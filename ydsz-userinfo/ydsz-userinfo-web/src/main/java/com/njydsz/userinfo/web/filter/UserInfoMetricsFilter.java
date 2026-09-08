@@ -22,7 +22,7 @@ import com.njydsz.userinfo.server.trace.TraceContext;
  * <p>对所有经过 Controller 的请求记录耗时指标 {@code ydsz_userinfo_http_request_duration_ms}， 按 URI（归一化路径模板）和
  * HTTP 方法维度分组，便于在 Grafana 中查看接口 P50/P90/P99 延迟分布。
  *
- * <p><b>URI 归一化：</b>将 PathVariable（如 {@code /api/v1/user/123}）归一化为模板路径 （如 {@code /api/v1/user/{id}}），避免不同
+ * <p><b>URI 归一化：</b>将 PathVariable（如 {@code /api/user/123}）归一化为模板路径 （如 {@code /api/user/{id}}），避免不同
  * ID 产生大量时间序列。
  *
  * <p><b>过滤器优先级：</b>设置为 {@link Ordered#LOWEST_PRECEDENCE} - 100，在认证过滤器之后执行， 确保只统计进入 Controller 的请求。

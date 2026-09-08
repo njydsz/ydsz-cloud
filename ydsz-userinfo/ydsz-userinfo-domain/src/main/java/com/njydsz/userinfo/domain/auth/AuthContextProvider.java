@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.domain.auth;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 认证上下文提供者接口（P2-1 Dubbo3 上下文传递适配）。
@@ -60,7 +61,7 @@ public interface AuthContextProvider {
       String username,
       String tenantId,
       String userType,
-      java.util.Set<String> roles,
+      Set<String> roles,
       String authType) {
   }
 }

@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * <p>Secondary authentication flow:
  *
  * <ol>
- *   <li>Frontend first calls {@code /api/v1/user/sensitive-verify} endpoint with current admin password
+ *   <li>Frontend first calls {@code /api/user/sensitive-verify} endpoint with current admin password
  *   <li>Backend verifies password and writes a short-lived (5 min) verification flag in Redis
  *   <li>When frontend sends sensitive operation request, AOP aspect checks if Redis flag is valid
  *   <li>If not verified or expired, throws {@code SENSITIVE_VERIFY_REQUIRED} exception

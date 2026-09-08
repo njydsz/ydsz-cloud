@@ -68,14 +68,14 @@ import com.njydsz.nextwiki.server.service.VersionDiffService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST   /api/v1/nextwiki/files/batch/delete           - 批量删除（同步）
- *   POST   /api/v1/nextwiki/files/batch/move             - 批量移动（同步）
- *   POST   /api/v1/nextwiki/files/batch/async-delete     - 异步批量删除
- *   POST   /api/v1/nextwiki/files/batch/async-move       - 异步批量移动
- *   GET    /api/v1/nextwiki/files/batch/task/{taskId}    - 查询批量任务状态
- *   GET    /api/v1/nextwiki/files/{nodeId}/versions      - 版本历史
- *   POST   /api/v1/nextwiki/files/{nodeId}/versions/{ver}/rollback - 版本回滚
- *   PUT    /api/v1/nextwiki/files/{nodeId}/star          - 切换星标
+ *   POST   /api/nextwiki/files/batch/delete           - 批量删除（同步）
+ *   POST   /api/nextwiki/files/batch/move             - 批量移动（同步）
+ *   POST   /api/nextwiki/files/batch/async-delete     - 异步批量删除
+ *   POST   /api/nextwiki/files/batch/async-move       - 异步批量移动
+ *   GET    /api/nextwiki/files/batch/task/{taskId}    - 查询批量任务状态
+ *   GET    /api/nextwiki/files/{nodeId}/versions      - 版本历史
+ *   POST   /api/nextwiki/files/{nodeId}/versions/{ver}/rollback - 版本回滚
+ *   PUT    /api/nextwiki/files/{nodeId}/star          - 切换星标
  * </pre>
  *
  * <h3>相关拆分</h3>
@@ -91,7 +91,7 @@ import com.njydsz.nextwiki.server.service.VersionDiffService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/files")
+@RequestMapping("/api/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "网盘文件批量与版本管理", description = "批量删除/移动、版本历史/回滚、星标切换")

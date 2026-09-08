@@ -28,7 +28,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
  *
  * <p>提供<b>消息发送 / 重试 / 死信 / 回执</b>的聚合统计指标端点， 是 P1-2「可观测看板」的核心入口，供运营管理后台渲染发送看板、漏斗分析、成本分析。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/stats/**}
+ * <p><b>接口路径：</b>{@code /api/message/stats/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -82,7 +82,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
 @Slf4j
 @Tag(name = "消息统计看板", description = "发送/重试/死信/回执聚合指标")
 @RestController
-@RequestMapping("/api/v1/message/stats")
+@RequestMapping("/api/message/stats")
 @RequiredArgsConstructor
 public class MessageStatsController {
 

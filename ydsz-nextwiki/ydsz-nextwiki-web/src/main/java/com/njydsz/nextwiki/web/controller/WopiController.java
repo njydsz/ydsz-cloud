@@ -69,11 +69,11 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   GET  /api/v1/nextwiki/wopi/files/{fileId}                - CheckFileInfo
- *   GET  /api/v1/nextwiki/wopi/files/{fileId}/contents      - GetFile
- *   POST /api/v1/nextwiki/wopi/files/{fileId}/contents      - PutFile
- *   POST /api/v1/nextwiki/wopi/files/{fileId}/lock          - Lock
- *   POST /api/v1/nextwiki/wopi/files/{fileId}/unlock        - Unlock
+ *   GET  /api/nextwiki/wopi/files/{fileId}                - CheckFileInfo
+ *   GET  /api/nextwiki/wopi/files/{fileId}/contents      - GetFile
+ *   POST /api/nextwiki/wopi/files/{fileId}/contents      - PutFile
+ *   POST /api/nextwiki/wopi/files/{fileId}/lock          - Lock
+ *   POST /api/nextwiki/wopi/files/{fileId}/unlock        - Unlock
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -93,7 +93,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/wopi")
+@RequestMapping("/api/nextwiki/wopi")
 @RequiredArgsConstructor
 @Tag(name = "WOPI 协议", description = "在线协同编辑 WOPI 接口（OnlyOffice / Collabora 集成）")
 public class WopiController {

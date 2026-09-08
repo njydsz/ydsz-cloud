@@ -58,7 +58,7 @@ public final class CronjobConstants {
   // ============================== 内部通信（节点间派发） ==============================
 
   /** 内部执行接口基路径（与 InternalJobController RequestMapping 保持一致）。 */
-  public static final String INTERNAL_API_PREFIX = "/api/v1/cronjob/internal";
+  public static final String INTERNAL_API_PREFIX = "/api/cronjob/internal";
 
   /** 远程任务执行接口路径（InternalJobController#execute）。 */
   public static final String INTERNAL_EXECUTE_PATH = INTERNAL_API_PREFIX + "/execute";

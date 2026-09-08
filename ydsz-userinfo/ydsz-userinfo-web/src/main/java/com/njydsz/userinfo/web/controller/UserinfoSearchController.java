@@ -31,7 +31,7 @@ import com.njydsz.userinfo.domain.dto.UserSearchQuery;
  *
  * <p>基于统一搜索服务（{@link UnifiedSearchService}）， 提供用户维度的全文检索能力，支持权限感知与多租户隔离。
  *
- * <p><b>接口路径：</b>{@code /api/v1/userinfo/search}
+ * <p><b>接口路径：</b>{@code /api/userinfo/search}
  *
  * <p><b>核心能力：</b>
  *
@@ -66,7 +66,7 @@ import com.njydsz.userinfo.domain.dto.UserSearchQuery;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/userinfo/search")
+@RequestMapping("/api/userinfo/search")
 @RequiredArgsConstructor
 @Tag(name = "用户搜索", description = "用户全文搜索")
 public class UserinfoSearchController {

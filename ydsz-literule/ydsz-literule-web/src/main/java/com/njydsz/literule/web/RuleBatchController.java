@@ -57,7 +57,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/literule/rules")
+@RequestMapping("/api/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则批量操作", description = "规则批量启停、优先级调整、分类调整与软删除")

@@ -62,7 +62,7 @@ public class TemplateGroupService {
   @Transactional(rollbackFor = Exception.class)
   public GenTemplateGroup create(GenTemplateGroup group) {
     group.setId(null);
-    group.setSystem(false);
+    group.setIsSystem(false);
     if (group.getSort() == null) {
       group.setSort(0);
     }
@@ -89,7 +89,7 @@ public class TemplateGroupService {
   public void activate(Long id) {
     List<GenTemplateGroup> all = groupRepository.findAllByOrderBysortAsc();
     for (GenTemplateGroup g : all) {
-      g.setActive(g.getId().equals(id));
+      g.setIsActive(g.getId().equals(id));
       groupRepository.save(g);
     }
     log.info("激活模板分组 id={}", id);
@@ -104,7 +104,7 @@ public class TemplateGroupService {
   public void deleteById(Long id) {
     GenTemplateGroup group = groupRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("分组不存在: " + id));
-    if (Boolean.TRUE.equals(group.getSystem())) {
+    if (Boolean.TRUE.equals(group.getIsSystem())) {
       throw new IllegalStateException("系统内置分组不可删除: " + group.getName());
     }
     groupRepository.deleteById(id);

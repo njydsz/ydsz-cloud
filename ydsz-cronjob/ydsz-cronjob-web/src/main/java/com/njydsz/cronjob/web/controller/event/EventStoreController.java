@@ -30,7 +30,7 @@ import com.njydsz.cronjob.server.service.event.EventStoreService;
 @Tag(name = "事件存储", description = "Event Sourcing 事件流查询")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/events")
+@RequestMapping("/api/cronjob/events")
 @RequiredArgsConstructor
 public class EventStoreController {
 

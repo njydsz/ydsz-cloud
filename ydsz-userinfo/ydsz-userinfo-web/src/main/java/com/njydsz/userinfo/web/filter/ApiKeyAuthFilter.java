@@ -23,7 +23,7 @@ import com.njydsz.userinfo.server.service.ApiKeyService;
 /**
  * API Key 认证过滤器（P1-2 API Key 授权体系）。
  *
- * <p>对 {@code /api/v1/apikey/verify} 等需要 API Key 认证的路径进行认证。
+ * <p>对 {@code /api/apikey/verify} 等需要 API Key 认证的路径进行认证。
  * 认证流程：
  *
  * <ol>
@@ -39,7 +39,7 @@ import com.njydsz.userinfo.server.service.ApiKeyService;
  * <p><b>使用方式：</b>
  *
  * <pre>
- * curl -H "Authorization: Beara kay_xxxxxxxxxxxx" https://api.example.com/api/v1/some-endpoint
+ * curl -H "Authorization: Beara kay_xxxxxxxxxxxx" https://api.example.com/api/some-endpoint
  * </pre>
  *
  * <p><b>安全设计：</b>
@@ -73,8 +73,8 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
   /** 无需 API Key 认证的路径 */
   private static final List<String> EXCLUDE_PATHS = List.of(
-      "/api/v1/apikey",      // API Key 管理端点本身（通过 Session 认证）
-      "/api/v1/auth",        // 认证端点
+      "/api/apikey",      // API Key 管理端点本身（通过 Session 认证）
+      "/api/auth",        // 认证端点
       "/actuator",
       "/swagger-ui",
       "/v3/api-docs"

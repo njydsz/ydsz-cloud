@@ -36,7 +36,7 @@ import com.njydsz.message.server.service.template.TemplateVersionService;
  *
  * <p>提供<b>模板版本历史、回滚、预览渲染、试发</b>的 HTTP API， 是 P1-6「模板版本化」的核心入口。每个模板的每次发布都生成版本快照， 支持回滚到任意历史版本，避免发版失误。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/template/version/**}
+ * <p><b>接口路径：</b>{@code /api/message/template/version/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -83,7 +83,7 @@ import com.njydsz.message.server.service.template.TemplateVersionService;
 @Slf4j
 @Tag(name = "模板版本管理", description = "版本历史、回滚、预览、试发")
 @RestController
-@RequestMapping("/api/v1/message/template/version")
+@RequestMapping("/api/message/template/version")
 @RequiredArgsConstructor
 public class TemplateVersionController {
 

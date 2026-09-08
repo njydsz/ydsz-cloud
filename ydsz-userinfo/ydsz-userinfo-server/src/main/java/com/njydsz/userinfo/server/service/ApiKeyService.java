@@ -261,7 +261,7 @@ public class ApiKeyService {
   private String getCurrentUserId() {
     String userId = RequestContext.getUserId();
     if (userId == null || userId.isBlank()) {
-      throw new BusinessException(UserInfoExceptionCode.UNAUTHORIZED);
+      throw new BusinessException(UserInfoExceptionCode.API_KEY_INVALID);
     }
     return userId;
   }

@@ -31,7 +31,7 @@ import com.njydsz.userinfo.server.service.PostService;
  *
  * <p>提供岗位的完整管理能力（CRUD）。 岗位是「职责维度」，描述用户做什么事（如 PM、DEV、QA），区别于角色（权限维度）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/Post}
+ * <p><b>接口路径：</b>{@code /api/Post}
  *
  * <p><b>核心能力：</b>
  *
@@ -60,7 +60,7 @@ import com.njydsz.userinfo.server.service.PostService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/post")
+@RequestMapping("/api/post")
 @RequiredArgsConstructor
 @Tag(name = "岗位管理", description = "岗位 CRUD")
 public class PostController {

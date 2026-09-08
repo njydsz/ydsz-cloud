@@ -76,7 +76,7 @@ import com.njydsz.cronjob.server.core.dag.DagInstanceControlService;
 @Slf4j
 @Tag(name = "DAG 工作流控制", description = "DAG 实例运行时控制：暂停/恢复/取消/重试节点")
 @RestController
-@RequestMapping("/api/v1/cronjob/dag/instance")
+@RequestMapping("/api/cronjob/dag/instance")
 @RequiredArgsConstructor
 public class DagInstanceControlController {
 

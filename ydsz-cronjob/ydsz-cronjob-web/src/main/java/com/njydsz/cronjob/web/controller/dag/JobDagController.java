@@ -74,7 +74,7 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
 @Tag(name = "DAG工作流定义", description = "DAG CRUD、启停、触发、校验、版本历史、回滚")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/dag")
+@RequestMapping("/api/cronjob/dag")
 @RequiredArgsConstructor
 public class JobDagController {
   /** 默认版本列表条数 */

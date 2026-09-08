@@ -23,7 +23,7 @@ import com.njydsz.userinfo.domain.vo.PostVO;
  * <p><b>典型使用：</b>
  *
  * <ul>
- *   <li>前端岗位管理页面通过 {@code /api/v1/Post/list} 加载岗位列表
+ *   <li>前端岗位管理页面通过 {@code /api/Post/list} 加载岗位列表
  *   <li>用户列表通过 {@code NameAssembler} 自动富化 {@code postName} 字段
  *   <li>审批人展开：{@code position:PM} 触发时按 {@code postCode} 匹配
  * </ul>

@@ -33,7 +33,7 @@ import com.njydsz.message.server.token.UnsubscribeTokenPayload;
  * <p>提供<b>基于 HMAC 签名 token 的一键退订</b>能力（P1-5），对标 RFC 8058 List-Unsubscribe-Post。 适用于邮件 /
  * 短信等无登录态场景的退订：用户在邮件底部点击退订链接即可完成退订， 无需登录管理后台。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/unsubscribe/**}
+ * <p><b>接口路径：</b>{@code /api/message/unsubscribe/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -78,7 +78,7 @@ import com.njydsz.message.server.token.UnsubscribeTokenPayload;
 @Slf4j
 @Tag(name = "退订中心", description = "token 一键退订与退订管理")
 @RestController
-@RequestMapping("/api/v1/message/unsubscribe")
+@RequestMapping("/api/message/unsubscribe")
 @RequiredArgsConstructor
 public class UnsubscribeController {
 

@@ -3,6 +3,7 @@ package com.njydsz.literule.domain.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import lombok.Getter;
@@ -88,6 +89,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
   private Integer priority;
 
   /** 是否启用 */
+  @TableField("enabled")
   private Boolean isEnabled;
 
   /** 适用范围 */

@@ -36,7 +36,7 @@ import com.njydsz.message.server.service.batch.BatchService;
  * <p>提供<b>异步批量发送</b>的 HTTP API，是 ydsz-message 处理大量通知的核心入口。 与 {@code
  * MessageController.send}（单条同步发送）不同，批量发送使用独立线程池逐条处理， 适合大批量、低延迟要求的场景（如全员通知、活动推送）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/batch/**}
+ * <p><b>接口路径：</b>{@code /api/message/batch/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -87,7 +87,7 @@ import com.njydsz.message.server.service.batch.BatchService;
 @Slf4j
 @Tag(name = "批量发送", description = "异步批量发送与进度查询")
 @RestController
-@RequestMapping("/api/v1/message/batch")
+@RequestMapping("/api/message/batch")
 @RequiredArgsConstructor
 public class BatchController {
 

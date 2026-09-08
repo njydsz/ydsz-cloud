@@ -78,7 +78,7 @@ public class GenTemplateRepositoryImpl implements GenTemplateRepository {
   public List<GenTemplate> findByGroupIdOrderByFileNameAsc(final Long groupId) {
     LambdaQueryWrapper<GenTemplate> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(GenTemplate::getGroupId, groupId)
-        .eq(GenTemplate::getActive, true)
+        .eq(GenTemplate::getIsActive, true)
         .orderByAsc(GenTemplate::getFileName);
     return mapper.selectList(wrapper);
   }

@@ -41,7 +41,7 @@ import com.njydsz.message.server.service.core.MessageService;
  * <p>提供<b>多模态消息发送能力</b>的 HTTP 入口：同步 / 异步 / 事务 / 批量四种发送语义， 是 {@code ydsz-message} 模块的核心门面，被
  * ydsz-workflow、ydsz-project、ydsz-system 等业务模块通过 Feign（{@code NotificationClient}）远程调用。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/**}
+ * <p><b>接口路径：</b>{@code /api/message/**}
  *
  * <p><b>统一发送端点：</b>
  *
@@ -84,7 +84,7 @@ import com.njydsz.message.server.service.core.MessageService;
 @Slf4j
 @Tag(name = "消息发送", description = "消息发送与发送日志查询")
 @RestController
-@RequestMapping("/api/v1/message")
+@RequestMapping("/api/message")
 @RequiredArgsConstructor
 public class MessageController {
 

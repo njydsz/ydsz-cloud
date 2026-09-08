@@ -33,7 +33,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  *
  * <p>提供语言的完整管理能力（CRUD），含默认语言唯一性管理。 用于前端 i18n 国际化与后端消息文案回退链。
  *
- * <p><b>接口路径：</b>{@code /api/v1/Language}
+ * <p><b>接口路径：</b>{@code /api/Language}
  *
  * <p><b>核心能力：</b>
  *
@@ -46,7 +46,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * <p><b>与其它模块的关联：</b>语言配置影响：
  *
  * <ul>
- *   <li>前端 i18n 文案（前端通过 {@code /api/v1/Language/list} 加载语言选项）
+ *   <li>前端 i18n 文案（前端通过 {@code /api/Language/list} 加载语言选项）
  *   <li>后端消息文案（{@code LocaleContextHolder} 匹配 {@code ydsz_i18n_message} 表）
  *   <li>浏览器语言探测（{@code Accept-Language} 头解析）
  * </ul>
@@ -67,7 +67,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/language")
+@RequestMapping("/api/language")
 @Tag(name = "语言管理", description = "语言 CRUD")
 @RequiredArgsConstructor
 public class LanguageController {

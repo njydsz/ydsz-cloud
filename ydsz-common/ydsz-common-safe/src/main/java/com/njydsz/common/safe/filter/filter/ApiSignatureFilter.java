@@ -49,11 +49,11 @@ import com.njydsz.common.util.security.HexUtils;
  *
  * <pre>{@code
  * // GET 请求（无 query）：query 行固定为 `\n` 后的空串
- * String raw = "GET\n/api/v1/order/detail\n\ne3b0c44298fc1c149afbf4c8996fb924..."
+ * String raw = "GET\n/api/order/detail\n\ne3b0c44298fc1c149afbf4c8996fb924..."
  * // GET 请求（带 query，按 key 字典序排序后规范化）：
- * String raw = "GET\n/api/v1/order/list\nid=1&page=2\ne3b0c44298fc1c149afbf4c8996fb924..."
+ * String raw = "GET\n/api/order/list\nid=1&page=2\ne3b0c44298fc1c149afbf4c8996fb924..."
  * // POST 请求：
- * String raw = "POST\n/api/v1/order/create\n\ne3b0c44298fc1c149afbf4c8996fb924..."
+ * String raw = "POST\n/api/order/create\n\ne3b0c44298fc1c149afbf4c8996fb924..."
  * }</pre>
  *
  * <p><b>客户端使用：</b>

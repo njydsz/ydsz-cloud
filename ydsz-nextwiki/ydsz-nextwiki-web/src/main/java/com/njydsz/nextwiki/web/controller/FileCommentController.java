@@ -63,10 +63,10 @@ import com.njydsz.nextwiki.server.mention.MentionService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   GET    /api/v1/nextwiki/comments/file/{fileNodeId} - 评论列表
- *   POST   /api/v1/nextwiki/comments                  - 添加评论/回复
- *   DELETE /api/v1/nextwiki/comments/{id}             - 删除评论
- *   POST   /api/v1/nextwiki/comments/{id}/resolve     - 标记已解决
+ *   GET    /api/nextwiki/comments/file/{fileNodeId} - 评论列表
+ *   POST   /api/nextwiki/comments                  - 添加评论/回复
+ *   DELETE /api/nextwiki/comments/{id}             - 删除评论
+ *   POST   /api/nextwiki/comments/{id}/resolve     - 标记已解决
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -93,7 +93,7 @@ import com.njydsz.nextwiki.server.mention.MentionService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/comments")
+@RequestMapping("/api/nextwiki/comments")
 @RequiredArgsConstructor
 @Tag(name = "文件评论", description = "文件级评论、回复、批注、解决标记")
 public class FileCommentController {

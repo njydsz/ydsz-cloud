@@ -35,7 +35,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * <pre>
  * [
  *   { "id": "ydsz-userinfo", "uri": "lb://ydsz-userinfo",
- *     "predicates": [ { "name": "Path", "args": { "pattern": "/api/v1/auth/**" } } ],
+ *     "predicates": [ { "name": "Path", "args": { "pattern": "/api/auth/**" } } ],
  *     "filters": [], "order": 0 }
  * ]
  * </pre>

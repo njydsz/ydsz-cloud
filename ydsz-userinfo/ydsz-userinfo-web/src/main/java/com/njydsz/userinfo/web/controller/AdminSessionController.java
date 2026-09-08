@@ -37,18 +37,18 @@ import com.njydsz.userinfo.server.auth.UserSessionAdminService;
  *
  * <p>提供账号封禁与解封、在线会话查看与强制下线能力，仅限具备管理员权限的用户访问。
  *
- * <p><b>接口路径：</b>{@code /api/v1/admin/users/{userId}/*} 和 {@code /api/v1/admin/sessions/*}
+ * <p><b>接口路径：</b>{@code /api/admin/users/{userId}/*} 和 {@code /api/admin/sessions/*}
  *
  * <p><b>核心能力：</b>
  *
  * <ul>
- *   <li>封禁用户（临时/永久）：{@code POST /api/v1/admin/users/{userId}/ban}</li>
- *   <li>解封用户：{@code POST /api/v1/admin/users/{userId}/unban}</li>
- *   <li>查询封禁信息：{@code GET /api/v1/admin/users/{userId}/ban-info}</li>
- *   <li>查询用户会话：{@code GET /api/v1/admin/users/{userId}/sessions}</li>
- *   <li>强制下线指定会话：{@code DELETE /api/v1/admin/users/{userId}/sessions/{accessToken}}</li>
- *   <li>查询所有在线会话：{@code GET /api/v1/admin/sessions}</li>
- *   <li>会话统计：{@code GET /api/v1/admin/sessions/statistics}</li>
+ *   <li>封禁用户（临时/永久）：{@code POST /api/admin/users/{userId}/ban}</li>
+ *   <li>解封用户：{@code POST /api/admin/users/{userId}/unban}</li>
+ *   <li>查询封禁信息：{@code GET /api/admin/users/{userId}/ban-info}</li>
+ *   <li>查询用户会话：{@code GET /api/admin/users/{userId}/sessions}</li>
+ *   <li>强制下线指定会话：{@code DELETE /api/admin/users/{userId}/sessions/{accessToken}}</li>
+ *   <li>查询所有在线会话：{@code GET /api/admin/sessions}</li>
+ *   <li>会话统计：{@code GET /api/admin/sessions/statistics}</li>
  * </ul>
  *
  * <p><b>安全特性：</b>
@@ -67,7 +67,7 @@ import com.njydsz.userinfo.server.auth.UserSessionAdminService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @Tag(name = "管理员封禁与会话治理", description = "账号封禁/解封、在线会话管理与强制下线")
 @ApiVersion("1")

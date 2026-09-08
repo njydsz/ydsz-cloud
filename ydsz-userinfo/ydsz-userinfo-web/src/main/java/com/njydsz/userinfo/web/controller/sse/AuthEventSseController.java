@@ -42,7 +42,7 @@ import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
  * <p><b>使用方式（前端示例）：</b>
  *
  * <pre>{@code
- * const eventSource = new EventSource('/api/v1/auth/events/stream', { withCredentials: true });
+ * const eventSource = new EventSource('/api/auth/events/stream', { withCredentials: true });
  * eventSource.addEventListener('auth.login.success', (e) => console.log(JSON.parse(e.data)));
  * eventSource.addEventListener('auth.session.evicted', (e) => redirectToLogin());
  * }</pre>
@@ -52,7 +52,7 @@ import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/auth/events")
+@RequestMapping("/api/auth/events")
 @RequiredArgsConstructor
 @Tag(name = "认证事件 SSE", description = "认证事件 Server-Sent Events 实时推送")
 public class AuthEventSseController {

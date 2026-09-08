@@ -48,7 +48,7 @@ public class ApiPermission extends MpBaseEntity<String> {
   /** HTTP 方法（GET/POST/PUT/DELETE 等） */
   private String httpMethod;
 
-  /** URL 模式（Ant 风格，如 /api/v1/config/page） */
+  /** URL 模式（Ant 风格，如 /api/config/page） */
   private String urlPattern;
 
   /** Controller 完全限定名 */

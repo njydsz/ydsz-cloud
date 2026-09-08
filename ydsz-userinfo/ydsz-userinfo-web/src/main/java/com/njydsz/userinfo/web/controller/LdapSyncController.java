@@ -24,7 +24,7 @@ import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
  *
  * <p>提供手动触发同步、查询同步状态、查询同步历史的能力，供管理员在后台管理系统中使用。
  *
- * <p><b>接口路径：</b>{@code /api/v1/admin/ldap/sync}
+ * <p><b>接口路径：</b>{@code /api/admin/ldap/sync}
  *
  * <p><b>启用条件：</b>{@code ydsz.userinfo.ldap.sync.enabled=true}。
  *
@@ -33,7 +33,7 @@ import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin/ldap/sync")
+@RequestMapping("/api/admin/ldap/sync")
 @ConditionalOnProperty(prefix = "ydsz.userinfo.ldap.sync", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Tag(name = "LDAP 同步管理", description = "LDAP/AD 组织架构同步触发、状态查询、历史记录")

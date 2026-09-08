@@ -31,14 +31,14 @@ import com.njydsz.userinfo.server.device.DeviceSessionVO;
  *   <li>下线指定设备（强制登出）</li>
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/devices}
+ * <p><b>接口路径：</b>{@code /api/devices}
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/devices")
+@RequestMapping("/api/devices")
 @RequiredArgsConstructor
 @Tag(name = "设备管理", description = "登录设备查看与下线")
 public class DeviceSessionController {

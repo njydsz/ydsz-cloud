@@ -35,7 +35,7 @@ import com.njydsz.system.server.service.AppInfoService;
  * <p>提供 OAuth2 第三方应用（client_credentials 模式）的注册与管理能力。 接入方通过应用注册获取 {@code clientId} / {@code
  * clientSecret}，换取访问令牌调用开放 API。
  *
- * <p><b>接口路径：</b>{@code /api/v1/app}
+ * <p><b>接口路径：</b>{@code /api/app}
  *
  * <p><b>核心字段：</b>
  *
@@ -64,7 +64,7 @@ import com.njydsz.system.server.service.AppInfoService;
 @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/app")
+@RequestMapping("/api/app")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:app:list")
 public class AppInfoController {

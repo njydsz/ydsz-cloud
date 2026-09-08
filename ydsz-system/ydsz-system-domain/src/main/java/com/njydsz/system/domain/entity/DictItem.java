@@ -25,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code extJson}：扩展属性 JSONB 字符串，承载自定义属性（如色值、图标）
  * </ul>
  *
- * <p><b>典型使用：</b>前端下拉框从 {@code /api/v1/dict/item/list?typeCode=order_status} 拉取， 显示 {@code
+ * <p><b>典型使用：</b>前端下拉框从 {@code /api/dict/item/list?typeCode=order_status} 拉取， 显示 {@code
  * itemCode}（如「已支付」），提交时传 {@code itemValue}（如 {@code "PAID"}）。
  *
  * <p><b>索引设计：</b>索引 {@code idx_type_code}（{@code type_code}）加速按类型查询。

@@ -79,7 +79,7 @@ public class DecisionTableDefinitionDTO implements Serializable {
   private Map<String, Object> defaultActions;
 
   /** 是否启用 */
-  @Builder.Default private boolean enabled = true;
+  @Builder.Default private boolean isEnabled = true;
 
   /** 优先级（数值越小越先执行） */
   @Builder.Default private int priority = 100;

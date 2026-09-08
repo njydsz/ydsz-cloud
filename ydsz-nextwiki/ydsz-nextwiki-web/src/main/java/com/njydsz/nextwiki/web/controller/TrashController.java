@@ -62,11 +62,11 @@ import com.njydsz.nextwiki.server.service.TrashApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   GET    /api/v1/nextwiki/trash/list                  - 回收站列表
- *   POST   /api/v1/nextwiki/trash/{id}/restore          - 恢复
- *   POST   /api/v1/nextwiki/trash/batch-restore         - 批量恢复
- *   DELETE /api/v1/nextwiki/trash/{id}                  - 永久删除
- *   DELETE /api/v1/nextwiki/trash/empty                 - 清空回收站
+ *   GET    /api/nextwiki/trash/list                  - 回收站列表
+ *   POST   /api/nextwiki/trash/{id}/restore          - 恢复
+ *   POST   /api/nextwiki/trash/batch-restore         - 批量恢复
+ *   DELETE /api/nextwiki/trash/{id}                  - 永久删除
+ *   DELETE /api/nextwiki/trash/empty                 - 清空回收站
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -89,7 +89,7 @@ import com.njydsz.nextwiki.server.service.TrashApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/trash")
+@RequestMapping("/api/nextwiki/trash")
 @RequiredArgsConstructor
 @Tag(name = "回收站管理", description = "回收站列表、恢复、永久删除、清空（默认 30 天保留期）")
 public class TrashController {

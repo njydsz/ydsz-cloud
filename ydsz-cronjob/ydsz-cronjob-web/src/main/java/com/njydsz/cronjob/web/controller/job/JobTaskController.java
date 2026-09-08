@@ -46,7 +46,7 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
 @Tag(name = "MapReduce 子任务查询", description = "子任务列表/分页/进度汇总")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/task")
+@RequestMapping("/api/cronjob/task")
 @RequiredArgsConstructor
 @Validated
 public class JobTaskController {

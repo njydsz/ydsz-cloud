@@ -23,7 +23,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
  *
  * <p>提供消息模块运维操作能力的 HTTP API，包含模板缓存管理（查询统计、失效清除）和 BloomFilter 去重过滤器状态查询，供管理后台运维面板和自动化运维系统消费。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/ops/**}
+ * <p><b>接口路径：</b>{@code /api/message/ops/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -44,7 +44,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
 @Slf4j
 @Tag(name = "运维诊断", description = "消息模块运维操作接口（高权限）")
 @RestController
-@RequestMapping("/api/v1/message/ops")
+@RequestMapping("/api/message/ops")
 @RequiredArgsConstructor
 public class OpsController {
 

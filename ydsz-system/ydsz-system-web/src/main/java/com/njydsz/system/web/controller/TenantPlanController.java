@@ -39,7 +39,7 @@ import com.njydsz.system.server.service.TenantPlanService;
  *
  * <p>提供 SaaS 套餐的 CRUD、分页查询、菜单配置等管理能力。 套餐定义租户的功能 / 容量 / 价格，是 SaaS 多租户定价模型的核心。
  *
- * <p><b>接口路径：</b>{@code /api/v1/tenant-plan}
+ * <p><b>接口路径：</b>{@code /api/tenant-plan}
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -48,7 +48,7 @@ import com.njydsz.system.server.service.TenantPlanService;
 @Tag(name = "租户套餐管理", description = "套餐 CRUD / 菜单配置")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/tenant-plan")
+@RequestMapping("/api/tenant-plan")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:tenant:plan:list")
 public class TenantPlanController {

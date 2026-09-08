@@ -55,7 +55,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Slf4j
 @Tag(name = "健康仪表盘", description = "聚合系统资源、任务、DAG、调度器多维度运行状态")
 @RestController
-@RequestMapping("/api/v1/cronjob/dashboard/health")
+@RequestMapping("/api/cronjob/dashboard/health")
 @RequiredArgsConstructor
 public class HealthDashboardController {
   /** 集合初始容量 */

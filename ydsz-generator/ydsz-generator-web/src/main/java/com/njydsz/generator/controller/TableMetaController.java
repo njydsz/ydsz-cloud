@@ -25,7 +25,7 @@ import com.njydsz.generator.service.TableMetadataService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/generator/tables")
+@RequestMapping("/api/generator/tables")
 @RequiredArgsConstructor
 public class TableMetaController {
 

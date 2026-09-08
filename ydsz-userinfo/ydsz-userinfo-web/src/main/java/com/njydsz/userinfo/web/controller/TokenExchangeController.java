@@ -37,7 +37,7 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
  *   <li><b>登出通知：</b>父域登出时通知子域清除本地状态</li>
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/sso}
+ * <p><b>接口路径：</b>{@code /api/sso}
  *
  * <p><b>安全约束：</b>
  *
@@ -54,7 +54,7 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/sso")
+@RequestMapping("/api/sso")
 @RequiredArgsConstructor
 @Tag(name = "跨域 SSO", description = "令牌交换/验证/登出通知")
 @ApiVersion("1")

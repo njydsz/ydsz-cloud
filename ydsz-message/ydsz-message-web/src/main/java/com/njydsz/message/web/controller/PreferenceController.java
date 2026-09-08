@@ -33,7 +33,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
  * <p>提供<b>用户级消息偏好管理</b>的 HTTP API。 偏好用于细粒度控制用户在「什么通道 / 什么业务类型 / 什么时段」愿意接收通知， 与 {@code
  * SubscriptionController}（订阅-发布主题）配合实现完整的消息触达策略。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/preference/**}
+ * <p><b>接口路径：</b>{@code /api/message/preference/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -79,7 +79,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
 @Tag(name = "消息偏好", description = "用户消息偏好管理")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/preference")
+@RequestMapping("/api/message/preference")
 @RequiredArgsConstructor
 public class PreferenceController {
 

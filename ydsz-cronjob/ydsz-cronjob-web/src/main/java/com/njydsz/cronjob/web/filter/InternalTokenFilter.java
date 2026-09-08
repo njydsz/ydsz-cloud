@@ -18,7 +18,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 /**
  * 内部通信鉴权过滤器（P0-1 安全加固）。
  *
- * <p>拦截 {@code /api/v1/cronjob/internal/**} 节点间派发端点，校验请求头
+ * <p>拦截 {@code /api/cronjob/internal/**} 节点间派发端点，校验请求头
  * {@code X-Ydsz-Internal-Token} 与配置 {@code ydsz.cronjob.remote.access-token} 是否一致。
  *
  * <h3>行为约定</h3>

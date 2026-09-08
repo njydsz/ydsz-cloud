@@ -41,7 +41,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  *   用户                         角色                           角色拥有的菜单权限
  * </pre>
  *
- * <p><b>接口路径：</b>{@code /api/v1/Role}
+ * <p><b>接口路径：</b>{@code /api/Role}
  *
  * <p><b>核心能力：</b>
  *
@@ -73,7 +73,7 @@ import com.njydsz.userinfo.server.service.RoleService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/role")
+@RequestMapping("/api/role")
 @RequiredArgsConstructor
 @Tag(name = "角色管理", description = "角色 CRUD、权限分配")
 public class RoleController {

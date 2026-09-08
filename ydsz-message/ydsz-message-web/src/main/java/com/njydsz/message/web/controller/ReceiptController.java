@@ -33,7 +33,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
  * 企业微信）在送达、阅读、点击等节点会主动回调 {@code /callback}，本 Controller 将其转化为标准化回执记录写入 {@code ydsz_msg_receipt}，
  * 并更新 {@code ydsz_msg_log.receiptStatus}。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/receipt/**}
+ * <p><b>接口路径：</b>{@code /api/message/receipt/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -77,7 +77,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
 @Tag(name = "消息回执", description = "服务商回执回调与查询")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/receipt")
+@RequestMapping("/api/message/receipt")
 @RequiredArgsConstructor
 public class ReceiptController {
 

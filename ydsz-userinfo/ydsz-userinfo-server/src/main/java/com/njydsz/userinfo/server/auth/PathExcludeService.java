@@ -79,7 +79,7 @@ public class PathExcludeService {
   /**
    * 动态添加排除路径（运行时生效，重启后丢失）。
    *
-   * @param pathPattern Ant 风格的路径模式（如 {@code /api/v1/public/**}）
+   * @param pathPattern Ant 风格的路径模式（如 {@code /api/public/**}）
    */
   public void addExcludedPath(String pathPattern) {
     if (pathPattern != null && !pathPattern.isBlank()) {

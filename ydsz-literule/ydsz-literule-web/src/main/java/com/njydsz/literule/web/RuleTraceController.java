@@ -60,7 +60,7 @@ import com.njydsz.literule.server.config.RuleTraceQueryService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/literule/rules")
+@RequestMapping("/api/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则执行追踪", description = "执行链路查询、历史回放与变更影响分析")

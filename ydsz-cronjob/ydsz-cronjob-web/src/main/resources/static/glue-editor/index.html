@@ -192,7 +192,7 @@ public class SampleHandler {
           try {
             const code = editor.getValue();
             // 调用后端保存接口
-            const response = await fetch('/api/v1/cronjob/glue/save', {
+            const response = await fetch('/api/cronjob/glue/save', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ file: currentFile.value, code: code, language: language.value })

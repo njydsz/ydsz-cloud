@@ -37,7 +37,7 @@ public class GenTemplate {
   /** 模板内容（Velocity 语法）。 */
   private String content;
   /** 是否为虚拟文件夹标记。 */
-  private Boolean folder;
+  private Boolean isFolder;
   /** 父路径（如 vue/ 表示前端子目录）。 */
   private String parentPath;
   /** 当前版本号。 */
@@ -45,7 +45,7 @@ public class GenTemplate {
   /** 内容 MD5 哈希（版本对比）。 */
   private String hash;
   /** 是否启用。 */
-  private Boolean active;
+  private Boolean isActive;
   /** 模板类型码（BACKEND/FRONTEND，对应 TemplateFileTypeEnum.code）。 */
   private String fileType;
   /** 创建时间。 */

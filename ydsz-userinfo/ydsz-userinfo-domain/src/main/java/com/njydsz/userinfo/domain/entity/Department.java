@@ -23,7 +23,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code sort}：同级排序序号（升序）
  * </ul>
  *
- * <p><b>树形查询：</b>前端通过 {@code /api/v1/Department/tree} 接口获取整棵部门树（递归构建）。
+ * <p><b>树形查询：</b>前端通过 {@code /api/Department/tree} 接口获取整棵部门树（递归构建）。
  *
  * <p><b>数据权限：</b>{@link Role#dataScope} 通过部门树实现 「本部门及子部门」「仅本部门」「自定义部门」三种隔离范围。
  *

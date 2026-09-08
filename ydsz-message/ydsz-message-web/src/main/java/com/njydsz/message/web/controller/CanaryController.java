@@ -19,7 +19,7 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
  *
  * <p>提供消息模板 A/B 对照实验的<b>实验管理与流量分桶</b> HTTP API，是 {@code ydsz-message} 模块「灰度发布」的入口。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/canary/**}
+ * <p><b>接口路径：</b>{@code /api/message/canary/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -39,7 +39,7 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
 @Tag(name = "灰度实验", description = "消息模板 A/B 对照实验管理")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/canary")
+@RequestMapping("/api/message/canary")
 @RequiredArgsConstructor
 public class CanaryController {
 

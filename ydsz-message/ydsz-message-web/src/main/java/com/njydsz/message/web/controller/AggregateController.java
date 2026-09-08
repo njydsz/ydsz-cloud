@@ -31,7 +31,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
  * <p>提供<b>消息聚合批次查询与强制刷新</b>的 HTTP API。 聚合批次指对同一聚合组（{@code group}）+ 同一接收人（{@code
  * receiver}）的相似消息按时间窗口合并， 避免短时间内对同一用户轰炸通知（例如"订单状态变更"被聚合成"您有 3 条订单更新"）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/aggregate/**}
+ * <p><b>接口路径：</b>{@code /api/message/aggregate/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -73,7 +73,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
 @Tag(name = "聚合批次", description = "消息聚合批次查询与刷新")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/aggregate")
+@RequestMapping("/api/message/aggregate")
 @RequiredArgsConstructor
 public class AggregateController {
 

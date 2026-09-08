@@ -47,7 +47,7 @@ import com.njydsz.userinfo.server.service.ApiKeyService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/apikey")
+@RequestMapping("/api/apikey")
 @RequiredArgsConstructor
 @Tag(name = "API Key 管理", description = "API Key 的创建、查询、撤销、启用/禁用")
 @ApiVersion("1")

@@ -42,7 +42,7 @@ import com.njydsz.common.permission.PermissionCodes;
 @Tag(name = "DAG 设计器", description = "DAG 工作流可视化编排")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/dag")
+@RequestMapping("/api/cronjob/dag")
 @RequiredArgsConstructor
 public class DagDesignerController {
 

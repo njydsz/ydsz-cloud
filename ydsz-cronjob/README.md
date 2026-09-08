@@ -38,7 +38,7 @@
 | **调度器-执行器分离** | `scheduler-executor-separation.enabled` Leader 仅调度，Worker 执行 |
 | **Webhook** | 出站回调 + HMAC-SHA256 签名 + 5 事件类型 + 失败指数退避重试（1s/5s，最多 3 次） |
 
-### 2. 关键 Controller（基路径 `/api/v1/cronjob`，共 17 个）
+### 2. 关键 Controller（基路径 `/api/cronjob`，共 17 个）
 
 Controller 按子包组织，结构如下：
 

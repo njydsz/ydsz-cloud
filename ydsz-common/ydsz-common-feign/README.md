@@ -141,10 +141,10 @@ public class SystemApplication { }
 @FeignClient(name = "userinfo-service", contextId = "userClient")
 public interface UserClient {
 
-    @GetMapping("/api/v1/users/{id}")
+    @GetMapping("/api/users/{id}")
     UserVO getUser(@PathVariable("id") Long id);  // YdszResponse 自动解包
 
-    @PostMapping("/api/v1/users")
+    @PostMapping("/api/users")
     Long createUser(@RequestBody CreateUserRequest request);
 }
 ```

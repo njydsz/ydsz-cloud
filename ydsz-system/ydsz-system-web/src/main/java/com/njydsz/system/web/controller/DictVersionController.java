@@ -36,7 +36,7 @@ import com.njydsz.system.server.service.EntityVersionService;
  * <p>提供字典变更历史查询和回滚能力。字典版本是字典变更审计与回滚能力的数据基础： 每次字典项发生变更（save / updateById / removeById）时，{@link
  * com.njydsz.system.server.service.DictItemServiceImpl} 会自动创建一条版本快照（含变更时间、操作说明、变更前字典全量 JSON 快照）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/dict/version}
+ * <p><b>接口路径：</b>{@code /api/dict/version}
  *
  * <p><b>核心能力：</b>
  *
@@ -63,7 +63,7 @@ import com.njydsz.system.server.service.EntityVersionService;
 @Tag(name = "字典版本", description = "字典变更历史查询 + 一键回滚")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/dict/version")
+@RequestMapping("/api/dict/version")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:dict:version:list")
 public class DictVersionController {

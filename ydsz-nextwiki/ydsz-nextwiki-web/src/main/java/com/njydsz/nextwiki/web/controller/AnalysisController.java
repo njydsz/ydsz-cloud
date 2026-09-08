@@ -59,10 +59,10 @@ import com.njydsz.nextwiki.server.service.StorageAnalysisApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   GET  /api/v1/nextwiki/analysis/overview         - 存储概览
- *   GET  /api/v1/nextwiki/analysis/by-type          - 按类型统计
- *   GET  /api/v1/nextwiki/analysis/top-large-files  - 大文件 Top-N
- *   POST /api/v1/nextwiki/analysis/summary          - AI 文档摘要
+ *   GET  /api/nextwiki/analysis/overview         - 存储概览
+ *   GET  /api/nextwiki/analysis/by-type          - 按类型统计
+ *   GET  /api/nextwiki/analysis/top-large-files  - 大文件 Top-N
+ *   POST /api/nextwiki/analysis/summary          - AI 文档摘要
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -85,7 +85,7 @@ import com.njydsz.nextwiki.server.service.StorageAnalysisApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/analysis")
+@RequestMapping("/api/nextwiki/analysis")
 @RequiredArgsConstructor
 @Tag(name = "存储分析与AI摘要", description = "存储统计报表、文档智能摘要（LLM）")
 public class AnalysisController {

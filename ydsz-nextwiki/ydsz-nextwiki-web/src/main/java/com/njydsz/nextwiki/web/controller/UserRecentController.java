@@ -27,10 +27,10 @@ import com.njydsz.nextwiki.server.service.UserRecentApplicationService;
  * <p>提供用户最近访问记录的查询和管理 API。
  *
  * <pre>
- *   GET    /api/v1/nextwiki/recent          - 查询最近访问列表
- *   POST   /api/v1/nextwiki/recent/{nodeId} - 记录访问
- *   DELETE /api/v1/nextwiki/recent          - 清空最近访问
- *   DELETE /api/v1/nextwiki/recent/{nodeId} - 删除单条访问记录
+ *   GET    /api/nextwiki/recent          - 查询最近访问列表
+ *   POST   /api/nextwiki/recent/{nodeId} - 记录访问
+ *   DELETE /api/nextwiki/recent          - 清空最近访问
+ *   DELETE /api/nextwiki/recent/{nodeId} - 删除单条访问记录
  * </pre>
  *
  * @author ydsz-team
@@ -38,7 +38,7 @@ import com.njydsz.nextwiki.server.service.UserRecentApplicationService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/recent")
+@RequestMapping("/api/nextwiki/recent")
 @RequiredArgsConstructor
 public class UserRecentController {
 

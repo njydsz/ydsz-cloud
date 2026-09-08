@@ -116,37 +116,37 @@ ydsz-system/
     └── src/main/java/com/njydsz/system/web/
         ├── SystemApplication.java      # 启动类（@EnableYdszAuth / @EnableYdszAudit / @EnableYdszSafe / @EnableYdszFeign）
         └── controller/                 # 13 个 Controller
-            ├── AppInfoController.java         # /api/v1/app
-            ├── AuditAdminController.java      # /api/v1/admin/audit
-            ├── ConfigController.java          # /api/v1/config
-            ├── ConfigVersionController.java   # /api/v1/config/version（回滚）
-            ├── DictController.java            # /api/v1/dict/type
-            ├── DictItemController.java        # /api/v1/dict/item
-            ├── DictVersionController.java     # /api/v1/dict/version
-            ├── FrontendInitController.java    # /api/v1/system/init（前端初始化聚合）
+            ├── AppInfoController.java         # /api/app
+            ├── AuditAdminController.java      # /api/admin/audit
+            ├── ConfigController.java          # /api/config
+            ├── ConfigVersionController.java   # /api/config/version（回滚）
+            ├── DictController.java            # /api/dict/type
+            ├── DictItemController.java        # /api/dict/item
+            ├── DictVersionController.java     # /api/dict/version
+            ├── FrontendInitController.java    # /api/system/init（前端初始化聚合）
             ├── InternalApiController.java     # /api/internal（POST + body，Feign 内部调用）
-            ├── TenantController.java          # /api/v1/tenant
-            ├── TenantPlanController.java      # /api/v1/tenant-plan
-            ├── VariableController.java        # /api/v1/variable
-            └── VariableVersionController.java # /api/v1/variable/version（回滚）
+            ├── TenantController.java          # /api/tenant
+            ├── TenantPlanController.java      # /api/tenant-plan
+            ├── VariableController.java        # /api/variable
+            └── VariableVersionController.java # /api/variable/version（回滚）
 ```
 
 ## 关键 Controller
 
 | 路径前缀 | 作用 |
 |---|---|
-| `/api/v1/config` | 系统参数 CRUD + 按 key 查询 + 按 group 批量查询 + 公开配置查询 + 游标分页 + 导入导出 |
-| `/api/v1/config/version` | 配置版本历史查询 + 回滚 |
-| `/api/v1/dict/type` | 字典类型 CRUD + 全量列表 |
-| `/api/v1/dict/item` | 字典项 CRUD + 按 (typeCode, itemCode) 精确查询 + 按类型查询启用列表 + 树形查询 + 批量写入 |
-| `/api/v1/dict/version` | 字典版本历史查询（支持分页） + 回滚 |
-| `/api/v1/variable` | 系统变量 CRUD + 按 key 查询值 |
-| `/api/v1/variable/version` | 变量版本历史 + 回滚 |
-| `/api/v1/tenant` | 租户 CRUD |
-| `/api/v1/tenant-plan` | 套餐 CRUD + 菜单配置 |
-| `/api/v1/app` | 应用注册 CRUD（支持搜索过滤） |
-| `/api/v1/admin/audit` | 审计日志查询（按时间/操作人/行为/追踪ID） |
-| `/api/v1/system/init` | 前端初始化聚合接口（公开配置 + 默认字典 + 系统版本号） |
+| `/api/config` | 系统参数 CRUD + 按 key 查询 + 按 group 批量查询 + 公开配置查询 + 游标分页 + 导入导出 |
+| `/api/config/version` | 配置版本历史查询 + 回滚 |
+| `/api/dict/type` | 字典类型 CRUD + 全量列表 |
+| `/api/dict/item` | 字典项 CRUD + 按 (typeCode, itemCode) 精确查询 + 按类型查询启用列表 + 树形查询 + 批量写入 |
+| `/api/dict/version` | 字典版本历史查询（支持分页） + 回滚 |
+| `/api/variable` | 系统变量 CRUD + 按 key 查询值 |
+| `/api/variable/version` | 变量版本历史 + 回滚 |
+| `/api/tenant` | 租户 CRUD |
+| `/api/tenant-plan` | 套餐 CRUD + 菜单配置 |
+| `/api/app` | 应用注册 CRUD（支持搜索过滤） |
+| `/api/admin/audit` | 审计日志查询（按时间/操作人/行为/追踪ID） |
+| `/api/system/init` | 前端初始化聚合接口（公开配置 + 默认字典 + 系统版本号） |
 | `/api/internal/config/get` | Feign 内部调用：按 key 查配置值（POST body 传输） |
 | `/api/internal/dict/item` | Feign 内部调用：按类型+编码查字典项展示值（POST body 传输） |
 | `/api/internal/dict/list` | Feign 内部调用：按类型查全部启用字典项展示值列表（POST body 传输） |
@@ -217,12 +217,12 @@ ydsz-system/
 - 配置 / 变量 / 字典等实体的写操作（save/update/delete）自动发布 `VersionSnapshotEvent`
 - `VersionSnapshotListener` 在事务提交后（`AFTER_COMMIT`）异步创建版本快照到 `ydsz_sys_entity_version`
 - 版本记录包含实体类型、实体 ID、版本号、变更内容（diff）
-- 支持版本历史查询与**回滚**（`/api/v1/config/version`、`/api/v1/variable/version`、`/api/v1/dict/version`）
+- 支持版本历史查询与**回滚**（`/api/config/version`、`/api/variable/version`、`/api/dict/version`）
 - 回滚策略：`RollbackStrategy` 接口 + 具体实现（ConfigRollbackStrategy / VariableRollbackStrategy / DictItemRollbackStrategy）
 
 ### 前端初始化
-- `FrontendInitController`（`/api/v1/system/init`）聚合返回公开配置 + 默认字典 + 系统版本号
-- 支持按需指定字典类型（`/api/v1/system/init/dicts?dictTypes=user_status,gender`）
+- `FrontendInitController`（`/api/system/init`）聚合返回公开配置 + 默认字典 + 系统版本号
+- 支持按需指定字典类型（`/api/system/init/dicts?dictTypes=user_status,gender`）
 - 限流保护（100 QPS），防止恶意刷接口
 
 ### 多租户配额管理
@@ -247,7 +247,7 @@ ydsz-system/
 ### 分页搜索
 - 所有分页接口支持搜索过滤（configGroup/configKey/status 等）
 - Service `page()` 方法返回 `PageResponse<VO>`（继承自 `YdszResponse<T>`），自带 `getPageNum()`/`getPageSize()`/`getPages()` 便捷方法
-- 游标分页：`ConfigController` 支持 `/api/v1/config/cursor` 端点，基于 ID 的 seek method 分页
+- 游标分页：`ConfigController` 支持 `/api/config/cursor` 端点，基于 ID 的 seek method 分页
 - 分页安全上限：所有分页接口硬上限 500 条（`MAX_PAGE_SIZE`）
 
 ### 批量操作

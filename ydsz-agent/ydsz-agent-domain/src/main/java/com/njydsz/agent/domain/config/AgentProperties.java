@@ -681,7 +681,7 @@ public class AgentProperties {
    * BI 洞察报告配置
    *
    * <p>控制 Agent 模块内置 BI 洞察报告自动生成功能的启用参数。
-   * 开启后可通过 {@code POST /api/v1/agent/insight/report} 接口触发报告生成。
+   * 开启后可通过 {@code POST /api/agent/insight/report} 接口触发报告生成。
    *
    * @author ydsz-team
    * @since 26.09.07

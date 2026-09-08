@@ -53,7 +53,7 @@ import com.njydsz.cronjob.server.core.connector.JobConnector;
 @Slf4j
 @Tag(name = "生态连接器", description = "外部调度系统集成：测试连接、导入/导出、查询远程任务")
 @RestController
-@RequestMapping("/api/v1/cronjob/connector")
+@RequestMapping("/api/cronjob/connector")
 @RequiredArgsConstructor
 public class ConnectorController {
 

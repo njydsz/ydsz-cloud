@@ -33,7 +33,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
  *   <li>合规审计批量导出某业务单据的全部通知记录
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/archive/search/**}
+ * <p><b>接口路径：</b>{@code /api/message/archive/search/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -78,7 +78,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
 @Tag(name = "消息归档搜索", description = "消息发送日志全文搜索")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/archive/search")
+@RequestMapping("/api/message/archive/search")
 @RequiredArgsConstructor
 public class MessageArchiveController {
 

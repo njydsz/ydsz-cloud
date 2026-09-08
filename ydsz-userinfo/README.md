@@ -109,39 +109,39 @@ ydsz-userinfo/
 
 | 路径前缀 | 作用 |
 |---|---|
-| `/api/v1/auth/login` `/logout` `/refresh` | 登录/登出/Token 刷新 |
-| `/api/v1/user` | 用户 CRUD + 分页 + 密码管理 + 角色分配 + 批量操作 + Excel 导入导出 |
-| `/api/v1/user/{userId}/login-history` | 用户登录历史查询 |
-| `/api/v1/profile` | 用户个人信息更新 |
-| `/api/v1/Role` | 角色 CRUD + 权限分配 |
-| `/api/v1/dept` | 部门 CRUD + 树形结构 |
-| `/api/v1/Menu` | 菜单 CRUD + 树形结构 |
-| `/api/v1/Company` | 公司 CRUD |
-| `/api/v1/Post` | 岗位 CRUD |
-| `/api/v1/Language` | 语言 CRUD |
-| `/api/v1/captcha` | 图形验证码生成/校验 |
-| `/api/v1/oauth2/authorize` `/token` | OAuth2 授权码模式（支持 PKCE + scope 细粒度） |
-| `/api/v1/admin/oauth2/applications` | OAuth2 应用注册管理 |
+| `/api/auth/login` `/logout` `/refresh` | 登录/登出/Token 刷新 |
+| `/api/user` | 用户 CRUD + 分页 + 密码管理 + 角色分配 + 批量操作 + Excel 导入导出 |
+| `/api/user/{userId}/login-history` | 用户登录历史查询 |
+| `/api/profile` | 用户个人信息更新 |
+| `/api/Role` | 角色 CRUD + 权限分配 |
+| `/api/dept` | 部门 CRUD + 树形结构 |
+| `/api/Menu` | 菜单 CRUD + 树形结构 |
+| `/api/Company` | 公司 CRUD |
+| `/api/Post` | 岗位 CRUD |
+| `/api/Language` | 语言 CRUD |
+| `/api/captcha` | 图形验证码生成/校验 |
+| `/api/oauth2/authorize` `/token` | OAuth2 授权码模式（支持 PKCE + scope 细粒度） |
+| `/api/admin/oauth2/applications` | OAuth2 应用注册管理 |
 | `/.well-known/openid-configuration` | OIDC Discovery 元数据文档 |
 | `/.well-known/jwks.json` | JWKS 公钥集合 |
 | `/saml` | SAML 2.0 Service Provider 端点 |
-| `/api/v1/saml-idp-config` | SAML IdP 配置管理 |
+| `/api/saml-idp-config` | SAML IdP 配置管理 |
 | `/cas` | CAS 协议端点（单点登录/登出） |
 | `/scim/v2` | SCIM 2.0 用户供给（RFC 7643/7644） |
-| `/api/v1/webauthn` | WebAuthn/Passkey 无密码认证 |
-| `/api/v1/profile/social` | 社交账号关联管理 |
-| `/api/v1/social-client-config` | 社交登录客户端配置 |
-| `/api/v1/auth-policy` | 认证策略管理 |
-| `/api/v1/admin/security/alerts` | 安全告警管理 |
-| `/api/v1/admin/security` | 安全仪表盘 |
-| `/api/v1/admin` | 会话管理 + 账号封禁 |
-| `/api/v1/devices` | 设备会话管理 |
-| `/api/v1/sso/metrics` | SSO 指标（CAS/OAuth2/SAML/OIDC/社交登录/WebAuthn） |
-| `/api/v1/sso` | 跨域 SSO 令牌交换 |
-| `/api/v1/admin/ldap/sync` | LDAP 同步管理 |
-| `/api/v1/userinfo/search` | 用户/部门/角色搜索 |
-| `/api/v1/self-service` | 自助注册/找回密码/发送验证码（图形验证码 + IP 限流 + 幂等防护） |
-| `/api/v1/auth/events` | SSE 认证事件实时推送（登录/MFA/会话驱逐/锁定等） |
+| `/api/webauthn` | WebAuthn/Passkey 无密码认证 |
+| `/api/profile/social` | 社交账号关联管理 |
+| `/api/social-client-config` | 社交登录客户端配置 |
+| `/api/auth-policy` | 认证策略管理 |
+| `/api/admin/security/alerts` | 安全告警管理 |
+| `/api/admin/security` | 安全仪表盘 |
+| `/api/admin` | 会话管理 + 账号封禁 |
+| `/api/devices` | 设备会话管理 |
+| `/api/sso/metrics` | SSO 指标（CAS/OAuth2/SAML/OIDC/社交登录/WebAuthn） |
+| `/api/sso` | 跨域 SSO 令牌交换 |
+| `/api/admin/ldap/sync` | LDAP 同步管理 |
+| `/api/userinfo/search` | 用户/部门/角色搜索 |
+| `/api/self-service` | 自助注册/找回密码/发送验证码（图形验证码 + IP 限流 + 幂等防护） |
+| `/api/auth/events` | SSE 认证事件实时推送（登录/MFA/会话驱逐/锁定等） |
 | `/api/internal/*` | 内部 Feign 调用接口（15 个端点，`@RequireInternal` 服务端二次校验） |
 
 ## 数据库表设计
@@ -206,7 +206,7 @@ ydsz-userinfo/
 | **安全告警** | 暴力破解/密码喷洒检测，支持自动 IP 封禁（common-safe IpAccessService） |
 | **可信代理** | `ydsz.userinfo.trusted-proxies` 配置，为空时不信任转发头防止 IP 伪造 |
 | **API 签名** | ApiSignatureFilter + ApiSignatureUtil，防止请求篡改 |
-| **跨域 SSO** | CrossDomainSsoFilter + CrossDomainTokenService + TokenExchangeController（`/api/v1/sso`） |
+| **跨域 SSO** | CrossDomainSsoFilter + CrossDomainTokenService + TokenExchangeController（`/api/sso`） |
 | **记住我** | RememberMeFilter + RememberMeService + RememberMeProperties |
 
 ## 外部依赖

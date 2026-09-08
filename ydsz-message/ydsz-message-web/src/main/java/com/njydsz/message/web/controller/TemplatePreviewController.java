@@ -30,7 +30,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
  * <p>提供<b>消息模板实时渲染预览</b>的 HTTP API，是模板编辑器的核心支撑。 在模板编辑时，前端实时调用本 Controller 给定参数预览渲染结果，
  * 避免每次都保存到数据库再触发发送测试。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/template/preview/**}
+ * <p><b>接口路径：</b>{@code /api/message/template/preview/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -71,7 +71,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
 @Tag(name = "模板预览", description = "模板渲染预览")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/template/preview")
+@RequestMapping("/api/message/template/preview")
 @RequiredArgsConstructor
 public class TemplatePreviewController {
   /** 集合初始容量 */

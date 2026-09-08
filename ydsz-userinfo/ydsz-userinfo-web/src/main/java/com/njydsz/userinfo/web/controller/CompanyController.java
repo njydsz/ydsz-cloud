@@ -33,7 +33,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * <p>提供公司的完整管理能力（CRUD）。 支持集团-子公司多级架构（{@code parentId="0"} = 顶级公司）， 一个公司可包含多个部门（通过 {@code
  * CompanyDept} 维护）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/Company}
+ * <p><b>接口路径：</b>{@code /api/Company}
  *
  * <p><b>核心能力：</b>
  *
@@ -67,7 +67,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/company")
+@RequestMapping("/api/company")
 @RequiredArgsConstructor
 @Tag(name = "公司管理", description = "公司 CRUD")
 public class CompanyController {

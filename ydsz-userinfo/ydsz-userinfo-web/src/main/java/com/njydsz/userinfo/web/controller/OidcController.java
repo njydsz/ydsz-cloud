@@ -72,12 +72,12 @@ public class OidcController {
   public ResponseEntity<OidcDiscoveryEndpointVO> discovery() {
     OidcDiscoveryEndpointVO metadata = new OidcDiscoveryEndpointVO(
         oidcProperties.getIssuer(),
-        baseUrl + "/api/v1/oauth2/authorize",
-        baseUrl + "/api/v1/oauth2/token",
-        baseUrl + "/api/v1/oauth2/userinfo",
+        baseUrl + "/api/oauth2/authorize",
+        baseUrl + "/api/oauth2/token",
+        baseUrl + "/api/oauth2/userinfo",
         baseUrl + "/.well-known/jwks.json",
-        baseUrl + "/api/v1/oauth2/revoke",
-        baseUrl + "/api/v1/oauth2/introspect",
+        baseUrl + "/api/oauth2/revoke",
+        baseUrl + "/api/oauth2/introspect",
         List.of(
             OidcDiscoveryEndpointVO.SCOPE_OPENID,
             "profile",

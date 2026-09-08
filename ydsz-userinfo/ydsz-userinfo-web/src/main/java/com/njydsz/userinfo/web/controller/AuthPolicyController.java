@@ -32,14 +32,14 @@ import com.njydsz.userinfo.server.service.AuthPolicyService;
  *
  * <p>提供租户级认证策略 CRUD 接口，支持多租户独立配置认证策略。
  *
- * <p><b>接口路径：</b>{@code /api/v1/auth-policy}
+ * <p><b>接口路径：</b>{@code /api/auth-policy}
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/auth-policy")
+@RequestMapping("/api/auth-policy")
 @RequiredArgsConstructor
 @Tag(name = "认证策略", description = "租户级认证策略管理（多租户域隔离）")
 @ApiVersion("1")

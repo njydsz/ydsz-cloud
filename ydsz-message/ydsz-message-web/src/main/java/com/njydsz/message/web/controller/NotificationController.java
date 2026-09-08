@@ -45,7 +45,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * <p>提供<b>站内通知</b>的完整生命周期 HTTP API：发送 → 收件箱 → 已读 → 撤回 → 实时推送。 站内通知是 ydsz-message 的核心通知类型之一，与短信 / 邮件
  * / IM / 企业微信 / WebSocket 并列。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/notifications/**}
+ * <p><b>接口路径：</b>{@code /api/message/notifications/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -89,7 +89,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
 @Tag(name = "站内通知", description = "站内通知发送/收件箱/已读/撤回/推送")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/notifications")
+@RequestMapping("/api/message/notifications")
 @RequiredArgsConstructor
 public class NotificationController {
 

@@ -49,7 +49,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Slf4j
 @Tag(name = "任务诊断", description = "聚合任务多维度状态信息，提供一键诊断能力")
 @RestController
-@RequestMapping("/api/v1/cronjob/monitor/diagnosis")
+@RequestMapping("/api/cronjob/monitor/diagnosis")
 @RequiredArgsConstructor
 public class JobDiagnosisController {
   /** Map 初始容量：16 */

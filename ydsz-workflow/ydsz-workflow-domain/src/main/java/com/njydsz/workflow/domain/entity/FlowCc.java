@@ -31,7 +31,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li><b>抄送（{@code FlowCc}）</b>：仅通知，不阻塞流程，接收人可读可不读
  * </ul>
  *
- * <p><b>已读机制：</b>{@code readStatus} 由前端调用 {@code /api/v1/flow/cc/{id}/read} 标记为 {@code READ}， 同步记录
+ * <p><b>已读机制：</b>{@code readStatus} 由前端调用 {@code /api/flow/cc/{id}/read} 标记为 {@code READ}， 同步记录
  * {@code readAt}。「抄送我的」列表默认按 {@code readStatus=UNREAD} 优先排序。
  *
  * <p><b>索引设计：</b>

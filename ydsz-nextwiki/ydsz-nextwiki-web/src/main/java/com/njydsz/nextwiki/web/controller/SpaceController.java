@@ -32,14 +32,14 @@ import com.njydsz.nextwiki.server.service.SpaceApplicationService;
  * <p>提供知识库空间的增删查改及成员管理 API。
  *
  * <pre>
- *   GET    /api/v1/nextwiki/spaces              - 查询空间列表
- *   POST   /api/v1/nextwiki/spaces              - 创建空间
- *   GET    /api/v1/nextwiki/spaces/{spaceId}    - 获取空间详情
- *   PUT    /api/v1/nextwiki/spaces/{spaceId}    - 更新空间
- *   DELETE /api/v1/nextwiki/spaces/{spaceId}    - 删除空间
- *   POST   /api/v1/nextwiki/spaces/{spaceId}/members - 添加成员
- *   DELETE /api/v1/nextwiki/spaces/{spaceId}/members/{userId} - 移除成员
- *   GET    /api/v1/nextwiki/spaces/{spaceId}/members - 成员列表
+ *   GET    /api/nextwiki/spaces              - 查询空间列表
+ *   POST   /api/nextwiki/spaces              - 创建空间
+ *   GET    /api/nextwiki/spaces/{spaceId}    - 获取空间详情
+ *   PUT    /api/nextwiki/spaces/{spaceId}    - 更新空间
+ *   DELETE /api/nextwiki/spaces/{spaceId}    - 删除空间
+ *   POST   /api/nextwiki/spaces/{spaceId}/members - 添加成员
+ *   DELETE /api/nextwiki/spaces/{spaceId}/members/{userId} - 移除成员
+ *   GET    /api/nextwiki/spaces/{spaceId}/members - 成员列表
  * </pre>
  *
  * @author ydsz-team
@@ -47,7 +47,7 @@ import com.njydsz.nextwiki.server.service.SpaceApplicationService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/spaces")
+@RequestMapping("/api/nextwiki/spaces")
 @RequiredArgsConstructor
 @Tag(name = "知识库空间管理", description = "S3-P2-01：空间管理聚合根")
 public class SpaceController {

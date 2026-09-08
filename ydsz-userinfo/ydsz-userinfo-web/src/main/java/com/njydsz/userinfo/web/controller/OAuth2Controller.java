@@ -47,7 +47,7 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
  * <p><b>OIDC 支持：</b>当 scope 包含 {@code openid} 时，token 端点额外返回 id_token（遵循 OpenID Connect Core 1.0），
  * id_token 包含标准声明（iss, sub, aud, exp, iat, nonce），由 {@link TokenService#issueIdToken} 签发。
  *
- * <p><b>接口路径：</b>{@code /api/v1/oauth2}
+ * <p><b>接口路径：</b>{@code /api/oauth2}
  *
  * <p><b>端点清单（P1-4 补齐）：</b>
  *
@@ -89,7 +89,7 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/oauth2")
+@RequestMapping("/api/oauth2")
 @RequiredArgsConstructor
 @Tag(name = "OAuth2", description = "OAuth2 授权码模式")
 public class OAuth2Controller {

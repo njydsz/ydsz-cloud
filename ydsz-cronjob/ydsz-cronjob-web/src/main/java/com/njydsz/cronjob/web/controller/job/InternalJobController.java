@@ -34,7 +34,7 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  * 内部任务执行接口 Controller（P1-4 远程派发接收端）。
  *
  * <p>集群模式下，每个 cronjob 节点都暴露此接口，接收 Leader 节点通过 HTTP 派发的远程分片任务。 Leader 通过 {@code RemoteTaskClient} 发送
- * HTTP POST 到 {@code http://{host}:{port}/api/v1/cronjob/internal/execute}， 本 Controller 接收后调用
+ * HTTP POST 到 {@code http://{host}:{port}/api/cronjob/internal/execute}， 本 Controller 接收后调用
  * {@link TaskDispatcher#executeLocally} 在本地执行。
  *
  * <p>同时支持 MapReduce 子任务的远程派发（{@link #executeSubTask}）：Leader 将大数据量任务 拆分为子任务后分发到各 Worker
@@ -76,7 +76,7 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 @Slf4j
 @Tag(name = "内部任务执行（远程派发接收端）", description = "集群节点间任务派发的 HTTP 接收端，接收 Leader 节点分片")
 @RestController
-@RequestMapping("/api/v1/cronjob/internal")
+@RequestMapping("/api/cronjob/internal")
 @RequiredArgsConstructor
 public class InternalJobController {
 

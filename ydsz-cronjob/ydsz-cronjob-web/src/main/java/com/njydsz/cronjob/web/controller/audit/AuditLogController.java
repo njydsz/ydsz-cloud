@@ -42,7 +42,7 @@ import com.njydsz.cronjob.server.service.audit.AuditLogService;
 @Tag(name = "操作审计", description = "cronjob 操作审计日志分页查询")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/audit")
+@RequestMapping("/api/cronjob/audit")
 @RequiredArgsConstructor
 @Validated
 public class AuditLogController {

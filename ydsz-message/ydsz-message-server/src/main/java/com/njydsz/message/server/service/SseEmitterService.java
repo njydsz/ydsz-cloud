@@ -30,7 +30,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * <p>使用方式：
  *
  * <ol>
- *   <li>客户端调用 {@code GET /api/v1/message/batch/progress/{batchId}/sse} 获取 SseEmitter
+ *   <li>客户端调用 {@code GET /api/message/batch/progress/{batchId}/sse} 获取 SseEmitter
  *   <li>后端在处理过程中调用 {@code broadcastProgress(batchId, progress)}
  *   <li>客户端断线后重连时带上 {@code Last-Event-ID} Header 以恢复缺失的进度
  * </ol>

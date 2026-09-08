@@ -35,11 +35,11 @@ public class GenTemplateGroup {
   /** 分组描述。 */
   private String description;
   /** 是否为系统分组（系统分组不可删除）。 */
-  private Boolean system;
+  private Boolean isSystem;
   /** 排序序号（升序）。 */
   private Integer sort;
   /** 是否激活为当前使用分组。 */
-  private Boolean active;
+  private Boolean isActive;
   /** 创建时间。 */
   private LocalDateTime createdAt;
   /** 更新时间。 */

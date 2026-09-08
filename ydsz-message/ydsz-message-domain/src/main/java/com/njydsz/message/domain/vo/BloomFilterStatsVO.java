@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * BloomFilter 统计信息视图对象。
  *
  * <p>反映消息去重 BloomFilter 的运行状态，包含预期插入条目数、当前误判率、窗口年龄等运维关键数据，
- * 供运维诊断接口（{@code GET /api/v1/message/ops/bloomfilter/stats}）返回。
+ * 供运维诊断接口（{@code GET /api/message/ops/bloomfilter/stats}）返回。
  *
  * @author ydsz-team
  * @since 26.09.01

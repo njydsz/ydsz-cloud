@@ -66,7 +66,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/literule/dsl")
+@RequestMapping("/api/literule/dsl")
 @RequiredArgsConstructor
 @Tag(name = "规则DSL导入导出", description = "DSL 规则导入 / 导出")
 public class RuleDslImportExportController {

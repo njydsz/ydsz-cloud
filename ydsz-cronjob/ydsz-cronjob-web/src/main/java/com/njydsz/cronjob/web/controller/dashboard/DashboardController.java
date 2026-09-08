@@ -36,7 +36,7 @@ import com.njydsz.cronjob.domain.repository.JobRepository;
 @Slf4j
 @Tag(name = "运维 Dashboard", description = "Dashboard 聚合统计数据：任务分布/分组排行/调度类型")
 @RestController
-@RequestMapping("/api/v1/cronjob/dashboard")
+@RequestMapping("/api/cronjob/dashboard")
 @RequiredArgsConstructor
 public class DashboardController {
   /** 集合初始容量 */

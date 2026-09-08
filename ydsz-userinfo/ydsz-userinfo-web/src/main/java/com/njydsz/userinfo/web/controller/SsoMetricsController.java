@@ -17,7 +17,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <p>为 Prometheus/Grafana 提供 SSO 相关指标数据，用于构建 SSO 监控仪表盘。
  *
- * <p><b>接口路径：</b>{@code /api/v1/sso/metrics}
+ * <p><b>接口路径：</b>{@code /api/sso/metrics}
  *
  * <p><b>指标说明：</b>
  *
@@ -35,7 +35,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/sso/metrics")
+@RequestMapping("/api/sso/metrics")
 @RequiredArgsConstructor
 public class SsoMetricsController {
 

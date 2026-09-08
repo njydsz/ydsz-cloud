@@ -69,19 +69,19 @@
 | **跨模块监听** | 接收其他模块事件 | `CrossModuleEventListener` |
 | **应用事件** | Agent 生命周期事件发布 | `AgentEventPublisher` |
 
-### 3. Web 层 Controller（9 个，基路径 `/api/v1/agent`）
+### 3. Web 层 Controller（9 个，基路径 `/api/agent`）
 
 | Controller | 路径前缀 | 主要端点 |
 |---|---|---|
-| `AgentController` | `/api/v1/agent` | 同步执行 `/execute`、流式执行（SSE）`/execute/stream`、同步对话 `/chat`、流式对话（SSE）`/chat/stream`、批量对话 `/chat/batch`、对话历史 `/history`（GET/DELETE）。支持多模态（Vision）输入 |
-| `AgentDefinitionController` | `/api/v1/agent/definitions` | Agent 定义 CRUD（列表 / 详情 / 按 code 查询 / 创建 / 更新 / 删除） |
-| `AgentMetadataController` | `/api/v1/agent` | Agent 元数据（可用模型 `/models`、已注册工具 `/tools`）。与 `AgentController` 共享基路径 |
-| `DagController` | `/api/v1/agent/dag` | DAG 编排执行 `/execute`、DSL 验证 `/validate`、检查点查询 `/checkpoint/{executionId}` |
-| `DebugController` | `/api/v1/agent/debug` | 调试器链路列表 `/traces`、链路详情 `/trace/{traceId}`、链路重放 `/trace/{traceId}/replay` |
-| `HumanApprovalController` | `/api/v1/agent/approvals` | 人工审批待审批列表 `/pending`、审批详情 `/{id}`、审批通过 `/{id}/approve`、审批拒绝 `/{id}/reject` |
-| `RagController` | `/api/v1/agent/rag` | 文档摄入 `/ingest`、向量检索 `/search`、删除文档 `/documents/{documentId}`、统计 `/stats` |
-| `ObservabilityController` | `/api/v1/agent/observability` | 可观测性概览 `/overview`、模型用量 `/model-usage` |
-| `PromptController` | `/api/v1/agent/prompt` | Prompt 模板评估 `/evaluate`、对比评估 `/compare` |
+| `AgentController` | `/api/agent` | 同步执行 `/execute`、流式执行（SSE）`/execute/stream`、同步对话 `/chat`、流式对话（SSE）`/chat/stream`、批量对话 `/chat/batch`、对话历史 `/history`（GET/DELETE）。支持多模态（Vision）输入 |
+| `AgentDefinitionController` | `/api/agent/definitions` | Agent 定义 CRUD（列表 / 详情 / 按 code 查询 / 创建 / 更新 / 删除） |
+| `AgentMetadataController` | `/api/agent` | Agent 元数据（可用模型 `/models`、已注册工具 `/tools`）。与 `AgentController` 共享基路径 |
+| `DagController` | `/api/agent/dag` | DAG 编排执行 `/execute`、DSL 验证 `/validate`、检查点查询 `/checkpoint/{executionId}` |
+| `DebugController` | `/api/agent/debug` | 调试器链路列表 `/traces`、链路详情 `/trace/{traceId}`、链路重放 `/trace/{traceId}/replay` |
+| `HumanApprovalController` | `/api/agent/approvals` | 人工审批待审批列表 `/pending`、审批详情 `/{id}`、审批通过 `/{id}/approve`、审批拒绝 `/{id}/reject` |
+| `RagController` | `/api/agent/rag` | 文档摄入 `/ingest`、向量检索 `/search`、删除文档 `/documents/{documentId}`、统计 `/stats` |
+| `ObservabilityController` | `/api/agent/observability` | 可观测性概览 `/overview`、模型用量 `/model-usage` |
+| `PromptController` | `/api/agent/prompt` | Prompt 模板评估 `/evaluate`、对比评估 `/compare` |
 
 ## DDD 分层结构
 
@@ -295,7 +295,7 @@ ydsz:
 ### 2. 同步执行 Agent
 
 ```bash
-curl -X POST http://localhost:9008/api/v1/agent/execute \
+curl -X POST http://localhost:9008/api/agent/execute \
   -H "Content-Type: application/json" \
   -d '{"agentCode": "order-analysis", "userInput": "帮我分析项目进度"}'
 ```
@@ -303,7 +303,7 @@ curl -X POST http://localhost:9008/api/v1/agent/execute \
 ### 3. 流式执行 Agent（SSE）
 
 ```bash
-curl -N -X POST http://localhost:9008/api/v1/agent/execute/stream \
+curl -N -X POST http://localhost:9008/api/agent/execute/stream \
   -H "Content-Type: application/json" \
   -d '{"agentCode": "order-analysis", "userInput": "帮我分析项目进度"}'
 ```
@@ -311,7 +311,7 @@ curl -N -X POST http://localhost:9008/api/v1/agent/execute/stream \
 ### 4. 同步对话
 
 ```bash
-curl -X POST http://localhost:9008/api/v1/agent/chat \
+curl -X POST http://localhost:9008/api/agent/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "你好，请介绍一下YDSZ系统"}'
 ```
@@ -319,7 +319,7 @@ curl -X POST http://localhost:9008/api/v1/agent/chat \
 ### 5. 流式对话（SSE）
 
 ```bash
-curl -N -X POST http://localhost:9008/api/v1/agent/chat/stream \
+curl -N -X POST http://localhost:9008/api/agent/chat/stream \
   -H "Content-Type: application/json" \
   -d '{"message": "帮我分析项目进度"}'
 ```
@@ -328,7 +328,7 @@ curl -N -X POST http://localhost:9008/api/v1/agent/chat/stream \
 
 ```bash
 # 同步多模态对话
-curl -X POST http://localhost:9008/api/v1/agent/chat \
+curl -X POST http://localhost:9008/api/agent/chat \
   -H "Content-Type: application/json" \
   -d '{"multimodalContent": [{"type": "text", "text": "这张图片是什么？"}, {"type": "image_url", "imageUrl": "https://example.com/image.jpg"}]}'
 ```
@@ -336,7 +336,7 @@ curl -X POST http://localhost:9008/api/v1/agent/chat \
 ### 6. 批量对话
 
 ```bash
-curl -X POST http://localhost:9008/api/v1/agent/chat/batch \
+curl -X POST http://localhost:9008/api/agent/chat/batch \
   -H "Content-Type: application/json" \
   -d '{"items": [{"itemId": "1", "message": "问题1"}, {"itemId": "2", "message": "问题2"}]}'
 ```
@@ -345,22 +345,22 @@ curl -X POST http://localhost:9008/api/v1/agent/chat/batch \
 
 ```bash
 # 获取历史
-curl http://localhost:9008/api/v1/agent/history?conversationId=xxx
+curl http://localhost:9008/api/agent/history?conversationId=xxx
 
 # 清除历史
-curl -X DELETE http://localhost:9008/api/v1/agent/history?conversationId=xxx
+curl -X DELETE http://localhost:9008/api/agent/history?conversationId=xxx
 ```
 
 ### 8. DAG 编排
 
 ```bash
 # 执行 DAG
-curl -X POST http://localhost:9008/api/v1/agent/dag/execute \
+curl -X POST http://localhost:9008/api/agent/dag/execute \
   -H "Content-Type: application/json" \
   -d '{"dsl": "name: order-analysis\nnodes:\n  - id: fetch\n    agent: order-fetcher\n  - id: analyze\n    agent: order-analyzer\n    dependsOn: [fetch]", "userInput": "分析订单"}'
 
 # 验证 DSL
-curl -X POST http://localhost:9008/api/v1/agent/dag/validate \
+curl -X POST http://localhost:9008/api/agent/dag/validate \
   -H "Content-Type: application/json" \
   -d '{"dsl": "name: test\nnodes:\n  - id: step1\n    agent: test-agent"}'
 ```
@@ -369,12 +369,12 @@ curl -X POST http://localhost:9008/api/v1/agent/dag/validate \
 
 ```bash
 # 评估单个 Prompt
-curl -X POST http://localhost:9008/api/v1/agent/prompt/evaluate \
+curl -X POST http://localhost:9008/api/agent/prompt/evaluate \
   -H "Content-Type: application/json" \
   -d '{"templateCode": "REACT_SYSTEM", "userMessage": "测试消息", "model": "gpt-4o-mini"}'
 
 # 对比评估两个 Prompt
-curl -X POST http://localhost:9008/api/v1/agent/prompt/compare \
+curl -X POST http://localhost:9008/api/agent/prompt/compare \
   -H "Content-Type: application/json" \
   -d '{"templateCodeA": "REACT_SYSTEM", "templateCodeB": "PLAN_SYSTEM", "userMessage": "测试消息"}'
 ```
@@ -442,7 +442,7 @@ mvn -pl ydsz-agent spring-boot:run
 ### Q3：Agent DAG 执行卡住
 
 1. 检查 DAG 节点依赖是否循环
-2. 检查人工审批节点是否待审批（调用 `/api/v1/agent/approvals/pending` 查询）
+2. 检查人工审批节点是否待审批（调用 `/api/agent/approvals/pending` 查询）
 3. 检查 Agent 心跳线程池是否正常（`agent-heartbeat` 线程池）
 4. 检查检查点存储（Redis）是否正常，异常时降级为无续跑能力
 
@@ -450,13 +450,13 @@ mvn -pl ydsz-agent spring-boot:run
 
 1. 部分 LLM Provider 不返回完整 Token 用量
 2. 流式对话需累加每个 chunk 的 Token 数
-3. 可通过 `/api/v1/agent/observability/model-usage` 查询模型用量统计
+3. 可通过 `/api/agent/observability/model-usage` 查询模型用量统计
 
 ### Q5：MCP 工具未注册
 
 1. 检查 `ydsz.agent.mcp.enabled=true`
 2. 检查 MCP Server URL 是否可达
-3. 检查 MCP Server 是否暴露了工具（调用 `/api/v1/agent/tools` 查询已注册工具列表）
+3. 检查 MCP Server 是否暴露了工具（调用 `/api/agent/tools` 查询已注册工具列表）
 4. 当前支持 SSE 和 stdio 两种传输方式
 
 ### Q6：LLM 语义缓存命中率低

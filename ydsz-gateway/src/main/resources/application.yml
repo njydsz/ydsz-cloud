@@ -22,11 +22,11 @@ logging:
 #        deprecation:
 #          enabled: true
 #          apis:
-#            - path: /api/v1/message/send
+#            - path: /api/message/send
 #              since: "v1"
 #              replacement: "v2"
 #              removalDate: "2026-12-31"
-#              message: "请使用 /api/v2/message/send 替代"
+#              message: "请使用 /api/message/send（Header: X-Api-Version: v2）替代"
 # ---------------------------------------------------------------------
 ydsz:
   gateway:

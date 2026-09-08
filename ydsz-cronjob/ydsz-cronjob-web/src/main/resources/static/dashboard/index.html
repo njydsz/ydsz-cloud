@@ -140,7 +140,7 @@
 
         const refreshData = () => {
           loading.value = true;
-          fetch('/api/v1/cronjob/dashboard/overview')
+          fetch('/api/cronjob/dashboard/overview')
             .then(resp => resp.json())
             .then(result => {
               if (result.code === 'A00000' && result.data) {

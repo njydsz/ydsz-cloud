@@ -35,14 +35,14 @@ import com.njydsz.userinfo.server.service.UserAccountService;
  *
  * <p>提供当前登录用户的个人资料管理能力，包括：查看资料、修改基本信息、更新头像、 双因素认证（MFA）绑定管理。
  *
- * <p><b>接口路径：</b>{@code /api/v1/profile}
+ * <p><b>接口路径：</b>{@code /api/profile}
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/profile")
+@RequestMapping("/api/profile")
 @RequiredArgsConstructor
 @Tag(name = "个人中心", description = "用户个人资料管理")
 public class UserProfileController {

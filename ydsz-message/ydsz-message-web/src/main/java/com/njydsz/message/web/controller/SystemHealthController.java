@@ -21,7 +21,7 @@ import com.njydsz.message.server.service.core.MessageHealthService;
  *
  * <p>提供消息模块运行时健康状态的查询 HTTP API，包含整体健康摘要、各通道熔断器状态、滑动窗口失败计数等运维关键指标，供管理后台监控面板和运维巡检系统消费。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/health/**}
+ * <p><b>接口路径：</b>{@code /api/message/health/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -45,7 +45,7 @@ import com.njydsz.message.server.service.core.MessageHealthService;
 @Tag(name = "系统健康检查", description = "消息模块运行时健康状态监控")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/health")
+@RequestMapping("/api/message/health")
 @RequiredArgsConstructor
 public class SystemHealthController {
 

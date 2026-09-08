@@ -60,7 +60,7 @@ import com.njydsz.cronjob.server.service.impl.schedule.ScheduleCalendarService;
 @Tag(name = "调度日历", description = "单任务未来触发时间 / 全局调度日历聚合可视化")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/calendar")
+@RequestMapping("/api/cronjob/calendar")
 @RequiredArgsConstructor
 public class ScheduleCalendarController {
 

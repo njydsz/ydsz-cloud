@@ -40,7 +40,7 @@ public interface CronjobServiceClient {
   /**
    * 立即触发执行一次定时任务（不抢占分布式锁）
    *
-   * <p>对应 cronjob 模块: POST /api/v1/cronjob/{id}/trigger?holdLock=false
+   * <p>对应 cronjob 模块: POST /api/cronjob/{id}/trigger?holdLock=false
    *
    * @param jobId 任务 ID
    * @return 执行日志 ID（触发失败时为 null）
@@ -62,7 +62,7 @@ public interface CronjobServiceClient {
   /**
    * P2-F8: 查询任务详情（含 status / cron 等定义信息）。
    *
-   * <p>对应 cronjob 模块: GET /api/v1/cronjob/{id}。返回 Map 以解耦 api 模块对 domain VO 的依赖。
+   * <p>对应 cronjob 模块: GET /api/cronjob/{id}。返回 Map 以解耦 api 模块对 domain VO 的依赖。
    *
    * @param jobId 任务 ID
    * @return 任务详情（字段: id / jobKey / jobName / status / cronExpression / scheduleType 等）
@@ -73,7 +73,7 @@ public interface CronjobServiceClient {
   /**
    * P2-F8: 暂停任务。
    *
-   * <p>对应 cronjob 模块: POST /api/v1/cronjob/{id}/pause。暂停后调度器不再触发该任务，
+   * <p>对应 cronjob 模块: POST /api/cronjob/{id}/pause。暂停后调度器不再触发该任务，
    * 正在执行的任务继续完成。
    *
    * @param jobId 任务 ID
@@ -85,7 +85,7 @@ public interface CronjobServiceClient {
   /**
    * P2-F8: 恢复任务。
    *
-   * <p>对应 cronjob 模块: POST /api/v1/cronjob/{id}/resume。恢复后按 cron 表达式重新排程。
+   * <p>对应 cronjob 模块: POST /api/cronjob/{id}/resume。恢复后按 cron 表达式重新排程。
    *
    * @param jobId 任务 ID
    * @return 统一响应结果

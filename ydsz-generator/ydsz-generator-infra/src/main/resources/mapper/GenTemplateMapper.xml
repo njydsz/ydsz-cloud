@@ -8,11 +8,11 @@
     <result column="file_name"   property="fileName"/>
     <result column="description" property="description"/>
     <result column="content"     property="content"/>
-    <result column="is_folder"   property="folder"/>
+    <result column="is_folder"   property="isFolder"/>
     <result column="parent_path" property="parentPath"/>
     <result column="version"     property="version"/>
     <result column="hash"        property="hash"/>
-    <result column="is_active"   property="active"/>
+    <result column="is_active"   property="isActive"/>
     <result column="file_type"   property="fileType"/>
     <result column="created_at"  property="createdAt"/>
     <result column="updated_at"  property="updatedAt"/>

@@ -4,7 +4,7 @@
 # 本文件为单一权威源（Single Source of Truth），适用于所有 AI 编码工具。
 # CatPaw 和 WorkBuddy 的配置文件由此文件生成或软链引用。
 #
-# 规范版本：对齐《云顶编码规范》1.0.3
+# 规范版本：对齐《云顶编码规范》1.0.8
 # 生成日期：2026-08-31
 #
 # 同步方式：
@@ -16,8 +16,8 @@ meta:
   version: "26.09.07"
   source: "docs/云顶编码规范.md v1.0.7"
   last_synced: "2026-09-07"
-  last_updated: "2026-09-07（YDIZ-OOP-004 删除；YDIZ-OOP-006 改为 P0 强制布尔字段带 is 前缀：数据库 is_xxx ↔ Java isXxx）"
-  total_rules: 49
+  last_updated: "2026-09-08（新增 YDIZ-API-001：API 版本控制策略，Header 协商优先，路径禁止包含版本段）"
+  total_rules: 50
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -778,8 +778,62 @@ rules:
       2. 若能改用 JDK API：直接替换为 java.util.concurrent 等 JDK 类
       3. 若必须复用通用工具：将能力下沉到 L1 ydzs-common-util 模块
       4. 检查并补充 pom.xml 中缺失的显式依赖声明
-      5. 运行 mvn dependency:tree 确认依赖方向正确
+            5. 运行 mvn dependency:tree 确认依赖方向正确
     source: "编码规范 22.2.1（enforce-l1-purity）- 【强制】"
+
+# ============================================
+# 十七、API 版本控制规范（1 条，P0）
+# ============================================
+  - id: "YDIZ-API-001"
+    category: "api"
+    severity: "P0"
+    title: "【强制】API 版本通过 Header 协商，路径禁止包含版本段"
+    description: |
+      项目统一采用 Header-based 版本控制策略。所有 Controller 的 @RequestMapping
+      **禁止**包含 /v1/、/v2/ 等版本段，版本信息通过请求头 X-Api-Version 传入。
+
+      **版本协商优先级**（由 ApiVersionHeaderFilter 执行）：
+      1. Header: X-Api-Version: v2 → v2（最高优先级）
+      2. Query: ?api-version=v2 → v2
+      3. 默认: 未指定时使用配置默认版本（默认 v1）
+
+      废弃接口通过 @ApiVersion(deprecated = true) + @Deprecated 标注，
+      网关在响应中注入 Sunset / Deprecation / Link 头引导客户端迁移。
+
+      **为什么禁止路径版本**：
+      - 路径版本导致 URL 不稳定，版本演进时需修改所有调用方
+      - 同一业务资源的多个版本应共享同一 URI，通过 Header 区分实现
+      - 便于网关统一路由、灰度、监控和 Deprecation 治理
+    pattern: |
+      以下任一情形构成违规：
+      1. Controller @RequestMapping 中出现 /v1/、/v2/ 等版本段
+      2. 前端/FeignClient 调用 URL 中硬编码 /v1/、/v2/ 前缀
+      3. 通过 Header/Query 以外的方式传递版本信息（如域名、Cookie）
+    example_bad: |
+      // ❌ 路径包含版本段
+      @RequestMapping("/api/v1/workflow/engine")
+      public class FlowTaskController { }
+
+      // ❌ 前端硬编码版本前缀
+      requestClient.get('/api/v1/workflow/engine/task/pass')
+    example_good: |
+      // ✅ 路径无版本段，版本由 Header 协商
+      @RequestMapping("/api/workflow/engine")
+      public class FlowTaskController { }
+
+      // ✅ 前端通过 Header 传递版本
+      requestClient.get('/api/workflow/engine/task/pass',
+        { headers: { 'X-Api-Version': 'v1' } })
+
+      // ✅ 网关路由配置（Path pattern 无版本前缀）
+      { "name": "Path", "args": { "pattern": "/api/workflow/**" } }
+    fix: |
+      1. Controller @RequestMapping: /api/v1/xxx → /api/xxx
+      2. 前端 api 层 URL: /api/v1/xxx → /api/xxx，加 Header X-Api-Version
+      3. 网关路由 pattern: /api/v1/xxx/** → /api/xxx/**
+      4. bootstrap.yml anon-urls: /api/v1/xxx → /api/xxx
+      5. FeignClient 路径常量、Javadoc 引用的路径同步更新
+    source: "编码规范 §24（API 版本控制策略）"
 
 # ============================================
 # 附录：按 category 统计
@@ -800,4 +854,5 @@ stats:
   architecture: 1
   engineering: 3
   warnings: 1
-  total: 47
+  api: 1
+  total: 50

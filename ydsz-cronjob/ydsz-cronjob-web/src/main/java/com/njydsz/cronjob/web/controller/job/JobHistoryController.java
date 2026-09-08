@@ -50,7 +50,7 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
 @Tag(name = "任务配置历史版本", description = "版本列表、版本详情、回滚、版本对比")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/history")
+@RequestMapping("/api/cronjob/history")
 @RequiredArgsConstructor
 public class JobHistoryController {
 

@@ -28,7 +28,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  *
  * <p>提供<b>已发送消息 / 站内通知的撤回</b>能力。 撤回语义：在用户尚未阅读时收回消息，已读消息撤回后仍会展示撤回提示但不再跳转原内容。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/recall/**}
+ * <p><b>接口路径：</b>{@code /api/message/recall/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -75,7 +75,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
 @Tag(name = "消息撤回", description = "通知/消息撤回")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/recall")
+@RequestMapping("/api/message/recall")
 @RequiredArgsConstructor
 public class RecallController {
 

@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  *
  * <p>配套路径改造示例：
  * <pre>
- * +-- /api/v1/user  (旧版，稳定)
+ * +-- /api/user  (旧版，稳定)
  * +-- /api/v2/user  (新版，享新能力)
  * </pre>
  *

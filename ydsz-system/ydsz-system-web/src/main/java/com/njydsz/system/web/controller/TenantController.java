@@ -36,7 +36,7 @@ import com.njydsz.system.server.service.TenantService;
  *
  * <p>提供 SaaS 多租户的 CRUD、分页查询等管理能力。 租户是系统多租户隔离的最高层，支持套餐绑定、配额管理、到期控制。
  *
- * <p><b>接口路径：</b>{@code /api/v1/tenant}
+ * <p><b>接口路径：</b>{@code /api/tenant}
  *
  * <p><b>安全特性：</b>
  *
@@ -53,7 +53,7 @@ import com.njydsz.system.server.service.TenantService;
 @Tag(name = "租户管理", description = "多租户 CRUD")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/tenant")
+@RequestMapping("/api/tenant")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:tenant:list")
 public class TenantController {

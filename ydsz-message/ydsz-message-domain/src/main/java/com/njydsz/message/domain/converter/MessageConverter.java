@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
@@ -286,6 +287,7 @@ public interface MessageConverter {
   // ===== MsgCanary =====
   MsgCanaryVO entityToVO(MsgCanary entity);
 
+  @Mapping(source = "isDeleted", target = "deleted")
   MsgCanary dtoToEntity(MsgCanaryDTO dto);
 
   // ===== 通用类型转换 =====

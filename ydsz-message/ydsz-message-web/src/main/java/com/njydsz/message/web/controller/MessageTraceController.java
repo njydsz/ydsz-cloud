@@ -24,7 +24,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  * <p>提供<b>消息全链路追踪</b>的 HTTP API，是 P0-2「可观测性」的核心入口。 每条消息在生命周期各阶段（创建 / 入队 / 消费 / 发送 / 回执 / 撤回）都会写入
  * {@code ydsz_msg_trace} 表， 通过 {@code msgTraceService} 聚合查询完整的轨迹。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/trace/**}
+ * <p><b>接口路径：</b>{@code /api/message/trace/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -79,7 +79,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
 @Tag(name = "消息追踪", description = "消息端到端全链路追踪")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/trace")
+@RequestMapping("/api/message/trace")
 @RequiredArgsConstructor
 public class MessageTraceController {
 

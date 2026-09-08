@@ -34,7 +34,7 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
  * <p>提供<b>用户与具体通道联系方式的绑定关系</b>管理 API。 与「通道类型」不同，本 Controller 管理的是<b>具体账号</b>（手机号、邮箱、IM 账号）与用户的绑定关系，
  * 是消息真正发送时的寻址依据。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/user-channels/**}
+ * <p><b>接口路径：</b>{@code /api/message/user-channels/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -82,7 +82,7 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
 @Tag(name = "用户通道绑定", description = "用户通道联系方式绑定/查询/删除")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/user-channels")
+@RequestMapping("/api/message/user-channels")
 @RequiredArgsConstructor
 public class UserChannelBindingController {
 

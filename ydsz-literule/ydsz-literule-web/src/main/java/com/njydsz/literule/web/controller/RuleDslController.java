@@ -69,7 +69,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/literule/dsl")
+@RequestMapping("/api/literule/dsl")
 @RequiredArgsConstructor
 @Tag(name = "规则DSL校验解析", description = "DSL 校验 / 解析 / 预览")
 public class RuleDslController {

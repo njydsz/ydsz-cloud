@@ -23,7 +23,7 @@ import com.njydsz.userinfo.server.auth.SecondaryAuthService;
  *
  * <p>拦截标注了 {@link SecondaryAuth} 注解的 Controller 方法，在执行前检查当前用户是否在指定场景下已通过二级认证。
  * 未验证或验证已过期时抛出 {@link UserInfoExceptionCode#SECONDARY_AUTH_REQUIRED} 异常，
- * 要求前端先调用 {@code Post /api/v1/auth/secondary-auth} 接口完成场景化验证。
+ * 要求前端先调用 {@code Post /api/auth/secondary-auth} 接口完成场景化验证。
  *
  * <p><b>与 {@link SensitiveOperationAspect} 的区别：</b>
  *

@@ -60,7 +60,7 @@ public class HttpAgentServiceClient implements AgentServiceClient {
   /**
    * {@inheritDoc}
    *
-   * <p>通过 HTTP POST 调用 ydsz-agent 的 {@code /api/v1/agent/execute} 接口执行 Agent，
+   * <p>通过 HTTP POST 调用 ydsz-agent 的 {@code /api/agent/execute} 接口执行 Agent，
    * 解析响应后返回审批决策结果。
    *
    * @param agentCode Agent 代码
@@ -78,7 +78,7 @@ public class HttpAgentServiceClient implements AgentServiceClient {
 
     try {
       RequestEntity<AgentExecuteRequest> request = RequestEntity
-          .post(agentBaseUrl + "/api/v1/agent/execute")
+          .post(agentBaseUrl + "/api/agent/execute")
           .header("X-Tenant-Id", resolveTenantId(context))
           .body(requestBody);
 

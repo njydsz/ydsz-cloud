@@ -57,35 +57,35 @@
 | 敏感词过滤 | DFA 字典树算法 O(n) |
 | 监控 | MessageMetrics（Micrometer Counter + Timer）+ MessageHealthIndicator |
 
-### 3. 关键 Controller（均位于 `/api/v1/message` 前缀下，共 25 个）
+### 3. 关键 Controller（均位于 `/api/message` 前缀下，共 25 个）
 
 | 路径前缀 | Controller | 作用 |
 |---|---|---|
-| `/api/v1/message` | `MessageController` | 发送消息（同步 / 异步 / 事务消息 / 批量 / 取消定时 / 发送日志分页 / 批次进度查询） |
-| `/api/v1/message/batch` | `BatchController` | 批量发送（提交批次 / 进度轮询 / SSE 实时推送） |
-| `/api/v1/message/template` | `TemplateController` | 模板管理（CRUD / 审核） |
-| `/api/v1/message/template/preview` | `TemplatePreviewController` | 模板预览渲染（按模板编码预览 / 自定义内容预览） |
-| `/api/v1/message/template/version` | `TemplateVersionController` | 模板版本管理（版本历史 / 回滚 / 预览 / 试发） |
-| `/api/v1/message/preference` | `PreferenceController` | 用户偏好（增删改查） |
-| `/api/v1/message/subscription` | `SubscriptionController` | 订阅管理（订阅 / 退订 / 按主题+通道查询） |
-| `/api/v1/message/unsubscribe` | `UnsubscribeController` | 退订中心（token 一键退订 / 预览 / 恢复订阅 / 退订记录查询） |
-| `/api/v1/message/notifications` | `NotificationController` | 站内通知（发送 / 收件箱 / 已读 / 撤回 / 删除 / WebSocket 单推 / 广播 / Feign 单播） |
-| `/api/v1/message/stats` | `MessageStatsController` | 发送统计（总览 / 通道 / 回执 / 转化漏斗 / 成本看板） |
-| `/api/v1/message/dead-letter` | `DeadLetterController` | 死信队列（分页查询 / 手动重发） |
-| `/api/v1/message/route-rule` | `RouteRuleController` | 条件路由规则（CRUD / 启用查询） |
-| `/api/v1/message/user-channels` | `UserChannelBindingController` | 用户渠道绑定（增删改查 / 我的绑定） |
-| `/api/v1/message/feedback` | `MessageFeedbackController` | 用户反馈（评分提交 / 平均评分 / 降频判定） |
-| `/api/v1/message/trace` | `MessageTraceController` | 消息全链路追踪（按 msgId / traceId / 业务单据查询） |
-| `/api/v1/message/read-status` | `ReadStatusController` | 已读状态同步（单条已读 / 批量已读 / 通知已读 / 全部已读 / 未读计数） |
-| `/api/v1/message/read-receipt` | `ReadReceiptController` | 已读回执（短信短链跳转回调） |
-| `/api/v1/message/archive/search` | `MessageArchiveController` | 归档检索（PostgreSQL 全文搜索） |
-| `/api/v1/message/aggregate` | `AggregateController` | 站内通知聚合（分页查询 / 强制刷新 / 到期刷新） |
-| `/api/v1/message/recall` | `RecallController` | 消息撤回（站内通知 / 按日志ID / 按消息ID / 批量撤回） |
-| `/api/v1/message/receipt` | `ReceiptController` | 送达回执（服务商回调 / 按日志ID查询） |
-| `/api/v1/message/retry` | `RetryPreviewController` | 重试策略预览（预设档位时间线 / 全部预设对比 / 可用预设列表） |
-| `/api/v1/message/canary` | `CanaryController` | 模板灰度发布（创建实验 / 分配实验桶） |
-| `/api/v1/message/health` | `SystemHealthController` | 健康检查（整体状态 / 各通道详细状态） |
-| `/api/v1/message/ops` | `OpsController` | 运维操作（模板缓存统计 / 缓存清除 / BloomFilter 统计） |
+| `/api/message` | `MessageController` | 发送消息（同步 / 异步 / 事务消息 / 批量 / 取消定时 / 发送日志分页 / 批次进度查询） |
+| `/api/message/batch` | `BatchController` | 批量发送（提交批次 / 进度轮询 / SSE 实时推送） |
+| `/api/message/template` | `TemplateController` | 模板管理（CRUD / 审核） |
+| `/api/message/template/preview` | `TemplatePreviewController` | 模板预览渲染（按模板编码预览 / 自定义内容预览） |
+| `/api/message/template/version` | `TemplateVersionController` | 模板版本管理（版本历史 / 回滚 / 预览 / 试发） |
+| `/api/message/preference` | `PreferenceController` | 用户偏好（增删改查） |
+| `/api/message/subscription` | `SubscriptionController` | 订阅管理（订阅 / 退订 / 按主题+通道查询） |
+| `/api/message/unsubscribe` | `UnsubscribeController` | 退订中心（token 一键退订 / 预览 / 恢复订阅 / 退订记录查询） |
+| `/api/message/notifications` | `NotificationController` | 站内通知（发送 / 收件箱 / 已读 / 撤回 / 删除 / WebSocket 单推 / 广播 / Feign 单播） |
+| `/api/message/stats` | `MessageStatsController` | 发送统计（总览 / 通道 / 回执 / 转化漏斗 / 成本看板） |
+| `/api/message/dead-letter` | `DeadLetterController` | 死信队列（分页查询 / 手动重发） |
+| `/api/message/route-rule` | `RouteRuleController` | 条件路由规则（CRUD / 启用查询） |
+| `/api/message/user-channels` | `UserChannelBindingController` | 用户渠道绑定（增删改查 / 我的绑定） |
+| `/api/message/feedback` | `MessageFeedbackController` | 用户反馈（评分提交 / 平均评分 / 降频判定） |
+| `/api/message/trace` | `MessageTraceController` | 消息全链路追踪（按 msgId / traceId / 业务单据查询） |
+| `/api/message/read-status` | `ReadStatusController` | 已读状态同步（单条已读 / 批量已读 / 通知已读 / 全部已读 / 未读计数） |
+| `/api/message/read-receipt` | `ReadReceiptController` | 已读回执（短信短链跳转回调） |
+| `/api/message/archive/search` | `MessageArchiveController` | 归档检索（PostgreSQL 全文搜索） |
+| `/api/message/aggregate` | `AggregateController` | 站内通知聚合（分页查询 / 强制刷新 / 到期刷新） |
+| `/api/message/recall` | `RecallController` | 消息撤回（站内通知 / 按日志ID / 按消息ID / 批量撤回） |
+| `/api/message/receipt` | `ReceiptController` | 送达回执（服务商回调 / 按日志ID查询） |
+| `/api/message/retry` | `RetryPreviewController` | 重试策略预览（预设档位时间线 / 全部预设对比 / 可用预设列表） |
+| `/api/message/canary` | `CanaryController` | 模板灰度发布（创建实验 / 分配实验桶） |
+| `/api/message/health` | `SystemHealthController` | 健康检查（整体状态 / 各通道详细状态） |
+| `/api/message/ops` | `OpsController` | 运维操作（模板缓存统计 / 缓存清除 / BloomFilter 统计） |
 
 ## 数据库表设计
 

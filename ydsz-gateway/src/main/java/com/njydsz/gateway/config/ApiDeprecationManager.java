@@ -53,7 +53,7 @@ public class ApiDeprecationManager {
    *
    * <p>使用前缀匹配：请求路径以任一配置项的 {@code path} 为前缀即视为命中。
    *
-   * @param path 请求路径（如 /api/v1/message/send）
+   * @param path 请求路径（如 /api/message/send）
    * @return true=已弃用
    */
   public boolean isDeprecated(String path) {

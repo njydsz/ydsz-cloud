@@ -26,7 +26,7 @@ import com.njydsz.generator.vo.TemplateZipVO;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/generator/import-export")
+@RequestMapping("/api/generator/import-export")
 @RequiredArgsConstructor
 public class ImportExportController {
 

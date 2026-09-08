@@ -34,7 +34,7 @@ import com.njydsz.system.server.service.VariableService;
  * <p>提供变量变更历史查询和回滚能力。变量版本是变量变更审计与回滚能力的数据基础： 每次变量发生变更（save / updateById / removeById）时，{@link
  * com.njydsz.system.server.service.impl.VariableServiceImpl} 会自动创建一条版本快照。
  *
- * <p><b>接口路径：</b>{@code /api/v1/variable/version}
+ * <p><b>接口路径：</b>{@code /api/variable/version}
  *
  * <p><b>安全特性：</b>
  *
@@ -52,7 +52,7 @@ import com.njydsz.system.server.service.VariableService;
 @Tag(name = "变量版本", description = "变量变更历史查询 + 一键回滚")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/variable/version")
+@RequestMapping("/api/variable/version")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:variable:version:list")
 public class VariableVersionController {

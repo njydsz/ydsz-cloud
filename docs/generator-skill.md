@@ -29,15 +29,15 @@ ydsz-generator
 
 ```bash
 # 生成单表代码
-curl -X POST http://localhost:9010/api/v1/generate \
+curl -X POST http://localhost:9010/api/generate \
   -H "Content-Type: application/json" \
   -d '{"tableName": "ydsz_sys_tenant"}'
 
 # 预览代码（不写文件）
-curl "http://localhost:9010/api/v1/generate/preview?tableName=ydsz_sys_tenant"
+curl "http://localhost:9010/api/generate/preview?tableName=ydsz_sys_tenant"
 
 # 列出可用模板
-curl http://localhost:9010/api/v1/generate/templates
+curl http://localhost:9010/api/generate/templates
 ```
 
 ### 方式二：CLI 命令行

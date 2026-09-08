@@ -64,7 +64,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public interface SystemUserFeignClient {
 
     @ApiVersion("v1")
-    @GetMapping("/api/v1/users/{id}")
+    @GetMapping("/api/users/{id}")
     UserDTO getUserById(@PathVariable("id") Long id);
 }
 ```

@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
-import com.njydsz.userinfo.domain.vo.UserAccountVO;
 
 /**
  * 用户生命周期自动化定时任务。

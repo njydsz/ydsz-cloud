@@ -74,10 +74,10 @@ import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownl
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST /api/v1/nextwiki/download/{nodeId}                  - 单文件下载
- *   POST /api/v1/nextwiki/download/folder/{folderId}         - 文件夹 ZIP 打包下载
- *   POST /api/v1/nextwiki/download/{nodeId}/signed-url       - 生成签名 URL
- *   GET  /api/v1/nextwiki/download/signed/{sign}?expires=... - 签名 URL 下载
+ *   POST /api/nextwiki/download/{nodeId}                  - 单文件下载
+ *   POST /api/nextwiki/download/folder/{folderId}         - 文件夹 ZIP 打包下载
+ *   POST /api/nextwiki/download/{nodeId}/signed-url       - 生成签名 URL
+ *   GET  /api/nextwiki/download/signed/{sign}?expires=... - 签名 URL 下载
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -99,7 +99,7 @@ import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownl
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/download")
+@RequestMapping("/api/nextwiki/download")
 @RequiredArgsConstructor
 @Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链、Range 断点续传")
 public class DownloadController {

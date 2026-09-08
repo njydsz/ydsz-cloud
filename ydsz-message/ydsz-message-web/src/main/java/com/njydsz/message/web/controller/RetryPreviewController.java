@@ -24,7 +24,7 @@ import com.njydsz.message.server.service.retry.RetryPreviewService;
  *
  * <p>提供重试预设档位的可视化预览 API，帮助使用者在配置前直观理解不同档位的重试行为。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/retry/**}
+ * <p><b>接口路径：</b>{@code /api/message/retry/**}
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -32,7 +32,7 @@ import com.njydsz.message.server.service.retry.RetryPreviewService;
 @Slf4j
 @Tag(name = "重试策略预览", description = "重试预设档位可视化预览")
 @RestController
-@RequestMapping("/api/v1/message/retry")
+@RequestMapping("/api/message/retry")
 @RequiredArgsConstructor
 public class RetryPreviewController {
   /** 集合初始容量 */

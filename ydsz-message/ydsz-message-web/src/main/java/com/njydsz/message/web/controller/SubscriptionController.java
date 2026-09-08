@@ -32,7 +32,7 @@ import com.njydsz.message.server.service.config.SubscriptionService;
  *
  * <p>提供<b>用户订阅主题关系</b>的 HTTP API，支撑「订阅 - 发布」通知模式： 用户订阅感兴趣的主题（{@code topicCode}），系统按主题批量推送消息。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/subscription/**}
+ * <p><b>接口路径：</b>{@code /api/message/subscription/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -70,7 +70,7 @@ import com.njydsz.message.server.service.config.SubscriptionService;
 @Tag(name = "消息订阅", description = "用户主题订阅关系管理")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/subscription")
+@RequestMapping("/api/message/subscription")
 @RequiredArgsConstructor
 public class SubscriptionController {
 

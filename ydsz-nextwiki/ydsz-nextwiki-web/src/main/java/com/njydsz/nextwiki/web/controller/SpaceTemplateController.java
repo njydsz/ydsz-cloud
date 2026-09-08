@@ -33,12 +33,12 @@ import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
  * <p>提供预定义空间结构模板的查询和管理 API。
  *
  * <pre>
- *   GET    /api/v1/nextwiki/templates               - 查询模板列表
- *   GET    /api/v1/nextwiki/templates/{templateId}  - 获取模板详情
- *   POST   /api/v1/nextwiki/templates               - 创建自定义模板
- *   PUT    /api/v1/nextwiki/templates/{templateId}  - 更新模板
- *   DELETE /api/v1/nextwiki/templates/{templateId}  - 删除模板
- *   POST   /api/v1/nextwiki/templates/{templateId}/use - 使用模板创建空间
+ *   GET    /api/nextwiki/templates               - 查询模板列表
+ *   GET    /api/nextwiki/templates/{templateId}  - 获取模板详情
+ *   POST   /api/nextwiki/templates               - 创建自定义模板
+ *   PUT    /api/nextwiki/templates/{templateId}  - 更新模板
+ *   DELETE /api/nextwiki/templates/{templateId}  - 删除模板
+ *   POST   /api/nextwiki/templates/{templateId}/use - 使用模板创建空间
  * </pre>
  *
  * @author ydsz-team
@@ -46,7 +46,7 @@ import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/templates")
+@RequestMapping("/api/nextwiki/templates")
 @RequiredArgsConstructor
 @Tag(name = "空间模板管理", description = "S4-P3-02：文档模板体系")
 public class SpaceTemplateController {

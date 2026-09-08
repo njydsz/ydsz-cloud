@@ -2,6 +2,7 @@ package com.njydsz.literule.domain.entity;
 
 import java.math.BigDecimal;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -70,6 +71,7 @@ public class RulePack extends MpBaseEntity<String> {
   private BigDecimal rating;
 
   /** 是否启用（true=可用, false=已下架） */
+  @TableField("enabled")
   private Boolean isEnabled;
 
   /** 是否官方认证规则集（true=官方发布, false=社区贡献） */

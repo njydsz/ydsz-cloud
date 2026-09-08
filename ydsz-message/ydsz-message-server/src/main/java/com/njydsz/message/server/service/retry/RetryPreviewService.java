@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
  * <p>使用方式：
  *
  * <ul>
- *   <li>API: {@code GET /api/v1/message/retry-preview?preset=standard} 获取指定预设的重试时间表
- *   <li>API: {@code GET /api/v1/message/retry-preview/all} 获取所有预设的对比视图
+ *   <li>API: {@code GET /api/message/retry-preview?preset=standard} 获取指定预设的重试时间表
+ *   <li>API: {@code GET /api/message/retry-preview/all} 获取所有预设的对比视图
  * </ul>
  *
  * @author ydsz-team

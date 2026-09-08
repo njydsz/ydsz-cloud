@@ -35,7 +35,7 @@ public class ForgotPasswordDTO implements Serializable {
   @NotBlank(message = "{userinfo.forgot.password.new.password.required}")
   private String newPassword;
 
-  /** 图形验证码 key（P0-5：防撞库找回密码，前端先调用 /api/v1/captcha 获取） */
+  /** 图形验证码 key（P0-5：防撞库找回密码，前端先调用 /api/captcha 获取） */
   @NotBlank(message = "{userinfo.forgot.password.captcha.key.required}")
   private String captchaKey;
 

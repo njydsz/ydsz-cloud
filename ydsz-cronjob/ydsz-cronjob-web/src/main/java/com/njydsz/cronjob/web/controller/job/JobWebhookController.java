@@ -56,7 +56,7 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
 @Tag(name = "WebHook 事件订阅", description = "订阅 CRUD、过滤查询、测试推送")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/webhook")
+@RequestMapping("/api/cronjob/webhook")
 @RequiredArgsConstructor
 public class JobWebhookController {
 

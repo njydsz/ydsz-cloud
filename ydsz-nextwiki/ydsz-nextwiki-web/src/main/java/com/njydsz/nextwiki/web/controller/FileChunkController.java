@@ -73,11 +73,11 @@ import com.njydsz.nextwiki.server.service.ChunkUploadApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST   /api/v1/nextwiki/files/chunk/init                       - 初始化分片上传
- *   POST   /api/v1/nextwiki/files/chunk/{uploadId}/{chunkNumber}   - 上传单个分片
- *   POST   /api/v1/nextwiki/files/chunk/{uploadId}/complete        - 完成分片上传（合并）
- *   DELETE /api/v1/nextwiki/files/chunk/{uploadId}                 - 取消分片上传
- *   GET    /api/v1/nextwiki/files/chunk/{uploadId}/uploaded-chunks - 已上传分片列表
+ *   POST   /api/nextwiki/files/chunk/init                       - 初始化分片上传
+ *   POST   /api/nextwiki/files/chunk/{uploadId}/{chunkNumber}   - 上传单个分片
+ *   POST   /api/nextwiki/files/chunk/{uploadId}/complete        - 完成分片上传（合并）
+ *   DELETE /api/nextwiki/files/chunk/{uploadId}                 - 取消分片上传
+ *   GET    /api/nextwiki/files/chunk/{uploadId}/uploaded-chunks - 已上传分片列表
  * </pre>
  *
  * <h3>相关拆分</h3>
@@ -93,7 +93,7 @@ import com.njydsz.nextwiki.server.service.ChunkUploadApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/files")
+@RequestMapping("/api/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "网盘文件分片上传", description = "大文件分片上传、断点续传、合并/取消/查询")

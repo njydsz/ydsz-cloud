@@ -38,7 +38,7 @@ public class SendVerifyCodeDTO implements Serializable {
   @NotBlank(message = "{userinfo.verify.code.target.required}")
   private String target;
 
-  /** 图形验证码 key（P0-5：防短信轰炸，前端先调用 /api/v1/captcha 获取） */
+  /** 图形验证码 key（P0-5：防短信轰炸，前端先调用 /api/captcha 获取） */
   @NotBlank(message = "{userinfo.verify.code.captcha.key.required}")
   private String captchaKey;
 

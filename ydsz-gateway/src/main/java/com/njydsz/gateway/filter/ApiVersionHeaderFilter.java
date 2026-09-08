@@ -69,7 +69,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
     matchIfMissing = true)
 public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
 
-  /** 匹配路径版本段：/api/v1/... 或 /v1/... */
+  /** 匹配路径版本段：/api/... 或 /v1/... */
   private static final Pattern VERSION_PATTERN = Pattern.compile("/(api/)?v(?<ver>\\d+)(?:[./]|$)");
 
   /** 版本响应头 */

@@ -34,7 +34,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
  * 次）仍发送失败的消息， 由 {@code RetryScheduler} 调度器在每次重试失败后递增 {@code retryCount}， 超过阈值后将 {@code
  * ydsz_msg_log.status} 置为 {@code DEAD}，进入死信状态。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/dead-letter/**}
+ * <p><b>接口路径：</b>{@code /api/message/dead-letter/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -81,7 +81,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
 @Slf4j
 @Tag(name = "死信管理", description = "死信查询与手动重发")
 @RestController
-@RequestMapping("/api/v1/message/dead-letter")
+@RequestMapping("/api/message/dead-letter")
 @RequiredArgsConstructor
 public class DeadLetterController {
 

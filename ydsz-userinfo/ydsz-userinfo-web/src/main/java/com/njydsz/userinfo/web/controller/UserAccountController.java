@@ -56,7 +56,7 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  * <p>提供用户账号的完整管理能力（CRUD）、密码自助管理（修改/重置）、角色分配/撤销、用户启用/禁用等。 是用户中心服务（ydsz-userinfo）最核心的
  * Controller，被各业务模块通过 Feign （{@code UserAccountClient}）远程调用获取用户基础信息。
  *
- * <p><b>接口路径：</b>{@code /api/v1/user}
+ * <p><b>接口路径：</b>{@code /api/user}
  *
  * <p><b>核心能力：</b>
  *
@@ -86,7 +86,7 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 @Tag(name = "用户管理", description = "用户账号 CRUD、密码管理、角色分配")
 @ApiVersion("1")

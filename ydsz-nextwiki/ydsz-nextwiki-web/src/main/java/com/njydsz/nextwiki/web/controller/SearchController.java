@@ -58,8 +58,8 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST /api/v1/nextwiki/search       - 综合搜索
- *   POST /api/v1/nextwiki/search/rebuild - 重建全量索引
+ *   POST /api/nextwiki/search       - 综合搜索
+ *   POST /api/nextwiki/search/rebuild - 重建全量索引
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -80,7 +80,7 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/search")
+@RequestMapping("/api/nextwiki/search")
 @RequiredArgsConstructor
 @Tag(name = "全文搜索", description = "文件名/内容/标签综合搜索，支持 ES 全文检索与 DB LIKE 降级")
 public class SearchController {

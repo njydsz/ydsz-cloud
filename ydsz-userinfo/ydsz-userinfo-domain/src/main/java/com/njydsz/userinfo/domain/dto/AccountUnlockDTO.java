@@ -42,7 +42,7 @@ public class AccountUnlockDTO implements Serializable {
   @NotBlank(message = "{userinfo.unlock.verify.code.required}")
   private String verifyCode;
 
-  /** 图形验证码 key（防暴力破解，前端先调用 /api/v1/captcha 获取） */
+  /** 图形验证码 key（防暴力破解，前端先调用 /api/captcha 获取） */
   @NotBlank(message = "{userinfo.unlock.captcha.key.required}")
   private String captchaKey;
 

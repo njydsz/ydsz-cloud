@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * WebAuthn 二级认证请求体。
  *
- * <p>前端在完成 WebAuthn 通行钥断言后，调用 {@code POST /api/v1/auth/secondary-auth/webauthn} 提交验证结果。
+ * <p>前端在完成 WebAuthn 通行钥断言后，调用 {@code POST /api/auth/secondary-auth/webauthn} 提交验证结果。
  *
  * <p><b>流程：</b>
  *

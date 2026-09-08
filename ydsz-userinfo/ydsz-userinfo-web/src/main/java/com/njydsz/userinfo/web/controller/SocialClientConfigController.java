@@ -32,7 +32,7 @@ import com.njydsz.userinfo.server.service.SocialClientConfigService;
  *
  * <p>提供社交平台 OAuth2 客户端配置的 CRUD 接口，配置变更后立即生效（无需重启）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/social-client-config}
+ * <p><b>接口路径：</b>{@code /api/social-client-config}
  *
  * <p><b>配置优先级：</b>数据库 ＞ application.yml
  *
@@ -41,7 +41,7 @@ import com.njydsz.userinfo.server.service.SocialClientConfigService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/social-client-config")
+@RequestMapping("/api/social-client-config")
 @RequiredArgsConstructor
 @Tag(name = "社交平台配置", description = "社交平台 OAuth2 客户端配置管理（热更新）")
 @ApiVersion("1")

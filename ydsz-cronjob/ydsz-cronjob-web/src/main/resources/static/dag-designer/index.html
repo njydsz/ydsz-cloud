@@ -315,7 +315,7 @@
             }));
             const dagDefinition = { nodes, edges };
 
-            const response = await fetch('/api/v1/cronjob/dag/save', {
+            const response = await fetch('/api/cronjob/dag/save', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(dagDefinition)

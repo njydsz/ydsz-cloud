@@ -172,7 +172,7 @@ public abstract class SentryMetricsAdapter {
    * @param name 指标名称（不含前缀）
    * @param tags 标签键值对
    */
-  protected void incrementCounter(String name, String... tags) {
+  public void incrementCounter(String name, String... tags) {
     MetricsCollector collector = getMetricsCollector();
     if (collector != null) {
       collector.incrementCounter(prefix + name, null, toMap(tags), 1.0);
@@ -186,7 +186,7 @@ public abstract class SentryMetricsAdapter {
    * @param amount 递增量
    * @param tags 标签键值对
    */
-  protected void incrementCounter(String name, double amount, String... tags) {
+  public void incrementCounter(String name, double amount, String... tags) {
     MetricsCollector collector = getMetricsCollector();
     if (collector != null) {
       collector.incrementCounter(prefix + name, null, toMap(tags), amount);

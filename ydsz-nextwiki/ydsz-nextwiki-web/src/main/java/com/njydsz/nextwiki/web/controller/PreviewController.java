@@ -49,9 +49,9 @@ import com.njydsz.nextwiki.server.service.PreviewApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST /api/v1/nextwiki/preview/{fileNodeId}/generate - 异步生成预览
- *   GET  /api/v1/nextwiki/preview/supported?suffix=pdf  - 是否支持预览
- *   GET  /api/v1/nextwiki/preview/type?suffix=pdf       - 预览类型
+ *   POST /api/nextwiki/preview/{fileNodeId}/generate - 异步生成预览
+ *   GET  /api/nextwiki/preview/supported?suffix=pdf  - 是否支持预览
+ *   GET  /api/nextwiki/preview/type?suffix=pdf       - 预览类型
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -73,7 +73,7 @@ import com.njydsz.nextwiki.server.service.PreviewApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/preview")
+@RequestMapping("/api/nextwiki/preview")
 @RequiredArgsConstructor
 @Tag(name = "文档预览", description = "在线预览生成、缩略图、文档格式转换")
 public class PreviewController {

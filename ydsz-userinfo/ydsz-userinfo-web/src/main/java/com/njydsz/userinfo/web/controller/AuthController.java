@@ -60,7 +60,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  *
  * <p>提供用户登录、登出、刷新 Token 等基础认证端点。 是整个用户中心服务的对外认证入口，被各业务系统通过 Feign 远程调用（{@code AuthServiceClient}）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/auth}
+ * <p><b>接口路径：</b>{@code /api/auth}
  *
  * <p><b>安全特性：</b>
  *
@@ -85,7 +85,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")
 @ApiVersion("1")

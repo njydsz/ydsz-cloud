@@ -26,10 +26,10 @@ import com.njydsz.nextwiki.server.service.UserFavoriteApplicationService;
  * <p>提供用户收藏夹的增删查改 API。
  *
  * <pre>
- *   GET    /api/v1/nextwiki/favorites       - 查询收藏列表
- *   POST   /api/v1/nextwiki/favorites       - 添加收藏
- *   DELETE /api/v1/nextwiki/favorites/{nodeId} - 取消收藏
- *   PUT    /api/v1/nextwiki/favorites/sort  - 更新收藏排序
+ *   GET    /api/nextwiki/favorites       - 查询收藏列表
+ *   POST   /api/nextwiki/favorites       - 添加收藏
+ *   DELETE /api/nextwiki/favorites/{nodeId} - 取消收藏
+ *   PUT    /api/nextwiki/favorites/sort  - 更新收藏排序
  * </pre>
  *
  * @author ydsz-team
@@ -37,7 +37,7 @@ import com.njydsz.nextwiki.server.service.UserFavoriteApplicationService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/favorites")
+@RequestMapping("/api/nextwiki/favorites")
 @RequiredArgsConstructor
 public class UserFavoriteController {
 

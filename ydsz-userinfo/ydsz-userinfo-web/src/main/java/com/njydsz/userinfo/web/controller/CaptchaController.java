@@ -23,7 +23,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
  *
  * <p>提供图形验证码的生成与校验能力，是用户登录流程的反机器人/防爆破第一道防线。 验证码通过 Redis 存储（key = captchaKey，TTL 默认 5 分钟），使用一次后立即失效。
  *
- * <p><b>接口路径：</b>{@code /api/v1/captcha}
+ * <p><b>接口路径：</b>{@code /api/captcha}
  *
  * <p><b>核心能力：</b>
  *
@@ -58,7 +58,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/captcha")
+@RequestMapping("/api/captcha")
 @RequiredArgsConstructor
 @Tag(name = "验证码", description = "图形验证码生成与校验")
 public class CaptchaController {

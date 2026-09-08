@@ -41,7 +41,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
       int maxRetryAttempts,
       CircuitBreaker circuitBreaker) {
     this.pushUrl =
-        lokiUrl.endsWith("/") ? lokiUrl + "loki/api/v1/push" : lokiUrl + "/loki/api/v1/push";
+        lokiUrl.endsWith("/") ? lokiUrl + "loki/api/push" : lokiUrl + "/loki/api/push";
     this.maxRetryAttempts = maxRetryAttempts;
     this.circuitBreaker = circuitBreaker;
     this.requestTimeoutSeconds = connectTimeoutSeconds;

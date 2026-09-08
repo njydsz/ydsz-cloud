@@ -47,7 +47,7 @@ import com.njydsz.literule.server.spi.RuleCategoryProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/literule/rules")
+@RequestMapping("/api/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则目录树", description = "规则分类目录树与责任人管理")

@@ -32,14 +32,14 @@ import com.njydsz.userinfo.server.service.SamlIdpConfigService;
  *
  * <p>提供 SAML IdP 配置 CRUD 接口，支持多租户独立配置 SAML IdP。
  *
- * <p><b>接口路径：</b>{@code /api/v1/saml-idp-config}
+ * <p><b>接口路径：</b>{@code /api/saml-idp-config}
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/saml-idp-config")
+@RequestMapping("/api/saml-idp-config")
 @RequiredArgsConstructor
 @Tag(name = "SAML IdP 配置", description = "SAML 身份提供者配置管理（多租户）")
 @ApiVersion("1")

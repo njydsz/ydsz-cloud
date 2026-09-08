@@ -69,8 +69,8 @@ import com.njydsz.nextwiki.server.service.FilePermissionService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST /api/v1/nextwiki/files/{nodeId}/lock    - 锁定（Check-out）
- *   POST /api/v1/nextwiki/files/{nodeId}/unlock  - 解锁（Check-in）
+ *   POST /api/nextwiki/files/{nodeId}/lock    - 锁定（Check-out）
+ *   POST /api/nextwiki/files/{nodeId}/unlock  - 解锁（Check-in）
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -90,7 +90,7 @@ import com.njydsz.nextwiki.server.service.FilePermissionService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/files")
+@RequestMapping("/api/nextwiki/files")
 @RequiredArgsConstructor
 @Tag(name = "文件锁定", description = "Check-out/Check-in 防并发编辑（P0-R3 修复后使用 status 字段）")
 public class FileLockController {

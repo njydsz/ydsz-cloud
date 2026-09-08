@@ -43,7 +43,7 @@ import com.njydsz.message.server.reactive.ReactiveSseRegistry;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/reactive")
+@RequestMapping("/api/message/reactive")
 @RequiredArgsConstructor
 public class ReactiveNotificationController {
 
@@ -56,12 +56,12 @@ public class ReactiveNotificationController {
     /**
      * 订阅实时响应式事件流。
      *
-     * <p>URL: GET /api/v1/message/reactive/stream</p>
+     * <p>URL: GET /api/message/reactive/stream</p>
      * <p>返回 Content-Type: text/event-stream</p>
      *
      * <p>客户端示例（EventSource）：
      * <pre>{@code
-     *   const es = new EventSource('/api/v1/message/reactive/stream');
+     *   const es = new EventSource('/api/message/reactive/stream');
      *   es.addEventListener('notification', e => console.log(e.data));
      * }</pre>
      *
@@ -98,11 +98,11 @@ public class ReactiveNotificationController {
     /**
      * 推送事件到响应式流。
      *
-     * <p>URL: POST /api/v1/message/reactive/publish</p>
+     * <p>URL: POST /api/message/reactive/publish</p>
      *
      * <p>请求体为 {@link ReactiveEvent} JSON，示例：
      * <pre>{@code
-     *   POST /api/v1/message/reactive/publish
+     *   POST /api/message/reactive/publish
      *   {
      *     "eventType": "notification",
      *     "targetUserId": "user-001",
@@ -139,7 +139,7 @@ public class ReactiveNotificationController {
     /**
      * 健康检测端点（试点状态查询）。
      *
-     * <p>URL: GET /api/v1/message/reactive/health</p>
+     * <p>URL: GET /api/message/reactive/health</p>
      *
      * @return 注册表运行状态
      */

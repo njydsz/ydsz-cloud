@@ -18,7 +18,7 @@ import com.njydsz.cronjob.server.core.logger.LogStreamManager;
 /**
  * 任务执行日志实时流端点（SSE）。
  *
- * <p>前端通过 {@code GET /api/v1/cronjob/log/stream/{logId}} 建立 SSE 长连接，
+ * <p>前端通过 {@code GET /api/cronjob/log/stream/{logId}} 建立 SSE 长连接，
  * 任务执行过程中产生的新日志行由 {@link LogStreamManager} 实时推送到订阅客户端。
  *
  * <h3>推送时序</h3>
@@ -37,7 +37,7 @@ import com.njydsz.cronjob.server.core.logger.LogStreamManager;
 @Slf4j
 @Tag(name = "任务日志流", description = "任务执行日志 SSE 实时推送")
 @RestController
-@RequestMapping("/api/v1/cronjob/log")
+@RequestMapping("/api/cronjob/log")
 @RequiredArgsConstructor
 public class JobLogStreamController {
 

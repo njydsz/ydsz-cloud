@@ -34,7 +34,7 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
  * <p>提供<b>用户对消息质量的评分与反馈</b>能力， 是 P1-4「消息质量闭环」的核心入口。通过收集用户对送达 / 内容 / 时机的主观评分，
  * 驱动发送策略的自动调优（降频、屏蔽、模板优化等）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/feedback/**}
+ * <p><b>接口路径：</b>{@code /api/message/feedback/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -75,7 +75,7 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
 @Tag(name = "消息反馈", description = "消息质量评分与用户反馈")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/feedback")
+@RequestMapping("/api/message/feedback")
 @RequiredArgsConstructor
 public class MessageFeedbackController {
 

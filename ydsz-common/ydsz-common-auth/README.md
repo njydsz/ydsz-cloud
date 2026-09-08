@@ -175,7 +175,7 @@ ydsz:
     token-prefix: "Bearer "
     ignore-paths:
       - /actuator/**
-      - /api/v1/public/**
+      - /api/public/**
     data-scope:
       fail-closed: true              # 未知 dataScope 拒绝访问
       cache-ttl: 300
@@ -189,7 +189,7 @@ ydsz:
 
 ```java
 @RestController
-@RequestMapping("/api/v1/orders")
+@RequestMapping("/api/orders")
 public class OrderController {
 
    @AuthApiPermission("order:read")

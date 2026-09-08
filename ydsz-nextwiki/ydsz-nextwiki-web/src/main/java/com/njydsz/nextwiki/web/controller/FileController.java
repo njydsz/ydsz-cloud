@@ -70,14 +70,14 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST   /api/v1/nextwiki/files/upload                 - 上传文件
- *   POST   /api/v1/nextwiki/files/folders                - 创建目录
- *   GET    /api/v1/nextwiki/files/list                   - 列出目录内容
- *   PUT    /api/v1/nextwiki/files/{nodeId}/move          - 移动文件/文件夹
- *   PUT    /api/v1/nextwiki/files/{nodeId}/rename        - 重命名
- *   DELETE /api/v1/nextwiki/files/{nodeId}               - 删除（移入回收站）
- *   POST   /api/v1/nextwiki/files/{nodeId}/copy          - 复制
- *   PUT    /api/v1/nextwiki/files/sort                   - 批量排序（拖拽排序）
+ *   POST   /api/nextwiki/files/upload                 - 上传文件
+ *   POST   /api/nextwiki/files/folders                - 创建目录
+ *   GET    /api/nextwiki/files/list                   - 列出目录内容
+ *   PUT    /api/nextwiki/files/{nodeId}/move          - 移动文件/文件夹
+ *   PUT    /api/nextwiki/files/{nodeId}/rename        - 重命名
+ *   DELETE /api/nextwiki/files/{nodeId}               - 删除（移入回收站）
+ *   POST   /api/nextwiki/files/{nodeId}/copy          - 复制
+ *   PUT    /api/nextwiki/files/sort                   - 批量排序（拖拽排序）
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -99,7 +99,7 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/files")
+@RequestMapping("/api/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "网盘文件管理", description = "文件上传、目录、移动、重命名、删除、复制")

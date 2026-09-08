@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * 登录请求 DTO。
  *
- * <p>用于 {@code Post /api/v1/auth/login} 接口，支持用户名+密码登录， 可选携带图形验证码进行人机校验。
+ * <p>用于 {@code Post /api/auth/login} 接口，支持用户名+密码登录， 可选携带图形验证码进行人机校验。
  *
  * <p><b>校验规则：</b>
  *
@@ -36,7 +36,7 @@ public class LoginDTO implements Serializable {
   @NotBlank(message = "密码不能为空")
   private String password;
 
-  /** 验证码 Redis Key（由 {@code GET /api/v1/auth/captcha} 返回，开启验证码时必填） */
+  /** 验证码 Redis Key（由 {@code GET /api/auth/captcha} 返回，开启验证码时必填） */
   private String captchaKey;
 
   /** 用户输入的图形验证码（不区分大小写，开启验证码时必填） */

@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * <pre>
  * &#64;DeprecatedApi(since = "v1", replacement = "v2", removalDate = "2026-12-31",
  *     message = "请使用 /api/v2/message/send 替代")
- * &#64;GetMapping("/api/v1/message/send")
+ * &#64;GetMapping("/api/message/send")
  * public Mono&lt;Void&gt; sendMessage() { ... }
  * </pre>
  *

@@ -64,7 +64,7 @@ public class GenTemplateGroupRepositoryImpl implements GenTemplateGroupRepositor
   @Override
   public Optional<GenTemplateGroup> findByIsActiveTrue() {
     LambdaQueryWrapper<GenTemplateGroup> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(GenTemplateGroup::getActive, true).last("LIMIT 1");
+    wrapper.eq(GenTemplateGroup::getIsActive, true).last("LIMIT 1");
     return Optional.ofNullable(mapper.selectOne(wrapper));
   }
 

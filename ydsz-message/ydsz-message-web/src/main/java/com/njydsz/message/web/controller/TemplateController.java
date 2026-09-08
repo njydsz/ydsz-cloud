@@ -36,7 +36,7 @@ import com.njydsz.message.server.service.TemplateService;
  *
  * <p>提供消息模板的<b>全生命周期管理</b> HTTP API：创建 / 查询 / 编辑 / 删除 / 审核 / 上下线， 是 ydsz-message 模块「模板中心」的入口。
  *
- * <p><b>接口路径：</b>{@code /api/v1/message/template/**}
+ * <p><b>接口路径：</b>{@code /api/message/template/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -75,7 +75,7 @@ import com.njydsz.message.server.service.TemplateService;
 @Tag(name = "消息模板", description = "消息模板增删改查与审核")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/message/template")
+@RequestMapping("/api/message/template")
 @RequiredArgsConstructor
 public class TemplateController {
 

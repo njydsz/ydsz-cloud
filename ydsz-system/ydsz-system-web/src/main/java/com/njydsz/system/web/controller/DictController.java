@@ -35,7 +35,7 @@ import com.njydsz.system.server.service.DictService;
  * <p>提供字典类型的完整 CRUD 接口（分页查询、按 ID 查询、新增、更新、删除）以及全量列表查询。 字典类型用于对系统中的枚举/常量进行统一管理（如订单状态、支付方式、地区代码等）， 配合
  * {@code DictItemController} 实现两级字典体系。
  *
- * <p><b>接口路径：</b>{@code /api/v1/dict/type}
+ * <p><b>接口路径：</b>{@code /api/dict/type}
  *
  * <p><b>安全特性：</b>
  *
@@ -57,7 +57,7 @@ import com.njydsz.system.server.service.DictService;
 @Tag(name = "字典类型", description = "字典类型 CRUD + 全量列表")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/dict/type")
+@RequestMapping("/api/dict/type")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:dict:list")
 public class DictController {

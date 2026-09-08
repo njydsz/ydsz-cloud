@@ -57,7 +57,7 @@ import com.njydsz.userinfo.server.auth.WebAuthnService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/webauthn")
+@RequestMapping("/api/webauthn")
 @RequiredArgsConstructor
 @Tag(name = "WebAuthn", description = "FIDO2 Passkey 无密码认证")
 @ApiVersion("1")

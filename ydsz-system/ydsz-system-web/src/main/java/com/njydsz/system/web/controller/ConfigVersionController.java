@@ -34,7 +34,7 @@ import com.njydsz.system.server.service.EntityVersionService;
  * <p>提供配置项变更历史查询和回滚能力。配置版本是配置变更审计与回滚能力的数据基础： 每次配置项发生变更（save / updateById / removeById）时，{@link
  * com.njydsz.system.server.service.ConfigServiceImpl} 会自动创建一条版本快照。
  *
- * <p><b>接口路径：</b>{@code /api/v1/config/version}
+ * <p><b>接口路径：</b>{@code /api/config/version}
  *
  * <p><b>安全特性：</b>
  *
@@ -52,7 +52,7 @@ import com.njydsz.system.server.service.EntityVersionService;
 @Tag(name = "配置版本", description = "配置变更历史查询 + 一键回滚")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/config/version")
+@RequestMapping("/api/config/version")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:config:version:list")
 public class ConfigVersionController {

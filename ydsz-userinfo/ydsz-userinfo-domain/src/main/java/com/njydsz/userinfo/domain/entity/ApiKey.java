@@ -69,6 +69,7 @@ public class ApiKey implements Serializable {
   private Integer rateLimit;
 
   /** 是否启用 */
+  @TableField("enabled")
   private Boolean isEnabled;
 
   /** 创建时间 */

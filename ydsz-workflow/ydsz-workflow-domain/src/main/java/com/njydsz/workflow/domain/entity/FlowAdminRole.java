@@ -3,6 +3,7 @@ package com.njydsz.workflow.domain.entity;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -60,6 +61,7 @@ public class FlowAdminRole extends MpBaseEntity<String> {
   private String roleCode;
 
   /** 是否启用（{@code false} 表示撤销授权，但保留历史记录） */
+  @TableField("enabled")
   private Boolean isEnabled;
 
   /** 授权人 ID（{@code null} 表示系统预置角色） */

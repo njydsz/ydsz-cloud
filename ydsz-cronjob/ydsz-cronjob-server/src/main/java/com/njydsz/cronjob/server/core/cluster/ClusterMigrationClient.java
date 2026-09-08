@@ -38,11 +38,11 @@ public class ClusterMigrationClient {
   private static final int HTTP_OK = 200;
 
   /** 集群漂移注册接口路径 */
-  private static final String MIGRATE_REGISTER_PATH = "/api/v1/cronjob/internal/migrate/register";
+  private static final String MIGRATE_REGISTER_PATH = "/api/cronjob/internal/migrate/register";
 
   /** 集群漂移注销接口路径 */
   private static final String MIGRATE_UNREGISTER_PATH =
-      "/api/v1/cronjob/internal/migrate/unregister";
+      "/api/cronjob/internal/migrate/unregister";
 
   /** 健康检查接口路径 */
   private static final String HEALTH_PATH = "/actuator/health";

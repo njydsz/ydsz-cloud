@@ -71,27 +71,27 @@ ydsz-nextwiki/
 │   └── src/main/java/com/njydsz/nextwiki/web/
 │       ├── NextwikiApplication.java   # 启动类（位于 web 根包下）
 │       └── controller/                # 21 个 Controller
-│           ├── FileController.java          # /api/v1/nextwiki/files
-│           ├── FileChunkController.java     # /api/v1/nextwiki/files/chunk
-│           ├── FileBatchController.java     # /api/v1/nextwiki/files/batch/*（同步+异步任务）
-│           ├── FileLockController.java      # /api/v1/nextwiki/files/{nodeId}/lock
-│           ├── FileCommentController.java   # /api/v1/nextwiki/comments
-│           ├── DownloadController.java      # /api/v1/nextwiki/download
-│           ├── ShareController.java         # /api/v1/nextwiki/shares
-│           ├── SearchController.java        # /api/v1/nextwiki/search
-│           ├── TrashController.java         # /api/v1/nextwiki/trash
-│           ├── QuotaController.java         # /api/v1/nextwiki/quota
-│           ├── TagController.java           # /api/v1/nextwiki/tags
-│           ├── BatchImportController.java   # /api/v1/nextwiki/import
-│           ├── AnalysisController.java      # /api/v1/nextwiki/analysis
-│           ├── PreviewController.java       # /api/v1/nextwiki/preview
-│           ├── SpaceController.java         # /api/v1/nextwiki/spaces
-│           ├── SpaceTemplateController.java # /api/v1/nextwiki/templates
-│           ├── UserFavoriteController.java  # /api/v1/nextwiki/favorites
-│           ├── UserRecentController.java    # /api/v1/nextwiki/recent
-│           ├── WopiController.java          # /api/v1/nextwiki/wopi
-│           ├── ai/AiController.java         # /api/v1/nextwiki/ai（文档摘要/状态）
-│           └── storage/PresignedUrlController.java # /api/v1/nextwiki/storage（预签名上传/下载）
+│           ├── FileController.java          # /api/nextwiki/files
+│           ├── FileChunkController.java     # /api/nextwiki/files/chunk
+│           ├── FileBatchController.java     # /api/nextwiki/files/batch/*（同步+异步任务）
+│           ├── FileLockController.java      # /api/nextwiki/files/{nodeId}/lock
+│           ├── FileCommentController.java   # /api/nextwiki/comments
+│           ├── DownloadController.java      # /api/nextwiki/download
+│           ├── ShareController.java         # /api/nextwiki/shares
+│           ├── SearchController.java        # /api/nextwiki/search
+│           ├── TrashController.java         # /api/nextwiki/trash
+│           ├── QuotaController.java         # /api/nextwiki/quota
+│           ├── TagController.java           # /api/nextwiki/tags
+│           ├── BatchImportController.java   # /api/nextwiki/import
+│           ├── AnalysisController.java      # /api/nextwiki/analysis
+│           ├── PreviewController.java       # /api/nextwiki/preview
+│           ├── SpaceController.java         # /api/nextwiki/spaces
+│           ├── SpaceTemplateController.java # /api/nextwiki/templates
+│           ├── UserFavoriteController.java  # /api/nextwiki/favorites
+│           ├── UserRecentController.java    # /api/nextwiki/recent
+│           ├── WopiController.java          # /api/nextwiki/wopi
+│           ├── ai/AiController.java         # /api/nextwiki/ai（文档摘要/状态）
+│           └── storage/PresignedUrlController.java # /api/nextwiki/storage（预签名上传/下载）
 └── ydsz-nextwiki-app/                 # 移动端 App 模块：端口 8081，独立启动入口
     └── src/main/java/com/njydsz/nextwiki/app/
         ├── NextwikiAppApplication.java # 移动端启动类
@@ -106,144 +106,144 @@ ydsz-nextwiki/
 
 | 端点 | 作用 |
 |---|---|
-| `POST /api/v1/nextwiki/files/upload` | 上传文件 |
-| `POST /api/v1/nextwiki/files/chunk/init` | 初始化分片上传 |
-| `POST /api/v1/nextwiki/files/chunk/{uploadId}/{chunkNumber}` | 上传分片（chunkNumber 从 1 开始） |
-| `POST /api/v1/nextwiki/files/chunk/{uploadId}/complete` | 完成分片上传 |
-| `DELETE /api/v1/nextwiki/files/chunk/{uploadId}` | 取消分片上传 |
-| `GET /api/v1/nextwiki/files/chunk/{uploadId}/uploaded-chunks` | 查询已上传分片列表（断点续传） |
-| `POST /api/v1/nextwiki/files/{nodeId}/copy` | 复制文件 |
-| `PUT /api/v1/nextwiki/files/sort` | 批量排序（拖拽排序） |
-| `POST /api/v1/nextwiki/files/folders` | 创建文件夹 |
-| `POST /api/v1/nextwiki/files/{nodeId}/lock` | 锁定文件 (P0-R3：使用 status 字段) |
-| `POST /api/v1/nextwiki/files/{nodeId}/unlock` | 解锁文件 |
-| `GET /api/v1/nextwiki/files/list` | 列出目录内容（支持排序/过滤/分页） |
-| `PUT /api/v1/nextwiki/files/{nodeId}/move` | 移动文件/文件夹 |
-| `PUT /api/v1/nextwiki/files/{nodeId}/rename` | 重命名文件/文件夹 |
-| `DELETE /api/v1/nextwiki/files/{nodeId}` | 删除文件（移入回收站） |
-| `GET /api/v1/nextwiki/files/{nodeId}/versions` | 获取版本历史 |
-| `POST /api/v1/nextwiki/files/{nodeId}/versions/{ver}/rollback` | 版本回滚 |
-| `GET /api/v1/nextwiki/files/{nodeId}/versions/diff` | 对比版本差异（文本文件，行粒度） |
-| `POST /api/v1/nextwiki/files/batch/delete` | 批量删除（同步） |
-| `POST /api/v1/nextwiki/files/batch/move` | 批量移动（同步） |
-| `POST /api/v1/nextwiki/files/batch/async-delete` | 异步批量删除（大批量 > 10，返回任务 ID） |
-| `POST /api/v1/nextwiki/files/batch/async-move` | 异步批量移动 |
-| `GET /api/v1/nextwiki/files/batch/task/{taskId}` | 查询异步批量任务状态 |
-| `PUT /api/v1/nextwiki/files/{nodeId}/star` | 切换文件星标状态 |
+| `POST /api/nextwiki/files/upload` | 上传文件 |
+| `POST /api/nextwiki/files/chunk/init` | 初始化分片上传 |
+| `POST /api/nextwiki/files/chunk/{uploadId}/{chunkNumber}` | 上传分片（chunkNumber 从 1 开始） |
+| `POST /api/nextwiki/files/chunk/{uploadId}/complete` | 完成分片上传 |
+| `DELETE /api/nextwiki/files/chunk/{uploadId}` | 取消分片上传 |
+| `GET /api/nextwiki/files/chunk/{uploadId}/uploaded-chunks` | 查询已上传分片列表（断点续传） |
+| `POST /api/nextwiki/files/{nodeId}/copy` | 复制文件 |
+| `PUT /api/nextwiki/files/sort` | 批量排序（拖拽排序） |
+| `POST /api/nextwiki/files/folders` | 创建文件夹 |
+| `POST /api/nextwiki/files/{nodeId}/lock` | 锁定文件 (P0-R3：使用 status 字段) |
+| `POST /api/nextwiki/files/{nodeId}/unlock` | 解锁文件 |
+| `GET /api/nextwiki/files/list` | 列出目录内容（支持排序/过滤/分页） |
+| `PUT /api/nextwiki/files/{nodeId}/move` | 移动文件/文件夹 |
+| `PUT /api/nextwiki/files/{nodeId}/rename` | 重命名文件/文件夹 |
+| `DELETE /api/nextwiki/files/{nodeId}` | 删除文件（移入回收站） |
+| `GET /api/nextwiki/files/{nodeId}/versions` | 获取版本历史 |
+| `POST /api/nextwiki/files/{nodeId}/versions/{ver}/rollback` | 版本回滚 |
+| `GET /api/nextwiki/files/{nodeId}/versions/diff` | 对比版本差异（文本文件，行粒度） |
+| `POST /api/nextwiki/files/batch/delete` | 批量删除（同步） |
+| `POST /api/nextwiki/files/batch/move` | 批量移动（同步） |
+| `POST /api/nextwiki/files/batch/async-delete` | 异步批量删除（大批量 > 10，返回任务 ID） |
+| `POST /api/nextwiki/files/batch/async-move` | 异步批量移动 |
+| `GET /api/nextwiki/files/batch/task/{taskId}` | 查询异步批量任务状态 |
+| `PUT /api/nextwiki/files/{nodeId}/star` | 切换文件星标状态 |
 
 ### 下载 / 分享 / 搜索 / 回收站 / 配额 / 标签 / 批量导入 / AI 分析
 
 | 端点 | 作用 |
 |---|---|
-| `POST /api/v1/nextwiki/download/{nodeId}` | 下载文件（支持 Range 断点续传） |
-| `POST /api/v1/nextwiki/download/folder/{folderId}` | 打包下载文件夹（ZIP） |
-| `POST /api/v1/nextwiki/download/{nodeId}/signed-url` | 生成签名下载 URL（时效+IP 绑定） |
-| `GET /api/v1/nextwiki/download/signed/{sign}` | 通过签名 URL 下载文件 |
-| `POST /api/v1/nextwiki/shares` | 创建分享链接（支持定向分享） |
-| `POST /api/v1/nextwiki/shares/verify` | 验证分享访问（限流 50 QPS） |
-| `DELETE /api/v1/nextwiki/shares/{shareId}` | 撤销分享 |
-| `GET /api/v1/nextwiki/shares/my` | 查询我的分享列表 |
-| `GET /api/v1/nextwiki/shares/received` | 查询我收到的分享 |
-| `GET /api/v1/nextwiki/shares/{shareId}/logs` | 查询分享访问日志 |
-| `GET /api/v1/nextwiki/shares/{shareId}/recipients` | 查询分享目标用户 |
-| `POST /api/v1/nextwiki/search` | 综合搜索（POST，多维度筛选） |
-| `POST /api/v1/nextwiki/search/rebuild` | 重建全量索引 |
-| `GET /api/v1/nextwiki/search/suggest` | 搜索自动补全建议 |
-| `GET /api/v1/nextwiki/search/did-you-mean` | "您是不是要找"纠错建议 |
-| `GET /api/v1/nextwiki/search/advanced` | 高级语法搜索（字段限定/布尔运算/短语匹配） |
-| `GET /api/v1/nextwiki/search/history` | 获取搜索历史（最近 20 条，保留 30 天） |
-| `DELETE /api/v1/nextwiki/search/history` | 清除搜索历史 |
-| `GET /api/v1/nextwiki/search/hot` | 获取热门搜索排行榜（Top 10） |
-| `GET /api/v1/nextwiki/trash/list` | 查询回收站 |
-| `POST /api/v1/nextwiki/trash/{trashItemId}/restore` | 恢复 |
-| `POST /api/v1/nextwiki/trash/batch-restore` | 批量恢复 |
-| `DELETE /api/v1/nextwiki/trash/{trashItemId}` | 永久删除 |
-| `DELETE /api/v1/nextwiki/trash/empty` | 清空回收站 |
-| `GET /api/v1/nextwiki/quota/info` | 查询配额（user/tenant/project） |
-| `POST /api/v1/nextwiki/quota/set` | 设置配额（管理员操作） |
-| `POST /api/v1/nextwiki/tags` | 创建标签 |
-| `GET /api/v1/nextwiki/tags` | 查询所有标签 |
-| `POST /api/v1/nextwiki/tags/bind` | 为文件绑定标签 |
-| `GET /api/v1/nextwiki/tags/file/{fileNodeId}` | 查询文件标签 |
-| `GET /api/v1/nextwiki/tags/recommend/{fileNodeId}` | 智能推荐标签 |
-| `POST /api/v1/nextwiki/import/batch-upload` | 批量上传 |
-| `POST /api/v1/nextwiki/import/zip` | ZIP 导入 |
-| `GET /api/v1/nextwiki/analysis/overview` | 存储概览 |
-| `GET /api/v1/nextwiki/analysis/by-type` | 按文件类型统计 |
-| `GET /api/v1/nextwiki/analysis/top-large-files` | 大文件 Top-N |
-| `POST /api/v1/nextwiki/analysis/summary` | 生成文档 AI 摘要（限流 50 QPS） |
-| `POST /api/v1/nextwiki/ai/summary` | AI 文件智能摘要 |
-| `GET /api/v1/nextwiki/ai/status` | 查询 AI 服务可用状态（含支持的文件类型） |
-| `POST /api/v1/nextwiki/storage/presigned-upload` | 生成预签名上传 URL（直传对象存储） |
-| `POST /api/v1/nextwiki/storage/presigned-download` | 生成预签名下载 URL |
+| `POST /api/nextwiki/download/{nodeId}` | 下载文件（支持 Range 断点续传） |
+| `POST /api/nextwiki/download/folder/{folderId}` | 打包下载文件夹（ZIP） |
+| `POST /api/nextwiki/download/{nodeId}/signed-url` | 生成签名下载 URL（时效+IP 绑定） |
+| `GET /api/nextwiki/download/signed/{sign}` | 通过签名 URL 下载文件 |
+| `POST /api/nextwiki/shares` | 创建分享链接（支持定向分享） |
+| `POST /api/nextwiki/shares/verify` | 验证分享访问（限流 50 QPS） |
+| `DELETE /api/nextwiki/shares/{shareId}` | 撤销分享 |
+| `GET /api/nextwiki/shares/my` | 查询我的分享列表 |
+| `GET /api/nextwiki/shares/received` | 查询我收到的分享 |
+| `GET /api/nextwiki/shares/{shareId}/logs` | 查询分享访问日志 |
+| `GET /api/nextwiki/shares/{shareId}/recipients` | 查询分享目标用户 |
+| `POST /api/nextwiki/search` | 综合搜索（POST，多维度筛选） |
+| `POST /api/nextwiki/search/rebuild` | 重建全量索引 |
+| `GET /api/nextwiki/search/suggest` | 搜索自动补全建议 |
+| `GET /api/nextwiki/search/did-you-mean` | "您是不是要找"纠错建议 |
+| `GET /api/nextwiki/search/advanced` | 高级语法搜索（字段限定/布尔运算/短语匹配） |
+| `GET /api/nextwiki/search/history` | 获取搜索历史（最近 20 条，保留 30 天） |
+| `DELETE /api/nextwiki/search/history` | 清除搜索历史 |
+| `GET /api/nextwiki/search/hot` | 获取热门搜索排行榜（Top 10） |
+| `GET /api/nextwiki/trash/list` | 查询回收站 |
+| `POST /api/nextwiki/trash/{trashItemId}/restore` | 恢复 |
+| `POST /api/nextwiki/trash/batch-restore` | 批量恢复 |
+| `DELETE /api/nextwiki/trash/{trashItemId}` | 永久删除 |
+| `DELETE /api/nextwiki/trash/empty` | 清空回收站 |
+| `GET /api/nextwiki/quota/info` | 查询配额（user/tenant/project） |
+| `POST /api/nextwiki/quota/set` | 设置配额（管理员操作） |
+| `POST /api/nextwiki/tags` | 创建标签 |
+| `GET /api/nextwiki/tags` | 查询所有标签 |
+| `POST /api/nextwiki/tags/bind` | 为文件绑定标签 |
+| `GET /api/nextwiki/tags/file/{fileNodeId}` | 查询文件标签 |
+| `GET /api/nextwiki/tags/recommend/{fileNodeId}` | 智能推荐标签 |
+| `POST /api/nextwiki/import/batch-upload` | 批量上传 |
+| `POST /api/nextwiki/import/zip` | ZIP 导入 |
+| `GET /api/nextwiki/analysis/overview` | 存储概览 |
+| `GET /api/nextwiki/analysis/by-type` | 按文件类型统计 |
+| `GET /api/nextwiki/analysis/top-large-files` | 大文件 Top-N |
+| `POST /api/nextwiki/analysis/summary` | 生成文档 AI 摘要（限流 50 QPS） |
+| `POST /api/nextwiki/ai/summary` | AI 文件智能摘要 |
+| `GET /api/nextwiki/ai/status` | 查询 AI 服务可用状态（含支持的文件类型） |
+| `POST /api/nextwiki/storage/presigned-upload` | 生成预签名上传 URL（直传对象存储） |
+| `POST /api/nextwiki/storage/presigned-download` | 生成预签名下载 URL |
 
 ### 文件评论
 
 | 端点 | 作用 |
 |---|---|
-| `GET /api/v1/nextwiki/comments/file/{fileNodeId}` | 查询文件评论列表 |
-| `POST /api/v1/nextwiki/comments` | 添加评论/回复（支持 @ 提及） |
-| `DELETE /api/v1/nextwiki/comments/{commentId}` | 删除评论（软删除） |
-| `POST /api/v1/nextwiki/comments/{commentId}/resolve` | 标记评论已解决 |
+| `GET /api/nextwiki/comments/file/{fileNodeId}` | 查询文件评论列表 |
+| `POST /api/nextwiki/comments` | 添加评论/回复（支持 @ 提及） |
+| `DELETE /api/nextwiki/comments/{commentId}` | 删除评论（软删除） |
+| `POST /api/nextwiki/comments/{commentId}/resolve` | 标记评论已解决 |
 
 ### 文档预览
 
 | 端点 | 作用 |
 |---|---|
-| `POST /api/v1/nextwiki/preview/{fileNodeId}/generate` | 异步生成预览（限流 50 QPS） |
-| `GET /api/v1/nextwiki/preview/supported?suffix=pdf` | 检查文件是否支持预览 |
-| `GET /api/v1/nextwiki/preview/type?suffix=pdf` | 获取预览类型（pdf/image/text/video/audio/code/none） |
+| `POST /api/nextwiki/preview/{fileNodeId}/generate` | 异步生成预览（限流 50 QPS） |
+| `GET /api/nextwiki/preview/supported?suffix=pdf` | 检查文件是否支持预览 |
+| `GET /api/nextwiki/preview/type?suffix=pdf` | 获取预览类型（pdf/image/text/video/audio/code/none） |
 
 ### 收藏夹 / 最近访问
 
 | 端点 | 作用 |
 |---|---|
-| `GET /api/v1/nextwiki/favorites` | 查询收藏列表 |
-| `POST /api/v1/nextwiki/favorites/{nodeId}` | 添加收藏 |
-| `DELETE /api/v1/nextwiki/favorites/{nodeId}` | 取消收藏 |
-| `GET /api/v1/nextwiki/favorites/{nodeId}/is-favorited` | 检查是否已收藏 |
-| `POST /api/v1/nextwiki/favorites/{nodeId}/sort` | 更新收藏排序 |
-| `GET /api/v1/nextwiki/favorites/count` | 查询收藏数量 |
-| `GET /api/v1/nextwiki/recent` | 查询最近访问列表 |
-| `POST /api/v1/nextwiki/recent/{nodeId}` | 记录访问 |
-| `DELETE /api/v1/nextwiki/recent` | 清空最近访问 |
-| `DELETE /api/v1/nextwiki/recent/{nodeId}` | 删除单条访问记录 |
-| `GET /api/v1/nextwiki/recent/count` | 查询最近访问记录数量 |
+| `GET /api/nextwiki/favorites` | 查询收藏列表 |
+| `POST /api/nextwiki/favorites/{nodeId}` | 添加收藏 |
+| `DELETE /api/nextwiki/favorites/{nodeId}` | 取消收藏 |
+| `GET /api/nextwiki/favorites/{nodeId}/is-favorited` | 检查是否已收藏 |
+| `POST /api/nextwiki/favorites/{nodeId}/sort` | 更新收藏排序 |
+| `GET /api/nextwiki/favorites/count` | 查询收藏数量 |
+| `GET /api/nextwiki/recent` | 查询最近访问列表 |
+| `POST /api/nextwiki/recent/{nodeId}` | 记录访问 |
+| `DELETE /api/nextwiki/recent` | 清空最近访问 |
+| `DELETE /api/nextwiki/recent/{nodeId}` | 删除单条访问记录 |
+| `GET /api/nextwiki/recent/count` | 查询最近访问记录数量 |
 
 ### 空间管理
 
 | 端点 | 作用 |
 |---|---|
-| `GET /api/v1/nextwiki/spaces` | 查询空间列表 |
-| `POST /api/v1/nextwiki/spaces` | 创建空间 |
-| `GET /api/v1/nextwiki/spaces/{spaceId}` | 获取空间详情 |
-| `PUT /api/v1/nextwiki/spaces/{spaceId}` | 更新空间 |
-| `POST /api/v1/nextwiki/spaces/{spaceId}/archive` | 归档空间 |
-| `DELETE /api/v1/nextwiki/spaces/{spaceId}` | 删除空间（逻辑删除） |
-| `POST /api/v1/nextwiki/spaces/{spaceId}/members` | 添加成员 |
-| `DELETE /api/v1/nextwiki/spaces/{spaceId}/members/{userId}` | 移除成员 |
-| `GET /api/v1/nextwiki/spaces/{spaceId}/members` | 成员列表 |
+| `GET /api/nextwiki/spaces` | 查询空间列表 |
+| `POST /api/nextwiki/spaces` | 创建空间 |
+| `GET /api/nextwiki/spaces/{spaceId}` | 获取空间详情 |
+| `PUT /api/nextwiki/spaces/{spaceId}` | 更新空间 |
+| `POST /api/nextwiki/spaces/{spaceId}/archive` | 归档空间 |
+| `DELETE /api/nextwiki/spaces/{spaceId}` | 删除空间（逻辑删除） |
+| `POST /api/nextwiki/spaces/{spaceId}/members` | 添加成员 |
+| `DELETE /api/nextwiki/spaces/{spaceId}/members/{userId}` | 移除成员 |
+| `GET /api/nextwiki/spaces/{spaceId}/members` | 成员列表 |
 
 ### 空间模板
 
 | 端点 | 作用 |
 |---|---|
-| `GET /api/v1/nextwiki/templates` | 查询模板列表（支持按分类过滤） |
-| `GET /api/v1/nextwiki/templates/{templateId}` | 获取模板详情 |
-| `POST /api/v1/nextwiki/templates` | 创建自定义模板 |
-| `PUT /api/v1/nextwiki/templates/{templateId}` | 更新模板 |
-| `DELETE /api/v1/nextwiki/templates/{templateId}` | 删除模板 |
-| `POST /api/v1/nextwiki/templates/{templateId}/use` | 使用模板创建空间 |
+| `GET /api/nextwiki/templates` | 查询模板列表（支持按分类过滤） |
+| `GET /api/nextwiki/templates/{templateId}` | 获取模板详情 |
+| `POST /api/nextwiki/templates` | 创建自定义模板 |
+| `PUT /api/nextwiki/templates/{templateId}` | 更新模板 |
+| `DELETE /api/nextwiki/templates/{templateId}` | 删除模板 |
+| `POST /api/nextwiki/templates/{templateId}/use` | 使用模板创建空间 |
 
 ### WOPI 在线编辑
 
 | 端点 | 作用 |
 |---|---|
-| `GET /api/v1/nextwiki/wopi/files/{fileId}` | CheckFileInfo（返回文件元信息） |
-| `GET /api/v1/nextwiki/wopi/files/{fileId}/contents` | GetFile（获取文件内容） |
-| `POST /api/v1/nextwiki/wopi/files/{fileId}/contents` | PutFile（保存编辑器内容，支持锁持有者校验） |
-| `POST /api/v1/nextwiki/wopi/files/{fileId}/lock` | Lock（锁定文件防并发） |
-| `POST /api/v1/nextwiki/wopi/files/{fileId}/unlock` | Unlock（解锁文件） |
+| `GET /api/nextwiki/wopi/files/{fileId}` | CheckFileInfo（返回文件元信息） |
+| `GET /api/nextwiki/wopi/files/{fileId}/contents` | GetFile（获取文件内容） |
+| `POST /api/nextwiki/wopi/files/{fileId}/contents` | PutFile（保存编辑器内容，支持锁持有者校验） |
+| `POST /api/nextwiki/wopi/files/{fileId}/lock` | Lock（锁定文件防并发） |
+| `POST /api/nextwiki/wopi/files/{fileId}/unlock` | Unlock（解锁文件） |
 
 ## 数据库
 
@@ -367,7 +367,7 @@ mvn spring-boot:run
 
 ### Q3：搜索索引不同步
 
-文件操作后搜索索引未更新，可调用 `POST /api/v1/nextwiki/search/rebuild` 全量重建索引（仅管理员权限）。
+文件操作后搜索索引未更新，可调用 `POST /api/nextwiki/search/rebuild` 全量重建索引（仅管理员权限）。
 
 ### Q4：WOPI 在线编辑无法保存
 

@@ -34,7 +34,7 @@ import com.njydsz.generator.vo.CodePreviewVO;
 @FeignClient(
     name = "ydsz-generator-service",
     contextId = "generatorFeignClient",
-    path = "/api/v1/generator",
+    path = "/api/generator",
     fallbackFactory = GeneratorClientFallbackFactory.class)
 public interface GeneratorFeignClient {
 

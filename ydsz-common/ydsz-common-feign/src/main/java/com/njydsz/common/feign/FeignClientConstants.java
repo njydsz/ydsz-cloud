@@ -44,18 +44,18 @@ public final class FeignClientConstants {
   /**
    * 字典项查询路径（P1-6 修正：指向 InternalApiController 内部端点）。
    *
-   * <p>原值 {@code /api/v1/dict/item} 是字典项"新增"业务端点，语义完全错误；
+   * <p>原值 {@code /api/dict/item} 是字典项"新增"业务端点，语义完全错误；
    * 内部查询应走 {@code /api/internal/dict/item}（请求体 DictItemGetRequest 与契约一致）。
    */
   public static final String SYSTEM_PATH_DICT_ITEM = "/api/internal/dict/item";
 
-  /** 字典列表查询路径（P1-6 修正：原值 /api/v1/dict/list 在契约中不存在） */
+  /** 字典列表查询路径（P1-6 修正：原值 /api/dict/list 在契约中不存在） */
   public static final String SYSTEM_PATH_DICT_LIST = "/api/internal/dict/list";
 
-  /** 系统配置获取路径（P1-6 修正：原值 /api/v1/config/get 在契约中不存在） */
+  /** 系统配置获取路径（P1-6 修正：原值 /api/config/get 在契约中不存在） */
   public static final String SYSTEM_PATH_CONFIG_GET = "/api/internal/config/get";
 
-  /** 应用信息校验路径（P1-6 修正：原值 /api/v1/app/validate 在契约中不存在） */
+  /** 应用信息校验路径（P1-6 修正：原值 /api/app/validate 在契约中不存在） */
   public static final String SYSTEM_PATH_APP_VALIDATE = "/api/internal/app/validate";
 
   // ======================== 消息服务路径常量 ========================
@@ -68,11 +68,11 @@ public final class FeignClientConstants {
   public static final String MESSAGE_PATH_SEND = "/api/internal/message/send";
 
   /** 消息广播路径（P1-6 修正：实际端点位于 /notifications 子路径） */
-  public static final String MESSAGE_PATH_BROADCAST = "/api/v1/message/notifications/broadcast";
+  public static final String MESSAGE_PATH_BROADCAST = "/api/message/notifications/broadcast";
 
   /** 实时推送路径（单播，P1-6 修正：实际端点位于 /notifications 子路径） */
   public static final String MESSAGE_PATH_PUSH_REALTIME =
-      "/api/v1/message/notifications/push-realtime";
+      "/api/message/notifications/push-realtime";
 
   // ======================== 定时任务服务路径常量 ========================
 

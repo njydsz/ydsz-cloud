@@ -54,8 +54,8 @@ import com.njydsz.nextwiki.server.service.QuotaApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   GET  /api/v1/nextwiki/quota/info?scopeType=user&scopeId=xxx - 查询配额
- *   POST /api/v1/nextwiki/quota/set                            - 设置配额
+ *   GET  /api/nextwiki/quota/info?scopeType=user&scopeId=xxx - 查询配额
+ *   POST /api/nextwiki/quota/set                            - 设置配额
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -76,7 +76,7 @@ import com.njydsz.nextwiki.server.service.QuotaApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/quota")
+@RequestMapping("/api/nextwiki/quota")
 @RequiredArgsConstructor
 @Tag(name = "存储配额", description = "配额查询、设置、校验（支持 user/tenant/project 维度）")
 public class QuotaController {

@@ -62,11 +62,11 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST /api/v1/nextwiki/tags                       - 创建标签
- *   GET  /api/v1/nextwiki/tags                       - 查询所有标签
- *   POST /api/v1/nextwiki/tags/bind                  - 为文件绑定标签
- *   GET  /api/v1/nextwiki/tags/file/{fileNodeId}     - 查询文件的标签
- *   GET  /api/v1/nextwiki/tags/recommend/{fileNodeId}- 智能推荐标签
+ *   POST /api/nextwiki/tags                       - 创建标签
+ *   GET  /api/nextwiki/tags                       - 查询所有标签
+ *   POST /api/nextwiki/tags/bind                  - 为文件绑定标签
+ *   GET  /api/nextwiki/tags/file/{fileNodeId}     - 查询文件的标签
+ *   GET  /api/nextwiki/tags/recommend/{fileNodeId}- 智能推荐标签
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -87,7 +87,7 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/tags")
+@RequestMapping("/api/nextwiki/tags")
 @RequiredArgsConstructor
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "标签管理",

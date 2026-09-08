@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  *
  * <pre>{@code
  * @SecondaryAuth(scene = "password_change", level = SensitiveLevel.HIGH)
- * @PutMapping("/api/v1/user/password")
+ * @PutMapping("/api/user/password")
  * public YdszResponse<Void> changePassword(@RequestBody ChangePasswordDTO dto) {
  *     // 业务逻辑
  * }
@@ -35,7 +35,7 @@ import java.lang.annotation.Target;
  * <p><b>验证流程：</b>
  *
  * <ol>
- *   <li>前端先调用 {@code /api/v1/auth/secondary-auth} 接口，传入场景标识和当前用户密码
+ *   <li>前端先调用 {@code /api/auth/secondary-auth} 接口，传入场景标识和当前用户密码
  *   <li>后端校验密码通过后，在 Redis 中写入场景化的安全标记（Key: {@code userinfo:safe:{scene}:{userId}}）
  *   <li>请求到达目标方法时，AOP 切面检查对应场景的 Redis 标记是否存在且有效
  *   <li>未通过验证时抛出 {@code SECONDARY_AUTH_REQUIRED} 异常

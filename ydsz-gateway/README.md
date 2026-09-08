@@ -404,7 +404,7 @@ curl http://localhost:9000/actuator/health
 curl http://localhost:9000/actuator/prometheus
 
 # 路由到 userinfo（需要先启动 userinfo）
-curl http://localhost:9000/api/v1/user/actuator/health
+curl http://localhost:9000/api/user/actuator/health
 ```
 
 ## 测试
@@ -421,14 +421,14 @@ curl http://localhost:9000/api/v1/user/actuator/health
 
 | 路由 ID | 服务 | 路径前缀 |
 |---|---|---|
-| `ydsz-userinfo` | 用户服务 | `/api/v1/auth/**`, `/api/v1/user/**`, `/api/v1/company/**`, `/api/v1/dept/**`, `/api/v1/menu/**`, `/api/v1/post/**`, `/api/v1/role/**`, `/api/v1/language/**`, `/api/v1/oauth2/**`, `/api/v1/userinfo/**`, `/api/internal/**`, `/feign/**` |
-| `ydsz-workflow` | 工作流服务 | `/api/v1/workflow/**` |
-| `ydsz-system` | 系统服务 | `/api/v1/config/**`, `/api/v1/dict/**`, `/api/v1/app/**`, `/api/v1/variable/**`, `/api/v1/system/**`, `/api/v1/search/**` |
-| `ydsz-message` | 消息服务 | `/api/v1/message/**` |
-| `ydsz-cronjob` | 定时任务服务 | `/api/v1/cronjob/**` |
-| `ydsz-literule` | 规则引擎服务 | `/api/v1/literule/**` |
-| `ydsz-agent` | Agent 服务 | `/api/v1/agent/**`（响应超时 120s） |
-| `ydsz-nextwiki` | 知识库服务 | `/api/v1/nextwiki/**` |
+| `ydsz-userinfo` | 用户服务 | `/api/auth/**`, `/api/user/**`, `/api/company/**`, `/api/dept/**`, `/api/menu/**`, `/api/post/**`, `/api/role/**`, `/api/language/**`, `/api/oauth2/**`, `/api/userinfo/**`, `/api/internal/**`, `/feign/**` |
+| `ydsz-workflow` | 工作流服务 | `/api/workflow/**` |
+| `ydsz-system` | 系统服务 | `/api/config/**`, `/api/dict/**`, `/api/app/**`, `/api/variable/**`, `/api/system/**`, `/api/search/**` |
+| `ydsz-message` | 消息服务 | `/api/message/**` |
+| `ydsz-cronjob` | 定时任务服务 | `/api/cronjob/**` |
+| `ydsz-literule` | 规则引擎服务 | `/api/literule/**` |
+| `ydsz-agent` | Agent 服务 | `/api/agent/**`（响应超时 120s） |
+| `ydsz-nextwiki` | 知识库服务 | `/api/nextwiki/**` |
 
 ## 常见问题
 

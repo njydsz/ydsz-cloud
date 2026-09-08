@@ -53,8 +53,8 @@ import com.njydsz.nextwiki.server.service.BatchImportApplicationService;
  * <h3>接口路径</h3>
  *
  * <pre>
- *   POST /api/v1/nextwiki/import/batch-upload - 批量上传
- *   POST /api/v1/nextwiki/import/zip          - ZIP 导入
+ *   POST /api/nextwiki/import/batch-upload - 批量上传
+ *   POST /api/nextwiki/import/zip          - ZIP 导入
  * </pre>
  *
  * <h3>架构位置</h3>
@@ -75,7 +75,7 @@ import com.njydsz.nextwiki.server.service.BatchImportApplicationService;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/import")
+@RequestMapping("/api/nextwiki/import")
 @RequiredArgsConstructor
 @Tag(name = "批量导入", description = "批量文件上传、ZIP 压缩包导入（自动解压保留目录结构）")
 public class BatchImportController {

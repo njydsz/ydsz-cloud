@@ -47,7 +47,7 @@ import com.njydsz.system.server.service.ConfigService;
  * 系统配置用于集中管理运行时可调参数（如功能开关、限流阈值、第三方服务地址、密钥等）， 配合 Nacos 实现动态配置下发，业务模块通过 {@code @NacosValue} 或 {@code
  * ConfigClient} 监听变更。
  *
- * <p><b>接口路径：</b>{@code /api/v1/config}
+ * <p><b>接口路径：</b>{@code /api/config}
  *
  * <p><b>安全特性：</b>
  *
@@ -68,7 +68,7 @@ import com.njydsz.system.server.service.ConfigService;
 @Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作 + 导入导出")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/config")
+@RequestMapping("/api/config")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:config:list")
 public class ConfigController {

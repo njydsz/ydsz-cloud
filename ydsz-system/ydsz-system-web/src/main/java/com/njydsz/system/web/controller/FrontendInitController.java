@@ -31,7 +31,7 @@ import com.njydsz.system.server.service.FrontendInitService;
  *   <li>系统版本号
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/system/init}
+ * <p><b>接口路径：</b>{@code /api/system/init}
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -39,7 +39,7 @@ import com.njydsz.system.server.service.FrontendInitService;
 @Tag(name = "前端初始化", description = "前端启动聚合数据接口")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/system/init")
+@RequestMapping("/api/system/init")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:frontend:init")
 public class FrontendInitController {

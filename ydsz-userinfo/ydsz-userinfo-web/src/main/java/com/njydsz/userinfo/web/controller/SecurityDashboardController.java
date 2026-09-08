@@ -40,7 +40,7 @@ import com.njydsz.userinfo.server.auth.SessionActivityService;
  *   <li>会话活跃度：活跃用户排行、会话趋势、设备分布、异常会话检测</li>
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/admin/security}
+ * <p><b>接口路径：</b>{@code /api/admin/security}
  *
  * <p><b>权限要求：</b>所有接口需 {@code admin:security:view} 权限。
  *
@@ -49,7 +49,7 @@ import com.njydsz.userinfo.server.auth.SessionActivityService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin/security")
+@RequestMapping("/api/admin/security")
 @RequiredArgsConstructor
 @Tag(name = "安全仪表盘", description = "安全指标和会话活跃度统计")
 public class SecurityDashboardController {

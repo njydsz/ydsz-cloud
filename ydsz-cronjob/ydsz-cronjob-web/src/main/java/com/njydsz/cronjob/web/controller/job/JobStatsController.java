@@ -51,7 +51,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Tag(name = "任务执行统计", description = "每日趋势、范围汇总、仪表盘、热力图、失败列表")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/stats")
+@RequestMapping("/api/cronjob/stats")
 @RequiredArgsConstructor
 public class JobStatsController {
   /** 集合初始容量 */

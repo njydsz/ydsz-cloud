@@ -73,7 +73,7 @@ public class ScriptDefinitionDTO implements Serializable {
   @Builder.Default private boolean sandboxEnabled = true;
 
   /** 是否启用 */
-  @Builder.Default private boolean enabled = true;
+  @Builder.Default private boolean isEnabled = true;
 
   /** 优先级（数值越小越先执行） */
   @Builder.Default private int priority = Rule.DEFAULT_PRIORITY;

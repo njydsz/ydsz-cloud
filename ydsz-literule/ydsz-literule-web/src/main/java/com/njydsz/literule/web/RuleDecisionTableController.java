@@ -64,7 +64,7 @@ import com.njydsz.literule.server.converter.LiteruleWebConverter;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/literule/rules")
+@RequestMapping("/api/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "决策表管理", description = "决策表 CRUD、评估与 Excel 导入导出")

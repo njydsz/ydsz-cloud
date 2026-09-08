@@ -4,7 +4,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 /**
@@ -16,7 +15,6 @@ import lombok.Data;
  * @since 26.09.07
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiKeyVO implements Serializable {
 
   @Serial

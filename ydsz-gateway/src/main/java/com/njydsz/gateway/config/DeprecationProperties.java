@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     deprecation:
  *       enabled: true
  *       apis:
- *         - path: /api/v1/message/send
+ *         - path: /api/message/send
  *           since: "v1"
  *           replacement: "v2"
  *           removalDate: "2026-12-31"
@@ -44,7 +44,7 @@ public class DeprecationProperties {
   /** 单条弃用 API 配置项 */
   @Data
   public static class DeprecatedApiEntry {
-    /** 弃用路径前缀（如 /api/v1/message/send） */
+    /** 弃用路径前缀（如 /api/message/send） */
     private String path;
 
     /** 弃用起始版本 */

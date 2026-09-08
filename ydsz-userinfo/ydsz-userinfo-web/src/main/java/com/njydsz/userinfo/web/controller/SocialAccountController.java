@@ -32,14 +32,14 @@ import com.njydsz.userinfo.server.auth.SocialAuthService;
  *   <li>解绑指定的社交账号</li>
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/profile/social}
+ * <p><b>接口路径：</b>{@code /api/profile/social}
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/profile/social")
+@RequestMapping("/api/profile/social")
 @RequiredArgsConstructor
 @Tag(name = "第三方账号绑定", description = "社交账号绑定管理")
 public class SocialAccountController {

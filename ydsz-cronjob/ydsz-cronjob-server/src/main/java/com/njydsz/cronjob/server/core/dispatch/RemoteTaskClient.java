@@ -33,7 +33,7 @@ import com.njydsz.cronjob.server.config.RemoteConfig;
  * <pre>
  * Leader.executeShardedJob
  *   └─ RemoteTaskClient.dispatch(node, request)
- *        └─ HTTP POST → http://{node.host}:{node.port}/api/v1/cronjob/internal/execute
+ *        └─ HTTP POST → http://{node.host}:{node.port}/api/cronjob/internal/execute
  *             └─ Executor.InternalJobController.execute(request)
  *                  └─ TaskDispatcher.executeLocally(job, triggerType, shardIndex, shardTotal)
  *                       └─ executeShard(...) → 返回 logId
@@ -374,7 +374,7 @@ public class RemoteTaskClient {
   /**
    * 附加内部通信鉴权头（配置了 access-token 时携带）。
    *
-   * <p>接收端 {@code InternalTokenFilter} 对 /api/v1/cronjob/internal/** 强制校验该请求头；
+   * <p>接收端 {@code InternalTokenFilter} 对 /api/cronjob/internal/** 强制校验该请求头；
    * 未配置令牌时（access-token 为空）不携带，兼容旧集群节点互调。
    *
    * @param builder HTTP 请求构造器

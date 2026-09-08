@@ -34,9 +34,9 @@ import com.njydsz.system.server.service.VariableService;
  *
  * <p>提供系统变量的完整 CRUD 接口（分页查询、按 ID 查询、新增、更新、删除）以及按变量键查询值的能力。
  * 系统变量是面向业务侧的运行时参数（如「当前生效的会计年度」「最近结算月份」「业务开关状态」等）， 业务方可通过 {@code
- * /api/v1/variable/key/{variableKey}} 端点直接获取变量值（走 Redis 缓存）。
+ * /api/variable/key/{variableKey}} 端点直接获取变量值（走 Redis 缓存）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/variable}
+ * <p><b>接口路径：</b>{@code /api/variable}
  *
  * <p><b>与 Config 的区别：</b>
  *
@@ -63,7 +63,7 @@ import com.njydsz.system.server.service.VariableService;
 @Tag(name = "系统变量", description = "系统变量 CRUD + 按 key 查询（高频调用走 Redis 缓存）")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/variable")
+@RequestMapping("/api/variable")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:variable:list")
 public class VariableController {

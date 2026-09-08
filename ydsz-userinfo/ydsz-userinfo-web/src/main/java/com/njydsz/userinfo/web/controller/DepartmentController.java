@@ -32,7 +32,7 @@ import com.njydsz.userinfo.server.service.DepartmentService;
  *
  * <p>提供部门的完整管理能力（CRUD）、部门树形结构查询。 部门是组织架构的核心节点，支持无限级树形结构（{@code parentId="0"} = 根部门）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/dept}
+ * <p><b>接口路径：</b>{@code /api/dept}
  *
  * <p><b>安全特性：</b>写接口启用 {@link Idempotent} 防重复、{@link RateLimit} 限流、{@link Audit} 审计日志。
  *
@@ -42,7 +42,7 @@ import com.njydsz.userinfo.server.service.DepartmentService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/dept")
+@RequestMapping("/api/dept")
 @RequiredArgsConstructor
 @Tag(name = "部门管理", description = "部门 CRUD、树形结构查询")
 public class DepartmentController {

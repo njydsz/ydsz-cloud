@@ -151,7 +151,7 @@
         const refreshData = () => {
           loading.value = true;
           // 从后端 API 获取全局拓扑数据
-          fetch('/api/v1/cronjob/topology/global')
+          fetch('/api/cronjob/topology/global')
             .then(resp => resp.json())
             .then(result => {
               if (result.code === 'A00000' && result.data) {

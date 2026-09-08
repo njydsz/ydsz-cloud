@@ -58,7 +58,7 @@ import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 @Tag(name = "DAG工作流实例", description = "DAG 实例查询、暂停/恢复/取消、可视化、上下文管理")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/dag/instance")
+@RequestMapping("/api/cronjob/dag/instance")
 @RequiredArgsConstructor
 public class JobDagInstanceController {
 

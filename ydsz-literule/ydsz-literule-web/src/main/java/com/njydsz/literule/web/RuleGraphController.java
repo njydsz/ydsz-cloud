@@ -62,7 +62,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/literule/rules")
+@RequestMapping("/api/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则链画布", description = "规则链画布编辑、校验、Dry-run 与表达式函数市场")

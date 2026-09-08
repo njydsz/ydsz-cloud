@@ -26,7 +26,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>典型使用：</b>
  *
  * <ul>
- *   <li>前端 i18n 加载：从 {@code /api/v1/Language/list} 获取所有启用语言，构造语言切换器
+ *   <li>前端 i18n 加载：从 {@code /api/Language/list} 获取所有启用语言，构造语言切换器
  *   <li>后端消息文案：通过 {@code LocaleContextHolder} 获取当前语言，匹配 {@code ydsz_i18n_message} 表
  *   <li>浏览器语言探测：根据 {@code Accept-Language} 头选择最匹配语言
  * </ul>

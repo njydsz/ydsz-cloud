@@ -31,7 +31,7 @@ import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
  *   <li>获取待处理告警数量统计</li>
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/admin/security/alerts}
+ * <p><b>接口路径：</b>{@code /api/admin/security/alerts}
  *
  * <p><b>权限要求：</b>所有接口需 {@code admin:security:alert} 权限。
  *
@@ -40,7 +40,7 @@ import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin/security/alerts")
+@RequestMapping("/api/admin/security/alerts")
 @RequiredArgsConstructor
 @Tag(name = "安全告警管理", description = "安全告警查询与处理")
 public class SecurityAlertController {

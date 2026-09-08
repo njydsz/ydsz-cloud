@@ -33,7 +33,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  * <p>提供菜单的完整管理能力（CRUD）、菜单树查询、当前用户菜单查询。 菜单（{@code ydsz_rbac_menu}）是 RBAC 模型中最细粒度的「权限点」，既可以表示前端路由节点，
  * 也可以表示后端接口权限码（如 {@code system:user:create}）。
  *
- * <p><b>接口路径：</b>{@code /api/v1/Menu}
+ * <p><b>接口路径：</b>{@code /api/Menu}
  *
  * <p><b>核心能力：</b>
  *
@@ -71,7 +71,7 @@ import com.njydsz.userinfo.server.service.MenuService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/menu")
+@RequestMapping("/api/menu")
 @RequiredArgsConstructor
 @Tag(name = "菜单管理", description = "菜单/权限 CRUD、树形结构查询")
 public class MenuController {

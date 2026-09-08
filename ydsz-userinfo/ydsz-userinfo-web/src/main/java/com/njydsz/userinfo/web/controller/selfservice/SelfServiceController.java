@@ -42,7 +42,7 @@ import com.njydsz.userinfo.server.service.SelfServiceService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/self-service")
+@RequestMapping("/api/self-service")
 @RequiredArgsConstructor
 @Tag(name = "自助服务", description = "用户自助注册、找回密码（无需登录）")
 public class SelfServiceController {

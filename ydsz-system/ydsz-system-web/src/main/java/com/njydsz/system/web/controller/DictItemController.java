@@ -40,7 +40,7 @@ import com.njydsz.system.server.service.DictItemService;
  * <p>提供字典项的完整 CRUD 接口（分页查询、按 ID 查询、新增、更新、删除）以及多种业务查询能力 （按 typeCode+itemCode 精确查询、按 typeCode
  * 查询启用项列表、查询子字典项）。 字典项是字典类型的具体枚举值，配合 {@link DictController} 实现两级字典体系。
  *
- * <p><b>接口路径：</b>{@code /api/v1/dict/item}
+ * <p><b>接口路径：</b>{@code /api/dict/item}
  *
  * <p><b>核心接口：</b>
  *
@@ -68,7 +68,7 @@ import com.njydsz.system.server.service.DictItemService;
 @Tag(name = "字典项", description = "字典项 CRUD + 批量操作 + 按类型查询 + 树形查询")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/dict/item")
+@RequestMapping("/api/dict/item")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:dict:item:list")
 public class DictItemController {

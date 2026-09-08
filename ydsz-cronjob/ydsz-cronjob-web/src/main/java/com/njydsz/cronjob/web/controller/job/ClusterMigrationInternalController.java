@@ -38,7 +38,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @Slf4j
 @Tag(name = "集群漂移（内部接收端）", description = "接收远程集群的漂移注册/注销请求")
 @RestController
-@RequestMapping("/api/v1/cronjob/internal/migrate")
+@RequestMapping("/api/cronjob/internal/migrate")
 @RequiredArgsConstructor
 public class ClusterMigrationInternalController {
 

@@ -74,7 +74,7 @@ import com.njydsz.literule.server.cep.CEPPattern;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/literule/cep")
+@RequestMapping("/api/literule/cep")
 @RequiredArgsConstructor
 @Tag(name = "CEP 复杂事件处理", description = "模式管理 / 事件投递 / 命中查询 / 引擎状态")
 public class CEPController {

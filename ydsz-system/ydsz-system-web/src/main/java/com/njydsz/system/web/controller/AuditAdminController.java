@@ -29,7 +29,7 @@ import com.njydsz.common.web.version.ApiVersion;
  *
  * <p>数据来源：调用 {@link AuditQueryService} (ydsz-common-audit 提供的查询能力)， 充分利用已有查询服务，避免重复编写 SQL 查询逻辑。
  *
- * <p><b>接口路径：</b>{@code /api/v1/admin/audit}
+ * <p><b>接口路径：</b>{@code /api/admin/audit}
  *
  * <p><b>权限要求：</b>建议通过网关或拦截器限制仅管理员角色访问（ADMIN 权限）。 具体鉴权机制由上层安全框架（如 Spring Security / Shiro）负责。
  *
@@ -46,7 +46,7 @@ import com.njydsz.common.web.version.ApiVersion;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin/audit")
+@RequestMapping("/api/admin/audit")
 @RequiredArgsConstructor
 @ApiVersion("1")
 @Tag(name = "审计日志管理", description = "审计日志查询（运营/管理后台）")

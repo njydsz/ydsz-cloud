@@ -28,7 +28,7 @@ import com.njydsz.system.server.service.ApiPermissionService;
  * 接口权限元数据由启动时自动扫描 {@code @AuthApiPermission} 注解注册到 DB，
  * 权限校验仍走 Redis（兼容现有体系），DB 仅作为「接口注册中心」展示哪些接口存在。
  *
- * <p><b>接口路径：</b>{@code /api/v1/permission/api}
+ * <p><b>接口路径：</b>{@code /api/permission/api}
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -37,7 +37,7 @@ import com.njydsz.system.server.service.ApiPermissionService;
 @Tag(name = "接口权限管理", description = "接口权限自动注册查看/同步管理")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/permission/api")
+@RequestMapping("/api/permission/api")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:permission:api-list")
 public class ApiPermissionController {

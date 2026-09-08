@@ -82,7 +82,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @Slf4j
 @Tag(name = "任务分组管理", description = "按业务域分组的任务批量管理：分页、暂停/恢复/触发、统计")
 @RestController
-@RequestMapping("/api/v1/cronjob/group")
+@RequestMapping("/api/cronjob/group")
 @RequiredArgsConstructor
 public class JobGroupController {
   /** 集合初始容量 */

@@ -43,24 +43,24 @@
 | **历史归档** | 定时归档 + 清理（可配置 cron / 阈值天数） |
 | **附件预览** | 外部预览服务集成（kkFileView / Office Online） |
 
-### 2. 关键 Controller（基路径 `/api/v1/workflow`）
+### 2. 关键 Controller（基路径 `/api/workflow`）
 
 | Controller | 路径前缀 | 作用 |
 |---|---|---|
-| `FlowDefinitionController` | `/api/v1/workflow/engine` | 流程定义 CRUD / 部署 / SLA 扫描 |
-| `FlowInstanceController` | `/api/v1/workflow/engine` | 流程实例（发起 / 审批 / 驳回 / 审计轨迹 / 自动触发器） |
-| `FlowTaskController` | `/api/v1/workflow/engine` | 审批任务（待办 / 已办 / 委派授权 / 批量催办 / 附件） |
-| `FlowDesignerController` | `/api/v1/workflow/engine` | 设计器（表单 / 表达式 / SLA 配置 / 模板 / 版本对比） |
-| `FlowMonitorDashboardController` | `/api/v1/workflow/engine` | 流程监控看板（概览 / 趋势 / 异常检测 / 健康度评分） |
-| `FlowEmbeddedApprovalController` | `/api/v1/workflow/embedded` | 嵌入式审批面板 |
-| `FlowAdvancedController` | `/api/v1/workflow/advanced` | 合并审批 / 加签投票 / 去重 / 周报月报 / 催办限流等 |
-| `FlowAnalyticsController` | `/api/v1/workflow/analytics` | 审批分析仪表盘（总览 / 效率排行 / 节点耗时 / 趋势） |
-| `FlowCommentController` | `/api/v1/workflow/comment` | 评论（树形回复）/ 常用意见 |
-| `FlowCategoryController` | `/api/v1/workflow/categories` | 流程分类（树形） |
-| `FlowTemplateController` | `/api/v1/workflow/template` | 流程模板市场（查询 / 导入 / 导出 / 版本 / 智能推荐） |
+| `FlowDefinitionController` | `/api/workflow/engine` | 流程定义 CRUD / 部署 / SLA 扫描 |
+| `FlowInstanceController` | `/api/workflow/engine` | 流程实例（发起 / 审批 / 驳回 / 审计轨迹 / 自动触发器） |
+| `FlowTaskController` | `/api/workflow/engine` | 审批任务（待办 / 已办 / 委派授权 / 批量催办 / 附件） |
+| `FlowDesignerController` | `/api/workflow/engine` | 设计器（表单 / 表达式 / SLA 配置 / 模板 / 版本对比） |
+| `FlowMonitorDashboardController` | `/api/workflow/engine` | 流程监控看板（概览 / 趋势 / 异常检测 / 健康度评分） |
+| `FlowEmbeddedApprovalController` | `/api/workflow/embedded` | 嵌入式审批面板 |
+| `FlowAdvancedController` | `/api/workflow/advanced` | 合并审批 / 加签投票 / 去重 / 周报月报 / 催办限流等 |
+| `FlowAnalyticsController` | `/api/workflow/analytics` | 审批分析仪表盘（总览 / 效率排行 / 节点耗时 / 趋势） |
+| `FlowCommentController` | `/api/workflow/comment` | 评论（树形回复）/ 常用意见 |
+| `FlowCategoryController` | `/api/workflow/categories` | 流程分类（树形） |
+| `FlowTemplateController` | `/api/workflow/template` | 流程模板市场（查询 / 导入 / 导出 / 版本 / 智能推荐） |
 
 > **Controller 数量说明**：`web/controller/` 共 15 个 Controller 文件。除 `embedded`、`advanced`、
-> `analytics`、`comment`、`categories`、`template` 外，其余 Controller 统一挂载在 `/api/v1/workflow/engine`
+> `analytics`、`comment`、`categories`、`template` 外，其余 Controller 统一挂载在 `/api/workflow/engine`
 > 前缀下，通过方法级路径区分功能。
 
 ## 数据库表设计

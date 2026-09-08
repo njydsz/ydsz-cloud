@@ -49,7 +49,7 @@ import com.njydsz.common.permission.PermissionCodes;
 @Tag(name = "GLUE 编辑器", description = "GLUE 任务 Handler 在线代码编辑")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/cronjob/glue")
+@RequestMapping("/api/cronjob/glue")
 @RequiredArgsConstructor
 public class GlueEditorController {
 

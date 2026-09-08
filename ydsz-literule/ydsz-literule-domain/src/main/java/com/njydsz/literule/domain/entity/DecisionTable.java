@@ -59,6 +59,7 @@ public class DecisionTable extends MpBaseEntity<String> {
   private String hitPolicy;
 
   /** 是否启用 */
+  @TableField("enabled")
   private Boolean isEnabled;
 
   /** 优先级 */

@@ -222,7 +222,7 @@ public final class PathGuard {
   private static final List<String> DEFAULT_WHITELIST = List.of(
       "/actuator/**",
       "/auth/**",
-      "/api/v1/auth/**",
+      "/api/auth/**",
       "/login",
       "/error");
 

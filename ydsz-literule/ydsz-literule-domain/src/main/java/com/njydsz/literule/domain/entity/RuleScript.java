@@ -1,5 +1,6 @@
 package com.njydsz.literule.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -49,6 +50,7 @@ public class RuleScript extends MpBaseEntity<String> {
   private Integer priority;
 
   /** 是否启用 */
+  @TableField("enabled")
   private Boolean isEnabled;
 
   /** 适用范围 */

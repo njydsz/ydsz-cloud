@@ -39,7 +39,7 @@ import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
  *   <li>删除应用</li>
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/admin/oauth2/applications}
+ * <p><b>接口路径：</b>{@code /api/admin/oauth2/applications}
  *
  * <p><b>权限要求：</b>所有接口需 {@code admin:oauth2:application} 权限。
  *
@@ -48,7 +48,7 @@ import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/admin/oauth2/applications")
+@RequestMapping("/api/admin/oauth2/applications")
 @RequiredArgsConstructor
 @Tag(name = "OAuth2 应用管理", description = "OAuth2 客户端应用注册与管理")
 public class OAuth2ApplicationController {

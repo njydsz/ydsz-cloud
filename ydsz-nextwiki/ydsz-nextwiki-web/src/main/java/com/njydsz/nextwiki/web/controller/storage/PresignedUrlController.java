@@ -45,7 +45,7 @@ import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 @ApiVersion("v1")
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/nextwiki/storage")
+@RequestMapping("/api/nextwiki/storage")
 @RequiredArgsConstructor
 @Tag(name = "存储直传", description = "Presigned URL 生成、直传凭证")
 public class PresignedUrlController {

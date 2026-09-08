@@ -27,7 +27,7 @@ import com.njydsz.generator.vo.GenResultVO;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/generator/code")
+@RequestMapping("/api/generator/code")
 @RequiredArgsConstructor
 public class CodeGenController {
 

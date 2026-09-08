@@ -124,7 +124,7 @@ public class CrossDecisionTableDefinitionDTO implements Serializable {
   private Map<String, Object> defaultActions;
 
   /** 是否启用 */
-  @Builder.Default private boolean enabled = true;
+  @Builder.Default private boolean isEnabled = true;
 
   /** 优先级 */
   @Builder.Default private int priority = Rule.DEFAULT_PRIORITY;
