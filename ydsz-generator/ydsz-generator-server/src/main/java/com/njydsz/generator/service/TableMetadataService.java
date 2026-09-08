@@ -207,12 +207,12 @@ public class TableMetadataService {
               .columnName(colName)
               .dataType(rs.getString("TYPE_NAME"))
               .columnSize(rs.getInt("COLUMN_SIZE"))
-              .nullable(rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable)
-              .pk(pks.contains(colName))
+.isNullable(rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable)
+        .isPk(pks.contains(colName))
               .comment(rs.getString("REMARKS"))
-              .dtoSkipped(false)
-              .voSkipped(false)
-              .querySkipped(false)
+        .isDtoSkipped(false)
+        .isVoSkipped(false)
+        .isQuerySkipped(false)
               .build();
           columns.add(col);
         }

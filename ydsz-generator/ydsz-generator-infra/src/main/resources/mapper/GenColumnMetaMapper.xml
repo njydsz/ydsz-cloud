@@ -8,14 +8,14 @@
     <result column="column_name"         property="columnName"/>
     <result column="data_type"           property="dataType"/>
     <result column="column_size"         property="columnSize"/>
-    <result column="nullable"            property="nullable"/>
-    <result column="is_pk"               property="pk"/>
+    <result column="nullable"            property="isNullable"/>
+    <result column="is_pk"               property="isPk"/>
     <result column="comment"             property="comment"/>
     <result column="override_java_type"  property="overrideJavaType"/>
     <result column="override_field_name" property="overrideFieldName"/>
-    <result column="skip_dto"            property="dtoSkipped"/>
-    <result column="skip_vo"             property="voSkipped"/>
-    <result column="skip_query"          property="querySkipped"/>
+    <result column="skip_dto"            property="isDtoSkipped"/>
+    <result column="skip_vo"             property="isVoSkipped"/>
+    <result column="skip_query"          property="isQuerySkipped"/>
     <result column="extra_config"        property="extraConfig"/>
   </resultMap>
 
