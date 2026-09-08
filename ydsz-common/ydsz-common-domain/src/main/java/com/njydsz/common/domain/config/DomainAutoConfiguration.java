@@ -20,5 +20,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
     matchIfMissing = true)
 @EnableConfigurationProperties(DomainProperties.class)
 public class DomainAutoConfiguration {
-  // 配置绑定由 @EnableConfigurationProperties 激活
+  /**
+   * 空类体：配置绑定由 {@code @EnableConfigurationProperties(DomainProperties.class)} 注解激活，
+   * 无需显式声明 Bean。通过 {@code ydsz.domain.enabled=false} 可关闭整个 Domain 模块。
+   */
 }

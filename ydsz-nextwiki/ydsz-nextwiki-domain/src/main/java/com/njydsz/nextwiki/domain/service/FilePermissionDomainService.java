@@ -76,8 +76,8 @@ public class FilePermissionDomainService {
             .granteeType(granteeType)
             .granteeId(granteeId)
             .permissionMask(permissionMask)
-            .isInherited(false)
-            .owner(false)
+.isInherited(false)
+.isOwner(false)
             .build();
 
     acl.setCreatedBy(userId);

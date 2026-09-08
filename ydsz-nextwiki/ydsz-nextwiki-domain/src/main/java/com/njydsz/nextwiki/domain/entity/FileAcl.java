@@ -52,7 +52,7 @@ public class FileAcl extends MpBaseEntity<String> implements Serializable {
   private Boolean isInherited;
 
   /** 是否为所有者（所有者拥有全部权限） */
-  private Boolean owner;
+  private Boolean isOwner;
 
   /** 权限位常量：读取 */
   public static final int PERM_READ = 1;

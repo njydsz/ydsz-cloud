@@ -107,6 +107,14 @@ public class DataValidator {
     /** 错误描述 */
     private final String message;
 
+    /**
+     * 构造校验错误详情。
+     *
+     * @param rowNum Excel 行号（从 1 开始）
+     * @param fieldName 字段中文名（若未配置则为 Java 字段名）
+     * @param value 字段实际值（可能为 null）
+     * @param message 错误描述
+     */
     public ValidationError(int rowNum, String fieldName, Object value, String message) {
       this.rowNum = rowNum;
       this.fieldName = fieldName;
@@ -114,22 +122,49 @@ public class DataValidator {
       this.message = message;
     }
 
+    /**
+     * 获取 Excel 行号。
+     *
+     * @return 行号（从 1 开始）
+     */
     public int getRowNum() {
       return rowNum;
     }
 
+    /**
+     * 获取字段中文名。
+     *
+     * @return 字段中文名（若未配置则为 Java 字段名）
+     */
     public String getFieldName() {
       return fieldName;
     }
 
+    /**
+     * 获取字段实际值。
+     *
+     * @return 字段实际值（可能为 null）
+     */
     public Object getValue() {
       return value;
     }
 
+    /**
+     * 获取错误描述。
+     *
+     * @return 错误描述文本
+     */
     public String getMessage() {
       return message;
     }
 
+    /**
+     * 返回格式化的错误描述文本。
+     *
+     * <p>格式：{@code fieldName: message (value=actualValue)}
+     *
+     * @return 可读的错误字符串，便于日志输出与调试
+     */
     @Override
     public String toString() {
       return fieldName + ": " + message + " (value=" + value + ")";

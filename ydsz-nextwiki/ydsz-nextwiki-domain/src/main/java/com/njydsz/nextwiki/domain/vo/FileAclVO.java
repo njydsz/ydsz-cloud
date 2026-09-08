@@ -39,7 +39,7 @@ public class FileAclVO implements Serializable {
   private Boolean isInherited;
 
   @Schema(description = "是否为所有者")
-  private Boolean owner;
+  private Boolean isOwner;
 
   @Schema(description = "创建人")
   private String createdBy;

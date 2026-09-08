@@ -38,11 +38,11 @@ public class CacheHealthIndicator {
 
   /** 健康状态枚举 */
   public enum Status {
-/** up */
+    /** 缓存正常运行。 */
     UP,
-/** warn */
+    /** 缓存存在告警（低命中率或高容量使用率）。 */
     WARN,
-/** down */
+    /** 缓存不可用或健康检查异常。 */
     DOWN
   }
 
@@ -55,6 +55,7 @@ public class CacheHealthIndicator {
   /** 命中率检查的最小访问样本数（低于此数量不判断命中率，默认 100） */
   private long minSampleSize = 100;
 
+  /** 受监控的缓存实例映射（key 为缓存名称，value 为缓存引用），通过 registerCache/unregisterCache 维护。 */
   private final Map<String, Cache<?, ?>> monitoredCaches = new ConcurrentHashMap<>();
 
   /**
@@ -163,7 +164,14 @@ public class CacheHealthIndicator {
     return new HealthResult(overallStatus, details);
   }
 
-  /** 检查单个缓存的健康状态 */
+  /**
+   * 检查单个缓存实例的健康状态。
+   *
+   * <p>评估维度包括大小、命中率、命中/未命中次数、容量使用率；任一维度触发阈值则将本缓存标记为 WARN。
+   *
+   * @param cache 待检查的缓存实例
+   * @return 健康详情映射，包含 size / hitRate / hitCount / missCount / maxSize / usage / status
+   */
   private Map<String, Object> checkCacheHealth(Cache<?, ?> cache) {
     Map<String, Object> details = new LinkedHashMap<>(16);
     Status status = Status.UP;
@@ -217,11 +225,26 @@ public class CacheHealthIndicator {
     return details;
   }
 
-  /** 健康检查结果 */
+  /**
+   * 健康检查结果封装。
+   *
+   * <p>聚合所有受监控缓存的健康状态，提供整体状态（status）和各缓存维度的详细指标（details）。
+   * 状态聚合规则：任一缓存为 DOWN 则整体为 DOWN；否则取最高告警级别（UP &lt; WARN &lt; DOWN）。
+   */
   public static class HealthResult {
+
+    /** 聚合后的整体健康状态。 */
     private final Status status;
+
+    /** 各缓存维度的健康详情，key 为缓存名称，value 为该缓存的指标映射（LinkedHashMap 保持注册顺序）。 */
     private final Map<String, Object> details;
 
+    /**
+     * 构造健康检查结果。
+     *
+     * @param status 聚合后的整体状态
+     * @param details 各缓存维度的健康详情映射
+     */
     HealthResult(Status status, Map<String, Object> details) {
       this.status = status;
       this.details = details;

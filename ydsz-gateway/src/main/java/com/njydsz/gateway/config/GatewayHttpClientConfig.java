@@ -4,6 +4,7 @@ import java.time.Duration;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -72,30 +73,36 @@ public class GatewayHttpClientConfig {
   /**
    * 获取连接超时（毫秒）
    *
-   * <p>超过此时间未获取到连接，抛出 PoolAcquireTimeoutException。 默认 45000ms（45s），与下游服务 30s 响应超时 + 缓冲。
+   * <p>超过此时间未获取到连接，抛出 PoolAcquireTimeoutException。
+   * 默认 45000ms（45s），与下游服务 30s 响应超时 + 缓冲。
    */
-  private long pendingAcquireTimeoutMs = 45000;
+  @Value("${ydsz.gateway.httpclient.pool.pending-acquire-timeout-ms:45000}")
+  private long pendingAcquireTimeoutMs;
 
   /**
    * 最大空闲时间（秒）
    *
-   * <p>连接空闲超过此时间后回收，避免持有半关闭连接。 默认 30s。
+   * <p>连接空闲超过此时间后回收，避免持有半关闭连接。默认 30s。
    */
-  private long maxIdleTimeSeconds = 30;
+  @Value("${ydsz.gateway.httpclient.pool.max-idle-time-seconds:30}")
+  private long maxIdleTimeSeconds;
 
   /**
    * 最大生命周期（秒）
    *
-   * <p>连接存活超过此时间后强制关闭重建， 避免被中间设备（LVS/SLB/Firewall）静默关闭导致请求失败。 默认 60s。
+   * <p>连接存活超过此时间后强制关闭重建，
+   * 避免被中间设备（LVS/SLB/Firewall）静默关闭导致请求失败。默认 60s。
    */
-  private long maxLifeTimeSeconds = 60;
+  @Value("${ydsz.gateway.httpclient.pool.max-life-time-seconds:60}")
+  private long maxLifeTimeSeconds;
 
   /**
    * 后台驱逐检查间隔（秒）
    *
-   * <p>Lettuce 风格的后台清理线程，定期扫描过期/泄漏连接。 默认 60s。
+   * <p>Lettuce 风格的后台清理线程，定期扫描过期/泄漏连接。默认 60s。
    */
-  private long evictionIntervalSeconds = 60;
+  @Value("${ydsz.gateway.httpclient.pool.eviction-interval-seconds:60}")
+  private long evictionIntervalSeconds;
 
   /**
    * 构建 Reactor Netty 连接提供者

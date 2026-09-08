@@ -10,7 +10,7 @@
         <result column="grantee_id" property="granteeId"/>
         <result column="permission_mask" property="permissionMask"/>
         <result column="is_inherited" property="isInherited"/>
-        <result column="is_owner" property="owner"/>
+        <result column="is_owner" property="isOwner"/>
         <result column="status" property="status"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
@@ -54,7 +54,7 @@
         VALUES
         <foreach collection="acls" item="acl" separator=",">
             (#{acl.id}, #{acl.fileNodeId}, #{acl.granteeType}, #{acl.granteeId},
-             #{acl.permissionMask}, #{acl.isInherited}, #{acl.owner}, 'active',
+             #{acl.permissionMask}, #{acl.isInherited}, #{acl.isOwner}, 'active',
              #{acl.createdBy}, NOW(), #{acl.updatedBy}, NOW(), 0, 0)
         </foreach>
     </insert>

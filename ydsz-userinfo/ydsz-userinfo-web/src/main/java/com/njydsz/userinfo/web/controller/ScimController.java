@@ -55,6 +55,12 @@ import com.njydsz.userinfo.server.service.UserAccountService;
  */
 @Slf4j
 @ApiVersion("26.09.01")
+/**
+ * SCIM 协议控制器（System for Cross-domain Identity Management）。
+ * <p>
+ * 路径含 /v2 是因为 SCIM 协议标准（RFC 7643/7644）规定，属于行业标准豁免 YDIZ-API-001。
+ * 项目统一通过 Header（X-Api-Version）控制自定义 API 版本，SCIM 路径按协议规范保留。
+ */
 @RestController
 @RequestMapping("${ydsz.userinfo.scim.base-path:/scim/v2}")
 @RequiredArgsConstructor
