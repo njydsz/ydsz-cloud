@@ -70,7 +70,7 @@ public class RuleTimeoutExecutor {
           .ruleCode(rule.getCode())
           .ruleName(rule.getName())
           .category(rule.getCategory())
-          .triggered(false)
+          .isTriggered(false)
           .description("评估超时（" + effectiveTimeout + "ms）")
           .triggeredAt(LocalDateTime.now())
           .build();
@@ -79,7 +79,7 @@ public class RuleTimeoutExecutor {
       log.warn("[LiteRule-Timeout] 规则 {} 评估被中断", rule.getCode());
       return RuleResultVO.builder()
           .ruleCode(rule.getCode())
-          .triggered(false)
+          .isTriggered(false)
           .description("评估被中断")
           .triggeredAt(LocalDateTime.now())
           .build();

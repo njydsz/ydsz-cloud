@@ -51,7 +51,7 @@ public class RuleTraceBuilder {
         .ruleCode(rule.getCode())
         .ruleName(rule.getName())
         .scenario(context.getScenario())
-        .triggered(result != null && result.isTriggered())
+        .isTriggered(result != null && result.isTriggered())
         .severity(severity)
         .conditionResult(conditionResult)
         .elapsedMs(elapsedMs)

@@ -82,7 +82,7 @@ public class ChainAsRule implements Rule {
    * @return 未触发的 RuleResultVO
    */
   private RuleResultVO notTriggered() {
-    return RuleResultVO.builder().ruleCode(getCode()).ruleName(getName()).triggered(false).build();
+    return RuleResultVO.builder().ruleCode(getCode()).ruleName(getName()).isTriggered(false).build();
   }
 
   /**

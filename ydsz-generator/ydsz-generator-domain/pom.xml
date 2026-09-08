@@ -23,6 +23,14 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-util</artifactId>
     </dependency>
+    <!-- mybatis: 编译期提供 JdbcType 等枚举，满足 mybatis-plus-annotation 注解默认值解析
+         原因：@TableField 注解的 jdbcType() 默认值引用了 org.apache.ibatis.type.JdbcType，
+         若缺失该依赖，javac 会报"未知的枚举常量 JdbcType.UNDEFINED"警告（YDIZ-WARN-001 红线） -->
+    <dependency>
+      <groupId>org.mybatis</groupId>
+      <artifactId>mybatis</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <!-- mybatis-plus-annotation: Domain Entity 使用 @TableId/@TableName -->
     <dependency>
       <groupId>com.baomidou</groupId>

@@ -158,7 +158,7 @@ public class DecisionTreeRule implements Rule {
       if (result == null) {
         return RuleResultVO.builder()
             .ruleCode(code)
-            .triggered(false)
+            .isTriggered(false)
             .triggeredAt(LocalDateTime.now())
             .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
             .build();
@@ -167,7 +167,7 @@ public class DecisionTreeRule implements Rule {
           .ruleCode(code)
           .ruleName(name)
           .category(category)
-          .triggered(true)
+          .isTriggered(true)
           .severity(result.severity.getCode())
           .title(result.title)
           .description(result.description)
@@ -178,7 +178,7 @@ public class DecisionTreeRule implements Rule {
       log.warn("[LiteRule-DecisionTree] 决策树 {} 评估异常: {}", code, e.getMessage());
       return RuleResultVO.builder()
           .ruleCode(code)
-          .triggered(false)
+          .isTriggered(false)
           .triggeredAt(LocalDateTime.now())
           .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
           .build();

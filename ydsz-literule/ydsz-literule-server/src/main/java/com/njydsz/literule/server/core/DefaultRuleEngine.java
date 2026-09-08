@@ -758,12 +758,12 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
           qualifiedCount++;
         }
       } catch (Exception e) {
-        all.add(
-            RuleResultVO.builder()
-                .ruleCode(rule.getCode())
-                .triggered(false)
-                .description("评估异常: " + e.getMessage())
-                .build());
+all.add(
+    RuleResultVO.builder()
+        .ruleCode(rule.getCode())
+        .isTriggered(false)
+        .description("评估异常: " + e.getMessage())
+        .build());
       }
     }
     return all;

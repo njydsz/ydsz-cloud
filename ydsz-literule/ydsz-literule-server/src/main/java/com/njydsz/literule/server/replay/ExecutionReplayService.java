@@ -299,7 +299,7 @@ public class ExecutionReplayService {
     versionDef.setEnabled(versionVO.getIsEnabled());
     versionDef.setScope(versionVO.getScope());
     versionDef.setMutexGroup(versionVO.getMutexGroup());
-    versionDef.setDrilldownAvailable(versionVO.getDrilldownAvailable());
+    versionDef.setDrilldownAvailable(versionVO.isDrilldownAvailable());
     versionDef.setVersion(versionVO.getVersion());
     versionDef.setStatus(versionVO.getStatus());
     versionDef.setEffectiveFrom(versionVO.getEffectiveFrom());

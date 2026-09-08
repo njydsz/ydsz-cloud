@@ -83,7 +83,7 @@ public class CrossDecisionTableRule implements Rule {
             .ruleCode(getCode())
             .ruleName(getName())
             .category(getCategory())
-            .triggered(false)
+            .isTriggered(false)
             .triggeredAt(LocalDateTime.now())
             .elapsedMs(elapsedMs(start))
             .build();
@@ -111,7 +111,7 @@ public class CrossDecisionTableRule implements Rule {
             .ruleCode(getCode())
             .ruleName(getName())
             .category(getCategory())
-            .triggered(false)
+            .isTriggered(false)
             .triggeredAt(LocalDateTime.now())
             .elapsedMs(elapsedMs(start))
             .build();
@@ -125,7 +125,7 @@ public class CrossDecisionTableRule implements Rule {
       log.warn("[LiteRule-CrossTable] 交叉决策表 {} 评估异常: {}", getCode(), e.getMessage());
       return RuleResultVO.builder()
           .ruleCode(getCode())
-          .triggered(false)
+          .isTriggered(false)
           .description("评估异常: " + e.getMessage())
           .triggeredAt(LocalDateTime.now())
           .elapsedMs(elapsedMs(start))
@@ -177,14 +177,14 @@ public class CrossDecisionTableRule implements Rule {
         .ruleCode(getCode())
         .ruleName(getName())
         .category(getCategory())
-        .triggered(true)
+        .isTriggered(true)
         .severity(severity.getCode())
         .title(title)
         .description(description)
         .currentValue(currentValue)
         .scope(definition.getScope())
         .triggeredAt(LocalDateTime.now())
-        .drilldownAvailable(true)
+        .isDrilldownAvailable(true)
         .elapsedMs(elapsedMs(startNano))
         .build();
   }

@@ -372,7 +372,7 @@ public class ScriptRule implements Rule {
               .ruleCode(code)
               .ruleName(name)
               .category(category)
-              .triggered(false)
+              .isTriggered(false)
               .description("脚本执行超时（" + sandboxTimeoutMs + "ms），可能存在死循环")
               .triggeredAt(LocalDateTime.now())
               .elapsedMs(elapsedMs(start))
@@ -383,7 +383,7 @@ public class ScriptRule implements Rule {
               .ruleCode(code)
               .ruleName(name)
               .category(category)
-              .triggered(false)
+              .isTriggered(false)
               .triggeredAt(LocalDateTime.now())
               .elapsedMs(elapsedMs(start))
               .build();
@@ -394,7 +394,7 @@ public class ScriptRule implements Rule {
               .ruleCode(code)
               .ruleName(name)
               .category(category)
-              .triggered(false)
+              .isTriggered(false)
               .triggeredAt(LocalDateTime.now())
               .elapsedMs(elapsedMs(start))
               .build();
@@ -409,7 +409,7 @@ public class ScriptRule implements Rule {
             .ruleCode(code)
             .ruleName(name)
             .category(category)
-            .triggered(false)
+            .isTriggered(false)
             .triggeredAt(LocalDateTime.now())
             .elapsedMs(elapsedMs(start))
             .build();
@@ -434,7 +434,7 @@ public class ScriptRule implements Rule {
           .ruleCode(code)
           .ruleName(name)
           .category(category)
-          .triggered(true)
+          .isTriggered(true)
           .severity(severity.getCode())
           .title(title)
           .description(desc)
@@ -449,7 +449,7 @@ public class ScriptRule implements Rule {
           .ruleCode(code)
           .ruleName(name)
           .category(category)
-          .triggered(false)
+          .isTriggered(false)
           .triggeredAt(LocalDateTime.now())
           .elapsedMs(elapsedMs(start))
           .build();
