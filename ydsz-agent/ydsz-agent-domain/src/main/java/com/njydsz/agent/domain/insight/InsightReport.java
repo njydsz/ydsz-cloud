@@ -3,12 +3,15 @@ package com.njydsz.agent.domain.insight;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 洞察报告领域实体（映射 ydsz_agt_insight_report 表）。
@@ -22,13 +25,13 @@ import lombok.NoArgsConstructor;
  * @since 26.09.07
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_insight_report")
-public class InsightReport {
+public class InsightReport extends MpBaseAuditEntity<Long> {
 
-  /** 自增主键 */
+  /** 自增主键（覆盖基类 ASSIGN_ID 为 AUTO，与数据库 SERIAL/BIGSERIAL 自增列对齐）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
 
@@ -71,9 +74,11 @@ public class InsightReport {
   /** 生成耗时（毫秒） */
   private Integer durationMs;
 
-  /** 创建时间 */
+  /** 创建时间（覆盖基类审计字段，与数据库 created_at 列对齐）。 */
+  @TableField("created_at")
   private LocalDateTime createdAt;
 
-  /** 更新时间 */
+  /** 更新时间（覆盖基类审计字段，与数据库 updated_at 列对齐）。 */
+  @TableField("updated_at")
   private LocalDateTime updatedAt;
 }

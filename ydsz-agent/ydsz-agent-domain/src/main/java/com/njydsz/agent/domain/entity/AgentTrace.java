@@ -1,10 +1,14 @@
 package com.njydsz.agent.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Agent 执行链路（映射 ydsz_agt_trace 表）
@@ -18,13 +22,14 @@ import lombok.NoArgsConstructor;
  * @since 26.09.01
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_trace")
-public class AgentTrace {
+public class AgentTrace extends MpBaseEntity<Long> {
 
-  /** 链路唯一 ID（主键，业务生成非自增） */
+  /** 链路唯一 ID（主键，业务生成非自增；覆盖基类 ASSIGN_ID 为 INPUT）。 */
+  @TableId(type = IdType.INPUT)
   private String traceId;
 
   /** 所属对话 ID */

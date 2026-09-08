@@ -12,11 +12,12 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 用户画像实体（映射 ydsz_agt_user_profile 表）
@@ -31,25 +32,22 @@ import lombok.NoArgsConstructor;
  *   <li>用户画像 — UserProfile（本类，长期偏好与习惯模型）</li>
  * </ul>
  *
+ * <p><b>Schema 说明</b>：{@code ydsz_agt_user_profile} 表以 {@code user_id} 作为业务主键， 独立 {@code id} 列不存在。
+ * 继承的基类 {@code id} 字段在本类中无数据库列映射，仅作为运行时占位； 实际主键通过本类的 {@link #userId} 字段体现。</p>
+ *
  * <p><b>线程安全</b>：持久化实体，可变；仅在单请求/单事务内使用，勿跨线程共享。</p>
  *
  * @author ydsz-agent
  * @since 26.09.07
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_user_profile")
-public class UserProfile {
+public class UserProfile extends MpBaseAuditEntity<String> {
 
-    /** 集合初始容量 */
-    private static final int COLLECTION_CAPACITY = 16;
-
-    /** 默认 Top 领域数 */
-    private static final int DEFAULT_TOP_DOMAINS = 5;
-
-    /** 用户 ID（主键，业务 ID，非自增） */
+    /** 用户 ID（主键，业务 ID，非自增；覆盖基类 ASSIGN_ID 为 INPUT，对应数据库 user_id 列）。 */
     @TableId(type = IdType.INPUT)
     private String userId;
 
@@ -197,4 +195,10 @@ public class UserProfile {
         frequency.merge(domain, 1, Integer::sum);
         setDomainFrequency(frequency);
     }
+
+    /** 集合初始容量 */
+    private static final int COLLECTION_CAPACITY = 16;
+
+    /** 默认 Top 领域数 */
+    private static final int DEFAULT_TOP_DOMAINS = 5;
 }

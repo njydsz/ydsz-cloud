@@ -47,7 +47,8 @@ public class Resilience4jFeignPostProcessor implements BeanPostProcessor {
    *
    * @param bean 待处理的 Bean 实例
    * @param beanName Bean 名称
-   * @return 处理后的 Bean（可包装或原样返回）   */
+   * @return 处理后的 Bean（可包装或原样返回）
+   */
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
     Class<?> beanClass = bean.getClass();
@@ -91,9 +92,9 @@ public class Resilience4jFeignPostProcessor implements BeanPostProcessor {
     }
     String circuitBreakerName = "feign:" + serviceId;
     if (feignProperties.getCircuitBreaker().isEnabled()) {
-      LOGGER.debug("[FeignClient] 注册 CircuitBreaker 命名映射: service={} → cb={}", serviceId, circuitBreakerName);
+      log.debug("[FeignClient] 注册 CircuitBreaker 命名映射: service={} → cb={}", serviceId, circuitBreakerName);
     } else {
-      LOGGER.debug("[FeignClient] 熔断器未启用，跳过 CircuitBreaker 注册: service={}", serviceId);
+      log.debug("[FeignClient] 熔断器未启用，跳过 CircuitBreaker 注册: service={}", serviceId);
     }
   }
 }

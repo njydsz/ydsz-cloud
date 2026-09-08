@@ -2,11 +2,15 @@ package com.njydsz.agent.domain.entity;
 
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Agent 人工审批请求（映射 ydsz_agt_approval 表）
@@ -37,13 +41,14 @@ import lombok.NoArgsConstructor;
  * @since 26.09.01
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_approval")
-public class AgentApproval {
+public class AgentApproval extends MpBaseAuditEntity<String> {
 
-  /** 审批请求 ID（主键，业务生成非自增） */
+  /** 审批请求 ID（主键，业务生成非自增；覆盖基类 ASSIGN_ID 为 INPUT）。 */
+  @TableId(type = IdType.INPUT)
   private String id;
 
   /** 所属对话 ID */
@@ -69,9 +74,6 @@ public class AgentApproval {
 
   /** 租户 ID */
   private String tenantId;
-
-  /** 请求创建时间 */
-  private LocalDateTime createdAt;
 
   /** 审批完成时间 */
   private LocalDateTime resolvedAt;

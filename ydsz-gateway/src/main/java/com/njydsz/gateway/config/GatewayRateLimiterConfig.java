@@ -65,7 +65,7 @@ public class GatewayRateLimiterConfig {
               "url:" + exchange.getRequest().getURI().getPath());
           default -> userKeyResolver;
         };
-    LOGGER.info("[GatewayRateLimiter] 限流 Key 解析策略: keyType={}", keyType);
+    log.info("[GatewayRateLimiter] 限流 Key 解析策略: keyType={}", keyType);
     return resolver;
   }
 }

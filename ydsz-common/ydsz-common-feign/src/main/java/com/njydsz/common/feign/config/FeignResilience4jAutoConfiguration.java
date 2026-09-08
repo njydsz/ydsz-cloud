@@ -80,7 +80,7 @@ public class FeignResilience4jAutoConfiguration {
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .build();
     CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(defaultConfig);
-    LOGGER.info(
+    log.info(
         "[FeignResilience4j] 全局 CircuitBreakerRegistry 已注册: failureRate={}, slowCallRate={}, waitTime={}ms",
         config.getFailureRateThreshold(),
         config.getSlowCallRateThreshold(),
