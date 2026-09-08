@@ -74,22 +74,43 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
     return mapper.shareLinkListToVO(shareLinkMapper.selectActiveSharesByUserId(userId));
   }
 
+  /**
+   * 更新分享链接记录（元数据变更）。
+   *
+   * @param dto 分享链接数据传输对象
+   */
   @Override
   public void update(ShareLinkDTO dto) {
     ShareLink entity = mapper.shareLinkToEntity(dto);
     shareLinkMapper.updateById(entity);
   }
 
+  /**
+   * 撤销分享链接（逻辑删除，保留历史记录）。
+   *
+   * @param id 分享链接 ID
+   */
   @Override
   public void revoke(String id) {
     shareLinkMapper.revoke(id);
   }
 
+  /**
+   * 原子递增分享链接访问次数。
+   *
+   * @param id 分享链接 ID
+   */
   @Override
   public void incrementAccessCount(String id) {
     shareLinkMapper.incrementAccessCount(id);
   }
 
+  /**
+   * 查询即将到期的分享链接（定时任务扫描使用）。
+   *
+   * @param withinHours 到期时间范围（小时内到期）
+   * @return 分享链接视图对象列表
+   */
   @Override
   public List<ShareLinkVO> findExpiringShares(int withinHours) {
     return mapper.shareLinkListToVO(shareLinkMapper.selectExpiringShares(withinHours));

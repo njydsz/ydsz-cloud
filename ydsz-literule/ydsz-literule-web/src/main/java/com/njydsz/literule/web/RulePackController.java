@@ -83,7 +83,11 @@ public class RulePackController {
   @Resource
   private LiteruleWebConverter literuleWebConverter;
 
-  /** 列出全部规则集（市场首页）
+  /**
+   * 列出全部规则集（市场首页）
+   *
+   * <p>查询所有已发布的规则集，按发布时间倒序排列。
+   *
    * @return 规则集列表（按发布时间倒序）
    */
   @GetMapping("/packs")
@@ -92,7 +96,11 @@ public class RulePackController {
         rulePackProvider.listAll().stream().map(literuleWebConverter::entityToVO).toList());
   }
 
-  /** 搜索规则集
+  /**
+   * 搜索规则集
+   *
+   * <p>按关键词对规则集名称与描述进行模糊匹配搜索。
+   *
    * @param keyword 搜索关键词（支持名称/描述模糊匹配）
    * @return 匹配的规则集列表
    */
@@ -105,7 +113,9 @@ public class RulePackController {
             .toList());
   }
 
-  /** 查询规则集最新版本
+  /**
+   * 查询规则集最新版本
+   *
    * @param packCode 规则集唯一编码
    * @return 最新版本规则集信息
    */
@@ -115,7 +125,9 @@ public class RulePackController {
         literuleWebConverter.entityToVO(rulePackProvider.getLatest(packCode)));
   }
 
-  /** 查询规则集的所有版本
+  /**
+   * 查询规则集的所有版本
+   *
    * @param packCode 规则集唯一编码
    * @return 版本列表（按版本号倒序）
    */
@@ -127,7 +139,9 @@ public class RulePackController {
             .toList());
   }
 
-  /** 查询规则集指定版本（含规则定义快照，P2-8）
+  /**
+   * 查询规则集指定版本（含规则定义快照，P2-8）
+   *
    * @param packCode 规则集唯一编码
    * @param version 版本号字符串
    * @return 指定版本的规则集信息
@@ -139,7 +153,11 @@ public class RulePackController {
         literuleWebConverter.entityToVO(rulePackProvider.getVersion(packCode, version)));
   }
 
-  /** 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表
+  /**
+   * 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表
+   *
+   * <p>将历史版本的规则定义固化为在线规则。差异规则将以版本覆盖方式安装，覆盖已有规则定义。
+   *
    * @param packCode 规则集唯一编码
    * @param version 回滚目标版本号
    * @param operator 操作人用户名
@@ -161,7 +179,11 @@ public class RulePackController {
             rulePackProvider.rollback(packCode, version, operator)));
   }
 
-  /** 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异
+  /**
+   * 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异
+   *
+   * <p>对比同一规则集的两个版本，识别新增、删除、修改的规则。
+   *
    * @param packCode 规则集唯一编码
    * @param fromVersion 基准版本号
    * @param toVersion 目标版本号
@@ -177,7 +199,11 @@ public class RulePackController {
             rulePackProvider.diff(packCode, fromVersion, toVersion)));
   }
 
-  /** 发布规则集到市场
+  /**
+   * 发布规则集到市场
+   *
+   * <p>将规则集正式发布到规则市场，发布后其他租户可浏览和安装。
+   *
    * @param pack 待发布的规则集信息
    * @param operator 操作人用户名
    * @return 发布后的规则集信息
@@ -197,8 +223,11 @@ public class RulePackController {
         literuleWebConverter.entityToVO(rulePackProvider.publish(pack, operator)));
   }
 
-  /** 安装规则集（一键导入）
-
+  /**
+   * 安装规则集（一键导入）
+   *
+   * <p>将规则集版本包含的规则定义批量安装到当前租户。已按版本安装过的规则将跳过。
+   *
    * @param packCode 规则集唯一编码
    * @param version 指定版本号（为空则安装最新版本）
    * @param operator 操作人用户名
@@ -220,7 +249,11 @@ public class RulePackController {
             rulePackProvider.install(packCode, version, operator)));
   }
 
-  /** 删除规则集
+  /**
+   * 删除规则集
+   *
+   * <p>从规则市场中删除规则集，但不影响已安装的规则实例。
+   *
    * @param id 规则集唯一标识
    * @return 无返回内容
    */
@@ -237,7 +270,11 @@ public class RulePackController {
     return YdszResponse.success();
   }
 
-  /** 标记为官方
+  /**
+   * 标记为官方
+   *
+   * <p>将规则集标记为官方认证或取消官方标识。官方规则集在市场中有特殊标识。
+   *
    * @param id 规则集唯一标识
    * @param official 是否官方（true/false）
    * @return 无返回内容
@@ -257,7 +294,11 @@ public class RulePackController {
     return YdszResponse.success();
   }
 
-  /** 评分（0-5）
+  /**
+   * 评分（0-5）
+   *
+   * <p>用户对规则集进行评分。多次评分取最新值。
+   *
    * @param id 规则集唯一标识
    * @param rating 评分值（0.0-5.0）
    * @return 无返回内容
@@ -336,7 +377,15 @@ public class RulePackController {
         svc.run(ruleCode, factsList, threads, iterations, warmupIterations));
   }
 
-  /** 安全转换为 int */
+  /**
+   * 安全转换为 int
+   *
+   * <p>将 Object 安全转为 int。null 或非数字时返回默认值，避免 NumberFormatException。
+   *
+   * @param v 待转换值
+   * @param defaultValue 默认值
+   * @return int 值
+   */
   private int toInt(Object v, int defaultValue) {
     if (v == null) {
       return defaultValue;

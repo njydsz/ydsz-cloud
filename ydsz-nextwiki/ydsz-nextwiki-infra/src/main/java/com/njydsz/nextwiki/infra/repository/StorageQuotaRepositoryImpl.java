@@ -47,22 +47,53 @@ public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
     return mapper.storageQuotaToVO(entity);
   }
 
+  /**
+   * 按配额记录 ID 查询。
+   *
+   * @param id 配额记录 ID
+   * @return 配额视图对象（可能为空）
+   */
   @Override
   public Optional<StorageQuotaVO> findById(String id) {
     return Optional.ofNullable(storageQuotaMapper.selectById(id)).map(mapper::storageQuotaToVO);
   }
 
+  /**
+   * 按作用域类型和 ID 查询配额记录。
+   *
+   * @param scopeType 作用域类型（user/tenant/project）
+   * @param scopeId 作用域 ID
+   * @return 配额视图对象（可能为空）
+   */
   @Override
   public Optional<StorageQuotaVO> findByScope(String scopeType, String scopeId) {
     return Optional.ofNullable(storageQuotaMapper.selectByScope(scopeType, scopeId))
         .map(mapper::storageQuotaToVO);
   }
 
+  /**
+   * 原子增加配额使用量（上传文件时调用）。
+   *
+   * @param scopeType 作用域类型（user/tenant/project）
+   * @param scopeId 作用域 ID
+   * @param bytesDelta 文件增量大小（字节）
+   * @param fileCountDelta 文件数增量
+   * @return 更新记录数
+   */
   @Override
   public int addUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta) {
     return storageQuotaMapper.addUsage(scopeType, scopeId, bytesDelta, fileCountDelta);
   }
 
+  /**
+   * 原子减少配额使用量（删除文件时调用）。
+   *
+   * @param scopeType 作用域类型（user/tenant/project）
+   * @param scopeId 作用域 ID
+   * @param bytesDelta 文件减量大小（字节）
+   * @param fileCountDelta 文件数减量
+   * @return 更新记录数
+   */
   @Override
   public int subtractUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta) {
     return storageQuotaMapper.subtractUsage(scopeType, scopeId, bytesDelta, fileCountDelta);

@@ -24,6 +24,14 @@ import java.util.Map;
  *
  * @author ydsz-team
  * @since 26.09.08
+ * @param externalId 外部源唯一标识（如 LDAP DN、JDBC 主键）
+ * @param username 用户名（登录账号）
+ * @param realName 真实姓名（可选）
+ * @param email 邮箱（可选）
+ * @param phone 手机号（可选）
+ * @param departmentCode 部门编码（可选，用于关联 ydsz 部门）
+ * @param isActive 是否有效（YDIZ-OOP-006 布尔前缀规则）
+ * @param attributes 扩展属性（平台特有字段，如 LDAP UUID、职位、办公地址等）
  */
 public record ProvisionRecord(
     String externalId,

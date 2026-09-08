@@ -119,7 +119,14 @@ public class RuleBatchController {
     return YdszResponse.success();
   }
 
-  /** 安全解析规则状态，无效值返回 null 而非伪装成 PUBLISHED */
+  /**
+   * 安全解析规则状态，无效值返回 null 而非伪装成 PUBLISHED
+   *
+   * <p>解析失败时返回 null，由调用方决定如何处理（抛出明确业务异常）。
+   *
+   * @param status 状态字符串
+   * @return {@link RuleStatus}；无法解析时返回 null
+   */
   private RuleStatus parseStatusSafely(String status) {
     try {
       return RuleStatus.valueOf(status);

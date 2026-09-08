@@ -90,6 +90,9 @@ public class RuleDecisionTableController {
 
   /**
    * 查询全部决策表
+   *
+   * <p>返回所有已定义的决策表基本信息列表。
+   *
    * @return 决策表列表
    */
   @GetMapping("/decision-tables")
@@ -97,7 +100,9 @@ public class RuleDecisionTableController {
     return YdszResponse.success(decisionTableQueryService.findAll());
   }
 
-  /** 查询单条决策表
+  /**
+   * 查询单条决策表
+   *
    * @param tableCode 决策表唯一编码
    * @return 决策表信息，不存在返回 null
    */
@@ -107,7 +112,11 @@ public class RuleDecisionTableController {
     return YdszResponse.success(result.orElse(null));
   }
 
-  /** 保存决策表
+  /**
+   * 保存决策表
+   *
+   * <p>新增或更新决策表定义。tableCode 已存在时更新，不存在时新增。
+   *
    * @param dto 决策表数据传输对象
    * @return 保存后的决策表信息
    */
@@ -124,7 +133,11 @@ public class RuleDecisionTableController {
     return YdszResponse.success(decisionTableQueryService.save(dto));
   }
 
-  /** 删除决策表
+  /**
+   * 删除决策表
+   *
+   * <p>物理删除指定决策表。已引用该决策表的规则将失去决策表关联。
+   *
    * @param id 决策表唯一标识
    * @return 无返回内容
    */

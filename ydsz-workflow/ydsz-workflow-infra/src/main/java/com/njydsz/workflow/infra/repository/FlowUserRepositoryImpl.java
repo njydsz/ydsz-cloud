@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +44,8 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowUserVO save(FlowUserVO vo) {
     FlowUser entity = converter.entityToEntity(vo);
@@ -52,6 +54,8 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowUserVO> saveBatch(List<FlowUserVO> users) {
     List<FlowUser> entities = users.stream().map(converter::entityToEntity).toList();
@@ -59,11 +63,15 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
     return users;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowUserVO> findById(String id) {
     return Optional.ofNullable(userMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowUserVO> findByInstanceId(String instanceId) {
     return converter.flowUserListToVO(
@@ -73,6 +81,8 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
                 .eq(FlowUser::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowUserVO> findByInstanceAndType(String instanceId, String userType) {
     return converter.flowUserListToVO(
@@ -83,11 +93,15 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
                 .eq(FlowUser::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     userMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowUserVO update(FlowUserVO vo) {
     FlowUser entity = converter.entityToEntity(vo);
@@ -95,6 +109,8 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<String> selectTaskIdsByUser(String userId, String tenantId) {
     List<Long> ids = userMapper.selectTaskIdsByUser(userId, tenantId);
@@ -102,6 +118,8 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
         : ids.stream().map(String::valueOf).toList();
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public int deleteByInstanceAndNodeAndUser(String instanceId, String nodeCode, String userId) {
     Map<String, Object> deleteMap = new HashMap<>(COLLECTION_CAPACITY);

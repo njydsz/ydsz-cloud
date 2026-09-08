@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +43,8 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowCategoryVO save(FlowCategoryDTO dto) {
     FlowCategory entity = converter.dtoToEntity(dto);
@@ -50,11 +52,15 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
     return converter.entityToVO(entity);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowCategoryVO> findById(String id) {
     return Optional.ofNullable(categoryMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowCategoryVO> findByCode(String code) {
     return categoryMapper
@@ -68,6 +74,8 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
         .map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowCategoryVO> findAll(String tenantId) {
     return converter.flowCategoryListToVO(
@@ -78,6 +86,8 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
                 .orderByAsc(FlowCategory::getSortNum)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowCategoryVO> findByParentId(String parentId) {
     return converter.flowCategoryListToVO(
@@ -88,11 +98,15 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
                 .orderByAsc(FlowCategory::getSortNum)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     categoryMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowCategoryVO update(FlowCategoryDTO dto) {
     FlowCategory entity = converter.dtoToEntity(dto);
@@ -100,6 +114,8 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
     return converter.entityToVO(entity);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public long countByCodeAndTenantId(String code, String tenantId) {
     return categoryMapper.selectCount(
@@ -109,6 +125,8 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
             .eq(FlowCategory::getIsDeleted, 0));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public long countByParentId(String parentId) {
     return categoryMapper.selectCount(
@@ -117,6 +135,8 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
             .eq(FlowCategory::getIsDeleted, 0));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public long countDefinitionsByCategory(String categoryId) {
     return definitionMapper.selectCount(

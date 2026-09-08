@@ -64,14 +64,24 @@ public class RuleDebugController {
     return debuggerProvider.getIfAvailable();
   }
 
-  /** 未启用调试时的统一错误响应 */
+  /**
+   * 未启用调试时的统一错误响应
+   *
+   * <p>当 {@code ydsz.literule.debug.enabled=false} 时，所有调试端点返回此统一错误。
+   *
+   * @return 错误响应对象
+   */
   private YdszResponse<Object> debugDisabled() {
     return YdszResponse.error("规则断点调试未启用（ydsz.literule.debug.enabled=false）");
   }
 
   // ==================== 断点管理 ====================
 
-  /** 查询全部断点
+  /**
+   * 查询全部断点
+   *
+   * <p>返回当前已配置的所有规则级与表达式节点级断点列表。
+   *
    * @return 断点列表
    */
   @GetMapping("/breakpoints")
@@ -128,7 +138,11 @@ public class RuleDebugController {
     return YdszResponse.success(result);
   }
 
-  /** 删除断点
+  /**
+   * 删除断点
+   *
+   * <p>按断点唯一标识移除断点。已存在的会话不再受该断点影响。
+   *
    * @param breakpointId 断点唯一标识
    * @return 删除结果（true 表示成功）
    */
@@ -236,7 +250,11 @@ public class RuleDebugController {
     return YdszResponse.success(true);
   }
 
-  /** 终止调试会话
+  /**
+   * 终止调试会话
+   *
+   * <p>强制终止调试会话，释放挂起的求值线程。
+   *
    * @param sessionId 调试会话唯一标识
    * @return 终止结果（true 表示成功）
    */
@@ -250,7 +268,11 @@ public class RuleDebugController {
     return YdszResponse.success(true);
   }
 
-  /** 查询全部活跃会话
+  /**
+   * 查询全部活跃会话
+   *
+   * <p>返回当前所有未终止的调试会话简要信息列表，供前端会话管理面板展示。
+   *
    * @return 活跃调试会话列表
    */
   @GetMapping("/sessions")
@@ -273,7 +295,14 @@ public class RuleDebugController {
             .toList());
   }
 
-  /** 命中列表转视图（截断事实快照避免超大响应） */
+  /**
+   * 命中列表转视图（截断事实快照避免超大响应）
+   *
+   * <p>将断点命中内部结构转为前端友好视图，仅保留元数据以控制响应体大小。
+   *
+   * @param hits 断点命中内部列表
+   * @return 视图列表
+   */
   private List<Map<String, Object>> toHitViews(List<BreakpointHit> hits) {
     return hits.stream()
         .map(

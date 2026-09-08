@@ -159,7 +159,15 @@ public class RuleImportExportController {
     return sb.toString();
   }
 
-  /** YAML 字符串转义（处理特殊字符与换行） */
+  /**
+   * YAML 字符串转义（处理特殊字符与换行）
+   *
+   * <p>对字符串中的冒号、#、双引号、反斜杠和换行符进行转义处理。
+   * 含特殊字符时使用双引号包裹，避免 YAML 解析错误。
+   *
+   * @param s 原始字符串
+   * @return 转义后的安全 YAML 字符串
+   */
   private String escapeYaml(String s) {
     if (s == null) {
       return "null";

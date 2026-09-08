@@ -2,7 +2,6 @@ package com.njydsz.userinfo.infra.social;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;

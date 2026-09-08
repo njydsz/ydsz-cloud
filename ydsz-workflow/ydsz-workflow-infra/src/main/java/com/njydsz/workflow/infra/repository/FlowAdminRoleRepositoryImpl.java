@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +38,9 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowAdminRoleVO save(FlowAdminRoleVO vo) {
     FlowAdminRole entity = converter.entityToEntity(vo);
@@ -46,11 +49,17 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowAdminRoleVO> findById(String id) {
     return Optional.ofNullable(adminRoleMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAdminRoleVO> findByUserId(String userId) {
     return converter.flowAdminRoleListToVO(
@@ -60,6 +69,9 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
                 .eq(FlowAdminRole::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAdminRoleVO> findByRoleCode(String roleCode) {
     return converter.flowAdminRoleListToVO(
@@ -69,11 +81,17 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
                 .eq(FlowAdminRole::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     adminRoleMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowAdminRoleVO update(FlowAdminRoleVO vo) {
     FlowAdminRole entity = converter.entityToEntity(vo);
@@ -81,6 +99,9 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode) {
     return adminRoleMapper
@@ -95,6 +116,9 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
         .map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowAdminRoleVO> findByUserAndRole(String userId, String roleCode, String tenantId) {
     return adminRoleMapper
@@ -110,6 +134,9 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
         .map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAdminRoleVO> findByUserId(String userId, String tenantId) {
     return converter.flowAdminRoleListToVO(

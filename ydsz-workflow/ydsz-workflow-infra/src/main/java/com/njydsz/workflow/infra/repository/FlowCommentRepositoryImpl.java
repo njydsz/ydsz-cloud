@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +38,8 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowCommentVO save(FlowCommentVO vo) {
     FlowComment entity = converter.entityToEntity(vo);
@@ -46,11 +48,15 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowCommentVO> findById(String id) {
     return Optional.ofNullable(commentMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> findByInstanceId(String instanceId) {
     return converter.flowCommentListToVO(
@@ -61,6 +67,8 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
                 .orderByDesc(FlowComment::getCreatedAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> findByTaskId(String taskId) {
     return converter.flowCommentListToVO(
@@ -70,11 +78,15 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
                 .eq(FlowComment::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     commentMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowCommentVO update(FlowCommentVO vo) {
     FlowComment entity = converter.entityToEntity(vo);
@@ -82,6 +94,8 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> findRootComments(String instanceId) {
     return converter.flowCommentListToVO(
@@ -93,6 +107,8 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
                 .orderByAsc(FlowComment::getCreatedAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> findReplies(String commentId) {
     return converter.flowCommentListToVO(
@@ -103,6 +119,8 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
                 .orderByAsc(FlowComment::getCreatedAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> findByInstanceAndTenant(String tenantId, String instanceId) {
     return converter.flowCommentListToVO(
@@ -114,6 +132,8 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
                 .orderByAsc(FlowComment::getCreatedAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowCommentVO> findRootCommentsByTenant(String tenantId, String instanceId) {
     return converter.flowCommentListToVO(

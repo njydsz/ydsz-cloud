@@ -80,6 +80,14 @@ public class SpaceRepositoryImpl implements SpaceRepository {
     return mapper.spaceListToVO(entities);
   }
 
+  /**
+   * 按租户 ID 分页查询空间列表。
+   *
+   * @param tenantId 租户 ID
+   * @param offset 分页偏移量
+   * @param limit 每页条数
+   * @return 分页空间视图对象列表
+   */
   @Override
   public PageResponse<List<SpaceVO>> findByTenantIdWithPage(String tenantId, int offset, int limit) {
     Page<Space> pageParam = new Page<>(offset / limit + 1, limit);
@@ -90,11 +98,23 @@ public class SpaceRepositoryImpl implements SpaceRepository {
     return PageResponses.success(voPage);
   }
 
+  /**
+   * 统计租户下的空间数量。
+   *
+   * @param tenantId 租户 ID
+   * @return 空间数量
+   */
   @Override
   public int countByTenantId(String tenantId) {
     return spaceMapper.countByTenantId(tenantId);
   }
 
+  /**
+   * 逻辑删除指定空间。
+   *
+   * @param id 空间 ID
+   * @return 更新记录数
+   */
   @Override
   public int deleteById(String id) {
     return spaceMapper.deleteById(id);

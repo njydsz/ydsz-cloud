@@ -58,9 +58,14 @@ public class RuleDependencyController {
   /** 规则依赖服务（SPI，由 project 模块提供实现） */
   private final RuleDependencyProvider ruleDependencyProvider;
 
-  /** 添加规则依赖
-   * @param ruleCode 规则唯一编码
-   * @param dto 依赖关系请求数据
+  /**
+   * 添加规则依赖
+   *
+   * <p>声明一条规则间的依赖关系，下游规则依赖上游规则的执行结果，
+   * 禁用上游规则时可根据 cascadeOnDisable 自动级联禁用下游规则。
+   *
+   * @param ruleCode 当前规则编码（依赖方）
+   * @param dto 依赖关系请求数据，包含被依赖规则编码、依赖类型、级联禁用开关与描述
    * @param operator 操作人用户名
    * @return 添加后的依赖关系信息
    */
@@ -85,8 +90,12 @@ public class RuleDependencyController {
             ruleCode, dependsOn, depType, cascade, description, operator));
   }
 
-  /** 删除规则依赖
-   * @param ruleCode 规则唯一编码
+  /**
+   * 删除规则依赖
+   *
+   * <p>解除一条已声明的规则依赖关系。删除后上游规则被禁用时不再级联影响下游。
+   *
+   * @param ruleCode 当前规则编码（依赖方）
    * @param dependsOnRuleCode 被依赖规则编码
    * @return 无返回内容
    */
@@ -104,7 +113,9 @@ public class RuleDependencyController {
     return YdszResponse.success();
   }
 
-  /** 查询规则的依赖（正向：依赖了哪些）
+  /**
+   * 查询规则的依赖（正向：依赖了哪些规则）
+   *
    * @param ruleCode 规则唯一编码
    * @return 正向依赖列表
    */
@@ -113,7 +124,9 @@ public class RuleDependencyController {
     return YdszResponse.success(ruleDependencyProvider.listDependencies(ruleCode));
   }
 
-  /** 查询被依赖（反向：被哪些规则依赖）
+  /**
+   * 查询被依赖（反向：被哪些规则依赖）
+   *
    * @param ruleCode 规则唯一编码
    * @return 反向依赖列表
    */
@@ -122,7 +135,11 @@ public class RuleDependencyController {
     return YdszResponse.success(ruleDependencyProvider.listDependents(ruleCode));
   }
 
-  /** 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表）
+  /**
+   * 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表）
+   *
+   * <p>分析禁用指定规则后，根据已声明的级联依赖关系，递归计算受影响的下游规则集合。
+   *
    * @param ruleCode 规则唯一编码
    * @return 需要级联禁用的规则编码列表
    */

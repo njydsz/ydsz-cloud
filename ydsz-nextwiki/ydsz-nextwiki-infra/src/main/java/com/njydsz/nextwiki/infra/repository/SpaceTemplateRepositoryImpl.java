@@ -45,12 +45,25 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
     return spaceTemplateMapper.updateById(entity);
   }
 
+  /**
+   * 按模板 ID 查询单个模板。
+   *
+   * @param id 模板 ID
+   * @return 模板 DTO（可能为空）
+   */
   @Override
   public Optional<SpaceTemplateDTO> findById(String id) {
     SpaceTemplate entity = spaceTemplateMapper.selectById(id);
     return Optional.ofNullable(entity).map(mapper::spaceTemplateToDTO);
   }
 
+  /**
+   * 查询可用模板列表（系统公开模板 + 租户自定义模板）。
+   *
+   * @param tenantId 租户 ID
+   * @param category 模板分类（可选）
+   * @return 模板 DTO 列表
+   */
   @Override
   public List<SpaceTemplateDTO> findAvailableTemplates(String tenantId, String category) {
     List<SpaceTemplate> entities = spaceTemplateMapper.selectAvailableTemplates(tenantId, category);
@@ -59,6 +72,15 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
         .collect(Collectors.toList());
   }
 
+  /**
+   * 分页查询模板列表（按租户和分类筛选）。
+   *
+   * @param tenantId 租户 ID
+   * @param category 模板分类
+   * @param offset 分页偏移量
+   * @param limit 每页条数
+   * @return 模板 DTO 列表
+   */
   @Override
   public List<SpaceTemplateDTO> findWithPage(String tenantId, String category, int offset, int limit) {
     List<SpaceTemplate> entities = spaceTemplateMapper.selectWithPage(tenantId, category, offset, limit);
@@ -67,11 +89,24 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
         .collect(Collectors.toList());
   }
 
+  /**
+   * 统计租户下的模板数量。
+   *
+   * @param tenantId 租户 ID
+   * @param category 模板分类
+   * @return 模板数量
+   */
   @Override
   public int countByTenantId(String tenantId, String category) {
     return spaceTemplateMapper.countByCondition(tenantId, category);
   }
 
+  /**
+   * 递增模板使用次数（使用模板创建空间时调用）。
+   *
+   * @param id 模板 ID
+   * @return 更新记录数
+   */
   @Override
   public int incrementUsageCount(String id) {
     SpaceTemplate entity = spaceTemplateMapper.selectById(id);
@@ -83,6 +118,12 @@ public class SpaceTemplateRepositoryImpl implements SpaceTemplateRepository {
     return 0;
   }
 
+  /**
+   * 删除模板（仅自定义模板可删除，系统模板校验由 service 层处理）。
+   *
+   * @param id 模板 ID
+   * @return 更新记录数
+   */
   @Override
   public int deleteById(String id) {
     return spaceTemplateMapper.deleteById(id);

@@ -38,6 +38,12 @@ public class FileCommentRepositoryImpl implements FileCommentRepository {
   private final FileCommentMapper fileCommentMapper;
   private final NextwikiStructMapper mapper;
 
+  /**
+   * 保存文件评论/回复。
+   *
+   * @param dto 评论数据传输对象
+   * @return 保存后的评论视图对象
+   */
   @Override
   public FileCommentVO save(FileCommentDTO dto) {
     FileComment entity = mapper.fileCommentToEntity(dto);
@@ -48,32 +54,66 @@ public class FileCommentRepositoryImpl implements FileCommentRepository {
     return mapper.fileCommentToVO(entity);
   }
 
+  /**
+   * 按评论 ID 查询单条评论。
+   *
+   * @param id 评论 ID
+   * @return 评论视图对象（可能为空）
+   */
   @Override
   public Optional<FileCommentVO> findById(String id) {
     return Optional.ofNullable(fileCommentMapper.selectFileCommentById(id)).map(mapper::fileCommentToVO);
   }
 
+  /**
+   * 按文件节点 ID 查询所有顶级评论。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 评论视图对象列表
+   */
   @Override
   public List<FileCommentVO> findByFileNodeId(String fileNodeId) {
     return mapper.fileCommentListToVO(fileCommentMapper.selectFileCommentsByFileNodeId(fileNodeId));
   }
 
+  /**
+   * 查询指定评论的所有回复。
+   *
+   * @param parentCommentId 父评论 ID
+   * @return 回复评论视图对象列表
+   */
   @Override
   public List<FileCommentVO> findReplies(String parentCommentId) {
     return mapper.fileCommentListToVO(fileCommentMapper.selectFileCommentReplies(parentCommentId));
   }
 
+  /**
+   * 更新评论内容（编辑评论）。
+   *
+   * @param dto 评论数据传输对象
+   */
   @Override
   public void update(FileCommentDTO dto) {
     FileComment entity = mapper.fileCommentToEntity(dto);
     fileCommentMapper.updateFileComment(entity);
   }
 
+  /**
+   * 删除评论（软删除）。
+   *
+   * @param id 评论 ID
+   */
   @Override
   public void delete(String id) {
     fileCommentMapper.deleteFileComment(id);
   }
 
+  /**
+   * 标记评论为已解决。
+   *
+   * @param id 评论 ID
+   * @param userId 操作人 ID
+   */
   @Override
   public void markResolved(String id, String userId) {
     fileCommentMapper.markFileCommentResolved(id, userId);

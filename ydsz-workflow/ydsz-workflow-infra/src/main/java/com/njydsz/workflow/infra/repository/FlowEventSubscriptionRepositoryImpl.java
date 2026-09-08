@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +39,8 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowEventSubscriptionVO save(FlowEventSubscriptionVO vo) {
     FlowEventSubscription entity = converter.entityToEntity(vo);
@@ -47,11 +49,15 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowEventSubscriptionVO> findById(String id) {
     return Optional.ofNullable(eventSubscriptionMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowEventSubscriptionVO> findByInstanceId(String instanceId) {
     return converter.flowEventSubscriptionListToVO(
@@ -61,6 +67,8 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
                 .eq(FlowEventSubscription::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowEventSubscriptionVO> findByInstanceAndNode(String instanceId, String nodeCode) {
     return converter.flowEventSubscriptionListToVO(
@@ -71,11 +79,15 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
                 .eq(FlowEventSubscription::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     eventSubscriptionMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteByInstanceId(String instanceId) {
     eventSubscriptionMapper.delete(
@@ -83,6 +95,8 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
             .eq(FlowEventSubscription::getInstanceId, instanceId));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowEventSubscriptionVO update(FlowEventSubscriptionVO vo) {
     FlowEventSubscription entity = converter.entityToEntity(vo);
@@ -90,6 +104,8 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowEventSubscriptionVO> findWaitingByEvent(String eventType, String flowCode) {
     return converter.flowEventSubscriptionListToVO(
@@ -101,6 +117,8 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
                 .eq(FlowEventSubscription::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowEventSubscriptionVO> findWaitingByEvent(
       String tenantId, String eventType, String eventRef) {
@@ -108,6 +126,8 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
         eventSubscriptionMapper.selectWaitingByEvent(tenantId, eventType, eventRef));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void markTriggered(String id) {
     FlowEventSubscription update = new FlowEventSubscription();
@@ -117,12 +137,16 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
     eventSubscriptionMapper.updateById(update);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void markTriggered(
       String id, String eventPayload, String triggerSource, LocalDateTime triggeredAt) {
     eventSubscriptionMapper.markTriggered(id, eventPayload, triggerSource, triggeredAt);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void resetToWaiting(String id) {
     FlowEventSubscription update = new FlowEventSubscription();
@@ -132,16 +156,22 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
     eventSubscriptionMapper.updateById(update);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public int cancelByTask(String boundaryTaskId, String reason) {
     return eventSubscriptionMapper.cancelByTask(boundaryTaskId, reason);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public int cancelByInstance(String instanceId, String reason) {
     return eventSubscriptionMapper.cancelByInstance(instanceId, reason);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowEventSubscriptionVO> findByInstanceOrderByCreatedAtDesc(String instanceId) {
     return converter.flowEventSubscriptionListToVO(

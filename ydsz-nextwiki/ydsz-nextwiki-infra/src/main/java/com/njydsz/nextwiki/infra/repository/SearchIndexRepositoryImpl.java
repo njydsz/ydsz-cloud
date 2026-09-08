@@ -48,28 +48,56 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
   private final SearchIndexMapper searchIndexMapper;
   private final NextwikiStructMapper mapper;
 
+  /**
+   * 写入/更新搜索索引（on duplicate key update 语义）。
+   *
+   * @param dto 搜索索引数据传输对象
+   */
   @Override
   public void upsert(SearchIndexDTO dto) {
     SearchIndex entity = mapper.searchIndexToEntity(dto);
     searchIndexMapper.upsert(entity);
   }
 
+  /**
+   * 按文件节点 ID 删除索引记录（文件删除时级联清理）。
+   *
+   * @param fileNodeId 文件节点 ID
+   */
   @Override
   public void deleteByFileNodeId(String fileNodeId) {
     searchIndexMapper.deleteByFileNodeId(fileNodeId);
   }
 
+  /**
+   * 按文件节点 ID 查询搜索索引。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 搜索索引视图对象（可能为空）
+   */
   @Override
   public Optional<SearchIndexVO> findByFileNodeId(String fileNodeId) {
     return Optional.ofNullable(searchIndexMapper.selectByFileNodeId(fileNodeId))
         .map(mapper::searchIndexToVO);
   }
 
+  /**
+   * 查询指定用户的所有可索引文件 ID 列表（全量索引构建时使用）。
+   *
+   * @param createdBy 用户 ID
+   * @return 文件节点 ID 列表
+   */
   @Override
   public List<String> findAllFileNodeIds(String createdBy) {
     return searchIndexMapper.selectAllFileNodeIds(createdBy);
   }
 
+  /**
+   * 分页搜索索引（基础关键词搜索）。
+   *
+   * @param query 搜索查询条件
+   * @return 分页搜索结果
+   */
   @Override
   public PageResponse<List<SearchIndexVO>> searchPage(SearchIndexQuery query) {
     Page<SearchIndex> pageParam = new Page<>(query.getPage(), query.getPageSize());
@@ -82,6 +110,12 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
     return PageResponses.success(voPage);
   }
 
+  /**
+   * 高级语法分页搜索（支持字段限定、布尔运算等）。
+   *
+   * @param query 高级搜索查询条件
+   * @return 分页搜索结果
+   */
   @Override
   public PageResponse<List<SearchIndexVO>> searchAdvanced(SearchQuery query) {
     Page<SearchIndex> pageParam = new Page<>(

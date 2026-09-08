@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +39,8 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowAuditLogVO save(FlowAuditLogVO vo) {
     FlowAuditLog entity = converter.entityToEntity(vo);
@@ -47,11 +49,15 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowAuditLogVO> findById(String id) {
     return Optional.ofNullable(auditLogMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAuditLogVO> findByInstanceId(String instanceId) {
     return converter.flowAuditLogListToVO(
@@ -62,6 +68,8 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
                 .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAuditLogVO> findByInstanceIdAndAction(String instanceId, String action) {
     return converter.flowAuditLogListToVO(
@@ -73,6 +81,8 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
                 .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAuditLogVO> findByTaskId(String taskId) {
     return converter.flowAuditLogListToVO(
@@ -83,11 +93,15 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
                 .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     auditLogMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAuditLogVO> findByBusinessTypeAndOperator(
       String businessType, String operatorId, int offset, int limit) {
@@ -100,6 +114,8 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAuditLogVO> findByBusinessTypeAndTarget(
       String businessType, String targetId, int offset, int limit) {
@@ -112,6 +128,8 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public long countByBusinessTypeAndActions(
       String businessType,
@@ -128,6 +146,8 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
             .le(endTime != null, FlowAuditLog::getCreatedAt, endTime));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAuditLogVO> findCountersignByInstance(
       String instanceId, List<String> actions, int offset, int limit) {
@@ -135,6 +155,8 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
         auditLogMapper.selectCountersignByInstance(instanceId, actions, offset, limit));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public long countCountersignByInstance(String instanceId, List<String> actions) {
     return auditLogMapper.countCountersignByInstance(instanceId, actions);

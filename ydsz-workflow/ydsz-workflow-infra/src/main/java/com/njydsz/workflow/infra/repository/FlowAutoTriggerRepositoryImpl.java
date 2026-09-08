@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +38,8 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowAutoTriggerVO save(FlowAutoTriggerVO vo) {
     FlowAutoTrigger entity = converter.entityToEntity(vo);
@@ -46,11 +48,15 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowAutoTriggerVO> findById(String id) {
     return Optional.ofNullable(autoTriggerMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAutoTriggerVO> findByFlowCode(String flowCode) {
     return converter.flowAutoTriggerListToVO(
@@ -60,6 +66,8 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
                 .eq(FlowAutoTrigger::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAutoTriggerVO> findByTriggerType(String triggerType) {
     return converter.flowAutoTriggerListToVO(
@@ -69,11 +77,15 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
                 .eq(FlowAutoTrigger::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     autoTriggerMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowAutoTriggerVO update(FlowAutoTriggerVO vo) {
     FlowAutoTrigger entity = converter.entityToEntity(vo);
@@ -81,6 +93,8 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAutoTriggerVO> findEnabledBySourceFlowCode(String sourceFlowCode) {
     return converter.flowAutoTriggerListToVO(
@@ -91,6 +105,8 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
                 .eq(FlowAutoTrigger::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteBySourceFlowCode(String sourceFlowCode) {
     autoTriggerMapper.delete(
@@ -98,6 +114,8 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
             .eq(FlowAutoTrigger::getSourceFlowCode, sourceFlowCode));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAutoTriggerVO> findAllOrderBySort() {
     return converter.flowAutoTriggerListToVO(

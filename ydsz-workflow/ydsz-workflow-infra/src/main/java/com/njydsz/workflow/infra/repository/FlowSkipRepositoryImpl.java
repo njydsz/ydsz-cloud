@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +38,8 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowSkipVO save(FlowSkipVO vo) {
     FlowSkip entity = converter.entityToEntity(vo);
@@ -46,11 +48,15 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowSkipVO> findById(String id) {
     return Optional.ofNullable(skipMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowSkipVO> findByInstanceId(String instanceId) {
     return converter.flowSkipListToVO(
@@ -60,11 +66,15 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
                 .eq(FlowSkip::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     skipMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowSkipVO update(FlowSkipVO vo) {
     FlowSkip entity = converter.entityToEntity(vo);
@@ -72,6 +82,8 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowSkipVO> findByDefinitionIdAndNodeCode(String definitionId, String nodeCode) {
     return converter.flowSkipListToVO(
@@ -82,6 +94,8 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
                 .eq(FlowSkip::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowSkipVO> findByDefinitionId(String definitionId) {
     return converter.flowSkipListToVO(
@@ -91,6 +105,8 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
                 .eq(FlowSkip::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public int deleteByDefinitionId(String definitionId) {
     return skipMapper.deleteByDefinitionId(definitionId);

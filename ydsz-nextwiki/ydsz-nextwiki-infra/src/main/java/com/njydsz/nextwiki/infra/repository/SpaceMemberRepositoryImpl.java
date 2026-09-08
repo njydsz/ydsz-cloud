@@ -30,6 +30,12 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final NextwikiStructMapper mapper;
 
+  /**
+   * 保存空间成员记录。
+   *
+   * @param dto 空间成员数据传输对象
+   * @return 更新记录数
+   */
   @Override
   public int save(SpaceMemberDTO dto) {
     if (dto.getId() == null || dto.getId().isEmpty()) {
@@ -39,22 +45,50 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
     return spaceMemberMapper.insert(entity);
   }
 
+  /**
+   * 更新空间成员的角色。
+   *
+   * @param spaceId 空间 ID
+   * @param userId 用户 ID
+   * @param role 新角色
+   * @return 更新记录数
+   */
   @Override
   public int updateRole(String spaceId, String userId, String role) {
     return spaceMemberMapper.updateRole(spaceId, userId, role);
   }
 
+  /**
+   * 移除空间成员。
+   *
+   * @param spaceId 空间 ID
+   * @param userId 用户 ID
+   * @return 更新记录数
+   */
   @Override
   public int deleteBySpaceIdAndUserId(String spaceId, String userId) {
     return spaceMemberMapper.deleteBySpaceIdAndUserId(spaceId, userId);
   }
 
+  /**
+   * 按空间 ID + 用户 ID 查询单个成员。
+   *
+   * @param spaceId 空间 ID
+   * @param userId 用户 ID
+   * @return 空间成员 DTO（可能为空）
+   */
   @Override
   public Optional<SpaceMemberDTO> findBySpaceIdAndUserId(String spaceId, String userId) {
     SpaceMember entity = spaceMemberMapper.selectBySpaceIdAndUserId(spaceId, userId);
     return Optional.ofNullable(entity).map(mapper::spaceMemberToDTO);
   }
 
+  /**
+   * 查询空间的所有成员。
+   *
+   * @param spaceId 空间 ID
+   * @return 空间成员 DTO 列表
+   */
   @Override
   public List<SpaceMemberDTO> findBySpaceId(String spaceId) {
     List<SpaceMember> entities = spaceMemberMapper.selectBySpaceId(spaceId);
@@ -63,6 +97,12 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
         .collect(Collectors.toList());
   }
 
+  /**
+   * 查询用户的所有空间成员关系。
+   *
+   * @param userId 用户 ID
+   * @return 空间成员 DTO 列表
+   */
   @Override
   public List<SpaceMemberDTO> findByUserId(String userId) {
     List<SpaceMember> entities = spaceMemberMapper.selectByUserId(userId);
@@ -71,11 +111,24 @@ public class SpaceMemberRepositoryImpl implements SpaceMemberRepository {
         .collect(Collectors.toList());
   }
 
+  /**
+   * 统计空间的成员数量。
+   *
+   * @param spaceId 空间 ID
+   * @return 成员数量
+   */
   @Override
   public int countBySpaceId(String spaceId) {
     return spaceMemberMapper.countBySpaceId(spaceId);
   }
 
+  /**
+   * 判断用户是否是空间的成员。
+   *
+   * @param spaceId 空间 ID
+   * @param userId 用户 ID
+   * @return 该用户是否已在空间中
+   */
   @Override
   public boolean existsBySpaceIdAndUserId(String spaceId, String userId) {
     return spaceMemberMapper.existsBySpaceIdAndUserId(spaceId, userId);

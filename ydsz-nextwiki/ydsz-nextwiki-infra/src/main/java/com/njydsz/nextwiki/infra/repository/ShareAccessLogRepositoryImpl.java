@@ -38,6 +38,12 @@ public class ShareAccessLogRepositoryImpl implements ShareAccessLogRepository {
   private final ShareAccessLogMapper shareAccessLogMapper;
   private final NextwikiStructMapper mapper;
 
+  /**
+   * 保存分享访问日志。
+   *
+   * @param dto 分享访问日志数据传输对象
+   * @return 保存后的日志视图对象
+   */
   @Override
   public ShareAccessLogVO save(ShareAccessLogDTO dto) {
     ShareAccessLog entity = mapper.shareAccessLogToEntity(dto);
@@ -48,11 +54,25 @@ public class ShareAccessLogRepositoryImpl implements ShareAccessLogRepository {
     return mapper.shareAccessLogToVO(entity);
   }
 
+  /**
+   * 按分享链接 ID 查询最近的访问日志。
+   *
+   * @param shareId 分享链接 ID
+   * @param limit 返回条数限制
+   * @return 访问日志视图对象列表
+   */
   @Override
   public List<ShareAccessLogVO> findByShareId(String shareId, int limit) {
     return mapper.shareAccessLogListToVO(shareAccessLogMapper.selectByShareId(shareId, limit));
   }
 
+  /**
+   * 统计每日访问量（用于趋势图展示）。
+   *
+   * @param shareId 分享链接 ID
+   * @param days 统计天数（从今天往前推）
+   * @return 每日访问统计（含日期和访问次数）
+   */
   @Override
   public List<Map<String, Object>> countDailyAccess(String shareId, int days) {
     return shareAccessLogMapper.countDailyAccess(shareId, days);

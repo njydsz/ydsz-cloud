@@ -37,6 +37,11 @@ public class ShareRecipientRepositoryImpl implements ShareRecipientRepository {
   private final ShareRecipientMapper shareRecipientMapper;
   private final NextwikiStructMapper mapper;
 
+  /**
+   * 批量新增分享目标用户（定向分享）。
+   *
+   * @param dtos 分享目标用户数据传输对象列表
+   */
   @Override
   public void saveBatch(List<ShareRecipientDTO> dtos) {
     if (dtos == null || dtos.isEmpty()) {
@@ -51,17 +56,36 @@ public class ShareRecipientRepositoryImpl implements ShareRecipientRepository {
     }
   }
 
+  /**
+   * 按分享链接 ID 查询目标用户列表。
+   *
+   * @param shareId 分享链接 ID
+   * @return 目标用户视图对象列表
+   */
   @Override
   public List<ShareRecipientVO> findByShareId(String shareId) {
     return mapper.shareRecipientListToVO(shareRecipientMapper.selectByShareId(shareId));
   }
 
+  /**
+   * 按用户 ID 查询该用户作为目标用户的分享记录（"我收到的分享"）。
+   *
+   * @param recipientId 目标用户 ID
+   * @return 目标用户视图对象列表
+   */
   @Override
   public List<ShareRecipientVO> findByRecipientId(String recipientId) {
     return mapper.shareRecipientListToVO(
         shareRecipientMapper.selectByRecipientId(recipientId));
   }
 
+  /**
+   * 标记目标用户已查看分享。
+   *
+   * @param shareId 分享链接 ID
+   * @param recipientId 目标用户 ID
+   * @return 更新记录数
+   */
   @Override
   public int markAsViewed(String shareId, String recipientId) {
     return shareRecipientMapper.markAsViewed(shareId, recipientId);

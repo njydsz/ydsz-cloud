@@ -43,6 +43,12 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
   private final FileVersionMapper fileVersionMapper;
   private final NextwikiStructMapper mapper;
 
+  /**
+   * 保存文件版本记录。
+   *
+   * @param dto 版本数据传输对象
+   * @return 保存后的版本视图对象
+   */
   @Override
   public FileVersionVO save(FileVersionDTO dto) {
     FileVersion entity = mapper.fileVersionToEntity(dto);
@@ -53,17 +59,34 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
     return mapper.fileVersionToVO(entity);
   }
 
+  /**
+   * 更新版本记录（仅更新描述、活跃状态等元数据）。
+   *
+   * @param dto 版本数据传输对象
+   */
   @Override
   public void update(FileVersionDTO dto) {
     FileVersion entity = mapper.fileVersionToEntity(dto);
     fileVersionMapper.updateById(entity);
   }
 
+  /**
+   * 按文件节点 ID 查询全部版本历史（倒序）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 版本视图对象列表
+   */
   @Override
   public List<FileVersionVO> findByFileNodeId(String fileNodeId) {
     return mapper.fileVersionListToVO(fileVersionMapper.selectByFileNodeId(fileNodeId));
   }
 
+  /**
+   * 按文件节点 ID 与版本号精确查询单个版本。
+   *
+   * @param query 版本查询条件
+   * @return 版本视图对象（可能为空）
+   */
   @Override
   public Optional<FileVersionVO> findByFileNodeIdAndVersion(FileVersionQuery query) {
     return Optional.ofNullable(
@@ -72,22 +95,46 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
         .map(mapper::fileVersionToVO);
   }
 
+  /**
+   * 查询文件的当前活跃版本。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 活跃版本视图对象（可能为空）
+   */
   @Override
   public Optional<FileVersionVO> findActiveVersion(String fileNodeId) {
     return Optional.ofNullable(fileVersionMapper.selectActiveVersion(fileNodeId))
         .map(mapper::fileVersionToVO);
   }
 
+  /**
+   * 设置指定版本为活跃版本（版本回滚时使用）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param versionNumber 要激活的版本号
+   */
   @Override
   public void setActiveVersion(String fileNodeId, Integer versionNumber) {
     fileVersionMapper.setActiveVersion(fileNodeId, versionNumber);
   }
 
+  /**
+   * 物理删除指定版本记录。
+   *
+   * @param id 版本 ID
+   */
   @Override
   public void deleteById(String id) {
     fileVersionMapper.deleteById(id);
   }
 
+  /**
+   * 删除超出保留数量的旧版本。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param keepCount 保留的最新版本数量
+   * @return 实际删除的版本数量
+   */
   @Override
   public int deleteExcessVersions(String fileNodeId, int keepCount) {
     List<FileVersion> excessVersions =
@@ -116,11 +163,24 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
     return ids.size();
   }
 
+  /**
+   * 统计文件的版本总数。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return 版本数量
+   */
   @Override
   public int countByFileNodeId(String fileNodeId) {
     return fileVersionMapper.countByFileNodeId(fileNodeId);
   }
 
+  /**
+   * 查询最早的 N 个版本。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param limit 返回数量限制
+   * @return 版本视图对象列表
+   */
   @Override
   public List<FileVersionVO> findOldestVersions(String fileNodeId, int limit) {
     return mapper.fileVersionListToVO(fileVersionMapper.selectOldestVersions(fileNodeId, limit));

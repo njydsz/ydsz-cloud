@@ -80,7 +80,11 @@ public class RuleTraceController {
   /** 规则管理服务 */
   private final RuleAdminService ruleAdminService;
 
-  /** 按 traceId 查询执行链路
+  /**
+   * 按 traceId 查询执行链路
+   *
+   * <p>返回指定 traceId 的全部执行轨迹，包含事实快照、触发结果和严重度。
+   *
    * @param traceId 追踪记录唯一标识
    * @return 执行链路列表
    */
@@ -89,7 +93,11 @@ public class RuleTraceController {
     return YdszResponse.success(ruleTraceQueryService.findByTraceId(traceId));
   }
 
-  /** 按规则编码查询最近链路
+  /**
+   * 按规则编码查询最近链路
+   *
+   * <p>查询指定规则最近 N 条执行轨迹，按时间倒序排列。用于规则状态诊断和趋势分析。
+   *
    * @param ruleCode 规则唯一编码
    * @param limit 返回条数上限（默认 20，最大 100）
    * @return 执行链路列表

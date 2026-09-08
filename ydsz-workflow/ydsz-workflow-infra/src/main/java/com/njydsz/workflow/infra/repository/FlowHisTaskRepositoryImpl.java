@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,6 +40,8 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowHisTaskVO save(FlowHisTaskVO vo) {
     FlowHisTask entity = converter.entityToEntity(vo);
@@ -48,11 +50,15 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowHisTaskVO> findById(String id) {
     return Optional.ofNullable(hisTaskMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowHisTaskVO> findByInstanceId(String instanceId) {
     return converter.flowHisTaskListToVO(
@@ -63,11 +69,15 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
                 .orderByDesc(FlowHisTask::getFinishAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> listPassedNodes(String instanceId) {
     return hisTaskMapper.listPassedNodes(instanceId);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowHisTaskVO> findByInstanceAndNode(String instanceId, String nodeCode) {
     return converter.flowHisTaskListToVO(
@@ -78,11 +88,15 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
                 .eq(FlowHisTask::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     hisTaskMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowHisTaskVO> findByAssignee(String userId, int limit) {
     return converter.flowHisTaskListToVO(
@@ -93,12 +107,16 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
                 .last("LIMIT " + limit)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Map<String, Object> selectOverviewStats(
       String tenantId, LocalDateTime startTime, LocalDateTime endTime) {
     return hisTaskMapper.selectOverviewStats(tenantId, startTime, endTime);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectApproverEfficiency(
       String tenantId,
@@ -108,17 +126,23 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
     return hisTaskMapper.selectApproverEfficiency(tenantId, startTime, endTime, limit);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectFlowEfficiencyComparison(
       String tenantId, LocalDateTime startTime, LocalDateTime endTime) {
     return hisTaskMapper.selectFlowEfficiencyComparison(tenantId, startTime, endTime);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectNodeDurationStats(String flowCode, String tenantId) {
     return hisTaskMapper.nodeDurationStats(flowCode, tenantId);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectApprovalTrend(
       String tenantId,
@@ -128,22 +152,30 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
     return hisTaskMapper.selectApprovalTrend(tenantId, startTime, endTime, granularity);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<String> selectCompletedAssigneeIds(String instanceId) {
     return hisTaskMapper.selectCompletedAssigneeIds(instanceId);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowHisTaskVO> selectDoneByAssignee(String assigneeId, String tenantId) {
     return converter.flowHisTaskListToVO(hisTaskMapper.selectDoneByAssignee(assigneeId, tenantId));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowHisTaskVO> selectDoneByAssigneePage(String assigneeId, String tenantId, int offset, int limit) {
     return converter.flowHisTaskListToVO(
         hisTaskMapper.selectDoneByAssigneePage(assigneeId, tenantId, offset, limit));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowHisTaskVO> selectDonePage(String assigneeId, String businessType, String flowCode,
       LocalDateTime startTime, LocalDateTime endTime,
@@ -152,17 +184,23 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
         hisTaskMapper.selectDonePage(assigneeId, businessType, flowCode, startTime, endTime, tenantId, offset, limit));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public long countDoneByAssignee(String assigneeId, String tenantId) {
     return hisTaskMapper.countDoneByAssignee(assigneeId, tenantId);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public long countDone(String assigneeId, String businessType, String flowCode,
       LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
     return hisTaskMapper.countDone(assigneeId, businessType, flowCode, startTime, endTime, tenantId);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowHisTaskVO> selectByTimeRange(
       String tenantId, String flowCode, LocalDateTime startTime, LocalDateTime endTime, int limit) {
@@ -178,6 +216,8 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
                 .last("LIMIT " + limit)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowHisTaskVO> selectRecentByTenant(String tenantId, int limit) {
     return converter.flowHisTaskListToVO(

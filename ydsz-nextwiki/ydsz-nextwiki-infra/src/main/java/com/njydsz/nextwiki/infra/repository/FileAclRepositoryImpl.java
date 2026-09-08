@@ -38,6 +38,12 @@ public class FileAclRepositoryImpl implements FileAclRepository {
   private final FileAclMapper fileAclMapper;
   private final NextwikiStructMapper mapper;
 
+  /**
+   * 保存文件 ACL 条目（新增或更新）。
+   *
+   * @param dto ACL 数据传输对象
+   * @return 保存后的 ACL 视图对象
+   */
   @Override
   public FileAclVO save(FileAclDTO dto) {
     FileAcl entity = mapper.fileAclToEntity(dto);
@@ -48,11 +54,23 @@ public class FileAclRepositoryImpl implements FileAclRepository {
     return mapper.fileAclToVO(entity);
   }
 
+  /**
+   * 按文件节点 ID 查询所有 ACL 记录。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @return ACL 视图对象列表
+   */
   @Override
   public List<FileAclVO> findByFileNodeId(String fileNodeId) {
     return mapper.fileAclListToVO(fileAclMapper.selectByFileNodeId(fileNodeId));
   }
 
+  /**
+   * 按文件节点与受权人（用户/角色/租户）查询 ACL 记录。
+   *
+   * @param query ACL 查询条件
+   * @return ACL 视图对象列表
+   */
   @Override
   public List<FileAclVO> findByFileNodeIdAndGrantee(FileAclQuery query) {
     // 语义为"查询用户对文件的有效权限"（含用户/角色/租户维度），
@@ -62,11 +80,22 @@ public class FileAclRepositoryImpl implements FileAclRepository {
             query.getFileNodeId(), query.getUserId(), query.getRoleIds()));
   }
 
+  /**
+   * 根据文件节点 ID 逻辑删除所有 ACL 记录（文件删除时级联清理）。
+   *
+   * @param fileNodeId 文件节点 ID
+   */
   @Override
   public void deleteByFileNodeId(String fileNodeId) {
     fileAclMapper.deleteByFileNodeId(fileNodeId);
   }
 
+  /**
+   * 查询用户在指定文件上的有效权限（综合用户/角色/租户维度）。
+   *
+   * @param query ACL 查询条件（含文件 ID、用户 ID、角色 ID）
+   * @return 有效 ACL 视图对象列表
+   */
   @Override
   public List<FileAclVO> findEffectivePermissions(FileAclQuery query) {
     return mapper.fileAclListToVO(
@@ -76,6 +105,11 @@ public class FileAclRepositoryImpl implements FileAclRepository {
             query.getRoleIds()));
   }
 
+  /**
+   * 批量新增 ACL 条目（文件权限初始化时使用）。
+   *
+   * @param dtos ACL 数据传输对象列表
+   */
   @Override
   public void batchSave(List<FileAclDTO> dtos) {
     if (dtos == null || dtos.isEmpty()) {

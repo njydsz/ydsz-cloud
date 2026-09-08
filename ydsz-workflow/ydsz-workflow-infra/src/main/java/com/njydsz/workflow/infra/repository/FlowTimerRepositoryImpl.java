@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +39,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowTimerVO save(FlowTimerVO vo) {
     FlowTimer entity = converter.entityToEntity(vo);
@@ -47,11 +49,15 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowTimerVO> findById(String id) {
     return Optional.ofNullable(timerMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowTimerVO> findByTaskId(String taskId) {
     return timerMapper
@@ -65,6 +71,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
         .map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowTimerVO> findByInstanceId(String instanceId) {
     return converter.flowTimerListToVO(
@@ -74,17 +82,23 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
                 .eq(FlowTimer::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     timerMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteByInstanceId(String instanceId) {
     timerMapper.delete(
         new LambdaQueryWrapper<FlowTimer>().eq(FlowTimer::getInstanceId, instanceId));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowTimerVO update(FlowTimerVO vo) {
     FlowTimer entity = converter.entityToEntity(vo);
@@ -92,6 +106,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowTimerVO> findDueTimers(LocalDateTime now, int limit) {
     return converter.flowTimerListToVO(
@@ -104,6 +120,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
                 .last("LIMIT " + limit)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void markFired(String id) {
     FlowTimer update = new FlowTimer();
@@ -113,6 +131,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
     timerMapper.updateById(update);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void cancelByTask(String taskId) {
     FlowTimer update = new FlowTimer();
@@ -125,6 +145,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
             .eq(FlowTimer::getTimerStatus, "PENDING"));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowTimerVO> findByInstanceIdOrderByFireTime(String instanceId) {
     return converter.flowTimerListToVO(
@@ -135,6 +157,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
                 .orderByAsc(FlowTimer::getFireAt)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public int cancelByInstance(String instanceId, String reason) {
     FlowTimer update = new FlowTimer();
@@ -148,6 +172,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
             .eq(FlowTimer::getIsDeleted, 0));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public long countPendingByInstance(String instanceId) {
     return timerMapper.selectCount(
@@ -157,6 +183,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
             .eq(FlowTimer::getIsDeleted, 0));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void markSnoozed(String id, LocalDateTime nextTime) {
     FlowTimer update = new FlowTimer();
@@ -166,6 +194,8 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
     timerMapper.updateById(update);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowTimerVO> findByInstanceOrderByCreatedAtDesc(String instanceId) {
     return converter.flowTimerListToVO(

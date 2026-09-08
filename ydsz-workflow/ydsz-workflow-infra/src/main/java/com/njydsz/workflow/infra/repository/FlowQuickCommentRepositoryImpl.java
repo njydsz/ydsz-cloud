@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +38,8 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowQuickCommentVO save(FlowQuickCommentVO vo) {
     FlowQuickComment entity = converter.entityToEntity(vo);
@@ -46,11 +48,15 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowQuickCommentVO> findById(String id) {
     return Optional.ofNullable(quickCommentMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowQuickCommentVO update(FlowQuickCommentVO vo) {
     FlowQuickComment entity = converter.entityToEntity(vo);
@@ -58,11 +64,15 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     quickCommentMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowQuickCommentVO> findActiveByUser(String userId, String tenantId) {
     return converter.flowQuickCommentListToVO(
@@ -73,6 +83,8 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
                 .eq(FlowQuickComment::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowQuickCommentVO> findActiveSystemByTenant(String tenantId) {
     return converter.flowQuickCommentListToVO(

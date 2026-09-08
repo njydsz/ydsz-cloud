@@ -63,6 +63,8 @@ public class RuleTemplateController {
   /**
    * 查询全部规则模板
    *
+   * <p>返回规则市场中所有可用的规则模板列表，供前端模板浏览页展示。
+   *
    * @return 模板列表
    */
   @GetMapping("/templates")
@@ -84,6 +86,8 @@ public class RuleTemplateController {
   /**
    * 按行业查询规则模板
    *
+   * <p>按行业维度（如金融、零售）筛选模板，便于行业用户快速定位适用模板。
+   *
    * @param industry 行业编码
    * @return 模板列表
    */
@@ -94,6 +98,8 @@ public class RuleTemplateController {
 
   /**
    * 一键导入模板为规则定义
+   *
+   * <p>从规则市场中选取模板，一键生成为规则定义。生成的规则状态为 DRAFT，可由运营进一步调整后发布。
    *
    * @param templateCode 模板编码
    * @param operator 操作人（从 Header 获取）

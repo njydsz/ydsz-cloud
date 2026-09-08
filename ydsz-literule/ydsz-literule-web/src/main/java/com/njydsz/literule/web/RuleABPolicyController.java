@@ -67,7 +67,11 @@ public class RuleABPolicyController {
   @Resource
   private LiteruleWebConverter literuleWebConverter;
 
-    /** 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
+    /**
+   * 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
+   *
+   * <p>查询规则的自动回滚策略配置。未配置时返回系统默认策略（触发率变化阈值、冷却时间等）。
+   *
    * @param ruleCode 规则唯一编码
    * @return AB Test 自动回滚策略信息
    */
@@ -76,9 +80,13 @@ public class RuleABPolicyController {
     return YdszResponse.success(abTestAutoRollbackProvider.getPolicy(ruleCode));
   }
 
-    /** 更新规则的 AB Test 自动回滚策略
+    /**
+   * 更新规则的 AB Test 自动回滚策略
+   *
+   * <p>更新指定规则的自动回滚策略配置。策略变更后立即生效，下一轮 AB Test 评估将使用新策略。
+   *
    * @param ruleCode 规则唯一编码
-   * @param dto 策略请求数据
+   * @param dto 策略请求数据（含触发率阈值、冷却时间等）
    * @param operator 操作人用户名
    * @return 无返回内容
    */
@@ -100,7 +108,11 @@ public class RuleABPolicyController {
     return YdszResponse.success();
   }
 
-    /** 查询规则的回滚历史
+    /**
+   * 查询规则的回滚历史
+   *
+   * <p>返回指定规则的历史自动回滚记录，包含回滚时间、触发原因、影响范围等信息。
+   *
    * @param ruleCode 规则唯一编码
    * @return 回滚历史列表
    */
@@ -110,7 +122,11 @@ public class RuleABPolicyController {
         abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
   }
 
-    /** 主动触发 AB Test 评估（人工立即检查）
+    /**
+   * 主动触发 AB Test 评估（人工立即检查）
+   *
+   * <p>立即执行一次 AB Test 评估，检查指标是否超过回滚阈值。不影响定时评估流程。
+   *
    * @param ruleCode 规则唯一编码
    * @return 是否需要回滚（true/false）
    */

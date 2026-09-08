@@ -92,7 +92,11 @@ public class RuleCategoryController {
             .toList());
   }
 
-  /** 按 Owner 查询规则
+  /**
+   * 按 Owner 查询规则
+   *
+   * <p>查询指定责任人名下的全部规则定义，用于分模块管理和权限控制。
+   *
    * @param owner 责任人用户名
    * @return 规则定义列表
    */
@@ -105,7 +109,11 @@ public class RuleCategoryController {
             .toList());
   }
 
-  /** 设置规则责任人
+  /**
+   * 设置规则责任人
+   *
+   * <p>变更指定规则的责任人。原责任人自动失去该规则的管理权限。
+   *
    * @param ruleCode 规则唯一编码
    * @param owner 责任人用户名
    * @param operator 操作人用户名
@@ -127,7 +135,11 @@ public class RuleCategoryController {
     return YdszResponse.success();
   }
 
-  /** 设置规则分类路径
+  /**
+   * 设置规则分类路径
+   *
+   * <p>变更指定规则所属分类。路径采用斜杠分隔的树状结构，如 "finance/credit"。
+   *
    * @param ruleCode 规则唯一编码
    * @param path 分类路径（如 "finance/credit"）
    * @param operator 操作人用户名

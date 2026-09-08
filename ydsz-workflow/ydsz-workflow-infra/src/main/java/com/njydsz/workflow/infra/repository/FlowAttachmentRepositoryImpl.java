@@ -1,4 +1,4 @@
-package com.njydsz.workflow.infra.repository;
+﻿package com.njydsz.workflow.infra.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +38,8 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
 
   private final WorkflowConverter converter;
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowAttachmentVO save(FlowAttachmentVO vo) {
     FlowAttachment entity = converter.entityToEntity(vo);
@@ -46,11 +48,15 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
     return vo;
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public Optional<FlowAttachmentVO> findById(String id) {
     return Optional.ofNullable(attachmentMapper.selectById(id)).map(converter::entityToVO);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAttachmentVO> findByInstanceId(String instanceId) {
     return converter.flowAttachmentListToVO(
@@ -60,6 +66,8 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
                 .eq(FlowAttachment::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public List<FlowAttachmentVO> findByTaskId(String taskId) {
     return converter.flowAttachmentListToVO(
@@ -69,11 +77,15 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
                 .eq(FlowAttachment::getIsDeleted, 0)));
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     attachmentMapper.deleteById(id);
   }
 
+  /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public FlowAttachmentVO update(FlowAttachmentVO vo) {
     FlowAttachment entity = converter.entityToEntity(vo);
