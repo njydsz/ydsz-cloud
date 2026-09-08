@@ -29,6 +29,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.template.TemplateVersionService;
 
 /**
@@ -82,6 +83,7 @@ import com.njydsz.message.server.service.template.TemplateVersionService;
  */
 @Slf4j
 @Tag(name = "模板版本管理", description = "版本历史、回滚、预览、试发")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/template/version")
 @RequiredArgsConstructor

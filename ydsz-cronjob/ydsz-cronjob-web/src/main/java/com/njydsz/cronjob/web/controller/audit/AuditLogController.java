@@ -20,6 +20,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.vo.AuditLogVO;
 import com.njydsz.cronjob.server.service.audit.AuditLogService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 操作审计视图 Controller（P1-14 操作审计视图）。
@@ -41,6 +42,7 @@ import com.njydsz.cronjob.server.service.audit.AuditLogService;
  */
 @Tag(name = "操作审计", description = "cronjob 操作审计日志分页查询")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/audit")
 @RequiredArgsConstructor

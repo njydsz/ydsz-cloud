@@ -24,6 +24,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagEdge;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务全局拓扑数据 API Controller（P2-3）。
@@ -49,6 +50,7 @@ import com.njydsz.cronjob.server.core.dag.DagEdge;
  */
 @Slf4j
 @Tag(name = "任务全局拓扑", description = "全局任务拓扑图数据：节点/边/统计")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/topology")
 @RequiredArgsConstructor

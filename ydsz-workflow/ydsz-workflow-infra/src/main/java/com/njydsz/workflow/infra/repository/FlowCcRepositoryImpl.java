@@ -65,7 +65,7 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
         ccMapper.selectList(
             new LambdaQueryWrapper<FlowCc>()
                 .eq(FlowCc::getInstanceId, instanceId)
-                .eq(FlowCc::getDeleted, 0)));
+                .eq(FlowCc::getIsDeleted, 0)));
   }
 
   @Override
@@ -74,7 +74,7 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
         ccMapper.selectList(
             new LambdaQueryWrapper<FlowCc>()
                 .eq(FlowCc::getCcUserId, receiverId)
-                .eq(FlowCc::getDeleted, 0)
+                .eq(FlowCc::getIsDeleted, 0)
                 .orderByDesc(FlowCc::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
@@ -98,7 +98,7 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
             new LambdaQueryWrapper<FlowCc>()
                 .eq(FlowCc::getCcUserId, userId)
                 .eq(FlowCc::getTenantId, tenantId)
-                .eq(FlowCc::getDeleted, 0)
+                .eq(FlowCc::getIsDeleted, 0)
                 .orderByDesc(FlowCc::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
@@ -109,7 +109,7 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
         new LambdaQueryWrapper<FlowCc>()
             .eq(FlowCc::getCcUserId, userId)
             .eq(FlowCc::getTenantId, tenantId)
-            .eq(FlowCc::getDeleted, 0));
+            .eq(FlowCc::getIsDeleted, 0));
   }
 
   @Override
@@ -153,7 +153,7 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
             .eq(FlowCc::getCcUserId, userId)
             .eq(FlowCc::getTenantId, tenantId)
             .eq(FlowCc::getReadStatus, "UNREAD")
-            .eq(FlowCc::getDeleted, 0));
+            .eq(FlowCc::getIsDeleted, 0));
   }
 
   @Override
@@ -166,7 +166,7 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
                 .eq(FlowCc::getTenantId, tenantId)
                 .eq(readStatus != null, FlowCc::getReadStatus, readStatus)
                 .eq(flowCode != null, FlowCc::getFlowCode, flowCode)
-                .eq(FlowCc::getDeleted, 0)
+                .eq(FlowCc::getIsDeleted, 0)
                 .orderByDesc(FlowCc::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
@@ -180,7 +180,7 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
             .eq(FlowCc::getTenantId, tenantId)
             .eq(readStatus != null, FlowCc::getReadStatus, readStatus)
             .eq(flowCode != null, FlowCc::getFlowCode, flowCode)
-            .eq(FlowCc::getDeleted, 0));
+            .eq(FlowCc::getIsDeleted, 0));
   }
 
   @Override
@@ -190,6 +190,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
             new LambdaQueryWrapper<FlowCc>()
                 .eq(FlowCc::getTenantId, tenantId)
                 .eq(FlowCc::getInstanceId, instanceId)
-                .eq(FlowCc::getDeleted, 0)));
+                .eq(FlowCc::getIsDeleted, 0)));
   }
 }

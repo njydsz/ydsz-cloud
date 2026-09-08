@@ -24,7 +24,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
     </resultMap>
@@ -33,7 +33,7 @@
         id, instance_id, task_id, flow_code, business_type, business_id,
         node_code, node_name, action, operator_id, operator_name,
         target_id, target_name, comment, comment_type, operated_at, status,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id, provider_trace_id
     </sql>
 
     <!-- 查某实例的全部审计日志（按时间正序） -->
@@ -42,7 +42,7 @@
         FROM ydsz_flow_audit_log
         WHERE instance_id = #{instanceId}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY operated_at ASC, id ASC
     </select>
 
@@ -52,7 +52,7 @@
         FROM ydsz_flow_audit_log
         WHERE task_id = #{taskId}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY operated_at ASC, id ASC
     </select>
 
@@ -68,7 +68,7 @@
           AND operated_at &gt;= #{startTime}
           <if test="endTime != null">AND operated_at &lt;= #{endTime}</if>
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY operated_at DESC, id DESC
     </select>
 
@@ -83,7 +83,7 @@
           AND operated_at &gt;= #{startTime}
           <if test="endTime != null">AND operated_at &lt;= #{endTime}</if>
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY operated_at DESC, id DESC
     </select>
 
@@ -100,7 +100,7 @@
               #{action}
           </foreach>
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY operated_at DESC, id DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -115,6 +115,6 @@
               #{action}
           </foreach>
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
     </select>
 </mapper>

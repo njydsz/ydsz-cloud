@@ -25,6 +25,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.core.MessageLogService;
 
 /**
@@ -80,6 +81,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
  */
 @Slf4j
 @Tag(name = "死信管理", description = "死信查询与手动重发")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/dead-letter")
 @RequiredArgsConstructor

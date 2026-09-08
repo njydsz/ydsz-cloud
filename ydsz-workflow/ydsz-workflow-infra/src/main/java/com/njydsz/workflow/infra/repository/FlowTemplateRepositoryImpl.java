@@ -57,7 +57,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
         .selectList(
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(FlowTemplate::getTemplateCode, code)
-                .eq(FlowTemplate::getDeleted, 0)
+                .eq(FlowTemplate::getIsDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -70,7 +70,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
         templateMapper.selectList(
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(tenantId != null, FlowTemplate::getTenantId, tenantId)
-                .eq(FlowTemplate::getDeleted, 0)
+                .eq(FlowTemplate::getIsDeleted, 0)
                 .orderByAsc(FlowTemplate::getSort)));
   }
 
@@ -80,7 +80,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
         templateMapper.selectList(
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(FlowTemplate::getCategory, categoryId)
-                .eq(FlowTemplate::getDeleted, 0)
+                .eq(FlowTemplate::getIsDeleted, 0)
                 .orderByAsc(FlowTemplate::getSort)));
   }
 
@@ -104,7 +104,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
                 .eq(FlowTemplate::getCategory, businessType)
                 .eq(FlowTemplate::getTenantId, tenantId)
                 .eq(FlowTemplate::getIsLatest, 1)
-                .eq(FlowTemplate::getDeleted, 0)
+                .eq(FlowTemplate::getIsDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -118,7 +118,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(FlowTemplate::getTemplateCode, templateCode)
                 .eq(FlowTemplate::getIsLatest, 1)
-                .eq(FlowTemplate::getDeleted, 0)
+                .eq(FlowTemplate::getIsDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -132,7 +132,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(category != null && !category.isEmpty(), FlowTemplate::getCategory, category)
                 .eq(FlowTemplate::getIsLatest, 1)
-                .eq(FlowTemplate::getDeleted, 0)
+                .eq(FlowTemplate::getIsDeleted, 0)
                 .orderByAsc(FlowTemplate::getSort)));
   }
 
@@ -157,7 +157,7 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
         templateMapper.selectList(
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(FlowTemplate::getTemplateCode, templateCode)
-                .eq(FlowTemplate::getDeleted, 0)
+                .eq(FlowTemplate::getIsDeleted, 0)
                 .orderByDesc(FlowTemplate::getVersion)));
   }
 
@@ -168,6 +168,6 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
             new LambdaQueryWrapper<FlowTemplate>()
                 .eq(FlowTemplate::getParentTemplateId, parentTemplateId)
                 .eq(FlowTemplate::getIsLatest, 1)
-                .eq(FlowTemplate::getDeleted, 0)));
+                .eq(FlowTemplate::getIsDeleted, 0)));
   }
 }

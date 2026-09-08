@@ -28,6 +28,7 @@ import com.njydsz.message.domain.dto.BatchProgressDTO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.server.service.SseEmitterService;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.batch.BatchService;
 
 /**
@@ -86,6 +87,7 @@ import com.njydsz.message.server.service.batch.BatchService;
  */
 @Slf4j
 @Tag(name = "批量发送", description = "异步批量发送与进度查询")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/batch")
 @RequiredArgsConstructor

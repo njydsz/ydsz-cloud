@@ -13,6 +13,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.core.MessageService;
 
 /**
@@ -39,6 +40,7 @@ import com.njydsz.message.server.service.core.MessageService;
  * @see com.njydsz.message.api.client.MessageSendClient Feign Client 接口
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/internal")
 @RequiredArgsConstructor

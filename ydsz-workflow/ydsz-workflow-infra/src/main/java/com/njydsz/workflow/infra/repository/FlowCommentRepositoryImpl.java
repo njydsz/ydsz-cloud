@@ -57,7 +57,7 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
         commentMapper.selectList(
             new LambdaQueryWrapper<FlowComment>()
                 .eq(FlowComment::getInstanceId, instanceId)
-                .eq(FlowComment::getDeleted, 0)
+                .eq(FlowComment::getIsDeleted, 0)
                 .orderByDesc(FlowComment::getCreatedAt)));
   }
 
@@ -67,7 +67,7 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
         commentMapper.selectList(
             new LambdaQueryWrapper<FlowComment>()
                 .eq(FlowComment::getTaskId, taskId)
-                .eq(FlowComment::getDeleted, 0)));
+                .eq(FlowComment::getIsDeleted, 0)));
   }
 
   @Override
@@ -89,7 +89,7 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
             new LambdaQueryWrapper<FlowComment>()
                 .eq(FlowComment::getInstanceId, instanceId)
                 .isNull(FlowComment::getParentCommentId)
-                .eq(FlowComment::getDeleted, 0)
+                .eq(FlowComment::getIsDeleted, 0)
                 .orderByAsc(FlowComment::getCreatedAt)));
   }
 
@@ -99,7 +99,7 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
         commentMapper.selectList(
             new LambdaQueryWrapper<FlowComment>()
                 .eq(FlowComment::getParentCommentId, commentId)
-                .eq(FlowComment::getDeleted, 0)
+                .eq(FlowComment::getIsDeleted, 0)
                 .orderByAsc(FlowComment::getCreatedAt)));
   }
 
@@ -110,7 +110,7 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
             new LambdaQueryWrapper<FlowComment>()
                 .eq(FlowComment::getTenantId, tenantId)
                 .eq(FlowComment::getInstanceId, instanceId)
-                .eq(FlowComment::getDeleted, 0)
+                .eq(FlowComment::getIsDeleted, 0)
                 .orderByAsc(FlowComment::getCreatedAt)));
   }
 
@@ -122,7 +122,7 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
                 .eq(FlowComment::getTenantId, tenantId)
                 .eq(FlowComment::getInstanceId, instanceId)
                 .isNull(FlowComment::getParentCommentId)
-                .eq(FlowComment::getDeleted, 0)
+                .eq(FlowComment::getIsDeleted, 0)
                 .orderByAsc(FlowComment::getCreatedAt)));
   }
 }

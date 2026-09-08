@@ -16,6 +16,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.vo.MsgTraceVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.core.MessageTraceService;
 
 /**
@@ -78,6 +79,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  */
 @Tag(name = "消息追踪", description = "消息端到端全链路追踪")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/trace")
 @RequiredArgsConstructor

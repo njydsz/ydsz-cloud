@@ -21,6 +21,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.RecallRequestDTO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.receipt.RecallService;
 
 /**
@@ -74,6 +75,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  */
 @Tag(name = "消息撤回", description = "通知/消息撤回")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/recall")
 @RequiredArgsConstructor

@@ -21,6 +21,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * Human-in-the-Loop 人工审批 REST API Controller。
@@ -62,6 +63,7 @@ import com.njydsz.common.permission.PermissionCodes;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/agent/approvals")
 @RequiredArgsConstructor

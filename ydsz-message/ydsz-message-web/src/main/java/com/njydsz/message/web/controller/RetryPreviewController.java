@@ -17,6 +17,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.server.service.retry.RetryPreset;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.retry.RetryPreviewService;
 
 /**
@@ -31,6 +32,7 @@ import com.njydsz.message.server.service.retry.RetryPreviewService;
  */
 @Slf4j
 @Tag(name = "重试策略预览", description = "重试预设档位可视化预览")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/retry")
 @RequiredArgsConstructor

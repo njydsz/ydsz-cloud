@@ -65,7 +65,7 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
             new LambdaQueryWrapper<FlowNode>()
                 .eq(FlowNode::getDefinitionId, definitionId)
                 .eq(FlowNode::getNodeCode, nodeCode)
-                .eq(FlowNode::getDeleted, 0)
+                .eq(FlowNode::getIsDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -78,7 +78,7 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
         nodeMapper.selectList(
             new LambdaQueryWrapper<FlowNode>()
                 .eq(FlowNode::getDefinitionId, definitionId)
-                .eq(FlowNode::getDeleted, 0)));
+                .eq(FlowNode::getIsDeleted, 0)));
   }
 
   @Override

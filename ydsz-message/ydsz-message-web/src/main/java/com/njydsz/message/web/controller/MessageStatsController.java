@@ -21,6 +21,7 @@ import com.njydsz.message.domain.dto.CostStatsDTO;
 import com.njydsz.message.domain.dto.FunnelStatsDTO;
 import com.njydsz.message.domain.dto.MessageStatsDTO;
 import com.njydsz.message.domain.dto.ReceiptStatsDTO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.core.MessageStatsService;
 
 /**
@@ -81,6 +82,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
  */
 @Slf4j
 @Tag(name = "消息统计看板", description = "发送/重试/死信/回执聚合指标")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/stats")
 @RequiredArgsConstructor

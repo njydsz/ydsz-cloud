@@ -28,6 +28,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务诊断端点（P1-4 新增）。
@@ -48,6 +49,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  */
 @Slf4j
 @Tag(name = "任务诊断", description = "聚合任务多维度状态信息，提供一键诊断能力")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/monitor/diagnosis")
 @RequiredArgsConstructor

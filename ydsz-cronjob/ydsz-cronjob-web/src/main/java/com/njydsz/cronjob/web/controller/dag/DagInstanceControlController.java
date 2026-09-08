@@ -20,6 +20,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.server.core.dag.DagInstanceControlService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * DAG 工作流实例运行时控制 Controller（P1-4）。
@@ -75,6 +76,7 @@ import com.njydsz.cronjob.server.core.dag.DagInstanceControlService;
  */
 @Slf4j
 @Tag(name = "DAG 工作流控制", description = "DAG 实例运行时控制：暂停/恢复/取消/重试节点")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/dag/instance")
 @RequiredArgsConstructor

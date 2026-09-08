@@ -132,7 +132,7 @@ public class JobRepositoryImpl implements JobRepository {
     if (group != null && !group.isBlank()) {
       wrapper.eq(Job::getJobGroup, group);
     }
-    wrapper.eq(Job::getDeleted, 0).orderByDesc(Job::getCreatedAt);
+    wrapper.eq(Job::getIsDeleted, 0).orderByDesc(Job::getCreatedAt);
     Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
     return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal());
   }
@@ -141,7 +141,7 @@ public class JobRepositoryImpl implements JobRepository {
   public PageResult<JobVO> pageByGroup(String jobGroup, int page, int size) {
     Page<Job> pageObj = new Page<>(page, size);
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0).orderByDesc(Job::getCreatedAt);
+    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getIsDeleted, 0).orderByDesc(Job::getCreatedAt);
     Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
     return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal());
   }
@@ -149,7 +149,7 @@ public class JobRepositoryImpl implements JobRepository {
   @Override
   public List<JobVO> findByGroupAndStatus(String jobGroup, String status) {
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0);
+    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getIsDeleted, 0);
     if (status != null) {
       wrapper.eq(Job::getStatus, status);
     }
@@ -160,7 +160,7 @@ public class JobRepositoryImpl implements JobRepository {
   @Override
   public List<String> listDistinctGroups() {
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getDeleted, 0).select(Job::getJobGroup);
+    wrapper.eq(Job::getIsDeleted, 0).select(Job::getJobGroup);
     return jobMapper.selectList(wrapper).stream()
         .map(Job::getJobGroup)
         .filter(g -> g != null && !g.isBlank())
@@ -172,21 +172,21 @@ public class JobRepositoryImpl implements JobRepository {
   @Override
   public long countByGroup(String jobGroup) {
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getDeleted, 0);
+    wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getIsDeleted, 0);
     return jobMapper.selectCount(wrapper);
   }
 
   @Override
   public long countByStatus(String status) {
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getStatus, status).eq(Job::getDeleted, 0);
+    wrapper.eq(Job::getStatus, status).eq(Job::getIsDeleted, 0);
     return jobMapper.selectCount(wrapper);
   }
 
   @Override
   public long countAll() {
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getDeleted, 0);
+    wrapper.eq(Job::getIsDeleted, 0);
     return jobMapper.selectCount(wrapper);
   }
 
@@ -236,14 +236,14 @@ public class JobRepositoryImpl implements JobRepository {
     if (status != null && !status.isBlank()) {
       wrapper.eq(Job::getStatus, status);
     }
-    wrapper.eq(Job::getDeleted, 0);
+    wrapper.eq(Job::getIsDeleted, 0);
     return jobMapper.selectCount(wrapper);
   }
 
   @Override
   public List<JobVO> findByStatus(String status) {
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Job::getDeleted, 0);
+    wrapper.eq(Job::getIsDeleted, 0);
     if (status != null && !status.isBlank()) {
       wrapper.eq(Job::getStatus, status);
     }

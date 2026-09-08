@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.reactive.ReactiveEvent;
 import com.njydsz.message.server.reactive.ReactiveSseRegistry;
 
@@ -42,6 +43,7 @@ import com.njydsz.message.server.reactive.ReactiveSseRegistry;
  * @see ReactiveEvent
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/reactive")
 @RequiredArgsConstructor

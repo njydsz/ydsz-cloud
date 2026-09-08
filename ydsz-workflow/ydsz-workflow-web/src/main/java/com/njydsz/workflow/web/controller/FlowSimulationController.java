@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.server.simulator.FlowSimulationService;
 import com.njydsz.workflow.server.simulator.SimulationResult;
@@ -25,6 +26,7 @@ import com.njydsz.workflow.server.simulator.SimulationResult;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/workflow/simulation")
 @Tag(name = "流程模拟", description = "流程定义模拟执行接口")

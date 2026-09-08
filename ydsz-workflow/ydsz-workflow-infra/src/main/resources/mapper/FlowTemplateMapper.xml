@@ -31,7 +31,7 @@
     <select id="selectByCategory" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_template
-        WHERE deleted = 0
+        WHERE is_deleted = 0
           AND is_latest = 1
         <if test="category != null and category != ''">
             AND category = #{category}
@@ -44,7 +44,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_template
         WHERE template_code = #{templateCode}
-          AND deleted = 0
+          AND is_deleted = 0
           AND is_latest = 1
     </select>
 
@@ -52,7 +52,7 @@
         UPDATE ydsz_flow_template
         SET use_count = use_count + 1
         WHERE template_code = #{templateCode}
-          AND deleted = 0
+          AND is_deleted = 0
           AND is_latest = 1
     </update>
 
@@ -61,7 +61,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_template
         WHERE template_code = #{templateCode}
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY version DESC, id ASC
     </select>
 
@@ -70,7 +70,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_template
         WHERE parent_template_id = #{parentTemplateId}
-          AND deleted = 0
+          AND is_deleted = 0
           AND is_latest = 1
         ORDER BY sort ASC, id ASC
     </select>
@@ -81,7 +81,7 @@
         SET is_latest = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE template_code = #{templateCode}
-          AND deleted = 0
+          AND is_deleted = 0
           AND is_latest = 1
     </update>
 
@@ -90,7 +90,7 @@
         SELECT MAX(version)
         FROM ydsz_flow_template
         WHERE template_code = #{templateCode}
-          AND deleted = 0
+          AND is_deleted = 0
     </select>
 
 </mapper>

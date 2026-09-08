@@ -22,14 +22,14 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="provider_trace_id" property="providerTraceId"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, tenant_id, instance_id, definition_id, flow_code, node_code, node_name,
         timer_type, boundary_task_id, fire_at, cycle, timer_status, fired_at, cancel_reason,
-        status, created_by, created_at, updated_by, updated_at, deleted, provider_trace_id
+        status, created_by, created_at, updated_by, updated_at, is_deleted, provider_trace_id
     </sql>
 
     <!-- P1-2: 扫描到点的 PENDING 定时器 -->
@@ -37,7 +37,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_timer
         WHERE timer_status = 'PENDING'
-          AND deleted = 0
+          AND is_deleted = 0
           AND fire_at &lt;= #{now}
         ORDER BY fire_at ASC
         LIMIT #{limit}
@@ -51,7 +51,7 @@
             updated_at = NOW()
         WHERE boundary_task_id = #{boundaryTaskId}
           AND timer_status = 'PENDING'
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P1-2: 标记定时器已触发 -->
@@ -72,7 +72,7 @@
             updated_at = NOW()
         WHERE instance_id = #{instanceId}
           AND timer_status = 'PENDING'
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <select id="countPendingByInstance" resultType="long">
@@ -80,6 +80,6 @@
         FROM ydsz_flow_timer
         WHERE instance_id = #{instanceId}
           AND timer_status = 'PENDING'
-          AND deleted = 0
+          AND is_deleted = 0
     </select>
 </mapper>

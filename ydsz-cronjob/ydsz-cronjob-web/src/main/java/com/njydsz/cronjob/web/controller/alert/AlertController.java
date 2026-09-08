@@ -33,6 +33,7 @@ import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.server.service.alert.AlertService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 告警规则管理 Controller（P5 告警 + 监控）。
@@ -62,6 +63,7 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
  */
 @Tag(name = "任务告警规则", description = "告警规则 CRUD、启停、告警日志查询")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/alert")
 @RequiredArgsConstructor

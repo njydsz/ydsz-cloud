@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -43,6 +44,7 @@ import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
  * @see com.njydsz.workflow.api.client.WorkflowServiceClient Feign Client 接口
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/internal")
 @RequiredArgsConstructor

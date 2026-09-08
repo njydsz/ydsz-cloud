@@ -53,7 +53,7 @@ public class AppInfoRepositoryImpl implements AppInfoRepository {
   @Override
   public boolean existsByAppKey(String appKey) {
     Long count = appInfoMapper.selectCount(
-        new LambdaQueryWrapper<AppInfo>().eq(AppInfo::getAppKey, appKey).eq(AppInfo::getDeleted, 0));
+        new LambdaQueryWrapper<AppInfo>().eq(AppInfo::getAppKey, appKey).eq(AppInfo::getIsDeleted, 0));
     return count != null && count > 0;
   }
 

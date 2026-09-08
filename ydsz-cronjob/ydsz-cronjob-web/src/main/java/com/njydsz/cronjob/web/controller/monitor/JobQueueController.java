@@ -17,6 +17,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务执行队列实时状态 Controller（P0-A2）。
@@ -55,6 +56,7 @@ import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
  */
 @Slf4j
 @Tag(name = "执行队列状态", description = "任务执行线程池实时状态：活跃数/队列大小/已完成数/拒绝数")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/queue")
 @RequiredArgsConstructor

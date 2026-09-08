@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
@@ -93,6 +94,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @see FlowDeployProcessDTO 部署参数 DTO
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-definition", description = "工作流流程定义统一接口")
 @RequestMapping("/api/workflow/engine")

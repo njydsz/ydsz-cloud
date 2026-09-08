@@ -29,6 +29,7 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.core.dag.DagCytoscapeHelper;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务执行拓扑图后端 API Controller（P2-11）。
@@ -70,6 +71,7 @@ import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
  */
 @Slf4j
 @Tag(name = "任务执行拓扑图", description = "DAG 实例执行拓扑可视化：节点/边/执行状态/历史")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/topology")
 @RequiredArgsConstructor

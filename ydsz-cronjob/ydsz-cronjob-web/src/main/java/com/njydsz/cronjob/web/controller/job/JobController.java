@@ -46,6 +46,7 @@ import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务调度 Controller
@@ -85,6 +86,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
  */
 @Tag(name = "任务调度", description = "任务 CRUD、暂停/恢复、立即触发、Cron 校验、批量操作")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob")
 @RequiredArgsConstructor

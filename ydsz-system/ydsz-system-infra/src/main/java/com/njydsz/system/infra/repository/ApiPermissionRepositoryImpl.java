@@ -53,7 +53,7 @@ public class ApiPermissionRepositoryImpl implements ApiPermissionRepository {
   public PageResponse<List<ApiPermissionVO>> findByPage(ApiPermissionQuery query) {
     Page<ApiPermission> page = new Page<>(query.getPageNum(), query.getPageSize());
     LambdaQueryWrapper<ApiPermission> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(ApiPermission::getDeleted, NOT_DELETED);
+    wrapper.eq(ApiPermission::getIsDeleted, NOT_DELETED);
     if (query.getApiCode() != null && !query.getApiCode().isBlank()) {
       wrapper.like(ApiPermission::getApiCode, query.getApiCode());
     }
@@ -84,7 +84,7 @@ public class ApiPermissionRepositoryImpl implements ApiPermissionRepository {
                 new LambdaQueryWrapper<ApiPermission>()
                     .eq(ApiPermission::getTenantId, tenantId)
                     .eq(ApiPermission::getApiCode, apiCode)
-                    .eq(ApiPermission::getDeleted, NOT_DELETED)
+                    .eq(ApiPermission::getIsDeleted, NOT_DELETED)
                     .last("LIMIT 1")))
         .map(converter::apiPermissionToVO);
   }
@@ -94,7 +94,7 @@ public class ApiPermissionRepositoryImpl implements ApiPermissionRepository {
     return converter.apiPermissionListToVO(apiPermissionMapper.selectList(
         new LambdaQueryWrapper<ApiPermission>()
             .eq(ApiPermission::getTenantId, tenantId)
-            .eq(ApiPermission::getDeleted, NOT_DELETED)
+            .eq(ApiPermission::getIsDeleted, NOT_DELETED)
             .orderByDesc(ApiPermission::getCreatedAt)));
   }
 

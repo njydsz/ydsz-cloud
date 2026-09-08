@@ -95,7 +95,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     LambdaQueryWrapper<FlowRunTask> wrapper = new LambdaQueryWrapper<FlowRunTask>()
         .in(FlowRunTask::getId, ids)
         .eq(StringUtils.hasText(tenantId), FlowRunTask::getTenantId, tenantId)
-        .eq(FlowRunTask::getDeleted, 0);
+        .eq(FlowRunTask::getIsDeleted, 0);
     return converter.flowRunTaskListToVO(taskMapper.selectList(wrapper));
   }
 
@@ -111,7 +111,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             new LambdaQueryWrapper<FlowRunTask>()
                 .eq(FlowRunTask::getInstanceId, instanceId)
                 .eq(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING)
-                .eq(FlowRunTask::getDeleted, 0)));
+                .eq(FlowRunTask::getIsDeleted, 0)));
   }
 
   @Override
@@ -122,7 +122,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .eq(FlowRunTask::getInstanceId, instanceId)
                 .eq(FlowRunTask::getNodeCode, nodeCode)
                 .eq(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING)
-                .eq(FlowRunTask::getDeleted, 0)));
+                .eq(FlowRunTask::getIsDeleted, 0)));
   }
 
   @Override
@@ -132,7 +132,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             new LambdaQueryWrapper<FlowRunTask>()
                 .eq(FlowRunTask::getAssigneeId, assigneeId)
                 .eq(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING)
-                .eq(FlowRunTask::getDeleted, 0)
+                .eq(FlowRunTask::getIsDeleted, 0)
                 .orderByDesc(FlowRunTask::getCreatedAt)
                 .last("LIMIT " + limit + " OFFSET " + offset)));
   }
@@ -143,7 +143,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         new LambdaQueryWrapper<FlowRunTask>()
             .eq(FlowRunTask::getAssigneeId, assigneeId)
             .eq(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING)
-            .eq(FlowRunTask::getDeleted, 0));
+            .eq(FlowRunTask::getIsDeleted, 0));
   }
 
   @Override
@@ -192,7 +192,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         taskMapper.selectList(
             new LambdaQueryWrapper<FlowRunTask>()
                 .eq(FlowRunTask::getInstanceId, instanceId)
-                .eq(FlowRunTask::getDeleted, 0)
+                .eq(FlowRunTask::getIsDeleted, 0)
                 .orderByDesc(FlowRunTask::getCreatedAt)));
   }
 
@@ -204,7 +204,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .eq(FlowRunTask::getAssigneeId, userId)
                 .eq(FlowRunTask::getTenantId, tenantId)
                 .eq(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING)
-                .eq(FlowRunTask::getDeleted, 0)
+                .eq(FlowRunTask::getIsDeleted, 0)
                 .orderByDesc(FlowRunTask::getCreatedAt)
                 .last("LIMIT " + limit)));
   }
@@ -224,7 +224,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
         .le(query.getCreatedAtTo() != null, FlowRunTask::getCreatedAt, query.getCreatedAtTo())
         .ge(query.getDueAtFrom() != null, FlowRunTask::getDueAt, query.getDueAtFrom())
         .le(query.getDueAtTo() != null, FlowRunTask::getDueAt, query.getDueAtTo())
-        .eq(FlowRunTask::getDeleted, 0);
+        .eq(FlowRunTask::getIsDeleted, 0);
 
     // 排序处理
     if (ORDER_DIRECTION_ASC.equalsIgnoreCase(query.getOrderDirection())) {
@@ -259,7 +259,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return taskMapper.selectCount(
         new LambdaQueryWrapper<FlowRunTask>()
             .in(FlowRunTask::getTaskStatus, statuses)
-            .eq(FlowRunTask::getDeleted, 0));
+            .eq(FlowRunTask::getIsDeleted, 0));
   }
 
   @Override
@@ -272,7 +272,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return taskMapper.selectCount(
         new LambdaQueryWrapper<FlowRunTask>()
             .eq(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING)
-            .eq(FlowRunTask::getDeleted, 0));
+            .eq(FlowRunTask::getIsDeleted, 0));
   }
 
   @Override
@@ -280,7 +280,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return converter.flowRunTaskListToVO(
         taskMapper.selectList(
             new LambdaQueryWrapper<FlowRunTask>()
-                .eq(FlowRunTask::getDeleted, 0)
+                .eq(FlowRunTask::getIsDeleted, 0)
                 .in(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
                 .le(FlowRunTask::getCreatedAt, thresholdTime)
                 .last("LIMIT " + limit)));
@@ -326,7 +326,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             new LambdaQueryWrapper<FlowRunTask>()
                 .eq(FlowRunTask::getInstanceId, instanceId)
                 .eq(FlowRunTask::getNodeCode, nodeCode)
-                .eq(FlowRunTask::getDeleted, 0)));
+                .eq(FlowRunTask::getIsDeleted, 0)));
   }
 
   @Override
@@ -337,7 +337,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .eq(FlowRunTask::getInstanceId, instanceId)
                 .eq(FlowRunTask::getNodeCode, nodeCode)
                 .in(FlowRunTask::getTaskStatus, TASK_STATUS_COMPLETED, TASK_STATUS_REJECTED)
-                .eq(FlowRunTask::getDeleted, 0)));
+                .eq(FlowRunTask::getIsDeleted, 0)));
   }
 
   @Override
@@ -432,7 +432,7 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
         taskMapper.selectList(
             new LambdaQueryWrapper<FlowRunTask>()
                 .eq(FlowRunTask::getAssigneeId, assigneeId)
-                .eq(FlowRunTask::getDeleted, 0)
+                .eq(FlowRunTask::getIsDeleted, 0)
                 .in(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)));
   }
 
@@ -447,7 +447,7 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
         taskMapper.selectList(
             new LambdaQueryWrapper<FlowRunTask>()
                 .eq(FlowRunTask::getAssigneeId, assigneeId)
-                .eq(FlowRunTask::getDeleted, 0)
+                .eq(FlowRunTask::getIsDeleted, 0)
                 .in(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
                 .eq(StringUtils.hasText(flowCode), FlowRunTask::getFlowCode, flowCode)
                 .eq(StringUtils.hasText(tenantId), FlowRunTask::getTenantId, tenantId)));
@@ -461,7 +461,7 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
                 .eq(tenantId != null, FlowRunTask::getTenantId, tenantId)
                 .in(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
                 .lt(FlowRunTask::getCreatedAt, threshold)
-                .eq(FlowRunTask::getDeleted, 0)
+                .eq(FlowRunTask::getIsDeleted, 0)
                 .orderByAsc(FlowRunTask::getCreatedAt)
                 .last("LIMIT " + limit)));
   }
@@ -471,7 +471,7 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
     return taskMapper.selectCount(
         new LambdaQueryWrapper<FlowRunTask>()
             .eq(FlowRunTask::getTenantId, tenantId)
-            .eq(FlowRunTask::getDeleted, 0)
+            .eq(FlowRunTask::getIsDeleted, 0)
             .in(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
             .lt(FlowRunTask::getDueAt, LocalDateTime.now()));
   }

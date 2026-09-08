@@ -28,6 +28,7 @@ import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务执行统计 Controller（P2-3 执行历史趋势可视化 + P1-2 监控仪表盘）。
@@ -50,6 +51,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  */
 @Tag(name = "任务执行统计", description = "每日趋势、范围汇总、仪表盘、热力图、失败列表")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/stats")
 @RequiredArgsConstructor

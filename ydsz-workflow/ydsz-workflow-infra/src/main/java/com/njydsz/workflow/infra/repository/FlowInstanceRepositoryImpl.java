@@ -89,7 +89,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
         instanceMapper.selectList(
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getInitiatorId, initiatorId)
-                .eq(FlowInstance::getDeleted, NOT_DELETED)
+                .eq(FlowInstance::getIsDeleted, NOT_DELETED)
                 .orderByDesc(FlowInstance::getCreatedAt)));
   }
 
@@ -100,7 +100,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getInitiatorId, initiatorId)
                 .eq(flowCode != null, FlowInstance::getFlowCode, flowCode)
-                .eq(FlowInstance::getDeleted, NOT_DELETED)
+                .eq(FlowInstance::getIsDeleted, NOT_DELETED)
                 .orderByDesc(FlowInstance::getCreatedAt)));
   }
 
@@ -110,7 +110,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
         instanceMapper.selectList(
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getParentInstanceId, parentInstanceId)
-                .eq(FlowInstance::getDeleted, NOT_DELETED)));
+                .eq(FlowInstance::getIsDeleted, NOT_DELETED)));
   }
 
   @Override
@@ -118,7 +118,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
     return instanceMapper.selectCount(
         new LambdaQueryWrapper<FlowInstance>()
             .eq(FlowInstance::getFlowStatus, flowStatus)
-            .eq(FlowInstance::getDeleted, NOT_DELETED));
+            .eq(FlowInstance::getIsDeleted, NOT_DELETED));
   }
 
   @Override
@@ -128,7 +128,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.SUSPENDED.name())
                 .le(FlowInstance::getUpdatedAt, before)
-                .eq(FlowInstance::getDeleted, NOT_DELETED)
+                .eq(FlowInstance::getIsDeleted, NOT_DELETED)
                 .last("LIMIT " + limit)));
   }
 
@@ -216,7 +216,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
             new LambdaQueryWrapper<FlowInstance>()
                 .eq(FlowInstance::getParentInstanceId, parentInstanceId)
                 .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name())
-                .eq(FlowInstance::getDeleted, NOT_DELETED)));
+                .eq(FlowInstance::getIsDeleted, NOT_DELETED)));
   }
 
   @Override
@@ -224,7 +224,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
     LambdaQueryWrapper<FlowInstance> wrapper = new LambdaQueryWrapper<FlowInstance>()
         .eq(FlowInstance::getDefinitionId, definitionId)
         .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name())
-        .eq(FlowInstance::getDeleted, NOT_DELETED);
+        .eq(FlowInstance::getIsDeleted, NOT_DELETED);
     if (tenantId != null) {
       wrapper.eq(FlowInstance::getTenantId, tenantId);
     }
@@ -246,7 +246,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
             new LambdaQueryWrapper<FlowInstance>()
                 .in(FlowInstance::getFlowStatus, statuses)
                 .lt(FlowInstance::getEndAt, threshold)
-                .eq(FlowInstance::getDeleted, NOT_DELETED)
+                .eq(FlowInstance::getIsDeleted, NOT_DELETED)
                 .orderByAsc(FlowInstance::getEndAt)
                 .last("LIMIT " + limit)));
   }
@@ -259,7 +259,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
                 .eq(tenantId != null, FlowInstance::getTenantId, tenantId)
                 .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name())
                 .lt(FlowInstance::getStartAt, threshold)
-                .eq(FlowInstance::getDeleted, NOT_DELETED)
+                .eq(FlowInstance::getIsDeleted, NOT_DELETED)
                 .orderByAsc(FlowInstance::getStartAt)
                 .last("LIMIT " + limit)));
   }

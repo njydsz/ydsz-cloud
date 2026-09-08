@@ -22,6 +22,7 @@ import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.template.TemplateVariableValidator;
 
 /**
@@ -70,6 +71,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
  */
 @Tag(name = "模板预览", description = "模板渲染预览")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/template/preview")
 @RequiredArgsConstructor

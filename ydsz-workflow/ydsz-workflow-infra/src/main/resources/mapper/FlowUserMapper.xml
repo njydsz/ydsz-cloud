@@ -18,7 +18,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
     </resultMap>
@@ -26,7 +26,7 @@
     <sql id="Base_Column_List">
         id, task_id, instance_id, node_code, user_type, user_id, user_name, processed, process_at,
         comment, status,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id, provider_trace_id
     </sql>
 
     <select id="selectByTaskId" resultMap="BaseResultMap">
@@ -34,7 +34,7 @@
         FROM ydsz_flow_user
         WHERE task_id = #{taskId}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
@@ -48,7 +48,7 @@
         WHERE task_id = #{taskId}
           AND user_id = #{userId}
           AND processed = 0
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P1-12: 查某实例某节点未处理的用户（顺序会签场景下取下一个办理人） -->
@@ -59,7 +59,7 @@
           AND node_code = #{nodeCode}
           AND processed = 0
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
@@ -70,7 +70,7 @@
         WHERE user_id = #{userId}
           AND processed = 0
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           AND tenant_id = #{tenantId}
     </select>
 
@@ -79,7 +79,7 @@
         INSERT INTO ydsz_flow_user
             (task_id, instance_id, node_code, user_type, user_id, user_name,
              processed, process_at, comment, status, created_by, created_at,
-             updated_by, updated_at, deleted, tenant_id, provider_trace_id)
+             updated_by, updated_at, is_deleted, tenant_id, provider_trace_id)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (#{item.taskId}, #{item.instanceId}, #{item.nodeCode}, #{item.userType},

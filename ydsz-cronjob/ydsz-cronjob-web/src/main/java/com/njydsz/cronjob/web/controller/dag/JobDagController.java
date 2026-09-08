@@ -37,6 +37,7 @@ import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionValidator;
 import com.njydsz.cronjob.server.service.dag.JobDagService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * DAG 工作流定义 Controller（P2 DAG 增强）。
@@ -73,6 +74,7 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
  */
 @Tag(name = "DAG工作流定义", description = "DAG CRUD、启停、触发、校验、版本历史、回滚")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/dag")
 @RequiredArgsConstructor

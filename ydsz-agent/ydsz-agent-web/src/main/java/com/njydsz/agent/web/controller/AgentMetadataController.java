@@ -18,6 +18,7 @@ import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * Agent 元数据查询 Controller（可用模型 / 已注册工具）
@@ -51,6 +52,7 @@ import com.njydsz.common.permission.PermissionCodes;
  * @see ToolRegistry 工具注册中心
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/agent")
 @RequiredArgsConstructor

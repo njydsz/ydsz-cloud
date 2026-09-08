@@ -25,6 +25,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.PreferenceUpsertDTO;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.config.PreferenceService;
 
 /**
@@ -78,6 +79,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
  */
 @Tag(name = "消息偏好", description = "用户消息偏好管理")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/preference")
 @RequiredArgsConstructor

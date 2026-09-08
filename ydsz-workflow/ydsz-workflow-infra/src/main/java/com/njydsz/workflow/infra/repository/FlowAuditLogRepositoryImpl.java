@@ -58,7 +58,7 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
         auditLogMapper.selectList(
             new LambdaQueryWrapper<FlowAuditLog>()
                 .eq(FlowAuditLog::getInstanceId, instanceId)
-                .eq(FlowAuditLog::getDeleted, 0)
+                .eq(FlowAuditLog::getIsDeleted, 0)
                 .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 
@@ -69,7 +69,7 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
             new LambdaQueryWrapper<FlowAuditLog>()
                 .eq(FlowAuditLog::getInstanceId, instanceId)
                 .eq(FlowAuditLog::getAction, action)
-                .eq(FlowAuditLog::getDeleted, 0)
+                .eq(FlowAuditLog::getIsDeleted, 0)
                 .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 
@@ -79,7 +79,7 @@ public class FlowAuditLogRepositoryImpl implements FlowAuditLogRepository {
         auditLogMapper.selectList(
             new LambdaQueryWrapper<FlowAuditLog>()
                 .eq(FlowAuditLog::getTaskId, taskId)
-                .eq(FlowAuditLog::getDeleted, 0)
+                .eq(FlowAuditLog::getIsDeleted, 0)
                 .orderByDesc(FlowAuditLog::getOperatedAt)));
   }
 

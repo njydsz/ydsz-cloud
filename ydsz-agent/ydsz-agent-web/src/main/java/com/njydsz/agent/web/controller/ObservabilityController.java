@@ -12,6 +12,7 @@ import com.njydsz.agent.server.observability.ObservabilityDashboardService;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.DashboardOverviewDTO;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.ModelUsageDTO;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * Agent 可观测性面板 REST API Controller
@@ -27,6 +28,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/agent/observability")
 public class ObservabilityController {

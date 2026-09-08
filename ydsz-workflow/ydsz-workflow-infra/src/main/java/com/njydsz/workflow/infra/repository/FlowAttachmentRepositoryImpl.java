@@ -57,7 +57,7 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
         attachmentMapper.selectList(
             new LambdaQueryWrapper<FlowAttachment>()
                 .eq(FlowAttachment::getInstanceId, instanceId)
-                .eq(FlowAttachment::getDeleted, 0)));
+                .eq(FlowAttachment::getIsDeleted, 0)));
   }
 
   @Override
@@ -66,7 +66,7 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
         attachmentMapper.selectList(
             new LambdaQueryWrapper<FlowAttachment>()
                 .eq(FlowAttachment::getTaskId, taskId)
-                .eq(FlowAttachment::getDeleted, 0)));
+                .eq(FlowAttachment::getIsDeleted, 0)));
   }
 
   @Override

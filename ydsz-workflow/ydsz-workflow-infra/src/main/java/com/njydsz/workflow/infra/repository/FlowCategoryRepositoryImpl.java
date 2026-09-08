@@ -61,7 +61,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
         .selectList(
             new LambdaQueryWrapper<FlowCategory>()
                 .eq(FlowCategory::getCategoryCode, code)
-                .eq(FlowCategory::getDeleted, 0)
+                .eq(FlowCategory::getIsDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -74,7 +74,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
         categoryMapper.selectList(
             new LambdaQueryWrapper<FlowCategory>()
                 .eq(tenantId != null, FlowCategory::getTenantId, tenantId)
-                .eq(FlowCategory::getDeleted, 0)
+                .eq(FlowCategory::getIsDeleted, 0)
                 .orderByAsc(FlowCategory::getSortNum)));
   }
 
@@ -84,7 +84,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
         categoryMapper.selectList(
             new LambdaQueryWrapper<FlowCategory>()
                 .eq(FlowCategory::getParentId, parentId)
-                .eq(FlowCategory::getDeleted, 0)
+                .eq(FlowCategory::getIsDeleted, 0)
                 .orderByAsc(FlowCategory::getSortNum)));
   }
 
@@ -106,7 +106,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
         new LambdaQueryWrapper<FlowCategory>()
             .eq(FlowCategory::getCategoryCode, code)
             .eq(tenantId != null, FlowCategory::getTenantId, tenantId)
-            .eq(FlowCategory::getDeleted, 0));
+            .eq(FlowCategory::getIsDeleted, 0));
   }
 
   @Override
@@ -114,7 +114,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
     return categoryMapper.selectCount(
         new LambdaQueryWrapper<FlowCategory>()
             .eq(FlowCategory::getParentId, parentId)
-            .eq(FlowCategory::getDeleted, 0));
+            .eq(FlowCategory::getIsDeleted, 0));
   }
 
   @Override
@@ -122,6 +122,6 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
     return definitionMapper.selectCount(
         new LambdaQueryWrapper<FlowDefinition>()
             .eq(FlowDefinition::getCategory, categoryId)
-            .eq(FlowDefinition::getDeleted, 0));
+            .eq(FlowDefinition::getIsDeleted, 0));
   }
 }

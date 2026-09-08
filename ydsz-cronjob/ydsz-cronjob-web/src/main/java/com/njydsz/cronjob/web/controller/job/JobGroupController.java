@@ -30,6 +30,7 @@ import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务分组管理 Controller（P1-B4）。
@@ -81,6 +82,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
  */
 @Slf4j
 @Tag(name = "任务分组管理", description = "按业务域分组的任务批量管理：分页、暂停/恢复/触发、统计")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/group")
 @RequiredArgsConstructor

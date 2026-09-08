@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.YdszResultCode;
@@ -74,6 +75,7 @@ import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
  */
 @Slf4j
 @Tag(name = "嵌入式审批")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/workflow/embedded")
 @RequiredArgsConstructor

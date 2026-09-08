@@ -28,6 +28,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.config.RouteRuleService;
 
 /**
@@ -73,6 +74,7 @@ import com.njydsz.message.server.service.config.RouteRuleService;
  */
 @Tag(name = "路由规则", description = "消息路由规则管理")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/route-rule")
 @RequiredArgsConstructor

@@ -23,6 +23,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**
@@ -72,6 +73,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
  */
 @Tag(name = "聚合批次", description = "消息聚合批次查询与刷新")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/aggregate")
 @RequiredArgsConstructor

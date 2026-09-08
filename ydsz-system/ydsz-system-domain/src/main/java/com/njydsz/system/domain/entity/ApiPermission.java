@@ -80,7 +80,7 @@ public class ApiPermission extends MpBaseEntity<String> {
    * 标记逻辑删除（将 deleted 字段置为 1）。
    */
   public void markDeleted() {
-    setDeleted(1);
+    setIsDeleted(true);
   }
 
   /**

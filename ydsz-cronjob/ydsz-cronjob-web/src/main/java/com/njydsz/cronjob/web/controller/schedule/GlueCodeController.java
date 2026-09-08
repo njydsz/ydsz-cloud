@@ -29,6 +29,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * GLUE 在线编码 Controller（P1-2 GLUE 在线编码）。
@@ -49,6 +50,7 @@ import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
  */
 @Slf4j
 @Tag(name = "GLUE 在线编码")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/glue")
 @RequiredArgsConstructor

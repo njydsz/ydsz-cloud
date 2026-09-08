@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.receipt.ReadReceiptService;
 
 /**
@@ -44,6 +45,7 @@ import com.njydsz.message.server.service.receipt.ReadReceiptService;
  */
 @Slf4j
 @Tag(name = "已读回执", description = "短信短链回调")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/read-receipt")
 @RequiredArgsConstructor

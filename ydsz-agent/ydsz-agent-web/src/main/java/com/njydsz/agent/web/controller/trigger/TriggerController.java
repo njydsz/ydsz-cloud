@@ -30,6 +30,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 触发器管理控制器。
@@ -50,6 +51,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/agent/triggers")
 @RequiredArgsConstructor

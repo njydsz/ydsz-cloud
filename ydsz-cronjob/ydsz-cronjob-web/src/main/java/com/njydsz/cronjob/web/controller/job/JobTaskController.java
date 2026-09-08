@@ -24,6 +24,7 @@ import com.njydsz.cronjob.domain.enums.JobTaskStatusEnum;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobTaskRepository;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * MapReduce 子任务查询 Controller（P0-4）。
@@ -45,6 +46,7 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
  */
 @Tag(name = "MapReduce 子任务查询", description = "子任务列表/分页/进度汇总")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/task")
 @RequiredArgsConstructor

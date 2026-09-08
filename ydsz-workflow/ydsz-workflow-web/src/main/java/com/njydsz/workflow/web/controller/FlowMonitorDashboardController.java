@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
@@ -55,6 +56,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @see FlowTaskService 任务服务
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-monitor", description = "工作流监控看板与效率分析统一接口")
 @RequestMapping("/api/workflow/engine")

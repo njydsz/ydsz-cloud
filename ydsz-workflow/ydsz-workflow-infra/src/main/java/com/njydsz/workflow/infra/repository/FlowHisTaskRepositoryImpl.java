@@ -59,7 +59,7 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
         hisTaskMapper.selectList(
             new LambdaQueryWrapper<FlowHisTask>()
                 .eq(FlowHisTask::getInstanceId, instanceId)
-                .eq(FlowHisTask::getDeleted, 0)
+                .eq(FlowHisTask::getIsDeleted, 0)
                 .orderByDesc(FlowHisTask::getFinishAt)));
   }
 
@@ -75,7 +75,7 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
             new LambdaQueryWrapper<FlowHisTask>()
                 .eq(FlowHisTask::getInstanceId, instanceId)
                 .eq(FlowHisTask::getNodeCode, nodeCode)
-                .eq(FlowHisTask::getDeleted, 0)));
+                .eq(FlowHisTask::getIsDeleted, 0)));
   }
 
   @Override
@@ -173,7 +173,7 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
                 .eq(flowCode != null, FlowHisTask::getFlowCode, flowCode)
                 .ge(startTime != null, FlowHisTask::getFinishAt, startTime)
                 .le(endTime != null, FlowHisTask::getFinishAt, endTime)
-                .eq(FlowHisTask::getDeleted, 0)
+                .eq(FlowHisTask::getIsDeleted, 0)
                 .orderByDesc(FlowHisTask::getFinishAt)
                 .last("LIMIT " + limit)));
   }
@@ -184,7 +184,7 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
         hisTaskMapper.selectList(
             new LambdaQueryWrapper<FlowHisTask>()
                 .eq(tenantId != null, FlowHisTask::getTenantId, tenantId)
-                .eq(FlowHisTask::getDeleted, 0)
+                .eq(FlowHisTask::getIsDeleted, 0)
                 .orderByDesc(FlowHisTask::getFinishAt)
                 .last("LIMIT " + limit)));
   }

@@ -7,14 +7,14 @@
         INSERT INTO ydsz_sys_api_permission (
             id, tenant_id, api_code, api_name, http_method, url_pattern,
             controller_class, method_name, description, status,
-            deleted, revision, created_by, created_at, updated_by, updated_at
+            is_deleted, revision, created_by, created_at, updated_by, updated_at
         ) VALUES
         <foreach collection="items" item="item" separator=",">
         (
             #{item.id}, #{item.tenantId}, #{item.apiCode}, #{item.apiName},
             #{item.httpMethod}, #{item.urlPattern}, #{item.controllerClass},
             #{item.methodName}, #{item.description}, #{item.status},
-            #{item.deleted}, #{item.revision}, #{item.createdBy},
+            #{item.isDeleted}, #{item.revision}, #{item.createdBy},
             #{item.createdAt}, #{item.updatedBy}, #{item.updatedAt}
         )
         </foreach>

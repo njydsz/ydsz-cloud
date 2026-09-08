@@ -24,6 +24,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
 
 /**
@@ -72,6 +73,7 @@ import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
  */
 @Tag(name = "已读状态", description = "消息已读/未读状态同步")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/read-status")
 @RequiredArgsConstructor

@@ -2,6 +2,7 @@ package com.njydsz.cronjob.web.controller.dashboard;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * Dashboard 页面视图 Controller（P2-6）。
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Controller
 public class DashboardViewController {
 

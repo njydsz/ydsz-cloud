@@ -18,6 +18,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.event.JobEvent;
 import com.njydsz.cronjob.server.service.event.EventStoreService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 事件存储查询 Controller（P3-1 Event Sourcing）。
@@ -29,6 +30,7 @@ import com.njydsz.cronjob.server.service.event.EventStoreService;
  */
 @Tag(name = "事件存储", description = "Event Sourcing 事件流查询")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/events")
 @RequiredArgsConstructor

@@ -25,6 +25,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.UnsubscribeQueryDTO;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
 import com.njydsz.message.server.service.config.UnsubscribeService;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.token.UnsubscribeTokenPayload;
 
 /**
@@ -77,6 +78,7 @@ import com.njydsz.message.server.token.UnsubscribeTokenPayload;
  */
 @Slf4j
 @Tag(name = "退订中心", description = "token 一键退订与退订管理")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/unsubscribe")
 @RequiredArgsConstructor

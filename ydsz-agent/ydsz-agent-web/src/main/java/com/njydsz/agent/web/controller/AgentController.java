@@ -45,6 +45,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * Agent 统一入口 Controller（执行 + 对话 + 历史）
@@ -96,6 +97,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @see AgentRequestGuard 请求守卫（幂等 + 限流 + 业务校验）
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/agent")
 @RequiredArgsConstructor

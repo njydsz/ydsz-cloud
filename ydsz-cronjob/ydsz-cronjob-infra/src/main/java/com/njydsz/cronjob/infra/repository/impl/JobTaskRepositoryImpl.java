@@ -67,7 +67,7 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
   public JobRepository.PageResult<JobTaskVO> pageByLogId(String logId, int page, int size) {
     Page<JobTask> pageObj = new Page<>(page, size);
         LambdaQueryWrapper<JobTask> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(JobTask::getLogId, logId).eq(JobTask::getDeleted, 0).orderByAsc(JobTask::getCreatedAt);
+    wrapper.eq(JobTask::getLogId, logId).eq(JobTask::getIsDeleted, 0).orderByAsc(JobTask::getCreatedAt);
     Page<JobTask> result = jobTaskMapper.selectPage(pageObj, wrapper);
     return new JobRepository.PageResult<>(converter.jobTaskListToVO(result.getRecords()), result.getTotal());
   }
@@ -75,7 +75,7 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
   @Override
   public int countByLogId(String logId) {
     LambdaQueryWrapper<JobTask> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(JobTask::getLogId, logId).eq(JobTask::getDeleted, 0);
+    wrapper.eq(JobTask::getLogId, logId).eq(JobTask::getIsDeleted, 0);
     return jobTaskMapper.selectCount(wrapper).intValue();
   }
 

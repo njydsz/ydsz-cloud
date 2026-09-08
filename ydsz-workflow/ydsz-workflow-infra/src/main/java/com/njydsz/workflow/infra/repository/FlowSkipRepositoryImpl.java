@@ -57,7 +57,7 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
         skipMapper.selectList(
             new LambdaQueryWrapper<FlowSkip>()
                 .eq(FlowSkip::getDefinitionId, instanceId)
-                .eq(FlowSkip::getDeleted, 0)));
+                .eq(FlowSkip::getIsDeleted, 0)));
   }
 
   @Override
@@ -79,7 +79,7 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
             new LambdaQueryWrapper<FlowSkip>()
                 .eq(FlowSkip::getDefinitionId, definitionId)
                 .eq(FlowSkip::getNextNodeCode, nodeCode)
-                .eq(FlowSkip::getDeleted, 0)));
+                .eq(FlowSkip::getIsDeleted, 0)));
   }
 
   @Override
@@ -88,7 +88,7 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
         skipMapper.selectList(
             new LambdaQueryWrapper<FlowSkip>()
                 .eq(FlowSkip::getDefinitionId, definitionId)
-                .eq(FlowSkip::getDeleted, 0)));
+                .eq(FlowSkip::getIsDeleted, 0)));
   }
 
   @Override

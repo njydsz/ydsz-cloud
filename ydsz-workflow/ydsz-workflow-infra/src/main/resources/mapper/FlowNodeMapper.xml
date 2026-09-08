@@ -19,7 +19,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
     </resultMap>
@@ -27,7 +27,7 @@
     <sql id="Base_Column_List">
         id, definition_id, flow_code, node_type, node_code, node_name, permission_flag,
         skip_any_node, coordinate, skip_list, ext, status,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id, provider_trace_id
     </sql>
 
     <select id="selectByDefinitionId" resultMap="BaseResultMap">
@@ -35,7 +35,7 @@
         FROM ydsz_flow_node
         WHERE definition_id = #{definitionId}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
@@ -45,7 +45,7 @@
         WHERE definition_id = #{definitionId}
           AND node_code = #{nodeCode}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         LIMIT 1
     </select>
 
@@ -55,7 +55,7 @@
         WHERE definition_id = #{definitionId}
           AND node_type = 0
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         LIMIT 1
     </select>
 
@@ -65,16 +65,16 @@
         WHERE definition_id = #{definitionId}
           AND node_type = 6
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
     <delete id="deleteByDefinitionId">
         UPDATE ydsz_flow_node
-        SET deleted = 1,
+        SET is_deleted = 1,
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE definition_id = #{definitionId}
-          AND deleted = 0
+          AND is_deleted = 0
     </delete>
 </mapper>

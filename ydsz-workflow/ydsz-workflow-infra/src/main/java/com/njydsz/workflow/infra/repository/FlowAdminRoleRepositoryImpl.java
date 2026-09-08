@@ -57,7 +57,7 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
         adminRoleMapper.selectList(
             new LambdaQueryWrapper<FlowAdminRole>()
                 .eq(FlowAdminRole::getUserId, userId)
-                .eq(FlowAdminRole::getDeleted, 0)));
+                .eq(FlowAdminRole::getIsDeleted, 0)));
   }
 
   @Override
@@ -66,7 +66,7 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
         adminRoleMapper.selectList(
             new LambdaQueryWrapper<FlowAdminRole>()
                 .eq(FlowAdminRole::getRoleCode, roleCode)
-                .eq(FlowAdminRole::getDeleted, 0)));
+                .eq(FlowAdminRole::getIsDeleted, 0)));
   }
 
   @Override
@@ -88,7 +88,7 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
             new LambdaQueryWrapper<FlowAdminRole>()
                 .eq(FlowAdminRole::getUserId, userId)
                 .eq(FlowAdminRole::getRoleCode, roleCode)
-                .eq(FlowAdminRole::getDeleted, 0)
+                .eq(FlowAdminRole::getIsDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -103,7 +103,7 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
                 .eq(FlowAdminRole::getUserId, userId)
                 .eq(FlowAdminRole::getRoleCode, roleCode)
                 .eq(tenantId != null, FlowAdminRole::getTenantId, tenantId)
-                .eq(FlowAdminRole::getDeleted, 0)
+                .eq(FlowAdminRole::getIsDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -117,6 +117,6 @@ public class FlowAdminRoleRepositoryImpl implements FlowAdminRoleRepository {
             new LambdaQueryWrapper<FlowAdminRole>()
                 .eq(FlowAdminRole::getUserId, userId)
                 .eq(tenantId != null, FlowAdminRole::getTenantId, tenantId)
-                .eq(FlowAdminRole::getDeleted, 0)));
+                .eq(FlowAdminRole::getIsDeleted, 0)));
   }
 }

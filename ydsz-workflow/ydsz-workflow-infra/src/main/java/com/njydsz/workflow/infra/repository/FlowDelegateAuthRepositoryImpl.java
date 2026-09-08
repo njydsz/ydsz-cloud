@@ -58,7 +58,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
         delegateAuthMapper.selectList(
             new LambdaQueryWrapper<FlowDelegateAuth>()
                 .eq(FlowDelegateAuth::getOwnerUserId, delegatorId)
-                .eq(FlowDelegateAuth::getDeleted, 0)));
+                .eq(FlowDelegateAuth::getIsDeleted, 0)));
   }
 
   @Override
@@ -68,7 +68,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
             new LambdaQueryWrapper<FlowDelegateAuth>()
                 .eq(FlowDelegateAuth::getOwnerUserId, delegatorId)
                 .eq(FlowDelegateAuth::getFlowCode, flowCode)
-                .eq(FlowDelegateAuth::getDeleted, 0)));
+                .eq(FlowDelegateAuth::getIsDeleted, 0)));
   }
 
   @Override
@@ -92,7 +92,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
                 .eq(FlowDelegateAuth::getAuthStatus, "ACTIVE")
                 .le(FlowDelegateAuth::getStartTime, now)
                 .and(w -> w.isNull(FlowDelegateAuth::getEndTime).or().ge(FlowDelegateAuth::getEndTime, now))
-                .eq(FlowDelegateAuth::getDeleted, 0)));
+                .eq(FlowDelegateAuth::getIsDeleted, 0)));
   }
 
   @Override
@@ -106,7 +106,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
                 .eq(FlowDelegateAuth::getAuthStatus, "ENABLED")
                 .le(FlowDelegateAuth::getStartTime, now)
                 .ge(FlowDelegateAuth::getEndTime, now)
-                .eq(FlowDelegateAuth::getDeleted, 0)));
+                .eq(FlowDelegateAuth::getIsDeleted, 0)));
   }
 
   @Override
@@ -125,7 +125,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
                 .eq(FlowDelegateAuth::getTenantId, tenantId)
                 .eq(FlowDelegateAuth::getOwnerUserId, ownerUserId)
                 .eq(status != null, FlowDelegateAuth::getAuthStatus, status)
-                .eq(FlowDelegateAuth::getDeleted, 0)
+                .eq(FlowDelegateAuth::getIsDeleted, 0)
                 .orderByDesc(FlowDelegateAuth::getCreatedAt)));
   }
 
@@ -138,7 +138,7 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
                 .eq(FlowDelegateAuth::getTenantId, tenantId)
                 .eq(FlowDelegateAuth::getDelegateUserId, delegateUserId)
                 .eq(status != null, FlowDelegateAuth::getAuthStatus, status)
-                .eq(FlowDelegateAuth::getDeleted, 0)
+                .eq(FlowDelegateAuth::getIsDeleted, 0)
                 .orderByDesc(FlowDelegateAuth::getCreatedAt)));
   }
 

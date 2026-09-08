@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.insight.InsightReportRequest;
 import com.njydsz.agent.domain.insight.InsightReportResult;
 import com.njydsz.agent.domain.insight.InsightReportService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 洞察报告 REST 控制器。
@@ -42,6 +43,7 @@ import com.njydsz.agent.domain.insight.InsightReportService;
  * @since 26.09.07
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/agent/insight")
 @RequiredArgsConstructor

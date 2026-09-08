@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.config.CanaryExperimentService;
 
 /**
@@ -38,6 +39,7 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
  */
 @Tag(name = "灰度实验", description = "消息模板 A/B 对照实验管理")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/canary")
 @RequiredArgsConstructor

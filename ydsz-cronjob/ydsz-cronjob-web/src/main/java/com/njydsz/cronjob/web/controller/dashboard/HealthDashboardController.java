@@ -33,6 +33,7 @@ import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 健康仪表盘 Controller（P1-2：前端控制台交互增强）。
@@ -54,6 +55,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  */
 @Slf4j
 @Tag(name = "健康仪表盘", description = "聚合系统资源、任务、DAG、调度器多维度运行状态")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/dashboard/health")
 @RequiredArgsConstructor

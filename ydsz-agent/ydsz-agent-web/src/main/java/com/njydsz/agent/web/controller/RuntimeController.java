@@ -15,6 +15,7 @@ import com.njydsz.agent.domain.runtime.RuntimeSession;
 import com.njydsz.agent.server.runtime.RuntimeManagementService;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * Agent 运行时管理控制器。
@@ -34,6 +35,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/agent/runtime")
 public class RuntimeController {

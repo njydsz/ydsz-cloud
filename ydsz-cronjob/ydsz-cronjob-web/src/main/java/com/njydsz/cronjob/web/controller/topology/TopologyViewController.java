@@ -2,6 +2,7 @@ package com.njydsz.cronjob.web.controller.topology;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务全局拓扑页面视图 Controller（P2-3）。
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Controller
 public class TopologyViewController {
 

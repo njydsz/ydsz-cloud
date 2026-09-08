@@ -2,6 +2,7 @@ package com.njydsz.cronjob.web.controller.designer;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * DAG 设计器页面视图 Controller（P2-2）。
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Controller
 public class DagDesignerViewController {
 

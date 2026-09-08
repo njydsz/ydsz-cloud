@@ -29,6 +29,7 @@ import com.njydsz.message.domain.dto.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.TemplateService;
 
 /**
@@ -74,6 +75,7 @@ import com.njydsz.message.server.service.TemplateService;
  */
 @Tag(name = "消息模板", description = "消息模板增删改查与审核")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/template")
 @RequiredArgsConstructor

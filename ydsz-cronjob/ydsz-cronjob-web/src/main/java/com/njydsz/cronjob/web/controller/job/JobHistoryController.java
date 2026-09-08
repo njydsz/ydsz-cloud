@@ -24,6 +24,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务配置历史版本 Controller（P1-6 任务版本管理）。
@@ -49,6 +50,7 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
  */
 @Tag(name = "任务配置历史版本", description = "版本列表、版本详情、回滚、版本对比")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/history")
 @RequiredArgsConstructor

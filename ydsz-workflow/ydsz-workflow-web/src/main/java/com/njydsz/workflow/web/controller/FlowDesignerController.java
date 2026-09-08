@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
@@ -68,6 +69,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
  * @see FlowDesignerDataDTO 设计器数据传输对象
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-designer", description = "工作流设计器/表单/SLA/模板接口")
 @RequestMapping("/api/workflow/engine")

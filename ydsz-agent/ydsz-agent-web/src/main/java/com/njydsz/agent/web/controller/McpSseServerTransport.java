@@ -28,6 +28,7 @@ import com.njydsz.agent.domain.mcp.McpServerDescriptor;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.infra.mcp.McpJsonRpcMessage;
 import com.njydsz.agent.server.agent.AgentFacade;
+import com.njydsz.common.base.api.ApiVersion;
 
 import jakarta.annotation.PostConstruct;
 
@@ -67,6 +68,7 @@ import jakarta.annotation.PostConstruct;
  * @since 26.09.07
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/mcp")
 @ConditionalOnProperty(prefix = "ydsz.agent.mcp", name = "serverEnabled", havingValue = "true")

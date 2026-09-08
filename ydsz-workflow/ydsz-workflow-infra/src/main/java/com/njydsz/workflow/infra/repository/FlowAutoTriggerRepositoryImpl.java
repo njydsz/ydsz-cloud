@@ -57,7 +57,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
         autoTriggerMapper.selectList(
             new LambdaQueryWrapper<FlowAutoTrigger>()
                 .eq(FlowAutoTrigger::getSourceFlowCode, flowCode)
-                .eq(FlowAutoTrigger::getDeleted, 0)));
+                .eq(FlowAutoTrigger::getIsDeleted, 0)));
   }
 
   @Override
@@ -66,7 +66,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
         autoTriggerMapper.selectList(
             new LambdaQueryWrapper<FlowAutoTrigger>()
                 .eq(FlowAutoTrigger::getConditionExpression, triggerType)
-                .eq(FlowAutoTrigger::getDeleted, 0)));
+                .eq(FlowAutoTrigger::getIsDeleted, 0)));
   }
 
   @Override
@@ -88,7 +88,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
             new LambdaQueryWrapper<FlowAutoTrigger>()
                 .eq(FlowAutoTrigger::getSourceFlowCode, sourceFlowCode)
                 .eq(FlowAutoTrigger::getEnabled, 1)
-                .eq(FlowAutoTrigger::getDeleted, 0)));
+                .eq(FlowAutoTrigger::getIsDeleted, 0)));
   }
 
   @Override
@@ -103,7 +103,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
     return converter.flowAutoTriggerListToVO(
         autoTriggerMapper.selectList(
             new LambdaQueryWrapper<FlowAutoTrigger>()
-                .eq(FlowAutoTrigger::getDeleted, 0)
+                .eq(FlowAutoTrigger::getIsDeleted, 0)
                 .orderByAsc(FlowAutoTrigger::getSort)
                 .orderByAsc(FlowAutoTrigger::getId)));
   }

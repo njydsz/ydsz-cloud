@@ -29,6 +29,7 @@ import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.server.core.dispatch.RemoteSubTaskRequest;
 import com.njydsz.cronjob.server.core.dispatch.RemoteTaskRequest;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 内部任务执行接口 Controller（P1-4 远程派发接收端）。
@@ -75,6 +76,7 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  */
 @Slf4j
 @Tag(name = "内部任务执行（远程派发接收端）", description = "集群节点间任务派发的 HTTP 接收端，接收 Leader 节点分片")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/internal")
 @RequiredArgsConstructor

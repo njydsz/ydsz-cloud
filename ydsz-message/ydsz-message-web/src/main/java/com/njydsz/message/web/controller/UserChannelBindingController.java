@@ -26,6 +26,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
 import com.njydsz.message.domain.vo.MsgUserChannelVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 /**
@@ -81,6 +82,7 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
  */
 @Tag(name = "用户通道绑定", description = "用户通道联系方式绑定/查询/删除")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/user-channels")
 @RequiredArgsConstructor

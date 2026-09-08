@@ -18,6 +18,7 @@ import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
 import com.njydsz.generator.service.TemplateGroupService;
 import com.njydsz.generator.service.TemplateService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 模板管理 REST 控制器（含分组管理）。
@@ -26,6 +27,7 @@ import com.njydsz.generator.service.TemplateService;
  * @since 26.09.05
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/generator")
 @RequiredArgsConstructor

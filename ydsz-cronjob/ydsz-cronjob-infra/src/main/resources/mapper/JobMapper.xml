@@ -31,7 +31,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -40,19 +40,19 @@
         params_json,
         status, remark, next_fire_time, last_fire_time, fire_count, success_count, fail_count,
         lock_ttl_ms, timeout_ms, misfire_policy, shard_total, timezone, cluster, tenant_id,
-        created_by, created_at, updated_by, updated_at, deleted
+        created_by, created_at, updated_by, updated_at, is_deleted
     </sql>
 
     <select id="selectByJobKey" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_job_main
-        WHERE job_key = #{jobKey} AND deleted = 0
+        WHERE job_key = #{jobKey} AND is_deleted = 0
     </select>
 
     <select id="selectAllNormal" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_job_main
-        WHERE status = 'NORMAL' AND deleted = 0
+        WHERE status = 'NORMAL' AND is_deleted = 0
     </select>
 
     <!-- P1-7: Leader 模式扫描待触发任务，FOR UPDATE SKIP LOCKED 抢占式行锁 -->
@@ -62,7 +62,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_job_main
         WHERE status = 'NORMAL'
-          AND deleted = 0
+          AND is_deleted = 0
           AND next_fire_time IS NOT NULL
           AND next_fire_time &lt;= #{now}
         ORDER BY COALESCE(priority, 5) ASC, next_fire_time ASC
@@ -77,7 +77,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_job_main
         WHERE status = 'NORMAL'
-          AND deleted = 0
+          AND is_deleted = 0
           AND schedule_type IN ('CRON', 'FIXED_RATE')
           AND next_fire_time IS NOT NULL
           AND next_fire_time &gt;= #{now}
@@ -95,7 +95,7 @@
             fire_count = fire_count + 1,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
           AND next_fire_time = #{oldNextFireTime}
     </update>
 
@@ -110,7 +110,7 @@
             <if test="status != null and status != ''">status = #{status},</if>
             updated_at = CURRENT_TIMESTAMP
         </set>
-        WHERE id = #{id} AND deleted = 0
+        WHERE id = #{id} AND is_deleted = 0
     </update>
 
 </mapper>

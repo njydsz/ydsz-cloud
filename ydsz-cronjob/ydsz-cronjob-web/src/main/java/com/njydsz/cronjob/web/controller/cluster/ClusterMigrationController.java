@@ -26,6 +26,7 @@ import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.job.JobClusterMigrationDTO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.service.cluster.ClusterMigrationService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 集群漂移管理 Controller（P2-5）。
@@ -48,6 +49,7 @@ import com.njydsz.cronjob.server.service.cluster.ClusterMigrationService;
  */
 @Tag(name = "集群漂移", description = "多云/多集群任务漂移管理")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/cluster")
 @RequiredArgsConstructor

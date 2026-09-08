@@ -25,6 +25,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.vo.MsgSubscriptionVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.config.SubscriptionService;
 
 /**
@@ -69,6 +70,7 @@ import com.njydsz.message.server.service.config.SubscriptionService;
  */
 @Tag(name = "消息订阅", description = "用户主题订阅关系管理")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/subscription")
 @RequiredArgsConstructor

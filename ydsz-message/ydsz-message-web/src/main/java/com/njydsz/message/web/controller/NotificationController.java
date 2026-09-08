@@ -37,6 +37,7 @@ import com.njydsz.message.domain.dto.NotificationSendDTO;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.NotificationService;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.receipt.RecallService;
 
 /**
@@ -88,6 +89,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  */
 @Tag(name = "站内通知", description = "站内通知发送/收件箱/已读/撤回/推送")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/notifications")
 @RequiredArgsConstructor

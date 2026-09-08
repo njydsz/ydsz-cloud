@@ -16,6 +16,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.domain.vo.BloomFilterStatsVO;
 import com.njydsz.message.domain.vo.CacheStatsVO;
 import com.njydsz.message.server.consumer.BloomFilterDeduplicator;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.template.cache.CachedTemplateEngine;
 
 /**
@@ -43,6 +44,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
  */
 @Slf4j
 @Tag(name = "运维诊断", description = "消息模块运维操作接口（高权限）")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/ops")
 @RequiredArgsConstructor

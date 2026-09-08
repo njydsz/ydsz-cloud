@@ -24,6 +24,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
 import com.njydsz.message.domain.vo.MsgReceiptVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.receipt.ReceiptService;
 
 /**
@@ -76,6 +77,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
  */
 @Tag(name = "消息回执", description = "服务商回执回调与查询")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/receipt")
 @RequiredArgsConstructor

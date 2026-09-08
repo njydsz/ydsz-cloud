@@ -35,6 +35,7 @@ import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * WebHook 事件订阅管理 Controller（P3-13）。
@@ -55,6 +56,7 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
  */
 @Tag(name = "WebHook 事件订阅", description = "订阅 CRUD、过滤查询、测试推送")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/webhook")
 @RequiredArgsConstructor

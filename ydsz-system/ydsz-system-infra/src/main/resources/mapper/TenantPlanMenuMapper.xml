@@ -11,12 +11,12 @@
     <insert id="insertBatch" parameterType="java.util.List">
         INSERT INTO ydsz_sys_tenant_plan_menu (
             id, plan_id, menu_id,
-            tenant_id, deleted, created_at, created_by
+            tenant_id, is_deleted, created_at, created_by
         ) VALUES
         <foreach collection="items" item="item" separator=",">
             (
                 #{item.id}, #{item.planId}, #{item.menuId},
-                #{item.tenantId}, #{item.deleted}, #{item.createdAt}, #{item.createdBy}
+                #{item.tenantId}, #{item.isDeleted}, #{item.createdAt}, #{item.createdBy}
             )
         </foreach>
     </insert>

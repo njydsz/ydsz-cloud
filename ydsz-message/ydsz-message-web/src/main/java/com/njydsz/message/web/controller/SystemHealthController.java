@@ -14,6 +14,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.domain.vo.ChannelHealthVO;
 import com.njydsz.message.domain.vo.SystemHealthVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.core.MessageHealthService;
 
 /**
@@ -44,6 +45,7 @@ import com.njydsz.message.server.service.core.MessageHealthService;
  */
 @Tag(name = "系统健康检查", description = "消息模块运行时健康状态监控")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/health")
 @RequiredArgsConstructor

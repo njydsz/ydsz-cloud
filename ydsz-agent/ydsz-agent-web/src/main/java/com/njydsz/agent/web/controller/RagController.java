@@ -27,6 +27,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * RAG 知识库管理 REST API Controller。
@@ -68,6 +69,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/agent/rag")
 public class RagController {

@@ -26,6 +26,7 @@ import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
 import com.njydsz.cronjob.server.service.dag.JobDagInstanceService;
 import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * DAG 工作流实例 Controller（P2 DAG 增强）。
@@ -57,6 +58,7 @@ import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
  */
 @Tag(name = "DAG工作流实例", description = "DAG 实例查询、暂停/恢复/取消、可视化、上下文管理")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/dag/instance")
 @RequiredArgsConstructor

@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.server.core.logger.LogStreamManager;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 任务执行日志实时流端点（SSE）。
@@ -36,6 +37,7 @@ import com.njydsz.cronjob.server.core.logger.LogStreamManager;
  */
 @Slf4j
 @Tag(name = "任务日志流", description = "任务执行日志 SSE 实时推送")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/log")
 @RequiredArgsConstructor

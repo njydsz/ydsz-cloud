@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
@@ -69,6 +70,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicSe
  * @see FlowUrgeLimiter 催办限流器
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-advanced", description = "工作流高级功能接口")
 @RequestMapping("/api/workflow/advanced")

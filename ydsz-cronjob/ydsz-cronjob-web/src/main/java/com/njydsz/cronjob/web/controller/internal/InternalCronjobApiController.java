@@ -15,6 +15,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 内部 API Controller（服务间 Feign 调用）
@@ -39,6 +40,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
  * @see com.njydsz.cronjob.api.client.CronjobServiceClient Feign Client 接口
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/internal")
 @RequiredArgsConstructor

@@ -20,7 +20,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
     </resultMap>
@@ -28,7 +28,7 @@
     <sql id="Base_Column_List">
         id, definition_id, flow_code, skip_name, skip_type, coordinate, skip_condition,
         next_node_code, source_node_code, next_node_type, coordinate_next, skip_list, status,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id, provider_trace_id
     </sql>
 
     <select id="selectByDefinitionId" resultMap="BaseResultMap">
@@ -36,7 +36,7 @@
         FROM ydsz_flow_skip
         WHERE definition_id = #{definitionId}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
@@ -46,13 +46,13 @@
         WHERE definition_id = #{definitionId}
           AND flow_code IN (
               SELECT flow_code FROM ydsz_flow_node
-              WHERE definition_id = #{definitionId} AND node_code = #{nodeCode} AND deleted = 0
+              WHERE definition_id = #{definitionId} AND node_code = #{nodeCode} AND is_deleted = 0
           )
           <if test="skipType != null and skipType != ''">
             AND skip_type = #{skipType}
           </if>
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
@@ -62,16 +62,16 @@
         WHERE definition_id = #{definitionId}
           AND next_node_code = #{nextNodeCode}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
     <delete id="deleteByDefinitionId">
         UPDATE ydsz_flow_skip
-        SET deleted = 1,
+        SET is_deleted = 1,
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE definition_id = #{definitionId}
-          AND deleted = 0
+          AND is_deleted = 0
     </delete>
 </mapper>

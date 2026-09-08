@@ -18,6 +18,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 集群漂移内部接收端 Controller（P2-5）。
@@ -37,6 +38,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
  */
 @Slf4j
 @Tag(name = "集群漂移（内部接收端）", description = "接收远程集群的漂移注册/注销请求")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/internal/migrate")
 @RequiredArgsConstructor

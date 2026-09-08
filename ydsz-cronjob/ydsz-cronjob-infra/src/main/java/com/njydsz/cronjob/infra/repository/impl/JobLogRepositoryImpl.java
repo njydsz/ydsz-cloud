@@ -213,7 +213,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
     LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobLog::getJobKey, jobKey)
         .eq(JobLog::getStatus, "RUNNING")
-        .eq(JobLog::getDeleted, 0)
+        .eq(JobLog::getIsDeleted, 0)
         .orderByDesc(JobLog::getCreatedAt)
         .last("LIMIT 1");
     return Optional.ofNullable(jobLogMapper.selectOne(wrapper))

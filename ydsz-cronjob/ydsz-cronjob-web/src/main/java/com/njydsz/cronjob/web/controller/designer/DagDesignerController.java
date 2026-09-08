@@ -20,6 +20,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * DAG 可视化设计器 Controller（P2-2）。
@@ -41,6 +42,7 @@ import com.njydsz.common.permission.PermissionCodes;
  */
 @Tag(name = "DAG 设计器", description = "DAG 工作流可视化编排")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/dag")
 @RequiredArgsConstructor

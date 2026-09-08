@@ -58,7 +58,7 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
         eventSubscriptionMapper.selectList(
             new LambdaQueryWrapper<FlowEventSubscription>()
                 .eq(FlowEventSubscription::getInstanceId, instanceId)
-                .eq(FlowEventSubscription::getDeleted, 0)));
+                .eq(FlowEventSubscription::getIsDeleted, 0)));
   }
 
   @Override
@@ -68,7 +68,7 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
             new LambdaQueryWrapper<FlowEventSubscription>()
                 .eq(FlowEventSubscription::getInstanceId, instanceId)
                 .eq(FlowEventSubscription::getNodeCode, nodeCode)
-                .eq(FlowEventSubscription::getDeleted, 0)));
+                .eq(FlowEventSubscription::getIsDeleted, 0)));
   }
 
   @Override
@@ -98,7 +98,7 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
                 .eq(FlowEventSubscription::getEventType, eventType)
                 .eq(FlowEventSubscription::getFlowCode, flowCode)
                 .eq(FlowEventSubscription::getSubscriptionStatus, "WAITING")
-                .eq(FlowEventSubscription::getDeleted, 0)));
+                .eq(FlowEventSubscription::getIsDeleted, 0)));
   }
 
   @Override
@@ -148,7 +148,7 @@ public class FlowEventSubscriptionRepositoryImpl implements FlowEventSubscriptio
         eventSubscriptionMapper.selectList(
             new LambdaQueryWrapper<FlowEventSubscription>()
                 .eq(FlowEventSubscription::getInstanceId, instanceId)
-                .eq(FlowEventSubscription::getDeleted, 0)
+                .eq(FlowEventSubscription::getIsDeleted, 0)
                 .orderByDesc(FlowEventSubscription::getCreatedAt)));
   }
 }

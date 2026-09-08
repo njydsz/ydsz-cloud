@@ -28,6 +28,7 @@ import com.njydsz.cronjob.server.core.connector.ConnectorExportResult;
 import com.njydsz.cronjob.server.core.connector.ConnectorManager;
 import com.njydsz.cronjob.server.core.connector.ConnectorTaskInfo;
 import com.njydsz.cronjob.server.core.connector.JobConnector;
+import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 生态连接器 Controller（P2-3）。
@@ -52,6 +53,7 @@ import com.njydsz.cronjob.server.core.connector.JobConnector;
  */
 @Slf4j
 @Tag(name = "生态连接器", description = "外部调度系统集成：测试连接、导入/导出、查询远程任务")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/cronjob/connector")
 @RequiredArgsConstructor

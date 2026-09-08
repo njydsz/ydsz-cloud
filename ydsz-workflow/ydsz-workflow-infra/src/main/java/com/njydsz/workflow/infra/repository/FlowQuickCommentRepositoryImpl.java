@@ -70,7 +70,7 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
             new LambdaQueryWrapper<FlowQuickComment>()
                 .eq(FlowQuickComment::getUserId, userId)
                 .eq(FlowQuickComment::getTenantId, tenantId)
-                .eq(FlowQuickComment::getDeleted, 0)));
+                .eq(FlowQuickComment::getIsDeleted, 0)));
   }
 
   @Override
@@ -80,6 +80,6 @@ public class FlowQuickCommentRepositoryImpl implements FlowQuickCommentRepositor
             new LambdaQueryWrapper<FlowQuickComment>()
                 .eq(FlowQuickComment::getIsSystem, 1)
                 .eq(FlowQuickComment::getTenantId, tenantId)
-                .eq(FlowQuickComment::getDeleted, 0)));
+                .eq(FlowQuickComment::getIsDeleted, 0)));
   }
 }

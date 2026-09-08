@@ -26,6 +26,7 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.MessageFeedbackDTO;
 import com.njydsz.message.domain.vo.MsgFeedbackVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.core.MessageFeedbackService;
 
 /**
@@ -74,6 +75,7 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
  */
 @Tag(name = "消息反馈", description = "消息质量评分与用户反馈")
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message/feedback")
 @RequiredArgsConstructor

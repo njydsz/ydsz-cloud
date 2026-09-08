@@ -33,6 +33,7 @@ import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.core.MessageService;
 
 /**
@@ -83,6 +84,7 @@ import com.njydsz.message.server.service.core.MessageService;
  */
 @Slf4j
 @Tag(name = "消息发送", description = "消息发送与发送日志查询")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/message")
 @RequiredArgsConstructor
