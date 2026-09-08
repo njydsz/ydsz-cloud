@@ -37,7 +37,7 @@ public final class ChatRequest implements Serializable {
   private final List<String> stop;
 
   /** 是否流式输出 */
-  private final boolean stream;
+  private final boolean isStream;
 
   /** 可用工具定义列表 */
   private final List<ToolDefinition> tools;
@@ -54,7 +54,7 @@ public final class ChatRequest implements Serializable {
    * @param maxTokens 最大生成 Token 数
    * @param topP Top-P 采样参数
    * @param stop 停止序列列表
-   * @param stream 是否流式输出
+   * @param isStream 是否流式输出
    * @param tools 可用工具定义列表
    * @param toolChoice 工具选择策略（auto/none/指定工具名）
    */
@@ -65,7 +65,7 @@ public final class ChatRequest implements Serializable {
       int maxTokens,
       double topP,
       List<String> stop,
-      boolean stream,
+      boolean isStream,
       List<ToolDefinition> tools,
       String toolChoice) {
     this.model = Objects.requireNonNull(model, "model 不能为 null");
@@ -74,7 +74,7 @@ public final class ChatRequest implements Serializable {
     this.maxTokens = maxTokens;
     this.topP = topP;
     this.stop = stop != null ? List.copyOf(stop) : List.of();
-    this.stream = stream;
+    this.isStream = isStream;
     this.tools = tools != null ? List.copyOf(tools) : List.of();
     this.toolChoice = toolChoice;
   }
@@ -139,7 +139,7 @@ public final class ChatRequest implements Serializable {
    * @return 流式输出返回 true
    */
   public boolean isStream() {
-    return stream;
+    return isStream;
   }
 
   /**
@@ -168,7 +168,7 @@ public final class ChatRequest implements Serializable {
    */
   public ChatRequest withMessages(List<ChatMessage> newMessages) {
     return new ChatRequest(
-        model, newMessages, temperature, maxTokens, topP, stop, stream, tools, toolChoice);
+        model, newMessages, temperature, maxTokens, topP, stop, isStream, tools, toolChoice);
   }
 
   /**
@@ -180,6 +180,17 @@ public final class ChatRequest implements Serializable {
   public ChatRequest withStream(boolean newStream) {
     return new ChatRequest(
         model, messages, temperature, maxTokens, topP, stop, newStream, tools, toolChoice);
+  }
+
+  /**
+   * 复制请求并切换流式/非流式模式（isStream 变体）。
+   *
+   * @param isStream 是否流式输出
+   * @return 携带新模式的新 ChatRequest 实例
+   */
+  public ChatRequest withIsStream(boolean isStream) {
+    return new ChatRequest(
+        model, messages, temperature, maxTokens, topP, stop, isStream, tools, toolChoice);
   }
 
   /**
@@ -209,7 +220,7 @@ public final class ChatRequest implements Serializable {
     private int maxTokens = DEFAULT_MAX_TOKENS;
     private double topP = 1.0; // Top-P 默认 1.0 即不做 nucleus 截断，由 temperature 主导采样
     private List<String> stop;
-    private boolean stream = false;
+    private boolean isStream = false;
     private List<ToolDefinition> tools;
     private String toolChoice;
 
@@ -282,11 +293,11 @@ public final class ChatRequest implements Serializable {
     /**
      * 设置是否走流式输出。
      *
-     * @param stream 是否流式输出
+     * @param isStream 是否流式输出
      * @return 当前 Builder
      */
-    public Builder stream(boolean stream) {
-      this.stream = stream;
+    public Builder isStream(boolean isStream) {
+      this.isStream = isStream;
       return this;
     }
 
@@ -320,7 +331,7 @@ public final class ChatRequest implements Serializable {
      */
     public ChatRequest build() {
       return new ChatRequest(
-          model, messages, temperature, maxTokens, topP, stop, stream, tools, toolChoice);
+          model, messages, temperature, maxTokens, topP, stop, isStream, tools, toolChoice);
     }
   }
 }
