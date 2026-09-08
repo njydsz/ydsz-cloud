@@ -16,8 +16,8 @@ meta:
   version: "26.09.07"
   source: "docs/云顶编码规范.md v1.0.7"
   last_synced: "2026-09-07"
-  last_updated: "2026-09-08（新增 YDIZ-API-001：API 版本控制策略，Header 协商优先，路径禁止包含版本段）"
-  total_rules: 50
+  last_updated: "2026-09-08（新增 YDIZ-API-002：@ApiVersion 注解必须放在 @RequestMapping 上方，P1 严格级）"
+  total_rules: 51
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -835,6 +835,55 @@ rules:
       5. FeignClient 路径常量、Javadoc 引用的路径同步更新
     source: "编码规范 §24（API 版本控制策略）"
 
+  - id: "YDIZ-API-002"
+    category: "api"
+    severity: "P1"
+    title: "【建议】@ApiVersion 注解必须放在 @RequestMapping 上方"
+    description: |
+      所有 Controller 类上的 `@ApiVersion` 注解必须置于 `@RequestMapping` **上方**，
+      位于类 Javadoc 之后、其他类级注解之前。统一注解顺序提升代码可读性，
+      确保版本信息在最靠近类声明的逻辑位置。
+
+      **正确顺序（从上到下）**：
+      1. Javadoc 类注释（作者、功能描述）
+      2. `@ApiVersion` — 声明该 Controller 的 API 版本
+      3. `@Tag` / `@Operation` — Swagger/OpenAPI 描述
+      4. `@Slf4j` — Lombok 日志
+      5. `@RestController` — Spring 组件标识
+      6. `@RequestMapping` — 路径映射
+      7. `@RequiredArgsConstructor` / `@ConstructorBinding` 等其他注解
+
+      **为什么**：`@ApiVersion` 描述的是该 Controller 整体的 API 版本契约，
+      与 `@RequestMapping` 共同构成 REST 接口的身份标识，应紧邻排列。
+      将版本注解放在路径映射上方符合"先声明版本，再声明路由"的逻辑阅读顺序。
+    pattern: |
+      以下情形构成违规：
+      1. Controller 类上 @ApiVersion 位于 @RequestMapping 下方
+      2. Controller 类上有 @RequestMapping 但缺少 @ApiVersion 注解
+    example_bad: |
+      // ❌ @ApiVersion 在 @RequestMapping 下方
+      @RestController
+      @RequestMapping("/api/app")
+      @ApiVersion("26.09.01")  // 位置错误，应在上方
+      public class AppInfoController { }
+    example_good: |
+      // ✅ @ApiVersion 在 @RequestMapping 上方
+      /**
+       * OAuth2 应用注册
+       * @author Marvin Lee
+       */
+      @ApiVersion("26.09.01")
+      @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
+      @Slf4j
+      @RestController
+      @RequestMapping("/api/app")
+      @RequiredArgsConstructor
+      public class AppInfoController { }
+    fix: |
+      将 @ApiVersion 注解从 @RequestMapping 下方移动到上方，
+      置于 Javadoc 之后、@Tag 等其他注解之前。
+    source: "编码规范 §26.3（API 版本控制策略）"
+
 # ============================================
 # 附录：按 category 统计
 # ============================================
@@ -854,5 +903,5 @@ stats:
   architecture: 1
   engineering: 3
   warnings: 1
-  api: 1
-  total: 50
+  api: 2
+  total: 51

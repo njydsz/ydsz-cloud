@@ -87,13 +87,13 @@ import com.njydsz.gateway.config.GatewayMetrics;
     matchIfMissing = true)
 public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
 
-  /** 查询参数最大记录长度 */
+  /** 查询参数在访问日志中的最大记录长度（超出后截断并追加 {@code ...}）。 */
   private static final int MAX_QUERY_LENGTH = 200;
 
-  /** User-Agent 最大记录长度 */
+  /** User-Agent 在访问日志中的最大记录长度（超出后截断并追加 {@code ...}）。 */
   private static final int MAX_UA_LENGTH = 200;
 
-  /** P0-8: 敏感查询参数（小写匹配，值脱敏为 ***） */
+  /** 敏感查询参数名集合（小写匹配），命中后值脱敏为 {@code ***}（P0-8：防 Token/密码泄漏到日志）。 */
   private static final Set<String> SENSITIVE_QUERY_PARAMS =
       Set.of(
           "token",
@@ -110,13 +110,13 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
           "code" // OAuth2 授权码
           );
 
-  /** P0-8: 脱敏占位符 */
+  /** P0-8: 敏感参数值的脱敏占位符。 */
   private static final String MASKED_VALUE = "***";
 
-  /** exchange attribute key: 请求开始时间戳 */
+  /** exchange attribute key：请求开始时间戳（{@code System.currentTimeMillis()}）。 */
   private static final String ATTR_START_TIME = "__gateway_start_time";
 
-  /** exchange attribute key: traceId */
+  /** exchange attribute key：网关生成的 traceId 缓存键。 */
   private static final String ATTR_TRACE_ID = "__gateway_trace_id";
 
   /** P3-14: 网关自定义指标 */

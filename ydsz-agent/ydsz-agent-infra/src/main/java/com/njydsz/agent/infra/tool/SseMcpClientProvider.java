@@ -79,6 +79,12 @@ public class SseMcpClientProvider implements McpClientProvider {
     }
   }
 
+  /**
+   * 列出 MCP Server 提供的所有工具。
+   *
+   * @param server MCP Server 连接配置
+   * @return 工具描述符列表；获取失败时返回空列表
+   */
   @Override
   public List<McpToolAdapter.McpToolDescriptor> listTools(AgentProperties.ServerInfo server) {
     try {
@@ -94,6 +100,15 @@ public class SseMcpClientProvider implements McpClientProvider {
     }
   }
 
+  /**
+   * 调用 MCP Server 上的指定工具。
+   *
+   * @param server MCP Server 连接配置
+   * @param toolName 工具名称（不带 server 前缀）
+   * @param arguments 参数 JSON 字符串（空字符串时使用空 Map）
+   * @return 工具执行结果内容文本
+   * @throws LlmException MCP 调用错误或网络异常
+   */
   @Override
   public String callTool(AgentProperties.ServerInfo server, String toolName, String arguments) {
     try {

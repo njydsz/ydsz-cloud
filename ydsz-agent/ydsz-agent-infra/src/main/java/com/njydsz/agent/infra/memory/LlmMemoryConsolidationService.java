@@ -88,10 +88,25 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
 
     private final LlmClient llmClient;
 
+    /**
+     * 构造基于 LLM 的记忆整合服务。
+     *
+     * @param llmClient LLM 客户端（用于从对话中提取事实）
+     */
     public LlmMemoryConsolidationService(LlmClient llmClient) {
         this.llmClient = llmClient;
     }
 
+    /**
+     * 从对话中提取值得记忆的事实。
+     *
+     * <p>判断对话是否值得提取（≥ {@value #MIN_CONVERSATION_MESSAGES} 条消息），
+     * 然后调用 LLM 分析对话内容并返回记忆事实列表。
+     *
+     * @param conversation 待分析的对话聚合
+     * @param tenantId 租户 ID（写入记忆事实）
+     * @return 提取到的记忆事实列表；对话过短或有异常时返回空列表
+     */
     @Override
     public List<MemoryExtractedFact> extractFacts(Conversation conversation, String tenantId) {
         if (conversation == null || !isWorthExtracting(conversation)) {
@@ -126,6 +141,12 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
         }
     }
 
+    /**
+     * 判断对话是否值得提取记忆。
+     *
+     * @param conversation 待判断的对话
+     * @return {@code true} 表示对话消息数达到提取阈值
+     */
     @Override
     public boolean isWorthExtracting(Conversation conversation) {
         if (conversation == null || conversation.getMessages() == null) {
@@ -134,6 +155,12 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
         return conversation.getMessages().size() >= MIN_CONVERSATION_MESSAGES;
     }
 
+    /**
+     * 持久化记忆事实（当前实现仅记录日志，实际持久化需对接 factStore）。
+     *
+     * @param facts 待持久化的记忆事实列表
+     * @return 已处理的事实条数
+     */
     @Override
     public int persistFacts(List<MemoryExtractedFact> facts) {
         if (facts == null || facts.isEmpty()) {

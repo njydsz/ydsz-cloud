@@ -33,21 +33,21 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.gateway.sql-injection")
 public class SqlInjectionProperties {
 
-  /** 是否启用 SQL 注入检测 */
+  /** 是否启用 SQL 注入检测（默认 true）。 */
   private boolean enabled = true;
 
-  /** 检测模式：STRICT(严格，更多规则) / STANDARD(标准) */
+  /** 检测模式：{@code STANDARD}（标准规则集） / {@code STRICT}（含额外严格规则）。 */
   private String mode = "STANDARD";
 
-  /** 命中后是否自动封禁 IP（通过 Redis） */
+  /** 命中 SQL 注入后是否自动封禁来源 IP（通过 Redis 黑名单）。 */
   private boolean autoBlock = true;
 
-  /** 触发自动封禁的命中次数阈值 */
+  /** 触发自动封禁的累计命中次数阈值（默认 3 次）。 */
   private int autoBlockThreshold = 3;
 
-  /** 自动封禁时长（秒） */
+  /** 自动封禁 IP 的 TTL（秒，默认 3600s = 1 小时）。 */
   private long autoBlockTtlSeconds = 3600;
 
-  /** 白名单参数名（不参与 SQL 注入检测） */
+  /** 白名单参数名：不涉及 SQL 查询的参数跳过检测（如分页/排序字段）。 */
   private List<String> whitelistParamNames = List.of("tenantId", "page", "size", "sort");
 }

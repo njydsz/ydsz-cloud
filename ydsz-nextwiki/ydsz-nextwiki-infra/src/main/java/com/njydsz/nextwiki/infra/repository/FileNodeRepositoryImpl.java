@@ -127,9 +127,9 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
       if (entity.getStatus() == null) {
         entity.setStatus("active");
       }
-      if (entity.getIsDeleted() == null) {
-        entity.setIsDeleted(0);
-      }
+    if (entity.getIsDeleted() == null) {
+      entity.setIsDeleted(false);
+    }
       if (entity.getRevision() == null) {
         entity.setRevision(0);
       }
@@ -252,7 +252,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
             .shareStatus("private")
             .status("active")
             .tenantId(TenantContextHolder.getTenantId())
-            .deleted(0)
+            .isDeleted(false)
             .revision(0)
             .build();
 

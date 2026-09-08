@@ -78,7 +78,7 @@ public class RuleDependencyController {
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     String dependsOn = dto.getDependsOnRuleCode();
     String depType = dto.getDependencyType() == null ? "EXECUTE" : dto.getDependencyType();
-    Boolean cascade = dto.isCascadeOnDisable() == null ? false : dto.isCascadeOnDisable();
+    Boolean cascade = dto.getCascadeOnDisable() == null ? false : dto.getCascadeOnDisable();
     String description = dto.getDescription();
     return YdszResponse.success(
         ruleDependencyProvider.add(

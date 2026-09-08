@@ -41,17 +41,19 @@ public class CorsProperties {
    *
    * <p>示例：{@code https://ydsz.example.com}。 默认值 {@code https://ydsz.example.com} 仅作为占位，生产环境必须通过
    * Nacos 配置替换。
+   *
+   * <p>凭据模式下不得为 {@code *}，由 {@link com.njydsz.gateway.config.GatewayFilterConfig} 启动时校验。
    */
   private String allowedOrigin = "https://ydsz.example.com";
 
-  /** 允许的 HTTP 方法 */
+  /** 允许的 HTTP 方法列表（默认覆盖常见 REST 操作 + OPTIONS 预检）。 */
   private List<String> allowedMethods =
       new ArrayList<>(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-  /** 允许的请求头 */
+  /** 允许的请求头列表（{@code *} 表示放行所有）。 */
   private List<String> allowedHeaders = new ArrayList<>(List.of("*"));
 
-  /** 暴露给浏览器 JS 的响应头 */
+  /** 暴露给浏览器 JS 的响应头列表。 */
   private List<String> exposedHeaders =
       new ArrayList<>(
           List.of(
@@ -63,13 +65,13 @@ public class CorsProperties {
               "Retry-After",
               "X-API-Version"));
 
-  /** 是否允许携带凭据（Cookie / Authorization） */
+  /** 是否允许携带凭据（Cookie / Authorization 头，默认 true）。 */
   private boolean allowCredentials = true;
 
-  /** 预检请求缓存时间（秒） */
+  /** 预检请求（OPTIONS）结果的浏览器缓存时间（秒，默认 3600s）。 */
   private long maxAgeSeconds = 3600;
 
-  /** 是否启用 CORS 过滤器（默认启用） */
+  /** 是否启用 CORS 过滤器（默认 true，可通过 {@code ydsz.gateway.cors.enabled=false} 关闭）。 */
   private boolean enabled = true;
 
   public String getAllowedOrigin() {

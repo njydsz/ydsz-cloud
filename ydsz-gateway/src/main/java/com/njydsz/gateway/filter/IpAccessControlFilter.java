@@ -74,10 +74,10 @@ import com.njydsz.gateway.config.IpAccessControlProperties;
     matchIfMissing = true)
 public class IpAccessControlFilter implements GlobalFilter, Ordered {
 
-  /** Redis IP 黑名单键前缀 */
+  /** Redis IP 黑名单键前缀（{@code ydsz:ip:blacklist:{ip}}），由运维或安全系统动态写入。 */
   private static final String IP_BLACKLIST_PREFIX = "ydsz:ip:blacklist:";
 
-  /** 白名单配置分隔符 */
+  /** 白名单配置分隔符正则：逗号或换行符（兼容 YAML list 和多行字符串写法）。 */
   private static final String WHITELIST_SEPARATOR = "[,\\n]";
 
   /**

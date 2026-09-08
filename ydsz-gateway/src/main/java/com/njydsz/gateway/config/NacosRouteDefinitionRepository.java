@@ -59,7 +59,7 @@ import com.njydsz.common.json.type.JsonType;
 @Slf4j
 public class NacosRouteDefinitionRepository implements RouteDefinitionRepository {
 
-  /** Nacos 配置中路由定义的 DataId */
+  /** Nacos 配置中路由定义的默认 DataId（可通过 {@code ydsz.gateway.dynamic-routes.data-id} 覆盖）。 */
   private static final String DEFAULT_DATA_ID = "gateway-routes.json";
 
   /** Nacos 配置管理器 */

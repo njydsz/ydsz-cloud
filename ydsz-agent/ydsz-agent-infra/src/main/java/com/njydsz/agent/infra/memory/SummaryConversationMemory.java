@@ -178,6 +178,12 @@ public class SummaryConversationMemory implements ConversationMemory {
     this.tokenCharRatio = tokenCharRatio > 0 ? tokenCharRatio : DEFAULT_TOKEN_CHAR_RATIO;
   }
 
+  /**
+   * 保存消息到委托记忆，并在超阈值时触发异步摘要压缩。
+   *
+   * @param conversationId 对话 ID
+   * @param message 待保存的消息
+   */
   @Override
   public void save(String conversationId, ChatMessage message) {
     delegate.save(conversationId, message);
@@ -190,6 +196,13 @@ public class SummaryConversationMemory implements ConversationMemory {
     }
   }
 
+  /**
+   * 加载对话消息（如有摘要则作为首条 system 消息拼入，再取委托记忆的最近 maxMessages 条）。
+   *
+   * @param conversationId 对话 ID
+   * @param maxMessages 从委托记忆的加载条数上限
+   * @return 消息列表（可能以摘要开头）
+   */
   @Override
   public List<ChatMessage> load(String conversationId, int maxMessages) {
     List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
@@ -203,6 +216,11 @@ public class SummaryConversationMemory implements ConversationMemory {
     return messages;
   }
 
+  /**
+   * 清除对话的所有消息、内存摘要缓存和 Redis 持久化摘要。
+   *
+   * @param conversationId 对话 ID
+   */
   @Override
   public void clear(String conversationId) {
     delegate.clear(conversationId);
@@ -210,6 +228,12 @@ public class SummaryConversationMemory implements ConversationMemory {
     deleteSummary(conversationId);
   }
 
+  /**
+   * 返回对话的消息条数（仅统计委托记忆，不含摘要）。
+   *
+   * @param conversationId 对话 ID
+   * @return 消息条数
+   */
   @Override
   public long count(String conversationId) {
     return delegate.count(conversationId);

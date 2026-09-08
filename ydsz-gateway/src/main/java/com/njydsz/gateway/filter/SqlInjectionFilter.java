@@ -87,10 +87,10 @@ import com.njydsz.gateway.config.SqlInjectionProperties;
     matchIfMissing = true)
 public class SqlInjectionFilter implements GlobalFilter, Ordered {
 
-  /** STANDARD 模式规则：覆盖常见 SQL 注入特征 */
+  /** STANDARD 模式规则集：覆盖常见 SQL 注入特征（经典注入、堆叠查询、联合查询、执行函数、注释符、编码绕过）。 */
   private static final List<Pattern> STANDARD_PATTERNS = new ArrayList<>(16);
 
-  /** STRICT 模式规则：在 STANDARD 基础上增加更多规则 */
+  /** STRICT 模式规则集：在 STANDARD 基础上增加 {@link #P_CLASSIC_OR_EMPTY} 与 {@link #P_UPDATE_SET} 等额外规则。 */
   private static final List<Pattern> STRICT_PATTERNS = new ArrayList<>(16);
 
   // ---- 经典注入模式 ----

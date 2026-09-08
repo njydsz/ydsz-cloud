@@ -53,19 +53,19 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
 @Component
 public class CachedJwtValidator {
 
-  /** 缓存最大容量 */
+  /** 缓存最大容量（10,000 条，防止内存溢出）。 */
   private static final long CACHE_MAX_SIZE = 10_000L;
 
-  /** 空值占位最小过期时间（毫秒）——防穿透 */
+  /** 空值占位最小过期时间（毫秒）——防穿透（无效 Token 短时缓存避免重复验签）。 */
   private static final long NULL_CACHE_MIN_MS = 2_000L;
 
-  /** 空值占位最大过期时间（毫秒）——随机抖动防雪崩 */
+  /** 空值占位最大过期时间（毫秒）——随机抖动防雪崩。 */
   private static final long NULL_CACHE_MAX_MS = 5_000L;
 
-  /** Token 过期前提前失效的缓冲时间（秒），避免缓存穿透到过期 Token */
+  /** Token 过期前提前失效的缓冲时间（秒），避免缓存穿透到已过期 Token。 */
   private static final long EXPIRE_BUFFER_SECONDS = 30L;
 
-  /** 缓存 TTL（秒） */
+  /** 缓存 TTL（秒，通过 {@code ydsz.gateway.jwt.cache-ttl-seconds} 配置注入，默认 10s）。 */
   private final long cacheTtlSeconds;
 
   /** 缓存命中计数器 */
@@ -329,7 +329,9 @@ public class CachedJwtValidator {
     return SensitiveUtil.defaultDesensitize(jwt, '*');
   }
 
-  /** 销毁时清理缓存 */
+  /**
+   * 销毁时清理全部缓存（Spring 容器关闭时由 {@link PreDestroy} 触发）。
+   */
   @PreDestroy
   public void cleanup() {
     claimsCache.invalidateAll();

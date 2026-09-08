@@ -29,12 +29,13 @@ import com.njydsz.common.util.ip.CidrUtils;
 public final class GatewayIpUtils {
 
   private static final String UNKNOWN = "unknown";
+  /** 无法获取客户端 IP 时的返回值（{@code 0.0.0.0}）。 */
   private static final String DEFAULT_IP = "0.0.0.0";
 
-  /** 可信代理头：X-Forwarded-For */
+  /** 可信代理头：X-Forwarded-For（仅当直连 IP 为可信代理时信任）。 */
   private static final String HEADER_X_FORWARDED_FOR = HeaderConstants.X_FORWARDED_FOR;
 
-  /** 可信代理头：X-Real-IP */
+  /** 可信代理头：X-Real-IP（仅当直连 IP 为可信代理时信任）。 */
   private static final String HEADER_X_REAL_IP = "X-Real-IP";
 
   private GatewayIpUtils() {

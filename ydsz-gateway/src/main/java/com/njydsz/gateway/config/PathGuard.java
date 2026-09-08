@@ -45,7 +45,7 @@ public final class PathGuard {
           HeaderConstants.X_FORWARDED_FOR,
           "X-Real-IP");
 
-  /** 最大解码次数（防止递归解码 DoS） */
+  /** 最大 URL 解码递归次数（防止 Double-Encoding 攻击的递归解码 DoS）。 */
   private static final int MAX_DECODE_ITERATIONS = 3;
 
   /**

@@ -30,7 +30,7 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
     {CorsProperties.class, SqlInjectionProperties.class, DeprecationProperties.class})
 public class GatewayFilterConfig {
 
-  /** 凭据模式下禁止的通配符标记 */
+  /** 凭据模式下禁止使用的通配符来源标记（{@code *} 与 {@code allowCredentials=true} 互斥）。 */
   private static final String WILDCARD_ORIGIN = "*";
 
   // =========================================================================

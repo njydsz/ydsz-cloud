@@ -43,7 +43,7 @@ public class NextFireTimeCalculator {
   private long cacheTtlSeconds;
 
   /** 缓存条目：Key = cron + "|" + timezone */
-  private static final class CacheEntry {
+  private final class CacheEntry {
     final LocalDateTime calculatedAt;
     final LocalDateTime nextFireTime;
 

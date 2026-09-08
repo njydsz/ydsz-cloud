@@ -33,11 +33,22 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
 @Slf4j
 public class GatewayHealthIndicator implements HealthIndicator {
 
+  /** Reactive Redis 客户端提供者（可选，用于探测限流/黑名单所依赖的 Redis 连通性）。 */
   private final ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider;
+
+  /** 安全响应头配置提供者（可选，用于校验安全头策略是否已生效）。 */
   private final ObjectProvider<SecurityHeaderProperties> securityHeaderProvider;
+
+  /** 限流配置提供者（可选，用于上报当前令牌桶阈值）。 */
   private final ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider;
+
+  /** IP 访问控制配置提供者（可选，用于上报黑白名单启用状态）。 */
   private final ObjectProvider<IpAccessControlProperties> ipAccessControlProvider;
+
+  /** 主鉴权过滤器提供者（可选，用于探测 JWT 密钥等鉴权前置条件）。 */
   private final ObjectProvider<AuthGlobalFilter> authFilterProvider;
+
+  /** 网关指标采集器提供者（可选，用于输出实时 QPS、错误率等运行指标）。 */
   private final ObjectProvider<GatewayMetrics> gatewayMetricsProvider;
 
   /**

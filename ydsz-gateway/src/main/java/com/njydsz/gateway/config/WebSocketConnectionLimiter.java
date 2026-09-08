@@ -55,19 +55,19 @@ import reactor.core.publisher.Mono;
 @ConditionalOnProperty(prefix = "ydsz.gateway.websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSocketConnectionLimiter {
 
-  /** 用户维度连接数 Redis 键前缀 */
+  /** 用户维度 WebSocket 连接数计数器 Redis 键前缀（{@code ydsz:ws:connections:{userId}}）。 */
   private static final String KEY_PREFIX_USER = "ydsz:ws:connections:";
 
-  /** IP 维度连接数 Redis 键前缀 */
+  /** IP 维度 WebSocket 连接数计数器 Redis 键前缀（{@code ydsz:ws:connections:ip:{ip}}）。 */
   private static final String KEY_PREFIX_IP = "ydsz:ws:connections:ip:";
 
-  /** 限流维度：用户 */
+  /** 限流维度标识：用户维度（用于 Prometheus 标签）。 */
   private static final String DIMENSION_USER = "user";
 
-  /** 限流维度：IP */
+  /** 限流维度标识：IP 维度（用于 Prometheus 标签）。 */
   private static final String DIMENSION_IP = "ip";
 
-  /** Lua 脚本：检查并递增计数器（原子操作） */
+  /** Lua 脚本：原子性地检查并递增连接数计数器，超限返回 -1，首次设置 TTL。 */
   private static final String INCR_WITH_LIMIT_SCRIPT = """
       local current = redis.call('GET', KEYS[1])
       if current and tonumber(current) >= tonumber(ARGV[1]) then
@@ -84,22 +84,22 @@ public class WebSocketConnectionLimiter {
 
   private final GatewayMetrics gatewayMetrics;
 
-  /** 单用户最大 WebSocket 连接数 */
+  /** 单用户最大 WebSocket 连接数（默认 5）。 */
   @Value("${ydsz.gateway.websocket.max-connections-per-user:5}")
   private int maxConnectionsPerUser;
 
-  /** 单 IP 最大 WebSocket 连接数 */
+  /** 单 IP 最大 WebSocket 连接数（默认 20）。 */
   @Value("${ydsz.gateway.websocket.max-connections-per-ip:20}")
   private int maxConnectionsPerIp;
 
-  /** 计数器 TTL（秒） */
+  /** 计数器 TTL（秒），作为异常断开时的兜底清理（默认 3600s）。 */
   @Value("${ydsz.gateway.websocket.counter-ttl-seconds:3600}")
   private long counterTtlSeconds;
 
   private RedisScript<Long> incrScript;
 
   /**
-   * 初始化 Lua 脚本。
+   * 启动时预编译 Lua 脚本并打印初始化参数。
    */
   @PostConstruct
   void initScript() {

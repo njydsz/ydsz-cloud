@@ -42,7 +42,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ApiDeprecationManager {
 
-  /** RFC 1123 日期格式（Sunset 头要求） */
+  /** RFC 1123 HTTP-Date 格式（Sunset 头要求，如 {@code Sat, 31 Dec 2026 23:59:59 GMT}）。 */
   private static final DateTimeFormatter RFC1123_FORMATTER =
       DateTimeFormatter.RFC_1123_DATE_TIME;
 

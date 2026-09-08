@@ -136,6 +136,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
    * @param message 错误消息
    * @return 完成信号 Mono
    */
+  private Mono<Void> rejectPayload(ServerWebExchange exchange, GatewayErrorCode errorCode, String message) {
     log.warn(
         "[PayloadValidation] 请求体校验失败 path={} reason={}",
         exchange.getRequest().getURI().getPath(),

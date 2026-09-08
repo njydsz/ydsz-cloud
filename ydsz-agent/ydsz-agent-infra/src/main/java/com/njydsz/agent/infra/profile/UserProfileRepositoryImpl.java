@@ -30,11 +30,24 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
 
     private final UserProfileMapper userProfileMapper;
 
+    /**
+     * 根据用户 ID 查找画像。
+     *
+     * @param userId 用户 ID
+     * @return 找到时返回包含画像的 Optional；不存在时返回空 Optional
+     */
     @Override
     public Optional<UserProfile> findByUserId(String userId) {
         return Optional.ofNullable(userProfileMapper.selectById(userId));
     }
 
+    /**
+     * 保存或更新用户画像（UPSERT 语义）。
+     *
+     * <p>先查询是否已存在：不存在则 INSERT，存在则 UPDATE。写入前自动填充创建/更新时间戳。
+     *
+     * @param profile 用户画像实体（为 {@code null} 时直接返回）
+     */
     @Override
     public void save(UserProfile profile) {
         if (profile == null) {
@@ -52,6 +65,11 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
         }
     }
 
+    /**
+     * 更新用户画像（直接按主键更新，不的存在性检查）。
+     *
+     * @param profile 用户画像实体（为 {@code null} 时直接返回）
+     */
     @Override
     public void update(UserProfile profile) {
         if (profile == null) {
@@ -61,6 +79,12 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
         userProfileMapper.updateById(profile);
     }
 
+    /**
+     * 查询最近活跃的用户画像（按最后交互时间降序）。
+     *
+     * @param limit 返回条数上限（≤0 时返回空列表）
+     * @return 用户画像列表
+     */
     @Override
     public List<UserProfile> findActiveProfiles(int limit) {
         if (limit <= 0) {
@@ -72,6 +96,11 @@ public class UserProfileRepositoryImpl implements UserProfileRepository {
                         .last("LIMIT " + limit));
     }
 
+    /**
+     * 根据用户 ID 删除画像。
+     *
+     * @param userId 用户 ID
+     */
     @Override
     public void deleteByUserId(String userId) {
         userProfileMapper.deleteById(userId);

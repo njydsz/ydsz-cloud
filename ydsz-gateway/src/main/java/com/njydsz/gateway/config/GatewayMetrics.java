@@ -42,28 +42,28 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 @ConditionalOnClass(MeterRegistry.class)
 public class GatewayMetrics extends SentryMetricsAdapter {
 
-  /** 指标前缀 */
+  /** 所有 Prometheus 指标的统一前缀。 */
   private static final String PREFIX = "ydsz_gateway_";
 
-  /** 熔断器状态：关闭 */
+  /** 熔断器指标值：{@link CircuitBreaker.State#CLOSED}，正常放行请求。 */
   public static final int STATE_CLOSED = 0;
 
-  /** 熔断器状态：打开 */
+  /** 熔断器指标值：{@link CircuitBreaker.State#OPEN}，快速失败所有请求。 */
   public static final int STATE_OPEN = 1;
 
-  /** 熔断器状态：半开 */
+  /** 熔断器指标值：{@link CircuitBreaker.State#HALF_OPEN}，放行限流探测流量。 */
   public static final int STATE_HALF_OPEN = 2;
 
-  /** 按 routeId 维护的熔断器状态引用 */
+  /** 按 routeId 维护的熔断器状态引用（映射为 0=CLOSED, 1=OPEN, 2=HALF_OPEN）。 */
   private final ConcurrentMap<String, AtomicInteger> breakerStates = new ConcurrentHashMap<>();
 
-  /** 本地兜底限流配额引用 */
+  /** 本地兜底限流配额引用（Gauge 上报用）。 */
   private final AtomicInteger fallbackQuotaRef = new AtomicInteger(0);
 
-  /** 配额 Gauge 注册标志（确保仅注册一次） */
+  /** 配额 Gauge 注册标志（确保仅注册一次）。 */
   private final AtomicBoolean quotaGaugeRegistered = new AtomicBoolean(false);
 
-  /** JWT 缓存 Gauge 注册标志 */
+  /** JWT 缓存 Gauge 注册标志（确保命中/未命中仅注册一次）。 */
   private final AtomicBoolean jwtGaugeRegistered = new AtomicBoolean(false);
 
   /**

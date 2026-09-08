@@ -52,25 +52,25 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.gateway.api-version")
 public class ApiVersionProperties {
 
-  /** 是否启用 API 版本管理 */
+  /** 是否启用 API 版本管理（默认 true）。 */
   private boolean enabled = true;
 
-  /** 支持的版本列表 */
+  /** 支持的版本列表（如 {@code v1, v2}），用于版本号校验。 */
   private List<String> supportedVersions = List.of("v1", "v2");
 
-  /** 默认版本（请求未指定版本时使用） */
+  /** 请求未指定版本时使用的默认版本。 */
   private String defaultVersion = "v2";
 
-  /** 弃用版本配置：版本号 → 弃用详情 */
+  /** 弃用版本配置：版本号 → 弃用详情（Sunset 日期 + 替代路径 + 说明）。 */
   private Map<String, DeprecatedVersion> deprecatedVersions = Map.of();
 
-  /** Header 版本协商配置 */
+  /** Header 版本协商配置（{@code X-API-Version} 头）。 */
   private HeaderNegotiationConfig headerNegotiation = new HeaderNegotiationConfig();
 
-  /** Query 版本协商配置 */
+  /** Query 版本协商配置（{@code api-version} 查询参数）。 */
   private QueryNegotiationConfig queryNegotiation = new QueryNegotiationConfig();
 
-  /** Header 协商配置 */
+  /** Header 版本协商配置：是否启用 + 请求头名称。 */
   @Data
   public static class HeaderNegotiationConfig {
     /** 是否启用 Header 协商 */
@@ -80,26 +80,26 @@ public class ApiVersionProperties {
     private String headerName = "X-API-Version";
   }
 
-  /** Query 协商配置 */
+  /** Query 版本协商配置：是否启用 + 查询参数名。 */
   @Data
   public static class QueryNegotiationConfig {
-    /** 是否启用 Query 协商 */
+    /** 是否启用 Query 参数版本协商（默认 true）。 */
     private boolean enabled = true;
 
-    /** 版本参数名称 */
+    /** 版本查询参数名称（默认 {@code api-version}）。 */
     private String paramName = "api-version";
   }
 
-  /** 弃用版本详情 */
+  /** 弃用版本详情：Sunset 日期 + 替代路径 + 说明。 */
   @Data
   public static class DeprecatedVersion {
-    /** Sunset 日期（RFC 3339 / ISO 8601） */
+    /** Sunset 日期（RFC 3339 / ISO 8601 格式，如 {@code 2026-12-31T23:59:59Z}）。 */
     private String sunset;
 
-    /** 替代版本路径 */
+    /** 替代版本路径（如 {@code /api/v2}）。 */
     private String replacement;
 
-    /** 弃用说明 */
+    /** 自定义弃用说明（中文文案，前端可展示给用户）。 */
     private String message;
   }
 }

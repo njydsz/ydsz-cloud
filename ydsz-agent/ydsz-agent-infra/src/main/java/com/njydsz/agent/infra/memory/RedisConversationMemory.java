@@ -65,15 +65,36 @@ public class RedisConversationMemory implements ConversationMemory {
   /** 最大列表大小 */
   private final int maxListSize;
 
+  /**
+   * 构造 Redis 对话记忆（使用默认 TTL 24h 与列表大小 50）。
+   *
+   * @param stringOps String 操作组件
+   * @param collectionOps 集合操作组件
+   */
   public RedisConversationMemory(RedisStringOps stringOps, RedisCollectionOps collectionOps) {
     this(stringOps, collectionOps, DEFAULT_TTL_HOURS, DEFAULT_MAX_LIST_SIZE);
   }
 
+  /**
+   * 构造 Redis 对话记忆（自定义 TTL，列表大小默认 50）。
+   *
+   * @param stringOps String 操作组件
+   * @param collectionOps 集合操作组件
+   * @param ttlHours 生存时间（小时）
+   */
   public RedisConversationMemory(
       RedisStringOps stringOps, RedisCollectionOps collectionOps, int ttlHours) {
     this(stringOps, collectionOps, ttlHours, DEFAULT_MAX_LIST_SIZE);
   }
 
+  /**
+   * 构造 Redis 对话记忆（全参）。
+   *
+   * @param stringOps String 操作组件
+   * @param collectionOps 集合操作组件
+   * @param ttlHours 生存时间（小时，≤0 时使用默认值）
+   * @param maxListSize 列表最大长度（≤0 时使用默认值）
+   */
   public RedisConversationMemory(
       RedisStringOps stringOps, RedisCollectionOps collectionOps, int ttlHours, int maxListSize) {
     this.stringOps = stringOps;
@@ -82,6 +103,12 @@ public class RedisConversationMemory implements ConversationMemory {
     this.maxListSize = maxListSize > 0 ? maxListSize : DEFAULT_MAX_LIST_SIZE;
   }
 
+  /**
+   * 追加一条消息到对话的 Redis List 末尾（LRU 滑动窗口：保留最近 maxListSize 条）。
+   *
+   * @param conversationId 对话 ID
+   * @param message 待保存的消息
+   */
   @Override
   public void save(String conversationId, ChatMessage message) {
     String key = buildKey(conversationId);
@@ -95,6 +122,13 @@ public class RedisConversationMemory implements ConversationMemory {
     }
   }
 
+  /**
+   * 加载对话的最近消息（最多 maxMessages 条，从 List 尾部倒序取）。
+   *
+   * @param conversationId 对话 ID
+   * @param maxMessages 加载条数上限
+   * @return 消息列表；对话不存在或为空时返回空列表
+   */
   @Override
   public List<ChatMessage> load(String conversationId, int maxMessages) {
     String key = buildKey(conversationId);
@@ -117,11 +151,22 @@ public class RedisConversationMemory implements ConversationMemory {
     return messages;
   }
 
+  /**
+   * 清除指定对话的所有消息。
+   *
+   * @param conversationId 对话 ID
+   */
   @Override
   public void clear(String conversationId) {
     stringOps.del(buildKey(conversationId));
   }
 
+  /**
+   * 返回指定对话的消息条数。
+   *
+   * @param conversationId 对话 ID
+   * @return 消息条数
+   */
   @Override
   public long count(String conversationId) {
     return collectionOps.lSize(buildKey(conversationId));

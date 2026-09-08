@@ -62,8 +62,8 @@ public class ConfigApprovalController {
     PageResponse<List<ConfigApprovalVO>> pageResponse = new PageResponse<>();
     pageResponse.setData(items);
     pageResponse.setTotal((long) items.size());
-    pageResponse.setPageNum(query.getPageNum());
-    pageResponse.setPageSize(query.getPageSize());
+    pageResponse.setPageNum((long) query.getPageNum());
+    pageResponse.setPageSize((long) query.getPageSize());
     return YdszResponse.success(pageResponse);
   }
 
@@ -83,8 +83,8 @@ public class ConfigApprovalController {
     PageResponse<List<ConfigApprovalVO>> pageResponse = new PageResponse<>();
     pageResponse.setData(items);
     pageResponse.setTotal((long) items.size());
-    pageResponse.setPageNum(query.getPageNum());
-    pageResponse.setPageSize(query.getPageSize());
+    pageResponse.setPageNum((long) query.getPageNum());
+    pageResponse.setPageSize((long) query.getPageSize());
     return YdszResponse.success(pageResponse);
   }
 
@@ -103,8 +103,8 @@ public class ConfigApprovalController {
     PageResponse<List<ConfigApprovalVO>> pageResponse = new PageResponse<>();
     pageResponse.setData(items);
     pageResponse.setTotal((long) items.size());
-    pageResponse.setPageNum(query.getPageNum());
-    pageResponse.setPageSize(query.getPageSize());
+    pageResponse.setPageNum((long) query.getPageNum());
+    pageResponse.setPageSize((long) query.getPageSize());
     return YdszResponse.success(pageResponse);
   }
 

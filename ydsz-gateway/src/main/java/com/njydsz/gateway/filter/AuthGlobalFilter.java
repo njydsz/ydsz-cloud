@@ -63,10 +63,10 @@ import com.njydsz.gateway.config.PathGuard;
     matchIfMissing = true)
 public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
-  /** Token 黑名单服务 */
+  /** 响应式 Token 黑名单服务（复用 ydsz-common-auth 的 SHA-256 摘要匹配逻辑）。 */
   private final ReactiveTokenBlacklistService tokenBlacklistService;
 
-  /** 白名单(不校验 Token) */
+  /** 不校验 Token 的白名单路径集合（Path 精确匹配，大小写不敏感）。 */
   private static final Set<String> WHITE_LIST =
       PathGuard.whiteList(
           "/auth/login",
@@ -82,7 +82,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
           "/workflow/third-party/feishu/callback",
           "/workflow/third-party/wecom/callback");
 
-  /** 内部头签名密钥最小长度 */
+  /** 内部头签名密钥最小安全长度（32 字节 = 256 bit，满足 HMAC-SHA256 安全要求）。 */
   private static final int MIN_INTERNAL_SECRET_LENGTH = 32;
 
   /** JWT 校验结果缓存 */

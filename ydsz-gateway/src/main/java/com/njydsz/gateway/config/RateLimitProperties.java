@@ -56,39 +56,42 @@ public class RateLimitProperties {
   /** 响应头配置 */
   private ResponseHeadersConfig responseHeaders = new ResponseHeadersConfig();
 
-  /** 用户级限流配置 */
+  /** 用户级限流配置：按用户 ID（X-User-Id 头）维度限流。 */
   @Data
   public static class PerUserConfig {
+    /** 是否启用用户级限流（默认 true）。 */
     private boolean enabled = true;
 
-    /** 默认每秒请求数 */
+    /** 令牌桶填充速率（每秒请求数，默认 50）。 */
     private int defaultQps = 50;
 
-    /** 突发容量（令牌桶） */
+    /** 令牌桶突发容量（短时最大请求数，默认 100）。 */
     private int burstCapacity = 100;
   }
 
-  /** IP 级限流配置 */
+  /** IP 级限流配置：按客户端真实 IP 维度限流。 */
   @Data
   public static class PerIpConfig {
+    /** 是否启用 IP 级限流（默认 true）。 */
     private boolean enabled = true;
 
-    /** 默认每秒请求数 */
+    /** 令牌桶填充速率（每秒请求数，默认 30）。 */
     private int defaultQps = 30;
 
-    /** 突发容量 */
+    /** 令牌桶突发容量（短时最大请求数，默认 60）。 */
     private int burstCapacity = 60;
 
-    /** IP 白名单（不限流） */
+    /** IP 白名单（命中后不限流，支持精确 IP 和 CIDR）。 */
     private List<String> whitelist;
   }
 
-  /** 响应头配置 */
+  /** 限流响应头配置：HTTP 429 响应中 {@code X-RateLimit-*} 头。 */
   @Data
   public static class ResponseHeadersConfig {
+    /** 是否注入限流响应头（默认 true）。 */
     private boolean enabled = true;
 
-    /** Retry-After 头值（秒） */
+    /** 限流触发时 {@code Retry-After} 头值（秒，默认 5）。 */
     private int retryAfter = 5;
   }
 }

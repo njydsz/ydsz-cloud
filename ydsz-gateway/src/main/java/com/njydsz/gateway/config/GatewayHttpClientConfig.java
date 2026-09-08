@@ -105,12 +105,12 @@ public class GatewayHttpClientConfig {
   private long evictionIntervalSeconds;
 
   /**
-   * 构建 Reactor Netty 连接提供者
+   * 构建 Reactor Netty 连接提供者。
    *
-   * <p>Spring Cloud Gateway 默认使用 Reactor Netty 的 {@link ConnectionProvider}，此处覆盖默认配置启用连接池，
+   * <p>Spring Cloud Gateway 默认使用 Reactor Netty 的 {@link ConnectionProvider}，此处覆盖默认配置启用连接池参数（最大连接数、空闲回收、生命周期），
    * 并开启 Micrometer 指标（P0-C3：真实连接池可观测性）。
    *
-   * @return 连接提供者
+   * @return 命名连接提供者
    */
   @Bean
   public ConnectionProvider gatewayConnectionProvider() {
@@ -136,13 +136,13 @@ public class GatewayHttpClientConfig {
   }
 
   /**
-   * 构建网关 HttpClient
+   * 构建网关 HTTP 客户端。
    *
-   * <p>使用上述连接提供者创建 HttpClient，覆盖 Spring Cloud Gateway 默认配置。 此 Bean 会被 Spring Cloud Gateway
-   * 自动发现并用于代理请求转发。
+   * <p>使用上述连接提供者创建 {@link HttpClient}，覆盖 Spring Cloud Gateway 默认配置。
+   * 此 Bean 会被 Spring Cloud Gateway 自动发现并用于代理请求转发。
    *
-   * @param connectionProvider 连接提供者
-   * @return HttpClient
+   * @param connectionProvider 命名的连接提供者（来自 {@link #gatewayConnectionProvider()}）
+   * @return 配置后的 HttpClient
    */
   @Bean
   public HttpClient gatewayHttpClient(ConnectionProvider connectionProvider) {
