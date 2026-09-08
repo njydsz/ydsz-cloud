@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.web.controller.tenant;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
@@ -19,8 +21,6 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-
-import java.util.List;
 
 /**
  * 租户切换 Controller（P1 多租户 JWT 切换）。

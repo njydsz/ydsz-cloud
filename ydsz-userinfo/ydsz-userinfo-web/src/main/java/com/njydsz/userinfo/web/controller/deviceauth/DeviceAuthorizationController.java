@@ -2,9 +2,6 @@ package com.njydsz.userinfo.web.controller.deviceauth;
 
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -58,6 +55,9 @@ public class DeviceAuthorizationController {
 
   /** 集合初始容量 */
   private static final int MAP_CAPACITY = 16;
+
+  /** User-Code 分组位置（连字符在第 4 位之后插入） */
+  private static final int USER_CODE_GROUP_SIZE = 4;
 
   /** User-Code 字符集（去除易混淆字符：0/O/1/I/L） */
   private static final char[] USER_CODE_CHARS =
@@ -204,7 +204,7 @@ public class DeviceAuthorizationController {
   private String generateUserCode() {
     StringBuilder sb = new StringBuilder(USER_CODE_LENGTH + 1);
     for (int i = 0; i < USER_CODE_LENGTH; i++) {
-      if (i == 4) {
+      if (i == USER_CODE_GROUP_SIZE) {
         sb.append('-');
       }
       int index = SECURE_RANDOM.nextInt(USER_CODE_CHARS.length);
