@@ -119,9 +119,15 @@ public class TraceRequestInterceptor implements RequestInterceptor {
     }
 
     if (w3cEnabled) {
-      String traceparent = buildTraceparent(traceId, spanId);
-      if (traceparent != null) {
-        requestTemplate.header(HEADER_TRACEPARENT, traceparent);
+      // 优先从 OTel Context 获取当前 span 的 W3C traceparent
+      String otelTraceparent = resolveOtelTraceparent();
+      if (otelTraceparent != null) {
+        requestTemplate.header(HEADER_TRACEPARENT, otelTraceparent);
+      } else {
+        String traceparent = buildTraceparent(traceId, spanId);
+        if (traceparent != null) {
+          requestTemplate.header(HEADER_TRACEPARENT, traceparent);
+        }
       }
     }
 
@@ -213,6 +219,37 @@ public class TraceRequestInterceptor implements RequestInterceptor {
       return traceHandler.getCurrentSpanId();
     }
     return null;
+  }
+
+  /**
+   * 尝试从 OTel Context 中获取当前 Span 的 W3C traceparent。
+   *
+   * <p>使用反射调用 OTel API，避免在 classpath 中无 OTel 时报错。 如果 OTel SDK 未初始化或当前无活跃
+   * Span，则返回 {@code null}，回退到本地构建的 traceparent。
+   *
+   * @return W3C traceparent 字符串，不可用时返回 null
+   */
+  private String resolveOtelTraceparent() {
+    try {
+      Class<?> spanClass = Class.forName("io.opentelemetry.api.trace.Span");
+      Object span = spanClass.getMethod("current").invoke(null);
+      Object spanContext = spanClass.getMethod("getSpanContext").invoke(span);
+      boolean isValid = (Boolean) spanContext.getClass().getMethod("isValid").invoke(spanContext);
+      boolean isSampled = (Boolean) spanContext.getClass().getMethod("isSampled").invoke(spanContext);
+      if (!isValid) {
+        return null;
+      }
+      String traceId = (String) spanContext.getClass().getMethod("getTraceId").invoke(spanContext);
+      String spanId = (String) spanContext.getClass().getMethod("getSpanId").invoke(spanContext);
+      String flags = isSampled ? TRACEPARENT_FLAGS_SAMPLED : "00";
+      return TRACEPARENT_VERSION + "-" + traceId + "-" + spanId + "-" + flags;
+    } catch (ClassNotFoundException e) {
+      // OTel API 不在 classpath 中，跳过
+      return null;
+    } catch (Exception e) {
+      // OTel SDK 未初始化或其他异常，跳过
+      return null;
+    }
   }
 
   /**

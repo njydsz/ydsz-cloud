@@ -5,7 +5,9 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -36,12 +38,13 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_acct_login_history")
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")
-public class UserLoginHistory {
+public class UserLoginHistory extends MpBaseIdEntity<String> {
 
-  /** 主键 ID（雪花算法） */
+  /** 主键 ID（雪花算法，由基类提供；此处覆盖 @TableId 以兼容 String 类型） */
   @TableId(type = IdType.ASSIGN_ID)
   private String id;
 
@@ -62,7 +65,4 @@ public class UserLoginHistory {
 
   /** 用户代理（浏览器/设备信息） */
   private String userAgent;
-
-  /** 登录时间 */
-  private LocalDateTime createdAt;
 }

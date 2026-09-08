@@ -7,7 +7,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * API Key 实体（P1-2 API Key 授权体系）。
@@ -28,12 +32,15 @@ import lombok.Data;
  * @since 26.09.07
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_auth_apikey")
-public class ApiKey implements Serializable {
+public class ApiKey extends MpBaseEntity<Long> {
 
   private static final long serialVersionUID = 1L;
 
-  /** 主键 ID */
+  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID） */
   @TableId(type = IdType.AUTO)
   private Long id;
 
@@ -71,16 +78,4 @@ public class ApiKey implements Serializable {
   /** 是否启用 */
   @TableField("enabled")
   private Boolean isEnabled;
-
-  /** 创建时间 */
-  @TableField("created_at")
-  private LocalDateTime createdAt;
-
-  /** 更新时间 */
-  @TableField("updated_at")
-  private LocalDateTime updatedAt;
-
-  /** 删除标记（软删除） */
-  @TableField("deleted")
-  private Boolean isDeleted;
 }

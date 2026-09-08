@@ -7,7 +7,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * WebAuthn 凭证持久化实体
@@ -18,12 +22,15 @@ import lombok.Data;
  * @since 26.09.01
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_auth_credential")
-public class WebAuthnCredential implements Serializable {
+public class WebAuthnCredential extends MpBaseEntity<Long> {
 
   private static final long serialVersionUID = 1L;
 
-  /** 主键 ID */
+  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID） */
   @TableId(type = IdType.AUTO)
   private Long id;
 
@@ -62,16 +69,4 @@ public class WebAuthnCredential implements Serializable {
   /** 最后使用时间 */
   @TableField("last_used_at")
   private LocalDateTime lastUsedAt;
-
-  /** 创建时间 */
-  @TableField("created_at")
-  private LocalDateTime createdAt;
-
-  /** 更新时间 */
-  @TableField("updated_at")
-  private LocalDateTime updatedAt;
-
-  /** 删除标记（软删除） */
-  @TableField("is_deleted")
-  private Boolean isDeleted;
 }
