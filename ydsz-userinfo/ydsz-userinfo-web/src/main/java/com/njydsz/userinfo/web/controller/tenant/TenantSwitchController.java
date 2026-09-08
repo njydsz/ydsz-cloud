@@ -43,7 +43,7 @@ import java.util.List;
  * @since 26.09.08
  */
 @Slf4j
-@ApiVersion("26.09.08")
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/auth/tenant")
 @RequiredArgsConstructor

@@ -6,7 +6,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.auth.model.AuthInfo;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.userinfo.domain.auth.AuthContextProvider;
 
@@ -41,16 +41,17 @@ public class ThreadLocalAuthContextProvider implements AuthContextProvider {
       return Optional.empty();
     }
 
-    // 从 RequestContext 提取用户信息
-    UserInfo userInfo = RequestContext.getUserInfo();
-    if (userInfo != null) {
+    // 从 RequestContext 提取认证信息（AuthInfo 在 BaseAuthFilter 中写入）
+    Object authObj = RequestContext.get(RequestContext.KEY_AUTH_INFO);
+    if (authObj instanceof AuthInfo authInfo) {
+      // 当前认证体系未提供 username / userType / roles 字段，留待后续扩展
       return Optional.of(new AuthContext(
-          userInfo.getUserId(),
-          userInfo.getUsername(),
-          userInfo.getTenantId(),
-          userInfo.getUserType(),
-          userInfo.getRoleCode() != null ? Set.copyOf(userInfo.getRoleCode()) : Set.of(),
-          AUTH_TYPE_TOKEN));
+          authInfo.getUniqueId(),
+          null,
+          authInfo.getTenantId(),
+          null,
+          Set.of(),
+          authInfo.getServiceTypeCode() != null ? AUTH_TYPE_TOKEN : AUTH_TYPE_UNKNOWN));
     }
 
     // Fallback：仅基于 userId 构建最小上下文

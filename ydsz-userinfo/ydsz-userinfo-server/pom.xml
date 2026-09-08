@@ -114,6 +114,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
+        <!-- P0-FIX: 统一通知入口（SmtpAlertNotificationChannel 通过 NotifyHelper 发邮件） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-notify</artifactId>
+        </dependency>
         <!-- webauthn4j: FIDO2 WebAuthn 密码学原语 -->
         <dependency>
             <groupId>com.webauthn4j</groupId>
@@ -145,11 +150,11 @@
             <artifactId>jjwt-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <!-- P2 告警通知扩展（SMTP 邮件告警需要 JavaMailSender + Jakarta Mail API） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
-        </dependency>
+        <!--
+            P0-FIX: 删除 spring-boot-starter-mail 直接依赖。
+            SmtpAlertNotificationChannel 改为通过 ydsz-common-notify 的 NotifyHelper 发邮件，
+            底层 JavaMailSender 由 common-notify 统一装配（YDIZ-NOTIFY 规范）。
+        -->
         <!-- Spring LDAP (LdapOrgSyncService 需要 LdapTemplate) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

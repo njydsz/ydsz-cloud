@@ -44,7 +44,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * @author ydsz-team
  * @since 26.09.08
  */
-@ApiVersion("26.09.08")
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/api/system/metrics")

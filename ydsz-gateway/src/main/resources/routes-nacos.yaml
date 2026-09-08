@@ -91,7 +91,7 @@
       {
         "name": "Path",
         "args": {
-          "pattern": "/api/config/**,/api/dict/**,/api/app/**,/api/variable/**,/api/system/**,/api/tenant/**,/api/tenant-plan/**,/api/permission/**"
+          "pattern": "/api/config/**,/api/dict/**,/api/app/**,/api/variable/**,/api/system/**,/api/tenant/**,/api/tenant-plan/**,/api/permission/**,/api/dashboard/**,/api/feature-flags/**"
         }
       }
     ],

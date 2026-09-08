@@ -3,17 +3,17 @@ package com.njydsz.userinfo.server.alert;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
-import org.springframework.mail.MailSender;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 
 /**
  * SMTP 邮件告警通知渠道（P2 告警通知扩展）。
  *
- * <p>通过 SMTP 邮件发送安全告警通知至安全管理员邮箱。
+ * <p>通过 ydsz-common-notify 统一发信能力发送安全告警邮件。
+ * 发送能力由 {@link NotifyHelper} 提供（底层委托 ydsz-common-notify 的 EmailNotifySender，
+ * 自动具备 SMTP 健康检查、XSS 清洗、DKIM 签名、发送指标、追踪像素等企业级能力）。
  *
  * <p><b>配置项：</b>
  *
@@ -36,34 +36,41 @@ public class SmtpAlertNotificationChannel implements AlertNotificationChannel {
   /** 渠道名称 */
   private static final String CHANNEL_NAME = "EMAIL";
 
-  private final MailSender mailSender;
+  /** 统一通知辅助类（业务入口） */
+  private final NotifyHelper notifyHelper;
 
   /**
    * 构造邮件告警通知渠道。
    *
-   * <p>当 Spring Boot 未配置 Spring Mail 时，{@link JavaMailSenderImpl} 会作为 fallback 注入，
-   * 但发送时会失败。此时 {@link #isAvailable()} 返回 false。
+   * <p>通过 {@link NotifyHelper} 发送邮件，复用 ydsz-common-notify 的企业级特性。
    *
-   * @param mailSender MailSender Bean
+   * @param notifyHelper 统一通知辅助类
    */
-  public SmtpAlertNotificationChannel(MailSender mailSender) {
-    this.mailSender = mailSender;
+  public SmtpAlertNotificationChannel(NotifyHelper notifyHelper) {
+    this.notifyHelper = notifyHelper;
   }
 
   @Override
   public void sendAlert(SecurityAlert alert) {
-    try {
-      SimpleMailMessage message = new SimpleMailMessage();
-      message.setFrom(System.getProperty("ydsz.userinfo.alert.email.from", "security@ydsz.top"));
-      message.setTo(System.getProperty("ydsz.userinfo.alert.email.to", "admin@ydsz.top").split(","));
-      message.setSubject(buildSubject(alert));
-      message.setText(buildBody(alert));
-
-      mailSender.send(message);
-
-      log.info("邮件告警通知发送成功: alertId={}, type={}", alert.id(), alert.alertType());
-    } catch (Exception e) {
-      log.warn("邮件告警通知发送失败: alertId={}, error={}", alert.id(), e.getMessage());
+    String to = System.getProperty("ydsz.userinfo.alert.email.to", "admin@ydsz.top");
+    if (to == null || to.isBlank()) {
+      log.warn("邮件告警收件人未配置: alertId={}", alert.id());
+      return;
+    }
+    String[] recipients = to.split(",");
+    for (String recipient : recipients) {
+      String trimmed = recipient.trim();
+      if (trimmed.isEmpty()) {
+        continue;
+      }
+      try {
+        notifyHelper.sendEmail(trimmed, buildSubject(alert), buildBody(alert));
+        log.info("邮件告警通知发送成功: alertId={}, to={}, type={}",
+            alert.id(), trimmed, alert.alertType());
+      } catch (Exception e) {
+        log.warn("邮件告警通知发送失败: alertId={}, to={}, error={}",
+            alert.id(), trimmed, e.getMessage());
+      }
     }
   }
 
@@ -74,7 +81,7 @@ public class SmtpAlertNotificationChannel implements AlertNotificationChannel {
 
   @Override
   public boolean isAvailable() {
-    return mailSender != null;
+    return notifyHelper != null;
   }
 
   /**

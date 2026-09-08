@@ -120,6 +120,6 @@ public class DecisionTreeDefinitionDTO implements Serializable {
     private String description;
 
     /** 是否为叶子节点 */
-    @Builder.Default private boolean leaf = false;
+    @Builder.Default private boolean isLeaf = false;
   }
 }
