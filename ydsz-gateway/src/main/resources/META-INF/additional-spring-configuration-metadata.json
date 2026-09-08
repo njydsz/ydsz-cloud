@@ -397,6 +397,30 @@
       "type": "java.lang.Integer",
       "description": "比例灰度阈值（百分比）。基于 userId/traceId 一致性哈希保证用户粘性。默认 0=禁用。",
       "defaultValue": 0
+    },
+    {
+      "name": "ydsz.gateway.rate-limiter.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Resilience4j 全局兜底限流（RequestRateLimiter）。默认 false。开启后与 RateLimitFilter（Redis Lua 二维度令牌桶）互补。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.gateway.rate-limiter.replenish-rate",
+      "type": "java.lang.Integer",
+      "description": "全局令牌桶填充速率（每秒生成的令牌数，默认 100）。对应 RequestRateLimiter 的 replenishRate 参数。",
+      "defaultValue": 100
+    },
+    {
+      "name": "ydsz.gateway.rate-limiter.burst-capacity",
+      "type": "java.lang.Integer",
+      "description": "全局令牌桶突发容量（桶内最大令牌数，默认 200）。对应 RequestRateLimiter 的 burstCapacity 参数。",
+      "defaultValue": 200
+    },
+    {
+      "name": "ydsz.gateway.rate-limiter.key-type",
+      "type": "java.lang.String",
+      "description": "限流 Key 解析策略：USER（按用户标识，默认）、IP（按客户端 IP）、URL（按请求路径）。",
+      "defaultValue": "USER"
     }
   ]
 }
