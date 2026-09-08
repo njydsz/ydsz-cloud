@@ -29,7 +29,7 @@ public final class Text2SqlStateContext implements Serializable {
   private final String tenantId;
   private final List<TableSchema> recalledSchemas;
   private final String generatedSql;
-  private final Boolean validationResult;
+  private final Boolean validResult;
   private final Double feasibilityScore;
   private final String feasibilityReason;
   private final Double consistencyScore;
@@ -45,7 +45,7 @@ public final class Text2SqlStateContext implements Serializable {
       String tenantId,
       List<TableSchema> recalledSchemas,
       String generatedSql,
-      Boolean validationResult,
+      Boolean validResult,
       Double feasibilityScore,
       String feasibilityReason,
       Double consistencyScore,
@@ -56,7 +56,7 @@ public final class Text2SqlStateContext implements Serializable {
     this.tenantId = tenantId;
     this.recalledSchemas = recalledSchemas != null ? List.copyOf(recalledSchemas) : List.of();
     this.generatedSql = generatedSql;
-    this.validationResult = validationResult;
+    this.validResult = validResult;
     this.feasibilityScore = feasibilityScore;
     this.feasibilityReason = feasibilityReason;
     this.consistencyScore = consistencyScore;
@@ -92,8 +92,8 @@ public final class Text2SqlStateContext implements Serializable {
     return Optional.ofNullable(generatedSql);
   }
 
-  public Optional<Boolean> getValidationResult() {
-    return Optional.ofNullable(validationResult);
+  public Optional<Boolean> getValidResult() {
+    return Optional.ofNullable(validResult);
   }
 
   public Optional<Double> getFeasibilityScore() {
@@ -138,7 +138,7 @@ public final class Text2SqlStateContext implements Serializable {
     private final String tenantId;
     private List<TableSchema> recalledSchemas;
     private String generatedSql;
-    private Boolean validationResult;
+    private Boolean validResult;
     private Double feasibilityScore;
     private String feasibilityReason;
     private Double consistencyScore;
@@ -180,11 +180,11 @@ public final class Text2SqlStateContext implements Serializable {
     /**
      * 设置安全校验结论。
      *
-     * @param validationResult true=通过
+     * @param validResult true=通过
      * @return Builder
      */
-    public Builder validationResult(boolean validationResult) {
-      this.validationResult = validationResult;
+    public Builder validResult(boolean validResult) {
+      this.validResult = validResult;
       return this;
     }
 
@@ -265,7 +265,7 @@ public final class Text2SqlStateContext implements Serializable {
           tenantId,
           recalledSchemas,
           generatedSql,
-          validationResult,
+          validResult,
           feasibilityScore,
           feasibilityReason,
           consistencyScore,

@@ -53,5 +53,5 @@ public class AgentExecutionRequestDTO implements Serializable {
 
   /** 是否流式输出（true 时通过 SSE 逐块返回结果） */
   @Schema(description = "是否流式输出")
-  private boolean stream;
+  private boolean isStream;
 }

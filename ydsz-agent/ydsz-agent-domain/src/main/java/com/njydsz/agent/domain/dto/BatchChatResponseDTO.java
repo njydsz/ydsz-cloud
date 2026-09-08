@@ -55,7 +55,7 @@ public class BatchChatResponseDTO implements Serializable {
 
     /** 是否成功 */
     @Schema(description = "是否成功")
-    private boolean success;
+    private boolean isSuccess;
 
     /** 响应内容（成功时非空） */
     @Schema(description = "响应内容（成功时非空）")
@@ -86,11 +86,11 @@ public class BatchChatResponseDTO implements Serializable {
     }
 
     public boolean isSuccess() {
-      return success;
+      return isSuccess;
     }
 
-    public void setSuccess(boolean success) {
-      this.success = success;
+    public void setIsSuccess(boolean isSuccess) {
+      this.isSuccess = isSuccess;
     }
 
     public String getContent() {

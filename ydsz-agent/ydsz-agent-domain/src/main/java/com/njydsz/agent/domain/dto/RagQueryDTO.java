@@ -36,5 +36,5 @@ public class RagQueryDTO implements Serializable {
 
   /** 是否包含上下文文本（默认 true，false 时仅返回元数据） */
   @Schema(description = "是否包含上下文文本（默认 true）")
-  private Boolean includeContext;
+  private Boolean isIncludeContext;
 }
