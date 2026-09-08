@@ -25,7 +25,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @since 26.09.01
  */
 @Data
-@SuppressWarnings("unchecked") // @SuperBuilder 生成的代码会触发 unchecked 警告，无法在源码层面修复
+// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
+@SuppressWarnings("unchecked")
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

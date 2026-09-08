@@ -20,7 +20,8 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
  * @since 26.09.01
  */
 @Data
-@SuppressWarnings("unchecked") // @SuperBuilder 与泛型继承（MpBaseEntity<String>）产生的 unchecked 警告，同 MpBaseIdEntity 无法在源码层面修复
+// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 与泛型继承产生 unchecked 警告
+@SuppressWarnings("unchecked")
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
