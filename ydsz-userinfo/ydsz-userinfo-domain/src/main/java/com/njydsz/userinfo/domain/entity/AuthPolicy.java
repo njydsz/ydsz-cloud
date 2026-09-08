@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,16 +41,20 @@ public class AuthPolicy extends MpBaseEntity<String> {
   private Integer passwordMinLength;
 
   /** 密码必须包含大写字母 */
-  private Boolean passwordRequireUppercase;
+  @TableField("is_password_require_uppercase")
+  private Boolean isPasswordRequireUppercase;
 
   /** 密码必须包含数字 */
-  private Boolean passwordRequireDigit;
+  @TableField("is_password_require_digit")
+  private Boolean isPasswordRequireDigit;
 
   /** 是否启用双因素认证 */
-  private Boolean mfaEnabled;
+  @TableField("is_mfa_enabled")
+  private Boolean isMfaEnabled;
 
   /** 登录是否启用图形验证码 */
-  private Boolean captchaEnabled;
+  @TableField("is_captcha_enabled")
+  private Boolean isCaptchaEnabled;
 
   /** 允许的身份提供者类型（逗号分隔） */
   private String allowedIdentityProviders;
