@@ -1,4 +1,4 @@
-package com.njydsz.workflow.domain.enums;
+﻿package com.njydsz.workflow.domain.enums;
 
 /**
  * 办理人类型
@@ -56,6 +56,7 @@ public enum FlowAssigneeType {
     this.desc = desc;
   }
 
+    /** @return 办理人类型描述。 */
   public String getDesc() {
     return desc;
   }

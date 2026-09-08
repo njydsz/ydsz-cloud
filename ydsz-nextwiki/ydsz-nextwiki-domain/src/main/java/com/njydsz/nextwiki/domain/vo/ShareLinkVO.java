@@ -63,7 +63,7 @@ public class ShareLinkVO implements Serializable {
   private String title;
 
   @Schema(description = "是否需要密码")
-  private Boolean hasPassword;
+  private Boolean isHasPassword;
 
   @Schema(description = "分享URL")
   private String shareUrl;

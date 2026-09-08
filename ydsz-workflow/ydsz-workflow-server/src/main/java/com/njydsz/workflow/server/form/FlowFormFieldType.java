@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.form;
+﻿package com.njydsz.workflow.server.form;
 
 /**
  * 表单字段类型（P0-3 表单引擎 MVP）
@@ -57,6 +57,7 @@ public enum FlowFormFieldType {
     this.code = code;
   }
 
+    /** @return 表单字段类型编码。 */
   public String getCode() {
     return code;
   }

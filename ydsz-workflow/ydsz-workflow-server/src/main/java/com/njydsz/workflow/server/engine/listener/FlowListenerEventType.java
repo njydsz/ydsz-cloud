@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine.listener;
+﻿package com.njydsz.workflow.server.engine.listener;
 
 /**
  * 流程监听器事件类型
@@ -45,10 +45,12 @@ public enum FlowListenerEventType {
     this.desc = desc;
   }
 
+    /** @return 事件类型编码。 */
   public String getCode() {
     return code;
   }
 
+    /** @return 事件类型描述。 */
   public String getDesc() {
     return desc;
   }

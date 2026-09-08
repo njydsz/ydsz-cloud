@@ -1,4 +1,4 @@
-package com.njydsz.workflow.server.engine.expr;
+﻿package com.njydsz.workflow.server.engine.expr;
 
 /**
  * 表达式引擎策略枚举。
@@ -49,10 +49,12 @@ public enum ExpressionEvalStrategy {
     this.name = name;
   }
 
+    /** @return 策略编码。 */
   public String getCode() {
     return code;
   }
 
+    /** @return 策略名称。 */
   public String getName() {
     return name;
   }
