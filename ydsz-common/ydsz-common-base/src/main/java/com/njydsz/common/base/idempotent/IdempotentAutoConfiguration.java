@@ -15,6 +15,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *
  * <p>当 classpath 中存在 Spring MVC 且配置了 {@code ydsz.base.idempotent.enabled=true} 时激活。
  *
+ * <p>装配以下核心组件：
+ *
+ * <ul>
+ *   <li>{@link IdempotentStore} 幂等键存储（默认内存实现，Redis 可用时替换）
+ *   <li>{@link IdempotentInterceptor} 幂等性拦截器，拦截 {@link com.njydsz.common.base.idempotent.Idempotent} 注解
+ *   <li>注册拦截器到 Spring MVC，顺序 100
+ * </ul>
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -53,6 +61,9 @@ public class IdempotentAutoConfiguration {
   /**
    * 幂等性拦截器。
    *
+   * <p>拦截标注了 {@link com.njydsz.common.base.idempotent.Idempotent} 注解的请求，
+   * 基于 <code>Idempotent-Key</code> 请求头判断是否重复提交，重复时返回 409 Conflict。
+   *
    * @param idempotentStore 幂等键存储
    * @return IdempotentInterceptor 实例
    */
@@ -63,7 +74,10 @@ public class IdempotentAutoConfiguration {
   }
 
   /**
-   * 注册幂等性拦截器到 Spring MVC。
+   * 注册幂等性拦截器到 Spring MVC 拦截器链。
+   *
+   * <p>匹配全部路径（{@code /**}），顺序 100，确保在限流拦截器之后执行。
+   * 拦截器通过 {@link ObjectProvider} 注入，不可用时跳过注册。
    *
    * @param interceptorProvider 拦截器提供者
    * @return WebMvcConfigurer 实例

@@ -129,16 +129,19 @@ public class JwtTokenService implements TokenService {
             .build();
   }
 
+  /** {@inheritDoc} */
   @Override
   public String issueAccessToken(UserInfo userInfo) {
     return buildToken(userInfo, TOKEN_TYPE_ACCESS, tokenProperties.getAccessTokenExpireSeconds());
   }
 
+  /** {@inheritDoc} */
   @Override
   public String issueRefreshToken(UserInfo userInfo) {
     return buildToken(userInfo, TOKEN_TYPE_REFRESH, tokenProperties.getRefreshTokenExpireSeconds());
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean validateAccessToken(String token) {
     if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(token)) {
@@ -148,6 +151,7 @@ public class JwtTokenService implements TokenService {
     return validateToken(token, TOKEN_TYPE_ACCESS);
   }
 
+  /** {@inheritDoc} */
   @Override
   public boolean validateRefreshToken(String token) {
     if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(token)) {
@@ -157,16 +161,19 @@ public class JwtTokenService implements TokenService {
     return validateToken(token, TOKEN_TYPE_REFRESH);
   }
 
+  /** {@inheritDoc} */
   @Override
   public UserInfo parseAccessToken(String token) {
     return parseToken(token, TOKEN_TYPE_ACCESS);
   }
 
+  /** {@inheritDoc} */
   @Override
   public UserInfo parseRefreshToken(String token) {
     return parseToken(token, TOKEN_TYPE_REFRESH);
   }
 
+  /** {@inheritDoc} */
   @Override
   public String refreshAccessToken(String refreshToken) {
     if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(refreshToken)) {
@@ -205,6 +212,7 @@ public class JwtTokenService implements TokenService {
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   public String issueIdToken(UserInfo userInfo, String nonce, String clientId) {
     if (userInfo == null || userInfo.getUserId() == null || userInfo.getUserId().isBlank()) {
@@ -307,7 +315,13 @@ public class JwtTokenService implements TokenService {
     return builder.signWith(secretKey).compact();
   }
 
-  /** 验证 JWT Token */
+  /**
+   * 验证 JWT Token。
+   *
+   * @param token           待验证的 JWT Token 字符串
+   * @param expectedTokenType 期望的 Token 类型（access 或 refresh）
+   * @return 验证通过且类型匹配返回 true
+   */
   private boolean validateToken(String token, String expectedTokenType) {
     try {
       Claims claims = parseClaims(token);
@@ -322,7 +336,13 @@ public class JwtTokenService implements TokenService {
     }
   }
 
-  /** 解析 JWT Token 为用户信息 */
+  /**
+   * 解析 JWT Token 为用户信息。
+   *
+   * @param token           待解析的 JWT Token 字符串
+   * @param expectedTokenType 期望的 Token 类型（access 或 refresh）
+   * @return 用户信息，类型不匹配或解析失败返回 null
+   */
   private UserInfo parseToken(String token, String expectedTokenType) {
     try {
       Claims claims = parseClaims(token);
@@ -395,6 +415,7 @@ public class JwtTokenService implements TokenService {
     return claims;
   }
 
+  /** {@inheritDoc} */
   @Override
   public long getAccessTokenRemainingTtl(String token) {
     try {

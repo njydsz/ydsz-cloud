@@ -15,6 +15,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *
  * <p>当 classpath 中存在 Spring MVC 且配置了 {@code ydsz.base.ratelimit.enabled=true} 时激活。
  *
+ * <p>装配以下核心组件：
+ *
+ * <ul>
+ *   <li>{@link RateLimiter} 限流器（默认本地内存实现，Redis 可用时替换）
+ *   <li>{@link RateLimitInterceptor} 限流拦截器，拦截 {@link com.njydsz.common.base.ratelimit.RateLimit} 注解
+ *   <li>注册拦截器到 Spring MVC，顺序 50
+ * </ul>
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -53,6 +61,9 @@ public class RateLimitAutoConfiguration {
   /**
    * 限流拦截器。
    *
+   * <p>拦截标注了 {@link com.njydsz.common.base.ratelimit.RateLimit} 注解的请求，
+   * 根据配置的 QPS 阈值决定是否放行，超出限制时返回 429 Too Many Requests。
+   *
    * @param rateLimiter 限流器
    * @return RateLimitInterceptor 实例
    */
@@ -63,7 +74,10 @@ public class RateLimitAutoConfiguration {
   }
 
   /**
-   * 注册限流拦截器到 Spring MVC。
+   * 注册限流拦截器到 Spring MVC 拦截器链。
+   *
+   * <p>匹配全部路径（{@code /**}），顺序 50，确保在安全过滤器之后、业务拦截器之前执行。
+   * 拦截器通过 {@link ObjectProvider} 注入，不可用时跳过注册。
    *
    * @param interceptorProvider 拦截器提供者
    * @return WebMvcConfigurer 实例
