@@ -33,7 +33,7 @@ public class RuleABPolicy extends MpBaseEntity<String> {
   private String ruleCode;
 
   /** 是否启用自动回滚 */
-  private Boolean autoRollbackEnabled;
+  private Boolean isAutoRollbackEnabled;
 
   /** 回滚动作：AUTO 自动回滚 / NOTIFY 仅通知 Owner */
   private String rollbackAction;

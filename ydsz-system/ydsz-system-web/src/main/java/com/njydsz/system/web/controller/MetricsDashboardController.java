@@ -64,6 +64,18 @@ public class MetricsDashboardController {
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+  /** 默认 Map 初始容量（单层 Map 字段数） */
+  private static final int DEFAULT_MAP_CAPACITY = 8;
+
+  /** 小型 Map 初始容量（2 ~ 4 字段） */
+  private static final int SMALL_MAP_CAPACITY = 4;
+
+  /** 默认 List 初始容量（预估服务数） */
+  private static final int DEFAULT_LIST_CAPACITY = 16;
+
+  /** 字节到 MB 的转换因子 (1024 * 1024) */
+  private static final long BYTES_PER_MB = 1024L * 1024L;
+
   /**
    * 获取运维仪表盘完整数据。
    *
@@ -82,7 +94,7 @@ public class MetricsDashboardController {
   public YdszResponse<Map<String, Object>> dashboard() {
     log.debug("[MetricsDashboard] 采集运维指标数据");
 
-    Map<String, Object> result = new LinkedHashMap<>(8);
+    Map<String, Object> result = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
 
     // 1. Nacos 注册中心服务实例列表
     List<Map<String, Object>> serviceList = collectServices();
@@ -95,7 +107,7 @@ public class MetricsDashboardController {
     result.put("runtime", collectRuntimeInfo());
 
     // 4. 汇总计数
-    Map<String, Integer> summary = new LinkedHashMap<>(4);
+    Map<String, Integer> summary = new LinkedHashMap<>(SMALL_MAP_CAPACITY);
     int totalServices = serviceList.size();
     int upServices = (int) serviceList.stream()
         .filter(s -> "UP".equals(s.get("status")))
@@ -119,7 +131,7 @@ public class MetricsDashboardController {
    * @return 服务列表
    */
   private List<Map<String, Object>> collectServices() {
-    List<Map<String, Object>> serviceList = new ArrayList<>(16);
+    List<Map<String, Object>> serviceList = new ArrayList<>(DEFAULT_LIST_CAPACITY);
 
     List<String> services = discoveryClient.getServices();
     if (services == null || services.isEmpty()) {
@@ -130,7 +142,7 @@ public class MetricsDashboardController {
       List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
       if (instances == null || instances.isEmpty()) {
         // 服务注册过但当前无实例
-        Map<String, Object> svcInfo = new LinkedHashMap<>(8);
+        Map<String, Object> svcInfo = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
         svcInfo.put("serviceId", serviceId);
         svcInfo.put("status", "DOWN");
         svcInfo.put("instanceCount", 0);
@@ -140,7 +152,7 @@ public class MetricsDashboardController {
 
       // Nacos 仅注册健康实例，有实例即视为 UP
       ServiceInstance primary = instances.get(0);
-      Map<String, Object> svcInfo = new LinkedHashMap<>(8);
+      Map<String, Object> svcInfo = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
       svcInfo.put("serviceId", serviceId);
       svcInfo.put("status", "UP");
       svcInfo.put("instanceCount", instances.size());
@@ -185,7 +197,7 @@ public class MetricsDashboardController {
           ? Math.round((double) keyspaceHits / totalLookups * 10000.0) / 100.0
           : 0.0;
 
-      Map<String, Object> redisMetrics = new LinkedHashMap<>(8);
+      Map<String, Object> redisMetrics = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
       redisMetrics.put("totalCommands", totalCommands);
       redisMetrics.put("keyspaceHits", keyspaceHits);
       redisMetrics.put("keyspaceMisses", keyspaceMisses);
@@ -195,7 +207,7 @@ public class MetricsDashboardController {
     } catch (Exception ex) {
       // Redis 指标采集异常不阻塞整体返回
       log.debug("[MetricsDashboard] Redis 指标采集异常: {}", ex.getMessage());
-      Map<String, Object> fallback = new LinkedHashMap<>(4);
+      Map<String, Object> fallback = new LinkedHashMap<>(SMALL_MAP_CAPACITY);
       fallback.put("available", false);
       fallback.put("reason", ex.getMessage());
       return fallback;
@@ -208,7 +220,7 @@ public class MetricsDashboardController {
    * @return 运行时信息 Map
    */
   private Map<String, Object> collectRuntimeInfo() {
-    Map<String, Object> runtime = new LinkedHashMap<>(8);
+    Map<String, Object> runtime = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
     runtime.put("applicationName", environment.getProperty("spring.application.name", "unknown"));
     runtime.put("serverPort", environment.getProperty("server.port", "unknown"));
     runtime.put("springBootVersion", environment.getProperty("spring-boot.version", "unknown"));
@@ -224,10 +236,10 @@ public class MetricsDashboardController {
     long freeMemory = rt.freeMemory();
     long usedMemory = totalMemory - freeMemory;
 
-    Map<String, Object> memory = new LinkedHashMap<>(4);
-    memory.put("usedMb", usedMemory / (1024 * 1024));
-    memory.put("totalMb", totalMemory / (1024 * 1024));
-    memory.put("maxMb", maxMemory / (1024 * 1024));
+    Map<String, Object> memory = new LinkedHashMap<>(SMALL_MAP_CAPACITY);
+    memory.put("usedMb", usedMemory / BYTES_PER_MB);
+    memory.put("totalMb", totalMemory / BYTES_PER_MB);
+    memory.put("maxMb", maxMemory / BYTES_PER_MB);
     double usagePercent = maxMemory > 0
         ? Math.round((double) usedMemory / maxMemory * 10000.0) / 100.0
         : 0.0;
