@@ -1227,16 +1227,16 @@ public class FileApplicationService {
         .sort(0)
         .currentVersion(0)
         .fileHash(fileHash)
-.isPreviewReady(false)
-.isStarred(false)
-.shareStatus("private")
-.createdBy(userId)
-.updatedBy(userId)
-.build();
-}
+        .isPreviewReady(false)
+        .isStarred(false)
+        .shareStatus("private")
+        .createdBy(userId)
+        .updatedBy(userId)
+        .build();
+  }
 
-/** 构建秒传去重的文件节点（引用已有存储对象，跳过上传） */
-private FileNodeDTO buildDedupedFileNode(
+  /** 构建秒传去重的文件节点（引用已有存储对象，跳过上传） */
+  private FileNodeDTO buildDedupedFileNode(
     String parentId,
     String name,
     String suffix,

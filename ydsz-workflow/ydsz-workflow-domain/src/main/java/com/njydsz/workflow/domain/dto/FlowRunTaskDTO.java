@@ -153,8 +153,8 @@ public class FlowRunTaskDTO {
   /** 链路追踪 ID */
   private String providerTraceId;
 
-  /** 删除标记（0=未删除，1=已删除） */
-  private Integer deleted;
+  /** 删除标记（false=未删除，true=已删除） */
+  private Boolean isDeleted;
 
   /** 创建时间 */
   private LocalDateTime createdAt;

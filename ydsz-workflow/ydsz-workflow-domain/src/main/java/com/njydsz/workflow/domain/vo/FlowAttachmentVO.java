@@ -35,8 +35,8 @@ public class FlowAttachmentVO implements Serializable {
   private String providerTraceId;
   /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
   private String tenantId;
-  /** 逻辑删除标记（对齐实体继承链 MpBaseEntity.deleted） */
-  private Integer deleted;
+  /** 逻辑删除标记（对齐实体继承链 MpBaseEntity.isDeleted） */
+  private Boolean isDeleted;
   private String createdBy;
   private LocalDateTime createdAt;
   private String updatedBy;

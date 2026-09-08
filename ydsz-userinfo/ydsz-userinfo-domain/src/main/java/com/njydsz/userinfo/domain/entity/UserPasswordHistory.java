@@ -54,7 +54,7 @@ public class UserPasswordHistory {
   /** 创建时间（该密码被设置的日期） */
   private LocalDateTime createdAt;
 
-  /** 逻辑删除标记（0=未删除，1=已删除；用于软删除兼容） */
-  @TableField(value = "deleted")
-  private Integer deleted;
+  /** 逻辑删除标记（false=未删除，true=已删除；用于软删除兼容） */
+  @TableField(value = "is_deleted")
+  private Boolean isDeleted;
 }
