@@ -120,10 +120,10 @@ public class FileNodeVO implements Serializable {
   private String thumbnailKey;
 
   @Schema(description = "是否已生成预览")
-  private Boolean previewReady;
+  private Boolean isPreviewReady;
 
   @Schema(description = "是否星标")
-  private Boolean starred;
+  private Boolean isStarred;
 
   @Schema(description = "节点状态: active / locked / archived")
   private String status;

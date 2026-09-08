@@ -64,8 +64,8 @@ public class JobLogVO implements Serializable {
   /** 执行状态: RUNNING / SUCCESS / FAILED / TIMEOUT */
   private String status;
 
-  /** 删除标记: 0=未删 / 1=已删 */
-  private Integer deleted;
+  /** 删除标记：false=未删 / true=已删 */
+  private Boolean isDeleted;
 
   /** 分片索引（0-based，非分片任务为 null） */
   private Integer shardIndex;

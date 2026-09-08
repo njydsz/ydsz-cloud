@@ -85,12 +85,12 @@ public class FileNode extends MpBaseEntity<String> implements Serializable {
   private String thumbnailKey;
 
   /** 是否已生成预览 */
-  @TableField("preview_ready")
-  private Boolean previewReady;
+  @TableField("is_preview_ready")
+  private Boolean isPreviewReady;
 
   /** 是否星标文件 */
-  @TableField("starred")
-  private Boolean starred;
+  @TableField("is_starred")
+  private Boolean isStarred;
 
   /** 共享状态：private / shared / public */
   private String shareStatus;

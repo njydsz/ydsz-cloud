@@ -70,10 +70,10 @@ public class FileNodeDTO implements Serializable {
   private String thumbnailKey;
 
   @Schema(description = "是否已生成预览")
-  private Boolean previewReady;
+  private Boolean isPreviewReady;
 
   @Schema(description = "是否星标文件")
-  private Boolean starred;
+  private Boolean isStarred;
 
   @Schema(description = "节点状态：active / locked / archived（locked 用于 Check-out 防并发编辑）")
   private String status;

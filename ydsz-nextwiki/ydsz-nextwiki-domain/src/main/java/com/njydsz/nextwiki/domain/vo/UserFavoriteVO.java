@@ -50,7 +50,7 @@ public class UserFavoriteVO implements Serializable {
   private Integer sort;
 
   @Schema(description = "是否星标")
-  private Boolean starred;
+  private Boolean isStarred;
 
   @Schema(description = "更新时间")
   private LocalDateTime updatedAt;

@@ -87,8 +87,8 @@ public class FlowDefinitionVO implements Serializable {
   /** 创建人 */
   /** 租户标识（对齐实体继承链 MpBaseEntity.tenantId） */
   private String tenantId;
-  /** 逻辑删除标记（对齐实体继承链 MpBaseEntity.deleted） */
-  private Integer deleted;
+  /** 逻辑删除标记（对齐实体继承链 MpBaseEntity.isDeleted） */
+  private Boolean isDeleted;
   /** 乐观锁版本号（对齐实体继承链 MpBaseEntity.revision） */
   private Integer revision;
   private String createdBy;
