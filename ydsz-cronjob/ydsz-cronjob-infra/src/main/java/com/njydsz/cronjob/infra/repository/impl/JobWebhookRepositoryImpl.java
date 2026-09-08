@@ -61,7 +61,7 @@ public class JobWebhookRepositoryImpl implements JobWebhookRepository {
   public void deleteById(String id, LocalDateTime updatedAt) {
     JobWebhook update = new JobWebhook();
     update.setId(id);
-    update.setDeleted(1);
+    update.setIsDeleted(true);
     update.setUpdatedAt(updatedAt);
     jobWebhookMapper.updateById(update);
   }
@@ -77,7 +77,7 @@ public class JobWebhookRepositoryImpl implements JobWebhookRepository {
   public JobRepository.PageResult<JobWebhookVO> pageBy(int pageNum, int size, String eventType, String jobKey) {
     Page<JobWebhook> pageObj = new Page<>(pageNum, size);
     LambdaQueryWrapper<JobWebhook> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(JobWebhook::getDeleted, 0);
+    wrapper.eq(JobWebhook::getIsDeleted, false);
     if (eventType != null && !eventType.isBlank()) {
       wrapper.eq(JobWebhook::getEventType, eventType);
     }

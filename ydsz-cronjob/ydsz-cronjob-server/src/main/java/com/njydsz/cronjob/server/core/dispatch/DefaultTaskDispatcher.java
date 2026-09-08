@@ -682,7 +682,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log0.setExecNodeId(nodeId);
     log0.setExecThreadId(Thread.currentThread().threadId());
     log0.setCreatedAt(LocalDateTime.now());
-    log0.setDeleted(0);
+    log0.setIsDeleted(false);
     jobLogRepository.insert(log0);
 
     // P1-2: 递增运行中任务数（Redis 维护，供 Gauge 直接读取）
@@ -1129,7 +1129,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log0.setExecNodeId(nodeId);
     log0.setExecThreadId(Thread.currentThread().threadId());
     log0.setCreatedAt(LocalDateTime.now());
-    log0.setDeleted(0);
+    log0.setIsDeleted(false);
     jobLogRepository.insert(log0);
 
     // P1-2: 递增运行中任务数（Redis 维护，供 Gauge 直接读取）

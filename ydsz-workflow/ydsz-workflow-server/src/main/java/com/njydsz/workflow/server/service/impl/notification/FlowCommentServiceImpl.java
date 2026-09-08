@@ -247,7 +247,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .message("error.workflow.comment.delete.no.permission")
           .build();
     }
-    comment.setDeleted(1);
+    comment.setIsDeleted(true);
     commentRepository.update(comment);
     log.info("[FlowComment] 删除评论: commentId={} userId={}", commentId, userId);
     return true;
@@ -425,7 +425,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
           .message("error.workflow.quickcomment.no.permission")
           .build();
     }
-    existing.setDeleted(1);
+    existing.setIsDeleted(true);
     quickCommentRepository.update(existing);
   }
 

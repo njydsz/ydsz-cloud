@@ -61,7 +61,7 @@ public class JobExecutionRecorder {
     logVO.setStatus(STATUS_PENDING);
     logVO.setTriggerType(triggerType);
     logVO.setCreatedAt(LocalDateTime.now());
-    logVO.setDeleted(0);
+    logVO.setIsDeleted(false);
     return logVO;
   }
 

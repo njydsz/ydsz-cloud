@@ -273,7 +273,7 @@ public class FlowDefinitionMigrationManager {
     }
 
     FlowDefinitionVO oldDef = definitionRepository.findById(oldDefinitionId).orElse(null);
-    if (oldDef == null || (oldDef.getDeleted() != null && oldDef.getDeleted() == 1)) {
+    if (oldDef == null || Boolean.TRUE.equals(oldDef.getIsDeleted())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.migration.definition.not.found")
@@ -281,7 +281,7 @@ public class FlowDefinitionMigrationManager {
           .build();
     }
     FlowDefinitionVO newDef = definitionRepository.findById(newDefinitionId).orElse(null);
-    if (newDef == null || (newDef.getDeleted() != null && newDef.getDeleted() == 1)) {
+    if (newDef == null || Boolean.TRUE.equals(newDef.getIsDeleted())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.migration.definition.not.found")

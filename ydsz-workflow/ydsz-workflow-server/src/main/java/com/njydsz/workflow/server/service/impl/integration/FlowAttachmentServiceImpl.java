@@ -193,7 +193,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
   @Override
   public void delete(String attachmentId, String operatorId) {
     FlowAttachmentVO entity = attachmentRepository.findById(attachmentId).orElse(null);
-    if (entity != null && (entity.getDeleted() == null || entity.getDeleted() == 0)) {
+    if (entity != null && !Boolean.TRUE.equals(entity.getIsDeleted())) {
       attachmentRepository.deleteById(attachmentId);
       log.info("[Flow] 附件删除: attachmentId={} operator={}", attachmentId, operatorId);
     }
@@ -202,7 +202,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
   @Override
   public FlowAttachmentPreviewDTO previewAttachment(String attachmentId) {
     FlowAttachmentVO attachment = attachmentRepository.findById(attachmentId).orElse(null);
-    if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
+    if (attachment == null || Boolean.TRUE.equals(attachment.getIsDeleted())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.attachment.not.found")
