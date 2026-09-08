@@ -26,8 +26,6 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.dto.TenantDTO;
-import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.query.TenantPageQuery;

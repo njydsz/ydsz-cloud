@@ -36,7 +36,7 @@ public class RuleABRollbackVO implements Serializable {
   private Long sampleSize;
 
   /** 是否从灰度版本回滚 */
-  private Boolean fromCanary;
+  private Boolean isFromCanary;
 
   /** 操作人 */
   private String operator;

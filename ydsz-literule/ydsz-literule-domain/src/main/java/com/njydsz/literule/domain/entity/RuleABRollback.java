@@ -49,7 +49,7 @@ public class RuleABRollback extends MpBaseEntity<String> {
   private Long sampleSize;
 
   /** true=已从 canary 切换回主版本 / false=仅通知未回滚 */
-  private Boolean fromCanary;
+  private Boolean isFromCanary;
 
   /** 操作人 ID（自动回滚时为 SYSTEM） */
   private String operator;

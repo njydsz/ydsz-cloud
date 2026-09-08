@@ -5,7 +5,7 @@
     <select id="selectByPackCode" resultType="com.njydsz.literule.infra.entity.RulePack">
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
-               description, author, download_count, rating, is_enabled, official,
+               description, author, download_count, rating, is_enabled, is_official,
                created_by, created_at, updated_by, updated_at
         FROM ydsz_rule_pack
         WHERE pack_code = #{packCode}
@@ -15,7 +15,7 @@
     <select id="selectByPackCodeVersion" resultType="com.njydsz.literule.infra.entity.RulePack">
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
-               description, author, download_count, rating, is_enabled, official,
+               description, author, download_count, rating, is_enabled, is_official,
                created_by, created_at, updated_by, updated_at
         FROM ydsz_rule_pack
         WHERE pack_code = #{packCode} AND pack_version = #{packVersion}
@@ -25,11 +25,11 @@
     <select id="selectByIndustry" resultType="com.njydsz.literule.infra.entity.RulePack">
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
-               description, author, download_count, rating, is_enabled, official,
+               description, author, download_count, rating, is_enabled, is_official,
                created_by, created_at, updated_by, updated_at
         FROM ydsz_rule_pack
         WHERE industry = #{industry} AND is_enabled = TRUE
-        ORDER BY official DESC, download_count DESC
+        ORDER BY is_official DESC, download_count DESC
     </select>
 
     <update id="increaseDownloadCount">

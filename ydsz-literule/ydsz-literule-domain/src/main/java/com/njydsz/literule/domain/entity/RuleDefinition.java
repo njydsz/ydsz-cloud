@@ -102,7 +102,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
   private String mutexGroup;
 
   /** 是否支持下钻查看详情 */
-  private Boolean drilldownAvailable;
+  private Boolean isDrilldownAvailable;
 
   /**
    * 乐观锁版本号

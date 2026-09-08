@@ -61,6 +61,17 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!--
+            Jackson annotations（optional）
+            编译期用于解析 spring-web / spring-boot-health / spring-boot-actuator 字节码中
+            引用的 @JsonInclude(NON_EMPTY) 等 Jackson 注解符号。本模块运行期不强制依赖 Jackson 核心
+            （由引入方决定使用 YdszJson 或 Jackson），故声明为 optional。
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!--servlet-->
         <dependency>
             <groupId>jakarta.servlet</groupId>

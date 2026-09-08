@@ -12,13 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.dto.AppValidateRequest;
-import com.njydsz.system.domain.dto.ConfigGetRequest;
-import com.njydsz.system.domain.dto.DictItemGetRequest;
-import com.njydsz.system.domain.dto.DictListRequest;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.domain.dto.AppValidateRequest;
 import com.njydsz.system.domain.dto.ConfigGetRequest;
 import com.njydsz.system.domain.dto.DictItemGetRequest;

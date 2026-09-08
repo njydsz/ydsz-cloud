@@ -26,7 +26,7 @@ public class RuleABPolicyDTO implements Serializable {
   private String ruleCode;
 
   /** 是否启用自动回滚 */
-  private Boolean autoRollbackEnabled;
+  private Boolean isAutoRollbackEnabled;
 
   /** 回滚动作（AUTO/NOTIFY） */
   private String rollbackAction;

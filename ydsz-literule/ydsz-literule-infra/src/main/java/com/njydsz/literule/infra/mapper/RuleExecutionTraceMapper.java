@@ -50,7 +50,7 @@ public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTrace>
       """
             SELECT
               COUNT(*)                                                                       AS evaluations,
-              COALESCE(SUM(CASE WHEN triggered = 1 THEN 1 ELSE 0 END), 0)                   AS triggered,
+              COALESCE(SUM(CASE WHEN is_triggered = 1 THEN 1 ELSE 0 END), 0)                   AS triggered,
               COALESCE(SUM(CASE WHEN error_message IS NOT NULL AND error_message <> '' THEN 1 ELSE 0 END), 0) AS errors,
               COALESCE(SUM(elapsed_ms), 0)                                                   AS totalElapsedMs,
               COALESCE(AVG(elapsed_ms), 0)                                                   AS avgElapsedMs
@@ -99,7 +99,7 @@ public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTrace>
               MAX(rule_name)                                  AS ruleName,
               MAX(scenario)                                   AS scenario,
               COUNT(*)                                        AS evaluations,
-              SUM(CASE WHEN triggered = 1 THEN 1 ELSE 0 END)  AS triggered,
+              SUM(CASE WHEN is_triggered = 1 THEN 1 ELSE 0 END)  AS triggered,
               SUM(CASE WHEN error_message IS NOT NULL AND error_message <> '' THEN 1 ELSE 0 END) AS errors,
               COALESCE(SUM(elapsed_ms), 0)                    AS totalElapsedMs,
               COALESCE(AVG(elapsed_ms), 0)                    AS avgElapsedMs
@@ -130,7 +130,7 @@ public interface RuleExecutionTraceMapper extends BaseMapper<RuleExecutionTrace>
             SELECT
               DATE_FORMAT(created_at, #{format})              AS bucket,
               COUNT(*)                                        AS evaluations,
-              SUM(CASE WHEN triggered = 1 THEN 1 ELSE 0 END)  AS triggered,
+              SUM(CASE WHEN is_triggered = 1 THEN 1 ELSE 0 END)  AS triggered,
               SUM(CASE WHEN error_message IS NOT NULL AND error_message <> '' THEN 1 ELSE 0 END) AS errors,
               COALESCE(AVG(elapsed_ms), 0)                    AS avgElapsedMs
             FROM ydsz_rule_execution_trace

@@ -75,7 +75,7 @@ public class RulePack extends MpBaseEntity<String> {
   private Boolean isEnabled;
 
   /** 是否官方认证规则集（true=官方发布, false=社区贡献） */
-  private Boolean official;
+  private Boolean isOfficial;
 
   // ==================== 领域行为方法 ====================
 
@@ -94,7 +94,7 @@ public class RulePack extends MpBaseEntity<String> {
    * @return true 表示官方发布
    */
   public boolean isOfficial() {
-    return Boolean.TRUE.equals(official);
+    return Boolean.TRUE.equals(isOfficial);
   }
 
   /** 增加下载次数（原子操作安全由调用方保证）。 */

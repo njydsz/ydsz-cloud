@@ -48,7 +48,7 @@ public class RuleExecutionTrace extends MpBaseIdEntity<String> {
   private String scenario;
 
   /** 是否触发 */
-  private Boolean triggered;
+  private Boolean isTriggered;
 
   /** 触发严重度 */
   private String severity;

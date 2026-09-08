@@ -43,7 +43,7 @@ public class RuleDependency extends MpBaseEntity<String> {
   private String dependencyType;
 
   /** 被依赖规则被禁用时是否级联禁用本规则 */
-  private Boolean cascadeOnDisable;
+  private Boolean isCascadeOnDisable;
 
   /** 依赖说明 */
   private String description;

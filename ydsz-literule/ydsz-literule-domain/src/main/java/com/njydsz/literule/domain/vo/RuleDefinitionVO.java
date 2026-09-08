@@ -68,7 +68,7 @@ public class RuleDefinitionVO implements Serializable {
   private String mutexGroup;
 
   /** 是否支持下钻查看详情 */
-  private Boolean drilldownAvailable;
+  private Boolean isDrilldownAvailable;
 
   /** 版本号 */
   private Integer version;

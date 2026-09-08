@@ -70,7 +70,7 @@ public class ScriptDefinitionDTO implements Serializable {
   @Builder.Default private String defaultSeverity = "INFO";
 
   /** 是否启用沙箱（默认 TRUE） */
-  @Builder.Default private boolean sandboxEnabled = true;
+  @Builder.Default private boolean isSandboxEnabled = true;
 
   /** 是否启用 */
   @Builder.Default private boolean isEnabled = true;

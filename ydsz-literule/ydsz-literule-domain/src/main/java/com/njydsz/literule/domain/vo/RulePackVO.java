@@ -63,7 +63,7 @@ public class RulePackVO implements Serializable {
   private Boolean isEnabled;
 
   /** 是否为官方包 */
-  private Boolean official;
+  private Boolean isOfficial;
 
   /** 创建人 */
   private String createdBy;

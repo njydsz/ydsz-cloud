@@ -32,7 +32,7 @@ public class RuleDependencyVO implements Serializable {
   private String dependencyType;
 
   /** 禁用被依赖规则时是否级联禁用本规则 */
-  private Boolean cascadeOnDisable;
+  private Boolean isCascadeOnDisable;
 
   /** 依赖描述 */
   private String description;

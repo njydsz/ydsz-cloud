@@ -45,7 +45,7 @@ public class RuleScript extends MpBaseEntity<String> {
   private String defaultSeverity;
 
   /** 是否启用沙箱 */
-  private Boolean sandboxEnabled;
+  private Boolean isSandboxEnabled;
 
   /** 优先级 */
   private Integer priority;

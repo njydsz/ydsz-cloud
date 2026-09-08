@@ -3,7 +3,7 @@
 <mapper namespace="com.njydsz.literule.infra.mapper.RuleDependencyMapper">
 
     <select id="selectByRuleCode" resultType="com.njydsz.literule.infra.entity.RuleDependency">
-        SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
+        SELECT id, rule_code, depends_on_rule_code, dependency_type, is_cascade_on_disable,
                description, tenant_id, created_by, created_at
         FROM ydsz_rule_dependency
         WHERE rule_code = #{ruleCode}
@@ -11,7 +11,7 @@
     </select>
 
     <select id="selectByDependsOn" resultType="com.njydsz.literule.infra.entity.RuleDependency">
-        SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
+        SELECT id, rule_code, depends_on_rule_code, dependency_type, is_cascade_on_disable,
                description, tenant_id, created_by, created_at
         FROM ydsz_rule_dependency
         WHERE depends_on_rule_code = #{dependsOnRuleCode}
@@ -19,11 +19,11 @@
     </select>
 
     <select id="selectCascadingByDependsOn" resultType="com.njydsz.literule.infra.entity.RuleDependency">
-        SELECT id, rule_code, depends_on_rule_code, dependency_type, cascade_on_disable,
+        SELECT id, rule_code, depends_on_rule_code, dependency_type, is_cascade_on_disable,
                description, tenant_id, created_by, created_at
         FROM ydsz_rule_dependency
         WHERE depends_on_rule_code = #{dependsOnRuleCode}
-          AND cascade_on_disable = TRUE
+          AND is_cascade_on_disable = TRUE
     </select>
 
     <delete id="deleteByRuleCode">

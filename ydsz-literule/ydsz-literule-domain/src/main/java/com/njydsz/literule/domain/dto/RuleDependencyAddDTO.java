@@ -30,7 +30,7 @@ public class RuleDependencyAddDTO {
 
   /** 被依赖规则禁用时是否级联禁用本规则，默认 false */
   @Schema(description = "被依赖规则禁用时是否级联禁用本规则", defaultValue = "false")
-  private Boolean cascadeOnDisable = false;
+  private Boolean isCascadeOnDisable = false;
 
   /** 依赖关系描述（可选） */
   @Schema(description = "依赖关系描述")
