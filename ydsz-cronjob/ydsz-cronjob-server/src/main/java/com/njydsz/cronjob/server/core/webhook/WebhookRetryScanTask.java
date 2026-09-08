@@ -14,6 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.core.code.YdszResultCode;
@@ -59,8 +60,9 @@ public class WebhookRetryScanTask implements ScanTask {
   /** HTTP 成功状态码上限（不含） */
   private static final int HTTP_OK_MAX_EXCLUSIVE = 300;
 
-  /** HTTP 请求超时：10 秒 */
-  private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
+  /** HTTP 请求超时（秒） */
+  @Value("${ydsz.cronjob.webhook.request-timeout-seconds:10}")
+  private long requestTimeoutSeconds;
 
   /** HMAC 算法 */
   private static final String HMAC_ALGORITHM = "HmacSHA256";
@@ -169,7 +171,7 @@ public class WebhookRetryScanTask implements ScanTask {
     HttpRequest.Builder builder =
         HttpRequest.newBuilder()
             .uri(URI.create(retry.getCallbackUrl()))
-            .timeout(REQUEST_TIMEOUT)
+            .timeout(Duration.ofSeconds(requestTimeoutSeconds))
             .header("Content-Type", "application/json; charset=UTF-8");
 
     // 如有 secret，计算签名

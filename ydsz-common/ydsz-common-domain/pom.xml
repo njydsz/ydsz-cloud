@@ -13,10 +13,8 @@
     </parent>
 
     <dependencies>
-        <!-- mybatis-plus-annotation: 业务 domain 层统一通过 common-domain 传递
-             版本由父 pom mybatis-plus.version 管控（3.5.16），避免 9 个业务模块逐个声明
-             注意：mybatis 核心需各业务模块自行 provided 引入，
-             因 @TableField 注解的 jdbcType() 默认值 JdbcType.UNDEFINED 编译期需解析 -->
+        <!-- mybatis-plus-annotation: 业务 domain 层统一由此传递（父 pom 版本 3.5.16），避免逐模块声明
+             注意：mybatis 核心需各业务模块自行 provided 引入，因 @TableField.jdbcType() 编译期需解析 JdbcType.UNDEFINED -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-annotation</artifactId>

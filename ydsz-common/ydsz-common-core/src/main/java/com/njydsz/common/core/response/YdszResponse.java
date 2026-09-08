@@ -68,6 +68,7 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
 @JsonClass(description = "统一API响应基类，标记可安全反序列化")
 public class YdszResponse<T> implements IResponse<T>, Serializable {
 
+  /** 序列化版本 UID，兼容 Lombok @SuperBuilder 生成的子类序列化。 */
   private static final long serialVersionUID = 1L;
 
   /**

@@ -44,10 +44,15 @@ public class TimeWindowAggregator implements NotificationAggregator {
     BY_RECEIVER
   }
 
+  /** 默认聚合窗口：30 秒 */
   private static final int DEFAULT_WINDOW_SECONDS = 30;
+  /** 单次聚合缓冲区最大消息数：100 条，超过触发即时 flush */
   private static final int DEFAULT_MAX_COUNT = 100;
+  /** 聚合摘要中最多展示前 N 条消息的内容预览 */
   private static final int MAX_CONTENT_PREVIEW = 10;
+  /** 聚合摘要中每条消息内容的截断长度（字符数） */
   private static final int CONTENT_TRUNCATE_LENGTH = 50;
+  /** 聚合 key 中接收者、渠道、模板编码之间的分隔符 */
   private static final String KEY_SEPARATOR = "|";
 
   private final int aggregateWindowSeconds;

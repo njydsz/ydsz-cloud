@@ -69,8 +69,13 @@ public class EventAutoConfiguration {
   /** 日志实例 */
   private static final Logger LOG = LoggerFactory.getLogger(EventAutoConfiguration.class);
 
+  /** 当前激活的 Outbox 后台处理器，销毁时调用 stop() 停机。 */
   private OutboxProcessor outboxProcessor;
+
+  /** 当前激活的事件投递网关，启动后校验是否为 Noop。 */
   private EventPublishGateway activeGateway;
+
+  /** 当前激活的事件配置属性，启动后校验网关合规性。 */
   private EventProperties activeProperties;
 
   /**
@@ -197,7 +202,11 @@ public class EventAutoConfiguration {
     }
   }
 
-  /** 销毁时停止 Outbox 处理器 */
+  /**
+   * 容器销毁时优雅停机。
+   *
+   * <p>停止 {@link OutboxProcessor} 后台线程，确保未完成投递的事件被持久化且线程池被释放。
+   */
   @PreDestroy
   public void destroy() {
     if (outboxProcessor != null) {

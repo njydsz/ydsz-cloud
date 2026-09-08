@@ -4,6 +4,7 @@ import java.time.Duration;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.util.TotpAuthenticator;
@@ -57,11 +58,13 @@ public class MfaService {
   /** 启用标记 Redis Key 前缀 */
   private static final String ENABLED_KEY_PREFIX = "userinfo:mfa:enabled:";
 
-  /** 绑定流程临时密钥有效期（5 分钟） */
-  private static final Duration SETUP_TTL = Duration.ofMinutes(5);
+  /** 绑定流程临时密钥有效期（默认 5 分钟）。 */
+  @Value("${ydsz.userinfo.mfa.setup-ttl:PT5M}")
+  private Duration setupTtl;
 
-  /** 已绑定密钥与启用标记有效期（30 天） */
-  private static final Duration BOUND_TTL = Duration.ofDays(30);
+  /** 已绑定密钥与启用标记有效期（默认 30 天）。 */
+  @Value("${ydsz.userinfo.mfa.bound-ttl:P30D}")
+  private Duration boundTtl;
 
   /** 启用标记值 */
   private static final String ENABLED_VALUE = "1";
@@ -98,7 +101,7 @@ public class MfaService {
     // 加密后存入 Redis（生产环境配置 encryption-key 时自动加密，开发环境明文）
     String encryptedSecret = mfaSecretEncryptor.encrypt(secret);
     try {
-      redisStringOps.set(SETUP_KEY_PREFIX + userId, encryptedSecret, SETUP_TTL);
+      redisStringOps.set(SETUP_KEY_PREFIX + userId, encryptedSecret, setupTtl);
     } catch (Exception e) {
       log.warn("Failed to store MFA setup secret: userId={}, error={}", userId, e.getMessage(), e);
     }
@@ -125,8 +128,8 @@ public class MfaService {
     // 加密后正式存储
     String encryptedSecret = mfaSecretEncryptor.encrypt(setupSecret);
     try {
-      redisStringOps.set(SECRET_KEY_PREFIX + userId, encryptedSecret, BOUND_TTL);
-      redisStringOps.set(ENABLED_KEY_PREFIX + userId, ENABLED_VALUE, BOUND_TTL);
+      redisStringOps.set(SECRET_KEY_PREFIX + userId, encryptedSecret, boundTtl);
+      redisStringOps.set(ENABLED_KEY_PREFIX + userId, ENABLED_VALUE, boundTtl);
       redisStringOps.del(SETUP_KEY_PREFIX + userId);
     } catch (Exception e) {
       log.warn("Failed to activate MFA: userId={}, error={}", userId, e.getMessage(), e);

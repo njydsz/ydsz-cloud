@@ -37,67 +37,73 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.FieldSetter;
  */
 public final class ColumnMetadata {
 
-  /** 类型转换ID常量 */
+  /** 类型转换 ID：字符串。 */
   public static final int TYPE_STRING = 0;
-/** type int */
-/** type int */
 
+  /** 类型转换 ID：整数（Integer / int）。 */
   public static final int TYPE_INT = 1;
-/** type long */
-/** type long */
+
+  /** 类型转换 ID：长整数（Long / long）。 */
   public static final int TYPE_LONG = 2;
-/** type double */
-/** type double */
+
+  /** 类型转换 ID：双精度浮点（Double / double）。 */
   public static final int TYPE_DOUBLE = 3;
-/** type float */
-/** type float */
+
+  /** 类型转换 ID：单精度浮点（Float / float）。 */
   public static final int TYPE_FLOAT = 4;
-/** type short */
-/** type short */
+
+  /** 类型转换 ID：短整数（Short / short）。 */
   public static final int TYPE_SHORT = 5;
-/** type byte */
-/** type byte */
+
+  /** 类型转换 ID：字节（Byte / byte）。 */
   public static final int TYPE_BYTE = 6;
-/** type boolean */
-/** type boolean */
+
+  /** 类型转换 ID：布尔（Boolean / boolean）。 */
   public static final int TYPE_BOOLEAN = 7;
-/** type date */
+
+  /** 类型转换 ID：java.util.Date。 */
   public static final int TYPE_DATE = 8;
-/** type local date time */
+
+  /** 类型转换 ID：java.time.LocalDateTime。 */
   public static final int TYPE_LOCAL_DATE_TIME = 9;
-/** type local date */
+
+  /** 类型转换 ID：java.time.LocalDate。 */
   public static final int TYPE_LOCAL_DATE = 10;
-/** type timestamp */
+
+  /** 类型转换 ID：java.sql.Timestamp。 */
   public static final int TYPE_TIMESTAMP = 11;
-/** type sql date */
+
+  /** 类型转换 ID：java.util.Date 的子类（java.sql.Date / java.sql.Time 等）。 */
   public static final int TYPE_SQL_DATE = 12;
-/** type big decimal */
+
+  /** 类型转换 ID：java.math.BigDecimal。 */
   public static final int TYPE_BIG_DECIMAL = 13;
-/** type default */
+
+  /** 类型转换 ID：未匹配的兜底类型。 */
   public static final int TYPE_DEFAULT = 14;
 
-  /** 列索引 */
+  /** 列索引（对应工作表中的列位置，从 0 开始）。 */
   public final int columnIndex;
 
-  /** 字段Setter访问器（ASM优化版本） */
+  /** 字段 Setter 访问器（ASM 优化版本，避免反射开销）。 */
   public final FieldSetter setter;
 
-  /** 目标类型 */
+  /** 目标字段类型（预计算，避免重复调用 {@code field.getType()}）。 */
   public final Class<?> targetType;
 
-  /** 日期格式（如果是日期字段） */
+  /** 日期格式（仅日期字段非 null）。 */
   public final String dateFormat;
 
-  /** 预计算的类型转换ID - 用于快速switch分支选择，避免虚方法分发 */
+  /** 预计算的类型转换 ID，用于 fast-switch 分支选择，避免虚方法分发开销。 */
   public final int typeId;
 
-  /** 预计算的类型转换策略 - 避免运行时类型判断 */
+  /** 预计算的类型转换策略，避免运行时逐行判断目标类型。 */
   public final TypeConvertStrategy convertStrategy;
 
-  /** 是否自动修剪字符串 */
+  /** 是否自动 trim 字符串类型单元格值。 */
   public final boolean automaticTrim;
 
-  /** 日期格式化器缓存 */
+  /** 日期格式化器缓存，按 dateFormat 字符串索引，避免重复创建 {@link DateTimeFormatter} 实例。 */
   private static final ConcurrentHashMap<String, DateTimeFormatter> FORMATTER_CACHE =
       new ConcurrentHashMap<>();
 
@@ -190,7 +196,12 @@ public final class ColumnMetadata {
         && Date.class.isAssignableFrom(targetType);
   }
 
-  /** 类型转换策略接口 */
+  /**
+   * 类型转换策略接口。
+   *
+   * <p>将 Apache POI {@code Cell} 的值转换为目标字段类型。通过预计算策略对象，避免每行每列的
+   * {@code instanceof} 判断，使 switch 分支直接进入对应的高速转换路径。
+   */
   public interface TypeConvertStrategy {
     Object convert(Cell cell, CellType forcedType);
 

@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -40,11 +41,13 @@ public class VerifyCodeService {
   /** 发送频率限制标记前缀 */
   private static final String VERIFY_CODE_LIMIT_PREFIX = "userinfo:verifycode:limit:";
 
-  /** 验证码有效期（5 分钟） */
-  private static final Duration CODE_TTL = Duration.ofMinutes(5);
+  /** 验证码有效期（默认 5 分钟）。 */
+  @Value("${ydsz.userinfo.verify-code.code-ttl:PT5M}")
+  private Duration codeTtl;
 
-  /** 发送频率限制间隔（60 秒） */
-  private static final Duration LIMIT_TTL = Duration.ofSeconds(60);
+  /** 发送频率限制间隔（默认 60 秒）。 */
+  @Value("${ydsz.userinfo.verify-code.limit-ttl:PT60S}")
+  private Duration limitTtl;
 
   /** 验证码长度 */
   private static final int CODE_LENGTH = 6;
@@ -82,11 +85,11 @@ public class VerifyCodeService {
     // 生成 6 位随机验证码
     String code = generateCode();
 
-    // 存储到 Redis，TTL 5 分钟
+    // 存储到 Redis，TTL 可配置
     String codeKey = VERIFY_CODE_KEY_PREFIX + type + ":" + target;
     try {
-      redisStringOps.set(codeKey, code, CODE_TTL);
-      redisStringOps.set(limitKey, "1", LIMIT_TTL);
+      redisStringOps.set(codeKey, code, codeTtl);
+      redisStringOps.set(limitKey, "1", limitTtl);
       log.info("验证码已生成: type={}, targetType={}, target={}", type, targetType, target);
     } catch (Exception e) {
       log.error("存储验证码异常: type={}, target={}, error={}", type, target, e.getMessage());

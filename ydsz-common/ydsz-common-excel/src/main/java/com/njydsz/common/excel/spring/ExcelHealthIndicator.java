@@ -35,12 +35,31 @@ public class ExcelHealthIndicator implements HealthIndicator {
   /** 临时目录探测写入内容（非空字节，确保真实落盘） */
   private static final byte[] PROBE_CONTENT = "ydsz-excel-health-probe".getBytes(StandardCharsets.UTF_8);
 
+  /** Excel 模块配置属性。 */
   private final ExcelProperties properties;
 
+  /**
+   * 构造健康检查指示器。
+   *
+   * @param properties Excel 模块配置属性
+   */
   public ExcelHealthIndicator(ExcelProperties properties) {
     this.properties = properties;
   }
 
+  /**
+   * 执行健康检查。
+   *
+   * <p>探测项包括：
+   *
+   * <ul>
+   *   <li>fastReader / fastWriter / dateFormat / maxReadMb / maxWriteMb（配置摘要）
+   *   <li>临时目录可写性（写入 + 读回校验 + 清理，不可写则报告 DOWN）
+   *   <li>tempDir 路径（方便排查权限问题）
+   * </ul>
+   *
+   * @return {@link Health#up()} 表示全部通过；{@link Health#down()} 表示探测失败
+   */
   @Override
   public Health health() {
     Map<String, Object> details = new LinkedHashMap<>(16);

@@ -44,6 +44,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @EnableConfigurationProperties(CoreProperties.class)
 public class CoreAutoConfiguration {
 
+  /** 日志实例，用于记录配置装配信息。 */
   private static final Logger LOG = LoggerFactory.getLogger(CoreAutoConfiguration.class);
 
   /**

@@ -11,6 +11,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
@@ -59,14 +60,17 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
   /** 当前调度句柄，用于取消已调度任务 */
   private volatile ScheduledFuture<?> currentScheduled;
 
-  /** 默认兜底扫描间隔（当无 dueAt 任务时） */
-  private static final Duration DEFAULT_FALLBACK_INTERVAL = Duration.ofMinutes(30);
+  /** 默认兜底扫描间隔（当无 dueAt 任务时），默认 30 分钟。 */
+  @Value("${ydsz.workflow.scheduler.fallback-interval:PT30M}")
+  private Duration fallbackInterval;
 
-  /** 最小调度间隔（防止过于频繁的调度） */
-  private static final Duration MIN_SCHEDULE_INTERVAL = Duration.ofSeconds(10);
+  /** 最小调度间隔（防止过于频繁的调度），默认 10 秒。 */
+  @Value("${ydsz.workflow.scheduler.min-schedule-interval:PT10S}")
+  private Duration minScheduleInterval;
 
-  /** 最大提前调度间隔（防止调度过远的任务） */
-  private static final Duration MAX_AHEAD_SCHEDULE = Duration.ofHours(24);
+  /** 最大提前调度间隔（防止调度过远的任务），默认 24 小时。 */
+  @Value("${ydsz.workflow.scheduler.max-ahead-schedule:PT24H}")
+  private Duration maxAheadSchedule;
 
   /**
    * 系统启动后初始化调度。
@@ -98,8 +102,8 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
   @Override
   public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
     taskRegistrar.setScheduler(taskScheduler);
-    // 兜底触发器：每 30 分钟检查一次（仅在动态调度未触发时生效）
-    taskRegistrar.addFixedDelayTask(this::fallbackScan, DEFAULT_FALLBACK_INTERVAL.toMillis());
+    // 兜底触发器（仅在动态调度未触发时生效）
+    taskRegistrar.addFixedDelayTask(this::fallbackScan, fallbackInterval.toMillis());
   }
 
   /**
@@ -158,14 +162,14 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
     }
 
     // 限制最大提前调度间隔
-    if (delay.compareTo(MAX_AHEAD_SCHEDULE) > 0) {
-      delay = MAX_AHEAD_SCHEDULE;
-      log.debug("[NextDue] 超出最大提前调度间隔，截断至 {}h", MAX_AHEAD_SCHEDULE.toHours());
+    if (delay.compareTo(maxAheadSchedule) > 0) {
+      delay = maxAheadSchedule;
+      log.debug("[NextDue] 超出最大提前调度间隔，截断至 {}h", maxAheadSchedule.toHours());
     }
 
     // 限制最小调度间隔
-    if (delay.compareTo(MIN_SCHEDULE_INTERVAL) < 0) {
-      delay = MIN_SCHEDULE_INTERVAL;
+    if (delay.compareTo(minScheduleInterval) < 0) {
+      delay = minScheduleInterval;
     }
 
     // 取消旧调度，创建新调度

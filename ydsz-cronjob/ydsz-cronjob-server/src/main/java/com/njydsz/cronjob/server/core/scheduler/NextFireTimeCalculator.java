@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -37,8 +38,9 @@ public class NextFireTimeCalculator {
   /** 默认时区（与调度基线一致） */
   private static final String DEFAULT_TIMEZONE = "Asia/Shanghai";
 
-  /** 缓存 TTL：60s 内同一表达式计算结果相同，避免扫描周期内重复解析 */
-  private static final Duration CACHE_TTL = Duration.ofSeconds(60);
+  /** 缓存 TTL（秒）：同一表达式在扫描周期内只解析一次 */
+  @Value("${ydsz.cronjob.scheduler.cache-ttl-seconds:60}")
+  private long cacheTtlSeconds;
 
   /** 缓存条目：Key = cron + "|" + timezone */
   private static final class CacheEntry {
@@ -51,7 +53,7 @@ public class NextFireTimeCalculator {
     }
 
     boolean isExpired() {
-      return Duration.between(calculatedAt, LocalDateTime.now()).getSeconds() >= CACHE_TTL.getSeconds();
+      return Duration.between(calculatedAt, LocalDateTime.now()).getSeconds() >= cacheTtlSeconds;
     }
   }
 

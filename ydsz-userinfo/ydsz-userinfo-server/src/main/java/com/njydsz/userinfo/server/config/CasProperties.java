@@ -3,6 +3,7 @@ package com.njydsz.userinfo.server.config;
 import java.time.Duration;
 
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -34,11 +35,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.cas")
 public class CasProperties {
-  /** TGT 默认有效期：8 小时 */
-  private static final Duration DEFAULT_TGT_TTL = Duration.ofHours(8);
-
-  /** ST 默认有效期：5 分钟 */
-  private static final Duration DEFAULT_ST_TTL = Duration.ofMinutes(5);
 
   /** CAS 协议全局开关（默认 false，需显式开启）。 */
   private boolean enabled = false;
@@ -53,10 +49,12 @@ public class CasProperties {
   private String serviceValidateUrl = "https://userinfo.ydsz.com/cas/serviceValidate";
 
   /** Ticket Granting Ticket 有效期（默认 8 小时）。 */
-  private Duration ticketGrantingTicketTtl = DEFAULT_TGT_TTL;
+  @Value("${ydsz.userinfo.cas.ticket-ttl.ticket-granting-ticket:PT8H}")
+  private Duration ticketGrantingTicketTtl;
 
   /** Service Ticket 有效期（默认 5 分钟）。 */
-  private Duration serviceTicketTtl = DEFAULT_ST_TTL;
+  @Value("${ydsz.userinfo.cas.ticket-ttl.service-ticket:PT5M}")
+  private Duration serviceTicketTtl;
 
   /** 是否自动签发 PGT（Proxy Granting Ticket，用于代理认证）。 */
   private boolean enableProxy = false;

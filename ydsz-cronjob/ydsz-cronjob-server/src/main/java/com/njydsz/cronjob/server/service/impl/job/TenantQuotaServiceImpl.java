@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.code.YdszResultCode;
@@ -54,11 +55,13 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   /** Redis key 前缀：日执行计数器 */
   private static final String DAILY_KEY_PREFIX = "ydsz:quota:daily:";
 
-  /** 并发计数器 TTL：24 小时（兜底，防止节点宕机导致计数泄漏） */
-  private static final Duration CONCURRENT_TTL = Duration.ofHours(24);
+  /** 并发计数器 TTL（小时），兜底防止节点宕机导致计数泄漏 */
+  @Value("${ydsz.cronjob.quota.concurrent-ttl-hours:24}")
+  private long concurrentTtlHours;
 
-  /** 日执行计数器 TTL：25 小时（跨天自动过期，留 1 小时余量应对时区差异） */
-  private static final Duration DAILY_TTL = Duration.ofHours(25);
+  /** 日执行计数器 TTL（小时），跨天自动过期，留余量应对时区差异 */
+  @Value("${ydsz.cronjob.quota.daily-ttl-hours:25}")
+  private long dailyTtlHours;
 
   /** 日期格式化器（用于日执行计数器 key 后缀） */
   private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -157,7 +160,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
       // INCR 并发计数器，首次设置 TTL
       Long concurrentVal = redisStringOps.incr(concurrentKey, 1);
       if (concurrentVal != null && concurrentVal == 1L) {
-        redisStringOps.expire(concurrentKey, CONCURRENT_TTL);
+        redisStringOps.expire(concurrentKey, Duration.ofHours(concurrentTtlHours));
       }
     } catch (Exception e) {
       log.warn("[Quota] INCR 并发计数器失败, 降级放行: tenant={} reason={}", tenantId, e.getMessage());
@@ -166,7 +169,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
       // INCR 日执行计数器，首次设置 TTL
       Long dailyVal = redisStringOps.incr(dailyKey, 1);
       if (dailyVal != null && dailyVal == 1L) {
-        redisStringOps.expire(dailyKey, DAILY_TTL);
+        redisStringOps.expire(dailyKey, Duration.ofHours(dailyTtlHours));
       }
     } catch (Exception e) {
       log.warn("[Quota] INCR 日执行计数器失败, 降级放行: tenant={} reason={}", tenantId, e.getMessage());

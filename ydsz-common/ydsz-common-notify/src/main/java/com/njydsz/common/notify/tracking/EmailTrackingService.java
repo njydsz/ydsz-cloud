@@ -52,17 +52,23 @@ public class EmailTrackingService {
 
   private static final Logger LOG = LoggerFactory.getLogger(EmailTrackingService.class);
 
+  /** Redis Key 前缀：邮件打开次数 */
   private static final String REDIS_KEY_OPEN_COUNT = "notify:track:open:count:";
+  /** Redis Key 前缀：邮件首次打开时间戳 */
   private static final String REDIS_KEY_OPEN_FIRST = "notify:track:open:first:";
+  /** Redis Key 前缀：邮件最近打开时间戳 */
   private static final String REDIS_KEY_OPEN_LAST = "notify:track:open:last:";
+  /** Redis Key 前缀：邮件打开时的 User-Agent */
   private static final String REDIS_KEY_OPEN_UA = "notify:track:open:ua:";
+  /** Redis Key 前缀：邮件追踪事件有序列表 */
   private static final String REDIS_KEY_EVENT = "notify:track:event:";
+  /** Redis Key 前缀：邮件内链接点击次数 */
   private static final String REDIS_KEY_CLICK_COUNT = "notify:track:click:count:";
 
-  /** Redis Key 过期时间（30 天） */
+  /** Redis Key 过期时间：30 天。 */
   private static final Duration REDIS_TTL = Duration.ofDays(30);
 
-  /** 追踪像素 HTML 片段模板 */
+  /** 追踪像素 HTML 片段模板（1×1 透明图片）。 */
   private static final String PIXEL_HTML_TEMPLATE =
       "<img src=\"%s?mid=%s\" width=\"1\" height=\"1\" alt=\"\" "
           + "style=\"display:none;border:0;outline:none;\"/>";
@@ -71,12 +77,15 @@ public class EmailTrackingService {
   private final RedisStringOps redisStringOps;
   private final RedisCollectionOps redisCollectionOps;
 
-  /** 内存降级计数器 */
+  /** 内存降级计数器：邮件打开次数（Redis 不可用时的降级存储）。 */
   private final ConcurrentMap<String, AtomicLong> memoryOpenCount = new ConcurrentHashMap<>();
-
+  /** 内存降级存储：邮件首次打开时间戳。 */
   private final ConcurrentMap<String, Long> memoryFirstOpen = new ConcurrentHashMap<>();
+  /** 内存降级存储：邮件最近打开时间戳。 */
   private final ConcurrentMap<String, Long> memoryLastOpen = new ConcurrentHashMap<>();
+  /** 内存降级计数器：邮件内链接点击次数。 */
   private final ConcurrentMap<String, AtomicLong> memoryClickCount = new ConcurrentHashMap<>();
+  /** 内存降级存储：邮件投递状态（如 DELIVERED、BOUNCED）。 */
   private final ConcurrentMap<String, String> memoryDeliveryStatus = new ConcurrentHashMap<>();
 
   public EmailTrackingService(

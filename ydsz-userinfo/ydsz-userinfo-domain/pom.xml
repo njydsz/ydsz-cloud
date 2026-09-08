@@ -13,12 +13,7 @@
     <description>Domain Layer - DTO/VO/Query/Enum</description>
     <dependencies>
 
-        <!-- mybatis-plus-annotation: @TableName/@TableField（Domain Entity 使用 ORM 注解） -->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-annotation</artifactId>
-            <scope>provided</scope>
-        </dependency>
+        <!-- mybatis-plus-annotation: 通过 ydsz-common-domain 传递（父 pom 统一版本 3.5.16） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
