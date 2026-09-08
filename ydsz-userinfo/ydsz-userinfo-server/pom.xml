@@ -145,6 +145,11 @@
             <artifactId>jjwt-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- P2 告警通知扩展（SMTP 邮件告警需要 JavaMailSender + Jakarta Mail API） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
         <!-- Spring LDAP (LdapOrgSyncService 需要 LdapTemplate) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
