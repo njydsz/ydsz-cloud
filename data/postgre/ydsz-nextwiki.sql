@@ -1045,3 +1045,19 @@ CREATE TRIGGER trg_ydsz_wiki_storage_quota_updated_at
 BEFORE UPDATE ON ydsz_wiki_storage_quota
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_wiki_storage_quota_set_updated_at();
+
+-- ============================================================================
+-- 2026-09-08: FileNode 布尔字段 is 前缀合规改造（YDIZ-OOP-006）
+--   preview_ready → is_preview_ready（Java 字段 isPreviewReady）
+--   starred → is_starred（Java 字段 isStarred）
+-- ============================================================================
+
+ALTER TABLE ydsz_wiki_file_node
+    RENAME COLUMN preview_ready TO is_preview_ready;
+
+ALTER TABLE ydsz_wiki_file_node
+    RENAME COLUMN starred TO is_starred;
+
+-- 更新字段注释
+COMMENT ON COLUMN ydsz_wiki_file_node.is_preview_ready IS '是否已生成预览（0=否 1=是）';
+COMMENT ON COLUMN ydsz_wiki_file_node.is_starred IS '是否星标文件（0=否 1=是）';

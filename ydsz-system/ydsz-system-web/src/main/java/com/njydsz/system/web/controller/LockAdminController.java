@@ -397,6 +397,18 @@ public class LockAdminController {
   }
 
   /**
+   * 构建错误响应 Map
+   *
+   * @param message 错误消息
+   * @return 包含 error key 的 Map
+   */
+  private static Map<String, Object> buildErrorMap(String message) {
+    Map<String, Object> errorMap = new HashMap<>(2);
+    errorMap.put("error", message);
+    return errorMap;
+  }
+
+  /**
    * 构建锁信息 Map（TTL、看门狗状态、续期次数、锁类型）
    */
   private Map<String, Object> buildLockInfo(String redisKey) {
