@@ -2,11 +2,13 @@ package com.njydsz.userinfo.server.auth;
 
 import lombok.Data;
 
+import com.njydsz.userinfo.domain.enums.SocialPlatformLinkingStrategy;
+
 /**
  * 社交登录结果 VO。
  *
  * <p>社交登录回调成功后返回，包含访问令牌和用户信息。结构参考 {@code LoginVO}，
- * 专用于社交登录场景，额外携带来源平台信息。
+ * 专用于社交登录场景，额外携带来源平台信息和绑定状态。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -31,6 +33,20 @@ public class SocialLoginVO {
 
   /** 登录来源平台（WECHAT/DINGTALK/GITHUB 等） */
   private String platform;
+
+  /**
+   * 绑定状态标识。
+   *
+   * <ul>
+   *   <li>{@code BIND_OK} — 已绑定且 Token 已签发</li>
+   *   <li>{@code PENDING_BIND} — 社交用户未绑定，需前端引导绑定</li>
+   *   <li>{@code AUTO_BOUND} — 自动创建用户并绑定完成（AUTO_BIND 策略）</li>
+   * </ul>
+   */
+  private String bindStatus;
+
+  /** 当前平台配置的绑定策略 */
+  private SocialPlatformLinkingStrategy linkingStrategy;
 
   /** 社交用户信息 */
   private SocialUserInfoVO socialUserInfo;

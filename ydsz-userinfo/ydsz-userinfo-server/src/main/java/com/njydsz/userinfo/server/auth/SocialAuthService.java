@@ -21,6 +21,8 @@ import com.njydsz.userinfo.domain.social.SocialAuthProvider;
 import com.njydsz.userinfo.domain.social.SocialUserInfo;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * 社交认证服务编排实现。
  *
@@ -120,12 +122,16 @@ public class SocialAuthService {
       if (existingBinding.isPresent()) {
         // 已绑定 —— 返回登录结果（此处仅填充平台信息，Token 签发由 AuthService 完成）
         result.setAccessToken("EXISTING_USER");
+        result.setBindStatus("BIND_OK");
         log.info("Social login matched existing binding: platform={}, userId={}",
             platform, existingBinding.get().getUserId());
       } else {
-        // 未绑定 —— 返回社交信息供前端展示绑定确认
-        log.info("Social login no binding found: platform={}, openId={}",
-            platform, userInfo.openId());
+        // 未绑定 —— 按平台绑定策略决定后续处理
+        SocialPlatformLinkingStrategy strategy = getLinkingStrategy(platform);
+        result.setLinkingStrategy(strategy);
+        result.setBindStatus("PENDING_BIND");
+        log.info("Social login no binding found: platform={}, openId={}, strategy={}",
+            platform, userInfo.openId(), strategy.getCode());
       }
 
       return result;
@@ -200,6 +206,20 @@ public class SocialAuthService {
    */
   public List<SocialAccountVO> listBindings(String userId) {
     return socialAccountRepository.listByUserId(userId);
+  }
+
+  /**
+   * 获取当前平台的绑定策略。
+   *
+   * @param platform 平台标识
+   * @return 绑定策略（默认 MANUAL_BIND）
+   */
+  public SocialPlatformLinkingStrategy getLinkingStrategy(String platform) {
+    SocialAuthProperties.ProviderConfig config = socialAuthProperties.getProvider(platform);
+    if (config != null && config.getLinkingStrategy() != null) {
+      return config.getLinkingStrategy();
+    }
+    return SocialPlatformLinkingStrategy.MANUAL_BIND;
   }
 
   /**

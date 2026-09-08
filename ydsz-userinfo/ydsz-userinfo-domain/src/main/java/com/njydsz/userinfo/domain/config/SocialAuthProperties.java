@@ -120,6 +120,14 @@ public class SocialAuthProperties {
     private String openidUrl;
 
     /**
+     * 账号绑定策略。
+     *
+     * <p>定义社交账号未绑定到本地用户时的处理策略。
+     * 默认 {@link SocialPlatformLinkingStrategy#MANUAL_BIND}（手动确认绑定）。
+     */
+    private SocialPlatformLinkingStrategy linkingStrategy = SocialPlatformLinkingStrategy.MANUAL_BIND;
+
+    /**
      * 获取授权端点 URL（优先使用自定义值，为空时返回默认值）。
      *
      * @param defaultUrl 默认端点 URL

@@ -69,7 +69,7 @@ public class MetricsDashboardController {
    * <ul>
    *   <li>{@code services} — Nacos 已注册服务及其实例列表（ID / 主机 / 端口 / 状态）
    *   <li>{@code redis} — Redis 关键指标（总命令数 / 命中数 / 未命中数 / 连接数 / 命中率）
-   *   <li>{@code runtime} — 运行时信息（PID / Java 版本 / Spring Boot 版本 / 应用名 / 端口）
+   *   <li>{@code runtime} — 运行时信息（Java 版本 / Spring Boot 版本 / 应用名 / 端口 / 内存）
    *   <li>{@code summary} — 汇总计数（总服务数 / UP 数 / DOWN 数）
    *   <li>{@code collectedAt} — 数据采集时间
    * </ul>
@@ -170,7 +170,7 @@ public class MetricsDashboardController {
     }
 
     try {
-      Properties info = redisTemplate.getRequiredConnectionFactory().getConnection().info("stats");
+      Properties info = redisTemplate.getConnectionFactory().getConnection().info("stats");
       if (info == null) {
         return null;
       }
@@ -216,10 +216,10 @@ public class MetricsDashboardController {
     runtime.put("availableCores", Runtime.getRuntime().availableProcessors());
 
     // JVM 内存信息
-    Runtime jvmRuntime = Runtime.getRuntime();
-    long maxMemory = jvmRuntime.maxMemory();
-    long totalMemory = jvmRuntime.totalMemory();
-    long freeMemory = jvmRuntime.freeMemory();
+    Runtime rt = Runtime.getRuntime();
+    long maxMemory = rt.maxMemory();
+    long totalMemory = rt.totalMemory();
+    long freeMemory = rt.freeMemory();
     long usedMemory = totalMemory - freeMemory;
 
     Map<String, Object> memory = new LinkedHashMap<>(4);
