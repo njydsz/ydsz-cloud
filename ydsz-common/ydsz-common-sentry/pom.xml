@@ -121,10 +121,24 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <!-- OpenTelemetry Spring Boot Starter（自动注册 ObservationRegistry + Micrometer bridge） -->
+        <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-spring-boot-starter</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
         <!-- OpenTelemetry API（可选，未来追踪标准） -->
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-api</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- OpenTelemetry Context（可选，Context 存储与传播） -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-context</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>

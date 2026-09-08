@@ -1,0 +1,70 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "annotations": {
+    "list": []
+  },
+  "description": "Ydsz Cloud 灰度发布监控面板 - 灰度版本 vs 旧版本关键指标对比",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1725801600000,
+  "links": [],
+  "panels": [],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "canary",
+    "ydsz-cloud",
+    "release"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "label": "环境",
+        "name": "env",
+        "options": [],
+        "query": "prod",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(http_server_requests_seconds_count, service)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "服务",
+        "multi": true,
+        "name": "service",
+        "options": [],
+        "query": {
+          "query": "label_values(http_server_requests_seconds_count, service)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Canary Release Dashboard",
+  "uid": "ydsz-canary-dashboard",
+  "version": 1,
+  "weekStart": ""
+}
