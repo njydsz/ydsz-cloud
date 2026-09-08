@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.system.domain.query.ApiPermissionQuery;
 import com.njydsz.system.domain.vo.ApiPermissionVO;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.ApiPermissionService;
 
 

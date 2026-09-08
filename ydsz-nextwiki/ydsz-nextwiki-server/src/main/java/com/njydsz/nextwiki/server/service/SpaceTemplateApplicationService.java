@@ -83,7 +83,7 @@ public class SpaceTemplateApplicationService {
         .category(category != null ? category : "general")
         .tenantId(tenantId)
         .isSystem(false)
-        .publicAccess(false)
+        .isPublicAccess(false)
         .structureJson(structureJson)
         .sort(0)
         .usageCount(0)

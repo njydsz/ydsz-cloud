@@ -15,7 +15,7 @@
         <result column="status" property="status"/>
         <result column="password" property="password"/>
         <result column="share_target_type" property="shareTargetType"/>
-        <result column="reminder_sent" property="reminderSent"/>
+        <result column="is_reminder_sent" property="isReminderSent"/>
         <result column="title" property="title"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
@@ -26,20 +26,20 @@
     </resultMap>
 
     <select id="selectByShareCode" resultMap="ShareLinkResult">
-        SELECT id, file_node_id, share_code, extract_code, share_type, expire_time, max_access_count, access_count, status, password, share_target_type, reminder_sent, reminder_sent_at, title, created_by, created_at, updated_by, updated_at, revision, deleted
+        SELECT id, file_node_id, share_code, extract_code, share_type, expire_time, max_access_count, access_count, status, password, share_target_type, is_reminder_sent, reminder_sent_at, title, created_by, created_at, updated_by, updated_at, revision, deleted
         FROM ydsz_wiki_share_link
         WHERE share_code = #{shareCode} AND deleted = 0
     </select>
 
     <select id="selectByFileNodeId" resultMap="ShareLinkResult">
-        SELECT id, file_node_id, share_code, extract_code, share_type, expire_time, max_access_count, access_count, status, password, share_target_type, reminder_sent, reminder_sent_at, title, created_by, created_at, updated_by, updated_at, revision, deleted
+        SELECT id, file_node_id, share_code, extract_code, share_type, expire_time, max_access_count, access_count, status, password, share_target_type, is_reminder_sent, reminder_sent_at, title, created_by, created_at, updated_by, updated_at, revision, deleted
         FROM ydsz_wiki_share_link
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
         ORDER BY created_at DESC
     </select>
 
     <select id="selectActiveSharesByUserId" resultMap="ShareLinkResult">
-        SELECT id, file_node_id, share_code, extract_code, share_type, expire_time, max_access_count, access_count, status, password, share_target_type, reminder_sent, reminder_sent_at, title, created_by, created_at, updated_by, updated_at, revision, deleted
+        SELECT id, file_node_id, share_code, extract_code, share_type, expire_time, max_access_count, access_count, status, password, share_target_type, is_reminder_sent, reminder_sent_at, title, created_by, created_at, updated_by, updated_at, revision, deleted
         FROM ydsz_wiki_share_link
         WHERE created_by = #{userId} AND deleted = 0 AND status = 'active'
         ORDER BY created_at DESC
@@ -66,14 +66,14 @@
     </update>
 
     <select id="selectExpiringShares" resultMap="ShareLinkResult">
-        SELECT id, file_node_id, share_code, extract_code, share_type, expire_time, max_access_count, access_count, status, password, share_target_type, reminder_sent, reminder_sent_at, title, created_by, created_at, updated_by, updated_at, revision, deleted
+        SELECT id, file_node_id, share_code, extract_code, share_type, expire_time, max_access_count, access_count, status, password, share_target_type, is_reminder_sent, reminder_sent_at, title, created_by, created_at, updated_by, updated_at, revision, deleted
         FROM ydsz_wiki_share_link
         WHERE status = 'active'
           AND deleted = 0
           AND expire_time IS NOT NULL
           AND expire_time &gt;= NOW()
           AND expire_time &lt;= NOW() + INTERVAL '#{withinHours} hours'
-          AND (reminder_sent = FALSE OR reminder_sent IS NULL)
+          AND (is_reminder_sent = FALSE OR is_reminder_sent IS NULL)
         ORDER BY expire_time ASC
     </select>
 

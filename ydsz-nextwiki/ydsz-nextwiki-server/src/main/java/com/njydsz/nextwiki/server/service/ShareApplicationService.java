@@ -315,7 +315,7 @@ public class ShareApplicationService {
         .status(vo.getStatus())
         .shareTargetType(vo.getShareTargetType())
         .title(vo.getTitle())
-        .reminderSent(vo.getReminderSent())
+        .isReminderSent(vo.getIsReminderSent())
         .createdBy(vo.getCreatedBy())
         .updatedBy(vo.getUpdatedBy())
         .createdAt(vo.getCreatedAt())

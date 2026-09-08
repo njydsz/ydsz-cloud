@@ -44,6 +44,8 @@ public class EntityReverseService {
   private static final int REPORT_BUILDER_CAPACITY = 256;
   /** 批量解析空目录结果列表初始容量。 */
   private static final int EMPTY_BATCH_RESULT_CAPACITY = 8;
+  /** Java 源文件后缀。 */
+  private static final String JAVA_FILE_EXTENSION = ".java";
 
   /**
    * 从指定 .java 源文件反向生成分析报告。
@@ -84,7 +86,7 @@ public class EntityReverseService {
     if (!dir.exists() || !dir.isDirectory()) {
       throw new IllegalArgumentException("无效目录: " + sourceDirPath);
     }
-    File[] javaFiles = dir.listFiles((d, name) -> name.endsWith(".java"));
+    File[] javaFiles = dir.listFiles((d, name) -> name.endsWith(JAVA_FILE_EXTENSION));
     if (javaFiles == null) {
       return new ArrayList<>(EMPTY_BATCH_RESULT_CAPACITY);
     }

@@ -76,7 +76,7 @@ public class FilePermissionDomainService {
             .granteeType(granteeType)
             .granteeId(granteeId)
             .permissionMask(permissionMask)
-            .inherited(false)
+            .isInherited(false)
             .owner(false)
             .build();
 

@@ -30,8 +30,12 @@ import com.njydsz.system.domain.dto.TenantPlanDTO;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.query.TenantPlanPageQuery;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
-import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.system.domain.dto.TenantPlanDTO;
+import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
+import com.njydsz.system.domain.query.TenantPlanPageQuery;
+import com.njydsz.system.domain.vo.TenantPlanMenuVO;
+import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.server.service.TenantPlanMenuService;
 import com.njydsz.system.server.service.TenantPlanService;
 

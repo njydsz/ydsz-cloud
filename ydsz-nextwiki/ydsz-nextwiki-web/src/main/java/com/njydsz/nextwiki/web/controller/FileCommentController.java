@@ -165,8 +165,8 @@ public class FileCommentController {
             .content(request.getContent())
             .parentCommentId(request.getParentCommentId())
             .position(request.getPosition())
-            .resolved(false)
-            .edited(false)
+            .isResolved(false)
+            .isEdited(false)
             .mentions(mentions.isEmpty() ? null : mentions)
             .build();
 

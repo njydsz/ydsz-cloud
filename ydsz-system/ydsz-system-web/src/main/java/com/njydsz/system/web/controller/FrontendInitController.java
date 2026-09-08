@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.vo.FrontendInitVO;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.system.domain.vo.FrontendInitVO;
 import com.njydsz.system.server.service.FrontendInitService;
 
 /**

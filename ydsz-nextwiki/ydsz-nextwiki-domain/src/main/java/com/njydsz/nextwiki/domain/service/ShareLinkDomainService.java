@@ -123,7 +123,7 @@ public class ShareLinkDomainService {
             .status(ShareStatus.ACTIVE.getCode())
             .password(hashedPassword)
             .shareTargetType(shareTargetType)
-            .reminderSent(false)
+            .isReminderSent(false)
             .title(title)
             .build();
 
@@ -237,7 +237,7 @@ public class ShareLinkDomainService {
         .filter(link -> link.getExpireTime() != null)
         .filter(link -> !link.getExpireTime().isBefore(now))
         .filter(link -> link.getExpireTime().isBefore(threshold))
-        .filter(link -> link.getReminderSent() == null || !link.getReminderSent())
+        .filter(link -> link.getIsReminderSent() == null || !link.getIsReminderSent())
         .collect(Collectors.toList());
   }
 
@@ -249,7 +249,7 @@ public class ShareLinkDomainService {
    * @param shareLink 分享链接实体（由 server 层查询后传入）
    */
   public void markReminderSent(ShareLinkDTO shareLink) {
-    shareLink.setReminderSent(true);
+    shareLink.setIsReminderSent(true);
   }
 
   // ==================== 查询过滤 ====================

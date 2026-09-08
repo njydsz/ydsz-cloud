@@ -28,8 +28,10 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.query.TenantPageQuery;
-import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.system.domain.dto.TenantDTO;
+import com.njydsz.system.domain.query.TenantPageQuery;
+import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.server.service.TenantService;
 
 /**

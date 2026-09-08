@@ -10,7 +10,7 @@
     <result column="icon_url" property="iconUrl"/>
     <result column="tenant_id" property="tenantId"/>
     <result column="is_system" property="isSystem"/>
-    <result column="is_public" property="publicAccess"/>
+    <result column="is_public_access" property="isPublicAccess"/>
     <result column="structure_json" property="structureJson"/>
     <result column="sort" property="sort"/>
     <result column="usage_count" property="usageCount"/>
@@ -22,7 +22,7 @@
   </resultMap>
 
   <sql id="Base_Column_List">
-    id, name, description, category, icon_url, tenant_id, is_system, is_public,
+    id, name, description, category, icon_url, tenant_id, is_system, is_public_access,
     structure_json, sort, usage_count, created_at, created_by, updated_at, updated_by, deleted
   </sql>
 
@@ -32,7 +32,7 @@
     FROM ydsz_wiki_space_template
     WHERE deleted = FALSE
       AND (
-        (is_system = TRUE AND is_public = TRUE)
+        (is_system = TRUE AND is_public_access = TRUE)
         OR
         (tenant_id = #{tenantId})
       )
@@ -46,7 +46,7 @@
     FROM ydsz_wiki_space_template
     WHERE deleted = FALSE
       AND (
-        (is_system = TRUE AND is_public = TRUE)
+        (is_system = TRUE AND is_public_access = TRUE)
         OR
         (tenant_id = #{tenantId})
       )
@@ -61,7 +61,7 @@
     FROM ydsz_wiki_space_template
     WHERE deleted = FALSE
       AND (
-        (is_system = TRUE AND is_public = TRUE)
+        (is_system = TRUE AND is_public_access = TRUE)
         OR
         (tenant_id = #{tenantId})
       )
