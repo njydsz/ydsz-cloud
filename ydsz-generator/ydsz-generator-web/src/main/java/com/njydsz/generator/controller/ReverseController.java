@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.generator.service.EntityReverseService;
 
 /**
@@ -19,6 +22,7 @@ import com.njydsz.generator.service.EntityReverseService;
  * @since 26.09.05
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/generator/reverse")
 @RequiredArgsConstructor
@@ -35,6 +39,7 @@ public class ReverseController {
    * @return 分析报告
    */
   @PostMapping("/analyze")
+  @Audit(module = "反向生成", action = AuditAction.OTHER, content = "'反向分析Java源文件'", recordRequest = false)
   public YdszResponse<String> analyze(
       @RequestParam String sourceFilePath,
       @RequestParam Long templateGroupId,
@@ -52,6 +57,7 @@ public class ReverseController {
    * @return 分析报告列表
    */
   @PostMapping("/analyze-batch")
+  @Audit(module = "反向生成", action = AuditAction.OTHER, content = "'批量反向分析目录'", recordRequest = false)
   public YdszResponse<List<String>> analyzeBatch(
       @RequestParam String sourceDirPath,
       @RequestParam Long templateGroupId,

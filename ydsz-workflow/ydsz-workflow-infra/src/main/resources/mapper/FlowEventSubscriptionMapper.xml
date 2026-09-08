@@ -24,7 +24,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="provider_trace_id" property="providerTraceId"/>
     </resultMap>
 
@@ -32,7 +32,7 @@
         id, tenant_id, instance_id, definition_id, flow_code, node_code, node_name,
         event_type, event_ref, correlation_key, boundary_task_id, subscription_status,
         payload, triggered_at, trigger_source, cancel_reason,
-        status, created_by, created_at, updated_by, updated_at, deleted, provider_trace_id
+        status, created_by, created_at, updated_by, updated_at, is_deleted, provider_trace_id
     </sql>
 
     <!-- 按事件类型 + 引用匹配 WAITING 订阅 -->
@@ -43,7 +43,7 @@
           AND event_type = #{eventType}
           AND event_ref = #{eventRef}
           AND subscription_status = 'WAITING'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY created_at ASC
     </select>
 
@@ -54,7 +54,7 @@
         WHERE tenant_id = #{tenantId}
           AND correlation_key = #{correlationKey}
           AND subscription_status = 'WAITING'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY created_at ASC
     </select>
 
@@ -78,7 +78,7 @@
             updated_at = NOW()
         WHERE boundary_task_id = #{boundaryTaskId}
           AND subscription_status = 'WAITING'
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- 取消某实例所有 WAITING 订阅 -->
@@ -89,7 +89,7 @@
             updated_at = NOW()
         WHERE instance_id = #{instanceId}
           AND subscription_status = 'WAITING'
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <select id="countWaitingByInstance" resultType="long">
@@ -97,6 +97,6 @@
         FROM ydsz_flow_event_subscription
         WHERE instance_id = #{instanceId}
           AND subscription_status = 'WAITING'
-          AND deleted = 0
+          AND is_deleted = 0
     </select>
 </mapper>

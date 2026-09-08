@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.generator.service.TemplateImportExportService;
 import com.njydsz.generator.vo.TemplateZipVO;
 
@@ -25,6 +28,7 @@ import com.njydsz.generator.vo.TemplateZipVO;
  * @since 26.09.05
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/generator/import-export")
 @RequiredArgsConstructor
@@ -39,6 +43,7 @@ public class ImportExportController {
    * @return zip 二进制流
    */
   @GetMapping("/export")
+  @Audit(module = "模板管理", action = AuditAction.EXPORT, content = "'导出模板分组:' + #groupId", recordRequest = false)
   public ResponseEntity<byte[]> exportTemplates(@RequestParam Long groupId) {
     log.info("导出模板 groupId={}", groupId);
     TemplateZipVO zip = importExportService.exportZip(groupId);
@@ -59,6 +64,7 @@ public class ImportExportController {
    * @return 导入数量
    */
   @PostMapping("/import")
+  @Audit(module = "模板管理", action = AuditAction.IMPORT, content = "'导入模板:' + #groupId", recordRequest = false)
   public YdszResponse<Integer> importTemplates(
       @RequestParam Long groupId,
       @RequestPart("file") MultipartFile file,

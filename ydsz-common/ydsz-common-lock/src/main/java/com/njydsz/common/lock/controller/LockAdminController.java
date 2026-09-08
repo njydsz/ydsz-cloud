@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
@@ -52,6 +53,7 @@ import com.njydsz.common.lock.scheduler.LockWatchDog.WatchTask;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/admin/lock")
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)

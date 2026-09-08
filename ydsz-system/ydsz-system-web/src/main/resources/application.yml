@@ -10,7 +10,37 @@ logging:
     # SkyWalking traceId 支持：Agent 注入时自动填充 X{traceId}，未启用时为空
     level: "%5p [%X{traceId:-},%X{spanId:-}]"
 
-# SkyWalking 链路追踪（通过 Java Agent 方式启用，无需修改业务代码）
+# =====================================================================
+#  Actuator 运维端点配置
+# --------------------------------------------------------------------
+#  暴露 health（Nacos 注册发现也依赖此端点）、info、metrics 等运维端点，
+#  由 /api/system/metrics/dashboard 接口聚合后供前端仪表盘消费。
+# =====================================================================
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,beans,env
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# Sentry 监控配置
+ydsz:
+  sentry:
+    app-name: ydzsz-system
+    metrics:
+      primary: micrometer
+      enable-system-metrics: true
+
+# SkyWalking 链路追踪（通过 Java Agent 方式启用，无需业务代码）
 # 启动示例：java -javaagent:/path/to/skywalking-agent.jar \
 #   -Dskywalking.agent.service_name=ydsz-system \
 #   -Dskywalking.collector.backend_service=localhost:11800 \

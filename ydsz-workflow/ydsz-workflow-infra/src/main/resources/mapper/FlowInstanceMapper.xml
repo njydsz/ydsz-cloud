@@ -27,7 +27,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
         <result column="parent_instance_id" property="parentInstanceId"/>
@@ -39,7 +39,7 @@
         id, flow_code, flow_name, definition_id, flow_version, business_type, business_id,
         business_no, title, initiator_id, initiator_name, current_node_code, current_node_name,
         variable, flow_status, activity_status, start_at, end_at, duration_ms, status,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id,
+        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id, provider_trace_id,
         parent_instance_id, parent_node_code, due_at
     </sql>
 
@@ -51,7 +51,7 @@
           AND business_id = #{businessId}
           AND flow_status IN ('RUNNING', 'SUSPENDED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         LIMIT 1
     </select>
 
@@ -62,7 +62,7 @@
           AND business_id = #{businessId}
           AND flow_status = #{flowStatus}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY created_at DESC
         LIMIT 1
     </select>
@@ -79,7 +79,7 @@
             updated_at = CURRENT_TIMESTAMP
         </set>
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P2-18: 更新流程变量 JSON（持久化 terminate reason 等） -->
@@ -89,7 +89,7 @@
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <select id="selectByInitiator" resultMap="BaseResultMap">
@@ -100,7 +100,7 @@
             AND flow_status = #{flowStatus}
           </if>
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY start_at DESC
     </select>
 
@@ -109,7 +109,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_instance
         WHERE status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="query.businessType != null and query.businessType != ''">
             AND business_type = #{query.businessType}
           </if>
@@ -146,7 +146,7 @@
         SELECT COUNT(1)
         FROM ydsz_flow_instance
         WHERE status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="query.businessType != null and query.businessType != ''">
             AND business_type = #{query.businessType}
           </if>
@@ -181,7 +181,7 @@
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- Query overdue subprocess instances (due_at < now, RUNNING, has parentInstanceId) -->
@@ -193,7 +193,7 @@
           AND flow_status = 'RUNNING'
           AND parent_instance_id IS NOT NULL
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
         ORDER BY due_at ASC
     </select>
@@ -202,7 +202,7 @@
     <select id="selectCountGroupByStatus" resultType="java.util.Map">
         SELECT flow_status AS "flowStatus", COUNT(1) AS "cnt"
         FROM ydsz_flow_instance
-        WHERE status = 'ENABLED' AND deleted = 0
+        WHERE status = 'ENABLED' AND is_deleted = 0
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
         GROUP BY flow_status
     </select>
@@ -213,7 +213,7 @@
             SUM(CASE WHEN start_at &gt;= CURRENT_DATE THEN 1 ELSE 0 END) AS "todayNewCount",
             SUM(CASE WHEN end_at &gt;= CURRENT_DATE AND end_at IS NOT NULL THEN 1 ELSE 0 END) AS "todayCompletedCount"
         FROM ydsz_flow_instance
-        WHERE status = 'ENABLED' AND deleted = 0
+        WHERE status = 'ENABLED' AND is_deleted = 0
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
     </select>
 
@@ -223,7 +223,7 @@
                MAX(flow_name) AS "flowName",
                COUNT(1) AS "cnt"
         FROM ydsz_flow_instance
-        WHERE status = 'ENABLED' AND deleted = 0
+        WHERE status = 'ENABLED' AND is_deleted = 0
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
           <if test="startTime != null">AND start_at &gt;= #{startTime}</if>
           <if test="endTime != null">AND start_at &lt;= #{endTime}</if>
@@ -235,7 +235,7 @@
     <select id="selectDailyNewCount" resultType="java.util.Map">
         SELECT DATE(start_at) AS "date", COUNT(1) AS "newCount"
         FROM ydsz_flow_instance
-        WHERE status = 'ENABLED' AND deleted = 0
+        WHERE status = 'ENABLED' AND is_deleted = 0
           AND start_at IS NOT NULL
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
           <if test="startTime != null">AND start_at &gt;= #{startTime}</if>
@@ -248,7 +248,7 @@
     <select id="selectDailyCompletedCount" resultType="java.util.Map">
         SELECT DATE(end_at) AS "date", COUNT(1) AS "completedCount"
         FROM ydsz_flow_instance
-        WHERE status = 'ENABLED' AND deleted = 0
+        WHERE status = 'ENABLED' AND is_deleted = 0
           AND end_at IS NOT NULL
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
           <if test="startTime != null">AND end_at &gt;= #{startTime}</if>
@@ -264,7 +264,7 @@
         WHERE definition_id = #{definitionId}
           AND flow_status = 'RUNNING'
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
     </select>
 
     <!--
@@ -279,7 +279,7 @@
         WHERE definition_id = #{definitionId}
           AND flow_status = 'RUNNING'
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           AND current_node_code IS NOT NULL
         GROUP BY current_node_code
         ORDER BY cnt DESC
@@ -299,13 +299,13 @@
         FROM ydsz_flow_instance i
         WHERE i.flow_status = 'RUNNING'
           AND i.status = 'ENABLED'
-          AND i.deleted = 0
+          AND i.is_deleted = 0
           AND NOT EXISTS (
               SELECT 1 FROM ydsz_flow_run_task t
               WHERE t.instance_id = i.id
                 AND t.task_status IN ('PENDING', 'CLAIMED')
                 AND t.status = 'ENABLED'
-                AND t.deleted = 0
+                AND t.is_deleted = 0
           )
         ORDER BY i.start_at ASC
         LIMIT #{limit}
@@ -321,6 +321,6 @@
             #{id}
         </foreach>
         AND flow_status = 'RUNNING'
-        AND deleted = 0
+        AND is_deleted = 0
     </update>
 </mapper>

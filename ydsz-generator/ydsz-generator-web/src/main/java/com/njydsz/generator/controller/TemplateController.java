@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
@@ -65,6 +67,7 @@ public class TemplateController {
    * @return 操作结果
    */
   @PostMapping("/groups/{id}/activate")
+  @Audit(module = "模板管理", action = AuditAction.ENABLE, content = "'激活模板分组:' + #id")
   public YdszResponse<Void> activateGroup(@PathVariable Long id) {
     groupService.activate(id);
     return YdszResponse.success(null);
@@ -77,6 +80,7 @@ public class TemplateController {
    * @return 持久化后实体
    */
   @PostMapping("/groups")
+  @Audit(module = "模板管理", action = AuditAction.CREATE, content = "'创建模板分组:' + #group.name")
   public YdszResponse<GenTemplateGroup> createGroup(@RequestBody GenTemplateGroup group) {
     return YdszResponse.success(groupService.create(group));
   }
@@ -88,6 +92,7 @@ public class TemplateController {
    * @return 操作结果
    */
   @DeleteMapping("/groups/{id}")
+  @Audit(module = "模板管理", action = AuditAction.DELETE, content = "'删除模板分组:' + #id")
   public YdszResponse<Void> deleteGroup(@PathVariable Long id) {
     groupService.deleteById(id);
     return YdszResponse.success(null);
@@ -124,6 +129,7 @@ public class TemplateController {
    * @return 更新后实体
    */
   @PostMapping("/templates/update")
+  @Audit(module = "模板管理", action = AuditAction.UPDATE, content = "'更新模板:' + #template.id")
   public YdszResponse<GenTemplate> updateTemplate(@RequestBody GenTemplate template) {
     return YdszResponse.success(templateService.updateContent(template));
   }

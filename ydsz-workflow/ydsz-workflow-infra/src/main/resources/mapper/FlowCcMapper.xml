@@ -8,7 +8,7 @@
         id, tenant_id, instance_id, task_id, node_code, node_name, flow_code, flow_name,
         business_key, cc_user_id, cc_user_name, cc_type, trigger_user_id, trigger_user_name,
         title, content, read_status, read_at, provider_trace_id, created_by, created_at,
-        updated_by, updated_at, deleted
+        updated_by, updated_at, is_deleted
     </sql>
 
     <!-- 查"抄送我的"（分页） -->
@@ -18,7 +18,7 @@
         FROM ydsz_flow_cc
         WHERE tenant_id = #{tenantId}
           AND cc_user_id = #{ccUserId}
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="readStatus != null and readStatus != ''">
               AND read_status = #{readStatus}
           </if>
@@ -35,7 +35,7 @@
         FROM ydsz_flow_cc
         WHERE tenant_id = #{tenantId}
           AND cc_user_id = #{ccUserId}
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="readStatus != null and readStatus != ''">
               AND read_status = #{readStatus}
           </if>
@@ -50,7 +50,7 @@
         FROM ydsz_flow_cc
         WHERE tenant_id = #{tenantId}
           AND cc_user_id = #{ccUserId}
-          AND deleted = 0
+          AND is_deleted = 0
           AND read_status = 'UNREAD'
     </select>
 
@@ -58,7 +58,7 @@
     <select id="countUnread" resultType="long">
         SELECT COUNT(1)
         FROM ydsz_flow_cc
-        WHERE deleted = 0
+        WHERE is_deleted = 0
           AND read_status = 'UNREAD'
     </select>
 
@@ -70,7 +70,7 @@
             updated_at = #{readAt}
         WHERE id = #{id}
           AND cc_user_id = #{ccUserId}
-          AND deleted = 0
+          AND is_deleted = 0
           AND read_status = 'UNREAD'
     </update>
 
@@ -82,7 +82,7 @@
             updated_at = #{readAt}
         WHERE tenant_id = #{tenantId}
           AND cc_user_id = #{ccUserId}
-          AND deleted = 0
+          AND is_deleted = 0
           AND read_status = 'UNREAD'
     </update>
 
@@ -93,7 +93,7 @@
         FROM ydsz_flow_cc
         WHERE tenant_id = #{tenantId}
           AND instance_id = #{instanceId}
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY created_at ASC
     </select>
 </mapper>

@@ -41,7 +41,7 @@
         <result column="last_urged_at" property="lastUrgedAt"/>
         <result column="sla_action" property="slaAction"/>
         <result column="sla_escalated" property="slaEscalated"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
         <result column="iter_var" property="iterVar"/>
@@ -55,7 +55,7 @@
         perform_type, approve_count, approve_finished, vote_pass_rate, task_status, comment, status,
         created_by, created_at, updated_by, updated_at, claim_at, finish_at, duration_ms, due_at, priority,
         urge_count, last_urged_at, sla_action, sla_escalated,
-        deleted, tenant_id, provider_trace_id,
+        is_deleted, tenant_id, provider_trace_id,
         iter_var, version
     </sql>
 
@@ -64,7 +64,7 @@
         FROM ydsz_flow_run_task
         WHERE instance_id = #{instanceId}
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
@@ -74,7 +74,7 @@
         WHERE instance_id = #{instanceId}
           AND task_status = 'PENDING'
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
@@ -85,7 +85,7 @@
           AND node_code = #{nodeCode}
           AND task_status = 'PENDING'
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY id ASC
     </select>
 
@@ -95,7 +95,7 @@ FROM ydsz_flow_run_task
 WHERE assignee_id = #{assigneeId}
 AND task_status IN ('PENDING', 'CLAIMED')
 AND status = 'ENABLED'
-AND deleted = 0
+AND is_deleted = 0
 ORDER BY priority DESC, created_at ASC
 </select>
 
@@ -109,7 +109,7 @@ WHERE assignee_id IN
 </foreach>
 AND task_status IN ('PENDING', 'CLAIMED')
 AND status = 'ENABLED'
-AND deleted = 0
+AND is_deleted = 0
 ORDER BY priority DESC, created_at ASC
 </select>
 
@@ -120,7 +120,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE assignee_id = #{assigneeId}
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY priority DESC, created_at ASC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -131,7 +131,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE assignee_id = #{assigneeId}
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
     </select>
 
     <!-- P1-1: 游标分页（Keyset Pagination）— 避免深度分页性能退化 -->
@@ -141,7 +141,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE assignee_id = #{assigneeId}
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="lastPriority != null">
               AND (priority, created_at, id) &lt; (#{lastPriority}, #{lastCreatedAt}, #{lastId})
           </if>
@@ -155,7 +155,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE assignee_id = #{assigneeId}
           AND task_status IN ('COMPLETED', 'REJECTED', 'SKIPPED', 'CANCELLED', 'TIMEOUT')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY finish_at DESC
     </select>
 
@@ -169,7 +169,7 @@ ORDER BY priority DESC, created_at ASC
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND task_status IN ('PENDING', 'CLAIMED')
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <update id="incrementFinished">
@@ -178,7 +178,7 @@ ORDER BY priority DESC, created_at ASC
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <update id="cancelByInstance">
@@ -188,7 +188,7 @@ ORDER BY priority DESC, created_at ASC
             updated_at = CURRENT_TIMESTAMP
         WHERE instance_id = #{instanceId}
           AND task_status IN ('PENDING', 'CLAIMED')
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P0-1: 取消单个任务（边界事件触发时使用） -->
@@ -200,7 +200,7 @@ ORDER BY priority DESC, created_at ASC
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND task_status IN ('PENDING', 'CLAIMED')
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <update id="skipByNode">
@@ -211,7 +211,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE instance_id = #{instanceId}
           AND node_code = #{nodeCode}
           AND task_status = 'PENDING'
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P2-18: 冻结某实例下所有 PENDING/CLAIMED 任务（流程挂起时调用） -->
@@ -222,7 +222,7 @@ ORDER BY priority DESC, created_at ASC
             updated_at = CURRENT_TIMESTAMP
         WHERE instance_id = #{instanceId}
           AND task_status IN ('PENDING', 'CLAIMED')
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P2-18: 解冻某实例下所有 FROZEN 任务（流程激活时调用，回到 PENDING） -->
@@ -233,7 +233,7 @@ ORDER BY priority DESC, created_at ASC
             updated_at = CURRENT_TIMESTAMP
         WHERE instance_id = #{instanceId}
           AND task_status = 'FROZEN'
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P0-5: 统计某实例某节点的未完成任务数（用于并行网关 join 判断） -->
@@ -244,7 +244,7 @@ ORDER BY priority DESC, created_at ASC
           AND node_code = #{nodeCode}
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
     </select>
 
     <!-- P0-1: 更新会签计数（设置 approveFinished） -->
@@ -254,7 +254,7 @@ ORDER BY priority DESC, created_at ASC
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- GAP-A1: 会签通过计数原子自增（带饱和守卫，防并发丢失更新与越界计数）。
@@ -266,7 +266,7 @@ ORDER BY priority DESC, created_at ASC
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND (approve_count IS NULL OR approve_finished &lt; approve_count)
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- GAP-A1: 票签权重原子累加（防并发丢失更新） -->
@@ -276,7 +276,7 @@ ORDER BY priority DESC, created_at ASC
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P1-12: 更新任务办理人信息（用于顺序会签切换办理人） -->
@@ -288,7 +288,7 @@ ORDER BY priority DESC, created_at ASC
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED） -->
@@ -298,7 +298,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE due_at &lt; CURRENT_TIMESTAMP
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="assigneeId != null and assigneeId != ''">AND assignee_id = #{assigneeId}</if>
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
         ORDER BY due_at ASC
@@ -312,7 +312,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE due_at &lt; CURRENT_TIMESTAMP
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="assigneeId != null and assigneeId != ''">AND assignee_id = #{assigneeId}</if>
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
     </select>
@@ -324,7 +324,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE due_at IS NOT NULL
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
         ORDER BY due_at ASC
         LIMIT #{limit}
     </select>
@@ -346,7 +346,7 @@ ORDER BY priority DESC, created_at ASC
         WHERE due_at &lt; CURRENT_TIMESTAMP
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
         ORDER BY overdueHours DESC
         LIMIT #{limit}
@@ -363,7 +363,7 @@ ORDER BY priority DESC, created_at ASC
         FROM ydsz_flow_run_task
         WHERE task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
-          AND deleted = 0
+          AND is_deleted = 0
           AND assignee_id IS NOT NULL
           AND assignee_id != '0'
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
@@ -380,7 +380,7 @@ ORDER BY priority DESC, created_at ASC
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P1-6: 标记 SLA 动作（用于审计） -->
@@ -391,7 +391,7 @@ ORDER BY priority DESC, created_at ASC
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <!-- P0-2: 批量取消任务（一致性修复用） -->
@@ -405,7 +405,7 @@ ORDER BY priority DESC, created_at ASC
             #{id}
         </foreach>
         AND task_status IN ('PENDING', 'CLAIMED')
-        AND deleted = 0
+        AND is_deleted = 0
     </update>
 
     <!--
@@ -422,9 +422,9 @@ ORDER BY priority DESC, created_at ASC
         INNER JOIN ydsz_flow_instance i ON t.instance_id = i.id
         WHERE t.task_status IN ('PENDING', 'CLAIMED')
           AND t.status = 'ENABLED'
-          AND t.deleted = 0
+          AND t.is_deleted = 0
           AND i.flow_status IN ('COMPLETED', 'TERMINATED', 'REJECTED')
-          AND i.deleted = 0
+          AND i.is_deleted = 0
         ORDER BY t.created_at ASC
         LIMIT #{limit}
     </select>
@@ -438,6 +438,6 @@ ORDER BY priority DESC, created_at ASC
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 </mapper>

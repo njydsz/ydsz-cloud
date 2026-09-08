@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;
@@ -24,6 +27,7 @@ import com.njydsz.generator.service.TableMetadataService;
  * @since 26.09.05
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/generator/tables")
 @RequiredArgsConstructor
@@ -50,6 +54,7 @@ public class TableMetaController {
    * @return 刷新后列表
    */
   @PostMapping("/refresh")
+  @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新表元数据:' + #datasourceId")
   public YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam Long datasourceId) {
     GenDatasource ds = datasourceService.getById(datasourceId);
     if (ds == null) {
@@ -77,6 +82,7 @@ public class TableMetaController {
    * @return 列元数据列表
    */
   @PostMapping("/columns/refresh")
+  @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新列元数据:' + #tableName")
   public YdszResponse<List<GenColumnMeta>> refreshColumns(
       @RequestParam Long datasourceId, @RequestParam String tableName) {
     GenDatasource ds = datasourceService.getById(datasourceId);

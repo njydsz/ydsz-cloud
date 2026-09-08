@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.generator.entity.GenHistory;
 import com.njydsz.generator.entity.GenHistoryFile;
 import com.njydsz.generator.service.GenHistoryService;
@@ -24,6 +27,7 @@ import com.njydsz.generator.service.GenHistoryService;
  * @since 26.09.05
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/generator/history")
 @RequiredArgsConstructor
@@ -72,6 +76,7 @@ public class HistoryController {
    * @return 操作结果
    */
   @PostMapping("/{id}/rollback")
+  @Audit(module = "生成历史", action = AuditAction.OTHER, content = "'回滚生成历史:' + #id")
   public YdszResponse<Void> rollback(@PathVariable Long id) {
     historyService.rollback(id);
     return YdszResponse.success(null);
@@ -84,6 +89,7 @@ public class HistoryController {
    * @return 操作结果
    */
   @DeleteMapping("/{id}")
+  @Audit(module = "生成历史", action = AuditAction.DELETE, content = "'删除生成历史:' + #id")
   public YdszResponse<Void> delete(@PathVariable Long id) {
     historyService.deleteHistory(id);
     return YdszResponse.success(null);

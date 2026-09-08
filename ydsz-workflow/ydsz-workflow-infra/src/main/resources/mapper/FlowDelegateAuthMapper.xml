@@ -7,7 +7,7 @@
     <sql id="Base_Column">
         id, tenant_id, owner_user_id, owner_user_name, delegate_user_id, delegate_user_name,
         scope_type, flow_code, node_code, role_code, start_time, end_time, auth_status, reason,
-        provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        provider_trace_id, created_by, created_at, updated_by, updated_at, is_deleted
     </sql>
 
     <!-- 按授权人查询 -->
@@ -16,7 +16,7 @@
         FROM ydsz_flow_delegate_auth
         WHERE tenant_id = #{tenantId}
           AND owner_user_id = #{ownerUserId}
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="status != null and status != ''">
               AND auth_status = #{status}
           </if>
@@ -29,7 +29,7 @@
         FROM ydsz_flow_delegate_auth
         WHERE tenant_id = #{tenantId}
           AND delegate_user_id = #{delegateUserId}
-          AND deleted = 0
+          AND is_deleted = 0
           <if test="status != null and status != ''">
               AND auth_status = #{status}
           </if>
@@ -42,7 +42,7 @@
         FROM ydsz_flow_delegate_auth
         WHERE tenant_id = #{tenantId}
           AND owner_user_id = #{ownerUserId}
-          AND deleted = 0
+          AND is_deleted = 0
           AND auth_status = 'ENABLED'
           AND start_time &lt;= #{now}
           AND end_time &gt;= #{now}
@@ -66,7 +66,7 @@
     <select id="selectExpired" resultType="com.njydsz.workflow.infra.entity.FlowDelegateAuth">
         SELECT <include refid="Base_Column"/>
         FROM ydsz_flow_delegate_auth
-        WHERE deleted = 0
+        WHERE is_deleted = 0
           AND auth_status = 'ENABLED'
           AND end_time &lt; #{now}
         ORDER BY end_time ASC
@@ -78,7 +78,7 @@
         UPDATE ydsz_flow_delegate_auth
         SET auth_status = 'EXPIRED',
             updated_at = #{updatedAt}
-        WHERE deleted = 0
+        WHERE is_deleted = 0
           AND auth_status = 'ENABLED'
           AND end_time &lt; #{now}
     </update>
@@ -89,6 +89,6 @@
         SET auth_status = #{status},
             updated_at = #{updatedAt}
         WHERE id = #{id}
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 </mapper>

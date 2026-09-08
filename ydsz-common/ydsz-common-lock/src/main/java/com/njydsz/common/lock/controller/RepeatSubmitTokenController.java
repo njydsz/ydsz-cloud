@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
@@ -34,6 +35,7 @@ import com.njydsz.common.lock.spi.CurrentUserIdResolver;
  * @see RepeatSubmitTokenService
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/repeat-submit")
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)

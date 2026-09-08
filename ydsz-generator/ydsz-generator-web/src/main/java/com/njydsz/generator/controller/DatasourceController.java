@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.service.DatasourceService;
 import com.njydsz.generator.vo.GenDatasourceRespVO;
@@ -24,6 +27,7 @@ import com.njydsz.generator.vo.GenDatasourceRespVO;
  * @since 26.09.05
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/generator/datasources")
 @RequiredArgsConstructor
@@ -57,6 +61,7 @@ public class DatasourceController {
    * @param datasource 数据源配置
    * @return 是否连接成功
    */
+  @Audit(module = "数据源管理", action = AuditAction.OTHER, content = "'测试数据库连接'", recordRequest = false)
   @PostMapping("/test")
   public YdszResponse<Boolean> testConnection(@RequestBody GenDatasource datasource) {
     return YdszResponse.success(datasourceService.testConnection(datasource));
@@ -68,6 +73,7 @@ public class DatasourceController {
    * @param datasource 数据源实体
    * @return 持久化后实体
    */
+  @Audit(module = "数据源管理", action = AuditAction.CREATE, excludeParams = {"password", "url"}, recordRequest = false)
   @PostMapping
   public YdszResponse<GenDatasource> create(@RequestBody GenDatasource datasource) {
     return YdszResponse.success(datasourceService.create(datasource));
@@ -79,6 +85,7 @@ public class DatasourceController {
    * @param datasource 数据源实体
    * @return 持久化后实体
    */
+  @Audit(module = "数据源管理", action = AuditAction.UPDATE, excludeParams = {"password", "url"}, recordRequest = false)
   @PostMapping("/update")
   public YdszResponse<GenDatasource> update(@RequestBody GenDatasource datasource) {
     return YdszResponse.success(datasourceService.update(datasource));
@@ -90,6 +97,7 @@ public class DatasourceController {
    * @param id 数据源 ID
    * @return 操作结果
    */
+  @Audit(module = "数据源管理", action = AuditAction.DELETE, content = "'删除数据源:' + #id")
   @DeleteMapping("/{id}")
   public YdszResponse<Void> delete(@PathVariable Long id) {
     datasourceService.deleteById(id);
