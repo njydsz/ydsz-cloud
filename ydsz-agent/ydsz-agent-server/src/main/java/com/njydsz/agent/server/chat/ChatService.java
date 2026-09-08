@@ -442,7 +442,7 @@ public class ChatService {
             .messages(messages)
             .temperature(properties.getLlm().getTemperature())
             .maxTokens(properties.getLlm().getMaxTokens())
-            .stream(true)
+            .isStream(true)
             .build();
 
     // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示
@@ -612,7 +612,7 @@ public class ChatService {
             .messages(messages)
             .temperature(properties.getLlm().getTemperature())
             .maxTokens(properties.getLlm().getMaxTokens())
-            .stream(true)
+            .isStream(true)
             .build();
 
     // P0: 调用前 Token 预计算 — 估算成本供配额预检与前端展示

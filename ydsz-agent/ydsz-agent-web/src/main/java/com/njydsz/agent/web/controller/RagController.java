@@ -153,7 +153,7 @@ public class RagController {
     BigDecimal minScore = request.getMinScore() != null
         ? BigDecimal.valueOf(request.getMinScore())
         : new BigDecimal("0.7");
-    boolean includeContext = request.getIncludeContext() == null || request.getIncludeContext();
+    boolean includeContext = request.getIsIncludeContext() == null || request.getIsIncludeContext();
 
     // 1. 检索 TopK chunk（使用 BigDecimal 精度传递，避免浮点误差）
     List<TextChunk> chunks = ragService.retrieve(request.getQuery(), topK, minScore.doubleValue());

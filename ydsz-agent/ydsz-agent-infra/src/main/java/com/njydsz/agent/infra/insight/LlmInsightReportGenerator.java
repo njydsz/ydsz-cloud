@@ -94,7 +94,7 @@ public class LlmInsightReportGenerator implements InsightReportGenerator {
               ChatMessage.user(prompt, "insight-report-gen")))
           .temperature(DEFAULT_TEMPERATURE)
           .maxTokens(DEFAULT_MAX_TOKENS)
-          .stream(false)
+          .isStream(false)
           .build();
       ChatResponse response = llmClient.chat(chatRequest);
       String llmResponse = response.getMessage() != null ? response.getMessage().getContent() : "";

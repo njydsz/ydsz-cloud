@@ -158,7 +158,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
             .messages(messages)
             .temperature(properties.getLlm().getTemperature())
             .maxTokens(properties.getLlm().getMaxTokens())
-            .stream(true)
+            .isStream(true)
             .build();
 
     long startTime = System.currentTimeMillis();

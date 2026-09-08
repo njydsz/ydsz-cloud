@@ -486,7 +486,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
                     ChatMessage.user(synthesizePrompt.toString(), convId)))
             .temperature(SYNTHESIZE_TEMPERATURE)
             .maxTokens(properties.getLlm().getMaxTokens())
-            .stream(true)
+            .isStream(true)
             .build();
 
     StringBuilder finalAnswer = new StringBuilder();
