@@ -53,6 +53,9 @@ public class DashboardServiceImpl implements DashboardService {
   /** 问候时段分界：深夜开始（22 点后为夜深了） */
   private static final int HOUR_NIGHT_START = 22;
 
+  /** 仪表盘概览项初始容量（租户/字典类型/系统变量/注册应用共 4 项） */
+  private static final int OVERVIEW_ITEMS_CAPACITY = 4;
+
   /** 租户 Service */
   private final TenantService tenantService;
 
@@ -68,7 +71,7 @@ public class DashboardServiceImpl implements DashboardService {
   @Override
   public List<DashboardOverviewItemVO> overview() {
     List<TenantVO> tenants = tenantService.listAccessibleTenants();
-    List<DashboardOverviewItemVO> items = new ArrayList<>(4);
+    List<DashboardOverviewItemVO> items = new ArrayList<>(OVERVIEW_ITEMS_CAPACITY);
     items.add(buildItem("租户总数", "累计租户", tenants.size(),
         countCreatedToday(tenants.stream().map(TenantVO::getCreatedAt).toList())));
     items.add(buildItem("字典类型", "累计字典", dictService.listAll().size(), 0L));

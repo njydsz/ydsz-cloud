@@ -35,9 +35,9 @@ public class GenColumnMeta {
   /** 字段长度。 */
   private Integer columnSize;
   /** 是否可为空。 */
-  private Boolean nullable;
+  private Boolean isNullable;
   /** 是否主键。 */
-  private Boolean pk;
+  private Boolean isPk;
   /** 字段注释。 */
   private String comment;
   /** 覆盖 Java 类型。 */
@@ -45,11 +45,11 @@ public class GenColumnMeta {
   /** 覆盖字段名。 */
   private String overrideFieldName;
   /** DTO 跳过标记。 */
-  private Boolean dtoSkipped;
+  private Boolean isDtoSkipped;
   /** VO 跳过标记。 */
-  private Boolean voSkipped;
+  private Boolean isVoSkipped;
   /** Query 跳过标记。 */
-  private Boolean querySkipped;
+  private Boolean isQuerySkipped;
   /** 扩展配置 JSON。 */
   private String extraConfig;
 }

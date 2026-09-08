@@ -24,5 +24,5 @@ public class CodePreviewVO {
   /** 代码内容。 */
   private String content;
   /** 是否存在冲突（文件已存在）。 */
-  private Boolean conflict;
+  private Boolean isConflict;
 }
