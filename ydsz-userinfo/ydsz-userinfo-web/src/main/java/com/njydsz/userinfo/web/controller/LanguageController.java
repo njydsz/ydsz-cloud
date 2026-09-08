@@ -23,6 +23,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.LanguageDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
@@ -66,6 +67,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * @see com.njydsz.userinfo.domain.vo.LanguageVO 语言VO
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/language")
 @Tag(name = "语言管理", description = "语言 CRUD")

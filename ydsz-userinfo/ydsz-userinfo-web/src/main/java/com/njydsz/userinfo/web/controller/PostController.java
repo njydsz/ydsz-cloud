@@ -22,6 +22,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.PostDTO;
 import com.njydsz.userinfo.domain.vo.PostVO;
 import com.njydsz.userinfo.server.service.PostService;
@@ -59,6 +60,7 @@ import com.njydsz.userinfo.server.service.PostService;
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（兼任岗位维护）
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/post")
 @RequiredArgsConstructor

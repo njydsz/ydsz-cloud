@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationCommand;
 import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
@@ -47,6 +48,7 @@ import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/admin/oauth2/applications")
 @RequiredArgsConstructor

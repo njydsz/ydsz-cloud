@@ -20,6 +20,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.MfaOperationDTO;
@@ -41,6 +42,7 @@ import com.njydsz.userinfo.server.service.UserAccountService;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor

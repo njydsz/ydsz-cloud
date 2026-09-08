@@ -25,14 +25,14 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="isDeleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, template_code, channel, locale, version, category, scene_code, subject, content,
         provider, provider_key, sign_name, status, audit_status, audit_by, audit_at, audit_remark,
-        description, created_by, created_at, updated_by, updated_at, deleted, tenant_id
+        description, created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
     </sql>
 
 </mapper>

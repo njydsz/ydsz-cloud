@@ -21,14 +21,14 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, user_id, channel, biz_type, enabled, dnd_enabled, dnd_start, dnd_end, daily_limit,
         hourly_limit, digest_enabled, digest_frequency, locale, extra,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id
+        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
     </sql>
 
 </mapper>

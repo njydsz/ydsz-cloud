@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.server.auth.LdapOrgSyncService;
 import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
 
@@ -32,6 +33,7 @@ import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/admin/ldap/sync")
 @ConditionalOnProperty(prefix = "ydsz.userinfo.ldap.sync", name = "enabled", havingValue = "true")

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.vo.SocialAccountVO;
 import com.njydsz.userinfo.server.auth.SocialAuthService;
@@ -38,6 +39,7 @@ import com.njydsz.userinfo.server.auth.SocialAuthService;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/profile/social")
 @RequiredArgsConstructor

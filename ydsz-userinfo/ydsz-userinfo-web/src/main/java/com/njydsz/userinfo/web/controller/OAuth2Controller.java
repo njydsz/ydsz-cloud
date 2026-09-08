@@ -32,6 +32,7 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.security.DigestUtils;
@@ -88,6 +89,7 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
  * @see com.njydsz.userinfo.web.controller.AuthController 普通登录（账号密码模式）
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/oauth2")
 @RequiredArgsConstructor

@@ -19,14 +19,14 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, rule_code, rule_name, biz_type, channel, priority, condition_expr, target_channel,
         fallback_channel, status, description, sort,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id
+        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
     </sql>
 
 </mapper>

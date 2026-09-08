@@ -6,6 +6,8 @@ import java.util.Map;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import com.njydsz.userinfo.domain.enums.SocialPlatformLinkingStrategy;
+
 /**
  * 社交认证配置属性。
  *
@@ -110,6 +112,14 @@ public class SocialAuthProperties {
     private String userDetailUrl;
 
     /**
+     * 自定义 OpenID 端点 URL（可选）。
+     *
+     * <p>用于私有化部署或内部代理场景，覆盖默认的公开端点。
+     * 仅有部分平台需要独立的 OpenID 解析端点（如 QQ），不需要时保持 null 即可。
+     */
+    private String openidUrl;
+
+    /**
      * 获取授权端点 URL（优先使用自定义值，为空时返回默认值）。
      *
      * @param defaultUrl 默认端点 URL
@@ -147,6 +157,16 @@ public class SocialAuthProperties {
      */
     public String getOrDefaultUserDetailUrl(String defaultUrl) {
       return (userDetailUrl != null && !userDetailUrl.isBlank()) ? userDetailUrl : defaultUrl;
+    }
+
+    /**
+     * 获取 OpenID 端点 URL（优先使用自定义值，为空时返回默认值）。
+     *
+     * @param defaultUrl 默认端点 URL
+     * @return 实际使用的端点 URL
+     */
+    public String getOrDefaultOpenidUrl(String defaultUrl) {
+      return (openidUrl != null && !openidUrl.isBlank()) ? openidUrl : defaultUrl;
     }
   }
 

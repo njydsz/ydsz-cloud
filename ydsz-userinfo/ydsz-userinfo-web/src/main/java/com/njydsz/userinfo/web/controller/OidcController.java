@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.vo.JwksEndpointVO;
 import com.njydsz.userinfo.domain.vo.OidcDiscoveryEndpointVO;
 import com.njydsz.userinfo.server.config.OidcProperties;
@@ -34,6 +35,7 @@ import com.njydsz.userinfo.server.config.OidcProperties;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/.well-known")
 @RequiredArgsConstructor

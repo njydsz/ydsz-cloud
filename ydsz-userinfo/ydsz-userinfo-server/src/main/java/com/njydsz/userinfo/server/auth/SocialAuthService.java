@@ -13,6 +13,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.config.SocialAuthProperties;
 import com.njydsz.userinfo.domain.dto.SocialAccountDTO;
+import com.njydsz.userinfo.domain.enums.SocialPlatformLinkingStrategy;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.SocialAccountRepository;
 import com.njydsz.userinfo.domain.social.SocialAuthException;

@@ -15,6 +15,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.userinfo.domain.dto.AccountUnlockDTO;
@@ -41,6 +42,7 @@ import com.njydsz.userinfo.server.service.SelfServiceService;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/self-service")
 @RequiredArgsConstructor

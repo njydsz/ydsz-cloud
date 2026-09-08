@@ -20,6 +20,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
@@ -65,6 +66,7 @@ import com.njydsz.userinfo.domain.dto.UserSearchQuery;
  * @see UnifiedSearchService 统一搜索服务
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/userinfo/search")
 @RequiredArgsConstructor

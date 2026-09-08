@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.server.auth.CaptchaService;
 
 /**
@@ -57,6 +58,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
  * @see com.njydsz.userinfo.web.controller.AuthController 认证 Controller（消费 captcha）
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/captcha")
 @RequiredArgsConstructor

@@ -6,7 +6,7 @@
     <insert id="insertBatch">
         INSERT INTO ydsz_msg_offline
             (id, user_id, msg_type, payload, msg_timestamp, status, pushed_at, expired_at,
-             created_by, created_at, updated_by, updated_at, deleted, tenant_id)
+             created_by, created_at, updated_by, updated_at, is_deleted, tenant_id)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (#{item.id}, #{item.userId}, #{item.msgType}, #{item.payload},
@@ -15,7 +15,7 @@
              #{item.pushedAt}, #{item.expiredAt},
              COALESCE(#{item.createdBy}, 'SYSTEM'), CURRENT_TIMESTAMP,
              COALESCE(#{item.updatedBy}, 'SYSTEM'), CURRENT_TIMESTAMP,
-             COALESCE(#{item.deleted}, 0),
+             COALESCE(#{item.isDeleted}, 0),
              COALESCE(#{item.tenantId}, '1'))
         </foreach>
     </insert>

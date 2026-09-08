@@ -29,7 +29,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="isDeleted"/>
+        <result column="is_deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
     </resultMap>
 
@@ -37,7 +37,7 @@
         id, title, content, level, category, priority, sender_id, receiver_id, biz_type, biz_id,
         message_group, batch_id, action_url, action_text, icon, extra, source_module, read_status,
         read_time, recall_status, recall_at, expired_at,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id
+        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
     </sql>
 
     <!-- P3-6: 批量插入站内通知。ID 由调用方用 IdGenerator.nextId() 预生成 -->
@@ -46,7 +46,7 @@
             (id, title, content, level, category, priority, sender_id, receiver_id,
              biz_type, biz_id, message_group, batch_id, action_url, action_text, icon,
              extra, source_module, read_status, recall_status, recall_at, expired_at,
-             mention_user_ids, created_by, created_at, updated_by, updated_at, deleted, tenant_id)
+             mention_user_ids, created_by, created_at, updated_by, updated_at, is_deleted, tenant_id)
         VALUES
         <foreach collection="list" item="item" separator=",">
             (#{item.id}, #{item.title}, #{item.content}, #{item.level}, #{item.category},
@@ -70,7 +70,7 @@
         WHERE id = #{id}
           AND receiver_id = #{userId}
           AND read_status = 0
-          AND deleted = 0
+          AND is_deleted = 0
     </update>
 
     <update id="markAllRead">
@@ -80,7 +80,7 @@
             SELECT id FROM ydsz_msg_notification
             WHERE receiver_id = #{userId}
               AND read_status = 0
-              AND deleted = 0
+              AND is_deleted = 0
             <if test="batchSize != null and batchSize > 0">
               LIMIT #{batchSize}
             </if>
@@ -92,7 +92,7 @@
         FROM ydsz_msg_notification
         WHERE receiver_id = #{userId}
           AND read_status = 0
-          AND deleted = 0
+          AND is_deleted = 0
     </select>
 
 </mapper>

@@ -30,6 +30,10 @@
     </dependency>
     <dependency>
       <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-base</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-audit</artifactId>
     </dependency>
     <dependency>

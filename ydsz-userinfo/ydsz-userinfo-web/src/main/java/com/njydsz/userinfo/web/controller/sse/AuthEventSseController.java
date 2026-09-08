@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
 
 /**
@@ -51,6 +52,7 @@ import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
  * @since 26.09.01
  */
 @Slf4j
+@ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/api/auth/events")
 @RequiredArgsConstructor
