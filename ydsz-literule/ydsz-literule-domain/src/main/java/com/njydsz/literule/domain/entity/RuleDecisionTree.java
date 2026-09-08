@@ -44,7 +44,6 @@ public class RuleDecisionTree extends MpBaseEntity<String> {
   private Integer priority;
 
   /** 是否启用 */
-  @TableField("enabled")
   private Boolean isEnabled;
 
   /** 适用范围 */

@@ -57,7 +57,7 @@ public class FlowFormSchema implements Serializable {
   private String layout;
 
   /** 是否允许审批人修改表单数据 */
-  private Boolean allowModify;
+  private Boolean isAllowModify;
 
   /** 扩展属性 */
   private Map<String, Object> extProps;

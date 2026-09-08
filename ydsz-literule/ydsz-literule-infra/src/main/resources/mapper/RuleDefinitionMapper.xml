@@ -5,7 +5,7 @@
     <select id="selectByCode" resultType="com.njydsz.literule.infra.entity.RuleDefinition">
         SELECT id, rule_code, rule_name, category, category_path, owner, description,
                condition_expression, severity_expression, default_severity,
-               title_template, description_template, priority, enabled AS isEnabled, scope, mutex_group,
+               title_template, description_template, priority, is_enabled, scope, mutex_group,
                drilldown_available, version, tenant_id, status,
                effective_from, effective_to, reviewed_by, reviewed_at, review_comment,
                canary_ratio, canary_conditions, canary_condition_expression, canary_severity_expression,
@@ -17,7 +17,7 @@
     <select id="searchRules" resultType="com.njydsz.literule.infra.entity.RuleDefinition">
         SELECT id, rule_code, rule_name, category, category_path, owner, description,
                condition_expression, severity_expression, default_severity,
-               title_template, description_template, priority, enabled AS isEnabled, scope, mutex_group,
+               title_template, description_template, priority, is_enabled, scope, mutex_group,
                drilldown_available, version, tenant_id, status,
                effective_from, effective_to, reviewed_by, reviewed_at, review_comment,
                canary_ratio, canary_conditions, canary_condition_expression, canary_severity_expression,

@@ -105,7 +105,7 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
   private List<WebhookSubscription> findMatchingSubscriptions(String eventType) {
     List<WebhookSubscription> result = new ArrayList<>(16);
     for (WebhookSubscription sub : subscriptions.values()) {
-      if (Boolean.FALSE.equals(sub.getEnabled())) {
+      if (Boolean.FALSE.equals(sub.getIsEnabled())) {
         continue;
       }
       if (sub.getEventTypes() == null || sub.getEventTypes().isBlank()) {

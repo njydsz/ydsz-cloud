@@ -1,8 +1,8 @@
 package com.njydsz.system.server.service;
 
-import com.njydsz.system.domain.approval.ConfigApprovalQuery;
-
 import java.util.List;
+
+import com.njydsz.system.domain.approval.ConfigApprovalQuery;
 
 /**
  * 配置变更审批单服务接口。

@@ -63,7 +63,7 @@ public class FlowTemplateDefinition implements Serializable {
   private Map<String, Object> defaultVariables;
 
   /** 是否为系统内置模板（true 不可删除） */
-  private Boolean systemBuiltIn;
+  private Boolean isSystemBuiltIn;
 
   /** 标签列表（用于搜索过滤） */
   private List<String> tags;

@@ -1,8 +1,9 @@
 package com.njydsz.system.server.converter;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.system.domain.approval.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalVO;
-import org.springframework.stereotype.Component;
 
 /**
  * 配置变更审批单 Converter。

@@ -1,10 +1,10 @@
 package com.njydsz.system.domain.approval;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import lombok.Data;
 
 /**
  * 配置变更审批单视图对象（返回前端）。

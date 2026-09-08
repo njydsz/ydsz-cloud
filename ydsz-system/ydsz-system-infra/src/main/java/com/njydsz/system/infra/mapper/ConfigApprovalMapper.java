@@ -1,8 +1,9 @@
 package com.njydsz.system.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.system.domain.approval.ConfigApproval;
 import org.apache.ibatis.annotations.Mapper;
+
+import com.njydsz.system.domain.approval.ConfigApproval;
 
 /**
  * 配置变更审批单 Mapper。

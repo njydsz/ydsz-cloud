@@ -72,6 +72,6 @@ public class WebAuthnCredential implements Serializable {
   private LocalDateTime updatedAt;
 
   /** 删除标记（软删除） */
-  @TableField("deleted")
+  @TableField("is_deleted")
   private Boolean isDeleted;
 }

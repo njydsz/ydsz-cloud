@@ -650,7 +650,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID',
     role_code       VARCHAR(64)     NOT NULL COMMENT '角色编码（FLOW_ADMIN=流程管理员，FLOW_DESIGNER=流程设计者，FLOW_AUDITOR=流程审计员）',
-    enabled         TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（0=撤销授权但保留历史记录，1=启用中）',
+    is_enabled      TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（0=撤销授权但保留历史记录，1=启用中）',
     granted_by      VARCHAR(32)     DEFAULT NULL COMMENT '授权人 ID（NULL 表示系统预置角色）',
     granted_at      DATETIME        DEFAULT NULL COMMENT '授权时间',
     expire_at       DATETIME        DEFAULT NULL COMMENT '过期时间（NULL 表示永不过期）',

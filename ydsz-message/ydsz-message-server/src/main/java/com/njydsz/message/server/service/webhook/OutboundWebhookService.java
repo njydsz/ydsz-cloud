@@ -51,7 +51,7 @@ public class OutboundWebhookService {
             .callbackUrl(url)
             .eventTypes(events != null ? String.join(",", events) : null)
             .secret(secret)
-            .enabled(true)
+            .isEnabled(true)
             .sourceModule("message")
             .build();
     webhookDispatcher.register(sub);

@@ -43,10 +43,8 @@ public class RuleVariableDef extends MpBaseEntity<String> {
   private String category;
 
   /** 是否必填 */
-  @TableField("required")
   private Boolean isRequired;
 
   /** 是否启用 */
-  @TableField("enabled")
   private Boolean isEnabled;
 }

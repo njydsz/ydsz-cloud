@@ -28,7 +28,7 @@ public class WebhookSubscription {
   private String secret;
 
   /** 是否启用 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 来源模块（如 message / workflow / project） */
   private String sourceModule;

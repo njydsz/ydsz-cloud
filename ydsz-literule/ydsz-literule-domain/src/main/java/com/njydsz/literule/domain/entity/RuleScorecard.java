@@ -56,7 +56,6 @@ public class RuleScorecard extends MpBaseEntity<String> {
   private Integer priority;
 
   /** 是否启用 */
-  @TableField("enabled")
   private Boolean isEnabled;
 
   /** 适用范围（如 ALL / PROJECT_TYPE:CONSTRUCTION 表示限定项目类型） */
