@@ -22,12 +22,14 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.handler.BaseExceptionHandler;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 
 /**
- * 全局异常处理器（规则引擎 Web 层）
+ * 全局异常处理器（规则引擎 Web 层）。
  *
- * <p>统一拦截 Controller 层抛出的异常，将各类异常转换为标准的 {@link YdszResponse} 错误响应，
+ * <p>继承 {@link BaseExceptionHandler}，复用全局异常体系的指标采集、事件发布、脱敏等能力。
+ * 统一拦截 Controller 层抛出的异常，将各类异常转换为标准的 {@link YdszResponse} 错误响应，
  * 避免直接抛出 {@code 500 Internal Server Error} 暴露内部实现细节。
  *
  * <p><b>处理优先级（由高到低）：</b>
@@ -42,27 +44,35 @@ import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
  *   <li>业务异常兜底：{@link IllegalArgumentException}、{@link IllegalStateException} — 400
  * </ol>
  *
- * <p>所有异常均返回 {@link YdszResultCode#VALIDATION_FAILED} 或 {@link
- * LiteruleExceptionCode#RULE_STATUS_INVALID} 等明确错误码，前端可据此进行友好提示。
- *
- * <p><b>日志级别：</b>
- *
- * <ul>
- *   <li>参数校验异常：WARN（可预期）
- *   <li>协议/路由异常：INFO（外部请求不匹配）
- *   <li>业务参数异常：WARN（客户端数据错误）
- * </ul>
- *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends BaseExceptionHandler {
 
   /**
-   * 处理 @RequestBody @Valid 校验失败
+   * 构造器 — 注入 Spring 环境对象。
+   *
+   * @param environment Spring 环境
+   */
+  protected GlobalExceptionHandler(org.springframework.core.env.Environment environment) {
+    super(environment);
+  }
+
+  /**
+   * 获取日志前缀。
+   *
+   * @return 日志前缀字符串
+   */
+  @Override
+  protected String getLogPrefix() {
+    return "[LiteRule]";
+  }
+
+  /**
+   * 处理 @RequestBody @Valid 校验失败。
    *
    * <p>提取所有字段校验错误，拼接为单条可读消息返回。
    *
@@ -75,12 +85,13 @@ public class GlobalExceptionHandler {
     String message = e.getBindingResult().getFieldErrors().stream()
         .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
         .collect(Collectors.joining("; "));
-    log.warn("[LiteRule] 参数校验失败: {}", message);
+    log.warn("{} 参数校验失败: {}", getLogPrefix(), message);
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理表单绑定校验失败（非 @RequestBody 场景）
+   * 处理表单绑定校验失败（非 @RequestBody 场景）。
    *
    * @param e 绑定异常
    * @return 标准错误响应
@@ -91,12 +102,13 @@ public class GlobalExceptionHandler {
     String message = e.getBindingResult().getFieldErrors().stream()
         .map(this::formatFieldError)
         .collect(Collectors.joining("; "));
-    log.warn("[LiteRule] 参数绑定失败: {}", message);
+    log.warn("{} 参数绑定失败: {}", getLogPrefix(), message);
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理缺少必填请求参数（@RequestParam）
+   * 处理缺少必填请求参数（@RequestParam）。
    *
    * @param e 缺少参数异常
    * @return 标准错误响应
@@ -105,12 +117,13 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleMissingParam(MissingServletRequestParameterException e) {
     String message = "缺少必填参数: " + e.getParameterName() + " (" + e.getParameterType() + ")";
-    log.warn("[LiteRule] {}", message);
+    log.warn("{} {}", getLogPrefix(), message);
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理缺少必填请求头（@RequestHeader）
+   * 处理缺少必填请求头（@RequestHeader）。
    *
    * @param e 缺少请求头异常
    * @return 标准错误响应
@@ -119,12 +132,13 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleMissingHeader(MissingRequestHeaderException e) {
     String message = "缺少必填请求头: " + e.getHeaderName();
-    log.warn("[LiteRule] {}", message);
+    log.warn("{} {}", getLogPrefix(), message);
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理请求体 JSON 解析失败
+   * 处理请求体 JSON 解析失败。
    *
    * @param e HTTP 消息不可读异常
    * @return 标准错误响应
@@ -133,12 +147,13 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
     String message = "请求体格式错误: " + e.getMessage();
-    log.warn("[LiteRule] 请求体解析失败: {}", e.getMessage());
+    log.warn("{} 请求体解析失败: {}", getLogPrefix(), e.getMessage());
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理参数类型不匹配（如传入字符串到整型参数）
+   * 处理参数类型不匹配（如传入字符串到整型参数）。
    *
    * @param e 参数类型不匹配异常
    * @return 标准错误响应
@@ -149,12 +164,13 @@ public class GlobalExceptionHandler {
     String message =
         String.format("参数[%s]类型不匹配，期望=%s，实际值=%s",
             e.getName(), e.getRequiredType(), e.getValue());
-    log.warn("[LiteRule] {}", message);
+    log.warn("{} {}", getLogPrefix(), message);
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理非法方法请求（如 POST 接口收到 GET 请求）
+   * 处理非法方法请求（如 POST 接口收到 GET 请求）。
    *
    * @param e HTTP 请求方法不支持异常
    * @return 标准错误响应
@@ -163,12 +179,13 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
   public YdszResponse<Void> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
     String message = "不支持的请求方法: " + e.getMethod();
-    log.info("[LiteRule] {}", message);
+    log.info("{} {}", getLogPrefix(), message);
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理不支持的 Content-Type
+   * 处理不支持的 Content-Type。
    *
    * @param e HTTP 媒体类型不支持异常
    * @return 标准错误响应
@@ -177,12 +194,13 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
   public YdszResponse<Void> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
     String message = "不支持的 Content-Type: " + e.getContentType();
-    log.info("[LiteRule] {}", message);
+    log.info("{} {}", getLogPrefix(), message);
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理 404 未匹配到路由
+   * 处理 404 未匹配到路由。
    *
    * @param e 无处理器异常
    * @return 标准错误响应
@@ -191,12 +209,13 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public YdszResponse<Void> handleNoHandlerFound(NoHandlerFoundException e) {
     String message = "接口不存在: " + e.getHttpMethod() + " " + e.getRequestURL();
-    log.info("[LiteRule] {}", message);
+    log.info("{} {}", getLogPrefix(), message);
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, message);
   }
 
   /**
-   * 处理 IllegalArgumentException（如非法参数值）
+   * 处理 IllegalArgumentException（如非法参数值）。
    *
    * <p>兜底处理业务代码中直接抛出的 IllegalArgumentException，返回 400 而非 500。
    *
@@ -206,12 +225,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleIllegalArgument(IllegalArgumentException e) {
-    log.warn("[LiteRule] 非法参数: {}", e.getMessage());
+    log.warn("{} 非法参数: {}", getLogPrefix(), e.getMessage());
+    recordMetrics(e);
     return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, e.getMessage());
   }
 
   /**
-   * 处理 IllegalStateException（如非法状态）
+   * 处理 IllegalStateException（如非法状态）。
    *
    * @param e 非法状态异常
    * @return 标准错误响应
@@ -219,12 +239,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalStateException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public YdszResponse<Void> handleIllegalState(IllegalStateException e) {
-    log.warn("[LiteRule] 非法状态: {}", e.getMessage());
+    log.warn("{} 非法状态: {}", getLogPrefix(), e.getMessage());
+    recordMetrics(e);
     return YdszResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, e.getMessage());
   }
 
   /**
-   * 格式化字段错误为可读消息
+   * 格式化字段错误为可读消息。
    *
    * @param fe 字段错误
    * @return 格式化后消息
