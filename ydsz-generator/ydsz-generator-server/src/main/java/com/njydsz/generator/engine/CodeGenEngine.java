@@ -135,7 +135,7 @@ public class CodeGenEngine {
         .fileName(template.getFileName())
         .filePath(template.getFileName())
         .content(content)
-        .conflict(false)
+        .isConflict(false)
         .build();
   }
 
