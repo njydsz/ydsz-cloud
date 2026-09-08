@@ -27,7 +27,7 @@ public final class AgentTrigger {
     private final String cronExpression;
     private final String matchPattern;
     private final Map<String, Object> config;
-    private final boolean enabled;
+    private final boolean isEnabled;
     private final int maxExecutionsPerHour;
     private final LocalDateTime createdAt;
     private final LocalDateTime lastTriggeredAt;
@@ -44,7 +44,7 @@ public final class AgentTrigger {
         this.cronExpression = builder.cronExpression;
         this.matchPattern = builder.matchPattern;
         this.config = builder.config != null ? Map.copyOf(builder.config) : Map.of();
-        this.enabled = builder.enabled;
+        this.isEnabled = builder.isEnabled;
         this.maxExecutionsPerHour = builder.maxExecutionsPerHour;
         this.createdAt = builder.createdAt;
         this.lastTriggeredAt = builder.lastTriggeredAt;
@@ -96,7 +96,7 @@ public final class AgentTrigger {
     }
 
     public boolean isEnabled() {
-        return enabled;
+        return isEnabled;
     }
 
     public int getMaxExecutionsPerHour() {
@@ -134,7 +134,7 @@ public final class AgentTrigger {
                 .cronExpression(this.cronExpression)
                 .matchPattern(this.matchPattern)
                 .config(this.config)
-                .enabled(this.enabled)
+                .isEnabled(this.isEnabled)
                 .maxExecutionsPerHour(this.maxExecutionsPerHour)
                 .createdAt(this.createdAt)
                 .lastTriggeredAt(newLastTriggeredAt)
@@ -156,7 +156,7 @@ public final class AgentTrigger {
         private String cronExpression;
         private String matchPattern;
         private Map<String, Object> config;
-        private boolean enabled = true;
+        private boolean isEnabled = true;
         private int maxExecutionsPerHour = DEFAULT_MAX_EXECUTIONS_PER_HOUR;
         private LocalDateTime createdAt;
         private LocalDateTime lastTriggeredAt;
@@ -212,8 +212,8 @@ public final class AgentTrigger {
             return this;
         }
 
-        public Builder enabled(boolean enabled) {
-            this.enabled = enabled;
+        public Builder isEnabled(boolean isEnabled) {
+            this.isEnabled = isEnabled;
             return this;
         }
 
