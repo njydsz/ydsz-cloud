@@ -316,8 +316,15 @@ public class FeignProperties {
     private long connectionTimeToLive = 60000;
   }
 
+  /** Resilience4j 专属配置（Spring Boot 原生配置模式，与 CircuitBreaker 开关解耦） */
+  private final Resilience4j resilience4j = new Resilience4j();
+
   /** 错误解码配置 */
   private final Error error = new Error();
+
+  public Resilience4j getResilience4j() {
+    return resilience4j;
+  }
 
   public Error getError() {
     return error;
@@ -346,6 +353,35 @@ public class FeignProperties {
     public void setMaxBodyBytes(int maxBodyBytes) {
       this.maxBodyBytes = maxBodyBytes;
     }
+  }
+
+  /** Resilience4j 熔断器原生配置（ydsz.feign.resilience4j.*）。 */
+  @Getter
+  @Setter
+  public static class Resilience4j {
+    /** 是否启用 Resilience4j 全局熔断器配置注册，默认 false。 */
+    private boolean enabled = false;
+
+    /** 失败率阈值（百分比），达到该值触发熔断，默认 50。 */
+    private float failureRateThreshold = 50.0f;
+
+    /** 慢调用率阈值（百分比），默认 80。 */
+    private float slowCallRateThreshold = 80.0f;
+
+    /** 慢调用时长阈值（毫秒），默认 3000。 */
+    private long slowCallDurationThresholdMs = 3000L;
+
+    /** 熔断打开后等待恢复的时长（毫秒），默认 10000。 */
+    private long waitDurationInOpenStateMs = 10000L;
+
+    /** HALF_OPEN 状态允许的探测调用数，默认 10。 */
+    private int permittedNumberOfCallsInHalfOpenState = 10;
+
+    /** 滑动窗口大小，默认 20。 */
+    private int slidingWindowSize = 20;
+
+    /** 滑动窗口内最小调用次数（低于该值不判定熔断），默认 10。 */
+    private int minimumNumberOfCalls = 10;
   }
 
   /** 响应拦截器配置 */

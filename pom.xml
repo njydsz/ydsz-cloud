@@ -109,6 +109,9 @@
         <springdoc.maven.plugin.version>1.4</springdoc.maven.plugin.version>
         <!-- Prometheus（Sentry 7.13.0 要求 ≥1.7.0，Spring Boot 4.0.8 BOM 管理 1.5.1，取高版本） -->
         <prometheus.version>1.7.0</prometheus.version>
+        <!-- OpenTelemetry（Spring Boot 4.x 兼容版本） -->
+        <otel.instrumentation.version>2.13.0</otel.instrumentation.version>
+        <otel.api.version>1.47.0</otel.api.version>
 
         <!-- 版本收敛治理（原 Maven Enforcer 治理遗留，现通过 DM 统一锁定版本消除多版本冲突） -->
         <guava.version>33.5.0-jre</guava.version>
@@ -993,6 +996,22 @@
                 <version>3.0.5</version>
             </dependency>
 
+            <!-- OpenTelemetry BOM：instrumentation 版本统一管控（Spring Boot 4.x 兼容） -->
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom</artifactId>
+                <version>${otel.instrumentation.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- OpenTelemetry API BOM：API/SDK/Context 版本统一管控 -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${otel.api.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- Prometheus（统一版本：Sentry 7.13.0 与 micrometer 1.17.0 之间取高版本） -->
             <dependency>
                 <groupId>io.prometheus</groupId>
