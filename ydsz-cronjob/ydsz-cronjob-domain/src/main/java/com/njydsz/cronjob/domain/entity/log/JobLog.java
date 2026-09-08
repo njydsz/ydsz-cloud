@@ -129,10 +129,10 @@ public class JobLog extends MpBaseIdEntity<String> {
   /** 执行状态: RUNNING/SUCCESS/FAILED/TIMEOUT */
   private String status;
 
-  /** 逻辑删除标识：0=未删除，1=已删除 */
+  /** 逻辑删除标识：false=未删除，true=已删除 */
   @TableLogic
-  @TableField("deleted")
-  private Integer deleted;
+  @TableField("is_deleted")
+  private Boolean isDeleted;
 
   /** 创建时间 */
   @TableField("created_at")

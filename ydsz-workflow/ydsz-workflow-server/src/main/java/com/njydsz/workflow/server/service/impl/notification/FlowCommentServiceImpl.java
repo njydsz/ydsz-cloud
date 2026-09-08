@@ -129,7 +129,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     if (StringUtils.hasText(dto.getParentCommentId())) {
       FlowCommentVO parent =
           commentRepository.findById(dto.getParentCommentId()).orElse(null);
-      if (parent == null || parent.getDeleted() == 1) {
+      if (parent == null || parent.getIsDeleted() == 1) {
         throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
             .key("error.workflow.comment.parent.not.found")
@@ -237,7 +237,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   @Transactional(rollbackFor = Exception.class)
   public boolean deleteComment(String commentId, String userId) {
     FlowCommentVO comment = commentRepository.findById(commentId).orElse(null);
-    if (comment == null || comment.getDeleted() == 1) {
+    if (comment == null || comment.getIsDeleted() == 1) {
       return false;
     }
     // 仅评论人本人可删除自己的评论
@@ -367,7 +367,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     }
     FlowQuickCommentVO existing = quickCommentRepository.findById(dto.getId())
         .orElse(null);
-    if (existing == null || existing.getDeleted() == 1) {
+    if (existing == null || existing.getIsDeleted() == 1) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.quickcomment.not.found")
@@ -409,7 +409,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
   public void deleteQuickComment(String id, String userId) {
     FlowQuickCommentVO existing = quickCommentRepository.findById(id)
         .orElse(null);
-    if (existing == null || existing.getDeleted() == 1) {
+    if (existing == null || existing.getIsDeleted() == 1) {
       return;
     }
     // 系统预设不可删除
@@ -447,7 +447,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
     try {
       FlowQuickCommentVO existing = quickCommentRepository.findById(id)
           .orElse(null);
-      if (existing != null && existing.getDeleted() == 0) {
+      if (existing != null && existing.getIsDeleted() == 0) {
         existing.setUseCount((existing.getUseCount() == null ? 0 : existing.getUseCount()) + 1);
         quickCommentRepository.update(existing);
       }

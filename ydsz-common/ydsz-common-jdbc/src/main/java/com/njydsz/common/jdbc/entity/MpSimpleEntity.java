@@ -26,7 +26,7 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  * <pre>
  * MpBaseIdEntity (id)
  *   └─ MpBaseAuditEntity (createdAt, createdBy, updatedAt, updatedBy)
- *        └─ MpSimpleEntity (本类, deleted, status, tenantId)  ← 无乐观锁
+ *        └─ MpSimpleEntity (本类, isDeleted, status, tenantId)  ← 无乐观锁
  *             └─ MpVersionedEntity (revision @Version)
  *                  └─ MpBaseEntity (全功能别名)
  * </pre>
@@ -68,12 +68,12 @@ public class MpSimpleEntity<T extends Serializable> extends MpBaseAuditEntity<T>
   /**
    * 逻辑删除标识
    *
-   * <p>0=未删除，1=已删除。使用 MP 原生 {@code @TableLogic} 注解， 由 MyBatis-Plus 自动处理逻辑删除条件。
+   * <p>false=未删除，true=已删除。使用 MP 原生 {@code @TableLogic} 注解，由 MyBatis-Plus 自动处理逻辑删除条件。
    */
   @TableLogic
-  @TableField("deleted")
+  @TableField("is_deleted")
   @JsonIgnore
-  private Integer deleted;
+  private Boolean isDeleted;
 
   /**
    * 状态标识

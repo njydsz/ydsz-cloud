@@ -14,15 +14,16 @@ import java.lang.annotation.Target;
  * <p><b>使用场景：</b>
  *
  * <ul>
- *   <li>类级别：统一声明整个 Controller 的 API 版本（如 "v1"）
- *   <li>方法级别：覆盖类级别声明，用于版本演进场景（如某接口已升级到 v2）
+ *   <li>类级别：统一声明整个 Controller 的 API 版本（如 "26.09.01"）
+ *   <li>方法级别：覆盖类级别声明，用于版本演进场景（如某接口已升级到 26.12.01）
  *   <li>标记废弃接口：{@code deprecated=true} + {@code replacement} 指明替代接口
  * </ul>
  *
  * <p><b>约定：</b>
  *
  * <ul>
- *   <li>版本号语义与 URL 路径中的版本号保持一致（如 "v1"、"v2"）
+ *   <li>版本号采用项目版本格式 {@code YY.MM.DD}，与版本发布保持一致
+ *   <li>默认值为当前项目首版 {@code "26.09.01"}
  *   <li>废弃接口必须声明 {@code replacement} 指明替代方案
  *   <li>{@code since} 记录该接口首次发布的版本，便于生成 API 变更日志
  * </ul>
@@ -30,11 +31,11 @@ import java.lang.annotation.Target;
  * <p><b>示例：</b>
  *
  * <pre>{@code
- * @ApiVersion("v1")
+ * @ApiVersion("26.09.01")
  * @RestController
  * public class FileController {
  *
- *   @ApiVersion(value = "v2", since = "2.0.0", replacement = "/api/v2/nextwiki/files/upload")
+ *   @ApiVersion(value = "26.12.01", since = "26.12.01", replacement = "/api/files/upload-v2")
  *   @PostMapping("/upload")
  *   public YdszResponse<...> uploadV2() { ... }
  * }
@@ -49,20 +50,20 @@ import java.lang.annotation.Target;
 public @interface ApiVersion {
 
   /**
-   * API 版本号（与 URL 路径中的版本号保持一致）。
+   * API 版本号（项目版本格式 YY.MM.DD）。
    *
-   * <p>示例：{@code "v1"}、{@code "v2"}、{@code "v1-beta"}。
+   * <p>默认值为当前项目首版 {@code "26.09.01"}。
    *
    * @return 版本号
    */
-  String value();
+  String value() default "26.09.01";
 
   /**
-   * 该接口首次引入的版本号（语义化版本）。
+   * 该接口首次引入的版本号（项目版本格式 YY.MM.DD）。
    *
-   * <p>用于生成 API 变更日志与兼容性说明。默认为空表示未知。
+   * <p>用于生成 API 变更日志与兼容性说明。默认为空表示与 value 一致。
    *
-   * @return 语义化版本号（如 "26.09.01"）
+   * @return 版本号
    */
   String since() default "";
 
@@ -85,7 +86,7 @@ public @interface ApiVersion {
   String replacement() default "";
 
   /**
-   * 计划移除版本（语义化版本）。
+   * 计划移除版本（项目版本格式 YY.MM.DD）。
    *
    * <p>声明该废弃接口将在哪个版本彻底移除，便于客户端制定迁移计划。
    *

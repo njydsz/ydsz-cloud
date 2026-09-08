@@ -1,7 +1,7 @@
 package com.njydsz.system.web.controller;
 
-import com.njydsz.common.auth.util.SecurityUtils;
-import com.njydsz.common.core.response.YdszResponse;
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
+import com.njydsz.common.auth.util.SecurityUtils;
+import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * 二次身份验证 Controller。

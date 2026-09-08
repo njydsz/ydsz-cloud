@@ -467,7 +467,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
-    if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+    if (def == null || (def.getIsDeleted() != null && def.getIsDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.designer.definition.not.found")
@@ -544,7 +544,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
-    if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+    if (def == null || (def.getIsDeleted() != null && def.getIsDeleted() == 1)) {
       throw SysException.builder()
           .resultCode(YdszResultCode.NOT_FOUND)
           .key("error.workflow.designer.definition.not.found")
@@ -597,7 +597,7 @@ public class FlowDefinitionDesignManager {
           .build();
     }
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
-    if (def == null || (def.getDeleted() != null && def.getDeleted() == 1)) {
+    if (def == null || (def.getIsDeleted() != null && def.getIsDeleted() == 1)) {
       return null;
     }
 
