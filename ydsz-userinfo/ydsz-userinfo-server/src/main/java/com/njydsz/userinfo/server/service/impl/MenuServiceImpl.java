@@ -179,7 +179,7 @@ public class MenuServiceImpl implements MenuService {
               vo.setPath(menuVO.getPath());
               vo.setComponent(menuVO.getComponent());
               vo.setIcon(menuVO.getIcon());
-              vo.setsort(menuVO.getsort());
+              vo.setSort(menuVO.getSort());
               vo.setPermissionCode(menuVO.getPermissionCode());
               vo.setVisible(menuVO.getVisible());
               vo.setStatus(menuVO.getStatus());
@@ -192,6 +192,6 @@ public class MenuServiceImpl implements MenuService {
         MenuTreeVO::getId,
         MenuTreeVO::getParentId,
         MenuTreeVO::setChildren,
-        MenuTreeVO::getsort);
+        MenuTreeVO::getSort);
   }
 }

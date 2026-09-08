@@ -143,14 +143,14 @@ public class DictRepositoryImpl implements DictRepository {
   @Override
   public List<DictItemVO> findItemsByParentId(String parentId) {
     LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItem::getParentId, parentId).orderByAsc(DictItem::getsort);
+    wrapper.eq(DictItem::getParentId, parentId).orderByAsc(DictItem::getSort);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
   @Override
   public List<DictItemVO> findItemsByTypeCode(String typeCode) {
     LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItem::getTypeCode, typeCode).orderByAsc(DictItem::getsort);
+    wrapper.eq(DictItem::getTypeCode, typeCode).orderByAsc(DictItem::getSort);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 
@@ -185,7 +185,7 @@ public class DictRepositoryImpl implements DictRepository {
     if (typeCode != null && !typeCode.isBlank()) {
       wrapper.eq(DictItem::getTypeCode, typeCode);
     }
-    wrapper.orderByAsc(DictItem::getTypeCode, DictItem::getsort);
+    wrapper.orderByAsc(DictItem::getTypeCode, DictItem::getSort);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 

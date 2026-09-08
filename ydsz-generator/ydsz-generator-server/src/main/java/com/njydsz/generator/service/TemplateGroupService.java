@@ -63,8 +63,8 @@ public class TemplateGroupService {
   public GenTemplateGroup create(GenTemplateGroup group) {
     group.setId(null);
     group.setSystem(false);
-    if (group.getsort() == null) {
-      group.setsort(0);
+    if (group.getSort() == null) {
+      group.setSort(0);
     }
     return groupRepository.save(group);
   }

@@ -122,7 +122,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("请假审批");
     tpl.setCategory("HR");
     tpl.setDescription("员工请假审批流程：发起人提交 → 直属上级审批 → HR备案");
-    tpl.setsort(sort_LEAVE);
+    tpl.setSort(sort_LEAVE);
     tpl.setUseCase("适用于事假、病假、年假、调休等各类请假申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("人事", "请假", "考勤"));
@@ -156,7 +156,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("费用报销");
     tpl.setCategory("FINANCE");
     tpl.setDescription("费用报销审批流程：发起人 → 直属上级 → 财务审批 → 出纳付款");
-    tpl.setsort(sort_EXPENSE);
+    tpl.setSort(sort_EXPENSE);
     tpl.setUseCase("适用于差旅费、招待费、办公费等各类费用报销");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("财务", "报销", "费用"));
@@ -192,7 +192,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("采购申请");
     tpl.setCategory("FINANCE");
     tpl.setDescription("采购申请审批流程：发起人 → 部门负责人 → 采购审批 → 财务审批");
-    tpl.setsort(sort_PURCHASE);
+    tpl.setSort(sort_PURCHASE);
     tpl.setUseCase("适用于物资采购、服务采购等各类采购申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("财务", "采购", "物资"));
@@ -229,7 +229,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("出差申请");
     tpl.setCategory("HR");
     tpl.setDescription("出差申请审批流程：发起人 → 直属上级 → HR审批");
-    tpl.setsort(sort_TRIP);
+    tpl.setSort(sort_TRIP);
     tpl.setUseCase("适用于国内/国际出差申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("人事", "出差", "差旅"));
@@ -263,7 +263,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("用印申请");
     tpl.setCategory("ADMIN");
     tpl.setDescription("用印申请审批流程：发起人 → 直属上级 → 行政审批");
-    tpl.setsort(sort_SEAL);
+    tpl.setSort(sort_SEAL);
     tpl.setUseCase("适用于公章、合同章、财务章等各类印章使用申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("行政", "用印", "印章"));
@@ -297,7 +297,7 @@ public class FlowPresetTemplateLibrary {
     tpl.setTemplateName("项目立项");
     tpl.setCategory("PROJECT");
     tpl.setDescription("项目立项审批流程：发起人 → 部门负责人 → 项目总监 → 总经理审批");
-    tpl.setsort(sort_PROJECT);
+    tpl.setSort(sort_PROJECT);
     tpl.setUseCase("适用于各类项目立项申请");
     tpl.setSystemBuiltIn(true);
     tpl.setTags(List.of("项目", "立项", "审批"));

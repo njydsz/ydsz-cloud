@@ -272,7 +272,7 @@ public class DepartmentServiceImpl implements DepartmentService {
           treeVO.setParentId(vo.getParentId());
           treeVO.setDeptName(vo.getDeptName());
           treeVO.setDeptCode(vo.getDeptCode());
-          treeVO.setsort(vo.getsort());
+          treeVO.setSort(vo.getSort());
           treeVO.setStatus(vo.getStatus());
           return treeVO;
         })
@@ -283,7 +283,7 @@ public class DepartmentServiceImpl implements DepartmentService {
             DepartmentTreeVO::getId,
             DepartmentTreeVO::getParentId,
             DepartmentTreeVO::setChildren,
-            DepartmentTreeVO::getsort);
+            DepartmentTreeVO::getSort);
 
     // 4. 写入多级缓存（异步异常不影响业务）
     try {

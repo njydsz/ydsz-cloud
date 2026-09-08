@@ -60,7 +60,7 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }
-    wrapper.orderByAsc(TenantPlan::getsort);
+    wrapper.orderByAsc(TenantPlan::getSort);
     IPage<TenantPlan> result = tenantPlanMapper.selectPage(page, wrapper);
     List<TenantPlanVO> vos = converter.planListToVO(result.getRecords());
     return PageResponse.success(result.getTotal(), (long) query.getPageNum(), (long) query.getPageSize(), vos);
@@ -75,7 +75,7 @@ public class TenantPlanRepositoryImpl implements TenantPlanRepository {
     if (query.getStatus() != null && !query.getStatus().isBlank()) {
       wrapper.eq(TenantPlan::getStatus, query.getStatus());
     }
-    wrapper.orderByAsc(TenantPlan::getsort);
+    wrapper.orderByAsc(TenantPlan::getSort);
     return converter.planListToVO(tenantPlanMapper.selectList(wrapper));
   }
 

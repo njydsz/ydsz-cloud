@@ -103,7 +103,7 @@ public class DictItemRollbackStrategy implements RollbackStrategy {
     dto.setTypeCode(vo.getTypeCode());
     dto.setItemCode(vo.getItemCode());
     dto.setItemValue(vo.getItemValue());
-    dto.setsort(vo.getsort());
+    dto.setSort(vo.getSort());
     dto.setStatus(vo.getStatus());
     dto.setParentId(vo.getParentId());
     dto.setDescription(vo.getDescription());

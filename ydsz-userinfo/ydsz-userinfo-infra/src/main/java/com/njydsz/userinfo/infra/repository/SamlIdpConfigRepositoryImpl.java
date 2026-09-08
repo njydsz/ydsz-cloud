@@ -49,7 +49,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
             SamlIdpConfig::getName, query.getName())
         .eq(query.getStatus() != null && !query.getStatus().isBlank(),
             SamlIdpConfig::getStatus, query.getStatus())
-        .orderByAsc(SamlIdpConfig::getsort);
+        .orderByAsc(SamlIdpConfig::getSort);
 
     List<SamlIdpConfig> entities = mapper.selectList(wrapper);
     return entities.stream()
@@ -90,7 +90,7 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
     entity.setDisplayNameAttribute(
         dto.getDisplayNameAttribute() != null ? dto.getDisplayNameAttribute() : "displayName");
     entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-    entity.setsort(dto.getsort() != null ? dto.getsort() : 100);
+    entity.setSort(dto.getSort() != null ? dto.getSort() : 100);
     entity.setRemark(dto.getRemark());
 
     mapper.insert(entity);
@@ -122,8 +122,8 @@ public class SamlIdpConfigRepositoryImpl implements SamlIdpConfigRepository {
     if (dto.getStatus() != null) {
       existing.setStatus(dto.getStatus());
     }
-    if (dto.getsort() != null) {
-      existing.setsort(dto.getsort());
+    if (dto.getSort() != null) {
+      existing.setSort(dto.getSort());
     }
     if (dto.getRemark() != null) {
       existing.setRemark(dto.getRemark());

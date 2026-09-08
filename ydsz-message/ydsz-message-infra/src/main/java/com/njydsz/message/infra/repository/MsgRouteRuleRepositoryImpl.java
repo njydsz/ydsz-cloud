@@ -148,7 +148,7 @@ public class MsgRouteRuleRepositoryImpl implements MsgRouteRuleRepository {
     entity.setTargetChannel(vo.getTargetChannel());
     entity.setFallbackChannel(vo.getFallbackChannel());
     entity.setDescription(vo.getDescription());
-    entity.setsort(vo.getsort());
+    entity.setSort(vo.getSort());
     entity.setStatus(vo.getStatus());
     return entity;
   }

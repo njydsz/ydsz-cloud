@@ -95,7 +95,7 @@ public class SocialClientConfigService {
           vo.setScope(entry.getValue().getScope());
           vo.setRedirectUri(entry.getValue().getRedirectUri());
           vo.setStatus("ENABLED");
-          vo.setsort(YAML_CONFIG_sort); // YAML 配置排在 DB 配置后面
+          vo.setSort(YAML_CONFIG_sort); // YAML 配置排在 DB 配置后面
           vo.setRemark("YAML 静态配置");
           merged.add(vo);
         }

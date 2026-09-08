@@ -246,7 +246,7 @@ public class DictItemServiceImpl implements DictItemService {
         DictItemVO::getId,
         DictItemVO::getParentId,
         DictItemVO::setChildren,
-        DictItemVO::getsort);
+        DictItemVO::getSort);
   }
 
   /**
@@ -584,7 +584,7 @@ public class DictItemServiceImpl implements DictItemService {
     vo.setTypeCode(excelRow.getTypeCode());
     vo.setItemCode(excelRow.getItemCode());
     vo.setItemValue(excelRow.getItemValue());
-    vo.setsort(excelRow.getsort());
+    vo.setSort(excelRow.getSort());
     vo.setParentId(excelRow.getParentId());
     vo.setDescription(excelRow.getDescription());
     vo.setStatus(excelRow.getStatus());
@@ -602,7 +602,7 @@ public class DictItemServiceImpl implements DictItemService {
     vo.setTypeCode(item.getTypeCode());
     vo.setItemCode(item.getItemCode());
     vo.setItemValue(item.getItemValue());
-    vo.setsort(item.getsort());
+    vo.setSort(item.getSort());
     vo.setParentId(item.getParentId());
     vo.setDescription(item.getDescription());
     vo.setStatus(item.getStatus());
@@ -652,7 +652,7 @@ public class DictItemServiceImpl implements DictItemService {
     dto.setTypeCode(vo.getTypeCode());
     dto.setItemCode(vo.getItemCode());
     dto.setItemValue(vo.getItemValue());
-    dto.setsort(vo.getsort());
+    dto.setSort(vo.getSort());
     dto.setDescription(vo.getDescription());
     dto.setExtJson(vo.getExtJson());
     dto.setStatus(vo.getStatus());

@@ -147,8 +147,8 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     if (dto.getDescription() != null) {
       vo.setDescription(dto.getDescription());
     }
-    if (dto.getsort() != null) {
-      vo.setsort(dto.getsort());
+    if (dto.getSort() != null) {
+      vo.setSort(dto.getSort());
     }
     msgRouteRuleRepository.update(vo);
     evictCache();
@@ -327,7 +327,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     vo.setFallbackChannel(dto.getFallbackChannel());
     vo.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "ENABLED");
     vo.setDescription(dto.getDescription());
-    vo.setsort(dto.getsort() == null ? 100 : dto.getsort());
+    vo.setSort(dto.getSort() == null ? 100 : dto.getSort());
     return vo;
   }
 }

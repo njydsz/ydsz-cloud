@@ -152,7 +152,7 @@ public class UserFavoriteApplicationService {
             .path(node.getPath())
             .thumbnailKey(node.getThumbnailKey())
             .starred(node.getStarred())
-            .sort(fav.getsort())
+            .sort(fav.getSort())
             .favoritedAt(fav.getCreatedAt())
             .updatedAt(node.getUpdatedAt())
             .build());
