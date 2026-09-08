@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,11 +28,11 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code roleCode}：角色编码（业务侧引用，全局唯一，建议格式 {@code ROLE_XXX}）
  *   <li>{@code roleName}：角色名称（前端展示）
  *   <li>{@code dataScope}：数据权限范围（ALL/DEPT_AND_CHILD/DEPT/SELF/CUSTOM），控制可见数据行
- *   <li>{@code builtIn}：是否内置角色（{@code true} 时禁止删除/编辑编码，保护系统角色）
+ *   <li>{@code isBuiltIn}：是否内置角色（{@code true} 时禁止删除/编辑编码，保护系统角色）
  *   <li>{@code tenantId}：租户 ID（多租户隔离，{@code "0"} = 平台级角色）
  * </ul>
  *
- * <p><b>内置角色（{@code builtIn=true}）保护：</b>
+ * <p><b>内置角色（{@code isBuiltIn=true}）保护：</b>
  *
  * <ul>
  *   <li>SUPER_ADMIN（超级管理员，平台级）
@@ -83,7 +84,8 @@ public class Role extends MpBaseEntity<String> {
    * <p>内置角色（{@code true}）保护机制：① 禁止删除；② 禁止修改 {@code roleCode}； ③ 可调整权限分配和数据范围。用于保护系统核心角色（SUPER_ADMIN
    * 等）。
    */
-  private Boolean builtIn;
+  @TableField("is_built_in")
+  private Boolean isBuiltIn;
 
   /**
    * 数据权限范围。
