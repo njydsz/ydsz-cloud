@@ -181,7 +181,7 @@ public class DictRepositoryImpl implements DictRepository {
   @Override
   public List<DictItemVO> findItemsForExport(String typeCode) {
     LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItem::getDeleted, 0);
+    wrapper.eq(DictItem::getIsDeleted, 0);
     if (typeCode != null && !typeCode.isBlank()) {
       wrapper.eq(DictItem::getTypeCode, typeCode);
     }
@@ -239,7 +239,7 @@ public class DictRepositoryImpl implements DictRepository {
   @Override
   public List<DictItemVO> findEnabledItems() {
     LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItem::getStatus, "ENABLED").eq(DictItem::getDeleted, 0);
+    wrapper.eq(DictItem::getStatus, "ENABLED").eq(DictItem::getIsDeleted, 0);
     return converter.dictItemListToVO(dictItemMapper.selectList(wrapper));
   }
 }

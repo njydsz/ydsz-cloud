@@ -25,7 +25,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.auth.SamlService;
@@ -63,7 +63,7 @@ import com.njydsz.userinfo.server.service.SamlIdpConfigService;
 @RequestMapping("/saml")
 @RequiredArgsConstructor
 @Tag(name = "SAML 2.0", description = "SAML Service Provider 标准端点")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class SamlController {
 
   /** SAML 2.0 SP 服务 */

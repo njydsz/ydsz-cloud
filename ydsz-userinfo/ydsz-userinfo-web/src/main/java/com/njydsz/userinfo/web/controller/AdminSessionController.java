@@ -23,7 +23,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.UserBanRequestDTO;
 import com.njydsz.userinfo.domain.enums.BanType;
 import com.njydsz.userinfo.domain.vo.BanInfoVO;
@@ -70,7 +70,7 @@ import com.njydsz.userinfo.server.auth.UserSessionAdminService;
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @Tag(name = "管理员封禁与会话治理", description = "账号封禁/解封、在线会话管理与强制下线")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class AdminSessionController {
 
   private final UserBanService userBanService;

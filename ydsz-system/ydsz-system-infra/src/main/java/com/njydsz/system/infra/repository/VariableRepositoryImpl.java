@@ -61,7 +61,7 @@ public class VariableRepositoryImpl implements VariableRepository {
         variableMapper.selectOne(
             new LambdaQueryWrapper<Variable>()
                 .eq(Variable::getVariableKey, variableKey)
-                .eq(Variable::getDeleted, 0)
+                .eq(Variable::getIsDeleted, 0)
                 .last("LIMIT 1")))
         .map(converter::entityToVO);
   }

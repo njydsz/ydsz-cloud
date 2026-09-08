@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.code.YdszResultCode;
@@ -67,6 +68,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  * @see ExpressionEngine 表达式校验器
  * @see RuleDslParser DSL 解析器
  */
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/api/literule/dsl")

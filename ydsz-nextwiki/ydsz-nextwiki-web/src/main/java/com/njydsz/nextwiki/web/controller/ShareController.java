@@ -62,7 +62,7 @@ import com.njydsz.nextwiki.server.service.ShareApplicationService;
  * @author ydsz-team
  * @since 26.09.01
  */
-@ApiVersion("v1")
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/api/nextwiki/shares")

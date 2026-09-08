@@ -37,6 +37,7 @@ import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.ImportResultVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.ConfigService;
 
@@ -65,6 +66,7 @@ import com.njydsz.system.server.service.ConfigService;
  * @since 26.09.01
  * @see com.njydsz.system.server.service.ConfigService 配置业务逻辑
  */
+@ApiVersion("26.09.01")
 @Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作 + 导入导出")
 @Slf4j
 @RestController

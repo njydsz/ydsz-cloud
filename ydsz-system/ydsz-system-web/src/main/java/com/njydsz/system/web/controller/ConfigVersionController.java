@@ -26,6 +26,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.server.service.ConfigService;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.EntityVersionService;
 
 /**
@@ -49,6 +50,7 @@ import com.njydsz.system.server.service.EntityVersionService;
  * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
  * @see com.njydsz.system.infra.entity.EntityVersion 实体版本
  */
+@ApiVersion("26.09.01")
 @Tag(name = "配置版本", description = "配置变更历史查询 + 一键回滚")
 @Slf4j
 @RestController

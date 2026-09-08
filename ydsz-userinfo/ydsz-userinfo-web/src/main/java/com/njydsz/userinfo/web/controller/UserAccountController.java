@@ -31,7 +31,7 @@ import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AssignRolesDTO;
 import com.njydsz.userinfo.domain.dto.BatchUserStatusDTO;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
@@ -89,7 +89,7 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 @Tag(name = "用户管理", description = "用户账号 CRUD、密码管理、角色分配")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class UserAccountController {
 
   private final UserAccountService service;

@@ -27,6 +27,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.query.AppInfoPageQuery;
 import com.njydsz.system.domain.vo.AppInfoVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.AppInfoService;
 
 /**
@@ -61,6 +62,7 @@ import com.njydsz.system.server.service.AppInfoService;
  * @since 26.09.01
  * @see AppInfoService 应用注册业务逻辑
  */
+@ApiVersion("26.09.01")
 @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
 @Slf4j
 @RestController

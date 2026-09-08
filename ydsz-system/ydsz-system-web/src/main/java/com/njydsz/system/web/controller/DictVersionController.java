@@ -28,6 +28,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.server.service.DictItemService;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.EntityVersionService;
 
 /**
@@ -60,6 +61,7 @@ import com.njydsz.system.server.service.EntityVersionService;
  * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
  * @see com.njydsz.system.infra.entity.EntityVersion 实体版本
  */
+@ApiVersion("26.09.01")
 @Tag(name = "字典版本", description = "字典变更历史查询 + 一键回滚")
 @Slf4j
 @RestController

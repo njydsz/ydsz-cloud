@@ -22,7 +22,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.ApiKeyCreateDTO;
 import com.njydsz.userinfo.domain.query.ApiKeyPageQuery;
 import com.njydsz.userinfo.domain.vo.ApiKeyVO;
@@ -50,7 +50,7 @@ import com.njydsz.userinfo.server.service.ApiKeyService;
 @RequestMapping("/api/apikey")
 @RequiredArgsConstructor
 @Tag(name = "API Key 管理", description = "API Key 的创建、查询、撤销、启用/禁用")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class ApiKeyController {
 
   private final ApiKeyService apiKeyService;

@@ -29,6 +29,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.query.TenantPageQuery;
 import com.njydsz.system.domain.vo.TenantVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.TenantService;
 
 /**
@@ -50,6 +51,7 @@ import com.njydsz.system.server.service.TenantService;
  * @since 26.09.01
  * @see TenantService 租户业务逻辑
  */
+@ApiVersion("26.09.01")
 @Tag(name = "租户管理", description = "多租户 CRUD")
 @Slf4j
 @RestController

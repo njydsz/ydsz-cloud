@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.util.SecurityUtils;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 
 /**
@@ -26,6 +27,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * @author ydsz-team
  * @since 26.09.08
  */
+@ApiVersion("26.09.01")
 @Tag(name = "二次身份验证", description = "敏感操作前的短期令牌颁发")
 @Slf4j
 @RestController

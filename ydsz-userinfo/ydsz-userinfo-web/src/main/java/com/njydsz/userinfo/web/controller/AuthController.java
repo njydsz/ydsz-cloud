@@ -40,7 +40,7 @@ import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.sentry.sla.SlaMetric;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.RefreshRequest;
 import com.njydsz.userinfo.domain.dto.SecondaryAuthRequest;
@@ -88,7 +88,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class AuthController {
   /** Map 初始容量 */
   private static final int MAP_CAPACITY = 16;

@@ -20,6 +20,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.nextwiki.domain.repository.SpaceRepository;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 
 /**
@@ -43,6 +44,7 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
  * @see com.njydsz.nextwiki.api.client.NextwikiSpaceClient
  * @see com.njydsz.nextwiki.api.client.NextwikiQuotaClient
  */
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/api/internal")

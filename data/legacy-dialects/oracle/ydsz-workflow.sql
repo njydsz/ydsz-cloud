@@ -1164,7 +1164,7 @@ CREATE TABLE ydsz_flow_admin_role (
     tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     role_code                VARCHAR2(64 CHAR)        NOT NULL,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     granted_by               VARCHAR2(32 CHAR)        DEFAULT NULL,
     granted_at               TIMESTAMP                DEFAULT NULL,
     expire_at                TIMESTAMP                DEFAULT NULL,
@@ -1184,7 +1184,7 @@ COMMENT ON COLUMN ydsz_flow_admin_role.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_flow_admin_role.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_flow_admin_role.user_id IS '用户 ID';
 COMMENT ON COLUMN ydsz_flow_admin_role.role_code IS '角色编码（FLOW_ADMIN=流程管理员，FLOW_DESIGNER=流程设计者，FLOW_AUDITOR=流程审计员）';
-COMMENT ON COLUMN ydsz_flow_admin_role.enabled IS '是否启用（0=撤销授权但保留历史记录，1=启用中）';
+COMMENT ON COLUMN ydsz_flow_admin_role.is_enabled IS '是否启用（0=撤销授权但保留历史记录，1=启用中）';
 COMMENT ON COLUMN ydsz_flow_admin_role.granted_by IS '授权人 ID（NULL 表示系统预置角色）';
 COMMENT ON COLUMN ydsz_flow_admin_role.granted_at IS '授权时间';
 COMMENT ON COLUMN ydsz_flow_admin_role.expire_at IS '过期时间（NULL 表示永不过期）';

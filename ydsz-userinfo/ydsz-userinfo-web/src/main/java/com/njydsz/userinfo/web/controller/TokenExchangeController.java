@@ -20,7 +20,7 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.CrossDomainTokenService;
 import com.njydsz.userinfo.server.auth.SessionManager;
@@ -57,7 +57,7 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
 @RequestMapping("/api/sso")
 @RequiredArgsConstructor
 @Tag(name = "跨域 SSO", description = "令牌交换/验证/登出通知")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class TokenExchangeController {
   /** "Bearer " 前缀长度 */
   private static final int BEARER_PREFIX_LENGTH = 7;

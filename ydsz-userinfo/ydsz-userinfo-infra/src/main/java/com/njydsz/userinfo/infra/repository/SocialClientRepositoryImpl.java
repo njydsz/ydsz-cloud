@@ -38,7 +38,7 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
   @Override
   public List<SocialClientVO> findByPage(SocialClientPageQuery query) {
     LambdaQueryWrapper<SocialClient> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(SocialClient::getDeleted, false)
+    wrapper.eq(SocialClient::getIsDeleted, false)
         .like(query.getPlatform() != null && !query.getPlatform().isBlank(),
             SocialClient::getPlatform, query.getPlatform())
         .like(query.getPlatformName() != null && !query.getPlatformName().isBlank(),
@@ -150,10 +150,10 @@ public class SocialClientRepositoryImpl implements SocialClientRepository {
   public void deleteByPlatform(String platform) {
     LambdaQueryWrapper<SocialClient> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(SocialClient::getPlatform, platform.toUpperCase())
-        .eq(SocialClient::getDeleted, false);
+        .eq(SocialClient::getIsDeleted, false);
     SocialClient entity = mapper.selectOne(wrapper);
     if (entity != null) {
-      entity.setDeleted(1);
+      entity.setIsDeleted(true);
       mapper.updateById(entity);
       log.info("社交平台客户端配置已删除: platform={}", platform);
     }

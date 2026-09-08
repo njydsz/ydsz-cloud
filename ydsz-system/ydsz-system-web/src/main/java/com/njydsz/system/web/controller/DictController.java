@@ -27,6 +27,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.DictService;
 
 /**
@@ -54,6 +55,7 @@ import com.njydsz.system.server.service.DictService;
  * @see DictItemController 字典项 Controller（字典两级体系下层）
  * @see DictVersionService 字典版本管理（变更通知下游）
  */
+@ApiVersion("26.09.01")
 @Tag(name = "字典类型", description = "字典类型 CRUD + 全量列表")
 @Slf4j
 @RestController

@@ -21,7 +21,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.SamlIdpDTO;
 import com.njydsz.userinfo.domain.query.SamlIdpPageQuery;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
@@ -42,7 +42,7 @@ import com.njydsz.userinfo.server.service.SamlIdpConfigService;
 @RequestMapping("/api/saml-idp-config")
 @RequiredArgsConstructor
 @Tag(name = "SAML IdP 配置", description = "SAML 身份提供者配置管理（多租户）")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class SamlIdpConfigController {
 
   private final SamlIdpConfigService configService;

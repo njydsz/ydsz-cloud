@@ -24,7 +24,7 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
@@ -60,7 +60,7 @@ import com.njydsz.userinfo.server.auth.WebAuthnService;
 @RequestMapping("/api/webauthn")
 @RequiredArgsConstructor
 @Tag(name = "WebAuthn", description = "FIDO2 Passkey 无密码认证")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class WebAuthnController {
 
   /** WebAuthn 服务 */

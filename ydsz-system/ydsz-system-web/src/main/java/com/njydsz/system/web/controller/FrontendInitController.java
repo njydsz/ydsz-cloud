@@ -16,6 +16,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.vo.FrontendInitVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.FrontendInitService;
 
 /**
@@ -36,6 +37,7 @@ import com.njydsz.system.server.service.FrontendInitService;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Tag(name = "前端初始化", description = "前端启动聚合数据接口")
 @Slf4j
 @RestController

@@ -39,7 +39,7 @@ CREATE TABLE ydsz_rule_def (
     title_template           VARCHAR2(512 CHAR)       DEFAULT NULL,
     description_template     VARCHAR2(512 CHAR)       DEFAULT NULL,
     priority                 NUMBER(10)               NOT NULL DEFAULT 100,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     scope                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     mutex_group              VARCHAR2(128 CHAR)       DEFAULT NULL,
     drilldown_available      NUMBER(1)                NOT NULL DEFAULT 0,
@@ -79,7 +79,7 @@ COMMENT ON COLUMN ydsz_rule_def.default_severity IS '默认严重级别';
 COMMENT ON COLUMN ydsz_rule_def.title_template IS '告警标题模板';
 COMMENT ON COLUMN ydsz_rule_def.description_template IS '告警描述模板';
 COMMENT ON COLUMN ydsz_rule_def.priority IS '优先级，数值越小优先级越高';
-COMMENT ON COLUMN ydsz_rule_def.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_def.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_def.scope IS '适用范围';
 COMMENT ON COLUMN ydsz_rule_def.mutex_group IS '互斥组名称（同组内首个命中后跳过其余规则；NULL 表示无互斥组）';
 COMMENT ON COLUMN ydsz_rule_def.drilldown_available IS '是否支持下钻查看详情（1=支持，0=不支持）';
@@ -113,8 +113,8 @@ CREATE TABLE ydsz_rule_variable_def (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     sample_value             CLOB                    ,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
-    required                 NUMBER(1)                NOT NULL DEFAULT 0,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_required              NUMBER(1)                NOT NULL DEFAULT 0,
+    is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
@@ -134,8 +134,8 @@ COMMENT ON COLUMN ydsz_rule_variable_def.var_type IS '变量类型（Number / St
 COMMENT ON COLUMN ydsz_rule_variable_def.description IS '变量描述（中文，供前端编辑器提示）';
 COMMENT ON COLUMN ydsz_rule_variable_def.sample_value IS '示例值（存储为字符串，用于前端编辑器预览和 dryRun 默认 facts）';
 COMMENT ON COLUMN ydsz_rule_variable_def.category IS '变量来源类别（EVM / PROJECT / FINANCE / BENCH 等）';
-COMMENT ON COLUMN ydsz_rule_variable_def.required IS '是否必填（1=必填，0=可选）';
-COMMENT ON COLUMN ydsz_rule_variable_def.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_variable_def.is_required IS '是否必填（1=必填，0=可选）';
+COMMENT ON COLUMN ydsz_rule_variable_def.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_variable_def.status IS '状态标识';
 COMMENT ON COLUMN ydsz_rule_variable_def.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_variable_def.revision IS '乐观锁版本号';
@@ -212,7 +212,7 @@ CREATE TABLE ydsz_rule_script (
     default_severity         VARCHAR2(32 CHAR)        DEFAULT NULL,
     sandbox_enabled          NUMBER(1)                NOT NULL DEFAULT 1,
     priority                 NUMBER(10)               DEFAULT NULL,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     scope                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -237,7 +237,7 @@ COMMENT ON COLUMN ydsz_rule_script.script IS 'Groovy 脚本源码（运行在沙
 COMMENT ON COLUMN ydsz_rule_script.default_severity IS '默认严重级别（INFO/WARN/ERROR/CRITICAL）';
 COMMENT ON COLUMN ydsz_rule_script.sandbox_enabled IS '是否启用沙箱（1=启用安全限制，0=关闭）';
 COMMENT ON COLUMN ydsz_rule_script.priority IS '优先级';
-COMMENT ON COLUMN ydsz_rule_script.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_script.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_script.scope IS '适用范围';
 COMMENT ON COLUMN ydsz_rule_script.version IS '版本号';
 COMMENT ON COLUMN ydsz_rule_script.provider_trace_id IS '供应商侧追踪 ID';
@@ -264,7 +264,7 @@ CREATE TABLE ydsz_rule_decision_table (
     rows                     CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_decision_table_rows CHECK (rows IS JSON),
     default_actions          CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_decision_table_default_actions CHECK (default_actions IS JSON),
     hit_policy               VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'FIRST',
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     priority                 NUMBER(10)               DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -290,7 +290,7 @@ COMMENT ON COLUMN ydsz_rule_decision_table.action_columns IS '动作列定义（
 COMMENT ON COLUMN ydsz_rule_decision_table.rows IS '决策行（JSON 数组）';
 COMMENT ON COLUMN ydsz_rule_decision_table.default_actions IS '默认动作（JSON 对象）';
 COMMENT ON COLUMN ydsz_rule_decision_table.hit_policy IS '命中策略（UNIQUE/FIRST/PRIORITY/COLLECT/ANY，默认 FIRST）';
-COMMENT ON COLUMN ydsz_rule_decision_table.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_decision_table.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_decision_table.priority IS '优先级';
 COMMENT ON COLUMN ydsz_rule_decision_table.version IS '版本';
 COMMENT ON COLUMN ydsz_rule_decision_table.status IS '状态标识';
@@ -313,7 +313,7 @@ CREATE TABLE ydsz_rule_decision_tree (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     root_node                CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_decision_tree_root_node CHECK (root_node IS JSON),
     priority                 NUMBER(10)               DEFAULT NULL,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     scope                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -336,7 +336,7 @@ COMMENT ON COLUMN ydsz_rule_decision_tree.category IS '规则分类';
 COMMENT ON COLUMN ydsz_rule_decision_tree.description IS '规则描述';
 COMMENT ON COLUMN ydsz_rule_decision_tree.root_node IS '根节点 JSON（嵌套结构，节点类型 CONDITION/ACTION/DEFAULT）';
 COMMENT ON COLUMN ydsz_rule_decision_tree.priority IS '优先级（数字越小越优先）';
-COMMENT ON COLUMN ydsz_rule_decision_tree.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_decision_tree.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_decision_tree.scope IS '适用范围';
 COMMENT ON COLUMN ydsz_rule_decision_tree.version IS '版本号';
 COMMENT ON COLUMN ydsz_rule_decision_tree.provider_trace_id IS '供应商侧追踪 ID';
@@ -363,7 +363,7 @@ CREATE TABLE ydsz_rule_scorecard (
     yellow_threshold         NUMBER(20,6)             DEFAULT NULL,
     factors                  CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_scorecard_factors CHECK (factors IS JSON),
     priority                 NUMBER(10)               DEFAULT NULL,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     scope                    VARCHAR2(128 CHAR)       DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -389,7 +389,7 @@ COMMENT ON COLUMN ydsz_rule_scorecard.red_threshold IS '红灯阈值（≤ 触�
 COMMENT ON COLUMN ydsz_rule_scorecard.yellow_threshold IS '黄灯阈值（≤ 触发黄灯）';
 COMMENT ON COLUMN ydsz_rule_scorecard.factors IS '评分因子 JSON：[{conditionExpression, score, description}]';
 COMMENT ON COLUMN ydsz_rule_scorecard.priority IS '优先级（数字越小越优先）';
-COMMENT ON COLUMN ydsz_rule_scorecard.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_scorecard.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_scorecard.scope IS '适用范围（如 ALL / PROJECT_TYPE:CONSTRUCTION）';
 COMMENT ON COLUMN ydsz_rule_scorecard.version IS '版本号';
 COMMENT ON COLUMN ydsz_rule_scorecard.provider_trace_id IS '供应商侧追踪 ID';
@@ -497,7 +497,7 @@ CREATE TABLE ydsz_rule_pack (
     author                   VARCHAR2(64 CHAR)        DEFAULT NULL,
     download_count           NUMBER(19)               NOT NULL DEFAULT 0,
     rating                   NUMBER(20,6)             DEFAULT NULL,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     official                 NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
@@ -525,7 +525,7 @@ COMMENT ON COLUMN ydsz_rule_pack.description IS '规则集描述';
 COMMENT ON COLUMN ydsz_rule_pack.author IS '作者（创建人用户名）';
 COMMENT ON COLUMN ydsz_rule_pack.download_count IS '下载次数（安装时 +1）';
 COMMENT ON COLUMN ydsz_rule_pack.rating IS '评分（0-5，保留 1 位小数）';
-COMMENT ON COLUMN ydsz_rule_pack.enabled IS '是否启用（1=可用，0=已下架）';
+COMMENT ON COLUMN ydsz_rule_pack.is_enabled IS '是否启用（1=可用，0=已下架）';
 COMMENT ON COLUMN ydsz_rule_pack.official IS '是否官方认证规则集（1=官方发布，0=社区贡献）';
 COMMENT ON COLUMN ydsz_rule_pack.status IS '状态标识';
 COMMENT ON COLUMN ydsz_rule_pack.deleted IS '逻辑删除标识（0=未删除，1=已删除）';

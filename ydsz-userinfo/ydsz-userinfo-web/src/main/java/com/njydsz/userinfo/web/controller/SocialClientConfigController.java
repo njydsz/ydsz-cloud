@@ -21,7 +21,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.SocialClientDTO;
 import com.njydsz.userinfo.domain.query.SocialClientPageQuery;
 import com.njydsz.userinfo.domain.vo.SocialClientVO;
@@ -44,7 +44,7 @@ import com.njydsz.userinfo.server.service.SocialClientConfigService;
 @RequestMapping("/api/social-client-config")
 @RequiredArgsConstructor
 @Tag(name = "社交平台配置", description = "社交平台 OAuth2 客户端配置管理（热更新）")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class SocialClientConfigController {
 
   private final SocialClientConfigService configService;

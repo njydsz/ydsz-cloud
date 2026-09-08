@@ -24,6 +24,7 @@ import com.njydsz.system.domain.approval.ConfigApprovalQuery;
 import com.njydsz.system.domain.approval.ConfigApprovalSubmitDTO;
 import com.njydsz.system.domain.approval.ConfigApprovalVO;
 import com.njydsz.system.server.converter.ConfigApprovalConverter;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.ConfigApprovalService;
 
 /**
@@ -34,6 +35,7 @@ import com.njydsz.system.server.service.ConfigApprovalService;
  * @author ydsz-team
  * @since 26.09.08
  */
+@ApiVersion("26.09.01")
 @Tag(name = "配置变更审批", description = "配置/字典/变量变更审批流")
 @Slf4j
 @RestController

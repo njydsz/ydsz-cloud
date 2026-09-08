@@ -21,7 +21,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AuthPolicyDTO;
 import com.njydsz.userinfo.domain.query.AuthPolicyPageQuery;
 import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
@@ -42,7 +42,7 @@ import com.njydsz.userinfo.server.service.AuthPolicyService;
 @RequestMapping("/api/auth-policy")
 @RequiredArgsConstructor
 @Tag(name = "认证策略", description = "租户级认证策略管理（多租户域隔离）")
-@ApiVersion("1")
+@ApiVersion("26.09.01")
 public class AuthPolicyController {
 
   private final AuthPolicyService authPolicyService;

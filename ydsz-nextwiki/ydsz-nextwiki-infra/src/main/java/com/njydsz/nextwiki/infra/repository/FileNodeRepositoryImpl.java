@@ -127,8 +127,8 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
       if (entity.getStatus() == null) {
         entity.setStatus("active");
       }
-      if (entity.getDeleted() == null) {
-        entity.setDeleted(0);
+      if (entity.getIsDeleted() == null) {
+        entity.setIsDeleted(0);
       }
       if (entity.getRevision() == null) {
         entity.setRevision(0);

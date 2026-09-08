@@ -18,6 +18,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.system.domain.query.ApiPermissionQuery;
 import com.njydsz.system.domain.vo.ApiPermissionVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.ApiPermissionService;
 
 
@@ -34,6 +35,7 @@ import com.njydsz.system.server.service.ApiPermissionService;
  * @since 26.09.01
  * @see com.njydsz.system.server.service.ApiPermissionService 接口权限业务逻辑
  */
+@ApiVersion("26.09.01")
 @Tag(name = "接口权限管理", description = "接口权限自动注册查看/同步管理")
 @Slf4j
 @RestController

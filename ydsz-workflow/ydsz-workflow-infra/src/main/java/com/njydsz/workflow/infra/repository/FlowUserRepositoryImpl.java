@@ -70,7 +70,7 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
         userMapper.selectList(
             new LambdaQueryWrapper<FlowUser>()
                 .eq(FlowUser::getInstanceId, instanceId)
-                .eq(FlowUser::getDeleted, 0)));
+                .eq(FlowUser::getIsDeleted, 0)));
   }
 
   @Override
@@ -80,7 +80,7 @@ public class FlowUserRepositoryImpl implements FlowUserRepository {
             new LambdaQueryWrapper<FlowUser>()
                 .eq(FlowUser::getInstanceId, instanceId)
                 .eq(FlowUser::getUserType, userType)
-                .eq(FlowUser::getDeleted, 0)));
+                .eq(FlowUser::getIsDeleted, 0)));
   }
 
   @Override

@@ -19,6 +19,7 @@ import com.njydsz.system.domain.dto.ConfigGetRequest;
 import com.njydsz.system.domain.dto.DictItemGetRequest;
 import com.njydsz.system.domain.dto.DictListRequest;
 import com.njydsz.system.domain.vo.DictItemVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.AppInfoService;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.DictItemService;
@@ -53,6 +54,7 @@ import com.njydsz.system.server.service.DictItemService;
  * @see ConfigService 配置业务逻辑
  * @see DictItemService 字典项业务逻辑
  */
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/api/internal")

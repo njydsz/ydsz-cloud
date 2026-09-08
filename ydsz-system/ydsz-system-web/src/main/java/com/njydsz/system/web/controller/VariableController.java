@@ -24,6 +24,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.vo.VariableVO;
@@ -60,6 +61,7 @@ import com.njydsz.system.server.service.VariableService;
  * @see ConfigController 系统配置 Controller（面向后端）
  * @see com.njydsz.system.server.service.VariableService 变量业务逻辑
  */
+@ApiVersion("26.09.01")
 @Tag(name = "系统变量", description = "系统变量 CRUD + 按 key 查询（高频调用走 Redis 缓存）")
 @Slf4j
 @RestController

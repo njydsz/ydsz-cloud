@@ -58,7 +58,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
         .selectList(
             new LambdaQueryWrapper<FlowTimer>()
                 .eq(FlowTimer::getBoundaryTaskId, taskId)
-                .eq(FlowTimer::getDeleted, 0)
+                .eq(FlowTimer::getIsDeleted, 0)
                 .last("LIMIT 1"))
         .stream()
         .findFirst()
@@ -71,7 +71,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
         timerMapper.selectList(
             new LambdaQueryWrapper<FlowTimer>()
                 .eq(FlowTimer::getInstanceId, instanceId)
-                .eq(FlowTimer::getDeleted, 0)));
+                .eq(FlowTimer::getIsDeleted, 0)));
   }
 
   @Override
@@ -99,7 +99,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
             new LambdaQueryWrapper<FlowTimer>()
                 .le(FlowTimer::getFireAt, now)
                 .eq(FlowTimer::getTimerStatus, "PENDING")
-                .eq(FlowTimer::getDeleted, 0)
+                .eq(FlowTimer::getIsDeleted, 0)
                 .orderByAsc(FlowTimer::getFireAt)
                 .last("LIMIT " + limit)));
   }
@@ -131,7 +131,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
         timerMapper.selectList(
             new LambdaQueryWrapper<FlowTimer>()
                 .eq(FlowTimer::getInstanceId, instanceId)
-                .eq(FlowTimer::getDeleted, 0)
+                .eq(FlowTimer::getIsDeleted, 0)
                 .orderByAsc(FlowTimer::getFireAt)));
   }
 
@@ -145,7 +145,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
         new LambdaQueryWrapper<FlowTimer>()
             .eq(FlowTimer::getInstanceId, instanceId)
             .eq(FlowTimer::getTimerStatus, "PENDING")
-            .eq(FlowTimer::getDeleted, 0));
+            .eq(FlowTimer::getIsDeleted, 0));
   }
 
   @Override
@@ -154,7 +154,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
         new LambdaQueryWrapper<FlowTimer>()
             .eq(FlowTimer::getInstanceId, instanceId)
             .eq(FlowTimer::getTimerStatus, "PENDING")
-            .eq(FlowTimer::getDeleted, 0));
+            .eq(FlowTimer::getIsDeleted, 0));
   }
 
   @Override
@@ -172,7 +172,7 @@ public class FlowTimerRepositoryImpl implements FlowTimerRepository {
         timerMapper.selectList(
             new LambdaQueryWrapper<FlowTimer>()
                 .eq(FlowTimer::getInstanceId, instanceId)
-                .eq(FlowTimer::getDeleted, 0)
+                .eq(FlowTimer::getIsDeleted, 0)
                 .orderByDesc(FlowTimer::getCreatedAt)));
   }
 }

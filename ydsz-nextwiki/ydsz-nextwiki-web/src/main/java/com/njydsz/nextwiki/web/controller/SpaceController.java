@@ -22,6 +22,7 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.nextwiki.server.service.SpaceApplicationService;
 
 /**
@@ -45,6 +46,7 @@ import com.njydsz.nextwiki.server.service.SpaceApplicationService;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/api/nextwiki/spaces")

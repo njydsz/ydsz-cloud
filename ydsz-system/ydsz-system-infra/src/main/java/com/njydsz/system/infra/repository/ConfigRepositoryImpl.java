@@ -65,7 +65,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
             configMapper.selectOne(
                 new LambdaQueryWrapper<Config>()
                     .eq(Config::getConfigKey, configKey)
-                    .eq(Config::getDeleted, NOT_DELETED)
+                    .eq(Config::getIsDeleted, NOT_DELETED)
                     .last("LIMIT 1")))
         .map(converter::entityToVO);
   }
@@ -153,7 +153,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public List<ConfigVO> findForCursor(String configGroup, String configKey, String cursor, int limit) {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, NOT_DELETED);
+    wrapper.eq(Config::getIsDeleted, NOT_DELETED);
     if (configGroup != null && !configGroup.isBlank()) {
       wrapper.eq(Config::getConfigGroup, configGroup);
     }
@@ -171,7 +171,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public boolean existsAfterCursor(String configGroup, String configKey, String cursor) {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, NOT_DELETED);
+    wrapper.eq(Config::getIsDeleted, NOT_DELETED);
     if (configGroup != null && !configGroup.isBlank()) {
       wrapper.eq(Config::getConfigGroup, configGroup);
     }
@@ -187,7 +187,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public List<ConfigVO> findForExport(String configGroup) {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, NOT_DELETED);
+    wrapper.eq(Config::getIsDeleted, NOT_DELETED);
     if (configGroup != null && !configGroup.isBlank()) {
       wrapper.eq(Config::getConfigGroup, configGroup).orderByAsc(Config::getSort);
     } else {
@@ -199,14 +199,14 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   @Override
   public List<ConfigVO> findEnabledConfigs() {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getStatus, STATUS_ENABLED).eq(Config::getDeleted, NOT_DELETED);
+    wrapper.eq(Config::getStatus, STATUS_ENABLED).eq(Config::getIsDeleted, NOT_DELETED);
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 
   @Override
   public List<ConfigVO> findByGroup(String configGroup) {
     LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getConfigGroup, configGroup).eq(Config::getDeleted, NOT_DELETED);
+    wrapper.eq(Config::getConfigGroup, configGroup).eq(Config::getIsDeleted, NOT_DELETED);
     return converter.configListToVO(configMapper.selectList(wrapper));
   }
 

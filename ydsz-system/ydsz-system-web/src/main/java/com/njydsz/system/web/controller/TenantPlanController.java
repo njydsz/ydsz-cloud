@@ -31,6 +31,7 @@ import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.query.TenantPlanPageQuery;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.vo.TenantPlanVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.TenantPlanMenuService;
 import com.njydsz.system.server.service.TenantPlanService;
 
@@ -45,6 +46,7 @@ import com.njydsz.system.server.service.TenantPlanService;
  * @since 26.09.01
  * @see TenantPlanService 套餐业务逻辑
  */
+@ApiVersion("26.09.01")
 @Tag(name = "租户套餐管理", description = "套餐 CRUD / 菜单配置")
 @Slf4j
 @RestController

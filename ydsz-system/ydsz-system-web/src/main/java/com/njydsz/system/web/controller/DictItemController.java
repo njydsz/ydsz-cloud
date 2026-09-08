@@ -31,6 +31,7 @@ import com.njydsz.system.domain.dto.DictItemBatchDTO;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemVO;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.DictItemService;
 
@@ -65,6 +66,7 @@ import com.njydsz.system.server.service.DictItemService;
  * @see DictController 字典类型 Controller（字典两级体系上层）
  * @see DictVersionController 字典版本 Controller（变更历史与回滚）
  */
+@ApiVersion("26.09.01")
 @Tag(name = "字典项", description = "字典项 CRUD + 批量操作 + 按类型查询 + 树形查询")
 @Slf4j
 @RestController
