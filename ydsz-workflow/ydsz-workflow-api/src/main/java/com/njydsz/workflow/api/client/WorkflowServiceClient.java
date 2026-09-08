@@ -32,7 +32,7 @@ public interface WorkflowServiceClient {
   /**
    * 启动流程实例
    *
-   * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/start
+   * <p>内部 Feign 通道: POST /api/internal/engine/instance/start
    *
    * @param dto 启动流程参数，使用 {@link FlowStartProcessDTO} 强类型传递
    * @return 流程实例 ID
@@ -43,7 +43,7 @@ public interface WorkflowServiceClient {
   /**
    * 通过业务单据反查流程状态
    *
-   * <p>对应自研引擎: GET /api/v1/workflow/engine/instance/byBusiness
+   * <p>内部 Feign 通道: GET /api/internal/engine/instance/byBusiness
    *
    * @param businessType 业务类型
    * @param businessId 业务单据 ID
@@ -57,7 +57,7 @@ public interface WorkflowServiceClient {
   /**
    * 终止流程实例
    *
-   * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/{id}/terminate
+   * <p>内部 Feign 通道: POST /api/internal/engine/instance/{id}/terminate
    *
    * @param processInstanceId 流程实例 ID
    * @param reason 终止原因（可空）

@@ -38,7 +38,7 @@ public class DecisionTableVO implements Serializable {
   private String hitPolicy;
 
   /** 是否启用 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 优先级，数值越小优先级越高 */
   private Integer priority;

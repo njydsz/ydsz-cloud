@@ -34,14 +34,14 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   public Optional<ApiKey> findByKeyHash(String apiKeyHash) {
     LambdaQueryWrapper<ApiKey> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(ApiKey::getApiKeyHash, apiKeyHash);
-    wrapper.eq(ApiKey::getDeleted, false);
+    wrapper.eq(ApiKey::getIsDeleted, false);
     return Optional.ofNullable(apiKeyMapper.selectOne(wrapper));
   }
 
   @Override
   public Optional<ApiKeyVO> findById(Long id) {
     ApiKey entity = apiKeyMapper.selectById(id);
-    if (entity == null || Boolean.TRUE.equals(entity.getDeleted())) {
+    if (entity == null || Boolean.TRUE.equals(entity.getIsDeleted())) {
       return Optional.empty();
     }
     return Optional.of(entityToVO(entity));
@@ -63,7 +63,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   public List<ApiKeyVO> listByUserId(String userId) {
     LambdaQueryWrapper<ApiKey> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(ApiKey::getUserId, userId);
-    wrapper.eq(ApiKey::getDeleted, false);
+    wrapper.eq(ApiKey::getIsDeleted, false);
     wrapper.orderByDesc(ApiKey::getCreatedAt);
     return apiKeyMapper.selectList(wrapper).stream().map(this::entityToVO).toList();
   }
@@ -86,7 +86,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
   public int updateEnabled(Long id, boolean enabled) {
     ApiKey entity = new ApiKey();
     entity.setId(id);
-    entity.setEnabled(enabled);
+    entity.setIsEnabled(enabled);
     return apiKeyMapper.updateById(entity);
   }
 
@@ -100,7 +100,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
     LambdaQueryWrapper<ApiKey> wrapper = new LambdaQueryWrapper<>();
     wrapper.isNotNull(ApiKey::getExpireAt);
     wrapper.lt(ApiKey::getExpireAt, now);
-    wrapper.eq(ApiKey::getDeleted, false);
+    wrapper.eq(ApiKey::getIsDeleted, false);
     return apiKeyMapper.selectCount(wrapper);
   }
 
@@ -111,15 +111,15 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
 
   private LambdaQueryWrapper<ApiKey> buildWrapper(ApiKeyPageQuery query) {
     LambdaQueryWrapper<ApiKey> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(ApiKey::getDeleted, false);
+    wrapper.eq(ApiKey::getIsDeleted, false);
     if (query.getKeyName() != null && !query.getKeyName().isBlank()) {
       wrapper.like(ApiKey::getKeyName, query.getKeyName());
     }
     if (query.getUserId() != null && !query.getUserId().isBlank()) {
       wrapper.eq(ApiKey::getUserId, query.getUserId());
     }
-    if (query.getEnabled() != null) {
-      wrapper.eq(ApiKey::getEnabled, query.getEnabled());
+    if (query.getIsEnabled() != null) {
+      wrapper.eq(ApiKey::getIsEnabled, query.getIsEnabled());
     }
     wrapper.orderByDesc(ApiKey::getCreatedAt);
     return wrapper;
@@ -134,7 +134,7 @@ public class ApiKeyRepositoryImpl implements ApiKeyRepository {
     vo.setExpireAt(entity.getExpireAt());
     vo.setLastUsedAt(entity.getLastUsedAt());
     vo.setRateLimit(entity.getRateLimit());
-    vo.setEnabled(entity.getEnabled());
+    vo.setIsEnabled(entity.getIsEnabled());
     vo.setCreatedAt(entity.getCreatedAt());
     // apiKey 字段返回 null（仅创建时返回明文）
     return vo;

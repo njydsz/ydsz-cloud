@@ -9,7 +9,7 @@
     <result column="category" property="category"/>
     <result column="icon_url" property="iconUrl"/>
     <result column="tenant_id" property="tenantId"/>
-    <result column="is_system" property="system"/>
+    <result column="is_system" property="isSystem"/>
     <result column="is_public" property="publicAccess"/>
     <result column="structure_json" property="structureJson"/>
     <result column="sort" property="sort"/>
@@ -18,7 +18,7 @@
     <result column="created_by" property="createdBy"/>
     <result column="updated_at" property="updatedAt"/>
     <result column="updated_by" property="updatedBy"/>
-    <result column="deleted" property="deleted"/>
+    <result column="deleted" property="isDeleted"/>
   </resultMap>
 
   <sql id="Base_Column_List">

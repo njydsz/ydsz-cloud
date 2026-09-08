@@ -65,7 +65,7 @@ public class ConfigDTO {
   @Xss(message = "配置项说明包含非法内容")
   private String description;
 
-  private Boolean public;
+  private Boolean isPublic;
 
   private Integer sort;
 

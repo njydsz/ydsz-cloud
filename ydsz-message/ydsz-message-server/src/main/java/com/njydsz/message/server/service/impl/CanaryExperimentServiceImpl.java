@@ -98,7 +98,7 @@ public class CanaryExperimentServiceImpl implements CanaryExperimentService {
         .experimentGroup(GROUP_VARIANT)
         .metricsGoal(metricsGoal)
         .status(STATUS_ACTIVE)
-        .deleted(false)
+        .isDeleted(false)
         .createdAt(LocalDateTime.now())
         .build();
 

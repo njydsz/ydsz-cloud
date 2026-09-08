@@ -24,5 +24,5 @@ public class ApiKeyPageQuery {
   private String userId;
 
   /** 按启用状态筛选 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 }

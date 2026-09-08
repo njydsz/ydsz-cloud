@@ -284,7 +284,7 @@ public class LiteRuleSdk {
      * @return 当前 Builder（链式调用）
      */
     public RuleBuilder enabled(boolean enabled) {
-      builder.enabled(enabled);
+      builder.isEnabled(enabled);
       return this;
     }
 

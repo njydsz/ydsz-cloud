@@ -296,7 +296,7 @@ public class ExecutionReplayService {
     versionDef.setTitleTemplate(versionVO.getTitleTemplate());
     versionDef.setDescriptionTemplate(versionVO.getDescriptionTemplate());
     versionDef.setPriority(versionVO.getPriority());
-    versionDef.setEnabled(versionVO.getEnabled());
+    versionDef.setEnabled(versionVO.getIsEnabled());
     versionDef.setScope(versionVO.getScope());
     versionDef.setMutexGroup(versionVO.getMutexGroup());
     versionDef.setDrilldownAvailable(versionVO.getDrilldownAvailable());

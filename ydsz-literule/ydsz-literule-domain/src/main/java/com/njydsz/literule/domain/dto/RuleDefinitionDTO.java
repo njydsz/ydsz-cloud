@@ -91,7 +91,7 @@ public class RuleDefinitionDTO implements Serializable {
   @Builder.Default private int priority = com.njydsz.literule.domain.Rule.DEFAULT_PRIORITY;
 
   /** 是否启用 */
-  @Builder.Default private boolean enabled = true;
+  @Builder.Default private boolean isEnabled = true;
 
   /** 影响范围 */
   private String scope;

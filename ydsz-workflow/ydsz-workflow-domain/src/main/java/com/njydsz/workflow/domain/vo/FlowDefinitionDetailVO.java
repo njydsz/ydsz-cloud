@@ -29,5 +29,5 @@ public class FlowDefinitionDetailVO implements Serializable {
   private List<FlowSkipVO> skips;
 
   /** 是否只读（如发布后不可直接编辑） */
-  private Boolean readOnly;
+  private Boolean isReadonly;
 }

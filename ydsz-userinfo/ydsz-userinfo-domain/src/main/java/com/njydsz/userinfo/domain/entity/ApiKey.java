@@ -69,7 +69,7 @@ public class ApiKey implements Serializable {
   private Integer rateLimit;
 
   /** 是否启用 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 创建时间 */
   @TableField("created_at")
@@ -81,5 +81,5 @@ public class ApiKey implements Serializable {
 
   /** 删除标记（软删除） */
   @TableField("deleted")
-  private Boolean deleted;
+  private Boolean isDeleted;
 }

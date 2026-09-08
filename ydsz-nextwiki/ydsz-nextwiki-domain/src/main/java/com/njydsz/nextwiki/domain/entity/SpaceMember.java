@@ -72,5 +72,5 @@ public class SpaceMember implements Serializable {
 
   /** 逻辑删除标识 */
   @TableLogic
-  private Boolean deleted;
+  private Boolean isDeleted;
 }

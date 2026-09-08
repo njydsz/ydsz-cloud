@@ -292,7 +292,7 @@ public final class RuleDslParser {
         .priority(intOrDefault(map.get("priority"), 100))
         .scope(asString(map.get("scope")))
         .mutexGroup(asString(map.get("mutex_group")))
-        .enabled(boolOrDefault(map.get("enabled"), true))
+        .isEnabled(boolOrDefault(map.get("enabled"), true))
         .version(intOrDefault(map.get("version"), 1))
         // expression 专用
         .condition(asString(map.get("condition")))

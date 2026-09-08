@@ -47,13 +47,13 @@ public class FlowFormField implements Serializable {
   private Object defaultValue;
 
   /** 是否必填（快速标记，等价于 validation.required=true） */
-  private Boolean required;
+  private Boolean isRequired;
 
   /** 是否只读 */
-  private Boolean readonly;
+  private Boolean isReadonly;
 
   /** 是否隐藏 */
-  private Boolean hidden;
+  private Boolean isHidden;
 
   /** 宽度占比（1-24 栅格，默认 24 即整行） */
   private Integer span;
@@ -130,7 +130,7 @@ public class FlowFormField implements Serializable {
     @Serial private static final long serialVersionUID = 1L;
 
     /** 是否必填 */
-    private Boolean required;
+    private Boolean isRequired;
 
     /** 最小值（NUMBER/MONEY 类型） */
     private Double min;

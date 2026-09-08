@@ -41,7 +41,7 @@ public class SpaceTemplateDTO implements Serializable {
   private String tenantId;
 
   @Schema(description = "是否为系统内置模板")
-  private Boolean system;
+  private Boolean isSystem;
 
   @Schema(description = "是否公开")
   private Boolean publicAccess;

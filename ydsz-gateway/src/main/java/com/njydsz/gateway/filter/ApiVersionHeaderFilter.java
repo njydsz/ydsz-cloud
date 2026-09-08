@@ -36,12 +36,15 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  *
  * <h3>版本协商优先级</h3>
  *
+ * <p>路径中<code>不再包含版本段</code>（如 {@code /api/users}），版本信息通过 Header / Query 传入。
+ *
  * <ol>
- *   <li>Path: {@code /api/v1/users} → v1（最高优先级）
- *   <li>Header: {@code X-API-Version: v2} → v2
+ *   <li>Header: {@code X-API-Version: v2} → v2（最高优先级）
  *   <li>Query: {@code ?api-version=v2} → v2
  *   <li>默认: 未指定版本时使用配置默认版本
  * </ol>
+ *
+ * <p>Path 段保留兼容：若路径中意外包含 {@code /v1/} 等版本段仍可解析（过渡期灰度保护）。
  *
  * <h3>弃用版本处理</h3>
  *

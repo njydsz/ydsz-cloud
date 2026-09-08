@@ -34,7 +34,7 @@ public class RuleDashboardTopRuleVO implements Serializable {
   private String owner;
 
   /** 是否启用 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 默认严重度 */
   private String defaultSeverity;

@@ -59,7 +59,7 @@ public class MsgCanaryDTO implements Serializable {
   private String status;
 
   /** 删除标记 */
-  private Boolean deleted;
+  private Boolean isDeleted;
 
   /** 创建时间 */
   private LocalDateTime createdAt;

@@ -198,7 +198,7 @@ public final class RuleDslConverter {
         .titleTemplate(entry.getTitle())
         .descriptionTemplate(entry.getDescriptionTemplate())
         .priority(entry.getPriority())
-        .enabled(entry.isEnabled())
+        .isEnabled(entry.isEnabled())
         .scope(entry.getScope())
         .mutexGroup(entry.getMutexGroup())
         .version(entry.getVersion())
@@ -226,7 +226,7 @@ public final class RuleDslConverter {
             .maxScore(entry.getMaxScore() != null ? BigDecimal.valueOf(entry.getMaxScore()) : new BigDecimal("100"))
             .scoreDirection(parseDirection(entry.getDirection()))
             .priority(entry.getPriority())
-            .enabled(entry.isEnabled())
+            .isEnabled(entry.isEnabled())
             .scope(entry.getScope())
             .version(entry.getVersion());
     // 因子列表
@@ -278,7 +278,7 @@ public final class RuleDslConverter {
             .description(entry.getDescription())
             .hitPolicy(parseHitPolicy(entry.getHitPolicy()))
             .priority(entry.getPriority())
-            .enabled(entry.isEnabled())
+            .isEnabled(entry.isEnabled())
             .scope(entry.getScope())
             .version(entry.getVersion());
     // 条件列
@@ -389,7 +389,7 @@ public final class RuleDslConverter {
         .columnBuckets(columnBuckets)
         .cells(cells)
         .defaultActions(defaults != null ? new LinkedHashMap<>(defaults) : null)
-        .enabled(entry.isEnabled())
+        .isEnabled(entry.isEnabled())
         .priority(entry.getPriority())
         .scope(entry.getScope())
         .version(entry.getVersion())

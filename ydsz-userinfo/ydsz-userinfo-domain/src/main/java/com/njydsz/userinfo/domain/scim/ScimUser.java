@@ -61,7 +61,7 @@ public class ScimUser {
 
   /** 账号是否启用。 */
   @JsonProperty("active")
-  private Boolean active;
+  private Boolean isActive;
 
   /** 电子邮箱列表。 */
   @JsonProperty("emails")

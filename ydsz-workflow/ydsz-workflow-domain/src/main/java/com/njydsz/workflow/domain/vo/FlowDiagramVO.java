@@ -45,7 +45,7 @@ public class FlowDiagramVO implements Serializable {
     @Serial private static final long serialVersionUID = 1L;
 
     /** 是否为当前激活节点（前端高亮） */
-    private boolean active;
+    private boolean isActive;
 
     /** 节点状态（RUNNING / COMPLETED / PENDING / SKIPPED） */
     private String nodeState;

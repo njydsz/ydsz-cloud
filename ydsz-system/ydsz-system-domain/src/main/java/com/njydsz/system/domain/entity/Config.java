@@ -70,7 +70,7 @@ public class Config extends MpBaseEntity<String> {
   private String description;
 
   /** 是否公开配置（true=公开，前端可查；false=私有，仅后端可查） */
-    private Boolean public;
+  private Boolean isPublic;
 
   /** 排序序号 */
   private Integer sort;
@@ -83,7 +83,7 @@ public class Config extends MpBaseEntity<String> {
    * @return true 为公开配置
    */
   public boolean publicConfig() {
-    return Boolean.TRUE.equals(public);
+    return Boolean.TRUE.equals(isPublic);
   }
 
   /**

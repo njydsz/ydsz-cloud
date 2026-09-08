@@ -199,7 +199,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     def.setTitleTemplate(rule.getTitleTemplate());
     def.setDescriptionTemplate(rule.getDescriptionTemplate());
     def.setPriority(rule.getPriority());
-    def.setEnabled(rule.getEnabled() != null && rule.getEnabled());
+    def.setEnabled(rule.getIsEnabled() != null && rule.getIsEnabled());
     def.setScope(rule.getScope());
     def.setMutexGroup(rule.getMutexGroup());
     def.setVersion(rule.getVersion() != null ? rule.getVersion() : 1);
@@ -236,7 +236,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     rule.setTitleTemplate(def.getTitleTemplate());
     rule.setDescriptionTemplate(def.getDescriptionTemplate());
     rule.setPriority(def.getPriority());
-    rule.setEnabled(def.isEnabled());
+    rule.setIsEnabled(def.isEnabled());
     rule.setScope(def.getScope());
     rule.setMutexGroup(def.getMutexGroup());
     rule.setStatus(def.getStatus());

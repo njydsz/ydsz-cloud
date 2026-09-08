@@ -48,7 +48,7 @@ public class FileVersionVO implements Serializable {
   private String changeType;
 
   @Schema(description = "是否为当前活跃版本")
-  private Boolean active;
+  private Boolean isActive;
 
   @Schema(description = "创建人")
   private String createdBy;

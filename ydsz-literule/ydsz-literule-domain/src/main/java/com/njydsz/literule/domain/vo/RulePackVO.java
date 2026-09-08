@@ -60,7 +60,7 @@ public class RulePackVO implements Serializable {
   private BigDecimal rating;
 
   /** 是否启用 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 是否为官方包 */
   private Boolean official;

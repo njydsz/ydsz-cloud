@@ -762,7 +762,7 @@ public class RuleLifecycleService {
 
     // 设置归档状态并禁用
     rule.setStatus(RuleStatus.ARCHIVED.name());
-    rule.setEnabled(false);
+    rule.setIsEnabled(false);
     rule.setReviewComment("退役原因: " + reason);
 
     RuleDefinitionDTO saved = ruleAdminService.save(rule, operator, "规则退役: " + reason);

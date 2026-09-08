@@ -105,7 +105,7 @@ public class RuleApprovalService {
         ApprovalFlow.builder()
             .flowCode(DEFAULT_FLOW_CODE)
             .name("默认 2 级审批流")
-            .enabled(true)
+            .isEnabled(true)
             .steps(
                 List.of(
                     ApprovalStep.builder()

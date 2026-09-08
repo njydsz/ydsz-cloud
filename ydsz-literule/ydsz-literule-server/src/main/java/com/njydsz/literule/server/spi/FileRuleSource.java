@@ -365,7 +365,7 @@ public class FileRuleSource implements RuleConfigProvider {
             .description(entry.getDescription())
             .priority(entry.getPriority())
             .scope(entry.getScope())
-            .enabled(entry.isEnabled())
+            .isEnabled(entry.isEnabled())
             .conditionExpression(entry.getCondition())
             .severityExpression(entry.getSeverityExpression())
             .titleTemplate(entry.getTitle())

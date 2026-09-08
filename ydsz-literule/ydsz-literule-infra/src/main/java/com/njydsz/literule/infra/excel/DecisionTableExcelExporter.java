@@ -341,7 +341,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
               .actionColumns(actionColumns)
               .rows(decisionRows)
               .defaultActions(defaultActions.isEmpty() ? null : defaultActions)
-              .enabled(true)
+              .isEnabled(true)
               .priority(priority)
               .scope(scope == null || scope.isBlank() ? null : scope)
               .version(1)

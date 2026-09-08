@@ -41,7 +41,7 @@ public class ApprovalFlow implements Serializable {
   private List<ApprovalStep> steps;
 
   /** 是否启用 */
-  private boolean enabled;
+  private boolean isEnabled;
 
   /**
    * 根据级别查询步骤

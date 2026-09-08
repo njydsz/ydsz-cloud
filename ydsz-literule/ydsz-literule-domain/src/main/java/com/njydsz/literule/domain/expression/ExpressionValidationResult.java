@@ -50,7 +50,7 @@ public class ExpressionValidationResult implements Serializable {
   }
 
   /** 校验是否通过 */
-  private boolean valid;
+  private boolean isValid;
 
   /** 错误类型；valid=true 时为 {@link ErrorType#OK} */
   private ErrorType errorType;
@@ -88,7 +88,7 @@ public class ExpressionValidationResult implements Serializable {
   public static ExpressionValidationResult ok(
       String expression, long parseTimeMs, List<String> referencedVariables) {
     return ExpressionValidationResult.builder()
-        .valid(true)
+        .isValid(true)
         .errorType(ErrorType.OK)
         .errorMessage(null)
         .errorLine(-1)
@@ -111,7 +111,7 @@ public class ExpressionValidationResult implements Serializable {
   public static ExpressionValidationResult fail(
       String expression, ErrorType errorType, String errorMessage, long parseTimeMs) {
     return ExpressionValidationResult.builder()
-        .valid(false)
+        .isValid(false)
         .errorType(errorType)
         .errorMessage(errorMessage)
         .errorLine(-1)

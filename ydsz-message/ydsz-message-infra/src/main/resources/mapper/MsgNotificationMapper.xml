@@ -29,7 +29,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
     </resultMap>
 
@@ -59,7 +59,7 @@
              #{item.recallAt}, #{item.expiredAt}, #{item.mentionUserIds},
              COALESCE(#{item.createdBy}, 'SYSTEM'), CURRENT_TIMESTAMP,
              COALESCE(#{item.updatedBy}, 'SYSTEM'), CURRENT_TIMESTAMP,
-             COALESCE(#{item.deleted}, 0),
+             COALESCE(#{item.isDeleted}, 0),
              COALESCE(#{item.tenantId}, '1'))
         </foreach>
     </insert>

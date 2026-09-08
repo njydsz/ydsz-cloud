@@ -59,7 +59,7 @@ public class RuleDefinitionVO implements Serializable {
   private Integer priority;
 
   /** 是否启用 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 适用范围 */
   private String scope;

@@ -14,7 +14,7 @@ import lombok.Data;
 public class ExpressionValidationResultVO {
 
   /** 是否校验通过（true=合法可保存） */
-  private boolean valid;
+  private boolean isValid;
 
   /** 错误类型（如 SYNTAX_ERROR / UNDEFINED_VARIABLE / TYPE_MISMATCH） */
   private String errorType;

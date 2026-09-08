@@ -122,7 +122,7 @@ public class RuleCanaryRouter {
         .titleTemplate(original.getTitleTemplate())
         .descriptionTemplate(original.getDescriptionTemplate())
         .priority(original.getPriority())
-        .enabled(true)
+        .isEnabled(true)
         .scope(original.getScope())
         .drilldownAvailable(original.isDrilldownAvailable())
         .version(original.getVersion())

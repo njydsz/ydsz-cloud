@@ -148,7 +148,7 @@ public class RuleDebugger {
             .nodeType(nodeType)
             .expression(expression)
             .condition(condition)
-            .enabled(true)
+            .isEnabled(true)
             .build();
     breakpoints.computeIfAbsent(ruleCode, k -> new ArrayList<>(COLLECTION_CAPACITY_8)).add(bp);
     log.info(

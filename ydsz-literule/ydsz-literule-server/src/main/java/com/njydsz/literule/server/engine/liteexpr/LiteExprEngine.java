@@ -272,7 +272,7 @@ public class LiteExprEngine implements ExpressionEngine {
     } catch (LiteExprException e) {
       long elapsed = (System.nanoTime() - start) / NANOS_PER_MILLI;
       return ExpressionValidationResult.builder()
-          .valid(false)
+          .isValid(false)
           .errorType(ExpressionValidationResult.ErrorType.SYNTAX_ERROR)
           .errorMessage(e.getMessage())
           .errorLine(e.getLine())

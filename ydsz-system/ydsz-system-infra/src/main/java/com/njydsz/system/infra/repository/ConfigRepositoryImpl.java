@@ -83,7 +83,7 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   public List<ConfigVO> findPublicEnabled() {
     return converter.configListToVO(configMapper.selectList(
         new LambdaQueryWrapper<Config>()
-            .eq(Config::getPublicFlag, PUBLIC_CONFIG)
+            .eq(Config::getIsPublic, PUBLIC_CONFIG)
             .eq(Config::getStatus, STATUS_ENABLED)
             .orderByAsc(Config::getSort)));
   }

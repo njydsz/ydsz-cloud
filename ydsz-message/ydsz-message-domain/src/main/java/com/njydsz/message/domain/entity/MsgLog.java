@@ -45,7 +45,7 @@ public class MsgLog implements Serializable {
   private LocalDateTime createdAt;
   private String updatedBy;
   private LocalDateTime updatedAt;
-  private Boolean deleted;
+  private Boolean isDeleted;
 
   // ===== 业务字段 =====
   private MessageChannelEnum channel;

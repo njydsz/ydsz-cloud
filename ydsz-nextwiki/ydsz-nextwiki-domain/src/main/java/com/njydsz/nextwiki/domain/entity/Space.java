@@ -105,7 +105,7 @@ public class Space implements Serializable {
 
   /** 逻辑删除标识 */
   @TableLogic
-  private Boolean deleted;
+  private Boolean isDeleted;
 
   /** 删除时间 */
   private LocalDateTime deletedTime;

@@ -40,7 +40,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
     </resultMap>
 
@@ -71,7 +71,7 @@
                 #{record.receiptAt}, #{record.retryCount}, #{record.nextRetryAt}, #{record.providerTraceId},
                 #{record.costMs}, #{record.cost}, #{record.traceId}, #{record.msgId}, #{record.topic},
                 #{record.reconsumeTimes}, #{record.parentMsgId}, #{record.scheduledAt}, #{record.createdBy},
-                #{record.createdAt}, #{record.updatedBy}, #{record.updatedAt}, #{record.deleted}, #{record.tenantId}
+                #{record.createdAt}, #{record.updatedBy}, #{record.updatedAt}, #{record.isDeleted}, #{record.tenantId}
             )
         </foreach>
     </insert>

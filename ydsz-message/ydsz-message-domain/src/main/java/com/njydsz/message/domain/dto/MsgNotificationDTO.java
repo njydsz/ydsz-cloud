@@ -113,5 +113,5 @@ public class MsgNotificationDTO implements Serializable {
   private String tenantId;
 
   /** 删除标识 */
-  private Boolean deleted;
+  private Boolean isDeleted;
 }

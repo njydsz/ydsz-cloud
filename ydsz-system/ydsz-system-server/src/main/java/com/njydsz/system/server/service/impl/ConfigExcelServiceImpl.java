@@ -225,9 +225,9 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     vo.setConfigValue(excelRow.getConfigValue());
     vo.setValueType(excelRow.getValueType());
     vo.setDefaultValue(excelRow.getDefaultValue());
-    vo.setDescription(excelRow.getDescription());
-    vo.setPublic(excelRow.getPublicFlag());
-    vo.setSort(excelRow.getSort());
+vo.setDescription(excelRow.getDescription());
+vo.setIsPublic(excelRow.getIsPublic());
+vo.setSort(excelRow.getSort());
     vo.setStatus(excelRow.getStatus());
     return vo;
   }
@@ -287,9 +287,9 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     dto.setConfigValue(vo.getConfigValue());
     dto.setValueType(vo.getValueType());
     dto.setDefaultValue(vo.getDefaultValue());
-    dto.setDescription(vo.getDescription());
-    dto.setPublic(vo.getPublicFlag());
-    dto.setSort(vo.getSort());
+dto.setDescription(vo.getDescription());
+dto.setIsPublic(vo.getIsPublic());
+dto.setSort(vo.getSort());
     dto.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return dto;
   }
@@ -307,9 +307,9 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
     excelVO.setConfigValue(vo.getConfigValue());
     excelVO.setValueType(vo.getValueType());
     excelVO.setDefaultValue(vo.getDefaultValue());
-    excelVO.setDescription(vo.getDescription());
-    excelVO.setPublic(vo.getPublicFlag());
-    excelVO.setSort(vo.getSort());
+excelVO.setDescription(vo.getDescription());
+excelVO.setIsPublic(vo.getIsPublic());
+excelVO.setSort(vo.getSort());
     excelVO.setStatus(vo.getStatus());
     return excelVO;
   }

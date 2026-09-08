@@ -20,7 +20,7 @@ public class FlowAdminRoleVO implements Serializable {
   private String id;
   private String userId;
   private String roleCode;
-  private Boolean enabled;
+  private Boolean isEnabled;
   private String grantedBy;
   private LocalDateTime grantedAt;
   private LocalDateTime expireAt;

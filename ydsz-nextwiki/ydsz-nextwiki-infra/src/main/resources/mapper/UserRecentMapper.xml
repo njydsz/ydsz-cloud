@@ -11,7 +11,7 @@
     <result column="accessed_at" property="accessedAt"/>
     <result column="created_at" property="createdAt"/>
     <result column="updated_at" property="updatedAt"/>
-    <result column="deleted" property="deleted"/>
+    <result column="deleted" property="isDeleted"/>
   </resultMap>
 
   <sql id="Base_Column_List">

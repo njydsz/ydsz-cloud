@@ -70,7 +70,7 @@ public class RulePack extends MpBaseEntity<String> {
   private BigDecimal rating;
 
   /** 是否启用（true=可用, false=已下架） */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 是否官方认证规则集（true=官方发布, false=社区贡献） */
   private Boolean official;
@@ -83,7 +83,7 @@ public class RulePack extends MpBaseEntity<String> {
    * @return true 表示可用
    */
   public boolean isAvailable() {
-    return Boolean.TRUE.equals(enabled);
+    return Boolean.TRUE.equals(isEnabled);
   }
 
   /**
@@ -121,11 +121,11 @@ public class RulePack extends MpBaseEntity<String> {
 
   /** 下架规则集。 */
   public void delist() {
-    this.enabled = false;
+    this.isEnabled = false;
   }
 
   /** 上架规则集。 */
   public void list() {
-    this.enabled = true;
+    this.isEnabled = true;
   }
 }

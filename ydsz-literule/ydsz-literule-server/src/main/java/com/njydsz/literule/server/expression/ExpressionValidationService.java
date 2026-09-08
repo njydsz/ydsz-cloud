@@ -195,7 +195,7 @@ public class ExpressionValidationService {
             "表达式引用了未注册的变量: %s（共 %d 个，请检查拼写或联系管理员注册变量）",
             String.join(", ", undefined), undefined.size());
     return ExpressionValidationResult.builder()
-        .valid(false)
+        .isValid(false)
         .errorType(ExpressionValidationResult.ErrorType.UNDEFINED_VARIABLE)
         .errorMessage(msg)
         .errorLine(-1)

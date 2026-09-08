@@ -88,7 +88,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
   private Integer priority;
 
   /** 是否启用 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 适用范围 */
   private String scope;
@@ -268,7 +268,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @return true 表示已发布且启用
    */
   public boolean isActive() {
-    return RuleStatusEnum.PUBLISHED.name().equals(status) && Boolean.TRUE.equals(enabled);
+    return RuleStatusEnum.PUBLISHED.name().equals(status) && Boolean.TRUE.equals(isEnabled);
   }
 
   /**

@@ -93,7 +93,7 @@ public class ApiKeyService {
 
     // 检查用户的有效 Key 数量
     List<ApiKeyVO> existingKeys = apiKeyRepository.listByUserId(userId);
-    long activeCount = existingKeys.stream().filter(k -> Boolean.TRUE.equals(k.getEnabled())).count();
+    long activeCount = existingKeys.stream().filter(k -> Boolean.TRUE.equals(k.getIsEnabled())).count();
     if (activeCount >= MAX_KEYS_PER_USER) {
       throw new BusinessException(UserInfoExceptionCode.API_KEY_LIMIT_EXCEEDED);
     }
@@ -120,7 +120,7 @@ public class ApiKeyService {
     entity.setScopes(dto.getScopes());
     entity.setExpireAt(expireAt);
     entity.setRateLimit(dto.getRateLimit() != null ? dto.getRateLimit() : DEFAULT_RATE_LIMIT);
-    entity.setEnabled(true);
+    entity.setIsEnabled(true);
 
     apiKeyRepository.save(entity);
 
@@ -135,7 +135,7 @@ public class ApiKeyService {
     vo.setScopes(dto.getScopes());
     vo.setExpireAt(expireAt);
     vo.setRateLimit(entity.getRateLimit());
-    vo.setEnabled(true);
+    vo.setIsEnabled(true);
     vo.setCreatedAt(LocalDateTime.now());
     return vo;
   }
@@ -157,7 +157,7 @@ public class ApiKeyService {
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.API_KEY_INVALID));
 
     // 检查是否启用
-    if (!Boolean.TRUE.equals(apiKey.getEnabled())) {
+    if (!Boolean.TRUE.equals(apiKey.getIsEnabled())) {
       throw new BusinessException(UserInfoExceptionCode.API_KEY_DISABLED);
     }
 

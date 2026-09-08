@@ -27,5 +27,5 @@ public class RuleBatchToggleDTO {
   /** 是否启用（true=启用，false=停用） */
   @Schema(description = "是否启用", requiredMode = Schema.RequiredMode.REQUIRED)
   @NotNull(message = "{validation.project.msg_f6d7e8f6}")
-  private Boolean enabled;
+  private Boolean isEnabled;
 }

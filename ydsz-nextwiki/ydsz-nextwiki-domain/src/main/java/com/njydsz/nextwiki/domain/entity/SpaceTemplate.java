@@ -62,7 +62,7 @@ public class SpaceTemplate implements Serializable {
   private String tenantId;
 
   /** 是否为系统内置模板（不可删除） */
-    private Boolean system;
+    private Boolean isSystem;
 
   /** 是否公开（所有租户可见） */
   private Boolean publicAccess;
@@ -90,5 +90,5 @@ public class SpaceTemplate implements Serializable {
 
   /** 逻辑删除标识 */
   @TableLogic
-  private Boolean deleted;
+  private Boolean isDeleted;
 }

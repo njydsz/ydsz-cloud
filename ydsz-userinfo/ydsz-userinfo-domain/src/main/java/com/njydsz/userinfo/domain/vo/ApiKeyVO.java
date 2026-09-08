@@ -47,7 +47,7 @@ public class ApiKeyVO implements Serializable {
   private Integer rateLimit;
 
   /** 是否启用 */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 创建时间 */
   private LocalDateTime createdAt;

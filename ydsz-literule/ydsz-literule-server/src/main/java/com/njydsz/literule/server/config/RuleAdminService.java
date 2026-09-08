@@ -268,7 +268,7 @@ public class RuleAdminService {
     def.setTitleTemplate(vo.getTitleTemplate());
     def.setDescriptionTemplate(vo.getDescriptionTemplate());
     def.setPriority(vo.getPriority());
-    def.setEnabled(vo.getEnabled() != null && vo.getEnabled());
+    def.setEnabled(vo.getIsEnabled() != null && vo.getIsEnabled());
     def.setScope(vo.getScope());
     def.setMutexGroup(vo.getMutexGroup());
     def.setVersion(vo.getVersion() != null ? vo.getVersion() : 1);

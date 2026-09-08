@@ -130,7 +130,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     wrapper.lt("expired_at", now);
     wrapper.eq("deleted", 0);
     MsgNotification entity = new MsgNotification();
-    entity.setDeleted(true);
+    entity.setIsDeleted(true);
     return msgNotificationMapper.update(entity, wrapper);
   }
 

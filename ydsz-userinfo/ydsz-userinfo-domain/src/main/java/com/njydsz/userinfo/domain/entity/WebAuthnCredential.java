@@ -73,5 +73,5 @@ public class WebAuthnCredential implements Serializable {
 
   /** 删除标记（软删除） */
   @TableField("deleted")
-  private Boolean deleted;
+  private Boolean isDeleted;
 }

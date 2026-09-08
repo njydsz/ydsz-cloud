@@ -53,7 +53,7 @@ public class Breakpoint {
   private String condition;
 
   /** 是否启用（默认 true） */
-  @Builder.Default private boolean enabled = true;
+  @Builder.Default private boolean isEnabled = true;
 
   /** 命中次数统计 */
   @Builder.Default private long hitCount = 0;

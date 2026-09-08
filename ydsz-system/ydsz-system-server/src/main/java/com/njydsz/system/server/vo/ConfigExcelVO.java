@@ -46,7 +46,7 @@ public class ConfigExcelVO {
 
   /** 是否公开（true=公开，false=私有） */
   @ExcelProperty(value = "是否公开", order = 7, width = 10)
-  private Boolean public;
+  private Boolean isPublic;
 
   /** 排序序号 */
   @ExcelProperty(value = "排序序号", order = 8, width = 10)

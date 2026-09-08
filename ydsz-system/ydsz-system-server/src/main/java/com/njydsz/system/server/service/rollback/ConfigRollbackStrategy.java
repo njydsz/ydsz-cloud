@@ -65,7 +65,7 @@ public class ConfigRollbackStrategy implements RollbackStrategy {
         currentConfig.setValueType(snapshotVO.getValueType());
         currentConfig.setDefaultValue(snapshotVO.getDefaultValue());
         currentConfig.setDescription(snapshotVO.getDescription());
-        currentConfig.setPublic(snapshotVO.getPublicFlag());
+        currentConfig.setIsPublic(snapshotVO.getIsPublic());
         currentConfig.setSort(snapshotVO.getSort());
         currentConfig.setStatus(snapshotVO.getStatus());
         configRepository.updateById(toDto(currentConfig));
@@ -78,7 +78,7 @@ public class ConfigRollbackStrategy implements RollbackStrategy {
         newConfig.setValueType(snapshotVO.getValueType());
         newConfig.setDefaultValue(snapshotVO.getDefaultValue());
         newConfig.setDescription(snapshotVO.getDescription());
-        newConfig.setPublic(snapshotVO.getPublicFlag());
+        newConfig.setIsPublic(snapshotVO.getIsPublic());
         newConfig.setSort(snapshotVO.getSort());
         newConfig.setStatus(snapshotVO.getStatus());
         configRepository.insert(newConfig);
@@ -153,7 +153,7 @@ public class ConfigRollbackStrategy implements RollbackStrategy {
     dto.setValueType(vo.getValueType());
     dto.setDefaultValue(vo.getDefaultValue());
     dto.setDescription(vo.getDescription());
-    dto.setPublic(vo.getPublicFlag());
+    dto.setIsPublic(vo.getIsPublic());
     dto.setSort(vo.getSort());
     dto.setStatus(vo.getStatus());
     return dto;

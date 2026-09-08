@@ -25,7 +25,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="deleted" property="deleted"/>
+        <result column="deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
     </resultMap>
 

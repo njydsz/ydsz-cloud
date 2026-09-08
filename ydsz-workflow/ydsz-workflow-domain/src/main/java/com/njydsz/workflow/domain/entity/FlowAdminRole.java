@@ -60,7 +60,7 @@ public class FlowAdminRole extends MpBaseEntity<String> {
   private String roleCode;
 
   /** 是否启用（{@code false} 表示撤销授权，但保留历史记录） */
-  private Boolean enabled;
+  private Boolean isEnabled;
 
   /** 授权人 ID（{@code null} 表示系统预置角色） */
   private String grantedBy;

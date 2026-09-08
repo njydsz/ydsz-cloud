@@ -25,5 +25,5 @@ public class ApprovalFlowVO {
   private List<Object> steps;
 
   /** 是否启用（true=启用并参与审批，false=停用） */
-  private boolean enabled;
+  private boolean isEnabled;
 }

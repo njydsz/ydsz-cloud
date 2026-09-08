@@ -82,7 +82,7 @@ public final class ScimConverter {
   /** 应用状态映射：1 → true, 0 → false。 */
   private static void applyStatus(ScimUser.ScimUserBuilder builder, Integer status) {
     if (status != null) {
-      builder.active(status == 1);
+      builder.isActive(status == 1);
     }
   }
 
@@ -123,7 +123,7 @@ public final class ScimConverter {
     dto.setRealName(resolveRealName(scimUser));
     dto.setEmail(resolvePrimaryEmail(scimUser));
     dto.setPhone(resolveFirstPhone(scimUser));
-    applyActiveStatus(dto, scimUser.getActive());
+    applyActiveStatus(dto, scimUser.getIsActive());
 
     return dto;
   }
@@ -218,9 +218,9 @@ public final class ScimConverter {
     dto.setRealName(resolveRealName(scimUser));
     dto.setEmail(resolveFirstEmail(scimUser));
     dto.setPhone(resolveFirstPhone(scimUser));
-    if (Boolean.FALSE.equals(scimUser.getActive())) {
+    if (Boolean.FALSE.equals(scimUser.getIsActive())) {
       dto.setStatus(UserLifecycleStatusEnum.DISABLED);
-    } else if (Boolean.TRUE.equals(scimUser.getActive())) {
+    } else if (Boolean.TRUE.equals(scimUser.getIsActive())) {
       dto.setStatus(UserLifecycleStatusEnum.ENABLED);
     }
 

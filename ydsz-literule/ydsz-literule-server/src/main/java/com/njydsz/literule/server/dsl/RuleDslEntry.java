@@ -73,7 +73,7 @@ public class RuleDslEntry implements Serializable {
   private String mutexGroup;
 
   /** 是否启用（默认 true） */
-  @Builder.Default private boolean enabled = true;
+  @Builder.Default private boolean isEnabled = true;
 
   /** 当前版本号（默认 1） */
   @Builder.Default private int version = 1;

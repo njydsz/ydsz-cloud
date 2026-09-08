@@ -12,7 +12,7 @@
     <result column="created_by" property="createdBy"/>
     <result column="updated_at" property="updatedAt"/>
     <result column="updated_by" property="updatedBy"/>
-    <result column="deleted" property="deleted"/>
+    <result column="deleted" property="isDeleted"/>
     <result column="deleted_time" property="deletedTime"/>
   </resultMap>
 

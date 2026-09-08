@@ -123,7 +123,7 @@ public final class RuleDslExporter {
         .priority(def.getPriority())
         .scope(def.getScope())
         .mutexGroup(def.getMutexGroup())
-        .enabled(def.isEnabled())
+        .isEnabled(def.isEnabled())
         .version(def.getVersion())
         // expression 专用字段
         .condition(def.getConditionExpression())
