@@ -1,6 +1,13 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -15,6 +22,9 @@ import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.MenuPageQuery;
 import com.njydsz.userinfo.domain.repository.MenuRepository;
+import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
+import com.njydsz.userinfo.domain.repository.RoleRepository;
+import com.njydsz.userinfo.domain.vo.MenuRouteVO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;

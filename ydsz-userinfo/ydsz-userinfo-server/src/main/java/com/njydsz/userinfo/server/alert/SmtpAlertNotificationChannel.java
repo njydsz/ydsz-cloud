@@ -3,8 +3,8 @@ package com.njydsz.userinfo.server.alert;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
+import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +36,7 @@ public class SmtpAlertNotificationChannel implements AlertNotificationChannel {
   /** 渠道名称 */
   private static final String CHANNEL_NAME = "EMAIL";
 
-  private final JavaMailSender mailSender;
+  private final MailSender mailSender;
 
   /**
    * 构造邮件告警通知渠道。
@@ -44,9 +44,9 @@ public class SmtpAlertNotificationChannel implements AlertNotificationChannel {
    * <p>当 Spring Boot 未配置 Spring Mail 时，{@link JavaMailSenderImpl} 会作为 fallback 注入，
    * 但发送时会失败。此时 {@link #isAvailable()} 返回 false。
    *
-   * @param mailSender JavaMailSender Bean
+   * @param mailSender MailSender Bean
    */
-  public SmtpAlertNotificationChannel(JavaMailSender mailSender) {
+  public SmtpAlertNotificationChannel(MailSender mailSender) {
     this.mailSender = mailSender;
   }
 

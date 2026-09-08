@@ -19,17 +19,18 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.security.LoginUser;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MenuRouteVO;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
-import com.njydsz.userinfo.server.auth.RoleCacheService;
 import com.njydsz.userinfo.server.service.MenuService;
 
 /**
@@ -84,9 +85,6 @@ public class MenuController {
 
   private final MenuService service;
 
-  /** 用户角色缓存服务（当前用户角色解析） */
-  private final RoleCacheService roleCacheService;
-
   /**
    * 查询全部菜单列表（扁平结构）
    *
@@ -115,6 +113,30 @@ public class MenuController {
   @Operation(summary = "查询菜单树形结构")
   public YdszResponse<List<MenuTreeVO>> tree() {
     return YdszResponse.success(service.tree());
+  }
+
+  /**
+   * 查询当前用户可访问的前端动态路由
+   *
+   * <p>登录后首屏核心端点：根据认证上下文中的角色编码，构建用户可访问的
+   * 路由树（vben 路由形态），由前端 {@code generateAccessible} 注册动态路由与菜单。
+   *
+   * <p>与 {@link #tree} 的区别：{@code /tree} 返回全量菜单（后台菜单管理用），
+   * 本端点仅返回当前用户角色已授权且启用中的目录/菜单节点（排除按钮/接口权限点）。
+   *
+   * <p>限流 100 QPS：登录后首屏必调，服务内部全缓存读取。
+   *
+   * @return 当前用户可访问的路由树；无角色或未授权菜单时返回空列表（前端回退静态路由）
+   */
+  @RateLimit(resource = "userinfo.Menu.routes", threshold = 100)
+  @GetMapping("/routes")
+  @Operation(summary = "查询当前用户可访问的前端动态路由", description = "按当前用户角色构建路由树，供前端注册动态路由与菜单")
+  public YdszResponse<List<MenuRouteVO>> routes() {
+    LoginUser currentUser = SecurityUtils.getCurrentUser();
+    if (currentUser == null || currentUser.getRoles() == null) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    return YdszResponse.success(service.routesForRoles(currentUser.getRoles()));
   }
 
   /**
