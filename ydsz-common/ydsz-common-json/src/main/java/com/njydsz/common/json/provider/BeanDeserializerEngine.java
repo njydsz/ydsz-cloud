@@ -42,7 +42,8 @@ import com.njydsz.common.json.util.JsonTypeUtils;
  * @see CreatorResolver
  * @see BuilderResolver
  */
-@SuppressWarnings("deprecation") // @SuppressWarnings 保留原因：兼容旧版 java.util.Date API，BeanReader/FieldMeta 等内部使用 Date 已废弃方法，框架需保持兼容
+// YDIZ-WARN-001 允许保留：兼容 API（兼容旧版 java.util.Date API，框架内部使用 Date 已废弃方法）
+@SuppressWarnings("deprecation")
 final class BeanDeserializerEngine {
   private static final Logger LOG = LoggerFactory.getLogger(BeanDeserializerEngine.class);
 

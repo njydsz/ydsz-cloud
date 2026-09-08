@@ -588,7 +588,7 @@ public final class SensitiveUtil {
    * <pre>{@code
    * List<PiiMatch> matches = SensitiveUtil.scanWithPositions("联系人：张三，手机：13800138000");
    * for (PiiMatch m : matches) {
-   *     System.out.println(m.type() + " at [" + m.startIndex() + "," + m.endIndex() + "): " + m.masked());
+   *     log.debug("PII match type={}, range=[{},{}), masked={}", m.type(), m.startIndex(), m.endIndex(), m.masked());
    * }
    * }</pre>
    *

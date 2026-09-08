@@ -18,6 +18,7 @@ import com.njydsz.common.json.YdszJson;
  * 不属于运行时代码的日志场景，因此豁免 checkstyle 日志规范要求。
  *
  * // CHECKSTYLE.OFF: RegexpSinglelineJava - CLI 工具类，System.out/err 为标准输出通道，非日志场景
+ * // YDIZ-LOG-003 豁免：CLI 工具终端用户交互输出（工具类面向终端，System.out/err 是有意的用户交互输出）
  *
  * <h3>用法</h3>
  *

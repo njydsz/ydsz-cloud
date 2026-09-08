@@ -17,7 +17,7 @@ import java.util.OptionalLong;
  *
  * // 查询淘汰策略
  * cache.policy().eviction().ifPresent(eviction -> {
- *     System.out.println("最大容量: " + eviction.getMaximum());
+ *     log.debug("最大容量={}", eviction.getMaximum());
  *     eviction.setMaximum(2000); // 动态调整
  * });
  * }</pre>

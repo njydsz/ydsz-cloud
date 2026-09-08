@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.reader.JSONReader;
@@ -33,7 +36,7 @@ import com.njydsz.common.json.tree.JsonNode;
  *         String name = parser.getCurrentName();
  *         if ("name".equals(name)) {
  *             parser.nextToken();     // VALUE_STRING
- *             System.out.println(parser.getText());
+ *             log.debug("field name={}, text={}", name, parser.getText());
  *         } else {
  *             parser.nextToken();
  *             parser.skipValue();     // 跳过不关心的字段
@@ -55,6 +58,8 @@ import com.njydsz.common.json.tree.JsonNode;
  * @since 26.09.01
  */
 public class JsonParser implements Closeable {
+
+  private static final Logger log = LoggerFactory.getLogger(JsonParser.class);
 
   /** 当前解析器状态令牌 */
   public enum JsonToken {

@@ -158,7 +158,8 @@ public class DownloadRateLimitService {
    * @param storageKey 存储对象键
    * @param userId 用户 ID（参与签名，校验时绑定）
    * @param ip 客户端 IP（参与签名，校验时绑定）
-   * @return 签名下载路径（如 {@code /nextwiki/download/{sign}?expires=...}）
+   * @return 签名下载路径（如 {@code /api/nextwiki/download/signed/{sign}?expires=...}），
+   *         对齐 {@code DownloadController} 的 {@code GET /signed/{sign}} 路由
    * @complexity O(1)（一次 SHA-256 + 一次 Redis 写入）
    * @security 签名含 userId 与 ip，理论上可限制重放来源；SHA-256 仅作完整性校验，非加密强度
    * @note 有效期由 {@code nextwiki.download.signed-url-expire-seconds} 决定
@@ -173,7 +174,10 @@ public class DownloadRateLimitService {
     String signKey = "nextwiki:sign:" + sign;
     stringOps.set(signKey, storageKey, Duration.ofSeconds(signedUrlExpireSeconds));
 
-    return "/nextwiki/download/" + sign + "?expires=" + expireTime;
+    // 贯通审计 P1（2026-09-08）：历史返回 /nextwiki/download/{sign} 缺失 /api 前缀
+    // 与 /signed 段，与 DownloadController#downloadBySignedUrl 路由不匹配（客户端必 404），
+    // 修正为对齐 Controller 契约的完整路径
+    return "/api/nextwiki/download/signed/" + sign + "?expires=" + expireTime;
   }
 
   /**

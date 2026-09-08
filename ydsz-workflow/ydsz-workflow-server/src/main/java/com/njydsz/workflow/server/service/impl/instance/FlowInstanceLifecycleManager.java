@@ -503,7 +503,7 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
     if (existing instanceof List<?> list) {
       for (Object item : list) {
         if (item instanceof Map<?, ?> itemMap) {
-          // YDIZ-WARN-001 例外#3：泛型擦除导致编译期无法验证 Map<?, ?> → Map<String, Object> 转换
+          // YDIZ-WARN-001 允许保留：泛型擦除，Map<?, ?> → Map<String, Object> 转换编译期无法验证
           @SuppressWarnings("unchecked")
           Map<String, Object> casted = (Map<String, Object>) itemMap;
           appendedNodes.add(new LinkedHashMap<>(casted));

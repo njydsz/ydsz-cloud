@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
 import com.njydsz.generator.service.TemplateGroupService;
 import com.njydsz.generator.service.TemplateService;
-import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 模板管理 REST 控制器（含分组管理）。

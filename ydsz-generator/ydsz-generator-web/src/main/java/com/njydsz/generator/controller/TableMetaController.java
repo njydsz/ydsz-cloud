@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;

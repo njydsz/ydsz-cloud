@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -52,6 +55,8 @@ import com.njydsz.common.excel.exception.ExcelReadException;
  * @see ExcelWriter
  */
 public class ExcelFacade {
+
+  private static final Logger log = LoggerFactory.getLogger(ExcelFacade.class);
 
   private ExcelFacade() {}
 
@@ -293,13 +298,12 @@ public class ExcelFacade {
    *
    * <pre>{@code
    * List<RawSheetData> sheets = ExcelFacade.readAllSheets(inputStream);
-   * for (RawSheetData sheet : sheets) {
-   *     System.out.println("Sheet: " + sheet.sheetName());
-   *     System.out.println("Headers: " + sheet.headers());
-   *     for (List<String> row : sheet.rows()) {
-   *         System.out.println(row);
-   *     }
-   * }
+* for (RawSheetData sheet : sheets) {
+ *     log.debug("Sheet={}, Headers={}", sheet.sheetName(), sheet.headers());
+ *     for (List<String> row : sheet.rows()) {
+ *         log.debug("row={}", row);
+ *     }
+ * }
    * }</pre>
    *
    * @param inputStream Excel 字节流，由调用方负责关闭；为 {@code null} 时返回空列表

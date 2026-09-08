@@ -161,6 +161,7 @@ public class McpSseServerTransport {
     try {
       String method = body.get("method") != null ? body.get("method").toString() : null;
       Object id = body.get("id");
+      // YDIZ-WARN-001 允许保留：泛型擦除，JSON-RPC 请求体 Map<?, ?> 编译期无法验证 Map<String, Object> 强转
       @SuppressWarnings("unchecked")
       Map<String, Object> params = body.get("params") instanceof Map<?, ?> map
           ? (Map<String, Object>) map : new HashMap<>(0);
