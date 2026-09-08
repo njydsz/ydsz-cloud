@@ -1,0 +1,106 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.seata.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Seata 分布式事务。默认 false，需在业务模块中显式开启。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.seata.application-id",
+      "type": "java.lang.String",
+      "description": "应用 ID（对应 Seata 注册中心中的服务实例标识）。",
+      "defaultValue": "${spring.application.name}"
+    },
+    {
+      "name": "ydsz.seata.tx-service-group",
+      "type": "java.lang.String",
+      "description": "事务服务分组（对应 Seata Server 的 vgroupMapping 配置）。",
+      "defaultValue": "default_tx_group"
+    },
+    {
+      "name": "ydsz.seata.data-source-proxy-mode",
+      "type": "java.lang.String",
+      "description": "数据源代理模式：AT（默认，自动补偿）/ TCC（手动补偿）/ SAGA（长事务）/ XA（强一致）。",
+      "defaultValue": "AT"
+    },
+    {
+      "name": "ydsz.seata.enable-auto-data-source-proxy",
+      "type": "java.lang.Boolean",
+      "description": "是否自动创建数据源代理。AT 模式必须为 true。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.seata.disable-global-transaction",
+      "type": "java.lang.Boolean",
+      "description": "是否禁用全局事务（Seata 原生属性兼容）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.seata.undo-log.table-name",
+      "type": "java.lang.String",
+      "description": "undo_log 回滚日志表名。",
+      "defaultValue": "undo_log"
+    },
+    {
+      "name": "ydsz.seata.undo-log.serialization",
+      "type": "java.lang.String",
+      "description": "undo_log 序列化方式。可选：jackson / kryo / fastjson / protobuf。",
+      "defaultValue": "jackson"
+    },
+    {
+      "name": "ydsz.seata.undo-log.only-care-update-columns",
+      "type": "java.lang.Boolean",
+      "description": "是否仅序列化被修改的列（false=记录整行前/后镜像）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.seata.rm.async-commit-buffer-limit",
+      "type": "java.lang.Integer",
+      "description": "异步提交缓冲区大小。",
+      "defaultValue": 10000
+    },
+    {
+      "name": "ydsz.seata.rm.report-retry-count",
+      "type": "java.lang.Integer",
+      "description": "一阶段结果上报重试次数。",
+      "defaultValue": 5
+    },
+    {
+      "name": "ydsz.seata.rm.meta-report-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否定期上报 undo_log 元数据到 Seata Server（增加网络开销，默认关闭）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.seata.rm.lock-retry-times",
+      "type": "java.lang.Integer",
+      "description": "全局锁获取重试次数。",
+      "defaultValue": 30
+    },
+    {
+      "name": "ydsz.seata.rm.lock-retry-internal",
+      "type": "java.lang.Integer",
+      "description": "全局锁重试间隔（毫秒）。",
+      "defaultValue": 10
+    },
+    {
+      "name": "ydsz.seata.tm.commit-retry-count",
+      "type": "java.lang.Integer",
+      "description": "全局事务提交重试次数。",
+      "defaultValue": 5
+    },
+    {
+      "name": "ydsz.seata.tm.rollback-retry-count",
+      "type": "java.lang.Integer",
+      "description": "全局事务回滚重试次数。",
+      "defaultValue": 5
+    },
+    {
+      "name": "ydsz.seata.tm.global-transaction-timeout",
+      "type": "java.lang.Integer",
+      "description": "全局事务超时时间（毫秒）。",
+      "defaultValue": 60000
+    }
+  ]
+}

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -31,7 +32,6 @@ import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AssignRolesDTO;
 import com.njydsz.userinfo.domain.dto.BatchUserStatusDTO;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;

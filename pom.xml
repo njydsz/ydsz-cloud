@@ -283,7 +283,11 @@
                 <artifactId>ydsz-common-search</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!-- ydsz-common-seata 管理项已随模块移除（2026-09-01 对标清理 P1） -->
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-seata</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-config</artifactId>

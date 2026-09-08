@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.scim.ScimConverter;
 import com.njydsz.userinfo.domain.scim.ScimError;

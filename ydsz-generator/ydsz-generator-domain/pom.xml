@@ -23,6 +23,11 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-util</artifactId>
     </dependency>
+    <!-- ydsz-common-jdbc：提供 MpBaseEntity/MpBaseAuditEntity 基类、PageResponses、MybatisPlus 审计 -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-jdbc</artifactId>
+    </dependency>
     <!-- mybatis: 编译期提供 JdbcType 等枚举，满足 mybatis-plus-annotation @TableField.jdbcType() 默认值解析 -->
     <dependency>
       <groupId>org.mybatis</groupId>

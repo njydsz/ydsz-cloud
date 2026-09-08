@@ -20,6 +20,11 @@
       <artifactId>ydsz-generator-infra</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- ydsz-common-exception：全局异常枚举 BusinessException/SysException -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-exception</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-thread</artifactId>

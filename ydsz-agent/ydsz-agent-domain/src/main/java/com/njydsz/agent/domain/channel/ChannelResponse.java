@@ -14,7 +14,7 @@ public final class ChannelResponse {
 
     private final String requestId;
     private final ChannelType channelType;
-    private final boolean success;
+    private final boolean isSuccess;
     private final String content;
     private final String errorCode;
     private final String errorMessage;
@@ -23,7 +23,7 @@ public final class ChannelResponse {
     private ChannelResponse(Builder builder) {
         this.requestId = builder.requestId;
         this.channelType = builder.channelType;
-        this.success = builder.success;
+        this.isSuccess = builder.isSuccess;
         this.content = builder.content;
         this.errorCode = builder.errorCode;
         this.errorMessage = builder.errorMessage;
@@ -46,7 +46,7 @@ public final class ChannelResponse {
         return new Builder()
                 .requestId(requestId)
                 .channelType(channelType)
-                .success(true)
+                .isSuccess(true)
                 .content(content)
                 .build();
     }
@@ -65,7 +65,7 @@ public final class ChannelResponse {
         return new Builder()
                 .requestId(requestId)
                 .channelType(channelType)
-                .success(false)
+                .isSuccess(false)
                 .errorCode(errorCode)
                 .errorMessage(errorMessage)
                 .build();
@@ -80,7 +80,7 @@ public final class ChannelResponse {
     }
 
     public boolean isSuccess() {
-        return success;
+        return isSuccess;
     }
 
     public String getContent() {
@@ -102,7 +102,7 @@ public final class ChannelResponse {
     public static final class Builder {
         private String requestId;
         private ChannelType channelType;
-        private boolean success;
+        private boolean isSuccess;
         private String content;
         private String errorCode;
         private String errorMessage;
@@ -118,8 +118,8 @@ public final class ChannelResponse {
             return this;
         }
 
-        public Builder success(boolean success) {
-            this.success = success;
+        public Builder success(boolean isSuccess) {
+            this.isSuccess = isSuccess;
             return this;
         }
 
