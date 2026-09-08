@@ -130,7 +130,7 @@ public class RoleController {
    *
    * <p>业务流程：roleCode 唯一性校验 → 写入 DB。
    *
-   * <p>{@code builtIn=true} 的内置角色由系统初始化时创建，<b>不允许</b>通过本接口创建。
+   * <p>{@code isBuiltIn=true} 的内置角色由系统初始化时创建，<b>不允许</b>通过本接口创建。
    *
    * <p><b>需要二次身份验证：</b>创建角色属于极敏感操作，需管理员输入当前登录密码确认身份后方可执行。
    *
@@ -156,7 +156,7 @@ public class RoleController {
    *
    * <p>幂等保护 5 秒；限流 50 QPS；写审计日志。
    *
-   * <p>业务流程：使用 {@code BeanUpdateUtil.copyNonNull} 动态复制非 null 字段， <b>忽略 builtIn 字段</b>（不允许通过 API
+   * <p>业务流程：使用 {@code BeanUpdateUtil.copyNonNull} 动态复制非 null 字段， <b>忽略 isBuiltIn 字段</b>（不允许通过 API
    * 变更内置角色标识）。
    *
    * <p><b>需要二次身份验证：</b>更新角色属于极敏感操作，需管理员输入当前登录密码确认身份后方可执行。
@@ -186,7 +186,7 @@ public class RoleController {
    * <p>删除前置校验：
    *
    * <ul>
-   *   <li>内置角色（{@code builtIn=true}）<b>禁止删除</b>
+   *   <li>内置角色（{@code isBuiltIn=true}）<b>禁止删除</b>
    *   <li>仍有用户关联的角色<b>禁止删除</b>（避免悬挂引用）
    * </ul>
    *

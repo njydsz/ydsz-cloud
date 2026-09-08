@@ -77,10 +77,10 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
     entity.setTenantId(dto.getTenantId());
     entity.setName(dto.getName());
     entity.setPasswordMinLength(dto.getPasswordMinLength());
-    entity.setPasswordRequireUppercase(dto.getPasswordRequireUppercase());
-    entity.setPasswordRequireDigit(dto.getPasswordRequireDigit());
-    entity.setMfaEnabled(dto.getMfaEnabled());
-    entity.setCaptchaEnabled(dto.getCaptchaEnabled());
+    entity.setIsPasswordRequireUppercase(dto.getIsPasswordRequireUppercase());
+    entity.setIsPasswordRequireDigit(dto.getIsPasswordRequireDigit());
+    entity.setIsMfaEnabled(dto.getIsMfaEnabled());
+    entity.setIsCaptchaEnabled(dto.getIsCaptchaEnabled());
     entity.setAllowedIdentityProviders(dto.getAllowedIdentityProviders());
     entity.setMaxSessionsPerUser(dto.getMaxSessionsPerUser());
     entity.setSessionTimeoutSeconds(dto.getSessionTimeoutSeconds());
@@ -128,17 +128,17 @@ public class AuthPolicyRepositoryImpl implements AuthPolicyRepository {
     if (dto.getPasswordMinLength() != null) {
       existing.setPasswordMinLength(dto.getPasswordMinLength());
     }
-    if (dto.getPasswordRequireUppercase() != null) {
-      existing.setPasswordRequireUppercase(dto.getPasswordRequireUppercase());
+    if (dto.getIsPasswordRequireUppercase() != null) {
+      existing.setIsPasswordRequireUppercase(dto.getIsPasswordRequireUppercase());
     }
-    if (dto.getPasswordRequireDigit() != null) {
-      existing.setPasswordRequireDigit(dto.getPasswordRequireDigit());
+    if (dto.getIsPasswordRequireDigit() != null) {
+      existing.setIsPasswordRequireDigit(dto.getIsPasswordRequireDigit());
     }
-    if (dto.getMfaEnabled() != null) {
-      existing.setMfaEnabled(dto.getMfaEnabled());
+    if (dto.getIsMfaEnabled() != null) {
+      existing.setIsMfaEnabled(dto.getIsMfaEnabled());
     }
-    if (dto.getCaptchaEnabled() != null) {
-      existing.setCaptchaEnabled(dto.getCaptchaEnabled());
+    if (dto.getIsCaptchaEnabled() != null) {
+      existing.setIsCaptchaEnabled(dto.getIsCaptchaEnabled());
     }
     if (dto.getAllowedIdentityProviders() != null) {
       existing.setAllowedIdentityProviders(dto.getAllowedIdentityProviders());

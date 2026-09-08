@@ -110,14 +110,14 @@ public class AuthPolicyService {
     merged.setName(tenantPolicy.getName() != null ? tenantPolicy.getName() : defaultPolicy.getName());
     merged.setPasswordMinLength(tenantPolicy.getPasswordMinLength() != null
         ? tenantPolicy.getPasswordMinLength() : defaultPolicy.getPasswordMinLength());
-    merged.setPasswordRequireUppercase(tenantPolicy.getPasswordRequireUppercase() != null
-        ? tenantPolicy.getPasswordRequireUppercase() : defaultPolicy.getPasswordRequireUppercase());
-    merged.setPasswordRequireDigit(tenantPolicy.getPasswordRequireDigit() != null
-        ? tenantPolicy.getPasswordRequireDigit() : defaultPolicy.getPasswordRequireDigit());
-    merged.setMfaEnabled(tenantPolicy.getMfaEnabled() != null
-        ? tenantPolicy.getMfaEnabled() : defaultPolicy.getMfaEnabled());
-    merged.setCaptchaEnabled(tenantPolicy.getCaptchaEnabled() != null
-        ? tenantPolicy.getCaptchaEnabled() : defaultPolicy.getCaptchaEnabled());
+    merged.setIsPasswordRequireUppercase(tenantPolicy.getIsPasswordRequireUppercase() != null
+        ? tenantPolicy.getIsPasswordRequireUppercase() : defaultPolicy.getIsPasswordRequireUppercase());
+    merged.setIsPasswordRequireDigit(tenantPolicy.getIsPasswordRequireDigit() != null
+        ? tenantPolicy.getIsPasswordRequireDigit() : defaultPolicy.getIsPasswordRequireDigit());
+    merged.setIsMfaEnabled(tenantPolicy.getIsMfaEnabled() != null
+        ? tenantPolicy.getIsMfaEnabled() : defaultPolicy.getIsMfaEnabled());
+    merged.setIsCaptchaEnabled(tenantPolicy.getIsCaptchaEnabled() != null
+        ? tenantPolicy.getIsCaptchaEnabled() : defaultPolicy.getIsCaptchaEnabled());
     merged.setAllowedIdentityProviders(tenantPolicy.getAllowedIdentityProviders() != null
         ? tenantPolicy.getAllowedIdentityProviders() : defaultPolicy.getAllowedIdentityProviders());
     merged.setMaxSessionsPerUser(tenantPolicy.getMaxSessionsPerUser() != null
@@ -138,10 +138,10 @@ public class AuthPolicyService {
     vo.setId("hardcoded-default");
     vo.setName("硬编码默认策略");
     vo.setPasswordMinLength(DEFAULT_PASSWORD_MIN_LENGTH);
-    vo.setPasswordRequireUppercase(true);
-    vo.setPasswordRequireDigit(true);
-    vo.setMfaEnabled(false);
-    vo.setCaptchaEnabled(true);
+    vo.setIsPasswordRequireUppercase(true);
+    vo.setIsPasswordRequireDigit(true);
+    vo.setIsMfaEnabled(false);
+    vo.setIsCaptchaEnabled(true);
     vo.setAllowedIdentityProviders("LOCAL");
     vo.setMaxSessionsPerUser(DEFAULT_MAX_SESSIONS_PER_USER);
     vo.setSessionTimeoutSeconds((int) DEFAULT_SESSION_TIMEOUT_SECONDS);

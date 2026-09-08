@@ -154,8 +154,8 @@ public class RoleServiceImpl implements RoleService {
     if (dto.getStatus() == null) {
       dto.setStatus("ENABLED");
     }
-    if (dto.getBuiltIn() == null) {
-      dto.setBuiltIn(false);
+    if (dto.getIsBuiltIn() == null) {
+      dto.setIsBuiltIn(false);
     }
     RoleVO vo = roleRepository.save(dto);
     log.info("Role created: code={}, id={}", vo.getRoleCode(), vo.getId());
@@ -200,7 +200,7 @@ public class RoleServiceImpl implements RoleService {
   public boolean removeById(String id) {
     RoleVO existing = roleRepository.findById(id)
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND));
-    if (Boolean.TRUE.equals(existing.getBuiltIn())) {
+    if (Boolean.TRUE.equals(existing.getIsBuiltIn())) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_BUILTIN_CANNOT_DELETE);
     }
 

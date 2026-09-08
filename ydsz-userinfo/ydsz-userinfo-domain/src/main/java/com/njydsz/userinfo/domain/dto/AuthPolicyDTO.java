@@ -30,16 +30,16 @@ public class AuthPolicyDTO {
   private Integer passwordMinLength;
 
   /** 密码必须包含大写字母 */
-  private Boolean passwordRequireUppercase;
+  private Boolean isPasswordRequireUppercase;
 
   /** 密码必须包含数字 */
-  private Boolean passwordRequireDigit;
+  private Boolean isPasswordRequireDigit;
 
   /** 密码是否启用双因素认证 */
-  private Boolean mfaEnabled;
+  private Boolean isMfaEnabled;
 
   /** 登录是否启用图形验证码 */
-  private Boolean captchaEnabled;
+  private Boolean isCaptchaEnabled;
 
   /** 允许的身份提供者类型（逗号分隔，如 "LDAP,SAML,OAUTH2"） */
   @Xss(message = "身份提供者类型包含非法内容")

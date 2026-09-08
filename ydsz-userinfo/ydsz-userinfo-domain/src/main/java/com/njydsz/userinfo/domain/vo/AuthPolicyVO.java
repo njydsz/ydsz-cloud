@@ -14,10 +14,10 @@ import lombok.Data;
  * <ul>
  *   <li>{@code tenantId} — 租户 ID（为空表示全局默认策略）</li>
  *   <li>{@code passwordMinLength} — 密码最小长度（>= 6）</li>
- *   <li>{@code passwordRequireUppercase} — 密码必须包含大写字母</li>
- *   <li>{@code passwordRequireDigit} — 密码必须包含数字</li>
- *   <li>{@code mfaEnabled} — 是否启用双因素认证</li>
- *   <li>{@code captchaEnabled} — 登录是否启用图形验证码</li>
+ *   <li>{@code isPasswordRequireUppercase} — 密码必须包含大写字母</li>
+ *   <li>{@code isPasswordRequireDigit} — 密码必须包含数字</li>
+ *   <li>{@code isMfaEnabled} — 是否启用双因素认证</li>
+ *   <li>{@code isCaptchaEnabled} — 登录是否启用图形验证码</li>
  *   <li>{@code allowedIdentityProviders} — 允许的身份提供者类型（如 LOCAL,LDAP,SAML）</li>
  *   <li>{@code maxSessionsPerUser} — 单用户最大并发会话数</li>
  *   <li>{@code sessionTimeoutSeconds} — 会话超时时间（秒）</li>
@@ -42,16 +42,16 @@ public class AuthPolicyVO {
   private Integer passwordMinLength;
 
   /** 密码必须包含大写字母 */
-  private Boolean passwordRequireUppercase;
+  private Boolean isPasswordRequireUppercase;
 
   /** 密码必须包含数字 */
-  private Boolean passwordRequireDigit;
+  private Boolean isPasswordRequireDigit;
 
   /** 是否启用双因素认证 */
-  private Boolean mfaEnabled;
+  private Boolean isMfaEnabled;
 
   /** 登录是否启用图形验证码 */
-  private Boolean captchaEnabled;
+  private Boolean isCaptchaEnabled;
 
   /** 允许的身份提供者类型 */
   private String allowedIdentityProviders;

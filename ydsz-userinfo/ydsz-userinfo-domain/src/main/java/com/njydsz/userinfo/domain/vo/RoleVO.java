@@ -32,5 +32,5 @@ public class RoleVO {
   private String status;
 
   /** 是否内置角色，内置角色不允许删除 */
-  private Boolean builtIn;
+  private Boolean isBuiltIn;
 }
