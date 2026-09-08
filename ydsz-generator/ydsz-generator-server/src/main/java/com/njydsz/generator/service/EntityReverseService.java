@@ -84,7 +84,7 @@ public class EntityReverseService {
     }
     File[] javaFiles = dir.listFiles((d, name) -> name.endsWith(".java"));
     if (javaFiles == null) {
-      return new ArrayList<>();
+      return new ArrayList<>(8);
     }
     List<String> results = new ArrayList<>(javaFiles.length);
     for (File f : javaFiles) {

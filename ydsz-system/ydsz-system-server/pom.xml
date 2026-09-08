@@ -118,5 +118,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-system-domain</artifactId>
         </dependency>
+        <!-- ydsz-common-json: YdszJson / JsonMapper，Config/DictItem/Variable 读写 JSON 字段 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
     </dependencies>
 </project>

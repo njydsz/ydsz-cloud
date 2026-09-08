@@ -262,6 +262,7 @@ public class McpSseServerTransport {
       return errorResponse(id, McpJsonRpcMessage.ERROR_INVALID_PARAMS, "缺少工具名称(name)");
     }
 
+    // YDIZ-WARN-001 允许保留：泛型擦除，JSON-RPC 参数 Map<?, ?> 编译期无法验证 Map<String, Object> 强转
     @SuppressWarnings("unchecked")
     Map<String, Object> arguments = params.get("arguments") instanceof Map<?, ?> map
         ? (Map<String, Object>) map : new HashMap<>(0);

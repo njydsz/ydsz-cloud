@@ -1,11 +1,9 @@
-package com.njydsz.common.web.lock;
+package com.njydsz.system.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,21 +16,21 @@ import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 
 /**
- * 表单重复提交 Token 控制器（ydsz-common-web 层）
+ * 表单重复提交 Token 控制器（ydsz-system-web）
  *
- * <p>提供获取防重复提交 Token 的接口，前端在提交表单前先调用此接口获取 Token，
- * 然后在提交时携带 Token 到请求头。
+ * <p>提供防重复提交 Token 获取接口。前端提交表单前先调用此接口获取一次性 Token，
+ * 然后在提交时携带到请求头 {@code X-Repeat-Token}。Token 与当前登录用户绑定，一次性使用。
  *
- * <p><b>使用流程：</b>
- *
+ * <h3>使用流程</h3>
  * <ol>
- *   <li>前端调用 {@code GET /repeat-submit/token} 获取 Token
- *   <li>前端提交表单时在请求头携带 {@code X-Repeat-Token: {token}}
- *   <li>后端校验 Token 有效性，成功后自动删除（一次性使用）
+ *   <li>前端调用 {@code GET /repeat-submit/token?ttlMillis=60000} 获取 Token</li>
+ *   <li>前端提交表单时在请求头 {@code X-Repeat-Token: {token}} 携带</li>
+ *   <li>后端 {@code RepeatSubmitAspect} 校验 Token 有效性，成功后自动删除</li>
  * </ol>
  *
- * <p><b>架构说明：</b>此类从 ydsz-common-lock（L4）迁移至此（L6），
- * 符合云顶编码规范 §22.2 层级定位——L4 不持有 Web 层组件。
+ * <p><b>架构说明：</b>此类从 ydzs-common-lock（L4）迁移至 ydzs-system-web（L7 应用主模块），
+ * 符合云顶编码规范 §22.2 层级定位：
+ * common 模块（L4/L5/L6）不持有 Controller，业务契约端点由 *-web / *-server 承载。
  *
  * @author ydsz-team
  * @since 26.08
@@ -42,8 +40,6 @@ import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 @ApiVersion("26.09.01")
 @RestController
 @RequestMapping("/repeat-submit")
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnBean(RepeatSubmitTokenService.class)
 @Tag(name = "防重复提交", description = "表单重复提交防护 Token 管理")
 public class RepeatSubmitTokenController {
 

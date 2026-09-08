@@ -127,6 +127,7 @@ public class TenantSwitchController {
    * @param targetTenantId 目标租户 ID
    * @throws BusinessException 目标租户不可访问时抛出
    */
+  // YDIZ-WARN-001 允许保留：泛型擦除，extras 字段类型为 Object 运行时可能为 List<?> 编译期无法验证
   @SuppressWarnings("unchecked")
   private void validateAccessibleTenant(UserInfo userInfo, String targetTenantId) {
     // 从 extras 中获取可访问租户列表

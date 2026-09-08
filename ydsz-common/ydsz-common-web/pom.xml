@@ -169,12 +169,6 @@
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
 
-        <!-- ydzs-common-lock（optional，提供 RepeatSubmitTokenController 条件装配能力） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-lock</artifactId>
-            <optional>true</optional>
-        </dependency>
     </dependencies>
 
 </project>

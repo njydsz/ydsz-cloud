@@ -29,7 +29,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 public abstract class SimpleRepositoryImpl<VO, DO, MAPPER extends BaseMapper<DO>> {
 
   /** MyBatis Mapper 实例。 */
-  protected final MAPPER mapper;
+  private final MAPPER mapper;
 
   /**
    * 构造通用仓储基类。

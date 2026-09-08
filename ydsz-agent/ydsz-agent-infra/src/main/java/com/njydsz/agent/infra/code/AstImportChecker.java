@@ -66,7 +66,7 @@ public class AstImportChecker {
    * @return 安全检查结果（通过的返回空列表，不通过的返回错误信息列表）
    */
   public List<String> validate(String code, List<String> allowedModules) {
-    List<String> violations = new ArrayList<>();
+    List<String> violations = new ArrayList<>(16);
     Set<String> allowedSet = new HashSet<>(allowedModules);
 
     // 添加危险模块到拒绝集合
