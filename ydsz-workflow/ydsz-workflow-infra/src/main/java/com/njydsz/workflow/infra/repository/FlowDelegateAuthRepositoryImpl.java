@@ -40,7 +40,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowDelegateAuthVO save(FlowDelegateAuthVO vo) {
     FlowDelegateAuth entity = converter.entityToEntity(vo);
@@ -50,13 +49,11 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowDelegateAuthVO> findById(String id) {
     return Optional.ofNullable(delegateAuthMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowDelegateAuthVO> findByDelegatorId(String delegatorId) {
@@ -67,7 +64,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
                 .eq(FlowDelegateAuth::getIsDeleted, 0)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowDelegateAuthVO> findByDelegatorAndFlow(String delegatorId, String flowCode) {
@@ -80,13 +76,11 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     delegateAuthMapper.deleteById(id);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public FlowDelegateAuthVO update(FlowDelegateAuthVO vo) {
@@ -95,7 +89,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
     return vo;
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowDelegateAuthVO> findActiveByOwner(String ownerId, LocalDateTime now) {
@@ -109,7 +102,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
                 .eq(FlowDelegateAuth::getIsDeleted, 0)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowDelegateAuthVO> matchAuth(
@@ -126,7 +118,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void updateStatus(String id, String status) {
     FlowDelegateAuth update = new FlowDelegateAuth();
@@ -135,7 +126,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
     delegateAuthMapper.updateById(update);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowDelegateAuthVO> selectByOwner(String tenantId, String ownerUserId, String status) {
@@ -149,7 +139,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
                 .orderByDesc(FlowDelegateAuth::getCreatedAt)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowDelegateAuthVO> selectByDelegate(
@@ -165,7 +154,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowDelegateAuthVO> matchAuthByScope(
       String tenantId, String ownerUserId, String flowCode, String nodeCode, LocalDateTime now) {
@@ -174,7 +162,6 @@ public class FlowDelegateAuthRepositoryImpl implements FlowDelegateAuthRepositor
         .map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int markExpired(LocalDateTime now, LocalDateTime endTime) {

@@ -74,6 +74,12 @@ public class SpaceRepositoryImpl implements SpaceRepository {
     return Optional.ofNullable(entity).map(mapper::spaceToVO);
   }
 
+  /**
+   * 按租户 ID 查询空间列表（不分页）。
+   *
+   * @param tenantId 租户 ID
+   * @return 空间视图列表
+   */
   @Override
   public List<SpaceVO> findByTenantId(String tenantId) {
     List<Space> entities = spaceMapper.selectByTenantId(tenantId);

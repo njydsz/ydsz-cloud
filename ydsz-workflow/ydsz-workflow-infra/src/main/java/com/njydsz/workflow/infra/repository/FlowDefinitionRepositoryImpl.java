@@ -42,7 +42,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowDefinitionVO save(FlowDefinitionDTO dto) {
     FlowDefinition entity = converter.dtoToEntity(dto);
@@ -51,13 +50,11 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowDefinitionVO> findById(String id) {
     return Optional.ofNullable(definitionMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowDefinitionVO> findPublished(String flowCode, String version, String tenantId) {
@@ -77,7 +74,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowDefinitionVO> findByFlowCode(String flowCode) {
     return converter.flowDefinitionListToVO(
@@ -88,7 +84,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
                 .orderByDesc(FlowDefinition::getFlowVersion)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowDefinitionVO> findByFlowCodeAndVersion(String flowCode, String version) {
@@ -105,13 +100,11 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     definitionMapper.deleteById(id);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public FlowDefinitionVO update(FlowDefinitionDTO dto) {
@@ -120,7 +113,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
     return converter.entityToVO(entity);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowDefinitionVO> findPage(
@@ -137,7 +129,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countPage(String flowCode, String flowName, String tenantId) {
     return definitionMapper.selectCount(
@@ -148,7 +139,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
             .eq(FlowDefinition::getIsDeleted, 0));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowDefinitionVO> findLatestByCode(String flowCode, String tenantId) {
@@ -165,7 +155,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
         .map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowDefinitionVO> findLatestPublished(String flowCode, String tenantId) {
@@ -184,7 +173,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowDefinitionVO> findEnabledByCategory(String categoryCode, String tenantId) {
     return converter.flowDefinitionListToVO(
@@ -198,7 +186,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
                 .orderByDesc(FlowDefinition::getCreatedAt)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowDefinitionVO> findActivePage(
@@ -217,7 +204,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowDefinitionVO> findByFlowCodeAndTenantId(String flowCode, String tenantId) {
     return converter.flowDefinitionListToVO(
@@ -229,7 +215,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
                 .orderByDesc(FlowDefinition::getFlowVersion)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int casLock(
@@ -243,13 +228,11 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public int casUnlock(String definitionId, String userId, Integer revision) {
     return definitionMapper.casUnlock(definitionId, userId, revision);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public void publish(String definitionId, int publishStatus) {
@@ -257,13 +240,11 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deactivateByFlowCode(String flowCode, String targetDefinitionId, String tenantId) {
     definitionMapper.deactivateByFlowCode(flowCode, targetDefinitionId, tenantId);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public void updateActivityStatus(String definitionId, int activityStatus) {
@@ -273,7 +254,6 @@ public class FlowDefinitionRepositoryImpl implements FlowDefinitionRepository {
     definitionMapper.updateById(entity);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowDefinitionVO> findPreviousPublishedVersion(

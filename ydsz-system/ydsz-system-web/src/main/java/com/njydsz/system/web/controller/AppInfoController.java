@@ -44,7 +44,6 @@ import com.njydsz.system.server.service.AppInfoService;
  *   <li>{@code clientId}：应用唯一标识，颁发时生成，全局不可变
  *   <li>{@code clientSecret}：应用密钥，仅在「创建/重置」时返回明文，其余接口返回脱敏值
  *   <li>{@code scopes}：授权范围（CSV），如 {@code "user.read,order.write"}
- * <li>{@code scopes}：授权范围（CSV），如 {@code "user.read,order.write"}
  *   <li>{@code boundIps}：IP 绑定白名单（CSV），如 {@code "192.168.1.0/24,10.0.0.1"}
  *   <li>{@code status}：应用状态（ENABLED / DISABLED / REVOKED）
  * </ul>

@@ -181,21 +181,27 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .build());
   }
 
-  @Override
-  public List<SearchFilter> getFilters(SearchProviderContext context) {
-    if (context == null || context.isAdmin()) {
-      return List.of();
+    /**
+     * 获取搜索过滤器（按用户 ID 限制搜索范围，实现权限隔离）。
+     *
+     * @param context 搜索提供者上下文
+     * @return 搜索过滤器列表，管理员和无用户身份时返回空列表
+     */
+    @Override
+    public List<SearchFilter> getFilters(SearchProviderContext context) {
+      if (context == null || context.isAdmin()) {
+        return List.of();
+      }
+      if (context.getUserId() == null || context.getUserId().isBlank()) {
+        return List.of();
+      }
+      return List.of(
+          SearchFilter.builder()
+              .field("created_by")
+              .values(List.of(context.getUserId()))
+              .operator(SearchFilter.Operator.EQ)
+              .build());
     }
-    if (context.getUserId() == null || context.getUserId().isBlank()) {
-      return List.of();
-    }
-    return List.of(
-        SearchFilter.builder()
-            .field("created_by")
-            .values(List.of(context.getUserId()))
-            .operator(SearchFilter.Operator.EQ)
-            .build());
-  }
 
   /**
    * 获取全部文件 ID（供索引重建/同步引擎调用；当前 SearchProvider 接口未定义该方法，保留为类自有能力）。

@@ -40,7 +40,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowCcVO save(FlowCcVO vo) {
     FlowCc entity = converter.entityToEntity(vo);
@@ -50,7 +49,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowCcVO> saveBatch(List<FlowCcVO> ccList) {
     List<FlowCc> entities = ccList.stream().map(converter::entityToEntity).toList();
@@ -59,13 +57,11 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowCcVO> findById(String id) {
     return Optional.ofNullable(ccMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowCcVO> findByInstanceId(String instanceId) {
@@ -76,7 +72,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
                 .eq(FlowCc::getIsDeleted, 0)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowCcVO> findByReceiverId(String receiverId, int offset, int limit) {
@@ -90,13 +85,11 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     ccMapper.deleteById(id);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public FlowCcVO update(FlowCcVO vo) {
@@ -105,7 +98,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
     return vo;
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowCcVO> findCcByUserPage(String userId, String tenantId, int offset, int limit) {
@@ -120,7 +112,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countCcByUser(String userId, String tenantId) {
     return ccMapper.selectCount(
@@ -131,7 +122,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void markRead(String id) {
     FlowCc update = new FlowCc();
@@ -141,7 +131,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
     ccMapper.updateById(update);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int markRead(String id, String userId, LocalDateTime readAt) {
@@ -155,7 +144,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
             .eq(FlowCc::getCcUserId, userId));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int markAllRead(String tenantId, String userId, LocalDateTime readAt) {
@@ -171,7 +159,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countUnread(String userId, String tenantId) {
     return ccMapper.selectCount(
@@ -182,7 +169,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
             .eq(FlowCc::getIsDeleted, 0));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowCcVO> findCcByUserPage(
@@ -200,7 +186,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countCcByUser(
       String userId, String tenantId, String readStatus, String flowCode) {
@@ -213,7 +198,6 @@ public class FlowCcRepositoryImpl implements FlowCcRepository {
             .eq(FlowCc::getIsDeleted, 0));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowCcVO> findByInstanceIdAndTenant(String tenantId, String instanceId) {

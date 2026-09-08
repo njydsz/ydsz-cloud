@@ -40,6 +40,12 @@ public class NextwikiQuotaClientFallback implements FallbackFactory<NextwikiQuot
             FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "知识库服务不可用");
       }
 
+      /**
+       * 按空间 ID 查询存储配额（降级返回服务不可用）。
+       *
+       * @param spaceId 空间 ID
+       * @return 错误响应，不抛异常
+       */
       @Override
       public YdszResponse<StorageQuotaDTO> getQuotaBySpaceId(String spaceId) {
         log.warn(

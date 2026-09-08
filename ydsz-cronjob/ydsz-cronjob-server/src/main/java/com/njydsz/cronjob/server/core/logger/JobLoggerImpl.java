@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.cronjob.domain.job.JobLogger;
@@ -319,6 +320,6 @@ public class JobLoggerImpl implements JobLogger {
 
   /** 将异常堆栈转为字符串。 */
   private String throwableToString(Throwable t) {
-    return org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(t);
+    return ExceptionUtils.getStackTrace(t);
   }
 }

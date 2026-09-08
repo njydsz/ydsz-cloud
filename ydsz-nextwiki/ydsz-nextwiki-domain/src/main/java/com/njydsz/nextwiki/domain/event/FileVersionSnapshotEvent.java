@@ -73,30 +73,65 @@ public class FileVersionSnapshotEvent extends ApplicationEvent {
     this.userId = userId;
   }
 
+  /**
+   * 获取关联的文件节点 ID。
+   *
+   * @return 文件节点 ID
+   */
   public String getFileNodeId() {
     return fileNodeId;
   }
 
+  /**
+   * 获取存储对象键。
+   *
+   * @return 存储对象键
+   */
   public String getStorageKey() {
     return storageKey;
   }
 
+  /**
+   * 获取文件大小。
+   *
+   * @return 文件大小（字节）
+   */
   public Long getSize() {
     return size;
   }
 
+  /**
+   * 获取文件 SHA-256 哈希。
+   *
+   * @return 文件哈希值
+   */
   public String getFileHash() {
     return fileHash;
   }
 
+  /**
+   * 获取 MIME 类型。
+   *
+   * @return MIME 类型字符串
+   */
   public String getMimeType() {
     return mimeType;
   }
 
+  /**
+   * 获取版本备注（用户自定义的描述信息）。
+   *
+   * @return 版本备注
+   */
   public String getRemark() {
     return remark;
   }
 
+  /**
+   * 获取操作人 ID（触发版本快照的用户）。
+   *
+   * @return 用户 ID
+   */
   public String getUserId() {
     return userId;
   }

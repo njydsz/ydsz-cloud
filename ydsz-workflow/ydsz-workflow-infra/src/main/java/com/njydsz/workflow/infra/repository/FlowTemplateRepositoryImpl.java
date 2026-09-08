@@ -39,7 +39,6 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowTemplateVO save(FlowTemplateVO vo) {
     FlowTemplate entity = converter.entityToEntity(vo);
@@ -49,13 +48,11 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowTemplateVO> findById(String id) {
     return Optional.ofNullable(templateMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowTemplateVO> findByCode(String code) {
@@ -71,7 +68,6 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowTemplateVO> findAll(String tenantId) {
     return converter.flowTemplateListToVO(
@@ -82,7 +78,6 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
                 .orderByAsc(FlowTemplate::getSort)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowTemplateVO> findByCategoryId(String categoryId) {
@@ -95,13 +90,11 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     templateMapper.deleteById(id);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public FlowTemplateVO update(FlowTemplateVO vo) {
@@ -110,7 +103,6 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
     return vo;
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowTemplateVO> findDefaultByCategory(String businessType, String tenantId) {
@@ -128,7 +120,6 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowTemplateVO> findByTemplateCode(String templateCode) {
     return templateMapper
@@ -144,7 +135,6 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowTemplateVO> findLatestByCategory(String category) {
     return converter.flowTemplateListToVO(
@@ -157,13 +147,11 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void incrementUseCount(String templateCode) {
     templateMapper.incrementUseCount(templateCode);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public void markAsNotLatest(String templateCode) {
@@ -171,13 +159,11 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<Integer> selectMaxVersion(String templateCode) {
     return Optional.ofNullable(templateMapper.selectMaxVersion(templateCode));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowTemplateVO> findVersionsByTemplateCode(String templateCode) {
@@ -189,7 +175,6 @@ public class FlowTemplateRepositoryImpl implements FlowTemplateRepository {
                 .orderByDesc(FlowTemplate::getVersion)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowTemplateVO> findByParentTemplateId(String parentTemplateId) {

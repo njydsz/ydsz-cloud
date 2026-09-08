@@ -371,13 +371,19 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       }
     }
 
+    /**
+     * 处理 Netty 通道异常（关闭异常连接）。
+     *
+     * @param context 通道处理器上下文
+     * @param cause 异常原因
+     */
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+    public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
       log.error(
           "[NextWiki-PUSH] 连接异常: remote={} err={}",
-          ctx.channel().remoteAddress(),
+          context.channel().remoteAddress(),
           cause.getMessage());
-      ctx.close();
+      context.close();
     }
   }
 }

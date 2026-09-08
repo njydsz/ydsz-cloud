@@ -39,7 +39,6 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowSkipVO save(FlowSkipVO vo) {
     FlowSkip entity = converter.entityToEntity(vo);
@@ -49,13 +48,11 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowSkipVO> findById(String id) {
     return Optional.ofNullable(skipMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowSkipVO> findByInstanceId(String instanceId) {
@@ -67,13 +64,11 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     skipMapper.deleteById(id);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public FlowSkipVO update(FlowSkipVO vo) {
@@ -82,7 +77,6 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
     return vo;
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowSkipVO> findByDefinitionIdAndNodeCode(String definitionId, String nodeCode) {
@@ -95,7 +89,6 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowSkipVO> findByDefinitionId(String definitionId) {
     return converter.flowSkipListToVO(
@@ -105,7 +98,6 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
                 .eq(FlowSkip::getIsDeleted, 0)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int deleteByDefinitionId(String definitionId) {

@@ -75,7 +75,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowRunTaskVO save(FlowRunTaskDTO dto) {
     FlowRunTask entity = converter.dtoToEntity(dto);
@@ -85,13 +84,11 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowRunTaskVO> findById(String id) {
     return Optional.ofNullable(taskMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findByIds(Collection<String> ids, String tenantId) {
@@ -106,13 +103,11 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     taskMapper.deleteById(id);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findPendingByInstance(String instanceId) {
@@ -125,7 +120,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findPendingByNode(String instanceId, String nodeCode) {
     return converter.flowRunTaskListToVO(
@@ -137,7 +131,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .eq(FlowRunTask::getIsDeleted, 0)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findPendingByAssignee(String assigneeId, int offset, int limit) {
@@ -152,7 +145,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countPendingByAssignee(String assigneeId) {
     return taskMapper.selectCount(
@@ -162,7 +154,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             .eq(FlowRunTask::getIsDeleted, 0));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int freezeByInstance(String instanceId) {
@@ -176,7 +167,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public int unfreezeByInstance(String instanceId) {
     FlowRunTask update = new FlowRunTask();
@@ -188,7 +178,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             .eq(FlowRunTask::getTaskStatus, TASK_STATUS_FROZEN));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int updateStatusByInstance(String instanceId, String taskStatus) {
@@ -202,7 +191,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowRunTaskVO update(FlowRunTaskVO vo) {
     FlowRunTask entity = converter.entityToEntity(vo);
@@ -210,7 +198,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
     return vo;
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findByInstanceId(String instanceId) {
@@ -222,7 +209,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .orderByDesc(FlowRunTask::getCreatedAt)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findTodoByAssignee(String userId, String tenantId, int limit) {
@@ -237,7 +223,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .last("LIMIT " + limit)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findByCondition(FlowTaskQuery query) {
@@ -273,7 +258,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public int updateStatusByCondition(
       String instanceId, String nodeCode, String fromStatus, String toStatus) {
@@ -287,7 +271,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countByStatusIn(List<String> statuses) {
     return taskMapper.selectCount(
@@ -297,13 +280,11 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countOverdue() {
     return taskMapper.countOverdue(null, null);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public long countPending() {
@@ -313,7 +294,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
             .eq(FlowRunTask::getIsDeleted, 0));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findOverdueTasks(LocalDateTime thresholdTime, int limit) {
@@ -327,7 +307,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> selectSlaCandidates(int limit) {
     List<FlowRunTask> candidates = taskMapper.selectSlaCandidates(limit);
@@ -335,13 +314,11 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void incrementUrgeCount(String taskId, int newUrgeCount, LocalDateTime urgeAt) {
     taskMapper.incrementUrgeCount(taskId, newUrgeCount, urgeAt);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public void markSlaAction(String taskId, String slaAction, int slaEscalated) {
@@ -349,13 +326,11 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void completeTask(String taskId, String taskStatus, LocalDateTime finishAt, Long durationMs) {
     taskMapper.completeTask(taskId, taskStatus, FLOW_TIMER_COMMENT, finishAt, durationMs);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int completeTaskWithComment(
@@ -365,13 +340,11 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void cancelTask(String taskId, String taskStatus, String comment) {
     taskMapper.cancelTask(taskId, taskStatus, comment);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findByInstanceAndNode(String instanceId, String nodeCode) {
@@ -383,7 +356,6 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
                 .eq(FlowRunTask::getIsDeleted, 0)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findCompletedByInstanceAndNode(String instanceId, String nodeCode) {
@@ -397,14 +369,12 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> selectTodoByAssignee(String assigneeId, String tenantId) {
     List<FlowRunTask> list = taskMapper.selectTodoByAssignee(assigneeId, tenantId);
     return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> selectTodoByAssignees(Collection<String> assigneeIds, String tenantId) {
@@ -417,14 +387,12 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> selectTodoByAssigneePage(String assigneeId, String tenantId, int offset, int limit) {
     List<FlowRunTask> list = taskMapper.selectTodoByAssigneePage(assigneeId, tenantId, offset, limit);
     return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
 }
 
-/** {@inheritDoc} */
 /** {@inheritDoc} */
 @Override
 public List<FlowRunTaskVO> selectTodoByAssigneeCursor(
@@ -440,13 +408,11 @@ return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(li
 }
 
 /** {@inheritDoc} */
-/** {@inheritDoc} */
 @Override
 public long countTodoByAssignee(String assigneeId, String tenantId) {
     return taskMapper.countTodoByAssignee(assigneeId, tenantId);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> selectOverdue(String assigneeId, String tenantId, int limit) {
@@ -455,13 +421,11 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countOverdueByAssignee(String assigneeId, String tenantId) {
     return taskMapper.countOverdue(assigneeId, tenantId);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public long countPendingByTenantId(String tenantId) {
@@ -472,13 +436,11 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectOverdueTopN(String tenantId, int limit) {
     return taskMapper.selectOverdueTopN(tenantId, limit);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectWorkloadByAssignee(String tenantId, int limit) {
@@ -486,13 +448,11 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt) {
     taskMapper.markProcessed(taskId, userId, comment, processedAt);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int incrementApproveFinished(String taskId) {
@@ -501,14 +461,12 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public int incrementApproveWeight(String taskId, int weight) {
     // GAP-A1: 权重原子累加，确保并发投票加和精确
     return taskMapper.incrementApproveWeight(taskId, weight);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findPendingTasksByAssignee(String assigneeId) {
@@ -521,13 +479,11 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void updateApproveFinished(String taskId, int approveFinished) {
     taskMapper.updateApproveFinished(taskId, approveFinished);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> selectPendingByAssignee(String assigneeId, String flowCode, String tenantId) {
@@ -542,7 +498,6 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowRunTaskVO> findStuckTasks(String tenantId, LocalDateTime threshold, int limit) {
     return converter.flowRunTaskListToVO(
@@ -556,7 +511,6 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
                 .last("LIMIT " + limit)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public long countOverdueByTenantId(String tenantId) {

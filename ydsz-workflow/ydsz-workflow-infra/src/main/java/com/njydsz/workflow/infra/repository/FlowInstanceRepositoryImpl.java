@@ -48,7 +48,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   private final WorkflowRepositoryConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowInstanceVO save(FlowInstanceDTO dto) {
     if (dto.getId() == null) {
@@ -65,13 +64,11 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowInstanceVO> findById(String id) {
     return Optional.ofNullable(instanceMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowInstanceVO> findByBusiness(
@@ -82,7 +79,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowInstanceVO> findByBusinessAndStatus(
       String businessType, String businessId, String flowStatus) {
@@ -91,7 +87,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
         .map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> findByInitiatorId(String initiatorId) {
@@ -103,7 +98,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
                 .orderByDesc(FlowInstance::getCreatedAt)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> selectByInitiator(String initiatorId, String flowCode) {
@@ -117,7 +111,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> findChildren(String parentInstanceId) {
     return converter.flowInstanceListToVO(
@@ -128,7 +121,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countByStatus(String flowStatus) {
     return instanceMapper.selectCount(
@@ -137,7 +129,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
             .eq(FlowInstance::getIsDeleted, NOT_DELETED));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> findSuspendedBefore(LocalDateTime before, int limit) {
@@ -151,20 +142,17 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     instanceMapper.deleteById(id);
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void updateVariable(String id, String variable) {
     instanceMapper.updateVariable(id, variable);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public void updateStatus(
@@ -178,13 +166,11 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void updateDueAt(String id, LocalDateTime dueAt) {
     instanceMapper.updateDueAt(id, dueAt);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> findPage(FlowInstancePageQuery query) {
@@ -192,13 +178,11 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public long countPage(FlowInstancePageQuery query) {
     return instanceMapper.countPage(query);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public long countRunningByDefinition(String definitionId) {
@@ -206,13 +190,11 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> countRunningGroupByNode(String definitionId) {
     return instanceMapper.selectRunningGroupByNode(definitionId);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectRunningGroupByNode(String definitionId) {
@@ -220,13 +202,11 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectCountGroupByStatus(String tenantId) {
     return instanceMapper.selectCountGroupByStatus(tenantId);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Map<String, Object> selectTodayCount(String tenantId) {
@@ -234,13 +214,11 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectDailyNewCount(String tenantId, LocalDateTime start, LocalDateTime end) {
     return instanceMapper.selectDailyNewCount(tenantId, start, end);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectDailyCompletedCount(String tenantId, LocalDateTime start, LocalDateTime end) {
@@ -248,14 +226,12 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<Map<String, Object>> selectFlowTypeDistribution(
       String tenantId, LocalDateTime start, LocalDateTime end) {
     return instanceMapper.selectFlowTypeDistribution(tenantId, start, end);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> findRunningChildrenByParentId(String parentInstanceId) {
@@ -267,7 +243,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
                 .eq(FlowInstance::getIsDeleted, NOT_DELETED)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> findRunningByDefinition(String definitionId, String tenantId) {
@@ -282,7 +257,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowInstanceVO update(FlowInstanceVO vo) {
     FlowInstance entity = converter.entityToEntity(vo);
@@ -290,7 +264,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
     return vo;
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> findArchiveCandidates(
@@ -305,7 +278,6 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
                 .last("LIMIT " + limit)));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowInstanceVO> findLongRunning(String tenantId, LocalDateTime threshold, int limit) {

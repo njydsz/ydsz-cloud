@@ -39,7 +39,6 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowAttachmentVO save(FlowAttachmentVO vo) {
     FlowAttachment entity = converter.entityToEntity(vo);
@@ -49,13 +48,11 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowAttachmentVO> findById(String id) {
     return Optional.ofNullable(attachmentMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowAttachmentVO> findByInstanceId(String instanceId) {
@@ -67,7 +64,6 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowAttachmentVO> findByTaskId(String taskId) {
     return converter.flowAttachmentListToVO(
@@ -78,13 +74,11 @@ public class FlowAttachmentRepositoryImpl implements FlowAttachmentRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {
     attachmentMapper.deleteById(id);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public FlowAttachmentVO update(FlowAttachmentVO vo) {

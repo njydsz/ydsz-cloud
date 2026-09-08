@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.cache.support.CacheKeyBuilder;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.repository.FlowNodeRepository;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
@@ -334,8 +335,7 @@ public class FlowDefinitionCacheService {
    * @return 缓存 key
    */
   private String buildCacheKey(String definitionId) {
-    return com.njydsz.common.cache.support.CacheKeyBuilder.build(
-        "workflow", "def:meta", definitionId);
+    return CacheKeyBuilder.build("workflow", "def:meta", definitionId);
   }
 
   /**

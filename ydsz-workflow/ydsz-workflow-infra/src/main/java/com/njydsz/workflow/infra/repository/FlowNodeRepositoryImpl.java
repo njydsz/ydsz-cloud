@@ -39,7 +39,6 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowNodeVO save(FlowNodeVO vo) {
     FlowNode entity = converter.entityToEntity(vo);
@@ -49,7 +48,6 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowNodeVO> saveBatch(List<FlowNodeVO> nodes) {
     List<FlowNode> entities = nodes.stream().map(converter::entityToEntity).toList();
@@ -58,13 +56,11 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowNodeVO> findById(String id) {
     return Optional.ofNullable(nodeMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public Optional<FlowNodeVO> findByCode(String definitionId, String nodeCode) {
@@ -81,7 +77,6 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public List<FlowNodeVO> findByDefinitionId(String definitionId) {
     return converter.flowNodeListToVO(
@@ -92,14 +87,12 @@ public class FlowNodeRepositoryImpl implements FlowNodeRepository {
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public void deleteByDefinitionId(String definitionId) {
     nodeMapper.delete(
         new LambdaQueryWrapper<FlowNode>().eq(FlowNode::getDefinitionId, definitionId));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public void deleteById(String id) {

@@ -39,7 +39,6 @@ public class FlowHisInstanceRepositoryImpl implements FlowHisInstanceRepository 
   private final WorkflowConverter converter;
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public FlowHisInstanceVO save(FlowHisInstanceVO vo) {
     FlowHisInstance entity = converter.entityToEntity(vo);
@@ -49,13 +48,11 @@ public class FlowHisInstanceRepositoryImpl implements FlowHisInstanceRepository 
   }
 
   /** {@inheritDoc} */
-  /** {@inheritDoc} */
   @Override
   public Optional<FlowHisInstanceVO> findById(String id) {
     return Optional.ofNullable(hisInstanceMapper.selectById(id)).map(converter::entityToVO);
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public List<FlowHisInstanceVO> findArchivedBefore(LocalDateTime threshold, int limit) {
@@ -63,7 +60,6 @@ public class FlowHisInstanceRepositoryImpl implements FlowHisInstanceRepository 
         hisInstanceMapper.selectByArchivedAtBefore(threshold, limit));
   }
 
-  /** {@inheritDoc} */
   /** {@inheritDoc} */
   @Override
   public int deleteByIds(List<String> ids) {
