@@ -85,7 +85,7 @@
         <module>ydsz-common-queue</module>
         <module>ydsz-common-event</module>
         <module>ydsz-common-config</module>
-        <module>ydsz-common-seata</module>
+        <!-- ydsz-common-seata 已于 2026-09-01 移除（全仓 0 个 @GlobalTransactional 使用点） -->
         <module>ydsz-common-socket</module>
         <module>ydsz-common-netty</module>
         <module>ydsz-common-file</module>
@@ -200,11 +200,6 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-config</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-seata</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

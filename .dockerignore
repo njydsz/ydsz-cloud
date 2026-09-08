@@ -1,0 +1,77 @@
+# =============================================================
+# .dockerignore — Docker 构建上下文排除规则
+# 减小构建上下文体积，提升 docker build 速度
+# =============================================================
+
+# ---- 构建产物 ----
+target/
+**/target/
+*.class
+*.jar
+*.war
+
+# ---- Git ----
+.git/
+.gitattributes
+.gitignore
+
+# ---- IDE 配置 ----
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# ---- CI / CD 配置（不需要进入镜像） ----
+.github/
+
+# ---- 文档（不进入镜像） ----
+docs/
+*.md
+
+# 但保留根目录 README.md（部分 Dockerfile LABEL 读取需要）
+!README.md
+
+# ---- 本地脚本 ----
+scripts/
+
+# ---- 日志文件 ----
+*.log
+*.log.*
+
+# ---- 临时文件 ----
+*.tmp
+*.temp
+*.swp
+*.bak
+
+# ---- 本地环境配置 ----
+*.local.*
+application-local.yml
+application-local.yaml
+application-local.properties
+application-dev-local.yml
+bootstrap-local.yml
+
+# ---- 敏感文件 ----
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# ---- OS 文件 ----
+.DS_Store
+Thumbs.db
+
+# ---- 工作区记忆（不入库也不入镜像） ----
+.workbuddy/
+.meituan-catpaw/
+
+# ---- Node（如有前端残留） ----
+node_modules/
+dist/

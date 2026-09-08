@@ -5,10 +5,12 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * 表元数据领域实体。
@@ -19,13 +21,13 @@ import lombok.NoArgsConstructor;
  * @since 26.09.05
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_table_meta")
-public class GenTableMeta {
+public class GenTableMeta extends MpBaseIdEntity<Long> {
 
-  /** 主键 ID。 */
+  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
   /** 数据源 ID。 */

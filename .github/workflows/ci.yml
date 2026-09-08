@@ -1,0 +1,56 @@
+name: ydsz-cloud CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+env:
+  JAVA_VERSION: "21"
+  MAVEN_OPTS: >-
+    -Dorg.slf4j.simpleLogger.showDateTime=true
+    -Djava.awt.headless=true
+    -Xmx4g
+    -XX:+UseG1GC
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # Step 1: 检出源码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: 设置 Java 21 并缓存 Maven 本地仓库
+      - name: Set up Java 21 (Temurin) & Maven cache
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          # key 包含 Runner OS 与 pom.xml hash，确保跨版本隔离
+          cache-dependency-path: |
+            **/pom.xml
+
+      # Step 3: Checkstyle 验证（严格执行云顶编码规范红线）
+      - name: Run Checkstyle
+        run: mvn checkstyle:check -B
+        # 失败即构建中断（failOnViolation=true，已在 pom 中配置）
+
+      # Step 4: Maven verify（编译 + 测试 + JaCoCo 覆盖率采集）
+      - name: Maven verify
+        run: mvn verify -B
+
+      # Step 5: 上传 JaCoCo 覆盖率报告到 Codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: "**/target/site/jacoco/jacoco.xml"
+          fail_ci_if_error: false
+        continue-on-error: true

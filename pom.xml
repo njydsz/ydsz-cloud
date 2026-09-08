@@ -91,6 +91,10 @@
         <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
         <!-- JaCoCo：测试破零配套（2026-09-01），覆盖率报告与后续增量门禁使用 -->
         <jacoco.version>0.8.12</jacoco.version>
+        <!-- JaCoCo 覆盖率门禁跳过开关（默认 false，命令行 -Djacoco.skip=true 跳过） -->
+        <jacoco.skip>false</jacoco.skip>
+        <!-- OWASP DependencyCheck（P2-2 依赖安全扫描） -->
+        <owasp-dc.version>8.4.0</owasp-dc.version>
         <!-- Resilience4j（Spring Cloud CircuitBreaker 官方实现，替代自研熔断引擎 2026-09-01） -->
         <resilience4j.version>2.4.0</resilience4j.version>
 
@@ -281,11 +285,6 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-search</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-seata</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1114,16 +1113,22 @@
                         </annotationProcessorPaths>
                     </configuration>
                 </plugin>
-                <!-- JaCoCo 覆盖率（2026-09-01 测试破零配套）：
-                     仅在 pluginManagement 预置配置，模块按需启用：
-                     mvn test jacoco:report（当前由 CI 后续迭代接入增量覆盖率门禁） -->
+                <!-- JaCoCo 覆盖率（P0-1 测试破零门禁，2026-09-01）：
+                     - prepare-agent 绑定 initialize 阶段（注入 agent 字节码增强）
+                     - report 绑定 test 阶段（生成覆盖率 HTML/XML 报告）
+                     - check 绑定 verify 阶段（覆盖率门禁校验，不达标则构建失败）
+                     跳过开关：-Djacoco.skip=true（默认 false，不跳过） -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>${jacoco.version}</version>
+                    <configuration>
+                        <skip>${jacoco.skip}</skip>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>prepare-agent</id>
+                            <phase>initialize</phase>
                             <goals>
                                 <goal>prepare-agent</goal>
                             </goals>
@@ -1133,6 +1138,63 @@
                             <phase>test</phase>
                             <goals>
                                 <goal>report</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>check-coverage</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <rule>
+                                        <element>PACKAGE</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.10</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                </rules>
+                                <excludes>
+                                    <exclude>**/entity/**</exclude>
+                                    <exclude>**/po/**</exclude>
+                                    <exclude>**/vo/**</exclude>
+                                    <exclude>**/dto/**</exclude>
+                                    <exclude>**/query/**</exclude>
+                                    <exclude>**/enums/**</exclude>
+                                    <exclude>**/config/Properties*.java</exclude>
+                                    <exclude>**/*Application.java</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- OWASP DependencyCheck（P2-2 依赖安全扫描）：依赖漏洞扫描，发现 CVSS ≥ 7 的漏洞时构建失败
+                     - 分析 sonatype（NVD 镜像加速），仅启用 JAR 分析器
+                     - 已单独配置 suppressions 文件，排除已知误报
+                    跳过开关：-Ddependency-check.skip=true（默认 false，不跳过） -->
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>${owasp-dc.version}</version>
+                    <configuration>
+                        <failBuildOnCVSS>7</failBuildOnCVSS>
+                        <suppressionFile>${project.basedir}/docs/owasp-suppressions.xml</suppressionFile>
+                        <analyzers>
+                            <nodeEnabled>false</nodeEnabled>
+                            <pyDistributionEnabled>false</pyDistributionEnabled>
+                        </analyzers>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>owasp-check</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
                             </goals>
                         </execution>
                     </executions>

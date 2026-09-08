@@ -1,16 +1,15 @@
 package com.njydsz.generator.entity;
 
-import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 import lombok.ToString;
 
 /**
@@ -24,13 +23,14 @@ import lombok.ToString;
  * @since 26.09.05
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_datasource")
-public class GenDatasource {
+public class GenDatasource extends MpBaseAuditEntity<Long> {
 
-  /** 主键 ID。 */
+  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
   /** 数据源名称。 */
@@ -50,8 +50,4 @@ public class GenDatasource {
   private Boolean isDefault;
   /** 描述。 */
   private String description;
-  /** 创建时间。 */
-  private LocalDateTime createdAt;
-  /** 更新时间。 */
-  private LocalDateTime updatedAt;
 }

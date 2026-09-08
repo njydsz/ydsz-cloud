@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.exception.custom.SysException;
+
 /**
  * 实体类反向生成服务。
  *
@@ -58,7 +60,7 @@ public class EntityReverseService {
   public String reverseGenerate(String sourceFilePath, Long templateGroupId, String outputDir) {
     File sourceFile = new File(sourceFilePath);
     if (!sourceFile.exists() || !sourceFile.isFile()) {
-      throw new IllegalArgumentException("源文件不存在: " + sourceFilePath);
+      throw SysException.of("源文件不存在: " + sourceFilePath);
     }
     try {
       String content = Files.readString(sourceFile.toPath(), StandardCharsets.UTF_8);
@@ -69,7 +71,10 @@ public class EntityReverseService {
       return buildReport(className, packageName, fields);
     } catch (IOException e) {
       log.error("读取源文件失败 path={} err={}", sourceFilePath, e.getMessage(), e);
-      throw new RuntimeException("反向解析失败: " + e.getMessage(), e);
+      throw SysException.builder()
+          .message("反向解析失败: " + e.getMessage())
+          .cause(e)
+          .build();
     }
   }
 

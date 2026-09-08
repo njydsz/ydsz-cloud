@@ -139,18 +139,4 @@ public class CodeGenController {
         codeGenService.generateAll(datasourceId, templateGroupId, outputDir,
             conflictStrategy, triggeredBy));
   }
-
-  /**
-   * 控制器级别兜底异常处理。
-   *
-   * <p>任何未捕获异常都返回 500 + 错误信息，保持响应结构一致。
-   *
-   * @param ex 未捕获异常
-   * @return 失败响应
-   */
-  @ExceptionHandler(Exception.class)
-  public YdszResponse<Void> handleException(Exception ex) {
-    log.error("Generator 接口未捕获异常: {}", ex.getMessage(), ex);
-    return YdszResponse.error("500", "生成失败: " + ex.getMessage());
-  }
 }

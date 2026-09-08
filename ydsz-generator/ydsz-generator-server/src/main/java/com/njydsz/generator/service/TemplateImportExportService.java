@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.generator.entity.GenTemplate;
@@ -61,7 +62,7 @@ public class TemplateImportExportService {
    */
   public TemplateZipVO exportZip(Long groupId) {
     GenTemplateGroup group = groupRepository.findById(groupId)
-        .orElseThrow(() -> new IllegalArgumentException("分组不存在: " + groupId));
+        .orElseThrow(() -> SysException.of("分组不存在: " + groupId));
     List<GenTemplate> templates = templateRepository.findByGroupIdOrderByFileNameAsc(groupId);
 
     try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -93,7 +94,10 @@ public class TemplateImportExportService {
           .build();
     } catch (Exception e) {
       log.error("导出模板失败 groupId={} err={}", groupId, e.getMessage(), e);
-      throw new RuntimeException("导出模板失败: " + e.getMessage(), e);
+      throw SysException.builder()
+          .message("导出模板失败: " + e.getMessage())
+          .cause(e)
+          .build();
     }
   }
 
@@ -108,7 +112,7 @@ public class TemplateImportExportService {
   @Transactional(rollbackFor = Exception.class)
   public int importZip(Long targetGroupId, byte[] zipData, boolean overwrite) {
     groupRepository.findById(targetGroupId)
-        .orElseThrow(() -> new IllegalArgumentException("目标分组不存在: " + targetGroupId));
+        .orElseThrow(() -> SysException.of("目标分组不存在: " + targetGroupId));
 
     List<GenTemplate> toSave = new ArrayList<>(IMPORT_LIST_CAPACITY);
     try (ZipInputStream zis = new ZipInputStream(
@@ -153,7 +157,10 @@ public class TemplateImportExportService {
       }
     } catch (Exception e) {
       log.error("导入模板失败 err={}", e.getMessage(), e);
-      throw new RuntimeException("导入模板失败: " + e.getMessage(), e);
+      throw SysException.builder()
+          .message("导入模板失败: " + e.getMessage())
+          .cause(e)
+          .build();
     }
 
     templateRepository.batchSave(toSave);

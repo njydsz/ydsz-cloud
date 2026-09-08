@@ -1,14 +1,14 @@
 package com.njydsz.generator.entity;
 
-import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 
 /**
  * 代码生成器模板领域实体。
@@ -19,13 +19,13 @@ import lombok.NoArgsConstructor;
  * @since 26.09.05
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_template")
-public class GenTemplate {
+public class GenTemplate extends MpBaseAuditEntity<Long> {
 
-  /** 模板 ID。 */
+  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
   /** 所属模板分组 ID。 */
@@ -48,8 +48,4 @@ public class GenTemplate {
   private Boolean isActive;
   /** 模板类型码（BACKEND/FRONTEND，对应 TemplateFileTypeEnum.code）。 */
   private String fileType;
-  /** 创建时间。 */
-  private LocalDateTime createdAt;
-  /** 更新时间。 */
-  private LocalDateTime updatedAt;
 }

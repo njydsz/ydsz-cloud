@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
@@ -66,7 +67,10 @@ public class TableMetadataService {
     try {
       tableNames = fetchTableNames(datasource);
     } catch (Exception e) {
-      throw new RuntimeException("刷新表元数据失败: " + e.getMessage(), e);
+      throw SysException.builder()
+          .message("刷新表元数据失败: " + e.getMessage())
+          .cause(e)
+          .build();
     }
     List<GenTableMeta> result = new ArrayList<>(tableNames.size());
 
@@ -102,7 +106,10 @@ public class TableMetadataService {
     try {
       columns = fetchColumns(datasource, tableMeta.getTableName());
     } catch (Exception e) {
-      throw new RuntimeException("刷新列元数据失败: " + e.getMessage(), e);
+      throw SysException.builder()
+          .message("刷新列元数据失败: " + e.getMessage())
+          .cause(e)
+          .build();
     }
     // 删除旧列数据
     columnMetaRepository.deleteByTableMetaId(tableMeta.getId());
