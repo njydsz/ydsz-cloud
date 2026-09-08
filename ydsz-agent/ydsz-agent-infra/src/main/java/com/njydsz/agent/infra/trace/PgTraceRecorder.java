@@ -56,6 +56,12 @@ public class PgTraceRecorder implements TraceRecorder {
   /** 每链路开始时间戳（traceId → 墙钟毫秒） */
   private final Map<String, Long> startTimes = new ConcurrentHashMap<>();
 
+  /**
+   * 构造数据库执行链路记录器。
+   *
+   * @param traceMapper 链路主表 Mapper（{@code ydsz_agt_trace}）
+   * @param traceStepMapper 链路步骤表 Mapper（{@code ydsz_agt_trace_step}）
+   */
   public PgTraceRecorder(AgentTraceMapper traceMapper, AgentTraceStepMapper traceStepMapper) {
     this.traceMapper = traceMapper;
     this.traceStepMapper = traceStepMapper;

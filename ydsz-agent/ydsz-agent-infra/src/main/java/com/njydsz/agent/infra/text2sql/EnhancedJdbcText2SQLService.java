@@ -111,6 +111,21 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
   private final boolean consistencyCheckEnabled;
   private final double consistencyThreshold;
 
+  /**
+   * 构造增强版 Text2SQL 服务（五步 StateGraph 编排）。
+   *
+   * @param llmClient LLM 客户端
+   * @param dataSource 数据源（用于执行 SQL）
+   * @param schemaRecallService Schema 召回服务
+   * @param consistencyChecker 语义一致性校验器
+   * @param defaultModel LLM 模型名称
+   * @param enhancedEnabled 增强模式是否启用
+   * @param schemaRecallEnabled Schema 召回步骤是否启用
+   * @param schemaRecallMaxTables 最大召回表数量
+   * @param feasibilityCheckEnabled 可行性评估步骤是否启用
+   * @param consistencyCheckEnabled 语义一致性校验步骤是否启用
+   * @param consistencyThreshold 语义一致性通过阈值（≥ 该值才执行 SQL）
+   */
   public EnhancedJdbcText2SQLService(
       LlmClient llmClient,
       DataSource dataSource,
@@ -137,11 +152,27 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
     this.consistencyThreshold = consistencyThreshold;
   }
 
+  /**
+   * 执行增强查询（委托给 {@link #queryEnhanced} 后转换为基类结果）。
+   *
+   * @param naturalLanguageQuery 用户自然语言查询
+   * @param tenantId 租户 ID
+   * @return 基础查询结果
+   * @throws Text2SQLException 任一编排步骤失败
+   */
   @Override
   public Text2SQLResult query(String naturalLanguageQuery, String tenantId) throws Text2SQLException {
     return queryEnhanced(naturalLanguageQuery, tenantId).toBaseResult();
   }
 
+  /**
+   * 执行完整的五步增强查询链路（Schema Recall → Feasibility → SQL Gen → Consistency → Execution）。
+   *
+   * @param naturalLanguageQuery 用户自然语言查询
+   * @param tenantId 租户 ID（用于行级隔离）
+   * @return 增强查询结果（含召回表、可行性分数、一致性分数等诊断信息）
+   * @throws Text2SQLException 任一编排步骤失败或一致性校验未通过
+   */
   @Override
   public Text2SQLEnhancedResult queryEnhanced(String naturalLanguageQuery, String tenantId)
       throws Text2SQLException {

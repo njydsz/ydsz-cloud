@@ -64,6 +64,13 @@ public class PgVectorStore implements VectorStore {
   /** 是否启用租户隔离（关闭时保持无 tenant_id 列的环境兼容） */
   private final boolean tenantIsolationEnabled;
 
+  /**
+   * 构造 PostgreSQL pgvector 向量存储。
+   *
+   * @param jdbcTemplate JDBC 模板（不走 MyBatis 租户拦截器）
+   * @param embeddingClient Embedding 客户端（用于自动计算向量与获取维度）
+   * @param tenantIsolationEnabled 是否启用多租户隔离（SQL 中追加 tenant_id 过滤）
+   */
   public PgVectorStore(
       JdbcTemplate jdbcTemplate, EmbeddingClient embeddingClient, boolean tenantIsolationEnabled) {
     this.jdbcTemplate = jdbcTemplate;
@@ -134,6 +141,11 @@ public class PgVectorStore implements VectorStore {
         tenantId);
   }
 
+  /**
+   * 批量存储文本块到 PostgreSQL（使用 JDBC batchUpdate 批量入库）。
+   *
+   * @param chunks 待存储的文本块列表（为 {@code null} 或空时直接返回）
+   */
   @Override
   public void storeBatch(List<TextChunk> chunks) {
     if (chunks == null || chunks.isEmpty()) {
@@ -176,12 +188,28 @@ public class PgVectorStore implements VectorStore {
     log.info("[VectorStore] 批量存储完成: {} 个文本块 (tenantId={})", chunks.size(), tenantId);
   }
 
+  /**
+   * 按文本查询执行 pgvector 余弦相似度检索。
+   *
+   * @param query 用户查询文本
+   * @param topK 返回条数上限
+   * @param minScore 相似度下限（[0,1]，转换为 distance = 1 - minScore）
+   * @return 按相似度降序排列的文本块列表
+   */
   @Override
   public List<TextChunk> search(String query, int topK, double minScore) {
     List<Float> queryVector = embeddingClient.embed(query);
     return searchByVector(queryVector, topK, minScore);
   }
 
+  /**
+   * 按已知向量执行 pgvector 检索（跳过 Embedding 调用）。
+   *
+   * @param embedding 查询向量
+   * @param topK 返回条数上限
+   * @param minScore 相似度下限（[0,1]）
+   * @return 按相似度降序排列的文本块列表；检索异常时返回空列表
+   */
   @Override
   public List<TextChunk> searchByVector(List<Float> embedding, int topK, double minScore) {
     if (embedding == null || embedding.isEmpty()) {
@@ -240,6 +268,11 @@ public class PgVectorStore implements VectorStore {
     }
   }
 
+  /**
+   * 删除指定文档的所有文本块（启用租户隔离时限定当前租户）。
+   *
+   * @param documentId 文档 ID
+   */
   @Override
   public void deleteByDocument(String documentId) {
     String tenantId = resolveTenantId();
@@ -255,6 +288,11 @@ public class PgVectorStore implements VectorStore {
     log.info("[VectorStore] 删除文档文本块: docId={}, tenantId={}", documentId, tenantId);
   }
 
+  /**
+   * 返回当前租户下的文本块总数。
+   *
+   * @return 文本块数量（查询异常时返回 0）
+   */
   @Override
   public long count() {
     try {
@@ -276,11 +314,21 @@ public class PgVectorStore implements VectorStore {
     }
   }
 
+  /**
+   * 返回向量存储类型标识。
+   *
+   * @return "pgvector" — PostgreSQL pgvector 存储
+   */
   @Override
   public String getType() {
     return "pgvector";
   }
 
+  /**
+   * 检查 pgvector 表是否可访问（执行 SELECT 1 探测）。
+   *
+   * @return {@code true} 表示数据库连接正常且表存在
+   */
   @Override
   public boolean isAvailable() {
     try {

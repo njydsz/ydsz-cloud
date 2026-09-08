@@ -67,7 +67,7 @@ public interface OAuth2ApplicationConverter {
   @Mapping(target = "createdBy", source = "createdBy")
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   OAuth2ApplicationEntity domainToEntity(OAuth2Application domain);
 }

@@ -223,7 +223,7 @@ public class ScorecardRule implements Rule {
           .ruleCode(code)
           .ruleName(name)
           .category(category)
-          .triggered(true)
+          .isTriggered(true)
           .severity(severity.getCode())
           .title(title)
           .description(desc.toString())
@@ -235,7 +235,7 @@ public class ScorecardRule implements Rule {
       log.warn("[LiteRule-Scorecard] 评分卡 {} 评估异常: {}", code, e.getMessage());
       return RuleResultVO.builder()
           .ruleCode(code)
-          .triggered(false)
+          .isTriggered(false)
           .triggeredAt(LocalDateTime.now())
           .elapsedMs((System.nanoTime() - start) / NANOS_PER_MILLI)
           .build();

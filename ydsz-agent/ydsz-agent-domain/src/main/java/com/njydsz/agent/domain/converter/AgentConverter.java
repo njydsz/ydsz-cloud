@@ -77,7 +77,7 @@ public interface AgentConverter {
    * @return 数据库实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
@@ -93,7 +93,7 @@ public interface AgentConverter {
    * @param dto Agent 定义 DTO（含 id）
    * @return 数据库实体
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
@@ -227,7 +227,7 @@ public interface AgentConverter {
    * @return 数据库实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
@@ -243,7 +243,7 @@ public interface AgentConverter {
    * @param dto Prompt 模板 DTO（含 id）
    * @return 数据库实体
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
@@ -278,7 +278,7 @@ public interface AgentConverter {
    * @return 数据库实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
@@ -313,7 +313,7 @@ public interface AgentConverter {
    * @return 数据库实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)

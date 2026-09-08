@@ -42,9 +42,16 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
     private static final int COLLECTION_CAPACITY = 16;
 
 
+    /** 触发记忆提取的最小对话条数（用户 + 助手往返至少 2 轮） */
     private static final int MIN_CONVERSATION_MESSAGES = 4;
+
+    /** 单次对话最大提取事实条数（防止 LLM 输出过多低质量事实） */
     private static final int MAX_FACTS_PER_EXTRACTION = 10;
+
+    /** 默认事实重要度（当未指定时使用） */
     private static final double DEFAULT_IMPORTANCE = 0.5;
+
+    /** 事实重要度上限（importance 字段钳制上限） */
     private static final double HIGH_IMPORTANCE = 0.8;
 
     /** 日志中事实内容的截断长度 */

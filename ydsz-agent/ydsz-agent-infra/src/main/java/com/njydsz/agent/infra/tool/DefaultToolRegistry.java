@@ -42,7 +42,9 @@ public class DefaultToolRegistry implements ToolRegistry {
   /** 工具执行线程池（JDK 21 虚拟线程，规范豁免场景） */
   private final ExecutorService toolExecutorPool;
 
-  /** 默认构造器（30 秒超时） */
+  /**
+   * 构造工具注册中心（使用默认 30 秒超时）。
+   */
   public DefaultToolRegistry() {
     this(DEFAULT_TOOL_TIMEOUT_SECONDS);
   }
@@ -57,6 +59,13 @@ public class DefaultToolRegistry implements ToolRegistry {
     this.toolExecutorPool = ExecutorUtils.newVirtualThreadExecutor("agent-tool-registry-");
   }
 
+  /**
+   * 注册一个工具（仅含名称与执行器，描述使用占位字符串）。
+   *
+   * @param name 工具名称（非空且全局唯一）
+   * @param executor 工具执行器（非 null）
+   * @throws IllegalArgumentException 名称为空或执行器为 null
+   */
   @Override
   public void register(String name, ToolExecutor executor) {
     if (name == null || name.isBlank()) {
@@ -95,12 +104,26 @@ public class DefaultToolRegistry implements ToolRegistry {
         registration.getDefinition().getDescription());
   }
 
+  /**
+   * 注销指定名称的工具。
+   *
+   * @param name 要注销的工具名称
+   */
   @Override
   public void unregister(String name) {
     registry.remove(name);
     log.info("[Tool-Registry] 注销工具: {}", name);
   }
 
+  /**
+   * 执行指定工具调用（带超时控制）。
+   *
+   * <p>未配置超时时直接同步执行；配置超时时通过 {@link java.util.concurrent.Future#get(long, TimeUnit)} 限时等待，
+   * 超时后返回 JSON 格式的错误信息而非抛出异常，保证调用方始终可拿到结构化响应。
+   *
+   * @param toolCall 工具调用请求（含工具名与参数）
+   * @return 工具执行结果的 JSON 字符串；执行失败时为 JSON 格式的错误信息
+   */
   @Override
   public String execute(ToolCall toolCall) {
     ToolRegistration registration = registry.get(toolCall.getName());
@@ -147,6 +170,11 @@ public class DefaultToolRegistry implements ToolRegistry {
     }
   }
 
+  /**
+   * 返回所有已注册工具的 function calling 定义列表。
+   *
+   * @return 工具定义列表（无序）
+   */
   @Override
   public List<ToolDefinition> getToolDefinitions() {
     List<ToolDefinition> defs = new ArrayList<>(registry.size());
@@ -156,11 +184,22 @@ public class DefaultToolRegistry implements ToolRegistry {
     return defs;
   }
 
+  /**
+   * 返回已注册工具的数量。
+   *
+   * @return 注册表大小
+   */
   @Override
   public int size() {
     return registry.size();
   }
 
+  /**
+   * 判断是否已注册指定名称的工具。
+   *
+   * @param name 工具名称
+   * @return {@code true} 表示已注册
+   */
   @Override
   public boolean contains(String name) {
     return registry.containsKey(name);

@@ -47,6 +47,13 @@ public class InMemoryTraceRecorder implements TraceRecorder {
   /** 链路元数据存储 */
   private final Map<String, RecordedTraceMeta> traceMetas = new ConcurrentHashMap<>();
 
+  /**
+   * 启动一条新的执行链路。
+   *
+   * @param conversationId 对话 ID
+   * @param agentId Agent 标识
+   * @return 生成的链路追踪 ID
+   */
   @Override
   public String startTrace(String conversationId, String agentId) {
     evictExpiredTraces();
@@ -58,6 +65,16 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     return traceId;
   }
 
+  /**
+   * 记录一个执行步骤（无成本信息）。
+   *
+   * @param traceId 链路追踪 ID
+   * @param stepType 步骤类型（如 LLM_CALL、TOOL_CALL）
+   * @param content 步骤内容摘要
+   * @param input 步骤输入对象
+   * @param output 步骤输出对象
+   * @param durationMs 步骤耗时（毫秒）
+   */
   @Override
   public void recordStep(
       String traceId,
@@ -69,6 +86,17 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     recordStep(traceId, stepType, content, input, output, durationMs, BigDecimal.ZERO);
   }
 
+  /**
+   * 记录一个执行步骤（含成本信息）。
+   *
+   * @param traceId 链路追踪 ID
+   * @param stepType 步骤类型（如 LLM_CALL、TOOL_CALL）
+   * @param content 步骤内容摘要
+   * @param input 步骤输入对象
+   * @param output 步骤输出对象
+   * @param durationMs 步骤耗时（毫秒）
+   * @param cost 步骤成本（美元）
+   */
   @Override
   public void recordStep(
       String traceId,
@@ -106,6 +134,12 @@ public class InMemoryTraceRecorder implements TraceRecorder {
         cost);
   }
 
+  /**
+   * 结束一条执行链路（标记最终状态，计算总耗时）。
+   *
+   * @param traceId 链路追踪 ID
+   * @param status 最终状态（如 SUCCESS / FAILED）
+   */
   @Override
   public void endTrace(String traceId, String status) {
     traceStatus.put(traceId, status);
@@ -120,6 +154,12 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     log.info("[Trace] 结束链路: traceId={}, status={}, steps={}", traceId, status, stepCount);
   }
 
+  /**
+   * 获取指定链路的所有步骤。
+   *
+   * @param traceId 链路追踪 ID
+   * @return 步骤列表（按序号升序）；链路不存在时返回空列表
+   */
   @Override
   public List<TraceStep> getSteps(String traceId) {
     return traces.getOrDefault(traceId, List.of());
@@ -187,6 +227,12 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     }
   }
 
+  /**
+   * 列出最近的链路 ID（按开始时间降序）。
+   *
+   * @param limit 返回条数上限（≤0 时取默认值 10）
+   * @return 链路 ID 列表
+   */
   @Override
   public List<String> listRecentTraces(int limit) {
     int safeLimit = limit > 0 ? limit : 10;

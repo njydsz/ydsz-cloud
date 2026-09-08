@@ -47,20 +47,47 @@ public class SimpleTextChunker implements TextChunker {
   /** 重叠大小（字符数） */
   private final int overlap;
 
+  /**
+   * 构造默认参数的分块器（chunkSize=500, overlap=50）。
+   */
   public SimpleTextChunker() {
     this(DEFAULT_CHUNK_SIZE, DEFAULT_OVERLAP);
   }
 
+  /**
+   * 构造指定参数的分块器。
+   *
+   * @param chunkSize 分块大小（字符数，<100 时使用默认值）
+   * @param overlap 重叠字符数（超过 chunkSize/2 时取半）
+   */
   public SimpleTextChunker(int chunkSize, int overlap) {
     this.chunkSize = chunkSize > 100 ? chunkSize : DEFAULT_CHUNK_SIZE;
     this.overlap = Math.min(overlap >= 0 ? overlap : DEFAULT_OVERLAP, chunkSize / 2);
   }
 
+  /**
+   * 将标题/来源为空的分块委托给四参数版本。
+   *
+   * @param text 原始文本
+   * @param documentId 文档 ID
+   * @return 分块列表
+   */
   @Override
   public List<TextChunk> chunk(String text, String documentId) {
     return chunk(text, documentId, null, null);
   }
 
+  /**
+   * 将文本切分为固定大小、带重叠的文本块。
+   *
+   * <p>按段落自然分块，超长段落按句子分割；相邻块之间保留 overlap 字符的重叠区域，确保语义连续性。
+   *
+   * @param text 待切分的原始文本（为 {@code null} 或空白时返回空列表）
+   * @param documentId 文档 ID（写入每个 chunk）
+   * @param documentTitle 文档标题（可 {@code null}）
+   * @param source 来源标识（可 {@code null}）
+   * @return 按原文顺序排列的文本块列表
+   */
   @Override
   public List<TextChunk> chunk(
       String text, String documentId, String documentTitle, String source) {

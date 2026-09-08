@@ -61,7 +61,7 @@ public interface SecurityAlertConverter {
   @Mapping(target = "handlerNote", source = "handlerNote")
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)

@@ -72,7 +72,7 @@ import com.njydsz.gateway.config.GatewayIpUtils;
     matchIfMissing = true)
 public class AuditLogFilter implements GlobalFilter, Ordered {
 
-  /** 审计敏感路径前缀（写操作/管理接口/鉴权接口） */
+  /** 敏感路径前缀集合：命中这些前缀的请求无论 HTTP 方法一律记录审计日志（写操作、管理接口、鉴权接口）。 */
   private static final Set<String> AUDIT_SENSITIVE_PREFIXES =
       Set.of(
           "/auth",
@@ -85,7 +85,7 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
           "/api/tenant",
           "/api/apikey");
 
-  /** 高敏感 HTTP 方法（DELETE 删除、PATCH 部分更新、PUT 全量更新） */
+  /** 高敏感 HTTP 方法集合：DELETE/PUT/PATCH 写操作一律审计，不论路径是否在敏感前缀列表中。 */
   private static final Set<HttpMethod> HIGH_SENSITIVITY_METHODS =
       Set.of(HttpMethod.DELETE, HttpMethod.PATCH, HttpMethod.PUT);
 
@@ -101,13 +101,14 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
   private GatewayAuditEventBridge gatewayAuditEventBridge;
 
   /**
-   * 审计日志过滤器入口
+   * 审计日志过滤器入口：在请求完成后异步记录安全审计日志。
    *
-   * <p>在请求完成后记录审计日志，使用 {@code then()} 确保 审计不影响正常请求处理。
+   * <p>先判断是否需要审计（高敏感方法或敏感路径前缀），对需要审计的请求在过滤器链完成后通过 {@code then()}
+   * 输出双轨审计日志（SLF4J 结构化日志 + 审计事件桥接），确保审计不影响正常请求处理。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param chain 网关过滤器链
-   * @return 放行后的完成信号
+   * @return 放行后的完成信号 Mono
    */
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

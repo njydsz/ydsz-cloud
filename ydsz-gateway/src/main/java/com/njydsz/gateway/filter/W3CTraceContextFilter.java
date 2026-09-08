@@ -57,7 +57,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
     matchIfMissing = true)
 public class W3CTraceContextFilter implements GlobalFilter, Ordered {
 
-  /** traceparent 请求头名 */
+  /** W3C Trace Context 中 traceparent 头的标准名称（traceparent header field name）。 */
   private static final String HEADER_TRACEPARENT = "traceparent";
 
   /**

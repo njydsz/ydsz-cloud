@@ -63,6 +63,12 @@ public class LlmClientBasedSchemaRecallService implements SchemaRecallService {
   private final LlmClient llmClient;
   private final String defaultModel;
 
+  /**
+   * 构造基于 LLM 的 Schema 召回服务。
+   *
+   * @param llmClient LLM 客户端（预留用于二次精排）
+   * @param defaultModel 模型名称
+   */
   public LlmClientBasedSchemaRecallService(
       LlmClient llmClient,
       @Value("${ydsz.agent.llm.default-model:gpt-4o-mini}") String defaultModel) {
@@ -70,6 +76,16 @@ public class LlmClientBasedSchemaRecallService implements SchemaRecallService {
     this.defaultModel = defaultModel;
   }
 
+  /**
+   * 从可用表中召回与用户问题相关的 Top-N 表 Schema。
+   *
+   * <p>当前版本使用关键词命中加权打分 + 排序；预留 LLM 精排接口（{@link #llmRerank}）暂未调用。
+   *
+   * @param query 用户自然语言问题
+   * @param availableTables 所有可用表 Schema
+   * @param maxRecall 最大召回数量（≤0 时返回空列表）
+   * @return 按匹配分数降序排列的表 Schema 子集
+   */
   @Override
   public List<TableSchema> recallRelevantSchemas(
       String query, List<TableSchema> availableTables, int maxRecall) {

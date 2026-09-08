@@ -46,6 +46,14 @@ public class CompatibleEmbeddingClient implements EmbeddingClient {
   /** HTTP 客户端 */
   private final RestClient restClient;
 
+  /**
+   * 构造兼容型 Embedding 客户端。
+   *
+   * @param baseUrl API 基础地址（如 https://api.openai.com/v1）
+   * @param apiKey API 鉴权密钥
+   * @param model Embedding 模型名称
+   * @param dimension 向量维度（≤0 时使用默认值 1536）
+   */
   public CompatibleEmbeddingClient(String baseUrl, String apiKey, String model, int dimension) {
     this.baseUrl = baseUrl != null ? baseUrl : "";
     this.apiKey = apiKey;
@@ -59,11 +67,24 @@ public class CompatibleEmbeddingClient implements EmbeddingClient {
             .build();
   }
 
+  /**
+   * 将单条文本转换为稠密向量。
+   *
+   * @param text 待嵌入的文本（非空）
+   * @return 浮点向量
+   */
   @Override
   public List<Float> embed(String text) {
     return embedBatch(List.of(text)).get(0);
   }
 
+  /**
+   * 批量将文本列表转换为稠密向量列表。
+   *
+   * @param texts 待嵌入的文本列表（元素非空）
+   * @return 与输入顺序一一对应的向量列表
+   * @throws LlmException Embedding API 调用失败或响应格式异常
+   */
   @Override
   public List<List<Float>> embedBatch(List<String> texts) {
     Map<String, Object> body = new HashMap<>(COLLECTION_CAPACITY);
@@ -87,11 +108,21 @@ public class CompatibleEmbeddingClient implements EmbeddingClient {
     }
   }
 
+  /**
+   * 返回当前模型的向量维度。
+   *
+   * @return 向量维度（正整数）
+   */
   @Override
   public int getDimension() {
     return dimension;
   }
 
+  /**
+   * 返回当前使用的 Embedding 模型名称。
+   *
+   * @return 模型名称（如 text-embedding-3-small）
+   */
   @Override
   public String getModel() {
     return model;

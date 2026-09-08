@@ -63,7 +63,7 @@ public interface WorkflowRepositoryConverter {
    * @return 流程实例实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -79,7 +79,7 @@ public interface WorkflowRepositoryConverter {
    * @param dto 流程实例 DTO（含 id）
    * @return 流程实例实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
@@ -93,7 +93,7 @@ public interface WorkflowRepositoryConverter {
    * @param vo 流程实例 VO
    * @return 流程实例实体
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)

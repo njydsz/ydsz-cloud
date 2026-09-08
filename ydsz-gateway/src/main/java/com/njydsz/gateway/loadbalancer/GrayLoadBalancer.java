@@ -97,7 +97,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   /** 当前负载均衡器所属服务 ID */
   private final String serviceId;
 
-  /** 轮询位置计数器(AtomicInteger 保证线程安全) */
+  /** 轮询位置计数器（AtomicInteger 保证多线程安全，初始位置随机化避免多实例启动时首轮都命中同一实例）。 */
   private final AtomicInteger position;
 
   /**
@@ -152,9 +152,9 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   }
 
   /**
-   * 响应式选择实例(无请求上下文)
+   * 响应式选择实例（无请求上下文）。
    *
-   * <p>父接口默认方法会传入空的 DefaultRequest,此处复用 {@link #choose(Request)}。
+   * <p>父接口默认方法会传入 null，此处复用 {@link #choose(Request)} 统一逻辑，等价于无灰度标识的稳定路由。
    *
    * @return 实例响应 Mono
    */
@@ -427,10 +427,16 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   }
 
   /**
-   * P2-7: Alias Method 预计算表（prob 和 alias 数组）。
+   * P2-7: Alias Method 预计算表（Vose 算法）。
    *
-   * <p>prob[i] 表示以千分比表示的选中自己的概率（0-1000）。 alias[i] 表示当不选自己时，回退到哪个列。 选择算法：随机选列 i，以 prob[i]/1000 概率返回
-   * i，否则返回 alias[i]。
+   * <p>两个并行数组将加权随机选择的每次决策降为 O(1)：
+   *
+   * <ul>
+   *   <li>{@code prob[i]} — 以千分比（0-1000）表示第 i 列选中自身的概率。</li>
+   *   <li>{@code alias[i]} — 当不选第 i 列时回退到哪一列。</li>
+   * </ul>
+   *
+   * <p>选择算法：随机选列 i，以 {@code prob[i]/1000} 概率返回 i，否则返回 {@code alias[i]}。
    */
   private static class AliasTable {
     final int[] prob;

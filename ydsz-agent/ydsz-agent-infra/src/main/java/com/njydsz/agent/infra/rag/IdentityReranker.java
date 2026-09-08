@@ -18,6 +18,14 @@ import com.njydsz.agent.domain.rag.TextChunk;
 @Slf4j
 public class IdentityReranker implements Reranker {
 
+  /**
+   * 不做重排序，仅截断至 topK 条。
+   *
+   * @param query 用户查询（未使用）
+   * @param chunks 待截断的文本块列表
+   * @param topK 返回条数上限
+   * @return 截断后的文本块列表
+   */
   @Override
   public List<TextChunk> rerank(String query, List<TextChunk> chunks, int topK) {
     if (chunks.size() <= topK) {
@@ -26,6 +34,11 @@ public class IdentityReranker implements Reranker {
     return chunks.subList(0, topK);
   }
 
+  /**
+   * 返回重排序器类型标识。
+   *
+   * @return "identity" — 恒等重排序
+   */
   @Override
   public String getType() {
     return "identity";

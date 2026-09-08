@@ -41,16 +41,16 @@ public class HybridRetriever implements Retriever {
   private static final int COLLECTION_CAPACITY = 16;
 
 
-  /** RRF 平滑常数 */
+  /** RRF 平滑常数（值越小头部排名差异越显著，默认 60 是 TREC 推荐值） */
   private static final int RRF_K = 60;
 
-  /** 候选召回分数下限缩放系数（召回时放宽为最低分数的一半） */
+  /** 候选召回分数下限缩放系数（召回时放宽为最低分数的一半，给 RRF 留出重排空间） */
   private static final double RECALL_MIN_SCORE_FACTOR = 0.5;
 
   /** 日志中查询文本的截断长度 */
   private static final int LOG_QUERY_TRUNCATE_LENGTH = 50;
 
-  /** 文本块表名 */
+  /** 文本块表名（存储向量化后的文档分块） */
   private static final String TABLE_NAME = "ydsz_agt_document_chunk";
 
   /** 向量存储 */
@@ -74,11 +74,28 @@ public class HybridRetriever implements Retriever {
   /** 是否启用租户隔离 */
   private final boolean tenantIsolationEnabled;
 
+  /**
+   * 构造混合检索器（使用恒等重排序器兜底）。
+   *
+   * @param vectorStore 向量存储实例
+   * @param jdbcTemplate JDBC 模板（用于全文检索）
+   * @param tenantIsolationEnabled 是否启用多租户隔离
+   */
   public HybridRetriever(
       VectorStore vectorStore, JdbcTemplate jdbcTemplate, boolean tenantIsolationEnabled) {
     this(vectorStore, jdbcTemplate, new IdentityReranker(), tenantIsolationEnabled);
   }
 
+  /**
+   * 构造混合检索器（全参）。
+   *
+   * <p>构造期会自动探测全文检索表是否存在，若不存在则全文检索自动禁用。
+   *
+   * @param vectorStore 向量存储实例
+   * @param jdbcTemplate JDBC 模板（用于全文检索）
+   * @param reranker 重排序器（传 null 时使用 IdentityReranker 兜底）
+   * @param tenantIsolationEnabled 是否启用多租户隔离
+   */
   public HybridRetriever(
       VectorStore vectorStore,
       JdbcTemplate jdbcTemplate,

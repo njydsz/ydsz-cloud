@@ -69,19 +69,19 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
     matchIfMissing = true)
 public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
 
-  /** 匹配路径版本段：/api/... 或 /v1/... */
+  /** 从 URL 路径中提取版本号的正则，匹配 {@code /v1/...} 或 {@code /api/v2/...} 格式。 */
   private static final Pattern VERSION_PATTERN = Pattern.compile("/(api/)?v(?<ver>\\d+)(?:[./]|$)");
 
-  /** 版本响应头 */
+  /** 响应头：命中的 API 版本号（{@code X-API-Version: v2}）。 */
   private static final String HEADER_API_VERSION = "X-API-Version";
 
-  /** Sunset 响应头（RFC 8594） */
+  /** 响应头：已弃用 API 的建议下线日期（RFC 8594 Sunset 头）。 */
   private static final String HEADER_SUNSET = "Sunset";
 
-  /** Deprecation 响应头 */
+  /** 响应头：标识当前 API 已被弃用（{@code Deprecation: true}）。 */
   private static final String HEADER_DEPRECATION = "Deprecation";
 
-  /** Link 响应头 */
+  /** 响应头：指向替代版本的 RFC 5988 Link 头（{@code Link: <...>; rel="successor-version"}）。 */
   private static final String HEADER_LINK = "Link";
 
   private final ApiVersionProperties properties;

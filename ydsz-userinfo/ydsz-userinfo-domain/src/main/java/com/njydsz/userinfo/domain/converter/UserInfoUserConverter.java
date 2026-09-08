@@ -75,7 +75,7 @@ public interface UserInfoUserConverter {
    * @return 用户账号实体（未持久化，id 为 null，password 为 null 需 Service 层填充）
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -104,7 +104,7 @@ public interface UserInfoUserConverter {
    * @param dto 用户统一 DTO（含 id）
    * @return 用户账号实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -156,7 +156,7 @@ public interface UserInfoUserConverter {
    * @return 用户-角色关联实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
@@ -191,7 +191,7 @@ public interface UserInfoUserConverter {
    * @return 用户-岗位关联实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
@@ -226,7 +226,7 @@ public interface UserInfoUserConverter {
    * @return 用户-部门关联实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
@@ -243,7 +243,7 @@ public interface UserInfoUserConverter {
    * @return 用户-部门关联实体（含 id）
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
@@ -278,7 +278,7 @@ public interface UserInfoUserConverter {
    * @return 密码历史实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   UserPasswordHistory dtoToEntity(UserPasswordHistoryDTO dto);
 
@@ -321,7 +321,7 @@ public interface UserInfoUserConverter {
    * @return 社交账号绑定实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)

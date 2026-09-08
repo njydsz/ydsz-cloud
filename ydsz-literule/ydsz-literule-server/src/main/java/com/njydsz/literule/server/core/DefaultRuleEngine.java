@@ -466,7 +466,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
       RuleEvaluationOutcome outcome =
           executeAndRecordRuleEvaluation(rule, context, scenario, "[LiteRule]");
 
-      if (outcome.triggered) {
+      if (outcome.isTriggered) {
         state.triggered.add(outcome.result);
         // 互斥组：记录已命中的组，同组后续规则跳过评估
         if (mutexGroup != null && !mutexGroup.isBlank()) {
@@ -1268,14 +1268,14 @@ return ruleRegistry.getIndexBypassThreshold();
     final RuleResultVO result;
     final Exception caughtException;
     final long elapsedMs;
-    final boolean triggered;
+    final boolean isTriggered;
     final boolean isError;
 
     RuleEvaluationOutcome(RuleResultVO result, Exception caughtException, long elapsedMs) {
       this.result = result;
       this.caughtException = caughtException;
       this.elapsedMs = elapsedMs;
-      this.triggered = result != null && result.isTriggered();
+      this.isTriggered = result != null && result.isTriggered();
       this.isError =
           caughtException != null
               || (result != null
@@ -1350,7 +1350,7 @@ return ruleRegistry.getIndexBypassThreshold();
     RuleEvaluationOutcome outcome = new RuleEvaluationOutcome(result, caughtException, elapsed);
 
     // 统计记录（含慢规则检测与告警）
-    statistics.record(rule.getCode(), outcome.triggered, outcome.isError, elapsed);
+    statistics.record(rule.getCode(), outcome.isTriggered, outcome.isError, elapsed);
 
     // 熔断器记录结果
     if (circuitBreaker != null) {
@@ -1363,7 +1363,7 @@ return ruleRegistry.getIndexBypassThreshold();
         metrics.recordEvaluation(
             rule.getCode(),
             scenario,
-            outcome.triggered,
+            outcome.isTriggered,
             result != null && result.getSeverity() != null ? RuleSeverity.fromCode(result.getSeverity()) : null,
             outcome.isError,
             elapsed);
@@ -1477,7 +1477,7 @@ return ruleRegistry.getIndexBypassThreshold();
           // 委托共享评估+记录逻辑（P2-T3：消除串行/并行路径重复代码）
           RuleEvaluationOutcome outcome =
               executeAndRecordRuleEvaluation(rule, context, scenario, "[LiteRule-Parallel]");
-          return outcome.triggered ? outcome.result : null;
+          return outcome.isTriggered ? outcome.result : null;
         });
   }
 

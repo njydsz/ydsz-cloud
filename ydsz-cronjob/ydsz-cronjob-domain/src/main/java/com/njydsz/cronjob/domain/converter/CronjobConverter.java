@@ -87,7 +87,7 @@ public interface CronjobConverter {
   List<TenantQuotaVO> tenantQuotaListToVO(List<TenantQuota> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -102,7 +102,7 @@ public interface CronjobConverter {
   List<GlueCodeVO> glueCodeListToVO(List<GlueCode> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -117,7 +117,7 @@ public interface CronjobConverter {
   List<JobVO> jobListToVO(List<Job> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -139,7 +139,7 @@ public interface CronjobConverter {
 
   List<JobAlertRuleVO> jobAlertRuleListToVO(List<JobAlertRule> entities);
 
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -147,7 +147,7 @@ public interface CronjobConverter {
   @Mapping(target = "updatedAt", ignore = true)
   JobAlertRule voToEntity(JobAlertRuleVO vo);
 
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -161,7 +161,7 @@ public interface CronjobConverter {
   List<JobArtifactVO> jobArtifactListToVO(List<JobArtifact> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -175,7 +175,7 @@ public interface CronjobConverter {
   List<JobDagVO> jobDagListToVO(List<JobDag> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -199,7 +199,7 @@ public interface CronjobConverter {
    * @param vo DAG 工作流视图对象
    * @return DAG 实体（审计字段、级联字段由服务层处理）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -213,7 +213,7 @@ public interface CronjobConverter {
   List<JobDagInstanceVO> jobDagInstanceListToVO(List<JobDagInstance> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -241,7 +241,7 @@ public interface CronjobConverter {
   List<JobDagNodeInstanceVO> jobDagNodeInstanceListToVO(List<JobDagNodeInstance> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -254,7 +254,7 @@ public interface CronjobConverter {
   List<JobDagNodeInstance> jobDagNodeInstanceVOsToEntities(List<JobDagNodeInstanceVO> vos);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -270,7 +270,7 @@ public interface CronjobConverter {
   List<JobDagVersionVO> jobDagVersionListToVO(List<JobDagVersion> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -304,7 +304,7 @@ public interface CronjobConverter {
   List<JobLogVO> jobLogListToVO(List<JobLog> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   JobLog voToEntity(JobLogVO vo);
@@ -323,7 +323,7 @@ public interface CronjobConverter {
   List<JobNodeVO> jobNodeListToVO(List<JobNode> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -338,7 +338,7 @@ public interface CronjobConverter {
   List<JobTaskVO> jobTaskListToVO(List<JobTask> entities);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -361,7 +361,7 @@ public interface CronjobConverter {
 
   // ===== JobWebhook PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -371,7 +371,7 @@ public interface CronjobConverter {
   JobWebhook postDtoToEntity(JobWebhookPostDTO dto);
 
   // ===== JobWebhook PutDTO → Entity =====
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -382,7 +382,7 @@ public interface CronjobConverter {
 
   // ===== Job PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -392,7 +392,7 @@ public interface CronjobConverter {
   Job postDtoToEntity(JobPostDTO dto);
 
   // ===== Job PutDTO → Entity =====
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -401,7 +401,7 @@ public interface CronjobConverter {
 
   // ===== JobDag PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -411,7 +411,7 @@ public interface CronjobConverter {
   JobDag postDtoToEntity(JobDagPostDTO dto);
 
   // ===== JobDag PutDTO → Entity =====
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)

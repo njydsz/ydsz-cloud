@@ -223,7 +223,7 @@ public interface WorkflowConverter {
    * @return 委托授权实体（系统字段由 DB 或 Service 层填充）
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -240,7 +240,7 @@ public interface WorkflowConverter {
    * @param dto 更新委派授权的请求 DTO
    * @return 委托授权实体
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)

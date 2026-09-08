@@ -25,12 +25,4 @@ import org.springframework.context.annotation.Import;
   // CHECKSTYLE.ON: RegexpSinglelineJava
 @ConditionalOnProperty(prefix = "ydsz.web.session", name = "enabled", havingValue = "true")
 @Import(RedisHttpSessionImportSelector.class)
-/**
- * Web 会话自动配置
- *
- * <p>启用 Redis HTTP 会话管理。
- *
- * @author ydsz-team
- * @since 26.09.01
- */
 public class WebSessionAutoConfiguration {}

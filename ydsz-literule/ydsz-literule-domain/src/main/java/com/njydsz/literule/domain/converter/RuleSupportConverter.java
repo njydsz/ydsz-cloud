@@ -73,7 +73,7 @@ public interface RuleSupportConverter {
   // ===== DecisionTable PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "status", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -83,7 +83,7 @@ public interface RuleSupportConverter {
   DecisionTable postDtoToEntity(DecisionTableDTO dto);
 
   // ===== RuleABPolicy PutDTO → Entity =====
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)

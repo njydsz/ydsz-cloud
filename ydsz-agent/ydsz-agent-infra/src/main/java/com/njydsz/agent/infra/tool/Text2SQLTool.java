@@ -32,6 +32,13 @@ public class Text2SQLTool implements ToolExecutor {
 
   private final Text2SQLService text2SQLService;
 
+  /**
+   * 执行 Text2SQL 工具调用：从参数中提取 query，委托 {@link Text2SQLService} 执行并返回 JSON 结果。
+   *
+   * @param arguments 工具参数映射（需含 "query" 键）
+   * @return JSON 格式查询结果或错误信息
+   * @throws ToolExecutionException 框架级异常（实际执行错误以 JSON 错误体返回，不抛出）
+   */
   @Override
   public String execute(Map<String, Object> arguments) throws ToolExecutionException {
     if (arguments == null || !arguments.containsKey(PARAM_QUERY)) {
@@ -61,6 +68,7 @@ public class Text2SQLTool implements ToolExecutor {
     }
   }
 
+  /** 从 TenantContext 解析当前租户 ID（异常或无上下文时返回 "default"）。 */
   private String resolveTenantId() {
     try {
       String tenantId = TenantContextHolder.getTenantId();

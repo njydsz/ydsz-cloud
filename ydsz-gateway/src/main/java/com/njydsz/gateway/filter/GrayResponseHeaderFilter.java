@@ -50,6 +50,16 @@ public class GrayResponseHeaderFilter implements GlobalFilter, Ordered {
   /** 网关指标组件（可选） */
   private final ObjectProvider<GatewayMetrics> gatewayMetricsProvider;
 
+  /**
+   * 灰度路由响应头过滤器入口。
+   *
+   * <p>在响应提交前读取负载均衡选中的实例 metadata，向响应头注入 {@code X-Gray-Hit} 标记，
+   * 供客户端与监控系统区分灰度 / 稳定路由结果。
+   *
+   * @param exchange 服务器 Web 交换上下文
+   * @param chain 网关过滤器链
+   * @return 完成信号 Mono
+   */
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
     return chain.filter(exchange)

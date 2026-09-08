@@ -100,16 +100,16 @@ import com.njydsz.gateway.config.PathGuard;
     matchIfMissing = true)
 public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
 
-  /** 熔断器状态指标值：CLOSED */
+  /** 熔断器指标值：{@link CircuitBreaker.State#CLOSED}，正常放行请求。 */
   private static final int STATE_CLOSED = 0;
 
-  /** 熔断器状态指标值：OPEN */
+  /** 熔断器指标值：{@link CircuitBreaker.State#OPEN}，快速失败所有请求。 */
   private static final int STATE_OPEN = 1;
 
-  /** 熔断器状态指标值：HALF_OPEN */
+  /** 熔断器指标值：{@link CircuitBreaker.State#HALF_OPEN}，放行限流探测流量。 */
   private static final int STATE_HALF_OPEN = 2;
 
-  /** 健康检查/探针路径前缀（豁免熔断） */
+  /** Actuator 探活与健康检查路径前缀（豁免熔断，避免 K8s 探针失败摘除实例）。 */
   private static final String ACTUATOR_PATH_PREFIX = "/actuator";
 
   private final CircuitBreakerRegistry circuitBreakerRegistry;
@@ -139,6 +139,16 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
   /** 已注册状态指标监听的路由集合（避免重复注册事件监听器） */
   private final Set<String> metricListenersRegistered = ConcurrentHashMap.newKeySet();
 
+  /**
+   * 熔断过滤器入口。
+   *
+   * <p>先检查是否需要熔断保护（路由已确定 + 非白名单/探针），然后获取或创建按路由隔离的
+   * {@link CircuitBreaker}，以「订阅获取许可 → 完成记录成败 → 熔断中快速失败」三段式完成请求熔断保护。
+   *
+   * @param exchange 服务器 Web 交换上下文
+   * @param chain 网关过滤器链
+   * @return 放行或拒绝（503 CircuitBreakerOpen）的完成信号 Mono
+   */
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
     // 豁免路径：健康检查 / 探针 / 白名单，避免探针失败导致 K8s 摘除网关实例
@@ -253,7 +263,13 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
         exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID));
   }
 
-  /** 过滤器执行顺序：{@code HIGHEST_PRECEDENCE + 45}。 */
+  /**
+   * 过滤器执行顺序：{@code #getOrder()} = {@link GatewayFilterOrder#CIRCUIT_BREAKER}。
+   *
+   * <p>位于限流（+30）之后、路由转发（+100）之前，确保限流后超限请求不再触发熔断计数。
+   *
+   * @return 顺序值
+   */
   @Override
   public int getOrder() {
     return GatewayFilterOrder.CIRCUIT_BREAKER.getOrder();

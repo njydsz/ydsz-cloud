@@ -53,10 +53,25 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
 
+  /**
+   * 构造工具注解扫描器。
+   *
+   * @param toolRegistry 工具注册中心（扫描到 @Tool 方法后注册到此）
+   */
   public ToolAnnotationScanner(ToolRegistry toolRegistry) {
     this.toolRegistry = toolRegistry;
   }
 
+  /**
+   * Bean 初始化后扫描其 @Tool 方法并注册到工具注册表。
+   *
+   * <p>Spring 容器中的每个 Bean 都会被此方法处理；带有 {@link Tool} 注解且 {@code enabled=true} 的 public 方法将被发现并注册。
+   *
+   * @param bean 当前初始化的 Bean 实例
+   * @param beanName Bean 名称
+   * @return 原始 Bean（不替换）
+   * @throws BeansException Spring 调用链异常
+   */
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
     Class<?> beanClass = bean.getClass();

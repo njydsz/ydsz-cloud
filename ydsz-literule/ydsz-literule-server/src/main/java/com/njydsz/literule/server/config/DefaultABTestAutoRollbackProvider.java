@@ -116,7 +116,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
   public void savePolicy(RuleABPolicyVO policy, String operator) {
     repository.savePolicy(policy, operator);
     log.info("[LiteRule-ABTest] A/B 回滚策略已保存: ruleCode={}, autoRollbackEnabled={}, operator={}",
-        policy.getRuleCode(), policy.isAutoRollbackEnabled(), operator);
+        policy.getRuleCode(), policy.getIsAutoRollbackEnabled(), operator);
   }
 
   @Override
@@ -127,7 +127,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
   @Override
   public boolean evaluateOne(String ruleCode) {
     RuleABPolicyVO policy = repository.findPolicy(ruleCode);
-    if (policy == null || !Boolean.TRUE.equals(policy.isAutoRollbackEnabled())) {
+    if (policy == null || !Boolean.TRUE.equals(policy.getIsAutoRollbackEnabled())) {
       return false;
     }
     if (traceRepository == null) {

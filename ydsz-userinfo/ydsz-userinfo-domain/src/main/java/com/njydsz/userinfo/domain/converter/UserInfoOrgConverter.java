@@ -85,7 +85,7 @@ public interface UserInfoOrgConverter {
    * @return 公司实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -102,7 +102,7 @@ public interface UserInfoOrgConverter {
    * @param dto 公司 DTO（含 id）
    * @return 公司实体（含 id，用于条件更新）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -156,7 +156,7 @@ public interface UserInfoOrgConverter {
    * @return 部门实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -172,7 +172,7 @@ public interface UserInfoOrgConverter {
    * @param dto 部门 DTO（含 id）
    * @return 部门实体（含 id）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -207,7 +207,7 @@ public interface UserInfoOrgConverter {
    * @return 公司-部门关联实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
@@ -225,7 +225,7 @@ public interface UserInfoOrgConverter {
    * @param dto 公司-部门关联 DTO（含 id）
    * @return 公司-部门关联实体（含 id）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -260,7 +260,7 @@ public interface UserInfoOrgConverter {
    * @return 岗位实体（未持久化）
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -275,7 +275,7 @@ public interface UserInfoOrgConverter {
    * @param dto 岗位 DTO（含 id）
    * @return 岗位实体（含 id）
    */
-  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)

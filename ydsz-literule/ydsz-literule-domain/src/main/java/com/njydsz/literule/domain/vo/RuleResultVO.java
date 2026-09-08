@@ -32,7 +32,7 @@ public class RuleResultVO {
   private String category;
 
   /** 是否命中触发（true=命中并产生告警） */
-  private boolean triggered;
+  private boolean isTriggered;
 
   /** 命中严重级别（代码，如 HIGH/MEDIUM/LOW/INFO） */
   private String severity;

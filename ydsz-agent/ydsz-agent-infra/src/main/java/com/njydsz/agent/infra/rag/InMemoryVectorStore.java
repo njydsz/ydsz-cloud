@@ -42,11 +42,22 @@ public class InMemoryVectorStore implements VectorStore {
   /** 是否启用租户隔离 */
   private final boolean tenantIsolationEnabled;
 
+  /**
+   * 构造内存向量存储。
+   *
+   * @param embeddingClient Embedding 客户端（用于自动计算向量）
+   * @param tenantIsolationEnabled 是否启用多租户隔离
+   */
   public InMemoryVectorStore(EmbeddingClient embeddingClient, boolean tenantIsolationEnabled) {
     this.embeddingClient = embeddingClient;
     this.tenantIsolationEnabled = tenantIsolationEnabled;
   }
 
+  /**
+   * 存储单个文本块（如未提供嵌入向量则自动计算并补齐）。
+   *
+   * @param chunk 待存储的文本块
+   */
   @Override
   public void store(TextChunk chunk) {
     TextChunk stored =
@@ -58,6 +69,11 @@ public class InMemoryVectorStore implements VectorStore {
     chunkTenants.put(stored.getId(), tenantId == null ? "" : tenantId);
   }
 
+  /**
+   * 批量存储文本块（逐条调用 {@link #store(TextChunk)}）。
+   *
+   * @param chunks 待存储的文本块列表
+   */
   @Override
   public void storeBatch(List<TextChunk> chunks) {
     for (TextChunk chunk : chunks) {
@@ -66,12 +82,28 @@ public class InMemoryVectorStore implements VectorStore {
     log.info("[Memory-VectorStore] 批量存储: {} 块, 总计: {}", chunks.size(), store.size());
   }
 
+  /**
+   * 按文本查询执行向量相似度检索。
+   *
+   * @param query 用户查询文本
+   * @param topK 返回条数上限
+   * @param minScore 余弦相似度下限（[0,1]）
+   * @return 按相似度降序排列的文本块列表
+   */
   @Override
   public List<TextChunk> search(String query, int topK, double minScore) {
     List<Float> queryVector = embeddingClient.embed(query);
     return searchByVector(queryVector, topK, minScore);
   }
 
+  /**
+   * 按已知向量执行相似度检索（跳过 Embedding 调用）。
+   *
+   * @param embedding 查询向量
+   * @param topK 返回条数上限
+   * @param minScore 余弦相似度下限（[0,1]）
+   * @return 按相似度降序排列的文本块列表
+   */
   @Override
   public List<TextChunk> searchByVector(List<Float> embedding, int topK, double minScore) {
     if (embedding == null || embedding.isEmpty()) {
@@ -96,6 +128,11 @@ public class InMemoryVectorStore implements VectorStore {
     return scored.stream().limit(topK).map(s -> s.chunk).toList();
   }
 
+  /**
+   * 删除指定文档的所有文本块。
+   *
+   * @param documentId 文档 ID
+   */
   @Override
   public void deleteByDocument(String documentId) {
     List<TextChunk> toRemove =
@@ -106,6 +143,11 @@ public class InMemoryVectorStore implements VectorStore {
     }
   }
 
+  /**
+   * 返回当前租户下的文本块总数。
+   *
+   * @return 文本块数量
+   */
   @Override
   public long count() {
     String currentTenant = resolveTenantId();
@@ -117,11 +159,21 @@ public class InMemoryVectorStore implements VectorStore {
         .count();
   }
 
+  /**
+   * 返回向量存储类型标识。
+   *
+   * @return "memory" — 内存存储
+   */
   @Override
   public String getType() {
     return "memory";
   }
 
+  /**
+   * 内存存储始终可用。
+   *
+   * @return {@code true}
+   */
   @Override
   public boolean isAvailable() {
     return true;

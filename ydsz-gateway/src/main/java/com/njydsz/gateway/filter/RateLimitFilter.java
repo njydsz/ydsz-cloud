@@ -305,7 +305,18 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     args.add(enabled ? "1" : "0");
   }
 
-  /** 限流结果记录（IP + 用户二维度） */
+  /**
+   * 限流结果封装记录：IP + 用户两个维度的令牌桶判定结果。
+   *
+   * <p>两个维度相互独立，任一维度被拒绝即可触发 429 限流响应。
+   *
+   * @param ipAllowed IP 维度是否放行
+   * @param ipRemaining IP 维度剩余令牌数
+   * @param ipReset IP 维度令牌重置时间（秒）
+   * @param userAllowed 用户维度是否放行
+   * @param userRemaining 用户维度剩余令牌数
+   * @param userReset 用户维度令牌重置时间（秒）
+   */
   private record RateLimitResult(
       boolean ipAllowed,
       int ipRemaining,

@@ -82,15 +82,16 @@ import com.njydsz.gateway.config.WebSocketConnectionLimiter;
     matchIfMissing = true)
 public class WebSocketAuthFilter implements GlobalFilter, Ordered {
 
-  /** WebSocket 路径前缀 */
+  /** WebSocket 路径前缀：仅对 {@code /ws/**} 路径生效。 */
   private static final String WS_PATH_PREFIX = "/ws";
 
-  /** WebSocket 升级请求头标识 */
+  /** HTTP 升级协议请求头名称（{@code Upgrade: websocket}）。 */
   private static final String HEADER_UPGRADE = "Upgrade";
 
+  /** Upgrade 头中表示 WebSocket 协议升级的值。 */
   private static final String UPGRADE_WEBSOCKET = "websocket";
 
-  /** Origin 请求头 */
+  /** Origin 请求头名称：用于跨域 WebSocket 劫持防护（P0-4）。 */
   private static final String HEADER_ORIGIN = "Origin";
 
   /**

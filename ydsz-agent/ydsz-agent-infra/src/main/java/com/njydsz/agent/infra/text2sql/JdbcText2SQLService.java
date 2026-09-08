@@ -86,6 +86,14 @@ public class JdbcText2SQLService implements Text2SQLService {
   private final boolean text2sqlEnabled;
   private final String defaultModel;
 
+  /**
+   * 构造 JDBC Text2SQL 基础服务。
+   *
+   * @param llmClient LLM 客户端（用于生成 SQL）
+   * @param dataSource 数据源（用于执行 SQL）
+   * @param text2sqlEnabled 是否启用 Text2SQL 功能
+   * @param defaultModel LLM 模型名称
+   */
   public JdbcText2SQLService(
       LlmClient llmClient,
       DataSource dataSource,
@@ -97,6 +105,14 @@ public class JdbcText2SQLService implements Text2SQLService {
     this.defaultModel = defaultModel;
   }
 
+  /**
+   * 将自然语言查询转换为 SQL 并执行，返回结构化结果。
+   *
+   * @param naturalLanguageQuery 用户的自然语言查询
+   * @param tenantId 租户 ID（用于行级隔离）
+   * @return 结构化查询结果（列名、行数据、SQL、执行耗时）
+   * @throws Text2SQLException Text2SQL 未启用、SQL 生成失败或安全校验不通过
+   */
   @Override
   public Text2SQLResult query(String naturalLanguageQuery, String tenantId) throws Text2SQLException {
     if (!text2sqlEnabled) {

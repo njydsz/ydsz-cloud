@@ -57,16 +57,16 @@ import com.njydsz.gateway.loadbalancer.GrayLoadBalancer;
     matchIfMissing = true)
 public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
 
-  /** 灰度标识值:灰度 */
+  /** 灰度标签值：标识请求应路由到灰度实例组。 */
   private static final String GRAY_TAG_GRAY = "gray";
 
-  /** 灰度标识值:稳定 */
+  /** 灰度标签值：标识请求应路由到稳定（非灰度）实例组。 */
   private static final String GRAY_TAG_STABLE = "stable";
 
-  /** 查询参数名:gray */
+  /** 灰度查询参数名：客户端通过 {@code ?gray=true/false} 显式指定灰度路由。 */
   private static final String QUERY_PARAM_GRAY = "gray";
 
-  /** 灰度路径前缀:匹配此路径自动走灰度 */
+  /** 金丝雀路径前缀：命中 {@code /canary/**} 的请求自动路由到灰度实例组，无需显式传递灰度标识。 */
   private static final String CANARY_PATH_PREFIX = "/canary/";
 
   /**

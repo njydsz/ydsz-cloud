@@ -49,6 +49,12 @@ public class McpToolAdapter {
   /** MCP 配置 */
   private final AgentProperties.Mcp mcpConfig;
 
+  /**
+   * 构造 MCP 工具适配器。
+   *
+   * @param clientProvider MCP 客户端提供者（封装传输层实现）
+   * @param mcpConfig MCP 全局配置（含 Server 列表与传输类型等）
+   */
   public McpToolAdapter(McpClientProvider clientProvider, AgentProperties.Mcp mcpConfig) {
     this.clientProvider = clientProvider;
     this.mcpConfig = mcpConfig;

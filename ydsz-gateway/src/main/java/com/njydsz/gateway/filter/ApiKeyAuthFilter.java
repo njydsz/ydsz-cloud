@@ -67,8 +67,13 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
     matchIfMissing = true)
 public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
 
+  /** 客户端传递 API Key 的 HTTP 请求头名称。 */
   private static final String HEADER_API_KEY = "X-API-Key";
+
+  /** 客户端通过查询参数传递 API Key 时使用的参数名（{@code ?api_key=xxx}）。 */
   private static final String QUERY_API_KEY = "api_key";
+
+  /** 网关注入下游的 API Key 认证标识头，前缀 {@code apikey:} + 脱敏 Key。 */
   private static final String HEADER_API_KEY_USER = "X-API-Key-User";
 
   private final AntPathMatcher pathMatcher = new AntPathMatcher();

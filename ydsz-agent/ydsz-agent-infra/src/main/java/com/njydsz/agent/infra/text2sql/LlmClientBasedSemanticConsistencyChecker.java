@@ -33,6 +33,12 @@ public class LlmClientBasedSemanticConsistencyChecker implements SemanticConsist
   private final LlmClient llmClient;
   private final String defaultModel;
 
+  /**
+   * 构造基于 LLM 的语义一致性校验器。
+   *
+   * @param llmClient LLM 客户端
+   * @param defaultModel 模型名称
+   */
   public LlmClientBasedSemanticConsistencyChecker(
       LlmClient llmClient,
       @Value("${ydsz.agent.llm.default-model:gpt-4o-mini}") String defaultModel) {
@@ -40,6 +46,15 @@ public class LlmClientBasedSemanticConsistencyChecker implements SemanticConsist
     this.defaultModel = defaultModel;
   }
 
+  /**
+   * 使用 LLM 判断生成的 SQL 是否与用户意图一致。
+   *
+   * <p>LLM 调用失败时返回 1.0（默认通过），避免校验环节阻塞查询链路。
+   *
+   * @param userQuery 用户原始问题
+   * @param generatedSql LLM 生成的 SQL
+   * @return 一致性校验结果（score 0.0-1.0 + 推理说明）
+   */
   @Override
   public ConsistencyCheckResult check(String userQuery, String generatedSql) {
     String prompt =

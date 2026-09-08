@@ -68,6 +68,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
   @Value("${ydsz.gateway.payload-validation.strict-content-type:true}")
   private boolean strictContentType;
 
+  /** 每 MB 对应的字节数（1024 × 1024 = 1,048,576）。 */
   private static final long BYTES_PER_MB = 1024L * 1024L;
 
   /**
@@ -117,14 +118,24 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
     return chain.filter(exchange);
   }
 
-  /** 判断 HTTP 方法是否有请求体 */
+  /**
+   * 判断 HTTP 方法是否可能携带请求体。
+   *
+   * @param method HTTP 方法名
+   * @return true = POST/PUT/PATCH
+   */
   private boolean hasBody(String method) {
     return "POST".equals(method) || "PUT".equals(method) || "PATCH".equals(method);
   }
 
-  /** 返回 4xx 请求体校验失败响应（P0-D1：统一错误响应写出器）。 */
-  private Mono<Void> rejectPayload(
-      ServerWebExchange exchange, GatewayErrorCode errorCode, String message) {
+  /**
+   * 返回 4xx 请求体校验失败响应（P0-D1：统一错误响应写出器）。
+   *
+   * @param exchange 服务器 Web 交换上下文
+   * @param errorCode 网关业务错误码
+   * @param message 错误消息
+   * @return 完成信号 Mono
+   */
     log.warn(
         "[PayloadValidation] 请求体校验失败 path={} reason={}",
         exchange.getRequest().getURI().getPath(),
