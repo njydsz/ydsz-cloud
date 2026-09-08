@@ -39,6 +39,17 @@
     "order": -1
   },
   {
+    "id": "ydsz-system-secondary-auth",
+    "uri": "lb://ydsz-system",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/auth/secondary-auth/**" }
+      }
+    ],
+    "order": -1
+  },
+  {
     "id": "ydsz-system-internal",
     "uri": "lb://ydsz-system",
     "predicates": [
@@ -56,7 +67,7 @@
       {
         "name": "Path",
         "args": {
-          "pattern": "/api/auth/**,/api/user/**,/api/company/**,/api/dept/**,/api/menu/**,/api/post/**,/api/role/**,/api/language/**,/api/oauth2/**,/api/userinfo/**,/api/profile/**,/api/captcha/**,/api/self-service/**,/api/webauthn/**,/api/sso/**,/api/auth-policy/**,/api/devices/**,/api/social-client-config/**,/api/saml-idp-config/**,/api/admin/**,/saml/**,/cas/**,/scim/**,/.well-known/**,/api/internal/**"
+          "pattern": "/api/auth/**,/api/user/**,/api/company/**,/api/dept/**,/api/menu/**,/api/post/**,/api/role/**,/api/language/**,/api/oauth2/**,/api/userinfo/**,/api/profile/**,/api/captcha/**,/api/self-service/**,/api/webauthn/**,/api/sso/**,/api/auth-policy/**,/api/devices/**,/api/social-client-config/**,/api/saml-idp-config/**,/api/apikey/**,/api/admin/**,/saml/**,/cas/**,/scim/**,/.well-known/**,/api/internal/**"
         }
       }
     ],
@@ -80,7 +91,7 @@
       {
         "name": "Path",
         "args": {
-          "pattern": "/api/config/**,/api/dict/**,/api/app/**,/api/variable/**,/api/system/**,/api/tenant/**,/api/tenant-plan/**"
+          "pattern": "/api/config/**,/api/dict/**,/api/app/**,/api/variable/**,/api/system/**,/api/tenant/**,/api/tenant-plan/**,/api/permission/**"
         }
       }
     ],
@@ -128,7 +139,7 @@
     "predicates": [
       {
         "name": "Path",
-        "args": { "pattern": "/api/agent/**" }
+        "args": { "pattern": "/api/agent/**,/api/mcp/**" }
       }
     ],
     "metadata": {
@@ -143,6 +154,17 @@
       {
         "name": "Path",
         "args": { "pattern": "/api/nextwiki/**" }
+      }
+    ],
+    "order": 0
+  },
+  {
+    "id": "ydsz-generator",
+    "uri": "lb://ydsz-generator",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/generator/**" }
       }
     ],
     "order": 0
