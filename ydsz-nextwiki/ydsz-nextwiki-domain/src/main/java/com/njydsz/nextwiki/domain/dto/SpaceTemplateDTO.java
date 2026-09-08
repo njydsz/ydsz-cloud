@@ -44,7 +44,7 @@ public class SpaceTemplateDTO implements Serializable {
   private Boolean isSystem;
 
   @Schema(description = "是否公开")
-  private Boolean publicAccess;
+  private Boolean isPublicAccess;
 
   @Schema(description = "模板结构 JSON")
   private String structureJson;

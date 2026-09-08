@@ -66,7 +66,7 @@ public class SpaceTemplate implements Serializable {
     private Boolean isSystem;
 
   /** 是否公开（所有租户可见） */
-  private Boolean publicAccess;
+  private Boolean isPublicAccess;
 
   /** 模板结构 JSON（定义目录树、初始页面、权限配置等） */
   private String structureJson;

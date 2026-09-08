@@ -61,7 +61,7 @@ public class ShareLinkDTO implements Serializable {
   private String title;
 
   @Schema(description = "是否已发送到期提醒")
-  private Boolean reminderSent;
+  private Boolean isReminderSent;
 
   @Schema(description = "创建人")
   private String createdBy;

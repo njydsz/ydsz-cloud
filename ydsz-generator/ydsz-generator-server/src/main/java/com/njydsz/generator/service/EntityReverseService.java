@@ -42,6 +42,8 @@ public class EntityReverseService {
   private static final int FIELD_LIST_CAPACITY = 16;
   /** 报告 StringBuilder 初始容量。 */
   private static final int REPORT_BUILDER_CAPACITY = 256;
+  /** 批量解析空目录结果列表初始容量。 */
+  private static final int EMPTY_BATCH_RESULT_CAPACITY = 8;
 
   /**
    * 从指定 .java 源文件反向生成分析报告。
@@ -84,7 +86,7 @@ public class EntityReverseService {
     }
     File[] javaFiles = dir.listFiles((d, name) -> name.endsWith(".java"));
     if (javaFiles == null) {
-      return new ArrayList<>(8);
+      return new ArrayList<>(EMPTY_BATCH_RESULT_CAPACITY);
     }
     List<String> results = new ArrayList<>(javaFiles.length);
     for (File f : javaFiles) {

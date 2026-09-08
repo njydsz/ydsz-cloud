@@ -65,7 +65,7 @@ public class ShareLink extends MpBaseEntity<String> implements Serializable {
   private String shareTargetType;
 
   /** 到期提醒是否已发送 */
-  private Boolean reminderSent;
+  private Boolean isReminderSent;
 
   /** 分享标题（可选） */
   private String title;

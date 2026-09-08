@@ -49,7 +49,7 @@ public class FileAcl extends MpBaseEntity<String> implements Serializable {
   private Integer permissionMask;
 
   /** 是否继承自父目录 */
-  private Boolean inherited;
+  private Boolean isInherited;
 
   /** 是否为所有者（所有者拥有全部权限） */
   private Boolean owner;

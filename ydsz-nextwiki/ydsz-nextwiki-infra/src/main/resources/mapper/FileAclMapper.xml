@@ -9,7 +9,7 @@
         <result column="grantee_type" property="granteeType"/>
         <result column="grantee_id" property="granteeId"/>
         <result column="permission_mask" property="permissionMask"/>
-        <result column="inherited" property="inherited"/>
+        <result column="is_inherited" property="isInherited"/>
         <result column="is_owner" property="owner"/>
         <result column="status" property="status"/>
         <result column="created_by" property="createdBy"/>
@@ -21,20 +21,20 @@
     </resultMap>
 
     <select id="selectByFileNodeId" resultMap="FileAclResult">
-        SELECT id, file_node_id, grantee_type, grantee_id, permission_mask, inherited, is_owner, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        SELECT id, file_node_id, grantee_type, grantee_id, permission_mask, is_inherited, is_owner, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
         FROM ydsz_wiki_file_acl
         WHERE file_node_id = #{fileNodeId} AND deleted = 0
     </select>
 
     <select id="selectByFileNodeIdAndGrantee" resultMap="FileAclResult">
-        SELECT id, file_node_id, grantee_type, grantee_id, permission_mask, inherited, is_owner, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        SELECT id, file_node_id, grantee_type, grantee_id, permission_mask, is_inherited, is_owner, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
         FROM ydsz_wiki_file_acl
         WHERE file_node_id = #{fileNodeId} AND grantee_type = #{granteeType}
         AND grantee_id = #{granteeId} AND deleted = 0
     </select>
 
     <select id="selectEffectivePermissions" resultMap="FileAclResult">
-        SELECT DISTINCT a.id, a.file_node_id, a.grantee_type, a.grantee_id, a.permission_mask, a.inherited, a.is_owner, a.status, a.created_by, a.created_at, a.updated_by, a.updated_at, a.revision, a.deleted, a.tenant_id FROM ydsz_wiki_file_acl a
+        SELECT DISTINCT a.id, a.file_node_id, a.grantee_type, a.grantee_id, a.permission_mask, a.is_inherited, a.is_owner, a.status, a.created_by, a.created_at, a.updated_by, a.updated_at, a.revision, a.deleted, a.tenant_id FROM ydsz_wiki_file_acl a
         WHERE a.deleted = 0 AND a.file_node_id = #{fileNodeId}
         AND (
             (a.grantee_type = 'user' AND a.grantee_id = #{userId})
@@ -49,12 +49,12 @@
 
     <insert id="batchInsert">
         INSERT INTO ydsz_wiki_file_acl (id, file_node_id, grantee_type, grantee_id,
-            permission_mask, inherited, is_owner, status, created_by, created_at,
+            permission_mask, is_inherited, is_owner, status, created_by, created_at,
             updated_by, updated_at, revision, deleted)
         VALUES
         <foreach collection="acls" item="acl" separator=",">
             (#{acl.id}, #{acl.fileNodeId}, #{acl.granteeType}, #{acl.granteeId},
-             #{acl.permissionMask}, #{acl.inherited}, #{acl.owner}, 'active',
+             #{acl.permissionMask}, #{acl.isInherited}, #{acl.owner}, 'active',
              #{acl.createdBy}, NOW(), #{acl.updatedBy}, NOW(), 0, 0)
         </foreach>
     </insert>

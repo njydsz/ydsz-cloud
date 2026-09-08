@@ -40,7 +40,7 @@ public class FileAclDTO implements Serializable {
   private Integer permissionMask;
 
   @Schema(description = "是否继承自父目录")
-  private Boolean inherited;
+  private Boolean isInherited;
 
   @Schema(description = "是否为所有者")
   private Boolean owner;

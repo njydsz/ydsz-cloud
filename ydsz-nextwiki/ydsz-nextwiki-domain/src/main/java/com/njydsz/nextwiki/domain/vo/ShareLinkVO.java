@@ -57,7 +57,7 @@ public class ShareLinkVO implements Serializable {
   private String password;
 
   @Schema(description = "到期提醒是否已发送")
-  private Boolean reminderSent;
+  private Boolean isReminderSent;
 
   @Schema(description = "分享标题（可选）")
   private String title;

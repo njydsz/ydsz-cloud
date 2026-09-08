@@ -37,13 +37,13 @@ public class FileCommentDTO implements Serializable {
   private String parentCommentId;
 
   @Schema(description = "是否已解决")
-  private Boolean resolved;
+  private Boolean isResolved;
 
   @Schema(description = "评论位置信息（JSON）")
   private String position;
 
   @Schema(description = "是否被编辑过")
-  private Boolean edited;
+  private Boolean isEdited;
 
   @Schema(description = "被 @ 提及的用户 ID 列表（S4-P3-04）")
   private List<String> mentions;

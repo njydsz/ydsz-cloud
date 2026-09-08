@@ -34,11 +34,11 @@ public class FileComment extends MpBaseEntity<String> implements Serializable {
   private String parentCommentId;
 
   /** 是否已解决（用于批注功能） */
-  private Boolean resolved;
+  private Boolean isResolved;
 
   /** 评论位置信息（JSON，用于文档内定位批注） */
   private String position;
 
   /** 是否被编辑过 */
-  private Boolean edited;
+  private Boolean isEdited;
 }
