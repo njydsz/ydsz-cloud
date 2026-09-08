@@ -454,7 +454,7 @@ public class FlowFormValidator {
         }
       }
     }
-    return Boolean.TRUE.equals(field.getHidden());
+    return Boolean.TRUE.equals(field.getIsHidden());
   }
 
   /**
@@ -465,8 +465,8 @@ public class FlowFormValidator {
    * @return true 表示该字段在当前联动状态下为必填
    */
   private boolean isRequired(FlowFormField field, Map<String, Object> allData) {
-    boolean baseRequired = Boolean.TRUE.equals(field.getRequired());
-    if (field.getValidation() != null && Boolean.TRUE.equals(field.getValidation().getRequired())) {
+    boolean baseRequired = Boolean.TRUE.equals(field.getIsRequired());
+    if (field.getValidation() != null && Boolean.TRUE.equals(field.getValidation().getIsRequired())) {
       baseRequired = true;
     }
     if (field.getLinkages() != null) {

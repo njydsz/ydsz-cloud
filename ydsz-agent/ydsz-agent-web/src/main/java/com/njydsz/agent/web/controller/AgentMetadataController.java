@@ -25,8 +25,8 @@ import com.njydsz.common.permission.PermissionCodes;
  * <p>从原 {@link AgentController} 拆分而来，仅承载只读的元数据查询接口：
  *
  * <ul>
- *   <li>{@code GET /api/v1/agent/models} - 获取可用模型 / Provider 列表
- *   <li>{@code GET /api/v1/agent/tools} - 获取已注册工具列表
+ *   <li>{@code GET /api/agent/models} - 获取可用模型 / Provider 列表
+ *   <li>{@code GET /api/agent/tools} - 获取已注册工具列表
  * </ul>
  *
  * <p>这些接口供前端 Agent 编辑器渲染「可用模型」下拉选择器和「可用工具」勾选列表， 不涉及 Agent 执行逻辑。Agent 的同步 / 流式执行见 {@link
@@ -52,7 +52,7 @@ import com.njydsz.common.permission.PermissionCodes;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent")
+@RequestMapping("/api/agent")
 @RequiredArgsConstructor
 @Tag(name = "Agent 元数据查询", description = "可用模型 / 已注册工具元数据查询")
 public class AgentMetadataController {

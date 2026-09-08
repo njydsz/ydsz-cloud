@@ -97,7 +97,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 @Slf4j
 @RestController
 @Tag(name = "workflow-instance", description = "工作流流程实例统一接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/api/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowInstanceController {

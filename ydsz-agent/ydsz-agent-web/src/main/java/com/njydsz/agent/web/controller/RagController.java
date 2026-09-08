@@ -69,7 +69,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent/rag")
+@RequestMapping("/api/agent/rag")
 public class RagController {
 
   /** 默认返回条数 */

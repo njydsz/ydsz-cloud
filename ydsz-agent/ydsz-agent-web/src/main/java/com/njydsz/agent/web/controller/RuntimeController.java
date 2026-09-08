@@ -35,7 +35,7 @@ import com.njydsz.common.core.response.YdszResponse;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent/runtime")
+@RequestMapping("/api/agent/runtime")
 public class RuntimeController {
 
     private static final int DEFAULT_RECENT_LIMIT = 50;

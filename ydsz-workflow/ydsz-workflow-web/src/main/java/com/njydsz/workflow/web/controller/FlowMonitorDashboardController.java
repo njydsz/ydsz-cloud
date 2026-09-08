@@ -57,7 +57,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @Slf4j
 @RestController
 @Tag(name = "workflow-monitor", description = "工作流监控看板与效率分析统一接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/api/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowMonitorDashboardController {

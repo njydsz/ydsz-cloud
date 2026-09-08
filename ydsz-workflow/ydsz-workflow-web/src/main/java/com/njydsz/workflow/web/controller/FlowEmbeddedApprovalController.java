@@ -35,7 +35,7 @@ import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
  *
  * <p><b>核心价值：</b>降低业务用户操作成本——审批动作嵌入业务流，避免"业务页 ↔ 审批中心"来回切换。
  *
- * <p><b>接口路径：</b>{@code /api/v1/workflow/embedded/**}
+ * <p><b>接口路径：</b>{@code /api/workflow/embedded/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -75,7 +75,7 @@ import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 @Slf4j
 @Tag(name = "嵌入式审批")
 @RestController
-@RequestMapping("/api/v1/workflow/embedded")
+@RequestMapping("/api/workflow/embedded")
 @RequiredArgsConstructor
 @Validated
 public class FlowEmbeddedApprovalController {

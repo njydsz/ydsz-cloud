@@ -19,8 +19,8 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p>提供面板数据的查询接口，供前端 Dashboard 渲染：
  *
  * <ul>
- *   <li>{@code GET /api/v1/agent/observability/overview} - 面板概览（今日成本、活跃会话等）
- *   <li>{@code GET /api/v1/agent/observability/model-usage} - 模型使用分布
+ *   <li>{@code GET /api/agent/observability/overview} - 面板概览（今日成本、活跃会话等）
+ *   <li>{@code GET /api/agent/observability/model-usage} - 模型使用分布
  * </ul>
  *
  * @author ydsz-team
@@ -28,7 +28,7 @@ import com.njydsz.common.core.response.YdszResponse;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent/observability")
+@RequestMapping("/api/agent/observability")
 public class ObservabilityController {
 
   /** 统计天数上限 */

@@ -185,7 +185,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
         return;
       }
       // 重新启用
-      existing.setEnabled(true);
+      existing.setIsEnabled(true);
       existing.setExpireAt(null);
       existing.setGrantedAt(LocalDateTime.now());
       adminRoleRepository.update(existing);
@@ -196,7 +196,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     role.setUserId(userId);
     role.setRoleCode(roleCode);
     role.setTenantId(tenantId);
-    role.setEnabled(true);
+    role.setIsEnabled(true);
     role.setGrantedAt(LocalDateTime.now());
     adminRoleRepository.save(role);
     log.info("[FlowAdmin] 授予角色: userId={} role={} tenantId={}", userId, roleCode, tenantId);
@@ -214,7 +214,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     if (existing == null) {
       return;
     }
-    existing.setEnabled(false);
+    existing.setIsEnabled(false);
     adminRoleRepository.update(existing);
     log.info("[FlowAdmin] 撤销角色: userId={} role={}", userId, roleCode);
   }
@@ -229,7 +229,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     if (role == null) {
       return false;
     }
-    if (Boolean.FALSE.equals(role.getEnabled())) {
+    if (Boolean.FALSE.equals(role.getIsEnabled())) {
       return false;
     }
     if (role.getExpireAt() != null && role.getExpireAt().isBefore(LocalDateTime.now())) {

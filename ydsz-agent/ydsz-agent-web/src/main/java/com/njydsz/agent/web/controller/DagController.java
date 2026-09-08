@@ -64,7 +64,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent/dag")
+@RequestMapping("/api/agent/dag")
 public class DagController {
 
   /**

@@ -64,7 +64,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent/debug")
+@RequestMapping("/api/agent/debug")
 public class DebugController {
 
   /** Agent 调试服务（封装链路查询 + 重放能力） */

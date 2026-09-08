@@ -33,7 +33,7 @@ import com.njydsz.workflow.server.service.FlowI18nService;
  *
  * <p>提供工作流「审批分析仪表盘」HTTP API，覆盖总览、效率排行、节点耗时、趋势等 多维度数据分析能力。
  *
- * <p><b>接口路径：</b>{@code /api/v1/workflow/analytics/**}
+ * <p><b>接口路径：</b>{@code /api/workflow/analytics/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -63,7 +63,7 @@ import com.njydsz.workflow.server.service.FlowI18nService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/workflow/analytics")
+@RequestMapping("/api/workflow/analytics")
 @RequiredArgsConstructor
 @Tag(name = "审批数据分析", description = "审批效率/驳回率/办理人排行等分析仪表盘与历史归档")
 public class FlowAnalyticsController {

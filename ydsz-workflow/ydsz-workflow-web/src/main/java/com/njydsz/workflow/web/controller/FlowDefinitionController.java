@@ -95,7 +95,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @Slf4j
 @RestController
 @Tag(name = "workflow-definition", description = "工作流流程定义统一接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/api/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowDefinitionController {
@@ -279,7 +279,7 @@ public class FlowDefinitionController {
   public YdszResponse<FlowDefinitionDetailVO> getDefinitionPreview(@PathVariable String id) {
     FlowDefinitionDetailVO detail = definitionService.getDetail(id);
     if (detail != null) {
-      detail.setReadOnly(true);
+      detail.setIsReadonly(true);
     }
     return YdszResponse.success(detail);
   }

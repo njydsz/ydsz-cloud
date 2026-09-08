@@ -32,7 +32,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
  * <p>提供流程模板的<b>查询 / 导入 / 导出 / 版本管理 / 智能推荐</b>能力。 内置行业审批流程模板库（含 HR / FINANCE / ADMIN / PROJECT 等分类），
  * 业务方可按需筛选、一键导入为草稿流程定义；也可将已发布流程反向导出为模板沉淀。
  *
- * <p><b>接口路径：</b>{@code /api/v1/workflow/template/**}
+ * <p><b>接口路径：</b>{@code /api/workflow/template/**}
  *
  * <p><b>核心能力：</b>
  *
@@ -72,7 +72,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
 @Slf4j
 @Tag(name = "流程模板市场")
 @RestController
-@RequestMapping("/api/v1/workflow/template")
+@RequestMapping("/api/workflow/template")
 @RequiredArgsConstructor
 @Validated
 public class FlowTemplateController {

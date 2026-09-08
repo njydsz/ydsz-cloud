@@ -63,7 +63,7 @@ import com.njydsz.common.permission.PermissionCodes;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent/approvals")
+@RequestMapping("/api/agent/approvals")
 @RequiredArgsConstructor
 public class HumanApprovalController {
 

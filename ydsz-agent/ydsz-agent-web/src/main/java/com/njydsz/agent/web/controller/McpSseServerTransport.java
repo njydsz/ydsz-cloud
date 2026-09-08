@@ -40,9 +40,9 @@ import jakarta.annotation.PostConstruct;
  * <h3>协议交互流程</h3>
  *
  * <ol>
- *   <li>外部 Client 发起 {@code GET /api/v1/mcp} → 建立 SSE 长连接</li>
+ *   <li>外部 Client 发起 {@code GET /api/mcp} → 建立 SSE 长连接</li>
  *   <li>服务端推送 {@code endpoint} 事件，告知 POST 地址（含 sessionId 查询参数）</li>
- *   <li>外部 Client {@code POST /api/v1/mcp?sessionId=xxx} 发送 JSON-RPC 请求</li>
+ *   <li>外部 Client {@code POST /api/mcp?sessionId=xxx} 发送 JSON-RPC 请求</li>
  *   <li>服务端在当前 POST 请求中直接返回 JSON-RPC 响应（简化模式）</li>
  * </ol>
  *
@@ -68,7 +68,7 @@ import jakarta.annotation.PostConstruct;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/mcp")
+@RequestMapping("/api/mcp")
 @ConditionalOnProperty(prefix = "ydsz.agent.mcp", name = "serverEnabled", havingValue = "true")
 @RequiredArgsConstructor
 public class McpSseServerTransport {
@@ -128,7 +128,7 @@ public class McpSseServerTransport {
 
     // 发送 endpoint 事件（MCP 标准：告知客户端 POST 地址）
     try {
-      String endpointUrl = "/api/v1/mcp?sessionId=" + sessionId;
+      String endpointUrl = "/api/mcp?sessionId=" + sessionId;
       emitter.send(SseEmitter.event()
           .name("endpoint")
           .data(endpointUrl, MediaType.TEXT_PLAIN));

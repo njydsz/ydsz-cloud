@@ -49,7 +49,7 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
  * <p>流程任务的 HTTP 入口，承担审批人对任务的全方位操作：
  * 核心办理、批量操作、查询统计、辅助操作、待办推送。
  *
- * <p><b>路径前缀：</b>{@code /api/v1/workflow/engine}（{@code @RequestMapping} 类级别映射）。
+ * <p><b>路径前缀：</b>{@code /api/workflow/engine}（{@code @RequestMapping} 类级别映射）。
  * 以下接口分组中的路径均为相对于此前缀的子路径。
  *
  * <p><b>接口分组：</b>
@@ -89,7 +89,7 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 @Slf4j
 @RestController
 @Tag(name = "workflow-task", description = "工作流任务统一接口")
-@RequestMapping("/api/v1/workflow/engine")
+@RequestMapping("/api/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowTaskController {

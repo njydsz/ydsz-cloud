@@ -25,7 +25,7 @@ import com.njydsz.workflow.server.message.MessageEventService;
  * @since 26.09.01
  */
 @RestController
-@RequestMapping("/api/v1/workflow/message-event")
+@RequestMapping("/api/workflow/message-event")
 @Tag(name = "消息事件", description = "消息事件发布与订阅接口")
 @RequiredArgsConstructor
 public class MessageEventController {

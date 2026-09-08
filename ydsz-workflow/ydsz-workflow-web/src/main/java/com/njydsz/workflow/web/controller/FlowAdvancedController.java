@@ -45,7 +45,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicSe
  *   <li><b>P2-8 催办限流可视化</b>：查询催办冷却剩余时间
  * </ul>
  *
- * <p><b>接口路径：</b>{@code /api/v1/workflow/advanced/**}
+ * <p><b>接口路径：</b>{@code /api/workflow/advanced/**}
  *
  * <p><b>权限模型：</b>所有写接口通过 {@link AuthApiPermission} 校验 {@link
  * PermissionCodes#WORKFLOW_INSTANCE_CONTROL} 或 {@link PermissionCodes#WORKFLOW_TASK_OPERATE} 权限码。
@@ -71,7 +71,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicSe
 @Slf4j
 @RestController
 @Tag(name = "workflow-advanced", description = "工作流高级功能接口")
-@RequestMapping("/api/v1/workflow/advanced")
+@RequestMapping("/api/workflow/advanced")
 @RequiredArgsConstructor
 public class FlowAdvancedController {
 

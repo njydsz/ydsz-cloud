@@ -31,11 +31,11 @@ import com.njydsz.agent.domain.insight.InsightReportService;
  *
  * <p>接口列表：
  * <ul>
- *   <li>{@code POST /api/v1/agent/insight/report} — 生成报告</li>
- *   <li>{@code GET /api/v1/agent/insight/report/{reportId}} — 查询报告元数据</li>
- *   <li>{@code GET /api/v1/agent/insight/report/{reportId}/html} — 导出 HTML</li>
- *   <li>{@code GET /api/v1/agent/insight/reports?userId=xxx} — 列出近期报告</li>
- *   <li>{@code DELETE /api/v1/agent/insight/report/{reportId}} — 删除报告</li>
+ *   <li>{@code POST /api/agent/insight/report} — 生成报告</li>
+ *   <li>{@code GET /api/agent/insight/report/{reportId}} — 查询报告元数据</li>
+ *   <li>{@code GET /api/agent/insight/report/{reportId}/html} — 导出 HTML</li>
+ *   <li>{@code GET /api/agent/insight/reports?userId=xxx} — 列出近期报告</li>
+ *   <li>{@code DELETE /api/agent/insight/report/{reportId}} — 删除报告</li>
  * </ul>
  *
  * @author ydsz-team
@@ -43,7 +43,7 @@ import com.njydsz.agent.domain.insight.InsightReportService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent/insight")
+@RequestMapping("/api/agent/insight")
 @RequiredArgsConstructor
 @ConditionalOnBean(InsightReportService.class)
 public class InsightReportController {

@@ -63,7 +63,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent/definitions")
+@RequestMapping("/api/agent/definitions")
 @RequiredArgsConstructor
 public class AgentDefinitionController {
 

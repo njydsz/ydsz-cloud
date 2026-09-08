@@ -52,12 +52,12 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * <p>P1-2 重构：合并原 {@code ChatController} 至此，形成单入口 API 体系：
  *
  * <ul>
- *   <li>{@code POST /api/v1/agent/execute} - 同步执行 Agent，等待完整响应后返回
- *   <li>{@code POST /api/v1/agent/execute/stream} - SSE 流式执行 Agent，逐 chunk 推送 LLM 响应
- *   <li>{@code POST /api/v1/agent/chat} - 同步对话
- *   <li>{@code POST /api/v1/agent/chat/stream} - SSE 流式对话
- *   <li>{@code GET /api/v1/agent/history} - 获取对话历史
- *   <li>{@code DELETE /api/v1/agent/history} - 清除对话历史
+ *   <li>{@code POST /api/agent/execute} - 同步执行 Agent，等待完整响应后返回
+ *   <li>{@code POST /api/agent/execute/stream} - SSE 流式执行 Agent，逐 chunk 推送 LLM 响应
+ *   <li>{@code POST /api/agent/chat} - 同步对话
+ *   <li>{@code POST /api/agent/chat/stream} - SSE 流式对话
+ *   <li>{@code GET /api/agent/history} - 获取对话历史
+ *   <li>{@code DELETE /api/agent/history} - 清除对话历史
  * </ul>
  *
  * <p>可用模型 / 已注册工具等元数据查询接口见 {@link AgentMetadataController}。
@@ -97,7 +97,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/agent")
+@RequestMapping("/api/agent")
 @RequiredArgsConstructor
 @Tag(name = "Agent 统一入口", description = "Agent 执行 / 对话 / 历史")
 public class AgentController {
