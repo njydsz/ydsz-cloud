@@ -106,7 +106,7 @@ public class RuleDefinitionDTO implements Serializable {
   private String mutexGroup;
 
   /** 是否可下钻 */
-  @Builder.Default private boolean drilldownAvailable = true;
+  @Builder.Default private boolean isDrilldownAvailable = true;
 
   /** 当前版本号 */
   @Builder.Default private int version = 1;
