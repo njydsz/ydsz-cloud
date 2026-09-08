@@ -42,6 +42,13 @@ import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
 import com.njydsz.agent.domain.code.CodeExecutionService;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.domain.insight.InsightReportRepository;
+import com.njydsz.agent.domain.insight.InsightReportService;
+import com.njydsz.agent.infra.insight.HtmlReportRenderer;
+import com.njydsz.agent.infra.insight.LlmInsightReportGenerator;
+import com.njydsz.agent.infra.mapper.InsightReportMapper;
+import com.njydsz.agent.infra.repository.InsightReportRepositoryImpl;
+import com.njydsz.agent.server.insight.InsightReportServiceImpl;
 import com.njydsz.agent.infra.code.NoopCodeExecutionService;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
@@ -699,6 +706,85 @@ public class AgentAutoConfiguration {
         userProfileRepository,
         properties,
         llmProfileAnalyzer.getIfAvailable());
+  }
+
+  // ========================= BI 洞察报告 Bean 注册 =========================
+
+  /**
+   * 装配洞察报告仓储实现。
+   *
+   * @param insightReportMapper 报告 Mapper
+   * @return 洞察报告仓储
+   */
+  @Bean
+  @ConditionalOnMissingBean(InsightReportRepository.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.insight",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public InsightReportRepository insightReportRepository(InsightReportMapper insightReportMapper) {
+    return new InsightReportRepositoryImpl(insightReportMapper);
+  }
+
+  /**
+   * 装配 LLM 洞察报告生成器。
+   *
+   * @param llmClient LLM 客户端
+   * @param properties Agent 配置
+   * @return 报告章节生成器
+   */
+  @Bean
+  @ConditionalOnMissingBean(LlmInsightReportGenerator.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.insight",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public LlmInsightReportGenerator llmInsightReportGenerator(
+      LlmClient llmClient, AgentProperties properties) {
+    return new LlmInsightReportGenerator(
+        llmClient,
+        properties.getInsight().getModel(),
+        properties.getInsight().getMaxSections());
+  }
+
+  /**
+   * 装配 HTML 报告渲染器。
+   *
+   * @return HTML 渲染器
+   */
+  @Bean
+  @ConditionalOnMissingBean(HtmlReportRenderer.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.insight",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public HtmlReportRenderer htmlReportRenderer() {
+    return new HtmlReportRenderer();
+  }
+
+  /**
+   * 装配洞察报告服务实现。
+   *
+   * @param reportRepository 报告仓储
+   * @param generator LLM 章节生成器
+   * @param renderer HTML 渲染器
+   * @return 洞察报告服务
+   */
+  @Bean
+  @ConditionalOnMissingBean(InsightReportService.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.agent.insight",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public InsightReportService insightReportService(
+      InsightReportRepository reportRepository,
+      LlmInsightReportGenerator generator,
+      HtmlReportRenderer renderer) {
+    return new InsightReportServiceImpl(reportRepository, generator, renderer);
   }
 
   // ========================= 代码执行（Python 沙箱）Bean 注册 =========================

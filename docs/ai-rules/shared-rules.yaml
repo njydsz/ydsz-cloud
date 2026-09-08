@@ -238,15 +238,12 @@ rules:
       - Getter 方法：`getIsDefault()`、`getIsActive()` 等
 
       **禁止的命名**：
-      - 不带 `is` 前缀的布尔字段（如 `default`、`active`、`deleted`）
-      - `_flag` 后缀（如 `default_flag` / `defaultFlag`、`active_flag` / `activeFlag`）
-    pattern: "private Boolean deleted; 或 private Boolean default; 或 private Boolean xxxFlag;"
-    fix: "Java 字段改为 isXxx；数据库列改为 is_xxx；xxxFlag 一律改为 isXxx"
+      不带 `is` 前缀的布尔字段（如 `default`、`active`、`deleted`）
+    pattern: "private Boolean deleted; 或 private Boolean default;"
+    fix: "Java 字段改为 isXxx；数据库列改为 is_xxx"
     example_bad: |
       ❌ private Boolean default;         // 缺少 is 前缀
       ❌ private Boolean deleted;         // 缺少 is 前缀
-      ❌ private Boolean activeFlag;      // 使用 _flag 后缀
-      ❌ private Boolean systemFlag;      // 使用 _flag 后缀
     example_good: |
       ✅ private Boolean isDefault;       // 数据库列: is_default
       ✅ private Boolean isDeleted;       // 数据库列: is_deleted

@@ -80,6 +80,9 @@ public class AgentProperties {
   /** 可观测性配置（OpenTelemetry） */
   private Otel otel = new Otel();
 
+  /** BI 洞察报告配置 */
+  private Insight insight = new Insight();
+
   /** 代码执行配置 */
   private CodeExecution codeExecution = new CodeExecution();
 
@@ -670,5 +673,37 @@ public class AgentProperties {
 
     /** Docker CPU 限制 */
     private String dockerCpuLimit = DEFAULT_DOCKER_CPU_LIMIT;
+  }
+
+  // ========================= BI 洞察报告配置 =========================
+
+  /**
+   * BI 洞察报告配置
+   *
+   * <p>控制 Agent 模块内置 BI 洞察报告自动生成功能的启用参数。
+   * 开启后可通过 {@code POST /api/v1/agent/insight/report} 接口触发报告生成。
+   *
+   * @author ydsz-team
+   * @since 26.09.07
+   */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Insight {
+
+    /** 是否启用洞察报告生成功能 */
+    private boolean enabled = false;
+
+    /** 报告生成使用的 LLM 模型 */
+    private String model = "gpt-4";
+
+    /** 报告生成超时时间（秒） */
+    private int reportTimeoutSeconds = 120;
+
+    /** 最大章节数 */
+    private int maxSections = 8;
+
+    /** 报告输出格式列表 */
+    private List<String> supportedFormats = List.of("html", "markdown");
   }
 }
