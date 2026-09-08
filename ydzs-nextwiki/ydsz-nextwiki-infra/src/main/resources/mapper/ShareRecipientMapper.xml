@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.nextwiki.infra.mapper.ShareRecipientMapper">
+
+    <resultMap id="ShareRecipientResult" type="com.njydsz.nextwiki.infra.entity.ShareRecipient">
+        <id column="id" property="id"/>
+        <result column="share_id" property="shareId"/>
+        <result column="recipient_type" property="recipientType"/>
+        <result column="recipient_id" property="recipientId"/>
+        <result column="recipient_name" property="recipientName"/>
+        <result column="status" property="status"/>
+        <result column="viewed_at" property="viewedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="revision" property="revision"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <select id="selectByShareId" resultMap="ShareRecipientResult">
+        SELECT id, share_id, recipient_type, recipient_id, recipient_name, status, viewed_at, created_at, created_by, updated_at, updated_by, revision, is_deleted, tenant_id
+        FROM ydsz_wiki_share_recipient
+        WHERE share_id = #{shareId} AND is_deleted = 0
+        ORDER BY created_at ASC
+    </select>
+
+    <select id="selectByRecipientId" resultMap="ShareRecipientResult">
+        SELECT id, share_id, recipient_type, recipient_id, recipient_name, status, viewed_at, created_at, created_by, updated_at, updated_by, revision, is_deleted, tenant_id
+        FROM ydsz_wiki_share_recipient
+        WHERE recipient_id = #{recipientId} AND is_deleted = 0
+        ORDER BY created_at ASC
+    </select>
+
+</mapper>

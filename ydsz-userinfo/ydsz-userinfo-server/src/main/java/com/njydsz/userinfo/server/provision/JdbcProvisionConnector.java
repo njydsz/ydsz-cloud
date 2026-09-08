@@ -135,21 +135,31 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
   /**
    * 执行查询并将 ResultSet 转换为 ProvisionRecord 列表。
    *
+   * <p>在查询前通过 {@link DynamicDataSourceContextHolder} 切换至外部业务数据源，
+   * 查询完成后恢复上一层数据源。
+   *
    * @param sql 查询 SQL
-   * @param params SQL 参数（可为 null）   */
+   * @param params SQL 参数（可为 null）
+   */
   private List<ProvisionRecord> executeQuery(String sql, Object[] params) {
     Map<String, String> mapping = properties.getFieldMapping();
     int batchSize = properties.getBatchSize() > 0 ? properties.getBatchSize() : DEFAULT_BATCH_SIZE;
     List<ProvisionRecord> records = new ArrayList<>(batchSize);
 
-    jdbcTemplate.query(sql, params, (ResultSet rs) -> {
-      ProvisionRecord record = mapResultSet(rs, mapping);
-      if (record != null) {
-        records.add(record);
-      }
-    });
+    String dsName = properties.getDatasourceName();
+    DynamicDataSourceContextHolder.push(dsName);
+    try {
+      jdbcTemplate.query(sql, params, (ResultSet rs) -> {
+        ProvisionRecord record = mapResultSet(rs, mapping);
+        if (record != null) {
+          records.add(record);
+        }
+      });
+    } finally {
+      DynamicDataSourceContextHolder.poll();
+    }
 
-    log.debug("JdbcProvisionConnector 查询完成: count={}", records.size());
+    log.debug("JdbcProvisionConnector 查询完成: count={}, ds={}", records.size(), dsName);
     return records;
   }
 

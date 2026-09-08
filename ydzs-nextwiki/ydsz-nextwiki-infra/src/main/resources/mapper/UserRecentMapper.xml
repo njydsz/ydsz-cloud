@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.nextwiki.infra.mapper.UserRecentMapper">
+
+  <resultMap id="BaseResultMap" type="com.njydsz.nextwiki.infra.entity.UserRecent">
+    <id column="id" property="id"/>
+    <result column="user_id" property="userId"/>
+    <result column="node_id" property="nodeId"/>
+    <result column="tenant_id" property="tenantId"/>
+    <result column="access_type" property="accessType"/>
+    <result column="accessed_at" property="accessedAt"/>
+    <result column="created_at" property="createdAt"/>
+    <result column="updated_at" property="updatedAt"/>
+    <result column="is_deleted" property="isDeleted"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, user_id, node_id, tenant_id, access_type, accessed_at, created_at, updated_at, is_deleted
+  </sql>
+
+  <!-- 查询用户最近访问列表（按访问时间倒序，未删除） -->
+  <select id="selectByUserIdOrderByAccessedAt" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM ydsz_wiki_user_recent
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+    ORDER BY accessed_at DESC
+    LIMIT #{limit}
+  </select>
+
+  <!-- 分页查询用户最近访问列表 -->
+  <select id="selectByUserIdWithPage" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM ydsz_wiki_user_recent
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+    ORDER BY accessed_at DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <!-- 统计用户最近访问数量 -->
+  <select id="countByUserId" resultType="int">
+    SELECT COUNT(*)
+    FROM ydsz_wiki_user_recent
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+  </select>
+
+  <!-- 根据用户ID和时间范围查询 -->
+  <select id="selectByUserIdAndTimeRange" resultMap="BaseResultMap">
+    SELECT <include refid="Base_Column_List"/>
+    FROM ydsz_wiki_user_recent
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+      AND accessed_at &gt;= #{startTime} AND accessed_at &lt;= #{endTime}
+    ORDER BY accessed_at DESC
+    LIMIT #{limit}
+  </select>
+
+  <!-- 检查指定节点是否存在记录 -->
+  <select id="existsByNodeId" resultType="boolean">
+    SELECT EXISTS(
+      SELECT 1 FROM ydsz_wiki_user_recent
+      WHERE user_id = #{userId} AND node_id = #{nodeId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
+    )
+  </select>
+
+  <!-- 删除用户的最近访问记录（物理删除） -->
+  <delete id="deleteByUserIdAndNodeId">
+    DELETE FROM ydsz_wiki_user_recent
+    WHERE user_id = #{userId} AND node_id = #{nodeId}
+  </delete>
+
+  <!-- 更新访问时间 -->
+  <update id="touch">
+    UPDATE ydsz_wiki_user_recent
+    SET accessed_at = NOW(), updated_at = NOW()
+    WHERE user_id = #{userId} AND node_id = #{nodeId} AND is_deleted = FALSE
+  </update>
+
+</mapper>
