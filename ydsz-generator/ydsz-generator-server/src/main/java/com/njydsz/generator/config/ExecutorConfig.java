@@ -1,6 +1,7 @@
 package com.njydsz.generator.config;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,7 +53,7 @@ public class ExecutorConfig {
         .maxPoolSize(maxSize)
         .queueCapacity(queueCapacity)
         .threadNamePrefix("ydsz-code-gen-")
-        .rejectedHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy())
+        .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
         .buildAndRegister();
   }
 }
