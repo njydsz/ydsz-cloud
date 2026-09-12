@@ -114,6 +114,18 @@ public interface MsgLogRepository {
   long count(MessageLogQueryDTO query);
 
   /**
+   * 按消息 ID 列表和接收人批量查询消息发送日志。
+   *
+   * <p>一次性查询多个 msgId 对应的日志记录（限定同一接收人），
+   * 避免在循环中逐条查询数据库（N+1 问题）。
+   *
+   * @param msgIds 消息 ID 列表（不可为空）
+   * @param userId 接收人 ID
+   * @return 匹配的消息日志 VO 列表；无匹配返回空列表
+   */
+  List<MsgLogVO> findByMsgIds(List<String> msgIds, String userId);
+
+  /**
    * 批量保存消息发送日志。
    *
    * @param list 消息发送日志 DTO 列表

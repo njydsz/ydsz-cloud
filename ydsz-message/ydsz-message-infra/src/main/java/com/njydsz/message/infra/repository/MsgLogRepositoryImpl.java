@@ -2,6 +2,7 @@ package com.njydsz.message.infra.repository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,9 +10,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -116,6 +116,18 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     QueryWrapper<MsgLog> wrapper = buildWrapper(query);
     Long count = msgLogMapper.selectCount(wrapper);
     return count != null ? count : 0L;
+  }
+
+  @Override
+  public List<MsgLogVO> findByMsgIds(List<String> msgIds, String userId) {
+    if (msgIds == null || msgIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+    QueryWrapper<MsgLog> wrapper = new QueryWrapper<>();
+    wrapper.in("msg_id", msgIds);
+    wrapper.eq("receiver", userId);
+    wrapper.eq("deleted", 0);
+    return converter.logListToVO(msgLogMapper.selectList(wrapper));
   }
 
   @Override

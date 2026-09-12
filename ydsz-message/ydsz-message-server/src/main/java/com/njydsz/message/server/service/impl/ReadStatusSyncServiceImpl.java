@@ -91,7 +91,8 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
   /**
    * 批量标记消息已读。
    *
-   * <p>事务内对给定消息列表统一置 READ 并推送 {@code MESSAGE_READ_BATCH} 事件； 空列表或 userId 缺失返回 0，不抛异常。
+   * <p>事务内通过单次 {@code msg_id IN (...)} 批量查询所有目标日志（消除 N+1）， 仅对状态非 READ 的记录置为 READ 并记录回执时间；
+   * 完成后推送 {@code MESSAGE_READ_BATCH} 事件。空列表或 userId 缺失返回 0，不抛异常。
    *
    * @param msgIds 消息 ID 列表
    * @param userId 用户 ID
@@ -103,15 +104,11 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (msgIds == null || msgIds.isEmpty() || !StringUtils.hasText(userId)) {
       return 0;
     }
+    // 批量查询所有消息日志（消除循环内逐条查询的 N+1 问题）
+    List<MsgLogVO> voList = msgLogRepository.findByMsgIds(msgIds, userId);
     int updated = 0;
-    for (String msgId : msgIds) {
-      MessageLogQueryDTO query = new MessageLogQueryDTO();
-      query.setMsgId(msgId);
-      query.setReceiver(userId);
-      query.setPageNum(1);
-      query.setPageSize(1);
-      MsgLogVO vo = msgLogRepository.findOne(query).orElse(null);
-      if (vo != null && !ReceiptStatusEnum.READ.name().equals(vo.getReceiptStatus())) {
+    for (MsgLogVO vo : voList) {
+      if (!ReceiptStatusEnum.READ.name().equals(vo.getReceiptStatus())) {
         vo.setReceiptStatus(ReceiptStatusEnum.READ.name());
         vo.setReceiptAt(LocalDateTime.now());
         msgLogRepository.update(vo);

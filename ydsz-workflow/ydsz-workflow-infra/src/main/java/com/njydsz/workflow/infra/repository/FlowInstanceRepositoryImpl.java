@@ -1,9 +1,11 @@
 package com.njydsz.workflow.infra.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +69,23 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   @Override
   public Optional<FlowInstanceVO> findById(String id) {
     return Optional.ofNullable(instanceMapper.selectById(id)).map(converter::entityToVO);
+  }
+
+  /**
+   * 按 ID 集合批量查询流程实例（消除 N+1 查询）。
+   *
+   * <p>内部使用 MyBatis-Plus 继承自 {@code BaseMapper} 的 {@code selectBatchIds}，
+   * 生成 {@code SELECT ... WHERE id IN (...)} 单次查询。
+   *
+   * @param ids 流程实例 ID 集合
+   * @return 流程实例 VO 列表；空集合返回空列表
+   */
+  @Override
+  public List<FlowInstanceVO> findAllById(Set<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return converter.flowInstanceListToVO(instanceMapper.selectBatchIds(ids));
   }
 
   /** {@inheritDoc} */

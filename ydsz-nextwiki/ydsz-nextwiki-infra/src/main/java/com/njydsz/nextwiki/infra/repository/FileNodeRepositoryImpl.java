@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -240,6 +241,22 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
    */
   @Override
   public List<FileNodeVO> findByIds(List<String> ids) {
+    return mapper.fileNodeListToVO(fileNodeMapper.selectBatchIds(ids));
+  }
+
+  /**
+   * 按 ID 集合批量查询文件节点（消除 N+1 查询）。
+   *
+   * <p>内部使用 MyBatis-Plus 的 {@code selectBatchIds}，生成 {@code SELECT ... WHERE id IN (...)} 单次查询。
+   *
+   * @param ids 文件节点 ID 集合
+   * @return 文件节点 VO 列表；空集合返回空列表
+   */
+  @Override
+  public List<FileNodeVO> findAllById(Set<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
     return mapper.fileNodeListToVO(fileNodeMapper.selectBatchIds(ids));
   }
 

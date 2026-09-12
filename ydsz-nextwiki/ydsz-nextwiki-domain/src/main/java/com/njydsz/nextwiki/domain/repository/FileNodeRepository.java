@@ -3,6 +3,7 @@ package com.njydsz.nextwiki.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
@@ -133,6 +134,16 @@ public interface FileNodeRepository {
    * @return 文件节点 VO 列表
    */
   List<FileNodeVO> findByIds(List<String> ids);
+
+  /**
+   * 按 ID 集合批量查询文件节点（用于消除 for 循环内的逐条 findById N+1 查询）。
+   *
+   * <p>内部通过 {@code SELECT ... WHERE id IN (...)} 一次性加载，调用方应在循环前收集 ID 集合并构建内存 Map。
+   *
+   * @param ids 文件节点 ID 集合（不允许为 null）
+   * @return 文件节点 VO 列表；无匹配返回空列表
+   */
+  List<FileNodeVO> findAllById(Set<String> ids);
 
   /**
    * 批量逻辑删除（移入回收站，用于批量删除场景）。

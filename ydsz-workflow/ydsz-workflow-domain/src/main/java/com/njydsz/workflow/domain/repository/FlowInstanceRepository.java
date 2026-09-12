@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
@@ -46,6 +47,16 @@ public interface FlowInstanceRepository {
    * @return 流程实例 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<FlowInstanceVO> findById(String id);
+
+  /**
+   * 按 ID 集合批量查询流程实例（用于消除 for 循环内的逐条 findById N+1 查询）。
+   *
+   * <p>内部通过 {@code SELECT ... WHERE id IN (...)} 一次性加载，调用方应在循环前收集 ID 集合并构建内存 Map。
+   *
+   * @param ids 流程实例 ID 集合（不允许为 null 或空集合）
+   * @return 流程实例 VO 列表；无匹配返回空列表
+   */
+  List<FlowInstanceVO> findAllById(Set<String> ids);
 
   /**
    * 根据租户 ID + 业务类型 + 业务单据 ID 查询流程实例。

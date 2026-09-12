@@ -2,8 +2,12 @@ package com.njydsz.nextwiki.server.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -187,15 +191,35 @@ public class FolderCopyService {
 
     List<FileNodeDTO> newNodes = new ArrayList<>(batchSourceNodes.size());
 
-    for (FileNodeVO source : batchSourceNodes) {
+    // --- N+1 修复：预计算 ID 并收集父节点 ID，批量查询（YDIZ-PERF-001） ---
+    // 第一遍：生成新 ID、填充 idMapping、计算每个节点的新父节点 ID
+    String[] generatedIds = new String[batchSourceNodes.size()];
+    String[] resolvedParentIds = new String[batchSourceNodes.size()];
+    Set<String> parentIdSet = new HashSet<>(batchSourceNodes.size() * 2);
+    for (int i = 0; i < batchSourceNodes.size(); i++) {
+      FileNodeVO source = batchSourceNodes.get(i);
       String newId = String.valueOf(snowflakeIdGenerator.nextId());
       idMapping.put(source.getId(), newId);
+      generatedIds[i] = newId;
 
-      // 计算新父节点 ID
       String newParentId = resolveNewParentId(source.getParentId(), newRootFolderId, idMapping);
+      resolvedParentIds[i] = newParentId;
+      parentIdSet.add(newParentId);
+    }
 
-      // 推导新路径与层级
-      FileNodeVO newParentNode = fileNodeRepository.findById(newParentId).orElse(null);
+    // 一次性批量查询所有父节点（仅 1 次 DB 查询替代原来的 N 次）
+    List<FileNodeVO> parentNodes = fileNodeRepository.findAllById(parentIdSet);
+    Map<String, FileNodeVO> parentNodeMap = parentNodes.stream()
+        .collect(Collectors.toMap(FileNodeVO::getId, Function.identity(), (a, b) -> a));
+
+    // 第二遍：从内存 Map 取父节点，构建新节点 DTO
+    for (int i = 0; i < batchSourceNodes.size(); i++) {
+      FileNodeVO source = batchSourceNodes.get(i);
+      String newId = generatedIds[i];
+      String newParentId = resolvedParentIds[i];
+
+      // 从内存 Map 获取父节点（不再逐条查库）
+      FileNodeVO newParentNode = parentNodeMap.get(newParentId);
       if (newParentNode == null) {
         // 如果父节点尚未在此批生成，且不在映射中，跳过此节点（下批再处理）
         // 但分页按 level 升序，理论上不会遇到
