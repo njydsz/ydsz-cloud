@@ -2,10 +2,10 @@ package com.njydsz.workflow.server.engine;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.support.CacheKeyBuilder;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * 任务计数 Redis 缓存服务。
@@ -30,7 +30,7 @@ import com.njydsz.common.cache.support.CacheKeyBuilder;
  *   <li>启动预热：应用启动时从 DB 加载初始值</li>
  * </ul>
  *
- * <p>使用 {@link StringRedisTemplate} 高级 API（opsForValue）操作 Redis，
+ * <p>使用 ydsz-common-redis 的 RedisStringOps 操作 Redis，
  * 键通过 {@link CacheKeyBuilder} 构建，自动携带租户前缀。
  *
  * @since 26.09.01
@@ -48,7 +48,7 @@ public class FlowTaskCountCacheService {
   private static final String KEY_TOTAL_PENDING = "ydsz:workflow:task:count:total";
 
   /** Redis String 模板（键已通过 CacheKeyBuilder 携带租户前缀，直接使用即可） */
-  private final StringRedisTemplate redisTemplate;
+  private final RedisStringOps redisStringOps;
 
   /**
    * 构建指定用户的个人待办计数 key。
@@ -73,9 +73,10 @@ public class FlowTaskCountCacheService {
       return 0;
     }
     try {
-      Long count = redisTemplate.opsForValue().increment(buildUserKey(userId));
-      redisTemplate.opsForValue().increment(KEY_TOTAL_PENDING);
-      return count != null ? count : 0;
+      String userKey = buildUserKey(userId);
+      long count = redisStringOps.incr(userKey, 1);
+      redisStringOps.incr(KEY_TOTAL_PENDING, 1);
+      return count;
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] INCR 失败 userId={}: {}", userId, e.getMessage());
       return 0;
@@ -96,13 +97,14 @@ public class FlowTaskCountCacheService {
       return 0;
     }
     try {
-      Long count = redisTemplate.opsForValue().decrement(buildUserKey(userId));
-      redisTemplate.opsForValue().decrement(KEY_TOTAL_PENDING);
+      String userKey = buildUserKey(userId);
+      long count = redisStringOps.decr(userKey, 1);
+      redisStringOps.decr(KEY_TOTAL_PENDING, 1);
       // 归零后删除 key，避免长期占用内存
-      if (count != null && count <= 0) {
-        redisTemplate.delete(buildUserKey(userId));
+      if (count <= 0) {
+        redisStringOps.del(userKey);
       }
-      return count != null ? Math.max(0, count) : 0;
+      return Math.max(0, count);
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] DECR 失败 userId={}: {}", userId, e.getMessage());
       return 0;
@@ -120,7 +122,7 @@ public class FlowTaskCountCacheService {
       return 0;
     }
     try {
-      String value = redisTemplate.opsForValue().get(buildUserKey(userId));
+      String value = redisStringOps.get(buildUserKey(userId), String.class);
       return value != null ? Long.parseLong(value) : 0;
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] GET 失败 userId={}: {}", userId, e.getMessage());
@@ -135,7 +137,7 @@ public class FlowTaskCountCacheService {
    */
   public long getTotalPendingCount() {
     try {
-      String value = redisTemplate.opsForValue().get(KEY_TOTAL_PENDING);
+      String value = redisStringOps.get(KEY_TOTAL_PENDING, String.class);
       return value != null ? Long.parseLong(value) : 0;
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] GET total 失败: {}", e.getMessage());
@@ -155,9 +157,9 @@ public class FlowTaskCountCacheService {
     }
     try {
       if (count <= 0) {
-        redisTemplate.delete(buildUserKey(userId));
+        redisStringOps.del(buildUserKey(userId));
       } else {
-        redisTemplate.opsForValue().set(buildUserKey(userId), String.valueOf(count));
+        redisStringOps.set(buildUserKey(userId), String.valueOf(count));
       }
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] SET 失败 userId={}: {}", userId, e.getMessage());
@@ -174,7 +176,7 @@ public class FlowTaskCountCacheService {
       return;
     }
     try {
-      redisTemplate.delete(buildUserKey(userId));
+      redisStringOps.del(buildUserKey(userId));
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] DELETE 失败 userId={}: {}", userId, e.getMessage());
     }

@@ -160,7 +160,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
     }
     wrapper.orderByDesc(JobLog::getStartTime);
     Page<JobLog> result = jobLogMapper.selectPage(pageObj, wrapper);
-    return new JobRepository.PageResult<>(converter.jobLogListToVO(result.getRecords()), result.getTotal());
+    return new JobRepository.PageResult<>(converter.jobLogListToVO(result.getRecords()), result.getTotal(), page, size);
   }
 
   @Override

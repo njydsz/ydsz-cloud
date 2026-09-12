@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +27,7 @@ import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
+import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
@@ -70,7 +70,7 @@ public class JobDiagnosisController {
   /** 日志 Repository（DDD 分层：Controller 通过 Repository 接口查询日志） */
   private final JobLogRepository jobLogRepository;
   private final CronjobProperties cronjobProperties;
-  private final StringRedisTemplate redisTemplate;
+  private final CronjobRedisOps cronjobRedisOps;
 
   private final ObjectProvider<RunningTaskCounter> runningTaskCounterProvider;
 
@@ -123,9 +123,9 @@ public class JobDiagnosisController {
     List<JobLogVO> recentLogs = jobLogRepository.findByJobKey(jobKey, RECENT_LOG_LIMIT);
     diagnosis.put("recentExecutions", recentLogs.size());
 
-    // 4. 当前 Redis 锁状态
+    // 4. 当前 Redis 锁状态（DDD 分层：Controller 通过 CronjobRedisOps 访问 Redis，禁止直接依赖 RedisTemplate）
     String lockKey = LockKeyUtil.buildJobLockKey(jobKey);
-    String lockHolder = redisTemplate.opsForValue().get(lockKey);
+    String lockHolder = cronjobRedisOps.getRaw(lockKey);
     diagnosis.put("lockKey", lockKey);
     diagnosis.put("lockHolder", lockHolder);
     diagnosis.put("lockAcquired", lockHolder != null);

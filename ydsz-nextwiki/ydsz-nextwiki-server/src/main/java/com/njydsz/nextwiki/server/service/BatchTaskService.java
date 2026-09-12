@@ -6,6 +6,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -44,8 +45,9 @@ public class BatchTaskService {
   /** 任务状态 Redis Key 前缀 */
   private static final String KEY_TASK = "nextwiki:batch:task:";
 
-  /** 任务状态保留时长（24 小时，过期自动清理，不再依赖内存遍历） */
-  private static final Duration TASK_TTL = Duration.ofHours(24);
+  /** 任务状态保留时长（小时），默认 24 小时，过期自动清理，不再依赖内存遍历 */
+  @Value("${ydsz.nextwiki.batch.task-ttl-hours:24}")
+  private long taskTtlHours;
 
   /** 操作类型前缀长度（如 "move:" 为 5 个字符） */
   private static final int OPERATION_PREFIX_LENGTH = 5;
@@ -216,7 +218,7 @@ public class BatchTaskService {
    */
   private void saveTaskStatus(BatchTaskStatus status) {
     try {
-      stringOps.set(KEY_TASK + status.getTaskId(), YdszJson.toJson(status), TASK_TTL);
+      stringOps.set(KEY_TASK + status.getTaskId(), YdszJson.toJson(status), Duration.ofHours(taskTtlHours));
     } catch (Exception e) {
       // 状态存储失败不阻塞任务执行，仅记录告警（后续查询可能失败，但业务不受影响）
       log.error(

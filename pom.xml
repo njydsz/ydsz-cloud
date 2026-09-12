@@ -89,6 +89,8 @@
         <errorprone.version>2.49.0</errorprone.version>
         <openpdf.version>1.3.30</openpdf.version>
         <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
+        <!-- Sentinel（流量控制/熔断降级/系统保护）— Spring Cloud Alibaba BOM 未覆盖 sentinel-adapter 和 sentinel-datasource-nacos，单独管理 -->
+        <sentinel.version>1.8.8</sentinel.version>
         <!-- JaCoCo：测试破零配套（2026-09-01），覆盖率报告与后续增量门禁使用 -->
         <!-- OWASP DependencyCheck（P2-2 依赖安全扫描） -->
         <owasp-dc.version>8.4.0</owasp-dc.version>
@@ -267,11 +269,6 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-json</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-websocket</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -989,6 +986,19 @@
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-api</artifactId>
                 <version>${grpc.version}</version>
+            </dependency>
+
+            <!-- Sentinel Gateway 适配器（Spring Cloud Alibaba BOM 未覆盖，需显式管理版本） -->
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
+                <version>${sentinel.version}</version>
+            </dependency>
+            <!-- Sentinel Nacos 数据源（Spring Cloud Alibaba BOM 未覆盖，需显式管理版本） -->
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-datasource-nacos</artifactId>
+                <version>${sentinel.version}</version>
             </dependency>
 
             <!-- Jasypt 配置加密（P0-4） -->

@@ -40,6 +40,17 @@ public class UserInfo implements Serializable {
   /** 租户ID */
   private String tenantId;
 
+  /**
+   * 终端类型（多终端 scope 隔离）。
+   *
+   * <p>取值范围：{@code web} / {@code app} / {@code api} / {@code unknown}。
+   * 从 JWT claims 中的 {@code deviceType} 声明解析而来，
+   * 网关层通过此字段 + 请求头 {@code X-Device-Type} 校验跨终端 token 隔离。
+   *
+   * @since 26.09.12
+   */
+  private String deviceType;
+
   /** 扩展属性（用于承载自定义用户数据） */
   private transient Map<String, Object> extras;
 
@@ -97,6 +108,14 @@ public class UserInfo implements Serializable {
 
   public void setTenantId(String tenantId) {
     this.tenantId = tenantId;
+  }
+
+  public String getDeviceType() {
+    return deviceType;
+  }
+
+  public void setDeviceType(String deviceType) {
+    this.deviceType = deviceType;
   }
 
   public Map<String, Object> getExtras() {

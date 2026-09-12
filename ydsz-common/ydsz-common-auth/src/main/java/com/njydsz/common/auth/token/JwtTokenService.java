@@ -67,6 +67,15 @@ public class JwtTokenService implements TokenService {
   private static final String CLAIM_TOKEN_TYPE = "tokenType";
 
   /**
+   * 多终端 scope 隔离：设备类型声明。
+   *
+   * <p>在 JWT claims 中存储终端类型编码（web/app/api/unknown），
+   * 网关 AuthGlobalFilter 校验请求 X-Device-Type 头与 claims 中的 deviceType 是否一致，
+   * 防止跨终端 token 重用。
+   */
+  private static final String CLAIM_DEVICE_TYPE = "deviceType";
+
+  /**
    * P1: JWT ID（jti）— 每个 token 唯一标识
    *
    * <p>用途：
@@ -132,13 +141,29 @@ public class JwtTokenService implements TokenService {
   /** {@inheritDoc} */
   @Override
   public String issueAccessToken(UserInfo userInfo) {
-    return buildToken(userInfo, TOKEN_TYPE_ACCESS, tokenProperties.getAccessTokenExpireSeconds());
+    return buildToken(userInfo, TOKEN_TYPE_ACCESS, tokenProperties.getAccessTokenExpireSeconds(),
+        null);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public String issueAccessToken(UserInfo userInfo, String deviceType) {
+    return buildToken(userInfo, TOKEN_TYPE_ACCESS, tokenProperties.getAccessTokenExpireSeconds(),
+        deviceType);
   }
 
   /** {@inheritDoc} */
   @Override
   public String issueRefreshToken(UserInfo userInfo) {
-    return buildToken(userInfo, TOKEN_TYPE_REFRESH, tokenProperties.getRefreshTokenExpireSeconds());
+    return buildToken(userInfo, TOKEN_TYPE_REFRESH, tokenProperties.getRefreshTokenExpireSeconds(),
+        null);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public String issueRefreshToken(UserInfo userInfo, String deviceType) {
+    return buildToken(userInfo, TOKEN_TYPE_REFRESH, tokenProperties.getRefreshTokenExpireSeconds(),
+        deviceType);
   }
 
   /** {@inheritDoc} */
@@ -234,14 +259,23 @@ public class JwtTokenService implements TokenService {
   /**
    * 构建 JWT Token
    *
-   * <p>P1: 在原有 iss/sub/iat/exp 基础上，新增 jti（JWT ID）和 aud（audience）：
+   * <p>P1: 在原有 iss/sub/iat/exp 基础上，新增 jti（JWT ID）和 aud（audience）；
+   * P2（26.09.12）: 新增 deviceType（多终端 scope 隔离声明）。
    *
    * <ul>
-   *   <li>jti：每个 token 唯一标识，用于精确黑名单和审计
-   *   <li>aud：受众声明，防止跨服务令牌重用（如颁发给 gateway 的 token 不能用于其他服务）
+   *   <li>jti：每个 token 唯一标识，用于精确黑名单和审计</li>
+   *   <li>aud：受众声明，防止跨服务令牌重用</li>
+   *   <li>deviceType：终端类型（web/app/api），实现跨终端 token 隔离</li>
    * </ul>
+   *
+   * @param userInfo 用户信息
+   * @param tokenType Token 类型（access/refresh/id_token）
+   * @param expireSeconds 有效时间（秒）
+   * @param deviceType 终端类型编码（可选，null 时不写入 deviceType 声明）
+   * @return JWT Token 字符串
    */
-  private String buildToken(UserInfo userInfo, String tokenType, long expireSeconds) {
+  private String buildToken(
+      UserInfo userInfo, String tokenType, long expireSeconds, String deviceType) {
     Instant now = Instant.now();
     Instant expiration = now.plusSeconds(expireSeconds);
 
@@ -251,6 +285,11 @@ public class JwtTokenService implements TokenService {
     claims.put(CLAIM_TENANT_ID, userInfo.getTenantId());
     claims.put(CLAIM_ROLE_CODE, userInfo.getRoleCode());
     claims.put(CLAIM_TOKEN_TYPE, tokenType);
+
+    // P2: 多终端 scope 隔离 — 写入 deviceType 声明
+    if (deviceType != null && !deviceType.isBlank()) {
+      claims.put(CLAIM_DEVICE_TYPE, deviceType);
+    }
 
     var builder =
         Jwts.builder()
@@ -271,6 +310,19 @@ public class JwtTokenService implements TokenService {
     }
 
     return builder.signWith(secretKey).compact();
+  }
+
+  /**
+   * 从已解析的 Claims 中提取 deviceType 声明。
+   *
+   * @param claims JWT Claims 对象
+   * @return 终端类型编码（web/app/api），未声明时返回 null
+   */
+  public String extractDeviceType(io.jsonwebtoken.Claims claims) {
+    if (claims == null) {
+      return null;
+    }
+    return claims.get(CLAIM_DEVICE_TYPE, String.class);
   }
 
   /**
@@ -357,6 +409,8 @@ public class JwtTokenService implements TokenService {
       userInfo.setUsername(claims.get(CLAIM_USERNAME, String.class));
       userInfo.setTenantId(claims.get(CLAIM_TENANT_ID, String.class));
       userInfo.setRoleCode(claims.get(CLAIM_ROLE_CODE, String.class));
+      // 多终端 scope 隔离：提取 deviceType 声明
+      userInfo.setDeviceType(claims.get(CLAIM_DEVICE_TYPE, String.class));
       return userInfo;
     } catch (JwtException e) {
       LOG.debug("Token parse failed: {}", e.getMessage());

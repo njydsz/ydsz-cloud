@@ -6,6 +6,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
@@ -41,17 +42,21 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @RequiredArgsConstructor
 public class WorkflowApproverCacheService {
 
-  /** 角色→用户列表缓存 TTL（秒）：5 分钟 */
-  private static final long CACHE_TTL_ROLE_USERS = 300;
+  /** 角色→用户列表缓存 TTL（秒），默认 5 分钟 */
+  @Value("${ydsz.userinfo.workflow-approver.role-users-cache-ttl-seconds:300}")
+  private long roleUsersCacheTtlSeconds;
 
-  /** 岗位→用户列表缓存 TTL（秒）：5 分钟 */
-  private static final long CACHE_TTL_POSITION_USERS = 300;
+  /** 岗位→用户列表缓存 TTL（秒），默认 5 分钟 */
+  @Value("${ydsz.userinfo.workflow-approver.position-users-cache-ttl-seconds:300}")
+  private long positionUsersCacheTtlSeconds;
 
-  /** 用户→上级缓存 TTL（秒）：5 分钟 */
-  private static final long CACHE_TTL_LEADER = 300;
+  /** 用户→上级缓存 TTL（秒），默认 5 分钟 */
+  @Value("${ydsz.userinfo.workflow-approver.leader-cache-ttl-seconds:300}")
+  private long leaderCacheTtlSeconds;
 
-  /** 部门→负责人缓存 TTL（秒）：10 分钟 */
-  private static final long CACHE_TTL_DEPT_LEADER = 600;
+  /** 部门→负责人缓存 TTL（秒），默认 10 分钟 */
+  @Value("${ydsz.userinfo.workflow-approver.dept-leader-cache-ttl-seconds:600}")
+  private long deptLeaderCacheTtlSeconds;
 
   private final RedisStringOps redisStringOps;
   private final UserAccountService userAccountService;
@@ -89,7 +94,7 @@ public class WorkflowApproverCacheService {
     // 写入缓存
     try {
       redisStringOps.set(
-          cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(CACHE_TTL_ROLE_USERS));
+          cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(roleUsersCacheTtlSeconds));
     } catch (Exception e) {
       log.warn("Workflow cache write failed for Role: {}", roleCode);
     }
@@ -126,7 +131,7 @@ public class WorkflowApproverCacheService {
 
     try {
       redisStringOps.set(
-          cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(CACHE_TTL_POSITION_USERS));
+          cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(positionUsersCacheTtlSeconds));
     } catch (Exception e) {
       log.warn("Workflow cache write failed for position: {}", positionCode);
     }
@@ -165,7 +170,7 @@ public class WorkflowApproverCacheService {
     try {
       // null 值使用占位符缓存，防止缓存穿透
       redisStringOps.set(
-          cacheKey, leaderId != null ? leaderId : "__NULL__", Duration.ofSeconds(CACHE_TTL_LEADER));
+          cacheKey, leaderId != null ? leaderId : "__NULL__", Duration.ofSeconds(leaderCacheTtlSeconds));
     } catch (Exception e) {
       log.warn("Workflow cache write failed for leader: {}", userId);
     }
@@ -201,7 +206,7 @@ public class WorkflowApproverCacheService {
       redisStringOps.set(
           cacheKey,
           leaderId != null ? leaderId : "__NULL__",
-          Duration.ofSeconds(CACHE_TTL_DEPT_LEADER));
+          Duration.ofSeconds(deptLeaderCacheTtlSeconds));
     } catch (Exception e) {
       log.warn("Workflow cache write failed for deptLeader: {}", deptId);
     }
@@ -237,7 +242,7 @@ public class WorkflowApproverCacheService {
       redisStringOps.set(
           cacheKey,
           leaderId != null ? leaderId : "__NULL__",
-          Duration.ofSeconds(CACHE_TTL_DEPT_LEADER));
+          Duration.ofSeconds(deptLeaderCacheTtlSeconds));
     } catch (Exception e) {
       log.warn("Workflow cache write failed for deptLeader code: {}", deptCode);
     }

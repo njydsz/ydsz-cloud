@@ -1,12 +1,10 @@
 package com.njydsz.nextwiki.server.service;
 
-import java.util.concurrent.TimeUnit;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 
 /**
@@ -30,39 +28,39 @@ public class StorageReferenceServiceImpl implements StorageReferenceService {
   /** Redis key 前缀 */
   private static final String KEY_PREFIX = "wiki:ref:";
 
-  /** key 生存时间（30 天），防止孤儿 key 永久堆积 */
-  private static final long TTL_DAYS = 30L;
+  /** key 生存时间（秒），防止孤儿 key 永久堆积 */
+  private static final long TTL_SECONDS = 30L * 24 * 60 * 60;
 
-  private final StringRedisTemplate redisTemplate;
+  private final RedisStringOps redisStringOps;
 
   @Override
   public long increment(String storageKey) {
     String key = buildKey(storageKey);
-    Long count = redisTemplate.opsForValue().increment(key);
-    if (count != null && count == 1L) {
-      redisTemplate.expire(key, TTL_DAYS, TimeUnit.DAYS);
+    long count = redisStringOps.incr(key, 1);
+    if (count == 1L) {
+      redisStringOps.expire(key, TTL_SECONDS);
     }
     log.info("[StorageReference] 引用++ : storageKey={}, count={}", storageKey, count);
-    return count != null ? count : 0L;
+    return count;
   }
 
   @Override
   public long decrement(String storageKey) {
     String key = buildKey(storageKey);
-    Long count = redisTemplate.opsForValue().decrement(key);
-    if (count != null && count <= 0L) {
-      redisTemplate.delete(key);
+    long count = redisStringOps.decr(key, 1);
+    if (count <= 0L) {
+      redisStringOps.del(key);
       log.info("[StorageReference] 引用归零，已清除 key: storageKey={}", storageKey);
       return 0L;
     }
     log.info("[StorageReference] 引用-- : storageKey={}, count={}", storageKey, count);
-    return count != null ? count : 0L;
+    return count;
   }
 
   @Override
   public long getCount(String storageKey) {
     String key = buildKey(storageKey);
-    String value = redisTemplate.opsForValue().get(key);
+    String value = redisStringOps.get(key, String.class);
     if (value == null || value.isBlank()) {
       return 0L;
     }

@@ -138,6 +138,28 @@
             <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
 
+        <!--
+            Sentinel: 流量控制 + 熔断降级 + 系统自适应保护（对标 SpringBlade blade-core-cloud 集成 Sentinel）。
+            与 Resilience4j 互补：
+              - Resilience4j：服务级熔断（调用下游超时/异常比例触发）
+              - Sentinel：网关级流量控制（QPS阈值/熔断降级/系统负载保护）+Nacos 规则持久化
+            Spring Cloud Alibaba BOM 已管理版本，无需显式声明。
+        -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+        </dependency>
+        <!-- Sentinel Gateway 适配器：自动注册 SentinelGatewayFilter，提供 API 维度流控和熔断 -->
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
+        </dependency>
+        <!-- Sentinel Nacos 数据源：流控/熔断/系统规则持久化到 Nacos，支持动态推送 -->
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-datasource-nacos</artifactId>
+        </dependency>
+
         <!-- Actuator 健康检查 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

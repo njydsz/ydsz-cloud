@@ -212,4 +212,23 @@ public class CronjobRedisOps {
       return -1;
     }
   }
+
+  // ======================== 原始 key 操作（LockKeyUtil 等已包含前缀的场景） ========================
+
+  /**
+   * 获取指定原始 key 的值（String 类型）。
+   *
+   * <p>适用于 key 已包含模块前缀的场景（如 {@code LockKeyUtil} 构造的 {@code ydzs:job:lock:{jobKey}}）。
+   *
+   * @param rawKey 完整 Redis key（已含前缀）
+   * @return 值；不存在或异常返回 null
+   */
+  public String getRaw(String rawKey) {
+    try {
+      return redisStringOps.get(rawKey, String.class);
+    } catch (Exception e) {
+      log.debug("[CronjobRedis] GET_RAW 异常: key={} reason={}", rawKey, e.getMessage());
+      return null;
+    }
+  }
 }

@@ -42,6 +42,7 @@ public final class PathGuard {
           GatewayConstants.HEADER_USER_PERMISSIONS,
           GatewayConstants.HEADER_INTERNAL_SIG,
           GatewayConstants.HEADER_TENANT_ID,
+          GatewayConstants.HEADER_X_DEVICE_TYPE,
           HeaderConstants.X_FORWARDED_FOR,
           "X-Real-IP");
 

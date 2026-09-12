@@ -203,6 +203,21 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
               return unauthorized(exchange, GatewayErrorCode.TOKEN_EXPIRED, "error.TOKEN_EXPIRED");
             }
 
+            // 多终端 scope 隔离：校验请求终端类型与 token deviceType 声明一致
+            String requestDeviceType = request.getHeaders().getFirst(GatewayConstants.HEADER_DEVICE_TYPE);
+            String tokenDeviceType = userInfo.getDeviceType();
+            if (tokenDeviceType != null && !tokenDeviceType.isBlank()) {
+              // token 声明了 deviceType，请求必须提供且匹配（大小写不敏感）
+              if (requestDeviceType == null || requestDeviceType.isBlank()
+                  || !tokenDeviceType.equalsIgnoreCase(requestDeviceType.trim())) {
+                log.warn(
+                    "[AuthFilter] 跨终端 token 使用被拒绝: tokenDeviceType={} requestDeviceType={} userId={}",
+                    tokenDeviceType, requestDeviceType, userInfo.getUserId());
+                return unauthorized(
+                    exchange, GatewayErrorCode.DEVICE_SCOPE_MISMATCH, "error.DEVICE_SCOPE_MISMATCH");
+              }
+            }
+
             String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
             String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
             String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
@@ -216,6 +231,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
             // 透传用户信息（先剥离客户端伪造的内部头，再注入网关值）
             final String acceptLang = request.getHeaders().getFirst("Accept-Language");
+            // 多终端 scope 隔离：透传已校验的 deviceType 给下游
+            String deviceTypeForDownstream = tokenDeviceType != null && !tokenDeviceType.isBlank()
+                ? tokenDeviceType : (requestDeviceType != null ? requestDeviceType : "");
             ServerHttpRequest mutated = request.mutate().headers(h -> {
               stripInternalHeaders(h);
               h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
@@ -225,6 +243,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
               h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
               h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
               h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
+              h.set(GatewayConstants.HEADER_X_DEVICE_TYPE, deviceTypeForDownstream);
               h.set("Authorization", authHeader);
               h.set("Accept-Language", acceptLang != null && !acceptLang.isEmpty() ? acceptLang : "zh-CN");
             }).build();

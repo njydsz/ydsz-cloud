@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -66,11 +67,13 @@ public class SecondaryAuthService {
   /** 安全操作标记 Redis Key 前缀 */
   private static final String SAFE_KEY_PREFIX = "userinfo:safe:";
 
-  /** 默认安全标记有效期（5 分钟，HIGH / MEDIUM 级别） */
-  private static final Duration DEFAULT_TTL = Duration.ofMinutes(5);
+  /** 默认安全标记有效期（分钟），HIGH / MEDIUM 级别，默认 5 分钟 */
+  @Value("${ydsz.userinfo.secondary-auth.default-ttl-minutes:5}")
+  private long defaultTtlMinutes;
 
-  /** CRITICAL 级别安全标记有效期（2 分钟，更短时效以降低风险窗口） */
-  private static final Duration CRITICAL_TTL = Duration.ofMinutes(2);
+  /** CRITICAL 级别安全标记有效期（分钟），默认 2 分钟，更短时效以降低风险窗口 */
+  @Value("${ydsz.userinfo.secondary-auth.critical-ttl-minutes:2}")
+  private long criticalTtlMinutes;
 
   /** 安全标记值 */
   private static final String SAFE_VALUE = "1";
@@ -111,7 +114,7 @@ public class SecondaryAuthService {
    * @throws BusinessException 用户不存在、密码错误或未登录时抛出
    */
   public void openSafe(String password, String scene) {
-    openSafe(password, scene, DEFAULT_TTL);
+    openSafe(password, scene, Duration.ofMinutes(defaultTtlMinutes));
   }
 
   /**
@@ -203,7 +206,7 @@ public class SecondaryAuthService {
    * @throws BusinessException 用户不存在、密码错误或未登录时抛出
    */
   public <T> T executeSafe(String password, String scene, SensitiveLevel level, Supplier<T> action) {
-    Duration ttl = level == SensitiveLevel.CRITICAL ? CRITICAL_TTL : DEFAULT_TTL;
+    Duration ttl = level == SensitiveLevel.CRITICAL ? Duration.ofMinutes(criticalTtlMinutes) : Duration.ofMinutes(defaultTtlMinutes);
     openSafe(password, scene, ttl);
     try {
       return action.get();
@@ -272,7 +275,7 @@ public class SecondaryAuthService {
       String authenticatorData,
       String signature) {
     openSafeWithWebAuthn(scene, challenge, credentialId, clientDataJSON,
-        authenticatorData, signature, DEFAULT_TTL);
+        authenticatorData, signature, Duration.ofMinutes(defaultTtlMinutes));
   }
 
   /**

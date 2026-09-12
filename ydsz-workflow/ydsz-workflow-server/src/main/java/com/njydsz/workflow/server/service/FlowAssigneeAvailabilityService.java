@@ -11,6 +11,7 @@ import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -52,7 +53,10 @@ public class FlowAssigneeAvailabilityService {
 
   private static final String TODO_COUNT_PREFIX = "flow:assignee:todo_count:";
   private static final String LAST_ACTIVE_PREFIX = "flow:assignee:last_active:";
-  private static final Duration TTL = Duration.ofDays(7);
+
+  /** 审批人状态缓存 TTL（天），默认 7 天 */
+  @Value("${ydsz.workflow.assignee.cache-ttl-days:7}")
+  private long assigneeCacheTtlDays;
 
   /** 待办数阈值 */
   private static final int BUSY_THRESHOLD = 10;
@@ -72,7 +76,7 @@ public class FlowAssigneeAvailabilityService {
       String key = TODO_COUNT_PREFIX + userId;
       Long count = redisStringOps.incr(key, 1);
       if (count != null && count == 1) {
-        redisStringOps.expire(key, TTL);
+        redisStringOps.expire(key, Duration.ofDays(assigneeCacheTtlDays));
       }
       updateLastActive(userId);
     } catch (Exception e) {
@@ -200,7 +204,7 @@ public class FlowAssigneeAvailabilityService {
     try {
       String key = LAST_ACTIVE_PREFIX + userId;
       String now = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-      redisStringOps.set(key, now, TTL);
+      redisStringOps.set(key, now, Duration.ofDays(assigneeCacheTtlDays));
     } catch (Exception e) {
       log.debug("[Availability] 更新活跃时间失败 userId={} err={}", userId, e.getMessage());
     }

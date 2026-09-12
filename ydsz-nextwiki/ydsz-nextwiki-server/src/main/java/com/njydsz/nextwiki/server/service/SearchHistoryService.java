@@ -1,16 +1,17 @@
 package com.njydsz.nextwiki.server.service;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * 搜索历史与热门搜索服务。
@@ -42,13 +43,15 @@ public class SearchHistoryService {
   /** 热门搜索返回条数 */
   private static final int HOT_SEARCHES_LIMIT = 10;
 
-  /** 搜索历史 TTL：30 天 */
-  private static final Duration HISTORY_TTL = Duration.ofDays(30);
+  /** 搜索历史 TTL：30 天（秒） */
+  private static final long HISTORY_TTL_SECONDS = 30L * 24 * 60 * 60;
 
-  /** 热门搜索 TTL：7 天（滑动窗口） */
-  private static final Duration HOT_TTL = Duration.ofDays(7);
+  /** 热门搜索 TTL：7 天（秒） */
+  private static final long HOT_TTL_SECONDS = 7L * 24 * 60 * 60;
 
-  private final StringRedisTemplate redisTemplate;
+  private final RedisCollectionOps redisCollectionOps;
+
+  private final RedisStringOps redisStringOps;
 
   /**
    * 记录用户搜索行为。
@@ -72,17 +75,17 @@ public class SearchHistoryService {
       // 写入用户搜索历史（去重 + 去头部重复 + 裁剪）
       String historyKey = KEY_SEARCH_HISTORY + userId;
       // 先移除相同关键词（避免重复）
-      redisTemplate.opsForList().remove(historyKey, 0, normalizedKeyword);
+      redisCollectionOps.lRem(historyKey, 0, normalizedKeyword);
       // 左侧插入（最新的在前面）
-      redisTemplate.opsForList().leftPush(historyKey, normalizedKeyword);
+      redisCollectionOps.lPush(historyKey, normalizedKeyword);
       // 裁剪到最大条数
-      redisTemplate.opsForList().trim(historyKey, 0, MAX_HISTORY_SIZE - 1);
+      redisCollectionOps.lTrim(historyKey, 0, MAX_HISTORY_SIZE - 1);
       // 设置 TTL
-      redisTemplate.expire(historyKey, HISTORY_TTL);
+      redisStringOps.expire(historyKey, HISTORY_TTL_SECONDS);
 
       // 增加热门搜索计数
-      redisTemplate.opsForZSet().incrementScore(KEY_HOT_SEARCHES, normalizedKeyword, 1);
-      redisTemplate.expire(KEY_HOT_SEARCHES, HOT_TTL);
+      redisCollectionOps.zincrby(KEY_HOT_SEARCHES, normalizedKeyword, 1.0);
+      redisStringOps.expire(KEY_HOT_SEARCHES, HOT_TTL_SECONDS);
 
       log.debug("[SearchHistoryService] 记录搜索: userId={}, keyword={}", userId, normalizedKeyword);
     } catch (Exception e) {
@@ -103,7 +106,8 @@ public class SearchHistoryService {
     }
 
     try {
-      List<String> history = redisTemplate.opsForList().range(KEY_SEARCH_HISTORY + userId, 0, -1);
+      List<String> history = redisCollectionOps.lRange(
+          KEY_SEARCH_HISTORY + userId, 0, -1, String.class);
       return history != null ? history : Collections.emptyList();
     } catch (Exception e) {
       log.warn("[SearchHistoryService] 获取搜索历史失败: userId={}, err={}", userId, e.getMessage(), e);
@@ -122,7 +126,7 @@ public class SearchHistoryService {
     }
 
     try {
-      redisTemplate.delete(KEY_SEARCH_HISTORY + userId);
+      redisStringOps.del(KEY_SEARCH_HISTORY + userId);
       log.debug("[SearchHistoryService] 清除搜索历史: userId={}", userId);
     } catch (Exception e) {
       log.warn("[SearchHistoryService] 清除搜索历史失败: userId={}, err={}", userId, e.getMessage(), e);
@@ -136,13 +140,15 @@ public class SearchHistoryService {
    */
   public List<Map.Entry<String, Double>> getHotSearches() {
     try {
-      ZSetOperations<String, String> zSet = redisTemplate.opsForZSet();
-      var range = zSet.reverseRangeWithScores(KEY_HOT_SEARCHES, 0, HOT_SEARCHES_LIMIT - 1);
+      Set<ZSetOperations.TypedTuple<Object>> range =
+          redisCollectionOps.zReverseRangeWithScores(
+              KEY_HOT_SEARCHES, 0, HOT_SEARCHES_LIMIT - 1);
       if (range == null || range.isEmpty()) {
         return Collections.emptyList();
       }
       return range.stream()
-          .map(entry -> Map.<String, Double>entry(entry.getValue(), entry.getScore()))
+          .map(entry -> Map.<String, Double>entry(
+              entry.getValue().toString(), entry.getScore()))
           .collect(Collectors.toList());
     } catch (Exception e) {
       log.warn("[SearchHistoryService] 获取热门搜索失败: err={}", e.getMessage(), e);

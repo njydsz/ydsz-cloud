@@ -72,12 +72,66 @@ ydsz:
       pool:
         max-connections: 500
 
+# Sentinel 集成（dev 环境配置，生产环境通过 Nacos 覆盖）
+spring.cloud.sentinel:
+  enabled: true
+  # 饥饿加载（启动时即连接 Sentinel Dashboard，避免首请求漏控）
+  eager: true
+  # Sentinel Dashboard 地址
+  transport:
+    port: 8719
+    dashboard: ${SENTINEL_DASHBOARD_ADDR:127.0.0.1:8858}
+  # 规则持久化：从 Nacos 加载流控/熔断/系统规则
+  datasource:
+    ds-flow:
+      nacos:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        data-id: ${spring.application.name}-sentinel-flow-rules
+        group-id: SENTINEL_GROUP
+        data-type: json
+        rule-type: flow
+    ds-degrade:
+      nacos:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        data-id: ${spring.application.name}-sentinel-degrade-rules
+        group-id: SENTINEL_GROUP
+        data-type: json
+        rule-type: degrade
+  # 日志配置
+  log:
+    dir: ${LOG_PATH:./logs}/sentinel
+    switch-pid: true
+  # 指标配置（与 Prometheus 集成）
+  metric:
+    file-single-size: 52428800
+    file-total-count: 6
+
+# Sentinel 流控网关参数（自定义扩展，非 Spring Cloud Alibaba 标准配置）
+ydsz:
+  sentinel:
+    gateway:
+      enabled: true
+      # 系统保护开关
+      system-protection:
+        enabled: true
+        # 系统最大负载阈值（-1 表示自动检测）
+        highest-system-load: -1.0
+        # 入口总 QPS 阈值（超过后拒绝所有请求）
+        max-qps: 5000
+        # CPU 使用率阈值（百分比，超过后触发系统保护）
+        highest-cpu-usage: 80.0
+      # 降级响应时间（ms）
+      fallback-timeout: 3000
+
 # 日志级别（dev 环境开 DEBUG）
 logging:
   level:
     root: INFO
     "[com.njydsz]": DEBUG
     "[org.springframework.cloud.gateway]": INFO
+    "[com.alibaba.csp.sentinel]": INFO
 
 # SpringDoc / Knife4j dev 环境开启（开关见上方 ydsz.doc.enabled）
 springdoc:

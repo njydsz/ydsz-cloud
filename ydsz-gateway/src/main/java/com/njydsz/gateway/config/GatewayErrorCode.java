@@ -83,6 +83,8 @@ public enum GatewayErrorCode {
   API_KEY_MISSING(40105, "error.API_KEY_MISSING"),
   /** API_KEY_INVALID */
   API_KEY_INVALID(40106, "error.API_KEY_INVALID"),
+  /** DEVICE_SCOPE_MISMATCH — 跨终端 token 使用被拒绝 */
+  DEVICE_SCOPE_MISMATCH(40107, "error.DEVICE_SCOPE_MISMATCH"),
 
   // ===== 403xx 权限不足 =====
   /** FORBIDDEN */

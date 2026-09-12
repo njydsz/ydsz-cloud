@@ -5,12 +5,12 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.vo.JobVO;
 
 /**
@@ -62,13 +62,13 @@ public class JobCacheManager {
   /** L2 Redis 缓存 TTL（分钟） */
   private static final long L2_TTL_MINUTES = 30;
 
-  /** L2 Redis 缓存 TTL（Duration 形式，Spring Data Redis 4.x API） */
-  private static final Duration L2_TTL = Duration.ofMinutes(L2_TTL_MINUTES);
+  /** L2 Redis 缓存 TTL（秒） */
+  private static final long L2_TTL_SECONDS = 30 * 60L;
 
   /** null 值占位（防穿透） */
   private static final JobVO NULL_PLACEHOLDER = new JobVO();
 
-  private final RedisTemplate<String, Object> redisTemplate;
+  private final RedisStringOps redisStringOps;
 
   /** L1 本地缓存（window-TinyLFU，线程安全） */
   private final Cache<String, JobVO> l1Cache =
@@ -98,10 +98,10 @@ public class JobCacheManager {
     // L2 命中
     String l2Key = L2_KEY_PREFIX + jobKey;
     try {
-      Object l2Obj = redisTemplate.opsForValue().get(l2Key);
-      if (l2Obj instanceof String l2Str) {
+      String l2Str = redisStringOps.get(l2Key, String.class);
+      if (l2Str != null && !l2Str.isBlank()) {
         JobVO l2Value = YdszJson.fromJson(l2Str, JobVO.class);
-        if (l2Value != null) {
+          if (l2Value != null) {
           log.debug("[JobCache] L2 命中: jobKey={}", jobKey);
           // 回填 L1
           l1Cache.put(L1_KEY_PREFIX + jobKey, isNullPlaceholder(l2Value) ? NULL_PLACEHOLDER : l2Value);
@@ -135,10 +135,10 @@ public class JobCacheManager {
   public void put(String jobKey, JobVO value) {
     String l2Key = L2_KEY_PREFIX + jobKey;
     try {
-      redisTemplate.opsForValue().set(
+      redisStringOps.set(
           l2Key,
           YdszJson.toJson(value != null ? value : NULL_PLACEHOLDER),
-          L2_TTL);
+          L2_TTL_SECONDS);
     } catch (Exception e) {
       log.warn("[JobCache] L2 写入异常: jobKey={} reason={}", jobKey, e.getMessage());
     }
@@ -154,7 +154,7 @@ public class JobCacheManager {
   public void invalidate(String jobKey) {
     l1Cache.invalidate(L1_KEY_PREFIX + jobKey);
     try {
-      redisTemplate.delete(L2_KEY_PREFIX + jobKey);
+      redisStringOps.del(L2_KEY_PREFIX + jobKey);
     } catch (Exception e) {
       log.warn("[JobCache] L2 删除异常: jobKey={} reason={}", jobKey, e.getMessage());
     }

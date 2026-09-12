@@ -69,7 +69,7 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
         LambdaQueryWrapper<JobTask> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobTask::getLogId, logId).eq(JobTask::getIsDeleted, 0).orderByAsc(JobTask::getCreatedAt);
     Page<JobTask> result = jobTaskMapper.selectPage(pageObj, wrapper);
-    return new JobRepository.PageResult<>(converter.jobTaskListToVO(result.getRecords()), result.getTotal());
+    return new JobRepository.PageResult<>(converter.jobTaskListToVO(result.getRecords()), result.getTotal(), page, size);
   }
 
   @Override

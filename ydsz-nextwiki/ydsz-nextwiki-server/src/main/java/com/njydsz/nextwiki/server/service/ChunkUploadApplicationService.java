@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -115,7 +116,10 @@ public class ChunkUploadApplicationService {
   private static final String KEY_UPLOAD_SESSION = "nextwiki:chunk:session:";
 
   private static final String KEY_UPLOADED_CHUNKS = "nextwiki:chunk:uploaded:";
-  private static final Duration SESSION_TTL = Duration.ofHours(2);
+
+  /** 上传会话 TTL（小时），默认 2 小时，过期自动清理 */
+  @Value("${ydsz.nextwiki.chunk-upload.session-ttl-hours:2}")
+  private long sessionTtlHours;
 
   public ChunkUploadApplicationService(
       RedisStringOps stringOps,
@@ -150,7 +154,7 @@ public class ChunkUploadApplicationService {
    * 初始化分片上传会话。
    *
    * <p>生成 {@code uploadId}，校验配额与总分片数上限（{@link #MAX_CHUNKS}）， 将元数据写入 Redis（{@code
-   * KEY_UPLOAD_SESSION} 前缀，TTL {@link #SESSION_TTL}）以支持断点续传。
+   * KEY_UPLOAD_SESSION} 前缀，TTL {@link #sessionTtlHours} 小时）以支持断点续传。
    *
    * @param fileName 原始文件名（含后缀），用于合并后落库
    * @param fileSize 文件总大小（字节），用于配额预校验
@@ -160,7 +164,7 @@ public class ChunkUploadApplicationService {
    * @return 初始化结果 {@link ChunkUploadInit}，含 {@code uploadId}、总分片数与单分片大小
    * @throws BusinessException 分片数超限（FILE_TOO_LARGE）或配额不足时抛出
    * @complexity O(1)（仅 Redis 写入 + 配额校验）
-   * @note 无数据库写；会话状态存于 Redis，依赖 {@link #SESSION_TTL} 自动过期清理
+   * @note 无数据库写；会话状态存于 Redis，依赖 sessionTtlHours={@link #sessionTtlHours} 配置的小时数自动过期清理
    */
   public ChunkUploadInit initChunkUpload(
       String fileName, long fileSize, int totalChunks, String parentId, String userId) {
@@ -183,7 +187,7 @@ public class ChunkUploadApplicationService {
     session.setUserId(userId);
     session.setCreatedAt(LocalDateTime.now().toString());
 
-    stringOps.set(KEY_UPLOAD_SESSION + uploadId, session.toJson(), SESSION_TTL);
+    stringOps.set(KEY_UPLOAD_SESSION + uploadId, session.toJson(), Duration.ofHours(sessionTtlHours));
 
     log.info(
         "[ChunkUploadApplicationService] 初始化分片上传: uploadId={}, fileName={}, totalChunks={}",
@@ -241,7 +245,7 @@ public class ChunkUploadApplicationService {
 
       // 记录已上传分片
       collectionOps.sAdd(KEY_UPLOADED_CHUNKS + uploadId, String.valueOf(chunkNumber));
-      stringOps.expire(KEY_UPLOADED_CHUNKS + uploadId, SESSION_TTL);
+      stringOps.expire(KEY_UPLOADED_CHUNKS + uploadId, Duration.ofHours(sessionTtlHours));
 
       log.debug(
           "[ChunkUploadApplicationService] 分片上传成功: uploadId={}, chunk={}", uploadId, chunkNumber);
@@ -836,7 +840,7 @@ public class ChunkUploadApplicationService {
   /**
    * 分片上传会话（Redis 存储，P0-R4: 改用 YdszJson 序列化替代管道符分隔）。
    *
-   * <p>会话承载一次分片上传的全部上下文，TTL 由 {@link #SESSION_TTL} 控制，过期即视为放弃。
+   * <p>会话承载一次分片上传的全部上下文，TTL 由 sessionTtlHours={@link #sessionTtlHours} 控制，过期即视为放弃。
    */
   @Data
   public static class ChunkUploadSession {

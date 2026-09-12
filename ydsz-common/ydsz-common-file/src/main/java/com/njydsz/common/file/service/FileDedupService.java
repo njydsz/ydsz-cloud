@@ -6,6 +6,8 @@ import java.time.Duration;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.util.string.StringUtils;
@@ -27,8 +29,9 @@ public class FileDedupService {
   /** 存储值分隔符：用于将 URL 和对象键拼合存储在一个 Redis String 中。 对象键本身由服务端生成（不含此分隔符），URL 中的特殊字符也不会与此冲突。 */
   private static final String VALUE_SEPARATOR = "|||";
 
-  /** 去重哈希映射的默认 TTL（30 天），依赖存储端生命周期策略自动清理过期文件。 */
-  private static final Duration DEDUP_HASH_TTL = Duration.ofDays(30);
+  /** 去重哈希映射的默认 TTL（天），默认 30 天，依赖存储端生命周期策略自动清理过期文件。 */
+  @Value("${ydsz.common.file.dedup-hash-ttl-days:30}")
+  private long dedupHashTtlDays;
 
   private final RedisStringOps redisStringOps;
 
@@ -98,6 +101,6 @@ public class FileDedupService {
     String key = buildDedupKey(fileSize, hash);
     String storedValue =
         StringUtils.isNotBlank(objectKey) ? filePath + VALUE_SEPARATOR + objectKey : filePath;
-    redisStringOps.set(key, storedValue, DEDUP_HASH_TTL);
+    redisStringOps.set(key, storedValue, Duration.ofDays(dedupHashTtlDays));
   }
 }

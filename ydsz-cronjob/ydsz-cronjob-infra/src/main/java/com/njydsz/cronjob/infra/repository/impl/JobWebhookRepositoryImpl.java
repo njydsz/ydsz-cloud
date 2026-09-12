@@ -86,6 +86,6 @@ public class JobWebhookRepositoryImpl implements JobWebhookRepository {
     }
     wrapper.orderByDesc(JobWebhook::getCreatedAt);
     Page<JobWebhook> result = jobWebhookMapper.selectPage(pageObj, wrapper);
-    return new JobRepository.PageResult<>(converter.jobWebhookListToVO(result.getRecords()), result.getTotal());
+    return new JobRepository.PageResult<>(converter.jobWebhookListToVO(result.getRecords()), result.getTotal(), pageNum, size);
   }
 }

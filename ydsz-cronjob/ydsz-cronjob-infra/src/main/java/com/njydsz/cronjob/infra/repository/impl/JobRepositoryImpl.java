@@ -153,7 +153,7 @@ public class JobRepositoryImpl implements JobRepository {
     }
     wrapper.eq(Job::getIsDeleted, 0).orderByDesc(Job::getCreatedAt);
     Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
-    return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal());
+    return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal(), page, size);
   }
 
   @Override
@@ -162,7 +162,7 @@ public class JobRepositoryImpl implements JobRepository {
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getIsDeleted, 0).orderByDesc(Job::getCreatedAt);
     Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
-    return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal());
+    return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal(), page, size);
   }
 
   @Override

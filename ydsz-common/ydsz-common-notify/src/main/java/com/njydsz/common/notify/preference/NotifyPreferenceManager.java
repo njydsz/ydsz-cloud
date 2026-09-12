@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.enums.NotifyChannel;
@@ -25,7 +26,10 @@ public class NotifyPreferenceManager {
   private static final Logger LOG = LoggerFactory.getLogger(NotifyPreferenceManager.class);
 
   private static final String REDIS_KEY_PREFIX = "notify:preference:";
-  private static final Duration CACHE_TTL = Duration.ofHours(24);
+
+  /** 通知偏好缓存 TTL（小时），默认 24 小时 */
+  @Value("${ydsz.common.notify.preference-cache-ttl-hours:24}")
+  private long preferenceCacheTtlHours;
 
   private final RedisStringOps redisStringOps;
   private final ConcurrentMap<String, NotifyPreference> localCache = new ConcurrentHashMap<>();
@@ -86,7 +90,7 @@ public class NotifyPreferenceManager {
     if (redisStringOps != null) {
       try {
         String json = YdszJson.toJson(preference);
-        redisStringOps.set(REDIS_KEY_PREFIX + preference.getUserId(), json, CACHE_TTL);
+        redisStringOps.set(REDIS_KEY_PREFIX + preference.getUserId(), json, Duration.ofHours(preferenceCacheTtlHours));
       } catch (Exception e) {
         LOG.warn("[NotifyPreferenceManager] Redis 保存偏好失败: {}", e.getMessage());
       }

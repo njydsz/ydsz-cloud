@@ -1082,6 +1082,79 @@ public class RedisCollectionOps {
     }
   }
 
+  // ============================ ZSet 增值 / 排行 ============================
+
+  /**
+   * 递增 ZSet 成员的分数。
+   *
+   * <p>若成员不存在，则以 {@code delta} 为初始分数新增成员。
+   *
+   * @param key 键
+   * @param value 成员
+   * @param delta 分数增量（可为负数表递减）
+   * @return 递增后的分数
+   */
+  public double zincrby(String key, Object value, double delta) {
+    if (key == null || value == null) {
+      return 0;
+    }
+    String formattedKey = formatKey(key);
+    try {
+      if (metricsCollector != null) {
+        return metricsCollector.recordOperation(
+            "zincrby",
+            () -> {
+              Double score = redisTemplate.opsForZSet().incrementScore(formattedKey, value, delta);
+              return score != null ? score : 0.0;
+            });
+      }
+      Double score = redisTemplate.opsForZSet().incrementScore(formattedKey, value, delta);
+      return score != null ? score : 0.0;
+    } catch (Exception e) {
+      recordError("zincrby", e);
+      log.error("【Redis】ZINCRBY 操作失败 | key={} | value={} | delta={} | error={}", key, value, delta, e);
+      return 0;
+    }
+  }
+
+  /**
+   * 获取 ZSet 指定排名范围的成员及其分数（降序）。
+   *
+   * <p>适用于热门搜索、排行榜等需要同时获取成员与分数的场景。
+   *
+   * @param key 键
+   * @param start 起始索引
+   * @param end 结束索引（-1 表示到末尾）
+   * @return 成员及其分数的 TypedTuple 集合
+   */
+  public Set<ZSetOperations.TypedTuple<Object>> zReverseRangeWithScores(
+      String key, long start, long end) {
+    if (key == null) {
+      return Collections.emptySet();
+    }
+    String formattedKey = formatKey(key);
+    try {
+      if (metricsCollector != null) {
+        return metricsCollector.recordOperation(
+            "zReverseRangeWithScores",
+            () -> {
+              Set<ZSetOperations.TypedTuple<Object>> result =
+                  redisTemplate.opsForZSet().reverseRangeWithScores(formattedKey, start, end);
+              return result != null ? result : Collections.emptySet();
+            });
+      }
+      Set<ZSetOperations.TypedTuple<Object>> result =
+          redisTemplate.opsForZSet().reverseRangeWithScores(formattedKey, start, end);
+      return result != null ? result : Collections.emptySet();
+    } catch (Exception e) {
+      recordError("zReverseRangeWithScores", e);
+      log.error(
+          "【Redis】ZREVRANGE_WITHSCORES 操作失败 | key={} | start={} | end={} | error={}",
+          key, start, end, e);
+      return Collections.emptySet();
+    }
+  }
+
   /** 记录指标错误 */
   private void recordError(String operationType, Throwable e) {
     if (metricsCollector != null) {

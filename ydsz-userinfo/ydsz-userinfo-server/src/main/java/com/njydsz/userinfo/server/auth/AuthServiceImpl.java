@@ -305,8 +305,10 @@ public class AuthServiceImpl implements AuthService {
     userInfo.setRoleCode(roleCodes);
     userInfo.setTenantId(user.getTenantId());
 
-    String accessToken = tokenService.issueAccessToken(userInfo);
-    String refreshToken = tokenService.issueRefreshToken(userInfo);
+    // 多终端 scope 隔离：按终端类型签发独立 scope 的 token
+    String deviceTypeCode = deviceType.getCode();
+    String accessToken = tokenService.issueAccessToken(userInfo, deviceTypeCode);
+    String refreshToken = tokenService.issueRefreshToken(userInfo, deviceTypeCode);
     sessionManager.createSession(
         new SessionCreateCommand(
             accessToken, refreshToken, user, roleCodes, roleNames, deviceType, null, null));
@@ -459,8 +461,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // 签发新的 access_token 和 refresh_token（token 轮换）
-    String newAccessToken = tokenService.issueAccessToken(userInfo);
-    String newRefreshToken = tokenService.issueRefreshToken(userInfo);
+    // 多终端 scope 隔离：刷新时也携带 deviceType 声明
+    String deviceTypeCode = userInfo.getDeviceType() != null ? userInfo.getDeviceType() : "unknown";
+    String newAccessToken = tokenService.issueAccessToken(userInfo, deviceTypeCode);
+    String newRefreshToken = tokenService.issueRefreshToken(userInfo, deviceTypeCode);
 
     // 将旧 refresh_token 加入黑名单（一次性使用，防止重放攻击）
     tokenBlacklistService.addToBlacklist(refreshToken);

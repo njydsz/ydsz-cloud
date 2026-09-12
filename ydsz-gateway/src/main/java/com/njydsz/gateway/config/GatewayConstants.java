@@ -57,4 +57,19 @@ public final class GatewayConstants {
 
   /** 请求唯一标识请求头（委托 {@link HeaderConstants#X_REQUEST_ID}） */
   public static final String HEADER_REQUEST_ID = HeaderConstants.X_REQUEST_ID;
+
+  /**
+   * 终端类型请求头（多终端 scope 隔离）。
+   *
+   * <p>客户端通过此头声明当前终端类型（web/app/api），网关鉴权过滤器校验此头与 JWT 中 deviceType 声明一致，
+   * 防止跨终端 token 重用（如 Web 端 token 被 App 端盗用）。
+   *
+   * <p>取值：{@code web} / {@code app} / {@code api}（大小写不敏感）。
+   *
+   * @since 26.09.12
+   */
+  public static final String HEADER_DEVICE_TYPE = "X-Device-Type";
+
+  /** 设备类型透传给下游的内部头 */
+  public static final String HEADER_X_DEVICE_TYPE = "X-User-Device-Type";
 }

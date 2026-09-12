@@ -5,10 +5,10 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.repository.MsgTenantConfigRepository;
 import com.njydsz.message.domain.vo.MsgTenantConfigVO;
 
@@ -40,7 +40,7 @@ public class TenantConfigService {
 
   private final MsgTenantConfigRepository msgTenantConfigRepository;
 
-  private final RedisTemplate<String, String> redisTemplate;
+  private final RedisStringOps redisStringOps;
 
   /** Redis 缓存 key 前缀 */
   private static final String CACHE_PREFIX = "msg:tenant:config:";
@@ -65,7 +65,7 @@ public class TenantConfigService {
 
     // 1. 查缓存
     try {
-      String cached = redisTemplate.opsForValue().get(cacheKey);
+      String cached = redisStringOps.get(cacheKey, String.class);
       if (cached != null && !cached.isBlank()) {
         log.debug("[TenantConfig] 缓存命中: tenant={}", tenantId);
         return YdszJson.fromJson(cached, MsgTenantConfigVO.class);
@@ -84,9 +84,7 @@ public class TenantConfigService {
 
     // 3. 写入缓存
     try {
-      redisTemplate
-          .opsForValue()
-          .set(cacheKey, YdszJson.toJson(config), Duration.ofMinutes(CACHE_TTL_MINUTES));
+      redisStringOps.set(cacheKey, YdszJson.toJson(config), Duration.ofMinutes(CACHE_TTL_MINUTES));
     } catch (Exception e) {
       log.warn("[TenantConfig] 缓存写入异常(忽略): tenant={} err={}", tenantId, e.getMessage(), e);
     }

@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.agent.DagCheckpoint;
@@ -16,7 +17,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <p>将检查点序列化为 JSON 存入 Redis，Key 设计：{@code agent:dag:checkpoint:{executionId}}。
  *
- * <p>TTL 24 小时：覆盖绝大多数续跑窗口（原执行超时后通常数分钟内触发续跑），过期自动清理避免 Redis 内存无界增长。
+ * <p>TTL 由 ydsz.agent.dag.checkpoint-ttl-hours 配置（默认 24 小时）：覆盖绝大多数续跑窗口（原执行超时后通常数分钟内触发续跑），过期自动清理避免 Redis 内存无界增长。
  *
  * <p>降级策略：Redis 不可用时静默跳过（不中断主流程），续跑能力暂时失效但编排本身仍可执行。
  *
@@ -30,8 +31,9 @@ public class RedisDagCheckpointStore implements DagCheckpointStore {
   /** 检查点 Key 前缀 */
   private static final String KEY_PREFIX = "agent:dag:checkpoint:";
 
-  /** 检查点 TTL：24 小时，覆盖绝大多数续跑窗口 */
-  private static final Duration TTL = Duration.ofHours(24);
+  /** 检查点 TTL（小时），默认 24 小时，覆盖绝大多数续跑窗口 */
+  @Value("${ydsz.agent.dag.checkpoint-ttl-hours:24}")
+  private long checkpointTtlHours;
 
   private final RedisStringOps redisStringOps;
 
@@ -48,7 +50,7 @@ public class RedisDagCheckpointStore implements DagCheckpointStore {
     String key = buildKey(checkpoint.getExecutionId());
     try {
       String json = YdszJson.toJson(checkpoint);
-      redisStringOps.set(key, json, TTL);
+      redisStringOps.set(key, json, Duration.ofHours(checkpointTtlHours));
       log.debug("[DagCheckpoint] 保存检查点: executionId={}", checkpoint.getExecutionId());
     } catch (Exception e) {
       log.warn("[DagCheckpoint] Redis 保存检查点失败，续跑能力降级: executionId={}, err={}",

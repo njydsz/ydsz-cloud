@@ -28,12 +28,44 @@ public interface TokenService {
   String issueAccessToken(UserInfo userInfo);
 
   /**
+   * 签发访问令牌（多终端 scope 隔离版本）。
+   *
+   * <p>参照 blade-auth 的多终端认证模式：每个终端类型（Web/App/API）签发独立 scope 的 token，
+   * token 中包含 {@code deviceType} 声明，验证时校验请求头 {@code X-Device-Type} 与 token 中的
+   * deviceType 声明一致，实现跨终端 token 隔离。
+   *
+   * <p><b>隔离规则：</b>
+   * <ul>
+   *   <li>Web 端签发 token A（deviceType=web）→ 仅 Web 端可用</li>
+   *   <li>App 端签发 token B（deviceType=app）→ 仅 App 端可用</li>
+   *   <li>API 调用签发 token C（deviceType=api）→ 仅程序调用可用</li>
+   * </ul>
+   *
+   * @param userInfo 用户信息
+   * @param deviceType 终端类型编码（web/app/api/unknown），不可为 null
+   * @return 访问令牌（JWT 格式，含 deviceType 声明）
+   */
+  String issueAccessToken(UserInfo userInfo, String deviceType);
+
+  /**
    * 签发刷新令牌
    *
    * @param userInfo 用户信息
    * @return 刷新令牌（JWT 格式）
    */
   String issueRefreshToken(UserInfo userInfo);
+
+  /**
+   * 签发刷新令牌（多终端 scope 隔离版本）。
+   *
+   * <p>同一 access_token 签发逻辑，refresh_token 也携带 deviceType 声明，
+   * 确保刷新令牌时也能校验终端类型一致性。
+   *
+   * @param userInfo 用户信息
+   * @param deviceType 终端类型编码（web/app/api/unknown），不可为 null
+   * @return 刷新令牌（JWT 格式，含 deviceType 声明）
+   */
+  String issueRefreshToken(UserInfo userInfo, String deviceType);
 
   /**
    * 验证访问令牌

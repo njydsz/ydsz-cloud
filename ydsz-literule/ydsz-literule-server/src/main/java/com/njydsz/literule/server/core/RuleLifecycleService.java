@@ -12,6 +12,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleStatus;
@@ -485,108 +486,28 @@ public class RuleLifecycleService {
   }
 
   /**
-   * 解析版本 JSON 为 RuleDefinitionDTO
+   * 解析版本 JSON 为 RuleDefinitionDTO。
    *
-   * <p>使用简化的 JSON 解析逻辑，提取关键字段进行比较。 如需精确解析，消费方可注入 ObjectMapper。
+   * <p>使用 YdszJson 反序列化，支持嵌套结构、转义字符等复杂场景，
+   * 消除手写字符串提取在边界值（嵌套引号、转义字符、数组）下的健壮性风险。
+   *
+   * @param json 版本 JSON 字符串
+   * @param ruleCode 规则编码（解析失败或 JSON 为空时兜底使用）
+   * @return 规则定义 DTO
    */
   private RuleDefinitionDTO parseDefinitionJson(String json, String ruleCode) {
     if (json == null || json.isBlank()) {
       return RuleDefinitionDTO.builder().code(ruleCode).build();
     }
     try {
-      // 简化解析：提取 JSON 中的字段值
-      Map<String, String> fields = extractJsonFields(json);
-      return RuleDefinitionDTO.builder()
-          .code(ruleCode)
-          .name(fields.get("name"))
-          .description(fields.get("description"))
-          .conditionExpression(fields.get("conditionExpression"))
-          .severityExpression(fields.get("severityExpression"))
-          .category(fields.get("category"))
-          .categoryPath(fields.get("categoryPath"))
-          .owner(fields.get("owner"))
-          .scope(fields.get("scope"))
-          .status(fields.getOrDefault("status", "PUBLISHED"))
-          .environment(fields.getOrDefault("environment", "default"))
-          .mutexGroup(fields.get("mutexGroup"))
-          .titleTemplate(fields.get("titleTemplate"))
-          .descriptionTemplate(fields.get("descriptionTemplate"))
-          .effectiveFrom(parseDateTime(fields.get("effectiveFrom")))
-          .effectiveTo(parseDateTime(fields.get("effectiveTo")))
-          .build();
+      RuleDefinitionDTO dto = YdszJson.fromJson(json, RuleDefinitionDTO.class);
+      if (dto != null && dto.getCode() == null) {
+        dto.setCode(ruleCode);
+      }
+      return dto != null ? dto : RuleDefinitionDTO.builder().code(ruleCode).build();
     } catch (Exception e) {
-      log.warn("[Lifecycle] 解析版本 JSON 失败: {}", e.getMessage());
+      log.warn("[Lifecycle] 解析版本 JSON 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
       return RuleDefinitionDTO.builder().code(ruleCode).build();
-    }
-  }
-
-  /** 从 JSON 字符串中提取字段值（简化实现） */
-  private Map<String, String> extractJsonFields(String json) {
-    Map<String, String> fields = new LinkedHashMap<>(COLLECTION_CAPACITY);
-    // 简化实现：逐个提取 "key":"value" 或 "key":value
-    String[] keys = {
-      "name",
-      "description",
-      "conditionExpression",
-      "severityExpression",
-      "category",
-      "categoryPath",
-      "owner",
-      "scope",
-      "status",
-      "environment",
-      "mutexGroup",
-      "titleTemplate",
-      "descriptionTemplate",
-      "effectiveFrom",
-      "effectiveTo",
-      "defaultSeverity"
-    };
-    for (String key : keys) {
-      String value = extractJsonValue(json, key);
-      if (value != null) {
-        fields.put(key, value);
-      }
-    }
-    return fields;
-  }
-
-  /** 从 JSON 中提取单个字段的值 */
-  private String extractJsonValue(String json, String key) {
-    String pattern = "\"" + key + "\"";
-    int idx = json.indexOf(pattern);
-    if (idx < 0) {
-      return null;
-    }
-    int colonIdx = json.indexOf(":", idx + pattern.length());
-    if (colonIdx < 0) {
-      return null;
-    }
-    int start = colonIdx + 1;
-    // 跳过空白
-    while (start < json.length() && Character.isWhitespace(json.charAt(start))) {
-      start++;
-    }
-    if (start >= json.length()) {
-      return null;
-    }
-    if (json.charAt(start) == '"') {
-      // 字符串值
-      int end = json.indexOf("\"", start + 1);
-      if (end < 0) {
-        return null;
-      }
-      return json.substring(start + 1, end);
-    } else {
-      // 非字符串值（数字、布尔）
-      int end = start;
-      while (end < json.length()
-          && json.charAt(end) != ','
-          && json.charAt(end) != '}'
-          && json.charAt(end) != ']') {
-        end++;
-      }
-      return json.substring(start, end).trim();
     }
   }
 

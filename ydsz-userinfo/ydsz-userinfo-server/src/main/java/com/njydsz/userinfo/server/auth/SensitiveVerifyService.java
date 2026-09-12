@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,11 +39,13 @@ public class SensitiveVerifyService {
   /** 敏感操作验证标记 Redis Key 前缀 */
   private static final String SENSITIVE_VERIFIED_KEY_PREFIX = "userinfo:sensitive:verified:";
 
-  /** 验证标记有效期（5 分钟） */
-  private static final Duration VERIFY_TTL = Duration.ofMinutes(5);
+  /** 验证标记有效期（分钟），默认 5 分钟 */
+  @Value("${ydsz.userinfo.sensitive-verify.verify-ttl-minutes:5}")
+  private long verifyTtlMinutes;
 
-  /** P1-8: CRITICAL 级别验证标记有效期（2 分钟，更短时效以降低风险窗口） */
-  private static final Duration CRITICAL_VERIFY_TTL = Duration.ofMinutes(2);
+  /** P1-8: CRITICAL 级别验证标记有效期（分钟），默认 2 分钟，更短时效以降低风险窗口 */
+  @Value("${ydsz.userinfo.sensitive-verify.critical-verify-ttl-minutes:2}")
+  private long criticalVerifyTtlMinutes;
 
   /** 验证标记值 */
   private static final String VERIFIED_VALUE = "1";
@@ -89,7 +92,8 @@ public class SensitiveVerifyService {
     }
 
     String key = buildKey(userId);
-    Duration ttl = level == SensitiveLevel.CRITICAL ? CRITICAL_VERIFY_TTL : VERIFY_TTL;
+    long ttlMinutes = level == SensitiveLevel.CRITICAL ? criticalVerifyTtlMinutes : verifyTtlMinutes;
+    Duration ttl = Duration.ofMinutes(ttlMinutes);
     redisStringOps.set(key, VERIFIED_VALUE, ttl);
     log.info("敏感操作二次认证通过: userId={}, level={}", userId, level);
   }

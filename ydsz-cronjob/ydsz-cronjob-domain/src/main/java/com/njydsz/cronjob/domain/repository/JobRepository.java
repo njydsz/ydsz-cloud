@@ -316,15 +316,21 @@ public interface JobRepository {
   /**
    * 分页查询内部结果对象。
    *
+   * <p>携带 pageNum/pageSize 完整分页信息，Service/Controller 层可直接构造 PageResponse。
+   *
    * @param <T> 记录类型
    */
   class PageResult<T> {
     private final List<T> records;
     private final long total;
+    private final int pageNum;
+    private final int pageSize;
 
-    public PageResult(List<T> records, long total) {
+    public PageResult(List<T> records, long total, int pageNum, int pageSize) {
       this.records = records;
       this.total = total;
+      this.pageNum = pageNum;
+      this.pageSize = pageSize;
     }
 
     public List<T> getRecords() {
@@ -335,11 +341,18 @@ public interface JobRepository {
       return total;
     }
 
+    public int getPageNum() {
+      return pageNum;
+    }
+
+    public int getPageSize() {
+      return pageSize;
+    }
+
     /**
      * 转换为 PageResponse（供 Service 层直接返回给 Controller）。
      *
-     * <p>注意：此方法丢失了 pageNum/pageSize 信息，仅做简易封装。
-     * 建议调用方自行构造 {@code PageResponse} 保留分页完整信息。
+     * <p>携带完整分页信息（pageNum / pageSize / total / records），无信息丢失。
      *
      * @return PageResponse 对象
      */
@@ -349,6 +362,8 @@ public interface JobRepository {
       response.setMsg("操作成功");
       response.setData(records);
       response.setTotal(total);
+      response.setPageNum(pageNum);
+      response.setPageSize(pageSize);
       return response;
     }
   }

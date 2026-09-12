@@ -3,7 +3,6 @@ package com.njydsz.message.server.consumer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -16,9 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
@@ -73,7 +72,7 @@ public class BloomFilterDeduplicator {
   private static final String REDIS_DEDUP_SET_PREFIX = "msg:bloom:dedup:";
 
   /** RedisTemplate（用于多实例共享去重） */
-  private final RedisTemplate<String, Object> redisTemplate;
+  private final RedisStringOps redisStringOps;
 
   /** Redis 去重 TTL（秒），与本地 BloomFilter 窗口一致 */
   private final int redisDedupTtlSeconds;
@@ -116,11 +115,11 @@ public class BloomFilterDeduplicator {
   /**
    * 构造 BloomFilter 去重器。
    *
-   * @param redisTemplate Redis 模板
+   * @param redisStringOps Redis String 操作组件
    */
   @Autowired
-  public BloomFilterDeduplicator(RedisTemplate<String, Object> redisTemplate) {
-    this.redisTemplate = redisTemplate;
+  public BloomFilterDeduplicator(RedisStringOps redisStringOps) {
+    this.redisStringOps = redisStringOps;
     this.redisDedupTtlSeconds = DEFAULT_DEDUP_TTL_SECONDS;
   }
 
@@ -173,8 +172,8 @@ public class BloomFilterDeduplicator {
     if (!redisDegraded) {
       try {
         String redisKey = REDIS_DEDUP_SET_PREFIX + msgId;
-        Boolean exists = redisTemplate.hasKey(redisKey);
-        if (Boolean.TRUE.equals(exists)) {
+        boolean exists = redisStringOps.hasKey(redisKey);
+        if (exists) {
           // Redis 确认存在 → 确实重复
           totalHits++;
           return true;
@@ -215,9 +214,7 @@ public class BloomFilterDeduplicator {
     if (!redisDegraded) {
       try {
         String redisKey = REDIS_DEDUP_SET_PREFIX + msgId;
-        redisTemplate
-            .opsForValue()
-            .set(redisKey, "1", redisDedupTtlSeconds, TimeUnit.SECONDS);
+        redisStringOps.set(redisKey, "1", redisDedupTtlSeconds);
       } catch (Exception e) {
         // Redis 异常时降级为纯本地 BloomFilter（fail-open）
         redisDegraded = true;

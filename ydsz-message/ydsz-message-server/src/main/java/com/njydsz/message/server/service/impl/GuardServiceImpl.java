@@ -41,11 +41,13 @@ import com.njydsz.message.server.service.core.GuardService;
 @Service
 @RequiredArgsConstructor
 public class GuardServiceImpl implements GuardService {
-  /** 默认 TTL（秒） */
-  private static final int DEFAULT_TTL_SECONDS = 60;
+  /** 默认 TTL（秒），默认 60 秒 */
+  @Value("${ydsz.message.guard.default-ttl-seconds:60}")
+  private int defaultTtlSeconds;
 
-  /** 锁延长（分钟） */
-  private static final int LOCK_EXTEND_MINUTES = 5;
+  /** 锁延长（分钟），默认 5 分钟 */
+  @Value("${ydsz.message.guard.lock-extend-minutes:5}")
+  private int lockExtendMinutes;
 
 
   /** 小时频率计数器 key 时间格式 */
@@ -210,7 +212,7 @@ public class GuardServiceImpl implements GuardService {
         channel,
         bizType,
         now.format(HOUR_FMT),
-        Duration.ofHours(1).plusMinutes(LOCK_EXTEND_MINUTES).getSeconds());
+        Duration.ofHours(1).plusMinutes(lockExtendMinutes).getSeconds());
     incrCounter(
         MessageConstants.FREQUENCY_DAILY_PREFIX,
         userId,
@@ -312,7 +314,7 @@ public class GuardServiceImpl implements GuardService {
     if (cfg == null || !cfg.isEnabled()) {
       return true;
     }
-    int ttl = cfg.getTtlSeconds() <= 0 ? DEFAULT_TTL_SECONDS : cfg.getTtlSeconds();
+    int ttl = cfg.getTtlSeconds() <= 0 ? defaultTtlSeconds : cfg.getTtlSeconds();
     String redisKey = MessageConstants.DEDUP_KEY_PREFIX + dedupKey;
     try {
       String token = idempotentStrategy.acquire(redisKey, ttl * 1000L);
@@ -337,9 +339,9 @@ public class GuardServiceImpl implements GuardService {
   public Duration getDedupTtl() {
     MessageProperties.DedupConfig cfg = messageProperties.getDedup();
     if (cfg == null) {
-      return Duration.ofSeconds(DEFAULT_TTL_SECONDS);
+      return Duration.ofSeconds(defaultTtlSeconds);
     }
-    return Duration.ofSeconds(cfg.getTtlSeconds() <= 0 ? DEFAULT_TTL_SECONDS : cfg.getTtlSeconds());
+    return Duration.ofSeconds(cfg.getTtlSeconds() <= 0 ? defaultTtlSeconds : cfg.getTtlSeconds());
   }
 
   private Long readCounter(

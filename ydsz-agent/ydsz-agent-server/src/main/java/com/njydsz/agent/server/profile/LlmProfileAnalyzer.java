@@ -41,6 +41,9 @@ public class LlmProfileAnalyzer {
     private static final Pattern STYLE_PATTERN = Pattern.compile(
             "\"queryStyle\"\\s*:\\s*\"([^\"]+)\"", Pattern.DOTALL);
 
+    /** JSON 数组字符串元素提取模式：匹配 "value" 格式 */
+    private static final Pattern STRING_ARRAY_ITEM_PATTERN = Pattern.compile("\"([^\"]+)\"");
+
     private static final String STYLE_ANALYSIS_PROMPT = """
             你是一个用户行为分析助手。请根据以下对话记录，分析用户的查询风格。
             
@@ -172,8 +175,7 @@ public class LlmProfileAnalyzer {
             return Collections.emptyList();
         }
         List<String> result = new ArrayList<>(COLLECTION_CAPACITY);
-        Pattern p = Pattern.compile("\"([^\"]+)\"");
-        Matcher m = p.matcher(arrayContent);
+        Matcher m = STRING_ARRAY_ITEM_PATTERN.matcher(arrayContent);
         while (m.find()) {
             result.add(m.group(1));
         }

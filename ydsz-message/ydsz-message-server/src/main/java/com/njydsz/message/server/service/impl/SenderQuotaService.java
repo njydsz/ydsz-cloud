@@ -6,6 +6,7 @@ import java.time.LocalTime;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -46,6 +47,14 @@ public class SenderQuotaService {
 
   private static final String DAILY_KEY_PREFIX = "quota:daily:";
   private static final String HOURLY_KEY_PREFIX = "quota:hourly:";
+
+  /** 日配额 Redis Key TTL（天），默认 2 天 */
+  @Value("${ydsz.message.quota.daily-ttl-days:2}")
+  private long quotaDailyTtlDays;
+
+  /** 小时配额 Redis Key TTL（小时），默认 2 小时 */
+  @Value("${ydsz.message.quota.hourly-ttl-hours:2}")
+  private long quotaHourlyTtlHours;
 
   /**
    * 检查发送方配额是否允许发送。
@@ -110,7 +119,7 @@ public class SenderQuotaService {
     String dailyKey = DAILY_KEY_PREFIX + senderId + ":" + channel + ":" + today;
     Long dailyCount = redisStringOps.incr(dailyKey, 1);
     if (dailyCount != null && dailyCount == 1L) {
-      redisStringOps.expire(dailyKey, Duration.ofDays(2));
+      redisStringOps.expire(dailyKey, Duration.ofDays(quotaDailyTtlDays));
     }
     String hourKey =
         HOURLY_KEY_PREFIX
@@ -123,7 +132,7 @@ public class SenderQuotaService {
             + String.format("%02d", LocalTime.now().getHour());
     Long hourCount = redisStringOps.incr(hourKey, 1);
     if (hourCount != null && hourCount == 1L) {
-      redisStringOps.expire(hourKey, Duration.ofHours(2));
+      redisStringOps.expire(hourKey, Duration.ofHours(quotaHourlyTtlHours));
     }
   }
 

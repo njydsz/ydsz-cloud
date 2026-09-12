@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -47,11 +48,13 @@ import com.njydsz.message.server.service.config.RouteRuleService;
 @RequiredArgsConstructor
 public class RouteRuleServiceImpl implements RouteRuleService {
 
-  /** 路由规则 Redis 缓存 TTL（L2） */
-  private static final Duration CACHE_TTL = Duration.ofMinutes(5);
+  /** 路由规则 Redis 缓存 TTL（L2），默认 5 分钟 */
+  @Value("${ydsz.message.route-rule.cache-ttl-minutes:5}")
+  private long cacheTtlMinutes;
 
-  /** 路由规则本地缓存 TTL（L1，毫秒），远短于 Redis TTL 以平衡一致性与性能 */
-  private static final long LOCAL_CACHE_TTL_MS = 30_000L;
+  /** 路由规则本地缓存 TTL（L1，毫秒），默认 30 秒，远短于 Redis TTL 以平衡一致性与性能 */
+  @Value("${ydsz.message.route-rule.local-cache-ttl-seconds:30}")
+  private long localCacheTtlSeconds;
 
   /** 本地缓存最大条目数（路由规则单一 key，设为 1） */
   private static final int LOCAL_CACHE_MAX_SIZE = 10;
@@ -64,7 +67,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
       YdszCache.<String, List<MsgRouteRuleVO>>newBuilder()
           .name(CACHE_NAME)
           .maximumSize(LOCAL_CACHE_MAX_SIZE)
-          .expireAfterWrite(LOCAL_CACHE_TTL_MS, TimeUnit.MILLISECONDS)
+          .expireAfterWrite(localCacheTtlSeconds, TimeUnit.SECONDS)
           .recordStats()
           .build();
 
@@ -297,7 +300,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     List<MsgRouteRuleVO> result = rules == null ? Collections.emptyList() : rules;
     // 回填 L2 + L1
     try {
-      redisStringOps.set(cacheKey, YdszJson.toJson(result), CACHE_TTL);
+      redisStringOps.set(cacheKey, YdszJson.toJson(result), Duration.ofMinutes(cacheTtlMinutes));
     } catch (Exception e) {
       log.warn("[RouteRule] L2 缓存回填失败: {}", e.getMessage(), e);
     }
