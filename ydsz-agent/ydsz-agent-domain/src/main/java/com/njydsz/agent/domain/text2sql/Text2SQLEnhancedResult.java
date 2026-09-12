@@ -1,10 +1,10 @@
 package com.njydsz.agent.domain.text2sql;
 
 import java.io.Serializable;
-
-import com.njydsz.agent.domain.gateway.Text2SQLService;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.agent.domain.gateway.Text2SQLService;
 
 /**
  * NL2SQL 增强链路执行结果。
