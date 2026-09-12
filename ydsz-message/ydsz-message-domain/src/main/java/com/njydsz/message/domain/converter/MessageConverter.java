@@ -287,7 +287,7 @@ public interface MessageConverter {
   // ===== MsgCanary =====
   MsgCanaryVO entityToVO(MsgCanary entity);
 
-  @Mapping(source = "isDeleted", target = "deleted")
+  @Mapping(source = "isDeleted", target = "isDeleted")
   MsgCanary dtoToEntity(MsgCanaryDTO dto);
 
   // ===== 通用类型转换 =====

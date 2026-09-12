@@ -158,7 +158,7 @@ public class RuleBatchController {
       @Valid @RequestBody RuleBatchToggleDTO dto,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
     List<String> ruleCodes = dto.getRuleCodes();
-    Boolean enabled = dto.getEnabled();
+    Boolean enabled = dto.getIsEnabled();
     // @NotEmpty + @NotNull 已校验非空，移除手动校验
     int success = 0;
     List<String> failed = new ArrayList<>(COLLECTION_CAPACITY);

@@ -2,9 +2,9 @@ package com.njydsz.gateway.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
@@ -37,7 +37,7 @@ public class UserKeyResolver implements KeyResolver {
    * @return 限流 Key 的 Mono
    */
   @Override
-  public Mono<String> resolve(org.springframework.web.server.ServerWebExchange exchange) {
+  public Mono<String> resolve(ServerWebExchange exchange) {
     ServerHttpRequest request = exchange.getRequest();
     String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
     if (userId != null && !userId.isBlank()) {

@@ -3,6 +3,7 @@ package com.njydsz.gateway.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
@@ -34,7 +35,7 @@ public class IpKeyResolver implements KeyResolver {
    * @return 限流 Key 的 Mono
    */
   @Override
-  public Mono<String> resolve(org.springframework.web.server.ServerWebExchange exchange) {
+  public Mono<String> resolve(ServerWebExchange exchange) {
     String clientIp = GatewayIpUtils.getClientIp(exchange.getRequest());
     return Mono.just("ip:" + clientIp);
   }

@@ -1,16 +1,15 @@
 package com.njydsz.userinfo.domain.entity;
 
-import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * 密码历史实体

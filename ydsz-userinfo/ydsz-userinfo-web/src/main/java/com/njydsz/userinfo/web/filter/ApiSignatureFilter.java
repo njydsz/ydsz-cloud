@@ -19,7 +19,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.ApiSignRequest;
 import com.njydsz.userinfo.server.auth.ApiSignatureUtil;
@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.config.ApiSignatureProperties;
  *   <li>检查是否在排除路径列表中（跳过签名校验）
  *   <li>读取 X-Timestamp、X-Nonce、X-Signature 请求头
  *   <li>检查时间戳是否在有效期内（防过期请求重放）
- *   <li>使用 SETNX 检查 nonce 是否已使用（防请求重放）
+ *   <li>使用 {@link DistributedLocker#tryLock} 检查 nonce 是否已使用（防请求重放）
  *   <li>拼接签名字符串并计算签名，与请求头中的签名比对
  * </ol>
  *
@@ -83,7 +83,13 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   private static final int NONCE_TTL_MULTIPLIER = 2;
 
   private final ApiSignatureProperties properties;
-  private final RedisStringOps redisStringOps;
+  /**
+   * 分布式锁实例（nonce 防重放）。
+   *
+   * <p>通过 {@link DistributedLocker#tryLock} 实现 nonce 一次性语义；
+   * 锁 TTL = 签名 TTL × 2，过期后自动释放。
+   */
+  private final DistributedLocker distributedLocker;
 
   @Override
   protected void doFilterInternal(
@@ -252,8 +258,9 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       if (ttlSeconds < 1L) {
         ttlSeconds = 1L;
       }
-      Boolean acquired = redisStringOps.setIfAbsent(key, timestamp, ttlSeconds);
-      return Boolean.TRUE.equals(acquired);
+      // P0-FIX：使用 DistributedLocker 替代裸 SETNX（统一走 common-lock）
+      String lockValue = distributedLocker.tryLock(key, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
+      return lockValue != null;
     } catch (Exception e) {
       log.warn("API signature: Redis error during nonce check, nonce={}, error={}",
           nonce, e.getMessage());

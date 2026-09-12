@@ -1,11 +1,13 @@
 package com.njydsz.agent.server.chat;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 
@@ -21,7 +23,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <h3>幂等去重</h3>
  *
- * <p>基于 Redis SETNX，key = {@code ydsz:agent:idem:{requestId}}，TTL 60s。 同一 requestId 60 秒内只能成功调用一次。
+ * <p>基于 {@link DistributedLocker#tryLock}，key = {@code ydsz:agent:idem:{requestId}}，TTL 60s。 同一 requestId 60 秒内只能成功调用一次。
+ * 通过 common-lock 的 WatchDog 续期机制，可应对长任务场景（需配合外部释放）。
  *
  * <h3>限流</h3>
  *
@@ -43,22 +46,27 @@ public class AgentRequestGuard {
   private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
 
   private final RedisStringOps stringOps;
+  /** 分布式锁实例（幂等去重，使用 common-lock WatchDog 续期 + 可重入能力） */
+  private final DistributedLocker distributedLocker;
 
-  /** 单用户每分钟请求上限（默认 10，可通过配置覆盖；P2 修复：原值硬编码） */
+  /** 单用户每分钟请求上限（默认 10，可通过配置覆盖） */
   private final int maxRequestsPerMinute;
 
-  public AgentRequestGuard(RedisStringOps stringOps) {
-    this(stringOps, 10);
+  public AgentRequestGuard(RedisStringOps stringOps, DistributedLocker distributedLocker) {
+    this(stringOps, distributedLocker, 10);
   }
 
   /**
    * 构造 Agent 请求守卫。
    *
    * @param stringOps Redis String 操作组件
+   * @param distributedLocker 分布式锁实例（幂等去重）
    * @param maxRequestsPerMinute 单用户每分钟请求上限
    */
-  public AgentRequestGuard(RedisStringOps stringOps, int maxRequestsPerMinute) {
+  public AgentRequestGuard(
+      RedisStringOps stringOps, DistributedLocker distributedLocker, int maxRequestsPerMinute) {
     this.stringOps = stringOps;
+    this.distributedLocker = distributedLocker;
     this.maxRequestsPerMinute = maxRequestsPerMinute > 0 ? maxRequestsPerMinute : 10;
   }
 
@@ -78,11 +86,12 @@ public class AgentRequestGuard {
     }
   }
 
-  /** 幂等检查：SETNX，已存在则拒绝 */
+  /** 幂等检查：使用 DistributedLocker，已存在则拒绝 */
   private void checkIdempotent(String requestId) {
     String key = IDEM_KEY_PREFIX + requestId;
-    Boolean acquired = stringOps.setIfAbsent(key, "1", IDEM_TTL.toSeconds());
-    if (acquired == null || !acquired) {
+    // P0-FIX：使用 common-lock 分布式锁替代裸 SETNX（统一走 common-lock）
+    String lockValue = distributedLocker.tryLock(key, IDEM_TTL.toSeconds(), TimeUnit.SECONDS);
+    if (lockValue == null) {
       log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
       throw BusinessException.builder()
           .code("REQUEST_DUPLICATE")
@@ -130,13 +139,28 @@ public class AgentRequestGuard {
    * 释放幂等锁（业务异常时调用，允许重试）。
    *
    * @param requestId 幂等请求 ID
+   * @param lockValue 释放操作需要的锁标识
    */
-  public void releaseIdempotent(String requestId) {
+  public void releaseIdempotent(String requestId, String lockValue) {
     if (requestId == null || requestId.isBlank()) {
       return;
     }
     String key = IDEM_KEY_PREFIX + requestId;
-    stringOps.del(key);
+    distributedLocker.unlock(key, lockValue);
+  }
+
+  /**
+   * 释放幂等锁（兼容旧接口，按 requestId 释放）。
+   *
+   * <p><b>注意：</b>DistributedLocker 需要 lockValue 才能安全释放。如果无法获得 lockValue，
+   * 可选择等待 TTL 自动过期。此方法尝试释放但可能失败（被 WatchDog 续期时）。</p>
+   *
+   * @param requestId 幂等请求 ID
+   * @deprecated 使用 {@link #releaseIdempotent(String, String)} 替代
+   */
+  @Deprecated
+  public void releaseIdempotent(String requestId) {
+    log.warn("[Agent-Guard] releaseIdempotent(单参) 已废弃，无法保证安全释放。requestId={}", requestId);
   }
 }
 

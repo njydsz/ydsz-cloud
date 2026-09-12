@@ -82,15 +82,6 @@ public class JobLockGuard {
   }
 
   /**
-   * 获取任务锁管理器（未配置时返回 null，走兼容的 RedisTemplate 路径）。
-   *
-   * @return 锁管理器或 null
-   */
-  public JobLockManager jobLockManager() {
-    return jobLockManagerProvider.getIfAvailable();
-  }
-
-  /**
    * 获取任务锁（按 jobKey + 可选分片索引粒度）。
    *
    * @param job 任务定义
@@ -137,10 +128,9 @@ public class JobLockGuard {
     if (lockKey == null) {
       return;
     }
-    JobLockManager lockManager = jobLockManager();
-    if (lockManager != null && lockValue != null) {
+    if (lockValue != null) {
       try {
-        lockManager.releaseLock(jobKey, shardIndex, lockValue);
+        jobLockManager.releaseLock(jobKey, shardIndex, lockValue);
         return;
       } catch (Exception e) {
         log.warn(
@@ -205,11 +195,8 @@ public class JobLockGuard {
       return;
     }
     try {
-      JobLockManager lockManager = jobLockManager();
-      if (lockManager != null
-          && idempotentLock.value() != null
-          && !idempotentLock.value().isEmpty()) {
-        lockManager.releaseLock(idempotentLock.key(), idempotentLock.value());
+      if (idempotentLock.value() != null && !idempotentLock.value().isEmpty()) {
+        jobLockManager.releaseLock(idempotentLock.key(), idempotentLock.value());
         return;
       }
       redisTemplate.execute(

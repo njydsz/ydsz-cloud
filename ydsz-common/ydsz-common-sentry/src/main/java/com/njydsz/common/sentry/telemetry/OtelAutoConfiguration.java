@@ -89,6 +89,6 @@ public class OtelAutoConfiguration {
   @Bean
   public Tracer otelTracer(SdkTracerProvider tracerProvider) {
     log.info("[OTel] 创建默认 Tracer, scope=ydsz");
-    return tracerProvider.getTracer("ydsz");
+    return tracerProvider.tracerBuilder("ydsz").build();
   }
 }
