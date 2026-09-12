@@ -593,7 +593,7 @@ public class AgentProperties {
    * 当应用引入 OTel SDK 且本配置开启时，{@link io.opentelemetry.api.OpenTelemetry} Bean
    * 会由 Spring Boot Actuator 自动装配（或用户自定义），链路级/步骤级 Span 会被导出。
    *
-   * <p>OTel 依赖为可选依赖（{@code <optional>true</optional>}），用户需在业务工程 pom 中显式引入方可生效。
+   * <p>OTel 依赖为可选依赖（{@code optional=true}），用户需在业务工程 pom 中显式引入方可生效。
    *
    * @author ydsz-team
    * @since 26.09.07
@@ -691,6 +691,12 @@ public class AgentProperties {
   @AllArgsConstructor
   public static class Insight {
 
+    /** 默认报告生成超时时间（秒） */
+    private static final int DEFAULT_REPORT_TIMEOUT_SECONDS = 120;
+
+    /** 默认最大章节数 */
+    private static final int DEFAULT_MAX_SECTIONS = 8;
+
     /** 是否启用洞察报告生成功能 */
     private boolean isEnabled = false;
 
@@ -698,10 +704,10 @@ public class AgentProperties {
     private String model = "gpt-4";
 
     /** 报告生成超时时间（秒） */
-    private int reportTimeoutSeconds = 120;
+    private int reportTimeoutSeconds = DEFAULT_REPORT_TIMEOUT_SECONDS;
 
     /** 最大章节数 */
-    private int maxSections = 8;
+    private int maxSections = DEFAULT_MAX_SECTIONS;
 
     /** 报告输出格式列表 */
     private List<String> supportedFormats = List.of("html", "markdown");

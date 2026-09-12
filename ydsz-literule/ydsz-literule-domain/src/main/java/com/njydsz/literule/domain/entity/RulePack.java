@@ -2,7 +2,6 @@ package com.njydsz.literule.domain.entity;
 
 import java.math.BigDecimal;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

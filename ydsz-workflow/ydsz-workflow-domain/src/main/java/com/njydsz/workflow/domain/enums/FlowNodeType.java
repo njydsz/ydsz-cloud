@@ -117,12 +117,20 @@ public enum FlowNodeType {
     this.desc = desc;
   }
 
-    /** @return 节点类型编码。 */
+  /**
+   * 获取节点类型编码。
+   *
+   * @return 节点类型编码
+   */
   public int getCode() {
     return code;
   }
 
-    /** @return 节点类型描述。 */
+  /**
+   * 获取节点类型描述。
+   *
+   * @return 节点类型描述
+   */
   public String getDesc() {
     return desc;
   }

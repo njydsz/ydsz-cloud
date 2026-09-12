@@ -5,6 +5,11 @@ package com.njydsz.agent.domain.code;
  *
  * <p>封装一次 Python 代码块沙箱执行的完整结果，无论成功还是失败均有对应字段可查。
  *
+ * @param success 是否执行成功
+ * @param output 标准输出内容（超长时已按 {@link #DEFAULT_MAX_OUTPUT_LENGTH} 截断）
+ * @param error 错误信息，成功时为 {@code null}
+ * @param durationMs 执行耗时（毫秒）
+ * @param exitCode 进程退出码
  * @author ydsz-team
  * @since 26.09.07
  */

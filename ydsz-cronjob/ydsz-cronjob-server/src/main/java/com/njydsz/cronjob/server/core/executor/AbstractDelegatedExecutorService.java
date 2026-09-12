@@ -14,6 +14,9 @@ import java.util.concurrent.TimeoutException;
  *
  * <p>将 {@link ExecutorService} 接口的全部方法委托给内嵌的 {@code delegate} 实例。
  * 子类可覆写 {@link #execute(Runnable)} / {@link #submit} 等方法以添加上下文装饰逻辑。
+ *
+ * @author ydsz-team
+ * @since 26.09.01
  */
 public abstract class AbstractDelegatedExecutorService implements ExecutorService {
 

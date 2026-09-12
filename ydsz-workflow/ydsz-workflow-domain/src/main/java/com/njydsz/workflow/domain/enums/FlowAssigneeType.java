@@ -56,7 +56,11 @@ public enum FlowAssigneeType {
     this.desc = desc;
   }
 
-    /** @return 办理人类型描述。 */
+  /**
+   * 获取办理人类型描述。
+   *
+   * @return 办理人类型描述
+   */
   public String getDesc() {
     return desc;
   }
