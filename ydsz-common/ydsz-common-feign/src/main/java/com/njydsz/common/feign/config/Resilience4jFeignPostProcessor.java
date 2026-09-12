@@ -73,9 +73,6 @@ public class Resilience4jFeignPostProcessor implements BeanPostProcessor {
     if (name == null || name.isBlank()) {
       name = feignClient.value();
     }
-    if (name == null || name.isBlank()) {
-      name = feignClient.serviceId();
-    }
     return name;
   }
 

@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.util.Collections;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -22,8 +21,8 @@ import com.njydsz.cronjob.server.core.LockKeyUtil;
  * <p>集中管理任务执行链路的两类分布式锁原语，职责单一、可独立单测：
  *
  * <ul>
- *   <li><b>任务锁</b>：按 jobKey（+分片索引）粒度去重，防止同一任务并发执行；优先使用
- *       {@link JobLockManager}（common-lock，WatchDog 续期 + 可重入），未配置时回退 Redis SETNX
+ *   <li><b>任务锁</b>：按 jobKey（+分片索引）粒度去重，防止同一任务并发执行；使用
+ *       {@link JobLockManager}（common-lock，WatchDog 续期 + 可重入）
  *   <li><b>幂等锁</b>：按 handler + params 粒度去重，防止相同参数的任务在集群中重复执行
  * </ul>
  *
@@ -63,22 +62,22 @@ public class JobLockGuard {
   public record AcquiredLock(String key, String value) {}
 
   private final CronjobProperties cronjobProperties;
-  private final ObjectProvider<JobLockManager> jobLockManagerProvider;
+  private final JobLockManager jobLockManager;
   private final RedisTemplate<String, Object> redisTemplate;
 
   /**
    * 构造任务锁守卫。
    *
    * @param cronjobProperties 调度配置（TTL 规整）
-   * @param jobLockManagerProvider 分布式锁管理器（可选，未配置时回退 Redis SETNX）
-   * @param redisTemplate Redis 客户端（SETNX 降级路径）
+   * @param jobLockManager 分布式锁管理器（common-lock，WatchDog 续期 + 可重入）
+   * @param redisTemplate Redis 客户端（仅用于 COVER 策略 releaseLockByValue Lua 释放）
    */
   public JobLockGuard(
       CronjobProperties cronjobProperties,
-      ObjectProvider<JobLockManager> jobLockManagerProvider,
+      JobLockManager jobLockManager,
       RedisTemplate<String, Object> redisTemplate) {
     this.cronjobProperties = cronjobProperties;
-    this.jobLockManagerProvider = jobLockManagerProvider;
+    this.jobLockManager = jobLockManager;
     this.redisTemplate = redisTemplate;
   }
 
@@ -104,19 +103,11 @@ public class JobLockGuard {
             ? LockKeyUtil.buildJobLockKey(job.getJobKey())
             : LockKeyUtil.buildJobLockKey(job.getJobKey(), shardIndex);
     Duration ttl = resolveLockTtl(job);
-    JobLockManager lockManager = jobLockManager();
-    String lockValue;
-    if (lockManager != null) {
-      // common-lock：WatchDog 续期 + 可重入
-      lockValue =
-          shardIndex == null
-              ? lockManager.tryAcquireLock(job.getJobKey(), null, ttl.toMillis())
-              : lockManager.tryAcquireLock(job.getJobKey(), shardIndex, ttl.toMillis());
-    } else {
-      // 兼容路径：Redis SETNX
-      Boolean acquired = redisTemplate.opsForValue().setIfAbsent(lockKey, INSTANCE_ID, ttl);
-      lockValue = Boolean.TRUE.equals(acquired) ? INSTANCE_ID : null;
-    }
+    // P0-FIX：统一走 common-lock，移除 SETNX 降级路径（消除无 WatchDog 续期、不可重入风险）
+    String lockValue =
+        shardIndex == null
+            ? jobLockManager.tryAcquireLock(job.getJobKey(), null, ttl.toMillis())
+            : jobLockManager.tryAcquireLock(job.getJobKey(), shardIndex, ttl.toMillis());
     return new AcquiredLock(lockKey, lockValue);
   }
 
@@ -196,12 +187,8 @@ public class JobLockGuard {
       return "";
     }
     try {
-      JobLockManager lockManager = jobLockManager();
-      if (lockManager != null) {
-        return lockManager.tryAcquireLock(idempotentLockKey, ttl.toMillis());
-      }
-      Boolean acquired = redisTemplate.opsForValue().setIfAbsent(idempotentLockKey, INSTANCE_ID, ttl);
-      return Boolean.TRUE.equals(acquired) ? INSTANCE_ID : null;
+      // P0-FIX：统一走 common-lock，移除 SETNX 降级路径（消除不可重入风险）
+      return jobLockManager.tryAcquireLock(idempotentLockKey, ttl.toMillis());
     } catch (Exception e) {
       log.warn("[LockGuard] 获取幂等锁异常, 降级放行: key={} reason={}", idempotentLockKey, e.getMessage());
       return "";
