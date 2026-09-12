@@ -173,7 +173,7 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
 
     // 取消旧调度，创建新调度
     cancelCurrent();
-    Instant triggerTime = now.plus(delay);
+    Instant triggerTime = now.plus(delay).atZone(ZoneId.systemDefault()).toInstant();
     currentScheduled = taskScheduler.schedule(this::onScheduledTrigger, triggerTime);
 
     log.info(
