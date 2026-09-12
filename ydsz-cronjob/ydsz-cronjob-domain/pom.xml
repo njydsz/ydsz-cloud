@@ -13,6 +13,11 @@
     <description>Domain Layer</description>
     <dependencies>
 
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-util</artifactId>
+    </dependency>
         <!-- mybatis-plus-annotation: 通过 ydsz-common-domain 传递（父 pom 统一版本 3.5.16） -->
         <dependency>
             <groupId>com.njydsz</groupId>

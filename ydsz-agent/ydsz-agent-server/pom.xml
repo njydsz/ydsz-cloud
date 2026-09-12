@@ -12,6 +12,29 @@
     <name>ydsz-agent-server</name>
     <description>Application Layer - Agent 执行引擎、对话服务、工具服务、RAG 服务</description>
     <dependencies>
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-exception</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-json</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-redis</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-safe</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-agent-domain</artifactId>

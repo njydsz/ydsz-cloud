@@ -12,6 +12,35 @@
     <name>ydsz-nextwiki-web</name>
     <description>Web Layer - REST API、启动入口</description>
     <dependencies>
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-base</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-exception</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-file</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-lock</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-safe</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-server</artifactId>

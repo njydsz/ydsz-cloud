@@ -12,6 +12,41 @@
     <name>ydsz-userinfo-infra</name>
     <description>Infrastructure Layer - MyBatis Mapper + Repository</description>
     <dependencies>
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-cache</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-core</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-exception</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-feign</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-json</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-redis</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-domain</artifactId>

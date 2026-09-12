@@ -12,6 +12,41 @@
     <name>ydsz-workflow-web</name>
     <description>DDD Module</description>
     <dependencies>
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-auth</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-base</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-feign</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-json</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-safe</artifactId>
+    </dependency>
+
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-util</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-server</artifactId>

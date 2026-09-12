@@ -15,6 +15,11 @@
     <description>DDD Module</description>
 
     <dependencies>
+    <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-domain</artifactId>
+    </dependency>
         <!--
             P0-1: gateway 为 reactive 栈（WebFlux + Netty），禁止依赖 ydsz-common-web
             （servlet 栈，会引入 spring-boot-starter-web/Tomcat 与 jakarta.servlet-api，造成双栈冲突）。

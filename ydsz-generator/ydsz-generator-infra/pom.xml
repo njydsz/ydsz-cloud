@@ -15,6 +15,11 @@
   <description>代码生成器基础设施层 — Repository 实现、Mapper</description>
 
   <dependencies>
+  <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
+  <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-util</artifactId>
+  </dependency>
     <dependency>
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-generator-domain</artifactId>
