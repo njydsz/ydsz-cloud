@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -146,11 +147,16 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     String tid = tenantId != null ? tenantId : "1";
 
     // 校验所有实例存在且类型相同
+    // N+1 修复：提前收集 instanceIds 后单次批量查询，循环内从 Map 取值（YDIZ-PERF-001）
+    List<FlowInstanceVO> instanceList = instanceRepository.findAllById(new LinkedHashSet<>(instanceIds));
+    Map<String, FlowInstanceVO> instanceMap = instanceList.stream()
+        .collect(Collectors.toMap(FlowInstanceVO::getId, Function.identity(), (a, b) -> a));
+
     Set<String> flowCodes = new LinkedHashSet<>();
     for (String instanceId : instanceIds) {
-        FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
-        if (instance == null) {
-          throw SysException.builder()
+      FlowInstanceVO instance = instanceMap.get(instanceId);
+      if (instance == null) {
+        throw SysException.builder()
             .resultCode(YdszResultCode.NOT_FOUND)
             .key("error.workflow.merge.instance.not.found")
             .params(instanceId)
@@ -324,9 +330,13 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     result.put("createdAt", detail.get("createdAt"));
 
     // 获取实例摘要
+    // N+1 修复：提前批量查询后从内存 Map 取值（YDIZ-PERF-001）
+    List<FlowInstanceVO> instanceList = instanceRepository.findAllById(instanceIds);
+    Map<String, FlowInstanceVO> instanceMap = instanceList.stream()
+        .collect(Collectors.toMap(FlowInstanceVO::getId, Function.identity(), (a, b) -> a));
     List<Map<String, Object>> instanceDetails = new ArrayList<>(COLLECTION_CAPACITY);
     for (String instanceId : instanceIds) {
-      FlowInstanceVO instance = instanceRepository.findById(instanceId).orElse(null);
+      FlowInstanceVO instance = instanceMap.get(instanceId);
       if (instance != null) {
         Map<String, Object> info = new LinkedHashMap<>(COLLECTION_CAPACITY);
         info.put("instanceId", instance.getId());

@@ -2,8 +2,11 @@ package com.njydsz.cronjob.server.core.healing;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
@@ -290,6 +293,15 @@ public class AnomalyRecoveryScanner {
     }
 
     // 3. 重新派发任务
+    // N+1 修复：提前收集所有 jobId → 批量查询 → 内存 Map（YDIZ-PERF-001）
+    Set<String> jobIds = new HashSet<>(runningLogs.size() * 2);
+    for (JobLogVO logEntry : runningLogs) {
+      jobIds.add(logEntry.getJobId());
+    }
+    List<JobVO> jobs = jobRepository.findAllById(jobIds);
+    Map<String, JobVO> jobMap = jobs.stream()
+        .collect(Collectors.toMap(JobVO::getId, Function.identity(), (a, b) -> a));
+
     int redispatched = 0;
     CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
     for (JobLogVO logEntry : runningLogs) {
@@ -302,7 +314,7 @@ public class AnomalyRecoveryScanner {
         break;
       }
       try {
-        JobVO job = jobRepository.findById(logEntry.getJobId()).orElse(null);
+        JobVO job = jobMap.get(logEntry.getJobId());
         if (job == null) {
           log.debug(
               "[AnomalyRecovery] 任务已删除, 跳过: jobId={} logId={}",

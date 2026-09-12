@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
@@ -43,6 +44,16 @@ public interface JobRepository {
    * @return 任务定义 VO；不存在返回 {@code Optional.empty()}
    */
   Optional<JobVO> findById(String id);
+
+  /**
+   * 按 ID 集合批量查询任务定义（用于消除 for 循环内的逐条 findById N+1 查询）。
+   *
+   * <p>内部通过 {@code SELECT ... WHERE id IN (...)} 一次性加载，调用方应在循环前收集 ID 集合并构建内存 Map。
+   *
+   * @param ids 任务 ID 集合（不允许为 null 或空集合）
+   * @return 任务定义 VO 列表；无匹配返回空列表
+   */
+  List<JobVO> findAllById(Set<String> ids);
 
   /**
    * 查询所有 NORMAL 状态任务（启动时加载）。

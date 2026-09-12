@@ -1,8 +1,10 @@
 package com.njydsz.cronjob.infra.repository.impl;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -43,6 +45,23 @@ public class JobRepositoryImpl implements JobRepository {
   @Override
   public Optional<JobVO> findById(String id) {
     return Optional.ofNullable(jobMapper.selectById(id)).map(converter::entityToVO);
+  }
+
+  /**
+   * 按 ID 集合批量查询任务定义（消除 N+1 查询）。
+   *
+   * <p>内部使用 MyBatis-Plus 继承自 {@code BaseMapper} 的 {@code selectBatchIds}，
+   * 生成 {@code SELECT ... WHERE id IN (...)} 单次查询。
+   *
+   * @param ids 任务 ID 集合
+   * @return 任务定义 VO 列表；空集合返回空列表
+   */
+  @Override
+  public List<JobVO> findAllById(Set<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return converter.jobListToVO(jobMapper.selectBatchIds(ids));
   }
 
   @Override
