@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
@@ -65,8 +66,9 @@ public class EmailTrackingService {
   /** Redis Key 前缀：邮件内链接点击次数 */
   private static final String REDIS_KEY_CLICK_COUNT = "notify:track:click:count:";
 
-  /** Redis Key 过期时间：30 天。 */
-  private static final Duration REDIS_TTL = Duration.ofDays(30);
+  /** Redis Key 过期时间（天），默认 30 天 */
+  @Value("${ydsz.common.notify.email-tracking.redis-ttl-days:30}")
+  private long emailTrackingRedisTtlDays;
 
   /** 追踪像素 HTML 片段模板（1×1 透明图片）。 */
   private static final String PIXEL_HTML_TEMPLATE =
@@ -146,7 +148,7 @@ public class EmailTrackingService {
       try {
         redisStringOps.incr(REDIS_KEY_OPEN_COUNT + trackingId, 1);
         redisStringOps.setIfAbsent(
-            REDIS_KEY_OPEN_FIRST + trackingId, String.valueOf(now), REDIS_TTL.getSeconds());
+            REDIS_KEY_OPEN_FIRST + trackingId, String.valueOf(now), Duration.ofDays(emailTrackingRedisTtlDays).getSeconds());
         redisStringOps.set(REDIS_KEY_OPEN_LAST + trackingId, String.valueOf(now), REDIS_TTL);
         if (StringUtils.hasText(userAgent)) {
           redisStringOps.set(REDIS_KEY_OPEN_UA + trackingId, userAgent, REDIS_TTL);
