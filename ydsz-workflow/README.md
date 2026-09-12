@@ -69,7 +69,7 @@
 数据库实体位于 `ydsz-workflow-infra` 模块的 `com.njydsz.workflow.infra.entity` 包下，
 类名**无 DO 后缀**（如 `FlowDefinition` / `FlowRunTask`，MyBatis-Plus 实体 + MapStruct 转换器风格）。
 
-**DDL 维护口径（2026-08-27 修订）**：三库全量 DDL 脚本随仓库维护于根目录 `data/{mysql,oracle,postgre}/ydsz-workflow.sql`；
+**DDL 维护口径（2026-08-27 修订）**：三库全量 DDL 脚本随仓库维护于根目录 `../sqls/{mysql,oracle,postgre}/ydsz-workflow.sql`；
 部署环境的差异配置（数据源连接等）由 Nacos 统一下发。历史文档中"DDL 不在模块内"的说法已作废。
 
 | 业务域 | 表名 | 说明 |

@@ -1,6 +1,6 @@
 # ydsz-workflow 数据库索引基线（P0-3）
 
-> 权威来源：`data/postgre/ydsz-workflow.sql`（项目规范要求脚本统一存放在 data/ 目录）。
+> 权威来源：`../../../../../../sqls/postgre/ydsz-workflow.sql`（项目规范要求脚本统一存放在 data/ 目录）。
 > 基线共 **21 张表 / 72 个索引**。索引口径须与 infra 实体 Javadoc 注释保持一致。
 
 ## ydsz_flow_admin_role
@@ -118,7 +118,7 @@
 - `idx_ydsz_flow_user_tenant_deleted` ON `ydsz_flow_user`(tenant_id, deleted)
 
 ## 维护约定
-- 表结构变更：同步修改 `V1__baseline.sql` 与 `data/postgre/ydsz-workflow.sql`，不得只改一处。
+- 表结构变更：同步修改 `V1__baseline.sql` 与 `../../../../../../sqls/postgre/ydsz-workflow.sql`，不得只改一处。
 - 索引新增：高频查询路径（待办列表、SLA 扫描、历史归档）必须提前评估索引，并在实体 Javadoc 中登记。
 - 变更评审：PR 涉及 DDL 时，CI 应比对本清单与 data/ 副本是否一致。## 并发防护审计（P0-2，2026-08-26）
 

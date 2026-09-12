@@ -36,7 +36,7 @@
 | 安全随机值（nonce、CSRF、临时令牌、一次性验证码） | `UUID.randomUUID` 或 `SecureRandom`/`RandomUtils` |
 | 对外暴露的不可枚举资源标识（如分享提取码） | 高熵随机（`RandomUtils`/`SecureRandom`），非雪花 |
 
-* 新代码违反划界由评审 + `data/scripts/check-common-reuse.py` 后续规则拦截
+* 新代码违反划界由评审 + `../../../sqls/scripts/check-common-reuse.py` 后续规则拦截
 * 存量混合主键不做追溯性重写（改主键代价远超收益），仅在涉及表重构时按本 ADR 执行
 
 ### 正面后果

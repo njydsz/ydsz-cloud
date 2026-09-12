@@ -49,5 +49,5 @@
 
 ## 关联
 
-* 守护规则：`data/scripts/check-common-reuse.py`
+* 守护规则：`../../../sqls/scripts/check-common-reuse.py`
 * 规范章节：《云顶编码规范》§33.7、§22（公共能力复用）

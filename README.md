@@ -167,9 +167,9 @@ mvn clean package -DskipTests
 
 ### 数据库初始化
 
-> 项目规范**禁止**使用 Flyway / Liquibase 等 schema-migration 框架。数据库 DDL 统一以 SQL 脚本形式管理，**唯一维护目录为 `data/postgre/`**（按服务一文件，如 `data/postgre/ydsz-system.sql`）。
+> 项目规范**禁止**使用 Flyway / Liquibase 等 schema-migration 框架。数据库 DDL 统一以 SQL 脚本形式管理，**唯一维护目录为 `sqls/postgre/`**（按服务一文件，如 `sqls/postgre/ydsz-system.sql`）。
 >
-> 注：`data/legacy-dialects/` 下的 MySQL / Oracle 方言脚本为历史遗留转译产物，**不再随 PostgreSQL 版本同步维护**，仅作迁移参考。
+> 注：`sqls/legacy-dialects/` 下的 MySQL / Oracle 方言脚本为历史遗留转译产物，**不再随 PostgreSQL 版本同步维护**，仅作迁移参考。
 
 ```bash
 # 1. 创建数据库
