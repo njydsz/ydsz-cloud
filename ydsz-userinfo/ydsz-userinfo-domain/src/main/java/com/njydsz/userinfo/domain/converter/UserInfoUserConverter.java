@@ -279,7 +279,6 @@ public interface UserInfoUserConverter {
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
   UserPasswordHistory dtoToEntity(UserPasswordHistoryDTO dto);
 
   // ===== UserLoginHistory =====
@@ -307,7 +306,6 @@ public interface UserInfoUserConverter {
    * @return 登录历史实体
    */
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
   UserLoginHistory dtoToEntity(UserLoginHistoryDTO dto);
 
   // ===== SocialAccount =====

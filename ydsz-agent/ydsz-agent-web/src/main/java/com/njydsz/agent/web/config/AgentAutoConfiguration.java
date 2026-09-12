@@ -89,6 +89,7 @@ import com.njydsz.agent.server.profile.UserProfileServiceImpl;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -422,13 +423,16 @@ public class AgentAutoConfiguration {
    * 装配 Agent 请求准入卫士。
    *
    * @param stringOps Redis String 操作组件
+   * @param distributedLocker 分布式锁实例（幂等去重）
    * @param properties Agent 配置（限流阈值）
    * @return 请求卫士
    */
   @Bean
   @ConditionalOnMissingBean(AgentRequestGuard.class)
-  public AgentRequestGuard agentRequestGuard(RedisStringOps stringOps, AgentProperties properties) {
-    return new AgentRequestGuard(stringOps, properties.getGuardrail().getMaxRequestsPerMinute());
+  public AgentRequestGuard agentRequestGuard(
+      RedisStringOps stringOps, DistributedLocker distributedLocker, AgentProperties properties) {
+    return new AgentRequestGuard(
+        stringOps, distributedLocker, properties.getGuardrail().getMaxRequestsPerMinute());
   }
 
   /**

@@ -46,7 +46,7 @@ public final class ChannelResponse {
         return new Builder()
                 .requestId(requestId)
                 .channelType(channelType)
-                .isSuccess(true)
+                .success(true)
                 .content(content)
                 .build();
     }

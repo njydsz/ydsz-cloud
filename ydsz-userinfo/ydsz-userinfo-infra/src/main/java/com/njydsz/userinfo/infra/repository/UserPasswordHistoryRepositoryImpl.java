@@ -41,7 +41,7 @@ public class UserPasswordHistoryRepositoryImpl implements UserPasswordHistoryRep
   public List<UserPasswordHistoryVO> findRecentByUserId(String userId, int limit) {
     LambdaQueryWrapper<UserPasswordHistory> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserPasswordHistory::getUserId, userId);
-    wrapper.orderByDesc(UserPasswordHistory::getCreatedAt);
+    wrapper.orderByDesc(e -> e.getCreatedAt());
     wrapper.last("LIMIT " + limit);
     List<UserPasswordHistory> entities = userPasswordHistoryMapper.selectList(wrapper);
     return converter.userPasswordHistoryListToVO(entities);
