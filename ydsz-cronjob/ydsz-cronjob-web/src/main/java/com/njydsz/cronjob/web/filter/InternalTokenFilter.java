@@ -1,8 +1,6 @@
 package com.njydsz.cronjob.web.filter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.cronjob.domain.constants.CronjobConstants;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
@@ -30,7 +29,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  *   <li>非 internal 路径：直接放行，不参与过滤
  * </ul>
  *
- * <p>令牌比较使用 {@link MessageDigest#isEqual(byte[], byte[])} 常量时间比较，防止时序侧信道。
+ * <p>令牌比较使用 {@link DigestUtils#constantTimeEquals(String, String)} 常量时间比较，防止时序侧信道。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -87,26 +86,13 @@ public class InternalTokenFilter extends OncePerRequestFilter {
       reject(response);
       return;
     }
-    if (!constantTimeEquals(providedToken, expectedToken)) {
+    if (!DigestUtils.constantTimeEquals(providedToken, expectedToken)) {
       log.warn("[InternalTokenFilter] 内部请求令牌校验失败: uri={} from={}",
           request.getRequestURI(), request.getRemoteAddr());
       reject(response);
       return;
     }
     filterChain.doFilter(request, response);
-  }
-
-  /**
-   * 常量时间比较两个令牌（防止时序侧信道猜测令牌）。
-   *
-   * @param provided 请求携带的令牌
-   * @param expected 配置的期望令牌
-   * @return true 相等
-   */
-  private boolean constantTimeEquals(String provided, String expected) {
-    byte[] providedBytes = provided.getBytes(StandardCharsets.UTF_8);
-    byte[] expectedBytes = expected.getBytes(StandardCharsets.UTF_8);
-    return MessageDigest.isEqual(providedBytes, expectedBytes);
   }
 
   /**

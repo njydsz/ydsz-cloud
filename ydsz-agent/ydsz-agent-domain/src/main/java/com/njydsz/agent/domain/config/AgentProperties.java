@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.config;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -471,6 +472,15 @@ public class AgentProperties {
 
     /** PII 脱敏启用 */
     private boolean isPiiMaskingEnabled = true;
+
+    /** 默认幂等锁 TTL 秒数 */
+    private static final int DEFAULT_IDEMP_TTL_SECONDS = 60;
+
+    /** 幂等锁 TTL（默认 60s，外部化配置键 ydsz.agent.guardrail.idempotent-ttl） */
+    private Duration idempotentTtl = Duration.ofSeconds(DEFAULT_IDEMP_TTL_SECONDS);
+
+    /** 限流时间窗口（默认 1m，外部化配置键 ydsz.agent.guardrail.rate-window） */
+    private Duration rateWindow = Duration.ofMinutes(1);
 
     /** 每分钟最大请求数 */
     private int maxRequestsPerMinute = DEFAULT_MAX_REQUESTS_PER_MINUTE;

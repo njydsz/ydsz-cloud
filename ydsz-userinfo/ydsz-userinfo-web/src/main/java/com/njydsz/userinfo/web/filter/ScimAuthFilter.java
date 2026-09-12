@@ -1,8 +1,6 @@
 package com.njydsz.userinfo.web.filter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.List;
 
 import jakarta.servlet.FilterChain;
@@ -18,6 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.domain.scim.ScimError;
 import com.njydsz.userinfo.server.config.ScimProperties;
 
@@ -43,7 +42,7 @@ import com.njydsz.userinfo.server.config.ScimProperties;
  * <p><b>安全设计：</b>
  *
  * <ul>
- *   <li>Token 比较使用 {@link java.security.MessageDigest#isEqual} 防时序攻击
+ *   <li>Token 比较使用 {@link DigestUtils#constantTimeEquals(String, String)} 防时序攻击
  *   <li>认证失败不暴露具体原因（Token 无效 vs 缺失统一返回 "authentication failed"）
  *   <li>SCIM 使用独立认证体系，不依赖 ydsz 主系统的 Session/Token
  * </ul>
@@ -119,7 +118,7 @@ public class ScimAuthFilter extends OncePerRequestFilter {
   /**
    * 校验 Bearer Token 是否有效。
    *
-   * <p>使用 {@link java.security.MessageDigest#isEqual} 进行常量时间比较，防止时序攻击。
+   * <p>使用 {@link DigestUtils#constantTimeEquals(String, String)} 进行常量时间比较，防止时序攻击。
    *
    * @param token 客户端提供的 Token
    * @return true 表示 Token 有效
@@ -129,9 +128,7 @@ public class ScimAuthFilter extends OncePerRequestFilter {
     if (expectedToken == null || expectedToken.isEmpty()) {
       return false;
     }
-    return MessageDigest.isEqual(
-        token.getBytes(StandardCharsets.UTF_8),
-        expectedToken.getBytes(StandardCharsets.UTF_8));
+    return DigestUtils.constantTimeEquals(token, expectedToken);
   }
 
   /**

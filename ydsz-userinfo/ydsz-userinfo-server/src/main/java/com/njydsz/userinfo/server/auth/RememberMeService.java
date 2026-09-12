@@ -2,13 +2,9 @@ package com.njydsz.userinfo.server.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
-import javax.crypto.Cipher;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +16,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.common.util.security.crypto.CryptoUtils;
 import com.njydsz.userinfo.server.config.RememberMeProperties;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
@@ -72,11 +69,8 @@ public class RememberMeService {
   /** 审计 Hash 字段：首次登录时间（Unix 秒） */
   private static final String FIELD_FIRST_LOGIN_TIME = "firstLoginTime";
 
-  /** AES-GCM IV 长度（字节） */
+  /** AES-GCM IV 长度（字节），用于密文最短长度校验 */
   private static final int GCM_IV_LENGTH = 12;
-
-  /** AES-GCM Tag 长度（位） */
-  private static final int GCM_TAG_LENGTH = 128;
 
   private final RememberMeProperties rememberMeProperties;
   private final UserInfoProperties userInfoProperties;
@@ -344,36 +338,28 @@ public class RememberMeService {
   }
 
   /**
-   * 使用 AES-GCM 加密用户 ID。
+   * 使用 AES-GCM 加密用户 ID（委托 {@link CryptoUtils#encryptBytes(byte[], byte[], byte[])}）。
    *
-   * <p>输出格式：Base64(IV + ciphertext + authTag)，IV 为 12 字节随机值。
+   * <p>输出格式：Base64(IV + ciphertext + authTag)，IV 为 12 字节随机值，与平台标准加密体系一致。
    *
    * @param userId 用户 ID
    * @return Base64 编码的加密结果
    * @throws GeneralSecurityException 加密失败时抛出
    */
   private String encryptUserId(String userId) throws GeneralSecurityException {
-    byte[] iv = new byte[GCM_IV_LENGTH];
-    SecureRandom.getInstanceStrong().nextBytes(iv);
-
-    SecretKeySpec keySpec = new SecretKeySpec(deriveKey(), "AES");
-    GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-
-    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-    cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);
-
-    byte[] ciphertext = cipher.doFinal(userId.getBytes(StandardCharsets.UTF_8));
-
-    // 拼接 IV + ciphertext（含 auth tag）
-    byte[] result = new byte[iv.length + ciphertext.length];
-    System.arraycopy(iv, 0, result, 0, iv.length);
-    System.arraycopy(ciphertext, 0, result, iv.length, ciphertext.length);
-
-    return Base64.getEncoder().encodeToString(result);
+    byte[] key = deriveKey();
+    try {
+      byte[] result = CryptoUtils.encryptBytes(userId.getBytes(StandardCharsets.UTF_8), key, null);
+      return Base64.getEncoder().encodeToString(result);
+    } catch (Exception e) {
+      throw new GeneralSecurityException("Remember-Me cookie encryption failed", e);
+    } finally {
+      CryptoUtils.destroyKey(key);
+    }
   }
 
   /**
-   * 使用 AES-GCM 解密用户 ID。
+   * 使用 AES-GCM 解密用户 ID（委托 {@link CryptoUtils#decryptBytes(byte[], byte[], byte[])}）。
    *
    * @param encrypted Base64 编码的加密结果
    * @return 解密后的用户 ID
@@ -386,19 +372,15 @@ public class RememberMeService {
       throw new IllegalArgumentException("Invalid encrypted cookie value: too short");
     }
 
-    byte[] iv = new byte[GCM_IV_LENGTH];
-    byte[] ciphertext = new byte[decoded.length - GCM_IV_LENGTH];
-    System.arraycopy(decoded, 0, iv, 0, GCM_IV_LENGTH);
-    System.arraycopy(decoded, GCM_IV_LENGTH, ciphertext, 0, ciphertext.length);
-
-    SecretKeySpec keySpec = new SecretKeySpec(deriveKey(), "AES");
-    GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
-
-    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-    cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmSpec);
-
-    byte[] plaintext = cipher.doFinal(ciphertext);
-    return new String(plaintext, StandardCharsets.UTF_8);
+    byte[] key = deriveKey();
+    try {
+      byte[] plaintext = CryptoUtils.decryptBytes(decoded, key, null);
+      return new String(plaintext, StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      throw new GeneralSecurityException("Remember-Me cookie decryption failed", e);
+    } finally {
+      CryptoUtils.destroyKey(key);
+    }
   }
 
   /**

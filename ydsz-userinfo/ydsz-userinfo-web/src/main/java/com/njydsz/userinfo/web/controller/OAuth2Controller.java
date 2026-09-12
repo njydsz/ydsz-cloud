@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.web.controller;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
@@ -832,9 +831,7 @@ public class OAuth2Controller {
     // 计算 SHA-256 哈希并 Base64URL 编码（复用 common-util 统一摘要能力，禁止自建 MessageDigest）
     byte[] hash = DigestUtils.sha256(codeVerifier.getBytes(StandardCharsets.US_ASCII));
     String computedChallenge = Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-    // 恒定时间比较（防时序攻击，JDK 标准 API MessageDigest.isEqual，非自建哈希）
-    return MessageDigest.isEqual(
-        computedChallenge.getBytes(StandardCharsets.US_ASCII),
-        codeChallenge.getBytes(StandardCharsets.US_ASCII));
+    // 恒定时间比较（防时序攻击，复用 common-util 统一能力）
+    return DigestUtils.constantTimeEquals(computedChallenge, codeChallenge);
   }
 }

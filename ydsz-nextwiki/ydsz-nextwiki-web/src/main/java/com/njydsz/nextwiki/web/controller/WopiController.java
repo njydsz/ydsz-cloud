@@ -3,7 +3,6 @@ package com.njydsz.nextwiki.web.controller;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +27,7 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
@@ -320,7 +320,7 @@ public class WopiController {
     String expectedAccessToken = properties.getWopi().getAccessToken();
     if (expectedAccessToken != null && !expectedAccessToken.isEmpty()) {
       if (authToken == null
-          || !MessageDigest.isEqual(authToken.getBytes(), expectedAccessToken.getBytes())) {
+          || !DigestUtils.constantTimeEquals(authToken, expectedAccessToken)) {
         throw new BusinessException(NextwikiExceptionCode.FILE_NOT_FOUND);
       }
     }

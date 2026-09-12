@@ -1,6 +1,5 @@
 package com.njydsz.userinfo.server.auth;
 
-import java.security.MessageDigest;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p><b>安全特性：</b>
  *
  * <ul>
- *   <li>签名比较使用 {@link MessageDigest#isEqual} 防止时序攻击
+ *   <li>签名比较使用 {@link DigestUtils#constantTimeEquals(String, String)} 防止时序攻击
  *   <li>时间戳校验防止过期请求重放
  *   <li>Nonce 唯一性校验（配合 Redis SETNX）防止请求重放
  * </ul>
@@ -98,7 +97,7 @@ public final class ApiSignatureUtil {
   /**
    * 验证请求签名。
    *
-   * <p>使用 {@link MessageDigest#isEqual} 进行恒定时间比较，防止时序攻击。
+   * <p>使用 {@link DigestUtils#constantTimeEquals(String, String)} 进行恒定时间比较，防止时序攻击。
    *
    * @param signature 待验证的签名值（Base64 编码）
    * @param request 签名请求要素

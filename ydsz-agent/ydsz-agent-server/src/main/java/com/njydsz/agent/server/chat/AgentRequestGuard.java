@@ -42,8 +42,21 @@ public class AgentRequestGuard {
 
   private static final String IDEM_KEY_PREFIX = "ydsz:agent:idem:";
   private static final String RATE_KEY_PREFIX = "ydsz:agent:rate:";
-  private static final Duration IDEM_TTL = Duration.ofSeconds(60);
-  private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
+
+  /** 默认幂等锁 TTL（60s） */
+  private static final Duration DEFAULT_IDEMP_TTL = Duration.ofSeconds(60);
+
+  /** 默认限流时间窗口（1m） */
+  private static final Duration DEFAULT_RATE_WINDOW = Duration.ofMinutes(1);
+
+  /** 默认单用户每分钟请求上限 */
+  private static final int DEFAULT_MAX_REQUESTS_PER_MINUTE = 10;
+
+  /** 幂等锁 TTL（默认 60s，可通过配置 ydsz.agent.guardrail.idempotent-ttl 覆盖） */
+  private final Duration idempotentTtl;
+
+  /** 限流时间窗口（默认 1m，可通过配置 ydsz.agent.guardrail.rate-window 覆盖） */
+  private final Duration rateWindow;
 
   private final RedisStringOps stringOps;
   /** 分布式锁实例（幂等去重，使用 common-lock WatchDog 续期 + 可重入能力） */
@@ -53,7 +66,7 @@ public class AgentRequestGuard {
   private final int maxRequestsPerMinute;
 
   public AgentRequestGuard(RedisStringOps stringOps, DistributedLocker distributedLocker) {
-    this(stringOps, distributedLocker, 10);
+    this(stringOps, distributedLocker, DEFAULT_MAX_REQUESTS_PER_MINUTE, DEFAULT_IDEMP_TTL, DEFAULT_RATE_WINDOW);
   }
 
   /**
@@ -65,9 +78,29 @@ public class AgentRequestGuard {
    */
   public AgentRequestGuard(
       RedisStringOps stringOps, DistributedLocker distributedLocker, int maxRequestsPerMinute) {
+    this(stringOps, distributedLocker, maxRequestsPerMinute, DEFAULT_IDEMP_TTL, DEFAULT_RATE_WINDOW);
+  }
+
+  /**
+   * 构造 Agent 请求守卫（完全参数化，TTL 外部化）。
+   *
+   * @param stringOps Redis String 操作组件
+   * @param distributedLocker 分布式锁实例（幂等去重）
+   * @param maxRequestsPerMinute 单用户每分钟请求上限
+   * @param idempotentTtl 幂等锁 TTL
+   * @param rateWindow 限流时间窗口
+   */
+  public AgentRequestGuard(
+      RedisStringOps stringOps,
+      DistributedLocker distributedLocker,
+      int maxRequestsPerMinute,
+      Duration idempotentTtl,
+      Duration rateWindow) {
     this.stringOps = stringOps;
     this.distributedLocker = distributedLocker;
     this.maxRequestsPerMinute = maxRequestsPerMinute > 0 ? maxRequestsPerMinute : 10;
+    this.idempotentTtl = idempotentTtl != null ? idempotentTtl : DEFAULT_IDEMP_TTL;
+    this.rateWindow = rateWindow != null ? rateWindow : DEFAULT_RATE_WINDOW;
   }
 
   /**
@@ -90,7 +123,7 @@ public class AgentRequestGuard {
   private void checkIdempotent(String requestId) {
     String key = IDEM_KEY_PREFIX + requestId;
     // P0-FIX：使用 common-lock 分布式锁替代裸 SETNX（统一走 common-lock）
-    String lockValue = distributedLocker.tryLock(key, IDEM_TTL.toSeconds(), TimeUnit.SECONDS);
+    String lockValue = distributedLocker.tryLock(key, idempotentTtl.toSeconds(), TimeUnit.SECONDS);
     if (lockValue == null) {
       log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
       throw BusinessException.builder()
@@ -109,7 +142,7 @@ public class AgentRequestGuard {
     String key = RATE_KEY_PREFIX + buildTenantSegment() + userId;
     long count = stringOps.incr(key, 1);
     if (count == 1) {
-      stringOps.expire(key, RATE_WINDOW.toSeconds());
+      stringOps.expire(key, rateWindow.toSeconds());
     }
     if (count > maxRequestsPerMinute) {
       log.warn("[Agent-Guard] 限流触发: key={}, count={}", key, count);

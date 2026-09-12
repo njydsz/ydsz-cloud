@@ -429,7 +429,11 @@ public class AgentAutoConfiguration {
   public AgentRequestGuard agentRequestGuard(
       RedisStringOps stringOps, DistributedLocker distributedLocker, AgentProperties properties) {
     return new AgentRequestGuard(
-        stringOps, distributedLocker, properties.getGuardrail().getMaxRequestsPerMinute());
+        stringOps,
+        distributedLocker,
+        properties.getGuardrail().getMaxRequestsPerMinute(),
+        properties.getGuardrail().getIdempotentTtl(),
+        properties.getGuardrail().getRateWindow());
   }
 
   /**

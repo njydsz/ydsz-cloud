@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditStatus;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.json.YdszJson;
@@ -113,13 +112,7 @@ public class RuleAuditLogService {
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.CREATE,
-        null,
-        afterSnapshot,
-        null,
-        null);
+    record(entry, AuditAction.CREATE, null, afterSnapshot, null, null);
   }
 
   /**
@@ -154,13 +147,7 @@ public class RuleAuditLogService {
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.UPDATE,
-        beforeSnapshot,
-        afterSnapshot,
-        null,
-        null);
+    record(entry, AuditAction.UPDATE, beforeSnapshot, afterSnapshot, null, null);
   }
 
   /**
@@ -175,14 +162,11 @@ public class RuleAuditLogService {
   public void logToggle(
       String ruleCode, boolean oldEnabled, boolean newEnabled, String operator, String source) {
     String changeDesc = String.format("enabled: %s -> %s", oldEnabled, newEnabled);
-    AuditAction commonAction =
-        newEnabled
-            ? AuditAction.ENABLE
-            : AuditAction.DISABLE;
+    AuditAction commonAction = newEnabled ? AuditAction.ENABLE : AuditAction.DISABLE;
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
-            .action(AuditAction.TOGGLE)
+            .action(commonAction)
             .operator(operator)
             .source(source)
             .changeDesc(changeDesc)
@@ -207,20 +191,14 @@ public class RuleAuditLogService {
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
-            .action(AuditAction.STATUS_CHANGE)
+            .action(AuditAction.UPDATE)
             .operator(operator)
             .source(source)
             .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.OTHER,
-        null,
-        null,
-        null,
-        null);
+    record(entry, AuditAction.OTHER, null, null, null, null);
   }
 
   /**
@@ -238,20 +216,14 @@ public class RuleAuditLogService {
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
-            .action(AuditAction.ROLLBACK)
+            .action(AuditAction.RESTORE)
             .operator(operator)
             .source(source)
             .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.RESTORE,
-        null,
-        null,
-        null,
-        null);
+    record(entry, AuditAction.RESTORE, null, null, null, null);
   }
 
   /**
@@ -276,13 +248,7 @@ public class RuleAuditLogService {
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.APPROVE,
-        null,
-        null,
-        null,
-        null);
+    record(entry, AuditAction.APPROVE, null, null, null, null);
   }
 
   /**
@@ -307,13 +273,7 @@ public class RuleAuditLogService {
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.REJECT,
-        null,
-        null,
-        null,
-        null);
+    record(entry, AuditAction.REJECT, null, null, null, null);
   }
 
   /**
@@ -339,13 +299,7 @@ public class RuleAuditLogService {
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.IMPORT,
-        null,
-        null,
-        null,
-        null);
+    record(entry, AuditAction.IMPORT, null, null, null, null);
   }
 
   /**
@@ -368,13 +322,7 @@ public class RuleAuditLogService {
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.EXPORT,
-        null,
-        null,
-        null,
-        null);
+    record(entry, AuditAction.EXPORT, null, null, null, null);
   }
 
   /**
@@ -394,13 +342,7 @@ public class RuleAuditLogService {
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        AuditAction.DELETE,
-        null,
-        null,
-        null,
-        null);
+    record(entry, AuditAction.DELETE, null, null, null, null);
   }
 
   /**
@@ -428,13 +370,7 @@ public class RuleAuditLogService {
             .errorMessage(errorMessage)
             .createdAt(LocalDateTime.now())
             .build();
-    record(
-        entry,
-        toCommonAction(action),
-        null,
-        null,
-        AuditStatus.FAILURE,
-        errorMessage);
+    record(entry, action, null, null, AuditStatus.FAILURE, errorMessage);
   }
 
   // ==================== 查询操作 ====================
@@ -480,10 +416,10 @@ public class RuleAuditLogService {
     if (auditQueryService == null) {
       return Collections.emptyList();
     }
-    AuditAction commonAction = toCommonAction(action);
+    int actionCode = action != null ? action.getCode() : AuditAction.OTHER.getCode();
     List<AuditLog> allLogs = auditQueryService.getByTimeRange(null, null);
     return allLogs.stream()
-        .filter(log -> log.getAction() != null && log.getAction().equals(commonAction.getCode()))
+        .filter(log -> log.getAction() != null && log.getAction().equals(actionCode))
         .limit(limit)
         .map(this::toAuditLogEntry)
         .collect(Collectors.toList());
@@ -518,48 +454,6 @@ public class RuleAuditLogService {
   // ==================== 内部方法 ====================
 
   /**
-   * 将自建审计操作枚举映射为通用审计操作枚举
-   *
-   * @param action 自建审计操作枚举
-   * @return 通用审计操作枚举
-   */
-  private AuditAction toCommonAction(AuditAction action) {
-    if (action == null) {
-      return AuditAction.OTHER;
-    }
-    switch (action) {
-      case CREATE:
-        return AuditAction.CREATE;
-      case UPDATE:
-        return AuditAction.UPDATE;
-      case TOGGLE:
-        return AuditAction.ENABLE;
-      case STATUS_CHANGE:
-        return AuditAction.UPDATE;
-      case ROLLBACK:
-        return AuditAction.RESTORE;
-      case APPROVE:
-        return AuditAction.APPROVE;
-      case REJECT:
-        return AuditAction.REJECT;
-      case IMPORT:
-        return AuditAction.IMPORT;
-      case EXPORT:
-        return AuditAction.EXPORT;
-      case DELETE:
-        return AuditAction.DELETE;
-      case DRY_RUN:
-        return AuditAction.OTHER;
-      case STRESS_TEST:
-        return AuditAction.OTHER;
-      case REPLAY:
-        return AuditAction.OTHER;
-      default:
-        return AuditAction.OTHER;
-    }
-  }
-
-  /**
    * 将 AuditLog（通用审计实体）映射回 AuditLogEntry（自建视图）
    *
    * @param log 通用审计日志实体
@@ -569,7 +463,7 @@ public class RuleAuditLogService {
     AuditLogEntry entry = new AuditLogEntry();
     entry.setId(auditLog.getId());
     entry.setRuleCode(auditLog.getBusinessNo());
-    entry.setAction(fromCommonActionCode(auditLog.getAction()));
+    entry.setAction(AuditAction.fromCode(auditLog.getAction()));
     entry.setOperator(auditLog.getOperatorId());
     entry.setResult(fromCommonStatus(auditLog.getStatus()));
     entry.setErrorMessage(auditLog.getErrorMessage());
@@ -605,47 +499,6 @@ public class RuleAuditLogService {
     }
 
     return entry;
-  }
-
-  /**
-   * 从通用审计操作编码映射回自建审计操作枚举
-   *
-   * @param actionCode 通用审计操作编码
-   * @return 自建审计操作枚举
-   */
-  private AuditAction fromCommonActionCode(Integer actionCode) {
-    if (actionCode == null) {
-      return AuditAction.STATUS_CHANGE;
-    }
-    for (AuditAction commonAction :
-        AuditAction.values()) {
-      if (commonAction.getCode() == actionCode) {
-        switch (commonAction) {
-          case CREATE:
-            return AuditAction.CREATE;
-          case UPDATE:
-            return AuditAction.UPDATE;
-          case DELETE:
-            return AuditAction.DELETE;
-          case IMPORT:
-            return AuditAction.IMPORT;
-          case EXPORT:
-            return AuditAction.EXPORT;
-          case APPROVE:
-            return AuditAction.APPROVE;
-          case REJECT:
-            return AuditAction.REJECT;
-          case ENABLE:
-          case DISABLE:
-            return AuditAction.TOGGLE;
-          case RESTORE:
-            return AuditAction.ROLLBACK;
-          default:
-            return AuditAction.STATUS_CHANGE;
-        }
-      }
-    }
-    return AuditAction.STATUS_CHANGE;
   }
 
   /**
@@ -700,7 +553,7 @@ public class RuleAuditLogService {
    * 写入审计日志到通用审计框架
    *
    * @param entry 自建审计日志条目（用于日志输出）
-   * @param action 通用审计操作
+   * @param action 审计操作（本地枚举，编码与通用 AuditAction 兼容）
    * @param beforeSnapshot 变更前快照
    * @param afterSnapshot 变更后快照
    * @param status 审计状态（为 null 时默认 SUCCESS）
@@ -714,10 +567,11 @@ public class RuleAuditLogService {
       AuditStatus status,
       String errorMessage) {
     try {
+      AuditAction effectiveAction = action != null ? action : AuditAction.OTHER;
       if (auditRecorder == null) {
         log.info(
             "[AuditLog] (no-op) {} {} by {} from {}",
-            action,
+            effectiveAction,
             entry.getRuleCode(),
             entry.getOperator(),
             entry.getSource());
@@ -727,7 +581,7 @@ public class RuleAuditLogService {
       AuditLog auditLog = new AuditLog();
       auditLog.setId(UUID.randomUUID().toString().replace("-", ""));
       auditLog.setAuditType(AuditType.OPERATION.getCode());
-      auditLog.setAction(action.getCode());
+      auditLog.setAction(effectiveAction.getCode());
       auditLog.setStatus(status != null ? status.getCode() : AuditStatus.SUCCESS.getCode());
       auditLog.setModule(MODULE_RULE_ENGINE);
       auditLog.setBusinessNo(entry.getRuleCode());
@@ -738,7 +592,7 @@ public class RuleAuditLogService {
       auditLog.setErrorMessage(errorMessage);
 
       // 构建 content
-      String content = buildContent(action, entry.getSource(), entry.getChangeDesc());
+      String content = buildContent(effectiveAction, entry.getSource(), entry.getChangeDesc());
       auditLog.setContent(content);
 
       // 序列化快照
@@ -753,7 +607,7 @@ public class RuleAuditLogService {
 
       log.info(
           "[AuditLog] {} {} by {} from {}",
-          action,
+          effectiveAction,
           entry.getRuleCode(),
           entry.getOperator(),
           entry.getSource());
@@ -765,13 +619,12 @@ public class RuleAuditLogService {
   /**
    * 构建审计日志 content 内容
    *
-   * @param action 通用审计操作
+   * @param action 审计操作
    * @param source 操作来源
    * @param changeDesc 变更描述（可为 null）
    * @return content 字符串
    */
-  private String buildContent(
-      AuditAction action, String source, String changeDesc) {
+  private String buildContent(AuditAction action, String source, String changeDesc) {
     StringBuilder sb = new StringBuilder();
     if (action != null) {
       sb.append("[").append(action.getDescription()).append("]");
@@ -857,34 +710,130 @@ public class RuleAuditLogService {
 
   // ==================== 内部枚举与模型 ====================
 
-  /** 审计操作类型 */
+  /**
+   * 规则引擎本地审计操作类型。
+   *
+   * <p>编码值与通用 {@code com.njydsz.common.audit.enums.AuditAction} 保持 1-23 一一对应，
+   * 规则专属操作从 100 起。
+   */
   public enum AuditAction {
-    /** 创建规则 */
-    CREATE,
-    /** 更新规则 */
-    UPDATE,
-    /** 规则启停切换 */
-    TOGGLE,
-    /** 规则状态变更 */
-    STATUS_CHANGE,
-    /** 规则版本回滚 */
-    ROLLBACK,
-    /** 审批通过 */
-    APPROVE,
-    /** 审批驳回 */
-    REJECT,
-    /** 规则导入 */
-    IMPORT,
-    /** 规则导出 */
-    EXPORT,
-    /** 规则删除 */
-    DELETE,
-    /** 规则试跑（dry-run） */
-    DRY_RUN,
-    /** 规则压测 */
-    STRESS_TEST,
-    /** 规则回放 */
-    REPLAY
+    /** 创建规则（编码 1） */
+    CREATE(1, "新增"),
+    /** 更新规则（编码 2） */
+    UPDATE(2, "修改"),
+    /** 删除规则（编码 3） */
+    DELETE(3, "删除"),
+    /** 查询（编码 4） */
+    QUERY(4, "查询"),
+    /** 导入规则（编码 5） */
+    IMPORT(5, "导入"),
+    /** 导出规则（编码 6） */
+    EXPORT(6, "导出"),
+    /** 上传（编码 7） */
+    UPLOAD(7, "上传"),
+    /** 下载（编码 8） */
+    DOWNLOAD(8, "下载"),
+    /** 登录（编码 9） */
+    LOGIN(9, "登录"),
+    /** 登出（编码 10） */
+    LOGOUT(10, "登出"),
+    /** 授权（编码 11） */
+    GRANT(11, "授权"),
+    /** 取消授权（编码 12） */
+    REVOKE(12, "取消授权"),
+    /** 启用规则（编码 13） */
+    ENABLE(13, "启用"),
+    /** 停用规则（编码 14） */
+    DISABLE(14, "禁用"),
+    /** 审核（编码 15） */
+    APPROVE(15, "审核"),
+    /** 驳回（编码 16） */
+    REJECT(16, "驳回"),
+    /** 重置（编码 17） */
+    RESET(17, "重置"),
+    /** 锁定（编码 18） */
+    LOCK(18, "锁定"),
+    /** 解锁（编码 19） */
+    UNLOCK(19, "解锁"),
+    /** 备份（编码 20） */
+    BACKUP(20, "备份"),
+    /** 恢复（编码 21） */
+    RESTORE(21, "恢复"),
+    /** 同步（编码 22） */
+    SYNC(22, "同步"),
+    /** 清理（编码 23） */
+    CLEAN(23, "清理"),
+    /** 其他操作（编码 99，兜底） */
+    OTHER(99, "其他"),
+    /** 规则启停切换（编码 101，规则专属） */
+    TOGGLE(101, "启停切换"),
+    /** 规则状态变更（编码 102，规则专属） */
+    STATUS_CHANGE(102, "状态变更"),
+    /** 规则版本回滚（编码 103，规则专属） */
+    ROLLBACK(103, "版本回滚"),
+    /** 规则试跑（编码 104，规则专属） */
+    DRY_RUN(104, "试跑"),
+    /** 规则压测（编码 105，规则专属） */
+    STRESS_TEST(105, "压测"),
+    /** 规则回放（编码 106，规则专属） */
+    REPLAY(106, "回放");
+
+    /** 操作编码（与通用 AuditAction 保持 1-23 一致，规则专属从 100 起） */
+    private final int code;
+
+    /** 操作描述（界面展示文案） */
+    private final String description;
+
+    AuditAction(int code, String description) {
+      this.code = code;
+      this.description = description;
+    }
+
+    /**
+     * 获取操作编码
+     *
+     * @return 编码
+     */
+    public int getCode() {
+      return code;
+    }
+
+    /**
+     * 获取操作描述
+     *
+     * @return 描述
+     */
+    public String getDescription() {
+      return description;
+    }
+
+    /**
+     * 根据编码获取审计操作枚举
+     *
+     * @param code 编码
+     * @return 审计操作；未匹配时返回 {@link #OTHER} 兜底
+     */
+    public static AuditAction fromCode(int code) {
+      for (AuditAction action : values()) {
+        if (action.code == code) {
+          return action;
+        }
+      }
+      return OTHER;
+    }
+
+    /**
+     * 根据编码获取审计操作枚举（Integer 版本，null 安全）
+     *
+     * @param code 编码（可为 null）
+     * @return 审计操作；null 或未匹配时返回 {@link #OTHER} 兜底
+     */
+    public static AuditAction fromCode(Integer code) {
+      if (code == null) {
+        return OTHER;
+      }
+      return fromCode(code.intValue());
+    }
   }
 
   /** 审计结果 */
