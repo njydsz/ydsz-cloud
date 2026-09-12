@@ -21,6 +21,9 @@ import java.util.Map;
  * }
  * }</pre>
  *
+ * @param chartType 图表类型（bar / line / pie / scatter / radar / table）
+ * @param labels X 轴标签列表
+ * @param datasets 数据集列表（每项含 label + data 字段）
  * @author ydsz-team
  * @since 26.09.07
  */

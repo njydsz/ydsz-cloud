@@ -9,6 +9,12 @@ import java.util.Map;
  * <p>封装 {@link DataSourceAnalysisService#analyze} 的完整输出，包含自然语言摘要、
  * 原始查询数据表格和可选的图表数据列表。
  *
+ * @param summary 自然语言摘要
+ * @param columns 数据列名列表
+ * @param rawData 原始数据行列表
+ * @param charts 图表数据列表
+ * @param durationMs 分析耗时（毫秒）
+ * @param query 原始查询文本
  * @author ydsz-team
  * @since 26.09.07
  */

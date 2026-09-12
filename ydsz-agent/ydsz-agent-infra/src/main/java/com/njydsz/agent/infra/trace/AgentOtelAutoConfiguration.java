@@ -1,7 +1,6 @@
 package com.njydsz.agent.infra.trace;
 
 import io.opentelemetry.api.OpenTelemetry;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

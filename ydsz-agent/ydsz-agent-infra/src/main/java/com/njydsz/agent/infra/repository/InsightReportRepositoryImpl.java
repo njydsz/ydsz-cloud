@@ -3,10 +3,9 @@ package com.njydsz.agent.infra.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import com.njydsz.agent.domain.insight.InsightReport;
 import com.njydsz.agent.domain.insight.InsightReportRepository;

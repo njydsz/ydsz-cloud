@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.domain.vo.ChannelHealthVO;
 import com.njydsz.message.domain.vo.SystemHealthVO;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.core.MessageHealthService;
 
 /**

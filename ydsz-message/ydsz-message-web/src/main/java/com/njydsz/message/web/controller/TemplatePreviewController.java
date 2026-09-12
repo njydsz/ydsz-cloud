@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
@@ -22,7 +23,6 @@ import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.template.TemplateVariableValidator;
 
 /**

@@ -10,17 +10,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.json.YdszJson;
-
 import com.njydsz.agent.domain.insight.InsightReport;
+import com.njydsz.agent.domain.insight.InsightReportGenerator;
 import com.njydsz.agent.domain.insight.InsightReportRepository;
 import com.njydsz.agent.domain.insight.InsightReportRequest;
 import com.njydsz.agent.domain.insight.InsightReportResult;
 import com.njydsz.agent.domain.insight.InsightReportService;
 import com.njydsz.agent.domain.insight.InsightReportStatus;
 import com.njydsz.agent.domain.insight.InsightSection;
-import com.njydsz.agent.domain.insight.InsightReportGenerator;
 import com.njydsz.agent.domain.insight.ReportRenderer;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 洞察报告服务实现。

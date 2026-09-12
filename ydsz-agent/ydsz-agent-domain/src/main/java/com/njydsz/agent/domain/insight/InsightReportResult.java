@@ -9,6 +9,14 @@ import java.util.List;
  * <p>封装 BI 洞察报告生成的完整输出，包括报告 ID、标题、完整内容、结构化章节列表、
  * 状态、存储路径和耗时。作为 {@link InsightReportService#generateReport} 的返回值。
  *
+ * @param reportId 报告唯一 ID
+ * @param title 报告标题
+ * @param content 生成的报告全文
+ * @param sections 报告章节列表
+ * @param status 报告状态
+ * @param reportPath 存储路径/URL
+ * @param createdAt 创建时间
+ * @param durationMs 生成耗时（毫秒）
  * @author ydsz-team
  * @since 26.09.07
  */

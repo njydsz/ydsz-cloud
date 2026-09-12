@@ -8,6 +8,14 @@ import java.util.Map;
  * <p>封装用户触发的 BI 洞察报告生成所需的全部输入参数，包括原始分析查询、数据分析结果、
  * 期望输出格式等。作为 {@link InsightReportService#generateReport} 的入参。
  *
+ * @param userId 触发用户
+ * @param conversationId 关联对话 ID（可选）
+ * @param reportTitle 报告标题
+ * @param query 原始分析查询
+ * @param dataSourceType 数据源类型（sql / python / mixed）
+ * @param dataJson 原始数据分析结果的 JSON 字符串
+ * @param reportFormat 报告格式（html / pdf / markdown）
+ * @param extraParams 额外参数
  * @author ydsz-team
  * @since 26.09.07
  */

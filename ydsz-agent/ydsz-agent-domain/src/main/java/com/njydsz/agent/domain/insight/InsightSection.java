@@ -18,6 +18,11 @@ import java.util.Set;
  *   <li>prediction — 预测推断</li>
  * </ul>
  *
+ * @param sectionType 章节类型
+ * @param title 章节标题
+ * @param content 章节内容（Markdown 或纯文本）
+ * @param dataJson 结构化数据 JSON（可选）
+ * @param sort 排序序号
  * @author ydsz-team
  * @since 26.09.07
  */

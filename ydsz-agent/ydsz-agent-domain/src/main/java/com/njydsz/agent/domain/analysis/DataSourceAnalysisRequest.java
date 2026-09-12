@@ -8,6 +8,11 @@ import java.util.Map;
  * <p>封装用户自然语言查询 + 数据源类型的组合请求。
  * 描述一次数据分析任务的输入参数，由 {@link DataSourceAnalysisService#analyze} 消费。
  *
+ * @param userId 触发用户
+ * @param query 自然语言分析查询
+ * @param dataSourceType 数据源类型（sql / python / mixed）
+ * @param tenantId 租户 ID
+ * @param extraParams 额外参数
  * @author ydsz-team
  * @since 26.09.07
  */

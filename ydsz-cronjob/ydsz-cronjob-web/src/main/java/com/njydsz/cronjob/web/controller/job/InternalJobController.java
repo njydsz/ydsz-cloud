@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -29,7 +30,6 @@ import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.server.core.dispatch.RemoteSubTaskRequest;
 import com.njydsz.cronjob.server.core.dispatch.RemoteTaskRequest;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
-import com.njydsz.common.base.api.ApiVersion;
 
 /**
  * 内部任务执行接口 Controller（P1-4 远程派发接收端）。

@@ -7,6 +7,10 @@ import java.util.List;
  *
  * <p>描述一次 Python 代码块沙箱执行的完整输入，包括代码本身、可选输入数据、超时配置和模块白名单。
  *
+ * @param code Python 代码字符串
+ * @param inputJson 可选 JSON 输入数据
+ * @param timeoutSeconds 超时秒数
+ * @param allowedModules 允许 import 的模块白名单
  * @author ydsz-team
  * @since 26.09.07
  */

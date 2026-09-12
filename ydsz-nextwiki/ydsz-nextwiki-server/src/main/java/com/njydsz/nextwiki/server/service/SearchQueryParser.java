@@ -7,8 +7,8 @@ import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.nextwiki.domain.query.SearchQuery;
 import com.njydsz.nextwiki.domain.query.SearchQuery.FieldQuery;
+import com.njydsz.nextwiki.domain.query.SearchQuery;
 
 /**
  * 高级搜索语法解析器。

@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.njydsz.common.safe.config.CsrfProperties;
 import com.njydsz.common.safe.config.CsrfProperties.CsrfMode;
+import com.njydsz.common.safe.config.CsrfProperties;
 import com.njydsz.common.safe.csrf.CsrfToken;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
 import com.njydsz.common.util.http.UrlPathUtils;

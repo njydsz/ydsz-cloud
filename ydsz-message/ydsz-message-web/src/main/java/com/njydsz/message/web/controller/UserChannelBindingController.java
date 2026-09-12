@@ -20,13 +20,13 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.UserChannelBindingDTO;
 import com.njydsz.message.domain.vo.MsgUserChannelVO;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 /**

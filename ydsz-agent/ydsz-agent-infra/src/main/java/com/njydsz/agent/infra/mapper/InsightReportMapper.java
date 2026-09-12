@@ -1,8 +1,7 @@
 package com.njydsz.agent.infra.mapper;
 
-import org.apache.ibatis.annotations.Mapper;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 import com.njydsz.agent.domain.insight.InsightReport;
 

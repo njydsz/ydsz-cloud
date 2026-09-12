@@ -25,9 +25,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -38,8 +38,8 @@ import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.server.benchmark.RuleStressTestService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
-import com.njydsz.literule.server.spi.RulePackProvider;
 import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
+import com.njydsz.literule.server.spi.RulePackProvider;
 
 /**
  * 规则集市场 Controller

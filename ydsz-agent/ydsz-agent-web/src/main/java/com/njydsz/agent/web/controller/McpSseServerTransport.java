@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,8 +30,6 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.infra.mcp.McpJsonRpcMessage;
 import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.common.base.api.ApiVersion;
-
-import jakarta.annotation.PostConstruct;
 
 /**
  * MCP HTTP+SSE 服务端传输层 Controller
