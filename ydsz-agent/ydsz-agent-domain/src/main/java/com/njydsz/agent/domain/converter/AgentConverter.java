@@ -127,6 +127,7 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO
    * @return 数据库实体
    */
+  @Mapping(target = "id", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -143,6 +144,7 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO（含 traceId）
    * @return 数据库实体
    */
+  @Mapping(target = "id", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -172,11 +174,23 @@ public interface AgentConverter {
   List<AgentTraceStepVO> agentTraceStepListToVO(List<AgentTraceStep> entities);
 
   /**
-   * DTO → Entity 转换
+   * DTO → Entity 转换（创建场景，系统字段自动忽略）。
+   *
+   * <p>AgentTraceStep 的 {@code id} 为 {@code @TableField(exist=false)} 占位字段，不映射到数据库列；
+   * {@code traceId + stepIndex} 构成复合业务键。
    *
    * @param dto Agent 执行链路步骤 DTO
    * @return 数据库实体
    */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   AgentTraceStep dtoToEntity(AgentTraceStepDTO dto);
 
   // ===== AgentApproval =====
@@ -204,7 +218,10 @@ public interface AgentConverter {
    * @return 数据库实体
    */
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   AgentApproval dtoToEntity(AgentApprovalDTO dto);
 
   /**
@@ -214,7 +231,9 @@ public interface AgentConverter {
    * @return 数据库实体
    */
   @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   AgentApproval dtoToEntityWithId(AgentApprovalDTO dto);
 
   // ===== PromptTemplate =====

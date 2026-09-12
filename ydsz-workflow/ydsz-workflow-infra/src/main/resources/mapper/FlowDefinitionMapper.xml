@@ -22,7 +22,7 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
-        <result column="is_deleted" property="isDeleted"/>
+        <result column="deleted" property="isDeleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
         <result column="canary_percent" property="canaryPercent"/>
@@ -37,7 +37,7 @@
     <sql id="Base_Column_List">
         id, flow_code, flow_name, category, flow_version, model_value, form_custom, form_path,
         activity_status, is_publish, listener_type, listener_path, ext, description, status,
-        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id, provider_trace_id,
+        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id,
         canary_percent, canary_status, canary_strategy, canary_rollout_log,
         locked_by, locked_at
     </sql>
@@ -46,11 +46,11 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_definition
         WHERE flow_code = #{flowCode}
-          AND version = #{version}
+          AND flow_version = #{version}
           AND tenant_id = #{tenantId}
           AND is_publish = 1
           AND status = 'ENABLED'
-          AND is_deleted = 0
+          AND deleted = 0
         LIMIT 1
     </select>
 
@@ -60,7 +60,7 @@
         WHERE flow_code = #{flowCode}
           AND tenant_id = #{tenantId}
           AND status = 'ENABLED'
-          AND is_deleted = 0
+          AND deleted = 0
         ORDER BY created_at DESC
         LIMIT 1
     </select>
@@ -71,7 +71,7 @@
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND is_deleted = 0
+          AND deleted = 0
     </update>
 
     <!-- P2-27: 失效同 flowCode 的其他已发布版本（is_publish 置 9） -->
@@ -84,7 +84,7 @@
           AND tenant_id = #{tenantId}
           AND id != #{exceptId}
           AND is_publish = 1
-          AND is_deleted = 0
+          AND deleted = 0
     </update>
 
     <!-- P2-28: 更新流程定义激活状态 -->
@@ -94,7 +94,7 @@
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND is_deleted = 0
+          AND deleted = 0
     </update>
 
     <!-- P3-1: 查询同 flowCode + tenant 下处于灰度中（CANARYING）的所有定义 -->
@@ -108,8 +108,8 @@
           AND canary_percent < 100
           AND is_publish = 1
           AND status = 'ENABLED'
-          AND is_deleted = 0
-        ORDER BY version DESC
+          AND deleted = 0
+        ORDER BY flow_version DESC
     </select>
 
     <!-- P3-1: 查询同 flowCode + tenant 下的所有定义（含历史版本） -->
@@ -118,8 +118,8 @@
         FROM ydsz_flow_definition
         WHERE flow_code = #{flowCode}
           AND tenant_id = #{tenantId}
-          AND is_deleted = 0
-        ORDER BY version DESC, created_at DESC
+          AND deleted = 0
+        ORDER BY flow_version DESC, created_at DESC
     </select>
 
     <!--
@@ -133,11 +133,11 @@
         UPDATE ydsz_flow_definition
         SET locked_by = #{lockedBy},
             locked_at = #{lockedAt},
-            version = version + 1,
+            revision = revision + 1,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-          AND version = #{version}
-          AND is_deleted = 0
+          AND revision = #{version}
+          AND deleted = 0
           AND (
                 locked_by IS NULL
              OR locked_by = #{expectedOldBy}
@@ -154,11 +154,11 @@
         UPDATE ydsz_flow_definition
         SET locked_by = NULL,
             locked_at = NULL,
-            version = version + 1,
+            revision = revision + 1,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND locked_by = #{expectedBy}
-          AND version = #{version}
-          AND is_deleted = 0
+          AND revision = #{version}
+          AND deleted = 0
     </update>
 </mapper>
