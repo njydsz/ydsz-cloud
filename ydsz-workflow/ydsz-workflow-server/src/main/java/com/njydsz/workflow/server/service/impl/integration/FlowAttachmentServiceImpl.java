@@ -160,7 +160,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
       entities.add(entity);
     }
     if (!entities.isEmpty()) {
-      for (com.njydsz.workflow.domain.vo.FlowAttachmentVO entity : entities) {
+      for (FlowAttachmentVO entity : entities) {
       attachmentRepository.save(entity);
     }
       log.info(

@@ -2,7 +2,9 @@ package com.njydsz.system.server.service;
 
 import java.util.List;
 
+import com.njydsz.system.domain.approval.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalQuery;
+import com.njydsz.system.domain.approval.ConfigApprovalSubmitDTO;
 
 /**
  * 配置变更审批单服务接口。
@@ -22,7 +24,7 @@ public interface ConfigApprovalService {
    * @param userName 当前用户姓名
    * @return 审批单 ID
    */
-  String submit(String userId, String userName, com.njydsz.system.domain.approval.ConfigApprovalSubmitDTO dto);
+  String submit(String userId, String userName, ConfigApprovalSubmitDTO dto);
 
   /**
    * 通过审批单。
@@ -56,7 +58,7 @@ public interface ConfigApprovalService {
    * @param id 审批单 ID
    * @return 审批单实体
    */
-  com.njydsz.system.domain.approval.ConfigApproval findById(String id);
+  ConfigApproval findById(String id);
 
   /**
    * 分页查询待当前用户审批的审批单。
@@ -65,7 +67,7 @@ public interface ConfigApprovalService {
    * @param query 分页参数
    * @return 审批单列表
    */
-  List<com.njydsz.system.domain.approval.ConfigApproval> findPendingByApprover(
+  List<ConfigApproval> findPendingByApprover(
       String approverId, ConfigApprovalQuery query);
 
   /**
@@ -75,7 +77,7 @@ public interface ConfigApprovalService {
    * @param query 分页参数
    * @return 审批单列表
    */
-  List<com.njydsz.system.domain.approval.ConfigApproval> findBySubmitter(
+  List<ConfigApproval> findBySubmitter(
       String submitterId, ConfigApprovalQuery query);
 
   /**
@@ -84,5 +86,5 @@ public interface ConfigApprovalService {
    * @param query 分页 + 筛选参数
    * @return 审批单列表
    */
-  List<com.njydsz.system.domain.approval.ConfigApproval> findAll(ConfigApprovalQuery query);
+  List<ConfigApproval> findAll(ConfigApprovalQuery query);
 }

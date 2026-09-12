@@ -86,7 +86,7 @@ public class Text2SQLTool implements ToolExecutor {
    *
    * @return ToolDefinition 列表
    */
-  public static List<com.njydsz.agent.domain.model.ToolDefinition> toolDefinitions() {
+  public static List<ToolDefinition> toolDefinitions() {
     Map<String, Object> parametersSchema =
         Map.of(
             "type", "object",

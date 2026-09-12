@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 
@@ -88,7 +89,7 @@ public class RuleDefinitionDTO implements Serializable {
   private String descriptionTemplate;
 
   /** 优先级（数值越小越先执行） */
-  @Builder.Default private int priority = com.njydsz.literule.domain.Rule.DEFAULT_PRIORITY;
+  @Builder.Default private int priority = Rule.DEFAULT_PRIORITY;
 
   /** 是否启用 */
   @Builder.Default private boolean isEnabled = true;

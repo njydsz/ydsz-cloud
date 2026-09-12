@@ -23,6 +23,7 @@ import com.njydsz.literule.domain.vo.RuleDashboardRealtimeVO;
 import com.njydsz.literule.domain.vo.RuleDashboardTopRuleVO;
 import com.njydsz.literule.domain.vo.RuleDashboardTrendVO;
 import com.njydsz.literule.server.core.RuleMetrics;
+import com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot;
 import com.njydsz.literule.server.spi.DashboardDataProvider;
 
 /**
@@ -124,7 +125,7 @@ public class RuleDashboardController {
    */
   @GetMapping("/slow-rules")
   @Operation(summary = "慢规则 Top N", description = "按平均耗时倒序的规则级耗时统计（E3）")
-  public YdszResponse<List<com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot>> slowRules(
+  public YdszResponse<List<RuleStatSnapshot>> slowRules(
       @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
     RuleMetrics metrics = ruleMetricsProvider.getIfAvailable();
     if (metrics == null) {
@@ -143,7 +144,7 @@ public class RuleDashboardController {
    */
   @GetMapping("/hot-rules")
   @Operation(summary = "热点规则 Top N", description = "按评估次数倒序的规则级热度统计（E3）")
-  public YdszResponse<List<com.njydsz.literule.server.core.RuleMetrics.RuleStatSnapshot>> hotRules(
+  public YdszResponse<List<RuleStatSnapshot>> hotRules(
       @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
     RuleMetrics metrics = ruleMetricsProvider.getIfAvailable();
     if (metrics == null) {

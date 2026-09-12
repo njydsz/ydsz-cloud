@@ -2,6 +2,7 @@ package com.njydsz.system.server.service;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.server.service.rollback.RollbackStrategy;
@@ -71,7 +72,7 @@ public interface EntityVersionService {
    * @param dto 版本创建参数（含资源类型/键/分组/版本号/变更说明/快照）
    * @return 新建版本记录主键 ID
    */
-  String createVersion(com.njydsz.system.domain.dto.EntityVersionDTO dto);
+  String createVersion(EntityVersionDTO dto);
 
   /**
    * 回滚资源到指定版本

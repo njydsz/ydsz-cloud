@@ -127,7 +127,14 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO
    * @return 数据库实体
    */
-  // P1 修复：返回类型原误写为 AgentTraceDTO（复制粘贴错误），应转换为 AgentTrace
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   AgentTrace dtoToEntity(AgentTraceDTO dto);
 
   /**
@@ -136,6 +143,14 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO（含 traceId）
    * @return 数据库实体
    */
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   AgentTrace dtoToEntityWithId(AgentTraceDTO dto);
 
   // ===== AgentTraceStep =====

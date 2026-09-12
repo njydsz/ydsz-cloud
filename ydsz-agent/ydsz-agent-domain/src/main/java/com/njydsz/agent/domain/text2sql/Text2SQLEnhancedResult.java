@@ -1,6 +1,8 @@
 package com.njydsz.agent.domain.text2sql;
 
 import java.io.Serializable;
+
+import com.njydsz.agent.domain.gateway.Text2SQLService;
 import java.util.List;
 import java.util.Map;
 
@@ -51,8 +53,8 @@ public record Text2SQLEnhancedResult(
    *
    * @return 仅含基础五元组的标准结果
    */
-  public com.njydsz.agent.domain.gateway.Text2SQLService.Text2SQLResult toBaseResult() {
-    return new com.njydsz.agent.domain.gateway.Text2SQLService.Text2SQLResult(
+  public Text2SQLService.Text2SQLResult toBaseResult() {
+    return new Text2SQLService.Text2SQLResult(
         columns, rows, rowCount, generatedSql, executionTimeMs);
   }
 }

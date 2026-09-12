@@ -49,6 +49,8 @@ import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.code.NoopCodeExecutionService;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
+import com.njydsz.agent.infra.insight.HtmlReportRenderer;
+import com.njydsz.agent.infra.insight.LlmInsightReportGenerator;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.llm.CachedLlmClient;
 import com.njydsz.agent.infra.llm.CompatibleLlmClient;
@@ -720,7 +722,7 @@ public class AgentAutoConfiguration {
       matchIfMissing = false)
   public InsightReportGenerator insightReportGenerator(
       LlmClient llmClient, AgentProperties properties) {
-    return new com.njydsz.agent.infra.insight.LlmInsightReportGenerator(
+    return new LlmInsightReportGenerator(
         llmClient,
         properties.getInsight().getModel(),
         properties.getInsight().getMaxSections());
@@ -739,7 +741,7 @@ public class AgentAutoConfiguration {
       havingValue = "true",
       matchIfMissing = false)
   public ReportRenderer htmlReportRenderer() {
-    return new com.njydsz.agent.infra.insight.HtmlReportRenderer();
+    return new HtmlReportRenderer();
   }
 
   /**

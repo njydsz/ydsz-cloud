@@ -2,6 +2,8 @@ package com.njydsz.userinfo.domain.vo;
 
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 
 /**
@@ -40,11 +42,11 @@ public class UserAccountCredentialVO {
   private String tenantId;
 
   /** 手机号码 */
-  @com.njydsz.common.safe.sensitive.SensitiveData(com.njydsz.common.safe.sensitive.SensitiveType.PHONE)
+  @SensitiveData(SensitiveType.PHONE)
   private String phone;
 
   /** 邮箱地址 */
-  @com.njydsz.common.safe.sensitive.SensitiveData(com.njydsz.common.safe.sensitive.SensitiveType.EMAIL)
+  @SensitiveData(SensitiveType.EMAIL)
   private String email;
 
   /** 封禁类型（TEMPORARY/PERMANENT/null），null 表示未封禁 */

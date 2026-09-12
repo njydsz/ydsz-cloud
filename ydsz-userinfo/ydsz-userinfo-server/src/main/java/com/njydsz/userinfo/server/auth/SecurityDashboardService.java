@@ -16,6 +16,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
+import com.njydsz.userinfo.domain.vo.AnomalySessionVO;
 import com.njydsz.userinfo.domain.vo.DeviceDistributionVO;
 import com.njydsz.userinfo.domain.vo.LoginFailDistributionVO;
 import com.njydsz.userinfo.domain.vo.LoginSuccessRateVO;
@@ -357,7 +358,7 @@ public class SecurityDashboardService {
    *
    * @return 异常会话列表
    */
-  public List<com.njydsz.userinfo.domain.vo.AnomalySessionVO> detectAnomalySessions() {
+  public List<AnomalySessionVO> detectAnomalySessions() {
     return sessionActivityService.detectAnomalySessions();
   }
 
