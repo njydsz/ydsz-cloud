@@ -1,8 +1,7 @@
 package com.njydsz.gateway.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 网关 Sentinel 自定义配置属性（{@code ydsz.sentinel.gateway.*}）。

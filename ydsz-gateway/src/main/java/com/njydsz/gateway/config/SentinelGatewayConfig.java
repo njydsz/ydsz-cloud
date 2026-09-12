@@ -2,7 +2,6 @@ package com.njydsz.gateway.config;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import jakarta.annotation.PostConstruct;
