@@ -1500,7 +1500,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     // 5. 短暂 sleep 避免竞态（让被中断的线程有机会释放资源），然后重新派发新任务
     sleepBriefly(COVER_REDISPATCH_DELAY_MS);
     log.info("[Dispatcher] COVER 策略: 已中断旧任务, 重新派发新任务: key={}", job.getJobKey());
-    // 锁已释放，executeJob 会重新走 setIfAbsent 流程获取锁
+    // 锁已释放，executeJob 会重新走 tryLock 流程获取锁
     COVER_REDISPATCHING.set(true);
     try {
       return executeJob(job, true, triggerType, retryCount);
