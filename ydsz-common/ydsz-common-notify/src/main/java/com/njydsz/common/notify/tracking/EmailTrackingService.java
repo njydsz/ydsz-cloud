@@ -149,9 +149,9 @@ public class EmailTrackingService {
         redisStringOps.incr(REDIS_KEY_OPEN_COUNT + trackingId, 1);
         redisStringOps.setIfAbsent(
             REDIS_KEY_OPEN_FIRST + trackingId, String.valueOf(now), Duration.ofDays(emailTrackingRedisTtlDays).getSeconds());
-        redisStringOps.set(REDIS_KEY_OPEN_LAST + trackingId, String.valueOf(now), REDIS_TTL);
+        redisStringOps.set(REDIS_KEY_OPEN_LAST + trackingId, String.valueOf(now), Duration.ofDays(emailTrackingRedisTtlDays));
         if (StringUtils.hasText(userAgent)) {
-          redisStringOps.set(REDIS_KEY_OPEN_UA + trackingId, userAgent, REDIS_TTL);
+          redisStringOps.set(REDIS_KEY_OPEN_UA + trackingId, userAgent, Duration.ofDays(emailTrackingRedisTtlDays));
         }
         LOG.debug(
             "[EmailTrackingService] 打开事件已记录(Redis): trackingId={}, userAgent={}",
@@ -251,7 +251,7 @@ public class EmailTrackingService {
       try {
         String eventJson = buildEventJson(event, now, userAgent, metadata);
         redisCollectionOps.rPush(REDIS_KEY_EVENT + trackingId, eventJson);
-        redisStringOps.expire(REDIS_KEY_EVENT + trackingId, REDIS_TTL);
+        redisStringOps.expire(REDIS_KEY_EVENT + trackingId, Duration.ofDays(emailTrackingRedisTtlDays));
       } catch (Exception e) {
         LOG.debug("[EmailTrackingService] Redis 存储事件失败: {}", e.getMessage());
       }
@@ -305,7 +305,7 @@ public class EmailTrackingService {
   private void recordDeliveryStatus(String trackingId, String status) {
     if (redisStringOps != null) {
       try {
-        redisStringOps.set(REDIS_KEY_EVENT + "status:" + trackingId, status, REDIS_TTL);
+        redisStringOps.set(REDIS_KEY_EVENT + "status:" + trackingId, status, Duration.ofDays(emailTrackingRedisTtlDays));
         return;
       } catch (Exception e) {
         LOG.debug("[EmailTrackingService] Redis 记录投递状态失败: {}", e.getMessage());

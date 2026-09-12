@@ -362,8 +362,8 @@ public interface JobRepository {
       response.setMsg("操作成功");
       response.setData(records);
       response.setTotal(total);
-      response.setPageNum(pageNum);
-      response.setPageSize(pageSize);
+      response.setPageNum((long) pageNum);
+      response.setPageSize((long) pageSize);
       return response;
     }
   }
