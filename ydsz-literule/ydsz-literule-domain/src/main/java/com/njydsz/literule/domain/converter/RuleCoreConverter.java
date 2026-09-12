@@ -39,10 +39,11 @@ public interface RuleCoreConverter {
   List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinition> entities);
 
   // ===== RuleDefinitionDTO (api) → RuleDefinitionVO =====
+  // 源 boolean isEnabled / isDrilldownAvailable 解析为 enabled / drilldownAvailable（MapStruct 去掉 is 前缀）
   @Mapping(source = "code", target = "ruleCode")
   @Mapping(source = "name", target = "ruleName")
-  @Mapping(source = "isEnabled", target = "isEnabled")
-  @Mapping(source = "isDrilldownAvailable", target = "isDrilldownAvailable")
+  @Mapping(source = "enabled", target = "isEnabled")
+  @Mapping(source = "drilldownAvailable", target = "isDrilldownAvailable")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "canaryConditions", ignore = true)
   @Mapping(target = "effectiveFrom", ignore = true)
@@ -54,9 +55,10 @@ public interface RuleCoreConverter {
   @Mapping(target = "updatedAt", ignore = true)
   RuleDefinitionVO entityToVO(RuleDefinitionDTO entity);
 
-  // ===== RuleResultVO (api) → RuleResultVO =====
-  @Mapping(source = "isTriggered", target = "isTriggered")
-  @Mapping(source = "isCanary", target = "isCanary")
+  // ===== RuleResultVO (api) → RuleResultVO（自映射，用于对象拷贝）=====
+  // 源 boolean isTriggered / isCanary 解析为 triggered / canary（MapStruct 去掉 is 前缀）
+  @Mapping(source = "triggered", target = "isTriggered")
+  @Mapping(source = "canary", target = "isCanary")
   RuleResultVO entityToVO(RuleResultVO entity);
 
   // ===== RuleEngineStatsVO (api) → RuleEngineStatsVO =====

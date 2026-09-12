@@ -2,8 +2,7 @@ package com.njydsz.workflow.server.scheduler;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 
@@ -174,7 +173,7 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
 
     // 取消旧调度，创建新调度
     cancelCurrent();
-    Date triggerTime = Date.from(now.plus(delay).atZone(ZoneId.systemDefault()).toInstant());
+    Instant triggerTime = now.plus(delay);
     currentScheduled = taskScheduler.schedule(this::onScheduledTrigger, triggerTime);
 
     log.info(

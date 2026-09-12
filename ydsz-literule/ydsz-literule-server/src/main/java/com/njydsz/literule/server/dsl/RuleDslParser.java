@@ -573,7 +573,7 @@ public final class RuleDslParser {
 
   private static List<Map<String, Object>> asListOfMaps(Object obj) {
     if (!(obj instanceof List<?> list)) {
-      return null;
+      return Collections.emptyList();
     }
     List<Map<String, Object>> result = new ArrayList<>(list.size());
     for (Object item : list) {

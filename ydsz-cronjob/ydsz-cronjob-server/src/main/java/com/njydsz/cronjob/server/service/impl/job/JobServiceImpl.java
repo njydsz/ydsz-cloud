@@ -9,9 +9,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +18,6 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,8 +31,6 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
-import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
-import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
@@ -90,9 +85,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   /** 调度配置属性（P0-4: 锁 TTL 等可配置项） */
   private final CronjobProperties cronjobProperties;
 
-  /** 租户上下文装饰器（自动传播租户到异步线程） */
-  private final TenantContextTaskDecorator tenantContextTaskDecorator;
-
   /** 任务锁管理器（委托 ydsz-common-lock 公共模块，复用 WatchDog / 指标等能力） */
   private final JobLockManager jobLockManager;
 
@@ -129,8 +121,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
-  /** 调度器 */
-  private TaskScheduler taskScheduler;
+  /**
+   * 调度器（YDIZ-CONC-001 合规：由 CronjobSchedulerConfig 以 @Bean 方式提供，
+   * 避免业务代码直接 new 自建线程池）。
+   */
+  private final TaskScheduler taskScheduler;
 
   /** 已调度的任务: jobKey -> Future */
   private final Map<String, ScheduledFuture<?>> scheduledMap = new ConcurrentHashMap<>();
@@ -262,24 +257,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     vo.setCreatedBy(j.getCreatedBy());
     vo.setUpdatedBy(j.getUpdatedBy());
     return vo;
-  }
-
-  /** 初始化任务调度器（线程池大小可配置，关闭时等待任务完成） */
-  @PostConstruct
-  public void initScheduler() {
-    ThreadPoolTaskScheduler s = new ThreadPoolTaskScheduler();
-    s.setPoolSize(cronjobProperties.getSchedulerPoolSize());
-    s.setThreadNamePrefix("ydsz-cronjob-scheduler-");
-    s.setWaitForTasksToCompleteOnShutdown(true);
-    s.setAwaitTerminationSeconds(cronjobProperties.getSchedulerAwaitTerminationSeconds());
-    s.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-    // P0-FIX: 注入租户上下文装饰器，定时任务异步执行时自动传播租户上下文
-    s.setTaskDecorator(tenantContextTaskDecorator);
-    s.initialize();
-    this.taskScheduler = s;
-    // P0-2: 注册至 ThreadPoolRegistry 统一监控
-    ThreadPoolRegistry.register("cronjob-scheduler", s.getScheduledThreadPoolExecutor());
-    log.info("[Cronjob] 任务调度器初始化完成, poolSize={}", cronjobProperties.getSchedulerPoolSize());
   }
 
   /** 销毁调度器，取消所有已调度任务 */

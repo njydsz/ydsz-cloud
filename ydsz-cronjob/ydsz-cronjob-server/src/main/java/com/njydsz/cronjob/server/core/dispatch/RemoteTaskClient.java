@@ -290,7 +290,7 @@ public class RemoteTaskClient {
    */
   private List<String> parseLogIdsFromBody(String body, int expectedSize) {
     if (body == null || body.isBlank()) {
-      return null;
+      return Collections.emptyList();
     }
     try {
       ObjectNode json = YdszJson.parseObject(body);

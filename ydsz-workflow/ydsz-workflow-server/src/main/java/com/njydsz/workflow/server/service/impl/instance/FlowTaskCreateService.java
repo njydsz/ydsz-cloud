@@ -1184,7 +1184,7 @@ public class FlowTaskCreateService {
       Map<String, Object> nodeExt) {
     Object selfSelectFlag = nodeExt.get("selfSelect");
     if (selfSelectFlag == null || !isBooleanTrue(selfSelectFlag) || variables == null) {
-      return null;
+      return Collections.emptyList();
     }
     Object selfSelectVal = variables.get("_selfSelect_" + node.getNodeCode());
     List<String> expanded = expandCollectionValue(selfSelectVal);
@@ -1214,7 +1214,7 @@ public class FlowTaskCreateService {
       Map<String, Object> nodeExt) {
     Object collectionVar = nodeExt.get("collection");
     if (collectionVar == null || variables == null || variables.isEmpty()) {
-      return null;
+      return Collections.emptyList();
     }
     String varName = String.valueOf(collectionVar).trim();
     if (varName.startsWith("${") && varName.endsWith("}")) {
@@ -1279,15 +1279,15 @@ public class FlowTaskCreateService {
   private List<String> tryExpandGroupAssignees(
       FlowNodeVO node, Map<String, Object> variables, Map<String, Object> nodeExt) {
     if (nodeExt == null) {
-      return null;
+      return Collections.emptyList();
     }
     Object assigneeTypeObj = nodeExt.get("assigneeType");
     if (!(assigneeTypeObj instanceof String assigneeType)) {
-      return null;
+      return Collections.emptyList();
     }
     if (!FlowAssigneeType.GROUP_CLAIM.name().equals(assigneeType)
         && !FlowAssigneeType.GROUP_ALL.name().equals(assigneeType)) {
-      return null;
+      return Collections.emptyList();
     }
     Object groupCodeObj = nodeExt.get("groupCode");
     String groupCode =

@@ -1,5 +1,6 @@
 package com.njydsz.workflow.server.service.impl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -220,7 +221,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
   public List<FlowDefinitionVersionVO> listVersions(String definitionId) {
     List<Map<String, Object>> list = queryService.listVersions(definitionId);
     if (list == null) {
-      return null;
+      return Collections.emptyList();
     }
     return YdszJson.convertValue(list,
         new JsonType<List<FlowDefinitionVersionVO>>() {});

@@ -2,9 +2,10 @@ package com.njydsz.userinfo.domain.vo;
 
 import java.time.LocalDateTime;
 
+import lombok.Data;
+
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-import lombok.Data;
 
 /**
  * 用户账号认证凭据 VO

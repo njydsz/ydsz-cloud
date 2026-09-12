@@ -34,7 +34,7 @@
 
 - **前沿技术栈**：Java 21 虚拟线程 + Spring Boot 4 + Spring Cloud 2025.1.2 + Jakarta EE 10
 - **DDD 分层架构**：严格 `api` / `domain` / `infra` / `server` / `app` / `web` 六层分离，依赖方向单向收敛（gateway 为单模块 reactive 栈，不拆分 DDD 层）
-- **自研引擎矩阵**：「规则引擎 + 任务调度 + 工作流（BPMN 2.0）+ AI Agent 框架」——四大引擎全部自研，开箱即用
+- **自研八大引擎**：系统引擎（ydsz-system）· 身份引擎（ydsz-userinfo）· 消息引擎（ydsz-message）· 流程引擎（ydsz-workflow）· 任务引擎（ydsz-cronjob）· 文件引擎（ydsz-nextwiki）· 规则引擎（ydsz-literule）· 智能引擎（ydsz-agent）——八大引擎全部自研，开箱即用
 - **多租户隔离**：支持 SINGLE（共享表）、MULTI（字段隔离）、ISOLATE_DB（独立数据库）三种策略
 - **全渠道消息**：6 种通知渠道（短信/邮件/Push/企微/IM等），支持 DAG 编排与跨渠道抑制
 - **安全纵深防御**：JWT + RBAC + 数据权限 + PII 脱敏 + XSS/SQL 注入/CSRF 防护 + 敏感配置加密（AES-256-GCM）

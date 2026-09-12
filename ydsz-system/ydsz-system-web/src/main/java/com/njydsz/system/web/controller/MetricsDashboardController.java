@@ -3,6 +3,7 @@ package com.njydsz.system.web.controller;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,13 +181,13 @@ public class MetricsDashboardController {
   private Map<String, Object> collectRedisMetrics() {
     StringRedisTemplate redisTemplate = stringRedisTemplateProvider.getIfAvailable();
     if (redisTemplate == null) {
-      return null;
+      return Collections.emptyMap();
     }
 
     try {
       Properties info = redisTemplate.getConnectionFactory().getConnection().info("stats");
       if (info == null) {
-        return null;
+        return Collections.emptyMap();
       }
 
       long totalCommands = parseLongOrDefault(info.getProperty("total_commands_processed"), 0L);

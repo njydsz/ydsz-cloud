@@ -94,6 +94,7 @@ public class TemplateFilterUtil {
       if (value instanceof LocalDate ld) {
         return ld.format(formatter);
       }
+      // 兼容调用方传入的 java.util.Date 类型，YDIZ-DATE-002 豁免
       if (value instanceof Date date) {
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter);
       }
