@@ -673,8 +673,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log0.setParamsJson(job.getParamsJson());
     log0.setTraceId(TracerUtils.getTraceId());
     log0.setTriggerType(triggerType);
-    // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
-    // P0-A2: 锁切换后持锁者为 JobLockManager 返回的 clientId（Lua 仅做 value 匹配，兼容）
+    // P0-1: 记录持锁者标识，供 TimeoutMonitor 通过 JobLockManager 安全释放锁
+    // P0-A2: 持锁者为 JobLockManager 返回的 clientId
     if (lockKey != null) {
       log0.setLockHolder(shardValue != null ? shardValue : JobLockGuard.INSTANCE_ID);
     }
@@ -1120,8 +1120,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log0.setParamsJson(job.getParamsJson());
     log0.setTraceId(TracerUtils.getTraceId());
     log0.setTriggerType(triggerType);
-    // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
-    // P0-A2: 锁切换后持锁者为 JobLockManager 返回的 clientId（Lua 仅做 value 匹配，兼容）
+    // P0-1: 记录持锁者标识，供 TimeoutMonitor 通过 JobLockManager 安全释放锁
+    // P0-A2: 持锁者为 JobLockManager 返回的 clientId
     if (lockKey != null) {
       log0.setLockHolder(lockValue != null ? lockValue : JobLockGuard.INSTANCE_ID);
     }

@@ -74,6 +74,12 @@ import com.njydsz.common.base.api.ApiVersion;
 @RequiredArgsConstructor
 public class McpSseServerTransport {
 
+  /** TEXT2SQL 工具默认最大迭代次数 */
+  private static final int TEXT2SQL_MAX_ITERATIONS = 5;
+
+  /** RAG 工具默认最大迭代次数 */
+  private static final int RAG_MAX_ITERATIONS = 3;
+
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
@@ -354,7 +360,7 @@ public class McpSseServerTransport {
     AgentExecutionRequest request = AgentExecutionRequest.builder()
         .userInput(question)
         .agentCode("text2sql")
-        .maxIterations(5)
+        .maxIterations(TEXT2SQL_MAX_ITERATIONS)
         .build();
 
     ChatResponse response = agentFacade.execute(request);
@@ -376,7 +382,7 @@ public class McpSseServerTransport {
     AgentExecutionRequest request = AgentExecutionRequest.builder()
         .userInput(query)
         .agentCode("rag")
-        .maxIterations(3)
+        .maxIterations(RAG_MAX_ITERATIONS)
         .build();
 
     ChatResponse response = agentFacade.execute(request);
