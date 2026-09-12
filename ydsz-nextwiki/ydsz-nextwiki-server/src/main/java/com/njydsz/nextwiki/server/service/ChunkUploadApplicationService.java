@@ -749,12 +749,14 @@ public class ChunkUploadApplicationService {
    * <p><b>保留内部类的原因：</b>
    *
    * <ul>
-   *   <li>Spring Test 的 {@code MockMultipartFile} 无 Path 构造器，需将文件全量读入 {@code byte[]}，
+   *   <li>Spring 的 {@code MockMultipartFile} 无 Path 构造器，需将文件全量读入 {@code byte[]}，
    *       对已落盘的合并文件（可能较大）存在不必要的内存拷贝</li>
    *   <li>当前实现支持流式读取（{@link #getInputStream()} 直接返回文件输入流），
    *       避免合并文件的二次内存加载</li>
-   *   <li>若后续有多处场景需要将 {@link Path} / {@link java.io.File} 适配为 {@code MultipartFile}，
-   *       可统一抽取为工具类，复用 {@link java.nio.file.Files#newInputStream} 流式能力</li>
+   *   <li>{@link #transferTo(File)} 与 {@link #transferTo(Path)} 均基于 {@link Files#copy}，
+   *       底层走文件系统零拷贝或高效通道，无额外内存缓冲</li>
+   *   <li>当前与 {@code PreviewApplicationService}、{@code ThumbnailApplicationService}
+   *       中存在同构实现；若后续继续复用，可统一抽取为工具类</li>
    * </ul>
    */
   private static class SimplePathMultipartFile implements MultipartFile {
@@ -809,6 +811,11 @@ public class ChunkUploadApplicationService {
     @Override
     public void transferTo(File dest) throws IOException, IllegalStateException {
       Files.copy(filePath, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    @Override
+    public void transferTo(Path dest) throws IOException, IllegalStateException {
+      Files.copy(filePath, dest, StandardCopyOption.REPLACE_EXISTING);
     }
   }
 
