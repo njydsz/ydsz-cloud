@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.message.infra.mapper.core.MsgNotificationMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.message.infra.entity.MsgNotification">
+    <resultMap id="BaseResultMap" type="com.njydsz.message.domain.entity.MsgNotification">
         <id column="id" property="id"/>
         <result column="title" property="title"/>
         <result column="content" property="content"/>
@@ -25,6 +25,7 @@
         <result column="recall_status" property="recallStatus"/>
         <result column="recall_at" property="recallAt"/>
         <result column="expired_at" property="expiredAt"/>
+        <result column="mention_user_ids" property="mentionUserIds"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
@@ -36,7 +37,7 @@
     <sql id="Base_Column_List">
         id, title, content, level, category, priority, sender_id, receiver_id, biz_type, biz_id,
         message_group, batch_id, action_url, action_text, icon, extra, source_module, read_status,
-        read_time, recall_status, recall_at, expired_at,
+        read_time, recall_status, recall_at, expired_at, mention_user_ids,
         created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
     </sql>
 

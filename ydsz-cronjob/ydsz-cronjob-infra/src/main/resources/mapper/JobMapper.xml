@@ -20,11 +20,13 @@
         <result column="fire_count" property="fireCount"/>
         <result column="success_count" property="successCount"/>
         <result column="fail_count" property="failCount"/>
+        <result column="priority" property="priority"/>
         <result column="lock_ttl_ms" property="lockTtlMs"/>
         <result column="timeout_ms" property="timeoutMs"/>
         <result column="misfire_policy" property="misfirePolicy"/>
         <result column="shard_total" property="shardTotal"/>
         <result column="timezone" property="timezone"/>
+        <result column="version" property="version"/>
         <result column="cluster" property="cluster"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="created_by" property="createdBy"/>
@@ -39,7 +41,7 @@
         schedule_type, fixed_rate_ms, fixed_delay_ms,
         params_json,
         status, remark, next_fire_time, last_fire_time, fire_count, success_count, fail_count,
-        lock_ttl_ms, timeout_ms, misfire_policy, shard_total, timezone, cluster, tenant_id,
+        priority, lock_ttl_ms, timeout_ms, misfire_policy, shard_total, timezone, version, cluster, tenant_id,
         created_by, created_at, updated_by, updated_at, is_deleted
     </sql>
 

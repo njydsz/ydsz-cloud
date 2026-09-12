@@ -46,7 +46,7 @@
             </if>
             <!-- 启停过滤 -->
             <if test="enabled != null">
-                AND enabled = #{enabled}
+                AND is_enabled = #{enabled}
             </if>
         </where>
         ORDER BY priority ASC, created_at DESC
@@ -79,7 +79,7 @@
             </if>
             <!-- 启停过滤 -->
             <if test="enabled != null">
-                AND enabled = #{enabled}
+                AND is_enabled = #{enabled}
             </if>
         </where>
     </select>
