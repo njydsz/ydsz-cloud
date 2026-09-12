@@ -41,6 +41,8 @@ public interface RuleCoreConverter {
   // ===== RuleDefinitionDTO (api) → RuleDefinitionVO =====
   @Mapping(source = "code", target = "ruleCode")
   @Mapping(source = "name", target = "ruleName")
+  @Mapping(source = "isEnabled", target = "isEnabled")
+  @Mapping(source = "isDrilldownAvailable", target = "isDrilldownAvailable")
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "canaryConditions", ignore = true)
   @Mapping(target = "effectiveFrom", ignore = true)
@@ -53,6 +55,8 @@ public interface RuleCoreConverter {
   RuleDefinitionVO entityToVO(RuleDefinitionDTO entity);
 
   // ===== RuleResultVO (api) → RuleResultVO =====
+  @Mapping(source = "isTriggered", target = "isTriggered")
+  @Mapping(source = "isCanary", target = "isCanary")
   RuleResultVO entityToVO(RuleResultVO entity);
 
   // ===== RuleEngineStatsVO (api) → RuleEngineStatsVO =====

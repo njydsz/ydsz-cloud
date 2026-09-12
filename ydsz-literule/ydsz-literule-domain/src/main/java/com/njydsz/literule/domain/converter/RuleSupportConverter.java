@@ -68,6 +68,7 @@ public interface RuleSupportConverter {
 
   // ===== RuleVersionDTO → RuleVersionHistory =====
   @Mapping(target = "id", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   RuleVersionHistory postDtoToEntity(RuleVersionDTO dto);
 
   // ===== DecisionTable PostDTO → Entity =====
