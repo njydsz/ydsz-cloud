@@ -1,12 +1,7 @@
 package com.njydsz.common.notify.channel;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.signature.DingTalkSignUtil;
 import com.njydsz.common.notify.template.TemplateEngine;
 
 /**
@@ -37,8 +33,6 @@ import com.njydsz.common.notify.template.TemplateEngine;
 public class DingTalkNotifySender implements NotifyChannelStrategy {
 
   private static final Logger LOG = LoggerFactory.getLogger(DingTalkNotifySender.class);
-
-  private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
 
   @Value("${ydsz.notify.dingtalk.webhook:}")
   private String webhook;
@@ -102,26 +96,13 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
    * 对 webhook URL 进行签名（当配置了 secret 时）
    *
    * <p>签名算法：HMAC-SHA256，待签名字符串为 {@code timestamp + "\n" + secret}。
+   * 委托 {@link DingTalkSignUtil#signWebhookUrl(String, String)} 统一实现。
    *
    * @param url 原始 webhook URL
    * @return 带签名参数的 URL
    */
   String signWebhookUrl(String url) {
-    if (secret == null || secret.isEmpty()) {
-      return url;
-    }
-    long timestamp = System.currentTimeMillis();
-    try {
-      Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
-      mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256_ALGORITHM));
-      byte[] signData = mac.doFinal((timestamp + "\n" + secret).getBytes(StandardCharsets.UTF_8));
-      String sign =
-          URLEncoder.encode(Base64.getEncoder().encodeToString(signData), StandardCharsets.UTF_8);
-      return url + (url.contains("?") ? "&" : "?") + "timestamp=" + timestamp + "&sign=" + sign;
-    } catch (Exception e) {
-      LOG.error("钉钉 webhook 签名失败: {}", e.getMessage(), e);
-      return url;
-    }
+    return DingTalkSignUtil.signWebhookUrl(url, secret);
   }
 
   /**

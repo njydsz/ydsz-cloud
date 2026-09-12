@@ -12,7 +12,6 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -21,6 +20,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.config.MessageProperties;
@@ -76,10 +76,8 @@ public class AliyunSmsProvider implements SmsProvider {
    */
   public AliyunSmsProvider(MessageProperties messageProperties) {
     this.config = messageProperties.getSms().getAliyun();
-    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-    factory.setConnectTimeout(config.getConnectTimeout());
-    factory.setReadTimeout(config.getReadTimeout());
-    this.restTemplate = new RestTemplate(factory);
+    this.restTemplate =
+        RestTemplateUtils.create(config.getConnectTimeout(), config.getReadTimeout());
   }
 
   /**

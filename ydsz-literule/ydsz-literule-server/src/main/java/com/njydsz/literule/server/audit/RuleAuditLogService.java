@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.domain.AuditLog;
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditStatus;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.json.YdszJson;
@@ -114,7 +115,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.CREATE,
+        AuditAction.CREATE,
         null,
         afterSnapshot,
         null,
@@ -155,7 +156,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.UPDATE,
+        AuditAction.UPDATE,
         beforeSnapshot,
         afterSnapshot,
         null,
@@ -174,10 +175,10 @@ public class RuleAuditLogService {
   public void logToggle(
       String ruleCode, boolean oldEnabled, boolean newEnabled, String operator, String source) {
     String changeDesc = String.format("enabled: %s -> %s", oldEnabled, newEnabled);
-    com.njydsz.common.audit.enums.AuditAction commonAction =
+    AuditAction commonAction =
         newEnabled
-            ? com.njydsz.common.audit.enums.AuditAction.ENABLE
-            : com.njydsz.common.audit.enums.AuditAction.DISABLE;
+            ? AuditAction.ENABLE
+            : AuditAction.DISABLE;
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
@@ -215,7 +216,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.OTHER,
+        AuditAction.OTHER,
         null,
         null,
         null,
@@ -246,7 +247,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.RESTORE,
+        AuditAction.RESTORE,
         null,
         null,
         null,
@@ -277,7 +278,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.APPROVE,
+        AuditAction.APPROVE,
         null,
         null,
         null,
@@ -308,7 +309,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.REJECT,
+        AuditAction.REJECT,
         null,
         null,
         null,
@@ -340,7 +341,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.IMPORT,
+        AuditAction.IMPORT,
         null,
         null,
         null,
@@ -369,7 +370,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.EXPORT,
+        AuditAction.EXPORT,
         null,
         null,
         null,
@@ -395,7 +396,7 @@ public class RuleAuditLogService {
             .build();
     record(
         entry,
-        com.njydsz.common.audit.enums.AuditAction.DELETE,
+        AuditAction.DELETE,
         null,
         null,
         null,
@@ -479,7 +480,7 @@ public class RuleAuditLogService {
     if (auditQueryService == null) {
       return Collections.emptyList();
     }
-    com.njydsz.common.audit.enums.AuditAction commonAction = toCommonAction(action);
+    AuditAction commonAction = toCommonAction(action);
     List<AuditLog> allLogs = auditQueryService.getByTimeRange(null, null);
     return allLogs.stream()
         .filter(log -> log.getAction() != null && log.getAction().equals(commonAction.getCode()))
@@ -522,39 +523,39 @@ public class RuleAuditLogService {
    * @param action 自建审计操作枚举
    * @return 通用审计操作枚举
    */
-  private com.njydsz.common.audit.enums.AuditAction toCommonAction(AuditAction action) {
+  private AuditAction toCommonAction(AuditAction action) {
     if (action == null) {
-      return com.njydsz.common.audit.enums.AuditAction.OTHER;
+      return AuditAction.OTHER;
     }
     switch (action) {
       case CREATE:
-        return com.njydsz.common.audit.enums.AuditAction.CREATE;
+        return AuditAction.CREATE;
       case UPDATE:
-        return com.njydsz.common.audit.enums.AuditAction.UPDATE;
+        return AuditAction.UPDATE;
       case TOGGLE:
-        return com.njydsz.common.audit.enums.AuditAction.ENABLE;
+        return AuditAction.ENABLE;
       case STATUS_CHANGE:
-        return com.njydsz.common.audit.enums.AuditAction.UPDATE;
+        return AuditAction.UPDATE;
       case ROLLBACK:
-        return com.njydsz.common.audit.enums.AuditAction.RESTORE;
+        return AuditAction.RESTORE;
       case APPROVE:
-        return com.njydsz.common.audit.enums.AuditAction.APPROVE;
+        return AuditAction.APPROVE;
       case REJECT:
-        return com.njydsz.common.audit.enums.AuditAction.REJECT;
+        return AuditAction.REJECT;
       case IMPORT:
-        return com.njydsz.common.audit.enums.AuditAction.IMPORT;
+        return AuditAction.IMPORT;
       case EXPORT:
-        return com.njydsz.common.audit.enums.AuditAction.EXPORT;
+        return AuditAction.EXPORT;
       case DELETE:
-        return com.njydsz.common.audit.enums.AuditAction.DELETE;
+        return AuditAction.DELETE;
       case DRY_RUN:
-        return com.njydsz.common.audit.enums.AuditAction.OTHER;
+        return AuditAction.OTHER;
       case STRESS_TEST:
-        return com.njydsz.common.audit.enums.AuditAction.OTHER;
+        return AuditAction.OTHER;
       case REPLAY:
-        return com.njydsz.common.audit.enums.AuditAction.OTHER;
+        return AuditAction.OTHER;
       default:
-        return com.njydsz.common.audit.enums.AuditAction.OTHER;
+        return AuditAction.OTHER;
     }
   }
 
@@ -616,8 +617,8 @@ public class RuleAuditLogService {
     if (actionCode == null) {
       return AuditAction.STATUS_CHANGE;
     }
-    for (com.njydsz.common.audit.enums.AuditAction commonAction :
-        com.njydsz.common.audit.enums.AuditAction.values()) {
+    for (AuditAction commonAction :
+        AuditAction.values()) {
       if (commonAction.getCode() == actionCode) {
         switch (commonAction) {
           case CREATE:
@@ -707,7 +708,7 @@ public class RuleAuditLogService {
    */
   private void record(
       AuditLogEntry entry,
-      com.njydsz.common.audit.enums.AuditAction action,
+      AuditAction action,
       Map<String, Object> beforeSnapshot,
       Map<String, Object> afterSnapshot,
       AuditStatus status,
@@ -770,7 +771,7 @@ public class RuleAuditLogService {
    * @return content 字符串
    */
   private String buildContent(
-      com.njydsz.common.audit.enums.AuditAction action, String source, String changeDesc) {
+      AuditAction action, String source, String changeDesc) {
     StringBuilder sb = new StringBuilder();
     if (action != null) {
       sb.append("[").append(action.getDescription()).append("]");

@@ -1,10 +1,7 @@
 package com.njydsz.userinfo.server.alert;
 
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 
 /**
@@ -156,19 +154,15 @@ public class WebhookAlertNotificationChannel implements AlertNotificationChannel
   }
 
   /**
-   * 生成 HMAC-SHA256 签名（企业微信 bot 要求）。
+   * 生成 HMAC-SHA256 签名（企业微信 bot 要求，委托 {@link DigestUtils#hmacSha256Base64(String, String)}）。
    *
    * @param timestamp 时间戳字符串
-   * @return Base64 编码的 HMAC 签名
+   * @return Base64 编码的 HMAC 签名；生成失败时返回空字符串
    */
   private String generateHmacSign(String timestamp) {
     try {
       String data = timestamp + "\n" + signingSecret;
-      Mac mac = Mac.getInstance("HmacSHA256");
-      mac.init(new SecretKeySpec(
-          signingSecret.getBytes(), "HmacSHA256"));
-      byte[] hash = mac.doFinal(data.getBytes());
-      return Base64.getEncoder().encodeToString(hash);
+      return DigestUtils.hmacSha256Base64(data, signingSecret);
     } catch (Exception e) {
       log.warn("生成 HMAC 签名失败: {}", e.getMessage());
       return "";

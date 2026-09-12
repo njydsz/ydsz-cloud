@@ -1,12 +1,9 @@
 package com.njydsz.userinfo.server.service;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Collection;
-import java.util.HexFormat;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -17,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.domain.dto.ApiKeyCreateDTO;
 import com.njydsz.userinfo.domain.entity.ApiKey;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -64,9 +62,6 @@ public class ApiKeyService {
 
   /** API Key 前缀标识 */
   private static final String API_KEY_PREFIX = "ak_";
-
-  /** SHA-256 算法名（预编译，YDIZ-CONC-003 合规） */
-  private static final String SHA_256 = "SHA-256";
 
   /** 默认过期天数（90 天） */
   private static final int DEFAULT_EXPIRE_DAYS = 90;
@@ -247,15 +242,14 @@ public class ApiKeyService {
     return API_KEY_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
   }
 
+  /**
+   * 计算 SHA-256 摘要（委托 {@link DigestUtils#sha256Hex(String)}，UTF-8 编码）。
+   *
+   * @param input 待摘要内容（明文 API Key）
+   * @return Hex 编码摘要
+   */
   private String sha256Hex(String input) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance(SHA_256);
-      byte[] hash = digest.digest(input.getBytes());
-      return HexFormat.of().formatHex(hash);
-    } catch (NoSuchAlgorithmException e) {
-      // SHA-256 是 JDK 必支持算法，不会到达此处
-      throw new IllegalStateException("SHA-256 algorithm not available", e);
-    }
+    return DigestUtils.sha256Hex(input);
   }
 
   private String getCurrentUserId() {

@@ -28,7 +28,7 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
 
-        <!-- Seata Spring Boot Starter（版本由 spring-cloud-alibaba-dependencies BOM 管理） -->
+        <!-- Seata Spring Boot Starter（版本由父 POM dependencyManagement 统一管理） -->
         <dependency>
             <groupId>io.seata</groupId>
             <artifactId>seata-spring-boot-starter</artifactId>

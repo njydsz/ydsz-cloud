@@ -285,9 +285,11 @@ public class UserInfoProperties {
   /**
    * P2-6: 可信代理 IP 列表。
    *
-   * <p>仅当请求来源（remoteAddr）命中此列表时，才信任 {@code X-Forwarded-For} 等代理头；
-   * 列表为空（默认）时不读取任何代理头，直接用 remoteAddr，防止客户端伪造 IP 绕过登录风控。
+   * @deprecated 客户端 IP 解析已于 26.09.12 统一收敛至 {@code com.njydsz.common.safe.util.ClientIpResolver}
+   *     （平台级可信代理校验：回环/内网网段直接可信），本配置不再被消费。保留字段仅为兼容存量
+   *     application.yml 绑定，禁止在新代码中读取；后续版本将删除。
    */
+  @Deprecated
   private List<String> trustedProxies = List.of();
 
   // ==================== P1-2 Token 自动续签配置 ====================

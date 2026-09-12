@@ -28,6 +28,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.ShareAccessLogVO;
 import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
@@ -252,23 +253,15 @@ public class ShareController {
   // ==================== 私有方法 ====================
 
   /**
-   * 获取客户端真实 IP（考虑代理）。
+   * 获取客户端真实 IP（委托 {@link ClientIpResolver}，含可信代理校验）。
+   *
+   * <p>仅当直连 IP 为可信代理（回环/内网网段）时才信任 {@code X-Forwarded-For} /
+   * {@code X-Real-IP}，防止外部客户端伪造转发头绕过分享限流与风控。
    *
    * @param request HTTP 请求
    * @return 客户端 IP 地址
    */
   private String getClientIp(HttpServletRequest request) {
-    String ip = request.getHeader("X-Forwarded-For");
-    if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-      ip = request.getHeader("X-Real-IP");
-    }
-    if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-      ip = request.getRemoteAddr();
-    }
-    // 多级代理场景：取第一个 IP
-    if (ip != null && ip.contains(",")) {
-      ip = ip.split(",")[0].trim();
-    }
-    return ip;
+    return ClientIpResolver.getClientIp(request);
   }
 }

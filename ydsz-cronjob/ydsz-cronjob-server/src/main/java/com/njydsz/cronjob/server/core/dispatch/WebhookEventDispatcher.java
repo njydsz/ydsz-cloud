@@ -9,8 +9,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookRetryVO;
@@ -75,9 +74,6 @@ public class WebhookEventDispatcher {
 
   /** Webhook 推送超时时间（秒） */
   private static final long WEBHOOK_REQUEST_TIMEOUT_SECONDS = 10;
-
-  /** HMAC 算法名称 */
-  private static final String HMAC_ALGORITHM = "HmacSHA256";
 
   /** 重试补偿记录默认最大重试次数 */
   private static final int DEFAULT_MAX_RETRIES = 5;
@@ -288,17 +284,18 @@ public class WebhookEventDispatcher {
     }
   }
 
-  /** 计算 HMAC-SHA256 签名。 */
+  /**
+   * 计算 HMAC-SHA256 签名（委托 {@link DigestUtils#hmacSha256Hex(String, String)}，UTF-8 编码）。
+   *
+   * <p>失败时返回空字符串（保持历史行为：签名头以空值发送，由接收方校验拒绝）。
+   *
+   * @param body 待签名请求体
+   * @param secret 签名密钥，不可为空
+   * @return Hex 编码签名；计算失败时返回空字符串
+   */
   private String computeSignature(String body, String secret) {
     try {
-      Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-      mac.init(new SecretKeySpec(secret.getBytes(), HMAC_ALGORITHM));
-      byte[] hash = mac.doFinal(body.getBytes());
-      StringBuilder sb = new StringBuilder();
-      for (byte b : hash) {
-        sb.append(String.format("%02x", b));
-      }
-      return sb.toString();
+      return DigestUtils.hmacSha256Hex(body, secret);
     } catch (Exception e) {
       log.warn("[Webhook] 签名计算失败: reason={}", e.getMessage());
       return "";

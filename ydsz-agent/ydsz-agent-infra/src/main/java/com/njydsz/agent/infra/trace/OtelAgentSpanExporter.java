@@ -6,6 +6,8 @@ import java.util.Map;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -142,11 +144,11 @@ public class OtelAgentSpanExporter implements AgentSpanExporter {
    * <p>OTel Attributes 支持 String / long / double / boolean。当前将所有属性转换为 String，
    * 更精确的类型映射（如 cost → double）由调用方在 AgentSpan.attributes 中预留 OTel 语义名。
    */
-  private io.opentelemetry.api.common.Attributes mapAttributes(Map<String, String> attrs) {
+  private Attributes mapAttributes(Map<String, String> attrs) {
     if (attrs == null || attrs.isEmpty()) {
-      return io.opentelemetry.api.common.Attributes.empty();
+      return Attributes.empty();
     }
-    io.opentelemetry.api.common.AttributesBuilder builder = io.opentelemetry.api.common.Attributes.builder();
+    AttributesBuilder builder = Attributes.builder();
     for (Map.Entry<String, String> entry : attrs.entrySet()) {
       builder.put(AttributeKey.stringKey(entry.getKey()), entry.getValue());
     }

@@ -2,11 +2,10 @@ package com.njydsz.message.server.channel.sms;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Map;
 import java.util.TreeMap;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 阿里云 SMS Common RPC 26.09.01 签名工具。
@@ -39,11 +38,7 @@ public final class AliyunSmsSigner {
     String canonical = buildCanonicalQuery(params);
     String stringToSign = "GET&" + percentEncode("/") + "&" + percentEncode(canonical);
     try {
-      Mac mac = Mac.getInstance("HmacSHA1");
-      mac.init(
-          new SecretKeySpec((accessKeySecret + "&").getBytes(StandardCharsets.UTF_8), "HmacSHA1"));
-      byte[] digest = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
-      return Base64.getEncoder().encodeToString(digest);
+      return DigestUtils.hmacSha1Base64(stringToSign, accessKeySecret + "&");
     } catch (Exception e) {
       throw new IllegalStateException("阿里云签名计算失败: " + e.getMessage(), e);
     }

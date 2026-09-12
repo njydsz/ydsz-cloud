@@ -1,12 +1,7 @@
 package com.njydsz.userinfo.server.alert;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.notify.signature.DingTalkSignUtil;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 
 /**
@@ -50,12 +46,6 @@ public class DingTalkAlertNotificationChannel implements AlertNotificationChanne
 
   /** 消息体内 markdown 对象初始容量 */
   private static final int MARKDOWN_INITIAL_CAPACITY = 4;
-
-  /** HMAC 签名算法 */
-  private static final String HMAC_ALGORITHM = "HmacSHA256";
-
-  /** URL 编码字符集名称 */
-  private static final String URL_ENCODING_CHARSET = StandardCharsets.UTF_8.name();
 
   @Value("${ydsz.userinfo.alert.dingtalk.webhook-url:}")
   private String webhookUrl;
@@ -107,31 +97,13 @@ public class DingTalkAlertNotificationChannel implements AlertNotificationChanne
   /**
    * 构建带加签的 Webhook URL（如配置了加签密钥）。
    *
-   * @return 完整 URL
+   * <p>委托 {@link DingTalkSignUtil#signWebhookUrl(String, String)} 统一实现钉钉官方加签协议
+   * （{@code timestamp + "\n" + secret} → HMAC-SHA256 → Base64 → URLEncode）。
+   *
+   * @return 完整 URL；签名失败时返回原始 URL（由 DingTalkSignUtil 保证不阻断发送）
    */
   private String buildSignedUrl() {
-    if (signingSecret == null || signingSecret.isBlank()) {
-      return webhookUrl;
-    }
-
-    try {
-      // 钉钉加签规则：timestamp + "\n" + secret 做 HMAC-SHA256 + Base64 + URLEncode
-      long timestamp = System.currentTimeMillis();
-      String stringToSign = timestamp + "\n" + signingSecret;
-
-      Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-      mac.init(new SecretKeySpec(
-          signingSecret.getBytes(), HMAC_ALGORITHM));
-      byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
-      String sign = URLEncoder.encode(
-          Base64.getEncoder().encodeToString(signData),
-          URL_ENCODING_CHARSET);
-
-      return webhookUrl + "&timestamp=" + timestamp + "&sign=" + sign;
-    } catch (Exception e) {
-      log.warn("构建钉钉加签 URL 失败: {}", e.getMessage());
-      return webhookUrl;
-    }
+    return DingTalkSignUtil.signWebhookUrl(webhookUrl, signingSecret);
   }
 
   /**

@@ -3,7 +3,6 @@ package com.njydsz.userinfo.web.controller;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,6 +40,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.sentry.sla.SlaMetric;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.RefreshRequest;
@@ -55,7 +55,6 @@ import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.MfaService;
 import com.njydsz.userinfo.server.auth.SecondaryAuthService;
 import com.njydsz.userinfo.server.auth.WebAuthnService;
-import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
  * 认证 Controller
@@ -102,10 +101,6 @@ public class AuthController {
   /** 二次认证标记默认 TTL（秒）：5 分钟 */
   private static final int DEFAULT_SECONDARY_AUTH_TTL = 300;
 
-  /** 客户端真实 IP 代理头列表（按优先级排序） */
-  private static final List<String> PROXY_IP_HEADERS = List.of(
-      HeaderConstants.X_FORWARDED_FOR, "X-Real-IP", "Proxy-Client-IP", "WL-Proxy-Client-IP");
-
   private final AuthService authService;
 
   /** 双因素认证服务（登录短信验证码发送） */
@@ -116,9 +111,6 @@ public class AuthController {
 
   /** P0-2: WebAuthn 通行钥二级认证服务 */
   private final WebAuthnService webAuthnService;
-
-  /** P2-6: 可信代理配置（决定是否信任转发头） */
-  private final UserInfoProperties properties;
 
   /** Token 服务（签发 access/refresh token） */
   private final TokenService tokenService;
@@ -431,59 +423,17 @@ public class AuthController {
   }
 
   /**
-   * 从 HttpServletRequest 中提取客户端真实 IP
+   * 从 HttpServletRequest 中提取客户端真实 IP（委托 {@link ClientIpResolver}）。
    *
-   * <p>P2-6: 仅当请求来自可信代理（{@code ydsz.userinfo.trusted-proxies}）时，才读取
-   * X-Forwarded-For、X-Real-IP 等代理头；否则直接用 getRemoteAddr()，
-   * 防止客户端直接伪造转发头绕过 IP 风控。
+   * <p>统一使用平台级可信代理校验：仅当直连 IP 为可信代理（回环/内网网段）时才读取
+   * X-Forwarded-For、X-Real-IP 等代理头，否则直接用 getRemoteAddr()，
+   * 防止客户端伪造转发头绕过 IP 风控。与 system 模块 InternalApiIpFilter 采用同一实现。
    *
    * @param request HTTP 请求
-   * @return 客户端真实 IP；无 IP 时为 null
+   * @return 客户端真实 IP；request 为 null 时返回 {@code "unknown"}
    */
   private String extractClientIp(HttpServletRequest request) {
-    if (request == null) {
-      return null;
-    }
-    if (!isTrustedProxy(request)) {
-      return request.getRemoteAddr();
-    }
-    // 多级代理场景：依次检查代理头，取第一个非 unknown 的 IP
-    for (String header : PROXY_IP_HEADERS) {
-      String ip = request.getHeader(header);
-      if (isValidProxyIp(ip)) {
-        int idx = ip.indexOf(',');
-        return (idx > 0) ? ip.substring(0, idx).trim() : ip.trim();
-      }
-    }
-    return request.getRemoteAddr();
-  }
-
-  /**
-   * 判断代理 IP 头值是否有效（非空且非 unknown）。
-   *
-   * @param ip IP 头值
-   * @return true 表示有效
-   */
-  private static boolean isValidProxyIp(String ip) {
-    return ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip);
-  }
-
-  /**
-   * P2-6: 判断请求是否来自可信代理。
-   *
-   * <p>远程地址命中 {@code ydsz.userinfo.trusted-proxies} 列表才返回 true；
-   * 列表为空时一律不信任代理头（默认安全策略）。
-   *
-   * @param request HTTP 请求
-   * @return true 表示来自可信代理
-   */
-  private boolean isTrustedProxy(HttpServletRequest request) {
-    List<String> trustedProxies = properties.getTrustedProxies();
-    if (trustedProxies == null || trustedProxies.isEmpty()) {
-      return false;
-    }
-    String remoteAddr = request.getRemoteAddr();
-    return remoteAddr != null && trustedProxies.contains(remoteAddr);
+    return ClientIpResolver.getClientIp(request);
   }
 
   /**

@@ -5,12 +5,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +18,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookRetryVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -63,9 +61,6 @@ public class WebhookRetryScanTask implements ScanTask {
   /** HTTP 请求超时（秒） */
   @Value("${ydsz.cronjob.webhook.request-timeout-seconds:10}")
   private long requestTimeoutSeconds;
-
-  /** HMAC 算法 */
-  private static final String HMAC_ALGORITHM = "HmacSHA256";
 
   /** 签名头名称 */
   private static final String SIGNATURE_HEADER = "X-Webhook-Signature";
@@ -209,22 +204,16 @@ public class WebhookRetryScanTask implements ScanTask {
   }
 
   /**
-   * HMAC-SHA256 签名。
+   * HMAC-SHA256 签名（委托 {@link DigestUtils#hmacSha256Hex(String, String)}，UTF-8 编码）。
    *
    * @param payload 请求体 JSON
    * @param secret Webhook 密钥
    * @return 十六进制签名
+   * @throws SysException 签名计算失败时抛出
    */
   private String computeSignature(String payload, String secret) {
     try {
-      Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-      mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM));
-      byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-      StringBuilder sb = new StringBuilder();
-      for (byte b : hash) {
-        sb.append(String.format("%02x", b));
-      }
-      return sb.toString();
+      return DigestUtils.hmacSha256Hex(payload, secret);
     } catch (Exception e) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)

@@ -9,7 +9,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -18,6 +17,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.config.MessageProperties;
@@ -71,10 +71,8 @@ public class GetuiPushProvider implements PushProvider {
   public GetuiPushProvider(
       MessageProperties messageProperties, SnowflakeIdGenerator snowflakeIdGenerator) {
     this.config = messageProperties.getPush().getGetui();
-    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-    factory.setConnectTimeout(config.getConnectTimeout());
-    factory.setReadTimeout(config.getReadTimeout());
-    this.restTemplate = new RestTemplate(factory);
+    this.restTemplate =
+        RestTemplateUtils.create(config.getConnectTimeout(), config.getReadTimeout());
     this.snowflakeIdGenerator = snowflakeIdGenerator;
   }
 

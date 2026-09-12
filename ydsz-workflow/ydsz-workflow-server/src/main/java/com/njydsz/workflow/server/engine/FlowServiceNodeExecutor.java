@@ -16,7 +16,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -26,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.safe.ssrf.HttpConnectionValidator;
 import com.njydsz.common.safe.ssrf.SsrfHttpRequestInterceptor;
+import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 
 /**
@@ -124,18 +124,16 @@ public class FlowServiceNodeExecutor {
   /**
    * 构造器：构建带超时和 SSRF 防护的 RestTemplate，并初始化 Aviator 沙箱实例。
    *
-   * <p>使用 {@link SimpleClientHttpRequestFactory} 配置超时，替代 Spring Boot 4.x 中已移除的
-   * {@code RestTemplateBuilder}。同时手动添加 {@link SsrfHttpRequestInterceptor} 实现 SSRF 防护，
-   * 因为此 RestTemplate 直接通过 {@code new} 创建，不经过 Spring 容器，无法被 {@code RestTemplateCustomizer}
-   * 自动定制。
+   * <p>委托 {@link RestTemplateUtils#create(Duration, Duration, ClientHttpRequestInterceptor[])}
+   * 统一构建（替代 Spring Boot 4.x 中已移除的 {@code RestTemplateBuilder}），
+   * 并挂载 {@link SsrfHttpRequestInterceptor} 实现 SSRF 防护。
    */
   public FlowServiceNodeExecutor() {
-    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-    factory.setConnectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS));
-    factory.setReadTimeout(Duration.ofSeconds(READ_TIMEOUT_SECONDS));
-    this.restTemplate = new RestTemplate(factory);
-    // P0-2: 手动添加 SSRF 拦截器（直接 new 的 RestTemplate 不经过 Spring 容器）
-    this.restTemplate.getInterceptors().add(new SsrfHttpRequestInterceptor());
+    this.restTemplate =
+        RestTemplateUtils.create(
+            Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS),
+            Duration.ofSeconds(READ_TIMEOUT_SECONDS),
+            new SsrfHttpRequestInterceptor());
     this.aviatorInstance = AviatorEvaluator.newInstance();
     // 浮点数解析为 Decimal，避免精度丢失
     this.aviatorInstance.setOption(Options.ALWAYS_PARSE_FLOATING_POINT_NUMBER_INTO_DECIMAL, true);

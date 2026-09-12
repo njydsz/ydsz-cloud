@@ -94,6 +94,8 @@
         <owasp-dc.version>8.4.0</owasp-dc.version>
         <!-- Resilience4j（Spring Cloud CircuitBreaker 官方实现，替代自研熔断引擎 2026-09-01） -->
         <resilience4j.version>2.4.0</resilience4j.version>
+        <!-- Seata 2.x 分布式事务（seata-spring-boot-starter 由 Spring Cloud Alibaba BOM 未覆盖，单独管理） -->
+        <seata.version>2.0.0</seata.version>
 
         <ttl.version>2.14.5</ttl.version>
         <disruptor.version>3.4.4</disruptor.version>
@@ -814,9 +816,12 @@
                 <version>${rocketmq.spring.version}</version>
             </dependency>
 
-            <!-- Seata 分布式事务管理项已于 2026-09-01 移除（对标清理 P1）：
-                 全仓 0 个 @GlobalTransactional 使用点，ydsz-common-seata 模块已删除。
-                 引入真实分布式事务场景时，连同 seata.version 属性与部署文档一并恢复。 -->
+            <!-- Seata 分布式事务：AT / TCC / SAGA / XA 四种模式（ydsz-common-seata 提供统一封装，按需准入） -->
+            <dependency>
+                <groupId>io.seata</groupId>
+                <artifactId>seata-spring-boot-starter</artifactId>
+                <version>${seata.version}</version>
+            </dependency>
 
             <!-- MinIO -->
             <dependency>

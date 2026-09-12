@@ -1,5 +1,6 @@
 package com.njydsz.common.notify.signature;
 
+import com.njydsz.common.util.api.Experimental;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
@@ -10,9 +11,12 @@ import com.njydsz.common.util.security.DigestUtils;
  *
  * <p>算法：HmacSHA256，密钥为 appSecret，签名内容为 timestamp + nonce + encrypt， 计算结果经 Base64 编码后与回调签名比对。
  *
+ * <p>底层委托 {@link DigestUtils#verifySignature}（常量时间比较，防时序攻击）。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
+@Experimental("IM 回调签名验证，当前暂无业务模块直接引用，保留待 workflow 三方审批回调接入；签名原语优先使用 common-util DigestUtils")
 public final class HmacSignatureUtil {
 
   private HmacSignatureUtil() {}

@@ -357,6 +357,44 @@ public final class DigestUtils {
   }
 
   /**
+   * 计算 HMAC-SHA1（带密钥的散列）
+   *
+   * <p>典型场景：阿里云 RPC 签名等第三方协议强制要求 HMAC-SHA1。
+   *
+   * @param input 输入
+   * @param key 键
+   * @return 处理后的字节数组
+   * @since 26.09.01
+   */
+  public static byte[] hmacSha1(byte[] input, byte[] key) {
+    try {
+      Mac mac = Mac.getInstance("HmacSHA1");
+      SecretKeySpec keySpec = new SecretKeySpec(key, "HmacSHA1");
+      mac.init(keySpec);
+      return mac.doFinal(input);
+    } catch (Exception e) {
+      throw new IllegalStateException("HmacSHA1 algorithm not available", e);
+    }
+  }
+
+  /**
+   * 计算 HMAC-SHA1 并返回 Base64 标准编码的签名
+   *
+   * @param data 待签名数据
+   * @param secret 密钥
+   * @return Base64 标准编码的签名；入参为 null 时返回 null
+   * @since 26.09.01
+   */
+  public static String hmacSha1Base64(String data, String secret) {
+    if (data == null || secret == null) {
+      return null;
+    }
+    byte[] hmac =
+        hmacSha1(data.getBytes(StandardCharsets.UTF_8), secret.getBytes(StandardCharsets.UTF_8));
+    return Base64.getEncoder().encodeToString(hmac);
+  }
+
+  /**
    * PBKDF2 密钥派生（推荐用于密码存储）
    *
    * @param password password
