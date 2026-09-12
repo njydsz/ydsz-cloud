@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.entity;
+﻿package com.njydsz.userinfo.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -52,6 +52,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @see RolePermission 角色-权限中间表
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller
  */
+// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
+@SuppressWarnings("unchecked")
 @Data
 @SuperBuilder
 @NoArgsConstructor

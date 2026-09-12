@@ -43,6 +43,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @see RolePermission 角色-菜单权限中间表
  * @see com.njydsz.userinfo.web.controller.MenuController 菜单 Controller
  */
+// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
+@SuppressWarnings("unchecked")
 @Data
 @SuperBuilder
 @NoArgsConstructor

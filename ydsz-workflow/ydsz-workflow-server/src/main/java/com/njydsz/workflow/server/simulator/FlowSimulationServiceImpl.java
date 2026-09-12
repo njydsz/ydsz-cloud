@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.simulator;
+package com.njydsz.workflow.server.simulator;
 
 import java.util.Map;
 

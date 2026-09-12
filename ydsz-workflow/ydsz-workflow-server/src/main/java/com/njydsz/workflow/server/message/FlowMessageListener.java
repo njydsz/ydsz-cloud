@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.message;
+package com.njydsz.workflow.server.message;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;

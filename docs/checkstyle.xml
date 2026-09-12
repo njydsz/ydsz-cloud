@@ -74,6 +74,16 @@
         <property name="lineSeparator" value="lf"/>
     </module>
 
+    <!-- 禁止 UTF-8 BOM 文件头（编码规范 1.1 节 / 规则 ID YDIZ-CODE-001，P0 阻断级）。
+         注：BOM 会使 Checkstyle 自身的 ANTLR 解析器在 TreeWalker 阶段抛出
+         NoViableAltException，导致整个模块检查中断并掩盖后续模块，故本规则置于
+         Checker 层（早于 TreeWalker）。修复工具：data/scripts/fix-file-encoding.py -->
+    <module name="RegexpSingleline">
+        <property name="format" value="^\ufeff"/>
+        <property name="message"
+                  value="【P0-YDIZ-CODE-001】源文件禁止携带 UTF-8 BOM，会导致 javac 报 illegal character 并使 Checkstyle 解析中断。修复：data/scripts/fix-file-encoding.py --apply 或 IDE 执行 Remove BOM。参考：云顶编码规范 1.1 节"/>
+    </module>
+
     <!-- 能力提供者模块豁免：common-excel/docs/file/netty/seata 允许直接 import 对应 SDK -->
     <!-- 豁免清单见同目录 checkstyle-suppressions.xml（v3.3 恢复 SuppressionFilter：
          此前因 checkstyle 全局 skip 误判「0 违规」而移除，恢复后豁免仅限能力提供者

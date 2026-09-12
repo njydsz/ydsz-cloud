@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.service.impl.integration;
+package com.njydsz.workflow.server.service.impl.integration;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

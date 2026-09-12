@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.form;
+package com.njydsz.workflow.server.form;
 
 /**
  * 表单字段类型（P0-3 表单引擎 MVP）

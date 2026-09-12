@@ -47,6 +47,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @see Company 公司实体
  * @see Department 部门实体
  */
+// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
+@SuppressWarnings("unchecked")
 @Data
 @SuperBuilder
 @NoArgsConstructor

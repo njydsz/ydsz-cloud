@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.engine;
+package com.njydsz.workflow.server.engine;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;

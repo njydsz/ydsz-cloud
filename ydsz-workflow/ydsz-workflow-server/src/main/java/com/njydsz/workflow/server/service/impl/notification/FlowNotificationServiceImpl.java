@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.service.impl.notification;
+package com.njydsz.workflow.server.service.impl.notification;
 
 import java.io.Serial;
 import java.io.Serializable;

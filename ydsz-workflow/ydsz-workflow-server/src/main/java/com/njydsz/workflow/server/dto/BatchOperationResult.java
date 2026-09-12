@@ -1,4 +1,4 @@
-﻿package com.njydsz.workflow.server.dto;
+package com.njydsz.workflow.server.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
