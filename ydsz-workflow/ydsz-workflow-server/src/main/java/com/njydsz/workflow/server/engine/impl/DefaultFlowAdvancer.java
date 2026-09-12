@@ -97,7 +97,11 @@ public class DefaultFlowAdvancer {
     this.lifecycleManager = lifecycleManager;
   }
 
-  /** @return 流程实例服务。 */
+  /**
+   * 获取流程实例服务。
+   *
+   * @return 流程实例服务。
+   */
     public FlowInstanceService getInstanceService() {
     return instanceService;
   }

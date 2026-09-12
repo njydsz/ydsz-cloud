@@ -29,6 +29,9 @@ public record DataSourceAnalysisResult(
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** JSON 拼接缓冲区初始容量 */
+  private static final int JSON_BUFFER_CAPACITY = 512;
+
   /**
    * 全参构造。
    *
@@ -66,7 +69,7 @@ public record DataSourceAnalysisResult(
    * @return JSON 格式字符串
    */
   public String toDataJson() {
-    StringBuilder sb = new StringBuilder(512);
+    StringBuilder sb = new StringBuilder(JSON_BUFFER_CAPACITY);
     sb.append("{\"summary\":\"").append(escapeJson(summary)).append("\"");
     sb.append(",\"columns\":");
     appendStringList(sb, columns);

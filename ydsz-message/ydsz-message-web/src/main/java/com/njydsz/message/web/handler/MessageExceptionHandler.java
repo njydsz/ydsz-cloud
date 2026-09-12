@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -55,7 +56,7 @@ public class MessageExceptionHandler extends BaseExceptionHandler {
    *
    * @param environment Spring 环境
    */
-  protected MessageExceptionHandler(org.springframework.core.env.Environment environment) {
+  protected MessageExceptionHandler(Environment environment) {
     super(environment);
   }
 

@@ -45,62 +45,110 @@ public class BpmnModel {
    */
   private Map<String, List<NodeCoordinate>> skipCoordinates;
 
-  /** @return 流程 KEY（BPMN process id） */
+  /**
+   * 获取流程 KEY（BPMN process id）。
+   *
+   * @return 流程 KEY（BPMN process id）
+   */
   public String getProcessId() {
     return processId;
   }
 
-  /** @param processId 流程 KEY */
+  /**
+   * 设置流程 KEY。
+   *
+   * @param processId 流程 KEY
+   */
   public void setProcessId(String processId) {
     this.processId = processId;
   }
 
-  /** @return 流程名称（BPMN process name） */
+  /**
+   * 获取流程名称（BPMN process name）。
+   *
+   * @return 流程名称（BPMN process name）
+   */
   public String getProcessName() {
     return processName;
   }
 
-  /** @param processName 流程名称 */
+  /**
+   * 设置流程名称。
+   *
+   * @param processName 流程名称
+   */
   public void setProcessName(String processName) {
     this.processName = processName;
   }
 
-  /** @return 节点列表 */
+  /**
+   * 获取节点列表。
+   *
+   * @return 节点列表
+   */
   public List<FlowNodeVO> getNodes() {
     return nodes;
   }
 
-  /** @param nodes 节点列表 */
+  /**
+   * 设置节点列表。
+   *
+   * @param nodes 节点列表
+   */
   public void setNodes(List<FlowNodeVO> nodes) {
     this.nodes = nodes;
   }
 
-  /** @return 跳转列表 */
+  /**
+   * 获取跳转列表。
+   *
+   * @return 跳转列表
+   */
   public List<FlowSkipVO> getSkips() {
     return skips;
   }
 
-  /** @param skips 跳转列表 */
+  /**
+   * 设置跳转列表。
+   *
+   * @param skips 跳转列表
+   */
   public void setSkips(List<FlowSkipVO> skips) {
     this.skips = skips;
   }
 
-  /** @return 节点坐标映射（key = nodeCode） */
+  /**
+   * 获取节点坐标映射（key = nodeCode）。
+   *
+   * @return 节点坐标映射（key = nodeCode）
+   */
   public Map<String, NodeCoordinate> getNodeCoordinates() {
     return nodeCoordinates;
   }
 
-  /** @param nodeCoordinates 节点坐标映射 */
+  /**
+   * 设置节点坐标映射。
+   *
+   * @param nodeCoordinates 节点坐标映射
+   */
   public void setNodeCoordinates(Map<String, NodeCoordinate> nodeCoordinates) {
     this.nodeCoordinates = nodeCoordinates;
   }
 
-  /** @return 边坐标映射（key = sequenceFlowId） */
+  /**
+   * 获取边坐标映射（key = sequenceFlowId）。
+   *
+   * @return 边坐标映射（key = sequenceFlowId）
+   */
   public Map<String, List<NodeCoordinate>> getSkipCoordinates() {
     return skipCoordinates;
   }
 
-  /** @param skipCoordinates 边坐标映射 */
+  /**
+   * 设置边坐标映射。
+   *
+   * @param skipCoordinates 边坐标映射
+   */
   public void setSkipCoordinates(Map<String, List<NodeCoordinate>> skipCoordinates) {
     this.skipCoordinates = skipCoordinates;
   }
@@ -141,42 +189,74 @@ public class BpmnModel {
       this.height = height;
     }
 
-    /** @return 横坐标。 */
+    /**
+     * 获取横坐标。
+     *
+     * @return 横坐标。
+     */
     public double getX() {
       return x;
     }
 
-    /** @param x 横坐标。 */
+    /**
+     * 设置横坐标。
+     *
+     * @param x 横坐标。
+     */
     public void setX(double x) {
       this.x = x;
     }
 
-    /** @return 纵坐标。 */
+    /**
+     * 获取纵坐标。
+     *
+     * @return 纵坐标。
+     */
     public double getY() {
       return y;
     }
 
-    /** @param y 纵坐标。 */
+    /**
+     * 设置纵坐标。
+     *
+     * @param y 纵坐标。
+     */
     public void setY(double y) {
       this.y = y;
     }
 
-    /** @return 宽度。 */
+    /**
+     * 获取宽度。
+     *
+     * @return 宽度。
+     */
     public double getWidth() {
       return width;
     }
 
-    /** @param width 宽度。 */
+    /**
+     * 设置宽度。
+     *
+     * @param width 宽度。
+     */
     public void setWidth(double width) {
       this.width = width;
     }
 
-    /** @return 高度。 */
+    /**
+     * 获取高度。
+     *
+     * @return 高度。
+     */
     public double getHeight() {
       return height;
     }
 
-    /** @param height 高度。 */
+    /**
+     * 设置高度。
+     *
+     * @param height 高度。
+     */
     public void setHeight(double height) {
       this.height = height;
     }

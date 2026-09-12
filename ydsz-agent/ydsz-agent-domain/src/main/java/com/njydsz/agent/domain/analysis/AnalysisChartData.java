@@ -65,7 +65,7 @@ public record AnalysisChartData(
    * @param datasets 数据行
    * @return 表格图表数据
    */
-  public static AnalysisChartData table(java.util.List<String> labels, java.util.List<Map<String, Object>> datasets) {
+  public static AnalysisChartData table(List<String> labels, List<Map<String, Object>> datasets) {
     return new AnalysisChartData("table", labels, datasets);
   }
 
@@ -76,7 +76,7 @@ public record AnalysisChartData(
    * @param datasets 数据集
    * @return 柱状图数据
    */
-  public static AnalysisChartData bar(java.util.List<String> labels, java.util.List<Map<String, Object>> datasets) {
+  public static AnalysisChartData bar(List<String> labels, List<Map<String, Object>> datasets) {
     return new AnalysisChartData("bar", labels, datasets);
   }
 }

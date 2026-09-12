@@ -12,6 +12,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
@@ -63,6 +64,10 @@ public class CronjobThreadPoolRegistry {
    *
    * <p>幂等操作：同名线程池若已存在，返回现有实例不重复注册。
    *
+   * <p>本方法在完成本地注册后，同步将线程池登记到 ydsz-common-thread 的 {@link
+   * ThreadPoolRegistry}，使本模块线程池可通过 common 统一的 {@code /actuator/threadpools}
+   * 端点观测（P0-1 整改：消除与 common-thread 重复的 Actuator 端点，见《云顶编码规范》§16.4）。
+   *
    * @param name 线程池名称（常量参见本类静态字段）
    * @param pool 线程池实例
    * @return 实际注册的线程池（可能是已存在的实例）
@@ -82,6 +87,8 @@ public class CronjobThreadPoolRegistry {
     }
     // P2-E1: 包装拒绝处理器为计数版本，使 rejectedExecutionCount 可观测
     wrapRejectionCounter(name, pool);
+    // P0-1 整改: 同步登记到 common-thread 统一注册中心，供 /actuator/threadpools 观测
+    ThreadPoolRegistry.register(name, pool);
     log.info("[ThreadPoolRegistry] 注册线程池: name={}", name);
     return pool;
   }

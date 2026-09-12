@@ -28,6 +28,9 @@ public record UserProfileContext(
         List<String> interestedDomains,
         String queryStyle) {
 
+    /** System Prompt 拼接缓冲区初始容量 */
+    private static final int PROMPT_BUFFER_CAPACITY = 128;
+
     /**
      * 判断画像上下文是否有效（包含有价值的信息）。
      *
@@ -53,7 +56,7 @@ public record UserProfileContext(
         if (!hasContent()) {
             return "";
         }
-        StringBuilder sb = new StringBuilder(128);
+        StringBuilder sb = new StringBuilder(PROMPT_BUFFER_CAPACITY);
         sb.append("\n\n[用户画像]\n");
         if (preferredLanguage != null && !preferredLanguage.isBlank()) {
             sb.append("偏好语言: ").append(preferredLanguage).append("\n");

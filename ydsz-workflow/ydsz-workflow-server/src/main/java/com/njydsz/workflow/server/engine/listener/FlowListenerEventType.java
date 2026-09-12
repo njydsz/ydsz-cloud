@@ -45,12 +45,20 @@ public enum FlowListenerEventType {
     this.desc = desc;
   }
 
-    /** @return 事件类型编码。 */
+    /**
+     * 获取事件类型编码。
+     *
+     * @return 事件类型编码。
+     */
   public String getCode() {
     return code;
   }
 
-    /** @return 事件类型描述。 */
+    /**
+     * 获取事件类型描述。
+     *
+     * @return 事件类型描述。
+     */
   public String getDesc() {
     return desc;
   }

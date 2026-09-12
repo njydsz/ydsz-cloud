@@ -3,6 +3,7 @@ package com.njydsz.userinfo.web.filter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -259,7 +260,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
         ttlSeconds = 1L;
       }
       // P0-FIX：使用 DistributedLocker 替代裸 SETNX（统一走 common-lock）
-      String lockValue = distributedLocker.tryLock(key, ttlSeconds, java.util.concurrent.TimeUnit.SECONDS);
+      String lockValue = distributedLocker.tryLock(key, ttlSeconds, TimeUnit.SECONDS);
       return lockValue != null;
     } catch (Exception e) {
       log.warn("API signature: Redis error during nonce check, nonce={}, error={}",

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
 
@@ -58,6 +59,7 @@ public class GlobalConcurrencyController {
 
   private final CronjobRedisOps cronjobRedisOps;
   private final CronjobProperties cronjobProperties;
+  private final JobLockManager jobLockManager;
 
   /** 节点发现策略（可选注入，用于动态获取在线节点数） */
   private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
@@ -168,23 +170,27 @@ public class GlobalConcurrencyController {
    *
    * <p>由定时任务定期调用，通过查询 RUNNING 状态的日志数校准计数器。防止进程崩溃导致的计数器漂移。
    *
+   * <p>校准锁使用 DistributedLocker（ydsz-common-lock），保证集群仅有一个节点执行校准。
+   *
    * @param actualRunningCount 实际运行中的任务数
    */
   public void calibrate(long actualRunningCount) {
+    // 通过 JobLockManager 获取校准锁（DistributedLocker 实现），避免多节点并发校准
+    String lockKey = CronjobRedisOps.buildKey(CALIBRATION_LOCK_SEGMENT);
+    String lockValue = jobLockManager.tryAcquireLock(lockKey, CALIBRATION_LOCK_TTL * 1000L);
+    if (lockValue == null) {
+      return; // 其他节点正在校准
+    }
     try {
-      boolean acquired = cronjobRedisOps.setIfAbsent(CALIBRATION_LOCK_SEGMENT, "1", CALIBRATION_LOCK_TTL);
-      if (!acquired) {
-        return; // 其他节点正在校准
-      }
       cronjobRedisOps.setLong(GLOBAL_CONCURRENT_SEGMENT, actualRunningCount);
       log.info("[GlobalConcurrency] 计数器已校准: value={}", actualRunningCount);
     } catch (Exception e) {
       log.warn("[GlobalConcurrency] 校准失败: reason={}", e.getMessage());
     } finally {
       try {
-        cronjobRedisOps.delete(CALIBRATION_LOCK_SEGMENT);
+        jobLockManager.releaseLock(lockKey, lockValue);
       } catch (Exception ignored) {
-        log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        log.debug("[GlobalConcurrency] 释放校准锁失败(将等待 TTL 自动过期): reason={}", ignored.getMessage());
       }
     }
   }

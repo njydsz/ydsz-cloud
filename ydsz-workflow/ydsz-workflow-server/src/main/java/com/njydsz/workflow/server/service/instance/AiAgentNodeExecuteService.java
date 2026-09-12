@@ -237,22 +237,38 @@ public class AiAgentNodeExecuteService {
       this.skipType = skipType;
     }
 
-    /** @return 当前流程实例。 */
+    /**
+     * 获取当前流程实例。
+     *
+     * @return 当前流程实例。
+     */
     public FlowInstanceVO getInstance() {
       return instance;
     }
 
-    /** @return 当前节点。 */
+    /**
+     * 获取当前节点。
+     *
+     * @return 当前节点。
+     */
     public FlowNodeVO getNode() {
       return node;
     }
 
-    /** @return 当前流程变量。 */
+    /**
+     * 获取当前流程变量。
+     *
+     * @return 当前流程变量。
+     */
     public Map<String, Object> getVariables() {
       return variables;
     }
 
-    /** @return 推进类型（SKIP / NO_SKIP / CONDITIONAL）。 */
+    /**
+     * 获取推进类型（SKIP / NO_SKIP / CONDITIONAL）。
+     *
+     * @return 推进类型（SKIP / NO_SKIP / CONDITIONAL）。
+     */
     public String getSkipType() {
       return skipType;
     }

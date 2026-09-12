@@ -8,7 +8,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * P2-E1: 拒绝任务计数处理器。
  *
  * <p>包装原始 {@link RejectedExecutionHandler}，在任务被拒绝时递增计数，
- * 供 {@link CronjobThreadPoolRegistry#getMetrics()} 与 {@code /actuator/threadpools} 端点观测
+ * 供 {@link CronjobThreadPoolRegistry#getMetrics()} 与 ydsz-common-thread 提供的
+ * {@code /actuator/threadpools} 端点观测
  * 线程池拒绝压力（原实现中 {@code rejectedExecutionCount} 硬编码为 0，无法观测）。
  *
  * <p>委托链：本处理器只做计数，实际拒绝策略（AbortPolicy / CallerRunsPolicy 等）由 delegate 决定，行为不变。

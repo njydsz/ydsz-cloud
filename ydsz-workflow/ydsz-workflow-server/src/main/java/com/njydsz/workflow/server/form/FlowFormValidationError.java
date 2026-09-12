@@ -36,17 +36,29 @@ public class FlowFormValidationError implements Serializable {
     this.message = message;
   }
 
-    /** @return 字段 key。 */
+  /**
+   * 获取字段 key。
+   *
+   * @return 字段 key
+   */
   public String getFieldKey() {
     return fieldKey;
   }
 
-    /** @return 错误信息。 */
+  /**
+   * 获取错误信息。
+   *
+   * @return 错误信息
+   */
   public String getMessage() {
     return message;
   }
 
-    /** @return 错误码。 */
+    /**
+     * 获取错误码。
+     *
+     * @return 错误码。
+     */
   public String getCode() {
     return code;
   }

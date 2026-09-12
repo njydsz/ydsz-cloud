@@ -1,7 +1,7 @@
 package com.njydsz.cronjob.server.core;
 
-import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,13 +9,12 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
-import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
 import com.njydsz.cronjob.server.service.job.JobService;
 
 /**
  * 事件驱动调度器。
  *
- * <p>接收外部事件（如 MQ 消息）并触发对应的定时任务执行。 使用 Redis SETNX 进行消息去重，确保同一事件不会重复触发。
+ * <p>接收外部事件（如 MQ 消息）并触发对应的定时任务执行。 使用 DistributedLocker 进行消息去重，确保同一事件不会重复触发。
  *
  * <p><b>P0-10</b>：强制要求调用方传 {@code msgId}，无 msgId 时拒绝触发，避免去重失效导致任务重复执行。
  *
@@ -27,18 +26,20 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @RequiredArgsConstructor
 public class EventDrivenScheduler {
 
-  /** Redis Key segment：事件去重（完整 key = ydzs:job:event:dedup:{msgId}） */
-  private static final String DEDUP_KEY_SEGMENT = "event:dedup";
-  private static final Duration DEDUP_TTL = Duration.ofMinutes(30);
+  /** 事件去重锁 TTL（毫秒） */
+  private static final long DEDUP_TTL_MS = TimeUnit.MINUTES.toMillis(30);
 
-  private final CronjobRedisOps cronjobRedisOps;
+  /** 事件去重锁 key 前缀 */
+  private static final String DEDUP_LOCK_PREFIX = "ydsz:job:event:dedup:";
+
+  private final JobLockManager jobLockManager;
   private final JobRepository jobRepository;
   private final JobService jobService;
 
   /**
    * 通过事件触发任务执行。
    *
-   * <p>使用 Redis SETNX 进行去重，同一 msgId 在 TTL 内不会重复触发。
+   * <p>使用 DistributedLocker（ydsz-common-lock）进行去重，同一 msgId 在 TTL 内不会重复触发。
    *
    * <p><b>P0-10</b>：msgId 为必填参数，为空时拒绝触发并返回 false，避免去重键退化为 {@code jobKey:timestamp} 导致
    * 同一事件重复触发。调用方应保证 msgId 全局唯一（如 MQ messageId、业务流水号）。
@@ -59,12 +60,13 @@ public class EventDrivenScheduler {
       return false;
     }
 
-    String dedupKey = DEDUP_KEY_SEGMENT + ":" + msgId;
-    Boolean acquired = cronjobRedisOps.setIfAbsent(dedupKey, "1", DEDUP_TTL.toSeconds());
-    if (!acquired) {
+    String dedupLockKey = DEDUP_LOCK_PREFIX + msgId;
+    String lockValue = jobLockManager.tryAcquireLock(dedupLockKey, DEDUP_TTL_MS);
+    if (lockValue == null) {
       log.info("[EventScheduler] 事件已去重, 跳过触发: jobKey={} msgId={}", jobKey, msgId);
       return false;
     }
+    // 注意：去重锁不在 finally 中释放，保留 TTL 窗口内的去重语义（与原始 SETNX + TTL 行为一致）
 
     try {
       Optional<JobVO> jobOpt = jobRepository.findByJobKey(jobKey);

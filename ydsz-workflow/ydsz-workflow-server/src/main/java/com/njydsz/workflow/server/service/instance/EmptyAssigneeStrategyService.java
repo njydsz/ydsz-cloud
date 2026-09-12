@@ -262,17 +262,29 @@ public class EmptyAssigneeStrategyService {
       this.variables = variables;
     }
 
-    /** @return 当前流程实例。 */
+    /**
+     * 获取当前流程实例。
+     *
+     * @return 当前流程实例。
+     */
     public FlowInstanceVO getInstance() {
       return instance;
     }
 
-    /** @return 当前节点。 */
+    /**
+     * 获取当前节点。
+     *
+     * @return 当前节点。
+     */
     public FlowNodeVO getNode() {
       return node;
     }
 
-    /** @return 当前流程变量。 */
+    /**
+     * 获取当前流程变量。
+     *
+     * @return 当前流程变量。
+     */
     public Map<String, Object> getVariables() {
       return variables;
     }

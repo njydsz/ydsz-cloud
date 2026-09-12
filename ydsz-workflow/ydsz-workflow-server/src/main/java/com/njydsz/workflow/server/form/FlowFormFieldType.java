@@ -57,7 +57,11 @@ public enum FlowFormFieldType {
     this.code = code;
   }
 
-    /** @return 表单字段类型编码。 */
+    /**
+     * 获取表单字段类型编码。
+     *
+     * @return 表单字段类型编码。
+     */
   public String getCode() {
     return code;
   }

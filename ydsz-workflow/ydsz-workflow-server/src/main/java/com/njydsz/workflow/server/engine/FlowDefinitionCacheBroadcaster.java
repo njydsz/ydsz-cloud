@@ -44,6 +44,8 @@ public class FlowDefinitionCacheBroadcaster {
   private final RedisPubSubOps redisPubSubOps;
 
   /**
+   * FlowDefinitionCacheService ↔ Broadcaster 循环依赖。
+   *
    * @Lazy 避免 FlowDefinitionCacheService ↔ Broadcaster 循环依赖
    */
   private final FlowDefinitionCacheService cacheService;

@@ -12,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
@@ -25,6 +23,7 @@ import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.AnomalyRecoveryConfig;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.alert.AlertContext;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
@@ -70,7 +69,7 @@ public class AnomalyRecoveryScanner {
   private final TaskDispatcher taskDispatcher;
   private final LeaderElector leaderElector;
   private final CronjobProperties cronjobProperties;
-  private final RedisTemplate<String, Object> redisTemplate;
+  private final JobLockManager jobLockManager;
   private final RedisStringOps redisStringOps;
 
   /** P1-1: 节点发现策略（可选注入，Nacos/DB 模式统一抽象） */
@@ -82,17 +81,8 @@ public class AnomalyRecoveryScanner {
   /** P6-2: Prometheus 指标收集器（可选注入） */
   private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
-  /** Lua 脚本: 安全释放锁 */
-  private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT;
-
   /** 自愈重试计数 Redis key 前缀 */
   private static final String HEAL_RETRY_PREFIX = "ydsz:job:heal:retry:";
-
-  static {
-    RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>();
-    RELEASE_LOCK_SCRIPT.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
-    RELEASE_LOCK_SCRIPT.setResultType(Long.class);
-  }
 
   private String leaderRole;
 
@@ -558,7 +548,7 @@ public class AnomalyRecoveryScanner {
   /**
    * 安全释放任务锁。
    *
-   * <p>使用 Lua 脚本保证"检查 lockHolder 匹配 + delete"的原子性，避免误删其他节点持有的锁。
+   * <p>通过 JobLockManager（DistributedLocker）释放锁，保证只有持有者能释放。
    * 分片任务使用 {@code :shard:{shardIndex}} 后缀的锁 key。
    *
    * @param jobKey 任务 key
@@ -571,22 +561,18 @@ public class AnomalyRecoveryScanner {
       return false;
     }
     try {
-      String lockKey = LockKeyUtil.buildJobLockKey(jobKey, shardIndex);
-      Long released =
-          redisTemplate.execute(
-              RELEASE_LOCK_SCRIPT, List.of(lockKey), lockHolder);
-      if (released != null && released > 0) {
+      boolean released = jobLockManager.releaseLock(jobKey, shardIndex, lockHolder);
+      if (released) {
         log.info(
-            "[AnomalyRecovery] 释放任务锁成功: jobKey={} shardIndex={} lockKey={}",
+            "[AnomalyRecovery] 释放任务锁成功: jobKey={} shardIndex={}",
             jobKey,
-            shardIndex,
-            lockKey);
+            shardIndex);
         return true;
       }
       log.debug(
-          "[AnomalyRecovery] 锁 holder 不匹配或已过期, 跳过释放: lockKey={} holder={}",
-          lockKey,
-          lockHolder);
+          "[AnomalyRecovery] 锁已被其他节点持有或已过期, 跳过释放: jobKey={} shardIndex={}",
+          jobKey,
+          shardIndex);
       return false;
     } catch (Exception e) {
       log.warn(
