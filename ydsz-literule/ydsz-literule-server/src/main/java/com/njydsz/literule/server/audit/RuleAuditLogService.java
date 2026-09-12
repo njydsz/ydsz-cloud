@@ -70,6 +70,9 @@ public class RuleAuditLogService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** "source=" 前缀长度（避免魔法值） */
+  private static final int SOURCE_PREFIX_LENGTH = "source=".length();
+
   /** 审计日志写入器（由 ydsz-common-audit 自动配置提供） */
   private final AuditRecorder auditRecorder;
 
@@ -679,10 +682,10 @@ public class RuleAuditLogService {
     if (remaining.startsWith("source=")) {
       int spaceIdx = remaining.indexOf(' ');
       if (spaceIdx > 0) {
-        entry.setSource(remaining.substring(7, spaceIdx));
+        entry.setSource(remaining.substring(SOURCE_PREFIX_LENGTH, spaceIdx));
         remaining = remaining.substring(spaceIdx + 1).trim();
       } else {
-        entry.setSource(remaining.substring(7));
+        entry.setSource(remaining.substring(SOURCE_PREFIX_LENGTH));
         remaining = "";
       }
     }
