@@ -140,15 +140,18 @@ public class SearchHistoryService {
    */
   public List<Map.Entry<String, Double>> getHotSearches() {
     try {
-      Set<ZSetOperations.TypedTuple<Object>> range =
+      Set<?> range =
           redisCollectionOps.zReverseRangeWithScores(
               KEY_HOT_SEARCHES, 0, HOT_SEARCHES_LIMIT - 1);
       if (range == null || range.isEmpty()) {
         return Collections.emptyList();
       }
       return range.stream()
-          .map(entry -> Map.<String, Double>entry(
-              entry.getValue().toString(), entry.getScore()))
+          .map(entry -> {
+              // noinspection unchecked
+              Map.Entry<String, Object> e = (Map.Entry<String, Object>) entry;
+              return Map.entry(e.getKey(), ((Number) e.getValue()).doubleValue());
+          })
           .collect(Collectors.toList());
     } catch (Exception e) {
       log.warn("[SearchHistoryService] 获取热门搜索失败: err={}", e.getMessage(), e);
