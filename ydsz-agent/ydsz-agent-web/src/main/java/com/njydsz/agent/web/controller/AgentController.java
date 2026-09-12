@@ -139,13 +139,8 @@ public class AgentController {
         "[Agent-API] 执行请求: agentCode={}, stream={}", request.getAgentCode(), request.isStream());
     requestGuard.check(request.getRequestId(), null);
     AgentExecutionRequest execReq = toExecutionRequest(request);
-    try {
-      ChatResponse response = agentFacade.execute(execReq);
-      return YdszResponse.success(toDTO(response));
-    } catch (Exception e) {
-      requestGuard.releaseIdempotent(request.getRequestId());
-      throw e;
-    }
+    ChatResponse response = agentFacade.execute(execReq);
+    return YdszResponse.success(toDTO(response));
   }
 
   /**
@@ -260,10 +255,9 @@ public class AgentController {
   @Operation(summary = "同步对话", description = "等待 LLM 返回完整响应后返回")
   public YdszResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
     requestGuard.check(request.getRequestId(), null);
-    try {
-      ChatResponse response;
-      // 多模态输入优先：multimodalContent 非空时使用 Vision 模型对话
-      if (request.getMultimodalContent() != null && !request.getMultimodalContent().isEmpty()) {
+    ChatResponse response;
+    // 多模态输入优先：multimodalContent 非空时使用 Vision 模型对话
+    if (request.getMultimodalContent() != null && !request.getMultimodalContent().isEmpty()) {
         log.info(
             "[Chat-API] 多模态同步对话请求: convId={}, partsCount={}",
             request.getConversationId(),
@@ -279,12 +273,8 @@ public class AgentController {
             agentFacade.chat(
                 request.getConversationId(), request.getMessage(), request.getSystemPrompt());
       }
-      ChatResponseDTO dto = toDTO(response);
-      return YdszResponse.success(dto);
-    } catch (Exception e) {
-      requestGuard.releaseIdempotent(request.getRequestId());
-      throw e;
-    }
+    ChatResponseDTO dto = toDTO(response);
+    return YdszResponse.success(dto);
   }
 
   /**
@@ -403,28 +393,23 @@ public class AgentController {
       @Valid @RequestBody BatchChatRequestDTO request) {
     log.info("[Batch-API] 批量对话请求: itemsCount={}", request.getItems().size());
     requestGuard.check(request.getRequestId(), null);
-    try {
-      // DTO → 应用层 BatchChatItem 转换
-      List<BatchChatItem> facadeItems = new ArrayList<>(request.getItems().size());
-      for (BatchChatRequestDTO.BatchChatItem dto : request.getItems()) {
-        MessageContent content = null;
-        if (dto.getMultimodalContent() != null && !dto.getMultimodalContent().isEmpty()) {
-          content = toMessageContent(dto.getMultimodalContent());
-        }
-        facadeItems.add(
-            new BatchChatItem(
-                dto.getItemId(),
-                dto.getConversationId(),
-                dto.getMessage(),
-                content,
-                dto.getSystemPrompt()));
+    // DTO → 应用层 BatchChatItem 转换
+    List<BatchChatItem> facadeItems = new ArrayList<>(request.getItems().size());
+    for (BatchChatRequestDTO.BatchChatItem dto : request.getItems()) {
+      MessageContent content = null;
+      if (dto.getMultimodalContent() != null && !dto.getMultimodalContent().isEmpty()) {
+        content = toMessageContent(dto.getMultimodalContent());
       }
-      BatchChatResult result = agentFacade.batchChat(facadeItems);
-      return YdszResponse.success(toBatchDTO(result));
-    } catch (Exception e) {
-      requestGuard.releaseIdempotent(request.getRequestId());
-      throw e;
+      facadeItems.add(
+          new BatchChatItem(
+              dto.getItemId(),
+              dto.getConversationId(),
+              dto.getMessage(),
+              content,
+              dto.getSystemPrompt()));
     }
+    BatchChatResult result = agentFacade.batchChat(facadeItems);
+    return YdszResponse.success(toBatchDTO(result));
   }
 
   /**

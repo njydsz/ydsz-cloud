@@ -181,19 +181,5 @@ public class AgentRequestGuard {
     String key = IDEM_KEY_PREFIX + requestId;
     distributedLocker.unlock(key, lockValue);
   }
-
-  /**
-   * 释放幂等锁（兼容旧接口，按 requestId 释放）。
-   *
-   * <p><b>注意：</b>DistributedLocker 需要 lockValue 才能安全释放。如果无法获得 lockValue，
-   * 可选择等待 TTL 自动过期。此方法尝试释放但可能失败（被 WatchDog 续期时）。</p>
-   *
-   * @param requestId 幂等请求 ID
-   * @deprecated 使用 {@link #releaseIdempotent(String, String)} 替代
-   */
-  @Deprecated
-  public void releaseIdempotent(String requestId) {
-    log.warn("[Agent-Guard] releaseIdempotent(单参) 已废弃，无法保证安全释放。requestId={}", requestId);
-  }
 }
 

@@ -204,7 +204,6 @@ ydsz-userinfo/
 | **指标埋点** | Micrometer 计数器/计时器（登录成功/失败/登出/认证耗时/在线会话数） |
 | **健康检查** | Redis + JWT + 数据库连通性 + 用户/角色计数 |
 | **安全告警** | 暴力破解/密码喷洒检测，支持自动 IP 封禁（common-safe IpAccessService） |
-| **可信代理** | `ydsz.userinfo.trusted-proxies` 配置，为空时不信任转发头防止 IP 伪造 |
 | **API 签名** | ApiSignatureFilter + ApiSignatureUtil，防止请求篡改 |
 | **跨域 SSO** | CrossDomainSsoFilter + CrossDomainTokenService + TokenExchangeController（`/api/sso`） |
 | **记住我** | RememberMeFilter + RememberMeService + RememberMeProperties |
@@ -340,7 +339,6 @@ ydsz:
 | `ydsz.userinfo.risk-anomaly-end-hour` | `6` | 风控：异常时段结束小时 |
 | `ydsz.userinfo.risk-frequency-window-minutes` | `5` | 风控：频率窗口（分钟） |
 | `ydsz.userinfo.risk-frequency-threshold` | `3` | 风控：频率阈值 |
-| `ydsz.userinfo.trusted-proxies` | `[]` | 可信代理 IP 列表（为空时不信任转发头） |
 | `ydsz.userinfo.auth-exclude-paths` | `["/actuator/**", ...]` | 不需要鉴权的路径列表（Ant 风格） |
 | `ydsz.userinfo.internal-call.enabled` | `false` | 内部接口服务端二次校验开关 |
 | `ydsz.userinfo.scim.base-path` | `/scim/v2` | SCIM 端点基础路径 |
