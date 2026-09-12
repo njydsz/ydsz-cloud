@@ -1,6 +1,10 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +22,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -215,8 +218,8 @@ public class BatchImportApplicationService {
           // 将临时文件包装为 MultipartFile 并上传
           byte[] content = Files.readAllBytes(tempFile);
           String contentType = Files.probeContentType(tempFile);
-          MultipartFile multipartFile =
-              new MockMultipartFile(
+          InMemoryMultipartFile multipartFile =
+              new InMemoryMultipartFile(
                   "file",
                   fileName,
                   contentType != null ? contentType : "application/octet-stream",
@@ -266,6 +269,94 @@ public class BatchImportApplicationService {
         entryPath.endsWith("/") ? entryPath.substring(0, entryPath.length() - 1) : entryPath;
     int lastSlash = trimmed.lastIndexOf('/');
     return lastSlash >= 0 ? trimmed.substring(lastSlash + 1) : trimmed;
+  }
+
+  // ==================== 内部类 ====================
+
+  /**
+   * 基于内存字节数组的 MultipartFile 实现。
+   *
+   * <p>用于将 ZIP 解压后的文件内容包装为 {@link MultipartFile}，传递给
+   * {@link FileApplicationService#upload} 完成后续存储与节点创建。
+   *
+   * <p><b>保留内部类的原因：</b>
+   *
+   * <ul>
+   *   <li>Spring Framework 7.x（含 spring-web）已移除 {@code org.springframework.mock.web.MockMultipartFile}，
+   *       该 Spring 版本下无标准 {@code MultipartFile} 适配实现</li>
+   *   <li>{@code spring-test} 在 main 源码中属于 test-scope，不可直接依赖</li>
+   *   <li>Apache Commons FileUpload 的 {@code CommonsMultipartFile} 需额外引入重量级三方依赖</li>
+   *   <li>当前实现仅服务于 {@link #importFromZip} 单一场景，复用范围极小，抽取公共工具类成本高于收益</li>
+   * </ul>
+   *
+   * <p>若后续有多处场景需要将 {@code byte[]} 适配为 {@code MultipartFile}，
+   * 可统一抽取为工具类，消除重复内部类。
+   */
+  private static class InMemoryMultipartFile implements MultipartFile {
+
+    private final String name;
+    private final String originalFilename;
+    private final String contentType;
+    private final byte[] content;
+
+    InMemoryMultipartFile(
+        String name, String originalFilename, String contentType, byte[] content) {
+      this.name = name;
+      this.originalFilename = originalFilename;
+      this.contentType = contentType;
+      this.content = content;
+    }
+
+    @Override
+    public String getName() {
+      return name;
+    }
+
+    @Override
+    public String getOriginalFilename() {
+      return originalFilename;
+    }
+
+    @Override
+    public String getContentType() {
+      return contentType;
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return content == null || content.length == 0;
+    }
+
+    @Override
+    public long getSize() {
+      return content != null ? content.length : 0;
+    }
+
+    @Override
+    public byte[] getBytes() {
+      return content != null ? content : new byte[0];
+    }
+
+    @Override
+    public InputStream getInputStream() {
+      return new ByteArrayInputStream(content != null ? content : new byte[0]);
+    }
+
+    @Override
+    public void transferTo(File dest) throws IOException {
+      try (OutputStream os = Files.newOutputStream(dest.toPath())) {
+        if (content != null) {
+          os.write(content);
+        }
+      }
+    }
+
+    @Override
+    public void transferTo(Path dest) throws IOException {
+      if (content != null) {
+        Files.write(dest, content);
+      }
+    }
   }
 
   /** 批量导入结果 */
