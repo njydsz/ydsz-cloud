@@ -102,6 +102,24 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
         </dependency>
+        <!-- ADR-4: 限流 Lua 脚本统一引用 ydsz-common-redis 的 RedisScriptConstants 共享常量，
+             本模块禁止内联 Lua（规范 §33.2 / §33.3） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
+        <!-- WebFluxErrorUtils 响应式统一错误工具（仅使用 spring-web 部分，排除 servlet 栈）。 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-base</artifactId>
+            <exclusions>
+                <!-- gateway 为 WebFlux 栈，排除 servlet 栈，避免 spring-webmvc 与 spring-webflux 双栈冲突 -->
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <!-- JSON 解析：ydsz-common-json（YdszJson / JsonNode / JsonTypeReference） -->
         <dependency>
             <groupId>com.njydsz</groupId>

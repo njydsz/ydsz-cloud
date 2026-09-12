@@ -28,9 +28,9 @@ import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
-import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.PathGuard;
+import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
  * 认证全局过滤器。

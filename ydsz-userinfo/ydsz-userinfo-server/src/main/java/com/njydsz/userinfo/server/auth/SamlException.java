@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.server.auth;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * SAML 认证异常
  *
@@ -9,7 +11,7 @@ package com.njydsz.userinfo.server.auth;
  * @author ydsz-team
  * @since 26.09.01
  */
-public class SamlException extends Exception {
+public class SamlException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 

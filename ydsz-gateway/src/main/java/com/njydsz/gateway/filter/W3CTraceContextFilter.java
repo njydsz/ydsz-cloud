@@ -45,6 +45,11 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  *
  * <p>{@code HIGHEST_PRECEDENCE}，最早执行，确保所有下游请求都携带 trace context。
  *
+ * <p><b>能力下沉计划（ADR-4，见 docs/ADR-2026-09-12_公共能力重复实现收敛决策.md）：</b>
+ * W3C Trace Context（{@code traceparent}）解析/传播是全平台需求，common-util 已有
+ * {@code TracerUtils#parseTraceparent}。本过滤器承载的协议逻辑后续应下沉至
+ * {@code ydsz-common-sentry} 的 {@code TraceContext} SPI，网关侧仅保留响应式接线。
+ *
  * @since 26.09.01
  * @author ydsz-team
  */

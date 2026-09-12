@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,10 @@ import com.njydsz.common.json.YdszJson;
  * FlowNode 视图对象。
  *
  * <p>提供 ext JSON 的懒解析 getter 方法，避免调用方重复编写解析逻辑。
- * 解析结果缓存在 {@code parsedExt} 中，同一 VO 多次调用只解析一次。
+ * 解析结果缓存在 transient volatile 字段中，同一 VO 多次调用只解析一次。
+ *
+ * <p>线程安全使用 {@link ReentrantLock} 替代 {@code synchronized} 关键字，
+ * 提供等价的互斥语义同时避免内置锁的局限性。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -71,10 +75,30 @@ public class FlowNodeVO implements Serializable {
   /** 催办通道配置懒解析缓存（不参与序列化）。 */
   private transient volatile UrgeChannelConfigVO parsedUrgeChannelConfig;
 
+  /** 实例级可重入锁，用于懒解析 double-check（不参与序列化）。 */
+  private transient volatile ReentrantLock parseLock;
+
   // ==================== ext 懒解析基础设施 ====================
 
   /**
+   * 获取实例级解析锁（懒初始化）。
+   *
+   * <p>使用 DCL 保证 parseLock 单次创建。由于 volatile 语义，最终所有线程都能看到正确的锁实例，
+   * 极少数情况下短暂创建两个锁对象不影响正确性（后续 set 会覆盖，volatile 保证可见性）。
+   *
+   * @return 实例级可重入锁
+   */
+  private ReentrantLock getParseLock() {
+    if (parseLock == null) {
+      parseLock = new ReentrantLock();
+    }
+    return parseLock;
+  }
+
+  /**
    * 获取 ext JSON 的解析结果 Map（懒解析、线程安全的 double-check 缓存）。
+   *
+   * <p>使用 {@link ReentrantLock} 替代 {@code synchronized(this)} 实现互斥。
    *
    * @return ext 对应的 Map，无配置时返回空 Map（非 null）
    */
@@ -82,7 +106,8 @@ public class FlowNodeVO implements Serializable {
     if (parsedExt != null) {
       return parsedExt;
     }
-    synchronized (this) {
+    getParseLock().lock();
+    try {
       if (parsedExt != null) {
         return parsedExt;
       }
@@ -99,6 +124,8 @@ public class FlowNodeVO implements Serializable {
         parsedExt = Collections.emptyMap();
         return parsedExt;
       }
+    } finally {
+      getParseLock().unlock();
     }
   }
 
@@ -113,12 +140,15 @@ public class FlowNodeVO implements Serializable {
     if (parsedSlaConfig != null) {
       return parsedSlaConfig;
     }
-    synchronized (this) {
+    getParseLock().lock();
+    try {
       if (parsedSlaConfig != null) {
         return parsedSlaConfig;
       }
       parsedSlaConfig = SlaConfigVO.fromExt(getExtMap());
       return parsedSlaConfig;
+    } finally {
+      getParseLock().unlock();
     }
   }
 
@@ -143,12 +173,15 @@ public class FlowNodeVO implements Serializable {
     if (parsedServiceNodeConfig != null) {
       return parsedServiceNodeConfig;
     }
-    synchronized (this) {
+    getParseLock().lock();
+    try {
       if (parsedServiceNodeConfig != null) {
         return parsedServiceNodeConfig;
       }
       parsedServiceNodeConfig = ServiceNodeConfigVO.fromExt(getExtMap());
       return parsedServiceNodeConfig;
+    } finally {
+      getParseLock().unlock();
     }
   }
 
@@ -161,12 +194,15 @@ public class FlowNodeVO implements Serializable {
     if (parsedCountersignConfig != null) {
       return parsedCountersignConfig;
     }
-    synchronized (this) {
+    getParseLock().lock();
+    try {
       if (parsedCountersignConfig != null) {
         return parsedCountersignConfig;
       }
       parsedCountersignConfig = CountersignConfigVO.fromExt(getExtMap());
       return parsedCountersignConfig;
+    } finally {
+      getParseLock().unlock();
     }
   }
 
@@ -179,12 +215,15 @@ public class FlowNodeVO implements Serializable {
     if (parsedAssigneeConfig != null) {
       return parsedAssigneeConfig;
     }
-    synchronized (this) {
+    getParseLock().lock();
+    try {
       if (parsedAssigneeConfig != null) {
         return parsedAssigneeConfig;
       }
       parsedAssigneeConfig = AssigneeConfigVO.fromExt(getExtMap());
       return parsedAssigneeConfig;
+    } finally {
+      getParseLock().unlock();
     }
   }
 
@@ -197,12 +236,15 @@ public class FlowNodeVO implements Serializable {
     if (parsedAiAgentNodeConfig != null) {
       return parsedAiAgentNodeConfig;
     }
-    synchronized (this) {
+    getParseLock().lock();
+    try {
       if (parsedAiAgentNodeConfig != null) {
         return parsedAiAgentNodeConfig;
       }
       parsedAiAgentNodeConfig = AiAgentNodeConfigVO.fromExt(getExtMap());
       return parsedAiAgentNodeConfig;
+    } finally {
+      getParseLock().unlock();
     }
   }
 
@@ -215,12 +257,15 @@ public class FlowNodeVO implements Serializable {
     if (parsedRejectStrategyConfig != null) {
       return parsedRejectStrategyConfig;
     }
-    synchronized (this) {
+    getParseLock().lock();
+    try {
       if (parsedRejectStrategyConfig != null) {
         return parsedRejectStrategyConfig;
       }
       parsedRejectStrategyConfig = RejectStrategyConfigVO.fromExt(getExtMap());
       return parsedRejectStrategyConfig;
+    } finally {
+      getParseLock().unlock();
     }
   }
 
@@ -233,12 +278,15 @@ public class FlowNodeVO implements Serializable {
     if (parsedUrgeChannelConfig != null) {
       return parsedUrgeChannelConfig;
     }
-    synchronized (this) {
+    getParseLock().lock();
+    try {
       if (parsedUrgeChannelConfig != null) {
         return parsedUrgeChannelConfig;
       }
       parsedUrgeChannelConfig = UrgeChannelConfigVO.fromExt(getExtMap());
       return parsedUrgeChannelConfig;
+    } finally {
+      getParseLock().unlock();
     }
   }
 

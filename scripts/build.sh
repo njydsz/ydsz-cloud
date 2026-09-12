@@ -5,7 +5,6 @@
 # 用法：
 #   ./scripts/build.sh                        # 全量构建（默认）
 #   ./scripts/build.sh --module ydsz-system   # 仅构建指定模块（及其上游依赖）
-#   ./scripts/build.sh --skip-tests           # 跳过单元测试
 #   ./scripts/build.sh --skip-checkstyle      # 跳过 Checkstyle 校验
 #   ./scripts/build.sh --module ydsz-gateway --skip-tests
 #
@@ -52,7 +51,6 @@ log_warn()    { printf "${COLOR_WARN}[WARN]${COLOR_RESET} %s\n" "$*" >&2; }
 
 # ---------- 参数解析 ----------
 MODULE=""
-SKIP_TESTS=false
 SKIP_CHECKSTYLE=false
 
 while [[ $# -gt 0 ]]; do
@@ -64,10 +62,6 @@ while [[ $# -gt 0 ]]; do
             fi
             MODULE="$2"
             shift 2
-            ;;
-        --skip-tests)
-            SKIP_TESTS=true
-            shift
             ;;
         --skip-checkstyle)
             SKIP_CHECKSTYLE=true
@@ -104,11 +98,6 @@ if [[ -n "${MODULE}" ]]; then
     log_info "单模块模式：${MODULE}（含上游依赖）"
 fi
 
-if [[ "${SKIP_TESTS}" == "true" ]]; then
-    MVN_ARGS+=("-DskipTests")
-    log_warn "已跳过单元测试"
-fi
-
 if [[ "${SKIP_CHECKSTYLE}" == "true" ]]; then
     MVN_ARGS+=("-Dcheckstyle.skip=true")
     log_warn "已跳过 Checkstyle 校验"
@@ -131,13 +120,6 @@ if MAVEN_OPTS="${MAVEN_OPTS:-}" "${MAVEN_CMD}" verify "${MVN_ARGS[@]}"; then
     ELAPSED=$(( END_TIME - START_TIME ))
     log_success "构建成功（耗时 ${ELAPSED}s）"
 
-    # JaCoCo 报告路径提示
-    log_info "JaCoCo 覆盖率报告路径："
-    if [[ -n "${MODULE}" ]]; then
-        log_info "  -> ${MODULE}/target/site/jacoco/index.html"
-    else
-        log_info "  -> <module>/target/site/jacoco/index.html"
-    fi
     exit 0
 else
     EXIT_CODE=$?

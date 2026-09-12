@@ -43,6 +43,11 @@ import com.njydsz.message.server.config.MessageProperties;
  *   <li>TemplateParam = {@code request.getParams()} 的 JSON
  * </ul>
  *
+ * <p><b>与 ydsz-common-notify 同名类的关系（ADR-1，见 docs/ADR-2026-09-12_公共能力重复实现收敛决策.md）：</b>
+ * common-notify 亦提供 {@code AliyunSmsProvider}（同一阿里云 RPC 协议的独立实现，含内联 HMAC-SHA1 签名）。
+ * 按 ADR-1 决议：本类与 {@link AliyunSmsSigner} 为<b>权威实现</b>（能力超集：batchSend + queryReceipt），
+ * 阿里云签名逻辑后续将下沉至 common-notify，届时本类改为组合调用 common，删除自有协议细节。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

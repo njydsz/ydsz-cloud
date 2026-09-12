@@ -53,18 +53,14 @@ import com.njydsz.agent.infra.llm.CachedLlmClient;
 import com.njydsz.agent.infra.llm.CompatibleLlmClient;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.infra.llm.SemanticLlmCache;
-import com.njydsz.agent.infra.mapper.InsightReportMapper;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.memory.SummaryConversationMemory;
-import com.njydsz.agent.infra.profile.UserProfileMapper;
-import com.njydsz.agent.infra.profile.UserProfileRepositoryImpl;
 import com.njydsz.agent.infra.rag.CompatibleEmbeddingClient;
 import com.njydsz.agent.infra.rag.HybridRetriever;
 import com.njydsz.agent.infra.rag.IdentityReranker;
 import com.njydsz.agent.infra.rag.InMemoryVectorStore;
 import com.njydsz.agent.infra.rag.PgVectorStore;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
-import com.njydsz.agent.infra.repository.InsightReportRepositoryImpl;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSchemaRecallService;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSemanticConsistencyChecker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
@@ -652,22 +648,8 @@ public class AgentAutoConfiguration {
 
   // ========================= 用户画像 Bean 注册 =========================
 
-  /**
-   * 装配用户画像 Repository 实现。
-   *
-   * @param userProfileMapper 用户画像 Mapper
-   * @return 用户画像 Repository
-   */
-  @Bean
-  @ConditionalOnMissingBean(UserProfileRepository.class)
-  @ConditionalOnProperty(
-      prefix = "ydsz.agent.profile",
-      name = "enabled",
-      havingValue = "true",
-      matchIfMissing = false)
-  public UserProfileRepository userProfileRepository(UserProfileMapper userProfileMapper) {
-    return new UserProfileRepositoryImpl(userProfileMapper);
-  }
+  // 用户画像 Repository 由 infra 层 AgentRepositoryAutoConfiguration 装配
+  // （§34.2.4：web 层禁止直接注入 infra 层 Mapper）
 
   /**
    * 装配 LLM 画像分析器（可选组件）。
@@ -714,22 +696,8 @@ public class AgentAutoConfiguration {
 
   // ========================= BI 洞察报告 Bean 注册 =========================
 
-  /**
-   * 装配洞察报告仓储实现。
-   *
-   * @param insightReportMapper 报告 Mapper
-   * @return 洞察报告仓储
-   */
-  @Bean
-  @ConditionalOnMissingBean(InsightReportRepository.class)
-  @ConditionalOnProperty(
-      prefix = "ydsz.agent.insight",
-      name = "enabled",
-      havingValue = "true",
-      matchIfMissing = false)
-  public InsightReportRepository insightReportRepository(InsightReportMapper insightReportMapper) {
-    return new InsightReportRepositoryImpl(insightReportMapper);
-  }
+  // 洞察报告 Repository 由 infra 层 AgentRepositoryAutoConfiguration 装配
+  // （§34.2.4：web 层禁止直接注入 infra 层 Mapper）
 
   /**
    * 装配 LLM 洞察报告生成器。

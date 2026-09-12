@@ -274,9 +274,23 @@ public class BatchImportApplicationService {
   // ==================== 内部类 ====================
 
   /**
-   * 基于内存字节数组的 MultipartFile 实现
+   * 基于内存字节数组的 MultipartFile 实现。
    *
-   * <p>用于将 ZIP 解压后的文件内容传递给 FileApplicationService.upload。
+   * <p>用于将 ZIP 解压后的文件内容包装为 {@link MultipartFile}，传递给
+   * {@link FileApplicationService#upload} 完成后续存储与节点创建。
+   *
+   * <p><b>保留内部类的原因：</b>
+   *
+   * <ul>
+   *   <li>Spring Test 提供的 {@code MockMultipartFile} 位于 {@code spring-test} 依赖中，
+   *       属于 test-scope，不可在 main 源码中引用</li>
+   *   <li>Apache Commons FileUpload 的 {@code CommonsMultipartFile} 需额外引入 commons-fileupload 依赖</li>
+   *   <li>当前实现仅服务于 {@link #importFromZip} 单一场景，复用范围极小，
+   *       引入公共 {@code MultipartFile} 适配类成本高于收益</li>
+   * </ul>
+   *
+   * <p>若后续有多处场景需要将 {@code byte[]} 适配为 {@code MultipartFile}，
+   * 可统一抽取为工具类（参考 {@code PreviewApplicationService} 中的同类适配）。
    */
   private static class InMemoryMultipartFile implements MultipartFile {
 

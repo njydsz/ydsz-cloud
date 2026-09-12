@@ -1,5 +1,6 @@
 package com.njydsz.workflow.server.engine;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -24,16 +25,20 @@ import com.njydsz.common.cache.support.CacheKeyBuilder;
  * <p><b>数据一致性：</b>
  *
  * <ul>
- *   <li>最终一致性：Redis 计数与 DB 存在短暂不一致（通常 < 1s）</li>
+ *   <li>最终一致性：Redis 计数与 DB 存在短暂不一致（通常 &lt; 1s）</li>
  *   <li>兜底校验：定时任务每小时全量校对一次（从 DB 重新 COUNT 并覆盖 Redis）</li>
  *   <li>启动预热：应用启动时从 DB 加载初始值</li>
  * </ul>
+ *
+ * <p>使用 {@link StringRedisTemplate} 高级 API（opsForValue）操作 Redis，
+ * 键通过 {@link CacheKeyBuilder} 构建，自动携带租户前缀。
  *
  * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class FlowTaskCountCacheService {
 
   /** 模块标识 */
@@ -42,17 +47,8 @@ public class FlowTaskCountCacheService {
   /** 全局待办计数 key（全局共享，不区分租户） */
   private static final String KEY_TOTAL_PENDING = "ydsz:workflow:task:count:total";
 
+  /** Redis String 模板（键已通过 CacheKeyBuilder 携带租户前缀，直接使用即可） */
   private final StringRedisTemplate redisTemplate;
-
-  
-  /**
-   * 构造任务计数缓存服务。
-   *
-   * @param redisTemplate Redis 模板
-   */
-  public FlowTaskCountCacheService(StringRedisTemplate redisTemplate) {
-    this.redisTemplate = redisTemplate;
-  }
 
   /**
    * 构建指定用户的个人待办计数 key。
@@ -67,7 +63,7 @@ public class FlowTaskCountCacheService {
   /**
    * 递增指定用户的待办计数。
    *
-   * <p>在任务创建时调用。
+   * <p>在任务创建时调用。使用 {@code opsForValue().increment()} 保证原子性。
    *
    * @param userId 用户 ID
    * @return 递增后的计数值
@@ -89,7 +85,8 @@ public class FlowTaskCountCacheService {
   /**
    * 递减指定用户的待办计数。
    *
-   * <p>在任务完成/取消/委派时调用。
+   * <p>在任务完成/取消/委派时调用。使用 {@code opsForValue().decrement()} 保证原子性，
+   * 归零后删除 key，避免长期占用内存。
    *
    * @param userId 用户 ID
    * @return 递减后的计数值
@@ -123,10 +120,8 @@ public class FlowTaskCountCacheService {
       return 0;
     }
     try {
-      Long count = redisTemplate.opsForValue().get(buildUserKey(userId)) != null
-          ? Long.parseLong(redisTemplate.opsForValue().get(buildUserKey(userId)))
-          : 0L;
-      return count != null ? count : 0;
+      String value = redisTemplate.opsForValue().get(buildUserKey(userId));
+      return value != null ? Long.parseLong(value) : 0;
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] GET 失败 userId={}: {}", userId, e.getMessage());
       return 0;

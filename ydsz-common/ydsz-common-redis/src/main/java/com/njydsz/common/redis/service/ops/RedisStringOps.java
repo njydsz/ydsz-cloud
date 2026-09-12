@@ -60,6 +60,25 @@ public class RedisStringOps {
           + "return redis.call('del', KEYS[1]) "
           + "else return 0 end";
 
+  /**
+   * 原子读取并删除键值（GETDEL 语义，防并发重放）。
+   *
+   * <p>Lua 脚本保证读取与删除的原子性：并发请求携带同一 key 时，仅第一个请求能读到值，后续请求返回 nil。适用于一次性消费场景（如授权码兑换）。
+   */
+  private static final String GETDEL_LUA =
+      "local v = redis.call('GET', KEYS[1]) "
+          + "if v then redis.call('DEL', KEYS[1]) end "
+          + "return v";
+
+  /**
+   * DECR IF POSITIVE Lua 脚本。
+   *
+   * <p>仅在计数器大于 0 时 DECR，避免并发递减导致计数器变为负数。适用于在线会话计数等不允许下溢的场景。
+   */
+  private static final String DECR_IF_POSITIVE_LUA =
+      "local v = tonumber(redis.call('GET', KEYS[1]) or '0') "
+          + "if v > 0 then return redis.call('DECR', KEYS[1]) else return 0 end";
+
   private static final long CACHE_EXPIRE_JITTER_RATIO = 10;
 
   /** getExpire 返回的键不存在标识 */
@@ -1110,6 +1129,53 @@ public class RedisStringOps {
     } catch (Exception e) {
       recordError("executeScript", e);
       log.error("【Redis】Lua 脚本执行失败 | error={}", e);
+      return null;
+    }
+  }
+
+  // ============================ 业务封装：原子计数与取删 =============================
+
+  /**
+   * 仅在计数器大于 0 时递减 1，避免下溢至负数。
+   *
+   * <p>使用 Lua 脚本保证读取-判断-递减的原子性。适用于在线会话总数、库存扣减等不允许减到负数的场景。 若键不存在或当前值已 ≤ 0，不做任何操作并返回 0。
+   *
+   * @param key 计数器键
+   * @return 递减后的值；未递减时返回 0；执行异常返回 0
+   */
+  public long decrIfPositive(String key) {
+    if (key == null || key.isEmpty()) {
+      return 0L;
+    }
+    try {
+      Long result = executeScriptWithShaCache(
+          DECR_IF_POSITIVE_LUA, Long.class, Collections.singletonList(key));
+      return result != null ? result : 0L;
+    } catch (Exception e) {
+      log.error("【Redis】decrIfPositive 失败 | key={} | error={}", key, e);
+      return 0L;
+    }
+  }
+
+  /**
+   * 原子读取并删除键值（GETDEL 语义）。
+   *
+   * <p>使用 Lua 脚本保证 GET 与 DEL 的原子性：并发场景下仅首次调用读到值，后续调用直接返回 null。 适用于一次性消费场景，如授权码兑换、防重放 token 核销。
+   *
+   * @param key 键
+   * @param clazz 返回值类型
+   * @param <T> 值类型
+   * @return 读取到的值；不存在或已被消费返回 null；执行异常返回 null
+   */
+  public <T> T getAndDelete(String key, Class<T> clazz) {
+    if (key == null || key.isEmpty()) {
+      return null;
+    }
+    try {
+      return executeScriptWithShaCache(
+          GETDEL_LUA, clazz, Collections.singletonList(key));
+    } catch (Exception e) {
+      log.error("【Redis】getAndDelete 失败 | key={} | error={}", key, e);
       return null;
     }
   }

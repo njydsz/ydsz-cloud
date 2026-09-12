@@ -27,10 +27,10 @@ import reactor.core.publisher.Mono;
 
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
-import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.PathGuard;
+import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
  * 网关全局熔断过滤器（基于 Resilience4j）。

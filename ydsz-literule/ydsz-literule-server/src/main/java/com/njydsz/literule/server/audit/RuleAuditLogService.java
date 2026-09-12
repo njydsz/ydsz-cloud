@@ -1,26 +1,34 @@
 package com.njydsz.literule.server.audit;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.audit.core.AuditQueryService;
+import com.njydsz.common.audit.core.AuditRecorder;
+import com.njydsz.common.audit.domain.AuditLog;
+import com.njydsz.common.audit.enums.AuditStatus;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
  * 规则操作审计日志服务（P3-5 RBAC 与审计日志）
  *
  * <p>记录规则全生命周期操作（创建、修改、启停、回滚、审批、导入/导出等）， 支持 {@code who + when + what + before/after} 的完整审计链路。
+ *
+ * <p>底层委托 ydsz-common-audit 的 {@link AuditRecorder}（写入）和 {@link AuditQueryService}（查询）， 使用统一的 {@code sys_audit_log} 表持久化，替代自建的内存存储实现。
  *
  * <h3>审计维度</h3>
  *
@@ -36,10 +44,8 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  *
  * <h3>使用方式</h3>
  *
- * <p>消费方通过 SPI 注入 {@link AuditLogStore} 实现持久化，或使用默认的内存存储（适合测试）。
- *
  * <pre>{@code
- * RuleAuditLogService auditService = new RuleAuditLogService(auditLogStore);
+ * RuleAuditLogService auditService = new RuleAuditLogService(auditRecorder, auditQueryService);
  *
  * // 记录规则保存操作
  * auditService.logCreate(newDef, "zhangsan", "MANUAL");
@@ -57,29 +63,41 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  */
 @Slf4j
 public class RuleAuditLogService {
+
+  /** 审计模块名（对应 sys_audit_log.module 字段，用于查询过滤） */
+  private static final String MODULE_RULE_ENGINE = "规则引擎";
+
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** 审计日志写入器（由 ydsz-common-audit 自动配置提供） */
+  private final AuditRecorder auditRecorder;
 
-  private final AuditLogStore store;
+  /** 审计日志查询服务（由 ydsz-common-audit 自动配置提供） */
+  private final AuditQueryService auditQueryService;
 
   /**
    * 构造审计日志服务
    *
-   * @param store 审计日志存储（为 null 时使用内存存储，仅适合测试）
+   * @param auditRecorder 审计日志写入器（由 ydsz-common-audit 提供，可为 null — 此时写入降级为日志输出）
+   * @param auditQueryService 审计日志查询服务（由 ydsz-common-audit 提供，可为 null — 此时查询返回空列表）
    */
-  public RuleAuditLogService(AuditLogStore store) {
-    this.store = store != null ? store : new InMemoryAuditLogStore();
+  public RuleAuditLogService(AuditRecorder auditRecorder, AuditQueryService auditQueryService) {
+    this.auditRecorder = auditRecorder;
+    this.auditQueryService = auditQueryService;
   }
 
   // ==================== 记录操作 ====================
 
-  /** 记录规则创建
+  /**
+   * 记录规则创建
+   *
    * @param def 新规则定义
-   * @param operator 操作人用户名（工号或SSO账号）
+   * @param operator 操作人用户名（工号或 SSO 账号）
    * @param source 操作来源（MANUAL/API/SCHEDULED/SDK）
    */
   public void logCreate(RuleDefinitionDTO def, String operator, String source) {
+    Map<String, Object> afterSnapshot = toSnapshot(def);
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(def.getCode())
@@ -87,14 +105,22 @@ public class RuleAuditLogService {
             .action(AuditAction.CREATE)
             .operator(operator)
             .source(source)
-            .afterSnapshot(toSnapshot(def))
+            .afterSnapshot(afterSnapshot)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.CREATE,
+        null,
+        afterSnapshot,
+        null,
+        null);
   }
 
-  /** 记录规则更新
+  /**
+   * 记录规则更新
+   *
    * @param oldDef 更新前规则定义
    * @param newDef 更新后规则定义
    * @param operator 操作人用户名
@@ -108,6 +134,8 @@ public class RuleAuditLogService {
       String source,
       String changeDesc) {
     Map<String, FieldDiff> diffs = computeFieldDiff(oldDef, newDef);
+    Map<String, Object> beforeSnapshot = toSnapshot(oldDef);
+    Map<String, Object> afterSnapshot = toSnapshot(newDef);
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(newDef.getCode())
@@ -116,16 +144,24 @@ public class RuleAuditLogService {
             .operator(operator)
             .source(source)
             .changeDesc(changeDesc)
-            .beforeSnapshot(toSnapshot(oldDef))
-            .afterSnapshot(toSnapshot(newDef))
+            .beforeSnapshot(beforeSnapshot)
+            .afterSnapshot(afterSnapshot)
             .fieldDiffs(diffs)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.UPDATE,
+        beforeSnapshot,
+        afterSnapshot,
+        null,
+        null);
   }
 
-  /** 记录规则启停切换
+  /**
+   * 记录规则启停切换
+   *
    * @param ruleCode 规则唯一编码
    * @param oldEnabled 切换前启用状态
    * @param newEnabled 切换后启用状态
@@ -134,20 +170,27 @@ public class RuleAuditLogService {
    */
   public void logToggle(
       String ruleCode, boolean oldEnabled, boolean newEnabled, String operator, String source) {
+    String changeDesc = String.format("enabled: %s -> %s", oldEnabled, newEnabled);
+    com.njydsz.common.audit.enums.AuditAction commonAction =
+        newEnabled
+            ? com.njydsz.common.audit.enums.AuditAction.ENABLE
+            : com.njydsz.common.audit.enums.AuditAction.DISABLE;
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
             .action(AuditAction.TOGGLE)
             .operator(operator)
             .source(source)
-            .changeDesc(String.format("enabled: %s -> %s", oldEnabled, newEnabled))
+            .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(entry, commonAction, null, null, null, null);
   }
 
-  /** 记录规则状态变更
+  /**
+   * 记录规则状态变更
+   *
    * @param ruleCode 规则唯一编码
    * @param oldStatus 变更前状态
    * @param newStatus 变更后状态
@@ -156,20 +199,29 @@ public class RuleAuditLogService {
    */
   public void logStatusChange(
       String ruleCode, String oldStatus, String newStatus, String operator, String source) {
+    String changeDesc = String.format("status: %s -> %s", oldStatus, newStatus);
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
             .action(AuditAction.STATUS_CHANGE)
             .operator(operator)
             .source(source)
-            .changeDesc(String.format("status: %s -> %s", oldStatus, newStatus))
+            .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.OTHER,
+        null,
+        null,
+        null,
+        null);
   }
 
-  /** 记录规则回滚
+  /**
+   * 记录规则回滚
+   *
    * @param ruleCode 规则唯一编码
    * @param fromVersion 回滚前版本号
    * @param toVersion 回滚目标版本号
@@ -178,20 +230,29 @@ public class RuleAuditLogService {
    */
   public void logRollback(
       String ruleCode, int fromVersion, int toVersion, String operator, String source) {
+    String changeDesc = String.format("version: %d -> %d", fromVersion, toVersion);
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
             .action(AuditAction.ROLLBACK)
             .operator(operator)
             .source(source)
-            .changeDesc(String.format("version: %d -> %d", fromVersion, toVersion))
+            .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.RESTORE,
+        null,
+        null,
+        null,
+        null);
   }
 
-  /** 记录规则审批通过
+  /**
+   * 记录规则审批通过
+   *
    * @param ruleCode 规则唯一编码
    * @param approver 审批人用户名
    * @param level 审批级别（如 L1/L2）
@@ -200,20 +261,29 @@ public class RuleAuditLogService {
    */
   public void logApprove(
       String ruleCode, String approver, String level, String comment, String source) {
+    String changeDesc = "审批通过 [" + level + "]: " + (comment != null ? comment : "");
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
             .action(AuditAction.APPROVE)
             .operator(approver)
             .source(source)
-            .changeDesc("审批通过 [" + level + "]: " + (comment != null ? comment : ""))
+            .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.APPROVE,
+        null,
+        null,
+        null,
+        null);
   }
 
-  /** 记录规则审批驳回
+  /**
+   * 记录规则审批驳回
+   *
    * @param ruleCode 规则唯一编码
    * @param rejecter 驳回人用户名
    * @param level 审批级别
@@ -222,20 +292,29 @@ public class RuleAuditLogService {
    */
   public void logReject(
       String ruleCode, String rejecter, String level, String reason, String source) {
+    String changeDesc = "审批驳回 [" + level + "]: " + (reason != null ? reason : "");
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
             .action(AuditAction.REJECT)
             .operator(rejecter)
             .source(source)
-            .changeDesc("审批驳回 [" + level + "]: " + (reason != null ? reason : ""))
+            .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.REJECT,
+        null,
+        null,
+        null,
+        null);
   }
 
-  /** 记录规则导入
+  /**
+   * 记录规则导入
+   *
    * @param ruleCode 首个导入规则编码
    * @param ruleName 首个导入规则名称
    * @param operator 操作人用户名
@@ -244,6 +323,7 @@ public class RuleAuditLogService {
    */
   public void logImport(
       String ruleCode, String ruleName, String operator, String source, int importedCount) {
+    String changeDesc = "导入 " + importedCount + " 条规则";
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
@@ -251,34 +331,51 @@ public class RuleAuditLogService {
             .action(AuditAction.IMPORT)
             .operator(operator)
             .source(source)
-            .changeDesc("导入 " + importedCount + " 条规则")
+            .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.IMPORT,
+        null,
+        null,
+        null,
+        null);
   }
 
-  /** 记录规则导出
+  /**
+   * 记录规则导出
+   *
    * @param ruleCode 导出规则编码
    * @param operator 操作人用户名
    * @param source 操作来源
    * @param format 导出文件格式（JSON/YAML/EXCEL）
    */
   public void logExport(String ruleCode, String operator, String source, String format) {
+    String changeDesc = "导出格式: " + format;
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
             .action(AuditAction.EXPORT)
             .operator(operator)
             .source(source)
-            .changeDesc("导出格式: " + format)
+            .changeDesc(changeDesc)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.EXPORT,
+        null,
+        null,
+        null,
+        null);
   }
 
-  /** 记录规则删除
+  /**
+   * 记录规则删除
+   *
    * @param ruleCode 规则唯一编码
    * @param operator 操作人用户名
    * @param source 操作来源
@@ -293,10 +390,18 @@ public class RuleAuditLogService {
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        com.njydsz.common.audit.enums.AuditAction.DELETE,
+        null,
+        null,
+        null,
+        null);
   }
 
-  /** 记录操作失败
+  /**
+   * 记录操作失败
+   *
    * @param ruleCode 规则唯一编码
    * @param action 审计操作类型
    * @param operator 操作人用户名
@@ -304,7 +409,11 @@ public class RuleAuditLogService {
    * @param errorMessage 失败原因
    */
   public void logFailure(
-      String ruleCode, AuditAction action, String operator, String source, String errorMessage) {
+      String ruleCode,
+      AuditAction action,
+      String operator,
+      String source,
+      String errorMessage) {
     AuditLogEntry entry =
         AuditLogEntry.builder()
             .ruleCode(ruleCode)
@@ -315,70 +424,361 @@ public class RuleAuditLogService {
             .errorMessage(errorMessage)
             .createdAt(LocalDateTime.now())
             .build();
-    record(entry);
+    record(
+        entry,
+        toCommonAction(action),
+        null,
+        null,
+        AuditStatus.FAILURE,
+        errorMessage);
   }
 
   // ==================== 查询操作 ====================
 
-  /** 按规则编码查询审计日志
+  /**
+   * 按规则编码查询审计日志
+   *
    * @param ruleCode 规则唯一编码
    * @param limit 返回条数上限
    * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryByRuleCode(String ruleCode, int limit) {
-    return store.queryByRuleCode(ruleCode, limit);
+    if (auditQueryService == null) {
+      return Collections.emptyList();
+    }
+    List<AuditLog> logs = auditQueryService.getByBusinessNo(ruleCode);
+    return logs.stream().limit(limit).map(this::toAuditLogEntry).collect(Collectors.toList());
   }
 
-  /** 按操作人查询审计日志
+  /**
+   * 按操作人查询审计日志
+   *
    * @param operator 操作人用户名
    * @param limit 返回条数上限
    * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryByOperator(String operator, int limit) {
-    return store.queryByOperator(operator, limit);
+    if (auditQueryService == null) {
+      return Collections.emptyList();
+    }
+    List<AuditLog> logs = auditQueryService.getByOperator(operator, null, null);
+    return logs.stream().limit(limit).map(this::toAuditLogEntry).collect(Collectors.toList());
   }
 
-  /** 按操作类型查询审计日志
+  /**
+   * 按操作类型查询审计日志
+   *
    * @param action 审计操作类型
    * @param limit 返回条数上限
    * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryByAction(AuditAction action, int limit) {
-    return store.queryByAction(action, limit);
+    if (auditQueryService == null) {
+      return Collections.emptyList();
+    }
+    com.njydsz.common.audit.enums.AuditAction commonAction = toCommonAction(action);
+    List<AuditLog> allLogs = auditQueryService.getByTimeRange(null, null);
+    return allLogs.stream()
+        .filter(log -> log.getAction() != null && log.getAction().equals(commonAction.getCode()))
+        .limit(limit)
+        .map(this::toAuditLogEntry)
+        .collect(Collectors.toList());
   }
 
-  /** 按时间范围查询审计日志
+  /**
+   * 按时间范围查询审计日志
+   *
    * @param start 起始时间（含）
    * @param end 结束时间（不含）
    * @param limit 返回条数上限
    * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryByTimeRange(LocalDateTime start, LocalDateTime end, int limit) {
-    return store.queryByTimeRange(start, end, limit);
+    if (auditQueryService == null) {
+      return Collections.emptyList();
+    }
+    List<AuditLog> logs = auditQueryService.getByTimeRange(start, end);
+    return logs.stream().limit(limit).map(this::toAuditLogEntry).collect(Collectors.toList());
   }
 
-  /** 查询最近的审计日志
+  /**
+   * 查询最近的审计日志
+   *
    * @param limit 返回条数上限
    * @return 审计日志列表（按时间倒序）
    */
   public List<AuditLogEntry> queryRecent(int limit) {
-    return store.queryRecent(limit);
+    return queryByTimeRange(null, null, limit);
   }
 
   // ==================== 内部方法 ====================
 
-  private void record(AuditLogEntry entry) {
+  /**
+   * 将自建审计操作枚举映射为通用审计操作枚举
+   *
+   * @param action 自建审计操作枚举
+   * @return 通用审计操作枚举
+   */
+  private com.njydsz.common.audit.enums.AuditAction toCommonAction(AuditAction action) {
+    if (action == null) {
+      return com.njydsz.common.audit.enums.AuditAction.OTHER;
+    }
+    switch (action) {
+      case CREATE:
+        return com.njydsz.common.audit.enums.AuditAction.CREATE;
+      case UPDATE:
+        return com.njydsz.common.audit.enums.AuditAction.UPDATE;
+      case TOGGLE:
+        return com.njydsz.common.audit.enums.AuditAction.ENABLE;
+      case STATUS_CHANGE:
+        return com.njydsz.common.audit.enums.AuditAction.UPDATE;
+      case ROLLBACK:
+        return com.njydsz.common.audit.enums.AuditAction.RESTORE;
+      case APPROVE:
+        return com.njydsz.common.audit.enums.AuditAction.APPROVE;
+      case REJECT:
+        return com.njydsz.common.audit.enums.AuditAction.REJECT;
+      case IMPORT:
+        return com.njydsz.common.audit.enums.AuditAction.IMPORT;
+      case EXPORT:
+        return com.njydsz.common.audit.enums.AuditAction.EXPORT;
+      case DELETE:
+        return com.njydsz.common.audit.enums.AuditAction.DELETE;
+      case DRY_RUN:
+        return com.njydsz.common.audit.enums.AuditAction.OTHER;
+      case STRESS_TEST:
+        return com.njydsz.common.audit.enums.AuditAction.OTHER;
+      case REPLAY:
+        return com.njydsz.common.audit.enums.AuditAction.OTHER;
+      default:
+        return com.njydsz.common.audit.enums.AuditAction.OTHER;
+    }
+  }
+
+  /**
+   * 将 AuditLog（通用审计实体）映射回 AuditLogEntry（自建视图）
+   *
+   * @param log 通用审计日志实体
+   * @return 审计日志条目
+   */
+  private AuditLogEntry toAuditLogEntry(AuditLog auditLog) {
+    AuditLogEntry entry = new AuditLogEntry();
+    entry.setId(auditLog.getId());
+    entry.setRuleCode(auditLog.getBusinessNo());
+    entry.setAction(fromCommonActionCode(auditLog.getAction()));
+    entry.setOperator(auditLog.getOperatorId());
+    entry.setResult(fromCommonStatus(auditLog.getStatus()));
+    entry.setErrorMessage(auditLog.getErrorMessage());
+    entry.setCreatedAt(auditLog.getOperationTime());
+
+    // 从 diffBeforeSnapshot 还原 beforeSnapshot
+    if (auditLog.getDiffBeforeSnapshot() != null && !auditLog.getDiffBeforeSnapshot().isEmpty()) {
+      try {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> before =
+            YdszJson.fromJson(auditLog.getDiffBeforeSnapshot(), Map.class);
+        entry.setBeforeSnapshot(before);
+      } catch (Exception e) {
+        RuleAuditLogService.log.debug("[AuditLog] 反序列化 beforeSnapshot 失败: {}", e.getMessage());
+      }
+    }
+
+    // 从 diffAfterSnapshot 还原 afterSnapshot
+    if (auditLog.getDiffAfterSnapshot() != null && !auditLog.getDiffAfterSnapshot().isEmpty()) {
+      try {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> after =
+            YdszJson.fromJson(auditLog.getDiffAfterSnapshot(), Map.class);
+        entry.setAfterSnapshot(after);
+      } catch (Exception e) {
+        RuleAuditLogService.log.debug("[AuditLog] 反序列化 afterSnapshot 失败: {}", e.getMessage());
+      }
+    }
+
+    // 从 content 解析 source 和 changeDesc
+    if (log.getContent() != null && !log.getContent().isEmpty()) {
+      parseContent(log.getContent(), entry);
+    }
+
+    return entry;
+  }
+
+  /**
+   * 从通用审计操作编码映射回自建审计操作枚举
+   *
+   * @param actionCode 通用审计操作编码
+   * @return 自建审计操作枚举
+   */
+  private AuditAction fromCommonActionCode(Integer actionCode) {
+    if (actionCode == null) {
+      return AuditAction.STATUS_CHANGE;
+    }
+    for (com.njydsz.common.audit.enums.AuditAction commonAction :
+        com.njydsz.common.audit.enums.AuditAction.values()) {
+      if (commonAction.getCode() == actionCode) {
+        switch (commonAction) {
+          case CREATE:
+            return AuditAction.CREATE;
+          case UPDATE:
+            return AuditAction.UPDATE;
+          case DELETE:
+            return AuditAction.DELETE;
+          case IMPORT:
+            return AuditAction.IMPORT;
+          case EXPORT:
+            return AuditAction.EXPORT;
+          case APPROVE:
+            return AuditAction.APPROVE;
+          case REJECT:
+            return AuditAction.REJECT;
+          case ENABLE:
+          case DISABLE:
+            return AuditAction.TOGGLE;
+          case RESTORE:
+            return AuditAction.ROLLBACK;
+          default:
+            return AuditAction.STATUS_CHANGE;
+        }
+      }
+    }
+    return AuditAction.STATUS_CHANGE;
+  }
+
+  /**
+   * 从通用审计状态编码映射回自建审计结果枚举
+   *
+   * @param statusCode 通用审计状态编码
+   * @return 自建审计结果枚举
+   */
+  private AuditResult fromCommonStatus(Integer statusCode) {
+    if (statusCode == null) {
+      return AuditResult.SUCCESS;
+    }
+    return statusCode == AuditStatus.SUCCESS.getCode() ? AuditResult.SUCCESS : AuditResult.FAILURE;
+  }
+
+  /**
+   * 解析 content 字符串，提取 source 和 changeDesc
+   *
+   * <p>格式：{@code "[操作描述] source=XXX changeDesc"}
+   *
+   * @param content 内容字符串
+   * @param entry 审计日志条目（会被修改 source 和 changeDesc 字段）
+   */
+  private void parseContent(String content, AuditLogEntry entry) {
+    if (content == null) {
+      return;
+    }
+    String remaining = content;
+    // 去掉前缀 [xxx]
+    int bracketEnd = remaining.indexOf(']');
+    if (bracketEnd >= 0) {
+      remaining = remaining.substring(bracketEnd + 1).trim();
+    }
+    // 提取 source=XXX
+    if (remaining.startsWith("source=")) {
+      int spaceIdx = remaining.indexOf(' ');
+      if (spaceIdx > 0) {
+        entry.setSource(remaining.substring(7, spaceIdx));
+        remaining = remaining.substring(spaceIdx + 1).trim();
+      } else {
+        entry.setSource(remaining.substring(7));
+        remaining = "";
+      }
+    }
+    // 剩余部分为 changeDesc
+    if (!remaining.isEmpty()) {
+      entry.setChangeDesc(remaining);
+    }
+  }
+
+  /**
+   * 写入审计日志到通用审计框架
+   *
+   * @param entry 自建审计日志条目（用于日志输出）
+   * @param action 通用审计操作
+   * @param beforeSnapshot 变更前快照
+   * @param afterSnapshot 变更后快照
+   * @param status 审计状态（为 null 时默认 SUCCESS）
+   * @param errorMessage 错误信息
+   */
+  private void record(
+      AuditLogEntry entry,
+      com.njydsz.common.audit.enums.AuditAction action,
+      Map<String, Object> beforeSnapshot,
+      Map<String, Object> afterSnapshot,
+      AuditStatus status,
+      String errorMessage) {
     try {
-      store.save(entry);
+      if (auditRecorder == null) {
+        log.info(
+            "[AuditLog] (no-op) {} {} by {} from {}",
+            action,
+            entry.getRuleCode(),
+            entry.getOperator(),
+            entry.getSource());
+        return;
+      }
+
+      AuditLog auditLog = new AuditLog();
+      auditLog.setId(UUID.randomUUID().toString().replace("-", ""));
+      auditLog.setAuditType(AuditType.OPERATION.getCode());
+      auditLog.setAction(action.getCode());
+      auditLog.setStatus(status != null ? status.getCode() : AuditStatus.SUCCESS.getCode());
+      auditLog.setModule(MODULE_RULE_ENGINE);
+      auditLog.setBusinessNo(entry.getRuleCode());
+      auditLog.setOperatorId(entry.getOperator());
+      auditLog.setOperatorName(entry.getOperator());
+      auditLog.setOperationTime(entry.getCreatedAt());
+      auditLog.setCreatedAt(entry.getCreatedAt());
+      auditLog.setErrorMessage(errorMessage);
+
+      // 构建 content
+      String content = buildContent(action, entry.getSource(), entry.getChangeDesc());
+      auditLog.setContent(content);
+
+      // 序列化快照
+      if (beforeSnapshot != null && !beforeSnapshot.isEmpty()) {
+        auditLog.setDiffBeforeSnapshot(YdszJson.toJson(beforeSnapshot));
+      }
+      if (afterSnapshot != null && !afterSnapshot.isEmpty()) {
+        auditLog.setDiffAfterSnapshot(YdszJson.toJson(afterSnapshot));
+      }
+
+      auditRecorder.recordAsync(auditLog);
+
       log.info(
           "[AuditLog] {} {} by {} from {}",
-          entry.getAction(),
+          action,
           entry.getRuleCode(),
           entry.getOperator(),
           entry.getSource());
     } catch (Exception e) {
       log.warn("[AuditLog] 审计日志记录失败: {}", e.getMessage());
     }
+  }
+
+  /**
+   * 构建审计日志 content 内容
+   *
+   * @param action 通用审计操作
+   * @param source 操作来源
+   * @param changeDesc 变更描述（可为 null）
+   * @return content 字符串
+   */
+  private String buildContent(
+      com.njydsz.common.audit.enums.AuditAction action, String source, String changeDesc) {
+    StringBuilder sb = new StringBuilder();
+    if (action != null) {
+      sb.append("[").append(action.getDescription()).append("]");
+    }
+    if (source != null && !source.isEmpty()) {
+      sb.append(" source=").append(source);
+    }
+    if (changeDesc != null && !changeDesc.isEmpty()) {
+      sb.append(" ").append(changeDesc);
+    }
+    return sb.toString().trim();
   }
 
   private Map<String, Object> toSnapshot(RuleDefinitionDTO def) {
@@ -412,15 +812,9 @@ public class RuleAuditLogService {
     }
 
     compareField(
-        diffs,
-        "conditionExpression",
-        oldDef.getConditionExpression(),
-        newDef.getConditionExpression());
+        diffs, "conditionExpression", oldDef.getConditionExpression(), newDef.getConditionExpression());
     compareField(
-        diffs,
-        "severityExpression",
-        oldDef.getSeverityExpression(),
-        newDef.getSeverityExpression());
+        diffs, "severityExpression", oldDef.getSeverityExpression(), newDef.getSeverityExpression());
     compareField(
         diffs,
         "defaultSeverity",
@@ -457,7 +851,7 @@ public class RuleAuditLogService {
     }
   }
 
-  // ==================== 枚举与模型 ====================
+  // ==================== 内部枚举与模型 ====================
 
   /** 审计操作类型 */
   public enum AuditAction {
@@ -500,6 +894,8 @@ public class RuleAuditLogService {
   /** 审计日志条目 */
   @Data
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class AuditLogEntry {
     /** 日志 ID */
     private String id;
@@ -548,83 +944,5 @@ public class RuleAuditLogService {
     private String field;
     private String oldValue;
     private String newValue;
-  }
-
-  // ==================== 存储 SPI ====================
-
-  /**
-   * 审计日志存储接口（SPI）
-   *
-   * <p>由消费方提供实现，将审计日志写入数据库（如 {@code ydsz_rule_audit_log} 表）。 默认提供 {@link
-   * InMemoryAuditLogStore}（仅适合测试）。
-   */
-  public interface AuditLogStore {
-
-    void save(AuditLogEntry entry);
-
-    List<AuditLogEntry> queryByRuleCode(String ruleCode, int limit);
-
-    List<AuditLogEntry> queryByOperator(String operator, int limit);
-
-    List<AuditLogEntry> queryByAction(AuditAction action, int limit);
-
-    List<AuditLogEntry> queryByTimeRange(LocalDateTime start, LocalDateTime end, int limit);
-
-    List<AuditLogEntry> queryRecent(int limit);
-  }
-
-  /** 内存审计日志存储（默认实现，仅适合测试） */
-  public static class InMemoryAuditLogStore implements AuditLogStore {
-
-    private final List<AuditLogEntry> entries = new CopyOnWriteArrayList<>();
-    private final Map<String, List<AuditLogEntry>> byRuleCode = new ConcurrentHashMap<>();
-    private final Map<String, List<AuditLogEntry>> byOperator = new ConcurrentHashMap<>();
-
-    @Override
-    public void save(AuditLogEntry entry) {
-      entries.add(entry);
-      byRuleCode.computeIfAbsent(entry.getRuleCode(), k -> new CopyOnWriteArrayList<>()).add(entry);
-      if (entry.getOperator() != null) {
-        byOperator
-            .computeIfAbsent(entry.getOperator(), k -> new CopyOnWriteArrayList<>())
-            .add(entry);
-      }
-    }
-
-    @Override
-    public List<AuditLogEntry> queryByRuleCode(String ruleCode, int limit) {
-      List<AuditLogEntry> list = byRuleCode.getOrDefault(ruleCode, Collections.emptyList());
-      return list.stream().limit(limit).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AuditLogEntry> queryByOperator(String operator, int limit) {
-      List<AuditLogEntry> list = byOperator.getOrDefault(operator, Collections.emptyList());
-      return list.stream().limit(limit).collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AuditLogEntry> queryByAction(AuditAction action, int limit) {
-      return entries.stream()
-          .filter(e -> e.getAction() == action)
-          .limit(limit)
-          .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AuditLogEntry> queryByTimeRange(LocalDateTime start, LocalDateTime end, int limit) {
-      return entries.stream()
-          .filter(e -> e.getCreatedAt() != null)
-          .filter(e -> !e.getCreatedAt().isBefore(start) && e.getCreatedAt().isBefore(end))
-          .limit(limit)
-          .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<AuditLogEntry> queryRecent(int limit) {
-      int size = entries.size();
-      int from = Math.max(0, size - limit);
-      return new ArrayList<>(entries.subList(from, size));
-    }
   }
 }

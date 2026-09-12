@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
 import com.njydsz.agent.domain.trigger.TriggerType;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * 触发器管理服务。
@@ -272,7 +273,7 @@ public class TriggerManagementService {
     /**
      * 触发器管理异常。
      */
-    public static class TriggerManagementException extends RuntimeException {
+    public static class TriggerManagementException extends BusinessException {
         public TriggerManagementException(String message) {
             super(message);
         }

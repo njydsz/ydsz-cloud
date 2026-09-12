@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.lock.RedisReadWriteLock;
 import com.njydsz.common.lock.RedisSemaphore;
+import com.njydsz.common.lock.admin.DistributedLockAdmin;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.impl.RedisMultiLock;
@@ -59,6 +60,16 @@ public interface LockStrategy {
    * @return 多 Key 联锁实例
    */
   RedisMultiLock getMultiLock(List<DistributedLocker> locks);
+
+  /**
+   * 获取分布式锁运维管理实例
+   *
+   * <p>封装运维场景（强制释放、键搜索、状态查询等）的 Redis 操作，
+   * 供业务 Web 层运维端点（Controller/Endpoint）使用，避免 Controller 直接注入 RedisTemplate。
+   *
+   * @return 运维管理实例，不会返回 null
+   */
+  DistributedLockAdmin getLockAdmin();
 
   /**
    * 获取看门狗实例（可选）

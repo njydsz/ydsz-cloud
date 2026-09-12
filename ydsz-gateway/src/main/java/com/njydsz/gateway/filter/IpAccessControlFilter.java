@@ -29,10 +29,10 @@ import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.GatewayErrorCode;
-import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.IpAccessControlProperties;
+import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
  * IP 访问控制全局过滤器。

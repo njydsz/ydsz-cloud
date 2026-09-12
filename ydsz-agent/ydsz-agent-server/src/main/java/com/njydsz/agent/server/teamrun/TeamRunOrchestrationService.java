@@ -18,6 +18,7 @@ import com.njydsz.agent.domain.teamrun.TeamRunMemberStatus;
 import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.domain.teamrun.TeamRunRepository;
 import com.njydsz.agent.domain.teamrun.TeamRunStatus;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
@@ -492,7 +493,7 @@ public class TeamRunOrchestrationService {
     /**
      * Team Run 异常。
      */
-    public static class TeamRunException extends RuntimeException {
+    public static class TeamRunException extends BusinessException {
         public TeamRunException(String message) {
             super(message);
         }

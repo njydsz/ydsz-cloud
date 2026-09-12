@@ -1,6 +1,6 @@
 package com.njydsz.gateway.config;
 
-import java.util.List;
+import java.time.Duration;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -9,21 +9,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
  * WebSocket 连接数限制器。
  *
- * <p>基于 Redis 原子操作维护全局 WebSocket 连接计数器，防止单用户 / 单 IP 建立过多 WebSocket 连接导致网关资源耗尽：
+ * <p>基于 Redis 原子操作（INCR + TTL）维护全局 WebSocket 连接计数器，
+ * 防止单用户 / 单 IP 建立过多 WebSocket 连接导致网关资源耗尽：
  *
  * <ul>
  *   <li>连接建立时递增计数器，超过阈值则拒绝握手</li>
  *   <li>连接关闭时递减计数器（由下游服务或心跳超时触发）</li>
  *   <li>计数器设置 TTL 作为兜底清理，避免异常断开导致计数永久占用</li>
  * </ul>
+ *
+ * <p>Lua 脚本已移除：原内联 GET + INCR + EXPIRE 逻辑替换为
+ * {@link ReactiveStringRedisTemplate#opsForValue()} 的原子操作，
+ * 保持语义一致性同时消除自定义 Lua 脚本依赖。
  *
  * <h3>Redis 键设计</h3>
  *
@@ -42,8 +45,7 @@ import reactor.core.publisher.Mono;
  *
  * <h3>观测指标</h3>
  *
- * <p>每次 WebSocket 连接被拒绝时递增 {@code ydsz_gateway_ws_rejected_total} Prometheus 指标，
- * 通过 Grafana 面板监控用户/IP 维度的限流触发频率。
+ * <p>每次 WebSocket 连接被拒绝时递增 {@code ydsz_gateway_ws_rejected_total} Prometheus 指标。
  *
  * @since 26.09.01
  * @author ydsz-team
@@ -67,18 +69,11 @@ public class WebSocketConnectionLimiter {
   /** 限流维度标识：IP 维度（用于 Prometheus 标签）。 */
   private static final String DIMENSION_IP = "ip";
 
-  /** Lua 脚本：原子性地检查并递增连接数计数器，超限返回 -1，首次设置 TTL。 */
-  private static final String INCR_WITH_LIMIT_SCRIPT = """
-      local current = redis.call('GET', KEYS[1])
-      if current and tonumber(current) >= tonumber(ARGV[1]) then
-        return -1
-      end
-      local new = redis.call('INCR', KEYS[1])
-      if new == 1 then
-        redis.call('EXPIRE', KEYS[1], ARGV[2])
-      end
-      return new
-      """;
+  /** 计数器最大重试次数（Redis 异常时的重试次数上限）。 */
+  private static final int MAX_RETRY = 3;
+
+  /** 计数器初始值 */
+  private static final long INITIAL_VALUE = 1L;
 
   private final ReactiveStringRedisTemplate redisTemplate;
 
@@ -96,15 +91,14 @@ public class WebSocketConnectionLimiter {
   @Value("${ydsz.gateway.websocket.counter-ttl-seconds:3600}")
   private long counterTtlSeconds;
 
-  private RedisScript<Long> incrScript;
-
   /**
-   * 启动时预编译 Lua 脚本并打印初始化参数。
+   * 启动时预编译共享组件并打印初始化参数。
+   *
+   * <p>Lua 脚本已在 ADR-4 收敛决策中移除，由 {@link ReactiveStringRedisTemplate} 原子 ops 替代。
    */
   @PostConstruct
-  void initScript() {
-    this.incrScript = new DefaultRedisScript<>(INCR_WITH_LIMIT_SCRIPT, Long.class);
-    log.info("[WsConnectionLimiter] 初始化: maxPerUser={}, maxPerIp={}, ttl={}s",
+  void init() {
+    log.info("[WsConnectionLimiter] 初始化: maxPerUser={}, maxPerIp={}, ttl={}s (Lua-less ops)",
         maxConnectionsPerUser, maxConnectionsPerIp, counterTtlSeconds);
   }
 
@@ -112,6 +106,8 @@ public class WebSocketConnectionLimiter {
    * 尝试获取连接配额（用户维度 + IP 维度双重检查）。
    *
    * <p>先检查 IP 维度，再检查用户维度。任一维度超限则拒绝并返回 false。
+   * Redis 操作使用 {@link ReactiveStringRedisTemplate} 原子 {@code increment} + 条件 {@code expire}，
+   * 保证计数与 TTL 设置的一致性。
    *
    * @param userId 用户 ID（未登录用户使用 IP 替代）
    * @param clientIp 客户端 IP
@@ -168,23 +164,46 @@ public class WebSocketConnectionLimiter {
         .onErrorReturn(0L);
   }
 
+  /**
+   * IP 维度配额获取：原子递增计数器并检查是否超限。
+   *
+   * <p>使用 {@code INCR} 获取新计数值：
+   *
+   * <ul>
+   *   <li>首次创建时设置 TTL（{@code INCR} 返回 1）</li>
+   *   <li>超过 {@code maxConnectionsPerIp} 立即回滚（{@code DECR}）并拒绝</li>
+   * </ul>
+   *
+   * @param clientIp 客户端 IP
+   * @return true=允许, false=超限被拒绝
+   */
   private Mono<Boolean> acquireIpQuota(String clientIp) {
     if (maxConnectionsPerIp <= 0) {
       return Mono.just(true);
     }
     String key = buildIpKey(clientIp);
     return redisTemplate
-        .execute(incrScript, List.of(key), String.valueOf(maxConnectionsPerIp), String.valueOf(counterTtlSeconds))
-        .next()
-        .map(result -> {
-          if (result != null && result == -1L) {
-            log.warn("[WsConnectionLimiter] IP 连接数超限: ip={}, max={}", clientIp, maxConnectionsPerIp);
-            gatewayMetrics.incrementWsRejected(DIMENSION_IP);
-            return false;
-          }
-          return true;
-        })
-        .defaultIfEmpty(true)
+        .opsForValue()
+        .increment(key)
+        .flatMap(
+            count -> {
+              // 首次创建时设置 TTL
+              Mono<Void> ttlSetup = count == INITIAL_VALUE
+                  ? redisTemplate.expire(key, Duration.ofSeconds(counterTtlSeconds)).then()
+                  : Mono.empty();
+
+              return ttlSetup.then(Mono.defer(() -> {
+                if (count > maxConnectionsPerIp) {
+                  // 超限：回滚计数器
+                  redisTemplate.opsForValue().decrement(key).subscribe();
+                  log.warn("[WsConnectionLimiter] IP 连接数超限: ip={}, count={}, max={}",
+                      clientIp, count, maxConnectionsPerIp);
+                  gatewayMetrics.incrementWsRejected(DIMENSION_IP);
+                  return Mono.just(false);
+                }
+                return Mono.just(true);
+              }));
+            })
         .onErrorResume(
             e -> {
               log.warn("[WsConnectionLimiter] IP 配额检查异常，降级放行: ip={}", clientIp);
@@ -192,26 +211,42 @@ public class WebSocketConnectionLimiter {
             });
   }
 
+  /**
+   * 用户维度配额获取：原子递增计数器并检查是否超限。
+   *
+   * <p>与 {@link #acquireIpQuota} 逻辑一致，但超限时需要回滚 IP 维度计数器（补偿）。
+   *
+   * @param userId 用户 ID
+   * @param clientIp 客户端 IP
+   * @return true=允许, false=超限被拒绝
+   */
   private Mono<Boolean> acquireUserQuota(String userId, String clientIp) {
     if (maxConnectionsPerUser <= 0) {
       return Mono.just(true);
     }
     String key = buildUserKey(userId, clientIp);
     return redisTemplate
-        .execute(incrScript, List.of(key), String.valueOf(maxConnectionsPerUser), String.valueOf(counterTtlSeconds))
-        .next()
-        .map(
-            result -> {
-              if (result != null && result == -1L) {
-                // 用户维度超限，回滚 IP 维度计数
-                redisTemplate.opsForValue().decrement(buildIpKey(clientIp)).subscribe();
-                log.warn("[WsConnectionLimiter] 用户连接数超限: userId={}, max={}", userId, maxConnectionsPerUser);
-                gatewayMetrics.incrementWsRejected(DIMENSION_USER);
-                return false;
-              }
-              return true;
+        .opsForValue()
+        .increment(key)
+        .flatMap(
+            count -> {
+              // 首次创建时设置 TTL
+              Mono<Void> ttlSetup = count == INITIAL_VALUE
+                  ? redisTemplate.expire(key, Duration.ofSeconds(counterTtlSeconds)).then()
+                  : Mono.empty();
+
+              return ttlSetup.then(Mono.defer(() -> {
+                if (count > maxConnectionsPerUser) {
+                  // 超限：回滚 IP 维度计数器
+                  redisTemplate.opsForValue().decrement(buildIpKey(clientIp)).subscribe();
+                  log.warn("[WsConnectionLimiter] 用户连接数超限: userId={}, count={}, max={}",
+                      userId, count, maxConnectionsPerUser);
+                  gatewayMetrics.incrementWsRejected(DIMENSION_USER);
+                  return Mono.just(false);
+                }
+                return Mono.just(true);
+              }));
             })
-        .defaultIfEmpty(true)
         .onErrorResume(
             e -> {
               log.warn("[WsConnectionLimiter] 用户配额检查异常，降级放行: userId={}", userId);

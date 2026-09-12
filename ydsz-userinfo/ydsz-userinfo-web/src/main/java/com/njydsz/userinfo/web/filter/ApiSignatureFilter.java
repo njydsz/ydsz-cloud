@@ -51,6 +51,11 @@ import com.njydsz.userinfo.server.config.ApiSignatureProperties;
  *   <li>校验失败返回 401 不暴露具体原因细节（由日志记录详细信息）
  * </ul>
  *
+ * <p><b>收敛计划（ADR-2，见 docs/ADR-2026-09-12_公共能力重复实现收敛决策.md）：</b>
+ * ydsz-common-safe 已提供同构的 {@code ApiSignatureFilter}（HMAC-SHA256 + timestamp 容差 + nonce 防重放 +
+ * 常量时间比较）。本类与 common-safe 能力重叠，判定为可替代；后续迭代将切换至 common-safe 实现
+ * （nonce 介质差异经其存储扩展点承接），本类随之删除。在此之前本类为唯一生效实现，不得再复制衍生。
+ *
  * @author ydsz-team
  * @since 26.09.01
  * @see ApiSignatureProperties 签名配置

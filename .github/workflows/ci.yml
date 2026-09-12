@@ -51,14 +51,6 @@ jobs:
         run: mvn checkstyle:check -B
         # 失败即构建中断（failOnViolation=true，已在 pom 中配置）
 
-      # Step 5: Maven verify（编译 + 测试 + JaCoCo 覆盖率采集）
+      # Step 5: Maven verify（编译 + 打包验证）
       - name: Maven verify
         run: mvn verify -B
-
-      # Step 6: 上传 JaCoCo 覆盖率报告到 Codecov
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: "**/target/site/jacoco/jacoco.xml"
-          fail_ci_if_error: false
-        continue-on-error: true

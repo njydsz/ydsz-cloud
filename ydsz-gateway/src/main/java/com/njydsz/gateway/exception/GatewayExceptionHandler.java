@@ -1,16 +1,12 @@
-package com.njydsz.gateway.config;
+package com.njydsz.gateway.exception;
 
 import java.net.ConnectException;
-import java.time.OffsetDateTime;
 import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
@@ -18,23 +14,23 @@ import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.auth.exception.PermissionDeniedException;
-import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.webflux.WebFluxErrorUtils;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
 
 /**
  * 网关全局异常处理器。
  *
- * <p>实现 {@link WebExceptionHandler} 接口，拦截所有网关层异常并返回统一 {@link YdszResponse} JSON。
+ * <p>实现 {@link WebExceptionHandler} 接口，拦截所有网关层异常并返回统一 JSON 错误响应。
  *
  * <p>仅处理响应尚未提交（body 未写出）的异常；已提交则原样抛出交由容器兜底。
  * 状态码 / 业务码 / 错误消息分别由 {@link #resolveHttpStatus}、{@link #resolveBizCode}、
- * {@link #resolveMessage} 解析，并注入 traceId 便于跨服务排障。
+ * {@link #resolveMessage} 解析。
  *
- * <p>支持 RFC 7807 ProblemDetail 格式与 ydsz 标准格式的双模式输出，
- * 通过请求 Accept 头自动协商。
+ * <p>错误响应通过 {@link WebFluxErrorUtils} 统一构建，与网关过滤器拒绝路径保持格式一致。
  *
  * <p>通过 {@code @Order(-2)} 确保优先于 Spring Boot 默认的 ErrorWebExceptionHandler。
  *
@@ -45,10 +41,6 @@ import com.njydsz.common.json.YdszJson;
 @Order(-2)
 public class GatewayExceptionHandler implements WebExceptionHandler {
 
-  /** ProblemDetail 媒体类型 */
-  private static final MediaType PROBLEM_JSON_MEDIA_TYPE =
-      MediaType.valueOf("application/problem+json");
-
   /**
    * 处理网关层异常并返回统一 JSON 错误响应。
    *
@@ -58,7 +50,8 @@ public class GatewayExceptionHandler implements WebExceptionHandler {
    */
   @Override
   public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-    if (exchange.getResponse().isCommitted()) {
+    ServerHttpResponse response = exchange.getResponse();
+    if (response.isCommitted()) {
       return Mono.error(ex);
     }
 
@@ -72,13 +65,9 @@ public class GatewayExceptionHandler implements WebExceptionHandler {
       traceId = TraceIdGenerator.generateSortableTraceId();
     }
 
-    GatewayErrorCode errorCode = GatewayErrorCode.fromCode(bizCode);
-
-    // Accept 协商 — 判断客户端是否请求 problem+json
-    boolean preferProblemJson = prefersProblemJson(exchange.getRequest());
-
-    YdszResponse<Void> body =
-        buildErrorResponse(bizCode, message, traceId, httpStatus, errorCode, preferProblemJson);
+    boolean preferProblemJson =
+        WebFluxErrorUtils.acceptsProblemJson(
+            exchange.getRequest().getHeaders().getFirst(HttpHeaders.ACCEPT));
 
     log.warn(
         "[GatewayError] status={} bizCode={} traceId={} path={} error={}",
@@ -88,83 +77,10 @@ public class GatewayExceptionHandler implements WebExceptionHandler {
         exchange.getRequest().getURI().getPath(),
         ex.getClass().getSimpleName() + ": " + ex.getMessage());
 
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(httpStatus);
-    response
-        .getHeaders()
-        .setContentType(preferProblemJson ? PROBLEM_JSON_MEDIA_TYPE : MediaType.APPLICATION_JSON);
-    response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
+    GatewayErrorCode errorCode = GatewayErrorCode.fromCode(bizCode);
 
-    // RFC 5988 Link 头指向错误文档
-    if (errorCode.getHelpUrl() != null && !errorCode.getHelpUrl().isBlank()) {
-      response
-          .getHeaders()
-          .add(HttpHeaders.LINK, "<" + errorCode.getHelpUrl() + ">; rel=\"help\"");
-    }
-
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
-    return response.writeWith(Mono.just(buffer));
-  }
-
-  /**
-   * 构建错误响应体（根据 Accept 头选择格式）。
-   *
-   * @param bizCode 业务错误码
-   * @param message 错误消息
-   * @param traceId 链路追踪 ID
-   * @param httpStatus HTTP 状态码
-   * @param errorCode 网关错误码枚举
-   * @param preferProblemJson 是否优先返回 ProblemDetail 格式
-   * @return 错误响应体
-   */
-  private YdszResponse<Void> buildErrorResponse(
-      int bizCode,
-      String message,
-      String traceId,
-      HttpStatus httpStatus,
-      GatewayErrorCode errorCode,
-      boolean preferProblemJson) {
-    YdszResponse<Void> body;
-    if (preferProblemJson) {
-      // RFC 7807 ProblemDetail 格式
-      body = YdszResponse.error(String.valueOf(bizCode), message);
-      body.putExtension(
-          "type",
-          errorCode.getHelpUrl() != null
-              ? errorCode.getHelpUrl()
-              : "https://docs.ydsz.com/errors/" + bizCode);
-      body.putExtension("title", httpStatus.getReasonPhrase());
-      body.putExtension("status", String.valueOf(httpStatus.value()));
-      body.putExtension("instance", "");
-      body.putExtension("timestamp", OffsetDateTime.now().toString());
-    } else {
-      // ydsz 标准格式（向后兼容）
-      body = YdszResponse.error(String.valueOf(bizCode), message);
-      body.putExtension("help", errorCode.getHelpUrl());
-      body.putExtension(
-          "type",
-          errorCode.getHelpUrl() != null
-              ? errorCode.getHelpUrl()
-              : "https://docs.ydsz.com/errors/" + bizCode);
-      body.putExtension("timestamp", OffsetDateTime.now().toString());
-    }
-    body.assignTraceId(traceId);
-    return body;
-  }
-
-  /**
-   * 判断请求是否优先接受 ProblemDetail 格式。
-   *
-   * @param request HTTP 请求
-   * @return true=优先返回 ProblemDetail
-   */
-  private boolean prefersProblemJson(ServerHttpRequest request) {
-    String acceptHeader = request.getHeaders().getFirst(HttpHeaders.ACCEPT);
-    if (acceptHeader == null || acceptHeader.isBlank()) {
-      return false;
-    }
-    return acceptHeader.contains("application/problem+json");
+    return WebFluxErrorUtils.buildErrorResponse(
+        response, httpStatus.value(), String.valueOf(bizCode), message, traceId, preferProblemJson);
   }
 
   /**
@@ -196,7 +112,6 @@ public class GatewayExceptionHandler implements WebExceptionHandler {
     if (ex instanceof TimeoutException) {
       return HttpStatus.GATEWAY_TIMEOUT;
     }
-    // NotFoundException 来自 spring-cloud-gateway
     String className = ex.getClass().getSimpleName();
     if ("NotFoundException".equals(className)) {
       return HttpStatus.NOT_FOUND;

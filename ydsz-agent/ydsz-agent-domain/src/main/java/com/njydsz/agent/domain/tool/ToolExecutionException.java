@@ -1,5 +1,7 @@
 package com.njydsz.agent.domain.tool;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 工具执行异常
  *
@@ -9,7 +11,7 @@ package com.njydsz.agent.domain.tool;
  * @author ydsz-team
  * @since 26.09.01
  */
-public class ToolExecutionException extends Exception {
+public class ToolExecutionException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 

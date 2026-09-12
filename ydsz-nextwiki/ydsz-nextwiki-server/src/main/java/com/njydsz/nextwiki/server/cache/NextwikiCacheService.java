@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.cache.support.CacheKeyBuilder;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.lock.annotation.LockType;
+import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
@@ -89,6 +93,7 @@ public class NextwikiCacheService {
 
   private final RedisStringOps redisStringOps;
   private final NextwikiMetrics nextwikiMetrics;
+  private final LockStrategy lockStrategy;
 
   // ==================== 文件详情缓存 ====================
 
@@ -163,8 +168,9 @@ public class NextwikiCacheService {
     }
     recordCacheMiss(metricName);
 
-    // 互斥锁防穿透
-    if (acquireLock(lockKey)) {
+    // 互斥锁防穿透（通过 DistributedLocker 实现，非阻塞尝试获取）
+    String lockValue = tryAcquireLock(lockKey);
+    if (lockValue != null) {
       try {
         // 双重检查
         String jsonCheck = redisStringOps.get(key, String.class);
@@ -182,7 +188,7 @@ public class NextwikiCacheService {
         }
         return result != null ? result : Collections.emptyList();
       } finally {
-        releaseLock(lockKey);
+        releaseLock(lockKey, lockValue);
       }
     }
 
@@ -367,7 +373,8 @@ public class NextwikiCacheService {
    */
   private <T> Optional<T> getOrLoadWithLock(String key, String lockKey, long ttl, String metricName,
       Supplier<Optional<T>> loader) {
-    if (acquireLock(lockKey)) {
+    String lockValue = tryAcquireLock(lockKey);
+    if (lockValue != null) {
       try {
         // 双重检查：其他线程可能已回查
         Optional<T> doubleCheck = getFromCache(key, Object.class);
@@ -380,7 +387,7 @@ public class NextwikiCacheService {
         result.ifPresent(value -> putToCache(key, value, jitterTtl(ttl)));
         return result;
       } finally {
-        releaseLock(lockKey);
+        releaseLock(lockKey, lockValue);
       }
     }
 
@@ -517,20 +524,23 @@ public class NextwikiCacheService {
   }
 
   /**
-   * 获取分布式互斥锁（防缓存穿透）。
+   * 非阻塞尝试获取分布式互斥锁（防缓存穿透）。
    *
-   * <p>使用 Redis SETNX + 过期时间实现互斥锁，仅一个线程能成功获锁执行 DB 回查。
+   * <p>委托 {@link LockStrategy} + {@link DistributedLocker#tryLock(String, long, TimeUnit)} 实现，
+   * 利用 Redis SETNX + 过期时间保证仅一个线程能成功获锁执行 DB 回查，与原有语义一致。
    *
    * @param lockKey 锁键
-   * @return {@code true} 表示获锁成功
+   * @return 获锁成功返回 lockValue（用于释放时校验），失败返回 {@code null}
    */
-  private boolean acquireLock(String lockKey) {
+  private String tryAcquireLock(String lockKey) {
     try {
-      return Boolean.TRUE.equals(redisStringOps.setIfAbsent(lockKey, "1", LOCK_LEASE_S));
+      DistributedLocker locker = lockStrategy.getLock(LockType.REENTRANT);
+      return locker.tryLock(lockKey, LOCK_LEASE_S, TimeUnit.SECONDS);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 获取互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage(), e);
-      // 异常时放行（允许直接查 DB，避免因 Redis 故障导致服务不可用）
-      return true;
+      // 异常时返回 null（进入等待重读逻辑，最终由 waitForCache/JsonListCache 兜底返回），
+      // 避免因 Redis 故障导致服务不可用
+      return null;
     }
   }
 
@@ -538,10 +548,12 @@ public class NextwikiCacheService {
    * 释放分布式互斥锁。
    *
    * @param lockKey 锁键
+   * @param lockValue 获取锁时返回的 lockValue，用于校验锁持有者
    */
-  private void releaseLock(String lockKey) {
+  private void releaseLock(String lockKey, String lockValue) {
     try {
-      redisStringOps.del(lockKey);
+      DistributedLocker locker = lockStrategy.getLock(LockType.REENTRANT);
+      locker.unlock(lockKey, lockValue);
     } catch (Exception e) {
       log.warn("[NextwikiCacheService] 释放互斥锁异常: lockKey={}, err={}", lockKey, e.getMessage(), e);
     }

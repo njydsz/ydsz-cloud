@@ -41,7 +41,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  *       <ul>
  *         <li>标记 log.status=TIMEOUT，填充 end_time / duration_ms / error_message
  *         <li>更新 job.fail_count + 1，status=ERROR（不阻止下次扫描，由运维人工处理）
- *         <li>释放对应的 Redis 任务锁（Lua 脚本安全释放）
+ *         <li>释放对应的 Redis 任务锁（JobLockManager DistributedLocker 安全释放）
  *       </ul>
  * </ol>
  *

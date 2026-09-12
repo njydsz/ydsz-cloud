@@ -156,8 +156,16 @@ public class FlowInstance extends MpBaseEntity<String> {
    */
   private final transient List<FlowDomainEvent> domainEvents = new ArrayList<>(16);
 
-  /** 状态机实例（无状态单例，延迟初始化） */
-  private static volatile FlowInstanceStateMachine stateMachine;
+  /**
+   * 状态机单例持有者（Initialization-on-demand Holder 模式）。
+   *
+   * <p>利用 JVM 类初始化锁保证线程安全且零同步开销，替代 DCL（double-checked locking）。
+   * 首次访问 {@link #getStateMachine()} 时触发 {@code StateMachineHolder} 类加载并初始化。
+   */
+  private static final class StateMachineHolder {
+    /** 流程状态机单例（无状态，可安全共享）。 */
+    static final FlowInstanceStateMachine INSTANCE = new FlowInstanceStateMachine();
+  }
 
   // ============================== 充血模型行为方法 ==============================
 
@@ -276,21 +284,15 @@ public class FlowInstance extends MpBaseEntity<String> {
   // ============================== 私有方法 ==============================
 
   /**
-   * 获取状态机实例（双重检查锁单例）。
+   * 获取状态机实例（Initialization-on-demand Holder 模式）。
    *
-   * <p>状态机本身无状态，可安全共享。使用 volatile + DCL 保证线程安全且避免同步开销。
+   * <p>状态机本身无状态，可安全共享。利用 JVM 类初始化锁保证线程安全且零同步开销，
+   * 替代原始的 DCL（double-checked locking）+ {@code synchronized(FlowInstance.class)}。
    *
    * @return 状态机单例
    */
   private static FlowInstanceStateMachine getStateMachine() {
-    if (stateMachine == null) {
-      synchronized (FlowInstance.class) {
-        if (stateMachine == null) {
-          stateMachine = new FlowInstanceStateMachine();
-        }
-      }
-    }
-    return stateMachine;
+    return StateMachineHolder.INSTANCE;
   }
 
   /**

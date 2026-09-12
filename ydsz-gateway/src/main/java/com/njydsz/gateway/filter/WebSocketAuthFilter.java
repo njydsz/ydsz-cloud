@@ -25,11 +25,11 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
-import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.PathGuard;
 import com.njydsz.gateway.config.WebSocketConnectionLimiter;
+import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
  * WebSocket 认证过滤器（P2-12 + P0-1 安全加固 + P0-4 Origin 校验）

@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +30,7 @@ import com.njydsz.message.server.service.core.GuardService;
  *
  * <p>令牌桶限流委托 {@link RedisRateLimiter}（ydsz-common-redis 公共能力）；
  * 每日 / 每小时频率使用 Redis INCR + EXPIRE，上限取自用户偏好；
- * 去重使用 {@link IdempotentStrategy#acquire} 实现原子去重。
+ * 去重使用 ydsz-common-lock 的 {@link IdempotentStrategy} 原子去重。
  *
  * <p>降级策略：Redis 异常时 fail-open（返回 true），仅记 WARN 日志，不阻断业务。
  *
@@ -37,6 +39,7 @@ import com.njydsz.message.server.service.core.GuardService;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class GuardServiceImpl implements GuardService {
   /** 默认 TTL（秒） */
   private static final int DEFAULT_TTL_SECONDS = 60;
@@ -51,13 +54,16 @@ public class GuardServiceImpl implements GuardService {
   /** 日频率计数器 key 时间格式 */
   private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-  /** Redis 令牌桶限流器（可选依赖，不可用时降级放行） */
-  private final RedisRateLimiter rateLimiter;
+  /** Redis 令牌桶限流器的可选提供者（不可用时降级放行） */
+  private final ObjectProvider<RedisRateLimiter> rateLimiterProvider;
+
+  /** 解析后的 Redis 令牌桶限流器实例（{@code null} 表示不可用，限流降级放行） */
+  private RedisRateLimiter rateLimiter;
 
   /** Redis 基础服务（用于 INCR/EXPIRE 频率计数） */
   private final RedisStringOps redisStringOps;
 
-  /** 幂等策略（SET NX EX 原子去重） */
+  /** 幂等策略（ydsz-common-lock 原子去重） */
   private final IdempotentStrategy idempotentStrategy;
 
   /** 用户偏好服务（读取 hourlyLimit/dailyLimit） */
@@ -80,19 +86,12 @@ public class GuardServiceImpl implements GuardService {
   @Value("${ydsz.message.rate-limit.fail-open:true}")
   private boolean failOpen;
 
-  public GuardServiceImpl(
-      ObjectProvider<RedisRateLimiter> rateLimiterProvider,
-      RedisStringOps redisStringOps,
-      IdempotentStrategy idempotentStrategy,
-      PreferenceService preferenceService,
-      TenantConfigService tenantConfigService,
-      MessageProperties messageProperties) {
+  /**
+   * 初始化令牌桶限流实例（可选依赖，不可用时降级放行）。
+   */
+  @PostConstruct
+  void initRateLimiter() {
     this.rateLimiter = rateLimiterProvider.getIfAvailable();
-    this.redisStringOps = redisStringOps;
-    this.idempotentStrategy = idempotentStrategy;
-    this.preferenceService = preferenceService;
-    this.tenantConfigService = tenantConfigService;
-    this.messageProperties = messageProperties;
     if (this.rateLimiter == null) {
       log.warn("[Guard] RedisRateLimiter 不可用，令牌桶限流将降级放行");
     }
@@ -298,7 +297,10 @@ public class GuardServiceImpl implements GuardService {
   /**
    * {@inheritDoc}
    *
-   * @param dedupKey 去重 key（拼接 DEDUP_KEY_PREFIX 后作为 Redis key）
+   * <p>委托 {@link IdempotentStrategy#acquire} 实现 TTL 窗口内原子去重，
+   * 去重 key 由 {@link MessageConstants#DEDUP_KEY_PREFIX} 拼接业务 key 构成。
+   *
+   * @param dedupKey 去重 key（不含前缀，由调用方按业务语义拼接）
    * @return 是否首次到达（true=首次放行，false=重复消息跳过）
    */
   @Override

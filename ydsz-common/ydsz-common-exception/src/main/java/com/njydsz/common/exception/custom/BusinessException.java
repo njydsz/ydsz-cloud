@@ -142,6 +142,34 @@ public class BusinessException extends AbstractYdszException {
     initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
   }
 
+  /**
+   * 使用消息构造业务异常（供子类简化以 message-only 方式构造）。
+   *
+   * <p>异常码使用默认值 {@link CoreExceptionCode#FAIL}，HTTP 状态码 400，级别 ERROR，分类 BUSINESS。
+   *
+   * @param message 错误描述
+   */
+  protected BusinessException(String message) {
+    super(message);
+    initFields(DEFAULT_CODE, null, new Object[] {});
+    initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    this.overrideMessage = message;
+  }
+
+  /**
+   * 使用消息和根因构造业务异常（供子类简化以 message + cause 方式构造）。
+   *
+   * <p>异常码使用默认值 {@link CoreExceptionCode#FAIL}，HTTP 状态码 400，级别 ERROR，分类 BUSINESS。
+   *
+   * @param message 错误描述
+   * @param cause 根因异常
+   */
+  protected BusinessException(String message, Throwable cause) {
+    super(message, cause);
+    initFields(DEFAULT_CODE, null, new Object[] {});
+    initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+  }
+
   // ==================== 业务方法 ====================
 
   /**

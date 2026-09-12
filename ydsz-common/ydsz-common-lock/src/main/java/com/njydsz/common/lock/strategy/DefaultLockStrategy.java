@@ -10,6 +10,8 @@ import org.springframework.scheduling.TaskScheduler;
 
 import com.njydsz.common.lock.RedisReadWriteLock;
 import com.njydsz.common.lock.RedisSemaphore;
+import com.njydsz.common.lock.admin.DefaultDistributedLockAdmin;
+import com.njydsz.common.lock.admin.DistributedLockAdmin;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.config.LockProperties;
 import com.njydsz.common.lock.core.AbstractRedisDistributedLock;
@@ -230,6 +232,18 @@ public class DefaultLockStrategy implements LockStrategy {
         scheduler,
         config.getMaxRenewCount(),
         config.getRenewIntervalSeconds());
+  }
+
+  /**
+   * 获取分布式锁运维管理实例
+   *
+   * <p>运维实例在多调用之间复用（无状态，可安全缓存）。
+   *
+   * @return LockAdmin 实例
+   */
+  @Override
+  public DistributedLockAdmin getLockAdmin() {
+    return new DefaultDistributedLockAdmin(stringRedisTemplate, lockWatchDog);
   }
 
   /**

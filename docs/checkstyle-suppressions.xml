@@ -174,5 +174,28 @@
     <!--    业界惯例使用小写 log，豁免 ConstantName 检查 -->
     <!-- ============================================ -->
     <suppress checks="ConstantName" message="名称 'log' 必须匹配表达式"/>
+    <!-- ============================================ -->
+    <!-- 5. DDD 分层架构规则的合法层豁免（§34 / 附录 D #22-#27） -->
+    <!--    infra 层自身封装 Mapper / Wrapper 属合法实现；     -->
+    <!--    domain 层持有 MapStruct Converter 属规范要求。     -->
+    <!-- ============================================ -->
+
+    <!-- infra 层（含 ydsz-*-infra 与 ydsz-generator-infra）：Mapper import 与 Wrapper 构造合法 -->
+    <suppress files=".*[\\/]([\w-]+-infra|infra)[\\/].*"
+              checks="RegexpSinglelineJava"
+              message=".*禁止在 infra 层之外直接注入 MyBatis Mapper.*"/>
+    <suppress files=".*[\\/]([\w-]+-infra|infra)[\\/].*"
+              checks="RegexpSinglelineJava"
+              message=".*禁止在业务代码直接构造 Wrapper.*"/>
+
+    <!-- common 基础设施层（common-jdbc 等需直接操作 MyBatis-Plus 内核） -->
+    <suppress files=".*[\\/]ydsz-common-[a-z]+[\\/].*"
+              checks="RegexpSinglelineJava"
+              message=".*禁止在业务代码直接构造 Wrapper.*"/>
+
+    <!-- domain 层：MapStruct Converter 的唯一合法归属（§34.2.1） -->
+    <suppress files=".*[\\/][\w-]+-domain[\\/].*"
+              checks="RegexpSinglelineJava"
+              message=".*MapStruct Converter 必须定义在.*"/>
 
 </suppressions>

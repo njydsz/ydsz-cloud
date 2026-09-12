@@ -740,7 +740,23 @@ public class ChunkUploadApplicationService {
         filePath, name, contentType != null ? contentType : "application/octet-stream");
   }
 
-  /** 基于 Path 的 MultipartFile 简单实现 */
+  /**
+   * 基于 Path 的 MultipartFile 简单实现。
+   *
+   * <p>用于将已落盘的合并文件包装为 {@link MultipartFile}，传递给
+   * {@link IFileStorage#upload} 完成对象存储上传。
+   *
+   * <p><b>保留内部类的原因：</b>
+   *
+   * <ul>
+   *   <li>Spring Test 的 {@code MockMultipartFile} 无 Path 构造器，需将文件全量读入 {@code byte[]}，
+   *       对已落盘的合并文件（可能较大）存在不必要的内存拷贝</li>
+   *   <li>当前实现支持流式读取（{@link #getInputStream()} 直接返回文件输入流），
+   *       避免合并文件的二次内存加载</li>
+   *   <li>若后续有多处场景需要将 {@link Path} / {@link java.io.File} 适配为 {@code MultipartFile}，
+   *       可统一抽取为工具类，复用 {@link java.nio.file.Files#newInputStream} 流式能力</li>
+   * </ul>
+   */
   private static class SimplePathMultipartFile implements MultipartFile {
     private final Path filePath;
     private final String name;

@@ -1,7 +1,5 @@
 package com.njydsz.userinfo.server.metrics;
 
-import java.util.Collections;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
@@ -43,15 +41,6 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
 
   /** Redis 在线会话总数计数器 Key */
   private static final String SESSION_TOTAL_KEY = "userinfo:session:total";
-
-  /**
-   * P0-8: 会话计数器防下溢 Lua 脚本。
-   *
-   * <p>登出时仅在计数器大于 0 时 DECR，避免并发登出导致计数器变为负数，破坏在线会话 Gauge 的准确性。
-   */
-  private static final String DECR_IF_POSITIVE_LUA =
-      "local v = tonumber(redis.call('GET', KEYS[1]) or '0') "
-          + "if v > 0 then return redis.call('DECR', KEYS[1]) else return 0 end";
 
   private final RedisStringOps redisStringOps;
 
@@ -109,16 +98,13 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
   /**
    * 记录一次登出，将在线会话 Redis 计数器 DECR -1。
    *
-   * <p>应在登出成功路径调用，并与一次成功登录配对。 P0-8: 使用 Lua 脚本防下溢（计数器为 0 时不再递减）；
+   * <p>应在登出成功路径调用，并与一次成功登录配对。 使用 {@link RedisStringOps#decrIfPositive} 防下溢（计数器为 0 时不再递减）；
    * P2-3: 同时累加 {@code ydsz_userinfo_logouts_total{result=success}} 计数器，用于登出行为分析。
    */
   public void recordLogout() {
     incrementCounter("logouts_total", "result", "success");
     try {
-      redisStringOps.executeScriptWithShaCache(
-          DECR_IF_POSITIVE_LUA,
-          Long.class,
-          Collections.singletonList(SESSION_TOTAL_KEY));
+      redisStringOps.decrIfPositive(SESSION_TOTAL_KEY);
     } catch (Exception e) {
       log.warn("Failed to decrement online session counter, error={}", e.getMessage());
     }

@@ -112,6 +112,17 @@
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
 
+        <!--
+            WebFlux 响应式错误工具（WebFluxErrorUtils）使用 ServerHttpResponse / DataBuffer / Mono 等响应式类型。
+            标记为 provided，避免强制 servlet-only 模块拉入完整 Reactor 栈；
+            WebFlux 网关模块通过 spring-cloud-gateway 依赖直接获得 reactor-core 运行时。
+        -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

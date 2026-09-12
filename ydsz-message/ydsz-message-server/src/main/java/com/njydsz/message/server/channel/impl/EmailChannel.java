@@ -95,7 +95,7 @@ public class EmailChannel implements MessageChannel {
       boolean isHtml = content != null && content.contains("<");
 
       // 构建 EmailMessage（适配 common-notify 的消息协议）
-      EmailMessage.Builder messageBuilder = EmailMessage.builder()
+      EmailMessage.EmailMessageBuilder messageBuilder = EmailMessage.builder()
           .to(request.getReceiver())
           .subject(subject)
           .content(content)

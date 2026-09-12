@@ -25,8 +25,8 @@ import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
-import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
+import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
  * P1-3: API Key 认证过滤器

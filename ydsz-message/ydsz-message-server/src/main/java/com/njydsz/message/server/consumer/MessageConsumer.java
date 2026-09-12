@@ -1,6 +1,5 @@
 package com.njydsz.message.server.consumer;
 
-import java.lang.management.ManagementFactory;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,7 +13,6 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -39,8 +37,9 @@ import com.njydsz.message.server.service.core.MessageService;
 /**
  * RocketMQ 消息消费端。
  *
- * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE},基于 Redis SET NX EX 实现消费端幂等防重。 异常处理:SysException
- * 保留锁并落库 FAILED 不重投;系统异常释放锁(Lua 安全释放)并抛出触发重投。
+ * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE}，基于 ydsz-common-lock 的 {@link
+ * com.njydsz.common.lock.idempotent.IdempotentStrategy} 实现消费端幂等防重。
+ * 异常处理：SysException 保留锁并落库 FAILED 不重投；系统异常释放锁并抛出触发重投。
  *
  * <p>性能优化:Redis 健康时跳过 DB 二级幂等检查,减少每次消费的 DB 查询开销。
  *
@@ -74,12 +73,6 @@ public class MessageConsumer implements RocketMQListener<String> {
   private final MessageProperties messageProperties;
   private final RedisHealthStatus redisHealthStatus;
 
-  /** 当前实例标识(hostname:pid),用于锁值与安全释放 */
-  private static final String INSTANCE_ID = initInstanceId();
-
-  /** Lua 脚本:仅当 value 匹配时才 delete(安全释放锁) */
-  private static final DefaultRedisScript<Long> RELEASE_SCRIPT = initReleaseScript();
-
   /** P1-10: 优雅停机标志 */
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
@@ -91,19 +84,6 @@ public class MessageConsumer implements RocketMQListener<String> {
 
   /** P2-5: 丢弃原因常量 - TTL 过期 */
   private static final String DROP_REASON_TTL_EXPIRED = "TTL_EXPIRED";
-
-  private static String initInstanceId() {
-    String name = ManagementFactory.getRuntimeMXBean().getName();
-    return name != null ? name : "unknown:" + ProcessHandle.current().pid();
-  }
-
-  private static DefaultRedisScript<Long> initReleaseScript() {
-    DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-    script.setScriptText(
-        "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
-    script.setResultType(Long.class);
-    return script;
-  }
 
   @Override
   public void onMessage(String body) {

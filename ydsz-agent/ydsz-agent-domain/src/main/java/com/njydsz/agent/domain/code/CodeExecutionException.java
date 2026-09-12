@@ -1,5 +1,7 @@
 package com.njydsz.agent.domain.code;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 代码执行异常。
  *
@@ -9,7 +11,7 @@ package com.njydsz.agent.domain.code;
  * @author ydsz-team
  * @since 26.09.07
  */
-public class CodeExecutionException extends RuntimeException {
+public class CodeExecutionException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 

@@ -148,6 +148,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-config</artifactId>
         </dependency>
+        <!-- P3-5: 审计模块（AuditRecorder / AuditQueryService 驱动规则审计日志） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-audit</artifactId>
+        </dependency>
         <!-- P2: JdbcHealthIndicator 自动注册（需要 actuator 在 classpath 上） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

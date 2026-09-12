@@ -1,5 +1,7 @@
 package com.njydsz.system.server.exception;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 配置变更审批业务异常。
  *
@@ -8,7 +10,7 @@ package com.njydsz.system.server.exception;
  * @author ydsz-team
  * @since 26.09.08
  */
-public class ConfigApprovalException extends RuntimeException {
+public class ConfigApprovalException extends BusinessException {
 
   /** 序列化版本号 */
   private static final long serialVersionUID = 1L;

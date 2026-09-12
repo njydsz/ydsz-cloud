@@ -37,6 +37,12 @@ import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
  *       的直接依赖和反射强耦合
  * </ul>
  *
+ * <p><b>与 ydsz-common-thread 同名类的场景定界（ADR-3，见 docs/ADR-2026-09-12_公共能力重复实现收敛决策.md）：</b>
+ * common-thread 的 {@code ThreadPoolHotUpdateListener} 管理 Spring {@code ThreadPoolTaskExecutor} Bean；
+ * 本类管理 {@code ExecutorUtils} 创建的裸 {@link ThreadPoolExecutor}，独有职责是租户隔离池
+ * （{@link TenantAwareExecutorPool#evictAllPools()}）与隔离策略切换。属"场景决定的必要实现"，
+ * 非重复建设；两者不得互相替代。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

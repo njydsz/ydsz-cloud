@@ -1,20 +1,16 @@
-package com.njydsz.gateway.config;
-
-import java.time.OffsetDateTime;
+package com.njydsz.gateway.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.base.webflux.WebFluxErrorUtils;
 import com.njydsz.common.core.trace.TraceIdGenerator;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
 
 /**
  * 网关统一错误响应写出器（P0-D1）。
@@ -26,21 +22,19 @@ import com.njydsz.common.json.YdszJson;
  *   <li>HTTP 状态码 + 5 位业务码（{@link GatewayErrorCode}）双轨输出
  *   <li>响应头携带 {@code X-Trace-Id}，便于跨服务排障
  *   <li>按 {@code Accept} 头协商返回 RFC 7807 ProblemDetail（{@code application/problem+json}）或 ydsz 标准 JSON
- *   <li>携带 RFC 5988 {@code Link} 帮助文档头
  * </ul>
  *
- * <p><b>设计约束：</b>本类为无状态静态工具，所有过滤器拒绝路径统一调用 {@link #write(ServerWebExchange, HttpStatus,
- * GatewayErrorCode, String, String)}，禁止再各自拼接 JSON。
+ * <p>内部委托 {@link WebFluxErrorUtils} 构建并写出错误响应，维护统一的错误体格式。
+ *
+ * <p><b>设计约束：</b>本类为无状态静态工具，所有过滤器拒绝路径统一调用
+ * {@link #write(ServerWebExchange, HttpStatus, GatewayErrorCode, String, String)}，
+ * 禁止再各自拼接 JSON。
  *
  * @since 26.09.01
  * @author ydsz-team
  */
 @Slf4j
 public final class GatewayErrorWriter {
-
-  /** ProblemDetail 媒体类型（RFC 7807） */
-  private static final MediaType PROBLEM_JSON_MEDIA_TYPE =
-      MediaType.valueOf("application/problem+json");
 
   private GatewayErrorWriter() {
     throw new UnsupportedOperationException("Utility class");
@@ -49,7 +43,8 @@ public final class GatewayErrorWriter {
   /**
    * 写出统一错误响应（自动从 exchange 获取或生成 traceId）。
    *
-   * <p>响应未提交时输出 JSON 错误体；已提交则直接完成（避免重复写响应导致的 IllegalStateException）。 此重载方法自动从请求头获取 {@code X-Trace-Id}，无需调用方手动传递。
+   * <p>响应未提交时输出 JSON 错误体；已提交则直接完成（避免重复写响应导致的 IllegalStateException）。
+   * 此重载方法自动从请求头获取 {@code X-Trace-Id}，无需调用方手动传递。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param httpStatus HTTP 状态码
@@ -71,23 +66,6 @@ public final class GatewayErrorWriter {
    *
    * <p>用于客户端请求已被彻底移除的 API 阶段（Sunset 后）。当前本任务仅实现弃用警告（200 + Header），
    * 不做拒绝。此方法留作 Sunset 阶段升级时使用。
-   *
-   * <p>响应格式（410 Gone）：
-   *
-   * <pre>
-   *   HTTP/1.1 410 Gone
-   *   Content-Type: application/json
-   *   X-Trace-Id: &lt;traceId&gt;
-   *   Sunset: &lt;RFC 1123 日期&gt;
-   *   Link: &lt;replacement&gt;; rel="successor-version"
-   *
-   *   {
-   *     "code": "41000",
-   *     "message": "&lt;message&gt;",
-   *     "traceId": "&lt;traceId&gt;",
-   *     ...
-   *   }
-   * </pre>
    *
    * <p>当前阶段方法保留但不调用（deprecated APIs 仍返回 200 + Deprecation 头），当 Sunset
    * 日期到来时切换至此方法即可。
@@ -133,6 +111,7 @@ public final class GatewayErrorWriter {
    * 写出统一错误响应（显式指定 traceId）。
    *
    * <p>响应未提交时输出 JSON 错误体；已提交则直接完成（避免重复写响应导致的 IllegalStateException）。
+   * 内部委托 {@link WebFluxErrorUtils} 完成 Accept 协商、Body 构建与写出。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param httpStatus HTTP 状态码
@@ -156,17 +135,9 @@ public final class GatewayErrorWriter {
         ? TraceIdGenerator.generateSortableTraceId()
         : traceId;
 
-    // Accept 协商：客户端请求 problem+json 时返回 RFC 7807 格式
-    boolean preferProblemJson = prefersProblemJson(exchange.getRequest());
-
-    YdszResponse<Void> body =
-        buildErrorBody(httpStatus, errorCode, message, finalTraceId, preferProblemJson);
-
-    response.setStatusCode(httpStatus);
-    response
-        .getHeaders()
-        .setContentType(preferProblemJson ? PROBLEM_JSON_MEDIA_TYPE : MediaType.APPLICATION_JSON);
-    response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, finalTraceId);
+    boolean preferProblemJson =
+        WebFluxErrorUtils.acceptsProblemJson(
+            exchange.getRequest().getHeaders().getFirst(HttpHeaders.ACCEPT));
 
     // RFC 5988 Link 头指向错误文档
     String helpUrl = errorCode.getHelpUrl();
@@ -174,60 +145,12 @@ public final class GatewayErrorWriter {
       response.getHeaders().add(HttpHeaders.LINK, "<" + helpUrl + ">; rel=\"help\"");
     }
 
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
-    return response.writeWith(Mono.just(buffer));
-  }
-
-  /**
-   * 构建统一错误响应体。
-   *
-   * @param httpStatus HTTP 状态码
-   * @param errorCode 网关业务错误码枚举
-   * @param message 错误消息
-   * @param traceId 链路追踪 ID
-   * @param preferProblemJson 是否输出 RFC 7807 ProblemDetail 格式
-   * @return 错误响应体
-   */
-  private static YdszResponse<Void> buildErrorBody(
-      HttpStatus httpStatus,
-      GatewayErrorCode errorCode,
-      String message,
-      String traceId,
-      boolean preferProblemJson) {
-    String bizCode = String.valueOf(errorCode.getCode());
-    String helpUrl = errorCode.getHelpUrl();
-
-    YdszResponse<Void> body = YdszResponse.error(bizCode, message);
-    if (preferProblemJson) {
-      // RFC 7807 ProblemDetail 扩展字段
-      body.putExtension("type", helpUrl != null ? helpUrl : "https://docs.ydsz.com/errors/" + bizCode);
-      body.putExtension("title", httpStatus.getReasonPhrase());
-      body.putExtension("status", String.valueOf(httpStatus.value()));
-      body.putExtension("instance", "");
-      body.putExtension("timestamp", OffsetDateTime.now().toString());
-    } else {
-      // ydsz 标准格式（向后兼容）
-      body.putExtension("help", helpUrl);
-      body.putExtension(
-          "type", helpUrl != null ? helpUrl : "https://docs.ydsz.com/errors/" + bizCode);
-      body.putExtension("timestamp", OffsetDateTime.now().toString());
-    }
-    body.assignTraceId(traceId);
-    return body;
-  }
-
-  /**
-   * 判断请求是否优先接受 ProblemDetail 格式。
-   *
-   * @param request HTTP 请求
-   * @return true=优先返回 ProblemDetail
-   */
-  private static boolean prefersProblemJson(ServerHttpRequest request) {
-    String acceptHeader = request.getHeaders().getFirst(HttpHeaders.ACCEPT);
-    if (acceptHeader == null || acceptHeader.isBlank()) {
-      return false;
-    }
-    return acceptHeader.contains("application/problem+json");
+    return WebFluxErrorUtils.buildErrorResponse(
+        response,
+        httpStatus.value(),
+        String.valueOf(errorCode.getCode()),
+        message,
+        finalTraceId,
+        preferProblemJson);
   }
 }

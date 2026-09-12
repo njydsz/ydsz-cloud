@@ -1,5 +1,7 @@
 package com.njydsz.userinfo.domain.provision;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 身份供给运行时异常（P0-1 Identity Provisioning 管道）。
  *
@@ -11,7 +13,7 @@ package com.njydsz.userinfo.domain.provision;
  * @author ydsz-team
  * @since 26.09.08
  */
-public class ProvisionException extends RuntimeException {
+public class ProvisionException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 

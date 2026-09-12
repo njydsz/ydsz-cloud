@@ -22,7 +22,9 @@ import com.njydsz.message.server.service.core.GuardService;
 /**
  * 智能去重 Handler。
  *
- * <p>使用 Redis SET NX EX 原子去重，窗口内重复消息跳过发送。
+ * <p>委托 {@link com.njydsz.message.server.service.core.GuardService#tryDedup(String)}
+ * 实现窗口内重复消息跳过发送，底层基于 ydsz-common-lock 的 {@link
+ * com.njydsz.common.lock.idempotent.IdempotentStrategy} 原子去重。
  * 去重 key 由 bizId + receiver + templateCode 拼接而成，
  * 含 channel 时追加 channel 维度（P2-D3 去重精化）。
  *

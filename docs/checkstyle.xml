@@ -695,7 +695,7 @@
                       value="import\s+org\.mapstruct\.(?:Mapper|Mapping|MappingTarget|Named)\s*;"/>
             <property name="ignoreComments" value="true"/>
             <property name="message"
-                      value="【强制-DDD】MapStruct Converter 必须定义在 {module}-domain/converter/ 包下，infra/server/web 层禁止直接引用。参考：云顶编码规范 34.2.1 / 34.2.2 节"/>
+                      value="【强制-DDD】MapStruct Converter 必须定义在业务模块的 domain/converter/ 包下，infra/server/web 层禁止直接引用。参考：云顶编码规范 34.2.1 / 34.2.2 节"/>
         </module>
 
         <!-- 附录D-27：@TableName 表名必须以 ydsz_ / sys_ 前缀开头 -->

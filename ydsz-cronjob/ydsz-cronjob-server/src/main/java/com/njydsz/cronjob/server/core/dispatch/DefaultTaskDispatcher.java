@@ -88,7 +88,7 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
  *   <li>写开始日志（ydsz_job_log, status=RUNNING）
  *   <li>调用 {@link JobHandler#execute(String)} 执行业务逻辑
  *   <li>更新日志为 SUCCESS/FAILED + 任务统计
- *   <li>释放锁（Lua 脚本安全释放）
+   *   <li>释放锁（JobLockManager DistributedLocker 安全释放）
  * </ol>
  *
  * <p>与 {@link JobNodeHeartbeat} 联动：执行前后递增/递减 running_count， 用于负载均衡选择。
@@ -773,7 +773,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       jobRepository.updateStats(
           job.getId(), null, null, incFire, incSucc, incFail, success ? null : "ERROR");
 
-      // P0-A2: 释放分片锁（优先 JobLockManager，回退 Lua 脚本安全释放）
+      // P0-A2: 释放分片锁（JobLockManager DistributedLocker 安全释放）
       jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), shardIndex, shardValue);
 
       // P0-2: 释放全局并发配额
@@ -1293,8 +1293,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       // P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）
       updateCircuitBreaker(job, success);
 
-      // 释放分布式锁（P0-A2: 优先 JobLockManager，回退 Lua 脚本安全释放）
-      jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
+    // 释放分布式锁（P0-A2: JobLockManager DistributedLocker 安全释放）
+    jobLockGuard.releaseJobLock(lockKey, job.getJobKey(), null, lockValue);
 
       // P0-2: 释放全局并发配额
       releaseGlobalConcurrency();

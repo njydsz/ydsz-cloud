@@ -7,21 +7,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.endpoint.annotation.DeleteOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
-import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
+import com.njydsz.common.lock.admin.DistributedLockAdmin;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
+import com.njydsz.common.lock.strategy.LockStrategy;
 
 /**
  * 分布式锁运维管理端点（ydsz-system-web）
@@ -33,6 +30,9 @@ import com.njydsz.common.lock.scheduler.LockWatchDog;
  * <p>替代原来位于 ydzs-common-lock（L4）中的 {@code LockAdminController}（{@code @RestController}），
  * 符合云顶编码规范 §22.2 层级定位：L4 基础数据层不持有 Web 层组件，
  * Controller 属于业务主应用模块（*-web）的职责。
+ *
+ * <p><b>改造说明（26.09.08）：</b>所有 Redis 操作收敛到 {@link DistributedLockAdmin}，
+ * Controller 不再直接注入 {@code StringRedisTemplate}，避免 Controller 层绕过 common-lock 模块直接操作 Redis。
  *
  * <h3>端点 URL 示例</h3>
  * <ul>
@@ -53,6 +53,7 @@ import com.njydsz.common.lock.scheduler.LockWatchDog;
  * @since 26.09.08
  * @see LockMetrics
  * @see LockWatchDog
+ * @see DistributedLockAdmin
  */
 @Slf4j
 @Endpoint(id = "lock")
@@ -81,16 +82,16 @@ public class LockAdminController {
   private final LockMetrics lockMetrics;
   private final LockWatchDog lockWatchDog;
 
-  /** Redis 模板（可选，未配置 Redis 时端点仍可装配但 Redis 操作返回错误提示） */
-  private final StringRedisTemplate redisTemplate;
+  /** 分布式锁运维管理实例（由 common-lock 模块提供，收敛所有 Redis 操作） */
+  private final DistributedLockAdmin lockAdmin;
 
   public LockAdminController(
       LockMetrics lockMetrics,
       LockWatchDog lockWatchDog,
-      ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+      LockStrategy lockStrategy) {
     this.lockMetrics = lockMetrics;
     this.lockWatchDog = lockWatchDog;
-    this.redisTemplate = redisTemplateProvider.getIfAvailable();
+    this.lockAdmin = lockStrategy.getLockAdmin();
   }
 
   /**
@@ -139,9 +140,6 @@ public class LockAdminController {
       @Selector String pattern,
       @Selector int page,
       @Selector int size) {
-    if (redisTemplate == null) {
-      return buildErrorMap("StringRedisTemplate 不可用");
-    }
     String effectivePattern = (pattern == null || pattern.isEmpty()) ? "lock:*" : pattern;
     int normalizedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
     int skip = Math.max(page, 0) * normalizedSize;
@@ -152,7 +150,7 @@ public class LockAdminController {
     for (int batch = 0;
         batch < MAX_PAGE_SIZE * 2 && lockList.size() < normalizedSize;
         batch++) {
-      List<String> batchKeys = scanBatch(effectivePattern, SCAN_BATCH_SIZE);
+      List<String> batchKeys = lockAdmin.scanKeys(effectivePattern, SCAN_BATCH_SIZE);
       if (batchKeys.isEmpty()) {
         break;
       }
@@ -192,17 +190,14 @@ public class LockAdminController {
    */
   @ReadOperation
   public Map<String, Object> lockStatus(@Selector String key) {
-    if (redisTemplate == null) {
-      return buildErrorMap("StringRedisTemplate 不可用，无法查询锁状态");
-    }
     String fullKey = LOCK_KEY_PREFIX + key;
     Map<String, Object> status = new HashMap<>(COLLECTION_INIT_CAPACITY);
     status.put("key", fullKey);
-    boolean exists = Boolean.TRUE.equals(redisTemplate.hasKey(fullKey));
+    boolean exists = lockAdmin.exists(fullKey);
     status.put("exists", exists);
     if (exists) {
-      Long ttl = redisTemplate.getExpire(fullKey, TimeUnit.MILLISECONDS);
-      if (ttl != null) {
+      long ttl = lockAdmin.getTtl(fullKey);
+      if (ttl >= 0) {
         status.put("ttlMs", ttl);
       }
     }
@@ -221,16 +216,12 @@ public class LockAdminController {
    */
   @DeleteOperation
   public Map<String, Object> forceUnlock(@Selector String key) {
-    if (redisTemplate == null) {
-      return buildErrorMap("StringRedisTemplate 不可用，无法强制释放锁");
-    }
     String fullKey = LOCK_KEY_PREFIX + key;
     Map<String, Object> result = new HashMap<>(COLLECTION_INIT_CAPACITY);
     result.put("key", fullKey);
-    boolean success = Boolean.TRUE.equals(redisTemplate.delete(fullKey));
-    result.put("released", success);
-    lockWatchDog.cancelRenewal(fullKey);
-    log.warn("[ydsz-lock] [admin] 强制释放锁 key={} success={}", fullKey, success);
+    boolean released = lockAdmin.forceUnlock(fullKey);
+    result.put("released", released);
+    log.warn("[ydsz-lock] [admin] 强制释放锁 key={} success={}", fullKey, released);
     return result;
   }
 
@@ -242,11 +233,8 @@ public class LockAdminController {
    */
   @ReadOperation
   public Set<String> searchKeys(@Selector String pattern) {
-    if (redisTemplate == null) {
-      return Collections.emptySet();
-    }
     String effectivePattern = (pattern == null || pattern.isEmpty()) ? "lock:*" : pattern;
-    Set<String> keys = redisTemplate.keys(effectivePattern);
+    Set<String> keys = lockAdmin.searchKeys(effectivePattern);
     log.debug(
         "[ydsz-lock] [admin] 搜索锁 key pattern={} count={}",
         effectivePattern,
@@ -265,9 +253,6 @@ public class LockAdminController {
    */
   @ReadOperation
   public Map<String, Object> summary(@Selector String pattern) {
-    if (redisTemplate == null) {
-      return buildErrorMap("StringRedisTemplate 不可用");
-    }
     String effectivePattern = (pattern == null || pattern.isEmpty()) ? "lock:*" : pattern;
     Map<String, Integer> categoryCount = new HashMap<>(COLLECTION_INIT_CAPACITY);
     int totalActive = 0;
@@ -275,7 +260,7 @@ public class LockAdminController {
     for (int batch = 0;
         batch < SUMMARY_SCAN_LIMIT / SCAN_BATCH_SIZE && totalActive < SUMMARY_SCAN_LIMIT;
         batch++) {
-      List<String> batchKeys = scanBatch(effectivePattern, SCAN_BATCH_SIZE);
+      List<String> batchKeys = lockAdmin.scanKeys(effectivePattern, SCAN_BATCH_SIZE);
       if (batchKeys.isEmpty()) {
         break;
       }
@@ -328,9 +313,6 @@ public class LockAdminController {
    */
   @WriteOperation
   public Map<String, Object> batchForceUnlock(List<String> keys) {
-    if (redisTemplate == null) {
-      return buildErrorMap("StringRedisTemplate 不可用，无法批量释放锁");
-    }
     if (keys == null || keys.isEmpty()) {
       return buildErrorMap("参数错误：keys 不能为空");
     }
@@ -346,9 +328,8 @@ public class LockAdminController {
     for (String key : keys) {
       String fullKey = LOCK_KEY_PREFIX + key;
       try {
-        boolean deleted = Boolean.TRUE.equals(redisTemplate.delete(fullKey));
-        lockWatchDog.cancelRenewal(fullKey);
-        if (deleted) {
+        boolean released = lockAdmin.forceUnlock(fullKey);
+        if (released) {
           successCount++;
         } else {
           failCount++;
@@ -380,23 +361,6 @@ public class LockAdminController {
   // ---------------------------------------------------------------------------
 
   /**
-   * 单次扫描指定数量的锁 key（使用 SCAN 命令渐进式遍历）
-   */
-  private List<String> scanBatch(String pattern, int batchSize) {
-    List<String> keys = new ArrayList<>(COLLECTION_INIT_CAPACITY);
-    ScanOptions options = ScanOptions.scanOptions().match(pattern).count(batchSize).build();
-    try (Cursor<String> cursor = redisTemplate.scan(options)) {
-      while (cursor.hasNext() && keys.size() < batchSize) {
-        keys.add(cursor.next());
-      }
-    } catch (Exception e) {
-      log.warn(
-          "[ydsz-lock] [admin] SCAN 遍历异常 pattern={} cause={}", pattern, e.getMessage());
-    }
-    return keys;
-  }
-
-  /**
    * 构建错误响应 Map
    *
    * @param message 错误消息
@@ -415,8 +379,8 @@ public class LockAdminController {
     Map<String, Object> info = new HashMap<>(COLLECTION_INIT_CAPACITY);
     info.put("key", redisKey);
     try {
-      Long ttl = redisTemplate.getExpire(redisKey, TimeUnit.MILLISECONDS);
-      info.put("ttlMs", ttl != null ? ttl : -1);
+      long ttl = lockAdmin.getTtl(redisKey);
+      info.put("ttlMs", ttl >= 0 ? ttl : -1);
       info.put("watched", lockWatchDog.isWatching(redisKey));
       LockWatchDog.WatchTask task = lockWatchDog.getActiveTasksSnapshot().get(redisKey);
       if (task != null) {
@@ -451,3 +415,4 @@ public class LockAdminController {
     return snapshot;
   }
 }
+

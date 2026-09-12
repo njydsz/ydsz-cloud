@@ -9,6 +9,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * 触发器执行服务。
@@ -131,7 +132,7 @@ public class TriggerExecutionService {
     /**
      * 触发器执行异常。
      */
-    public static class TriggerExecutionException extends RuntimeException {
+    public static class TriggerExecutionException extends BusinessException {
         public TriggerExecutionException(String message, Throwable cause) {
             super(message, cause);
         }

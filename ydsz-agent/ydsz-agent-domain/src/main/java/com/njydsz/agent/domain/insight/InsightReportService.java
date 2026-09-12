@@ -2,6 +2,8 @@ package com.njydsz.agent.domain.insight;
 
 import java.util.List;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 洞察报告服务领域网关接口。
  *
@@ -52,7 +54,7 @@ public interface InsightReportService {
   /**
    * 洞察报告异常。
    */
-  class InsightReportException extends RuntimeException {
+  class InsightReportException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 

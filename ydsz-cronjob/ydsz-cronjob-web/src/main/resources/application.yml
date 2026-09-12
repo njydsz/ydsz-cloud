@@ -6,6 +6,22 @@
 # 注：taskExecutorPool（PriorityBlockingQueue）和 retryScheduler（ScheduledExecutorService）
 # 因特殊队列/调度需求保留手动创建，由 CronjobProperties 配置化
 ydsz:
+  # P1-14: 操作审计配置 —— 将 common-audit 的写入路由到 ydsz_job_audit_log 表（与 SysAuditLogMapper 查询同源）
+  audit:
+    enabled: true
+    app-key: ydsz-cronjob
+    record-request: false
+    record-response: true # Outbox 订阅记录 responseResult（任务执行结果摘要）
+    retention-days: 180 # cronjob 调度审计建议保留 180 天（排查历史执行问题）
+    sharding-enabled: false
+    sharding-base-table-name: ydsz_job_audit_log # 写入自建表（表结构兼容 common-audit 的 DDL）
+    async:
+      batch-size: 50 # Outbox 订阅者低频触发，批量阈值下调以提升实时性
+      queue-capacity: 5000
+      thread-core-size: 1 # 单一订阅者线程，降低资源占用
+      thread-max-size: 2
+      reject-policy: CALLER_RUNS
+      shutdown-timeout: 15
   thread:
     enabled: true
     pools:
@@ -23,7 +39,8 @@ ydsz:
         thread-name-prefix: ydsz-job-dispatch-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 15
-      # P2-2: auditExecutor — 调度审计异步处理（@Async("auditExecutor")）
+      # P2-2: auditExecutor — 任务结果队列发布异步线程（JobResultQueuePublisher.onTaskCompleted）
+      # 注意：与 ydsz-common-audit 的 auditAsyncExecutor 不同，auditExecutor 专用于结果队列推送，非审计落库
       auditExecutor:
         core-size: 2
         max-size: 4

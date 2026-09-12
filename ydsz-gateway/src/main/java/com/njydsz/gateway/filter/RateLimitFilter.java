@@ -1,49 +1,59 @@
 package com.njydsz.gateway.filter;
 
+import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
+import com.njydsz.common.safe.ratelimit.algorithm.RateLimiterFactory;
+import com.njydsz.common.safe.ratelimit.cluster.RedisClusterRateLimiter;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
+import com.njydsz.common.safe.ratelimit.model.RateLimitContext;
+import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
+import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
-import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.RateLimitProperties;
+import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
  * 限流全局过滤器。
  *
- * <p>基于 Redis + Lua 脚本实现的令牌桶限流，支持 IP 和用户两个维度：
+ * <p>基于 ydsz-common-safe 的 {@link RedisClusterRateLimiter} 实现令牌桶限流，支持 IP 和用户两个维度：
  *
  * <ul>
  *   <li>IP 级限流：防止单 IP 暴力请求
  *   <li>用户级限流：按用户 ID 限流
  * </ul>
  *
- * <h3>令牌桶算法</h3>
- *
- * <p>使用 Redis Lua 脚本保证原子性：以固定速率向桶中添加令牌（replenishRate），桶容量有限（burstCapacity），
- * 每次请求消耗 1 个令牌，桶空时拒绝。两个维度合并为单次 Redis 调用，减少网络 IO。
+ * <p>内部委托 common-safe {@link RedisClusterRateLimiter#tryAcquire} 完成令牌桶判定，
+ * 移除内联 Lua 脚本，算法实现收敛至 common-safe 模块。
  *
  * <h3>限流维度优先级</h3>
  *
@@ -54,7 +64,7 @@ import com.njydsz.gateway.config.RateLimitProperties;
  *
  * <h3>降级策略</h3>
  *
- * <p>Redis 不可用时直接放行，保证可用性。生产环境建议通过集群 Redis 或 Sentinel 避免单点故障。
+ * <p>Redis 不可用时按 {@code fallbackOnError} 配置决定策略（默认 PASS=直接放行），保证可用性。
  *
  * @since 26.09.01
  * @author ydsz-team
@@ -62,6 +72,7 @@ import com.njydsz.gateway.config.RateLimitProperties;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnClass({MeterRegistry.class, StringRedisTemplate.class})
 @ConditionalOnProperty(
     prefix = "ydsz.gateway.filter",
     name = "rate-limit",
@@ -69,94 +80,52 @@ import com.njydsz.gateway.config.RateLimitProperties;
     matchIfMissing = true)
 public class RateLimitFilter implements GlobalFilter, Ordered {
 
+  /** 限流 Lua 脚本内联已移除，改用 common-safe {@link RedisClusterRateLimiter}。 */
+
   private final RateLimitProperties properties;
-  private final ReactiveStringRedisTemplate redisTemplate;
+  private final StringRedisTemplate redisTemplate;
   private final GatewayMetrics gatewayMetrics;
 
-  /** Redis 连续失败计数器 */
+  /** Redis 连续失败计数器（超过阈值时限流降级放行）。 */
   private static final int CIRCUIT_THRESHOLD = 5;
+
+  /** Redis 不可用时的降级策略：PASS=放行（默认）。 */
+  @Value("${ydsz.gateway.ratelimit.fallback-on-error:PASS}")
+  private String fallbackOnError;
+
+  /** Redis 集群限流器 key 前缀。 */
+  @Value("${ydsz.gateway.ratelimit.key-prefix:ydsz:ratelimit:}")
+  private String keyPrefix;
+
+  /** 阻塞调用调度策略（boundedElastic，适配 common-safe 同步 Redis 调用）。 */
+  private final Scheduler blockingScheduler = Schedulers.newBoundedElastic(
+      50, 1000, "rate-limit-redis", 60, true);
 
   private final AtomicInteger redisFailureCount = new AtomicInteger(0);
 
+  /** 集群限流器（IP 维度 + 用户维度共用，按 resource 区分 key）。 */
+  private volatile RedisClusterRateLimiter clusterLimiter;
+
   /**
-   * 二维度（IP + 用户）合并令牌桶 Lua 脚本。
+   * 获取或懒初始化集群限流器。
    *
-   * <p>参数:
+   * <p>单例模式，配置变更需重启生效。
    *
-   * <pre>
-   *   KEYS[1] = ip key         KEYS[2] = user key
-   *   ARGV[1..3] = ip rate/capacity/enabled
-   *   ARGV[4..6] = user rate/capacity/enabled
-   *   ARGV[7] = timestamp_seconds  ARGV[8] = requested_tokens
-   * </pre>
-   *
-   * <p>返回: {ip_allowed, ip_remaining, ip_reset, user_allowed, user_remaining, user_reset}
+   * @return 集群限流器实例
    */
-  private static final String TOKEN_BUCKET_SCRIPT =
-      """
-            -- 令牌桶算法
-            local function token_bucket(key, rate, capacity, now, requested)
-                local bucket = redis.call('hmget', key, 'tokens', 'timestamp')
-                local tokens = tonumber(bucket[1])
-                local last_refill = tonumber(bucket[2])
-
-                if tokens == nil then
-                    tokens = capacity
-                    last_refill = now
-                end
-
-                local elapsed = math.max(0, now - last_refill)
-                local refill = elapsed * rate
-                tokens = math.min(capacity, tokens + refill)
-
-                local allowed = 0
-                local remaining = tokens
-
-                if tokens >= requested then
-                    tokens = tokens - requested
-                    allowed = 1
-                    remaining = tokens
-                end
-
-                local ttl = math.ceil(capacity / rate * 2)
-                redis.call('hmset', key, 'tokens', tokens, 'timestamp', now)
-                redis.call('expire', key, ttl)
-
-                local reset = math.ceil((capacity - tokens) / rate)
-                return allowed, remaining, reset
-            end
-
-            local now = tonumber(ARGV[7])
-            local requested = tonumber(ARGV[8])
-
-            local results = {}
-
-            -- 遍历 2 个维度（每个维度 3 个参数：rate, capacity, enabled）
-            for i = 1, 2 do
-                local key_index = i
-                local arg_base = (i - 1) * 3
-                local enabled = tonumber(ARGV[arg_base + 3])
-
-                if enabled == 1 then
-                    local rate = tonumber(ARGV[arg_base + 1])
-                    local capacity = tonumber(ARGV[arg_base + 2])
-                    local allowed, remaining, reset = token_bucket(KEYS[key_index], rate, capacity, now, requested)
-                    results[i * 3 - 2] = allowed
-                    results[i * 3 - 1] = remaining
-                    results[i * 3] = reset
-                else
-                    results[i * 3 - 2] = 1
-                    results[i * 3 - 1] = 0
-                    results[i * 3] = 0
-                end
-            end
-
-            return results
-            """;
-
-  /** 预编译 Lua 脚本 */
-  private final RedisScript<List> tokenBucketScript =
-      RedisScript.of(new ByteArrayResource(TOKEN_BUCKET_SCRIPT.getBytes()), List.class);
+  private RedisClusterRateLimiter getClusterLimiter() {
+    if (clusterLimiter == null) {
+      synchronized (this) {
+        if (clusterLimiter == null) {
+          clusterLimiter = new RedisClusterRateLimiter(
+              redisTemplate,
+              keyPrefix,
+              fallbackOnError);
+        }
+      }
+    }
+    return clusterLimiter;
+  }
 
   /**
    * 限流过滤器入口。
@@ -192,29 +161,39 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             && !clientIp.isEmpty()
             && properties.getPerIp().getWhitelist().contains(clientIp);
 
-    return executeTokenBucket(exchange, clientIp, userId, ipWhitelisted)
+    return executeRateLimit(exchange, clientIp, userId, ipWhitelisted)
         .flatMap(
             result -> {
-              if (result == null || result.allAllowed()) {
+              if (result == null || (result.ipAllowed && result.userAllowed)) {
                 return chain.filter(exchange);
               }
               // 按优先级检查各维度限流：IP → USER
-              if (!result.ipAllowed()) {
+              if (!result.ipAllowed) {
                 return rejectWithRateLimit(
-                    exchange, "IP", clientIp, properties.getPerIp().getDefaultQps(), result.ipReset());
+                    exchange,
+                    "IP",
+                    clientIp,
+                    properties.getPerIp().getDefaultQps(),
+                    result.ipRemaining);
               }
-              if (!result.userAllowed()) {
+              if (!result.userAllowed) {
                 return rejectWithRateLimit(
-                    exchange, "USER", userId, properties.getPerUser().getDefaultQps(), result.userReset());
+                    exchange,
+                    "USER",
+                    userId,
+                    properties.getPerUser().getDefaultQps(),
+                    result.userRemaining);
               }
               return chain.filter(exchange);
             });
   }
 
   /**
-   * 执行二维度令牌桶限流检查（IP + 用户）。
+   * 执行 IP + 用户二维度令牌桶限流。
    *
-   * <p>维度标识来源：IP（可信代理解析）、用户（X-User-Id）。
+   * <p>通过 common-safe {@link RedisClusterRateLimiter} 的 {@link RateLimiterFactory} 机制
+   * 创建临时规则并执行限流判定。阻塞 Redis 调用包装于 boundedElastic Scheduler 中，
+   * 避免阻塞 Netty 事件循环。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param clientIp 客户端 IP
@@ -222,15 +201,16 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
    * @param ipWhitelisted IP 是否在白名单中
    * @return 限流结果 Mono
    */
-  private Mono<RateLimitResult> executeTokenBucket(
+  private Mono<GatewayRateLimitResult> executeRateLimit(
       ServerWebExchange exchange,
       String clientIp,
       String userId,
       boolean ipWhitelisted) {
+
     // Redis 熔断检查
     if (redisFailureCount.get() >= CIRCUIT_THRESHOLD) {
       log.warn("[RateLimit] Redis 连续失败 {} 次，限流降级放行", redisFailureCount.get());
-      return Mono.just(localFallback());
+      return Mono.just(allAllowedResult());
     }
 
     boolean ipEnabled =
@@ -245,158 +225,178 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       return Mono.just(allAllowedResult());
     }
 
-    long now = System.currentTimeMillis() / 1000;
-    List<String> keys =
-        List.of(
-            "ydsz:ratelimit:ip:" + (clientIp != null ? clientIp : ""),
-            "ydsz:ratelimit:user:" + (userId != null ? userId : ""));
-
-    // ARGV[1..6] = 2 维度 × (rate, capacity, enabled)；ARGV[7]=now；ARGV[8]=requested
-    List<Object> args = new ArrayList<>(8);
-    appendDimensionArgs(
-        args, properties.getPerIp().getDefaultQps(), properties.getPerIp().getBurstCapacity(), ipEnabled);
-    appendDimensionArgs(
-        args, properties.getPerUser().getDefaultQps(), properties.getPerUser().getBurstCapacity(), userEnabled);
-    args.add(String.valueOf(now));
-    args.add("1");
-
-    return redisTemplate
-        .execute(tokenBucketScript, keys, args)
-        .next()
-        .map(
-            result -> {
-              if (result == null || result.size() < 6) {
-                redisFailureCount.incrementAndGet();
-                return allAllowedResult();
-              }
-              boolean ipAllowed = getLong(result, 0) != null && getLong(result, 0) == 1L;
-              int ipRemaining = getLong(result, 1) != null ? getLong(result, 1).intValue() : 0;
-              int ipReset = getLong(result, 2) != null ? getLong(result, 2).intValue() : 0;
-              boolean userAllowed = getLong(result, 3) != null && getLong(result, 3) == 1L;
-              int userRemaining = getLong(result, 4) != null ? getLong(result, 4).intValue() : 0;
-              int userReset = getLong(result, 5) != null ? getLong(result, 5).intValue() : 0;
-
-              redisFailureCount.set(0);
-              return new RateLimitResult(
-                  ipAllowed, ipRemaining, ipReset,
-                  userAllowed, userRemaining, userReset);
-            })
+    // 将阻塞调用包装在 boundedElastic Scheduler 上执行
+    return Mono.fromCallable(() -> doAcquire(ipEnabled, userEnabled, clientIp, userId))
+        .subscribeOn(blockingScheduler)
         .onErrorResume(
             e -> {
               int count = redisFailureCount.incrementAndGet();
               log.warn("[RateLimit] Redis 限流检查异常 (连续 {} 次)，降级放行: path={} err={}",
                   count, exchange.getRequest().getURI().getPath(), e.getMessage());
-              return Mono.just(localFallback());
+              return Mono.just(allAllowedResult());
             })
         .defaultIfEmpty(allAllowedResult());
   }
 
   /**
-   * 追加单个限流维度的 Lua 参数（rate, capacity, enabled）。
+   * 实际执行限流获取（在 blockingScheduler 上同步执行）。
    *
-   * @param args 参数列表
-   * @param qps 令牌桶速率
-   * @param capacity 令牌桶容量
-   * @param enabled 该维度是否启用
+   * <p>分别构建 IP 维度和用户维度的 {@link RateLimitRule} 与 {@link RateLimitContext}，
+   * 然后调用 {@link RedisClusterRateLimiter#tryAcquire} 获取判定结果。
+   *
+   * @param ipEnabled IP 维度是否启用
+   * @param userEnabled 用户维度是否启用
+   * @param clientIp 客户端 IP
+   * @param userId 用户 ID
+   * @return 限流结果
    */
-  private void appendDimensionArgs(List<Object> args, int qps, int capacity, boolean enabled) {
-    args.add(String.valueOf(qps));
-    args.add(String.valueOf(capacity));
-    args.add(enabled ? "1" : "0");
+  private GatewayRateLimitResult doAcquire(
+      boolean ipEnabled, boolean userEnabled, String clientIp, String userId) {
+
+    RedisClusterRateLimiter limiter = getClusterLimiter();
+
+    boolean ipAllowed = true;
+    int ipRemaining = 0;
+    boolean userAllowed = true;
+    int userRemaining = 0;
+
+    // IP 维度限流
+    if (ipEnabled) {
+      RateLimitRule ipRule = buildIpRule(clientIp);
+      RateLimitContext ipCtx = RateLimitContext.builder()
+          .resource("ip:" + clientIp)
+          .build();
+      try {
+        RateLimitDecision decision = limiter.tryAcquire(ipRule, ipCtx);
+        ipAllowed = decision.getResult() == RateLimitResult.PASS;
+        ipRemaining = decision.getRemaining() != null
+            ? decision.getRemaining().intValue() : 0;
+        redisFailureCount.set(0);
+      } catch (Exception e) {
+        redisFailureCount.incrementAndGet();
+        ipAllowed = true;
+        log.warn("[RateLimit] IP 维度限流异常，降级放行: ip={}", clientIp, e);
+      }
+    }
+
+    // 用户维度限流
+    if (userEnabled && ipAllowed) {
+      RateLimitRule userRule = buildUserRule(userId);
+      RateLimitContext userCtx = RateLimitContext.builder()
+          .resource("user:" + userId)
+          .build();
+      try {
+        RateLimitDecision decision = limiter.tryAcquire(userRule, userCtx);
+        userAllowed = decision.getResult() == RateLimitResult.PASS;
+        userRemaining = decision.getRemaining() != null
+            ? decision.getRemaining().intValue() : 0;
+        redisFailureCount.set(0);
+      } catch (Exception e) {
+        redisFailureCount.incrementAndGet();
+        userAllowed = true;
+        log.warn("[RateLimit] 用户维度限流异常，降级放行: userId={}", userId, e);
+      }
+    }
+
+    return new GatewayRateLimitResult(ipAllowed, ipRemaining, userAllowed, userRemaining);
   }
 
   /**
-   * 限流结果封装记录：IP + 用户两个维度的令牌桶判定结果。
+   * 构建 IP 维度的限流规则。
    *
-   * <p>两个维度相互独立，任一维度被拒绝即可触发 429 限流响应。
+   * @param clientIp 客户端 IP
+   * @return IP 维度限流规则
+   */
+  private RateLimitRule buildIpRule(String clientIp) {
+    int qps = properties.getPerIp().getDefaultQps();
+    int burstCapacity = properties.getPerIp().getBurstCapacity();
+    return RateLimitRule.builder()
+        .resource("ratelimit:ip:" + clientIp)
+        .dimension(RateLimitDimension.IP)
+        .algorithm(RateLimitAlgorithm.TOKEN_BUCKET)
+        .mode(RateLimitMode.CLUSTER)
+        .threshold(BigDecimal.valueOf(qps))
+        .window(Duration.ofSeconds(1))
+        .burstCapacity(burstCapacity)
+        .build();
+  }
+
+  /**
+   * 构建用户维度的限流规则。
+   *
+   * @param userId 用户 ID
+   * @return 用户维度限流规则
+   */
+  private RateLimitRule buildUserRule(String userId) {
+    int qps = properties.getPerUser().getDefaultQps();
+    int burstCapacity = properties.getPerUser().getBurstCapacity();
+    return RateLimitRule.builder()
+        .resource("ratelimit:user:" + userId)
+        .dimension(RateLimitDimension.USER)
+        .algorithm(RateLimitAlgorithm.TOKEN_BUCKET)
+        .mode(RateLimitMode.CLUSTER)
+        .threshold(BigDecimal.valueOf(qps))
+        .window(Duration.ofSeconds(1))
+        .burstCapacity(burstCapacity)
+        .build();
+  }
+
+  /**
+   * 限流结果封装：IP + 用户两个维度的令牌桶判定结果。
    *
    * @param ipAllowed IP 维度是否放行
    * @param ipRemaining IP 维度剩余令牌数
-   * @param ipReset IP 维度令牌重置时间（秒）
    * @param userAllowed 用户维度是否放行
    * @param userRemaining 用户维度剩余令牌数
-   * @param userReset 用户维度令牌重置时间（秒）
    */
-  private record RateLimitResult(
+  private record GatewayRateLimitResult(
       boolean ipAllowed,
       int ipRemaining,
-      int ipReset,
       boolean userAllowed,
-      int userRemaining,
-      int userReset) {
-    boolean allAllowed() {
-      return ipAllowed && userAllowed;
-    }
-  }
-
-  /** 本地兜底限流（Redis 不可用时直接放行） */
-  private RateLimitResult localFallback() {
-    if (gatewayMetrics != null) {
-      gatewayMetrics.incrementRatelimitFallback();
-    }
-    return allAllowedResult();
-  }
+      int userRemaining) {}
 
   /** 全部维度放行的限流结果（未启用维度与异常降级时使用） */
-  private RateLimitResult allAllowedResult() {
-    return new RateLimitResult(
-        true, 0, 0,
-        true, 0, 0);
-  }
-
-  /** 安全类型转换 */
-  private Long getLong(List list, int index) {
-    if (list == null || index < 0 || index >= list.size()) {
-      return null;
-    }
-    Object value = list.get(index);
-    if (value instanceof Long l) {
-      return l;
-    }
-    if (value instanceof Number n) {
-      return n.longValue();
-    }
-    if (value instanceof String s) {
-      try {
-        return Long.parseLong(s.trim());
-      } catch (NumberFormatException e) {
-        return null;
-      }
-    }
-    return null;
+  private GatewayRateLimitResult allAllowedResult() {
+    gatewayMetrics.incrementRatelimitFallback();
+    return new GatewayRateLimitResult(true, 0, true, 0);
   }
 
   /**
-   * 返回 429 限流响应（P0-D1：统一错误响应写出器）。
+   * 返回 429 限流响应。
+   *
+   * <p>通过 {@link GatewayErrorWriter} 写出统一错误响应。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param dimension 限流维度
    * @param identity 限流标识
    * @param limit 限流配额
-   * @param resetSeconds 重置时间（秒）
+   * @param remainingSeconds 重置时间（秒）
    * @return 完成信号 Mono
    */
   private Mono<Void> rejectWithRateLimit(
-      ServerWebExchange exchange, String dimension, String identity, int limit, int resetSeconds) {
+      ServerWebExchange exchange,
+      String dimension,
+      String identity,
+      int limit,
+      int remainingSeconds) {
     // 限流响应头（X-RateLimit-* / Retry-After / 绝对时间戳）
     if (properties.getResponseHeaders().isEnabled()) {
       ServerHttpResponse response = exchange.getResponse();
       response.getHeaders().add("X-RateLimit-Limit", String.valueOf(limit));
       response.getHeaders().add("X-RateLimit-Remaining", "0");
-      response.getHeaders().add("X-RateLimit-Reset", String.valueOf(resetSeconds));
-      // E2: Retry-After 同时提供相对秒数和绝对时间戳（RFC 9110 / ISO 8601），便于客户端精确等待
-      response.getHeaders().add("Retry-After", String.valueOf(resetSeconds));
-      Instant resetAt = Instant.now().plus(resetSeconds, ChronoUnit.SECONDS);
+      response.getHeaders().add("X-RateLimit-Reset", String.valueOf(remainingSeconds));
+      // Retry-After 同时提供相对秒数和绝对时间戳（RFC 9110 / ISO 8601）
+      response.getHeaders().add("Retry-After", String.valueOf(remainingSeconds));
+      Instant resetAt = Instant.now().plus(remainingSeconds, ChronoUnit.SECONDS);
       response.getHeaders().add("X-RateLimit-Reset-Time", resetAt.toString());
     }
 
-    if (gatewayMetrics != null) {
-      gatewayMetrics.incrementRatelimitTriggered(dimension, exchange.getRequest().getURI().getPath());
-    }
+    gatewayMetrics.incrementRatelimitTriggered(dimension, exchange.getRequest().getURI().getPath());
 
     GatewayErrorCode errorCode = resolveRateLimitErrorCode(dimension);
-    log.info("[RateLimit] 限流触发: dimension={} identity={} path={} reset={}s",
-        dimension, maskIdentity(identity), exchange.getRequest().getURI().getPath(), resetSeconds);
+    log.info("[RateLimit] 限流触发: dimension={} identity={} path={}",
+        dimension, maskIdentity(identity), exchange.getRequest().getURI().getPath());
+
     return GatewayErrorWriter.write(
         exchange,
         HttpStatus.TOO_MANY_REQUESTS,

@@ -7,20 +7,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.dto.ApprovalRecordDTO;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
-import com.njydsz.literule.server.core.LockService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
@@ -45,50 +48,56 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RuleApprovalService {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;
 
-
     /** 三级审批对应的审查等级（3） */
-  private static final int LEVEL_3_REVIEW = 3;
+    private static final int LEVEL_3_REVIEW = 3;
 
-  /** 节点 ID 取前缀长度 */
-  private static final int NODE_ID_PREFIX_LENGTH = 8;
+    /** 节点 ID 取前缀长度 */
+    private static final int NODE_ID_PREFIX_LENGTH = 8;
 
-  /** 默认审批流编码（2 级审批） */
-  public static final String DEFAULT_FLOW_CODE = "default-2level";
+    /** 默认审批流编码（2 级审批） */
+    public static final String DEFAULT_FLOW_CODE = "default-2level";
 
-  private final RuleConfigProvider configProvider;
+    /** 锁默认等待时间（秒） */
+    private static final long LOCK_WAIT_TIME = 5L;
 
-  /** 审批流配置注册表（flowCode -> ApprovalFlow） */
-  private final Map<String, ApprovalFlow> flowRegistry = new ConcurrentHashMap<>();
+    /** 锁默认持有时间（秒） */
+    private static final long LOCK_LEASE_TIME = 30L;
 
-  /** 审批记录存储（ruleCode -> ApprovalRecord） */
-  private final Map<String, ApprovalRecord> recordStore = new ConcurrentHashMap<>();
+    private final RuleConfigProvider configProvider;
 
-  /** 审批记录持久化仓库（可选 SPI） */
-  private ApprovalRecordRepository recordRepository;
+    /** 分布式锁（P1-3：替代 synchronized，支持集群部署） */
+    private final DistributedLocker distributedLocker;
 
-  /** 审批权限检查器（可选 SPI） */
-  private ApprovalPermissionChecker permissionChecker;
+    /** 审批流配置注册表（flowCode -> ApprovalFlow） */
+    private final Map<String, ApprovalFlow> flowRegistry = new ConcurrentHashMap<>();
 
-  /** P1-5: 工作流引擎桥接（可选 SPI，用于将审批事件转发到 workflow 模块） */
-  private RuleApprovalWorkflowBridge workflowBridge;
+    /** 审批记录存储（ruleCode -> ApprovalRecord） */
+    private final Map<String, ApprovalRecord> recordStore = new ConcurrentHashMap<>();
 
-  /** 分布式锁服务（P1-3：替代 synchronized，支持集群部署） */
-  private LockService lockService;
+    /** 审批记录持久化仓库（可选 SPI） */
+    private ApprovalRecordRepository recordRepository;
 
-  /**
-   * 构造审批流服务
-   *
-   * @param configProvider 规则配置提供者（用于读写规则定义的 status 字段）
-   */
-  public RuleApprovalService(RuleConfigProvider configProvider) {
-    this.configProvider = configProvider;
-    // 注册默认审批流（2 级审批）
-    registerDefaultFlows();
-  }
+    /** 审批权限检查器（可选 SPI） */
+    private ApprovalPermissionChecker permissionChecker;
+
+    /** P1-5: 工作流引擎桥接（可选 SPI，用于将审批事件转发到 workflow 模块） */
+    private RuleApprovalWorkflowBridge workflowBridge;
+
+    /**
+     * 初始化：注册默认审批流
+     *
+     * <p>使用 @PostConstruct 在构造完成后执行，替代原构造函数中的 registerDefaultFlows() 调用。
+     */
+    @PostConstruct
+    private void init() {
+        // 注册默认审批流（2 级审批）
+        registerDefaultFlows();
+    }
 
   /**
    * 注册默认审批流
@@ -156,19 +165,6 @@ public class RuleApprovalService {
   }
 
   /**
-   * P1-3: 设置分布式锁服务
-   *
-   * <p>设置后，审批操作（提交/通过/驳回/委托/撤回）使用分布式锁保障集群部署下的互斥。
-   * 未设置时，使用本地 synchronized（向后兼容单节点部署）。
-   *
-   * @param lockService 分布式锁服务
-   * @since 1.4.0
-   */
-  public void setLockService(LockService lockService) {
-    this.lockService = lockService;
-  }
-
-  /**
    * 注册自定义审批流
    *
    * @param flow 审批流配置
@@ -210,24 +206,38 @@ public class RuleApprovalService {
   // ==================== 锁辅助方法（P1-3） ====================
 
   /**
-   * 使用分布式锁或本地锁执行操作（P1-3）
+   * 使用分布式锁执行操作（P1-3）
    *
-   * <p>当 {@link #lockService} 已注入时，使用分布式锁保障集群部署下的互斥；
-   * 未注入时，使用本地 synchronized（向后兼容单节点部署）。
+   * <p>通过 {@link DistributedLocker} 获取分布式锁，保障集群部署下的互斥。
+   * 获取锁失败时抛出 {@link IllegalStateException}，不阻塞等待。
+   * 锁的等待时间 {@link #LOCK_WAIT_TIME} 秒，持有时间 {@link #LOCK_LEASE_TIME} 秒。
    *
-   * @param lockKey 锁 key
+   * @param lockKey 锁 key（需带业务前缀，如 "literule:approval:xxx"）
    * @param action 要执行的操作
    * @param <T> 返回类型
    * @return 操作结果
+   * @throws IllegalStateException 获取锁失败
    * @since 1.4.0
    */
   private <T> T executeWithLock(String lockKey, Supplier<T> action) {
-    if (lockService != null) {
-      return lockService.executeWithLock(lockKey, action);
-    }
-    // 未注入 LockService 时，使用本地 synchronized（向后兼容）
-    synchronized (this) {
+    String lockValue = null;
+    try {
+      lockValue = distributedLocker.tryLock(lockKey, LOCK_WAIT_TIME, LOCK_LEASE_TIME, TimeUnit.SECONDS);
+      if (lockValue == null) {
+        throw new IllegalStateException("获取分布式锁失败（超时 " + LOCK_WAIT_TIME + "s）: " + lockKey);
+      }
       return action.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("获取分布式锁被中断: " + lockKey, e);
+    } finally {
+      if (lockValue != null) {
+        try {
+          distributedLocker.unlock(lockKey, lockValue);
+        } catch (Exception e) {
+          log.warn("[Approval] 释放锁异常: {}, 原因: {}", lockKey, e.getMessage());
+        }
+      }
     }
   }
 
@@ -239,7 +249,7 @@ public class RuleApprovalService {
    * <p>将规则从 DRAFT 状态提交到多级审批流的第一级。规则状态变更为 {@link RuleStatus#REVIEW_L1}（多级）或 {@link
    * RuleStatus#REVIEW}（单级兼容）。
    *
-   * <p>P1-3：集群部署时使用分布式锁保障互斥，单节点部署时使用本地 synchronized（向后兼容）。
+   * <p>P1-3：使用分布式锁保障集群部署下的互斥，锁 key 基于 ruleCode。
    *
    * @param ruleCode 规则编码
    * @param flowCode 审批流编码（null 时使用默认 2 级审批流）
@@ -248,7 +258,7 @@ public class RuleApprovalService {
    * @throws IllegalArgumentException 规则不存在、状态非法、审批流不存在
    */
   public ApprovalRecord submitForReview(String ruleCode, String flowCode, String operator) {
-    // P1-3：使用分布式锁或本地锁保障互斥
+    // P1-3：使用分布式锁保障互斥
     return executeWithLock("literule:approval:submit:" + ruleCode, () -> {
       requireNonBlank(ruleCode, "ruleCode");
       requireNonBlank(operator, "operator");

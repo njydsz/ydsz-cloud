@@ -11,6 +11,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+import com.njydsz.gateway.exception.GatewayExceptionHandler;
+
 /**
  * 网关 Web 层过滤器配置（CORS + 全局异常处理 + 安全响应头）。
  *

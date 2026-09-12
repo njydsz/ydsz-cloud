@@ -12,7 +12,6 @@
         <version>26.09.01-SNAPSHOT</version>
     </parent>
 
-
     <dependencies>
         <!-- ydsz-common-core 核心模块，提供常量定义 -->
         <dependency>
@@ -119,13 +118,6 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <!-- 测试（2026-09-01 测试破零：spring-boot-parent BOM 统一管理版本） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>

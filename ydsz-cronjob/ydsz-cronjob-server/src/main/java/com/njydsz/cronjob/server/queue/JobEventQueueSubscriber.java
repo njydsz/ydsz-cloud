@@ -28,7 +28,7 @@ import com.njydsz.cronjob.server.core.EventDrivenScheduler;
  *   <li>在 {@link PostConstruct} 阶段启动异步订阅，应用启动即开始监听
  *   <li>使用 common-queue 的 {@link IMessageSubscriber#subscribeAsync} 持续消费
  *   <li>消息体为 JSON 格式：{"jobKey":"sync-job", "msgId":"msg-001", "payload":"{...}"}
- *   <li>去重由 {@link EventDrivenScheduler} 内部 Redis SETNX 保证
+   *   <li>去重由 {@link EventDrivenScheduler} 内部 DistributedLocker 保证
  *   <li>队列消费失败不影响应用启动，仅记录告警
  * </ul>
  *

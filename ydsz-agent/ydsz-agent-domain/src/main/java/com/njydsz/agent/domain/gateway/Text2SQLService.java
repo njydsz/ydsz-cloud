@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.agent.domain.text2sql.Text2SQLEnhancedResult;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * Text2SQL 服务接口（领域网关）
@@ -88,7 +89,7 @@ public interface Text2SQLService {
   /**
    * Text2SQL 异常。
    */
-  class Text2SQLException extends RuntimeException {
+  class Text2SQLException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 

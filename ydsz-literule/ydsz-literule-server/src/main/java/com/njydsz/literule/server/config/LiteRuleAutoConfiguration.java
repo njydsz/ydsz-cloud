@@ -8,6 +8,9 @@ import java.util.concurrent.TimeUnit;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.audit.core.AuditQueryService;
+import com.njydsz.common.audit.core.AuditRecorder;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -28,6 +31,7 @@ import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.repository.OutboxRepository;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -866,8 +870,10 @@ public class LiteRuleAutoConfiguration {
    * 提供持久化实现；权限校验可通过 {@link ApprovalPermissionChecker} SPI 委托给消费方。
    *
    * @param configProvider 规则配置提供者
+   * @param distributedLocker 分布式锁（来自 ydsz-common-lock，替代本地 synchronized）
    * @param recordRepoProvider 审批记录持久化仓库（可选）
    * @param permissionCheckerProvider 权限检查器（可选）
+   * @param workflowBridgeProvider 工作流引擎桥接（可选）
    * @return RuleApprovalService 实例
    * @since 26.09.01
    */
@@ -876,10 +882,11 @@ public class LiteRuleAutoConfiguration {
   @ConditionalOnBean(RuleConfigProvider.class)
   public RuleApprovalService ruleApprovalService(
       RuleConfigProvider configProvider,
+      DistributedLocker distributedLocker,
       ObjectProvider<ApprovalRecordRepository> recordRepoProvider,
       ObjectProvider<ApprovalPermissionChecker> permissionCheckerProvider,
       ObjectProvider<RuleApprovalWorkflowBridge> workflowBridgeProvider) {
-    RuleApprovalService service = new RuleApprovalService(configProvider);
+    RuleApprovalService service = new RuleApprovalService(configProvider, distributedLocker);
     ApprovalRecordRepository recordRepo = recordRepoProvider.getIfAvailable();
     if (recordRepo != null) {
       service.setRecordRepository(recordRepo);
@@ -1577,10 +1584,12 @@ public class LiteRuleAutoConfiguration {
   /**
    * 规则审计日志服务（P3-5）
    *
-   * <p>当存在 {@link RuleAdminService} 时自动装配， 记录规则全生命周期操作的审计日志。 默认使用内存存储，可通过 {@link
-   * com.njydsz.literule.server.audit.RuleAuditLogService.AuditLogStore} SPI 提供持久化实现。
+   * <p>当存在 {@link RuleAdminService} 时自动装配，记录规则全生命周期操作的审计日志。
+   * 底层委托 ydsz-common-audit 的 {@link AuditRecorder}（写入）和 {@link AuditQueryService}（查询），
+   * 使用统一的 {@code sys_audit_log} 表持久化。
    *
-   * @param auditLogStoreProvider 审计日志存储（可选，为空使用内存存储）
+   * @param auditRecorderProvider 审计日志写入器（由 ydsz-common-audit 自动配置提供）
+   * @param auditQueryServiceProvider 审计日志查询服务（由 ydsz-common-audit 自动配置提供）
    * @return RuleAuditLogService 实例
    * @since 26.09.01
    */
@@ -1588,12 +1597,15 @@ public class LiteRuleAutoConfiguration {
   @ConditionalOnMissingBean
   @ConditionalOnBean(RuleAdminService.class)
   public RuleAuditLogService ruleAuditLogService(
-      ObjectProvider<RuleAuditLogService.AuditLogStore> auditLogStoreProvider) {
-    RuleAuditLogService.AuditLogStore store = auditLogStoreProvider.getIfAvailable();
-    RuleAuditLogService service = new RuleAuditLogService(store);
+      ObjectProvider<AuditRecorder> auditRecorderProvider,
+      ObjectProvider<AuditQueryService> auditQueryServiceProvider) {
+    AuditRecorder recorder = auditRecorderProvider.getIfAvailable();
+    AuditQueryService queryService = auditQueryServiceProvider.getIfAvailable();
+    RuleAuditLogService service = new RuleAuditLogService(recorder, queryService);
     log.info(
-        "[LiteRule-Audit] 规则审计日志服务已初始化（store={}）",
-        store != null ? store.getClass().getSimpleName() : "InMemory");
+        "[LiteRule-Audit] 规则审计日志服务已初始化（recorder={}, queryService={}）",
+        recorder != null ? recorder.getClass().getSimpleName() : "null",
+        queryService != null ? queryService.getClass().getSimpleName() : "null");
     return service;
   }
 

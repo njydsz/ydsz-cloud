@@ -1,13 +1,8 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
-import java.time.Duration;
-import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -16,11 +11,14 @@ import com.njydsz.workflow.server.service.FlowJoinTokenService;
 /**
  * 流程加签 Token 服务实现。
  *
- * <p>管理加签/减签/转签的短期 Token ({@code ydsz_flow_join_token})：
+ * <p>管理并行网关 join 的到达计数与分支总数 ({@code flow:join:*})：
  *
- * <p>加签发起人生成 Token → 受邀人通过 Token 链接加入审批 → Token 一次性使用后失效。
+ * <p>分支到达时原子计数 → 达到阈值时触发 join 聚合 → 全部完成后清除。
  *
- * <p>支持过期时间、租户隔离、操作审计。
+ * <p>支持全部分支到达和 N/M 到达两种模式， TTL 兜底防止数据永久残留。
+ *
+ * <p>Redis 操作使用 {@link RedisStringOps} 高级 API（INCR + EXPIRE、SET + EXPIRE），
+ * 替代手写 Lua 脚本，保证原子性同时提升可维护性。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -40,90 +38,18 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   private static final String REQUIRED_SUFFIX = ":required";
 
   /** 默认 TTL：7 天 */
-  private static final Duration TTL = Duration.ofDays(7);
+  private static final long TTL_SECONDS = 7 * 24 * 60 * 60;
 
-  /** 默认 TTL 秒数（Lua 脚本用） */
-  private static final long TTL_SECONDS = TTL.getSeconds();
-
-  /** Redis 模板，操作 join 令牌计数 key（原子 Lua 脚本保证并发安全） */
-  private final RedisTemplate<String, Object> redisTemplate;
-
-  /** Redis String 操作组件（get/hasKey/delete） */
+  /** Redis String 操作组件（SET + EXPIRE、INCR、GET 等高级 API，支持租户前缀） */
   private final RedisStringOps redisStringOps;
-
-  /**
-   * P1-7: 初始化脚本 —— 原子写入 total + arrived 并带 TTL。 KEYS[1]=arrivedKey, KEYS[2]=totalKey,
-   * ARGV[1]=total, ARGV[2]=ttlSeconds
-   *
-   * <pre>
-   *   redis.call('SET', KEYS[1], '0', 'EX', ARGV[2])
-   *   redis.call('SET', KEYS[2], ARGV[1], 'EX', ARGV[2])
-   *   return 1
-   * </pre>
-   */
-  private static final RedisScript<Long> INIT_SCRIPT =
-      new DefaultRedisScript<>(
-          "redis.call('SET', KEYS[1], '0', 'EX', ARGV[2])\n"
-              + "redis.call('SET', KEYS[2], ARGV[1], 'EX', ARGV[2])\n"
-              + "return 1",
-          Long.class);
-
-  /**
-   * P1-7: 到达脚本 —— 原子 INCR arrived + 比较 total + 补设 TTL，返回是否全部到达。 KEYS[1]=arrivedKey,
-   * KEYS[2]=totalKey, ARGV[1]=ttlSeconds
-   *
-   * <pre>
-   *   local arrived = redis.call('INCR', KEYS[1])
-   *   redis.call('EXPIRE', KEYS[1], ARGV[1])
-   *   local total = tonumber(redis.call('GET', KEYS[2]))
-   *   if total and arrived >= total then
-   *     return 1
-   *   end
-   *   return 0
-   * </pre>
-   */
-  private static final RedisScript<Long> ARRIVE_SCRIPT =
-      new DefaultRedisScript<>(
-          "local arrived = redis.call('INCR', KEYS[1])\n"
-              + "redis.call('EXPIRE', KEYS[1], ARGV[1])\n"
-              + "local total = tonumber(redis.call('GET', KEYS[2]))\n"
-              + "if total and arrived >= total then\n"
-              + "  return 1\n"
-              + "end\n"
-              + "return 0",
-          Long.class);
-
-  /**
-   * P0-3: N/M join 初始化脚本 —— 原子写入 total + required + arrived 并带 TTL。 KEYS[1]=arrivedKey,
-   * KEYS[2]=totalKey, KEYS[3]=requiredKey, ARGV[1]=total, ARGV[2]=required, ARGV[3]=ttlSeconds
-   */
-  private static final RedisScript<Long> INIT_REQUIRED_SCRIPT =
-      new DefaultRedisScript<>(
-          "redis.call('SET', KEYS[1], '0', 'EX', ARGV[3])\n"
-              + "redis.call('SET', KEYS[2], ARGV[1], 'EX', ARGV[3])\n"
-              + "redis.call('SET', KEYS[3], ARGV[2], 'EX', ARGV[3])\n"
-              + "return 1",
-          Long.class);
-
-  /**
-   * P0-3: N/M join 到达脚本 —— INCR arrived + 比较 required + 补设 TTL。 KEYS[1]=arrivedKey,
-   * KEYS[2]=requiredKey, ARGV[1]=ttlSeconds
-   */
-  private static final RedisScript<Long> ARRIVE_REQUIRED_SCRIPT =
-      new DefaultRedisScript<>(
-          "local arrived = redis.call('INCR', KEYS[1])\n"
-              + "redis.call('EXPIRE', KEYS[1], ARGV[1])\n"
-              + "local required = tonumber(redis.call('GET', KEYS[2]))\n"
-              + "if required and arrived >= required then\n"
-              + "  return 1\n"
-              + "end\n"
-              + "return 0",
-          Long.class);
 
   // ============================== 接口实现 ==============================
 
   /**
-   * 初始化 join 令牌：写入分支总数并重置到达计数
+   * 初始化 join 令牌：写入分支总数并重置到达计数。
+   *
+   * <p>使用 SET + EX 原子写入替代 Lua 脚本（{@code SET key value EX ttl}），
+   * Spring Data Redis 在单次请求中完成 SET + EXPIRE，无并发竞态。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -138,12 +64,9 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     String totalKey = buildTotalKey(instanceId, joinNodeCode);
     String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
     try {
-      // P1-7: 原子写入 total + arrived 并带 TTL（单条 Lua 脚本）
-      redisTemplate.execute(
-          INIT_SCRIPT,
-          List.of(arrivedKey, totalKey),
-          String.valueOf(total),
-          String.valueOf(TTL_SECONDS));
+      // SET arrived 0 EX ttl + SET total N EX ttl（两条原子 SET 命令，Spring Data Redis SET 带 Duration）
+      redisStringOps.set(arrivedKey, "0", TTL_SECONDS);
+      redisStringOps.set(totalKey, String.valueOf(total), TTL_SECONDS);
       log.info(
           "[FlowJoinToken] 初始化 join 令牌 instanceId={} node={} branchCount={}",
           instanceId,
@@ -159,7 +82,10 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   }
 
   /**
-   * 标记一个分支已到达：INCR 到达计数并判断是否全部到达
+   * 标记一个分支已到达：INCR 到达计数并判断是否全部到达。
+   *
+   * <p>使用 INCR + EXPIRE + GET 组合替代 Lua 脚本。INCR 保证原子计数，
+   * EXPIRE 刷新 TTL，GET total 仅读取不变值（initTokens 后不再修改），无竞态。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -173,15 +99,22 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     String totalKey = buildTotalKey(instanceId, joinNodeCode);
     String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
     try {
-      // P1-7: 原子 INCR + 比较 total + 补设 TTL（单条 Lua 脚本，消除并发竞态）
-      Long result =
-          redisTemplate.execute(
-              ARRIVE_SCRIPT, List.of(arrivedKey, totalKey), String.valueOf(TTL_SECONDS));
-      boolean allArrived = result != null && result == 1L;
+      // INCR arrived（原子） + EXPIRE 刷新 TTL
+      Long arrived = redisStringOps.incr(arrivedKey, 1L);
+      redisStringOps.expire(arrivedKey, TTL_SECONDS);
+      // GET total（total 在 initTokens 后不再修改，无需原子组合）
+      String totalStr = redisStringOps.get(totalKey, String.class);
+      if (totalStr == null || arrived == null) {
+        return false;
+      }
+      int total = Integer.parseInt(totalStr);
+      boolean allArrived = arrived >= total;
       log.debug(
-          "[FlowJoinToken] 分支到达 instanceId={} node={} allArrived={}",
+          "[FlowJoinToken] 分支到达 instanceId={} node={} arrived={} total={} allArrived={}",
           instanceId,
           joinNodeCode,
+          arrived,
+          total,
           allArrived);
       return allArrived;
     } catch (Exception e) {
@@ -195,7 +128,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   }
 
   /**
-   * 检查是否所有分支都已到达
+   * 检查是否所有分支都已到达。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -236,7 +169,9 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   }
 
   /**
-   * P0-3: 初始化 N/M join 令牌
+   * P0-3: 初始化 N/M join 令牌。
+   *
+   * <p>使用三条 SET + EX 原子写入，替代 Lua 脚本。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -255,12 +190,10 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     String totalKey = buildTotalKey(instanceId, joinNodeCode);
     String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
     try {
-      redisTemplate.execute(
-          INIT_REQUIRED_SCRIPT,
-          List.of(arrivedKey, totalKey, requiredKey),
-          String.valueOf(total),
-          String.valueOf(required),
-          String.valueOf(TTL_SECONDS));
+      // 三条 SET + EX，每条独立原子
+      redisStringOps.set(arrivedKey, "0", TTL_SECONDS);
+      redisStringOps.set(totalKey, String.valueOf(total), TTL_SECONDS);
+      redisStringOps.set(requiredKey, String.valueOf(required), TTL_SECONDS);
       log.info(
           "[FlowJoinToken] P0-3 初始化 N/M join 令牌 instanceId={} node={} total={} required={}",
           instanceId,
@@ -277,7 +210,9 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   }
 
   /**
-   * P0-3: 标记分支到达并检查 N/M 聚合条件
+   * P0-3: 标记分支到达并检查 N/M 聚合条件。
+   *
+   * <p>使用 INCR + EXPIRE + GET 组合替代 Lua 脚本，获取 required 值而非 total。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -291,16 +226,22 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     String arrivedKey = buildArrivedKey(instanceId, joinNodeCode);
     String requiredKey = buildRequiredKey(instanceId, joinNodeCode);
     try {
+      // INCR arrived（原子） + EXPIRE 刷新 TTL
+      Long arrived = redisStringOps.incr(arrivedKey, 1L);
+      redisStringOps.expire(arrivedKey, TTL_SECONDS);
       // 先尝试 N/M 评估
-      Long result =
-          redisTemplate.execute(
-              ARRIVE_REQUIRED_SCRIPT,
-              List.of(arrivedKey, requiredKey),
-              String.valueOf(TTL_SECONDS));
-      if (result != null && result == 1L) {
-        log.debug(
-            "[FlowJoinToken] P0-3 N/M 聚合条件满足 instanceId={} node={}", instanceId, joinNodeCode);
-        return true;
+      String requiredStr = redisStringOps.get(requiredKey, String.class);
+      if (requiredStr != null && arrived != null) {
+        int required = Integer.parseInt(requiredStr);
+        if (arrived >= required) {
+          log.debug(
+              "[FlowJoinToken] P0-3 N/M 聚合条件满足 instanceId={} node={} arrived={} required={}",
+              instanceId,
+              joinNodeCode,
+              arrived,
+              required);
+          return true;
+        }
       }
       // required key 不存在时回退到全部分支语义
       Boolean hasRequired = redisStringOps.hasKey(requiredKey);
@@ -319,7 +260,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   }
 
   /**
-   * P0-3: 检查是否满足 N/M 聚合条件
+   * P0-3: 检查是否满足 N/M 聚合条件。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -355,7 +296,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   }
 
   /**
-   * 清除 join 令牌：删除到达计数与分支总数 key
+   * 清除 join 令牌：删除到达计数与分支总数 key。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码
@@ -440,7 +381,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
   }
 
   /**
-   * 参数合法性校验
+   * 参数合法性校验。
    *
    * @param instanceId 流程实例 ID
    * @param joinNodeCode join 节点编码

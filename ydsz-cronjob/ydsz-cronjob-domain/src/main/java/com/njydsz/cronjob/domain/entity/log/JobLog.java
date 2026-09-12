@@ -69,11 +69,11 @@ public class JobLog extends MpBaseIdEntity<String> {
   private String triggerType;
 
   /**
-   * 持锁者标识（P0-1：hostname:pid）。
+   * 持锁者标识（分布式锁 clientId）。
    *
-   * <p>任务派发抢占分布式锁时记录锁的 value（INSTANCE_ID）， 供 {@link
-   * com.njydsz.cronjob.server.core.dispatch.TimeoutMonitor} 超时后 通过 Lua 脚本安全释放锁（仅当 value 匹配时才
-   * delete），避免误删其他节点持有的锁。
+   * <p>任务派发抢占分布式锁时记录锁 value（JobLockManager 返回的 clientId）， 供 {@link
+   * com.njydsz.cronjob.server.core.dispatch.TimeoutMonitor} 超时后 通过 DistributedLocker
+   * 安全释放锁（仅当 value 匹配时才释放），避免误删其他节点持有的锁。
    */
   private String lockHolder;
 

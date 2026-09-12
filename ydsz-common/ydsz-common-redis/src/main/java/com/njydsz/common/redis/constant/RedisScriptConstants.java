@@ -11,8 +11,9 @@ package com.njydsz.common.redis.constant;
  * <ul>
  *   <li>{@link #TOKEN_BUCKET_LUA_MS} — 毫秒精度版，适用于同步 {@link
  *       org.springframework.data.redis.core.RedisTemplate}， 使用 {@code PEXPIRE}（毫秒 TTL）和毫秒时间戳
- *   <li>响应式栈版本（基于秒精度）由 {@code ydsz-gateway} 的 {@code RateLimitFilter} 持有， 差异源于 {@link
- *       org.springframework.data.redis.core.ReactiveStringRedisTemplate} 的调用模型； 两者算法同源，修改时请保持语义一致
+ *   <li>{@link #TOKEN_BUCKET_LUA_MULTI_DIMENSION} — 多维度批量令牌桶（秒精度），适用于响应式栈
+ *       （{@code ReactiveStringRedisTemplate}）单次往返同时校验 IP/用户等多维度限流，
+ *       消费方为 {@code ydsz-gateway} 的 {@code RateLimitFilter}
  * </ul>
  *
  * <p><b>使用约束：</b>
@@ -108,6 +109,92 @@ public final class RedisScriptConstants {
           + "redis.call('HMSET', key, 'tokens', tokens, 'lastRefillMs', lastRefill) "
           + "redis.call('PEXPIRE', key, math.ceil(periodMs * 2 / 1000) + 1) "
           + "return {allowed, tokens}";
+
+  // ======================== 令牌桶（多维度批量，秒精度） ========================
+
+  /**
+   * 多维度批量令牌桶限流 Lua 脚本（秒精度，响应式栈适用）。
+   *
+   * <p>与 {@link #TOKEN_BUCKET_LUA_MS} 算法同源，差异在于：单次 Redis 往返同时校验
+   * {@code KEYS[1..2]} 指向的多维度（如 IP 维度 + 用户维度），避免逐维度调用产生的网络开销。
+   * 秒精度时间戳与 TTL 由 {@code ReactiveStringRedisTemplate} 的调用模型决定。
+   *
+   * <p>参数：
+   *
+   * <pre>
+   *   KEYS[1] = 第一维度 key（如 ip）  KEYS[2] = 第二维度 key（如 user）
+   *   ARGV[1..3] = 第一维度 rate/capacity/enabled（enabled=0 时该维度直接放行）
+   *   ARGV[4..6] = 第二维度 rate/capacity/enabled
+   *   ARGV[7] = timestamp_seconds  ARGV[8] = requested_tokens
+   * </pre>
+   *
+   * <p>返回：{dim1_allowed, dim1_remaining, dim1_reset, dim2_allowed, dim2_remaining, dim2_reset}
+   *
+   * <p><b>来源（ADR-4）：</b>自 {@code ydsz-gateway} 的 {@code RateLimitFilter} 内联脚本下沉，
+   * 消除业务模块内联 Lua（规范 §33.2/§33.3）。修改本脚本时须与 {@link #TOKEN_BUCKET_LUA_MS}
+   * 的令牌补充/扣减语义保持一致。
+   */
+  public static final String TOKEN_BUCKET_LUA_MULTI_DIMENSION =
+      """
+            -- 令牌桶算法
+            local function token_bucket(key, rate, capacity, now, requested)
+                local bucket = redis.call('hmget', key, 'tokens', 'timestamp')
+                local tokens = tonumber(bucket[1])
+                local last_refill = tonumber(bucket[2])
+
+                if tokens == nil then
+                    tokens = capacity
+                    last_refill = now
+                end
+
+                local elapsed = math.max(0, now - last_refill)
+                local refill = elapsed * rate
+                tokens = math.min(capacity, tokens + refill)
+
+                local allowed = 0
+                local remaining = tokens
+
+                if tokens >= requested then
+                    tokens = tokens - requested
+                    allowed = 1
+                    remaining = tokens
+                end
+
+                local ttl = math.ceil(capacity / rate * 2)
+                redis.call('hmset', key, 'tokens', tokens, 'timestamp', now)
+                redis.call('expire', key, ttl)
+
+                local reset = math.ceil((capacity - tokens) / rate)
+                return allowed, remaining, reset
+            end
+
+            local now = tonumber(ARGV[7])
+            local requested = tonumber(ARGV[8])
+
+            local results = {}
+
+            -- 遍历 2 个维度（每个维度 3 个参数：rate, capacity, enabled）
+            for i = 1, 2 do
+                local key_index = i
+                local arg_base = (i - 1) * 3
+                local enabled = tonumber(ARGV[arg_base + 3])
+
+                if enabled == 1 then
+                    local rate = tonumber(ARGV[arg_base + 1])
+                    local capacity = tonumber(ARGV[arg_base + 2])
+                    local allowed, remaining, reset = token_bucket(KEYS[key_index], rate, capacity, now, requested)
+                    results[i * 3 - 2] = allowed
+                    results[i * 3 - 1] = remaining
+                    results[i * 3] = reset
+                else
+                    results[i * 3 - 2] = 1
+                    results[i * 3 - 1] = 0
+                    results[i * 3] = 0
+                end
+            end
+
+            return results
+            """;
 
   // ======================== 滑动窗口（分桶） ========================
 

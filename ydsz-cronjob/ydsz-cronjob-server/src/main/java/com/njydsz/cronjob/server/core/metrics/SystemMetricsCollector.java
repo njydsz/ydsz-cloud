@@ -26,6 +26,11 @@ import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
  *
  * <p>采集失败时返回安全默认值（CPU/内存 0，任务数 0），不影响心跳主流程。
  *
+ * <p><b>与 ydsz-common-sentry 同名类的关系（ADR-3，见 docs/ADR-2026-09-12_公共能力重复实现收敛决策.md）：</b>
+ * common-sentry 的 {@code SystemMetricsCollector} 面向 MetricsCollector SPI（CPU/内存/磁盘/GC 全量指标）；
+ * 本类面向调度心跳负载（CPU/内存 + 集群运行任务数，写入 {@code ydsz_job_node} 表）。
+ * 后续迭代应复用 common-sentry 的采集结果，删除自有 JMX 读数实现（ADR-3 决议 2）。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

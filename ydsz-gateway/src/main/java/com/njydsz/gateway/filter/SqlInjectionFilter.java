@@ -21,10 +21,10 @@ import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.GatewayErrorCode;
-import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.SqlInjectionProperties;
+import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
  * SQL 注入检测全局过滤器。
@@ -73,6 +73,10 @@ import com.njydsz.gateway.config.SqlInjectionProperties;
  *
  * <p><b>职责边界：</b>本过滤器仅在网关层做轻量级正则检测，<b>不</b>解析 SQL AST，
  * 深度 SQL 注入防御由下游服务使用预编译 PreparedStatement 负责。
+ *
+ * <p><b>与 ydsz-common-jdbc 的关系（ADR-4，见 docs/ADR-2026-09-12_公共能力重复实现收敛决策.md）：</b>
+ * common-jdbc 的 {@code SqlFirewallInnerInterceptor} 在 JDBC 层做深度防护，本过滤器在网关层做入口拦截，
+ * 二者构成<b>纵深防御</b>而非重复建设；网关层为响应式栈，无法直接复用 Servlet 端实现。
  *
  * @since 26.09.01
  * @author ydsz-team

@@ -5,7 +5,6 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,35 +146,6 @@ public class OAuth2Controller {
 
   /** P0-4: 授权码随机字节长度（32 字节 = 256 位熵，Base64URL 编码后 43 字符） */
   private static final int CODE_RANDOM_BYTES = 32;
-
-  /**
-   * P0-3: 授权码原子取删 Lua 脚本（GETDEL 语义，防并发重放）。
-   *
-   * <p>授权码必须一次性使用：并发请求携带同一授权码时，仅第一个请求能读到值，
-   * 后续请求 GET 返回 nil，无法二次签发 token。
-   */
-  private static final String GETDEL_CODE_LUA =
-      "local v = redis.call('GET', KEYS[1]) "
-          + "if v then redis.call('DEL', KEYS[1]) end "
-          + "return v";
-
-  /**
-   * P0-3: 原子读取并删除授权码上下文（GETDEL）。
-   *
-   * @param code 授权码
-   * @return 授权码上下文 JSON；不存在或已消费返回 null
-   */
-  private String getAndDeleteCode(String code) {
-    try {
-      return redisStringOps.executeScriptWithShaCache(
-          GETDEL_CODE_LUA,
-          String.class,
-          Collections.singletonList(CODE_KEY_PREFIX + code));
-    } catch (Exception e) {
-      log.error("OAuth2 atomic get-and-delete code failed, code={}", code, e);
-      return null;
-    }
-  }
 
   /**
    * P0-4: 生成高强度授权码（RFC 6749 §10.10：至少 128 位随机熵）。
@@ -488,7 +458,7 @@ public class OAuth2Controller {
       String code, String clientId, String clientSecret, String codeVerifier, String state) {
 
     // 1. P0-3: 原子读取并删除授权码（GETDEL 语义，防并发重放）
-    String storedContext = getAndDeleteCode(code);
+    String storedContext = redisStringOps.getAndDelete(CODE_KEY_PREFIX + code, String.class);
     if (storedContext == null) {
       throw new BusinessException(UserInfoExceptionCode.OAUTH2_CODE_INVALID);
     }

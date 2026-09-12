@@ -13,8 +13,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.gateway.config.GatewayErrorCode;
-import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
+import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
  * P1-8: 请求体安全校验过滤器
