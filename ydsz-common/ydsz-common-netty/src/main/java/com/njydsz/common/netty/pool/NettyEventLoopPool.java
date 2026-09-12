@@ -7,8 +7,8 @@ import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.netty.config.NettyProperties;
-import com.njydsz.common.netty.transport.NativeTransportDetector.TransportType;
 import com.njydsz.common.netty.transport.NativeTransportDetector;
+import com.njydsz.common.netty.transport.NativeTransportDetector.TransportType;
 
 /**
  * Netty EventLoopGroup 池化管理器。

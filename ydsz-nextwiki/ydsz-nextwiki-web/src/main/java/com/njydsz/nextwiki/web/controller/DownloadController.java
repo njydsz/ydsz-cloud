@@ -37,9 +37,9 @@ import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
+import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.DownloadContext;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownloadContext;
-import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 
 /**
  * 文件下载 REST API Controller。

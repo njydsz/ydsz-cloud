@@ -38,8 +38,8 @@ import com.njydsz.literule.domain.vo.PackUpdateInfoVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
 import com.njydsz.literule.server.benchmark.RuleStressTestService;
 import com.njydsz.literule.server.converter.LiteruleWebConverter;
-import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 import com.njydsz.literule.server.spi.RulePackProvider;
+import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 
 /**
  * 规则集市场 Controller

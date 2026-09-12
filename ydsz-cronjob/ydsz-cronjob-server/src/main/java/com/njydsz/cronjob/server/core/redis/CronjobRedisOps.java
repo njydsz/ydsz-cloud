@@ -151,24 +151,6 @@ public class CronjobRedisOps {
     }
   }
 
-  /**
-   * SETNX（key 不存在时设置）。
-   *
-   * @param keySegment key segment
-   * @param value      值
-   * @param ttlSeconds TTL（秒）
-   * @return true 设置成功；false key 已存在或异常
-   */
-  public boolean setIfAbsent(String keySegment, String value, long ttlSeconds) {
-    try {
-      Boolean result = redisStringOps.setIfAbsent(buildKey(keySegment), value, ttlSeconds);
-      return Boolean.TRUE.equals(result);
-    } catch (Exception e) {
-      log.debug("[CronjobRedis] SETNX 异常: key={} reason={}", keySegment, e.getMessage());
-      return false;
-    }
-  }
-
   // ======================== 便捷方法 ========================
 
   /**
