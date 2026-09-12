@@ -1,6 +1,9 @@
 package com.njydsz.agent.server.memory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -115,11 +118,11 @@ public class ConversationMemoryConsolidationService {
         }
         try {
             // 按 userId 分组事实，逐用户刷新画像
-            java.util.Map<String, List<MemoryExtractedFact>> grouped = new java.util.HashMap<>();
+            Map<String, List<MemoryExtractedFact>> grouped = new HashMap<>();
             for (MemoryExtractedFact fact : facts) {
                 String userId = fact.getUserId();
                 if (userId != null) {
-                    grouped.computeIfAbsent(userId, k -> new java.util.ArrayList<>()).add(fact);
+                    grouped.computeIfAbsent(userId, k -> new ArrayList<>()).add(fact);
                 }
             }
             for (var entry : grouped.entrySet()) {

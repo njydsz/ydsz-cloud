@@ -38,6 +38,9 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
 @Slf4j
 public class ExportingTraceRecorder implements TraceRecorder {
 
+  /** 步骤内容最大保留长度 */
+  private static final int MAX_CONTENT_LENGTH = 500;
+
   /** Span 属性集合初始容量 */
   private static final int ATTRIBUTES_CAPACITY = 8;
 
@@ -149,7 +152,7 @@ public class ExportingTraceRecorder implements TraceRecorder {
       attrs.put("agent.step.type", stepType);
       attrs.put("agent.id", rootMeta != null ? rootMeta.agentId() : "unknown");
       if (content != null) {
-        attrs.put("agent.step.content", truncate(content, 500));
+        attrs.put("agent.step.content", truncate(content, MAX_CONTENT_LENGTH));
       }
 
       List<AgentSpan.SpanEvent> events = new ArrayList<>(EVENTS_CAPACITY);

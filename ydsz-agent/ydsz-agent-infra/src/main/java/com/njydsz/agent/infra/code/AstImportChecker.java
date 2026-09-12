@@ -30,6 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AstImportChecker {
 
+  /** 违规列表初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+
   /** 危险内置函数集合 */
   private static final Set<String> DANGEROUS_BUILTINS = Set.of(
       "eval", "exec", "open", "__import__", "compile", "globals", "locals",
@@ -66,7 +69,7 @@ public class AstImportChecker {
    * @return 安全检查结果（通过的返回空列表，不通过的返回错误信息列表）
    */
   public List<String> validate(String code, List<String> allowedModules) {
-    List<String> violations = new ArrayList<>(16);
+    List<String> violations = new ArrayList<>(COLLECTION_CAPACITY);
     Set<String> allowedSet = new HashSet<>(allowedModules);
 
     // 添加危险模块到拒绝集合
@@ -81,8 +84,8 @@ public class AstImportChecker {
       }
 
       // 解析脚本输出的 import 列表和危险调用
-      for (String line : astOutput.split("\n")) {
-        line = line.trim();
+      for (String rawLine : astOutput.split("\n")) {
+        String line = rawLine.trim();
         if (line.isEmpty()) {
           continue;
         }

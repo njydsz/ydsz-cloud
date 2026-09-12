@@ -5,6 +5,7 @@ import java.util.Base64;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -241,6 +242,7 @@ public class DeviceAuthorizationController {
    * 设备码上下文（Redis 持久化）。
    */
   @Data
+  @Builder
   public static class DeviceCodeContext {
     /** 客户端 ID */
     private String clientId;

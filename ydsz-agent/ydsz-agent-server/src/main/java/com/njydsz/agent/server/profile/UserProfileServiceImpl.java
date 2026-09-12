@@ -1,7 +1,6 @@
 package com.njydsz.agent.server.profile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -50,6 +49,9 @@ import com.njydsz.agent.domain.profile.UserProfileService;
         havingValue = "true",
         matchIfMissing = true)
 public class UserProfileServiceImpl implements UserProfileService {
+
+  /** 画像关注领域提取上限 */
+  private static final int TOP_DOMAIN_LIMIT = 5;
 
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;
@@ -305,7 +307,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         return intentCount.entrySet().stream()
                 .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
-                .limit(5)
+                .limit(TOP_DOMAIN_LIMIT)
                 .map(Map.Entry::getKey)
                 .toList();
     }

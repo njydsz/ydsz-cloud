@@ -2,7 +2,6 @@ package com.njydsz.cronjob.server.core.dispatch;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 
 import jakarta.annotation.PostConstruct;
@@ -11,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +18,7 @@ import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
-import com.njydsz.cronjob.server.core.LockKeyUtil;
+import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.alert.AlertContext;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
@@ -68,7 +65,7 @@ public class TimeoutMonitor {
   private final JobRepository jobRepository;
   private final JobLogRepository jobLogRepository;
   private final LeaderElector leaderElector;
-  private final RedisTemplate<String, Object> redisTemplate;
+  private final JobLockManager jobLockManager;
   private final CronjobProperties cronjobProperties;
 
   /** P5: 告警触发器（可选注入，未配置时不触发告警） */
@@ -76,16 +73,6 @@ public class TimeoutMonitor {
 
   /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
   private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
-
-  /** P0-1: Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete），与 DefaultTaskDispatcher 一致 */
-  private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
-
-  private static DefaultRedisScript<Long> initReleaseScript() {
-    DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-    script.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
-    script.setResultType(Long.class);
-    return script;
-  }
 
   /** 单批最多扫描超时日志数 */
   private static final int BATCH_SIZE = 100;
@@ -96,7 +83,7 @@ public class TimeoutMonitor {
    * 初始化超时监控器：解析 Leader 角色并确认启用状态。
    *
    * <p>仅在 {@code ydsz.cronjob.leader.enabled=true} 时进入监控启用分支； 否则仅记录 Leaderless 日志。本方法不创建线程或锁资源——
-   * 超时检测依赖的 Redis 释放锁 {@code RELEASE_LOCK_SCRIPT} 为静态常量在类加载期即初始化， 扫描任务由 {@link #scan()} 方法上的
+   * 锁释放委托 {@link JobLockManager}（DistributedLocker），扫描任务由 {@link #scan()} 方法上的
    * {@code @DistributedScheduled} + {@code @Scheduled} 双注解驱动，无需在此预注册。
    */
   @PostConstruct
@@ -222,30 +209,27 @@ public class TimeoutMonitor {
     if (metrics != null) {
       metrics.incJobTimeout(log0.getJobKey());
     }
-    // P0-7: 释放任务锁（Lua 脚本安全释放，仅当 lockHolder 匹配时才 delete）
-    // P0-11: 通过 LockKeyUtil 统一构造，支持分片任务锁释放
-    String lockKey = LockKeyUtil.buildJobLockKey(log0.getJobKey(), log0.getShardIndex());
+    // P0-7: 释放任务锁（通过 JobLockManager DistributedLocker 安全释放）
     String holder = log0.getLockHolder();
     if (holder != null && !holder.isBlank()) {
       try {
-        Long released =
-            redisTemplate.execute(RELEASE_LOCK_SCRIPT, Collections.singletonList(lockKey), holder);
-        if (released != null && released > 0) {
+        boolean released = jobLockManager.releaseLock(log0.getJobKey(), log0.getShardIndex(), holder);
+        if (released) {
           log.info(
-              "[TimeoutMonitor] 安全释放超时任务锁成功: jobKey={} lockKey={} holder={}",
+              "[TimeoutMonitor] 安全释放超时任务锁成功: jobKey={} shardIndex={} holder={}",
               log0.getJobKey(),
-              lockKey,
+              log0.getShardIndex(),
               holder);
         } else {
           log.info(
-              "[TimeoutMonitor] 锁 holder 不匹配或已过期, 跳过释放: jobKey={} lockKey={} holder={}",
+              "[TimeoutMonitor] 锁已被其他节点持有或已过期, 跳过释放: jobKey={} shardIndex={} holder={}",
               log0.getJobKey(),
-              lockKey,
+              log0.getShardIndex(),
               holder);
         }
       } catch (Exception e) {
         log.warn(
-            "[TimeoutMonitor] 释放锁失败(将等待 TTL 自动过期): lockKey={} reason={}", lockKey, e.getMessage());
+            "[TimeoutMonitor] 释放锁失败(将等待 TTL 自动过期): jobKey={} reason={}", log0.getJobKey(), e.getMessage());
       }
     } else {
       // 兜底: 日志无 lockHolder（历史数据或 MANUAL 触发未持锁），跳过释放

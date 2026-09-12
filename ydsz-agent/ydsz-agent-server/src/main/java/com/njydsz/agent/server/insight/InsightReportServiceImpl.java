@@ -1,6 +1,5 @@
 package com.njydsz.agent.server.insight;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +45,13 @@ import com.njydsz.common.json.YdszJson;
     havingValue = "true",
     matchIfMissing = false)
 public class InsightReportServiceImpl implements InsightReportService {
+
+  /** 错误信息最大保留长度 */
+  private static final int MAX_ERROR_MESSAGE_LENGTH = 500;
+  /** 报告 ID 随机段长度 */
+  private static final int REPORT_ID_RANDOM_LENGTH = 16;
+  /** JSON 拼接缓冲区初始容量 */
+  private static final int JSON_BUFFER_CAPACITY = 512;
 
   /** 持久化仓储 */
   private final InsightReportRepository reportRepository;
@@ -126,7 +132,7 @@ public class InsightReportServiceImpl implements InsightReportService {
     } catch (Exception e) {
       log.error("[Insight] 报告生成失败: reportId={}", reportId, e);
       report.setStatus(InsightReportStatus.FAILED.getCode());
-      report.setErrorMessage(truncate(e.getMessage(), 500));
+      report.setErrorMessage(truncate(e.getMessage(), MAX_ERROR_MESSAGE_LENGTH));
       report.setDurationMs((int) (System.currentTimeMillis() - startTime));
       report.setUpdatedAt(LocalDateTime.now());
       reportRepository.save(report);
@@ -171,7 +177,7 @@ public class InsightReportServiceImpl implements InsightReportService {
    * 生成唯一报告业务 ID。
    */
   private String generateReportId() {
-    return "rpt_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+    return "rpt_" + UUID.randomUUID().toString().replace("-", "").substring(0, REPORT_ID_RANDOM_LENGTH);
   }
 
   /**
@@ -222,7 +228,7 @@ public class InsightReportServiceImpl implements InsightReportService {
    * 构建降级纯文本内容（HTML 渲染失败时）。
    */
   private String buildPlainTextFallback(List<InsightSection> sections) {
-    StringBuilder sb = new StringBuilder(512);
+    StringBuilder sb = new StringBuilder(JSON_BUFFER_CAPACITY);
     if (sections != null) {
       for (InsightSection section : sections) {
         sb.append("=== ").append(section.title()).append(" ===\n");

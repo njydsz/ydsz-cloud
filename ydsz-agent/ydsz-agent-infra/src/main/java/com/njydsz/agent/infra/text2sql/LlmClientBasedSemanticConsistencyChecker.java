@@ -27,6 +27,9 @@ import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
 @Service
 public class LlmClientBasedSemanticConsistencyChecker implements SemanticConsistencyChecker {
 
+  /** 查询文本预览截断长度 */
+  private static final int QUERY_PREVIEW_LENGTH = 30;
+
   /** 校验请求最大输出 Token 数 */
   private static final int CHECK_MAX_TOKENS = 256;
 
@@ -146,7 +149,7 @@ public class LlmClientBasedSemanticConsistencyChecker implements SemanticConsist
       log.info(
           "[SemanticConsistency] 校验完成: score={}, query='{}'",
           score,
-          userQuery.length() > 30 ? userQuery.substring(0, 30) + "..." : userQuery);
+          userQuery.length() > QUERY_PREVIEW_LENGTH ? userQuery.substring(0, QUERY_PREVIEW_LENGTH) + "..." : userQuery);
       return new ConsistencyCheckResult(score, reasoning);
     } catch (NumberFormatException e) {
       log.warn("[SemanticConsistency] 解析 LLM 响应失败: {}", e.getMessage());

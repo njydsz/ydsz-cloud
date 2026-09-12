@@ -39,6 +39,11 @@ import com.njydsz.agent.domain.text2sql.TableSchema;
 @Service
 public class LlmClientBasedSchemaRecallService implements SchemaRecallService {
 
+  /** 查询文本预览截断长度 */
+  private static final int QUERY_PREVIEW_LENGTH = 50;
+  /** Prompt 拼接缓冲区初始容量 */
+  private static final int PROMPT_BUFFER_CAPACITY = 512;
+
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
@@ -116,7 +121,7 @@ public class LlmClientBasedSchemaRecallService implements SchemaRecallService {
     }
     log.info(
         "[SchemaRecall] 召回完成: query='{}', candidates={}, recalled={}",
-        query.length() > 50 ? query.substring(0, 50) + "..." : query,
+        query.length() > QUERY_PREVIEW_LENGTH ? query.substring(0, QUERY_PREVIEW_LENGTH) + "..." : query,
         availableTables.size(),
         result.size());
     return result;
@@ -203,7 +208,7 @@ public class LlmClientBasedSchemaRecallService implements SchemaRecallService {
   private List<TableSchema> llmRerank(
       String query, List<TableSchema> candidates, int maxRecall) {
     // 构建 Prompt
-    StringBuilder prompt = new StringBuilder(512);
+    StringBuilder prompt = new StringBuilder(PROMPT_BUFFER_CAPACITY);
     prompt.append(
         """
         你是数据库 Schema 分析助手。根据用户问题，从以下候选表中选出最相关的表。

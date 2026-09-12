@@ -1,7 +1,7 @@
 package com.njydsz.agent.infra.code;
 
 import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -45,6 +45,13 @@ import com.njydsz.agent.domain.code.CodeExecutionService;
     name = "mode",
     havingValue = "docker")
 public class DockerSandboxCodeExecutionService implements CodeExecutionService {
+
+  /** 命令参数列表初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
+  /** 进程退出等待宽限（秒） */
+  private static final int PROCESS_EXIT_GRACE_SECONDS = 5;
+  /** 进程强制销毁等待（秒） */
+  private static final int PROCESS_DESTROY_WAIT_SECONDS = 3;
 
   /** Docker 镜像名称 */
   private final String dockerImage;
@@ -95,7 +102,7 @@ public class DockerSandboxCodeExecutionService implements CodeExecutionService {
 
     try {
       // 构建 docker run 命令
-      List<String> command = new ArrayList<>(16);
+      List<String> command = new ArrayList<>(COLLECTION_CAPACITY);
       command.add("docker");
       command.add("run");
       command.add("--rm");
@@ -123,7 +130,7 @@ public class DockerSandboxCodeExecutionService implements CodeExecutionService {
       dockerProcess = pb.start();
 
       // 等待执行完成或超时
-      boolean finished = dockerProcess.waitFor(timeout + 5, TimeUnit.SECONDS);
+      boolean finished = dockerProcess.waitFor(timeout + PROCESS_EXIT_GRACE_SECONDS, TimeUnit.SECONDS);
       long duration = System.currentTimeMillis() - startTime;
 
       if (!finished) {
@@ -174,7 +181,7 @@ public class DockerSandboxCodeExecutionService implements CodeExecutionService {
   public boolean isAvailable() {
     try {
       Process process = new ProcessBuilder("docker", "info").start();
-      boolean finished = process.waitFor(5, TimeUnit.SECONDS);
+      boolean finished = process.waitFor(PROCESS_EXIT_GRACE_SECONDS, TimeUnit.SECONDS);
       if (!finished) {
         process.destroyForcibly();
         return false;
@@ -199,7 +206,7 @@ public class DockerSandboxCodeExecutionService implements CodeExecutionService {
   private void forceStopContainer(String containerName) {
     try {
       Process stopProcess = new ProcessBuilder("docker", "stop", "--time=1", containerName).start();
-      boolean stopped = stopProcess.waitFor(3, TimeUnit.SECONDS);
+      boolean stopped = stopProcess.waitFor(PROCESS_DESTROY_WAIT_SECONDS, TimeUnit.SECONDS);
       if (!stopped) {
         stopProcess.destroyForcibly();
       }
@@ -216,7 +223,7 @@ public class DockerSandboxCodeExecutionService implements CodeExecutionService {
    * @return 字符串内容
    * @throws IOException IO 异常
    */
-  private String readStream(java.io.InputStream inputStream) throws IOException {
+  private String readStream(InputStream inputStream) throws IOException {
     StringBuilder sb = new StringBuilder();
     try (BufferedReader reader = new BufferedReader(
         new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {

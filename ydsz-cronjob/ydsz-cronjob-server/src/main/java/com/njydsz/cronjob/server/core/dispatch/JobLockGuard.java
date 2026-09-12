@@ -2,11 +2,8 @@ package com.njydsz.cronjob.server.core.dispatch;
 
 import java.net.InetAddress;
 import java.time.Duration;
-import java.util.Collections;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.domain.job.JobHandler;
@@ -26,8 +23,7 @@ import com.njydsz.cronjob.server.core.LockKeyUtil;
  *   <li><b>幂等锁</b>：按 handler + params 粒度去重，防止相同参数的任务在集群中重复执行
  * </ul>
  *
- * <p>释放统一走 {@link JobLockManager#releaseLock}，失败或不可用时回退 Lua 脚本
- * （value 相等判断，兼容 SETNX 与 common-lock 两种获取路径）。
+ * <p>所有锁的获取与释放统一走 {@link JobLockManager}（ydsz-common-lock），不再使用 Lua 脚本。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -36,11 +32,8 @@ import com.njydsz.cronjob.server.core.LockKeyUtil;
 @Component
 public class JobLockGuard {
 
-  /** 本节点实例标识（hostname:pid，锁持有者兜底标识） */
+  /** 本节点实例标识（hostname:pid，作为兜底 lockHolder 存入日志，仅供兼容读取 */
   public static final String INSTANCE_ID = initInstanceId();
-
-  /** Lua 脚本：安全释放锁（value 相等才删除，防止误删他人锁） */
-  private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
 
   /** 幂等锁 key 前缀 */
   private static final String IDEMPOTENT_LOCK_PREFIX = "ydsz:job:idempotent:";
@@ -63,22 +56,16 @@ public class JobLockGuard {
 
   private final CronjobProperties cronjobProperties;
   private final JobLockManager jobLockManager;
-  private final RedisTemplate<String, Object> redisTemplate;
 
   /**
    * 构造任务锁守卫。
    *
    * @param cronjobProperties 调度配置（TTL 规整）
    * @param jobLockManager 分布式锁管理器（common-lock，WatchDog 续期 + 可重入）
-   * @param redisTemplate Redis 客户端（仅用于 COVER 策略 releaseLockByValue Lua 释放）
    */
-  public JobLockGuard(
-      CronjobProperties cronjobProperties,
-      JobLockManager jobLockManager,
-      RedisTemplate<String, Object> redisTemplate) {
+  public JobLockGuard(CronjobProperties cronjobProperties, JobLockManager jobLockManager) {
     this.cronjobProperties = cronjobProperties;
     this.jobLockManager = jobLockManager;
-    this.redisTemplate = redisTemplate;
   }
 
   /**
@@ -119,31 +106,19 @@ public class JobLockGuard {
   /**
    * 安全释放任务持有的分布式锁。
    *
-   * @param lockKey 锁 key（null 时跳过）
+   * <p>统一通过 JobLockManager（DistributedLocker）释放，仅持有者可释放。
+   *
+   * @param lockKey 锁 key（null 时跳过，仅用于兼容旧接口）
    * @param jobKey 任务 KEY（JobLockManager 释放需要）
    * @param shardIndex 分片索引（null = 非分片任务）
-   * @param lockValue 锁持有者标识（可能为 null，兜底使用 INSTANCE_ID）
+   * @param lockValue 锁持有者标识（null 时跳过释放）
    */
   public void releaseJobLock(String lockKey, String jobKey, Integer shardIndex, String lockValue) {
-    if (lockKey == null) {
+    if (lockKey == null || lockValue == null) {
       return;
     }
-    if (lockValue != null) {
-      try {
-        jobLockManager.releaseLock(jobKey, shardIndex, lockValue);
-        return;
-      } catch (Exception e) {
-        log.warn(
-            "[LockGuard] JobLockManager 释放锁失败, 回退 Lua 脚本: key={} reason={}",
-            lockKey,
-            e.getMessage());
-      }
-    }
     try {
-      redisTemplate.execute(
-          RELEASE_LOCK_SCRIPT,
-          Collections.singletonList(lockKey),
-          lockValue != null ? lockValue : INSTANCE_ID);
+      jobLockManager.releaseLock(jobKey, shardIndex, lockValue);
     } catch (Exception e) {
       log.warn(
           "[LockGuard] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}", lockKey, e.getMessage());
@@ -188,6 +163,8 @@ public class JobLockGuard {
   /**
    * 释放幂等锁（空句柄或降级句柄时跳过）。
    *
+   * <p>统一通过 JobLockManager（DistributedLocker）释放，仅持有者可释放。
+   *
    * @param idempotentLock 幂等锁句柄
    */
   public void releaseIdempotentLock(IdempotentLockHandle idempotentLock) {
@@ -197,14 +174,7 @@ public class JobLockGuard {
     try {
       if (idempotentLock.value() != null && !idempotentLock.value().isEmpty()) {
         jobLockManager.releaseLock(idempotentLock.key(), idempotentLock.value());
-        return;
       }
-      redisTemplate.execute(
-          RELEASE_LOCK_SCRIPT,
-          Collections.singletonList(idempotentLock.key()),
-          idempotentLock.value() != null && !idempotentLock.value().isEmpty()
-              ? idempotentLock.value()
-              : INSTANCE_ID);
     } catch (Exception e) {
       log.warn(
           "[LockGuard] 释放幂等锁失败(将等待 TTL 自动过期): key={} reason={}",
@@ -214,27 +184,21 @@ public class JobLockGuard {
   }
 
   /**
-   * 通过 Lua 脚本安全释放锁（仅当 lockHolder 匹配时才删除）。
+   * 安全释放锁（仅当 lockHolder 匹配时才释放）。
    *
    * <p>供 COVER 策略使用：中断旧任务线程后，按日志记录的持锁者标识释放锁。
+   * 通过 JobLockManager（DistributedLocker）安全释放，仅持有者可释放。
    *
    * @param lockKey 锁 key
    * @param lockHolder 持锁者标识
    */
   public void releaseLockByValue(String lockKey, String lockHolder) {
     try {
-      redisTemplate.execute(RELEASE_LOCK_SCRIPT, Collections.singletonList(lockKey), lockHolder);
+      jobLockManager.releaseLock(lockKey, lockHolder);
     } catch (Exception e) {
       log.warn(
           "[LockGuard] 按值释放锁失败(将等待 TTL 自动过期): key={} reason={}", lockKey, e.getMessage());
     }
-  }
-
-  private static DefaultRedisScript<Long> initReleaseScript() {
-    DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-    script.setScriptText(LockKeyUtil.RELEASE_LOCK_SCRIPT);
-    script.setResultType(Long.class);
-    return script;
   }
 
   private static String initInstanceId() {

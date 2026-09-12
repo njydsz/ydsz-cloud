@@ -61,6 +61,11 @@ import com.njydsz.agent.domain.text2sql.Text2SqlStateContext;
     matchIfMissing = false)
 public class EnhancedJdbcText2SQLService implements Text2SQLService {
 
+  /** 默认匹配得分（无明确匹配时的中性分值） */
+  private static final double DEFAULT_MATCH_SCORE = 0.5;
+  /** SQL 拼接缓冲区初始容量 */
+  private static final int SQL_BUFFER_CAPACITY = 256;
+
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
@@ -266,7 +271,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
 
       ChatResponse response = llmClient.chat(request);
       String content = response.getContent();
-      double score = 0.5;
+      double score = DEFAULT_MATCH_SCORE;
       String reasoning = "可行性评估默认通过";
       if (content != null && !content.isBlank()) {
         try {
@@ -587,7 +592,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
     if (schemas.isEmpty()) {
       return "（暂无可用表结构，请根据用户问题合理推断）";
     }
-    StringBuilder sb = new StringBuilder(256);
+    StringBuilder sb = new StringBuilder(SQL_BUFFER_CAPACITY);
     for (TableSchema table : schemas) {
       sb.append("表名: ").append(table.tableName());
       if (table.description() != null && !table.description().isEmpty()) {

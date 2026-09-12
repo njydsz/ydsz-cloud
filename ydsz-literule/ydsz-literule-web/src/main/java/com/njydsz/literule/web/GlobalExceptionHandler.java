@@ -4,7 +4,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler extends BaseExceptionHandler {
    *
    * @param environment Spring 环境
    */
-  protected GlobalExceptionHandler(org.springframework.core.env.Environment environment) {
+  protected GlobalExceptionHandler(Environment environment) {
     super(environment);
   }
 

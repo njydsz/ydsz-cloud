@@ -106,12 +106,11 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
 @Slf4j
 @Service
 public class FlowTemplateServiceImpl implements FlowTemplateService {
-    /** 集合初始容量 */
-    private static final int COLLECTION_CAPACITY = 16;
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
 
-
-    /** 默认排序号：未设置排序的模板置底（999） */
-  private static final int DEFAULT_sort = 999;
+  /** 默认排序号：未设置排序的模板置底（999） */
+  private static final int DEFAULT_SORT = 999;
 
   /** 流程名称后缀最大长度（30 字符，防止超长后缀导致名称超限） */
   private static final int MAX_NAME_SUFFIX_LENGTH = 30;
@@ -414,7 +413,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         template.setBpmnXml(bpmnXml);
         template.setFormPath(definition.getFormPath());
         template.setUseCount(0);
-        template.setSort(existing.getSort() != null ? existing.getSort() : DEFAULT_sort);
+        template.setSort(existing.getSort() != null ? existing.getSort() : DEFAULT_SORT);
         // P2-9: 版本化字段 — 沿用 inherit_type 与 parent_template_id 保持继承关系连续
         template.setVersion(newVersion);
         template.setVersionLabel("v" + newVersion + ".0");
@@ -439,7 +438,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         template.setBpmnXml(bpmnXml);
         template.setFormPath(definition.getFormPath());
         template.setUseCount(0);
-        template.setSort(DEFAULT_sort);
+        template.setSort(DEFAULT_SORT);
         // P2-9: 版本化字段
         template.setVersion(1);
         template.setVersionLabel("26.09.01");
@@ -759,7 +758,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
       newTemplate.setBpmnXml(source.getBpmnXml());
       newTemplate.setFormPath(source.getFormPath());
       newTemplate.setUseCount(0);
-      newTemplate.setSort(source.getSort() != null ? source.getSort() : DEFAULT_sort);
+      newTemplate.setSort(source.getSort() != null ? source.getSort() : DEFAULT_SORT);
       // P2-9: 继承关系字段
       newTemplate.setParentTemplateId(source.getId());
       newTemplate.setVersion(1);

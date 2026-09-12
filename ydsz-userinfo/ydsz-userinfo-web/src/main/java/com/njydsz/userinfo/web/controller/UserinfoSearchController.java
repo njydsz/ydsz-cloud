@@ -111,7 +111,7 @@ public class UserinfoSearchController {
             .page(query.getPage())
             .pageSize(query.getPageSize())
             .userId(request.getHeader(AuthHeaderConstants.X_USER_ID))
-            .tenantId(TenantContextHolder.getCurrentTenantId())
+            .tenantId(TenantContextHolder.getTenantId())
             .roles(parseRolesHeader(request.getHeader(AuthHeaderConstants.X_USER_ROLES)))
             .deptId(request.getHeader(USER_DEPT_HEADER))
             .admin("true".equalsIgnoreCase(request.getHeader(USER_ADMIN_HEADER)))

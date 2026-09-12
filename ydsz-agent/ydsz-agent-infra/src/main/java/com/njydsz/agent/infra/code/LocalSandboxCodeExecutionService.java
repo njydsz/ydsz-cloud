@@ -1,10 +1,8 @@
 package com.njydsz.agent.infra.code;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +44,9 @@ import com.njydsz.agent.domain.code.CodeExecutionService;
     name = "mode",
     havingValue = "local")
 public class LocalSandboxCodeExecutionService implements CodeExecutionService {
+
+  /** 进程退出等待宽限（秒） */
+  private static final int PROCESS_EXIT_GRACE_SECONDS = 5;
 
   /** Python 解释器路径 */
   private final String pythonPath;
@@ -165,7 +166,7 @@ public class LocalSandboxCodeExecutionService implements CodeExecutionService {
     try {
       ProcessBuilder pb = new ProcessBuilder(pythonPath, "--version");
       Process process = pb.start();
-      boolean finished = process.waitFor(5, TimeUnit.SECONDS);
+      boolean finished = process.waitFor(PROCESS_EXIT_GRACE_SECONDS, TimeUnit.SECONDS);
       if (!finished) {
         process.destroyForcibly();
         return false;
@@ -189,7 +190,7 @@ public class LocalSandboxCodeExecutionService implements CodeExecutionService {
    * @return 字符串内容
    * @throws IOException IO 异常
    */
-  private String readStream(java.io.InputStream inputStream) throws IOException {
+  private String readStream(InputStream inputStream) throws IOException {
     StringBuilder sb = new StringBuilder();
     try (BufferedReader reader = new BufferedReader(
         new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {

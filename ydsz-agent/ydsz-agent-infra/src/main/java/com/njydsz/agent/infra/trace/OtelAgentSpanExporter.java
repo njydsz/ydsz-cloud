@@ -2,7 +2,6 @@ package com.njydsz.agent.infra.trace;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
 import io.opentelemetry.api.OpenTelemetry;

@@ -37,6 +37,11 @@ import com.njydsz.agent.domain.model.ChatResponse;
 @Component
 public class LlmInsightReportGenerator implements InsightReportGenerator {
 
+  /** JSON 拼接缓冲区初始容量 */
+  private static final int JSON_BUFFER_CAPACITY = 512;
+  /** 章节列表初始容量 */
+  private static final int SECTION_LIST_CAPACITY = 8;
+
   /** 允许的章节类型白名单（用于过滤 LLM 返回中的非法类型） */
   private static final Set<String> VALID_SECTION_TYPES = Set.of(
       "summary", "data", "chart", "insight", "trend", "prediction");
@@ -122,7 +127,7 @@ public class LlmInsightReportGenerator implements InsightReportGenerator {
     String query = request.query();
     String dataJson = request.dataJson();
 
-    StringBuilder sb = new StringBuilder(512);
+    StringBuilder sb = new StringBuilder(JSON_BUFFER_CAPACITY);
     sb.append("请根据以下数据和分析目标，生成一份结构化的 BI 洞察报告（章节列表）。\n\n");
     sb.append("=== 报告标题 ===\n").append(reportTitle).append("\n\n");
     if (query != null && !query.isBlank()) {
@@ -157,7 +162,7 @@ public class LlmInsightReportGenerator implements InsightReportGenerator {
     }
 
     String jsonBlock = arrayMatcher.group();
-    List<InsightSection> sections = new ArrayList<>(8);
+    List<InsightSection> sections = new ArrayList<>(SECTION_LIST_CAPACITY);
 
     Matcher sectionMatcher = SECTION_PATTERN.matcher(jsonBlock);
     int sort = 0;

@@ -1,6 +1,5 @@
 package com.njydsz.agent.infra.profile;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;

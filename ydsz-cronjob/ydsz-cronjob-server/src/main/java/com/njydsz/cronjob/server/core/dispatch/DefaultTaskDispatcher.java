@@ -1431,7 +1431,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    *   <li>从 ydsz_job_log 查询当前 RUNNING 的日志（jobKey + status=RUNNING）
    *   <li>获取 execThreadId 和 execNodeId
    *   <li>如果 execNodeId 是当前节点：通过 Thread.interrupt() 中断执行线程，最多等待 1s
-   *   <li>通过 Lua 脚本安全释放锁（仅当 lockHolder 匹配时才 delete）
+   *   <li>通过 JobLockManager（DistributedLocker）安全释放锁（仅当 lockHolder 匹配时才释放）
    *   <li>重新获取锁并执行新任务（递归调用 executeJob）
    *   <li>中断失败（线程不响应）或远程节点任务时降级为 DISCARD，记录 warn 日志
    * </ol>
@@ -1493,7 +1493,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
           execThreadId);
       return null;
     }
-    // 4. 通过 Lua 脚本安全释放锁（仅当 lockHolder 匹配时才 delete）
+    // 4. 通过 JobLockManager（DistributedLocker）安全释放锁（仅当 lockHolder 匹配时才释放）
     String lockHolder = runningLog.getLockHolder();
     String releaseHolder = (lockHolder != null) ? lockHolder : JobLockGuard.INSTANCE_ID;
     jobLockGuard.releaseLockByValue(lockKey, releaseHolder);
