@@ -1,13 +1,7 @@
 package com.njydsz.message.server.channel;
 
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +18,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.message.server.config.ChannelProperties;
 
 /**
@@ -63,9 +58,6 @@ public class WebhookChannel implements MessageChannel {
 
   /** 通道类型 */
   private static final String CHANNEL_TYPE = "WEBHOOK";
-
-  /** HMAC-SHA256 算法名 */
-  private static final String HMAC_SHA256_ALGO = "HmacSHA256";
 
   /** 签名时间戳请求头 */
   private static final String HEADER_TIMESTAMP = "X-Webhook-Timestamp";
@@ -136,7 +128,7 @@ public class WebhookChannel implements MessageChannel {
       // 签名：如果配置了 secret 则添加时间戳和签名头
       if (StringUtils.hasText(secret)) {
         String signContent = timestamp + "\n" + secret;
-        String signature = hmacSha256(signContent, secret);
+        String signature = DigestUtils.hmacSha256Base64(signContent, secret);
         bodySpec.header(HEADER_TIMESTAMP, String.valueOf(timestamp));
         bodySpec.header(HEADER_SIGNATURE, signature);
         log.debug("[WEBHOOK] 已添加签名: timestamp={}", timestamp);
@@ -159,26 +151,6 @@ public class WebhookChannel implements MessageChannel {
       return MessageResult.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
-    }
-  }
-
-  /**
-   * 计算 HMAC-SHA256 签名并 Base64 编码。
-   *
-   * @param data 待签名内容
-   * @param secret 签名密钥
-   * @return Base64 编码的签名字符串
-   */
-  private String hmacSha256(String data, String secret) {
-    try {
-      Mac mac = Mac.getInstance(HMAC_SHA256_ALGO);
-      SecretKeySpec secretKeySpec =
-          new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256_ALGO);
-      mac.init(secretKeySpec);
-      byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-      return Base64.getEncoder().encodeToString(hash);
-    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      throw new IllegalStateException("HMAC-SHA256 签名失败: " + e.getMessage(), e);
     }
   }
 
