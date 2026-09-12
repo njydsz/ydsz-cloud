@@ -156,14 +156,5 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--
-            Guava（GuavaTokenBlacklistBloomFilter 使用 BloomFilter + Funnels）
-            注意：仅被已废弃的 GuavaTokenBlacklistBloomFilter 使用，计划 4.0.0 随该移除此依赖。
-            请勿在新代码中引入 Guava 依赖。
-        -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
     </dependencies>
 </project>
