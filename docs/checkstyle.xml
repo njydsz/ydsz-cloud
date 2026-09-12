@@ -74,15 +74,28 @@
         <property name="lineSeparator" value="lf"/>
     </module>
 
-    <!-- 禁止 UTF-8 BOM 文件头（编码规范 1.1 节 / 规则 ID YDIZ-CODE-001，P0 阻断级）。
-         注：BOM 会使 Checkstyle 自身的 ANTLR 解析器在 TreeWalker 阶段抛出
-         NoViableAltException，导致整个模块检查中断并掩盖后续模块，故本规则置于
-         Checker 层（早于 TreeWalker）。修复工具：data/scripts/fix-file-encoding.py -->
-    <module name="RegexpSingleline">
-        <property name="format" value="^\ufeff"/>
-        <property name="message"
-                  value="【P0-YDIZ-CODE-001】源文件禁止携带 UTF-8 BOM，会导致 javac 报 illegal character 并使 Checkstyle 解析中断。修复：data/scripts/fix-file-encoding.py --apply 或 IDE 执行 Remove BOM。参考：云顶编码规范 1.1 节"/>
-    </module>
+    <!-- ============================================ -->
+    <!-- 编码规范 1.1 节（YDIZ-CODE-001，P0 阻断级）    -->
+    <!-- ============================================ -->
+    <!--
+        BOM / CRLF 为何不在本文件检查（2026-09-12 实测结论）：
+
+        1. UTF-8 BOM：Checkstyle 9.3 的 TreeWalker 在解析带 BOM 的 .java 时会抛
+           NoViableAltException（"no viable alternative at input 'package'"），
+           该异常会使 Checkstyle 中止**整个模块**的文件处理，且 Checker 层的
+           RegexpSingleline 规则不会被执行——因此 BOM 无法通过本配置检出。
+           （已实测验证：注入 BOM 探针后，无论是否配置 RegexpSingleline，
+            结果均为解析崩溃且无任何违规输出。）
+        2. CRLF：Checkstyle 读取文件时按行终止符切分并剥离 \r，行内容中不含 \r，
+           故 RegexpSingleline 无法匹配行尾回车符。
+
+        真实门禁位置（fail-closed）：
+          - CI：.github/workflows/ci.yml 的「编码规范前置校验」步骤（BOM + CRLF）
+          - 本地：data/scripts/fix-file-encoding.py（检查/修复，规范 1.1 节推荐工具）
+          - 编辑器：.editorconfig（charset=utf-8 / end_of_line=lf / insert_final_newline）
+          - Git：.gitattributes（*.java text eol=lf）
+        上述任一环节失败即阻断，BOM 文件不会进入主干。
+    -->
 
     <!-- 能力提供者模块豁免：common-excel/docs/file/netty/seata 允许直接 import 对应 SDK -->
     <!-- 豁免清单见同目录 checkstyle-suppressions.xml（v3.3 恢复 SuppressionFilter：

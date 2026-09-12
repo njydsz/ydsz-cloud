@@ -38,16 +38,24 @@ jobs:
           cache-dependency-path: |
             **/pom.xml
 
-      # Step 3: Checkstyle 验证（严格执行云顶编码规范红线）
+      # Step 3: 编码规范前置校验（云顶编码规范 1.1 节 / YDIZ-CODE-001，P0 阻断级）
+      # 必须早于 Checkstyle：BOM 会使 Checkstyle 的 ANTLR 解析器抛 NoViableAltException，
+      # 中断整个模块并掩盖后续模块，导致「零违规」假象。此处前置拦截并给出明确诊断。
+      - name: 编码规范前置校验（BOM / CRLF / 末尾换行）
+        run: python3 data/scripts/fix-file-encoding.py
+        # 默认检查模式：发现问题以退出码 1 阻断。本地修复：
+        #   python3 data/scripts/fix-file-encoding.py --apply
+
+      # Step 4: Checkstyle 验证（严格执行云顶编码规范红线）
       - name: Run Checkstyle
         run: mvn checkstyle:check -B
         # 失败即构建中断（failOnViolation=true，已在 pom 中配置）
 
-      # Step 4: Maven verify（编译 + 测试 + JaCoCo 覆盖率采集）
+      # Step 5: Maven verify（编译 + 测试 + JaCoCo 覆盖率采集）
       - name: Maven verify
         run: mvn verify -B
 
-      # Step 5: 上传 JaCoCo 覆盖率报告到 Codecov
+      # Step 6: 上传 JaCoCo 覆盖率报告到 Codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
