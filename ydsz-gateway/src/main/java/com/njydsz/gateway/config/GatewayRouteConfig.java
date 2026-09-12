@@ -83,8 +83,7 @@ public class GatewayRouteConfig {
       routeListenerExecutor =
           applicationContext.getBean("nacosRouteListenerExecutor", ThreadPoolTaskExecutor.class);
     } catch (NoSuchBeanDefinitionException e) {
-      log.warn("[GatewayRouteConfig] 未配置托管线程池 nacosRouteListenerExecutor，"
-          + " Nacos 配置变更回调将使用客户端默认线程");
+      log.warn("[GatewayRouteConfig] 未配置托管线程池 nacosRouteListenerExecutor, Nacos 配置变更回调将使用客户端默认线程");
     }
     return new NacosRouteDefinitionRepository(
         nacosConfigManager, dataId, group, true, eventPublisher, routeListenerExecutor);

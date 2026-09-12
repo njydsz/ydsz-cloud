@@ -74,7 +74,7 @@ YDSZ 是一套前后端分离的全栈微服务架构。前端 [ydsz-micro](http
 
 ```
 ydsz-cloud/
-├── ydsz-common/              # 🧱 公共能力底座（29 子模块，L1-L6 分层，不独立部署）
+├── ydsz-common/              # 🧱 公共能力底座（30 子模块，L1-L6 分层，不独立部署）
 │   ├── ydsz-common-json      # L1：高性能 JSON 引擎（零外部依赖，自研 ASM/SIMD 优化）
 │   ├── ydsz-common-util      # L1：工具类（加密/哈希/IP/雪花ID/Bean映射/密码强度）
 │   ├── ydsz-common-cache     # L1：多策略本地缓存（W-TinyLFU / Striped / 防穿透击穿雪崩）
@@ -101,6 +101,7 @@ ydsz-cloud/
 │   ├── ydsz-common-docs      # L5：8 种格式解析（PDF/Word/Excel/PPT/HTML/Markdown/TXT/CSV via Tika+POI+PDFBox） + PII 检测 + 安全扫描
 │   ├── ydsz-common-search    # L5：SPI 多引擎搜索（PG tsvector + zhparser 中文分词 + 内存降级） + 索引同步 + 搜索建议 + 业务重排
 │   ├── ydsz-common-sentry    # L5：指标采集（Micrometer + 内存降级） + 日志发布（ELK/Loki/双发） + SLA 框架 + 告警收敛 + 熔断
+│   ├── ydsz-common-seata     # L5：Seata 分布式事务封装（SeataProperties + SeataAutoConfiguration，默认关闭） + undo_log DDL
 │   ├── ydsz-common-base      # L6：MVC 配置抽象基类 + CORS/时区/安全头/TraceId/OpenAPI
 │   ├── ydsz-common-app       # L6：移动端 App 基座（API 签名 + AppAuthFilter + 请求追踪）
 │   └── ydsz-common-web       # L6：PC Web 基座（全局响应包装 + 请求日志拦截 + 认证体系）
@@ -132,6 +133,7 @@ ydsz-cloud/
 | **ydsz-literule** | 6 种规则类型 · 自研 LiteExpr 引擎（AST + 沙箱） · 热加载 · 版本 Diff + 回滚 · Dry-Run 仿真 · A/B 测试 · 规则包/市场 · CEP 引擎 |
 | **ydsz-agent** | 6 种 Agent 执行器 · LLM Provider 抽象 · 同步/流式对话（SSE） · RAG · DAG 编排 · Tool Calling / MCP 工具 · 安全护栏（PII + Prompt 注入检测） |
 | **ydsz-generator** | 数据库逆向工程 · Velocity 模板引擎一键生成 DDD 分层 CRUD 代码（Entity/Mapper/Service/Controller/DTO/VO/Query/Converter/Assembler/Enum/Feign/Vue 前端 16 种产物） · 数据源管理 · 模板管理 · 导入导出 · 历史回溯 |
+| **ydsz-common-seata** | Seata 分布式事务封装 · ydsz.seata.* 配置 · SeataAutoConfiguration（默认 enabled=false） · SeataHealthIndicator · undo_log DDL |
 
 ---
 

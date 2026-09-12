@@ -57,6 +57,23 @@ ADR 体系用于：
 | [ADR-005](./adr/ADR-005-multi-tenancy.md) | 多租户隔离策略 | 待决策 | 2025-02-15 |
 | [ADR-006](./adr/ADR-006-observability.md) | 日志与可观测性标准化 | 部分接受 | 2025-02-20 |
 
+## 公共能力六层分级体系（ydsz-common）
+
+YDSZ 公共底座 `ydsz-common` 下设 **30 个子模块**，按依赖纯度严格分为 L1-L6 六层，是八大引擎乃至整个平台的共性基础设施来源。
+
+| 层级 | 定位 | 子模块数 | 子模块清单 | 依赖约束 |
+|------|------|----------|-----------|----------|
+| **L1 工具层** | 零外部依赖 / 极低依赖的工具库 | 4 | `json` `util` `cache` `excel` | 禁止依赖任何业务模块、Spring 上下文、L3+ |
+| **L2 核心响应** | 统一响应 / 分页 / TraceId / 请求上下文 | 1 | `core` | 仅依赖 L1 |
+| **L3 领域基类** | DDD 基类 / 异常体系 / RFC 7807 | 2 | `domain` `exception` | 仅依赖 L1-L2 |
+| **L4 数据基础** | 数据持久化增强（JDBC/Redis/锁/线程/租户） | 5 | `jdbc` `redis` `lock` `thread` `tenant` | 仅依赖 L1-L3，禁止依赖 L5+ |
+| **L5 业务服务** | 安全 / 认证 / 消息 / 事务 / 可观测 / 存储 | 15 | `auth` `safe` `feign` `audit` `notify` `queue` `event` `config` `socket` `netty` `file` `docs` `search` `sentry` `seata` | 可依赖 L1-L4，禁止依赖 L6 |
+| **L6 应用基座** | Web/App 启动基类 + 全局自动配置 | 3 | `base` `app` `web` | 可依赖全部 L1-L5 |
+
+> **分层核心原则**：高层模块可以依赖低层模块，低层模块禁止依赖高层模块（YDIZ-ARCH-001，P0 阻断级）。
+>
+> L1 纯度由 Maven Enforce 插件 `enforce-l1-purity` 规则强制守护；L2-L6 依赖方向由 ArchUnit 测试在各业务模块 `-web` 子模块 `ArchitectureTest` 中落地。
+
 ## 八大引擎体系
 
 YDSZ 后端 8 个可部署业务微服务各自承担一个核心领域职责，形成「八大引擎」矩阵——每个引擎独立部署、独立演进、独立扩缩容，通过 Feign + Gateway 相互协作：

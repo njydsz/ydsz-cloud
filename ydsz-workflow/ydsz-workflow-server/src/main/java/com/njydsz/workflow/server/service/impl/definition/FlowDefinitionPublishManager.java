@@ -408,8 +408,7 @@ public class FlowDefinitionPublishManager {
     if ("HIGH".equals(riskLevel)) {
       if (force) {
         log.warn(
-            "[Flow][P1-4] 强制发布 HIGH 风险流程: flowCode={} newDef={} oldDef={} "
-                + "runningInstances={} recommendations={}",
+            "[Flow][P1-4] 强制发布 HIGH 风险流程: flowCode={} newDef={} oldDef={} runningInstances={} recommendations={}",
             flowCode,
             def.getId(),
             activeDef.getId(),
@@ -417,8 +416,7 @@ public class FlowDefinitionPublishManager {
             recommendations);
       } else if (flowProperties.isPublishBlockOnHighRisk()) {
         log.warn(
-            "[Flow][P1-4] 阻断 HIGH 风险发布: flowCode={} newDef={} oldDef={} "
-                + "runningInstances={} recommendations={}",
+            "[Flow][P1-4] 阻断 HIGH 风险发布: flowCode={} newDef={} oldDef={} runningInstances={} recommendations={}",
             flowCode,
             def.getId(),
             activeDef.getId(),
@@ -437,8 +435,7 @@ public class FlowDefinitionPublishManager {
             .build();
       } else {
         log.warn(
-            "[Flow][P1-4] block-on-high-risk=false，放行 HIGH 风险发布: flowCode={} "
-                + "newDef={} oldDef={} runningInstances={} recommendations={}",
+            "[Flow][P1-4] block-on-high-risk=false，放行 HIGH 风险发布: flowCode={} newDef={} oldDef={} runningInstances={} recommendations={}",
             flowCode,
             def.getId(),
             activeDef.getId(),
@@ -447,8 +444,7 @@ public class FlowDefinitionPublishManager {
       }
     } else if ("MEDIUM".equals(riskLevel) || "LOW".equals(riskLevel)) {
       log.warn(
-          "[Flow][P1-4] 发布 {} 风险流程: flowCode={} newDef={} oldDef={} "
-              + "runningInstances={} recommendations={}",
+          "[Flow][P1-4] 发布 {} 风险流程: flowCode={} newDef={} oldDef={} runningInstances={} recommendations={}",
           riskLevel,
           flowCode,
           def.getId(),

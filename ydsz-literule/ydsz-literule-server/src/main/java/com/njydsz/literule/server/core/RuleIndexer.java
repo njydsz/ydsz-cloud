@@ -139,8 +139,7 @@ public class RuleIndexer {
       }
 
       log.info(
-          "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, "
-              + "mutexGroups={}, fieldIndexSize={}, alphaNodes={}",
+          "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, mutexGroups={}, fieldIndexSize={}, alphaNodes={}",
           rules.size(), tenantIndex.size(), environmentIndex.size(), scopeIndex.size(),
           mutexGroupIndex.size(), fieldToRules.size(), fieldOpIndex.size());
     });

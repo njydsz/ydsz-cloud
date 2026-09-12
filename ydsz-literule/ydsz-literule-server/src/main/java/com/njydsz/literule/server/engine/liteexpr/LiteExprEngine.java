@@ -119,8 +119,7 @@ public class LiteExprEngine implements ExpressionEngine {
     this.bytecodeCompiler = new BytecodeCompiler("");
     this.bytecodeInterpreter = new BytecodeInterpreter(functionRegistry);
     log.info(
-        "[LiteExpr] 自研表达式引擎已初始化（sandbox={}, bytecode={}, functions={}, "
-            + "cacheCapacity={}, maxEvalNanos={})",
+        "[LiteExpr] 自研表达式引擎已初始化（sandbox={}, bytecode={}, functions={}, cacheCapacity={}, maxEvalNanos={})",
         sandboxEnabled,
         bytecodeEnabled,
         functionRegistry.getFunctionNames().size(),

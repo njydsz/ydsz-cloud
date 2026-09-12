@@ -81,9 +81,7 @@ public class UserInfoNameAssembler implements NameAssembler {
             .build();
     this.redisStringOps = properties.isRedisCacheEnabled() ? redisProvider.getIfAvailable() : null;
     if (properties.isRedisCacheEnabled() && this.redisStringOps == null) {
-      log.info(
-          "NameAssembler Redis cache enabled but RedisStringOps not available; "
-              + "falling back to L1 cache only");
+      log.info("NameAssembler Redis cache enabled but RedisStringOps not available; falling back to L1 cache only");
     }
   }
 

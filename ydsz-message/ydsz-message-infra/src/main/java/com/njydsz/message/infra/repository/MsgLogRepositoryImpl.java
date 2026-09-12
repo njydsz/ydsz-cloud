@@ -11,6 +11,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
@@ -37,6 +39,7 @@ import com.njydsz.message.infra.mapper.core.MsgLogMapper;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class MsgLogRepositoryImpl implements MsgLogRepository {
@@ -173,14 +176,14 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
       try {
         wrapper.ge("created_at", LocalDateTime.parse(query.getStartTime()));
       } catch (DateTimeParseException e) {
-        // ignore invalid date format
+        log.debug("日期格式不匹配，跳过", e);
       }
     }
     if (query.getEndTime() != null && !query.getEndTime().isBlank()) {
       try {
         wrapper.le("created_at", LocalDateTime.parse(query.getEndTime()));
       } catch (DateTimeParseException e) {
-        // ignore invalid date format
+        log.debug("日期格式不匹配，跳过", e);
       }
     }
     wrapper.eq("deleted", 0);

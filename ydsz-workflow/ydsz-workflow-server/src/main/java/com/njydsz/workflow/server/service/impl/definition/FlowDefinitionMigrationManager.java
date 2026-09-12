@@ -611,9 +611,7 @@ public class FlowDefinitionMigrationManager {
     List<Map<String, Object>> removedSkips = MapUtils.getListOfMaps(skipDiff, "removed");
 
     log.info(
-        "[Flow] 版本差异对比: flowCode={} v1={} v2={} "
-            + "nodeAdded={} nodeRemoved={} nodeModified={} "
-            + "skipAdded={} skipRemoved={}",
+        "[Flow] 版本差异对比: flowCode={} v1={} v2={} nodeAdded={} nodeRemoved={} nodeModified={} skipAdded={} skipRemoved={}",
         flowCode, version1, version2,
         addedNodes.size(), removedNodes.size(), modifiedNodes.size(),
         addedSkips.size(), removedSkips.size());

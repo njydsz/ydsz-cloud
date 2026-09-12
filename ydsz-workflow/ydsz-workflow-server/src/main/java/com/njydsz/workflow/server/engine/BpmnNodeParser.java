@@ -179,9 +179,8 @@ public class BpmnNodeParser {
           node.setSkipAnyNode(pt.name());
         }
       } catch (IllegalArgumentException e) {
-        // invalid perform type, ignore
         log.debug("[BpmnNodeParser] 无效的会签类型，已跳过: nodeKey={}, value={}",
-            node.getNodeCode(), node.getSkipAnyNode());
+            node.getNodeCode(), node.getSkipAnyNode(), e);
       }
     }
 

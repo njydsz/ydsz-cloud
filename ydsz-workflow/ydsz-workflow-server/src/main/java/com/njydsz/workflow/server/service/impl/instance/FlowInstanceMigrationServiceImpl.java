@@ -239,8 +239,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
           targetDefId, targetDef, nodeMapping, targetNodeMap);
     }
 
-    log.info("[Flow-Migrate] 迁移完成: sourceDefId={} targetDefId={} dryRun={} "
-        + "total={} migrated={} skipped={} failed={}",
+    log.info("[Flow-Migrate] 迁移完成: sourceDefId={} targetDefId={} dryRun={} total={} migrated={} skipped={} failed={}",
         sourceDefId, targetDefId, dryRun, instances.size(),
         counters.migratedCount, counters.skippedCount, counters.failedCount);
 

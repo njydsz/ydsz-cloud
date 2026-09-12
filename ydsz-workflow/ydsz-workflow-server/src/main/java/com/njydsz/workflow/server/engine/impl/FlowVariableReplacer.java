@@ -125,6 +125,8 @@ public class FlowVariableReplacer {
         putCache(cacheKey, method);
         return method.invoke(target);
       } catch (NoSuchMethodException e) {
+        log.debug("[FlowVariableReplacer] getter 方法不存在 {}.{}(), 降级到字段反射",
+            clazz.getSimpleName(), methodName);
         // getter 不存在 → 继续尝试下一个或降级到字段反射
       } catch (Exception e) {
         log.warn(

@@ -246,8 +246,7 @@ public class ScriptRule implements Rule {
     // 非 groovy 语言仅有正则黑名单防护（P0-4 安全提示）
     if (sandboxEnabled && !"groovy".equals(this.language)) {
       log.warn(
-          "[LiteRule-Script] 脚本规则 {} 使用语言 {}，其沙箱仅为正则黑名单防护（弱于 Groovy 的 AST 级防护），"
-              + "请确保脚本内容受信任或升级为 Groovy",
+          "[LiteRule-Script] 脚本规则 {} 使用语言 {}，其沙箱仅为正则黑名单防护（弱于 Groovy 的 AST 级防护），请确保脚本内容受信任或升级为 Groovy",
           code,
           this.language);
     }

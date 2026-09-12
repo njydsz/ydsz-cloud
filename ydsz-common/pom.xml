@@ -57,7 +57,6 @@
         <error-prone-annotations.version>2.49.0</error-prone-annotations.version>
         <fastjson2.version>2.0.62</fastjson2.version>
         <asm.version>9.7.1</asm.version>
-        <!-- Seata 2.x（保留版本属性供 history 引用，已无活跃模块使用） -->
         <seata.version>2.0.0</seata.version>
     </properties>
 
@@ -87,7 +86,7 @@
         <module>ydsz-common-queue</module>
         <module>ydsz-common-event</module>
         <module>ydsz-common-config</module>
-        <!-- ydsz-common-seata 已于 2026-09-01 移除（全仓 0 个 @GlobalTransactional 使用点） -->
+        <module>ydsz-common-seata</module>
         <module>ydsz-common-socket</module>
         <module>ydsz-common-netty</module>
         <module>ydsz-common-file</module>

@@ -96,8 +96,7 @@ public class AnomalyRecoveryScanner {
     AnomalyRecoveryConfig config = cronjobProperties.getAnomalyRecovery();
     if (cronjobProperties.getLeader().isEnabled()) {
       log.info(
-          "[AnomalyRecovery] 初始化完成, role={} scanInterval={}s stuckThreshold={}s "
-              + "failoverEnabled={} selfHealingEnabled={}",
+          "[AnomalyRecovery] 初始化完成, role={} scanInterval={}s stuckThreshold={}s failoverEnabled={} selfHealingEnabled={}",
           leaderRole,
           config.getScanIntervalSeconds(),
           config.getStuckThresholdSeconds(),

@@ -133,7 +133,7 @@ public class TraceIntegrationHelper {
       MDC.remove("job.status");
       MDC.remove("job.error");
     } catch (Exception e) {
-      // 静默忽略
+      log.debug("MDC 清理失败，不影响主流程", e);
     }
   }
 }

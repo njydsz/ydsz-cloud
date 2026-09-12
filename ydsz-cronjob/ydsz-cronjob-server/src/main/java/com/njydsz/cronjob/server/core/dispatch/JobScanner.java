@@ -130,8 +130,7 @@ public class JobScanner {
           this.dispatchPool = threadPool.getThreadPoolExecutor();
           this.useExternalDispatchPool = true;
           log.info(
-              "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} "
-                  + "parallelDispatch=true pool=common-thread(cronjobDispatchExecutor)",
+              "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true pool=common-thread(cronjobDispatchExecutor)",
               leaderRole,
               cronjobProperties.getScanner().getIntervalMs(),
               cronjobProperties.getScanner().getBatchSize());
@@ -148,8 +147,7 @@ public class JobScanner {
                   .build();
           this.useExternalDispatchPool = false;
           log.info(
-              "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} "
-                  + "parallelDispatch=true poolSize={} (manual fallback)",
+              "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={} (manual fallback)",
               leaderRole,
               cronjobProperties.getScanner().getIntervalMs(),
               cronjobProperties.getScanner().getBatchSize(),

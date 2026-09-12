@@ -931,7 +931,8 @@ public class FlowTaskCreateService {
     } else if (priorityVal instanceof String s && !s.isBlank()) {
       try {
         dto.setPriority(Integer.parseInt(s.trim()));
-      } catch (NumberFormatException ignore) {
+      } catch (NumberFormatException e) {
+        log.debug("[FlowTaskCreateService] 优先级格式不匹配，跳过: value={}, 使用默认值 {}", s, DEFAULT_TASK_PRIORITY);
         dto.setPriority(DEFAULT_TASK_PRIORITY);
       }
     } else {
@@ -953,7 +954,8 @@ public class FlowTaskCreateService {
     } else if (rate instanceof String s && !s.isBlank()) {
       try {
         dto.setVotePassRate(new BigDecimal(s.trim()));
-      } catch (NumberFormatException ignore) {
+      } catch (NumberFormatException e) {
+        log.debug("[FlowTaskCreateService] 通过率格式不匹配，跳过: value={}", s);
         // keep default
       }
     }
@@ -1417,7 +1419,8 @@ public class FlowTaskCreateService {
     int levels = 1;
     try {
       levels = Integer.parseInt(levelStr);
-    } catch (NumberFormatException ignored) {
+    } catch (NumberFormatException e) {
+      log.debug("[FlowTaskCreateService] 多级领导层级格式不匹配，跳过: levelStr={}, 使用默认值 1", levelStr);
       // use default
     }
     String startUserId = resolveInitiatorId(variables);

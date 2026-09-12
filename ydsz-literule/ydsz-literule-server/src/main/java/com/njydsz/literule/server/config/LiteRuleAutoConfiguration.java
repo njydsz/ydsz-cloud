@@ -236,8 +236,7 @@ public class LiteRuleAutoConfiguration {
     }
 
     log.info(
-        "[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, "
-            + "metrics={}, canary={}, model={}, slowRuleThreshold={}ms）",
+        "[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, model={}, slowRuleThreshold={}ms）",
         properties.isStatsEnabled(),
         properties.isTraceEnabled(),
         properties.getRuleTimeoutMs(),
@@ -334,8 +333,7 @@ public class LiteRuleAutoConfiguration {
           new RuleTimeoutExecutor(
               properties.getRuleTimeoutMs(), createFallbackTimeoutExecutor(poolSize));
       log.warn(
-          "[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={}, "
-              + "executor=fallback: common-thread bean 'ruleTimeoutExecutor' 未配置)",
+          "[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={}, executor=fallback: common-thread bean 'ruleTimeoutExecutor' 未配置)",
           properties.getRuleTimeoutMs(),
           poolSize);
     }
@@ -1482,8 +1480,7 @@ public class LiteRuleAutoConfiguration {
       evaluator = new ParallelRuleEvaluator(cfg.getParallelPoolSize());
       // CHECKSTYLE.ON: RegexpSinglelineJava
       log.warn(
-          "[LiteRule-Performance] 规则并行评估器已初始化（poolSize={}, "
-              + "executor=fallback: common-thread bean 'ruleParallelExecutor' 未配置）",
+          "[LiteRule-Performance] 规则并行评估器已初始化（poolSize={}, executor=fallback: common-thread bean 'ruleParallelExecutor' 未配置）",
           cfg.getParallelPoolSize());
     }
     return evaluator;

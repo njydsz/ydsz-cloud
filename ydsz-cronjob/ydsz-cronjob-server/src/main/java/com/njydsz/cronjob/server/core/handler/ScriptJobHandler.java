@@ -267,8 +267,8 @@ public class ScriptJobHandler implements JobHandler {
       // 关闭 stdin，避免脚本因等待输入而阻塞
       try {
         process.getOutputStream().close();
-      } catch (IOException ignored) {
-        // 关闭失败不影响主流程
+      } catch (IOException e) {
+        log.debug("关闭进程 stdin 失败，不影响主流程", e);
       }
 
       // 异步读取 stdout/stderr
@@ -343,8 +343,8 @@ public class ScriptJobHandler implements JobHandler {
       // Shell 脚本需要可执行权限（非 Windows）
       try {
         tempFile.toFile().setExecutable(true);
-      } catch (Exception ignored) {
-        // Windows 等不支持 chmod 的环境忽略
+      } catch (Exception e) {
+        log.debug("当前环境不支持此操作，已跳过", e);
       }
     }
     return tempFile;

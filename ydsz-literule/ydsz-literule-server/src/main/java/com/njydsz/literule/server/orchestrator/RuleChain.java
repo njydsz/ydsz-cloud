@@ -417,8 +417,8 @@ public class RuleChain {
       if (future.isDone() && !future.isCompletedExceptionally()) {
         try {
           results.addAll(future.join());
-        } catch (Exception ignored) {
-          // 跳过异常结果
+        } catch (Exception e) {
+          log.debug("[LiteRule-Chain] 合并并行结果时异常，跳过", e);
         }
       }
     }

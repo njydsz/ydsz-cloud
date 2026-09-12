@@ -164,8 +164,8 @@ public class BpmnElementHelper {
         if (parsed != null) {
           map.putAll(parsed);
         }
-      } catch (Exception ignore) {
-        // ignore
+      } catch (Exception e) {
+        log.debug("[BpmnElementHelper] ext JSON 格式不匹配，跳过: nodeCode={}, ext={}", node.getNodeCode(), ext, e);
       }
     }
     return map;

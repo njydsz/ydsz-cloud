@@ -228,7 +228,7 @@ public class HttpJobHandler implements JobHandler {
             return true;
           }
         } catch (NumberFormatException e) {
-          // skip invalid code
+          log.warn("数值格式不匹配，使用默认值", e);
         }
       }
       return false;

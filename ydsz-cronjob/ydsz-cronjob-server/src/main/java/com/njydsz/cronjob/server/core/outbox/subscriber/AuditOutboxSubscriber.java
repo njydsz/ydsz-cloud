@@ -119,8 +119,7 @@ public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
     if (recorder == null || idGenerator == null) {
       // 未引入 ydsz-common-audit 或 SnowflakeIdGenerator 不可用：降级为日志记录，保留事件全貌
       log.info(
-          "[AuditSubscriber] 审计组件不可用，降级为日志记录: eventKey={} eventType={} topic={} payload={}"
-              + " recorderAvailable={} idGenAvailable={}",
+          "[AuditSubscriber] 审计组件不可用，降级为日志记录: eventKey={} eventType={} topic={} payload={} recorderAvailable={} idGenAvailable={}",
           event.getEventKey(),
           event.getEventType(),
           event.getTopic(),

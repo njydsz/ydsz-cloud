@@ -1,7 +1,6 @@
 package com.njydsz.common.seata.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.seata.spring.annotation.GlobalTransactionalInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;

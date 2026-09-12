@@ -219,7 +219,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
       try {
         return rs.getString(mappedColumn);
       } catch (SQLException e) {
-        // 列名不存在，继续尝试默认列名
+        log.debug("列不存在，使用默认列名");
       }
     }
     // 尝试默认列名
@@ -230,7 +230,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
           return value;
         }
       } catch (SQLException e) {
-        // 列不存在，继续下一个
+        log.debug("列不存在，继续下一个");
       }
     }
     return null;

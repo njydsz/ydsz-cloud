@@ -165,8 +165,8 @@ public class GroovyDockerSandboxExecutor {
         try {
           Files.deleteIfExists(scriptFile);
           Files.deleteIfExists(scriptFile.getParent());
-        } catch (Exception ignored) {
-          // 清理失败不影响主流程
+        } catch (Exception e) {
+          log.debug("资源清理失败，不影响主流程", e);
         }
       }
     }

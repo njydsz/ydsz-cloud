@@ -177,8 +177,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
             .divide(BigDecimal.valueOf(total), ERROR_RATE_SCALE, RoundingMode.HALF_UP);
     if (errorRate.compareTo(threshold) >= 0) {
       log.warn(
-          "[LiteRule-ABTest] A/B 检测到劣化，建议自动回滚: ruleCode={}, errorRate={}, threshold={}, "
-              + "窗口样本={}, 窗口={}分钟",
+          "[LiteRule-ABTest] A/B 检测到劣化，建议自动回滚: ruleCode={}, errorRate={}, threshold={}, 窗口样本={}, 窗口={}分钟",
           ruleCode, errorRate, threshold, total, windowMinutes);
       return true;
     }

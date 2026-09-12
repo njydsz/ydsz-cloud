@@ -216,8 +216,8 @@ public class ApiDeprecationManager {
     try {
       ZonedDateTime parsed = ZonedDateTime.parse(trimmed, RFC1123_FORMATTER);
       return parsed.format(RFC1123_FORMATTER);
-    } catch (DateTimeParseException ignored) {
-      // 继续尝试其他格式
+    } catch (DateTimeParseException e) {
+      log.debug("当前环境不支持此操作，已跳过", e);
     }
 
     // 尝试 ISO 8601（含时区）

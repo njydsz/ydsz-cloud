@@ -518,8 +518,8 @@ public class GlueJobHandler implements JobHandler {
       if (logger != null) {
         logger.info(format, args);
       }
-    } catch (Exception ignored) {
-      // 日志写入失败不影响主流程
+    } catch (Exception e) {
+      log.debug("日志写入失败不影响主流程", e);
     }
   }
 

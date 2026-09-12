@@ -103,8 +103,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
   @PostConstruct
   private void validateSecret() {
     if (internalSignSecret == null || internalSignSecret.isEmpty()) {
-      log.error("[AuthFilter] 内部头签名密钥未配置 (ydsz.gateway.internal-sign-secret)，"
-          + "下游服务将无法验证内部头签名，存在身份伪造风险");
+      log.error("[AuthFilter] 内部头签名密钥未配置 (ydsz.gateway.internal-sign-secret),下游服务将无法验证内部头签名，存在身份伪造风险");
       return;
     }
     if (internalSignSecret.length() < MIN_INTERNAL_SECRET_LENGTH) {

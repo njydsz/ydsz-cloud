@@ -90,8 +90,7 @@ public class RuleStressTestService {
 
     StressTestResult result = runInternal(ruleCode, factsList, safeThreads, safeIterations);
     log.info(
-        "[LiteRule-Benchmark] 压测完成: ruleCode={}, threads={}, iterations={}, qps={}, "
-            + "p50={}ms, p95={}ms, p99={}ms, errorRate={}",
+        "[LiteRule-Benchmark] 压测完成: ruleCode={}, threads={}, iterations={}, qps={}, p50={}ms, p95={}ms, p99={}ms, errorRate={}",
         ruleCode, safeThreads, safeIterations,
         result.getQps(), result.getP50Ms(), result.getP95Ms(), result.getP99Ms(),
         result.getErrorRate());

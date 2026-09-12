@@ -395,8 +395,8 @@ public class HealthDashboardController {
         double load = sunOs.getCpuLoad();
         return load >= 0 ? load * 100 : 0;
       }
-    } catch (Exception ignored) {
-      // 降级处理
+    } catch (Exception e) {
+      log.debug("当前环境不支持此操作，已跳过", e);
     }
     return 0;
   }

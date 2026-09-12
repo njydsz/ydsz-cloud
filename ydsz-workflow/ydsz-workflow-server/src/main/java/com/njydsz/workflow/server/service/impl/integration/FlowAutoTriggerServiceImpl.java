@@ -174,8 +174,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
         workflowFacade.startProcess(buildStartProcessDTO(trigger, instance, variables));
 
     log.info(
-        "[FlowAutoTrigger] 自动触发流程成功: sourceFlowCode={} sourceInstanceId={} "
-            + "targetFlowCode={} targetInstanceId={} triggerId={}",
+        "[FlowAutoTrigger] 自动触发流程成功: sourceFlowCode={} sourceInstanceId={} targetFlowCode={} targetInstanceId={} triggerId={}",
         instance.getFlowCode(),
         instance.getId(),
         trigger.getTargetFlowCode(),

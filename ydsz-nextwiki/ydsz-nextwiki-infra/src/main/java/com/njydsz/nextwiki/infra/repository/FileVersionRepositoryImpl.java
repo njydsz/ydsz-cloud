@@ -154,9 +154,7 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
       fileVersionMapper.deleteBatchIds(ids);
     }
 
-    log.info(
-        "[FileVersionRepositoryImpl] 已删除 {} 个超出版本上限的旧版本，"
-            + "fileNodeId={}, keepCount={}",
+    log.info("[FileVersionRepositoryImpl] 已删除 {} 个超出版本上限的旧版本，fileNodeId={}, keepCount={}",
         ids.size(),
         fileNodeId,
         keepCount);

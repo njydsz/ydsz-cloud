@@ -133,8 +133,7 @@ public class DefaultFlowVariableStrategy {
       // P1-3: 降级告警 — Aviator 不可用，回退到自研正则解析器（仅输出一次）
       if (!aviatorUnavailableLogged) {
         log.warn(
-            "[Flow][降级告警] Aviator 表达式引擎不可用，使用正则解析器降级求值。"
-                + "建议启用 ydsz-literule 模块以获得统一的 Aviator 表达式支持。");
+            "[Flow][降级告警] Aviator 表达式引擎不可用，使用正则解析器降级求值。建议启用 ydsz-literule 模块以获得统一的 Aviator 表达式支持。");
         aviatorUnavailableLogged = true;
       }
     }
