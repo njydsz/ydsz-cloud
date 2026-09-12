@@ -10,11 +10,14 @@ import org.apache.ibatis.annotations.Param;
 import com.njydsz.workflow.domain.entity.FlowAuditLog;
 
 /**
- * 流程审计日志 Mapper
+ * 流程审计日志 Mapper（工作流域内审计）
  *
  * <p>对应数据表 <code>ydsz_flow_audit_log</code>，记录审批全操作轨迹。
  *
- * <p>审计日志是「不可变」的事实表（仅插入不更新/删除），用于安全审计/合规追溯/异常排查。
+ * <p>审计日志是「不可变」的事实表（仅插入不更新/删除），用于域内合规追溯/异常排查。
+ *
+ * <p><b>域内职责说明：</b>本 Mapper 操作的是工作流领域内部的事件溯源记录（节点流转追溯），
+ * 与横切通用操作审计（{@code ydsz-common-audit}）是两套独立体系，不可互相替代。
  *
  * <p><b>主要索引：</b>
  *

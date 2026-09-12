@@ -7,10 +7,14 @@ import java.util.Optional;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 
 /**
- * 审计日志仓储接口（domain 层契约）。
+ * 审计日志仓储接口（domain 层契约，工作流域内审计）。
  *
  * <p>定义审计日志（ydsz_flow_audit_log）的持久化抽象，隔离领域模型与具体数据访问技术实现。
  * 应用层 Service 通过此接口操作审计日志聚合，不直接依赖 MyBatis Mapper。
+ *
+ * <p><b>域内职责说明：</b>本接口属于工作流领域内部的事件溯源记录（节点流转追溯），
+ * 与横切通用操作审计（{@code ydsz-common-audit} 的 {@code AuditRecorder}）是两套独立体系，
+ * 不可互相替代，详见 {@link com.njydsz.workflow.domain.entity.FlowAuditLog}。
  *
  * <p><b>设计要点：</b>
  *

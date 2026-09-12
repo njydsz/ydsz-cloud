@@ -16,6 +16,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+// StringRedisTemplate 仅透传给 SemanticLlmCache 构造（后者需要 ZSetOperations.popMin 无法由 RedisCollectionOps 替代）
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 

@@ -4,10 +4,10 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 import com.njydsz.workflow.domain.event.DomainEventPublisher;
 import com.njydsz.workflow.domain.event.FlowMessageEvent;
 import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
@@ -42,7 +42,8 @@ public class MessageEventServiceImpl implements MessageEventService {
 
   private final DomainEventPublisher domainEventPublisher;
 
-  private final RedisTemplate<String, String> redisTemplate;
+  /** Redis Pub/Sub 操作组件——替代直接注入 RedisTemplate，符合 ydzs-common-redis 封装规范 */
+  private final RedisPubSubOps pubSubOps;
 
   /** {@inheritDoc} */
   @Override
@@ -64,7 +65,7 @@ public class MessageEventServiceImpl implements MessageEventService {
     try {
       String channel = CHANNEL_PREFIX + messageName;
       String message = buildMessageJson(messageName, correlationKeys);
-      redisTemplate.convertAndSend(channel, message);
+      pubSubOps.publish(channel, message);
       log.info("[Flow-MessageEvent] Redis广播完成: channel={} triggered={}", channel, triggered);
     } catch (Exception e) {
       log.warn("[Flow-MessageEvent] Redis广播失败(不影响核心流程): err={}", e.getMessage());

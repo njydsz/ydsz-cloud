@@ -596,8 +596,8 @@ public class RuleAuditLogService {
     }
 
     // 从 content 解析 source 和 changeDesc
-    if (log.getContent() != null && !log.getContent().isEmpty()) {
-      parseContent(log.getContent(), entry);
+    if (auditLog.getContent() != null && !auditLog.getContent().isEmpty()) {
+      parseContent(auditLog.getContent(), entry);
     }
 
     return entry;

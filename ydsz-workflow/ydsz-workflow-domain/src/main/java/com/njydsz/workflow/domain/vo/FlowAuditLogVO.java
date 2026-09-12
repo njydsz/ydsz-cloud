@@ -7,7 +7,9 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * FlowAuditLog 视图对象。
+ * FlowAuditLog 视图对象（工作流域内审计，节点流转追溯）。
+ *
+ * <p>与横切通用操作审计（{@code ydsz-common-audit}）为两套独立体系。
  *
  * @author ydsz-team
  * @since 26.09.01

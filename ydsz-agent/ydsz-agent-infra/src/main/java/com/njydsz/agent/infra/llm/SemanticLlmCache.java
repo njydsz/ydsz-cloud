@@ -44,6 +44,15 @@ import com.njydsz.common.util.security.DigestUtils;
  *
  * <p><b>线程安全</b>：YdszCache 与 {@link StringRedisTemplate} 均为线程安全实现。
  *
+ * <p><b>关于直接注入 {@link StringRedisTemplate} 的说明</b>：本类的 LRU 淘汰方法（{@link
+ * #evictIfOverCapacity}）
+ * 依赖 Spring Data Redis 的 {@code ZSetOperations.popMin} 实现原子性的「取出并删除最低 score 成员」，
+ * 该操作在 ydzs-common-redis 的 {@code RedisCollectionOps} 中暂无对应封装
+ * （仅提供 {@code zRemoveRange} 按排名删除，无法原子返回被删成员）。
+ * 若强行替换为 {@code zRange} + {@code zRem} 两步非原子操作，则在并发写入时可能出现「已取出的成员被其他线程修改」的竞争问题，
+ * 导致误删或漏删。因此保留 {@link StringRedisTemplate} 注入，key 命名已符合 {@link
+ * com.njydsz.common.redis.config.RedisKeyNamingConvention} 规范。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

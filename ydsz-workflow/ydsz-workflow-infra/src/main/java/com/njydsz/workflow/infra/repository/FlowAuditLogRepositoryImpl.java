@@ -15,7 +15,7 @@ import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 
 /**
- * 审计日志仓储实现（Infra 层）。
+ * 审计日志仓储实现（Infra 层，工作流域内审计）。
  *
  * <p>实现领域层定义的 {@link FlowAuditLogRepository} 接口，封装 FlowAuditLogMapper 数据访问细节。
  *
