@@ -21,7 +21,6 @@ import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.api.client.NotificationClient;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.notify.helper.NotifyHelper;
@@ -32,6 +31,7 @@ import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.server.core.AlertSendException;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
+import com.njydsz.message.api.client.NotificationClient;
 
 /**
  * 告警派发器（P5 告警 + 监控）。
