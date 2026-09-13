@@ -185,7 +185,7 @@ public class HtmlTemplateRegistry {
     private String subject;
     private String htmlContent;
     private String textContent;
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     public HtmlEmailTemplate() {}
 
@@ -228,11 +228,11 @@ public class HtmlTemplateRegistry {
     }
 
     public boolean isEnabled() {
-      return enabled;
+      return isEnabled;
     }
 
-    public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+    public void setEnabled(boolean isEnabled) {
+      this.isEnabled = isEnabled;
     }
   }
 }

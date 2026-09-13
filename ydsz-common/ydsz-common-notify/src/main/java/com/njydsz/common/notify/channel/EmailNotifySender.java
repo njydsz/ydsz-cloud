@@ -280,8 +280,8 @@ public class EmailNotifySender implements NotifyChannelStrategy {
       validateAttachmentSize(message);
       String subject = buildSubject(message.getSubject());
       boolean isHtml =
-          message.getHtml() != null
-              ? message.getHtml()
+          message.getIsHtml() != null
+              ? message.getIsHtml()
               : (emailConfig().isHtmlMode() && isHtmlContent(message.getContent()));
 
       // P0-3：HTML 内容 XSS 清洗

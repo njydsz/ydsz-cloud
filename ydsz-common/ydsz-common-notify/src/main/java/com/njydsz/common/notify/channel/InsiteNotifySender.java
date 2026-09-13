@@ -204,6 +204,6 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
     private long timestamp;
 
     /** 是否已读 */
-    private boolean read;
+    private boolean isRead;
   }
 }

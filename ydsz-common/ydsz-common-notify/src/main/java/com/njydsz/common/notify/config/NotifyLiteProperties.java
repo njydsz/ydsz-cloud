@@ -35,7 +35,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class NotifyLiteProperties {
 
   /** 是否启用通知模块 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 邮件渠道配置 */
   private EmailConfig email = new EmailConfig();
@@ -54,7 +54,7 @@ public class NotifyLiteProperties {
   public static class EmailConfig {
 
     /** 是否启用邮件渠道 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** SMTP 主机地址 */
     private String smtpHost;
@@ -72,13 +72,13 @@ public class NotifyLiteProperties {
     private String password;
 
     /** 是否需要认证 */
-    private boolean auth = true;
+    private boolean isAuth = true;
 
     /** 是否启用 STARTTLS */
-    private boolean starttls;
+    private boolean isStarttls;
 
     /** 默认是否以 HTML 模式发送 */
-    private boolean htmlMode = true;
+    private boolean isHtmlMode = true;
 
     /** 默认邮件主题前缀 */
     private String defaultSubjectPrefix = "";
@@ -95,7 +95,7 @@ public class NotifyLiteProperties {
   public static class WeComConfig {
 
     /** 是否启用企业微信渠道 */
-    private boolean enabled;
+    private boolean isEnabled;
 
     /** 企业ID */
     private String corpId;
@@ -115,7 +115,7 @@ public class NotifyLiteProperties {
   public static class DingTalkConfig {
 
     /** 是否启用钉钉渠道 */
-    private boolean enabled;
+    private boolean isEnabled;
 
     /** 应用 Key */
     private String appKey;
@@ -135,7 +135,7 @@ public class NotifyLiteProperties {
   public static class FeishuConfig {
 
     /** 是否启用飞书渠道 */
-    private boolean enabled;
+    private boolean isEnabled;
 
     /** 应用 ID */
     private String appId;

@@ -45,7 +45,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
   private final NotifyRetryQueue primary;
   private final NotifyRetryQueue fallback;
   private final DeadLetterHandler deadLetterHandler;
-  private volatile boolean redisAvailable;
+  private volatile boolean isRedisAvailable;
   private volatile long lastProbeTime = 0;
 
   /**
@@ -75,10 +75,10 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
 
     if (redisTemplate != null) {
       this.primary = new RedisNotifyRetryQueue(redisTemplate, mr, bs, redisKeyPrefix);
-      this.redisAvailable = testRedisConnection(redisTemplate);
+      this.isRedisAvailable = testRedisConnection(redisTemplate);
     } else {
       this.primary = fallback;
-      this.redisAvailable = false;
+      this.isRedisAvailable = false;
       LOG.info("[PersistentNotifyRetryQueue] Redis 不可用，使用内存队列（降级）");
     }
   }
@@ -106,7 +106,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
    * <p>P2-7: 优化为周期性探测（每 30 秒），避免每次操作都发起 Redis 往返。
    */
   private NotifyRetryQueue delegate() {
-    if (redisAvailable) {
+    if (isRedisAvailable) {
       long now = System.currentTimeMillis();
       if (now - lastProbeTime > PROBE_INTERVAL_MS) {
         lastProbeTime = now;
@@ -114,7 +114,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
           primary.getQueueSize();
         } catch (Exception e) {
           LOG.warn("[PersistentNotifyRetryQueue] Redis 探测失败，降级到内存队列, error={}", e.getMessage());
-          redisAvailable = false;
+          isRedisAvailable = false;
           return fallback;
         }
       }
@@ -180,7 +180,7 @@ public class PersistentNotifyRetryQueue implements NotifyRetryQueue {
    * @return {@code true} 表示 Redis 可用
    */
   public boolean isRedisAvailable() {
-    return redisAvailable;
+    return isRedisAvailable;
   }
 
   /**
