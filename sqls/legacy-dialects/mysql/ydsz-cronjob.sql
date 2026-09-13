@@ -9,7 +9,7 @@
 --   - 公共列按基类继承链累积：
 --       MpBaseIdEntity     -> id
 --       MpBaseAuditEntity  -> + created_by/created_at/updated_by/updated_at
---       MpSimpleEntity     -> + deleted/status/tenant_id
+--       MpSimpleEntity     -> + is_deleted/status/tenant_id
 --       MpVersionedEntity / MpBaseEntity -> + revision（乐观锁）
 --   - 禁止物理外键，逻辑外键加索引
 --   - 字符集：utf8mb4
@@ -431,7 +431,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
 
 -- ----------------------------------------------------------------------------
 -- 14. 任务执行日志
---     继承 MpBaseIdEntity，deleted/created_at/updated_at 由实体自身声明
+--     继承 MpBaseIdEntity，is_deleted/created_at/updated_at 由实体自身声明
 -- ----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log (

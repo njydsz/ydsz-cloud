@@ -10,7 +10,7 @@
 -- 说明：
 --   1. 表名统一前缀 ydsz_flow_。
 --   2. 继承 MpBaseEntity<String> 的实体含全量公共列
---      （tenant_id / status / deleted / revision / created_by / created_at /
+--      （tenant_id / status / is_deleted / revision / created_by / created_at /
 --       updated_by / updated_at）。
 --   3. 历史归档/审计类实体（FlowHisTask / FlowHisInstance / FlowAuditLog）
 --      同样继承 MpBaseEntity<String>，含全量公共列。

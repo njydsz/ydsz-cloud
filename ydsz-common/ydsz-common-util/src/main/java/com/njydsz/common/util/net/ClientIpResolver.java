@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.util.ip.CidrUtils;
 
 /**
@@ -88,7 +87,7 @@ public final class ClientIpResolver {
     }
     return resolveFromHeaders(
         request.getRemoteAddr(),
-        request.getHeader(HeaderConstants.X_FORWARDED_FOR),
+        request.getHeader("X-Forwarded-For"),
         request.getHeader("X-Real-IP"));
   }
 
