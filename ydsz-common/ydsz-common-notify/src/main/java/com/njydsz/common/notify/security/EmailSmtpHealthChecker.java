@@ -52,7 +52,7 @@ public class EmailSmtpHealthChecker {
   @Scheduled(fixedDelay = 60_000, initialDelay = 5_000)
   public void healthCheck() {
     NotifyProperties.EmailConfig email = properties.getEmail();
-    if (email == null || !email.getIsEnabled() || !StringUtils.hasText(email.getSmtpHost())) {
+    if (email == null || !email.isEnabled() || !StringUtils.hasText(email.getSmtpHost())) {
       return;
     }
     try {
@@ -152,16 +152,16 @@ public class EmailSmtpHealthChecker {
     sender.setPort(email.getSmtpPort());
     sender.setUsername(email.getFromMail());
     sender.setPassword(email.getPassword());
-    sender.setProtocol(email.getSsl().getIsEnabled() ? "smtps" : "smtp");
+    sender.setProtocol(email.getSsl().isEnabled() ? "smtps" : "smtp");
     Properties props = sender.getJavaMailProperties();
-    props.put("mail.smtp.auth", String.valueOf(email.getIsAuth()));
+    props.put("mail.smtp.auth", String.valueOf(email.isAuth()));
     props.put("mail.smtp.connectiontimeout", "5000");
     props.put("mail.smtp.timeout", "5000");
-    if (email.getSsl().getIsEnabled()) {
+    if (email.getSsl().isEnabled()) {
       props.put("mail.smtp.ssl.enable", "true");
       props.put("mail.smtp.ssl.protocols", email.getSsl().getProtocols());
     }
-    if (email.getIsStarttls()) {
+    if (email.isStarttls()) {
       props.put("mail.smtp.starttls.enable", "true");
     }
     return sender;

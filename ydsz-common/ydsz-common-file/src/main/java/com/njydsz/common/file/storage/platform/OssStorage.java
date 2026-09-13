@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage.platform;
+﻿package com.njydsz.common.file.storage.platform;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -442,7 +442,7 @@ public class OssStorage extends AbstractFileStorage {
       }
       ListObjectsResult result = new ListObjectsResult();
       result.setObjects(objects);
-      result.setIsHasMore(hasMore);
+      result.setHasMore(hasMore);
       result.setNextCursor(nextCursor);
       result.setObjectCount(objects.size());
       return result;

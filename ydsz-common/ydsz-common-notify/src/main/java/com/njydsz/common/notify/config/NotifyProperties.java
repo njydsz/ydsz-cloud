@@ -59,7 +59,7 @@ public class NotifyProperties {
 
   // ==================== Getter / Setter ====================
 
-  public boolean getIsEnabled() {
+  public boolean isEnabled() {
     return isEnabled;
   }
 
@@ -273,7 +273,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -345,7 +345,7 @@ public class NotifyProperties {
       this.writeTimeout = writeTimeout;
     }
 
-    public boolean getIsAuth() {
+    public boolean isAuth() {
       return isAuth;
     }
 
@@ -353,7 +353,7 @@ public class NotifyProperties {
       this.isAuth = auth;
     }
 
-    public boolean getIsStarttls() {
+    public boolean isStarttls() {
       return isStarttls;
     }
 
@@ -361,7 +361,7 @@ public class NotifyProperties {
       this.isStarttls = starttls;
     }
 
-    public boolean getIsDebug() {
+    public boolean isDebug() {
       return isDebug;
     }
 
@@ -377,7 +377,7 @@ public class NotifyProperties {
       this.encoding = encoding;
     }
 
-    public boolean getIsHtmlMode() {
+    public boolean isHtmlMode() {
       return isHtmlMode;
     }
 
@@ -485,7 +485,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -501,7 +501,7 @@ public class NotifyProperties {
       this.protocols = protocols;
     }
 
-    public boolean getIsCheckServerIdentity() {
+    public boolean isCheckServerIdentity() {
       return isCheckServerIdentity;
     }
 
@@ -539,7 +539,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsSanitizeHtml() {
+    public boolean isSanitizeHtml() {
       return isSanitizeHtml;
     }
 
@@ -574,7 +574,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -607,7 +607,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -685,7 +685,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -791,7 +791,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -839,7 +839,7 @@ public class NotifyProperties {
       this.defaultUser = defaultUser;
     }
 
-    public boolean getIsEnableMessageCheck() {
+    public boolean isEnableMessageCheck() {
       return isEnableMessageCheck;
     }
 
@@ -885,7 +885,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -917,7 +917,7 @@ public class NotifyProperties {
       this.agentId = agentId;
     }
 
-    public boolean getIsUseCustomRobot() {
+    public boolean isUseCustomRobot() {
       return isUseCustomRobot;
     }
 
@@ -968,7 +968,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -1039,7 +1039,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -1081,7 +1081,7 @@ public class NotifyProperties {
       return maxPerUser;
     }
 
-    public boolean getIsAllowReadMark() {
+    public boolean isAllowReadMark() {
       return isAllowReadMark;
     }
 
@@ -1107,7 +1107,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -1154,7 +1154,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -1227,7 +1227,7 @@ public class NotifyProperties {
       this.batchSize = batchSize;
     }
 
-    public boolean getIsPersistent() {
+    public boolean isPersistent() {
       return isPersistent;
     }
 
@@ -1270,7 +1270,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
@@ -1372,7 +1372,7 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 

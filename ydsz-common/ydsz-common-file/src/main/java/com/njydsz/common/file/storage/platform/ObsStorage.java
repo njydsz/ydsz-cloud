@@ -1,4 +1,4 @@
-package com.njydsz.common.file.storage.platform;
+﻿package com.njydsz.common.file.storage.platform;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -513,7 +513,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
 
       ListObjectsResult result = new ListObjectsResult();
       result.setObjects(objects);
-      result.setIsHasMore(hasMore);
+      result.setHasMore(hasMore);
       result.setNextCursor(nextCursor);
       result.setObjectCount(objects.size());
       return result;

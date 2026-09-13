@@ -1,4 +1,4 @@
-package com.njydsz.common.file.domain;
+﻿package com.njydsz.common.file.domain;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class ListObjectsResult {
   private String nextCursor;
 
   /** 是否还有更多对象 */
-  private boolean isHasMore;
+  private boolean hasMore;
 
   /** 本次返回的对象数量 */
   private int objectCount;
@@ -40,7 +40,7 @@ public class ListObjectsResult {
     ListObjectsResult result = new ListObjectsResult();
     result.setObjects(List.of());
     result.setNextCursor(null);
-    result.setIsHasMore(false);
+    result.setHasMore(false);
     result.setObjectCount(0);
     return result;
   }

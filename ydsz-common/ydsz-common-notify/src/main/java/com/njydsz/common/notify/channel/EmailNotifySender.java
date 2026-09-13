@@ -160,7 +160,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     boolean success = false;
     try {
       String subject = buildSubject(title);
-      boolean isHtml = emailConfig().getIsHtmlMode() && isHtmlContent(content);
+      boolean isHtml = emailConfig().isHtmlMode() && isHtmlContent(content);
 
       // P0-3：HTML 内容 XSS 清洗
       String safeContent = sanitizeIfNeeded(content, isHtml);
@@ -247,7 +247,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     return mailSender != null
         && notifyProperties != null
         && notifyProperties.getEmail() != null
-        && emailConfig().getIsEnabled()
+        && emailConfig().isEnabled()
         && StringUtils.hasText(emailConfig().getSmtpHost())
         && StringUtils.hasText(emailConfig().getFromMail());
   }
@@ -282,7 +282,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
       boolean isHtml =
           message.getIsHtml() != null
               ? message.getIsHtml()
-              : (emailConfig().getIsHtmlMode() && isHtmlContent(message.getContent()));
+              : (emailConfig().isHtmlMode() && isHtmlContent(message.getContent()));
 
       // P0-3：HTML 内容 XSS 清洗
       String safeContent = sanitizeIfNeeded(message.getContent(), isHtml);
