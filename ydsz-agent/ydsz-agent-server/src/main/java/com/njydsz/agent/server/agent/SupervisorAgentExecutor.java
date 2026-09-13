@@ -17,6 +17,7 @@ import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
+import com.njydsz.agent.domain.middleware.MiddlewareChain;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -109,7 +110,8 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
-      AgentFactory agentFactory) {
+      AgentFactory agentFactory,
+      MiddlewareChain middlewareChain) {
     super(
         llmClient,
         memory,
@@ -118,7 +120,8 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
         agentMetrics,
         costAnalysisService,
         guardrailService,
-        promptTemplateProvider);
+        promptTemplateProvider,
+        middlewareChain);
     this.agentFactory = agentFactory;
   }
 
