@@ -8,19 +8,19 @@
     <result column="column_name"         property="columnName"/>
     <result column="data_type"           property="dataType"/>
     <result column="column_size"         property="columnSize"/>
-    <result column="nullable"            property="isNullable"/>
+    <result column="is_nullable"        property="isNullable"/>
     <result column="is_pk"               property="isPk"/>
     <result column="comment"             property="comment"/>
     <result column="override_java_type"  property="overrideJavaType"/>
     <result column="override_field_name" property="overrideFieldName"/>
-    <result column="skip_dto"            property="isDtoSkipped"/>
-    <result column="skip_vo"             property="isVoSkipped"/>
-    <result column="skip_query"          property="isQuerySkipped"/>
+    <result column="dto_skipped"        property="isDtoSkipped"/>
+    <result column="vo_skipped"         property="isVoSkipped"/>
+    <result column="query_skipped"      property="isQuerySkipped"/>
     <result column="extra_config"        property="extraConfig"/>
   </resultMap>
 
   <select id="selectByTableMetaIdOrderByIdAsc" resultMap="BaseResultMap">
-    SELECT id, table_meta_id, column_name, data_type, column_size, nullable, is_pk, comment, override_java_type, override_field_name, skip_dto, skip_vo, skip_query, extra_config
+    SELECT id, table_meta_id, column_name, data_type, column_size, is_nullable, is_pk, comment, override_java_type, override_field_name, dto_skipped, vo_skipped, query_skipped, extra_config
     FROM ydsz_gen_column_meta
     WHERE table_meta_id = #{tableMetaId}
     ORDER BY id ASC

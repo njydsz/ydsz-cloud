@@ -38,7 +38,7 @@ public class ObjectMetadata {
   private LocalDateTime lastModified;
 
   /** 是否为目录（目录以 / 结尾） */
-  private Boolean directory;
+  private Boolean isDirectory;
 
   /** 存储类别（标准存储/低频存储/归档存储等） */
   private String storageClass;

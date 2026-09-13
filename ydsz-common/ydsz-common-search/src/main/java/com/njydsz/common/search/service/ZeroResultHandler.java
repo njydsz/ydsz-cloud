@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
+import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.util.message.MessageUtils;
@@ -108,7 +109,7 @@ public class ZeroResultHandler {
    * @return 建议描述，无过滤条件时返回 null
    */
   private String buildFilterRemovalSuggestion(SearchRequest request) {
-    List<com.njydsz.common.search.api.SearchFilter> filters = request.getFilters();
+    List<SearchFilter> filters = request.getFilters();
     if (filters == null || filters.isEmpty()) {
       return null;
     }

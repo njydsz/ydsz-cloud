@@ -1,6 +1,7 @@
 package com.njydsz.generator.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -47,10 +48,13 @@ public class GenColumnMeta extends MpBaseIdEntity<Long> {
   /** 覆盖字段名。 */
   private String overrideFieldName;
   /** DTO 跳过标记。 */
+  @TableField("dto_skipped")
   private Boolean isDtoSkipped;
   /** VO 跳过标记。 */
+  @TableField("vo_skipped")
   private Boolean isVoSkipped;
   /** Query 跳过标记。 */
+  @TableField("query_skipped")
   private Boolean isQuerySkipped;
   /** 扩展配置 JSON。 */
   private String extraConfig;

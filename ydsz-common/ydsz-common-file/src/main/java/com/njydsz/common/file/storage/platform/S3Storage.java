@@ -563,7 +563,7 @@ public class S3Storage extends AbstractFileStorage {
           response.lastModified() != null
               ? LocalDateTime.ofInstant(response.lastModified(), ZoneId.systemDefault())
               : null);
-      metadata.setDirectory(false);
+      metadata.setIsDirectory(false);
       return metadata;
     } catch (Exception e) {
       log.error(
@@ -602,7 +602,7 @@ public class S3Storage extends AbstractFileStorage {
                   ? LocalDateTime.ofInstant(s3Object.lastModified(), ZoneId.systemDefault())
                   : null);
           om.setETag(s3Object.eTag());
-          om.setDirectory(false);
+          om.setIsDirectory(false);
           objects.add(om);
         }
       }

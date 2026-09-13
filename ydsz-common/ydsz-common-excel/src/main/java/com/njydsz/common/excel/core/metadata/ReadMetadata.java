@@ -22,7 +22,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  *   <li>目标Sheet - sheetName、sheetIndex(二选一)
  *   <li>映射配置 - clazz、headRowNumber
  *   <li>格式配置 - dateFormat、numberFormat
- *   <li>行为配置 - readCacheSize、automaticTrim
+ *   <li>行为配置 - readCacheSize、isAutomaticTrim
  * </ul>
  *
  * @see ExcelReader
@@ -60,7 +60,7 @@ public class ReadMetadata {
   private Integer readCacheSize;
 
   /** 是否使用科学计数法 */
-  private Boolean useScientificNotation;
+  private Boolean isUseScientificNotation;
 
   /** 日期格式 */
   private String dateFormat;
@@ -72,7 +72,7 @@ public class ReadMetadata {
   private String password;
 
   /** 强制使用输入流模式 */
-  private Boolean mandatoryUseInputStream;
+  private Boolean isMandatoryUseInputStream;
 
   /** 表头属性列表 */
   private List<ReadHeaderProperty> headList;
@@ -87,10 +87,10 @@ public class ReadMetadata {
   private Set<String> includeColumnFiledNames;
 
   /** 是否跳过空行 */
-  private Boolean skipEmptyRows;
+  private Boolean isSkipEmptyRows;
 
   /** 是否校验列数 */
-  private Boolean checkColumnCount;
+  private Boolean isCheckColumnCount;
 
   /** 期望的列数 */
   private Integer expectedColumnCount;
@@ -107,16 +107,16 @@ public class ReadMetadata {
    *   <li>sheetIndex = 0
    *   <li>headRowNumber = 1
    *   <li>readCacheSize = 1024
-   *   <li>useScientificNotation = false
-   *   <li>mandatoryUseInputStream = false
+   *   <li>isUseScientificNotation = false
+   *   <li>isMandatoryUseInputStream = false
    * </ul>
    */
   public ReadMetadata() {
     this.sheetIndex = 0;
     this.headRowNumber = 1;
     this.readCacheSize = 1024;
-    this.useScientificNotation = false;
-    this.mandatoryUseInputStream = false;
+    this.isUseScientificNotation = false;
+    this.isMandatoryUseInputStream = false;
     this.headList = new ArrayList<>(16);
     this.currentReadRow = new AtomicInteger(0);
   }
@@ -193,12 +193,12 @@ public class ReadMetadata {
     this.readCacheSize = readCacheSize;
   }
 
-  public Boolean getUseScientificNotation() {
-    return useScientificNotation;
+  public Boolean getIsUseScientificNotation() {
+    return isUseScientificNotation;
   }
 
-  public void setUseScientificNotation(Boolean useScientificNotation) {
-    this.useScientificNotation = useScientificNotation;
+  public void setIsUseScientificNotation(Boolean isUseScientificNotation) {
+    this.isUseScientificNotation = isUseScientificNotation;
   }
 
   public String getDateFormat() {
@@ -225,12 +225,12 @@ public class ReadMetadata {
     this.password = password;
   }
 
-  public Boolean getMandatoryUseInputStream() {
-    return mandatoryUseInputStream;
+  public Boolean getIsMandatoryUseInputStream() {
+    return isMandatoryUseInputStream;
   }
 
-  public void setMandatoryUseInputStream(Boolean mandatoryUseInputStream) {
-    this.mandatoryUseInputStream = mandatoryUseInputStream;
+  public void setIsMandatoryUseInputStream(Boolean isMandatoryUseInputStream) {
+    this.isMandatoryUseInputStream = isMandatoryUseInputStream;
   }
 
   public List<ReadHeaderProperty> getHeadList() {
@@ -279,20 +279,20 @@ public class ReadMetadata {
     this.includeColumnFiledNames = includeColumnFiledNames;
   }
 
-  public Boolean getSkipEmptyRows() {
-    return skipEmptyRows;
+  public Boolean getIsSkipEmptyRows() {
+    return isSkipEmptyRows;
   }
 
-  public void setSkipEmptyRows(Boolean skipEmptyRows) {
-    this.skipEmptyRows = skipEmptyRows;
+  public void setIsSkipEmptyRows(Boolean isSkipEmptyRows) {
+    this.isSkipEmptyRows = isSkipEmptyRows;
   }
 
-  public Boolean getCheckColumnCount() {
-    return checkColumnCount;
+  public Boolean getIsCheckColumnCount() {
+    return isCheckColumnCount;
   }
 
-  public void setCheckColumnCount(Boolean checkColumnCount) {
-    this.checkColumnCount = checkColumnCount;
+  public void setIsCheckColumnCount(Boolean isCheckColumnCount) {
+    this.isCheckColumnCount = isCheckColumnCount;
   }
 
   public Integer getExpectedColumnCount() {

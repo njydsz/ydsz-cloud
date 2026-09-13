@@ -23,7 +23,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  *   <li>Sheet配置 - sheetName、sheetNo、headRowNumber
  *   <li>映射配置 - clazz、headList
  *   <li>格式配置 - dateFormat、numberFormat
- *   <li>保护配置 - password、passwordProtected
+ *   <li>保护配置 - password、isPasswordProtected
  * </ul>
  *
  * @see ExcelWriter
@@ -67,7 +67,7 @@ public class WriteMetadata {
   private Integer dataRowNumber;
 
   /** 是否使用科学计数法 */
-  private Boolean useScientificNotation;
+  private Boolean isUseScientificNotation;
 
   /** 日期格式 */
   private String dateFormat;
@@ -79,13 +79,13 @@ public class WriteMetadata {
   private String password;
 
   /** 是否锁定(预留) */
-  private Boolean locked;
+  private Boolean isLocked;
 
   /** 表头属性列表 */
   private List<WriteHeaderProperty> headList;
 
   /** 自动去除字符串首尾空格 */
-  private Boolean automaticTrim;
+  private Boolean isAutomaticTrim;
 
   /** 最大列字符长度 */
   private Integer maxChanLength;
@@ -94,10 +94,10 @@ public class WriteMetadata {
   private String excelType;
 
   /** 是否写入隐藏Sheet(预留) */
-  private Boolean writeHiddenSheet;
+  private Boolean isWriteHiddenSheet;
 
   /** 是否密码保护 */
-  private Boolean passwordProtected;
+  private Boolean isPasswordProtected;
 
   /** 要排除的字段名集合 */
   private Set<String> excludeColumnFiledNames;
@@ -115,7 +115,7 @@ public class WriteMetadata {
   private Integer freezePaneCol;
 
   /** 是否自动设置列宽 */
-  private Boolean autoColumnWidth;
+  private Boolean isAutoColumnWidth;
 
   /** 合并单元格区域列表: [startRow, endRow, startCol, endCol] */
   private List<int[]> mergedRegions;
@@ -129,7 +129,7 @@ public class WriteMetadata {
    *   <li>sheetName = "sheet1"
    *   <li>sheetNo = 0
    *   <li>headRowNumber = 1
-   *   <li>automaticTrim = true
+   *   <li>isAutomaticTrim = true
    *   <li>excelType = "xlsx"
    * </ul>
    */
@@ -138,14 +138,14 @@ public class WriteMetadata {
     this.sheetNo = 0;
     this.headRowNumber = DEFAULT_HEAD_ROW_NUMBER;
     this.dataRowNumber = 0;
-    this.useScientificNotation = false;
-    this.locked = false;
+    this.isUseScientificNotation = false;
+    this.isLocked = false;
     this.headList = new ArrayList<>(16);
-    this.automaticTrim = true;
+    this.isAutomaticTrim = true;
     this.maxChanLength = 1024;
     this.excelType = "xlsx";
-    this.writeHiddenSheet = false;
-    this.passwordProtected = false;
+    this.isWriteHiddenSheet = false;
+    this.isPasswordProtected = false;
   }
 
   public ExcelConfig getExcelConfig() {
@@ -220,12 +220,12 @@ public class WriteMetadata {
     this.dataRowNumber = dataRowNumber;
   }
 
-  public Boolean getUseScientificNotation() {
-    return useScientificNotation;
+  public Boolean getIsUseScientificNotation() {
+    return isUseScientificNotation;
   }
 
-  public void setUseScientificNotation(Boolean useScientificNotation) {
-    this.useScientificNotation = useScientificNotation;
+  public void setIsUseScientificNotation(Boolean isUseScientificNotation) {
+    this.isUseScientificNotation = isUseScientificNotation;
   }
 
   public String getDateFormat() {
@@ -252,12 +252,12 @@ public class WriteMetadata {
     this.password = password;
   }
 
-  public Boolean getLocked() {
-    return locked;
+  public Boolean getIsLocked() {
+    return isLocked;
   }
 
-  public void setLocked(Boolean locked) {
-    this.locked = locked;
+  public void setIsLocked(Boolean isLocked) {
+    this.isLocked = isLocked;
   }
 
   public List<WriteHeaderProperty> getHeadList() {
@@ -268,12 +268,12 @@ public class WriteMetadata {
     this.headList = headList;
   }
 
-  public Boolean getAutomaticTrim() {
-    return automaticTrim;
+  public Boolean getIsAutomaticTrim() {
+    return isAutomaticTrim;
   }
 
-  public void setAutomaticTrim(Boolean automaticTrim) {
-    this.automaticTrim = automaticTrim;
+  public void setIsAutomaticTrim(Boolean isAutomaticTrim) {
+    this.isAutomaticTrim = isAutomaticTrim;
   }
 
   public Integer getMaxChanLength() {
@@ -292,20 +292,20 @@ public class WriteMetadata {
     this.excelType = excelType;
   }
 
-  public Boolean getWriteHiddenSheet() {
-    return writeHiddenSheet;
+  public Boolean getIsWriteHiddenSheet() {
+    return isWriteHiddenSheet;
   }
 
-  public void setWriteHiddenSheet(Boolean writeHiddenSheet) {
-    this.writeHiddenSheet = writeHiddenSheet;
+  public void setIsWriteHiddenSheet(Boolean isWriteHiddenSheet) {
+    this.isWriteHiddenSheet = isWriteHiddenSheet;
   }
 
-  public Boolean getPasswordProtected() {
-    return passwordProtected;
+  public Boolean getIsPasswordProtected() {
+    return isPasswordProtected;
   }
 
-  public void setPasswordProtected(Boolean passwordProtected) {
-    this.passwordProtected = passwordProtected;
+  public void setIsPasswordProtected(Boolean isPasswordProtected) {
+    this.isPasswordProtected = isPasswordProtected;
   }
 
   public Set<String> getExcludeColumnFiledNames() {
@@ -348,12 +348,12 @@ public class WriteMetadata {
     this.freezePaneCol = freezePaneCol;
   }
 
-  public Boolean getAutoColumnWidth() {
-    return autoColumnWidth;
+  public Boolean getIsAutoColumnWidth() {
+    return isAutoColumnWidth;
   }
 
-  public void setAutoColumnWidth(Boolean autoColumnWidth) {
-    this.autoColumnWidth = autoColumnWidth;
+  public void setIsAutoColumnWidth(Boolean isAutoColumnWidth) {
+    this.isAutoColumnWidth = isAutoColumnWidth;
   }
 
   public List<int[]> getMergedRegions() {
@@ -416,7 +416,7 @@ public class WriteMetadata {
     private String defaultValue;
 
     /** 是否需要处理器 */
-    private Boolean needHandler;
+    private Boolean isNeedHandler;
 
     /** 样式注解 */
     private ExcelStyle style;
@@ -524,12 +524,12 @@ public class WriteMetadata {
       this.defaultValue = defaultValue;
     }
 
-    public Boolean getNeedHandler() {
-      return needHandler;
+    public Boolean getIsNeedHandler() {
+      return isNeedHandler;
     }
 
-    public void setNeedHandler(Boolean needHandler) {
-      this.needHandler = needHandler;
+    public void setIsNeedHandler(Boolean isNeedHandler) {
+      this.isNeedHandler = isNeedHandler;
     }
 
     public ExcelStyle getStyle() {

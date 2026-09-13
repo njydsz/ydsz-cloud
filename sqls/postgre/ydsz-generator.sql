@@ -42,7 +42,7 @@ COMMENT ON COLUMN ydsz_gen_datasource.jdbc_url IS 'JDBC URL';
 COMMENT ON COLUMN ydsz_gen_datasource.username IS '数据库用户名';
 COMMENT ON COLUMN ydsz_gen_datasource.password IS '数据库密码（AES 加密存储）';
 COMMENT ON COLUMN ydsz_gen_datasource.dialect IS '数据库方言（POSTGRESQL/MYSQL/ORACLE）';
-COMMENT ON COLUMN ydsz_gen_datasource.default IS '是否为默认数据源（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_datasource.is_default IS '是否为默认数据源（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_datasource.description IS '数据源描述';
 COMMENT ON COLUMN ydsz_gen_datasource.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_gen_datasource.updated_at IS '更新时间';
@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history (
     file_count               INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(16)              NOT NULL DEFAULT 'RUNNING',
     triggered_by             VARCHAR(64)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     started_at               TIMESTAMP                NOT NULL,
     finished_at              TIMESTAMP                DEFAULT NULL,
     error_message            TEXT                     DEFAULT NULL,
@@ -152,6 +153,7 @@ COMMENT ON COLUMN ydsz_gen_history.started_at IS '开始时间';
 COMMENT ON COLUMN ydsz_gen_history.finished_at IS '完成时间';
 COMMENT ON COLUMN ydsz_gen_history.error_message IS '错误信息（失败时记录）';
 COMMENT ON COLUMN ydsz_gen_history.gen_params IS '生成参数 JSON 快照';
+COMMENT ON COLUMN ydsz_gen_history.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_gen_history_status ON ydsz_gen_history (status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_gen_history_started ON ydsz_gen_history (started_at);
@@ -168,6 +170,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history_file (
     original_backup_path     VARCHAR(512)             DEFAULT NULL,
     file_hash                CHAR(32)                 DEFAULT NULL,
     action                   VARCHAR(16)              NOT NULL DEFAULT 'CREATED',
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_gen_history_file PRIMARY KEY (id),
     CONSTRAINT fk_ydsz_gen_history_file_history FOREIGN KEY (history_id) REFERENCES ydsz_gen_history (id)
 );
@@ -179,6 +182,7 @@ COMMENT ON COLUMN ydsz_gen_history_file.file_path IS '生成文件路径';
 COMMENT ON COLUMN ydsz_gen_history_file.original_backup_path IS '原文件备份路径（用于回滚）';
 COMMENT ON COLUMN ydsz_gen_history_file.file_hash IS '文件内容 MD5 哈希';
 COMMENT ON COLUMN ydsz_gen_history_file.action IS '文件操作类型（CREATED/UPDATED/UNCHANGED）';
+COMMENT ON COLUMN ydsz_gen_history_file.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_gen_history_file_history ON ydsz_gen_history_file (history_id);
 
@@ -195,6 +199,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_table_meta (
     alias_name               VARCHAR(64)              DEFAULT NULL,
     module_name              VARCHAR(64)              DEFAULT NULL,
     cached_at                TIMESTAMP                NOT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_gen_table_meta PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_gen_table_meta_ds_table UNIQUE (datasource_id, table_name),
     CONSTRAINT fk_ydsz_gen_table_meta_datasource FOREIGN KEY (datasource_id) REFERENCES ydsz_gen_datasource (id)
@@ -208,6 +213,7 @@ COMMENT ON COLUMN ydsz_gen_table_meta.comment IS '表注释';
 COMMENT ON COLUMN ydsz_gen_table_meta.alias_name IS '用户自定义别名（用于类名生成）';
 COMMENT ON COLUMN ydsz_gen_table_meta.module_name IS '模块名称（用于包路径）';
 COMMENT ON COLUMN ydsz_gen_table_meta.cached_at IS '缓存时间';
+COMMENT ON COLUMN ydsz_gen_table_meta.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_gen_table_meta_datasource ON ydsz_gen_table_meta (datasource_id);
 
@@ -231,6 +237,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_column_meta (
     vo_skipped               SMALLINT                 NOT NULL DEFAULT 0,
     query_skipped            SMALLINT                 NOT NULL DEFAULT 0,
     extra_config             JSONB                    DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_gen_column_meta PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_gen_column_meta_table_column UNIQUE (table_meta_id, column_name),
     CONSTRAINT fk_ydsz_gen_column_meta_table FOREIGN KEY (table_meta_id) REFERENCES ydsz_gen_table_meta (id)
@@ -242,8 +249,8 @@ COMMENT ON COLUMN ydsz_gen_column_meta.table_meta_id IS '所属表元数据 ID';
 COMMENT ON COLUMN ydsz_gen_column_meta.column_name IS '物理列名';
 COMMENT ON COLUMN ydsz_gen_column_meta.data_type IS '物理数据类型';
 COMMENT ON COLUMN ydsz_gen_column_meta.column_size IS '字段长度';
-COMMENT ON COLUMN ydsz_gen_column_meta.nullable IS '是否可为空（0=否 1=是）';
-COMMENT ON COLUMN ydsz_gen_column_meta.pk IS '是否为主键（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_column_meta.is_nullable IS '是否可为空（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_column_meta.is_pk IS '是否为主键（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_column_meta.comment IS '字段注释';
 COMMENT ON COLUMN ydsz_gen_column_meta.override_java_type IS '人工覆盖 Java 类型（为空则使用自动映射）';
 COMMENT ON COLUMN ydsz_gen_column_meta.override_field_name IS '人工覆盖字段名（为空则使用自动命名）';
@@ -251,6 +258,7 @@ COMMENT ON COLUMN ydsz_gen_column_meta.dto_skipped IS '是否在 DTO 中跳过�
 COMMENT ON COLUMN ydsz_gen_column_meta.vo_skipped IS '是否在 VO 中跳过（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_column_meta.query_skipped IS '是否在 Query 中跳过（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_column_meta.extra_config IS '扩展配置 JSON（枚举值、校验规则等）';
+COMMENT ON COLUMN ydsz_gen_column_meta.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_gen_column_meta_table ON ydsz_gen_column_meta (table_meta_id);
 
@@ -259,13 +267,13 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_gen_column_meta_table ON ydsz_gen_column_met
 -- 8. 初始化数据（模板分组）
 -- ============================================================================
 
-INSERT INTO ydsz_gen_template_group (name, description, system, sort, active)
+INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, is_active)
 VALUES ('default', '标准 DDD 分层模板（entity/service/controller/repository...）', 1, 1, 1)
-ON CONFLICT (name) DO UPDATE SET system = system;
+ON CONFLICT (name) DO UPDATE SET is_system = is_system;
 
-INSERT INTO ydsz_gen_template_group (name, description, system, sort, active)
+INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, is_active)
 VALUES ('mybatis-plus', 'Mybatis-Plus 增强版模板（含 Wrapper/通用 Service）', 1, 2, 0)
-ON CONFLICT (name) DO UPDATE SET system = system;
+ON CONFLICT (name) DO UPDATE SET is_system = is_system;
 
 
 -- ============================================================================

@@ -450,7 +450,7 @@ public class MinioStorage extends AbstractFileStorage {
           stat.lastModified() != null
               ? LocalDateTime.ofInstant(stat.lastModified().toInstant(), ZoneId.systemDefault())
               : null);
-      metadata.setDirectory(false);
+      metadata.setIsDirectory(false);
       return metadata;
     } catch (Exception e) {
       log.error(
@@ -515,7 +515,7 @@ public class MinioStorage extends AbstractFileStorage {
                   ? LocalDateTime.ofInstant(item.lastModified().toInstant(), ZoneId.systemDefault())
                   : null);
           om.setETag(item.etag());
-          om.setDirectory(item.isDir());
+          om.setIsDirectory(item.isDir());
           objects.add(om);
           lastKey = item.objectName();
         } else {

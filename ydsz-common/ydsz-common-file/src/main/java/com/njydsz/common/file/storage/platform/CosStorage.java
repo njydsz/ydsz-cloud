@@ -446,7 +446,7 @@ public class CosStorage extends AbstractFileStorage {
               ? LocalDateTime.ofInstant(
                   cosMetadata.getLastModified().toInstant(), ZoneId.systemDefault())
               : null);
-      metadata.setDirectory(false);
+      metadata.setIsDirectory(false);
       return metadata;
     } catch (Exception e) {
       log.error(
@@ -487,7 +487,7 @@ public class CosStorage extends AbstractFileStorage {
                       summary.getLastModified().toInstant(), ZoneId.systemDefault())
                   : null);
           om.setETag(summary.getETag());
-          om.setDirectory(false);
+          om.setIsDirectory(false);
           objects.add(om);
         }
       }

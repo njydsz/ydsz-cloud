@@ -396,7 +396,7 @@ public class OssStorage extends AbstractFileStorage {
               ? LocalDateTime.ofInstant(
                   ossMetadata.getLastModified().toInstant(), ZoneId.systemDefault())
               : null);
-      metadata.setDirectory(false);
+      metadata.setIsDirectory(false);
       return metadata;
     } catch (Exception e) {
       log.error(
@@ -436,7 +436,7 @@ public class OssStorage extends AbstractFileStorage {
                       summary.getLastModified().toInstant(), ZoneId.systemDefault())
                   : null);
           om.setETag(summary.getETag());
-          om.setDirectory(false);
+          om.setIsDirectory(false);
           objects.add(om);
         }
       }

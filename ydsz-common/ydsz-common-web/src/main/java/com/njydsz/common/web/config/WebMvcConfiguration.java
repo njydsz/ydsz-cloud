@@ -21,6 +21,7 @@ import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.base.config.YdszAutoConfiguration;
+import com.njydsz.common.base.constant.FilterOrder;
 import com.njydsz.common.base.constant.InterceptorOrder;
 import com.njydsz.common.safe.config.SafeConfiguration;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
@@ -185,7 +186,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         new FilterRegistrationBean<>(securityHeaderFilter);
     bean.addUrlPatterns("/*");
     bean.setName("securityHeaderFilter");
-    bean.setOrder(com.njydsz.common.base.constant.FilterOrder.SECURITY_HEADER_FILTER);
+    bean.setOrder(FilterOrder.SECURITY_HEADER_FILTER);
     return bean;
   }
 

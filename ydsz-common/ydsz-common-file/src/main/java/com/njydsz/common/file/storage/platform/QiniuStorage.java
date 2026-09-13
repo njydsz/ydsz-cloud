@@ -474,7 +474,7 @@ public class QiniuStorage extends AbstractFileStorage {
           fileInfo.putTime > 0
               ? LocalDateTime.ofInstant(Instant.ofEpochMilli(fileInfo.putTime / 10000), ZoneId.systemDefault())
               : null);
-      metadata.setDirectory(false);
+      metadata.setIsDirectory(false);
       return metadata;
     } catch (QiniuException e) {
       if (e.code() == 612) {
@@ -525,7 +525,7 @@ public class QiniuStorage extends AbstractFileStorage {
               item.putTime > 0
                   ? LocalDateTime.ofInstant(Instant.ofEpochMilli(item.putTime / 10000), ZoneId.systemDefault())
                   : null);
-          om.setDirectory(item.key.endsWith(FileConstant.DIR_SPLIT));
+          om.setIsDirectory(item.key.endsWith(FileConstant.DIR_SPLIT));
           objects.add(om);
           count++;
         }
