@@ -30,5 +30,5 @@ public class SearchProviderContext {
   private String deptId;
 
   /** 是否管理员 */
-  @Builder.Default private boolean admin = false;
+  @Builder.Default private boolean isAdmin = false;
 }

@@ -55,12 +55,12 @@ public class SearchRequest implements Serializable {
   /** 是否升序（默认 false 降序） */
   @Schema(description = "是否升序")
   @Builder.Default
-  private boolean ascending = false;
+  private boolean isAscending = false;
 
   /** 是否启用高亮 */
   @Schema(description = "是否启用高亮")
   @Builder.Default
-  private boolean highlight = true;
+  private boolean isHighlight = true;
 
   /** 高亮前置标签 */
   @Schema(description = "高亮前置标签")
@@ -77,7 +77,7 @@ public class SearchRequest implements Serializable {
   /** 是否启用模糊匹配 */
   @Schema(description = "是否启用模糊匹配")
   @Builder.Default
-  private boolean fuzzy = true;
+  private boolean isFuzzy = true;
 
   /** 模糊匹配最小相似度 */
   @Schema(description = "模糊匹配最小相似度")
@@ -112,12 +112,12 @@ public class SearchRequest implements Serializable {
 
   /** 是否管理员（跳过数据权限过滤） */
   @Schema(description = "是否管理员")
-  private boolean admin;
+  private boolean isAdmin;
 
   /** 是否仅搜索标题 */
   @Schema(description = "是否仅搜索标题")
   @Builder.Default
-  private boolean titleOnly = false;
+  private boolean isTitleOnly = false;
 
   /** 游标（用于 keyset 分页） */
   @Schema(description = "游标（用于 keyset 分页）")

@@ -35,16 +35,16 @@ public class SearchField {
   @Builder.Default private BigDecimal weight = new BigDecimal("1.0");
 
   /** 是否参与搜索 */
-  @Builder.Default private boolean searchable = true;
+  @Builder.Default private boolean isSearchable = true;
 
   /** 是否支持高亮 */
-  @Builder.Default private boolean highlightable = false;
+  @Builder.Default private boolean isHighlightable = false;
 
   /** 是否支持聚合（facet） */
-  @Builder.Default private boolean aggregatable = false;
+  @Builder.Default private boolean isAggregatable = false;
 
   /** 是否支持排序 */
-  @Builder.Default private boolean sortable = false;
+  @Builder.Default private boolean isSortable = false;
 
   /** 分析器（引擎可忽略，如 PG 的 search_zh / ES 的 ik_smart） */
   private String analyzer;

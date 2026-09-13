@@ -406,8 +406,8 @@ public class OutboxProcessor {
    * @param retryCount 当前重试次数
    * @return 退避秒数
    */
-  private long calculateBackoff(int retryCount) {
-    int shift = Math.min(retryCount, MAX_SHIFT);
+  private long calculateBackoff(long retryCount) {
+    int shift = Math.min((int) retryCount, MAX_SHIFT);
     long backoff = properties.getBaseBackoffSeconds() * (1L << shift);
     return Math.min(backoff, properties.getMaxBackoffSeconds());
   }

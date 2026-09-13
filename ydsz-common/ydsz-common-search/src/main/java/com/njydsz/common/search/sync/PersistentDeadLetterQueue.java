@@ -62,15 +62,15 @@ public class PersistentDeadLetterQueue {
   private static final int MAX_DB_RETRY = 5;
 
   private final JdbcTemplate jdbcTemplate;
-  private final boolean dbAvailable;
+  private final boolean isDbAvailable;
 
   public PersistentDeadLetterQueue(Optional<DataSource> dataSource) {
     if (dataSource.isPresent()) {
       this.jdbcTemplate = new JdbcTemplate(dataSource.get());
-      this.dbAvailable = checkTableExists();
+      this.isDbAvailable = checkTableExists();
     } else {
       this.jdbcTemplate = null;
-      this.dbAvailable = false;
+      this.isDbAvailable = false;
     }
   }
 
@@ -82,7 +82,7 @@ public class PersistentDeadLetterQueue {
    * @return 入队成功返回 true（DB 不可用时返回 false，需降级到内存）
    */
   public boolean enqueue(IndexOperation operation, String errorMsg) {
-    if (!dbAvailable || operation == null) {
+    if (!isDbAvailable || operation == null) {
       return false;
     }
     try {
@@ -131,7 +131,7 @@ public class PersistentDeadLetterQueue {
    * @return 成功处理的记录数
    */
   public int replayPending(int batchSize, Consumer<DlqRecord> replayFn) {
-    if (!dbAvailable) {
+    if (!isDbAvailable) {
       return 0;
     }
     try {
@@ -198,7 +198,7 @@ public class PersistentDeadLetterQueue {
    * @return 待处理记录数
    */
   public long getPendingCount() {
-    if (!dbAvailable) {
+    if (!isDbAvailable) {
       return 0;
     }
     try {
@@ -219,7 +219,7 @@ public class PersistentDeadLetterQueue {
    * @return 清理的记录数
    */
   public int cleanupResolved(int retainDays) {
-    if (!dbAvailable) {
+    if (!isDbAvailable) {
       return 0;
     }
     try {
