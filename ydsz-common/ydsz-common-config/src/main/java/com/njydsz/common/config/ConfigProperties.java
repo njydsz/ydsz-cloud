@@ -42,7 +42,7 @@ public class ConfigProperties {
   public static class ChangeMonitor {
 
     /** 是否启用配置变更监听桥接（默认 true） */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /**
      * 是否在变更通知前快照旧值。
@@ -64,7 +64,7 @@ public class ConfigProperties {
   public static class Cli {
 
     /** 是否启用 CLI 工具 Bean（默认 true） */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /**
      * 加密算法（与 Jasypt 配置对齐）。
@@ -87,7 +87,7 @@ public class ConfigProperties {
   public static class Health {
 
     /** 是否启用配置加密健康检查（默认 true） */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /**
      * 健康检查缓存 TTL（毫秒）。
