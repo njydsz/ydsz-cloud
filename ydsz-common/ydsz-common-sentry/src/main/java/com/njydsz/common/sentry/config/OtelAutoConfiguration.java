@@ -219,7 +219,7 @@ public class OtelAutoConfiguration {
         builder.addProcessor(
             new YdszSpanEnrichmentProcessor(
                 YdszSpanEnrichmentProcessor.EnrichmentConfig.builder()
-                    .enabled(true)
+                    .isEnabled(true)
                     .sources(otelConfig.getEnrichmentSources())
                     .build()));
       }
