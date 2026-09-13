@@ -101,7 +101,7 @@ public final class CacheBuilder<K, V> {
   private int stripes = 32;
 
   /** 是否启用统计 */
-  private boolean recordStats = true;
+  private boolean isRecordStats = true;
 
   /** 删除监听器 */
   private RemovalListener<? super K, ? super V> removalListener;
@@ -131,7 +131,7 @@ public final class CacheBuilder<K, V> {
   private long nullValueMaxExpireMs = 0;
 
   /** 是否启用健康检查注册（默认 true） */
-  private boolean healthCheckEnabled = true;
+  private boolean isHealthCheckEnabled = true;
 
   /** 健康检查指示器 */
   private CacheHealthIndicator healthIndicator;
@@ -229,7 +229,7 @@ public final class CacheBuilder<K, V> {
    * @return this
    */
   public CacheBuilder<K, V> healthCheckEnabled(boolean healthCheckEnabled) {
-    this.healthCheckEnabled = healthCheckEnabled;
+    this.isHealthCheckEnabled = healthCheckEnabled;
     return this;
   }
 
@@ -312,7 +312,7 @@ public final class CacheBuilder<K, V> {
    * @return this
    */
   public CacheBuilder<K, V> recordStats() {
-    this.recordStats = true;
+    this.isRecordStats = true;
     return this;
   }
 
@@ -323,7 +323,7 @@ public final class CacheBuilder<K, V> {
    * @return this
    */
   public CacheBuilder<K, V> recordStats(boolean recordStats) {
-    this.recordStats = recordStats;
+    this.isRecordStats = recordStats;
     return this;
   }
 
@@ -421,7 +421,7 @@ public final class CacheBuilder<K, V> {
       cache.setNullValueTtl(nullValueMinExpireMs, nullValueMaxExpireMs);
     }
     // 健康检查自动注册
-    if (healthCheckEnabled
+    if (isHealthCheckEnabled
         && healthIndicator != null
         && cacheName != null
         && !cacheName.isEmpty()) {
@@ -568,7 +568,7 @@ public final class CacheBuilder<K, V> {
         taskExecutor != null ? taskExecutor : listenerExecutor,
         effectiveRefreshDuration,
         effectiveRefreshUnit,
-        recordStats);
+        isRecordStats);
   }
 
   /**

@@ -77,9 +77,9 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
 
   private int initialCapacity = 64;
 
-  private boolean allowNullValues = true;
+  private boolean isAllowNullValues = true;
 
-  private boolean recordStats = true;
+  private boolean isRecordStats = true;
 
   private long expireAfterAccess = 0;
 
@@ -144,7 +144,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
    * @param allowNullValues allowNullValues 参数
    */
   public void setAllowNullValues(boolean allowNullValues) {
-    this.allowNullValues = allowNullValues;
+    this.isAllowNullValues = allowNullValues;
   }
 
   /**
@@ -153,7 +153,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
    * @param recordStats recordStats 参数
    */
   public void setRecordStats(boolean recordStats) {
-    this.recordStats = recordStats;
+    this.isRecordStats = recordStats;
   }
 
   /**
@@ -228,7 +228,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
     // cacheNames 仅作为启动期预创建列表，不作为白名单拦截（空列表不得导致缓存整体失效）
     Cache<Object, Object> delegate = buildCache(name);
     createdCaches.add(delegate);
-    SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.allowNullValues);
+    SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.isAllowNullValues);
 
     // 注解级空值短 TTL（防穿透）：per-cache 配置优先，回退全局默认
     YdszCacheProperties.CacheConfig perCache = perCacheConfigs.get(name);
@@ -319,7 +319,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
     boolean effectiveRecordStats =
         perCache != null && perCache.getRecordStats() != null
             ? perCache.getRecordStats()
-            : this.recordStats;
+            : this.isRecordStats;
 
     CacheBuilder<Object, Object> builder =
         YdszCache.newBuilder()
