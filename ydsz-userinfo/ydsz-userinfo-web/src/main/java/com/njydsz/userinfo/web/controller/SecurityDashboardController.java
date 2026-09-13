@@ -51,7 +51,7 @@ import com.njydsz.userinfo.server.auth.SessionActivityService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/admin/security")
+@RequestMapping("/admin/security")
 @RequiredArgsConstructor
 @Tag(name = "安全仪表盘", description = "安全指标和会话活跃度统计")
 public class SecurityDashboardController {

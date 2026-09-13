@@ -54,7 +54,7 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/sso")
+@RequestMapping("/sso")
 @RequiredArgsConstructor
 @Tag(name = "跨域 SSO", description = "令牌交换/验证/登出通知")
 @ApiVersion("26.09.01")

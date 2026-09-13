@@ -59,7 +59,7 @@ import com.njydsz.workflow.server.service.FlowTaskService;
 @ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-monitor", description = "工作流监控看板与效率分析统一接口")
-@RequestMapping("/api/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowMonitorDashboardController {

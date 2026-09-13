@@ -50,7 +50,7 @@ public class NotifyPreference {
       new EnumMap<>(NotifyChannel.class);
 
   /** 是否聚合通知 */
-  private boolean aggregateEnabled = false;
+  private boolean isAggregateEnabled = false;
 
   /** 聚合时间窗口（分钟） */
   private int aggregateWindowMinutes = 30;
@@ -228,11 +228,11 @@ public class NotifyPreference {
   }
 
   public boolean isAggregateEnabled() {
-    return aggregateEnabled;
+    return isAggregateEnabled;
   }
 
-  public void setAggregateEnabled(boolean aggregateEnabled) {
-    this.aggregateEnabled = aggregateEnabled;
+  public void setAggregateEnabled(boolean isAggregateEnabled) {
+    this.isAggregateEnabled = isAggregateEnabled;
   }
 
   public int getAggregateWindowMinutes() {

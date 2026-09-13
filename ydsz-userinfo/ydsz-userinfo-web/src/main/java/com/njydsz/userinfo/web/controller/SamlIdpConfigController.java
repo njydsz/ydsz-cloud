@@ -39,7 +39,7 @@ import com.njydsz.userinfo.server.service.SamlIdpConfigService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/saml-idp-config")
+@RequestMapping("/saml-idp-config")
 @RequiredArgsConstructor
 @Tag(name = "SAML IdP 配置", description = "SAML 身份提供者配置管理（多租户）")
 @ApiVersion("26.09.01")

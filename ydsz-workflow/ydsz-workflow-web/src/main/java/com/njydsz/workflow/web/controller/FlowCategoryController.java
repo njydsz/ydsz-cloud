@@ -60,7 +60,7 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
 @Validated
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/workflow/categories")
+@RequestMapping("/workflow/categories")
 @RequiredArgsConstructor
 @Tag(name = "流程分类管理", description = "流程分类的增删改查")
 public class FlowCategoryController {

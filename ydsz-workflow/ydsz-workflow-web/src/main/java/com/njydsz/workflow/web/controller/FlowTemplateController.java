@@ -74,7 +74,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
 @Tag(name = "流程模板市场")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/workflow/template")
+@RequestMapping("/workflow/template")
 @RequiredArgsConstructor
 @Validated
 public class FlowTemplateController {

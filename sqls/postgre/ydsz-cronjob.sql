@@ -282,6 +282,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_history (
     changed_by               VARCHAR(64)              DEFAULT NULL,
     changed_at               TIMESTAMP                DEFAULT NULL,
     history_deleted          SMALLINT                 NOT NULL DEFAULT 0,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_history PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_history_jh_job_version UNIQUE (job_id, version)
 );
@@ -303,6 +304,7 @@ COMMENT ON COLUMN ydsz_job_history.remark IS '备注（冗余）';
 COMMENT ON COLUMN ydsz_job_history.changed_by IS '修改人 ID';
 COMMENT ON COLUMN ydsz_job_history.changed_at IS '修改时间';
 COMMENT ON COLUMN ydsz_job_history.history_deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_job_history.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_history_jh_job_id ON ydsz_job_history (job_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_history_jh_changed_at ON ydsz_job_history (changed_at);
@@ -785,6 +787,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
     line_no                  INTEGER                  NOT NULL,
     log_level                VARCHAR(32)              DEFAULT NULL,
     content                  VARCHAR(4000)            NOT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_log_content PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_log_content_jlc_log_line UNIQUE (log_id, line_no)
 );
@@ -796,6 +799,7 @@ COMMENT ON COLUMN ydsz_job_log_content.job_key IS '任务 KEY（冗余，避免�
 COMMENT ON COLUMN ydsz_job_log_content.line_no IS '行号（从 1 递增）';
 COMMENT ON COLUMN ydsz_job_log_content.log_level IS '日志级别：DEBUG / INFO / WARN / ERROR';
 COMMENT ON COLUMN ydsz_job_log_content.content IS '日志内容（单行文本，最长 4000 字符）';
+COMMENT ON COLUMN ydsz_job_log_content.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_content_jlc_job_key ON ydsz_job_log_content (job_key);
 
@@ -812,6 +816,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
     max_duration_ms          BIGINT                   DEFAULT NULL,
     min_duration_ms          BIGINT                   DEFAULT NULL,
     p95_duration_ms          BIGINT                   DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_daily_stats PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_daily_stats_jds_job_date UNIQUE (job_id, stats_date)
 );
@@ -829,6 +834,7 @@ COMMENT ON COLUMN ydsz_job_daily_stats.avg_duration_ms IS '平均耗时（毫秒
 COMMENT ON COLUMN ydsz_job_daily_stats.max_duration_ms IS '最大耗时（毫秒）';
 COMMENT ON COLUMN ydsz_job_daily_stats.min_duration_ms IS '最小耗时（毫秒）';
 COMMENT ON COLUMN ydsz_job_daily_stats.p95_duration_ms IS 'P95 耗时（毫秒）';
+COMMENT ON COLUMN ydsz_job_daily_stats.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_daily_stats_jds_stats_date ON ydsz_job_daily_stats (stats_date);
 
@@ -849,6 +855,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     error_message            TEXT                     DEFAULT NULL,
     trace_id                 VARCHAR(64)              DEFAULT NULL,
     trigger_log_id           VARCHAR(32)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_alert_dispatch PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_alert_dispatch_ad_alert_code UNIQUE (alert_code)
 );
@@ -870,6 +877,7 @@ COMMENT ON COLUMN ydsz_job_alert_dispatch.alert_status IS '告警状态: PENDING
 COMMENT ON COLUMN ydsz_job_alert_dispatch.error_message IS '错误信息（部分通道失败时记录; 映射到 fail_reason）';
 COMMENT ON COLUMN ydsz_job_alert_dispatch.trace_id IS '链路追踪 ID（映射到 provider_trace_id）';
 COMMENT ON COLUMN ydsz_job_alert_dispatch.trigger_log_id IS '触发该告警的任务日志 ID（关联 ydsz_job_log.id）';
+COMMENT ON COLUMN ydsz_job_alert_dispatch.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_dispatch_ad_rule_id ON ydsz_job_alert_dispatch (rule_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_dispatch_ad_job_id ON ydsz_job_alert_dispatch (job_id);
@@ -984,6 +992,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
     retry_status             VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
     last_error               TEXT                     DEFAULT NULL,
     last_retry_time          TIMESTAMP                DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_webhook_retry PRIMARY KEY (id)
 );
 
@@ -1004,6 +1013,7 @@ COMMENT ON COLUMN ydsz_job_webhook_retry.next_retry_time IS '下次重试时间'
 COMMENT ON COLUMN ydsz_job_webhook_retry.retry_status IS '状态: PENDING/SUCCESS/DEAD';
 COMMENT ON COLUMN ydsz_job_webhook_retry.last_error IS '最后错误信息';
 COMMENT ON COLUMN ydsz_job_webhook_retry.last_retry_time IS '最后重试时间';
+COMMENT ON COLUMN ydsz_job_webhook_retry.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_retry_status ON ydsz_job_webhook_retry (retry_status, next_retry_time);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_retry_webhook ON ydsz_job_webhook_retry (webhook_id);

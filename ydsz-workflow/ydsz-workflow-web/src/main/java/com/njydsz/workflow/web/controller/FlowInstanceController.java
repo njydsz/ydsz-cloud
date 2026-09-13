@@ -99,7 +99,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 @ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-instance", description = "工作流流程实例统一接口")
-@RequestMapping("/api/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowInstanceController {

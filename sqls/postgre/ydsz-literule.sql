@@ -703,6 +703,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
     definition_json          JSONB                    DEFAULT NULL,
     change_desc              VARCHAR(512)             DEFAULT NULL,
     operator                 VARCHAR(64)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_rule_version_history PRIMARY KEY (id)
 );
 
@@ -713,6 +714,7 @@ COMMENT ON COLUMN ydsz_rule_version_history.version IS '版本号';
 COMMENT ON COLUMN ydsz_rule_version_history.definition_json IS '该版本的规则定义 JSON 快照';
 COMMENT ON COLUMN ydsz_rule_version_history.change_desc IS '变更说明';
 COMMENT ON COLUMN ydsz_rule_version_history.operator IS '操作人';
+COMMENT ON COLUMN ydsz_rule_version_history.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_version_history_rule_version ON ydsz_rule_version_history (rule_code, version);
 
@@ -729,6 +731,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     facts_snapshot           JSONB                    DEFAULT NULL,
     result_snapshot          JSONB                    DEFAULT NULL,
     error_message            TEXT                    ,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_rule_execution_trace PRIMARY KEY (id)
 );
 
@@ -745,6 +748,7 @@ COMMENT ON COLUMN ydsz_rule_execution_trace.elapsed_ms IS '执行耗时（毫秒
 COMMENT ON COLUMN ydsz_rule_execution_trace.facts_snapshot IS '事实数据快照（JSON 对象）';
 COMMENT ON COLUMN ydsz_rule_execution_trace.result_snapshot IS '结果快照（JSON 对象）';
 COMMENT ON COLUMN ydsz_rule_execution_trace.error_message IS '错误信息';
+COMMENT ON COLUMN ydsz_rule_execution_trace.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_execution_trace_trace_id ON ydsz_rule_execution_trace (trace_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_execution_trace_rule_code ON ydsz_rule_execution_trace (rule_code);

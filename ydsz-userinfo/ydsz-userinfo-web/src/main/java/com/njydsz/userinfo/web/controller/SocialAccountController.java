@@ -41,7 +41,7 @@ import com.njydsz.userinfo.server.auth.SocialAuthService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/profile/social")
+@RequestMapping("/profile/social")
 @RequiredArgsConstructor
 @Tag(name = "第三方账号绑定", description = "社交账号绑定管理")
 public class SocialAccountController {

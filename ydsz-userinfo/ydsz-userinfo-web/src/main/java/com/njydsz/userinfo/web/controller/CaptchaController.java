@@ -60,7 +60,7 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/captcha")
+@RequestMapping("/captcha")
 @RequiredArgsConstructor
 @Tag(name = "验证码", description = "图形验证码生成与校验")
 public class CaptchaController {

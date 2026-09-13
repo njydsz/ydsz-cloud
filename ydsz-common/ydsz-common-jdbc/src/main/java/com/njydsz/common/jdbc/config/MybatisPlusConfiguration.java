@@ -184,19 +184,19 @@ public class MybatisPlusConfiguration {
     if (paginationProperties.getMaxLimit() != null && paginationProperties.getMaxLimit() > 0) {
       paginationInterceptor.setMaxLimit(paginationProperties.getMaxLimit());
     }
-    paginationInterceptor.setOverflow(paginationProperties.getIsOverflow());
+    paginationInterceptor.setOverflow(paginationProperties.isOverflow());
     interceptor.addInnerInterceptor(paginationInterceptor);
 
     // 6. SQL 防火墙拦截器（置于拦截器链末端，在所有 SQL 改写完成后做安全校验）
-    if (sqlFirewallProperties != null && sqlFirewallProperties.getIsEnabled()) {
+    if (sqlFirewallProperties != null && sqlFirewallProperties.isEnabled()) {
       SqlFirewallInnerInterceptor firewall = new SqlFirewallInnerInterceptor();
       firewall.setIsEnabled(true);
-      firewall.setIsBlockDropTable(sqlFirewallProperties.getIsBlockDropTable());
-      firewall.setIsBlockTruncate(sqlFirewallProperties.getIsBlockTruncate());
-      firewall.setIsBlockDeleteWithoutWhere(sqlFirewallProperties.getIsBlockDeleteWithoutWhere());
-      firewall.setIsBlockUpdateWithoutWhere(sqlFirewallProperties.getIsBlockUpdateWithoutWhere());
-      firewall.setIsBlockMultiStatement(sqlFirewallProperties.getIsBlockMultiStatement());
-      firewall.setIsBlockPermissionOps(sqlFirewallProperties.getIsBlockPermissionOps());
+      firewall.setIsBlockDropTable(sqlFirewallProperties.isBlockDropTable());
+      firewall.setIsBlockTruncate(sqlFirewallProperties.isBlockTruncate());
+      firewall.setIsBlockDeleteWithoutWhere(sqlFirewallProperties.isBlockDeleteWithoutWhere());
+      firewall.setIsBlockUpdateWithoutWhere(sqlFirewallProperties.isBlockUpdateWithoutWhere());
+      firewall.setIsBlockMultiStatement(sqlFirewallProperties.isBlockMultiStatement());
+      firewall.setIsBlockPermissionOps(sqlFirewallProperties.isBlockPermissionOps());
       firewall.setAllowTables(sqlFirewallProperties.getAllowTables());
       interceptor.addInnerInterceptor(firewall);
       log.debug("MyBatis Plus: SqlFirewall interceptor enabled");
@@ -272,7 +272,7 @@ public class MybatisPlusConfiguration {
             || fieldFillConfiguration.getCreateAtIntercept().getIsEnabled()
             || fieldFillConfiguration.getUpdateAtIntercept().getIsEnabled();
     boolean dataPermission = Boolean.TRUE.equals(dataPermissionConfiguration.getIsEnabled());
-    boolean sqlFirewall = sqlFirewallProperties != null && sqlFirewallProperties.getIsEnabled();
+    boolean sqlFirewall = sqlFirewallProperties != null && sqlFirewallProperties.isEnabled();
     boolean sqlTrace = isSqlTraceEnabled(ctx);
     int spiCount = spiInterceptorProviders.getIfAvailable(Collections::emptyList).size();
     String dataSourceInfo = buildDataSourceInfo(ctx);

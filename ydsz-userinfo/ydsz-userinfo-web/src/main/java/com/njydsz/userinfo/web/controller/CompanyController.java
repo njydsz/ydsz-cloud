@@ -69,7 +69,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/company")
+@RequestMapping("/company")
 @RequiredArgsConstructor
 @Tag(name = "公司管理", description = "公司 CRUD")
 public class CompanyController {

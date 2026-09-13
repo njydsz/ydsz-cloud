@@ -21,7 +21,7 @@ import lombok.Data;
  *     .cc("pmo@example.com")
  *     .subject("项目立项审批通知")
  *     .content("<h2>立项申请</h2><p>项目 XXX 已提交审批，请及时处理。</p>")
- *     .html(true)
+ *     .isHtml(true)
  *     .attachment(EmailMessage.Attachment.builder()
  *         .filename("立项报告.pdf")
  *         .content(pdfBytes)
@@ -59,7 +59,7 @@ public class EmailMessage implements Serializable {
   private String content;
 
   /** 是否 HTML 格式（true=HTML，false=纯文本，null=由配置决定） */
-  private Boolean html;
+  private Boolean isHtml;
 
   /** 附件列表 */
   private List<Attachment> attachments;

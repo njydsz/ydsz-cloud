@@ -45,7 +45,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/auth/tenant")
+@RequestMapping("/auth/tenant")
 @RequiredArgsConstructor
 @Tag(name = "TenantSwitch", description = "多租户 JWT 上下文切换")
 public class TenantSwitchController {

@@ -77,7 +77,7 @@ import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 @Tag(name = "嵌入式审批")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/workflow/embedded")
+@RequestMapping("/workflow/embedded")
 @RequiredArgsConstructor
 @Validated
 public class FlowEmbeddedApprovalController {

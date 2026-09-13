@@ -28,7 +28,7 @@ import com.njydsz.workflow.server.simulator.SimulationResult;
  */
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/workflow/simulation")
+@RequestMapping("/workflow/simulation")
 @Tag(name = "流程模拟", description = "流程定义模拟执行接口")
 @RequiredArgsConstructor
 public class FlowSimulationController {

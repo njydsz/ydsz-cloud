@@ -91,7 +91,7 @@ import com.njydsz.workflow.server.service.FlowTodoCountPushService;
 @ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-task", description = "工作流任务统一接口")
-@RequestMapping("/api/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowTaskController {

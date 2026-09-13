@@ -72,7 +72,7 @@ import com.njydsz.workflow.server.service.FlowTemplateService;
 @ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-designer", description = "工作流设计器/表单/SLA/模板接口")
-@RequestMapping("/api/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated
 public class FlowDesignerController {

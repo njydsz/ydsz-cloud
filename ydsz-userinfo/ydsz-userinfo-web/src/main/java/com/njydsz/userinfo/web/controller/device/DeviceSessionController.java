@@ -40,7 +40,7 @@ import com.njydsz.userinfo.server.device.DeviceSessionVO;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/devices")
+@RequestMapping("/devices")
 @RequiredArgsConstructor
 @Tag(name = "设备管理", description = "登录设备查看与下线")
 public class DeviceSessionController {

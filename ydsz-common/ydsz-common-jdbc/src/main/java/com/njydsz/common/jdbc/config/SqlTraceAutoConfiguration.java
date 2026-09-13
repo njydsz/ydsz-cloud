@@ -73,19 +73,19 @@ public class SqlTraceAutoConfiguration {
     SqlTraceInnerInterceptor interceptor = findOrCreateTraceInterceptor(mybatisPlusInterceptor);
 
     // 慢 SQL 配置
-    boolean slowSqlActive = Boolean.TRUE.equals(slowSqlProperties.getIsEnabled());
+    boolean slowSqlActive = Boolean.TRUE.equals(slowSqlProperties.isEnabled());
     interceptor.setIsSlowSqlEnabled(slowSqlActive || interceptor.getIsSlowSqlEnabled());
     interceptor.setSlowSqlThresholdMillis(slowSqlProperties.getThresholdMillis());
     interceptor.setAlertThresholdMillis(slowSqlProperties.getAlertThresholdMillis());
 
     // SQL 审计配置
-    boolean auditActive = Boolean.TRUE.equals(sqlAuditProperties.getIsEnabled());
+    boolean auditActive = Boolean.TRUE.equals(sqlAuditProperties.isEnabled());
     interceptor.setIsAuditEnabled(auditActive || interceptor.getIsAuditEnabled());
-    interceptor.setIsAuditSelect(sqlAuditProperties.getIsAuditSelect());
-    interceptor.setIsAuditInsert(sqlAuditProperties.getIsAuditInsert());
-    interceptor.setIsAuditUpdate(sqlAuditProperties.getIsAuditUpdate());
-    interceptor.setIsAuditDelete(sqlAuditProperties.getIsAuditDelete());
-    interceptor.setIsLogParameters(sqlAuditProperties.getIsLogParameters());
+    interceptor.setIsAuditSelect(sqlAuditProperties.isAuditSelect());
+    interceptor.setIsAuditInsert(sqlAuditProperties.isAuditInsert());
+    interceptor.setIsAuditUpdate(sqlAuditProperties.isAuditUpdate());
+    interceptor.setIsAuditDelete(sqlAuditProperties.isAuditDelete());
+    interceptor.setIsLogParameters(sqlAuditProperties.isLogParameters());
     interceptor.setMaxParameterLength(sqlAuditProperties.getMaxParameterLength());
     interceptor.setExcludeTables(sqlAuditProperties.getExcludeTables());
     interceptor.setExcludeMethods(sqlAuditProperties.getExcludeMethods());

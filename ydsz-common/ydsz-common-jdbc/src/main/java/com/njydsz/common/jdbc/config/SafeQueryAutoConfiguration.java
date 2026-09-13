@@ -80,8 +80,8 @@ public class SafeQueryAutoConfiguration {
     // 从 JDBC 配置加载安全查询设置
     SafeQueryProperties safeQuery = safeQueryProperties.getIfAvailable();
     if (safeQuery != null) {
-      interceptor.setIsEnabled(safeQuery.getIsEnabled());
-      interceptor.setIsStrictMode(safeQuery.getIsStrictMode());
+      interceptor.setIsEnabled(safeQuery.isEnabled());
+      interceptor.setIsStrictMode(safeQuery.isStrictMode());
       if (safeQuery.getOrderByWhitelist() != null) {
         interceptor.setOrderByWhitelist(safeQuery.getOrderByWhitelist());
       }

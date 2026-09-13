@@ -73,7 +73,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicSe
 @ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-advanced", description = "工作流高级功能接口")
-@RequestMapping("/api/workflow/advanced")
+@RequestMapping("/workflow/advanced")
 @RequiredArgsConstructor
 public class FlowAdvancedController {
 

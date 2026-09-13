@@ -75,7 +75,7 @@ import com.njydsz.userinfo.server.service.RoleService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/role")
+@RequestMapping("/role")
 @RequiredArgsConstructor
 @Tag(name = "角色管理", description = "角色 CRUD、权限分配")
 public class RoleController {

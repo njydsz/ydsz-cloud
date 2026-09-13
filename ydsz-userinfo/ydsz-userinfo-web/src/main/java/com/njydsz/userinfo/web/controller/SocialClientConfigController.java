@@ -41,7 +41,7 @@ import com.njydsz.userinfo.server.service.SocialClientConfigService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/social-client-config")
+@RequestMapping("/social-client-config")
 @RequiredArgsConstructor
 @Tag(name = "社交平台配置", description = "社交平台 OAuth2 客户端配置管理（热更新）")
 @ApiVersion("26.09.01")

@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class DefaultNotifyResult implements NotifySendResult {
 
   /** 是否发送成功 */
-  private boolean success;
+  private boolean isSuccess;
 
   /** 消息ID */
   private String messageId;
@@ -32,6 +32,6 @@ public class DefaultNotifyResult implements NotifySendResult {
 
   @Override
   public boolean isSuccess() {
-    return success;
+    return isSuccess;
   }
 }

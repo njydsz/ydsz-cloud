@@ -32,7 +32,7 @@ import com.njydsz.workflow.server.service.FlowAttachmentService;
  */
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/workflow/engine")
+@RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 public class FlowAttachmentController {
 

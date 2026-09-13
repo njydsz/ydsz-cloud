@@ -44,7 +44,7 @@ import com.njydsz.userinfo.server.service.DepartmentService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/dept")
+@RequestMapping("/dept")
 @RequiredArgsConstructor
 @Tag(name = "部门管理", description = "部门 CRUD、树形结构查询")
 public class DepartmentController {

@@ -42,7 +42,7 @@ import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/admin/security/alerts")
+@RequestMapping("/admin/security/alerts")
 @RequiredArgsConstructor
 @Tag(name = "安全告警管理", description = "安全告警查询与处理")
 public class SecurityAlertController {

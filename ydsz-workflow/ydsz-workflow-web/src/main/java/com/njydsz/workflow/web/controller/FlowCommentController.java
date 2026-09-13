@@ -79,7 +79,7 @@ import com.njydsz.workflow.server.service.FlowCommentService;
 @ApiVersion("26.09.01")
 @RestController
 @Tag(name = "workflow-comment", description = "工作流审批评论与常用语统一接口")
-@RequestMapping("/api/workflow/comment")
+@RequestMapping("/workflow/comment")
 @RequiredArgsConstructor
 public class FlowCommentController {
 

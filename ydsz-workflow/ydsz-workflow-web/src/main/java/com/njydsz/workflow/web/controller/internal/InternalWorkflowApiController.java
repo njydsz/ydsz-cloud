@@ -46,7 +46,7 @@ import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/internal")
+@RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "workflow:internal:api")
 public class InternalWorkflowApiController {

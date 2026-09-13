@@ -35,7 +35,7 @@ public class EmailSmtpHealthChecker {
   private static final int MAX_FAILURE_STREAK = 3;
 
   private final NotifyProperties properties;
-  private volatile boolean healthy = true;
+  private volatile boolean isHealthy = true;
   private volatile int failureStreak = 0;
   private volatile long lastCheckTime = 0;
 
@@ -60,10 +60,10 @@ public class EmailSmtpHealthChecker {
       lastCheckTime = System.currentTimeMillis();
       if (ok) {
         failureStreak = 0;
-        if (!healthy) {
+        if (!isHealthy) {
           LOG.info("[EmailSmtpHealthChecker] SMTP 连接恢复, host={}", email.getSmtpHost());
         }
-        healthy = true;
+        isHealthy = true;
       } else {
         onFailure(email);
       }
@@ -79,7 +79,7 @@ public class EmailSmtpHealthChecker {
    * @return true 表示 SMTP 连通正常
    */
   public boolean isHealthy() {
-    return healthy;
+    return isHealthy;
   }
 
   /**
@@ -125,7 +125,7 @@ public class EmailSmtpHealthChecker {
   private void onFailure(NotifyProperties.EmailConfig email) {
     failureStreak++;
     if (failureStreak >= MAX_FAILURE_STREAK) {
-      healthy = false;
+      isHealthy = false;
       LOG.error(
           "[EmailSmtpHealthChecker] SMTP 连续 {} 次探活失败，标记为不健康, host={}, port={}",
           failureStreak,

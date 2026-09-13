@@ -39,7 +39,7 @@ import com.njydsz.userinfo.server.service.AuthPolicyService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/auth-policy")
+@RequestMapping("/auth-policy")
 @RequiredArgsConstructor
 @Tag(name = "认证策略", description = "租户级认证策略管理（多租户域隔离）")
 @ApiVersion("26.09.01")
