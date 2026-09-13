@@ -108,6 +108,28 @@ public class WebSocketCircuitBreaker {
   }
 
   /**
+   * 执行受保护的无返回值操作，失败或熔断时走降级。
+   *
+   * <p>适用于 operation 和 fallback 均为 void 的场景（如缓存写入），避免无意义的 {@code null} 返回。
+   *
+   * @param operation 受保护操作（无返回值）
+   * @param fallback 降级操作（无返回值）
+   */
+  public void execute(Runnable operation, Runnable fallback) {
+    try {
+      io.github.resilience4j.circuitbreaker.CircuitBreaker
+          .decorateRunnable(delegate, operation)
+          .run();
+    } catch (CallNotPermittedException e) {
+      log.debug("[WS-CircuitBreaker] '{}' 熔断中, 执行降级", name);
+      fallback.run();
+    } catch (Exception e) {
+      log.debug("[WS-CircuitBreaker] '{}' 操作失败, 执行降级: {}", name, e.getMessage());
+      fallback.run();
+    }
+  }
+
+  /**
    * 获取当前熔断状态。
    *
    * @return 当前状态快照

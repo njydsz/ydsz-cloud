@@ -71,7 +71,6 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
 @Slf4j
 @AutoConfiguration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnClass(SearchStrategy.class)
 @ConditionalOnProperty(
     prefix = "ydsz.search",
     name = "enabled",

@@ -219,17 +219,17 @@ public class LocalRoleDataPermissionResolver implements DataPermissionResolver {
     }
     String mergedCustomCondition =
         customSqlConditions.length() > 0 ? customSqlConditions.toString() : null;
-    return new DataScopeInfo(
-        maxScope,
-        tenantId,
-        userId,
-        Collections.unmodifiableSet(companies),
-        Collections.unmodifiableSet(depts),
-        Collections.unmodifiableSet(projects),
-        Collections.unmodifiableSet(regions),
-        Collections.unmodifiableSet(spaceIds),
-        mergedCustomCondition,
-        null);
+    return DataScopeInfo.builder()
+        .scope(maxScope)
+        .tenantId(tenantId)
+        .userId(userId)
+        .companyIds(companies)
+        .deptIds(depts)
+        .projectIds(projects)
+        .regionIds(regions)
+        .spaceIds(spaceIds)
+        .customSqlCondition(mergedCustomCondition)
+        .build();
   }
 
   private String trimToNull(String value) {

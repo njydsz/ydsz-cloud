@@ -16,8 +16,8 @@ meta:
   version: "26.09.07"
   source: "docs/云顶编码规范.md v1.0.8"
   last_synced: "2026-09-07"
-  last_updated: "2026-09-08（新增 YDIZ-TX-001~004：分布式事务规则 4 条，P0+P1）"
-  total_rules: 55
+  last_updated: "2026-09-08（新增 YDIZ-ARCH-002：L1→L1 反射耦合检测标准 P1）"
+  total_rules: 57
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -731,7 +731,7 @@ rules:
     source: "编码规范 10.1 节"
 
 # ============================================
-# 十六、架构层级规范（1 条，P0）
+# 十六、架构层级规范（3 条，P0+P1）
 # ============================================
   - id: "YDIZ-ARCH-001"
     category: "architecture"
@@ -780,6 +780,130 @@ rules:
       4. 检查并补充 pom.xml 中缺失的显式依赖声明
             5. 运行 mvn dependency:tree 确认依赖方向正确
     source: "编码规范 22.2.1（enforce-l1-purity）- 【强制】"
+
+  - id: "YDIZ-ARCH-002"
+    category: "architecture"
+    severity: "P1"
+    title: "【建议】L1 工具模块禁止通过反射调用 L2+ 内部模块，允许 SPI/@ConditionalOnClass 桥接"
+    description: |
+      L1 工具层模块（ydsz-common-json、ydsz-common-util、ydsz-common-cache、ydsz-common-excel）必须保持零内部依赖纯度。
+      除 pom.xml 直接依赖外，严禁通过 Java 反射机制在运行时动态加载并调用 L2 及以上层级的内部模块类。
+      反射调用绕过了 Maven 依赖管理和编译期检查，会导致：
+      1. 运行时 NoClassDefFoundError（部署环境缺少期望依赖时）
+      2. 层级架构被隐性破坏（L1 反向依赖 L2+，违反 YDIZ-ARCH-001）
+      3. 重构/升级时反射路径断裂，编译期无法检测
+
+      **允许的桥接方式**：
+      - Java SPI（ServiceLoader）：L1 模块通过 ServiceLoader.load(XxxSpi.class) 加载实现类，由上层模块在 META-INF/services 中声明实现，运行时按需注入，编译期无类型耦合
+      - Spring @ConditionalOnClass(name="xxx")：通过全限定类名字符串进行条件判断，类不存在时该配置不生效，不产生编译期依赖
+
+      **L1→L1 反射耦合**：L1 模块之间通过反射调用彼此类，同样视为隐性依赖，属 P1 违规。应通过 ydsz-common-util 公共能力下沉或 SPI 方式解耦。
+    pattern: |
+      以下任一情形构成 P1 违规：
+      1. L1 模块中使用 Class.forName("com.njydsz.common.xxx...") 且目标类属于 L2+ 模块
+      2. L1 模块中使用 ReflectionUtils.getMethod / Method.invoke 调用 L2+ 模块的类
+      3. L1 模块中硬编码 L2+ 模块内部类的全限定名字符串（如 "com.njydsz.common.core.xxx"）
+      4. L1 模块之间通过反射互相调用（如 cache 调 util、json 调 cache 等）
+      允许情形（不违规）：
+      - 使用 ServiceLoader.load(XxxSpi.class) 进行 SPI 扩展
+      - 使用 @ConditionalOnClass(name="xxx") 做条件装配
+    example_bad: |
+      // ❌ ydsz-common-cache（L1）通过反射调用 ydsz-common-thread（L4）的 ExecutorUtils
+      package com.njydsz.common.cache.support;
+      Class<?> clazz = Class.forName("com.njydsz.common.thread.util.ExecutorUtils");
+      Method method = clazz.getMethod("getBizExecutor");
+      Executor executor = (Executor) method.invoke(null);
+
+      // ❌ L1→L1 反射耦合：cache 模块反射调用 util 模块的内部类
+      Class<?> utilClass = Class.forName("com.njydsz.common.util.InternalStringUtils");
+      Object result = utilClass.getMethod("normalize", String.class).invoke(null, input);
+    example_good: |
+      // ✅ 使用 SPI 桥接：L1 定义 SPI 接口，上层模块提供实现
+      ServiceLoader<ExecutorServiceSpi> loader = ServiceLoader.load(ExecutorServiceSpi.class);
+      ExecutorServiceSpi spi = loader.iterator().hasNext() ? loader.iterator().next() : null;
+      if (spi != null) {
+          executor = spi.getExecutor();
+      }
+
+      // ✅ 使用 @ConditionalOnClass 做条件桥接
+      @Configuration
+      @ConditionalOnClass(name = "com.njydsz.common.thread.util.ExecutorUtils")
+      public class ThreadPoolAutoConfig {
+          @Bean
+          public Executor bizExecutor() {
+              return ExecutorUtils.getBizExecutor();
+          }
+      }
+
+      // ✅ L1 能力下沉到 ydzs-common-util 模块
+      // 将通用字符串处理逻辑从 ydsz-common-util 提取，cache 直接 import util 的公开 API
+      import com.njydsz.common.util.StringUtils;
+    fix: |
+      1. 识别反射调用的目标类所属模块及层级
+      2. 若目标在 L2+：改用 SPI 接口定义（loader 模式）或 @ConditionalOnClass 条件装配移除反射
+      3. 若目标在 L1（L1->L1 反射）：将通用能力下沉到 ydzs-common-util，替换为直接 import
+      4. 检查并更新 pom.xml，确保 SPI 实现模块的依赖正确
+    source: "编码规范 22.2.1（enforce-l1-purity）- L1 工具纯度补充条款"
+
+  - id: "YDIZ-ARCH-003"
+    category: "architecture"
+    severity: "P1"
+    title: "【建议】L1 模块对外 API 必须提供纯 JDK 降级路径"
+    description: |
+      L1 工具层模块在为上层提供便捷封装的同时，必须保证**不引入非 JDK 的隐式耦合**。
+      当 L1 模块内部使用了第三方库能力（如 Jackson 序列化、Caffeine 缓存）时，
+      必须提供纯 JDK 实现的默认降级路径，确保上层模块在无第三方依赖时的最小可运行性。
+
+      **为什么需要降级路径**：
+      - L1 模块的理想状态是零依赖（仅 JDK），但实际业务中可能需要引入轻量第三方库
+      - 若 L1 模块直接硬编码第三方库 API（如 ObjectMapper.readValue），则上层引入该 L1 模块时必须同时传递所有第三方依赖
+      - 降级路径通过 SPI 或 @ConditionalOnClass 实现：优先使用第三方能力，缺失时使用 JDK 原生实现
+
+      **降级模式**：
+      - 序列化场景：优先使用 Jackson（若 classpath 存在），降级使用 JDK 原生（toString/Map 手动映射）
+      - 缓存场景：优先使用 Caffeine（若 classpath 存在），降级使用 JDK ConcurrentHashMap + 手动过期
+      - 时间处理场景：使用 JDK java.time.* API，无需降级
+    pattern: |
+      以下情形构成 P1 违规：
+      1. L1 模块方法签名直接返回第三方库类型（如 ObjectMapper、Cache）且无纯 JDK 替代路径
+      2. L1 模块方法实现中直接 new 第三方类的实例，未做 classpath 探测
+      3. L1 模块无条件下 import com.fasterxml.jackson.* / com.github.benmanes.caffeine.* 等
+    example_bad: |
+      // ❌ L1 模块无降级地硬编码 Jackson
+      package com.njydsz.common.json;
+      public class JsonUtils {
+          private static final ObjectMapper MAPPER = new ObjectMapper(); // 无降级
+          public static String toJson(Object obj) throws JsonProcessingException {
+              return MAPPER.writeValueAsString(obj);
+          }
+      }
+
+      // ❌ 返回 Jackson 类型给上层
+      public static ObjectMapper getMapper() { return MAPPER; }
+    example_good: |
+      // ✅ L1 提供纯 JDK 降级 + 第三方增强
+      package com.njydsz.common.json;
+      public class JsonUtils {
+          static {
+              // 优先加载 SPI 实现
+              ServiceLoader<JsonSpi> loader = ServiceLoader.load(JsonSpi.class);
+              jsonSpi = loader.iterator().hasNext() ? loader.iterator().next() : null;
+          }
+
+          public static String toJson(Object obj) {
+              if (jsonSpi != null) {
+                  return jsonSpi.toJson(obj); // 第三方实现（Jackson/Fastjson 等）
+              }
+              // 纯 JDK 降级：基本类型直接 toString，Map/List 递归处理
+              return fallbackToJson(obj); // JDK 原生实现
+          }
+      }
+    fix: |
+      1. 在 L1 模块中定义 SPI 接口（如 JsonSpi、CacheSpi）
+      2. 提供纯 JDK 实现的降级版本（fallback 模式）
+      3. 第三方实现模块通过 META-INF/services 声明 SPI 实现
+      4. 移除方法签名中的第三方类型暴露，改用 JDK 兼容类型
+    source: "编码规范 22.2.1（enforce-l1-purity）- L1 工具纯度补充条款"
 
 # ============================================
 # 十七、API 版本控制规范（1 条，P0）
@@ -1095,9 +1219,9 @@ stats:
   performance: 2
   common-reuse: 8
   security: 2
-  architecture: 1
+  architecture: 3
   engineering: 3
   warnings: 1
   api: 2
   tx: 4
-  total: 55
+  total: 57

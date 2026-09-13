@@ -1,6 +1,6 @@
 package com.njydsz.common.cache.support;
 
-import org.springframework.util.Assert;
+import java.util.Objects;
 
 /**
  * 模块级缓存键构造器抽象基类（P2-2：公共能力下沉）。
@@ -46,7 +46,7 @@ public abstract class AbstractModuleCacheKeyBuilder {
    * @param module 模块名（如 {@code "system"}、{@code "nextwiki"}），不可为空
    */
   protected AbstractModuleCacheKeyBuilder(String module) {
-    Assert.hasText(module, "module must not be empty");
+    Objects.requireNonNull(module, "module must not be empty");
     this.module = module;
   }
 
