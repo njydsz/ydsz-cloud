@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.template;
+﻿package com.njydsz.message.web.controller.template;
 
 import java.util.List;
 
@@ -77,7 +77,7 @@ import com.njydsz.message.server.service.TemplateService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/template")
+@RequestMapping("/message/template")
 @RequiredArgsConstructor
 public class TemplateController {
 

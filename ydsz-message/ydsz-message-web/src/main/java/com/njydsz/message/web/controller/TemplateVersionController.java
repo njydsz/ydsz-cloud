@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.template;
+﻿package com.njydsz.message.web.controller.template;
 
 import java.util.List;
 
@@ -85,7 +85,7 @@ import com.njydsz.message.server.service.template.TemplateVersionService;
 @Tag(name = "模板版本管理", description = "版本历史、回滚、预览、试发")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/template/version")
+@RequestMapping("/message/template/version")
 @RequiredArgsConstructor
 public class TemplateVersionController {
 

@@ -76,7 +76,7 @@ import com.njydsz.nextwiki.server.service.QuotaApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/quota")
+@RequestMapping("/nextwiki/quota")
 @RequiredArgsConstructor
 @Tag(name = "存储配额", description = "配额查询、设置、校验（支持 user/tenant/project 维度）")
 public class QuotaController {

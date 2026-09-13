@@ -48,7 +48,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/system/metrics")
+@RequestMapping("/system/metrics")
 @RequiredArgsConstructor
 public class MetricsDashboardController {
 

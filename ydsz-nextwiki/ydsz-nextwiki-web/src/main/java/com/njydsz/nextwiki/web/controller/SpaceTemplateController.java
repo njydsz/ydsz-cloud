@@ -48,7 +48,7 @@ import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/templates")
+@RequestMapping("/nextwiki/templates")
 @RequiredArgsConstructor
 @Tag(name = "空间模板管理", description = "S4-P3-02：文档模板体系")
 public class SpaceTemplateController {

@@ -55,7 +55,7 @@ import com.njydsz.system.server.service.TenantService;
 @Tag(name = "租户管理", description = "多租户 CRUD")
 @Slf4j
 @RestController
-@RequestMapping("/api/tenant")
+@RequestMapping("/tenant")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:tenant:list")
 public class TenantController {

@@ -4,7 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.core.request.PageQuery;
+import com.njydsz.common.domain.query.PageQuery;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

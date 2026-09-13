@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.core;
+﻿package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 import java.util.Map;
@@ -77,7 +77,7 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/feedback")
+@RequestMapping("/message/feedback")
 @RequiredArgsConstructor
 public class MessageFeedbackController {
 

@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.batch;
+﻿package com.njydsz.message.web.controller.batch;
 
 import java.util.List;
 
@@ -75,7 +75,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/aggregate")
+@RequestMapping("/message/aggregate")
 @RequiredArgsConstructor
 public class AggregateController {
 

@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.receipt;
+﻿package com.njydsz.message.web.controller.receipt;
 
 import java.io.IOException;
 
@@ -47,7 +47,7 @@ import com.njydsz.message.server.service.receipt.ReadReceiptService;
 @Tag(name = "已读回执", description = "短信短链回调")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/read-receipt")
+@RequestMapping("/message/read-receipt")
 @RequiredArgsConstructor
 public class ReadReceiptController {
 

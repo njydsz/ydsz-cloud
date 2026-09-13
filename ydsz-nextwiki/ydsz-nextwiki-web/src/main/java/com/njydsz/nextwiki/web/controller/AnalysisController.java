@@ -85,7 +85,7 @@ import com.njydsz.nextwiki.server.service.StorageAnalysisApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/analysis")
+@RequestMapping("/nextwiki/analysis")
 @RequiredArgsConstructor
 @Tag(name = "存储分析与AI摘要", description = "存储统计报表、文档智能摘要（LLM）")
 public class AnalysisController {

@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller;
+﻿package com.njydsz.message.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,7 +41,7 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/canary")
+@RequestMapping("/message/canary")
 @RequiredArgsConstructor
 public class CanaryController {
 

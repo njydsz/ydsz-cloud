@@ -39,7 +39,7 @@ import com.njydsz.system.server.service.ApiPermissionService;
 @Tag(name = "接口权限管理", description = "接口权限自动注册查看/同步管理")
 @Slf4j
 @RestController
-@RequestMapping("/api/permission/api")
+@RequestMapping("/permission/api")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:permission:api-list")
 public class ApiPermissionController {

@@ -70,7 +70,7 @@ import com.njydsz.system.server.service.DictItemService;
 @Tag(name = "字典项", description = "字典项 CRUD + 批量操作 + 按类型查询 + 树形查询")
 @Slf4j
 @RestController
-@RequestMapping("/api/dict/item")
+@RequestMapping("/dict/item")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:dict:item:list")
 public class DictItemController {

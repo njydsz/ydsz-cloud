@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller;
+﻿package com.njydsz.message.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,7 +46,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
 @Tag(name = "运维诊断", description = "消息模块运维操作接口（高权限）")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/ops")
+@RequestMapping("/message/ops")
 @RequiredArgsConstructor
 public class OpsController {
 

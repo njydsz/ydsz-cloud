@@ -41,7 +41,7 @@ import com.njydsz.system.server.service.FrontendInitService;
 @Tag(name = "前端初始化", description = "前端启动聚合数据接口")
 @Slf4j
 @RestController
-@RequestMapping("/api/system/init")
+@RequestMapping("/system/init")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:frontend:init")
 public class FrontendInitController {

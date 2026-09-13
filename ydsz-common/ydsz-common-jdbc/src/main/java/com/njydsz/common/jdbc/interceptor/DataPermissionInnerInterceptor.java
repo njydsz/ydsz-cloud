@@ -87,7 +87,7 @@ public abstract class DataPermissionInnerInterceptor extends CachingJsqlParserSu
    * @return 应用数据权限后的 SQL 语句
    */
   public String apply(String sql, DataPermissionContext context) {
-    if (config == null || !Boolean.TRUE.equals(config.getEnabled())) {
+    if (config == null || !Boolean.TRUE.equals(config.getIsEnabled())) {
       return sql;
     }
     if (context == null) {
@@ -116,7 +116,7 @@ public abstract class DataPermissionInnerInterceptor extends CachingJsqlParserSu
   @Override
   public void beforePrepare(
       StatementHandler sh, Connection connection, Integer transactionTimeout) {
-    if (config == null || !Boolean.TRUE.equals(config.getEnabled())) {
+    if (config == null || !Boolean.TRUE.equals(config.getIsEnabled())) {
       return;
     }
     if (shouldCheckBypass() && DataPermissionHelper.isBypassActive()) {

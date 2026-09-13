@@ -43,7 +43,7 @@ import com.njydsz.system.server.service.ConfigService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/feature-flags")
+@RequestMapping("/feature-flags")
 @RequiredArgsConstructor
 @Tag(name = "远程特性开关", description = "前端 FeatureFlagsManager 远程开关数据源")
 public class FeatureFlagController {

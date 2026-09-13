@@ -59,7 +59,7 @@ import com.njydsz.system.server.service.DictService;
 @Tag(name = "字典类型", description = "字典类型 CRUD + 全量列表")
 @Slf4j
 @RestController
-@RequestMapping("/api/dict/type")
+@RequestMapping("/dict/type")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:dict:list")
 public class DictController {

@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.core;
+﻿package com.njydsz.message.web.controller.core;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -84,7 +84,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
 @Tag(name = "消息统计看板", description = "发送/重试/死信/回执聚合指标")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/stats")
+@RequestMapping("/message/stats")
 @RequiredArgsConstructor
 public class MessageStatsController {
 

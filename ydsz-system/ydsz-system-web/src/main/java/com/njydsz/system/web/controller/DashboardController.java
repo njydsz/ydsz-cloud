@@ -40,7 +40,7 @@ import com.njydsz.system.server.service.DashboardService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/dashboard")
 @RequiredArgsConstructor
 @Tag(name = "工作台聚合", description = "主框架工作台概览统计与聚合数据")
 public class DashboardController {

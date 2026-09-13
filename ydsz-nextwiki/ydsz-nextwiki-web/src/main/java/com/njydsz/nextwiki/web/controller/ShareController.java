@@ -66,7 +66,7 @@ import com.njydsz.nextwiki.server.service.ShareApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/shares")
+@RequestMapping("/nextwiki/shares")
 @RequiredArgsConstructor
 @Tag(name = "文件分享", description = "创建分享链接、验证访问、撤销分享、访问日志、定向分享")
 public class ShareController {

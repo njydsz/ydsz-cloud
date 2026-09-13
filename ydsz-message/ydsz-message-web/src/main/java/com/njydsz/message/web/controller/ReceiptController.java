@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.receipt;
+﻿package com.njydsz.message.web.controller.receipt;
 
 import java.util.List;
 
@@ -79,7 +79,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/receipt")
+@RequestMapping("/message/receipt")
 @RequiredArgsConstructor
 public class ReceiptController {
 

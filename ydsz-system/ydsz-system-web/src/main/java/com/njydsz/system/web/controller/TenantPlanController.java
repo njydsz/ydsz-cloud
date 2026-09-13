@@ -50,7 +50,7 @@ import com.njydsz.system.server.service.TenantPlanService;
 @Tag(name = "租户套餐管理", description = "套餐 CRUD / 菜单配置")
 @Slf4j
 @RestController
-@RequestMapping("/api/tenant-plan")
+@RequestMapping("/tenant-plan")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:tenant:plan:list")
 public class TenantPlanController {

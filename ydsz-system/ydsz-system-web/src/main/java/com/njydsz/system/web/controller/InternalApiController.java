@@ -57,7 +57,7 @@ import com.njydsz.system.server.service.DictItemService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/internal")
+@RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:internal:api")
 public class InternalApiController {

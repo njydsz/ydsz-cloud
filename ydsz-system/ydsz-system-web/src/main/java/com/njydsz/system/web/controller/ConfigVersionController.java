@@ -54,7 +54,7 @@ import com.njydsz.system.server.service.EntityVersionService;
 @Tag(name = "配置版本", description = "配置变更历史查询 + 一键回滚")
 @Slf4j
 @RestController
-@RequestMapping("/api/config/version")
+@RequestMapping("/config/version")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:config:version:list")
 public class ConfigVersionController {

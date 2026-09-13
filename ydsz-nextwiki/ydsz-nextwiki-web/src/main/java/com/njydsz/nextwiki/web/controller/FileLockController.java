@@ -90,7 +90,7 @@ import com.njydsz.nextwiki.server.service.FilePermissionService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/files")
+@RequestMapping("/nextwiki/files")
 @RequiredArgsConstructor
 @Tag(name = "文件锁定", description = "Check-out/Check-in 防并发编辑（P0-R3 修复后使用 status 字段）")
 public class FileLockController {

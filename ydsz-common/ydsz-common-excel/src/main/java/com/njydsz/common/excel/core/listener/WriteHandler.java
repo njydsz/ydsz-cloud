@@ -362,7 +362,7 @@ public class WriteHandler {
       DataValidationConstraint constraint = createConstraint(dvHelper, config);
 
       DataValidation validation = dvHelper.createValidation(constraint, addressList);
-      validation.setShowErrorBox(config.isShowErrorMessage());
+      validation.setShowErrorBox(config.getIsShowErrorMessage());
       if (config.getErrorTitle() != null || config.getError() != null) {
         validation.createErrorBox(
             config.getErrorTitle() != null ? config.getErrorTitle() : "",

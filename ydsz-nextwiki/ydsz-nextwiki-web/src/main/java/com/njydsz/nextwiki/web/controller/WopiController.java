@@ -93,7 +93,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/wopi")
+@RequestMapping("/nextwiki/wopi")
 @RequiredArgsConstructor
 @Tag(name = "WOPI 协议", description = "在线协同编辑 WOPI 接口（OnlyOffice / Collabora 集成）")
 public class WopiController {

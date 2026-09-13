@@ -73,7 +73,7 @@ import com.njydsz.nextwiki.server.service.PreviewApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/preview")
+@RequestMapping("/nextwiki/preview")
 @RequiredArgsConstructor
 @Tag(name = "文档预览", description = "在线预览生成、缩略图、文档格式转换")
 public class PreviewController {

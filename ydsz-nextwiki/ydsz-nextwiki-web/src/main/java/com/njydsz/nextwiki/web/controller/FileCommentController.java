@@ -93,7 +93,7 @@ import com.njydsz.nextwiki.server.mention.MentionService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/comments")
+@RequestMapping("/nextwiki/comments")
 @RequiredArgsConstructor
 @Tag(name = "文件评论", description = "文件级评论、回复、批注、解决标记")
 public class FileCommentController {

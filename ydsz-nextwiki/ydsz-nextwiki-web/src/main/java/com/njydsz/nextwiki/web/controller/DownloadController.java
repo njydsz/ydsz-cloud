@@ -99,7 +99,7 @@ import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownl
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/download")
+@RequestMapping("/nextwiki/download")
 @RequiredArgsConstructor
 @Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链、Range 断点续传")
 public class DownloadController {

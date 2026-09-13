@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.config;
+﻿package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
@@ -76,7 +76,7 @@ import com.njydsz.message.server.service.config.RouteRuleService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/route-rule")
+@RequestMapping("/message/route-rule")
 @RequiredArgsConstructor
 public class RouteRuleController {
 

@@ -65,7 +65,7 @@ import com.njydsz.system.server.service.EntityVersionService;
 @Tag(name = "字典版本", description = "字典变更历史查询 + 一键回滚")
 @Slf4j
 @RestController
-@RequestMapping("/api/dict/version")
+@RequestMapping("/dict/version")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:dict:version:list")
 public class DictVersionController {

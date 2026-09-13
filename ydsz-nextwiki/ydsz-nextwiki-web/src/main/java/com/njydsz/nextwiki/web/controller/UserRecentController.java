@@ -40,7 +40,7 @@ import com.njydsz.nextwiki.server.service.UserRecentApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/recent")
+@RequestMapping("/nextwiki/recent")
 @RequiredArgsConstructor
 public class UserRecentController {
 

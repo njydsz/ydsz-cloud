@@ -47,7 +47,7 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/internal")
+@RequestMapping("/internal")
 @RequiredArgsConstructor
 @Tag(name = "内部 API", description = "跨服务 Feign 调用接口")
 public class InternalApiController {

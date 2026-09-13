@@ -82,7 +82,7 @@ public class ValueFormatter {
 
     if (value instanceof String s) {
       String processedValue = automaticTrim ? s.trim() : s;
-      if (excelConfig.isFormulaInjectionProtection()) {
+      if (excelConfig.getIsFormulaInjectionProtection()) {
         // P1 修复：XLSX 路径用空格前缀（撇号在 XLSX 单元格中会字面显示），分路径策略见 FormulaInjectionGuard
         processedValue = excelConfig.sanitizeForXlsx(processedValue);
       }
@@ -105,7 +105,7 @@ public class ValueFormatter {
       cell.setCellValue(formatSqlDate(value, dateFormat));
     } else {
       String strValue = value.toString();
-      if (excelConfig.isFormulaInjectionProtection()) {
+      if (excelConfig.getIsFormulaInjectionProtection()) {
         strValue = excelConfig.sanitizeForXlsx(strValue);
       }
       cell.setCellValue(strValue);

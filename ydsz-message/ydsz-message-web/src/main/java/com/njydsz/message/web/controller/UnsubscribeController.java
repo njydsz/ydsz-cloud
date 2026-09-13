@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.config;
+﻿package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
@@ -80,7 +80,7 @@ import com.njydsz.message.server.token.UnsubscribeTokenPayload;
 @Tag(name = "退订中心", description = "token 一键退订与退订管理")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/unsubscribe")
+@RequestMapping("/message/unsubscribe")
 @RequiredArgsConstructor
 public class UnsubscribeController {
 

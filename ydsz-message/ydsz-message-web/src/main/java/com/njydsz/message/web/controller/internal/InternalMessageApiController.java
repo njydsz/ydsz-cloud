@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.internal;
+﻿package com.njydsz.message.web.controller.internal;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ import com.njydsz.message.server.service.core.MessageService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/internal")
+@RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "message:internal:api")
 public class InternalMessageApiController {

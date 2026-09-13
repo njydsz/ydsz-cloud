@@ -87,7 +87,7 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/tags")
+@RequestMapping("/nextwiki/tags")
 @RequiredArgsConstructor
 @io.swagger.v3.oas.annotations.tags.Tag(
     name = "标签管理",

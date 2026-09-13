@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller;
+﻿package com.njydsz.message.web.controller;
 
 import java.util.List;
 
@@ -47,7 +47,7 @@ import com.njydsz.message.server.service.core.MessageHealthService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/health")
+@RequestMapping("/message/health")
 @RequiredArgsConstructor
 public class SystemHealthController {
 

@@ -91,7 +91,7 @@ import com.njydsz.nextwiki.server.service.VersionDiffService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/files")
+@RequestMapping("/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "网盘文件批量与版本管理", description = "批量删除/移动、版本历史/回滚、星标切换")

@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.config;
+﻿package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
@@ -83,7 +83,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
 @Tag(name = "死信管理", description = "死信查询与手动重发")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/dead-letter")
+@RequestMapping("/message/dead-letter")
 @RequiredArgsConstructor
 public class DeadLetterController {
 

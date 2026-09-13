@@ -46,7 +46,7 @@ import com.njydsz.common.core.response.YdszResponse;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/audit")
+@RequestMapping("/admin/audit")
 @RequiredArgsConstructor
 @ApiVersion("26.09.01")
 @Tag(name = "审计日志管理", description = "审计日志查询（运营/管理后台）")

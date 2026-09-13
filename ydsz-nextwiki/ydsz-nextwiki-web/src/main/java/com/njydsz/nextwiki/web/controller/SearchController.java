@@ -80,7 +80,7 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/search")
+@RequestMapping("/nextwiki/search")
 @RequiredArgsConstructor
 @Tag(name = "全文搜索", description = "文件名/内容/标签综合搜索，支持 ES 全文检索与 DB LIKE 降级")
 public class SearchController {

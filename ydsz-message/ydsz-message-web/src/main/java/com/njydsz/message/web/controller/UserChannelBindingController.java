@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.config;
+﻿package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
@@ -84,7 +84,7 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/user-channels")
+@RequestMapping("/message/user-channels")
 @RequiredArgsConstructor
 public class UserChannelBindingController {
 

@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.archive;
+﻿package com.njydsz.message.web.controller.archive;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -80,7 +80,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/archive/search")
+@RequestMapping("/message/archive/search")
 @RequiredArgsConstructor
 public class MessageArchiveController {
 

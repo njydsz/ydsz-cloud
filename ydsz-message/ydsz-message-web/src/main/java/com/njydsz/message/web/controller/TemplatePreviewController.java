@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.template;
+﻿package com.njydsz.message.web.controller.template;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -73,7 +73,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/template/preview")
+@RequestMapping("/message/template/preview")
 @RequiredArgsConstructor
 public class TemplatePreviewController {
   /** 集合初始容量 */

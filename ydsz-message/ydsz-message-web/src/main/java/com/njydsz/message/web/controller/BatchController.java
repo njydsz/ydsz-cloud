@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.batch;
+﻿package com.njydsz.message.web.controller.batch;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -89,7 +89,7 @@ import com.njydsz.message.server.service.batch.BatchService;
 @Tag(name = "批量发送", description = "异步批量发送与进度查询")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/batch")
+@RequestMapping("/message/batch")
 @RequiredArgsConstructor
 public class BatchController {
 

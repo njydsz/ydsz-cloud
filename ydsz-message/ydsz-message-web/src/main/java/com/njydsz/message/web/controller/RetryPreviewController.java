@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller;
+﻿package com.njydsz.message.web.controller;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,7 +34,7 @@ import com.njydsz.message.server.service.retry.RetryPreviewService;
 @Tag(name = "重试策略预览", description = "重试预设档位可视化预览")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/retry")
+@RequestMapping("/message/retry")
 @RequiredArgsConstructor
 public class RetryPreviewController {
   /** 集合初始容量 */

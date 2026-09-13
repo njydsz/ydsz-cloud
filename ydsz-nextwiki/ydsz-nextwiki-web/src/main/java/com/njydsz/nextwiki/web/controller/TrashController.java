@@ -89,7 +89,7 @@ import com.njydsz.nextwiki.server.service.TrashApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/trash")
+@RequestMapping("/nextwiki/trash")
 @RequiredArgsConstructor
 @Tag(name = "回收站管理", description = "回收站列表、恢复、永久删除、清空（默认 30 天保留期）")
 public class TrashController {

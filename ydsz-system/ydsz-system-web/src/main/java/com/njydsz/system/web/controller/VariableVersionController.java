@@ -54,7 +54,7 @@ import com.njydsz.system.server.service.VariableService;
 @Tag(name = "变量版本", description = "变量变更历史查询 + 一键回滚")
 @Slf4j
 @RestController
-@RequestMapping("/api/variable/version")
+@RequestMapping("/variable/version")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:variable:version:list")
 public class VariableVersionController {

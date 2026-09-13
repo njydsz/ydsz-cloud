@@ -70,7 +70,7 @@ import com.njydsz.system.server.service.ConfigService;
 @Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作 + 导入导出")
 @Slf4j
 @RestController
-@RequestMapping("/api/config")
+@RequestMapping("/config")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:config:list")
 public class ConfigController {

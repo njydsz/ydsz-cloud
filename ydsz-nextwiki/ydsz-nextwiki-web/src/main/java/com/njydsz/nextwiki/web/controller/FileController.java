@@ -99,7 +99,7 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/files")
+@RequestMapping("/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "网盘文件管理", description = "文件上传、目录、移动、重命名、删除、复制")

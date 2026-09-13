@@ -49,7 +49,7 @@ import com.njydsz.nextwiki.server.service.SpaceApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/spaces")
+@RequestMapping("/nextwiki/spaces")
 @RequiredArgsConstructor
 @Tag(name = "知识库空间管理", description = "S3-P2-01：空间管理聚合根")
 public class SpaceController {

@@ -93,7 +93,7 @@ import com.njydsz.nextwiki.server.service.ChunkUploadApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/files")
+@RequestMapping("/nextwiki/files")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "网盘文件分片上传", description = "大文件分片上传、断点续传、合并/取消/查询")

@@ -39,7 +39,7 @@ import com.njydsz.nextwiki.server.service.UserFavoriteApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/favorites")
+@RequestMapping("/nextwiki/favorites")
 @RequiredArgsConstructor
 public class UserFavoriteController {
 

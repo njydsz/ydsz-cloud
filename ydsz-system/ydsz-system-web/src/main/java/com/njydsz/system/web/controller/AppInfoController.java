@@ -65,7 +65,7 @@ import com.njydsz.system.server.service.AppInfoService;
 @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
 @Slf4j
 @RestController
-@RequestMapping("/api/app")
+@RequestMapping("/app")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "sys:app:list")
 public class AppInfoController {

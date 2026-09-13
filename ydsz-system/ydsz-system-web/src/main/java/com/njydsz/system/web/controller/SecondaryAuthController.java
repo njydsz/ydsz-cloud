@@ -31,7 +31,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @Tag(name = "二次身份验证", description = "敏感操作前的短期令牌颁发")
 @Slf4j
 @RestController
-@RequestMapping("/api/auth/secondary-auth")
+@RequestMapping("/auth/secondary-auth")
 public class SecondaryAuthController {
 
   /** 二次认证令牌有效期（毫秒） — 30 分钟 */

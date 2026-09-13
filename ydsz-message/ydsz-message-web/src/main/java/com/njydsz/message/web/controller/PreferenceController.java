@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.config;
+﻿package com.njydsz.message.web.controller.config;
 
 import java.util.List;
 
@@ -81,7 +81,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/preference")
+@RequestMapping("/message/preference")
 @RequiredArgsConstructor
 public class PreferenceController {
 

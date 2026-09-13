@@ -39,7 +39,7 @@ import com.njydsz.system.server.service.ConfigApprovalService;
 @Tag(name = "配置变更审批", description = "配置/字典/变量变更审批流")
 @Slf4j
 @RestController
-@RequestMapping("/api/config/approval")
+@RequestMapping("/config/approval")
 @RequiredArgsConstructor
 public class ConfigApprovalController {
 

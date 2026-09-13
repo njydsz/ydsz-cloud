@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller;
+﻿package com.njydsz.message.web.controller;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -45,7 +45,7 @@ import com.njydsz.message.server.reactive.ReactiveSseRegistry;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/reactive")
+@RequestMapping("/message/reactive")
 @RequiredArgsConstructor
 public class ReactiveNotificationController {
 

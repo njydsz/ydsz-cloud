@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.core;
+﻿package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 
@@ -81,7 +81,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/trace")
+@RequestMapping("/message/trace")
 @RequiredArgsConstructor
 public class MessageTraceController {
 

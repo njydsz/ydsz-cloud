@@ -1,4 +1,4 @@
-package com.njydsz.message.web.controller.receipt;
+﻿package com.njydsz.message.web.controller.receipt;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -77,7 +77,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/message/recall")
+@RequestMapping("/message/recall")
 @RequiredArgsConstructor
 public class RecallController {
 

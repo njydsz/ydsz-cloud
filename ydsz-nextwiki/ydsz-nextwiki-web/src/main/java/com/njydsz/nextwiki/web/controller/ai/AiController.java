@@ -44,7 +44,7 @@ import com.njydsz.nextwiki.server.service.AiSummaryService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/ai")
+@RequestMapping("/nextwiki/ai")
 @RequiredArgsConstructor
 @Tag(name = "AI 智能能力", description = "文件智能摘要、关键词提取等 AI 能力（预留接口）")
 public class AiController {

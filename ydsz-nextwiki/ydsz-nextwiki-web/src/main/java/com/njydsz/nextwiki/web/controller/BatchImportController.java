@@ -75,7 +75,7 @@ import com.njydsz.nextwiki.server.service.BatchImportApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/nextwiki/import")
+@RequestMapping("/nextwiki/import")
 @RequiredArgsConstructor
 @Tag(name = "批量导入", description = "批量文件上传、ZIP 压缩包导入（自动解压保留目录结构）")
 public class BatchImportController {
