@@ -146,7 +146,7 @@ public interface AgentMiddleware {
    * 限流中间件={@link #RATE_LIMIT_PRIORITY}、
    * 输出护栏={@link #OUTPUT_GUARD_PRIORITY}。
    *
-   * @return 优先级整数，默认 50
+   * @return 优先级整数，默认 {@link #DEFAULT_PRIORITY}
    */
   default int getPriority() {
     return DEFAULT_PRIORITY;

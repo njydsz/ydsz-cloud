@@ -21,7 +21,6 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
-import com.njydsz.agent.domain.middleware.AgentMiddleware;
 import com.njydsz.agent.domain.middleware.MiddlewareChain;
 import com.njydsz.agent.domain.middleware.MiddlewareContext;
 import com.njydsz.agent.domain.model.ToolDefinition;
