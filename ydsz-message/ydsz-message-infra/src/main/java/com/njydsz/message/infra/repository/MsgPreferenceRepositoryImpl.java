@@ -86,13 +86,13 @@ public class MsgPreferenceRepositoryImpl implements MsgPreferenceRepository {
     entity.setUserId(vo.getUserId());
     entity.setChannel(vo.getChannel());
     entity.setBizType(vo.getBizType());
-    entity.setEnabled(vo.getEnabled());
-    entity.setDndEnabled(vo.getDndEnabled());
+    entity.setIsEnabled(vo.getIsEnabled());
+    entity.setIsDndEnabled(vo.getIsDndEnabled());
     entity.setDndStart(vo.getDndStart());
     entity.setDndEnd(vo.getDndEnd());
     entity.setDailyLimit(vo.getDailyLimit());
     entity.setHourlyLimit(vo.getHourlyLimit());
-    entity.setDigestEnabled(vo.getDigestEnabled());
+    entity.setIsDigestEnabled(vo.getIsDigestEnabled());
     entity.setDigestFrequency(vo.getDigestFrequency());
     entity.setLocale(vo.getLocale());
     entity.setExtra(vo.getExtra());

@@ -22,11 +22,11 @@ public class PreferenceUpsertDTO {
   /** 业务类型 */
   @Xss private String bizType;
 
-  /** 是否启用该通道: 0 关闭 / 1 开启 */
-  private Integer enabled;
+  /** 是否启用该通道: true=开启 / false=关闭 */
+  private Boolean isEnabled;
 
-  /** 免打扰开关: 0 关闭 / 1 开启 */
-  private Integer dndEnabled;
+  /** 是否开启免打扰: true=开启 / false=关闭 */
+  private Boolean isDndEnabled;
 
   /** 免打扰开始时间 HH:mm */
   @Xss private String dndStart;
@@ -40,8 +40,8 @@ public class PreferenceUpsertDTO {
   /** 每小时发送上限 */
   private Integer hourlyLimit;
 
-  /** 聚合开关: 0 即时发送 / 1 聚合摘要 */
-  private Integer digestEnabled;
+  /** 是否启用聚合: true=聚合 / false=即时发送 */
+  private Boolean isDigestEnabled;
 
   /** 聚合频率: HOURLY/DAILY/WEEKLY */
   @Xss private String digestFrequency;

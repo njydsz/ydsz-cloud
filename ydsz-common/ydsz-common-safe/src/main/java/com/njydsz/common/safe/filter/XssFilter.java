@@ -21,8 +21,8 @@ import com.njydsz.common.safe.alert.SafeAlertProperties;
 import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
-import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.safe.xss.EscapeUtils;
+import com.njydsz.common.util.net.ClientIpResolver;
 import com.njydsz.common.util.http.UrlPathUtils;
 
 /**

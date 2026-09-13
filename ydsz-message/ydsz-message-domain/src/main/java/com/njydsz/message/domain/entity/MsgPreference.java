@@ -2,6 +2,7 @@ package com.njydsz.message.domain.entity;
 
 import java.io.Serial;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,11 +34,13 @@ public class MsgPreference extends MpBaseEntity<String> {
   /** 业务类型(__DEFAULT__ 表示该通道全局默认偏好) */
   private String bizType;
 
-  /** 是否启用该通道: 0 关闭 / 1 开启(关闭后不发送) */
-  private Integer enabled;
+  /** 是否启用该通道: true=开启 / false=关闭(关闭后不发送) */
+  @TableField("is_enabled")
+  private Boolean isEnabled;
 
-  /** 免打扰开关: 0 关闭 / 1 开启 */
-  private Integer dndEnabled;
+  /** 是否开启免打扰: true=开启 / false=关闭 */
+  @TableField("is_dnd_enabled")
+  private Boolean isDndEnabled;
 
   /** 免打扰开始时间 HH:mm(如 22:00) */
   private String dndStart;
@@ -51,8 +54,9 @@ public class MsgPreference extends MpBaseEntity<String> {
   /** 每小时发送上限 */
   private Integer hourlyLimit;
 
-  /** 聚合开关: 0 即时发送 / 1 聚合摘要 */
-  private Integer digestEnabled;
+  /** 是否启用摘要聚合: true=聚合 / false=即时发送 */
+  @TableField("is_digest_enabled")
+  private Boolean isDigestEnabled;
 
   /** 聚合频率: HOURLY / DAILY / WEEKLY */
   private String digestFrequency;

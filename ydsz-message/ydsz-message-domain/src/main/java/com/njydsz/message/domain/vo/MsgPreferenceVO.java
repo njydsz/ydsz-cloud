@@ -31,11 +31,11 @@ public class MsgPreferenceVO implements Serializable {
   /** 业务类型 */
   private String bizType;
 
-  /** 是否启用（1=启用，0=停用） */
-  private Integer enabled;
+  /** 是否启用(true=启用,false=停用) */
+  private Boolean isEnabled;
 
-  /** 是否启用免打扰（1=启用，0=停用） */
-  private Integer dndEnabled;
+  /** 是否启用免打扰(true=启用,false=停用) */
+  private Boolean isDndEnabled;
 
   /** 免打扰开始时间（HH:mm 格式） */
   private String dndStart;
@@ -49,8 +49,8 @@ public class MsgPreferenceVO implements Serializable {
   /** 每小时发送上限 */
   private Integer hourlyLimit;
 
-  /** 是否启用摘要聚合（1=启用，0=停用） */
-  private Integer digestEnabled;
+  /** 是否启用摘要聚合(true=启用,false=停用) */
+  private Boolean isDigestEnabled;
 
   /** 摘要频率（HOURLY/DAILY/WEEKLY） */
   private String digestFrequency;

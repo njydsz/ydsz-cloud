@@ -19,8 +19,8 @@ import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.common.safe.ip.IpAccessService;
-import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.util.http.UrlPathUtils;
+import com.njydsz.common.util.net.ClientIpResolver;
 
 /**
  * IP 黑白名单过滤器

@@ -26,8 +26,8 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.common.safe.ratelimit.model.RateLimitContext;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
-import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.util.http.RequestContextUtils;
+import com.njydsz.common.util.net.ClientIpResolver;
 
 /**
  * 限流 AOP 切面

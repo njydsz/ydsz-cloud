@@ -65,13 +65,13 @@ public class PreferenceServiceImpl implements PreferenceService {
       vo.setUserId(dto.getUserId());
       vo.setChannel(dto.getChannel());
       vo.setBizType(bizType);
-      vo.setEnabled(dto.getEnabled() == null ? 1 : dto.getEnabled());
-      vo.setDndEnabled(dto.getDndEnabled() == null ? 0 : dto.getDndEnabled());
+      vo.setIsEnabled(dto.getIsEnabled() == null ? Boolean.TRUE : dto.getIsEnabled());
+      vo.setIsDndEnabled(dto.getIsDndEnabled() == null ? Boolean.FALSE : dto.getIsDndEnabled());
       vo.setDndStart(dto.getDndStart());
       vo.setDndEnd(dto.getDndEnd());
       vo.setDailyLimit(dto.getDailyLimit());
       vo.setHourlyLimit(dto.getHourlyLimit());
-      vo.setDigestEnabled(dto.getDigestEnabled() == null ? 0 : dto.getDigestEnabled());
+      vo.setIsDigestEnabled(dto.getIsDigestEnabled() == null ? Boolean.FALSE : dto.getIsDigestEnabled());
       vo.setDigestFrequency(dto.getDigestFrequency());
       vo.setLocale(dto.getLocale());
       vo.setExtra(dto.getExtra());
@@ -84,15 +84,15 @@ public class PreferenceServiceImpl implements PreferenceService {
       return vo;
     }
     MsgPreferenceVO vo = existing.get();
-    vo.setEnabled(dto.getEnabled() == null ? vo.getEnabled() : dto.getEnabled());
-    vo.setDndEnabled(
-        dto.getDndEnabled() == null ? vo.getDndEnabled() : dto.getDndEnabled());
+    vo.setIsEnabled(dto.getIsEnabled() == null ? vo.getIsEnabled() : dto.getIsEnabled());
+    vo.setIsDndEnabled(
+        dto.getIsDndEnabled() == null ? vo.getIsDndEnabled() : dto.getIsDndEnabled());
     vo.setDndStart(dto.getDndStart());
     vo.setDndEnd(dto.getDndEnd());
     vo.setDailyLimit(dto.getDailyLimit());
     vo.setHourlyLimit(dto.getHourlyLimit());
-    vo.setDigestEnabled(
-        dto.getDigestEnabled() == null ? vo.getDigestEnabled() : dto.getDigestEnabled());
+    vo.setIsDigestEnabled(
+        dto.getIsDigestEnabled() == null ? vo.getIsDigestEnabled() : dto.getIsDigestEnabled());
     vo.setDigestFrequency(dto.getDigestFrequency());
     vo.setLocale(dto.getLocale());
     vo.setExtra(dto.getExtra());
