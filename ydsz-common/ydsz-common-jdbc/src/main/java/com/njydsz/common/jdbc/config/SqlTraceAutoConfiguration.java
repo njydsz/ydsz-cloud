@@ -47,7 +47,7 @@ import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
 @AutoConfiguration
 @ConditionalOnClass(MybatisPlusInterceptor.class)
 @ConditionalOnExpression(
-    "${ydsz.jdbc.enabled:true} and (${ydsz.jdbc.slow-sql.enabled:false} or ${ydsz.jdbc.sql-audit.enabled:false})")
+    "${ydsz.jdbc.is-enabled:true} and (${ydsz.jdbc.slow-sql.is-enabled:false} or ${ydsz.jdbc.sql-audit.is-enabled:false})")
 @EnableConfigurationProperties({
   JdbcProperties.class,
   SlowSqlProperties.class,
@@ -73,19 +73,19 @@ public class SqlTraceAutoConfiguration {
     SqlTraceInnerInterceptor interceptor = findOrCreateTraceInterceptor(mybatisPlusInterceptor);
 
     // 慢 SQL 配置
-    boolean slowSqlActive = Boolean.TRUE.equals(slowSqlProperties.isEnabled());
-    interceptor.setSlowSqlEnabled(slowSqlActive || interceptor.isSlowSqlEnabled());
+    boolean slowSqlActive = Boolean.TRUE.equals(slowSqlProperties.getIsEnabled());
+    interceptor.setIsSlowSqlEnabled(slowSqlActive || interceptor.getIsSlowSqlEnabled());
     interceptor.setSlowSqlThresholdMillis(slowSqlProperties.getThresholdMillis());
     interceptor.setAlertThresholdMillis(slowSqlProperties.getAlertThresholdMillis());
 
     // SQL 审计配置
-    boolean auditActive = Boolean.TRUE.equals(sqlAuditProperties.isEnabled());
-    interceptor.setAuditEnabled(auditActive || interceptor.isAuditEnabled());
-    interceptor.setAuditSelect(sqlAuditProperties.isAuditSelect());
-    interceptor.setAuditInsert(sqlAuditProperties.isAuditInsert());
-    interceptor.setAuditUpdate(sqlAuditProperties.isAuditUpdate());
-    interceptor.setAuditDelete(sqlAuditProperties.isAuditDelete());
-    interceptor.setLogParameters(sqlAuditProperties.isLogParameters());
+    boolean auditActive = Boolean.TRUE.equals(sqlAuditProperties.getIsEnabled());
+    interceptor.setIsAuditEnabled(auditActive || interceptor.getIsAuditEnabled());
+    interceptor.setIsAuditSelect(sqlAuditProperties.getIsAuditSelect());
+    interceptor.setIsAuditInsert(sqlAuditProperties.getIsAuditInsert());
+    interceptor.setIsAuditUpdate(sqlAuditProperties.getIsAuditUpdate());
+    interceptor.setIsAuditDelete(sqlAuditProperties.getIsAuditDelete());
+    interceptor.setIsLogParameters(sqlAuditProperties.getIsLogParameters());
     interceptor.setMaxParameterLength(sqlAuditProperties.getMaxParameterLength());
     interceptor.setExcludeTables(sqlAuditProperties.getExcludeTables());
     interceptor.setExcludeMethods(sqlAuditProperties.getExcludeMethods());
@@ -98,8 +98,8 @@ public class SqlTraceAutoConfiguration {
 
     log.info(
         "SQL链路追踪已启用 (慢SQL={}, 审计={}), 慢SQL阈值: {}ms, 告警阈值: {}ms",
-        interceptor.isSlowSqlEnabled(),
-        interceptor.isAuditEnabled(),
+        interceptor.getIsSlowSqlEnabled(),
+        interceptor.getIsAuditEnabled(),
         slowSqlProperties.getThresholdMillis(),
         slowSqlProperties.getAlertThresholdMillis());
   }

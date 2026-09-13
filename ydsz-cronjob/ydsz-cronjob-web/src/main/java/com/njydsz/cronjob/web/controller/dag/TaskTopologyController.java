@@ -73,7 +73,7 @@ import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 @Tag(name = "任务执行拓扑图", description = "DAG 实例执行拓扑可视化：节点/边/执行状态/历史")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/topology")
+@RequestMapping("/cronjob/topology")
 @RequiredArgsConstructor
 public class TaskTopologyController {
   /** 集合初始容量 */

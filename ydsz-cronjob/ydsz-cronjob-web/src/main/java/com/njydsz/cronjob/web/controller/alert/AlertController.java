@@ -65,7 +65,7 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/alert")
+@RequestMapping("/cronjob/alert")
 @RequiredArgsConstructor
 public class AlertController {
 

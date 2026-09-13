@@ -88,7 +88,7 @@ public class Resilience4jFeignPostProcessor implements BeanPostProcessor {
       return;
     }
     String circuitBreakerName = "feign:" + serviceId;
-    if (feignProperties.getCircuitBreaker().getIsEnabled()) {
+    if (feignProperties.getCircuitBreaker().isEnabled()) {
       log.debug("[FeignClient] 注册 CircuitBreaker 命名映射: service={} → cb={}", serviceId, circuitBreakerName);
     } else {
       log.debug("[FeignClient] 熔断器未启用，跳过 CircuitBreaker 注册: service={}", serviceId);

@@ -51,7 +51,7 @@ import com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor;
 @ConditionalOnClass(MybatisPlusInterceptor.class)
 @ConditionalOnProperty(
     prefix = "ydsz.jdbc.safe-query",
-    name = "enabled",
+    name = "is-enabled",
     havingValue = "true",
     matchIfMissing = true)
 @EnableConfigurationProperties({
@@ -80,14 +80,14 @@ public class SafeQueryAutoConfiguration {
     // 从 JDBC 配置加载安全查询设置
     SafeQueryProperties safeQuery = safeQueryProperties.getIfAvailable();
     if (safeQuery != null) {
-      interceptor.setEnabled(safeQuery.isEnabled());
-      interceptor.setStrictMode(safeQuery.isStrictMode());
+      interceptor.setIsEnabled(safeQuery.getIsEnabled());
+      interceptor.setIsStrictMode(safeQuery.getIsStrictMode());
       if (safeQuery.getOrderByWhitelist() != null) {
         interceptor.setOrderByWhitelist(safeQuery.getOrderByWhitelist());
       }
     }
 
-    log.info("安全查询拦截器已启用 (strictMode={})", interceptor.isStrictMode());
+    log.info("安全查询拦截器已启用 (strictMode={})", interceptor.getIsStrictMode());
     return interceptor;
   }
 

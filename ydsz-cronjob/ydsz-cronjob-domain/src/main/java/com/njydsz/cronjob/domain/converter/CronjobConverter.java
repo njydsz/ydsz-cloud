@@ -82,6 +82,7 @@ public interface CronjobConverter {
   CronjobConverter INSTANT = Mappers.getMapper(CronjobConverter.class);
 
   // ===== TenantQuota =====
+  @Mapping(target = "enabled", source = "isEnabled", qualifiedByName = "booleanToInteger")
   TenantQuotaVO entityToVO(TenantQuota entity);
 
   List<TenantQuotaVO> tenantQuotaListToVO(List<TenantQuota> entities);
@@ -94,6 +95,7 @@ public interface CronjobConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "isEnabled", source = "enabled", qualifiedByName = "integerToBoolean")
   TenantQuota voToEntity(TenantQuotaVO vo);
 
   // ===== GlueCode =====

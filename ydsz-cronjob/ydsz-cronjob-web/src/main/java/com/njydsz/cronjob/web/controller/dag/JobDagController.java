@@ -76,7 +76,7 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/dag")
+@RequestMapping("/cronjob/dag")
 @RequiredArgsConstructor
 public class JobDagController {
   /** 默认版本列表条数 */

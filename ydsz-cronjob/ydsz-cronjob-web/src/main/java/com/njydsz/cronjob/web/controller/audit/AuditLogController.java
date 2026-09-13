@@ -44,7 +44,7 @@ import com.njydsz.cronjob.server.service.audit.AuditLogService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/audit")
+@RequestMapping("/cronjob/audit")
 @RequiredArgsConstructor
 @Validated
 public class AuditLogController {

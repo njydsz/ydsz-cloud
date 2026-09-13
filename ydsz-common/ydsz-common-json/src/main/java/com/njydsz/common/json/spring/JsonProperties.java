@@ -38,7 +38,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
 public class JsonProperties {
 
   /** 是否启用 YdszJson */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 全局日期格式 */
   private String dateFormat = "yyyy-MM-dd HH:mm:ss";
@@ -47,16 +47,16 @@ public class JsonProperties {
   @NotNull private PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
 
   /** 是否输出 null 值 */
-  private boolean writeNulls = false;
+  private boolean isWriteNulls = false;
 
   /** 是否格式化输出 */
-  private boolean prettyPrint = false;
+  private boolean isPrettyPrint = false;
 
   /** 循环引用处理策略（REF / IGNORE / ERROR） */
   private String circularReferenceStrategy = "REF";
 
   /** 枚举是否使用序号序列化 */
-  private boolean serializeEnumUsingOrdinal = false;
+  private boolean isSerializeEnumUsingOrdinal = false;
 
   /** 最大 JSON 大小（字节，默认 10MB） */
   @Min(1)
@@ -76,16 +76,16 @@ public class JsonProperties {
    * <p><b>预留配置（P1 文档纠偏）：当前版本无消费方，设置后不产生任何监控指标。</b>
    * Micrometer 集成规划中，落地前请勿依赖此开关。默认 true。
    */
-  private boolean monitoringEnabled = true;
+  private boolean isMonitoringEnabled = true;
 
   /** 是否使用 BigDecimal 解析浮点数（金融场景精度保护） */
-  private boolean useBigDecimal = false;
+  private boolean isUseBigDecimal = false;
 
   /** 是否包裹根对象 */
-  private boolean wrapRootValue = false;
+  private boolean isWrapRootValue = false;
 
   /** 反序列化失败时是否抛出异常 */
-  private boolean failOnError = false;
+  private boolean isFailOnError = false;
 
   /**
    * 反序列化遇到未知字段时是否抛出异常（P1.5 新增，对标 Jackson FAIL_ON_UNKNOWN_PROPERTIES）。
@@ -93,13 +93,13 @@ public class JsonProperties {
    * <p>默认 {@code false}（容错跳过，与本模块历史行为一致）；{@code true} 用于接口契约
    * 严格场景（如拼写错误字段的显式暴露）。
    */
-  private boolean failOnUnknownProperties = false;
+  private boolean isFailOnUnknownProperties = false;
 
   /** HTTP 请求体最大大小（字节，默认 10MB） */
   private long maxRequestBodySize = 10L * 1024 * 1024;
 
   /** 是否启用 预热（默认 false，需显式开启） */
-  private boolean warmupEnabled = false;
+  private boolean isWarmupEnabled = false;
 
   /**
    * 是否禁用 Spring Boot Jackson 自动配置。
@@ -112,16 +112,16 @@ public class JsonProperties {
    *
    * @since 26.09.01
    */
-  private boolean disableJacksonAutoConfiguration = false;
+  private boolean isDisableJacksonAutoConfiguration = false;
 
   // --- enabled ---
 
   public boolean isEnabled() {
-    return enabled;
+    return isEnabled;
   }
 
   public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+    this.isEnabled = enabled;
   }
 
   // --- dateFormat ---
@@ -146,22 +146,22 @@ public class JsonProperties {
 
   // --- writeNulls ---
 
-  public boolean isWriteNulls() {
-    return writeNulls;
+  public boolean getIsWriteNulls() {
+    return isWriteNulls;
   }
 
-  public void setWriteNulls(boolean writeNulls) {
-    this.writeNulls = writeNulls;
+  public void setIsWriteNulls(boolean writeNulls) {
+    this.isWriteNulls = writeNulls;
   }
 
   // --- prettyPrint ---
 
-  public boolean isPrettyPrint() {
-    return prettyPrint;
+  public boolean getIsPrettyPrint() {
+    return isPrettyPrint;
   }
 
-  public void setPrettyPrint(boolean prettyPrint) {
-    this.prettyPrint = prettyPrint;
+  public void setIsPrettyPrint(boolean prettyPrint) {
+    this.isPrettyPrint = prettyPrint;
   }
 
   // --- circularReferenceStrategy ---
@@ -176,12 +176,12 @@ public class JsonProperties {
 
   // --- serializeEnumUsingOrdinal ---
 
-  public boolean isSerializeEnumUsingOrdinal() {
-    return serializeEnumUsingOrdinal;
+  public boolean getIsSerializeEnumUsingOrdinal() {
+    return isSerializeEnumUsingOrdinal;
   }
 
-  public void setSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
-    this.serializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
+  public void setIsSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
+    this.isSerializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
   }
 
   // --- maxJsonSize ---
@@ -216,52 +216,52 @@ public class JsonProperties {
 
   // --- monitoringEnabled ---
 
-  public boolean isMonitoringEnabled() {
-    return monitoringEnabled;
+  public boolean getIsMonitoringEnabled() {
+    return isMonitoringEnabled;
   }
 
-  public void setMonitoringEnabled(boolean monitoringEnabled) {
-    this.monitoringEnabled = monitoringEnabled;
+  public void setIsMonitoringEnabled(boolean monitoringEnabled) {
+    this.isMonitoringEnabled = monitoringEnabled;
   }
 
   // --- useBigDecimal ---
 
-  public boolean isUseBigDecimal() {
-    return useBigDecimal;
+  public boolean getIsUseBigDecimal() {
+    return isUseBigDecimal;
   }
 
-  public void setUseBigDecimal(boolean useBigDecimal) {
-    this.useBigDecimal = useBigDecimal;
+  public void setIsUseBigDecimal(boolean useBigDecimal) {
+    this.isUseBigDecimal = useBigDecimal;
   }
 
   // --- wrapRootValue ---
 
-  public boolean isWrapRootValue() {
-    return wrapRootValue;
+  public boolean getIsWrapRootValue() {
+    return isWrapRootValue;
   }
 
-  public void setWrapRootValue(boolean wrapRootValue) {
-    this.wrapRootValue = wrapRootValue;
+  public void setIsWrapRootValue(boolean wrapRootValue) {
+    this.isWrapRootValue = wrapRootValue;
   }
 
   // --- failOnError ---
 
-  public boolean isFailOnError() {
-    return failOnError;
+  public boolean getIsFailOnError() {
+    return isFailOnError;
   }
 
-  public void setFailOnError(boolean failOnError) {
-    this.failOnError = failOnError;
+  public void setIsFailOnError(boolean failOnError) {
+    this.isFailOnError = failOnError;
   }
 
   // --- failOnUnknownProperties ---
 
-  public boolean isFailOnUnknownProperties() {
-    return failOnUnknownProperties;
+  public boolean getIsFailOnUnknownProperties() {
+    return isFailOnUnknownProperties;
   }
 
-  public void setFailOnUnknownProperties(boolean failOnUnknownProperties) {
-    this.failOnUnknownProperties = failOnUnknownProperties;
+  public void setIsFailOnUnknownProperties(boolean failOnUnknownProperties) {
+    this.isFailOnUnknownProperties = failOnUnknownProperties;
   }
 
   // --- maxRequestBodySize ---
@@ -276,21 +276,21 @@ public class JsonProperties {
 
   // --- warmupEnabled ---
 
-  public boolean isWarmupEnabled() {
-    return warmupEnabled;
+  public boolean getIsWarmupEnabled() {
+    return isWarmupEnabled;
   }
 
-  public void setWarmupEnabled(boolean warmupEnabled) {
-    this.warmupEnabled = warmupEnabled;
+  public void setIsWarmupEnabled(boolean warmupEnabled) {
+    this.isWarmupEnabled = warmupEnabled;
   }
 
   // --- disableJacksonAutoConfiguration ---
 
-  public boolean isDisableJacksonAutoConfiguration() {
-    return disableJacksonAutoConfiguration;
+  public boolean getIsDisableJacksonAutoConfiguration() {
+    return isDisableJacksonAutoConfiguration;
   }
 
-  public void setDisableJacksonAutoConfiguration(boolean disableJacksonAutoConfiguration) {
-    this.disableJacksonAutoConfiguration = disableJacksonAutoConfiguration;
+  public void setIsDisableJacksonAutoConfiguration(boolean disableJacksonAutoConfiguration) {
+    this.isDisableJacksonAutoConfiguration = disableJacksonAutoConfiguration;
   }
 }

@@ -55,7 +55,7 @@ import com.njydsz.cronjob.server.core.connector.JobConnector;
 @Tag(name = "生态连接器", description = "外部调度系统集成：测试连接、导入/导出、查询远程任务")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/connector")
+@RequestMapping("/cronjob/connector")
 @RequiredArgsConstructor
 public class ConnectorController {
 

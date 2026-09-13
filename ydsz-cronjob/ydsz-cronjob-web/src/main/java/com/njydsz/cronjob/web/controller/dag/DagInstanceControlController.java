@@ -78,7 +78,7 @@ import com.njydsz.cronjob.server.core.dag.DagInstanceControlService;
 @Tag(name = "DAG 工作流控制", description = "DAG 实例运行时控制：暂停/恢复/取消/重试节点")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/dag/instance")
+@RequestMapping("/cronjob/dag/instance")
 @RequiredArgsConstructor
 public class DagInstanceControlController {
 

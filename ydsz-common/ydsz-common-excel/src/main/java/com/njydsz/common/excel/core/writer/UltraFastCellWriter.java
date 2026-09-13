@@ -105,7 +105,7 @@ public final class UltraFastCellWriter {
    * @return 消毒后的值
    */
   private String sanitize(String value) {
-    if (excelConfig != null && excelConfig.isFormulaInjectionProtection()) {
+    if (excelConfig != null && excelConfig.getIsFormulaInjectionProtection()) {
       return excelConfig.sanitizeForXlsx(value);
     }
     return value;

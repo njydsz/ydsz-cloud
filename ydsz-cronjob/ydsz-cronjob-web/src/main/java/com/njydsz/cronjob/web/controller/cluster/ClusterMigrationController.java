@@ -51,7 +51,7 @@ import com.njydsz.cronjob.server.service.cluster.ClusterMigrationService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/cluster")
+@RequestMapping("/cronjob/cluster")
 @RequiredArgsConstructor
 @Validated
 public class ClusterMigrationController {

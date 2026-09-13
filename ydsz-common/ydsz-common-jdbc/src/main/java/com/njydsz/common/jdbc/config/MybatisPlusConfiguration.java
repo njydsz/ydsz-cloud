@@ -188,7 +188,7 @@ public class MybatisPlusConfiguration {
     interceptor.addInnerInterceptor(paginationInterceptor);
 
     // 6. SQL 防火墙拦截器（置于拦截器链末端，在所有 SQL 改写完成后做安全校验）
-    if (sqlFirewallProperties != null && sqlFirewallProperties.isEnabled()) {
+    if (sqlFirewallProperties != null && sqlFirewallProperties.getIsEnabled()) {
       SqlFirewallInnerInterceptor firewall = new SqlFirewallInnerInterceptor();
       firewall.setIsEnabled(true);
       firewall.setIsBlockDropTable(sqlFirewallProperties.getIsBlockDropTable());

@@ -134,19 +134,19 @@ public class SafeConfiguration {
     LOG.info(
         "  XSS:            mode={}, enabled={}, strictLevel={}",
         safeXssProperties.getMode(),
-        safeXssProperties.getIsEnabled(),
+        safeXssProperties.isEnabled(),
         safeXssProperties.getStrictLevel());
     LOG.info(
         "  CSRF:           mode={}, enabled={}, checkOrigin={}",
         csrfProperties.getMode(),
-        csrfProperties.getIsEnabled(),
-        csrfProperties.getIsCheckOrigin());
-    LOG.info("  Security Heads: enabled={}", securityHeaderProperties.getIsEnabled());
+        csrfProperties.isEnabled(),
+        csrfProperties.isCheckOrigin());
+    LOG.info("  Security Heads: enabled={}", securityHeaderProperties.isEnabled());
     LOG.info("  Rate Limit:     see RateLimitAutoConfiguration for details");
-    LOG.info("  API Signature:  enabled={}", apiSignatureProperties.getIsEnabled());
+    LOG.info("  API Signature:  enabled={}", apiSignatureProperties.isEnabled());
     LOG.info(
         "  IP Access:      enabled={}, mode={}",
-        ipAccessProperties.getIsEnabled(),
+        ipAccessProperties.isEnabled(),
         ipAccessProperties.getMode());
     LOG.info("==============================================================================");
   }
@@ -289,7 +289,7 @@ public class SafeConfiguration {
         properties.getWindowSeconds());
     return new SecurityEventAggregator(
         ipAccessService.getIfAvailable(),
-        properties.getIsEnabled(),
+        properties.isEnabled(),
         properties.getThreshold(),
         properties.getWindowSeconds());
   }
@@ -461,7 +461,7 @@ public class SafeConfiguration {
   @Bean
   @ConditionalOnMissingBean(SensitiveDataAdvice.class)
   public SensitiveDataAdvice sensitiveDataAdvice(SensitiveDataProperties configuration) {
-    LOG.info("注册敏感数据脱敏 AOP 拦截器，启用状态: {}", configuration.getIsEnabled());
+    LOG.info("注册敏感数据脱敏 AOP 拦截器，启用状态: {}", configuration.isEnabled());
     return new SensitiveDataAdvice(configuration);
   }
 
