@@ -50,7 +50,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SeataProperties {
 
     /** 是否启用 Seata 分布式事务（默认 false，按需开启） */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 应用 ID（默认与 spring.application.name 一致） */
     private String applicationId = "${spring.application.name}";
@@ -62,10 +62,10 @@ public class SeataProperties {
     private String dataSourceProxyMode = "AT";
 
     /** 是否自动创建数据源代理（AT 模式必须为 true） */
-    private boolean enableAutoDataSourceProxy = true;
+    private boolean isEnableAutoDataSourceProxy = true;
 
     /** disableGlobalTransaction 全局开关（Seata 原生属性兼容） */
-    private boolean disableGlobalTransaction = false;
+    private boolean isDisableGlobalTransaction = false;
 
     /** UndoLog 配置 */
     private UndoLog undoLog = new UndoLog();
@@ -90,7 +90,7 @@ public class SeataProperties {
         private String serialization = "jackson";
 
         /** 仅特定列存入 undo_log：true=只序列化修改字段，false=整行的前后镜像 */
-        private boolean onlyCareUpdateColumns = true;
+        private boolean isOnlyCareUpdateColumns = true;
     }
 
     /**
@@ -107,7 +107,7 @@ public class SeataProperties {
         private int reportRetryCount = 5;
 
         /** undo_log 元数据定期上报 Server（默认 false，减少网络开销） */
-        private boolean metaReportEnabled = false;
+        private boolean isMetaReportEnabled = false;
 
         /** lock 锁重试次数 */
         private int lockRetryTimes = 30;

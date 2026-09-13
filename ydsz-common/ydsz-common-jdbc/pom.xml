@@ -33,6 +33,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
+        <!--ydsz-common-cache（L1 工具层：统一本地缓存框架，JDBC 查询结果缓存）-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
+        </dependency>
+        <!--ydsz-common-json（L1 工具层：高性能 JSON 引擎，用于 JsonTypeHandler 列序列化）-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
         <!--
             jackson-annotations（optional，编译期可见，运行期不强制）
             由于 optional 依赖不传递的规则，ydsz-common-json 中的 jackson-annotations(optional)
@@ -119,11 +129,6 @@
             <artifactId>micrometer-core</artifactId>
         </dependency>
         <!-- 数据库熔断由平台自研引擎提供（ydsz-common-safe，经上层服务按需引入） -->
-        <!-- ydsz-common-cache（统一本地缓存框架，替代 Caffeine） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-cache</artifactId>
-        </dependency>
         <!-- spring-boot-actuator (optional for HealthIndicator) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -146,11 +151,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <!--ydsz-common-json-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
         </dependency>
     </dependencies>
 

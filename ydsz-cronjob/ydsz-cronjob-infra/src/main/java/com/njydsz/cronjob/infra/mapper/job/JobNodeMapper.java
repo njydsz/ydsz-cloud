@@ -114,17 +114,13 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
    * @param cpuUsage CPU 使用率
    * @param memUsagePct 内存使用率
    * @param status 状态
-   * @param responseTimeMs 加权平均响应时长（毫秒）
-   * @param consecutiveFailures 连续失败次数
    * @return 受影响行数
    */
   @Update(
       "UPDATE ydsz_job_node "
           + "SET last_heartbeat = #{lastHeartbeat}, running_count = #{runningCount}, "
           + "    cpu_usage = #{cpuUsage}, mem_usage_pct = #{memUsagePct}, "
-          + "    status = #{status}, "
-          + "    response_time_ms = #{responseTimeMs}, "
-          + "    consecutive_failures = #{consecutiveFailures} "
+          + "    status = #{status} "
           + "WHERE node_id = #{nodeId} AND deleted = 0")
   int updateHeartbeat(
       @Param("nodeId") String nodeId,
@@ -132,9 +128,7 @@ public interface JobNodeMapper extends BaseMapper<JobNode> {
       @Param("runningCount") int runningCount,
       @Param("cpuUsage") BigDecimal cpuUsage,
       @Param("memUsagePct") BigDecimal memUsagePct,
-      @Param("status") String status,
-      @Param("responseTimeMs") Long responseTimeMs,
-      @Param("consecutiveFailures") int consecutiveFailures);
+      @Param("status") String status);
 
   /**
    * 更新节点状态。
