@@ -89,7 +89,7 @@ import com.njydsz.userinfo.server.oauth2.OAuthCodeContext;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/oauth2")
+@RequestMapping("/oauth2")
 @RequiredArgsConstructor
 @Tag(name = "OAuth2", description = "OAuth2 授权码模式")
 public class OAuth2Controller {

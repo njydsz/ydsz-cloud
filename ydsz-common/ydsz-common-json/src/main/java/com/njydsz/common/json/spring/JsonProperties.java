@@ -150,7 +150,7 @@ public class JsonProperties {
     return isWriteNulls;
   }
 
-  public void setIsWriteNulls(boolean writeNulls) {
+  public void setWriteNulls(boolean writeNulls) {
     this.isWriteNulls = writeNulls;
   }
 
@@ -160,7 +160,7 @@ public class JsonProperties {
     return isPrettyPrint;
   }
 
-  public void setIsPrettyPrint(boolean prettyPrint) {
+  public void setPrettyPrint(boolean prettyPrint) {
     this.isPrettyPrint = prettyPrint;
   }
 
@@ -180,7 +180,7 @@ public class JsonProperties {
     return isSerializeEnumUsingOrdinal;
   }
 
-  public void setIsSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
+  public void setSerializeEnumUsingOrdinal(boolean serializeEnumUsingOrdinal) {
     this.isSerializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
   }
 
@@ -216,11 +216,11 @@ public class JsonProperties {
 
   // --- monitoringEnabled ---
 
-  public boolean getIsMonitoringEnabled() {
+  public boolean isMonitoringEnabled() {
     return isMonitoringEnabled;
   }
 
-  public void setIsMonitoringEnabled(boolean monitoringEnabled) {
+  public void setMonitoringEnabled(boolean monitoringEnabled) {
     this.isMonitoringEnabled = monitoringEnabled;
   }
 

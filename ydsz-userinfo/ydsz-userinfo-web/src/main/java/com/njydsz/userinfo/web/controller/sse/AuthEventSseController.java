@@ -54,7 +54,7 @@ import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/auth/events")
+@RequestMapping("/auth/events")
 @RequiredArgsConstructor
 @Tag(name = "认证事件 SSE", description = "认证事件 Server-Sent Events 实时推送")
 public class AuthEventSseController {

@@ -87,7 +87,7 @@ import com.njydsz.userinfo.server.auth.WebAuthnService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")
 @ApiVersion("26.09.01")

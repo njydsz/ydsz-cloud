@@ -62,7 +62,7 @@ import com.njydsz.userinfo.server.service.PostService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/post")
+@RequestMapping("/post")
 @RequiredArgsConstructor
 @Tag(name = "岗位管理", description = "岗位 CRUD")
 public class PostController {

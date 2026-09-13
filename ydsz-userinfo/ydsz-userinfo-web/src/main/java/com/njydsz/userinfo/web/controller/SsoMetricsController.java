@@ -37,7 +37,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/sso/metrics")
+@RequestMapping("/sso/metrics")
 @RequiredArgsConstructor
 public class SsoMetricsController {
 

@@ -50,7 +50,7 @@ import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/admin/oauth2/applications")
+@RequestMapping("/admin/oauth2/applications")
 @RequiredArgsConstructor
 @Tag(name = "OAuth2 应用管理", description = "OAuth2 客户端应用注册与管理")
 public class OAuth2ApplicationController {

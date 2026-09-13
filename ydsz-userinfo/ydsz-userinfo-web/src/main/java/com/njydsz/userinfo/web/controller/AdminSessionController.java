@@ -67,7 +67,7 @@ import com.njydsz.userinfo.server.auth.UserSessionAdminService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 @Tag(name = "管理员封禁与会话治理", description = "账号封禁/解封、在线会话管理与强制下线")
 @ApiVersion("26.09.01")

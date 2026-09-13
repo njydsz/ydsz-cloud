@@ -69,7 +69,7 @@ import com.njydsz.userinfo.server.service.LanguageService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/language")
+@RequestMapping("/language")
 @Tag(name = "语言管理", description = "语言 CRUD")
 @RequiredArgsConstructor
 public class LanguageController {

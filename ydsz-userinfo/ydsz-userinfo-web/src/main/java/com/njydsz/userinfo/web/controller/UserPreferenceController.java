@@ -44,7 +44,7 @@ import com.njydsz.userinfo.server.service.UserPreferenceService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/user/preferences")
+@RequestMapping("/user/preferences")
 @RequiredArgsConstructor
 @Tag(name = "用户偏好", description = "当前用户偏好的读取/保存/重置")
 public class UserPreferenceController {

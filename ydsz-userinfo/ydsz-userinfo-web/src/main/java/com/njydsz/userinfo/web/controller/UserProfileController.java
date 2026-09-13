@@ -44,7 +44,7 @@ import com.njydsz.userinfo.server.service.UserAccountService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping("/profile")
 @RequiredArgsConstructor
 @Tag(name = "个人中心", description = "用户个人资料管理")
 public class UserProfileController {

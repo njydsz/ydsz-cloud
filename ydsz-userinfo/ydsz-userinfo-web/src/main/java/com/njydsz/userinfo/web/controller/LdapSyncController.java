@@ -35,7 +35,7 @@ import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/admin/ldap/sync")
+@RequestMapping("/admin/ldap/sync")
 @ConditionalOnProperty(prefix = "ydsz.userinfo.ldap.sync", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Tag(name = "LDAP 同步管理", description = "LDAP/AD 组织架构同步触发、状态查询、历史记录")

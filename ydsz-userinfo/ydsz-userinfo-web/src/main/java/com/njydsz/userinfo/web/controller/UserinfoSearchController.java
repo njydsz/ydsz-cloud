@@ -68,7 +68,7 @@ import com.njydsz.userinfo.domain.dto.UserSearchQuery;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/userinfo/search")
+@RequestMapping("/userinfo/search")
 @RequiredArgsConstructor
 @Tag(name = "用户搜索", description = "用户全文搜索")
 public class UserinfoSearchController {

@@ -78,7 +78,7 @@ import com.njydsz.userinfo.web.annotation.RequireInternal;
 @ApiVersion("26.09.01")
 @RestController
 @RequireInternal
-@RequestMapping("/api/internal")
+@RequestMapping("/internal")
 @RequiredArgsConstructor
 @Tag(name = "内部 API", description = "跨服务 Feign 调用接口")
 public class InternalApiController {

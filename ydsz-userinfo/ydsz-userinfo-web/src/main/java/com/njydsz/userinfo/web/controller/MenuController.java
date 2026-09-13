@@ -78,7 +78,7 @@ import com.njydsz.userinfo.server.service.MenuService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/menu")
+@RequestMapping("/menu")
 @RequiredArgsConstructor
 @Tag(name = "菜单管理", description = "菜单/权限 CRUD、树形结构查询")
 public class MenuController {

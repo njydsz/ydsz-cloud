@@ -49,7 +49,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/oauth2")
+@RequestMapping("/oauth2")
 @RequiredArgsConstructor
 @Tag(name = "DeviceAuthorization", description = "OAuth2 设备授权码模式 (RFC 8628)")
 public class DeviceAuthorizationController {

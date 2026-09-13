@@ -31,7 +31,7 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/userinfo/login-log")
+@RequestMapping("/userinfo/login-log")
 @RequiredArgsConstructor
 @ApiVersion("26.09.13")
 @Tag(name = "登录日志", description = "用户登录历史查询（审计用）")
