@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import com.njydsz.agent.domain.middleware.AgentMiddleware;
 import com.njydsz.agent.domain.middleware.MiddlewareContext;
 import com.njydsz.agent.domain.model.ChatResponse;
-import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 
 /**
