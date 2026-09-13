@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DomainProperties {
 
   /** 是否启用 domain 模块自动装配 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 分页查询配置 */
   private Page page = new Page();

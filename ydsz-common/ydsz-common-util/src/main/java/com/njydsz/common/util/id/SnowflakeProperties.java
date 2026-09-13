@@ -46,7 +46,7 @@ public class SnowflakeProperties {
    *
    * <p>默认 true；设置为 false 时可禁用 {@link SnowflakeIdGenerator} 的注册。
    */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /**
    * 工作节点ID（显式配置，最高优先级）。

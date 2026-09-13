@@ -83,7 +83,7 @@ import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
 public class TenantProperties {
 
   /** 是否启用多租户（默认 false，不启用）。 */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 租户隔离模式（默认 SINGLE）。 */
   @NotNull private TenantMode mode = TenantMode.SINGLE;
@@ -176,7 +176,7 @@ public class TenantProperties {
   @Data
   public static class SqlCache {
     /** 是否启用（默认 false）。 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
     /** 最大缓存条目数（默认 2000）。 */
     private long maxSize = 2000L;
     /** 未访问过期时间（分钟，默认 10）。 */
@@ -185,7 +185,7 @@ public class TenantProperties {
     public SqlCache() {}
 
     public boolean isEnabled() {
-      return enabled;
+      return isEnabled;
     }
 
     public long getMaxSize() {
@@ -228,7 +228,7 @@ public class TenantProperties {
     /** HTTP header 名（可选，Feign 跨服务恢复用）。 */
     private String header;
     /** 是否多值（默认 false，true → WHERE column IN (...)）。 */
-    private boolean multiValue = false;
+    private boolean isMultiValue = false;
 
     /** 默认构造器（用于反序列化）。 */
     public TenantField() {}
@@ -267,11 +267,11 @@ public class TenantProperties {
     }
 
     public boolean isMultiValue() {
-      return multiValue;
+      return isMultiValue;
     }
 
     public void setMultiValue(boolean multiValue) {
-      this.multiValue = multiValue;
+      this.isMultiValue = multiValue;
     }
   }
 
