@@ -160,13 +160,23 @@ public interface CronjobConverter {
   @Mapping(target = "isEnabled", source = "enabled", qualifiedByName = "integerToBoolean")
   JobAlertRule dtoToEntity(AlertRuleSaveDTO dto);
 
-  /** Integer(0/1) → Boolean 转换。 */
+  /**
+   * Integer(0/1) → Boolean 转换。
+   *
+   * @param value 整数值，null/false 返回 false，1 返回 true
+   * @return Boolean 值
+   */
   @Named("integerToBoolean")
   default Boolean integerToBoolean(Integer value) {
     return value != null && value == 1;
   }
 
-  /** Boolean → Integer(0/1) 转换。 */
+  /**
+   * Boolean → Integer(0/1) 转换。
+   *
+   * @param value Boolean 值，true 返回 1，否则返回 0
+   * @return 整数值
+   */
   @Named("booleanToInteger")
   default Integer booleanToInteger(Boolean value) {
     return Boolean.TRUE.equals(value) ? 1 : 0;
