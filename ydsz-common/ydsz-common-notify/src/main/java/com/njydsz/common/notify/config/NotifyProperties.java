@@ -377,12 +377,12 @@ public class NotifyProperties {
       this.encoding = encoding;
     }
 
-    public boolean isHtmlMode() {
-      return htmlMode;
+    public boolean getIsHtmlMode() {
+      return isHtmlMode;
     }
 
     public void setHtmlMode(boolean htmlMode) {
-      this.htmlMode = htmlMode;
+      this.isHtmlMode = htmlMode;
     }
 
     public String getDefaultSubjectPrefix() {
