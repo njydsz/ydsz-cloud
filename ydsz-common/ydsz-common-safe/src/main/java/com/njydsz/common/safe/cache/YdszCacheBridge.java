@@ -43,7 +43,7 @@ public final class YdszCacheBridge<K, V> implements SafeCache<K, V> {
    */
   public static <K, V> SafeCache<K, V> create(long expireAfterWrite, TimeUnit timeUnit, long maxSize) {
     CacheBuilder<K, V> builder =
-        YdszCache.newBuilder()
+        YdszCache.<K, V>newBuilder()
             .type(CacheType.STRIPED)
             .expireAfterWrite(expireAfterWrite, timeUnit);
     if (maxSize > 0) {
