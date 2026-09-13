@@ -4,10 +4,10 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
