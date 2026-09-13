@@ -660,7 +660,7 @@ public class NotifyProperties {
   public static class SmsConfig {
 
     /** 是否启用短信渠道 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 短信 API Endpoint */
     private String endpoint;
@@ -685,12 +685,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public String getEndpoint() {
@@ -769,7 +769,7 @@ public class NotifyProperties {
   public static class WeComConfig {
 
     /** 是否启用企业微信渠道 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 企业 ID */
     private String corpId;
@@ -787,16 +787,16 @@ public class NotifyProperties {
     private String defaultUser;
 
     /** 是否开启消息内容校验 */
-    private boolean enableMessageCheck = true;
+    private boolean isEnableMessageCheck = true;
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public String getCorpId() {
