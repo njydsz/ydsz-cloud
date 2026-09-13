@@ -80,7 +80,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
 
       // 短信渠道
       NotifyProperties.SmsConfig sms = notifyProperties.getSms();
-      if (sms != null && sms.getIsEnabled()) {
+      if (sms != null && sms.isEnabled()) {
         boolean ready =
             sms.getAccessKeyId() != null
                 && !sms.getAccessKeyId().isEmpty()
@@ -96,7 +96,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
 
       // 企业微信渠道
       NotifyProperties.WeComConfig wecom = notifyProperties.getWecom();
-      if (wecom != null && wecom.getIsEnabled()) {
+      if (wecom != null && wecom.isEnabled()) {
         boolean ready =
             wecom.getCorpId() != null
                 && !wecom.getCorpId().isEmpty()
@@ -112,7 +112,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
 
       // 钉钉渠道
       NotifyProperties.DingTalkConfig dingtalk = notifyProperties.getDingtalk();
-      if (dingtalk != null && dingtalk.getIsEnabled()) {
+      if (dingtalk != null && dingtalk.isEnabled()) {
         boolean ready =
             dingtalk.getAppKey() != null
                 && !dingtalk.getAppKey().isEmpty()
@@ -128,7 +128,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
 
       // 飞书渠道
       NotifyProperties.FeishuConfig feishu = notifyProperties.getFeishu();
-      if (feishu != null && feishu.getIsEnabled()) {
+      if (feishu != null && feishu.isEnabled()) {
         boolean ready =
             feishu.getAppId() != null
                 && !feishu.getAppId().isEmpty()
@@ -144,7 +144,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
 
       // 站内信渠道
       NotifyProperties.InsiteConfig insite = notifyProperties.getInsite();
-      if (insite != null && insite.getIsEnabled()) {
+      if (insite != null && insite.isEnabled()) {
         channels.put("insite", "ready");
         configuredCount++;
       } else {

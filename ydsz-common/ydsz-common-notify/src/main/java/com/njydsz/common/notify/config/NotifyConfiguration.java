@@ -560,7 +560,7 @@ public class NotifyConfiguration {
         "[NotifyConfiguration] NotifyRateLimiterManager bean registered, redisRateLimiter={}, "
             + "enabled={}, defaultMaxRequests={}, defaultWindowSeconds={}",
         redisRateLimiter != null,
-        rateLimitConfig.getIsEnabled(),
+        rateLimitConfig.isEnabled(),
         rateLimitConfig.getDefaultMaxRequests(),
         rateLimitConfig.getDefaultWindowSeconds());
     return new NotifyRateLimiterManager(rateLimitConfig, redisRateLimiter);
@@ -654,7 +654,7 @@ public class NotifyConfiguration {
     DeadLetterHandler dlqHandler = deadLetterHandlerProvider.getIfAvailable();
 
     NotifyRetryQueue queue;
-    if (retryConfig.getIsPersistent()) {
+    if (retryConfig.isPersistent()) {
       queue =
           new PersistentNotifyRetryQueue(
               redisTemplate,

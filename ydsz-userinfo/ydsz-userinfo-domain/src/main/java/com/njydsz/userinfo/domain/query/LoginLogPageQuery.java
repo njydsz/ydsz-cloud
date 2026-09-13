@@ -4,10 +4,10 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.common.domain.query.PageQuery;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 登录日志分页查询条件。

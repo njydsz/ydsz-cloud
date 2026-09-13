@@ -185,7 +185,7 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
    */
   @Override
   public boolean isEnabled() {
-    return insiteConfig != null && insiteConfig.getIsEnabled();
+    return insiteConfig != null && insiteConfig.isEnabled();
   }
 
   /** 站内信消息体 */

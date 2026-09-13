@@ -192,7 +192,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
   @Override
   public boolean isEnabled() {
-    return smsConfig != null && smsConfig.getIsEnabled();
+    return smsConfig != null && smsConfig.isEnabled();
   }
 
   /**

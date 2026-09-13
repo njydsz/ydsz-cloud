@@ -71,7 +71,7 @@ public class NotifyFallbackManager {
    */
   public boolean isFallbackEnabled() {
     return properties.getFallback() != null
-        && properties.getFallback().getIsEnabled()
+        && properties.getFallback().isEnabled()
         && properties.getFallback().getChains() != null
         && !properties.getFallback().getChains().isEmpty();
   }
