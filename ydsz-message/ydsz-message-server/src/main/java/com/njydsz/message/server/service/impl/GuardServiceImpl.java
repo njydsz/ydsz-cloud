@@ -145,10 +145,10 @@ public class GuardServiceImpl implements GuardService {
       return true;
     }
     MsgPreferenceVO pref = preferenceService.getByUser(userId, channel, bizType);
-    if (pref == null || pref.getEnabled() == null) {
+    if (pref == null || pref.getIsEnabled() == null) {
       return true;
     }
-    if (pref.getEnabled() == 0) {
+    if (!Boolean.TRUE.equals(pref.getIsEnabled())) {
       return false;
     }
     LocalDateTime now = LocalDateTime.now();

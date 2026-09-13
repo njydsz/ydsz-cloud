@@ -83,7 +83,7 @@ public class UserPreferenceHandler implements SendHandler {
     String bizType = ctx.getBizType();
     MsgPreferenceVO pref = preferenceService.getByUser(receiver, channel, bizType);
     ctx.setPreference(pref);
-    if (pref == null || !Integer.valueOf(1).equals(pref.getDndEnabled())) {
+    if (pref == null || !Boolean.TRUE.equals(pref.getIsDndEnabled())) {
       return true;
     }
     if (!isInDndWindow(pref)) {

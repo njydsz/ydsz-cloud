@@ -373,7 +373,7 @@ public class MessageServiceImpl implements MessageService {
 
     // P0-5: 聚合判断 —— 委托 AggregatePersistenceService 执行事务安全的原子操作
     if (ctx.getPreference() != null
-        && Integer.valueOf(1).equals(ctx.getPreference().getDigestEnabled())
+        && Boolean.TRUE.equals(ctx.getPreference().getIsDigestEnabled())
         && StringUtils.hasText(ctx.getBizType())
         && StringUtils.hasText(ctx.getReceiver())) {
       aggregatePersistenceService.persistAggregated(

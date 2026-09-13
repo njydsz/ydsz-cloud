@@ -76,6 +76,5 @@ public class ApiKey extends MpBaseEntity<Long> {
   private Integer rateLimit;
 
   /** 是否启用 */
-  @TableField("enabled")
   private Boolean isEnabled;
 }
