@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -92,6 +93,28 @@ public final class ChatResponse implements Serializable {
 
   public CostEstimate getCostEstimate() {
     return costEstimate;
+  }
+
+  /**
+   * 复制响应并替换内容文本（不可变语义）。
+   *
+   * <p>用于输出护栏中间件对 LLM 返回内容进行脱敏或替换的场景，
+   * 原响应不可修改，此方法返回携带新内容的全新实例。
+   *
+   * @param newContent 新的助手回复内容
+   * @return 替换内容后的新 ChatResponse 实例
+   */
+  public ChatResponse withContent(String newContent) {
+    ChatMessage newMessage = new ChatMessage(
+        message != null ? message.getId() : id,
+        message != null ? message.getRole() : MessageRole.ASSISTANT,
+        newContent,
+        message != null ? message.getConversationId() : null,
+        message != null ? message.getCreatedAt() : null,
+        message != null ? new ArrayList<>(message.getToolCalls()) : null,
+        message != null ? message.getToolCallId() : null,
+        message != null ? message.getTokenUsage() : null);
+    return new ChatResponse(id, model, newMessage, usage, finishReason, toolCalls, costEstimate);
   }
 
   /**

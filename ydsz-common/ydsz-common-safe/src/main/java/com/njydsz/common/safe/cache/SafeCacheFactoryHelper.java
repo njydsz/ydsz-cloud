@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.cache;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -43,7 +45,7 @@ public final class SafeCacheFactoryHelper {
     try {
       // 反射加载 YdszCacheBridge，如果 ydzs-common-cache 不在 classpath 则抛出 NoClassDefFoundError
       Class<?> bridgeClass = Class.forName("com.njydsz.common.safe.cache.YdszCacheBridge");
-      java.lang.reflect.Method createMethod =
+      Method createMethod =
           bridgeClass.getMethod("create", long.class, TimeUnit.class, long.class);
       SafeCache<K, V> cache =
           (SafeCache<K, V>) createMethod.invoke(null, expireAfterWrite, timeUnit, maxSize);
@@ -51,7 +53,7 @@ public final class SafeCacheFactoryHelper {
           expireAfterWrite, timeUnit.name(), maxSize > 0 ? maxSize : "unlimited",
           bridgeClass.getSimpleName());
       return cache;
-    } catch (java.lang.reflect.InvocationTargetException e) {
+    } catch (InvocationTargetException e) {
       // YdszCacheBridge.create 内部可能抛出 NoClassDefFoundError（ydsz-common-cache 不可用）
       Throwable cause = e.getCause() != null ? e.getCause() : e;
       if (cause instanceof NoClassDefFoundError) {

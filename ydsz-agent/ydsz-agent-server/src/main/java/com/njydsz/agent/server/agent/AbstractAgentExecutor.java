@@ -11,6 +11,9 @@ import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
+import com.njydsz.agent.domain.middleware.AgentMiddleware;
+import com.njydsz.agent.domain.middleware.MiddlewareChain;
+import com.njydsz.agent.domain.middleware.MiddlewareContext;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
@@ -67,6 +70,9 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
   /** Prompt 模板提供者（加载外部化模板） */
   protected final PromptTemplateProvider promptTemplateProvider;
 
+  /** 中间件链（可选，为 null 时跳过中间件调用） */
+  protected final MiddlewareChain middlewareChain;
+
   /**
    * 构造函数（注入公共依赖）。
    *
@@ -78,6 +84,7 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
    * @param costAnalysisService 成本分析服务
    * @param guardrailService 护栏编排服务
    * @param promptTemplateProvider Prompt 模板提供者
+   * @param middlewareChain 中间件链（可为 null）
    */
   protected AbstractAgentExecutor(
       LlmClient llmClient,
@@ -87,7 +94,8 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
       AgentMetrics agentMetrics,
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
-      PromptTemplateProvider promptTemplateProvider) {
+      PromptTemplateProvider promptTemplateProvider,
+      MiddlewareChain middlewareChain) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.properties = properties;
@@ -96,6 +104,7 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
     this.costAnalysisService = costAnalysisService;
     this.guardrailService = guardrailService;
     this.promptTemplateProvider = promptTemplateProvider;
+    this.middlewareChain = middlewareChain;
   }
 
   /**
@@ -250,6 +259,88 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
     String model = properties.getLlm().getDefaultModel();
     chunkConsumer.accept(ChatChunk.content(responseId, model, "抱歉，您的输入被安全护栏拒绝。"));
     chunkConsumer.accept(ChatChunk.finish(responseId, model, "guardrail_rejected", null));
+  }
+
+  /**
+   * 创建中间件上下文。
+   *
+   * @param request 执行请求
+   * @return 新的中间件上下文实例
+   */
+  protected MiddlewareContext createMiddlewareContext(AgentExecutionRequest request) {
+    return new MiddlewareContext(request, extractConvId(request));
+  }
+
+  /**
+   * 通知 Agent 执行开始（触发中间件 onAgentStart 钩子）。
+   *
+   * @param context 中间件上下文
+   */
+  protected void notifyAgentStart(MiddlewareContext context) {
+    if (middlewareChain != null) {
+      middlewareChain.executeAgentStart(context);
+    }
+  }
+
+  /**
+   * 通知系统 Prompt 构建（触发中间件 onSystemPrompt 钩子）。
+   *
+   * @param context 中间件上下文
+   */
+  protected void notifySystemPrompt(MiddlewareContext context) {
+    if (middlewareChain != null) {
+      middlewareChain.executeSystemPrompt(context);
+    }
+  }
+
+  /**
+   * 通知 LLM 推理前（触发中间件 onReasoning 钩子）。
+   *
+   * @param context 中间件上下文
+   */
+  protected void notifyReasoning(MiddlewareContext context) {
+    if (middlewareChain != null) {
+      middlewareChain.executeReasoning(context);
+    }
+  }
+
+  /**
+   * 执行 LLM 调用（触发中间件 onModelCall 洋葱模型）。
+   *
+   * @param context 中间件上下文
+   * @param finalCall 实际 LLM 调用函数
+   * @return LLM 响应
+   */
+  protected ChatResponse executeLlmCall(
+      MiddlewareContext context, AgentMiddleware.ModelCallProceed finalCall) {
+    if (middlewareChain != null) {
+      return middlewareChain.executeModelCall(context, finalCall);
+    }
+    ChatResponse response = finalCall.execute();
+    context.setLlmResponse(response);
+    return response;
+  }
+
+  /**
+   * 通知工具观察（触发中间件 onObservation 钩子）。
+   *
+   * @param context 中间件上下文
+   */
+  protected void notifyObservation(MiddlewareContext context) {
+    if (middlewareChain != null) {
+      middlewareChain.executeObservation(context);
+    }
+  }
+
+  /**
+   * 通知 Agent 执行结束（触发中间件 onAgentEnd 钩子）。
+   *
+   * @param context 中间件上下文
+   */
+  protected void notifyAgentEnd(MiddlewareContext context) {
+    if (middlewareChain != null) {
+      middlewareChain.executeAgentEnd(context);
+    }
   }
 
   /**

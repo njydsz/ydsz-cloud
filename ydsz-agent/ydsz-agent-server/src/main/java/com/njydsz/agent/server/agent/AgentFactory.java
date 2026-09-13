@@ -1,6 +1,7 @@
 package com.njydsz.agent.server.agent;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Lazy;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
@@ -9,6 +10,7 @@ import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
+import com.njydsz.agent.domain.middleware.MiddlewareChain;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
@@ -76,6 +78,9 @@ public class AgentFactory {
   /** Prompt 模板提供者（加载外部化模板） */
   private final PromptTemplateProvider promptTemplateProvider;
 
+  /** 中间件链（可选，为 null 时不启用中间件） */
+  private final MiddlewareChain middlewareChain;
+
   /**
    * DAG 编排执行器（延迟注入打破循环依赖）。
    *
@@ -102,7 +107,8 @@ public class AgentFactory {
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
       @Lazy DagOrchestrationExecutor dagExecutor,
-      @Lazy SupervisorAgentExecutor supervisorExecutor) {
+      @Lazy SupervisorAgentExecutor supervisorExecutor,
+      ObjectProvider<MiddlewareChain> middlewareChainProvider) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.toolRegistry = toolRegistry;
@@ -115,6 +121,7 @@ public class AgentFactory {
     this.promptTemplateProvider = promptTemplateProvider;
     this.dagExecutor = dagExecutor;
     this.supervisorExecutor = supervisorExecutor;
+    this.middlewareChain = middlewareChainProvider.getIfAvailable();
   }
 
   /**

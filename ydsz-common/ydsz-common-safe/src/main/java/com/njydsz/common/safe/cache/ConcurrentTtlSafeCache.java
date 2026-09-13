@@ -48,7 +48,12 @@ public class ConcurrentTtlSafeCache<K, V> implements SafeCache<K, V> {
         this.maxSize > 0 ? this.maxSize : "unlimited");
   }
 
-  /** 构造 TTL 缓存（默认不限制容量） */
+  /**
+   * 构造 TTL 缓存（默认不限制容量）
+   *
+   * @param expireAfterWrite 写入后过期时间
+   * @param timeUnit 时间单位
+   */
   public ConcurrentTtlSafeCache(long expireAfterWrite, TimeUnit timeUnit) {
     this(expireAfterWrite, timeUnit, 0);
   }

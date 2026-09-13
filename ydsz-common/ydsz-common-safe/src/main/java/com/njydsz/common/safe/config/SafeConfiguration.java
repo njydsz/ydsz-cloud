@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.config;
 
+import java.util.concurrent.TimeUnit;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -29,13 +31,13 @@ import com.njydsz.common.safe.alert.SecurityEventAggregator;
 import com.njydsz.common.safe.alert.SecurityEventListener;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.audit.SecurityAuditLogger;
+import com.njydsz.common.safe.cache.SafeCacheFactoryHelper;
 import com.njydsz.common.safe.captcha.CaptchaGenerator;
 import com.njydsz.common.safe.captcha.CaptchaProperties;
 import com.njydsz.common.safe.config.condition.XssConverterModeCondition;
 import com.njydsz.common.safe.config.condition.XssFilterModeCondition;
 import com.njydsz.common.safe.converter.XssJsonMessageConverter;
 import com.njydsz.common.safe.core.JsonBodyXssCleaner;
-import com.njydsz.common.safe.cache.SafeCacheFactoryHelper;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.safe.csrf.CsrfTokenGenerator;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
@@ -420,7 +422,7 @@ public class SafeConfiguration {
     return new InMemoryCsrfTokenRepository(
         expiration,
         SafeCacheFactoryHelper.createCache(
-            expiration * 2L, java.util.concurrent.TimeUnit.SECONDS, 0));
+            expiration * 2L, TimeUnit.SECONDS, 0));
   }
 
   /**
@@ -501,7 +503,7 @@ public class SafeConfiguration {
         redisStringOps,
         SafeCacheFactoryHelper.createCache(
             properties.getLocalCacheTtlSeconds(),
-            java.util.concurrent.TimeUnit.SECONDS,
+            TimeUnit.SECONDS,
             properties.getLocalCacheSize()));
   }
 
@@ -547,7 +549,7 @@ public class SafeConfiguration {
     long expireSeconds = 300L;
     long maxSize = 10000L;
     return new NonceCache(
-        SafeCacheFactoryHelper.createCache(expireSeconds, java.util.concurrent.TimeUnit.SECONDS, maxSize),
+        SafeCacheFactoryHelper.createCache(expireSeconds, TimeUnit.SECONDS, maxSize),
         expireSeconds);
   }
 

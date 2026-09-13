@@ -7,12 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.middleware.AgentMiddleware;
 import com.njydsz.agent.domain.middleware.MiddlewareContext;
-import com.njydsz.agent.domain.middleware.MiddlewareException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 
@@ -21,6 +19,9 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
  *
  * <p>优先级 100（最后执行），在 onAgentEnd 钩子中对 LLM 最终输出执行安全审查和脱敏。
  * 护栏拒绝时替换为预设兜底文案而非中断执行。
+ *
+ * <p><b>执行策略</b>：输入护栏拒绝会中断执行（抛异常），输出护栏拒绝则替换文案——
+ * 因为中断输出已生成后抛异常会丢失结果，替换兜底文案对用户更友好。
  *
  * @author ydsz-team
  * @since 26.09.13
@@ -75,7 +76,7 @@ public class OutputGuardrailMiddleware implements AgentMiddleware {
         log.warn("[Guardrail] 输出护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
         metrics.recordGuardrailRejection(guard.getName(), "output");
         // 输出护栏拒绝时替换为兜底文案（不中断执行）
-        context.setLlmResponse(buildRejectionResponse(response));
+        context.setLlmResponse(response.withContent(rejectionMessage));
         return;
       }
       if (result.getSanitizedInput() != null) {
@@ -86,16 +87,6 @@ public class OutputGuardrailMiddleware implements AgentMiddleware {
     if (!sanitized.equals(content)) {
       context.setLlmResponse(response.withContent(sanitized));
     }
-  }
-
-  /**
-   * 构造护栏拒绝响应。
-   *
-   * @param original 原始响应
-   * @return 替换了内容的响应对象
-   */
-  private ChatResponse buildRejectionResponse(ChatResponse original) {
-    return original.withContent(rejectionMessage);
   }
 
   @Override

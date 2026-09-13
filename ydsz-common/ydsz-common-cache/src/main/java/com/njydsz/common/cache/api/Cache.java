@@ -78,7 +78,7 @@ public interface Cache<K, V> {
    *
    * @param key 键
    * @param loader loader 参数
-   * @return 返回值说明
+   * @return 包含缓存值的 Future（已完成），异常时 Future 异常完成
    */
   CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader);
 
@@ -86,7 +86,7 @@ public interface Cache<K, V> {
    * 检查是否包含指定键
    *
    * @param key 键
-   * @return 返回值说明
+   * @return true 如果缓存中存在该键（含空值占位或真实值）
    */
   boolean containsKey(K key);
 
@@ -195,7 +195,7 @@ public interface Cache<K, V> {
    * 从缓存中移除指定键
    *
    * @param key 键
-   * @return 返回值说明
+   * @return 被移除的值（含空值占位），如果不存在则返回 null
    */
   V remove(K key);
 
@@ -245,7 +245,7 @@ public interface Cache<K, V> {
    * 批量获取
    *
    * @param keys keys 参数
-   * @return 返回值说明
+   * @return 请求集合中非空值的映射（不含缺失/空值条目）
    */
   default Map<K, V> getAll(Collection<K> keys) {
     if (keys == null || keys.isEmpty()) {
@@ -323,14 +323,14 @@ public interface Cache<K, V> {
   /**
    * 获取缓存大小（估计值）
    *
-   * @return 返回值说明
+   * @return 缓存条目数量估计，非精确值
    */
   long estimatedSize();
 
   /**
    * 缓存是否为空
    *
-   * @return 返回值说明
+   * @return true 如果 estimatedSize()==0
    */
   default boolean isEmpty() {
     return estimatedSize() == 0;
@@ -339,14 +339,14 @@ public interface Cache<K, V> {
   /**
    * 获取命中率
    *
-   * @return 返回值说明
+   * @return 命中率，范围 [0.0, 1.0]；无统计时返回 0.0
    */
   double getHitRate();
 
   /**
    * 获取统计信息
    *
-   * @return 返回值说明
+   * @return 当前统计快照（累计值，不影响后续统计）
    */
   CacheStats getStats();
 
@@ -398,21 +398,21 @@ public interface Cache<K, V> {
   /**
    * 获取所有键
    *
-   * @return 返回值说明
+   * @return 所有已注册键集合（可能是视图快照）
    */
   Set<K> keySet();
 
   /**
    * 获取所有值
    *
-   * @return 返回值说明
+   * @return 所有缓存值（实值，不含空值占位）
    */
   Collection<V> values();
 
   /**
    * 获取缓存的 Map 视图
    *
-   * @return 返回值说明
+   * @return 缓存视图（写入会同步到底层缓存）
    */
   default Map<K, V> asMap() {
     return new CacheAsMapView<>(this);
@@ -521,7 +521,7 @@ public interface Cache<K, V> {
    * @see NullValueGuard#registerNullKey
    *
    * @param key 键
-   * @return 返回值说明
+   * @return null（仅作注册副作用）
    */
   default V createNullPlaceholder(K key) {
     return CacheProtectionGuard.createNullPlaceholder(this, key);
@@ -532,7 +532,7 @@ public interface Cache<K, V> {
    * @see NullValueGuard#isNullKeyRegistered
    *
    * @param key 键
-   * @return 返回值说明
+   * @return true 如果该键已注册为空值占位
    */
   default boolean isNullPlaceholderKey(K key) {
     return CacheProtectionGuard.isNullPlaceholderKey(this, key);

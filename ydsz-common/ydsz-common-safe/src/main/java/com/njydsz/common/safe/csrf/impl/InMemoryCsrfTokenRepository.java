@@ -45,7 +45,7 @@ public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {
    *
    * <p>底层使用 ConcurrentTtlSafeCache，适用于 ydzs-common-cache 不可用或无 Spring 容器的场景。
    *
-   * @param expirationSeconds令牌过期时间（秒）
+   * @param expirationSeconds 令牌过期时间（秒）
    */
   public InMemoryCsrfTokenRepository(long expirationSeconds) {
     this.expirationSeconds = expirationSeconds;
