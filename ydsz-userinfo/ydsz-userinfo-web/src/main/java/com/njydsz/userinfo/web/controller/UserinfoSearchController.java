@@ -114,9 +114,9 @@ public class UserinfoSearchController {
             .tenantId(TenantContextHolder.getTenantId())
             .roles(parseRolesHeader(request.getHeader(AuthHeaderConstants.X_USER_ROLES)))
             .deptId(request.getHeader(USER_DEPT_HEADER))
-            .admin("true".equalsIgnoreCase(request.getHeader(USER_ADMIN_HEADER)))
-            .highlight(true)
-            .fuzzy(true)
+            .isAdmin("true".equalsIgnoreCase(request.getHeader(USER_ADMIN_HEADER)))
+            .isHighlight(true)
+            .isFuzzy(true)
             .build();
 
     return YdszResponse.success(unifiedSearchService.search(requestBody));

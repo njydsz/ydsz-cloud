@@ -196,7 +196,10 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     approver                 VARCHAR(64)              DEFAULT NULL,
     comment                  VARCHAR(512)             DEFAULT NULL,
     tenant_id                VARCHAR(64)              NOT NULL DEFAULT '0',
+    created_by               VARCHAR(64)              DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at              TIMESTAMP                DEFAULT NULL,
     CONSTRAINT pk_ydsz_agt_approval PRIMARY KEY (id)
 );
@@ -213,6 +216,22 @@ COMMENT ON COLUMN ydsz_agt_approval.comment IS '审批意见';
 COMMENT ON COLUMN ydsz_agt_approval.tenant_id IS '租户 ID';
 COMMENT ON COLUMN ydsz_agt_approval.created_at IS '请求创建时间';
 COMMENT ON COLUMN ydsz_agt_approval.resolved_at IS '审批完成时间';
+
+-- ============================================================================
+-- 2026-09-13: AgentApproval 补充审计列（created_by/updated_by/updated_at）。
+--   修复基类 MpBaseAuditEntity 字段在 DDL 中缺少对应列的运行时错误。
+-- ============================================================================
+
+ALTER TABLE ydsz_agt_approval
+    ADD COLUMN IF NOT EXISTS created_by VARCHAR(64) DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS updated_by VARCHAR(64) DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+COMMENT ON COLUMN ydsz_agt_approval.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydsz_agt_approval.updated_by IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydsz_agt_approval.updated_at IS '最后更新时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_tenant_created ON ydsz_agt_approval (tenant_id, created_at);
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_conversation ON ydsz_agt_approval (conversation_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_approval_trace ON ydsz_agt_approval (trace_id);

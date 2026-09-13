@@ -24,10 +24,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-safe</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
         <dependency>

@@ -21,6 +21,7 @@
         <result column="audit_at" property="auditAt"/>
         <result column="audit_remark" property="auditRemark"/>
         <result column="description" property="description"/>
+        <result column="variable_defs" property="variableDefs"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
@@ -32,7 +33,7 @@
     <sql id="Base_Column_List">
         id, template_code, channel, locale, version, category, scene_code, subject, content,
         provider, provider_key, sign_name, status, audit_status, audit_by, audit_at, audit_remark,
-        description, created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
+        description, variable_defs, created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
     </sql>
 
 </mapper>

@@ -65,25 +65,44 @@ public class WebhookRetryScanTask implements ScanTask {
   /** 签名头名称 */
   private static final String SIGNATURE_HEADER = "X-Webhook-Signature";
 
-  /** 连接超时时间（秒）：5 秒 */
-  private static final long CONNECT_TIMEOUT_SECONDS = 5;
-
-  /** 默认扫描间隔（毫秒）：30 秒 */
-  private static final long DEFAULT_SCAN_INTERVAL_MS = 30_000L;
-
   /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
-  /** 最大退避时间：60 秒 */
-  private static final long MAX_BACKOFF_MS = 60_000L;
+  /** 连接超时时间（秒），通过 ydsz.cronjob.webhook.connect-timeout-seconds 配置。 */
+  @Value("${ydsz.cronjob.webhook.connect-timeout-seconds:5}")
+  private long connectTimeoutSeconds;
 
-  /** 退避基数：1000 ms */
-  private static final long BACKOFF_BASE_MS = 1_000L;
+  /** 默认扫描间隔（毫秒），通过 ydsz.cronjob.webhook.default-scan-interval-ms 配置。 */
+  @Value("${ydsz.cronjob.webhook.default-scan-interval-ms:30000}")
+  private long defaultScanIntervalMs;
+
+  /** 最大退避时间（毫秒），通过 ydsz.cronjob.webhook.max-backoff-ms 配置。 */
+  @Value("${ydsz.cronjob.webhook.max-backoff-ms:60000}")
+  private long maxBackoffMs;
+
+  /** 退避基数（毫秒），通过 ydsz.cronjob.webhook.backoff-base-ms 配置。 */
+  @Value("${ydsz.cronjob.webhook.backoff-base-ms:1000}")
+  private long backoffBaseMs;
 
   private final WebhookRetryRepository webhookRetryRepository;
   private final CronjobProperties cronjobProperties;
-  private final HttpClient httpClient =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS)).build();
+
+  /**
+   * JDK HttpClient 实例（使用配置的 connect-timeout-seeds 初始化）。
+   *
+   * <p>在 @PostConstruct 中延迟构建，确保 @Value 注入已完成。</p>
+   */
+  private HttpClient httpClient;
+
+  /**
+   * 初始化 HttpClient（延迟加载，等待 @Value 注入完成）。
+   */
+  @jakarta.annotation.PostConstruct
+  private void initHttpClient() {
+    this.httpClient = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(connectTimeoutSeconds))
+        .build();
+  }
 
   @Override
   public String name() {
@@ -143,7 +162,7 @@ public class WebhookRetryScanTask implements ScanTask {
   @Override
   public long intervalMs() {
     long configuredInterval = cronjobProperties.getWebhookRetry().getScanIntervalMs();
-    return configuredInterval > 0 ? configuredInterval : DEFAULT_SCAN_INTERVAL_MS;
+    return configuredInterval > 0 ? configuredInterval : defaultScanIntervalMs;
   }
 
   @Override
@@ -193,14 +212,14 @@ public class WebhookRetryScanTask implements ScanTask {
   }
 
   /**
-   * 计算指数退避毫秒数：2^retryCount * 1000ms，上限 60s。
+   * 计算指数退避毫秒数：2^retryCount * backoffBaseMs，上限 maxBackoffMs。
    *
    * @param retryCount 当前重试次数（从 1 开始）
    * @return 退避毫秒数
    */
   private long calculateBackoffMs(int retryCount) {
-    long backoff = (long) Math.pow(2, retryCount) * BACKOFF_BASE_MS;
-    return Math.min(backoff, MAX_BACKOFF_MS);
+    long backoff = (long) Math.pow(2, retryCount) * backoffBaseMs;
+    return Math.min(backoff, maxBackoffMs);
   }
 
   /**

@@ -49,6 +49,7 @@ public class UserProfile extends MpBaseAuditEntity<String> {
 
     /** 用户 ID（主键，业务 ID，非自增；覆盖基类 ASSIGN_ID 为 INPUT，对应数据库 user_id 列）。 */
     @TableId(type = IdType.INPUT)
+    @TableField("user_id")
     private String userId;
 
     /** 偏好语言（zh-CN / en-US） */

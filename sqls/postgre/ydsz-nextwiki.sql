@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_node (
     current_version          INTEGER                  NOT NULL DEFAULT 1,
     file_hash                VARCHAR(64)              DEFAULT NULL,
     thumbnail_key            VARCHAR(1024)            DEFAULT NULL,
-    preview_ready            SMALLINT                 NOT NULL DEFAULT 0,
-    starred                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_preview_ready         SMALLINT                 NOT NULL DEFAULT 0,
+    is_starred               SMALLINT                 NOT NULL DEFAULT 0,
     share_status             VARCHAR(32)              NOT NULL DEFAULT 'private',
     deleted_time             TIMESTAMP                DEFAULT NULL,
     original_path            VARCHAR(1024)            DEFAULT NULL,
@@ -1051,17 +1051,24 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_wiki_storage_quota_set_updated_at();
 
 -- ============================================================================
--- 2026-09-08: FileNode 布尔字段 is 前缀合规改造（YDIZ-OOP-006）
---   preview_ready → is_preview_ready（Java 字段 isPreviewReady）
---   starred → is_starred（Java 字段 isStarred）
+-- 2026-09-13: FileNode 布尔字段 is 前缀合规（YDIZ-OOP-006 补）。
+--   CREATE TABLE 已直接使用 is_preview_ready / is_starred 列名（），与 Entity 和 Mapper XML 三向一致。
+--   兼容旧版本库：尝试 RENAME（幂等，已执行过则忽略）。
 -- ============================================================================
 
-ALTER TABLE ydsz_wiki_file_node
-    RENAME COLUMN preview_ready TO is_preview_ready;
+DO $$
+BEGIN
+    -- preview_ready → is_preview_ready
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_name = 'ydsz_wiki_file_node' AND column_name = 'preview_ready') THEN
+        ALTER TABLE ydsz_wiki_file_node RENAME COLUMN preview_ready TO is_preview_ready;
+    END IF;
+    -- starred → is_starred
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_name = 'ydsz_wiki_file_node' AND column_name = 'starred') THEN
+        ALTER TABLE ydsz_wiki_file_node RENAME COLUMN starred TO is_starred;
+    END IF;
+END $$;
 
-ALTER TABLE ydsz_wiki_file_node
-    RENAME COLUMN starred TO is_starred;
-
--- 更新字段注释
 COMMENT ON COLUMN ydsz_wiki_file_node.is_preview_ready IS '是否已生成预览（0=否 1=是）';
 COMMENT ON COLUMN ydsz_wiki_file_node.is_starred IS '是否星标文件（0=否 1=是）';
