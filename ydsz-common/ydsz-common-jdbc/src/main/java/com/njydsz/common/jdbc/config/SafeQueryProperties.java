@@ -29,7 +29,7 @@ import org.springframework.validation.annotation.Validated;
 public class SafeQueryProperties {
 
   /** 是否启用安全查询拦截（默认 true） */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /**
    * 严格模式（默认 false）
@@ -39,7 +39,7 @@ public class SafeQueryProperties {
    *   <li>false: 忽略非法排序字段（仅日志警告）
    * </ul>
    */
-  private boolean strictMode = false;
+  private boolean isStrictMode = false;
 
   /**
    * 排序字段白名单

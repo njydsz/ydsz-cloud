@@ -79,8 +79,8 @@ public class UserInfoNameAssembler implements NameAssembler {
             .expireAfterWrite(
                 properties.getCacheTtl().toMillis(), TimeUnit.MILLISECONDS)
             .build();
-    this.redisStringOps = properties.isRedisCacheEnabled() ? redisProvider.getIfAvailable() : null;
-    if (properties.isRedisCacheEnabled() && this.redisStringOps == null) {
+    this.redisStringOps = properties.getIsRedisCacheEnabled() ? redisProvider.getIfAvailable() : null;
+    if (properties.getIsRedisCacheEnabled() && this.redisStringOps == null) {
       log.info("NameAssembler Redis cache enabled but RedisStringOps not available; falling back to L1 cache only");
     }
   }
@@ -219,7 +219,7 @@ public class UserInfoNameAssembler implements NameAssembler {
     Map<String, String> nameMap = batchResolveNames(type, ids);
 
     // 回写：未命中时用 ID 顶替（兜底）
-    boolean fallbackToId = properties.isFallbackToId();
+    boolean fallbackToId = properties.getIsFallbackToId();
     for (T obj : validObjects) {
       String id = idGetter.apply(obj);
       String name = nameMap.get(id);
@@ -272,7 +272,7 @@ public class UserInfoNameAssembler implements NameAssembler {
     String name = resolveName(type, id);
     if (name != null && !name.isBlank()) {
       nameSetter.accept(obj, name);
-    } else if (properties.isFallbackToId()) {
+    } else if (properties.getIsFallbackToId()) {
       // 兜底：用 ID 顶替 name
       nameSetter.accept(obj, id);
     }

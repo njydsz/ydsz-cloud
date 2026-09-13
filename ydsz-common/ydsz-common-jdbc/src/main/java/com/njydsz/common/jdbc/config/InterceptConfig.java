@@ -44,7 +44,7 @@ public class InterceptConfig {
    * MyMetaObjectHandler} 不再触发，审计字段填充改由 {@code CombinedFieldFillInterceptor} 在 SQL
    * 层接管，故默认启用以保证填充生效）。
    */
-  private Boolean enabled = true;
+  private Boolean isEnabled = true;
 
   /**
    * 目标表集合

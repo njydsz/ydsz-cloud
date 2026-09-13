@@ -30,7 +30,7 @@ import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
 @ConfigurationProperties(prefix = "ydsz.jdbc.data-permission")
 public class DataPermissionConfiguration {
   /** 是否启用数据权限拦截（行级 + 列级）。 */
-  private Boolean enabled = false;
+  private Boolean isEnabled = false;
 
   /** 拦截表策略：INCLUDE 仅拦截配置表；EXCLUDE 排除配置表。 */
   private InterceptTableStrategy interceptTableStrategy = InterceptTableStrategy.EXCLUDE;

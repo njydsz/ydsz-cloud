@@ -28,7 +28,7 @@ import org.springframework.validation.annotation.Validated;
 public class SlowSqlProperties {
 
   /** 是否启用慢 SQL 监控（默认 false） */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 慢 SQL 检测阈值（毫秒），超过此阈值的 SQL 将被记录警告 */
   @Min(1)

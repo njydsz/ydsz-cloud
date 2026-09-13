@@ -128,7 +128,7 @@ public class RateLimitAutoConfiguration {
       RateLimitProperties properties,
       ObjectProvider<MeterRegistry> meterRegistryProvider,
       RateLimitManager rateLimitManager) {
-    if (!properties.isMetricsEnabled()) {
+    if (!properties.getIsMetricsEnabled()) {
       log.info("Rate limit metrics disabled by configuration");
       return null;
     }

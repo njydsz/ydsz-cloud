@@ -34,22 +34,22 @@ import org.springframework.validation.annotation.Validated;
 public class SqlAuditProperties {
 
   /** 是否启用 SQL 审计（默认 false） */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 是否审计 SELECT 语句（默认 false，生产环境建议关闭） */
-  private boolean auditSelect = false;
+  private boolean isAuditSelect = false;
 
   /** 是否审计 INSERT 语句（默认 true） */
-  private boolean auditInsert = true;
+  private boolean isAuditInsert = true;
 
   /** 是否审计 UPDATE 语句（默认 true） */
-  private boolean auditUpdate = true;
+  private boolean isAuditUpdate = true;
 
   /** 是否审计 DELETE 语句（默认 true） */
-  private boolean auditDelete = true;
+  private boolean isAuditDelete = true;
 
   /** 是否记录 SQL 参数（默认 true） */
-  private boolean logParameters = true;
+  private boolean isLogParameters = true;
 
   /** 参数最大长度（超过则截断，默认 500） */
   @Min(1)

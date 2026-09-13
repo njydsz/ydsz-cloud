@@ -66,5 +66,5 @@ public class PaginationProperties {
    *
    * <p>默认值：false
    */
-  private boolean overflow = false;
+  private boolean isOverflow = false;
 }

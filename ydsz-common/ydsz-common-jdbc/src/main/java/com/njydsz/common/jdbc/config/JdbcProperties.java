@@ -41,7 +41,7 @@ import org.springframework.validation.annotation.Validated;
 public class JdbcProperties {
 
   /** 是否启用 JDBC 模块（默认 true） */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** Mapper 扫描包路径数组（默认 com.njydsz.**.mapper） */
   private List<String> mapperScanPackages = Arrays.asList("com.njydsz.**.mapper");

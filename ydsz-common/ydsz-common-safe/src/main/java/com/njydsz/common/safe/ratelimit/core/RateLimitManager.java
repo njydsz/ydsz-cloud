@@ -106,7 +106,7 @@ public class RateLimitManager {
    */
   private static CircuitBreaker createDefaultCircuitBreaker(RateLimitProperties properties) {
     boolean cbEnabled =
-        properties.getCircuitBreaker() != null && properties.getCircuitBreaker().isEnabled();
+        properties.getCircuitBreaker() != null && properties.getCircuitBreaker().getIsEnabled();
     if (!cbEnabled) {
       return null;
     }
@@ -132,7 +132,7 @@ public class RateLimitManager {
    * @return 限流决策
    */
   public RateLimitDecision decide(RateLimitContext context) {
-    if (!properties.isEnabled()) {
+    if (!properties.getIsEnabled()) {
       return passThrough(context, "ratelimit disabled");
     }
     Optional<RateLimiter> limiterOpt = ruleCache.getLimiter(context.getResource());
@@ -141,7 +141,7 @@ public class RateLimitManager {
     }
     RateLimiter limiter = limiterOpt.get();
     RateLimitRule rule = limiter.getRule();
-    if (!rule.isEnabled()) {
+    if (!rule.getIsEnabled()) {
       return passThrough(context, "rule disabled");
     }
 

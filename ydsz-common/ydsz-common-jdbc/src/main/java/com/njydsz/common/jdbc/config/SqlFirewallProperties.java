@@ -34,25 +34,25 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SqlFirewallProperties {
 
   /** 是否启用 SQL 防火墙（默认 false） */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 是否拦截 DROP TABLE/DATABASE/INDEX 操作（默认 true） */
-  private boolean blockDropTable = true;
+  private boolean isBlockDropTable = true;
 
   /** 是否拦截 TRUNCATE TABLE 操作（默认 true） */
-  private boolean blockTruncate = true;
+  private boolean isBlockTruncate = true;
 
   /** 是否拦截无 WHERE 条件的 DELETE 操作（默认 true） */
-  private boolean blockDeleteWithoutWhere = true;
+  private boolean isBlockDeleteWithoutWhere = true;
 
   /** 是否拦截无 WHERE 条件的 UPDATE 操作（默认 true） */
-  private boolean blockUpdateWithoutWhere = true;
+  private boolean isBlockUpdateWithoutWhere = true;
 
   /** 是否拦截分号分隔的多语句执行（默认 true） */
-  private boolean blockMultiStatement = true;
+  private boolean isBlockMultiStatement = true;
 
   /** 是否拦截 GRANT/REVOKE 权限操作（默认 true） */
-  private boolean blockPermissionOps = true;
+  private boolean isBlockPermissionOps = true;
 
   /** DROP/TRUNCATE 操作的表白名单（忽略大小写） */
   private Set<String> allowTables = new HashSet<>(16);

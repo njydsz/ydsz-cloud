@@ -102,7 +102,7 @@ public class ExcelWriter {
   private int currentRowIndex;
 
   /** 是否追加写入模式 */
-  private boolean append;
+  private boolean isAppend;
 
   /** 样式管理器 - 管理单元格样式缓存 */
   private final StyleManager styleManager;
@@ -128,7 +128,7 @@ public class ExcelWriter {
     this.metadata = metadata;
     this.context = new WriteContext(metadata);
     this.currentRowIndex = 0;
-    this.append = false;
+    this.isAppend = false;
     this.callbacks = new ArrayList<>(16);
     this.styleManager = new StyleManager(512);
     this.workbookFactory = new WorkbookFactory();
@@ -418,7 +418,7 @@ public class ExcelWriter {
    * @return 当前写入器实例
    */
   public ExcelWriter append() {
-    this.append = true;
+    this.isAppend = true;
     return this;
   }
 
@@ -551,9 +551,9 @@ public class ExcelWriter {
 
       if (useFastWriter
           && isXlsx
-          && !append
+          && !isAppend
           && metadata.getClazz() != null
-          && !multiSheetWriting
+          && !isMultiSheetWriting
           // 深度完善·方案 B：显式降级——fast 引擎不触发 WriteLifecycleHandler 回调、
           // 不应用样式注解。注册了回调或 DTO 带样式注解时回落 POI 路径，
           // 消除"配置了但静默失效"的能力差异（此前仅 javadoc 标注限制）
@@ -580,11 +580,11 @@ public class ExcelWriter {
       // 与读路径（ExcelReader.headRowNumber）、@ExcelSheet.headRowNumber、WorkbookFactory.findLastRowIndex、
       // WriteContext 及 fast 写引擎（表头恒在首行）语义对齐。
       // 此前直接将 1-based 值当 0-based 行索引用，默认导出首行空白且写读 round-trip 断裂。
-      if (multiSheetWriting) {
+      if (isMultiSheetWriting) {
         currentRowIndex = Math.max(0, metadata.getHeadRowNumber() - 1);
-      } else if (append && currentRowIndex <= 0) {
+      } else if (isAppend && currentRowIndex <= 0) {
         currentRowIndex = workbookFactory.findLastRowIndex(sheet, metadata) + 1;
-      } else if (!append) {
+      } else if (!isAppend) {
         currentRowIndex = Math.max(0, metadata.getHeadRowNumber() - 1);
       }
 
@@ -604,7 +604,7 @@ public class ExcelWriter {
 
       applySheetSettings();
 
-      if (!multiSheetWriting) {
+      if (!isMultiSheetWriting) {
         finish();
         markWriteCompleted();
       }
@@ -627,10 +627,10 @@ public class ExcelWriter {
   }
 
   /** 是否正在多Sheet写入流程中 */
-  private boolean multiSheetWriting = false;
+  private boolean isMultiSheetWriting = false;
 
   /** 是否已经完成写入(避免重复finish) */
-  private boolean writeCompleted = false;
+  private boolean isWriteCompleted = false;
 
   /**
    * DTO 是否携带样式注解（{@code @ExcelStyle} / {@code @ContentStyle}）。
@@ -661,7 +661,7 @@ public class ExcelWriter {
    * @return 当前写入器实例
    */
   public ExcelWriter setMultiSheetWriting(boolean multiSheet) {
-    this.multiSheetWriting = multiSheet;
+    this.isMultiSheetWriting = multiSheet;
     return this;
   }
 
@@ -671,7 +671,7 @@ public class ExcelWriter {
    * @return {@code true} 如果可以写入，{@code false} 如果已经完成过写入
    */
   boolean canWrite() {
-    return !writeCompleted;
+    return !isWriteCompleted;
   }
 
   // ==================== 生命周期回调分发 ====================
@@ -768,7 +768,7 @@ public class ExcelWriter {
 
   /** 标记写入完成 */
   private void markWriteCompleted() {
-    this.writeCompleted = true;
+    this.isWriteCompleted = true;
   }
 
   /**
@@ -1362,7 +1362,7 @@ public class ExcelWriter {
     // P1-2 修复：幂等化。doWrite 单 Sheet 场景自动 finish 并 markWriteCompleted，
     // 调用方（如 ExcelExportHelper）"doWrite + finish" 惯用写法此前触发已关闭 workbook 的二次写入
     // （POI: Cannot write data, document seems to have been closed already）。
-    if (writeCompleted || workbook == null) {
+    if (isWriteCompleted || workbook == null) {
       return;
     }
 

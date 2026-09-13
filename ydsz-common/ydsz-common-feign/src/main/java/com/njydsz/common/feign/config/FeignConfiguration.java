@@ -283,13 +283,13 @@ public class FeignConfiguration {
       FeignProperties feignProperties,
       ObjectProvider<MeterRegistry> meterRegistryProvider,
       ObjectProvider<BulkheadRequestInterceptor> bulkheadProvider) {
-    boolean logEnabled = feignProperties.getResponseInterceptor().isLogEnabled();
+    boolean logEnabled = feignProperties.getResponseInterceptor().getIsLogEnabled();
     long slowCallThresholdMillis =
         feignProperties.getResponseInterceptor().getSlowCallThresholdMillis();
 
     FeignResponseInterceptor.FeignResponseMetrics metrics = null;
     MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
-    if (feignProperties.getResponseInterceptor().isMetricsEnabled() && meterRegistry != null) {
+    if (feignProperties.getResponseInterceptor().getIsMetricsEnabled() && meterRegistry != null) {
       metrics = new FeignResponseMetricsAdapter(meterRegistry);
     }
 
