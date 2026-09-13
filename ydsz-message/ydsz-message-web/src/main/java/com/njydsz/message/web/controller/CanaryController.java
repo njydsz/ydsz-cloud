@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.web.controller;
+package com.njydsz.message.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

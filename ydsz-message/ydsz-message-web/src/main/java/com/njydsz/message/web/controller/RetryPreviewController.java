@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.web.controller;
+package com.njydsz.message.web.controller;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

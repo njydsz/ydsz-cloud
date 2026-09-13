@@ -1,4 +1,4 @@
-﻿package com.njydsz.message.web.controller.batch;
+package com.njydsz.message.web.controller.batch;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.web.controller;
+package com.njydsz.literule.web.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -227,13 +227,13 @@ public class NotifyProperties {
     private int writeTimeout = 10000;
 
     /** 是否需要认证 */
-    private boolean auth = true;
+    private boolean isAuth = true;
 
     /** 是否启用 STARTTLS */
-    private boolean starttls;
+    private boolean isStarttls;
 
     /** 是否启用调试模式 */
-    private boolean debug;
+    private boolean isDebug;
 
     /** 编码格式 */
     private String encoding = "UTF-8";
@@ -273,12 +273,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public String getSmtpHost() {

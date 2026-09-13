@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.web.controller.internal;
+package com.njydsz.literule.web.controller.internal;
 
 import java.util.List;
 import java.util.Map;
