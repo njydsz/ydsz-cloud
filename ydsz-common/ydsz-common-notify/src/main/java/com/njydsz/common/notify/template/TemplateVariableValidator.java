@@ -48,7 +48,7 @@ public class TemplateVariableValidator {
 
     private final String name;
     private final VariableType type;
-    private final boolean required;
+    private final boolean isRequired;
     private final String regex;
     private final String description;
 
@@ -57,15 +57,15 @@ public class TemplateVariableValidator {
      *
      * @param name 变量名
      * @param type 变量类型
-     * @param required 是否必填
+     * @param isRequired 是否必填
      * @param regex 正则校验（可为 null）
      * @param description 变量描述
      */
     public VariableDefinition(
-        String name, VariableType type, boolean required, String regex, String description) {
+        String name, VariableType type, boolean isRequired, String regex, String description) {
       this.name = name;
       this.type = type != null ? type : VariableType.STRING;
-      this.required = required;
+      this.isRequired = isRequired;
       this.regex = regex;
       this.description = description;
     }
@@ -79,7 +79,7 @@ public class TemplateVariableValidator {
     }
 
     public boolean isRequired() {
-      return required;
+      return isRequired;
     }
 
     public String getRegex() {

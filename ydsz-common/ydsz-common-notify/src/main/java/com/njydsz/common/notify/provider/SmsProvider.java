@@ -58,7 +58,7 @@ public interface SmsProvider {
   /** 短信发送结果 */
   class SmsSendResult {
 
-    private final boolean success;
+    private final boolean isSuccess;
     private final String messageId;
     private final String errorCode;
     private final String errorMessage;
@@ -66,13 +66,13 @@ public interface SmsProvider {
     /**
      * 构造发送结果
      *
-     * @param success 是否成功
+     * @param isSuccess 是否成功
      * @param messageId 消息ID
      * @param errorCode 错误码
      * @param errorMessage 错误信息
      */
-    public SmsSendResult(boolean success, String messageId, String errorCode, String errorMessage) {
-      this.success = success;
+    public SmsSendResult(boolean isSuccess, String messageId, String errorCode, String errorMessage) {
+      this.isSuccess = isSuccess;
       this.messageId = messageId;
       this.errorCode = errorCode;
       this.errorMessage = errorMessage;
@@ -106,7 +106,7 @@ public interface SmsProvider {
     }
 
     public boolean isSuccess() {
-      return success;
+      return isSuccess;
     }
 
     public String getMessageId() {
