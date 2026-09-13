@@ -151,7 +151,7 @@ public class RedisRetryInterceptor implements MethodInterceptor {
   private final int maxRetries;
   private final long initialBackoffMs;
   private final long maxBackoffMs;
-  private final boolean retryOnWrite;
+  private final boolean isRetryOnWrite;
 
   /** 创建重试拦截器（使用默认配置：重试 3 次，初始 100ms，最大 2s，仅对读操作重试） */
   public RedisRetryInterceptor() {
@@ -191,7 +191,7 @@ public class RedisRetryInterceptor implements MethodInterceptor {
     this.maxRetries = maxRetries;
     this.initialBackoffMs = initialBackoffMs;
     this.maxBackoffMs = maxBackoffMs;
-    this.retryOnWrite = retryOnWrite;
+    this.isRetryOnWrite = retryOnWrite;
   }
 
   @Override
@@ -200,7 +200,7 @@ public class RedisRetryInterceptor implements MethodInterceptor {
     boolean isWriteOperation = isWriteMethod(methodName);
 
     // 写操作且未开启写重试：直接执行，不重试
-    if (isWriteOperation && !retryOnWrite) {
+    if (isWriteOperation && !isRetryOnWrite) {
       log.debug("【Redis】跳过写操作重试 | method={}", methodName);
       return invocation.proceed();
     }

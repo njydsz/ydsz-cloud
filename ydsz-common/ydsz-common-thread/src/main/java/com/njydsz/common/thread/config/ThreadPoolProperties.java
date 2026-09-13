@@ -66,7 +66,7 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
 public class ThreadPoolProperties {
 
   /** 是否启用统一线程池管理（默认 true）。 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /**
    * 热更新配置。默认不启用。
@@ -147,7 +147,7 @@ public class ThreadPoolProperties {
      *
      * <p>仅对 PLATFORM 类型生效。
      */
-    private boolean allowCoreThreadTimeOut = false;
+    private boolean isAllowCoreThreadTimeOut = false;
 
     /**
      * 线程空闲存活秒数（默认 60，最小 0）。
@@ -197,7 +197,7 @@ public class ThreadPoolProperties {
      *
      * @since 26.09.01
      */
-    private boolean enableDetailedMetrics = false;
+    private boolean isEnableDetailedMetrics = false;
 
     /**
      * TaskDecorator Bean 名称列表（仅对 PLATFORM 类型生效）。
@@ -258,6 +258,6 @@ public class ThreadPoolProperties {
      *
      * <p>启用后，应用启动时自动打印线程池注册摘要， 并提供运行时调整线程池参数的能力。
      */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
   }
 }

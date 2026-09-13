@@ -33,7 +33,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  */
 public class TenantRedisKeyPrefixer {
 
-  private final boolean enabled;
+  private final boolean isEnabled;
   private final Supplier<String> tenantIdSupplier;
 
   /**
@@ -44,7 +44,7 @@ public class TenantRedisKeyPrefixer {
    */
   public TenantRedisKeyPrefixer(Supplier<String> tenantIdSupplier, boolean enabled) {
     this.tenantIdSupplier = tenantIdSupplier;
-    this.enabled = enabled;
+    this.isEnabled = enabled;
   }
 
   /**
@@ -54,7 +54,7 @@ public class TenantRedisKeyPrefixer {
    * @return 带租户前缀的 key，如果未启用或为超级管理员则返回原 key
    */
   public String prefixKey(String key) {
-    if (!enabled || key == null) {
+    if (!isEnabled || key == null) {
       return key;
     }
 

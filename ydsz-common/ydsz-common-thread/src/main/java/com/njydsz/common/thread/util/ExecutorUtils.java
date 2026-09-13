@@ -110,7 +110,7 @@ public final class ExecutorUtils {
     private int queueCapacity = DEFAULT_QUEUE_CAPACITY;
     private BlockingQueueType queueType = BlockingQueueType.LINKED;
     private String threadNamePrefix;
-    private boolean daemon;
+    private boolean isDaemon;
     private RejectedExecutionHandler handler = new ThreadPoolExecutor.CallerRunsPolicy();
 
     private ThreadPoolBuilder() {}
@@ -147,7 +147,7 @@ public final class ExecutorUtils {
     }
 
     public ThreadPoolBuilder daemon(boolean daemon) {
-      this.daemon = daemon;
+      this.isDaemon = daemon;
       return this;
     }
 
@@ -157,7 +157,7 @@ public final class ExecutorUtils {
     }
 
     public ThreadPoolExecutor build() {
-      ThreadFactory tf = createThreadFactory(threadNamePrefix, daemon);
+      ThreadFactory tf = createThreadFactory(threadNamePrefix, isDaemon);
       BlockingQueue<Runnable> queue = createQueue(queueType, queueCapacity);
       return new ThreadPoolExecutor(
           corePoolSize, maximumPoolSize, keepAliveTime, unit, queue, tf, handler);
