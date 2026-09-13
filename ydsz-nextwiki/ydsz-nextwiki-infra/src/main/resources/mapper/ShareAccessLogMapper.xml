@@ -15,7 +15,7 @@
         <result column="access_type" property="accessType"/>
         <result column="access_status" property="accessStatus"/>
         <result column="fail_reason" property="failReason"/>
-        <result column="created_at" property="accessTime"/>
+        <result column="access_time" property="accessTime"/>
         <result column="created_by" property="createdBy"/>
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
@@ -24,7 +24,7 @@
     </resultMap>
 
     <select id="selectByShareId" resultMap="ShareAccessLogResult">
-        SELECT id, share_id, share_code, file_node_id, visitor_id, visitor_name, visitor_ip, user_agent, access_type, access_status, fail_reason, created_at, created_by, updated_at, updated_by, revision, is_deleted
+        SELECT id, share_id, share_code, file_node_id, visitor_id, visitor_name, visitor_ip, user_agent, access_type, access_status, fail_reason, access_time, created_by, created_at, updated_at, updated_by, revision, is_deleted
         FROM ydsz_wiki_share_access_log
         WHERE share_id = #{shareId} AND is_deleted = 0
         ORDER BY created_at DESC

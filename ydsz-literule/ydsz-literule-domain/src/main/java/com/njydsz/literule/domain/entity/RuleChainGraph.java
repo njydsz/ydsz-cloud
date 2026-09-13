@@ -1,5 +1,6 @@
 package com.njydsz.literule.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
  * 规则链画布（P0-1）
@@ -61,6 +63,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
   private String status;
 
   /** 画布内容 JSON（包含 nodes/edges/viewport/metadata） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String contentJson;
 
   // ==================== 领域行为方法 ====================

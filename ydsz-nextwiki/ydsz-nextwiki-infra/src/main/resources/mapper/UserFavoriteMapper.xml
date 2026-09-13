@@ -12,7 +12,7 @@
     <result column="created_by" property="createdBy"/>
     <result column="updated_at" property="updatedAt"/>
     <result column="updated_by" property="updatedBy"/>
-    <result column="deleted" property="isDeleted"/>
+    <result column="is_deleted" property="isDeleted"/>
     <result column="deleted_time" property="deletedTime"/>
   </resultMap>
 
@@ -55,7 +55,7 @@
   <select id="existsByUserIdAndNodeId" resultType="boolean">
     SELECT COUNT(*) > 0
     FROM ydsz_wiki_user_favorite
-    WHERE user_id = #{userId} AND node_id = #{nodeId} AND tenant_id = #{tenantId} AND deleted = FALSE
+    WHERE user_id = #{userId} AND node_id = #{nodeId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
   </select>
 
   <!-- 根据用户ID和节点ID删除收藏记录（物理删除） -->
@@ -68,7 +68,7 @@
   <update id="updatesort">
     UPDATE ydsz_wiki_user_favorite
     SET sort = #{sort}, updated_at = NOW()
-    WHERE user_id = #{userId} AND node_id = #{nodeId} AND deleted = FALSE
+    WHERE user_id = #{userId} AND node_id = #{nodeId} AND is_deleted = FALSE
   </update>
 
 </mapper>

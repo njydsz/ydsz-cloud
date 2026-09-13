@@ -181,6 +181,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       eventData.put("eventType", eventType);
       eventData.put("payload", payload);
       eventData.put("timestamp", System.currentTimeMillis());
+      String json = YdszJson.toJson(eventData);
       ByteBuf buf = NettyBufferUtils.toUtf8ByteBuf(json);
       channelGroupManager.broadcastToGroup(groupKey, buf);
       return true;
@@ -306,13 +307,13 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
         ack.put("type", "AUTH_ACK");
         ack.put("success", true);
         ack.put("message", "ok");
-        ctx.writeAndFlush(Unpooled.copiedBuffer(YdszJson.toJson(ack), CharsetUtil.UTF_8));
+        ctx.writeAndFlush(NettyBufferUtils.toUtf8ByteBuf(YdszJson.toJson(ack)));
       } else {
         Map<String, Object> ack = new HashMap<>(MAP_CAPACITY_4);
         ack.put("type", "AUTH_ACK");
         ack.put("success", false);
         ack.put("message", "userId is required");
-        ctx.writeAndFlush(Unpooled.copiedBuffer(YdszJson.toJson(ack), CharsetUtil.UTF_8));
+        ctx.writeAndFlush(NettyBufferUtils.toUtf8ByteBuf(YdszJson.toJson(ack)));
       }
     }
 

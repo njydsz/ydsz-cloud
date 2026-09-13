@@ -1,5 +1,6 @@
 package com.njydsz.literule.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
  * 规则决策树实体
@@ -38,6 +40,7 @@ public class RuleDecisionTree extends MpBaseEntity<String> {
   private String description;
 
   /** 根节点 JSON（嵌套结构） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String rootNode;
 
   /** 优先级（数字越小越优先） */

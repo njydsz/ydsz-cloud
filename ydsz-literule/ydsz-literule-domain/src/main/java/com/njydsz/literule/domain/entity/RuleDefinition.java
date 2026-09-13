@@ -3,6 +3,7 @@ package com.njydsz.literule.domain.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 import com.njydsz.literule.domain.enums.RuleStatusEnum;
 
 /**
@@ -135,6 +137,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
   private BigDecimal canaryRatio;
 
   /** 灰度条件表达式列表（JSON 数组） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String canaryConditions;
 
   /** 灰度候选版本条件表达式 */

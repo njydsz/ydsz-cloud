@@ -4,7 +4,7 @@
 
     <select id="selectByRuleCode" resultType="com.njydsz.literule.infra.entity.RuleDependency">
         SELECT id, rule_code, depends_on_rule_code, dependency_type, is_cascade_on_disable,
-               description, tenant_id, created_by, created_at
+               description, tenant_id, revision, created_by, created_at
         FROM ydsz_rule_dependency
         WHERE rule_code = #{ruleCode}
         ORDER BY id ASC
@@ -12,7 +12,7 @@
 
     <select id="selectByDependsOn" resultType="com.njydsz.literule.infra.entity.RuleDependency">
         SELECT id, rule_code, depends_on_rule_code, dependency_type, is_cascade_on_disable,
-               description, tenant_id, created_by, created_at
+               description, tenant_id, revision, created_by, created_at
         FROM ydsz_rule_dependency
         WHERE depends_on_rule_code = #{dependsOnRuleCode}
         ORDER BY id ASC
@@ -20,7 +20,7 @@
 
     <select id="selectCascadingByDependsOn" resultType="com.njydsz.literule.infra.entity.RuleDependency">
         SELECT id, rule_code, depends_on_rule_code, dependency_type, is_cascade_on_disable,
-               description, tenant_id, created_by, created_at
+               description, tenant_id, revision, created_by, created_at
         FROM ydsz_rule_dependency
         WHERE depends_on_rule_code = #{dependsOnRuleCode}
           AND is_cascade_on_disable = TRUE

@@ -2,6 +2,7 @@ package com.njydsz.literule.domain.entity;
 
 import java.math.BigDecimal;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
  * 规则集实体（P2-14）。
@@ -42,9 +44,11 @@ public class RulePack extends MpBaseEntity<String> {
   private String industry;
 
   /** 标签（JSON 数组，如 ["风控", "审批"]） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String tags;
 
   /** 包含的规则编码列表（JSON 数组，逗号分隔） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String ruleCodes;
 
   /**
@@ -53,6 +57,7 @@ public class RulePack extends MpBaseEntity<String> {
    * <p>发布该版本时，将 ruleCodes 对应的规则定义完整 JSON 列表固化存库， 保证知识包版本的"内容可复现"：回滚/安装某一历史版本时，可直接取用快照，
    * 而不依赖当时在线规则表的实时状态。格式：{@code List<RuleDefinitionDTO>} 的 JSON。
    */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String ruleSnapshots;
 
   /** 升级来源版本号（如回滚/升级时记录前一版本，便于审计链路） */

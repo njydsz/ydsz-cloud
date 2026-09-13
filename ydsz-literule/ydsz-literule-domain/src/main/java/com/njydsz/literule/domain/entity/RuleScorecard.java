@@ -2,6 +2,7 @@ package com.njydsz.literule.domain.entity;
 
 import java.math.BigDecimal;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
  * 规则评分卡实体
@@ -50,6 +52,7 @@ public class RuleScorecard extends MpBaseEntity<String> {
   private BigDecimal yellowThreshold;
 
   /** 评分因子 JSON：[{conditionExpression, score, description}] */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String factors;
 
   /** 优先级（数字越小越优先） */
