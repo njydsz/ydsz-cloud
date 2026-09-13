@@ -41,7 +41,7 @@ public class KafkaQueueProperties extends QueueProperties {
   private String topic = "ydsz-kafka-topic";
 
   /** 是否自动提交偏移量 */
-  private boolean enableAutoCommit = false;
+  private boolean isEnableAutoCommit = false;
 
   /**
    * 自动偏移量重置策略

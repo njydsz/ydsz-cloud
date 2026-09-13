@@ -36,7 +36,7 @@ import com.njydsz.common.queue.enums.QueueType;
 public class QueueProperties {
 
   /** 是否启用消息队列模块 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /**
    * 队列引擎类型
@@ -104,7 +104,7 @@ public class QueueProperties {
   private int consumerExecutorAwaitTerminationSeconds = 30;
 
   /** 是否启用死信队列自动重试 */
-  private boolean deadLetterRetryEnabled = true;
+  private boolean isDeadLetterRetryEnabled = true;
 
   /** 死信队列最大重试次数 */
   @Min(1)
@@ -121,7 +121,7 @@ public class QueueProperties {
   private int deadLetterRetryJitterPercent = 30;
 
   /** 是否启用消息去重（默认 false，分布式场景推荐使用 ydsz-common-redis 的 RedisMessageDeduplicator） */
-  private boolean dedupEnabled = false;
+  private boolean isDedupEnabled = false;
 
   /** 消息去重窗口（毫秒，默认 300000 = 5 分钟） */
   private long dedupWindowMillis = 300_000L;

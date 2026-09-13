@@ -66,13 +66,13 @@ public class RabbitMQProperties extends QueueProperties {
   private String routingKey = "ydsz.routing.key";
 
   /** 是否启用消息确认（ACK） */
-  private boolean acknowledgeMode = true;
+  private boolean isAcknowledgeMode = true;
 
   /** 每次最大拉取消息数 */
   private int prefetchCount = 10;
 
   /** 是否持久化队列 */
-  private boolean durable = true;
+  private boolean isDurable = true;
 
   /** 消费者并发数 */
   private int concurrentConsumers = 5;
