@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class WebhookProperties {
 
   /** 是否启用 Webhook 功能。 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 连接超时时间（毫秒）。 */
   private int connectTimeoutMs = 5000;
@@ -29,11 +29,11 @@ public class WebhookProperties {
   private int maxConnectionsPerRoute = 20;
 
   public boolean isEnabled() {
-    return enabled;
+    return isEnabled;
   }
 
   public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+    this.isEnabled = enabled;
   }
 
   public int getConnectTimeoutMs() {

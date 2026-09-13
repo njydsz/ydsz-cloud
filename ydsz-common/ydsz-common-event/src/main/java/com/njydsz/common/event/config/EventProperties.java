@@ -38,7 +38,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class EventProperties {
 
   /** 是否启用 Outbox 模式 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** Outbox 表名 */
   private String tableName = "ydsz_com_outbox";
@@ -62,7 +62,7 @@ public class EventProperties {
   private int sentRetentionDays = 7;
 
   /** 是否启用自动清理已投递消息 */
-  private boolean autoCleanup = true;
+  private boolean isAutoCleanup = true;
 
   /** 清理间隔（小时） */
   private long cleanupIntervalHours = 6;
@@ -80,7 +80,7 @@ public class EventProperties {
   private int awaitTerminationSeconds = 10;
 
   /** 检测到 NoopEventPublishGateway 时是否启动失败（生产环境应设为 true） */
-  private boolean failOnNoop = true;
+  private boolean isFailOnNoop = true;
 
   /** Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率 */
   private long statusCountCacheSeconds = 5;

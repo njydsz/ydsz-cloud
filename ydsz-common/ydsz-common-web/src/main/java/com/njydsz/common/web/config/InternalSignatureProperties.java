@@ -28,7 +28,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class InternalSignatureProperties {
 
   /** 是否启用内部签名校验（默认关闭，密钥对齐后灰度开启） */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** HMAC-SHA256 签名密钥（与网关 ydsz.gateway.internal-sign-secret 一致） */
   private String secret = "";
@@ -37,11 +37,11 @@ public class InternalSignatureProperties {
   private List<String> enforcePaths = new ArrayList<>(List.of("/internal/**", "/feign/**"));
 
   public boolean isEnabled() {
-    return enabled;
+    return isEnabled;
   }
 
   public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+    this.isEnabled = enabled;
   }
 
   public String getSecret() {

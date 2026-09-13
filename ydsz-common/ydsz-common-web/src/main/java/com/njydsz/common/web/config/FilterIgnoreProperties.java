@@ -45,7 +45,7 @@ public class FilterIgnoreProperties {
    * <p>为 true 时，{@link #commonIgnoreUrls} 和 {@link #authFilterIgnoreServiceNames} 将完全覆盖 {@link
    * FilterIgnoreConstants} 中的内置默认值，而非与之合并。
    */
-  private boolean replaceBuiltin = false;
+  private boolean isReplaceBuiltin = false;
 
   /**
    * 获取有效的公共忽略 URL 集合。
@@ -56,7 +56,7 @@ public class FilterIgnoreProperties {
    * @return 有效的 URL 集合（不可变）
    */
   public Set<String> getResolvedCommonIgnoreUrls() {
-    if (replaceBuiltin) {
+    if (isReplaceBuiltin) {
       return Set.copyOf(commonIgnoreUrls);
     }
     Set<String> merged = new LinkedHashSet<>(FilterIgnoreConstants.getCommonIgnoreUrls());
@@ -67,13 +67,13 @@ public class FilterIgnoreProperties {
   /**
    * 获取有效的认证过滤器忽略服务名称集合。
    *
-   * <p>当 {@link #replaceBuiltin} 为 {@code false} 时，与 {@link
+   * <p>当 {@link #isReplaceBuiltin} 为 {@code false} 时，与 {@link
    * FilterIgnoreConstants#getAuthFilterIgnoreServiceNames()} 合并； 为 {@code true} 时，仅使用本配置值。
    *
    * @return 有效的服务名称集合（不可变）
    */
   public Set<String> getResolvedAuthFilterIgnoreServiceNames() {
-    if (replaceBuiltin) {
+    if (isReplaceBuiltin) {
       return Set.copyOf(authFilterIgnoreServiceNames);
     }
     Set<String> merged = new LinkedHashSet<>(FilterIgnoreConstants.getAuthFilterIgnoreServiceNames());

@@ -44,7 +44,7 @@ public class WebMultipartProperties {
    * <p>启用后会注册一个 {@link jakarta.servlet.MultipartConfigElement} Bean， 覆盖 Spring Boot 默认的 1MB / 10MB
    * 限制。 默认值：{@code true}
    */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /**
    * 单个文件最大大小。
@@ -72,7 +72,7 @@ public class WebMultipartProperties {
    *
    * <p>设为 true 时，multipart 在被访问时才解析，可在异常处理中重试。 默认值：{@code false}
    */
-  private boolean resolveLazily = false;
+  private boolean isResolveLazily = false;
 
   /**
    * 临时文件目录。
