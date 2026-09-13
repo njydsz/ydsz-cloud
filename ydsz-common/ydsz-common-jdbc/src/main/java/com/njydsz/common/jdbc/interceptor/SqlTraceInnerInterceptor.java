@@ -116,7 +116,7 @@ public class SqlTraceInnerInterceptor
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   /** 慢 SQL 检测开关 */
-  private boolean slowSqlEnabled = false;
+  private boolean isSlowSqlEnabled = false;
 
   /** 慢 SQL 检测阈值（毫秒） */
   private long slowSqlThresholdMillis = 1000;
@@ -127,23 +127,23 @@ public class SqlTraceInnerInterceptor
   /** Micrometer 指标注册表 */
   private MeterRegistry meterRegistry;
 
-  /** SQL 审计开关 */
-  private boolean auditEnabled = false;
+  /** 审计开关 */
+  private boolean isAuditEnabled = false;
 
   /** 是否审计 SELECT 语句 */
-  private boolean auditSelect = false;
+  private boolean isAuditSelect = false;
 
   /** 是否审计 INSERT 语句 */
-  private boolean auditInsert = true;
+  private boolean isAuditInsert = true;
 
   /** 是否审计 UPDATE 语句 */
-  private boolean auditUpdate = true;
+  private boolean isAuditUpdate = true;
 
   /** 是否审计 DELETE 语句 */
-  private boolean auditDelete = true;
+  private boolean isAuditDelete = true;
 
   /** 是否记录 SQL 参数 */
-  private boolean logParameters = true;
+  private boolean isLogParameters = true;
 
   /** 参数最大长度（超过则截断） */
   private int maxParameterLength = 500;
@@ -315,10 +315,10 @@ public class SqlTraceInnerInterceptor
   /** 判断是否应该审计该 SQL 类型 */
   private boolean shouldAudit(SqlCommandType commandType) {
     return switch (commandType) {
-      case SELECT -> auditSelect;
-      case INSERT -> auditInsert;
-      case UPDATE -> auditUpdate;
-      case DELETE -> auditDelete;
+      case SELECT -> isAuditSelect;
+      case INSERT -> isAuditInsert;
+      case UPDATE -> isAuditUpdate;
+      case DELETE -> isAuditDelete;
       default -> false;
     };
   }
@@ -352,7 +352,7 @@ public class SqlTraceInnerInterceptor
       String timestamp = LocalDateTime.now().format(FORMATTER);
 
       String parameters = "";
-      if (logParameters && parameter != null) {
+      if (isLogParameters && parameter != null) {
         parameters = formatParameters(parameter);
       }
 
@@ -448,10 +448,10 @@ public class SqlTraceInnerInterceptor
       // SQL 真实执行完成后统一处理慢 SQL 与审计
       TimingContext timing = TIMING_CONTEXT.get();
       if (timing != null) {
-        if (slowSqlEnabled && elapsedMillis > slowSqlThresholdMillis) {
+        if (isSlowSqlEnabled && elapsedMillis > slowSqlThresholdMillis) {
           handleSlowSql(timing.sqlId, elapsedMillis, timing.finalSql);
         }
-        if (auditEnabled
+        if (isAuditEnabled
             && shouldAudit(timing.commandType)
             && !shouldExclude(timing.sqlId, timing.finalSql)) {
           logAudit(
@@ -484,12 +484,12 @@ public class SqlTraceInnerInterceptor
 
   // ----- Getters / Setters -----
 
-  public boolean isSlowSqlEnabled() {
-    return slowSqlEnabled;
+  public boolean getIsSlowSqlEnabled() {
+    return isSlowSqlEnabled;
   }
 
-  public void setSlowSqlEnabled(boolean slowSqlEnabled) {
-    this.slowSqlEnabled = slowSqlEnabled;
+  public void setIsSlowSqlEnabled(boolean isSlowSqlEnabled) {
+    this.isSlowSqlEnabled = isSlowSqlEnabled;
   }
 
   public long getSlowSqlThresholdMillis() {
@@ -516,52 +516,52 @@ public class SqlTraceInnerInterceptor
     this.meterRegistry = meterRegistry;
   }
 
-  public boolean isAuditEnabled() {
-    return auditEnabled;
+  public boolean getIsAuditEnabled() {
+    return isAuditEnabled;
   }
 
-  public void setAuditEnabled(boolean auditEnabled) {
-    this.auditEnabled = auditEnabled;
+  public void setIsAuditEnabled(boolean isAuditEnabled) {
+    this.isAuditEnabled = isAuditEnabled;
   }
 
-  public boolean isAuditSelect() {
-    return auditSelect;
+  public boolean getIsAuditSelect() {
+    return isAuditSelect;
   }
 
-  public void setAuditSelect(boolean auditSelect) {
-    this.auditSelect = auditSelect;
+  public void setIsAuditSelect(boolean isAuditSelect) {
+    this.isAuditSelect = isAuditSelect;
   }
 
-  public boolean isAuditInsert() {
-    return auditInsert;
+  public boolean getIsAuditInsert() {
+    return isAuditInsert;
   }
 
-  public void setAuditInsert(boolean auditInsert) {
-    this.auditInsert = auditInsert;
+  public void setIsAuditInsert(boolean isAuditInsert) {
+    this.isAuditInsert = isAuditInsert;
   }
 
-  public boolean isAuditUpdate() {
-    return auditUpdate;
+  public boolean getIsAuditUpdate() {
+    return isAuditUpdate;
   }
 
-  public void setAuditUpdate(boolean auditUpdate) {
-    this.auditUpdate = auditUpdate;
+  public void setIsAuditUpdate(boolean isAuditUpdate) {
+    this.isAuditUpdate = isAuditUpdate;
   }
 
-  public boolean isAuditDelete() {
-    return auditDelete;
+  public boolean getIsAuditDelete() {
+    return isAuditDelete;
   }
 
-  public void setAuditDelete(boolean auditDelete) {
-    this.auditDelete = auditDelete;
+  public void setIsAuditDelete(boolean isAuditDelete) {
+    this.isAuditDelete = isAuditDelete;
   }
 
-  public boolean isLogParameters() {
-    return logParameters;
+  public boolean getIsLogParameters() {
+    return isLogParameters;
   }
 
-  public void setLogParameters(boolean logParameters) {
-    this.logParameters = logParameters;
+  public void setIsLogParameters(boolean isLogParameters) {
+    this.isLogParameters = isLogParameters;
   }
 
   public int getMaxParameterLength() {

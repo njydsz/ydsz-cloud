@@ -38,7 +38,7 @@ public class FeignRequestInterceptor implements RequestInterceptor {
   public void apply(RequestTemplate requestTemplate) {
     if (feignProperties == null
         || feignProperties.getPropagation() == null
-        || !feignProperties.getPropagation().isEnabled()
+        || !feignProperties.getPropagation().getIsEnabled()
         || feignProperties.getPropagation().getHeaders() == null
         || feignProperties.getPropagation().getHeaders().isEmpty()) {
       return;

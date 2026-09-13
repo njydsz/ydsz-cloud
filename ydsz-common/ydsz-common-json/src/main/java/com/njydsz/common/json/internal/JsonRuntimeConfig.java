@@ -39,18 +39,18 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  */
 public record JsonRuntimeConfig(
     PropertyNamingStrategy namingStrategy,
-    boolean writeNulls,
-    boolean prettyPrint,
+    boolean isWriteNulls,
+    boolean isPrettyPrint,
     String circularRefStrategy,
-    boolean serializeEnumUsingOrdinal,
+    boolean isSerializeEnumUsingOrdinal,
     String dateFormat,
-    boolean failOnError,
+    boolean isFailOnError,
     String defaultDateFormat,
     long maxJsonSize,
     int maxDepth,
     int maxGenericDepth,
-    boolean useBigDecimal,
-    boolean wrapRootValue)
+    boolean isUseBigDecimal,
+    boolean isWrapRootValue)
     implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -76,18 +76,18 @@ public record JsonRuntimeConfig(
     }
     return new JsonRuntimeConfig(
         config.getNamingStrategy(),
-        config.isWriteNulls(),
-        config.isPrettyPrint(),
+        config.getIsWriteNulls(),
+        config.getIsPrettyPrint(),
         config.getCircularReferenceStrategy().name(),
-        config.isSerializeEnumUsingOrdinal(),
+        config.getIsSerializeEnumUsingOrdinal(),
         config.getDateFormat(),
-        config.isFailOnError(),
+        config.getIsFailOnError(),
         config.getDefaultDateFormat(),
         config.getMaxJsonSize(),
         config.getMaxDepth(),
         config.getMaxGenericDepth(),
-        config.isUseBigDecimal(),
-        config.isWrapRootValue());
+        config.getIsUseBigDecimal(),
+        config.getIsWrapRootValue());
   }
 
   /**
@@ -112,7 +112,7 @@ public record JsonRuntimeConfig(
    * @return 是否格式化输出
    */
   public boolean resolvePrettyPrint(Boolean override) {
-    return override != null ? override : prettyPrint;
+    return override != null ? override : isPrettyPrint;
   }
 
   /**
@@ -122,6 +122,6 @@ public record JsonRuntimeConfig(
    * @return 是否输出 null 值
    */
   public boolean resolveWriteNulls(Boolean override) {
-    return override != null ? override : writeNulls;
+    return override != null ? override : isWriteNulls;
   }
 }
