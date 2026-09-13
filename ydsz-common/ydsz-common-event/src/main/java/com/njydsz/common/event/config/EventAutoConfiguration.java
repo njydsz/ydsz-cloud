@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminService;
 import com.njydsz.common.event.gateway.EventPublishGateway;
@@ -272,7 +273,7 @@ public class EventAutoConfiguration {
     // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
     @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
     // CHECKSTYLE.ON: RegexpSinglelineJava
-    @ConditionalOnBean(org.springframework.kafka.core.KafkaTemplate.class)
+    @ConditionalOnBean(KafkaTemplate.class)
     public static class KafkaGatewayConfiguration {
 
       /** 日志实例 */
@@ -287,7 +288,7 @@ public class EventAutoConfiguration {
       @Bean
       @ConditionalOnMissingBean(EventPublishGateway.class)
       public EventPublishGateway kafkaEventPublishGateway(
-          org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate) {
+          KafkaTemplate<String, String> kafkaTemplate) {
         LOG.info("KafkaEventPublishGateway registered: topic=ydsz-outbox-events");
         return new KafkaEventPublishGateway(kafkaTemplate, null);
       }
