@@ -58,7 +58,7 @@ public class AgentTraceMiddleware implements AgentMiddleware {
     String traceId = context.getTraceId();
     if (traceId != null && response != null) {
       BigDecimal cost = response.getCostEstimate() != null
-          ? response.getCostEstimate().getTotalCost() : BigDecimal.ZERO;
+          ? BigDecimal.valueOf(response.getCostEstimate().getActualCostUsd()) : BigDecimal.ZERO;
       traceRecorder.recordStep(
           traceId,
           "LLM_CALL",

@@ -157,11 +157,20 @@ public class MiddlewareChainImpl implements MiddlewareChain {
     ChatResponse invoke(int index) {
       if (index >= middlewares.size()) {
         // 所有中间件已放行，执行实际调用
-        return finalCall.execute();
+        ChatResponse result = finalCall.execute();
+        // 将结果设置到上下文（如果外部需要读取）
+        if (context.getLlmResponse() == null) {
+          context.setLlmResponse(result);
+        }
+        return result;
       }
       AgentMiddleware current = middlewares.get(index);
       try {
-        return current.onModelCall(context, () -> invoke(index + 1));
+        // 调用中间件钩子：如果放行 proceed.execute() 会触发 invoke(index+1)
+        // 如果不放行（如缓存命中/限流拦截），中间件通过 context.setLlmResponse() 设置结果并抛出 MiddlewareException
+        current.onModelCall(context, () -> invoke(index + 1));
+        // 中间件未放行但通过 context 设置了响应（如缓存命中）
+        return context.getLlmResponse();
       } catch (MiddlewareException e) {
         log.warn("[Middleware] {} 中断模型调用: {}", current.getName(), e.getUserMessage());
         throw e;
