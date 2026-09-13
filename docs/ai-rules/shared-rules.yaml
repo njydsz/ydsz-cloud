@@ -13,10 +13,10 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.07"
-  source: "docs/云顶编码规范.md v1.0.8"
-  last_synced: "2026-09-07"
-  last_updated: "2026-09-08（新增 YDIZ-ARCH-002：L1→L1 反射耦合检测标准 P1）"
+  version: "26.09.13"
+  source: "docs/云顶编码规范.md v1.0.9"
+  last_synced: "2026-09-13"
+  last_updated: "2026-09-13（YDIZ-API-001 扩展：增加 /api 网关层命名空间规范）"
   total_rules: 57
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"

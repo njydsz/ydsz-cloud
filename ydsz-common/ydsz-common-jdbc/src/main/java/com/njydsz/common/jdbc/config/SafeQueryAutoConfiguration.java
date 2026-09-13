@@ -51,7 +51,7 @@ import com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor;
 @ConditionalOnClass(MybatisPlusInterceptor.class)
 @ConditionalOnProperty(
     prefix = "ydsz.jdbc.safe-query",
-    name = "is-enabled",
+    name = "enabled",
     havingValue = "true",
     matchIfMissing = true)
 @EnableConfigurationProperties({

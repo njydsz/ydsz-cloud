@@ -30,19 +30,14 @@ public interface WebAuthnCredentialConverter {
   WebAuthnCredentialVO toVO(WebAuthnCredential entity);
 
   /**
-   * VO → DO 转换。
+   * VO → Entity 转换（创建/更新场景）。
+   *
+   * <p>仅映射物理表实际存在的字段；审计字段（createdBy/updatedBy）及
+   * 基类字段（createdAt/updatedAt/id）由数据库/拦截器自动填充。
    *
    * @param vo 视图对象
    * @return 持久化实体
    */
-  @Mapping(target = "id", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "status", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "revision", ignore = true)
   WebAuthnCredential toDO(WebAuthnCredentialVO vo);
 }
