@@ -19,6 +19,6 @@ public class NextwikiWebMvcConfig implements WebMvcConfigurer {
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(new ApiVersionInterceptor()).addPathPatterns("/api/**");
+    registry.addInterceptor(new ApiVersionInterceptor()).addPathPatterns("/**");
   }
 }

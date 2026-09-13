@@ -34,7 +34,7 @@ public class InternalSignatureProperties {
   private String secret = "";
 
   /** 强制验签的路径模式（Ant 风格） */
-  private List<String> enforcePaths = new ArrayList<>(List.of("/api/internal/**", "/feign/**"));
+  private List<String> enforcePaths = new ArrayList<>(List.of("/internal/**", "/feign/**"));
 
   public boolean isEnabled() {
     return enabled;

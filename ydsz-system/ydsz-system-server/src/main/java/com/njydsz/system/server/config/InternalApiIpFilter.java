@@ -85,7 +85,7 @@ public class InternalApiIpFilter {
     registration.setFilter(
         (request, response, chain) ->
             doFilter((HttpServletRequest) request, (HttpServletResponse) response, chain));
-    registration.addUrlPatterns("/api/internal/*");
+    registration.addUrlPatterns("/internal/*");
     registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
     registration.setName("internalApiIpFilter");
     return registration;

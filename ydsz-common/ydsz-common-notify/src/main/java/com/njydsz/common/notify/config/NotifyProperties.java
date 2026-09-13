@@ -469,13 +469,13 @@ public class NotifyProperties {
   /** SSL 配置内部类 */
   public static class SslConfig {
     /** 是否启用 SSL */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** SSL 协议版本 */
     private String protocols = "TLSv1.2";
 
     /** 是否验证服务端证书 */
-    private boolean checkServerIdentity = true;
+    private boolean isCheckServerIdentity = true;
 
     /** 信任库路径 */
     private String trustStore;
@@ -485,12 +485,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public String getProtocols() {
@@ -501,12 +501,12 @@ public class NotifyProperties {
       this.protocols = protocols;
     }
 
-    public boolean isCheckServerIdentity() {
-      return checkServerIdentity;
+    public boolean getIsCheckServerIdentity() {
+      return isCheckServerIdentity;
     }
 
     public void setCheckServerIdentity(boolean checkServerIdentity) {
-      this.checkServerIdentity = checkServerIdentity;
+      this.isCheckServerIdentity = checkServerIdentity;
     }
 
     public String getTrustStore() {
@@ -529,7 +529,7 @@ public class NotifyProperties {
   /** 邮件安全配置（XSS 清洗、退订头、加密密钥） */
   public static class SecurityConfig {
     /** 是否对 HTML 邮件内容执行 XSS 清洗 */
-    private boolean sanitizeHtml = true;
+    private boolean isSanitizeHtml = true;
 
     /** List-Unsubscribe 退订头 URL */
     private String listUnsubscribe;
@@ -539,12 +539,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isSanitizeHtml() {
-      return sanitizeHtml;
+    public boolean getIsSanitizeHtml() {
+      return isSanitizeHtml;
     }
 
     public void setSanitizeHtml(boolean sanitizeHtml) {
-      this.sanitizeHtml = sanitizeHtml;
+      this.isSanitizeHtml = sanitizeHtml;
     }
 
     public String getListUnsubscribe() {
@@ -567,19 +567,19 @@ public class NotifyProperties {
   /** 邮件追踪配置（已读回执像素） */
   public static class TrackingConfig {
     /** 是否启用邮件追踪 */
-    private boolean enabled;
+    private boolean isEnabled;
 
     /** 追踪像素基础 URL */
     private String pixelBaseUrl;
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public String getPixelBaseUrl() {
@@ -594,7 +594,7 @@ public class NotifyProperties {
   /** DKIM 签名配置 */
   public static class DkimConfig {
     /** 是否启用 DKIM 签名 */
-    private boolean enabled;
+    private boolean isEnabled;
 
     /** 签名域名 */
     private String domain;
@@ -607,12 +607,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public String getDomain() {
