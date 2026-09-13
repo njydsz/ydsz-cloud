@@ -100,7 +100,7 @@ public class WriteHandler {
     /**
      * 设置条件格式命中的单元格是否加粗显示。
      *
-     * @param bold {@code true} 表示加粗
+     * @param isBold {@code true} 表示加粗
      * @return 当前配置，便于链式调用
      */
     public ConditionalFormattingConfig setBold(boolean isBold) {
@@ -227,7 +227,7 @@ public class WriteHandler {
      * <p>默认 {@code false}，即静默拦截非法输入但不向用户提示原因； 设置为 {@code true} 后配合 {@link #setErrorTitle} / {@link
      * #setError} 展示细节。
      *
-     * @param showErrorMessage {@code true} 显示错误弹窗
+     * @param isShowErrorMessage {@code true} 显示错误弹窗
      * @return 当前配置，便于链式调用
      */
     public DataValidationConfig setShowErrorMessage(boolean isShowErrorMessage) {

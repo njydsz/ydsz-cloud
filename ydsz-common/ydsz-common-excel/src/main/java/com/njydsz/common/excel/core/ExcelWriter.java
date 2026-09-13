@@ -543,7 +543,7 @@ public class ExcelWriter {
 
       ExcelConfig config =
           metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
-      boolean useFastWriter = config.isUseFastWriter();
+      boolean useFastWriter = config.getIsUseFastWriter();
       boolean isXlsx = true;
       if (metadata.getFilePath() != null) {
         isXlsx = !metadata.getFilePath().toLowerCase().endsWith(".xls");

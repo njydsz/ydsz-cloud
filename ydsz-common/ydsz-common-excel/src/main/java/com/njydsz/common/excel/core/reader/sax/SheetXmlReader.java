@@ -516,7 +516,7 @@ public class SheetXmlReader {
       try {
         double serial = Double.parseDouble(actualValue);
         // POI DateUtil 返回 java.util.Date，桥接为 LocalDateTime 后装载到 SimpleCell
-        Date date = DateUtil.getJavaDate(serial, reader.excelConfig().isUse1904Windowing());
+        Date date = DateUtil.getJavaDate(serial, reader.excelConfig().getIsUse1904Windowing());
         LocalDateTime ldt = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         SimpleCell dateCell = SimpleCell.forDate(actualValue, ldt);
         return colMeta.convertStrategy.convert(dateCell, CellType.NUMERIC);

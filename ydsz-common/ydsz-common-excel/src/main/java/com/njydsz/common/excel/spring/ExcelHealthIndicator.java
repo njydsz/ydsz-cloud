@@ -63,8 +63,8 @@ public class ExcelHealthIndicator implements HealthIndicator {
   @Override
   public Health health() {
     Map<String, Object> details = new LinkedHashMap<>(16);
-    details.put("fastReader", properties.getUseFastReader());
-    details.put("fastWriter", properties.getUseFastWriter());
+    details.put("fastReader", properties.getIsUseFastReader());
+    details.put("fastWriter", properties.getIsUseFastWriter());
     details.put("dateFormat", properties.getDefaultDateFormat());
     details.put("maxReadMb", properties.getMaxReadFileSizeMb());
     details.put("maxWriteMb", properties.getMaxWriteFileSizeMb());

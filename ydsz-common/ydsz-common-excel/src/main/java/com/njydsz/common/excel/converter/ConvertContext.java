@@ -126,7 +126,7 @@ public class ConvertContext {
      *
      * <p>Excel 手工录入数据常带不可见空格，开启后可避免下游精确匹配失败。
      *
-     * @param automaticTrim {@code true} 表示自动 trim
+     * @param isAutomaticTrim {@code true} 表示自动 trim
      * @return 当前构建器，便于链式调用
      */
     public Builder automaticTrim(boolean isAutomaticTrim) {
@@ -139,7 +139,7 @@ public class ConvertContext {
      *
      * <p>严格模式下无法解析的数值将转换失败并上报错误； 宽松模式下则降级为 {@code null} 或默认值继续处理，适合容忍脏数据的批量导入。
      *
-     * @param strictNumberConversion {@code true} 表示严格模式
+     * @param isStrictNumberConversion {@code true} 表示严格模式
      * @return 当前构建器，便于链式调用
      */
     public Builder strictNumberConversion(boolean isStrictNumberConversion) {
@@ -153,7 +153,7 @@ public class ConvertContext {
      * <p>Mac 版 Excel 早期以 1904-01-01 为纪元，与默认的 1900 系统相差 1462 天。 若源文件工作簿标记了 1904 窗口而此处未开启，所有日期都会整体偏移约
      * 4 年。
      *
-     * @param use1904Windowing {@code true} 表示按 1904 纪元解析日期序列号
+     * @param isUse1904Windowing {@code true} 表示按 1904 纪元解析日期序列号
      * @return 当前构建器，便于链式调用
      */
     public Builder use1904Windowing(boolean isUse1904Windowing) {

@@ -331,7 +331,7 @@ public class ExcelReader {
    */
   public ExcelReader use1904Windowing() {
     ExcelConfig config = metadata.getExcelConfig();
-    if (config != null && !config.isUse1904Windowing()) {
+    if (config != null && !config.getIsUse1904Windowing()) {
       LOG.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
     }
     return this;
@@ -490,7 +490,7 @@ public class ExcelReader {
         // 同时移除"大文件自动升级 fast"逻辑：fast 引擎为显式 opt-in，避免未开启时被阈值静默升级。
         boolean hasFileSource = filePath != null || metadata.getFile() != null;
 
-        if (config.isUseFastReader() && hasFileSource) {
+        if (config.getIsUseFastReader() && hasFileSource) {
           useFastReader = true;
           Path fastPath =
               filePath != null ? Path.of(filePath) : metadata.getFile().toPath();
