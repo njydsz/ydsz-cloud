@@ -61,10 +61,10 @@ public class OutboxMessage {
   private final OutboxStatus status;
 
   /** 重试次数 */
-  private final int retryCount;
+  private final long retryCount;
 
   /** 最大重试次数 */
-  private final int maxRetries;
+  private final long maxRetries;
 
   /** 下次重试时间（指数退避） */
   private final Instant nextRetryAt;

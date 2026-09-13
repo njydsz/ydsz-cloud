@@ -361,3 +361,131 @@ CREATE TRIGGER trg_ydsz_agt_token_usage_updated_at
 BEFORE UPDATE ON ydsz_agt_token_usage
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_agt_token_usage_set_updated_at();
+
+-- ============================================================================
+-- 用户画像表 ydzs_agt_user_profile
+--
+-- 派生自 domain/profile/UserProfile.java（继承 MpBaseAuditEntity<String>，
+-- 以 user_id 为业务主键，独立 id 列不存在）。
+-- 存储用户偏好、关注领域、查询风格等长期画像记忆（三层长期记忆体系中的画像层）。
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS ydsz_agt_user_profile (
+    user_id                 VARCHAR(32)    NOT NULL,
+    preferred_language      VARCHAR(32)    DEFAULT NULL,
+    interested_domains      TEXT           DEFAULT NULL,
+    domain_frequency        TEXT           DEFAULT NULL,
+    query_style             VARCHAR(32)    DEFAULT NULL,
+    common_intents          TEXT           DEFAULT NULL,
+    total_interactions      INTEGER        NOT NULL DEFAULT 0,
+    last_interaction_at     TIMESTAMP      DEFAULT NULL,
+    created_by              VARCHAR(64)    DEFAULT NULL,
+    created_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by              VARCHAR(64)    DEFAULT NULL,
+    updated_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ydsz_agt_user_profile PRIMARY KEY (user_id)
+);
+
+COMMENT ON TABLE ydsz_agt_user_profile IS '用户画像表（三层长期记忆体系中的画像层）';
+COMMENT ON COLUMN ydsz_agt_user_profile.user_id IS '用户 ID（主键，业务 ID，雪花算法生成）';
+COMMENT ON COLUMN ydsz_agt_user_profile.preferred_language IS '偏好语言（zh-CN / en-US）';
+COMMENT ON COLUMN ydzs_agt_user_profile.interested_domains IS '关注领域列表（JSON 字符串存储）';
+COMMENT ON COLUMN ydsz_agt_user_profile.domain_frequency IS '领域查询频次统计（JSON 字符串，领域 → 次数映射）';
+COMMENT ON COLUMN ydsz_agt_user_profile.query_style IS '查询风格（如 简洁 / 详细 / 分析型 / 探索型）';
+COMMENT ON COLUMN ydsz_agt_user_profile.common_intents IS '高频意图标签（JSON 字符串存储）';
+COMMENT ON COLUMN ydsz_agt_user_profile.total_interactions IS '总交互次数';
+COMMENT ON COLUMN ydsz_agt_user_profile.last_interaction_at IS '最近交互时间（findActiveProfiles ORDER BY last_interaction_at DESC）';
+COMMENT ON COLUMN ydsz_agt_user_profile.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydsz_agt_user_profile.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_agt_user_profile.updated_by IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydsz_agt_user_profile.updated_at IS '最后更新时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_user_profile_last_interaction_at ON ydsz_agt_user_profile (last_interaction_at DESC);
+
+-- ============================================================================
+-- 洞察报告表 ydzs_agt_insight_report
+--
+-- 派生自 domain/insight/InsightReport.java（继承 MpBaseAuditEntity<Long>，
+-- 自增 BIGSERIAL 主键）。
+-- 记录 BI 洞察报告从创建到导出的完整生命周期，含原始数据分析结果 JSON（data_json）
+-- 与报告内容 JSON（content_json）。
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS ydsz_agt_insight_report (
+    id                      BIGSERIAL      PRIMARY KEY,
+    report_id               VARCHAR(64)    NOT NULL,
+    user_id                 VARCHAR(64)    NOT NULL,
+    conversation_id         VARCHAR(64)    DEFAULT NULL,
+    title                   VARCHAR(256)   NOT NULL,
+    query                   TEXT           DEFAULT NULL,
+    data_source_type        VARCHAR(32)    DEFAULT NULL,
+    data_json               JSONB          DEFAULT NULL,
+    content_json            JSONB          DEFAULT NULL,
+    status                  VARCHAR(32)    DEFAULT NULL,
+    report_format           VARCHAR(32)    DEFAULT NULL,
+    report_path             VARCHAR(512)   DEFAULT NULL,
+    error_message           VARCHAR(512)   DEFAULT NULL,
+    duration_ms             INTEGER        DEFAULT NULL,
+    created_by              VARCHAR(64)    DEFAULT NULL,
+    created_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by              VARCHAR(64)    DEFAULT NULL,
+    updated_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_ydsz_agt_insight_report_report_id UNIQUE (report_id)
+);
+
+COMMENT ON TABLE ydsz_agt_insight_report IS '洞察报告表（BI 洞察报告持久化，含分析结果 JSON 与报告内容 JSON）';
+COMMENT ON COLUMN ydzs_agt_insight_report.id IS '自增主键（BIGSERIAL）';
+COMMENT ON COLUMN ydzs_agt_insight_report.report_id IS '唯一业务 ID（雪花算法生成）';
+COMMENT ON COLUMN ydsz_agt_insight_report.user_id IS '触发用户 ID';
+COMMENT ON COLUMN ydsz_agt_insight_report.conversation_id IS '关联对话 ID（可选）';
+COMMENT ON COLUMN ydsz_agt_insight_report.title IS '报告标题';
+COMMENT ON COLUMN ydsz_agt_insight_report.query IS '原始分析查询';
+COMMENT ON COLUMN ydzs_agt_insight_report.data_source_type IS '数据源类型（sql / python / mixed）';
+COMMENT ON COLUMN ydzs_agt_insight_report.data_json IS '原始数据分析结果 JSON';
+COMMENT ON COLUMN ydzs_agt_insight_report.content_json IS '报告内容 JSON（含 sections 列表）';
+COMMENT ON COLUMN ydzs_agt_insight_report.status IS '报告状态编码（draft / completed / failed / exported）';
+COMMENT ON COLUMN ydzs_agt_insight_report.report_format IS '报告格式（html / pdf / markdown）';
+COMMENT ON COLUMN ydzs_agt_insight_report.report_path IS '存储路径（可选）';
+COMMENT ON COLUMN ydzs_agt_insight_report.error_message IS '生成失败时的错误信息';
+COMMENT ON COLUMN ydzs_agt_insight_report.duration_ms IS '生成耗时（毫秒）';
+COMMENT ON COLUMN ydzs_agt_insight_report.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydzs_agt_insight_report.created_at IS '创建时间';
+COMMENT ON COLUMN ydzs_agt_insight_report.updated_by IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydzs_agt_insight_report.updated_at IS '最后更新时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_insight_report_user_id ON ydsz_agt_insight_report (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_insight_report_status ON ydsz_agt_insight_report (status);
+
+-- ============================================================================
+-- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器（PostgreSQL）
+-- ============================================================================
+
+-- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
+CREATE OR REPLACE FUNCTION fn_ydsz_agt_user_profile_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_ydsz_agt_user_profile_updated_at ON ydsz_agt_user_profile;
+CREATE TRIGGER trg_ydsz_agt_user_profile_updated_at
+BEFORE UPDATE ON ydsz_agt_user_profile
+FOR EACH ROW
+EXECUTE FUNCTION fn_ydsz_agt_user_profile_set_updated_at();
+
+-- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
+CREATE OR REPLACE FUNCTION fn_ydsz_agt_insight_report_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_ydsz_agt_insight_report_updated_at ON ydsz_agt_insight_report;
+CREATE TRIGGER trg_ydsz_agt_insight_report_updated_at
+BEFORE UPDATE ON ydsz_agt_insight_report
+FOR EACH ROW
+EXECUTE FUNCTION fn_ydsz_agt_insight_report_set_updated_at();

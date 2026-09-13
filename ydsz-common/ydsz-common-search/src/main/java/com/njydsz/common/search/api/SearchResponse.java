@@ -61,7 +61,7 @@ public class SearchResponse implements Serializable {
   /** 是否为降级结果 */
   @Schema(description = "是否为降级结果")
   @Builder.Default
-  private boolean degraded = false;
+  private boolean isDegraded = false;
 
   /** P3-21: 下一页游标（为空表示无更多数据） */
   @Schema(description = "下一页游标")

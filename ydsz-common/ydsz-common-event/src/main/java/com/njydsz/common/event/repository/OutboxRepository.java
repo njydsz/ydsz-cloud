@@ -125,8 +125,8 @@ public class OutboxRepository {
             ps.setString(4, msg.getEventType());
             ps.setString(5, msg.getPayload());
             ps.setString(6, msg.getStatus().name());
-            ps.setInt(7, msg.getRetryCount());
-            ps.setInt(8, msg.getMaxRetries());
+            ps.setLong(7, msg.getRetryCount());
+            ps.setLong(8, msg.getMaxRetries());
             ps.setTimestamp(
                 9, msg.getNextRetryAt() != null ? Timestamp.from(msg.getNextRetryAt()) : null);
             ps.setTimestamp(
@@ -588,8 +588,8 @@ public class OutboxRepository {
           .eventType(rs.getString("event_type"))
           .payload(rs.getString("payload"))
           .status(OutboxStatus.valueOf(rs.getString("status")))
-          .retryCount(rs.getInt("retry_count"))
-          .maxRetries(rs.getInt("max_retries"))
+          .retryCount(rs.getLong("retry_count"))
+          .maxRetries(rs.getLong("max_retries"))
           .nextRetryAt(nextRetry != null ? nextRetry.toInstant() : null)
           .createdAt(createdAt != null ? createdAt.toInstant() : null)
           .updatedAt(updatedAt != null ? updatedAt.toInstant() : null)
