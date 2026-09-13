@@ -1,5 +1,6 @@
 package com.njydsz.common.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -21,16 +22,24 @@ import java.util.Arrays;
  *   <li>L2 (core)：仅可依赖 L1
  *   <li>L3 (domain/exception)：仅可依赖 L1-L2
  *   <li>L4 (jdbc/redis/lock/thread/tenant)：仅可依赖 L1-L3，同层 L4 互引豁免
- *   <li>L5 (15 个服务模块)：仅可依赖 L1-L4，同层 L5 互引豁免，禁止依赖 L6
+ *   <li>L5 (15 个服务模块)：仅可依赖 L1-L4，禁止依赖 L6，同层 L5 互引仅限明确白名单
  *   <li>L6 (base/app/web)：允许依赖全部
+ * </ul>
+ *
+ * <h2>命名约定</h2>
+ *
+ * <ul>
+ *   <li>自动配置类必须以 {@code AutoConfiguration} 结尾（如 {@code CoreAutoConfiguration}）
+ *   <li>配置属性类必须以 {@code Properties} 结尾（如 {@code TokenProperties}）
  * </ul>
  *
  * <h2>豁免说明</h2>
  *
  * <ul>
- *   <li>同层互引（如 auth→safe 均为 L5）不违规，仅当低层→高层反向依赖时触发失败。
  *   <li>L1 util.config 子包豁免：该子包提供 Spring 动态配置能力（@ConfigurationProperties 绑定等），
  *       需要引入 spring-boot-autoconfigure，无法保持纯零依赖。
+ *   <li>L5 同层互引白名单（仅允许以下 L5→L5 依赖方向，其余禁止）：
+ *       auth→safe（列级脱敏公共能力下沉）
  * </ul>
  *
  * <h2>接入方式</h2>
@@ -103,11 +112,6 @@ public class CommonLayerArchitectureTest {
     QUEUE_PKG, EVENT_PKG, CONFIG_PKG, SOCKET_PKG, NETTY_PKG,
     FILE_PKG, DOCS_PKG, SEARCH_PKG, SENTRY_PKG, SEATA_PKG,
     BASE_PKG, WEB_PKG, APP_PKG
-  };
-
-  /** L4 层所有模块。 */
-  private static final String[] L4_PACKAGES = {
-    JDBC_PKG, REDIS_PKG, LOCK_PKG, THREAD_PKG, TENANT_PKG
   };
 
   // ========== L1 纯度规则 ==========
@@ -210,7 +214,9 @@ public class CommonLayerArchitectureTest {
   // ========== L5 纯度规则 ==========
 
   /**
-   * L5 模块禁止依赖 L6 层。同层 L5 互引不违规（auth→safe、feign→safe、notify→event 等均属同级）。
+   * L5 模块禁止依赖 L6 层。
+   *
+   * <p>注：L5 同层互引仅限白名单（auth→safe），其余 L5→L5 依赖应通过提取公共能力至 L1-L4 消除。
    */
   @ArchTest
   static final ArchRule L5_SHOULD_NOT_DEPEND_ON_L6 =
@@ -225,12 +231,68 @@ public class CommonLayerArchitectureTest {
           .resideInAnyPackage(BASE_PKG, WEB_PKG, APP_PKG)
           .because("L5 模块禁止依赖 L6 层（YDIZ-ARCH-001 单向依赖）");
 
+  /**
+   * L5→L5 同层依赖管控：禁止非白名单的 L5→L5 依赖。
+   *
+   * <p>当前白名单：auth→safe（列级脱敏能力下沉）。
+   * feign→safe、audit→safe 冗余依赖已随 26.09.13 版本移除。
+   */
+  @ArchTest
+  static final ArchRule L5_SHOULD_NOT_HAVE_UNAUTHORIZED_CROSS_DEPENDENCIES =
+      noClasses()
+          .that()
+          .resideInAnyPackage(FEIGN_PKG, AUDIT_PKG)
+          .should()
+          .dependOnClassesThat()
+          .resideInAPackage(SAFE_PKG)
+          .because("feign/audit 禁止依赖 safe（26.09.13 已清理冗余依赖）");
+
+  // ========== 命名约定 ==========
+
+  /**
+   * 自动配置类必须以 {@code AutoConfiguration} 结尾。
+   *
+   * <p>统一的命名约定提升可发现性，便于 Spring Boot 自动装配扫描识别。
+   */
+  @ArchTest
+  static final ArchRule AUTO_CONFIGURATION_CLASSES_SHOULD_BE_NAMED_AUTOCONFIGURATION =
+      classes()
+          .that()
+          .areAnnotatedWith(
+              org.springframework.boot.autoconfigure.AutoConfiguration.class)
+          .or()
+          .areAnnotatedWith(
+              org.springframework.context.annotation.Configuration.class)
+          .and()
+          .haveSimpleNameNotContaining("Properties")
+          .and()
+          .haveSimpleNameNotContaining("Test")
+          .should()
+          .haveSimpleNameEndingWith("AutoConfiguration")
+          .because("自动配置类命名以 AutoConfiguration 结尾（YDIZ-NAME-005）");
+
+  /**
+   * 配置属性类必须以 {@code Properties} 结尾。
+   *
+   * <p>@ConfigurationProperties 标注的类使用 *Properties 命名统一规范。
+   */
+  @ArchTest
+  static final ArchRule PROPERTIES_CLASSES_SHOULD_BE_NAMED_PROPERTIES =
+      classes()
+          .that()
+          .areAnnotatedWith(
+              org.springframework.boot.context.properties.ConfigurationProperties.class)
+          .should()
+          .haveSimpleNameEndingWith("Properties")
+          .allowEmptyShould(true)
+          .because("配置属性类命名以 Properties 结尾（YDIZ-NAME-005）");
+
   // ========== 包循环依赖检测 ==========
 
   /**
    * common 子模块包之间禁止循环依赖。
    *
-   * <p>同级互引（如 auth→safe、feign→safe）如果形成闭环也应避免；此规则捕获跨层循环。
+   * <p>同级互引（如 auth→safe）如果形成闭环也应避免；此规则捕获跨层循环。
    */
   @ArchTest
   static final ArchRule COMMON_MODULES_SHOULD_HAVE_NO_CYCLES =

@@ -37,12 +37,12 @@ import com.njydsz.userinfo.server.service.AuthPolicyService;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/auth-policy")
 @RequiredArgsConstructor
 @Tag(name = "认证策略", description = "租户级认证策略管理（多租户域隔离）")
-@ApiVersion("26.09.01")
 public class AuthPolicyController {
 
   private final AuthPolicyService authPolicyService;

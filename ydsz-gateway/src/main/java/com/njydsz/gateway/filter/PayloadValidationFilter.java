@@ -60,7 +60,7 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
 public class PayloadValidationFilter implements GlobalFilter, Ordered {
 
   @Value("${ydsz.gateway.payload-validation.enabled:true}")
-  private boolean enabled;
+  private boolean isEnabled;
 
   @Value("${ydsz.gateway.payload-validation.max-body-size-mb:10}")
   private int maxBodySizeMb;
@@ -83,7 +83,7 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
    */
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-    if (!enabled) {
+    if (!isEnabled) {
       return chain.filter(exchange);
     }
 

@@ -79,7 +79,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
   private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
   @Value("${ydsz.gateway.api-key.enabled:false}")
-  private boolean enabled;
+  private boolean isEnabled;
 
   /**
    * API Key 白名单（Spring 自动将逗号分隔的配置解析为 List）。
@@ -126,7 +126,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
    */
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-    if (!enabled) {
+    if (!isEnabled) {
       return chain.filter(exchange);
     }
 

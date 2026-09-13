@@ -482,7 +482,7 @@ public class AgentController {
     for (BatchChatResult.BatchResultItem item : result.getResults()) {
       BatchChatResponseDTO.BatchResultItem itemDTO = new BatchChatResponseDTO.BatchResultItem();
       itemDTO.setItemId(item.getItemId());
-      itemDTO.setIsSuccess(item.isSuccess());
+      itemDTO.setIsSuccess(item.getIsSuccess());
       itemDTO.setContent(item.getContent());
       itemDTO.setModel(item.getModel());
       itemDTO.setFinishReason(item.getFinishReason());

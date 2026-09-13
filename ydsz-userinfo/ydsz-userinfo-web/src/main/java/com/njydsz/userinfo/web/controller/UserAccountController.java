@@ -84,12 +84,12 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  * @see com.njydsz.userinfo.server.service.UserAccountService 用户业务逻辑
  * @see com.njydsz.userinfo.domain.vo.UserAccountVO 用户VO
  */
+@ApiVersion("26.09.01")
 @Slf4j
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
 @Tag(name = "用户管理", description = "用户账号 CRUD、密码管理、角色分配")
-@ApiVersion("26.09.01")
 public class UserAccountController {
 
   private final UserAccountService service;

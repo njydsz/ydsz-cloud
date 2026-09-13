@@ -47,7 +47,7 @@ public class BatchChatResult implements Serializable {
     int success = 0;
     int failed = 0;
     for (BatchResultItem item : results) {
-      if (item.isSuccess()) {
+      if (item.getIsSuccess()) {
         success++;
       } else {
         failed++;
@@ -96,7 +96,7 @@ public class BatchChatResult implements Serializable {
   /**
    * 批量对话单条结果
    *
-   * <p>不可变对象，通过 {@link #success} 标记本条对话是否成功完成。
+   * <p>不可变对象，通过 {@link #isSuccess} 标记本条对话是否成功完成。
    */
   public static class BatchResultItem implements Serializable {
 
@@ -105,8 +105,8 @@ public class BatchChatResult implements Serializable {
     /** 条目标识（与请求中 itemId 对应） */
     private final String itemId;
 
-    /** 是否成功 */
-    private final boolean success;
+    /** 是否成功（YDIZ-OOP-006：布尔字段强制 is 前缀）。 */
+    private final boolean isSuccess;
 
     /** 响应内容（成功时非空） */
     private final String content;
@@ -136,14 +136,14 @@ public class BatchChatResult implements Serializable {
      */
     private BatchResultItem(
         String itemId,
-        boolean success,
+        boolean isSuccess,
         String content,
         String model,
         TokenUsage usage,
         String finishReason,
         String errorMessage) {
       this.itemId = itemId;
-      this.success = success;
+      this.isSuccess = isSuccess;
       this.content = content;
       this.model = model;
       this.usage = usage;
@@ -191,8 +191,8 @@ public class BatchChatResult implements Serializable {
      *
      * @return 成功返回 true
      */
-    public boolean isSuccess() {
-      return success;
+    public boolean getIsSuccess() {
+      return isSuccess;
     }
 
     /**
