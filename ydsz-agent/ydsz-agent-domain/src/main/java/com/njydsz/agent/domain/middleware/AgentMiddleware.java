@@ -36,6 +36,24 @@ import com.njydsz.agent.domain.model.ChatResponse;
  */
 public interface AgentMiddleware {
 
+  /** 默认优先级（中间入力），用于未显式指定优先级的通用中间件。 */
+  int DEFAULT_PRIORITY = 50;
+
+  /** 输入护栏建议优先级。 */
+  int INPUT_GUARD_PRIORITY = 10;
+
+  /** 链路追踪中间件建议优先级。 */
+  int TRACE_PRIORITY = 20;
+
+  /** 指标采集中间件建议优先级。 */
+  int METRICS_PRIORITY = 30;
+
+  /** 限流中间件建议优先级。 */
+  int RATE_LIMIT_PRIORITY = 40;
+
+  /** 输出护栏建议优先级。 */
+  int OUTPUT_GUARD_PRIORITY = 100;
+
   /**
    * Agent 执行开始时调用。
    *
@@ -122,12 +140,16 @@ public interface AgentMiddleware {
    * 获取执行优先级。
    *
    * <p>数字越小优先级越高（越先执行）。建议取值：
-   * 输入护栏=10、追踪中间件=20、指标中间件=30、限流中间件=40、输出护栏=100。
+   * 输入护栏={@link #INPUT_GUARD_PRIORITY}、
+   * 追踪中间件={@link #TRACE_PRIORITY}、
+   * 指标中间件={@link #METRICS_PRIORITY}、
+   * 限流中间件={@link #RATE_LIMIT_PRIORITY}、
+   * 输出护栏={@link #OUTPUT_GUARD_PRIORITY}。
    *
    * @return 优先级整数，默认 50
    */
   default int getPriority() {
-    return 50;
+    return DEFAULT_PRIORITY;
   }
 
   /**
