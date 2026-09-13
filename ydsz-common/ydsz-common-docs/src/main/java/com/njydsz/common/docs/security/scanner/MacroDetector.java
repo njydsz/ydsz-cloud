@@ -61,7 +61,7 @@ public class MacroDetector implements DocumentSecurityScanner {
       return SecurityScanResult.builder()
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
-          .success(true)
+          .isSuccess(true)
           .build();
     }
     List<SecurityScanResult.SecurityFinding> findings = new ArrayList<>(16);
@@ -101,7 +101,7 @@ public class MacroDetector implements DocumentSecurityScanner {
     return SecurityScanResult.builder()
         .securityLevel(findings.isEmpty() ? SecurityLevel.SAFE : SecurityLevel.HIGH)
         .findings(findings)
-        .success(true)
+        .isSuccess(true)
         .build();
   }
 

@@ -135,7 +135,7 @@ public class AsyncDocumentParser {
                 } catch (Exception e) {
                   log.error("[AsyncDocumentParser] temp file error: {}", fileName, e);
                   return DocumentParseResult.builder()
-                      .success(false)
+                      .isSuccess(false)
                       .errorMessage("IO error: " + e.getMessage())
                       .fileName(fileName)
                       .elapsed(Duration.ZERO)
@@ -148,7 +148,7 @@ public class AsyncDocumentParser {
               e -> {
                 log.error("[AsyncDocumentParser] async error: {}", fileName, e);
                 return DocumentParseResult.builder()
-                    .success(false)
+                    .isSuccess(false)
                     .errorMessage("timeout or error: " + e.getMessage())
                     .fileName(fileName)
                     .elapsed(Duration.ZERO)
@@ -158,7 +158,7 @@ public class AsyncDocumentParser {
       log.warn("[AsyncDocumentParser] 任务被拒绝（队列已满）: {}", fileName);
       return CompletableFuture.completedFuture(
           DocumentParseResult.builder()
-              .success(false)
+              .isSuccess(false)
               .errorMessage("async queue full")
               .fileName(fileName)
               .elapsed(Duration.ZERO)

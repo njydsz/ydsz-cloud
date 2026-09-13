@@ -53,7 +53,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
       return SecurityScanResult.builder()
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
-          .success(true)
+          .isSuccess(true)
           .build();
     }
 
@@ -141,7 +141,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
       return SecurityScanResult.builder()
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
-          .success(false)
+          .isSuccess(false)
           .errorMessage("PDF 解析失败: " + e.getMessage())
           .build();
     } finally {
@@ -159,7 +159,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
     return SecurityScanResult.builder()
         .securityLevel(level)
         .findings(findings)
-        .success(true)
+        .isSuccess(true)
         .build();
   }
 

@@ -124,7 +124,7 @@ public class DocumentService {
       return DocumentParseResult.builder()
           .content(content)
           .elapsed(elapsed)
-          .success(true)
+          .isSuccess(true)
           .fileName(fileName)
           .build();
 
@@ -132,7 +132,7 @@ public class DocumentService {
       recordParseMetric(format, false, Duration.between(start, Instant.now()).toMillis());
       return DocumentParseResult.builder()
           .elapsed(Duration.between(start, Instant.now()))
-          .success(false)
+          .isSuccess(false)
           .errorMessage(e.getMessage())
           .fileName(fileName)
           .build();
@@ -141,7 +141,7 @@ public class DocumentService {
       recordParseMetric(format, false, Duration.between(start, Instant.now()).toMillis());
       return DocumentParseResult.builder()
           .elapsed(Duration.between(start, Instant.now()))
-          .success(false)
+          .isSuccess(false)
           .errorMessage(e.getMessage())
           .fileName(fileName)
           .build();
@@ -191,7 +191,7 @@ public class DocumentService {
       return SecurityScanResult.builder()
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
-          .success(true)
+          .isSuccess(true)
           .build();
     }
     DocumentFormat format = DocumentFormat.fromFileName(fileName);
@@ -286,7 +286,7 @@ public class DocumentService {
             fileName,
             scanResult.getSecurityLevel());
         return DocumentParseResult.builder()
-            .success(false)
+            .isSuccess(false)
             .errorMessage("文档存在高危安全风险(" + scanResult.getSecurityLevel() + ")，已被安全策略阻止")
             .fileName(fileName)
             .elapsed(Duration.ZERO)
@@ -297,7 +297,7 @@ public class DocumentService {
       }
     } catch (Exception e) {
       return DocumentParseResult.builder()
-          .success(false)
+          .isSuccess(false)
           .errorMessage(e.getMessage())
           .fileName(fileName)
           .elapsed(Duration.ZERO)
@@ -316,7 +316,7 @@ public class DocumentService {
       return SecurityScanResult.builder()
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
-          .success(false)
+          .isSuccess(false)
           .errorMessage("输入流为空")
           .build();
     }
@@ -358,7 +358,7 @@ public class DocumentService {
       return SecurityScanResult.builder()
           .securityLevel(level)
           .findings(allFindings)
-          .success(allSuccess)
+          .isSuccess(allSuccess)
           .errorMessage(lastError)
           .build();
 
@@ -367,7 +367,7 @@ public class DocumentService {
       return SecurityScanResult.builder()
           .securityLevel(SecurityLevel.SAFE)
           .findings(List.of())
-          .success(false)
+          .isSuccess(false)
           .errorMessage("IO 错误: " + e.getMessage())
           .build();
     } finally {
