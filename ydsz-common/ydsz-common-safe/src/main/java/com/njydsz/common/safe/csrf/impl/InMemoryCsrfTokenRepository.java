@@ -6,9 +6,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.cache.YdszCache;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.builder.CacheType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.safe.cache.ConcurrentTtlSafeCache;
+import com.njydsz.common.safe.cache.SafeCache;
 import com.njydsz.common.safe.csrf.CsrfToken;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
 import com.njydsz.common.util.security.DigestUtils;
@@ -16,8 +18,10 @@ import com.njydsz.common.util.security.DigestUtils;
 /**
  * 基于内存的 CSRF 令牌存储库
  *
- * <p>使用 ydsz-common-cache 缓存管理令牌过期，ConcurrentHashMap 存储会话与令牌映射。 内置令牌生成逻辑，避免与 CsrfTokenGenerator
- * 产生循环依赖。
+ * <p>使用 SafeCache 抽象管理令牌过期，ConcurrentHashMap 存储会话与令牌映射。 内置令牌生成逻辑，避免与 CsrfTokenGenerator 产生循环依赖。
+ *
+ * <p>当 ydzs-common-cache 在 classpath 时，底层使用 Caffeine 语义的缓存实现；
+ * 否则退化为 ConcurrentHashMap + TTL 的兜底实现。
  *
  * <p><b>注意：</b>此实现适用于单机部署。分布式环境下建议使用 Redis 实现。
  *
@@ -27,21 +31,44 @@ import com.njydsz.common.util.security.DigestUtils;
  */
 public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {
 
+  private static final Logger LOG = LoggerFactory.getLogger(InMemoryCsrfTokenRepository.class);
+
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
   private static final int TOKEN_BYTE_LENGTH = 32;
 
   private final long expirationSeconds;
-  private final Cache<String, CsrfToken> tokenCache;
+  private final SafeCache<String, CsrfToken> tokenCache;
   private final ConcurrentMap<String, String> sessionTokenMap;
 
+  /**
+   * 构造基于内存的 CSRF 令牌存储库（兜底模式）。
+   *
+   * <p>底层使用 ConcurrentTtlSafeCache，适用于 ydzs-common-cache 不可用或无 Spring 容器的场景。
+   *
+   * @param expirationSeconds令牌过期时间（秒）
+   */
   public InMemoryCsrfTokenRepository(long expirationSeconds) {
     this.expirationSeconds = expirationSeconds;
-    this.tokenCache =
-        YdszCache.<String, CsrfToken>newBuilder()
-            .type(CacheType.STRIPED)
-            .expireAfterWrite(expirationSeconds * 2L, TimeUnit.SECONDS)
-            .build();
+    this.tokenCache = new ConcurrentTtlSafeCache<>(
+        expirationSeconds * 2L, TimeUnit.SECONDS);
     this.sessionTokenMap = new ConcurrentHashMap<>();
+    LOG.info("InMemoryCsrfTokenRepository 已初始化(兜底模式): expiration={}s", expirationSeconds);
+  }
+
+  /**
+   * 构造基于内存的 CSRF 令牌存储库（托管模式）。
+   *
+   * <p>接受外部注入的 SafeCache 实现，由 Spring 容器根据 ydzs-common-cache 可用性选择合适的底层实现。
+   *
+   * @param expirationSeconds 令牌过期时间（秒）
+   * @param tokenCache 令牌缓存实现
+   */
+  public InMemoryCsrfTokenRepository(long expirationSeconds, SafeCache<String, CsrfToken> tokenCache) {
+    this.expirationSeconds = expirationSeconds;
+    this.tokenCache = tokenCache;
+    this.sessionTokenMap = new ConcurrentHashMap<>();
+    LOG.info("InMemoryCsrfTokenRepository 已初始化(托管模式): expiration={}s, cacheClass={}",
+        expirationSeconds, tokenCache.getClass().getSimpleName());
   }
 
   @Override

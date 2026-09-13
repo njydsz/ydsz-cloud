@@ -12,8 +12,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.server.config.ApiSignatureProperties;
 import com.njydsz.userinfo.server.config.InternalCallProperties;
 import com.njydsz.userinfo.web.annotation.RequireInternal;
 import com.njydsz.userinfo.web.filter.ApiSignatureFilter;
@@ -36,7 +36,7 @@ import com.njydsz.userinfo.web.filter.ApiSignatureFilter;
  * @since 26.09.01
  * @see RequireInternal 内部接口标记注解
  * @see InternalCallProperties 内部调用配置
- * @see ApiSignatureProperties 签名配置
+ * @see com.njydsz.common.safe.config.ApiSignatureProperties 签名配置（common-safe）
  */
 @Slf4j
 @Aspect

@@ -35,6 +35,7 @@ import com.njydsz.common.safe.config.condition.XssConverterModeCondition;
 import com.njydsz.common.safe.config.condition.XssFilterModeCondition;
 import com.njydsz.common.safe.converter.XssJsonMessageConverter;
 import com.njydsz.common.safe.core.JsonBodyXssCleaner;
+import com.njydsz.common.safe.cache.SafeCacheFactoryHelper;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.safe.csrf.CsrfTokenGenerator;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
@@ -407,6 +408,7 @@ public class SafeConfiguration {
    * 注册 CSRF 令牌存储库（单机内存环境）
    *
    * <p>仅当 RedisStringOps 不可用时使用内存存储。适用于单机部署场景。
+   * 当 ydzs-common-cache 在 classpath 时使用 Caffeine 语义缓存；否则自动退化为 ConcurrentTtlSafeCache 兜底。
    *
    * @param properties CSRF 配置属性
    * @return CSRF 令牌存储库实例
@@ -414,7 +416,11 @@ public class SafeConfiguration {
   @Bean
   @ConditionalOnMissingBean({RedisStringOps.class, CsrfTokenRepository.class})
   public CsrfTokenRepository inMemoryCsrfTokenRepository(CsrfProperties properties) {
-    return new InMemoryCsrfTokenRepository(properties.getExpirationSeconds());
+    long expiration = properties.getExpirationSeconds();
+    return new InMemoryCsrfTokenRepository(
+        expiration,
+        SafeCacheFactoryHelper.createCache(
+            expiration * 2L, java.util.concurrent.TimeUnit.SECONDS, 0));
   }
 
   /**
@@ -475,8 +481,9 @@ public class SafeConfiguration {
   /**
    * 注册 IP 访问控制服务
    *
-   * <p>提供 IP 黑白名单管理能力，支持 CIDR 网段匹配、Redis 持久化存储和本地缓存。 仅在 {@code ydsz.safe.ip-access.enabled=true} 且
-   * Redis 可用时注册。
+   * <p>提供 IP 黑白名单管理能力，支持 CIDR 网段匹配、Redis 持久化存储和本地缓存。
+   * 仅在 {@code ydsz.safe.ip-access.enabled=true} 且 Redis 可用时注册。
+   * 本地缓存当 ydzs-common-cache 可用时使用 Caffeine 语义，否则退化为 ConcurrentTtlSafeCache 兜底。
    *
    * @param properties IP 访问控制配置
    * @param redisStringOps Redis String 操作
@@ -489,7 +496,13 @@ public class SafeConfiguration {
   public IpAccessService ipAccessService(
       IpAccessProperties properties, RedisStringOps redisStringOps) {
     LOG.info("注册 IP 访问控制服务: mode={}", properties.getMode());
-    return new IpAccessService(properties, redisStringOps);
+    return new IpAccessService(
+        properties,
+        redisStringOps,
+        SafeCacheFactoryHelper.createCache(
+            properties.getLocalCacheTtlSeconds(),
+            java.util.concurrent.TimeUnit.SECONDS,
+            properties.getLocalCacheSize()));
   }
 
   /**
@@ -522,8 +535,8 @@ public class SafeConfiguration {
   /**
    * 注册防重放 Nonce 缓存
    *
-   * <p>用于 API 签名验证的 nonce 防重放存储，基于 ydsz-common-cache 实现 TTL 自动过期。 定时清理任务每 60 秒执行一次（需宿主应用开启
-   * {@code @EnableScheduling}）。
+   * <p>用于 API 签名验证的 nonce 防重放存储。 当 ydzs-common-cache 在 classpath 时使用 Caffeine 语义缓存；
+   * 否则自动退化为 ConcurrentTtlSafeCache 兜底。 定时清理任务每 60 秒执行一次（需宿主应用开启 {@code @EnableScheduling}）。
    *
    * @return Nonce 缓存实例
    */
@@ -531,7 +544,11 @@ public class SafeConfiguration {
   @ConditionalOnMissingBean(NonceCache.class)
   public NonceCache nonceCache() {
     LOG.info("注册防重放 Nonce 缓存");
-    return new NonceCache();
+    long expireSeconds = 300L;
+    long maxSize = 10000L;
+    return new NonceCache(
+        SafeCacheFactoryHelper.createCache(expireSeconds, java.util.concurrent.TimeUnit.SECONDS, maxSize),
+        expireSeconds);
   }
 
   /**

@@ -21,3 +21,25 @@ skywalking:
   agent:
     service_name: ${spring.application.name}
     collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}
+
+# -----------------------------------------------------------------------
+#  API 参数签名校验配置（common-safe，P0-7）
+#  -----------------------------------------------------------------------
+#  仅对 /api/internal/** 路径生效（其他路径由 shouldNotFilter 跳过）。
+#  错误响应格式：UserInfoExceptionCode (A20129/A20130/A20131/A20132) + YdszResponse 包装。
+#  防重放 Nonce 由 common-cache（本地缓存）承接，无需 Redis。
+#
+# ydsz:
+#   safe:
+#     api-signature:
+#       enabled: true
+#       app-id: "userinfo"
+#       app-secret: "${API_SIGNATURE_SECRET:change-me-in-production}"
+#       timestamp-tolerance-seconds: 300
+#       nonce-expire-seconds: 600
+#       header-timestamp: X-Timestamp
+#       header-nonce: X-Nonce
+#       header-signature: X-Signature
+#       header-app-id: X-App-Id
+#       excludes:
+#         - /api/internal/health

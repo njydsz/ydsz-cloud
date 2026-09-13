@@ -30,8 +30,8 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
  *   <li>启用 {@code @EnableAsync}：支撑登录历史异步落库（P1-2，{@code LoginHistoryServiceImpl#recordLoginAttempt}）
  *   <li>启用 {@code @EnableCaching}：为部门树、角色权限等热点数据预留声明式缓存能力（P2-2，
  *       当前热点缓存由编程式缓存实现，遵循 18.5 缓存规范：统一走 {@code ydsz-common-cache} 且 TTL 外部化）
- *   <li>注册 {@link UserInfoProperties}、{@link LdapProperties}、{@link LdapSyncProperties} 与
- *       {@link ApiSignatureProperties} 配置属性
+ *   <li>注册 {@link UserInfoProperties}、{@link LdapProperties}、{@link LdapSyncProperties} 等
+ *       配置属性（{@code ApiSignatureProperties} 由 common-safe 的自动配置接管）
  * </ul>
  *
  * <p><b>Bean 清单：</b>
@@ -58,7 +58,6 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
   LdapSyncProperties.class,
   InternalCallProperties.class,
   CrossDomainSsoProperties.class,
-  ApiSignatureProperties.class,
   GeoIpProperties.class,
   UserTokenProperties.class,
   UserSecurityProperties.class,

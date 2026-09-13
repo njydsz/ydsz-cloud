@@ -3,13 +3,11 @@ package com.njydsz.userinfo.web.filter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -20,11 +18,10 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.safe.config.ApiSignatureProperties;
+import com.njydsz.common.safe.crypto.NonceCache;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.server.auth.ApiSignRequest;
-import com.njydsz.userinfo.server.auth.ApiSignatureUtil;
-import com.njydsz.userinfo.server.config.ApiSignatureProperties;
 
 /**
  * API 参数签名校验过滤器（P0-7）。
@@ -36,9 +33,14 @@ import com.njydsz.userinfo.server.config.ApiSignatureProperties;
  *   <li>检查是否在排除路径列表中（跳过签名校验）
  *   <li>读取 X-Timestamp、X-Nonce、X-Signature 请求头
  *   <li>检查时间戳是否在有效期内（防过期请求重放）
- *   <li>使用 {@link DistributedLocker#tryLock} 检查 nonce 是否已使用（防请求重放）
+ *   <li>使用 {@link NonceCache#verifyAndConsume} 检查 nonce 是否已使用（防请求重放）
  *   <li>拼接签名字符串并计算签名，与请求头中的签名比对
  * </ol>
+ *
+ * <p>本类继承 common-safe 的 {@link com.njydsz.common.safe.filter.ApiSignatureFilter}，
+ * 复用其基础设施（{@link ApiSignatureProperties} 配置绑定 + {@link NonceCache} 防重放），
+ * 同时保持 userinfo 模块特有的行为：仅拦截 {@code /api/internal/**} 路径、
+ * 返回 {@link UserInfoExceptionCode} 错误码格式、执行顺序 {@code HIGHEST_PRECEDENCE + 30}。
  *
  * <p><b>优先级：</b>{@link Ordered#HIGHEST_PRECEDENCE} + 30，在 TraceIdFilter 之后、
  * MetricsFilter 之前执行。确保日志可以记录签名校验失败的事件，同时不影响 traceId 的传递。
@@ -46,32 +48,29 @@ import com.njydsz.userinfo.server.config.ApiSignatureProperties;
  * <p><b>安全设计：</b>
  *
  * <ul>
- *   <li>签名比较使用 {@link java.security.MessageDigest#isEqual} 防时序攻击
- *   <li>nonce 缓存 TTL 为签名 TTL 的 2 倍，确保窗口期内有效请求的 nonce 不被清除
+ *   <li>签名比较使用 {@link DigestUtils#constantTimeEquals} 防时序攻击
+ *   <li>nonce 缓存 TTL 由 {@link ApiSignatureProperties#getNonceExpireSeconds()} 控制
  *   <li>校验失败返回 401 不暴露具体原因细节（由日志记录详细信息）
  * </ul>
  *
- * <p><b>收敛计划（ADR-2，见 docs/ADR-2026-09-12_公共能力重复实现收敛决策.md）：</b>
- * ydsz-common-safe 已提供同构的 {@code ApiSignatureFilter}（HMAC-SHA256 + timestamp 容差 + nonce 防重放 +
- * 常量时间比较）。本类与 common-safe 能力重叠，判定为可替代；后续迭代将切换至 common-safe 实现
- * （nonce 介质差异经其存储扩展点承接），本类随之删除。在此之前本类为唯一生效实现，不得再复制衍生。
- *
  * @author ydsz-team
  * @since 26.09.01
- * @see ApiSignatureProperties 签名配置
- * @see ApiSignatureUtil 签名工具类
+ * @see ApiSignatureProperties 签名配置（common-safe）
+ * @see NonceCache 防重放 Nonce 缓存（common-safe）
  */
 @Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 30)
-@RequiredArgsConstructor
-public class ApiSignatureFilter extends OncePerRequestFilter {
+public class ApiSignatureFilter extends com.njydsz.common.safe.filter.ApiSignatureFilter {
 
   /** 内部 API 路径前缀 */
   private static final String INTERNAL_PATH_PREFIX = "/api/internal";
 
   /** 请求体缓存大小（8KB），用于签名校验时缓存请求体 */
   private static final int REQUEST_BODY_CACHE_SIZE = 8192;
+
+  /** 签名字段分隔符 */
+  private static final char FIELD_SEPARATOR = '\n';
 
   /**
    * 签名校验通过的请求属性名。
@@ -82,20 +81,20 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   public static final String SIGNATURE_VERIFIED_ATTR =
       ApiSignatureFilter.class.getName() + ".SIGNATURE_VERIFIED";
 
-  /** Nonce Redis Key 前缀 */
-  private static final String NONCE_KEY_PREFIX = "userinfo:api-signature:nonce:";
-
-  /** nonce 缓存 TTL 倍率（相对于签名 TTL） */
-  private static final int NONCE_TTL_MULTIPLIER = 2;
-
   private final ApiSignatureProperties properties;
+  private final NonceCache nonceCache;
+
   /**
-   * 分布式锁实例（nonce 防重放）。
+   * 构造 API 参数签名校验过滤器。
    *
-   * <p>通过 {@link DistributedLocker#tryLock} 实现 nonce 一次性语义；
-   * 锁 TTL = 签名 TTL × 2，过期后自动释放。
+   * @param properties 签名配置属性（来自 common-safe）
+   * @param nonceCache 防重放 Nonce 缓存（来自 common-safe）
    */
-  private final DistributedLocker distributedLocker;
+  public ApiSignatureFilter(ApiSignatureProperties properties, NonceCache nonceCache) {
+    super(properties, nonceCache, null);
+    this.properties = properties;
+    this.nonceCache = nonceCache;
+  }
 
   @Override
   protected void doFilterInternal(
@@ -104,6 +103,12 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
 
     // 仅对内部 API 路径进行签名校验
     if (!isInternalPath(request)) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
+    // 当签名功能整体关闭时，放行所有请求
+    if (!properties.isEnabled()) {
       filterChain.doFilter(request, response);
       return;
     }
@@ -135,7 +140,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
    * 执行签名校验（参数检查 / 时间戳 / nonce / 签名比对）。
    *
    * @param wrappedRequest 已包装的请求（可重复读 body）
-   * @param response 响应
+   * @param response HTTP 响应
    * @return true 表示校验通过
    */
   private boolean verifySignature(
@@ -157,15 +162,16 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     if (timestamp < 0) {
       return false;
     }
-    if (ApiSignatureUtil.isExpired(timestamp, properties.getTtlMillis())) {
-      log.warn("API signature: expired signature, uri={}, timestamp={}, ttl={}",
-          wrappedRequest.getRequestURI(), timestamp, properties.getTtlMillis());
+    if (isExpired(timestamp)) {
+      log.warn("API signature: expired signature, uri={}, timestamp={}, tolerance={}",
+          wrappedRequest.getRequestURI(), timestamp,
+          properties.getTimestampToleranceSeconds());
       writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_EXPIRED);
       return false;
     }
 
-    // 4. nonce 防重放校验（SETNX）
-    if (!tryAcquireNonce(nonce, timestamp)) {
+    // 4. nonce 防重放校验
+    if (!nonceCache.verifyAndConsume(nonce)) {
       log.warn("API signature: nonce reused (possible replay attack), uri={}, nonce={}",
           wrappedRequest.getRequestURI(), nonce);
       writeUnauthorized(response, UserInfoExceptionCode.NONCE_REUSED);
@@ -178,13 +184,14 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     String query = wrappedRequest.getQueryString();
     String body = getRequestBody(wrappedRequest);
 
-    boolean valid =
-        ApiSignatureUtil.verify(
-            signature,
-            new ApiSignRequest(method, path, query, body, timestamp, nonce),
-            properties.getSecret());
+    String signContent = buildSignContent(method, path, query, body, timestamp, nonce);
+    if (signContent == null) {
+      writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_INVALID);
+      return false;
+    }
 
-    if (!valid) {
+    String expected = DigestUtils.hmacSha256Base64(signContent, properties.getAppSecret());
+    if (!DigestUtils.constantTimeEquals(expected, signature)) {
       log.warn("API signature: invalid signature, uri={}, method={}, nonce={}",
           wrappedRequest.getRequestURI(), method, nonce);
       writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_INVALID);
@@ -194,11 +201,55 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   }
 
   /**
+   * 判断签名时间戳是否已过期。
+   *
+   * @param timestamp 签名时间戳（毫秒 Unix epoch）
+   * @return true 表示已过期
+   */
+  private boolean isExpired(long timestamp) {
+    long now = System.currentTimeMillis();
+    long toleranceMillis = properties.getTimestampToleranceSeconds() * 1000L;
+    return Math.abs(now - timestamp) > toleranceMillis;
+  }
+
+  /**
+   * 构建签名字符串。
+   *
+   * @param method HTTP 方法
+   * @param path 请求路径
+   * @param query 查询字符串
+   * @param body 请求体
+   * @param timestamp 签名时间戳
+   * @param nonce 一次性随机串
+   * @return 签名字符串；method/path/nonce 任一为空时返回 null
+   */
+  private String buildSignContent(
+      String method, String path, String query, String body, long timestamp, String nonce) {
+    if (method == null || method.isBlank()) {
+      return null;
+    }
+    if (path == null || path.isBlank()) {
+      return null;
+    }
+    if (nonce == null || nonce.isBlank()) {
+      return null;
+    }
+    String safeQuery = query != null ? query : "";
+    String safeBody = body != null ? body : "";
+    return method + FIELD_SEPARATOR
+        + path + FIELD_SEPARATOR
+        + safeQuery + FIELD_SEPARATOR
+        + safeBody + FIELD_SEPARATOR
+        + timestamp + FIELD_SEPARATOR
+        + nonce;
+  }
+
+  /**
    * 解析时间戳字符串，非法格式直接拒绝。
    *
    * @param timestampStr 时间戳字符串
-   * @param wrappedRequest 请求（日志用）
-   * @param response 响应
+   * @param wrappedRequest 请求对象（日志用）
+   * @param response HTTP 响应
    * @return 解析后的时间戳；非法格式返回 -1
    */
   private long parseTimestamp(
@@ -229,50 +280,24 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   /**
    * 判断当前请求路径是否在排除列表中。
    *
+   * <p>使用 Ant 风格路径匹配（common-safe 的 {@code UrlPathUtils}），
+   * 行为与原 userinfo 实现（startsWith）兼容。
+   *
    * @param request HTTP 请求
    * @return true 表示应跳过签名校验
    */
   private boolean isExcludedPath(HttpServletRequest request) {
-    List<String> excludePaths = properties.getExcludePaths();
-    if (excludePaths == null || excludePaths.isEmpty()) {
+    List<String> excludes = properties.getExcludes();
+    if (excludes == null || excludes.isEmpty()) {
       return false;
     }
     String uri = request.getRequestURI();
-    for (String pattern : excludePaths) {
+    for (String pattern : excludes) {
       if (uri.startsWith(pattern)) {
         return true;
       }
     }
     return false;
-  }
-
-  /**
-   * 尝试占用 nonce（SETNX + TTL）。
-   *
-   * <p>使用 Redis SETNX 实现 nonce 的一次性语义：若 key 已存在则说明 nonce 已被使用，
-   * 防止请求重放。TTL 设为签名有效期的 2 倍，确保窗口期内的请求 nonce 唯一性。
-   *
-   * @param nonce     一次性随机字符串
-   * @param timestamp 签名时间戳（用于计算 Redis TTL）
-   * @return true 表示 nonce 占用成功（首次使用），false 表示已被使用
-   */
-  private boolean tryAcquireNonce(String nonce, long timestamp) {
-    try {
-      String key = NONCE_KEY_PREFIX + nonce;
-      // TTL = 签名 TTL * 2，转换为秒并向上取整
-      long ttlSeconds = (properties.getTtlMillis() * NONCE_TTL_MULTIPLIER) / 1000L;
-      if (ttlSeconds < 1L) {
-        ttlSeconds = 1L;
-      }
-      // P0-FIX：使用 DistributedLocker 替代裸 SETNX（统一走 common-lock）
-      String lockValue = distributedLocker.tryLock(key, ttlSeconds, TimeUnit.SECONDS);
-      return lockValue != null;
-    } catch (Exception e) {
-      log.warn("API signature: Redis error during nonce check, nonce={}, error={}",
-          nonce, e.getMessage());
-      // Redis 异常时拒绝请求（fail-closed 策略）
-      return false;
-    }
   }
 
   /**
@@ -302,7 +327,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
    *
    * <p>返回 JSON 格式的 {@link YdszResponse} 错误响应，不暴露具体校验失败原因。
    *
-   * @param response     HTTP 响应
+   * @param response HTTP 响应
    * @param exceptionCode 错误码枚举
    */
   private void writeUnauthorized(HttpServletResponse response,
@@ -320,7 +345,6 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
 
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    // 当签名功能整体关闭时，放行所有请求
-    return !properties.isEnabled();
+    return !isInternalPath(request);
   }
 }

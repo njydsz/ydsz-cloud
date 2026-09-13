@@ -1,4 +1,5 @@
 package com.njydsz.common.safe.ip;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -7,10 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.cache.YdszCache;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.safe.cache.ConcurrentTtlSafeCache;
+import com.njydsz.common.safe.cache.SafeCache;
 import com.njydsz.common.safe.config.IpAccessProperties;
 
 /**
@@ -26,6 +26,9 @@ import com.njydsz.common.safe.config.IpAccessProperties;
  *   <li>自动封禁/解封 API
  * </ul>
  *
+ * <p>当 ydzs-common-cache 在 classpath 时，本地缓存由容器注入基于 Caffeine 语义的 SafeCache；
+ * 否则使用 {@link SafeCacheFactoryHelper} 创建，可退化为 ConcurrentTtlSafeCache 兜底。
+ *
  * @author ydsz-team
  * @since 26.09.01
  * @see IpAccessFilter
@@ -40,27 +43,26 @@ public class IpAccessService {
   private final IpAccessProperties properties;
   private final RedisStringOps redisStringOps;
 
-  private final Cache<String, Boolean> blacklistCache;
+  private final SafeCache<String, Boolean> blacklistCache;
   private final List<CidrBlock> staticBlacklistCidrs = new ArrayList<>(4);
   private final List<CidrBlock> staticWhitelistCidrs = new ArrayList<>(4);
 
   /**
-   * 构造 IP 访问控制服务
+   * 构造 IP 访问控制服务（Spring 托管模式）。
+   *
+   * <p>当 ydzs-common-cache 可用且容器提供 SafeCache 注入时使用。
    *
    * @param properties IP 访问控制配置
    * @param redisStringOps Redis 字符串操作
+   * @param blacklistCache 本地黑名单缓存（由容器根据 cache 可用性选择实现）
    */
-  public IpAccessService(IpAccessProperties properties, RedisStringOps redisStringOps) {
+  public IpAccessService(
+      IpAccessProperties properties,
+      RedisStringOps redisStringOps,
+      SafeCache<String, Boolean> blacklistCache) {
     this.properties = properties;
     this.redisStringOps = redisStringOps;
-
-    // 构建本地缓存（对标 Caffeine 语义）
-    this.blacklistCache =
-        YdszCache.<String, Boolean>newBuilder()
-            .type(CacheType.TINYLFU)
-            .maximumSize(properties.getLocalCacheSize())
-            .expireAfterWrite(properties.getLocalCacheTtlSeconds(), TimeUnit.SECONDS)
-            .build();
+    this.blacklistCache = blacklistCache;
 
     // 解析静态黑白名单 CIDR
     for (String cidr : properties.getStaticBlacklist()) {
@@ -77,10 +79,50 @@ public class IpAccessService {
     }
 
     LOG.info(
-        "[IpAccessService] 初始化完成：mode={}, staticBlacklist={}, staticWhitelist={}",
+        "[IpAccessService] 初始化完成：mode={}, staticBlacklist={}, staticWhitelist={}, cacheClass={}",
         properties.getMode(),
         staticBlacklistCidrs.size(),
-        staticWhitelistCidrs.size());
+        staticWhitelistCidrs.size(),
+        blacklistCache.getClass().getSimpleName());
+  }
+
+  /**
+   * 构造 IP 访问控制服务（自建缓存模式）。
+   *
+   * <p>当 ydzs-common-cache 可用时使用其 Builder 构建缓存；否则退化为 ConcurrentTtlSafeCache。
+   * 适用于未通过容器注入的场景。
+   *
+   * @param properties IP 访问控制配置
+   * @param redisStringOps Redis 字符串操作
+   */
+  public IpAccessService(IpAccessProperties properties, RedisStringOps redisStringOps) {
+    this.properties = properties;
+    this.redisStringOps = redisStringOps;
+    this.blacklistCache = SafeCacheFactoryHelper.createCache(
+        properties.getLocalCacheTtlSeconds(),
+        TimeUnit.SECONDS,
+        properties.getLocalCacheSize());
+
+    // 解析静态黑白名单 CIDR
+    for (String cidr : properties.getStaticBlacklist()) {
+      CidrBlock block = CidrBlock.parse(cidr);
+      if (block != null) {
+        staticBlacklistCidrs.add(block);
+      }
+    }
+    for (String cidr : properties.getStaticWhitelist()) {
+      CidrBlock block = CidrBlock.parse(cidr);
+      if (block != null) {
+        staticWhitelistCidrs.add(block);
+      }
+    }
+
+    LOG.info(
+        "[IpAccessService] 初始化完成：mode={}, staticBlacklist={}, staticWhitelist={}, cacheClass={}",
+        properties.getMode(),
+        staticBlacklistCidrs.size(),
+        staticWhitelistCidrs.size(),
+        blacklistCache.getClass().getSimpleName());
   }
 
   /**
@@ -195,7 +237,7 @@ public class IpAccessService {
     }
     String key = properties.getRedisKeyPrefix() + BLACKLIST_SUFFIX + ":" + ip;
     redisStringOps.del(key);
-    blacklistCache.remove(ip);
+    blacklistCache.invalidate(ip);
     LOG.info("[IpAccessService] IP 已解封：ip={}", ip);
   }
 

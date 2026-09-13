@@ -7,10 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.common.cache.YdszCache;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.safe.cache.ConcurrentTtlSafeCache;
+import com.njydsz.common.safe.cache.SafeCache;
 
 /**
  * 防重放 Nonce 缓存。
@@ -22,6 +20,9 @@ import com.njydsz.common.cache.listener.RemovalCause;
  *   <li>定时清理任务：{@link #cleanExpiredNonces()} 定期清理过期 nonce
  *   <li>容量限制：最大 10000 条，避免内存膨胀
  * </ul>
+ *
+ * <p>当 ydzs-common-cache 在 classpath 时，底层使用 Caffeine 语义的缓存实现；
+ * 否则退化为基于 ConcurrentHashMap + TTL 的兜底实现。
  *
  * <p><b>使用示例：</b>
  *
@@ -51,8 +52,8 @@ public class NonceCache {
   /** 默认最大缓存容量 */
   private static final long DEFAULT_MAX_SIZE = 10000;
 
-  /** nonce 缓存，使用 ydsz-common-cache 实现 TTL 自动过期 */
-  private final Cache<String, Long> cache;
+  /** nonce 缓存，使用 SafeCache 抽象（ydsz-common-cache 可用时为 Cache 实现，否则为 ConcurrentTtlSafeCache） */
+  private final SafeCache<String, Long> cache;
 
   /** 过期时间（秒） */
   private final long expireSeconds;
@@ -63,7 +64,7 @@ public class NonceCache {
   /** 统计：累计被拒绝的重复 nonce 数量 */
   private final AtomicLong rejectCount = new AtomicLong(0);
 
-  /** 构建 Nonce 缓存（使用默认配置）。 */
+  /** 构建 Nonce 缓存（使用默认配置），底层使用 ConcurrentTtlSafeCache 兜底。 */
   public NonceCache() {
     this(DEFAULT_EXPIRE_SECONDS, DEFAULT_MAX_SIZE);
   }
@@ -76,20 +77,24 @@ public class NonceCache {
    */
   public NonceCache(long expireSeconds, long maxSize) {
     this.expireSeconds = expireSeconds;
-    this.cache =
-        YdszCache.<String, Long>newBuilder()
-            .type(CacheType.STRIPED)
-            .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
-            .maximumSize(maxSize)
-            .removalListener(
-                (String key, Long value, RemovalCause cause) -> {
-                  if (LOG.isDebugEnabled()) {
-                    LOG.debug("Nonce 缓存淘汰: key={}, cause={}", key, cause);
-                  }
-                })
-            .build();
+    // 当外部直接构造时（无 Spring 容器），退化为 ConcurrentTtlSafeCache 兜底
+    this.cache = new ConcurrentTtlSafeCache<>(expireSeconds, TimeUnit.SECONDS, maxSize);
 
-    LOG.info("Nonce 缓存已初始化: expire={}s, maxSize={}", expireSeconds, maxSize);
+    LOG.info("Nonce 缓存已初始化(兜底模式): expire={}s, maxSize={}", expireSeconds, maxSize);
+  }
+
+  /**
+   * 构建 Nonce 缓存（注入 SafeCache，由 Spring 容器配置时调用）。
+   *
+   * @param cache 缓存实现（由容器根据 ydzs-common-cache 可用性选择）
+   * @param expireSeconds 过期时间（秒）
+   */
+  public NonceCache(SafeCache<String, Long> cache, long expireSeconds) {
+    this.expireSeconds = expireSeconds;
+    this.cache = cache;
+
+    LOG.info("Nonce 缓存已初始化(托管模式): expire={}s, cacheClass={}",
+        expireSeconds, cache.getClass().getSimpleName());
   }
 
   /**
@@ -165,11 +170,11 @@ public class NonceCache {
   /**
    * 存入 nonce 并设置独立的过期时间。
    *
-   * <p>注意：Caffeine 的过期时间是在缓存构建时全局设置的， 此方法存入的 nonce 仍然使用全局 expireSeconds。 如果需要独立过期时间，建议使用 Redis 实现。
+   * <p>注意：底层缓存的过期时间多为全局设置，此方法存入的 nonce 仍使用全局 expireSeconds。
    *
    * @param nonce nonce 值
    * @param expireSeconds 独立过期时间（秒）（预留参数，当前使用全局配置）
-    * @param timestamp timestamp 参数
+   * @param timestamp timestamp 参数
    * @return 存入成功返回 true，nonce 已存在返回 false
    */
   public boolean put(String nonce, long timestamp, long expireSeconds) {
@@ -230,8 +235,8 @@ public class NonceCache {
   /**
    * 定时清理过期 nonce。
    *
-   * <p>ydsz-common-cache 的 TTL 是懒清理（访问时触发），此定时任务 主动触发清理，确保不占用内存。 执行频率默认 60 秒，可通过 {@code
-   * ydsz.safe.nonce-clean-interval} 配置。
+   * <p>底层缓存的 TTL 多为懒清理（访问时触发），此定时任务主动触发清理，确保不占用内存。
+   * 执行频率默认 60 秒，可通过 {@code ydsz.safe.nonce-clean-interval} 配置。
    */
   @Scheduled(
       fixedRateString = "${ydsz.safe.nonce-clean-interval:60000}",
