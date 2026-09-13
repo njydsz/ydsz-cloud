@@ -3,12 +3,12 @@ package com.njydsz.common.auth.context;
 import java.util.Map;
 
 import com.njydsz.common.auth.model.ColumnPermissionInfo;
+import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.context.TenantContext;
 import com.njydsz.common.core.context.TenantContextHolder;
-import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.common.exception.custom.SysException;
 
 /**

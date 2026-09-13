@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -36,7 +35,9 @@ import com.njydsz.common.socket.session.LocalSessionRegistry;
  */
 @Slf4j
 @AutoConfiguration
-@ConditionalOnClass({StringRedisTemplate.class, SimpMessagingTemplate.class})
+@ConditionalOnClass(
+      value = SimpMessagingTemplate.class,
+      name = {"org.springframework.data.redis.core.StringRedisTemplate"})
 @ConditionalOnProperty(
     prefix = "ydsz.websocket.cluster",
     name = "enabled",
@@ -53,9 +54,9 @@ public class WebSocketClusterAutoConfiguration {
    * @return 集群广播发布者实例
    */
   @Bean
-  @ConditionalOnBean(StringRedisTemplate.class)
+  @ConditionalOnBean(type = "org.springframework.data.redis.core.StringRedisTemplate")
   public WebSocketClusterPublisher webSocketClusterPublisher(
-      StringRedisTemplate redisTemplate,
+      org.springframework.data.redis.core.StringRedisTemplate redisTemplate,
       WebSocketProperties properties,
       WebSocketCircuitBreaker circuitBreaker) {
     log.info(
