@@ -273,7 +273,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       if (!(msg instanceof ByteBuf buf)) {
         return;
       }
-      String json = buf.toString(CharsetUtil.UTF_8);
+      String json = NettyBufferUtils.toUtf8String(buf);
       try {
         Map<String, Object> data = YdszJson.parseMap(json);
         String type = (String) data.get("type");
