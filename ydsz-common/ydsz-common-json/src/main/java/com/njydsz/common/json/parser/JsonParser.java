@@ -96,7 +96,7 @@ public class JsonParser implements Closeable {
   private JsonToken currentToken;
   private String currentName;
   private String textValue;
-  private boolean closed;
+  private boolean isClosed;
 
   /**
    * 私有构造函数。
@@ -164,7 +164,7 @@ public class JsonParser implements Closeable {
    * @throws JsonException 如果解析失败或遇到意外字符
    */
   public JsonToken nextToken() {
-    if (closed) {
+    if (isClosed) {
       throw new IllegalStateException("Parser is closed");
     }
     try {
@@ -506,7 +506,7 @@ public class JsonParser implements Closeable {
   /** 关闭解析器并释放资源。 */
   @Override
   public void close() throws IOException {
-    closed = true;
+    isClosed = true;
     currentToken = null;
     currentName = null;
     textValue = null;
@@ -518,6 +518,6 @@ public class JsonParser implements Closeable {
    * @return true 如果已关闭
    */
   public boolean isClosed() {
-    return closed;
+    return isClosed;
   }
 }

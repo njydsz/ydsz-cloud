@@ -109,16 +109,16 @@ public final class SerializationProvider {
     // CHECKSTYLE.ON: RegexpSinglelineJava
 
     /** 是否输出 null 值字段 */
-    public boolean writeNulls;
+    public boolean isWriteNulls;
 
     /** 是否格式化输出 */
-    public boolean prettyPrint;
+    public boolean isPrettyPrint;
 
     /** 循环引用处理策略（REF/IGNORE/ERROR） */
     public String circularRefStrategy;
 
     /** 枚举是否使用序号 */
-    public boolean serializeEnumUsingOrdinal;
+    public boolean isSerializeEnumUsingOrdinal;
 
     /** 排除字段集合 */
     public Set<String> excludedFields;
@@ -127,7 +127,7 @@ public final class SerializationProvider {
     public String dateFormat;
 
     /** 序列化失败时是否抛出异常 */
-    public boolean failOnError;
+    public boolean isFailOnError;
 
     /** JSONWriter 实例池 */
     public JSONWriter fastWriterPool;
@@ -175,12 +175,12 @@ public final class SerializationProvider {
      */
     public static SerializationContext from(JsonRuntimeConfig runtimeConfig) {
       SerializationContext ctx = new SerializationContext();
-      ctx.writeNulls = runtimeConfig.writeNulls();
-      ctx.prettyPrint = runtimeConfig.prettyPrint();
+      ctx.isWriteNulls = runtimeConfig.isWriteNulls();
+      ctx.isPrettyPrint = runtimeConfig.isPrettyPrint();
       ctx.circularRefStrategy = runtimeConfig.circularRefStrategy();
-      ctx.serializeEnumUsingOrdinal = runtimeConfig.serializeEnumUsingOrdinal();
+      ctx.isSerializeEnumUsingOrdinal = runtimeConfig.isSerializeEnumUsingOrdinal();
       ctx.dateFormat = runtimeConfig.dateFormat();
-      ctx.failOnError = runtimeConfig.failOnError();
+      ctx.isFailOnError = runtimeConfig.isFailOnError();
       ctx.fastWriterPool = new JSONWriter();
       ctx.currentViewClass = null;
       ctx.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -296,7 +296,7 @@ public final class SerializationProvider {
    * @param writeNulls {@code true} 表示输出 null 字段，{@code false} 表示忽略
    */
   public static void setWriteNulls(boolean writeNulls) {
-    SerializationContext.CONTEXT.get().writeNulls = writeNulls;
+    SerializationContext.CONTEXT.get().isWriteNulls = writeNulls;
   }
 
   /**
@@ -305,7 +305,7 @@ public final class SerializationProvider {
    * @return {@code true} 表示输出 null 字段
    */
   public static boolean isWriteNulls() {
-    return SerializationContext.CONTEXT.get().writeNulls;
+    return SerializationContext.CONTEXT.get().isWriteNulls;
   }
 
   /**
@@ -314,7 +314,7 @@ public final class SerializationProvider {
    * @param prettyPrint {@code true} 表示输出带缩进的格式化 JSON
    */
   public static void setPrettyPrint(boolean prettyPrint) {
-    SerializationContext.CONTEXT.get().prettyPrint = prettyPrint;
+    SerializationContext.CONTEXT.get().isPrettyPrint = prettyPrint;
   }
 
   /**
@@ -323,7 +323,7 @@ public final class SerializationProvider {
    * @return {@code true} 表示输出带缩进的格式化 JSON
    */
   public static boolean isPrettyPrint() {
-    return SerializationContext.CONTEXT.get().prettyPrint;
+    return SerializationContext.CONTEXT.get().isPrettyPrint;
   }
 
   /**
@@ -351,7 +351,7 @@ public final class SerializationProvider {
    * @param ordinal {@code true} 表示输出枚举序号（如 {@code 0}）， {@code false} 表示输出枚举名（如 {@code "ACTIVE"}）
    */
   public static void setSerializeEnumUsingOrdinal(boolean ordinal) {
-    SerializationContext.CONTEXT.get().serializeEnumUsingOrdinal = ordinal;
+    SerializationContext.CONTEXT.get().isSerializeEnumUsingOrdinal = ordinal;
   }
 
   /**
@@ -360,7 +360,7 @@ public final class SerializationProvider {
    * @return {@code true} 表示输出枚举序号
    */
   public static boolean isSerializeEnumUsingOrdinal() {
-    return SerializationContext.CONTEXT.get().serializeEnumUsingOrdinal;
+    return SerializationContext.CONTEXT.get().isSerializeEnumUsingOrdinal;
   }
 
   /**
@@ -390,7 +390,7 @@ public final class SerializationProvider {
    * @since 26.09.01
    */
   public static void setFailOnError(boolean failOnError) {
-    SerializationContext.CONTEXT.get().failOnError = failOnError;
+    SerializationContext.CONTEXT.get().isFailOnError = failOnError;
   }
 
   /**
@@ -402,7 +402,7 @@ public final class SerializationProvider {
   // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在使用处/清理方法中调用 remove()（云顶规范 15.1）
   public static boolean isFailOnError() {
   // CHECKSTYLE.ON: RegexpSinglelineJava
-    return SerializationContext.CONTEXT.get().failOnError;
+    return SerializationContext.CONTEXT.get().isFailOnError;
   }
 
   /**

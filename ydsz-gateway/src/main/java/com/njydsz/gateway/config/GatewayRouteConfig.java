@@ -40,6 +40,22 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * ]
  * </pre>
  *
+ * <h3>StripPrefix 过滤器</h3>
+ *
+ * <p>按 YDIZ-API-001 规范，{@code /api} 前缀为网关层统一路由命名空间，业务层 Controller 的
+ * {@code @RequestMapping} 禁止包含 {@code /api} 段。所有路由均需配置
+ * {@code StripPrefix=1} 过滤器将 {@code /api} 剥离后再转发至后端服务。</p>
+ *
+ * <pre>
+ * {
+ *   "id": "ydsz-agent",
+ *   "uri": "lb://ydsz-agent",
+ *   "predicates": [{ "name": "Path", "args": { "pattern": "/api/agent/**" } }],
+ *   "filters": [{ "name": "StripPrefix", "args": { "parts": "1" } }],
+ *   "order": 0
+ * }
+ * </pre>
+ *
  * <p>详见模块内 {@code routes-nacos.yaml} 模板。
  *
  * @since 26.09.01

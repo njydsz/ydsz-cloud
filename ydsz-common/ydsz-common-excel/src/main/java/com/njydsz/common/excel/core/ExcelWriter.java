@@ -595,7 +595,7 @@ public class ExcelWriter {
         headProperties = analyzeClass();
       }
 
-      if (!append) {
+      if (!isAppend) {
         writeHead(headProperties);
         dispatchAfterHeaderWrite(currentRowIndex - 1);
       }
@@ -837,7 +837,7 @@ public class ExcelWriter {
     }
 
     WorkbookFactory.WorkbookInitResult result =
-        workbookFactory.initWorkbook(metadata, context, null, append);
+        workbookFactory.initWorkbook(metadata, context, null, isAppend);
     this.workbook = result.getWorkbook();
     this.sheet = result.getSheet();
     if (result.getStyleHandler() != null) {
@@ -1391,7 +1391,7 @@ public class ExcelWriter {
     } catch (IOException e) {
       firstException = e;
     } finally {
-      if (!append && !multiSheetWriting) {
+      if (!isAppend && !isMultiSheetWriting) {
         // PERF: finish 时统一关闭 workbook，关闭异常在无主异常时作为主异常抛出
         final Workbook wbToClose = workbook;
         try {

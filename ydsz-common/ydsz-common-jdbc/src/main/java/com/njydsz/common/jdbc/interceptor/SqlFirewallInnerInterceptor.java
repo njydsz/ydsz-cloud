@@ -75,19 +75,19 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
   private static final Pattern SEMICOLON_PATTERN =
       Pattern.compile(";\\s*", Pattern.CASE_INSENSITIVE);
 
-  private boolean enabled = false;
-  private boolean blockDropTable = true;
-  private boolean blockTruncate = true;
-  private boolean blockDeleteWithoutWhere = true;
-  private boolean blockUpdateWithoutWhere = true;
-  private boolean blockMultiStatement = true;
-  private boolean blockPermissionOps = true;
+  private boolean isEnabled = false;
+  private boolean isBlockDropTable = true;
+  private boolean isBlockTruncate = true;
+  private boolean isBlockDeleteWithoutWhere = true;
+  private boolean isBlockUpdateWithoutWhere = true;
+  private boolean isBlockMultiStatement = true;
+  private boolean isBlockPermissionOps = true;
   private Set<String> allowTables = Collections.emptySet();
 
   @Override
   public void beforePrepare(
       StatementHandler sh, Connection connection, Integer transactionTimeout) {
-    if (!enabled) {
+    if (!isEnabled) {
       return;
     }
 
@@ -102,13 +102,13 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     String trimmedSql = sql.trim();
 
     // 多语句检测
-    if (blockMultiStatement && containsMultiStatement(trimmedSql)) {
+    if (isBlockMultiStatement && containsMultiStatement(trimmedSql)) {
       reject("SQL 防火墙拦截：检测到多语句执行（分号分隔），已拒绝", sql);
       return;
     }
 
     // DROP 检测
-    if (blockDropTable && DROP_PATTERN.matcher(trimmedSql).find()) {
+    if (isBlockDropTable && DROP_PATTERN.matcher(trimmedSql).find()) {
       if (!isTableAllowed(trimmedSql)) {
         reject("SQL 防火墙拦截：检测到 DROP 操作，已拒绝", sql);
         return;
@@ -116,7 +116,7 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     }
 
     // TRUNCATE 检测
-    if (blockTruncate && TRUNCATE_PATTERN.matcher(trimmedSql).find()) {
+    if (isBlockTruncate && TRUNCATE_PATTERN.matcher(trimmedSql).find()) {
       if (!isTableAllowed(trimmedSql)) {
         reject("SQL 防火墙拦截：检测到 TRUNCATE 操作，已拒绝", sql);
         return;
@@ -124,7 +124,7 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     }
 
     // 权限操作检测
-    if (blockPermissionOps && DDL_PERMISSION_PATTERN.matcher(trimmedSql).find()) {
+    if (isBlockPermissionOps && DDL_PERMISSION_PATTERN.matcher(trimmedSql).find()) {
       reject("SQL 防火墙拦截：检测到 GRANT/REVOKE 权限操作，已拒绝", sql);
       return;
     }
@@ -132,7 +132,7 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     SqlCommandType commandType = ms.getSqlCommandType();
 
     // DELETE 无 WHERE 检测（使用 JSqlParser AST 精确判断，避免字符串匹配误判）
-    if (blockDeleteWithoutWhere && commandType == SqlCommandType.DELETE) {
+    if (isBlockDeleteWithoutWhere && commandType == SqlCommandType.DELETE) {
       if (!hasWhereClause(trimmedSql, SqlCommandType.DELETE)) {
         reject("SQL 防火墙拦截：检测到无 WHERE 条件的 DELETE 操作，已拒绝", sql);
         return;
@@ -140,7 +140,7 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
     }
 
     // UPDATE 无 WHERE 检测（使用 JSqlParser AST 精确判断，避免字符串匹配误判）
-    if (blockUpdateWithoutWhere && commandType == SqlCommandType.UPDATE) {
+    if (isBlockUpdateWithoutWhere && commandType == SqlCommandType.UPDATE) {
       if (!hasWhereClause(trimmedSql, SqlCommandType.UPDATE)) {
         reject("SQL 防火墙拦截：检测到无 WHERE 条件的 UPDATE 操作，已拒绝", sql);
         return;
