@@ -1144,7 +1144,7 @@ public class NotifyProperties {
   public static class DedupConfig {
 
     /** 是否启用消息去重 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 去重时间窗口（秒），在此时间内相同内容不重复发送 */
     private long windowSeconds = 300;
@@ -1154,12 +1154,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public long getWindowSeconds() {
@@ -1196,7 +1196,7 @@ public class NotifyProperties {
     private int batchSize = 100;
 
     /** 是否使用 Redis 持久化重试队列，开启后服务重启不会丢失待重试消息 */
-    private boolean persistent = false;
+    private boolean isPersistent = false;
 
     /** Redis Key 前缀 */
     private String redisKeyPrefix = "notify:retry:";
@@ -1227,12 +1227,12 @@ public class NotifyProperties {
       this.batchSize = batchSize;
     }
 
-    public boolean isPersistent() {
-      return persistent;
+    public boolean getIsPersistent() {
+      return isPersistent;
     }
 
     public void setPersistent(boolean persistent) {
-      this.persistent = persistent;
+      this.isPersistent = persistent;
     }
 
     public String getRedisKeyPrefix() {
@@ -1248,7 +1248,7 @@ public class NotifyProperties {
   public static class RateLimit {
 
     /** 是否启用渠道限流 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 每分钟最大发送条数（全局） */
     private int maxPerMinute = 1000;
@@ -1270,12 +1270,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public int getMaxPerMinute() {
@@ -1359,7 +1359,7 @@ public class NotifyProperties {
   public static class SchedulerConfig {
 
     /** 是否启用定时任务 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 定时发送扫描间隔（毫秒） */
     private long scanIntervalMs = 60000;
