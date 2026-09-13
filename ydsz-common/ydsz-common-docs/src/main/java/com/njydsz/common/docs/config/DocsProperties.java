@@ -22,7 +22,7 @@ import org.springframework.validation.annotation.Validated;
 public class DocsProperties {
 
   /** 是否启用文档处理模块 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 文件大小上限（MB），超出应在上游网关拦截 */
   @Min(1)
@@ -35,13 +35,13 @@ public class DocsProperties {
   private int parseTimeoutSeconds = 60;
 
   /** 是否启用安全扫描 */
-  private boolean securityScanEnabled = true;
+  private boolean isSecurityScanEnabled = true;
 
   /** 是否启用 PII 检测 */
-  private boolean piiDetectionEnabled = true;
+  private boolean isPiiDetectionEnabled = true;
 
   /** 是否启用预处理流水线 */
-  private boolean preprocessEnabled = true;
+  private boolean isPreprocessEnabled = true;
 
   /** 异步解析线程池大小 */
   @Min(1)
@@ -54,7 +54,7 @@ public class DocsProperties {
   private int asyncQueueCapacity = 100;
 
   /** 高风险时是否阻止解析 */
-  private boolean blockOnHighRisk = false;
+  private boolean isBlockOnHighRisk = false;
 
   /** 文本分块最大字符数 */
   @Min(100)

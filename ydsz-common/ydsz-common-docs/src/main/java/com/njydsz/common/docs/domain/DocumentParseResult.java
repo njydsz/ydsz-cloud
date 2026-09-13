@@ -24,7 +24,7 @@ public class DocumentParseResult {
   private Duration elapsed;
 
   /** 解析是否成功 */
-  private boolean success;
+  private boolean isSuccess;
 
   /** 错误消息（解析失败时） */
   private String errorMessage;

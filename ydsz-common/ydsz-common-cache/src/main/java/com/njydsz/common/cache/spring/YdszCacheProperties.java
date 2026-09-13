@@ -68,7 +68,7 @@ public class YdszCacheProperties {
 
   @NotNull private TimeUnit expireTimeUnit = TimeUnit.MINUTES;
 
-  private boolean allowNullValues = true;
+  private boolean isAllowNullValues = true;
 
   @Min(1)
   private int initialCapacity = 64;
@@ -80,7 +80,7 @@ public class YdszCacheProperties {
   private long refreshAfterWrite = 0;
 
   /** 是否启用统计 */
-  private boolean recordStats = true;
+  private boolean isRecordStats = true;
 
   /**
    * 空值占位 TTL 下界（毫秒）。
@@ -109,7 +109,7 @@ public class YdszCacheProperties {
     private Integer initialCapacity;
     private Long expireAfterAccess;
     private Long refreshAfterWrite;
-    private Boolean recordStats;
+    private Boolean isRecordStats;
     /** 空值占位 TTL 下界（毫秒），覆盖全局 nullValueTtlMin */
     private Long nullValueTtlMin;
     /** 空值占位 TTL 上界（毫秒），覆盖全局 nullValueTtlMax */
@@ -172,11 +172,11 @@ public class YdszCacheProperties {
     }
 
     public Boolean getRecordStats() {
-      return recordStats;
+      return isRecordStats;
     }
 
     public void setRecordStats(Boolean recordStats) {
-      this.recordStats = recordStats;
+      this.isRecordStats = recordStats;
     }
 
     public Long getNullValueTtlMin() {
@@ -237,11 +237,11 @@ public class YdszCacheProperties {
   }
 
   public boolean isAllowNullValues() {
-    return allowNullValues;
+    return isAllowNullValues;
   }
 
   public void setAllowNullValues(boolean allowNullValues) {
-    this.allowNullValues = allowNullValues;
+    this.isAllowNullValues = allowNullValues;
   }
 
   public int getInitialCapacity() {
@@ -269,11 +269,11 @@ public class YdszCacheProperties {
   }
 
   public boolean isRecordStats() {
-    return recordStats;
+    return isRecordStats;
   }
 
   public void setRecordStats(boolean recordStats) {
-    this.recordStats = recordStats;
+    this.isRecordStats = recordStats;
   }
 
   public long getNullValueTtlMin() {

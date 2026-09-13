@@ -26,7 +26,7 @@ public class SecurityScanResult {
   private List<SecurityFinding> findings;
 
   /** 扫描是否成功 */
-  private boolean success;
+  private boolean isSuccess;
 
   /** 错误消息 */
   private String errorMessage;
