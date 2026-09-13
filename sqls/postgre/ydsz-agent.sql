@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     category                 VARCHAR(64)              DEFAULT NULL,
     current_version          INTEGER                  NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -51,7 +51,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_template.description IS '模板描述';
 COMMENT ON COLUMN ydsz_agt_prompt_template.category IS '分类（用于分组检索）';
 COMMENT ON COLUMN ydsz_agt_prompt_template.current_version IS '当前版本号，自 1 起每次更新递增';
 COMMENT ON COLUMN ydsz_agt_prompt_template.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agt_prompt_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_prompt_template.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_agt_prompt_template.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_agt_prompt_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_agt_prompt_template.updated_at IS '最后更新时间';
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     content                  TEXT                     NOT NULL,
     change_note              VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
@@ -87,7 +87,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_version.version IS '版本号（与 template �
 COMMENT ON COLUMN ydsz_agt_prompt_version.content IS '该版本的模板内容快照';
 COMMENT ON COLUMN ydsz_agt_prompt_version.change_note IS '版本备注（描述本次变更内容）';
 COMMENT ON COLUMN ydsz_agt_prompt_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agt_prompt_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_prompt_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_agt_prompt_version.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_agt_prompt_version.created_at IS '版本创建时间';
 COMMENT ON COLUMN ydsz_agt_prompt_version.created_by IS '操作人';
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     temperature              DOUBLE PRECISION         DEFAULT NULL,
     max_tokens               INTEGER                  DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -132,7 +132,7 @@ COMMENT ON COLUMN ydsz_agt_definition.tool_names IS '工具名称列表 JSON（[
 COMMENT ON COLUMN ydsz_agt_definition.temperature IS '温度参数';
 COMMENT ON COLUMN ydsz_agt_definition.max_tokens IS '最大生成 Token 数';
 COMMENT ON COLUMN ydsz_agt_definition.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agt_definition.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_definition.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_agt_definition.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_agt_definition.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_agt_definition.updated_at IS '最后更新时间';
@@ -228,7 +228,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     completion_tokens        BIGINT                   NOT NULL DEFAULT 0,
     total_tokens             BIGINT                   NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -246,7 +246,7 @@ COMMENT ON COLUMN ydsz_agt_token_usage.prompt_tokens IS '提示词 Token 数';
 COMMENT ON COLUMN ydsz_agt_token_usage.completion_tokens IS '补全 Token 数';
 COMMENT ON COLUMN ydsz_agt_token_usage.total_tokens IS '总 Token 数（prompt + completion）';
 COMMENT ON COLUMN ydsz_agt_token_usage.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agt_token_usage.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_token_usage.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_agt_token_usage.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_agt_token_usage.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_agt_token_usage.updated_at IS '最后更新时间';
@@ -278,7 +278,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
     source                   VARCHAR(128)             DEFAULT NULL,
     metadata                 JSONB                    DEFAULT NULL,
     tenant_id                VARCHAR(64)              DEFAULT NULL,
-    deleted                  BOOLEAN                  NOT NULL DEFAULT FALSE,
+    is_deleted               BOOLEAN                  NOT NULL DEFAULT FALSE,
     created_at               TIMESTAMPTZ              NOT NULL DEFAULT NOW(),
     CONSTRAINT pk_ydsz_agt_document_chunk PRIMARY KEY (id)
 );
@@ -294,7 +294,7 @@ COMMENT ON COLUMN ydsz_agt_document_chunk.document_title IS '文档标题（冗�
 COMMENT ON COLUMN ydsz_agt_document_chunk.source IS '来源标识（文件路径/URL 等）';
 COMMENT ON COLUMN ydsz_agt_document_chunk.metadata IS '分块元数据 JSONB';
 COMMENT ON COLUMN ydsz_agt_document_chunk.tenant_id IS '租户 ID（多租户隔离，原生 SQL 显式过滤）';
-COMMENT ON COLUMN ydsz_agt_document_chunk.deleted IS '逻辑删除标识（HybridRetriever 全文检素 WHERE deleted = false）';
+COMMENT ON COLUMN ydsz_agt_document_chunk.is_deleted IS '逻辑删除标识（HybridRetriever 全文检素 WHERE deleted = false）';
 COMMENT ON COLUMN ydsz_agt_document_chunk.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_document_id ON ydsz_agt_document_chunk (document_id);

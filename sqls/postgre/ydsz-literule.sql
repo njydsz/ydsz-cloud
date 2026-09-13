@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     title_template           VARCHAR(512)             DEFAULT NULL,
     description_template     VARCHAR(512)             DEFAULT NULL,
     priority                 INTEGER                  NOT NULL DEFAULT 100,
-    enabled                  SMALLINT                 NOT NULL DEFAULT 1,
+    is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     scope                    VARCHAR(128)             DEFAULT NULL,
     mutex_group              VARCHAR(128)             DEFAULT NULL,
-    drilldown_available      SMALLINT                 NOT NULL DEFAULT 0,
+    is_drilldown_available   SMALLINT                 NOT NULL DEFAULT 0,
     version                  INTEGER                  NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
     effective_from           TIMESTAMP                DEFAULT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     canary_conditions        JSONB                    DEFAULT NULL,
     canary_condition_expression TEXT                    ,
     canary_severity_expression TEXT                    ,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -77,10 +77,10 @@ COMMENT ON COLUMN ydsz_rule_def.default_severity IS '默认严重级别';
 COMMENT ON COLUMN ydsz_rule_def.title_template IS '告警标题模板';
 COMMENT ON COLUMN ydsz_rule_def.description_template IS '告警描述模板';
 COMMENT ON COLUMN ydsz_rule_def.priority IS '优先级，数值越小优先级越高';
-COMMENT ON COLUMN ydsz_rule_def.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_def.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_def.scope IS '适用范围';
 COMMENT ON COLUMN ydsz_rule_def.mutex_group IS '互斥组名称（同组内首个命中后跳过其余规则；NULL 表示无互斥组）';
-COMMENT ON COLUMN ydsz_rule_def.drilldown_available IS '是否支持下钻查看详情（1=支持，0=不支持）';
+COMMENT ON COLUMN ydsz_rule_def.is_drilldown_available IS '是否支持下钻查看详情（1=支持，0=不支持）';
 COMMENT ON COLUMN ydsz_rule_def.version IS '乐观锁版本号（并发更新规则时防止覆盖）';
 COMMENT ON COLUMN ydsz_rule_def.status IS '生命周期状态（DRAFT/PUBLISHED/DISABLED）';
 COMMENT ON COLUMN ydsz_rule_def.effective_from IS '生效时间（NULL 表示立即生效）';
@@ -92,7 +92,7 @@ COMMENT ON COLUMN ydsz_rule_def.canary_ratio IS '灰度比例（0.0~1.0，0 表�
 COMMENT ON COLUMN ydsz_rule_def.canary_conditions IS '灰度条件表达式列表（JSON 数组）';
 COMMENT ON COLUMN ydsz_rule_def.canary_condition_expression IS '灰度候选版本条件表达式';
 COMMENT ON COLUMN ydsz_rule_def.canary_severity_expression IS '灰度候选版本严重度表达式';
-COMMENT ON COLUMN ydsz_rule_def.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_def.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_def.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_def.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_def.updated_at IS '最后更新时间';
@@ -111,10 +111,10 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     description              VARCHAR(512)             DEFAULT NULL,
     sample_value             TEXT                    ,
     category                 VARCHAR(64)              DEFAULT NULL,
-    required                 SMALLINT                 NOT NULL DEFAULT 0,
-    enabled                  SMALLINT                 NOT NULL DEFAULT 1,
+    is_required              SMALLINT                 NOT NULL DEFAULT 0,
+    is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -132,10 +132,10 @@ COMMENT ON COLUMN ydsz_rule_variable_def.var_type IS '变量类型（Number / St
 COMMENT ON COLUMN ydsz_rule_variable_def.description IS '变量描述（中文，供前端编辑器提示）';
 COMMENT ON COLUMN ydsz_rule_variable_def.sample_value IS '示例值（存储为字符串，用于前端编辑器预览和 dryRun 默认 facts）';
 COMMENT ON COLUMN ydsz_rule_variable_def.category IS '变量来源类别（EVM / PROJECT / FINANCE / BENCH 等）';
-COMMENT ON COLUMN ydsz_rule_variable_def.required IS '是否必填（1=必填，0=可选）';
-COMMENT ON COLUMN ydsz_rule_variable_def.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_variable_def.is_required IS '是否必填（1=必填，0=可选）';
+COMMENT ON COLUMN ydsz_rule_variable_def.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_variable_def.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_variable_def.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_variable_def.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_variable_def.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_variable_def.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_variable_def.updated_at IS '最后更新时间';
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     industry                 VARCHAR(64)              DEFAULT NULL,
     tags                     VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -189,7 +189,7 @@ COMMENT ON COLUMN ydsz_rule_template.scope IS '适用范围';
 COMMENT ON COLUMN ydsz_rule_template.industry IS '所属行业';
 COMMENT ON COLUMN ydsz_rule_template.tags IS '标签，逗号分隔';
 COMMENT ON COLUMN ydsz_rule_template.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_template.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_template.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_template.updated_at IS '最后更新时间';
@@ -208,14 +208,14 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     description              VARCHAR(512)             DEFAULT NULL,
     script                   TEXT                    ,
     default_severity         VARCHAR(32)              DEFAULT NULL,
-    sandbox_enabled          SMALLINT                 NOT NULL DEFAULT 1,
+    is_sandbox_enabled       SMALLINT                 NOT NULL DEFAULT 1,
     priority                 INTEGER                  DEFAULT NULL,
-    enabled                  SMALLINT                 NOT NULL DEFAULT 1,
+    is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     scope                    VARCHAR(128)             DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -233,14 +233,14 @@ COMMENT ON COLUMN ydsz_rule_script.category IS '规则分类';
 COMMENT ON COLUMN ydsz_rule_script.description IS '规则描述';
 COMMENT ON COLUMN ydsz_rule_script.script IS 'Groovy 脚本源码（运行在沙箱中）';
 COMMENT ON COLUMN ydsz_rule_script.default_severity IS '默认严重级别（INFO/WARN/ERROR/CRITICAL）';
-COMMENT ON COLUMN ydsz_rule_script.sandbox_enabled IS '是否启用沙箱（1=启用安全限制，0=关闭）';
+COMMENT ON COLUMN ydsz_rule_script.is_sandbox_enabled IS '是否启用沙箱（1=启用安全限制，0=关闭）';
 COMMENT ON COLUMN ydsz_rule_script.priority IS '优先级';
-COMMENT ON COLUMN ydsz_rule_script.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_script.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_script.scope IS '适用范围';
 COMMENT ON COLUMN ydsz_rule_script.version IS '版本号';
 COMMENT ON COLUMN ydsz_rule_script.provider_trace_id IS '供应商侧追踪 ID';
 COMMENT ON COLUMN ydsz_rule_script.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_script.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_script.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_script.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_script.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_script.updated_at IS '最后更新时间';
@@ -262,11 +262,11 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     rows                     JSONB                    DEFAULT NULL,
     default_actions          JSONB                    DEFAULT NULL,
     hit_policy               VARCHAR(32)              NOT NULL DEFAULT 'FIRST',
-    enabled                  SMALLINT                 NOT NULL DEFAULT 1,
+    is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     priority                 INTEGER                  DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -288,11 +288,11 @@ COMMENT ON COLUMN ydsz_rule_decision_table.action_columns IS '动作列定义（
 COMMENT ON COLUMN ydsz_rule_decision_table.rows IS '决策行（JSON 数组）';
 COMMENT ON COLUMN ydsz_rule_decision_table.default_actions IS '默认动作（JSON 对象）';
 COMMENT ON COLUMN ydsz_rule_decision_table.hit_policy IS '命中策略（UNIQUE/FIRST/PRIORITY/COLLECT/ANY，默认 FIRST）';
-COMMENT ON COLUMN ydsz_rule_decision_table.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_decision_table.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_decision_table.priority IS '优先级';
 COMMENT ON COLUMN ydsz_rule_decision_table.version IS '版本';
 COMMENT ON COLUMN ydsz_rule_decision_table.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_decision_table.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_decision_table.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_decision_table.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_decision_table.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_decision_table.updated_at IS '最后更新时间';
@@ -311,12 +311,12 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     description              VARCHAR(512)             DEFAULT NULL,
     root_node                JSONB                    DEFAULT NULL,
     priority                 INTEGER                  DEFAULT NULL,
-    enabled                  SMALLINT                 NOT NULL DEFAULT 1,
+    is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     scope                    VARCHAR(128)             DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -334,12 +334,12 @@ COMMENT ON COLUMN ydsz_rule_decision_tree.category IS '规则分类';
 COMMENT ON COLUMN ydsz_rule_decision_tree.description IS '规则描述';
 COMMENT ON COLUMN ydsz_rule_decision_tree.root_node IS '根节点 JSON（嵌套结构，节点类型 CONDITION/ACTION/DEFAULT）';
 COMMENT ON COLUMN ydsz_rule_decision_tree.priority IS '优先级（数字越小越优先）';
-COMMENT ON COLUMN ydsz_rule_decision_tree.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_decision_tree.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_decision_tree.scope IS '适用范围';
 COMMENT ON COLUMN ydsz_rule_decision_tree.version IS '版本号';
 COMMENT ON COLUMN ydsz_rule_decision_tree.provider_trace_id IS '供应商侧追踪 ID';
 COMMENT ON COLUMN ydsz_rule_decision_tree.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_decision_tree.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_decision_tree.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_decision_tree.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_decision_tree.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_decision_tree.updated_at IS '最后更新时间';
@@ -361,12 +361,12 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     yellow_threshold         NUMERIC(20,6)            DEFAULT NULL,
     factors                  JSONB                    DEFAULT NULL,
     priority                 INTEGER                  DEFAULT NULL,
-    enabled                  SMALLINT                 NOT NULL DEFAULT 1,
+    is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     scope                    VARCHAR(128)             DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -387,12 +387,12 @@ COMMENT ON COLUMN ydsz_rule_scorecard.red_threshold IS '红灯阈值（≤ 触�
 COMMENT ON COLUMN ydsz_rule_scorecard.yellow_threshold IS '黄灯阈值（≤ 触发黄灯）';
 COMMENT ON COLUMN ydsz_rule_scorecard.factors IS '评分因子 JSON：[{conditionExpression, score, description}]';
 COMMENT ON COLUMN ydsz_rule_scorecard.priority IS '优先级（数字越小越优先）';
-COMMENT ON COLUMN ydsz_rule_scorecard.enabled IS '是否启用（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_scorecard.is_enabled IS '是否启用（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_scorecard.scope IS '适用范围（如 ALL / PROJECT_TYPE:CONSTRUCTION）';
 COMMENT ON COLUMN ydsz_rule_scorecard.version IS '版本号';
 COMMENT ON COLUMN ydsz_rule_scorecard.provider_trace_id IS '供应商侧追踪 ID';
 COMMENT ON COLUMN ydsz_rule_scorecard.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_scorecard.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_scorecard.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_scorecard.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_scorecard.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_scorecard.updated_at IS '最后更新时间';
@@ -413,7 +413,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
     graph_version            INTEGER                  NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
     content_json             JSONB                    DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -433,7 +433,7 @@ COMMENT ON COLUMN ydsz_rule_chain_graph.scenario IS '适用场景（与 RuleCont
 COMMENT ON COLUMN ydsz_rule_chain_graph.graph_version IS '画布版本号（独立递增）';
 COMMENT ON COLUMN ydsz_rule_chain_graph.status IS '画布状态（DRAFT/PUBLISHED/ARCHIVED）';
 COMMENT ON COLUMN ydsz_rule_chain_graph.content_json IS '画布内容 JSON（包含 nodes/edges/viewport/metadata）';
-COMMENT ON COLUMN ydsz_rule_chain_graph.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_chain_graph.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_chain_graph.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_chain_graph.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_chain_graph.updated_at IS '最后更新时间';
@@ -448,10 +448,10 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
     rule_code                VARCHAR(64)              NOT NULL,
     depends_on_rule_code     VARCHAR(64)              NOT NULL,
     dependency_type          VARCHAR(32)              NOT NULL,
-    cascade_on_disable       SMALLINT                 NOT NULL DEFAULT 0,
+    is_cascade_on_disable    SMALLINT                 NOT NULL DEFAULT 0,
     description              VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -467,10 +467,10 @@ COMMENT ON COLUMN ydsz_rule_dependency.tenant_id IS '租户 ID（多租户隔离
 COMMENT ON COLUMN ydsz_rule_dependency.rule_code IS '主规则编码（依赖方）';
 COMMENT ON COLUMN ydsz_rule_dependency.depends_on_rule_code IS '被依赖的规则编码';
 COMMENT ON COLUMN ydsz_rule_dependency.dependency_type IS '依赖类型（EXECUTE/READ_RESULT/SOFT）';
-COMMENT ON COLUMN ydsz_rule_dependency.cascade_on_disable IS '被依赖规则被禁用时是否级联禁用本规则（1=级联，0=不级联）';
+COMMENT ON COLUMN ydsz_rule_dependency.is_cascade_on_disable IS '被依赖规则被禁用时是否级联禁用本规则（1=级联，0=不级联）';
 COMMENT ON COLUMN ydsz_rule_dependency.description IS '依赖说明';
 COMMENT ON COLUMN ydsz_rule_dependency.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_dependency.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_dependency.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_dependency.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_dependency.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_dependency.updated_at IS '最后更新时间';
@@ -495,10 +495,10 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     author                   VARCHAR(64)              DEFAULT NULL,
     download_count           BIGINT                   NOT NULL DEFAULT 0,
     rating                   NUMERIC(20,6)            DEFAULT NULL,
-    enabled                  SMALLINT                 NOT NULL DEFAULT 1,
-    official                 SMALLINT                 NOT NULL DEFAULT 0,
+    is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
+    is_official              SMALLINT                 NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -523,10 +523,10 @@ COMMENT ON COLUMN ydsz_rule_pack.description IS '规则集描述';
 COMMENT ON COLUMN ydsz_rule_pack.author IS '作者（创建人用户名）';
 COMMENT ON COLUMN ydsz_rule_pack.download_count IS '下载次数（安装时 +1）';
 COMMENT ON COLUMN ydsz_rule_pack.rating IS '评分（0-5，保留 1 位小数）';
-COMMENT ON COLUMN ydsz_rule_pack.enabled IS '是否启用（1=可用，0=已下架）';
-COMMENT ON COLUMN ydsz_rule_pack.official IS '是否官方认证规则集（1=官方发布，0=社区贡献）';
+COMMENT ON COLUMN ydsz_rule_pack.is_enabled IS '是否启用（1=可用，0=已下架）';
+COMMENT ON COLUMN ydsz_rule_pack.is_official IS '是否官方认证规则集（1=官方发布，0=社区贡献）';
 COMMENT ON COLUMN ydsz_rule_pack.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_pack.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_pack.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_pack.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_pack.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_pack.updated_at IS '最后更新时间';
@@ -544,7 +544,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
     installed_at             TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     error_message            TEXT                    ,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -560,7 +560,7 @@ COMMENT ON COLUMN ydsz_rule_pack_install.installed_by IS '安装操作人 ID';
 COMMENT ON COLUMN ydsz_rule_pack_install.installed_at IS '安装时间';
 COMMENT ON COLUMN ydsz_rule_pack_install.status IS '安装状态（INSTALLING/INSTALLED/FAILED/UNINSTALLING/UNINSTALLED）';
 COMMENT ON COLUMN ydsz_rule_pack_install.error_message IS '失败原因（status=FAILED 时记录异常信息）';
-COMMENT ON COLUMN ydsz_rule_pack_install.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_pack_install.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_pack_install.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_pack_install.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_pack_install.updated_at IS '最后更新时间';
@@ -575,7 +575,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     rule_code                VARCHAR(64)              NOT NULL,
-    auto_rollback_enabled    SMALLINT                 NOT NULL DEFAULT 0,
+    is_auto_rollback_enabled SMALLINT                 NOT NULL DEFAULT 0,
     rollback_action          VARCHAR(32)              DEFAULT NULL,
     error_rate_threshold     NUMERIC(20,6)            DEFAULT NULL,
     min_sample_size          INTEGER                  DEFAULT NULL,
@@ -585,7 +585,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     last_evaluated_at        TIMESTAMP                DEFAULT NULL,
     last_rollback_at         TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -599,7 +599,7 @@ COMMENT ON TABLE ydsz_rule_ab_policy IS 'AB Test 自动回滚策略表';
 COMMENT ON COLUMN ydsz_rule_ab_policy.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_rule_ab_policy.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_rule_ab_policy.rule_code IS '关联规则编码（一对一）';
-COMMENT ON COLUMN ydsz_rule_ab_policy.auto_rollback_enabled IS '是否启用自动回滚（1=启用，0=停用）';
+COMMENT ON COLUMN ydsz_rule_ab_policy.is_auto_rollback_enabled IS '是否启用自动回滚（1=启用，0=停用）';
 COMMENT ON COLUMN ydsz_rule_ab_policy.rollback_action IS '回滚动作（AUTO 自动回滚 / NOTIFY 仅通知 Owner）';
 COMMENT ON COLUMN ydsz_rule_ab_policy.error_rate_threshold IS 'canary 桶错误率阈值（0~1.0）';
 COMMENT ON COLUMN ydsz_rule_ab_policy.min_sample_size IS '最小样本数';
@@ -609,7 +609,7 @@ COMMENT ON COLUMN ydsz_rule_ab_policy.description IS '描述';
 COMMENT ON COLUMN ydsz_rule_ab_policy.last_evaluated_at IS '最近一次评估时间';
 COMMENT ON COLUMN ydsz_rule_ab_policy.last_rollback_at IS '最近一次回滚时间';
 COMMENT ON COLUMN ydsz_rule_ab_policy.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_ab_policy.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_ab_policy.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_ab_policy.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_ab_policy.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_ab_policy.updated_at IS '最后更新时间';
@@ -626,7 +626,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
     bucket_count             BIGINT                   NOT NULL DEFAULT 0,
     stat_date                DATE                     NOT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -644,7 +644,7 @@ COMMENT ON COLUMN ydsz_rule_canary_bucket.bucket_type IS '桶类型（PRIMARY/CA
 COMMENT ON COLUMN ydsz_rule_canary_bucket.bucket_count IS '桶命中次数';
 COMMENT ON COLUMN ydsz_rule_canary_bucket.stat_date IS '统计日期';
 COMMENT ON COLUMN ydsz_rule_canary_bucket.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_canary_bucket.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_canary_bucket.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_canary_bucket.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_canary_bucket.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rule_canary_bucket.updated_at IS '最后更新时间';
@@ -661,11 +661,11 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     trigger_reason           VARCHAR(32)              NOT NULL,
     error_rate               NUMERIC(20,6)            DEFAULT NULL,
     sample_size              BIGINT                   DEFAULT NULL,
-    from_canary              SMALLINT                 NOT NULL DEFAULT 0,
+    is_from_canary           SMALLINT                 NOT NULL DEFAULT 0,
     operator                 VARCHAR(64)              DEFAULT NULL,
     notify_status            VARCHAR(32)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    deleted                  SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -681,11 +681,11 @@ COMMENT ON COLUMN ydsz_rule_ab_rollback.rule_code IS '规则编码（关联 ydsz
 COMMENT ON COLUMN ydsz_rule_ab_rollback.trigger_reason IS '触发原因（ERROR_RATE/MANUAL/OWNER_REQUEST）';
 COMMENT ON COLUMN ydsz_rule_ab_rollback.error_rate IS '回滚时的错误率（triggerReason=ERROR_RATE 时记录）';
 COMMENT ON COLUMN ydsz_rule_ab_rollback.sample_size IS '回滚时的样本量（参与 AB Test 的事件总数）';
-COMMENT ON COLUMN ydsz_rule_ab_rollback.from_canary IS '是否已从 canary 切换回主版本（1=已回滚，0=仅通知未回滚）';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.is_from_canary IS '是否已从 canary 切换回主版本（1=已回滚，0=仅通知未回滚）';
 COMMENT ON COLUMN ydsz_rule_ab_rollback.operator IS '操作人 ID（自动回滚时为 SYSTEM）';
 COMMENT ON COLUMN ydsz_rule_ab_rollback.notify_status IS '通知状态（PENDING/SENT/FAILED，回滚后通知规则责任人）';
 COMMENT ON COLUMN ydsz_rule_ab_rollback.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rule_ab_rollback.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rule_ab_rollback.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rule_ab_rollback.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rule_ab_rollback.created_at IS '回滚时间';
 COMMENT ON COLUMN ydsz_rule_ab_rollback.updated_at IS '最后更新时间';
@@ -722,7 +722,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             DEFAULT NULL,
     scenario                 VARCHAR(64)              DEFAULT NULL,
-    triggered                SMALLINT                 DEFAULT NULL,
+    is_triggered             SMALLINT                 DEFAULT NULL,
     severity                 VARCHAR(32)              DEFAULT NULL,
     condition_result         TEXT                    ,
     elapsed_ms               BIGINT                   DEFAULT NULL,
@@ -738,7 +738,7 @@ COMMENT ON COLUMN ydsz_rule_execution_trace.trace_id IS '追踪 ID（同一批�
 COMMENT ON COLUMN ydsz_rule_execution_trace.rule_code IS '规则编码';
 COMMENT ON COLUMN ydsz_rule_execution_trace.rule_name IS '规则名称';
 COMMENT ON COLUMN ydsz_rule_execution_trace.scenario IS '业务场景';
-COMMENT ON COLUMN ydsz_rule_execution_trace.triggered IS '是否触发（1=触发，0=未触发）';
+COMMENT ON COLUMN ydsz_rule_execution_trace.is_triggered IS '是否触发（1=触发，0=未触发）';
 COMMENT ON COLUMN ydsz_rule_execution_trace.severity IS '触发严重度';
 COMMENT ON COLUMN ydsz_rule_execution_trace.condition_result IS '条件表达式求值结果描述';
 COMMENT ON COLUMN ydsz_rule_execution_trace.elapsed_ms IS '执行耗时（毫秒）';

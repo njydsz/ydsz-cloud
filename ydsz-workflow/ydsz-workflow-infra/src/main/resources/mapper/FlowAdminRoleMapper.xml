@@ -3,7 +3,7 @@
 <mapper namespace="com.njydsz.workflow.infra.mapper.FlowAdminRoleMapper">
 
     <select id="selectByUserId" resultType="com.njydsz.workflow.infra.entity.FlowAdminRole">
-        SELECT id, user_id, role_code, enabled AS isEnabled, granted_by, granted_at, expire_at, tenant_id, created_at, created_by, updated_at, updated_by, is_deleted, revision
+        SELECT id, user_id, role_code, is_enabled AS isEnabled, granted_by, granted_at, expire_at, tenant_id, created_at, created_by, updated_at, updated_by, is_deleted, revision
         FROM ydsz_flow_admin_role
         WHERE user_id = #{userId}
           AND is_deleted = 0
@@ -12,7 +12,7 @@
     </select>
 
     <select id="selectByUserAndRole" resultType="com.njydsz.workflow.infra.entity.FlowAdminRole">
-        SELECT id, user_id, role_code, enabled AS isEnabled, granted_by, granted_at, expire_at, tenant_id, created_at, created_by, updated_at, updated_by, is_deleted, revision
+        SELECT id, user_id, role_code, is_enabled AS isEnabled, granted_by, granted_at, expire_at, tenant_id, created_at, created_by, updated_at, updated_by, is_deleted, revision
         FROM ydsz_flow_admin_role
         WHERE user_id = #{userId}
           AND role_code = #{roleCode}

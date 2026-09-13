@@ -10,7 +10,7 @@
                created_by, created_at, updated_by, updated_at, is_deleted
         FROM ydsz_flow_auto_trigger
         WHERE source_flow_code = #{sourceFlowCode}
-          AND enabled = 1
+          AND is_enabled = 1
           AND is_deleted = 0
         ORDER BY sort ASC, id ASC
     </select>
