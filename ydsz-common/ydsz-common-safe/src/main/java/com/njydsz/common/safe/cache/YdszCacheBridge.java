@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.cache.builder.CacheType;
 
 /**
@@ -41,7 +42,7 @@ public final class YdszCacheBridge<K, V> implements SafeCache<K, V> {
    * @throws NoClassDefFoundError 当 ydzs-common-cache 不在 classpath 时抛出
    */
   public static <K, V> SafeCache<K, V> create(long expireAfterWrite, TimeUnit timeUnit, long maxSize) {
-    YdszCache.CacheBuilder<K, V> builder =
+    CacheBuilder<K, V> builder =
         YdszCache.newBuilder()
             .type(CacheType.STRIPED)
             .expireAfterWrite(expireAfterWrite, timeUnit);

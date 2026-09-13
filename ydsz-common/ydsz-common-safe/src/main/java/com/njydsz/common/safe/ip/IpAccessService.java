@@ -11,6 +11,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.cache.ConcurrentTtlSafeCache;
 import com.njydsz.common.safe.cache.SafeCache;
+import com.njydsz.common.safe.cache.SafeCacheFactoryHelper;
 import com.njydsz.common.safe.config.IpAccessProperties;
 
 /**
