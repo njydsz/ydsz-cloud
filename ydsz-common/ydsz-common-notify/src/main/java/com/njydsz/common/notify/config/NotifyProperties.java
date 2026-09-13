@@ -839,12 +839,12 @@ public class NotifyProperties {
       this.defaultUser = defaultUser;
     }
 
-    public boolean isEnableMessageCheck() {
-      return enableMessageCheck;
+    public boolean getIsEnableMessageCheck() {
+      return isEnableMessageCheck;
     }
 
     public void setEnableMessageCheck(boolean enableMessageCheck) {
-      this.enableMessageCheck = enableMessageCheck;
+      this.isEnableMessageCheck = enableMessageCheck;
     }
   }
 

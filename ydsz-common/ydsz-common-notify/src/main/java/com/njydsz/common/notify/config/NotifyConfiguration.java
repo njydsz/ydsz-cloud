@@ -148,27 +148,27 @@ public class NotifyConfiguration {
     }
     sender.setPassword(password);
     sender.setDefaultEncoding(email.getEncoding());
-    sender.setProtocol(email.getSsl().isEnabled() ? "smtps" : "smtp");
+    sender.setProtocol(email.getSsl().getIsEnabled() ? "smtps" : "smtp");
 
     Properties props = sender.getJavaMailProperties();
-    props.put("mail.smtp.auth", String.valueOf(email.isAuth()));
+    props.put("mail.smtp.auth", String.valueOf(email.getIsAuth()));
     props.put("mail.smtp.connectiontimeout", String.valueOf(email.getConnectionTimeout()));
     props.put("mail.smtp.timeout", String.valueOf(email.getTimeout()));
     props.put("mail.smtp.writetimeout", String.valueOf(email.getWriteTimeout()));
-    props.put("mail.smtp.debug", String.valueOf(email.isDebug()));
+    props.put("mail.smtp.debug", String.valueOf(email.getIsDebug()));
 
-    if (email.getSsl().isEnabled()) {
+    if (email.getSsl().getIsEnabled()) {
       props.put("mail.smtp.ssl.enable", "true");
       props.put("mail.smtp.ssl.protocols", email.getSsl().getProtocols());
       props.put(
           "mail.smtp.ssl.checkserveridentity",
-          String.valueOf(email.getSsl().isCheckServerIdentity()));
+          String.valueOf(email.getSsl().getIsCheckServerIdentity()));
       if (StringUtils.hasText(email.getSsl().getTrustStore())) {
         props.put("mail.smtp.ssl.trust", email.getSsl().getTrustStore());
       }
     }
 
-    if (email.isStarttls()) {
+    if (email.getIsStarttls()) {
       props.put("mail.smtp.starttls.enable", "true");
       props.put("mail.smtp.starttls.required", "true");
     }
@@ -183,8 +183,8 @@ public class NotifyConfiguration {
         "[NotifyConfiguration] JavaMailSender bean registered, host={}, port={}, ssl={}, starttls={}",
         email.getSmtpHost(),
         email.getSmtpPort(),
-        email.getSsl().isEnabled(),
-        email.isStarttls());
+        email.getSsl().getIsEnabled(),
+        email.getIsStarttls());
     return sender;
   }
 
