@@ -1,6 +1,7 @@
 package com.njydsz.system.domain.entity;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -8,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 
 
@@ -40,7 +42,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_sys_entity_version")
+@TableName(value = "ydsz_sys_entity_version", autoResultMap = true)
 public class EntityVersion extends MpBaseEntity<String> {
 
   /** 资源类型：CONFIG/DICT/VARIABLE */
@@ -59,6 +61,7 @@ public class EntityVersion extends MpBaseEntity<String> {
   private String changeLog;
 
   /** 变更前 JSON 快照（用于回滚） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String snapshotJson;
 
   /** 生效时间 */

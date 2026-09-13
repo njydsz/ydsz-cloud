@@ -38,6 +38,9 @@ public interface WebAuthnCredentialConverter {
    * @param vo 视图对象
    * @return 持久化实体
    */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
   WebAuthnCredential toDO(WebAuthnCredentialVO vo);
 }

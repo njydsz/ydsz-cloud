@@ -1,4 +1,5 @@
 package com.njydsz.system.domain.entity;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -6,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 
 
@@ -38,7 +40,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_sys_dict_item")
+@TableName(value = "ydsz_sys_dict_item", autoResultMap = true)
 public class DictItem extends MpBaseEntity<String> {
 
   /** 所属字典类型编码（逻辑外键 → {@code ydsz_sys_dict_type.type_code}） */
@@ -60,5 +62,6 @@ public class DictItem extends MpBaseEntity<String> {
   private String description;
 
   /** 扩展属性 JSONB 字符串，承载自定义属性（如色值、图标、URL 等） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String extJson;
 }

@@ -26,7 +26,7 @@ import com.njydsz.common.netty.exception.NettyException;
 public class NettyServerLifecycle implements SmartLifecycle {
 
   private final List<AbstractNettyServer> servers;
-  private final boolean failFast;
+  private final boolean isFailFast;
   private volatile boolean running = false;
 
   /**
@@ -37,7 +37,7 @@ public class NettyServerLifecycle implements SmartLifecycle {
    */
   public NettyServerLifecycle(List<AbstractNettyServer> servers, boolean failFast) {
     this.servers = servers;
-    this.failFast = failFast;
+    this.isFailFast = failFast;
   }
 
   @Override
@@ -51,12 +51,12 @@ public class NettyServerLifecycle implements SmartLifecycle {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         log.error("[Netty-Lifecycle] {} 启动被中断", server.getClass().getSimpleName(), e);
-        if (failFast) {
+        if (isFailFast) {
           throw new NettyException("Netty Server 启动被中断: " + server.getClass().getSimpleName(), e);
         }
       } catch (Exception e) {
         log.error("[Netty-Lifecycle] {} 启动失败", server.getClass().getSimpleName(), e);
-        if (failFast) {
+        if (isFailFast) {
           throw new NettyException("Netty Server 启动失败: " + server.getClass().getSimpleName(), e);
         }
       }

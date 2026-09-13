@@ -1,4 +1,5 @@
 package com.njydsz.system.domain.entity;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -6,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 
 
@@ -44,7 +46,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_sys_tenant_plan")
+@TableName(value = "ydsz_sys_tenant_plan", autoResultMap = true)
 public class TenantPlan extends MpBaseEntity<String> {
 
   /** 套餐编码（唯一标识，如 {@code TRIAL} / {@code STANDARD} / {@code ENTERPRISE}） */
@@ -60,8 +62,10 @@ public class TenantPlan extends MpBaseEntity<String> {
   private Integer sort;
 
   /** 资源配额 JSON（如 {@code {"maxUsers":50,"maxProjects":10,"storageGb":100}}） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String quotaJson;
 
   /** 功能开关 JSON（如 {@code {"workflow":true,"dataAnalytics":false}}，按套餐控制功能可用性） */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String featureJson;
 }
