@@ -387,6 +387,11 @@ rules:
       Entity（持久化实体）和 Converter（对象转换器）是领域模型的一部分，必须放在 {module}-domain 层。
       infra 层作为 domain 的实现，通过 pom 依赖 domain 模块来复用 Entity 和 Converter，**禁止**在 infra 层自行定义 MapStruct Converter 或维护 entity 包的副本。
 
+      **infra 层 MapStruct `provided` 依赖豁免**：
+      当 domain 层将 MapStruct 声明为 `provided` scope 时，该依赖**不会**传递到 infra 层。
+      但 infra 层需要编译期解析 domain 层的 `@Mapper` 注解（注入 domain 层声明的 Converter 接口时需解析 `ReportingPolicy` 等枚举值），
+      因此 infra 模块允许以 `provided` scope **被动声明** `org.mapstruct` 依赖。此为例外豁免，不构成违规。
+
       **分层放置规则**：
       - {module}-domain/entity/ — 数据库实体类（带 @TableName / @TableField 注解）
       - {module}-domain/converter/ 或 {module}-domain/model/converter/ — MapStruct 转换器接口
@@ -409,9 +414,10 @@ rules:
     fix: |
       1. 将 Entity 类从 {module}-infra/entity/ 迁移至 {module}-domain/entity/
       2. 将 Converter 接口从 {module}-infra/converter/ 迁移至 {module}-domain/converter/ 或 domain/model/converter/
-      3. 将 pom.xml 中 org.mapstruct 依赖从 infra 模块移至 domain 模块
-      4. 更新所有 import 引用（infra/server 层通过依赖 domain 模块引用 Entity 和 Converter）
-      5. infra 模块 pom.xml 确保已依赖 {module}-domain
+      3. 将 pom.xml 中 org.mapstruct 依赖从 infra 模块移至 domain 模块（infra 层**不允许 compile scope**）
+      4. 若 infra 层因 domain 层 MapStruct 为 `provided` 导致编译期无法解析 `@Mapper` 注解：infra 可用 `provided` scope **被动声明** `org.mapstruct`（此为豁免情形，不构成违规）
+      5. 更新所有 import 引用（infra/server 层通过依赖 domain 模块引用 Entity 和 Converter）
+      6. infra 模块 pom.xml 确保已依赖 {module}-domain
     example_bad: |
       // ❌ Entity 错误地放在 infra 层
       // 文件：ydsz-userinfo-infra/src/main/java/com/njydsz/userinfo/infra/entity/UserAccount.java

@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import io.netty.channel.ChannelOption;
+import com.njydsz.common.netty.util.NettyChannelOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -196,7 +196,7 @@ public class CompatibleLlmClient implements LlmClient {
    */
   private HttpClient createNettyHttpClient(ConnectionProvider provider) {
     return HttpClient.create(provider)
-        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS)
+        .option(NettyChannelOptions.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS)
         .responseTimeout(Duration.ofSeconds(this.timeoutSeconds));
   }
 

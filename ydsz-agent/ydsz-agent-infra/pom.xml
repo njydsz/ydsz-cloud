@@ -31,10 +31,15 @@
     </dependency>
 
     <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
-    <dependency>
-        <groupId>com.njydsz</groupId>
-        <artifactId>ydsz-common-thread</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
+        <!-- P0-2: CompatibleLlmClient 使用 NettyChannelOptions 封装类配置 Reactor Netty 连接超时 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-netty</artifactId>
+        </dependency>
 
     <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
     <dependency>
