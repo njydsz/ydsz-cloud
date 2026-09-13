@@ -26,7 +26,7 @@ public class ListObjectsResult {
   private String nextCursor;
 
   /** 是否还有更多对象 */
-  private boolean hasMore;
+  private boolean isHasMore;
 
   /** 本次返回的对象数量 */
   private int objectCount;

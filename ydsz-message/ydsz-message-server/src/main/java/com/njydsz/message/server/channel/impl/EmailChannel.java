@@ -99,7 +99,7 @@ public class EmailChannel implements MessageChannel {
           .to(request.getReceiver())
           .subject(subject)
           .content(content)
-          .html(isHtml);
+          .isHtml(isHtml);
 
       // P2-14: 解析附件/内嵌图片
       if (request.getChannelMeta() != null) {

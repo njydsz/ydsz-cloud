@@ -1372,12 +1372,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
-    public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+    public void setIsEnabled(boolean isEnabled) {
+      this.isEnabled = isEnabled;
     }
 
     public long getScanIntervalMs() {
