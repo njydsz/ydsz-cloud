@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     rule_name                   VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category                    VARCHAR(64)     DEFAULT NULL COMMENT '规则分类编码（一级分类标识）',
     category_path               VARCHAR(255)    DEFAULT NULL COMMENT '分类路径（/ 分隔的多级分类，如 finance/credit/loan）',
-    owner                       VARCHAR(64)     DEFAULT NULL COMMENT '责任人（规则负责人工号/用户名）',
+    is_owner                       VARCHAR(64)     DEFAULT NULL COMMENT '责任人（规则负责人工号/用户名）',
     description                 VARCHAR(512)    DEFAULT NULL COMMENT '规则描述',
     condition_expression        TEXT            COMMENT '条件表达式（LiteExpr 语法）',
     severity_expression         TEXT            COMMENT '严重度表达式，可选',
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     is_enabled                   TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（1=启用，0=停用）',
     scope                       VARCHAR(128)    DEFAULT NULL COMMENT '适用范围',
     mutex_group                 VARCHAR(128)    DEFAULT NULL COMMENT '互斥组名称（同组内首个命中后跳过其余规则；NULL 表示无互斥组）',
-    drilldown_available         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否支持下钻查看详情（1=支持，0=不支持）',
+    is_drilldown_available         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否支持下钻查看详情（1=支持，0=不支持）',
     version                     INT             NOT NULL DEFAULT 1 COMMENT '乐观锁版本号（并发更新规则时防止覆盖）',
     status                      VARCHAR(32)     DEFAULT NULL COMMENT '生命周期状态（DRAFT/PUBLISHED/DISABLED）',
     effective_from              DATETIME        DEFAULT NULL COMMENT '生效时间（NULL 表示立即生效）',
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     canary_conditions           JSON            DEFAULT NULL COMMENT '灰度条件表达式列表（JSON 数组）',
     canary_condition_expression TEXT            COMMENT '灰度候选版本条件表达式',
     canary_severity_expression  TEXT            COMMENT '灰度候选版本严重度表达式',
-    deleted                     TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted                     TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision                    INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     CONSTRAINT uk_rule_code UNIQUE (rule_code, tenant_id),
     INDEX idx_category (category),
     INDEX idx_status (status),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='LiteRule 规则定义主表';
 
 -- ============================================================================
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     is_required     TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否必填（1=必填，0=可选）',
     is_enabled      TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（1=启用，0=停用）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_var_name UNIQUE (var_name, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则变量定义表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_template (
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     industry              VARCHAR(64)     DEFAULT NULL COMMENT '所属行业',
     tags                  VARCHAR(512)    DEFAULT NULL COMMENT '标签，逗号分隔',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_template_code UNIQUE (template_code, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='LiteRule 规则模板表';
 
 -- ============================================================================
@@ -119,21 +119,21 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     description      VARCHAR(512)    DEFAULT NULL COMMENT '规则描述',
     script           LONGTEXT        COMMENT 'Groovy 脚本源码（运行在沙箱中）',
     default_severity VARCHAR(32)     DEFAULT NULL COMMENT '默认严重级别（INFO/WARN/ERROR/CRITICAL）',
-    sandbox_enabled  TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用沙箱（1=启用安全限制，0=关闭）',
+    is_sandbox_is_enabled  TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用沙箱（1=启用安全限制，0=关闭）',
     priority         INT             DEFAULT NULL COMMENT '优先级',
     is_enabled       TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（1=启用，0=停用）',
     scope            VARCHAR(128)    DEFAULT NULL COMMENT '适用范围',
     version          INT             NOT NULL DEFAULT 1 COMMENT '版本号',
     provider_trace_id VARCHAR(64)    DEFAULT NULL COMMENT '供应商侧追踪 ID',
     status           VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision         INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by       VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     updated_by       VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_rule_code (rule_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则脚本表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     priority          INT             DEFAULT NULL COMMENT '优先级',
     version           INT             NOT NULL DEFAULT 1 COMMENT '版本',
     status            VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     updated_by        VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_table_code UNIQUE (table_code, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='决策表实体表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
@@ -177,14 +177,14 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     version           INT             NOT NULL DEFAULT 1 COMMENT '版本号',
     provider_trace_id VARCHAR(64)     DEFAULT NULL COMMENT '供应商侧追踪 ID',
     status            VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by        VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     updated_by        VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_rule_code (rule_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则决策树表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     version           INT             NOT NULL DEFAULT 1 COMMENT '版本号',
     provider_trace_id VARCHAR(64)     DEFAULT NULL COMMENT '供应商侧追踪 ID',
     status            VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     updated_by        VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_rule_code (rule_code),
     INDEX idx_category (category),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则评分卡表';
 
 -- ============================================================================
@@ -229,14 +229,14 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
     graph_version INT             NOT NULL DEFAULT 1 COMMENT '画布版本号（独立递增）',
     status        VARCHAR(32)     DEFAULT NULL COMMENT '画布状态（DRAFT/PUBLISHED/ARCHIVED）',
     content_json  JSON            DEFAULT NULL COMMENT '画布内容 JSON（包含 nodes/edges/viewport/metadata）',
-    deleted       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision      INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by    VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     updated_by    VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_code UNIQUE (rule_code, tenant_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则链画布表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
@@ -245,10 +245,10 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
     rule_code            VARCHAR(64)     NOT NULL COMMENT '主规则编码（依赖方）',
     depends_on_rule_code VARCHAR(64)     NOT NULL COMMENT '被依赖的规则编码',
     dependency_type      VARCHAR(32)     NOT NULL COMMENT '依赖类型（EXECUTE/READ_RESULT/SOFT）',
-    cascade_on_disable   TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '被依赖规则被禁用时是否级联禁用本规则（1=级联，0=不级联）',
+    is_cascade_on_disable   TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '被依赖规则被禁用时是否级联禁用本规则（1=级联，0=不级联）',
     description          VARCHAR(512)    DEFAULT NULL COMMENT '依赖说明',
     status               VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted              TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted              TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision             INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -256,7 +256,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
     updated_by           VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_dep UNIQUE (rule_code, depends_on_rule_code),
     INDEX idx_depends_on_rule_code (depends_on_rule_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则依赖关系表';
 
 -- ============================================================================
@@ -279,9 +279,9 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     download_count   BIGINT          NOT NULL DEFAULT 0 COMMENT '下载次数（安装时 +1）',
     rating           DECIMAL(20,6)   DEFAULT NULL COMMENT '评分（0-5，保留 1 位小数）',
     is_enabled       TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（1=可用，0=已下架）',
-    official         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否官方认证规则集（1=官方发布，0=社区贡献）',
+    is_official         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否官方认证规则集（1=官方发布，0=社区贡献）',
     status           VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision         INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -290,7 +290,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     CONSTRAINT uk_pack_code UNIQUE (pack_code, pack_version),
     INDEX idx_pack_code (pack_code),
     INDEX idx_industry (industry),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则集（知识包）表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
@@ -300,7 +300,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
     installed_at  DATETIME        DEFAULT NULL COMMENT '安装时间',
     status        VARCHAR(32)     DEFAULT NULL COMMENT '安装状态（INSTALLING/INSTALLED/FAILED/UNINSTALLING/UNINSTALLED）',
     error_message TEXT            COMMENT '失败原因（status=FAILED 时记录异常信息）',
-    deleted       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision      INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -308,7 +308,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
     updated_by    VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_status (status),
     INDEX idx_installed_at (installed_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则包安装记录表';
 
 -- ============================================================================
@@ -319,8 +319,8 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     id                   VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
     tenant_id            VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code            VARCHAR(64)     NOT NULL COMMENT '关联规则编码（一对一）',
-    auto_rollback_enabled TINYINT(1)     NOT NULL DEFAULT 0 COMMENT '是否启用自动回滚（1=启用，0=停用）',
-    rollback_action      VARCHAR(32)     DEFAULT NULL COMMENT '回滚动作（AUTO 自动回滚 / NOTIFY 仅通知 Owner）',
+    is_auto_rollback_is_enabled TINYINT(1)     NOT NULL DEFAULT 0 COMMENT '是否启用自动回滚（1=启用，0=停用）',
+    rollback_action      VARCHAR(32)     DEFAULT NULL COMMENT 'is_owner）',
     error_rate_threshold DECIMAL(20,6)   DEFAULT NULL COMMENT 'canary 桶错误率阈值（0~1.0）',
     min_sample_size      INT             DEFAULT NULL COMMENT '最小样本数',
     check_window_minutes INT             DEFAULT NULL COMMENT '监控窗口（分钟）',
@@ -329,14 +329,14 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     last_evaluated_at    DATETIME        DEFAULT NULL COMMENT '最近一次评估时间',
     last_rollback_at     DATETIME        DEFAULT NULL COMMENT '最近一次回滚时间',
     status               VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted              TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted              TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision             INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by           VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     updated_by           VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_code UNIQUE (rule_code, tenant_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AB Test 自动回滚策略表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
@@ -347,7 +347,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
     bucket_count BIGINT          NOT NULL DEFAULT 0 COMMENT '桶命中次数',
     stat_date    DATE            NOT NULL COMMENT '统计日期',
     status       VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted      TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted      TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision     INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -355,7 +355,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
     updated_by   VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_bucket_date UNIQUE (rule_code, bucket_type, stat_date),
     INDEX idx_stat_date (stat_date),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则灰度分桶统计表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
@@ -365,11 +365,11 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     trigger_reason VARCHAR(32)     NOT NULL COMMENT '触发原因（ERROR_RATE/MANUAL/OWNER_REQUEST）',
     error_rate     DECIMAL(20,6)   DEFAULT NULL COMMENT '回滚时的错误率（triggerReason=ERROR_RATE 时记录）',
     sample_size    BIGINT          DEFAULT NULL COMMENT '回滚时的样本量（参与 AB Test 的事件总数）',
-    from_canary    TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否已从 canary 切换回主版本（1=已回滚，0=仅通知未回滚）',
-    operator       VARCHAR(64)     DEFAULT NULL COMMENT '操作人 ID（自动回滚时为 SYSTEM）',
+    is_from_canary    TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否已从 canary 切换回主版本（1=已回滚，0=仅通知未回滚）',
+    operator       VARCHAR(64)     DEFAULT NULL COMMENT 'is_system）',
     notify_status  VARCHAR(32)     DEFAULT NULL COMMENT '通知状态（PENDING/SENT/FAILED，回滚后通知规则责任人）',
     status         VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted        TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted        TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision       INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '回滚时间',
     updated_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -377,7 +377,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     updated_by     VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_rule_code (rule_code),
     INDEX idx_created_at (created_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AB Test 回滚历史表';
 
 -- ============================================================================
@@ -400,7 +400,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     rule_code        VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name        VARCHAR(128)    DEFAULT NULL COMMENT '规则名称',
     scenario         VARCHAR(64)     DEFAULT NULL COMMENT '业务场景',
-    triggered        TINYINT(1)      DEFAULT NULL COMMENT '是否触发（1=触发，0=未触发）',
+    is_triggered        TINYINT(1)      DEFAULT NULL COMMENT '是否触发（1=触发，0=未触发）',
     severity         VARCHAR(32)     DEFAULT NULL COMMENT '触发严重度',
     condition_result TEXT            COMMENT '条件表达式求值结果描述',
     elapsed_ms       BIGINT          DEFAULT NULL COMMENT '执行耗时（毫秒）',

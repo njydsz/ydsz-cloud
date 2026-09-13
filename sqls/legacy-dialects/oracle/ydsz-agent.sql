@@ -33,7 +33,7 @@ CREATE TABLE ydsz_agt_prompt_template (
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     current_version          NUMBER(10)               NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -53,7 +53,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_template.description IS '模板描述';
 COMMENT ON COLUMN ydsz_agt_prompt_template.category IS '分类（用于分组检索）';
 COMMENT ON COLUMN ydsz_agt_prompt_template.current_version IS '当前版本号，自 1 起每次更新递增';
 COMMENT ON COLUMN ydsz_agt_prompt_template.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agt_prompt_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_prompt_template.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_agt_prompt_template.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_agt_prompt_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_agt_prompt_template.updated_at IS '最后更新时间';
@@ -61,7 +61,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_prompt_template.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_agt_prompt_template_category ON ydsz_agt_prompt_template (category);
-CREATE INDEX idx_ydsz_agt_prompt_template_tenant_deleted ON ydsz_agt_prompt_template (tenant_id, deleted);
+CREATE INDEX idx_ydsz_agt_prompt_template_tenant_is_deleted ON ydsz_agt_prompt_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_agt_prompt_version (
     id                       VARCHAR2(32 CHAR)       ,
@@ -71,7 +71,7 @@ CREATE TABLE ydsz_agt_prompt_version (
     content                  CLOB                     NOT NULL,
     change_note              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -89,7 +89,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_version.version IS '版本号（与 template �
 COMMENT ON COLUMN ydsz_agt_prompt_version.content IS '该版本的模板内容快照';
 COMMENT ON COLUMN ydsz_agt_prompt_version.change_note IS '版本备注（描述本次变更内容）';
 COMMENT ON COLUMN ydsz_agt_prompt_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agt_prompt_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_prompt_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_agt_prompt_version.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_agt_prompt_version.created_at IS '版本创建时间';
 COMMENT ON COLUMN ydsz_agt_prompt_version.created_by IS '操作人';
@@ -111,7 +111,7 @@ CREATE TABLE ydsz_agt_definition (
     temperature              BINARY_DOUBLE            DEFAULT NULL,
     max_tokens               NUMBER(10)               DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -134,7 +134,7 @@ COMMENT ON COLUMN ydsz_agt_definition.tool_names IS '工具名称列表 JSON（[
 COMMENT ON COLUMN ydsz_agt_definition.temperature IS '温度参数';
 COMMENT ON COLUMN ydsz_agt_definition.max_tokens IS '最大生成 Token 数';
 COMMENT ON COLUMN ydsz_agt_definition.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agt_definition.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_definition.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_agt_definition.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_agt_definition.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_agt_definition.updated_at IS '最后更新时间';
@@ -142,7 +142,7 @@ COMMENT ON COLUMN ydsz_agt_definition.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_definition.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_agt_definition_agent_type ON ydsz_agt_definition (agent_type);
-CREATE INDEX idx_ydsz_agt_definition_tenant_deleted ON ydsz_agt_definition (tenant_id, deleted);
+CREATE INDEX idx_ydsz_agt_definition_tenant_is_deleted ON ydsz_agt_definition (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_agt_trace (
     trace_id                 VARCHAR2(64 CHAR)       ,
@@ -230,7 +230,7 @@ CREATE TABLE ydsz_agt_token_usage (
     completion_tokens        NUMBER(19)               NOT NULL DEFAULT 0,
     total_tokens             NUMBER(19)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -248,7 +248,7 @@ COMMENT ON COLUMN ydsz_agt_token_usage.prompt_tokens IS '提示词 Token 数';
 COMMENT ON COLUMN ydsz_agt_token_usage.completion_tokens IS '补全 Token 数';
 COMMENT ON COLUMN ydsz_agt_token_usage.total_tokens IS '总 Token 数（prompt + completion）';
 COMMENT ON COLUMN ydsz_agt_token_usage.status IS '状态标识';
-COMMENT ON COLUMN ydsz_agt_token_usage.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_token_usage.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_agt_token_usage.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_agt_token_usage.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_agt_token_usage.updated_at IS '最后更新时间';
@@ -256,19 +256,19 @@ COMMENT ON COLUMN ydsz_agt_token_usage.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_token_usage.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_agt_token_usage_conversation_created ON ydsz_agt_token_usage (conversation_id, created_at);
-CREATE INDEX idx_ydsz_agt_token_usage_tenant_deleted ON ydsz_agt_token_usage (tenant_id, deleted);
+CREATE INDEX idx_ydsz_agt_token_usage_tenant_is_deleted ON ydsz_agt_token_usage (tenant_id, is_deleted);
 
-INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
-VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, 0);
-
-INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
-VALUES ('100000000000000002', '0', 'DEFAULT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '初始版本');
-
-INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
-VALUES ('100000000000000003', '0', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', 1, 0);
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
+VALUES ('100000000000000001', '0', 'DEFAULT_is_system', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, 0);
 
 INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
-VALUES ('100000000000000004', '0', 'REACT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', '初始版本');
+VALUES ('100000000000000002', '0', 'DEFAULT_is_system', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '初始版本');
+
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
+VALUES ('100000000000000003', '0', 'REACT_is_system', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', 1, 0);
+
+INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
+VALUES ('100000000000000004', '0', 'REACT_is_system', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', '初始版本');
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (Oracle)

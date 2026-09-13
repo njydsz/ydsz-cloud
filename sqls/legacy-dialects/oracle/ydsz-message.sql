@@ -58,7 +58,7 @@ CREATE TABLE ydsz_msg_template (
     audit_remark             VARCHAR2(512 CHAR)       DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     variable_defs            CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_template_variable_defs CHECK (variable_defs IS JSON),
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -88,7 +88,7 @@ COMMENT ON COLUMN ydsz_msg_template.audit_at IS '审核时间';
 COMMENT ON COLUMN ydsz_msg_template.audit_remark IS '审核意见';
 COMMENT ON COLUMN ydsz_msg_template.description IS '描述说明';
 COMMENT ON COLUMN ydsz_msg_template.variable_defs IS '模板变量定义（JSON）';
-COMMENT ON COLUMN ydsz_msg_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_template.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_template.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_template.created_by IS '创建人';
@@ -96,7 +96,7 @@ COMMENT ON COLUMN ydsz_msg_template.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_msg_template_channel ON ydsz_msg_template (channel);
 CREATE INDEX idx_ydsz_msg_template_scene_code ON ydsz_msg_template (scene_code);
-CREATE INDEX idx_ydsz_msg_template_tenant_deleted ON ydsz_msg_template (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_template_tenant_is_deleted ON ydsz_msg_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_template_version (
     id                       VARCHAR2(32 CHAR)       ,
@@ -109,7 +109,7 @@ CREATE TABLE ydsz_msg_template_version (
     auditor                  VARCHAR2(64 CHAR)        DEFAULT NULL,
     audit_remark             VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -130,14 +130,14 @@ COMMENT ON COLUMN ydsz_msg_template_version.audit_status IS '审核状态: APPRO
 COMMENT ON COLUMN ydsz_msg_template_version.auditor IS '审核人';
 COMMENT ON COLUMN ydsz_msg_template_version.audit_remark IS '审核意见';
 COMMENT ON COLUMN ydsz_msg_template_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_msg_template_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_template_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_template_version.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_template_version.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_template_version.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_template_version.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_template_version.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_msg_template_version_tenant_deleted ON ydsz_msg_template_version (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_template_version_tenant_is_deleted ON ydsz_msg_template_version (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_notification (
     id                       VARCHAR2(32 CHAR)       ,
@@ -164,7 +164,7 @@ CREATE TABLE ydsz_msg_notification (
     recall_at                TIMESTAMP                DEFAULT NULL,
     expired_at               TIMESTAMP                DEFAULT NULL,
     mention_user_ids         CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_notification_mention_user_ids CHECK (mention_user_ids IS JSON),
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -197,7 +197,7 @@ COMMENT ON COLUMN ydsz_msg_notification.recall_status IS '撤回状态: NONE 未
 COMMENT ON COLUMN ydsz_msg_notification.recall_at IS '撤回时间';
 COMMENT ON COLUMN ydsz_msg_notification.expired_at IS '过期时间';
 COMMENT ON COLUMN ydsz_msg_notification.mention_user_ids IS '提及用户 ID 列表（JSON 数组）';
-COMMENT ON COLUMN ydsz_msg_notification.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_notification.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_notification.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_notification.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_notification.created_by IS '创建人';
@@ -207,7 +207,7 @@ CREATE INDEX idx_ydsz_msg_notification_receiver_read ON ydsz_msg_notification (r
 CREATE INDEX idx_ydsz_msg_notification_biz ON ydsz_msg_notification (biz_type, biz_id);
 CREATE INDEX idx_ydsz_msg_notification_batch_id ON ydsz_msg_notification (batch_id);
 CREATE INDEX idx_ydsz_msg_notification_message_group ON ydsz_msg_notification (message_group);
-CREATE INDEX idx_ydsz_msg_notification_tenant_deleted ON ydsz_msg_notification (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_notification_tenant_is_deleted ON ydsz_msg_notification (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_user_channel (
     id                       VARCHAR2(32 CHAR)       ,
@@ -219,7 +219,7 @@ CREATE TABLE ydsz_msg_user_channel (
     is_primary               NUMBER(1)                NOT NULL DEFAULT 0,
     extra                    CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_user_channel_extra CHECK (extra IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -239,7 +239,7 @@ COMMENT ON COLUMN ydsz_msg_user_channel.verified IS '是否已验证: 0 未验�
 COMMENT ON COLUMN ydsz_msg_user_channel.is_primary IS '是否主绑定: 0 否 / 1 是（同通道多绑定时优先使用主绑定）';
 COMMENT ON COLUMN ydsz_msg_user_channel.extra IS '扩展字段（JSON，如 deviceToken / openId 等）';
 COMMENT ON COLUMN ydsz_msg_user_channel.status IS '状态标识';
-COMMENT ON COLUMN ydsz_msg_user_channel.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_user_channel.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_user_channel.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_user_channel.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_user_channel.updated_at IS '最后更新时间';
@@ -247,7 +247,7 @@ COMMENT ON COLUMN ydsz_msg_user_channel.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_user_channel.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_msg_user_channel_channel_user_id ON ydsz_msg_user_channel (channel_user_id);
-CREATE INDEX idx_ydsz_msg_user_channel_tenant_deleted ON ydsz_msg_user_channel (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_user_channel_tenant_is_deleted ON ydsz_msg_user_channel (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_subscription (
     id                       VARCHAR2(32 CHAR)       ,
@@ -259,7 +259,7 @@ CREATE TABLE ydsz_msg_subscription (
     role_scope               VARCHAR2(128 CHAR)       DEFAULT NULL,
     extra                    CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_subscription_extra CHECK (extra IS JSON),
     unsubscribed_at          TIMESTAMP                DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -279,7 +279,7 @@ COMMENT ON COLUMN ydsz_msg_subscription.status IS '订阅状态: SUBSCRIBED 已�
 COMMENT ON COLUMN ydsz_msg_subscription.role_scope IS '角色范围（如 PM|MEMBER，限定角色内可见性）';
 COMMENT ON COLUMN ydsz_msg_subscription.extra IS '扩展字段（JSON）';
 COMMENT ON COLUMN ydsz_msg_subscription.unsubscribed_at IS '退订时间（仅 status=UNSUBSCRIBED 时有意义）';
-COMMENT ON COLUMN ydsz_msg_subscription.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_subscription.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_subscription.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_subscription.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_subscription.updated_at IS '最后更新时间';
@@ -287,7 +287,7 @@ COMMENT ON COLUMN ydsz_msg_subscription.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_subscription.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_msg_subscription_topic_code ON ydsz_msg_subscription (topic_code);
-CREATE INDEX idx_ydsz_msg_subscription_tenant_deleted ON ydsz_msg_subscription (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_subscription_tenant_is_deleted ON ydsz_msg_subscription (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_preference (
     id                       VARCHAR2(32 CHAR)       ,
@@ -295,18 +295,18 @@ CREATE TABLE ydsz_msg_preference (
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
     biz_type                 VARCHAR2(64 CHAR)        NOT NULL DEFAULT '__DEFAULT__',
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
-    dnd_enabled              NUMBER(1)                NOT NULL DEFAULT 0,
+    is_enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    dnd_is_enabled              NUMBER(1)                NOT NULL DEFAULT 0,
     dnd_start                VARCHAR2(8 CHAR)         DEFAULT NULL,
     dnd_end                  VARCHAR2(8 CHAR)         DEFAULT NULL,
     daily_limit              NUMBER(10)               DEFAULT NULL,
     hourly_limit             NUMBER(10)               DEFAULT NULL,
-    digest_enabled           NUMBER(1)                NOT NULL DEFAULT 0,
+    digest_is_enabled           NUMBER(1)                NOT NULL DEFAULT 0,
     digest_frequency         VARCHAR2(32 CHAR)        DEFAULT NULL,
     locale                   VARCHAR2(16 CHAR)        DEFAULT NULL,
     extra                    CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_preference_extra CHECK (extra IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -322,25 +322,25 @@ COMMENT ON COLUMN ydsz_msg_preference.tenant_id IS '租户 ID（多租户隔离�
 COMMENT ON COLUMN ydsz_msg_preference.user_id IS '用户 ID（关联 ydsz_employee.id）';
 COMMENT ON COLUMN ydsz_msg_preference.channel IS '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
 COMMENT ON COLUMN ydsz_msg_preference.biz_type IS '业务类型（__DEFAULT__ 表示该通道全局默认偏好）';
-COMMENT ON COLUMN ydsz_msg_preference.enabled IS '是否启用该通道: 0 关闭 / 1 开启（关闭后不发送）';
-COMMENT ON COLUMN ydsz_msg_preference.dnd_enabled IS '免打扰开关: 0 关闭 / 1 开启';
+COMMENT ON COLUMN ydsz_msg_preference.is_enabled IS '是否启用该通道: 0 关闭 / 1 开启（关闭后不发送）';
+COMMENT ON COLUMN ydsz_msg_preference.dnd_is_enabled IS '免打扰开关: 0 关闭 / 1 开启';
 COMMENT ON COLUMN ydsz_msg_preference.dnd_start IS '免打扰开始时间 HH:mm（如 22:00）';
 COMMENT ON COLUMN ydsz_msg_preference.dnd_end IS '免打扰结束时间 HH:mm（如 08:00）';
 COMMENT ON COLUMN ydsz_msg_preference.daily_limit IS '每日发送上限（超过则暂存或丢弃）';
 COMMENT ON COLUMN ydsz_msg_preference.hourly_limit IS '每小时发送上限';
-COMMENT ON COLUMN ydsz_msg_preference.digest_enabled IS '聚合开关: 0 即时发送 / 1 聚合摘要';
+COMMENT ON COLUMN ydsz_msg_preference.digest_is_enabled IS '聚合开关: 0 即时发送 / 1 聚合摘要';
 COMMENT ON COLUMN ydsz_msg_preference.digest_frequency IS '聚合频率: HOURLY / DAILY / WEEKLY';
 COMMENT ON COLUMN ydsz_msg_preference.locale IS '偏好语言（如 zh-CN / en-US，影响模板 i18n 选择）';
 COMMENT ON COLUMN ydsz_msg_preference.extra IS '扩展字段（JSON）';
 COMMENT ON COLUMN ydsz_msg_preference.status IS '状态标识';
-COMMENT ON COLUMN ydsz_msg_preference.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_preference.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_preference.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_preference.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_preference.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_preference.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_preference.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_msg_preference_tenant_deleted ON ydsz_msg_preference (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_preference_tenant_is_deleted ON ydsz_msg_preference (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_route_rule (
     id                       VARCHAR2(32 CHAR)       ,
@@ -356,7 +356,7 @@ CREATE TABLE ydsz_msg_route_rule (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     sort               NUMBER(10)               DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -380,7 +380,7 @@ COMMENT ON COLUMN ydsz_msg_route_rule.fallback_channel IS '目标通道发送失
 COMMENT ON COLUMN ydsz_msg_route_rule.description IS '描述说明';
 COMMENT ON COLUMN ydsz_msg_route_rule.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_msg_route_rule.status IS '状态标识';
-COMMENT ON COLUMN ydsz_msg_route_rule.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_route_rule.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_route_rule.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_route_rule.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_route_rule.updated_at IS '最后更新时间';
@@ -388,7 +388,7 @@ COMMENT ON COLUMN ydsz_msg_route_rule.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_route_rule.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_msg_route_rule_biz_channel ON ydsz_msg_route_rule (biz_type, channel);
-CREATE INDEX idx_ydsz_msg_route_rule_tenant_deleted ON ydsz_msg_route_rule (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_route_rule_tenant_is_deleted ON ydsz_msg_route_rule (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_variable_source (
     id                       VARCHAR2(32 CHAR)       ,
@@ -400,7 +400,7 @@ CREATE TABLE ydsz_msg_variable_source (
     cache_ttl                NUMBER(10)               DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -420,14 +420,14 @@ COMMENT ON COLUMN ydsz_msg_variable_source.source_expr IS '数据源表达式';
 COMMENT ON COLUMN ydsz_msg_variable_source.cache_ttl IS '缓存有效期（秒），0=不缓存';
 COMMENT ON COLUMN ydsz_msg_variable_source.description IS '描述说明';
 COMMENT ON COLUMN ydsz_msg_variable_source.status IS '状态标识';
-COMMENT ON COLUMN ydsz_msg_variable_source.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_variable_source.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_variable_source.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_variable_source.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_variable_source.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_variable_source.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_variable_source.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_msg_variable_source_tenant_deleted ON ydsz_msg_variable_source (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_variable_source_tenant_is_deleted ON ydsz_msg_variable_source (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_canary (
     id                       VARCHAR2(32 CHAR)       ,
@@ -442,7 +442,7 @@ CREATE TABLE ydsz_msg_canary (
     experiment_group         VARCHAR2(32 CHAR)        DEFAULT NULL,
     metrics_goal             VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ACTIVE',
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -465,7 +465,7 @@ COMMENT ON COLUMN ydsz_msg_canary.percentage IS '当前放量百分比（0~100�
 COMMENT ON COLUMN ydsz_msg_canary.experiment_group IS '实验组: CONTROL 对照组 / VARIANT 实验组';
 COMMENT ON COLUMN ydsz_msg_canary.metrics_goal IS '目标指标: DELIVERY_RATE 送达率 / READ_RATE 阅读率 / CLICK_RATE 点击率';
 COMMENT ON COLUMN ydsz_msg_canary.status IS '实验状态: ACTIVE 运行中 / PAUSED 已暂停 / COMPLETED 已结束';
-COMMENT ON COLUMN ydsz_msg_canary.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_canary.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_canary.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_canary.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_canary.updated_at IS '最后更新时间';
@@ -473,7 +473,7 @@ COMMENT ON COLUMN ydsz_msg_canary.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_canary.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_msg_canary_template_code ON ydsz_msg_canary (template_code);
-CREATE INDEX idx_ydsz_msg_canary_tenant_deleted ON ydsz_msg_canary (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_canary_tenant_is_deleted ON ydsz_msg_canary (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_tenant_config (
     id                       VARCHAR2(32 CHAR)       ,
@@ -518,7 +518,7 @@ CREATE TABLE ydsz_msg_batch (
     completed_at             TIMESTAMP                DEFAULT NULL,
     sender_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
     payload                  CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_batch_payload CHECK (payload IS JSON),
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -547,7 +547,7 @@ COMMENT ON COLUMN ydsz_msg_batch.started_at IS '开始处理时间';
 COMMENT ON COLUMN ydsz_msg_batch.completed_at IS '完成时间';
 COMMENT ON COLUMN ydsz_msg_batch.sender_id IS '触发发送的用户 ID';
 COMMENT ON COLUMN ydsz_msg_batch.payload IS '消息请求列表 JSON（断点续传恢复用）';
-COMMENT ON COLUMN ydsz_msg_batch.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_batch.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_batch.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_batch.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_batch.updated_at IS '最后更新时间';
@@ -556,7 +556,7 @@ COMMENT ON COLUMN ydsz_msg_batch.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_msg_batch_status ON ydsz_msg_batch (status);
 CREATE INDEX idx_ydsz_msg_batch_sender_id ON ydsz_msg_batch (sender_id);
-CREATE INDEX idx_ydsz_msg_batch_tenant_deleted ON ydsz_msg_batch (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_batch_tenant_is_deleted ON ydsz_msg_batch (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_aggregate (
     id                       VARCHAR2(32 CHAR)       ,
@@ -572,7 +572,7 @@ CREATE TABLE ydsz_msg_aggregate (
     sent_at                  TIMESTAMP                DEFAULT NULL,
     digest_content           CLOB                    ,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -595,7 +595,7 @@ COMMENT ON COLUMN ydsz_msg_aggregate.scheduled_send_at IS '计划发送时间（
 COMMENT ON COLUMN ydsz_msg_aggregate.sent_at IS '实际发送时间';
 COMMENT ON COLUMN ydsz_msg_aggregate.digest_content IS '聚合后摘要内容（渲染后）';
 COMMENT ON COLUMN ydsz_msg_aggregate.status IS '状态标识';
-COMMENT ON COLUMN ydsz_msg_aggregate.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_aggregate.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_aggregate.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_aggregate.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_aggregate.updated_at IS '最后更新时间';
@@ -605,7 +605,7 @@ COMMENT ON COLUMN ydsz_msg_aggregate.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_msg_aggregate_group_receiver ON ydsz_msg_aggregate (aggregate_group, receiver);
 CREATE INDEX idx_ydsz_msg_aggregate_batch_status ON ydsz_msg_aggregate (batch_status);
 CREATE INDEX idx_ydsz_msg_aggregate_scheduled_send_at ON ydsz_msg_aggregate (scheduled_send_at);
-CREATE INDEX idx_ydsz_msg_aggregate_tenant_deleted ON ydsz_msg_aggregate (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_aggregate_tenant_is_deleted ON ydsz_msg_aggregate (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_offline (
     id                       VARCHAR2(32 CHAR)       ,
@@ -617,7 +617,7 @@ CREATE TABLE ydsz_msg_offline (
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PENDING',
     pushed_at                TIMESTAMP                DEFAULT NULL,
     expired_at               TIMESTAMP                DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -636,7 +636,7 @@ COMMENT ON COLUMN ydsz_msg_offline.msg_timestamp IS '消息时间戳（毫秒）
 COMMENT ON COLUMN ydsz_msg_offline.status IS '推送状态: PENDING 待推送 / PUSHED 已推送 / EXPIRED 已过期';
 COMMENT ON COLUMN ydsz_msg_offline.pushed_at IS '推送时间';
 COMMENT ON COLUMN ydsz_msg_offline.expired_at IS '过期时间（默认 createdAt + 30 天）';
-COMMENT ON COLUMN ydsz_msg_offline.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_offline.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_offline.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_offline.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_offline.updated_at IS '最后更新时间';
@@ -645,7 +645,7 @@ COMMENT ON COLUMN ydsz_msg_offline.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_msg_offline_user_status ON ydsz_msg_offline (user_id, status);
 CREATE INDEX idx_ydsz_msg_offline_expired_at ON ydsz_msg_offline (expired_at);
-CREATE INDEX idx_ydsz_msg_offline_tenant_deleted ON ydsz_msg_offline (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_offline_tenant_is_deleted ON ydsz_msg_offline (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_log (
     id                       VARCHAR2(32 CHAR)       ,
@@ -682,7 +682,7 @@ CREATE TABLE ydsz_msg_log (
     reconsume_times          NUMBER(10)               DEFAULT NULL,
     parent_msg_id            VARCHAR2(64 CHAR)        DEFAULT NULL,
     scheduled_at             TIMESTAMP                DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -725,7 +725,7 @@ COMMENT ON COLUMN ydsz_msg_log.topic IS '订阅主题编码';
 COMMENT ON COLUMN ydsz_msg_log.reconsume_times IS 'MQ 重新消费次数';
 COMMENT ON COLUMN ydsz_msg_log.parent_msg_id IS '父消息 ID（级联消息溯源）';
 COMMENT ON COLUMN ydsz_msg_log.scheduled_at IS '定时发送时间';
-COMMENT ON COLUMN ydsz_msg_log.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_log.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_log.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_log.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_log.created_by IS '创建人';
@@ -741,7 +741,7 @@ CREATE INDEX idx_ydsz_msg_log_batch_id ON ydsz_msg_log (batch_id);
 CREATE INDEX idx_ydsz_msg_log_dedup_key ON ydsz_msg_log (dedup_key);
 CREATE INDEX idx_ydsz_msg_log_provider_trace_id ON ydsz_msg_log (provider_trace_id);
 CREATE INDEX idx_ydsz_msg_log_scheduled_at ON ydsz_msg_log (scheduled_at);
-CREATE INDEX idx_ydsz_msg_log_tenant_deleted ON ydsz_msg_log (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_log_tenant_is_deleted ON ydsz_msg_log (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_receipt (
     id                       VARCHAR2(32 CHAR)       ,
@@ -754,7 +754,7 @@ CREATE TABLE ydsz_msg_receipt (
     provider_msg             VARCHAR2(512 CHAR)       DEFAULT NULL,
     raw_response             CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_receipt_raw_response CHECK (raw_response IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -774,7 +774,7 @@ COMMENT ON COLUMN ydsz_msg_receipt.provider_code IS '供应商编码';
 COMMENT ON COLUMN ydsz_msg_receipt.provider_msg IS '供应商消息';
 COMMENT ON COLUMN ydsz_msg_receipt.raw_response IS '原始响应（JSON）';
 COMMENT ON COLUMN ydsz_msg_receipt.status IS '状态标识';
-COMMENT ON COLUMN ydsz_msg_receipt.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_receipt.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_receipt.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_receipt.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_receipt.updated_at IS '最后更新时间';
@@ -784,7 +784,7 @@ COMMENT ON COLUMN ydsz_msg_receipt.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_msg_receipt_log_id ON ydsz_msg_receipt (log_id);
 CREATE INDEX idx_ydsz_msg_receipt_receipt_time ON ydsz_msg_receipt (receipt_time);
 CREATE INDEX idx_ydsz_msg_receipt_provider_trace_id ON ydsz_msg_receipt (provider_trace_id);
-CREATE INDEX idx_ydsz_msg_receipt_tenant_deleted ON ydsz_msg_receipt (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_receipt_tenant_is_deleted ON ydsz_msg_receipt (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_trace (
     id                       VARCHAR2(32 CHAR)       ,
@@ -837,7 +837,7 @@ CREATE TABLE ydsz_msg_feedback (
     feedback_type            VARCHAR2(32 CHAR)        DEFAULT NULL,
     content                  VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -858,7 +858,7 @@ COMMENT ON COLUMN ydsz_msg_feedback.rating IS '评分: 1-5 分（1=非常不满�
 COMMENT ON COLUMN ydsz_msg_feedback.feedback_type IS '反馈类型: TOO_FREQUENT 太频繁 / IRRELEVANT 不相关 / TOO_LONG 内容太长 / SPAM 垃圾信息 / GOOD 有用 / OTHER 其他';
 COMMENT ON COLUMN ydsz_msg_feedback.content IS '反馈内容（用户自由文本输入）';
 COMMENT ON COLUMN ydsz_msg_feedback.status IS '状态标识';
-COMMENT ON COLUMN ydsz_msg_feedback.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_msg_feedback.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_feedback.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_msg_feedback.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_msg_feedback.updated_at IS '最后更新时间';
@@ -867,7 +867,7 @@ COMMENT ON COLUMN ydsz_msg_feedback.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_msg_feedback_msg_id ON ydsz_msg_feedback (msg_id);
 CREATE INDEX idx_ydsz_msg_feedback_user_id ON ydsz_msg_feedback (user_id);
-CREATE INDEX idx_ydsz_msg_feedback_tenant_deleted ON ydsz_msg_feedback (tenant_id, deleted);
+CREATE INDEX idx_ydsz_msg_feedback_tenant_is_deleted ON ydsz_msg_feedback (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_msg_outbox (
     id                       VARCHAR2(32 CHAR)       ,

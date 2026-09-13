@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_node (
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     parent_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '父节点ID（根目录为 "0"）',
     name            VARCHAR(255)    NOT NULL COMMENT '节点名称（文件名或目录名）',
-    node_type       VARCHAR(32)     NOT NULL COMMENT '节点类型：folder / file',
+    node_type       VARCHAR(32)     NOT NULL COMMENT 'is_folder / file',
     suffix          VARCHAR(64)     DEFAULT NULL COMMENT '文件扩展名（小写，不含点；文件夹为空）',
     size            BIGINT          NOT NULL DEFAULT 0 COMMENT '文件大小（字节；文件夹为 0）',
     storage_key     VARCHAR(1024)   DEFAULT NULL COMMENT '底层存储对象键（objectName）',
@@ -27,14 +27,14 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_node (
     current_version INT             NOT NULL DEFAULT 1 COMMENT '当前版本号（从 1 开始，每次更新 +1）',
     file_hash       VARCHAR(64)     DEFAULT NULL COMMENT '文件 SHA-256 哈希（用于秒传去重）',
     thumbnail_key   VARCHAR(1024)   DEFAULT NULL COMMENT '缩略图存储键',
-    preview_ready   TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否已生成预览',
-    starred         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否星标文件',
-    share_status    VARCHAR(32)     NOT NULL DEFAULT 'private' COMMENT '共享状态：private / shared / public',
+    is_preview_ready   TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否已生成预览',
+    is_starred         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否星标文件',
+    share_status    VARCHAR(32)     NOT NULL DEFAULT 'private' COMMENT 'is_public',
     deleted_time    DATETIME        DEFAULT NULL COMMENT '逻辑删除时间（回收站功能：删除时记录时间，30 天后永久删除）',
     original_path   VARCHAR(1024)   DEFAULT NULL COMMENT '原始路径（删除前的完整路径，用于恢复）',
     storage_class   VARCHAR(32)     NOT NULL DEFAULT 'STANDARD' COMMENT '存储类型：STANDARD / GLACIER / DEEP_ARCHIVE（冷数据归档）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -42,14 +42,14 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_node (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_parent_id (parent_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted),
-    INDEX idx_ydsz_wiki_file_node_parent_deleted_updated (parent_id, deleted, updated_at),
-    INDEX idx_ydsz_wiki_file_node_parent_deleted_type_updated (parent_id, deleted, node_type, updated_at),
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    INDEX idx_ydsz_wiki_file_node_parent_deleted_updated (parent_id, is_deleted, updated_at),
+    INDEX idx_ydsz_wiki_file_node_parent_deleted_type_updated (parent_id, is_deleted, node_type, updated_at),
     INDEX idx_ydsz_wiki_file_node_path (path(255)),
-    INDEX idx_ydsz_wiki_file_node_created_deleted_type (created_by, deleted, node_type),
+    INDEX idx_ydsz_wiki_file_node_created_deleted_type (created_by, is_deleted, node_type),
     INDEX idx_ydsz_wiki_file_node_file_hash (file_hash),
-    INDEX idx_ydsz_wiki_file_node_not_deleted (id, parent_id, tenant_id),
-    INDEX idx_ydsz_wiki_file_node_storage_class (node_type, deleted, storage_class, updated_at)
+    INDEX idx_ydsz_wiki_file_node_not_is_deleted (id, parent_id, tenant_id),
+    INDEX idx_ydsz_wiki_file_node_storage_class (node_type, is_deleted, storage_class, updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='网盘文件节点（统一表示文件和目录，构成目录树的核心节点）';
 
 -- ----------------------------------------------------------------------------
@@ -66,9 +66,9 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_version (
     mime_type       VARCHAR(128)    DEFAULT NULL COMMENT '该版本的 MIME 类型',
     remark          VARCHAR(512)    DEFAULT NULL COMMENT '版本说明（用户自定义的版本备注）',
     change_type     VARCHAR(32)     NOT NULL DEFAULT 'update' COMMENT '变更类型：create / update / rollback',
-    active          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为当前活跃版本',
+    is_active          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为当前活跃版本',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_version (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_file_node_version (file_node_id, version_number),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件版本历史（每次文件更新生成一条版本记录，支持版本回溯）';
 
 -- ----------------------------------------------------------------------------
@@ -87,10 +87,10 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_tag (
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     name            VARCHAR(255)    NOT NULL COMMENT '标签名称',
     color           VARCHAR(32)     DEFAULT NULL COMMENT '标签颜色（十六进制颜色码，如 #1890ff）',
-    type            VARCHAR(32)     NOT NULL DEFAULT 'manual' COMMENT '标签类型：manual（手动）/ auto（自动推荐）/ system（系统预设）',
+    type            VARCHAR(32)     NOT NULL DEFAULT 'manual' COMMENT 'is_system（系统预设）',
     usage_count     INT             NOT NULL DEFAULT 0 COMMENT '使用次数（文件关联数）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_tag (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_tenant_tag_name (tenant_id, name),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签（对文件/文件夹打标签，用于知识库分类和检索）';
 
 -- ----------------------------------------------------------------------------
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_tag (
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点ID',
     tag_id          VARCHAR(32)     NOT NULL COMMENT '标签ID',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_tag (
     PRIMARY KEY (id),
     UNIQUE KEY uk_file_node_tag (file_node_id, tag_id),
     INDEX idx_tag_id (tag_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件-标签关联（多对多）';
 
 -- ----------------------------------------------------------------------------
@@ -131,11 +131,11 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_comment (
     file_node_id      VARCHAR(32)   NOT NULL COMMENT '关联的文件节点ID',
     content           TEXT          NOT NULL COMMENT '评论内容',
     parent_comment_id VARCHAR(32)   DEFAULT NULL COMMENT '父评论ID（用于回复，null 表示顶级评论）',
-    resolved          TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否已解决（用于批注功能）',
+    is_resolved          TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否已解决（用于批注功能）',
     position          JSON          DEFAULT NULL COMMENT '评论位置信息（JSON，用于文档内定位批注）',
-    edited            TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否被编辑过',
+    is_edited            TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否被编辑过',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -144,7 +144,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_comment (
     PRIMARY KEY (id),
     INDEX idx_file_node_id (file_node_id),
     INDEX idx_parent_comment_id (parent_comment_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件评论（支持文件级别的评论和回复，用于知识库协作讨论）';
 
 -- ----------------------------------------------------------------------------
@@ -157,10 +157,10 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_acl (
     grantee_type    VARCHAR(32)     NOT NULL COMMENT '授权对象类型：user / role / group / tenant',
     grantee_id      VARCHAR(64)     NOT NULL COMMENT '授权对象ID（用户ID / 角色ID / 组ID / 租户ID）',
     permission_mask INT             NOT NULL DEFAULT 0 COMMENT '权限位掩码（read=1, write=2, delete=4, share=8, download=16）',
-    inherited       TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否继承自父目录',
-    owner           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为所有者（所有者拥有全部权限）',
+    is_inherited       TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否继承自父目录',
+    is_owner           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为所有者（所有者拥有全部权限）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_acl (
     PRIMARY KEY (id),
     UNIQUE KEY uk_file_grantee (file_node_id, grantee_type, grantee_id),
     INDEX idx_grantee (grantee_type, grantee_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件级 ACL 权限（文件/文件夹级别的细粒度权限控制）';
 
 -- ----------------------------------------------------------------------------
@@ -185,12 +185,12 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_link (
     expire_time       DATETIME      DEFAULT NULL COMMENT '过期时间（null 表示永久有效）',
     max_access_count  INT           DEFAULT NULL COMMENT '最大访问次数（null 表示不限）',
     access_count      INT           NOT NULL DEFAULT 0 COMMENT '已访问次数',
-    status            VARCHAR(32)   NOT NULL DEFAULT 'active' COMMENT '分享状态：active / expired / revoked',
+    status            VARCHAR(32)   NOT NULL DEFAULT 'active' COMMENT 'is_active / expired / revoked',
     password          VARCHAR(128)  DEFAULT NULL COMMENT '分享密码（BCrypt 加密；空表示无密码）',
-    share_target_type VARCHAR(32)   NOT NULL DEFAULT 'PUBLIC' COMMENT '分享目标类型：PUBLIC(公开) / USER(指定用户) / DEPT(部门)',
-    reminder_sent     TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '到期提醒是否已发送',
+    share_target_type VARCHAR(32)   NOT NULL DEFAULT 'PUBLIC' COMMENT 'is_public(公开) / USER(指定用户) / DEPT(部门)',
+    is_reminder_sent     TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '到期提醒是否已发送',
     title             VARCHAR(255)  DEFAULT NULL COMMENT '分享标题（可选）',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -199,8 +199,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_link (
     PRIMARY KEY (id),
     UNIQUE KEY uk_share_code (share_code),
     INDEX idx_file_node_id (file_node_id),
-    INDEX idx_ydsz_wiki_share_link_expire_reminder (status, expire_time, reminder_sent),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_ydsz_wiki_share_link_expire_reminder (status, expire_time, is_reminder_sent),
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件分享链接（带密码和过期时间的文件级临时授权机制）';
 
 -- ----------------------------------------------------------------------------
@@ -213,9 +213,9 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_recipient (
     recipient_type  VARCHAR(32)     NOT NULL DEFAULT 'USER' COMMENT '接收者类型：USER/DEPT/ROLE',
     recipient_id    VARCHAR(64)     NOT NULL COMMENT '接收者 ID',
     recipient_name  VARCHAR(128)    DEFAULT NULL COMMENT '接收者名称',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'ACTIVE' COMMENT '状态：ACTIVE/VIEWED/REVOKED',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'ACTIVE' COMMENT 'is_active/VIEWED/REVOKED',
     viewed_at       DATETIME        DEFAULT NULL COMMENT '首次查看时间',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -223,9 +223,9 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_recipient (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_share_recipient (share_id, recipient_type, recipient_id),
-    INDEX idx_ydsz_wiki_share_recipient_share (share_id, deleted),
-    INDEX idx_ydsz_wiki_share_recipient_user (recipient_id, status, deleted),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_ydsz_wiki_share_recipient_share (share_id, is_deleted),
+    INDEX idx_ydsz_wiki_share_recipient_user (recipient_id, status, is_deleted),
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享目标用户（定向分享，记录分享链接的目标接收者）';
 
 -- ----------------------------------------------------------------------------
@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log (
     fail_reason     VARCHAR(255)    DEFAULT NULL COMMENT '失败原因',
     access_time     DATETIME        NOT NULL COMMENT '访问时间',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -257,7 +257,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log (
     INDEX idx_ydsz_wiki_share_access_log_share_id (share_id, created_at),
     INDEX idx_ydsz_wiki_share_access_log_created (created_at),
     INDEX idx_ydsz_wiki_share_access_log_visitor (visitor_id, created_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享链接访问日志（记录每次分享链接被访问的详细信息，用于安全审计和访问统计）';
 
 -- ----------------------------------------------------------------------------
@@ -277,13 +277,13 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log_archive (
     access_status   VARCHAR(32)     NOT NULL DEFAULT 'SUCCESS' COMMENT '访问状态：SUCCESS/FAIL',
     fail_reason     VARCHAR(255)    DEFAULT NULL COMMENT '失败原因',
     access_time     DATETIME        NOT NULL COMMENT '访问时间',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (id),
     INDEX idx_archive_share_created (share_id, created_at),
     INDEX idx_archive_created (created_at),
     INDEX idx_archive_access_time (access_time),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享访问日志归档表（归档 90 天前访问日志，防止主表无限膨胀）';
 
 -- ----------------------------------------------------------------------------
@@ -297,14 +297,14 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
     icon_url        VARCHAR(1024)   DEFAULT NULL COMMENT '空间图标 URL',
     cover_url       VARCHAR(1024)   DEFAULT NULL COMMENT '空间封面 URL',
     owner_id        VARCHAR(64)     NOT NULL COMMENT '空间所有者（创建者）',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'active' COMMENT '空间状态：active / archived / deleted',
-    visibility      VARCHAR(32)     NOT NULL DEFAULT 'private' COMMENT '可见性：private / organization / public',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'active' COMMENT 'is_deleted',
+    visibility      VARCHAR(32)     NOT NULL DEFAULT 'private' COMMENT 'is_public',
     sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     member_count    INT             NOT NULL DEFAULT 1 COMMENT '成员数量',
     node_count      INT             NOT NULL DEFAULT 0 COMMENT '节点数量（文件/目录总数）',
     quota_limit     BIGINT          DEFAULT NULL COMMENT '空间独立配额（字节，NULL 表示使用租户配额）',
     quota_used      BIGINT          NOT NULL DEFAULT 0 COMMENT '已使用配额（字节）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     deleted_time    DATETIME        DEFAULT NULL COMMENT '删除时间',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -313,8 +313,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_wiki_space_tenant_name (tenant_id, name),
     INDEX idx_ydsz_wiki_space_tenant_sort (tenant_id, sort),
-    INDEX idx_ydsz_wiki_space_owner (owner_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_ydsz_wiki_space_is_owner (owner_id),
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库空间（空间管理聚合根，文件节点的顶级容器）';
 
 -- ----------------------------------------------------------------------------
@@ -325,9 +325,9 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_member (
     tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     space_id        VARCHAR(32)     NOT NULL COMMENT '空间ID',
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
-    role            VARCHAR(32)     NOT NULL COMMENT '角色：owner / admin / editor / viewer',
+    role            VARCHAR(32)     NOT NULL COMMENT 'is_owner / admin / editor / viewer',
     joined_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
@@ -336,7 +336,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_member (
     UNIQUE KEY uk_ydsz_wiki_space_member_space_user (space_id, user_id),
     INDEX idx_ydsz_wiki_space_member_space_role (space_id, role),
     INDEX idx_ydsz_wiki_space_member_user (user_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间成员（记录用户与空间的归属关系及角色）';
 
 -- ----------------------------------------------------------------------------
@@ -349,20 +349,20 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     description     VARCHAR(512)    DEFAULT NULL COMMENT '模板描述',
     category        VARCHAR(32)     NOT NULL DEFAULT 'general' COMMENT '模板分类：general / project / meeting / knowledge',
     icon_url        VARCHAR(1024)   DEFAULT NULL COMMENT '模板图标 URL',
-    system          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统内置模板（不可删除）',
-    public_access   TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否公开（所有租户可见）',
+    is_system          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统内置模板（不可删除）',
+    is_public_access   TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否公开（所有租户可见）',
     structure_json  JSON            NOT NULL COMMENT '模板结构 JSON（定义目录树、初始页面、权限配置等）',
     sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     usage_count     INT             NOT NULL DEFAULT 0 COMMENT '使用次数',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_ydsz_wiki_space_template_tenant_category (tenant_id, category),
-    INDEX idx_ydsz_wiki_space_template_system_public (system, public_access),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_ydsz_wiki_space_template_system_is_public (is_system, is_public_access),
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间模板（预定义可复用的空间结构模板）';
 
 -- ----------------------------------------------------------------------------
@@ -375,12 +375,12 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_trash_item (
     original_name       VARCHAR(255)  NOT NULL COMMENT '原文件名',
     original_path       VARCHAR(1024) DEFAULT NULL COMMENT '原始路径',
     original_parent_id  VARCHAR(32)   DEFAULT NULL COMMENT '原始父节点ID',
-    node_type           VARCHAR(32)   NOT NULL COMMENT '节点类型：folder / file',
+    node_type           VARCHAR(32)   NOT NULL COMMENT 'is_folder / file',
     size                BIGINT        NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
     deleted_time        DATETIME      NOT NULL COMMENT '删除时间',
     purge_time          DATETIME      NOT NULL COMMENT '预计永久删除时间',
     status              VARCHAR(32)   NOT NULL DEFAULT 'in_trash' COMMENT '状态：in_trash / restored / purged',
-    deleted             TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -390,7 +390,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_trash_item (
     INDEX idx_file_node_id (file_node_id),
     INDEX idx_deleted_time (deleted_time),
     INDEX idx_purge_time (purge_time),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='回收站条目（记录被逻辑删除的文件/文件夹，支持恢复和自动清理）';
 
 -- ----------------------------------------------------------------------------
@@ -408,7 +408,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_search_index (
     size            BIGINT          NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
     tags            VARCHAR(512)    DEFAULT NULL COMMENT '标签（逗号分隔）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -417,7 +417,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_search_index (
     PRIMARY KEY (id),
     UNIQUE KEY uk_file_node_id (file_node_id),
     FULLTEXT INDEX ft_search_name_content (name, content),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件搜索索引（数据库 fallback 搜索，ES 不可用时提供文件名/路径/内容搜索）';
 
 -- ----------------------------------------------------------------------------
@@ -429,7 +429,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
     node_id         VARCHAR(64)     NOT NULL COMMENT '收藏的文件/目录节点ID',
     sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号（值越小越靠前）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     deleted_time    DATETIME        DEFAULT NULL COMMENT '删除时间',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -438,7 +438,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_wiki_user_favorite_user_node (user_id, node_id),
     INDEX idx_ydsz_wiki_user_favorite_user_sort (user_id, sort),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
 
 -- ----------------------------------------------------------------------------
@@ -451,14 +451,14 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_recent (
     node_id         VARCHAR(64)     NOT NULL COMMENT '访问的文件/目录节点ID',
     access_type     VARCHAR(32)     NOT NULL DEFAULT 'view' COMMENT '访问类型：view / edit / download',
     accessed_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最近访问时间（排序字段）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_wiki_user_recent_user_node (user_id, node_id),
     INDEX idx_ydsz_wiki_user_recent_user_accessed (user_id, accessed_at),
     INDEX idx_ydsz_wiki_user_recent_access_type (user_id, access_type),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户最近访问记录（同一节点只保留一条，支持按访问时间倒序查询）';
 
 -- ----------------------------------------------------------------------------
@@ -474,7 +474,7 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_storage_quota (
     file_count_limit INT            DEFAULT NULL COMMENT '文件数量上限',
     file_count_used INT             NOT NULL DEFAULT 0 COMMENT '已使用文件数量',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -482,5 +482,5 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_storage_quota (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_scope (scope_type, scope_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='存储配额（按用户/租户/项目维度设置存储上限，上传时校验配额）';

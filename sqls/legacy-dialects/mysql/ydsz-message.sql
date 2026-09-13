@@ -37,14 +37,14 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template (
     provider        VARCHAR(64)     DEFAULT NULL COMMENT '服务商编码',
     provider_key    VARCHAR(128)    DEFAULT NULL COMMENT '服务商侧模板 Key',
     sign_name       VARCHAR(128)    DEFAULT NULL COMMENT '签名名称（如短信签名）',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'DISABLED' COMMENT '模板状态: ENABLED 启用 / DISABLED 禁用',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'DISABLED' COMMENT 'is_enabled 启用 / DISABLED 禁用',
     audit_status    VARCHAR(32)     NOT NULL DEFAULT 'DRAFT' COMMENT '审核状态: DRAFT 草稿 / AUDITING 审核中 / APPROVED 已通过 / REJECTED 已驳回',
     audit_by        VARCHAR(64)     DEFAULT NULL COMMENT '审核人',
     audit_at        DATETIME        DEFAULT NULL COMMENT '审核时间',
     audit_remark    VARCHAR(512)    DEFAULT NULL COMMENT '审核意见',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '描述说明',
     variable_defs   JSON            DEFAULT NULL COMMENT '模板变量定义（JSON）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template (
     CONSTRAINT uk_template_code UNIQUE (template_code, tenant_id),
     INDEX idx_channel (channel),
     INDEX idx_scene_code (scene_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息模板主表';
 
 -- ----------------------------------------------------------------------------
@@ -69,14 +69,14 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template_version (
     auditor         VARCHAR(64)     DEFAULT NULL COMMENT '审核人',
     audit_remark    VARCHAR(512)    DEFAULT NULL COMMENT '审核意见',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_tpl_version UNIQUE (template_code, version),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息模板版本历史表';
 
 -- ----------------------------------------------------------------------------
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     title           VARCHAR(255)    NOT NULL COMMENT '通知标题',
     content         TEXT            COMMENT '通知内容',
     level           VARCHAR(32)     NOT NULL DEFAULT 'INFO' COMMENT '通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急',
-    category        VARCHAR(32)     NOT NULL DEFAULT 'SYSTEM' COMMENT '通知分类: SYSTEM 系统 / WORKFLOW 流程 / ALERT 告警 / TO_DO 待办 / ANNOUNCE 公告',
+    category        VARCHAR(32)     NOT NULL DEFAULT 'SYSTEM' COMMENT 'is_system 系统 / WORKFLOW 流程 / ALERT 告警 / TO_DO 待办 / ANNOUNCE 公告',
     priority        VARCHAR(32)     NOT NULL DEFAULT 'NORMAL' COMMENT '发送优先级: LOW / NORMAL / HIGH / URGENT',
     sender_id       VARCHAR(32)     DEFAULT NULL COMMENT '发送人用户 ID',
     receiver_id     VARCHAR(32)     NOT NULL COMMENT '接收人用户 ID',
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     recall_at       DATETIME        DEFAULT NULL COMMENT '撤回时间',
     expired_at      DATETIME        DEFAULT NULL COMMENT '过期时间',
     mention_user_ids JSON           DEFAULT NULL COMMENT '提及用户 ID 列表（JSON 数组）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     INDEX idx_biz (biz_type, biz_id),
     INDEX idx_batch_id (batch_id),
     INDEX idx_message_group (message_group),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='站内通知表';
 
 -- ----------------------------------------------------------------------------
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     is_primary        TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否主绑定: 0 否 / 1 是（同通道多绑定时优先使用主绑定）',
     extra             JSON          DEFAULT NULL COMMENT '扩展字段（JSON，如 deviceToken / openId 等）',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_user_channel UNIQUE (user_id, channel_type, channel_user_id),
     INDEX idx_channel_user_id (channel_user_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户通道绑定表';
 
 -- ----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
     role_scope        VARCHAR(128)  DEFAULT NULL COMMENT '角色范围（如 PM|MEMBER，限定角色内可见性）',
     extra             JSON          DEFAULT NULL COMMENT '扩展字段（JSON）',
     unsubscribed_at   DATETIME      DEFAULT NULL COMMENT '退订时间（仅 status=UNSUBSCRIBED 时有意义）',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
     updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_subscription UNIQUE (user_id, topic_code, channel),
     INDEX idx_topic_code (topic_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订阅关系表';
 
 -- ----------------------------------------------------------------------------
@@ -176,25 +176,25 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
     user_id           VARCHAR(32)   NOT NULL COMMENT '用户 ID（关联 ydsz_employee.id）',
     channel           VARCHAR(32)   NOT NULL COMMENT '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU',
     biz_type          VARCHAR(64)   NOT NULL DEFAULT '__DEFAULT__' COMMENT '业务类型（__DEFAULT__ 表示该通道全局默认偏好）',
-    enabled           TINYINT(1)    NOT NULL DEFAULT 1 COMMENT '是否启用该通道: 0 关闭 / 1 开启（关闭后不发送）',
-    dnd_enabled       TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '免打扰开关: 0 关闭 / 1 开启',
+    is_enabled           TINYINT(1)    NOT NULL DEFAULT 1 COMMENT '是否启用该通道: 0 关闭 / 1 开启（关闭后不发送）',
+    dnd_is_enabled       TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '免打扰开关: 0 关闭 / 1 开启',
     dnd_start         VARCHAR(8)    DEFAULT NULL COMMENT '免打扰开始时间 HH:mm（如 22:00）',
     dnd_end           VARCHAR(8)    DEFAULT NULL COMMENT '免打扰结束时间 HH:mm（如 08:00）',
     daily_limit       INT           DEFAULT NULL COMMENT '每日发送上限（超过则暂存或丢弃）',
     hourly_limit      INT           DEFAULT NULL COMMENT '每小时发送上限',
-    digest_enabled    TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '聚合开关: 0 即时发送 / 1 聚合摘要',
+    digest_is_enabled    TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '聚合开关: 0 即时发送 / 1 聚合摘要',
     digest_frequency  VARCHAR(32)   DEFAULT NULL COMMENT '聚合频率: HOURLY / DAILY / WEEKLY',
     locale            VARCHAR(16)   DEFAULT NULL COMMENT '偏好语言（如 zh-CN / en-US，影响模板 i18n 选择）',
     extra             JSON          DEFAULT NULL COMMENT '扩展字段（JSON）',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by        VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
     updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_preference UNIQUE (user_id, channel, biz_type),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户消息偏好表';
 
 -- ----------------------------------------------------------------------------
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
     description       VARCHAR(512)  DEFAULT NULL COMMENT '描述说明',
     sort        INT           DEFAULT NULL COMMENT '排序序号',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -222,7 +222,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
     updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_code UNIQUE (rule_code, tenant_id),
     INDEX idx_biz_channel (biz_type, channel),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息路由规则表';
 
 -- ----------------------------------------------------------------------------
@@ -238,14 +238,14 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_variable_source (
     cache_ttl         INT           DEFAULT NULL COMMENT '缓存有效期（秒），0=不缓存',
     description       VARCHAR(512)  DEFAULT NULL COMMENT '描述说明',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by        VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
     updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_variable UNIQUE (template_code, variable_name),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息变量数据源绑定表';
 
 -- ----------------------------------------------------------------------------
@@ -263,8 +263,8 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_canary (
     percentage        INT           NOT NULL DEFAULT 0 COMMENT '当前放量百分比（0~100）',
     experiment_group  VARCHAR(32)   DEFAULT NULL COMMENT '实验组: CONTROL 对照组 / VARIANT 实验组',
     metrics_goal      VARCHAR(32)   DEFAULT NULL COMMENT '目标指标: DELIVERY_RATE 送达率 / READ_RATE 阅读率 / CLICK_RATE 点击率',
-    status            VARCHAR(32)   NOT NULL DEFAULT 'ACTIVE' COMMENT '实验状态: ACTIVE 运行中 / PAUSED 已暂停 / COMPLETED 已结束',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    status            VARCHAR(32)   NOT NULL DEFAULT 'ACTIVE' COMMENT 'is_active 运行中 / PAUSED 已暂停 / COMPLETED 已结束',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -272,7 +272,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_canary (
     updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_canary_key UNIQUE (canary_key),
     INDEX idx_template_code (template_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='灰度实验表';
 
 -- ----------------------------------------------------------------------------
@@ -286,7 +286,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
     hourly_limit        BIGINT      DEFAULT NULL COMMENT '租户级每小时发送上限（null 表示使用全局默认值）',
     channel_overrides   JSON        DEFAULT NULL COMMENT '租户级通道开关（JSON Map，如 {"SMS": true, "EMAIL": false}）',
     provider_overrides  JSON        DEFAULT NULL COMMENT '租户级通道映射（JSON Map，如 {"SMS": "aliyun", "EMAIL": "sendgrid"}）',
-    status              VARCHAR(32) NOT NULL DEFAULT 'ENABLED' COMMENT '配置状态: ENABLED / DISABLED',
+    status              VARCHAR(32) NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled / DISABLED',
     CONSTRAINT uk_tenant_id UNIQUE (tenant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='多租户消息配置表';
 
@@ -312,7 +312,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     completed_at      DATETIME      DEFAULT NULL COMMENT '完成时间',
     sender_id         VARCHAR(32)   DEFAULT NULL COMMENT '触发发送的用户 ID',
     payload           JSON          DEFAULT NULL COMMENT '消息请求列表 JSON（断点续传恢复用）',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -321,7 +321,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     CONSTRAINT uk_batch_id UNIQUE (batch_id),
     INDEX idx_status (status),
     INDEX idx_sender_id (sender_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息发送批次表';
 
 -- ----------------------------------------------------------------------------
@@ -341,7 +341,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
     sent_at            DATETIME     DEFAULT NULL COMMENT '实际发送时间',
     digest_content     TEXT         COMMENT '聚合后摘要内容（渲染后）',
     status             VARCHAR(32)  DEFAULT NULL COMMENT '状态标识',
-    deleted            TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted            TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision           INT          NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -350,7 +350,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
     INDEX idx_group_receiver (aggregate_group, receiver),
     INDEX idx_batch_status (batch_status),
     INDEX idx_scheduled_send_at (scheduled_send_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聚合批次表';
 
 -- ----------------------------------------------------------------------------
@@ -366,7 +366,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
     status          VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '推送状态: PENDING 待推送 / PUSHED 已推送 / EXPIRED 已过期',
     pushed_at       DATETIME        DEFAULT NULL COMMENT '推送时间',
     expired_at      DATETIME        DEFAULT NULL COMMENT '过期时间（默认 createdAt + 30 天）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -374,7 +374,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_user_status (user_id, status),
     INDEX idx_expired_at (expired_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='离线消息持久化表';
 
 -- ----------------------------------------------------------------------------
@@ -415,7 +415,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     reconsume_times   INT           DEFAULT NULL COMMENT 'MQ 重新消费次数',
     parent_msg_id     VARCHAR(64)   DEFAULT NULL COMMENT '父消息 ID（级联消息溯源）',
     scheduled_at      DATETIME      DEFAULT NULL COMMENT '定时发送时间',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     created_by        VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
@@ -430,7 +430,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     INDEX idx_dedup_key (dedup_key),
     INDEX idx_provider_trace_id (provider_trace_id),
     INDEX idx_scheduled_at (scheduled_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息发送日志表';
 
 -- ----------------------------------------------------------------------------
@@ -447,7 +447,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
     provider_msg      VARCHAR(512)  DEFAULT NULL COMMENT '供应商消息',
     raw_response      JSON          DEFAULT NULL COMMENT '原始响应（JSON）',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -456,7 +456,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
     INDEX idx_log_id (log_id),
     INDEX idx_receipt_time (receipt_time),
     INDEX idx_provider_trace_id (provider_trace_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息回执表';
 
 -- ----------------------------------------------------------------------------
@@ -498,7 +498,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
     feedback_type     VARCHAR(32)   DEFAULT NULL COMMENT '反馈类型: TOO_FREQUENT 太频繁 / IRRELEVANT 不相关 / TOO_LONG 内容太长 / SPAM 垃圾信息 / GOOD 有用 / OTHER 其他',
     content           VARCHAR(512)  DEFAULT NULL COMMENT '反馈内容（用户自由文本输入）',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
-    deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -506,7 +506,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
     updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_msg_id (msg_id),
     INDEX idx_user_id (user_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息用户反馈表';
 
 -- ----------------------------------------------------------------------------

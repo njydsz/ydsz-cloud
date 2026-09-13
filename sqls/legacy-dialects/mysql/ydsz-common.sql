@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS ydsz_com_search_dead_letter (
     document_json TEXT         DEFAULT NULL COMMENT '文档 JSON（UPSERT/BULK 操作时使用）',
     error_msg     TEXT         DEFAULT NULL COMMENT '最后一次失败原因（截断 2000 字符）',
     retry_count   INT          NOT NULL DEFAULT 0 COMMENT '已重试次数，达到 5 次升级为 DISCARDED',
-    status        VARCHAR(20)  NOT NULL DEFAULT 'PENDING' COMMENT '状态：PENDING-待处理 / RETRYING-处理中 / RESOLVED-已解决 / DISCARDED-已放弃(需人工介入)',
+    status        VARCHAR(20)  NOT NULL DEFAULT 'PENDING' COMMENT 'is_resolved-已解决 / DISCARDED-已放弃(需人工介入)',
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '入队时间',
     resolved_at   DATETIME     DEFAULT NULL COMMENT '解决时间',
     PRIMARY KEY (id),

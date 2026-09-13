@@ -38,7 +38,7 @@ CREATE TABLE ydsz_sys_tenant (
     datasource_key           VARCHAR2(64 CHAR)        DEFAULT NULL,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -61,7 +61,7 @@ COMMENT ON COLUMN ydsz_sys_tenant.expire_at IS '订阅到期时间（到期后�
 COMMENT ON COLUMN ydsz_sys_tenant.datasource_key IS '独立数据源标识（ISOLATE_DB 模式下使用）';
 COMMENT ON COLUMN ydsz_sys_tenant.remark IS '备注';
 COMMENT ON COLUMN ydsz_sys_tenant.status IS '状态标识（ENABLED/DISABLED，启用状态值）';
-COMMENT ON COLUMN ydsz_sys_tenant.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_tenant.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_tenant.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_tenant.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_tenant.created_at IS '创建时间';
@@ -69,7 +69,7 @@ COMMENT ON COLUMN ydsz_sys_tenant.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_sys_tenant_plan_id ON ydsz_sys_tenant (plan_id);
-CREATE INDEX idx_ydsz_sys_tenant_tenant_deleted ON ydsz_sys_tenant (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_tenant_tenant_is_deleted ON ydsz_sys_tenant (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_tenant_plan (
     id                       VARCHAR2(32 CHAR)       ,
@@ -81,7 +81,7 @@ CREATE TABLE ydsz_sys_tenant_plan (
     quota_json               CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_tenant_plan_quota_json CHECK (quota_json IS JSON),
     feature_json             CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_tenant_plan_feature_json CHECK (feature_json IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -101,14 +101,14 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan.sort IS '排序号（升序，影响前�
 COMMENT ON COLUMN ydsz_sys_tenant_plan.quota_json IS '资源配额 JSON（如 {"maxUsers":50,"maxProjects":10,"storageGb":100}）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.feature_json IS '功能开关 JSON（如 {"workflow":true,"dataAnalytics":false}）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.status IS '状态标识';
-COMMENT ON COLUMN ydsz_sys_tenant_plan.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_sys_tenant_plan_tenant_deleted ON ydsz_sys_tenant_plan (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_tenant_plan_tenant_is_deleted ON ydsz_sys_tenant_plan (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_tenant_plan_menu (
     id                       VARCHAR2(32 CHAR)       ,
@@ -116,7 +116,7 @@ CREATE TABLE ydsz_sys_tenant_plan_menu (
     plan_id                  VARCHAR2(32 CHAR)        NOT NULL,
     menu_id                  VARCHAR2(64 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -132,14 +132,14 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.tenant_id IS '租户 ID（多租户�
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.plan_id IS '套餐 ID（ydsz_sys_tenant_plan.id）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.menu_id IS '菜单 ID（ydsz_menu.id 或权限码 ydsz:xxx）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.status IS '状态标识';
-COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_sys_tenant_plan_menu_tenant_deleted ON ydsz_sys_tenant_plan_menu (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_tenant_plan_menu_tenant_is_deleted ON ydsz_sys_tenant_plan_menu (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_dict_type (
     id                       VARCHAR2(32 CHAR)       ,
@@ -148,7 +148,7 @@ CREATE TABLE ydsz_sys_dict_type (
     type_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -165,14 +165,14 @@ COMMENT ON COLUMN ydsz_sys_dict_type.type_code IS '类型编码（唯一标识�
 COMMENT ON COLUMN ydsz_sys_dict_type.type_name IS '类型名称（展示用）';
 COMMENT ON COLUMN ydsz_sys_dict_type.description IS '类型描述';
 COMMENT ON COLUMN ydsz_sys_dict_type.status IS '状态标识';
-COMMENT ON COLUMN ydsz_sys_dict_type.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_dict_type.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_dict_type.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_dict_type.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_dict_type.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_dict_type.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_dict_type.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_sys_dict_type_tenant_deleted ON ydsz_sys_dict_type (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_dict_type_tenant_is_deleted ON ydsz_sys_dict_type (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_dict_item (
     id                       VARCHAR2(32 CHAR)       ,
@@ -185,7 +185,7 @@ CREATE TABLE ydsz_sys_dict_item (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     ext_json                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_dict_item_ext_json CHECK (ext_json IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -206,7 +206,7 @@ COMMENT ON COLUMN ydsz_sys_dict_item.parent_id IS '父级字典项 ID（支持�
 COMMENT ON COLUMN ydsz_sys_dict_item.description IS '字典项描述';
 COMMENT ON COLUMN ydsz_sys_dict_item.ext_json IS '扩展属性 JSON（承载自定义属性，如色值、图标、URL 等）';
 COMMENT ON COLUMN ydsz_sys_dict_item.status IS '状态标识';
-COMMENT ON COLUMN ydsz_sys_dict_item.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_dict_item.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_dict_item.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_dict_item.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_dict_item.created_at IS '创建时间';
@@ -214,7 +214,7 @@ COMMENT ON COLUMN ydsz_sys_dict_item.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_dict_item.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_sys_dict_item_parent_id ON ydsz_sys_dict_item (parent_id);
-CREATE INDEX idx_ydsz_sys_dict_item_tenant_deleted ON ydsz_sys_dict_item (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_dict_item_tenant_is_deleted ON ydsz_sys_dict_item (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_config (
     id                       VARCHAR2(32 CHAR)       ,
@@ -225,10 +225,10 @@ CREATE TABLE ydsz_sys_config (
     value_type               VARCHAR2(32 CHAR)        NOT NULL,
     default_value            CLOB                     DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    public                   NUMBER(1)                NOT NULL DEFAULT 0,
+    is_public                   NUMBER(1)                NOT NULL DEFAULT 0,
     sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -247,17 +247,17 @@ COMMENT ON COLUMN ydsz_sys_config.config_value IS '配置值';
 COMMENT ON COLUMN ydsz_sys_config.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
 COMMENT ON COLUMN ydsz_sys_config.default_value IS '默认值（配置未设置时使用）';
 COMMENT ON COLUMN ydsz_sys_config.description IS '配置描述';
-COMMENT ON COLUMN ydsz_sys_config.public IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
+COMMENT ON COLUMN ydsz_sys_config.is_public IS '是否公开配置（1=公开，前端可查；0=私有，仅后端可查）';
 COMMENT ON COLUMN ydsz_sys_config.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_sys_config.status IS '状态标识';
-COMMENT ON COLUMN ydsz_sys_config.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_config.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_config.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_config.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_config.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_config.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_config.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_sys_config_tenant_deleted ON ydsz_sys_config (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_config_tenant_is_deleted ON ydsz_sys_config (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_variable (
     id                       VARCHAR2(32 CHAR)       ,
@@ -267,7 +267,7 @@ CREATE TABLE ydsz_sys_variable (
     value_type               VARCHAR2(32 CHAR)        NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -285,14 +285,14 @@ COMMENT ON COLUMN ydsz_sys_variable.variable_value IS '变量值（按 valueType
 COMMENT ON COLUMN ydsz_sys_variable.value_type IS '值类型（STRING/NUMBER/BOOLEAN/JSON）';
 COMMENT ON COLUMN ydsz_sys_variable.description IS '变量描述（业务含义说明）';
 COMMENT ON COLUMN ydsz_sys_variable.status IS '状态标识（ENABLED/DISABLED）';
-COMMENT ON COLUMN ydsz_sys_variable.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_variable.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_variable.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_variable.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_variable.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_variable.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_variable.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_sys_variable_tenant_deleted ON ydsz_sys_variable (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_variable_tenant_is_deleted ON ydsz_sys_variable (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_app_info (
     id                       VARCHAR2(32 CHAR)       ,
@@ -306,7 +306,7 @@ CREATE TABLE ydsz_sys_app_info (
     bound_ips                VARCHAR2(512 CHAR)       DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -329,14 +329,14 @@ COMMENT ON COLUMN ydsz_sys_app_info.scopes IS 'OAuth2 授权范围（CSV 格式�
 COMMENT ON COLUMN ydsz_sys_app_info.bound_ips IS 'IP 绑定白名单（CSV 格式；为空表示不限制 IP）';
 COMMENT ON COLUMN ydsz_sys_app_info.description IS '应用描述';
 COMMENT ON COLUMN ydsz_sys_app_info.status IS '状态标识';
-COMMENT ON COLUMN ydsz_sys_app_info.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_app_info.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_app_info.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_app_info.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_app_info.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_app_info.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_app_info.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_sys_app_info_tenant_deleted ON ydsz_sys_app_info (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_app_info_tenant_is_deleted ON ydsz_sys_app_info (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_sys_entity_version (
     id                       VARCHAR2(32 CHAR)       ,
@@ -349,7 +349,7 @@ CREATE TABLE ydsz_sys_entity_version (
     snapshot_json            CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_entity_version_snapshot_json CHECK (snapshot_json IS JSON),
     effective_date           TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -369,7 +369,7 @@ COMMENT ON COLUMN ydsz_sys_entity_version.change_log IS '变更说明';
 COMMENT ON COLUMN ydsz_sys_entity_version.snapshot_json IS '变更前 JSON 快照（用于回滚）';
 COMMENT ON COLUMN ydsz_sys_entity_version.effective_date IS '生效时间';
 COMMENT ON COLUMN ydsz_sys_entity_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_sys_entity_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_sys_entity_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_sys_entity_version.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_sys_entity_version.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_sys_entity_version.created_at IS '创建时间';
@@ -377,7 +377,7 @@ COMMENT ON COLUMN ydsz_sys_entity_version.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_entity_version.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_sys_entity_version_resource_type_key_version ON ydsz_sys_entity_version (resource_type, resource_key, version);
-CREATE INDEX idx_ydsz_sys_entity_version_tenant_deleted ON ydsz_sys_entity_version (tenant_id, deleted);
+CREATE INDEX idx_ydsz_sys_entity_version_tenant_is_deleted ON ydsz_sys_entity_version (tenant_id, is_deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (Oracle)

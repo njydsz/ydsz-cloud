@@ -41,14 +41,14 @@ CREATE TABLE ydsz_wiki_file_node (
     current_version          NUMBER(10)               NOT NULL DEFAULT 1,
     file_hash                VARCHAR2(64 CHAR)        DEFAULT NULL,
     thumbnail_key            VARCHAR2(1024 CHAR)      DEFAULT NULL,
-    preview_ready            NUMBER(1)                NOT NULL DEFAULT 0,
-    starred                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_preview_ready            NUMBER(1)                NOT NULL DEFAULT 0,
+    is_starred                  NUMBER(1)                NOT NULL DEFAULT 0,
     share_status             VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'private',
     deleted_time             TIMESTAMP                DEFAULT NULL,
     original_path            VARCHAR2(1024 CHAR)      DEFAULT NULL,
     storage_class            VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'STANDARD',
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -74,14 +74,14 @@ COMMENT ON COLUMN ydsz_wiki_file_node.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_wiki_file_node.current_version IS '当前版本号（从 1 开始，每次更新 +1）';
 COMMENT ON COLUMN ydsz_wiki_file_node.file_hash IS '文件 SHA-256 哈希（用于秒传去重）';
 COMMENT ON COLUMN ydsz_wiki_file_node.thumbnail_key IS '缩略图存储键';
-COMMENT ON COLUMN ydsz_wiki_file_node.preview_ready IS '是否已生成预览';
-COMMENT ON COLUMN ydsz_wiki_file_node.starred IS '是否星标文件';
+COMMENT ON COLUMN ydsz_wiki_file_node.is_preview_ready IS '是否已生成预览';
+COMMENT ON COLUMN ydsz_wiki_file_node.is_starred IS '是否星标文件';
 COMMENT ON COLUMN ydsz_wiki_file_node.share_status IS '共享状态：private / shared / public';
 COMMENT ON COLUMN ydsz_wiki_file_node.deleted_time IS '逻辑删除时间（回收站功能：删除时记录时间，30 天后永久删除）';
 COMMENT ON COLUMN ydsz_wiki_file_node.original_path IS '原始路径（删除前的完整路径，用于恢复）';
 COMMENT ON COLUMN ydsz_wiki_file_node.storage_class IS '存储类型：STANDARD / GLACIER / DEEP_ARCHIVE（冷数据归档）';
 COMMENT ON COLUMN ydsz_wiki_file_node.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_node.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_file_node.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_file_node.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_file_node.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_file_node.updated_at IS '最后更新时间';
@@ -89,14 +89,14 @@ COMMENT ON COLUMN ydsz_wiki_file_node.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_node.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_file_node_parent_id ON ydsz_wiki_file_node (parent_id);
-CREATE INDEX idx_ydsz_wiki_file_node_tenant_deleted ON ydsz_wiki_file_node (tenant_id, deleted);
-CREATE INDEX idx_ydsz_wiki_file_node_parent_deleted_updated ON ydsz_wiki_file_node (parent_id, deleted, updated_at);
-CREATE INDEX idx_ydsz_wiki_file_node_parent_deleted_type_updated ON ydsz_wiki_file_node (parent_id, deleted, node_type, updated_at);
+CREATE INDEX idx_ydsz_wiki_file_node_tenant_is_deleted ON ydsz_wiki_file_node (tenant_id, is_deleted);
+CREATE INDEX idx_ydsz_wiki_file_node_parent_deleted_updated ON ydsz_wiki_file_node (parent_id, is_deleted, updated_at);
+CREATE INDEX idx_ydsz_wiki_file_node_parent_deleted_type_updated ON ydsz_wiki_file_node (parent_id, is_deleted, node_type, updated_at);
 CREATE INDEX idx_ydsz_wiki_file_node_path ON ydsz_wiki_file_node (SUBSTR(path, 1, 255));
-CREATE INDEX idx_ydsz_wiki_file_node_created_deleted_type ON ydsz_wiki_file_node (created_by, deleted, node_type);
+CREATE INDEX idx_ydsz_wiki_file_node_created_deleted_type ON ydsz_wiki_file_node (created_by, is_deleted, node_type);
 CREATE INDEX idx_ydsz_wiki_file_node_file_hash ON ydsz_wiki_file_node (file_hash);
-CREATE INDEX idx_ydsz_wiki_file_node_not_deleted ON ydsz_wiki_file_node (id, parent_id, tenant_id);
-CREATE INDEX idx_ydsz_wiki_file_node_storage_class ON ydsz_wiki_file_node (node_type, deleted, storage_class, updated_at);
+CREATE INDEX idx_ydsz_wiki_file_node_not_is_deleted ON ydsz_wiki_file_node (id, parent_id, tenant_id);
+CREATE INDEX idx_ydsz_wiki_file_node_storage_class ON ydsz_wiki_file_node (node_type, is_deleted, storage_class, updated_at);
 
 CREATE TABLE ydsz_wiki_file_version (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -109,9 +109,9 @@ CREATE TABLE ydsz_wiki_file_version (
     mime_type                VARCHAR2(128 CHAR)       DEFAULT NULL,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     change_type              VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'update',
-    active                   NUMBER(1)                NOT NULL DEFAULT 0,
+    is_active                   NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -132,16 +132,16 @@ COMMENT ON COLUMN ydsz_wiki_file_version.file_hash IS '该版本的文件 SHA-25
 COMMENT ON COLUMN ydsz_wiki_file_version.mime_type IS '该版本的 MIME 类型';
 COMMENT ON COLUMN ydsz_wiki_file_version.remark IS '版本说明（用户自定义的版本备注）';
 COMMENT ON COLUMN ydsz_wiki_file_version.change_type IS '变更类型：create / update / rollback';
-COMMENT ON COLUMN ydsz_wiki_file_version.active IS '是否为当前活跃版本';
+COMMENT ON COLUMN ydsz_wiki_file_version.is_active IS '是否为当前活跃版本';
 COMMENT ON COLUMN ydsz_wiki_file_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_file_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_file_version.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_file_version.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_file_version.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_file_version.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_version.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_wiki_file_version_tenant_deleted ON ydsz_wiki_file_version (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_file_version_tenant_is_deleted ON ydsz_wiki_file_version (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_tag (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -151,7 +151,7 @@ CREATE TABLE ydsz_wiki_tag (
     type                     VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'manual',
     usage_count              NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -169,14 +169,14 @@ COMMENT ON COLUMN ydsz_wiki_tag.color IS '标签颜色（十六进制颜色码�
 COMMENT ON COLUMN ydsz_wiki_tag.type IS '标签类型：manual（手动）/ auto（自动推荐）/ system（系统预设）';
 COMMENT ON COLUMN ydsz_wiki_tag.usage_count IS '使用次数（文件关联数）';
 COMMENT ON COLUMN ydsz_wiki_tag.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_tag.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_tag.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_tag.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_tag.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_tag.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_tag.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_tag.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_wiki_tag_tenant_deleted ON ydsz_wiki_tag (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_tag_tenant_is_deleted ON ydsz_wiki_tag (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_file_tag (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -184,7 +184,7 @@ CREATE TABLE ydsz_wiki_file_tag (
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     tag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -200,7 +200,7 @@ COMMENT ON COLUMN ydsz_wiki_file_tag.tenant_id IS '租户 ID（多租户隔离�
 COMMENT ON COLUMN ydsz_wiki_file_tag.file_node_id IS '文件节点ID';
 COMMENT ON COLUMN ydsz_wiki_file_tag.tag_id IS '标签ID';
 COMMENT ON COLUMN ydsz_wiki_file_tag.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_tag.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_file_tag.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_file_tag.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_file_tag.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_file_tag.updated_at IS '最后更新时间';
@@ -208,7 +208,7 @@ COMMENT ON COLUMN ydsz_wiki_file_tag.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_tag.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_file_tag_tag_id ON ydsz_wiki_file_tag (tag_id);
-CREATE INDEX idx_ydsz_wiki_file_tag_tenant_deleted ON ydsz_wiki_file_tag (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_file_tag_tenant_is_deleted ON ydsz_wiki_file_tag (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_file_comment (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -216,11 +216,11 @@ CREATE TABLE ydsz_wiki_file_comment (
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     content                  CLOB                     NOT NULL,
     parent_comment_id        VARCHAR2(32 CHAR)        DEFAULT NULL,
-    resolved                 NUMBER(1)                NOT NULL DEFAULT 0,
+    is_resolved                 NUMBER(1)                NOT NULL DEFAULT 0,
     position                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_wiki_file_comment_position CHECK (position IS JSON),
-    edited                   NUMBER(1)                NOT NULL DEFAULT 0,
+    is_edited                   NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -235,11 +235,11 @@ COMMENT ON COLUMN ydsz_wiki_file_comment.tenant_id IS '租户 ID（多租户隔�
 COMMENT ON COLUMN ydsz_wiki_file_comment.file_node_id IS '关联的文件节点ID';
 COMMENT ON COLUMN ydsz_wiki_file_comment.content IS '评论内容';
 COMMENT ON COLUMN ydsz_wiki_file_comment.parent_comment_id IS '父评论ID（用于回复，null 表示顶级评论）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.resolved IS '是否已解决（用于批注功能）';
+COMMENT ON COLUMN ydsz_wiki_file_comment.is_resolved IS '是否已解决（用于批注功能）';
 COMMENT ON COLUMN ydsz_wiki_file_comment.position IS '评论位置信息（JSON，用于文档内定位批注）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.edited IS '是否被编辑过';
+COMMENT ON COLUMN ydsz_wiki_file_comment.is_edited IS '是否被编辑过';
 COMMENT ON COLUMN ydsz_wiki_file_comment.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_comment.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_file_comment.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_file_comment.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_file_comment.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_file_comment.updated_at IS '最后更新时间';
@@ -248,7 +248,7 @@ COMMENT ON COLUMN ydsz_wiki_file_comment.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_file_comment_file_node_id ON ydsz_wiki_file_comment (file_node_id);
 CREATE INDEX idx_ydsz_wiki_file_comment_parent_comment_id ON ydsz_wiki_file_comment (parent_comment_id);
-CREATE INDEX idx_ydsz_wiki_file_comment_tenant_deleted ON ydsz_wiki_file_comment (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_file_comment_tenant_is_deleted ON ydsz_wiki_file_comment (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_file_acl (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -257,10 +257,10 @@ CREATE TABLE ydsz_wiki_file_acl (
     grantee_type             VARCHAR2(32 CHAR)        NOT NULL,
     grantee_id               VARCHAR2(64 CHAR)        NOT NULL,
     permission_mask          NUMBER(10)               NOT NULL DEFAULT 0,
-    inherited                NUMBER(1)                NOT NULL DEFAULT 1,
-    owner                    NUMBER(1)                NOT NULL DEFAULT 0,
+    is_inherited                NUMBER(1)                NOT NULL DEFAULT 1,
+    is_owner                    NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -277,10 +277,10 @@ COMMENT ON COLUMN ydsz_wiki_file_acl.file_node_id IS '文件节点ID';
 COMMENT ON COLUMN ydsz_wiki_file_acl.grantee_type IS '授权对象类型：user / role / group / tenant';
 COMMENT ON COLUMN ydsz_wiki_file_acl.grantee_id IS '授权对象ID（用户ID / 角色ID / 组ID / 租户ID）';
 COMMENT ON COLUMN ydsz_wiki_file_acl.permission_mask IS '权限位掩码（read=1, write=2, delete=4, share=8, download=16）';
-COMMENT ON COLUMN ydsz_wiki_file_acl.inherited IS '是否继承自父目录';
-COMMENT ON COLUMN ydsz_wiki_file_acl.owner IS '是否为所有者（所有者拥有全部权限）';
+COMMENT ON COLUMN ydsz_wiki_file_acl.is_inherited IS '是否继承自父目录';
+COMMENT ON COLUMN ydsz_wiki_file_acl.is_owner IS '是否为所有者（所有者拥有全部权限）';
 COMMENT ON COLUMN ydsz_wiki_file_acl.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_acl.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_file_acl.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_file_acl.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_file_acl.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_file_acl.updated_at IS '最后更新时间';
@@ -288,7 +288,7 @@ COMMENT ON COLUMN ydsz_wiki_file_acl.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_acl.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_file_acl_grantee ON ydsz_wiki_file_acl (grantee_type, grantee_id);
-CREATE INDEX idx_ydsz_wiki_file_acl_tenant_deleted ON ydsz_wiki_file_acl (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_file_acl_tenant_is_deleted ON ydsz_wiki_file_acl (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_share_link (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -303,9 +303,9 @@ CREATE TABLE ydsz_wiki_share_link (
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'active',
     password                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     share_target_type        VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PUBLIC',
-    reminder_sent            NUMBER(1)                NOT NULL DEFAULT 0,
+    is_reminder_sent            NUMBER(1)                NOT NULL DEFAULT 0,
     title                    VARCHAR2(255 CHAR)       DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -328,9 +328,9 @@ COMMENT ON COLUMN ydsz_wiki_share_link.access_count IS '已访问次数';
 COMMENT ON COLUMN ydsz_wiki_share_link.status IS '分享状态：active / expired / revoked';
 COMMENT ON COLUMN ydsz_wiki_share_link.password IS '分享密码（BCrypt 加密；空表示无密码）';
 COMMENT ON COLUMN ydsz_wiki_share_link.share_target_type IS '分享目标类型：PUBLIC(公开) / USER(指定用户) / DEPT(部门)';
-COMMENT ON COLUMN ydsz_wiki_share_link.reminder_sent IS '到期提醒是否已发送';
+COMMENT ON COLUMN ydsz_wiki_share_link.is_reminder_sent IS '到期提醒是否已发送';
 COMMENT ON COLUMN ydsz_wiki_share_link.title IS '分享标题（可选）';
-COMMENT ON COLUMN ydsz_wiki_share_link.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_share_link.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_share_link.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_share_link.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_share_link.updated_at IS '最后更新时间';
@@ -338,8 +338,8 @@ COMMENT ON COLUMN ydsz_wiki_share_link.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_share_link.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_share_link_file_node_id ON ydsz_wiki_share_link (file_node_id);
-CREATE INDEX idx_ydsz_wiki_share_link_expire_reminder ON ydsz_wiki_share_link (status, expire_time, reminder_sent);
-CREATE INDEX idx_ydsz_wiki_share_link_tenant_deleted ON ydsz_wiki_share_link (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_share_link_expire_reminder ON ydsz_wiki_share_link (status, expire_time, is_reminder_sent);
+CREATE INDEX idx_ydsz_wiki_share_link_tenant_is_deleted ON ydsz_wiki_share_link (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_share_recipient (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -350,7 +350,7 @@ CREATE TABLE ydsz_wiki_share_recipient (
     recipient_name           VARCHAR2(128 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ACTIVE',
     viewed_at                TIMESTAMP                DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -369,16 +369,16 @@ COMMENT ON COLUMN ydsz_wiki_share_recipient.recipient_id IS '接收者 ID';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.recipient_name IS '接收者名称';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.status IS '状态：ACTIVE/VIEWED/REVOKED';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.viewed_at IS '首次查看时间';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_share_recipient.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_wiki_share_recipient_share ON ydsz_wiki_share_recipient (share_id, deleted);
-CREATE INDEX idx_ydsz_wiki_share_recipient_user ON ydsz_wiki_share_recipient (recipient_id, status, deleted);
-CREATE INDEX idx_ydsz_wiki_share_recipient_tenant_deleted ON ydsz_wiki_share_recipient (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_share_recipient_share ON ydsz_wiki_share_recipient (share_id, is_deleted);
+CREATE INDEX idx_ydsz_wiki_share_recipient_user ON ydsz_wiki_share_recipient (recipient_id, status, is_deleted);
+CREATE INDEX idx_ydsz_wiki_share_recipient_tenant_is_deleted ON ydsz_wiki_share_recipient (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_share_access_log (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -395,7 +395,7 @@ CREATE TABLE ydsz_wiki_share_access_log (
     fail_reason              VARCHAR2(255 CHAR)       DEFAULT NULL,
     access_time              TIMESTAMP                NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -419,7 +419,7 @@ COMMENT ON COLUMN ydsz_wiki_share_access_log.access_status IS '访问状态：SU
 COMMENT ON COLUMN ydsz_wiki_share_access_log.fail_reason IS '失败原因';
 COMMENT ON COLUMN ydsz_wiki_share_access_log.access_time IS '访问时间';
 COMMENT ON COLUMN ydsz_wiki_share_access_log.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_share_access_log.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_share_access_log.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_share_access_log.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_share_access_log.updated_at IS '最后更新时间';
@@ -430,7 +430,7 @@ CREATE INDEX idx_ydsz_wiki_share_access_log_access_time ON ydsz_wiki_share_acces
 CREATE INDEX idx_ydsz_wiki_share_access_log_share_id ON ydsz_wiki_share_access_log (share_id, created_at);
 CREATE INDEX idx_ydsz_wiki_share_access_log_created ON ydsz_wiki_share_access_log (created_at);
 CREATE INDEX idx_ydsz_wiki_share_access_log_visitor ON ydsz_wiki_share_access_log (visitor_id, created_at);
-CREATE INDEX idx_ydsz_wiki_share_access_log_tenant_deleted ON ydsz_wiki_share_access_log (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_share_access_log_tenant_is_deleted ON ydsz_wiki_share_access_log (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_share_access_log_archive (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -446,7 +446,7 @@ CREATE TABLE ydsz_wiki_share_access_log_archive (
     access_status            VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'SUCCESS',
     fail_reason              VARCHAR2(255 CHAR)       DEFAULT NULL,
     access_time              TIMESTAMP                NOT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_wiki_share_access_log_archive PRIMARY KEY (id)
 );
@@ -465,13 +465,13 @@ COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.access_type IS '访问类�
 COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.access_status IS '访问状态：SUCCESS/FAIL';
 COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.fail_reason IS '失败原因';
 COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.access_time IS '访问时间';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.created_at IS '创建时间';
 
 CREATE INDEX idx_ydsz_wiki_share_access_log_archive_archive_share_created ON ydsz_wiki_share_access_log_archive (share_id, created_at);
 CREATE INDEX idx_ydsz_wiki_share_access_log_archive_archive_created ON ydsz_wiki_share_access_log_archive (created_at);
 CREATE INDEX idx_ydsz_wiki_share_access_log_archive_archive_access_time ON ydsz_wiki_share_access_log_archive (access_time);
-CREATE INDEX idx_ydsz_wiki_share_access_log_archive_tenant_deleted ON ydsz_wiki_share_access_log_archive (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_share_access_log_archive_tenant_is_deleted ON ydsz_wiki_share_access_log_archive (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_space (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -488,7 +488,7 @@ CREATE TABLE ydsz_wiki_space (
     node_count               NUMBER(10)               NOT NULL DEFAULT 0,
     quota_limit              NUMBER(19)               DEFAULT NULL,
     quota_used               NUMBER(19)               NOT NULL DEFAULT 0,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     deleted_time             TIMESTAMP                DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -513,7 +513,7 @@ COMMENT ON COLUMN ydsz_wiki_space.member_count IS '成员数量';
 COMMENT ON COLUMN ydsz_wiki_space.node_count IS '节点数量（文件/目录总数）';
 COMMENT ON COLUMN ydsz_wiki_space.quota_limit IS '空间独立配额（字节，NULL 表示使用租户配额）';
 COMMENT ON COLUMN ydsz_wiki_space.quota_used IS '已使用配额（字节）';
-COMMENT ON COLUMN ydsz_wiki_space.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_space.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_space.deleted_time IS '删除时间';
 COMMENT ON COLUMN ydsz_wiki_space.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_space.updated_at IS '最后更新时间';
@@ -521,8 +521,8 @@ COMMENT ON COLUMN ydsz_wiki_space.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_space_tenant_sort ON ydsz_wiki_space (tenant_id, sort);
-CREATE INDEX idx_ydsz_wiki_space_owner ON ydsz_wiki_space (owner_id);
-CREATE INDEX idx_ydsz_wiki_space_tenant_deleted ON ydsz_wiki_space (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_space_is_owner ON ydsz_wiki_space (owner_id);
+CREATE INDEX idx_ydsz_wiki_space_tenant_is_deleted ON ydsz_wiki_space (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_space_member (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -531,7 +531,7 @@ CREATE TABLE ydsz_wiki_space_member (
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     role                     VARCHAR2(32 CHAR)        NOT NULL,
     joined_at                TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -547,7 +547,7 @@ COMMENT ON COLUMN ydsz_wiki_space_member.space_id IS '空间ID';
 COMMENT ON COLUMN ydsz_wiki_space_member.user_id IS '用户ID';
 COMMENT ON COLUMN ydsz_wiki_space_member.role IS '角色：owner / admin / editor / viewer';
 COMMENT ON COLUMN ydsz_wiki_space_member.joined_at IS '加入时间';
-COMMENT ON COLUMN ydsz_wiki_space_member.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_space_member.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_space_member.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_space_member.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_space_member.created_by IS '创建人';
@@ -555,7 +555,7 @@ COMMENT ON COLUMN ydsz_wiki_space_member.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_space_member_space_role ON ydsz_wiki_space_member (space_id, role);
 CREATE INDEX idx_ydsz_wiki_space_member_user ON ydsz_wiki_space_member (user_id);
-CREATE INDEX idx_ydsz_wiki_space_member_tenant_deleted ON ydsz_wiki_space_member (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_space_member_tenant_is_deleted ON ydsz_wiki_space_member (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_space_template (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -564,12 +564,12 @@ CREATE TABLE ydsz_wiki_space_template (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     category                 VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'general',
     icon_url                 VARCHAR2(1024 CHAR)      DEFAULT NULL,
-    system                   NUMBER(1)                NOT NULL DEFAULT 0,
-    public_access           NUMBER(1)                NOT NULL DEFAULT 1,
+    is_system                   NUMBER(1)                NOT NULL DEFAULT 0,
+    is_public_access           NUMBER(1)                NOT NULL DEFAULT 1,
     structure_json           CLOB                     NOT NULL CONSTRAINT ck_ydsz_wiki_space_template_structure_json CHECK (structure_json IS JSON),
     sort               NUMBER(10)               NOT NULL DEFAULT 0,
     usage_count              NUMBER(10)               NOT NULL DEFAULT 0,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -584,20 +584,20 @@ COMMENT ON COLUMN ydsz_wiki_space_template.name IS '模板名称';
 COMMENT ON COLUMN ydsz_wiki_space_template.description IS '模板描述';
 COMMENT ON COLUMN ydsz_wiki_space_template.category IS '模板分类：general / project / meeting / knowledge';
 COMMENT ON COLUMN ydsz_wiki_space_template.icon_url IS '模板图标 URL';
-COMMENT ON COLUMN ydsz_wiki_space_template.system IS '是否为系统内置模板（不可删除）';
-COMMENT ON COLUMN ydsz_wiki_space_template.public_access IS '是否公开（所有租户可见）';
+COMMENT ON COLUMN ydsz_wiki_space_template.is_system IS '是否为系统内置模板（不可删除）';
+COMMENT ON COLUMN ydsz_wiki_space_template.is_public_access IS '是否公开（所有租户可见）';
 COMMENT ON COLUMN ydsz_wiki_space_template.structure_json IS '模板结构 JSON（定义目录树、初始页面、权限配置等）';
 COMMENT ON COLUMN ydsz_wiki_space_template.sort IS '排序序号';
 COMMENT ON COLUMN ydsz_wiki_space_template.usage_count IS '使用次数';
-COMMENT ON COLUMN ydsz_wiki_space_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_space_template.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_space_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_space_template.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_space_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space_template.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_space_template_tenant_category ON ydsz_wiki_space_template (tenant_id, category);
-CREATE INDEX idx_ydsz_wiki_space_template_system_public ON ydsz_wiki_space_template (system, public_access);
-CREATE INDEX idx_ydsz_wiki_space_template_tenant_deleted ON ydsz_wiki_space_template (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_space_template_system_is_public ON ydsz_wiki_space_template (is_system, is_public_access);
+CREATE INDEX idx_ydsz_wiki_space_template_tenant_is_deleted ON ydsz_wiki_space_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_trash_item (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -611,7 +611,7 @@ CREATE TABLE ydsz_wiki_trash_item (
     deleted_time             TIMESTAMP                NOT NULL,
     purge_time               TIMESTAMP                NOT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'in_trash',
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -632,7 +632,7 @@ COMMENT ON COLUMN ydsz_wiki_trash_item.size IS '文件大小（字节）';
 COMMENT ON COLUMN ydsz_wiki_trash_item.deleted_time IS '删除时间';
 COMMENT ON COLUMN ydsz_wiki_trash_item.purge_time IS '预计永久删除时间';
 COMMENT ON COLUMN ydsz_wiki_trash_item.status IS '状态：in_trash / restored / purged';
-COMMENT ON COLUMN ydsz_wiki_trash_item.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_trash_item.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_trash_item.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_trash_item.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_trash_item.updated_at IS '最后更新时间';
@@ -642,7 +642,7 @@ COMMENT ON COLUMN ydsz_wiki_trash_item.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_wiki_trash_item_file_node_id ON ydsz_wiki_trash_item (file_node_id);
 CREATE INDEX idx_ydsz_wiki_trash_item_deleted_time ON ydsz_wiki_trash_item (deleted_time);
 CREATE INDEX idx_ydsz_wiki_trash_item_purge_time ON ydsz_wiki_trash_item (purge_time);
-CREATE INDEX idx_ydsz_wiki_trash_item_tenant_deleted ON ydsz_wiki_trash_item (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_trash_item_tenant_is_deleted ON ydsz_wiki_trash_item (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_search_index (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -656,7 +656,7 @@ CREATE TABLE ydsz_wiki_search_index (
     size                     NUMBER(19)               NOT NULL DEFAULT 0,
     tags                     VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -678,7 +678,7 @@ COMMENT ON COLUMN ydsz_wiki_search_index.mime_type IS 'MIME 类型';
 COMMENT ON COLUMN ydsz_wiki_search_index.size IS '文件大小（字节）';
 COMMENT ON COLUMN ydsz_wiki_search_index.tags IS '标签（逗号分隔）';
 COMMENT ON COLUMN ydsz_wiki_search_index.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_search_index.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_search_index.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_search_index.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_search_index.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_search_index.updated_at IS '最后更新时间';
@@ -687,7 +687,7 @@ COMMENT ON COLUMN ydsz_wiki_search_index.updated_by IS '最后更新人';
 
 -- 原 MySQL FULLTEXT 索引: Oracle 使用普通复合索引, 全文检索建议由 ES/应用层承担 (或升级为 Oracle Text CONTEXT 索引)
 CREATE INDEX idx_ydsz_wiki_search_index_ft_search_name_content ON ydsz_wiki_search_index (name, content);
-CREATE INDEX idx_ydsz_wiki_search_index_tenant_deleted ON ydsz_wiki_search_index (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_search_index_tenant_is_deleted ON ydsz_wiki_search_index (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_user_favorite (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -695,7 +695,7 @@ CREATE TABLE ydsz_wiki_user_favorite (
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
     sort               NUMBER(10)               NOT NULL DEFAULT 0,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     deleted_time             TIMESTAMP                DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -711,7 +711,7 @@ COMMENT ON COLUMN ydsz_wiki_user_favorite.tenant_id IS '租户 ID（多租户隔
 COMMENT ON COLUMN ydsz_wiki_user_favorite.user_id IS '用户ID';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.node_id IS '收藏的文件/目录节点ID';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.sort IS '排序序号（值越小越靠前）';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_user_favorite.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.deleted_time IS '删除时间';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_at IS '最后更新时间';
@@ -719,7 +719,7 @@ COMMENT ON COLUMN ydsz_wiki_user_favorite.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_wiki_user_favorite_user_sort ON ydsz_wiki_user_favorite (user_id, sort);
-CREATE INDEX idx_ydsz_wiki_user_favorite_tenant_deleted ON ydsz_wiki_user_favorite (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_user_favorite_tenant_is_deleted ON ydsz_wiki_user_favorite (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_user_recent (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -728,7 +728,7 @@ CREATE TABLE ydsz_wiki_user_recent (
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
     access_type              VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'view',
     accessed_at              TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_wiki_user_recent PRIMARY KEY (id),
@@ -742,13 +742,13 @@ COMMENT ON COLUMN ydsz_wiki_user_recent.user_id IS '用户ID';
 COMMENT ON COLUMN ydsz_wiki_user_recent.node_id IS '访问的文件/目录节点ID';
 COMMENT ON COLUMN ydsz_wiki_user_recent.access_type IS '访问类型：view / edit / download';
 COMMENT ON COLUMN ydsz_wiki_user_recent.accessed_at IS '最近访问时间（排序字段）';
-COMMENT ON COLUMN ydsz_wiki_user_recent.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_user_recent.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_user_recent.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_user_recent.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_wiki_user_recent_user_accessed ON ydsz_wiki_user_recent (user_id, accessed_at);
 CREATE INDEX idx_ydsz_wiki_user_recent_access_type ON ydsz_wiki_user_recent (user_id, access_type);
-CREATE INDEX idx_ydsz_wiki_user_recent_tenant_deleted ON ydsz_wiki_user_recent (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_user_recent_tenant_is_deleted ON ydsz_wiki_user_recent (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_wiki_storage_quota (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
@@ -760,7 +760,7 @@ CREATE TABLE ydsz_wiki_storage_quota (
     file_count_limit         NUMBER(10)               DEFAULT NULL,
     file_count_used          NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -780,14 +780,14 @@ COMMENT ON COLUMN ydsz_wiki_storage_quota.quota_used IS '已使用量（字节�
 COMMENT ON COLUMN ydsz_wiki_storage_quota.file_count_limit IS '文件数量上限';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.file_count_used IS '已使用文件数量';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_wiki_storage_quota.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_wiki_storage_quota_tenant_deleted ON ydsz_wiki_storage_quota (tenant_id, deleted);
+CREATE INDEX idx_ydsz_wiki_storage_quota_tenant_is_deleted ON ydsz_wiki_storage_quota (tenant_id, is_deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (Oracle)

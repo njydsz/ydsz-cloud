@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     category        VARCHAR(64)     DEFAULT NULL COMMENT '分类（用于分组检索）',
     current_version INT             NOT NULL DEFAULT 1 COMMENT '当前版本号，自 1 起每次更新递增',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     -- 索引
     CONSTRAINT uk_template_code UNIQUE (template_code, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Prompt 模板主表';
 
 -- ----------------------------------------------------------------------------
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     content         TEXT            NOT NULL COMMENT '该版本的模板内容快照',
     change_note     VARCHAR(512)    DEFAULT NULL COMMENT '版本备注（描述本次变更内容）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '版本创建时间',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '操作人',
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     temperature     DOUBLE          DEFAULT NULL COMMENT '温度参数',
     max_tokens      INT             DEFAULT NULL COMMENT '最大生成 Token 数',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     -- 索引
     CONSTRAINT uk_agent_code UNIQUE (agent_code, tenant_id),
     INDEX idx_agent_type (agent_type),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 定义（Agent 的完整配置信息）';
 
 -- ----------------------------------------------------------------------------
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     completion_tokens   BIGINT          NOT NULL DEFAULT 0 COMMENT '补全 Token 数',
     total_tokens        BIGINT          NOT NULL DEFAULT 0 COMMENT '总 Token 数（prompt + completion）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
@@ -162,28 +162,28 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
 
     -- 索引
     INDEX idx_conversation_created (conversation_id, created_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Token 用量记录（LLM 调用 Token 消耗明细）';
 
 -- ============================================================================
 -- 初始化数据：默认系统 Prompt 模板（沿用 V1__prompt_template.sql）
 -- ============================================================================
-INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
-VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt',
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
+VALUES ('100000000000000001', '0', 'DEFAULT_is_system', '默认系统 Prompt',
         '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。',
-        '系统默认的通用助手 Prompt', 'system', 1, FALSE);
+        '系统默认的通用助手 Prompt', 'is_system', 1, FALSE);
 
 INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
-VALUES ('100000000000000002', '0', 'DEFAULT_SYSTEM', 1,
+VALUES ('100000000000000002', '0', 'DEFAULT_is_system', 1,
         '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。',
         '初始版本');
 
-INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
-VALUES ('100000000000000003', '0', 'REACT_SYSTEM', 'ReAct Agent Prompt',
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
+VALUES ('100000000000000003', '0', 'REACT_is_system', 'ReAct Agent Prompt',
         '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。',
-        'ReAct 模式下的工具调用助手 Prompt', 'system', 1, FALSE);
+        'ReAct 模式下的工具调用助手 Prompt', 'is_system', 1, FALSE);
 
 INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
-VALUES ('100000000000000004', '0', 'REACT_SYSTEM', 1,
+VALUES ('100000000000000004', '0', 'REACT_is_system', 1,
         '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。',
         '初始版本');

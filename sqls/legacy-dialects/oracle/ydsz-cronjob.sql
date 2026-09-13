@@ -72,7 +72,7 @@ CREATE TABLE ydsz_job_main (
     canary_ratio             NUMBER(10)               DEFAULT NULL,
     canary_handler           VARCHAR2(128 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -121,7 +121,7 @@ COMMENT ON COLUMN ydsz_job_main.cluster IS '执行集群';
 COMMENT ON COLUMN ydsz_job_main.canary_ratio IS '金丝雀流量比例（百分比 0-100）';
 COMMENT ON COLUMN ydsz_job_main.canary_handler IS '金丝雀处理器 Bean 名称';
 COMMENT ON COLUMN ydsz_job_main.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_main.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_main.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_main.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_main.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_main.updated_at IS '最后更新时间';
@@ -130,7 +130,7 @@ COMMENT ON COLUMN ydsz_job_main.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_job_main_job_group ON ydsz_job_main (job_group);
 CREATE INDEX idx_ydsz_job_main_job_next_fire ON ydsz_job_main (next_fire_time);
-CREATE INDEX idx_ydsz_job_main_tenant_deleted ON ydsz_job_main (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_main_tenant_is_deleted ON ydsz_job_main (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_glue (
     id                       VARCHAR2(32 CHAR)       ,
@@ -141,7 +141,7 @@ CREATE TABLE ydsz_job_glue (
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -160,14 +160,14 @@ COMMENT ON COLUMN ydsz_job_glue.language IS '语言: GROOVY(默认)/PYTHON/SHELL
 COMMENT ON COLUMN ydsz_job_glue.version IS '版本号（从 1 递增）';
 COMMENT ON COLUMN ydsz_job_glue.remark IS '版本备注';
 COMMENT ON COLUMN ydsz_job_glue.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_glue.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_glue.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_glue.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_glue.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_glue.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_job_glue.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_job_glue.updated_by IS '最后更新人';
 
-CREATE INDEX idx_ydsz_job_glue_tenant_deleted ON ydsz_job_glue (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_glue_tenant_is_deleted ON ydsz_job_glue (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_task (
     id                       VARCHAR2(32 CHAR)       ,
@@ -184,7 +184,7 @@ CREATE TABLE ydsz_job_task (
     exec_node_id             VARCHAR2(64 CHAR)        DEFAULT NULL,
     retry_count              NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -208,7 +208,7 @@ COMMENT ON COLUMN ydsz_job_task.error_message IS '错误信息（失败时填充
 COMMENT ON COLUMN ydsz_job_task.exec_node_id IS '执行节点 ID（hostname:port）';
 COMMENT ON COLUMN ydsz_job_task.retry_count IS '重试次数（默认 0，每次重试递增）';
 COMMENT ON COLUMN ydsz_job_task.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_task.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_task.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_task.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_task.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_task.updated_at IS '最后更新时间';
@@ -217,7 +217,7 @@ COMMENT ON COLUMN ydsz_job_task.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_job_task_jt_job_id ON ydsz_job_task (job_id);
 CREATE INDEX idx_ydsz_job_task_jt_log_id ON ydsz_job_task (log_id);
-CREATE INDEX idx_ydsz_job_task_tenant_deleted ON ydsz_job_task (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_task_tenant_is_deleted ON ydsz_job_task (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_node (
     id                       VARCHAR2(32 CHAR)       ,
@@ -233,7 +233,7 @@ CREATE TABLE ydsz_job_node (
     running_count            NUMBER(10)               NOT NULL DEFAULT 0,
     tags                     CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_node_tags CHECK (tags IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -257,7 +257,7 @@ COMMENT ON COLUMN ydsz_job_node.mem_usage_pct IS '内存使用率（百分比，
 COMMENT ON COLUMN ydsz_job_node.running_count IS '当前正在执行的任务数';
 COMMENT ON COLUMN ydsz_job_node.tags IS '节点标签 JSON（用于任务亲和性选择）';
 COMMENT ON COLUMN ydsz_job_node.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_node.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_node.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_node.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_node.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_node.updated_at IS '最后更新时间';
@@ -265,7 +265,7 @@ COMMENT ON COLUMN ydsz_job_node.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_job_node.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_job_node_last_heartbeat ON ydsz_job_node (last_heartbeat);
-CREATE INDEX idx_ydsz_job_node_tenant_deleted ON ydsz_job_node (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_node_tenant_is_deleted ON ydsz_job_node (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_history (
     id                       VARCHAR2(32 CHAR)       ,
@@ -283,7 +283,7 @@ CREATE TABLE ydsz_job_history (
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     changed_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     changed_at               TIMESTAMP                DEFAULT NULL,
-    history_deleted          NUMBER(1)                NOT NULL DEFAULT 0,
+    is_history_deleted          NUMBER(1)                NOT NULL DEFAULT 0,
     CONSTRAINT pk_ydsz_job_history PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_history_jh_job_version UNIQUE (job_id, version)
 );
@@ -304,7 +304,7 @@ COMMENT ON COLUMN ydsz_job_history.params_json IS '参数 JSON（冗余）';
 COMMENT ON COLUMN ydsz_job_history.remark IS '备注（冗余）';
 COMMENT ON COLUMN ydsz_job_history.changed_by IS '修改人 ID';
 COMMENT ON COLUMN ydsz_job_history.changed_at IS '修改时间';
-COMMENT ON COLUMN ydsz_job_history.history_deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_job_history.is_history_deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_ydsz_job_history_jh_job_id ON ydsz_job_history (job_id);
 CREATE INDEX idx_ydsz_job_history_jh_changed_at ON ydsz_job_history (changed_at);
@@ -323,7 +323,7 @@ CREATE TABLE ydsz_job_artifact (
     metadata                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_artifact_metadata CHECK (metadata IS JSON),
     expire_at                TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -346,7 +346,7 @@ COMMENT ON COLUMN ydsz_job_artifact.content_type IS '内容类型（MIME type）
 COMMENT ON COLUMN ydsz_job_artifact.metadata IS '产物元数据 JSON';
 COMMENT ON COLUMN ydsz_job_artifact.expire_at IS '过期时间（null=不过期）';
 COMMENT ON COLUMN ydsz_job_artifact.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_artifact.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_artifact.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_artifact.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_artifact.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_artifact.updated_at IS '最后更新时间';
@@ -356,7 +356,7 @@ COMMENT ON COLUMN ydsz_job_artifact.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_job_artifact_ja_job_id ON ydsz_job_artifact (job_id);
 CREATE INDEX idx_ydsz_job_artifact_ja_log_id ON ydsz_job_artifact (log_id);
 CREATE INDEX idx_ydsz_job_artifact_ja_expire_at ON ydsz_job_artifact (expire_at);
-CREATE INDEX idx_ydsz_job_artifact_tenant_deleted ON ydsz_job_artifact (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_artifact_tenant_is_deleted ON ydsz_job_artifact (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_webhook (
     id                       VARCHAR2(32 CHAR)       ,
@@ -371,7 +371,7 @@ CREATE TABLE ydsz_job_webhook (
     secret                   VARCHAR2(256 CHAR)       DEFAULT NULL,
     webhook_status           VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -393,7 +393,7 @@ COMMENT ON COLUMN ydsz_job_webhook.headers IS '请求头 JSON';
 COMMENT ON COLUMN ydsz_job_webhook.secret IS '密钥（用于签名验证）';
 COMMENT ON COLUMN ydsz_job_webhook.webhook_status IS '状态: ACTIVE / INACTIVE';
 COMMENT ON COLUMN ydsz_job_webhook.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_webhook.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_webhook.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_webhook.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_webhook.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_webhook.updated_at IS '最后更新时间';
@@ -402,7 +402,7 @@ COMMENT ON COLUMN ydsz_job_webhook.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_job_webhook_event_type ON ydsz_job_webhook (event_type);
 CREATE INDEX idx_ydsz_job_webhook_jw_job_key ON ydsz_job_webhook (job_key);
-CREATE INDEX idx_ydsz_job_webhook_tenant_deleted ON ydsz_job_webhook (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_webhook_tenant_is_deleted ON ydsz_job_webhook (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_alert_rule (
     id                       VARCHAR2(32 CHAR)       ,
@@ -417,11 +417,11 @@ CREATE TABLE ydsz_job_alert_rule (
     channels                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_alert_rule_channels CHECK (channels IS JSON),
     receivers                CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_alert_rule_receivers CHECK (receivers IS JSON),
     cooldown_minutes         NUMBER(10)               DEFAULT NULL,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
     source_type              VARCHAR2(32 CHAR)        DEFAULT NULL,
     last_alert_at            TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -443,11 +443,11 @@ COMMENT ON COLUMN ydsz_job_alert_rule.time_window_minutes IS '统计时间窗口
 COMMENT ON COLUMN ydsz_job_alert_rule.channels IS '通知通道（JSON 数组: ["EMAIL","DINGTALK","WECOM","WEBHOOK"]）';
 COMMENT ON COLUMN ydsz_job_alert_rule.receivers IS '接收人（JSON 数组: 邮箱/手机号/userId 列表）';
 COMMENT ON COLUMN ydsz_job_alert_rule.cooldown_minutes IS '冷却时间（分钟），同一规则在冷却期内不重复告警';
-COMMENT ON COLUMN ydsz_job_alert_rule.enabled IS '是否启用: 0 禁用 / 1 启用';
+COMMENT ON COLUMN ydsz_job_alert_rule.is_enabled IS '是否启用: 0 禁用 / 1 启用';
 COMMENT ON COLUMN ydsz_job_alert_rule.source_type IS '规则来源: MANUAL 手动创建(默认) / SLA 由SLA规则自动生成';
 COMMENT ON COLUMN ydsz_job_alert_rule.last_alert_at IS '最后告警时间（用于冷却判断）';
 COMMENT ON COLUMN ydsz_job_alert_rule.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_alert_rule.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_alert_rule.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_alert_rule.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_alert_rule.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_alert_rule.updated_at IS '最后更新时间';
@@ -456,7 +456,7 @@ COMMENT ON COLUMN ydsz_job_alert_rule.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_job_alert_rule_ar_job_id ON ydsz_job_alert_rule (job_id);
 CREATE INDEX idx_ydsz_job_alert_rule_ar_alert_type ON ydsz_job_alert_rule (alert_type);
-CREATE INDEX idx_ydsz_job_alert_rule_tenant_deleted ON ydsz_job_alert_rule (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_alert_rule_tenant_is_deleted ON ydsz_job_alert_rule (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_tenant_quota (
     id                       VARCHAR2(32 CHAR)       ,
@@ -464,9 +464,9 @@ CREATE TABLE ydsz_job_tenant_quota (
     max_jobs                 NUMBER(10)               DEFAULT NULL,
     max_concurrent           NUMBER(10)               DEFAULT NULL,
     max_daily_executions     NUMBER(10)               DEFAULT NULL,
-    enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
+    is_enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -482,9 +482,9 @@ COMMENT ON COLUMN ydsz_job_tenant_quota.tenant_id IS '租户 ID（多租户隔�
 COMMENT ON COLUMN ydsz_job_tenant_quota.max_jobs IS '任务数上限（NULL=unlimited；超过此值拒绝创建新任务）';
 COMMENT ON COLUMN ydsz_job_tenant_quota.max_concurrent IS '并发执行上限（NULL=unlimited；超过此值拒绝派发）';
 COMMENT ON COLUMN ydsz_job_tenant_quota.max_daily_executions IS '日执行量上限（NULL=unlimited；超过此值拒绝派发）';
-COMMENT ON COLUMN ydsz_job_tenant_quota.enabled IS '是否启用配额检查: 0 禁用 / 1 启用';
+COMMENT ON COLUMN ydsz_job_tenant_quota.is_enabled IS '是否启用配额检查: 0 禁用 / 1 启用';
 COMMENT ON COLUMN ydsz_job_tenant_quota.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_tenant_quota.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_tenant_quota.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_tenant_quota.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_tenant_quota.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_tenant_quota.updated_at IS '最后更新时间';
@@ -512,7 +512,7 @@ CREATE TABLE ydsz_job_dag (
     fail_count               NUMBER(19)               NOT NULL DEFAULT 0,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -542,7 +542,7 @@ COMMENT ON COLUMN ydsz_job_dag.success_count IS '成功次数';
 COMMENT ON COLUMN ydsz_job_dag.fail_count IS '失败次数';
 COMMENT ON COLUMN ydsz_job_dag.version IS '版本号(乐观锁)';
 COMMENT ON COLUMN ydsz_job_dag.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_dag.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_dag.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_dag.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_dag.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_dag.updated_at IS '最后更新时间';
@@ -550,7 +550,7 @@ COMMENT ON COLUMN ydsz_job_dag.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_job_dag.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_job_dag_dag_next_fire ON ydsz_job_dag (next_fire_time);
-CREATE INDEX idx_ydsz_job_dag_tenant_deleted ON ydsz_job_dag (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_dag_tenant_is_deleted ON ydsz_job_dag (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_dag_version (
     id                       VARCHAR2(32 CHAR)       ,
@@ -566,7 +566,7 @@ CREATE TABLE ydsz_job_dag_version (
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     changed_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -590,7 +590,7 @@ COMMENT ON COLUMN ydsz_job_dag_version.fail_strategy IS '失败策略快照';
 COMMENT ON COLUMN ydsz_job_dag_version.remark IS '版本备注（如"新增节点A"、"修改条件分支"）';
 COMMENT ON COLUMN ydsz_job_dag_version.changed_by IS '变更操作人';
 COMMENT ON COLUMN ydsz_job_dag_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_dag_version.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_dag_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_dag_version.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_dag_version.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_dag_version.updated_at IS '最后更新时间';
@@ -598,7 +598,7 @@ COMMENT ON COLUMN ydsz_job_dag_version.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_job_dag_version.updated_by IS '最后更新人';
 
 CREATE INDEX idx_ydsz_job_dag_version_dv_dag_key ON ydsz_job_dag_version (dag_key);
-CREATE INDEX idx_ydsz_job_dag_version_tenant_deleted ON ydsz_job_dag_version (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_dag_version_tenant_is_deleted ON ydsz_job_dag_version (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_dag_instance (
     id                       VARCHAR2(32 CHAR)       ,
@@ -620,7 +620,7 @@ CREATE TABLE ydsz_job_dag_instance (
     skipped_nodes            NUMBER(10)               DEFAULT NULL,
     next_fire_time           TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -649,7 +649,7 @@ COMMENT ON COLUMN ydsz_job_dag_instance.failed_nodes IS '失败节点数';
 COMMENT ON COLUMN ydsz_job_dag_instance.skipped_nodes IS '跳过节点数';
 COMMENT ON COLUMN ydsz_job_dag_instance.next_fire_time IS '下次触发时间（用于 DAG 的 CRON 调度）';
 COMMENT ON COLUMN ydsz_job_dag_instance.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_dag_instance.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_dag_instance.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_dag_instance.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_dag_instance.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_dag_instance.updated_at IS '最后更新时间';
@@ -659,7 +659,7 @@ COMMENT ON COLUMN ydsz_job_dag_instance.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_job_dag_instance_di_dag_id ON ydsz_job_dag_instance (dag_id);
 CREATE INDEX idx_ydsz_job_dag_instance_di_status ON ydsz_job_dag_instance (instance_status);
 CREATE INDEX idx_ydsz_job_dag_instance_di_started_at ON ydsz_job_dag_instance (started_at);
-CREATE INDEX idx_ydsz_job_dag_instance_tenant_deleted ON ydsz_job_dag_instance (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_dag_instance_tenant_is_deleted ON ydsz_job_dag_instance (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_dag_node_instance (
     id                       VARCHAR2(32 CHAR)       ,
@@ -678,7 +678,7 @@ CREATE TABLE ydsz_job_dag_node_instance (
     result_json              CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_dag_node_instance_result_json CHECK (result_json IS JSON),
     error_message            CLOB                     DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -704,7 +704,7 @@ COMMENT ON COLUMN ydsz_job_dag_node_instance.duration_ms IS '节点执行耗时�
 COMMENT ON COLUMN ydsz_job_dag_node_instance.result_json IS '节点执行结果 JSON';
 COMMENT ON COLUMN ydsz_job_dag_node_instance.error_message IS '节点错误信息';
 COMMENT ON COLUMN ydsz_job_dag_node_instance.status IS '状态标识';
-COMMENT ON COLUMN ydsz_job_dag_node_instance.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_job_dag_node_instance.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_dag_node_instance.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_job_dag_node_instance.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_dag_node_instance.updated_at IS '最后更新时间';
@@ -714,7 +714,7 @@ COMMENT ON COLUMN ydsz_job_dag_node_instance.updated_by IS '最后更新人';
 CREATE INDEX idx_ydsz_job_dag_node_instance_dni_dag_instance_id ON ydsz_job_dag_node_instance (dag_instance_id);
 CREATE INDEX idx_ydsz_job_dag_node_instance_dni_job_id ON ydsz_job_dag_node_instance (job_id);
 CREATE INDEX idx_ydsz_job_dag_node_instance_dni_log_id ON ydsz_job_dag_node_instance (log_id);
-CREATE INDEX idx_ydsz_job_dag_node_instance_tenant_deleted ON ydsz_job_dag_node_instance (tenant_id, deleted);
+CREATE INDEX idx_ydsz_job_dag_node_instance_tenant_is_deleted ON ydsz_job_dag_node_instance (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_job_log (
     id                       VARCHAR2(32 CHAR)       ,
@@ -740,7 +740,7 @@ CREATE TABLE ydsz_job_log (
     handler_init_time        TIMESTAMP                DEFAULT NULL,
     handler_end_time         TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_log PRIMARY KEY (id)
@@ -770,7 +770,7 @@ COMMENT ON COLUMN ydsz_job_log.dispatch_time IS '派发时间（任务被 Dispat
 COMMENT ON COLUMN ydsz_job_log.handler_init_time IS 'Handler 初始化时间（JobHandler 实例化/资源准备完成的时刻）';
 COMMENT ON COLUMN ydsz_job_log.handler_end_time IS 'Handler 执行结束时间（JobHandler.execute() 返回的时刻）';
 COMMENT ON COLUMN ydsz_job_log.status IS '执行状态: RUNNING/SUCCESS/FAILED/TIMEOUT';
-COMMENT ON COLUMN ydsz_job_log.deleted IS '逻辑删除标识：0=未删除，1=已删除';
+COMMENT ON COLUMN ydsz_job_log.is_deleted IS '逻辑删除标识：0=未删除，1=已删除';
 COMMENT ON COLUMN ydsz_job_log.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_job_log.updated_at IS '更新时间';
 

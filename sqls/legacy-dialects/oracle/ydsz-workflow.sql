@@ -45,7 +45,7 @@ CREATE TABLE ydsz_flow_category (
     icon                     VARCHAR2(128 CHAR)       DEFAULT NULL,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -65,7 +65,7 @@ COMMENT ON COLUMN ydsz_flow_category.sort_num IS '排序号（越小越靠前）
 COMMENT ON COLUMN ydsz_flow_category.icon IS '图标（前端展示用，如 Element Plus icon 名称）';
 COMMENT ON COLUMN ydsz_flow_category.remark IS '备注（说明分类的业务用途）';
 COMMENT ON COLUMN ydsz_flow_category.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_category.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_category.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_category.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_category.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_category.created_at IS '创建时间';
@@ -73,7 +73,7 @@ COMMENT ON COLUMN ydsz_flow_category.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_category.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_category_parent_id ON ydsz_flow_category (parent_id);
-CREATE INDEX idx_ydsz_flow_category_tenant_deleted ON ydsz_flow_category (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_category_tenant_is_deleted ON ydsz_flow_category (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_definition (
     id                       VARCHAR2(32 CHAR)       ,
@@ -99,7 +99,7 @@ CREATE TABLE ydsz_flow_definition (
     locked_by                VARCHAR2(32 CHAR)        DEFAULT NULL,
     locked_at                TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -133,7 +133,7 @@ COMMENT ON COLUMN ydsz_flow_definition.canary_rollout_log IS '灰度发布历史
 COMMENT ON COLUMN ydsz_flow_definition.locked_by IS '当前持锁人 ID（设计器协同编辑锁定，NULL=未锁定）';
 COMMENT ON COLUMN ydsz_flow_definition.locked_at IS '加锁时间（超过 30 分钟可强制抢占）';
 COMMENT ON COLUMN ydsz_flow_definition.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_definition.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_definition.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_definition.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_definition.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_definition.created_at IS '创建时间';
@@ -141,7 +141,7 @@ COMMENT ON COLUMN ydsz_flow_definition.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_definition.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_definition_category ON ydsz_flow_definition (category);
-CREATE INDEX idx_ydsz_flow_definition_tenant_deleted ON ydsz_flow_definition (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_definition_tenant_is_deleted ON ydsz_flow_definition (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_template (
     id                       VARCHAR2(32 CHAR)       ,
@@ -161,7 +161,7 @@ CREATE TABLE ydsz_flow_template (
     inherit_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
     is_latest                NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -189,7 +189,7 @@ COMMENT ON COLUMN ydsz_flow_template.version_label IS '版本标签（如 26.09.
 COMMENT ON COLUMN ydsz_flow_template.inherit_type IS '继承类型（STANDALONE=独立，CLONE=克隆，INHERIT=继承）';
 COMMENT ON COLUMN ydsz_flow_template.is_latest IS '是否当前 templateCode 下最新版本（0=否，1=是）';
 COMMENT ON COLUMN ydsz_flow_template.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_template.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_template.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_template.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_template.created_at IS '创建时间';
@@ -198,7 +198,7 @@ COMMENT ON COLUMN ydsz_flow_template.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_template_category ON ydsz_flow_template (category);
 CREATE INDEX idx_ydsz_flow_template_parent_template_id ON ydsz_flow_template (parent_template_id);
-CREATE INDEX idx_ydsz_flow_template_tenant_deleted ON ydsz_flow_template (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_template_tenant_is_deleted ON ydsz_flow_template (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_node (
     id                       VARCHAR2(32 CHAR)       ,
@@ -217,7 +217,7 @@ CREATE TABLE ydsz_flow_node (
     sla_config               CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_node_sla_config CHECK (sla_config IS JSON),
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -244,7 +244,7 @@ COMMENT ON COLUMN ydsz_flow_node.form_fields_config IS '表单字段权限配置
 COMMENT ON COLUMN ydsz_flow_node.sla_config IS 'SLA 超时配置 JSON（{"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT",...}）';
 COMMENT ON COLUMN ydsz_flow_node.provider_trace_id IS '链路追踪 ID（关联 MDC traceId，用于跨服务追踪）';
 COMMENT ON COLUMN ydsz_flow_node.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_node.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_node.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_node.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_node.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_node.created_at IS '创建时间';
@@ -252,7 +252,7 @@ COMMENT ON COLUMN ydsz_flow_node.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_node.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_node_flow_code ON ydsz_flow_node (flow_code);
-CREATE INDEX idx_ydsz_flow_node_tenant_deleted ON ydsz_flow_node (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_node_tenant_is_deleted ON ydsz_flow_node (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_skip (
     id                       VARCHAR2(32 CHAR)       ,
@@ -271,7 +271,7 @@ CREATE TABLE ydsz_flow_skip (
     ext                      CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_skip_ext CHECK (ext IS JSON),
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -297,7 +297,7 @@ COMMENT ON COLUMN ydsz_flow_skip.skip_list IS '跳转路由集合 JSON';
 COMMENT ON COLUMN ydsz_flow_skip.ext IS '扩展字段 JSON（存储 sourceRef / sequenceFlowId 等 BPMN 派生信息）';
 COMMENT ON COLUMN ydsz_flow_skip.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_skip.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_skip.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_skip.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_skip.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_skip.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_skip.created_at IS '创建时间';
@@ -307,7 +307,7 @@ COMMENT ON COLUMN ydsz_flow_skip.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_flow_skip_definition_id ON ydsz_flow_skip (definition_id);
 CREATE INDEX idx_ydsz_flow_skip_flow_code ON ydsz_flow_skip (flow_code);
 CREATE INDEX idx_ydsz_flow_skip_source_node_code ON ydsz_flow_skip (source_node_code);
-CREATE INDEX idx_ydsz_flow_skip_tenant_deleted ON ydsz_flow_skip (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_skip_tenant_is_deleted ON ydsz_flow_skip (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_auto_trigger (
     id                       VARCHAR2(32 CHAR)       ,
@@ -316,10 +316,10 @@ CREATE TABLE ydsz_flow_auto_trigger (
     target_flow_code         VARCHAR2(64 CHAR)        NOT NULL,
     condition_expression     VARCHAR2(512 CHAR)       DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    enabled                  NUMBER(10)               NOT NULL DEFAULT 1,
+    is_enabled                  NUMBER(10)               NOT NULL DEFAULT 1,
     sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -335,10 +335,10 @@ COMMENT ON COLUMN ydsz_flow_auto_trigger.source_flow_code IS '源流程编码（
 COMMENT ON COLUMN ydsz_flow_auto_trigger.target_flow_code IS '目标流程编码（被触发方）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.condition_expression IS '条件表达式（Aviator 语法，为空则无条件触发）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.description IS '规则描述（说明触发场景与业务背景）';
-COMMENT ON COLUMN ydsz_flow_auto_trigger.enabled IS '是否启用（0=禁用，1=启用）';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.is_enabled IS '是否启用（0=禁用，1=启用）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.sort IS '排序权重（升序执行）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_auto_trigger.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_auto_trigger.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_auto_trigger.created_at IS '创建时间';
@@ -347,8 +347,8 @@ COMMENT ON COLUMN ydsz_flow_auto_trigger.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_auto_trigger_source_flow_code ON ydsz_flow_auto_trigger (source_flow_code);
 CREATE INDEX idx_ydsz_flow_auto_trigger_target_flow_code ON ydsz_flow_auto_trigger (target_flow_code);
-CREATE INDEX idx_ydsz_flow_auto_trigger_enabled ON ydsz_flow_auto_trigger (enabled);
-CREATE INDEX idx_ydsz_flow_auto_trigger_tenant_deleted ON ydsz_flow_auto_trigger (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_auto_trigger_is_enabled ON ydsz_flow_auto_trigger (enabled);
+CREATE INDEX idx_ydsz_flow_auto_trigger_tenant_is_deleted ON ydsz_flow_auto_trigger (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_instance (
     id                       VARCHAR2(32 CHAR)       ,
@@ -377,7 +377,7 @@ CREATE TABLE ydsz_flow_instance (
     due_at                   TIMESTAMP                DEFAULT NULL,
     reject_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -414,7 +414,7 @@ COMMENT ON COLUMN ydsz_flow_instance.provider_trace_id IS '链路追踪 ID（关
 COMMENT ON COLUMN ydsz_flow_instance.due_at IS '子流程超时时间（超时自动终止子流程，可空）';
 COMMENT ON COLUMN ydsz_flow_instance.reject_reason IS '退回原因（最近一次 REJECT 操作的备注，重审时清空）';
 COMMENT ON COLUMN ydsz_flow_instance.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_instance.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_instance.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_instance.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_instance.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_instance.created_at IS '创建时间';
@@ -423,7 +423,7 @@ COMMENT ON COLUMN ydsz_flow_instance.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_instance_initiator_id ON ydsz_flow_instance (initiator_id);
 CREATE INDEX idx_ydsz_flow_instance_flow_status ON ydsz_flow_instance (flow_status);
-CREATE INDEX idx_ydsz_flow_instance_tenant_deleted ON ydsz_flow_instance (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_instance_tenant_is_deleted ON ydsz_flow_instance (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_run_task (
     id                       VARCHAR2(32 CHAR)       ,
@@ -469,7 +469,7 @@ CREATE TABLE ydsz_flow_run_task (
     iter_var                 VARCHAR2(128 CHAR)       DEFAULT '' NOT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -520,7 +520,7 @@ COMMENT ON COLUMN ydsz_flow_run_task.sla_escalated IS '是否已升级（0=否�
 COMMENT ON COLUMN ydsz_flow_run_task.iter_var IS 'FOREACH 节点当前迭代元素值（如 userId/deptId，非循环节点为空字符串占位，保证唯一约束幂等生效）';
 COMMENT ON COLUMN ydsz_flow_run_task.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_run_task.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_run_task.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_run_task.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_run_task.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_run_task.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_run_task.created_at IS '创建时间';
@@ -530,7 +530,7 @@ COMMENT ON COLUMN ydsz_flow_run_task.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_flow_run_task_assignee_id ON ydsz_flow_run_task (assignee_id);
 CREATE INDEX idx_ydsz_flow_run_task_business ON ydsz_flow_run_task (business_type, business_id);
 CREATE INDEX idx_ydsz_flow_run_task_due_at ON ydsz_flow_run_task (due_at);
-CREATE INDEX idx_ydsz_flow_run_task_tenant_deleted ON ydsz_flow_run_task (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_run_task_tenant_is_deleted ON ydsz_flow_run_task (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_user (
     id                       VARCHAR2(32 CHAR)       ,
@@ -548,7 +548,7 @@ CREATE TABLE ydsz_flow_user (
     sign_type                VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ORIGINAL',
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -574,7 +574,7 @@ COMMENT ON COLUMN ydsz_flow_user.weight IS '办理人权重（默认 1，可配�
 COMMENT ON COLUMN ydsz_flow_user.sign_type IS '加签类型（ORIGINAL=原始审批人，BEFORE=前加签，AFTER=后加签，PARALLEL=并加签，ADD=追加处理人）';
 COMMENT ON COLUMN ydsz_flow_user.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_user.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_user.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_user.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_user.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_user.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_user.created_at IS '创建时间';
@@ -582,7 +582,7 @@ COMMENT ON COLUMN ydsz_flow_user.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_user.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_user_instance_id ON ydsz_flow_user (instance_id);
-CREATE INDEX idx_ydsz_flow_user_tenant_deleted ON ydsz_flow_user (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_user_tenant_is_deleted ON ydsz_flow_user (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_timer (
     id                       VARCHAR2(32 CHAR)       ,
@@ -601,7 +601,7 @@ CREATE TABLE ydsz_flow_timer (
     cancel_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -627,7 +627,7 @@ COMMENT ON COLUMN ydsz_flow_timer.fired_at IS '实际触发时间';
 COMMENT ON COLUMN ydsz_flow_timer.cancel_reason IS '取消原因（userTask 完成时关闭）';
 COMMENT ON COLUMN ydsz_flow_timer.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_timer.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_timer.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_timer.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_timer.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_timer.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_timer.created_at IS '创建时间';
@@ -637,7 +637,7 @@ COMMENT ON COLUMN ydsz_flow_timer.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_flow_timer_fire_at ON ydsz_flow_timer (fire_at);
 CREATE INDEX idx_ydsz_flow_timer_instance_id ON ydsz_flow_timer (instance_id);
 CREATE INDEX idx_ydsz_flow_timer_timer_status ON ydsz_flow_timer (timer_status);
-CREATE INDEX idx_ydsz_flow_timer_tenant_deleted ON ydsz_flow_timer (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_timer_tenant_is_deleted ON ydsz_flow_timer (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_event_subscription (
     id                       VARCHAR2(32 CHAR)       ,
@@ -658,7 +658,7 @@ CREATE TABLE ydsz_flow_event_subscription (
     cancel_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -686,7 +686,7 @@ COMMENT ON COLUMN ydsz_flow_event_subscription.trigger_source IS '触发来源�
 COMMENT ON COLUMN ydsz_flow_event_subscription.cancel_reason IS '取消原因';
 COMMENT ON COLUMN ydsz_flow_event_subscription.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_event_subscription.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_event_subscription.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_event_subscription.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_event_subscription.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_event_subscription.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_event_subscription.created_at IS '创建时间';
@@ -697,7 +697,7 @@ CREATE INDEX idx_ydsz_flow_event_subscription_instance_id ON ydsz_flow_event_sub
 CREATE INDEX idx_ydsz_flow_event_subscription_event_ref ON ydsz_flow_event_subscription (event_ref);
 CREATE INDEX idx_ydsz_flow_event_subscription_subscription_status ON ydsz_flow_event_subscription (subscription_status);
 CREATE INDEX idx_ydsz_flow_event_subscription_correlation_key ON ydsz_flow_event_subscription (correlation_key);
-CREATE INDEX idx_ydsz_flow_event_subscription_tenant_deleted ON ydsz_flow_event_subscription (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_event_subscription_tenant_is_deleted ON ydsz_flow_event_subscription (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_his_task (
     id                       VARCHAR2(32 CHAR)       ,
@@ -730,7 +730,7 @@ CREATE TABLE ydsz_flow_his_task (
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     iter_var                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -770,7 +770,7 @@ COMMENT ON COLUMN ydsz_flow_his_task.duration_ms IS '耗时（毫秒）';
 COMMENT ON COLUMN ydsz_flow_his_task.provider_trace_id IS '链路追踪 ID（保留原始 trace 便于历史回溯）';
 COMMENT ON COLUMN ydsz_flow_his_task.iter_var IS 'FOREACH 迭代元素值（从源 task 复制，非循环节点为 NULL）';
 COMMENT ON COLUMN ydsz_flow_his_task.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_his_task.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_his_task.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_his_task.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_his_task.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_his_task.created_at IS '创建时间';
@@ -781,7 +781,7 @@ CREATE INDEX idx_ydsz_flow_his_task_instance_id ON ydsz_flow_his_task (instance_
 CREATE INDEX idx_ydsz_flow_his_task_assignee_id ON ydsz_flow_his_task (assignee_id);
 CREATE INDEX idx_ydsz_flow_his_task_business ON ydsz_flow_his_task (business_type, business_id);
 CREATE INDEX idx_ydsz_flow_his_task_finish_at ON ydsz_flow_his_task (finish_at);
-CREATE INDEX idx_ydsz_flow_his_task_tenant_deleted ON ydsz_flow_his_task (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_his_task_tenant_is_deleted ON ydsz_flow_his_task (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_his_instance (
     id                       VARCHAR2(32 CHAR)       ,
@@ -807,7 +807,7 @@ CREATE TABLE ydsz_flow_his_instance (
     archived_at              TIMESTAMP                DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -841,7 +841,7 @@ COMMENT ON COLUMN ydsz_flow_his_instance.duration_ms IS '流程耗时（毫秒�
 COMMENT ON COLUMN ydsz_flow_his_instance.archived_at IS '归档时间（由调度器在迁移时填充）';
 COMMENT ON COLUMN ydsz_flow_his_instance.provider_trace_id IS '链路追踪 ID（保留原始 trace 便于历史回溯）';
 COMMENT ON COLUMN ydsz_flow_his_instance.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_his_instance.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_his_instance.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_his_instance.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_his_instance.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_his_instance.created_at IS '创建时间';
@@ -866,7 +866,7 @@ CREATE TABLE ydsz_flow_comment (
     reply_to_user_name       VARCHAR2(64 CHAR)        DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -890,7 +890,7 @@ COMMENT ON COLUMN ydsz_flow_comment.reply_to_user_id IS '被回复人 ID（回�
 COMMENT ON COLUMN ydsz_flow_comment.reply_to_user_name IS '被回复人姓名（冗余）';
 COMMENT ON COLUMN ydsz_flow_comment.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_comment.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_comment.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_comment.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_comment.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_comment.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_comment.created_at IS '创建时间';
@@ -899,7 +899,7 @@ COMMENT ON COLUMN ydsz_flow_comment.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_comment_instance_id ON ydsz_flow_comment (instance_id);
 CREATE INDEX idx_ydsz_flow_comment_parent_comment_id ON ydsz_flow_comment (parent_comment_id);
-CREATE INDEX idx_ydsz_flow_comment_tenant_deleted ON ydsz_flow_comment (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_comment_tenant_is_deleted ON ydsz_flow_comment (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_quick_comment (
     id                       VARCHAR2(32 CHAR)       ,
@@ -911,7 +911,7 @@ CREATE TABLE ydsz_flow_quick_comment (
     use_count                NUMBER(10)               NOT NULL DEFAULT 0,
     is_system                NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -930,7 +930,7 @@ COMMENT ON COLUMN ydsz_flow_quick_comment.sort_num IS '排序号（越小越靠�
 COMMENT ON COLUMN ydsz_flow_quick_comment.use_count IS '使用次数（统计用，前端可按使用频率排序）';
 COMMENT ON COLUMN ydsz_flow_quick_comment.is_system IS '是否系统预设（0=用户自定义，1=系统预置所有用户可见）';
 COMMENT ON COLUMN ydsz_flow_quick_comment.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_quick_comment.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_quick_comment.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_quick_comment.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_quick_comment.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_quick_comment.created_at IS '创建时间';
@@ -940,7 +940,7 @@ COMMENT ON COLUMN ydsz_flow_quick_comment.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_flow_quick_comment_user_id ON ydsz_flow_quick_comment (user_id);
 CREATE INDEX idx_ydsz_flow_quick_comment_sort_num ON ydsz_flow_quick_comment (sort_num);
 CREATE INDEX idx_ydsz_flow_quick_comment_use_count ON ydsz_flow_quick_comment (use_count);
-CREATE INDEX idx_ydsz_flow_quick_comment_tenant_deleted ON ydsz_flow_quick_comment (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_quick_comment_tenant_is_deleted ON ydsz_flow_quick_comment (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_cc (
     id                       VARCHAR2(32 CHAR)       ,
@@ -963,7 +963,7 @@ CREATE TABLE ydsz_flow_cc (
     read_at                  TIMESTAMP                DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -993,7 +993,7 @@ COMMENT ON COLUMN ydsz_flow_cc.read_status IS '已读状态（UNREAD=未读，RE
 COMMENT ON COLUMN ydsz_flow_cc.read_at IS '已读时间（标记 READ 时由后端填充）';
 COMMENT ON COLUMN ydsz_flow_cc.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_cc.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_cc.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_cc.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_cc.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_cc.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_cc.created_at IS '创建时间';
@@ -1003,7 +1003,7 @@ COMMENT ON COLUMN ydsz_flow_cc.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_flow_cc_cc_user_id ON ydsz_flow_cc (cc_user_id);
 CREATE INDEX idx_ydsz_flow_cc_instance_id ON ydsz_flow_cc (instance_id);
 CREATE INDEX idx_ydsz_flow_cc_business_key ON ydsz_flow_cc (business_key);
-CREATE INDEX idx_ydsz_flow_cc_tenant_deleted ON ydsz_flow_cc (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_cc_tenant_is_deleted ON ydsz_flow_cc (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_cc_rule (
     id                       VARCHAR2(32 CHAR)       ,
@@ -1012,10 +1012,10 @@ CREATE TABLE ydsz_flow_cc_rule (
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     rule_type                VARCHAR2(32 CHAR)        NOT NULL,
     rule_target              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    enabled                  NUMBER(10)               NOT NULL DEFAULT 1,
+    is_enabled                  NUMBER(10)               NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1031,10 +1031,10 @@ COMMENT ON COLUMN ydsz_flow_cc_rule.flow_code IS '流程编码（NULL=所有流�
 COMMENT ON COLUMN ydsz_flow_cc_rule.node_code IS '节点编码（NULL=该流程所有节点生效）';
 COMMENT ON COLUMN ydsz_flow_cc_rule.rule_type IS '规则类型（USER=指定用户，ROLE=角色展开，DEPT=部门展开，SPEL=表达式动态解析）';
 COMMENT ON COLUMN ydsz_flow_cc_rule.rule_target IS '规则目标（按 ruleType 解析：USER 传 userId / ROLE 传 roleCode / DEPT 传 deptId / SPEL 传表达式）';
-COMMENT ON COLUMN ydsz_flow_cc_rule.enabled IS '是否启用（0=禁用，1=启用）';
+COMMENT ON COLUMN ydsz_flow_cc_rule.is_enabled IS '是否启用（0=禁用，1=启用）';
 COMMENT ON COLUMN ydsz_flow_cc_rule.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_cc_rule.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_cc_rule.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_cc_rule.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_cc_rule.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_cc_rule.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_cc_rule.created_at IS '创建时间';
@@ -1042,8 +1042,8 @@ COMMENT ON COLUMN ydsz_flow_cc_rule.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_cc_rule.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_cc_rule_flow_node ON ydsz_flow_cc_rule (flow_code, node_code);
-CREATE INDEX idx_ydsz_flow_cc_rule_enabled ON ydsz_flow_cc_rule (enabled);
-CREATE INDEX idx_ydsz_flow_cc_rule_tenant_deleted ON ydsz_flow_cc_rule (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_cc_rule_is_enabled ON ydsz_flow_cc_rule (enabled);
+CREATE INDEX idx_ydsz_flow_cc_rule_tenant_is_deleted ON ydsz_flow_cc_rule (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_attachment (
     id                       VARCHAR2(32 CHAR)       ,
@@ -1064,7 +1064,7 @@ CREATE TABLE ydsz_flow_attachment (
     md5                      VARCHAR2(64 CHAR)        DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1092,7 +1092,7 @@ COMMENT ON COLUMN ydsz_flow_attachment.download_url IS '临时下载地址（由
 COMMENT ON COLUMN ydsz_flow_attachment.md5 IS '文件 MD5（去重/校验）';
 COMMENT ON COLUMN ydsz_flow_attachment.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_attachment.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_attachment.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_attachment.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_attachment.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_attachment.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_attachment.created_at IS '创建时间';
@@ -1102,7 +1102,7 @@ COMMENT ON COLUMN ydsz_flow_attachment.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_flow_attachment_instance_id ON ydsz_flow_attachment (instance_id);
 CREATE INDEX idx_ydsz_flow_attachment_task_id ON ydsz_flow_attachment (task_id);
 CREATE INDEX idx_ydsz_flow_attachment_md5 ON ydsz_flow_attachment (md5);
-CREATE INDEX idx_ydsz_flow_attachment_tenant_deleted ON ydsz_flow_attachment (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_attachment_tenant_is_deleted ON ydsz_flow_attachment (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_delegate_auth (
     id                       VARCHAR2(32 CHAR)       ,
@@ -1121,7 +1121,7 @@ CREATE TABLE ydsz_flow_delegate_auth (
     reason                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1147,7 +1147,7 @@ COMMENT ON COLUMN ydsz_flow_delegate_auth.auth_status IS '授权状态（ENABLED
 COMMENT ON COLUMN ydsz_flow_delegate_auth.reason IS '授权原因（如「出差 3 天」「部门调整」）';
 COMMENT ON COLUMN ydsz_flow_delegate_auth.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_delegate_auth.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_delegate_auth.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_delegate_auth.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_delegate_auth.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_delegate_auth.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_delegate_auth.created_at IS '创建时间';
@@ -1157,7 +1157,7 @@ COMMENT ON COLUMN ydsz_flow_delegate_auth.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_flow_delegate_auth_owner_user_id ON ydsz_flow_delegate_auth (owner_user_id);
 CREATE INDEX idx_ydsz_flow_delegate_auth_delegate_user_id ON ydsz_flow_delegate_auth (delegate_user_id);
 CREATE INDEX idx_ydsz_flow_delegate_auth_status_time ON ydsz_flow_delegate_auth (auth_status, end_time);
-CREATE INDEX idx_ydsz_flow_delegate_auth_tenant_deleted ON ydsz_flow_delegate_auth (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_delegate_auth_tenant_is_deleted ON ydsz_flow_delegate_auth (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_admin_role (
     id                       VARCHAR2(32 CHAR)       ,
@@ -1169,7 +1169,7 @@ CREATE TABLE ydsz_flow_admin_role (
     granted_at               TIMESTAMP                DEFAULT NULL,
     expire_at                TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1189,7 +1189,7 @@ COMMENT ON COLUMN ydsz_flow_admin_role.granted_by IS '授权人 ID（NULL 表示
 COMMENT ON COLUMN ydsz_flow_admin_role.granted_at IS '授权时间';
 COMMENT ON COLUMN ydsz_flow_admin_role.expire_at IS '过期时间（NULL 表示永不过期）';
 COMMENT ON COLUMN ydsz_flow_admin_role.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_admin_role.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_admin_role.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_admin_role.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_admin_role.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_admin_role.created_at IS '创建时间';
@@ -1197,7 +1197,7 @@ COMMENT ON COLUMN ydsz_flow_admin_role.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_admin_role.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_flow_admin_role_role_code ON ydsz_flow_admin_role (role_code);
-CREATE INDEX idx_ydsz_flow_admin_role_tenant_deleted ON ydsz_flow_admin_role (tenant_id, deleted);
+CREATE INDEX idx_ydsz_flow_admin_role_tenant_is_deleted ON ydsz_flow_admin_role (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_flow_audit_log (
     id                       VARCHAR2(32 CHAR)       ,
@@ -1219,7 +1219,7 @@ CREATE TABLE ydsz_flow_audit_log (
     operated_at              TIMESTAMP                NOT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1248,7 +1248,7 @@ COMMENT ON COLUMN ydsz_flow_audit_log.comment_type IS '审批意见分类（AGRE
 COMMENT ON COLUMN ydsz_flow_audit_log.operated_at IS '操作时间（精确到毫秒）';
 COMMENT ON COLUMN ydsz_flow_audit_log.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN ydsz_flow_audit_log.status IS '状态标识';
-COMMENT ON COLUMN ydsz_flow_audit_log.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_audit_log.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_audit_log.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_audit_log.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_audit_log.created_at IS '创建时间';

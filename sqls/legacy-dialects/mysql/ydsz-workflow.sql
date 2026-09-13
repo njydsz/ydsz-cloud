@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_category (
     icon            VARCHAR(128)    DEFAULT NULL COMMENT '图标（前端展示用，如 Element Plus icon 名称）',
     remark          VARCHAR(512)    DEFAULT NULL COMMENT '备注（说明分类的业务用途）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_category (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_category_code UNIQUE (category_code, tenant_id),
     INDEX idx_parent_id (parent_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程分类表（树形结构，流程定义分组归类）';
 
 -- 流程定义表（工作流模板层，支持灰度发布与协同编辑锁定）
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     locked_by           VARCHAR(32)     DEFAULT NULL COMMENT '当前持锁人 ID（设计器协同编辑锁定，NULL=未锁定）',
     locked_at           DATETIME        DEFAULT NULL COMMENT '加锁时间（超过 30 分钟可强制抢占）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_flow_code_version UNIQUE (flow_code, flow_version, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程定义表（流程模板元数据）';
 
 -- 流程模板表（模板市场预置模板，含 BPMN 2.0 XML，支持继承与版本化）
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     inherit_type        VARCHAR(32)     DEFAULT NULL COMMENT '继承类型（STANDALONE=独立，CLONE=克隆，INHERIT=继承）',
     is_latest           INT             NOT NULL DEFAULT 0 COMMENT '是否当前 templateCode 下最新版本（0=否，1=是）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     CONSTRAINT uk_template_code_version UNIQUE (template_code, version, tenant_id),
     INDEX idx_category (category),
     INDEX idx_parent_template_id (parent_template_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程模板表（模板市场预置模板，BPMN 2.0 XML）';
 
 -- 流程节点表（流程定义中的节点：开始/审批/网关/结束/子流程/抄送）
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_node (
     sla_config          JSON            DEFAULT NULL COMMENT 'SLA 超时配置 JSON（{"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT",...}）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（关联 MDC traceId，用于跨服务追踪）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_node (
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_definition_node_code UNIQUE (definition_id, node_code),
     INDEX idx_flow_code (flow_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程节点表（流程定义结构最小单元）';
 
 -- 节点跳转关联表（流程图有向边，对应 BPMN sequenceFlow）
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     ext                 JSON            DEFAULT NULL COMMENT '扩展字段 JSON（存储 sourceRef / sequenceFlowId 等 BPMN 派生信息）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     INDEX idx_definition_id (definition_id),
     INDEX idx_flow_code (flow_code),
     INDEX idx_source_node_code (source_node_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='节点跳转关联表（流程图有向边）';
 
 -- 流程自动触发规则表（源流程终态后按条件自动启动目标流程）
@@ -176,10 +176,10 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
     target_flow_code        VARCHAR(64)     NOT NULL COMMENT '目标流程编码（被触发方）',
     condition_expression    VARCHAR(512)    DEFAULT NULL COMMENT '条件表达式（Aviator 语法，为空则无条件触发）',
     description             VARCHAR(512)    DEFAULT NULL COMMENT '规则描述（说明触发场景与业务背景）',
-    enabled                 INT             NOT NULL DEFAULT 1 COMMENT '是否启用（0=禁用，1=启用）',
+    is_enabled                 INT             NOT NULL DEFAULT 1 COMMENT '是否启用（0=禁用，1=启用）',
     sort              INT             NOT NULL DEFAULT 0 COMMENT '排序权重（升序执行）',
     status                  VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision                INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by              VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -187,8 +187,8 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
     updated_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_source_flow_code (source_flow_code),
     INDEX idx_target_flow_code (target_flow_code),
-    INDEX idx_enabled (enabled),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_is_enabled (is_enabled),
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程自动触发规则表（流程触发流程的自动化配置）';
 
 -- ============================================================================
@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
     due_at              DATETIME        DEFAULT NULL COMMENT '子流程超时时间（超时自动终止子流程，可空）',
     reject_reason       VARCHAR(512)    DEFAULT NULL COMMENT '退回原因（最近一次 REJECT 操作的备注，重审时清空）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
     -- 应用层通过 selectByBusiness (flow_status IN ('RUNNING','SUSPENDED')) 做幂等校验
     INDEX idx_initiator_id (initiator_id),
     INDEX idx_flow_status (flow_status),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程实例表（一次完整流程审批的运行时上下文）';
 
 -- 待办任务运行表（我的待办核心查询表，任务完成后归档至 ydsz_flow_his_task）
@@ -280,7 +280,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     iter_var            VARCHAR(128)    NOT NULL DEFAULT '' COMMENT 'FOREACH 节点当前迭代元素值（如 userId/deptId，非循环节点为空字符串）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -290,7 +290,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     INDEX idx_assignee_id (assignee_id),
     INDEX idx_business (business_type, business_id),
     INDEX idx_due_at (due_at),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='待办任务运行表（我的待办核心查询表）';
 
 -- 流程任务-办理人关系表（会签多办理人、加签/减签多对多关系）
@@ -310,7 +310,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_user (
     sign_type           VARCHAR(32)     NOT NULL DEFAULT 'ORIGINAL' COMMENT '加签类型（ORIGINAL=原始审批人，BEFORE=前加签，AFTER=后加签，PARALLEL=并加签，ADD=追加处理人）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -318,7 +318,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_user (
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_task_user (task_id, user_id, sign_type),
     INDEX idx_instance_id (instance_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程任务-办理人关系表（会签/加签多对多关系）';
 
 -- 工作流定时器表（中间定时器 / 边界定时器调度，对标 BPMN TimerEvent）
@@ -339,7 +339,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
     cancel_reason       VARCHAR(512)    DEFAULT NULL COMMENT '取消原因（userTask 完成时关闭）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -348,7 +348,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
     INDEX idx_fire_at (fire_at),
     INDEX idx_instance_id (instance_id),
     INDEX idx_timer_status (timer_status),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流定时器表（中间/边界定时器调度）';
 
 -- 工作流事件订阅表（消息/错误/信号事件运行时等待，对标 BPMN CatchEvent）
@@ -371,7 +371,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
     cancel_reason           VARCHAR(512)    DEFAULT NULL COMMENT '取消原因',
     provider_trace_id       VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status                  VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision                INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by              VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -381,7 +381,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
     INDEX idx_event_ref (event_ref),
     INDEX idx_subscription_status (subscription_status),
     INDEX idx_correlation_key (correlation_key),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工作流事件订阅表（消息/错误/信号事件运行时等待）';
 
 -- ============================================================================
@@ -420,7 +420,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（保留原始 trace 便于历史回溯）',
     iter_var            VARCHAR(128)    DEFAULT NULL COMMENT 'FOREACH 迭代元素值（从源 task 复制，非循环节点为 NULL）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -457,7 +457,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     archived_at         DATETIME        DEFAULT NULL COMMENT '归档时间（由调度器在迁移时填充）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID（保留原始 trace 便于历史回溯）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -488,7 +488,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
     reply_to_user_name  VARCHAR(64)     DEFAULT NULL COMMENT '被回复人姓名（冗余）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -496,7 +496,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_instance_id (instance_id),
     INDEX idx_parent_comment_id (parent_comment_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程评论表（审批人沟通讨论，支持多级回复）';
 
 -- 审批常用语表（用户预设常用审批意见，按用户隔离）
@@ -510,7 +510,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
     use_count       INT             NOT NULL DEFAULT 0 COMMENT '使用次数（统计用，前端可按使用频率排序）',
     is_system       INT             NOT NULL DEFAULT 0 COMMENT '是否系统预设（0=用户自定义，1=系统预置所有用户可见）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -519,7 +519,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
     INDEX idx_user_id (user_id),
     INDEX idx_sort_num (sort_num),
     INDEX idx_use_count (use_count),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审批常用语表（用户预设常用审批意见）';
 
 -- 流程抄送表（抄送中心通知记录，仅通知不阻塞流程）
@@ -536,7 +536,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
     cc_user_id          VARCHAR(32)     NOT NULL COMMENT '抄送接收人 ID',
     cc_user_name        VARCHAR(64)     DEFAULT NULL COMMENT '抄送接收人姓名（冗余）',
     cc_type             VARCHAR(32)     NOT NULL COMMENT '抄送类型（CC_NODE=CC 节点，MANUAL_CC=人工抄送，AUTO_CC=系统规则）',
-    trigger_user_id     VARCHAR(32)     DEFAULT NULL COMMENT '触发抄送的人 ID（AUTO_CC 时为 SYSTEM）',
+    trigger_user_id     VARCHAR(32)     DEFAULT NULL COMMENT 'is_system）',
     trigger_user_name   VARCHAR(64)     DEFAULT NULL COMMENT '触发抄送的人姓名（冗余）',
     title               VARCHAR(128)    DEFAULT NULL COMMENT '抄送标题',
     content             VARCHAR(512)    DEFAULT NULL COMMENT '抄送内容/意见（人工抄送时填写）',
@@ -544,7 +544,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
     read_at             DATETIME        DEFAULT NULL COMMENT '已读时间（标记 READ 时由后端填充）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -553,7 +553,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
     INDEX idx_cc_user_id (cc_user_id),
     INDEX idx_instance_id (instance_id),
     INDEX idx_business_key (business_key),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程抄送表（抄送中心通知记录）';
 
 -- 流程抄送规则表（自动抄送规则配置，运行时按规则生成抄送记录）
@@ -564,18 +564,18 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
     node_code           VARCHAR(64)     DEFAULT NULL COMMENT '节点编码（NULL=该流程所有节点生效）',
     rule_type           VARCHAR(32)     NOT NULL COMMENT '规则类型（USER=指定用户，ROLE=角色展开，DEPT=部门展开，SPEL=表达式动态解析）',
     rule_target         VARCHAR(512)    DEFAULT NULL COMMENT '规则目标（按 ruleType 解析：USER 传 userId / ROLE 传 roleCode / DEPT 传 deptId / SPEL 传表达式）',
-    enabled             INT             NOT NULL DEFAULT 1 COMMENT '是否启用（0=禁用，1=启用）',
+    is_enabled             INT             NOT NULL DEFAULT 1 COMMENT '是否启用（0=禁用，1=启用）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_by          VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_flow_node (flow_code, node_code),
-    INDEX idx_enabled (enabled),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_is_enabled (is_enabled),
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程抄送规则表（自动抄送规则配置）';
 
 -- 审批附件表（附件元数据统一落库，支持 MD5 秒传去重）
@@ -598,7 +598,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
     md5                 VARCHAR(64)     DEFAULT NULL COMMENT '文件 MD5（去重/校验）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -607,7 +607,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
     INDEX idx_instance_id (instance_id),
     INDEX idx_task_id (task_id),
     INDEX idx_md5 (md5),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='审批附件表（附件元数据，支持 MD5 秒传）';
 
 -- ============================================================================
@@ -628,11 +628,11 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
     role_code               VARCHAR(64)     DEFAULT NULL COMMENT '角色编码（ROLE 模式必填）',
     start_time              DATETIME        NOT NULL COMMENT '生效开始时间',
     end_time                DATETIME        NOT NULL COMMENT '生效结束时间',
-    auth_status             VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT '授权状态（ENABLED=生效中，DISABLED=手动停用，EXPIRED=已过期，REVOKED=已撤销）',
+    auth_status             VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled=生效中，DISABLED=手动停用，EXPIRED=已过期，REVOKED=已撤销）',
     reason                  VARCHAR(512)    DEFAULT NULL COMMENT '授权原因（如「出差 3 天」「部门调整」）',
     provider_trace_id       VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status                  VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted                 TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision                INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by              VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at              DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -641,7 +641,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
     INDEX idx_owner_user_id (owner_user_id),
     INDEX idx_delegate_user_id (delegate_user_id),
     INDEX idx_status_time (auth_status, end_time),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程委派代理表（长期授权规则）';
 
 -- 流程管理员角色映射表（用户与流程管理员角色多对多，支持临时授权）
@@ -655,7 +655,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
     granted_at      DATETIME        DEFAULT NULL COMMENT '授权时间',
     expire_at       DATETIME        DEFAULT NULL COMMENT '过期时间（NULL 表示永不过期）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -663,7 +663,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_user_role UNIQUE (user_id, role_code),
     INDEX idx_role_code (role_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程管理员角色映射表（用户-角色多对多）';
 
 -- 流程审计日志表（全生命周期操作轨迹，只追加，禁止修改删除）
@@ -687,7 +687,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     operated_at         DATETIME        NOT NULL COMMENT '操作时间（精确到毫秒）',
     provider_trace_id   VARCHAR(64)     DEFAULT NULL COMMENT '链路追踪 ID',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user (
     phone           VARCHAR(128)    DEFAULT NULL COMMENT '手机号（用于短信验证/找回密码，脱敏返回）',
     email           VARCHAR(128)    DEFAULT NULL COMMENT '邮箱（用于通知/找回密码，脱敏返回）',
     avatar          VARCHAR(1024)   DEFAULT NULL COMMENT '头像 URL',
-    status          VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '账号状态（0=禁用，1=启用；另兼容 ENABLED/DISABLED/PENDING/SUSPENDED/RESIGNED 生命周期值）',
+    status          VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT 'is_enabled/DISABLED/PENDING/SUSPENDED/RESIGNED 生命周期值）',
     user_type       VARCHAR(32)     DEFAULT NULL COMMENT '用户类型（PLATFORM/ISV/TENANT_ADMIN/REGULAR 等）',
     company_id      VARCHAR(32)     DEFAULT NULL COMMENT '所属公司 ID（关联 ydsz_org_company.id）',
     last_login_at   DATETIME        DEFAULT NULL COMMENT '最近登录时间',
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user (
     ban_expire_at   DATETIME        DEFAULT NULL COMMENT '封禁到期时间（临时封禁使用，永久封禁为 NULL）',
     banned_by       VARCHAR(64)     DEFAULT NULL COMMENT '封禁操作人标识',
     banned_at       DATETIME        DEFAULT NULL COMMENT '封禁操作时间',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user (
     INDEX idx_phone (phone),
     INDEX idx_dept_id (dept_id),
     INDEX idx_company_id (company_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户账号主表';
 
 -- 公司表（组织架构最高级单位，支持集团-子公司多级架构）
@@ -59,8 +59,8 @@ CREATE TABLE IF NOT EXISTS ydsz_org_company (
     contact_person  VARCHAR(64)     DEFAULT NULL COMMENT '联系人姓名',
     contact_phone   VARCHAR(128)    DEFAULT NULL COMMENT '联系电话',
     address         VARCHAR(512)    DEFAULT NULL COMMENT '注册地址',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT '启用状态（ENABLED/DISABLED，禁用后公司下所有部门和用户均无法登录）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED，禁用后公司下所有部门和用户均无法登录）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS ydsz_org_company (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_company_code UNIQUE (company_code),
     INDEX idx_parent_id (parent_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公司表';
 
 -- 部门表（组织架构部门节点，无限级树形结构）
@@ -81,8 +81,8 @@ CREATE TABLE IF NOT EXISTS ydsz_org_department (
     description     VARCHAR(512)    DEFAULT NULL COMMENT '部门描述（说明部门职责与归属）',
     sort      INT             NOT NULL DEFAULT 0 COMMENT '同级排序序号（升序）',
     leader_id       VARCHAR(32)     DEFAULT NULL COMMENT '部门负责人用户 ID（关联 ydsz_acct_user.id，支持 leader: 审批人展开）',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT '启用状态（ENABLED/DISABLED，禁用后部门下用户无法被分配新角色）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED，禁用后部门下用户无法被分配新角色）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS ydsz_org_department (
     CONSTRAINT uk_dept_code UNIQUE (dept_code),
     INDEX idx_parent_id (parent_id),
     INDEX idx_leader_id (leader_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='部门表';
 
 -- ============================================================================
@@ -106,17 +106,17 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_role (
     role_name       VARCHAR(128)    NOT NULL COMMENT '角色名称（前端展示）',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '角色描述（说明该角色的业务定位与适用场景）',
     sort      INT             NOT NULL DEFAULT 0 COMMENT '同级排序序号（升序）',
-    built_in        TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否内置角色（1=内置，禁止删除/修改编码，如 SUPER_ADMIN/TENANT_ADMIN/AUDITOR/GUEST）',
+    is_built_in        TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否内置角色（1=内置，禁止删除/修改编码，如 SUPER_ADMIN/TENANT_ADMIN/AUDITOR/GUEST）',
     data_scope      VARCHAR(32)     DEFAULT NULL COMMENT '数据权限范围（ALL/DEPT_AND_CHILD/DEPT/SELF/CUSTOM）',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT '启用状态（ENABLED/DISABLED，禁用后拥有该角色的用户暂时无法访问系统）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED，禁用后拥有该角色的用户暂时无法访问系统）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_role_code UNIQUE (role_code, tenant_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色表';
 
 -- 菜单/权限表（RBAC 最细粒度权限点：目录/菜单/按钮，无限级树形结构）
@@ -128,13 +128,13 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_menu (
     menu_code       VARCHAR(64)     NOT NULL COMMENT '菜单编码（业务侧引用，全局唯一）',
     menu_type       VARCHAR(32)     NOT NULL COMMENT '菜单类型（DIR=目录/MENU=菜单/BUTTON=按钮）',
     path            VARCHAR(255)    DEFAULT NULL COMMENT '前端路由路径（menuType=MENU 时使用）',
-    component       VARCHAR(255)    DEFAULT NULL COMMENT '前端组件路径（menuType=MENU 时使用，如 system/user/index）',
+    component       VARCHAR(255)    DEFAULT NULL COMMENT 'is_system/user/index）',
     icon            VARCHAR(128)    DEFAULT NULL COMMENT '菜单图标（Iconify/Element Plus 图标名）',
     sort      INT             NOT NULL DEFAULT 0 COMMENT '同级排序序号（升序）',
-    permission_code VARCHAR(128)    DEFAULT NULL COMMENT '权限码（如 system:user:create，被后端 @AuthApiPermission 引用）',
+    permission_code VARCHAR(128)    DEFAULT NULL COMMENT 'is_system:user:create，被后端 @AuthApiPermission 引用）',
     visible         TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否前端可见（1=可见，0=隐藏但仍参与鉴权）',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT '启用状态（ENABLED/DISABLED）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_menu (
     CONSTRAINT uk_menu_code UNIQUE (menu_code),
     INDEX idx_parent_id (parent_id),
     INDEX idx_permission_code (permission_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜单/权限表';
 
 -- 岗位表（职责维度：PM/DEV/QA/SA 等，区别于部门与角色）
@@ -154,15 +154,15 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_post (
     post_code       VARCHAR(64)     NOT NULL COMMENT '岗位编码（业务侧引用，全局唯一，如 PM/DEV/QA/SA）',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '岗位描述（说明岗位的工作职责与任职要求）',
     sort      INT             NOT NULL DEFAULT 0 COMMENT '同级排序序号（升序）',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT '启用状态（ENABLED/DISABLED，禁用后岗位不可再被分配给新用户）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED，禁用后岗位不可再被分配给新用户）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_post_code UNIQUE (post_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='岗位表';
 
 -- 语言配置表（系统支持的语言种类及默认语言标识，用于 i18n 国际化）
@@ -173,15 +173,15 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_language (
     language_name   VARCHAR(128)    NOT NULL COMMENT '语言名称（前端展示，如「简体中文」「English」）',
     is_default      TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否默认语言（1=是，0=否，系统全局仅允许 1 个默认语言）',
     sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号（升序，决定语言切换器展示顺序）',
-    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT '启用状态（ENABLED/DISABLED，禁用后前端语言切换器隐藏该选项）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    status          VARCHAR(32)     NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED，禁用后前端语言切换器隐藏该选项）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_language_code UNIQUE (language_code),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='语言配置表';
 
 -- ============================================================================
@@ -195,7 +195,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_role (
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_acct_user.id）',
     role_id         VARCHAR(32)     NOT NULL COMMENT '角色 ID（关联 ydsz_rbac_role.id）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -203,7 +203,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_role (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_user_id (user_id),
     INDEX idx_role_id (role_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户-角色关联表';
 
 -- 用户-岗位关联表（用户可兼任多岗位，主岗位由 ydsz_acct_user.position_code 维护）
@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_post (
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_acct_user.id）',
     post_id         VARCHAR(32)     NOT NULL COMMENT '岗位 ID（关联 ydsz_rbac_post.id）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_post (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_user_id (user_id),
     INDEX idx_post_id (post_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户-岗位关联表';
 
 -- 用户-部门关联表（支持兼岗，一个用户仅一个主部门由 Service 层事务保证）
@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_dept (
     dept_id         VARCHAR(32)     NOT NULL COMMENT '部门 ID（关联 ydsz_org_department.id）',
     is_primary      TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否主部门（1=是，0=否，一个用户只能有一个主部门，由 Service 层事务保证）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -240,7 +240,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_user_dept (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_user_id (user_id),
     INDEX idx_dept_id (dept_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户-部门关联表';
 
 -- 公司-部门关联表（组织结构维度：一个部门可被多个公司共享）
@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS ydsz_org_company_dept (
     company_id      VARCHAR(32)     NOT NULL COMMENT '公司 ID（关联 ydsz_org_company.id）',
     dept_id         VARCHAR(32)     NOT NULL COMMENT '部门 ID（关联 ydsz_org_department.id）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -258,7 +258,7 @@ CREATE TABLE IF NOT EXISTS ydsz_org_company_dept (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     INDEX idx_company_id (company_id),
     INDEX idx_dept_id (dept_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公司-部门关联表';
 
 -- 角色-权限关联表（permission_id 实际指向 ydsz_rbac_menu.id，按钮级权限 menu_id 可为空）
@@ -269,7 +269,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_role_permission (
     permission_id   VARCHAR(32)     NOT NULL COMMENT '权限 ID（实际指向 ydsz_rbac_menu.id，语义上为权限点而非菜单节点）',
     menu_id         VARCHAR(32)     DEFAULT NULL COMMENT '关联菜单 ID（可空，纯按钮级权限无对应菜单节点）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -278,7 +278,7 @@ CREATE TABLE IF NOT EXISTS ydsz_rbac_role_permission (
     INDEX idx_role_id (role_id),
     INDEX idx_permission_id (permission_id),
     INDEX idx_menu_id (menu_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色-权限关联表';
 
 -- ============================================================================
@@ -306,7 +306,7 @@ CREATE TABLE IF NOT EXISTS ydsz_acct_password_history (
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_acct_user.id）',
     password_hash   VARCHAR(255)    NOT NULL COMMENT 'BCrypt 加密后的历史密码哈希',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（该密码被设置的日期）',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标记（0=未删除，1=已删除，用于软删除兼容）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标记（0=未删除，1=已删除，用于软删除兼容）',
     INDEX idx_user_id_created_at (user_id, created_at),
     INDEX idx_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='密码历史表';
@@ -331,10 +331,10 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
     tenant_id VARCHAR(64) DEFAULT NULL COMMENT '租户 ID（NULL 表示全局默认策略）',
     name VARCHAR(64) NOT NULL COMMENT '策略名称',
     password_min_length INT DEFAULT 8 COMMENT '密码最小长度（≥ 6）',
-    password_require_uppercase BOOLEAN DEFAULT TRUE COMMENT '密码必须包含大写字母',
-    password_require_digit BOOLEAN DEFAULT TRUE COMMENT '密码必须包含数字',
-    mfa_enabled BOOLEAN DEFAULT FALSE COMMENT '是否启用双因素认证',
-    captcha_enabled BOOLEAN DEFAULT TRUE COMMENT '登录是否启用图形验证码',
+    is_password_require_uppercase BOOLEAN DEFAULT TRUE COMMENT '密码必须包含大写字母',
+    is_password_require_digit BOOLEAN DEFAULT TRUE COMMENT '密码必须包含数字',
+    mfa_is_enabled BOOLEAN DEFAULT FALSE COMMENT '是否启用双因素认证',
+    captcha_is_enabled BOOLEAN DEFAULT TRUE COMMENT '登录是否启用图形验证码',
     allowed_identity_providers VARCHAR(256) DEFAULT 'LOCAL' COMMENT '允许的身份提供者类型（逗号分隔：LOCAL/LDAP/SAML/OAUTH2）',
     max_sessions_per_user INT DEFAULT 3 COMMENT '每个用户最大会话数',
     session_timeout_seconds INT DEFAULT 7200 COMMENT '会话超时时间（秒）',
@@ -342,7 +342,7 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
 
     -- 通用字段（ydsz-common-jdbc MpBaseEntity）
     status VARCHAR(32) DEFAULT NULL COMMENT '状态标识',
-    deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
@@ -354,7 +354,7 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='认证策略配置表';
 
 -- 插入全局默认策略
-INSERT INTO ydsz_auth_policy (id, tenant_id, name, password_min_length, password_require_uppercase, password_require_digit, mfa_enabled, captcha_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, deleted, revision)
+INSERT INTO ydsz_auth_policy (id, tenant_id, name, password_min_length, is_password_require_uppercase, is_password_require_digit, is_mfa_is_enabled, is_captcha_is_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, is_deleted, revision)
 VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, TRUE, TRUE, FALSE, TRUE, 'LOCAL', 3, 7200, '系统全局默认策略，租户未配置时继承', FALSE, 0)
 ON DUPLICATE KEY UPDATE name = name;
 
@@ -378,13 +378,13 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_social_client (
     app_secret VARCHAR(256) NOT NULL COMMENT '应用密钥（BCrypt 加密存储）',
     scope VARCHAR(256) DEFAULT NULL COMMENT 'OAuth2 授权范围（scope）',
     redirect_uri VARCHAR(512) DEFAULT NULL COMMENT '授权回调地址（redirectUri）',
-    status VARCHAR(16) NOT NULL DEFAULT 'ENABLED' COMMENT '状态：ENABLED/DISABLED',
+    status VARCHAR(16) NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED',
     sort INT DEFAULT 100 COMMENT '排序权重（越小越靠前）',
     remark VARCHAR(256) DEFAULT NULL COMMENT '备注说明',
 
     -- 通用字段（ydsz-common-jdbc MpBaseEntity）
     tenant_id VARCHAR(64) DEFAULT NULL COMMENT '租户 ID',
-    deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
@@ -394,7 +394,7 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_social_client (
     -- 索引
     UNIQUE INDEX uk_platform (`platform`) COMMENT '平台标识唯一索引',
     INDEX idx_status (`status`) COMMENT '状态索引',
-    INDEX idx_tenant_deleted (`tenant_id`, `deleted`) COMMENT '租户+删除标记索引'
+    INDEX idx_tenant_is_deleted (`tenant_id`, `is_deleted`) COMMENT '租户+删除标记索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='社交平台客户端配置表';
 
 -- ----------------------------------------------------------------------------
@@ -417,13 +417,13 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_saml_config (
     certificate TEXT DEFAULT NULL COMMENT 'IdP 公钥证书（PEM 格式，用于验证 SAML Response 签名）',
     email_attribute VARCHAR(64) DEFAULT 'email' COMMENT '用户邮箱对应的 SAML Attribute 名称',
     display_name_attribute VARCHAR(64) DEFAULT 'displayName' COMMENT '用户显示名称对应的 SAML Attribute 名称',
-    status VARCHAR(16) NOT NULL DEFAULT 'ENABLED' COMMENT '状态：ENABLED/DISABLED',
+    status VARCHAR(16) NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED',
     sort INT DEFAULT 100 COMMENT '排序权重（越小越靠前）',
     remark VARCHAR(256) DEFAULT NULL COMMENT '备注说明',
 
     -- 通用字段（ydsz-common-jdbc MpBaseEntity）
     tenant_id VARCHAR(64) DEFAULT NULL COMMENT '租户 ID',
-    deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
@@ -433,7 +433,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_saml_config (
     -- 索引
     UNIQUE INDEX uk_entity_id (`entity_id`) COMMENT 'Entity ID 唯一索引',
     INDEX idx_status (`status`) COMMENT '状态索引',
-    INDEX idx_tenant_deleted (`tenant_id`, `deleted`) COMMENT '租户+删除标记索引'
+    INDEX idx_tenant_is_deleted (`tenant_id`, `is_deleted`) COMMENT '租户+删除标记索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SAML 2.0 身份提供者配置表';
 
 -- ----------------------------------------------------------------------------
@@ -451,11 +451,11 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_oauth2_application (
     client_id VARCHAR(128) NOT NULL COMMENT '客户端 ID（唯一标识）',
     client_name VARCHAR(256) NOT NULL COMMENT '应用名称',
     client_secret VARCHAR(256) NOT NULL COMMENT '客户端密钥（BCrypt 加密存储）',
-    client_type VARCHAR(16) NOT NULL COMMENT '客户端类型：CONFIDENTIAL/PUBLIC',
+    client_type VARCHAR(16) NOT NULL COMMENT 'is_public',
     redirect_uris JSON NOT NULL COMMENT '授权回调地址白名单（JSON 数组）',
     allowed_scopes JSON DEFAULT NULL COMMENT '允许申请的权限范围（JSON 数组）',
     allowed_audiences JSON DEFAULT NULL COMMENT '允许的受众（JSON 数组）',
-    status VARCHAR(16) NOT NULL DEFAULT 'ENABLED' COMMENT '应用状态：ENABLED/DISABLED',
+    status VARCHAR(16) NOT NULL DEFAULT 'ENABLED' COMMENT 'is_enabled/DISABLED',
     description VARCHAR(512) DEFAULT NULL COMMENT '应用描述',
     icon_url VARCHAR(512) DEFAULT NULL COMMENT '应用图标 URL',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
@@ -463,7 +463,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_oauth2_application (
 
     -- 通用字段（ydsz-common-jdbc MpBaseEntity）
     tenant_id VARCHAR(64) DEFAULT NULL COMMENT '租户 ID',
-    deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
     updated_by VARCHAR(64) DEFAULT NULL COMMENT '更新者用户 ID',
@@ -472,7 +472,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_oauth2_application (
     -- 索引
     UNIQUE INDEX uk_client_id (`client_id`) COMMENT 'clientId 唯一索引',
     INDEX idx_status (`status`) COMMENT '状态索引',
-    INDEX idx_tenant_deleted (`tenant_id`, `deleted`) COMMENT '租户+删除标记索引'
+    INDEX idx_tenant_is_deleted (`tenant_id`, `is_deleted`) COMMENT '租户+删除标记索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='OAuth2 应用注册表';
 
 -- 社交账号绑定表（用户与第三方社交平台的绑定关系，令牌 AES-256-GCM 加密存储）
@@ -489,7 +489,7 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_social_account (
     refresh_token   VARCHAR(1024)   DEFAULT NULL COMMENT '刷新令牌（AES-256-GCM 加密存储，部分平台不返回 refresh_token）',
     expires_at      DATETIME        DEFAULT NULL COMMENT '令牌过期时间',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -497,7 +497,7 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_social_account (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     CONSTRAINT uk_platform_open_id UNIQUE (platform, open_id),
     INDEX idx_user_id (user_id),
-    INDEX idx_tenant_deleted (tenant_id, deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='社交账号绑定表';
 
 -- ============================================================================
@@ -526,14 +526,14 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_security_alert (
     source_ip VARCHAR(64) DEFAULT NULL COMMENT '来源 IP',
     title VARCHAR(256) NOT NULL COMMENT '告警标题',
     content TEXT COMMENT '告警内容',
-    status VARCHAR(16) NOT NULL DEFAULT 'PENDING' COMMENT '告警状态：PENDING/ACKNOWLEDGED/RESOLVED/IGNORED',
+    status VARCHAR(16) NOT NULL DEFAULT 'PENDING' COMMENT 'is_resolved/IGNORED',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     handled_at TIMESTAMP DEFAULT NULL COMMENT '处理时间',
     handler_note VARCHAR(512) DEFAULT NULL COMMENT '处理备注',
 
     -- 通用字段（ydsz-common-jdbc MpBaseEntity）
     tenant_id VARCHAR(64) DEFAULT NULL COMMENT '租户 ID',
-    deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '逻辑删除标记',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     created_by VARCHAR(64) DEFAULT NULL COMMENT '创建者用户 ID',
     updated_by VARCHAR(64) DEFAULT NULL COMMENT '更新者用户 ID',
@@ -544,7 +544,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idp_security_alert (
     INDEX idx_type_time (`alert_type`, `created_at`) COMMENT '告警类型+创建时间复合索引',
     INDEX idx_user_id (`user_id`) COMMENT '用户 ID 索引',
     INDEX idx_source_ip (`source_ip`) COMMENT '来源 IP 索引',
-    INDEX idx_tenant_deleted (`tenant_id`, `deleted`) COMMENT '租户+删除标记索引'
+    INDEX idx_tenant_is_deleted (`tenant_id`, `is_deleted`) COMMENT '租户+删除标记索引'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='安全告警表';
 
 -- WebAuthn 凭证表（用户注册的公钥凭证，用于 FIDO2 无密码认证）
@@ -554,14 +554,14 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_credential (
     user_id         VARCHAR(32)     NOT NULL COMMENT '用户 ID（关联 ydsz_acct_user.id）',
     public_key      VARCHAR(1024)   NOT NULL COMMENT '公钥（COSE 密钥格式，Base64URL 编码）',
     sign_count      BIGINT          NOT NULL DEFAULT 0 COMMENT '签名计数器（防克隆检测）',
-    credential_type VARCHAR(32)     DEFAULT NULL COMMENT '凭证类型（如 public-key）',
+    credential_type VARCHAR(32)     DEFAULT NULL COMMENT 'is_public-key）',
     aaguid          VARCHAR(64)     DEFAULT NULL COMMENT 'AAGUID（认证器唯一标识）',
     display_name    VARCHAR(128)    DEFAULT NULL COMMENT '凭证友好名称',
     registered_at   DATETIME        DEFAULT NULL COMMENT '注册时间',
     last_used_at    DATETIME        DEFAULT NULL COMMENT '最后使用时间',
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '删除标记（软删除，0=未删除，1=已删除）',
+    is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '删除标记（软删除，0=未删除，1=已删除）',
     CONSTRAINT uk_credential_id UNIQUE (credential_id),
     INDEX idx_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='WebAuthn 凭证表';

@@ -50,7 +50,7 @@ CREATE TABLE ydsz_acct_user (
     ban_expire_at            TIMESTAMP                DEFAULT NULL,
     banned_by                VARCHAR2(64 CHAR)        DEFAULT NULL,
     banned_at                TIMESTAMP                DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -84,7 +84,7 @@ COMMENT ON COLUMN ydsz_acct_user.ban_reason IS '封禁原因';
 COMMENT ON COLUMN ydsz_acct_user.ban_expire_at IS '封禁到期时间（临时封禁使用，永久封禁为 NULL）';
 COMMENT ON COLUMN ydsz_acct_user.banned_by IS '封禁操作人标识';
 COMMENT ON COLUMN ydsz_acct_user.banned_at IS '封禁操作时间';
-COMMENT ON COLUMN ydsz_acct_user.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_acct_user.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_acct_user.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_acct_user.created_at IS '创建时间';
@@ -94,7 +94,7 @@ COMMENT ON COLUMN ydsz_acct_user.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_acct_user_phone ON ydsz_acct_user (phone);
 CREATE INDEX idx_ydsz_acct_user_dept_id ON ydsz_acct_user (dept_id);
 CREATE INDEX idx_ydsz_acct_user_company_id ON ydsz_acct_user (company_id);
-CREATE INDEX idx_ydsz_acct_user_tenant_deleted ON ydsz_acct_user (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_tenant_is_deleted ON ydsz_acct_user (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_org_company (
     id                       VARCHAR2(32 CHAR)       ,
@@ -106,7 +106,7 @@ CREATE TABLE ydsz_org_company (
     contact_phone            VARCHAR2(128 CHAR)       DEFAULT NULL,
     address                  VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -126,7 +126,7 @@ COMMENT ON COLUMN ydsz_org_company.contact_person IS '联系人姓名';
 COMMENT ON COLUMN ydsz_org_company.contact_phone IS '联系电话';
 COMMENT ON COLUMN ydsz_org_company.address IS '注册地址';
 COMMENT ON COLUMN ydsz_org_company.status IS '启用状态（ENABLED/DISABLED，禁用后公司下所有部门和用户均无法登录）';
-COMMENT ON COLUMN ydsz_org_company.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_org_company.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_org_company.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_org_company.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_org_company.created_at IS '创建时间';
@@ -134,7 +134,7 @@ COMMENT ON COLUMN ydsz_org_company.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_org_company.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_org_company_parent_id ON ydsz_org_company (parent_id);
-CREATE INDEX idx_ydsz_org_company_tenant_deleted ON ydsz_org_company (tenant_id, deleted);
+CREATE INDEX idx_ydsz_org_company_tenant_is_deleted ON ydsz_org_company (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_org_department (
     id                       VARCHAR2(32 CHAR)       ,
@@ -146,7 +146,7 @@ CREATE TABLE ydsz_org_department (
     sort               NUMBER(10)               NOT NULL DEFAULT 0,
     leader_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -166,7 +166,7 @@ COMMENT ON COLUMN ydsz_org_department.description IS '部门描述（说明部�
 COMMENT ON COLUMN ydsz_org_department.sort IS '同级排序序号（升序）';
 COMMENT ON COLUMN ydsz_org_department.leader_id IS '部门负责人用户 ID（关联 ydsz_acct_user.id，支持 leader: 审批人展开）';
 COMMENT ON COLUMN ydsz_org_department.status IS '启用状态（ENABLED/DISABLED，禁用后部门下用户无法被分配新角色）';
-COMMENT ON COLUMN ydsz_org_department.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_org_department.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_org_department.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_org_department.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_org_department.created_at IS '创建时间';
@@ -175,7 +175,7 @@ COMMENT ON COLUMN ydsz_org_department.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_org_department_parent_id ON ydsz_org_department (parent_id);
 CREATE INDEX idx_ydsz_org_department_leader_id ON ydsz_org_department (leader_id);
-CREATE INDEX idx_ydsz_org_department_tenant_deleted ON ydsz_org_department (tenant_id, deleted);
+CREATE INDEX idx_ydsz_org_department_tenant_is_deleted ON ydsz_org_department (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rbac_role (
     id                       VARCHAR2(32 CHAR)       ,
@@ -184,10 +184,10 @@ CREATE TABLE ydsz_rbac_role (
     role_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     sort               NUMBER(10)               NOT NULL DEFAULT 0,
-    built_in                 NUMBER(1)                NOT NULL DEFAULT 0,
+    is_built_in                 NUMBER(1)                NOT NULL DEFAULT 0,
     data_scope               VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -204,17 +204,17 @@ COMMENT ON COLUMN ydsz_rbac_role.role_code IS '角色编码（业务侧引用，
 COMMENT ON COLUMN ydsz_rbac_role.role_name IS '角色名称（前端展示）';
 COMMENT ON COLUMN ydsz_rbac_role.description IS '角色描述（说明该角色的业务定位与适用场景）';
 COMMENT ON COLUMN ydsz_rbac_role.sort IS '同级排序序号（升序）';
-COMMENT ON COLUMN ydsz_rbac_role.built_in IS '是否内置角色（1=内置，禁止删除/修改编码，如 SUPER_ADMIN/TENANT_ADMIN/AUDITOR/GUEST）';
+COMMENT ON COLUMN ydsz_rbac_role.is_built_in IS '是否内置角色（1=内置，禁止删除/修改编码，如 SUPER_ADMIN/TENANT_ADMIN/AUDITOR/GUEST）';
 COMMENT ON COLUMN ydsz_rbac_role.data_scope IS '数据权限范围（ALL/DEPT_AND_CHILD/DEPT/SELF/CUSTOM）';
 COMMENT ON COLUMN ydsz_rbac_role.status IS '启用状态（ENABLED/DISABLED，禁用后拥有该角色的用户暂时无法访问系统）';
-COMMENT ON COLUMN ydsz_rbac_role.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rbac_role.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rbac_role.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rbac_role.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rbac_role.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rbac_role.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_rbac_role.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_rbac_role_tenant_deleted ON ydsz_rbac_role (tenant_id, deleted);
+CREATE INDEX idx_ydsz_rbac_role_tenant_is_deleted ON ydsz_rbac_role (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rbac_menu (
     id                       VARCHAR2(32 CHAR)       ,
@@ -230,7 +230,7 @@ CREATE TABLE ydsz_rbac_menu (
     permission_code          VARCHAR2(128 CHAR)       DEFAULT NULL,
     visible                  NUMBER(1)                NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -254,7 +254,7 @@ COMMENT ON COLUMN ydsz_rbac_menu.sort IS '同级排序序号（升序）';
 COMMENT ON COLUMN ydsz_rbac_menu.permission_code IS '权限码（如 system:user:create，被后端 @AuthApiPermission 引用）';
 COMMENT ON COLUMN ydsz_rbac_menu.visible IS '是否前端可见（1=可见，0=隐藏但仍参与鉴权）';
 COMMENT ON COLUMN ydsz_rbac_menu.status IS '启用状态（ENABLED/DISABLED）';
-COMMENT ON COLUMN ydsz_rbac_menu.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rbac_menu.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rbac_menu.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rbac_menu.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rbac_menu.created_at IS '创建时间';
@@ -263,7 +263,7 @@ COMMENT ON COLUMN ydsz_rbac_menu.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_rbac_menu_parent_id ON ydsz_rbac_menu (parent_id);
 CREATE INDEX idx_ydsz_rbac_menu_permission_code ON ydsz_rbac_menu (permission_code);
-CREATE INDEX idx_ydsz_rbac_menu_tenant_deleted ON ydsz_rbac_menu (tenant_id, deleted);
+CREATE INDEX idx_ydsz_rbac_menu_tenant_is_deleted ON ydsz_rbac_menu (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rbac_post (
     id                       VARCHAR2(32 CHAR)       ,
@@ -273,7 +273,7 @@ CREATE TABLE ydsz_rbac_post (
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -291,14 +291,14 @@ COMMENT ON COLUMN ydsz_rbac_post.post_code IS '岗位编码（业务侧引用，
 COMMENT ON COLUMN ydsz_rbac_post.description IS '岗位描述（说明岗位的工作职责与任职要求）';
 COMMENT ON COLUMN ydsz_rbac_post.sort IS '同级排序序号（升序）';
 COMMENT ON COLUMN ydsz_rbac_post.status IS '启用状态（ENABLED/DISABLED，禁用后岗位不可再被分配给新用户）';
-COMMENT ON COLUMN ydsz_rbac_post.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rbac_post.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rbac_post.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rbac_post.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rbac_post.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rbac_post.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_rbac_post.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_rbac_post_tenant_deleted ON ydsz_rbac_post (tenant_id, deleted);
+CREATE INDEX idx_ydsz_rbac_post_tenant_is_deleted ON ydsz_rbac_post (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_acct_user_language (
     id                       VARCHAR2(32 CHAR)       ,
@@ -308,7 +308,7 @@ CREATE TABLE ydsz_acct_user_language (
     is_default               NUMBER(1)                NOT NULL DEFAULT 0,
     sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -326,14 +326,14 @@ COMMENT ON COLUMN ydsz_acct_user_language.language_name IS '语言名称（前�
 COMMENT ON COLUMN ydsz_acct_user_language.is_default IS '是否默认语言（1=是，0=否，系统全局仅允许 1 个默认语言）';
 COMMENT ON COLUMN ydsz_acct_user_language.sort IS '排序序号（升序，决定语言切换器展示顺序）';
 COMMENT ON COLUMN ydsz_acct_user_language.status IS '启用状态（ENABLED/DISABLED，禁用后前端语言切换器隐藏该选项）';
-COMMENT ON COLUMN ydsz_acct_user_language.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user_language.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_acct_user_language.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_acct_user_language.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_acct_user_language.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_acct_user_language.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_acct_user_language.updated_at IS '最后更新时间';
 
-CREATE INDEX idx_ydsz_acct_user_language_tenant_deleted ON ydsz_acct_user_language (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_language_tenant_is_deleted ON ydsz_acct_user_language (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_acct_user_role (
     id                       VARCHAR2(32 CHAR)       ,
@@ -341,7 +341,7 @@ CREATE TABLE ydsz_acct_user_role (
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     role_id                  VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -356,7 +356,7 @@ COMMENT ON COLUMN ydsz_acct_user_role.tenant_id IS '租户 ID（多租户隔离�
 COMMENT ON COLUMN ydsz_acct_user_role.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
 COMMENT ON COLUMN ydsz_acct_user_role.role_id IS '角色 ID（关联 ydsz_rbac_role.id）';
 COMMENT ON COLUMN ydsz_acct_user_role.status IS '状态标识';
-COMMENT ON COLUMN ydsz_acct_user_role.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user_role.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_acct_user_role.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_acct_user_role.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_acct_user_role.created_at IS '创建时间';
@@ -365,7 +365,7 @@ COMMENT ON COLUMN ydsz_acct_user_role.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_acct_user_role_user_id ON ydsz_acct_user_role (user_id);
 CREATE INDEX idx_ydsz_acct_user_role_role_id ON ydsz_acct_user_role (role_id);
-CREATE INDEX idx_ydsz_acct_user_role_tenant_deleted ON ydsz_acct_user_role (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_role_tenant_is_deleted ON ydsz_acct_user_role (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_acct_user_post (
     id                       VARCHAR2(32 CHAR)       ,
@@ -373,7 +373,7 @@ CREATE TABLE ydsz_acct_user_post (
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     post_id                  VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -388,7 +388,7 @@ COMMENT ON COLUMN ydsz_acct_user_post.tenant_id IS '租户 ID（多租户隔离�
 COMMENT ON COLUMN ydsz_acct_user_post.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
 COMMENT ON COLUMN ydsz_acct_user_post.post_id IS '岗位 ID（关联 ydsz_rbac_post.id）';
 COMMENT ON COLUMN ydsz_acct_user_post.status IS '状态标识';
-COMMENT ON COLUMN ydsz_acct_user_post.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user_post.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_acct_user_post.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_acct_user_post.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_acct_user_post.created_at IS '创建时间';
@@ -397,7 +397,7 @@ COMMENT ON COLUMN ydsz_acct_user_post.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_acct_user_post_user_id ON ydsz_acct_user_post (user_id);
 CREATE INDEX idx_ydsz_acct_user_post_post_id ON ydsz_acct_user_post (post_id);
-CREATE INDEX idx_ydsz_acct_user_post_tenant_deleted ON ydsz_acct_user_post (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_post_tenant_is_deleted ON ydsz_acct_user_post (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_acct_user_dept (
     id                       VARCHAR2(32 CHAR)       ,
@@ -406,7 +406,7 @@ CREATE TABLE ydsz_acct_user_dept (
     dept_id                  VARCHAR2(32 CHAR)        NOT NULL,
     is_primary               NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -422,7 +422,7 @@ COMMENT ON COLUMN ydsz_acct_user_dept.user_id IS '用户 ID（关联 ydsz_acct_u
 COMMENT ON COLUMN ydsz_acct_user_dept.dept_id IS '部门 ID（关联 ydsz_org_department.id）';
 COMMENT ON COLUMN ydsz_acct_user_dept.is_primary IS '是否主部门（1=是，0=否，一个用户只能有一个主部门，由 Service 层事务保证）';
 COMMENT ON COLUMN ydsz_acct_user_dept.status IS '状态标识';
-COMMENT ON COLUMN ydsz_acct_user_dept.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_acct_user_dept.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_acct_user_dept.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_acct_user_dept.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_acct_user_dept.created_at IS '创建时间';
@@ -431,7 +431,7 @@ COMMENT ON COLUMN ydsz_acct_user_dept.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_acct_user_dept_user_id ON ydsz_acct_user_dept (user_id);
 CREATE INDEX idx_ydsz_acct_user_dept_dept_id ON ydsz_acct_user_dept (dept_id);
-CREATE INDEX idx_ydsz_acct_user_dept_tenant_deleted ON ydsz_acct_user_dept (tenant_id, deleted);
+CREATE INDEX idx_ydsz_acct_user_dept_tenant_is_deleted ON ydsz_acct_user_dept (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_org_company_dept (
     id                       VARCHAR2(32 CHAR)       ,
@@ -439,7 +439,7 @@ CREATE TABLE ydsz_org_company_dept (
     company_id               VARCHAR2(32 CHAR)        NOT NULL,
     dept_id                  VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -454,7 +454,7 @@ COMMENT ON COLUMN ydsz_org_company_dept.tenant_id IS '租户 ID（多租户隔�
 COMMENT ON COLUMN ydsz_org_company_dept.company_id IS '公司 ID（关联 ydsz_org_company.id）';
 COMMENT ON COLUMN ydsz_org_company_dept.dept_id IS '部门 ID（关联 ydsz_org_department.id）';
 COMMENT ON COLUMN ydsz_org_company_dept.status IS '状态标识';
-COMMENT ON COLUMN ydsz_org_company_dept.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_org_company_dept.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_org_company_dept.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_org_company_dept.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_org_company_dept.created_at IS '创建时间';
@@ -463,7 +463,7 @@ COMMENT ON COLUMN ydsz_org_company_dept.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_org_company_dept_company_id ON ydsz_org_company_dept (company_id);
 CREATE INDEX idx_ydsz_org_company_dept_dept_id ON ydsz_org_company_dept (dept_id);
-CREATE INDEX idx_ydsz_org_company_dept_tenant_deleted ON ydsz_org_company_dept (tenant_id, deleted);
+CREATE INDEX idx_ydsz_org_company_dept_tenant_is_deleted ON ydsz_org_company_dept (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_rbac_role_permission (
     id                       VARCHAR2(32 CHAR)       ,
@@ -472,7 +472,7 @@ CREATE TABLE ydsz_rbac_role_permission (
     permission_id            VARCHAR2(32 CHAR)        NOT NULL,
     menu_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -488,7 +488,7 @@ COMMENT ON COLUMN ydsz_rbac_role_permission.role_id IS '角色 ID（关联 ydsz_
 COMMENT ON COLUMN ydsz_rbac_role_permission.permission_id IS '权限 ID（实际指向 ydsz_rbac_menu.id，语义上为权限点而非菜单节点）';
 COMMENT ON COLUMN ydsz_rbac_role_permission.menu_id IS '关联菜单 ID（可空，纯按钮级权限无对应菜单节点）';
 COMMENT ON COLUMN ydsz_rbac_role_permission.status IS '状态标识';
-COMMENT ON COLUMN ydsz_rbac_role_permission.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_rbac_role_permission.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_rbac_role_permission.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_rbac_role_permission.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rbac_role_permission.created_at IS '创建时间';
@@ -498,7 +498,7 @@ COMMENT ON COLUMN ydsz_rbac_role_permission.updated_at IS '最后更新时间';
 CREATE INDEX idx_ydsz_rbac_role_permission_role_id ON ydsz_rbac_role_permission (role_id);
 CREATE INDEX idx_ydsz_rbac_role_permission_permission_id ON ydsz_rbac_role_permission (permission_id);
 CREATE INDEX idx_ydsz_rbac_role_permission_menu_id ON ydsz_rbac_role_permission (menu_id);
-CREATE INDEX idx_ydsz_rbac_role_permission_tenant_deleted ON ydsz_rbac_role_permission (tenant_id, deleted);
+CREATE INDEX idx_ydsz_rbac_role_permission_tenant_is_deleted ON ydsz_rbac_role_permission (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_acct_login_history (
     id                       VARCHAR2(32 CHAR)       ,
@@ -531,7 +531,7 @@ CREATE TABLE ydsz_acct_password_history (
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     password_hash            VARCHAR2(255 CHAR)       NOT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     CONSTRAINT pk_ydsz_acct_password_history PRIMARY KEY (id)
 );
 
@@ -540,7 +540,7 @@ COMMENT ON COLUMN ydsz_acct_password_history.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_acct_password_history.user_id IS '用户 ID（关联 ydsz_acct_user.id）';
 COMMENT ON COLUMN ydsz_acct_password_history.password_hash IS 'BCrypt 加密后的历史密码哈希';
 COMMENT ON COLUMN ydsz_acct_password_history.created_at IS '创建时间（该密码被设置的日期）';
-COMMENT ON COLUMN ydsz_acct_password_history.deleted IS '逻辑删除标记（0=未删除，1=已删除，用于软删除兼容）';
+COMMENT ON COLUMN ydsz_acct_password_history.is_deleted IS '逻辑删除标记（0=未删除，1=已删除，用于软删除兼容）';
 
 CREATE INDEX idx_ydsz_acct_password_history_user_id_created_at ON ydsz_acct_password_history (user_id, created_at);
 CREATE INDEX idx_ydsz_acct_password_history_user_id ON ydsz_acct_password_history (user_id);
@@ -550,16 +550,16 @@ CREATE TABLE ydsz_auth_policy (
     tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
     name                     VARCHAR2(64 CHAR)        NOT NULL,
     password_min_length      NUMBER(10)               DEFAULT 8,
-    password_require_uppercase NUMBER(1)                DEFAULT 1,
-    password_require_digit   NUMBER(1)                DEFAULT 1,
-    mfa_enabled              NUMBER(1)                DEFAULT 0,
-    captcha_enabled          NUMBER(1)                DEFAULT 1,
+    is_password_require_uppercase NUMBER(1)                DEFAULT 1,
+    is_password_require_digit   NUMBER(1)                DEFAULT 1,
+    is_mfa_is_enabled              NUMBER(1)                DEFAULT 0,
+    is_captcha_is_enabled          NUMBER(1)                DEFAULT 1,
     allowed_identity_providers VARCHAR2(256 CHAR)       DEFAULT 'LOCAL',
     max_sessions_per_user    NUMBER(10)               DEFAULT 3,
     session_timeout_seconds  NUMBER(10)               DEFAULT 7200,
     remark                   VARCHAR2(256 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -574,16 +574,16 @@ COMMENT ON COLUMN ydsz_auth_policy.id IS '策略 ID（UUID）';
 COMMENT ON COLUMN ydsz_auth_policy.tenant_id IS '租户 ID（NULL 表示全局默认策略）';
 COMMENT ON COLUMN ydsz_auth_policy.name IS '策略名称';
 COMMENT ON COLUMN ydsz_auth_policy.password_min_length IS '密码最小长度（≥ 6）';
-COMMENT ON COLUMN ydsz_auth_policy.password_require_uppercase IS '密码必须包含大写字母';
-COMMENT ON COLUMN ydsz_auth_policy.password_require_digit IS '密码必须包含数字';
-COMMENT ON COLUMN ydsz_auth_policy.mfa_enabled IS '是否启用双因素认证';
-COMMENT ON COLUMN ydsz_auth_policy.captcha_enabled IS '登录是否启用图形验证码';
+COMMENT ON COLUMN ydsz_auth_policy.is_password_require_uppercase IS '密码必须包含大写字母';
+COMMENT ON COLUMN ydsz_auth_policy.is_password_require_digit IS '密码必须包含数字';
+COMMENT ON COLUMN ydsz_auth_policy.is_mfa_is_enabled IS '是否启用双因素认证';
+COMMENT ON COLUMN ydsz_auth_policy.is_captcha_is_enabled IS '登录是否启用图形验证码';
 COMMENT ON COLUMN ydsz_auth_policy.allowed_identity_providers IS '允许的身份提供者类型（逗号分隔：LOCAL/LDAP/SAML/OAUTH2）';
 COMMENT ON COLUMN ydsz_auth_policy.max_sessions_per_user IS '每个用户最大会话数';
 COMMENT ON COLUMN ydsz_auth_policy.session_timeout_seconds IS '会话超时时间（秒）';
 COMMENT ON COLUMN ydsz_auth_policy.remark IS '备注说明';
 COMMENT ON COLUMN ydsz_auth_policy.status IS '状态标识';
-COMMENT ON COLUMN ydsz_auth_policy.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_auth_policy.is_deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_auth_policy.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_auth_policy.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_auth_policy.created_by IS '创建者用户 ID';
@@ -596,7 +596,7 @@ MERGE INTO ydsz_auth_policy t
 USING (SELECT 'default-policy-001' AS id FROM dual) s
 ON (t.id = s.id)
 WHEN NOT MATCHED THEN
-    INSERT (id, tenant_id, name, password_min_length, password_require_uppercase, password_require_digit, mfa_enabled, captcha_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, deleted, revision)
+    INSERT (id, tenant_id, name, password_min_length, is_password_require_uppercase, is_password_require_digit, is_mfa_is_enabled, is_captcha_is_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, is_deleted, revision)
     VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, 1, 1, 0, 1, 'LOCAL', 3, 7200, '系统全局默认策略，租户未配置时继承', 0, 0)
 ;
 
@@ -612,7 +612,7 @@ CREATE TABLE ydsz_auth_social_client (
     sort               NUMBER(10)               DEFAULT 100,
     remark                   VARCHAR2(256 CHAR)       DEFAULT NULL,
     tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -634,7 +634,7 @@ COMMENT ON COLUMN ydsz_auth_social_client.status IS '状态：ENABLED/DISABLED';
 COMMENT ON COLUMN ydsz_auth_social_client.sort IS '排序权重（越小越靠前）';
 COMMENT ON COLUMN ydsz_auth_social_client.remark IS '备注说明';
 COMMENT ON COLUMN ydsz_auth_social_client.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_auth_social_client.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_auth_social_client.is_deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_auth_social_client.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_auth_social_client.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_auth_social_client.created_by IS '创建者用户 ID';
@@ -642,7 +642,7 @@ COMMENT ON COLUMN ydsz_auth_social_client.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_auth_social_client.revision IS '乐观锁版本号';
 
 CREATE INDEX idx_ydsz_auth_social_client_status ON ydsz_auth_social_client (status);
-CREATE INDEX idx_ydsz_auth_social_client_tenant_deleted ON ydsz_auth_social_client (tenant_id, deleted);
+CREATE INDEX idx_ydsz_auth_social_client_tenant_is_deleted ON ydsz_auth_social_client (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idp_saml_config (
     id                       VARCHAR2(64 CHAR)       ,
@@ -656,7 +656,7 @@ CREATE TABLE ydsz_idp_saml_config (
     sort               NUMBER(10)               DEFAULT 100,
     remark                   VARCHAR2(256 CHAR)       DEFAULT NULL,
     tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -678,7 +678,7 @@ COMMENT ON COLUMN ydsz_idp_saml_config.status IS '状态：ENABLED/DISABLED';
 COMMENT ON COLUMN ydsz_idp_saml_config.sort IS '排序权重（越小越靠前）';
 COMMENT ON COLUMN ydsz_idp_saml_config.remark IS '备注说明';
 COMMENT ON COLUMN ydsz_idp_saml_config.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_idp_saml_config.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_idp_saml_config.is_deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_idp_saml_config.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_idp_saml_config.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_idp_saml_config.created_by IS '创建者用户 ID';
@@ -686,7 +686,7 @@ COMMENT ON COLUMN ydsz_idp_saml_config.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_idp_saml_config.revision IS '乐观锁版本号';
 
 CREATE INDEX idx_ydsz_idp_saml_config_status ON ydsz_idp_saml_config (status);
-CREATE INDEX idx_ydsz_idp_saml_config_tenant_deleted ON ydsz_idp_saml_config (tenant_id, deleted);
+CREATE INDEX idx_ydsz_idp_saml_config_tenant_is_deleted ON ydsz_idp_saml_config (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idp_oauth2_application (
     id                       VARCHAR2(64 CHAR)       ,
@@ -703,7 +703,7 @@ CREATE TABLE ydsz_idp_oauth2_application (
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     revision                 NUMBER(10)               DEFAULT 0,
@@ -726,13 +726,13 @@ COMMENT ON COLUMN ydsz_idp_oauth2_application.icon_url IS '应用图标 URL';
 COMMENT ON COLUMN ydsz_idp_oauth2_application.created_by IS '创建者用户 ID';
 COMMENT ON COLUMN ydsz_idp_oauth2_application.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_idp_oauth2_application.tenant_id IS '租户 ID';
-COMMENT ON COLUMN ydsz_idp_oauth2_application.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_idp_oauth2_application.is_deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_idp_oauth2_application.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_idp_oauth2_application.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_idp_oauth2_application.revision IS '乐观锁版本号';
 
 CREATE INDEX idx_ydsz_idp_oauth2_application_status ON ydsz_idp_oauth2_application (status);
-CREATE INDEX idx_ydsz_idp_oauth2_application_tenant_deleted ON ydsz_idp_oauth2_application (tenant_id, deleted);
+CREATE INDEX idx_ydsz_idp_oauth2_application_tenant_is_deleted ON ydsz_idp_oauth2_application (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_auth_social_account (
     id                       VARCHAR2(32 CHAR)       ,
@@ -747,7 +747,7 @@ CREATE TABLE ydsz_auth_social_account (
     refresh_token            VARCHAR2(1024 CHAR)      DEFAULT NULL,
     expires_at               TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     revision                 NUMBER(10)               NOT NULL DEFAULT 0,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -770,7 +770,7 @@ COMMENT ON COLUMN ydsz_auth_social_account.access_token IS '访问令牌（AES-2
 COMMENT ON COLUMN ydsz_auth_social_account.refresh_token IS '刷新令牌（AES-256-GCM 加密存储，部分平台不返回 refresh_token）';
 COMMENT ON COLUMN ydsz_auth_social_account.expires_at IS '令牌过期时间';
 COMMENT ON COLUMN ydsz_auth_social_account.status IS '状态标识';
-COMMENT ON COLUMN ydsz_auth_social_account.deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_auth_social_account.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_auth_social_account.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_auth_social_account.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_auth_social_account.created_at IS '创建时间';
@@ -778,7 +778,7 @@ COMMENT ON COLUMN ydsz_auth_social_account.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_auth_social_account.updated_at IS '最后更新时间';
 
 CREATE INDEX idx_ydsz_auth_social_account_user_id ON ydsz_auth_social_account (user_id);
-CREATE INDEX idx_ydsz_auth_social_account_tenant_deleted ON ydsz_auth_social_account (tenant_id, deleted);
+CREATE INDEX idx_ydsz_auth_social_account_tenant_is_deleted ON ydsz_auth_social_account (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_idp_security_alert (
     id                       VARCHAR2(64 CHAR)       ,
@@ -796,7 +796,7 @@ CREATE TABLE ydsz_idp_security_alert (
     tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
     created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     revision                 NUMBER(10)               DEFAULT 0,
     CONSTRAINT pk_ydsz_idp_security_alert PRIMARY KEY (id)
@@ -818,7 +818,7 @@ COMMENT ON COLUMN ydsz_idp_security_alert.handler_note IS '处理备注';
 COMMENT ON COLUMN ydsz_idp_security_alert.tenant_id IS '租户 ID';
 COMMENT ON COLUMN ydsz_idp_security_alert.created_by IS '创建者用户 ID';
 COMMENT ON COLUMN ydsz_idp_security_alert.updated_by IS '更新者用户 ID';
-COMMENT ON COLUMN ydsz_idp_security_alert.deleted IS '逻辑删除标记（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_idp_security_alert.is_deleted IS '逻辑删除标记（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_idp_security_alert.updated_at IS '更新时间';
 COMMENT ON COLUMN ydsz_idp_security_alert.revision IS '乐观锁版本号';
 
@@ -826,7 +826,7 @@ CREATE INDEX idx_ydsz_idp_security_alert_status_risk ON ydsz_idp_security_alert 
 CREATE INDEX idx_ydsz_idp_security_alert_type_time ON ydsz_idp_security_alert (alert_type, created_at);
 CREATE INDEX idx_ydsz_idp_security_alert_user_id ON ydsz_idp_security_alert (user_id);
 CREATE INDEX idx_ydsz_idp_security_alert_source_ip ON ydsz_idp_security_alert (source_ip);
-CREATE INDEX idx_ydsz_idp_security_alert_tenant_deleted ON ydsz_idp_security_alert (tenant_id, deleted);
+CREATE INDEX idx_ydsz_idp_security_alert_tenant_is_deleted ON ydsz_idp_security_alert (tenant_id, is_deleted);
 
 CREATE TABLE ydsz_auth_credential (
     id                       NUMBER(19) GENERATED BY DEFAULT AS IDENTITY NOT NULL,
@@ -841,7 +841,7 @@ CREATE TABLE ydsz_auth_credential (
     last_used_at             TIMESTAMP                DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
+    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     CONSTRAINT pk_ydsz_auth_credential PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_auth_credential_credential_id UNIQUE (credential_id)
 );
@@ -859,7 +859,7 @@ COMMENT ON COLUMN ydsz_auth_credential.registered_at IS '注册时间';
 COMMENT ON COLUMN ydsz_auth_credential.last_used_at IS '最后使用时间';
 COMMENT ON COLUMN ydsz_auth_credential.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_auth_credential.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_auth_credential.deleted IS '删除标记（软删除，0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_auth_credential.is_deleted IS '删除标记（软删除，0=未删除，1=已删除）';
 
 CREATE INDEX idx_ydsz_auth_credential_user_id ON ydsz_auth_credential (user_id);
 
