@@ -87,14 +87,14 @@ COMMENT ON COLUMN ydsz_wiki_file_node.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_node.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_id ON ydsz_wiki_file_node (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_tenant_deleted ON ydsz_wiki_file_node (tenant_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_deleted_updated ON ydsz_wiki_file_node (parent_id, deleted, updated_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_deleted_type_updated ON ydsz_wiki_file_node (parent_id, deleted, node_type, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_tenant_is_deleted ON ydsz_wiki_file_node (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_is_is_deleted_updated ON ydsz_wiki_file_node (parent_id, is_deleted, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_is_is_deleted_type_updated ON ydsz_wiki_file_node (parent_id, is_deleted, node_type, updated_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_path ON ydsz_wiki_file_node (left(path, 255));
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_created_deleted_type ON ydsz_wiki_file_node (created_by, deleted, node_type);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_created_is_deleted_type ON ydsz_wiki_file_node (created_by, is_deleted, node_type);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_file_hash ON ydsz_wiki_file_node (file_hash);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_not_deleted ON ydsz_wiki_file_node (id, parent_id, tenant_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_storage_class ON ydsz_wiki_file_node (node_type, deleted, storage_class, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_id_parent_tenant ON ydsz_wiki_file_node (id, parent_id, tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_storage_class ON ydsz_wiki_file_node (node_type, is_deleted, storage_class, updated_at);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_file_version (
     id                       VARCHAR(32)              NOT NULL,
@@ -139,7 +139,7 @@ COMMENT ON COLUMN ydsz_wiki_file_version.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_file_version.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_version.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_version_tenant_deleted ON ydsz_wiki_file_version (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_version_tenant_is_deleted ON ydsz_wiki_file_version (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_tag (
     id                       VARCHAR(32)              NOT NULL,
@@ -174,7 +174,7 @@ COMMENT ON COLUMN ydsz_wiki_tag.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_tag.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_tag.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_tag_tenant_deleted ON ydsz_wiki_tag (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_tag_tenant_is_deleted ON ydsz_wiki_tag (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_file_tag (
     id                       VARCHAR(32)              NOT NULL,
@@ -206,7 +206,7 @@ COMMENT ON COLUMN ydsz_wiki_file_tag.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_tag.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_tag_tag_id ON ydsz_wiki_file_tag (tag_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_tag_tenant_deleted ON ydsz_wiki_file_tag (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_tag_tenant_is_deleted ON ydsz_wiki_file_tag (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_file_comment (
     id                       VARCHAR(32)              NOT NULL,
@@ -246,7 +246,7 @@ COMMENT ON COLUMN ydsz_wiki_file_comment.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_file_node_id ON ydsz_wiki_file_comment (file_node_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_parent_comment_id ON ydsz_wiki_file_comment (parent_comment_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_tenant_deleted ON ydsz_wiki_file_comment (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_tenant_is_deleted ON ydsz_wiki_file_comment (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_file_acl (
     id                       VARCHAR(32)              NOT NULL,
@@ -286,7 +286,7 @@ COMMENT ON COLUMN ydsz_wiki_file_acl.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_file_acl.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_acl_grantee ON ydsz_wiki_file_acl (grantee_type, grantee_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_acl_tenant_deleted ON ydsz_wiki_file_acl (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_acl_tenant_is_deleted ON ydsz_wiki_file_acl (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_share_link (
     id                       VARCHAR(32)              NOT NULL,
@@ -336,8 +336,8 @@ COMMENT ON COLUMN ydsz_wiki_share_link.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_share_link.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_file_node_id ON ydsz_wiki_share_link (file_node_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_expire_reminder ON ydsz_wiki_share_link (status, expire_time, reminder_sent);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_tenant_deleted ON ydsz_wiki_share_link (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_expire_reminder ON ydsz_wiki_share_link (status, expire_time, is_reminder_sent);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_tenant_is_deleted ON ydsz_wiki_share_link (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_share_recipient (
     id                       VARCHAR(32)              NOT NULL,
@@ -374,9 +374,9 @@ COMMENT ON COLUMN ydsz_wiki_share_recipient.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_share_recipient.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_share ON ydsz_wiki_share_recipient (share_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_user ON ydsz_wiki_share_recipient (recipient_id, status, deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_tenant_deleted ON ydsz_wiki_share_recipient (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_share_id_is_deleted ON ydsz_wiki_share_recipient (share_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_user_is_deleted ON ydsz_wiki_share_recipient (recipient_id, status, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_tenant_is_deleted ON ydsz_wiki_share_recipient (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log (
     id                       VARCHAR(32)              NOT NULL,
@@ -428,7 +428,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_access_time ON ydsz_wi
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_share_id ON ydsz_wiki_share_access_log (share_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_created ON ydsz_wiki_share_access_log (created_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_visitor ON ydsz_wiki_share_access_log (visitor_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_tenant_deleted ON ydsz_wiki_share_access_log (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_tenant_is_deleted ON ydsz_wiki_share_access_log (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log_archive (
     id                       VARCHAR(32)              NOT NULL,
@@ -469,7 +469,7 @@ COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.created_at IS '创建时间
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_share_created ON ydsz_wiki_share_access_log_archive (share_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_created ON ydsz_wiki_share_access_log_archive (created_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_access_time ON ydsz_wiki_share_access_log_archive (access_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_tenant_deleted ON ydsz_wiki_share_access_log_archive (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_tenant_is_deleted ON ydsz_wiki_share_access_log_archive (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
     id                       VARCHAR(32)              NOT NULL,
@@ -520,7 +520,7 @@ COMMENT ON COLUMN ydsz_wiki_space.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_tenant_sort ON ydsz_wiki_space (tenant_id, sort);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_owner ON ydsz_wiki_space (owner_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_tenant_deleted ON ydsz_wiki_space (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_tenant_is_deleted ON ydsz_wiki_space (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_space_member (
     id                       VARCHAR(32)              NOT NULL,
@@ -553,7 +553,7 @@ COMMENT ON COLUMN ydsz_wiki_space_member.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_space_role ON ydsz_wiki_space_member (space_id, role);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_user ON ydsz_wiki_space_member (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_tenant_deleted ON ydsz_wiki_space_member (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_tenant_is_deleted ON ydsz_wiki_space_member (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     id                       VARCHAR(32)              NOT NULL,
@@ -594,8 +594,8 @@ COMMENT ON COLUMN ydsz_wiki_space_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space_template.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_tenant_category ON ydsz_wiki_space_template (tenant_id, category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_system_public ON ydsz_wiki_space_template (system, public_access);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_tenant_deleted ON ydsz_wiki_space_template (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_is_system_is_public_access ON ydsz_wiki_space_template (is_system, is_public_access);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_tenant_is_deleted ON ydsz_wiki_space_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_trash_item (
     id                       VARCHAR(32)              NOT NULL,
@@ -640,7 +640,7 @@ COMMENT ON COLUMN ydsz_wiki_trash_item.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_file_node_id ON ydsz_wiki_trash_item (file_node_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_deleted_time ON ydsz_wiki_trash_item (deleted_time);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_purge_time ON ydsz_wiki_trash_item (purge_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_tenant_deleted ON ydsz_wiki_trash_item (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_tenant_is_deleted ON ydsz_wiki_trash_item (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_search_index (
     id                       VARCHAR(32)              NOT NULL,
@@ -685,7 +685,7 @@ COMMENT ON COLUMN ydsz_wiki_search_index.updated_by IS '最后更新人';
 
 -- 原 MySQL FULLTEXT 索引, 转 GIN 全文索引 (to_tsvector, simple 分词)
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_search_index_ft_search_name_content ON ydsz_wiki_search_index USING GIN (to_tsvector('simple', COALESCE(name, '') || ' ' || COALESCE(content, '')));
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_search_index_tenant_deleted ON ydsz_wiki_search_index (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_search_index_tenant_is_deleted ON ydsz_wiki_search_index (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     id                       VARCHAR(32)              NOT NULL,
@@ -717,7 +717,7 @@ COMMENT ON COLUMN ydsz_wiki_user_favorite.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_favorite_user_sort ON ydsz_wiki_user_favorite (user_id, sort);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_favorite_tenant_deleted ON ydsz_wiki_user_favorite (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_favorite_tenant_is_deleted ON ydsz_wiki_user_favorite (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_user_recent (
     id                       VARCHAR(32)              NOT NULL,
@@ -746,7 +746,7 @@ COMMENT ON COLUMN ydsz_wiki_user_recent.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_user_accessed ON ydsz_wiki_user_recent (user_id, accessed_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_access_type ON ydsz_wiki_user_recent (user_id, access_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_tenant_deleted ON ydsz_wiki_user_recent (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_tenant_is_deleted ON ydsz_wiki_user_recent (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_wiki_storage_quota (
     id                       VARCHAR(32)              NOT NULL,
@@ -785,7 +785,7 @@ COMMENT ON COLUMN ydsz_wiki_storage_quota.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_storage_quota.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_storage_quota_tenant_deleted ON ydsz_wiki_storage_quota (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_storage_quota_tenant_is_deleted ON ydsz_wiki_storage_quota (tenant_id, is_deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)

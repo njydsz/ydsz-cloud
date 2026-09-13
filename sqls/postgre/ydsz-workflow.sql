@@ -71,7 +71,7 @@ COMMENT ON COLUMN ydsz_flow_category.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_category.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_category_parent_id ON ydsz_flow_category (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_category_tenant_deleted ON ydsz_flow_category (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_category_tenant_is_deleted ON ydsz_flow_category (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     id                       VARCHAR(32)             ,
@@ -139,7 +139,7 @@ COMMENT ON COLUMN ydsz_flow_definition.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_definition.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_definition_category ON ydsz_flow_definition (category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_definition_tenant_deleted ON ydsz_flow_definition (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_definition_tenant_is_deleted ON ydsz_flow_definition (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     id                       VARCHAR(32)             ,
@@ -196,7 +196,7 @@ COMMENT ON COLUMN ydsz_flow_template.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_template_category ON ydsz_flow_template (category);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_template_parent_template_id ON ydsz_flow_template (parent_template_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_template_tenant_deleted ON ydsz_flow_template (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_template_tenant_is_deleted ON ydsz_flow_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_node (
     id                       VARCHAR(32)             ,
@@ -250,7 +250,7 @@ COMMENT ON COLUMN ydsz_flow_node.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_node.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_node_flow_code ON ydsz_flow_node (flow_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_node_tenant_deleted ON ydsz_flow_node (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_node_tenant_is_deleted ON ydsz_flow_node (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     id                       VARCHAR(32)             ,
@@ -305,7 +305,7 @@ COMMENT ON COLUMN ydsz_flow_skip.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_definition_id ON ydsz_flow_skip (definition_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_flow_code ON ydsz_flow_skip (flow_code);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_source_node_code ON ydsz_flow_skip (source_node_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_tenant_deleted ON ydsz_flow_skip (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_tenant_is_deleted ON ydsz_flow_skip (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
     id                       VARCHAR(32)             ,
@@ -345,8 +345,8 @@ COMMENT ON COLUMN ydsz_flow_auto_trigger.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_source_flow_code ON ydsz_flow_auto_trigger (source_flow_code);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_target_flow_code ON ydsz_flow_auto_trigger (target_flow_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_enabled ON ydsz_flow_auto_trigger (enabled);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_tenant_deleted ON ydsz_flow_auto_trigger (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_is_enabled ON ydsz_flow_auto_trigger (is_enabled);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_tenant_is_deleted ON ydsz_flow_auto_trigger (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
     id                       VARCHAR(32)             ,
@@ -421,7 +421,7 @@ COMMENT ON COLUMN ydsz_flow_instance.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_initiator_id ON ydsz_flow_instance (initiator_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_flow_status ON ydsz_flow_instance (flow_status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_tenant_deleted ON ydsz_flow_instance (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_tenant_is_deleted ON ydsz_flow_instance (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     id                       VARCHAR(32)             ,
@@ -528,7 +528,7 @@ COMMENT ON COLUMN ydsz_flow_run_task.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_assignee_id ON ydsz_flow_run_task (assignee_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_business ON ydsz_flow_run_task (business_type, business_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_due_at ON ydsz_flow_run_task (due_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_tenant_deleted ON ydsz_flow_run_task (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_tenant_is_deleted ON ydsz_flow_run_task (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_user (
     id                       VARCHAR(32)             ,
@@ -580,7 +580,7 @@ COMMENT ON COLUMN ydsz_flow_user.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_user.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_user_instance_id ON ydsz_flow_user (instance_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_user_tenant_deleted ON ydsz_flow_user (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_user_tenant_is_deleted ON ydsz_flow_user (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
     id                       VARCHAR(32)             ,
@@ -635,7 +635,7 @@ COMMENT ON COLUMN ydsz_flow_timer.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_fire_at ON ydsz_flow_timer (fire_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_instance_id ON ydsz_flow_timer (instance_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_timer_status ON ydsz_flow_timer (timer_status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_tenant_deleted ON ydsz_flow_timer (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_tenant_is_deleted ON ydsz_flow_timer (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
     id                       VARCHAR(32)             ,
@@ -695,7 +695,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_instance_id ON ydsz_
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_event_ref ON ydsz_flow_event_subscription (event_ref);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_subscription_status ON ydsz_flow_event_subscription (subscription_status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_correlation_key ON ydsz_flow_event_subscription (correlation_key);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_tenant_deleted ON ydsz_flow_event_subscription (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_tenant_is_deleted ON ydsz_flow_event_subscription (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     id                       VARCHAR(32)             ,
@@ -779,7 +779,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_instance_id ON ydsz_flow_his_t
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_assignee_id ON ydsz_flow_his_task (assignee_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_business ON ydsz_flow_his_task (business_type, business_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_finish_at ON ydsz_flow_his_task (finish_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_tenant_deleted ON ydsz_flow_his_task (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_tenant_is_deleted ON ydsz_flow_his_task (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     id                       VARCHAR(32)             ,
@@ -848,7 +848,7 @@ COMMENT ON COLUMN ydsz_flow_his_instance.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_archived_at ON ydsz_flow_his_instance (archived_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_end_at ON ydsz_flow_his_instance (end_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_tenant_deleted ON ydsz_flow_his_instance (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_tenant_is_deleted ON ydsz_flow_his_instance (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
     id                       VARCHAR(32)             ,
@@ -898,7 +898,7 @@ COMMENT ON COLUMN ydsz_flow_comment.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_comment_instance_id ON ydsz_flow_comment (instance_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_comment_parent_comment_id ON ydsz_flow_comment (parent_comment_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_comment_tenant_deleted ON ydsz_flow_comment (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_comment_tenant_is_deleted ON ydsz_flow_comment (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
     id                       VARCHAR(32)             ,
@@ -939,7 +939,7 @@ COMMENT ON COLUMN ydsz_flow_quick_comment.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_quick_comment_user_id ON ydsz_flow_quick_comment (user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_quick_comment_sort_num ON ydsz_flow_quick_comment (sort_num);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_quick_comment_use_count ON ydsz_flow_quick_comment (use_count);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_quick_comment_tenant_deleted ON ydsz_flow_quick_comment (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_quick_comment_tenant_is_deleted ON ydsz_flow_quick_comment (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
     id                       VARCHAR(32)             ,
@@ -1002,7 +1002,7 @@ COMMENT ON COLUMN ydsz_flow_cc.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_cc_user_id ON ydsz_flow_cc (cc_user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_instance_id ON ydsz_flow_cc (instance_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_business_key ON ydsz_flow_cc (business_key);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_tenant_deleted ON ydsz_flow_cc (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_tenant_is_deleted ON ydsz_flow_cc (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
     id                       VARCHAR(32)             ,
@@ -1041,8 +1041,8 @@ COMMENT ON COLUMN ydsz_flow_cc_rule.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_cc_rule.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_flow_node ON ydsz_flow_cc_rule (flow_code, node_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_enabled ON ydsz_flow_cc_rule (enabled);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_tenant_deleted ON ydsz_flow_cc_rule (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_is_enabled ON ydsz_flow_cc_rule (is_enabled);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_tenant_is_deleted ON ydsz_flow_cc_rule (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
     id                       VARCHAR(32)             ,
@@ -1101,7 +1101,7 @@ COMMENT ON COLUMN ydsz_flow_attachment.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_attachment_instance_id ON ydsz_flow_attachment (instance_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_attachment_task_id ON ydsz_flow_attachment (task_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_attachment_md5 ON ydsz_flow_attachment (md5);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_attachment_tenant_deleted ON ydsz_flow_attachment (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_attachment_tenant_is_deleted ON ydsz_flow_attachment (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
     id                       VARCHAR(32)             ,
@@ -1156,7 +1156,7 @@ COMMENT ON COLUMN ydsz_flow_delegate_auth.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_owner_user_id ON ydsz_flow_delegate_auth (owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_delegate_user_id ON ydsz_flow_delegate_auth (delegate_user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_status_time ON ydsz_flow_delegate_auth (auth_status, end_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_tenant_deleted ON ydsz_flow_delegate_auth (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_tenant_is_deleted ON ydsz_flow_delegate_auth (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
     id                       VARCHAR(32)             ,
@@ -1196,7 +1196,7 @@ COMMENT ON COLUMN ydsz_flow_admin_role.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_flow_admin_role.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_admin_role_role_code ON ydsz_flow_admin_role (role_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_admin_role_tenant_deleted ON ydsz_flow_admin_role (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_admin_role_tenant_is_deleted ON ydsz_flow_admin_role (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     id                       VARCHAR(32)             ,
@@ -1258,7 +1258,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_instance_id ON ydsz_flow_audi
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_business ON ydsz_flow_audit_log (business_type, business_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_operator_id ON ydsz_flow_audit_log (operator_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_operated_at ON ydsz_flow_audit_log (operated_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_tenant_deleted ON ydsz_flow_audit_log (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_audit_log_tenant_is_deleted ON ydsz_flow_audit_log (tenant_id, is_deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)

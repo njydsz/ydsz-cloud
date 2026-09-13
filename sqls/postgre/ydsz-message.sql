@@ -94,7 +94,7 @@ COMMENT ON COLUMN ydsz_msg_template.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_template_channel ON ydsz_msg_template (channel);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_template_scene_code ON ydsz_msg_template (scene_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_template_tenant_deleted ON ydsz_msg_template (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_template_tenant_is_deleted ON ydsz_msg_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_template_version (
     id                       VARCHAR(32)             ,
@@ -135,7 +135,7 @@ COMMENT ON COLUMN ydsz_msg_template_version.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_template_version.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_template_version.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_template_version_tenant_deleted ON ydsz_msg_template_version (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_template_version_tenant_is_deleted ON ydsz_msg_template_version (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     id                       VARCHAR(32)             ,
@@ -205,7 +205,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_notification_receiver_read ON ydsz_msg_n
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_notification_biz ON ydsz_msg_notification (biz_type, biz_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_notification_batch_id ON ydsz_msg_notification (batch_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_notification_message_group ON ydsz_msg_notification (message_group);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_notification_tenant_deleted ON ydsz_msg_notification (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_notification_tenant_is_deleted ON ydsz_msg_notification (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     id                       VARCHAR(32)             ,
@@ -245,7 +245,7 @@ COMMENT ON COLUMN ydsz_msg_user_channel.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_user_channel.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_user_channel_channel_user_id ON ydsz_msg_user_channel (channel_user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_user_channel_tenant_deleted ON ydsz_msg_user_channel (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_user_channel_tenant_is_deleted ON ydsz_msg_user_channel (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
     id                       VARCHAR(32)             ,
@@ -285,7 +285,7 @@ COMMENT ON COLUMN ydsz_msg_subscription.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_subscription.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_subscription_topic_code ON ydsz_msg_subscription (topic_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_subscription_tenant_deleted ON ydsz_msg_subscription (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_subscription_tenant_is_deleted ON ydsz_msg_subscription (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
     id                       VARCHAR(32)             ,
@@ -338,7 +338,7 @@ COMMENT ON COLUMN ydsz_msg_preference.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_preference.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_preference.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_preference_tenant_deleted ON ydsz_msg_preference (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_preference_tenant_is_deleted ON ydsz_msg_preference (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
     id                       VARCHAR(32)             ,
@@ -386,7 +386,7 @@ COMMENT ON COLUMN ydsz_msg_route_rule.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_route_rule.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_route_rule_biz_channel ON ydsz_msg_route_rule (biz_type, channel);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_route_rule_tenant_deleted ON ydsz_msg_route_rule (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_route_rule_tenant_is_deleted ON ydsz_msg_route_rule (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_variable_source (
     id                       VARCHAR(32)             ,
@@ -425,7 +425,7 @@ COMMENT ON COLUMN ydsz_msg_variable_source.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_msg_variable_source.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_variable_source.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_variable_source_tenant_deleted ON ydsz_msg_variable_source (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_variable_source_tenant_is_deleted ON ydsz_msg_variable_source (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_canary (
     id                       VARCHAR(32)             ,
@@ -471,7 +471,7 @@ COMMENT ON COLUMN ydsz_msg_canary.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_msg_canary.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_canary_template_code ON ydsz_msg_canary (template_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_canary_tenant_deleted ON ydsz_msg_canary (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_canary_tenant_is_deleted ON ydsz_msg_canary (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
     id                       VARCHAR(32)             ,
@@ -554,7 +554,7 @@ COMMENT ON COLUMN ydsz_msg_batch.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_batch_status ON ydsz_msg_batch (status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_batch_sender_id ON ydsz_msg_batch (sender_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_batch_tenant_deleted ON ydsz_msg_batch (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_batch_tenant_is_deleted ON ydsz_msg_batch (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
     id                       VARCHAR(32)             ,
@@ -603,7 +603,7 @@ COMMENT ON COLUMN ydsz_msg_aggregate.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_aggregate_group_receiver ON ydsz_msg_aggregate (aggregate_group, receiver);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_aggregate_batch_status ON ydsz_msg_aggregate (batch_status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_aggregate_scheduled_send_at ON ydsz_msg_aggregate (scheduled_send_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_aggregate_tenant_deleted ON ydsz_msg_aggregate (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_aggregate_tenant_is_deleted ON ydsz_msg_aggregate (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
     id                       VARCHAR(32)             ,
@@ -643,7 +643,7 @@ COMMENT ON COLUMN ydsz_msg_offline.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_offline_user_status ON ydsz_msg_offline (user_id, status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_offline_expired_at ON ydsz_msg_offline (expired_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_offline_tenant_deleted ON ydsz_msg_offline (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_offline_tenant_is_deleted ON ydsz_msg_offline (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     id                       VARCHAR(32)             ,
@@ -739,7 +739,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_batch_id ON ydsz_msg_log (batch_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_dedup_key ON ydsz_msg_log (dedup_key);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_provider_trace_id ON ydsz_msg_log (provider_trace_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_scheduled_at ON ydsz_msg_log (scheduled_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_tenant_deleted ON ydsz_msg_log (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_tenant_is_deleted ON ydsz_msg_log (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
     id                       VARCHAR(32)             ,
@@ -782,7 +782,7 @@ COMMENT ON COLUMN ydsz_msg_receipt.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_receipt_log_id ON ydsz_msg_receipt (log_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_receipt_receipt_time ON ydsz_msg_receipt (receipt_time);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_receipt_provider_trace_id ON ydsz_msg_receipt (provider_trace_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_receipt_tenant_deleted ON ydsz_msg_receipt (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_receipt_tenant_is_deleted ON ydsz_msg_receipt (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
     id                       VARCHAR(32)             ,
@@ -865,7 +865,7 @@ COMMENT ON COLUMN ydsz_msg_feedback.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_feedback_msg_id ON ydsz_msg_feedback (msg_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_feedback_user_id ON ydsz_msg_feedback (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_msg_feedback_tenant_deleted ON ydsz_msg_feedback (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_feedback_tenant_is_deleted ON ydsz_msg_feedback (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_outbox (
     id                       VARCHAR(32)             ,

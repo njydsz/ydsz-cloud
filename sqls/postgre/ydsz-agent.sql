@@ -59,7 +59,7 @@ COMMENT ON COLUMN ydsz_agt_prompt_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_prompt_template.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_template_category ON ydsz_agt_prompt_template (category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_template_tenant_deleted ON ydsz_agt_prompt_template (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_prompt_template_tenant_is_deleted ON ydsz_agt_prompt_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     id                       VARCHAR(32)             ,
@@ -140,7 +140,7 @@ COMMENT ON COLUMN ydsz_agt_definition.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_definition.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_definition_agent_type ON ydsz_agt_definition (agent_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agt_definition_tenant_deleted ON ydsz_agt_definition (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_definition_tenant_is_deleted ON ydsz_agt_definition (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     trace_id                 VARCHAR(64)             ,
@@ -254,7 +254,7 @@ COMMENT ON COLUMN ydsz_agt_token_usage.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_agt_token_usage.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_conversation_created ON ydsz_agt_token_usage (conversation_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_tenant_deleted ON ydsz_agt_token_usage (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_tenant_is_deleted ON ydsz_agt_token_usage (tenant_id, is_deleted);
 
 -- ============================================================================
 -- RAG 向量文档块表 ydsz_agt_document_chunk（pgvector 专用）

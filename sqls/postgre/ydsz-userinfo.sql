@@ -92,7 +92,7 @@ COMMENT ON COLUMN ydsz_acct_user.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_phone ON ydsz_acct_user (phone);
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_id ON ydsz_acct_user (dept_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_company_id ON ydsz_acct_user (company_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_tenant_deleted ON ydsz_acct_user (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_tenant_is_deleted ON ydsz_acct_user (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_org_company (
     id                       VARCHAR(32)             ,
@@ -132,7 +132,7 @@ COMMENT ON COLUMN ydsz_org_company.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_org_company.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_parent_id ON ydsz_org_company (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_tenant_deleted ON ydsz_org_company (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_tenant_is_deleted ON ydsz_org_company (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_org_department (
     id                       VARCHAR(32)             ,
@@ -173,7 +173,7 @@ COMMENT ON COLUMN ydsz_org_department.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_org_department_parent_id ON ydsz_org_department (parent_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_org_department_leader_id ON ydsz_org_department (leader_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_org_department_tenant_deleted ON ydsz_org_department (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_department_tenant_is_deleted ON ydsz_org_department (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rbac_role (
     id                       VARCHAR(32)             ,
@@ -212,7 +212,7 @@ COMMENT ON COLUMN ydsz_rbac_role.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rbac_role.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_rbac_role.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_tenant_deleted ON ydsz_rbac_role (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_tenant_is_deleted ON ydsz_rbac_role (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rbac_menu (
     id                       VARCHAR(32)             ,
@@ -261,7 +261,7 @@ COMMENT ON COLUMN ydsz_rbac_menu.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_menu_parent_id ON ydsz_rbac_menu (parent_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_menu_permission_code ON ydsz_rbac_menu (permission_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_menu_tenant_deleted ON ydsz_rbac_menu (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_menu_tenant_is_deleted ON ydsz_rbac_menu (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rbac_post (
     id                       VARCHAR(32)             ,
@@ -296,7 +296,7 @@ COMMENT ON COLUMN ydsz_rbac_post.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_rbac_post.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_rbac_post.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_post_tenant_deleted ON ydsz_rbac_post (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_post_tenant_is_deleted ON ydsz_rbac_post (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_user_language (
     id                       VARCHAR(32)             ,
@@ -331,7 +331,7 @@ COMMENT ON COLUMN ydsz_acct_user_language.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_acct_user_language.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_acct_user_language.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_language_tenant_deleted ON ydsz_acct_user_language (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_language_tenant_is_deleted ON ydsz_acct_user_language (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_user_role (
     id                       VARCHAR(32)             ,
@@ -363,7 +363,7 @@ COMMENT ON COLUMN ydsz_acct_user_role.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_role_user_id ON ydsz_acct_user_role (user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_role_role_id ON ydsz_acct_user_role (role_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_role_tenant_deleted ON ydsz_acct_user_role (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_role_tenant_is_deleted ON ydsz_acct_user_role (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_user_post (
     id                       VARCHAR(32)             ,
@@ -395,7 +395,7 @@ COMMENT ON COLUMN ydsz_acct_user_post.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_post_user_id ON ydsz_acct_user_post (user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_post_post_id ON ydsz_acct_user_post (post_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_post_tenant_deleted ON ydsz_acct_user_post (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_post_tenant_is_deleted ON ydsz_acct_user_post (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_user_dept (
     id                       VARCHAR(32)             ,
@@ -429,7 +429,7 @@ COMMENT ON COLUMN ydsz_acct_user_dept.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_user_id ON ydsz_acct_user_dept (user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_dept_id ON ydsz_acct_user_dept (dept_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_tenant_deleted ON ydsz_acct_user_dept (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_dept_tenant_is_deleted ON ydsz_acct_user_dept (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_org_company_dept (
     id                       VARCHAR(32)             ,
@@ -461,7 +461,7 @@ COMMENT ON COLUMN ydsz_org_company_dept.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_dept_company_id ON ydsz_org_company_dept (company_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_dept_dept_id ON ydsz_org_company_dept (dept_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_dept_tenant_deleted ON ydsz_org_company_dept (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_org_company_dept_tenant_is_deleted ON ydsz_org_company_dept (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rbac_role_permission (
     id                       VARCHAR(32)             ,
@@ -496,7 +496,7 @@ COMMENT ON COLUMN ydsz_rbac_role_permission.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_role_id ON ydsz_rbac_role_permission (role_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_permission_id ON ydsz_rbac_role_permission (permission_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_menu_id ON ydsz_rbac_role_permission (menu_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_tenant_deleted ON ydsz_rbac_role_permission (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rbac_role_permission_tenant_is_deleted ON ydsz_rbac_role_permission (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_acct_login_history (
     id                       VARCHAR(32)             ,
@@ -635,7 +635,7 @@ COMMENT ON COLUMN ydsz_auth_social_client.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_auth_social_client.revision IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_client_status ON ydsz_auth_social_client (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_client_tenant_deleted ON ydsz_auth_social_client (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_client_tenant_is_deleted ON ydsz_auth_social_client (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_idp_saml_config (
     id                       VARCHAR(64)             ,
@@ -679,7 +679,7 @@ COMMENT ON COLUMN ydsz_idp_saml_config.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_idp_saml_config.revision IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_idp_saml_config_status ON ydsz_idp_saml_config (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_idp_saml_config_tenant_deleted ON ydsz_idp_saml_config (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_saml_config_tenant_is_deleted ON ydsz_idp_saml_config (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_idp_oauth2_application (
     id                       VARCHAR(64)             ,
@@ -725,7 +725,7 @@ COMMENT ON COLUMN ydsz_idp_oauth2_application.updated_by IS '更新者用户 ID'
 COMMENT ON COLUMN ydsz_idp_oauth2_application.revision IS '乐观锁版本号';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_idp_oauth2_application_status ON ydsz_idp_oauth2_application (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_idp_oauth2_application_tenant_deleted ON ydsz_idp_oauth2_application (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_oauth2_application_tenant_is_deleted ON ydsz_idp_oauth2_application (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_auth_social_account (
     id                       VARCHAR(32)             ,
@@ -771,7 +771,7 @@ COMMENT ON COLUMN ydsz_auth_social_account.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_auth_social_account.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_account_user_id ON ydsz_auth_social_account (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_account_tenant_deleted ON ydsz_auth_social_account (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_auth_social_account_tenant_is_deleted ON ydsz_auth_social_account (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_idp_security_alert (
     id                       VARCHAR(64)             ,
@@ -819,7 +819,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_status_risk ON ydsz_idp_s
 CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_type_time ON ydsz_idp_security_alert (alert_type, created_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_user_id ON ydsz_idp_security_alert (user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_source_ip ON ydsz_idp_security_alert (source_ip);
-CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_tenant_deleted ON ydsz_idp_security_alert (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_idp_security_alert_tenant_is_deleted ON ydsz_idp_security_alert (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_auth_credential (
     id                       BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL,

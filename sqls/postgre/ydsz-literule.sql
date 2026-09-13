@@ -101,7 +101,7 @@ COMMENT ON COLUMN ydsz_rule_def.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_def_category ON ydsz_rule_def (category);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_def_status ON ydsz_rule_def (status);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_def_tenant_deleted ON ydsz_rule_def (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_def_tenant_is_deleted ON ydsz_rule_def (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     id                       VARCHAR(32)             ,
@@ -143,7 +143,7 @@ COMMENT ON COLUMN ydsz_rule_variable_def.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_variable_def.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_variable_def_category ON ydsz_rule_variable_def (category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_variable_def_tenant_deleted ON ydsz_rule_variable_def (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_variable_def_tenant_is_deleted ON ydsz_rule_variable_def (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     id                       VARCHAR(32)             ,
@@ -197,7 +197,7 @@ COMMENT ON COLUMN ydsz_rule_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_template.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_template_category ON ydsz_rule_template (category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_template_tenant_deleted ON ydsz_rule_template (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_template_tenant_is_deleted ON ydsz_rule_template (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     id                       VARCHAR(32)             ,
@@ -248,7 +248,7 @@ COMMENT ON COLUMN ydsz_rule_script.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_script.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_script_rule_code ON ydsz_rule_script (rule_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_script_tenant_deleted ON ydsz_rule_script (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_script_tenant_is_deleted ON ydsz_rule_script (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     id                       VARCHAR(32)             ,
@@ -300,7 +300,7 @@ COMMENT ON COLUMN ydsz_rule_decision_table.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_decision_table.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_table_category ON ydsz_rule_decision_table (category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_table_tenant_deleted ON ydsz_rule_decision_table (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_table_tenant_is_deleted ON ydsz_rule_decision_table (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     id                       VARCHAR(32)             ,
@@ -347,7 +347,7 @@ COMMENT ON COLUMN ydsz_rule_decision_tree.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_decision_tree.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_tree_rule_code ON ydsz_rule_decision_tree (rule_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_tree_tenant_deleted ON ydsz_rule_decision_tree (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_tree_tenant_is_deleted ON ydsz_rule_decision_tree (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     id                       VARCHAR(32)             ,
@@ -401,7 +401,7 @@ COMMENT ON COLUMN ydsz_rule_scorecard.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_scorecard_rule_code ON ydsz_rule_scorecard (rule_code);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_scorecard_category ON ydsz_rule_scorecard (category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_scorecard_tenant_deleted ON ydsz_rule_scorecard (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_scorecard_tenant_is_deleted ON ydsz_rule_scorecard (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
     id                       VARCHAR(32)             ,
@@ -440,7 +440,7 @@ COMMENT ON COLUMN ydsz_rule_chain_graph.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_rule_chain_graph.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_chain_graph.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_chain_graph_tenant_deleted ON ydsz_rule_chain_graph (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_chain_graph_tenant_is_deleted ON ydsz_rule_chain_graph (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
     id                       VARCHAR(32)             ,
@@ -478,7 +478,7 @@ COMMENT ON COLUMN ydsz_rule_dependency.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_dependency.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_dependency_depends_on_rule_code ON ydsz_rule_dependency (depends_on_rule_code);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_dependency_tenant_deleted ON ydsz_rule_dependency (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_dependency_tenant_is_deleted ON ydsz_rule_dependency (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     id                       VARCHAR(32)             ,
@@ -535,7 +535,7 @@ COMMENT ON COLUMN ydsz_rule_pack.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_pack_code ON ydsz_rule_pack (pack_code);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_industry ON ydsz_rule_pack (industry);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_tenant_deleted ON ydsz_rule_pack (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_tenant_is_deleted ON ydsz_rule_pack (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
     id                       VARCHAR(32)             ,
@@ -569,7 +569,7 @@ COMMENT ON COLUMN ydsz_rule_pack_install.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_install_status ON ydsz_rule_pack_install (status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_install_installed_at ON ydsz_rule_pack_install (installed_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_install_tenant_deleted ON ydsz_rule_pack_install (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_install_tenant_is_deleted ON ydsz_rule_pack_install (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     id                       VARCHAR(32)             ,
@@ -616,7 +616,7 @@ COMMENT ON COLUMN ydsz_rule_ab_policy.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_rule_ab_policy.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_ab_policy.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_policy_tenant_deleted ON ydsz_rule_ab_policy (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_policy_tenant_is_deleted ON ydsz_rule_ab_policy (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
     id                       VARCHAR(32)             ,
@@ -652,7 +652,7 @@ COMMENT ON COLUMN ydsz_rule_canary_bucket.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_rule_canary_bucket.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_canary_bucket_stat_date ON ydsz_rule_canary_bucket (stat_date);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_canary_bucket_tenant_deleted ON ydsz_rule_canary_bucket (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_canary_bucket_tenant_is_deleted ON ydsz_rule_canary_bucket (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     id                       VARCHAR(32)             ,
@@ -694,7 +694,7 @@ COMMENT ON COLUMN ydsz_rule_ab_rollback.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_rollback_rule_code ON ydsz_rule_ab_rollback (rule_code);
 CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_rollback_created_at ON ydsz_rule_ab_rollback (created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_rollback_tenant_deleted ON ydsz_rule_ab_rollback (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_rollback_tenant_is_deleted ON ydsz_rule_ab_rollback (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
     id                       VARCHAR(32)             ,

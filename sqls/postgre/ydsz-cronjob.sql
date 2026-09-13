@@ -128,7 +128,7 @@ COMMENT ON COLUMN ydsz_job_main.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_job_group ON ydsz_job_main (job_group);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_job_next_fire ON ydsz_job_main (next_fire_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_tenant_deleted ON ydsz_job_main (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_tenant_is_deleted ON ydsz_job_main (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     id                       VARCHAR(32)             ,
@@ -165,7 +165,7 @@ COMMENT ON COLUMN ydsz_job_glue.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_job_glue.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_job_glue.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_glue_tenant_deleted ON ydsz_job_glue (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_glue_tenant_is_deleted ON ydsz_job_glue (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_task (
     id                       VARCHAR(32)             ,
@@ -215,7 +215,7 @@ COMMENT ON COLUMN ydsz_job_task.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_task_jt_job_id ON ydsz_job_task (job_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_task_jt_log_id ON ydsz_job_task (log_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_task_tenant_deleted ON ydsz_job_task (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_task_tenant_is_deleted ON ydsz_job_task (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_node (
     id                       VARCHAR(32)             ,
@@ -263,7 +263,7 @@ COMMENT ON COLUMN ydsz_job_node.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_job_node.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_node_last_heartbeat ON ydsz_job_node (last_heartbeat);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_node_tenant_deleted ON ydsz_job_node (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_node_tenant_is_deleted ON ydsz_job_node (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_history (
     id                       VARCHAR(32)             ,
@@ -354,7 +354,7 @@ COMMENT ON COLUMN ydsz_job_artifact.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_artifact_ja_job_id ON ydsz_job_artifact (job_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_artifact_ja_log_id ON ydsz_job_artifact (log_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_artifact_ja_expire_at ON ydsz_job_artifact (expire_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_artifact_tenant_deleted ON ydsz_job_artifact (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_artifact_tenant_is_deleted ON ydsz_job_artifact (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
     id                       VARCHAR(32)             ,
@@ -400,7 +400,7 @@ COMMENT ON COLUMN ydsz_job_webhook.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_event_type ON ydsz_job_webhook (event_type);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_jw_job_key ON ydsz_job_webhook (job_key);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_tenant_deleted ON ydsz_job_webhook (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_webhook_tenant_is_deleted ON ydsz_job_webhook (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
     id                       VARCHAR(32)             ,
@@ -454,7 +454,7 @@ COMMENT ON COLUMN ydsz_job_alert_rule.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_ar_job_id ON ydsz_job_alert_rule (job_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_ar_alert_type ON ydsz_job_alert_rule (alert_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_tenant_deleted ON ydsz_job_alert_rule (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_alert_rule_tenant_is_deleted ON ydsz_job_alert_rule (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
     id                       VARCHAR(32)             ,
@@ -548,7 +548,7 @@ COMMENT ON COLUMN ydsz_job_dag.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_job_dag.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_dag_next_fire ON ydsz_job_dag (next_fire_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_tenant_deleted ON ydsz_job_dag (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_tenant_is_deleted ON ydsz_job_dag (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
     id                       VARCHAR(32)             ,
@@ -596,7 +596,7 @@ COMMENT ON COLUMN ydsz_job_dag_version.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_job_dag_version.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_version_dv_dag_key ON ydsz_job_dag_version (dag_key);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_version_tenant_deleted ON ydsz_job_dag_version (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_version_tenant_is_deleted ON ydsz_job_dag_version (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
     id                       VARCHAR(32)             ,
@@ -657,7 +657,7 @@ COMMENT ON COLUMN ydsz_job_dag_instance.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_instance_di_dag_id ON ydsz_job_dag_instance (dag_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_instance_di_status ON ydsz_job_dag_instance (instance_status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_instance_di_started_at ON ydsz_job_dag_instance (started_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_instance_tenant_deleted ON ydsz_job_dag_instance (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_instance_tenant_is_deleted ON ydsz_job_dag_instance (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
     id                       VARCHAR(32)             ,
@@ -712,7 +712,7 @@ COMMENT ON COLUMN ydsz_job_dag_node_instance.updated_by IS '最后更新人';
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_node_instance_dni_dag_instance_id ON ydsz_job_dag_node_instance (dag_instance_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_node_instance_dni_job_id ON ydsz_job_dag_node_instance (job_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_node_instance_dni_log_id ON ydsz_job_dag_node_instance (log_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_node_instance_tenant_deleted ON ydsz_job_dag_node_instance (tenant_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_node_instance_tenant_is_deleted ON ydsz_job_dag_node_instance (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log (
     id                       VARCHAR(32)             ,
