@@ -3,12 +3,6 @@ package com.njydsz.nextwiki.server.channel;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.netty.codec.LengthFieldCodec;
-import com.njydsz.common.netty.config.NettyProperties;
-import com.njydsz.common.netty.server.AbstractNettyServer;
-import com.njydsz.common.netty.util.NettyBufferUtils;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -19,6 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.netty.codec.LengthFieldCodec;
+import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.server.AbstractNettyServer;
+import com.njydsz.common.netty.util.NettyBufferUtils;
 
 /**
  * NextWiki TCP 推送通道（基于 common-netty，P1-2 Netty 推送能力扩展）。
