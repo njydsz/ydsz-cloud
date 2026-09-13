@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller.internal;
+﻿package com.njydsz.literule.web.controller.internal;
 
 import java.util.List;
 import java.util.Map;
@@ -52,7 +52,7 @@ import com.njydsz.literule.server.converter.LiteruleWebConverter;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/internal")
+@RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "literule:internal:api")
 public class InternalLiteruleApiController {

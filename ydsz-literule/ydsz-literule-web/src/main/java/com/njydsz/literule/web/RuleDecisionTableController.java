@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.io.IOException;
 import java.util.List;
@@ -66,7 +66,7 @@ import com.njydsz.literule.server.converter.LiteruleWebConverter;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "决策表管理", description = "决策表 CRUD、评估与 Excel 导入导出")

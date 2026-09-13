@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ import com.njydsz.literule.server.spi.DashboardDataProvider;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/dashboard")
+@RequestMapping("/literule/dashboard")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎监控大盘", description = "P1-6 规则引擎指标聚合 API：概览 / 趋势 / 分布 / Top 规则 / 实时指标")

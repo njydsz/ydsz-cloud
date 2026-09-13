@@ -48,7 +48,7 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/task")
+@RequestMapping("/cronjob/task")
 @RequiredArgsConstructor
 @Validated
 public class JobTaskController {

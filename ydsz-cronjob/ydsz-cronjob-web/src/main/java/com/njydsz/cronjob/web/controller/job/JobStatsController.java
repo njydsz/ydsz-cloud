@@ -53,7 +53,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/stats")
+@RequestMapping("/cronjob/stats")
 @RequiredArgsConstructor
 public class JobStatsController {
   /** 集合初始容量 */

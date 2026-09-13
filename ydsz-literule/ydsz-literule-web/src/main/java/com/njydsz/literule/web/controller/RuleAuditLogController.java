@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -44,7 +44,7 @@ import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/audit")
+@RequestMapping("/literule/audit")
 @RequiredArgsConstructor
 @ConditionalOnBean(RuleAuditLogService.class)
 @Tag(name = "规则审计日志", description = "P3-5 规则操作审计日志查询 API")

@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -76,7 +76,7 @@ import com.njydsz.literule.server.cep.CEPPattern;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/cep")
+@RequestMapping("/literule/cep")
 @RequiredArgsConstructor
 @Tag(name = "CEP 复杂事件处理", description = "模式管理 / 事件投递 / 命中查询 / 引擎状态")
 public class CEPController {

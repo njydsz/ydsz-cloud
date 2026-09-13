@@ -29,7 +29,7 @@ import com.njydsz.generator.service.GenHistoryService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/generator/history")
+@RequestMapping("/generator/history")
 @RequiredArgsConstructor
 public class HistoryController {
 

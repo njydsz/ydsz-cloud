@@ -39,7 +39,7 @@ import com.njydsz.cronjob.server.core.logger.LogStreamManager;
 @Tag(name = "任务日志流", description = "任务执行日志 SSE 实时推送")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/log")
+@RequestMapping("/cronjob/log")
 @RequiredArgsConstructor
 public class JobLogStreamController {
 

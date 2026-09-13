@@ -136,7 +136,7 @@ public class HeaderAnalyzer {
 
     ColumnMetadata[] columnMetadataArray = new ColumnMetadata[columnCount];
     int idx = 0;
-    boolean automaticTrim = getExcelConfig().isAutomaticTrim();
+    boolean isAutomaticTrim = getExcelConfig().getIsAutomaticTrim();
     for (Map.Entry<Integer, Field> entry : fieldMap.entrySet()) {
       int col = entry.getKey();
       Field field = entry.getValue();
@@ -144,7 +144,7 @@ public class HeaderAnalyzer {
       Class<?> targetType = field.getType();
       String dateFormat = dateFormats.get(col);
       columnMetadataArray[idx++] =
-          new ColumnMetadata(col, setter, targetType, dateFormat, automaticTrim);
+          new ColumnMetadata(col, setter, targetType, dateFormat, isAutomaticTrim);
     }
 
     return columnMetadataArray;
@@ -233,7 +233,7 @@ public class HeaderAnalyzer {
 
     ColumnMetadata[] columnMetadataArray = new ColumnMetadata[columnCount];
     int idx = 0;
-    boolean automaticTrim = getExcelConfig().isAutomaticTrim();
+    boolean isAutomaticTrim = getExcelConfig().getIsAutomaticTrim();
     for (Map.Entry<Integer, Field> entry : fieldMap.entrySet()) {
       int col = entry.getKey();
       Field field = entry.getValue();
@@ -241,7 +241,7 @@ public class HeaderAnalyzer {
       Class<?> targetType = field.getType();
       String dateFormat = dateFormats.get(col);
       columnMetadataArray[idx++] =
-          new ColumnMetadata(col, setter, targetType, dateFormat, automaticTrim);
+          new ColumnMetadata(col, setter, targetType, dateFormat, isAutomaticTrim);
     }
 
     return columnMetadataArray;
@@ -280,7 +280,7 @@ public class HeaderAnalyzer {
     if (header.equals(fieldName)) {
       return true;
     }
-    if (getExcelConfig().isAutomaticTrim()) {
+    if (getExcelConfig().getIsAutomaticTrim()) {
       return header.trim().equals(fieldName.trim());
     }
     return false;

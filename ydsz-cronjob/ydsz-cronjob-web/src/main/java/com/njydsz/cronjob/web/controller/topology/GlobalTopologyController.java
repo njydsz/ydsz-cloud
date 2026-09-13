@@ -52,7 +52,7 @@ import com.njydsz.cronjob.server.core.dag.DagEdge;
 @Tag(name = "任务全局拓扑", description = "全局任务拓扑图数据：节点/边/统计")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/topology")
+@RequestMapping("/cronjob/topology")
 @RequiredArgsConstructor
 public class GlobalTopologyController {
   /** 集合初始容量 */

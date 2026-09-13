@@ -58,7 +58,7 @@ import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 @Tag(name = "执行队列状态", description = "任务执行线程池实时状态：活跃数/队列大小/已完成数/拒绝数")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/queue")
+@RequestMapping("/cronjob/queue")
 @RequiredArgsConstructor
 public class JobQueueController {
   /** 集合初始容量 */

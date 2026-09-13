@@ -22,18 +22,18 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * 一次构建后只读，如需修改配置请构建新的 {@link JsonConfig} 并重新生成。
  *
  * @param namingStrategy 字段命名策略（如 SNAKE_CASE / LOWER_CAMEL_CASE）
- * @param writeNulls 是否输出 null 值
- * @param prettyPrint 是否格式化输出
+ * @param isWriteNulls 是否输出 null 值
+ * @param isPrettyPrint 是否格式化输出
  * @param circularRefStrategy 循环引用处理策略名称（REF / IGNORE / ERROR）
- * @param serializeEnumUsingOrdinal 枚举是否使用序号序列化
+ * @param isSerializeEnumUsingOrdinal 枚举是否使用序号序列化
  * @param dateFormat 全局日期格式（空串表示使用默认 ISO 格式）
- * @param failOnError 序列化失败时是否抛出异常
+ * @param isFailOnError 序列化失败时是否抛出异常
  * @param defaultDateFormat 反序列化时未显式指定格式的日期默认解析模式
  * @param maxJsonSize 单次 JSON 处理的最大字节数上限
  * @param maxDepth 最大嵌套深度（防止栈溢出）
  * @param maxGenericDepth 泛型递归深度上限
- * @param useBigDecimal 是否将浮点数解析为 BigDecimal
- * @param wrapRootValue 是否启用根名称包裹
+ * @param isUseBigDecimal 是否将浮点数解析为 BigDecimal
+ * @param isWrapRootValue 是否启用根名称包裹
  * @since 26.09.01
  * @author ydsz-team
  */

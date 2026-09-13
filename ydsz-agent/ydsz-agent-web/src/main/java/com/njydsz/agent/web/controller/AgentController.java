@@ -99,7 +99,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/agent")
+@RequestMapping("/agent")
 @RequiredArgsConstructor
 @Tag(name = "Agent 统一入口", description = "Agent 执行 / 对话 / 历史")
 public class AgentController {

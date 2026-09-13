@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -67,7 +67,7 @@ import com.njydsz.literule.server.converter.LiteruleWebConverter;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则生命周期", description = "规则状态变更、审批与多级审批流")

@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则冲突检测", description = "规则冲突检测")

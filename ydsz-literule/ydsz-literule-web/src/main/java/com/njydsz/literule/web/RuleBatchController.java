@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -59,7 +59,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则批量操作", description = "规则批量启停、优先级调整、分类调整与软删除")

@@ -65,7 +65,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/agent/approvals")
+@RequestMapping("/agent/approvals")
 @RequiredArgsConstructor
 public class HumanApprovalController {
 

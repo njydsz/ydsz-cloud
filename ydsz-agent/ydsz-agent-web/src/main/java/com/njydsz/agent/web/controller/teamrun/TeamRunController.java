@@ -51,7 +51,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/agent/teamruns")
+@RequestMapping("/agent/teamruns")
 @RequiredArgsConstructor
 @Tag(name = "Team Run 管理", description = "多 Agent 协作编排 / 查询 / 控制")
 public class TeamRunController {

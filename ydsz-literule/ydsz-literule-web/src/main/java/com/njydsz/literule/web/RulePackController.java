@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,7 +64,7 @@ import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则集市场", description = "规则集发布、安装、版本管理与压测")

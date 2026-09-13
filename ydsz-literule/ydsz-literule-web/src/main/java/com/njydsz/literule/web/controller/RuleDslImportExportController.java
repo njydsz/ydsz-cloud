@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -68,7 +68,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/dsl")
+@RequestMapping("/literule/dsl")
 @RequiredArgsConstructor
 @Tag(name = "规则DSL导入导出", description = "DSL 规则导入 / 导出")
 public class RuleDslImportExportController {

@@ -56,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ApiVersion("26.09.13")
 @RestController
-@RequestMapping("/api/agent/memory")
+@RequestMapping("/agent/memory")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "对话记忆管理", description = "Agent 对话历史的查询、写入、清除、整合")

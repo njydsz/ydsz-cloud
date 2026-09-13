@@ -142,7 +142,7 @@ public class NumberConverter implements CellValueConverter {
       }
     } catch (NumberFormatException e) {
       logConversionError(targetType.getSimpleName(), str, context);
-      if (context.isStrictNumberConversion()) {
+      if (context.getIsStrictNumberConversion()) {
         throw new IllegalArgumentException(
             String.format(
                 "Excel单元格值 '%s' 无法转换为%s类型，行号:%d，列名:%s",

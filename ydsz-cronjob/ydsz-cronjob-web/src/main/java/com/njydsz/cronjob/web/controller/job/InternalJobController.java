@@ -78,7 +78,7 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 @Tag(name = "内部任务执行（远程派发接收端）", description = "集群节点间任务派发的 HTTP 接收端，接收 Leader 节点分片")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/internal")
+@RequestMapping("/cronjob/internal")
 @RequiredArgsConstructor
 public class InternalJobController {
 

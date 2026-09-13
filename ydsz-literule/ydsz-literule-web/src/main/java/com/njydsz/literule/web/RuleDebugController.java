@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,7 +47,7 @@ import com.njydsz.literule.server.debug.RuleDebugger;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/debug")
+@RequestMapping("/literule/debug")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则断点调试", description = "规则级/表达式节点级断点、调试会话与单步执行")

@@ -42,7 +42,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/internal")
+@RequestMapping("/internal")
 @RequiredArgsConstructor
 @AuthApiPermission(apiCodes = "cronjob:internal:api")
 public class InternalCronjobApiController {

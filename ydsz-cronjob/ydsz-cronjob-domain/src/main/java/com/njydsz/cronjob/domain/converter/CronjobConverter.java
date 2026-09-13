@@ -135,6 +135,7 @@ public interface CronjobConverter {
   JobAlertLog voToEntity(JobAlertLogVO vo);
 
   // ===== JobAlertRule =====
+  @Mapping(target = "enabled", source = "isEnabled", qualifiedByName = "booleanToInteger")
   JobAlertRuleVO entityToVO(JobAlertRule entity);
 
   List<JobAlertRuleVO> jobAlertRuleListToVO(List<JobAlertRule> entities);
@@ -145,6 +146,7 @@ public interface CronjobConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "isEnabled", source = "enabled", qualifiedByName = "integerToBoolean")
   JobAlertRule voToEntity(JobAlertRuleVO vo);
 
   @Mapping(target = "isDeleted", ignore = true)
@@ -153,7 +155,20 @@ public interface CronjobConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "isEnabled", source = "enabled", qualifiedByName = "integerToBoolean")
   JobAlertRule dtoToEntity(AlertRuleSaveDTO dto);
+
+  /** Integer(0/1) → Boolean 转换。 */
+  @Named("integerToBoolean")
+  default Boolean integerToBoolean(Integer value) {
+    return value != null && value == 1;
+  }
+
+  /** Boolean → Integer(0/1) 转换。 */
+  @Named("booleanToInteger")
+  default Integer booleanToInteger(Boolean value) {
+    return Boolean.TRUE.equals(value) ? 1 : 0;
+  }
 
   // ===== JobArtifact =====
   JobArtifactVO entityToVO(JobArtifact entity);

@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -52,7 +52,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则导入导出", description = "规则 JSON/YAML 导入导出与 GitOps 集成")

@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.List;
 
@@ -47,7 +47,7 @@ import com.njydsz.literule.server.spi.RuleTemplateProvider;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则模板市场", description = "规则模板查询与一键导入")

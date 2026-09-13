@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -71,7 +71,7 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/dsl")
+@RequestMapping("/literule/dsl")
 @RequiredArgsConstructor
 @Tag(name = "规则DSL校验解析", description = "DSL 校验 / 解析 / 预览")
 public class RuleDslController {

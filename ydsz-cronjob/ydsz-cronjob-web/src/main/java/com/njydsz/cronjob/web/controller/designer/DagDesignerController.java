@@ -44,7 +44,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/dag")
+@RequestMapping("/cronjob/dag")
 @RequiredArgsConstructor
 public class DagDesignerController {
 

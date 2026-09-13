@@ -65,10 +65,10 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
   private Set<String> orderByWhitelist = null;
 
   /** 是否启用安全拦截 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 严格模式：true=拒绝非法排序字段抛异常, false=忽略非法排序字段 */
-  private boolean strictMode = false;
+  private boolean isStrictMode = false;
 
   /** 深度分页警告阈值（offset >= 此值时打 WARN） */
   private long cursorWarningThreshold = 10000L;
@@ -94,7 +94,7 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
   @Override
   public void beforePrepare(
       StatementHandler sh, Connection connection, Integer transactionTimeout) {
-    if (!enabled) {
+    if (!isEnabled) {
       return;
     }
 
@@ -208,9 +208,9 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
     String message =
         String.format(
             "SQL 安全拦截：检测到不安全的排序字段 '%s'（表达式: '%s'），已%s。仅允许 [a-zA-Z_][a-zA-Z0-9_.]* 模式",
-            fieldName, fullExpr, strictMode ? "拒绝（严格模式）" : "忽略");
+            fieldName, fullExpr, isStrictMode ? "拒绝（严格模式）" : "忽略");
 
-    if (strictMode) {
+    if (isStrictMode) {
       log.error(message);
       throw SysException.builder().message(message).build();
     } else {
@@ -331,20 +331,20 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
 
   // ===== Getters / Setters =====
 
-  public boolean isEnabled() {
-    return enabled;
+  public boolean getIsEnabled() {
+    return isEnabled;
   }
 
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+  public void setIsEnabled(boolean isEnabled) {
+    this.isEnabled = isEnabled;
   }
 
-  public boolean isStrictMode() {
-    return strictMode;
+  public boolean getIsStrictMode() {
+    return isStrictMode;
   }
 
-  public void setStrictMode(boolean strictMode) {
-    this.strictMode = strictMode;
+  public void setIsStrictMode(boolean isStrictMode) {
+    this.isStrictMode = isStrictMode;
   }
 
   public Set<String> getOrderByWhitelist() {

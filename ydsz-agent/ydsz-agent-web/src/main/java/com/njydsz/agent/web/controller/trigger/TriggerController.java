@@ -53,7 +53,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/agent/triggers")
+@RequestMapping("/agent/triggers")
 @RequiredArgsConstructor
 @Tag(name = "触发器管理", description = "触发器 CRUD / 启用禁用 / 查询")
 public class TriggerController {

@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,7 +64,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则链画布", description = "规则链画布编辑、校验、Dry-run 与表达式函数市场")

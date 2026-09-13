@@ -56,13 +56,13 @@ public final class ThreadLocalSnapshot {
   /** 捕获当前线程的 ThreadLocal 序列化参数快照。 */
   public ThreadLocalSnapshot() {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
-    this.savedWriteNulls = ctx.writeNulls;
-    this.savedPrettyPrint = ctx.prettyPrint;
+    this.savedWriteNulls = ctx.isWriteNulls;
+    this.savedPrettyPrint = ctx.isPrettyPrint;
     this.savedCircularRefStrategy = ctx.circularRefStrategy;
-    this.savedSerializeEnumUsingOrdinal = ctx.serializeEnumUsingOrdinal;
+    this.savedSerializeEnumUsingOrdinal = ctx.isSerializeEnumUsingOrdinal;
     this.savedExcludedFields = ctx.excludedFields;
     this.savedDateFormat = ctx.dateFormat;
-    this.savedFailOnError = ctx.failOnError;
+    this.savedFailOnError = ctx.isFailOnError;
     this.savedNamingStrategy = FieldMetadataLoader.NAMING_STRATEGY.get();
     this.savedUseBigDecimal = JsonParserUtil.isUseBigDecimal();
     this.savedCallMaxDepth = JSONReader.getCallMaxDepthOverride();
@@ -73,13 +73,13 @@ public final class ThreadLocalSnapshot {
   /** 恢复快照中保存的 ThreadLocal 序列化参数。 */
   public void restore() {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
-    ctx.writeNulls = savedWriteNulls;
-    ctx.prettyPrint = savedPrettyPrint;
+    ctx.isWriteNulls = savedWriteNulls;
+    ctx.isPrettyPrint = savedPrettyPrint;
     ctx.circularRefStrategy = savedCircularRefStrategy;
-    ctx.serializeEnumUsingOrdinal = savedSerializeEnumUsingOrdinal;
+    ctx.isSerializeEnumUsingOrdinal = savedSerializeEnumUsingOrdinal;
     ctx.excludedFields = savedExcludedFields;
     ctx.dateFormat = savedDateFormat;
-    ctx.failOnError = savedFailOnError;
+    ctx.isFailOnError = savedFailOnError;
     FieldMetadataLoader.NAMING_STRATEGY.set(savedNamingStrategy);
     JsonParserUtil.setUseBigDecimal(savedUseBigDecimal);
     JSONReader.setCallDepthOverride(savedCallMaxDepth, savedCallMaxGenericDepth);

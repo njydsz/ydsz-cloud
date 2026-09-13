@@ -52,7 +52,7 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/history")
+@RequestMapping("/cronjob/history")
 @RequiredArgsConstructor
 public class JobHistoryController {
 

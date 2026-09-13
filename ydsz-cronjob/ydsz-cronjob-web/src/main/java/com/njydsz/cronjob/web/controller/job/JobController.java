@@ -88,7 +88,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob")
+@RequestMapping("/cronjob")
 @RequiredArgsConstructor
 @Validated
 public class JobController {

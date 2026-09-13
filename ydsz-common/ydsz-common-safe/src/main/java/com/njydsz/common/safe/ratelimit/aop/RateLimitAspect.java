@@ -155,7 +155,7 @@ public class RateLimitAspect {
             .warmupPeriod(Duration.ofMillis(annotation.warmupMillis()))
             .errorCode(annotation.errorCode())
             .fallback(annotation.fallback())
-            .enabled(true)
+            .isEnabled(true)
             .build();
     // 启动时校验规则合法性，提前暴露配置错误
     rule.validate();

@@ -29,7 +29,7 @@ public class StringConverter implements CellValueConverter {
     }
     if (rawValue instanceof String) {
       String str = (String) rawValue;
-      return context.isAutomaticTrim() ? str.trim() : str;
+      return context.getIsAutomaticTrim() ? str.trim() : str;
     }
     if (rawValue instanceof Double) {
       return String.valueOf(rawValue);

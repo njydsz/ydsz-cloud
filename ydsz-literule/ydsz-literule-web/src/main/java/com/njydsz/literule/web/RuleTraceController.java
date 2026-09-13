@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -62,7 +62,7 @@ import com.njydsz.literule.server.config.RuleTraceQueryService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/rules")
+@RequestMapping("/literule/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则执行追踪", description = "执行链路查询、历史回放与变更影响分析")

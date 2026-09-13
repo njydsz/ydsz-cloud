@@ -98,7 +98,7 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
       @NonNull MethodParameter returnType,
       @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
     // 如果未启用脱敏，直接跳过
-    if (!configuration.getIsEnabled()) {
+    if (!configuration.isEnabled()) {
       return false;
     }
 

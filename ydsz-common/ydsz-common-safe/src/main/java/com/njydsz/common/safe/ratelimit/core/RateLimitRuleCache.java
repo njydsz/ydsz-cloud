@@ -75,7 +75,7 @@ public class RateLimitRuleCache {
         .retainAll(rules.stream().map(RateLimitRule::getResource).collect(Collectors.toSet()));
     // 创建/更新
     for (RateLimitRule rule : rules) {
-      if (!rule.getIsEnabled()) {
+      if (!rule.isEnabled()) {
         limiters.remove(rule.getResource());
         continue;
       }

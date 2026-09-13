@@ -31,7 +31,7 @@ import com.njydsz.generator.service.TemplateService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/generator")
+@RequestMapping("/generator")
 @RequiredArgsConstructor
 public class TemplateController {
 

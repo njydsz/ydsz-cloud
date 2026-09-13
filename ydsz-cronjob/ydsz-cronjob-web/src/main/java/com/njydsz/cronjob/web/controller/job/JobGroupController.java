@@ -84,7 +84,7 @@ import com.njydsz.cronjob.server.service.job.JobService;
 @Tag(name = "任务分组管理", description = "按业务域分组的任务批量管理：分页、暂停/恢复/触发、统计")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/group")
+@RequestMapping("/cronjob/group")
 @RequiredArgsConstructor
 public class JobGroupController {
   /** 集合初始容量 */

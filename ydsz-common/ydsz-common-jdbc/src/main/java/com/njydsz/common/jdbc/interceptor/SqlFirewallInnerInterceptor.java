@@ -249,60 +249,60 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
 
   // ----- Getters / Setters -----
 
-  public boolean isEnabled() {
-    return enabled;
+  public boolean getIsEnabled() {
+    return isEnabled;
   }
 
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+  public void setIsEnabled(boolean isEnabled) {
+    this.isEnabled = isEnabled;
   }
 
-  public boolean isBlockDropTable() {
-    return blockDropTable;
+  public boolean getIsBlockDropTable() {
+    return isBlockDropTable;
   }
 
-  public void setBlockDropTable(boolean blockDropTable) {
-    this.blockDropTable = blockDropTable;
+  public void setIsBlockDropTable(boolean isBlockDropTable) {
+    this.isBlockDropTable = isBlockDropTable;
   }
 
-  public boolean isBlockTruncate() {
-    return blockTruncate;
+  public boolean getIsBlockTruncate() {
+    return isBlockTruncate;
   }
 
-  public void setBlockTruncate(boolean blockTruncate) {
-    this.blockTruncate = blockTruncate;
+  public void setIsBlockTruncate(boolean isBlockTruncate) {
+    this.isBlockTruncate = isBlockTruncate;
   }
 
-  public boolean isBlockDeleteWithoutWhere() {
-    return blockDeleteWithoutWhere;
+  public boolean getIsBlockDeleteWithoutWhere() {
+    return isBlockDeleteWithoutWhere;
   }
 
-  public void setBlockDeleteWithoutWhere(boolean blockDeleteWithoutWhere) {
-    this.blockDeleteWithoutWhere = blockDeleteWithoutWhere;
+  public void setIsBlockDeleteWithoutWhere(boolean isBlockDeleteWithoutWhere) {
+    this.isBlockDeleteWithoutWhere = isBlockDeleteWithoutWhere;
   }
 
-  public boolean isBlockUpdateWithoutWhere() {
-    return blockUpdateWithoutWhere;
+  public boolean getIsBlockUpdateWithoutWhere() {
+    return isBlockUpdateWithoutWhere;
   }
 
-  public void setBlockUpdateWithoutWhere(boolean blockUpdateWithoutWhere) {
-    this.blockUpdateWithoutWhere = blockUpdateWithoutWhere;
+  public void setIsBlockUpdateWithoutWhere(boolean isBlockUpdateWithoutWhere) {
+    this.isBlockUpdateWithoutWhere = isBlockUpdateWithoutWhere;
   }
 
-  public boolean isBlockMultiStatement() {
-    return blockMultiStatement;
+  public boolean getIsBlockMultiStatement() {
+    return isBlockMultiStatement;
   }
 
-  public void setBlockMultiStatement(boolean blockMultiStatement) {
-    this.blockMultiStatement = blockMultiStatement;
+  public void setIsBlockMultiStatement(boolean isBlockMultiStatement) {
+    this.isBlockMultiStatement = isBlockMultiStatement;
   }
 
-  public boolean isBlockPermissionOps() {
-    return blockPermissionOps;
+  public boolean getIsBlockPermissionOps() {
+    return isBlockPermissionOps;
   }
 
-  public void setBlockPermissionOps(boolean blockPermissionOps) {
-    this.blockPermissionOps = blockPermissionOps;
+  public void setIsBlockPermissionOps(boolean isBlockPermissionOps) {
+    this.isBlockPermissionOps = isBlockPermissionOps;
   }
 
   public Set<String> getAllowTables() {

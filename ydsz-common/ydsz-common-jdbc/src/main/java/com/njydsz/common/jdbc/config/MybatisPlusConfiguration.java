@@ -80,7 +80,7 @@ import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
   PaginationProperties.class,
   SqlFirewallProperties.class
 })
-@ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.jdbc", name = "is-enabled", matchIfMissing = true)
 public class MybatisPlusConfiguration {
 
   private final FieldFillConfiguration fieldFillConfiguration;
@@ -184,19 +184,19 @@ public class MybatisPlusConfiguration {
     if (paginationProperties.getMaxLimit() != null && paginationProperties.getMaxLimit() > 0) {
       paginationInterceptor.setMaxLimit(paginationProperties.getMaxLimit());
     }
-    paginationInterceptor.setOverflow(paginationProperties.isOverflow());
+    paginationInterceptor.setOverflow(paginationProperties.getIsOverflow());
     interceptor.addInnerInterceptor(paginationInterceptor);
 
     // 6. SQL 防火墙拦截器（置于拦截器链末端，在所有 SQL 改写完成后做安全校验）
     if (sqlFirewallProperties != null && sqlFirewallProperties.isEnabled()) {
       SqlFirewallInnerInterceptor firewall = new SqlFirewallInnerInterceptor();
-      firewall.setEnabled(true);
-      firewall.setBlockDropTable(sqlFirewallProperties.isBlockDropTable());
-      firewall.setBlockTruncate(sqlFirewallProperties.isBlockTruncate());
-      firewall.setBlockDeleteWithoutWhere(sqlFirewallProperties.isBlockDeleteWithoutWhere());
-      firewall.setBlockUpdateWithoutWhere(sqlFirewallProperties.isBlockUpdateWithoutWhere());
-      firewall.setBlockMultiStatement(sqlFirewallProperties.isBlockMultiStatement());
-      firewall.setBlockPermissionOps(sqlFirewallProperties.isBlockPermissionOps());
+      firewall.setIsEnabled(true);
+      firewall.setIsBlockDropTable(sqlFirewallProperties.getIsBlockDropTable());
+      firewall.setIsBlockTruncate(sqlFirewallProperties.getIsBlockTruncate());
+      firewall.setIsBlockDeleteWithoutWhere(sqlFirewallProperties.getIsBlockDeleteWithoutWhere());
+      firewall.setIsBlockUpdateWithoutWhere(sqlFirewallProperties.getIsBlockUpdateWithoutWhere());
+      firewall.setIsBlockMultiStatement(sqlFirewallProperties.getIsBlockMultiStatement());
+      firewall.setIsBlockPermissionOps(sqlFirewallProperties.getIsBlockPermissionOps());
       firewall.setAllowTables(sqlFirewallProperties.getAllowTables());
       interceptor.addInnerInterceptor(firewall);
       log.debug("MyBatis Plus: SqlFirewall interceptor enabled");
@@ -208,16 +208,16 @@ public class MybatisPlusConfiguration {
   /** 配置字段填充拦截器 */
   private void configureFieldFillInterceptors(MybatisPlusInterceptor interceptor) {
     List<FieldFillHandler> enabledHandlers = new ArrayList<>(4);
-    if (fieldFillConfiguration.getCreatedByIntercept().getEnabled()) {
+    if (fieldFillConfiguration.getCreatedByIntercept().getIsEnabled()) {
       enabledHandlers.add(new CreatedByHandler(fieldFillConfiguration));
     }
-    if (fieldFillConfiguration.getUpdateByIntercept().getEnabled()) {
+    if (fieldFillConfiguration.getUpdateByIntercept().getIsEnabled()) {
       enabledHandlers.add(new UpdatedByHandler(fieldFillConfiguration));
     }
-    if (fieldFillConfiguration.getCreateAtIntercept().getEnabled()) {
+    if (fieldFillConfiguration.getCreateAtIntercept().getIsEnabled()) {
       enabledHandlers.add(new CreatedAtHandler(fieldFillConfiguration));
     }
-    if (fieldFillConfiguration.getUpdateAtIntercept().getEnabled()) {
+    if (fieldFillConfiguration.getUpdateAtIntercept().getIsEnabled()) {
       enabledHandlers.add(new UpdatedAtHandler(fieldFillConfiguration));
     }
     if (enabledHandlers.isEmpty()) {
@@ -237,7 +237,7 @@ public class MybatisPlusConfiguration {
    * @param interceptor MyBatis Plus 拦截器链
    */
   private void configureDataPermissionInterceptor(MybatisPlusInterceptor interceptor) {
-    if (Boolean.TRUE.equals(dataPermissionConfiguration.getEnabled())) {
+    if (Boolean.TRUE.equals(dataPermissionConfiguration.getIsEnabled())) {
       DataScopeIdExpander expander =
           dataScopeIdExpanderProvider == null ? null : dataScopeIdExpanderProvider.getIfAvailable();
       DataPermissionContextResolver resolver = new DataPermissionContextResolver(expander);
@@ -267,12 +267,12 @@ public class MybatisPlusConfiguration {
     ApplicationContext ctx = event.getApplicationContext();
 
     boolean fieldFill =
-        fieldFillConfiguration.getCreatedByIntercept().getEnabled()
-            || fieldFillConfiguration.getUpdateByIntercept().getEnabled()
-            || fieldFillConfiguration.getCreateAtIntercept().getEnabled()
-            || fieldFillConfiguration.getUpdateAtIntercept().getEnabled();
-    boolean dataPermission = Boolean.TRUE.equals(dataPermissionConfiguration.getEnabled());
-    boolean sqlFirewall = sqlFirewallProperties != null && sqlFirewallProperties.isEnabled();
+        fieldFillConfiguration.getCreatedByIntercept().getIsEnabled()
+            || fieldFillConfiguration.getUpdateByIntercept().getIsEnabled()
+            || fieldFillConfiguration.getCreateAtIntercept().getIsEnabled()
+            || fieldFillConfiguration.getUpdateAtIntercept().getIsEnabled();
+    boolean dataPermission = Boolean.TRUE.equals(dataPermissionConfiguration.getIsEnabled());
+    boolean sqlFirewall = sqlFirewallProperties != null && sqlFirewallProperties.getIsEnabled();
     boolean sqlTrace = isSqlTraceEnabled(ctx);
     int spiCount = spiInterceptorProviders.getIfAvailable(Collections::emptyList).size();
     String dataSourceInfo = buildDataSourceInfo(ctx);

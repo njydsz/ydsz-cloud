@@ -62,7 +62,7 @@ import com.njydsz.cronjob.server.service.impl.schedule.ScheduleCalendarService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/calendar")
+@RequestMapping("/cronjob/calendar")
 @RequiredArgsConstructor
 public class ScheduleCalendarController {
 

@@ -32,7 +32,7 @@ import com.njydsz.cronjob.server.service.event.EventStoreService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/events")
+@RequestMapping("/cronjob/events")
 @RequiredArgsConstructor
 public class EventStoreController {
 

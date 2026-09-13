@@ -1,4 +1,4 @@
-package com.njydsz.literule.web.controller;
+﻿package com.njydsz.literule.web.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +41,7 @@ import com.njydsz.literule.server.expression.VariableRegistry;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
-@RequestMapping("/api/literule/variables")
+@RequestMapping("/literule/variables")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则变量管理", description = "变量注册表 CRUD、变量分类查询")

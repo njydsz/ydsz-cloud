@@ -29,7 +29,7 @@ import com.njydsz.generator.vo.GenDatasourceRespVO;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/generator/datasources")
+@RequestMapping("/generator/datasources")
 @RequiredArgsConstructor
 public class DatasourceController {
 

@@ -225,7 +225,7 @@ public class AlertController {
     saveDTO.setChannels(dto.getChannels());
     saveDTO.setReceivers(dto.getReceivers());
     saveDTO.setCooldownMinutes(dto.getCooldownMinutes());
-    saveDTO.setIsEnabled(dto.getIsEnabled());
+    saveDTO.setEnabled(dto.getEnabled());
     return saveDTO;
   }
 
@@ -243,7 +243,7 @@ public class AlertController {
     saveDTO.setChannels(dto.getChannels());
     saveDTO.setReceivers(dto.getReceivers());
     saveDTO.setCooldownMinutes(dto.getCooldownMinutes());
-    saveDTO.setIsEnabled(dto.getIsEnabled());
+    saveDTO.setEnabled(dto.getEnabled());
     return saveDTO;
   }
 }

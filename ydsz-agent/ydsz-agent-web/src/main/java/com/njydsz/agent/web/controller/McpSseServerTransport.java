@@ -69,7 +69,7 @@ import com.njydsz.common.base.api.ApiVersion;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/mcp")
+@RequestMapping("/mcp")
 @ConditionalOnProperty(prefix = "ydsz.agent.mcp", name = "serverEnabled", havingValue = "true")
 @RequiredArgsConstructor
 public class McpSseServerTransport {

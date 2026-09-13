@@ -35,7 +35,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/agent/prompt")
+@RequestMapping("/agent/prompt")
 @Tag(name = "Prompt 评估", description = "Prompt 模板试运行与对比评估")
 public class PromptController {
 

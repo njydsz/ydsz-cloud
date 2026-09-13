@@ -24,7 +24,7 @@ import com.njydsz.generator.service.EntityReverseService;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/generator/reverse")
+@RequestMapping("/generator/reverse")
 @RequiredArgsConstructor
 public class ReverseController {
 

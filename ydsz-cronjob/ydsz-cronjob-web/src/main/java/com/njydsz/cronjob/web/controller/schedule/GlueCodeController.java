@@ -52,7 +52,7 @@ import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 @Tag(name = "GLUE 在线编码")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/glue")
+@RequestMapping("/cronjob/glue")
 @RequiredArgsConstructor
 @Validated
 public class GlueCodeController {

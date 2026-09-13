@@ -51,7 +51,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Tag(name = "任务诊断", description = "聚合任务多维度状态信息，提供一键诊断能力")
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/cronjob/monitor/diagnosis")
+@RequestMapping("/cronjob/monitor/diagnosis")
 @RequiredArgsConstructor
 public class JobDiagnosisController {
   /** Map 初始容量：16 */

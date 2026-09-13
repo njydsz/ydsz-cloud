@@ -437,7 +437,7 @@ public final class JsonConfig implements Serializable {
     JSONReader.setMaxDepth(maxDepth);
     JSONReader.setMaxGenericDepth(maxGenericDepth);
     // 传播 failOnUnknownProperties 到 BeanReader（P1.5：未知字段严格模式）
-    BeanReader.setFailOnUnknownProperties(failOnUnknownProperties);
+    BeanReader.setFailOnUnknownProperties(isFailOnUnknownProperties);
     // wrapRootValue 不需要传播到 SerializationContext，因为它在 serialize() 入口处检查
   }
 

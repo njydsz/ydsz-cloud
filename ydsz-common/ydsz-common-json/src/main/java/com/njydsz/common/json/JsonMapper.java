@@ -178,14 +178,14 @@ public class JsonMapper {
    */
   private boolean isRuntimeConfigActive() {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
-    return ctx.writeNulls == runtimeConfig.writeNulls()
-        && ctx.prettyPrint == runtimeConfig.prettyPrint()
+    return ctx.isWriteNulls == runtimeConfig.isWriteNulls()
+        && ctx.isPrettyPrint == runtimeConfig.isPrettyPrint()
         && Objects.equals(ctx.circularRefStrategy, runtimeConfig.circularRefStrategy())
-        && ctx.serializeEnumUsingOrdinal == runtimeConfig.serializeEnumUsingOrdinal()
+        && ctx.isSerializeEnumUsingOrdinal == runtimeConfig.isSerializeEnumUsingOrdinal()
         && Objects.equals(ctx.dateFormat, runtimeConfig.dateFormat())
-        && ctx.failOnError == runtimeConfig.failOnError()
+        && ctx.isFailOnError == runtimeConfig.isFailOnError()
         && FieldMetadataLoader.NAMING_STRATEGY.get() == runtimeConfig.namingStrategy()
-        && JsonParserUtil.isUseBigDecimal() == runtimeConfig.useBigDecimal()
+        && JsonParserUtil.isUseBigDecimal() == runtimeConfig.isUseBigDecimal()
         && depthOverridesMatch();
   }
 
@@ -241,17 +241,17 @@ public class JsonMapper {
   private void applyRuntimeConfig() {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
     // 使用预计算运行时配置快速填充配置字段
-    ctx.writeNulls = runtimeConfig.writeNulls();
-    ctx.prettyPrint = runtimeConfig.prettyPrint();
+    ctx.isWriteNulls = runtimeConfig.isWriteNulls();
+    ctx.isPrettyPrint = runtimeConfig.isPrettyPrint();
     ctx.circularRefStrategy = runtimeConfig.circularRefStrategy();
-    ctx.serializeEnumUsingOrdinal = runtimeConfig.serializeEnumUsingOrdinal();
+    ctx.isSerializeEnumUsingOrdinal = runtimeConfig.isSerializeEnumUsingOrdinal();
     ctx.dateFormat = runtimeConfig.dateFormat();
-    ctx.failOnError = runtimeConfig.failOnError();
+    ctx.isFailOnError = runtimeConfig.isFailOnError();
     // namingStrategy 设置到独立 ThreadLocal（与 BeanSerializerCache 二级 Key 对齐）
     FieldMetadataLoader.NAMING_STRATEGY.set(runtimeConfig.namingStrategy());
     // P0-3：实例级精度模式隔离——此前仅 JsonConfig.install() 全局传播，
     // mapper 级 useBigDecimal 配置实际不生效，多实例场景互相覆盖
-    JsonParserUtil.setUseBigDecimal(runtimeConfig.useBigDecimal());
+    JsonParserUtil.setUseBigDecimal(runtimeConfig.isUseBigDecimal());
     // P0-3：实例级深度隔离——仅对显式自定义深度的 Mapper 设置线程级覆盖；
     // 继承全局深度的 Mapper 回退静态全局值，保留运行期临时调整兼容语义
     // （详见 depthOverridesMatch 的语义分层说明）

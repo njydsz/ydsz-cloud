@@ -54,7 +54,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/agent")
+@RequestMapping("/agent")
 @RequiredArgsConstructor
 @Tag(name = "Agent 元数据查询", description = "可用模型 / 已注册工具元数据查询")
 public class AgentMetadataController {

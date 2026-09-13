@@ -45,7 +45,7 @@ import com.njydsz.common.base.api.ApiVersion;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/agent/insight")
+@RequestMapping("/agent/insight")
 @RequiredArgsConstructor
 @ConditionalOnBean(InsightReportService.class)
 public class InsightReportController {

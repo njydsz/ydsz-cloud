@@ -220,8 +220,8 @@ public class JsonAutoConfiguration {
             if (!Objects.equals(oldConfig.getDateFormat(), nextConfig.getDateFormat())) {
               needClear = true;
             }
-            if (oldConfig.isSerializeEnumUsingOrdinal()
-                != nextConfig.isSerializeEnumUsingOrdinal()) {
+            if (oldConfig.getIsSerializeEnumUsingOrdinal()
+                != nextConfig.getIsSerializeEnumUsingOrdinal()) {
               needClear = true;
             }
             if (needClear) {

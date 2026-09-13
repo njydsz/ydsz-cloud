@@ -30,7 +30,7 @@ import com.njydsz.generator.vo.TemplateZipVO;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/generator/import-export")
+@RequestMapping("/generator/import-export")
 @RequiredArgsConstructor
 public class ImportExportController {
 

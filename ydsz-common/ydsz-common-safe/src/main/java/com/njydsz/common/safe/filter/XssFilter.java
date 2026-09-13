@@ -196,7 +196,7 @@ public class XssFilter extends OncePerRequestFilter {
    * <p>仅扫描非 JSON 请求。JSON 请求体的检测在 {@link #doFilterInternal} 中完成。
    */
   private void detectAndPublishXssEvent(HttpServletRequest request) {
-    if (eventPublisher == null || alertProperties == null || !alertProperties.getIsEnabled()) {
+    if (eventPublisher == null || alertProperties == null || !alertProperties.isEnabled()) {
       return;
     }
 

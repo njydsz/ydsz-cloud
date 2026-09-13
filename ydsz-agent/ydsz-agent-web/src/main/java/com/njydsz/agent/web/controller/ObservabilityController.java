@@ -30,7 +30,7 @@ import com.njydsz.common.core.response.YdszResponse;
 @Slf4j
 @ApiVersion("26.09.01")
 @RestController
-@RequestMapping("/api/agent/observability")
+@RequestMapping("/agent/observability")
 public class ObservabilityController {
 
   /** 统计天数上限 */
