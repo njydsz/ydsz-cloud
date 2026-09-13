@@ -70,6 +70,15 @@ public class EmailMessage implements Serializable {
   /** 自定义邮件头 */
   private Map<String, String> headers;
 
+  /** 显式 getter 避免 Lombok @Data 对 Boolean isXxx 字段生成器行为不确定 */
+  public Boolean getIsHtml() {
+    return isHtml;
+  }
+
+  public void setIsHtml(Boolean isHtml) {
+    this.isHtml = isHtml;
+  }
+
   /**
    * 邮件附件
    *
