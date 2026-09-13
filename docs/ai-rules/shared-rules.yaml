@@ -924,7 +924,7 @@ rules:
   - id: "YDIZ-API-001"
     category: "api"
     severity: "P0"
-    title: "【强制】API 版本通过 Header 协商，路径禁止包含版本段"
+    title: "【强制】API 版本通过 Header 协商，/api 前缀为网关层命名空间"
     description: |
       项目统一采用 Header-based 版本控制策略。所有 Controller 的 @RequestMapping
       **禁止**包含 /v1/、/v2/ 等版本段，版本信息通过请求头 X-Api-Version 传入。
@@ -941,36 +941,80 @@ rules:
       - 路径版本导致 URL 不稳定，版本演进时需修改所有调用方
       - 同一业务资源的多个版本应共享同一 URI，通过 Header 区分实现
       - 便于网关统一路由、灰度、监控和 Deprecation 治理
+
+      **/api 前缀命名空间规范**：
+
+      `/api` 是网关层统一的路由命名空间，用于区分 REST 接口与页面/静态资源路由。
+      业务层 Controller 的 @RequestMapping **禁止包含** `/api` 段，网关通过
+      `StripPrefix=1` 过滤器剥离 `/api` 后再转发至后端服务。
+
+      **职责划分**：
+      - 网关层（routes-nacos.yaml）：Path predicate 包含 `/api/**`，
+        配 `StripPrefix=1` 过滤器负责剥离命名空间
+      - 业务层（Controller）：@RequestMapping 仅承载纯资源路径
+        （如 `/workflow/engine`、`/agent`），不含 `/api` 段
+
+      **为什么 /api 不出现在业务层**：
+      1. 职责单一 — 路由命名空间是网关的基础设施职责，业务层只需关注资源路径
+      2. 便于迁移 — 当接口从 HTTP 切换为 gRPC 等协议时，资源路径不变
+      3. 解耦灵活性 — 网关可统一调整路由策略（如 `/api` → `/openapi"），业务代码无感
+      4. 避免歧义 — 业务层混入基础设施关键词导致路径语义混乱
+
+      **例外豁免**：
+      SCIM 国际标准路径（RFC 7643/7644）在 Controller 的 @RequestMapping 保留
+      `/v2/scim/**`，类型为 SCIM 协议标准而非 YDSZ 版本控制，不属于违规。
+      须在类 Javadoc 标注 `<!-- YDIZ-API-001-EXEMPT: SCIM RFC 7643/7644 -->`。
     pattern: |
       以下任一情形构成违规：
-      1. Controller @RequestMapping 中出现 /v1/、/v2/ 等版本段
-      2. 前端/FeignClient 调用 URL 中硬编码 /v1/、/v2/ 前缀
-      3. 通过 Header/Query 以外的方式传递版本信息（如域名、Cookie）
+      1. Controller @RequestMapping 中出现 /v1/、/v2/ 等版本段（SCIM 除外）
+      2. Controller @RequestMapping 中出现 /api/ 段（如 "/api/agent"、"/api/workflow"）
+      3. 前端/FeignClient 调用 URL 中硬编码 /v1/、/v2/ 前缀
+      4. 通过 Header/Query 以外的方式传递版本信息（如域名、Cookie）
+      5. 网关路由配置缺少 StripPrefix=1 过滤器（导致 /api 透传到业务层）
     example_bad: |
       // ❌ 路径包含版本段
       @RequestMapping("/api/v1/workflow/engine")
       public class FlowTaskController { }
 
+      // ❌ 业务层 Controller 包含 /api 前缀
+      @RequestMapping("/api/agent")
+      public class AgentController { }
+
+      // ❌ 网关路由缺少 StripPrefix（/api 透传到业务层）
+      { "name": "Path", "args": { "pattern": "/api/agent/**" } }
+
       // ❌ 前端硬编码版本前缀
       requestClient.get('/api/v1/workflow/engine/task/pass')
     example_good: |
-      // ✅ 路径无版本段，版本由 Header 协商
-      @RequestMapping("/api/workflow/engine")
-      public class FlowTaskController { }
+      // ✅ 路径无版本段、无 /api 前缀，版本由 Header 协商
+      @RequestMapping("/agent")
+      public class AgentController { }
 
-      // ✅ 前端通过 Header 传递版本
-      requestClient.get('/api/workflow/engine/task/pass',
+      // ✅ 网关路由 StripPrefix 剥离 /api 后转发
+      {
+        "name": "Path", "args": { "pattern": "/api/agent/**" },
+        "filters": [{ "name": "StripPrefix", "args": { "parts": "1" } }]
+      }
+
+      // ✅ 前端通过 Header 传递版本，URL 使用网关命名空间
+      requestClient.get('/api/agent/list',
         { headers: { 'X-Api-Version': 'v1' } })
 
-      // ✅ 网关路由配置（Path pattern 无版本前缀）
-      { "name": "Path", "args": { "pattern": "/api/workflow/**" } }
+      // ✅ SCIM 标准路径豁免
+      /**
+       * SCIM 用户管理（RFC 7643/7644）
+       * <!-- YDIZ-API-001-EXEMPT: SCIM RFC 7643/7644 -->
+       */
+      @RequestMapping("/v2/scim/Users")
+      public class ScimController { }
     fix: |
-      1. Controller @RequestMapping: /api/v1/xxx → /api/xxx
-      2. 前端 api 层 URL: /api/v1/xxx → /api/xxx，加 Header X-Api-Version
-      3. 网关路由 pattern: /api/v1/xxx/** → /api/xxx/**
-      4. bootstrap.yml anon-urls: /api/v1/xxx → /api/xxx
-      5. FeignClient 路径常量、Javadoc 引用的路径同步更新
-    source: "编码规范 §24（API 版本控制策略）"
+      1. Controller @RequestMapping: /api/v1/xxx → /api/xxx（移除版本段）
+      2. Controller @RequestMapping: /api/agent → /agent（移除 /api 段）
+      3. 网关路由 pattern: /api/v1/xxx/** → /api/xxx/** 并增加 StripPrefix=1
+      4. 前端 api 层 URL: /api/v1/xxx → /api/xxx，加 Header X-Api-Version
+      5. bootstrap.yml anon-urls: /api/v1/xxx → /api/xxx
+      6. FeignClient 路径常量、Javadoc 引用的路径同步更新
+    source: "编码规范 §24（API 版本控制策略）及 §26.3（网关路由编排）"
 
   - id: "YDIZ-API-002"
     category: "api"

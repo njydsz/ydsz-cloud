@@ -22,7 +22,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
 public class NotifyProperties {
 
   /** 是否启用通知模块 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 邮件渠道配置 */
   private EmailConfig email = new EmailConfig();
@@ -59,12 +59,12 @@ public class NotifyProperties {
 
   // ==================== Getter / Setter ====================
 
-  public boolean isEnabled() {
-    return enabled;
+  public boolean getIsEnabled() {
+    return isEnabled;
   }
 
   public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+    this.isEnabled = enabled;
   }
 
   public EmailConfig getEmail() {
@@ -200,7 +200,7 @@ public class NotifyProperties {
   public static class EmailConfig {
 
     /** 是否启用邮件渠道 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** SMTP 主机地址 */
     private String smtpHost;
