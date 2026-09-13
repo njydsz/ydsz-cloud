@@ -7,13 +7,13 @@
         <result column="user_id" property="userId"/>
         <result column="channel" property="channel"/>
         <result column="biz_type" property="bizType"/>
-        <result column="enabled" property="enabled"/>
-        <result column="dnd_enabled" property="dndEnabled"/>
+        <result column="is_enabled" property="isEnabled"/>
+        <result column="is_dnd_enabled" property="isDndEnabled"/>
         <result column="dnd_start" property="dndStart"/>
         <result column="dnd_end" property="dndEnd"/>
         <result column="daily_limit" property="dailyLimit"/>
         <result column="hourly_limit" property="hourlyLimit"/>
-        <result column="digest_enabled" property="digestEnabled"/>
+        <result column="is_digest_enabled" property="isDigestEnabled"/>
         <result column="digest_frequency" property="digestFrequency"/>
         <result column="locale" property="locale"/>
         <result column="extra" property="extra"/>
@@ -26,9 +26,9 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, user_id, channel, biz_type, enabled, dnd_enabled, dnd_start, dnd_end, daily_limit,
-        hourly_limit, digest_enabled, digest_frequency, locale, extra,
-        created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
+    id, user_id, channel, biz_type, is_enabled, is_dnd_enabled, dnd_start, dnd_end, daily_limit,
+    hourly_limit, is_digest_enabled, digest_frequency, locale, extra,
+    created_by, created_at, updated_by, updated_at, is_deleted, tenant_id
     </sql>
 
 </mapper>
