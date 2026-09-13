@@ -47,16 +47,16 @@ public final class FeignClientConstants {
    * <p>原值 {@code /api/dict/item} 是字典项"新增"业务端点，语义完全错误；
    * 内部查询应走 {@code /api/internal/dict/item}（请求体 DictItemGetRequest 与契约一致）。
    */
-  public static final String SYSTEM_PATH_DICT_ITEM = "/api/internal/dict/item";
+  public static final String SYSTEM_PATH_DICT_ITEM = "/internal/dict/item";
 
   /** 字典列表查询路径（P1-6 修正：原值 /api/dict/list 在契约中不存在） */
-  public static final String SYSTEM_PATH_DICT_LIST = "/api/internal/dict/list";
+  public static final String SYSTEM_PATH_DICT_LIST = "/internal/dict/list";
 
   /** 系统配置获取路径（P1-6 修正：原值 /api/config/get 在契约中不存在） */
-  public static final String SYSTEM_PATH_CONFIG_GET = "/api/internal/config/get";
+  public static final String SYSTEM_PATH_CONFIG_GET = "/internal/config/get";
 
   /** 应用信息校验路径（P1-6 修正：原值 /api/app/validate 在契约中不存在） */
-  public static final String SYSTEM_PATH_APP_VALIDATE = "/api/internal/app/validate";
+  public static final String SYSTEM_PATH_APP_VALIDATE = "/internal/app/validate";
 
   // ======================== 消息服务路径常量 ========================
 
@@ -65,113 +65,113 @@ public final class FeignClientConstants {
    *
    * <p>指向 {@code InternalMessageApiController} 内部端点，仅供跨服务 Feign 调用，对公网不可访问。
    */
-  public static final String MESSAGE_PATH_SEND = "/api/internal/message/send";
+  public static final String MESSAGE_PATH_SEND = "/internal/message/send";
 
   /** 消息广播路径（P1-6 修正：实际端点位于 /notifications 子路径） */
-  public static final String MESSAGE_PATH_BROADCAST = "/api/message/notifications/broadcast";
+  public static final String MESSAGE_PATH_BROADCAST = "/message/notifications/broadcast";
 
   /** 实时推送路径（单播，P1-6 修正：实际端点位于 /notifications 子路径） */
   public static final String MESSAGE_PATH_PUSH_REALTIME =
-      "/api/message/notifications/push-realtime";
+      "/message/notifications/push-realtime";
 
   // ======================== 定时任务服务路径常量 ========================
 
   /** 定时任务触发路径（内部 Feign 通道） */
-  public static final String CRONJOB_PATH_TRIGGER = "/api/internal/cronjob/{id}/trigger";
+  public static final String CRONJOB_PATH_TRIGGER = "/internal/cronjob/{id}/trigger";
 
   /** 定时任务详情查询路径（内部 Feign 通道） */
-  public static final String CRONJOB_PATH_GET = "/api/internal/cronjob/{id}";
+  public static final String CRONJOB_PATH_GET = "/internal/cronjob/{id}";
 
   /** 定时任务暂停路径（内部 Feign 通道） */
-  public static final String CRONJOB_PATH_PAUSE = "/api/internal/cronjob/{id}/pause";
+  public static final String CRONJOB_PATH_PAUSE = "/internal/cronjob/{id}/pause";
 
   /** 定时任务恢复路径（内部 Feign 通道） */
-  public static final String CRONJOB_PATH_RESUME = "/api/internal/cronjob/{id}/resume";
+  public static final String CRONJOB_PATH_RESUME = "/internal/cronjob/{id}/resume";
 
   // ======================== 规则引擎服务路径常量 ========================
 
   /** 规则评估（dry-run）路径（内部 Feign 通道） */
-  public static final String LITERULE_PATH_DRY_RUN = "/api/internal/literule/rules/dry-run";
+  public static final String LITERULE_PATH_DRY_RUN = "/internal/literule/rules/dry-run";
 
   /** 规则评估（正式）路径（内部 Feign 通道） */
-  public static final String LITERULE_PATH_EVALUATE = "/api/internal/literule/rules/evaluate";
+  public static final String LITERULE_PATH_EVALUATE = "/internal/literule/rules/evaluate";
 
   // ======================== 工作流服务路径常量 ========================
 
   /** 流程启动路径（内部 Feign 通道） */
-  public static final String WORKFLOW_PATH_START = "/api/internal/engine/instance/start";
+  public static final String WORKFLOW_PATH_START = "/internal/engine/instance/start";
 
   /** 按业务查询流程路径（内部 Feign 通道） */
   public static final String WORKFLOW_PATH_GET_BY_BUSINESS =
-      "/api/internal/engine/instance/byBusiness";
+      "/internal/engine/instance/byBusiness";
 
   /** 流程终止路径（内部 Feign 通道） */
   public static final String WORKFLOW_PATH_TERMINATE =
-      "/api/internal/engine/instance/{id}/terminate";
+      "/internal/engine/instance/{id}/terminate";
 
   // ======================== 用户中心内部 API 路径常量 ========================
 
   /** 用户信息查询路径 */
-  public static final String USERINFO_PATH_USER_INFO = "/api/internal/user/info";
+  public static final String USERINFO_PATH_USER_INFO = "/internal/user/info";
 
   /** 部门树查询路径 */
-  public static final String USERINFO_PATH_DEPT_TREE = "/api/internal/dept/tree";
+  public static final String USERINFO_PATH_DEPT_TREE = "/internal/dept/tree";
 
   /** 部门列表查询路径 */
-  public static final String USERINFO_PATH_DEPT_LIST = "/api/internal/dept/list";
+  public static final String USERINFO_PATH_DEPT_LIST = "/internal/dept/list";
 
   /** 按角色查询用户 ID 列表路径 */
-  public static final String USERINFO_PATH_USER_LIST_BY_ROLE = "/api/internal/user/list-by-role";
+  public static final String USERINFO_PATH_USER_LIST_BY_ROLE = "/internal/user/list-by-role";
 
   /** 查询用户角色编码列表路径 */
-  public static final String USERINFO_PATH_USER_ROLE_CODES = "/api/internal/user/role-codes";
+  public static final String USERINFO_PATH_USER_ROLE_CODES = "/internal/user/role-codes";
 
   /** 查询用户部门 ID 列表路径 */
-  public static final String USERINFO_PATH_USER_DEPT_IDS = "/api/internal/user/dept-ids";
+  public static final String USERINFO_PATH_USER_DEPT_IDS = "/internal/user/dept-ids";
 
   /** 查询用户直属上级路径 */
-  public static final String USERINFO_PATH_USER_LEADER = "/api/internal/user/leader";
+  public static final String USERINFO_PATH_USER_LEADER = "/internal/user/leader";
 
   /** 按岗位查询用户 ID 列表路径 */
   public static final String USERINFO_PATH_USER_LIST_BY_POSITION =
-      "/api/internal/user/list-by-position";
+      "/internal/user/list-by-position";
 
   /** 按部门 ID 查询负责人路径 */
-  public static final String USERINFO_PATH_DEPT_LEADER_BY_ID = "/api/internal/dept/leader-by-id";
+  public static final String USERINFO_PATH_DEPT_LEADER_BY_ID = "/internal/dept/leader-by-id";
 
   /** 按部门编码查询负责人路径 */
   public static final String USERINFO_PATH_DEPT_LEADER_BY_CODE =
-      "/api/internal/dept/leader-by-code";
+      "/internal/dept/leader-by-code";
 
   /** 批量查询用户名称路径 */
-  public static final String USERINFO_PATH_USER_BATCH_NAMES = "/api/internal/user/batch-names";
+  public static final String USERINFO_PATH_USER_BATCH_NAMES = "/internal/user/batch-names";
 
   /** 批量查询部门名称路径 */
-  public static final String USERINFO_PATH_DEPT_BATCH_NAMES = "/api/internal/dept/batch-names";
+  public static final String USERINFO_PATH_DEPT_BATCH_NAMES = "/internal/dept/batch-names";
 
   /** 批量查询角色名称路径 */
-  public static final String USERINFO_PATH_ROLE_BATCH_NAMES = "/api/internal/role/batch-names";
+  public static final String USERINFO_PATH_ROLE_BATCH_NAMES = "/internal/role/batch-names";
 
   /** 批量查询岗位名称路径 */
-  public static final String USERINFO_PATH_POST_BATCH_NAMES = "/api/internal/post/batch-names";
+  public static final String USERINFO_PATH_POST_BATCH_NAMES = "/internal/post/batch-names";
 
   /** 批量查询公司名称路径 */
   public static final String USERINFO_PATH_COMPANY_BATCH_NAMES =
-      "/api/internal/company/batch-names";
+      "/internal/company/batch-names";
 
   // ======================== 知识库服务路径常量 ========================
 
   /** 空间详情查询路径（内部 Feign 通道） */
-  public static final String NEXTWIKI_PATH_SPACE_GET = "/api/internal/space/get";
+  public static final String NEXTWIKI_PATH_SPACE_GET = "/internal/space/get";
 
   /** 空间批量查询路径（内部 Feign 通道） */
-  public static final String NEXTWIKI_PATH_SPACE_BATCH = "/api/internal/space/batch";
+  public static final String NEXTWIKI_PATH_SPACE_BATCH = "/internal/space/batch";
 
   /** 按租户 ID 查询存储配额路径（内部 Feign 通道） */
-  public static final String NEXTWIKI_PATH_QUOTA_GET = "/api/internal/quota/get-by-tenant";
+  public static final String NEXTWIKI_PATH_QUOTA_GET = "/internal/quota/get-by-tenant";
 
   /** 按空间 ID 查询存储配额路径（内部 Feign 通道） */
-  public static final String NEXTWIKI_PATH_QUOTA_GET_BY_SPACE = "/api/internal/quota/get-by-space";
+  public static final String NEXTWIKI_PATH_QUOTA_GET_BY_SPACE = "/internal/quota/get-by-space";
 
   // ======================== Feign 降级统一错误码 ========================
 

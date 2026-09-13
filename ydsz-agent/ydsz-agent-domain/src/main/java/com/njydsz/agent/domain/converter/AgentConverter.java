@@ -127,15 +127,6 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO
    * @return 数据库实体
    */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "isDeleted", ignore = true)
-  @Mapping(target = "status", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   AgentTrace dtoToEntity(AgentTraceDTO dto);
 
   /**
@@ -144,15 +135,6 @@ public interface AgentConverter {
    * @param dto Agent 执行链路 DTO（含 traceId）
    * @return 数据库实体
    */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "isDeleted", ignore = true)
-  @Mapping(target = "status", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   AgentTrace dtoToEntityWithId(AgentTraceDTO dto);
 
   // ===== AgentTraceStep =====
@@ -182,15 +164,6 @@ public interface AgentConverter {
    * @param dto Agent 执行链路步骤 DTO
    * @return 数据库实体
    */
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "isDeleted", ignore = true)
-  @Mapping(target = "status", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
   AgentTraceStep dtoToEntity(AgentTraceStepDTO dto);
 
   // ===== AgentApproval =====

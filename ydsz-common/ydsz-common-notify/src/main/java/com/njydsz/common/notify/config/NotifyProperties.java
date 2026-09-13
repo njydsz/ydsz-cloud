@@ -239,7 +239,7 @@ public class NotifyProperties {
     private String encoding = "UTF-8";
 
     /** 默认是否以 HTML 模式发送（false 时发送纯文本） */
-    private boolean htmlMode = true;
+    private boolean isHtmlMode = true;
 
     /** 默认邮件主题前缀，如 "【ydsz项目管理】" */
     private String defaultSubjectPrefix = "";
@@ -345,28 +345,28 @@ public class NotifyProperties {
       this.writeTimeout = writeTimeout;
     }
 
-    public boolean isAuth() {
-      return auth;
+    public boolean getIsAuth() {
+      return isAuth;
     }
 
     public void setAuth(boolean auth) {
-      this.auth = auth;
+      this.isAuth = auth;
     }
 
-    public boolean isStarttls() {
-      return starttls;
+    public boolean getIsStarttls() {
+      return isStarttls;
     }
 
     public void setStarttls(boolean starttls) {
-      this.starttls = starttls;
+      this.isStarttls = starttls;
     }
 
-    public boolean isDebug() {
-      return debug;
+    public boolean getIsDebug() {
+      return isDebug;
     }
 
     public void setDebug(boolean debug) {
-      this.debug = debug;
+      this.isDebug = debug;
     }
 
     public String getEncoding() {
