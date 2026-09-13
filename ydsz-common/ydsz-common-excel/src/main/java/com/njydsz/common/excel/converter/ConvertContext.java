@@ -47,7 +47,7 @@ public class ConvertContext {
     return automaticTrim;
   }
 
-  public void setAutomaticTrim(boolean automaticTrim) {
+  public void setIsAutomaticTrim(boolean automaticTrim) {
     this.automaticTrim = automaticTrim;
   }
 

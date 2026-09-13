@@ -94,14 +94,14 @@ public class WriteMetadataBuilder {
     copy.setHeadRowNumber(existing.getHeadRowNumber());
     copy.setDateFormat(existing.getDateFormat());
     copy.setNumberFormat(existing.getNumberFormat());
-    copy.setAutomaticTrim(existing.getAutomaticTrim());
+    copy.setIsAutomaticTrim(existing.getIsAutomaticTrim());
     copy.setPassword(existing.getPassword());
     copy.setExcludeColumnFiledNames(existing.getExcludeColumnFiledNames());
     copy.setIncludeColumnFiledNames(existing.getIncludeColumnFiledNames());
     copy.setDataSize(existing.getDataSize());
     copy.setFreezePaneRow(existing.getFreezePaneRow());
     copy.setFreezePaneCol(existing.getFreezePaneCol());
-    copy.setAutoColumnWidth(existing.getAutoColumnWidth());
+    copy.setIsAutoColumnWidth(existing.getIsAutoColumnWidth());
     copy.setMergedRegions(existing.getMergedRegions());
     return copy;
   }
@@ -214,7 +214,7 @@ public class WriteMetadataBuilder {
    * @return 当前建造者
    */
   public WriteMetadataBuilder automaticTrim(boolean automaticTrim) {
-    metadata.setAutomaticTrim(automaticTrim);
+    metadata.setIsAutomaticTrim(automaticTrim);
     return this;
   }
 
@@ -310,7 +310,7 @@ public class WriteMetadataBuilder {
    * @return 当前建造者
    */
   public WriteMetadataBuilder autoColumnWidth(boolean autoColumnWidth) {
-    metadata.setAutoColumnWidth(autoColumnWidth);
+    metadata.setIsAutoColumnWidth(autoColumnWidth);
     return this;
   }
 

@@ -145,7 +145,7 @@ public class ExcelWriter {
   private void rebuildValueFormatter() {
     this.valueFormatter =
         new ValueFormatter(
-            metadata.getAutomaticTrim() != null ? metadata.getAutomaticTrim() : true,
+            metadata.getIsAutomaticTrim() != null ? metadata.getIsAutomaticTrim() : true,
             metadata.getExcelConfig());
   }
 
@@ -232,13 +232,13 @@ public class ExcelWriter {
     newMetadata.setHeadRowNumber(metadata.getHeadRowNumber());
     newMetadata.setDateFormat(metadata.getDateFormat());
     newMetadata.setNumberFormat(metadata.getNumberFormat());
-    newMetadata.setAutomaticTrim(metadata.getAutomaticTrim());
+    newMetadata.setIsAutomaticTrim(metadata.getIsAutomaticTrim());
     newMetadata.setPassword(metadata.getPassword());
     newMetadata.setExcludeColumnFiledNames(metadata.getExcludeColumnFiledNames());
     newMetadata.setIncludeColumnFiledNames(metadata.getIncludeColumnFiledNames());
     newMetadata.setFreezePaneRow(metadata.getFreezePaneRow());
     newMetadata.setFreezePaneCol(metadata.getFreezePaneCol());
-    newMetadata.setAutoColumnWidth(metadata.getAutoColumnWidth());
+    newMetadata.setIsAutoColumnWidth(metadata.getIsAutoColumnWidth());
     newMetadata.setMergedRegions(metadata.getMergedRegions());
     return newMetadata;
   }
@@ -350,7 +350,7 @@ public class ExcelWriter {
    * @return 当前写入器实例
    */
   public ExcelWriter autoColumnWidth(boolean autoColumnWidth) {
-    metadata.setAutoColumnWidth(autoColumnWidth);
+    metadata.setIsAutoColumnWidth(autoColumnWidth);
     return this;
   }
 
@@ -374,7 +374,7 @@ public class ExcelWriter {
    * @return 当前写入器实例
    */
   public ExcelWriter automaticTrim(boolean automaticTrim) {
-    metadata.setAutomaticTrim(automaticTrim);
+    metadata.setIsAutomaticTrim(automaticTrim);
     rebuildValueFormatter();
     return this;
   }
@@ -799,7 +799,7 @@ public class ExcelWriter {
       }
     }
 
-    if (metadata.getAutoColumnWidth() != null && metadata.getAutoColumnWidth()) {
+    if (metadata.getIsAutoColumnWidth() != null && metadata.getIsAutoColumnWidth()) {
       if (!(workbook instanceof SXSSFWorkbook)) {
         List<WriteHeaderProperty> headProperties = metadata.getHeadList();
         if (headProperties != null) {
@@ -884,7 +884,7 @@ public class ExcelWriter {
       }
       metadata.setFreezePaneRow(sheetAnnotation.freezePane().row());
       metadata.setFreezePaneCol(sheetAnnotation.freezePane().col());
-      metadata.setAutoColumnWidth(sheetAnnotation.autoColumnWidth());
+      metadata.setIsAutoColumnWidth(sheetAnnotation.autoColumnWidth());
 
       ExcelSheet.MergedRegion[] mergedRegions = sheetAnnotation.mergedRegions();
       if (mergedRegions != null && mergedRegions.length > 0) {
@@ -1024,7 +1024,7 @@ public class ExcelWriter {
     // 同时修复 automaticTrim 为 null 时 Boolean 拆箱 NPE 风险
     ultraFastCellWriter =
         new UltraFastCellWriter(
-            metadata.getAutomaticTrim() != null ? metadata.getAutomaticTrim() : true,
+            metadata.getIsAutomaticTrim() != null ? metadata.getIsAutomaticTrim() : true,
             metadata.getExcelConfig());
   }
 

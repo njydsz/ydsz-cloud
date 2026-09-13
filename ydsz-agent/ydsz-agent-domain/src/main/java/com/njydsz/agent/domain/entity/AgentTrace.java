@@ -8,8 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-
 /**
  * Agent 执行链路（映射 ydsz_agt_trace 表）
  *
@@ -24,11 +22,11 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @TableName("ydsz_agt_trace")
-public class AgentTrace extends MpBaseEntity<Long> {
+public class AgentTrace {
 
-  /** 链路唯一 ID（主键，业务生成非自增；覆盖基类 ASSIGN_ID 为 INPUT）。 */
+  /** 链路唯一 ID（主键，业务生成非自增）。 */
   @TableId(type = IdType.INPUT)
   private String traceId;
 

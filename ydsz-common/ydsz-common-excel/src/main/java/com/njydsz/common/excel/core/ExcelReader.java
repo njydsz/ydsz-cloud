@@ -267,7 +267,7 @@ public class ExcelReader {
    * @return 当前读取器实体
    */
   public ExcelReader skipEmptyRows() {
-    metadata.setSkipEmptyRows(true);
+    metadata.setIsSkipEmptyRows(true);
     return this;
   }
 
@@ -278,7 +278,7 @@ public class ExcelReader {
    * @return 当前读取器实体
    */
   public ExcelReader skipEmptyRows(boolean skip) {
-    metadata.setSkipEmptyRows(skip);
+    metadata.setIsSkipEmptyRows(skip);
     return this;
   }
 
@@ -291,7 +291,7 @@ public class ExcelReader {
    * @return 当前读取器实体
    */
   public ExcelReader checkColumnCount(int expectedColumnCount) {
-    metadata.setCheckColumnCount(true);
+    metadata.setIsCheckColumnCount(true);
     metadata.setExpectedColumnCount(expectedColumnCount);
     return this;
   }
@@ -345,7 +345,7 @@ public class ExcelReader {
    * @return 当前读取器实体
    */
   public ExcelReader mandatoryUseInputStream() {
-    metadata.setMandatoryUseInputStream(true);
+    metadata.setIsMandatoryUseInputStream(true);
     return this;
   }
 
@@ -515,7 +515,7 @@ public class ExcelReader {
           superFastReader.setExcelConfig(config);
           superFastReader.setSheetName(metadata.getSheetName());
           superFastReader.setSheetIndex(metadata.getSheetIndex());
-          superFastReader.setSkipEmptyRows(Boolean.TRUE.equals(metadata.getSkipEmptyRows()));
+          superFastReader.setIsSkipEmptyRows(Boolean.TRUE.equals(metadata.getIsSkipEmptyRows()));
           // read(Path)：ZipFile 随机访问，支持 workbook.xml/rels 解析的 Sheet 选择与解压限流防护
           superFastReader.read(fastPath);
           notifyEnd();
@@ -704,8 +704,8 @@ public class ExcelReader {
     int lastRowNum = sheet.getLastRowNum();
     int startRow = headerRowIndex + 1;
 
-    boolean skipEmptyRows = Boolean.TRUE.equals(metadata.getSkipEmptyRows());
-    boolean checkColumnCount = Boolean.TRUE.equals(metadata.getCheckColumnCount());
+    boolean skipEmptyRows = Boolean.TRUE.equals(metadata.getIsSkipEmptyRows());
+    boolean checkColumnCount = Boolean.TRUE.equals(metadata.getIsCheckColumnCount());
     Integer expectedColumnCount = metadata.getExpectedColumnCount();
     boolean hasListeners = !listeners.isEmpty();
     int listenerCount = listeners.size();

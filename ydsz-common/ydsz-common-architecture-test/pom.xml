@@ -31,7 +31,7 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- 依赖全部 common 子模块，确保 ArchUnit 能扫描所有类 -->
+        <!-- L1 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
@@ -48,10 +48,14 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-excel</artifactId>
         </dependency>
+
+        <!-- L2 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+
+        <!-- L3 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
@@ -60,6 +64,8 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
+
+        <!-- L4 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-jdbc</artifactId>
@@ -80,20 +86,84 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+
+        <!-- L5 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-audit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-notify</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-queue</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-event</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-socket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-netty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-file</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-docs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-search</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-sentry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-seata</artifactId>
+        </dependency>
+
+        <!-- L6 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-base</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
+            <artifactId>ydsz-common-app</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-app</artifactId>
+            <artifactId>ydsz-common-web</artifactId>
         </dependency>
 
-        <!-- ArchUnit -->
+        <!-- ArchUnit JUnit5 -->
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>

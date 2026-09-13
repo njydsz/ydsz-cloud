@@ -571,7 +571,7 @@ public class SuperFastExcelReader {
    *
    * @param skipEmptyRows 是否跳过空行
    */
-  public void setSkipEmptyRows(boolean skipEmptyRows) {
+  public void setIsSkipEmptyRows(boolean skipEmptyRows) {
     this.skipEmptyRows = skipEmptyRows;
   }
 
