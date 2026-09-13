@@ -729,6 +729,8 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_recent (
     is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_wiki_user_recent PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_wiki_user_recent_user_node UNIQUE (user_id, node_id)
 );
@@ -743,6 +745,8 @@ COMMENT ON COLUMN ydsz_wiki_user_recent.accessed_at IS '最近访问时间（排
 COMMENT ON COLUMN ydsz_wiki_user_recent.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_wiki_user_recent.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_user_recent.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_wiki_user_recent.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_wiki_user_recent.updated_by IS '更新者用户 ID';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_user_accessed ON ydsz_wiki_user_recent (user_id, accessed_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_access_type ON ydsz_wiki_user_recent (user_id, access_type);

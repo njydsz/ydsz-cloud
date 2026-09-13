@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_datasource (
     description              VARCHAR(255)             DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_gen_datasource PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_gen_datasource_name UNIQUE (name)
 );
@@ -46,6 +48,8 @@ COMMENT ON COLUMN ydsz_gen_datasource.is_default IS '是否为默认数据源（
 COMMENT ON COLUMN ydsz_gen_datasource.description IS '数据源描述';
 COMMENT ON COLUMN ydsz_gen_datasource.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_gen_datasource.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_gen_datasource.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_gen_datasource.updated_by IS '更新者用户 ID';
 
 
 -- ============================================================================
@@ -61,6 +65,8 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template_group (
     is_active                SMALLINT                 NOT NULL DEFAULT 1,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_gen_template_group PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_gen_template_group_name UNIQUE (name)
 );
@@ -74,6 +80,8 @@ COMMENT ON COLUMN ydsz_gen_template_group.sort IS '排序序号（升序）';
 COMMENT ON COLUMN ydsz_gen_template_group.is_active IS '是否激活为当前使用分组（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_template_group.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_gen_template_group.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_gen_template_group.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_gen_template_group.updated_by IS '更新者用户 ID';
 
 
 -- ============================================================================
@@ -94,6 +102,8 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template (
     file_type                VARCHAR(16)              NOT NULL DEFAULT 'BACKEND',
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_gen_template PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_gen_template_group_file UNIQUE (group_id, file_name),
     CONSTRAINT fk_ydsz_gen_template_group FOREIGN KEY (group_id) REFERENCES ydsz_gen_template_group (id)
@@ -113,6 +123,8 @@ COMMENT ON COLUMN ydsz_gen_template.is_active IS '是否启用（0=否 1=是）'
 COMMENT ON COLUMN ydsz_gen_template.file_type IS '模板类型（BACKEND/FRONTEND）';
 COMMENT ON COLUMN ydsz_gen_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_gen_template.updated_at IS '更新时间';
+COMMENT ON COLUMN ydsz_gen_template.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_gen_template.updated_by IS '更新者用户 ID';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_gen_template_group ON ydsz_gen_template (group_id);
 

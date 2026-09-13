@@ -55,8 +55,8 @@ public class ConvertContext {
     return isStrictNumberConversion;
   }
 
-  public void setIsStrictNumberConversion(boolean strictNumberConversion) {
-    this.isStrictNumberConversion = strictlyNumberConversion;
+  public void setIsStrictNumberConversion(boolean isStrictNumberConversion) {
+    this.isStrictNumberConversion = isStrictNumberConversion;
   }
 
   public boolean getIsUse1904Windowing() {
