@@ -49,7 +49,7 @@ public class PageResponse<T> extends YdszResponse<T> {
    *
    * <p>仅游标分页模式有效，偏移量模式下参考 {@link #getPages()} 与当前 pageNum 判断。
    */
-  @Getter @Setter private Boolean hasMore;
+  @Getter @Setter private Boolean isHasMore;
 
   /** 由工厂方法构造。 */
   public PageResponse() {
@@ -138,7 +138,7 @@ public class PageResponse<T> extends YdszResponse<T> {
     response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
     response.setData((T) records);
     response.setNextCursor(nextCursor);
-    response.setHasMore(nextCursor != null);
+    response.setIsHasMore(nextCursor != null);
     return response;
   }
 
@@ -154,7 +154,7 @@ public class PageResponse<T> extends YdszResponse<T> {
     response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
     response.setData(null);
     response.setNextCursor(null);
-    response.setHasMore(false);
+    response.setIsHasMore(false);
     return response;
   }
 
@@ -166,6 +166,6 @@ public class PageResponse<T> extends YdszResponse<T> {
    * @return true 表示游标分页模式，false 表示偏移量分页模式
    */
   public boolean isCursorMode() {
-    return nextCursor != null || hasMore != null;
+    return nextCursor != null || isHasMore != null;
   }
 }

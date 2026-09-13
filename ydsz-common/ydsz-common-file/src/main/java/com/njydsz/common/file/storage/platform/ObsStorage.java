@@ -513,7 +513,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
 
       ListObjectsResult result = new ListObjectsResult();
       result.setObjects(objects);
-      result.setHasMore(hasMore);
+      result.setIsHasMore(hasMore);
       result.setNextCursor(nextCursor);
       result.setObjectCount(objects.size());
       return result;

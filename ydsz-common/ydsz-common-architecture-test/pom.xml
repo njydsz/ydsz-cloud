@@ -147,6 +147,7 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-seata</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- L6 -->

@@ -33,7 +33,7 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  *   <tr><td>sort</td><td>Integer</td><td>排序字段，同级节点排序用</td></tr>
  *   <tr><td>level</td><td>Integer</td><td>节点层级深度，根节点为 1</td></tr>
  *   <tr><td>path</td><td>String</td><td>节点路径，如 "/1/2/3/"</td></tr>
- *   <tr><td>leaf</td><td>Boolean</td><td>是否为叶子节点</td></tr>
+ *   <tr><td>isLeaf</td><td>Boolean</td><td>是否为叶子节点</td></tr>
  * </table>
  *
  * <p><b>使用示例：</b>
@@ -134,7 +134,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
    *   <li>false：有子节点
    * </ul>
    */
-  @Builder.Default @Setter private Boolean leaf = true;
+  @Builder.Default @Setter private Boolean isLeaf = true;
 
   /**
    * 添加子节点
@@ -147,7 +147,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
       children = new ArrayList<>(16);
     }
     children.add(child);
-    this.leaf = false;
+    this.isLeaf = false;
     return (T) this;
   }
 
@@ -163,7 +163,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
     if (childList != null && !childList.isEmpty()) {
       children.addAll(childList);
-      this.leaf = false;
+      this.isLeaf = false;
     }
     return (T) this;
   }

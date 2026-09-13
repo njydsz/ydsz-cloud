@@ -442,7 +442,7 @@ public class OssStorage extends AbstractFileStorage {
       }
       ListObjectsResult result = new ListObjectsResult();
       result.setObjects(objects);
-      result.setHasMore(hasMore);
+      result.setIsHasMore(hasMore);
       result.setNextCursor(nextCursor);
       result.setObjectCount(objects.size());
       return result;
