@@ -5,13 +5,14 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * WebAuthn 凭证持久化实体
@@ -28,7 +29,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_auth_credential")
-public class WebAuthnCredential extends MpBaseEntity<Long> {
+public class WebAuthnCredential extends MpBaseIdEntity<Long> {
 
   private static final long serialVersionUID = 1L;
 
@@ -71,4 +72,13 @@ public class WebAuthnCredential extends MpBaseEntity<Long> {
   /** 最后使用时间 */
   @TableField("last_used_at")
   private LocalDateTime lastUsedAt;
+
+  /** 更新时间（基类 MpBaseIdEntity 不含此字段，手动声明以匹配物理表）。 */
+  @TableField("updated_at")
+  private LocalDateTime updatedAt;
+
+  /** 删除标记（软删除，0=未删除，1=已删除）。 */
+  @TableLogic
+  @TableField("is_deleted")
+  private Boolean isDeleted;
 }

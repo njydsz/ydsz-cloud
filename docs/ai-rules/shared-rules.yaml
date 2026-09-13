@@ -224,21 +224,28 @@ rules:
     fix: "添加 @Override 注解"
     source: "编码规范附录 D 第 17 项"
 
-  - id: "YDIZ-OOP-006"
-    category: "oop"
-    severity: "P0"
-    title: "【强制】布尔字段必须带 is 前缀"
-    description: |
-      数据库布尔字段和 Java 布尔字段映射**必须统一使用 `is_xxx` / `isXxx` 前缀**。
-      此规则同时约束 Java 字段名和数据库列名。
+- id: "YDIZ-OOP-006"
+  category: "oop"
+  severity: "P0"
+  title: "【强制】布尔字段必须带 is 前缀"
+  description: |
+    数据库布尔字段和 Java 布尔字段映射**必须统一使用 `is_xxx` / `isXxx` 前缀**。
+    此规则同时约束 Java 字段名和数据库列名。
 
-      **强制命名规范**：
-      - 数据库列名：`is_default`、`is_active`、`is_system`、`is_public`、`is_deleted`、`is_folder`
-      - Java 字段名：`isDefault`、`isActive`、`isSystem`、`isPublic`、`isDeleted`、`isFolder`
-      - Getter 方法：`getIsDefault()`、`getIsActive()` 等
+    **强制命名规范**：
+    - 数据库列名：`is_default`、`is_active`、`is_system`、`is_public`、`is_deleted`、`is_folder`
+    - Java 字段名：`isDefault`、`isActive`、`isSystem`、`isPublic`、`isDeleted`、`isFolder`
+    - Getter 方法：`getIsDefault()`、`getIsActive()` 等
 
-      **禁止的命名**：
-      不带 `is` 前缀的布尔字段（如 `default`、`active`、`deleted`）
+    **禁止的命名**：
+    不带 `is` 前缀的布尔字段（如 `default`、`active`、`deleted`）
+
+    **`@ConfigurationProperties` 豁免**：
+    标注 `@ConfigurationProperties` 的配置类中，布尔字段名直接作为 YAML 属性键对外暴露，
+    重命名为 `isXxx` 将导致既有 application.yml 配置键失效（破坏向后兼容）。
+    此类配置类允许保留原有布尔字段名（如 `automaticTrim`、`useFastReader`、`formulaInjectionProtection`），
+    但须在 Javadoc 字段注释中标注 `<!-- OOP-006-EXEMPT: @ConfigurationProperties -->`。
+    非 Spring Boot 绑定场景（非 @ConfigurationProperties 的纯 POJO / VO）不予豁免。
     pattern: "private Boolean deleted; 或 private Boolean default;"
     fix: "Java 字段改为 isXxx；数据库列改为 is_xxx"
     example_bad: |

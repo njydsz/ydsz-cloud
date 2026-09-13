@@ -41,19 +41,19 @@ public class AuthPolicy extends MpBaseEntity<String> {
   private Integer passwordMinLength;
 
   /** 密码必须包含大写字母 */
-  @TableField("is_password_require_uppercase")
+  @TableField("password_require_uppercase")
   private Boolean isPasswordRequireUppercase;
 
   /** 密码必须包含数字 */
-  @TableField("is_password_require_digit")
+  @TableField("password_require_digit")
   private Boolean isPasswordRequireDigit;
 
   /** 是否启用双因素认证 */
-  @TableField("is_mfa_enabled")
+  @TableField("mfa_enabled")
   private Boolean isMfaEnabled;
 
   /** 登录是否启用图形验证码 */
-  @TableField("is_captcha_enabled")
+  @TableField("captcha_enabled")
   private Boolean isCaptchaEnabled;
 
   /** 允许的身份提供者类型（逗号分隔） */

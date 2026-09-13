@@ -260,10 +260,16 @@
                 <artifactId>ydsz-common-search</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!-- ydsz-common-sentry -->
+            <!-- ydzs-common-sentry -->
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-sentry</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- ydzs-common-seata -->
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-seata</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

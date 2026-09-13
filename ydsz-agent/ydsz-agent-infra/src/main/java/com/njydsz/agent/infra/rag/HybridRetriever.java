@@ -194,7 +194,7 @@ public class HybridRetriever implements Retriever {
                   + "chunk_index, token_count FROM "
                   + TABLE_NAME
                   + " "
-                  + "WHERE deleted = false AND content ILIKE ? ");
+                  + "WHERE is_deleted = false AND content ILIKE ? ");
       List<Object> params = new ArrayList<>(COLLECTION_CAPACITY);
       String pattern = "%" + query.replace("%", "\\%").replace("_", "\\_") + "%";
       params.add(pattern);

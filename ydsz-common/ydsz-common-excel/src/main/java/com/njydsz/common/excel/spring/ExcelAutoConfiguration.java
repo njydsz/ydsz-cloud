@@ -99,7 +99,7 @@ public class ExcelAutoConfiguration {
         .writeBufferSize(properties.getWriteBufferSize())
         .defaultDateFormat(properties.getDefaultDateFormat())
         .defaultNumberFormat(properties.getDefaultNumberFormat())
-        .automaticTrim(properties.getIsAutomaticTrim())
+        .automaticTrim(properties.getAutomaticTrim())
         .useFastReader(properties.getUseFastReader())
         .useFastWriter(properties.getUseFastWriter())
         .streamingParseThresholdMB(properties.getStreamingParseThresholdMb())

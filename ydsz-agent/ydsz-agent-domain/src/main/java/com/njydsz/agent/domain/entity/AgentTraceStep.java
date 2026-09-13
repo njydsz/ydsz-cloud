@@ -2,14 +2,10 @@ package com.njydsz.agent.domain.entity;
 
 import java.math.BigDecimal;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * Agent 执行链路步骤（映射 ydsz_agt_trace_step 表）
@@ -18,9 +14,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * <p><b>线程安全</b>：持久化实体，可变；仅在单请求/单事务内使用，勿跨线程共享。
  *
- * <p><b>Schema 说明</b>：{@code ydsz_agt_trace_step} 表使用 {@code (traceId, stepIndex)} 作为复合业务键， 无独立 {@code id} 列。
- * 本类继承的 {@code id} 字段（来自 {@link MpBaseEntity}）标注为 {@code exist=false}，不映射到数据库列， 仅作为
- * MyBatis-Plus 运行时占位需要。业务主键通过 {@link #traceId} + {@link #stepIndex} 体现。
+ * <p><b>Schema 说明</b>：{@code ydsz_agt_trace_step} 表使用 {@code (traceId, stepIndex)} 作为复合业务键，
+ * 无独立 {@code id} 列。非 MyBatis-Plus 基类继承实体，以精确匹配物理表字段。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -28,13 +23,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_trace_step")
-public class AgentTraceStep extends MpBaseEntity<Long> {
-
-  /** 主键占位（基类继承，无 DB 列映射；schema 用 traceId+stepIndex 复合业务键）。 */
-  @TableField(exist = false)
-  private Long id;
+public class AgentTraceStep {
 
   /** 链路 ID（关联 ydsz_agt_trace.traceId） */
   private String traceId;
