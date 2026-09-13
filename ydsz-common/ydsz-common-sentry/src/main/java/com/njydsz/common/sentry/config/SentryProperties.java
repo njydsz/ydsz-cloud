@@ -29,7 +29,7 @@ import org.springframework.validation.annotation.Validated;
 public class SentryProperties {
 
   /** 是否启用 Sentry */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 应用名 */
   @NotBlank(message = "应用名不能为空")
@@ -76,7 +76,7 @@ public class SentryProperties {
     private String primary = "micrometer";
 
     /** 是否启用系统资源指标采集 */
-    private boolean enableSystemMetrics = true;
+    private boolean isEnableSystemMetrics = true;
 
     /** 系统资源指标采集间隔（秒） */
     @Min(value = 1, message = "系统资源指标采集间隔不能小于 1 秒")
@@ -94,7 +94,7 @@ public class SentryProperties {
   @Validated
   public static class CircuitBreakerConfig {
     /** 是否启用熔断器 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 失败率阈值 */
     @Min(value = 0, message = "失败率阈值不能小于 0")
@@ -145,7 +145,7 @@ public class SentryProperties {
   @Data
   @Validated
   public static class ElkConfig {
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     @NotBlank(message = "ELK 主机名不能为空")
     private String host = "logstash";
@@ -174,7 +174,7 @@ public class SentryProperties {
   @Data
   @Validated
   public static class LokiConfig {
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     @NotBlank(message = "Loki URL 不能为空")
     private String url = "http://loki:3100";
@@ -192,7 +192,7 @@ public class SentryProperties {
   @Data
   public static class DualConfig {
     /** 所有发布器都失败才算失败 */
-    private boolean failOnAllError = false;
+    private boolean isFailOnAllError = false;
   }
 
   /** 异步日志发布配置（队列与批量刷新）。 */
@@ -200,7 +200,7 @@ public class SentryProperties {
   @Validated
   public static class AsyncConfig {
     /** 是否启用异步日志发布 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 队列容量 */
     @Min(value = 64, message = "异步队列容量不能小于 64")
@@ -256,7 +256,7 @@ public class SentryProperties {
   @Validated
   public static class OtelConfig {
     /** 是否启用 OTel SDK 自动初始化 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 服务名（默认使用 sentry.appName） */
     private String serviceName;
@@ -291,7 +291,7 @@ public class SentryProperties {
     private List<String> healthCheckPaths = List.of("/actuator", "/health", "/metrics");
 
     /** 是否启用 Span 属性自动注入（MDC/RequestContext/env） */
-    private boolean enrichmentEnabled = true;
+    private boolean isEnrichmentEnabled = true;
 
     /** 自动注入来源列表 */
     private List<String> enrichmentSources = List.of("mdc");
@@ -317,7 +317,7 @@ public class SentryProperties {
     @Validated
     public static class ErrorEventConfig {
       /** 是否启用错误事件发布 */
-      private boolean enabled = true;
+      private boolean isEnabled = true;
 
       /** 慢 Span 阈值（毫秒） */
       private long slowThresholdMillis = 3000;
@@ -348,7 +348,7 @@ public class SentryProperties {
   @Validated
   public static class TailSamplingConfig {
     /** 是否启用尾部采样 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 采样决策等待时间（毫秒） */
     @Min(value = 1000, message = "采样决策等待时间不能小于 1000ms")
@@ -364,7 +364,7 @@ public class SentryProperties {
     private BigDecimal recordRatio = new BigDecimal("0.05");
 
     /** 是否 100% 采集错误 Span（HTTP 5xx / OTel StatusCode.ERROR） */
-    private boolean errorStatus = true;
+    private boolean isErrorStatus = true;
 
     /** 慢请求阈值（毫秒，>0 时 100% 采集超过该阈值的 Span） */
     private long slowThresholdMillis = 3000;
@@ -376,7 +376,7 @@ public class SentryProperties {
     private List<String> grayTags = List.of();
 
     /** 是否 100% 采集压测流量 */
-    private boolean pressureTraffic = true;
+    private boolean isPressureTraffic = true;
   }
 
   /** 告警配置（Webhook / 通知渠道）。 */
@@ -384,7 +384,7 @@ public class SentryProperties {
   @Validated
   public static class AlertingConfig {
     /** 是否启用告警 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** Webhook URL（为空则不发送） */
     private String webhookUrl;
@@ -404,7 +404,7 @@ public class SentryProperties {
     private long silencePeriodMillis = 300000;
 
     /** 是否记录告警日志 */
-    private boolean logAlerts = true;
+    private boolean isLogAlerts = true;
 
     /** 钉钉告警接收者 */
     private String dingtalkReceiver = "";
@@ -428,6 +428,6 @@ public class SentryProperties {
     private long p99LatencyMillis = 3000;
 
     /** 是否启用 SLO Burn Rate 告警 */
-    private boolean burnRateAlertEnabled = true;
+    private boolean isBurnRateAlertEnabled = true;
   }
 }

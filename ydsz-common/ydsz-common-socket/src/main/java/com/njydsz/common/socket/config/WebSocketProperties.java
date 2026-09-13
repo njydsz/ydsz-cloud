@@ -64,7 +64,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class WebSocketProperties {
 
   /** 是否启用 WebSocket 模块 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** WebSocket 端点路径 */
   private String endpoint = "/ws";
@@ -73,7 +73,7 @@ public class WebSocketProperties {
   private List<String> allowedOriginPatterns = List.of("*");
 
   /** 是否启用 SockJS 回退 */
-  private boolean sockJsEnabled = true;
+  private boolean isSockJsEnabled = true;
 
   /** 心跳配置 */
   private Heartbeat heartbeat = new Heartbeat();
@@ -136,7 +136,7 @@ public class WebSocketProperties {
   @Data
   public static class Cluster {
     /** 是否启用集群广播（Redis Pub/Sub） */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** Redis Channel 名称 */
     private String channel = "ydsz:ws:cluster:push";
@@ -150,7 +150,7 @@ public class WebSocketProperties {
   @Data
   public static class Offline {
     /** 是否启用离线消息补偿 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** Redis 缓存最大条数 */
     private int maxCache = 100;
@@ -167,7 +167,7 @@ public class WebSocketProperties {
   @Data
   public static class RateLimit {
     /** 是否启用速率限制 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 每用户每分钟最大消息数 */
     private int maxPerUserPerMinute = 60;
@@ -201,7 +201,7 @@ public class WebSocketProperties {
   @Data
   public static class Retry {
     /** 是否启用消息重试 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 最大重试次数 */
     private int maxRetries = 3;
@@ -210,7 +210,7 @@ public class WebSocketProperties {
     private Duration retryDelay = Duration.ofSeconds(5);
 
     /** 是否启用死信队列 */
-    private boolean deadLetterEnabled = true;
+    private boolean isDeadLetterEnabled = true;
 
     /** 退避策略：fixed / exponential / exponential_with_jitter */
     private String backoffStrategy = "exponential";

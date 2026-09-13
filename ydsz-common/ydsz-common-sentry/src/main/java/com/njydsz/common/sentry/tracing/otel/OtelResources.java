@@ -170,10 +170,10 @@ public final class OtelResources {
     @Builder.Default private String environment = "dev";
 
     /** 是否包含主机信息 */
-    @Builder.Default private boolean includeHostInfo = true;
+    @Builder.Default private boolean isIncludeHostInfo = true;
 
     /** 是否包含进程信息 */
-    @Builder.Default private boolean includeProcessInfo = true;
+    @Builder.Default private boolean isIncludeProcessInfo = true;
 
     /** 自定义属性 */
     @Builder.Default private Map<String, String> customAttributes = new HashMap<>(16);

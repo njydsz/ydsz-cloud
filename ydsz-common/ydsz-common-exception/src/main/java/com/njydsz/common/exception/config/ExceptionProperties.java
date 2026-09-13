@@ -41,10 +41,10 @@ import org.springframework.validation.annotation.Validated;
 public class ExceptionProperties {
 
   /** 是否启用异常指标统计 */
-  private boolean metricsEnabled = true;
+  private boolean isMetricsEnabled = true;
 
   /** 是否启用全局异常处理器 */
-  private boolean globalHandlerEnabled = true;
+  private boolean isGlobalHandlerEnabled = true;
 
   /**
    * 响应格式
@@ -57,10 +57,10 @@ public class ExceptionProperties {
   private ResponseFormat responseFormat = ResponseFormat.BASE_RESPONSE;
 
   /** 是否在响应中包含异常堆栈信息（仅开发/测试环境建议开启） */
-  private boolean includeStackTrace = false;
+  private boolean isIncludeStackTrace = false;
 
   /** 是否启用错误码文档端点 */
-  private boolean docEndpointEnabled = true;
+  private boolean isDocEndpointEnabled = true;
 
   /**
    * 错误码文档端点安全配置
@@ -82,7 +82,7 @@ public class ExceptionProperties {
    *
    * <p>注意：code tag 为高基数标签，可能导致 Prometheus 指标爆炸。 仅在错误码数量可控且需要按 code 维度查询时开启。
    */
-  private boolean metricsIncludeCodeTag = false;
+  private boolean isMetricsIncludeCodeTag = false;
 
   /**
    * 异常处理耗时分位数预计算配置（如 P99）。
@@ -99,7 +99,7 @@ public class ExceptionProperties {
    *
    * <p>需要 classpath 中存在 springdoc-openapi 库才生效。 默认 true（自动启用）。
    */
-  private boolean openapiEnabled = true;
+  private boolean isOpenapiEnabled = true;
 
   /** 响应格式枚举 */
   public enum ResponseFormat {
@@ -121,7 +121,7 @@ public class ExceptionProperties {
     private List<String> filterModules = Collections.emptyList();
 
     /** 是否需要访问鉴权（开启后需结合 Spring Security） */
-    private boolean authRequired = false;
+    private boolean isAuthRequired = false;
 
     /** 鉴权头名称（当 authRequired=true 时校验） */
     private String authHeaderName = "X-Actuator-Auth";

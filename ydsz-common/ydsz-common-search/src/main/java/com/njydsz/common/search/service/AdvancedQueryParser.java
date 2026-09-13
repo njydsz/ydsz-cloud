@@ -285,10 +285,10 @@ public class AdvancedQueryParser {
         .tenantId(request.getTenantId())
         .roles(request.getRoles())
         .deptId(request.getDeptId())
-        .admin(request.isAdmin())
-        .highlight(request.isHighlight())
-        .fuzzy(request.isFuzzy())
-        .titleOnly(request.isTitleOnly())
+        .isAdmin(request.isAdmin())
+        .isHighlight(request.isHighlight())
+        .isFuzzy(request.isFuzzy())
+        .isTitleOnly(request.isTitleOnly())
         .filters(combinedFilters)
         .build();
   }

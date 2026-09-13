@@ -47,7 +47,7 @@ public class SlaDefinition {
     private long timeoutMillis;
 
     /** 是否关键步骤（失败则整体 SLA 违反） */
-    private boolean critical = true;
+    private boolean isCritical = true;
 
     /**
      * sla step。
@@ -73,7 +73,7 @@ public class SlaDefinition {
     public SlaStep(String name, long timeoutMillis, boolean critical) {
       this.name = name;
       this.timeoutMillis = timeoutMillis;
-      this.critical = critical;
+      this.isCritical = critical;
     }
   }
 

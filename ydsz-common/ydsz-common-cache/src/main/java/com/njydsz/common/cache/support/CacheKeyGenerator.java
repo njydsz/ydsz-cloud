@@ -37,14 +37,14 @@ public final class CacheKeyGenerator {
 
   private final String prefix;
   private final String namespace;
-  private final boolean hashLongKeys;
+  private final boolean isHashLongKeys;
   private final int maxLength;
   private final String separator;
 
   private CacheKeyGenerator(Builder builder) {
     this.prefix = builder.prefix != null ? builder.prefix : "";
     this.namespace = builder.namespace != null ? builder.namespace : "";
-    this.hashLongKeys = builder.hashLongKeys;
+    this.isHashLongKeys = builder.isHashLongKeys;
     this.maxLength = builder.maxLength;
     this.separator = builder.separator != null ? builder.separator : ":";
   }
@@ -68,7 +68,7 @@ public final class CacheKeyGenerator {
     }
 
     // 如果 key 过长且启用了哈希压缩，使用 MD5 哈希
-    if (hashLongKeys && keyStr.length() > maxLength) {
+    if (isHashLongKeys && keyStr.length() > maxLength) {
       sb.append(hashKey(keyStr));
     } else {
       sb.append(keyStr);
@@ -137,7 +137,7 @@ public final class CacheKeyGenerator {
   public static final class Builder {
     private String prefix;
     private String namespace;
-    private boolean hashLongKeys = false;
+    private boolean isHashLongKeys = false;
     private int maxLength = 128;
     private String separator;
 
@@ -183,7 +183,7 @@ public final class CacheKeyGenerator {
      * @return 当前构建器，便于链式调用
      */
     public Builder hashLongKeys(boolean hashLongKeys) {
-      this.hashLongKeys = hashLongKeys;
+      this.isHashLongKeys = hashLongKeys;
       return this;
     }
 

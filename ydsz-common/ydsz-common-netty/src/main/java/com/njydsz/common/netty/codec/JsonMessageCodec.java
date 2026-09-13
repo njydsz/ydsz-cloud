@@ -15,8 +15,6 @@ import com.njydsz.common.json.YdszJson;
 /**
  * JSON 消息编解码器 — 基于 {@link YdszJson} 引擎实现消息序列化/反序列化。
  *
- * <p>组合 {@link MessageEncoder} 和 {@link MessageDecoder} 接口， 将业务对象与 ByteBuf 之间进行 JSON 转换。
- *
  * <p>使用方式：
  *
  * <pre>{@code

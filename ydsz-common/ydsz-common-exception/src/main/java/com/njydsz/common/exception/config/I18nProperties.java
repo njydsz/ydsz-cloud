@@ -68,7 +68,7 @@ public class I18nProperties {
    *
    * <p>当请求语言不在 supportedLocales 中时，是否回退到系统默认 Locale。 默认 false，固定使用 {@link #getDefaultMessage()}。
    */
-  private boolean fallbackToSystemLocale = false;
+  private boolean isFallbackToSystemLocale = false;
 
   /**
    * 找不到国际化消息时的默认提示

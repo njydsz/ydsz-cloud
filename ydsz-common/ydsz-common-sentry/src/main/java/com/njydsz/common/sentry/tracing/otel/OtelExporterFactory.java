@@ -198,7 +198,7 @@ public final class OtelExporterFactory {
     private String protocol = "grpc";
 
     /** 是否启用 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 请求头（如 Authorization） */
     private Map<String, String> headers = new HashMap<>(16);
@@ -216,7 +216,7 @@ public final class OtelExporterFactory {
     @Data
     public static class TlsConfig {
       /** 是否启用 TLS 加密传输 */
-      private boolean enabled = false;
+      private boolean isEnabled = false;
 
       /** 客户端证书文件路径 */
       private String certFile;

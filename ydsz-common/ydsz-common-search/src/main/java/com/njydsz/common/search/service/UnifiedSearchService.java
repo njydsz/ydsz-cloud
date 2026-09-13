@@ -411,7 +411,7 @@ public class UnifiedSearchService {
             .tenantId(request.getTenantId())
             .roles(request.getRoles())
             .deptId(request.getDeptId())
-            .admin(request.isAdmin())
+            .isAdmin(request.isAdmin())
             .build();
 
     List<SearchFilter> allFilters = new ArrayList<>(request.getFilters());
@@ -566,12 +566,12 @@ public class UnifiedSearchService {
         .page(original.getPage())
         .pageSize(original.getPageSize())
         .sortBy(original.getSortBy())
-        .ascending(original.isAscending())
-        .highlight(original.isHighlight())
+        .isAscending(original.isAscending())
+        .isHighlight(original.isHighlight())
         .highlightPreTag(original.getHighlightPreTag())
         .highlightPostTag(original.getHighlightPostTag())
         .highlightFragmentSize(original.getHighlightFragmentSize())
-        .fuzzy(original.isFuzzy())
+        .isFuzzy(original.isFuzzy())
         .fuzzyMinSimilarity(original.getFuzzyMinSimilarity())
         .filters(original.getFilters())
         .aggregations(original.getAggregations())
@@ -579,8 +579,8 @@ public class UnifiedSearchService {
         .userId(original.getUserId())
         .roles(original.getRoles())
         .deptId(original.getDeptId())
-        .admin(original.isAdmin())
-        .titleOnly(original.isTitleOnly())
+        .isAdmin(original.isAdmin())
+        .isTitleOnly(original.isTitleOnly())
         .build();
   }
 }
