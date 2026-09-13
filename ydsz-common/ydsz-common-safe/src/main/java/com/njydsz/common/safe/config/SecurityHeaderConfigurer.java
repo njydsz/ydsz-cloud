@@ -135,7 +135,7 @@ public final class SecurityHeaderConfigurer {
    * @return CSP 策略字符串
    */
   public static String buildCspPolicy(SecurityHeaderProperties properties) {
-    if (properties.getCsp() == null || !properties.getCsp().isEnabled()) {
+    if (properties.getCsp() == null || !properties.getCsp().getIsEnabled()) {
       return "";
     }
     // 如果 csp 配置了 explicit policy，直接使用
@@ -143,9 +143,9 @@ public final class SecurityHeaderConfigurer {
       return properties.getCsp().getPolicy();
     }
     // 否则根据细粒度配置构建
-    boolean unsafeEval = properties.getCsp().isUnsafeEval();
+    boolean isUnsafeEval = properties.getCsp().getIsUnsafeEval();
     String scriptSrc =
-        unsafeEval ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " : "script-src 'self'; ";
+        isUnsafeEval ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " : "script-src 'self'; ";
     return "default-src 'self'; "
         + scriptSrc
         + "style-src 'self' 'unsafe-inline'; "
@@ -168,13 +168,13 @@ public final class SecurityHeaderConfigurer {
    * @return HSTS 头值
    */
   public static String buildHstsHeader(SecurityHeaderProperties properties) {
-    if (properties.getHsts() != null && properties.getHsts().isEnabled()) {
+    if (properties.getHsts() != null && properties.getHsts().getIsEnabled()) {
       StringBuilder hstsValue =
           new StringBuilder().append("max-age=").append(properties.getHsts().getMaxAge());
-      if (properties.getHsts().isIncludeSubdomains()) {
+      if (properties.getHsts().getIsIncludeSubdomains()) {
         hstsValue.append("; includeSubDomains");
       }
-      if (properties.getHsts().isPreload()) {
+      if (properties.getHsts().getIsPreload()) {
         hstsValue.append("; preload");
       }
       return hstsValue.toString();

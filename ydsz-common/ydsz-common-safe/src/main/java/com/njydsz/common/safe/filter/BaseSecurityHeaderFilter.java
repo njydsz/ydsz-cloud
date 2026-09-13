@@ -52,7 +52,7 @@ public abstract class BaseSecurityHeaderFilter extends OncePerRequestFilter {
       @NonNull HttpServletResponse response,
       @NonNull FilterChain filterChain)
       throws ServletException, IOException {
-    if (!properties.isEnabled() || isExcluded(request)) {
+    if (!properties.getIsEnabled() || isExcluded(request)) {
       filterChain.doFilter(request, response);
       return;
     }

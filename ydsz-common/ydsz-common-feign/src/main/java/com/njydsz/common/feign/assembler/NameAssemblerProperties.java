@@ -20,7 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class NameAssemblerProperties {
 
   /** 是否启用 NameAssembler，默认 true */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 本地缓存最大条目数，默认 1000 */
   private int cacheMaxSize = 1000;
@@ -29,7 +29,7 @@ public class NameAssemblerProperties {
   private Duration cacheTtl = Duration.ofMinutes(5);
 
   /** 是否启用 Redis 二级缓存，默认 false */
-  private boolean redisCacheEnabled = false;
+  private boolean isRedisCacheEnabled = false;
 
   /** Redis 二级缓存 TTL，默认 10 分钟 */
   private Duration redisCacheTtl = Duration.ofMinutes(10);
@@ -41,5 +41,5 @@ public class NameAssemblerProperties {
   private int batchMaxSize = 100;
 
   /** Feign 失败时是否用 ID 字符串顶替名称字段，默认 true */
-  private boolean fallbackToId = true;
+  private boolean isFallbackToId = true;
 }

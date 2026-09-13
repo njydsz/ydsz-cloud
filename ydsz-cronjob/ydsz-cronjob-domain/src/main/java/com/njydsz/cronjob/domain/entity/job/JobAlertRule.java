@@ -77,8 +77,8 @@ public class JobAlertRule extends MpBaseEntity<String> {
   /** 冷却时间（分钟），同一规则在冷却期内不重复告警 */
   private Integer cooldownMinutes;
 
-  /** 是否启用: 0 禁用 / 1 启用 */
-  private Integer enabled;
+  /** 是否启用（0=禁用，1=启用） */
+  private Boolean isEnabled;
 
   /** 规则来源: MANUAL 手动创建(默认) / SLA 由SLA规则自动生成 */
   private String sourceType;

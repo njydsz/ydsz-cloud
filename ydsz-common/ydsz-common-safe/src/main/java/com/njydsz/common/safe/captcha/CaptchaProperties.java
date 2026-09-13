@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CaptchaProperties {
 
   /** 是否启用验证码功能 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 验证码有效期（秒） */
   private long ttlSeconds = 300;

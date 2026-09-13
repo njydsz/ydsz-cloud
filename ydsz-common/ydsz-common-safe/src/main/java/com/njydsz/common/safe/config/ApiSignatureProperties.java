@@ -39,7 +39,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ApiSignatureProperties {
 
   /** 是否启用 API 签名验证 */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 应用 ID，用于区分不同接入方 */
   private String appId;

@@ -113,7 +113,7 @@ public class MetadataCache {
               : ann.dateFormat();
       prop.width = ann.width() > 0 ? (short) ann.width() : null;
       prop.formula = ann.formula().isEmpty() ? null : ann.formula();
-      prop.hasStyle = field.isAnnotationPresent(ExcelStyle.class);
+      prop.isHasStyle = field.isAnnotationPresent(ExcelStyle.class);
       cached.properties[i] = prop;
     }
 
@@ -170,7 +170,7 @@ public class MetadataCache {
     public String formula;
 
     /** 是否有样式注解 */
-    public boolean hasStyle;
+    public boolean isHasStyle;
 
     /**
      * 获取字段值

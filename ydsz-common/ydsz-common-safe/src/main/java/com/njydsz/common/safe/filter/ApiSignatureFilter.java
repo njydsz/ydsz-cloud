@@ -126,7 +126,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       @NonNull FilterChain filterChain)
       throws ServletException, IOException {
 
-    if (!properties.isEnabled() || isExcluded(request)) {
+    if (!properties.getIsEnabled() || isExcluded(request)) {
       filterChain.doFilter(request, response);
       return;
     }

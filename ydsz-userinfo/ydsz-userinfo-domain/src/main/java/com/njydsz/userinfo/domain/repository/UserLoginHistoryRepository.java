@@ -3,7 +3,9 @@ package com.njydsz.userinfo.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
+import com.njydsz.userinfo.domain.query.LoginLogPageQuery;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 
 /**
@@ -92,4 +94,14 @@ public interface UserLoginHistoryRepository {
    * @return 有登录失败记录的去重用户数
    */
   long countDistinctUsersWithFailures(LocalDateTime startTime, LocalDateTime endTime);
+
+  /**
+   * 分页查询登录历史列表。
+   *
+   * <p>支持按用户名、IP、登录结果、时间范围筛选，默认按创建时间降序排列。
+   *
+   * @param query 分页查询条件
+   * @return 分页结果（含总记录数与当前页数据）
+   */
+  PageResponse<List<UserLoginHistoryVO>> page(LoginLogPageQuery query);
 }

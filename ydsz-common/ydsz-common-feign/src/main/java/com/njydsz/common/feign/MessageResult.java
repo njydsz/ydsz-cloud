@@ -22,7 +22,7 @@ public class MessageResult implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 是否发送成功 */
-  private boolean success;
+  private boolean isSuccess;
 
   /** 消息追踪 ID */
   private String traceId;
@@ -68,11 +68,11 @@ public class MessageResult implements Serializable {
   public MessageResult() {}
 
   public boolean isSuccess() {
-    return success;
+    return isSuccess;
   }
 
   public void setSuccess(boolean success) {
-    this.success = success;
+    this.isSuccess = success;
   }
 
   public String getTraceId() {
@@ -152,7 +152,7 @@ public class MessageResult implements Serializable {
       String userMessage,
       String developerMessage,
       Integer retryAfter) {
-    this.success = success;
+    this.isSuccess = success;
     this.traceId = traceId;
     this.providerTraceId = providerTraceId;
     this.status = status;
@@ -171,7 +171,7 @@ public class MessageResult implements Serializable {
    */
   public static MessageResult ok(String channel, String traceId) {
     MessageResult result = new MessageResult();
-    result.success = true;
+    result.isSuccess = true;
     result.traceId = traceId;
     result.status = "SUCCESS";
     return result;
@@ -191,7 +191,7 @@ public class MessageResult implements Serializable {
   public static MessageResult fail(
       String errorCode, String userMessage, String developerMessage, Integer retryAfter) {
     MessageResult result = new MessageResult();
-    result.success = false;
+    result.isSuccess = false;
     result.userMessage = userMessage;
     result.developerMessage = developerMessage;
     result.retryAfter = retryAfter;

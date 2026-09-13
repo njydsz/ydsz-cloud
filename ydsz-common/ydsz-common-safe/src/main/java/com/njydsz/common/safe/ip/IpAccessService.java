@@ -98,7 +98,7 @@ public class IpAccessService {
    * @return true 表示允许访问，false 表示拒绝
    */
   public boolean isAllowed(String ip) {
-    if (!properties.isEnabled()) {
+    if (!properties.getIsEnabled()) {
       return true;
     }
     if (ip == null || ip.isEmpty()) {

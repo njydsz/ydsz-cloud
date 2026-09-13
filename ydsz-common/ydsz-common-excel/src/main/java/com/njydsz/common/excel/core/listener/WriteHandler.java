@@ -69,7 +69,7 @@ public class WriteHandler {
     private String formula;
     private String fontColor;
     private String backgroundColor;
-    private boolean bold;
+    private boolean isBold;
 
     public ConditionalFormattingConfig(String formula) {
       this.formula = formula;
@@ -103,8 +103,8 @@ public class WriteHandler {
      * @param bold {@code true} 表示加粗
      * @return 当前配置，便于链式调用
      */
-    public ConditionalFormattingConfig setBold(boolean bold) {
-      this.bold = bold;
+    public ConditionalFormattingConfig setBold(boolean isBold) {
+      this.isBold = isBold;
       return this;
     }
 
@@ -120,8 +120,8 @@ public class WriteHandler {
       return backgroundColor;
     }
 
-    public boolean isBold() {
-      return bold;
+    public boolean getIsBold() {
+      return isBold;
     }
   }
 
@@ -138,12 +138,12 @@ public class WriteHandler {
     private String errorStyle;
     private String errorTitle;
     private String error;
-    private boolean showErrorMessage;
+    private boolean isShowErrorMessage;
 
     public DataValidationConfig(int validationType) {
       this.validationType = validationType;
       this.operatorType = DataValidationConstraint.OperatorType.IGNORED;
-      this.showErrorMessage = false;
+      this.isShowErrorMessage = false;
     }
 
     /**
@@ -230,8 +230,8 @@ public class WriteHandler {
      * @param showErrorMessage {@code true} 显示错误弹窗
      * @return 当前配置，便于链式调用
      */
-    public DataValidationConfig setShowErrorMessage(boolean showErrorMessage) {
-      this.showErrorMessage = showErrorMessage;
+    public DataValidationConfig setShowErrorMessage(boolean isShowErrorMessage) {
+      this.isShowErrorMessage = isShowErrorMessage;
       return this;
     }
 
@@ -263,8 +263,8 @@ public class WriteHandler {
       return error;
     }
 
-    public boolean isShowErrorMessage() {
-      return showErrorMessage;
+    public boolean getIsShowErrorMessage() {
+      return isShowErrorMessage;
     }
   }
 

@@ -39,6 +39,6 @@ public class TenantQuota extends MpBaseEntity<String> {
   /** 日执行量上限（NULL=unlimited；超过此值拒绝派发，P7-3 实现） */
   private Integer maxDailyExecutions;
 
-  /** 是否启用配额检查: 0 禁用 / 1 启用 */
-  private Integer enabled;
+  /** 是否启用配额检查（0=禁用，1=启用） */
+  private Boolean isEnabled;
 }

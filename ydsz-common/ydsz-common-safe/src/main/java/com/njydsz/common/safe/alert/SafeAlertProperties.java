@@ -23,5 +23,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SafeAlertProperties {
 
   /** 是否启用安全事件告警 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 }

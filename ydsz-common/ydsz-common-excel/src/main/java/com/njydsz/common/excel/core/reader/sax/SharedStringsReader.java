@@ -60,7 +60,7 @@ public class SharedStringsReader {
   private String[] preloadedStrings;
 
   /** 是否使用预加载模式 */
-  private boolean usePreload = true;
+  private boolean isUsePreload = true;
 
   public SharedStringsReader() {
     lruCache =
@@ -99,7 +99,7 @@ public class SharedStringsReader {
       preloadedStrings = new String[count];
       offsets = null;
       lengths = null;
-      usePreload = true;
+      isUsePreload = true;
 
       pos = 0;
       int idx = 0;
@@ -118,7 +118,7 @@ public class SharedStringsReader {
     }
 
     // 大文件：懒加载模式，记录每个 si 内容区间（多 run 拼接推迟到 getString）
-    usePreload = false;
+    isUsePreload = false;
     offsets = new int[count];
     lengths = new int[count];
 
@@ -411,7 +411,7 @@ public class SharedStringsReader {
     }
 
     // 预加载模式：直接从数组获取
-    if (usePreload) {
+    if (isUsePreload) {
       if (index < stringCount) {
         return preloadedStrings[index];
       }

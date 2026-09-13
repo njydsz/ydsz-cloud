@@ -53,7 +53,7 @@ public class SafeXssProperties {
    *
    * <p>默认值为 true，即启用 XSS 防护。 设置为 false 可全局关闭 XSS 过滤功能。
    */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /**
    * 过滤器注册顺序
@@ -105,7 +105,7 @@ public class SafeXssProperties {
    * <p>启用后，通过注册 {@code XssStringDeserializer} 到 Jackson ObjectMapper， 所有 String 字段在 JSON 反序列化时自动进行
    * XSS 清洗。 默认值为 true。
    */
-  private boolean jsonEnabled = true;
+  private boolean isJsonEnabled = true;
 
   /**
    * 自定义 XSS 检测模式（正则表达式列表）
@@ -169,7 +169,7 @@ public class SafeXssProperties {
    *
    * <p>启用后，只有 allowedTags 中的标签会被保留，其他标签会被过滤。 默认值为 false，即使用默认的 HTMLFilter 规则。
    */
-  private boolean tagWhitelistEnabled = false;
+  private boolean isTagWhitelistEnabled = false;
 
   /**
    * XSS 检测严格级别

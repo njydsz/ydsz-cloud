@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AutoBlockProperties {
 
   /** 是否启用自动封禁 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 触发自动封禁的事件数量阈值（同一 IP 在窗口内触发此数量次安全事件则自动封禁） */
   private int threshold = 10;

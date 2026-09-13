@@ -71,7 +71,7 @@ public class RateLimitRule implements Serializable {
   @Builder.Default private Duration warmupPeriod = Duration.ZERO;
 
   /** 是否启用 */
-  @Builder.Default private boolean enabled = true;
+  @Builder.Default private boolean isEnabled = true;
 
   /** 优先级（数值越小优先级越高，1-100） */
   @Builder.Default private int priority = 50;

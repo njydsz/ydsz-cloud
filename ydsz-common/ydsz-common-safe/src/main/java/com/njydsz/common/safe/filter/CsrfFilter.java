@@ -110,7 +110,7 @@ public class CsrfFilter extends OncePerRequestFilter {
       @NonNull FilterChain chain)
       throws IOException, ServletException {
 
-    if (!properties.isEnabled()) {
+    if (!properties.getIsEnabled()) {
       chain.doFilter(httpRequest, httpResponse);
       return;
     }
@@ -132,7 +132,7 @@ public class CsrfFilter extends OncePerRequestFilter {
     }
 
     // Origin/Referer 校验（第二道防线，在 Token 校验之前执行）
-    if (properties.isCheckOrigin() && !validateOrigin(httpRequest)) {
+    if (properties.getIsCheckOrigin() && !validateOrigin(httpRequest)) {
       LOGGER.warn(
           "CSRF Origin 校验失败 | URI: {} | Origin: {} | Referer: {}",
           httpRequest.getRequestURI(),
@@ -199,7 +199,7 @@ public class CsrfFilter extends OncePerRequestFilter {
     // 前端需要读取 CSRF Token，不能设置 HttpOnly
     cookie.setHttpOnly(false);
     // Secure 标志：配置优先，未配置时根据请求协议动态决定
-    Boolean cookieSecure = properties.isCookieSecure();
+    Boolean cookieSecure = properties.getIsCookieSecure();
     if (cookieSecure != null) {
       cookie.setSecure(cookieSecure);
     } else {

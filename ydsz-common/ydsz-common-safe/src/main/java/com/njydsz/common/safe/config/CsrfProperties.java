@@ -63,7 +63,7 @@ public class CsrfProperties {
    *
    * <p>启用后，所有非 GET 请求需在 Header ({@code X-CSRF-TOKEN}) 或 参数 ({@code _csrf}) 中携带 CSRF 令牌。
    */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /**
    * CSRF 防护模式
@@ -117,7 +117,7 @@ public class CsrfProperties {
    *
    * <p>启用后，对于启用 CSRF 防护的请求，将验证请求 Origin 头是否在允许的 Origin 列表中。
    */
-  private boolean checkOrigin = true;
+  private boolean isCheckOrigin = true;
 
   /**
    * 允许的 Origin 列表
@@ -131,7 +131,7 @@ public class CsrfProperties {
    *
    * <p>启用后，CSRF Cookie 仅在 HTTPS 连接中传输。仅在 HTTPS 环境下启用。
    */
-  private boolean cookieSecure = true;
+  private boolean isCookieSecure = true;
 
   /**
    * CSRF Cookie 的 SameSite 属性

@@ -41,7 +41,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 public class RateLimitProperties {
 
   /** 是否启用限流模块 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 默认限流模式 */
   private String defaultMode = "LOCAL";
@@ -50,7 +50,7 @@ public class RateLimitProperties {
   private String fallbackOnError = "PASS";
 
   /** 是否启用 Micrometer 指标 */
-  private boolean metricsEnabled = true;
+  private boolean isMetricsEnabled = true;
 
   /** 集群限流 Redis Key 前缀 */
   private String clusterKeyPrefix = "ydsz:ratelimit:";

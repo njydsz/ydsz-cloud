@@ -81,15 +81,15 @@ public final class JsonConfig implements Serializable {
 
   private final CircularReferenceStrategy circularReferenceStrategy;
 
-  private final boolean writeNulls;
+  private final boolean isWriteNulls;
 
   private final String dateFormat;
 
-  private final boolean serializeEnumUsingOrdinal;
+  private final boolean isSerializeEnumUsingOrdinal;
 
-  private final boolean prettyPrint;
+  private final boolean isPrettyPrint;
 
-  private final boolean failOnError;
+  private final boolean isFailOnError;
 
   private final String defaultDateFormat;
 
@@ -99,9 +99,9 @@ public final class JsonConfig implements Serializable {
 
   private final int maxGenericDepth;
 
-  private final boolean useBigDecimal;
+  private final boolean isUseBigDecimal;
 
-  private final boolean wrapRootValue;
+  private final boolean isWrapRootValue;
 
   /**
    * 反序列化遇到未知字段时是否抛出异常（P1.5 新增）。
@@ -111,7 +111,7 @@ public final class JsonConfig implements Serializable {
    * {@link com.njydsz.common.json.exception.JsonDeserializationException}（含字段名与位置），
    * 用于接口契约严格场景（如拼写错误字段的显式暴露）。
    */
-  private final boolean failOnUnknownProperties;
+  private final boolean isFailOnUnknownProperties;
 
   /**
    * 全参数构造函数（包可见，仅供 Builder 内部使用）。
@@ -136,32 +136,32 @@ public final class JsonConfig implements Serializable {
   JsonConfig(
       PropertyNamingStrategy namingStrategy,
       CircularReferenceStrategy circularReferenceStrategy,
-      boolean writeNulls,
+      boolean isWriteNulls,
       String dateFormat,
-      boolean serializeEnumUsingOrdinal,
-      boolean prettyPrint,
-      boolean failOnError,
+      boolean isSerializeEnumUsingOrdinal,
+      boolean isPrettyPrint,
+      boolean isFailOnError,
       String defaultDateFormat,
       long maxJsonSize,
       int maxDepth,
       int maxGenericDepth,
-      boolean useBigDecimal,
-      boolean wrapRootValue,
-      boolean failOnUnknownProperties) {
+      boolean isUseBigDecimal,
+      boolean isWrapRootValue,
+      boolean isFailOnUnknownProperties) {
     this.namingStrategy = namingStrategy;
     this.circularReferenceStrategy = circularReferenceStrategy;
-    this.writeNulls = writeNulls;
+    this.isWriteNulls = isWriteNulls;
     this.dateFormat = dateFormat;
-    this.serializeEnumUsingOrdinal = serializeEnumUsingOrdinal;
-    this.prettyPrint = prettyPrint;
-    this.failOnError = failOnError;
+    this.isSerializeEnumUsingOrdinal = isSerializeEnumUsingOrdinal;
+    this.isPrettyPrint = isPrettyPrint;
+    this.isFailOnError = isFailOnError;
     this.defaultDateFormat = defaultDateFormat;
     this.maxJsonSize = maxJsonSize;
     this.maxDepth = maxDepth;
     this.maxGenericDepth = maxGenericDepth;
-    this.useBigDecimal = useBigDecimal;
-    this.wrapRootValue = wrapRootValue;
-    this.failOnUnknownProperties = failOnUnknownProperties;
+    this.isUseBigDecimal = isUseBigDecimal;
+    this.isWrapRootValue = isWrapRootValue;
+    this.isFailOnUnknownProperties = isFailOnUnknownProperties;
   }
 
   /**
@@ -307,8 +307,8 @@ public final class JsonConfig implements Serializable {
    *
    * @return 是否输出空值
    */
-  public boolean isWriteNulls() {
-    return writeNulls;
+  public boolean getIsWriteNulls() {
+    return isWriteNulls;
   }
 
   /**
@@ -325,8 +325,8 @@ public final class JsonConfig implements Serializable {
    *
    * @return 是否使用枚举序号序列化
    */
-  public boolean isSerializeEnumUsingOrdinal() {
-    return serializeEnumUsingOrdinal;
+  public boolean getIsSerializeEnumUsingOrdinal() {
+    return isSerializeEnumUsingOrdinal;
   }
 
   /**
@@ -334,8 +334,8 @@ public final class JsonConfig implements Serializable {
    *
    * @return 是否格式化输出
    */
-  public boolean isPrettyPrint() {
-    return prettyPrint;
+  public boolean getIsPrettyPrint() {
+    return isPrettyPrint;
   }
 
   /**
@@ -343,8 +343,8 @@ public final class JsonConfig implements Serializable {
    *
    * @return {@code true} 抛异常，{@code false} 降级为容错输出
    */
-  public boolean isFailOnError() {
-    return failOnError;
+  public boolean getIsFailOnError() {
+    return isFailOnError;
   }
 
   /**
@@ -394,8 +394,8 @@ public final class JsonConfig implements Serializable {
    *
    * @return 是否使用 BigDecimal
    */
-  public boolean isUseBigDecimal() {
-    return useBigDecimal;
+  public boolean getIsUseBigDecimal() {
+    return isUseBigDecimal;
   }
 
   /**
@@ -406,8 +406,8 @@ public final class JsonConfig implements Serializable {
    * @return 是否启用根名称包裹
    * @since 26.09.01
    */
-  public boolean isWrapRootValue() {
-    return wrapRootValue;
+  public boolean getIsWrapRootValue() {
+    return isWrapRootValue;
   }
 
   /**
@@ -415,8 +415,8 @@ public final class JsonConfig implements Serializable {
    *
    * @return {@code true} 严格模式（抛异常），默认 {@code false}（容错跳过）
    */
-  public boolean isFailOnUnknownProperties() {
-    return failOnUnknownProperties;
+  public boolean getIsFailOnUnknownProperties() {
+    return isFailOnUnknownProperties;
   }
 
   /**
@@ -426,13 +426,13 @@ public final class JsonConfig implements Serializable {
    */
   public void apply() {
     SerializationProvider.setNamingStrategy(namingStrategy);
-    SerializationProvider.setWriteNulls(writeNulls);
-    SerializationProvider.setPrettyPrint(prettyPrint);
+    SerializationProvider.setWriteNulls(isWriteNulls);
+    SerializationProvider.setPrettyPrint(isPrettyPrint);
     SerializationProvider.setCircularReferenceStrategy(circularReferenceStrategy.name());
-    SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
+    SerializationProvider.setSerializeEnumUsingOrdinal(isSerializeEnumUsingOrdinal);
     SerializationProvider.setDateFormat(dateFormat);
-    SerializationProvider.setFailOnError(failOnError);
-    SerializationProvider.setUseBigDecimal(useBigDecimal);
+    SerializationProvider.setFailOnError(isFailOnError);
+    SerializationProvider.setUseBigDecimal(isUseBigDecimal);
     // 传播 maxDepth 到反序列化路径（JSONReader 全局配置）
     JSONReader.setMaxDepth(maxDepth);
     JSONReader.setMaxGenericDepth(maxGenericDepth);
@@ -449,16 +449,16 @@ public final class JsonConfig implements Serializable {
         + ", circularReferenceStrategy="
         + circularReferenceStrategy
         + ", writeNulls="
-        + writeNulls
+        + isWriteNulls
         + ", dateFormat='"
         + dateFormat
         + '\''
         + ", serializeEnumUsingOrdinal="
-        + serializeEnumUsingOrdinal
+        + isSerializeEnumUsingOrdinal
         + ", prettyPrint="
-        + prettyPrint
+        + isPrettyPrint
         + ", failOnError="
-        + failOnError
+        + isFailOnError
         + ", defaultDateFormat='"
         + defaultDateFormat
         + '\''
@@ -469,11 +469,11 @@ public final class JsonConfig implements Serializable {
         + ", maxGenericDepth="
         + maxGenericDepth
         + ", useBigDecimal="
-        + useBigDecimal
+        + isUseBigDecimal
         + ", wrapRootValue="
-        + wrapRootValue
+        + isWrapRootValue
         + ", failOnUnknownProperties="
-        + failOnUnknownProperties
+        + isFailOnUnknownProperties
         + '}';
   }
 
@@ -512,18 +512,18 @@ public final class JsonConfig implements Serializable {
   public static final class Builder {
     private PropertyNamingStrategy namingStrategy = PropertyNamingStrategy.LOWER_CAMEL_CASE;
     private CircularReferenceStrategy circularReferenceStrategy = CircularReferenceStrategy.REF;
-    private boolean writeNulls = false;
+    private boolean isWriteNulls = false;
     private String dateFormat = "";
-    private boolean serializeEnumUsingOrdinal = false;
-    private boolean prettyPrint = false;
-    private boolean failOnError = false;
+    private boolean isSerializeEnumUsingOrdinal = false;
+    private boolean isPrettyPrint = false;
+    private boolean isFailOnError = false;
     private String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
     private long maxJsonSize = DEFAULT_MAX_JSON_SIZE;
     private int maxDepth = DEFAULT_MAX_DEPTH;
     private int maxGenericDepth = DEFAULT_MAX_GENERIC_DEPTH;
-    private boolean useBigDecimal = false;
-    private boolean wrapRootValue = false;
-    private boolean failOnUnknownProperties = false;
+    private boolean isUseBigDecimal = false;
+    private boolean isWrapRootValue = false;
+    private boolean isFailOnUnknownProperties = false;
 
     /** 私有构造函数，通过 {@link JsonConfig#builder()} 创建实例。 */
     private Builder() {}
@@ -557,7 +557,7 @@ public final class JsonConfig implements Serializable {
      * @return this（链式调用）
      */
     public Builder writeNulls(boolean writeNulls) {
-      this.writeNulls = writeNulls;
+      this.isWriteNulls = writeNulls;
       return this;
     }
 
@@ -579,7 +579,7 @@ public final class JsonConfig implements Serializable {
      * @return this（链式调用）
      */
     public Builder serializeEnumUsingOrdinal(boolean ordinal) {
-      this.serializeEnumUsingOrdinal = ordinal;
+      this.isSerializeEnumUsingOrdinal = ordinal;
       return this;
     }
 
@@ -590,7 +590,7 @@ public final class JsonConfig implements Serializable {
      * @return this（链式调用）
      */
     public Builder prettyPrint(boolean prettyPrint) {
-      this.prettyPrint = prettyPrint;
+      this.isPrettyPrint = prettyPrint;
       return this;
     }
 
@@ -601,7 +601,7 @@ public final class JsonConfig implements Serializable {
      * @return this（链式调用）
      */
     public Builder failOnError(boolean failOnError) {
-      this.failOnError = failOnError;
+      this.isFailOnError = failOnError;
       return this;
     }
 
@@ -614,7 +614,7 @@ public final class JsonConfig implements Serializable {
      * @return this（链式调用）
      */
     public Builder failOnUnknownProperties(boolean failOnUnknownProperties) {
-      this.failOnUnknownProperties = failOnUnknownProperties;
+      this.isFailOnUnknownProperties = failOnUnknownProperties;
       return this;
     }
 
@@ -669,7 +669,7 @@ public final class JsonConfig implements Serializable {
      * @return this（链式调用）
      */
     public Builder useBigDecimal(boolean useBigDecimal) {
-      this.useBigDecimal = useBigDecimal;
+      this.isUseBigDecimal = useBigDecimal;
       return this;
     }
 
@@ -680,7 +680,7 @@ public final class JsonConfig implements Serializable {
      * @return this（链式调用）
      */
     public Builder wrapRootValue(boolean wrapRootValue) {
-      this.wrapRootValue = wrapRootValue;
+      this.isWrapRootValue = wrapRootValue;
       return this;
     }
 
@@ -696,18 +696,18 @@ public final class JsonConfig implements Serializable {
       if (config != null) {
         this.namingStrategy = config.getNamingStrategy();
         this.circularReferenceStrategy = config.getCircularReferenceStrategy();
-        this.writeNulls = config.isWriteNulls();
+        this.isWriteNulls = config.getIsWriteNulls();
         this.dateFormat = config.getDateFormat();
-        this.serializeEnumUsingOrdinal = config.isSerializeEnumUsingOrdinal();
-        this.prettyPrint = config.isPrettyPrint();
-        this.failOnError = config.isFailOnError();
+        this.isSerializeEnumUsingOrdinal = config.getIsSerializeEnumUsingOrdinal();
+        this.isPrettyPrint = config.getIsPrettyPrint();
+        this.isFailOnError = config.getIsFailOnError();
         this.defaultDateFormat = config.getDefaultDateFormat();
         this.maxJsonSize = config.getMaxJsonSize();
         this.maxDepth = config.getMaxDepth();
         this.maxGenericDepth = config.getMaxGenericDepth();
-        this.useBigDecimal = config.isUseBigDecimal();
-        this.wrapRootValue = config.isWrapRootValue();
-        this.failOnUnknownProperties = config.isFailOnUnknownProperties();
+        this.isUseBigDecimal = config.getIsUseBigDecimal();
+        this.isWrapRootValue = config.getIsWrapRootValue();
+        this.isFailOnUnknownProperties = config.getIsFailOnUnknownProperties();
       }
       return this;
     }
@@ -723,18 +723,18 @@ public final class JsonConfig implements Serializable {
       return new JsonConfig(
           this.namingStrategy,
           this.circularReferenceStrategy,
-          this.writeNulls,
+          this.isWriteNulls,
           this.dateFormat,
-          this.serializeEnumUsingOrdinal,
-          this.prettyPrint,
-          this.failOnError,
+          this.isSerializeEnumUsingOrdinal,
+          this.isPrettyPrint,
+          this.isFailOnError,
           this.defaultDateFormat,
           this.maxJsonSize,
           this.maxDepth,
           this.maxGenericDepth,
-          this.useBigDecimal,
-          this.wrapRootValue,
-          this.failOnUnknownProperties);
+          this.isUseBigDecimal,
+          this.isWrapRootValue,
+          this.isFailOnUnknownProperties);
     }
   }
 

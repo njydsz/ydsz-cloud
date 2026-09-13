@@ -34,7 +34,7 @@ public class CircuitBreakerProperties {
    *
    * <p>默认 true。设为 false 可禁用熔断保护。
    */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /**
    * 失败率阈值（百分比）

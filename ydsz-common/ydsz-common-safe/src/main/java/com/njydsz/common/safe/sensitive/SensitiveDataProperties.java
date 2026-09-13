@@ -36,7 +36,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SensitiveDataProperties {
 
   /** 是否启用敏感数据脱敏 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 最大递归深度 */
   private int maxDepth = 10;
@@ -45,7 +45,7 @@ public class SensitiveDataProperties {
   private String logLevel = "DEBUG";
 
   /** 是否启用脱敏统计 */
-  private boolean statisticsEnabled = false;
+  private boolean isStatisticsEnabled = false;
 
   /** 全局脱敏规则列表 */
   private List<GlobalDesensitizeRule> globalRules = new ArrayList<>(4);
@@ -56,6 +56,6 @@ public class SensitiveDataProperties {
     private String fieldName;
     private SensitiveType type;
     private char replaceChar = '*';
-    private boolean enabled = true;
+    private boolean isEnabled = true;
   }
 }

@@ -48,7 +48,7 @@ public class StylesReader {
   private int[] xfNumFmtIds = new int[0];
 
   /** 是否已解析到有效内容（styles.xml 缺失时为 false，isDateFormat 恒 false） */
-  private boolean parsed = false;
+  private boolean isParsed = false;
 
   /**
    * 解析 styles.xml 输入流。
@@ -60,7 +60,7 @@ public class StylesReader {
     String xml = new String(readAll(is), StandardCharsets.UTF_8);
     parseCustomFormats(xml);
     parseCellXfs(xml);
-    parsed = true;
+    isParsed = true;
   }
 
   /**
@@ -70,7 +70,7 @@ public class StylesReader {
    * @return 是日期格式返回 true；未解析、索引越界或非日期格式返回 false
    */
   boolean isDateFormat(int styleIndex) {
-    if (!parsed || styleIndex < 0 || styleIndex >= xfNumFmtIds.length) {
+    if (!isParsed || styleIndex < 0 || styleIndex >= xfNumFmtIds.length) {
       return false;
     }
     return isDateFormatId(xfNumFmtIds[styleIndex]);

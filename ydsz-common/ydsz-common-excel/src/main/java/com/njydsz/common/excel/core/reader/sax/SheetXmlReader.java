@@ -87,7 +87,7 @@ public class SheetXmlReader {
   private int cellStyleIndex = -1;
 
   /** 当前行是否有数据（用于空行跳过） */
-  private boolean rowHasData;
+  private boolean isRowHasData;
 
   /**
    * 构造 Sheet 读取器。
@@ -132,7 +132,7 @@ public class SheetXmlReader {
       }
 
       parseRowAttributes(data, rowStart, rowAttrEnd);
-      rowHasData = false;
+      isRowHasData = false;
 
       if (currentRow > reader.headRowNumber && rowData == null && reader.instantiator != null) {
         try {
@@ -153,7 +153,7 @@ public class SheetXmlReader {
 
       if (rowData != null && reader.context != null && reader.listeners != null) {
         // skipEmptyRows: skip rows with no cell data
-        if (reader.skipEmptyRows && !rowHasData) {
+        if (reader.skipEmptyRows && !isRowHasData) {
           rowData = null;
           pos = rowEnd + 6;
           continue;
@@ -436,7 +436,7 @@ public class SheetXmlReader {
     }
 
     if (currentRow > reader.headRowNumber && rowData != null) {
-      rowHasData = true;
+      isRowHasData = true;
       parseDataCell(currentCol, value);
     }
   }

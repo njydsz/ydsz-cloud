@@ -24,7 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class FeignProperties {
 
   /** 模块总开关，默认true */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** Feign日志级别，默认BASIC，可选NONE/HEADERS/FULL */
   private String loggerLevel = "BASIC";
@@ -60,11 +60,11 @@ public class FeignProperties {
   private final ResponseInterceptor responseInterceptor = new ResponseInterceptor();
 
   public boolean isEnabled() {
-    return enabled;
+    return isEnabled;
   }
 
   public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+    this.isEnabled = enabled;
   }
 
   public String getLoggerLevel() {
@@ -136,7 +136,7 @@ public class FeignProperties {
   @Setter
   public static class Propagation {
     /** 是否启用请求头透传，默认true */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 默认透传的13个核心业务头：覆盖链路追踪、身份鉴权、权限校验、租户隔离等所有业务场景 */
     private Set<String> headers =
@@ -163,7 +163,7 @@ public class FeignProperties {
   @Setter
   public static class Retry {
     /** 是否启用重试，默认true */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 最大重试次数（包含首次调用），默认3 */
     private int maxAttempts = 3;
@@ -202,7 +202,7 @@ public class FeignProperties {
   @Setter
   public static class Trace {
     /** 是否启用W3C traceparent协议头透传，默认true */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
   }
 
   /** 监控指标配置 */
@@ -210,7 +210,7 @@ public class FeignProperties {
   @Setter
   public static class Metrics {
     /** 是否启用Feign调用指标采集，默认true */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
   }
 
   /** 熔断器开关配置 */
@@ -218,7 +218,7 @@ public class FeignProperties {
   @Setter
   public static class CircuitBreaker {
     /** 是否启用Resilience4j熔断能力，默认false */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 熔断状态 Redis 持久化 TTL（秒），默认 3600 */
     private int stateTtlSeconds = 3600;
@@ -245,7 +245,7 @@ public class FeignProperties {
   /** 信号量隔离（Bulkhead）配置 */
   public static class Bulkhead {
     /** 是否启用信号量隔离，默认false */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 默认最大并发请求数，默认50 */
     private int defaultMaxConcurrent = 50;
@@ -257,10 +257,10 @@ public class FeignProperties {
     private Map<String, Integer> serviceMaxConcurrent = new HashMap<>(16);
 
     public boolean isEnabled() {
-      return enabled;
+      return isEnabled;
     }
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
     public int getDefaultMaxConcurrent() {
       return defaultMaxConcurrent;
@@ -287,7 +287,7 @@ public class FeignProperties {
   @Setter
   public static class Compress {
     /** 是否启用GZIP压缩，默认false */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 压缩触发阈值（字节），默认 1024 */
     private int minSize = 1024;
@@ -333,17 +333,17 @@ public class FeignProperties {
   /** 错误解码配置 */
   public static class Error {
     /** 是否在错误信息中包含响应体，默认false */
-    private boolean includeBody = false;
+    private boolean isIncludeBody = false;
 
     /** 响应体最大字节数，默认4096 */
     private int maxBodyBytes = 4096;
 
     public boolean isIncludeBody() {
-      return includeBody;
+      return isIncludeBody;
     }
 
     public void setIncludeBody(boolean includeBody) {
-      this.includeBody = includeBody;
+      this.isIncludeBody = includeBody;
     }
 
     public int getMaxBodyBytes() {
@@ -360,7 +360,7 @@ public class FeignProperties {
   @Setter
   public static class Resilience4j {
     /** 是否启用 Resilience4j 全局熔断器配置注册，默认 false。 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 失败率阈值（百分比），达到该值触发熔断，默认 50。 */
     private float failureRateThreshold = 50.0f;
@@ -389,13 +389,13 @@ public class FeignProperties {
   @Setter
   public static class ResponseInterceptor {
     /** 是否启用响应拦截器，默认true */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 是否启用响应日志，默认false */
-    private boolean logEnabled = false;
+    private boolean isLogEnabled = false;
 
     /** 是否启用响应时间指标采集，默认true */
-    private boolean metricsEnabled = true;
+    private boolean isMetricsEnabled = true;
 
     /** 慢调用阈值（毫秒），默认 3000 */
     private long slowCallThresholdMillis = 3000;

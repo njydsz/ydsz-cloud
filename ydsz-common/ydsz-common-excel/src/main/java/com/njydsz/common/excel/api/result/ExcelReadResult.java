@@ -73,7 +73,7 @@ public class ExcelReadResult<T> {
   private long elapsedTime;
 
   /** 是否成功 */
-  private boolean success;
+  private boolean isSuccess;
 
   /** 异常信息 */
   private Throwable error;
@@ -96,7 +96,7 @@ public class ExcelReadResult<T> {
     this.data = builder.data;
     this.totalRows = builder.totalRows;
     this.elapsedTime = builder.elapsedTime;
-    this.success = builder.success;
+    this.isSuccess = builder.isSuccess;
     this.error = builder.error;
     this.future = builder.future;
     this.fileName = builder.fileName;
@@ -119,7 +119,7 @@ public class ExcelReadResult<T> {
     result.data = data;
     result.totalRows = data != null ? data.size() : 0;
     result.elapsedTime = elapsedTime;
-    result.success = true;
+    result.isSuccess = true;
     return result;
   }
 
@@ -135,7 +135,7 @@ public class ExcelReadResult<T> {
     result.data = new ArrayList<>(16);
     result.totalRows = 0;
     result.error = error;
-    result.success = false;
+    result.isSuccess = false;
     return result;
   }
 
@@ -153,8 +153,8 @@ public class ExcelReadResult<T> {
     return elapsedTime;
   }
 
-  public boolean isSuccess() {
-    return success;
+  public boolean getIsSuccess() {
+    return isSuccess;
   }
 
   public Throwable getError() {
@@ -299,7 +299,7 @@ public class ExcelReadResult<T> {
     private List<T> data;
     private int totalRows;
     private long elapsedTime;
-    private boolean success;
+    private boolean isSuccess;
     private Throwable error;
     private CompletableFuture<List<T>> future;
     private String fileName;
@@ -321,8 +321,8 @@ public class ExcelReadResult<T> {
       return this;
     }
 
-    public Builder<T> success(boolean success) {
-      this.success = success;
+    public Builder<T> success(boolean isSuccess) {
+      this.isSuccess = isSuccess;
       return this;
     }
 

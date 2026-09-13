@@ -51,7 +51,7 @@ public class SecurityHeaderProperties {
    *
    * <p>默认值为 true，即启用所有配置的安全响应头。
    */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /**
    * 过滤器注册顺序
@@ -134,10 +134,10 @@ public class SecurityHeaderProperties {
   /** CSP 配置 */
   @Data
   public static class CspConfig {
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 是否允许 unsafe-eval（仅开发环境） */
-    private boolean unsafeEval = false;
+    private boolean isUnsafeEval = false;
 
     /** 显式 CSP 策略字符串（设置后忽略其他细粒度配置） */
     private String policy;
@@ -146,22 +146,22 @@ public class SecurityHeaderProperties {
   /** HSTS 配置 */
   @Data
   public static class HstsConfig {
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** HSTS max-age（秒） */
     private long maxAge = 31536000;
 
     /** 是否包含子域名 */
-    private boolean includeSubdomains = true;
+    private boolean isIncludeSubdomains = true;
 
     /** 是否启用 preload */
-    private boolean preload = true;
+    private boolean isPreload = true;
   }
 
   /** COOP 配置 */
   @Data
   public static class CoopConfig {
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** COOP 策略 */
     private String policy = "same-origin";
@@ -170,7 +170,7 @@ public class SecurityHeaderProperties {
   /** COEP 配置 */
   @Data
   public static class CoepConfig {
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** COEP 策略：unsafe-none（默认，兼容性好）| require-corp（严格） */
     private String policy = "unsafe-none";
@@ -179,7 +179,7 @@ public class SecurityHeaderProperties {
   /** CORP 配置 */
   @Data
   public static class CorpConfig {
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** CORP 策略 */
     private String policy = "same-origin";

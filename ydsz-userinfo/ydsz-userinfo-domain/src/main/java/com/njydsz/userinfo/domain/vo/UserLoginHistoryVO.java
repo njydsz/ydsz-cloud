@@ -51,4 +51,13 @@ public class UserLoginHistoryVO {
 
   /** 登录时间 */
   private LocalDateTime createdAt;
+
+  /** 浏览器名称（由 User-Agent 解析） */
+  private String browser;
+
+  /** 操作系统（由 User-Agent 解析） */
+  private String os;
+
+  /** IP 归属地 */
+  private String location;
 }

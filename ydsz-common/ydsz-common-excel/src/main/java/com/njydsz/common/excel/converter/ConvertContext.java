@@ -15,9 +15,9 @@ public class ConvertContext {
   private int rowIndex;
   private String columnName;
   private String dateFormat;
-  private boolean automaticTrim;
-  private boolean strictNumberConversion;
-  private boolean use1904Windowing;
+  private boolean isAutomaticTrim;
+  private boolean isStrictNumberConversion;
+  private boolean isUse1904Windowing;
 
   public int getRowIndex() {
     return rowIndex;
@@ -43,28 +43,28 @@ public class ConvertContext {
     this.dateFormat = dateFormat;
   }
 
-  public boolean isAutomaticTrim() {
-    return automaticTrim;
+  public boolean getIsAutomaticTrim() {
+    return isAutomaticTrim;
   }
 
-  public void setIsAutomaticTrim(boolean automaticTrim) {
-    this.automaticTrim = automaticTrim;
+  public void setIsAutomaticTrim(boolean isAutomaticTrim) {
+    this.isAutomaticTrim = isAutomaticTrim;
   }
 
-  public boolean isStrictNumberConversion() {
-    return strictNumberConversion;
+  public boolean getIsStrictNumberConversion() {
+    return isStrictNumberConversion;
   }
 
-  public void setStrictNumberConversion(boolean strictNumberConversion) {
-    this.strictNumberConversion = strictNumberConversion;
+  public void setIsStrictNumberConversion(boolean strictNumberConversion) {
+    this.isStrictNumberConversion = strictlyNumberConversion;
   }
 
-  public boolean isUse1904Windowing() {
-    return use1904Windowing;
+  public boolean getIsUse1904Windowing() {
+    return isUse1904Windowing;
   }
 
-  public void setUse1904Windowing(boolean use1904Windowing) {
-    this.use1904Windowing = use1904Windowing;
+  public void setIsUse1904Windowing(boolean use1904Windowing) {
+    this.isUse1904Windowing = use1904Windowing;
   }
 
   /**
@@ -129,8 +129,8 @@ public class ConvertContext {
      * @param automaticTrim {@code true} 表示自动 trim
      * @return 当前构建器，便于链式调用
      */
-    public Builder automaticTrim(boolean automaticTrim) {
-      context.automaticTrim = automaticTrim;
+    public Builder automaticTrim(boolean isAutomaticTrim) {
+      context.isAutomaticTrim = isAutomaticTrim;
       return this;
     }
 
@@ -142,8 +142,8 @@ public class ConvertContext {
      * @param strictNumberConversion {@code true} 表示严格模式
      * @return 当前构建器，便于链式调用
      */
-    public Builder strictNumberConversion(boolean strictNumberConversion) {
-      context.strictNumberConversion = strictNumberConversion;
+    public Builder strictNumberConversion(boolean isStrictNumberConversion) {
+      context.isStrictNumberConversion = isStrictNumberConversion;
       return this;
     }
 
@@ -156,8 +156,8 @@ public class ConvertContext {
      * @param use1904Windowing {@code true} 表示按 1904 纪元解析日期序列号
      * @return 当前构建器，便于链式调用
      */
-    public Builder use1904Windowing(boolean use1904Windowing) {
-      context.use1904Windowing = use1904Windowing;
+    public Builder use1904Windowing(boolean isUse1904Windowing) {
+      context.isUse1904Windowing = isUse1904Windowing;
       return this;
     }
 

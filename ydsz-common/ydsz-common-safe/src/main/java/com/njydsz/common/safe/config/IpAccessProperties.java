@@ -45,7 +45,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class IpAccessProperties {
 
   /** 是否启用 IP 访问控制 */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 访问控制模式 */
   private AccessMode mode = AccessMode.BLACKLIST;

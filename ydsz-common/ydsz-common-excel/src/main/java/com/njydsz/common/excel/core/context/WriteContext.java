@@ -33,7 +33,7 @@ public class WriteContext {
   private int currentColumn;
 
   /** 是否已完成写入 */
-  private boolean finished;
+  private boolean isFinished;
 
   public WriteContext() {}
 
@@ -82,12 +82,12 @@ public class WriteContext {
     this.currentColumn = currentColumn;
   }
 
-  public boolean isFinished() {
-    return finished;
+  public boolean getIsFinished() {
+    return isFinished;
   }
 
-  public void setFinished(boolean finished) {
-    this.finished = finished;
+  public void setIsFinished(boolean finished) {
+    this.isFinished = finished;
   }
 
   /**

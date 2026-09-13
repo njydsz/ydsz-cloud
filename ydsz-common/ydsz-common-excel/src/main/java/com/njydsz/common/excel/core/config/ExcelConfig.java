@@ -44,19 +44,19 @@ public class ExcelConfig {
 
   private final int readBufferSize;
   private final int writeBufferSize;
-  private final boolean automaticTrim;
+  private final boolean isAutomaticTrim;
   private final String defaultDateFormat;
   private final String defaultNumberFormat;
   private final int maxReadCacheSize;
   private final int streamingParseThresholdMB;
-  private final boolean strictNumberConversion;
+  private final boolean isStrictNumberConversion;
   private final int maxReadFileSizeMB;
   private final int maxWriteFileSizeMB;
-  private final boolean formulaInjectionProtection;
-  private final boolean useFastReader;
-  private final boolean useFastWriter;
+  private final boolean isFormulaInjectionProtection;
+  private final boolean isUseFastReader;
+  private final boolean isUseFastWriter;
   private final int compressionLevel;
-  private final boolean use1904Windowing;
+  private final boolean isUse1904Windowing;
   private final int headRowNumber;
   private final int writeCacheSize;
   private final ValidationMode validationMode;
@@ -65,19 +65,19 @@ public class ExcelConfig {
   private ExcelConfig(Builder builder) {
     this.readBufferSize = builder.readBufferSize;
     this.writeBufferSize = builder.writeBufferSize;
-    this.automaticTrim = builder.automaticTrim;
+    this.isAutomaticTrim = builder.isAutomaticTrim;
     this.defaultDateFormat = builder.defaultDateFormat;
     this.defaultNumberFormat = builder.defaultNumberFormat;
     this.maxReadCacheSize = builder.maxReadCacheSize;
     this.streamingParseThresholdMB = builder.streamingParseThresholdMB;
-    this.strictNumberConversion = builder.strictNumberConversion;
+    this.isStrictNumberConversion = builder.isStrictNumberConversion;
     this.maxReadFileSizeMB = builder.maxReadFileSizeMB;
     this.maxWriteFileSizeMB = builder.maxWriteFileSizeMB;
-    this.formulaInjectionProtection = builder.formulaInjectionProtection;
-    this.useFastReader = builder.useFastReader;
-    this.useFastWriter = builder.useFastWriter;
+    this.isFormulaInjectionProtection = builder.isFormulaInjectionProtection;
+    this.isUseFastReader = builder.isUseFastReader;
+    this.isUseFastWriter = builder.isUseFastWriter;
     this.compressionLevel = builder.compressionLevel;
-    this.use1904Windowing = builder.use1904Windowing;
+    this.isUse1904Windowing = builder.isUse1904Windowing;
     this.headRowNumber = builder.headRowNumber;
     this.writeCacheSize = builder.writeCacheSize;
     this.validationMode = builder.validationMode;
@@ -91,8 +91,8 @@ public class ExcelConfig {
     return writeBufferSize;
   }
 
-  public boolean isAutomaticTrim() {
-    return automaticTrim;
+  public boolean getIsAutomaticTrim() {
+    return isAutomaticTrim;
   }
 
   public String getDefaultDateFormat() {
@@ -111,8 +111,8 @@ public class ExcelConfig {
     return streamingParseThresholdMB;
   }
 
-  public boolean isStrictNumberConversion() {
-    return strictNumberConversion;
+  public boolean getIsStrictNumberConversion() {
+    return isStrictNumberConversion;
   }
 
   public int getMaxReadFileSizeMB() {
@@ -123,16 +123,16 @@ public class ExcelConfig {
     return maxWriteFileSizeMB;
   }
 
-  public boolean isFormulaInjectionProtection() {
-    return formulaInjectionProtection;
+  public boolean getIsFormulaInjectionProtection() {
+    return isFormulaInjectionProtection;
   }
 
-  public boolean isUseFastReader() {
-    return useFastReader;
+  public boolean getIsUseFastReader() {
+    return isUseFastReader;
   }
 
-  public boolean isUseFastWriter() {
-    return useFastWriter;
+  public boolean getIsUseFastWriter() {
+    return isUseFastWriter;
   }
 
   /**
@@ -149,7 +149,7 @@ public class ExcelConfig {
    *
    * <p>纯检测，不改写入参；实际转义由 {@link #sanitizeFormulaInjection(String)}（CSV 路径）或
    * {@link #sanitizeForXlsx(String)}（XLSX 路径）完成。 委派给 {@link
-   * FormulaInjectionGuard}，不受 {@code formulaInjectionProtection} 开关影响。
+   * FormulaInjectionGuard}，不受 {@code isFormulaInjectionProtection} 开关影响。
    *
    * @param value 待检测的单元格文本，可为 {@code null}
    * @return {@code true} 表示以危险前缀开头，导出后可能被 Excel 当作公式执行
@@ -188,8 +188,8 @@ public class ExcelConfig {
     return compressionLevel;
   }
 
-  public boolean isUse1904Windowing() {
-    return use1904Windowing;
+  public boolean getIsUse1904Windowing() {
+    return isUse1904Windowing;
   }
 
   public int getHeadRowNumber() {
@@ -227,19 +227,19 @@ public class ExcelConfig {
 
     private int readBufferSize = DEFAULT_BUFFER_SIZE;
     private int writeBufferSize = DEFAULT_BUFFER_SIZE;
-    private boolean automaticTrim = true;
+    private boolean isAutomaticTrim = true;
     private String defaultDateFormat = "yyyy-MM-dd HH:mm:ss";
     private String defaultNumberFormat = "#,##0.00";
     private int maxReadCacheSize = DEFAULT_MAX_READ_CACHE_SIZE;
     private int streamingParseThresholdMB = DEFAULT_STREAMING_PARSE_THRESHOLD_MB;
-    private boolean strictNumberConversion = false;
+    private boolean isStrictNumberConversion = false;
     private int maxReadFileSizeMB = DEFAULT_MAX_READ_FILE_SIZE_MB;
     private int maxWriteFileSizeMB = DEFAULT_MAX_WRITE_FILE_SIZE_MB;
-    private boolean formulaInjectionProtection = true;
-    private boolean useFastReader = false;
-    private boolean useFastWriter = false;
+    private boolean isFormulaInjectionProtection = true;
+    private boolean isUseFastReader = false;
+    private boolean isUseFastWriter = false;
     private int compressionLevel = Deflater.BEST_SPEED;
-    private boolean use1904Windowing = false;
+    private boolean isUse1904Windowing = false;
     private int headRowNumber = DEFAULT_HEAD_ROW_NUMBER;
     private int writeCacheSize = DEFAULT_WRITE_CACHE_SIZE;
     private ValidationMode validationMode = ValidationMode.FAIL_FAST;
@@ -256,8 +256,8 @@ public class ExcelConfig {
       return this;
     }
 
-    public Builder automaticTrim(boolean automaticTrim) {
-      this.automaticTrim = automaticTrim;
+    public Builder automaticTrim(boolean isAutomaticTrim) {
+      this.isAutomaticTrim = isAutomaticTrim;
       return this;
     }
 
@@ -281,8 +281,8 @@ public class ExcelConfig {
       return this;
     }
 
-    public Builder strictNumberConversion(boolean strictNumberConversion) {
-      this.strictNumberConversion = strictNumberConversion;
+    public Builder strictNumberConversion(boolean isStrictNumberConversion) {
+      this.isStrictNumberConversion = isStrictNumberConversion;
       return this;
     }
 
@@ -296,18 +296,18 @@ public class ExcelConfig {
       return this;
     }
 
-    public Builder formulaInjectionProtection(boolean formulaInjectionProtection) {
-      this.formulaInjectionProtection = formulaInjectionProtection;
+    public Builder formulaInjectionProtection(boolean isFormulaInjectionProtection) {
+      this.isFormulaInjectionProtection = isFormulaInjectionProtection;
       return this;
     }
 
-    public Builder useFastReader(boolean useFastReader) {
-      this.useFastReader = useFastReader;
+    public Builder useFastReader(boolean isUseFastReader) {
+      this.isUseFastReader = isUseFastReader;
       return this;
     }
 
-    public Builder useFastWriter(boolean useFastWriter) {
-      this.useFastWriter = useFastWriter;
+    public Builder useFastWriter(boolean isUseFastWriter) {
+      this.isUseFastWriter = isUseFastWriter;
       return this;
     }
 
@@ -316,8 +316,8 @@ public class ExcelConfig {
       return this;
     }
 
-    public Builder use1904Windowing(boolean use1904Windowing) {
-      this.use1904Windowing = use1904Windowing;
+    public Builder use1904Windowing(boolean isUse1904Windowing) {
+      this.isUse1904Windowing = isUse1904Windowing;
       return this;
     }
 

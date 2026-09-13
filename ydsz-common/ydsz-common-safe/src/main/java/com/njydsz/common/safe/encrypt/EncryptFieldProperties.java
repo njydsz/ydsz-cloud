@@ -33,7 +33,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class EncryptFieldProperties {
 
   /** 是否启用字段加密（默认 true） */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 默认密钥版本 */
   private int defaultKeyVersion = 1;
