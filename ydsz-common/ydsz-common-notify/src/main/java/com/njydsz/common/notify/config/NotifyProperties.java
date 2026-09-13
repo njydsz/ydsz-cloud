@@ -866,7 +866,7 @@ public class NotifyProperties {
   public static class DingTalkConfig {
 
     /** 是否启用钉钉渠道 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 应用 AppKey */
     private String appKey;
@@ -878,19 +878,19 @@ public class NotifyProperties {
     private long agentId;
 
     /** 是否使用机器人自定义消息 */
-    private boolean useCustomRobot = false;
+    private boolean isUseCustomRobot = false;
 
     /** 机器人 Webhook URL（自定义机器人时使用） */
     private String webhookUrl;
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public String getAppKey() {
@@ -917,12 +917,12 @@ public class NotifyProperties {
       this.agentId = agentId;
     }
 
-    public boolean isUseCustomRobot() {
-      return useCustomRobot;
+    public boolean getIsUseCustomRobot() {
+      return isUseCustomRobot;
     }
 
     public void setUseCustomRobot(boolean useCustomRobot) {
-      this.useCustomRobot = useCustomRobot;
+      this.isUseCustomRobot = useCustomRobot;
     }
 
     public String getWebhookUrl() {
@@ -952,7 +952,7 @@ public class NotifyProperties {
   public static class FeishuConfig {
 
     /** 是否启用飞书渠道 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 应用 App ID */
     private String appId;
@@ -968,12 +968,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public String getAppId() {
@@ -1026,7 +1026,7 @@ public class NotifyProperties {
   public static class InsiteConfig {
 
     /** 是否启用站内信渠道 */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 站内信过期天数（0 表示永不过期） */
     private int expireDays = 30;
@@ -1035,16 +1035,16 @@ public class NotifyProperties {
     private int maxPerUser = 1000;
 
     /** 是否允许用户标记已读 */
-    private boolean allowReadMark = true;
+    private boolean isAllowReadMark = true;
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public int getExpireDays() {
@@ -1081,12 +1081,12 @@ public class NotifyProperties {
       return maxPerUser;
     }
 
-    public boolean isAllowReadMark() {
-      return allowReadMark;
+    public boolean getIsAllowReadMark() {
+      return isAllowReadMark;
     }
 
     public void setAllowReadMark(boolean allowReadMark) {
-      this.allowReadMark = allowReadMark;
+      this.isAllowReadMark = allowReadMark;
     }
   }
 
@@ -1094,7 +1094,7 @@ public class NotifyProperties {
   public static class FallbackConfig {
 
     /** 是否启用渠道降级 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 降级链配置（key: 主渠道, value: 按优先级排序的备用渠道列表） */
     private Map<NotifyChannel, List<NotifyChannel>> chains;
@@ -1107,12 +1107,12 @@ public class NotifyProperties {
 
     // ==================== Getter / Setter ====================
 
-    public boolean isEnabled() {
-      return enabled;
+    public boolean getIsEnabled() {
+      return isEnabled;
     }
 
     public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
+      this.isEnabled = enabled;
     }
 
     public Map<NotifyChannel, List<NotifyChannel>> getChains() {

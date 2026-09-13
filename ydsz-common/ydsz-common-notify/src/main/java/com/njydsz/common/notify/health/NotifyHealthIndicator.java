@@ -64,7 +64,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
 
       // 邮件渠道
       NotifyProperties.EmailConfig email = notifyProperties.getEmail();
-      if (email != null && email.isEnabled()) {
+      if (email != null && email.getIsEnabled()) {
         boolean ready =
             email.getSmtpHost() != null
                 && !email.getSmtpHost().isEmpty()
