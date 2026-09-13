@@ -31,7 +31,7 @@ public class NotifyPasswordResolver {
 
   private final NotifyProperties properties;
   private volatile PooledPBEStringEncryptor encryptor;
-  private volatile boolean initialized = false;
+  private volatile boolean isInitialized = false;
 
   public NotifyPasswordResolver(NotifyProperties properties) {
     this.properties = properties;
@@ -95,16 +95,16 @@ public class NotifyPasswordResolver {
    * @return PooledPBEStringEncryptor 实例，未配置密钥时返回 null
    */
   private PooledPBEStringEncryptor getEncryptor() {
-    if (initialized) {
+    if (isInitialized) {
       return encryptor;
     }
     synchronized (this) {
-      if (initialized) {
+      if (isInitialized) {
         return encryptor;
       }
       NotifyProperties.EmailConfig email = properties.getEmail();
       if (email == null || email.getSecurity() == null) {
-        initialized = true;
+        isInitialized = true;
         return null;
       }
       String key = email.getSecurity().getJasyptKey();
@@ -114,12 +114,12 @@ public class NotifyPasswordResolver {
       if (!StringUtils.hasText(key)) {
         LOG.warn(
             "[NotifyPasswordResolver] Jasypt 密钥未配置（jasyptKey 或 JASYPT_ENCRYPTOR_PASSWORD），跳过解密");
-        initialized = true;
+        isInitialized = true;
         return null;
       }
       // P0-1: 委托 ConfigCliTool 创建加密器，消除重复 Jasypt 参数配置
       encryptor = ConfigCliTool.createEncryptor(key);
-      initialized = true;
+      isInitialized = true;
       LOG.info("[NotifyPasswordResolver] Jasypt 加密器初始化完成（委托 ConfigCliTool）");
       return encryptor;
     }

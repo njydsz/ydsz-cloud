@@ -61,7 +61,7 @@ public class DkimSigner {
 
   private final NotifyProperties properties;
   private volatile PrivateKey privateKey;
-  private volatile boolean initialized = false;
+  private volatile boolean isInitialized = false;
 
   public DkimSigner(NotifyProperties properties) {
     this.properties = properties;
@@ -163,11 +163,11 @@ public class DkimSigner {
 
   /** 懒加载 RSA 私钥 */
   private PrivateKey getPrivateKey() {
-    if (initialized) {
+    if (isInitialized) {
       return privateKey;
     }
     synchronized (this) {
-      if (initialized) {
+      if (isInitialized) {
         return privateKey;
       }
       try {
@@ -188,7 +188,7 @@ public class DkimSigner {
         LOG.error("[DkimSigner] RSA 私钥加载失败: {}", e.getMessage());
         privateKey = null;
       }
-      initialized = true;
+      isInitialized = true;
       return privateKey;
     }
   }

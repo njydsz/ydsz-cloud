@@ -76,7 +76,7 @@ public class UnifiedAlertEvent extends DomainEvent {
   private final LocalDateTime triggeredAt;
 
   /** 是否为恢复通知（true=告警恢复，false=正常告警） */
-  private final boolean recovery;
+  private final boolean isRecovery;
 
   public UnifiedAlertEvent(
       String alertCode,
@@ -91,7 +91,7 @@ public class UnifiedAlertEvent extends DomainEvent {
       String targetUserIds,
       String pushChannels,
       LocalDateTime triggeredAt,
-      boolean recovery) {
+      boolean isRecovery) {
     super(
         IdGenerator.nextIdStr(),
         LocalDateTime.now(),
@@ -111,7 +111,7 @@ public class UnifiedAlertEvent extends DomainEvent {
     this.targetUserIds = targetUserIds;
     this.pushChannels = pushChannels;
     this.triggeredAt = triggeredAt;
-    this.recovery = recovery;
+    this.isRecovery = isRecovery;
   }
 
   /**
