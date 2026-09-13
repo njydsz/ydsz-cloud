@@ -57,6 +57,7 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
