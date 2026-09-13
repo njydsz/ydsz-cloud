@@ -21,13 +21,16 @@ import com.njydsz.agent.domain.model.MessageRole;
 @Component
 public class SlidingWindowCompressor implements ContextCompressor {
 
+  /** System 消息初始容量，避免扩容开销 */
+  private static final int SYSTEM_MSG_CAPACITY = 4;
+
   @Override
   public List<ChatMessage> compress(List<ChatMessage> messages, int maxSize) {
     if (messages.size() <= maxSize) {
       return messages;
     }
     // 分离 System 消息和非 System 消息
-    List<ChatMessage> systemMessages = new ArrayList<>(4);
+    List<ChatMessage> systemMessages = new ArrayList<>(SYSTEM_MSG_CAPACITY);
     List<ChatMessage> nonSystemMessages = new ArrayList<>(messages.size());
     for (ChatMessage msg : messages) {
       if (msg.getRole() == MessageRole.SYSTEM) {

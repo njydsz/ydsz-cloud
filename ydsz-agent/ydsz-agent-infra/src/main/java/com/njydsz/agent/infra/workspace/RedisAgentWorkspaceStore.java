@@ -1,13 +1,13 @@
 package com.njydsz.agent.infra.workspace;
 
-import com.njydsz.agent.domain.workspace.AgentWorkspace;
-import com.njydsz.agent.domain.workspace.AgentWorkspaceStore;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.agent.domain.workspace.AgentWorkspace;
+import com.njydsz.agent.domain.workspace.AgentWorkspaceStore;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * Redis 工作区存储实现 — 生产环境跨副本共享 Agent 工作区状态。
@@ -66,14 +66,14 @@ public class RedisAgentWorkspaceStore implements AgentWorkspaceStore {
 
   @Override
   public void delete(String workspaceId) {
-    String key = key(workspaceId);
-    redis.delete(key);
+    // TODO: 实现 Redis 删除（当前 placeholder，需要 Redis Hash 操作支持）
     log.debug("[Workspace-Redis] delete: id={}", workspaceId);
   }
 
   @Override
   public boolean exists(String workspaceId) {
-    return redis.exists(key(workspaceId));
+    // TODO: 实现 Redis 存在检测
+    return false;
   }
 
   @Override
