@@ -78,7 +78,7 @@ public class DkimSigner {
       return false;
     }
     NotifyProperties.DkimConfig dkim = email.getDkim();
-    return dkim.isEnabled()
+    return dkim.getIsEnabled()
         && StringUtils.hasText(dkim.getDomain())
         && StringUtils.hasText(dkim.getSelector())
         && StringUtils.hasText(dkim.getPrivateKey());

@@ -47,7 +47,7 @@ public class NotifyDedupService {
    * @return {@code true} 表示启用去重
    */
   public boolean isDedupEnabled() {
-    return properties.getDedup() != null && properties.getDedup().isEnabled();
+    return properties.getDedup() != null && properties.getDedup().getIsEnabled();
   }
 
   /**

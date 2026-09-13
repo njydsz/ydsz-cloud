@@ -143,7 +143,7 @@ public class CommonLayerArchitectureTest {
   static final ArchRule L1_UTIL_SHOULD_ONLY_DEPEND_L1 =
       noClasses()
           .that()
-          .resideInPackage(UTIL_PKG)
+          .resideInAPackage(UTIL_PKG)
           .and()
           .resideOutsideOfPackages(UTIL_CONFIG_PKG)
           .should()
@@ -161,7 +161,7 @@ public class CommonLayerArchitectureTest {
   static final ArchRule L2_CORE_SHOULD_ONLY_DEPEND_L1 =
       noClasses()
           .that()
-          .resideInPackage(CORE_PKG)
+          .resideInAPackage(CORE_PKG)
           .should()
           .dependOnClassesThat()
           .resideInAnyPackage(

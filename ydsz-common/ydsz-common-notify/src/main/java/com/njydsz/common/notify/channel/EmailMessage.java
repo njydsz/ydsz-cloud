@@ -70,7 +70,11 @@ public class EmailMessage implements Serializable {
   /** 自定义邮件头 */
   private Map<String, String> headers;
 
-  /** 显式 getter 避免 Lombok @Data 对 Boolean isXxx 字段生成器行为不确定 */
+  /**
+   * 显式 getter 避免 Lombok @Data 对 Boolean isXxx 字段生成器行为不确定。
+   *
+   * @return 是否 HTML 格式（true=HTML，false=纯文本，null=由配置决定）
+   */
   public Boolean getIsHtml() {
     return isHtml;
   }
@@ -83,7 +87,6 @@ public class EmailMessage implements Serializable {
    * 邮件附件
    *
    * @author ydsz-team
-   * @since 26.09.01
    * @since 26.09.01
    */
   @Data
@@ -106,7 +109,6 @@ public class EmailMessage implements Serializable {
    * 内联资源（用于 HTML 邮件中通过 cid: 引用）
    *
    * @author ydsz-team
-   * @since 26.09.01
    * @since 26.09.01
    */
   @Data

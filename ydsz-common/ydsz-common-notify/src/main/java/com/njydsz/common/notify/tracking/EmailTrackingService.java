@@ -108,7 +108,7 @@ public class EmailTrackingService {
     NotifyProperties.EmailConfig email = properties.getEmail();
     return email != null
         && email.getTracking() != null
-        && email.getTracking().isEnabled()
+        && email.getTracking().getIsEnabled()
         && StringUtils.hasText(email.getTracking().getPixelBaseUrl());
   }
 

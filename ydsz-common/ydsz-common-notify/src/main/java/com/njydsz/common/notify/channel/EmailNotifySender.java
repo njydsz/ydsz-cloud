@@ -389,7 +389,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     if (!isHtml || !StringUtils.hasText(content)) {
       return content;
     }
-    if (emailConfig().getSecurity() != null && emailConfig().getSecurity().isSanitizeHtml()) {
+    if (emailConfig().getSecurity() != null && emailConfig().getSecurity().getIsSanitizeHtml()) {
       String sanitized = EmailContentSanitizer.sanitize(content);
       if (!sanitized.equals(content)) {
         LOG.debug("HTML 邮件内容已清洗 XSS");
