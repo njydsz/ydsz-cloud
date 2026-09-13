@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.file.storage.platform;
+package com.njydsz.common.file.storage.platform;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
