@@ -3,23 +3,22 @@ package com.njydsz.nextwiki.server.channel;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.netty.codec.LengthFieldCodec;
+import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.server.AbstractNettyServer;
+import com.njydsz.common.netty.util.NettyBufferUtils;
+
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.netty.codec.LengthFieldCodec;
-import com.njydsz.common.netty.config.NettyProperties;
-import com.njydsz.common.netty.server.AbstractNettyServer;
 
 /**
  * NextWiki TCP 推送通道（基于 common-netty，P1-2 Netty 推送能力扩展）。
@@ -145,7 +144,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       eventData.put("payload", payload);
       eventData.put("timestamp", System.currentTimeMillis());
       String json = YdszJson.toJson(eventData);
-      ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
+      ByteBuf buf = NettyBufferUtils.toUtf8ByteBuf(json);
       channelGroupManager.broadcastToGroup(groupKey, buf);
       int count = channelGroupManager.groupSize(groupKey);
       log.info(
@@ -182,10 +181,8 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       eventData.put("eventType", eventType);
       eventData.put("payload", payload);
       eventData.put("timestamp", System.currentTimeMillis());
-      String json = YdszJson.toJson(eventData);
-      ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
+      ByteBuf buf = NettyBufferUtils.toUtf8ByteBuf(json);
       channelGroupManager.broadcastToGroup(groupKey, buf);
-      log.info("[NextWiki-PUSH] 用户推送: userId={} event={}", userId, eventType);
       return true;
     } catch (Exception e) {
       log.error("[NextWiki-PUSH] 用户推送异常: userId={} err={}", userId, e.getMessage(), e);

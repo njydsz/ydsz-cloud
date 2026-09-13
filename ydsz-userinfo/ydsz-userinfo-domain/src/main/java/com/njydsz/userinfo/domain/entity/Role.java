@@ -104,10 +104,4 @@ public class Role extends MpBaseEntity<String> {
    */
   private String dataScope;
 
-  /**
-   * 租户 ID。
-   *
-   * <p>{@code "0"} 表示平台级角色（所有租户可见）；其它值为租户级角色（仅对应租户可见）。
-   */
-  private String tenantId;
 }

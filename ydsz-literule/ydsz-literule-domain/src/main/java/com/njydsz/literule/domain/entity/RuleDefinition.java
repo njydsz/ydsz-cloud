@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -104,12 +103,11 @@ public class RuleDefinition extends MpBaseEntity<String> {
   private Boolean isDrilldownAvailable;
 
   /**
-   * 乐观锁版本号
+   * 业务版本号（非乐观锁）。
    *
-   * <p>并发更新规则时防止覆盖：UPDATE 自动追加 {@code WHERE version = #{oldVersion}}， 若记录已被其他事务修改，UPDATE 影响行数为
-   * 0，业务层应据此抛出乐观锁冲突异常。 SQL DDL：{@code version INTEGER NOT NULL DEFAULT 1}。
+   * <p>并发更新乐观锁由父类继承的 {@code revision} 字段（{@code @Version}）保障。 本字段仅记录业务层面的规则版本，初始值为 1。 SQL DDL：{@code version INTEGER NOT NULL DEFAULT 1}。
    */
-  @Version private Integer version;
+  private Integer version;
 
   /**
    * 生命周期状态

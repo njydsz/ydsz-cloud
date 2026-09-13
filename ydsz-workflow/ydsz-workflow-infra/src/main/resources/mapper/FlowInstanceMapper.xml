@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.workflow.infra.mapper.FlowInstanceMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.workflow.infra.entity.FlowInstance">
+    <resultMap id="BaseResultMap" type="com.njydsz.workflow.domain.entity.FlowInstance">
         <id column="id" property="id"/>
         <result column="flow_code" property="flowCode"/>
         <result column="flow_name" property="flowName"/>
@@ -33,6 +33,7 @@
         <result column="parent_instance_id" property="parentInstanceId"/>
         <result column="parent_node_code" property="parentNodeCode"/>
         <result column="due_at" property="dueAt"/>
+        <result column="reject_reason" property="rejectReason"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -40,7 +41,7 @@
         business_no, title, initiator_id, initiator_name, current_node_code, current_node_name,
         variable, flow_status, activity_status, start_at, end_at, duration_ms, status,
         created_by, created_at, updated_by, updated_at, is_deleted, tenant_id, provider_trace_id,
-        parent_instance_id, parent_node_code, due_at
+        parent_instance_id, parent_node_code, due_at, reject_reason
     </sql>
 
     <select id="selectByBusiness" resultMap="BaseResultMap">

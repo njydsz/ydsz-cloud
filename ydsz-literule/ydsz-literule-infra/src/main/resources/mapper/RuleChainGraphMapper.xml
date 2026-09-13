@@ -4,7 +4,8 @@
 
     <select id="selectByRuleCode" resultType="com.njydsz.literule.infra.entity.RuleChainGraph">
         SELECT id, rule_code, name, description, scenario, tenant_id, graph_version,
-               status, content_json, created_by, created_at, updated_by, updated_at
+               status, content_json, revision,
+               created_by, created_at, updated_by, updated_at
         FROM ydsz_rule_chain_graph
         WHERE rule_code = #{ruleCode} LIMIT 1
     </select>

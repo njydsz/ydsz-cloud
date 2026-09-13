@@ -3,6 +3,7 @@ package com.njydsz.generator.entity;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
  * 代码生成任务/历史领域实体。
@@ -51,5 +53,6 @@ public class GenHistory extends MpBaseIdEntity<Long> {
   /** 错误信息（失败时记录）。 */
   private String errorMessage;
   /** 生成参数 JSON 快照。 */
+  @TableField(typeHandler = JsonTypeHandler.class)
   private String genParams;
 }

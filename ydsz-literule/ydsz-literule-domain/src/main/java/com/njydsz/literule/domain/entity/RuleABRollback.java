@@ -1,7 +1,6 @@
 package com.njydsz.literule.domain.entity;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -56,7 +55,4 @@ public class RuleABRollback extends MpBaseEntity<String> {
 
   /** 通知状态：PENDING / SENT / FAILED（回滚后通知规则责任人） */
   private String notifyStatus;
-
-  /** 回滚时间 */
-  private LocalDateTime createdAt;
 }

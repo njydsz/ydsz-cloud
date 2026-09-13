@@ -12,7 +12,7 @@
         审计字段（created_at, created_by, updated_at, updated_by）同理由调用方设置，与单条 insert 保持一致。
     -->
     <insert id="insertBatch" parameterType="java.util.List">
-        INSERT INTO ydsz_config (
+        INSERT INTO ydsz_sys_config (
             id, config_group, config_key, config_value, value_type,
             default_value, description, is_public, sort,
             status, tenant_id, is_deleted, revision,
@@ -21,7 +21,7 @@
         <foreach collection="items" item="item" separator=",">
             (
                 #{item.id}, #{item.configGroup}, #{item.configKey}, #{item.configValue}, #{item.valueType},
-                #{item.defaultValue}, #{item.description}, #{item.public}, #{item.sort},
+                #{item.defaultValue}, #{item.description}, #{item.isPublic}, #{item.sort},
                 #{item.status}, #{item.tenantId}, #{item.isDeleted}, #{item.revision},
                 #{item.createdAt}, #{item.createdBy}, #{item.updatedAt}, #{item.updatedBy}
             )

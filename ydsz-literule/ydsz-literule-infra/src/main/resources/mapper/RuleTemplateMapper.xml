@@ -6,6 +6,7 @@
         id, template_code, template_name, category, description,
         condition_expression, severity_expression, default_severity,
         title_template, description_template, priority, scope, industry, tags,
+        tenant_id, revision, status, updated_at, updated_by,
         created_by, created_at
     </sql>
 

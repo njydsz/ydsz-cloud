@@ -57,7 +57,7 @@ public class FlowQuickComment extends MpBaseEntity<String> {
   private String commentType;
 
   /** 排序号（越小越靠前，默认 {@code 0}） */
-  private Integer sortNum;
+  private Integer sort;
 
   /** 使用次数（统计用，前端可按使用频率排序） */
   private Integer useCount;

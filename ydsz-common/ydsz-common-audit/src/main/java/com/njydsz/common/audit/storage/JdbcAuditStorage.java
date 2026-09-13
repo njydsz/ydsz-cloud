@@ -73,14 +73,16 @@ public class JdbcAuditStorage implements AuditWriter {
   private static final String INSERT_COLUMNS =
       "(id, audit_type, action, status, module, content, "
           + "business_no, operator_id, operator_name, ip_address, "
-          + "request_params, response_result, error_message, cost_time, "
+          + "request_params, response_result, diff_before_snapshot, diff_after_snapshot, "
+          + "error_message, cost_time, "
           + "app_key, tenant_id, trace_id, operation_time, created_at)";
 
   /** INSERT 语句命名参数值模板 */
   private static final String INSERT_VALUES =
       "VALUES (:id, :auditType, :action, :status, :module, :content, "
           + ":businessNo, :operatorId, :operatorName, :ipAddress, "
-          + ":requestParams, :responseResult, :errorMessage, :costTime, "
+          + ":requestParams, :responseResult, :diffBeforeSnapshot, :diffAfterSnapshot, "
+          + ":errorMessage, :costTime, "
           + ":appKey, :tenantId, :traceId, :operationTime, :createdAt)";
 
   /** 命名参数 JDBC 模板，用于执行参数化 SQL */
@@ -274,6 +276,8 @@ public class JdbcAuditStorage implements AuditWriter {
     params.put("ipAddress", auditLog.getIpAddress());
     params.put("requestParams", auditLog.getRequestParams());
     params.put("responseResult", auditLog.getResponseResult());
+    params.put("diffBeforeSnapshot", auditLog.getDiffBeforeSnapshot());
+    params.put("diffAfterSnapshot", auditLog.getDiffAfterSnapshot());
     params.put("errorMessage", auditLog.getErrorMessage());
     params.put("costTime", auditLog.getCostTime());
     params.put("appKey", auditLog.getAppKey());

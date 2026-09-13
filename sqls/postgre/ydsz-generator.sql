@@ -245,9 +245,9 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_column_meta (
     comment                  VARCHAR(255)             DEFAULT NULL,
     override_java_type       VARCHAR(64)              DEFAULT NULL,
     override_field_name      VARCHAR(64)              DEFAULT NULL,
-    dto_skipped              SMALLINT                 NOT NULL DEFAULT 0,
-    vo_skipped               SMALLINT                 NOT NULL DEFAULT 0,
-    query_skipped            SMALLINT                 NOT NULL DEFAULT 0,
+    is_dto_skipped           SMALLINT                 NOT NULL DEFAULT 0,
+    is_vo_skipped            SMALLINT                 NOT NULL DEFAULT 0,
+    is_query_skipped         SMALLINT                 NOT NULL DEFAULT 0,
     extra_config             JSONB                    DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_gen_column_meta PRIMARY KEY (id),
@@ -266,9 +266,9 @@ COMMENT ON COLUMN ydsz_gen_column_meta.is_pk IS '是否为主键（0=否 1=是�
 COMMENT ON COLUMN ydsz_gen_column_meta.comment IS '字段注释';
 COMMENT ON COLUMN ydsz_gen_column_meta.override_java_type IS '人工覆盖 Java 类型（为空则使用自动映射）';
 COMMENT ON COLUMN ydsz_gen_column_meta.override_field_name IS '人工覆盖字段名（为空则使用自动命名）';
-COMMENT ON COLUMN ydsz_gen_column_meta.dto_skipped IS '是否在 DTO 中跳过（0=否 1=是）';
-COMMENT ON COLUMN ydsz_gen_column_meta.vo_skipped IS '是否在 VO 中跳过（0=否 1=是）';
-COMMENT ON COLUMN ydsz_gen_column_meta.query_skipped IS '是否在 Query 中跳过（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_column_meta.is_dto_skipped IS '是否在 DTO 中跳过（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_column_meta.is_vo_skipped IS '是否在 VO 中跳过（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_column_meta.is_query_skipped IS '是否在 Query 中跳过（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_column_meta.extra_config IS '扩展配置 JSON（枚举值、校验规则等）';
 COMMENT ON COLUMN ydsz_gen_column_meta.created_at IS '创建时间';
 

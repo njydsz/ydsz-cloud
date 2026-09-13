@@ -70,6 +70,4 @@ public class OAuth2ApplicationEntity extends MpBaseEntity<String> {
   /** 应用图标 URL */
   private String iconUrl;
 
-  /** 创建者用户 ID */
-  private String createdBy;
 }

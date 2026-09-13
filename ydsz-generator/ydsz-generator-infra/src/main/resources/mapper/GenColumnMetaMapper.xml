@@ -13,14 +13,14 @@
     <result column="comment"             property="comment"/>
     <result column="override_java_type"  property="overrideJavaType"/>
     <result column="override_field_name" property="overrideFieldName"/>
-    <result column="dto_skipped"        property="isDtoSkipped"/>
-    <result column="vo_skipped"         property="isVoSkipped"/>
-    <result column="query_skipped"      property="isQuerySkipped"/>
+    <result column="is_dto_skipped"     property="isDtoSkipped"/>
+    <result column="is_vo_skipped"      property="isVoSkipped"/>
+    <result column="is_query_skipped"   property="isQuerySkipped"/>
     <result column="extra_config"        property="extraConfig"/>
   </resultMap>
 
   <select id="selectByTableMetaIdOrderByIdAsc" resultMap="BaseResultMap">
-    SELECT id, table_meta_id, column_name, data_type, column_size, is_nullable, is_pk, comment, override_java_type, override_field_name, dto_skipped, vo_skipped, query_skipped, extra_config
+    SELECT id, table_meta_id, column_name, data_type, column_size, is_nullable, is_pk, comment, override_java_type, override_field_name, is_dto_skipped, is_vo_skipped, is_query_skipped, extra_config
     FROM ydsz_gen_column_meta
     WHERE table_meta_id = #{tableMetaId}
     ORDER BY id ASC

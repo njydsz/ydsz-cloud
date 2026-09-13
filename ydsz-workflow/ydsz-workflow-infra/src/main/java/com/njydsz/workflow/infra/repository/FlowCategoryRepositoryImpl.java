@@ -79,7 +79,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
             new LambdaQueryWrapper<FlowCategory>()
                 .eq(tenantId != null, FlowCategory::getTenantId, tenantId)
                 .eq(FlowCategory::getIsDeleted, 0)
-                .orderByAsc(FlowCategory::getSortNum)));
+                .orderByAsc(FlowCategory::getSort)));
   }
 
   /** {@inheritDoc} */
@@ -90,7 +90,7 @@ public class FlowCategoryRepositoryImpl implements FlowCategoryRepository {
             new LambdaQueryWrapper<FlowCategory>()
                 .eq(FlowCategory::getParentId, parentId)
                 .eq(FlowCategory::getIsDeleted, 0)
-                .orderByAsc(FlowCategory::getSortNum)));
+                .orderByAsc(FlowCategory::getSort)));
   }
 
   /** {@inheritDoc} */

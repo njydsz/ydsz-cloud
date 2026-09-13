@@ -229,6 +229,8 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
     cpu_usage                NUMERIC(20,6)            DEFAULT NULL,
     mem_usage_pct            NUMERIC(20,6)            DEFAULT NULL,
     running_count            INTEGER                  NOT NULL DEFAULT 0,
+    response_time_ms         BIGINT                   DEFAULT 0,
+    consecutive_failures     INTEGER                  NOT NULL DEFAULT 0,
     tags                     JSONB                    DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
@@ -253,6 +255,8 @@ COMMENT ON COLUMN ydsz_job_node.node_status IS '节点状态: ONLINE 在线 / OF
 COMMENT ON COLUMN ydsz_job_node.cpu_usage IS 'CPU 使用率（百分比，0-100）';
 COMMENT ON COLUMN ydsz_job_node.mem_usage_pct IS '内存使用率（百分比，0-100）';
 COMMENT ON COLUMN ydsz_job_node.running_count IS '当前正在执行的任务数';
+COMMENT ON COLUMN ydsz_job_node.response_time_ms IS '加权平均响应时长（毫秒）：DB ping 延迟的指数移动平均，用于节点健康评估';
+COMMENT ON COLUMN ydsz_job_node.consecutive_failures IS '连续失败次数：心跳/健康检查连续失败次数，超过阈值触发自动隔离';
 COMMENT ON COLUMN ydsz_job_node.tags IS '节点标签 JSON（用于任务亲和性选择）';
 COMMENT ON COLUMN ydsz_job_node.status IS '状态标识';
 COMMENT ON COLUMN ydsz_job_node.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';

@@ -31,9 +31,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuppressWarnings("unchecked")
 public class AuthPolicy extends MpBaseEntity<String> {
 
-  /** 租户 ID（为空表示全局默认策略） */
-  private String tenantId;
-
   /** 策略名称 */
   private String name;
 

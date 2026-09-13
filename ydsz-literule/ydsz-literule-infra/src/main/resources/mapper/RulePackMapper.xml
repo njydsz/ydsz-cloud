@@ -6,6 +6,7 @@
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
                description, author, download_count, rating, is_enabled, is_official,
+               tenant_id, revision,
                created_by, created_at, updated_by, updated_at
         FROM ydsz_rule_pack
         WHERE pack_code = #{packCode}
@@ -16,6 +17,7 @@
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
                description, author, download_count, rating, is_enabled, is_official,
+               tenant_id, revision,
                created_by, created_at, updated_by, updated_at
         FROM ydsz_rule_pack
         WHERE pack_code = #{packCode} AND pack_version = #{packVersion}
@@ -26,6 +28,7 @@
         SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
                rule_snapshots, previous_version,
                description, author, download_count, rating, is_enabled, is_official,
+               tenant_id, revision,
                created_by, created_at, updated_by, updated_at
         FROM ydsz_rule_pack
         WHERE industry = #{industry} AND is_enabled = TRUE

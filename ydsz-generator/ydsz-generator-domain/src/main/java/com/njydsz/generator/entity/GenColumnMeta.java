@@ -48,13 +48,13 @@ public class GenColumnMeta extends MpBaseIdEntity<Long> {
   /** 覆盖字段名。 */
   private String overrideFieldName;
   /** DTO 跳过标记。 */
-  @TableField("dto_skipped")
+  @TableField("is_dto_skipped")
   private Boolean isDtoSkipped;
   /** VO 跳过标记。 */
-  @TableField("vo_skipped")
+  @TableField("is_vo_skipped")
   private Boolean isVoSkipped;
   /** Query 跳过标记。 */
-  @TableField("query_skipped")
+  @TableField("is_query_skipped")
   private Boolean isQuerySkipped;
   /** 扩展配置 JSON。 */
   private String extraConfig;

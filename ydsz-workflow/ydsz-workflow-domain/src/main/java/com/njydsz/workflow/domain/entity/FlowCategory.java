@@ -54,7 +54,7 @@ public class FlowCategory extends MpBaseEntity<String> {
   private String parentId;
 
   /** 排序号（越小越靠前） */
-  private Integer sortNum;
+  private Integer sort;
 
   /** 图标（前端展示用，如 Element Plus icon 名称） */
   private String icon;

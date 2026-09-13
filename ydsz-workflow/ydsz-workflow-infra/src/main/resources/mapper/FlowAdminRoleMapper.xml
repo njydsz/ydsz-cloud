@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.workflow.infra.mapper.FlowAdminRoleMapper">
 
-    <select id="selectByUserId" resultType="com.njydsz.workflow.infra.entity.FlowAdminRole">
+    <select id="selectByUserId" resultType="com.njydsz.workflow.domain.entity.FlowAdminRole">
         SELECT id, user_id, role_code, is_enabled AS isEnabled, granted_by, granted_at, expire_at, tenant_id, created_at, created_by, updated_at, updated_by, is_deleted, revision
         FROM ydsz_flow_admin_role
         WHERE user_id = #{userId}
@@ -11,7 +11,7 @@
         ORDER BY created_at DESC
     </select>
 
-    <select id="selectByUserAndRole" resultType="com.njydsz.workflow.infra.entity.FlowAdminRole">
+    <select id="selectByUserAndRole" resultType="com.njydsz.workflow.domain.entity.FlowAdminRole">
         SELECT id, user_id, role_code, is_enabled AS isEnabled, granted_by, granted_at, expire_at, tenant_id, created_at, created_by, updated_at, updated_by, is_deleted, revision
         FROM ydsz_flow_admin_role
         WHERE user_id = #{userId}
