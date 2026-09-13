@@ -133,8 +133,12 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     tenant_id           VARCHAR(64)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
     created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '请求创建时间',
     resolved_at         DATETIME        DEFAULT NULL COMMENT '审批完成时间',
+    created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人 ID（CombinedFieldFillInterceptor 自动填充）',
+    updated_by          VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）',
+    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
 
     -- 索引
+    INDEX idx_approval_tenant_created (tenant_id, created_at),
     INDEX idx_approval_conversation (conversation_id),
     INDEX idx_approval_trace (trace_id),
     INDEX idx_approval_status (status),

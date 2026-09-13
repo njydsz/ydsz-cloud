@@ -11,7 +11,7 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供统一搜索 SPI、多引擎策略、索引同步、搜索建议、业务重排、搜索分析与质量追踪能力 |
-| **依赖** | common-core、common-json、common-domain、common-util、common-exception；可选依赖 common-jdbc、common-cache、common-redis、common-docs、spring-context、spring-web、spring-jdbc、spring-boot-autoconfigure、spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api、resilience4j-circuitbreaker、apm-toolkit-trace、swagger-annotations-jakarta |
+| **依赖** | common-core、common-json、common-domain、common-util、common-exception；可选依赖 common-jdbc、common-cache、common-redis、spring-context、spring-web、spring-jdbc、spring-boot-autoconfigure、spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api、resilience4j-circuitbreaker、apm-toolkit-trace、swagger-annotations-jakarta |
 | **版本** | 26.09.01 |
 
 ## 核心能力

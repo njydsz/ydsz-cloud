@@ -20,6 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminService;
 import com.njydsz.common.event.gateway.EventPublishGateway;
+import com.njydsz.common.event.gateway.KafkaEventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
 import com.njydsz.common.event.health.OutboxHealthIndicator;
@@ -216,40 +217,79 @@ public class EventAutoConfiguration {
 
   // ==================== 嵌套配置：RocketMQ 网关 ====================
 
-  /**
-   * RocketMQ 网关配置（嵌套配置类）
-   *
-   * <p>通过嵌套 {@code @Configuration} 类实现条件装配—— {@code @ConditionalOnClass} /
-   * {@code @ConditionalOnBean} 会正常生效， 避免 {@code @Import} 导致的条件注解失效问题。
-   *
-   * <p>封装 RocketMQ 生产者 Bean 注册逻辑，支持事务消息、顺序消息、延迟消息。
-   *
-   * @author ydsz-team
-   * @since 26.09.01
-   * @since 26.09.01 由独立顶层配置类改为嵌套配置类
-   */
-  @Configuration
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
-  @ConditionalOnClass(name = "org.apache.rocketmq.spring.core.RocketMQTemplate")
-  // CHECKSTYLE.ON: RegexpSinglelineJava
-  @ConditionalOnBean(type = "org.apache.rocketmq.spring.core.RocketMQTemplate")
-  public static class RocketMqGatewayConfiguration {
+    /**
+     * RocketMQ 网关配置（嵌套配置类）
+     *
+     * <p>通过嵌套 {@code @Configuration} 类实现条件装配—— {@code @ConditionalOnClass} /
+     * {@code @ConditionalOnBean} 会正常生效， 避免 {@code @Import} 导致的条件注解失效问题。
+     *
+     * <p>封装 RocketMQ 生产者 Bean 注册逻辑，支持事务消息、顺序消息、延迟消息。
+     *
+     * @author ydsz-team
+     * @since 26.09.01
+     * @since 26.09.01 由独立顶层配置类改为嵌套配置类
+     */
+    @Configuration
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
+    @ConditionalOnClass(name = "org.apache.rocketmq.spring.core.RocketMQTemplate")
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    @ConditionalOnBean(type = "org.apache.rocketmq.spring.core.RocketMQTemplate")
+    public static class RocketMqGatewayConfiguration {
 
-    /** 日志实例 */
-    private static final Logger LOG = LoggerFactory.getLogger(RocketMqGatewayConfiguration.class);
+      /** 日志实例 */
+      private static final Logger LOG = LoggerFactory.getLogger(RocketMqGatewayConfiguration.class);
+
+      /**
+       * 注册 RocketMQ 事件投递网关
+       *
+       * @param rocketMQTemplate RocketMQ 模板（由 rocketmq-spring-boot-starter 自动注册）
+       * @return RocketMQ 网关实例
+       */
+      @Bean
+      @ConditionalOnMissingBean(EventPublishGateway.class)
+      public EventPublishGateway rocketMqEventPublishGateway(
+          RocketMQTemplate rocketMQTemplate) {
+        LOG.info("RocketMqEventPublishGateway registered: topic=ydsz-outbox-events");
+        return new RocketMqEventPublishGateway(rocketMQTemplate, null);
+      }
+    }
+
+    // ==================== 嵌套配置：Kafka 网关 ====================
 
     /**
-     * 注册 RocketMQ 事件投递网关
+     * Kafka 网关配置（嵌套配置类）。
      *
-     * @param rocketMQTemplate RocketMQ 模板（由 rocketmq-spring-boot-starter 自动注册）
-     * @return RocketMQ 网关实例
+     * <p>通过嵌套 {@code @Configuration} 类实现条件装配——当 classpath 存在 Spring Kafka 且容器中存在
+     * KafkaTemplate Bean 时自动注册 KafkaEventPublishGateway。
+     *
+     * <p>与 RocketMqGatewayConfiguration 互斥：Spring 容器中优先使用已存在的 EventPublishGateway Bean，
+     * 当 KafkaTemplate 和 RocketMQTemplate 同时存在时，取决于 Bean 注册顺序（建议使用时仅引入一种 MQ 客户端）。
+     *
+     * @author ydsz-team
+     * @since 26.09.13
      */
-    @Bean
-    @ConditionalOnMissingBean(EventPublishGateway.class)
-    public EventPublishGateway rocketMqEventPublishGateway(
-        RocketMQTemplate rocketMQTemplate) {
-      LOG.info("RocketMqEventPublishGateway registered: topic=ydsz-outbox-events");
-      return new RocketMqEventPublishGateway(rocketMQTemplate, null);
+    @Configuration
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
+    @ConditionalOnClass(name = "org.springframework.kafka.core.KafkaTemplate")
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    @ConditionalOnBean(org.springframework.kafka.core.KafkaTemplate.class)
+    public static class KafkaGatewayConfiguration {
+
+      /** 日志实例 */
+      private static final Logger LOG = LoggerFactory.getLogger(KafkaGatewayConfiguration.class);
+
+      /**
+       * 注册 Kafka 事件投递网关
+       *
+       * @param kafkaTemplate Kafka 模板（由 spring-kafka 自动注册）
+       * @return Kafka 网关实例
+       */
+      @Bean
+      @ConditionalOnMissingBean(EventPublishGateway.class)
+      public EventPublishGateway kafkaEventPublishGateway(
+          org.springframework.kafka.core.KafkaTemplate<String, String> kafkaTemplate) {
+        LOG.info("KafkaEventPublishGateway registered: topic=ydsz-outbox-events");
+        return new KafkaEventPublishGateway(kafkaTemplate, null);
+      }
     }
   }
-}

@@ -109,6 +109,17 @@
         </dependency>
 
 
+        <!--
+            Spring Kafka（optional，编译期可见，运行期不强制）
+            提供 KafkaTemplate 供 KafkaEventPublishGateway 使用。
+            仅当使用方引入 spring-kafka 时才自动装配 Kafka 网关。
+        -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- JSON 模块 -->
         <dependency>
             <groupId>com.njydsz</groupId>

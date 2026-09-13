@@ -349,7 +349,7 @@ public class SearchApplicationService {
             .page(page)
             .pageSize(pageSize)
             .userId(userId)
-            .highlight(true)
+            .isHighlight(true)
             .filters(filters != null ? filters : new ArrayList<>(COLLECTION_CAPACITY))
             .build();
 
@@ -602,7 +602,7 @@ public class SearchApplicationService {
         .page(searchQuery.getPage())
         .pageSize(searchQuery.getPageSize())
         .userId(userId)
-        .highlight(true)
+        .isHighlight(true)
         .filters(filters)
         .build();
 

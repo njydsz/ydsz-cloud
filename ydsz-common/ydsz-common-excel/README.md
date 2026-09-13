@@ -166,8 +166,8 @@ ydsz:
 ### 3. 直接使用
 
 ```java
-import com.njydsz.common.core.excel.core.ExcelFacade;
-import com.njydsz.common.core.excel.annotation.ExcelProperty;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.annotation.ExcelProperty;
 
 // 数据读取（注解映射）
 @Data

@@ -200,6 +200,9 @@ CREATE TABLE ydsz_agt_approval (
     tenant_id                VARCHAR2(64 CHAR)        NOT NULL DEFAULT '0',
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at              TIMESTAMP                DEFAULT NULL,
+    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_agt_approval PRIMARY KEY (id)
 );
 
@@ -215,7 +218,11 @@ COMMENT ON COLUMN ydsz_agt_approval.comment IS '审批意见';
 COMMENT ON COLUMN ydsz_agt_approval.tenant_id IS '租户 ID';
 COMMENT ON COLUMN ydsz_agt_approval.created_at IS '请求创建时间';
 COMMENT ON COLUMN ydsz_agt_approval.resolved_at IS '审批完成时间';
+COMMENT ON COLUMN ydsz_agt_approval.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydsz_agt_approval.updated_by IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydsz_agt_approval.updated_at IS '最后更新时间';
 
+CREATE INDEX idx_ydsz_agt_approval_tenant_created ON ydsz_agt_approval (tenant_id, created_at);
 CREATE INDEX idx_ydsz_agt_approval_approval_conversation ON ydsz_agt_approval (conversation_id);
 CREATE INDEX idx_ydsz_agt_approval_approval_trace ON ydsz_agt_approval (trace_id);
 CREATE INDEX idx_ydsz_agt_approval_approval_status ON ydsz_agt_approval (status);

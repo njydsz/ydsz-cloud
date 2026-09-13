@@ -2,7 +2,7 @@
 
 > YDSZ 移动端 App 后端服务基座模块（L6 应用层）
 
-继承 `common-base` 的所有抽象能力，叠加 App 认证（`AppAuthFilter`）、请求体缓存（`AppContentCachingFilter`）、请求追踪（`AppRequestIdResponseFilter`）、健康检查（`AppHealthIndicator`）、指标采集（`AppMetrics`）以及作用域隔离（`@AppApi`）等移动端特有配置。本模块与 `common-web` 是两个**平行**的应用层入口，后端微服务**统一使用 `common-web`**，本模块**暂无消费方**，为未来移动端项目预留。
+继承 `common-base` 的所有抽象能力，叠加 App 认证（`AppAuthFilter`）、请求体缓存（`AppContentCachingFilter`）、请求追踪（`AppRequestIdResponseFilter`）、健康检查（`AppHealthIndicator`）、指标采集（`AppMetrics`）以及作用域隔离（`@AppApi`）等移动端特有配置。本模块与 `common-web` 是两个**平行**的应用层入口，后端微服务**统一使用 `common-web`**，当前已有 7 个业务模块的 app 子模块消费（ydsz-nextwiki-app、ydsz-userinfo-app、ydsz-system-app、ydsz-cronjob-app、ydsz-agent-app、ydsz-message-app、ydsz-literule-app），处于预留/脚手架阶段。
 
 ## 模块定位
 
@@ -231,7 +231,7 @@ com.njydsz.common.app.config.RequestIdGeneratorAutoConfiguration
 5. **认证失败原因分类**：`AppAuthFilter.resolveFailureReason` 从异常类名推断失败原因标签，用于指标 `reason` 标签的取值规范化。
 6. **`RequestIdGenerator` 委托 `SnowflakeUtils`**：分布式部署中应正确配置 workerId 以避免 ID 冲突。
 7. **请求体缓存跳过 multipart**：自动跳过 `multipart/` 请求，避免大文件上传 OOM。默认缓存容量 2MB，超过截断丢弃。
-8. **暂无消费方**：本模块为未来移动端项目预留，暂无业务微服务实际引入；如有移动端后端项目立项，可直接引入使用。
+8. **消费方**：当前已有 7 个业务模块的 app 子模块消费（ydsz-nextwiki-app、ydsz-userinfo-app、ydsz-system-app、ydsz-cronjob-app、ydsz-agent-app、ydsz-message-app、ydsz-literule-app），处于预留/脚手架阶段。其中 nextwiki-app 和 userinfo-app 已配置完整启动入口，其余 5 个为脚手架态。
 
 ## 变更记录
 
