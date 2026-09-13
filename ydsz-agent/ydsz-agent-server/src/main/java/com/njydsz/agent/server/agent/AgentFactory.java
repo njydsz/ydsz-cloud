@@ -169,7 +169,8 @@ public class AgentFactory {
               costAnalysisService,
               guardrailService,
               promptTemplateProvider,
-              ragService);
+              ragService,
+              middlewareChain);
       case "RAG" ->
           // RAG 模式：检索增强生成，复用 ReAct 执行器（ragService 不为 null 时自动启用知识增强）
           new ReActAgentExecutor(
@@ -182,7 +183,8 @@ public class AgentFactory {
               costAnalysisService,
               guardrailService,
               promptTemplateProvider,
-              ragService);
+              ragService,
+              middlewareChain);
       case "CHAT" ->
           // Simple 模式：单轮对话，无工具调用
           new SimpleAgentExecutor(
@@ -193,7 +195,8 @@ public class AgentFactory {
               agentMetrics,
               costAnalysisService,
               guardrailService,
-              promptTemplateProvider);
+              promptTemplateProvider,
+              middlewareChain);
       case "PLAN_EXECUTE", "WORKFLOW" ->
           // Plan-Execute 模式：先规划后执行，复杂任务分解
           new PlanExecuteAgentExecutor(
@@ -205,7 +208,8 @@ public class AgentFactory {
               agentMetrics,
               costAnalysisService,
               guardrailService,
-              promptTemplateProvider);
+              promptTemplateProvider,
+              middlewareChain);
       case "SUPERVISOR" ->
           // Supervisor 模式：主管-子 Agent 协同（仅首次创建时初始化，后续走缓存）
           supervisorExecutor;
@@ -224,7 +228,8 @@ public class AgentFactory {
             costAnalysisService,
             guardrailService,
             promptTemplateProvider,
-            ragService);
+            ragService,
+            middlewareChain);
       }
     };
   }

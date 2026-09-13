@@ -21,6 +21,9 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
+import com.njydsz.agent.domain.middleware.AgentMiddleware;
+import com.njydsz.agent.domain.middleware.MiddlewareChain;
+import com.njydsz.agent.domain.middleware.MiddlewareContext;
 import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.tool.ToolRegistry;
@@ -85,7 +88,8 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
-      RagService ragService) {
+      RagService ragService,
+      MiddlewareChain middlewareChain) {
     super(
         llmClient,
         memory,
@@ -94,7 +98,8 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
         agentMetrics,
         costAnalysisService,
         guardrailService,
-        promptTemplateProvider);
+        promptTemplateProvider,
+        middlewareChain);
     this.toolRegistry = toolRegistry;
     this.ragService = ragService;
   }
@@ -102,26 +107,37 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   @Override
   public ChatResponse execute(AgentExecutionRequest request) {
     String convId = extractConvId(request);
-    String traceId = startTrace(convId, "REACT");
+    MiddlewareContext mwContext = createMiddlewareContext(request);
+    // 启动中间件链（onAgentStart 钩子 — 含链路追踪启动）
+    notifyAgentStart(mwContext);
+    String traceId = mwContext.getTraceId() != null ? mwContext.getTraceId() : startTrace(convId, "REACT");
+
     log.info(
         "[ReAct] 开始执行: convId={}, traceId={}, maxIterations={}",
         convId,
         traceId,
         request.getMaxIterations());
 
-    String userInput = applyInputGuardrails(request.getUserInput());
+    // 优先使用中间件输入护栏，回退到 GuardrailService（向后兼容）
+    String userInput = executeInputGuardrails(mwContext, request.getUserInput());
     if (userInput == null) {
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
+      mwContext.setFinished(true);
+      notifyAgentEnd(mwContext);
       return buildRejectedResponse("输入被护栏拒绝");
     }
 
     List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
-    messages.add(ChatMessage.system(buildSystemPrompt(request, userInput)));
+    String systemPrompt = buildSystemPrompt(request, userInput);
+    messages.add(ChatMessage.system(systemPrompt));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
 
+    // 通知系统 Prompt 构建（onSystemPrompt 钩子）
+    mwContext.setSystemPrompt(systemPrompt);
+    notifySystemPrompt(mwContext);
+
     TokenUsage totalUsage = TokenUsage.zero();
-    // P2 优化：工具定义按请求缓存，避免每轮迭代重复收集
     List<ToolDefinition> toolDefinitions = new ArrayList<>(toolRegistry.getToolDefinitions());
 
     for (int i = 0; i < request.getMaxIterations(); i++) {
@@ -134,24 +150,26 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
               .tools(toolDefinitions)
               .build();
 
-      long llmStart = System.currentTimeMillis();
-      ChatResponse response;
-      try {
-        response = llmClient.chat(llmRequest);
-      } catch (Exception e) {
-        recordLlmError(traceId, "REACT", request, e, llmStart);
-        throw e;
+      // 设置 LLM 请求到中间件上下文（onReasoning 钩子可审查/修改）
+      mwContext.setLlmRequest(llmRequest);
+      notifyReasoning(mwContext);
+      // 使用中间件链执行 LLM 调用（onModelCall 洋葱模型 — 支持缓存/限流/指标）
+      ChatResponse response = executeLlmCall(mwContext, () -> llmClient.chat(llmRequest));
+      // 同步路径中间件链不会自动设置 llmResponse，需手动补设
+      if (mwContext.getLlmResponse() == null) {
+        mwContext.setLlmResponse(response);
       }
 
       if (response.getUsage() != null) {
         totalUsage = totalUsage.add(response.getUsage());
       }
-      recordLlmSuccess(convId, traceId, "ReAct iteration " + (i + 1), messages, response, llmStart);
 
       if (!response.hasToolCalls()) {
         String output = applyOutputGuardrails(response.getContent());
         saveConversation(convId, userInput, output, response.getUsage());
         traceRecorder.endTrace(traceId, "SUCCESS");
+        mwContext.setFinished(true);
+        notifyAgentEnd(mwContext);
         log.info(
             "[ReAct] 完成: convId={}, iterations={}, tokens={}",
             convId,
@@ -167,47 +185,57 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       }
 
       messages.add(response.getMessage());
-      // 白名单过滤 + 并发执行工具（保持原始顺序回填结果）
+      // 并发执行工具并获取结果
       List<ToolCall> allowedCalls = filterAllowedTools(request, response.getToolCalls());
       Map<String, String> toolResults = executeToolsConcurrently(traceId, allowedCalls);
       for (ToolCall toolCall : allowedCalls) {
-        ChatMessage toolMsg =
-            ChatMessage.tool(
-                toolCall.getId(),
-                toolResults.getOrDefault(toolCall.getId(), "{}"),
-                convId);
+        String result = toolResults.getOrDefault(toolCall.getId(), "{}");
+        // 通知工具观察（onObservation 钩子）
+        mwContext.setToolCall(toolCall);
+        mwContext.setToolResult(result);
+        notifyObservation(mwContext);
+        ChatMessage toolMsg = ChatMessage.tool(toolCall.getId(), result, convId);
         messages.add(toolMsg);
       }
     }
 
     log.warn("[ReAct] 超过最大迭代次数: convId={}", convId);
     traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
+    mwContext.setFinished(true);
+    notifyAgentEnd(mwContext);
     return buildMaxIterationsResponse(convId, totalUsage);
   }
 
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
     String convId = extractConvId(request);
-    String traceId = startTrace(convId, "REACT_STREAM");
+    MiddlewareContext mwContext = createMiddlewareContext(request);
+    notifyAgentStart(mwContext);
+    String traceId = mwContext.getTraceId() != null ? mwContext.getTraceId() : startTrace(convId, "REACT_STREAM");
     log.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
     TokenUsage totalUsage = TokenUsage.zero();
 
-    String userInput = applyInputGuardrails(request.getUserInput());
+    String userInput = executeInputGuardrails(mwContext, request.getUserInput());
     if (userInput == null) {
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
+      mwContext.setFinished(true);
+      notifyAgentEnd(mwContext);
       emitRejectionStream(responseId, chunkConsumer);
       return;
     }
 
     List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
-    messages.add(ChatMessage.system(buildSystemPrompt(request, userInput)));
+    String systemPrompt = buildSystemPrompt(request, userInput);
+    messages.add(ChatMessage.system(systemPrompt));
     messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
     messages.add(ChatMessage.user(userInput, convId));
 
-    // P2 优化：工具定义按请求缓存，避免每轮迭代重复收集
+    mwContext.setSystemPrompt(systemPrompt);
+    notifySystemPrompt(mwContext);
+
     List<ToolDefinition> toolDefinitions = new ArrayList<>(toolRegistry.getToolDefinitions());
 
     for (int i = 0; i < request.getMaxIterations(); i++) {
@@ -220,24 +248,17 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
               .tools(toolDefinitions)
               .build();
 
-      long llmStart = System.currentTimeMillis();
-      ChatResponse response;
-      try {
-        response = llmClient.chat(llmRequest);
-      } catch (Exception e) {
-        recordLlmError(traceId, "REACT_STREAM", request, e, llmStart);
-        chunkConsumer.accept(
-            ChatChunk.content(responseId, model, "[错误] LLM 调用失败: " + e.getMessage()));
-        chunkConsumer.accept(ChatChunk.finish(responseId, model, "error", null));
-        throw e;
+      mwContext.setLlmRequest(llmRequest);
+      notifyReasoning(mwContext);
+      ChatResponse response = executeLlmCall(mwContext, () -> llmClient.chat(llmRequest));
+      if (mwContext.getLlmResponse() == null) {
+        mwContext.setLlmResponse(response);
       }
 
       if (response.getUsage() != null) {
         totalUsage = totalUsage.add(response.getUsage());
       }
-      recordLlmSuccess(convId, traceId, "ReAct iteration " + (i + 1), messages, response, llmStart);
 
-      // P0-6: 推送 LLM 回复内容（Thought / Final Answer）
       if (response.getContent() != null && !response.getContent().isBlank()) {
         String prefix = i > 0 ? "\n\n[思考" + (i + 1) + "] " : "";
         chunkConsumer.accept(ChatChunk.content(responseId, model, prefix + response.getContent()));
@@ -247,30 +268,34 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
         String output = applyOutputGuardrails(response.getContent());
         saveConversation(convId, userInput, output, totalUsage);
         traceRecorder.endTrace(traceId, "SUCCESS");
+        mwContext.setFinished(true);
+        notifyAgentEnd(mwContext);
         chunkConsumer.accept(ChatChunk.finish(responseId, model, "stop", totalUsage));
         return;
       }
 
-      // 推送工具调用事件
       messages.add(response.getMessage());
       List<ToolCall> allowedCalls = filterAllowedTools(request, response.getToolCalls());
       for (ToolCall toolCall : allowedCalls) {
         chunkConsumer.accept(
             ChatChunk.content(responseId, model, "\n\n[工具调用] " + toolCall.getName() + "..."));
       }
-      // 并发执行工具，保持原始顺序回填结果
       Map<String, String> toolResults = executeToolsConcurrently(traceId, allowedCalls);
       for (ToolCall toolCall : allowedCalls) {
         String result = toolResults.getOrDefault(toolCall.getId(), "{}");
+        mwContext.setToolCall(toolCall);
+        mwContext.setToolResult(result);
+        notifyObservation(mwContext);
         chunkConsumer.accept(
             ChatChunk.content(responseId, model, "\n[工具结果] " + truncateResult(result)));
-        ChatMessage toolMsg = ChatMessage.tool(toolCall.getId(), result, convId);
-        messages.add(toolMsg);
+        messages.add(ChatMessage.tool(toolCall.getId(), result, convId));
       }
     }
 
     log.warn("[ReAct-Stream] 超过最大迭代次数: convId={}", convId);
     traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
+    mwContext.setFinished(true);
+    notifyAgentEnd(mwContext);
     chunkConsumer.accept(ChatChunk.content(responseId, model, "\n\n抱歉，我已达到最大推理次数限制，无法完成此任务。"));
     chunkConsumer.accept(ChatChunk.finish(responseId, model, "max_iterations", totalUsage));
   }
@@ -361,6 +386,24 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   public boolean supports(String type) {
     return "react".equalsIgnoreCase(type) || "react_agent".equalsIgnoreCase(type)
         || "rag".equalsIgnoreCase(type);
+  }
+
+  /**
+   * 执行输入护栏（优先中间件，回退 GuardrailService）。
+   *
+   * @param mwContext 中间件上下文
+   * @param userInput 用户原始输入
+   * @return 脱敏后的输入（或 null 表示被拒绝）
+   */
+  private String executeInputGuardrails(MiddlewareContext mwContext, String userInput) {
+    // 当中间件链包含输入护栏中间件时，护栏逻辑在 onReasoning 钩子中执行（通过抛异常中断）。
+    // 此处为向后兼容保留 GuardrailService 调用路径。
+    try {
+      return applyInputGuardrails(userInput);
+    } catch (Exception e) {
+      mwContext.setError(e);
+      return null;
+    }
   }
 
   /**

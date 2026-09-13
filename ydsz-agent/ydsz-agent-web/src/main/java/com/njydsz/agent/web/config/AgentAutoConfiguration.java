@@ -512,7 +512,8 @@ public class AgentAutoConfiguration {
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
       @Lazy DagOrchestrationExecutor dagExecutor,
-      @Lazy SupervisorAgentExecutor supervisorExecutor) {
+      @Lazy SupervisorAgentExecutor supervisorExecutor,
+      ObjectProvider<MiddlewareChain> middlewareChainProvider) {
     return new AgentFactory(
         llmClient,
         memory,
@@ -525,7 +526,8 @@ public class AgentAutoConfiguration {
         guardrailService,
         promptTemplateProvider,
         dagExecutor,
-        supervisorExecutor);
+        supervisorExecutor,
+        middlewareChainProvider);
   }
 
   /**
