@@ -141,9 +141,12 @@
     <suppress files="DefaultRuleEngine\.java|LiteExprFunction\.java|NacosRuleSource\.java|ZookeeperRuleSource\.java|RuleConfigProvider\.java"
               checks="IllegalThrows"/>
 
-    <!-- literule：配置类注解字符串（@ConditionalOnClass 类名字符串）与类型名工具
-         （java.lang./java.util. 前缀剔除）中的包名属于字符串字面量语义而非代码体 FQN，RegexpSinglelineJava 豁免 -->
+<!-- literule：配置类注解字符串（@ConditionalOnClass 类名字符串）与类型名工具
+     （java.lang./java.util. 前缀剔除）中的包名属于字符串字面量语义而非代码体 FQN，RegexpSinglelineJava 豁免 -->
     <suppress files="LiteRuleAutoConfiguration\.java|VariableDefinition\.java" checks="RegexpSinglelineJava"/>
+
+    <!-- socket：P1-6 @ConditionalOnClass(name=...) 字符串形态 + FQN 强转消除编译期强引用，包名属字符串字面量语义，RegexpSinglelineJava 豁免 -->
+    <suppress files="WebSocketAutoConfiguration\.java|WebSocketClusterAutoConfiguration\.java" checks="RegexpSinglelineJava"/>
 
     <!-- literule RuleDebugger：ThreadLocal CURRENT_RULE_CODE 在 finally 块中已 remove（调试会话结束清理），
          声明行被 RegexpSinglelineJava 正则匹配属规则误报，豁免 ThreadLocal 检测 -->

@@ -294,12 +294,12 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
     channel                  VARCHAR(32)              NOT NULL,
     biz_type                 VARCHAR(64)              NOT NULL DEFAULT '__DEFAULT__',
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
-    dnd_enabled              SMALLINT                 NOT NULL DEFAULT 0,
+    is_dnd_enabled              SMALLINT                 NOT NULL DEFAULT 0,
     dnd_start                VARCHAR(8)               DEFAULT NULL,
     dnd_end                  VARCHAR(8)               DEFAULT NULL,
     daily_limit              INTEGER                  DEFAULT NULL,
     hourly_limit             INTEGER                  DEFAULT NULL,
-    digest_enabled           SMALLINT                 NOT NULL DEFAULT 0,
+    is_digest_enabled           SMALLINT                 NOT NULL DEFAULT 0,
     digest_frequency         VARCHAR(32)              DEFAULT NULL,
     locale                   VARCHAR(16)              DEFAULT NULL,
     extra                    JSONB                    DEFAULT NULL,
@@ -321,12 +321,12 @@ COMMENT ON COLUMN ydsz_msg_preference.user_id IS '用户 ID（关联 ydsz_employ
 COMMENT ON COLUMN ydsz_msg_preference.channel IS '通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU';
 COMMENT ON COLUMN ydsz_msg_preference.biz_type IS '业务类型（__DEFAULT__ 表示该通道全局默认偏好）';
 COMMENT ON COLUMN ydsz_msg_preference.is_enabled IS '是否启用该通道: 0 关闭 / 1 开启（关闭后不发送）';
-COMMENT ON COLUMN ydsz_msg_preference.dnd_enabled IS '免打扰开关: 0 关闭 / 1 开启';
+COMMENT ON COLUMN ydsz_msg_preference.is_dnd_enabled IS '免打扰开关: 0 关闭 / 1 开启';
 COMMENT ON COLUMN ydsz_msg_preference.dnd_start IS '免打扰开始时间 HH:mm（如 22:00）';
 COMMENT ON COLUMN ydsz_msg_preference.dnd_end IS '免打扰结束时间 HH:mm（如 08:00）';
 COMMENT ON COLUMN ydsz_msg_preference.daily_limit IS '每日发送上限（超过则暂存或丢弃）';
 COMMENT ON COLUMN ydsz_msg_preference.hourly_limit IS '每小时发送上限';
-COMMENT ON COLUMN ydsz_msg_preference.digest_enabled IS '聚合开关: 0 即时发送 / 1 聚合摘要';
+COMMENT ON COLUMN ydsz_msg_preference.is_digest_enabled IS '聚合开关: 0 即时发送 / 1 聚合摘要';
 COMMENT ON COLUMN ydsz_msg_preference.digest_frequency IS '聚合频率: HOURLY / DAILY / WEEKLY';
 COMMENT ON COLUMN ydsz_msg_preference.locale IS '偏好语言（如 zh-CN / en-US，影响模板 i18n 选择）';
 COMMENT ON COLUMN ydsz_msg_preference.extra IS '扩展字段（JSON）';
