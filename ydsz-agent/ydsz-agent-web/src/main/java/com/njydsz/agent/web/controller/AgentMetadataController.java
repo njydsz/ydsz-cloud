@@ -18,7 +18,7 @@ import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.auth.constant.PermissionCodes;
 
 /**
  * Agent 元数据查询 Controller（可用模型 / 已注册工具）

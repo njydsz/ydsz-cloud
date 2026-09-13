@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.FileVersionMapper">
 
-    <resultMap id="FileVersionResult" type="com.njydsz.nextwiki.infra.entity.FileVersion">
+    <resultMap id="FileVersionResult" type="com.njydsz.nextwiki.domain.entity.FileVersion">
         <id column="id" property="id"/>
         <result column="file_node_id" property="fileNodeId"/>
         <result column="version_number" property="versionNumber"/>
@@ -20,38 +20,38 @@
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
         <result column="revision" property="revision"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
     </resultMap>
 
     <select id="selectByFileNodeId" resultMap="FileVersionResult">
         SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
         FROM ydsz_wiki_file_version
-        WHERE file_node_id = #{fileNodeId} AND deleted = 0
+        WHERE file_node_id = #{fileNodeId} AND is_deleted = 0
         ORDER BY version_number DESC
     </select>
 
     <select id="selectByVersion" resultMap="FileVersionResult">
         SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
         FROM ydsz_wiki_file_version
-        WHERE file_node_id = #{fileNodeId} AND version_number = #{versionNumber} AND deleted = 0
+        WHERE file_node_id = #{fileNodeId} AND version_number = #{versionNumber} AND is_deleted = 0
     </select>
 
     <select id="selectActiveVersion" resultMap="FileVersionResult">
         SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
         FROM ydsz_wiki_file_version
-        WHERE file_node_id = #{fileNodeId} AND is_active = TRUE AND deleted = 0
+        WHERE file_node_id = #{fileNodeId} AND is_active = TRUE AND is_deleted = 0
         LIMIT 1
     </select>
 
     <select id="countByFileNodeId" resultType="int">
         SELECT COUNT(*) FROM ydsz_wiki_file_version
-        WHERE file_node_id = #{fileNodeId} AND deleted = 0
+        WHERE file_node_id = #{fileNodeId} AND is_deleted = 0
     </select>
 
     <select id="selectOldestVersions" resultMap="FileVersionResult">
         SELECT id, file_node_id, version_number, storage_key, size, file_hash, mime_type, remark, change_type, is_active, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
         FROM ydsz_wiki_file_version
-        WHERE file_node_id = #{fileNodeId} AND deleted = 0
+        WHERE file_node_id = #{fileNodeId} AND is_deleted = 0
         ORDER BY version_number ASC
         LIMIT #{limit}
     </select>
@@ -73,7 +73,7 @@
             updated_at = #{version.updatedAt},
             revision = revision + 1
         WHERE id = #{version.id}
-          AND deleted = 0
+          AND is_deleted = 0
           AND revision = #{version.revision}
     </update>
 

@@ -94,7 +94,7 @@ public class FlowAutoTriggerRepositoryImpl implements FlowAutoTriggerRepository 
         autoTriggerMapper.selectList(
             new LambdaQueryWrapper<FlowAutoTrigger>()
                 .eq(FlowAutoTrigger::getSourceFlowCode, sourceFlowCode)
-                .eq(FlowAutoTrigger::getEnabled, 1)
+                .eq(FlowAutoTrigger::getIsEnabled, true)
                 .eq(FlowAutoTrigger::getIsDeleted, 0)));
   }
 

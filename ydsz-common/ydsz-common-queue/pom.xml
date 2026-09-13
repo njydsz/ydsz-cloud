@@ -43,6 +43,7 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- 内部依赖 -->
@@ -115,12 +116,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- ActiveMQ 消息队列依赖（按需引入） -->
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-client</artifactId>
-            <optional>true</optional>
-        </dependency>
         <!--lombok-->
         <dependency>
             <groupId>org.projectlombok</groupId>

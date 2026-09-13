@@ -16,7 +16,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.cronjob.server.service.impl.schedule.ScheduleCalendarService;
 
 /**

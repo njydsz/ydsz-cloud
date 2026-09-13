@@ -24,7 +24,7 @@ import com.njydsz.common.auth.annotation.AuthRowPermission;
 import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.auth.model.DataScopeAware;
 import com.njydsz.common.auth.model.DataScopeInfo;
-import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
+import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
@@ -82,9 +82,9 @@ public class AuthRowPermissionAspect {
   private final ConcurrentHashMap<Method, ResolvedRowPermission> annotationCache =
       new ConcurrentHashMap<>(256);
 
-  private final RedisRoleDataPermissionResolver resolver;
+  private final DataPermissionResolver resolver;
 
-  public AuthRowPermissionAspect(RedisRoleDataPermissionResolver resolver) {
+  public AuthRowPermissionAspect(DataPermissionResolver resolver) {
     this.resolver = resolver;
   }
 

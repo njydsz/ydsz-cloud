@@ -317,7 +317,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     trigger.setSourceFlowCode(sourceFlowCode);
     trigger.setTargetFlowCode(targetFlowCode);
     trigger.setConditionExpression(conditionExpression);
-    trigger.setEnabled(1);
+    trigger.setIsEnabled(true);
     trigger.setSort(0);
     autoTriggerRepository.save(trigger);
     log.info(
@@ -359,10 +359,10 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
       log.warn("[FlowAutoTrigger] 触发规则不存在: id={}", id);
       return false;
     }
-    int newEnabled = (trigger.getEnabled() != null && trigger.getEnabled() == 1) ? 0 : 1;
-    trigger.setEnabled(newEnabled);
+    Boolean newEnabled = !Boolean.TRUE.equals(trigger.getIsEnabled());
+    trigger.setIsEnabled(newEnabled);
     autoTriggerRepository.update(trigger);
-    log.info("[FlowAutoTrigger] 切换触发规则状态: id={} enabled={}", id, newEnabled);
-    return newEnabled == 1;
+    log.info("[FlowAutoTrigger] 切换触发规则状态: id={} isEnabled={}", id, newEnabled);
+    return newEnabled;
   }
 }

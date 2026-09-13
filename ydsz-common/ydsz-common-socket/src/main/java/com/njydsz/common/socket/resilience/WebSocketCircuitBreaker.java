@@ -1,16 +1,17 @@
 package com.njydsz.common.socket.resilience;
 
-import java.math.BigDecimal;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.time.Duration;
+import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
-
 /**
- * WebSocket 模块轻量级熔断器。
+ * WebSocket 模块轻量级熔断器（基于 Resilience4j）。
  *
- * <p>基于滑动窗口失败率统计，达到阈值后触发熔断。 继承 {@link AbstractCircuitBreaker} 复用核心状态机逻辑。
+ * <p>底层委托 Resilience4j CircuitBreaker，提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
  *
  * <p>状态流转：
  *
@@ -23,22 +24,38 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  *
  * <h3>26.09.01 变更</h3>
  *
- * <p>自 26.09.01 起，继承 {@link AbstractCircuitBreaker}（ydsz-common-safe）， 复用标准三态状态机，移除自研 CAS 状态管理代码。
+ * <p>自 26.09.01 起，委托 Resilience4j CircuitBreaker，移除自研 AbstractCircuitBreaker 继承体系，
+ * 复用经过生产验证的 Resilience4j 滑动窗口、状态机、指标等核心能力。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
-public class WebSocketCircuitBreaker extends AbstractCircuitBreaker {
-
-  /** 滑动窗口大小（调用次数） */
-  private final int slidingWindowSize;
-
-  private final AtomicInteger failureCount = new AtomicInteger(0);
-  private final AtomicInteger totalCount = new AtomicInteger(0);
+public class WebSocketCircuitBreaker {
 
   /**
-   * 构造 WebSocket 熔断器
+   * 熔断状态枚举。
+   *
+   * <ul>
+   *   <li>{@link #CLOSED}：正常放行请求
+   *   <li>{@link #OPEN}：熔断打开，直接拒绝请求
+   *   <li>{@link #HALF_OPEN}：半开探测，放行少量试探请求
+   * </ul>
+   */
+  public enum State {
+    /** 正常放行 */
+    CLOSED,
+    /** 熔断打开 */
+    OPEN,
+    /** 半开探测 */
+    HALF_OPEN
+  }
+
+  private final String name;
+  private final io.github.resilience4j.circuitbreaker.CircuitBreaker delegate;
+
+  /**
+   * 构造 WebSocket 熔断器。
    *
    * @param name 熔断器名称
    * @param failureRateThreshold 失败率阈值（0~1.0）
@@ -47,8 +64,19 @@ public class WebSocketCircuitBreaker extends AbstractCircuitBreaker {
    */
   public WebSocketCircuitBreaker(
       String name, double failureRateThreshold, int slidingWindowSize, long halfOpenAfterMillis) {
-    super(new Config(name, BigDecimal.valueOf(failureRateThreshold), halfOpenAfterMillis, 1));
-    this.slidingWindowSize = slidingWindowSize;
+    this.name = name;
+    CircuitBreakerConfig config =
+        CircuitBreakerConfig.custom()
+            .failureRateThreshold((float) (failureRateThreshold * 100))
+            .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+            .slidingWindowSize(slidingWindowSize)
+            .waitDurationInOpenState(Duration.ofMillis(halfOpenAfterMillis))
+            .minimumNumberOfCalls(slidingWindowSize)
+            .permittedNumberOfCallsInHalfOpenState(1)
+            .automaticTransitionFromOpenToHalfOpenEnabled(true)
+            .build();
+    this.delegate = CircuitBreakerRegistry.of(config).circuitBreaker(name);
+
     log.info(
         "[WS-CircuitBreaker] '{}' 初始化: threshold={}, window={}, halfOpenAfter={}ms",
         name,
@@ -57,35 +85,47 @@ public class WebSocketCircuitBreaker extends AbstractCircuitBreaker {
         halfOpenAfterMillis);
   }
 
-  @Override
-  protected boolean evaluateThreshold() {
-    int total = totalCount.get();
-    if (total < slidingWindowSize) {
-      return false;
+  /**
+   * 执行受保护的操作，失败或熔断时走降级。
+   *
+   * @param operation 受保护操作
+   * @param fallback 降级操作
+   * @param <T> 操作结果类型
+   * @return 操作结果或降级结果
+   */
+  public <T> T execute(Supplier<T> operation, Supplier<T> fallback) {
+    try {
+      return io.github.resilience4j.circuitbreaker.CircuitBreaker
+          .decorateSupplier(delegate, operation)
+          .get();
+    } catch (CallNotPermittedException e) {
+      log.debug("[WS-CircuitBreaker] '{}' 熔断中, 执行降级", name);
+      return fallback.get();
+    } catch (Exception e) {
+      log.debug("[WS-CircuitBreaker] '{}' 操作失败, 执行降级: {}", name, e.getMessage());
+      return fallback.get();
     }
-    int failures = failureCount.get();
-    BigDecimal rate = BigDecimal.valueOf(failures)
-        .divide(BigDecimal.valueOf(total), 10, BigDecimal.ROUND_HALF_UP);
-    // 窗口已满，重置统计
-    failureCount.set(0);
-    totalCount.set(0);
-    return rate.compareTo(config.getFailureThreshold()) >= 0;
   }
 
-  @Override
-  protected void onSuccessRecord() {
-    totalCount.incrementAndGet();
+  /**
+   * 获取当前熔断状态。
+   *
+   * @return 当前状态快照
+   */
+  public State getState() {
+    return switch (delegate.getState()) {
+      case OPEN -> State.OPEN;
+      case HALF_OPEN -> State.HALF_OPEN;
+      default -> State.CLOSED;
+    };
   }
 
-  @Override
-  protected void onFailureRecord() {
-    failureCount.incrementAndGet();
-    totalCount.incrementAndGet();
-  }
-
-  @Override
-  protected void resetStats() {
-    failureCount.set(0);
-    totalCount.set(0);
+  /**
+   * 获取熔断器名称。
+   *
+   * @return 名称
+   */
+  public String getName() {
+    return name;
   }
 }

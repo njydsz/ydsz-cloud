@@ -118,5 +118,11 @@
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
 
+        <!-- Resilience4j CircuitBreaker（P1-5: 自研熔断器替换为 Resilience4j） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+        </dependency>
+
     </dependencies>
 </project>

@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.StorageQuotaMapper">
 
-    <resultMap id="StorageQuotaResult" type="com.njydsz.nextwiki.infra.entity.StorageQuota">
+    <resultMap id="StorageQuotaResult" type="com.njydsz.nextwiki.domain.entity.StorageQuota">
         <id column="id" property="id"/>
         <result column="scope_type" property="scopeType"/>
         <result column="scope_id" property="scopeId"/>
@@ -17,13 +17,13 @@
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
         <result column="revision" property="revision"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
     </resultMap>
 
     <select id="selectByScope" resultMap="StorageQuotaResult">
-        SELECT id, scope_type, scope_id, quota_limit, quota_used, file_count_limit, file_count_used, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        SELECT id, scope_type, scope_id, quota_limit, quota_used, file_count_limit, file_count_used, status, created_by, created_at, updated_by, updated_at, revision, is_deleted, tenant_id
         FROM ydsz_wiki_storage_quota
-        WHERE scope_type = #{scopeType} AND scope_id = #{scopeId} AND deleted = 0
+        WHERE scope_type = #{scopeType} AND scope_id = #{scopeId} AND is_deleted = 0
         LIMIT 1
     </select>
 
@@ -41,7 +41,7 @@
             updated_at = #{quota.updatedAt},
             revision = revision + 1
         WHERE id = #{quota.id}
-          AND deleted = 0
+          AND is_deleted = 0
           AND revision = #{quota.revision}
     </update>
 

@@ -7,10 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.njydsz.common.util.internal.proxy.CoreConstants;
-import com.njydsz.common.util.internal.proxy.ParsedTraceparent;
-import com.njydsz.common.util.internal.proxy.RequestContextProxy;
-import com.njydsz.common.util.internal.proxy.TraceIdGeneratorProxy;
+import com.njydsz.common.util.internal.bridge.CoreConstants;
+import com.njydsz.common.util.internal.bridge.ParsedTraceparent;
+import com.njydsz.common.util.internal.bridge.RequestContextProxy;
+import com.njydsz.common.util.internal.bridge.TraceIdGeneratorProxy;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

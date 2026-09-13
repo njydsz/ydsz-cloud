@@ -6,7 +6,7 @@ import java.util.Set;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.safe.util.ClientIpResolver;
+import com.njydsz.common.util.net.ClientIpResolver;
 import com.njydsz.common.util.ip.CidrUtils;
 
 /**

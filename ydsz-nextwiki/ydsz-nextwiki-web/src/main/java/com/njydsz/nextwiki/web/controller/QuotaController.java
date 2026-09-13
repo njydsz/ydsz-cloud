@@ -18,7 +18,7 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.server.service.QuotaApplicationService;

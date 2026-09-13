@@ -11,7 +11,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.njydsz.common.base.config.BaseTraceProperties;
-import com.njydsz.common.safe.util.ClientIpResolver;
+import com.njydsz.common.util.net.ClientIpResolver;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

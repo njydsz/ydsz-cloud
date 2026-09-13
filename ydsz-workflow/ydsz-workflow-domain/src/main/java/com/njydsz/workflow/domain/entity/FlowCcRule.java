@@ -2,6 +2,7 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -70,8 +71,9 @@ public class FlowCcRule extends MpBaseEntity<String> {
    */
   private String ruleTarget;
 
-  /** 是否启用：{@code 0} 禁用 / {@code 1} 启用 */
-  private Integer enabled;
+  /** 是否启用 */
+  @TableField("is_enabled")
+  private Boolean isEnabled;
 
   /** 链路追踪 ID */
   private String providerTraceId;

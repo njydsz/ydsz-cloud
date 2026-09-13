@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.FileAclMapper">
 
-    <resultMap id="FileAclResult" type="com.njydsz.nextwiki.infra.entity.FileAcl">
+    <resultMap id="FileAclResult" type="com.njydsz.nextwiki.domain.entity.FileAcl">
         <id column="id" property="id"/>
         <result column="file_node_id" property="fileNodeId"/>
         <result column="grantee_type" property="granteeType"/>
@@ -17,25 +17,25 @@
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
         <result column="revision" property="revision"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
     </resultMap>
 
     <select id="selectByFileNodeId" resultMap="FileAclResult">
-        SELECT id, file_node_id, grantee_type, grantee_id, permission_mask, is_inherited, is_owner, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        SELECT id, file_node_id, grantee_type, grantee_id, permission_mask, is_inherited, is_owner, status, created_by, created_at, updated_by, updated_at, revision, is_deleted, tenant_id
         FROM ydsz_wiki_file_acl
-        WHERE file_node_id = #{fileNodeId} AND deleted = 0
+        WHERE file_node_id = #{fileNodeId} AND is_deleted = 0
     </select>
 
     <select id="selectByFileNodeIdAndGrantee" resultMap="FileAclResult">
-        SELECT id, file_node_id, grantee_type, grantee_id, permission_mask, is_inherited, is_owner, status, created_by, created_at, updated_by, updated_at, revision, deleted, tenant_id
+        SELECT id, file_node_id, grantee_type, grantee_id, permission_mask, is_inherited, is_owner, status, created_by, created_at, updated_by, updated_at, revision, is_deleted, tenant_id
         FROM ydsz_wiki_file_acl
         WHERE file_node_id = #{fileNodeId} AND grantee_type = #{granteeType}
-        AND grantee_id = #{granteeId} AND deleted = 0
+        AND grantee_id = #{granteeId} AND is_deleted = 0
     </select>
 
     <select id="selectEffectivePermissions" resultMap="FileAclResult">
-        SELECT DISTINCT a.id, a.file_node_id, a.grantee_type, a.grantee_id, a.permission_mask, a.is_inherited, a.is_owner, a.status, a.created_by, a.created_at, a.updated_by, a.updated_at, a.revision, a.deleted, a.tenant_id FROM ydsz_wiki_file_acl a
-        WHERE a.deleted = 0 AND a.file_node_id = #{fileNodeId}
+        SELECT DISTINCT a.id, a.file_node_id, a.grantee_type, a.grantee_id, a.permission_mask, a.is_inherited, a.is_owner, a.status, a.created_by, a.created_at, a.updated_by, a.updated_at, a.revision, a.is_deleted, a.tenant_id FROM ydsz_wiki_file_acl a
+        WHERE a.is_deleted = 0 AND a.file_node_id = #{fileNodeId}
         AND (
             (a.grantee_type = 'user' AND a.grantee_id = #{userId})
             <if test="roleIds != null and roleIds.size() > 0">
@@ -50,7 +50,7 @@
     <insert id="batchInsert">
         INSERT INTO ydsz_wiki_file_acl (id, file_node_id, grantee_type, grantee_id,
             permission_mask, is_inherited, is_owner, status, created_by, created_at,
-            updated_by, updated_at, revision, deleted)
+            updated_by, updated_at, revision, is_deleted)
         VALUES
         <foreach collection="acls" item="acl" separator=",">
             (#{acl.id}, #{acl.fileNodeId}, #{acl.granteeType}, #{acl.granteeId},

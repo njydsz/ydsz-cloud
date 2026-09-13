@@ -20,7 +20,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameType;
-import com.njydsz.common.security.DataScopeHelper;
+import com.njydsz.common.auth.service.DataScopeHelper;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.query.FlowInstancePageQuery;

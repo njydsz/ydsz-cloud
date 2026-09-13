@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 /**
@@ -22,7 +23,8 @@ public class FlowAutoTriggerVO implements Serializable {
   private String targetFlowCode;
   private String conditionExpression;
   private String description;
-  private Integer enabled;
+  @TableField("is_enabled")
+  private Boolean isEnabled;
   private Integer sort;
   private String createdBy;
   private LocalDateTime createdAt;

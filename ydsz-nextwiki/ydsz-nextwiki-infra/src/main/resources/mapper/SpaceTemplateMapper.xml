@@ -18,19 +18,19 @@
     <result column="created_by" property="createdBy"/>
     <result column="updated_at" property="updatedAt"/>
     <result column="updated_by" property="updatedBy"/>
-    <result column="deleted" property="isDeleted"/>
+    <result column="is_deleted" property="isDeleted"/>
   </resultMap>
 
   <sql id="Base_Column_List">
     id, name, description, category, icon_url, tenant_id, is_system, is_public_access,
-    structure_json, sort, usage_count, created_at, created_by, updated_at, updated_by, deleted
+    structure_json, sort, usage_count, created_at, created_by, updated_at, updated_by, is_deleted
   </sql>
 
   <!-- 查询可用模板（系统公开模板 + 租户自定义模板，按排序号升序） -->
   <select id="selectAvailableTemplates" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_space_template
-    WHERE deleted = FALSE
+    WHERE is_deleted = FALSE
       AND (
         (is_system = TRUE AND is_public_access = TRUE)
         OR
@@ -44,7 +44,7 @@
   <select id="selectWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_space_template
-    WHERE deleted = FALSE
+    WHERE is_deleted = FALSE
       AND (
         (is_system = TRUE AND is_public_access = TRUE)
         OR
@@ -59,7 +59,7 @@
   <select id="countByCondition" resultType="int">
     SELECT COUNT(*)
     FROM ydsz_wiki_space_template
-    WHERE deleted = FALSE
+    WHERE is_deleted = FALSE
       AND (
         (is_system = TRUE AND is_public_access = TRUE)
         OR

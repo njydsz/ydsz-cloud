@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-docs</artifactId>
     <name>ydsz-common-docs</name>
-    <description>ydsz-common-docs - 文档内容解析与预处理、文档安全与合规公共服务模块</description>
+    <description>文档内容解析与预处理、文档安全与合规公共服务模块（8 格式解析 + PII 检测 + 安全扫描 + OCR 扩展接口）</description>
 
     <parent>
         <groupId>com.njydsz</groupId>

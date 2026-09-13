@@ -2,7 +2,9 @@
 
 > OpenFeign 增强（L5 业务服务层）— 数据权限透传 / 编解码 / 重试 / 链路追踪 / 熔断 / 压缩
 
-提供数据权限上下文透传（行 / 列级）、自定义 JSON 编解码（`YdszResponse` 自动解包）、指数退避重试（`@Retryable` 语义化 + 方法级 Aware）、链路追踪（SkyWalking + Trace HTTP Header 透传）、GZIP 请求压缩、Bulkhead 信号量隔离、Resilience4j 熔断器适配、Redis 可选用状态持久化、Feign 指标采集、NotificationClient 通知发送 Feign 客户端等能力。
+提供数据权限上下文透传（行 / 列级）、自定义 JSON 编解码（`YdszResponse` 自动解包）、指数退避重试（`@Retryable` 语义化 + 方法级 Aware）、链路追踪（SkyWalking + Trace HTTP Header 透传）、GZIP 请求压缩、Bulkhead 信号量隔离、Resilience4j 熔断器适配、Redis 可选用状态持久化、Feign 指标采集等能力。
+>
+> 注：`NotificationClient` + `NotificationClientFallbackFactory` 已移至 `ydsz-message-api` 模块（消息服务归属业务客户端，不应出现在 common 基础层）。
 
 ## 模块定位
 
@@ -92,13 +94,13 @@
 | `CircuitBreakerStrategy`（circuitbreaker） | 熔断策略接口 |
 | `SafeCircuitBreakerAdapter`（circuitbreaker） | Resilience4j CircuitBreaker 适配器 |
 
-### 8. 通知 Feign 客户端
+### 8. 通知 Feign 客户端（已迁出）
+
+> `NotificationClient` 与 `NotificationClientFallbackFactory` 已迁移至 `com.njydsz.message.api.client` / `com.njydsz.message.api.fallback`（`ydsz-message-api` 模块）。
 
 | 类 | 说明 |
 |---|---|
-| `NotificationClient` | 通知服务 Feign 客户端（调用 ydsz-notification 服务发送通知） |
-| `NotificationClientFallbackFactory` | 降级工厂 |
-| `BroadcastRequestDTO` / `PushRealtimeRequestDTO` / `RealtimePushDTO`（dto） | 通知推送 DTO |
+| `BroadcastRequestDTO` / `PushRealtimeRequestDTO` / `RealtimePushDTO`（dto） | 通知推送 DTO（保留在本模块供 message-api 复用） |
 
 ### 9. 名字组装
 
@@ -177,14 +179,15 @@ ydsz:
       url: http://ydsz-notification:9009
 ```
 
-### 5. 熔断器通知 Feign 客户端
+### 5. 通知 Feign 客户端
+
+> 已迁移至 `ydsz-message-api` 模块，使用时应引入 `ydsz-message-api` 依赖：
 
 ```java
+import com.njydsz.message.api.client.NotificationClient;
+
 @Autowired
 private NotificationClient notificationClient;
-
-// 发送站内通知
-notificationClient.sendRealtimePush(new PushRealtimeRequestDTO(...));
 ```
 
 ## SPI 扩展点

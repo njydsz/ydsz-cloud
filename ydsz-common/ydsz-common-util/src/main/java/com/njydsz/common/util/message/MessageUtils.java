@@ -9,8 +9,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 
 import com.njydsz.common.util.config.StaticBridge;
-import com.njydsz.common.util.internal.proxy.CoreConstants;
-import com.njydsz.common.util.internal.proxy.RequestContextProxy;
+import com.njydsz.common.util.internal.bridge.CoreConstants;
+import com.njydsz.common.util.internal.bridge.RequestContextProxy;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

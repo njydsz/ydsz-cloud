@@ -22,7 +22,7 @@ import com.njydsz.message.server.channel.NotifyChannelStrategyAdapter;
  * <p>启动时收集所有 {@link MessageChannel} Bean，为每个在 {@link NotifyChannel} 枚举中 有对应值的通道创建 {@link
  * NotifyChannelStrategyAdapter}，注册为 {@link NotifyChannelStrategy} Bean。
  *
- * <p><b>收敛定位</b>：message 模块是 common-notify 的通道 Provider， 业务模块不应直接使用 message 模块的 {@code
+ * <p><b>收敛定位</b>：message 模块是 common-notify 的通道 Provider， 业务模块不应直接使用本模块的 {@code
  * NotificationClient} Feign 或 {@code MessageChannel}，而应通过 {@code NotifyHelper} 发送通知。 详见 {@code
  * docs/module-review/ADR-001-notify-message-convergence.md}。
  *

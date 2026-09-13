@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.DataScopeInfo;
+import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
@@ -68,7 +69,7 @@ import com.njydsz.common.util.string.StringUtils;
  * @see DataScopeInfo
  * @see YdszCache
  */
-public class RedisRoleDataPermissionResolver {
+public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
 
   private static final Logger LOG = LoggerFactory.getLogger(RedisRoleDataPermissionResolver.class);
 

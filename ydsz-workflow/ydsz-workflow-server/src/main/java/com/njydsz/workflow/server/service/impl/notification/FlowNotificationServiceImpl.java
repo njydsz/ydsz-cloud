@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.feign.NotificationClient;
+import com.njydsz.message.api.client.NotificationClient;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 

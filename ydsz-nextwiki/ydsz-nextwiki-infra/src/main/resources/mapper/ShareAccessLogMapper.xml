@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.ShareAccessLogMapper">
 
-    <resultMap id="ShareAccessLogResult" type="com.njydsz.nextwiki.infra.entity.ShareAccessLog">
+    <resultMap id="ShareAccessLogResult" type="com.njydsz.nextwiki.domain.entity.ShareAccessLog">
         <id column="id" property="id"/>
         <result column="share_id" property="shareId"/>
         <result column="share_code" property="shareCode"/>
@@ -20,13 +20,13 @@
         <result column="updated_by" property="updatedBy"/>
         <result column="updated_at" property="updatedAt"/>
         <result column="revision" property="revision"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
     </resultMap>
 
     <select id="selectByShareId" resultMap="ShareAccessLogResult">
-        SELECT id, share_id, share_code, file_node_id, visitor_id, visitor_name, visitor_ip, user_agent, access_type, access_status, fail_reason, created_at, created_by, updated_at, updated_by, revision, deleted
+        SELECT id, share_id, share_code, file_node_id, visitor_id, visitor_name, visitor_ip, user_agent, access_type, access_status, fail_reason, created_at, created_by, updated_at, updated_by, revision, is_deleted
         FROM ydsz_wiki_share_access_log
-        WHERE share_id = #{shareId} AND deleted = 0
+        WHERE share_id = #{shareId} AND is_deleted = 0
         ORDER BY created_at DESC
         LIMIT #{limit}
     </select>
@@ -36,7 +36,7 @@
                COUNT(*) AS access_count
         FROM ydsz_wiki_share_access_log
         WHERE share_id = #{shareId}
-          AND deleted = 0
+          AND is_deleted = 0
           AND created_at &gt;= NOW() - INTERVAL '#{days} days'
         GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
         ORDER BY access_date DESC

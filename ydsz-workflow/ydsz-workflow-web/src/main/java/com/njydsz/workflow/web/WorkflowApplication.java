@@ -29,7 +29,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * @since 26.09.01
  */
 @SpringBootApplication(
-    scanBasePackages = {"com.njydsz.workflow", "com.njydsz.common"})
+    scanBasePackages = {"com.njydsz.workflow", "com.njydsz.common", "com.njydsz.message.api"})
 @EnableDiscoveryClient
 @EnableYdszAudit
 @EnableYdszAuth

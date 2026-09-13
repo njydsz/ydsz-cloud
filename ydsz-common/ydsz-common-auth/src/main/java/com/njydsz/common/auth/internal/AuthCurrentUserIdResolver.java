@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
-import com.njydsz.common.security.LoginUser;
+import com.njydsz.common.auth.model.LoginUser;
 
 /**
  * 基于 AuthContext 的当前用户 ID 解析器实现

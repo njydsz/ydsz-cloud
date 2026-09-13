@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -212,7 +211,7 @@ public class WebSocketAutoConfiguration {
    * @return 在线用户服务实例，不会为 {@code null}；Redis 缺失时返回 no-op 实现
    */
   @Bean
-  @ConditionalOnClass(StringRedisTemplate.class)
+  @ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
   @ConditionalOnMissingBean(OnlineUserService.class)
   @ConditionalOnProperty(
       prefix = "ydsz.websocket",
@@ -220,7 +219,7 @@ public class WebSocketAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public OnlineUserService onlineUserService(
-      @Autowired(required = false) StringRedisTemplate redisTemplate,
+      @Autowired(required = false) Object redisTemplate,
       WebSocketProperties properties) {
     if (redisTemplate == null) {
       log.warn("[WebSocket] StringRedisTemplate 不存在，OnlineUserService 降级为 no-op");
@@ -246,7 +245,9 @@ public class WebSocketAutoConfiguration {
       };
     }
     log.info("[WebSocket] 注册 OnlineUserService");
-    return new OnlineUserService(redisTemplate, properties.getSessionTtlSeconds());
+    return new OnlineUserService(
+        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
+        properties.getSessionTtlSeconds());
   }
 
   // ==================== 离线消息存储 ====================
@@ -263,7 +264,7 @@ public class WebSocketAutoConfiguration {
    * @return 离线消息存储实例，不会为 {@code null}；Redis 缺失时返回 no-op 实现
    */
   @Bean
-  @ConditionalOnClass(StringRedisTemplate.class)
+  @ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
   @ConditionalOnMissingBean(OfflineMessageStore.class)
   @ConditionalOnProperty(
       prefix = "ydsz.websocket.offline",
@@ -271,7 +272,7 @@ public class WebSocketAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public OfflineMessageStore offlineMessageStore(
-      @Autowired(required = false) StringRedisTemplate redisTemplate,
+      @Autowired(required = false) Object redisTemplate,
       WebSocketProperties properties,
       WebSocketCircuitBreaker circuitBreaker) {
     if (redisTemplate == null) {
@@ -292,7 +293,10 @@ public class WebSocketAutoConfiguration {
       };
     }
     log.info("[WebSocket] 注册 RedisOfflineMessageStore");
-    return new RedisOfflineMessageStore(redisTemplate, properties, circuitBreaker);
+    return new RedisOfflineMessageStore(
+        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
+        properties,
+        circuitBreaker);
   }
 
   // ==================== P0-3: 心跳保活 ====================
@@ -314,11 +318,14 @@ public class WebSocketAutoConfiguration {
   public WebSocketHeartbeatHandler webSocketHeartbeatHandler(
       OnlineUserService onlineUserService,
       WebSocketProperties properties,
-      @Autowired(required = false) StringRedisTemplate redisTemplate) {
+      @Autowired(required = false) Object redisTemplate) {
     log.info(
         "[WebSocket] 注册 WebSocketHeartbeatHandler (staleTimeout={}ms)",
         properties.getHeartbeat().getStaleSessionTimeout());
-    return new WebSocketHeartbeatHandler(properties, onlineUserService, redisTemplate);
+    return new WebSocketHeartbeatHandler(
+        properties,
+        onlineUserService,
+        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate);
   }
 
   // ==================== P0-4: 重试队列 + 死信队列 ====================
@@ -338,9 +345,10 @@ public class WebSocketAutoConfiguration {
       name = "dead-letter-enabled",
       havingValue = "true")
   public DeadLetterQueue deadLetterQueue(
-      @Autowired(required = false) StringRedisTemplate redisTemplate) {
+      @Autowired(required = false) Object redisTemplate) {
     log.info("[WebSocket] 注册 RedisDeadLetterQueue");
-    return new RedisDeadLetterQueue(redisTemplate);
+    return new RedisDeadLetterQueue(
+        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate);
   }
 
   /**
@@ -361,7 +369,7 @@ public class WebSocketAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public MessageRetryQueue messageRetryQueue(
-      @Autowired(required = false) StringRedisTemplate redisTemplate,
+      @Autowired(required = false) Object redisTemplate,
       WebSocketProperties properties,
       @Autowired(required = false) DeadLetterQueue deadLetterQueue) {
     if (redisTemplate == null) {
@@ -390,7 +398,10 @@ public class WebSocketAutoConfiguration {
     log.info(
         "[WebSocket] 注册 RedisMessageRetryQueue (maxRetries={})",
         properties.getRetry().getMaxRetries());
-    return new RedisMessageRetryQueue(redisTemplate, properties, deadLetterQueue);
+    return new RedisMessageRetryQueue(
+        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
+        properties,
+        deadLetterQueue);
   }
 
   // ==================== 会话事件监听器 ====================
@@ -467,15 +478,18 @@ public class WebSocketAutoConfiguration {
    * @return 速率限制器实例，不会为 {@code null}
    */
   @Bean
-  @ConditionalOnClass(StringRedisTemplate.class)
+  @ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
   @ConditionalOnMissingBean(WebSocketRateLimiter.class)
   public WebSocketRateLimiter webSocketRateLimiter(
-      @Autowired(required = false) StringRedisTemplate redisTemplate,
+      @Autowired(required = false) Object redisTemplate,
       WebSocketProperties properties,
       WebSocketCircuitBreaker circuitBreaker) {
     log.info(
         "[WebSocket] 注册 WebSocketRateLimiter (enabled={})", properties.getRateLimit().isEnabled());
-    return new WebSocketRateLimiter(redisTemplate, properties, circuitBreaker);
+    return new WebSocketRateLimiter(
+        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
+        properties,
+        circuitBreaker);
   }
 
   // ==================== P3-1: STOMP 消息拦截器 ====================
@@ -518,11 +532,14 @@ public class WebSocketAutoConfiguration {
   public HealthIndicator webSocketHealthIndicator(
       WebSocketProperties properties,
       WebSocketSessionEventListener eventListener,
-      @Autowired(required = false) StringRedisTemplate redisTemplate,
+      @Autowired(required = false) Object redisTemplate,
       WebSocketCircuitBreaker circuitBreaker) {
     log.info("[WebSocket] 注册 WebSocketHealthIndicator");
     return new WebSocketHealthIndicator(
-        properties, eventListener.getActiveConnectionsCounter(), redisTemplate, circuitBreaker);
+        properties,
+        eventListener.getActiveConnectionsCounter(),
+        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
+        circuitBreaker);
   }
 
   // ==================== 统一推送模板 ====================

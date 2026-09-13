@@ -29,7 +29,7 @@ import com.njydsz.common.feign.exception.OpenFeignException;
  * FeignClientConstants#FEIGN_SERVICE_UNAVAILABLE}）。
  *
  * <p>对于需要差异化降级逻辑的服务，仍可使用自定义 FallbackFactory（如 {@link
- * NotificationClientFallbackFactory}）。
+ * com.njydsz.message.api.fallback.NotificationClientFallbackFactory}）。
  *
  * @param <T> Feign 客户端接口类型
  * @author ydsz-team

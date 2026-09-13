@@ -1,7 +1,7 @@
 package com.njydsz.common.auth.util;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.security.LoginUser;
+import com.njydsz.common.auth.model.LoginUser;
 
 /**
  * 安全上下文工具类（便捷入口）。

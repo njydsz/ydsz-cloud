@@ -67,8 +67,9 @@ public class FlowAutoTrigger extends MpBaseEntity<String> {
   /** 规则描述（说明触发场景与业务背景） */
   private String description;
 
-  /** 是否启用：{@code 0} 禁用 / {@code 1} 启用 */
-  private Integer enabled;
+  /** 是否启用 */
+  @TableField("is_enabled")
+  private Boolean isEnabled;
 
   /** 排序权重（升序执行） */
   @TableField("sort")

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-seata</artifactId>
     <name>ydsz-common-seata</name>
-    <description>YDSZ Common Seata - 分布式事务统一模块，支持 AT / TCC / SAGA / XA 四种模式，基于 Seata 2.x 与 Spring Cloud Alibaba</description>
+    <description>Seata 分布式事务桥接层（配置前缀映射 + 健康检查，业务层按原生 starter 能力直接使用）</description>
 
     <parent>
         <groupId>com.njydsz</groupId>

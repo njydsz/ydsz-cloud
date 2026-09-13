@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
 import com.njydsz.common.safe.ip.IpAccessService;
-import com.njydsz.common.safe.util.ClientIpResolver;
+import com.njydsz.common.util.net.ClientIpResolver;
 
 
 

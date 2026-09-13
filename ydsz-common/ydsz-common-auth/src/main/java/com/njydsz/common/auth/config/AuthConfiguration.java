@@ -31,11 +31,16 @@ import com.njydsz.common.auth.listener.PermissionKeyspaceNotificationListener;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
+import com.njydsz.common.auth.service.ColumnScopeFallbackLoader;
+import com.njydsz.common.auth.service.DataPermissionResolver;
+import com.njydsz.common.auth.service.DataScopeFallbackLoader;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.auth.service.RolePermissionCacheService;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.auth.service.TokenBlacklistService;
+import com.njydsz.common.auth.service.impl.LocalRoleColumnPermissionResolver;
+import com.njydsz.common.auth.service.impl.LocalRoleDataPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
 import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
@@ -219,7 +224,9 @@ public class AuthConfiguration {
   }
 
   /**
-   * 创建数据权限解析器。
+   * 创建 Redis 数据权限解析器。
+   *
+   * <p>当 RedisStringOps 可用时（ydsz-common-redis 在 classpath 上且 Redis 连接正常），注册此高性能实现。
    *
    * @param redisStringOps Redis String 操作
    * @param properties 认证配置属性
@@ -227,9 +234,9 @@ public class AuthConfiguration {
    * @return 数据权限解析器实例
    */
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(DataPermissionResolver.class)
   @ConditionalOnBean(RedisStringOps.class)
-  public RedisRoleDataPermissionResolver dataPermissionResolver(
+  public RedisRoleDataPermissionResolver redisDataPermissionResolver(
       RedisStringOps redisStringOps,
       AuthProperties properties,
       RbacUserInfoService userInfoService) {
@@ -237,19 +244,43 @@ public class AuthConfiguration {
   }
 
   /**
+   * 创建本地兜底数据权限解析器。
+   *
+   * <p>当 Redis 不可用时（{@link DataPermissionResolver} 尚无其他实现），注册此本地缓存兜底实现。
+   * 缓存 TTL 使用 {@code localPermissionCacheMinutes}（默认 5 分钟），并通过 {@link DataScopeFallbackLoader}
+   * SPI 允许业务方从本地 DB / 配置文件加载兜底数据。
+   *
+   * @param properties 认证配置属性
+   * @param userInfoServiceProvider 用户信息服务提供者（可选，依赖 ydzz-common-redis）
+   * @param fallbackLoaderProvider 兜底数据加载器提供者（可选，由业务消费方实现）
+   * @return 本地兜底数据权限解析器
+   */
+  @Bean
+  @ConditionalOnMissingBean(DataPermissionResolver.class)
+  public LocalRoleDataPermissionResolver localDataPermissionResolver(
+      AuthProperties properties,
+      ObjectProvider<RbacUserInfoService> userInfoServiceProvider,
+      ObjectProvider<DataScopeFallbackLoader> fallbackLoaderProvider) {
+    return new LocalRoleDataPermissionResolver(
+        properties, userInfoServiceProvider, fallbackLoaderProvider);
+  }
+
+  /**
    * 创建行级权限切面。
    *
-   * @param resolver 数据权限解析器
+   * @param resolver 数据权限解析器接口
    * @return 行级权限切面实例
    */
   @Bean
   @ConditionalOnMissingBean
-  public AuthRowPermissionAspect authRowPermissionAspect(RedisRoleDataPermissionResolver resolver) {
+  public AuthRowPermissionAspect authRowPermissionAspect(DataPermissionResolver resolver) {
     return new AuthRowPermissionAspect(resolver);
   }
 
   /**
-   * 创建列权限解析器。
+   * 创建 Redis 列权限解析器。
+   *
+   * <p>当 RedisStringOps 可用时注册此实现。
    *
    * @param redisStringOps Redis String 操作
    * @param properties 认证配置属性
@@ -257,13 +288,35 @@ public class AuthConfiguration {
    * @return 列权限解析器实例
    */
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(ColumnPermissionResolver.class)
   @ConditionalOnBean(RedisStringOps.class)
-  public ColumnPermissionResolver columnPermissionResolver(
+  public ColumnPermissionResolver redisColumnPermissionResolver(
       RedisStringOps redisStringOps,
       AuthProperties properties,
       RbacUserInfoService userInfoService) {
     return new RedisRoleColumnPermissionResolver(redisStringOps, properties, userInfoService);
+  }
+
+  /**
+   * 创建本地兜底列权限解析器。
+   *
+   * <p>当 Redis 不可用时（{@link ColumnPermissionResolver} 尚无其他实现），注册此本地缓存兜底实现。
+   * 缓存 TTL 使用 {@code localPermissionCacheMinutes}（默认 5 分钟），并通过 {@link ColumnScopeFallbackLoader}
+   * SPI 允许业务方从本地 DB / 配置文件加载兜底数据。
+   *
+   * @param properties 认证配置属性
+   * @param userInfoServiceProvider 用户信息服务提供者（可选）
+   * @param fallbackLoaderProvider 兜底数据加载器提供者（可选）
+   * @return 本地兜底列权限解析器
+   */
+  @Bean
+  @ConditionalOnMissingBean(ColumnPermissionResolver.class)
+  public LocalRoleColumnPermissionResolver localColumnPermissionResolver(
+      AuthProperties properties,
+      ObjectProvider<RbacUserInfoService> userInfoServiceProvider,
+      ObjectProvider<ColumnScopeFallbackLoader> fallbackLoaderProvider) {
+    return new LocalRoleColumnPermissionResolver(
+        properties, userInfoServiceProvider, fallbackLoaderProvider);
   }
 
   /**
@@ -430,7 +483,7 @@ public class AuthConfiguration {
   @ConditionalOnProperty(prefix = "ydsz.auth", name = "cross-instance-enabled", havingValue = "true", matchIfMissing = false)
   public PermissionChangeCacheInvalidator permissionChangeCacheInvalidator(
       RolePermissionLoader rolePermissionLoader,
-      RedisRoleDataPermissionResolver dataPermissionResolver,
+      DataPermissionResolver dataPermissionResolver,
       ColumnPermissionResolver columnPermissionResolver,
       RedisMessageListenerContainer redisMessageListenerContainer) {
     return new PermissionChangeCacheInvalidator(

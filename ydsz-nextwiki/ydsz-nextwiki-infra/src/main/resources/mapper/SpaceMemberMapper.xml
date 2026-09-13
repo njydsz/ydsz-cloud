@@ -12,18 +12,18 @@
     <result column="created_by" property="createdBy"/>
     <result column="updated_at" property="updatedAt"/>
     <result column="updated_by" property="updatedBy"/>
-    <result column="deleted" property="isDeleted"/>
+    <result column="is_deleted" property="isDeleted"/>
   </resultMap>
 
   <sql id="Base_Column_List">
-    id, space_id, user_id, role, tenant_id, joined_at, created_by, updated_at, updated_by, deleted
+    id, space_id, user_id, role, tenant_id, joined_at, created_by, updated_at, updated_by, is_deleted
   </sql>
 
   <!-- 查询空间的成员列表（按角色优先级排序，未删除） -->
   <select id="selectBySpaceId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_space_member
-    WHERE space_id = #{spaceId} AND deleted = FALSE
+    WHERE space_id = #{spaceId} AND is_deleted = FALSE
     ORDER BY
       CASE role
         WHEN 'owner' THEN 1
@@ -39,7 +39,7 @@
   <select id="selectByUserId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_space_member
-    WHERE user_id = #{userId} AND deleted = FALSE
+    WHERE user_id = #{userId} AND is_deleted = FALSE
     ORDER BY joined_at DESC
   </select>
 
@@ -47,7 +47,7 @@
   <select id="selectBySpaceIdAndUserId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_space_member
-    WHERE space_id = #{spaceId} AND user_id = #{userId} AND deleted = FALSE
+    WHERE space_id = #{spaceId} AND user_id = #{userId} AND is_deleted = FALSE
     LIMIT 1
   </select>
 
@@ -55,21 +55,21 @@
   <select id="countBySpaceId" resultType="int">
     SELECT COUNT(*)
     FROM ydsz_wiki_space_member
-    WHERE space_id = #{spaceId} AND deleted = FALSE
+    WHERE space_id = #{spaceId} AND is_deleted = FALSE
   </select>
 
   <!-- 检查用户是否在空间中 -->
   <select id="existsBySpaceIdAndUserId" resultType="boolean">
     SELECT COUNT(*) > 0
     FROM ydsz_wiki_space_member
-    WHERE space_id = #{spaceId} AND user_id = #{userId} AND deleted = FALSE
+    WHERE space_id = #{spaceId} AND user_id = #{userId} AND is_deleted = FALSE
   </select>
 
   <!-- 更新成员角色 -->
   <update id="updateRole">
     UPDATE ydsz_wiki_space_member
     SET role = #{role}, updated_at = NOW(), updated_by = #{userId}
-    WHERE space_id = #{spaceId} AND user_id = #{userId} AND deleted = FALSE
+    WHERE space_id = #{spaceId} AND user_id = #{userId} AND is_deleted = FALSE
   </update>
 
   <!-- 删除成员 -->

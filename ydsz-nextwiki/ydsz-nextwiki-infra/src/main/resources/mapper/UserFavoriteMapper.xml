@@ -17,14 +17,14 @@
   </resultMap>
 
   <sql id="Base_Column_List">
-    id, user_id, node_id, tenant_id, sort, created_at, created_by, updated_at, updated_by, deleted, deleted_time
+    id, user_id, node_id, tenant_id, sort, created_at, created_by, updated_at, updated_by, is_deleted, deleted_time
   </sql>
 
   <!-- 查询用户收藏列表（按排序号升序，未删除） -->
   <select id="selectByUserId" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_user_favorite
-    WHERE user_id = #{userId} AND deleted = FALSE
+    WHERE user_id = #{userId} AND is_deleted = FALSE
     ORDER BY sort ASC, created_at DESC
   </select>
 
@@ -32,7 +32,7 @@
   <select id="selectByUserIdWithPage" resultMap="BaseResultMap">
     SELECT <include refid="Base_Column_List"/>
     FROM ydsz_wiki_user_favorite
-    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
     ORDER BY sort ASC, created_at DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
@@ -41,14 +41,14 @@
   <select id="countByUserId" resultType="int">
     SELECT COUNT(*)
     FROM ydsz_wiki_user_favorite
-    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
   </select>
 
   <!-- 查询用户的最大排序号 -->
   <select id="selectMaxsort" resultType="int">
     SELECT COALESCE(MAX(sort), 0)
     FROM ydsz_wiki_user_favorite
-    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND deleted = FALSE
+    WHERE user_id = #{userId} AND tenant_id = #{tenantId} AND is_deleted = FALSE
   </select>
 
   <!-- 检查节点是否已被用户收藏 -->

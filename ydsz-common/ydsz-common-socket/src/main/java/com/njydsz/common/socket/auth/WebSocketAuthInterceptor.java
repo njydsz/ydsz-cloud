@@ -15,7 +15,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.safe.util.ClientIpResolver;
+import com.njydsz.common.util.net.ClientIpResolver;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;

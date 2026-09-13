@@ -14,12 +14,12 @@ import com.njydsz.message.api.fallback.MessageSendClientFallback;
  *
  * <p>提供消息发送的远程调用能力，支持多通道路由（邮件/短信/Webhook/站内信）。 典型场景：工作流审批通知、定时任务执行结果告警、规则引擎触发动作等。
  *
- * <p>与 {@code common-feign/NotificationClient} 的区别：
+ * <p>与同模块 {@link NotificationClient} 的区别：
  *
  * <ul>
- *   <li>{@code NotificationClient} 定义在 common-feign 模块，使用 common-feign 的 DTO
- *   <li>{@code MessageSendClient} 定义在 message-api 模块，可引用 message-domain 的 VO/DTO
- *   <li>两者互补：common-feign 适合通用通知场景，message-api 适合需要消息领域对象的场景
+ *   <li>{@link NotificationClient} 使用 common-feign 的 DTO（{@code MessageRequest} 等）
+ *   <li>{@code MessageSendClient} 可引用 message-domain 的 VO/DTO
+ *   <li>两者互补：通用 DTO 场景使用 {@link NotificationClient}，需要消息领域对象的场景使用 {@code MessageSendClient}
  * </ul>
  *
  * @author ydsz-team

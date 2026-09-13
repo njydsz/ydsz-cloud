@@ -40,7 +40,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.common.safe.util.ClientIpResolver;
+import com.njydsz.common.util.net.ClientIpResolver;
 import com.njydsz.common.sentry.sla.SlaMetric;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.dto.RefreshRequest;

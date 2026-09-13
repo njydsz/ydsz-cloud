@@ -21,8 +21,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.SnowflakeProperties;
 import com.njydsz.common.util.id.WorkerIdAllocator;
 import com.njydsz.common.util.id.WorkerIdAllocatorChain;
-import com.njydsz.common.util.internal.proxy.RequestContextProxy;
-import com.njydsz.common.util.internal.proxy.TraceIdGeneratorProxy;
+import com.njydsz.common.util.internal.bridge.RequestContextProxy;
+import com.njydsz.common.util.internal.bridge.TraceIdGeneratorProxy;
 import com.njydsz.common.util.io.TempFileManager;
 import com.njydsz.common.util.io.TempFileProperties;
 

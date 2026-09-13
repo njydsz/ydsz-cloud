@@ -72,6 +72,25 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 
 > **注意**：`common-web` 与 `common-app` 是两个**平行**的应用层入口，分别面向 PC Web 服务和移动端 App。后端微服务统一使用 `common-web`，`common-app` 仅用于未来移动端项目。
 
+## L4→L4 横切依赖
+
+L4 基础数据层内部，以下两个模块存在**同层（L4→L4）单向依赖**，属于刻意的设计决策，不违反分层原则：
+
+| 模块 | 依赖的同级模块 | 依赖原因 |
+|---|---|---|
+| `common-tenant` | `common-jdbc`、`common-redis`、`common-thread` | 多租户隔离需要感知 JDBC 数据源、Redis 上下文、线程池传播 |
+| `common-lock` | `common-redis` | 分布式锁以 Redis 为底层存储引擎（Redisson / Lua 脚本） |
+
+**关键约束**：
+
+1. **单向依赖，无循环**：tenant → jdbc / redis / thread 为单向；lock → redis 为单向。被依赖方（jdbc、redis、thread）不反向引用 tenant 或 lock。
+2. **tenant 作为横切基础设施的特例**：多租户隔离是全链路横切关注点，租户上下文需贯穿数据访问（jdbc）、缓存（redis）、异步线程（thread）三个通道，因此允许 L4→L4 同级引用。
+3. **lock 与 redis 是引擎与载体关系**：分布式锁的核心语义（WatchDog 续期、可重入、Fair/Multi 锁型）依赖 Redis 原语实现；redis 模块仅提供 Key/Value 门面，不感知上层锁语义。
+
+> **判断依据**：L4→L4 依赖合规的条件 —— (a) 单向无环；(b) 被依赖模块不反向引用；(c) 有明确的横切基础设施语义。以上三条件均满足。
+>
+> **合规出处**：详见 `docs/云顶编码规范.md` §22.3「L4→L4 横切依赖（26.09.01 新增特例）」。
+
 ## 自动配置机制
 
 所有 28 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。

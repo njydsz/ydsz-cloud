@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.nextwiki.infra.mapper.SearchIndexMapper">
 
-    <resultMap id="SearchIndexResult" type="com.njydsz.nextwiki.infra.entity.SearchIndex">
+    <resultMap id="SearchIndexResult" type="com.njydsz.nextwiki.domain.entity.SearchIndex">
         <id column="id" property="id"/>
         <result column="file_node_id" property="fileNodeId"/>
         <result column="name" property="name"/>
@@ -17,14 +17,14 @@
         <result column="created_at" property="createdAt"/>
         <result column="updated_at" property="updatedAt"/>
         <result column="revision" property="revision"/>
-        <result column="deleted" property="deleted"/>
+        <result column="is_deleted" property="isDeleted"/>
     </resultMap>
 
     <!-- 新增或更新索引（PostgreSQL ON CONFLICT 语义，以 file_node_id 为唯一键） -->
     <insert id="upsert">
         INSERT INTO ydsz_wiki_search_index
             (id, file_node_id, name, path, content, suffix, mime_type, size, tags,
-             created_by, created_at, updated_at, revision, deleted)
+             created_by, created_at, updated_at, revision, is_deleted)
         VALUES
             (#{index.id}, #{index.fileNodeId}, #{index.name}, #{index.path}, #{index.content},
              #{index.suffix}, #{index.mimeType}, #{index.size}, #{index.tags},
@@ -38,7 +38,7 @@
             size       = EXCLUDED.size,
             tags       = EXCLUDED.tags,
             updated_at = NOW(),
-            deleted    = 0
+            is_deleted    = 0
     </insert>
 
     <!-- 根据文件节点ID删除索引（物理删除） -->
@@ -48,18 +48,18 @@
 
     <!-- 根据文件节点ID查询索引 -->
     <select id="selectByFileNodeId" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, deleted FROM ydsz_wiki_search_index WHERE file_node_id = #{fileNodeId} AND deleted = 0 LIMIT 1
+        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index WHERE file_node_id = #{fileNodeId} AND is_deleted = 0 LIMIT 1
     </select>
 
     <!-- 查询所有未删除的索引记录 -->
     <select id="selectAll" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, deleted FROM ydsz_wiki_search_index WHERE deleted = 0 ORDER BY created_at ASC
+        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index WHERE is_deleted = 0 ORDER BY created_at ASC
     </select>
 
     <!-- 数据库分页搜索索引（支持 name/path/content/tags 多维度 LIKE 搜索） -->
     <select id="searchPage" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, deleted FROM ydsz_wiki_search_index
-        WHERE deleted = 0
+        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index
+        WHERE is_deleted = 0
         AND created_by = #{createdBy}
         <choose>
             <when test="scope == 'filename'">
@@ -87,7 +87,7 @@
     <!-- 统计搜索结果总数 -->
     <select id="countSearchResults" resultType="long">
         SELECT COUNT(*) FROM ydsz_wiki_search_index
-        WHERE deleted = 0
+        WHERE is_deleted = 0
         AND created_by = #{createdBy}
         <choose>
             <when test="scope == 'filename'">
@@ -115,8 +115,8 @@
         调用前由 SearchIndexRepositoryImpl.searchAdvanced 将 SearchQuery 转为各参数
     -->
     <select id="searchAdvanced" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, deleted FROM ydsz_wiki_search_index
-        WHERE deleted = 0
+        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index
+        WHERE is_deleted = 0
         AND created_by = #{query.createdBy}
         <!-- 全文词模糊匹配（name/path/content/tags，任意一词命中即匹配） -->
         <if test="query.fullTextTerms != null and query.fullTextTerms.size() > 0">

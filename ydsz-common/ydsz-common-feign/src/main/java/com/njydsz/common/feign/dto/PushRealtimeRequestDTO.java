@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  *
  * <p>封装单播推送的全部参数（目标用户 ID + 消息类型 + 数据载荷）， 用于工作流待办数推送、任务分配通知等场景。
  *
- * <p><b>P0-3-fix</b>：新增 DTO 以支持 {@link com.njydsz.common.feign.NotificationClient#pushRealtime} 方法。
+ * <p><b>P0-3-fix</b>：新增 DTO 以支持 {@link com.njydsz.message.api.client.NotificationClient#pushRealtime} 方法。
  *
  * @author ydsz-team
  * @since 26.09.01

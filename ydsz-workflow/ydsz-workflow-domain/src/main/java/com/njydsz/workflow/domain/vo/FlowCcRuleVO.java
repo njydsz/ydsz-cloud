@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 /**
@@ -22,7 +23,8 @@ public class FlowCcRuleVO implements Serializable {
   private String nodeCode;
   private String ruleType;
   private String ruleTarget;
-  private Integer enabled;
+  @TableField("is_enabled")
+  private Boolean isEnabled;
   private String providerTraceId;
   private String createdBy;
   private LocalDateTime createdAt;

@@ -17,7 +17,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.cronjob", "com.njydsz.common"})
+@SpringBootApplication(scanBasePackages = {"com.njydsz.cronjob", "com.njydsz.common", "com.njydsz.message.api"})
 @EnableDiscoveryClient
 @EnableYdszAuth
 @EnableYdszSafe

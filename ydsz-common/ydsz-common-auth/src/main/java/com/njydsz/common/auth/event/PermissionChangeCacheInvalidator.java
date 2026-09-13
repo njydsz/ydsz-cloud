@@ -15,9 +15,9 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
+import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
-import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
 
 /**
@@ -53,7 +53,7 @@ public class PermissionChangeCacheInvalidator {
   private static final String PERMISSION_CHANGE_CHANNEL = "ydsz-auth:permission:changed";
 
   private final RolePermissionLoader rolePermissionLoader;
-  private final RedisRoleDataPermissionResolver dataPermissionResolver;
+  private final DataPermissionResolver dataPermissionResolver;
   private final ColumnPermissionResolver columnPermissionResolver;
   private final RedisMessageListenerContainer redisMessageListenerContainer;
 
@@ -141,10 +141,8 @@ public class PermissionChangeCacheInvalidator {
 
   private void invalidateDataPermissionCache(String roleCode) {
     try {
-      if (dataPermissionResolver instanceof RedisRoleDataPermissionResolver) {
-        ((RedisRoleDataPermissionResolver) dataPermissionResolver).invalidate(roleCode);
-        log.info("数据权限缓存已失效：roleCode={}", roleCode);
-      }
+      dataPermissionResolver.invalidate(roleCode);
+      log.info("数据权限缓存已失效：roleCode={}", roleCode);
     } catch (Exception e) {
       log.error("数据权限缓存失效失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
     }

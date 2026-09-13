@@ -12,7 +12,7 @@
 
     <artifactId>ydsz-common-search</artifactId>
     <name>ydsz-common-search</name>
-    <description>YDSZ Common Search - 统一搜索服务框架（PG tsvector + zhparser 中文分词 + SPI 多引擎抽象 + 索引同步 + 搜索建议 + 聚合分面）</description>
+    <description>搜索引擎 SPI 抽象层（当前实现：PostgreSQL 全文检索 tsvector + 内存引擎，预留 ES/Solr 扩展点）</description>
 
     <dependencies>
         <!--common-core-->
