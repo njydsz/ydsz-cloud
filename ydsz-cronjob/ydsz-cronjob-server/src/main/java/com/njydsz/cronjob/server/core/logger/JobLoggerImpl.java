@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import com.njydsz.common.util.exception.ExceptionUtils;
 import com.njydsz.cronjob.domain.job.JobLogger;
 import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
