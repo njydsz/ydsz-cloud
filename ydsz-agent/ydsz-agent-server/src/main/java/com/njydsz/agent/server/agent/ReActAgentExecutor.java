@@ -14,6 +14,8 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
+import com.njydsz.agent.domain.execution.ExecutionCheckpoint;
+import com.njydsz.agent.domain.execution.SessionPausedException;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.middleware.MiddlewareChain;
@@ -31,6 +33,7 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -79,6 +82,9 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   /** RAG 检索服务（可选，为 null 时不启用知识增强） */
   private final RagService ragService;
 
+  /** 执行暂停服务（可选，为 null 时不支持会话级暂停/恢复） */
+  private final ExecutionPauseService pauseService;
+
   public ReActAgentExecutor(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -90,7 +96,8 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
       RagService ragService,
-      MiddlewareChain middlewareChain) {
+      MiddlewareChain middlewareChain,
+      ExecutionPauseService pauseService) {
     super(
         llmClient,
         memory,
@@ -103,6 +110,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
         middlewareChain);
     this.toolRegistry = toolRegistry;
     this.ragService = ragService;
+    this.pauseService = pauseService;
   }
 
   @Override
@@ -142,61 +150,15 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     List<ToolDefinition> toolDefinitions = new ArrayList<>(toolRegistry.getToolDefinitions());
 
     for (int i = 0; i < request.getMaxIterations(); i++) {
-      ChatRequest llmRequest =
-          ChatRequest.builder()
-              .model(properties.getLlm().getDefaultModel())
-              .messages(messages)
-              .temperature(properties.getLlm().getTemperature())
-              .maxTokens(properties.getLlm().getMaxTokens())
-              .tools(toolDefinitions)
-              .build();
-
-      // 设置 LLM 请求到中间件上下文（onReasoning 钩子可审查/修改）
-      mwContext.setLlmRequest(llmRequest);
-      notifyReasoning(mwContext);
-      // 使用中间件链执行 LLM 调用（onModelCall 洋葱模型 — 支持缓存/限流/指标）
-      ChatResponse response = executeLlmCall(mwContext, () -> llmClient.chat(llmRequest));
-      // 同步路径中间件链不会自动设置 llmResponse，需手动补设
-      if (mwContext.getLlmResponse() == null) {
-        mwContext.setLlmResponse(response);
-      }
-
-      if (response.getUsage() != null) {
-        totalUsage = totalUsage.add(response.getUsage());
-      }
-
-      if (!response.hasToolCalls()) {
-        String output = applyOutputGuardrails(response.getContent());
-        saveConversation(convId, userInput, output, response.getUsage());
-        traceRecorder.endTrace(traceId, "SUCCESS");
-        mwContext.setFinished(true);
-        notifyAgentEnd(mwContext);
-        log.info(
-            "[ReAct] 完成: convId={}, iterations={}, tokens={}",
-            convId,
-            i + 1,
-            totalUsage.getTotalTokens());
-        return new ChatResponse(
-            response.getId(),
-            response.getModel(),
-            ChatMessage.assistant(output, convId, totalUsage),
-            totalUsage,
-            "stop",
-            List.of());
-      }
-
-      messages.add(response.getMessage());
-      // 并发执行工具并获取结果（经中间件 onActing 洋葱模型包装）
-      List<ToolCall> allowedCalls = filterAllowedTools(request, response.getToolCalls());
-      ToolBatchOutcome outcome = executeToolBatch(mwContext, traceId, allowedCalls);
-      for (ToolCall toolCall : allowedCalls) {
-        String result = outcome.results().getOrDefault(toolCall.getId(), "{}");
-        // 通知工具观察（onObservation 钩子）
-        mwContext.setToolCall(toolCall);
-        mwContext.setToolResult(result);
-        notifyObservation(mwContext);
-        ChatMessage toolMsg = ChatMessage.tool(toolCall.getId(), result, convId);
-        messages.add(toolMsg);
+      try {
+        ChatResponse response = runIteration(
+            request, mwContext, messages, totalUsage, toolDefinitions, convId, traceId, i);
+        if (response != null) {
+          return response;
+        }
+      } catch (SessionPausedException e) {
+        return handlePaused(
+            e, request, convId, traceId, messages, userInput, systemPrompt, totalUsage, i);
       }
     }
 
@@ -205,6 +167,151 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     mwContext.setFinished(true);
     notifyAgentEnd(mwContext);
     return buildMaxIterationsResponse(convId, totalUsage);
+  }
+
+  /**
+   * 执行单轮 ReAct 迭代。
+   *
+   * <p>如果本轮产生工具调用，执行工具批次并把结果加入消息列表；
+   * 如果产生最终答案，返回 ChatResponse；否则返回 null 继续下一轮。
+   *
+   * @param request 执行请求
+   * @param mwContext 中间件上下文
+   * @param messages 当前消息列表（会被修改）
+   * @param totalUsage 当前总 Token 用量（会被修改）
+   * @param toolDefinitions 工具定义列表
+   * @param convId 对话 ID
+   * @param traceId 链路追踪 ID
+   * @param iteration 当前迭代轮次
+   * @return 最终响应（非 null 时本轮结束）
+   */
+  private ChatResponse runIteration(
+      AgentExecutionRequest request,
+      MiddlewareContext mwContext,
+      List<ChatMessage> messages,
+      TokenUsage totalUsage,
+      List<ToolDefinition> toolDefinitions,
+      String convId,
+      String traceId,
+      int iteration) {
+    ChatRequest llmRequest =
+        ChatRequest.builder()
+            .model(properties.getLlm().getDefaultModel())
+            .messages(messages)
+            .temperature(properties.getLlm().getTemperature())
+            .maxTokens(properties.getLlm().getMaxTokens())
+            .tools(toolDefinitions)
+            .build();
+
+    // 设置 LLM 请求到中间件上下文（onReasoning 钩子可审查/修改）
+    mwContext.setLlmRequest(llmRequest);
+    notifyReasoning(mwContext);
+    // 使用中间件链执行 LLM 调用（onModelCall 洋葱模型 — 支持缓存/限流/指标）
+    ChatResponse response = executeLlmCall(mwContext, () -> llmClient.chat(llmRequest));
+    // 同步路径中间件链不会自动设置 llmResponse，需手动补设
+    if (mwContext.getLlmResponse() == null) {
+      mwContext.setLlmResponse(response);
+    }
+
+    if (response.getUsage() != null) {
+      totalUsage.add(response.getUsage());
+    }
+
+    if (!response.hasToolCalls()) {
+      String output = applyOutputGuardrails(response.getContent());
+      saveConversation(convId, request.getUserInput(), output, response.getUsage());
+      traceRecorder.endTrace(traceId, "SUCCESS");
+      mwContext.setFinished(true);
+      notifyAgentEnd(mwContext);
+      log.info(
+          "[ReAct] 完成: convId={}, iterations={}, tokens={}",
+          convId,
+          iteration + 1,
+          totalUsage.getTotalTokens());
+      return new ChatResponse(
+          response.getId(),
+          response.getModel(),
+          ChatMessage.assistant(output, convId, totalUsage),
+          totalUsage,
+          "stop",
+          List.of());
+    }
+
+    messages.add(response.getMessage());
+    // 并发执行工具并获取结果（经中间件 onActing 洋葱模型包装）
+    List<ToolCall> allowedCalls = filterAllowedTools(request, response.getToolCalls());
+    ToolBatchOutcome outcome = executeToolBatch(mwContext, traceId, allowedCalls);
+    for (ToolCall toolCall : allowedCalls) {
+      String result = outcome.results().getOrDefault(toolCall.getId(), "{}");
+      // 通知工具观察（onObservation 钩子）
+      mwContext.setToolCall(toolCall);
+      mwContext.setToolResult(result);
+      notifyObservation(mwContext);
+      ChatMessage toolMsg = ChatMessage.tool(toolCall.getId(), result, convId);
+      messages.add(toolMsg);
+    }
+    return null;
+  }
+
+  /**
+   * 处理会话暂停：保存检查点并返回暂停响应。
+   *
+   * @param e 暂停异常
+   * @param request 原执行请求
+   * @param convId 对话 ID
+   * @param traceId 链路追踪 ID
+   * @param messages 当前消息列表
+   * @param userInput 用户输入原文
+   * @param systemPrompt 系统提示词
+   * @param totalUsage 已消耗 Token
+   * @param iteration 当前迭代轮次
+   * @return 暂停状态响应
+   */
+  private ChatResponse handlePaused(
+      SessionPausedException e,
+      AgentExecutionRequest request,
+      String convId,
+      String traceId,
+      List<ChatMessage> messages,
+      String userInput,
+      String systemPrompt,
+      TokenUsage totalUsage,
+      int iteration) {
+    if (pauseService == null) {
+      throw new IllegalStateException("会话暂停服务未装配，无法保存检查点");
+    }
+    ExecutionCheckpoint checkpoint =
+        new ExecutionCheckpoint(
+            e.getApprovalId(),
+            request,
+            convId,
+            traceId,
+            List.copyOf(messages),
+            e.getPendingToolCalls(),
+            totalUsage,
+            iteration,
+            userInput,
+            systemPrompt,
+            Map.of());
+    pauseService.save(e.getApprovalId(), checkpoint);
+    log.info(
+        "[ReAct] 会话已暂停等待审批: convId={}, traceId={}, approvalId={}, iteration={}",
+        convId,
+        traceId,
+        e.getApprovalId(),
+        iteration);
+    return new ChatResponse(
+            IdGenerator.nextIdStr(),
+            properties.getLlm().getDefaultModel(),
+            ChatMessage.assistant(
+                "当前操作需人工审批，审批通过后将自动恢复执行。approvalId=" + e.getApprovalId(),
+                convId,
+                totalUsage),
+            totalUsage,
+            "paused",
+            List.of())
+        .withMetadata("approvalId", e.getApprovalId())
+        .withMetadata("status", "PAUSED");
   }
 
   @Override

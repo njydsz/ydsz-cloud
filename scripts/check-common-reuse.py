@@ -179,12 +179,12 @@ def scan() -> dict:
                         }
                     )
 
-        # E1：业务类名与 common 类名同名（同名同义才可疑；纯同名可能是 DDD 语境差异，人工定性）
+        # E1：业务类名与 common 类名同名 → WARN 级（需人工定性：继承复用 / 命名冲突 / 真重复 / ADR 豁免）
         for cls_name, rel in biz_class_names.items():
             if cls_name in common_classes and not cls_name.endswith(
                 ("Provider", "Sender", "Publisher", "Collector")
             ):
-                errors.append(
+                warnings.append(
                     {
                         "rule": "E1",
                         "file": str(rel),
