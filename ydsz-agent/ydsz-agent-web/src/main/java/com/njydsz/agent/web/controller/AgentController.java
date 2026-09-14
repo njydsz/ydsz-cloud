@@ -32,6 +32,7 @@ import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageContent;
+import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.agent.server.agent.AgentFacade.BatchChatItem;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
@@ -156,6 +157,11 @@ public class AgentController {
    *   <li>使用虚拟线程承载 LLM 调用，节省线程资源
    *   <li>客户端断开后通过 {@code active} 标志终止 LLM 调用，节省 Token 成本
    *   <li>事件类型：{@code chunk}（增量内容）/ {@code done}（正常结束）/ {@code error}（异常结束）
+   *       / {@code progress}（DAG 节点进度）
+   *   <li>P0-2/P0-3 类型化事件帧：{@code tool_call_started} / {@code tool_call_completed}
+   *       / {@code reasoning} / {@code citation} / {@code approval_required}（HITL 审批卡片，
+   *       载荷携带 {@code replyId}）/ {@code approval_resolved} / {@code result}，
+   *       载荷含 {@code source} 归属标识供多 Agent 协作时前端解复用
    * </ul>
    *
    * @param request Agent 执行请求体
@@ -226,9 +232,32 @@ public class AgentController {
                   } catch (IOException e) {
                     log.debug("[Agent-API] SSE progress 发送失败（客户端已断开）: {}", e.getMessage());
                   }
-                }));
+                },
+                // P0-2/P0-3: 类型化事件帧 — 工具调用开始/完成、思考链、HITL 审批请求等
+                event -> sendSseEvent(emitter, event)));
 
     return emitter;
+  }
+
+  /**
+   * 将类型化事件转为独立 SSE 事件帧推送。
+   *
+   * <p>事件类型作为 SSE 的 {@code event:} 名（前端 {@code addEventListener} 按类型监听），
+   * 事件载荷（含 {@code source} 归属标识）作为 {@code data:}。客户端已断开时静默忽略——
+   * 断连由 {@link SseExecutor} 的 active 标志统一处理，此处不重复中止执行。
+   *
+   * @param emitter SSE 发送句柄
+   * @param event 类型化事件（null 时忽略）
+   */
+  private void sendSseEvent(SseEmitter emitter, SseEvent event) {
+    if (event == null) {
+      return;
+    }
+    try {
+      emitter.send(SseEmitter.event().data(event.toPayload()).name(event.getEvent()));
+    } catch (IOException e) {
+      log.debug("[Agent-API] SSE 事件发送失败（客户端已断开）: type={}", event.getEvent());
+    }
   }
 
   // ==========================================================================
@@ -500,9 +529,10 @@ public class AgentController {
     return dto;
   }
 
-  /** ChatResponse → ChatResponseDTO 转换（Agent 执行用）。 */
+  /** AgentExecutionRequestDTO → 领域执行请求转换。 */
   private AgentExecutionRequest toExecutionRequest(AgentExecutionRequestDTO dto) {
     return AgentExecutionRequest.builder()
+        .agentCode(dto.getAgentCode())
         .conversationId(dto.getConversationId())
         .userInput(dto.getUserInput())
         .systemPrompt(dto.getSystemPrompt())

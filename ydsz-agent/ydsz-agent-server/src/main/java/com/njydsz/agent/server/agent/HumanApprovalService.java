@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.dto.AgentApprovalDTO;
+import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.agent.domain.repository.AgentApprovalRepository;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
 import com.njydsz.common.core.context.TenantContextHolder;
@@ -39,10 +41,10 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * 仅作热点缓存，支持多实例共享与重启恢复；审批结果通过 {@link DomainEventPublisher} 发布 {@code AGENT_APPROVAL_REQUESTED} /
  * {@code AGENT_APPROVAL_RESOLVED} 事件，执行器可订阅事件恢复/中止被暂停的步骤。
  *
- * <h3>对标竞品</h3>
- *
- * <ul>
- * </ul>
+ * <p><b>事件化推送（P0-3）</b>：除领域事件外，本服务支持接收当前 SSE 流的事件消费者，
+ * 在审批产生/决策时直接推送 {@code approval_required} / {@code approval_resolved}
+ * 事件（载荷携带 {@code replyId}），使前端无需轮询 {@code /approvals/pending}；
+ * 轮询端点保留作为流断开或页面刷新后的补偿路径。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -54,6 +56,9 @@ public class HumanApprovalService {
 
   /** 内存缓存上限，超过先清理过期项 */
   private static final int MAX_PENDING = 500;
+
+  /** 审批上下文摘要最大字符数 */
+  private static final int SUMMARY_MAX_CHARS = 500;
 
   /** 审批结果事件类型（审批通过/拒绝统一发布，metadata.status 区分） */
   private static final String EVENT_APPROVAL_RESOLVED = "AGENT_APPROVAL_RESOLVED";
@@ -92,6 +97,30 @@ public class HumanApprovalService {
    */
   public String requestApproval(
       String conversationId, String traceId, String stepDescription, Map<String, Object> context) {
+    return requestApproval(conversationId, traceId, stepDescription, context, null);
+  }
+
+  /**
+   * 创建审批请求并把审批卡片直接推入当前 SSE 流（P0-3 HITL 事件化）。
+   *
+   * <p>对标 AgentScope 的 {@code RequireUserConfirmEvent}：审批请求不再只落库等前端轮询，
+   * 而是以 {@code approval_required} 事件实时推送，事件载荷携带 {@code replyId}
+   * （复用 {@code approvalId}）供前端关联回填。轮询端点（{@code /approvals/pending}）
+   * 保留作为补偿路径，用于流已断开或页面刷新后的补捞。
+   *
+   * @param conversationId 对话 ID
+   * @param traceId 执行链路 ID
+   * @param stepDescription 当前步骤描述
+   * @param context 上下文信息（用户输入、已有结果等）
+   * @param eventConsumer 当前 SSE 流的事件消费者（可为 null，此时行为同无参重载）
+   * @return 审批请求 ID
+   */
+  public String requestApproval(
+      String conversationId,
+      String traceId,
+      String stepDescription,
+      Map<String, Object> context,
+      Consumer<SseEvent> eventConsumer) {
     if (pendingApprovals.size() >= MAX_PENDING) {
       evictExpired();
     }
@@ -121,9 +150,43 @@ public class HumanApprovalService {
       log.warn("[HITL] 审批请求事件发布失败: id={}, error={}", approvalId, e.getMessage());
     }
 
+    // 事件化推送：审批卡片直达当前流，前端无需轮询
+    emitEvent(eventConsumer, SseEvent.approvalRequired(approvalId, stepDescription, summarize(context)));
+
     log.info(
         "[HITL] 创建审批请求: id={}, convId={}, step={}", approvalId, conversationId, stepDescription);
     return approvalId;
+  }
+
+  /**
+   * 向流推送事件（消费者或事件为空时静默忽略，不影响主流程）。
+   *
+   * @param eventConsumer 事件消费者（可为 null）
+   * @param event 待推送事件
+   */
+  private void emitEvent(Consumer<SseEvent> eventConsumer, SseEvent event) {
+    if (eventConsumer == null || event == null) {
+      return;
+    }
+    try {
+      eventConsumer.accept(event);
+    } catch (Exception e) {
+      log.warn("[HITL] 审批事件推送失败（降级为轮询补偿）: id={}", event.getData().get("approvalId"));
+    }
+  }
+
+  /**
+   * 生成审批上下文摘要（供审批人快速判断，控制长度）。
+   *
+   * @param context 审批上下文
+   * @return 摘要文本；上下文为空时返回空串
+   */
+  private String summarize(Map<String, Object> context) {
+    if (context == null || context.isEmpty()) {
+      return "";
+    }
+    String json = YdszJson.toJson(context);
+    return json.length() <= SUMMARY_MAX_CHARS ? json : json.substring(0, SUMMARY_MAX_CHARS);
   }
 
   /**
@@ -184,7 +247,24 @@ public class HumanApprovalService {
    * @return 操作是否成功
    */
   public boolean approve(String approvalId, String approver, String comment) {
-    return resolve(approvalId, ApprovalStatus.APPROVED, approver, comment);
+    return approve(approvalId, approver, comment, null);
+  }
+
+  /**
+   * 审批通过（并把审批结果事件推入当前 SSE 流）。
+   *
+   * <p>事件载荷携带 {@code replyId}（= approvalId）与 {@code approved=true}，
+   * 使前端能在同一条流上完成「审批卡片 → 已批准」的状态流转。
+   *
+   * @param approvalId 审批请求 ID
+   * @param approver 审批人
+   * @param comment 审批意见
+   * @param eventConsumer 当前 SSE 流的事件消费者（可为 null）
+   * @return 操作是否成功
+   */
+  public boolean approve(
+      String approvalId, String approver, String comment, Consumer<SseEvent> eventConsumer) {
+    return resolve(approvalId, ApprovalStatus.APPROVED, approver, comment, eventConsumer);
   }
 
   /**
@@ -198,7 +278,21 @@ public class HumanApprovalService {
    * @return 操作是否成功
    */
   public boolean reject(String approvalId, String approver, String comment) {
-    return resolve(approvalId, ApprovalStatus.REJECTED, approver, comment);
+    return reject(approvalId, approver, comment, null);
+  }
+
+  /**
+   * 审批拒绝（并把审批结果事件推入当前 SSE 流）。
+   *
+   * @param approvalId 审批请求 ID
+   * @param approver 审批人
+   * @param comment 审批意见
+   * @param eventConsumer 当前 SSE 流的事件消费者（可为 null）
+   * @return 操作是否成功
+   */
+  public boolean reject(
+      String approvalId, String approver, String comment, Consumer<SseEvent> eventConsumer) {
+    return resolve(approvalId, ApprovalStatus.REJECTED, approver, comment, eventConsumer);
   }
 
   /**
@@ -232,9 +326,13 @@ public class HumanApprovalService {
                     && entry.getValue().getCreatedAt().isBefore(cutoff));
   }
 
-  /** 统一审批决策：更新内存 + DB + 发布解析事件。 */
+  /** 统一审批决策：更新内存 + DB + 发布解析事件（可选事件化推送）。 */
   private boolean resolve(
-      String approvalId, ApprovalStatus newStatus, String approver, String comment) {
+      String approvalId,
+      ApprovalStatus newStatus,
+      String approver,
+      String comment,
+      Consumer<SseEvent> eventConsumer) {
     ApprovalRequest request = pendingApprovals.get(approvalId);
     if (request == null) {
       Optional<AgentApprovalVO> vo = agentApprovalRepository.findById(approvalId);
@@ -272,6 +370,12 @@ public class HumanApprovalService {
     } catch (Exception e) {
       log.warn("[HITL] 审批结果事件发布失败: id={}, error={}", approvalId, e.getMessage());
     }
+
+    // 事件化推送：审批结果回填到同一条流（replyId = approvalId）
+    emitEvent(
+        eventConsumer,
+        SseEvent.approvalResolved(
+            approvalId, newStatus == ApprovalStatus.APPROVED, approver, comment));
 
     log.info("[HITL] 审批决策: id={}, status={}, approver={}", approvalId, newStatus, approver);
     return true;

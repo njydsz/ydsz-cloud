@@ -33,16 +33,13 @@ public class ContextOverflowHandler {
   /** Token 估算字符系数（char/token） */
   private final double tokenCharRatio;
 
-  /** 默认 Token 估算字符系数 */
-  public static final double DEFAULT_TOKEN_CHAR_RATIO = 2.5;
-
   /**
    * 构造上下文溢出处理器。
    *
    * @param compressor 上下文压缩策略（不为 null 时启用压缩兜底）
    */
   public ContextOverflowHandler(ContextCompressor compressor) {
-    this(compressor, DEFAULT_TOKEN_CHAR_RATIO);
+    this(compressor, ContextCompressor.DEFAULT_TOKEN_CHAR_RATIO);
   }
 
   /**

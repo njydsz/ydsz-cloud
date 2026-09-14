@@ -98,6 +98,9 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   /** Markdown 代码块语言标记 "json" 的长度 */
   private static final int JSON_LANG_TAG_LENGTH = 4;
 
+  /** 子代理片段来源标识前缀（完整形式 {@code supervisor/{子任务号}}） */
+  private static final String SUB_SOURCE_PREFIX = "supervisor/";
+
   /** Agent 工厂 */
   private final AgentFactory agentFactory;
 
@@ -208,13 +211,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       SubTask subTask,
       String traceId,
       TokenUsage[] usageAcc) {
-    AgentExecutionRequest subRequest =
-        AgentExecutionRequest.builder()
-            .userInput(subTask.description())
-            .conversationId(convId + "-sub-" + subTask.id())
-            .systemPrompt(null)
-            .maxIterations(request.getMaxIterations())
-            .build();
+    AgentExecutionRequest subRequest = buildSubRequest(convId, request, subTask);
     AgentExecutor worker = createWorker(subTask.type(), request);
     try {
       ChatResponse workerResponse = worker.execute(subRequest);
@@ -382,15 +379,11 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       String model,
       StreamingPiiMasker streamingMasker,
       Consumer<ChatChunk> chunkConsumer) {
-    AgentExecutionRequest subRequest =
-        AgentExecutionRequest.builder()
-            .userInput(subTask.description())
-            .conversationId(convId + "-sub-" + subTask.id())
-            .systemPrompt(null)
-            .maxIterations(request.getMaxIterations())
-            .build();
+    AgentExecutionRequest subRequest = buildSubRequest(convId, request, subTask);
     AgentExecutor worker = createWorker(subTask.type(), request);
     StringBuilder resultBuilder = new StringBuilder();
+    // 子代理片段来源标识：父流按 supervisor/{子任务号} 区分归属（P0-2）
+    String subSource = SUB_SOURCE_PREFIX + subTask.id();
     try {
       // 使用流式执行（worker 支持流式则流式，否则回退到同步）
       worker.executeStream(
@@ -402,20 +395,22 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
               if (!maskedDelta.isEmpty()) {
                 resultBuilder.append(maskedDelta);
                 chunkConsumer.accept(
-                    ChatChunk.content(responseId, model, maskedDelta, chunk.getDeltaToolCalls()));
+                    ChatChunk.content(responseId, model, maskedDelta, chunk.getDeltaToolCalls())
+                        .withSource(subSource));
               }
             } else if (chunk.isFinished()) {
               // 冲刷剩余缓冲
               String maskedRest = streamingMasker.flush();
               if (!maskedRest.isEmpty()) {
                 resultBuilder.append(maskedRest);
-                chunkConsumer.accept(ChatChunk.content(responseId, model, maskedRest));
+                chunkConsumer.accept(
+                    ChatChunk.content(responseId, model, maskedRest).withSource(subSource));
               }
               if (chunk.getUsage() != null) {
                 usageAcc[0] = usageAcc[0].add(chunk.getUsage());
               }
             } else {
-              chunkConsumer.accept(chunk);
+              chunkConsumer.accept(chunk.withSource(subSource));
             }
           });
       traceRecorder.recordStep(
@@ -673,6 +668,25 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
     return sb.toString();
   }
 
+  /**
+   * 构建子任务执行请求（强制父级管控继承）。
+   *
+   * <p>P1-3：对标 AgentScope「子代理强制继承父级 DENY 规则」，子请求经
+   * {@link AgentExecutionRequest#deriveForSubAgent} 派生——工具白名单取父级与子级的交集，
+   * 保证子 Agent 的工具面不会宽于父级；迭代上限、系统提示词、预置上下文一并继承，
+   * 避免子级自行放宽管控。此前子请求未设置任何工具白名单，等于给子 Agent 开放全部工具。
+   *
+   * @param convId 父对话 ID
+   * @param request 父级执行请求
+   * @param subTask 子任务定义
+   * @return 收紧后的子任务请求
+   */
+  private AgentExecutionRequest buildSubRequest(
+      String convId, AgentExecutionRequest request, SubTask subTask) {
+    return request.deriveForSubAgent(
+        subTask.description(), convId + "-sub-" + subTask.id(), List.of());
+  }
+
   /** 创建 Worker Agent 执行器 */
   private AgentExecutor createWorker(String type, AgentExecutionRequest request) {
     AgentDefinition def =
@@ -682,7 +696,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
             "Worker",
             AgentDefinition.Type.valueOf(type),
             request.getSystemPrompt(),
-            List.of(),
+            request.getEnabledTools(),
             BigDecimal.valueOf(properties.getLlm().getTemperature()),
             properties.getLlm().getMaxTokens(),
             request.getMaxIterations(),

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,6 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.agent.domain.code.CodeExecutionService;
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.context.ContextCompressor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.DagCheckpointStore;
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -48,6 +50,7 @@ import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.domain.workspace.AgentWorkspaceStore;
 import com.njydsz.agent.infra.code.NoopCodeExecutionService;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
@@ -80,6 +83,7 @@ import com.njydsz.agent.server.agent.SupervisorAgentExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.harness.AgentHarness;
 import com.njydsz.agent.server.health.AgentHealthIndicator;
 import com.njydsz.agent.server.insight.InsightReportServiceImpl;
 import com.njydsz.agent.server.metrics.AgentMetrics;
@@ -529,6 +533,42 @@ public class AgentAutoConfiguration {
         dagExecutor,
         supervisorExecutor,
         middlewareChainProvider);
+  }
+
+  /**
+   * 装配 Agent Harness（生产就绪执行入口）。
+   *
+   * <p>把「工作区生命周期 + 上下文预算守门 + 溢出重试」收敛到执行链入口，
+   * 执行器只保留推理与工具调用职责（P0-1：消除 AgentHarness 裸奔资产）。
+   *
+   * <p>各可选能力以 {@link ObjectProvider} 注入，未装配时对应能力自动降级：
+   * 无工作区存储 → 跳过工作区；无压缩策略 → 仅做预算裁剪不压缩。
+   *
+   * <p>参数默认值与 {@link AgentHarness#DEFAULT_CONTEXT_TOKEN_BUDGET} 保持一致，
+   * 可通过 {@code ydsz.agent.harness.*} 覆盖。
+   *
+   * @param workspaceStoreProvider 工作区存储（可选）
+   * @param memory 对话记忆（上下文预算守门数据源）
+   * @param contextCompressorProvider 上下文压缩策略（可选）
+   * @param maxRetryOnOverflow 上下文溢出最大重试次数
+   * @param contextTokenBudget 上下文 Token 预算（估算值）
+   * @return Agent Harness 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(AgentHarness.class)
+  public AgentHarness agentHarness(
+      ObjectProvider<AgentWorkspaceStore> workspaceStoreProvider,
+      ConversationMemory memory,
+      ObjectProvider<ContextCompressor> contextCompressorProvider,
+      @Value("${ydsz.agent.harness.max-retry-on-overflow:1}") int maxRetryOnOverflow,
+      @Value("${ydsz.agent.harness.context-token-budget:12000}") int contextTokenBudget) {
+    return AgentHarness.builder()
+        .workspaceStore(workspaceStoreProvider.getIfAvailable())
+        .memory(memory)
+        .contextCompressor(contextCompressorProvider.getIfAvailable())
+        .maxRetryOnOverflow(maxRetryOnOverflow)
+        .contextTokenBudget(contextTokenBudget)
+        .build();
   }
 
   /**

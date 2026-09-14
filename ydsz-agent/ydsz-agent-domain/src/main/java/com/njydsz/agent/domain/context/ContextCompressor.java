@@ -24,15 +24,28 @@ import com.njydsz.agent.domain.model.ChatMessage;
 public interface ContextCompressor {
 
   /**
+   * 默认 Token 估算字符系数（Char/Token）。
+   *
+   * <p>与 {@code ConversationMemory#estimateTokens} 的字符估算口径保持一致，
+   * 作为全链路（压缩策略 / 溢出处理 / Harness 预算守门）的唯一默认值来源。
+   */
+  double DEFAULT_TOKEN_CHAR_RATIO = 2.5;
+
+  /**
    * 压缩消息列表，返回压缩后的新列表。
    *
-   * <p>实现应保证：返回列表大小 <= maxSize，且保留 System Prompt 消息（role=SYSTEM）不被丢弃。
+   * <p><b>口径约定</b>：第二个参数统一为 <b>Token 预算（估算值）</b>，而非消息条数
+   * ——调用方（{@code ContextOverflowHandler} / {@code AgentHarness}）均按 Token 预算调用，
+   * 实现须自行把预算换算为可保留的消息范围，禁止当作条数上限直接比较。
+   *
+   * <p>实现应保证：返回列表的估算 Token 不超过预算，且保留 System Prompt 消息
+   * （role=SYSTEM）不被丢弃。
    *
    * @param messages 原始消息列表（不可变入参，返回新列表）
-   * @param maxSize 目标最大消息条数或 Token 预算
+   * @param tokenBudget 目标 Token 预算（估算值，非消息条数）
    * @return 压缩后的消息列表（总 Token 不超过预算）
    */
-  List<ChatMessage> compress(List<ChatMessage> messages, int maxSize);
+  List<ChatMessage> compress(List<ChatMessage> messages, int tokenBudget);
 
   /**
    * 获取压缩策略名称。

@@ -221,7 +221,7 @@ public class AgentHarness {
     try {
       history =
           memory.loadWithTokenBudget(
-              conversationId, tokenBudget, ContextOverflowHandler.DEFAULT_TOKEN_CHAR_RATIO);
+              conversationId, tokenBudget, ContextCompressor.DEFAULT_TOKEN_CHAR_RATIO);
     } catch (Exception e) {
       log.warn(
           "[Harness] 加载历史失败，跳过上下文预算守门: convId={}, error={}",
