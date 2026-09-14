@@ -1212,6 +1212,19 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
         </plugin>
+        <!-- P0-1: maven-surefire-plugin 启用 JUnit 5 平台（测试破零基础设施） -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+                <includes>
+                    <include>**/*Test.java</include>
+                </includes>
+                <excludes>
+                    <exclude>**/*IT.java</exclude>
+                </excludes>
+            </configuration>
+        </plugin>
         <!-- Checkstyle 源码检查：JSON 生态红线——业务代码禁止 import 第三方 JSON 库（Jackson/Fastjson/Gson）
              规则文件：checkstyle/checkstyle.xml；只扫 src/main，不扫 src/test（不影响 benchmark 基准库）
              验证：./mvnw-local.sh checkstyle:check 或 validate -->

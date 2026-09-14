@@ -141,6 +141,24 @@ public final class SseEvent {
     return source != null && !source.isBlank();
   }
 
+  /**
+   * 转换为 SSE 传输载荷（data 字段的 Map 形式）。
+   *
+   * <p>在 {@link #getData()} 基础上追加来源标识（若已设置），使前端可在同一事件类型下
+   * 按 {@link #FIELD_SOURCE} 区分多 Agent 协作的归属。事件类型本身由 SSE 的
+   * {@code event:} 帧承载，不放入载荷。
+   *
+   * @return 可变载荷映射（调用方可安全修改，不影响本不可变事件对象）
+   */
+  public Map<String, Object> toPayload() {
+    Map<String, Object> payload = new HashMap<>(Math.max(COLLECTION_CAPACITY, data.size() + 1));
+    payload.putAll(data);
+    if (hasSource()) {
+      payload.put(FIELD_SOURCE, source);
+    }
+    return payload;
+  }
+
   // ========== 工厂方法 ==========
 
   /**
