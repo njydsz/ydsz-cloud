@@ -60,6 +60,9 @@ public class ToolApprovalMiddleware implements AgentMiddleware {
   /** 待审批工具数量初始容量 */
   private static final int PENDING_CAPACITY = 4;
 
+  /** 已审批工具调用 ID 上下文属性键（恢复执行时跳过重复审批） */
+  private static final String BYPASS_CALL_IDS_KEY = "tool-approval.approved-call-ids";
+
   /** 敏感工具名单（空表示不拦截任何工具） */
   private final Set<String> sensitiveTools;
 
@@ -101,7 +104,7 @@ public class ToolApprovalMiddleware implements AgentMiddleware {
       context.setToolResults(proceed.execute());
       return;
     }
-    List<ToolCall> pending = filterSensitive(toolCalls);
+    List<ToolCall> pending = filterSensitive(toolCalls, context);
     if (pending.isEmpty()) {
       context.setToolResults(proceed.execute());
       return;
