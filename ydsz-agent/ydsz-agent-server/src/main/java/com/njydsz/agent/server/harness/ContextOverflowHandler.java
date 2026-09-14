@@ -34,7 +34,7 @@ public class ContextOverflowHandler {
   private final double tokenCharRatio;
 
   /** 默认 Token 估算字符系数 */
-  private static final double DEFAULT_TOKEN_CHAR_RATIO = 2.5;
+  public static final double DEFAULT_TOKEN_CHAR_RATIO = 2.5;
 
   /**
    * 构造上下文溢出处理器。

@@ -131,7 +131,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     String systemPrompt = buildSystemPrompt(request, userInput);
     messages.add(ChatMessage.system(systemPrompt));
-    messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+    messages.addAll(loadHistory(request, convId));
     messages.add(ChatMessage.user(userInput, convId));
 
     // 通知系统 Prompt 构建（onSystemPrompt 钩子）
@@ -237,7 +237,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       Consumer<ChatChunk> chunkConsumer,
       Consumer<SseEvent> eventConsumer) {
     String convId = extractConvId(request);
-    MiddlewareContext mwContext = createMiddlewareContext(request);
+    MiddlewareContext mwContext = createMiddlewareContext(request, eventConsumer);
     notifyAgentStart(mwContext);
     String traceId = mwContext.getTraceId() != null ? mwContext.getTraceId() : startTrace(convId, "REACT_STREAM");
     log.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
@@ -258,7 +258,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     String systemPrompt = buildSystemPrompt(request, userInput);
     messages.add(ChatMessage.system(systemPrompt));
-    messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+    messages.addAll(loadHistory(request, convId));
     messages.add(ChatMessage.user(userInput, convId));
 
     mwContext.setSystemPrompt(systemPrompt);
@@ -292,6 +292,11 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
         chunkConsumer.accept(
             ChatChunk.content(responseId, model, prefix + response.getContent())
                 .withSource(ChatChunk.SOURCE_MAIN));
+        // 携带工具调用时，本轮文本属于推理思考过程，额外推送 reasoning 事件供前端分区展示
+        if (response.hasToolCalls()) {
+          emitEvent(
+              eventConsumer, SseEvent.reasoning(response.getContent()), ChatChunk.SOURCE_MAIN);
+        }
       }
 
       if (!response.hasToolCalls()) {
@@ -300,6 +305,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
         traceRecorder.endTrace(traceId, "SUCCESS");
         mwContext.setFinished(true);
         notifyAgentEnd(mwContext);
+        emitEvent(eventConsumer, SseEvent.result(output, model), ChatChunk.SOURCE_MAIN);
         chunkConsumer.accept(ChatChunk.finish(responseId, model, "stop", totalUsage));
         return;
       }
@@ -337,6 +343,20 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   }
 
   /**
+   * 推送单个类型化事件（消费者为空时静默忽略）。
+   *
+   * @param eventConsumer 事件消费者（可为 null）
+   * @param event 待推送事件
+   * @param source 事件来源标识
+   */
+  private void emitEvent(Consumer<SseEvent> eventConsumer, SseEvent event, String source) {
+    if (eventConsumer == null || event == null) {
+      return;
+    }
+    eventConsumer.accept(event.withSource(source));
+  }
+
+  /**
    * 推送工具调用开始事件。
    *
    * @param toolCalls 本批次工具调用
@@ -347,9 +367,10 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       return;
     }
     for (ToolCall toolCall : toolCalls) {
-      eventConsumer.accept(
-          SseEvent.toolCallStarted(toolCall.getName(), toolCall.getArguments())
-              .withSource(ChatChunk.SOURCE_MAIN));
+      emitEvent(
+          eventConsumer,
+          SseEvent.toolCallStarted(toolCall.getName(), toolCall.getArguments()),
+          ChatChunk.SOURCE_MAIN);
     }
   }
 
@@ -370,10 +391,11 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       return;
     }
     Long duration = durations != null ? durations.get(toolCall.getId()) : null;
-    eventConsumer.accept(
+    emitEvent(
+        eventConsumer,
         SseEvent.toolCallCompleted(
-                toolCall.getName(), truncateResult(result), duration != null ? duration : 0L)
-            .withSource(ChatChunk.SOURCE_MAIN));
+            toolCall.getName(), truncateResult(result), duration != null ? duration : 0L),
+        ChatChunk.SOURCE_MAIN);
   }
 
   /**

@@ -101,7 +101,7 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
     String systemPrompt = buildSystemPrompt(request, ragContext);
     List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     messages.add(ChatMessage.system(systemPrompt));
-    messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+    messages.addAll(loadHistory(request, convId));
     messages.add(ChatMessage.user(userInput, convId));
 
     ChatRequest llmRequest =
@@ -179,7 +179,7 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
     String systemPrompt = buildSystemPrompt(request, ragContext);
     List<ChatMessage> messages = new ArrayList<>(COLLECTION_CAPACITY);
     messages.add(ChatMessage.system(systemPrompt));
-    messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+    messages.addAll(loadHistory(request, convId));
     messages.add(ChatMessage.user(userInput, convId));
 
     ChatRequest llmRequest =

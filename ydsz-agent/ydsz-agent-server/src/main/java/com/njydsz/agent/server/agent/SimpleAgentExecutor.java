@@ -85,7 +85,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
             properties.getPromptTemplate().getDefaultSystemCode(),
             properties.getDefaultSystemPrompt());
     messages.add(ChatMessage.system(systemPrompt));
-    messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+    messages.addAll(loadHistory(request, convId));
     messages.add(ChatMessage.user(userInput, convId));
 
     ChatRequest llmRequest =
@@ -152,7 +152,7 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
             properties.getPromptTemplate().getDefaultSystemCode(),
             properties.getDefaultSystemPrompt());
     messages.add(ChatMessage.system(systemPrompt));
-    messages.addAll(memory.load(convId, properties.getMemory().getMaxMessages()));
+    messages.addAll(loadHistory(request, convId));
     messages.add(ChatMessage.user(userInput, convId));
 
     ChatRequest llmRequest =
