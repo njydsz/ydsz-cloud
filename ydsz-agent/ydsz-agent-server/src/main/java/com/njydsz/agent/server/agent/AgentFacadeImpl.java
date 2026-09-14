@@ -10,18 +10,22 @@ import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageContent;
+import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.chat.ChatService;
+import com.njydsz.agent.server.harness.AgentHarness;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
@@ -63,6 +67,14 @@ public class AgentFacadeImpl implements AgentFacade {
 
   /** Agent 定义服务（按 code 查找定义以支持类型路由） */
   private final AgentDefinitionService agentDefinitionService;
+
+  /**
+   * Agent Harness（可选）。
+   *
+   * <p>以 {@link ObjectProvider} 注入：未装配 Harness 时（如精简部署）本门面直接委托执行器，
+   * 保证执行链路在任何装配组合下都可用。
+   */
+  private final ObjectProvider<AgentHarness> agentHarnessProvider;
 
   /**
    * {@inheritDoc}
@@ -183,20 +195,38 @@ public class AgentFacadeImpl implements AgentFacade {
    *
    * <p>根据请求中的 agentCode 查找 Agent 定义，路由到对应类型的执行器。
    * 若未找到定义则降级使用默认执行器（ReAct）。
+   *
+   * <p>P0-1 收口：执行统一经 {@link AgentHarness} 进入，由 Harness 承担
+   * 「工作区生命周期 + 上下文预算守门 + 溢出重试」，执行器只负责推理与工具调用。
    */
   @Override
   public ChatResponse execute(AgentExecutionRequest request) {
+    AgentExecutor executor = resolveExecutor(request);
+    AgentHarness harness = agentHarnessProvider.getIfAvailable();
+    if (harness != null) {
+      return harness.execute(request, executor);
+    }
+    return executor.execute(request);
+  }
+
+  /**
+   * 按 agentCode 路由执行器（未命中定义时回退默认执行器）。
+   *
+   * @param request 执行请求
+   * @return 目标执行器
+   */
+  private AgentExecutor resolveExecutor(AgentExecutionRequest request) {
     if (request.getAgentCode() != null && agentDefinitionService != null) {
       AgentDefinitionVO vo = agentDefinitionService.getByCode(request.getAgentCode());
       if (vo != null) {
         log.debug("[AgentFacade] 路由到类型执行器: agentCode={}, type={}",
             request.getAgentCode(), vo.getAgentType());
         AgentDefinition definition = toDomain(vo);
-        return agentFactory.getExecutor(definition).execute(request);
+        return agentFactory.getExecutor(definition);
       }
     }
     log.debug("[AgentFacade] 使用默认执行器: agentCode={}", request.getAgentCode());
-    return agentFactory.getDefaultExecutor().execute(request);
+    return agentFactory.getDefaultExecutor();
   }
 
   /**
@@ -260,7 +290,7 @@ public class AgentFacadeImpl implements AgentFacade {
    */
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-    agentFactory.getDefaultExecutor().executeStream(request, chunkConsumer);
+    executeStream(request, chunkConsumer, null);
   }
 
   /**
@@ -273,7 +303,28 @@ public class AgentFacadeImpl implements AgentFacade {
       AgentExecutionRequest request,
       Consumer<ChatChunk> chunkConsumer,
       Consumer<DagProgressEvent> progressConsumer) {
-    agentFactory.getDefaultExecutor().executeStream(request, chunkConsumer, progressConsumer);
+    executeStream(request, chunkConsumer, progressConsumer, null);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>P0-1/P0-2 收口：流式执行统一经 {@link AgentHarness} 进入（上下文预算守门 + 工作区生命周期），
+   * 并原样透传类型化事件回调供 Controller 转为独立 SSE 事件帧。
+   */
+  @Override
+  public void executeStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<DagProgressEvent> progressConsumer,
+      Consumer<SseEvent> eventConsumer) {
+    AgentExecutor executor = resolveExecutor(request);
+    AgentHarness harness = agentHarnessProvider.getIfAvailable();
+    if (harness != null) {
+      harness.executeStream(request, executor, chunkConsumer, progressConsumer, eventConsumer);
+      return;
+    }
+    executor.executeStream(request, chunkConsumer, progressConsumer, eventConsumer);
   }
 
   /**

@@ -10,6 +10,7 @@ import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageContent;
+import com.njydsz.agent.domain.model.SseEvent;
 
 /**
  * Agent 应用门面（Application Facade）
@@ -173,6 +174,27 @@ public interface AgentFacade {
       AgentExecutionRequest request,
       Consumer<ChatChunk> chunkConsumer,
       Consumer<DagProgressEvent> progressConsumer);
+
+  /**
+   * 流式执行 Agent（SSE，带进度回调 + 类型化事件回调）。
+   *
+   * <p>在文本片段与编排进度之外，额外透传类型化事件（工具调用开始/完成、思考链、
+   * 人工审批请求等），供 Controller 转成独立的 SSE 事件帧推送给前端。
+   *
+   * <p>默认实现忽略事件回调，仅委托三参重载，保证既有实现类无需改动即可编译。
+   *
+   * @param request Agent 执行请求
+   * @param chunkConsumer 流式片段消费者
+   * @param progressConsumer DAG 节点进度事件消费者（可为 null）
+   * @param eventConsumer 类型化事件消费者（可为 null）
+   */
+  default void executeStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<DagProgressEvent> progressConsumer,
+      Consumer<SseEvent> eventConsumer) {
+    executeStream(request, chunkConsumer, progressConsumer);
+  }
 
   /**
    * 获取对话历史。
