@@ -78,11 +78,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
         </dependency>
-        <!-- ydsz-common-app: 提供 AbstractModuleHealthIndicator 健康检查基类（从 common-web 迁入） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-app</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>

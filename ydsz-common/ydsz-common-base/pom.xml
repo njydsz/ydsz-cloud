@@ -64,11 +64,11 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- spring-boot-health (Spring Boot 4.x: health classes moved from actuator to health module) -->
+        <!-- spring-boot-health (Spring Boot 4.x: health classes moved from actor to health module)
+             非 optional：base 提供了 AbstractModuleHealthIndicator 等健康基类，下游必须能获得 Health/HealthIndicator 类 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-health</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- springdoc-openapi（可选，业务项目可选择是否使用 OpenAPI 文档） -->
