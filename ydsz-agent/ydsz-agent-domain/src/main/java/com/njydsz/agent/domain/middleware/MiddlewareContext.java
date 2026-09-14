@@ -206,6 +206,47 @@ public class MiddlewareContext {
     this.toolResults = toolResults;
   }
 
+  /**
+   * 获取类型化事件消费者。
+   *
+   * @return 事件消费者；非流式路径或未注入时为 null
+   */
+  public Consumer<SseEvent> getEventConsumer() {
+    return eventConsumer;
+  }
+
+  /**
+   * 设置类型化事件消费者（由执行器在流式路径注入）。
+   *
+   * @param eventConsumer 事件消费者（可为 null）
+   */
+  public void setEventConsumer(Consumer<SseEvent> eventConsumer) {
+    this.eventConsumer = eventConsumer;
+  }
+
+  /**
+   * 向当前 SSE 流推送类型化事件（消费者缺失时静默忽略）。
+   *
+   * <p>供中间件在执行过程中主动上报结构化事件（如工具审批请求、工具审计告警），
+   * 避免中间件反向依赖具体执行器的输出通道。
+   *
+   * @param event 待推送事件（null 时忽略）
+   */
+  public void emitEvent(SseEvent event) {
+    if (eventConsumer != null && event != null) {
+      eventConsumer.accept(event);
+    }
+  }
+
+  /**
+   * 判断当前执行是否具备事件推送通道。
+   *
+   * @return true 表示已注入事件消费者
+   */
+  public boolean canEmitEvent() {
+    return eventConsumer != null;
+  }
+
   public boolean isFinished() {
     return finished;
   }
