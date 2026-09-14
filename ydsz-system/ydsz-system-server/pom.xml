@@ -45,6 +45,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
         </dependency>
+        <!-- ydsz-common-app: 提供 AbstractModuleHealthIndicator 健康检查基类（从 common-web 迁入） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-app</artifactId>
+        </dependency>
         <!-- ydsz-common-exception: explicit declaration for direct BusinessException usage -->
         <dependency>
             <groupId>com.njydsz</groupId>

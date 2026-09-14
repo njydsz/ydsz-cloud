@@ -8,9 +8,9 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.health.contributor.Status;
 
+import com.njydsz.common.app.health.AbstractModuleHealthIndicator;
 import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 
 
 
@@ -39,7 +39,7 @@ import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
  *
  * <ul>
  *   <li>使用轻量级探针，<b>命中索引但不返回数据</b>，避免 COUNT(*) 扫描
- *   <li>{@link com.njydsz.common.web.health.AbstractModuleHealthIndicator#checkTableProbe} 框架
+ *   <li>{@link com.njydsz.common.app.health.AbstractModuleHealthIndicator#checkTableProbe} 框架
  *       自动捕获异常并转换为 {@code Health.down()}，不会因探针失败抛出未处理异常
  *   <li>整体执行耗时应 < 50ms（受 Redis / DB 网络延迟影响）
  * </ul>
@@ -49,7 +49,7 @@ import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
  * @author ydsz-team
  * @since 26.09.01
  * @see org.springframework.boot.health.contributor.HealthIndicator Spring Boot 健康检查接口
- * @see com.njydsz.common.web.health.AbstractModuleHealthIndicator 通用健康检查基类
+ * @see com.njydsz.common.app.health.AbstractModuleHealthIndicator 通用健康检查基类
  * @see com.njydsz.common.jdbc.health.DataSourceHealthIndicator 数据源健康检查
  */
 @Slf4j

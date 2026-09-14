@@ -18,10 +18,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-base</artifactId>
         </dependency>
-        <!-- Web 健康检查基类 -->
+        <!-- App 公共基座模块（含 AbstractModuleHealthIndicator 健康检查基类） -->
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
+            <artifactId>ydsz-common-app</artifactId>
         </dependency>
         <!-- 本模块领域层 -->
         <dependency>

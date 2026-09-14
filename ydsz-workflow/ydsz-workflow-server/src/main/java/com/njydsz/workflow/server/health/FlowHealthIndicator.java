@@ -8,7 +8,7 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.app.health.AbstractModuleHealthIndicator;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 

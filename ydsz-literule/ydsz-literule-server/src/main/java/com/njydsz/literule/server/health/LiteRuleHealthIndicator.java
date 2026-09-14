@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
 import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.server.cep.CEPEngine;
 import com.njydsz.literule.server.core.AsyncTraceRecorder;

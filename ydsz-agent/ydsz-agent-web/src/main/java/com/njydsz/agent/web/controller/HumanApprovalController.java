@@ -178,6 +178,8 @@ public class HumanApprovalController {
       return YdszResponse.error(
           AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found or already resolved: " + id);
     }
+    // 暂停模式：触发执行器中止（非暂停模式下检查点不存在，resume 返回 null 为正常降级）
+    agentFacade.resume(id, false);
     return YdszResponse.success(true);
   }
 }

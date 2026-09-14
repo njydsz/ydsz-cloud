@@ -231,7 +231,7 @@ public class AgentFacadeImpl implements AgentFacade {
       log.warn("[AgentFacade] 执行暂停服务未装配，无法恢复: approvalId={}", approvalId);
       return null;
     }
-    ExecutionCheckpoint checkpoint = pauseService.find(approvalId);
+    ExecutionCheckpoint checkpoint = pauseService.find(approvalId).orElse(null);
     if (checkpoint == null) {
       log.debug("[AgentFacade] 检查点不存在，跳过恢复: approvalId={}", approvalId);
       return null;

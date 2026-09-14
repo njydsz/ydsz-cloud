@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.health.contributor.Health;
 
 import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 
 /**

@@ -2,7 +2,7 @@ package com.njydsz.literule.app.health;
 
 import org.springframework.boot.health.contributor.Health;
 
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
 
 /**
  * 规则引擎模块 App 端健康检查指示器。

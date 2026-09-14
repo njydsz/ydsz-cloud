@@ -2,7 +2,7 @@ package com.njydsz.nextwiki.app.health;
 
 import org.springframework.boot.health.contributor.Health;
 
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
 import com.njydsz.nextwiki.app.config.NextwikiAppProperties;
 
 /**

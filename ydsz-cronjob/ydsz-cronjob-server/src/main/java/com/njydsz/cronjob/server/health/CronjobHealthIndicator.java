@@ -10,7 +10,7 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
 import com.njydsz.cronjob.domain.repository.JobNodeRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;

@@ -83,6 +83,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
         </dependency>
+        <!-- ydsz-common-app: 提供 AbstractModuleHealthIndicator 健康检查基类（从 common-web 迁入） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-app</artifactId>
+        </dependency>
         <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
         <dependency>
             <groupId>com.njydsz</groupId>
