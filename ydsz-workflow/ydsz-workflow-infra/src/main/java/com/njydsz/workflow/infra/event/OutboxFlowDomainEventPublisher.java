@@ -8,7 +8,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.event.DomainEventPublisher;
 import com.njydsz.workflow.domain.event.FlowDomainEvent;
 
@@ -107,7 +106,6 @@ public class OutboxFlowDomainEventPublisher implements DomainEventPublisher {
     return DomainEvent.builder()
         .eventType(event.getClass().getSimpleName())
         .aggregateType(AGGREGATE_TYPE_WORKFLOW)
-        .payload(YdszJson.toJson(event))
         .metadata(metadata)
         .build();
   }
