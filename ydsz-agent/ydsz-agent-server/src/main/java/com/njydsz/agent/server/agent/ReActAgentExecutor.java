@@ -357,7 +357,10 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     // 执行已审批的待执行工具调用（标记为已审批，避免工具审批门再次拦截）
     List<ToolCall> pending = checkpoint.getPendingToolCalls();
     if (!pending.isEmpty()) {
-      Set<String> approvedIds = pending.stream().map(ToolCall::getId).collect(Collectors.toSet());
+      Set<String> approvedIds = new HashSet<>(pending.size());
+      for (ToolCall toolCall : pending) {
+        approvedIds.add(toolCall.getId());
+      }
       mwContext.setAttribute(TOOL_APPROVAL_BYPASS_IDS, approvedIds);
       ToolBatchOutcome outcome = executeToolBatch(mwContext, traceId, pending);
       mwContext.setAttribute(TOOL_APPROVAL_BYPASS_IDS, null);
