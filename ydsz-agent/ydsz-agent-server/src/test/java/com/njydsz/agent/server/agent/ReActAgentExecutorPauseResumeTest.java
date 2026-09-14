@@ -10,7 +10,6 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -111,7 +110,7 @@ class ReActAgentExecutorPauseResumeTest {
 
     properties = new AgentProperties();
     properties.getLlm().setDefaultModel("gpt-4");
-    properties.getLlm().setTemperature(BigDecimal.valueOf(0.7));
+    properties.getLlm().setTemperature(0.7);
     properties.getLlm().setMaxTokens(2048);
     properties.getMemory().setMaxMessages(10);
 
