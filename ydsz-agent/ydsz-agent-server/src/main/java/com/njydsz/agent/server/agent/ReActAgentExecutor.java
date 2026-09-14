@@ -1,8 +1,10 @@
 package com.njydsz.agent.server.agent;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -75,6 +77,9 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
 
   /** 工具结果推送时的截断长度 */
   private static final int TOOL_RESULT_TRUNCATE_LENGTH = 200;
+
+  /** 工具审批门中间件已审批调用 ID 上下文属性键（恢复执行时避免重复拦截） */
+  private static final String TOOL_APPROVAL_BYPASS_IDS = "tool-approval.approved-call-ids";
 
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
@@ -151,10 +156,11 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
 
     for (int i = 0; i < request.getMaxIterations(); i++) {
       try {
-        ChatResponse response = runIteration(
+        IterationOutcome outcome = runIteration(
             request, mwContext, messages, totalUsage, toolDefinitions, convId, traceId, i);
-        if (response != null) {
-          return response;
+        totalUsage = outcome.totalUsage();
+        if (outcome.response() != null) {
+          return outcome.response();
         }
       } catch (SessionPausedException e) {
         return handlePaused(
@@ -178,14 +184,14 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
    * @param request 执行请求
    * @param mwContext 中间件上下文
    * @param messages 当前消息列表（会被修改）
-   * @param totalUsage 当前总 Token 用量（会被修改）
+   * @param totalUsage 当前总 Token 用量（累加后通过返回值透出，原引用保持不变）
    * @param toolDefinitions 工具定义列表
    * @param convId 对话 ID
    * @param traceId 链路追踪 ID
    * @param iteration 当前迭代轮次
-   * @return 最终响应（非 null 时本轮结束）
+   * @return 迭代结果（最终响应或 null + 更新后的累计用量）
    */
-  private ChatResponse runIteration(
+  private IterationOutcome runIteration(
       AgentExecutionRequest request,
       MiddlewareContext mwContext,
       List<ChatMessage> messages,
@@ -214,7 +220,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     }
 
     if (response.getUsage() != null) {
-      totalUsage.add(response.getUsage());
+      totalUsage = totalUsage.add(response.getUsage());
     }
 
     if (!response.hasToolCalls()) {
@@ -228,13 +234,14 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
           convId,
           iteration + 1,
           totalUsage.getTotalTokens());
-      return new ChatResponse(
+      ChatResponse finalResponse = new ChatResponse(
           response.getId(),
           response.getModel(),
           ChatMessage.assistant(output, convId, totalUsage),
           totalUsage,
           "stop",
           List.of());
+      return new IterationOutcome(finalResponse, totalUsage);
     }
 
     messages.add(response.getMessage());
@@ -250,7 +257,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       ChatMessage toolMsg = ChatMessage.tool(toolCall.getId(), result, convId);
       messages.add(toolMsg);
     }
-    return null;
+    return new IterationOutcome(null, totalUsage);
   }
 
   /**
@@ -312,6 +319,84 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
             List.of())
         .withMetadata("approvalId", e.getApprovalId())
         .withMetadata("status", "PAUSED");
+  }
+
+  /**
+   * 从检查点恢复 ReAct 执行。
+   *
+   * <p>审批通过后，执行检查点中保存的待执行工具调用，并将结果回填到消息列表，
+   * 然后从当前迭代轮次继续 ReAct 循环；审批拒绝时返回拒绝响应并清理检查点。
+   *
+   * @param checkpoint 执行检查点
+   * @param approved true=审批通过；false=审批拒绝
+   * @return 恢复后的最终响应
+   */
+  @Override
+  public ChatResponse resume(ExecutionCheckpoint checkpoint, boolean approved) {
+    if (pauseService == null) {
+      throw new IllegalStateException("会话暂停服务未装配，无法恢复执行");
+    }
+    String approvalId = checkpoint.getApprovalId();
+    String convId = checkpoint.getConversationId();
+    String traceId = checkpoint.getTraceId();
+    AgentExecutionRequest request = checkpoint.getRequest();
+
+    if (!approved) {
+      pauseService.discard(approvalId);
+      traceRecorder.endTrace(traceId, "APPROVAL_REJECTED");
+      log.info("[ReAct] 审批拒绝，中止执行: approvalId={}", approvalId);
+      return buildRejectedResponse("人工审批未通过，当前操作已中止");
+    }
+
+    List<ChatMessage> messages = new ArrayList<>(checkpoint.getMessages());
+    TokenUsage totalUsage = checkpoint.getTotalUsage();
+    MiddlewareContext mwContext = createMiddlewareContext(request);
+    mwContext.setTraceId(traceId);
+    mwContext.setSystemPrompt(checkpoint.getSystemPrompt());
+
+    // 执行已审批的待执行工具调用（标记为已审批，避免工具审批门再次拦截）
+    List<ToolCall> pending = checkpoint.getPendingToolCalls();
+    if (!pending.isEmpty()) {
+      Set<String> approvedIds = pending.stream().map(ToolCall::getId).collect(Collectors.toSet());
+      mwContext.setAttribute(TOOL_APPROVAL_BYPASS_IDS, approvedIds);
+      ToolBatchOutcome outcome = executeToolBatch(mwContext, traceId, pending);
+      mwContext.setAttribute(TOOL_APPROVAL_BYPASS_IDS, null);
+      for (ToolCall toolCall : pending) {
+        String result = outcome.results().getOrDefault(toolCall.getId(), "{}");
+        mwContext.setToolCall(toolCall);
+        mwContext.setToolResult(result);
+        notifyObservation(mwContext);
+        messages.add(ChatMessage.tool(toolCall.getId(), result, convId));
+      }
+    }
+
+    log.info(
+        "[ReAct] 恢复执行: approvalId={}, convId={}, traceId={}, iteration={}",
+        approvalId, convId, traceId, checkpoint.getCurrentIteration());
+
+    List<ToolDefinition> toolDefinitions = new ArrayList<>(toolRegistry.getToolDefinitions());
+    for (int i = checkpoint.getCurrentIteration() + 1; i < request.getMaxIterations(); i++) {
+      try {
+        IterationOutcome outcome = runIteration(
+            request, mwContext, messages, totalUsage, toolDefinitions, convId, traceId, i);
+        totalUsage = outcome.totalUsage();
+        if (outcome.response() != null) {
+          pauseService.discard(approvalId);
+          return outcome.response();
+        }
+      } catch (SessionPausedException e) {
+        return handlePaused(
+            e, request, convId, traceId, messages,
+            checkpoint.getUserInput(), checkpoint.getSystemPrompt(), totalUsage, i);
+      }
+    }
+
+    pauseService.discard(approvalId);
+    log.warn("[ReAct] 恢复后超过最大迭代次数: convId={}", convId);
+    traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
+    mwContext.setFinished(true);
+    notifyAgentEnd(mwContext);
+    return buildMaxIterationsResponse(convId, totalUsage);
   }
 
   @Override
@@ -529,6 +614,15 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
    * @param durations callId → 执行耗时（毫秒）
    */
   private record ToolBatchOutcome(Map<String, String> results, Map<String, Long> durations) {
+  }
+
+  /**
+   * 单轮迭代结果。
+   *
+   * @param response 最终响应（非 null 时本轮结束）
+   * @param totalUsage 更新后的累计 Token 用量
+   */
+  private record IterationOutcome(ChatResponse response, TokenUsage totalUsage) {
   }
 
   private String truncateResult(String result) {

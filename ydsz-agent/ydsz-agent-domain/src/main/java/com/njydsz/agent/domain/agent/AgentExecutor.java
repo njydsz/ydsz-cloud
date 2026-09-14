@@ -2,6 +2,7 @@ package com.njydsz.agent.domain.agent;
 
 import java.util.function.Consumer;
 
+import com.njydsz.agent.domain.execution.ExecutionCheckpoint;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.SseEvent;
@@ -33,6 +34,20 @@ public interface AgentExecutor {
    * @return 执行结果
    */
   ChatResponse execute(AgentExecutionRequest request);
+
+  /**
+   * 从检查点恢复执行（会话级暂停/恢复）。
+   *
+   * <p>默认实现返回 {@code null}，表示当前执行器不支持恢复；支持暂停模式的执行器
+   *（如 {@code ReActAgentExecutor}）应重写本方法，按审批结果继续或中止被暂停的步骤。
+   *
+   * @param checkpoint 执行检查点
+   * @param approved true=审批通过继续执行；false=审批拒绝中止执行
+   * @return 恢复后的执行结果；不支持时返回 null
+   */
+  default ChatResponse resume(ExecutionCheckpoint checkpoint, boolean approved) {
+    return null;
+  }
 
   /**
    * 流式执行 Agent
