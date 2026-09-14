@@ -17,6 +17,7 @@ import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
+import com.njydsz.agent.domain.execution.ExecutionCheckpoint;
 import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
@@ -25,6 +26,7 @@ import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.chat.ChatService;
+import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.harness.AgentHarness;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
@@ -75,6 +77,13 @@ public class AgentFacadeImpl implements AgentFacade {
    * 保证执行链路在任何装配组合下都可用。
    */
   private final ObjectProvider<AgentHarness> agentHarnessProvider;
+
+  /**
+   * 执行暂停服务（可选）。
+   *
+   * <p>会话级暂停/恢复时使用；未装配时 resume 返回 null。
+   */
+  private final ObjectProvider<ExecutionPauseService> pauseServiceProvider;
 
   /**
    * {@inheritDoc}
@@ -207,6 +216,29 @@ public class AgentFacadeImpl implements AgentFacade {
       return harness.execute(request, executor);
     }
     return executor.execute(request);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>按 {@code approvalId} 从 {@link ExecutionPauseService} 查找检查点，委托原执行器恢复。
+   * 检查点不存在时返回 null（说明该审批不是暂停模式或已过期清理）。
+   */
+  @Override
+  public ChatResponse resume(String approvalId, boolean approved) {
+    ExecutionPauseService pauseService = pauseServiceProvider.getIfAvailable();
+    if (pauseService == null) {
+      log.warn("[AgentFacade] 执行暂停服务未装配，无法恢复: approvalId={}", approvalId);
+      return null;
+    }
+    ExecutionCheckpoint checkpoint = pauseService.find(approvalId);
+    if (checkpoint == null) {
+      log.debug("[AgentFacade] 检查点不存在，跳过恢复: approvalId={}", approvalId);
+      return null;
+    }
+    AgentExecutor executor = resolveExecutor(checkpoint.getRequest());
+    log.info("[AgentFacade] 恢复执行: approvalId={}, approved={}", approvalId, approved);
+    return executor.resume(checkpoint, approved);
   }
 
   /**

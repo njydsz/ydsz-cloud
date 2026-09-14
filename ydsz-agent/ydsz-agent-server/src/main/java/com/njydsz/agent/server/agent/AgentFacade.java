@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
+import com.njydsz.agent.domain.execution.ExecutionCheckpoint;
 import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
@@ -122,6 +123,18 @@ public interface AgentFacade {
    * @return Agent 响应
    */
   ChatResponse execute(AgentExecutionRequest request);
+
+  /**
+   * 按审批请求 ID 恢复被暂停的 Agent 执行。
+   *
+   * <p>工具审批门处于暂停模式时，执行器会保存 {@link ExecutionCheckpoint} 并返回
+   * 携带 {@code approvalId} 的暂停响应；审批完成后调用本方法恢复执行。
+   *
+   * @param approvalId 审批请求 ID
+   * @param approved true=审批通过继续执行；false=审批拒绝中止执行
+   * @return 恢复后的 Agent 响应；检查点不存在时返回 null
+   */
+  ChatResponse resume(String approvalId, boolean approved);
 
   /**
    * 流式对话（SSE）。

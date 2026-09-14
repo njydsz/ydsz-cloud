@@ -15,6 +15,7 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 
@@ -81,6 +82,9 @@ public class AgentFactory {
   /** 中间件链（可选，为 null 时不启用中间件） */
   private final MiddlewareChain middlewareChain;
 
+  /** 执行暂停服务（可选，为 null 时不支持会话级暂停/恢复） */
+  private final ExecutionPauseService pauseService;
+
   /**
    * DAG 编排执行器（延迟注入打破循环依赖）。
    *
@@ -108,7 +112,8 @@ public class AgentFactory {
       PromptTemplateProvider promptTemplateProvider,
       @Lazy DagOrchestrationExecutor dagExecutor,
       @Lazy SupervisorAgentExecutor supervisorExecutor,
-      ObjectProvider<MiddlewareChain> middlewareChainProvider) {
+      ObjectProvider<MiddlewareChain> middlewareChainProvider,
+      ExecutionPauseService pauseService) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.toolRegistry = toolRegistry;
@@ -122,6 +127,7 @@ public class AgentFactory {
     this.dagExecutor = dagExecutor;
     this.supervisorExecutor = supervisorExecutor;
     this.middlewareChain = middlewareChainProvider.getIfAvailable();
+    this.pauseService = pauseService;
   }
 
   /**
@@ -170,7 +176,8 @@ public class AgentFactory {
               guardrailService,
               promptTemplateProvider,
               ragService,
-              middlewareChain);
+              middlewareChain,
+              pauseService);
       case "RAG" ->
           // RAG 模式：检索增强生成，复用 ReAct 执行器（ragService 不为 null 时自动启用知识增强）
           new ReActAgentExecutor(
@@ -184,7 +191,8 @@ public class AgentFactory {
               guardrailService,
               promptTemplateProvider,
               ragService,
-              middlewareChain);
+              middlewareChain,
+              pauseService);
       case "CHAT" ->
           // Simple 模式：单轮对话，无工具调用
           new SimpleAgentExecutor(
@@ -229,7 +237,8 @@ public class AgentFactory {
             guardrailService,
             promptTemplateProvider,
             ragService,
-            middlewareChain);
+            middlewareChain,
+            pauseService);
       }
     };
   }

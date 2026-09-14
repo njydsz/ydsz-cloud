@@ -140,17 +140,43 @@ public class ToolApprovalMiddleware implements AgentMiddleware {
   /**
    * 筛选命中敏感名单的工具调用。
    *
+   * <p>恢复执行时，上下文可能携带已审批调用 ID（{@link #BYPASS_CALL_IDS_KEY}），
+   * 这些调用已被人为审批通过，不再重复拦截。
+   *
    * @param toolCalls 本批次工具调用
+   * @param context 中间件上下文
    * @return 需要人工审批的调用列表
    */
-  private List<ToolCall> filterSensitive(List<ToolCall> toolCalls) {
+  private List<ToolCall> filterSensitive(List<ToolCall> toolCalls, MiddlewareContext context) {
+    Set<String> bypassIds = resolveBypassIds(context);
     List<ToolCall> pending = new ArrayList<>(PENDING_CAPACITY);
     for (ToolCall toolCall : toolCalls) {
+      if (bypassIds.contains(toolCall.getId())) {
+        continue;
+      }
       if (toolCall.getName() != null && sensitiveTools.contains(toolCall.getName())) {
         pending.add(toolCall);
       }
     }
     return pending;
+  }
+
+  /**
+   * 解析已审批调用 ID 集合（上下文缺失或类型不匹配时返回空集）。
+   *
+   * @param context 中间件上下文
+   * @return 已审批调用 ID 集合
+   */
+  @SuppressWarnings("unchecked")
+  private Set<String> resolveBypassIds(MiddlewareContext context) {
+    Object value = context.getAttribute(BYPASS_CALL_IDS_KEY);
+    if (value instanceof Set) {
+      return (Set<String>) value;
+    }
+    if (value instanceof List) {
+      return new HashSet<>((List<String>) value);
+    }
+    return Set.of();
   }
 
   /**

@@ -1,4 +1,4 @@
-package com.njydsz.common.web.health;
+package com.njydsz.common.app.health;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -23,7 +23,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  *     private final RedisStringOps redisStringOps;
  *     private final MyMapper myMapper;
  *
- *     @Override
+ *     &#64;Override
  *     protected void doHealthCheck(Health.Builder builder) {
  *         checkRedis(builder, () -> redisStringOps.hasKey("health-check"));
  *         checkTableProbe(builder, "myTable", () -> myMapper.selectById(1L));
@@ -159,8 +159,8 @@ public abstract class AbstractModuleHealthIndicator implements HealthIndicator {
    * <p>{@code statusSupplier} 抛异常时同样只追加 {@code ERROR} 明细，不降级整体状态，
    * 因此可选组件的抖动不会让模块健康检查直接失败。
    *
-   * @param builder 健康状态构建器
-   * @param componentName 明细项名称，直接作为 health details 的键
+   * @param builder 健康状态构建器，直接作为 health details 的键
+   * @param componentName 明细项名称
    * @param component 可选组件实例，为 {@code null} 表示未接入
    * @param statusSupplier 状态文案提供者，仅在 {@code component} 非 {@code null} 时调用
    */
