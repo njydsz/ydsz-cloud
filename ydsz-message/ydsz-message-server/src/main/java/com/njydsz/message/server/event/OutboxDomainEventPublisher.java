@@ -11,6 +11,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.event.MessageDomainEvent;
 import com.njydsz.message.domain.event.OutboxEvent;
+import com.njydsz.message.domain.identity.IdGenerator;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
 
 /**
@@ -42,6 +43,9 @@ public class OutboxDomainEventPublisher {
   private final ApplicationEventPublisher eventPublisher;
   private final OutboxEventRepository outboxEventRepository;
 
+  /** 唯一 ID 生成器（实现委托 common-util Snowflake，ADR-008：Outbox 主键禁用 UUID） */
+  private final IdGenerator idGenerator;
+
   /** Outbox 模式开关（关闭后等同原直接发布行为） */
   @Value("${ydsz.message.outbox.enabled:true}")
   private boolean outboxEnabled;
@@ -70,7 +74,7 @@ public class OutboxDomainEventPublisher {
       String payload = YdszJson.toJson(event);
       String eventType = event.getClass().getName();
 
-      // 构造 Outbox 事件
+      // 构造 Outbox 事件（主键经 IdGenerator 雪花生成，ADR-008 整改：原 UUID.randomUUID 违反主键边界）
       OutboxEvent outboxEvent =
           new OutboxEvent(
               event.getClass().getSimpleName(),
@@ -78,6 +82,7 @@ public class OutboxDomainEventPublisher {
               eventType,
               payload,
               event.getTenantId());
+      outboxEvent.setId(idGenerator.nextId());
 
       // 注册事务同步器：事务提交后写入 Outbox（与业务操作同事务）
       TransactionSynchronizationManager.registerSynchronization(

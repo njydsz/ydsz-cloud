@@ -230,7 +230,7 @@ public class MessageServiceImpl implements MessageService {
    * @return 发送结果（含 msgId 供追踪）
    */
   private MessageResult dispatchAsync(MsgLogVO logDO, SendContext ctx) {
-    // P2-A6: 构造 OutboxEvent, 与 msgLog 落库在同一事务中(原子性保证)
+    // P2-A6: 构造 OutboxEvent, 与 msgLog 落库在同一事务中(原子性保证)；主键经 common Snowflake 生成（ADR-008）
     OutboxEvent outboxEvent =
         new OutboxEvent(
             "Message",
@@ -238,6 +238,7 @@ public class MessageServiceImpl implements MessageService {
             "MessageAsyncDispatch",
             YdszJson.toJson(buildMessageRequestFromLog(logDO, ctx)),
             TenantContextHolder.getTenantId());
+    outboxEvent.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     // P2-A6: 落库 PENDING + 写 Outbox 在同一事务中(OutboxDomainEventPublisher 因此感知事务上下文)
     messageSendTxService.insertLogAndOutbox(logDO, outboxEvent);
     log.info(
@@ -670,6 +671,8 @@ public class MessageServiceImpl implements MessageService {
               "MessageAsyncDispatch",
               YdszJson.toJson(request),
               TenantContextHolder.getTenantId());
+      // 主键经 common Snowflake 生成（ADR-008 整改：原 UUID.randomUUID 违反主键边界）
+      outboxEvent.setId(String.valueOf(snowflakeIdGenerator.nextId()));
       outboxEventRepository.save(outboxEvent);
       log.info(
           "[Message] 异步消息已写入 Outbox: msgId={} outboxId={}",
