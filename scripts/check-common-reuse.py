@@ -46,10 +46,10 @@ JAVA_FILE_RE = re.compile(r"^import\s+(?:static\s+)?([A-Za-z0-9_.]+)\s*;", re.MU
 CLASS_DECL_RE = re.compile(r"\b(?:class|interface|enum|record)\s+([A-Z][A-Za-z0-9_]*)")
 PACKAGE_RE = re.compile(r"^package\s+([A-Za-z0-9_.]+)\s*;", re.MULTILINE)
 
-# 已定界豁免清单：(规则, 文件路径包含片段) -> 依据说明。
+# 已定界豁免清单：(规则, 文件路径片段) -> 依据说明。片段与正斜杠化路径匹配。
 # 豁免项不计入退出码，但仍打印（DEFERRED）保持可见；定界变化时同步更新本表。
 KNOWN_EXCEPTIONS = {
-    ("E3", "gateway/config/GatewayHealthIndicator.java"): (
+    ("E3", "GatewayHealthIndicator.java"): (
         "网关为 WebFlux 响应式栈，common-web 基类探针为 Servlet 栈阻塞封装，"
         "场景决定必要实现（ADR-011 定界说明）"
     ),
@@ -220,6 +220,17 @@ def scan() -> dict:
                     }
                 )
 
+    # 豁免分流：命中 KNOWN_EXCEPTIONS 的 ERROR 转入 deferred（不计退出码，保持可见）
+    deferred: list[dict] = []
+    kept_errors: list[dict] = []
+    for e in errors:
+        reason = is_exempt(e["rule"], e["file"])
+        if reason:
+            deferred.append({**e, "reason": reason})
+        else:
+            kept_errors.append(e)
+    errors = kept_errors
+
     # 供给侧统计
     supply = {
         sub: {"total": sum(m[sub] for m in matrix.values()), "modules": sum(1 for m in matrix.values() if m[sub] > 0)}
@@ -229,6 +240,7 @@ def scan() -> dict:
 
     return {
         "errors": errors,
+        "deferred": deferred,
         "warnings": warnings,
         "matrix": {m: dict(row) for m, row in sorted(matrix.items())},
         "supply": supply,

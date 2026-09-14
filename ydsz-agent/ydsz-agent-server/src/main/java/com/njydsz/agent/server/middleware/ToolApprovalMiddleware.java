@@ -12,6 +12,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.agent.domain.execution.SessionPausedException;
 import com.njydsz.agent.domain.middleware.AgentMiddleware;
 import com.njydsz.agent.domain.middleware.MiddlewareContext;
 import com.njydsz.agent.domain.model.ToolCall;
@@ -25,10 +26,16 @@ import com.njydsz.agent.server.agent.HumanApprovalService;
  * {@code approval_required} 事件推入当前 SSE 流（P0-3 事件化，前端直接渲染审批卡片），
  * 再以结构化「待审批」观察结果回填，使推理循环可继续（不阻塞执行线程）。
  *
- * <p><b>非阻塞语义</b>：本中间件不挂起等待人工决策。审批通过后由调用方携带
- * {@code approvalId} 重新发起该工具调用（补偿路径见 {@code HumanApprovalController}），
- * 这是有意为之——在 SSE 请求线程上阻塞等待人工操作会长期占用容器线程，
- * 与 {@code SseExecutor} 的超时清理策略冲突。
+ * <p><b>两种工作模式</b>：
+ * <ul>
+ *   <li><b>非阻塞模式（默认）</b>：命中敏感名单的工具调用以结构化「待审批」观察结果回填，
+ *       推理循环继续，审批通过后由调用方携带 {@code approvalId} 重新发起该工具调用。
+ *       适用于不想挂起执行线程的场景（SSE 超时清理策略兼容）。</li>
+ *   <li><b>暂停模式</b>：{@code ydsz.agent.approval.pause-on-sensitive=true} 时，
+ *       命中敏感工具的本批次调用会抛出 {@link SessionPausedException}，
+ *       执行器捕获后保存 {@link com.njydsz.agent.domain.execution.ExecutionCheckpoint}
+ *       并返回暂停状态；审批通过后调用 {@code AgentFacade.resume(...)} 恢复执行。</li>
+ * </ul>
  *
  * <p><b>默认关闭</b>：{@code ydsz.agent.approval.sensitive-tools} 未配置时名单为空，
  * 中间件对任何工具都不拦截（零行为变更），仅作为可插拔的审批能力接入点。
@@ -58,19 +65,28 @@ public class ToolApprovalMiddleware implements AgentMiddleware {
   /** 审批服务（未装配时降级为不拦截） */
   private final ObjectProvider<HumanApprovalService> approvalServiceProvider;
 
+  /** 是否启用暂停模式（true 时抛 SessionPausedException，false 时返回待审批观察结果） */
+  private final boolean pauseOnSensitive;
+
   /**
    * 构造工具审批门中间件。
    *
    * @param sensitiveToolsConfig 敏感工具名单（逗号分隔，未配置时为空串表示不拦截）
+   * @param pauseOnSensitive 命中敏感工具时是否暂停执行（默认 false）
    * @param approvalServiceProvider 审批服务（可选）
    */
   public ToolApprovalMiddleware(
       @Value("${ydsz.agent.approval.sensitive-tools:}") String sensitiveToolsConfig,
+      @Value("${ydsz.agent.approval.pause-on-sensitive:false}") boolean pauseOnSensitive,
       ObjectProvider<HumanApprovalService> approvalServiceProvider) {
     this.sensitiveTools = parseSensitiveTools(sensitiveToolsConfig);
+    this.pauseOnSensitive = pauseOnSensitive;
     this.approvalServiceProvider = approvalServiceProvider;
     if (!sensitiveTools.isEmpty()) {
-      log.info("[ToolApproval] 工具审批门已启用: sensitiveTools={}", sensitiveTools);
+      log.info(
+          "[ToolApproval] 工具审批门已启用: sensitiveTools={}, pauseOnSensitive={}",
+          sensitiveTools,
+          pauseOnSensitive);
     }
   }
 
@@ -89,7 +105,16 @@ public class ToolApprovalMiddleware implements AgentMiddleware {
       context.setToolResults(proceed.execute());
       return;
     }
-    // 放行非敏感调用，命中名单的调用以「待审批」观察结果回填
+
+    // 暂停模式：登记审批后抛异常，由执行器保存检查点并结束当前执行
+    if (pauseOnSensitive) {
+      // 仅对第一个敏感工具创建审批请求（批量敏感场景拆到恢复后再处理）
+      ToolCall firstPending = pending.get(0);
+      String approvalId = requestApproval(context, firstPending);
+      throw new SessionPausedException(approvalId, pending);
+    }
+
+    // 非阻塞模式：放行非敏感调用，命中名单的调用以「待审批」观察结果回填
     Map<String, String> results = new HashMap<>(proceed.execute());
     for (ToolCall toolCall : pending) {
       String approvalId = requestApproval(context, toolCall);
