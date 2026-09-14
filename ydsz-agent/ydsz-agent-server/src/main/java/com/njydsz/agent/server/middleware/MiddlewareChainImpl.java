@@ -3,6 +3,7 @@ package com.njydsz.agent.server.middleware;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -102,6 +103,12 @@ public class MiddlewareChainImpl implements MiddlewareChain {
   }
 
   @Override
+  public Map<String, String> executeActing(
+      MiddlewareContext context, AgentMiddleware.ActingProceed finalCall) {
+    return new ActingOnionInvoker(middlewares, context, finalCall).invoke(0);
+  }
+
+  @Override
   public void executeObservation(MiddlewareContext context) {
     for (AgentMiddleware middleware : middlewares) {
       try {
@@ -134,7 +141,6 @@ public class MiddlewareChainImpl implements MiddlewareChain {
    * 最内层调用 finalCall.execute() 执行实际 LLM 调用。
    */
   private static class OnionInvoker {
-
     private final List<AgentMiddleware> middlewares;
     private final MiddlewareContext context;
     private final AgentMiddleware.ModelCallProceed finalCall;
@@ -173,6 +179,55 @@ public class MiddlewareChainImpl implements MiddlewareChain {
         return context.getLlmResponse();
       } catch (MiddlewareException e) {
         log.warn("[Middleware] {} 中断模型调用: {}", current.getName(), e.getUserMessage());
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * 洋葱模型递归调用器（工具执行阶段）— 按优先级升序链式触发 onActing。
+   *
+   * <p>中间件可读取 {@link MiddlewareContext#getToolCalls()} 审计/过滤本批次工具调用；
+   * 放行后由最内层 {@code finalCall} 执行实际工具调用并回填结果。
+   * 未放行的中间件须自行通过 {@link MiddlewareContext#setToolResults(java.util.Map)} 提供结果，
+   * 否则视为放行。
+   */
+  private static class ActingOnionInvoker {
+
+    private final List<AgentMiddleware> middlewares;
+    private final MiddlewareContext context;
+    private final AgentMiddleware.ActingProceed finalCall;
+
+    ActingOnionInvoker(
+        List<AgentMiddleware> middlewares,
+        MiddlewareContext context,
+        AgentMiddleware.ActingProceed finalCall) {
+      this.middlewares = middlewares;
+      this.context = context;
+      this.finalCall = finalCall;
+    }
+
+    /**
+     * 递归执行第 index 个中间件的 onActing。
+     *
+     * @param index 当前中间件索引
+     * @return callId → 工具执行结果
+     */
+    Map<String, String> invoke(int index) {
+      if (index >= middlewares.size()) {
+        Map<String, String> result = finalCall.execute();
+        if (context.getToolResults() == null) {
+          context.setToolResults(result);
+        }
+        return result;
+      }
+      AgentMiddleware current = middlewares.get(index);
+      try {
+        current.onActing(context, () -> invoke(index + 1));
+        Map<String, String> results = context.getToolResults();
+        return results != null ? results : Map.of();
+      } catch (MiddlewareException e) {
+        log.warn("[Middleware] {} 中断工具执行: {}", current.getName(), e.getUserMessage());
         throw e;
       }
     }

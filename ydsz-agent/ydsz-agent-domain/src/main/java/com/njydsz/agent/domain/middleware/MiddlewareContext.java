@@ -1,11 +1,14 @@
 package com.njydsz.agent.domain.middleware;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.agent.domain.model.ToolCall;
 
 /**
@@ -51,6 +54,15 @@ public class MiddlewareContext {
 
   /** 工具执行结果 */
   private String toolResult;
+
+  /** 本次 Acting 阶段待执行/已执行的工具调用批次（onActing 钩子使用） */
+  private List<ToolCall> toolCalls;
+
+  /** Acting 阶段工具执行结果（callId → 结果文本，onActing 钩子可读写） */
+  private Map<String, String> toolResults;
+
+  /** 类型化事件消费者（流式路径下由执行器注入，中间件可据此把事件推入当前 SSE 流） */
+  private Consumer<SseEvent> eventConsumer;
 
   /** 执行结束标记 */
   private boolean finished;
@@ -156,6 +168,42 @@ public class MiddlewareContext {
    */
   public void setToolResult(String toolResult) {
     this.toolResult = toolResult;
+  }
+
+  /**
+   * 获取本次 Acting 阶段的工具调用批次。
+   *
+   * @return 工具调用列表（onActing 钩子执行前设置）
+   */
+  public List<ToolCall> getToolCalls() {
+    return toolCalls;
+  }
+
+  /**
+   * 设置本次 Acting 阶段的工具调用批次。
+   *
+   * @param toolCalls 工具调用列表
+   */
+  public void setToolCalls(List<ToolCall> toolCalls) {
+    this.toolCalls = toolCalls;
+  }
+
+  /**
+   * 获取 Acting 阶段工具执行结果。
+   *
+   * @return callId → 结果文本（结果返回后由框架回填）
+   */
+  public Map<String, String> getToolResults() {
+    return toolResults;
+  }
+
+  /**
+   * 设置 Acting 阶段工具执行结果。
+   *
+   * @param toolResults callId → 结果文本
+   */
+  public void setToolResults(Map<String, String> toolResults) {
+    this.toolResults = toolResults;
   }
 
   public boolean isFinished() {

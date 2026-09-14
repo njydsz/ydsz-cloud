@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.model.SseEvent;
 
 /**
  * Agent 执行器接口
@@ -57,6 +58,30 @@ public interface AgentExecutor {
       Consumer<ChatChunk> chunkConsumer,
       Consumer<DagProgressEvent> progressConsumer) {
     executeStream(request, chunkConsumer);
+  }
+
+  /**
+   * 流式执行 Agent（带进度回调 + 类型化事件回调）。
+   *
+   * <p>在流式片段之外额外推送类型化事件（{@link SseEvent}）：工具调用开始/结束、
+   * 思考链、引用来源、人工审批请求等。默认实现忽略事件回调，仅委托三参重载；
+   * 支持事件化输出的执行器（如 {@code ReActAgentExecutor}）应重写本方法。
+   *
+   * <p><b>设计说明</b>：中间件与执行器通过本回调把结构化事件推给前端，
+   * 与纯文本片段（{@code chunkConsumer}）分离，便于前端按事件类型分区渲染；
+   * 事件可携带来源标识（{@link SseEvent#getSource()}）以区分多 Agent 协作下的归属。
+   *
+   * @param request 执行请求
+   * @param chunkConsumer 流式片段消费者
+   * @param progressConsumer DAG 节点进度事件消费者（可为 null）
+   * @param eventConsumer 类型化事件消费者（可为 null）
+   */
+  default void executeStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<DagProgressEvent> progressConsumer,
+      Consumer<SseEvent> eventConsumer) {
+    executeStream(request, chunkConsumer, progressConsumer);
   }
 
   /**

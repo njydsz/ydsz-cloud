@@ -1,6 +1,7 @@
 package com.njydsz.agent.server.agent;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,9 @@ import com.njydsz.agent.domain.middleware.MiddlewareContext;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
@@ -268,7 +271,42 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
    * @return 新的中间件上下文实例
    */
   protected MiddlewareContext createMiddlewareContext(AgentExecutionRequest request) {
-    return new MiddlewareContext(request, extractConvId(request));
+    return createMiddlewareContext(request, null);
+  }
+
+  /**
+   * 创建中间件上下文（绑定类型化事件消费者）。
+   *
+   * <p>将 SSE 事件消费者挂载到上下文，使中间件（如工具审批门）能在执行过程中
+   * 直接把结构化事件推入当前流，而无需回传到执行器（P0-3 HITL 事件化）。
+   *
+   * @param request 执行请求
+   * @param eventConsumer 类型化事件消费者（可为 null，流式路径外调用时为 null）
+   * @return 新的中间件上下文实例
+   */
+  protected MiddlewareContext createMiddlewareContext(
+      AgentExecutionRequest request, Consumer<SseEvent> eventConsumer) {
+    MiddlewareContext context = new MiddlewareContext(request, extractConvId(request));
+    context.setEventConsumer(eventConsumer);
+    return context;
+  }
+
+  /**
+   * 加载对话历史（优先使用上层预置的上下文消息）。
+   *
+   * <p>{@code AgentHarness} 会在执行前按 Token 预算裁剪并压缩历史，并把结果写入
+   * {@link AgentExecutionRequest#getContextMessages()}；非空时以预置内容为准，
+   * 使上下文预算策略在执行器之外可插拔，同时保持「执行器自行加载」的既有行为不变。
+   *
+   * @param request 执行请求（携带可选预置上下文）
+   * @param conversationId 对话 ID
+   * @return 历史消息列表（按时间正序）
+   */
+  protected List<ChatMessage> loadHistory(AgentExecutionRequest request, String conversationId) {
+    if (request != null && request.hasContextMessages()) {
+      return request.getContextMessages();
+    }
+    return memory.load(conversationId, properties.getMemory().getMaxMessages());
   }
 
   /**
@@ -330,6 +368,31 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
     if (middlewareChain != null) {
       middlewareChain.executeObservation(context);
     }
+  }
+
+  /**
+   * 执行工具调用批次（触发中间件 onActing 洋葱模型）。
+   *
+   * <p>调用前会把本批次工具调用写入上下文供中间件审计，
+   * 并清空上一轮的残留结果，避免中间件未放行时读到历史值。
+   *
+   * @param context 中间件上下文
+   * @param toolCalls 本批次工具调用
+   * @param finalCall 实际工具执行函数
+   * @return callId → 工具执行结果
+   */
+  protected Map<String, String> executeActing(
+      MiddlewareContext context,
+      List<ToolCall> toolCalls,
+      AgentMiddleware.ActingProceed finalCall) {
+    context.setToolCalls(toolCalls);
+    context.setToolResults(null);
+    if (middlewareChain != null) {
+      return middlewareChain.executeActing(context, finalCall);
+    }
+    Map<String, String> results = finalCall.execute();
+    context.setToolResults(results);
+    return results;
   }
 
   /**

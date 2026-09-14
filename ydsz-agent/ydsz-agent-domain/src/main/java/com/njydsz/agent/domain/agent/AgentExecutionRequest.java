@@ -1,9 +1,12 @@
 package com.njydsz.agent.domain.agent;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import com.njydsz.agent.domain.model.ChatMessage;
 
 /**
  * Agent 执行请求
@@ -48,6 +51,15 @@ public final class AgentExecutionRequest {
   private final List<String> enabledTools;
 
   /**
+   * 上层（Harness）预置的上下文历史消息，不可变列表。
+   *
+   * <p>非空时执行器以其替代「从 {@code ConversationMemory} 按滑动窗口加载历史」的默认行为，
+   * 使上下文预算裁剪 / 压缩策略在执行前即生效（见 {@code AgentHarness}）。
+   * 为空表示执行器自行加载历史，保持既有行为不变。
+   */
+  private final List<ChatMessage> contextMessages;
+
+  /**
    * 全参构造。
    *
    * @param agentCode Agent 编码
@@ -57,6 +69,39 @@ public final class AgentExecutionRequest {
    * @param variables Prompt 模板渲染变量（null 时按空 Map 处理）
    * @param maxIterations ReAct 循环最大迭代轮次（非正数按默认 10 处理）
    * @param enabledTools 工具名白名单（null 时表示不限制）
+   * @param contextMessages 上层预置的上下文历史消息（null/空表示由执行器自行加载）
+   */
+  public AgentExecutionRequest(
+      String agentCode,
+      String conversationId,
+      String userInput,
+      String systemPrompt,
+      Map<String, Object> variables,
+      int maxIterations,
+      List<String> enabledTools,
+      List<ChatMessage> contextMessages) {
+    this.agentCode = agentCode;
+    this.conversationId = conversationId;
+    this.userInput = Objects.requireNonNull(userInput, "userInput 不能为 null");
+    this.systemPrompt = systemPrompt;
+    this.variables = variables != null ? Map.copyOf(variables) : Collections.emptyMap();
+    // 未指定迭代上限时默认 10 轮，作为 ReAct 循环的兜底上限，避免工具调用死循环
+    this.maxIterations = maxIterations > 0 ? maxIterations : 10;
+    this.enabledTools = enabledTools != null ? List.copyOf(enabledTools) : Collections.emptyList();
+    this.contextMessages =
+        contextMessages != null ? List.copyOf(contextMessages) : Collections.emptyList();
+  }
+
+  /**
+   * 兼容构造（无预置上下文消息，由执行器自行加载历史）。
+   *
+   * @param agentCode Agent 编码
+   * @param conversationId 对话 ID
+   * @param userInput 本轮用户输入原文
+   * @param systemPrompt 系统提示词
+   * @param variables Prompt 模板渲染变量
+   * @param maxIterations ReAct 循环最大迭代轮次
+   * @param enabledTools 工具名白名单
    */
   public AgentExecutionRequest(
       String agentCode,
@@ -66,14 +111,15 @@ public final class AgentExecutionRequest {
       Map<String, Object> variables,
       int maxIterations,
       List<String> enabledTools) {
-    this.agentCode = agentCode;
-    this.conversationId = conversationId;
-    this.userInput = Objects.requireNonNull(userInput, "userInput 不能为 null");
-    this.systemPrompt = systemPrompt;
-    this.variables = variables != null ? Map.copyOf(variables) : Collections.emptyMap();
-    // 未指定迭代上限时默认 10 轮，作为 ReAct 循环的兜底上限，避免工具调用死循环
-    this.maxIterations = maxIterations > 0 ? maxIterations : 10;
-    this.enabledTools = enabledTools != null ? List.copyOf(enabledTools) : Collections.emptyList();
+    this(
+        agentCode,
+        conversationId,
+        userInput,
+        systemPrompt,
+        variables,
+        maxIterations,
+        enabledTools,
+        null);
   }
 
   /**
@@ -140,6 +186,103 @@ public final class AgentExecutionRequest {
   }
 
   /**
+   * 获取上层预置的上下文历史消息。
+   *
+   * @return 不可变上下文消息列表（空表示由执行器自行加载历史）
+   */
+  public List<ChatMessage> getContextMessages() {
+    return contextMessages;
+  }
+
+  /**
+   * 判断是否已由上层预置上下文历史消息。
+   *
+   * @return true 表示 {@link #getContextMessages()} 非空
+   */
+  public boolean hasContextMessages() {
+    return !contextMessages.isEmpty();
+  }
+
+  /**
+   * 创建携带预置上下文历史消息的副本。
+   *
+   * <p>供 {@code AgentHarness} 在执行前注入「预算裁剪 + 压缩」后的历史，
+   * 不修改原对象（本类不可变）。传入 null 或空列表表示清除预置消息、回退到执行器自加载。
+   *
+   * @param newContextMessages 预置上下文消息
+   * @return 携带新上下文消息的副本
+   */
+  public AgentExecutionRequest withContextMessages(List<ChatMessage> newContextMessages) {
+    return new AgentExecutionRequest(
+        agentCode,
+        conversationId,
+        userInput,
+        systemPrompt,
+        variables,
+        maxIterations,
+        enabledTools,
+        newContextMessages);
+  }
+
+  /**
+   * 派生用于子 Agent 的执行请求，强制「管控继承」而非重新授权。
+   *
+   * <p>对标 AgentScope 的「子代理强制继承父级 DENY 规则」：子请求的工具白名单为
+   * <b>父级白名单与子级自带工具的交集</b>，保证子 Agent 的工具面不会宽于父级
+   * （父级白名单为空表示父级不限制，此时子级回退到父级不限制语义）。
+   *
+   * <p>其余推理参数（迭代上限、预置上下文）沿用父级，避免子级自行放大。
+   *
+   * @param subUserInput 子任务用户输入
+   * @param subConversationId 子任务对话 ID
+   * @param childTools 子 Agent 自身声明的工具（可为 null，表示不额外收窄）
+   * @return 收紧后的子请求
+   */
+  public AgentExecutionRequest deriveForSubAgent(
+      String subUserInput, String subConversationId, List<String> childTools) {
+    List<String> inherited = intersectTools(enabledTools, childTools);
+    return new AgentExecutionRequest(
+        agentCode,
+        subConversationId,
+        subUserInput,
+        systemPrompt,
+        variables,
+        maxIterations,
+        inherited,
+        Collections.emptyList());
+  }
+
+  /**
+   * 工具白名单交集计算。
+   *
+   * <p>规则：父级不限制（空）→ 沿用子级；子级未声明（空）→ 沿用父级；两者均非空 → 取交集。
+   *
+   * @param parentTools 父级工具白名单
+   * @param childTools 子级工具白名单
+   * @return 收紧后的工具白名单
+   */
+  private static List<String> intersectTools(List<String> parentTools, List<String> childTools) {
+    boolean parentUnlimited = parentTools == null || parentTools.isEmpty();
+    boolean childUnlimited = childTools == null || childTools.isEmpty();
+    if (parentUnlimited && childUnlimited) {
+      return Collections.emptyList();
+    }
+    if (parentUnlimited) {
+      return List.copyOf(childTools);
+    }
+    if (childUnlimited) {
+      return List.copyOf(parentTools);
+    }
+    List<String> intersection = new ArrayList<>(parentTools.size());
+    for (String tool : parentTools) {
+      if (childTools.contains(tool)) {
+        intersection.add(tool);
+      }
+    }
+    return intersection;
+  }
+
+  /**
    * 创建 {@link AgentExecutionRequest} 的构建器入口。
    *
    * <p>仅 {@link Builder#userInput(String)} 为必填，其余字段均有安全默认值， 未显式设置时不会因空指针中断构造。
@@ -163,6 +306,7 @@ public final class AgentExecutionRequest {
     private Map<String, Object> variables;
     private int maxIterations = 10; // Builder 默认值，与构造兜底保持一致，避免未设值时陷入无限迭代
     private List<String> enabledTools;
+    private List<ChatMessage> contextMessages;
 
     /**
      * 设置 Agent 编码。
@@ -242,6 +386,17 @@ public final class AgentExecutionRequest {
     }
 
     /**
+     * 设置上层预置的上下文历史消息。
+     *
+     * @param contextMessages 预置上下文消息（null/空表示由执行器自行加载历史）
+     * @return 当前 Builder
+     */
+    public Builder contextMessages(List<ChatMessage> contextMessages) {
+      this.contextMessages = contextMessages;
+      return this;
+    }
+
+    /**
      * 构建 {@link AgentExecutionRequest} 实例。
      *
      * @return 新的不可变请求实例
@@ -254,7 +409,8 @@ public final class AgentExecutionRequest {
           systemPrompt,
           variables,
           maxIterations,
-          enabledTools);
+          enabledTools,
+          contextMessages);
     }
   }
 }

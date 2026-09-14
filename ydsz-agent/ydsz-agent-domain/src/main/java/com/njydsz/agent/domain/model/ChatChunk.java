@@ -9,6 +9,11 @@ import java.util.Objects;
  *
  * <p>流式输出时每个 SSE 事件对应一个 ChatChunk，包含增量内容或工具调用增量。
  *
+ * <p><b>来源标识（source）</b>：多 Agent 协作场景（Supervisor / DAG / TeamRun）下，
+ * 子 Agent 的流式片段会被转发到同一条父级 SSE 流中，{@link #getSource()} 用于标识
+ * 片段归属（主 Agent 为 {@link #SOURCE_MAIN}，子 Agent 为 {@code supervisor/2} 形式的路径），
+ * 前端据此对不同 Agent 的输出分组渲染。
+ *
  * <p><b>线程安全</b>：全字段 final 且集合不可变，不可变值对象，可安全在流式回调与业务线程间共享。
  *
  * @author ydsz-team
@@ -19,6 +24,9 @@ public final class ChatChunk implements Serializable {
   /** toString 内容截断长度 */
   private static final int TO_STRING_TRUNCATE_LEN = 50;
 
+  /** 主 Agent 来源标识（子 Agent 来源为 {@code 父路径/子标识} 形式） */
+  public static final String SOURCE_MAIN = "main";
+
   private static final long serialVersionUID = 1L;
 
   private final String id;
@@ -28,6 +36,19 @@ public final class ChatChunk implements Serializable {
   private final String finishReason;
   private final TokenUsage usage;
 
+  /** 片段来源标识（多 Agent 场景用于区分归属，单 Agent 场景为 null） */
+  private final String source;
+
+  /**
+   * 构造流式片段（无来源标识，兼容单 Agent 场景）。
+   *
+   * @param id chunk 唯一标识
+   * @param model 模型名称
+   * @param deltaContent 增量文本内容
+   * @param deltaToolCalls 增量工具调用列表
+   * @param finishReason 结束原因
+   * @param usage Token 用量
+   */
   public ChatChunk(
       String id,
       String model,
@@ -35,12 +56,35 @@ public final class ChatChunk implements Serializable {
       List<ToolCall> deltaToolCalls,
       String finishReason,
       TokenUsage usage) {
+    this(id, model, deltaContent, deltaToolCalls, finishReason, usage, null);
+  }
+
+  /**
+   * 构造流式片段（含来源标识）。
+   *
+   * @param id chunk 唯一标识
+   * @param model 模型名称
+   * @param deltaContent 增量文本内容
+   * @param deltaToolCalls 增量工具调用列表
+   * @param finishReason 结束原因
+   * @param usage Token 用量
+   * @param source 片段来源标识（多 Agent 场景下区分归属，可为 null）
+   */
+  public ChatChunk(
+      String id,
+      String model,
+      String deltaContent,
+      List<ToolCall> deltaToolCalls,
+      String finishReason,
+      TokenUsage usage,
+      String source) {
     this.id = Objects.requireNonNull(id, "id 不能为 null");
     this.model = model;
     this.deltaContent = deltaContent;
     this.deltaToolCalls = deltaToolCalls != null ? List.copyOf(deltaToolCalls) : List.of();
     this.finishReason = finishReason;
     this.usage = usage;
+    this.source = source;
   }
 
   /**
@@ -132,6 +176,28 @@ public final class ChatChunk implements Serializable {
 
   public TokenUsage getUsage() {
     return usage;
+  }
+
+  /**
+   * 获取片段来源标识。
+   *
+   * @return 来源标识（主 Agent 为 {@link #SOURCE_MAIN}，子 Agent 为路径形式，未标识时为 null）
+   */
+  public String getSource() {
+    return source;
+  }
+
+  /**
+   * 创建携带来源标识的副本。
+   *
+   * <p>用于子 Agent 片段转发到父级流时补充归属信息，不修改原对象。
+   *
+   * @param newSource 来源标识
+   * @return 携带新来源标识的片段副本
+   */
+  public ChatChunk withSource(String newSource) {
+    return new ChatChunk(
+        id, model, deltaContent, deltaToolCalls, finishReason, usage, newSource);
   }
 
   /**

@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.runtime.RuntimeSession;
@@ -15,13 +16,19 @@ import com.njydsz.agent.domain.runtime.RuntimeSessionStore;
  * 基于内存的 Agent 运行时会话存储实现。
  *
  * <p>使用 ConcurrentHashMap 存储会话，支持高并发读写。
- * 会话数据在应用重启后丢失，适用于单实例部署或开发环境。
- * 生产环境建议替换为 Redis 实现以支持集群部署。</p>
+ * 会话数据在应用重启后丢失，且多副本部署时各副本互相不可见，
+ * 适用于单实例部署或开发环境。生产环境多副本部署请设置
+ * {@code ydsz.agent.runtime.backend=redis} 切换为 Redis 实现。
  *
  * @author ydsz-agent
  * @since 26.09.01
  */
 @Component
+@ConditionalOnProperty(
+        prefix = "ydsz.agent.runtime",
+        name = "backend",
+        havingValue = "memory",
+        matchIfMissing = true)
 public class InMemoryRuntimeSessionStore implements RuntimeSessionStore {
 
     private static final int DEFAULT_FIND_ALL_LIMIT = 200;

@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
+import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
@@ -21,6 +22,7 @@ import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.agent.domain.model.ToolDefinition;
@@ -184,11 +186,11 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       }
 
       messages.add(response.getMessage());
-      // 并发执行工具并获取结果
+      // 并发执行工具并获取结果（经中间件 onActing 洋葱模型包装）
       List<ToolCall> allowedCalls = filterAllowedTools(request, response.getToolCalls());
-      Map<String, String> toolResults = executeToolsConcurrently(traceId, allowedCalls);
+      ToolBatchOutcome outcome = executeToolBatch(mwContext, traceId, allowedCalls);
       for (ToolCall toolCall : allowedCalls) {
-        String result = toolResults.getOrDefault(toolCall.getId(), "{}");
+        String result = outcome.results().getOrDefault(toolCall.getId(), "{}");
         // 通知工具观察（onObservation 钩子）
         mwContext.setToolCall(toolCall);
         mwContext.setToolResult(result);
@@ -207,6 +209,33 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
 
   @Override
   public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
+    doExecuteStream(request, chunkConsumer, null);
+  }
+
+  @Override
+  public void executeStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<DagProgressEvent> progressConsumer,
+      Consumer<SseEvent> eventConsumer) {
+    doExecuteStream(request, chunkConsumer, eventConsumer);
+  }
+
+  /**
+   * 流式执行核心实现（可选类型化事件推送）。
+   *
+   * <p>在文本片段之外，向 {@code eventConsumer} 推送结构化事件：
+   * 工具调用开始（{@code tool_call_started}）与完成（{@code tool_call_completed}），
+   * 事件携带来源标识 {@link ChatChunk#SOURCE_MAIN} 以便前端区分多 Agent 协作下的归属。
+   *
+   * @param request 执行请求
+   * @param chunkConsumer 流式片段消费者
+   * @param eventConsumer 类型化事件消费者（可为 null）
+   */
+  private void doExecuteStream(
+      AgentExecutionRequest request,
+      Consumer<ChatChunk> chunkConsumer,
+      Consumer<SseEvent> eventConsumer) {
     String convId = extractConvId(request);
     MiddlewareContext mwContext = createMiddlewareContext(request);
     notifyAgentStart(mwContext);
@@ -260,7 +289,9 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
 
       if (response.getContent() != null && !response.getContent().isBlank()) {
         String prefix = i > 0 ? "\n\n[思考" + (i + 1) + "] " : "";
-        chunkConsumer.accept(ChatChunk.content(responseId, model, prefix + response.getContent()));
+        chunkConsumer.accept(
+            ChatChunk.content(responseId, model, prefix + response.getContent())
+                .withSource(ChatChunk.SOURCE_MAIN));
       }
 
       if (!response.hasToolCalls()) {
@@ -275,18 +306,22 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
 
       messages.add(response.getMessage());
       List<ToolCall> allowedCalls = filterAllowedTools(request, response.getToolCalls());
+      emitToolCallStarted(allowedCalls, eventConsumer);
       for (ToolCall toolCall : allowedCalls) {
         chunkConsumer.accept(
-            ChatChunk.content(responseId, model, "\n\n[工具调用] " + toolCall.getName() + "..."));
+            ChatChunk.content(responseId, model, "\n\n[工具调用] " + toolCall.getName() + "...")
+                .withSource(ChatChunk.SOURCE_MAIN));
       }
-      Map<String, String> toolResults = executeToolsConcurrently(traceId, allowedCalls);
+      ToolBatchOutcome outcome = executeToolBatch(mwContext, traceId, allowedCalls);
       for (ToolCall toolCall : allowedCalls) {
-        String result = toolResults.getOrDefault(toolCall.getId(), "{}");
+        String result = outcome.results().getOrDefault(toolCall.getId(), "{}");
         mwContext.setToolCall(toolCall);
         mwContext.setToolResult(result);
         notifyObservation(mwContext);
+        emitToolCallCompleted(toolCall, result, outcome.durations(), eventConsumer);
         chunkConsumer.accept(
-            ChatChunk.content(responseId, model, "\n[工具结果] " + truncateResult(result)));
+            ChatChunk.content(responseId, model, "\n[工具结果] " + truncateResult(result))
+                .withSource(ChatChunk.SOURCE_MAIN));
         messages.add(ChatMessage.tool(toolCall.getId(), result, convId));
       }
     }
@@ -295,8 +330,76 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
     mwContext.setFinished(true);
     notifyAgentEnd(mwContext);
-    chunkConsumer.accept(ChatChunk.content(responseId, model, "\n\n抱歉，我已达到最大推理次数限制，无法完成此任务。"));
+    chunkConsumer.accept(
+        ChatChunk.content(responseId, model, "\n\n抱歉，我已达到最大推理次数限制，无法完成此任务。")
+            .withSource(ChatChunk.SOURCE_MAIN));
     chunkConsumer.accept(ChatChunk.finish(responseId, model, "max_iterations", totalUsage));
+  }
+
+  /**
+   * 推送工具调用开始事件。
+   *
+   * @param toolCalls 本批次工具调用
+   * @param eventConsumer 事件消费者（可为 null）
+   */
+  private void emitToolCallStarted(List<ToolCall> toolCalls, Consumer<SseEvent> eventConsumer) {
+    if (eventConsumer == null || toolCalls == null) {
+      return;
+    }
+    for (ToolCall toolCall : toolCalls) {
+      eventConsumer.accept(
+          SseEvent.toolCallStarted(toolCall.getName(), toolCall.getArguments())
+              .withSource(ChatChunk.SOURCE_MAIN));
+    }
+  }
+
+  /**
+   * 推送工具调用完成事件。
+   *
+   * @param toolCall 已执行的工具调用
+   * @param result 执行结果
+   * @param durations 执行耗时表（callId → 毫秒）
+   * @param eventConsumer 事件消费者（可为 null）
+   */
+  private void emitToolCallCompleted(
+      ToolCall toolCall,
+      String result,
+      Map<String, Long> durations,
+      Consumer<SseEvent> eventConsumer) {
+    if (eventConsumer == null) {
+      return;
+    }
+    Long duration = durations != null ? durations.get(toolCall.getId()) : null;
+    eventConsumer.accept(
+        SseEvent.toolCallCompleted(
+                toolCall.getName(), truncateResult(result), duration != null ? duration : 0L)
+            .withSource(ChatChunk.SOURCE_MAIN));
+  }
+
+  /**
+   * 执行工具批次（经中间件 onActing 洋葱模型包装）。
+   *
+   * @param mwContext 中间件上下文
+   * @param traceId 链路 ID
+   * @param toolCalls 本批次工具调用
+   * @return 执行结果与耗时
+   */
+  private ToolBatchOutcome executeToolBatch(
+      MiddlewareContext mwContext, String traceId, List<ToolCall> toolCalls) {
+    Map<String, Long> durations = new ConcurrentHashMap<>(toolCalls.size());
+    Map<String, String> results =
+        executeActing(
+            mwContext, toolCalls, () -> executeToolsConcurrently(traceId, toolCalls, durations));
+    return new ToolBatchOutcome(results, durations);
+  }
+
+  /**
+   * 工具批次执行结果。
+   *
+   * @param results callId → 结果文本
+   * @param durations callId → 执行耗时（毫秒）
+   */
+  private record ToolBatchOutcome(Map<String, String> results, Map<String, Long> durations) {
   }
 
   private String truncateResult(String result) {
@@ -345,9 +448,11 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
    *
    * @param traceId 链路 ID
    * @param toolCalls 待执行的工具调用列表
+   * @param durations 执行耗时收集容器（callId → 毫秒），由调用方传入以便事件推送复用
    * @return callId → 工具执行结果
    */
-  private Map<String, String> executeToolsConcurrently(String traceId, List<ToolCall> toolCalls) {
+  private Map<String, String> executeToolsConcurrently(
+      String traceId, List<ToolCall> toolCalls, Map<String, Long> durations) {
     Map<String, String> results = new ConcurrentHashMap<>(toolCalls.size());
     if (toolCalls.isEmpty()) {
       return results;
@@ -360,7 +465,8 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
                 long toolStart = System.currentTimeMillis();
                 String result = toolRegistry.execute(toolCall);
                 long toolDuration = System.currentTimeMillis() - toolStart;
-                // TraceRecorder 记录工具调用步骤
+                durations.put(toolCall.getId(), toolDuration);
+                // TraceRecorder 记录工具调用步骤（先持久化，后由中间件按需驱逐结果）
                 traceRecorder.recordStep(
                     traceId,
                     "TOOL_CALL",

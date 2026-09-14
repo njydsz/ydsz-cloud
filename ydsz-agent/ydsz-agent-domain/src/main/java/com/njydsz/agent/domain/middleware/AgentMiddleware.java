@@ -1,5 +1,7 @@
 package com.njydsz.agent.domain.middleware;
 
+import java.util.Map;
+
 import com.njydsz.agent.domain.model.ChatResponse;
 
 /**
@@ -19,7 +21,9 @@ import com.njydsz.agent.domain.model.ChatResponse;
  *   ↓
  * onModelCall    →  实际调用 LLM API（可缓存/限流/切换模型）
  *   ↓
- * onObservation  →  工具执行结果返回（可审查/过滤）
+ * onActing       →  工具执行阶段（可审计/超时控制/结果处理，洋葱模型）
+ *   ↓
+ * onObservation  →  单个工具执行结果返回（可审查/过滤）
  *   ↓
  * 循环回到 onReasoning 或 →
  * onAgentEnd     →  Agent 执行结束（最终响应）
@@ -48,8 +52,16 @@ public interface AgentMiddleware {
   /** 指标采集中间件建议优先级。 */
   int METRICS_PRIORITY = 30;
 
-  /** 限流中间件建议优先级。 */
+  /**
+   * 限流中间件建议优先级。
+   */
   int RATE_LIMIT_PRIORITY = 40;
+
+  /** 工具审计中间件建议优先级（Acting 阶段，早于业务中间件）。 */
+  int TOOL_AUDIT_PRIORITY = 45;
+
+  /** 工具结果压缩驱逐中间件建议优先级（Acting 阶段，晚于审计）。 */
+  int TOOL_EVICTION_PRIORITY = 55;
 
   /** 输出护栏建议优先级。 */
   int OUTPUT_GUARD_PRIORITY = 100;
@@ -104,6 +116,30 @@ public interface AgentMiddleware {
   default void onModelCall(MiddlewareContext context, ModelCallProceed proceed) {
     // 默认放行
     proceed.execute();
+  }
+
+  /**
+   * 工具执行阶段的包装钩子（Acting 阶段，洋葱模型）。
+   *
+   * <p>适用于：工具级审计/权限二次校验、工具批量执行前后的耗时统计、
+   * 长对话中工具结果的压缩驱逐、按租户限制工具调用并发度。
+   *
+   * <p>钩子执行前 {@link MiddlewareContext#setToolCalls(java.util.List)} 已填入本批次待执行的
+   * 工具调用；中间件可读取（审计）、可修改（过滤）、可抛 {@link MiddlewareException} 拒绝整批执行。
+   * 放行后框架完成实际工具调用，并把结果写入 {@link MiddlewareContext#setToolResults(java.util.Map)}。
+   *
+   * <p><b>实现注意</b>：若中间件需要对工具结果做压缩驱逐，必须确保结果已被
+   * {@code TraceRecorder} 持久化后再驱逐（框架在工具执行时即落链路），
+   * 否则会丢失可观测性证据。参考 AgentScope 将 ToolResultEviction 从 onActing
+   * 调整至 onReasoning 阶段的实践。
+   *
+   * @param context 中间件上下文（toolCalls 已就绪，toolResults 待回填）
+   * @param proceed 放行函数 — 调用后执行本批次工具调用（可能继续下一个中间件），
+   *     返回 callId → 结果文本；不放行时中间件可直接返回自定义结果
+   */
+  default void onActing(MiddlewareContext context, ActingProceed proceed) {
+    // 默认放行
+    context.setToolResults(proceed.execute());
   }
 
   /**
@@ -163,5 +199,18 @@ public interface AgentMiddleware {
      * @return LLM 响应
      */
     ChatResponse execute();
+  }
+
+  /**
+   * 工具执行放行函数 — 在 onActing 中调用以继续执行下一个中间件或实际工具调用。
+   */
+  @FunctionalInterface
+  interface ActingProceed {
+    /**
+     * 执行被包装的工具调用批次。
+     *
+     * @return callId → 工具执行结果文本
+     */
+    Map<String, String> execute();
   }
 }

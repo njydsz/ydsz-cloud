@@ -9,15 +9,19 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.agent.DagCheckpoint;
 import com.njydsz.agent.domain.gateway.DagCheckpointStore;
+import com.njydsz.agent.domain.state.AgentStateKey;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * 基于 Redis 的 DAG 检查点存储
  *
- * <p>将检查点序列化为 JSON 存入 Redis，Key 设计：{@code agent:dag:checkpoint:{executionId}}。
+ * <p>将检查点序列化为 JSON 存入 Redis，键由统一的 {@link AgentStateKey} 生成：
+ * {@code ydsz:agent:checkpoint:default:default:{executionId}}，与运行时会话、工作区
+ * 共用同一套分区命名规则（此前为独立的 {@code agent:dag:checkpoint:} 前缀）。
  *
  * <p>TTL 由 ydsz.agent.dag.checkpoint-ttl-hours 配置（默认 24 小时）：覆盖绝大多数续跑窗口（原执行超时后通常数分钟内触发续跑），过期自动清理避免 Redis 内存无界增长。
+ * 键格式迁移期间，旧前缀下的检查点将在其 TTL 到期后自然失效（最长 24 小时内的续跑能力降级为重新执行）。
  *
  * <p>降级策略：Redis 不可用时静默跳过（不中断主流程），续跑能力暂时失效但编排本身仍可执行。
  *
@@ -27,9 +31,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @Slf4j
 @Service
 public class RedisDagCheckpointStore implements DagCheckpointStore {
-
-  /** 检查点 Key 前缀 */
-  private static final String KEY_PREFIX = "agent:dag:checkpoint:";
 
   /** 检查点 TTL（小时），默认 24 小时，覆盖绝大多数续跑窗口 */
   @Value("${ydsz.agent.dag.checkpoint-ttl-hours:24}")
@@ -94,6 +95,6 @@ public class RedisDagCheckpointStore implements DagCheckpointStore {
   }
 
   private static String buildKey(String executionId) {
-    return KEY_PREFIX + executionId;
+    return AgentStateKey.ofBusiness(AgentStateKey.NAMESPACE_CHECKPOINT, executionId).toStorageKey();
   }
 }
