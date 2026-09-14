@@ -2,7 +2,9 @@ package com.njydsz.agent.domain.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -31,7 +33,7 @@ public final class ChatResponse implements Serializable {
   /** Token 用量统计 */
   private final TokenUsage usage;
 
-  /** 结束原因（stop/length/tool_calls/content_filter） */
+  /** 结束原因（stop/length/tool_calls/content_filter/paused） */
   private final String finishReason;
 
   /** 工具调用列表 */
@@ -40,6 +42,9 @@ public final class ChatResponse implements Serializable {
   /** 成本估算与核算（可能为 null，表示未启用成本计算） */
   private final CostEstimate costEstimate;
 
+  /** 扩展元数据（如暂停恢复所需 approvalId） */
+  private final Map<String, Object> metadata;
+
   public ChatResponse(
       String id,
       String model,
@@ -47,7 +52,7 @@ public final class ChatResponse implements Serializable {
       TokenUsage usage,
       String finishReason,
       List<ToolCall> toolCalls) {
-    this(id, model, message, usage, finishReason, toolCalls, null);
+    this(id, model, message, usage, finishReason, toolCalls, null, null);
   }
 
   public ChatResponse(
@@ -58,6 +63,18 @@ public final class ChatResponse implements Serializable {
       String finishReason,
       List<ToolCall> toolCalls,
       CostEstimate costEstimate) {
+    this(id, model, message, usage, finishReason, toolCalls, costEstimate, null);
+  }
+
+  public ChatResponse(
+      String id,
+      String model,
+      ChatMessage message,
+      TokenUsage usage,
+      String finishReason,
+      List<ToolCall> toolCalls,
+      CostEstimate costEstimate,
+      Map<String, Object> metadata) {
     this.id = Objects.requireNonNull(id, "id 不能为 null");
     this.model = model;
     this.message = message;
@@ -65,6 +82,7 @@ public final class ChatResponse implements Serializable {
     this.finishReason = finishReason;
     this.toolCalls = toolCalls != null ? List.copyOf(toolCalls) : List.of();
     this.costEstimate = costEstimate;
+    this.metadata = metadata != null ? Map.copyOf(metadata) : Map.of();
   }
 
   public String getId() {
@@ -96,6 +114,15 @@ public final class ChatResponse implements Serializable {
   }
 
   /**
+   * 获取扩展元数据。
+   *
+   * @return 不可变元数据映射
+   */
+  public Map<String, Object> getMetadata() {
+    return metadata;
+  }
+
+  /**
    * 复制响应并替换内容文本（不可变语义）。
    *
    * <p>用于输出护栏中间件对 LLM 返回内容进行脱敏或替换的场景，
@@ -114,7 +141,22 @@ public final class ChatResponse implements Serializable {
         message != null ? new ArrayList<>(message.getToolCalls()) : null,
         message != null ? message.getToolCallId() : null,
         message != null ? message.getTokenUsage() : null);
-    return new ChatResponse(id, model, newMessage, usage, finishReason, toolCalls, costEstimate);
+    return new ChatResponse(
+        id, model, newMessage, usage, finishReason, toolCalls, costEstimate, metadata);
+  }
+
+  /**
+   * 复制响应并追加/替换元数据（不可变语义）。
+   *
+   * @param key 元数据键
+   * @param value 元数据值
+   * @return 携带新元数据的新 ChatResponse 实例
+   */
+  public ChatResponse withMetadata(String key, Object value) {
+    Map<String, Object> newMetadata = new HashMap<>(metadata);
+    newMetadata.put(key, value);
+    return new ChatResponse(
+        id, model, message, usage, finishReason, toolCalls, costEstimate, newMetadata);
   }
 
   /**
