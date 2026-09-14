@@ -43,6 +43,9 @@ import com.njydsz.common.netty.server.NettyServerLifecycle;
  * <p>同时通过 {@link BeanPostProcessor} 自动将 {@link NettyChannelMetrics} 和 {@link NettyEventLoopPool}
  * 注入到所有 {@link AbstractNettyServer} 和 {@link AbstractNettyClient} Bean 中，业务方无需手动处理。
  *
+ * <p><b>生命周期状态（§33.7 储备义务，26.09.14 标注）：</b>reserve · 可用。长连接网关能力储备，接入方启用前需补齐
+ * 连接管理与粘拆包处理的关键路径单测。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

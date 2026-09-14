@@ -57,6 +57,9 @@ import com.njydsz.common.tenant.web.TenantContextWebFilter;
  *
  * <p>不引入 {@code common-tenant} 依赖或设为 false 时， 无任何租户逻辑，{@code MpBaseEntity.tenantId} 字段被忽略。
  *
+ * <p><b>生命周期状态（§33.7 储备义务，26.09.14 标注）：</b>reserve · 稳定。默认关闭（matchIfMissing=false），
+ * 多个业务模块经自动装配隐式依赖本模块，属能力储备而非可删项。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

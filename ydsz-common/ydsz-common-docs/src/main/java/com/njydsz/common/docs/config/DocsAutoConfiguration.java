@@ -22,6 +22,9 @@ import com.njydsz.common.docs.service.AsyncDocumentParser;
  *
  * <p><b>配置开关：</b> {@code ydsz.docs.enabled=true}（默认启用）
  *
+ * <p><b>生命周期状态（§33.7 储备义务，26.09.14 标注）：</b>reserve · 可用。文档解析/导出能力储备（ADR-5 已与 agent
+ * TextChunker 定界），接入方启用前需补齐解析流水线关键路径单测。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

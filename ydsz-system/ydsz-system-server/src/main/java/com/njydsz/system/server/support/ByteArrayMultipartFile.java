@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -103,6 +104,6 @@ public class ByteArrayMultipartFile implements MultipartFile {
 
   @Override
   public void transferTo(File dest) throws IOException, IllegalStateException {
-    java.nio.file.Files.write(dest.toPath(), content);
+    Files.write(dest.toPath(), content);
   }
 }

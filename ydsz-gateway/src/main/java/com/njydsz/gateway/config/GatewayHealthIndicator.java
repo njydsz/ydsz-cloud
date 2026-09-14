@@ -40,7 +40,7 @@ public class GatewayHealthIndicator implements HealthIndicator {
   private final ObjectProvider<SecurityHeaderProperties> securityHeaderProvider;
 
   /** 限流配置提供者（可选，用于上报当前令牌桶阈值）。 */
-  private final ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider;
+  private final ObjectProvider<GatewayRateLimitProperties> rateLimitPropertiesProvider;
 
   /** IP 访问控制配置提供者（可选，用于上报黑白名单启用状态）。 */
   private final ObjectProvider<IpAccessControlProperties> ipAccessControlProvider;
@@ -66,7 +66,7 @@ public class GatewayHealthIndicator implements HealthIndicator {
   public GatewayHealthIndicator(
       ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
       ObjectProvider<SecurityHeaderProperties> securityHeaderProvider,
-      ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider,
+      ObjectProvider<GatewayRateLimitProperties> rateLimitPropertiesProvider,
       ObjectProvider<IpAccessControlProperties> ipAccessControlProvider,
       ObjectProvider<AuthGlobalFilter> authFilterProvider,
       ObjectProvider<GatewayMetrics> gatewayMetricsProvider) {
@@ -120,7 +120,7 @@ public class GatewayHealthIndicator implements HealthIndicator {
     }
 
     // 限流状态
-    RateLimitProperties rateLimit = rateLimitPropertiesProvider.getIfAvailable();
+    GatewayRateLimitProperties rateLimit = rateLimitPropertiesProvider.getIfAvailable();
     if (rateLimit != null) {
       details.put("rateLimit.enabled", rateLimit.isEnabled());
       details.put("rateLimit.perIp.enabled", rateLimit.getPerIp().isEnabled());

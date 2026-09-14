@@ -13,6 +13,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * <p>注册 {@link SnowflakeIdGenerator} 的 {@link ObjectProvider} Supplier 到 {@link
  * RequestIdGenerator}，替代已弃用的 {@code SpringContextHolder} 查找。
  *
+ * <p><b>生命周期状态（§33.7 储备义务，26.09.14 标注）：</b>reserve · 稳定。App 端通用基座能力，低引用属储备特征。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

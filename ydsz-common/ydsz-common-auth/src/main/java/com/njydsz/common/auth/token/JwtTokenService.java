@@ -1,6 +1,5 @@
 package com.njydsz.common.auth.token;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 // jwt 库 API 强约束 java.util.Date（jjwt 0.12 暂不支持 Instant）
 import java.util.Date;
@@ -13,7 +12,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParserBuilder;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,7 +127,7 @@ public class JwtTokenService implements TokenService {
     if (secretKeyRaw == null || secretKeyRaw.isBlank()) {
       throw new IllegalStateException("ydsz.auth.token.secret-key 不能为空，请在配置文件中设置 JWT 签名密钥");
     }
-    this.secretKey = Keys.hmacShaKeyFor(secretKeyRaw.getBytes(StandardCharsets.UTF_8));
+    this.secretKey = TokenKeyUtils.hmacShaKeyFor(secretKeyRaw);
     this.claimsCache =
         YdszCache.<String, Claims>newBuilder()
             .name("auth:jwt-claims")

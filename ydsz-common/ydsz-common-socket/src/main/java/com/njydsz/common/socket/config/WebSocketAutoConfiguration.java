@@ -71,6 +71,9 @@ import com.njydsz.common.socket.session.WebSocketSessionEventListener;
  *   <li>{@link RealtimePushTemplate} — 统一推送模板
  * </ul>
  *
+ * <p><b>生命周期状态（§33.7 储备义务，26.09.14 标注）：</b>reserve · 可用。WebSocket 推送能力储备（含集群模式
+ * 装配），接入方启用前需补齐会话管理与集群广播的关键路径单测。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

@@ -39,7 +39,7 @@ import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
-import com.njydsz.gateway.config.RateLimitProperties;
+import com.njydsz.gateway.config.GatewayRateLimitProperties;
 import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
@@ -82,7 +82,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
   /** 限流 Lua 脚本内联已移除，改用 common-safe {@link RedisClusterRateLimiter}。 */
 
-  private final RateLimitProperties properties;
+  private final GatewayRateLimitProperties properties;
   private final StringRedisTemplate redisTemplate;
   private final GatewayMetrics gatewayMetrics;
 

@@ -44,11 +44,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
         </dependency>
-        <!-- ydsz-common-lock（optional, TokenBlacklistService 刷新锁使用 DistributedLocker） -->
+        <!-- ydsz-common-lock（TokenBlacklistService 刷新锁使用 DistributedLocker，AuthCurrentUserIdResolver 使用 CurrentUserIdResolver） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-lock</artifactId>
-            <optional>true</optional>
         </dependency>
         <!-- ydsz-common-redis（optional, Redis 模式下行级/列级/用户信息服务；classpath 缺失时降级为本地缓存） -->
         <dependency>

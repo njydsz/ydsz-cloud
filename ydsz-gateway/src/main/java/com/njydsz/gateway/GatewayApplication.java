@@ -14,8 +14,8 @@ import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.gateway.config.CorsProperties;
 import com.njydsz.gateway.config.GatewayHealthIndicator;
 import com.njydsz.gateway.config.GatewayMetrics;
+import com.njydsz.gateway.config.GatewayRateLimitProperties;
 import com.njydsz.gateway.config.IpAccessControlProperties;
-import com.njydsz.gateway.config.RateLimitProperties;
 import com.njydsz.gateway.filter.AuthGlobalFilter;
 
 /**
@@ -57,7 +57,7 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableConfigurationProperties({
-  RateLimitProperties.class,
+  GatewayRateLimitProperties.class,
   SecurityHeaderProperties.class,
   IpAccessControlProperties.class,
   CorsProperties.class
@@ -94,7 +94,7 @@ public class GatewayApplication {
   public GatewayHealthIndicator gatewayHealthIndicator(
       ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
       ObjectProvider<SecurityHeaderProperties> securityHeaderProvider,
-      ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider,
+      ObjectProvider<GatewayRateLimitProperties> rateLimitPropertiesProvider,
       ObjectProvider<IpAccessControlProperties> ipAccessControlProvider,
       ObjectProvider<AuthGlobalFilter> authFilterProvider,
       ObjectProvider<GatewayMetrics> gatewayMetricsProvider) {

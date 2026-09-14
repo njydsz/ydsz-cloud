@@ -1,15 +1,14 @@
 package com.njydsz.userinfo.server.config;
 
-import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 
-import io.jsonwebtoken.security.Keys;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.auth.oidc.JwksEndpoint;
+import com.njydsz.common.auth.token.TokenKeyUtils;
 import com.njydsz.common.auth.token.TokenProperties;
 
 /**
@@ -22,8 +21,12 @@ import com.njydsz.common.auth.token.TokenProperties;
  *   <li>{@link JwksEndpoint} — JWKS 公钥端点
  * </ul>
  *
+ * <p>HMAC 密钥经 common-auth {@link TokenKeyUtils} 统一构建（P2-5 整改：不再直连
+ * jjwt {@code Keys} 工具类，密钥构建语义收敛至 common-auth）。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.09.14 密钥构建收敛至 common-auth TokenKeyUtils（P2-5 整改）
  */
 @Configuration
 @EnableConfigurationProperties(OidcProperties.class)
@@ -44,8 +47,7 @@ public class OidcConfiguration {
    */
   @Bean
   public JwksEndpoint jwksEndpoint(TokenProperties tokenProperties) {
-    byte[] secretBytes = tokenProperties.getSecretKey().getBytes(StandardCharsets.UTF_8);
-    SecretKey secretKey = Keys.hmacShaKeyFor(secretBytes);
+    SecretKey secretKey = TokenKeyUtils.hmacShaKeyFor(tokenProperties.getSecretKey());
     return new JwksEndpoint(secretKey.getEncoded(), tokenProperties.getPublicKeyPem());
   }
 }

@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @since 26.09.01
  * @author ydsz-team
- * @see RateLimitProperties
+ * @see GatewayRateLimitProperties
  * @see GatewayRateLimiterConfig
  */
 @Data

@@ -26,6 +26,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-system-domain</artifactId>
         </dependency>
+        <!-- Web 健康检查基类（AbstractModuleHealthIndicator） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-web</artifactId>
+        </dependency>
         <!-- HealthIndicator（SystemAppHealthIndicator 使用，修复缺失依赖导致的编译失败） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
