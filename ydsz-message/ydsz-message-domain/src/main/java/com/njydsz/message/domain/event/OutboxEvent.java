@@ -3,7 +3,6 @@ package com.njydsz.message.domain.event;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import lombok.Data;
 
@@ -39,8 +38,8 @@ public class OutboxEvent implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  /** 事件唯一 ID */
-  private String id = UUID.randomUUID().toString();
+  /** 事件唯一 ID（数据库主键，由发布方经 {@code IdGenerator}（common-util Snowflake）生成，ADR-008 边界要求） */
+  private String id;
 
   /** 聚合根类型（如：Message、Template、Batch） */
   private String aggregateType;
