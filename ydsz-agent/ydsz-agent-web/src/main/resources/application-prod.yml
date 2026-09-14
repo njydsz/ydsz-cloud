@@ -1,0 +1,60 @@
+# ydsz-agent 生产环境（多副本）配置样本
+#
+# 使用方式：
+#   java -jar ydsz-agent-web.jar --spring.profiles.active=prod
+# 或在 Nacos 配置中心创建相同内容的 data-id：ydsz-agent-prod.yaml
+#
+# 多副本部署核心要求：
+# 1. 会话级状态必须共享：ExecutionPauseService 会自动检测 AgentStateStore（Redis）
+#    并将 HITL 审批检查点写入 Redis，使审批回调可路由到任意副本恢复执行。
+# 2. SSE 流式连接建议配合网关粘性会话（session affinity），或在客户端实现
+#    断线重连 + 审批事件补偿（/api/agent/approvals/pending）。
+# 3. 必须外置：PostgreSQL、Redis、Nacos、LLM API；禁止多副本间使用本地内存状态。
+
+server:
+  port: 9008
+
+spring:
+  application:
+    name: ydsz-agent
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:prod}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+      config:
+        server-addr: ${NACOS_SERVER:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:prod}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        file-extension: yaml
+
+ydsz:
+  agent:
+    # 审批检查点 TTL：生产环境建议与审批超时时间一致（默认 1 小时）
+    approval:
+      pause-ttl-hours: 1
+      # 暂停模式：命中敏感工具时挂起执行，审批通过后由 /approvals/{id}/approve 恢复
+      pause-on-sensitive: ${AGENT_PAUSE_ON_SENSITIVE:false}
+      sensitive-tools: ${AGENT_SENSITIVE_TOOLS:}
+
+    # 记忆与状态均使用 Redis，天然支持多副本共享
+    memory:
+      ttl-hours: 24
+      max-messages: 20
+
+    # LLM 超时在生产环境建议保持 60s 以上，并配置多 Provider 降级
+    llm:
+      timeout-seconds: 60
+
+  # Redis 为 AgentStateStore 后端，必须高可用（主从/哨兵/集群）
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DB:0}
+
+# 日志：统一 JSON 输出便于 ELK/Loki 收集；MDC 保留 traceId 便于跨副本串联
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"

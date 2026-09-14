@@ -389,6 +389,49 @@ mvn -pl ydsz-agent spring-boot:run
 
 > **首次启动前**请确保 PostgreSQL 数据库已创建。脚本 `V1__prompt_template.sql`（Prompt 模板表）及 `V2__*.sql` 等 **需手动执行初始化**——项目规范禁止 Flyway / Liquibase，不存在自动迁移。DDL 表结构（`ydsz_agent_*`）由手动 SQL 脚本（`src/main/resources/db/`）补齐，未启用 MyBatis Plus 自动建表。
 
+## 多副本部署
+
+`ydsz-agent` 支持水平扩展，但以下状态组件必须外置共享，禁止多副本间依赖本地内存：
+
+| 状态类型 | 默认实现 | 多副本要求 | 关键配置 / Bean |
+|---|---|---|---|
+| 对话记忆 | `RedisConversationMemory` | 已共享（Redis） | `spring.redis.*` |
+| HITL 审批检查点 | `ExecutionPauseService` | 自动检测 `AgentStateStore` 并写入 Redis | `AgentStateStore` / `RedisAgentStateStore` |
+| DAG 检查点 | `RedisDagCheckpointStore` | 已共享（Redis） | `DagCheckpointStore` |
+| 链路追踪 | `PgTraceRecorder` / `InMemoryTraceRecorder` | 生产环境必须使用 PG 持久化 | `TraceRecorder` |
+
+### 启用生产环境配置
+
+```bash
+java -jar ydsz-agent-web/target/ydsz-agent-web.jar --spring.profiles.active=prod
+```
+
+生产配置样本见 `ydsz-agent-web/src/main/resources/application-prod.yml`，核心项：
+
+```yaml
+ydsz:
+  agent:
+    approval:
+      pause-ttl-hours: 1          # 审批检查点 Redis TTL
+      pause-on-sensitive: true    # 敏感工具触发暂停模式
+      sensitive-tools: "deleteData,sendNotification"
+spring:
+  cloud:
+    nacos:
+      discovery:
+        namespace: prod           # 多副本注册到同一命名空间
+```
+
+### 多副本 HITL 恢复流程
+
+1. 副本 A 执行到敏感工具，`ToolApprovalMiddleware` 抛出 `SessionPausedException`；
+2. `ReActAgentExecutor` 保存 `ExecutionCheckpoint` 到 Redis（`AgentStateStore`）；
+3. 用户调用 `/api/agent/approvals/{id}/approve`（由网关路由到副本 B/C）；
+4. `AgentFacade.resume(...)` 从 Redis 读取检查点并继续执行；
+5. 执行完成后删除 Redis 检查点。
+
+> **注意**：SSE 流式连接建议配合网关粘性会话（session affinity）；非粘性场景下，客户端应通过 `/api/agent/approvals/pending` 补偿获取审批状态。
+
 ## 数据库表
 
 | 表名 | 说明 |

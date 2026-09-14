@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 

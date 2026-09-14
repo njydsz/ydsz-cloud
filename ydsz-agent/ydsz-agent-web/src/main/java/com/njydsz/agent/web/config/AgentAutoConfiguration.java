@@ -83,6 +83,7 @@ import com.njydsz.agent.server.agent.SupervisorAgentExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.harness.AgentHarness;
 import com.njydsz.agent.server.health.AgentHealthIndicator;
 import com.njydsz.agent.server.insight.InsightReportServiceImpl;
@@ -518,7 +519,8 @@ public class AgentAutoConfiguration {
       PromptTemplateProvider promptTemplateProvider,
       @Lazy DagOrchestrationExecutor dagExecutor,
       @Lazy SupervisorAgentExecutor supervisorExecutor,
-      ObjectProvider<MiddlewareChain> middlewareChainProvider) {
+      ObjectProvider<MiddlewareChain> middlewareChainProvider,
+      ExecutionPauseService pauseService) {
     return new AgentFactory(
         llmClient,
         memory,
@@ -532,7 +534,8 @@ public class AgentAutoConfiguration {
         promptTemplateProvider,
         dagExecutor,
         supervisorExecutor,
-        middlewareChainProvider);
+        middlewareChainProvider,
+        pauseService);
   }
 
   /**

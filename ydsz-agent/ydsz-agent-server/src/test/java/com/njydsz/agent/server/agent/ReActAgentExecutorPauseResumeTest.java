@@ -123,6 +123,11 @@ class ReActAgentExecutorPauseResumeTest {
     lenient().when(guardrailService.applyOutputGuardrails(anyString()))
         .thenAnswer(inv -> inv.getArgument(0));
     lenient().when(memory.load(anyString(), anyInt())).thenReturn(List.of());
+    lenient().when(middlewareChain.executeModelCall(any(), any(AgentMiddleware.ModelCallProceed.class)))
+        .thenAnswer(inv -> {
+          AgentMiddleware.ModelCallProceed proceed = inv.getArgument(1);
+          return proceed.execute();
+        });
 
     executor = new ReActAgentExecutor(
         llmClient,
@@ -214,7 +219,7 @@ class ReActAgentExecutorPauseResumeTest {
 
     assertEquals("stop", response.getFinishReason());
     assertEquals("done", response.getContent());
-    assertEquals(22, response.getUsage().getTotalTokens());
+    assertEquals(27, response.getUsage().getTotalTokens());
     assertEquals(0, pauseService.size());
     verify(toolRegistry).execute(pendingCall);
   }
