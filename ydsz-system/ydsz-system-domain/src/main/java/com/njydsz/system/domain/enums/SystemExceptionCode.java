@@ -21,6 +21,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *   <li>B94001-B94099 租户管理
  *   <li>B95001-B95099 租户套餐
  *   <li>B96001-B96099 实体版本（通用）
+ *   <li>B97001-B97099 前端监控上报
  * </ul>
  *
  * @author ydsz-team
@@ -96,7 +97,11 @@ public enum SystemExceptionCode implements ExceptionCode {
 
   // ==================== B96001-B96099 实体版本（通用） ====================
   /** ENTITY_VERSION_NOT_FOUND */
-  ENTITY_VERSION_NOT_FOUND("B96001", "system.entity.version.not.found", 404); // 实体版本不存在
+  ENTITY_VERSION_NOT_FOUND("B96001", "system.entity.version.not.found", 404), // 实体版本不存在
+
+  // ==================== B97001-B97099 前端监控上报 ====================
+  /** MONITOR_SOURCE_STORE_FAILED */
+  MONITOR_SOURCE_STORE_FAILED("B97001", "system.monitor.source.store.failed", 500); // sourcemap 存储失败（对象存储未配置或上传异常）
 
   /** HTTP 状态码：客户端参数错误 */
   private static final int HTTP_BAD_REQUEST = 400;
