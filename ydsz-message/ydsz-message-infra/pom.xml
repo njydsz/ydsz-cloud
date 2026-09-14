@@ -23,6 +23,12 @@
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-domain</artifactId>
     </dependency>
+
+    <!-- ydsz-common-util: MpIdGenerator 委托 SnowflakeIdGenerator（ADR-008，禁直连 MP IdWorker） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-util</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-message-domain</artifactId>
