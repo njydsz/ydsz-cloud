@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.app.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
 
 /**
  * 工作流 App 端健康检查指示器。

@@ -9,7 +9,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.app.health.AbstractModuleHealthIndicator;
+import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
 import com.njydsz.userinfo.app.config.ConditionalOnPlatform;
 import com.njydsz.userinfo.domain.query.RolePageQuery;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
