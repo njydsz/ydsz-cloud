@@ -80,7 +80,20 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
           "/actuator/info",
           "/workflow/third-party/dingtalk/callback",
           "/workflow/third-party/feishu/callback",
-          "/workflow/third-party/wecom/callback");
+          "/workflow/third-party/wecom/callback",
+          // 前端监控上报免鉴权（P0-1）：前端 navigator.sendBeacon 与构建脚本 fetch
+          // 均无法携带 Authorization 头，强制鉴权会导致上报 401、可观测性闭环断裂。
+          // 防滥用由网关 RateLimit 过滤器 + 端点侧报文体积上限共同承担。
+          // 含 /api 与剥离后两种形态同时列出：本过滤器与 StripPrefix 的执行先后
+          // 决定其可见路径，列全两种可避免因链路顺序调整而放行失效。
+          "/monitor/error",
+          "/monitor/web-vitals",
+          "/monitor/sourcemaps",
+          "/v1/monitor/sourcemaps",
+          "/api/monitor/error",
+          "/api/monitor/web-vitals",
+          "/api/monitor/sourcemaps",
+          "/api/v1/monitor/sourcemaps");
 
   /** 内部头签名密钥最小安全长度（32 字节 = 256 bit，满足 HMAC-SHA256 安全要求）。 */
   private static final int MIN_INTERNAL_SECRET_LENGTH = 32;

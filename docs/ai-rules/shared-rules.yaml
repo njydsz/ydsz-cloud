@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.13"
-  source: "docs/云顶编码规范.md v1.0.9"
-  last_synced: "2026-09-13"
-  last_updated: "2026-09-13（YDIZ-API-001 扩展：增加 /api 网关层命名空间规范）"
-  total_rules: 57
+  version: "26.09.14"
+  source: "docs/云顶编码规范.md v1.0.10"
+  last_synced: "2026-09-14"
+  last_updated: "2026-09-14（YDIZ-TEST-001 新增：测试破零 P0 规范；前端规范 §16.10 修订为测试策略）"
+  total_rules: 58
   severity_levels:
     P0: "阻断级，AI 编码绝对禁止违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -1260,6 +1260,78 @@ rules:
       }
     source: "编码规范 §25.5 - 【建议】"
 
+  # ============================================
+  # 十七、测试规范（26.09.14 起生效，1 条 P0）
+  # ============================================
+  - id: "YDIZ-TEST-001"
+    category: "testing"
+    severity: "P0"
+    title: "【强制】核心引擎 Domain 层新增方法须同步编写单元测试"
+    description: |
+      核心引擎（workflow、literule、cronjob、agent、message、nextwiki）的 Domain 层新增方法须同步编写单元测试。
+
+      **测试框架选型**：
+      - JUnit 5（junit-jupiter）作为测试运行平台
+      - Mockito 作为模拟框架（用于隔离外部依赖）
+      - AssertJ 作为断言库（提供流式断言 API）
+
+      **测试范围优先级**：
+      1. 状态机流转规则（如 FlowInstanceStatus.canTransitTo）
+      2. 表达式求值器（如 LiteExprEngine.validate）
+      3. 工厂方法 / 静态工具方法
+      4. 领域服务（DomainService）核心算法
+
+      **测试文件组织**：
+      - Maven 标准目录：`src/test/java/...`（与 main 同源结构）
+      - 命名约定：`{ClassName}Test.java`
+      - Tag 标注：`@Tag("unit")` 用于分类执行
+
+      **命名规范**：
+      - 测试方法名使用中文 `@DisplayName` 描述行为（如 `"RUNNING 可流转到 SUSPENDED"`）
+      - 类名以 `Test` 结尾
+      - 使用 `@Nested` 组织相关测试用例
+
+      **覆盖率目标**：
+      - 核心引擎 Domain 层：≥ 60%
+      - ydsz-common L1-L3 公共模块：≥ 70%
+
+      **禁止事项**：
+      - 禁止无断言的渲染性测试
+      - 禁止在单元测试中启动 Spring ApplicationContext（应使用纯 POJO 测试 + Mockito）
+      - 禁止测试方法间存在执行顺序依赖
+    pattern: |
+      以下情形构成违规：
+      1. 新增 Domain 方法未同步编写对应单测
+      2. 测试方法无 assertThat 断言
+      3. 单元测试使用 @SpringBootTest 启动完整上下文（应仅在集成测试中使用）
+    example_bad: |
+      // ❌ 新增 DomainService 方法未编写单测
+      public class RuleLifecycleService {
+          public void publishRule(String ruleCode) {
+              // 复杂发布逻辑... 但无对应测试
+          }
+      }
+
+      // ❌ 测试无断言
+      @Test
+      void testPublish() {
+          service.publishRule("R001"); // 无 assertThat，测试无意义
+      }
+    example_good: |
+      // ✅ 同步编写单元测试
+      class FlowInstanceStatusTest {
+          @Test
+          @DisplayName("RUNNING 可流转到 SUSPENDED")
+          void runningCanTransitToSuspended() {
+              assertThat(FlowInstanceStatus.RUNNING.canTransitTo(FlowInstanceStatus.SUSPENDED)).isTrue();
+          }
+      }
+    fix: |
+      1. 为新增 Domain 方法编写对应单测
+      2. 补充缺失的 assertThat 断言
+      3. 使用 Mockito.mock() 替代 Spring 集成测试
+    source: "编码规范 §15 - P0-1 测试破零"
+
 # ============================================
 # 附录：按 category 统计
 # ============================================
@@ -1281,4 +1353,5 @@ stats:
   warnings: 1
   api: 2
   tx: 4
-  total: 57
+  testing: 1
+  total: 58

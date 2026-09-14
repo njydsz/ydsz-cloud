@@ -31,6 +31,20 @@
 
 [
   {
+    "id": "ydsz-system-monitor",
+    "uri": "lb://ydsz-system",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/monitor/**,/api/v1/monitor/**" }
+      }
+    ],
+    "filters": [
+      { "name": "StripPrefix", "args": { "parts": "1" } }
+    ],
+    "order": 0
+  },
+  {
     "id": "ydsz-system-audit",
     "uri": "lb://ydsz-system",
     "predicates": [

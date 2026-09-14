@@ -128,5 +128,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- P0-1: 前端 sourcemap 落对象存储（IFileStorage，MinIO 等具体后端由 common-file 自动装配） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-file</artifactId>
+        </dependency>
     </dependencies>
 </project>
