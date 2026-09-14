@@ -1,5 +1,6 @@
 package com.njydsz.workflow.infra.gateway;
 
+import java.time.Duration;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
@@ -19,6 +21,10 @@ import com.njydsz.workflow.domain.gateway.AgentServiceClient;
  * <p>通过 {@link RestTemplate} 调用 ydsz-agent 的 REST API，封装同步执行 Agent 的流程。
  * 作为默认实现注册，可通过 {@code @ConditionalOnMissingBean} 机制由 Feign 实现替换。
  *
+ * <p>RestTemplate 经 common-util {@link RestTemplateUtils#create} 统一构建（P2-3 整改：
+ * 不再注入裸 RestTemplate Bean，与同模块 {@code FlowServiceNodeExecutor} 收敛姿势对齐，
+ * 获得统一超时配置）。
+ *
  * <h3>架构说明</h3>
  *
  * <ul>
@@ -28,6 +34,7 @@ import com.njydsz.workflow.domain.gateway.AgentServiceClient;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.09.14 RestTemplate 改经 RestTemplateUtils 统一构建（P2-3 整改）
  */
 @Slf4j
 @Component
@@ -40,7 +47,13 @@ public class HttpAgentServiceClient implements AgentServiceClient {
   /** 依据关键词判定通过/拒绝后的置信度 */
   private static final double KEYWORD_CONFIDENCE = 0.85;
 
-  /** HTTP 客户端 */
+  /** 连接超时 */
+  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+
+  /** 读取超时 */
+  private static final Duration READ_TIMEOUT = Duration.ofSeconds(30);
+
+  /** HTTP 客户端（RestTemplateUtils 统一构建，含超时配置） */
   private final RestTemplate restTemplate;
 
   /** Agent 服务基础 URL（从配置注入） */
@@ -49,11 +62,10 @@ public class HttpAgentServiceClient implements AgentServiceClient {
   /**
    * 构造器。
    *
-   * @param restTemplate HTTP 客户端
    * @param env Spring 环境配置
    */
-  public HttpAgentServiceClient(RestTemplate restTemplate, Environment env) {
-    this.restTemplate = restTemplate;
+  public HttpAgentServiceClient(Environment env) {
+    this.restTemplate = RestTemplateUtils.create(CONNECT_TIMEOUT, READ_TIMEOUT);
     this.agentBaseUrl = env.getProperty("ydsz.agent.base-url", "http://ydsz-agent:8080");
   }
 

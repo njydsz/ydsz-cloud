@@ -26,6 +26,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
         </dependency>
+        <!-- ydsz-common-util: HttpAgentServiceClient 经 RestTemplateUtils 统一构建（P2-3 整改） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
         <!-- mybatis-plus-annotation: @TableName/@TableField 注解 -->
         <dependency>
             <groupId>com.baomidou</groupId>
