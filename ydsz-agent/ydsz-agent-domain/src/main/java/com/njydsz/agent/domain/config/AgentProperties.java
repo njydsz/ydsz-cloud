@@ -506,6 +506,12 @@ public class AgentProperties {
     /** 默认最大工具调用深度 */
     private static final int DEFAULT_MAX_DEPTH = 5;
 
+    /** 默认单工具结果驱逐字符上限 */
+    private static final int DEFAULT_EVICTION_MAX_RESULT_CHARS = 2_000;
+
+    /** 默认全部工具结果总字符上限 */
+    private static final int DEFAULT_EVICTION_MAX_TOTAL_CHARS = 10_000;
+
     /** 是否启用工具调用 */
     private boolean isEnabled = true;
 
@@ -523,6 +529,27 @@ public class AgentProperties {
 
     /** 工具执行失败时是否快速失败 */
     private boolean isFailFast = true;
+
+    /** 是否启用工具结果驱逐（默认关闭，避免无预警截断） */
+    private boolean evictionEnabled = false;
+
+    /**
+     * 单个工具结果最大字符数；超过则截断并附加 "...[truncated]" 标记。
+     * 为 -1 时不限制。
+     */
+    private int evictionMaxResultChars = DEFAULT_EVICTION_MAX_RESULT_CHARS;
+
+    /**
+     * 本批次工具结果总字符数上限；超过时按比例压缩各结果，优先保留短结果。
+     * 为 -1 时不限制。
+     */
+    private int evictionMaxTotalChars = DEFAULT_EVICTION_MAX_TOTAL_CHARS;
+
+    /**
+     * 单个工具结果最大 Token 数（按字符/2.5 估算）；超过则截断。
+     * 为 -1 时不限制。
+     */
+    private int evictionMaxResultTokens = -1;
   }
 
   // ========================= 配额配置 =========================

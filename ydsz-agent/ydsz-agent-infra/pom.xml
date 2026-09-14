@@ -84,5 +84,11 @@
             <version>1.42.1</version>
             <optional>true</optional>
         </dependency>
+        <!-- P1: 单元测试基础设施（JUnit 5） -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
