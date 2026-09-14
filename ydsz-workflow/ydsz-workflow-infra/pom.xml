@@ -21,6 +21,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-jdbc</artifactId>
         </dependency>
+        <!-- ydsz-common-event: 领域事件经 common-event Outbox 门面统一发布（ADR-009，禁自建 Outbox） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-event</artifactId>
+        </dependency>
         <!-- mybatis-plus-annotation: @TableName/@TableField 注解 -->
         <dependency>
             <groupId>com.baomidou</groupId>

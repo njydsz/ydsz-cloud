@@ -50,6 +50,21 @@ public final class AgentStateKey {
   /** 单段最大长度（防止超长键与键注入） */
   private static final int MAX_SEGMENT_LENGTH = 64;
 
+  /** 分区键段数（命名空间 / 租户 / 用户 / 会话） */
+  private static final int SEGMENT_COUNT = 4;
+
+  /** 命名空间段下标 */
+  private static final int IDX_NAMESPACE = 0;
+
+  /** 租户段下标 */
+  private static final int IDX_TENANT = 1;
+
+  /** 用户段下标 */
+  private static final int IDX_USER = 2;
+
+  /** 会话段下标 */
+  private static final int IDX_CONVERSATION = 3;
+
   /** 扫描模式通配符 */
   private static final String SCAN_WILDCARD = "*";
 
@@ -162,12 +177,15 @@ public final class AgentStateKey {
     }
     String body = storageKey.substring(KEY_PREFIX.length());
     String[] segments = body.split(SEGMENT_SEPARATOR, -1);
-    int requiredSegments = 4;
-    if (segments.length < requiredSegments) {
+    if (segments.length < SEGMENT_COUNT) {
       return Optional.empty();
     }
     return Optional.of(
-        new AgentStateKey(segments[0], segments[1], segments[2], segments[3]));
+        new AgentStateKey(
+            segments[IDX_NAMESPACE],
+            segments[IDX_TENANT],
+            segments[IDX_USER],
+            segments[IDX_CONVERSATION]));
   }
 
   public String getNamespace() {
