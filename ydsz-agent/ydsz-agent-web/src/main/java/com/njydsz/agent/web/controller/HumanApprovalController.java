@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
+import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.agent.server.agent.HumanApprovalService;
 import com.njydsz.agent.server.agent.HumanApprovalService.ApprovalRequest;
 import com.njydsz.common.audit.annotation.Audit;
@@ -71,6 +72,9 @@ public class HumanApprovalController {
 
   /** 人工审批服务（封装审批请求的增删改查 + Agent 通知） */
   private final HumanApprovalService approvalService;
+
+  /** Agent 应用门面（用于暂停模式下恢复执行） */
+  private final AgentFacade agentFacade;
 
   /**
    * 列出所有待审批请求。
@@ -140,6 +144,8 @@ public class HumanApprovalController {
       return YdszResponse.error(
           AgentExceptionCode.AGENT_NOT_FOUND, "Approval not found or already resolved: " + id);
     }
+    // 暂停模式：触发执行器恢复（非暂停模式下检查点不存在，resume 返回 null 为正常降级）
+    agentFacade.resume(id, true);
     return YdszResponse.success(true);
   }
 
