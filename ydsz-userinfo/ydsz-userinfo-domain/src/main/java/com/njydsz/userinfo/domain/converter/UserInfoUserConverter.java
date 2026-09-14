@@ -287,9 +287,15 @@ public interface UserInfoUserConverter {
   /**
    * 登录历史实体 → VO
    *
+   * <p>浏览器名称（browser）、操作系统（os）、IP 归属地（location）由 Service 层通过解析
+   * User-Agent 和 IP 库计算后填充，不通过 MapStruct 自动映射。
+   *
    * @param entity 登录历史实体
    * @return 登录历史 VO
    */
+  @Mapping(target = "browser", ignore = true)
+  @Mapping(target = "os", ignore = true)
+  @Mapping(target = "location", ignore = true)
   UserLoginHistoryVO entityToVO(UserLoginHistory entity);
 
   /**

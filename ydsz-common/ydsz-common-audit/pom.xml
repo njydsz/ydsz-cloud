@@ -119,5 +119,15 @@
             <artifactId>swagger-annotations-jakarta</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- jackson-annotations: Spring Boot 4.x actuator/health 的 class 文件引用 @JsonInclude(NON_EMPTY) 注解。
+             ydsz-common-health 类（如 AuditHealthIndicator）编译时 javac 需解析 JsonInclude$Include 枚举常量，
+             否则报"未知的枚举常量 com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY"。
+             optional 保证编译期可见，但不强制下游引入 Jackson 核心。 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>
