@@ -5,7 +5,9 @@
   E1  同名类            业务模块类名与 ydsz-common 类名同名（需人工核验定性：继承复用/命名冲突/真重复）
   E2  底层 SDK 直连     业务模块绕过 common 封装直连底层 SDK（关键前缀映射）
   E3  HealthIndicator   业务模块 implements HealthIndicator 而未继承 AbstractModuleHealthIndicator
-  W1  僵尸依赖          pom 声明 common 模块但模块内零 import（自动装配豁免，仅提示）
+  W1  僵尸依赖          pom 声明 common 模块但模块内零 import
+                        （自动装配型模块豁免：提供 META-INF/spring/*.imports 的模块
+                         以运行时 Bean 能力供给，源码零 import 属正常形态，仍提示但标注豁免）
   W2  同义后缀          业务自建类与 common 类经后缀规范化后同名
                         （排除 Provider/Sender/Publisher/Collector —— 误报率极高）
   矩阵                  业务模块 × common 模块 import 计数 + 供给侧统计
@@ -105,9 +107,23 @@ def is_exempt(rule: str, file_str: str) -> str | None:
     return None
 
 
+def collect_autoconfig_modules() -> set[str]:
+    """收集提供 Spring Boot 自动装配的 common 模块名（W1 自动装配豁免依据）。"""
+    modules: set[str] = set()
+    pattern = (
+        "ydsz-common-*/src/main/resources/META-INF/spring/"
+        "org.springframework.boot.autoconfigure.AutoConfiguration.imports"
+    )
+    for imports_file in COMMON_DIR.glob(pattern):
+        # 路径结构：ydsz-common/<模块>/src/main/resources/META-INF/spring/<文件名>
+        modules.add(imports_file.parents[5].name)
+    return modules
+
+
 def scan() -> dict:
     """执行全量静态扫描，返回结果字典。"""
     common_classes = collect_common_classes()
+    autoconfig_modules = collect_autoconfig_modules()
     biz_modules = discover_biz_modules()
 
     errors: list[dict] = []
@@ -214,16 +230,24 @@ def scan() -> dict:
                     }
                 )
 
-        # W1：僵尸依赖（pom 声明但零 import；自动装配模块豁免——仅提示）
+        # W1：僵尸依赖（pom 声明但零 import；自动装配型模块豁免，仅提示）
         declared = set(re.findall(r"<artifactId>(ydsz-common-[a-z-]+)</artifactId>", pom_text))
         module_dep[module] = declared
         for dep in declared:
             if dep not in imports_by_common:
+                auto = dep in autoconfig_modules
+                detail = (
+                    f"依赖 {dep} 但模块源码零 import；{dep} 为自动装配型模块"
+                    "（以运行时 Bean 能力供给，源码零 import 属正常形态）——豁免，无需处理"
+                    if auto
+                    else f"依赖 {dep} 但模块源码零 import（若为自动装配能力则豁免，否则为僵尸依赖）"
+                )
                 warnings.append(
                     {
                         "rule": "W1",
                         "file": f"{module}/pom.xml",
-                        "detail": f"依赖 {dep} 但模块源码零 import（若为自动装配能力则豁免，否则为僵尸依赖）",
+                        "detail": detail,
+                        "autoConfig": auto,
                     }
                 )
 

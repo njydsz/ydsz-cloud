@@ -29,6 +29,14 @@ import com.njydsz.cronjob.domain.vo.OutboxEventVO;
  *
  * <p>对标 Debezium Outbox Pattern、Eventuate Tram、Axon Framework 的 Event Bus。
  *
+ * <p><b>平台内重复与收敛计划（ADR-6，见 docs/architecture/adr/ADR-009-public-capability-convergence.md）：</b>
+ * ydsz-common-event 已提供本能力的超集（{@code OutboxService} 事务 afterCommit 发布 +
+ * {@code OutboxProcessor} 扫描 + claim/reclaim 抢单回收 + 去重键/trace 透传 + {@code OutboxAdminService}
+ * 管理端 + {@code OutboxHealthIndicator}）。本类属平台内重复实现，<b>非豁免</b>；收敛为阶段化任务
+ * （阶段一 DDL 对齐、阶段二替换为 common-event、阶段三删除自建类）。
+ * 在阶段三完成前：本类为唯一在用的 cronjob Outbox 实现，<b>禁止新增第二条 Outbox 链</b>，
+ * 其余模块一律使用 common-event {@code OutboxService}。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

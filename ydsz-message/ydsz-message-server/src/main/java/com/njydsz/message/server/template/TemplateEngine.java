@@ -17,6 +17,13 @@ import java.util.Set;
  *
  * <p>多渠道差异化由 {@code TemplateService.loadByCodeAndChannel} 在模板加载层实现， 引擎仅负责按给定模板内容渲染。
  *
+ * <p><b>与 ydsz-common-notify 同名接口的边界（ADR-7，见
+ * docs/architecture/adr/ADR-009-public-capability-convergence.md）：</b>
+ * 本接口是<b>模板内容渲染语法引擎</b>（按传入模板内容渲染，含条件/循环块语法）；
+ * common-notify {@code TemplateEngine} 是<b>模板注册与按 ID 渲染入口</b>（SpEL + 模板注册表 + 热加载）。
+ * 二者能力分层不同，不合并；非消息域的模板渲染需求一律优先 common-notify。
+ * <b>TODO（ADR-7 决议 3）：</b>本接口计划重命名为 {@code MessageTemplateRenderer}，消除与 common-notify 的同名歧义。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

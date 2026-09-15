@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.njydsz.common.util.id.IdGenerator;
+
 /**
  * 审计日志实体
  *
@@ -32,6 +34,22 @@ public class AuditLog implements Serializable {
 
   /** 审计记录唯一标识（雪花算法生成） */
   private String id;
+
+  /**
+   * 确保审计记录具备唯一标识。
+   *
+   * <p>存储层入库前调用：{@link #id} 为空或空白时，由 common-util {@link IdGenerator#nextIdStr()}
+   * 补齐雪花 ID，避免调用方遗漏赋值导致主键为 {@code null} 而入库失败。
+   *
+   * <p>调用方已显式赋值（如 {@code IdGenerator.nextIdStr()}）时本方法不做任何修改。
+   *
+   * @since 26.09.15
+   */
+  public void ensureId() {
+    if (id == null || id.isBlank()) {
+      this.id = IdGenerator.nextIdStr();
+    }
+  }
 
   /** 审计类型（{@link com.njydsz.common.audit.enums.AuditType} 编码） */
   private Integer auditType;

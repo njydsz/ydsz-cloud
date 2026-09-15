@@ -151,6 +151,8 @@ public class JdbcAuditStorage implements AuditWriter {
     if (auditLog == null) {
       return;
     }
+    // 调用方未赋值 ID 时由 common-util 雪花补齐（ADR-008）
+    auditLog.ensureId();
     try {
       String tableName = resolveTableName(auditLog);
       String sql = buildInsertSql(tableName);
@@ -165,6 +167,12 @@ public class JdbcAuditStorage implements AuditWriter {
   public void writeBatch(List<AuditLog> auditLogs) {
     if (auditLogs == null || auditLogs.isEmpty()) {
       return;
+    }
+    // 调用方未赋值 ID 时由 common-util 雪花补齐（ADR-008）
+    for (AuditLog auditLog : auditLogs) {
+      if (auditLog != null) {
+        auditLog.ensureId();
+      }
     }
     try {
       if (tableNameResolver.isShardingEnabled()) {

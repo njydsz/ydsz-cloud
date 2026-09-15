@@ -25,6 +25,13 @@ import java.time.LocalDateTime;
  *   <li>事件驱动：其他有界上下文订阅事件实现最终一致性
  * </ul>
  *
+ * <p><b>与 ydsz-common-event 的边界（ADR-8，见 docs/architecture/adr/ADR-009-public-capability-convergence.md）：</b>
+ * common-event {@code api.DomainEvent} 是<b>模块间集成事件契约</b>（继承 Spring {@code ApplicationEvent}，
+ * 由 {@code DomainEventPublisher} 发布，供其他模块订阅）；本接口是<b>聚合内 Event Sourcing 事件</b>
+ * （携带 {@code aggregateId}/{@code aggregateType}/事件溯源元数据，用于事件存储与状态重建）。
+ * 二者语义不同层，故并存：跨模块通知请使用 common-event 契约（参见
+ * {@code AlertDispatcher} / {@code DefaultTaskDispatcher} 的用法），聚合内状态变更溯源使用本接口。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

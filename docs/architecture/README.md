@@ -56,6 +56,12 @@ ADR 体系用于：
 | [ADR-004](./adr/ADR-004-seata-mode.md) | Seata 分布式事务模式选择 | 接受 | 2025-02-10 |
 | [ADR-005](./adr/ADR-005-multi-tenancy.md) | 多租户隔离策略 | 待决策 | 2025-02-15 |
 | [ADR-006](./adr/ADR-006-observability.md) | 日志与可观测性标准化 | 部分接受 | 2025-02-20 |
+| [ADR-007](./adr/ADR-007-bean-copy-convergence.md) | Bean 拷贝能力收敛（BeanMapper） | 接受 | 2026-09-12 |
+| [ADR-008](./adr/ADR-008-id-generation-boundary.md) | 分布式 ID 生成场景边界（IdGenerator vs UUID） | 接受 | 2026-09-12 |
+| [ADR-009](./adr/ADR-009-public-capability-convergence.md) | 公共能力重复实现收敛决策（含 2026-09-15 增补 ADR-6/7/8） | 接受 | 2026-09-14 |
+| [ADR-010](./adr/ADR-010-mq-usage-boundary.md) | MQ 使用边界（RocketMQ 直连豁免范围） | 接受 | 2026-09-14 |
+| [ADR-011](./adr/ADR-011-reactive-ratelimit-boundary.md) | 响应式限流边界（WebFlux 场景） | 接受 | 2026-09-14 |
+| [ADR-012](./adr/ADR-012-seata-poc-design.md) | Seata 分布式事务 PoC 设计 | 接受（待 PoC 验证） | 2026-09-14 |
 
 ## 公共能力六层分级体系（ydsz-common）
 
@@ -102,13 +108,19 @@ docs/architecture/
 │   ├── ADR-003-no-db-migration-tool.md
 │   ├── ADR-004-seata-mode.md
 │   ├── ADR-005-multi-tenancy.md
-│   └── ADR-006-observability.md
+│   ├── ADR-006-observability.md
+│   ├── ADR-007-bean-copy-convergence.md
+│   ├── ADR-008-id-generation-boundary.md
+│   ├── ADR-009-public-capability-convergence.md
+│   ├── ADR-010-mq-usage-boundary.md
+│   ├── ADR-011-reactive-ratelimit-boundary.md
+│   └── ADR-012-seata-poc-design.md
 └── templates/
     └── adr-template.md    ← MADR 2.1.2 格式模板
 ```
 
 ## 相关资源
 
-* [云顶编码规范](../编码规范.md) — YDIZ 系列规范与 ADR 双向引用
-* [云顶版本规范](../版本规范.md) — 版本兼容性约束
+* [云顶编码规范](../云顶编码规范.md) — YDIZ 系列规范与 ADR 双向引用
+* [云顶版本规范](../云顶版本规范.md) — 版本兼容性约束
 * [MADR 2.1.2 格式原文](https://adr.github.io/madr/)

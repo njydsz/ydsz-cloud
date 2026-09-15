@@ -1,4 +1,4 @@
-# ADR-010: Seata 分布式事务 PoC 设计
+# ADR-012: Seata 分布式事务 PoC 设计
 
 | 属性 | 值 |
 |------|-----|
@@ -6,6 +6,7 @@
 | **决策日期** | 2026-09-14 |
 | **决策者** | ydsz-team |
 | **相关** | ydzs-common-seata 模块、workflow 引擎、cronjob 引擎 |
+| **编号变更** | 2026-09-15 由 `ADR-010` 重编号为 ADR-012 并移入 `adr/`（原编号与 `ADR-010-mq-usage-boundary.md` 撞号） |
 
 ## 背景
 

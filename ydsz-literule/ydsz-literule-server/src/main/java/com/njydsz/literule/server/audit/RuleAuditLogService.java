@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
@@ -21,6 +20,7 @@ import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.enums.AuditStatus;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
@@ -58,8 +58,12 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * List<AuditLogEntry> userLogs = auditService.queryByOperator("zhangsan", 100);
  * }</pre>
  *
+ * <p><b>审计记录主键：</b>由 common-util {@link IdGenerator#nextIdStr()} 生成雪花 ID（ADR-008 整改：
+ * 此前使用 JDK 随机 UUID 写入主键，与平台 ID 边界冲突）。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.09.15 审计主键改用 common-util IdGenerator 雪花 ID（ADR-008 整改）
  */
 @Slf4j
 public class RuleAuditLogService {
@@ -579,7 +583,7 @@ public class RuleAuditLogService {
       }
 
       AuditLog auditLog = new AuditLog();
-      auditLog.setId(UUID.randomUUID().toString().replace("-", ""));
+      auditLog.setId(IdGenerator.nextIdStr());
       auditLog.setAuditType(AuditType.OPERATION.getCode());
       auditLog.setAction(effectiveAction.getCode());
       auditLog.setStatus(status != null ? status.getCode() : AuditStatus.SUCCESS.getCode());

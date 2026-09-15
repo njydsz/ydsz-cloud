@@ -52,6 +52,8 @@ public class DefaultAuditStorage implements AuditWriter {
       LOG.warn("【审计存储】审计日志为空,跳过保存");
       return;
     }
+    // 调用方未赋值 ID 时由 common-util 雪花补齐（ADR-008）
+    auditLog.ensureId();
     // 尝试将日志加入队列，队列满时丢弃最旧日志
     if (!queue.offer(auditLog)) {
       AuditLog dropped = queue.poll();

@@ -2,7 +2,6 @@ package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +13,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
 import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
@@ -169,6 +169,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
    * <ol>
    *   <li>校验同租户下 {@code categoryCode} 唯一性
    *   <li>构建 {@link FlowCategory} 实体，{@code sortNum} 为空时默认 {@code 0}
+   *   <li>主键由 common-util {@link IdGenerator#nextIdStr()} 生成雪花 ID（ADR-008）
    *   <li>写入数据库并返回新 ID
    * </ol>
    *
@@ -200,7 +201,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     category.setRemark(dto.getRemark());
     category.setTenantId(tid);
     FlowCategoryDTO categoryDto = new FlowCategoryDTO();
-    categoryDto.setId(UUID.randomUUID().toString());
+    categoryDto.setId(IdGenerator.nextIdStr());
     categoryDto.setCategoryCode(dto.getCategoryCode());
     categoryDto.setCategoryName(dto.getCategoryName());
     categoryDto.setParentId(dto.getParentId());

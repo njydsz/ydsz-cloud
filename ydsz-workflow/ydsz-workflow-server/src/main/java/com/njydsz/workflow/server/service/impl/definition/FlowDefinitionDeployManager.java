@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -24,6 +23,7 @@ import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.workflow.domain.dto.FlowDefinitionDTO;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
@@ -348,6 +348,9 @@ public class FlowDefinitionDeployManager {
   /**
    * 保存流程定义。
    *
+   * <p>主键由 common-util {@link IdGenerator#nextIdStr()} 生成雪花 ID
+   * （ADR-008 整改：此前使用 JDK 随机 UUID 写入主键）。
+   *
    * @param dto 部署 DTO（含 flowCode / flowName / formPath 等）
    * @param version 版本号字符串（保存时自动 parse 为 int）
    * @param tenantId 租户 ID
@@ -355,7 +358,7 @@ public class FlowDefinitionDeployManager {
    */
   private FlowDefinitionVO saveDefinition(FlowDeployProcessDTO dto, String version, String tenantId) {
     FlowDefinitionDTO defDto = new FlowDefinitionDTO();
-    defDto.setId(UUID.randomUUID().toString());
+    defDto.setId(IdGenerator.nextIdStr());
     defDto.setFlowCode(dto.getFlowCode());
     defDto.setFlowName(dto.getFlowName());
     defDto.setFlowVersion(parseVersionInt(version));

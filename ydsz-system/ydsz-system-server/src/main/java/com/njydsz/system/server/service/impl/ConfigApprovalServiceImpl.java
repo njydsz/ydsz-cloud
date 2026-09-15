@@ -2,13 +2,13 @@ package com.njydsz.system.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.system.domain.approval.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalQuery;
 import com.njydsz.system.domain.approval.ConfigApprovalRepository;
@@ -21,8 +21,13 @@ import com.njydsz.system.server.service.ConfigApprovalService;
  *
  * <p>实现审批单的完整业务逻辑：提交 → 审批（通过/拒绝/撤回）。
  *
+ * <p><b>主键生成：</b>审批单 ID 由 common-util {@link IdGenerator#nextIdStr()} 生成雪花 ID
+ * （ADR-008 整改：此前使用 JDK 随机 UUID 手工赋值，覆盖了实体的
+ * {@code IdType.ASSIGN_ID} 自动分配）。
+ *
  * @author ydsz-team
  * @since 26.09.08
+ * @since 26.09.15 主键改用 common-util IdGenerator 雪花 ID（ADR-008 整改）
  */
 @Slf4j
 @Service
@@ -35,7 +40,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
   @Transactional(rollbackFor = Exception.class)
   public String submit(String userId, String userName, ConfigApprovalSubmitDTO dto) {
     ConfigApproval record = new ConfigApproval();
-    record.setId(UUID.randomUUID().toString());
+    record.setId(IdGenerator.nextIdStr());
     record.setResourceType(dto.getResourceType());
     record.setResourceKey(dto.getResourceKey());
     record.setResourceGroup(dto.getResourceGroup());
