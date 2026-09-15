@@ -42,6 +42,12 @@ E2_PREFIXES = {
     "org.apache.kafka": "common-event（MQ 抽象）",
 }
 
+# 包名第 4 段与实际所属 common 模块不一致时的归属修正（矩阵口径用）
+PACKAGE_MODULE_OVERRIDES = {
+    # com.njydsz.common.webhook.* 物理位于 ydsz-common-web，非独立模块
+    "webhook": "web",
+}
+
 JAVA_FILE_RE = re.compile(r"^import\s+(?:static\s+)?([A-Za-z0-9_.]+)\s*;", re.MULTILINE)
 CLASS_DECL_RE = re.compile(r"\b(?:class|interface|enum|record)\s+([A-Z][A-Za-z0-9_]*)")
 PACKAGE_RE = re.compile(r"^package\s+([A-Za-z0-9_.]+)\s*;", re.MULTILINE)
@@ -138,6 +144,7 @@ def scan() -> dict:
                 if not imp.startswith("com.njydsz.common"):
                     continue
                 sub = imp.split(".")[3] if imp.count(".") >= 4 else "core"
+                sub = PACKAGE_MODULE_OVERRIDES.get(sub, sub)
                 if sub == "util" and ".common.util." in imp:
                     sub = "util"
                 matrix[module][sub] += 1
