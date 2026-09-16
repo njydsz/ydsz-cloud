@@ -14,6 +14,7 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.cache.stats.CacheStats;
+import com.njydsz.common.cache.support.CacheKeyBuilder;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 
@@ -275,6 +276,9 @@ public class EvaluationResultCache {
    * @return 缓存键
    */
   private String buildCacheKey(RuleContextVO context) {
-    return CacheKeyBuilder.buildKey(context);
+    return CacheKeyBuilder.buildPattern(
+        "eval",
+        context.getScenario() != null ? context.getScenario() : "default",
+        String.valueOf(context.getFacts().hashCode()));
   }
 }

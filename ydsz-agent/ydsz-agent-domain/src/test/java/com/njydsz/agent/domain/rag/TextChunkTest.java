@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.rag;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.HashMap;
 import java.util.List;
@@ -136,11 +137,11 @@ class TextChunkTest {
 
       TextChunk embedded = original.withEmbedding(embedding);
 
-      assertThat(embedded.id()).isEqualTo(original.id());
-      assertThat(embedded.content()).isEqualTo(original.content());
-      assertThat(embedded.documentId()).isEqualTo(original.documentId());
-      assertThat(embedded.documentTitle()).isEqualTo(original.documentTitle());
-      assertThat(embedded.chunkIndex()).isEqualTo(original.chunkIndex());
+      assertThat(embedded.getId()).isEqualTo(original.getId());
+      assertThat(embedded.getContent()).isEqualTo(original.getContent());
+      assertThat(embedded.getDocumentId()).isEqualTo(original.getDocumentId());
+      assertThat(embedded.getDocumentTitle()).isEqualTo(original.getDocumentTitle());
+      assertThat(embedded.getChunkIndex()).isEqualTo(original.getChunkIndex());
     }
   }
 

@@ -2,8 +2,6 @@ package com.njydsz.agent.domain.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.math.BigDecimal;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -44,7 +42,7 @@ class AgentPropertiesTest {
     @Test
     @DisplayName("setIsEnabled(false) 后 isEnabled() 返回 false")
     void setIsEnabledToFalseShouldReflectInGetter() {
-      properties.setIsEnabled(false);
+      properties.setEnabled(false);
 
       assertThat(properties.isEnabled()).isFalse();
     }
@@ -55,7 +53,7 @@ class AgentPropertiesTest {
     @Test
     @DisplayName("setIsEnabled(true) 后 isEnabled() 返回 true")
     void setIsEnabledToTrueShouldReflectInGetter() {
-      properties.setIsEnabled(true);
+      properties.setEnabled(true);
 
       assertThat(properties.isEnabled()).isTrue();
     }
@@ -80,7 +78,7 @@ class AgentPropertiesTest {
 
   @Nested
   @DisplayName("嵌套配置组自动实例化")
-  void nestedConfigurationsAutoInstantiated() {
+  class NestedConfigurationsAutoInstantiated {
 
     /**
      * 所有嵌套配置组不应为 null（@Data 无参构造器应创建默认实例）。
@@ -109,7 +107,7 @@ class AgentPropertiesTest {
 
   @Nested
   @DisplayName("LLM 子配置默认值")
-  void llmSubConfigurationDefaults() {
+  class LlmSubConfigurationDefaults {
 
     /**
      * LLM 默认 Provider 不应为空字符串或 null。
@@ -143,7 +141,7 @@ class AgentPropertiesTest {
 
   @Nested
   @DisplayName("配额配置 Quota 子配置")
-  void quotaSubConfiguration() {
+  class QuotaSubConfiguration {
 
     /**
      * 默认 Token 上限应为正数，确保有效配额管控。
@@ -151,19 +149,18 @@ class AgentPropertiesTest {
     @Test
     @DisplayName("配额 tokenLimit 默认应大于 0")
     void tokenLimitShouldBePositive() {
-      assertThat(properties.getQuota().getTokenLimit()).isGreaterThan(0);
+      assertThat(properties.getQuota().getDailyTokenLimit()).isGreaterThan(0);
     }
 
     /**
      * 价格阈值应使用 BigDecimal 类型且非负（禁止 double/float，符合 YDIZ-OOP-003）。
      */
     @Test
-    @DisplayName("价格阈值 priceThreshold 应使用 BigDecimal 且非负")
-    void priceThresholdShouldBeBigDecimalAndNonNegative() {
-      BigDecimal threshold = properties.getQuota().getPriceThreshold();
+    @DisplayName("价格阈值 alertThreshold 应非负")
+    void alertThresholdShouldBeNonNegative() {
+      double threshold = properties.getQuota().getAlertThreshold();
 
-      assertThat(threshold).isNotNull();
-      assertThat(threshold.compareTo(BigDecimal.ZERO)).isGreaterThanOrEqualTo(0);
+      assertThat(threshold).isGreaterThanOrEqualTo(0.0);
     }
   }
 }
