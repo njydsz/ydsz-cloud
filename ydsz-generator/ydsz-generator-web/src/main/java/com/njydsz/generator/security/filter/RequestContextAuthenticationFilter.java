@@ -7,7 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,8 +18,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.njydsz.common.auth.model.AuthInfo;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 请求上下文 → Spring Security 认证桥接过滤器（P0-1 鉴权底层支撑）。

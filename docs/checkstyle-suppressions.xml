@@ -136,6 +136,9 @@
     <!-- literule ScriptRule：危险类黑名单为不可拆行的正则字面量（拆行会改变语义），LineLength 豁免 -->
     <suppress files="ScriptRule\.java" checks="LineLength"/>
 
+    <!-- generator：Spring Security 配置类 SecurityFilterChain 契约要求 throws Exception，IllegalThrows 豁免 -->
+    <suppress files="GeneratorSecurityConfig\.java" checks="IllegalThrows"/>
+
     <!-- literule：反射/脚本/SPI 场景允许 throws Exception（反射创建 Nacos/Zookeeper 监听器、表达式函数 SPI
          契约、生命周期回调 init/destroy、超时评估包装），IllegalThrows 豁免，其余红线规则保留 -->
     <suppress files="DefaultRuleEngine\.java|LiteExprFunction\.java|NacosRuleSource\.java|ZookeeperRuleSource\.java|RuleConfigProvider\.java"
