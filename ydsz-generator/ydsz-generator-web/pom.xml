@@ -36,6 +36,16 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-audit</artifactId>
     </dependency>
+    <!-- P0-1: ydsz-common-auth 提供 Spring Security 方法级鉴权底层能力 -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-auth</artifactId>
+    </dependency>
+    <!-- P1-2: ydsz-common-web 提供 WebAuthFilter / CSRF / TraceFilter 等 Web 基础能力 -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-web</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
