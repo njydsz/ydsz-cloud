@@ -56,18 +56,24 @@
         </dependency>
 
         <!--
-            Jackson annotations（optional，编译期可见，运行期不强制）
-            spring-boot 4.x 的 spring-boot-health / spring-boot-actuator / spring-web 7.0.x
-            的 class 文件字节码中带有 @JsonInclude 等 Jackson 注解。本模块刻意不强制依赖
-            Jackson 引擎（用 Ydsz YdszJson 替代），但需要 Jackson annotations jar 提供
-            注解 class 文件供 javac 在读取这些依赖 class 时解析，否则会持续报
-            "未知的枚举常量 com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY"
-            警告。声明为 optional 即可在编译期消除警告，又不强制本模块使用者必须引入 Jackson 核心。
+            Jackson annotations（compile 作用域，传递到下游）
+            本模块的 YdszJson / JsonNode / JsonMergePatch 等编译后 class 的字节码中引用 @JsonInclude(NON_EMPTY)
+            等 Jackson 注解常量（用于与 Spring Boot 自动检测机制互操作，运行时由 YdszJson 引擎处理，不依赖
+            Jackson 核心）。
+
+            作用域决策：
+            - 不能 optional：optional 依赖不传递，下游模块编译本模块的类时 javac 无法解析 JsonInclude$Include
+              枚举常量，持续报"未知的枚举常量 com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY"
+              警告（参见 ydsz-common-config / ydsz-common-jdbc / ydsz-common-audit 等编译输出）。
+            - compile（默认）：编译期传递给所有下游，确保 javac 能解析注解字节码；运行期仍为 annotations
+              零运行时开销（本模块 100% 使用 YdszJson，不读取 Jackson 核心）。
+
+            本模块的核心定位（"零外部 JSON 库依赖"）不变：YdszJson 运行时零 Jackson 依赖，jackson-annotations
+            仅作为编译期注解占位符存在。
         -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- Jakarta Annotation -->
