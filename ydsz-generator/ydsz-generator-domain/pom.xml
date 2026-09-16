@@ -41,6 +41,11 @@
       <artifactId>mybatis-plus-annotation</artifactId>
       <scope>provided</scope>
     </dependency>
+    <!-- P0-2: ydsz-common-tenant 提供 TenantContextHolder / TenantContextTaskDecorator 等多租户能力 -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-tenant</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>

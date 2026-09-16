@@ -4,6 +4,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +29,7 @@ import com.njydsz.generator.service.TableMetadataService;
  */
 @Slf4j
 @ApiVersion("26.09.01")
+@Secured("ROLE_GENERATOR_USER")
 @RestController
 @RequestMapping("/generator/tables")
 @RequiredArgsConstructor

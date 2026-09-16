@@ -13,13 +13,13 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.14"
-  source: "docs/云顶编码规范.md v1.0.10"
-  last_synced: "2026-09-14"
-  last_updated: "2026-09-14（YDIZ-TEST-001 新增：测试破零 P0 规范；前端规范 §16.10 修订为测试策略）"
-  total_rules: 58
+  version: "26.09.16"
+  source: "docs/云顶编码规范.md v1.0.8"
+  last_synced: "2026-09-16"
+  last_updated: "2026-09-16（§14 测试体系全面升级：YDIZ-TEST-001 升级测试分层策略；新增 YDIZ-TEST-002 Mock 使用规范、YDIZ-TEST-003 测试基础设施依赖管理；total 58→60）"
+  total_rules: 60
   severity_levels:
-    P0: "阻断级，AI 编码绝对禁止违反"
+    P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
 

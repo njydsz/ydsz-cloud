@@ -29,6 +29,7 @@ import com.njydsz.generator.vo.TemplateZipVO;
  */
 @Slf4j
 @ApiVersion("26.09.01")
+@Secured("ROLE_GENERATOR_USER")
 @RestController
 @RequestMapping("/generator/import-export")
 @RequiredArgsConstructor
