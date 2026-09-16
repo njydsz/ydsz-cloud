@@ -28,6 +28,8 @@ public class GenTemplate extends MpBaseAuditEntity<Long> {
   /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
+  /** 租户 ID（多租户隔离）。 */
+  private String tenantId;
   /** 所属模板分组 ID。 */
   private Long groupId;
   /** 文件名（如 entity.vm、vue/api.vm）。 */

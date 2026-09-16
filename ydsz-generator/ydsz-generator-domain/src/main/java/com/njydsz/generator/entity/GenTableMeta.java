@@ -30,6 +30,8 @@ public class GenTableMeta extends MpBaseIdEntity<Long> {
   /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
+  /** 租户 ID（多租户隔离）。 */
+  private String tenantId;
   /** 数据源 ID。 */
   private Long datasourceId;
   /** 物理表名。 */

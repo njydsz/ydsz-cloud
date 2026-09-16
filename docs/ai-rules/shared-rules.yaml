@@ -1261,49 +1261,66 @@ rules:
     source: "编码规范 §25.5 - 【建议】"
 
   # ============================================
-  # 十七、测试规范（26.09.14 起生效，1 条 P0）
+  # ============================================
+  # 十七、测试规范（26.09.14 起生效，1.0.8 扩充至 3 条：2 P0 + 1 P1）
   # ============================================
   - id: "YDIZ-TEST-001"
     category: "testing"
     severity: "P0"
-    title: "【强制】核心引擎 Domain 层新增方法须同步编写单元测试"
+    title: "【强制】项目建立分层测试体系（测试金字塔），核心模块必须编写单元测试"
     description: |
-      核心引擎（workflow、literule、cronjob、agent、message、nextwiki）的 Domain 层新增方法须同步编写单元测试。
+      项目采用测试金字塔模型，按 **单元测试 → 集成测试 → E2E 测试 → 架构守护测试 → 契约测试** 五层构建测试体系。
 
-      **测试框架选型**：
-      - JUnit 5（junit-jupiter）作为测试运行平台
-      - Mockito 作为模拟框架（用于隔离外部依赖）
-      - AssertJ 作为断言库（提供流式断言 API）
+      **测试分层与定位**：
+      - 单元测试（70%）：`{module}-{layer}/src/test/java/`，框架 JUnit Jupiter 5 + AssertJ + Mockito，验证 POJO 行为、领域服务逻辑、状态机转换、纯函数算法
+      - 集成测试（15%）：Testcontainers，验证数据库 SQL 执行、Redis 缓存一致性、消息队列收发
+      - E2E 测试（5%）：Playwright / RestAssured，验证端到端业务流程
+      - 架构守护测试（5%）：ArchUnit + ydsz-common-architecture-test，验证 DDD 分层依赖方向、L1-L6 层级纯度
+      - 契约测试（5%）：Pact / OpenAPI Validator，验证前后端 API 契约一致性
+
+      **核心模块单元测试覆盖基线（PR 增量行覆盖率门禁）**：
+      - ydsz-userinfo（RBAC 权限链路、多租户隔离、SCIM、MFA）：增量 ≥ 60%，全量 ≥ 50%
+      - ydsz-workflow（BPMN 状态机、节点跳转、超时回滚）：增量 ≥ 55%，全量 ≥ 45%
+      - ydsz-literule（LiteExpr AST 编译、沙箱隔离、CEP）：增量 ≥ 50%，全量 ≥ 40%
+      - ydsz-message（渠道路由、DAG 编排、跨渠道抑制）：增量 ≥ 45%，全量 ≥ 30%
+      - ydsz-cronjob（Leader 选举、分片广播、异常自愈）：增量 ≥ 45%，全量 ≥ 30%
+      - ydsz-nextwiki（秒传算法、版本控制、安全扫描）：增量 ≥ 40%，全量 ≥ 25%
+      - ydsz-agent（ReAct 循环、工具审批门、记忆压缩）：增量 ≥ 40%，全量 ≥ 35%
 
       **测试范围优先级**：
       1. 状态机流转规则（如 FlowInstanceStatus.canTransitTo）
       2. 表达式求值器（如 LiteExprEngine.validate）
-      3. 工厂方法 / 静态工具方法
+      3. 工厂方法 / 静态工具方法 / 值对象行为
       4. 领域服务（DomainService）核心算法
+      5. RBAC 权限判断、多租户数据过滤
 
       **测试文件组织**：
-      - Maven 标准目录：`src/test/java/...`（与 main 同源结构）
-      - 命名约定：`{ClassName}Test.java`
-      - Tag 标注：`@Tag("unit")` 用于分类执行
+      - Maven 标准目录：`src/test/java/...`（与 main 镜像对称结构）
+      - 命名约定：`{ClassName}Test.java`；抽象类使用 `{Abstract}BehaviorTest`
+      - Tag 标注：`@Tag("unit")`、`@Tag("integration")` 用于分类执行
 
       **命名规范**：
-      - 测试方法名使用中文 `@DisplayName` 描述行为（如 `"RUNNING 可流转到 SUSPENDED"`）
+      - 测试方法名使用中文 `@DisplayName` 描述行为（如 `"预置上下文存在时应优先于历史加载"`）
       - 类名以 `Test` 结尾
       - 使用 `@Nested` 组织相关测试用例
 
-      **覆盖率目标**：
-      - 核心引擎 Domain 层：≥ 60%
-      - ydsz-common L1-L3 公共模块：≥ 70%
+      **测试覆盖豁免**（需 Javadoc 标注豁免原因）：
+      - 纯 getter/setter（Lombok @Data 生成）
+      - 配置绑定类：标注 `TEST-EXEMPT: config-binding`
+      - Spring Boot 自动配置类：标注 `TEST-EXEMPT: auto-config`
+      - 静态工具方法（纯函数）：需注明算法来源
 
       **禁止事项**：
       - 禁止无断言的渲染性测试
       - 禁止在单元测试中启动 Spring ApplicationContext（应使用纯 POJO 测试 + Mockito）
       - 禁止测试方法间存在执行顺序依赖
+      - 禁止 Mock 被测类本身、禁止 Mock 纯 POJO 值对象
     pattern: |
       以下情形构成违规：
       1. 新增 Domain 方法未同步编写对应单测
       2. 测试方法无 assertThat 断言
       3. 单元测试使用 @SpringBootTest 启动完整上下文（应仅在集成测试中使用）
+      4. 核心模块增量行覆盖率低于门禁阈值
     example_bad: |
       // ❌ 新增 DomainService 方法未编写单测
       public class RuleLifecycleService {
@@ -1317,23 +1334,152 @@ rules:
       void testPublish() {
           service.publishRule("R001"); // 无 assertThat，测试无意义
       }
+
+      // ❌ 核心模块零测试覆盖（未达标）
+      // ydsz-userinfo domain 层 12 万行代码，测试文件数 = 0
     example_good: |
       // ✅ 同步编写单元测试
       class FlowInstanceStatusTest {
-          @Test
-          @DisplayName("RUNNING 可流转到 SUSPENDED")
-          void runningCanTransitToSuspended() {
-              assertThat(FlowInstanceStatus.RUNNING.canTransitTo(FlowInstanceStatus.SUSPENDED)).isTrue();
+          @Nested
+          @DisplayName("终态判定")
+          class IsFinishedTest {
+              @Test
+              @DisplayName("COMPLETED 应为终态")
+              void completedShouldBeFinished() {
+                  assertThat(FlowInstanceStatus.COMPLETED.isFinished()).isTrue();
+              }
           }
       }
     fix: |
       1. 为新增 Domain 方法编写对应单测
       2. 补充缺失的 assertThat 断言
       3. 使用 Mockito.mock() 替代 Spring 集成测试
-    source: "编码规范 §15 - P0-1 测试破零"
+      4. 为核心模块建立测试数据工厂（_support/ 包），降低编写成本
+    source: "编码规范 §14.1 测试分层策略（YDIZ-TEST-001，P0）"
+
+  - id: "YDIZ-TEST-002"
+    category: "testing"
+    severity: "P0"
+    title: "【强制】Mock 外部依赖规则：生产/Mock 行为一致，禁止 Mock 被测類和纯 POJO"
+    description: |
+      测试中 Mock 外部依赖（数据库、Redis、外部 HTTP、消息队列）以隔离被测单元。Mock 行为必须与真实依赖契约对齐。
+
+      **允许 Mock 的依赖**：
+      - 基础设施接口（Repository、Mapper、CacheClient）：Mockito，用于 domain 层单元测试
+      - Feign 外部服务客户端：Mockito / MockServer
+      - Spring ApplicationEvent：Mockito / @EventListener 测试验证
+      - 外部 HTTP 客户端（RestTemplate、WebClient）：WireMock / MockWebServer
+      - 数据库集成：使用 Testcontainers 启动真实 PostgreSQL（非 Mock）
+      - 缓存集成：使用 Testcontainers 启动真实 Redis
+      - 消息队列：使用 Testcontainers 启动真实 RabbitMQ
+
+      **禁止 Mock 的依赖**：
+      - 被测类本身（失去测试意义）
+      - 纯 POJO 值对象（Mock 纯数据行为无意义）
+      - AssertJ 流式断言（assertThat 返回值 Mock 后失效）
+      - 私有方法（表明设计问题，应重构）
+      - 静态方法（非工具类，应重构为实例方法）
+    pattern: |
+      以下情形构成违规：
+      1. 使用 @Mock 标注被测类（应使用真实对象 + @InjectMocks）
+      2. Mock 纯 getter 方法的返回值（应直接构造真实对象）
+      3. when(...).thenReturn(...) 与真实依赖行为不一致
+    example_bad: |
+      // ❌ 错误：Mock 被测类本身
+      @Mock
+      private DomainService sut; // sut 不应被 Mock
+
+      // ❌ 错误：Mock 纯 POJO
+      @Mock
+      private SseEvent event;
+      when(event.getEvent()).thenReturn("custom"); // 纯数据对象不应 Mock
+    example_good: |
+      // ✅ 正确：Mock 依赖，测试真实被测对象
+      @ExtendWith(MockitoExtension.class)
+      class ServiceTest {
+          @Mock
+          private Repository repository;  // Mock 基础设施
+
+          @InjectMocks
+          private DomainService sut;      // 真实被测对象
+
+          @Test
+          @DisplayName("场景描述_期望行为")
+          void method_scenario_expectedBehavior() {
+              // Arrange
+              when(repository.findById(any())).thenReturn(Optional.of(entity));
+              // Act + Assert
+              assertThat(sut.execute(input)).isNotNull();
+              verify(repository).findById(input.getId());
+          }
+      }
+    fix: |
+      1. 被测对象使用 @InjectMocks 或 new 真实构造
+      2. 纯 POJO 直接 new 并 setter 构造，不 Mock
+      3. Mock 桩行为需与真实依赖契约对齐
+    source: "编码规范 §14.3 Mock 使用规范（YDIZ-TEST-002，P0）"
+
+  - id: "YDIZ-TEST-003"
+    category: "testing"
+    severity: "P1"
+    title: "【推荐】测试基础设施依赖管理：统一版本声明、按需引入"
+    description: |
+      各业务模块按需引入测试依赖，统一由父 pom `dependencyManagement` 管理版本。
+
+      **核心测试依赖版本定义（父 pom 统一声明）**：
+      - `org.junit.jupiter:junit-jupiter`: 5.10.3+ — 单元/集成测试运行平台
+      - `org.assertj:assertj-core`: 3.26.0+ — 单元/集成断言
+      - `org.mockito:mockito-core`: 5.12.0+ — Mock 外部依赖
+      - `org.testcontainers:testcontainers`: 1.20.0+ — 集成测试环境
+      - `org.testcontainers:postgresql`: 1.20.0+ — DB 集成环境
+      - `org.testcontainers:rabbitmq`: 1.20.0+ — MQ 集成环境
+      - `org.testcontainers:junit-jupiter`: 1.20.0+ — TC JUnit5 扩展
+      - `com.tngtech.archunit:archunit-junit5`: 1.4.0+ — 架构守护
+
+      **依赖引入原则**：
+      - 所有模块 `src/test/` 必须引入 `junit-jupiter` + `assertj-core`
+      - domain 层测试用 `mockito-core` 隔离仓储
+      - infra 层集成测试额外引入 `testcontainers` 系列
+      - scope 必须为 `test`，禁止 `compile` 或 `provided`
+    pattern: |
+      以下情形构成违规：
+      1. 测试依赖未在父 pom dependencyManagement 中统一管理版本
+      2. 测试依赖使用 compile scope
+      3. 模块已引入测试框架但未在父 pom 中声明版本
+    example_bad: |
+      <!-- ❌ 错误：不在 dependencyManagement 中管理 -->
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter</artifactId>
+          <version>5.10.3</version>  <!-- 版本分散在各模块 -->
+          <scope>test</scope>
+      </dependency>
+    example_good: |
+      <!-- ✅ 正确：父 pom 统一定义版本 -->
+      <!-- parent pom dependencyManagement -->
+      <dependencyManagement>
+          <dependencies>
+              <dependency>
+                  <groupId>org.junit.jupiter</groupId>
+                  <artifactId>junit-jupiter</artifactId>
+                  <version>5.10.3</version>
+                  <scope>test</scope>
+              </dependency>
+          </dependencies>
+      </dependencyManagement>
+      <!-- 业务模块只需引用，不指定版本 -->
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter</artifactId>
+      </dependency>
+    fix: |
+      1. 将测试依赖版本统一收口到父 pom dependencyManagement
+      2. 业务模块仅声明 groupId + artifactId，不重复指定 version
+      3. scope 保持 test，禁止扩散到 compile/runtime
+    source: "编码规范 §14.6 测试基础设施依赖管理（YDIZ-TEST-003，P1）"
 
 # ============================================
-# 附录：按 category 统计
+# 附录：按 category 统计（26.09.16 更新，total 58→60）
 # ============================================
 stats:
   encoding: 1
@@ -1353,5 +1499,5 @@ stats:
   warnings: 1
   api: 2
   tx: 4
-  testing: 1
-  total: 58
+  testing: 3
+  total: 60

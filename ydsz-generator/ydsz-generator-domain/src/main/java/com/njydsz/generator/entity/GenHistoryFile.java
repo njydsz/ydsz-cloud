@@ -28,6 +28,8 @@ public class GenHistoryFile extends MpBaseIdEntity<Long> {
   /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
+  /** 租户 ID（多租户隔离）。 */
+  private String tenantId;
   /** 所属任务 ID。 */
   private Long historyId;
   /** 生成文件路径。 */

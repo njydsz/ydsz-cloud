@@ -67,6 +67,9 @@ ydsz:
         thread-name-prefix: code-gen-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30
+  # P0-2: 启用多租户隔离（SINGLE 模式 + tenant_id 列注入）
+  tenant:
+    enabled: true
 
 # 日志
 logging:

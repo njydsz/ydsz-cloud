@@ -33,6 +33,8 @@ public class GenDatasource extends MpBaseAuditEntity<Long> {
   /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
+  /** 租户 ID（多租户隔离）。 */
+  private String tenantId;
   /** 数据源名称。 */
   private String name;
   /** JDBC URL。 */

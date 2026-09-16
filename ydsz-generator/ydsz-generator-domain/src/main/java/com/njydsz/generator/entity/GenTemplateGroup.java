@@ -30,6 +30,8 @@ public class GenTemplateGroup extends MpBaseAuditEntity<Long> {
   /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)
   private Long id;
+  /** 租户 ID（多租户隔离）。 */
+  private String tenantId;
   /** 分组名（UNIQUE，如 default、mybatis-plus）。 */
   private String name;
   /** 分组描述。 */
