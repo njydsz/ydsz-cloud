@@ -41,6 +41,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-auth</artifactId>
         </dependency>
+        <!-- P2-1: 显式声明 common-thread（LockAdminController 等需要操作 ThreadPoolExecutor） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
