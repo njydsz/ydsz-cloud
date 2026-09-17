@@ -161,6 +161,12 @@ public class CachedLlmClient implements LlmClient {
     return delegate.getProvider();
   }
 
+  @Override
+  public List<Float> embed(String text) {
+    // Embedding 不缓存，直接委托
+    return delegate.embed(text);
+  }
+
   /**
    * 判断请求是否携带工具定义。
    *

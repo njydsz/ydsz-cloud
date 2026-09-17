@@ -90,6 +90,15 @@ public class AgentProperties {
   /** 代码执行配置 */
   private CodeExecution codeExecution = new CodeExecution();
 
+  /** OCR 配置 */
+  private Ocr ocr = new Ocr();
+
+  /** Web 搜索配置 */
+  private WebSearch webSearch = new WebSearch();
+
+  /** 混合搜索配置 */
+  private HybridSearch hybridSearch = new HybridSearch();
+
   // ========================= LLM 配置 =========================
 
   /** LLM 相关配置组（默认 Provider、模型、密钥、价格等）。 */
@@ -811,5 +820,112 @@ public class AgentProperties {
 
     /** 报告输出格式列表 */
     private List<String> supportedFormats = List.of("html", "markdown");
+  }
+
+  // ========================= OCR 配置 =========================
+
+  /**
+   * OCR（光学字符识别）配置
+   *
+   * <p>控制扫描版 PDF / 图片中文字提取的相关参数。
+   * 支持多 Provider 路由：LLM Vision 模型（如 qwen-vl）、Tesseract、云服务商 OCR。
+   *
+   * @author ydsz-team
+   * @since 26.09.17
+   */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Ocr {
+
+    /** 默认 OCR 调用超时（秒） */
+    private static final int DEFAULT_TIMEOUT_SECONDS = 60;
+
+    /** PDF 转图片默认 DPI */
+    private static final int DEFAULT_PDF_DPI = 200;
+
+    /** 是否启用 OCR 功能 */
+    private boolean isEnabled = false;
+
+    /** OCR 引擎类型：llm-vision / tesseract / cloud */
+    private String provider = "llm-vision";
+
+    /** LLM Vision 模型名称（provider=llm-vision 时） */
+    private String visionModel = "qwen-vl-max";
+
+    /** PDF 转图片的 DPI 值（影响 OCR 精度与处理耗时） */
+    private int pdfDpi = DEFAULT_PDF_DPI;
+
+    /** OCR 调用超时（秒） */
+    private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
+
+    /** OCR 引擎不可用时是否跳过（降级为仅记录警告） */
+    private boolean isDegradedOnFailure = true;
+  }
+
+  // ========================= Web 搜索配置 =========================
+
+  /**
+   * Web 搜索配置
+   *
+   * <p>控制实时互联网搜索的相关参数，与 RAG 知识库检索互为补充。
+   * 支持免费 DuckDuckGo HTML 端点或自定义搜索 API。
+   *
+   * @author ydsz-team
+   * @since 26.09.17
+   */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class WebSearch {
+
+    /** 默认搜索超时（秒） */
+    private static final int DEFAULT_TIMEOUT_SECONDS = 10;
+
+    /** 默认返回结果数 */
+    private static final int DEFAULT_TOP_K = 5;
+
+    /** 是否启用 Web 搜索 */
+    private boolean isEnabled = false;
+
+    /** 搜索 Provider：duckduckgo / custom */
+    private String provider = "duckduckgo";
+
+    /** 自定义搜索 API 端点（provider=custom 时） */
+    private String endpoint = "";
+
+    /** 自定义搜索 API Key（provider=custom 时） */
+    private String apiKey = "";
+
+    /** 搜索超时（秒） */
+    private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
+
+    /** 默认返回结果数 */
+    private int topK = DEFAULT_TOP_K;
+
+    /** 搜索失败时是否降级返回空结果（不影响 RAG 主流程） */
+    private boolean isDegradedOnFailure = true;
+  }
+
+  // ========================= 混合搜索配置 =========================
+
+  /**
+   * 混合搜索配置（RAG + WebSearch）
+   *
+   * <p>控制是否启用 Web 搜索与知识库检索的融合，以及相关权重参数。
+   *
+   * @author ydsz-team
+   * @since 26.09.17
+   */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class HybridSearch {
+
+    /** 是否启用 Web 搜索融合（false 时仅走 RAG 向量检索） */
+    private boolean isWebEnabled = false;
+
+    /** Web 搜索最大 RAG 结果数分配比例（0-1），例如 0.3 表示 Web 结果占 30% */
+    private double webResultRatio = 0.3;
   }
 }

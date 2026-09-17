@@ -65,6 +65,9 @@ public class CompatibleLlmClient implements LlmClient {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** 默认 Embedding 模型 */
+  private static final String DEFAULT_EMBEDDING_MODEL = "text-embedding-ada-002";
+
 
   /** 默认最大重试次数 */
   private static final int DEFAULT_MAX_RETRIES = 3;
@@ -520,6 +523,67 @@ public class CompatibleLlmClient implements LlmClient {
       return LlmException.ErrorType.PROVIDER_ERROR;
     }
     return LlmException.ErrorType.INVALID_RESPONSE;
+  }
+
+  @Override
+  public List<Float> embed(String text) {
+    if (text == null || text.isBlank()) {
+      return List.of();
+    }
+    Map<String, Object> requestBody = Map.of(
+        "model", DEFAULT_EMBEDDING_MODEL,
+        "input", text);
+    try {
+      if (!concurrencyLimiter.tryAcquire(timeoutSeconds, TimeUnit.SECONDS)) {
+        throw new LlmException("LLM 并发限流等待超时（embedding）", LlmException.ErrorType.RATE_LIMITED, null);
+      }
+      try {
+        String responseJson =
+            webClient
+                .post()
+                .uri("/embeddings")
+                .bodyValue(snakeCaseMapper.toJson(requestBody))
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return parseEmbeddingResponse(responseJson);
+      } finally {
+        concurrencyLimiter.release();
+      }
+    } catch (LlmException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("[LLM-{}] embedding 调用失败: {}", provider, e.getMessage(), e);
+      throw new LlmException(
+          "embedding 调用失败: " + e.getMessage(), LlmException.ErrorType.PROVIDER_ERROR, e);
+    }
+  }
+
+  /**
+   * 解析 Embedding API 响应，提取浮点向量。
+   *
+   * <p>兼容 OpenAI Embeddings API 响应格式：{@code {"data": [{"embedding": [...]}]}}。
+   *
+   * @param json 原始 JSON 响应字符串
+   * @return 嵌入向量（浮点列表）
+   */
+  private List<Float> parseEmbeddingResponse(String json) {
+    ObjectNode obj = (ObjectNode) YdszJson.readTree(json);
+    ArrayNode data = (ArrayNode) obj.get("data");
+    if (data == null || data.size() == 0) {
+      log.warn("[LLM-{}] embedding 响应无 data 字段", provider);
+      return List.of();
+    }
+    ArrayNode embedding = (ArrayNode) data.get(0).get("embedding");
+    if (embedding == null) {
+      log.warn("[LLM-{}] embedding 响应无 embedding 字段", provider);
+      return List.of();
+    }
+    List<Float> vector = new ArrayList<>(embedding.size());
+    for (int i = 0; i < embedding.size(); i++) {
+      vector.add((float) embedding.get(i).asDouble());
+    }
+    return vector;
   }
 
   /** 判断异常链中是否包含超时异常 */

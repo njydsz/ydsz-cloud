@@ -167,6 +167,27 @@ public class LlmClientRouter implements LlmClient {
     return "router";
   }
 
+  @Override
+  public List<Float> embed(String text) {
+    LlmClient client = defaultClient.get();
+    if (client == null) {
+      throw new LlmException("无可用 LLM Provider 执行 embedding", LlmException.ErrorType.MODEL_NOT_FOUND);
+    }
+    try {
+      return client.embed(text);
+    } catch (LlmException e) {
+      if (!shouldFallback(e.getErrorType())) {
+        throw e;
+      }
+      log.warn("[LLM-Router] 主 Provider embedding 失败 ({})，尝试 Fallback", e.getErrorType());
+      LlmClient fallback = findFallback(client);
+      if (fallback != null) {
+        return fallback.embed(text);
+      }
+      throw e;
+    }
+  }
+
   /**
    * 获取已注册的全部 Provider 名称。
    *

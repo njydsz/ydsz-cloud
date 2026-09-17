@@ -34,6 +34,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.repository.ConfigRepository;
+import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
@@ -80,7 +81,7 @@ class ConfigServiceImplTest {
   @BeforeEach
   void setUp() {
     // strictValidation 默认为 false（向后兼容存量非法值）
-    when(properties.getStrictValidation()).thenReturn(false);
+    when(properties.isStrictValidation()).thenReturn(false);
     // SpEL @cacheKeyBuilder 调用全部返回 testKey，不影响黑盒行为
     when(cacheKeyBuilder.configValue(anyString())).thenReturn("testKey");
     when(cacheKeyBuilder.configGroup(anyString())).thenReturn("testGroup");
@@ -102,8 +103,8 @@ class ConfigServiceImplTest {
       PageResponse<ConfigVO> result = configService.pageByCursor("grp", "k", 0, null);
 
       verify(configRepository).findForCursor("grp", "k", null, 1);
-      assertThat(result.list()).isEmpty();
-      assertThat(result.nextCursor()).isNull();
+      assertThat(result.getData()).isEmpty();
+      assertThat(result.getNextCursor()).isNull();
     }
 
     @Test
@@ -128,7 +129,7 @@ class ConfigServiceImplTest {
 
       PageResponse<ConfigVO> result = configService.pageByCursor("grp", "k", 2, null);
 
-      assertThat(result.nextCursor()).isEqualTo("last-id-2");
+      assertThat(result.getNextCursor()).isEqualTo("last-id-2");
     }
 
     @Test
@@ -141,7 +142,7 @@ class ConfigServiceImplTest {
 
       PageResponse<ConfigVO> result = configService.pageByCursor("grp", "k", 1, null);
 
-      assertThat(result.nextCursor()).isNull();
+      assertThat(result.getNextCursor()).isNull();
     }
 
     @Test
@@ -194,7 +195,7 @@ class ConfigServiceImplTest {
     @Test
     @DisplayName("strictValidation=true + 格式非法时应抛出异常")
     void shouldThrowWhenStrictValidationFails() {
-      when(properties.getStrictValidation()).thenReturn(true);
+      when(properties.isStrictValidation()).thenReturn(true);
       ConfigDTO dto = new ConfigDTO();
       dto.setConfigGroup("sys");
       dto.setConfigKey("num.key");
@@ -211,7 +212,7 @@ class ConfigServiceImplTest {
     @Test
     @DisplayName("strictValidation=false + 格式非法时应放行（仅告警）")
     void shouldPassWhenLooseValidation() {
-      when(properties.getStrictValidation()).thenReturn(false);
+      when(properties.isStrictValidation()).thenReturn(false);
       ConfigDTO dto = new ConfigDTO();
       dto.setId("loose-id");
       dto.setConfigGroup("sys");
@@ -285,7 +286,7 @@ class ConfigServiceImplTest {
     @DisplayName("page 应委托 Repository.findByPage")
     void pageShouldDelegate() {
       ConfigPageQuery query = new ConfigPageQuery();
-      PageResponse<List<ConfigVO>> expected = PageResponse.empty();
+      PageResponse<List<ConfigVO>> expected = PageResponse.empty(1L, 20L);
       when(configRepository.findByPage(query)).thenReturn(expected);
 
       PageResponse<List<ConfigVO>> result = configService.page(query);
