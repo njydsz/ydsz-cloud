@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.HybridSearchProperties;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.search.WebSearchService;
 
@@ -75,7 +76,7 @@ public class HybridSearchService {
       topK = DEFAULT_TOP_K_FALLBACK;
     }
 
-    AgentProperties.HybridSearch hybridConfig = properties.getHybridSearch();
+    HybridSearchProperties hybridConfig = properties.getHybridSearch();
     boolean webEnabled = hybridConfig.isWebEnabled()
         && webSearchService != null
         && webSearchService.isAvailable();

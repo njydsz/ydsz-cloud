@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.QuotaProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -660,7 +661,7 @@ public class ChatService {
    * @return 租户配额配置
    */
   private TenantQuota resolveTenantQuota() {
-    AgentProperties.Quota config = properties.getQuota();
+    QuotaProperties config = properties.getQuota();
     return new TenantQuota(
         "default",
         config.getDailyTokenLimit(),

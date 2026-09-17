@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.McpServerProperties;
 import com.njydsz.agent.domain.mcp.McpExposedTool;
 import com.njydsz.agent.domain.mcp.McpServerCapabilityProvider;
 import com.njydsz.agent.domain.mcp.McpServerDescriptor;
@@ -75,7 +76,7 @@ public class DefaultMcpServerCapabilityProvider implements McpServerCapabilityPr
     if (descriptorCache != null) {
       return descriptorCache;
     }
-    AgentProperties.McpServer server = agentProperties.getMcpServer();
+    McpServerProperties server = agentProperties.getMcpServer();
     String name = server != null && server.getServerName() != null
         ? server.getServerName() : "ydsz-agent";
     String version = server != null && server.getServerVersion() != null

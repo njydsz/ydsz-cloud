@@ -9,6 +9,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.WebSearchProperties;
 import com.njydsz.agent.domain.search.WebSearchService;
 
 /**
@@ -113,7 +114,7 @@ public class HttpWebSearchService implements WebSearchService {
    * @return 搜索结果列表
    */
   private List<SearchResult> searchCustom(String query, int topK) {
-    AgentProperties.WebSearch config = properties.getWebSearch();
+    WebSearchProperties config = properties.getWebSearch();
     String endpoint = config.getEndpoint();
     if (endpoint == null || endpoint.isBlank()) {
       log.warn("[WebSearch] 自定义搜索端点未配置 (ydsz.agent.web-search.endpoint)");

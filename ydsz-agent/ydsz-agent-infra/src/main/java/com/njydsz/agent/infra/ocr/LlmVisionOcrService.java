@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.OcrProperties;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -70,7 +71,7 @@ public class LlmVisionOcrService implements OcrService {
 
   @Override
   public boolean isAvailable() {
-    AgentProperties.Ocr ocrConfig = properties.getOcr();
+    OcrProperties ocrConfig = properties.getOcr();
     if (!ocrConfig.isEnabled()) {
       return false;
     }

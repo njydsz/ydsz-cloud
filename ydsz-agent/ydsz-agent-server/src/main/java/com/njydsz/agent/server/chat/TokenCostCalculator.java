@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.LlmProperties;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.CostEstimate;
@@ -96,7 +97,7 @@ public class TokenCostCalculator {
     if (model == null || model.isBlank()) {
       return properties.getLlm().getFallbackPrice();
     }
-    AgentProperties.Llm llm = properties.getLlm();
+    LlmProperties llm = properties.getLlm();
     Map<String, Double> priceMap = llm.getModelPrices();
     if (priceMap != null && priceMap.containsKey(model)) {
       return BigDecimal.valueOf(priceMap.get(model));
