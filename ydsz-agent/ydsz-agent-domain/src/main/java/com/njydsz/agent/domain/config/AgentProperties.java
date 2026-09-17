@@ -78,6 +78,9 @@ public class AgentProperties {
   /** 用户画像配置 */
   private ProfileConfig profile = new ProfileConfig();
 
+  /** Reranker 精排配置 */
+  private RerankerConfig rerankerConfig = new RerankerConfig();
+
   /** 可观测性配置（OpenTelemetry） */
   private Otel otel = new Otel();
 
@@ -601,6 +604,42 @@ public class AgentProperties {
 
     /** Cron 表达式 */
     private String cron = "0 30 2 * * ?";
+  }
+
+  // ========================= Reranker 精排配置 =========================
+
+  /**
+   * Reranker 精排配置
+   *
+   * <p>对召回阶段候选文档做精排，弥补单向量相似度在语义匹配精度上的不足。 支持基于 HTTP API 的通用 Reranker（兼容 BGE-Reranker / Qwen-Reranker / Cohere Rerank / Jina Rerank）。
+   *
+   * <p>当 {@code enabled=true} 且配置了 {@code baseUrl} 时，{@code HttpReranker} 生效，替代默认的 {@code IdentityReranker}。
+   *
+   * @author ydsz-team
+   * @since 26.09.17
+   */
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class RerankerConfig {
+
+    /** 默认超时时间（毫秒） */
+    private static final int DEFAULT_TIMEOUT_MILLIS = 5000;
+
+    /** 是否启用 Reranker 精排 */
+    private boolean isEnabled = false;
+
+    /** Reranker API Base URL */
+    private String baseUrl = "";
+
+    /** Reranker API Key */
+    private String apiKey = "";
+
+    /** 模型名称 */
+    private String model = "bge-reranker-v2-m3";
+
+    /** 调用超时（毫秒） */
+    private int timeoutMillis = DEFAULT_TIMEOUT_MILLIS;
   }
 
   // ========================= 用户画像配置 =========================
