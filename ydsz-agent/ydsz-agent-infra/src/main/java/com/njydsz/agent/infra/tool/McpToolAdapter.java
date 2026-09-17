@@ -7,7 +7,6 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.config.properties.McpProperties;
 import com.njydsz.agent.domain.model.ToolDefinition;
 
@@ -51,7 +50,7 @@ public class McpToolAdapter {
   private final McpClientProvider clientProvider;
 
   /** MCP 配置 */
-  private final AgentProperties.Mcp mcpConfig;
+  private final McpProperties mcpConfig;
 
   /**
    * 构造 MCP 工具适配器。
@@ -59,7 +58,7 @@ public class McpToolAdapter {
    * @param clientProvider MCP 客户端提供者（封装传输层实现）
    * @param mcpConfig MCP 全局配置（含 Server 列表与传输类型等）
    */
-  public McpToolAdapter(McpClientProvider clientProvider, AgentProperties.Mcp mcpConfig) {
+  public McpToolAdapter(McpClientProvider clientProvider, McpProperties mcpConfig) {
     this.clientProvider = clientProvider;
     this.mcpConfig = mcpConfig;
   }

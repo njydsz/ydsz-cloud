@@ -13,7 +13,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.RerankerProperties;
 import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.common.json.YdszJson;
@@ -119,7 +119,7 @@ public class HttpReranker implements Reranker {
    *
    * @param rerankerConfig Reranker 配置
    */
-  public HttpReranker(AgentProperties.RerankerConfig rerankerConfig) {
+  public HttpReranker(RerankerProperties rerankerConfig) {
     this.baseUrl = rerankerConfig.getBaseUrl();
     this.apiKey = rerankerConfig.getApiKey();
     this.model = rerankerConfig.getModel();
