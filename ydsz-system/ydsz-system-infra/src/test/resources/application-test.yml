@@ -1,0 +1,48 @@
+#
+# 集成测试 Profile（application-test.yml）
+#
+# 由 SystemTestInitializer @ActiveProfiles("test") 激活。
+# datasource 连接信息由 @DynamicPropertySource 从 Testcontainers 注入，本文件只需配置与 TC 兼容的细项。
+
+spring:
+  application:
+    name: ydsz-system-infra-test
+  # datasource 配置覆盖由 SystemTestInitializer @DynamicPropertySource 提供，这里作为 fallback
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: "HikariPool-SystemIT"
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 10000
+      idle-timeout: 30000
+  # 禁用所有非必要自动配置，加速上下文启动（tc 容器单 JVM 共享，不需要每次初始化连接）
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
+
+# ydsz-common-jdbc 集成
+ydsz:
+  jdbc:
+    enabled: true
+    mapper-scan-packages:
+      - com.njydsz.system.infra.mapper
+    dynamic-datasource:
+      enabled: true
+    slow-sql:
+      enabled: false
+    sql-audit:
+      enabled: false
+    safe-query:
+      enabled: true
+
+# 日志级别
+logging:
+  level:
+    com.njydsz: INFO
+    org.testcontainers: INFO
+    com.github.dockerjava: WARN
+    org.springframework.boot.test: INFO
