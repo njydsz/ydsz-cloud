@@ -9,6 +9,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.agent.infra.rag.HybridRetriever;
+import com.njydsz.agent.infra.rag.RagDebugInfo;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 
