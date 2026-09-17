@@ -51,6 +51,43 @@ jobs:
         run: mvn checkstyle:check -B
         # 失败即构建中断（failOnViolation=true，已在 pom 中配置）
 
-      # Step 5: Maven verify（编译 + 打包验证）
-      - name: Maven verify
-        run: mvn verify -B
+      # Step 5: Maven verify（编译 + 测试 + 打包验证 — surefire 跑单元测试 + failsafe 跑 IT 集成测试）
+      - name: Maven verify (Compile + Unit Test + Integration Test)
+        run: mvn verify -B -fae
+        # -fae: 失败继续（避免模块 A 失败遮断 B 的测试报告归档），但最终步骤会检查测试结果
+
+      # Step 6: 测试报告归档（surefire-reports / failsafe-reports 产物收集 — 云顶编码规范 §14.4）
+      # 由 Maven Surefire 与 Failsafe 插件在 target/surefire-reports 与 target/failsafe-reports 生成的 XML 报告
+      - name: 归档单元测试与集成测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ github.run_number }}
+          path: |
+            **/target/surefire-reports/*.xml
+            **/target/failsafe-reports/*.xml
+          if-no-files-found: warn
+          retention-days: 30
+
+      # Step 7: JUnit 测试趋势与报告（Test Reporter — 提供可视化测试报告与失败标注）
+      - name: 测试报告注解（Test Report Annotation）
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: 后端测试报告
+          path: |
+            **/target/surefire-reports/*.xml
+            **/target/failsafe-reports/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      # Step 8: JaCoCo 覆盖率报告归档
+      - name: 归档 JaCoCo 覆盖率报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report-${{ github.run_number }}
+          path: |
+            **/target/site/jacoco/jacoco.xml
+          if-no-files-found: warn
+          retention-days: 30
