@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.trace.AgentSpan;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
+import com.njydsz.agent.domain.trace.TraceContextHolder;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 
@@ -32,8 +33,12 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
  *
  * <p><b>容错</b>：导出失败不影响原有链路记录（try-catch 包外层）。
  *
+ * <p><b>业务关联维度</b>：在导出 Span 时，自动从 {@link TraceContextHolder} 获取当前线程的
+ * botId / turnId / conversationId / accountId，并设置为 OTel Span 的 Attribute，
+ * 便于在可观测性后台中按业务维度聚合分析。
+ *
  * @author ydsz-team
- * @since 26.09.07
+ * @since 26.09.17
  */
 @Slf4j
 public class ExportingTraceRecorder implements TraceRecorder {
@@ -41,8 +46,8 @@ public class ExportingTraceRecorder implements TraceRecorder {
   /** 步骤内容最大保留长度 */
   private static final int MAX_CONTENT_LENGTH = 500;
 
-  /** Span 属性集合初始容量 */
-  private static final int ATTRIBUTES_CAPACITY = 8;
+  /** Span 属性集合初始容量（含业务关联维度） */
+  private static final int ATTRIBUTES_CAPACITY = 12;
 
   /** 步骤事件列表初始容量 */
   private static final int EVENTS_CAPACITY = 4;
@@ -70,14 +75,23 @@ public class ExportingTraceRecorder implements TraceRecorder {
   /**
    * {@inheritDoc}
    *
-   * <p>在底层记录器启动链路后，记录根 Span 元数据（用于步骤级 Span 的 parentSpanId 关联）。
+   * <p>在底层记录器启动链路后，记录根 Span 元数据（用于步骤级 Span 的 parentSpanId 关联），
+   * 并自动从 {@link TraceContextHolder} 获取业务关联维度。
    */
   @Override
   public String startTrace(String conversationId, String agentId) {
     String traceId = delegate.startTrace(conversationId, agentId);
     String rootSpanId = TraceIdGenerator.generateSortableTraceId();
+
+    // 从 ThreadLocal 上下文获取业务关联维度
+    TraceContextHolder.TraceContext ctx = TraceContextHolder.get();
+    String botId = ctx != null ? ctx.botId() : null;
+    String turnId = ctx != null ? ctx.turnId() : null;
+    String ctxConversationId = ctx != null ? ctx.conversationId() : conversationId;
+    String accountId = ctx != null ? ctx.accountId() : null;
+
     rootSpanMetas.put(traceId,
-        new AgentRootSpanMeta(traceId, rootSpanId, conversationId, agentId, Instant.now()));
+        new AgentRootSpanMeta(traceId, rootSpanId, ctxConversationId, agentId, botId, turnId, accountId, Instant.now()));
     return traceId;
   }
 
@@ -138,6 +152,8 @@ public class ExportingTraceRecorder implements TraceRecorder {
 
   /**
    * 导出步骤级 Span。
+   *
+   * <p>自动将业务关联维度（botId / turnId / conversationId / accountId）设置为 OTel Span 的 Attribute。
    */
   private void exportStepSpan(
       String traceId, String stepType, String content, long durationMs, BigDecimal cost) {
@@ -155,6 +171,9 @@ public class ExportingTraceRecorder implements TraceRecorder {
         attrs.put("agent.step.content", truncate(content, MAX_CONTENT_LENGTH));
       }
 
+      // 设置业务关联维度属性
+      appendBusinessAttrs(rootMeta, attrs);
+
       List<AgentSpan.SpanEvent> events = new ArrayList<>(EVENTS_CAPACITY);
       if (cost != null && cost.compareTo(BigDecimal.ZERO) > 0) {
         events.add(new AgentSpan.SpanEvent(
@@ -165,7 +184,11 @@ public class ExportingTraceRecorder implements TraceRecorder {
 
       AgentSpan span = new AgentSpan(
           traceId, spanId, parentSpanId, stepType, "INTERNAL",
-          instantStartTime, endTime, "SUCCESS", attrs, events, cost != null ? cost : BigDecimal.ZERO);
+          instantStartTime, endTime, "SUCCESS", attrs, events, cost != null ? cost : BigDecimal.ZERO,
+          rootMeta != null ? rootMeta.botId() : null,
+          rootMeta != null ? rootMeta.turnId() : null,
+          rootMeta != null ? rootMeta.conversationId() : null,
+          rootMeta != null ? rootMeta.accountId() : null);
       exporter.export(span);
     } catch (Exception e) {
       // 导出失败不应影响主链路记录
@@ -176,6 +199,8 @@ public class ExportingTraceRecorder implements TraceRecorder {
 
   /**
    * 导出链路级 Span。
+   *
+   * <p>自动将业务关联维度（botId / turnId / conversationId / accountId）设置为 OTel Span 的 Attribute。
    */
   private void exportRootSpan(String traceId, String status) {
     try {
@@ -189,13 +214,41 @@ public class ExportingTraceRecorder implements TraceRecorder {
       attrs.put("agent.id", rootMeta.agentId());
       attrs.put("conversation.id", rootMeta.conversationId());
 
+      // 设置业务关联维度属性
+      appendBusinessAttrs(rootMeta, attrs);
+
       AgentSpan span = new AgentSpan(
           traceId, rootMeta.rootSpanId(), null, rootMeta.agentId(),
           "INTERNAL", rootMeta.startTime(), endTime,
-          status != null ? status : "SUCCESS", attrs, List.of(), BigDecimal.ZERO);
+          status != null ? status : "SUCCESS", attrs, List.of(), BigDecimal.ZERO,
+          rootMeta.botId(), rootMeta.turnId(), rootMeta.conversationId(), rootMeta.accountId());
       exporter.export(span);
     } catch (Exception e) {
       log.warn("[Otel] 链路 Span 导出失败: traceId={}, err={}", traceId, e.getMessage());
+    }
+  }
+
+  /**
+   * 将业务关联维度追加到 Attributes Map（非空值才添加）。
+   *
+   * @param rootMeta 链路根 Span 元数据
+   * @param attrs 待填充的属性 Map
+   */
+  private void appendBusinessAttrs(AgentRootSpanMeta rootMeta, Map<String, String> attrs) {
+    if (rootMeta == null) {
+      return;
+    }
+    if (rootMeta.botId() != null) {
+      attrs.put("ydsz.bot_id", rootMeta.botId());
+    }
+    if (rootMeta.turnId() != null) {
+      attrs.put("ydsz.turn_id", rootMeta.turnId());
+    }
+    if (rootMeta.conversationId() != null) {
+      attrs.put("ydsz.conversation_id", rootMeta.conversationId());
+    }
+    if (rootMeta.accountId() != null) {
+      attrs.put("ydsz.account_id", rootMeta.accountId());
     }
   }
 
@@ -220,6 +273,9 @@ public class ExportingTraceRecorder implements TraceRecorder {
    * @param rootSpanId 根 Span ID（步骤 Span 的 parentSpanId）
    * @param conversationId 对话 ID
    * @param agentId Agent ID
+   * @param botId 关联的 Agent 定义 ID
+   * @param turnId 对话轮次 ID
+   * @param accountId 账号/用户 ID
    * @param startTime 链路开始时间
    */
   private record AgentRootSpanMeta(
@@ -227,5 +283,8 @@ public class ExportingTraceRecorder implements TraceRecorder {
       String rootSpanId,
       String conversationId,
       String agentId,
+      String botId,
+      String turnId,
+      String accountId,
       Instant startTime) {}
 }

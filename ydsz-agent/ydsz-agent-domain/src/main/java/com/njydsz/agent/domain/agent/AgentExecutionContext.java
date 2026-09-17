@@ -95,6 +95,31 @@ public final class AgentExecutionContext implements Serializable {
     return clientIp;
   }
 
+  /**
+   * 为子 Agent 创建隔离的上下文副本。
+   *
+   * <p>复制租户、用户等关键字段，但生成新的 executionId 并使用子任务专用的 conversationId。
+   * 子 Agent 在此副本上下文中执行，对话记忆与主 Agent 完全隔离，
+   * 主 Agent 仅获取子任务的最终结果，不受中间 LLM 调用过程污染。
+   *
+   * @param subTaskCode 子任务标识码（用于区分子任务）
+   * @param subTaskPrompt 子任务提示词描述（保留用于日志追踪）
+   * @return 隔离的子 Agent 上下文副本
+   */
+  public AgentExecutionContext copyForSubTask(String subTaskCode, String subTaskPrompt) {
+    String subConversationId =
+        (conversationId != null ? conversationId : UUID.randomUUID().toString().replace("-", ""))
+            + ":"
+            + subTaskCode;
+    return new AgentExecutionContext(
+        UUID.randomUUID().toString().replace("-", ""),
+        tenantId,
+        userId,
+        subConversationId,
+        source,
+        clientIp);
+  }
+
   @Override
   public String toString() {
     return "AgentExecutionContext{executionId='"

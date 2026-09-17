@@ -179,7 +179,7 @@ public class SkillController {
     vo.setInputSchema(descriptor.inputSchema());
     vo.setMetadata(descriptor.metadata());
     vo.setTargetType(descriptor.targetType().getCode());
-    vo.setIsSandboxRequired(descriptor.isSandboxRequired());
+    vo.setSandboxRequired(descriptor.isSandboxRequired());
     return vo;
   }
 

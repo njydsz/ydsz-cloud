@@ -50,6 +50,7 @@ import com.njydsz.agent.domain.skill.SkillContentGenerator;
 import com.njydsz.agent.infra.skill.LlmSkillContentGenerator;
 import com.njydsz.agent.domain.text2sql.SchemaRecallService;
 import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
+import com.njydsz.agent.domain.tool.SemanticToolSearchService;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceRecorder;
@@ -77,6 +78,7 @@ import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSchemaRecallService;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSemanticConsistencyChecker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
+import com.njydsz.agent.infra.tool.EmbeddingSemanticToolSearchService;
 import com.njydsz.agent.infra.tool.McpClientProviderRouter;
 import com.njydsz.agent.infra.tool.McpToolAdapter;
 import com.njydsz.agent.infra.tool.SseMcpClientProvider;
@@ -270,6 +272,22 @@ public class AgentAutoConfiguration {
   @ConditionalOnMissingBean(ToolAnnotationScanner.class)
   public ToolAnnotationScanner toolAnnotationScanner(ToolRegistry toolRegistry) {
     return new ToolAnnotationScanner(toolRegistry);
+  }
+
+  /**
+   * 装配语义 Tool 搜索服务。
+   *
+   * <p>基于 embedding 相似度实现自然语言查询工具匹配，
+   * LLM 不可用时自动降级为字符串包含匹配。
+   *
+   * @param llmClient LLM 客户端（用于获取 embedding 向量）
+   * @param toolRegistry 工具注册中心
+   * @return 语义搜索服务实例
+   */
+  @Bean
+  public SemanticToolSearchService semanticToolSearchService(
+      LlmClient llmClient, ToolRegistry toolRegistry) {
+    return new EmbeddingSemanticToolSearchService(llmClient, toolRegistry);
   }
 
   /**

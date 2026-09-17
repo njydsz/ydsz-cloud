@@ -101,6 +101,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-search</artifactId>
         </dependency>
+        <!-- OCR: PDF 逐页转图片用于扫描版 PDF 文字提取 -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.3</version>
+        </dependency>
         <!-- P0-3: 多租户隔离 -->
         <dependency>
             <groupId>com.njydsz</groupId>

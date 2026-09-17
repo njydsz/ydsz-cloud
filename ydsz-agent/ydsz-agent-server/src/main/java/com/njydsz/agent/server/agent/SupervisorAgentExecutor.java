@@ -6,11 +6,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
+import com.njydsz.agent.domain.agent.AgentExecutionContext;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.config.AgentProperties;
@@ -101,6 +106,9 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   /** 子代理片段来源标识前缀（完整形式 {@code supervisor/{子任务号}}） */
   private static final String SUB_SOURCE_PREFIX = "supervisor/";
 
+  /** 子 Agent 执行超时时间（秒） */
+  private static final long SUB_TASK_TIMEOUT_SECONDS = 120;
+
   /** Agent 工厂 */
   private final AgentFactory agentFactory;
 
@@ -145,79 +153,196 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
     traceRecorder.recordStep(
         traceId, "PLAN", "Task plan created", userInput, subTasks.size() + " subtasks", 0);
 
-    // 2. 按依赖顺序执行子任务（depends_on 拓扑调度，无依赖者先执行）
-    List<String> results = new ArrayList<>(subTasks.size());
-    Map<Integer, String> taskResults = new HashMap<>(COLLECTION_CAPACITY);
-    TokenUsage[] totalUsage = {TokenUsage.zero()};
-    List<SubTask> pending = new ArrayList<>(subTasks);
-    while (!pending.isEmpty()) {
-      boolean progressed = false;
-      Iterator<SubTask> iterator = pending.iterator();
-      while (iterator.hasNext()) {
-        SubTask subTask = iterator.next();
-        if (!subTask.dependsOn().stream().allMatch(taskResults::containsKey)) {
-          continue;
-        }
-        iterator.remove();
-        progressed = true;
-        String result = executeSubTask(convId, request, subTask, traceId, totalUsage);
-        taskResults.put(subTask.id(), result);
-        results.add(result);
-      }
-      if (!progressed) {
-        // 依赖环或缺失依赖：兜底按剩余顺序执行，避免死循环
-        log.warn("[Supervisor] 子任务依赖无法满足，按剩余顺序兜底执行: remaining={}", pending.size());
-        for (SubTask subTask : pending) {
-          String result = executeSubTask(convId, request, subTask, traceId, totalUsage);
-          taskResults.put(subTask.id(), result);
-          results.add(result);
-        }
-        break;
-      }
-    }
+    // 2. 按依赖层级并行执行子任务（每层内部并行，层间串行保证依赖顺序）
+    ParallelSubTaskResult parallelResult =
+        executeSubTasksWithIsolation(convId, request, subTasks, traceId);
 
     // 3. 汇总结果
-    String finalAnswer = synthesizeResults(userInput, results, convId);
+    String finalAnswer = synthesizeResults(userInput, parallelResult.results(), convId);
     String output = guardrailService.applyOutputGuardrails(finalAnswer);
     traceRecorder.endTrace(traceId, "SUCCESS");
     log.info(
         "[Supervisor] 执行完成: convId={}, subTasks={}, tokens={}",
         convId,
         subTasks.size(),
-        totalUsage[0].getTotalTokens());
+        parallelResult.totalUsage().getTotalTokens());
 
     return new ChatResponse(
         IdGenerator.nextIdStr(),
         properties.getLlm().getDefaultModel(),
-        ChatMessage.assistant(output, convId, totalUsage[0]),
-        totalUsage[0],
+        ChatMessage.assistant(output, convId, parallelResult.totalUsage()),
+        parallelResult.totalUsage(),
         "stop",
         List.of());
   }
 
   /**
-   * 执行单个子任务并记录结果（成功/失败均返回结果文本）。
+   * 按依赖层级并行执行子任务，每层内部通过 {@link CompletableFuture} 并行，层间串行保证依赖顺序。
    *
-   * @param convId 对话 ID
-   * @param request 原始执行请求（用于继承推理参数）
-   * @param subTask 子任务定义
+   * <p><b>上下文隔离策略</b>：
+   *
+   * <ul>
+   *   <li>每个子任务通过 {@link #buildSubAgentConversationId} 获得独立的对话 ID，
+   *       与主 Agent 记忆完全隔离（基于 {@link AgentExecutionContext#copyForSubTask} 的命名约定）
+   *   <li>子 Agent 的中间 LLM 调用结果不会污染主 Agent 上下文
+   *   <li>主 Agent 仅获取每个子任务的最终结果（最后一条 assistant 消息内容）
+   * </ul>
+   *
+   * <p><b>容错策略</b>：单个子任务失败不影响其他子任务，失败时返回错误描述文本继续汇总。
+   *
+   * @param convId 主对话 ID
+   * @param request 原始执行请求
+   * @param subTasks 子任务列表
    * @param traceId 链路 ID
-   * @param usageAcc Token 用量累加器（单元素数组，跨方法可变）
-   * @return 子任务执行结果文本
+   * @return 并行子任务执行结果（含结果列表和聚合 Token 用量）
    */
-  private String executeSubTask(
+  private ParallelSubTaskResult executeSubTasksWithIsolation(
       String convId,
       AgentExecutionRequest request,
+      List<SubTask> subTasks,
+      String traceId) {
+    Map<Integer, String> taskResults = new HashMap<>(COLLECTION_CAPACITY);
+    TokenUsage totalUsage = TokenUsage.zero();
+
+    // 按依赖层级分组：key=依赖深度（0=无依赖，1=依赖 depth 0 的任务...）
+    Map<Integer, List<SubTask>> layers = groupByDependencyDepth(subTasks);
+    List<Integer> sortedDepths = layers.keySet().stream().sorted().toList();
+
+    // 按层级顺序执行，层内并行
+    for (int depth : sortedDepths) {
+      List<SubTask> layerTasks = layers.get(depth);
+      log.info("[Supervisor] 开始执行第 {} 层，共 {} 个子任务", depth, layerTasks.size());
+
+      // 为每个子任务提交并行到子 Agent 线程池执行
+      List<CompletableFuture<TaskResult>> futures = new ArrayList<>(layerTasks.size());
+      for (SubTask subTask : layerTasks) {
+        // 构建隔离的子对话 ID（对话记忆隔离）
+        String subConversationId = buildSubAgentConversationId(convId, subTask);
+        CompletableFuture<TaskResult> future =
+            CompletableFuture.supplyAsync(
+                    () -> executeSubTaskIsolated(subConversationId, request, subTask, traceId),
+                    SubAgentExecutorPool.getExecutor())
+                .orTimeout(SUB_TASK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .handle(
+                    (result, ex) -> {
+                      if (ex != null) {
+                        return handleSubTaskException(subTask, ex, traceId);
+                      }
+                      return result;
+                    });
+        futures.add(future);
+      }
+
+      // 等待当前层全部完成，累计 Token 用量
+      for (CompletableFuture<TaskResult> future : futures) {
+        try {
+          TaskResult taskResult = future.get();
+          taskResults.put(taskResult.taskId(), taskResult.result());
+          if (taskResult.usage() != null) {
+            totalUsage = totalUsage.add(taskResult.usage());
+          }
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          log.error("[Supervisor] 子任务等待被中断: {}", e.getMessage());
+        } catch (ExecutionException e) {
+          // handle() 已处理异常，此处不应到达；兜底记录
+          log.error("[Supervisor] 子任务执行异常: {}", e.getCause().getMessage());
+        }
+      }
+    }
+
+    // 按任务 ID 顺序返回结果
+    List<String> results =
+        subTasks.stream().map(task -> taskResults.getOrDefault(task.id(), "")).toList();
+    return new ParallelSubTaskResult(results, totalUsage);
+  }
+
+  /**
+   * 按依赖深度对子任务进行分层分组。
+   *
+   * <p>深度 0 = 无依赖（可立即执行）；深度 N = 所有依赖任务的深度均小于 N。
+   *
+   * @param subTasks 子任务列表
+   * @return 按深度分层的子任务映射
+   */
+  private Map<Integer, List<SubTask>> groupByDependencyDepth(List<SubTask> subTasks) {
+    Map<Integer, List<SubTask>> layers = new HashMap<>();
+    Map<Integer, Integer> taskDepths = new HashMap<>();
+
+    for (SubTask task : subTasks) {
+      int depth = computeDepth(task, subTasks, taskDepths);
+      layers.computeIfAbsent(depth, k -> new ArrayList<>()).add(task);
+    }
+    return layers;
+  }
+
+  /**
+   * 递归计算子任务的依赖深度。
+   *
+   * @param task 当前子任务
+   * @param allTasks 全部子任务列表
+   * @param memo 深度缓存（避免重复计算）
+   * @return 依赖深度（0 = 无依赖）
+   */
+  private int computeDepth(SubTask task, List<SubTask> allTasks, Map<Integer, Integer> memo) {
+    Integer cached = memo.get(task.id());
+    if (cached != null) {
+      return cached;
+    }
+    int depth;
+    if (task.dependsOn().isEmpty()) {
+      depth = 0;
+    } else {
+      int maxDepDepth = 0;
+      for (int depId : task.dependsOn()) {
+        for (SubTask candidate : allTasks) {
+          if (candidate.id() == depId) {
+            maxDepDepth = Math.max(maxDepDepth, computeDepth(candidate, allTasks, memo));
+            break;
+          }
+        }
+      }
+      depth = maxDepDepth + 1;
+    }
+    memo.put(task.id(), depth);
+    return depth;
+  }
+
+  /**
+   * 构建子 Agent 的隔离对话 ID。
+   *
+   * <p>命名约定与 {@link AgentExecutionContext#copyForSubTask} 一致：
+   * 格式为 {@code parentConversationId:subTaskCode}，确保子 Agent 的对话记忆命名空间与主 Agent 完全隔离。
+   *
+   * @param parentConversationId 父对话 ID
+   * @param subTask 子任务定义
+   * @return 子 Agent 的隔离对话 ID
+   */
+  private String buildSubAgentConversationId(String parentConversationId, SubTask subTask) {
+    return parentConversationId + ":sub-" + subTask.id();
+  }
+
+  /**
+   * 在隔离子对话中执行单个子任务，仅返回最终结果。
+   *
+   * <p>子 Agent 的所有中间 LLM 调用结果保存在子对话的记忆中，不会污染主 Agent 上下文。
+   *
+   * @param subConversationId 子对话 ID（隔离命名空间）
+   * @param request 原始执行请求
+   * @param subTask 子任务定义
+   * @param traceId 链路 ID
+   * @return 子任务执行结果（含 ID、结果文本、Token 用量）
+   */
+  private TaskResult executeSubTaskIsolated(
+      String subConversationId,
+      AgentExecutionRequest request,
       SubTask subTask,
-      String traceId,
-      TokenUsage[] usageAcc) {
-    AgentExecutionRequest subRequest = buildSubRequest(convId, request, subTask);
+      String traceId) {
+    AgentExecutionRequest subRequest =
+        request.deriveForSubAgent(subTask.description(), subConversationId, List.of());
     AgentExecutor worker = createWorker(subTask.type(), request);
     try {
       ChatResponse workerResponse = worker.execute(subRequest);
-      if (workerResponse.getUsage() != null) {
-        usageAcc[0] = usageAcc[0].add(workerResponse.getUsage());
-      }
       traceRecorder.recordStep(
           traceId,
           "SUB_TASK_DONE",
@@ -225,7 +350,7 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
           subTask.description(),
           workerResponse.getContent(),
           0);
-      return workerResponse.getContent();
+      return new TaskResult(subTask.id(), workerResponse.getContent(), workerResponse.getUsage());
     } catch (Exception e) {
       log.error("[Supervisor] 子任务 {} 执行失败: {}", subTask.id(), e.getMessage());
       traceRecorder.recordStep(
@@ -235,8 +360,37 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
           subTask.description(),
           e.getMessage(),
           0);
-      return "[子任务 " + subTask.id() + " 执行失败: " + e.getMessage() + "]";
+      return new TaskResult(
+          subTask.id(), "[子任务 " + subTask.id() + " 执行失败: " + e.getMessage() + "]", null);
     }
+  }
+
+  /**
+   * 处理子任务执行异常（超时、中断等），返回错误结果。
+   *
+   * @param subTask 子任务定义
+   * @param ex 异常对象
+   * @param traceId 链路 ID
+   * @return 包含错误描述的结果
+   */
+  private TaskResult handleSubTaskException(SubTask subTask, Throwable ex, String traceId) {
+    String reason;
+    if (ex instanceof TimeoutException) {
+      reason = "执行超时";
+    } else if (ex instanceof InterruptedException) {
+      reason = "执行被中断";
+    } else {
+      reason = "执行异常: " + ex.getMessage();
+    }
+    log.error("[Supervisor] 子任务 {} {}: {}", subTask.id(), reason, ex.getMessage());
+    traceRecorder.recordStep(
+        traceId,
+        "SUB_TASK_TIMEOUT",
+        "Sub-task " + subTask.id() + " " + reason,
+        subTask.description(),
+        ex.getMessage(),
+        0);
+    return new TaskResult(subTask.id(), "[子任务 " + subTask.id() + reason + "]", null);
   }
 
   /**
@@ -703,6 +857,23 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
             properties.getLlm().getDefaultModel());
     return agentFactory.getExecutor(def);
   }
+
+  /**
+   * 子任务执行结果（隔离执行后的轻量返回值，仅携带最终结果，不含中间过程数据）。
+   *
+   * @param taskId 子任务 ID
+   * @param result 子任务最终结果文本
+   * @param usage Token 用量（可能为 null）
+   */
+  private record TaskResult(int taskId, String result, TokenUsage usage) {}
+
+  /**
+   * 并行子任务聚合执行结果。
+   *
+   * @param results 按子任务 ID 排序的结果文本列表
+   * @param totalUsage 所有子任务 Token 用量的总和
+   */
+  private record ParallelSubTaskResult(List<String> results, TokenUsage totalUsage) {}
 
   /**
    * 子任务定义

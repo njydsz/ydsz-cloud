@@ -24,11 +24,14 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  *   <li>{@code agent_cache_hits_total{provider}} / {@code agent_cache_misses_total{provider}} — LLM 缓存命中/未命中
  * </ul>
  *
+ * <p>业务关联维度（botId / conversationId）支持按 Agent 定义和会话聚合指标数据，
+ * 通过带 botId / conversationId 标签的重载方法实现。
+ *
  * <p><b>DDD 合规</b>：实现 domain 层 {@link CacheMetricsRecorder} SPI， 供 infra 层
  * {@code CachedLlmClient} 回调上报缓存指标，避免 infra 反向依赖 server 层。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.09.17
  */
 public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRecorder {
 
@@ -65,6 +68,26 @@ public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRe
    */
   public void recordLlmCall(
       String provider, String model, long durationMs, ChatResponse response, Throwable error) {
+    recordLlmCall(provider, model, durationMs, response, error, null, null);
+  }
+
+  /**
+   * 记录 LLM 同步调用结果（含业务关联维度）。
+   *
+   * <p>在关键指标（llm_calls_total、llm_call_duration_seconds、llm_tokens_total）上增加
+   * botId 和 conversationId 标签，便于在 Prometheus / Grafana 中按 Agent 定义和会话聚合分析。
+   *
+   * @param provider Provider 名称
+   * @param model 模型名称
+   * @param durationMs 耗时（毫秒）
+   * @param response 响应（null 表示失败）
+   * @param error 异常（null 表示成功）
+   * @param botId 关联的 Agent 定义 ID（可为 null）
+   * @param conversationId 会话 ID（可为 null）
+   */
+  public void recordLlmCall(
+      String provider, String model, long durationMs, ChatResponse response, Throwable error,
+      String botId, String conversationId) {
     String status = error == null ? "success" : "failure";
     String errorType =
         error instanceof LlmException le
@@ -73,17 +96,16 @@ public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRe
 
     counter(
             METRIC_LLM_CALLS,
-            "provider",
-            provider,
-            "model",
-            model,
-            "status",
-            status,
-            "error_type",
-            errorType)
+            "provider", provider,
+            "model", model,
+            "status", status,
+            "error_type", errorType,
+            "bot_id", safe(botId),
+            "conversation_id", safe(conversationId))
         .increment();
 
-    timer(METRIC_LLM_DURATION, "provider", provider, "model", model)
+    timer(METRIC_LLM_DURATION, "provider", provider, "model", model,
+        "bot_id", safe(botId), "conversation_id", safe(conversationId))
         .record(durationMs, TimeUnit.MILLISECONDS);
 
     if (response != null && response.getUsage() != null) {
@@ -91,21 +113,19 @@ public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRe
       incrementCounter(
           METRIC_LLM_TOKENS,
           usage.getPromptTokens(),
-          "provider",
-          provider,
-          "model",
-          model,
-          "type",
-          "prompt");
+          "provider", provider,
+          "model", model,
+          "type", "prompt",
+          "bot_id", safe(botId),
+          "conversation_id", safe(conversationId));
       incrementCounter(
           METRIC_LLM_TOKENS,
           usage.getCompletionTokens(),
-          "provider",
-          provider,
-          "model",
-          model,
-          "type",
-          "completion");
+          "provider", provider,
+          "model", model,
+          "type", "completion",
+          "bot_id", safe(botId),
+          "conversation_id", safe(conversationId));
     }
   }
 
@@ -120,6 +140,23 @@ public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRe
    */
   public void recordLlmStream(
       String provider, String model, long durationMs, TokenUsage tokenUsage, Throwable error) {
+    recordLlmStream(provider, model, durationMs, tokenUsage, error, null, null);
+  }
+
+  /**
+   * 记录 LLM 流式调用结果（含业务关联维度）。
+   *
+   * @param provider Provider 名称
+   * @param model 模型名称
+   * @param durationMs 耗时（毫秒）
+   * @param tokenUsage Token 用量（null 表示失败）
+   * @param error 异常（null 表示成功）
+   * @param botId 关联的 Agent 定义 ID（可为 null）
+   * @param conversationId 会话 ID（可为 null）
+   */
+  public void recordLlmStream(
+      String provider, String model, long durationMs, TokenUsage tokenUsage, Throwable error,
+      String botId, String conversationId) {
     String status = error == null ? "success" : "failure";
     String errorType =
         error instanceof LlmException le
@@ -128,40 +165,36 @@ public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRe
 
     counter(
             METRIC_LLM_CALLS,
-            "provider",
-            provider,
-            "model",
-            model,
-            "status",
-            status,
-            "error_type",
-            errorType,
-            "mode",
-            "stream")
+            "provider", provider,
+            "model", model,
+            "status", status,
+            "error_type", errorType,
+            "mode", "stream",
+            "bot_id", safe(botId),
+            "conversation_id", safe(conversationId))
         .increment();
 
-    timer(METRIC_LLM_DURATION, "provider", provider, "model", model)
+    timer(METRIC_LLM_DURATION, "provider", provider, "model", model,
+        "bot_id", safe(botId), "conversation_id", safe(conversationId))
         .record(durationMs, TimeUnit.MILLISECONDS);
 
     if (tokenUsage != null) {
       incrementCounter(
           METRIC_LLM_TOKENS,
           tokenUsage.getPromptTokens(),
-          "provider",
-          provider,
-          "model",
-          model,
-          "type",
-          "prompt");
+          "provider", provider,
+          "model", model,
+          "type", "prompt",
+          "bot_id", safe(botId),
+          "conversation_id", safe(conversationId));
       incrementCounter(
           METRIC_LLM_TOKENS,
           tokenUsage.getCompletionTokens(),
-          "provider",
-          provider,
-          "model",
-          model,
-          "type",
-          "completion");
+          "provider", provider,
+          "model", model,
+          "type", "completion",
+          "bot_id", safe(botId),
+          "conversation_id", safe(conversationId));
     }
   }
 

@@ -16,6 +16,9 @@ import java.util.Optional;
  * 无论是整条链路（LLM 调用链）还是单个步骤（Think/Act/Observe/Consolidate），
  * 均可建模为 Span。
  *
+ * <p>业务关联维度（botId / turnId / conversationId / accountId）用于在可观测性后台中
+ * 按 Agent 定义、对话轮次、会话、账号等维度聚合分析 Trace 与 Metrics 数据。
+ *
  * @param traceId 上级链路 Trace ID（业务生成，非 OTel 自动生成）
  * @param spanId Span 唯一 ID
  * @param parentSpanId 父 Span ID（整条链路根节点为 null）
@@ -27,8 +30,12 @@ import java.util.Optional;
  * @param attributes 键值对属性集合（携带 token 用量、模型名、agent 类型等观测数据）
  * @param events 有序事件列表（Span 执行期间记录的瞬时事件，如 "LLM 首 Token 已返回"）
  * @param cost USD 成本（可选，LLM 调用场景填充）
+ * @param botId 关联的 Agent 定义 ID
+ * @param turnId 对话轮次 ID（同一 conversation 内递增）
+ * @param conversationId 会话 ID
+ * @param accountId 账号/用户 ID
  * @author ydsz-team
- * @since 26.09.07
+ * @since 26.09.17
  */
 public record AgentSpan(
     String traceId,
@@ -41,10 +48,14 @@ public record AgentSpan(
     String status,
     Map<String, String> attributes,
     List<SpanEvent> events,
-    BigDecimal cost) {
+    BigDecimal cost,
+    String botId,
+    String turnId,
+    String conversationId,
+    String accountId) {
 
   /**
-   * 便捷构造：不含可选字段。
+   * 便捷构造：不含可选字段和业务关联维度。
    */
   public AgentSpan(
       String traceId,
@@ -56,7 +67,26 @@ public record AgentSpan(
       Instant endTime,
       String status) {
     this(traceId, spanId, parentSpanId, name, kind, startTime, endTime, status,
-        Map.of(), List.of(), BigDecimal.ZERO);
+        Map.of(), List.of(), BigDecimal.ZERO, null, null, null, null);
+  }
+
+  /**
+   * 便捷构造：含 attributes、events、cost，但不含业务关联维度。
+   */
+  public AgentSpan(
+      String traceId,
+      String spanId,
+      String parentSpanId,
+      String name,
+      String kind,
+      Instant startTime,
+      Instant endTime,
+      String status,
+      Map<String, String> attributes,
+      List<SpanEvent> events,
+      BigDecimal cost) {
+    this(traceId, spanId, parentSpanId, name, kind, startTime, endTime, status,
+        attributes, events, cost, null, null, null, null);
   }
 
   /**
