@@ -46,6 +46,12 @@ public class ObservabilityController {
   /** 按 botId 查询时默认统计天数 */
   private static final int DEFAULT_BOT_METRICS_DAYS = 7;
 
+  /** trace-context 返回 Map 初始容量（botId / turnId / conversationId / accountId 四个键） */
+  private static final int TRACE_CONTEXT_MAP_CAPACITY = 4;
+
+  /** 按 botId 指标查询返回占位 Map 初始容量 */
+  private static final int BOT_METRICS_MAP_CAPACITY = 4;
+
   private final ObservabilityDashboardService dashboardService;
 
   public ObservabilityController(ObservabilityDashboardService dashboardService) {
@@ -92,7 +98,7 @@ public class ObservabilityController {
   @PostMapping("/trace-context")
   public YdszResponse<Map<String, String>> getTraceContext() {
     log.info("[Observability-API] 查询当前链路上下文");
-    Map<String, String> context = new HashMap<>(4);
+    Map<String, String> context = new HashMap<>(TRACE_CONTEXT_MAP_CAPACITY);
     TraceContextHolder.TraceContext ctx = TraceContextHolder.get();
     if (ctx != null) {
       context.put("botId", ctx.botId() != null ? ctx.botId() : "");
@@ -126,7 +132,7 @@ public class ObservabilityController {
     log.info("[Observability-API] 按 botId 查询指标: botId={}, days={}", botId, safeDays);
     // TODO: 由 dashboardService 提供按 botId 聚合的指标查询能力
     // 当前返回占位结构，待 ObservabilityDashboardService 扩展后填充实际数据
-    Map<String, Object> result = new HashMap<>(4);
+    Map<String, Object> result = new HashMap<>(BOT_METRICS_MAP_CAPACITY);
     result.put("botId", botId);
     result.put("days", safeDays);
     result.put("placeholder", "待实现按 botId 聚合查询");

@@ -17,10 +17,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.EnableScheduling;
 // StringRedisTemplate 仅透传给 SemanticLlmCache 构造（后者需要 ZSetOperations.popMin 无法由 RedisCollectionOps 替代）
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.agent.domain.code.CodeExecutionService;
 import com.njydsz.agent.domain.config.AgentProperties;
@@ -47,7 +47,6 @@ import com.njydsz.agent.domain.repository.AgentTraceRepository;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.skill.SkillContentGenerator;
-import com.njydsz.agent.infra.skill.LlmSkillContentGenerator;
 import com.njydsz.agent.domain.text2sql.SchemaRecallService;
 import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
 import com.njydsz.agent.domain.tool.SemanticToolSearchService;
@@ -75,6 +74,7 @@ import com.njydsz.agent.infra.rag.LlmSemanticTextChunker;
 import com.njydsz.agent.infra.rag.PgVectorStore;
 import com.njydsz.agent.infra.rag.RegexTextChunker;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
+import com.njydsz.agent.infra.skill.LlmSkillContentGenerator;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSchemaRecallService;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSemanticConsistencyChecker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
