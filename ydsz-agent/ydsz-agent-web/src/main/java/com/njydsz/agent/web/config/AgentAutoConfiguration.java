@@ -62,6 +62,7 @@ import com.njydsz.agent.infra.insight.LlmInsightReportGenerator;
 import com.njydsz.agent.infra.llm.CachedLlmClient;
 import com.njydsz.agent.infra.llm.CompatibleLlmClient;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
+import com.njydsz.agent.infra.llm.ResilientLlmClient;
 import com.njydsz.agent.infra.llm.SemanticLlmCache;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.memory.SummaryConversationMemory;
@@ -160,16 +161,17 @@ public class AgentAutoConfiguration {
     LlmClientRouter router = new LlmClientRouter();
     AgentProperties.Llm llmConfig = properties.getLlm();
 
-    // 注册默认 Provider
+    // 注册默认 Provider（经熔断器包装后注册到路由器）
     CompatibleLlmClient defaultClient =
         new CompatibleLlmClient(
             llmConfig.getDefaultProvider(),
             llmConfig.getBaseUrl(),
             llmConfig.getApiKey(),
             llmConfig.getTimeoutSeconds());
-    router.register(defaultClient);
+    String defaultProviderName = llmConfig.getDefaultProvider();
+    router.register(new ResilientLlmClient(defaultClient, defaultProviderName));
 
-    // 注册额外 Provider（多模型 + Fallback 链）
+    // 注册额外 Provider（多模型 + Fallback 链，每个独立熔断）
     if (llmConfig.getProviders() != null) {
       for (var entry : llmConfig.getProviders().entrySet()) {
         AgentProperties.ProviderConfig pc = entry.getValue();
@@ -180,7 +182,7 @@ public class AgentAutoConfiguration {
         CompatibleLlmClient client =
             new CompatibleLlmClient(
                 providerName, pc.getBaseUrl(), pc.getApiKey(), llmConfig.getTimeoutSeconds());
-        router.register(client);
+        router.register(new ResilientLlmClient(client, providerName));
       }
     }
 

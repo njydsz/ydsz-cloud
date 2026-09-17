@@ -3,7 +3,6 @@ package com.njydsz.agent.server.chat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  *
  * <p>提供同步和流式两种对话模式，支持文本和多模态（Vision）两种输入。
  *
- * <p>对话流程（{@link #executeChat} 模板统一编排）：
+ * <p>对话流程（公共阶段由辅助方法统一编排）：
  *
  * <ol>
  *   <li>应用输入护栏（Prompt 注入检测、PII 脱敏）
@@ -52,6 +51,11 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 public class ChatService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
+
+  /** 同步日志前缀 */
+  private static final String LOG_PREFIX_SYNC = "[Chat]";
+  /** 流式日志前缀 */
+  private static final String LOG_PREFIX_STREAM = "[Chat-Stream]";
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -127,22 +131,50 @@ public class ChatService {
    * @return 助手回复
    */
   public ChatResponse chat(String conversationId, String userMessage, String systemPrompt) {
-    return executeChat(
-        conversationId,
-        userMessage,
-        systemPrompt,
-        "CHAT",
-        "simple",
-        false,
-        convId -> memory.save(convId, ChatMessage.user(userMessage, convId)),
-        () -> buildMessages(resolveConvIdOrNew(conversationId), userMessage, systemPrompt),
-        request -> llmClient.chat(request));
+    String convId = resolveConvIdOrNew(conversationId);
+    String traceId = traceRecorder.startTrace(convId, "CHAT");
+    String logPrefix = LOG_PREFIX_SYNC;
+    log.info("{} 同步对话: convId={}, traceId={}, messageLen={}", logPrefix, convId, traceId, userMessage.length());
+
+    runtimeMetrics.markConversationActive();
+
+    String sanitizedInput = applyTextGuardrails(logPrefix, convId, userMessage, traceId, "simple");
+    if (sanitizedInput == null) {
+      return rejectAndBuildResponse(convId, traceId, "simple", false);
+    }
+
+    memory.save(convId, ChatMessage.user(sanitizedInput, convId));
+    runtimeMetrics.recordMessage("user");
+
+    ChatRequest request = buildTextRequest(convId, sanitizedInput, systemPrompt, false);
+    String model = properties.getLlm().getDefaultModel();
+    String provider = llmClient.getProvider();
+    String executionId = String.valueOf(snowflakeIdGenerator.nextId());
+    String tenantId = resolveTenantId(convId);
+
+    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+    log.info("{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+        logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+    performQuotaPreCheck(tenantId, estimatedCost);
+
+    eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT", model);
+    long startTime = System.currentTimeMillis();
+    ChatResponse response;
+    try {
+      response = llmClient.chat(request);
+    } catch (Exception e) {
+      long duration = System.currentTimeMillis() - startTime;
+      handleLlmException(e, convId, traceId, "simple", model, provider, executionId, tenantId, request, duration, false);
+      throw e;
+    }
+    long duration = System.currentTimeMillis() - startTime;
+    return finalizeSuccess(
+        logPrefix, response, convId, traceId, "simple", model, provider, executionId, tenantId,
+        request, duration, false, "CHAT");
   }
 
   /**
    * 同步对话（多模态，Vision 模型）
-   *
-   * <p>与 {@link #chat(String, String, String)} 流程一致，区别在于用户消息通过 {@link MessageContent} 封装多模态内容。
    *
    * @param conversationId 对话 ID（null 则新建）
    * @param multimodalContent 多模态内容（文本/图片段落列表）
@@ -150,16 +182,43 @@ public class ChatService {
    * @return 助手回复
    */
   public ChatResponse chat(String conversationId, MessageContent multimodalContent, String systemPrompt) {
-    return executeChat(
-        conversationId,
-        null,
-        systemPrompt,
-        "CHAT_MULTIMODAL",
-        "multimodal",
-        false,
-        convId -> memory.save(convId, ChatMessage.userWithContent(multimodalContent, convId)),
-        () -> buildMessages(resolveConvIdOrNew(conversationId), multimodalContent, systemPrompt),
-        request -> llmClient.chat(request));
+    String convId = resolveConvIdOrNew(conversationId);
+    String traceId = traceRecorder.startTrace(convId, "CHAT_MULTIMODAL");
+    String logPrefix = LOG_PREFIX_SYNC;
+    log.info("{} 多模态同步对话: convId={}, traceId={}, partsCount={}",
+        logPrefix, convId, traceId, multimodalContent.getParts().size());
+
+    runtimeMetrics.markConversationActive();
+
+    // 多模态模式无纯文本输入时不走文本护栏
+    memory.save(convId, ChatMessage.userWithContent(multimodalContent, convId));
+    runtimeMetrics.recordMessage("user");
+
+    ChatRequest request = buildMultimodalRequest(convId, multimodalContent, systemPrompt, false);
+    String model = properties.getLlm().getDefaultModel();
+    String provider = llmClient.getProvider();
+    String executionId = String.valueOf(snowflakeIdGenerator.nextId());
+    String tenantId = resolveTenantId(convId);
+
+    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+    log.info("{} 多模态成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+        logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+    performQuotaPreCheck(tenantId, estimatedCost);
+
+    eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT_MULTIMODAL", model);
+    long startTime = System.currentTimeMillis();
+    ChatResponse response;
+    try {
+      response = llmClient.chat(request);
+    } catch (Exception e) {
+      long duration = System.currentTimeMillis() - startTime;
+      handleLlmException(e, convId, traceId, "multimodal", model, provider, executionId, tenantId, request, duration, false);
+      throw e;
+    }
+    long duration = System.currentTimeMillis() - startTime;
+    return finalizeSuccess(
+        logPrefix, response, convId, traceId, "multimodal", model, provider, executionId, tenantId,
+        request, duration, false, "CHAT_MULTIMODAL");
   }
 
   /**
@@ -175,29 +234,61 @@ public class ChatService {
       String userMessage,
       String systemPrompt,
       Consumer<ChatChunk> chunkConsumer) {
-    StreamingContext ctx = new StreamingContext(chunkConsumer);
-    executeChat(
-        conversationId,
-        userMessage,
-        systemPrompt,
-        "CHAT_STREAM",
-        "simple",
-        true,
-        convId -> memory.save(convId, ChatMessage.user(userMessage, convId)),
-        () -> buildMessages(resolveConvIdOrNew(conversationId), userMessage, systemPrompt),
-        request -> {
-          llmClient.requestStream(
-              request,
-              chunk -> handleStreamingChunk(chunk, ctx),
-              usage -> ctx.usage = usage);
-          return ctx.buildResponse();
-        });
+    String convId = resolveConvIdOrNew(conversationId);
+    String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
+    String logPrefix = LOG_PREFIX_STREAM;
+    log.info("{} 流式对话: convId={}, traceId={}, messageLen={}", logPrefix, convId, traceId, userMessage.length());
+
+    runtimeMetrics.markConversationActive();
+
+    String sanitizedInput = applyTextGuardrails(logPrefix, convId, userMessage, traceId, "simple");
+    if (sanitizedInput == null) {
+      handleStreamRejection(convId, chunkConsumer);
+      return;
+    }
+
+    memory.save(convId, ChatMessage.user(sanitizedInput, convId));
+    runtimeMetrics.recordMessage("user");
+
+    ChatRequest request = buildTextRequest(convId, sanitizedInput, systemPrompt, true);
+    String model = properties.getLlm().getDefaultModel();
+    String provider = llmClient.getProvider();
+    String executionId = String.valueOf(snowflakeIdGenerator.nextId());
+    String tenantId = resolveTenantId(convId);
+
+    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+    log.info("{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+        logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+    performQuotaPreCheck(tenantId, estimatedCost);
+
+    eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT_STREAM", model);
+    long startTime = System.currentTimeMillis();
+    StringBuilder contentBuilder = new StringBuilder(COLLECTION_CAPACITY);
+    final TokenUsage[] usage = {TokenUsage.zero()};
+    final boolean[] firstTokenRecorded = {false};
+    StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
+
+    try {
+      llmClient.stream(
+          request,
+          chunk -> handleStreamChunk(chunk, streamingMasker, contentBuilder, usage, firstTokenRecorded,
+              startTime, provider, model, chunkConsumer));
+    } catch (Exception e) {
+      long duration = System.currentTimeMillis() - startTime;
+      handleLlmException(e, convId, traceId, "simple", model, provider, executionId, tenantId, request, duration, true);
+      throw e;
+    }
+    long duration = System.currentTimeMillis() - startTime;
+    finalizeStreamSuccess(
+        logPrefix, usage[0], convId, traceId, "simple", model, provider, executionId, tenantId,
+        request, duration, contentBuilder, "CHAT_STREAM");
+    log.info("{} 流式对话完成: convId={}, tokens={}, costUsd={}",
+        logPrefix, convId, usage[0].getTotalTokens(),
+        tokenCostCalculator.calculateActual(usage[0], model).getActualCostUsd());
   }
 
   /**
    * 流式对话（多模态，Vision 模型）
-   *
-   * <p>与 {@link #stream(String, String, String, Consumer)} 流程一致，区别在于用户消息通过 {@link MessageContent} 封装多模态内容。
    *
    * @param conversationId 对话 ID（null 则新建）
    * @param multimodalContent 多模态内容（文本/图片段落列表）
@@ -209,23 +300,50 @@ public class ChatService {
       MessageContent multimodalContent,
       String systemPrompt,
       Consumer<ChatChunk> chunkConsumer) {
-    StreamingContext ctx = new StreamingContext(chunkConsumer);
-    executeChat(
-        conversationId,
-        null,
-        systemPrompt,
-        "CHAT_MULTIMODAL_STREAM",
-        "multimodal",
-        true,
-        convId -> memory.save(convId, ChatMessage.userWithContent(multimodalContent, convId)),
-        () -> buildMessages(resolveConvIdOrNew(conversationId), multimodalContent, systemPrompt),
-        request -> {
-          llmClient.requestStream(
-              request,
-              chunk -> handleStreamingChunk(chunk, ctx),
-              usage -> ctx.usage = usage);
-          return ctx.buildResponse();
-        });
+    String convId = resolveConvIdOrNew(conversationId);
+    String traceId = traceRecorder.startTrace(convId, "CHAT_MULTIMODAL_STREAM");
+    String logPrefix = LOG_PREFIX_STREAM;
+    log.info("{} 多模态流式对话: convId={}, traceId={}, partsCount={}",
+        logPrefix, convId, traceId, multimodalContent.getParts().size());
+
+    runtimeMetrics.markConversationActive();
+
+    // 多模态模式无纯文本输入时不走文本护栏
+    memory.save(convId, ChatMessage.userWithContent(multimodalContent, convId));
+    runtimeMetrics.recordMessage("user");
+
+    ChatRequest request = buildMultimodalRequest(convId, multimodalContent, systemPrompt, true);
+    String model = properties.getLlm().getDefaultModel();
+    String provider = llmClient.getProvider();
+    String executionId = String.valueOf(snowflakeIdGenerator.nextId());
+    String tenantId = resolveTenantId(convId);
+
+    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+    log.info("{} 多模态成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+        logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+    performQuotaPreCheck(tenantId, estimatedCost);
+
+    eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT_MULTIMODAL_STREAM", model);
+    long startTime = System.currentTimeMillis();
+    StringBuilder contentBuilder = new StringBuilder(COLLECTION_CAPACITY);
+    final TokenUsage[] usage = {TokenUsage.zero()};
+    final boolean[] firstTokenRecorded = {false};
+    StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
+
+    try {
+      llmClient.stream(
+          request,
+          chunk -> handleStreamChunk(chunk, streamingMasker, contentBuilder, usage, firstTokenRecorded,
+              startTime, provider, model, chunkConsumer));
+    } catch (Exception e) {
+      long duration = System.currentTimeMillis() - startTime;
+      handleLlmException(e, convId, traceId, "multimodal", model, provider, executionId, tenantId, request, duration, true);
+      throw e;
+    }
+    long duration = System.currentTimeMillis() - startTime;
+    finalizeStreamSuccess(
+        logPrefix, usage[0], convId, traceId, "multimodal", model, provider, executionId, tenantId,
+        request, duration, contentBuilder, "CHAT_MULTIMODAL_STREAM");
   }
 
   /**
@@ -247,157 +365,35 @@ public class ChatService {
     memory.clear(conversationId);
   }
 
-  // ======================== 内部模板 ========================
+  // ======================== 辅助方法（消除四方法重复） ========================
 
   /**
-   * 对话执行模板。
+   * 同步模式的护栏处理。
    *
-   * <p>统一编排输入护栏、配额预检、LLM 调用、成本核算、输出护栏、记忆保存的完整流程，
-   * 通过回调参数适配文本/多模态、同步/流式四种调用方式。
-   *
-   * @param conversationId 原始对话 ID（可为 null）
-   * @param rawInput 原始用户输入（文本模式为消息字符串，多模态模式为 null）
-   * @param systemPrompt 系统提示词（null 时使用默认）
-   * @param traceType 链路追踪类型标识（如 CHAT / CHAT_STREAM）
-   * @param metricsLabel 指标标签（simple / multimodal）
-   * @param isStream 是否流式模式
-   * @param saveUserMessage 保存用户消息的回调
-   * @param buildRequest 构建 LLM 请求的回调
-   * @param callLlm 调用 LLM 并获取响应的回调
-   * @return 助手回复
+   * @return 护栏通过后的原文，或 null 表示被拒绝
    */
-  private ChatResponse executeChat(
-      String conversationId,
-      String rawInput,
-      String systemPrompt,
-      String traceType,
-      String metricsLabel,
-      boolean isStream,
-      Consumer<String> saveUserMessage,
-      Supplier<ChatRequest> buildRequest,
-      Supplier<ChatResponse> callLlm) {
-
-    String convId = resolveConvIdOrNew(conversationId);
-    String traceId = traceRecorder.startTrace(convId, traceType);
-    String logPrefix = isStream ? "[Chat-Stream]" : "[Chat]";
-    log.info(
-        "{} 对话开始: convId={}, traceId={}, mode={}",
-        logPrefix, convId, traceId, metricsLabel);
-
-    // P2: 运行态指标埋点 — 标记会话活跃
-    runtimeMetrics.markConversationActive();
-
-    // ========== 步骤 1: 输入护栏 ==========
-    String sanitizedInput = applyInputGuardrails(logPrefix, convId, rawInput, traceId, metricsLabel);
-    if (sanitizedInput == null) {
-      return handleGuardrailRejection(
-          convId, traceId, metricsLabel, isStream, traceType);
-    }
-
-    // ========== 步骤 2: 保存用户消息 ==========
-    saveUserMessage.accept(convId);
-    runtimeMetrics.recordMessage("user");
-
-    // ========== 步骤 3: 构建请求 + 配额预检 ==========
-    ChatRequest request = buildRequest.get();
-    String model = properties.getLlm().getDefaultModel();
-    String provider = llmClient.getProvider();
-    String executionId = String.valueOf(snowflakeIdGenerator.nextId());
-    String tenantId = resolveTenantId(convId);
-
-    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
-    log.info(
-        "{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
-        logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
-
-    performQuotaPreCheck(logPrefix, convId, tenantId, estimatedCost);
-
-    // ========== 步骤 4: 启动事件 & LLM 调用 ==========
-    eventPublisher.publishExecutionStarted(executionId, tenantId, null, traceType, model);
-    long startTime = System.currentTimeMillis();
-    ChatResponse response;
-    try {
-      response = callLlm.get();
-    } catch (Exception e) {
-      long duration = System.currentTimeMillis() - startTime;
-      handleLlmFailure(logPrefix, e, convId, traceId, metricsLabel, model, provider,
-          executionId, tenantId, request, duration, isStream);
-      throw e;
-    }
-    long duration = System.currentTimeMillis() - startTime;
-
-    // ========== 步骤 5: 成功路径——成本核算 + 记忆保存 + 指标 ==========
-    return handleLlmSuccess(
-        logPrefix, response, convId, traceId, metricsLabel, model, provider,
-        executionId, tenantId, request, duration, isStream, systemPrompt);
-  }
-
-  /**
-   * 处理流式 chunk 回调（PII 脱敏 + 首 Token 时间测量）。
-   */
-  private void handleStreamingChunk(ChatChunk chunk, StreamingContext ctx) {
-    if (!ctx.firstTokenRecorded && chunk.hasContent()) {
-      long ttftMs = System.currentTimeMillis() - ctx.startTime;
-      ctx.firstTokenRecorded = true;
-      runtimeMetrics.recordTtft(ctx.provider, ctx.model, ttftMs);
-    }
-    if (chunk.hasContent()) {
-      String maskedDelta = ctx.piiMasker.mask(chunk.getDeltaContent());
-      if (!maskedDelta.isEmpty()) {
-        ctx.contentBuilder.append(maskedDelta);
-        ctx.chunkConsumer.accept(
-            ChatChunk.content(chunk.getId(), chunk.getModel(), maskedDelta, chunk.getDeltaToolCalls()));
-      }
-    } else if (chunk.isFinished()) {
-      String maskedRest = ctx.piiMasker.flush();
-      if (!maskedRest.isEmpty()) {
-        ctx.contentBuilder.append(maskedRest);
-        ctx.chunkConsumer.accept(ChatChunk.content(chunk.getId(), chunk.getModel(), maskedRest));
-      }
-      ctx.chunkConsumer.accept(chunk);
-    } else {
-      // 工具调用等非文本 chunk 原样转发
-      ctx.chunkConsumer.accept(chunk);
-    }
-  }
-
-  /**
-   * 输入护栏处理。
-   *
-   * @return 脱敏后的输入护栏通过原文；护栏拒绝时返回 null
-   */
-  private String applyInputGuardrails(
+  private String applyTextGuardrails(
       String logPrefix, String convId, String rawInput, String traceId, String metricsLabel) {
-    String input = rawInput;
-    if (input == null && metricsLabel.equals("multimodal")) {
-      // 多模态模式无纯文本输入时不走文本护栏
-      return "";
-    }
-    if (input == null) {
-      return null;
-    }
-    String sanitized = guardrailService.applyInputGuardrails(input);
+    String sanitized = guardrailService.applyInputGuardrails(rawInput);
     if (sanitized == null) {
       log.warn("{} 输入被安全护栏拒绝: convId={}", logPrefix, convId);
       metrics.recordGuardrailRejection("input-guardrail", "input");
+      traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_INPUT",
+          "Input rejected by guardrail", rawInput, "rejected", 0);
+      traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
     }
     return sanitized;
   }
 
   /**
-   * 处理护栏拒绝场景。
+   * 同步模式的护栏拒绝响应。
    */
-  private ChatResponse handleGuardrailRejection(
-      String convId, String traceId, String metricsLabel, boolean isStream, String traceType) {
-    traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
-    ChatMessage rejectedMsg =
-        ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
+  private ChatResponse rejectAndBuildResponse(
+      String convId, String traceId, String metricsLabel, boolean isStream) {
+    ChatMessage rejectedMsg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
     memory.save(convId, rejectedMsg);
     runtimeMetrics.recordMessage("assistant");
     runtimeMetrics.recordExecution(metricsLabel, false, 0);
-    if (isStream) {
-      // 流式模式通过返回值标识拒绝（调用方已结束流）
-    }
     return new ChatResponse(
         String.valueOf(snowflakeIdGenerator.nextId()),
         "guardrail",
@@ -408,78 +404,118 @@ public class ChatService {
   }
 
   /**
-   * 配额预检：调用前拦截超额请求。
+   * 流式模式的护栏拒绝处理。
    */
-  private void performQuotaPreCheck(
-      String logPrefix, String convId, String tenantId, CostEstimate estimatedCost) {
+  private void handleStreamRejection(String convId, Consumer<ChatChunk> chunkConsumer) {
+    memory.save(convId, ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero()));
+    runtimeMetrics.recordMessage("assistant");
+    runtimeMetrics.recordExecution("simple", false, 0);
+    chunkConsumer.accept(ChatChunk.content("", "guardrail", "抱歉，您的输入被安全护栏拒绝。"));
+    chunkConsumer.accept(ChatChunk.finish("", "guardrail", "guardrail_rejected", null));
+  }
+
+  /**
+   * 配额预检（调用前拦截超额请求）。
+   */
+  private void performQuotaPreCheck(String tenantId, CostEstimate estimatedCost) {
     if (!properties.getQuota().isEnabled()) {
       return;
     }
     TenantQuota quota = resolveTenantQuota();
     quotaService.preCheck(
         tenantId, quota, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
-    log.debug("{} 配额预检通过: convId={}", logPrefix, convId);
   }
 
   /**
-   * 处理 LLM 调用异常。
+   * 构造文本同步请求。
    */
-  private void handleLlmFailure(
-      String logPrefix,
-      Exception e,
-      String convId,
-      String traceId,
-      String metricsLabel,
-      String model,
-      String provider,
-      String executionId,
-      String tenantId,
-      ChatRequest request,
-      long duration,
-      boolean isStream) {
+  private ChatRequest buildTextRequest(String convId, String sanitizedInput, String systemPrompt, boolean stream) {
+    List<ChatMessage> messages = buildMessages(convId, sanitizedInput, systemPrompt);
+    return ChatRequest.builder()
+        .model(properties.getLlm().getDefaultModel())
+        .messages(messages)
+        .temperature(properties.getLlm().getTemperature())
+        .maxTokens(properties.getLlm().getMaxTokens())
+        .isStream(stream)
+        .build();
+  }
+
+  /**
+   * 构造多模态同步请求。
+   */
+  private ChatRequest buildMultimodalRequest(String convId, MessageContent multimodalContent, String systemPrompt, boolean stream) {
+    List<ChatMessage> messages = buildMessages(convId, multimodalContent, systemPrompt);
+    return ChatRequest.builder()
+        .model(properties.getLlm().getDefaultModel())
+        .messages(messages)
+        .temperature(properties.getLlm().getTemperature())
+        .maxTokens(properties.getLlm().getMaxTokens())
+        .isStream(stream)
+        .build();
+  }
+
+
+  /**
+   * 处理 LLM 调用异常（统一指标、链路、事件记录）。
+   */
+  private void handleLlmException(
+      Exception e, String convId, String traceId, String metricsLabel,
+      String model, String provider, String executionId, String tenantId,
+      ChatRequest request, long duration, boolean isStream) {
     if (isStream) {
       metrics.recordLlmStream(provider, model, duration, null, e);
     } else {
       metrics.recordLlmCall(provider, model, duration, null, e);
     }
-    traceRecorder.recordStep(
-        traceId, "LLM_CALL_ERROR",
+    traceRecorder.recordStep(traceId, "LLM_CALL_ERROR",
         isStream ? "Stream LLM call failed" : "LLM call failed",
         request, e.getMessage(), duration);
     traceRecorder.endTrace(traceId, "FAILED");
     runtimeMetrics.recordExecution(metricsLabel, false, duration);
     eventPublisher.publishExecutionFailed(executionId, tenantId, metricsLabel, model, duration, e.getMessage());
-    log.error("{} LLM 调用失败，保存错误消息: convId={}, error={}", logPrefix, convId, e.getMessage());
+    log.error("{} LLM 调用失败，保存错误消息: convId={}, error={}",
+        isStream ? LOG_PREFIX_STREAM : LOG_PREFIX_SYNC, convId, e.getMessage());
     ChatMessage errorMsg =
         ChatMessage.assistant("[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
     memory.save(convId, errorMsg);
   }
 
   /**
-   * 处理 LLM 调用成功。
+   * 同步模式 LLM 调用成功后处理（成本核算 + 配额 + 记忆保存 + 指标 + 事件）。
    */
-  private ChatResponse handleLlmSuccess(
-      String logPrefix,
-      ChatResponse response,
-      String convId,
-      String traceId,
-      String metricsLabel,
-      String model,
-      String provider,
-      String executionId,
-      String tenantId,
-      ChatRequest request,
-      long duration,
-      boolean isStream,
-      String systemPrompt) {
-    TokenUsage usage = response.getUsage();
+  private ChatResponse finalizeSuccess(
+      String logPrefix, ChatResponse response, String convId, String traceId,
+      String metricsLabel, String model, String provider, String executionId, String tenantId,
+      ChatRequest request, long duration, boolean isStream, String eventType) {
+    metrics.recordLlmCall(provider, model, duration, response, null);
+    return doFinalize(logPrefix, response.getUsage(), response.getContent(), response, convId,
+        traceId, metricsLabel, model, provider, executionId, tenantId, request, duration, eventType);
+  }
 
-    if (isStream) {
-      metrics.recordLlmStream(provider, model, duration, usage, null);
-    } else {
-      metrics.recordLlmCall(provider, model, duration, response, null);
-    }
+  /**
+   * 流式模式 LLM 调用成功后处理。
+   */
+  private void finalizeStreamSuccess(
+      String logPrefix, TokenUsage usage, String convId, String traceId,
+      String metricsLabel, String model, String provider, String executionId, String tenantId,
+      ChatRequest request, long duration, StringBuilder contentBuilder, String eventType) {
+    metrics.recordLlmStream(provider, model, duration, usage, null);
+    doFinalize(logPrefix, usage, contentBuilder.toString(), null, convId, traceId,
+        metricsLabel, model, provider, executionId, tenantId, request, duration, eventType);
+  }
 
+  /**
+   * 统一的成功后处理：成本核算 + 配额用量 + 输出护栏 + 记忆保存 + 指标 + 链路 + 事件。
+   *
+   * @param response 同步模式的完整响应（流式模式传 null）
+   * @param convId 对话 ID
+   * @return 同步模式的响应（流式模式返回 null）
+   */
+  private ChatResponse doFinalize(
+      String logPrefix, TokenUsage usage, String rawContent, ChatResponse response,
+      String convId, String traceId, String metricsLabel,
+      String model, String provider, String executionId, String tenantId,
+      ChatRequest request, long duration, String eventType) {
     // P0: 调用后精确成本核算
     CostEstimate actualCost = tokenCostCalculator.calculateActual(usage, model);
     if (usage != null && !usage.equals(TokenUsage.zero()) && costAnalysisService != null) {
@@ -489,14 +525,13 @@ public class ChatService {
     if (properties.getQuota().isEnabled()) {
       quotaService.recordUsage(tenantId, actualCost);
     }
-    log.info(
-        "{} 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
+    log.info("{} 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
         logPrefix, convId, actualCost.getActualTotalTokens(), actualCost.getActualCostUsd());
     traceRecorder.recordStep(traceId, "LLM_CALL",
-        isStream ? "Stream LLM call" : "Chat LLM call", request, response, duration);
+        request.isStream() ? "Stream LLM call" : "Chat LLM call",
+        request, response != null ? response : rawContent, duration);
 
-    // 输出护栏 + 记忆保存
-    String output = guardrailService.applyOutputGuardrails(response.getContent());
+    String output = guardrailService.applyOutputGuardrails(rawContent);
     ChatMessage assistantMsg = ChatMessage.assistant(output, convId, usage);
     memory.save(convId, assistantMsg);
     runtimeMetrics.recordMessage("assistant");
@@ -504,34 +539,65 @@ public class ChatService {
 
     traceRecorder.endTrace(traceId, "SUCCESS");
     eventPublisher.publishExecutionCompleted(
-        executionId, tenantId, metricsLabel, model, duration,
+        executionId, tenantId, eventType, model, duration,
         actualCost.getActualTotalTokens(), actualCost.getActualCostUsd());
-    log.info(
-        "{} 对话完成: convId={}, tokens={}, costUsd={}",
-        logPrefix, convId,
-        usage != null ? usage.getTotalTokens() : 0,
-        actualCost.getActualCostUsd());
 
-    return new ChatResponse(
-        response.getId(),
-        response.getModel(),
-        assistantMsg,
-        usage,
-        response.getFinishReason(),
-        List.of(),
-        actualCost);
+    if (response != null) {
+      return new ChatResponse(
+          response.getId(), response.getModel(), assistantMsg, usage,
+          response.getFinishReason(), List.of(), actualCost);
+    }
+    return null;
   }
-
-  // ======================== 辅助方法 ========================
 
   /**
-   * 解析对话 ID（原始 ID 为 null 时生成雪花 ID）。
+   * 处理流式 chunk 回调：PII 脱敏 + 首 Token 测量 + 内容累积。
    */
-  private String resolveConvIdOrNew(String conversationId) {
-    return conversationId != null
-        ? conversationId
-        : String.valueOf(snowflakeIdGenerator.nextId());
+  private void handleStreamChunk(
+      ChatChunk chunk,
+      StreamingPiiMasker piiMasker,
+      StringBuilder contentBuilder,
+      TokenUsage[] usage,
+      boolean[] firstTokenRecorded,
+      long startTime,
+      String provider,
+      String model,
+      Consumer<ChatChunk> chunkConsumer) {
+    if (!firstTokenRecorded[0] && chunk.hasContent()) {
+      long ttftMs = System.currentTimeMillis() - startTime;
+      runtimeMetrics.recordTtft(provider, model, ttftMs);
+      firstTokenRecorded[0] = true;
+    }
+    if (chunk.hasContent()) {
+      // P0: 流式增量 PII 脱敏——先脱敏后推送，避免已发出的 token 含敏感信息
+      String maskedDelta = piiMasker.mask(chunk.getDeltaContent());
+      if (!maskedDelta.isEmpty()) {
+        contentBuilder.append(maskedDelta);
+        chunkConsumer.accept(
+            ChatChunk.content(chunk.getId(), chunk.getModel(), maskedDelta, chunk.getDeltaToolCalls()));
+      }
+    } else if (chunk.isFinished()) {
+      // 冲刷剩余缓冲：确保尾部 PII 在流结束前完成脱敏
+      String maskedRest = piiMasker.flush();
+      if (!maskedRest.isEmpty()) {
+        contentBuilder.append(maskedRest);
+        chunkConsumer.accept(ChatChunk.content(chunk.getId(), chunk.getModel(), maskedRest));
+      }
+      if (chunk.getUsage() != null) {
+        usage[0] = chunk.getUsage();
+        if (!firstTokenRecorded[0]) {
+          long duration = System.currentTimeMillis() - startTime;
+          runtimeMetrics.recordTtft(provider, model, duration);
+        }
+      }
+      chunkConsumer.accept(chunk);
+    } else {
+      // 工具调用等非文本 chunk 原样转发
+      chunkConsumer.accept(chunk);
+    }
   }
+
+  // ======================== 请求构建辅助 ========================
 
   private List<ChatMessage> buildMessages(
       String conversationId, String userMessage, String systemPrompt) {
@@ -559,6 +625,15 @@ public class ChatService {
 
   private String getDefaultSystemPrompt() {
     return properties.getDefaultSystemPrompt();
+  }
+
+  /**
+   * 解析对话 ID（原始 ID 为 null 时生成雪花 ID）。
+   */
+  private String resolveConvIdOrNew(String conversationId) {
+    return conversationId != null
+        ? conversationId
+        : String.valueOf(snowflakeIdGenerator.nextId());
   }
 
   /**
@@ -591,44 +666,5 @@ public class ChatService {
         config.getDailyTokenLimit(),
         config.getMonthlyBudgetUsd(),
         config.getAlertThreshold());
-  }
-
-  // ======================== 内部数据载体 ========================
-
-  /**
-   * 流式执行上下文载体。
-   *
-   * <p>封装流式 LLM 调用过程中的状态数据，避免多维数组/原子引用散落在方法体中。
-   */
-  private static final class StreamingContext {
-    final Consumer<ChatChunk> chunkConsumer;
-    final String provider;
-    final String model;
-    final long startTime;
-    final StringBuilder contentBuilder;
-    final StreamingPiiMasker piiMasker;
-    TokenUsage usage;
-    boolean firstTokenRecorded;
-
-    StreamingContext(Consumer<ChatChunk> chunkConsumer) {
-      this.chunkConsumer = chunkConsumer;
-      this.provider = null;
-      this.model = null;
-      this.startTime = System.currentTimeMillis();
-      this.contentBuilder = new StringBuilder();
-      this.piiMasker = new StreamingPiiMasker();
-      this.usage = TokenUsage.zero();
-      this.firstTokenRecorded = false;
-    }
-
-    ChatResponse buildResponse() {
-      return new ChatResponse(
-          String.valueOf(java.util.concurrent.ThreadLocalRandom.current().nextLong()),
-          model,
-          null,
-          usage,
-          "stop",
-          List.of());
-    }
   }
 }
