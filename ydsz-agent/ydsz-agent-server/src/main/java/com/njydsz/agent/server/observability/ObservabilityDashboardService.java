@@ -7,10 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.agent.infra.rag.HybridRetriever;
-import com.njydsz.agent.infra.rag.RagDebugInfo;
+import com.njydsz.agent.domain.rag.RagDebugEnquirer;
+import com.njydsz.agent.domain.rag.RagDebugInfo;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 
@@ -22,6 +23,7 @@ import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
  * <ul>
  *   <li>{@link AgentRuntimeMetrics} — 会话活跃度、执行耗时、TTFT
  *   <li>{@link CostAnalysisService} — Token 成本统计
+ *   <li>{@link RagDebugEnquirer} — RAG 检索全链路耗时分解（各阶段延迟、结果数量）
  * </ul>
  *
  * <p>所有金额使用 {@link BigDecimal} 类型，精度 6 位小数（微美元级），符合货币计算规范。
@@ -35,11 +37,30 @@ public class ObservabilityDashboardService {
 
   private final AgentRuntimeMetrics runtimeMetrics;
   private final CostAnalysisService costAnalysisService;
+  private final ObjectProvider<RagDebugEnquirer> ragDebugEnquirerProvider;
 
   public ObservabilityDashboardService(
-      AgentRuntimeMetrics runtimeMetrics, CostAnalysisService costAnalysisService) {
+      AgentRuntimeMetrics runtimeMetrics,
+      CostAnalysisService costAnalysisService,
+      ObjectProvider<RagDebugEnquirer> ragDebugEnquirerProvider) {
     this.runtimeMetrics = runtimeMetrics;
     this.costAnalysisService = costAnalysisService;
+    this.ragDebugEnquirerProvider = ragDebugEnquirerProvider;
+  }
+
+  /**
+   * 获取 RAG 检索的全链路调试信息。
+   *
+   * <p>包含向量/全文/融合/重排各阶段的耗时和结果数量，用于检索性能诊断。 当混合检索器未装配时返回默认值对象。
+   *
+   * @return 最近一次检索调试信息
+   */
+  public RagDebugInfo getRagDebugInfo() {
+    RagDebugEnquirer enquirer = ragDebugEnquirerProvider.getIfAvailable();
+    if (enquirer == null) {
+      return new RagDebugInfo();
+    }
+    return enquirer.getLastDebugInfo();
   }
 
   /**

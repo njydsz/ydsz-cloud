@@ -8,6 +8,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.njydsz.agent.domain.rag.RagDebugEnquirer;
+import com.njydsz.agent.domain.rag.RagDebugInfo;
 import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.Retriever;
 import com.njydsz.agent.domain.rag.TextChunk;
@@ -37,7 +39,7 @@ import com.njydsz.common.json.YdszJson;
  * @since 26.09.01
  */
 @Slf4j
-public class HybridRetriever implements Retriever {
+public class HybridRetriever implements Retriever, RagDebugEnquirer {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
@@ -56,6 +58,11 @@ public class HybridRetriever implements Retriever {
 
   /** 最近一次检索调试信息（全链路耗时分解） */
   private volatile RagDebugInfo lastDebugInfo = new RagDebugInfo();
+
+  @Override
+  public RagDebugInfo getLastDebugInfo() {
+    return lastDebugInfo;
+  }
 
   /** 向量存储 */
   private final VectorStore vectorStore;
@@ -179,17 +186,6 @@ public class HybridRetriever implements Retriever {
         reranked.size(),
         debug.getTotalLatencyMs());
     return reranked;
-  }
-
-  /**
-   * 获取最近一次检索的全链路调试信息。
-   *
-   * <p>包含各阶段耗时（向量/全文/融合/重排）和结果数量，用于可观测性面板展示和排查检索性能瓶颈。
-   *
-   * @return 最近一次检索的调试信息
-   */
-  public RagDebugInfo getLastDebugInfo() {
-    return lastDebugInfo;
   }
 
   private List<TextChunk> rrfFuse(

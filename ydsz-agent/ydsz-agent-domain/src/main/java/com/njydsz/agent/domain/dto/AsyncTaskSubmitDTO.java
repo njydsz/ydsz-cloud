@@ -31,6 +31,14 @@ public class AsyncTaskSubmitDTO implements Serializable {
   @Schema(description = "任务输入参数（JSON 字符串）")
   private String inputPayload;
 
+  /** 租户编码（可选，多租户隔离标识） */
+  @Schema(description = "租户编码（可选）", example = "tenant-demo")
+  private String tenantCode;
+
+  /** 触发用户 ID（可选） */
+  @Schema(description = "触发用户 ID（可选）", example = "user-001")
+  private String userId;
+
   /** 自定义超时秒数（可选，null 时使用任务类型默认值） */
   @Schema(description = "自定义超时秒数（可选）", example = "300")
   private Long timeoutSeconds;

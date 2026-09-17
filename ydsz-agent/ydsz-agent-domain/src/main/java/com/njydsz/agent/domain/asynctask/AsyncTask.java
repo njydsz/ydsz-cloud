@@ -17,7 +17,7 @@ import java.util.Objects;
  * @since 26.09.17
  */
 @TableName("ydsz_agt_async_task")
-public class AsyncTask extends MpBaseEntity implements Serializable {
+public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
