@@ -13,6 +13,7 @@ import com.njydsz.agent.domain.rag.Retriever;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 混合检索器（Hybrid Retrieval）
@@ -52,6 +53,9 @@ public class HybridRetriever implements Retriever {
 
   /** 文本块表名（存储向量化后的文档分块） */
   private static final String TABLE_NAME = "ydsz_agt_document_chunk";
+
+  /** 最近一次检索调试信息（全链路耗时分解） */
+  private volatile RagDebugInfo lastDebugInfo = new RagDebugInfo();
 
   /** 向量存储 */
   private final VectorStore vectorStore;
@@ -128,26 +132,64 @@ public class HybridRetriever implements Retriever {
     if (query == null || query.isBlank()) {
       return List.of();
     }
-    List<TextChunk> vectorResults = vectorStore.search(query, topK * 2, minScore * RECALL_MIN_SCORE_FACTOR);
-    log.debug("[Hybrid-Retrieval] 向量检索: {} 条", vectorResults.size());
+    RagDebugInfo debug = new RagDebugInfo();
+    debug.setQuery(truncate(query, LOG_QUERY_TRUNCATE_LENGTH));
+    debug.setTopK(topK);
+    debug.setMinScore(minScore);
 
+    // 向量检索阶段
+    long vectorStart = System.currentTimeMillis();
+    List<TextChunk> vectorResults = vectorStore.search(query, topK * 2, minScore * RECALL_MIN_SCORE_FACTOR);
+    debug.setVectorLatencyMs(System.currentTimeMillis() - vectorStart);
+    debug.setVectorResultCount(vectorResults.size());
+    log.debug("[Hybrid-Retrieval] 向量检索: {} 条, 耗时 {}ms", vectorResults.size(), debug.getVectorLatencyMs());
+
+    // 全文检索阶段
     List<TextChunk> fullTextResults = List.of();
+    long fullTextStart = System.currentTimeMillis();
     if (fullTextAvailable) {
       fullTextResults = fullTextSearch(query, topK * 2);
-      log.debug("[Hybrid-Retrieval] 全文检索: {} 条", fullTextResults.size());
     }
+    debug.setFullTextLatencyMs(System.currentTimeMillis() - fullTextStart);
+    debug.setFullTextResultCount(fullTextResults.size());
+    debug.setFullTextAvailable(fullTextAvailable);
+    log.debug("[Hybrid-Retrieval] 全文检索: {} 条, 耗时 {}ms", fullTextResults.size(), debug.getFullTextLatencyMs());
 
+    // RRF 融合阶段
+    long fuseStart = System.currentTimeMillis();
     List<TextChunk> merged = rrfFuse(vectorResults, fullTextResults, topK);
+    debug.setFuseLatencyMs(System.currentTimeMillis() - fuseStart);
+    debug.setMergedResultCount(merged.size());
+
     // 精排阶段：通过 Reranker 对融合结果做重排序，提升 Top-K 精确度
+    long rerankStart = System.currentTimeMillis();
     List<TextChunk> reranked = reranker.rerank(query, merged, topK);
+    debug.setRerankLatencyMs(System.currentTimeMillis() - rerankStart);
+    debug.setRerankedResultCount(reranked.size());
+    debug.setRerankerType(reranker.getType());
+    debug.setTotalLatencyMs(debug.getVectorLatencyMs() + debug.getFullTextLatencyMs() + debug.getFuseLatencyMs() + debug.getRerankLatencyMs());
+
+    this.lastDebugInfo = debug;
     log.info(
-        "[Hybrid-Retrieval] 混合检索完成: query='{}', vector={}, fulltext={}, merged={}, reranked={}",
-        truncate(query, LOG_QUERY_TRUNCATE_LENGTH),
+        "[Hybrid-Retrieval] 混合检索完成: query='{}', vector={}, fulltext={}, merged={}, reranked={}, total={}ms",
+        debug.getQuery(),
         vectorResults.size(),
         fullTextResults.size(),
         merged.size(),
-        reranked.size());
+        reranked.size(),
+        debug.getTotalLatencyMs());
     return reranked;
+  }
+
+  /**
+   * 获取最近一次检索的全链路调试信息。
+   *
+   * <p>包含各阶段耗时（向量/全文/融合/重排）和结果数量，用于可观测性面板展示和排查检索性能瓶颈。
+   *
+   * @return 最近一次检索的调试信息
+   */
+  public RagDebugInfo getLastDebugInfo() {
+    return lastDebugInfo;
   }
 
   private List<TextChunk> rrfFuse(
