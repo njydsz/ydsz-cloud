@@ -1,6 +1,6 @@
 package com.njydsz.agent.domain.skill;
 
-import com.njydsz.common.exception.BizException;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * Skill 执行异常
@@ -11,7 +11,7 @@ import com.njydsz.common.exception.BizException;
  * @author ydsz-team
  * @since 26.09.17
  */
-public class SkillExecutionException extends BizException {
+public class SkillExecutionException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 

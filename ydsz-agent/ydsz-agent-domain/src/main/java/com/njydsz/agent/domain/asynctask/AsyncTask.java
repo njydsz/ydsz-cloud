@@ -1,6 +1,6 @@
 package com.njydsz.agent.domain.asynctask;
 
-import com.njydsz.common.jdbc.domain.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;

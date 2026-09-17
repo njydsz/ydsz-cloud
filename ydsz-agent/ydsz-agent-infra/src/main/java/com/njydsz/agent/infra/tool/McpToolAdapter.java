@@ -20,13 +20,16 @@ import com.njydsz.agent.domain.model.ToolDefinition;
  *
  * <h3>集成说明</h3>
  *
- * <p>当前通过 {@link McpClientProvider} 抽象接入 SSE 传输实现（{@link SseMcpClientProvider}，
- * 基于 JDK HttpClient 手写 JSON-RPC over HTTP/SSE，未引入官方 io.modelcontextprotocol:sdk 依赖）。
- * 未来接入官方 SDK 或补齐 stdio / streamable-http 传输时，仅需新增 {@link McpClientProvider} 实现，
- * 本适配器无需改动。
+ * <p>通过 {@link McpClientProvider} 抽象接入 MCP 协议。当前使用 {@link McpClientProviderRouter} 作为统一入口，
+ * 根据每个 Server 的 {@code transportType} 自动路由到对应实现：
  *
- * <p><b>传输类型校验</b>：仅支持 {@code transport=sse}；配置其他传输类型（如 stdio）时明确抛错，
- * 避免静默降级为 SSE 导致连接行为与配置不符。
+ * <ul>
+ *   <li>{@code sse} → {@link SseMcpClientProvider}（基于 JDK HttpClient 手写 JSON-RPC over SSE）
+ *   <li>{@code streamable-http} → {@link StreamableHttpMcpClientProvider}（标准 HTTP 流式传输）
+ *   <li>{@code stdio} → 暂未实现（需引入 io.modelcontextprotocol:sdk 官方依赖）
+ * </ul>
+ *
+ * <p>所有传输实现均支持四级认证（none / api-key / bearer / oauth），配置方式见 {@link AgentProperties.ServerInfo}。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -90,15 +93,9 @@ public class McpToolAdapter {
    *
    * @param server MCP Server 配置
    * @return 转换后的工具定义列表
-   * @throws IllegalArgumentException 当传输类型非 {@code sse} 时抛出（当前仅实现 SSE 传输）
+   * @throws UnsupportedOperationException 当传输类型不受支持时由路由器抛出
    */
   public List<ToolDefinition> discoverServerTools(AgentProperties.ServerInfo server) {
-    // P1 修复：传输类型校验，避免配置 stdio 时被静默当作 SSE 处理
-    String transport = server.getTransportType() != null ? server.getTransportType().toLowerCase() : "sse";
-    if (!"sse".equals(transport)) {
-      throw new IllegalArgumentException(
-          "MCP 传输类型暂不支持: " + transport + "（当前仅支持 sse，stdio/streamable-http 待接入官方 SDK）");
-    }
     List<McpToolDescriptor> descriptors = clientProvider.listTools(server);
     List<ToolDefinition> result = new ArrayList<>(descriptors.size());
     for (McpToolDescriptor descriptor : descriptors) {

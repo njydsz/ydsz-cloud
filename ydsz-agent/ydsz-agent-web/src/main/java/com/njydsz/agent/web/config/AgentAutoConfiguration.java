@@ -74,8 +74,10 @@ import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSchemaRecallService;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSemanticConsistencyChecker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
+import com.njydsz.agent.infra.tool.McpClientProviderRouter;
 import com.njydsz.agent.infra.tool.McpToolAdapter;
 import com.njydsz.agent.infra.tool.SseMcpClientProvider;
+import com.njydsz.agent.infra.tool.StreamableHttpMcpClientProvider;
 import com.njydsz.agent.infra.tool.ToolAnnotationScanner;
 import com.njydsz.agent.infra.trace.ExportingTraceRecorder;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
@@ -483,6 +485,8 @@ public class AgentAutoConfiguration {
   /**
    * 装配 MCP 工具适配器。
    *
+   * <p>使用路由器根据每个 Server 的 transportType 自动选择对应传输实现。
+   *
    * @param properties Agent 配置
    * @param toolRegistry 目标工具注册中心
    * @return MCP 工具适配器
@@ -490,8 +494,10 @@ public class AgentAutoConfiguration {
   @Bean
   @ConditionalOnProperty(prefix = "ydsz.agent.mcp", name = "enabled", havingValue = "true")
   public McpToolAdapter mcpToolAdapter(AgentProperties properties, ToolRegistry toolRegistry) {
-    SseMcpClientProvider clientProvider = new SseMcpClientProvider();
-    McpToolAdapter adapter = new McpToolAdapter(clientProvider, properties.getMcp());
+    SseMcpClientProvider sseProvider = new SseMcpClientProvider();
+    StreamableHttpMcpClientProvider streamableHttpProvider = new StreamableHttpMcpClientProvider();
+    McpClientProviderRouter router = new McpClientProviderRouter(sseProvider, streamableHttpProvider);
+    McpToolAdapter adapter = new McpToolAdapter(router, properties.getMcp());
     adapter
         .discoverAllTools()
         .forEach(

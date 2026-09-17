@@ -190,6 +190,8 @@ public class SseMcpClientProvider implements McpClientProvider {
               .header("Accept", MIME_APPLICATION_JSON + ", text/event-stream")
               .timeout(Duration.ofMillis(server.getTimeout() != null ? server.getTimeout() : DEFAULT_TIMEOUT_MILLIS))
               .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+      // 注入认证头
+      applyAuthentication(requestBuilder, server);
       if (sessionId != null) {
         requestBuilder.header("Mcp-Session-Id", sessionId);
       }
@@ -340,6 +342,32 @@ public class SseMcpClientProvider implements McpClientProvider {
     } catch (Exception e) {
       log.warn("[MCP-SSE] 解析参数失败，作为原始字符串传入: err={}", e.getMessage());
       return Map.of("_raw", arguments);
+    }
+  }
+
+  /**
+   * 根据配置向请求注入认证头。
+   *
+   * @param requestBuilder HTTP 请求构建器
+   * @param server MCP Server 配置
+   */
+  private void applyAuthentication(HttpRequest.Builder requestBuilder, AgentProperties.ServerInfo server) {
+    String authType = server.getAuthType();
+    if (authType == null || "none".equalsIgnoreCase(authType)) {
+      return;
+    }
+    if ("api-key".equalsIgnoreCase(authType)) {
+      String apiKey = server.getAuthApiKey();
+      if (apiKey != null && !apiKey.isBlank()) {
+        requestBuilder.header("X-Api-Key", apiKey);
+      }
+      return;
+    }
+    if ("bearer".equalsIgnoreCase(authType)) {
+      String token = server.getAuthToken();
+      if (token != null && !token.isBlank()) {
+        requestBuilder.header("Authorization", "Bearer " + token);
+      }
     }
   }
 }
