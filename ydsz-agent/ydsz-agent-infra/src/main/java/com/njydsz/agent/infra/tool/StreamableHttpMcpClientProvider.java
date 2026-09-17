@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.McpProperties;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
@@ -117,7 +118,7 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
   }
 
   @Override
-  public List<McpToolAdapter.McpToolDescriptor> listTools(AgentProperties.ServerInfo server) {
+  public List<McpToolAdapter.McpToolDescriptor> listTools(McpProperties.ServerInfo server) {
     try {
       String sessionId = initSession(server);
       String listResponse = sendRequest(server, sessionId, "tools/list", Map.of());
@@ -129,7 +130,7 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
   }
 
   @Override
-  public String callTool(AgentProperties.ServerInfo server, String toolName, String arguments) {
+  public String callTool(McpProperties.ServerInfo server, String toolName, String arguments) {
     try {
       String sessionId = initSession(server);
       Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
@@ -152,7 +153,7 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
    * @param server MCP Server 配置
    * @return 会话 ID
    */
-  private String initSession(AgentProperties.ServerInfo server) {
+  private String initSession(McpProperties.ServerInfo server) {
     StreamableSessionEntry cached = sessionCache.get(server.getName());
     if (cached != null && !cached.isExpired()) {
       return cached.sessionId();
@@ -191,7 +192,7 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
    * @return 响应 JSON 字符串
    */
   private String sendRequest(
-      AgentProperties.ServerInfo server, String sessionId, String method,
+      McpProperties.ServerInfo server, String sessionId, String method,
       Map<String, Object> params) {
     try {
       Map<String, Object> body = new HashMap<>(COLLECTION_CAPACITY_8);
@@ -244,7 +245,7 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
    * @param requestBuilder HTTP 请求构建器
    * @param server MCP Server 配置
    */
-  private void applyAuthentication(HttpRequest.Builder requestBuilder, AgentProperties.ServerInfo server) {
+  private void applyAuthentication(HttpRequest.Builder requestBuilder, McpProperties.ServerInfo server) {
     String authType = server.getAuthType();
     if (authType == null || "none".equalsIgnoreCase(authType)) {
       return;
@@ -277,7 +278,7 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
    * @param server MCP Server 配置
    * @return access_token；获取失败返回 null
    */
-  private String obtainOAuthToken(AgentProperties.ServerInfo server) {
+  private String obtainOAuthToken(McpProperties.ServerInfo server) {
     OAuthTokenEntry cached = oauthTokenCache.get(server.getName());
     if (cached != null && !cached.isExpired()) {
       return cached.accessToken();

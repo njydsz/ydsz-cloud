@@ -8,6 +8,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.McpProperties;
 import com.njydsz.agent.domain.model.ToolDefinition;
 
 /**
@@ -29,7 +30,7 @@ import com.njydsz.agent.domain.model.ToolDefinition;
  *   <li>{@code stdio} → 暂未实现（需引入 io.modelcontextprotocol:sdk 官方依赖）
  * </ul>
  *
- * <p>所有传输实现均支持四级认证（none / api-key / bearer / oauth），配置方式见 {@link AgentProperties.ServerInfo}。
+ * <p>所有传输实现均支持四级认证（none / api-key / bearer / oauth），配置方式见 {@link McpProperties.ServerInfo}。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -73,7 +74,7 @@ public class McpToolAdapter {
     if (mcpConfig == null || !mcpConfig.isEnabled()) {
       return allTools;
     }
-    for (AgentProperties.ServerInfo server : mcpConfig.getServers()) {
+    for (McpProperties.ServerInfo server : mcpConfig.getServers()) {
       if (!server.isEnabled()) {
         continue;
       }
@@ -95,7 +96,7 @@ public class McpToolAdapter {
    * @return 转换后的工具定义列表
    * @throws UnsupportedOperationException 当传输类型不受支持时由路由器抛出
    */
-  public List<ToolDefinition> discoverServerTools(AgentProperties.ServerInfo server) {
+  public List<ToolDefinition> discoverServerTools(McpProperties.ServerInfo server) {
     List<McpToolDescriptor> descriptors = clientProvider.listTools(server);
     List<ToolDefinition> result = new ArrayList<>(descriptors.size());
     for (McpToolDescriptor descriptor : descriptors) {
@@ -121,7 +122,7 @@ public class McpToolAdapter {
     }
     String serverName = parts[0];
     String toolName = parts[1];
-    AgentProperties.ServerInfo serverConfig = findServerConfig(serverName);
+    McpProperties.ServerInfo serverConfig = findServerConfig(serverName);
     return clientProvider.callTool(serverConfig, toolName, arguments);
   }
 
@@ -142,7 +143,7 @@ public class McpToolAdapter {
   }
 
   /** 根据名称查找 Server 配置 */
-  private AgentProperties.ServerInfo findServerConfig(String serverName) {
+  private McpProperties.ServerInfo findServerConfig(String serverName) {
     return mcpConfig.getServers().stream()
         .filter(s -> serverName.equals(s.getName()))
         .findFirst()

@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.tool;
 
 import java.util.List;
 
-import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.McpProperties;
 
 /**
  * MCP Client 提供者接口
@@ -23,7 +23,7 @@ public interface McpClientProvider {
    * @param server MCP Server 连接配置
    * @return 工具描述符列表
    */
-  List<McpToolAdapter.McpToolDescriptor> listTools(AgentProperties.ServerInfo server);
+  List<McpToolAdapter.McpToolDescriptor> listTools(McpProperties.ServerInfo server);
 
   /**
    * 调用 MCP Server 上的工具
@@ -33,5 +33,5 @@ public interface McpClientProvider {
    * @param arguments 工具参数（JSON 对象字符串）
    * @return 工具执行结果内容
    */
-  String callTool(AgentProperties.ServerInfo server, String toolName, String arguments);
+  String callTool(McpProperties.ServerInfo server, String toolName, String arguments);
 }

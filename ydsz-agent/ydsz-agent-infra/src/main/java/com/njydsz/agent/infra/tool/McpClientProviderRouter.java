@@ -5,6 +5,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.McpProperties;
 
 /**
  * MCP Client 提供者路由器
@@ -46,12 +47,12 @@ public class McpClientProviderRouter implements McpClientProvider {
   }
 
   @Override
-  public List<McpToolAdapter.McpToolDescriptor> listTools(AgentProperties.ServerInfo server) {
+  public List<McpToolAdapter.McpToolDescriptor> listTools(McpProperties.ServerInfo server) {
     return resolveProvider(server).listTools(server);
   }
 
   @Override
-  public String callTool(AgentProperties.ServerInfo server, String toolName, String arguments) {
+  public String callTool(McpProperties.ServerInfo server, String toolName, String arguments) {
     return resolveProvider(server).callTool(server, toolName, arguments);
   }
 
@@ -62,7 +63,7 @@ public class McpClientProviderRouter implements McpClientProvider {
    * @return 对应传输实现的 Provider
    * @throws UnsupportedOperationException 当传输类型不受支持时
    */
-  private McpClientProvider resolveProvider(AgentProperties.ServerInfo server) {
+  private McpClientProvider resolveProvider(McpProperties.ServerInfo server) {
     String transport = server.getTransportType() != null ? server.getTransportType().toLowerCase() : "sse";
     switch (transport) {
       case "sse":

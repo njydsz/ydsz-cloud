@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.McpProperties;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
@@ -86,7 +87,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @return 工具描述符列表；获取失败时返回空列表
    */
   @Override
-  public List<McpToolAdapter.McpToolDescriptor> listTools(AgentProperties.ServerInfo server) {
+  public List<McpToolAdapter.McpToolDescriptor> listTools(McpProperties.ServerInfo server) {
     try {
       // 1. 初始化 MCP 会话（获取 sessionId）
       String sessionId = initSession(server);
@@ -110,7 +111,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @throws LlmException MCP 调用错误或网络异常
    */
   @Override
-  public String callTool(AgentProperties.ServerInfo server, String toolName, String arguments) {
+  public String callTool(McpProperties.ServerInfo server, String toolName, String arguments) {
     try {
       String sessionId = initSession(server);
       Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
@@ -135,7 +136,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @param server MCP Server 配置
    * @return 会话 ID
    */
-  private String initSession(AgentProperties.ServerInfo server) {
+  private String initSession(McpProperties.ServerInfo server) {
     SessionEntry cached = sessionCache.get(server.getName());
     if (cached != null && !cached.isExpired()) {
       return cached.sessionId();
@@ -174,7 +175,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @return 响应 JSON 字符串
    */
   private String sendRequest(
-      AgentProperties.ServerInfo server, String sessionId, String method,
+      McpProperties.ServerInfo server, String sessionId, String method,
       Map<String, Object> params) {
     try {
       Map<String, Object> body = new HashMap<>(COLLECTION_CAPACITY_8);
@@ -351,7 +352,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @param requestBuilder HTTP 请求构建器
    * @param server MCP Server 配置
    */
-  private void applyAuthentication(HttpRequest.Builder requestBuilder, AgentProperties.ServerInfo server) {
+  private void applyAuthentication(HttpRequest.Builder requestBuilder, McpProperties.ServerInfo server) {
     String authType = server.getAuthType();
     if (authType == null || "none".equalsIgnoreCase(authType)) {
       return;
