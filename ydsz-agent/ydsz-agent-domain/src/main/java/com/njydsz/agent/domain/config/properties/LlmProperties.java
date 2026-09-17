@@ -8,8 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.agent.domain.config.properties.ProviderProperties;
-
 /**
  * LLM 相关配置组（默认 Provider、模型、密钥、价格等）。
  *
@@ -53,12 +51,15 @@ public class LlmProperties {
   /** 调用超时（秒） */
   private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
 
+  /** 模型单价映射初始容量 */
+  private static final int MODEL_PRICES_INITIAL_CAPACITY = 16;
+
   /** 模型单价映射（模型名 -> USD/千 Token） */
-  private Map<String, Double> modelPrices = new LinkedHashMap<>(16);
+  private Map<String, Double> modelPrices = new LinkedHashMap<>(MODEL_PRICES_INITIAL_CAPACITY);
 
   /** 未知模型兜底单价（USD/千 Token），未配置的模型使用此价格 */
   private BigDecimal fallbackPrice = new BigDecimal("0.001");
 
   /** 多 Provider 配置 */
-  private Map<String, ProviderProperties> providers = new LinkedHashMap<>(16);
+  private Map<String, ProviderProperties> providers = new LinkedHashMap<>(MODEL_PRICES_INITIAL_CAPACITY);
 }

@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.config.properties.McpProperties;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.common.json.YdszJson;
