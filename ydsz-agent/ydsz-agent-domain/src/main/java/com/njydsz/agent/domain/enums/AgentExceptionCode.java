@@ -80,7 +80,13 @@ public enum AgentExceptionCode implements ExceptionCode {
   /** 追踪记录不存在 */
   TRACE_NOT_FOUND("B94401", "agent.trace.not.found", 404),
   /** 追踪记录为空 */
-  TRACE_EMPTY("B94402", "agent.trace.empty", 400);
+  TRACE_EMPTY("B94402", "agent.trace.empty", 400),
+
+  // ==================== B94501-B94599 A2A 协议 ====================
+  /** A2A 调用失败（网络/Agent 不可用/超时） */
+  A2A_CALL_FAILED("B94501", "agent.a2a.call.failed", 502),
+  /** A2A 协议错误（认证/拒绝/Task 失败/格式异常） */
+  A2A_PROTOCOL_ERROR("B94502", "agent.a2a.protocol.error", 400);
 
   /** 缺省 HTTP 状态码 */
   private static final int DEFAULT_HTTP_STATUS = 400;

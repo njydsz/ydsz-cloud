@@ -24,6 +24,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.agent.domain.code.CodeExecutionService;
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.LlmProperties;
+import com.njydsz.agent.domain.config.properties.MemoryProperties;
+import com.njydsz.agent.domain.config.properties.ProviderProperties;
+import com.njydsz.agent.domain.config.properties.RagProperties;
+import com.njydsz.agent.domain.config.properties.RerankerProperties;
 import com.njydsz.agent.domain.context.ContextCompressor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.DagCheckpointStore;
@@ -159,7 +164,7 @@ public class AgentAutoConfiguration {
       ObjectProvider<StringRedisTemplate>
           redisTemplateProvider) {
     LlmClientRouter router = new LlmClientRouter();
-    AgentProperties.Llm llmConfig = properties.getLlm();
+    LlmProperties llmConfig = properties.getLlm();
 
     // 注册默认 Provider（经熔断器包装后注册到路由器）
     CompatibleLlmClient defaultClient =
@@ -174,7 +179,7 @@ public class AgentAutoConfiguration {
     // 注册额外 Provider（多模型 + Fallback 链，每个独立熔断）
     if (llmConfig.getProviders() != null) {
       for (var entry : llmConfig.getProviders().entrySet()) {
-        AgentProperties.ProviderConfig pc = entry.getValue();
+        ProviderProperties pc = entry.getValue();
         if (!pc.isEnabled()) {
           continue;
         }
@@ -227,7 +232,7 @@ public class AgentAutoConfiguration {
       RedisCollectionOps collectionOps,
       AgentProperties properties,
       LlmClient llmClient) {
-    AgentProperties.Memory memoryConfig = properties.getMemory();
+    MemoryProperties memoryConfig = properties.getMemory();
     int maxMessages = memoryConfig.getMaxMessages();
     int maxListSize = Math.max(maxMessages * 2, MIN_MEMORY_LIST_SIZE);
     RedisConversationMemory redisMemory =
@@ -358,7 +363,7 @@ public class AgentAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(EmbeddingClient.class)
   public EmbeddingClient embeddingClient(AgentProperties properties) {
-    AgentProperties.Rag ragConfig = properties.getRag();
+    RagProperties ragConfig = properties.getRag();
     String apiKey =
         ragConfig.getEmbeddingApiKey().isEmpty()
             ? properties.getLlm().getApiKey()
@@ -383,7 +388,7 @@ public class AgentAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(TextChunker.class)
   public TextChunker textChunker(AgentProperties properties, LlmClient llmClient) {
-    AgentProperties.Rag ragConfig = properties.getRag();
+    RagProperties ragConfig = properties.getRag();
     String strategy = ragConfig.getChunkStrategy();
     if ("regex".equalsIgnoreCase(strategy)) {
       log.info("[Agent] 使用正则分块策略: separator={}", ragConfig.getChunkSeparator());
@@ -409,7 +414,7 @@ public class AgentAutoConfiguration {
   @ConditionalOnMissingBean(VectorStore.class)
   public VectorStore vectorStore(
       AgentProperties properties, EmbeddingClient embeddingClient, JdbcTemplate jdbcTemplate) {
-    AgentProperties.Rag ragConfig = properties.getRag();
+    RagProperties ragConfig = properties.getRag();
     if ("pgvector".equalsIgnoreCase(ragConfig.getVectorStore())) {
       PgVectorStore pgStore =
           new PgVectorStore(jdbcTemplate, embeddingClient, ragConfig.isTenantIsolation());
@@ -678,7 +683,7 @@ public class AgentAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(Reranker.class)
   public Reranker reranker(AgentProperties properties) {
-    AgentProperties.RerankerConfig rerankerConfig = properties.getRerankerConfig();
+    RerankerProperties rerankerConfig = properties.getRerankerConfig();
     if (rerankerConfig.isEnabled() && rerankerConfig.getBaseUrl() != null && !rerankerConfig.getBaseUrl().isBlank()) {
       log.info("[Agent] 启用 HTTP Reranker 精排: model={}, url={}", rerankerConfig.getModel(), rerankerConfig.getBaseUrl());
       return new HttpReranker(rerankerConfig);

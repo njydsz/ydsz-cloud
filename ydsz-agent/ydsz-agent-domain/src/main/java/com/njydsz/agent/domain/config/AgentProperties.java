@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
+import com.njydsz.agent.domain.config.properties.A2aProperties;
 import com.njydsz.agent.domain.config.properties.CacheProperties;
 import com.njydsz.agent.domain.config.properties.CodeExecutionProperties;
 import com.njydsz.agent.domain.config.properties.GuardrailProperties;
@@ -130,4 +131,8 @@ public class AgentProperties {
   /** 混合搜索配置 */
   @NestedConfigurationProperty
   private HybridSearchProperties hybridSearch = new HybridSearchProperties();
+
+  /** A2A 协议配置 */
+  @NestedConfigurationProperty
+  private A2aProperties a2a = new A2aProperties();
 }
