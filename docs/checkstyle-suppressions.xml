@@ -128,6 +128,10 @@
          属能力提供者抽象层的必要边界暴露，与 TcpPushChannel 豁免口径对齐，红线规则其余项保留 -->
     <suppress files="CompatibleLlmClient\.java" checks="IllegalImport"/>
 
+    <!-- agent DocumentIngestionService：PDFBox 用于扫描版 PDF 渲染为图片供 OCR 文字提取，
+         ydsz-common-docs 封装过于通用且未覆盖渲染场景，此处为业务模块调用 PDFBox API 的合理边界 -->
+    <suppress files="DocumentIngestionService\.java" checks="IllegalImport"/>
+
     <!-- workflow 算法密集/示例字符串密集文件：条件表达式引擎（JSON 示例）、委托授权/模板/效率分析
          等业务实现包含不可拆行的长字符串字面量与规则表，LineLength 豁免，其余红线规则保留 -->
     <suppress files="FlowConditionExprServiceImpl\.java|FlowDelegateAuthServiceImpl\.java|FlowTemplateServiceImpl\.java|FlowTaskCoreService\.java|FlowInstanceMigrationServiceImpl\.java|FlowEfficiencyServiceImpl\.java|DefaultFlowRoutingService\.java|FlowEmbeddedApprovalServiceImpl\.java|ProjectInitiationFlowListener\.java|FlowTaskPassService\.java|FlowTaskOperateService\.java|FlowTaskCreateService\.java|FlowSlaServiceImpl\.java|FlowExportServiceImpl\.java|FlowEventSubscriptionServiceImpl\.java|FlowDefinitionDesignManager\.java"

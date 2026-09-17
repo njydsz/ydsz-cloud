@@ -1,11 +1,11 @@
 package com.njydsz.agent.server.agent;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 子 Agent 异步执行线程池管理器
@@ -20,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>线程名前缀 "sub-agent-"，便于排查子 Agent 相关线程问题
  * </ul>
  *
- * <p>使用 JDK {@link ThreadPoolExecutor} 直接构造（禁止 {@link java.util.concurrent.Executors} 工厂方法），
- * 确保线程池参数完全可控。
+ * <p>通过 {@link com.njydsz.common.thread.util.ExecutorUtils} Builder 创建，
+ * 禁止业务代码直接 new ThreadPoolExecutor（统一使用 ydsz-common-thread 管理能力）。
  *
  * @author ydsz-team
  * @since 26.09.17
@@ -45,29 +45,18 @@ public final class SubAgentExecutorPool {
   /** 最大线程数 = 核心线程数 × 2 */
   private static final int MAXIMUM_POOL_SIZE = CORE_POOL_SIZE * 2;
 
-  /** 线程名生成序号 */
-  private static final AtomicInteger THREAD_NUMBER = new AtomicInteger(1);
-
   /** 子 Agent 专用线程池 */
   private static final ThreadPoolExecutor EXECUTOR =
-      new ThreadPoolExecutor(
-          CORE_POOL_SIZE,
-          MAXIMUM_POOL_SIZE,
-          KEEP_ALIVE_TIME,
-          TimeUnit.SECONDS,
-          new ArrayBlockingQueue<>(QUEUE_CAPACITY),
-          r -> {
-            Thread thread = new Thread(r);
-            thread.setName("sub-agent-" + THREAD_NUMBER.getAndIncrement());
-            thread.setDaemon(true);
-            if (thread.getPriority() != Thread.NORM_PRIORITY) {
-              thread.setPriority(Thread.NORM_PRIORITY);
-            }
-            thread.setUncaughtExceptionHandler(
-                (t, e) -> log.error("[SubAgent-Pool] 未捕获异常: thread={}, msg={}", t.getName(), e.getMessage(), e));
-            return thread;
-          },
-          new ThreadPoolExecutor.CallerRunsPolicy());
+      ExecutorUtils.builder()
+          .corePoolSize(CORE_POOL_SIZE)
+          .maxPoolSize(MAXIMUM_POOL_SIZE)
+          .keepAliveTime(KEEP_ALIVE_TIME, TimeUnit.SECONDS)
+          .queueType(ExecutorUtils.BlockingQueueType.ARRAY)
+          .queueCapacity(QUEUE_CAPACITY)
+          .threadNamePrefix("sub-agent-")
+          .daemon(true)
+          .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
+          .build();
 
   private SubAgentExecutorPool() {
     throw new UnsupportedOperationException("工具类不可实例化");

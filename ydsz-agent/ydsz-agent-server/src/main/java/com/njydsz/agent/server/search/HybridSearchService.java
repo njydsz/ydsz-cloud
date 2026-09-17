@@ -34,6 +34,9 @@ public class HybridSearchService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** 非法 topK 时的默认返回条数 */
+  private static final int DEFAULT_TOP_K_FALLBACK = 5;
+
   private final RagSearchDelegate ragSearchDelegate;
   private final WebSearchService webSearchService;
   private final AgentProperties properties;
@@ -69,7 +72,7 @@ public class HybridSearchService {
       return List.of();
     }
     if (topK <= 0) {
-      topK = 5;
+      topK = DEFAULT_TOP_K_FALLBACK;
     }
 
     AgentProperties.HybridSearch hybridConfig = properties.getHybridSearch();

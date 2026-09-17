@@ -38,6 +38,9 @@ import com.njydsz.common.exception.custom.BusinessException;
 @Service
 public class AsyncTaskService {
 
+  /** 默认最大重试次数 */
+  private static final int DEFAULT_MAX_RETRY = 3;
+
   private final AsyncTaskStore taskStore;
 
   /**
@@ -103,7 +106,7 @@ public class AsyncTaskService {
     task.setExpireAt(LocalDateTime.now().plusSeconds(timeoutSecs));
 
     // 设置默认重试策略
-    task.setMaxRetry(3);
+    task.setMaxRetry(DEFAULT_MAX_RETRY);
     task.setRetryCount(0);
 
     // 持久化

@@ -41,6 +41,9 @@ public class HttpWebSearchService implements WebSearchService {
   /** 链接与标题之间的最大距离（字符），超过则不认为该链接属于该标题 */
   private static final int MAX_LINK_DISTANCE = 1000;
 
+  /** href=" 引号后偏移量，用于跳过定位符获取 URL 值 */
+  private static final int HREF_MARKER_OFFSET = 6;
+
   private final AgentProperties properties;
   private final RestClient restClient;
 
@@ -192,7 +195,7 @@ public class HttpWebSearchService implements WebSearchService {
       if (linkIdx >= 0 && linkIdx - titleEnd < MAX_LINK_DISTANCE) {
         int urlStart = html.indexOf("href=\"", linkIdx);
         if (urlStart >= 0) {
-          urlStart += 6;
+          urlStart += HREF_MARKER_OFFSET;
           int urlEnd = html.indexOf("\"", urlStart);
           if (urlEnd > urlStart) {
             url = htmlDecode(html.substring(urlStart, urlEnd).trim());

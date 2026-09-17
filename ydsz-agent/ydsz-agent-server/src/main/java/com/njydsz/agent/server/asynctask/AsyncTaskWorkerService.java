@@ -2,7 +2,6 @@ package com.njydsz.agent.server.asynctask;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,10 +10,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.asynctask.AsyncTask;
-import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
-import com.njydsz.agent.domain.asynctask.AsyncTaskType;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
-import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.agent.domain.asynctask.AsyncTaskType;
 
 /**
  * 异步任务 Worker 调度服务（简化版 Job）
@@ -50,6 +47,12 @@ public class AsyncTaskWorkerService {
   /** 单次轮询最大任务数 */
   private static final int POLL_LIMIT = 10;
 
+  /** Worker ID 随机后缀长度 */
+  private static final int WORKER_ID_SUFFIX_LENGTH = 8;
+
+  /** 占位进度值（骨架执行模拟用） */
+  private static final int PLACEHOLDER_PROGRESS = 50;
+
   /** 超时阈值偏移量（秒）：RUNNING 任务超过此秒未完成视为超时 */
   private static final int TIMEOUT_OFFSET_SECONDS = 300;
 
@@ -62,7 +65,7 @@ public class AsyncTaskWorkerService {
    */
   public AsyncTaskWorkerService(AsyncTaskStore taskStore) {
     this.taskStore = taskStore;
-    this.workerId = "worker-" + UUID.randomUUID().toString().substring(0, 8);
+    this.workerId = "worker-" + UUID.randomUUID().toString().substring(0, WORKER_ID_SUFFIX_LENGTH);
     log.info("[AsyncTask-Worker] Worker 初始化完成: workerId={}, storeType={}",
         workerId, taskStore.getType());
   }
@@ -171,7 +174,7 @@ public class AsyncTaskWorkerService {
         taskId, taskType, typeDesc);
 
     // 模拟进度更新 → 100% → 成功（骨架占位，实际应由 AsyncTaskExecutor 驱动进度）
-    taskStore.updateProgress(taskId, 50, workerId);
+    taskStore.updateProgress(taskId, PLACEHOLDER_PROGRESS, workerId);
     taskStore.findById(taskId).ifPresent(t -> {
       t.succeed("{\"result\":\"任务执行完成（占位）\"}");
       taskStore.save(t);

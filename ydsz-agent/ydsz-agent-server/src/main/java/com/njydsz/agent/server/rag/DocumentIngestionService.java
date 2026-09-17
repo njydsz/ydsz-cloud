@@ -1,14 +1,12 @@
 package com.njydsz.agent.server.rag;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import javax.imageio.ImageIO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +55,9 @@ public class DocumentIngestionService {
 
   /** OCR 图片输出格式 */
   private static final String OCR_IMAGE_FORMAT = "png";
+
+  /** 文档 ID 中 UUID 截取长度 */
+  private static final int DOC_ID_UUID_LENGTH = 8;
 
   private final TextChunker textChunker;
   private final EmbeddingClient embeddingClient;
@@ -187,7 +188,7 @@ public class DocumentIngestionService {
         return 0;
       }
 
-      String documentId = "ocr-" + UUID.randomUUID().toString().substring(0, 8) + "-" + fileName;
+      String documentId = "ocr-" + UUID.randomUUID().toString().substring(0, DOC_ID_UUID_LENGTH) + "-" + fileName;
       int count = ingest(documentId, fullText, fileName, "ocr-scanned-pdf");
       log.info("[RAG-OCR] 扫描版 PDF 摄入完成: fileName={}, pages={}, chunks={}",
           fileName, pageCount, count);
@@ -233,7 +234,7 @@ public class DocumentIngestionService {
       return 0;
     }
 
-    String documentId = "ocr-img-" + UUID.randomUUID().toString().substring(0, 8);
+    String documentId = "ocr-img-" + UUID.randomUUID().toString().substring(0, DOC_ID_UUID_LENGTH);
     int count = ingest(documentId, text, "image-" + datasetId, "ocr-image");
     log.info("[RAG-OCR] 图片 OCR 摄入完成: datasetId={}, chunks={}", datasetId, count);
     return count;
