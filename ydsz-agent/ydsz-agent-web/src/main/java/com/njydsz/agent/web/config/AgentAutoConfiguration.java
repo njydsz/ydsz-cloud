@@ -63,10 +63,13 @@ import com.njydsz.agent.infra.llm.SemanticLlmCache;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.memory.SummaryConversationMemory;
 import com.njydsz.agent.infra.rag.CompatibleEmbeddingClient;
+import com.njydsz.agent.infra.rag.HttpReranker;
 import com.njydsz.agent.infra.rag.HybridRetriever;
 import com.njydsz.agent.infra.rag.IdentityReranker;
 import com.njydsz.agent.infra.rag.InMemoryVectorStore;
+import com.njydsz.agent.infra.rag.LlmSemanticTextChunker;
 import com.njydsz.agent.infra.rag.PgVectorStore;
+import com.njydsz.agent.infra.rag.RegexTextChunker;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSchemaRecallService;
 import com.njydsz.agent.infra.text2sql.LlmClientBasedSemanticConsistencyChecker;
@@ -345,13 +348,26 @@ public class AgentAutoConfiguration {
   /**
    * 装配文本分块器。
    *
+   * <p>根据配置选择分块策略：simple（默认固定分块）、regex（正则分隔符）、llm（LLM 语义感知分块）。
+   *
    * @param properties Agent 配置
+   * @param llmClient LLM 客户端（llm 策略需要）
    * @return 分块器
    */
   @Bean
   @ConditionalOnMissingBean(TextChunker.class)
-  public TextChunker textChunker(AgentProperties properties) {
+  public TextChunker textChunker(AgentProperties properties, LlmClient llmClient) {
     AgentProperties.Rag ragConfig = properties.getRag();
+    String strategy = ragConfig.getChunkStrategy();
+    if ("regex".equalsIgnoreCase(strategy)) {
+      log.info("[Agent] 使用正则分块策略: separator={}", ragConfig.getChunkSeparator());
+      return new RegexTextChunker(ragConfig.getChunkSize(), ragConfig.getChunkOverlap(), ragConfig.getChunkSeparator());
+    }
+    if ("llm".equalsIgnoreCase(strategy)) {
+      log.info("[Agent] 使用 LLM 语义分块策略: model={}", properties.getLlm().getDefaultModel());
+      return new LlmSemanticTextChunker(
+          llmClient, properties.getLlm().getDefaultModel(), ragConfig.getChunkSize());
+    }
     return new SimpleTextChunker(ragConfig.getChunkSize(), ragConfig.getChunkOverlap());
   }
 
@@ -622,13 +638,21 @@ public class AgentAutoConfiguration {
   }
 
   /**
-   * 装配恒等 Reranker 作为默认实现。
+   * 装配 Reranker。
    *
-   * @return 恒等 Reranker
+   * <p>当配置了 {@code ydsz.agent.reranker.baseUrl} 且启用时，使用 HTTP Reranker 做精排； 否则降级为恒等 Reranker（仅截断）。
+   *
+   * @param properties Agent 配置
+   * @return Reranker 实例
    */
   @Bean
   @ConditionalOnMissingBean(Reranker.class)
-  public Reranker reranker() {
+  public Reranker reranker(AgentProperties properties) {
+    AgentProperties.RerankerConfig rerankerConfig = properties.getRerankerConfig();
+    if (rerankerConfig.isEnabled() && rerankerConfig.getBaseUrl() != null && !rerankerConfig.getBaseUrl().isBlank()) {
+      log.info("[Agent] 启用 HTTP Reranker 精排: model={}, url={}", rerankerConfig.getModel(), rerankerConfig.getBaseUrl());
+      return new HttpReranker(rerankerConfig);
+    }
     return new IdentityReranker();
   }
 

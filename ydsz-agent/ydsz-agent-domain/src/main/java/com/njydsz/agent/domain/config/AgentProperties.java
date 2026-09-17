@@ -278,6 +278,12 @@ public class AgentProperties {
     /** 文本分块重叠字符数 */
     private int chunkOverlap = DEFAULT_CHUNK_OVERLAP;
 
+    /** 分块策略：simple（固定分块）/ regex（正则分隔符）/ llm（LLM 语义分块） */
+    private String chunkStrategy = "simple";
+
+    /** 正则分块策略时的分隔符（Pattern 字符串，如 "\\n#{1,3}\\s" 按 Markdown 标题分块） */
+    private String chunkSeparator = "\\n#{1,3}\\s";
+
     /** 是否启用租户隔离 */
     private boolean isTenantIsolation = false;
   }
@@ -314,6 +320,24 @@ public class AgentProperties {
     private Integer timeout;
     /** 是否启用（默认 true） */
     private boolean isEnabled = true;
+    /** 认证类型：none / api-key / bearer / oauth */
+    private String authType = "none";
+    /** API Key 值（authType=api-key 时，通过 X-Api-Key 头发送） */
+    private String authApiKey;
+    /** Bearer Token（authType=bearer 时，通过 Authorization: Bearer <token> 发送） */
+    private String authToken;
+    /** OAuth Client ID（authType=oauth 时） */
+    private String authClientId;
+    /** OAuth Client Secret（authType=oauth 时） */
+    private String authClientSecret;
+    /** OAuth Token URL（authType=oauth 时） */
+    private String authTokenUrl;
+    /** Stdio 模式启动命令 */
+    private String command;
+    /** Stdio 模式命令参数 */
+    private List<String> args;
+    /** Stdio 模式环境变量 */
+    private Map<String, String> envVars;
   }
 
   // ========================= MCP Server 配置（ydsz-agent 自身暴露） =========================
