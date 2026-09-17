@@ -11,9 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
@@ -26,23 +23,16 @@ import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
  * 任务数据在应用重启后丢失，且多副本部署时各副本互相不可见。
  * 适用于单实例部署或开发/测试环境。
  *
- * <p><b>并发安全</b>：
- * <ul>
- *   <li>{@link #claim} 使用 {@code synchronized} 块保护状态变更</li>
- *   <li>所有状态变更方法内部加锁保证原子性</li>
- * </ul>
+ * <p><b>并发安全</b>：所有状态变更方法内部使用 {@code synchronized} 块保护，
+ * 保证 claim/release 操作的原子性。
+ *
+ * <p><b>装配条件</b>：由 {@link AgentAsyncTaskAutoConfiguration} 按条件注册，
+ * 非直接 {@code @Component}，避免与 JDBC 实现产生重复 Bean。
  *
  * @author ydsz-team
  * @since 26.09.17
  */
 @Slf4j
-@Component
-@ConditionalOnProperty(
-    prefix = "ydsz.agent.async-task",
-    name = "store-type",
-    havingValue = "memory",
-    matchIfMissing = true)
-@ConditionalOnMissingBean(AsyncTaskStore.class)
 public class InMemoryAsyncTaskStore implements AsyncTaskStore {
 
   /** 存储后端标识 */

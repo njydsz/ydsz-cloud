@@ -1,1 +1,2 @@
 com.njydsz.agent.infra.trace.AgentOtelAutoConfiguration
+com.njydsz.agent.infra.asynctask.AgentAsyncTaskAutoConfiguration

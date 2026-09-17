@@ -1167,6 +1167,24 @@
                 <version>${jacoco.version}</version>
                 <scope>test</scope>
             </dependency>
+            <!-- REST Assured：HTTP 契约测试（Phase 3 E2E P0 用户旅程验证） -->
+            <dependency>
+                <groupId>io.rest-assured</groupId>
+                <artifactId>rest-assured</artifactId>
+                <version>5.5.0</version>
+                <scope>test</scope>
+                <exclusions>
+                    <!-- 与 Groovy 4.x 版本冲突兜底：统一使用 Framework 自带 Groovy -->
+                    <exclusion>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy-xml</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

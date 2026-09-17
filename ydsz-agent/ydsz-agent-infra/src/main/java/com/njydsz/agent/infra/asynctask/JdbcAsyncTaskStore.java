@@ -10,9 +10,6 @@ import java.util.Optional;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Repository;
 
 import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
@@ -32,20 +29,14 @@ import com.njydsz.agent.infra.mapper.AsyncTaskMapper;
  *   <li>定时任务可回收超时 RUNNING 任务</li>
  * </ul>
  *
- * <p><b>装配条件</b>：配置项 {@code ydsz.agent.async-task.store-type=jdbc} 时激活。
+ * <p><b>装配条件</b>：由 {@link AgentAsyncTaskAutoConfiguration} 按条件注册，
+ * 非直接 {@code @Component}，避免与内存实现产生重复 Bean。
  *
  * @author ydsz-team
  * @since 26.09.17
  */
 @Slf4j
-@Primary
-@Repository
 @RequiredArgsConstructor
-@ConditionalOnProperty(
-    prefix = "ydsz.agent.async-task",
-    name = "store-type",
-    havingValue = "jdbc",
-    matchIfMissing = false)
 public class JdbcAsyncTaskStore implements AsyncTaskStore {
 
   /** 存储后端标识 */
