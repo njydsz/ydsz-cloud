@@ -50,6 +50,16 @@ public class PromptTemplateRepositoryImpl implements PromptTemplateRepository {
   }
 
   @Override
+  public boolean updateByIdAbTest(PromptTemplateDTO dto) {
+    PromptTemplate entity = new PromptTemplate();
+    entity.setId(dto.getId());
+    entity.setIsAbTestEnabled(dto.getIsAbTestEnabled());
+    entity.setAbTargetVersion(dto.getAbTargetVersion());
+    entity.setAbTrafficPercent(dto.getAbTrafficPercent());
+    return promptTemplateMapper.updateById(entity) > 0;
+  }
+
+  @Override
   public boolean deleteById(String id) {
     return promptTemplateMapper.deleteById(id) > 0;
   }

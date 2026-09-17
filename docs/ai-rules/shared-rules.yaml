@@ -1478,8 +1478,51 @@ rules:
       3. scope 保持 test，禁止扩散到 compile/runtime
     source: "编码规范 §14.6 测试基础设施依赖管理（YDIZ-TEST-003，P1）"
 
+  # ==================== 弹性与容错（resilience） ====================
+  - id: "YDIZ-RESILIENCE-001"
+    category: "resilience"
+    severity: "P1"
+    title: "LLM 外部调用必须通过熔断器保护"
+    description: |
+      所有调用外部 LLM Provider（OpenAI/DeepSeek/Claude 等）的 HTTP 请求必须经 Resilience4j CircuitBreaker 包装。
+      推荐使用装饰器模式（ResilientLlmClient 包装 CompatibleLlmClient），熔断器按 Provider 名称隔离。
+      关键参数：滑动窗口 ≥10 次调用，失败率阈值 50%，半开态允许 3 个探测请求，冷却期 ≥30s。
+      熔断器 OPEN 态必须快速失败（CallNotPermittedException → LlmException(PROVIDER_ERROR)），防止雪崩。
+      本地配置错误（认证/模型名错误）必须 ignoreExceptions 不计入熔断统计，避免误触发。
+    pattern: "直接调用 LLM WebClient/resilience4j 但未装饰"
+    fix: "使用 ResilientLlmClient 装饰器包装底层 LlmClient"
+    source: "编码规范 §29.1 LLM 弹性设计（YDIZ-RESILIENCE-001，P1）"
+
+  # ==================== 配置管理（config） ====================
+  - id: "YDIZ-CONFIG-001"
+    category: "config"
+    severity: "P1"
+    title: "@ConfigurationProperties 类超过 200 行必须拆分为子配置类"
+    description: |
+      当 @ConfigurationProperties 注解的配置类超过 200 行或 5+ 个内部静态配置类时，
+      必须将内部静态类拆分为独立的顶级配置类，并通过 @NestedConfigurationProperty 引用。
+      拆分后主类仅保留 @ConfigurationProperties 注解 + @NestedConfigurationProperty 字段引用。
+      每个顶级配置类独立文件，命名以 Properties 后缀结尾（如 LlmProperties、RagProperties）。
+      YAML 前缀路径保持不变（Spring Boot relaxed binding 保持兼容）。
+    pattern: "@ConfigurationProperties 类 >200 行或 >5 个内部静态类"
+    fix: "拆分为独立顶级 @ConfigurationProperties 类 + @NestedCompositionProperty 注入"
+    source: "编码规范 §30.1 配置拆分规范（YDIZ-CONFIG-001，P1）"
+
+  - id: "YDIZ-CONFIG-002"
+    category: "config"
+    severity: "P2"
+    title: "模板方法模式用于多方法共享流程"
+    description: |
+      当 ≥2 个公开方法共享相同编排流程（如 ChatService 的 chat/stream 同步/流式四方法共享护栏→配额→LLM调用→成本→事件流程），
+      必须使用 Template Method 模式抽取共享流程为私有模板方法，差异部分通过回调（Supplier/Soldient）注入。
+      模板方法命名以 `do` / `execute` / `finalize` 前缀开头（如 doFinalize、executeChat）。
+      禁止 protected 重写子类（sealed/final 优先），避免模板方法模式退化为继承耦合。
+    pattern: "≥2 个方法包含 >50% 重复代码"
+    fix: "提取私有模板方法 + Supplier/Runnable 回调注入差异"
+    source: "编码规范 §30.2 共享流程模板化（YDIZ-CONFIG-002，P2）"
+
 # ============================================
-# 附录：按 category 统计（26.09.16 更新，total 58→60）
+# 附录：按 category 统计（26.09.17 更新，total 60→64）
 # ============================================
 stats:
   encoding: 1
@@ -1500,4 +1543,6 @@ stats:
   api: 2
   tx: 4
   testing: 3
-  total: 60
+  resilience: 1
+  config: 2
+  total: 64

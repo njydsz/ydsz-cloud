@@ -1,15 +1,17 @@
 package com.njydsz.agent.infra.a2a;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -55,6 +57,19 @@ public class HttpA2aClient implements A2aClient {
   /** JSON 请求体字段 */
   private static final String JSONRPC_VERSION = "2.0";
 
+  /** HTTP 成功状态码下界（含） */
+  private static final int HTTP_SUCCESS_LOW = 200;
+  /** HTTP 成功状态码上界（不含） */
+  private static final int HTTP_SUCCESS_HIGH = 300;
+  /** HTTP 客户端错误状态码下界（含） */
+  private static final int HTTP_CLIENT_ERROR_LOW = 400;
+  /** HashMap 默认初始容量（小对象） */
+  private static final int SMALL_MAP_CAPACITY = 4;
+  /** HashMap 默认初始容量（请求体） */
+  private static final int REQUEST_BODY_CAPACITY = 8;
+  /** 双元素 HashMap 初始容量 */
+  private static final int PAIR_MAP_CAPACITY = 2;
+
   /** A2A 配置 */
   private final A2aProperties a2aProperties;
 
@@ -87,7 +102,7 @@ public class HttpA2aClient implements A2aClient {
           .build();
       HttpResponse<String> response = httpClient.send(request,
           HttpResponse.BodyHandlers.ofString());
-      if (response.statusCode() >= 200 && response.statusCode() < 300) {
+      if (response.statusCode() >= HTTP_SUCCESS_LOW && response.statusCode() < HTTP_SUCCESS_HIGH) {
         return parseAgentCard(response.body());
       }
       throw new A2aException(
@@ -95,7 +110,7 @@ public class HttpA2aClient implements A2aClient {
           A2aException.A2aErrorType.AGENT_UNAVAILABLE);
     } catch (A2aException e) {
       throw e;
-    } catch (java.io.IOException e) {
+    } catch (IOException e) {
       throw new A2aException(
           "A2A 网络异常: " + e.getMessage(),
           A2aException.A2aErrorType.NETWORK_TIMEOUT, e);
@@ -116,7 +131,7 @@ public class HttpA2aClient implements A2aClient {
   public A2aTask sendMessage(String agentUrl, String message,
       Map<String, Object> metadata) {
     validateAgentUrl(agentUrl);
-    Map<String, Object> params = new HashMap<>(4);
+    Map<String, Object> params = new HashMap<>(SMALL_MAP_CAPACITY);
     params.put("message", buildTextMessage(message));
     if (metadata != null && !metadata.isEmpty()) {
       params.put("metadata", metadata);
@@ -134,7 +149,7 @@ public class HttpA2aClient implements A2aClient {
   @Override
   public A2aTask getTask(String agentUrl, String taskId) {
     validateAgentUrl(agentUrl);
-    Map<String, Object> params = new HashMap<>(4);
+    Map<String, Object> params = new HashMap<>(SMALL_MAP_CAPACITY);
     params.put("id", taskId);
     Map<String, Object> response = callJsonRpc(agentUrl, METHOD_GET_TASK, params);
     return parseTaskResponse(response);
@@ -168,7 +183,7 @@ public class HttpA2aClient implements A2aClient {
   @Override
   public A2aTask cancelTask(String agentUrl, String taskId) {
     validateAgentUrl(agentUrl);
-    Map<String, Object> params = new HashMap<>(4);
+    Map<String, Object> params = new HashMap<>(SMALL_MAP_CAPACITY);
     params.put("id", taskId);
     Map<String, Object> response = callJsonRpc(agentUrl, METHOD_CANCEL_TASK, params);
     return parseTaskResponse(response);
@@ -193,11 +208,11 @@ public class HttpA2aClient implements A2aClient {
   private Map<String, Object> callJsonRpc(String agentUrl, String method,
       Map<String, Object> params) {
     try {
-      Map<String, Object> requestBody = new HashMap<>(8);
+      Map<String, Object> requestBody = new HashMap<>(REQUEST_BODY_CAPACITY);
       requestBody.put("jsonrpc", JSONRPC_VERSION);
       requestBody.put("method", method);
       requestBody.put("params", params);
-      requestBody.put("id", java.util.UUID.randomUUID().toString());
+      requestBody.put("id", UUID.randomUUID().toString());
       String jsonBody = YdszJson.toJson(requestBody);
       String endpointUrl = agentUrl.endsWith("/")
           ? agentUrl + "api/v1"
@@ -212,7 +227,7 @@ public class HttpA2aClient implements A2aClient {
           .build();
       HttpResponse<String> response = httpClient.send(request,
           HttpResponse.BodyHandlers.ofString());
-      if (response.statusCode() >= 400) {
+      if (response.statusCode() >= HTTP_CLIENT_ERROR_LOW) {
         throw new A2aException(
             "A2A JSON-RPC 调用失败 (HTTP " + response.statusCode() + "): " + method,
             A2aException.A2aErrorType.PROTOCOL_ERROR);
@@ -220,7 +235,7 @@ public class HttpA2aClient implements A2aClient {
       return parseJsonRpcResponse(response.body());
     } catch (A2aException e) {
       throw e;
-    } catch (java.io.IOException e) {
+    } catch (IOException e) {
       throw new A2aException(
           "A2A 网络异常: " + e.getMessage(),
           A2aException.A2aErrorType.NETWORK_TIMEOUT, e);
@@ -236,12 +251,12 @@ public class HttpA2aClient implements A2aClient {
    * 构建文本消息体。
    */
   private Map<String, Object> buildTextMessage(String text) {
-    Map<String, Object> message = new HashMap<>(4);
+    Map<String, Object> message = new HashMap<>(SMALL_MAP_CAPACITY);
     message.put("role", "user");
-    Map<String, Object> part = new HashMap<>(2);
+    Map<String, Object> part = new HashMap<>(PAIR_MAP_CAPACITY);
     part.put("type", "text");
     part.put("text", text);
-    message.put("parts", java.util.List.of(part));
+    message.put("parts", List.of(part));
     return message;
   }
 
@@ -301,7 +316,7 @@ public class HttpA2aClient implements A2aClient {
       card.setUrl(node.get("url") != null ? node.get("url").asText() : null);
       card.setVersion(node.get("version") != null ? node.get("version").asText() : null);
       if (node.get("capabilities") != null && node.get("capabilities").isArray()) {
-        java.util.List<String> caps = new java.util.ArrayList<>();
+        List<String> caps = new ArrayList<>();
         var elems = node.get("capabilities").elements();
         while (elems.hasNext()) {
           caps.add(elems.next().asText());

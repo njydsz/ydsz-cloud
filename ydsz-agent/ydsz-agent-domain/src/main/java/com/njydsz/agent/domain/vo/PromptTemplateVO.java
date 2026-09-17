@@ -42,6 +42,15 @@ public class PromptTemplateVO implements Serializable {
   /** 当前版本号，自 1 起每次更新递增 */
   private Integer currentVersion;
 
+  /** 是否启用 A/B 灰度测试 */
+  private Boolean isAbTestEnabled;
+
+  /** A/B 灰度目标版本（canary 版本号） */
+  private Integer abTargetVersion;
+
+  /** A/B 灰度流量百分比（1-100） */
+  private Integer abTrafficPercent;
+
   /** 创建人 */
   private String createdBy;
 

@@ -44,6 +44,14 @@ public interface PromptTemplateRepository {
   boolean updateById(PromptTemplateDTO dto);
 
   /**
+   * 根据 ID 仅更新 A/B 灰度测试字段（避免覆盖版本号/内容等业务字段）。
+   *
+   * @param dto 仅需含 id + isAbTestEnabled + abTargetVersion + abTrafficPercent
+   * @return 更新成功返回 true
+   */
+  boolean updateByIdAbTest(PromptTemplateDTO dto);
+
+  /**
    * 根据 ID 逻辑删除 Prompt 模板
    *
    * @param id 主键 ID

@@ -3,7 +3,6 @@ package com.njydsz.agent.server.prompt;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,22 +20,31 @@ import com.njydsz.agent.domain.vo.PromptTemplateVO;
 import com.njydsz.agent.domain.vo.PromptVersionVO;
 
 /**
- * Prompt 管理服务
+ * Prompt 管理服务（含版本管理 + 发布/灰度/回滚能力）
  *
- * <p>提供 Prompt 模板的 CRUD、版本管理和变量替换能力。 底层使用数据库持久化，内存缓存加速热点读取。
- *
- * <h3>核心能力</h3>
+ * <p>提供 Prompt 模板的完整生命周期管理：
  *
  * <ul>
  *   <li>Prompt 模板 CRUD（数据库存储，重启不丢失）
- *   <li>版本管理（每次更新创建新版本，可回滚）
- *   <li>分类检索
- *   <li>变量替换（#{var} 占位符）
+ *   <li>版本管理（每次更新创建新版本快照；支持蓝绿发布与回滚）
+ *   <li>灰度发布（A/B 测试流量切分，按比例将请求路由到新旧版本）
+ *   <li>分类检索与变量替换（#{var} 占位符）
  * </ul>
  *
  * <h3>缓存策略</h3>
  *
  * <p>首次读取后缓存在内存中，写操作同步更新缓存与数据库， 确保单实例内读取一致性。多实例部署时依赖数据库保证最终一致性。
+ *
+ * <h3>灰度发布策略</h3>
+ *
+ * <p>通过灰度配置（{@link com.njydsz.agent.domain.dto.PromptTemplateDTO#getAbTrafficPercent()}  +
+ * {@code abTargetVersion}）控制新旧版本流量切分比例。路由算法采用 contextId 取模（保证同一用户会话一致性）：
+ *
+ * <pre>
+ * slot = hash(contextId) % 100
+ * slot &lt; abTrafficPercent → 新版本
+ * slot &ge; abTrafficPercent → 稳定版本
+ * </pre>
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -56,6 +64,9 @@ public class PromptManagementService {
 
   /** 是否已执行缓存预热 */
   private final AtomicBoolean cacheWarmed = new AtomicBoolean(false);
+
+  /** 灰度流量分母（百分比精度） */
+  private static final int AB_TEST_DENOMINATOR = 100;
 
   public PromptManagementService(
       PromptTemplateRepository templateRepository, PromptVersionRepository versionRepository) {
@@ -131,9 +142,7 @@ public class PromptManagementService {
     templateDTO.setCategory(existing.getCategory());
     templateDTO.setCurrentVersion(newVersion);
     templateRepository.updateById(templateDTO);
-    // 插入新版本快照
     insertVersion(code, newVersion, content, null);
-    // 更新缓存
     PromptTemplate updated =
         new PromptTemplate(
             existing.getTemplateCode(),
@@ -161,6 +170,145 @@ public class PromptManagementService {
       return cached;
     }
     return loadAndCache(code);
+  }
+
+  /**
+   * 获取 Prompt 模板内容（带灰度路由）。
+   *
+   * <p>当模板启用 A/B 测试时，使用 {@code contextId} 计算路由：
+   * 流量按比例分配到 stable 版本（currentVersion - 1）和 canary 版本（currentVersion）。 当参数 {@code contextId} 为 null 时直接返回稳定版本。
+   *
+   * @param code 模板编码
+   * @param contextId 请求上下文 ID（用户 ID / 会话 ID 等），为 null 时使用稳定版本
+   * @return 路由到的 Prompt 内容
+   * @throws IllegalArgumentException 当模板不存在时抛出
+   */
+  public String getContentWithAbTest(String code, String contextId) {
+    PromptTemplateVO config = selectByCode(code);
+    if (config == null) {
+      throw new IllegalArgumentException("Prompt 模板不存在: " + code);
+    }
+    if (!Boolean.TRUE.equals(config.getIsAbTestEnabled())
+        || config.getAbTrafficPercent() == null
+        || config.getAbTargetVersion() == null
+        || contextId == null
+        || contextId.isBlank()) {
+      // 灰度未启用或无 contextId → 返回稳定版本
+      return config.getContent();
+    }
+    int trafficPercent = Math.min(config.getAbTrafficPercent(), AB_TEST_DENOMINATOR);
+    int slot = Math.abs(contextId.hashCode()) % AB_TEST_DENOMINATOR;
+    if (slot < trafficPercent) {
+      // 路由到灰度（目标）版本
+      PromptVersion pv = getVersion(code, config.getAbTargetVersion());
+      if (pv != null) {
+        log.trace("[Prompt] A/B 灰度命中: code={}, contextId={}, targetVersion={}",
+            code, contextId, config.getAbTargetVersion());
+        return pv.content();
+      }
+    }
+    // 稳定版本（主表）
+    return config.getContent();
+  }
+
+  /**
+   * 发布（激活）指定版本 — 蓝绿发布。
+   *
+   * <p>将目标版本的内容激活到主表（当前生效版本），实现蓝绿切换。
+   *
+   * @param code 模板编码
+   * @param targetVersion 要激活的版本号
+   * @param changeNote 发布说明
+   * @return 激活后的模板
+   */
+  @Transactional
+  public PromptTemplate releaseVersion(String code, int targetVersion, String changeNote) {
+    PromptVersion pv = getVersion(code, targetVersion);
+    if (pv == null) {
+      throw new IllegalArgumentException("版本不存在: " + targetVersion);
+    }
+    PromptTemplateVO existing = selectByCode(code);
+    LocalDateTime now = LocalDateTime.now();
+    PromptTemplateDTO templateDTO = new PromptTemplateDTO();
+    templateDTO.setId(existing.getId());
+    templateDTO.setTemplateCode(existing.getTemplateCode());
+    templateDTO.setTemplateName(existing.getTemplateName());
+    templateDTO.setContent(pv.content());
+    templateDTO.setDescription(existing.getDescription());
+    templateDTO.setCategory(existing.getCategory());
+    templateDTO.setCurrentVersion(targetVersion);
+    templateDTO.setIsAbTestEnabled(false);
+    templateDTO.setAbTrafficPercent(null);
+    templateDTO.setAbTargetVersion(null);
+    templateRepository.updateById(templateDTO);
+    insertVersion(code, targetVersion, pv.content(),
+        "发布版本" + targetVersion + (changeNote != null ? ": " + changeNote : ""));
+    PromptTemplate released =
+        new PromptTemplate(
+            existing.getTemplateCode(),
+            existing.getTemplateName(),
+            pv.content(),
+            existing.getDescription(),
+            existing.getCategory(),
+            targetVersion,
+            existing.getCreatedAt(),
+            now);
+    templateCache.put(code, released);
+    log.info("[Prompt] 发布版本: code={}, version={}", code, targetVersion);
+    return released;
+  }
+
+  /**
+   * 启用灰度测试（A/B 测试）。
+   *
+   * <p>将主表当前版本作为稳定版本，新版本作为灰度（canary）版本，按 {@code trafficPercent}% 切分流量。
+   *
+   * @param code 模板编码
+   * @param canaryVersion 灰度（canary）版本号
+   * @param trafficPercent 灰度流量百分比（1-100）
+   */
+  @Transactional
+  public void enableAbTest(String code, int canaryVersion, int trafficPercent) {
+    PromptTemplateVO existing = selectByCode(code);
+    if (existing == null) {
+      throw new IllegalArgumentException("Prompt 模板不存在: " + code);
+    }
+    PromptVersion pv = getVersion(code, canaryVersion);
+    if (pv == null) {
+      throw new IllegalArgumentException("灰度版本不存在: " + canaryVersion);
+    }
+    PromptTemplateDTO templateDTO = new PromptTemplateDTO();
+    templateDTO.setId(existing.getId());
+    templateDTO.setIsAbTestEnabled(true);
+    templateDTO.setAbTargetVersion(canaryVersion);
+    templateDTO.setAbTrafficPercent(Math.min(trafficPercent, AB_TEST_DENOMINATOR));
+    templateRepository.updateByIdAbTest(templateDTO);
+    templateCache.remove(code);
+    log.info("[Prompt] 启用 A/B 灰度: code={}, canaryVersion={}, trafficPercent={}%",
+        code, canaryVersion, trafficPercent);
+  }
+
+  /**
+   * 停止灰度测试。
+   *
+   * <p>关闭 A/B 测试，所有流量回退到主表稳定版本。
+   *
+   * @param code 模板编码
+   */
+  @Transactional
+  public void disableAbTest(String code) {
+    PromptTemplateVO existing = selectByCode(code);
+    if (existing == null) {
+      return;
+    }
+    PromptTemplateDTO templateDTO = new PromptTemplateDTO();
+    templateDTO.setId(existing.getId());
+    templateDTO.setIsAbTestEnabled(false);
+    templateDTO.setAbTrafficPercent(null);
+    templateDTO.setAbTargetVersion(null);
+    templateRepository.updateByIdAbTest(templateDTO);
+    templateCache.remove(code);
+    log.info("[Prompt] 停用 A/B 灰度: code={}", code);
   }
 
   /**
@@ -219,16 +367,16 @@ public class PromptManagementService {
   /**
    * 删除模板（逻辑删除主表，保留版本历史以供审计）
    *
-   * @param pCode 模板编码
+   * @param code 模板编码
    */
   @Transactional
-  public void delete(String pCode) {
-    PromptTemplateVO existing = selectByCode(pCode);
+  public void delete(String code) {
+    PromptTemplateVO existing = selectByCode(code);
     if (existing != null) {
       templateRepository.deleteById(existing.getId());
-      log.info("[Prompt] 删除模板: code={}", pCode);
+      log.info("[Prompt] 删除模板: code={}", code);
     }
-    templateCache.remove(pCode);
+    templateCache.remove(code);
   }
 
   /**
@@ -324,23 +472,40 @@ public class PromptManagementService {
     if (templateVO.isEmpty()) {
       return null;
     }
-    PromptTemplateVO vo = templateVO.get();
+    PromptTemplateVO t = templateVO.get();
     PromptTemplate template =
         new PromptTemplate(
-            vo.getTemplateCode(), vo.getTemplateName(),
-            vo.getContent(), vo.getDescription(),
-            vo.getCategory(), vo.getCurrentVersion(),
-            vo.getCreatedAt(), vo.getUpdatedAt());
+            t.getTemplateCode(),
+            t.getTemplateName(),
+            t.getContent(),
+            t.getDescription(),
+            t.getCategory(),
+            t.getCurrentVersion(),
+            t.getCreatedAt(),
+            t.getUpdatedAt());
     templateCache.put(code, template);
     return template;
   }
 
-  /** 根据编码查询模板 */
+  /**
+   * 根据编码查询 Prompt 模板 VO。
+   *
+   * @param code 模板编码
+   * @return PromptTemplateVO 或 null（未找到）
+   */
   private PromptTemplateVO selectByCode(String code) {
-    return templateRepository.findByCode(code).orElse(null);
+    Optional<PromptTemplateVO> templateVO = templateRepository.findByCode(code);
+    return templateVO.orElse(null);
   }
 
-  /** 插入版本快照记录 */
+  /**
+   * 插入版本快照记录。
+   *
+   * @param code 模板编码
+   * @param version 版本号
+   * @param content 内容快照
+   * @param changeNote 版本备注
+   */
   private void insertVersion(String code, int version, String content, String changeNote) {
     PromptVersionDTO versionDTO = new PromptVersionDTO();
     versionDTO.setTemplateCode(code);
@@ -350,19 +515,21 @@ public class PromptManagementService {
     versionRepository.insert(versionDTO);
   }
 
+  // ======================== 内部模型 ========================
+
   /**
-   * Prompt 模板（当前版本快照）
+   * Prompt 模板值对象（缓存载体）。
    *
-   * <p>对外返回的不可变视图，与数据库实体解耦。
+   * <p>注意：record 字段命名需与 {@link PromptTemplateDTO} 保持语义对齐以便映射。
    *
-   * @param code 模板唯一编码
-   * @param name 模板名称
-   * @param content 模板内容，支持 #{var} 占位符
-   * @param description 模板描述
-   * @param category 分类
-   * @param version 当前版本号
-   * @param createdAt 创建时间
-   * @param updatedAt 最近更新时间
+   * @param code          模板编码
+   * @param name          模板名称
+   * @param content       模板内容
+   * @param description   模板描述
+   * @param category      模板分类
+   * @param currentVersion 当前版本号
+   * @param createdAt     创建时间
+   * @param updatedAt     更新时间
    */
   public record PromptTemplate(
       String code,
@@ -370,31 +537,55 @@ public class PromptManagementService {
       String content,
       String description,
       String category,
-      int version,
+      int currentVersion,
       LocalDateTime createdAt,
       LocalDateTime updatedAt) {
 
-    public PromptTemplate {
-      Objects.requireNonNull(code, "code 不能为 null");
+    /** 内容 getter（兼容旧调用路径）。
+     *
+     * @return 模板内容
+     */
+    public String content() {
+      return content;
+    }
+
+    /** 分类 getter（兼容旧调用路径）。
+     *
+     * @return 模板分类
+     */
+    public String category() {
+      return category;
+    }
+
+    /** 当前版本 getter。
+     *
+     * @return 当前版本号
+     */
+    public int version() {
+      return currentVersion;
     }
   }
 
   /**
-   * Prompt 模板的历史版本。
+   * Prompt 版本值对象。
    *
-   * @param code 所属模板编码
-   * @param version 版本号
-   * @param content 该版本的模板内容快照
-   * @param createdAt 版本创建时间
+   * @param templateCode 模板编码
+   * @param version      版本号
+   * @param content      版本内容
+   * @param createdAt    创建时间
    */
   public record PromptVersion(
-      String code,
+      String templateCode,
       int version,
       String content,
       LocalDateTime createdAt) {
 
-    public PromptVersion {
-      Objects.requireNonNull(code, "code 不能为 null");
+    /** 内容 getter（兼容旧调用路径）。
+     *
+     * @return 版本内容
+     */
+    public String content() {
+      return content;
     }
   }
 }
