@@ -1,5 +1,6 @@
 package com.njydsz.agent.domain.gateway;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -68,4 +69,15 @@ public interface LlmClient {
    * @return Provider 标识
    */
   String getProvider();
+
+  /**
+   * 文本向量化（Embedding）
+   *
+   * <p>将输入文本转化为高维浮点向量，用于语义相似度计算。 Provider 需兼容 OpenAI Embeddings API 格式（{@code POST /embeddings}）。
+   *
+   * @param text 待向量化的文本（非空）
+   * @return 浮点向量表示
+   * @throws LlmException 向量化失败时抛出
+   */
+  List<Float> embed(String text);
 }

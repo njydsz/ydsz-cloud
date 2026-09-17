@@ -122,7 +122,7 @@ public class LlmSkillContentGenerator implements SkillContentGenerator {
         .temperature(0.5)
         .maxTokens(2048)
         .build();
-    String response = llmClient.chat(request).message().getContent();
+    String response = llmClient.chat(request).getMessage().getContent();
     // 清理可能的 markdown 代码块包裹
     String content = response != null ? response.trim() : "";
     if (content.startsWith("```markdown")) {

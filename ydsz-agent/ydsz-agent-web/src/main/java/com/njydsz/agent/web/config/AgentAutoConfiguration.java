@@ -864,4 +864,21 @@ public class AgentAutoConfiguration {
   public CodeExecutionService noopCodeExecutionService(AgentProperties properties) {
     return new NoopCodeExecutionService(properties.getCodeExecution().getAllowedModules());
   }
+
+  // ========================= Skill AI 辅助生成 Bean 注册 =========================
+
+  /**
+   * 装配 Skill 内容 AI 生成器。
+   *
+   * <p>基于 LLM 为 Skill 生成和优化 SKILL.md 草稿内容。当 LLM 客户端可用时生效。
+   *
+   * @param llmClient LLM 客户端
+   * @param properties Agent 配置
+   * @return Skill 内容生成器
+   */
+  @Bean
+  @ConditionalOnMissingBean(SkillContentGenerator.class)
+  public SkillContentGenerator skillContentGenerator(LlmClient llmClient, AgentProperties properties) {
+    return new LlmSkillContentGenerator(llmClient, properties.getLlm().getDefaultModel());
+  }
 }

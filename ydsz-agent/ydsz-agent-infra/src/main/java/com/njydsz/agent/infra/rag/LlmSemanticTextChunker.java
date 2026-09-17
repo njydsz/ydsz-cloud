@@ -187,7 +187,7 @@ public class LlmSemanticTextChunker implements TextChunker {
           .temperature(0.1)
           .maxTokens(100)
           .build();
-      String response = llmClient.chat(request).message().getContent();
+      String response = llmClient.chat(request).getMessage().getContent();
       if (response == null) {
         return 0;
       }
