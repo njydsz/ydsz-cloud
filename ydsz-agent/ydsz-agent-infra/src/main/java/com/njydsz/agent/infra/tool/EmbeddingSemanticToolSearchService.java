@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +46,15 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
 
   /** 相似度阈值 */
   private static final BigDecimal SIMILARITY_THRESHOLD = new BigDecimal("0.5");
+
+  /** 默认返回条数（topK 非法时使用） */
+  private static final int DEFAULT_TOP_K = 5;
+
+  /** 降级匹配时名称命中得分 */
+  private static final int FALLBACK_NAME_MATCH_SCORE = 10;
+
+  /** 降级匹配时描述命中得分 */
+  private static final int FALLBACK_DESC_MATCH_SCORE = 5;
 
   /** MathContext 精度控制（10 位有效数字） */
   private static final MathContext MATH_CONTEXT = new MathContext(10, RoundingMode.HALF_UP);
@@ -93,7 +101,7 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
       return List.of();
     }
     if (topK <= 0) {
-      topK = 5;
+      topK = DEFAULT_TOP_K;
     }
 
     // 1. 确保缓存已预热（懒初始化）
@@ -266,10 +274,10 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
       String desc = tool.getDescription() != null ? tool.getDescription().toLowerCase() : "";
       int score = 0;
       if (name.contains(lowerQuery)) {
-        score += 10;
+        score += FALLBACK_NAME_MATCH_SCORE;
       }
       if (desc.contains(lowerQuery)) {
-        score += 5;
+        score += FALLBACK_DESC_MATCH_SCORE;
       }
       if (score > 0) {
         scored.add(new ToolScore(tool, BigDecimal.valueOf(score)));

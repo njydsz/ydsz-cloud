@@ -76,6 +76,12 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
   /** MIME 类型：application/json */
   private static final String MIME_APPLICATION_JSON = "application/json";
 
+  /** OAuth token 默认过期时间（秒） */
+  private static final long DEFAULT_OAUTH_EXPIRES_IN_SECONDS = 3600L;
+
+  /** OAuth token 提前过期缓冲（秒），避免边界失效 */
+  private static final long OAUTH_EXPIRY_BUFFER_SECONDS = 60L;
+
   /** HTTP Client（线程安全，可复用） */
   private final HttpClient httpClient =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
@@ -309,9 +315,9 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
         return null;
       }
       String accessToken = accessTokenObj.toString();
-      long expiresInSeconds = expiresInObj instanceof Number ? ((Number) expiresInObj).longValue() : 3600L;
-      // 提前 60 秒过期，避免边界失效
-      long expiresAt = System.currentTimeMillis() + (expiresInSeconds - 60) * 1000L;
+      long expiresInSeconds = expiresInObj instanceof Number ? ((Number) expiresInObj).longValue() : DEFAULT_OAUTH_EXPIRES_IN_SECONDS;
+      // 提前过期缓冲，避免边界失效
+      long expiresAt = System.currentTimeMillis() + (expiresInSeconds - OAUTH_EXPIRY_BUFFER_SECONDS) * 1000L;
       oauthTokenCache.put(server.getName(), new OAuthTokenEntry(accessToken, expiresAt));
       log.info("[MCP-Streamable] OAuth token 获取成功: server={}", server.getName());
       return accessToken;
