@@ -35,6 +35,12 @@ public class HttpWebSearchService implements WebSearchService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** 摘要与标题之间的最大距离（字符），超过则不认为该摘要属于该标题 */
+  private static final int MAX_SNIPPET_DISTANCE = 2000;
+
+  /** 链接与标题之间的最大距离（字符），超过则不认为该链接属于该标题 */
+  private static final int MAX_LINK_DISTANCE = 1000;
+
   private final AgentProperties properties;
   private final RestClient restClient;
 
@@ -169,7 +175,7 @@ public class HttpWebSearchService implements WebSearchService {
       // 在标题附近查找摘要
       int snippetIdx = html.indexOf(snippetMarker, titleEnd);
       String snippet = "";
-      if (snippetIdx >= 0 && snippetIdx - titleEnd < 2000) {
+      if (snippetIdx >= 0 && snippetIdx - titleEnd < MAX_SNIPPET_DISTANCE) {
         int snippetStart = html.indexOf('>', snippetIdx);
         if (snippetStart >= 0) {
           snippetStart++;
@@ -183,7 +189,7 @@ public class HttpWebSearchService implements WebSearchService {
       // 在标题附近查找链接
       String url = "";
       int linkIdx = html.indexOf(linkMarker, titleEnd);
-      if (linkIdx >= 0 && linkIdx - titleEnd < 1000) {
+      if (linkIdx >= 0 && linkIdx - titleEnd < MAX_LINK_DISTANCE) {
         int urlStart = html.indexOf("href=\"", linkIdx);
         if (urlStart >= 0) {
           urlStart += 6;

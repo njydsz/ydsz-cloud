@@ -20,11 +20,14 @@ public class ToolSearchRequestDTO implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
+  /** 默认返回数量上限 */
+  private static final int DEFAULT_TOP_K = 5;
+
   /** 自然语言查询文本 */
   @Schema(description = "自然语言查询文本", example = "查询天气的工具")
   private String query;
 
   /** 返回数量上限（默认 5，最大 20） */
   @Schema(description = "返回数量上限（默认 5，最大 20）", example = "5")
-  private Integer topK = 5;
+  private Integer topK = DEFAULT_TOP_K;
 }

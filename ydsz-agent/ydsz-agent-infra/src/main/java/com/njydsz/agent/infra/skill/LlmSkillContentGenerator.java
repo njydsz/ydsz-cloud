@@ -8,7 +8,6 @@ import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.skill.SkillContentGenerator;
-import com.njydsz.common.json.YdszJson;
 
 /**
  * 基于 LLM 的 Skill 内容生成器实现
@@ -30,6 +29,15 @@ import com.njydsz.common.json.YdszJson;
  */
 @Slf4j
 public class LlmSkillContentGenerator implements SkillContentGenerator {
+
+  /** LLM 生成温度（控制输出随机性） */
+  private static final double GENERATION_TEMPERATURE = 0.5;
+
+  /** 生成 SKILL.md 时的最大 token 数 */
+  private static final int MAX_GENERATION_TOKENS = 2048;
+
+  /** Markdown 代码块标记长度（"```" 字符数） */
+  private static final int MARKDOWN_CODE_FENCE_LENGTH = 3;
 
   private final LlmClient llmClient;
   private final String model;
@@ -119,8 +127,8 @@ public class LlmSkillContentGenerator implements SkillContentGenerator {
     ChatRequest request = ChatRequest.builder()
         .model(model)
         .messages(messages)
-        .temperature(0.5)
-        .maxTokens(2048)
+        .temperature(GENERATION_TEMPERATURE)
+        .maxTokens(MAX_GENERATION_TOKENS)
         .build();
     String response = llmClient.chat(request).getMessage().getContent();
     // 清理可能的 markdown 代码块包裹
@@ -129,10 +137,10 @@ public class LlmSkillContentGenerator implements SkillContentGenerator {
       content = content.substring("```markdown".length()).trim();
     }
     if (content.startsWith("```")) {
-      content = content.substring(3).trim();
+      content = content.substring(MARKDOWN_CODE_FENCE_LENGTH).trim();
     }
     if (content.endsWith("```")) {
-      content = content.substring(0, content.length() - 3).trim();
+      content = content.substring(0, content.length() - MARKDOWN_CODE_FENCE_LENGTH).trim();
     }
     return content;
   }

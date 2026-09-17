@@ -57,6 +57,9 @@ public class LocalSkillRuntime implements SkillRuntime {
   /** 默认超时时间（秒） */
   private static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
+  /** 超时上限（秒），防止单次执行时间过长 */
+  private static final int MAX_TIMEOUT_SECONDS = 600;
+
   /** Python 解释器路径 */
   private final String pythonPath;
 
@@ -256,7 +259,7 @@ public class LocalSkillRuntime implements SkillRuntime {
    */
   private int resolveTimeout(SkillExecutionContext context) {
     if (context.timeoutMs() > 0) {
-      return (int) Math.min(context.timeoutMs() / 1000, 600);
+      return (int) Math.min(context.timeoutMs() / 1000, MAX_TIMEOUT_SECONDS);
     }
     return DEFAULT_TIMEOUT_SECONDS;
   }

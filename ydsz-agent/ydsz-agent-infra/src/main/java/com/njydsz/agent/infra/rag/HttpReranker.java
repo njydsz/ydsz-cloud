@@ -14,7 +14,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.config.AgentProperties;
-import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.common.json.YdszJson;

@@ -8,7 +8,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.skill.SkillDescriptor;
 import com.njydsz.agent.domain.skill.SkillExecutionContext;
@@ -16,11 +15,9 @@ import com.njydsz.agent.domain.skill.SkillExecutionException;
 import com.njydsz.agent.domain.skill.SkillExecutionResult;
 import com.njydsz.agent.domain.skill.SkillRegistry;
 import com.njydsz.agent.domain.skill.SkillRuntime;
-import com.njydsz.agent.domain.tool.ToolExecutionException;
 import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.agent.domain.tool.ToolRegistration;
 import com.njydsz.agent.domain.tool.ToolRegistry;
-import com.njydsz.common.json.YdszJson;
 
 /**
  * Skill → Tool 适配器，桥接已有 {@link ToolRegistry}。

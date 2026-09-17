@@ -159,6 +159,10 @@
          （P0-2 并发修复，无状态单例解释器），声明行被 RegexpSinglelineJava 正则匹配属规则误报，豁免 ThreadLocal 检测 -->
     <suppress files="TreeInterpreter\.java" checks="RegexpSinglelineJava" message=".*ThreadLocal.*"/>
 
+    <!-- agent TraceContextHolder：ThreadLocal 链路上下文在 clear() 的 finally 调用语义
+         （请求结束时清理），声明行被 RegexpSinglelineJava 正则匹配属规则误报，豁免 ThreadLocal 检测 -->
+    <suppress files="TraceContextHolder\.java" checks="RegexpSinglelineJava" message=".*ThreadLocal.*"/>
+
     <!-- ============================================ -->
     <!-- 3. 全部 common 子模块：算法类规则通用豁免     -->
     <!--    自研基础库（引擎/工具/配置/异常/领域模型） -->

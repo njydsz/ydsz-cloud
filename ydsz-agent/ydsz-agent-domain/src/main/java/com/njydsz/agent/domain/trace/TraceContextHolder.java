@@ -24,13 +24,13 @@ package com.njydsz.agent.domain.trace;
  */
 public final class TraceContextHolder {
 
-  /** ThreadLocal 存储链路上下文 */
-  private static final ThreadLocal<TraceContext> CONTEXT = new ThreadLocal<>();
-
   /** 工具类禁止实例化 */
   private TraceContextHolder() {
     throw new UnsupportedOperationException("工具类禁止实例化");
   }
+
+  /** ThreadLocal 存储链路上下文（clear() 方法提供 remove() 语义，确保线程池环境安全） */
+  private static final ThreadLocal<TraceContext> CONTEXT = new ThreadLocal<>();
 
   /**
    * 当前请求的业务关联维度上下文。

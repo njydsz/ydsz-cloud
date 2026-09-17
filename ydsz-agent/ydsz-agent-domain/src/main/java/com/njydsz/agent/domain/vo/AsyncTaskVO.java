@@ -4,11 +4,12 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
 import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 
 /**
  * 异步任务视图对象

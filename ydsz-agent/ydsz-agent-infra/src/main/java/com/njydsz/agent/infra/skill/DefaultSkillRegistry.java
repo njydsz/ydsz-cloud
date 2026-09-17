@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import com.njydsz.agent.domain.skill.SkillDescriptor;
 import com.njydsz.agent.domain.skill.SkillExecutionContext;
 import com.njydsz.agent.domain.skill.SkillExecutionException;
-import com.njydsz.agent.domain.skill.SkillExecutionResult;
 import com.njydsz.agent.domain.skill.SkillExecutionTarget;
 import com.njydsz.agent.domain.skill.SkillRegistry;
 import com.njydsz.agent.domain.skill.SkillRepository;
@@ -35,6 +34,9 @@ import com.njydsz.agent.domain.skill.SkillRuntime;
 @Slf4j
 @Component
 public class DefaultSkillRegistry implements SkillRegistry {
+
+  /** 超时上限（毫秒），超出此值视为配置错误 */
+  private static final long MAX_TIMEOUT_MS = 600_000L;
 
   /** Skill 注册存储 */
   private final Map<String, SkillDescriptor> registry = new ConcurrentHashMap<>();
@@ -187,7 +189,7 @@ public class DefaultSkillRegistry implements SkillRegistry {
     }
 
     // 超时校验：上限 600 秒
-    if (context.timeoutMs() > 600_000L) {
+    if (context.timeoutMs() > MAX_TIMEOUT_MS) {
       throw new SkillExecutionException(skillCode,
           "超时配置超出上限（600s）: " + context.timeoutMs() + "ms");
     }

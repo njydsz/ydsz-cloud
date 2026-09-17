@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +63,9 @@ public class DockerSandboxSkillRuntime implements SkillRuntime {
   private static final int MAX_OUTPUT_LENGTH = 1024 * 1024;
   /** 默认超时时间（秒） */
   private static final int DEFAULT_TIMEOUT_SECONDS = 60;
+
+  /** 超时上限（秒），防止单次执行时间过长 */
+  private static final int MAX_TIMEOUT_SECONDS = 600;
 
   /** Docker 镜像名称 */
   private final String dockerImage;
@@ -131,8 +136,8 @@ public class DockerSandboxSkillRuntime implements SkillRuntime {
       command.add(String.valueOf(timeout));
 
       // 挂载脚本目录到容器
-      java.nio.file.Path scriptFilePath = java.nio.file.Paths.get(scriptPath);
-      java.nio.file.Path parentDir = scriptFilePath.getParent();
+      Path scriptFilePath = Paths.get(scriptPath);
+      Path parentDir = scriptFilePath.getParent();
       if (parentDir != null) {
         command.add("-v");
         command.add(parentDir.toAbsolutePath() + ":/skill-scripts:ro");
@@ -319,7 +324,7 @@ public class DockerSandboxSkillRuntime implements SkillRuntime {
    */
   private int resolveTimeout(SkillExecutionContext context) {
     if (context.timeoutMs() > 0) {
-      return (int) Math.min(context.timeoutMs() / 1000, 600);
+      return (int) Math.min(context.timeoutMs() / 1000, MAX_TIMEOUT_SECONDS);
     }
     return DEFAULT_TIMEOUT_SECONDS;
   }

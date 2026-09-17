@@ -1,10 +1,12 @@
 package com.njydsz.agent.domain.asynctask;
 
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 异步任务实体
@@ -85,8 +87,11 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
     this.status = AsyncTaskStatus.PENDING.getCode();
     this.progressPercent = 0;
     this.retryCount = 0;
-    this.maxRetry = 3;
+    this.maxRetry = DEFAULT_MAX_RETRY;
   }
+
+  /** 默认最大重试次数 */
+  private static final int DEFAULT_MAX_RETRY = 3;
 
   /** 默认构造器（MyBatis Plus 需要）。 */
   public AsyncTask() {

@@ -2,7 +2,6 @@ package com.njydsz.agent.infra.ocr;
 
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
@@ -12,8 +11,6 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.MessageContent;
-import com.njydsz.agent.domain.model.MessageRole;
-import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.ocr.ImageFormat;
 import com.njydsz.agent.domain.ocr.OcrService;
 

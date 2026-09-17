@@ -925,7 +925,10 @@ public class AgentProperties {
     /** 是否启用 Web 搜索融合（false 时仅走 RAG 向量检索） */
     private boolean isWebEnabled = false;
 
+    /** Web 搜索默认结果占比（webResultRatio） */
+    private static final double DEFAULT_WEB_RESULT_RATIO = 0.3;
+
     /** Web 搜索最大 RAG 结果数分配比例（0-1），例如 0.3 表示 Web 结果占 30% */
-    private double webResultRatio = 0.3;
+    private double webResultRatio = DEFAULT_WEB_RESULT_RATIO;
   }
 }

@@ -1,8 +1,8 @@
 package com.njydsz.agent.domain.rag;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 /**
  * RAG 全链路调试信息（domain 层值对象）
@@ -26,14 +26,20 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class RagDebugInfo {
 
+  /** 默认 topK 值 */
+  private static final int DEFAULT_TOP_K = 5;
+
+  /** 默认最小相似度阈值 */
+  private static final double DEFAULT_MIN_SCORE = 0.7;
+
   /** 截断后的查询文本（避免日志过长） */
   private String query = "";
 
   /** 请求的 topK 值 */
-  private int topK = 5;
+  private int topK = DEFAULT_TOP_K;
 
   /** 向量检索最小相似度阈值 */
-  private double minScore = 0.7;
+  private double minScore = DEFAULT_MIN_SCORE;
 
   /** 向量检索耗时（毫秒） */
   private long vectorLatencyMs = 0;

@@ -41,6 +41,12 @@ import com.njydsz.common.json.tree.ObjectNode;
 @Slf4j
 public class LlmEntityExtractionService implements EntityExtractionService {
 
+  /** 抽取 LLM 温度参数 - 需要精确抽取 */
+  private static final double EXTRACT_TEMPERATURE = 0.1;
+
+  /** 抽取 LLM 最大输出 Token */
+  private static final int EXTRACT_MAX_TOKENS = 2048;
+
   /** 默认 chunk 切分大小（字符数） */
   private static final int DEFAULT_CHUNK_SIZE = 4000;
 
@@ -128,8 +134,8 @@ public class LlmEntityExtractionService implements EntityExtractionService {
     ChatRequest request = ChatRequest.builder()
         .model(model)
         .messages(List.of(systemMsg, userMsg))
-        .temperature(0.1)
-        .maxTokens(2048)
+        .temperature(EXTRACT_TEMPERATURE)
+        .maxTokens(EXTRACT_MAX_TOKENS)
         .build();
 
     ChatResponse response = llmClient.chat(request);

@@ -43,6 +43,9 @@ public class RegexTextChunker implements TextChunker {
   /** 最小段落长度（字符），低于此值与相邻段落合并 */
   private static final int MIN_SECTION_LENGTH = 50;
 
+  /** 默认分块大小（字符），当传入值 <= 100 时使用此默认值 */
+  private static final int DEFAULT_CHUNK_SIZE = 500;
+
   /** 分隔符正则 Pattern */
   private final Pattern separatorPattern;
 
@@ -64,7 +67,7 @@ public class RegexTextChunker implements TextChunker {
    */
   public RegexTextChunker(int chunkSize, int overlap, String separatorRegex) {
     this.separatorPattern = Pattern.compile(separatorRegex != null ? separatorRegex : "\\n#{1,3}\\s");
-    this.chunkSize = chunkSize > 100 ? chunkSize : 500;
+    this.chunkSize = chunkSize > 100 ? chunkSize : DEFAULT_CHUNK_SIZE;
     this.overlap = Math.min(overlap >= 0 ? overlap : 100, this.chunkSize / 2);
   }
 

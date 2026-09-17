@@ -44,6 +44,7 @@ import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.rollback.ConfigRollbackStrategy;
 import com.njydsz.system.server.service.impl.ConfigServiceImpl;
+import com.njydsz.system.server.config.SystemProperties.ConfigCache;
 
 /**
  * ConfigServiceImpl 单元测试（纯 Mockito，无 Spring 容器，云顶编码规范 §14.1 测试金字塔顶层）。
@@ -81,7 +82,9 @@ class ConfigServiceImplTest {
   @BeforeEach
   void setUp() {
     // strictValidation 默认为 false（向后兼容存量非法值）
-    when(properties.isStrictValidation()).thenReturn(false);
+    ConfigCache configCache = mock(ConfigCache.class);
+    when(properties.getConfig()).thenReturn(configCache);
+    when(configCache.isStrictValidation()).thenReturn(false);
     // SpEL @cacheKeyBuilder 调用全部返回 testKey，不影响黑盒行为
     when(cacheKeyBuilder.configValue(anyString())).thenReturn("testKey");
     when(cacheKeyBuilder.configGroup(anyString())).thenReturn("testGroup");
@@ -103,7 +106,7 @@ class ConfigServiceImplTest {
       PageResponse<ConfigVO> result = configService.pageByCursor("grp", "k", 0, null);
 
       verify(configRepository).findForCursor("grp", "k", null, 1);
-      assertThat(result.getData()).isEmpty();
+      assertThat((java.util.List<ConfigVO>) result.getData()).isEmpty();
       assertThat(result.getNextCursor()).isNull();
     }
 
@@ -195,7 +198,7 @@ class ConfigServiceImplTest {
     @Test
     @DisplayName("strictValidation=true + 格式非法时应抛出异常")
     void shouldThrowWhenStrictValidationFails() {
-      when(properties.isStrictValidation()).thenReturn(true);
+      when(properties.getConfig().isStrictValidation()).thenReturn(true);
       ConfigDTO dto = new ConfigDTO();
       dto.setConfigGroup("sys");
       dto.setConfigKey("num.key");
@@ -212,7 +215,7 @@ class ConfigServiceImplTest {
     @Test
     @DisplayName("strictValidation=false + 格式非法时应放行（仅告警）")
     void shouldPassWhenLooseValidation() {
-      when(properties.isStrictValidation()).thenReturn(false);
+      when(properties.getConfig().isStrictValidation()).thenReturn(false);
       ConfigDTO dto = new ConfigDTO();
       dto.setId("loose-id");
       dto.setConfigGroup("sys");
