@@ -567,7 +567,7 @@ public class AgentProperties {
     private boolean isFailFast = true;
 
     /** 是否启用工具结果驱逐（默认关闭，避免无预警截断） */
-    private boolean evictionEnabled = false;
+    private boolean isEvictionEnabled = false;
 
     /**
      * 单个工具结果最大字符数；超过则截断并附加 "...[truncated]" 标记。

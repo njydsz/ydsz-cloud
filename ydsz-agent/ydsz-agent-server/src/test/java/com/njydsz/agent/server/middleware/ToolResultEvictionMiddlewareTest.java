@@ -48,7 +48,7 @@ class ToolResultEvictionMiddlewareTest {
   @DisplayName("未启用时透传结果")
   void disabledShouldPassThrough() throws Exception {
     AgentProperties properties = new AgentProperties();
-    properties.getTool().setEvictionEnabled(false);
+    properties.getTool().setIsEvictionEnabled(false);
     ToolResultEvictionMiddleware middleware = new ToolResultEvictionMiddleware(properties);
     Map<String, String> original = Map.of("r1", "a".repeat(10_000));
     when(proceed.execute()).thenReturn(original);
@@ -66,7 +66,7 @@ class ToolResultEvictionMiddlewareTest {
   @DisplayName("单结果字符超限截断")
   void perResultCharLimitShouldTruncate() throws Exception {
     AgentProperties properties = new AgentProperties();
-    properties.getTool().setEvictionEnabled(true);
+    properties.getTool().setIsEvictionEnabled(true);
     properties.getTool().setEvictionMaxResultChars(100);
     ToolResultEvictionMiddleware middleware = new ToolResultEvictionMiddleware(properties);
     Map<String, String> results = new HashMap<>();
@@ -89,7 +89,7 @@ class ToolResultEvictionMiddlewareTest {
   @DisplayName("单结果 Token 超限截断")
   void perResultTokenLimitShouldTruncate() throws Exception {
     AgentProperties properties = new AgentProperties();
-    properties.getTool().setEvictionEnabled(true);
+    properties.getTool().setIsEvictionEnabled(true);
     properties.getTool().setEvictionMaxResultTokens(20);
     ToolResultEvictionMiddleware middleware = new ToolResultEvictionMiddleware(properties);
     when(proceed.execute()).thenReturn(Map.of("r1", "a".repeat(100)));
@@ -109,7 +109,7 @@ class ToolResultEvictionMiddlewareTest {
   @DisplayName("总字符超限按比例压缩")
   void totalCharLimitShouldCompressProportionally() throws Exception {
     AgentProperties properties = new AgentProperties();
-    properties.getTool().setEvictionEnabled(true);
+    properties.getTool().setIsEvictionEnabled(true);
     properties.getTool().setEvictionMaxResultChars(-1);
     properties.getTool().setEvictionMaxTotalChars(100);
     ToolResultEvictionMiddleware middleware = new ToolResultEvictionMiddleware(properties);
@@ -135,7 +135,7 @@ class ToolResultEvictionMiddlewareTest {
   @DisplayName("空结果不报错")
   void emptyResultsShouldHandleGracefully() throws Exception {
     AgentProperties properties = new AgentProperties();
-    properties.getTool().setEvictionEnabled(true);
+    properties.getTool().setIsEvictionEnabled(true);
     ToolResultEvictionMiddleware middleware = new ToolResultEvictionMiddleware(properties);
     when(proceed.execute()).thenReturn(Map.of());
 
