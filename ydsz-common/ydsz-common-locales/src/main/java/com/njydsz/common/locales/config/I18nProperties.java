@@ -60,16 +60,31 @@ public class I18nProperties {
   private static final String[] DEFAULT_BASENAMES = {
     "classpath:i18n/exception-messages",
     "classpath:i18n/base-messages",
+    "classpath:i18n/config-messages",
     "classpath:i18n/core-messages",
-    "classpath:i18n/common-web-messages",
+    "classpath:i18n/docs-messages",
+    "classpath:i18n/excel-messages",
+    "classpath:i18n/feign-messages",
+    "classpath:i18n/file-messages",
+    "classpath:i18n/jdbc-messages",
+    "classpath:i18n/lock-messages",
+    "classpath:i18n/notify-messages",
+    "classpath:i18n/redis-messages",
+    "classpath:i18n/safe-messages",
+    "classpath:i18n/search-messages",
+    "classpath:i18n/seata-messages",
     "classpath:i18n/tenant-messages",
+    "classpath:i18n/docs-messages",
+    "classpath:i18n/common-web-messages",
+    "classpath:com/njydsz/common/util/password/password-messages",
     "classpath:i18n/userinfo-messages",
     "classpath:i18n/nextwiki-messages",
     "classpath:i18n/message-messages",
     "classpath:i18n/cronjob-messages",
     "classpath:i18n/literule-messages",
     "classpath:i18n/workflow-messages",
-    "classpath:i18n/agent-messages"
+    "classpath:i18n/agent-messages",
+    "classpath:i18n/system-messages"
   };
 
   /**
