@@ -1,5 +1,8 @@
 package com.njydsz.agent.web.controller;
 
+import java.util.List;
+import java.util.UUID;
+
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,15 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.repository.DagWorkflowRepository;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-
-import java.util.List;
-import java.util.UUID;
 
 /**
  * DAG 工作流持久化管理 Controller。
@@ -34,6 +33,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/agent/dag-workflow")
 public class DagWorkflowController {
+
+  /** 工作流编码中 UUID 前缀截取长度。 */
+  private static final int WORKFLOW_CODE_PREFIX_LENGTH = 12;
 
   private final DagWorkflowRepository repository;
 
@@ -113,6 +115,6 @@ public class DagWorkflowController {
 
   /** 生成工作流编码：dag-{UUID 前 12 位} */
   private String generateWorkflowCode() {
-    return "dag-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+    return "dag-" + UUID.randomUUID().toString().replace("-", "").substring(0, WORKFLOW_CODE_PREFIX_LENGTH);
   }
 }
