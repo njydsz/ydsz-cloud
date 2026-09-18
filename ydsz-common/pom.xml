@@ -96,8 +96,6 @@
         <module>ydsz-common-base</module>
         <module>ydsz-common-app</module>
         <module>ydsz-common-web</module>
-        <!-- 架构守护测试 -->
-        <module>ydsz-common-architecture-test</module>
     </modules>
 
     <dependencyManagement>
