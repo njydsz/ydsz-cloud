@@ -2,7 +2,6 @@ package com.njydsz.common.locales.util;
 
 import java.util.Locale;
 
-import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
 
@@ -47,7 +46,7 @@ import org.springframework.lang.Nullable;
  * @author ydsz-team
  * @since 26.09.18
  * @see I18nMessages
- * @see com.njydsz.common.exception.custom.MessageSourceHolder
+ * @see MessageSourceHolder
  */
 public final class I18n {
 
@@ -86,8 +85,7 @@ public final class I18n {
    * @return 解析后的消息；key 未找到时返回 key 本身
    */
   public static String message(String key, @Nullable Object[] params, @Nullable Locale locale) {
-    com.njydsz.common.exception.custom.MessageSourceHolder.MessageResolver resolver =
-        com.njydsz.common.exception.custom.MessageSourceHolder.getResolver();
+    MessageResolver resolver = MessageSourceHolder.getResolver();
     if (resolver == null) {
       return key;
     }
