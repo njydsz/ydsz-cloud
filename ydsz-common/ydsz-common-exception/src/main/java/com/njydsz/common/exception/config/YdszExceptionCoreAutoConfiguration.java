@@ -19,6 +19,7 @@ import org.springframework.core.env.Environment;
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 import com.njydsz.common.exception.registry.ExceptionCodeScanner;
+import com.njydsz.common.locales.config.I18nProperties;
 import com.njydsz.common.locales.config.LocalesAutoConfiguration;
 import com.njydsz.common.locales.util.MessageSourceHolder;
 
@@ -82,21 +83,26 @@ public class YdszExceptionCoreAutoConfiguration {
    * 创建错误码自动扫描注册器 Bean。
    *
    * <p>扫描与 i18n key 校验在全部单例 Bean 实例化完成后执行（{@code SmartInitializingSingleton}）， 确保 fail-fast
-   * 校验基于完整注册表，而非空表空转。
+   * 校验基于完整注册表，而非空表空转。 {@code i18nProperties} 用于执行资源文件 basename 存在性校验（26.09.18 增强）。
    *
    * @param errorCodeTable 错误码注册表，扫描到的 {@code @YdszExceptionCode} 全部注册到此表；
    *     由 {@link #errorCodeTable()} 提供，容器缺失时由该方法兜底创建空表
    * @param messageSource 国际化消息源
    * @param env Spring 环境对象
+   * @param i18nProperties i18n 配置属性（通过 {@link LocalesAutoConfiguration} 注册），可为 null
    * @return 处理结果
    */
   @Bean
   @ConditionalOnMissingBean(ExceptionCodeScanner.class)
   public ExceptionCodeScanner exceptionCodeScanner(
-      ErrorCodeTable errorCodeTable, MessageSource messageSource, Environment env) {
+      ErrorCodeTable errorCodeTable,
+      MessageSource messageSource,
+      Environment env,
+      ObjectProvider<I18nProperties> i18nPropertiesProvider) {
     boolean validateOnStartup =
         env == null || env.getProperty("ydsz.i18n.validate-on-startup", Boolean.class, true);
-    return new ExceptionCodeScanner(errorCodeTable, messageSource, validateOnStartup);
+    I18nProperties i18nProperties = i18nPropertiesProvider.getIfAvailable();
+    return new ExceptionCodeScanner(errorCodeTable, messageSource, validateOnStartup, i18nProperties);
   }
 
   // ==================== MessageSource 静态注入 ====================

@@ -25,11 +25,17 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.locales.config.I18nProperties;
 
 /**
  * 错误码自动扫描注册器。
  *
- * <p>启动时扫描所有标注 {@link YdszExceptionCode} 注解的枚举类， 将其注册到统一错误码表 {@link ErrorCodeTable}（单一注册中心）。
+ * <p>启动时扫描所有标注 {@link YdszExceptionCode} 注解的枚举类，将其注册到统一错误码表 {@link ErrorCodeTable}（单一注册中心）。
+ *
+ * <p><b>i18n fail-fast 校验（26.09.18 增强）：</b>除既有 ExceptionCode key 的解析校验外， 新增基于 {@link
+ * com.njydsz.common.locales.config.I18nProperties#getScanBasenames()} 的资源文件存在性校验，
+ * 对每个已声明的 basename 前缀检查其兜底 `{prefix}-messages.properties` 是否真实存在于 classpath，
+ * 缺失时输出 WARN（不阻断，因部分模块仅依赖 i18n 不定义资源文件）。
  *
  * <p><b>时序说明：</b>实现 {@link SmartInitializingSingleton}，在全部单例 Bean 实例化完成后 执行扫描注册与 i18n key fail-fast
  * 校验，保证校验时机晚于注册，避免"校验空转"。
@@ -73,6 +79,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
   private final ErrorCodeTable errorCodeTable;
   private final MessageSource messageSource;
   private final boolean validateOnStartup;
+  private final String[] scanBasenames;
   private final AnnotationTypeFilter annotationFilter =
       new AnnotationTypeFilter(YdszExceptionCode.class);
   private final ResourcePatternResolver resourceResolver =
@@ -88,23 +95,47 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
   private transient int totalCodes;
 
   /**
-   * 构造扫描注册器。
+   * 构造扫描注册器（不含 i18n basename 校验，兼容旧版调用方）。
    *
    * @param errorCodeTable 统一错误码表（可为 null，为 null 时跳过注册）
    * @param messageSource 国际化消息源（用于 i18n key fail-fast 校验）
    * @param validateOnStartup 是否启动时校验 i18n key 可解析
+   * @deprecated 推荐使用 4 参数构造器 {@link #ExceptionCodeScanner(ErrorCodeTable, MessageSource, boolean,
+   *     I18nProperties)}，以启用 basename 扫描校验
    */
+  @Deprecated
   public ExceptionCodeScanner(
       ErrorCodeTable errorCodeTable, MessageSource messageSource, boolean validateOnStartup) {
+    this(errorCodeTable, messageSource, validateOnStartup, null);
+  }
+
+  /**
+   * 构造扫描注册器（含 i18n basename 扫描校验，26.09.18 增强）。
+   *
+   * @param errorCodeTable 统一错误码表（可为 null，为 null 时跳过注册）
+   * @param messageSource 国际化消息源（用于 i18n key fail-fast 校验）
+   * @param validateOnStartup 是否启动时校验 i18n key 可解析
+   * @param i18nProperties i18n 配置属性（可为 null，为 null 时跳过 basename 校验）
+   */
+  public ExceptionCodeScanner(
+      ErrorCodeTable errorCodeTable,
+      MessageSource messageSource,
+      boolean validateOnStartup,
+      I18nProperties i18nProperties) {
     this.errorCodeTable = errorCodeTable;
     this.messageSource = messageSource;
     this.validateOnStartup = validateOnStartup;
+    this.scanBasenames =
+        i18nProperties != null
+            ? i18nProperties.getScanBasenames()
+            : new String[] {};
   }
 
   /**
    * 所有单例 Bean 实例化完成后执行扫描注册与 i18n key 校验。
    *
-   * <p>扫描先于校验，保证 fail-fast 校验基于完整注册表执行。
+   * <p>扫描先于校验，保证 fail-fast 校验基于完整注册表执行。 校验包含两层：ExceptionCode key 可解析性 +
+   * 已声明 basename 的资源文件存在性。
    */
   @Override
   public void afterSingletonsInstantiated() {
@@ -112,6 +143,52 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
     if (validateOnStartup && messageSource != null) {
       validateExceptionCodeKeys();
     }
+    if (validateOnStartup && scanBasenames != null && scanBasenames.length > 0) {
+      validateResourceBasenames();
+    }
+  }
+
+  /**
+   * 校验已声明的 i18n basename 前缀其兜底资源文件是否存在于 classpath。
+   *
+   * <p>对每个 scanbasename，拼出 `{prefix}.messages.properties` 路径， 通过 Spring ResourcePatternResolver 检查
+   * classpath 是否真正存在该文件。缺失时输出 WARN（不阻断，因部分模块仅消费 i18n 不声明资源文件）。
+   *
+   * <p>典型触发场景：新模块接入 i18n 后在 `I18nProperties.DEFAULT_BASENAMES` 追加了前缀，
+   * 但资源文件尚未创建。
+   */
+  public void validateResourceBasenames() {
+    if (scanBasenames == null || scanBasenames.length == 0) {
+      return;
+    }
+    List<String> missingBasenames = new ArrayList<>(2);
+    for (String basename : scanBasenames) {
+      if (basename == null || basename.isEmpty()) {
+        continue;
+      }
+      // basename 形如 classpath:i18n/exception-messages，需拼出兜底文件路径
+      String defaultResourcePath = basename + ".properties";
+      try {
+        Resource[] found = resourceResolver.getResources(defaultResourcePath);
+        long existingCount =
+            java.util.Arrays.stream(found).filter(Resource::exists).count();
+        if (existingCount == 0) {
+          missingBasenames.add(basename);
+          log.warn(
+              "[ExceptionCodeScanner] i18n 资源文件缺失：basename '{}' 对应的兜底文件 {} 在 classpath 中不存在。"
+                  + "请在对应模块创建 {}_messages.properties 或从 I18nProperties 的 basename 列表中移除此前缀。",
+              basename,
+              defaultResourcePath,
+              basename.replace("classpath:i18n/", "").replace("-messages", ""));
+        }
+      } catch (Exception e) {
+        log.debug("[ExceptionCodeScanner] 校验 basename '{}' 时 IO 异常: {}", basename, e.getMessage());
+      }
+    }
+    log.info(
+        "[ExceptionCodeScanner] i18n 资源基数校验完成：已声明 {} 个 basename，缺失 {} 个",
+        scanBasenames.length,
+        missingBasenames.size());
   }
 
   /**
