@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -46,7 +45,7 @@ import com.njydsz.common.locales.util.I18nMessages;
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties(I18nProperties.class)
-@ConditionalOnClass(name = "org.springframework.context.MessageSource")
+@ConditionalOnClass(MessageSource.class)
 public class LocalesAutoConfiguration {
 
   /** MessageSource Bean 名称常量（ydsz 统一约定，避免多模块冲突） */

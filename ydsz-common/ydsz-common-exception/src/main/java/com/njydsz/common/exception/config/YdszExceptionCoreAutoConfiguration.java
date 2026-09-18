@@ -1,8 +1,9 @@
 package com.njydsz.common.exception.config;
 
+import java.util.Locale;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
-import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -48,7 +49,7 @@ import com.njydsz.common.locales.util.MessageSourceHolder;
 @AutoConfiguration
 @AutoConfigureAfter(LocalesAutoConfiguration.class)
 @EnableConfigurationProperties(ExceptionProperties.class)
-@ConditionalOnClass(name = "org.springframework.context.MessageSource")
+@ConditionalOnClass(MessageSource.class)
 public class YdszExceptionCoreAutoConfiguration {
 
   private final ExceptionProperties exceptionProperties;
@@ -89,7 +90,7 @@ public class YdszExceptionCoreAutoConfiguration {
    *     由 {@link #errorCodeTable()} 提供，容器缺失时由该方法兜底创建空表
    * @param messageSource 国际化消息源
    * @param env Spring 环境对象
-   * @param i18nProperties i18n 配置属性（通过 {@link LocalesAutoConfiguration} 注册），可为 null
+   * @param i18nPropertiesProvider i18n 配置属性提供器（通过 {@link LocalesAutoConfiguration} 注册），可为 null
    * @return 处理结果
    */
   @Bean

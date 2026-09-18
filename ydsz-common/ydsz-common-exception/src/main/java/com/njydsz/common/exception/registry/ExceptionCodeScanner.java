@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -171,7 +172,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
       try {
         Resource[] found = resourceResolver.getResources(defaultResourcePath);
         long existingCount =
-            java.util.Arrays.stream(found).filter(Resource::exists).count();
+            Arrays.stream(found).filter(Resource::exists).count();
         if (existingCount == 0) {
           missingBasenames.add(basename);
           log.warn(
