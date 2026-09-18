@@ -4,7 +4,7 @@
 # 本文件为单一权威源（Single Source of Truth），适用于所有 AI 编码工具。
 # CatPaw 和 WorkBuddy 的配置文件由此文件生成或软链引用。
 #
-# 规范版本：对齐《云顶编码规范》1.0.8
+# 规范版本：对齐《云顶编码规范》1.0.9
 # 生成日期：2026-08-31
 #
 # 同步方式：
@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.16"
-  source: "docs/云顶编码规范.md v1.0.8"
-  last_synced: "2026-09-16"
-  last_updated: "2026-09-16（§14 测试体系全面升级：YDIZ-TEST-001 升级测试分层策略；新增 YDIZ-TEST-002 Mock 使用规范、YDIZ-TEST-003 测试基础设施依赖管理；total 58→60）"
-  total_rules: 60
+  version: "26.09.18"
+  source: "docs/云顶编码规范.md v1.0.9"
+  last_synced: "2026-09-18"
+  last_updated: "2026-09-18（§36 国际化规范：新增 YDIZ-I18N-001 P0 资源文件命名约束；新增 YDIZ-I18N-002 P1 硬编码文案禁令；total 64→66）"
+  total_rules: 66
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -1522,7 +1522,66 @@ rules:
     source: "编码规范 §30.2 共享流程模板化（YDIZ-CONFIG-002，P2）"
 
 # ============================================
-# 附录：按 category 统计（26.09.17 更新，total 60→64）
+# 十六、国际化规范（i18n，2 条，P0+P1）
+# ============================================
+  - id: "YDIZ-I18N-001"
+    category: "i18n"
+    severity: "P0"
+    title: "【强制】业务模块资源文件必须使用 {module}-messages 前缀命名，禁止裸 messages.properties（YDIZ-I18N-001）"
+    description: |
+      业务模块的 i18n 资源文件必须命名为 `{module}-messages*.properties` 格式（如 `exception-messages_en_US.properties`）。
+      禁止使用裸 `messages.properties` 或 `messages_XX_XX.properties` 命名。
+
+      **为什么**：多个模块同名 messages.properties 会被 ReloadableResourceBundleMessageSource 覆盖，导致 i18n 文案错乱。
+
+      **命名规范**：
+      - 兜底（无后缀）：`{module}-messages.properties`
+      - 中文简体：`{module}-messages_zh_CN.properties`
+      - 英文：`{module}-messages_en_US.properties`
+      - 繁体中文：`{module}-messages_zh_TW.properties`（按需）
+    pattern: "业务模块的 messages*.properties 未带模块前缀"
+    fix: |
+      将 `messages.properties` / `messages_zh_CN.properties` 重命名为 `{module}-messages.properties` / `{module}-messages_zh_CN.properties`
+    example_bad: |
+      ```
+      ydsz-foo-domain/src/main/resources/i18n/
+        ├── messages.properties          ← 违反 YDIZ-I18N-001
+        ├── messages_en_US.properties
+        └── messages_zh_CN.properties
+      ```
+    example_good: |
+      ```
+      ydsz-foo-domain/src/main/resources/i18n/
+        ├── foo-messages.properties
+        ├── foo-messages_en_US.properties ← 正确：{module}-messages 前缀
+        └── foo-messages_zh_CN.properties
+      ```
+    source: "编码规范 §36.4.1 资源文件命名（YDIZ-I18N-001，P0）"
+
+  - id: "YDIZ-I18N-002"
+    category: "i18n"
+    severity: "P1"
+    title: "【强制】禁止硬编码用户可见文案，必须走 i18n key（YDIZ-I18N-002）"
+    description: |
+      Service / Controller 等 Spring 托管层禁止出现自然语言文案字面量。
+      异常消息、接口返回 message、业务描述等用户可见文案必须通过 i18n key 解析。
+
+      **允许例外**：日志中的开发者描述字符串、常量类中的技术性 key 名、单元测试中的固定测试字符串。
+    pattern: "throw new BusinessException(\"硬编码中文\") 或 msg(\"English literal\")"
+    fix: |
+      提取为 i18n key，定义为 `{module}-messages*.properties` 中的条目，重构代码调用 I18n.message() 或注入 I18nMessages
+    example_bad: |
+      ```java
+      throw new BusinessException("用户 " + userId + " 不存在");  // 违反 YDIZ-I18N-002
+      ```
+    example_good: |
+      ```java
+      throw BusinessException.of(ErrorCode.X).msg(i18n.resolve("foo.user.not.found", new Object[]{userId}));
+      ```
+    source: "编码规范 §36.5.1 禁止硬编码用户可见文案（YDIZ-I18N-002，P1）"
+
+# ============================================
+# 附录：按 category 统计（26.09.18 更新，total 64→66）
 # ============================================
 stats:
   encoding: 1
@@ -1545,4 +1604,5 @@ stats:
   testing: 3
   resilience: 1
   config: 2
-  total: 64
+  i18n: 2
+  total: 66
