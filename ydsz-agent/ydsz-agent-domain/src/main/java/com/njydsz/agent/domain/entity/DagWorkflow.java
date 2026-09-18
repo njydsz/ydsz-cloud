@@ -1,13 +1,9 @@
 package com.njydsz.agent.domain.entity;
 
-import lombok.Data;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import lombok.Data;
 
-import java.time.LocalDateTime;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * DAG 工作流持久化实体（存储 YAML DSL 供后续加载/编辑/执行）。
