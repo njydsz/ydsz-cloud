@@ -193,6 +193,11 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-locales</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-jdbc</artifactId>
                 <version>${project.version}</version>
             </dependency>

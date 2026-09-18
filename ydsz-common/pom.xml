@@ -65,8 +65,9 @@
         <module>ydsz-common-cache</module>
         <module>ydsz-common-excel</module>
         <module>ydsz-common-util</module>
-        <!-- L2 基础设施层 -->
+        <!-- L2 核心响应与基础设施层 -->
         <module>ydsz-common-core</module>
+        <module>ydsz-common-locales</module>
         <!-- L3 基础服务层 -->
         <module>ydsz-common-domain</module>
         <module>ydsz-common-exception</module>
@@ -105,6 +106,11 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-locales</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- L2 -->

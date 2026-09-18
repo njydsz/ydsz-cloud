@@ -85,7 +85,7 @@ public final class I18n {
    * @return 解析后的消息；key 未找到时返回 key 本身
    */
   public static String message(String key, @Nullable Object[] params, @Nullable Locale locale) {
-    MessageResolver resolver = MessageSourceHolder.getResolver();
+    MessageSourceHolder.MessageResolver resolver = MessageSourceHolder.getResolver();
     if (resolver == null) {
       return key;
     }
