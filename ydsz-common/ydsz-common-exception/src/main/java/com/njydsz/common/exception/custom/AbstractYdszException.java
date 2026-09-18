@@ -11,6 +11,7 @@ import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
+import com.njydsz.common.locales.util.MessageSourceHolder;
 
 /**
  * 异常抽象基类

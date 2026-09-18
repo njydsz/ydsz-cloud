@@ -19,6 +19,12 @@
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
 
+        <!-- ydsz-common-locales（L2 国际化基座，提供 MessageSource / MessageSourceHolder / I18nProperties） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-locales</artifactId>
+        </dependency>
+
         <!--
             注：原依赖 ydsz-common-util 用于 SpringContextHolder，
             经代码审计确认 exception 模块未引用任何 util 类，故移除。

@@ -1,4 +1,4 @@
-package com.njydsz.common.exception.custom;
+package com.njydsz.common.locales.util;
 
 import java.util.Locale;
 
@@ -7,9 +7,10 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.lang.Nullable;
 
 /**
- * 国际化消息源访问器（Spring Bean）。
+ * 国际化消息工具类
  *
- * <p>替代静态 {@link MessageSourceHolder} 的可注入方案，适用于需要通过 Spring DI 获取 i18n 消息解析能力的场景（如 Service 层、工具类）。
+ * <p>作为可注入 Bean（{@code i18nMessages}），替代静态 {@link I18n#message(String)} 的可注入方案，
+ * 适用于需要通过 Spring DI 获取 i18n 消息解析能力的场景（如 Service 层、工具类）。
  *
  * <p>与普通 {@link MessageSource} 相比，额外提供：
  *
@@ -21,45 +22,55 @@ import org.springframework.lang.Nullable;
  * <p><b>使用示例：</b>
  *
  * <pre>{@code
- * @Service
+ * &#64;Service
  * public class UserServiceImpl implements UserService {
- *     private final MessageSourceAccessor messageAccessor;
+ *     private final I18nMessages i18n;
  *
- *     public UserServiceImpl(MessageSourceAccessor messageAccessor) {
- *         this.messageAccessor = messageAccessor;
+ *     public UserServiceImpl(I18nMessages i18n) {
+ *         this.i18n = i18n;
  *     }
  *
  *     public void validate(User user) {
  *         if (user == null) {
  *             throw BusinessException.of(CoreExceptionCode.PARAM_ERROR)
- *                 .msg(messageAccessor.resolve("user.null"));
+ *                 .msg(i18n.resolve("user.null"));
  *         }
  *     }
  * }
  * }</pre>
  *
- * <p><b>兼容说明：</b>静态 {@link MessageSourceHolder} 仍然可用， {@link
- * com.njydsz.common.exception.config.YdszExceptionCoreAutoConfiguration} 会在启动时将同一个 {@link
- * MessageSource} 注入到本 Bean 和 {@link MessageSourceHolder}， 两者行为一致。
+ * <p>静态场景（如异常构造器）请直接使用 {@link I18n} 工具类 + {@link
+ * com.njydsz.common.exception.custom.MessageSourceHolder}，无需注入。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.09.18
+ * @see I18n
  */
-public class MessageSourceAccessor {
+public class I18nMessages {
 
   private final MessageSource messageSource;
 
   /**
-   * 构造消息源访问器
+   * 构造消息工具实例
    *
-   * @param messageSource Spring 消息源（不可为 null）
+   * @param messageSource Spring MessageSource（不可为 null）
    */
-  public MessageSourceAccessor(MessageSource messageSource) {
+  public I18nMessages(MessageSource messageSource) {
     this.messageSource = messageSource;
   }
 
   /**
    * 按当前请求 Locale 解析国际化消息。
+   *
+   * @param key 消息键
+   * @return 解析后的消息；key 未找到时返回 key 本身
+   */
+  public String resolve(String key) {
+    return resolve(key, null);
+  }
+
+  /**
+   * 按当前请求 Locale 解析国际化消息（带参数）。
    *
    * @param key 消息键
    * @param params 消息参数（可为 null）
@@ -70,7 +81,7 @@ public class MessageSourceAccessor {
   }
 
   /**
-   * 按当前请求 Locale 解析国际化消息，使用默认消息兜底。
+   * 按指定 Locale 解析国际化消息（带参数与默认文案）。
    *
    * @param key 消息键
    * @param params 消息参数（可为 null）
@@ -93,7 +104,7 @@ public class MessageSourceAccessor {
    *
    * @param key 消息键
    * @param params 消息参数（可为 null）
-   * @param locale 区域设置（可为 null，回退到 {@link Locale#ROOT}）
+   * @param locale 区域设置（可为 null，回退到系统默认）
    * @return 解析后的消息；key 未找到时返回 key 本身
    */
   public String resolve(String key, @Nullable Object[] params, @Nullable Locale locale) {
@@ -124,7 +135,7 @@ public class MessageSourceAccessor {
   /**
    * 检查底层 MessageSource 是否可用。
    *
-   * @return 始终返回 true（构造时即要求非 null）
+   * @return 始终返回 true（构造时即要求 MessageSource 非 null）
    */
   public boolean isAvailable() {
     return messageSource != null;

@@ -1,4 +1,4 @@
-package com.njydsz.common.exception.custom;
+package com.njydsz.common.locales.util;
 
 import java.util.Locale;
 
@@ -7,13 +7,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 /**
- * 国际化消息源静态持有者
+ * 国际化消息源静态持有者（L2 基础设施）
  *
- * <p>为 {@link AbstractYdszException} 提供无侵入的 i18n 消息解析能力。 由 {@code
- * YdszExceptionCoreAutoConfiguration} 在启动时注入 Spring {@code MessageSource}， 使异常类在不直接依赖 Spring
- * 上下文的情况下实现 i18n 消息懒加载解析。
+ * <p>为异常体系（L3）提供无侵入的 i18n 消息解析能力。由 {@link
+ * com.njydsz.common.locales.config.LocalesAutoConfiguration} 在启动时注入 Spring MessageSource，
+ * 使异常类在不直接依赖 Spring 上下文的情况下实现 i18n 消息懒加载解析。
  *
- * <p><b>线程安全：</b>使用 volatile 引用 + 空检查，保证多线程可见性。 一旦注入完成（应用就绪后），仅读取不写入，无并发风险。
+ * <p>本类位于 L2（ydsz-common-locales），可供异常模块/领域模块/业务模块平等引用 —— 不违反层级单向依赖原则。
+ *
+ * <p><b>线程安全：</b>使用 volatile 引用 + 双重检查，保证多线程可见性。 一旦注入完成（应用就绪后），仅读取不写入，无并发风险。
  *
  * <p><b>使用约束：</b>
  *
@@ -24,6 +26,9 @@ import org.springframework.context.i18n.LocaleContextHolder;
  *       Locale#ROOT}，保证多语言切换真实生效
  * </ul>
  *
+ * <p>此持有者由 {@link com.njydsz.common.locales.util.I18n} 工具类与 {@link
+ * com.njydsz.common.exception.custom.AbstractYdszException} 共同消费。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -32,7 +37,7 @@ public final class MessageSourceHolder {
   private static final Logger LOG = LoggerFactory.getLogger(MessageSourceHolder.class);
 
   private MessageSourceHolder() {
-    // 工具类，禁止实例化
+    // 工具类禁止实例化
   }
 
   /**
@@ -56,15 +61,24 @@ public final class MessageSourceHolder {
   private static volatile MessageResolver resolver;
 
   /**
-   * 注入消息解析器（由 AutoConfiguration 在启动时调用一次）
+   * 注入消息解析器（由 LocalesAutoConfiguration 在启动时调用一次）
    *
    * @param newResolver 消息解析器，为 null 则清除当前解析器
    */
   public static void setResolver(MessageResolver newResolver) {
     resolver = newResolver;
     if (newResolver != null) {
-      LOG.debug("MessageSourceResolver 已注入，AbstractYdszException 的 getMessage() 将启用 i18n 解析");
+      LOG.debug("MessageSourceResolver 已注入，国际化静态工具 I18n / 异常 AbstractYdszException 启用 i18n 解析");
     }
+  }
+
+  /**
+   * 获取当前注入的解析器（供 I18n 工具与异常体系使用）
+   *
+   * @return 当前解析器，未注入时返回 null
+   */
+  public static MessageResolver getResolver() {
+    return resolver;
   }
 
   /**
@@ -90,7 +104,7 @@ public final class MessageSourceHolder {
   }
 
   /**
-   * 解析国际化消息（供 AbstractYdszException.getMessage() 调用）。
+   * 解析国际化消息（供 AbstractYdszException.getMessage() 与 I18n.message() 调用）。
    *
    * <p>按当前请求线程的 Locale 解析，保证同一异常在不同语言请求下返回对应文案。 若解析器未注入，直接返回 messageKey 本身（保持向后兼容）。 若解析器已注入但解析失败（如
    * key 不存在），同样返回 messageKey 兜底。

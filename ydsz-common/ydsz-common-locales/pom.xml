@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common</artifactId>
+        <version>26.09.01-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ydsz-common-locales</artifactId>
+    <name>ydsz-common-locales</name>
+    <description>国际化基座公共模块（MessageSource + LocaleResolver + i18n 工具类，L2 核心响应与基础设施层）</description>
+
+    <dependencies>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- SLF4J API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <!-- 同层依赖：ydsz-common-core（L2，提供 BizContextKeys/TenantContextHolder 等核心上下文） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+
+        <!-- spring-boot（提供 spring-core、spring-context、spring-beans 等核心 API）
+             I18nProperties @ConfigurationProperties 绑定、LocalesAutoConfiguration XML/注解配置 均直接使用 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot-autoconfigure（提供 @AutoConfiguration、@ConditionalOnXxx 等注册机制）
+             LocalesAutoConfiguration 核心注解 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-context（提供 MessageSource / MessageSourceAccessor / ReloadableResourceBundleMessageSource）
+             LocalesAutoConfiguration 创建 MessageSource Bean -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-webmvc（提供 AcceptHeaderLocaleResolver / LocaleChangeInterceptor）
+             仅 Web 环境下注册，运行时按需加载 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+</project>
