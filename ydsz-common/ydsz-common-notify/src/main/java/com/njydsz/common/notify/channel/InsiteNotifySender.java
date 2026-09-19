@@ -3,11 +3,14 @@ package com.njydsz.common.notify.channel;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -62,18 +65,22 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
 
   private final NotifyProperties.InsiteConfig insiteConfig;
   private final ObjectProvider<StringRedisTemplate> redisTemplateProvider;
+  private final ExecutorService insiteExecutor;
 
   /**
    * 构造站内信发送器
    *
    * @param notifyProperties 通知配置属性
    * @param redisTemplateProvider Redis 模板（可选，缺失时降级为不操作）
+   * @param insiteExecutor 站内信渠道专属虚拟线程池
    */
   public InsiteNotifySender(
       NotifyProperties notifyProperties,
-      ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+      ObjectProvider<StringRedisTemplate> redisTemplateProvider,
+      @Qualifier("notifyInsiteExecutor") ExecutorService insiteExecutor) {
     this.insiteConfig = notifyProperties.getInsite();
     this.redisTemplateProvider = redisTemplateProvider;
+    this.insiteExecutor = insiteExecutor;
   }
 
   @Override

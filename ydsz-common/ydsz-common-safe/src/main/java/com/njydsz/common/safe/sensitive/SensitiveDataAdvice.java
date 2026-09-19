@@ -123,20 +123,25 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
     try {
       LOG.debug("开始对返回值进行敏感数据脱敏: {}", returnType.getParameterType().getName());
       return SensitiveDataProcessor.process(body, configuration.getMaxDepth());
+    } catch (SensitiveDataProcessingException e) {
+      // 脱敏处理失败：抛出统一异常，由全局异常处理器转换为 500 错误响应，避免返回全 null 空对象
+      // 导致前端误判为"成功但无数据"而掩盖问题
+      LOG.error(
+          "敏感数据脱敏处理失败 [type={}]: {}",
+          body.getClass().getName(),
+          e.getMessage(),
+          e);
+      throw new SensitiveDataProcessingException(
+          "返回值脱敏失败，请求 URI: " + request.getURI().getPath(), e);
     } catch (Exception e) {
-      // 脱敏失败返回空对象，防止原始未脱敏数据泄露
-      LOG.error("敏感数据脱敏处理失败，返回空对象以避免数据泄露: {}", e.getMessage(), e);
-      return createEmptyObject(body.getClass());
-    }
-  }
-
-  /** 创建指定类型的空对象，用于脱敏失败时返回 避免原始数据泄露 */
-  private Object createEmptyObject(Class<?> clazz) {
-    try {
-      return clazz.getDeclaredConstructor().newInstance();
-    } catch (Exception ex) {
-      LOG.error("创建空对象失败: {}", clazz.getName(), ex);
-      return null;
+      // 其他未预期异常同样抛出，防止原始未脱敏数据泄露
+      LOG.error(
+          "敏感数据脱敏处理未知错误 [type={}]: {}",
+          body.getClass().getName(),
+          e.getMessage(),
+          e);
+      throw new SensitiveDataProcessingException(
+          "返回值脱敏过程中发生未知错误，请求 URI: " + request.getURI().getPath(), e);
     }
   }
 

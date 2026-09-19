@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -134,7 +133,6 @@ public final class DiffSnapshotHelper {
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  @Schema(description = "字段级变更 diff 结果")
   public static class DiffResult implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -195,15 +193,12 @@ public final class DiffSnapshotHelper {
       private static final long serialVersionUID = 1L;
 
       /** 字段名 */
-      @Schema(description = "字段名")
       private String field;
 
       /** 变更前值 */
-      @Schema(description = "变更前值")
       private String old;
 
       /** 变更后值（序列化键保持为 "new"，兼容既有审计日志格式） */
-      @Schema(description = "变更后值")
       @JsonProperty("new")
       private String newValue;
     }
