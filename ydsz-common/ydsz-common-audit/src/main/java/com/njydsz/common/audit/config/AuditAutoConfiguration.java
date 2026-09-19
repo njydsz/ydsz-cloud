@@ -103,7 +103,8 @@ public class AuditAutoConfiguration {
   @ConditionalOnBean(NamedParameterJdbcTemplate.class)
   public AuditWriter jdbcAuditWriter(
       NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditProperties properties) {
-    String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
+    String shardingType = properties.isShardingEnabled()
+        ? properties.getShardingType().getCode() : null;
     String baseTableName = properties.getShardingBaseTableName();
     LOG.info(
         "初始化 JDBC 审计日志写入器: JdbcAuditWriter(复用容器模板), 分表类型={}, 基础表名={}",
@@ -125,7 +126,8 @@ public class AuditAutoConfiguration {
   @ConditionalOnMissingBean(AuditWriter.class)
   @ConditionalOnBean(DataSource.class)
   public AuditWriter jdbcAuditWriterFallback(DataSource dataSource, AuditProperties properties) {
-    String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
+    String shardingType = properties.isShardingEnabled()
+        ? properties.getShardingType().getCode() : null;
     String baseTableName = properties.getShardingBaseTableName();
     LOG.info(
         "初始化 JDBC 审计日志写入器: JdbcAuditWriter(数据源模式), 分表类型={}, 基础表名={}",
@@ -269,7 +271,8 @@ public class AuditAutoConfiguration {
   @ConditionalOnMissingBean(AuditQueryService.class)
   @ConditionalOnBean(JdbcTemplate.class)
   public AuditQueryService auditQueryService(JdbcTemplate jdbcTemplate, AuditProperties properties) {
-    String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
+    String shardingType = properties.isShardingEnabled()
+        ? properties.getShardingType().getCode() : null;
     String baseTableName = properties.getShardingBaseTableName();
     LOG.info("初始化默认审计查询服务: DefaultAuditQueryService(复用容器模板), 分表类型={}",
         shardingType != null ? shardingType : "DISABLED");
@@ -290,7 +293,8 @@ public class AuditAutoConfiguration {
   @ConditionalOnBean(DataSource.class)
   public AuditQueryService auditQueryServiceFallback(
       DataSource dataSource, AuditProperties properties) {
-    String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
+    String shardingType = properties.isShardingEnabled()
+        ? properties.getShardingType().getCode() : null;
     String baseTableName = properties.getShardingBaseTableName();
     LOG.info("初始化默认审计查询服务: DefaultAuditQueryService(数据源模式), 分表类型={}",
         shardingType != null ? shardingType : "DISABLED");

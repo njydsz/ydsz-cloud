@@ -150,6 +150,24 @@ public class CsrfProperties {
   private String sessionIdHeader;
 
   /**
+   * 自定义 Session ID Cookie 名称列表
+   *
+   * <p>当应用不使用标准 JSESSIONID Cookie 而使用自定义 Cookie 名称（如 Sa-Token 的 {@code satoken}）时，
+   * 配置此列表。过滤器按此列表顺序查找 Session ID，列表中任意一个匹配即返回。
+   * 留空或未配置时仅查找 JSESSIONID（向后兼容）。
+   *
+   * <pre>{@code
+   * ydsz:
+   *   safe:
+   *     csrf:
+   *       session-cookie-names:
+   *         - satoken
+   *         - JSESSIONID
+   * }</pre>
+   */
+  private List<String> sessionCookieNames = new ArrayList<>();
+
+  /**
    * CSRF 防护模式枚举
    *
    * <ul>

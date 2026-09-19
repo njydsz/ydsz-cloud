@@ -21,7 +21,7 @@ import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
- * 站内信通知发送器
+ * 站内信通知发送器（轻量级默认实现）
  *
  * <p>实现 {@link NotifyChannelStrategy} 接口，将站内信存储到 Redis List， 支持前端通过 WebSocket 或轮询拉取。
  *
@@ -48,8 +48,23 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  *       expire-minutes: 1440
  * }</pre>
  *
- * <p><b>收敛定位</b>：作为 common-notify 内置的 INSITE Provider， 当 message 模块不存在时提供默认的站内信存储能力。 若 message
- * 模块存在，其 {@code InAppChannel} 通过 {@code NotifyChannelBridgeConfiguration} 桥接后自动覆盖本实现。
+ * <p><b>P0-5 职责边界说明（common-notify vs message 模块）：</b>
+ *
+ * <table border="1">
+ *   <caption>站内信职责划分</caption>
+ *   <tr><th>能力</th><th>本实现（common-notify）</th><th>message 模块实现</th></tr>
+ *   <tr><td>写入存储</td><td>✅ Redis List leftPush</td><td>✅ 数据库 + Redis 缓存</td></tr>
+ *   <tr><td>分页查询</td><td>❌ （需自行 LRANGE）</td><td>✅ 完整分页 API</td></tr>
+ *   <tr><td>已读/未读状态</td><td>❌（仅写入时标记 isRead=false）</td><td>✅ 状态变更 API</td></tr>
+ *   <tr><td>消息分类/类型</td><td>❌</td><td>✅ 分类筛选</td></tr>
+ *   <tr><td>搜索</td><td>❌</td><td>✅ 全文检索</td></tr>
+ *   <tr><td>批量操作</td><td>❌</td><td>✅ 全部标记已读/删除</td></tr>
+ *   <tr><td>WebSocket 推送</td><td>❌（需业务侧自行实现）</td><td>✅ 内置推送</td></tr>
+ * </table>
+ *
+ * <p><b>桥接覆盖机制</b>：当 message 模块存在时，message 模块实现 {@link NotifyChannelStrategy} 接口并声明
+ * {@code @Primary} 或将渠道枚举设为 {@link NotifyChannel#INSITE}， 本默认实现自动被覆盖（Spring
+ * {@code @ConditionalOnMissingBean} 机制）。 禁用本实现：{@code ydsz.notify.insite.enabled=false}。
  *
  * @author ydsz-team
  * @since 26.09.01

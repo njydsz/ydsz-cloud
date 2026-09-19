@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -46,6 +47,9 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
   private final QueueProperties properties;
   private final RedisTemplate<String, Object> redisTemplate;
   private final ExecutorService consumerExecutor;
+  private final ObjectProvider<KafkaQueueProperties> kafkaPropertiesProvider;
+  private final ObjectProvider<RocketMQProperties> rocketPropertiesProvider;
+  private final ObjectProvider<RabbitMQProperties> rabbitPropertiesProvider;
   private final List<IMessageQueue> createdQueues = new CopyOnWriteArrayList<>();
 
   /**
@@ -54,17 +58,26 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
    * @param properties 队列配置
    * @param redisTemplate Redis 模板（可为 null，仅使用非 Redis 队列时允许）
    * @param consumerExecutor 异步消费者线程池（可为 null，将退化到裸线程，不推荐）
+   * @param kafkaPropertiesProvider Kafka 专属配置提供者（独立前缀 ydsz.queue.kafka，可选）
+   * @param rocketPropertiesProvider RocketMQ 专属配置提供者（独立前缀 ydsz.queue.rocketmq，可选）
+   * @param rabbitPropertiesProvider RabbitMQ 专属配置提供者（独立前缀 ydsz.queue.rabbitmq，可选）
    */
   public MessageQueueFactory(
       QueueProperties properties,
       RedisTemplate<String, Object> redisTemplate,
-      ExecutorService consumerExecutor) {
+      ExecutorService consumerExecutor,
+      ObjectProvider<KafkaQueueProperties> kafkaPropertiesProvider,
+      ObjectProvider<RocketMQProperties> rocketPropertiesProvider,
+      ObjectProvider<RabbitMQProperties> rabbitPropertiesProvider) {
     if (properties == null) {
       throw BusinessException.builder().key("队列配置不能为空").build();
     }
     this.properties = properties;
     this.redisTemplate = redisTemplate;
     this.consumerExecutor = consumerExecutor;
+    this.kafkaPropertiesProvider = kafkaPropertiesProvider;
+    this.rocketPropertiesProvider = rocketPropertiesProvider;
+    this.rabbitPropertiesProvider = rabbitPropertiesProvider;
   }
 
   /** Spring 容器关闭时兜底关闭所有持有的队列实例，防止连接泄漏。 */
@@ -170,23 +183,75 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
 
   private IMessageQueue createKafkaMQ() {
     log.info("[Factory] 创建 Kafka 队列");
-    KafkaQueueProperties kafkaProperties = extractKafkaProperties();
+    KafkaQueueProperties kafkaProperties = resolveKafkaProperties();
     return new KafkaMQ(kafkaProperties, consumerExecutor);
   }
 
   private IMessageQueue createRocketMQ() {
     log.info("[Factory] 创建 RocketMQ 队列");
-    RocketMQProperties rocketProperties = extractRocketMQProperties();
+    RocketMQProperties rocketProperties = resolveRocketProperties();
     return new RocketMQ(rocketProperties);
   }
 
   private IMessageQueue createRabbitMQ() {
     log.info("[Factory] 创建 RabbitMQ 队列");
-    RabbitMQProperties rabbitProperties = extractRabbitMQProperties();
+    RabbitMQProperties rabbitProperties = resolveRabbitProperties();
     return new RabbitMQ(rabbitProperties);
   }
 
-  private KafkaQueueProperties extractKafkaProperties() {
+  /**
+   * 解析 Kafka 配置：优先使用独立前缀 {@code ydsz.queue.kafka.*}，
+   * 若未配置则回退到从通用 {@link QueueProperties} 提取（向后兼容）。
+   */
+  private KafkaQueueProperties resolveKafkaProperties() {
+    KafkaQueueProperties dedicated = kafkaPropertiesProvider.getIfAvailable();
+    if (dedicated != null && dedicated.getBootstrapServers() != null
+        && !dedicated.getBootstrapServers().isBlank()
+        && !"localhost:9092".equals(dedicated.getBootstrapServers())) {
+      log.info("[Factory] 使用独立 Kafka 配置（ydsz.queue.kafka.*），bootstrapServers={}",
+          dedicated.getBootstrapServers());
+      return dedicated;
+    }
+    // 向后兼容：从通用 QueueProperties 提取
+    return extractKafkaPropertiesCompat();
+  }
+
+  /**
+   * 解析 RocketMQ 配置：优先使用独立前缀 {@code ydsz.queue.rocketmq.*}，
+   * 若未配置则回退到从通用 {@link QueueProperties} 提取（向后兼容）。
+   */
+  private RocketMQProperties resolveRocketProperties() {
+    RocketMQProperties dedicated = rocketPropertiesProvider.getIfAvailable();
+    if (dedicated != null && dedicated.getNamesrvAddr() != null
+        && !dedicated.getNamesrvAddr().isBlank()
+        && !"localhost:9876".equals(dedicated.getNamesrvAddr())) {
+      log.info("[Factory] 使用独立 RocketMQ 配置（ydsz.queue.rocketmq.*），namesrvAddr={}",
+          dedicated.getNamesrvAddr());
+      return dedicated;
+    }
+    // 向后兼容：从通用 QueueProperties 提取
+    return extractRocketPropertiesCompat();
+  }
+
+  /**
+   * 解析 RabbitMQ 配置：优先使用独立前缀 {@code ydsz.queue.rabbitmq.*}，
+   * 若未配置则回退到从通用 {@link QueueProperties} 提取（向后兼容）。
+   */
+  private RabbitMQProperties resolveRabbitProperties() {
+    RabbitMQProperties dedicated = rabbitPropertiesProvider.getIfAvailable();
+    if (dedicated != null && dedicated.getHost() != null
+        && !dedicated.getHost().isBlank()
+        && !"localhost".equals(dedicated.getHost())) {
+      log.info("[Factory] 使用独立 RabbitMQ 配置（ydsz.queue.rabbitmq.*），host={}",
+          dedicated.getHost());
+      return dedicated;
+    }
+    // 向后兼容：从通用 QueueProperties 提取
+    return extractRabbitPropertiesCompat();
+  }
+
+  /** 向后兼容：从通用 QueueProperties 提取 Kafka 配置（独立前缀未配置时的 fallback）。 */
+  private KafkaQueueProperties extractKafkaPropertiesCompat() {
     KafkaQueueProperties kafkaProperties = new KafkaQueueProperties();
     kafkaProperties.setBootstrapServers(properties.getHost() + ":" + properties.getPort());
     kafkaProperties.setGroupId(properties.getStreamGroup());
@@ -197,7 +262,8 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
     return kafkaProperties;
   }
 
-  private RocketMQProperties extractRocketMQProperties() {
+  /** 向后兼容：从通用 QueueProperties 提取 RocketMQ 配置（独立前缀未配置时的 fallback）。 */
+  private RocketMQProperties extractRocketMQPropertiesCompat() {
     RocketMQProperties rocketProperties = new RocketMQProperties();
     rocketProperties.setNamesrvAddr(properties.getHost() + ":" + properties.getPort());
     rocketProperties.setGroupId(properties.getStreamGroup());
@@ -205,7 +271,8 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
     return rocketProperties;
   }
 
-  private RabbitMQProperties extractRabbitMQProperties() {
+  /** 向后兼容：从通用 QueueProperties 提取 RabbitMQ 配置（独立前缀未配置时的 fallback）。 */
+  private RabbitMQProperties extractRabbitPropertiesCompat() {
     RabbitMQProperties rabbitProperties = new RabbitMQProperties();
     rabbitProperties.setHost(properties.getHost());
     rabbitProperties.setRabbitPort(properties.getPort());

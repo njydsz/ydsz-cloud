@@ -429,6 +429,7 @@ public class CsrfFilter extends OncePerRequestFilter {
   }
 
   private String getSessionId(HttpServletRequest request) {
+    // 1. 优先从自定义 Header 获取
     String sessionIdHeader = properties.getSessionIdHeader();
     if (sessionIdHeader != null && !sessionIdHeader.isEmpty()) {
       String sessionId = request.getHeader(sessionIdHeader);
@@ -437,8 +438,19 @@ public class CsrfFilter extends OncePerRequestFilter {
       }
     }
 
+    // 2. 按配置的 Cookie 名称列表查找 Session ID
     Cookie[] cookies = request.getCookies();
     if (cookies != null) {
+      // 优先使用用户配置的自定义 Cookie 名称列表（如 satoken）
+      List<String> configuredNames = properties.getSessionCookieNames();
+      if (configuredNames != null && !configuredNames.isEmpty()) {
+        for (Cookie cookie : cookies) {
+          if (configuredNames.contains(cookie.getName())) {
+            return cookie.getValue();
+          }
+        }
+      }
+      // 3. 回退到默认 JSESSIONID（向后兼容）
       for (Cookie cookie : cookies) {
         if ("JSESSIONID".equals(cookie.getName())) {
           return cookie.getValue();

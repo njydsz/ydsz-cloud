@@ -65,6 +65,14 @@ public class XssFilter extends OncePerRequestFilter {
   /** 默认 XSS 排除路径列表 */
   private static final List<String> DEFAULT_EXCLUDES = new ArrayList<>(4);
 
+  /**
+   * 请求体大小阈值（字节）：超过该阈值时跳过全量 XSS 正则扫描，仅记录告警。
+   *
+   * <p>XSS 检测需要对整个 body 执行正则匹配，大 body（如批量导入）会引发不必要的 CPU 开销。
+   * 典型 XSS 载荷短小（<1KB），超过 100KB 的请求体中嵌入 XSS 的概率极低，可直接放行。
+   */
+  private static final int XSS_SCAN_BODY_THRESHOLD = 100 * 1024;
+
   static {
     DEFAULT_EXCLUDES.add("/error");
     DEFAULT_EXCLUDES.add("/favicon.ico");
@@ -156,7 +164,10 @@ public class XssFilter extends OncePerRequestFilter {
       byte[] bodyBytes = extractBodyBytes(request);
       if (bodyBytes != null) {
         cachedBody = new CachedRequestBody(bodyBytes);
-        if (cachedBody.hasText() && EscapeUtils.containsXSS(cachedBody.getText())) {
+        // 超过阈值的大 body 跳过全量 XSS 检测，避免正则匹配在批量导入等场景下的 CPU 开销
+        if (cachedBody.hasText()
+            && cachedBody.getBytes().length <= XSS_SCAN_BODY_THRESHOLD
+            && EscapeUtils.containsXSS(cachedBody.getText())) {
           publishEvent(request, cachedBody.getText());
         }
       }

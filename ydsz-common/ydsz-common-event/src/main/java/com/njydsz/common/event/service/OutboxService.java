@@ -138,6 +138,7 @@ public class OutboxService {
     String idempotencyKey = resolveIdempotencyKey(partial);
     String processedPayload = maybeCompress(partial.getPayload());
     boolean isCompressed = !processedPayload.equals(partial.getPayload());
+    int schemaVersion = partial.getSchemaVersion() > 0 ? partial.getSchemaVersion() : 1;
 
     // 幂等去重检查（仅当有 idempotencyKey 时）
     if (idempotencyKey != null && outboxRepository.existsByIdempotencyKey(idempotencyKey)) {
@@ -157,7 +158,7 @@ public class OutboxService {
             .tenantId(tenantId)
             .traceId(traceId)
             .idempotencyKey(idempotencyKey)
-            .schemaVersion(1)
+            .schemaVersion(schemaVersion)
             .isCompressed(isCompressed)
             .payload(processedPayload)
             .status(OutboxStatus.PENDING)
@@ -212,7 +213,8 @@ public class OutboxService {
             .aggregateId(event.getAggregateId())
             .eventType(event.getEventType())
             .payload(YdszJson.toJson(event))
-            .idempotencyKey(event.getEventId()));
+            .idempotencyKey(event.getEventId())
+            .schemaVersion(event.getSchemaVersion()));
   }
 
   /**
