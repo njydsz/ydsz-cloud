@@ -82,6 +82,15 @@ public enum AuditAction {
   /** 清理（数据清理/归档） */
   CLEAN(23, "清理"),
 
+  /** 批量删除（单次操作删除多条记录） */
+  BATCH_DELETE(24, "批量删除"),
+
+  /** 批量更新（单次操作更新多条记录） */
+  BATCH_UPDATE(25, "批量更新"),
+
+  /** 批量导入（单次操作批量录入数据） */
+  BATCH_IMPORT(26, "批量导入"),
+
   /** 其他（未归类操作，作为默认兜底） */
   OTHER(99, "其他");
 
@@ -154,6 +163,9 @@ public enum AuditAction {
         || this == BACKUP
         || this == RESTORE
         || this == SYNC
-        || this == CLEAN;
+        || this == CLEAN
+        || this == BATCH_DELETE
+        || this == BATCH_UPDATE
+        || this == BATCH_IMPORT;
   }
 }

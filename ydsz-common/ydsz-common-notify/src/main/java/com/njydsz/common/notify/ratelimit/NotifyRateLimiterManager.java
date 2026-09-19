@@ -7,7 +7,9 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.notify.config.NotifyProperties;
+import com.njydsz.common.notify.core.NotifyCircuitBreakerRegistry;
 import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 
 /**
@@ -26,6 +28,9 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
  * <p>P0-1 架构优化：从纯内存滑动窗口迁移为委托 {@link RedisRateLimiter#tryAcquireSlidingWindow} 实现分布式限流，
  * 消除多实例部署下内存限流器不一致问题。
  *
+ * <p>P0-6 限流+熔断联动：当熔断器处于半开放（HALF_OPEN）状态时， 自动绕过节流限制放行探测请求，
+ * 确保熔断器能够正确探测服务是否恢复，避免因限流导致半开探测失败、熔断器重新打开。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -34,6 +39,9 @@ public class NotifyRateLimiterManager {
 
   private final Map<NotifyChannel, ChannelLimit> channelLimits = new EnumMap<>(NotifyChannel.class);
   private final RedisRateLimiter redisRateLimiter;
+
+  /** 熔断器注册中心（可选，P0-6 限流-熔断联动） */
+  private final NotifyCircuitBreakerRegistry circuitBreakerRegistry;
 
   /** 渠道限流参数封装 */
   private static class ChannelLimit {
@@ -54,7 +62,22 @@ public class NotifyRateLimiterManager {
    */
   public NotifyRateLimiterManager(
       NotifyProperties.RateLimit rateLimitConfig, RedisRateLimiter redisRateLimiter) {
+    this(rateLimitConfig, redisRateLimiter, null);
+  }
+
+  /**
+   * 构造限流管理器（含熔断器联动，P0-6）。
+   *
+   * @param rateLimitConfig 限流配置
+   * @param redisRateLimiter Redis 限流器（可选，不可用时降级为不限制）
+   * @param circuitBreakerRegistry 熔断器注册中心（可选，半开放状态绕过限流）
+   */
+  public NotifyRateLimiterManager(
+      NotifyProperties.RateLimit rateLimitConfig,
+      RedisRateLimiter redisRateLimiter,
+      NotifyCircuitBreakerRegistry circuitBreakerRegistry) {
     this.redisRateLimiter = redisRateLimiter;
+    this.circuitBreakerRegistry = circuitBreakerRegistry;
     initializeLimits(rateLimitConfig);
   }
 
@@ -92,6 +115,9 @@ public class NotifyRateLimiterManager {
    *
    * <p>当 tenantId 不为空时，限流 key 包含租户维度，避免不同租户间互相限流。 当 tenantId 为空时，退化为全局共享限流（向后兼容）。
    *
+   * <p><b>P0-6 限流-熔断联动</b>：当指定渠道的熔断器处于 HALF_OPEN 状态时， 自动绕过节流限制放行请求，
+   * 确保探测请求能够到达下游验证服务恢复情况。
+   *
    * @param channel 通知渠道
    * @param tenantId 租户 ID（可为 null，表示全局共享）
    * @return true 表示允许发送，false 表示被限流
@@ -100,6 +126,16 @@ public class NotifyRateLimiterManager {
     if (channel == null) {
       return true;
     }
+
+    // P0-6：熔断器半开放状态下绕过节流限制，放行探测请求
+    if (circuitBreakerRegistry != null) {
+      AbstractCircuitBreaker.State breakerState = circuitBreakerRegistry.getBreaker(channel).getState();
+      if (breakerState == AbstractCircuitBreaker.State.HALF_OPEN) {
+        log.debug("[NotifyRateLimiter] 渠道[{}]熔断器半开放，绕过节流放行探测请求", channel);
+        return true;
+      }
+    }
+
     if (redisRateLimiter == null) {
       log.debug("[NotifyRateLimiter] RedisRateLimiter 不可用，降级放行 | channel={}", channel);
       return true;
