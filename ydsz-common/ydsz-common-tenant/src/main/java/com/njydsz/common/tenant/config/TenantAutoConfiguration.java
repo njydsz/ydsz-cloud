@@ -2,6 +2,8 @@ package com.njydsz.common.tenant.config;
 
 import javax.sql.DataSource;
 
+import java.util.Map;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -222,6 +224,51 @@ public class TenantAutoConfiguration {
   public TenantContextFeignInterceptor tenantContextFeignInterceptor(TenantProperties properties) {
     log.info("多租户 Feign 跨服务透传已启用");
     return new TenantContextFeignInterceptor(properties.getActiveTenantFields());
+  }
+
+  /**
+   * 注册一个默认的 Feign 传播策略 Bean（实现 {@link TenantContextPropagationStrategy}）。
+   *
+   * <p>基于 Feign Header 的传播策略实现，作为内置默认实现；业务模块可通过 {@code @Primary} 覆盖以支持自定义协议。
+   *
+   * @return Feign 传播策略 Bean
+   */
+  @Bean
+  @ConditionalOnBean(TenantContextFeignInterceptor.class)
+  @ConditionalOnMissingBean
+  public TenantContextPropagationStrategy feignTenantContextPropagationStrategy(
+      TenantContextFeignInterceptor feignInterceptor) {
+    return new TenantContextPropagationStrategy() {
+      @Override
+      public void propagate(Map<String, String> transportCarrier) {
+        // Feign 拦截器的传播由它自己在 RequestTemplate 中完成
+        // 此处作为适配，当业务代码需要手动往 GraphQL/gRPC 等载体注入时，
+        // 回退到 Feign 拦截器的 header 映射逻辑
+        var ctx = com.njydsz.common.core.context.TenantContextHolder.get();
+        if (ctx == null) {
+          return;
+        }
+        var fields = ctx.getFields();
+        if (fields == null) {
+          return;
+        }
+        for (var entry : fields.entrySet()) {
+          if (entry.getValue() instanceof String value) {
+            transportCarrier.put("x-" + entry.getKey().toLowerCase(), value);
+          }
+        }
+      }
+
+      @Override
+      public int order() {
+        return 100;
+      }
+
+      @Override
+      public boolean supports(String transportType) {
+        return "feign".equalsIgnoreCase(transportType) || "http".equalsIgnoreCase(transportType);
+      }
+    };
   }
 
   /**

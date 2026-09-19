@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 import org.springframework.lang.NonNull;
@@ -24,6 +25,9 @@ import org.springframework.lang.NonNull;
  *
  * <p>26.09.01 新增：修复虚拟线程池指标计数器空转问题。
  *
+ * <p>26.09.19 变更（P2-14）：移除内部重复计数器，仅保留 {@link VirtualThreadMetrics} 作为唯一数据来源，
+ * {@link #getSubmittedCount()} / {@link #getCompletedCount()} 改为从 metrics 读取。
+ *
  * @author ydsz-team
  * @since 26.09.01
  * @see VirtualThreadMetrics
@@ -32,12 +36,6 @@ public class MeteredVirtualExecutorService implements ExecutorService {
 
   private final ExecutorService delegate;
   private final VirtualThreadMetrics metrics;
-
-  /** 已提交任务计数器（使用 LongAdder 优化高并发写入性能）。 */
-  private final LongAdder submittedCount = new LongAdder();
-
-  /** 已完成任务计数器。 */
-  private final LongAdder completedCount = new LongAdder();
 
   /**
    * 构造带指标追踪的虚拟线程执行器服务。
@@ -52,28 +50,24 @@ public class MeteredVirtualExecutorService implements ExecutorService {
 
   @Override
   public void execute(@NonNull Runnable command) {
-    submittedCount.increment();
     metrics.incrementSubmitted();
     delegate.execute(wrapTask(command));
   }
 
   @Override
   public <T> Future<T> submit(@NonNull Callable<T> task) {
-    submittedCount.increment();
     metrics.incrementSubmitted();
     return delegate.submit(wrapCallable(task));
   }
 
   @Override
   public <T> Future<T> submit(@NonNull Runnable task, T result) {
-    submittedCount.increment();
     metrics.incrementSubmitted();
     return delegate.submit(wrapTask(task), result);
   }
 
   @Override
   public Future<?> submit(@NonNull Runnable task) {
-    submittedCount.increment();
     metrics.incrementSubmitted();
     return delegate.submit(wrapTask(task));
   }
@@ -81,23 +75,22 @@ public class MeteredVirtualExecutorService implements ExecutorService {
   @Override
   public <T> List<Future<T>> invokeAll(@NonNull Collection<? extends Callable<T>> tasks)
       throws InterruptedException {
-    submittedCount.add(tasks.size());
-    metrics.getSubmittedCount();
-    return delegate.invokeAll(tasks);
+    metrics.addSubmitted(tasks.size());
+    return delegate.invokeAll(wrapCallables(tasks));
   }
 
   @Override
   public <T> List<Future<T>> invokeAll(
       @NonNull Collection<? extends Callable<T>> tasks, long timeout, @NonNull TimeUnit unit)
       throws InterruptedException {
-    submittedCount.add(tasks.size());
-    return delegate.invokeAll(tasks, timeout, unit);
+    metrics.addSubmitted(tasks.size());
+    return delegate.invokeAll(wrapCallables(tasks), timeout, unit);
   }
 
   @Override
   public <T> T invokeAny(@NonNull Collection<? extends Callable<T>> tasks)
       throws InterruptedException, ExecutionException {
-    submittedCount.add(tasks.size());
+    metrics.addSubmitted(tasks.size());
     return delegate.invokeAny(tasks);
   }
 
@@ -105,8 +98,8 @@ public class MeteredVirtualExecutorService implements ExecutorService {
   public <T> T invokeAny(
       @NonNull Collection<? extends Callable<T>> tasks, long timeout, @NonNull TimeUnit unit)
       throws InterruptedException, ExecutionException, TimeoutException {
-    submittedCount.add(tasks.size());
-    return delegate.invokeAny(tasks, timeout, unit);
+    metrics.addSubmitted(tasks.size());
+    return delegate.invokeAny(tasks);
   }
 
   @Override
@@ -136,21 +129,21 @@ public class MeteredVirtualExecutorService implements ExecutorService {
   }
 
   /**
-   * 获取累计提交任务数。
+   * 获取累计提交任务数（来自 VirtualThreadMetrics，P2-14 移除内部重复计数）。
    *
    * @return 提交总数
    */
   public long getSubmittedCount() {
-    return submittedCount.sum();
+    return metrics.getSubmittedCount();
   }
 
   /**
-   * 获取累计完成任务数。
+   * 获取累计完成任务数（来自 VirtualThreadMetrics，P2-14 移除内部重复计数）。
    *
    * @return 完成总数
    */
   public long getCompletedCount() {
-    return completedCount.sum();
+    return metrics.getCompletedCount();
   }
 
   // ====================== private helpers ======================
@@ -161,7 +154,6 @@ public class MeteredVirtualExecutorService implements ExecutorService {
       try {
         task.run();
       } finally {
-        completedCount.increment();
         metrics.incrementCompleted();
       }
     };
@@ -173,9 +165,15 @@ public class MeteredVirtualExecutorService implements ExecutorService {
       try {
         return callable.call();
       } finally {
-        completedCount.increment();
         metrics.incrementCompleted();
       }
     };
+  }
+
+  /** 批量包装 Callable 集合（为 invokeAll 保持完成计数准确）。 */
+  private <T> Collection<? extends Callable<T>> wrapCallables(Collection<? extends Callable<T>> tasks) {
+    return tasks.stream()
+        .map(this::<T>wrapCallable)
+        .toList();
   }
 }

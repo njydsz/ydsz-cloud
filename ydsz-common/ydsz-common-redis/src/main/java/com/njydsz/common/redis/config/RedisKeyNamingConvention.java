@@ -2,6 +2,8 @@ package com.njydsz.common.redis.config;
 
 import java.util.regex.Pattern;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Redis Key 命名规范校验工具
  *
@@ -17,12 +19,12 @@ import java.util.regex.Pattern;
  *   <li>临时性数据（锁、限流、验证码）应使用独立业务域前缀（{@code lock:}、{@code ratelimit:}、{@code captcha:}）
  * </ul>
  *
- * <p><b>使用场景：</b>
+ * <p><b>校验模式（通过 {@link RedisProperties.KeyNaming#getMode()} 配置）：</b>
  *
  * <ul>
- *   <li>单元测试中校验 Key 命名合规性
- *   <li>Code Review 时人工对照检查
- *   <li>配合 Redis MONITOR / SCAN 做命名规范巡检
+ *   <li>{@link ValidationMode#STRICT} - 违规时抛出 {@link IllegalArgumentException}
+ *   <li>{@link ValidationMode#WARN}（默认）- 违规时打印 WARN 日志，不阻断操作
+ *   <li>{@link ValidationMode#DISABLED} - 不做任何校验
  * </ul>
  *
  * <p><b>使用示例：</b>
@@ -31,6 +33,9 @@ import java.util.regex.Pattern;
  * // 校验 Key 是否合规
  * boolean valid = RedisKeyNamingConvention.isValid("user:info:10086");   // true
  * boolean invalid = RedisKeyNamingConvention.isValid("User_Info_10086"); // false
+ *
+ * // 按配置模式校验（WARN 模式只打日志，STRICT 模式抛异常）
+ * RedisKeyNamingConvention.validateWithMode("user:info:10086", ValidationMode.WARN);
  *
  * // 批量扫描并找出不合规的 Key
  * List<String> violations = RedisKeyNamingConvention.filterInvalidKeys(allKeys);
@@ -41,6 +46,7 @@ import java.util.regex.Pattern;
  * @see RedisKeysEnum
  * @see RedisKeyFormatter
  */
+@Slf4j
 public final class RedisKeyNamingConvention {
 
   /** Key 最大长度限制 */
@@ -67,6 +73,21 @@ public final class RedisKeyNamingConvention {
   /** 私有构造，禁止实例化 */
   private RedisKeyNamingConvention() {
     throw new AssertionError("工具类禁止实例化");
+  }
+
+  /**
+   * Key 命名校验模式
+   *
+   * <p>控制 {@link #validateWithMode(String, ValidationMode)} 在遇到违规时的行为：
+   * STRICT 抛异常、WARN 仅日志告警、DISABLED 关闭校验。
+   */
+  public enum ValidationMode {
+    /** 严格模式：违规时抛出 IllegalArgumentException */
+    STRICT,
+    /** 警告模式（默认）：违规时打印 WARN 日志，不阻断操作 */
+    WARN,
+    /** 禁用模式：不做任何校验 */
+    DISABLED
   }
 
   /**
@@ -102,6 +123,30 @@ public final class RedisKeyNamingConvention {
       return "Key 只能包含小写字母、数字、下划线、连字符和冒号，且冒号不能出现在首尾或连续出现";
     }
     return null;
+  }
+
+  /**
+   * 按指定模式校验 Key 命名
+   *
+   * <p>DISABLED 模式下直接返回；WARN 模式下违规仅打印日志；STRICT 模式下违规抛出异常。
+   *
+   * @param key 原始 Key
+   * @param mode 校验模式
+   */
+  public static void validateWithMode(String key, ValidationMode mode) {
+    if (mode == ValidationMode.DISABLED) {
+      return;
+    }
+    String reason = validateWithReason(key);
+    if (reason == null) {
+      return;
+    }
+    if (mode == ValidationMode.WARN) {
+      log.warn("【RedisKeyNaming】Key 命名违规（WARN 模式） | key={} | reason={}", key, reason);
+    } else {
+      throw new IllegalArgumentException(
+          String.format("Redis Key 命名违规 | key=%s | reason=%s", key, reason));
+    }
   }
 
   /**

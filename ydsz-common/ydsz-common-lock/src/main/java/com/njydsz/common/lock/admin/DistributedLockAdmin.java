@@ -79,4 +79,16 @@ public interface DistributedLockAdmin {
    * @return 本次扫描得到的键列表；无更多匹配时返回空列表；pattern 为 null 或空返回空列表
    */
   List<String> scanKeys(String pattern, int batchSize);
+
+  /**
+   * 获取公平锁等待队列的运维信息（P2-E5 新增）。
+   *
+   * <p>返回当前正在等待该锁的客户端列表（按入队顺序），包含 clientId 与入队时间戳。 用于排查"队列头部是否被死锁客户端阻塞"等 P0-F2 问题。
+   *
+   * <p>该操作使用 {@code LRANGE} 读取列表内容，时间复杂度 O(N)（N 为队列长度）。 队列长度通常在数十条以内，不会造成 Redis 性能问题。
+   *
+   * @param lockKey 锁的 Redis 键（与 {@link #exists(String)} 的 key 格式一致）
+   * @return 队列条目列表（格式：{@code clientId:joinTimeMillis}）； 队列不存在或为空返回空列表；非公平锁或不含公平队列的时候返回空列表
+   */
+  List<String> getFairQueue(String lockKey);
 }

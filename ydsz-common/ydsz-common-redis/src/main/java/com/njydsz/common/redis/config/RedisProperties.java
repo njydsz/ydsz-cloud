@@ -174,6 +174,9 @@ public class RedisProperties {
   /** 多级缓存配置（L1 Caffeine + L2 Redis） */
   private MultiLevel multilevel = new MultiLevel();
 
+  /** Key 命名规范校验配置 */
+  private KeyNaming keyNaming = new KeyNaming();
+
   /** 客户端配置（连接池、SSL、读策略等） */
   @NestedConfigurationProperty private Client client = new Client();
 

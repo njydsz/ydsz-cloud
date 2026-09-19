@@ -25,6 +25,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Role;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.thread.actuator.ThreadPoolMetricsEndpoint;
@@ -102,6 +104,44 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
           "[ydsz-thread] 自动配置完成，已管理平台线程池: {}，ThreadPoolRegistry 已注册: {} 个",
           applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class).keySet(),
           ThreadPoolRegistry.size());
+    }
+  }
+
+  /**
+   * 应用上下文刷新完成后输出启动诊断信息（P2-16）。
+   *
+   * <p>输出内容：JVM 版本与 VirtualThread 支持状态、CPU 核心数、Platform 与 Virtual 线程池数量。
+   * 与 {@code @EventListener(ContextRefreshedEvent.class)} 语义等价，
+   * 但此处直接在配置类中保留以确保热更新监听器注册完成后也触发诊断。
+   *
+   * @param event 上下文刷新事件
+   */
+  @EventListener(ContextRefreshedEvent.class)
+  public void onApplicationReady(ContextRefreshedEvent event) {
+    if (event.getApplicationContext() != applicationContext) {
+      // 仅响应根上下文的刷新事件，避免子上下文重复触发
+      return;
+    }
+    printStartupDiagnostics();
+  }
+
+  /**
+   * 输出启动诊断信息。
+   *
+   * <p>P2-16：增强启动日志，输出 JVM/线程池/CPU 信息辅助问题定位。
+   */
+  private void printStartupDiagnostics() {
+    try {
+      int platformCount = applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class).size();
+      int registryCount = ThreadPoolRegistry.size();
+      int cpuCores = Runtime.getRuntime().availableProcessors();
+      String javaVersion = System.getProperty("java.version");
+
+      LOG.info(
+          "[ydsz-thread] 启动诊断: JVM={}, CPU cores={}, Platform线程池={}, Registry={}",
+          javaVersion, cpuCores, platformCount, registryCount);
+    } catch (Exception e) {
+      LOG.debug("[ydsz-thread] 启动诊断输出异常: {}", e.getMessage());
     }
   }
 

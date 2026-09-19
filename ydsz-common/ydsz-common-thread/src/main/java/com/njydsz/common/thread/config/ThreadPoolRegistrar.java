@@ -98,7 +98,13 @@ public class ThreadPoolRegistrar
       String beanName = prefix + name + "Executor";
 
       if (registry.containsBeanDefinition(beanName)) {
-        LOG.warn("ydsz-thread: Bean [{}] 已存在，跳过注册（可能与业务 Bean 命名冲突）", beanName);
+        // P2-17：命名冲突时输出可操作建议，辅助开发者快速定位问题
+        LOG.warn(
+            "ydsz-thread: Bean [{}] 已存在，跳过注册。"
+                + " 建议: 1) 在 ydsz.thread.bean-name-prefix 配置前缀（如 'ydsz-'）避免冲突；"
+                + " 2) 检查业务代码中是否有自定义的同名 ThreadPoolTaskExecutor Bean"
+                + "（可能是 @Bean 配置或 Spring Boot 自动装配产生）",
+            beanName);
         continue;
       }
 

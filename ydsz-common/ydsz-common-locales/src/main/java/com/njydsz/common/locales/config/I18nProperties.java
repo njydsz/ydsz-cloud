@@ -220,6 +220,14 @@ public class I18nProperties {
   private int negativeCacheCapacity = 500;
 
   /**
+   * i18n 运行时严格度等级（新增高阶配置，简化 boolean 开关组合）
+   *
+   * <p>设置此字段后，{@link #isNegativeCacheEnabled()} 与 {@link #isMissingTranslationLogEnabled()} 返回值以本枚举为准； 设为 null
+   * 时回退到独立的 {@code negative-cache-enabled} / {@code missing-translation-log-enabled} 字段。 默认值：{@code null}（向后兼容，使用旧字段）。
+   */
+  private com.njydsz.common.locales.util.RuntimeStrictness runtimeStrictness;
+
+  /**
    * 是否启用 i18n 元数据 REST API（默认 false）。
    *
    * <p>启用后暴露 {@code /api/internal/i18n/languages}、{@code /api/internal/i18n/languages/supported}、
@@ -468,13 +476,43 @@ public class I18nProperties {
   }
 
   /**
-   * 合并手动配置 basename、通配符扫描发现、SPI  Provider 声明的 basename。
+   * 合并手动配置 basename、通配符扫描发现、SPI Provider 声明的 basename。
    *
-   * <p>合并优先级：手动配置 > 通配符扫描 > SPI Provider 声明，去重保留首次出现顺序。三类来源覆盖绝大多数资源定位场景。
+   * <p>合并优先级：手动配置 &gt; 通配符扫描 &gt; SPI Provider 声明，去重保留首次出现顺序。 三类来源覆盖绝大多数资源定位场景。
    *
-   * @return 合并后的 basename 数组
+   * <p>结果在 ClassLoader 级别缓存（static volatile），Spring DevTools restart 后无需重新扫描 classpath IO。 缓存可通过 {@link #invalidateBasenameCache()} 手动失效。
+   *
+   * @return 合并后的 basename 数组（缓存引用，不要修改内容）
    */
   public String[] getEffectiveBasenames() {
+    String[] cached = EFFECTIVE_BASENAMES_CACHE;
+    if (cached != null) {
+      return cached;
+    }
+    synchronized (CACHE_LOCK) {
+      if (EFFECTIVE_BASENAMES_CACHE != null) {
+        return EFFECTIVE_BASENAMES_CACHE;
+      }
+      EFFECTIVE_BASENAMES_CACHE = computeEffectiveBasenames();
+      return EFFECTIVE_BASENAMES_CACHE;
+    }
+  }
+
+  /**
+   * 手动失效 basename 合并结果缓存（admin reload 后调用，强制重新扫描通配符 + SPI）。
+   */
+  public static void invalidateBasenameCache() {
+    synchronized (CACHE_LOCK) {
+      EFFECTIVE_BASENAMES_CACHE = null;
+    }
+  }
+
+  /**
+   * 实际执行 basename 合并计算（通配符扫描 + SPI + 手动配置）。
+   *
+   * @return 合并后的 basename 数组副本
+   */
+  private String[] computeEffectiveBasenames() {
     Set<String> merged = new LinkedHashSet<>();
 
     // 1. 先加入手动配置的 basename
@@ -502,6 +540,12 @@ public class I18nProperties {
 
     return merged.toArray(new String[0]);
   }
+
+  /** basename 合并结果缓存 — 跨 ClassLoader 共享，DevTools restart 后仍有效 */
+  private static volatile String[] EFFECTIVE_BASENAMES_CACHE;
+
+  /** 缓存锁对象 */
+  private static final Object CACHE_LOCK = new Object();
 
   /**
    * 通过 ServiceLoader 发现业务模块实现的 {@link com.njydsz.common.locales.spi.I18nBasenameProvider}，收集其声明的 basename。
