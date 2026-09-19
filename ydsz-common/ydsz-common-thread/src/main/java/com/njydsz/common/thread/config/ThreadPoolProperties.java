@@ -24,6 +24,7 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
  * ydsz:
  *   thread:
  *     enabled: true
+ *     hot-update-enabled: true
  *     pools:
  *       io:
  *         core-size: 8
@@ -57,6 +58,12 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
  *   <li>新增 {@code hot-update} 配置项，支持自动注册热更新监听器
  * </ul>
  *
+ * <p>26.09.19 变更（P2-3）：
+ *
+ * <ul>
+ *   <li>{@code HotUpdateConfig} 降级为内联 {@code hotUpdateEnabled} 字段，配置键为 {@code ydsz.thread.hot-update-enabled}
+ * </ul>
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -69,13 +76,15 @@ public class ThreadPoolProperties {
   private boolean isEnabled = true;
 
   /**
-   * 热更新配置。默认不启用。
+   * 是否启用热更新监听器（默认 false）。
    *
    * <p>启用后，应用启动时会自动注册热更新监听器，允许运行时动态调整线程池参数。
    *
+   * <p>配置键：{@code ydsz.thread.hot-update-enabled}。
+   *
    * @since 26.09.01
    */
-  private HotUpdateConfig hotUpdate = new HotUpdateConfig();
+  private boolean hotUpdateEnabled = false;
 
   /**
    * Bean 名称前缀（默认空字符串）。
@@ -243,21 +252,5 @@ public class ThreadPoolProperties {
     DISCARD_OLDEST,
     /** 静默丢弃 */
     DISCARD
-  }
-
-  /**
-   * 热更新配置属性。
-   *
-   * @since 26.09.01
-   */
-  @Data
-  public static class HotUpdateConfig {
-
-    /**
-     * 是否启用热更新监听器（默认 false）。
-     *
-     * <p>启用后，应用启动时自动打印线程池注册摘要， 并提供运行时调整线程池参数的能力。
-     */
-    private boolean isEnabled = false;
   }
 }

@@ -139,20 +139,40 @@ public class ExceptionCodeDocEndpoint {
   }
 
   /**
-   * 解析异常码对应的国际化消息
+   * 解析异常码对应的全部已配置语言的国际化消息（26.09.19 新增）。
+   *
+   * <p>遍历项目已配置的 Locale 集合（{@code zh_CN} / {@code en_US} / {@code zh_TW}），
+   * 按 key 逐一解析，返回 locale 标签 → 文案的不可变映射。前端可据此一次性拉取全部语言文案，
+   * 本地切换语言时无需再次请求。
    *
    * @param code 异常码枚举
-   * @return 已解析的消息；解析失败时返回 i18n key
+   * @return 各 Locale 对应文案映射（至少含 {@link Locale#ROOT} 兜底）
    */
-  private String resolveMessage(ExceptionCode code) {
-    if (messageSource == null || code.getKey() == null) {
-      return code.getKey();
+  private Map<String, String> resolveAllMessages(ExceptionCode code) {
+    Map<String, String> messages = new HashMap<>(4);
+    if (code.getKey() == null) {
+      return messages;
     }
-    try {
-      return messageSource.getMessage(code.getKey(), null, code.getKey(), Locale.ROOT);
-    } catch (Exception e) {
-      return code.getKey();
+    if (messageSource == null) {
+      messages.put(Locale.ROOT.toString(), code.getKey());
+      return messages;
     }
+    // 遍历项目已配置的 Locale 集合（与 ydzz-common-locales 配置的 basenames 对齐）
+    Locale[] supportedLocales =
+        new Locale[] {Locale.ROOT, Locale.SIMPLIFIED_CHINESE, Locale.US, Locale.TRADITIONAL_CHINESE};
+    for (Locale locale : supportedLocales) {
+      try {
+        String msg = messageSource.getMessage(code.getKey(), null, code.getKey(), locale);
+        if (msg != null && !msg.equals(code.getKey())) {
+          messages.put(locale.toString(), msg);
+        }
+      } catch (Exception e) {
+        // 该 Locale 无翻译时跳过（使用 ROOT 兜底）
+      }
+    }
+    // 确保至少含 ROOT 兜底
+    messages.putIfAbsent(Locale.ROOT.toString(), code.getKey());
+    return messages;
   }
 
   /**
@@ -233,28 +253,43 @@ public class ExceptionCodeDocEndpoint {
     /** HTTP 状态码 */
     private final int httpStatus;
 
-    /** 已解析的消息 */
+    /** 已解析消息（默认 Locale.ROOT 兜底） */
     private final String message;
 
     /** 来源类名 */
     private final String source;
 
     /**
-     * 构造错误码文档
+     * 多语言消息映射（26.09.19 新增）。
+     *
+     * <p>键为 {@link Locale#toString()}（{@code zh_CN}/{@code en_US}/{@code zh_TW}/{@code ""}），
+     * 值为对应语言的已解析文案。前端可据此实现错误文案本地化，避免硬编码 i18n key。
+     */
+    private final Map<String, String> messages;
+
+    /**
+     * 构造错误码文档（含多语言消息）。
      *
      * @param code 业务错误码
      * @param key 国际化消息键
      * @param httpStatus HTTP 状态码
-     * @param message 已解析的消息
+     * @param message 默认消息（Locale.ROOT 兜底）
      * @param source 来源类名
+     * @param messages 多语言消息映射
      */
     public ExceptionCodeDoc(
-        String code, String key, int httpStatus, String message, String source) {
+        String code,
+        String key,
+        int httpStatus,
+        String message,
+        String source,
+        Map<String, String> messages) {
       this.code = code;
       this.key = key;
       this.httpStatus = httpStatus;
       this.message = message;
       this.source = source;
+      this.messages = messages;
     }
   }
 }

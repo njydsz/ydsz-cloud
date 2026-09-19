@@ -1,4 +1,5 @@
 package com.njydsz.common.thread.config;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -12,6 +13,9 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import com.njydsz.common.thread.metrics.ThreadPoolRegistryMetrics;
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 
 /**
  * 线程池运行时动态参数调整器。
@@ -28,11 +32,19 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * <p>启用方式：在 application.yml 中设置 {@code ydsz.thread.hot-update.enabled=true}， 或通过 {@link
  * ThreadPoolHotUpdateAutoConfiguration} 注册。
  *
+ * <p>快照数据通过 {@link ThreadPoolRegistry.ThreadPoolMetricsSnapshot} 暴露，去除了重复的 {@code ThreadPoolSnapshot} 内部类。
+ *
  * <p>26.09.01 变更：
  *
  * <ul>
  *   <li>从依赖 {@link ThreadPoolAutoConfiguration} 改为直接注入 {@link ApplicationContext}， 降低耦合并纳入自动配置体系
  *   <li>由 {@link ThreadPoolHotUpdateAutoConfiguration} 自动注册，无需业务模块手动创建 Bean
+ * </ul>
+ *
+ * <p>26.09.19 变更（P1-19）：
+ *
+ * <ul>
+ *   <li>删除内部类 {@code ThreadPoolSnapshot}，改用 {@link ThreadPoolRegistry.ThreadPoolMetricsSnapshot}
  * </ul>
  *
  * @author ydsz-team
@@ -65,17 +77,26 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   }
 
   /**
-   * 应用上下文刷新完成后回调，打印线程池注册摘要。
+   * 应用上下文刷新完成后回调，打印线程池注册摘要并刷新注册中心指标。
    *
    * <p>该方法由 Spring 容器在 {@link ContextRefreshedEvent} 发布时自动调用。
+   * 26.09.19 新增：刷新 ThreadPoolRegistryMetrics，确保运行时注册的新线程池指标也被绑定（P1-13）。
    *
    * @param event 上下文刷新事件
    */
   @EventListener(ContextRefreshedEvent.class)
   public void onContextReady(ContextRefreshedEvent event) {
     Map<String, ThreadPoolTaskExecutor> executors = getExecutors();
+    int platformCount = executors.size();
+    int registryCount = ThreadPoolRegistry.size();
     LOG.info(
-        "[ThreadPoolHotUpdate] 热更新监听器就绪，当前共 {} 个平台线程池: {}", executors.size(), executors.keySet());
+        "[ThreadPoolHotUpdate] 热更新监听器就绪，当前共 {} 个平台线程池 (注册中心 {} 个): {}",
+        platformCount,
+        registryCount,
+        executors.keySet());
+
+    // P1-13: 刷新注册中心指标，覆盖运行时新增线程池
+    refreshRegistryMetrics();
   }
 
   /**
@@ -137,24 +158,35 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   /**
    * 获取指定线程池的当前快照。
    *
+   * <p>26.09.19 修复（P1-19）：返回类型改为 {@link ThreadPoolRegistry.ThreadPoolMetricsSnapshot}，
+   * 与 {@link ThreadPoolRegistry#snapshotMetrics(String)} 保持统一，消除重复的 {@code ThreadPoolSnapshot} 内部类。
+   *
    * @param poolName 线程池配置 key
-   * @return 线程池快照信息
+   * @return 线程池快照信息；线程池不存在返回 null
    */
-  public ThreadPoolSnapshot snapshot(String poolName) {
+  public ThreadPoolRegistry.ThreadPoolMetricsSnapshot snapshot(String poolName) {
     ThreadPoolTaskExecutor executor = getExecutor(poolName);
     if (executor == null) {
       return null;
     }
     try {
       ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
-      return new ThreadPoolSnapshot(
+      if (pool == null) {
+        return null;
+      }
+      return new ThreadPoolRegistry.ThreadPoolMetricsSnapshot(
           poolName,
           pool.getCorePoolSize(),
           pool.getMaximumPoolSize(),
           pool.getActiveCount(),
           pool.getPoolSize(),
-          pool.getQueue().size(),
-          pool.getCompletedTaskCount());
+          pool.getQueue() != null ? pool.getQueue().size() : 0,
+          pool.getQueue() != null
+              ? pool.getQueue().size() + pool.getQueue().remainingCapacity()
+              : 0,
+          pool.getCompletedTaskCount(),
+          pool.getLargestPoolSize(),
+          pool.getTaskCount());
     } catch (Exception e) {
       LOG.warn("[ThreadPoolHotUpdate] 线程池 [{}] 快照获取失败: {}", poolName, e.getMessage());
       return null;
@@ -166,25 +198,14 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
    *
    * @return poolName → snapshot 的映射
    */
-  public Map<String, ThreadPoolSnapshot> snapshotAll() {
-    Map<String, ThreadPoolSnapshot> result = new LinkedHashMap<>(16);
+  public Map<String, ThreadPoolRegistry.ThreadPoolMetricsSnapshot> snapshotAll() {
+    Map<String, ThreadPoolRegistry.ThreadPoolMetricsSnapshot> result = new LinkedHashMap<>(16);
     Map<String, ThreadPoolTaskExecutor> executors = getExecutors();
     for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
       String poolName = resolvePoolName(entry.getKey());
-      try {
-        ThreadPoolExecutor pool = entry.getValue().getThreadPoolExecutor();
-        result.put(
-            poolName,
-            new ThreadPoolSnapshot(
-                poolName,
-                pool.getCorePoolSize(),
-                pool.getMaximumPoolSize(),
-                pool.getActiveCount(),
-                pool.getPoolSize(),
-                pool.getQueue().size(),
-                pool.getCompletedTaskCount()));
-      } catch (Exception e) {
-        LOG.warn("[ThreadPoolHotUpdate] 线程池 [{}] 快照获取失败: {}", poolName, e.getMessage());
+      ThreadPoolRegistry.ThreadPoolMetricsSnapshot snapshot = snapshot(poolName);
+      if (snapshot != null) {
+        result.put(poolName, snapshot);
       }
     }
     return result;
@@ -236,6 +257,21 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   }
 
   /**
+   * P1-13: 刷新 ThreadPoolRegistryMetrics 的 Gauge 注册，覆盖运行时新增线程池。
+   */
+  private void refreshRegistryMetrics() {
+    if (applicationContext == null) {
+      return;
+    }
+    try {
+      ThreadPoolRegistryMetrics metrics = applicationContext.getBean(ThreadPoolRegistryMetrics.class);
+      metrics.refreshMetrics(null);
+    } catch (Exception e) {
+      LOG.debug("[ThreadPoolHotUpdate] 刷新注册中心指标失败: {}", e.getMessage());
+    }
+  }
+
+  /**
    * 执行实际的核心线程数/最大线程数调整（已校验参数合法性）。
    *
    * @param executor 目标执行器
@@ -274,64 +310,6 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
         return new ThreadPoolExecutor.DiscardPolicy();
       default:
         return new ThreadPoolExecutor.CallerRunsPolicy();
-    }
-  }
-
-  // ==================== 内部数据类 ====================
-
-  /** 线程池运行时快照（不可变）。 */
-  public static class ThreadPoolSnapshot {
-    private final String poolName;
-    private final int corePoolSize;
-    private final int maximumPoolSize;
-    private final int activeCount;
-    private final int poolSize;
-    private final int queueSize;
-    private final long completedTaskCount;
-
-    public ThreadPoolSnapshot(
-        String poolName,
-        int corePoolSize,
-        int maximumPoolSize,
-        int activeCount,
-        int poolSize,
-        int queueSize,
-        long completedTaskCount) {
-      this.poolName = poolName;
-      this.corePoolSize = corePoolSize;
-      this.maximumPoolSize = maximumPoolSize;
-      this.activeCount = activeCount;
-      this.poolSize = poolSize;
-      this.queueSize = queueSize;
-      this.completedTaskCount = completedTaskCount;
-    }
-
-    public String getPoolName() {
-      return poolName;
-    }
-
-    public int getCorePoolSize() {
-      return corePoolSize;
-    }
-
-    public int getMaximumPoolSize() {
-      return maximumPoolSize;
-    }
-
-    public int getActiveCount() {
-      return activeCount;
-    }
-
-    public int getPoolSize() {
-      return poolSize;
-    }
-
-    public int getQueueSize() {
-      return queueSize;
-    }
-
-    public long getCompletedTaskCount() {
-      return completedTaskCount;
     }
   }
 }

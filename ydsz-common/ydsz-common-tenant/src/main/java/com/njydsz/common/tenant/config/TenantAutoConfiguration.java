@@ -27,6 +27,7 @@ import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.tenant.cache.CacheKeyBuilderInitializer;
 import com.njydsz.common.tenant.datasource.DatasourceKeyResolver;
+import com.njydsz.common.tenant.datasource.SchemaFlywayInitializer;
 import com.njydsz.common.tenant.datasource.SchemaSearchPathExecutor;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
@@ -430,5 +431,27 @@ public class TenantAutoConfiguration {
   public SchemaSearchPathExecutor schemaSearchPathExecutor(TenantProperties properties) {
     log.info("多租户 SCHEMA 模式 search_path 自动设置已启用（schema-search-path-enabled=true）");
     return new SchemaSearchPathExecutor(properties);
+  }
+
+  /**
+   * SCHEMA 模式 Flyway 迁移助手（可选，Flyway 在 classpath 时）。
+   *
+   * <p>为新租户创建独立 schema 并执行迁移脚本。业务模块（ydsz-tenant-admin）获取此 Bean 后调用：
+   * {@link SchemaFlywayInitializer#createSchema(String)} 与
+   * {@link SchemaFlywayInitializer#migrateTenantSchema(String)}。
+   *
+   * @param properties 租户配置
+   * @param flywayProvider Flyway 实例提供者（可选，Flyway 在 classpath 时可用）
+   * @return Flyway 迁移助手
+   */
+  @Bean
+  @ConditionalOnProperty(prefix = "ydsz.tenant", name = "mode", havingValue = "SCHEMA")
+  @ConditionalOnClass(name = "org.flywaydb.core.Flyway")
+  @ConditionalOnMissingBean
+  public SchemaFlywayInitializer schemaFlywayInitializer(
+      TenantProperties properties,
+      ObjectProvider<org.flywaydb.core.Flyway> flywayProvider) {
+    log.info("多租户 SCHEMA 模式 Flyway 迁移助手已注册");
+    return new SchemaFlywayInitializer(properties, flywayProvider.getIfAvailable());
   }
 }

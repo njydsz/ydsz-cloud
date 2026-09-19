@@ -1,5 +1,7 @@
 package com.njydsz.common.thread.metrics;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import io.micrometer.core.instrument.Gauge;
@@ -16,7 +18,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * <p>将 {@link ThreadPoolRegistry} 中所有已注册线程池的实时指标绑定到 Micrometer，
  * 使得 Prometheus / Observability 平台可以采集到线程池运行状态。
  *
- * <p>暴露的 Gauge 指标（每个线程池 6 项）：
+ * <p>暴露的 Gauge 指标（每个线程池 9 项）：
  *
  * <ul>
  *   <li>{@code ydsz.registry.executor.core} - 核心线程数
@@ -34,6 +36,9 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  *
  * <p>此外，还注册一条汇总 Gauge {@code ydsz.registry.executor.count} 表示当前注册中心管理的线程池总数。
  *
+ * <p>26.09.19 变更：支持 {@link #refreshMetrics(MeterRegistry)} 增量刷新，覆盖运行时通过 {@link
+ * com.njydsz.common.thread.util.ExecutorUtils} 新注册线程池的指标注册问题（P1-13）。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -46,15 +51,22 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
   /** 注册中心指标汇总前缀。 */
   public static final String METRIC_COUNT_NAME = "ydsz.registry.executor.count";
 
+  /** 已注册指标的线程池名称集合（用于增量刷新判断）。 */
+  private final Set<String> registeredPoolNames = ConcurrentHashMap.newKeySet();
+
+  /** 当前绑定的 MeterRegistry 引用（供增量刷新使用）。 */
+  private MeterRegistry boundRegistry;
+
   @Override
   public void bindTo(MeterRegistry registry) {
+    this.boundRegistry = registry;
+
     // 汇总指标：当前注册中心管理的线程池数量
     Gauge.builder(METRIC_COUNT_NAME, ThreadPoolExecutor.class, e -> ThreadPoolRegistry.size())
         .description("当前 ThreadPoolRegistry 管理的线程池总数")
         .register(registry);
 
     // 为每个已注册线程池注册 Gauge（延迟绑定，按需创建）
-    // 由于线程池是运行时动态注册的，我们使用动态 Gauge 注册器
     registerDynamicGauges(registry);
 
     log.info(
@@ -63,14 +75,40 @@ public class ThreadPoolRegistryMetrics implements MeterBinder {
   }
 
   /**
+   * 增量刷新指标绑定，仅注册新增线程池的 Gauge。
+   *
+   * <p>解决运行时通过 {@code ExecutorUtils} 动态注册新线程池后，Grafana 无法采集其指标的问题。
+   * 应在 {@code ContextRefreshedEvent} 发布后调用一次，确保所有延迟注册的线程池也被覆盖。
+   *
+   * @param meterRegistry Micrometer MeterRegistry；为 null 时使用上次绑定值
+   */
+  public void refreshMetrics(MeterRegistry meterRegistry) {
+    MeterRegistry registry = meterRegistry != null ? meterRegistry : boundRegistry;
+    if (registry == null) {
+      return;
+    }
+    boundRegistry = registry;
+
+    ThreadPoolRegistry.getAll().forEach(
+        (name, executor) -> {
+          if (registeredPoolNames.add(name)) {
+            registerPoolGauges(name, executor, registry);
+            log.debug("[ThreadPoolRegistryMetrics] 增量注册线程池 [{}] 指标", name);
+          }
+        });
+  }
+
+  /**
    * 动态注册所有已注册线程池的 Gauge 指标。
    *
    * <p>从 {@link ThreadPoolRegistry#getAll()} 遍历所有线程池，为每个创建一组 Gauge。
-   * 后续新注册的线程池需通过 {@link #refreshMetrics(MeterRegistry)} 方法重新绑定。
    */
   private void registerDynamicGauges(MeterRegistry meterRegistry) {
     ThreadPoolRegistry.getAll().forEach(
-        (name, executor) -> registerPoolGauges(name, executor, meterRegistry));
+        (name, executor) -> {
+          registeredPoolNames.add(name);
+          registerPoolGauges(name, executor, meterRegistry);
+        });
   }
 
   /**

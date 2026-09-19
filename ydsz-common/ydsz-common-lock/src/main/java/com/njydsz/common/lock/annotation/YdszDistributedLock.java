@@ -69,7 +69,16 @@ public @interface YdszDistributedLock {
   /**
    * 最大等待时间
    *
-   * <p>为 0 时表示非阻塞，获取不到锁直接返回
+   * <p>为 0 时表示非阻塞（获取不到锁直接失败）。
+   *
+   * <p><b>与 {@link #retryCount()} 的层级关系：</b>
+   *
+   * <ul>
+   *   <li>{@code waitTime}：<b>单次</b>获取锁时的阻塞等待时间。框架内部通过指数退避（10ms → 200ms）循环尝试获取锁，要么在 waitTime 内获取成功，要么超时返回 null。
+   *   <li>{@code retryCount}：<b>外层</b>重试次数。每次重试会发起一轮全新的 {@code waitTime} 阻塞获取。
+   * </ul>
+   *
+   * <p>两者叠加的总耗时 ≈ (retryCount + 1) × waitTime。 建议：waitTime 根据业务可容忍的排队等待时长设置（通常 1-10s），retryCount 根据集群节点数和锁粒度设置（通常 0-2 次）。
    *
    * @return 等待时间
    */

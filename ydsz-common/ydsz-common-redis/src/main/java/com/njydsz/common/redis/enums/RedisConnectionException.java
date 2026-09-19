@@ -3,7 +3,7 @@ package com.njydsz.common.redis.enums;
 /**
  * Redis 连接异常
  *
- * <p>当 Redis 连接失败、超时等基础设施故障时抛出此异常。 该异常触发自动重试机制，属于可恢复异常。
+ * <p>当 Redis 连接失败、超时等基础设施故障时抛出此异常。该异常触发自动重试机制，属于可恢复异常。
  *
  * <p>适用场景：
  *
@@ -20,6 +20,12 @@ public class RedisConnectionException extends RedisOperationException {
 
   private static final long serialVersionUID = 1L;
 
+  /** 连接异常默认恢复建议 */
+  private static final String DEFAULT_SUGGESTION =
+      "建议：1) 检查 Redis 服务是否运行（ydsz.redis.host:port）；"
+          + "2) 检查网络连通性（防火墙/安全组）；"
+          + "3) 查看 Redis 服务端日志排查拒绝连接原因";
+
   /**
    * 构造 Redis 连接异常
    *
@@ -28,7 +34,7 @@ public class RedisConnectionException extends RedisOperationException {
    * @param cause 原始异常
    */
   public RedisConnectionException(String key, String operation, Throwable cause) {
-    super(key, operation, cause);
+    super(key, operation, cause, DEFAULT_SUGGESTION);
   }
 
   /**
@@ -38,6 +44,6 @@ public class RedisConnectionException extends RedisOperationException {
    * @param cause 原始异常
    */
   public RedisConnectionException(String operation, Throwable cause) {
-    super(null, operation, cause);
+    super(null, operation, cause, DEFAULT_SUGGESTION);
   }
 }

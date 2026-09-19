@@ -410,18 +410,63 @@ public class RedisConnectionFactoryConfigurer {
   /**
    * 构建 Redis 节点列表
    *
+   * <p>支持 IPv4（host:port）和 IPv6（[::1]:6379）地址格式。
+   * 格式错误的节点将被跳过，并在日志中打印告警信息。
+   *
    * @param nodes 节点字符串列表（host:port 格式）
-   * @return Redis 节点列表
+   * @return Redis 节点列表，不会为 null
    */
   private List<RedisNode> buildRedisNodes(Collection<String> nodes) {
     List<RedisNode> redisNodes = new ArrayList<>(16);
-    if (nodes != null) {
-      for (String node : nodes) {
-        String[] parts = node.split(":");
-        if (parts.length == 2) {
-          redisNodes.add(new RedisNode(parts[0], Integer.parseInt(parts[1])));
-        }
+    if (nodes == null || nodes.isEmpty()) {
+      return redisNodes;
+    }
+    for (String node : nodes) {
+      if (node == null || node.trim().isEmpty()) {
+        continue;
       }
+      try {
+        String trimmedNode = node.trim();
+        String host;
+        String portStr;
+
+        if (trimmedNode.startsWith("[")) {
+          // IPv6 格式：[::1]:6379
+          int bracketEnd = trimmedNode.indexOf(']');
+          if (bracketEnd < 0) {
+            log.warn("【Redis】节点格式错误（IPv6 缺少闭合方括号），已跳过 | node={}", node);
+            continue;
+          }
+          host = trimmedNode.substring(1, bracketEnd);
+          int portIdx = trimmedNode.indexOf("]:");
+          if (portIdx < 0) {
+            log.warn("【Redis】节点格式错误（IPv6 缺少端口分隔），已跳过 | node={}", node);
+            continue;
+          }
+          portStr = trimmedNode.substring(portIdx + 2);
+        } else {
+          // IPv4 格式：host:port
+          int lastColon = trimmedNode.lastIndexOf(':');
+          if (lastColon <= 0 || lastColon >= trimmedNode.length() - 1) {
+            log.warn("【Redis】节点格式错误（缺少冒号或端口），已跳过 | node={}", node);
+            continue;
+          }
+          host = trimmedNode.substring(0, lastColon);
+          portStr = trimmedNode.substring(lastColon + 1);
+        }
+
+        int port = Integer.parseInt(portStr);
+        if (port <= 0 || port > 65535) {
+          log.warn("【Redis】节点端口超出合法范围（1-65535），已跳过 | node={} | port={}", node, port);
+          continue;
+        }
+        redisNodes.add(new RedisNode(host, port));
+      } catch (NumberFormatException e) {
+        log.warn("【Redis】节点端口解析失败（非数字），已跳过 | node={} | cause={}", node, e.getMessage());
+      }
+    }
+    if (redisNodes.isEmpty() && !nodes.isEmpty()) {
+      log.warn("【Redis】集群节点列表配置有 {} 条记录，但解析后无有效节点", nodes.size());
     }
     return redisNodes;
   }

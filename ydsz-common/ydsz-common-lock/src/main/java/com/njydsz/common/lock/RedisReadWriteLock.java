@@ -33,6 +33,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *   <li>读锁释放：Lua 原子 decr 读锁计数器，计数器归零时删除 key
  *   <li>写锁获取：Lua 原子检查无写锁且读锁计数器为0 + 设置写锁
  *   <li>写锁释放：Lua 原子校验 lockValue 匹配 + 删除写锁 key
+ *   <li>安全续期：Lua 原子校验 key 的值与 holder 一致后才续期（P0-A1 修复）
  * </ul>
  *
  * <p><b>内存安全：</b> 使用 {@link YdszCache} 替代 {@link ThreadLocal}，通过 TTL（30 分钟）和最大容量（10,000）
@@ -40,7 +41,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <p><b>等待策略：</b> 使用指数退避策略（10ms → 200ms）替代固定 50ms 轮询，减少无效 Redis 调用。
  *
- * <p><b>自动续期：</b> 注入 {@link TaskScheduler} 后，读锁/写锁持有期间按租约时间 1/3 间隔自动续期， 防止长操作期间锁因 TTL 到期被强制释放。
+ * <p><b>自动续期：</b> 注入 {@link TaskScheduler} 后，读锁/写锁持有期间按租约时间 1/3 间隔自动续期， 防止长操作期间锁因 TTL 到期被强制释放。续期使用安全续期脚本，仅当 key 当前值与持有者 lockValue
+ * 一致时才刷新 TTL，避免续期到被抢占后的其他客户端锁上。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -59,6 +61,30 @@ public class RedisReadWriteLock implements ReadWriteLock {
 
   /** 续期任务缓存键前缀：写锁 */
   private static final String RENEWAL_KEY_WRITE = "W";
+
+  /**
+   * 安全续期 Lua 脚本（P0-A1 修复）。
+   *
+   * <p>原子性校验：key 存在 且 当前值与预期 holder 值一致时才续期（PEXPIRE）。
+   *
+   * <p>返回值：1=续期成功，0=锁已被抢占（持有者变更）或锁已释放。
+   *
+   * <p>与裸 {@code EXPIRE} 的区别：裸命令不校验持有者，可能将其他客户端已抢占的锁 TTL 重新刷新； 本脚本通过值比对确保只有真正的持有者才能续期。
+   */
+  private static final String SAFE_RENEW_SCRIPT =
+      "if redis.call('exists', KEYS[1]) == 0 then "
+          + "    return 0 "
+          + "end "
+          + "if redis.call('get', KEYS[1]) == ARGV[1] then "
+          + "    redis.call('pexpire', KEYS[1], ARGV[2]) "
+          + "    return 1 "
+          + "else "
+          + "    return 0 "
+          + "end";
+
+  /** 安全续期脚本封装（预编译） */
+  private static final DefaultRedisScript<Long> SAFE_RENEW_SCRIPT_INSTANCE =
+      new DefaultRedisScript<>(SAFE_RENEW_SCRIPT, Long.class);
 
   /** Redis String 操作组件 */
   private final RedisStringOps redisStringOps;
@@ -248,38 +274,71 @@ public class RedisReadWriteLock implements ReadWriteLock {
   /**
    * 启动持锁自动续期（读锁/写锁共用）
    *
+   * <p>P0-A1 修复：续期时传入持有者 lockValue，仅当 key 值与 holder 一致时才刷新 TTL。
+   *
    * @param renewalKey 续期任务缓存键（R/W + threadId）
    * @param redisKey 需要续期的 Redis 键
    * @param holderKey 锁持有者的线程缓存键
+   * @param lockValue 获取锁时的 lockValue（用于安全续期脚本校验持有者）
    */
-  private void scheduleRenewal(String renewalKey, String redisKey, String holderKey) {
+  private void scheduleRenewal(
+      String renewalKey, String redisKey, String holderKey, String lockValue) {
     if (scheduler == null) {
       return;
     }
     long renewInterval = Math.max(expireMillis / RENEW_DIVISOR, 1000);
     ScheduledFuture<?> future =
         scheduler.scheduleAtFixedRate(
-            () -> renewHeldLock(renewalKey, redisKey, holderKey), Duration.ofMillis(renewInterval));
+            () -> renewHeldLock(renewalKey, redisKey, holderKey, lockValue),
+            Duration.ofMillis(renewInterval));
     renewalTasks.put(renewalKey, future);
   }
 
   /**
-   * 续期仍由原持有线程持有的锁
+   * 安全续期仍由原持有线程持有的锁（P0-A1 修复）。
+   *
+   * <p>续期前通过 Lua 脚本原子性校验：Redis key 存在 且 当前值等于持有者的 lockValue 时 才执行 PEXPIRE。
+   *
+   * <ul>
+   *   <li>校验通过 + 续期成功 → 正常返回
+   *   <li>锁已释放（key 不存在） → 停止续期
+   *   <li>锁被抢占（值不匹配） → 停止续期（安全续期关键逻辑）
+   * </ul>
    *
    * @param renewalKey 续期任务缓存键
    * @param redisKey 需要续期的 Redis 键
    * @param holderKey 锁持有者的线程缓存键
+   * @param lockValue 持有者的 lockValue（用于安全校验）
    */
-  private void renewHeldLock(String renewalKey, String redisKey, String holderKey) {
+  private void renewHeldLock(
+      String renewalKey, String redisKey, String holderKey, String lockValue) {
     boolean stillHeld = isHeldByHolder(holderKey);
     if (!stillHeld) {
       cancelRenewal(renewalKey);
       return;
     }
     try {
-      redisTemplate.expire(redisKey, Duration.ofMillis(expireMillis));
+      Long result =
+          redisTemplate.execute(
+              SAFE_RENEW_SCRIPT_INSTANCE,
+              Collections.singletonList(redisKey),
+              lockValue,
+              String.valueOf(expireMillis));
+      if (Long.valueOf(1L).equals(result)) {
+        log.debug("[ydsz-lock] [rw-lock] 安全续期成功 key={}", redisKey);
+        return;
+      }
+      if (Long.valueOf(0L).equals(result)) {
+        // 锁被抢占或已释放，停止续期
+        log.warn(
+            "[ydsz-lock] [rw-lock] 锁已被抢占或释放，停止续期 key={} expectedHolder={}",
+            redisKey,
+            lockValue);
+      }
     } catch (Exception e) {
-      log.warn("读写锁续期失败: key={} | error={}", redisKey, e.getMessage());
+      log.error("[ydsz-lock] [rw-lock] 安全续期异常 key={} error={}", redisKey, e.getMessage(), e);
+    } finally {
+      // 任何失败都停止续期，避免无效刷新
       cancelRenewal(renewalKey);
     }
   }
@@ -386,7 +445,7 @@ public class RedisReadWriteLock implements ReadWriteLock {
           if (result != null && result == 1L) {
             readLockValueCache.put(cacheKey, lockValue);
             readLockCountCache.put(cacheKey, 1);
-            scheduleRenewal(RENEWAL_KEY_READ + cacheKey, readLockKey, cacheKey);
+            scheduleRenewal(RENEWAL_KEY_READ + cacheKey, readLockKey, cacheKey, lockValue);
             return true;
           }
         } catch (Exception e) {
@@ -493,7 +552,7 @@ public class RedisReadWriteLock implements ReadWriteLock {
                   String.valueOf(expireMillis));
           if (result != null && result == 1L) {
             writeLockValueCache.put(cacheKey, lockValue);
-            scheduleRenewal(RENEWAL_KEY_WRITE + cacheKey, writeLockKey, cacheKey);
+            scheduleRenewal(RENEWAL_KEY_WRITE + cacheKey, writeLockKey, cacheKey, lockValue);
             return true;
           }
         } catch (Exception e) {

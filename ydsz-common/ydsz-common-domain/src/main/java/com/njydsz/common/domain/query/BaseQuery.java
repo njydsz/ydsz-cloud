@@ -138,14 +138,80 @@ public abstract class BaseQuery implements Serializable {
   }
 
   /**
-   * 从枚举设置状态过滤
+   * 从枚举填充状态过滤值。
    *
-   * <p>将枚举名称设置为 status 字段值。
+   * <p>将枚举的 {@link Enum#name()} 设置为 {@link #status} 字段。
    *
-   * @param statusEnum 状态枚举
-   * @since 26.09.01
+   * @param statusEnum 状态枚举；传入 {@code null} 时清空 status 字段
+   * @return 当前查询对象，支持链式调用
+   * @since 26.09.19
    */
-  public void statusEnum(Enum<?> statusEnum) {
+  public BaseQuery fillStatusByEnum(Enum<?> statusEnum) {
     this.status = statusEnum != null ? statusEnum.name() : null;
+    return this;
+  }
+
+  // === Fluent API（链式调用）===
+
+  /**
+   * 设置状态过滤（链式调用）。
+   *
+   * @param status 状态字符串；传入 {@code null} 清空
+   * @return 当前查询对象，支持链式调用
+   * @since 26.09.19
+   */
+  public BaseQuery withStatus(String status) {
+    this.status = status;
+    return this;
+  }
+
+  /**
+   * 从枚举设置状态过滤（链式调用）。
+   *
+   * @param statusEnum 状态枚举；传入 {@code null} 清空
+   * @return 当前查询对象，支持链式调用
+   * @since 26.09.19
+   */
+  public BaseQuery withStatus(Enum<?> statusEnum) {
+    this.status = statusEnum != null ? statusEnum.name() : null;
+    return this;
+  }
+
+  /**
+   * 设置搜索关键字（链式调用）。
+   *
+   * @param searchKey 搜索关键字；传入 {@code null} 清空
+   * @return 当前查询对象，支持链式调用
+   * @since 26.09.19
+   */
+  public BaseQuery withSearchKey(String searchKey) {
+    this.searchKey = searchKey;
+    return this;
+  }
+
+  /**
+   * 设置时间范围（链式调用）。
+   *
+   * @param start 开始时间；传入 {@code null} 表示无起始限制
+   * @param end 结束时间；传入 {@code null} 表示无结束限制
+   * @return 当前查询对象，支持链式调用
+   * @since 26.09.19
+   */
+  public BaseQuery withTimeRange(LocalDateTime start, LocalDateTime end) {
+    this.startDateTime = start;
+    this.endDateTime = end;
+    return this;
+  }
+
+  /**
+   * 设置租户 ID（链式调用）。
+   *
+   * @param tenantId 租户 ID；传入 {@code null} 清空
+   * @return 当前查询对象，支持链式调用
+   * @since 26.09.19
+   */
+  public BaseQuery withTenantId(String tenantId) {
+    this.tenantId = tenantId;
+    return this;
   }
 }

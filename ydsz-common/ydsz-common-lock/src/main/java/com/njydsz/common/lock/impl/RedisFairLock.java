@@ -38,13 +38,16 @@ import com.njydsz.common.lock.core.AbstractRedisDistributedLock;
 public class RedisFairLock extends AbstractRedisDistributedLock {
 
   /**
-   * 获取公平锁 Lua 脚本
+   * 获取公平锁 Lua 脚本（P0-F2 增强版）
    *
-   * <p>支持可重入：当前客户端已持有时递增计数；否则检查等待队列队首，仅队首客户端可获取锁
+   * <p>支持可重入：当前客户端已持有时递增计数；否则检查等待队列队首，仅队首客户端可获取锁。
    *
-   * <p>LPOS 快速路径：Redis 6.2+ 使用 LPOS O(1) 检查客户端是否已在队列中， 低版本通过 pcall 捕获错误后回退到 LINDEX O(N) 遍历
+   * <p>LPOS 快速路径：Redis 6.2+ 使用 LPOS O(1) 检查客户端是否已在队列中， 低版本通过 pcall 捕获错误后回退到 LINDEX O(N) 遍历。
    *
-   * <p>原子 EXPIRE：队列 TTL 续期合并到 RPUSH 操作中，避免非原子操作窗口
+   * <p>原子 EXPIRE：队列 TTL 续期合并到 RPUSH 操作中，避免非原子操作窗口。
+   *
+   * <p><b>P0-F2 安全兜底——队首过期条目自动清理：</b> 队列条目格式为 {@code clientId:joinTimeMillis}。 当队首条目在队列中等待超过 {@value #MAX_QUEUE_WAIT_MILLIS}ms 时，视为已过期（持有者可能宕机/超时退出），
+   * 自动从队列中移除并继续检查下一个队首条目。
    */
   private static final String ACQUIRE_LOCK_LUA_SCRIPT =
       "local lockKey = KEYS[1] "
@@ -52,18 +55,48 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
           + "local clientId = ARGV[1] "
           + "local leaseTimeMs = ARGV[2] "
           + "local queueTtlSeconds = ARGV[3] "
+          + "local nowMillis = tonumber(ARGV[4]) "
+          + "local maxWaitMillis = tonumber(ARGV[5]) "
+          + "local entryDelimiter = ARGV[6] "
+          + "local function extractClientId(entry) "
+          + "    local sepIndex = string.find(entry, entryDelimiter, 1, true) "
+          + "    if sepIndex then return string.sub(entry, 1, sepIndex - 1) end "
+          + "    return entry "
+          + "end "
+          + "local function isEntryExpired(entry) "
+          + "    local sepIndex = string.find(entry, entryDelimiter, 1, true) "
+          + "    if not sepIndex then return false end "
+          + "    local joinTs = tonumber(string.sub(entry, sepIndex + 1)) "
+          + "    if not joinTs then return false end "
+          + "    return (nowMillis - joinTs) > maxWaitMillis "
+          + "end "
+          + "local function removeHeadExpired() "
+          + "    local head = redis.call('LINDEX', queueKey, 0) "
+          + "    if head and isEntryExpired(head) then "
+          + "        redis.call('LPOP', queueKey) "
+          + "        return true "
+          + "    end "
+          + "    return false "
+          + "end "
+          + "while true do "
+          + "    local headClient = redis.call('LINDEX', queueKey, 0) "
+          + "    if headClient == false then break end "
+          + "    if not isEntryExpired(headClient) then break end "
+          + "    redis.call('LPOP', queueKey) "
+          + "end "
           + "local function isInQueue(queueKey, clientId) "
           + "    local lposResult = redis.pcall('LPOS', queueKey, clientId) "
           + "    if type(lposResult) == 'table' and lposResult['err'] then "
           + "        local len = redis.call('LLEN', queueKey) "
           + "        for i = 0, len - 1, 1 do "
-          + "            if redis.call('LINDEX', queueKey, i) == clientId then "
+          + "            if extractClientId(redis.call('LINDEX', queueKey, i)) == clientId then "
           + "                return true "
           + "            end "
           + "        end "
           + "        return false "
           + "    end "
-          + "    return lposResult ~= false and lposResult ~= nil "
+          + "    if lposResult == false or lposResult == nil then return false end "
+          + "    return true "
           + "end "
           + "if redis.call('HEXISTS', lockKey, 'owner') == 1 then "
           + "    if redis.call('HGET', lockKey, 'owner') == clientId then "
@@ -72,7 +105,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
           + "        return 1 "
           + "    else "
           + "        if not isInQueue(queueKey, clientId) then "
-          + "            redis.call('RPUSH', queueKey, clientId) "
+          + "            redis.call('RPUSH', queueKey, clientId .. entryDelimiter .. nowMillis) "
           + "            redis.call('EXPIRE', queueKey, queueTtlSeconds) "
           + "        end "
           + "        return 0 "
@@ -86,7 +119,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
           + "    redis.call('PEXPIRE', lockKey, leaseTimeMs) "
           + "    return 1 "
           + "end "
-          + "if headClient == clientId then "
+          + "if extractClientId(headClient) == clientId then "
           + "    redis.call('HSET', lockKey, 'owner', clientId) "
           + "    redis.call('HSET', lockKey, '__count', 1) "
           + "    redis.call('HSET', lockKey, '__leaseTime', leaseTimeMs) "
@@ -95,20 +128,23 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
           + "    return 1 "
           + "end "
           + "if not isInQueue(queueKey, clientId) then "
-          + "    redis.call('RPUSH', queueKey, clientId) "
+          + "    redis.call('RPUSH', queueKey, clientId .. entryDelimiter .. nowMillis) "
           + "    redis.call('EXPIRE', queueKey, queueTtlSeconds) "
           + "end "
           + "return 0";
 
   /**
-   * 释放公平锁 Lua 脚本
+   * 释放公平锁 Lua 脚本（P0-F2 兼容版）
    *
-   * <p>递减重入计数，计数归零时删除锁并从等待队列中移除客户端
+   * <p>递减重入计数，计数归零时删除锁并从等待队列中移除客户端。
+   *
+   * <p>P0-F2 兼容：客户端队列条目格式为 {@code clientId:joinTimeMillis}。 清理时按前缀匹配定位条目后使用 LREM 删除（精确移除，避免误删其他客户端）。
    */
   private static final String RELEASE_LOCK_LUA_SCRIPT =
       "local lockKey = KEYS[1] "
           + "local queueKey = KEYS[2] "
           + "local clientId = ARGV[1] "
+          + "local entryDelimiter = ARGV[2] "
           + "local owner = redis.call('HGET', lockKey, 'owner') "
           + "if owner == clientId then "
           + "    local count = redis.call('HGET', lockKey, '__count') "
@@ -121,7 +157,13 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
           + "        return 1 "
           + "    else "
           + "        redis.call('DEL', lockKey) "
-          + "        redis.call('LREM', queueKey, 1, clientId) "
+          + "        for i = 0, redis.call('LLEN', queueKey) - 1, 1 do "
+          + "            local entry = redis.call('LINDEX', queueKey, i) "
+          + "            if entry and string.sub(entry, 1, string.len(clientId)) == clientId then "
+          + "                redis.call('LREM', queueKey, 0, entry) "
+          + "                break "
+          + "            end "
+          + "        end "
           + "        return 1 "
           + "    end "
           + "else "
@@ -132,15 +174,33 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
   private static final long QUEUE_EXPIRE_SECONDS = 3600;
 
   /**
+   * 公平锁每条等待条目的最大存活时间（毫秒）。超过该时间未被消费的队首条目将被自动清理（P0-F2 安全兜底）。
+   *
+   * <p>配合 {@link #QUEUE_ENTRY_DELIMITER} 与 {@link #findHeadEntryIndex} Lua 函数使用。
+   */
+  private static final long MAX_QUEUE_WAIT_MILLIS = 30_000L;
+
+  /** 等待队列条目分隔符（clientId 与入队时间戳之间的分隔符） */
+  private static final String QUEUE_ENTRY_DELIMITER = ":";
+
+  /**
    * 清理等待队列中指定客户端 Lua 脚本
    *
-   * <p>从队列中移除 clientId，并设置队列 TTL 防止孤立队列
+   * <p>从队列中移除 clientId（线性查找，O(N)），并设置队列 TTL 防止孤立队列。
+   *
+   * <p>P0-F2 增强：通过 {@link #findHeadEntryIndex} 定位被清理条目的入队时间戳， 使用 {code LREM queueKey 0 {entry}} 按完整条目格式删除， 避免在 clientId 存在时间戳后缀时的误匹配。
    */
   private static final String CLEANUP_QUEUE_LUA_SCRIPT =
       "local queueKey = KEYS[1] "
           + "local clientId = ARGV[1] "
           + "local queueTtlSeconds = ARGV[2] "
-          + "redis.call('LREM', queueKey, 1, clientId) "
+          + "for i = 0, redis.call('LLEN', queueKey) - 1, 1 do "
+          + "    local entry = redis.call('LINDEX', queueKey, i) "
+          + "    if entry and string.sub(entry, 1, string.len(clientId)) == clientId then "
+          + "        redis.call('LREM', queueKey, 0, entry) "
+          + "        break "
+          + "    end "
+          + "end "
           + "if redis.call('LLEN', queueKey) == 0 then "
           + "    redis.call('DEL', queueKey) "
           + "else "
@@ -199,6 +259,8 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
    *
    * <p>按等待队列顺序获取锁，当前客户端在队首或锁空闲时可获取。 队列 TTL 续期已合并到 Lua 脚本中，保证原子性。
    *
+   * <p>P0-F2：入队时附加当前时间戳（毫秒），获取锁前循环清理超过 {@value #MAX_QUEUE_WAIT_MILLIS}ms 的过期队首条目。
+   *
    * @param lockKey 锁的键（已含命名空间前缀）
    * @param leaseTime 租约时间
    * @param timeUnit 时间单位
@@ -217,7 +279,10 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
               Arrays.asList(lockKey, queueKey),
               clientId,
               String.valueOf(leaseTimeMs),
-              String.valueOf(QUEUE_EXPIRE_SECONDS));
+              String.valueOf(QUEUE_EXPIRE_SECONDS),
+              String.valueOf(System.currentTimeMillis()),
+              String.valueOf(MAX_QUEUE_WAIT_MILLIS),
+              QUEUE_ENTRY_DELIMITER);
       acquired = Long.valueOf(1L).equals(result);
       if (acquired) {
         log.debug("[ydsz-lock]获取公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
@@ -284,7 +349,10 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
     try {
       Long result =
           stringRedisTemplate.execute(
-              releaseLockScript, Arrays.asList(lockKey, queueKey), clientId);
+              releaseLockScript,
+              Arrays.asList(lockKey, queueKey),
+              clientId,
+              QUEUE_ENTRY_DELIMITER);
       boolean released = Long.valueOf(1L).equals(result);
       if (released) {
         log.debug("[ydsz-lock]释放公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
@@ -344,11 +412,57 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
     }
   }
 
+  /**
+   * 判断队列条目是否为过期队首（P0-F2 调试信息输出）。
+   *
+   * @param entry 队列条目（格式 clientId:joinTimeMillis）
+   * @return true=已过期
+   */
+  private boolean isQueueEntryExpired(String entry) {
+    if (entry == null || entry.isEmpty()) {
+      return false;
+    }
+    int sepIndex = entry.indexOf(QUEUE_ENTRY_DELIMITER);
+    if (sepIndex < 0) {
+      return false;
+    }
+    try {
+      long joinTs = Long.parseLong(entry.substring(sepIndex + 1));
+      return (System.currentTimeMillis() - joinTs) > MAX_QUEUE_WAIT_MILLIS;
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
+
+  /**
+   * 获取指定客户端的排队位置（0-based）。
+   *
+   * <p>P0-F2 兼容：队列条目格式为 {@code clientId:joinTimeMillis}，查找时做前缀匹配后返回位置。
+   *
+   * @param lockKey 锁的键
+   * @param lockValue 客户端标识（不含时间戳后缀）
+   * @return 排队位置（0=队首），未找到返回 -1
+   */
   public int getQueuePosition(String lockKey, String lockValue) {
     String queueKey = getQueueKey(lockKey);
     try {
-      Long index = stringRedisTemplate.opsForList().indexOf(queueKey, lockValue);
-      return index != null ? index.intValue() : -1;
+      Long length = stringRedisTemplate.opsForList().size(queueKey);
+      if (length == null || length == 0) {
+        return -1;
+      }
+      // 遍历队列做前缀匹配（格式: clientId:joinTimeMillis）
+      var entries = stringRedisTemplate.opsForList().range(queueKey, 0, length - 1);
+      if (entries != null) {
+        for (int i = 0; i < entries.size(); i++) {
+          String entry = entries.get(i);
+          if (entry != null
+              && entry.length() >= lockValue.length()
+              && entry.startsWith(lockValue)) {
+            return i;
+          }
+        }
+      }
+      return -1;
     } catch (Exception e) {
       log.error("[ydsz-lock]获取排队位置异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
       return -1;

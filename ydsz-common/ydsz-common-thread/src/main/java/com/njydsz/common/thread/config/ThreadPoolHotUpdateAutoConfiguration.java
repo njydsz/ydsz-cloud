@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Role;
  */
 @AutoConfiguration(after = ThreadPoolAutoConfiguration.class)
 @EnableConfigurationProperties(ThreadPoolProperties.class)
-@ConditionalOnProperty(prefix = "ydsz.thread.hot-update", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "ydsz.thread", name = "hot-update-enabled", havingValue = "true")
 public class ThreadPoolHotUpdateAutoConfiguration {
 
   private static final Logger LOG =

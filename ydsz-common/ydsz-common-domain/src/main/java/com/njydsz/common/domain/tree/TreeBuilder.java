@@ -115,11 +115,17 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
   }
 
   /**
-   * 构建树形结构（O(n)）。
+   * 构建树形结构（O(n)），并自动填充 {@link TreeNode#getLevel() level} 与 {@link TreeNode#getPath() path}。
    *
    * <p>仅对节点列表做只读处理（不修改传入列表），返回新构建的根节点列表。 每次调用独立构建，不维护缓存。
    *
+   * <p><b>level 规则：</b>根节点为 {@link TreeNode#ROOT_LEVEL}（1），子节点逐层递增。
+   *
+   * <p><b>path 规则：</b>格式 {@code /parentId1/parentId2/currentId/}， 根节点路径为 {@code /rootId/}（若 ID 有效）。
+   * 若节点 ID 为 {@code null}，该节点的 level 和 path 不会被赋值，保持构建前原值。
+   *
    * @return 构建完成的根节点列表（无节点时返回空列表）
+   * @since 26.09.01
    */
   public List<T> build() {
     if (nodeList.isEmpty()) {
@@ -143,7 +149,54 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
       }
     }
     roots.sort(comparator);
+    // 自动填充 level 和 path（迭代实现，避免深层树栈溢出）
+    fillLevelAndPath(roots);
     return roots;
+  }
+
+  /**
+   * 迭代填充所有节点的 level 和 path 字段。
+   *
+   * <p>使用栈实现 DFS，栈帧包含 (节点, 父路径) 二元组。
+   *
+   * @param roots 根节点列表
+   */
+  @SuppressWarnings("unchecked")
+  private void fillLevelAndPath(List<T> roots) {
+    Deque<Object[]> stack = new ArrayDeque<>(roots.size() * 2);
+    // 初始化：根节点 level=1, path=/
+    for (int i = roots.size() - 1; i >= 0; i--) {
+      T root = roots.get(i);
+      if (root.getId() != null) {
+        root.setLevel(TreeNode.ROOT_LEVEL);
+        root.setPath("/");
+        stack.push(new Object[] {root, "/"});
+      }
+    }
+    while (!stack.isEmpty()) {
+      Object[] frame = stack.pop();
+      T node = (T) frame[0];
+      String parentPath = (String) frame[1];
+      ID nodeId = node.getId();
+      if (nodeId == null) {
+        continue;
+      }
+      int currentLevel = node.getLevel() != null ? node.getLevel() : TreeNode.ROOT_LEVEL;
+      String currentPath = parentPath + nodeId + "/";
+      node.setPath(currentPath);
+
+      List<T> children = node.getChildren();
+      if (children != null && !children.isEmpty()) {
+        int childLevel = currentLevel + 1;
+        for (int i = children.size() - 1; i >= 0; i--) {
+          T child = children.get(i);
+          if (child.getId() != null) {
+            child.setLevel(childLevel);
+            stack.push(new Object[] {child, currentPath});
+          }
+        }
+      }
+    }
   }
 
   /**

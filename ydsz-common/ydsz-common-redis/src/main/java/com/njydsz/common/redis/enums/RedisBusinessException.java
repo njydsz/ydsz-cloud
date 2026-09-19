@@ -3,7 +3,8 @@ package com.njydsz.common.redis.enums;
 /**
  * Redis 业务异常
  *
- * <p>当 Redis 操作因业务逻辑错误（如序列化失败、类型转换错误、参数非法）时抛出此异常。 该异常属于不可恢复异常，不会触发重试，应由业务层处理。
+ * <p>当 Redis 操作因业务逻辑错误（如序列化失败、类型转换错误、参数非法）时抛出此异常。
+ * 该异常属于不可恢复异常，不会触发重试，应由业务层处理。
  *
  * <p>适用场景：
  *
@@ -20,6 +21,12 @@ public class RedisBusinessException extends RedisOperationException {
 
   private static final long serialVersionUID = 1L;
 
+  /** 业务异常默认恢复建议 */
+  private static final String DEFAULT_SUGGESTION =
+      "建议：1) 检查存储值的序列化/反序列化类型是否一致；"
+          + "2) 检查 Redis key 命名是否符合规范（[a-z0-9_:-]）；"
+          + "3) 确认参数值非 null 且格式正确";
+
   /**
    * 构造 Redis 业务异常
    *
@@ -28,7 +35,7 @@ public class RedisBusinessException extends RedisOperationException {
    * @param cause 原始异常
    */
   public RedisBusinessException(String key, String operation, Throwable cause) {
-    super(key, operation, cause);
+    super(key, operation, cause, DEFAULT_SUGGESTION);
   }
 
   /**
@@ -38,6 +45,6 @@ public class RedisBusinessException extends RedisOperationException {
    * @param message 错误描述
    */
   public RedisBusinessException(String operation, String message) {
-    super(null, operation, new RuntimeException(message));
+    super(null, operation, new RuntimeException(message), DEFAULT_SUGGESTION);
   }
 }

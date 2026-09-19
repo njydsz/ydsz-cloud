@@ -1,4 +1,4 @@
-package com.njydsz.common.locales.config;
+﻿package com.njydsz.common.locales.config;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -263,6 +264,23 @@ public class LocalesAutoConfiguration {
         registry.addInterceptor(interceptor).addPathPatterns("/**");
       }
     };
+  }
+
+  /**
+   * 注册 i18n Admin REST Controller（仅当 {@link I18nProperties#isAdminApiEnabled()} 且存在 I18nAdminController
+   * 类时才注册）。
+   *
+   * <p>提供端点：/api/admin/i18n/config | translate | missing | languages | overrides | override PUT | reload。
+   * 鉴权由 Spring Security 资源服务器在 ydsz-userinfo 模块中承担。
+   *
+   * @return Admin REST Controller
+   */
+  @Bean
+  @ConditionalOnProperty(prefix = "ydsz.i18n", name = "admin-api-enabled", havingValue = "true")
+  @ConditionalOnClass(I18nAdminController.class)
+  @ConditionalOnMissingBean(I18nAdminController.class)
+  public I18nAdminController i18nAdminController() {
+    return new I18nAdminController(i18nProperties);
   }
 
   /**

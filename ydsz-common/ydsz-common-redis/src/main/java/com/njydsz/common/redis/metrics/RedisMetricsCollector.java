@@ -57,12 +57,16 @@ public class RedisMetricsCollector {
   private static final String METRIC_OPERATION_SLOW = "redis.operation.slow";
   private static final String TAG_OPERATION_TYPE = "operation_type";
   private static final String TAG_ERROR_TYPE = "error_type";
+  private static final String TAG_INSTANCE = "instance";
 
   /** Micrometer 指标注册表 */
   private final MeterRegistry registry;
 
   /** 慢操作阈值（毫秒），0 表示禁用 */
   private final long slowOperationThresholdMillis;
+
+  /** Redis 实例标识（host:port），用于区分多实例共享同一 MeterRegistry 的场景 */
+  private final String instance;
 
   /** Timer 缓存：避免每次调用都重新注册 Meter */
   private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
@@ -77,18 +81,25 @@ public class RedisMetricsCollector {
       new ConcurrentHashMap<>();
 
   private RedisMetricsCollector(MeterRegistry registry) {
-    this(registry, 0);
+    this(registry, 0, "unknown");
+  }
+
+  private RedisMetricsCollector(MeterRegistry registry, long slowOperationThresholdMillis) {
+    this(registry, slowOperationThresholdMillis, "unknown");
   }
 
   /**
-   * 构造 Redis 指标收集器（带慢操作阈值）
+   * 构造 Redis 指标收集器（含实例标识）
    *
    * @param registry MeterRegistry 实例
    * @param slowOperationThresholdMillis 慢操作阈值（毫秒），0 表示禁用慢操作检测
+   * @param instance Redis 实例标识（如 host:port），用于区分多实例
    */
-  private RedisMetricsCollector(MeterRegistry registry, long slowOperationThresholdMillis) {
+  private RedisMetricsCollector(
+      MeterRegistry registry, long slowOperationThresholdMillis, String instance) {
     this.registry = registry;
     this.slowOperationThresholdMillis = slowOperationThresholdMillis;
+    this.instance = instance;
   }
 
   /**
@@ -102,16 +113,17 @@ public class RedisMetricsCollector {
   }
 
   /**
-   * 创建或获取 Redis 指标收集器（带慢操作阈值）
+   * 创建或获取 Redis 指标收集器（带慢操作阈值和实例标识）
    *
    * @param registry MeterRegistry 实例
    * @param slowOperationThresholdMillis 慢操作阈值（毫秒），0 表示禁用
+   * @param instance Redis 实例标识（如 "localhost:6379"）
    * @return RedisMetricsCollector 实例
    */
   public static RedisMetricsCollector getOrCreate(
-      MeterRegistry registry, long slowOperationThresholdMillis) {
+      MeterRegistry registry, long slowOperationThresholdMillis, String instance) {
     return INSTANCES.computeIfAbsent(
-        registry, r -> new RedisMetricsCollector(r, slowOperationThresholdMillis));
+        registry, r -> new RedisMetricsCollector(r, slowOperationThresholdMillis, instance));
   }
 
   /**
@@ -126,6 +138,7 @@ public class RedisMetricsCollector {
         op ->
             Timer.builder(METRIC_OPERATION_LATENCY)
                 .tag(TAG_OPERATION_TYPE, op)
+                .tag(TAG_INSTANCE, instance)
                 .description("Redis operation latency")
                 .register(registry));
   }
@@ -202,6 +215,7 @@ public class RedisMetricsCollector {
                 Counter.builder(METRIC_OPERATION_ERRORS)
                     .tag(TAG_OPERATION_TYPE, operationType)
                     .tag(TAG_ERROR_TYPE, errorType)
+                    .tag(TAG_INSTANCE, instance)
                     .description("Redis operation errors")
                     .register(registry));
     counter.increment();
@@ -235,6 +249,7 @@ public class RedisMetricsCollector {
             op ->
                 Counter.builder(METRIC_OPERATION_SLOW)
                     .tag(TAG_OPERATION_TYPE, op)
+                    .tag(TAG_INSTANCE, instance)
                     .description("Redis slow operation count (exceeds configured threshold)")
                     .register(registry));
     counter.increment();

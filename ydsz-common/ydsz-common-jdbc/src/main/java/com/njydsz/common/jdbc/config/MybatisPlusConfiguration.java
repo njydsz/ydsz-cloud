@@ -6,6 +6,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.core.config.GlobalConfig;
+import com.baomidou.mybatisplus.core.toolkit.GlobalConfigUtils;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
@@ -31,12 +34,15 @@ import com.njydsz.common.jdbc.interceptor.ColPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.CombinedFieldFillInterceptor;
 import com.njydsz.common.jdbc.interceptor.RowPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
+import com.njydsz.common.jdbc.interceptor.SqlTimeoutInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.jdbc.permission.DataScopeIdExpander;
 import com.njydsz.common.jdbc.permission.NoopDataScopeIdExpander;
 import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.MeterBinder;
 
 /**
  * MyBatis Plus 配置类
@@ -75,6 +81,7 @@ import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties({
+  JdbcProperties.class,
   FieldFillConfiguration.class,
   DataPermissionConfiguration.class,
   PaginationProperties.class,
@@ -83,6 +90,7 @@ import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "is-enabled", matchIfMissing = true)
 public class MybatisPlusConfiguration {
 
+  private final JdbcProperties jdbcProperties;
   private final FieldFillConfiguration fieldFillConfiguration;
   private final DataPermissionConfiguration dataPermissionConfiguration;
   private final ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider;
@@ -90,15 +98,21 @@ public class MybatisPlusConfiguration {
   private final SqlFirewallProperties sqlFirewallProperties;
   private final ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders;
   private final SqlAstCache sqlAstCache;
+  private final ObjectProvider<MeterRegistry> meterRegistryProvider;
+  private final ObjectProvider<List<MeterBinder>> meterBindersProvider;
 
   public MybatisPlusConfiguration(
+      JdbcProperties jdbcProperties,
       FieldFillConfiguration fieldFillConfiguration,
       DataPermissionConfiguration dataPermissionConfiguration,
       ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider,
       PaginationProperties paginationProperties,
       SqlFirewallProperties sqlFirewallProperties,
       ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders,
-      SqlAstCache sqlAstCache) {
+      SqlAstCache sqlAstCache,
+      ObjectProvider<MeterRegistry> meterRegistryProvider,
+      ObjectProvider<List<MeterBinder>> meterBindersProvider) {
+    this.jdbcProperties = jdbcProperties;
     this.fieldFillConfiguration = fieldFillConfiguration;
     this.dataPermissionConfiguration = dataPermissionConfiguration;
     this.dataScopeIdExpanderProvider = dataScopeIdExpanderProvider;
@@ -106,6 +120,57 @@ public class MybatisPlusConfiguration {
     this.sqlFirewallProperties = sqlFirewallProperties;
     this.spiInterceptorProviders = spiInterceptorProviders;
     this.sqlAstCache = sqlAstCache;
+    this.meterRegistryProvider = meterRegistryProvider;
+    this.meterBindersProvider = meterBindersProvider;
+    applyGlobalIdType();
+    registerJdbcMetrics();
+  }
+
+  /**
+   * 将 {@link JdbcProperties#getIdType()} 同步到 MP 全局 {@link GlobalConfig}。
+   *
+   * <p>影响效果：未在实体 {@code @TableId(type=...)} 上显式声明的字段，将使用此处配置的全局策略。
+   * 实体类若显式标注 {@code @TableId(type=IdType.AUTO)} 则会覆盖全局配置。
+   *
+   * <p><b>注意：</b>该方法在构造时调用，早于 SqlSessionFactory 初始化，
+   * 确保所有 Mapper 解析前全局 ID 类型已生效。
+   */
+  private void applyGlobalIdType() {
+    IdType idType = jdbcProperties.getIdType();
+    if (idType == null) {
+      return;
+    }
+    GlobalConfig config = GlobalConfigUtils.defaults();
+    if (config.getDbConfig() != null && config.getDbConfig().getIdType() == null) {
+      config.getDbConfig().setIdType(idType);
+      log.info("MyBatis Plus 全局 ID 类型已设置为: {}", idType.getKey());
+    }
+  }
+
+  /**
+   * 注册 JDBC 模块的核心 Micrometer 指标。
+   *
+   * <p>接入点：
+   * <ul>
+   *   <li>将 {@link SqlAstCache} 的 hit/miss 计数绑定到 {@link MeterRegistry}</li>
+   *   <li>通过 SPI {@link MeterBinder} 收集外部模块定义的指标（如慢 SQL 计数、连接池状态）</li>
+   * </ul>
+   *
+   * <p>弱依赖：未引入 Spring Boot Actuator 时不注册任何指标（{@link MeterRegistry} Bean 不存在）。
+   */
+  private void registerJdbcMetrics() {
+    MeterRegistry registry = meterRegistryProvider.getIfAvailable();
+    if (registry != null) {
+      sqlAstCache.setMeterRegistry(registry);
+      List<MeterBinder> binders = meterBindersProvider.getIfAvailable();
+      if (binders != null) {
+        for (MeterBinder binder : binders) {
+          binder.bindTo(registry);
+          log.debug("JDBC Micrometer 指标注册: {}", binder.getClass().getSimpleName());
+        }
+      }
+      log.info("ydsz-common-jdbc Micrometer 指标已接入");
+    }
   }
 
   /**
@@ -145,6 +210,12 @@ public class MybatisPlusConfiguration {
   @ConditionalOnMissingBean(MybatisPlusInterceptor.class)
   public MybatisPlusInterceptor mybatisPlusInterceptor() {
     MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+
+    // 0. SQL 超时统一控制（最先加入，保证超时设置在 Prepare 阶段生效）
+    interceptor.addInnerInterceptor(
+        new SqlTimeoutInnerInterceptor(jdbcProperties.getQueryTimeoutSeconds()));
+    log.debug("MyBatis Plus: SqlTimeoutInnerInterceptor enabled ({} seconds)",
+        jdbcProperties.getQueryTimeoutSeconds());
 
     // 1. 乐观锁拦截器（MP 内置，处理实体 @Version 字段的参数映射与版本递增）
     interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());

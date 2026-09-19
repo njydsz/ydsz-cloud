@@ -612,8 +612,8 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
           "无法获取租户上下文，已拒绝执行 SQL 以避免跨租户数据泄露。"
               + "请检查 TenantContextWebFilter 是否正确注册，"
               + "或使用 SystemTenantContextRunner 包装异步/定时任务，"
-              + "或将相关表加入 ignore-tables，或将 URL 加入 anon-urls。",
-          DiagnosticsUtil.collect("no-context"));
+              + "或将相关表加入 ignore-tables，或将 URL 加入 anon-urls。 "
+              + DiagnosticsUtil.collect("no-context"));
     }
 
     List<TenantField> activeFields = properties.getActiveTenantFields();
@@ -633,8 +633,8 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
           metrics.recordFailClosed();
         }
         throw new TenantIsolationException(
-            "无法获取租户字段 [" + field.getColumn() + "] 的值（claim=" + claimName + "），已拒绝执行 SQL。",
-            DiagnosticsUtil.collect("missing-field-" + field.getColumn()));
+            "无法获取租户字段 [" + field.getColumn() + "] 的值（claim=" + claimName + "），已拒绝执行 SQL。 "
+                + DiagnosticsUtil.collect("missing-field-" + field.getColumn()));
       }
       // 跨租户共享：将主租户字段值扩展为 [当前租户, 共享租户...]
       if (context.hasSharing() && isPrimaryTenantField(field)) {

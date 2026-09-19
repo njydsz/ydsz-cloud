@@ -3,6 +3,7 @@ package com.njydsz.common.redis.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -21,6 +23,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import com.njydsz.common.redis.annotation.RedisKeyExpireListenerRegistry;
 import com.njydsz.common.redis.annotation.YdszCacheableAspect;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.common.redis.interceptor.RedisRetryInterceptor;
@@ -302,6 +305,29 @@ public class RedisConfiguration {
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
     return container;
+  }
+
+  /**
+   * 注册 Redis Key 过期事件监听注册表
+   *
+   * <p>扫描所有标注了 {@code @RedisKeyExpireListener} 的 Spring Bean 方法，
+   * 将它们注册为 Redis Keyspace Notification 的订阅者。
+   *
+   * <p>仅在 Redis 端开启 Keyspace Notifications 且 ydsz.redis.key-expiration.enabled=true 时生效。
+   *
+   * @param applicationContext Spring 应用上下文
+   * @param listenerContainer Redis 消息监听容器
+   * @param redisProperties Redis 配置属性
+   * @return 过期事件监听注册表实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnBean(RedisMessageListenerContainer.class)
+  public RedisKeyExpireListenerRegistry redisKeyExpireListenerRegistry(
+      ApplicationContext applicationContext,
+      RedisMessageListenerContainer listenerContainer,
+      RedisProperties redisProperties) {
+    return new RedisKeyExpireListenerRegistry(applicationContext, listenerContainer, redisProperties);
   }
 
   // ============================ Redis Ops Beans ============================
