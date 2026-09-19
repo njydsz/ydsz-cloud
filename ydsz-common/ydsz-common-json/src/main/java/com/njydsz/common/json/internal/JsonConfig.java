@@ -12,6 +12,9 @@ import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.reader.BeanReader;
 import com.njydsz.common.json.reader.JSONReader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * YdszJson 全局配置类（不可变）。
  *
@@ -49,6 +52,8 @@ import com.njydsz.common.json.reader.JSONReader;
 public final class JsonConfig implements Serializable {
 
   private static final long serialVersionUID = 1L;
+
+  private static final Logger LOG = LoggerFactory.getLogger(JsonConfig.class);
 
   private static final AtomicReference<JsonConfig> INSTANCE = new AtomicReference<>();
 
@@ -248,14 +253,8 @@ public final class JsonConfig implements Serializable {
       try {
         listener.onConfigChanged(oldConfig, newConfig, newVersion);
       } catch (Exception e) {
-        // P1 修复：监听器异常不应影响配置安装，但必须记录日志便于问题排查
-        // 使用 System.err 回退：静态初始化早于 SLF4J Logger 可用时（类加载阶段）至少保证异常可见
-        System.err.println(
-            "[YdszJson] ConfigChangeListener 异常: "
-                + listener.getClass().getName()
-                + " - "
-                + e.getMessage());
-        e.printStackTrace(System.err);
+        // 监听器异常不应影响配置安装，但必须记录日志便于问题排查
+        LOG.error("[YdszJson] ConfigChangeListener 异常: {}", listener.getClass().getName(), e);
       }
     }
   }
