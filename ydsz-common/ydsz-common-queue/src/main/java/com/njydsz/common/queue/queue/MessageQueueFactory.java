@@ -230,7 +230,7 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
       return dedicated;
     }
     // 向后兼容：从通用 QueueProperties 提取
-    return extractRocketPropertiesCompat();
+    return extractRocketMQPropertiesCompat();
   }
 
   /**

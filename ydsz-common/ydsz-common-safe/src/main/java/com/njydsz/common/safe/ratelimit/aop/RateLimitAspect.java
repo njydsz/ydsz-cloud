@@ -167,7 +167,14 @@ public class RateLimitAspect {
     Object[] args = pjp.getArgs();
     StringBuilder keyBuilder = new StringBuilder(rule.getResource());
 
-    if (annotation.dimension() == RateLimitDimension.USER
+    // 优先使用自定义 keyExpression，支持 {paramName} / {index} 占位符
+    String keyExpression = annotation.keyExpression();
+    if (keyExpression != null && !keyExpression.isEmpty()) {
+      String resolved = resolveKeyExpression(keyExpression, pjp);
+      if (resolved != null && !resolved.isEmpty()) {
+        keyBuilder.append(":").append(resolved);
+      }
+    } else if (annotation.dimension() == RateLimitDimension.USER
         || annotation.dimension() == RateLimitDimension.HOT_USER) {
       // 从上下文中取 userId
       String userId = extractUserId(args);
@@ -259,5 +266,101 @@ public class RateLimitAspect {
       log.debug("Caught exception (ignored): {}", ignored.getMessage());
     }
     return null;
+  }
+
+  /**
+   * 解析自定义 keyExpression 模板，将 {@code {paramName}} 或 {@code {index}} 占位符替换为实际参数值。
+   *
+   * <p>解析规则：
+   *
+   * <ul>
+   *   <li>{@code {0}}、{@code {1}} — 数字索引占位符，替换为对应位置的参数值
+   *   <li>{@code {paramName}} — 参数名占位符，通过方法参数名解析匹配（需要编译时保留参数名，即 {@code -parameters} 编译选项）
+   * </ul>
+   *
+   * <p>解析失败的占位符保留原始文本（含花括号），确保限流 key 不意外合并导致误拦截。
+   *
+   * @param expression 模板表达式
+   * @param pjp 当前连接点（用于获取参数名和参数值）
+   * @return 解析后的 key 字符串
+   */
+  private String resolveKeyExpression(String expression, ProceedingJoinPoint pjp) {
+    if (expression == null || expression.isEmpty()) {
+      return "";
+    }
+
+    // 快速路径：不包含占位符，直接返回
+    if (!expression.contains("{")) {
+      return expression;
+    }
+
+    MethodSignature signature = (MethodSignature) pjp.getSignature();
+    String[] paramNames = signature.getParameterNames();
+    Object[] args = pjp.getArgs();
+
+    StringBuilder result = new StringBuilder(expression.length());
+    int fromIndex = 0;
+    while (fromIndex < expression.length()) {
+      int start = expression.indexOf('{', fromIndex);
+      if (start == -1) {
+        result.append(expression.substring(fromIndex));
+        break;
+      }
+      int end = expression.indexOf('}', start + 1);
+      if (end == -1) {
+        result.append(expression.substring(fromIndex));
+        break;
+      }
+
+      // 追加占位符之前的部分
+      result.append(expression, fromIndex, start);
+
+      String placeholder = expression.substring(start + 1, end);
+      String value = resolvePlaceholder(placeholder, paramNames, args);
+      result.append(value != null ? value : expression.substring(start, end + 1));
+
+      fromIndex = end + 1;
+    }
+
+    return result.toString();
+  }
+
+  /**
+   * 解析单个占位符，返回对应参数值；无法解析时返回 null。
+   *
+   * @param placeholder 占位符内容（不含花括号）
+   * @param paramNames 方法参数名数组
+   * @param args 方法参数值数组
+   * @return 解析后的值；无法解析返回 null
+   */
+  private String resolvePlaceholder(String placeholder, String[] paramNames, Object[] args) {
+    // 优先尝试按参数索引解析
+    int index = tryParseInt(placeholder);
+    if (index >= 0 && index < args.length && args[index] != null) {
+      return args[index].toString();
+    }
+
+    // 按参数名解析（需要编译时 -parameters 保留参数名）
+    if (paramNames != null && paramNames.length == args.length) {
+      for (int i = 0; i < paramNames.length; i++) {
+        if (placeholder.equals(paramNames[i]) && args[i] != null) {
+          return args[i].toString();
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /** 尝试将字符串解析为整数，解析失败返回 -1。 */
+  private static int tryParseInt(String s) {
+    if (s == null || s.isEmpty()) {
+      return -1;
+    }
+    try {
+      return Integer.parseInt(s);
+    } catch (NumberFormatException e) {
+      return -1;
+    }
   }
 }

@@ -290,8 +290,11 @@ public class ResponseUnwrapDecoder implements Decoder {
    * Feign 业务异常。
    *
    * <p>当 Feign 调用返回的业务状态码非成功时抛出。携带原始 HTTP 状态码，便于调用方区分网络错误与业务错误。
+   *
+   * <p>自 26.09.19 起由 {@link feign.codec.DecodeException} 改为继承 {@link com.njydsz.common.exception.custom.SysException}，
+   * 避免父类构造函数需要非 null Request 的限制。
    */
-  public static class FeignBusinessException extends DecodeException {
+  public static class FeignBusinessException extends com.njydsz.common.exception.custom.SysException {
 
     private static final long serialVersionUID = 1L;
 
@@ -308,13 +311,14 @@ public class ResponseUnwrapDecoder implements Decoder {
      * @param httpCode 原始 HTTP 状态码（如 200、403 等）
      */
     public FeignBusinessException(String code, String msg, String url, int httpCode) {
-      super(
-          httpCode,
-          String.format(
-              "Feign 业务失败, url: %s, httpCode: %d, code: %s, msg: %s", url, httpCode, code, msg));
+      super(com.njydsz.common.exception.code.CoreExceptionCode.NETWORK_ERROR);
       this.code = code;
       this.msg = msg;
       this.url = url;
+      setMessage(
+          String.format(
+              "Feign 业务失败, url: %s, httpCode: %d, code: %s, msg: %s",
+              url, httpCode, code, msg));
     }
 
     public String getCode() {

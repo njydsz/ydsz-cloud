@@ -168,14 +168,6 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
   }
 
   /**
-   * 批量发送站内信通知
-   *
-   * @param receivers 接收者用户 ID 列表
-   * @param title 消息标题
-   * @param content 消息内容
-   * @return 发送结果
-   */
-  /**
    * 批量发送站内信通知（并行优化，P0-4）。
    *
    * <p>使用虚拟线程并行存储，吞吐量相比串行提升显著。

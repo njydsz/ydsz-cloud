@@ -5,12 +5,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 
 import com.njydsz.common.event.model.OutboxMessage;
 
 /**
- * Outbox 运维管理 HTTP 接口（F-2）
+ * Outbox 运维管理 HTTP 接口骨架（F-2）
  *
  * <p>提供 Outbox 消息队列的运维操作能力：
  *
@@ -23,24 +22,46 @@ import com.njydsz.common.event.model.OutboxMessage;
  *   <li>手动触发历史消息清理
  * </ul>
  *
- * <p><b>路径前缀：</b>{@code /admin/events/outbox}
+ * <p><b>设计原则：</b>本骨架不引入 spring-web 相关依赖（ ResponseEntity / @RestController 等），
+ * 确保 event 模块不强制依赖 Web 容器。
  *
- * <p><b>编码规范遵循：</b>
+ * <p>业务 Web 模块（如 ydsz-system）可按以下方式装配：
  *
- * <ul>
- *   <li>YDIZ-API-001：API 版本通过 Header 协商，路径不包含版本段
- *   <li>YDIZ-API-002：@ApiVersion 注解位于 @RequestMapping 上方
- * </ul>
+ * <pre>{@code
+ * // 业务 web 模块中声明真正的 REST 适配器
+ * &#64;RestController
+ * &#64;RequestMapping("/admin/events/outbox")
+ * &#64;RequiredArgsConstructor
+ * public class OutboxAdminRestController {
+ *     private final OutboxAdminController adminController;
+ *
+ *     &#64;GetMapping("/dead-letters")
+ *     public YdszResponse&lt;Page&lt;OutboxMessage&gt;&gt; listDeadLetters(
+ *             &#64;RequestParam(defaultValue = "0") int page,
+ *             &#64;RequestParam(defaultValue = "20") int size,
+ *             &#64;RequestParam(required = false) String eventType) {
+ *         return YdszResponse.success(adminController.listDeadLetters(page, size, eventType));
+ *     }
+ *
+ *     &#64;PostMapping("/dead-letters/{id}/retry")
+ *     public YdszResponse&lt;Boolean&gt; retryDeadLetter(&#64;PathVariable String id) {
+ *         return YdszResponse.success(adminController.retryDeadLetter(id));
+ *     }
+ *
+ *     &#64;GetMapping("/statistics")
+ *     public YdszResponse&lt;Map&lt;String, Long&gt;&gt; getStatistics() {
+ *         return YdszResponse.success(adminController.getStatistics());
+ *     }
+ * }
+ * }</pre>
+ *
+ * <p><b>编码规范遵循：</b>YDIZ-API-001（版本 Header 协商，路径不含版本段）。
  *
  * <p><b>安全建议：</b>生产环境应通过网关鉴权限制管理员角色访问此接口。
  *
  * @author ydsz-team
  * @since 26.09.19
  */
-// 需注意：本 Controller 不强制引入 spring-web，通过以下方式之一启用：
-// 1. 业务模块引入 spring-boot-starter-web 后，本类自动被组件扫描装配
-// 2. 业务模块通过 @Import(OutboxAdminController.class) 显式装配
-// 如业务模块使用 spring-webflux，请使用 OutboxAdminRouterFunction 替代
 public class OutboxAdminController {
 
   /** 日志实例 */
@@ -58,33 +79,6 @@ public class OutboxAdminController {
     this.outboxAdminService = outboxAdminService;
   }
 
-  // ==================== 注：以下方法签名仅供参考，实际装配方式二选一 ====================
-  //
-  // 选项 A：spring-web（Spring MVC）路径注册示例（需引入 spring-boot-starter-web）
-  // @RestController
-  // @RequestMapping("/admin/events/outbox")
-  // @Tag(name = "Outbox Admin", description = "Outbox 消息队列运维管理")
-  // public class OutboxAdminController implements OutboxAdminEndpoints { ... }
-  //
-  // 选项 B：spring-webflux 函数式注册示例（需引入 spring-boot-starter-webflux）
-  // @Configuration
-  // public class OutboxAdminRouter {
-  //   @Bean
-  //   public RouterFunction<ServerResponse> outboxAdminRoutes(OutboxAdminController controller) {
-  //     return RouterFunctions.route()
-  //         .path("/admin/events/outbox", builder -> builder
-  //             .GET("/dead-letters", controller::listDeadLetters)
-  //             .POST("/dead-letters/{id}/retry", controller::retryDeadLetter)
-  //             .POST("/dead-letters/retry-all", controller::retryAllDeadLetters)
-  //             .GET("/statistics", controller::getStatistics)
-  //             .DELETE("/messages/{id}", controller::deleteMessage)
-  //             .POST("/cleanup", controller::cleanup))
-  //         .build();
-  //   }
-  // }
-  //
-  // 具体实现由业务模块根据实际 Web 框架选择，核心逻辑已封装在 OutboxAdminService 中。
-
   /**
    * 分页查询死信消息
    *
@@ -101,7 +95,7 @@ public class OutboxAdminController {
    * 手动重试单条死信消息
    *
    * @param messageId 消息 ID
-   * @return 操作结果
+   * @return true 表示重置成功，false 表示消息不存在或状态不是 DEAD_LETTER
    */
   public boolean retryDeadLetter(String messageId) {
     return outboxAdminService.retryDeadLetter(messageId);
@@ -120,8 +114,10 @@ public class OutboxAdminController {
   /**
    * 安全删除已终态消息
    *
+   * <p>仅允许删除 SENT 或 DEAD_LETTER 状态的消息。
+   *
    * @param messageId 消息 ID
-   * @return 操作结果
+   * @return true 表示删除成功
    */
   public boolean deleteMessage(String messageId) {
     return outboxAdminService.deleteTerminatedMessage(messageId);
@@ -145,16 +141,6 @@ public class OutboxAdminController {
   public int cleanup(int retentionDays) {
     int days = retentionDays > 0 ? retentionDays : 7;
     return outboxAdminService.cleanupSentMessages(days);
-  }
-
-  /**
-   * 通用响应包装
-   *
-   * @param data 响应数据
-   * @return 标准响应
-   */
-  protected <T> ResponseEntity<T> ok(T data) {
-    return ResponseEntity.ok(data);
   }
 
   /**

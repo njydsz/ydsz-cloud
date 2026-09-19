@@ -3,35 +3,37 @@ package com.njydsz.common.audit.event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import reactor.core.publisher.Mono;
 
 /**
  * 网关审计事件桥接器
  *
- * <p>解决Spring Cloud Gateway（WebFlux 响应式）与 Spring MVC（Servlet + AOP） 之间的审计数据互通问题。
+ * <p>解决 Spring Cloud Gateway（WebFlux 响应式）与 Spring MVC（Servlet + AOP） 之间的审计数据互通问题。
  *
  * <p>使用场景：
  *
  * <ul>
  *   <li>网关过滤器（{@code GlobalFilter}）无法直接注入 {@code AuditRecorder}（强依赖 Servlet 上下文）
- *   <li>通过本桥接器，网关发布 {@link GatewayAuditEvent} 到 {@link ApplicationEventPublisher}，由已有的 {@link
- *       AuditEventListener} 异步消费并落库到 {@code sys_audit_log}
+ *   <li>通过本桥接器，网关发布审计事件到 {@link ApplicationEventPublisher}，由 {@link
+ *       AuditEventListener}（{@code @Async}）异步消费并落库到 {@code sys_audit_log}
  * </ul>
  *
  * <h3>使用模式：</h3>
  *
  * <pre>{@code
- * // 在 Gateway Filter 中
- * auditEventBridge.publishAuditEvent(
- *     userId,
- *     clientIp,
- *     "DELETE",
- *     "/api/project/{id}",
- *     200,
- *     45L,
- *     traceId,
- *     tenantId
- * );
+ * // 在 Gateway GlobalFilter 中
+ * return chain.filter(exchange).doFinally(signalType -> {
+ *     auditEventBridge.publishAuditEvent(
+ *         userId,
+ *         clientIp,
+ *         exchange.getRequest().getMethodValue(),
+ *         exchange.getRequest().getURI().getPath(),
+ *         exchange.getResponse().getStatusCode() != null
+ *             ? exchange.getResponse().getStatusCode().value() : 0,
+ *         durationMs,
+ *         traceId,
+ *         tenantId
+ *     );
+ * });
  * }</pre>
  *
  * <h3>集成架构：</h3>
@@ -45,8 +47,9 @@ import reactor.core.publisher.Mono;
  *
  * <ul>
  *   <li>桥接器发布操作日志事件（OperationLogEvent），复用已有的审计消费链路
- *   <li>网关侧调用返回 Mono<Void>，支持响应式链式调用
- *   <li>内部使用非阻塞发布（不调用 block()），通过 Reactor 事件循环调度
+ *   <li>方法返回 void，调用即忘（fire-and-forget），不引入响应式依赖
+ *   <li>内部通过 Spring {@link ApplicationEventPublisher} 发布，由 {@code @Async} 监听器异步处理，
+ *       事件发布本身不会阻塞网关请求线程
  * </ul>
  *
  * @author ydsz-team
@@ -68,9 +71,10 @@ public class GatewayAuditEventBridge {
   }
 
   /**
-   * 发布网关审计事件（响应式）
+   * 发布网关审计事件（fire-and-forget）
    *
    * <p>从 WebFlux 的非阻塞线程安全发布到 Spring 事件体系。
+   * 方法即时返回，事件由 {@code @Async} 监听器异步消费落库，不阻塞网关请求线程。
    *
    * @param userId 用户 ID
    * @param clientIp 客户端 IP
@@ -80,9 +84,8 @@ public class GatewayAuditEventBridge {
    * @param durationMs 请求耗时
    * @param traceId 追踪 ID
    * @param tenantId 租户 ID
-   * @return 发布完成的 Mono
    */
-  public Mono<Void> publishAuditEvent(
+  public void publishAuditEvent(
       String userId,
       String clientIp,
       String method,
@@ -91,53 +94,50 @@ public class GatewayAuditEventBridge {
       long durationMs,
       String traceId,
       String tenantId) {
-    return Mono.fromRunnable(
-        () -> {
-          try {
-            boolean isWriteOperation = isWriteOperation(method);
-            String status = (statusCode >= 200 && statusCode < 400) ? "SUCCESS" : "FAILED";
+    try {
+      boolean isWriteOperation = isWriteOperation(method);
+      String status = (statusCode >= 200 && statusCode < 400) ? "SUCCESS" : "FAILED";
 
-            // 构建审计事件
-            OperationLogEvent event =
-                OperationLogEvent.builder()
-                    .source(this)
-                    .module("网关路由")
-                    .action(mapHttpMethod(method))
-                    .bizType("gateway")
-                    .bizId(traceId)
-                    .userId(userId)
-                    .username(null) // 网关层通常不持有用户名，由下游服务补充
-                    .requestUrl(path)
-                    .httpMethod(method)
-                    .methodSignature("gateway:" + method + " " + path)
-                    .clientIp(clientIp)
-                    .userAgent("gateway")
-                    .paramsJson(null)
-                    .responseJson(null)
-                    .beforeData(null)
-                    .afterData(null)
-                    .status(status)
-                    .errorMessage(statusCode >= 400 ? "HTTP " + statusCode : null)
-                    .costMs(durationMs)
-                    .traceId(traceId)
-                    .tenantId(tenantId)
-                    .build();
+      // 构建审计事件
+      OperationLogEvent event =
+          OperationLogEvent.builder()
+              .source(this)
+              .module("网关路由")
+              .action(mapHttpMethod(method))
+              .bizType("gateway")
+              .bizId(traceId)
+              .userId(userId)
+              .username(null) // 网关层通常不持有用户名，由下游服务补充
+              .requestUrl(path)
+              .httpMethod(method)
+              .methodSignature("gateway:" + method + " " + path)
+              .clientIp(clientIp)
+              .userAgent("gateway")
+              .paramsJson(null)
+              .responseJson(null)
+              .beforeData(null)
+              .afterData(null)
+              .status(status)
+              .errorMessage(statusCode >= 400 ? "HTTP " + statusCode : null)
+              .costMs(durationMs)
+              .traceId(traceId)
+              .tenantId(tenantId)
+              .build();
 
-            eventPublisher.publishEvent(event);
+      eventPublisher.publishEvent(event);
 
-            if (LOG.isDebugEnabled()) {
-              LOG.debug(
-                  "[GatewayAudit] 审计事件已发布: userId={}, method={}, path={}, status={}, duration={}ms",
-                  userId,
-                  method,
-                  path,
-                  statusCode,
-                  durationMs);
-            }
-          } catch (Exception e) {
-            LOG.error("[GatewayAudit] 发布审计事件异常: reason={}", e.getMessage(), e);
-          }
-        });
+      if (LOG.isDebugEnabled()) {
+        LOG.debug(
+            "[GatewayAudit] 审计事件已发布: userId={}, method={}, path={}, status={}, duration={}ms",
+            userId,
+            method,
+            path,
+            statusCode,
+            durationMs);
+      }
+    } catch (Exception e) {
+      LOG.error("[GatewayAudit] 发布审计事件异常: reason={}", e.getMessage(), e);
+    }
   }
 
   /**
@@ -150,15 +150,10 @@ public class GatewayAuditEventBridge {
     if (method == null) {
       return false;
     }
-    switch (method.toUpperCase()) {
-      case "POST":
-      case "PUT":
-      case "DELETE":
-      case "PATCH":
-        return true;
-      default:
-        return false;
-    }
+    return switch (method.toUpperCase()) {
+      case "POST", "PUT", "DELETE", "PATCH" -> true;
+      default -> false;
+    };
   }
 
   /**
@@ -171,18 +166,12 @@ public class GatewayAuditEventBridge {
     if (method == null) {
       return "OTHER";
     }
-    switch (method.toUpperCase()) {
-      case "POST":
-        return "CREATE";
-      case "PUT":
-      case "PATCH":
-        return "UPDATE";
-      case "DELETE":
-        return "DELETE";
-      case "GET":
-        return "QUERY";
-      default:
-        return "OTHER";
-    }
+    return switch (method.toUpperCase()) {
+      case "POST" -> "CREATE";
+      case "PUT", "PATCH" -> "UPDATE";
+      case "DELETE" -> "DELETE";
+      case "GET" -> "QUERY";
+      default -> "OTHER";
+    };
   }
 }

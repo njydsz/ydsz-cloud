@@ -80,13 +80,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- reactor-core：GatewayAuditEventBridge 提供响应式 Mono 返回值供 WebFlux 网关调用链使用 -->
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- spring-boot-actuator (optional for HealthIndicator) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
