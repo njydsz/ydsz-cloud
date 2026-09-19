@@ -50,6 +50,12 @@
             <artifactId>ydsz-common-auth</artifactId>
         </dependency>
 
+        <!-- 公共国际化基座（ydsz-common-locales 提供 I18nProperties 与 I18n 配置能力） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-locales</artifactId>
+        </dependency>
+
         <!-- Micrometer Core（AbstractModuleMetrics 基类需要，optional 按需引入） -->
         <dependency>
             <groupId>io.micrometer</groupId>

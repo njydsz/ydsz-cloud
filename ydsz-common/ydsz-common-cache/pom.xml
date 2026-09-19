@@ -14,6 +14,7 @@
   <properties>
     <!-- L1 工具层模块标识：激活 purity 检查 -->
     <l1.module.skip>false</l1.module.skip>
+    <!-- JUnit 版本：由 spring-boot-starter-test 4.1.0 统一管理 -->
   </properties>
   <dependencies>
     <!-- SLF4J API（日志门面，L1 模块直接声明，避免内部模块耦合） -->
@@ -97,11 +98,6 @@
 
     <!-- 测试依赖 -->
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
@@ -116,12 +112,13 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <version>${spring-boot.version}</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-aop</artifactId>
-      <version>${spring-boot.version}</version>
-      <scope>test</scope>
+      <exclusions>
+        <!-- Exclude JUnit Jupiter managed by parent to prevent version conflict -->
+        <exclusion>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!--
         注意：ydsz-common-cache 不依赖 ydsz-common-tenant。
