@@ -2,13 +2,15 @@ package com.njydsz.common.queue.mq.rabbit;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.queue.config.QueueProperties;
 
 /**
  * RabbitMQ 消息队列配置属性
  *
- * <p>封装 RabbitMQ 消息队列的连接和行为配置参数。
+ * <p>封装 RabbitMQ 消息队列的连接和行为配置参数。绑定前缀 {@code ydsz.queue.rabbitmq}，
+ * 与通用 {@link QueueProperties}（前缀 {@code ydsz.queue}）独立绑定，避免字段映射错位。
  *
  * <p><b>配置示例：</b>
  *
@@ -31,6 +33,7 @@ import com.njydsz.common.queue.config.QueueProperties;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ConfigurationProperties(prefix = "ydsz.queue.rabbitmq")
 public class RabbitMQProperties extends QueueProperties {
 
   /** RabbitMQ 服务器地址 */
