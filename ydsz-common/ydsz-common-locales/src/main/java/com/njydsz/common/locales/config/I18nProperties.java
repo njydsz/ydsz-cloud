@@ -511,16 +511,16 @@ public class I18nProperties {
    * @return 合并后的 basename 数组（缓存引用，不要修改内容）
    */
   public String[] getEffectiveBasenames() {
-    String[] cached = EFFECTIVE_BASENAMES_CACHE;
+    String[] cached = effectiveBasenamesCache;
     if (cached != null) {
       return cached;
     }
     synchronized (CACHE_LOCK) {
-      if (EFFECTIVE_BASENAMES_CACHE != null) {
-        return EFFECTIVE_BASENAMES_CACHE;
+      if (effectiveBasenamesCache != null) {
+        return effectiveBasenamesCache;
       }
-      EFFECTIVE_BASENAMES_CACHE = computeEffectiveBasenames();
-      return EFFECTIVE_BASENAMES_CACHE;
+      effectiveBasenamesCache = computeEffectiveBasenames();
+      return effectiveBasenamesCache;
     }
   }
 
@@ -529,7 +529,7 @@ public class I18nProperties {
    */
   public static void invalidateBasenameCache() {
     synchronized (CACHE_LOCK) {
-      EFFECTIVE_BASENAMES_CACHE = null;
+      effectiveBasenamesCache = null;
     }
   }
 
@@ -568,7 +568,7 @@ public class I18nProperties {
   }
 
   /** basename 合并结果缓存 — 跨 ClassLoader 共享，DevTools restart 后仍有效 */
-  private static volatile String[] EFFECTIVE_BASENAMES_CACHE;
+  private static volatile String[] effectiveBasenamesCache;
 
   /** 缓存锁对象 */
   private static final Object CACHE_LOCK = new Object();

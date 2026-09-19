@@ -6,6 +6,8 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -362,7 +364,7 @@ public final class CryptoUtils {
    * @throws NullPointerException 如果 key 或 action 为 null
    * @since 26.09.19
    */
-  public static <R> R withKey(byte[] key, java.util.function.Function<byte[], R> action) {
+  public static <R> R withKey(byte[] key, Function<byte[], R> action) {
     Objects.requireNonNull(key, "key must not be null");
     Objects.requireNonNull(action, "action must not be null");
     try {
@@ -380,7 +382,7 @@ public final class CryptoUtils {
    * @throws NullPointerException 如果 key 或 action 为 null
    * @since 26.09.19
    */
-  public static void withKeyVoid(byte[] key, java.util.function.Consumer<byte[]> action) {
+  public static void withKeyVoid(byte[] key, Consumer<byte[]> action) {
     Objects.requireNonNull(key, "key must not be null");
     Objects.requireNonNull(action, "action must not be null");
     try {

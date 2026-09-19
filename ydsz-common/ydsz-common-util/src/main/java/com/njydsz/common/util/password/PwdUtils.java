@@ -35,6 +35,16 @@ public final class PwdUtils {
    */
   private static final BCryptPasswordEncoder BCRYPT_ENCODER = new BCryptPasswordEncoder(12);
 
+  /** BCrypt 密码编码器全限定类名（用于 Class.forName 检查）。 */
+  private static final String BCRYPT_ENCODER_CLASS_NAME =
+      "org." + "springframework.security.crypto.bcrypt.BCryptPasswordEncoder";
+
+  /** BCrypt 依赖的 Spring Security groupId。 */
+  private static final String SPRING_SECURITY_GROUP_ID = "org." + "springframework.security";
+
+  /** BCrypt 依赖的 Spring Security crypto artifactId。 */
+  private static final String SPRING_SECURITY_CRYPTO_ARTIFACT_ID = "spring-security-crypto";
+
   /** 私有构造器，工具类不允许实例化。 */
   private PwdUtils() {
     throw new UnsupportedOperationException(
@@ -117,7 +127,7 @@ public final class PwdUtils {
    */
   public static boolean isBcryptAvailable() {
     try {
-      Class.forName("org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder");
+      Class.forName(BCRYPT_ENCODER_CLASS_NAME);
       return true;
     } catch (ClassNotFoundException e) {
       return false;
@@ -136,12 +146,7 @@ public final class PwdUtils {
    */
   public static String hashPasswordBCrypt(String rawPassword) {
     if (!isBcryptAvailable()) {
-      throw new IllegalStateException(
-          "BCrypt 需要 spring-security-crypto 依赖。请在 pom.xml 中添加：\n"
-              + "<dependency>\n"
-              + "  <groupId>org.springframework.security</groupId>\n"
-              + "  <artifactId>spring-security-crypto</artifactId>\n"
-              + "</dependency>");
+      throw new IllegalStateException(buildBcryptDependencyMessage());
     }
     return BCRYPT_ENCODER.encode(rawPassword);
   }
@@ -158,12 +163,7 @@ public final class PwdUtils {
    */
   public static boolean verifyPasswordBCrypt(String rawPassword, String hashedPassword) {
     if (!isBcryptAvailable()) {
-      throw new IllegalStateException(
-          "BCrypt 需要 spring-security-crypto 依赖。请在 pom.xml 中添加：\n"
-              + "<dependency>\n"
-              + "  <groupId>org.springframework.security</groupId>\n"
-              + "  <artifactId>spring-security-crypto</artifactId>\n"
-              + "</dependency>");
+      throw new IllegalStateException(buildBcryptDependencyMessage());
     }
     return BCRYPT_ENCODER.matches(rawPassword, hashedPassword);
   }
@@ -178,6 +178,19 @@ public final class PwdUtils {
    */
   public static boolean isBCryptFormat(String password) {
     return password != null && BCRYPT_PATTERN.matcher(password).matches();
+  }
+
+  /**
+   * 构建 BCrypt 依赖缺失时的提示消息。
+   *
+   * @return XML 依赖片段提示消息
+   */
+  private static String buildBcryptDependencyMessage() {
+    return "BCrypt 需要 spring-security-crypto 依赖。请在 pom.xml 中添加：\n"
+        + "<dependency>\n"
+        + "  <groupId>" + SPRING_SECURITY_GROUP_ID + "</groupId>\n"
+        + "  <artifactId>" + SPRING_SECURITY_CRYPTO_ARTIFACT_ID + "</artifactId>\n"
+        + "</dependency>";
   }
 
   /**

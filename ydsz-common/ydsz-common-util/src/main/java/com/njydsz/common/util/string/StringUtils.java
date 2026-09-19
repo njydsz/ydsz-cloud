@@ -251,8 +251,8 @@ public final class StringUtils {
    * removeStart(null, "/")             -> null
    * </pre>
    *
-   * @param str 待处理字符串（可为 null）
-   * @param remove 要移除的前缀（可为 null）
+   * @param input 待处理字符串（可为 null）
+   * @param prefix 要移除的前缀（可为 null）
    * @return 移除前缀后的字符串；如果输入为 null 或不以前缀开头，返回原字符串
    */
   public static String removeStart(String input, String prefix) {
