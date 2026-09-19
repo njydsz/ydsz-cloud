@@ -69,7 +69,8 @@ public class JsonAutoConfiguration {
    * @return YdszJson 配置 Bean
    */
   @Bean
-  @ConditionalOnMissingBean
+  // 按类型精确匹配，避免与用户自定义的同名非内部类型 Bean 混淆（P1 精细化修复）
+  @ConditionalOnMissingBean(JsonConfigBean.class)
   public JsonConfigBean ydszJsonConfigBean(
       JsonProperties properties, List<JsonModule> springModules) {
     return new JsonConfigBean(properties, springModules);
