@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.queue.AbstractMessageQueue;
@@ -88,27 +87,5 @@ public class RocketMQ extends AbstractMessageQueue {
     subscribers.clear();
 
     log.info("[RocketMQ] 所有资源已释放");
-  }
-
-  private void validateConnection() {
-    DefaultMQProducer probe = null;
-    try {
-      probe = new DefaultMQProducer("rocketmq-connectivity-check");
-      probe.setNamesrvAddr(properties.resolvedNamesrvAddr());
-      probe.setSendMsgTimeout(3000);
-      probe.start();
-      log.debug("[RocketMQ] 连接验证成功");
-    } catch (Exception e) {
-      log.error("[RocketMQ] 连接验证失败，namesrvAddr={}", properties.resolvedNamesrvAddr(), e);
-      throw BusinessException.builder().key("RocketMQ 连接失败，请检查配置：" + e.getMessage()).build();
-    } finally {
-      if (probe != null) {
-        try {
-          probe.shutdown();
-        } catch (Exception e) {
-          log.debug("[RocketMQ] 连接验证 Producer 关闭异常", e);
-        }
-      }
-    }
   }
 }

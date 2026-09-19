@@ -1,10 +1,5 @@
 package com.njydsz.common.queue.mq.rabbit;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -98,24 +93,4 @@ public class RabbitMQ extends AbstractMessageQueue {
 
   @Override
   protected void doClose() {}
-
-  private void validateConnection() {
-    try {
-      ConnectionFactory factory = new ConnectionFactory();
-      factory.setHost(properties.resolvedHost());
-      factory.setPort(properties.resolvedPort());
-      factory.setUsername(properties.resolvedUsername());
-      factory.setPassword(properties.resolvedPassword());
-      factory.setVirtualHost(properties.resolvedVirtualHost());
-      try (Connection conn = factory.newConnection()) {
-        if (conn.isOpen()) {
-          log.debug("[RabbitMQ] 连接验证成功");
-        }
-      }
-    } catch (IOException | TimeoutException e) {
-      log.error(
-          "[RabbitMQ] 连接验证失败，host={}:{}", properties.resolvedHost(), properties.resolvedPort(), e);
-      throw BusinessException.builder().key("RabbitMQ 连接失败，请检查配置：" + e.getMessage()).build();
-    }
-  }
 }

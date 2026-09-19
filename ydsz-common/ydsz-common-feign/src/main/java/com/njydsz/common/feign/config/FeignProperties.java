@@ -52,6 +52,9 @@ public class FeignProperties {
   /** 信号量隔离（Bulkhead）配置 */
   private final Bulkhead bulkhead = new Bulkhead();
 
+  /** Resilience4j RateLimiter 限流配置 */
+  private final RateLimiter rateLimiter = new RateLimiter();
+
   /** GZIP 请求压缩配置 */
   private final Compress compress = new Compress();
 
@@ -103,6 +106,10 @@ public class FeignProperties {
 
   public Bulkhead getBulkhead() {
     return bulkhead;
+  }
+
+  public RateLimiter getRateLimiter() {
+    return rateLimiter;
   }
 
   public Compress getCompress() {
@@ -298,6 +305,26 @@ public class FeignProperties {
     public void setServiceMaxConcurrent(Map<String, Integer> serviceMaxConcurrent) {
       this.serviceMaxConcurrent = serviceMaxConcurrent;
     }
+  }
+
+  /** Resilience4j RateLimiter 限流配置 */
+  @Getter
+  @Setter
+  public static class RateLimiter {
+    /** 是否启用 QPS 限流，默认 false */
+    private boolean isEnabled = false;
+
+    /** 每个周期内允许的最大请求数，默认 100 */
+    private int defaultLimitForPeriod = 100;
+
+    /** 限流刷新周期（毫秒），默认 1000（1 秒） */
+    private long limitRefreshPeriodMs = 1000;
+
+    /** 获取许可的超时时间（毫秒），默认 5000 */
+    private long timeoutDurationMs = 5000;
+
+    /** 按服务维度配置最大请求数 */
+    private Map<String, Integer> serviceLimitForPeriod = new HashMap<>(16);
   }
 
   /** GZIP 请求压缩配置 */

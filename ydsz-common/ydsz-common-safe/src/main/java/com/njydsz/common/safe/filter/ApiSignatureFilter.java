@@ -192,7 +192,10 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
             + bodySha256;
 
     String expectedSignature = hmacSha256Base64(raw, properties.getAppSecret());
-    if (!constantTimeEquals(expectedSignature, signature)) {
+    // 使用 MessageDigest.isEqual() 进行恒定时间比较，替代自实现逻辑
+    if (!MessageDigest.isEqual(
+        expectedSignature.getBytes(StandardCharsets.UTF_8),
+        signature.getBytes(StandardCharsets.UTF_8))) {
       LOG.warn("【API签名验证】签名校验失败 | uri={}", request.getRequestURI());
       publishEvent(request, "Signature mismatch");
       reject(response, "Invalid signature");
@@ -305,17 +308,4 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       throw new IllegalStateException("HMAC-SHA256 computation failed", e);
     }
   }
-
-  /** 常量时间比较，防止时序攻击 */
-  private static boolean constantTimeEquals(String a, String b) {
-    if (a == null || b == null || a.length() != b.length()) {
-      return false;
-    }
-    int result = 0;
-    for (int i = 0; i < a.length(); i++) {
-      result |= a.charAt(i) ^ b.charAt(i);
-    }
-    return result == 0;
-  }
-
 }

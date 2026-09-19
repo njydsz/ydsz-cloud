@@ -27,6 +27,7 @@ import com.njydsz.common.auth.metrics.AuthMetricsCollector;
  * @author ydsz-team
  * @since 26.09.18
  */
+@Configuration
 public class HealthMetricsConfiguration {
 
   private static final Logger LOG = LoggerFactory.getLogger(HealthMetricsConfiguration.class);

@@ -12,6 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,6 +55,9 @@ public class AuditFallbackWriter implements AutoCloseable {
   /** 缓冲区大小（默认 8KB） */
   private static final int BUFFER_SIZE = 8192;
 
+  /** 锁获取超时时间（毫秒） */
+  private static final long LOCK_TIMEOUT_MS = 100;
+
   /** 日期格式化器（线程安全） */
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -67,6 +72,9 @@ public class AuditFallbackWriter implements AutoCloseable {
 
   /** 当前写入文件路径 */
   private volatile Path currentFilePath;
+
+  /** 写入锁（ReentrantLock + tryLock 超时，避免 synchronized 无限阻塞） */
+  private final ReentrantLock writeLock = new ReentrantLock();
 
   /**
    * 设置磁盘兜底路径
@@ -89,6 +97,15 @@ public class AuditFallbackWriter implements AutoCloseable {
   }
 
   /**
+   * 获取当前磁盘兜底文件堆积数量（用于健康检查）
+   *
+   * @return 兜底目录下的 JSON 文件数量；目录不存在时返回 0
+   */
+  public int getFallbackFileCount() {
+    return listFallbackFiles().size();
+  }
+
+  /**
    * 磁盘兜底是否已失效
    *
    * @return 已失效返回 true
@@ -100,29 +117,41 @@ public class AuditFallbackWriter implements AutoCloseable {
   /**
    * 将单条审计日志写入磁盘兜底文件
    *
+   * <p>使用 {@link ReentrantLock#tryLock(long, TimeUnit)} 带锁等待超时，
+   * 超时后放弃写入并记录错误，避免在高并发场景下因 synchronized 无超时导致的线程堆积。
+   *
    * @param auditLog 待写入的审计日志
    */
-  public synchronized void writeToFallback(AuditLog auditLog) {
+  public void writeToFallback(AuditLog auditLog) {
     if (diskFallbackFailed) {
       LOG.error("【审计兜底】磁盘兜底已失效, 审计日志将丢失, id={}", auditLog.getId());
       return;
     }
 
+    boolean locked = false;
     try {
+      locked = writeLock.tryLock(LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+      if (!locked) {
+        LOG.warn("【审计兜底】获取写入锁超时({}ms), 放弃写入, id={}", LOCK_TIMEOUT_MS, auditLog.getId());
+        return;
+      }
       ensureWriterOpen();
       String jsonLine = YdszJson.toJson(auditLog);
       currentWriter.write(jsonLine);
       currentWriter.newLine();
-
-      // flush 策略：每 100ms flush 一次，避免频繁刷盘
       currentWriter.flush();
-
-      // 检查文件大小，超过限制则滚动
       checkAndRollFile();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.warn("【审计兜底】写入锁等待被中断, id={}", auditLog.getId());
     } catch (IOException e) {
       diskFallbackFailed = true;
       LOG.error("【审计兜底】磁盘兜底写入失败, 审计日志将丢失, id={}, error={}", auditLog.getId(), e.getMessage(), e);
       closeCurrentWriter();
+    } finally {
+      if (locked) {
+        writeLock.unlock();
+      }
     }
   }
 
@@ -224,8 +253,13 @@ public class AuditFallbackWriter implements AutoCloseable {
   }
 
   /** 关闭当前 BufferedWriter */
-  public synchronized void close() {
-    closeCurrentWriter();
+  public void close() {
+    writeLock.lock();
+    try {
+      closeCurrentWriter();
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   /** 确保 writer 已打开，如果文件不存在或需要滚动则创建新文件 */

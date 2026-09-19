@@ -11,6 +11,7 @@ import feign.Retryer;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -36,6 +37,7 @@ import com.njydsz.common.feign.compress.GzipRequestCompressInterceptor;
 import com.njydsz.common.feign.interceptor.BulkheadRequestInterceptor;
 import com.njydsz.common.feign.interceptor.FeignResponseInterceptor;
 import com.njydsz.common.feign.monitor.FeignResponseMetricsAdapter;
+import com.njydsz.common.feign.ratelimiter.FeignRateLimiterInterceptor;
 import com.njydsz.common.feign.trace.TraceRequestInterceptor;
 
 /**
@@ -297,6 +299,32 @@ public class FeignConfiguration {
 
     return new FeignResponseInterceptor(
         metrics, logEnabled, slowCallThresholdMillis, null, bulkhead);
+  }
+
+  /**
+   * 创建 Resilience4j RateLimiter 请求限流拦截器。
+   *
+   * <p>基于 Resilience4j RateLimiter 实现按服务维度的 QPS 限流。 当服务的 QPS 超过配置阈值时，快速失败。
+   * 仅当 {@code ydsz.feign.rate-limiter.enabled=true} 时生效。
+   *
+   * @param feignProperties Feign 配置属性
+   * @param rateLimiterRegistryProvider Resilience4j RateLimiter 注册表（可选）
+   * @return FeignRateLimiterInterceptor 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(FeignRateLimiterInterceptor.class)
+  @ConditionalOnProperty(prefix = "ydsz.feign.rate-limiter", name = "enabled", havingValue = "true")
+  public FeignRateLimiterInterceptor rateLimiterInterceptor(
+      FeignProperties feignProperties,
+      ObjectProvider<RateLimiterRegistry> rateLimiterRegistryProvider) {
+    FeignProperties.RateLimiter config = feignProperties.getRateLimiter();
+    RateLimiterRegistry registry = rateLimiterRegistryProvider.getIfAvailable();
+    if (registry == null) {
+      // 当没有外部 Registry 时创建默认 Registry
+      registry = RateLimiterRegistry.ofDefaults();
+    }
+    return new FeignRateLimiterInterceptor(
+        registry, java.time.Duration.ofMillis(config.getTimeoutDurationMs()));
   }
 
   /**

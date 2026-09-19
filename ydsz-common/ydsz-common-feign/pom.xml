@@ -124,6 +124,11 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
+        <!-- Resilience4j RateLimiter（QPS 限流能力，26.09.19 新增） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-ratelimiter</artifactId>
+        </dependency>
 
         <!-- ==================== 测试依赖 ==================== -->
         <dependency>

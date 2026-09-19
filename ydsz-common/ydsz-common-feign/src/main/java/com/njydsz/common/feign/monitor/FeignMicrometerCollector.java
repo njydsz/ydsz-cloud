@@ -21,10 +21,11 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code feign.request.latency} - Feign 请求延迟 Timer（标签: client, method, status_code）
  *   <li>{@code feign.request.errors} - Feign 请求错误 Counter（标签: client, method, status_code）
  *   <li>{@code feign.request.slow} - Feign 慢调用 Counter（标签: client, method）
+ *   <li>{@code feign.response.body.size} - 响应体大小分布（DistributionSummary，标签: client, method, status_code）
  * </ul>
  *
- * <p><b>Timer 缓存：</b>使用 {@link ConcurrentHashMap} 缓存已创建的 Timer 实例， 避免每次调用都创建新的 {@link
- * Timer.Builder} 对象。
+ * <p><b>缓存优化（自 26.09.19）：</b>为减少 {@link Counter.Builder} 重复构建和 {@link DistributionSummary.Builder}
+ * 的对象分配开销，使用 {@link ConcurrentHashMap} 缓存已创建的 Counter 和 DistributionSummary 实例，避免每次调用重新构建 Builder。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -45,6 +46,16 @@ public class FeignMicrometerCollector {
 
   /** Timer 缓存，Key = "client|method|status" */
   private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+
+  /** Counter 缓存（errors），Key = "client|method|status" */
+  private final ConcurrentHashMap<String, Counter> errorCounterCache = new ConcurrentHashMap<>();
+
+  /** Counter 缓存（slow），Key = "client|method" */
+  private final ConcurrentHashMap<String, Counter> slowCounterCache = new ConcurrentHashMap<>();
+
+  /** DistributionSummary 缓存（body size），Key = "client|method|status" */
+  private final ConcurrentHashMap<String, DistributionSummary> bodySizeSummaryCache =
+      new ConcurrentHashMap<>();
 
   private final MeterRegistry registry;
 
@@ -80,6 +91,68 @@ public class FeignMicrometerCollector {
                 .tag(TAG_METHOD, method)
                 .tag(TAG_STATUS_CODE, status)
                 .description("Feign request latency")
+                .register(registry));
+  }
+
+  /**
+   * 获取或创建错误计数 Counter（带缓存）。
+   *
+   * @param clientName 客户端名称
+   * @param method HTTP 方法
+   * @param status HTTP 状态码
+   * @return 缓存的 Counter 实例
+   */
+  private Counter getOrCreateErrorCounter(String clientName, String method, String status) {
+    String cacheKey = clientName + "|" + method + "|" + status;
+    return errorCounterCache.computeIfAbsent(
+        cacheKey,
+        k ->
+            Counter.builder(METRIC_REQUEST_ERRORS)
+                .tag(TAG_CLIENT, clientName)
+                .tag(TAG_METHOD, method)
+                .tag(TAG_STATUS_CODE, status)
+                .description("Feign request errors")
+                .register(registry));
+  }
+
+  /**
+   * 获取或创建慢调用计数 Counter（带缓存）。
+   *
+   * @param clientName 客户端名称
+   * @param method HTTP 方法
+   * @return 缓存的 Counter 实例
+   */
+  private Counter getOrCreateSlowCounter(String clientName, String method) {
+    String cacheKey = clientName + "|" + method;
+    return slowCounterCache.computeIfAbsent(
+        cacheKey,
+        k ->
+            Counter.builder(METRIC_REQUEST_SLOW)
+                .tag(TAG_CLIENT, clientName)
+                .tag(TAG_METHOD, method)
+                .description("Feign slow call count (exceeds configured threshold)")
+                .register(registry));
+  }
+
+  /**
+   * 获取或创建响应体大小 DistributionSummary（带缓存）。
+   *
+   * @param clientName 客户端名称
+   * @param method HTTP 方法
+   * @param status HTTP 状态码
+   * @return 缓存的 DistributionSummary 实例
+   */
+  private DistributionSummary getOrCreateBodySizeSummary(
+      String clientName, String method, String status) {
+    String cacheKey = clientName + "|" + method + "|" + status;
+    return bodySizeSummaryCache.computeIfAbsent(
+        cacheKey,
+        k ->
+            DistributionSummary.builder(METRIC_RESPONSE_BODY_SIZE)
+                .tag(TAG_CLIENT, clientName)
+                .tag(TAG_METHOD, method)
+                .tag(TAG_STATUS_CODE, status)
+                .description("Feign response body size in bytes")
                 .register(registry));
   }
 
@@ -128,24 +201,18 @@ public class FeignMicrometerCollector {
   }
 
   /**
-   * 记录 Feign 请求错误。
+   * 记录 Feign 请求错误（使用缓存的 Counter）。
    *
    * @param clientName Feign 客户端名称
    * @param method HTTP 方法
    * @param statusCode HTTP 状态码
    */
   public void recordError(String clientName, String method, String statusCode) {
-    Counter.builder(METRIC_REQUEST_ERRORS)
-        .tag(TAG_CLIENT, clientName)
-        .tag(TAG_METHOD, method)
-        .tag(TAG_STATUS_CODE, statusCode)
-        .description("Feign request errors")
-        .register(registry)
-        .increment();
+    getOrCreateErrorCounter(clientName, method, statusCode).increment();
   }
 
   /**
-   * 记录 Feign 请求错误（从异常推断状态码）。
+   * 记录 Feign 请求错误（从异常推断状态码，使用缓存的 Counter）。
    *
    * @param clientName Feign 客户端名称
    * @param method HTTP 方法
@@ -157,7 +224,7 @@ public class FeignMicrometerCollector {
   }
 
   /**
-   * 记录响应体大小。
+   * 记录响应体大小（使用缓存的 DistributionSummary）。
    *
    * <p>注册指标 {@code feign.response.body.size}（DistributionSummary）， 使用标签 client / method /
    * status_code 区分维度，便于监控响应体分布、 识别异常大响应或持续空响应。
@@ -172,27 +239,17 @@ public class FeignMicrometerCollector {
     if (bodySizeBytes < 0) {
       return;
     }
-    DistributionSummary.builder(METRIC_RESPONSE_BODY_SIZE)
-        .tag(TAG_CLIENT, clientName)
-        .tag(TAG_METHOD, method)
-        .tag(TAG_STATUS_CODE, String.valueOf(statusCode))
-        .description("Feign response body size in bytes")
-        .register(registry)
+    getOrCreateBodySizeSummary(clientName, method, String.valueOf(statusCode))
         .record(bodySizeBytes);
   }
 
   /**
-   * 记录 Feign 慢调用。
+   * 记录 Feign 慢调用（使用缓存的 Counter）。
    *
    * @param clientName Feign 客户端名称
    * @param method HTTP 方法
    */
   public void recordSlowCall(String clientName, String method) {
-    Counter.builder(METRIC_REQUEST_SLOW)
-        .tag(TAG_CLIENT, clientName)
-        .tag(TAG_METHOD, method)
-        .description("Feign slow call count (exceeds configured threshold)")
-        .register(registry)
-        .increment();
+    getOrCreateSlowCounter(clientName, method).increment();
   }
 }

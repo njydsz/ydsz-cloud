@@ -38,7 +38,16 @@ public class AuditTemplateProcessor {
   /** 空字符串常量，用于模板解析结果为空时的默认返回值 */
   private static final String EMPTY_STRING = "";
 
-  /** 表达式缓存最大容量，超过时清空缓存（防止无限增长） */
+  /**
+   * 表达式缓存最大容量，超过时通过 LRU 淘汰最旧条目。
+   *
+   * <p><b>注意事项：</b>如果业务方在 {@code @Audit(content=...)} 中使用 SpEL 表达式内联动态值
+   * （如 {@code "'操作:' + #userId"} 每次 userId 不同导致模板字符串唯一），
+   * 缓存将退化为每个唯一模板仅使用一次即被淘汰，产生「缓存击穿」。
+   *
+   * <p><b>建议：</b>模板表达式应保持编译期常量形式（如 {@code "'操作:' + #id"}），
+   * 避免将运行时变量直接拼入模板字符串。
+   */
   private static final int MAX_EXPRESSION_CACHE_SIZE = 256;
 
   /** SpEL 表达式解析器（线程安全） */

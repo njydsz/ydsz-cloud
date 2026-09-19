@@ -119,12 +119,6 @@ public class TokenBucketLimiter implements RateLimiter {
     /** 填充速率（每秒令牌数），使用 double 避免热路径 BigDecimal 运算 */
     private final double refillRate;
 
-    /** 预热期（纳秒） */
-    private final long warmupNanos;
-
-    /** 启动时间（纳秒） */
-    private final long startNanos;
-
     /** 读写锁：保护 lastRefillNanos 和 tokensNanos 的一致性 */
     private final StampedLock lock = new StampedLock();
 
@@ -141,9 +135,7 @@ public class TokenBucketLimiter implements RateLimiter {
       this.capacity = rule.getBurstCapacity();
       // 预计算为 double，避免热路径 BigDecimal→long 转换与 GC 分配
       this.refillRate = rule.getThreshold().doubleValue();
-      this.warmupNanos = rule.getWarmupPeriod() == null ? 0L : rule.getWarmupPeriod().toNanos();
-      this.startNanos = System.nanoTime();
-      this.lastRefillNanos = this.startNanos;
+      this.lastRefillNanos = System.nanoTime();
       // 启动时桶满
       this.tokensNanos = this.capacity * NANOS_PER_TOKEN;
       this.lastAccessMillis = System.currentTimeMillis();
@@ -197,8 +189,7 @@ public class TokenBucketLimiter implements RateLimiter {
         elapsedNanos = 0;
       }
 
-      double actualRate = calculateActualRate(elapsedNanos);
-      long tokensToAdd = (long) (elapsedNanos * actualRate);
+      long tokensToAdd = (long) (elapsedNanos * refillRate);
       long capacityNanos = capacity * NANOS_PER_TOKEN;
 
       // 计算补充后的令牌数（上限为桶容量）
@@ -216,7 +207,7 @@ public class TokenBucketLimiter implements RateLimiter {
         long actualElapsed = now - latestRefill;
 
         if (actualElapsed > 0) {
-          double rate = calculateActualRate(actualElapsed);
+          double rate = refillRate;
           long toAdd = (long) (actualElapsed * rate);
           latestTokens = Math.min(latestTokens + toAdd, capacityNanos);
         }
@@ -238,7 +229,7 @@ public class TokenBucketLimiter implements RateLimiter {
           lastRefillNanos = now;
           // 计算需要等待的时间
           long needNanos = NANOS_PER_TOKEN - latestTokens;
-          long waitMs = (long) Math.ceil(needNanos / actualRate / 1_000_000.0);
+          long waitMs = (long) Math.ceil(needNanos / refillRate / 1_000_000.0);
           return RateLimitDecision.builder()
               .result(RateLimitResult.BLOCKED)
               .remaining(BigDecimal.ZERO)
@@ -251,21 +242,6 @@ public class TokenBucketLimiter implements RateLimiter {
       } finally {
         lock.unlockWrite(writeStamp);
       }
-    }
-
-    /**
-     * 计算实际填充速率（考虑预热期）
-     *
-     * @param elapsedNanos 距离上次填充的纳秒数
-     * @return 实际填充速率（令牌/秒，double 精度足够限流场景）
-     */
-    private double calculateActualRate(long elapsedNanos) {
-      if (warmupNanos > 0) {
-        long sinceStart = elapsedNanos + (lastRefillNanos - startNanos);
-        double warmupFactor = Math.min(1.0, (double) sinceStart / warmupNanos);
-        return refillRate * warmupFactor;
-      }
-      return refillRate;
     }
   }
 }
