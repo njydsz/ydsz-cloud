@@ -19,7 +19,11 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 
 /**
- * 熔断器（基于 Resilience4j）。
+ * 安全熔断器（基于 Resilience4j 适配器）。
+ *
+ * <p>对 Resilience4j CircuitBreaker 的统一包装，将底层受保护调用
+ * 标准化为 {@link com.njydsz.common.safe.ratelimit.model.RateLimitDecision} 输出，
+ * 解决与 Resilience4j {@code CircuitBreaker} 类名冲突。
  *
  * <p><b>三态机：</b>
  *
@@ -42,27 +46,23 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
  * <p>每个资源标识对应一个独立的底层 Resilience4j 熔断器实例，
  * 由 Resilience4j 提供滑动窗口统计、状态自动流转、半开探测与事件总线能力。
  *
- * <p>本类的类名同为 CircuitBreaker，与 Resilience4j 的 CircuitBreaker 同名冲突，
- * 故底层 Resilience4j CircuitBreaker 使用 FQN（全限定名）引用，其余类均已改为显式 import。
- *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
-public class CircuitBreaker {
+public class SafeCircuitBreaker {
 
   /** 资源 → 底层 Resilience4j 熔断器实例 */
-  // FQN-OK: name conflict with Resilience4j CircuitBreaker
   private final Map<String, io.github.resilience4j.circuitbreaker.CircuitBreaker> breakers =
       new ConcurrentHashMap<>();
 
   private final BreakerConfig config;
 
-  public CircuitBreaker(BreakerConfig config) {
+  public SafeCircuitBreaker(BreakerConfig config) {
     this.config = config;
   }
 
-  public CircuitBreaker() {
+  public SafeCircuitBreaker() {
     this(BreakerConfig.defaults());
   }
 

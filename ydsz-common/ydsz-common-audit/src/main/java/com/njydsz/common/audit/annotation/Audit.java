@@ -38,6 +38,9 @@ import com.njydsz.common.audit.enums.AuditType;
  *   <li>响应结果默认不记录，开启时需评估日志存储与合规风险
  * </ul>
  *
+ * <p><b>已知限制：</b>{@code recordDiff} 和 {@code resourceIdSpEL} 当前版本
+ * 暂不支持，标记为「规划中」（Planned），配置不会生效。
+ *
  * @author ydsz-team
  * @since 26.09.01
  * @see com.njydsz.common.audit.aspect.AuditAspect
@@ -126,24 +129,26 @@ public @interface Audit {
   String[] excludeParams() default {};
 
   /**
-   * 是否记录变更 diff 快照（P2-14：合规追溯增强）。
+   * 是否记录变更 diff 快照（合规追溯增强）。
    *
-   * <p>开启后，审计切面会在方法执行前（解析 {@link #resourceIdSpEL()} 后）查询旧值作为
+   * <p><b>⏳ 规划中（Planned）：</b>当前版本暂不支持此功能，配置不会生效。
+   *
+   * <p>开启后（规划中），审计切面会在方法执行前（解析 {@link #resourceIdSpEL()} 后）查询旧值作为
    * 「变更前快照」（{@code diffBeforeSnapshot}），方法执行成功后记录返回值作为
    * 「变更后快照」（{@code diffAfterSnapshot}）。
    *
    * <p>仅对 {@code action = UPDATE / DELETE} 场景意义最大；CREATE 只记录「后」。
    *
-   * <p>注意：开启会引入一次额外的「查询旧值」数据库操作，需评估性能。
+   * <p>注意：开启后（规划中）会引入一次额外的「查询旧值」数据库操作，需评估性能。
    *
    * @return 开启 diff 记录返回 true（默认 false）
-   *
-   * @since 4.1.0
    */
   boolean recordDiff() default false;
 
   /**
    * 资源 ID 的 SpEL 表达式，用于查询「变更前快照」。
+   *
+   * <p><b>⏳ 规划中（Planned）：</b>当前版本暂不支持此功能，配置不会生效。
    *
    * <p>SpEL 中可访问方法参数（按参数名，如 {@code #id}）及请求上下文。
    * 切面解析此表达式后，以「模块名 + 资源 ID」为键查询旧值。
@@ -151,8 +156,6 @@ public @interface Audit {
    * <p>示例：{@code "#id"}（方法参数名为 id 时）、{@code "#dto.id"}。
    *
    * @return 资源 ID 的 SpEL 表达式，未配置时不进行 diff 查询
-   *
-   * @since 4.1.0
    */
   String resourceIdSpEL() default "";
 }

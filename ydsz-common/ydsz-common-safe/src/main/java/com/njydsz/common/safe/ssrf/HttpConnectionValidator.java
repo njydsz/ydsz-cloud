@@ -128,7 +128,7 @@ public final class HttpConnectionValidator {
    * @throws SsrfBlockedException 若 URL 被判定为风险目标
    */
   public void validate(String urlString) throws SsrfBlockedException {
-    if (!properties.getIsEnabled()) {
+    if (!properties.isEnabled()) {
       return;
     }
     if (urlString == null || urlString.isBlank()) {
@@ -249,11 +249,11 @@ public final class HttpConnectionValidator {
       compilePatterns();
     }
 
-    public boolean getIsEnabled() {
+    public boolean isEnabled() {
       return isEnabled;
     }
 
-    public void setIsEnabled(boolean isEnabled) {
+    public void setEnabled(boolean isEnabled) {
       this.isEnabled = isEnabled;
     }
 

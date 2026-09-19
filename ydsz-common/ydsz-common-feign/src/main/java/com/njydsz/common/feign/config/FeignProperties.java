@@ -1,6 +1,5 @@
 package com.njydsz.common.feign.config;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -16,6 +15,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * YdszFeign 模块核心配置属性类
  *
  * <p>配置前缀：ydsz.feign，覆盖请求头透传、重试、超时、追踪、指标、熔断、隔离、压缩等全量能力。
+ *
+ * <p><b>熔断器配置统一说明：</b> {@code ydsz.feign.circuit-breaker.*} 为熔断器唯一配置入口（自 26.09.19 起），
+ * 原先 {@code ydsz.feign.resilience4j.*} 配置路径已废弃，保留一版本兼容后移除。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -44,7 +46,7 @@ public class FeignProperties {
   /** 监控指标配置 */
   private final Metrics metrics = new Metrics();
 
-  /** 熔断器开关配置，具体熔断规则使用Resilience4j原生配置 */
+  /** 熔断器配置（Resilience4j，唯一配置入口） */
   private final CircuitBreaker circuitBreaker = new CircuitBreaker();
 
   /** 信号量隔离（Bulkhead）配置 */
@@ -213,21 +215,30 @@ public class FeignProperties {
     private boolean isEnabled = true;
   }
 
-  /** 熔断器开关配置 */
+  /**
+   * 熔断器配置（Resilience4j）。
+   *
+   * <p>自 26.09.19 起，{@code ydsz.feign.circuit-breaker.*} 为熔断器唯一配置入口。
+   * 废弃的 {@code ydsz.feign.resilience4j.*} 路径保留一版本兼容，新配置请使用 circuit-breaker 路径。
+   */
   @Getter
   @Setter
   public static class CircuitBreaker {
-    /** 是否启用Resilience4j熔断能力，默认false */
+    /**
+     * 是否启用 Resilience4j 熔断能力。
+     *
+     * <p>自 26.09.19 起统一使用 circuitBreaker 开关（原 resilience4j.enabled 保留兼容）。
+     */
     private boolean isEnabled = false;
 
     /** 熔断状态 Redis 持久化 TTL（秒），默认 3600 */
     private int stateTtlSeconds = 3600;
 
-    /** 失败率阈值（百分比），达到该值触发熔断，默认 50 */
-    private BigDecimal failureRateThreshold = new BigDecimal("50");
+    /** 失败率阈值（百分比），达到该值触发熔断，默认 50.0 */
+    private float failureRateThreshold = 50.0f;
 
-    /** 慢调用率阈值（百分比），默认 80 */
-    private BigDecimal slowCallRateThreshold = new BigDecimal("80");
+    /** 慢调用率阈值（百分比），默认 80.0 */
+    private float slowCallRateThreshold = 80.0f;
 
     /** 慢调用时长阈值（毫秒），默认 3000 */
     private long slowCallDurationMs = 3000;
@@ -240,6 +251,13 @@ public class FeignProperties {
 
     /** 滑动窗口大小，默认 20 */
     private int slidingWindowSize = 20;
+
+    /**
+     * HALF_OPEN 状态允许的探测调用数，默认 10。
+     *
+     * <p>统一配置入口下，halfOpen 探测数从 {@code permitHalfOpen → permittedCallsInHalfOpen} 语义合并。
+     */
+    private int permittedNumberOfCallsInHalfOpenState = 10;
   }
 
   /** 信号量隔离（Bulkhead）配置 */
@@ -316,15 +334,65 @@ public class FeignProperties {
     private long connectionTimeToLive = 60000;
   }
 
-  /** Resilience4j 专属配置（Spring Boot 原生配置模式，与 CircuitBreaker 开关解耦） */
+  /**
+   * 熔断器 Resilience4j 专属配置（ydsz.feign.resilience4j.*）。
+   *
+   * <p><b>已废弃，自 26.09.19 起请统一使用 {@code ydzz.feign.circuit-breaker.*} 配置路径。</b>
+   * 保留一个版本用于兼容旧配置，下一版本移除。
+   *
+   * @deprecated 使用 {@link CircuitBreaker} 替代，配置路径 {@code ydsz.feign.circuit-breaker.*}
+   */
+  @Deprecated
   private final Resilience4j resilience4j = new Resilience4j();
-
-  /** 错误解码配置 */
-  private final Error error = new Error();
 
   public Resilience4j getResilience4j() {
     return resilience4j;
   }
+
+  /**
+   * 已废弃的 Resilience4j 配置类。
+   *
+   * @deprecated 使用 {@link CircuitBreaker} 替代
+   */
+  @Deprecated
+  @Getter
+  @Setter
+  public static class Resilience4j {
+    /** @deprecated */
+    @Deprecated
+    private boolean isEnabled = false;
+
+    /** @deprecated */
+    @Deprecated
+    private float failureRateThreshold = 50.0f;
+
+    /** @deprecated */
+    @Deprecated
+    private float slowCallRateThreshold = 80.0f;
+
+    /** @deprecated */
+    @Deprecated
+    private long slowCallDurationThresholdMs = 3000L;
+
+    /** @deprecated */
+    @Deprecated
+    private long waitDurationInOpenStateMs = 10000L;
+
+    /** @deprecated */
+    @Deprecated
+    private int permittedNumberOfCallsInHalfOpenState = 10;
+
+    /** @deprecated */
+    @Deprecated
+    private int slidingWindowSize = 20;
+
+    /** @deprecated */
+    @Deprecated
+    private int minimumNumberOfCalls = 10;
+  }
+
+  /** 错误解码配置 */
+  private final Error error = new Error();
 
   public Error getError() {
     return error;
@@ -353,35 +421,6 @@ public class FeignProperties {
     public void setMaxBodyBytes(int maxBodyBytes) {
       this.maxBodyBytes = maxBodyBytes;
     }
-  }
-
-  /** Resilience4j 熔断器原生配置（ydsz.feign.resilience4j.*）。 */
-  @Getter
-  @Setter
-  public static class Resilience4j {
-    /** 是否启用 Resilience4j 全局熔断器配置注册，默认 false。 */
-    private boolean isEnabled = false;
-
-    /** 失败率阈值（百分比），达到该值触发熔断，默认 50。 */
-    private float failureRateThreshold = 50.0f;
-
-    /** 慢调用率阈值（百分比），默认 80。 */
-    private float slowCallRateThreshold = 80.0f;
-
-    /** 慢调用时长阈值（毫秒），默认 3000。 */
-    private long slowCallDurationThresholdMs = 3000L;
-
-    /** 熔断打开后等待恢复的时长（毫秒），默认 10000。 */
-    private long waitDurationInOpenStateMs = 10000L;
-
-    /** HALF_OPEN 状态允许的探测调用数，默认 10。 */
-    private int permittedNumberOfCallsInHalfOpenState = 10;
-
-    /** 滑动窗口大小，默认 20。 */
-    private int slidingWindowSize = 20;
-
-    /** 滑动窗口内最小调用次数（低于该值不判定熔断），默认 10。 */
-    private int minimumNumberOfCalls = 10;
   }
 
   /** 响应拦截器配置 */
