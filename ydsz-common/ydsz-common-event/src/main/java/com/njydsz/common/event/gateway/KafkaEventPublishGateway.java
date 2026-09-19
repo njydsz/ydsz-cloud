@@ -28,7 +28,7 @@ import com.njydsz.common.event.model.OutboxMessage;
  * <ul>
  *   <li>Topic：固定为 {@code ydsz-outbox-events}（可通过构造参数覆盖）
  *   <li>Key：使用 {@code eventType} 作为 Kafka 分区键，相同类型的事件路由到同一分区
- *   <li>Header：tenantId / traceId / deduplicationId / outboxId 以 Header 传递
+ *   <li>Header：tenantId / traceId / idempotencyKey / outboxId 以 Header 传递
  * </ul>
  *
  * <p>投递语义：单条同步投递（等待 ack，超时降级为失败）；批量投递逐条调用单条发送，失败不影响其他消息。
@@ -177,10 +177,10 @@ public class KafkaEventPublishGateway implements EventPublishGateway {
     if (message.getTraceId() != null) {
       headers.add(new RecordHeader("traceId", message.getTraceId().getBytes(StandardCharsets.UTF_8)));
     }
-    if (message.getDeduplicationId() != null) {
+    if (message.getIdempotencyKey() != null) {
       headers.add(
           new RecordHeader(
-              "deduplicationId", message.getDeduplicationId().getBytes(StandardCharsets.UTF_8)));
+              "idempotencyKey", message.getIdempotencyKey().getBytes(StandardCharsets.UTF_8)));
     }
     headers.add(
         new RecordHeader(

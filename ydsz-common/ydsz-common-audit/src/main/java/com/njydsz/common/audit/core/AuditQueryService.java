@@ -147,4 +147,32 @@ public interface AuditQueryService {
       Integer auditType,
       LocalDateTime startTime,
       LocalDateTime endTime);
+
+  // ====================== Full-text search (ES-compatible) ======================
+
+  /**
+   * 全文检索 + 多维过滤 + 分页查询（ES 兼容接口）
+   *
+   * <p>关键词 {@link AuditSearchQuery#getKeyword()} 同时匹配 content、module、
+   * error_message 三个全文字段，底层实现按需选择：
+   *
+   * <ul>
+   *   <li>JDBC 实现：通过 {@code LIKE '%keyword%'} 提供基础模糊匹配</li>
+   *   <li>ES 实现（规划中）：通过 {@code multi_match} 查询 + 分词器提供高性能全文检索</li>
+   * </ul>
+   *
+   * <p>默认实现直接返回空分页结果，业务方应使用 {@link
+   * com.njydsz.common.audit.core.DefaultAuditQueryService} 获得 JDBC 实现的真正检索能力。
+   *
+   * @param query 检索查询参数载体
+   * @return 分页查询结果
+   * @since 26.09.19
+   */
+  default YdszResponse<List<AuditLog>> search(AuditSearchQuery query) {
+    // 默认实现返回空结果，由 DefaultAuditQueryService 覆盖
+    if (query != null) {
+      query.normalize();
+    }
+    return com.njydsz.common.core.response.PageResponse.empty(1L, 20L);
+  }
 }

@@ -25,7 +25,7 @@ import com.njydsz.common.event.model.OutboxMessage;
  * <ul>
  *   <li>Topic：固定为 {@code ydsz-outbox-events}（可通过配置覆盖）
  *   <li>Tag：使用 {@code eventType} 作为 Tag，消费端可按事件类型订阅
- *   <li>keys：使用 {@code deduplicationId} 作为消息 keys（如有）
+ *   <li>keys：使用 {@code idempotencyKey} 作为消息 keys（如有）
  * </ul>
  *
  * <p>批量投递使用 RocketMQ 原生批量发送能力（{@code DefaultMQProducer.send(Collection<Message>)}）， 单批总大小限制
@@ -81,8 +81,8 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
       if (message.getTraceId() != null) {
         builder.setHeader("traceId", message.getTraceId());
       }
-      if (message.getDeduplicationId() != null) {
-        builder.setHeader("deduplicationId", message.getDeduplicationId());
+      if (message.getIdempotencyKey() != null) {
+        builder.setHeader("idempotencyKey", message.getIdempotencyKey());
       }
 
       SendResult result = rocketMQTemplate.syncSend(destination, builder.build());
@@ -165,8 +165,8 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
       if (msg.getTraceId() != null) {
         mqMsg.putUserProperty("traceId", msg.getTraceId());
       }
-      if (msg.getDeduplicationId() != null) {
-        mqMsg.putUserProperty("deduplicationId", msg.getDeduplicationId());
+      if (msg.getIdempotencyKey() != null) {
+        mqMsg.putUserProperty("idempotencyKey", msg.getIdempotencyKey());
       }
       mqMsg.putUserProperty("outboxId", msg.getId());
       mqMessages.add(mqMsg);

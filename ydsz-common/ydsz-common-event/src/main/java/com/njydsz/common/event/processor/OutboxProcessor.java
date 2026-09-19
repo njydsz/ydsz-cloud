@@ -1,6 +1,7 @@
 package com.njydsz.common.event.processor;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -27,21 +28,25 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  * <p>定时扫描 PENDING 状态的 Outbox 消息，通过 {@link EventPublishGateway} 投递到消息队列。 投递成功标记为
  * SENT，失败则增加重试计数并指数退避。
  *
- * <p>核心增强：
+ * <p>核心能力：
  *
  * <ul>
- *   <li>批量 claim：单条 SQL 原子批量抢占消息，避免 N+1 查询
+ *   <li>逐条 CAS claim：单条 SQL 原子抢占消息，消除批量 claim 在高并发场景下的冲突（P-2）
  *   <li>多线程投递：轮询和投递分离，MQ 慢时不阻塞轮询
  *   <li>超时回收：定期回收卡在 PROCESSING 状态的消息
- *   <li>Gauge 指标：队列深度按状态暴露到 Prometheus
- *   <li>分离 Timer：批量投递和单条投递独立计时
+ *   <li>Micrometer 指标：队列深度、投递结果、耗时实时暴露
  *   <li>自动清理：定期清理已投递的历史消息
  * </ul>
  *
  * <p>退避策略：baseDelay * 2^min(retryCount,30)，最大不超过 maxBackoffSeconds。
  *
+ * <p><b>可观测性升级路径（O-1）：</b>未来可迁移至 Spring 6 Observation API， 通过 {@code
+ * Observation.createNotStarted("ydsz.outbox.publish")} 同时产出 Trace + Metrics， 替代当前手写的
+ * Counter/Timer/Gauge。现有指标命名（ydsz.outbox.*）保持兼容。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.09.19 P-2 逐条 CAS 替代批量 claim，消除高并发冲突；去除冗余重试路径
  */
 public class OutboxProcessor {
 
@@ -85,7 +90,7 @@ public class OutboxProcessor {
   private volatile Map<String, Long> cachedStatusCounts = Map.of();
 
   /** 运行状态标志 */
-  private volatile boolean running = false;
+  private volatile boolean isRunning = false;
 
   /**
    * 创建 Outbox 处理器（使用默认自创建线程池）。
@@ -164,7 +169,7 @@ public class OutboxProcessor {
 
       // 队列深度 Gauge
       for (OutboxStatus status : OutboxStatus.values()) {
-        Gauge.builder("ydsz.outbox.queue.size", () -> getCachedCount(status))
+        Gauge.builder("ydsz.outbox.queue.size", this::getCachedCount)
             .tag("status", status.name())
             .description("Outbox queue depth by status")
             .register(meterRegistry);
@@ -178,8 +183,8 @@ public class OutboxProcessor {
     }
   }
 
-  private long getCachedCount(OutboxStatus status) {
-    return cachedStatusCounts.getOrDefault(status.name(), 0L);
+  private long getCachedCount() {
+    return cachedStatusCounts.getOrDefault(OutboxStatus.PENDING.name(), 0L);
   }
 
   /**
@@ -194,16 +199,16 @@ public class OutboxProcessor {
    * </ul>
    */
   public void start() {
-    if (running) {
+    if (isRunning) {
       return;
     }
-    running = true;
+    isRunning = true;
 
     long pollInterval = properties.getPollIntervalSeconds();
 
     // 主轮询任务
-    scheduler.scheduleWithFixedDelay(
-        this::processBatch, pollInterval, pollInterval, TimeUnit.SECONDS);
+    scheduler.scheduleWithFixedDelay(this::processBatch, pollInterval, pollInterval,
+        TimeUnit.SECONDS);
 
     // 超时回收任务（每 2 倍轮询间隔执行一次）
     int staleThreshold = properties.getStaleProcessingThresholdMinutes();
@@ -224,7 +229,8 @@ public class OutboxProcessor {
     }
 
     LOG.info(
-        "OutboxProcessor started: pollInterval={}s, batchSize={}, workerThreads={}, staleThreshold={}min",
+        "OutboxProcessor started: pollInterval={}s, batchSize={}, workerThreads={}, "
+            + "staleThreshold={}min",
         pollInterval,
         properties.getBatchSize(),
         properties.getWorkerThreads(),
@@ -237,7 +243,7 @@ public class OutboxProcessor {
    * <p>优雅关闭调度线程和投递线程池，等待最多 {@code awaitTerminationSeconds} 秒。
    */
   public void stop() {
-    running = false;
+    isRunning = false;
     scheduler.shutdown();
     publishExecutor.shutdown();
     try {
@@ -259,7 +265,14 @@ public class OutboxProcessor {
   /**
    * 处理一批待投递消息
    *
-   * <p>执行流程：查询 PENDING 消息 → 批量 claim → 分发投递任务
+   * <p>执行流程（P-2 逐条 CAS）：
+   *
+   * <ol>
+   *   <li>查询 PENDING 消息 → 逐条原子 claim（失败即跳过，已被其他实例 claim）
+   *   <li>成功的消息直接分发到工作线程池投递
+   * </ol>
+   *
+   * <p>相比批量 claim，逐条 CAS 在高并发多实例部署时冲突率极低： 失败的 ID 直接跳过（非冲突重试），无需额外的重试逻辑。
    */
   void processBatch() {
     try {
@@ -270,45 +283,45 @@ public class OutboxProcessor {
       if (messages.isEmpty()) {
         return;
       }
-      LOG.debug("Processing {} pending outbox messages", messages.size());
 
-      // 批量 claim（单条 SQL）
-      List<String> ids = messages.stream().map(OutboxMessage::getId).toList();
-      int claimedCount = outboxRepository.claimBatchForProcessing(ids);
+      // P-2 逐条 CAS：每条消息独立竞争，失败（已被其他实例 claim）直接跳过
+      List<OutboxMessage> claimedMessages = new ArrayList<>();
+      for (OutboxMessage msg : messages) {
+        if (outboxRepository.claimForProcessing(msg.getId())) {
+          claimedMessages.add(msg);
+        }
+      }
 
-      if (claimedCount == 0) {
+      if (claimedMessages.isEmpty()) {
+        LOG.debug(
+            "No messages claimed (all contested), batch={}", messages.size());
         return;
       }
 
-      if (claimedCount == messages.size()) {
-        // 快速路径：全部 claim 成功
-        dispatchPublish(messages);
-      } else {
-        // 部分被其他实例 claim，逐条 claim 失败的消息跳过
-        for (OutboxMessage msg : messages) {
-          if (outboxRepository.claimForProcessing(msg.getId())) {
-            dispatchPublish(List.of(msg));
-          }
-        }
-      }
+      LOG.debug(
+          "Processing {}/{} outbox messages (contested {} messages)",
+          claimedMessages.size(), messages.size(), messages.size() - claimedMessages.size());
+
+      dispatchBatch(claimedMessages);
     } catch (Exception e) {
       LOG.error("Error processing outbox batch", e);
     }
   }
 
   /**
-   * 分发投递任务到工作线程池
+   * 将已 claim 的消息批量分发到工作线程池
    *
-   * <p>始终提交到工作线程池执行，避免调度线程被慢 MQ 阻塞。 当 worker 线程池满时，{@link
-   * java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy} 会回退到调用线程（调度线程）执行，提供自然的背压——即 MQ
-   * 慢时自动降低轮询频率， 但不会因为单次慢投递阻塞整个轮询周期。
+   * <p>所有消息均在当前线程已完成 CAS claim，此处仅提交到工作线程池执行 MQ 发送。 当 worker
+   * 线程池满时，{@link java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy} 会回退到调度线程执行，提供自然的背压。
+   *
+   * @param claimedMessages 已 claim 的消息列表（状态为 PROCESSING）
    */
-  private void dispatchPublish(List<OutboxMessage> messages) {
-    Runnable task =
-        messages.size() > 1
-            ? () -> processBatchPublish(messages)
-            : () -> processSingle(messages.get(0));
-    publishExecutor.execute(task);
+  private void dispatchBatch(List<OutboxMessage> claimedMessages) {
+    if (claimedMessages.size() == 1) {
+      publishExecutor.execute(() -> processSingle(claimedMessages.get(0)));
+    } else {
+      publishExecutor.execute(() -> processBatchPublish(claimedMessages));
+    }
   }
 
   /**
@@ -329,7 +342,8 @@ public class OutboxProcessor {
         if (Boolean.TRUE.equals(results.get(i))) {
           outboxRepository.markAsSent(message.getId());
           incrementCounter(publishSuccessCounter);
-          LOG.debug("Outbox message sent: id={}, type={}", message.getId(), message.getEventType());
+          LOG.debug(
+              "Outbox message sent: id={}, type={}", message.getId(), message.getEventType());
         } else {
           handleFailure(message, "Gateway returned false in batch");
         }
@@ -359,7 +373,8 @@ public class OutboxProcessor {
       if (success) {
         outboxRepository.markAsSent(message.getId());
         incrementCounter(publishSuccessCounter);
-        LOG.debug("Outbox message sent: id={}, type={}", message.getId(), message.getEventType());
+        LOG.debug(
+            "Outbox message sent: id={}, type={}", message.getId(), message.getEventType());
       } else {
         handleFailure(message, "Gateway returned false");
       }
@@ -373,7 +388,8 @@ public class OutboxProcessor {
    * 处理投递失败：更新重试计数、计算退避时间、判断是否进入死信
    *
    * @param message Outbox 消息
-   * @param errorMessage 错误信息
+   * @param errorMessage 错误信息（将被智能截断，保留首部+尾部关键信息，详见 {@link
+   *     OutboxRepository#truncateErrorMessage}）
    */
   private void handleFailure(OutboxMessage message, String errorMessage) {
     long backoff = calculateBackoff(message.getRetryCount());
@@ -387,14 +403,14 @@ public class OutboxProcessor {
           "Outbox message moved to dead letter: id={}, retryCount={}, error={}",
           message.getId(),
           message.getRetryCount() + 1,
-          errorMessage);
+          OutboxRepository.truncateErrorMessage(errorMessage));
     } else {
       LOG.warn(
           "Outbox message publish failed, will retry: id={}, retryCount={}, backoff={}s, error={}",
           message.getId(),
           message.getRetryCount() + 1,
           backoff,
-          errorMessage);
+          OutboxRepository.truncateErrorMessage(errorMessage));
     }
   }
 
