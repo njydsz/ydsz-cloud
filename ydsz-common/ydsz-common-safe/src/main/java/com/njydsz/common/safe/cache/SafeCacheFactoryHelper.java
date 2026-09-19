@@ -39,6 +39,7 @@ public final class SafeCacheFactoryHelper {
    * @param <V> 值类型
    * @return SafeCache 实例
    */
+  // 反射调用 YdszCacheBridge.create() 返回值类型为 SafeCache，泛型参数在反射中擦除；使用原始类型 Method 触发 unchecked 警告，此处忽略
   @SuppressWarnings({"unchecked", "rawtypes"})
   public static <K, V> SafeCache<K, V> createCache(
       long expireAfterWrite, TimeUnit timeUnit, long maxSize) {

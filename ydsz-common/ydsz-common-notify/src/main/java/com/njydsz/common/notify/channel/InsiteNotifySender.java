@@ -160,6 +160,16 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
    * @param content 消息内容
    * @return 发送结果
    */
+  /**
+   * 批量发送站内信通知（并行优化，P0-4）。
+   *
+   * <p>使用虚拟线程并行存储，吞吐量相比串行提升显著。
+   *
+   * @param receivers 接收者用户 ID 列表
+   * @param title 消息标题
+   * @param content 消息内容
+   * @return 发送结果
+   */
   @Override
   public NotifySendResult batchSend(List<String> receivers, String title, String content) {
     if (!isEnabled()) {
@@ -168,18 +178,31 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
     if (receivers == null || receivers.isEmpty()) {
       return NotifySendResult.failure("接收者列表为空", getChannel().getName());
     }
+    // P0-4：虚拟线程并行批量存储
+    List<CompletableFuture<NotifySendResult>> futures =
+        receivers.stream()
+            .map(
+                receiver ->
+                    CompletableFuture.supplyAsync(
+                        () -> send(receiver, title, content), insiteExecutor))
+            .toList();
     int successCount = 0;
     int failureCount = 0;
-    for (String receiver : receivers) {
-      NotifySendResult result = send(receiver, title, content);
-      if (result.isSuccess()) {
-        successCount++;
-      } else {
+    for (CompletableFuture<NotifySendResult> future : futures) {
+      try {
+        NotifySendResult result = future.get();
+        if (result.isSuccess()) {
+          successCount++;
+        } else {
+          failureCount++;
+        }
+      } catch (Exception e) {
         failureCount++;
+        LOG.warn("[InsiteNotifySender] 批量发送异常: {}", e.getMessage());
       }
     }
     if (failureCount == 0) {
-      return NotifySendResult.success("batch:" + successCount, getChannel().getName());
+      return NotifySendResult.success("batch-parallel:" + successCount, getChannel().getName());
     }
     return NotifySendResult.failure(
         "部分发送失败: 成功" + successCount + "/" + receivers.size(), getChannel().getName());
