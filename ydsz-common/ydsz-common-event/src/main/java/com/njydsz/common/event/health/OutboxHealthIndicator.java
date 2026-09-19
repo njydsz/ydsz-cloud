@@ -6,44 +6,58 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
+import com.njydsz.common.event.config.EventProperties;
 import com.njydsz.common.event.model.OutboxStatus;
 import com.njydsz.common.event.repository.OutboxRepository;
 
 /**
  * Outbox 健康检查指标
  *
- * <p>检查 Outbox 表中的消息积压情况：
+ * <p>检查 Outbox 表中的消息积压情况，阈值通过 {@link EventProperties.Health} 可配：
  *
  * <ul>
- *   <li>DEAD_LETTER 消息数 > 阈值时标记为 DOWN
- *   <li>PENDING 消息数超过阈值时标记为 DEGRADED（自定义 Status）
- *   <li>PROCESSING 消息数超过阈值时标记为 DEGRADED（可能有实例宕机）
+ *   <li>DEAD_LETTER 消息数 > {@code deadLetterThreshold} 时标记为 DOWN
+ *   <li>PENDING 消息数 > {@code pendingThreshold} 时标记为 DEGRADED（自定义 Status）
+ *   <li>PROCESSING 消息数 > {@code processingThreshold} 时标记为 DEGRADED（可能有实例宕机）
  * </ul>
  *
- * <p>查询优化：仅统计非 SENT 状态的消息（SENT 消息由清理任务定期删除， 不参与健康检查），避免在大表上对 SENT 行做无意义的 COUNT。
+ * <p>查询优化：从仓储层使用缓存版本的 countByStatus（缓存时间由 {@code statusCountCacheSeconds} 配置）， 减少高频
+ * /actuator/health 端点带来的全表 COUNT 压力。
+ *
+ * <p>配置示例：
+ *
+ * <pre>{@code
+ * ydsz:
+ *   event:
+ *     outbox:
+ *       health:
+ *         pending-threshold: 10000
+ *         processing-threshold: 5000
+ *         dead-letter-threshold: 10
+ * }</pre>
  *
  * @author ydsz-team
  * @since 26.09.01
- * @since 26.09.01 移除对 EventProperties 的依赖，使用内置常量阈值
+ * @since 26.09.19 E-3 阈值可配：移除硬编码常量，改为从 EventProperties.Health 读取
+ * @since 26.09.19 移除对 EventProperties 的依赖（由构造注入改为配置注入）
  */
 public class OutboxHealthIndicator implements HealthIndicator {
 
-  /** DEAD_LETTER 消息数健康阈值 */
-  private static final long DEAD_LETTER_THRESHOLD = 10L;
-
-  /** PENDING 消息数健康阈值 */
-  private static final long PENDING_THRESHOLD = 10000L;
-
   /** Outbox 仓储 */
   private final OutboxRepository outboxRepository;
+
+  /** 健康检查阈值配置 */
+  private final EventProperties.Health healthConfig;
 
   /**
    * 构造函数
    *
    * @param outboxRepository Outbox 仓储
+   * @param properties 事件配置属性（提取 Health 配置用于阈值判断）
    */
-  public OutboxHealthIndicator(OutboxRepository outboxRepository) {
+  public OutboxHealthIndicator(OutboxRepository outboxRepository, EventProperties properties) {
     this.outboxRepository = outboxRepository;
+    this.healthConfig = properties != null ? properties.getHealth() : new EventProperties.Health();
   }
 
   /**
@@ -68,12 +82,16 @@ public class OutboxHealthIndicator implements HealthIndicator {
       long processing = statusCounts.getOrDefault(OutboxStatus.PROCESSING.name(), 0L);
       long deadLetter = statusCounts.getOrDefault(OutboxStatus.DEAD_LETTER.name(), 0L);
 
+      long pendingThreshold = healthConfig.getPendingThreshold();
+      long processingThreshold = healthConfig.getProcessingThreshold();
+      long deadLetterThreshold = healthConfig.getDeadLetterThreshold();
+
       Health.Builder builder;
-      if (deadLetter > DEAD_LETTER_THRESHOLD) {
+      if (deadLetter > deadLetterThreshold) {
         builder = Health.down();
-      } else if (pending > PENDING_THRESHOLD) {
+      } else if (pending > pendingThreshold) {
         builder = Health.status("DEGRADED");
-      } else if (processing > PENDING_THRESHOLD / 2) {
+      } else if (processing > processingThreshold) {
         builder = Health.status("DEGRADED");
       } else {
         builder = Health.up();
@@ -83,8 +101,9 @@ public class OutboxHealthIndicator implements HealthIndicator {
           .withDetail("pending", pending)
           .withDetail("processing", processing)
           .withDetail("deadLetter", deadLetter)
-          .withDetail("pendingThreshold", PENDING_THRESHOLD)
-          .withDetail("deadLetterThreshold", DEAD_LETTER_THRESHOLD)
+          .withDetail("pendingThreshold", pendingThreshold)
+          .withDetail("processingThreshold", processingThreshold)
+          .withDetail("deadLetterThreshold", deadLetterThreshold)
           .withDetail("timestamp", Instant.now().toString())
           .build();
     } catch (Exception e) {

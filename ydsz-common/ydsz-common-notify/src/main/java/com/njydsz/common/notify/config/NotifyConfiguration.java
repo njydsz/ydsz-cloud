@@ -563,17 +563,21 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(NotifyRateLimiterManager.class)
   public NotifyRateLimiterManager notifyRateLimiterManager(
-      NotifyProperties properties, ObjectProvider<RedisRateLimiter> redisRateLimiterProvider) {
+      NotifyProperties properties,
+      ObjectProvider<RedisRateLimiter> redisRateLimiterProvider,
+      ObjectProvider<NotifyCircuitBreakerRegistry> circuitBreakerRegistryProvider) {
     NotifyProperties.RateLimit rateLimitConfig = properties.getRateLimit();
     RedisRateLimiter redisRateLimiter = redisRateLimiterProvider.getIfAvailable();
+    NotifyCircuitBreakerRegistry circuitBreakerRegistry = circuitBreakerRegistryProvider.getIfAvailable();
     LOG.info(
         "[NotifyConfiguration] NotifyRateLimiterManager bean registered, redisRateLimiter={}, "
-            + "enabled={}, defaultMaxRequests={}, defaultWindowSeconds={}",
+            + "circuitBreakerRegistry={}, enabled={}, defaultMaxRequests={}, defaultWindowSeconds={}",
         redisRateLimiter != null,
+        circuitBreakerRegistry != null,
         rateLimitConfig.isEnabled(),
         rateLimitConfig.getDefaultMaxRequests(),
         rateLimitConfig.getDefaultWindowSeconds());
-    return new NotifyRateLimiterManager(rateLimitConfig, redisRateLimiter);
+    return new NotifyRateLimiterManager(rateLimitConfig, redisRateLimiter, circuitBreakerRegistry);
   }
 
   // ==================== NotifyService ====================

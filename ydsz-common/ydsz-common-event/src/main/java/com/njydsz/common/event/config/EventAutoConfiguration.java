@@ -163,7 +163,10 @@ public class EventAutoConfiguration {
   /**
    * 创建 Outbox 健康检查指标
    *
+   * <p>注入 {@link EventProperties} 以支持阈值可配（E-3）。
+   *
    * @param outboxRepository Outbox 仓储
+   * @param properties 事件配置属性
    * @return Outbox 健康指标实例
    */
   @Bean
@@ -171,8 +174,9 @@ public class EventAutoConfiguration {
   // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
   // CHECKSTYLE.ON: RegexpSinglelineJava
-  public OutboxHealthIndicator outboxHealthIndicator(OutboxRepository outboxRepository) {
-    return new OutboxHealthIndicator(outboxRepository);
+  public OutboxHealthIndicator outboxHealthIndicator(
+      OutboxRepository outboxRepository, EventProperties properties) {
+    return new OutboxHealthIndicator(outboxRepository, properties);
   }
 
   /**

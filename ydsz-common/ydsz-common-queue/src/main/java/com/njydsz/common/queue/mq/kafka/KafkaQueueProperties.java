@@ -2,13 +2,15 @@ package com.njydsz.common.queue.mq.kafka;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.queue.config.QueueProperties;
 
 /**
  * Kafka 消息队列配置属性
  *
- * <p>封装 Kafka 消息队列的连接和行为配置参数。
+ * <p>封装 Kafka 消息队列的连接和行为配置参数。绑定前缀 {@code ydsz.queue.kafka}，
+ * 与通用 {@link QueueProperties}（前缀 {@code ydsz.queue}）独立绑定，避免字段映射错位。
  *
  * <p><b>配置示例：</b>
  *
@@ -29,6 +31,7 @@ import com.njydsz.common.queue.config.QueueProperties;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ConfigurationProperties(prefix = "ydsz.queue.kafka")
 public class KafkaQueueProperties extends QueueProperties {
 
   /** Kafka 服务地址 */
