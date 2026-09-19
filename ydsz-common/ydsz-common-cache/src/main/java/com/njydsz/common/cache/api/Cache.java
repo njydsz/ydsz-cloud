@@ -452,6 +452,7 @@ public interface Cache<K, V> {
    * <p>委托给 {@link Warmer#warm} 实现。此默认方法提供统一调用入口，实现类可覆写以支持异步预热。
    *
    * @param warmer 预热器 SPI（非空）
+   * @param target 执行预热的缓存实例（非空）
    */
   default void warmUp(com.njydsz.common.cache.support.Warmer warmer, Cache<K, V> target) {
     if (warmer == null) {

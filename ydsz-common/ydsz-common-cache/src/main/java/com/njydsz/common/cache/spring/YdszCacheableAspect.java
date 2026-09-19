@@ -2,7 +2,6 @@ package com.njydsz.common.cache.spring;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
@@ -288,15 +287,7 @@ public class YdszCacheableAspect {
    */
   private Object lookupCacheValue(CacheManager manager, String cacheName, String key) {
     try {
-      org.springframework.cache.Cache cache = manager.getCache(cacheName);
-      if (cache == null) {
-        return null;
-      }
-      Object nativeValue = cache.get(key);
-      if (nativeValue instanceof org.springframework.cache.Cache.ValueWrapper wrapper) {
-        return wrapper.get();
-      }
-      return nativeValue;
+      return SpringCacheHelper.lookupCacheValue(manager, cacheName, key);
     } catch (Exception e) {
       LOG.debug("缓存读取({}, {}) 失败: {}", cacheName, key, e.getMessage());
       return null;
@@ -313,10 +304,7 @@ public class YdszCacheableAspect {
    */
   private void putCacheValue(CacheManager manager, String cacheName, String key, Object value) {
     try {
-      org.springframework.cache.Cache cache = manager.getCache(cacheName);
-      if (cache != null) {
-        cache.put(key, value);
-      }
+      SpringCacheHelper.putCacheValue(manager, cacheName, key, value);
     } catch (Exception e) {
       LOG.warn("缓存写入({}, {}) 失败: {}", cacheName, key, e.getMessage());
     }
@@ -333,14 +321,14 @@ public class YdszCacheableAspect {
   private void registerNullPlaceholder(
       CacheManager manager, String cacheName, String key, long nullTtlSeconds) {
     try {
-      org.springframework.cache.Cache springCache = manager.getCache(cacheName);
-      if (springCache == null || !(springCache.getNativeCache() instanceof Cache<?, ?> nativeCache)) {
+      Object nativeCache = SpringCacheHelper.getNativeCache(manager, cacheName);
+      if (!(nativeCache instanceof Cache<?, ?> ydszCache)) {
         return;
       }
       CacheProtectionGuard.registerNullPlaceholder(
-          (Cache<Object, Object>) nativeCache, key, nullTtlSeconds * 1000, nullTtlSeconds * 1000);
+          (Cache<Object, Object>) ydszCache, key, nullTtlSeconds * 1000, nullTtlSeconds * 1000);
       // 同时在 Spring 缓存中写入 null（确保 Spring 路径也命中）
-      springCache.put(key, null);
+      SpringCacheHelper.putCacheValue(manager, cacheName, key, null);
     } catch (Exception e) {
       LOG.warn("空值占位符注册失败, cache={}, key={}, error={}", cacheName, key, e.getMessage());
     }
@@ -356,12 +344,12 @@ public class YdszCacheableAspect {
    */
   private boolean isNullPlaceholderActive(CacheManager manager, String cacheName, String key) {
     try {
-      org.springframework.cache.Cache springCache = manager.getCache(cacheName);
-      if (springCache == null || !(springCache.getNativeCache() instanceof Cache<?, ?> nativeCache)) {
+      Object nativeCache = SpringCacheHelper.getNativeCache(manager, cacheName);
+      if (!(nativeCache instanceof Cache<?, ?> ydszCache)) {
         return false;
       }
       return CacheProtectionGuard.isNullPlaceholderActive(
-          (Cache<Object, Object>) nativeCache, key);
+          (Cache<Object, Object>) ydszCache, key);
     } catch (Exception e) {
       return false;
     }
