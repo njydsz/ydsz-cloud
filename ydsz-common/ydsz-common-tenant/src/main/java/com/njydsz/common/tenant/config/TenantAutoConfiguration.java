@@ -32,6 +32,7 @@ import com.njydsz.common.tenant.datasource.SchemaSearchPathExecutor;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
+import com.njydsz.common.tenant.feign.TenantContextPropagationStrategy;
 import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
 import com.njydsz.common.tenant.metrics.TenantMetrics;

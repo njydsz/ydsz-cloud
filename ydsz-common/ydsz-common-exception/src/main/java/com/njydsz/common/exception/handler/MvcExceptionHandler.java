@@ -156,12 +156,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         e.getFailureCount(),
         traceId);
 
-    YdszResponse<Map<String, Object>> response = new YdszResponse<>();
-    response.setCode(e.getCode());
-    response.setMsg(resolvedMsg);
-    response.setData(batchResult);
-    response.assignTraceId(traceId);
-    return response;
+    YdszResponse<Map<String, Object>> batchResponse = new YdszResponse<>();
+    batchResponse.setCode(e.getCode());
+    batchResponse.setMsg(resolvedMsg);
+    batchResponse.setData(batchResult);
+    batchResponse.assignTraceId(traceId);
+    return batchResponse;
   }
 
   /**
