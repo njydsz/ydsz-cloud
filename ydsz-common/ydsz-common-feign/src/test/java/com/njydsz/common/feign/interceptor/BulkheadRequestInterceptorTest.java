@@ -66,7 +66,7 @@ class BulkheadRequestInterceptorTest {
       RequestTemplate template2 = createRequestTemplate("http://ydsz-message/api/test");
       assertThatThrownBy(() -> interceptor.apply(template2))
           .isInstanceOf(OpenFeignException.class)
-          .hasMessageContaining("BULKHEAD_FULL");
+          .hasMessageContaining("Bulkhead full");
 
       // 释放第一次的许可
       interceptor.releaseCurrentPermit();

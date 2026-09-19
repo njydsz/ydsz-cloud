@@ -263,7 +263,7 @@ public class AuditAspect {
     }
 
     if (exception != null) {
-      auditLog.setErrorMessage(exception.getClass().getName() + ": " + exception.getMessage());
+      auditLog.setErrorMessage(buildErrorMessage(exception));
     }
 
     auditLog.setAppKey(properties.getAppKey());
@@ -407,6 +407,35 @@ public class AuditAspect {
         maxLength,
         original.length());
     return original.substring(0, maxLength) + "...[truncated]";
+  }
+
+  /**
+   * 构建异常错误信息（含前 512 字符堆栈帧）
+   *
+   * <p>截断堆栈防止超长写入审计日志列。包含异常类名、消息和前 8 帧堆栈信息。
+   *
+   * @param exception 异常对象
+   * @return 错误信息字符串；传入 null 时返回 null
+   */
+  private String buildErrorMessage(Throwable exception) {
+    if (exception == null) {
+      return null;
+    }
+    StringBuilder sb = new StringBuilder(512);
+    sb.append(exception.getClass().getName());
+    if (exception.getMessage() != null) {
+      sb.append(": ").append(exception.getMessage());
+    }
+    StackTraceElement[] stackTrace = exception.getStackTrace();
+    int maxFrames = Math.min(8, stackTrace.length);
+    for (int i = 0; i < maxFrames; i++) {
+      sb.append("\n\tat ").append(stackTrace[i]);
+    }
+    String message = sb.toString();
+    if (message.length() > 512) {
+      return message.substring(0, 511) + "…";
+    }
+    return message;
   }
 
   /**

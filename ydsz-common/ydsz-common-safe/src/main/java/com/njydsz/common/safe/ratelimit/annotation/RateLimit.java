@@ -143,4 +143,37 @@ public @interface RateLimit {
    * @return 预热期（毫秒），默认 {@code 0L}
    */
   long warmupMillis() default 0L;
+
+  /**
+   * 自定义限流 key 模板表达式，支持 {@code {paramName}} 占位符自动替换为对应参数值。
+   *
+   * <p>当默认维度参数提取（{@code keyParam}/反射 getUserId）无法满足时使用此属性。
+   * 支持以下两种占位符模式：
+   *
+   * <ul>
+   *   <li>参数名模式：{@code "{userId}"} — 自动查找方法参数名为 {@code userId} 的值
+   *   <li>参数索引模式：{@code "{0}"}、{@code "{1}"} — 按参数位置索引取值
+   * </ul>
+   *
+   * <p><b>示例：</b>
+   *
+   * <pre>{@code
+   * // 按订单创建者 ID 限流（而非登录用户）
+   * &#64;RateLimit(resource = "order.create",
+   *            threshold = 10,
+   *            keyExpression = "{creatorId}")
+   * public void createOrder(String creatorId, OrderDTO dto) { ... }
+   *
+   * // 多字段组合 key
+   * &#64;RateLimit(resource = "goods.comment",
+   *            threshold = 5,
+   *            keyExpression = "{goodsId}:{userId}")
+   * public void addComment(Long goodsId, Long userId) { ... }
+   * }</pre>
+   *
+   * <p>留空时使用默认行为（按维度自动选择参数提取方式）。
+   *
+   * @return key 模板表达式，默认空串
+   */
+  String keyExpression() default "";
 }
