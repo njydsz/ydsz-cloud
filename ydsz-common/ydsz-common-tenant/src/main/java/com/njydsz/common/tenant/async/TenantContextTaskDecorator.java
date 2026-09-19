@@ -1,10 +1,7 @@
 package com.njydsz.common.tenant.async;
 
-import java.util.Map;
-
 import org.springframework.core.task.TaskDecorator;
 
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.context.TenantContext;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
@@ -18,17 +15,33 @@ import com.njydsz.common.tenant.config.TenantProperties;
  * executor.setTaskDecorator(tenantContextTaskDecorator);
  * </pre>
  *
- * <p>传播策略：
+ * <p>上下文传播依赖 {@code ydsz-common-core} 中 {@code RequestContext} 的 TTL 机制
+ * （{@link com.alibaba.ttl.TransmittableThreadLocal}）实现自动跨线程传播，
+ * 本类仅处理<b>兜底</b>逻辑：
  *
  * <ul>
- *   <li>父线程有上下文 → snapshot → restore（传播用户租户）
- *   <li>父线程无上下文 → 系统租户（定时任务/内部调用）
+ *   <li>父线程有 TTL 上下文 → TTL 自动 copy 到子线程（无需本类操作）
+ *   <li>父线程无上下文（定时任务/内部调用/MQ Consumer）→ 注入系统租户，防止 fail-closed
  * </ul>
  *
- * <p>基于 {@link RequestContext} 的快照/恢复机制实现。
+ * <p>与旧版相比：移除了冗余的 {@code RequestContext.snapshot()/restore()} 手动同步代码，
+ * 消除双轨并存导致的数据不一致风险。清理操作也简化为仅清理本装饰器注入的系统租户。
+ *
+ * <p><b>使用示例：</b>
+ *
+ * <pre>{@code
+ * &#64;Bean
+ * public TaskExecutor taskExecutor(TenantContextTaskDecorator decorator) {
+ *     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+ *     executor.setCorePoolSize(4);
+ *     executor.setMaxPoolSize(8);
+ *     executor.setTaskDecorator(decorator);
+ *     return executor;
+ * }
+ * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.09.19
  */
 public class TenantContextTaskDecorator implements TaskDecorator {
 
@@ -40,28 +53,23 @@ public class TenantContextTaskDecorator implements TaskDecorator {
 
   @Override
   public Runnable decorate(Runnable runnable) {
-    // 捕获父线程上下文快照
-    Map<String, Object> snapshot = RequestContext.snapshot();
-
+    // TTL 已通过 RequestContext 中的 TransmittableThreadLocal 自动跨线程传播
+    // 仅在无上下文时兜底为系统租户，避免异步场景触发 fail-closed 拒绝 SQL
     return () -> {
-      if (snapshot != null && !snapshot.isEmpty()) {
-        // 传播父线程的租户上下文
-        RequestContext.restore(snapshot);
-        // 恢复快照时同步 tenantId 字符串（bridgeToMdc 兼容）
-        TenantContext ctx = TenantContextHolder.get();
-        if (ctx != null) {
-          RequestContext.setTenantId(ctx.getTenantId());
-        }
-      } else {
-        // 无父线程上下文 → 系统租户
+      TenantContext current = TenantContextHolder.get();
+      boolean appliedFallback = false;
+      if (current == null) {
         TenantContextHolder.set(TenantContext.system(properties.getSystemTenantId()));
+        appliedFallback = true;
       }
       try {
         runnable.run();
       } finally {
-        RequestContext.clear();
+        // 兜底场景需要清理；TTL 传播场景由 TTL copy() 保证隔离
+        if (appliedFallback) {
+          TenantContextHolder.clear();
+        }
       }
     };
   }
 }
-

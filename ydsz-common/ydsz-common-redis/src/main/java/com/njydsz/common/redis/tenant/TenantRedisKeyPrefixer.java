@@ -47,8 +47,14 @@ public class TenantRedisKeyPrefixer {
     this.isEnabled = enabled;
   }
 
+  /** 租户前缀版本标识符，用于在反序列化时安全区分租户前缀与业务 Key 内容 */
+  private static final String TENANT_PREFIX_MARKER = "t:";
+
   /**
    * 为 key 添加租户前缀。
+   *
+   * <p>前缀格式：{@code t:{tenantId}:{originalKey}}。使用 {@value #TENANT_PREFIX_MARKER}
+   * 作为版本标识符，避免反序列化时因业务 Key 恰好以字母开头+冒号格式而导致误判剥离。
    *
    * @param key 原始 key
    * @return 带租户前缀的 key，如果未启用或为超级管理员则返回原 key
@@ -63,7 +69,33 @@ public class TenantRedisKeyPrefixer {
       return key;
     }
 
-    return tenantId + ":" + key;
+    return TENANT_PREFIX_MARKER + tenantId + ":" + key;
+  }
+
+  /**
+   * 从带租户前缀的完整 Key 中剥离租户前缀，还原为原始业务 Key。
+   *
+   * <p>仅在已知该 Key 确实添加了租户前缀时使用（如 SCAN 遍历时）。
+   * 普通读/写场景无需调用此方法，因为 {@link #createKeySerializer()} 在序列化时自动加前缀。
+   *
+   * @param prefixedKey 带租户前缀的完整 Key
+   * @return 原始业务 Key；如果前缀格式不匹配则返回原值
+   */
+  public String deprefixKey(String prefixedKey) {
+    if (!isEnabled || prefixedKey == null) {
+      return prefixedKey;
+    }
+
+    String tenantId = tenantIdSupplier != null ? tenantIdSupplier.get() : null;
+    if (tenantId == null || "0".equals(tenantId)) {
+      return prefixedKey;
+    }
+
+    String expectedPrefix = TENANT_PREFIX_MARKER + tenantId + ":";
+    if (prefixedKey.startsWith(expectedPrefix)) {
+      return prefixedKey.substring(expectedPrefix.length());
+    }
+    return prefixedKey;
   }
 
   /**
@@ -97,17 +129,8 @@ public class TenantRedisKeyPrefixer {
       if (key == null) {
         return null;
       }
-
-      // 反序列化时移除租户前缀
-      int colonIndex = key.indexOf(':');
-      if (colonIndex > 0 && colonIndex < key.length() - 1) {
-        String possibleTenantId = key.substring(0, colonIndex);
-        if (possibleTenantId.matches("[a-zA-Z0-9_-]+") && possibleTenantId.length() <= 20) {
-          return key.substring(colonIndex + 1);
-        }
-      }
-
-      return key;
+      // 使用安全的租户前缀剥离方法（基于 t:{tenantId}: 固定格式匹配，避免正则误判）
+      return prefixer.deprefixKey(key);
     }
   }
 }

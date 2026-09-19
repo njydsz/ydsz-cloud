@@ -108,9 +108,9 @@ public class TenantContextWebFilter implements Filter {
         boolean isSuperAdmin = properties.getSuperTenantId().equals(tenantId);
         TenantContext.Builder builder = TenantContext.builder(tenantId).superAdmin(isSuperAdmin);
 
-        // SCHEMA 模式：设置 search_path
-        if (properties.getMode() == TenantProperties.TenantMode.SCHEMA && !isSuperAdmin) {
-          builder.schema("tenant_" + tenantId);
+        // SCHEMA 模式：设置 search_path（支持自定义 schema 名称映射）
+        if (properties.isSchemaMode() && !isSuperAdmin) {
+          builder.schema(properties.resolveSchemaName(tenantId));
         }
 
         // 跨租户共享：附加可访问的源租户 ID

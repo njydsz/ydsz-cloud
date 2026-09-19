@@ -24,7 +24,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
@@ -186,11 +189,16 @@ public class LocalesAutoConfiguration {
   // ==================== Web 国际化（按需条件加载） ====================
 
   /**
-   * 创建区域解析器（默认 AcceptHeaderLocaleResolver）
+   * 创建区域解析器（可切换 AcceptHeaderLocaleResolver / UserPriorityLocaleResolver 两种模式）
    *
-   * <p>解析顺序：请求参数 {@code ?lang=xxx} &gt; Accept-Language Header &gt; 默认 Locale（zh_CN）。
+   * <p>解析顺序取决于 {@link I18nProperties#getLocaleResolverType()}：
    *
-   * <p>仅当类路径存在 {@link LocaleResolver} 且当前没有自定义 {@code LocaleResolver} Bean 时才注册， 避免与 Spring Boot 自动配置冲突。
+   * <ul>
+   *   <li>{@code accept-header}（默认）：仅 Accept-Language Header + 默认 Locale
+   *   <li>{@code user-priority}：参数 &gt; Cookie &gt; 用户偏好 SPI &gt; Header &gt; 默认 Locale
+   * </ul>
+   *
+   * <p>仅当类路径存在 {@link LocaleResolver} 且当前没有自定义 {@code LocaleResolver} Bean 时才注册，避免与 Spring Boot 自动配置冲突。
    *
    * @return 区域解析器
    */
@@ -198,9 +206,22 @@ public class LocalesAutoConfiguration {
   @ConditionalOnClass({LocaleResolver.class, AcceptHeaderLocaleResolver.class})
   @ConditionalOnMissingBean(LocaleResolver.class)
   public LocaleResolver ydszLocaleResolver() {
-    AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
-
     Locale defaultLocale = parseDefaultLocale();
+    String resolverType = i18nProperties.getLocaleResolverType();
+    if ("user-priority".equalsIgnoreCase(resolverType)) {
+      UserPriorityLocaleResolver resolver =
+          new UserPriorityLocaleResolver(
+              defaultLocale,
+              UserPriorityLocaleResolver.DEFAULT_LOCALE_COOKIE_NAME,
+              i18nProperties.getLangParamName());
+      log.info(
+          "UserPriorityLocaleResolver 已注册 | 默认 Locale: {} | 支持语言: {} | Cookie 名称: {}",
+          defaultLocale,
+          Arrays.toString(i18nProperties.getSupportedLocales()),
+          UserPriorityLocaleResolver.DEFAULT_LOCALE_COOKIE_NAME);
+      return resolver;
+    }
+    AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
     resolver.setDefaultLocale(defaultLocale);
 
     List<Locale> localeList = new ArrayList<>(8);
@@ -210,11 +231,38 @@ public class LocalesAutoConfiguration {
     resolver.setSupportedLocales(localeList);
 
     log.info(
-        "LocaleResolver 已注册 | 默认 Locale: {} | 支持语言: {}",
+        "AcceptHeaderLocaleResolver 已注册 | 默认 Locale: {} | 支持语言: {}",
         defaultLocale,
         Arrays.toString(i18nProperties.getSupportedLocales()));
 
     return resolver;
+  }
+
+  /**
+   * 注册用户偏好 Locale 写入拦截器（仅当 LocaleResolver 类型为 user-priority 时生效）。
+   *
+   * <p>与 {@link UserPriorityLocaleResolver} 配合，在请求完成后将本次切换的 Locale 写入 Cookie。
+   *
+   * @return WebMvcConfigurer 实例，仅增加拦截器而不覆盖用户自定义的配置
+   */
+  @Bean
+  @ConditionalOnClass({HandlerInterceptor.class, UserPriorityLocaleResolver.class})
+  @ConditionalOnMissingBean(name = "ydszLocaleWritingMvcConfigurer")
+  public WebMvcConfigurer ydszLocaleWritingMvcConfigurer() {
+    if (!"user-priority".equalsIgnoreCase(i18nProperties.getLocaleResolverType())) {
+      // 无需注册拦截器，返回 noop configurer
+      return new WebMvcConfigurer() {};
+    }
+    final UserPriorityLocaleWritingInterceptor interceptor =
+        new UserPriorityLocaleWritingInterceptor(
+            UserPriorityLocaleResolver.DEFAULT_LOCALE_COOKIE_NAME,
+            UserPriorityLocaleResolver.DEFAULT_COOKIE_MAX_AGE);
+    return new WebMvcConfigurer() {
+      @Override
+      public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(interceptor).addPathPatterns("/**");
+      }
+    };
   }
 
   /**
@@ -345,7 +393,7 @@ public class LocalesAutoConfiguration {
     ReloadableResourceBundleMessageSource messageSource =
         new ReloadableResourceBundleMessageSource();
 
-    // 获取有效的 basename 列表：手动配置 + 通配符扫描发现（如果启用）
+    // 获取有效的 basename 列表：手动配置 + 通配符扫描发现（如果启用） + 兜底框架级
     String[] effectiveBasenames = i18nProperties.getEffectiveBasenames();
 
     // 记录通配符扫描发现的新增资源
@@ -373,6 +421,9 @@ public class LocalesAutoConfiguration {
     messageSource.setFallbackToSystemLocale(i18nProperties.isFallbackToSystemLocale());
     messageSource.setUseCodeAsDefaultMessage(true);
 
+    // 将 MessageSource 桥接至 MessageSourceHolder，使 I18nMessages / I18n 静态工具能走统一路径（负缓存 + 缺失节流）
+    bridgeMessageSourceHolder(messageSource);
+
     log.info(
         "国际化配置已加载 | 资源前缀数: {} | 缓存时间: {}秒 | 支持语言: {} | profiles: {} | wildcardScan: {}",
         cleanedBasenames.length,
@@ -382,6 +433,29 @@ public class LocalesAutoConfiguration {
         i18nProperties.isWildcardScanEnabled());
 
     return messageSource;
+  }
+
+  /**
+   * 将 Spring MessageSource 桥接至 {@link MessageSourceHolder}，实现 I18nMessages（可注入 Bean）与
+   * {@link com.njydsz.common.locales.util.I18n}（静态工具）共享同一解析入口。
+   *
+   * <p>桥接后二者行为全等：负缓存命中、缺失节流、LRU 淘汰 — 解决此前双路径行为不对称的隐患（A1 修复点）。
+   *
+   * @param messageSource Spring 提供的 MessageSource 实例（不可为 null）
+   */
+  private void bridgeMessageSourceHolder(MessageSource messageSource) {
+    MessageSourceHolder.setResolver(
+        (key, params, defaultMsg, locale) -> {
+          try {
+            return messageSource.getMessage(key, params, defaultMsg, locale);
+          } catch (Exception e) {
+            // MessageSource.getMessage 在 key 找不到时会抛 NoSuchMessageException，
+            // 此时 useCodeAsDefaultMessage=true 场景下 messageSource 已返回 key 本身，
+            // 正常分支不会进入此处；仅兜底极端场景（如 encoding 异常、Bundle 损坏）
+            return defaultMsg;
+          }
+        });
+    log.info("MessageSource 已桥接至 MessageSourceHolder | 双路径行为统一启用");
   }
 
   /**

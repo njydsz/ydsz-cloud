@@ -51,4 +51,25 @@ public @interface Idempotent {
    * @return 提示信息
    */
   String message() default "请勿重复提交";
+
+  /**
+   * 幂等校验生效条件（SpEL 表达式）。
+   *
+   * <p>返回 {@code true} 时执行幂等校验，返回 {@code false} 时跳过幂等检查直接执行业务方法。
+   *
+   * <p>SpEL 变量：方法参数名（如 {@code #req} 引用入参）。
+   *
+   * <p><b>使用示例：</b>
+   *
+   * <pre>{@code
+   * // 仅对 POST 请求做幂等校验，GET 查询放行
+   * @Idempotent(key = "#req.requestId", condition = "#req.method == 'POST'")
+   * public Result handle(Request req) { ... }
+   * }</pre>
+   *
+   * <p>默认空串（恒生效，不做条件判断）。
+   *
+   * @return SpEL 条件表达式，空串表示无条件生效
+   */
+  String condition() default "";
 }

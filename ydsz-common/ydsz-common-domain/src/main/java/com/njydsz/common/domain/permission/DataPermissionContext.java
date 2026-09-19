@@ -1,5 +1,9 @@
 package com.njydsz.common.domain.permission;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serial;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,11 +23,72 @@ import lombok.Data;
  * <p><b>层级说明：</b>下沉至 domain 层，auth/jdbc/server 模块均可直接引用，
  * 避免 auth 反向依赖 jdbc 模块。
  *
+ * <p><b>反序列化安全：</b>通过 {@link #readObject(ObjectInputStream)} 确保集合字段在反序列化后
+ * 不会为 {@code null}，防止下游 {@link #isEmptyRowScope()} 调用出现 NPE。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Data
 public class DataPermissionContext {
+
+  /** 确保反序列化后集合字段非空（JVM 反序列化不会执行字段初始化器）。 */
+  @Serial
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    if (companyIds == null) {
+      companyIds = new HashSet<>(16);
+    }
+    if (deptIds == null) {
+      deptIds = new HashSet<>(16);
+    }
+    if (projectIds == null) {
+      projectIds = new HashSet<>(16);
+    }
+    if (regionIds == null) {
+      regionIds = new HashSet<>(16);
+    }
+    if (spaceIds == null) {
+      spaceIds = new HashSet<>(4);
+    }
+    if (visibleColumnsByTable == null) {
+      visibleColumnsByTable = new HashMap<>(16);
+    }
+    if (editableColumnsByTable == null) {
+      editableColumnsByTable = new HashMap<>(16);
+    }
+  }
+
+  /**
+   * 不可变的空上下文常量（所有字段为空集合，不可添加元素）。
+   *
+   * <p>适用于：
+   *
+   * <ul>
+   *   <li>无数据权限要求时的默认返回值
+   *   <li>降级场景（无登录用户、无权限配置）
+   *   <li>只读判断场景（{@link #isEmptyRowScope()} 必然返回 {@code true}）
+   * </ul>
+   *
+   * <p><b>注意：</b>EMPTY 是共享常量，禁止通过 setter 修改其字段。
+   * 如需可变空上下文（后续会添加公司/部门 ID），使用 {@link #emptyMutable()}。
+   *
+   * @since 26.09.19
+   */
+  @SuppressWarnings("squid:S2386") // 集合已通过 Collections.unmodifiableXxx 包装，不可外部修改
+  public static final DataPermissionContext EMPTY;
+
+  static {
+    DataPermissionContext ctx = new DataPermissionContext();
+    // 类级别初始化器已赋空集合，此处包装为不可变视图
+    ctx.companyIds = Collections.unmodifiableSet(ctx.companyIds);
+    ctx.deptIds = Collections.unmodifiableSet(ctx.deptIds);
+    ctx.projectIds = Collections.unmodifiableSet(ctx.projectIds);
+    ctx.regionIds = Collections.unmodifiableSet(ctx.regionIds);
+    ctx.spaceIds = Collections.unmodifiableSet(ctx.spaceIds);
+    EMPTY = ctx;
+  }
+
   /** 行级权限维度编码（从请求头或 RequestContext 解析）。 */
   private String dataScope;
 
@@ -52,13 +117,28 @@ public class DataPermissionContext {
   private Map<String, Set<String>> editableColumnsByTable = new HashMap<>(16);
 
   /**
-   * 创建空的上下文实例（所有字段使用默认值）。
+   * 获取不可变的空上下文常量（所有字段为空集合）。
    *
-   * <p>当权限上下文为 null 时，使用此方法作为安全降级，不拦截 SQL。
+   * <p>当权限上下文需要安全降级时使用此常量，避免重复创建空对象。
    *
-   * @return 空上下文实例
+   * <p><b>注意：</b>返回的 {@link #EMPTY} 是不可变常量，禁止修改。 如需可变空上下文，使用 {@link #emptyMutable()}。
+   *
+   * @return 不可变的空上下文常量 {@link #EMPTY}
+   * @since 26.09.19 优化：从每次创建新实例改为返回共享常量
    */
   public static DataPermissionContext empty() {
+    return EMPTY;
+  }
+
+  /**
+   * 创建可变空上下文实例（所有字段使用默认空集合）。
+   *
+   * <p>适用于需要在返回后向上下文填充数据的场景（如通过拦截器逐步构建权限条件）。
+   *
+   * @return 可变空上下文实例
+   * @since 26.09.19
+   */
+  public static DataPermissionContext emptyMutable() {
     return new DataPermissionContext();
   }
 

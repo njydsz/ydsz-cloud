@@ -15,11 +15,12 @@ import org.springframework.context.annotation.Configuration;
  * <pre>
  * # application.yml
  * ydsz:
- *   sql-intercept:
+ *   jdbc:
  *     pagination:
- *       db-type: mysql          # 数据库类型（可选，不配置则自动检测）
- *       max-limit: 500          # 单页最大记录数（防止全表扫描）
- *       overflow: false         # 页码溢出是否继续查询
+ *       db-type: mysql            # 数据库类型（可选，不配置则自动检测）
+ *       max-limit: 500            # 单页最大记录数（防止全表扫描）
+ *       overflow: false           # 页码溢出是否继续查询
+ *       optimize-count: true      # 自动裁剪 COUNT 语句的 JOIN/GROUP BY
  * </pre>
  *
  * <p><b>优化说明：</b>
@@ -56,6 +57,16 @@ public class PaginationProperties {
    * <p>默认值：500
    */
   private Long maxLimit = 500L;
+
+  /**
+   * 是否自动裁剪 COUNT 语句
+   *
+   * <p>开启后 MP 会自动移除与 COUNT 无关的 LEFT JOIN、ORDER BY、GROUP BY 等子句，
+   * 提升分页 COUNT 查询的性能。仅当分页查询存在复杂 JOIN 时才会生效。
+   *
+   * <p>默认值：true
+   */
+  private boolean isOptimizeCount = true;
 
   /**
    * 页码溢出是否继续查询

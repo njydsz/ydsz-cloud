@@ -1,6 +1,8 @@
 package com.njydsz.common.exception.handler;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -398,8 +400,10 @@ public abstract class BaseExceptionHandler {
       info.setMessage(getRootCauseMessage(throwable));
       info.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
       info.setLevel(ExceptionLevel.ERROR.name());
+      // 异常指纹：非受检异常通过堆栈指纹聚合同类根因（26.09.19 新增）
+      info.setFingerprint(generateFingerprint(throwable));
       if (includeExceptionInfo()) {
-       info.setDetails(Map.of("stackTrace", getStackTraceString(throwable)));
+       info.setDetails(Map.of("stackTrace", getStackTraceString(throwable), "fingerprint", info.getFingerprint()));
       }
     }
 
@@ -583,6 +587,56 @@ public abstract class BaseExceptionHandler {
         info.getMessage(),
         includeExceptionInfo() ? info : null,
         ExceptionLevel.ERROR);
+  }
+
+  /**
+   * 为异常生成聚合指纹（26.09.19 新增）。
+   *
+   * <p>基于异常类名 + 堆栈前 N 个元素的类名/方法名生成 hash。同类根因（如同一方法的 NPE） 即使在不同请求中抛出，指纹也相同，便于 ELK/Sentry 聚合统计同类异常。
+   *
+   * <p>对标 Sentry 的 {@code Event.Fingerprint} 机制，在日志层面支持异常去重， 减少告警风暴。
+   *
+   * @param throwable 异常对象
+   * @return 16 位十六进制指纹字符串；堆栈不可用时返回类名 hash
+   */
+  protected static String generateFingerprint(Throwable throwable) {
+    if (throwable == null) {
+      return "null";
+    }
+    StackTraceElement[] stackTrace = throwable.getStackTrace();
+    if (stackTrace == null || stackTrace.length == 0) {
+      return hexHash(throwable.getClass().getName());
+    }
+    // 取前 5 个堆栈元素生成指纹
+    int depth = Math.min(5, stackTrace.length);
+    StringBuilder seed = new StringBuilder(128);
+    seed.append(throwable.getClass().getName());
+    for (int i = 0; i < depth; i++) {
+      StackTraceElement element = stackTrace[i];
+      seed.append('|').append(element.getClassName()).append('.').append(element.getMethodName());
+    }
+    return hexHash(seed.toString());
+  }
+
+  /**
+   * 生成字符串的 16 位十六进制 hash（基于 SHA-256 截断）。
+   *
+   * @param input 输入字符串
+   * @return 16 位十六进制 hash
+   */
+  private static String hexHash(String input) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+      StringBuilder hex = new StringBuilder(16);
+      for (int i = 0; i < 8; i++) {
+        hex.append(String.format("%02x", hash[i]));
+      }
+      return hex.toString();
+    } catch (Exception e) {
+      // SHA-256 不可用时降级为 JDK hashCode
+      return Integer.toHexString(input.hashCode());
+    }
   }
 
   /**

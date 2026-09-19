@@ -12,6 +12,7 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.config.RedisProperties;
+import com.njydsz.common.redis.constant.RedisNullPlaceholder;
 import com.njydsz.common.redis.service.CacheProvider;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.string.StringUtils;
@@ -67,8 +68,8 @@ public class MultiLevelCacheProvider implements CacheProvider {
   /** 多级缓存名称前缀（用于日志与监控区分） */
   private static final String CACHE_NAME = "multilevel";
 
-  /** 空值占位符（与 RedisStringOps 中的保持一致） */
-  private static final String NULL_PLACEHOLDER = "__NULL__";
+  // 空值占位符常量已在 RedisNullPlaceholder 中统一定义
+  // 此处私有字段已移除，所有引用切换为 RedisNullPlaceholder.MARKER
 
   /** L1 YdszCache 本地缓存实例 */
   private final Cache<String, Object> l1Cache;
@@ -114,7 +115,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
     Object l1Value = l1Cache.getIfPresent(key);
     if (l1Value != null) {
       log.trace("[{}] L1 命中 - key={}", CACHE_NAME, key);
-      return NULL_PLACEHOLDER.equals(l1Value) ? null : l1Value;
+      return RedisNullPlaceholder.MARKER.equals(l1Value) ? null : l1Value;
     }
 
     // L2 查询
@@ -122,7 +123,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
     if (jsonValue != null) {
       log.debug("[{}] L2 命中 - key={}", CACHE_NAME, key);
       Object value = deserialize(jsonValue);
-      l1Cache.put(key, value == null ? NULL_PLACEHOLDER : value);
+      l1Cache.put(key, value == null ? RedisNullPlaceholder.MARKER : value);
       return value;
     }
 
@@ -210,7 +211,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
     // L1 查询
     Object l1Value = l1Cache.getIfPresent(key);
     if (l1Value != null) {
-      return NULL_PLACEHOLDER.equals(l1Value) ? null : clazz.cast(l1Value);
+      return RedisNullPlaceholder.MARKER.equals(l1Value) ? null : clazz.cast(l1Value);
     }
 
     // L2 + Supplier
@@ -240,15 +241,18 @@ public class MultiLevelCacheProvider implements CacheProvider {
   /**
    * 反序列化 JSON 字符串
    *
+   * <p>判断是否为 JSON 格式：以 '{' 开头（JSON 对象）、以 '[' 开头（JSON 数组）、
+   * 或以 '"' 开头（JSON 字符串值）。其他情况（纯数字、布尔值等简单类型）直接返回原始字符串。
+   *
    * @param jsonValue JSON 字符串
    * @return 反序列化后的对象；解析失败时返回原始字符串
    */
   private Object deserialize(String jsonValue) {
-    if (StringUtils.isBlank(jsonValue) || NULL_PLACEHOLDER.equals(jsonValue)) {
+    if (StringUtils.isBlank(jsonValue) || RedisNullPlaceholder.MARKER.equals(jsonValue)) {
       return null;
     }
     // 简单判断：非 JSON 格式直接返回字符串
-    if (!jsonValue.startsWith("{") && !jsonValue.startsWith("[")) {
+    if (!isJsonValue(jsonValue)) {
       return jsonValue;
     }
     try {
@@ -257,6 +261,20 @@ public class MultiLevelCacheProvider implements CacheProvider {
       log.debug("[{}] JSON 反序列化失败，返回原始字符串 - value={}", CACHE_NAME, jsonValue);
       return jsonValue;
     }
+  }
+
+  /**
+   * 判断字符串是否为 JSON 格式
+   *
+   * @param value 待检测字符串
+   * @return true-JSON 格式
+   */
+  private boolean isJsonValue(String value) {
+    if (value == null || value.isEmpty()) {
+      return false;
+    }
+    char firstChar = value.charAt(0);
+    return firstChar == '{' || firstChar == '[' || firstChar == '"';
   }
 
   /**

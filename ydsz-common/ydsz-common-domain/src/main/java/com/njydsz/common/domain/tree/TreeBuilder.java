@@ -1,8 +1,10 @@
 package com.njydsz.common.domain.tree;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -190,5 +192,94 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     }
     roots.sort(comparator);
     return roots;
+  }
+
+  /**
+   * 懒加载方式构建树（按需加载子节点，适合大数据量场景）。
+   *
+   * <p>从根节点开始，通过 {@link TreeNodeProvider#loadChildren(Serializable)} 按需加载子节点，
+   * 避免一次性加载全量节点到内存。使用迭代而非递归，避免深层树导致栈溢出。
+   *
+   * <p><b>终止条件：</b>
+   *
+   * <ul>
+   *   <li>达到 {@code maxDepth} 深度限制时停止继续加载</li>
+   *   <li>{@link TreeNodeProvider#loadChildren(Serializable)} 返回空列表时自然终止</li>
+   * </ul>
+   *
+   * @param provider 子节点懒加载提供器
+   * @param maxDepth 最大加载深度（含根节点）；小于 1 时视为无限深度
+   * @return 构建完成的根节点列表
+   * @since 26.09.19
+   * @see TreeNodeProvider
+   * @see #build()
+   */
+  public List<T> buildLazy(TreeNodeProvider<T, ID> provider, int maxDepth) {
+    Objects.requireNonNull(provider, "TreeNodeProvider不能为null");
+    Comparator<T> comparator = sortComparator != null ? sortComparator : defaultSortComparator();
+
+    // 第一层：加载根节点
+    List<T> roots = provider.loadChildren(rootId);
+    if (roots == null || roots.isEmpty()) {
+      return new ArrayList<>(0);
+    }
+    roots.sort(comparator);
+    if (maxDepth <= 1) {
+      return roots;
+    }
+
+    // 使用栈进行广度/深度混合迭代，避免递归溢出
+    // 栈中存放 (当前节点, 当前深度) 对
+    Deque<Object[]> stack = new ArrayDeque<>(roots.size() * 2);
+    for (int i = roots.size() - 1; i >= 0; i--) {
+      stack.push(new Object[] {roots.get(i), 1});
+    }
+
+    while (!stack.isEmpty()) {
+      Object[] frame = stack.pop();
+      @SuppressWarnings("unchecked")
+      T node = (T) frame[0];
+      int depth = (int) frame[1];
+
+      if (depth >= maxDepth) {
+        continue;
+      }
+
+      ID nodeId = node.getId();
+      if (nodeId == null) {
+        continue;
+      }
+
+      List<T> children = provider.loadChildren(nodeId);
+      if (children != null && !children.isEmpty()) {
+        children.sort(comparator);
+        node.addChildren(children);
+        int nextDepth = depth + 1;
+        for (int i = children.size() - 1; i >= 0; i--) {
+          stack.push(new Object[] {children.get(i), nextDepth});
+        }
+      }
+    }
+
+    return roots;
+  }
+
+  /**
+   * 懒加载方式构建树（单根模式）。
+   *
+   * <p>从 {@code parentId == null} 的节点作为根节点开始加载。
+   *
+   * @param nodeList 顶层节点列表（仅加载用于识别根节点）
+   * @param provider 子节点懒加载提供器
+   * @param maxDepth 最大加载深度
+   * @param <T> 继承 TreeNode 的具体类型
+   * @param <ID> ID 类型
+   * @return 构建完成的根节点列表
+   * @since 26.09.19
+   * @see #buildLazy(TreeNodeProvider, int)
+   */
+  public static <T extends TreeNode<T, ID>, ID extends Serializable> List<T> buildLazy(
+      List<T> nodeList, TreeNodeProvider<T, ID> provider, int maxDepth) {
+    return new TreeBuilder<T, ID>(nodeList).buildLazy(provider, maxDepth);
   }
 }

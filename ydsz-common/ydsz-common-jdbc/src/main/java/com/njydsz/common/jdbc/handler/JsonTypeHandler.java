@@ -10,6 +10,8 @@ import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
 import com.njydsz.common.json.YdszJson;
+import lombok.extern.slf4j.Slf4j;
+import org.postgresql.util.PGobject;
 
 /**
  * JSON 类型转换处理器
@@ -21,11 +23,21 @@ import com.njydsz.common.json.YdszJson;
  * <h2>数据库兼容性</h2>
  *
  * <ul>
- *   <li><b>MySQL / Oracle / SQLServer / 等（VARCHAR / TEXT / CLOB 列）</b>：使用 {@link
+ *   <li><b>MySQL / Oracle / SQLServer（VARCHAR / TEXT / CLOB 列）</b>：使用 {@link
  *       PreparedStatement#setString(int, String)} 写入，兼容性最佳。
- *   <li><b>PostgreSQL（原生 JSON / JSONB 列）</b>：当字段显式声明 {@code jdbcType=OTHER} 时使用 {@link
- *       PreparedStatement#setObject(int, Object, int)} 配合 {@link Types#OTHER}， 由 PostgreSQL 驱动完成二进制
- *       JSON 处理。
+ *   <li><b>PostgreSQL（原生 JSON / JSONB 列）</b>：使用 PostgreSQL {@link PGobject} 显式声明类型，
+ *       驱动根据 PGobject 内部类型列名（{@code "json"} 或 {@code "jsonb"}）完成二进制 JSON 处理，
+ *       避免"column is of type jsonb but expression is of type character varying"错误。
+ * </ul>
+ *
+ * <p><b>PostgreSQL 写入策略说明：</b>
+ *
+ * <ul>
+ *   <li>当字段显式声明 {@code jdbcType=OTHER} 且驱动为 PostgreSQL 时，构造 {@link PGobject}
+ *       并设置其 type 为 {@code jsonb}，保证 PostgreSQL 驱动正确处理二进制编码
+ *   <li>回退策略：PGobject 构造失败（非 PostgreSQL 驱动）时降级为 {@code setString}，
+ *       由隐式类型转换完成写入（兼容性保障）
+ *   <li>YAML 中推荐配置：{@code jdbctype=OTHER} 确保 JSONB 类型列的正确写入
  * </ul>
  *
  * <h2>支持的类型</h2>
@@ -40,14 +52,15 @@ import com.njydsz.common.json.YdszJson;
  * <h2>使用示例</h2>
  *
  * <pre>
- * // MyBatis XML 映射配置
+ * // MyBatis XML 映射配置（PostgreSQL JSONB 列推荐）
  * {@code <resultMap id="BaseResultMap" type="User">}
- *     {@code <result column="extra_info" property="extraInfo" jdbcType="VARCHAR" typeHandler="JsonTypeHandler"/>}
+ *     {@code <result column="extra_info" property="extraInfo" jdbcType="OTHER" typeHandler="JsonTypeHandler"/>}
  * {@code < /resultMap>}
  *
  * // MyBatis 注解配置
  * {@code @Results({
- *     @Result(column = "extra_info", property = "extraInfo", typeHandler = JsonTypeHandler.class)
+ *     @Result(column = "extra_info", property = "extraInfo", jdbcType = JdbcType.OTHER,
+ *             typeHandler = JsonTypeHandler.class)
  * })}
  * </pre>
  *
@@ -55,15 +68,17 @@ import com.njydsz.common.json.YdszJson;
  *
  * <p>对应的数据库字段类型应为 VARCHAR、TEXT、JSON 或 JSONB（PostgreSQL 原生支持）。
  *
- * <p>对于 PostgreSQL JSONB 列，使用 {@code Types.OTHER} 设置参数，确保驱动正确处理二进制 JSON。
- *
  * @param <T> Java 对象类型
  * @author ydsz-team
  * @since 26.09.01
  * @see <a href="https://mybatis.org/mybatis-3/zh/configuration.html#typeHandlers">MyBatis
  *     TypeHandler</a>
  */
+@Slf4j
 public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
+
+  private static final String PG_JSONB_TYPE = "jsonb";
+  private static final String PG_JSON_TYPE = "json";
 
   private final Class<T> type;
 
@@ -104,11 +119,15 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
   }
 
   /**
-   * 设置非空参数，将 Java 对象序列化为 JSON 字符串后设置到 PreparedStatement。
+   * 设置非空参数，将 Java 对象序列化为 JSON 后设置到 PreparedStatement。
    *
-   * <p>数据库兼容策略：当 jdbcType 为字符串类（VARCHAR / CHAR / CLOB 等）或未指定时， 使用 {@code setString}（MySQL / Oracle
-   * / SQLServer 等最常见场景，兼容性最佳）； 仅当显式声明为 {@link JdbcType#OTHER}（PostgreSQL JSON / JSONB 原生列）时， 使用
-   * {@code setObject(..., Types.OTHER)} 交由驱动处理二进制 JSON。
+   * <p>数据库兼容策略：
+   *
+   * <ul>
+   *   <li>jdbcType = OTHER 且 PostgreSQL 驱动可用：构造 {@link PGobject}（type=jsonb），
+   *       通过 {@code setObject(...)} 写入，保证 PostgreSQL JSONB 列的二进制处理
+   *   <li>其他情况：使用 {@code setString} 写入（MySQL / Oracle / SQLServer / 文本 json 列）
+   * </ul>
    *
    * @param ps PreparedStatement
    * @param i 参数索引
@@ -121,10 +140,36 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
       throws SQLException {
     String json = toJsonString(parameter);
     if (jdbcType == JdbcType.OTHER) {
-      // PostgreSQL 原生 JSON / JSONB 列
-      ps.setObject(i, json, Types.OTHER);
+      // PostgreSQL 原生 JSONB 写入：使用 PGobject 显式声明类型
+      writePostgresJsonb(ps, i, json);
     } else {
-      // MySQL / Oracle / SQLServer 等：VARCHAR / TEXT / CLOB 列（兼容 PostgreSQL 文本/json 列）
+      // MySQL / Oracle / SQLServer 等：VARCHAR / TEXT / CLOB 列
+      ps.setString(i, json);
+    }
+  }
+
+  /**
+   * 使用 PGobject 写入 PostgreSQL JSONB 列。
+   *
+   * <p>若 PGobject 不可用（ jdbcType=OTHER 但非 PostgreSQL 驱动），降级为 setString，
+   * 由数据库隐式类型转换完成写入，保证写入不中断。
+   *
+   * @param ps PreparedStatement
+   * @param i 参数索引
+   * @param json JSON 字符串
+   * @throws SQLException 写入异常
+   */
+  private void writePostgresJsonb(PreparedStatement ps, int i, String json) throws SQLException {
+    try {
+      PGobject pgObject = new PGobject();
+      pgObject.setType(PG_JSONB_TYPE);
+      pgObject.setValue(json);
+      ps.setObject(i, pgObject);
+    } catch (SQLException e) {
+      // PGobject 不可用（非 PG 驱动）或类型设置失败，降级为 setString
+      log.debug(
+          "JsonTypeHandler: PGobject 写入失败，降级为 setString（driver={}）",
+          ps.getConnection().getMetaData().getDriverName());
       ps.setString(i, json);
     }
   }

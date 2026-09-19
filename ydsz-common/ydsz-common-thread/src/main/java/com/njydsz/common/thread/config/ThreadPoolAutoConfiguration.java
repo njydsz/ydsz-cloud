@@ -2,8 +2,7 @@ package com.njydsz.common.thread.config;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
@@ -25,11 +23,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Role;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.thread.actuator.ThreadPoolMetricsEndpoint;
-import com.njydsz.common.thread.metrics.MeteredRejectedHandler;
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
 import com.njydsz.common.thread.metrics.ThreadPoolRegistryMetrics;
 import com.njydsz.common.thread.registry.ThreadPoolRegistry;
@@ -45,9 +43,10 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * <ul>
  *   <li>按业务隔离：每个线程池独立的 coreSize/maxSize/queue/rejectPolicy
  *   <li>Micrometer 指标：active/queueSize/completed/rejected Gauge + Counter， 前缀 {@code
- *       ydsz.executor}，自动注册 {@link ThreadPoolMetrics} / {@link VirtualThreadMetrics} Bean
+ *       ydsz.executor}，自动注册 {@link ThreadPoolMetrics} / {@link
+ *       com.njydsz.common.thread.metrics.VirtualThreadMetrics} Bean
  *   <li>优雅关闭：shutdown 时等待任务完成
- *   <li>健康检查：自动注册 {@link ThreadHealthIndicator}
+ *   <li>健康检查：自动注册 {@link com.njydsz.common.thread.health.ThreadHealthIndicator}
  *   <li>TaskDecorator 支持：通过 {@code task-decorator-bean-names} 配置上下文传播
  * </ul>
  *
@@ -61,15 +60,21 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * <p><b>26.09.01 变更：</b>
  *
  * <ul>
- *   <li>新增 {@link ThreadPoolMetrics} / {@link VirtualThreadMetrics} 自动注册
- *   <li>新增 {@link MeteredRejectedHandler} 自动包装拒绝策略
+ *   <li>新增 {@link ThreadPoolMetrics} / {@link com.njydsz.common.thread.metrics.VirtualThreadMetrics} 自动注册
+ *   <li>新增 {@link com.njydsz.common.thread.metrics.MeteredRejectedHandler} 自动包装拒绝策略
  *   <li>新增 TaskDecorator 配置支持
+ * </ul>
+ *
+ * <p><b>26.09.19 变更：</b>
+ *
+ * <ul>
+ *   <li>ApplicationContext 注入方式由字段注入改为构造器注入 + {@code @Lazy}，消除字段注入
  * </ul>
  *
  * @author ydsz-team
  * @since 26.09.01
  * @see ThreadPoolProperties
- * @see ThreadHealthIndicator
+ * @see com.njydsz.common.thread.health.ThreadHealthIndicator
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ThreadPoolProperties.class)
@@ -79,13 +84,16 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolAutoConfiguration.class);
 
   /**
-   * 延迟注入 ApplicationContext，支持 {@code ApplicationContextRunner} 测试场景。
+   * 使用构造器注入 + {@code @Lazy} 避免循环依赖：
+   * ApplicationContext → ThreadPoolAutoConfiguration → ApplicationContext。
    *
-   * <p>使用字段注入而非构造器注入，避免测试时缺少默认构造器的问题。
+   * <p>26.09.19 重构：由字段注入改为构造器注入，符合 P1 规范对齐要求。
    */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
-  @Autowired private ApplicationContext applicationContext;
-  // CHECKSTYLE.ON: RegexpSinglelineJava
+  private final ApplicationContext applicationContext;
+
+  public ThreadPoolAutoConfiguration(@Lazy ApplicationContext applicationContext) {
+    this.applicationContext = applicationContext;
+  }
 
   @Override
   public void afterSingletonsInstantiated() {
@@ -182,7 +190,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   }
 
   /**
-   * 线程池与指标绑定器的后处理器：在线程池初始化完成后为其包装 {@link MeteredRejectedHandler}， 使拒绝事件自动计入 Micrometer。
+   * 线程池与指标绑定器的后处理器：在线程池初始化完成后为其包装 {@link com.njydsz.common.thread.metrics.MeteredRejectedHandler}， 使拒绝事件自动计入 Micrometer。
    *
    * <p>通过 BeanPostProcessor 而非构造器注入避免循环依赖： ThreadPoolTaskExecutor → 拒绝策略 → MeteredRejectedHandler →
    * ThreadPoolMetrics → ThreadPoolTaskExecutor。
@@ -197,90 +205,5 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   @ConditionalOnMissingBean(name = "threadPoolMetricsPostProcessor")
   public BeanPostProcessor threadPoolMetricsPostProcessor() {
     return new ThreadPoolMetricsPostProcessor();
-  }
-
-  /**
-   * 线程池指标装配后处理器。
-   *
-   * <p>在所有 Bean 初始化完成后，为每个平台线程池包装 {@link MeteredRejectedHandler}， 实现拒绝事件自动计入 Micrometer 指标。
-   *
-   * <p>虚拟线程池无法使用原生拒绝策略（虚拟线程池从不拒绝），因此无需包装。
-   *
-   * <p>冲突防护：仅处理名称以 "Executor" 结尾、存在配套 Metrics Bean 的平台线程池， 避免误处理业务自定义的 ThreadPoolTaskExecutor Bean。
-   *
-   * @since 26.09.01
-   */
-  public static class ThreadPoolMetricsPostProcessor
-      implements BeanPostProcessor, BeanFactoryAware {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolMetricsPostProcessor.class);
-
-    private BeanFactory beanFactory;
-
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-      this.beanFactory = beanFactory;
-    }
-
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName)
-        throws BeansException {
-      // 仅处理平台线程池（虚拟线程池没有原生拒绝策略）
-      if (!(bean instanceof ThreadPoolTaskExecutor)) {
-        return bean;
-      }
-
-      // 仅处理 ydsz-common-thread 管理的 Bean：
-      //   1. 名称以 "Executor" 结尾
-      //   2. 存在配套的 "<beanName>Metrics" Bean
-      if (!beanName.endsWith("Executor") || beanFactory == null) {
-        return bean;
-      }
-
-      // 排除工厂本身
-      if ("threadPoolExecutorFactory".equals(beanName)) {
-        return bean;
-      }
-
-      String metricsBeanName = beanName + "Metrics";
-      if (!beanFactory.containsBean(metricsBeanName)) {
-        // 不存在配套 Metrics Bean，说明不是 ydsz-common-thread 管理的线程池
-        return bean;
-      }
-
-      try {
-        Object metricsBean = beanFactory.getBean(metricsBeanName);
-        if (!(metricsBean instanceof ThreadPoolMetrics)) {
-          return bean;
-        }
-
-        ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
-        ThreadPoolMetrics metrics = (ThreadPoolMetrics) metricsBean;
-
-        // 通过底层 ThreadPoolExecutor 获取拒绝策略（ThreadPoolTaskExecutor 本身不提供 getter）
-        ThreadPoolExecutor threadPoolExecutor = executor.getThreadPoolExecutor();
-        RejectedExecutionHandler currentHandler = threadPoolExecutor.getRejectedExecutionHandler();
-        if (currentHandler == null) {
-          LOG.warn("ydsz-thread: 线程池 [{}] 拒绝策略为 null，跳过指标包装", beanName);
-          return bean;
-        }
-
-        // 避免重复包装
-        if (currentHandler instanceof MeteredRejectedHandler) {
-          return bean;
-        }
-
-        MeteredRejectedHandler meteredHandler = new MeteredRejectedHandler(currentHandler, metrics);
-        threadPoolExecutor.setRejectedExecutionHandler(meteredHandler);
-        LOG.info(
-            "ydsz-thread: 已为线程池 [{}] 装配指标感知拒绝策略 ([{}] → MeteredRejectedHandler)",
-            beanName,
-            currentHandler.getClass().getSimpleName());
-      } catch (Exception e) {
-        LOG.warn("ydsz-thread: 为线程池 [{}] 装配指标感知拒绝策略失败: {}", beanName, e.getMessage());
-      }
-
-      return bean;
-    }
   }
 }

@@ -35,6 +35,15 @@ public class ThreadPoolTimerMetrics {
   private final Tags commonTags;
 
   /**
+   * 缓存的 Timer 引用，避免每次 {@link #record} 调用都构建 Timer Builder。
+   *
+   * <p>Micrometer 的 {@code Timer.register()} 本身会去重，但 Builder 构建和 percentiles 数组创建仍有开销。
+   * 在任务执行的高频路径上尤为明显。使用 volatile + 双重检查锁定保证线程安全。
+   */
+  private volatile Timer cachedExecutionTimer;
+  private volatile Timer cachedQueueWaitTimer;
+
+  /**
    * 构造指标绑定器。
    *
    * @param poolName 线程池名称（作为指标 tag）
@@ -52,6 +61,8 @@ public class ThreadPoolTimerMetrics {
    *
    * <p>若执行耗时超过 {@code slowTaskThresholdMs}，则递增慢任务计数器。
    *
+   * <p>26.09.19 性能优化：Timer 引用改为构造时缓存，避免每次调用 Builder 构建开销。
+   *
    * @param executionMs 执行耗时（毫秒）
    * @param queueWaitMs 队列等待时长（毫秒）
    * @param slowTaskThresholdMs 慢任务阈值（毫秒），≥ 100
@@ -59,23 +70,59 @@ public class ThreadPoolTimerMetrics {
    */
   public void record(
       long executionMs, long queueWaitMs, long slowTaskThresholdMs, String metricPoolName) {
-    // Timer 懒加载注册（Micrometer 会自动去重，重复注册为同一实例）
-    Timer executionTimer =
-        Timer.builder(METRIC_EXECUTION_TIME)
-            .tags(commonTags)
-            .publishPercentiles(0.5, 0.95, 0.99)
-            .register(meterRegistry);
-    Timer queueWaitTimer =
-        Timer.builder(METRIC_QUEUE_WAIT_TIME)
-            .tags(commonTags)
-            .publishPercentiles(0.5, 0.95, 0.99)
-            .register(meterRegistry);
+    // 使用缓存的 Timer 引用（首次调用时懒初始化）
+    Timer executionTimer = getOrCreateExecutionTimer();
+    Timer queueWaitTimer = getOrCreateQueueWaitTimer();
 
     executionTimer.record(executionMs, TimeUnit.MILLISECONDS);
     queueWaitTimer.record(queueWaitMs, TimeUnit.MILLISECONDS);
 
     if (executionMs > slowTaskThresholdMs) {
       meterRegistry.counter(METRIC_SLOW_TASKS, commonTags).increment();
+    }
+  }
+
+  /**
+   * 获取或创建（带缓存）执行耗时 Timer。
+   *
+   * @return 缓存的 execution Timer 实例
+   */
+  private Timer getOrCreateExecutionTimer() {
+    Timer timer = cachedExecutionTimer;
+    if (timer != null) {
+      return timer;
+    }
+    synchronized (this) {
+      if (cachedExecutionTimer == null) {
+        cachedExecutionTimer =
+            Timer.builder(METRIC_EXECUTION_TIME)
+                .tags(commonTags)
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .register(meterRegistry);
+      }
+      return cachedExecutionTimer;
+    }
+  }
+
+  /**
+   * 获取或创建（带缓存）队列等待 Timer。
+   *
+   * @return 缓存的 queue wait Timer 实例
+   */
+  private Timer getOrCreateQueueWaitTimer() {
+    Timer timer = cachedQueueWaitTimer;
+    if (timer != null) {
+      return timer;
+    }
+    synchronized (this) {
+      if (cachedQueueWaitTimer == null) {
+        cachedQueueWaitTimer =
+            Timer.builder(METRIC_QUEUE_WAIT_TIME)
+                .tags(commonTags)
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .register(meterRegistry);
+      }
+      return cachedQueueWaitTimer;
     }
   }
 

@@ -2,8 +2,12 @@ package com.njydsz.common.exception.code;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
@@ -31,11 +35,36 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  */
 public class ErrorCodeTable {
 
+  private static final Logger LOG = LoggerFactory.getLogger(ErrorCodeTable.class);
+
   /** code → ExceptionCode 全局索引（运行时反查） */
   private final ConcurrentHashMap<String, ExceptionCode> codeIndex = new ConcurrentHashMap<>();
 
   /** ModuleEntry 内部类：模块元信息 + 该模块下的 code → key 映射 */
   private final ConcurrentHashMap<String, ModuleEntry> moduleIndex = new ConcurrentHashMap<>();
+
+  // ==================== 错误码准入机制（26.09.19 新增） ====================
+
+  /**
+   * 模块错误码数量告警阈值。
+   *
+   * <p>单个模块注册的错误码超过此值时输出 WARN 日志，提示进行码段拆分或清理冗余码。
+   */
+  private static final int MODULE_CODE_COUNT_WARN_THRESHOLD = 30;
+
+  /**
+   * 全局错误码数量 P2 软上限。
+   *
+   * <p>全部模块注册的错误码总量超过此值时输出 WARN 日志，建议启动错误码治理审查。
+   */
+  private static final int GLOBAL_CODE_COUNT_WARN_THRESHOLD = 200;
+
+  /**
+   * 全局错误码数量 P1 硬上限。
+   *
+   * <p>全部模块注册的错误码总量超过此值时输出 ERROR 日志。新增码需通过架构评审后才能扩容。
+   */
+  private static final int GLOBAL_CODE_COUNT_HARD_LIMIT = 500;
 
   /**
    * 注册模块元信息。
@@ -63,6 +92,9 @@ public class ErrorCodeTable {
   /**
    * 注册该模块下的一个错误码。
    *
+   * <p><b>准入校验（26.09.19 新增）：</b>单模块码数超过 {@link #MODULE_CODE_COUNT_WARN_THRESHOLD} 时
+   * 输出 WARN 日志提示拆分；全局码数超过阈值时输出 WARN/ERROR 日志。
+   *
    * @param module 模块名
    * @param code 错误码字符串
    * @param key i18n 消息键
@@ -79,6 +111,71 @@ public class ErrorCodeTable {
                   + "尝试再次注册为 [%s]（key=%s）。请检查 @YdszExceptionCode 注解的模块错误码定义。",
               module, code, previous.enumName(), enumName, key));
     }
+    // 准入校验：模块码数与全局码数双维度检查
+    validateAdmission(entry);
+  }
+
+  /**
+   * 批量注册完成后执行准入校验（全局维度）。
+   *
+   * <p>校验全局错误码总数是否突破软上限 / 硬上限，分别输出 WARN / ERROR 日志引导治理。
+   */
+  public void validateGlobalAdmission() {
+    int total = codeIndex.size();
+    if (total > GLOBAL_CODE_COUNT_HARD_LIMIT) {
+      LOG.error(
+          "[ErrorCodeTable] 全局错误码数量 {} 已突破 P1 硬上限 {}，请立即启动错误码治理审查！"
+              + "新增错误码需通过架构评审后才能扩容。当前模块数: {}，各模块码数: {}",
+          total, GLOBAL_CODE_COUNT_HARD_LIMIT, moduleIndex.size(), buildModuleCodeCounts());
+    } else if (total > GLOBAL_CODE_COUNT_WARN_THRESHOLD) {
+      LOG.warn(
+          "[ErrorCodeTable] 全局错误码数量 {} 已超过 P2 软上限 {}，建议启动错误码治理审查。"
+              + "当前模块数: {}，各模块码数: {}",
+          total, GLOBAL_CODE_COUNT_WARN_THRESHOLD, moduleIndex.size(), buildModuleCodeCounts());
+    }
+  }
+
+  /**
+   * 模块级 + 全局级准入校验。
+   *
+   * @param entry 当前注册操作的模块条目
+   */
+  private void validateAdmission(ModuleEntry entry) {
+    // 模块维度：单模块码数超限 WARN
+    if (entry.codes().size() > MODULE_CODE_COUNT_WARN_THRESHOLD) {
+      LOG.warn(
+          "[ErrorCodeTable] 模块 [{}] 错误码数量 {} 已超过建议阈值 {}，建议拆分子模块或清理冗余码。",
+          entry.name(), entry.codes().size(), MODULE_CODE_COUNT_WARN_THRESHOLD);
+    }
+    // 全局维度：仅在校验代价较低时检查（每 10 个码检查一次，避免每次注册都全量计算）
+    int total = codeIndex.size();
+    if (total % 10 == 0) {
+      if (total > GLOBAL_CODE_COUNT_HARD_LIMIT) {
+        LOG.error(
+            "[ErrorCodeTable] 全局错误码数量 {} 已突破 P1 硬上限 {}，请立即启动错误码治理审查！",
+            total, GLOBAL_CODE_COUNT_HARD_LIMIT);
+      } else if (total > GLOBAL_CODE_COUNT_WARN_THRESHOLD) {
+        LOG.warn(
+            "[ErrorCodeTable] 全局错误码数量 {} 已超过 P2 软上限 {}，建议启动错误码治理审查。",
+            total, GLOBAL_CODE_COUNT_WARN_THRESHOLD);
+      }
+    }
+  }
+
+  /**
+   * 构建各模块码数摘要（供准入校验日志使用）。
+   *
+   * @return 模块名 → 码数的字符串表示
+   */
+  private String buildModuleCodeCounts() {
+    StringBuilder sb = new StringBuilder(64);
+    for (Map.Entry<String, ModuleEntry> e : moduleIndex.entrySet()) {
+      if (sb.length() > 0) {
+        sb.append(", ");
+      }
+      sb.append(e.getKey()).append("=").append(e.getValue().codes().size());
+    }
+    return sb.toString();
   }
 
   /**
@@ -285,4 +382,48 @@ public class ErrorCodeTable {
    * @param enumName 枚举常量名
    */
   public record CodeEntry(String code, String key, String enumName) {}
+
+  // ==================== 公开查询 API（26.09.19 新增，P2-A3） ====================
+
+  /**
+   * 按 HTTP 状态码范围搜索匹配的错误码。
+   *
+   * <p>供前端/客户端按 HTTP 语义反向查找对应的业务错误码集合。
+   *
+   * @param httpStatus HTTP 状态码（如 400、404、500）
+   * @return 匹配的 CodeEntry 列表（不可变），无匹配时返回空列表
+   */
+  public java.util.List<CodeEntry> codesByHttpStatus(int httpStatus) {
+    return codeIndex.values().stream()
+        .filter(c -> c.getHttpStatus() == httpStatus)
+        .map(c -> {
+          String enumName =
+              c instanceof Enum<?> enumValue ? enumValue.name() : c.getClass().getSimpleName();
+          return new CodeEntry(c.getCode(), c.getKey(), enumName);
+        })
+        .toList();
+  }
+
+  /**
+   * 按模块名搜索错误码（兼容 {@code getCodes}，但返回 List 便于流式处理）。
+   *
+   * @param module 模块名
+   * @return 错误码列表（不可变），模块不存在时返回空列表
+   */
+  public java.util.List<CodeEntry> codesByModule(String module) {
+    ModuleEntry entry = moduleIndex.get(module);
+    if (entry == null) {
+      return java.util.List.of();
+    }
+    return java.util.List.copyOf(entry.codes().values());
+  }
+
+  /**
+   * 获取错误码总数（按模块维度合计，与 {@link #size} 全局维度互补）。
+   *
+   * @return 所有模块注册的 code 条目数之和
+   */
+  public int totalModuleCodeCount() {
+    return moduleIndex.values().stream().mapToInt(e -> e.codes().size()).sum();
+  }
 }

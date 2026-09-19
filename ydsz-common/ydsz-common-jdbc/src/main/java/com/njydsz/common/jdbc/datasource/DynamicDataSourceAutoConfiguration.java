@@ -27,9 +27,19 @@ import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
  *
  * <p>启用后，支持通过 {@link DS} 注解动态切换数据源。
  *
- * <p><b>装配说明：</b>本配置在 {@link HikariCPConfiguration} 之后执行，
+ * <p><b>装配说明：</b>本配置在 {@link MultiDataSourcePoolCustomizer} 之后执行，
  * 将容器中已创建的默认数据源（HikariDataSource）作为路由数据源的默认目标 与 {@code master} 目标注册，保证 {@link
  * DynamicRoutingDataSource} 可直接使用； 同时注册 {@code @DS} 注解切面与动态多数据源健康检查。
+ *
+ * <p><b>互斥说明：</b>本配置与 baomidou 官方 {@code DynamicDataSourceAutoConfiguration}
+ * 互斥。当本配置生效时，baomidou 的自动路由不会被启动（通过
+ * {@code @ConditionalOnMissingBean} 检测 baomidou 的 {@code DynamicRoutingDataSource} Bean）。
+ * 业务模块若使用本模块的动态路由，请勿额外引入 {@code dynamic-datasource-spring-boot3-starter}，
+ * 或显式排除 baomidou 的自动配置：
+ *
+ * <pre>
+ * spring.autoconfigure.exclude=com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+ * </pre>
  *
  * <p>配置示例：
  *
@@ -58,11 +68,17 @@ public class DynamicDataSourceAutoConfiguration {
    *
    * <p>将容器中唯一的默认数据源作为路由默认目标与 master 目标， 使 {@link DynamicRoutingDataSource} 在单数据源场景下即可正常路由。
    *
+   * <p><b>互斥条件：</b>通过 {@code @ConditionalOnMissingBean} 检测 baomidou 自带的
+   * {@code DynamicRoutingDataSource}（不同包但同名）是否已注册，避免 Bean 冲突导致启动失败。
+   *
    * @param defaultDataSourceProvider 默认数据源提供者
    * @return DynamicRoutingDataSource 实例
    */
   @Bean
-  @ConditionalOnMissingBean(DynamicRoutingDataSource.class)
+  @ConditionalOnMissingBean(value = DynamicRoutingDataSource.class)
+  @ConditionalOnMissingBean(
+      name =
+          "com.baomidou.dynamic.datasource.DynamicRoutingDataSource")
   public DynamicRoutingDataSource dynamicRoutingDataSource(
       ObjectProvider<DataSource> defaultDataSourceProvider) {
     DynamicRoutingDataSource routingDataSource = new DynamicRoutingDataSource();

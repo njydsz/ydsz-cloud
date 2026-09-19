@@ -6,18 +6,18 @@ import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
-import com.njydsz.common.redis.config.RedisProperties;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.redis.constant.RedisNullPlaceholder;
+import com.njydsz.common.redis.service.CacheProvider;
 
 /**
  * {@link YdszCacheable} 注解的 AOP 切面实现
@@ -29,11 +29,16 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *   <li>缓存雪崩防护（随机TTL偏移）—— 默认启用
  * </ul>
  *
+ * <p>切面通过 {@link CacheProvider} 接口访问底层缓存实现，与 {@link
+ * com.njydsz.common.redis.service.ops.RedisStringOps} 等具体实现解耦，
+ * 便于替换为多级缓存或其他自定义实现。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
 @Aspect
+@RequiredArgsConstructor
 public class YdszCacheableAspect {
 
   /** 缓存 TTL 随机抖动范围（比例） */
@@ -42,21 +47,7 @@ public class YdszCacheableAspect {
   /** SpEL 表达式解析器（线程安全，复用） */
   private static final ExpressionParser PARSER = new SpelExpressionParser();
 
-  private final RedisStringOps redisStringOps;
-
-  /**
-   * 构造切面实例
-   *
-   * @param redisStringOps Redis String 操作（用于缓存读写、空值缓存等）
-   * @param redisTemplate Redis 模板（预留，供未来扩展）
-   * @param redisProperties Redis 配置（预留，供未来扩展）
-   */
-  public YdszCacheableAspect(
-      RedisStringOps redisStringOps,
-      RedisTemplate<String, Object> redisTemplate,
-      RedisProperties redisProperties) {
-    this.redisStringOps = redisStringOps;
-  }
+  private final CacheProvider cacheProvider;
 
   /**
    * 环绕通知：拦截 {@link YdszCacheable} 注解方法
@@ -83,10 +74,10 @@ public class YdszCacheableAspect {
     long ttlWithJitter = applyRandomJitter(annotation.ttl(), annotation.timeUnit());
 
     // 查询缓存
-    Object cached = redisStringOps.get(cacheKey);
+    Object cached = cacheProvider.get(cacheKey);
     if (cached != null) {
       // 命中空值缓存标记，返回 null
-      if ("NULL".equals(cached)) {
+      if (RedisNullPlaceholder.isMarker(cached)) {
         return null;
       }
       return cached;
@@ -97,10 +88,10 @@ public class YdszCacheableAspect {
 
     if (result != null) {
       // 写入缓存（带 TTL 抖动防雪崩）
-      redisStringOps.set(cacheKey, result, Duration.ofSeconds(ttlWithJitter));
+      cacheProvider.set(cacheKey, result, ttlWithJitter);
     } else if (annotation.preventPenetration()) {
       // 空值缓存防穿透
-      redisStringOps.set(cacheKey, "NULL", Duration.ofSeconds(annotation.nullValueTtl()));
+      cacheProvider.set(cacheKey, RedisNullPlaceholder.MARKER, annotation.nullValueTtl());
     }
 
     return result;
@@ -154,7 +145,7 @@ public class YdszCacheableAspect {
     Object result = joinPoint.proceed();
 
     String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
-    redisStringOps.del(cacheKey);
+    cacheProvider.delete(cacheKey);
     log.debug("【YdszCacheEvict】缓存淘汰 | key={}", cacheKey);
 
     return result;
@@ -180,7 +171,7 @@ public class YdszCacheableAspect {
     if (result != null) {
       String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
       Duration ttlDuration = Duration.of(annotation.ttl(), annotation.timeUnit().toChronoUnit());
-      redisStringOps.set(cacheKey, result, ttlDuration);
+      cacheProvider.set(cacheKey, result, ttlDuration.getSeconds());
       log.debug("【YdszCachePut】缓存更新 | key={} | ttl={}s", cacheKey, annotation.ttl());
     }
 

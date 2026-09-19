@@ -160,6 +160,28 @@ public class TenantProperties {
    */
   private Map<String, String> datasourceMapping = new HashMap<>(8);
 
+  /**
+   * per-tenant Schema 名称映射（SCHEMA 模式）。
+   *
+   * <p>key=租户 ID，value=PostgreSQL schema 名称。未命中时使用默认规则 {@code "tenant_" + tenantId}。
+   *
+   * <p>示例：将租户 A 映射到 {@code schema_grp1} 而非 {@code tenant_A}。
+   *
+   * @since 26.09.19
+   */
+  private Map<String, String> schemaMapping = new HashMap<>(8);
+
+  /**
+   * 是否启用 PostgreSQL search_path 自动设置（SCHEMA 模式）。
+   *
+   * <p>启用后，在获取连接时自动执行 {@code SET search_path TO {schema},public}，
+   * 使得不带 schema 前缀的表名自动解析到租户 schema，
+   * 减少 SQL 改写开销。默认关闭（使用 JSqlParser 改写表名前缀方式）。
+   *
+   * @since 26.09.19
+   */
+  private boolean schemaSearchPathEnabled = false;
+
   /** SQL 改写缓存配置（默认关闭）。 */
   private SqlCache sqlCache = new SqlCache();
 
@@ -376,6 +398,48 @@ public class TenantProperties {
    */
   public Map<String, String> getDatasourceMapping() {
     return datasourceMapping != null ? datasourceMapping : Collections.emptyMap();
+  }
+
+  /**
+   * 获取 per-tenant Schema 名称映射（SCHEMA 模式）。
+   *
+   * @return Schema 名称映射（key=租户 ID，value=schema 名称）
+   * @since 26.09.19
+   */
+  public Map<String, String> getSchemaMapping() {
+    return schemaMapping != null ? schemaMapping : Collections.emptyMap();
+  }
+
+  /**
+   * 解析指定租户对应的 Schema 名称。
+   *
+   * <p>优先从 {@link #getSchemaMapping()} 配置读取；未命中时使用默认规则 {@code "tenant_" + tenantId}。
+   *
+   * @param tenantId 租户 ID（非空）
+   * @return Schema 名称，不会为 null
+   * @since 26.09.19
+   */
+  public String resolveSchemaName(String tenantId) {
+    if (tenantId == null || tenantId.isEmpty()) {
+      return "public";
+    }
+    if (schemaMapping != null && !schemaMapping.isEmpty()) {
+      String mapped = schemaMapping.get(tenantId);
+      if (mapped != null && !mapped.isBlank()) {
+        return mapped.strip();
+      }
+    }
+    return "tenant_" + tenantId;
+  }
+
+  /**
+   * 当前是否为 SCHEMA 模式。
+   *
+   * @return true=SCHEMA 模式
+   * @since 26.09.19
+   */
+  public boolean isSchemaMode() {
+    return mode == TenantMode.SCHEMA;
   }
 
   /**

@@ -68,6 +68,14 @@ public class ExceptionInfo implements Serializable {
   private int httpStatus;
 
   /**
+   * 异常指纹（26.09.19 新增）。
+   *
+   * <p>基于异常类名 + 堆栈前 5 个元素生成的 16 位 hash，用于在 ELK/Sentry 中聚合同类根因。
+   * 同类异常在不同请求中抛出时 fingerprint 相同，可减少告警风暴。
+   */
+  private String fingerprint;
+
+  /**
    * 异常级别。
    *
    * <p>取值来自 {@link com.njydsz.common.exception.enums.ExceptionLevel} 枚举的 name：
@@ -150,6 +158,10 @@ public class ExceptionInfo implements Serializable {
 
   public void setHttpStatus(int httpStatus) {
     this.httpStatus = httpStatus;
+  }
+
+  public void setFingerprint(String fingerprint) {
+    this.fingerprint = fingerprint;
   }
 
   public void setLevel(String level) {

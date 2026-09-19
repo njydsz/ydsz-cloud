@@ -7,6 +7,9 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonIgnore;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,8 +18,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-
-import com.njydsz.common.json.annotation.JsonIgnore;
 
 /**
  * 树节点基础类
@@ -33,8 +34,10 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  *   <tr><td>sort</td><td>Integer</td><td>排序字段，同级节点排序用</td></tr>
  *   <tr><td>level</td><td>Integer</td><td>节点层级深度，根节点为 1</td></tr>
  *   <tr><td>path</td><td>String</td><td>节点路径，如 "/1/2/3/"</td></tr>
- *   <tr><td>isLeaf</td><td>Boolean</td><td>是否为叶子节点</td></tr>
  * </table>
+ *
+ * <p><b>叶子节点判断：</b>{@link #isLeaf()} 方法动态计算，
+ * 当 children 为 null 或空时返回 true，反之为 false。
  *
  * <p><b>使用示例：</b>
  *
@@ -117,27 +120,17 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
   /**
    * 节点路径（由 {@link TreeBuilder#build()} 自动填充）。
    *
-   * <p>格式：从根节点到当前节点的完整 ID 路径，如 {@code /1/2/5/}。 调用 {@link TreeBuilder#build()} 前该字段为 {@code null}；
+   * <p>格式：从根节点到当前节点的完整 ID 路径，如 {@code /1/2/5/}。
+   * 调用 {@link TreeBuilder#build()} 前该字段为 {@code null}；
    * 构建完成后可根据路径快速判断节点归属关系与层级深度。
    *
    * @see TreeBuilder#build()
    */
-  @Setter private String path;
+  @Setter
+  private String path;
 
   /**
-   * 是否为叶子节点
-   *
-   * <p>由 TreeBuilder 自动计算：
-   *
-   * <ul>
-   *   <li>true：无子节点
-   *   <li>false：有子节点
-   * </ul>
-   */
-  @Builder.Default @Setter private Boolean isLeaf = true;
-
-  /**
-   * 添加子节点
+   * 添加子节点。
    *
    * @param child 子节点实体
    * @return 当前节点，支持链式调用
@@ -147,12 +140,11 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
       children = new ArrayList<>(16);
     }
     children.add(child);
-    this.isLeaf = false;
     return (T) this;
   }
 
   /**
-   * 添加多个子节点
+   * 添加多个子节点。
    *
    * @param childList 子节点列表
    * @return 当前节点，支持链式调用
@@ -163,7 +155,6 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
     if (childList != null && !childList.isEmpty()) {
       children.addAll(childList);
-      this.isLeaf = false;
     }
     return (T) this;
   }
@@ -193,10 +184,14 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
   }
 
   /**
-   * 判断是否为叶子节点
+   * 判断是否为叶子节点（动态计算）。
    *
-   * @return 如果没有子节点返回true
+   * <p>当 {@code children} 为 {@code null} 或 {@link List#isEmpty() 空} 时返回 {@code true}，
+   * 表示当前节点无子节点；反之返回 {@code false}。
+   *
+   * @return 是叶子节点返回 true
    */
+  @JsonProperty("isLeaf")
   public boolean isLeaf() {
     return children == null || children.isEmpty();
   }

@@ -54,12 +54,18 @@ public class I18nProperties {
   /** classpath 通配符扫描模式（单模式），用于自动发现新增模块的资源前缀。 */
   private static final String DEFAULT_WILDCARD_PATTERN = "classpath*:i18n/*-messages*.properties";
 
+  /** 框架级兜底 basename（在所有模块 basename 之后，提供全局通用 i18n 翻译）。 */
+  private static final String FRAMEWORK_FALLBACK_BASENAME = "classpath:i18n/framework-fallback-messages";
+
   /**
    * 默认支持的 Locale 列表
    *
    * <p>用于解析 Accept-Language 请求头和验证 lang 参数。一旦配置显式指定 {@code supported-locales}，此项作为默认值退场。
+   *
+   * <p>单一数据源：值由 {@link com.njydsz.common.locales.util.KnownLocaleTags#DEFAULT_SUPPORTED_TAGS} 维护。
    */
-  private static final String[] DEFAULT_SUPPORTED_LOCALES = {"zh_CN", "en_US", "zh_TW"};
+  private static final String[] DEFAULT_SUPPORTED_LOCALES =
+      com.njydsz.common.locales.util.KnownLocaleTags.DEFAULT_SUPPORTED_TAGS.toArray(new String[0]);
 
   /**
    * 默认资源前缀列表
@@ -221,6 +227,35 @@ public class I18nProperties {
    * spring-webmvc} 在类路径上）才生效；非 Web 环境配置了也不会报错（条件不满足自动跳过）。
    */
   private boolean metadataApiEnabled = false;
+
+  /**
+   * Locale 解析器类型
+   *
+   * <p>可选值：
+   *
+   * <ul>
+   *   <li>{@code accept-header}（默认）：仅使用 Accept-Language Header + 默认 Locale
+   *   <li>{@code user-priority}：参数 &gt; Cookie &gt; 登录用户偏好 &gt; Header &gt; 默认 Locale；
+   *       自动注册 Cookie 持久化拦截器
+   * </ul>
+   */
+  private String localeResolverType = "accept-header";
+
+  /**
+   * 是否启用 i18n 管理 REST API（默认 false）。
+   *
+   * <p>启用后暴露以下管理端点（需 Web 环境），供运维/开发查询与动态管理翻译：
+   *
+   * <ul>
+   *   <li>{@code GET /api/admin/i18n/translate?key=xxx} — 查询 key 在所有 Locale 下的翻译值
+   *   <li>{@code GET /api/admin/i18n/missing?locale=en_US} — 列出某 Locale 中缺失的 key
+   *   <li>{@code POST /api/admin/i18n/reload} — 清空底层缓存 + 负缓存 + 节流缓冲区
+   *   <li>{@code PUT /api/admin/i18n/override} — 写入运行时翻译覆盖（重启失效）
+   * </ul>
+   *
+   * <p>鉴权由 Spring Security 资源服务器承载；本模块仅暴露端点，不处理认证。 非 Web 环境配置了也不会报错。
+   */
+  private boolean adminApiEnabled = false;
 
   /**
    * 获取支持的 Locale 标签数组（返回副本，防止外部修改内部配置）
@@ -423,8 +458,8 @@ public class I18nProperties {
         path = path.substring(0, dotIdx);
       }
 
-      // 去掉区域后缀 _zh_CN / _en_US / _zh_TW
-      path = path.replaceAll("_(zh_CN|en_US|zh_TW|ja_JP|ko_KR)$", "");
+      // 去掉区域后缀（使用已知 locale tags 统一维护的正则，单一数据源 F4+O2）
+      path = com.njydsz.common.locales.util.KnownLocaleTags.stripLocaleSuffix(path);
 
       return "classpath:" + path;
     } catch (Exception e) {
@@ -457,8 +492,13 @@ public class I18nProperties {
       merged.addAll(discoverBasenamesViaWildcard());
     }
 
-    // 3. 最后加入 SPI Provider 声明的 basename（用于非标准路径的模块自声明）
+    // 3. 再加入 SPI Provider 声明的 basename（用于非标准路径的模块自声明）
     merged.addAll(discoverBasenamesViaSpi());
+
+    // 4. 最后追加框架级兜底 basename（仅在 classpath 中存在对应资源文件时才启用）
+    if (isFrameworkFallbackAvailable()) {
+      merged.add(FRAMEWORK_FALLBACK_BASENAME);
+    }
 
     return merged.toArray(new String[0]);
   }
@@ -495,6 +535,23 @@ public class I18nProperties {
       log.debug("ServiceLoader I18nBasenameProvider 发现失败: {}", e.getMessage());
     }
     return discovered;
+  }
+
+  /**
+   * 校验框架级兜底 basename 对应的资源文件是否存在于 classpath 中。
+   *
+   * <p>框架级兜底提供全局通用 i18n 翻译（如通用错误码、系统级消息），用于所有模块共享的基础文案。若用户未创建该文件，则静默跳过，不影响既有功能。
+   *
+   * @return 框架级兜底资源存在时返回 true
+   */
+  private boolean isFrameworkFallbackAvailable() {
+    try {
+      PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+      Resource[] resources = resolver.getResources("classpath*:i18n/framework-fallback-messages*.properties");
+      return resources.length > 0;
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   @Override

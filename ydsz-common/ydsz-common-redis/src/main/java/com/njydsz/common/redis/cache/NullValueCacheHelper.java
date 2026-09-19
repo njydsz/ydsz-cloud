@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.constant.RedisNullPlaceholder;
 
 /**
  * 缓存空值保护工具类
@@ -34,8 +35,12 @@ public class NullValueCacheHelper {
     throw new AssertionError("Utility class cannot be instantiated");
   }
 
-  /** 空值占位符：缓存中以该字符串表示"数据库无此记录" */
-  private static final String NULL_VALUE_PLACEHOLDER = "__NULL__";
+  /**
+   * 空值占位符：缓存中以该字符串表示"数据库无此记录"
+   *
+   * <p>使用 {@link RedisNullPlaceholder} 统一常量，避免与其他模块的空值标记产生语义分歧
+   */
+  private static final String NULL_VALUE_PLACEHOLDER = RedisNullPlaceholder.MARKER;
 
   /**
    * 防穿透互斥锁默认租约时间（分钟）

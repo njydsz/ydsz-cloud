@@ -1,5 +1,8 @@
 package com.njydsz.common.tenant.interceptor;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -158,32 +161,34 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
   /**
    * 构建缓存 Key。
    *
-   * <p>Key 由「完整原始 SQL + 全部租户字段签名」拼接而成：
+   * <p>Key 由「租户字段签名 + SQL 哈希摘要」拼接而成：
    *
    * <ul>
    *   <li>MULTI 模式下所有字段值均参与 Key 计算，确保不同维度取值不会命中错误缓存
    *   <li>跳过隔离或超级管理员时使用 "skip" / "superadmin" 标记
    *   <li>无租户上下文时使用 "none" 标记（触发 fail-closed）
+   *   <li>SQL 部分使用 SHA-256 哈希（16 进制，64 字符），避免长 SQL 导致缓存 Key 膨胀
    * </ul>
    *
    * @param originalSql 原始 SQL（保持原样，不做 normalize）
-   * @return 缓存 Key
+   * @return 缓存 Key（总长度受控：前缀 + 64 字符哈希）
    */
   private String buildCacheKey(String originalSql) {
     TenantContext context = TenantContextHolder.get();
+    String sqlHash = sha256Hex(originalSql);
 
     if (context == null) {
-      return "none:" + originalSql;
+      return "none:" + sqlHash;
     }
     if (context.isSkipIsolation()) {
-      return "skip:" + originalSql;
+      return "skip:" + sqlHash;
     }
     if (context.isSuperAdmin()) {
-      return "superadmin:" + originalSql;
+      return "superadmin:" + sqlHash;
     }
 
-    // 拼接全部租户字段值作为签名
-    StringJoiner joiner = new StringJoiner("|", "", ":" + originalSql);
+    // 拼接全部租户字段值作为签名，SQL 使用哈希摘要替代原文
+    StringJoiner joiner = new StringJoiner("|", "", ":" + sqlHash);
     joiner.add(String.valueOf(context.getTenantId()));
     for (Map.Entry<String, Object> entry : context.getFields().entrySet()) {
       if (!"tenantId".equals(entry.getKey())) {
@@ -191,6 +196,34 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
       }
     }
     return joiner.toString();
+  }
+
+  /**
+   * 将输入字符串计算为 SHA-256 哈希的 16 进制表示。
+   *
+   * <p>使用 {@link MessageDigest} 线程不安全，每次调用创建新实例， 避免同步开销。对于缓存 Key 构建场景（单次调用 <1μs），
+   * 该开销可忽略。
+   *
+   * @param input 待哈希输入
+   * @return 64 字符小写 16 进制哈希串；算法不可用时回退为 {@link String#hashCode()} 的 16 进制
+   */
+  private static String sha256Hex(String input) {
+    if (input == null) {
+      return "null";
+    }
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+      StringBuilder sb = new StringBuilder(hashBytes.length * 2);
+      for (byte b : hashBytes) {
+        sb.append(String.format("%02x", b));
+      }
+      return sb.toString();
+    } catch (NoSuchAlgorithmException e) {
+      // SHA-256 是所有 Java 平台必须支持的算法，理论上不会到达此处
+      // 回退：使用 String hashCode（仅 8 字符，碰撞率可接受，因仅用于缓存 Key）
+      return Integer.toString(input.hashCode(), 16);
+    }
   }
 
   /**
@@ -339,13 +372,25 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
   /**
    * SCHEMA 模式：为表设置租户 schema 前缀（{@code tenant_xxx.table}），实现数据库层隔离。
    *
-   * <p>非 SCHEMA 模式或上下文无 schema 时为空操作。 已带 schema 前缀的表跳过（避免重复前缀）， 白名单表（ignore-tables）跳过。
-   * 超级管理员 / 跳过隔离上下文不应用前缀。
+   * <p>满足以下任一条件时跳过（空操作）：
+   *
+   * <ul>
+   *   <li>非 SCHEMA 模式
+   *   <li>上下文无 schema
+   *   <li>已带 schema 前缀的表（避免重复前缀）
+   *   <li>白名单表（ignore-tables）
+   *   <li>超级管理员 / 跳过隔离上下文
+   *   <li>search_path 自动设置已启用（{@code ydsz.tenant.schema-search-path-enabled=true}，由 search_path 路由）
+   * </ul>
    *
    * @param table 目标表
    */
   private void applySchemaToTable(Table table) {
     if (properties.getMode() != TenantProperties.TenantMode.SCHEMA) {
+      return;
+    }
+    if (properties.isSchemaSearchPathEnabled()) {
+      // search_path 已由 SchemaSearchPathExecutor 设置，无需改写表名前缀
       return;
     }
     if (table == null || table.getSchemaName() != null) {
@@ -567,7 +612,8 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
           "无法获取租户上下文，已拒绝执行 SQL 以避免跨租户数据泄露。"
               + "请检查 TenantContextWebFilter 是否正确注册，"
               + "或使用 SystemTenantContextRunner 包装异步/定时任务，"
-              + "或将相关表加入 ignore-tables，或将 URL 加入 anon-urls。");
+              + "或将相关表加入 ignore-tables，或将 URL 加入 anon-urls。",
+          DiagnosticsUtil.collect("no-context"));
     }
 
     List<TenantField> activeFields = properties.getActiveTenantFields();
@@ -587,7 +633,8 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
           metrics.recordFailClosed();
         }
         throw new TenantIsolationException(
-            "无法获取租户字段 [" + field.getColumn() + "] 的值（claim=" + claimName + "），已拒绝执行 SQL。");
+            "无法获取租户字段 [" + field.getColumn() + "] 的值（claim=" + claimName + "），已拒绝执行 SQL。",
+            DiagnosticsUtil.collect("missing-field-" + field.getColumn()));
       }
       // 跨租户共享：将主租户字段值扩展为 [当前租户, 共享租户...]
       if (context.hasSharing() && isPrimaryTenantField(field)) {

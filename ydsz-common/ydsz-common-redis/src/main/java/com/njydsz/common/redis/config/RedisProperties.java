@@ -135,7 +135,15 @@ public class RedisProperties {
   /** 限流器配置 */
   private RateLimiter rateLimiter = new RateLimiter();
 
-  /** SSL 启用配置 */
+  /**
+   * SSL 启用配置（全局顶层已废弃）
+   *
+   * @since 26.09.01
+   * @deprecated 自 26.09.01 起迁移至 {@code ydsz.redis.client.ssl.enabled}，
+   *             顶层字段不再被读取。请在新配置中使用嵌套路径：
+   *             {@code ydsz.redis.client.ssl.enabled: true}
+   */
+  @Deprecated
   private boolean sslEnabled = false;
 
   /** Redis 用户名 */

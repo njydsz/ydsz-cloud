@@ -112,6 +112,15 @@ public class IdempotentAspect {
       return proceed(joinPoint);
     }
 
+    // condition 条件判断：SpEL 表达式返回 false 时跳过幂等检查
+    if (!evaluateCondition(idempotent.condition(), method, joinPoint.getArgs())) {
+      log.debug(
+          "[ydsz-lock] [idempotent] 幂等条件不满足，跳过幂等检查 method={} condition={}",
+          method.getName(),
+          idempotent.condition());
+      return proceed(joinPoint);
+    }
+
     String userKey = resolveUserKey(idempotent.key(), method, joinPoint.getArgs());
     String redisKey = buildRedisKey(userKey);
 
@@ -380,6 +389,32 @@ public class IdempotentAspect {
       return keyPrefix + userKey;
     }
     return keyPrefix + namespace + ":" + userKey;
+  }
+
+  /**
+   * 评估幂等校验的 condition 条件（SpEL 表达式）。
+   *
+   * <p>空串或空白串视为无条件生效，返回 {@code true}。 表达式解析异常时保守返回 {@code true}（执行幂等校验），避免因 SpEL 配置错误导致幂等防线失效。
+   *
+   * @param condition SpEL 条件表达式
+   * @param method 目标方法
+   * @param args 方法参数
+   * @return {@code true} 表示条件满足需要执行幂等校验，{@code false} 表示跳过
+   */
+  private boolean evaluateCondition(String condition, Method method, Object[] args) {
+    if (condition == null || condition.isBlank()) {
+      return true;
+    }
+    try {
+      String resolved = LockExpressionUtils.resolve(condition, method, args);
+      return Boolean.parseBoolean(resolved);
+    } catch (Exception e) {
+      log.warn(
+          "[ydsz-lock] [idempotent] condition SpEL 解析失败，默认执行幂等校验 condition={} cause={}",
+          condition,
+          e.getMessage());
+      return true;
+    }
   }
 
   /**

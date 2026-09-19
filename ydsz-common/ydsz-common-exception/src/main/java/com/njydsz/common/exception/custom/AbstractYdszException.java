@@ -2,6 +2,7 @@ package com.njydsz.common.exception.custom;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import com.njydsz.common.core.code.ResultCode;
@@ -54,6 +55,20 @@ public abstract class AbstractYdszException extends RuntimeException
 
   /** 懒加载解析的消息参数 */
   protected transient Object[] messageParams;
+
+  /**
+   * DCL 缓存的 i18n 消息（26.09.19 新增）。
+   *
+   * <p>volatile 保证跨线程可见。首次调用 {@link #getMessage()} 时通过 DCL 解析后缓存， 同一 Locale 重复调用直接返回缓存值，避免 {@link
+   * org.springframework.context.support.AbstractMessageSource}
+   * 重复格式化开销（MessageFormat.parse() 为性能热点）。
+   *
+   * <p>缓存绑定到 {@link #resolvingLocale}，跨线程切换 Locale 后自动失效重新解析。
+   */
+  protected volatile String cachedMessage;
+
+  /** 缓存解析时绑定的 Locale（与 {@link #cachedMessage} 配对，用于缓存失效判定） */
+  protected transient Locale resolvingLocale;
 
   /** HTTP 状态码 */
   protected int httpStatus;
@@ -136,6 +151,7 @@ public abstract class AbstractYdszException extends RuntimeException
     this.overrideMessage = null;
     this.messageKey = key;
     this.messageParams = this.params;
+    invalidateMessageCache();
   }
 
   /**
@@ -277,11 +293,11 @@ public abstract class AbstractYdszException extends RuntimeException
   }
 
   /**
-   * 获取异常消息（i18n 解析 - 无对象内缓存）。
+   * 获取异常消息（i18n 解析 - DCL 缓存优化，26.09.19）。
    *
-   * <p>直接通过 {@link MessageSourceHolder} 按当前请求 Locale 解析国际化消息。 {@link
-   * org.springframework.context.i18n.LocaleContextHolder} 基于 {@link ThreadLocal} 实现， 同一请求线程内 Locale
-   * 恒定，天然保证多语言切换不串文案，无需异常对象内维护 ConcurrentHashMap 缓存。
+   * <p>使用 DCL（Double-Check Locking）缓存已解析的 i18n 文案：同一异常实例在同一 Locale
+   * 下仅解析一次，重复调用直接返回缓存值。跨线程切换 {@link java.util.Locale} 后通过 {@link
+   * #resolvingLocale} 比对自动失效重新解析，保证多语言不串文案。
    *
    * <p>若 {@link MessageSourceHolder} 未注入（如非 Spring 环境）， 则直接返回 messageKey 本身（兜底行为，保持向后兼容）。 若通过
    * {@link #setMessage(String)} 显式覆盖消息，优先返回覆盖值。
@@ -300,7 +316,48 @@ public abstract class AbstractYdszException extends RuntimeException
     if (messageKey == null) {
       return super.getMessage();
     }
-    return MessageSourceHolder.resolve(messageKey, messageParams);
+    // DCL: 先无锁读缓存
+    String cached = cachedMessage;
+    if (cached != null && isSameLocale(resolvingLocale)) {
+      return cached;
+    }
+    // 缓存未命中，进入同步块重新解析
+    synchronized (this) {
+      // 二次检查：可能已被其他线程填充
+      if (cachedMessage != null && isSameLocale(resolvingLocale)) {
+        return cachedMessage;
+      }
+      String resolved = MessageSourceHolder.resolve(messageKey, messageParams);
+      this.cachedMessage = resolved;
+      this.resolvingLocale = MessageSourceHolder.currentLocale();
+      return resolved;
+    }
+  }
+
+  /**
+   * 判断缓存绑定的 Locale 是否与当前请求线程的 Locale 一致。
+   *
+   * @param cachedLocale 缓存绑定的 Locale，可为 {@code null}
+   * @return true - 一致可使用缓存；false - 不一致需重新解析
+   */
+  private boolean isSameLocale(Locale cachedLocale) {
+    Locale current = MessageSourceHolder.currentLocale();
+    if (cachedLocale == null) {
+      return current == null;
+    }
+    return cachedLocale.equals(current);
+  }
+
+  /**
+   * 清除 i18n 文案 DCL 缓存。
+   *
+   * <p>当 {@link #setMessage(String)} 显式覆盖消息、或 {@link #initFields} 重置 key 时调用， 强制下次 {@link #getMessage()} 重新解析。
+   */
+  protected void invalidateMessageCache() {
+    synchronized (this) {
+      this.cachedMessage = null;
+      this.resolvingLocale = null;
+    }
   }
 
   /**
@@ -312,6 +369,10 @@ public abstract class AbstractYdszException extends RuntimeException
    */
   public void setMessage(String message) {
     this.overrideMessage = message;
+    // 显式覆盖消息时同步清除 i18n 缓存，保证下次未覆盖调用重新解析
+    if (message == null) {
+      invalidateMessageCache();
+    }
   }
 
   public int getHttpStatus() {

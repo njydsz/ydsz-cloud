@@ -22,13 +22,12 @@ package com.njydsz.common.domain.specification;
  * List<User> filtered = users.stream().filter(spec::isSatisfiedBy).toList();
  * }</pre>
  *
- * <p><b>SPI：</b>业务模块通过 {@code @Component} 注册自定义规约实现，
- * {@link SpecificationRegistry} 自动收集并可根据名称获取。
- *
  * @param <T> 被规约评估的对象类型
  * @author ydsz-team
  * @since 26.09.13
- * @see SpecificationRegistry
+ * @see #and(Specification)
+ * @see #or(Specification)
+ * @see #negate()
  */
 public interface Specification<T> {
 

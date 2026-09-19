@@ -27,6 +27,7 @@ import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.tenant.cache.CacheKeyBuilderInitializer;
 import com.njydsz.common.tenant.datasource.DatasourceKeyResolver;
+import com.njydsz.common.tenant.datasource.SchemaSearchPathExecutor;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
@@ -410,5 +411,24 @@ public class TenantAutoConfiguration {
   @ConditionalOnMissingBean
   public CacheKeyBuilderInitializer cacheKeyBuilderInitializer() {
     return new CacheKeyBuilderInitializer();
+  }
+
+  /**
+   * SCHEMA 模式 search_path 自动设置器（可选）。
+   *
+   * <p>当 {@code ydsz.tenant.schema-search-path-enabled=true} 时生效，
+   * 业务模块获取jdbc连接后可调用 {@link SchemaSearchPathExecutor#applySearchPath(java.sql.Connection)} 自动设置 search_path。
+   *
+   * <p>注意：需要业务模块或 ydsz-common-jdbc 集成调用，本类仅提供执行器实例。
+   *
+   * @param properties 租户配置
+   * @return SchemaSearchPathExecutor 实例
+   */
+  @Bean
+  @ConditionalOnProperty(prefix = "ydsz.tenant", name = "schema-search-path-enabled", havingValue = "true")
+  @ConditionalOnMissingBean
+  public SchemaSearchPathExecutor schemaSearchPathExecutor(TenantProperties properties) {
+    log.info("多租户 SCHEMA 模式 search_path 自动设置已启用（schema-search-path-enabled=true）");
+    return new SchemaSearchPathExecutor(properties);
   }
 }

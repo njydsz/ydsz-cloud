@@ -8,6 +8,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>集中管理 domain 模块的所有配置项（{@code ydsz.domain.*}）。
  *
+ * <p><b>启用开关：</b>通过 {@code ydsz.domain.enabled=false} 关闭自动装配，
+ * 与 {@link DomainAutoConfiguration} 的 {@code @ConditionalOnProperty(name = "enabled")} 保持一致。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -15,8 +18,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.domain")
 public class DomainProperties {
 
-  /** 是否启用 domain 模块自动装配 */
-  private boolean isEnabled = true;
+  /** 是否启用 domain 模块自动装配。配置键：{@code ydsz.domain.enabled} */
+  private boolean enabled = true;
 
   /** 分页查询配置 */
   private Page page = new Page();

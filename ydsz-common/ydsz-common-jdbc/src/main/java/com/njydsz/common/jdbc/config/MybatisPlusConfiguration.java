@@ -175,7 +175,7 @@ public class MybatisPlusConfiguration {
     // 4. 数据权限拦截器（行级+列级）
     configureDataPermissionInterceptor(interceptor);
 
-    // 5. 分页拦截器（支持显式指定 DbType + maxLimit 安全加固）
+    // 5. 分页拦截器（支持显式指定 DbType + maxLimit 安全加固 + COUNT 优化）
     PaginationInnerInterceptor paginationInterceptor = new PaginationInnerInterceptor();
     String dbType = paginationProperties.getDbType();
     if (dbType != null && !dbType.isEmpty()) {
@@ -185,6 +185,7 @@ public class MybatisPlusConfiguration {
       paginationInterceptor.setMaxLimit(paginationProperties.getMaxLimit());
     }
     paginationInterceptor.setOverflow(paginationProperties.isOverflow());
+    paginationInterceptor.setOptimizeCountSql(paginationProperties.isOptimizeCount());
     interceptor.addInnerInterceptor(paginationInterceptor);
 
     // 6. SQL 防火墙拦截器（置于拦截器链末端，在所有 SQL 改写完成后做安全校验）
