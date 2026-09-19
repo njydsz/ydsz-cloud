@@ -1,5 +1,8 @@
 package com.njydsz.common.queue.metrics;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -267,6 +270,32 @@ public class QueueMetrics {
         getMaxConsumeLatency(),
         backlogCount,
         getElapsedSeconds());
+  }
+
+  /**
+   * 以结构化 Map 形式导出所有指标（供 Actuator / Prometheus 使用）。
+   *
+   * <p>返回的 Map 包含完整的计数与延迟统计，结构扁平便于 JSON 序列化。
+   *
+   * @return 不可变的结构化指标 Map
+   */
+  public Map<String, Object> toMap() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("queueName", queueName);
+    map.put("queueType", queueType);
+    map.put("publishSuccess", publishSuccessCount.sum());
+    map.put("publishFail", publishFailCount.sum());
+    map.put("avgPublishLatency", getAvgPublishLatency());
+    map.put("maxPublishLatency", getMaxPublishLatency());
+    map.put("avgPublishQps", getAvgPublishQps());
+    map.put("consumeSuccess", consumeSuccessCount.sum());
+    map.put("consumeFail", consumeFailCount.sum());
+    map.put("avgConsumeLatency", getAvgConsumeLatency());
+    map.put("maxConsumeLatency", getMaxConsumeLatency());
+    map.put("avgConsumeQps", getAvgConsumeQps());
+    map.put("backlog", backlogCount);
+    map.put("uptimeSeconds", getElapsedSeconds());
+    return Collections.unmodifiableMap(map);
   }
 
   /** 重置所有指标 */

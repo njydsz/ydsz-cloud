@@ -57,6 +57,7 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
   }
 
   /** 包装 handler，在处理前检查去重 */
+
   private IMessageHandler wrapHandler(IMessageHandler handler) {
     if (handler == null) {
       return null;
@@ -68,8 +69,10 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
       }
       try {
         handler.onMessage(message);
+      } catch (RuntimeException e) {
+        throw e;
       } catch (Throwable t) {
-        throw new RuntimeException(t);
+        throw new RuntimeException("消息处理失败: " + t.getMessage(), t);
       }
     };
   }

@@ -1,6 +1,5 @@
 package com.njydsz.common.queue.service;
 
-import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
 
 /**
@@ -52,15 +51,18 @@ public final class MessageSubscriberHelper {
   /**
    * 同步消费并处理单条消息（一次性消费）。
    *
-   * <p>此方法消费一条消息并立即调用 handler 处理。 如果 handler 处理失败，异常会向上抛出，消息可能被重新投递。
+   * <p>此方法消费一条消息并立即调用 handler 处理。 如果 handler 处理失败，原始异常会向上抛出（不被包装），
+   * 便于调用方基于实际业务异常类型做差异化处理（如 {@link
+   * com.njydsz.common.exception.custom.BusinessException} 做重试、{@link
+   * com.njydsz.common.exception.custom.SysException} 触发告警）。
    *
-   * <p><b>注意：</b>此方法只消费一条消息，不适合持续监听场景。 如需持续消费，请使用 {@link #subscribeAsync(IMessageSubscriber,
-   * IMessageHandler)}。
+   * <p><b>注意：</b>此方法只消费一条消息，不适合持续监听场景。 如需持续消费，请使用 {@link
+   * #subscribeAsync(IMessageSubscriber, IMessageHandler)}。
    *
    * @param subscriber 订阅者实例，不可为 null
    * @param handler 消息处理器，不可为 null
    * @return 消息 traceId，消费失败或无消息时返回 null
-   * @throws RuntimeException 当 handler 处理失败时抛出
+   * @throws RuntimeException 当 handler 抛出异常时，以原始类型向上传播
    */
   public static String subscribeOnce(IMessageSubscriber subscriber, IMessageHandler handler) {
     if (subscriber == null || handler == null) {
@@ -73,8 +75,12 @@ public final class MessageSubscriberHelper {
     try {
       handler.onMessage(message);
       return message.getTraceId();
+    } catch (RuntimeException e) {
+      // 运行时异常（含业务异常）：直接向上传播，便于调用方基于异常类型做差异化处理
+      throw e;
     } catch (Throwable t) {
-      throw SysException.builder().message("消息处理失败: " + t.getMessage()).cause(t).build();
+      // 检查异常：解包后以运行时异常向上传播，避免改变订阅方的异常处理流程
+      throw new RuntimeException("消息处理失败: " + t.getMessage(), t);
     }
   }
 

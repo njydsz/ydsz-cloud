@@ -62,4 +62,24 @@ public interface IMessagePublisher extends Closeable {
    */
   @Override
   void close();
+
+  /**
+   * 发布带延时/延迟投递的消息。
+   *
+   * <p>默认实现忽略延迟参数、直接立即发布（兼容不支持延时的引擎）。
+   * 支持延时的发布者实现（如 {@code RocketMQPublisher}、{@code KafkaMessagePublisher}）应覆盖本方法以使用原生延迟能力。
+   *
+   * <p>如需更精确的定时器方案，请使用 {@link com.njydsz.common.queue.delayed.DelayedMessageSender}。
+   *
+   * @param message 消息对象，为 null 时静默忽略
+   * @param delayMillis 延迟毫秒数，≤ 0 时立即发布
+   */
+  default void publishDelayed(QueueMessage message, long delayMillis) {
+    if (message == null || delayMillis <= 0) {
+      publish(message);
+      return;
+    }
+    // 默认实现：忽略延迟，立即发布
+    publish(message);
+  }
 }

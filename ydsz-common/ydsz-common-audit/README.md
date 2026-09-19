@@ -11,7 +11,7 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供操作审计留痕、合规追溯、数据导出审计等能力 |
-| **依赖** | common-core、common-util、common-safe、common-exception、common-thread、common-json；spring-boot-starter、spring-boot-starter-aspectj；可选依赖 spring-jdbc、spring-webmvc、jakarta.servlet-api、spring-boot-health、micrometer-core |
+| **依赖** | common-core、common-util、common-exception、common-thread、common-json；spring-boot-starter、spring-boot-starter-aspectj；可选依赖 spring-jdbc、spring-webmvc、jakarta.servlet-api、spring-boot-health、micrometer-core |
 | **版本** | 26.09.01-SNAPSHOT |
 
 ## 核心能力
@@ -66,13 +66,13 @@
 
 默认敏感词：`password`、`oldPassword`、`newPassword`、`confirmPassword`、`token`、`accessToken`、`refreshToken`、`authorization`、`secret`、`apiKey`、`privateKey`。
 
-### 7. Diff 快照（合规追溯）
+### 7. Diff 快照（合规追溯）— ⏳ 规划中
 
 | 类 | 说明 |
 |---|---|
-| `DiffSnapshotHelper` | Diff 快照助手，在方法执行前查询旧值（`diffBeforeSnapshot`），执行后记录新值（`diffAfterSnapshot`），仅对 `action = UPDATE/DELETE` 场景意义最大 |
+| `DiffSnapshotHelper` | Diff 快照计算工具（逻辑已实现），提供 field-level 变更差异计算能力 |
 
-开启方式：`@Audit(recordDiff = true, resourceIdSpEL = "#id")`，会在执行前额外引入一次查询旧值的数据库操作。
+> ⏳ **当前状态**：`DiffSnapshotHelper` 类的基础 diff 计算逻辑已实现，但 `@Audit(recordDiff = true, resourceIdSpEL = "...")` 注解的实际联动功能**尚未集成到切面**（规划中）。业务方可直接使用 `DiffSnapshotHelper.diff(beforeJson, afterJson, ignoredFields)` 工具方法手动计算并传入事件，注解方式的自动 diff 将在后续版本实现。
 
 ### 8. 异步线程池
 
@@ -123,15 +123,16 @@ public class Application {
 public R<User> createUser(@RequestBody UserDTO user) { ... }
 ```
 
-### 4. Diff 快照示例
+### 4. 变更 Diff 手动计算（规划中：注解自动 diff）
 
 ```java
-@Audit(module = "商品管理",
-       action = AuditAction.UPDATE,
-       content = "'更新商品价格:' + #dto.goodsId",
-       recordDiff = true,
-       resourceIdSpEL = "#dto.goodsId")
-public void updateGoods(@RequestBody GoodsDTO dto) { ... }
+// 当前：使用 DiffSnapshotHelper 工具手动计算
+String beforeJson = YdszJson.toJson(oldEntity);
+String afterJson = YdszJson.toJson(newEntity);
+DiffSnapshotHelper.DiffResult diff = DiffSnapshotHelper.diff(
+    beforeJson, afterJson, Set.of("updateTime", "version"));
+
+// 规划：@Audit(recordDiff = true, resourceIdSpEL = "#id") 将实现切面联动
 ```
 
 ## 配置项
@@ -198,7 +199,19 @@ applicationEventPublisher.publishEvent(new DataExportAuditEvent(...));
 ```java
 // Gateway GlobalFilter 中
 GatewayAuditEventBridge bridge = ...; // 注入
-bridge.publishOperationLog(module, action, content, operator);
+return chain.filter(exchange).doFinally(signalType -> {
+    bridge.publishAuditEvent(
+        userId,
+        clientIp,
+        exchange.getRequest().getMethodValue(),
+        exchange.getRequest().getURI().getPath(),
+        exchange.getResponse().getStatusCode() != null
+            ? exchange.getResponse().getStatusCode().value() : 0,
+        durationMs,
+        traceId,
+        tenantId
+    );
+});
 ```
 
 ### 4. 变更 Diff 审计
@@ -233,12 +246,109 @@ public void updateEmployee(@RequestBody EmployeeDTO dto) { ... }
 
 ## SPI 扩展点
 
+### 扩展接口一览
+
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
-| `AuditWriter` | 自定义审计存储后端（如 ES / MQ / 远程 API），替换默认 JDBC 实现 | 业务模块实现 |
+| `AuditWriter` | 自定义审计存储后端（如 ES / Kafka / 远程 API），替换默认 JDBC 实现 | 业务模块实现 |
 | `AuditRecorder` | 自定义记录器（如 Disruptor 高性能实现），替换默认异步/同步实现 | 业务模块实现 |
 | `AuditQueryService` | 自定义审计查询服务（如 ES 全文查询），替换默认 JDBC 实现 | 业务模块实现 |
-| `EventPublishGateway` | 操作日志事件投递渠道扩展（AuditEventListener 消费后二次分发） | 业务模块实现 |
+
+### 自定义 AuditWriter 示例（Kafka 投递）
+
+以下示例演示如何将审计日志投递到 Kafka，替代默认的 JDBC 存储：
+
+```java
+package com.njydsz.myapp.audit;
+
+import com.njydsz.common.audit.core.AuditWriteException;
+import com.njydsz.common.audit.core.AuditWriter;
+import com.njydsz.common.audit.domain.AuditLog;
+import com.njydsz.common.json.YdszJson;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+/**
+ * 将审计日志投递到 Kafka topic: ydsz-audit-log
+ */
+@Component
+public class KafkaAuditWriter implements AuditWriter {
+
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    public KafkaAuditWriter(KafkaTemplate<String, String> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    @Override
+    public void write(AuditLog auditLog) {
+        auditLog.ensureId();
+        String json = YdszJson.toJson(auditLog);
+        try {
+            kafkaTemplate.send("ydsz-audit-log", auditLog.getTenantId(), json);
+        } catch (Exception e) {
+            throw new AuditWriteException("Kafka 投递失败 id=" + auditLog.getId(), e);
+        }
+    }
+
+    @Override
+    public void writeBatch(List<AuditLog> auditLogs) {
+        for (AuditLog auditLog : auditLogs) {
+            write(auditLog);
+        }
+    }
+
+    @Override
+    public String getName() {
+        return "KafkaAuditWriter";
+    }
+
+    @Override
+    public String getType() {
+        return "KAFKA";
+    }
+
+    @Override
+    public int cleanupExpired(int retentionDays) {
+        // Kafka 通过 topic retention 策略自动清理，无需手动删除
+        return 0;
+    }
+}
+```
+
+> 由于 `KafkaAuditWriter` 标注了 `@Component` 且 `AuditAutoConfiguration` 中的 JDBC Writer Bean 使用 `@ConditionalOnMissingBean(AuditWriter.class)`，Spring 容器会优先注入自定义实现，JDBC 自动配置不会生效。
+
+### 自定义 AuditRecorder 示例（同步写入场景）
+
+```java
+@Component
+public class SyncAuditRecorder implements AuditRecorder {
+
+    private final AuditWriter auditWriter;
+
+    public SyncAuditRecorder(AuditWriter auditWriter) {
+        this.auditWriter = auditWriter;
+    }
+
+    @Override
+    public void record(AuditLog auditLog) {
+        auditWriter.write(auditLog);
+    }
+
+    @Override
+    public void recordAsync(AuditLog auditLog) {
+        // 同步模式：异步调用等同于同步写入
+        auditWriter.write(auditLog);
+    }
+
+    @Override
+    public void recordBatch(List<AuditLog> auditLogs) {
+        auditWriter.writeBatch(auditLogs);
+    }
+}
+```
 
 ## 自动配置类
 
@@ -265,10 +375,10 @@ public void updateEmployee(@RequestBody EmployeeDTO dto) { ... }
 3. **响应记录默认关闭**：`recordResponse=false` 避免大响应体和敏感数据落库。开启前需评估日志存储成本与合规风险。
 4. **分表需预建表**：开启 `sharding-enabled=true` 前，审计表必须按月/日/年提前创建（如 `sys_audit_log_202601`），框架不会自动建表。
 5. **队列满默认 CALLER_RUNS**：默认拒绝策略保证审计数据不丢失（调用者阻塞 → 超时后磁盘兜底）。高吞吐场景可改为 `DISCARD_OLDEST` 但会丢审计。
-6. **磁盘兜底目录**：`AuditFallbackWriter` 写入路径为 `logs/audit-fallback/`，需确保该目录有写权限并定期清理。
-7. **Diff 快照引入额外查询**：`recordDiff=true` 会在方法执行前引入一次「查询旧值」数据库操作，评估性能后再开启。
-8. **网关事件桥接依赖 WebFlux**：`GatewayAuditEventBridge` 供 Spring Cloud Gateway 使用，MVC 应用无需关注。
-9. **覆盖 Bean 提供自定义实现**：所有 Bean 标注 `@ConditionalOnMissingBean`，业务方可自行注册同名 Bean 覆盖默认实现。
+6. **磁盘兜底目录**：`AuditFallbackWriter` 默认写入 `java.io.ydsz.audit.fallback.dir` 系统属性指定目录（未设置时默认 `{java.io.tmpdir}/audit-fallback/`）。锁机制使用 `ReentrantLock` + 100ms 超时降级，避免高并发下 synchronized 阻塞线程。需确保目录有写权限并定期清理。
+7. **Diff 快照功能规划中**：`@Audit(recordDiff = true)` 当前版本暂未生效（规划中），详见 §7 Diff 快照。
+8. **网关事件桥接返回 void**：`GatewayAuditEventBridge.publishAuditEvent(...)` 返回 void（fire-and-forget），适配 `doFinally` 等回调式 WebFlux 钩子，不再依赖 reactor-core。
+9. **覆盖 Bean 提供自定义实现**：所有核心 Bean 标注 `@ConditionalOnMissingBean`，业务方可自行注册同名 Bean 覆盖默认实现（参见 SPI 扩展点示例）。
 
 ## 变更记录
 

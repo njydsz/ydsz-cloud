@@ -3,18 +3,28 @@ package com.njydsz.common.feign.circuitbreaker;
 import java.math.BigDecimal;
 
 /**
- * Feign 熔断器策略接口。
+ * Feign 熔断器策略接口（完整能力）。
  *
- * <p>封装平台自研熔断器与 Feign 调用的集成点，提供请求许可判断和结果反馈。 实现类由 {@link CircuitBreakerFeignConfiguration}
- * 注册（需启用 {@code ydsz.feign.circuit-breaker.enabled=true}）。
+ * <p>继承 {@link FeignCircuitBreakerGuard}（核心热路径），扩展运维查询能力（{@link #getState} / {@link #getMetrics}）。
+ * 实现类由 {@link CircuitBreakerFeignConfiguration} 注册（需启用 {@code ydsz.feign.circuit-breaker.enabled=true}）。
  *
  * <p>当未注册实现时，{@code FeignResponseInterceptor} 跳过熔断逻辑（降级为无保护模式）。
  *
+ * <p><b>接口分层（自 26.09.19）：</b>
+ *
+ * <ul>
+ *   <li>{@link FeignCircuitBreakerGuard}：核心热路径（allowRequest / recordSuccess / recordFailure）
+ *   <li>本接口：运维查询（getState / getMetrics），频率低，可包含 IO / 锁操作
+ * </ul>
+ *
+ * <p>针对热路径编程时，可仅注入 {@link FeignCircuitBreakerGuard} 避免依赖运维查询方法。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @see FeignCircuitBreakerGuard
  * @see CircuitBreakerFeignConfiguration
  */
-public interface FeignCircuitBreakerStrategy {
+public interface FeignCircuitBreakerStrategy extends FeignCircuitBreakerGuard {
 
   /** 熔断器状态枚举。 */
   enum CircuitBreakerState {
@@ -74,32 +84,9 @@ public interface FeignCircuitBreakerStrategy {
   }
 
   /**
-   * 判断指定服务的熔断器是否允许当前请求通过。
-   *
-   * @param serviceName Feign 服务名称（来自 @FeignClient name）
-   * @return true=允许通过；false=熔断器开启，应快速失败
-   */
-  boolean allowRequest(String serviceName);
-
-  /**
-   * 记录一次成功的调用。
-   *
-   * @param serviceName 服务名称
-   * @param durationMs 调用耗时（毫秒）
-   */
-  void recordSuccess(String serviceName, long durationMs);
-
-  /**
-   * 记录一次失败的调用。
-   *
-   * @param serviceName 服务名称
-   * @param durationMs 调用耗时（毫秒）
-   * @param throwable 异常对象
-   */
-  void recordFailure(String serviceName, long durationMs, Throwable throwable);
-
-  /**
    * 获取指定服务的熔断器状态。
+   *
+   * <p>仅在运维查询场景使用（热路径不允许直接调用）。
    *
    * @param serviceName 服务名称
    * @return 熔断器状态
@@ -108,6 +95,8 @@ public interface FeignCircuitBreakerStrategy {
 
   /**
    * 获取指定服务的熔断器指标。
+   *
+   * <p>仅在运维查询场景使用（热路径不允许直接调用）。
    *
    * @param serviceName 服务名称
    * @return 熔断器指标

@@ -110,8 +110,8 @@ public class RateLimitManager {
     if (!cbEnabled) {
       return null;
     }
-    CircuitBreaker.BreakerConfig config =
-        CircuitBreaker.BreakerConfig.builder()
+    SafeCircuitBreaker.BreakerConfig config =
+        SafeCircuitBreaker.BreakerConfig.builder()
             .failureRateThreshold(
                 properties.getCircuitBreaker().getFailureRateThreshold()
                     .divide(new BigDecimal("100"), 4, RoundingMode.HALF_UP))
@@ -185,7 +185,7 @@ public class RateLimitManager {
     }
 
     // 检查熔断器状态，OPEN 状态直接降级
-    if (circuitBreaker.getState(CIRCUIT_BREAKER_RESOURCE) == CircuitBreaker.State.OPEN) {
+    if (circuitBreaker.getState(CIRCUIT_BREAKER_RESOURCE) == SafeCircuitBreaker.State.OPEN) {
       log.debug(
           "Circuit breaker OPEN, fall back to local limiter for resource={}",
           context.getResource());

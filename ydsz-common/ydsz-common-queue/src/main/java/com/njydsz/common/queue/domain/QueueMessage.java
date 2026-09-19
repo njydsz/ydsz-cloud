@@ -97,6 +97,14 @@ public class QueueMessage implements Serializable {
   private String timestamp;
 
   /**
+   * 消息创建时间（毫秒 epoch），用于高性能过期检查，避免反复解析 {@link #timestamp}。
+   *
+   * <p>该字段不直接对外暴露由用户设置；由 {@link #of} 工厂方法和 {@link #fromPayload}
+   * 反序列化路径自动计算得出（基于 {@link #timestamp} 解析或当前时间）。
+   */
+  private transient long createdEpochMillis;
+
+  /**
    * 消息分组键
    *
    * <p>用于顺序消息场景，相同分组键的消息会被路由到同一队列分区，保证顺序性。 仅 Kafka / RocketMQ 等部分 MQ 原生支持，其他引擎忽略此字段。
@@ -117,7 +125,9 @@ public class QueueMessage implements Serializable {
     message.setHeaders(new HashMap<>(4));
     message.setTraceId(generateTraceId());
     message.setRetryCount(0);
-    message.setTimestamp(formatNow());
+    long now = System.currentTimeMillis();
+    message.setTimestamp(formatEpoch(now));
+    message.setCreatedEpochMillis(now);
     return message;
   }
 
@@ -158,7 +168,9 @@ public class QueueMessage implements Serializable {
     message.setHeaders(headers == null ? new HashMap<>(4) : new HashMap<>(headers));
     message.setTraceId(StringUtils.isNotBlank(traceId) ? traceId : generateTraceId());
     message.setRetryCount(retryCount == null ? 0 : retryCount);
-    message.setTimestamp(formatNow());
+    long now = System.currentTimeMillis();
+    message.setTimestamp(formatEpoch(now));
+    message.setCreatedEpochMillis(now);
     message.setMessageGroupKey(messageGroupKey);
     return message;
   }
@@ -192,7 +204,19 @@ public class QueueMessage implements Serializable {
       message.setTraceId(generateTraceId());
     }
     if (StringUtils.isBlank(message.getTimestamp())) {
-      message.setTimestamp(formatNow());
+      long now = System.currentTimeMillis();
+      message.setTimestamp(formatEpoch(now));
+      message.setCreatedEpochMillis(now);
+    } else if (message.createdEpochMillis <= 0) {
+      // timestamp 但没有 epoch：尝试解析timestamp回填
+      try {
+        message.createdEpochMillis = LocalDateTime.parse(message.getTimestamp(), TIMESTAMP_FORMATTER)
+            .atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+      } catch (Exception ex) {
+        // 解析失败：使用当前时间兜底，不影响业务
+        message.createdEpochMillis = System.currentTimeMillis();
+        message.setTimestamp(formatEpoch(message.createdEpochMillis));
+      }
     }
     return YdszJson.toJson(message);
   }
@@ -229,7 +253,18 @@ public class QueueMessage implements Serializable {
         message.setTraceId(generateTraceId());
       }
       if (StringUtils.isBlank(message.getTimestamp())) {
-        message.setTimestamp(formatNow());
+        long now = System.currentTimeMillis();
+        message.setTimestamp(formatEpoch(now));
+        message.setCreatedEpochMillis(now);
+      } else if (message.createdEpochMillis <= 0) {
+        // 反序列化得到的 timestamp -> 回填 epoch
+        try {
+          message.createdEpochMillis = LocalDateTime.parse(message.getTimestamp(), TIMESTAMP_FORMATTER)
+              .atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        } catch (Exception ex) {
+          message.createdEpochMillis = System.currentTimeMillis();
+          message.setTimestamp(formatEpoch(message.createdEpochMillis));
+        }
       }
       return message;
     } catch (Exception ex) {
@@ -266,15 +301,18 @@ public class QueueMessage implements Serializable {
   }
 
   /**
-   * 检查消息是否已过期（基于消息头中的 expireMillis 字段和 timestamp 字段）
+   * 检查消息是否已过期（基于消息头中的 expireMillis 字段和创建时间的 epoch 毫秒）
    *
-   * <p>如果未设置 expireMillis 或 timestamp，返回 false（永不过期）。
+   * <p>如果未设置 expireMillis 或 createdEpochMillis，返回 false（永不过期）。
+   *
+   * <p>使用预计算的 {@link #createdEpochMillis} 避免每次都解析时间字符串，
+   * 在高频消费路径（每秒数千次调用）下提升吞吐量。
    *
    * @return true 如果已过期，false 如果未过期或没有设置过期时间
    */
   public boolean isExpired() {
     String expireHeader = getHeader("expireMillis");
-    if (expireHeader == null || StringUtils.isBlank(this.timestamp)) {
+    if (expireHeader == null || createdEpochMillis <= 0) {
       return false;
     }
     try {
@@ -282,10 +320,8 @@ public class QueueMessage implements Serializable {
       if (expireMillis <= 0) {
         return false;
       }
-      LocalDateTime createTime = LocalDateTime.parse(this.timestamp, TIMESTAMP_FORMATTER);
-      LocalDateTime expireTime = createTime.plusNanos(expireMillis * 1_000_000);
-      return LocalDateTime.now().isAfter(expireTime);
-    } catch (Exception ex) {
+      return System.currentTimeMillis() > createdEpochMillis + expireMillis;
+    } catch (NumberFormatException ex) {
       return false;
     }
   }
@@ -321,7 +357,9 @@ public class QueueMessage implements Serializable {
   public QueueMessage reset() {
     this.retryCount = 0;
     this.traceId = generateTraceId();
-    this.timestamp = formatNow();
+    long now = System.currentTimeMillis();
+    this.timestamp = formatEpoch(now);
+    this.createdEpochMillis = now;
     return this;
   }
 
@@ -348,12 +386,14 @@ public class QueueMessage implements Serializable {
   }
 
   /**
-   * 格式化当前时间
+   * 格式化毫秒 epoch 为人类可读的时间字符串
    *
+   * @param epochMillis 毫秒时间戳
    * @return 格式化的时间字符串
    */
-  private static String formatNow() {
-    return LocalDateTime.now().format(TIMESTAMP_FORMATTER);
+  private static String formatEpoch(long epochMillis) {
+    return LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(epochMillis),
+        java.time.ZoneId.systemDefault()).format(TIMESTAMP_FORMATTER);
   }
 
   @Override

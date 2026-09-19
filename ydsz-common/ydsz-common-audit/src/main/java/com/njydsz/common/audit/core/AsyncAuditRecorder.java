@@ -348,7 +348,9 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
             .withDetail(
                 "queueUsageRatio",
                 String.format("%.1f%%", usageRatio * 100))
-            .withDetail("queueFullCount", queueFullCount);
+            .withDetail("queueFullCount", queueFullCount)
+            .withDetail("fallbackFileCount", fallbackWriter.getFallbackFileCount())
+            .withDetail("fallbackFailed", fallbackWriter.isDiskFallbackFailed());
 
     if (usageRatio > QUEUE_USAGE_WARN_THRESHOLD) {
       return HealthInfo.down(info.getDetails())

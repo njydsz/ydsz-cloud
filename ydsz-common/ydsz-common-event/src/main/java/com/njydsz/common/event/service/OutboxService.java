@@ -18,6 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.OutboxNewMessageEvent;
 import com.njydsz.common.event.config.EventProperties;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
@@ -223,6 +224,9 @@ public class OutboxService {
    * <p>事务提交成功后发布 {@link OutboxMessage} 作为 Spring 事件， 供进程内 {@code @EventListener} 订阅（如
    * CrossModuleEventListener）。 事务回滚时不触发，确保只发布已持久化的消息。
    *
+   * <p><b>O-2 钩子升级：</b>如需在事务回滚时执行补偿逻辑（如 Saga 补偿、资源清理）， 请使用 {@link
+   * #registerTransactionPhaseCallback} 注册 {@link TransactionPhase#AFTER_ROLLBACK} 回调。
+   *
    * @param message Outbox 消息
    */
   private void registerDomainEventPublishCallback(OutboxMessage message) {
@@ -236,8 +240,82 @@ public class OutboxService {
           @Override
           public void afterCommit() {
             doPublishDomainEvent(message);
+            // P-1 推模式：事务提交后通知 OutboxProcessor 触发即时轮询
+            eventPublisher.publishEvent(new OutboxNewMessageEvent(this, message.getId()));
           }
         });
+  }
+
+  /**
+   * 事务阶段枚举
+   *
+   * <p>借鉴 Spring {@code TransactionPhase} 设计，用于 {@link #registerTransactionPhaseCallback}
+   * 注册不同事务阶段的生命周期回调。
+   *
+   * @since 26.09.19
+   */
+  public enum TransactionPhase {
+    /** 事务提交成功后 */
+    AFTER_COMMIT,
+    /** 事务回滚后 */
+    AFTER_ROLLBACK
+  }
+
+  /**
+   * 注册事务阶段回调（O-2）
+   *
+   * <p>允许业务模块注册在事务提交或回滚后执行的操作。典型场景：
+   *
+   * <ul>
+   *   <li>AFTER_COMMIT: RPC 调用、发送邮件（只对已提交数据生效）
+   *   <li>AFTER_ROLLBACK: Saga 补偿、记录回滚日志、释放预扣资源
+   * </ul>
+   *
+   * <p>回调仅在当前存在数据库事务时注册；无事务上下文时回立即执行（与 afterCommit 行为一致）。
+   *
+   * @param phase 事务阶段（AFTER_COMMIT 或 AFTER_ROLLBACK）
+   * @param callback 回调任务（抛异常不影响主事务回滚，仅记录 WARN 日志）
+   * @since 26.09.19
+   */
+  public void registerTransactionPhaseCallback(TransactionPhase phase, Runnable callback) {
+    if (callback == null) {
+      return;
+    }
+    if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+      // 无事务上下文，立即执行
+      executeCallback(callback);
+      return;
+    }
+    TransactionSynchronizationManager.registerSynchronization(
+        new TransactionSynchronization() {
+          @Override
+          public void afterCommit() {
+            if (phase == TransactionPhase.AFTER_COMMIT) {
+              executeCallback(callback);
+            }
+          }
+
+          @Override
+          public void afterCompletion(int status) {
+            if (phase == TransactionPhase.AFTER_ROLLBACK
+                && status == TransactionSynchronization.STATUS_ROLLED_BACK) {
+              executeCallback(callback);
+            }
+          }
+        });
+  }
+
+  /**
+   * 执行回调（捕获异常，不影响主流程）
+   *
+   * @param callback 回调任务
+   */
+  private void executeCallback(Runnable callback) {
+    try {
+      callback.run();
+    } catch (Exception e) {
+      LOG.warn("Transaction phase callback execution failed: phase error={}", e.getMessage(), e);
+    }
   }
 
   /**
@@ -453,6 +531,9 @@ public class OutboxService {
           @Override
           public void afterCommit() {
             messages.forEach(OutboxService.this::doPublishDomainEvent);
+            // P-1 推模式：批量事务提交后通知 OutboxProcessor
+            messages.forEach(msg ->
+                eventPublisher.publishEvent(new OutboxNewMessageEvent(this, msg.getId())));
           }
         });
   }

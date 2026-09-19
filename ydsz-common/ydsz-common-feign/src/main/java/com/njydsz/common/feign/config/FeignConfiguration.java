@@ -34,6 +34,7 @@ import com.njydsz.common.feign.codec.JsonDecoder;
 import com.njydsz.common.feign.codec.JsonEncoder;
 import com.njydsz.common.feign.codec.ResponseUnwrapDecoder;
 import com.njydsz.common.feign.compress.GzipRequestCompressInterceptor;
+import com.njydsz.common.feign.actuator.FeignHealthSnapshot;
 import com.njydsz.common.feign.interceptor.BulkheadRequestInterceptor;
 import com.njydsz.common.feign.interceptor.FeignResponseInterceptor;
 import com.njydsz.common.feign.monitor.FeignResponseMetricsAdapter;
@@ -245,6 +246,21 @@ public class FeignConfiguration {
    * @param feignProperties Feign 配置属性
    * @return GzipRequestCompressInterceptor 实例
    */
+  /**
+   * 创建 Feign 健康状态快照 Bean。
+   *
+   * <p>提供 Feign 模块的状态快照（不依赖 Spring Actuator API）。 上层 web 包可通过此 Bean 桥接到 {@code HealthIndicator}
+   * 或自定义监控端点。
+   *
+   * @param feignProperties Feign 配置属性
+   * @return FeignHealthSnapshot 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(FeignHealthSnapshot.class)
+  public FeignHealthSnapshot feignHealthSnapshot(FeignProperties feignProperties) {
+    return FeignHealthSnapshot.from(feignProperties);
+  }
+
   @Bean
   @ConditionalOnMissingBean(GzipRequestCompressInterceptor.class)
   @ConditionalOnProperty(prefix = "ydsz.feign.compress", name = "enabled", havingValue = "true")

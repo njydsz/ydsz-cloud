@@ -103,18 +103,22 @@ public final class MessagePublisherHelper {
   /**
    * 发布带延迟的消息。
    *
-   * <p>默认实现直接发布（不延迟）。支持延迟的队列实现可覆盖此行为。
+   * <p>委托给 {@link IMessagePublisher#publishDelayed(QueueMessage, long)}：
+   * 支持原生延迟的引擎（如 RocketMQ、Kafka）会被正确路由到延迟投递路径；
+   * 不支持延迟的引擎（如 Redis Stream）由接口默认实现降级为立即发布。
    *
-   * @param publisher 基础发布者，不可为 null
+   * <p>如需更高精度的定时器场景（宕机会丢失），请使用 {@link
+   * com.njydsz.common.queue.delayed.DelayedMessageSender}。
+   *
+   * @param publisher 发布者，不可为 null
    * @param message 消息对象，不可为 null
-   * @param delayMillis 延迟时间（毫秒）
+   * @param delayMillis 延迟毫秒数
    */
   public static void publishDelayed(
       IMessagePublisher publisher, QueueMessage message, long delayMillis) {
     if (publisher == null || message == null) {
       return;
     }
-    // 默认忽略延迟参数，直接发布
-    publishMessage(publisher, message);
+    publisher.publishDelayed(message, delayMillis);
   }
 }

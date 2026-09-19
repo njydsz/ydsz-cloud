@@ -2,6 +2,7 @@ package com.njydsz.common.queue.manager;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -156,6 +157,42 @@ public class QueueManager {
     }
 
     return sb.toString();
+  }
+
+  /**
+   * 以结构化 Map 形式导出全局指标（供 Actuator 端点、Prometheus 等结构化消费方使用）。
+   *
+   * <p>返回的 Map 结构：
+   *
+   * <pre>{@code
+   * {
+   *   "queueCount": 2,
+   *   "queues": {
+   *     "order-events": { "type": "STREAM", "published": 100, "consumed": 95, ... },
+   *     "notify-channel": { "type": "KAFKA",  "published": 50,  "consumed": 50, ... }
+   *   }
+   * }
+   * }</pre>
+   *
+   * @return 不可变的结构化指标 Map
+   */
+  public Map<String, Object> toMap() {
+    Map<String, Object> result = new LinkedHashMap<>();
+    result.put("queueCount", queueRegistry.size());
+    Map<String, Object> queues = new LinkedHashMap<>();
+    for (Map.Entry<String, QueueEntry> reg : queueRegistry.entrySet()) {
+      String name = reg.getKey();
+      QueueEntry entry = reg.getValue();
+      QueueMetrics metrics = metricsRegistry.get(name);
+      Map<String, Object> queueDetail = new LinkedHashMap<>();
+      queueDetail.put("type", entry.getQueueType());
+      if (metrics != null) {
+        queueDetail.putAll(metrics.toMap());
+      }
+      queues.put(name, queueDetail);
+    }
+    result.put("queues", queues);
+    return Collections.unmodifiableMap(result);
   }
 
   /**

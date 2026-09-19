@@ -7,8 +7,26 @@ import org.springframework.context.ApplicationEvent;
 /**
  * 数据导出审计事件
  *
- * <p>在数据导出操作完成时发布，由 {@code DataExportAuditListener} 异步消费并落库到 {@code
- * ydsz_data_export_audit}，用于安全审计与合规留痕。
+ * <p>在数据导出操作完成时发布，由 {@link AuditEventListener} 异步消费并落库到 {@code
+ * sys_audit_log}（action = {@link com.njydsz.common.audit.enums.AuditAction#EXPORT}），
+ * 用于安全审计与合规留痕。
+ *
+ * <p><b>使用示例：</b>
+ *
+ * <pre>{@code
+ * applicationEventPublisher.publishEvent(
+ *     DataExportAuditEvent.builder()
+ *         .userId(currentUser.getId())
+ *         .username(currentUser.getUsername())
+ *         .exportModule("用户管理")
+ *         .bizType("user")
+ *         .rowCount(1500)
+ *         .traceId(traceId)
+ *         .clientIp(clientIp)
+ *         .tenantId(tenantId)
+ *         .exportedAt(System.currentTimeMillis())
+ *         .build());
+ * }</pre>
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -24,11 +42,8 @@ public class DataExportAuditEvent extends ApplicationEvent {
   /** 用户名 */
   private final String username;
 
-  /** 导出模块 */
+  /** 导出模块（如"用户管理"、"订单管理"等） */
   private final String exportModule;
-
-  /** 导出动作 */
-  private final String exportAction;
 
   /** 业务类型 */
   private final String bizType;
@@ -45,7 +60,7 @@ public class DataExportAuditEvent extends ApplicationEvent {
   /** 租户 ID */
   private final String tenantId;
 
-  /** 导出时间（毫秒） */
+  /** 导出时间（毫秒时间戳） */
   private final Long exportedAt;
 
   @Builder
@@ -54,7 +69,6 @@ public class DataExportAuditEvent extends ApplicationEvent {
       String userId,
       String username,
       String exportModule,
-      String exportAction,
       String bizType,
       Integer rowCount,
       String traceId,
@@ -65,7 +79,6 @@ public class DataExportAuditEvent extends ApplicationEvent {
     this.userId = userId;
     this.username = username;
     this.exportModule = exportModule;
-    this.exportAction = exportAction;
     this.bizType = bizType;
     this.rowCount = rowCount;
     this.traceId = traceId;

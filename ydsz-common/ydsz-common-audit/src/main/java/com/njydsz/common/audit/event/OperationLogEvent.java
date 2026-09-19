@@ -7,16 +7,21 @@ import org.springframework.context.ApplicationEvent;
 /**
  * 操作日志事件
  *
- * <p>由操作日志切面（或业务代码）在需要记录用户操作行为时发布， 由 {@code OperationLogListener} 异步消费并落库到 {@code
- * ydsz_operation_log}。
+ * <p>由操作日志切面（或业务代码）在需要记录用户操作行为时发布， 由 {@link
+ * com.njydsz.common.audit.event.AuditEventListener} 异步消费并落库到 {@code
+ * sys_audit_log}。
  *
  * <p>与早期基于 {@code AuditLog} 实体的审计事件相比：
  *
  * <ul>
  *   <li>早期方案携带 {@code AuditLog} 实体，面向通用审计链路
- *   <li>{@code OperationLogEvent} 面向操作日志表，字段与 {@code ydsz_operation_log} 对齐， 额外包含 beforeData /
+ *   <li>{@code OperationLogEvent} 面向操作日志表，字段与 {@code sys_audit_log} 对齐， 额外包含 beforeData /
  *       afterData 变更差异
  * </ul>
+ *
+ * <p><b>⏳ 演进规划（Unified Diff）：</b>未来计划将 {@code beforeData}/{@code afterData} 抽象为统一的 {@code
+ * AuditDiffProvider} SPI， 统一 {@code @Audit(recordDiff=true)} 切面方案和事件方案的变更快照能力。
+ * 业务方只需实现 {@code AuditDiffProvider} 接口提供「旧值查询」能力，无论注解还是事件场景均可复用同一 diff 计算机制。
  *
  * @author ydsz-team
  * @since 26.09.01
