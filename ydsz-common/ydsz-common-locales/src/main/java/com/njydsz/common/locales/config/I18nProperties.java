@@ -3,19 +3,21 @@ package com.njydsz.common.locales.config;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 /**
  * 国际化配置属性
  *
  * <p>配置前缀：{@code ydsz.i18n}
  *
- * <p><b>默认 basename 说明：</b>classpath 通配符不可用于 ReloadableResourceBundleMessageSource，
- * 因此默认值通过逗号分隔显式列出所有模块的 i18n 资源前缀。新增业务模块请同步追加<i>资源前缀</i>，并保证资源文件按
+ * <p><b>默认 basename 说明：</b>classpath 通配符不可用于 ReloadableResourceBundleMessageSource，因此默认值通过逗号分隔显式列出所有模块的 i18n 资源前缀。新增业务模块请同步追加<i>资源前缀</i>，并保证资源文件按
  * {@code {prefix}_{lang}.properties} 命名规范落地 —— 参见 YDIZ-I18N-001。
  *
  * <p><b>配置示例：</b>
@@ -35,6 +37,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       - zh_TW
  *     lang-param-name: "lang"
  *     validate-on-startup: true
+ *     wildcard-scan-enabled: true
  * }</pre>
  *
  * @author ydsz-team
@@ -44,6 +47,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 @ConfigurationProperties(prefix = "ydsz.i18n")
 public class I18nProperties {
+
+  /** classpath 通配符扫描模式（单模式），用于自动发现新增模块的资源前缀。 */
+  private static final String DEFAULT_WILDCARD_PATTERN = "classpath*:i18n/*-messages*.properties";
 
   /**
    * 默认支持的 Locale 列表
@@ -165,6 +171,18 @@ public class I18nProperties {
   private String[] scanBasenames;
 
   /**
+   * 是否启用 classpath 通配符自动扫描资源文件（默认 true）。
+   *
+   * <p>启用后，LocalesAutoConfiguration 启动时通过 {@link PathMatchingResourcePatternResolver} 扫描 {@code
+   * classpath*:i18n/*-messages*.properties}，自动发现新增模块的资源前缀，无需手动追加 {@code basename}
+   * 列表。扫描结果与 {@code basename} 配置合并去重后传入 {@link
+   * org.springframework.context.support.ReloadableResourceBundleMessageSource}。
+   *
+   * <p>禁用后仅使用 {@code basename} 手动配置（向后兼容行为）。
+   */
+  private boolean wildcardScanEnabled = true;
+
+  /**
    * 获取支持的 Locale 标签数组（返回副本，防止外部修改内部配置）
    *
    * @return 支持的 Locale 标签数组（如 zh_CN / en_US）
@@ -193,6 +211,19 @@ public class I18nProperties {
   }
 
   /**
+   * 判断通配符自动扫描是否启用。
+   *
+   * @return 启用返回 true
+   */
+  public boolean isWildcardScanEnabled() {
+    return wildcardScanEnabled;
+  }
+
+  public void setWildcardScanEnabled(boolean wildcardScanEnabled) {
+    this.wildcardScanEnabled = wildcardScanEnabled;
+  }
+
+  /**
    * 获取支持的语言标签集合（不可变集合视图）
    *
    * @return 支持的语言标签 Set
@@ -213,6 +244,115 @@ public class I18nProperties {
    */
   public boolean isSupported(String localeTag) {
     return getSupportedLocaleSet().contains(localeTag);
+  }
+
+  /**
+   * 通过 classpath 通配符自动发现新增模块的 i18n 资源前缀。
+   *
+   * <p>扫描路径为 {@code classpath*:i18n/*-messages*.properties}，覆盖 Spring Boot 默认的资源目录约定。
+   * 当资源文件分布不符合此标准路径时（如 ydzz-common-util 中的 password-messages），仍需在 {@code basename}
+   * 中显式声明。
+   *
+   * <p>返回值去重且保持发现顺序；扫描失败（如 Spring 上下文未就绪）时返回空集合，由调用方降级到默认列表。
+   *
+   * @return 已发现的资源前缀集合（如 classpath:i18n/userinfo-messages）
+   */
+  public Set<String> discoverBasenamesViaWildcard() {
+    if (!wildcardScanEnabled) {
+      return Collections.emptySet();
+    }
+    Set<String> discovered = new LinkedHashSet<>();
+    try {
+      PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+      Resource[] resources = resolver.getResources(DEFAULT_WILDCARD_PATTERN);
+      for (Resource resource : resources) {
+        String basename = extractBasenameFromResource(resource);
+        if (basename != null && !basename.isEmpty()) {
+          discovered.add(basename);
+        }
+      }
+    } catch (Exception e) {
+      // 扫描失败时静默降级，调用方走默认 basename 列表
+    }
+    return discovered;
+  }
+
+  /**
+   * 从 Resource 中提取 basename（classpath: 前缀 + 去后缀 + 去区域后缀）
+   *
+   * <p>例如：{@code file:/.../target/classes/i18n/userinfo-messages_zh_CN.properties} → {@code
+   * classpath:i18n/userinfo-messages}
+   *
+   * @param resource Spring Resource
+   * @return 标准化的 basename；无法解析时返回 null
+   */
+  private String extractBasenameFromResource(Resource resource) {
+    try {
+      String path;
+      if (resource.getURL().getProtocol().startsWith("jar")) {
+        // jar 包内资源，路径形如 jar:file:/path/ydsz-common-foo.jar!/i18n/foo-messages_zh_CN.properties
+        path = resource.getURL().toString();
+        int jarSeparator = path.indexOf("!/");
+        if (jarSeparator > 0) {
+          path = path.substring(jarSeparator + 2);
+        }
+      } else {
+        // 文件系统资源，路径形如 file:/D:/Code/.../target/classes/i18n/foo-messages_zh_CN.properties
+        path = resource.getURL().toString();
+        int classesIdx = path.indexOf("/classes/");
+        int resourcesIdx = path.indexOf("/resources/");
+        int stripIdx = Math.max(classesIdx, resourcesIdx);
+        if (stripIdx > 0) {
+          path = path.substring(stripIdx + 1);
+          if (path.startsWith("classes/")) {
+            path = path.substring("classes/".length());
+          } else if (path.startsWith("resources/")) {
+            path = path.substring("resources/".length());
+          }
+        }
+      }
+
+      // 去掉文件扩展名 .properties
+      int dotIdx = path.lastIndexOf('.');
+      if (dotIdx > 0) {
+        path = path.substring(0, dotIdx);
+      }
+
+      // 去掉区域后缀 _zh_CN / _en_US / _zh_TW
+      path = path.replaceAll("_(zh_CN|en_US|zh_TW|ja_JP|ko_KR)$", "");
+
+      return "classpath:" + path;
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * 合并手动配置 basename 与通配符扫描发现的 basename。
+   *
+   * <p>手动配置优先级更高：手动配置的 basename 在前，通配符发现的在后，去重合并。
+   *
+   * @return 合并后的 basename 数组
+   */
+  public String[] getEffectiveBasenames() {
+    Set<String> merged = new LinkedHashSet<>();
+
+    // 1. 先加入手动配置的 basename
+    if (basename != null && !basename.isEmpty()) {
+      for (String b : basename.split(",")) {
+        String trimmed = b.trim();
+        if (!trimmed.isEmpty()) {
+          merged.add(trimmed);
+        }
+      }
+    }
+
+    // 2. 再加入通配符扫描发现的 basename
+    if (wildcardScanEnabled) {
+      merged.addAll(discoverBasenamesViaWildcard());
+    }
+
+    return merged.toArray(new String[0]);
   }
 
   @Override
@@ -240,6 +380,8 @@ public class I18nProperties {
         + '\''
         + ", validateOnStartup="
         + validateOnStartup
+        + ", wildcardScanEnabled="
+        + wildcardScanEnabled
         + '}';
   }
 }

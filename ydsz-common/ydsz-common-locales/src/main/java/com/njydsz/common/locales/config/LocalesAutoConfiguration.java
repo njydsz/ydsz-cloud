@@ -51,6 +51,9 @@ public class LocalesAutoConfiguration {
   /** MessageSource Bean 名称常量（ydsz 统一约定，避免多模块冲突） */
   public static final String MESSAGE_SOURCE_BEAN_NAME = "ydszMessageSource";
 
+  /** 通配符扫描发现阈值日志：扫描到的新增资源数量 >= 此值时打印 INFO 提示 */
+  private static final int DISCOVERY_LOG_THRESHOLD = 1;
+
   private final I18nProperties i18nProperties;
   private final Environment environment;
 
@@ -70,6 +73,11 @@ public class LocalesAutoConfiguration {
    * Boot 的 MessageSourceAutoConfiguration 默认 Bean 互相干扰。 若消费方仍需要传统 {@code messageSource} 名称，可在
    * application.yml 中通过 {@code spring.messages.basename} 显式指向 —— 此时本 Bean 可通过
    * {@code @ConditionalOnMissingBean} 自动跳过。
+   *
+   * <p>当 {@code ydsz.i18n.wildcard-scan-enabled=true}（默认），启动时通过 {@link
+   * org.springframework.core.io.support.PathMatchingResourcePatternResolver} 自动扫描 {@code
+   * classpath*:i18n/*-messages*.properties}，将发现的新增资源前缀与手动配置合并去重后传入 {@link
+   * ReloadableResourceBundleMessageSource}，实现新模块零配置被发现。
    *
    * @return MessageSource 实例
    */
@@ -182,13 +190,28 @@ public class LocalesAutoConfiguration {
     ReloadableResourceBundleMessageSource messageSource =
         new ReloadableResourceBundleMessageSource();
 
-    String basename = i18nProperties.getBasename();
-    String[] basenameArray = basename.split(",");
-    String[] basenames = new String[basenameArray.length];
-    for (int i = 0; i < basenameArray.length; i++) {
-      basenames[i] = basenameArray[i].trim();
+    // 获取有效的 basename 列表：手动配置 + 通配符扫描发现（如果启用）
+    String[] effectiveBasenames = i18nProperties.getEffectiveBasenames();
+
+    // 记录通配符扫描发现的新增资源
+    if (i18nProperties.isWildcardScanEnabled()) {
+      int discoveredCount = effectiveBasenames.length - i18nProperties.getBasename().split(",").length;
+      if (discoveredCount >= DISCOVERY_LOG_THRESHOLD) {
+        log.info(
+            "通配符扫描已发现 {} 个 i18n 资源前缀 | 总计: {} 个",
+            discoveredCount,
+            effectiveBasenames.length);
+      } else {
+        log.info("通配符扫描已执行 | 总计: {} 个 i18n 资源前缀", effectiveBasenames.length);
+      }
     }
-    messageSource.setBasenames(basenames);
+
+    // 清理 basename（去除空白，标准化 classpath 前缀）
+    String[] cleanedBasenames = new String[effectiveBasenames.length];
+    for (int i = 0; i < effectiveBasenames.length; i++) {
+      cleanedBasenames[i] = normalizeBasename(effectiveBasenames[i]);
+    }
+    messageSource.setBasenames(cleanedBasenames);
 
     messageSource.setDefaultEncoding(i18nProperties.getEncoding());
     messageSource.setCacheSeconds(cacheSeconds);
@@ -196,13 +219,32 @@ public class LocalesAutoConfiguration {
     messageSource.setUseCodeAsDefaultMessage(true);
 
     log.info(
-        "国际化配置已加载 | 基础路径数: {} | 缓存时间: {}秒 | 支持语言: {} | profiles: {}",
-        basenames.length,
+        "国际化配置已加载 | 资源前缀数: {} | 缓存时间: {}秒 | 支持语言: {} | profiles: {} | wildcardScan: {}",
+        cleanedBasenames.length,
         cacheSeconds,
         Arrays.toString(i18nProperties.getSupportedLocales()),
-        Arrays.toString(environment != null ? environment.getActiveProfiles() : new String[] {}));
+        Arrays.toString(environment != null ? environment.getActiveProfiles() : new String[] {}),
+        i18nProperties.isWildcardScanEnabled());
 
     return messageSource;
+  }
+
+  /**
+   * 标准化 basename 条目：去除首尾空格、去掉尾部斜杠。
+   *
+   * @param basename 原始 basename 字符串（如 " classpath:i18n/userinfo-messages "）
+   * @return 标准化后的 basename（如 "classpath:i18n/userinfo-messages"）
+   */
+  private String normalizeBasename(String basename) {
+    if (basename == null) {
+      return "";
+    }
+    String trimmed = basename.trim();
+    // 去掉尾部斜杠（防止路径拼接异常）
+    while (trimmed.endsWith("/")) {
+      trimmed = trimmed.substring(0, trimmed.length() - 1);
+    }
+    return trimmed;
   }
 
   private Locale parseDefaultLocale() {
