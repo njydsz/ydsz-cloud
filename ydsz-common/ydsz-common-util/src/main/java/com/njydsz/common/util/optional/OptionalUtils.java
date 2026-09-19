@@ -1,6 +1,7 @@
 package com.njydsz.common.util.optional;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -13,9 +14,9 @@ import java.util.stream.Stream;
  * <p>JDK 的 {@link Optional} 在企业级开发中常遇以下痛点：
  *
  * <ul>
- *   <li>链式"或"操作：语义不直观
- *   <li>与 Stream 互转：无法直接 {@code Optional → Stream}
- *   <li>集合筛选：缺少一次性过滤 {@code Collection<Optional<T>} → Collection<T} 的能力
+ *   <li>链式"或"操作：语义不直观</li>
+ *   <li>与 Stream 互转：无法直接 {@code Optional → Stream}</li>
+ *   <li>集合筛选：缺少一次性过滤 {@code Collection<Optional<T>} → Collection<T} 的能力</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
@@ -118,7 +119,7 @@ public final class OptionalUtils {
    * @throws NullPointerException 如果 optionals 为 null
    * @since 26.09.19
    */
-  public static <T> java.util.List<T> presentOnly(Collection<Optional<T>> optionals) {
+  public static <T> List<T> presentOnly(Collection<Optional<T>> optionals) {
     Objects.requireNonNull(optionals, "optionals must not be null");
     return optionals.stream()
         .filter(Objects::nonNull)
