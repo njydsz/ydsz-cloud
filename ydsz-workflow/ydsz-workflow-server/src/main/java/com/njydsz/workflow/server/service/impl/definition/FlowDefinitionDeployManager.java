@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -144,7 +144,7 @@ public class FlowDefinitionDeployManager {
    */
   @Transactional(rollbackFor = Exception.class)
   @CacheEvict(
-      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      value = {WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE, WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   /**
    * 部署流程定义（创建 BPMN 解析 + 入库 + 发布）。

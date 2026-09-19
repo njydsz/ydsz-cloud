@@ -10,7 +10,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -319,11 +319,11 @@ excelVO.setSort(vo.getSort());
     if (configGroup == null) {
       return;
     }
-    cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE).evict(cacheKeyBuilder.configGroup(configGroup));
+    cacheManager.getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE).evict(cacheKeyBuilder.configGroup(configGroup));
   }
 
   /** 失效「公开配置」缓存。 */
   private void evictConfigPublic() {
-    cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE).evict(cacheKeyBuilder.configPublic());
+    cacheManager.getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE).evict(cacheKeyBuilder.configPublic());
   }
 }

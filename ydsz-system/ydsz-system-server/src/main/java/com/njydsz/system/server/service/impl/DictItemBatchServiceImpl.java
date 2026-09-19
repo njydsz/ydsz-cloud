@@ -13,7 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
@@ -187,7 +187,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
       return;
     }
     cacheManager
-        .getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE)
         .evict(cacheKeyBuilder.dictList(typeCode));
   }
 

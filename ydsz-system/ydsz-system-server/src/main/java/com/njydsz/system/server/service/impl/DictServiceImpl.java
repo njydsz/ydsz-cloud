@@ -9,7 +9,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -141,7 +141,7 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   @CacheEvict(
-      value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
+      value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   @Transactional(rollbackFor = Exception.class)
   public String save(DictTypeDTO dto) {
@@ -169,7 +169,7 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   @CacheEvict(
-      value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
+      value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(DictTypeDTO dto) {
@@ -194,7 +194,7 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   @CacheEvict(
-      value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
+      value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
@@ -255,7 +255,7 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   @Cacheable(
-      value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
+      value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   public List<DictTypeVO> listAll() {
     return dictRepository.findAllTypes();

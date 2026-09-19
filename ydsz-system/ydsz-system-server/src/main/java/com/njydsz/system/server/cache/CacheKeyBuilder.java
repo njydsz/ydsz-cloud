@@ -16,7 +16,7 @@ import com.njydsz.common.cache.support.AbstractModuleCacheKeyBuilder;
  *
  * <pre>{@code
  * @Cacheable(
- *     value = CacheConstants.SYSTEM_CONFIG_CACHE,
+ *     value = SystemCacheConstants.SYSTEM_CONFIG_CACHE,
  *     key = "@cacheKeyBuilder.configValue(#p0)"
  * )
  * public String getConfigValue(String configKey) { ... }

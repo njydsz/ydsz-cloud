@@ -112,13 +112,6 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <version>${spring-boot.version}</version>
       <scope>test</scope>
-      <exclusions>
-        <!-- Exclude JUnit Jupiter managed by parent to prevent version conflict -->
-        <exclusion>
-          <groupId>org.junit.jupiter</groupId>
-          <artifactId>junit-jupiter</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <!--
         注意：ydsz-common-cache 不依赖 ydsz-common-tenant。

@@ -14,7 +14,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -166,13 +166,13 @@ public class ConfigServiceImpl implements ConfigService {
   @Caching(
       evict = {
         @CacheEvict(
-            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            value = SystemCacheConstants.SYSTEM_CONFIG_CACHE,
             key = "@cacheKeyBuilder.configValue(#dto.configKey)"),
         @CacheEvict(
-            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            value = SystemCacheConstants.SYSTEM_CONFIG_CACHE,
             key = "@cacheKeyBuilder.configGroup(#dto.configGroup)"),
         @CacheEvict(
-            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            value = SystemCacheConstants.SYSTEM_CONFIG_CACHE,
             key = "@cacheKeyBuilder.configPublic()")
       })
   @Transactional(rollbackFor = Exception.class)
@@ -189,13 +189,13 @@ public class ConfigServiceImpl implements ConfigService {
   @Caching(
       evict = {
         @CacheEvict(
-            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            value = SystemCacheConstants.SYSTEM_CONFIG_CACHE,
             key = "@cacheKeyBuilder.configValue(#dto.configKey)"),
         @CacheEvict(
-            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            value = SystemCacheConstants.SYSTEM_CONFIG_CACHE,
             key = "@cacheKeyBuilder.configGroup(#dto.configGroup)"),
         @CacheEvict(
-            value = CacheConstants.SYSTEM_CONFIG_CACHE,
+            value = SystemCacheConstants.SYSTEM_CONFIG_CACHE,
             key = "@cacheKeyBuilder.configPublic()")
       })
   @Transactional(rollbackFor = Exception.class)
@@ -274,7 +274,7 @@ public class ConfigServiceImpl implements ConfigService {
       return;
     }
     cacheManager
-        .getCache(CacheConstants.SYSTEM_CONFIG_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE)
         .evict(cacheKeyBuilder.configValue(configKey));
   }
 
@@ -284,34 +284,34 @@ public class ConfigServiceImpl implements ConfigService {
       return;
     }
     cacheManager
-        .getCache(CacheConstants.SYSTEM_CONFIG_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE)
         .evict(cacheKeyBuilder.configGroup(configGroup));
   }
 
   /** 失效「公开配置」缓存。 */
   private void evictConfigPublic() {
     cacheManager
-        .getCache(CacheConstants.SYSTEM_CONFIG_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE)
         .evict(cacheKeyBuilder.configPublic());
   }
 
   // ============================== 业务查询 ==============================
 
   @Override
-  @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configValue(#p0)")
+  @Cacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configValue(#p0)")
   public String getConfigValue(String configKey) {
     ConfigVO config = configRepository.findEnabledByKey(configKey).orElse(null);
     return config != null ? config.getConfigValue() : null;
   }
 
   @Override
-  @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configGroup(#p0)")
+  @Cacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configGroup(#p0)")
   public List<ConfigVO> getConfigsByGroup(String configGroup) {
     return configRepository.findEnabledByGroup(configGroup);
   }
 
   @Override
-  @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configPublic()")
+  @Cacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configPublic()")
   public List<ConfigVO> listPublicConfigs() {
     return configRepository.findPublicEnabled();
   }

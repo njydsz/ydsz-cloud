@@ -7,7 +7,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.DictItemDTO;
@@ -85,7 +85,7 @@ public class DictItemRollbackStrategy implements RollbackStrategy {
    * @param typeCode 字典类型编码
    */
   private void evictDictList(String typeCode) {
-    Cache cache = cacheManager.getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE);
+    Cache cache = cacheManager.getCache(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE);
     if (cache != null) {
       cache.evict(cacheKeyBuilder.dictList(typeCode));
     }

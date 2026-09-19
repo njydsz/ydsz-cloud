@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -144,7 +144,7 @@ public class FlowDefinitionDesignManager {
    */
   @Transactional(rollbackFor = Exception.class)
   @CacheEvict(
-      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      value = {WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE, WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   /**
    * 更新流程设计（修改 BPMN / 节点配置后保存草稿）。

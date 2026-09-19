@@ -6,7 +6,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
 
 /**
@@ -89,11 +89,11 @@ public class SystemConfigChangeListener implements ConfigChangeListener {
    */
   private void handleCacheTtlChange(String key) {
     if (key.contains("config.")) {
-      evictCacheByName(CacheConstants.SYSTEM_CONFIG_CACHE, "配置");
+      evictCacheByName(SystemCacheConstants.SYSTEM_CONFIG_CACHE, "配置");
     } else if (key.contains("dict.")) {
-      evictCacheByName(CacheConstants.SYSTEM_DICT_ITEM_CACHE, "字典");
+      evictCacheByName(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE, "字典");
     } else if (key.contains("variable.")) {
-      evictCacheByName(CacheConstants.SYSTEM_VARIABLE_CACHE, "变量");
+      evictCacheByName(SystemCacheConstants.SYSTEM_VARIABLE_CACHE, "变量");
     }
   }
 

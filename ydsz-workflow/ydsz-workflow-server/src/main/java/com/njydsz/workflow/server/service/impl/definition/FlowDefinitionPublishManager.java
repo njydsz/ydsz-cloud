@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
@@ -105,7 +105,7 @@ public class FlowDefinitionPublishManager {
    * @see #publish(String, boolean)
    */
   @CacheEvict(
-      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      value = {WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE, WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   /**
    * 发布流程定义（生效指定版本）。
@@ -128,7 +128,7 @@ public class FlowDefinitionPublishManager {
    * @throws SysException {@code NOT_FOUND} — 流程定义不存在；{@code BAD_REQUEST} — HIGH 风险未强制发布
    */
   @CacheEvict(
-      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      value = {WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE, WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   /**
    * 发布流程定义（可强制发布）。
@@ -165,7 +165,7 @@ public class FlowDefinitionPublishManager {
    * @param definitionId 流程定义 ID
    */
   @CacheEvict(
-      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      value = {WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE, WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   /**
    * 停用流程定义（标记为失效状态）。
@@ -191,7 +191,7 @@ public class FlowDefinitionPublishManager {
    */
   @Transactional(rollbackFor = Exception.class)
   @CacheEvict(
-      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      value = {WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE, WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   /**
    * 切换流程的激活版本（同 flowCode 下不同版本切换）。
@@ -265,7 +265,7 @@ public class FlowDefinitionPublishManager {
    */
   @Transactional(rollbackFor = Exception.class)
   @CacheEvict(
-      value = {CacheConstants.FLOW_DEF_PUBLISHED_CACHE, CacheConstants.FLOW_DEF_LATEST_CACHE},
+      value = {WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE, WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE},
       allEntries = true)
   /**
    * 回滚流程定义（恢复上一激活版本）。

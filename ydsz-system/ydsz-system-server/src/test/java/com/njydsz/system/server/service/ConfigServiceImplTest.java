@@ -27,7 +27,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -89,7 +89,7 @@ class ConfigServiceImplTest {
     when(cacheKeyBuilder.configValue(anyString())).thenReturn("testKey");
     when(cacheKeyBuilder.configGroup(anyString())).thenReturn("testGroup");
     when(cacheKeyBuilder.configPublic()).thenReturn("testPublic");
-    when(cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE)).thenReturn(mock(Cache.class));
+    when(cacheManager.getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE)).thenReturn(mock(Cache.class));
     // eventPublisherProvider 返回 null 时走降级逻辑
     when(eventPublisherProvider.getIfAvailable()).thenReturn(null);
   }

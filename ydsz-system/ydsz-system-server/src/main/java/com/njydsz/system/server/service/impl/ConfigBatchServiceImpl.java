@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
@@ -219,7 +219,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
       return;
     }
     cacheManager
-        .getCache(CacheConstants.SYSTEM_CONFIG_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE)
         .evict(cacheKeyBuilder.configGroup(configGroup));
   }
 
@@ -228,7 +228,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    */
   private void evictConfigPublic() {
     cacheManager
-        .getCache(CacheConstants.SYSTEM_CONFIG_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE)
         .evict(cacheKeyBuilder.configPublic());
   }
 

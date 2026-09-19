@@ -6,7 +6,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
@@ -104,7 +104,7 @@ public class ConfigRollbackStrategy implements RollbackStrategy {
    * @param configGroup 配置分组
    */
   private void evictConfigCaches(String configKey, String configGroup) {
-    Cache cache = cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE);
+    Cache cache = cacheManager.getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE);
     if (cache == null) {
       return;
     }

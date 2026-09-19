@@ -14,7 +14,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.excel.core.ExcelFacade;
@@ -173,7 +173,7 @@ public class DictItemServiceImpl implements DictItemService {
    */
   @Override
   @Cacheable(
-      value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
+      value = SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE,
       key = "@cacheKeyBuilder.dictItem(#p0, #p1)")
   public DictItemVO getByTypeAndCode(String typeCode, String itemCode) {
     return dictRepository.findItemByTypeAndCode(typeCode, itemCode).orElse(null);
@@ -197,7 +197,7 @@ public class DictItemServiceImpl implements DictItemService {
    */
   @Override
   @Cacheable(
-      value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
+      value = SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE,
       key = "@cacheKeyBuilder.dictList(#p0)",
       sync = true)
   public List<DictItemVO> listEnabledByTypeCode(String typeCode) {
@@ -293,7 +293,7 @@ public class DictItemServiceImpl implements DictItemService {
    */
   @Override
   @CacheEvict(
-      value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
+      value = SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE,
       key = "@cacheKeyBuilder.dictList(#dto.typeCode)")
   @Transactional(rollbackFor = Exception.class)
   public String save(DictItemDTO dto) {
@@ -325,7 +325,7 @@ public class DictItemServiceImpl implements DictItemService {
    */
   @Override
   @CacheEvict(
-      value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
+      value = SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE,
       key = "@cacheKeyBuilder.dictList(#dto.typeCode)")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(DictItemDTO dto) {
@@ -430,7 +430,7 @@ public class DictItemServiceImpl implements DictItemService {
       return;
     }
     cacheManager
-        .getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE)
         .evict(cacheKeyBuilder.dictItem(typeCode, itemCode));
   }
 
@@ -444,7 +444,7 @@ public class DictItemServiceImpl implements DictItemService {
       return;
     }
     cacheManager
-        .getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE)
         .evict(cacheKeyBuilder.dictList(typeCode));
   }
 

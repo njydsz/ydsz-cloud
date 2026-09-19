@@ -15,7 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -180,7 +180,7 @@ public class VariableServiceImpl implements VariableService {
    * @return 变量值字符串，不存在时返回 null（SpringYdszCache 自动缓存 null 值防穿透）
    */
   @Override
-  @Cacheable(value = CacheConstants.SYSTEM_VARIABLE_CACHE, key = "@cacheKeyBuilder.variable(#p0)")
+  @Cacheable(value = SystemCacheConstants.SYSTEM_VARIABLE_CACHE, key = "@cacheKeyBuilder.variable(#p0)")
   public String getVariableValue(String variableKey) {
     VariableVO vo = variableRepository.findEnabledByKey(variableKey).orElse(null);
     return vo != null ? vo.getVariableValue() : null;
@@ -232,7 +232,7 @@ public class VariableServiceImpl implements VariableService {
    */
   @Override
   @CacheEvict(
-      value = CacheConstants.SYSTEM_VARIABLE_CACHE,
+      value = SystemCacheConstants.SYSTEM_VARIABLE_CACHE,
       key = "@cacheKeyBuilder.variable(#dto.variableKey)")
   @Transactional(rollbackFor = Exception.class)
   public String save(VariableDTO dto) {
@@ -262,7 +262,7 @@ public class VariableServiceImpl implements VariableService {
    */
   @Override
   @CacheEvict(
-      value = CacheConstants.SYSTEM_VARIABLE_CACHE,
+      value = SystemCacheConstants.SYSTEM_VARIABLE_CACHE,
       key = "@cacheKeyBuilder.variable(#dto.variableKey)")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(VariableDTO dto) {
@@ -354,7 +354,7 @@ public class VariableServiceImpl implements VariableService {
       return;
     }
     cacheManager
-        .getCache(CacheConstants.SYSTEM_VARIABLE_CACHE)
+        .getCache(SystemCacheConstants.SYSTEM_VARIABLE_CACHE)
         .evict(cacheKeyBuilder.variable(variableKey));
   }
 

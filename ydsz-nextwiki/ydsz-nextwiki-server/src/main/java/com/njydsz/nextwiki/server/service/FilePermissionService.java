@@ -9,7 +9,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.nextwiki.server.constant.NextwikiCacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.dto.FileAclDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -158,7 +158,7 @@ public class FilePermissionService {
    * @return 有效 ACL 列表，可能为空
    */
   @Cacheable(
-      cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE,
+      cacheNames = NextwikiCacheConstants.NEXTWIKI_FILE_ACL_CACHE,
       key = "@nextwikiCacheKeyBuilder.fileAcl(#fileNodeId, #userId)",
       condition = "#userId != null")
   public List<FileAclVO> getEffectiveAcls(String fileNodeId, String userId) {
@@ -181,7 +181,7 @@ public class FilePermissionService {
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    */
   @Transactional(rollbackFor = Exception.class)
-  @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
+  @CacheEvict(cacheNames = NextwikiCacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
   public FileAclVO grantPermission(
       String fileNodeId,
       String granteeType,
@@ -202,7 +202,7 @@ public class FilePermissionService {
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    */
   @Transactional(rollbackFor = Exception.class)
-  @CacheEvict(cacheNames = CacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
+  @CacheEvict(cacheNames = NextwikiCacheConstants.NEXTWIKI_FILE_ACL_CACHE, allEntries = true)
   public FileAclVO setOwner(String fileNodeId, String userId) {
     FileAclDTO dto = filePermissionDomainService.buildOwnerAcl(fileNodeId, userId);
     return fileAclRepository.save(dto);

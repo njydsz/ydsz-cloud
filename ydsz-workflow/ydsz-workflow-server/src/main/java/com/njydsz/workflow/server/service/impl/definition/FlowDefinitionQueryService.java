@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.repository.FlowDefinitionRepository;
@@ -88,7 +88,7 @@ public class FlowDefinitionQueryService {
    */
   @Transactional(readOnly = true)
   @Cacheable(
-      value = CacheConstants.FLOW_DEF_PUBLISHED_CACHE,
+      value = WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE,
       key = "#flowCode + ':' + #version + ':' + #tenantId",
       unless = "#result == null")
   /**
@@ -121,7 +121,7 @@ public class FlowDefinitionQueryService {
    */
   @Transactional(readOnly = true)
   @Cacheable(
-      value = CacheConstants.FLOW_DEF_LATEST_CACHE,
+      value = WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE,
       key = "#flowCode + ':' + #tenantId",
       unless = "#result == null")
   /**

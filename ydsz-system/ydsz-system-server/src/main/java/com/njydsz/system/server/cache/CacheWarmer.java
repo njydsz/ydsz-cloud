@@ -12,7 +12,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
@@ -94,7 +94,7 @@ public class CacheWarmer {
         return;
       }
 
-      Cache configCache = cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE);
+      Cache configCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE);
       if (configCache == null) {
         log.warn("[CacheWarmer] 配置缓存不存在，跳过预热");
         return;
@@ -130,7 +130,7 @@ public class CacheWarmer {
         return;
       }
 
-      Cache dictCache = cacheManager.getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE);
+      Cache dictCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE);
       if (dictCache == null) {
         log.warn("[CacheWarmer] 字典缓存不存在，跳过预热");
         return;

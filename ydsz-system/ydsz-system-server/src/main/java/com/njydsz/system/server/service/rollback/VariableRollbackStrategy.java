@@ -5,7 +5,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.VariableDTO;
@@ -77,7 +77,7 @@ public class VariableRollbackStrategy implements RollbackStrategy {
   private void evictVariable(String snapshotJson) {
     try {
       VariableVO snapshotVO = YdszJson.fromJson(snapshotJson, VariableVO.class);
-      Cache cache = cacheManager.getCache(CacheConstants.SYSTEM_VARIABLE_CACHE);
+      Cache cache = cacheManager.getCache(SystemCacheConstants.SYSTEM_VARIABLE_CACHE);
       if (cache != null) {
         cache.evict(cacheKeyBuilder.variable(snapshotVO.getVariableKey()));
       }
