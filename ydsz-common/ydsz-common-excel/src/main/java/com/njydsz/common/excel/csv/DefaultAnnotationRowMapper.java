@@ -197,7 +197,7 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
    *
    * <p>日期时间类型在 {@code dateFormat} 非空时按其解析/格式化（与 Excel 读写路径行为一致）， 为空时回退 ISO 默认格式。
    */
-  private static Object convert(String value, Class<?> targetType, String dateFormat) {
+  static Object convert(String value, Class<?> targetType, String dateFormat) {
     if (targetType == String.class) {
       return value;
     }
