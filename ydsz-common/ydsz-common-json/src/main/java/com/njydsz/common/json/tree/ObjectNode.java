@@ -371,7 +371,22 @@ public final class ObjectNode extends JsonNode {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    // P2 r4 优化：按字段数量预估容量（每字段至少 "k":v, 6 字符），减少 StringBuilder 扩容
+    StringBuilder sb = new StringBuilder(fields.size() * 8 + 2);
+    appendTo(sb);
+    return sb.toString();
+  }
+
+  /**
+   * 直接将 ObjectNode 的 JSON 文本写入 StringBuilder（P2 r4：绕过子节点 toString 的中间 String 分配）。
+   *
+   * <p>当存在嵌套容器节点时，子节点的 appendTo 将为递归的直接写入，避免每层嵌套树都创建独立中间 String。
+   *
+   * @param sb 输出目标 StringBuilder
+   * @since 26.09.01
+   */
+  @Override
+  public void appendTo(StringBuilder sb) {
     sb.append('{');
     boolean first = true;
     for (Map.Entry<String, JsonNode> entry : fields.entrySet()) {
@@ -383,10 +398,14 @@ public final class ObjectNode extends JsonNode {
       escapeJsonString(sb, entry.getKey());
       sb.append('"');
       sb.append(':');
-      sb.append(entry.getValue().toString());
+      JsonNode child = entry.getValue();
+      if (child != null) {
+        child.appendTo(sb);
+      } else {
+        sb.append("null");
+      }
     }
     sb.append('}');
-    return sb.toString();
   }
 
   /**

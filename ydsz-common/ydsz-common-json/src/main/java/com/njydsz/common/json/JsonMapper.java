@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.internal.JsonConfig;
+import com.njydsz.common.json.internal.JsonConfigCarrier;
 import com.njydsz.common.json.internal.JsonRuntimeConfig;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
@@ -971,6 +972,18 @@ public class JsonMapper {
     if (byteLength > maxSize) {
       throw new JsonException("JSON size exceeds limit: " + byteLength + " > " + maxSize);
     }
+  }
+
+  /**
+   * 获取此 Mapper 的配置载体（不可变容器，对标 Jackson SerializationConfig）。
+   *
+   * <p>用于需要脱离 ThreadLocal 显式传递配置的场景（如跨线程批量序列化、响应式管道中）， 避免隐式 ThreadLocal 读取导致的线程污染风险。
+   *
+   * @return 当前 Mapper 的配置载体（与 runtimeConfig 同源的独立副本，不可变）
+   * @since 26.09.01
+   */
+  public JsonConfigCarrier getConfigCarrier() {
+    return JsonConfigCarrier.from(runtimeConfig);
   }
 
   /**

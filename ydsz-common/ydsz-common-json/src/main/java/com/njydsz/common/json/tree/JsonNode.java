@@ -482,6 +482,18 @@ public abstract class JsonNode {
   @Override
   public abstract String toString();
 
+  /**
+   * 将当前节点的 JSON 文本直接追加到指定的 StringBuilder（P2 r4 优化：减少嵌套树 toString 的中间 String 分配）。
+   *
+   * <p>基类默认实现委托 {@link #toString()}，子类可覆盖为直接写入 sb 的高效形式。 调用方始终可使用此方法避免每层嵌套树都创建独立的中间 String。
+   *
+   * @param sb 输出目标 StringBuilder
+   * @since 26.09.01
+   */
+  public void appendTo(StringBuilder sb) {
+    sb.append(toString());
+  }
+
   @Override
   public abstract int hashCode();
 

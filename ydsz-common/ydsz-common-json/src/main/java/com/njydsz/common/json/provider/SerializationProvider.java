@@ -579,17 +579,17 @@ public final class SerializationProvider {
    *   <li>大 JSON 使用小 StringBuilder 导致多次扩容
    * </ul>
    *
-   * 分级阈值：
+   * <p>分级阈值（默认池初始化为 {@link #MEDIUM_SB_CAPACITY} 4096，覆盖典型 REST 响应 2-4KB 场景）：
    *
    * <ul>
-   *   <li>预估 < SMALL_SB_CAPACITY(1024)：小 JSON，适合简单 Bean
-   *   <li>预估 < MEDIUM_SB_CAPACITY(4096)：中 JSON，适合一般 Bean
-   *   <li>预估 < LARGE_SB_CAPACITY(16384)：大 JSON，适合大集合/复杂嵌套
-   *   <li>预估 > LARGE_SB_CAPACITY：超大 JSON，按需分配
+   *   <li>预估 &le; SMALL_SB_CAPACITY(1024)：小 JSON，适合简单 Bean
+   *   <li>预估 &le; MEDIUM_SB_CAPACITY(4096)：中 JSON，适合一般 Bean
+   *   <li>预估 &le; LARGE_SB_CAPACITY(16384)：大 JSON，适合大集合/复杂嵌套
+   *   <li>预估 &gt; LARGE_SB_CAPACITY：超大 JSON，缩容到中等级别且下次按需扩容
    * </ul>
    *
-   * @param estimatedSize 预估的 JSON 输出大小
-   * @return 适合大小的 StringBuilder
+   * @param estimatedSize 预估的 JSON 输出大小（字节）
+   * @return 适合大小的 StringBuilder（已通过 {@link StringBuilder#setLength(int)} 重置为空白状态）
    */
   private static StringBuilder getSizedStringBuilder(int estimatedSize) {
     SerializationContext ctx = SerializationContext.CONTEXT.get();

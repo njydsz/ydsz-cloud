@@ -301,16 +301,33 @@ public final class ArrayNode extends JsonNode {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    // P2 r4 优化：按元素数量预估容量（每元素至少 "x", 4 字符），减少 StringBuilder 扩容
+    StringBuilder sb = new StringBuilder(elements.size() * 4 + 2);
+    appendTo(sb);
+    return sb.toString();
+  }
+
+  /**
+   * 直接将 ArrayNode 的 JSON 文本写入 StringBuilder（P2 r4：绕过子节点 toString 的中间 String 分配）。
+   *
+   * @param sb 输出目标 StringBuilder
+   * @since 26.09.01
+   */
+  @Override
+  public void appendTo(StringBuilder sb) {
     sb.append('[');
     for (int i = 0; i < elements.size(); i++) {
       if (i > 0) {
         sb.append(',');
       }
-      sb.append(elements.get(i).toString());
+      JsonNode element = elements.get(i);
+      if (element != null) {
+        element.appendTo(sb);
+      } else {
+        sb.append("null");
+      }
     }
     sb.append(']');
-    return sb.toString();
   }
 
   // ==================== List-like 便捷 getter（FastJSON2/Gson 风格） ====================

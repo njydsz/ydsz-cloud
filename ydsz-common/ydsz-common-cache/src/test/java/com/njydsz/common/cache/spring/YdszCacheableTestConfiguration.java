@@ -2,6 +2,7 @@ package com.njydsz.common.cache.spring;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * @YdszCacheable 集成测试的最小 Spring 应用配置。
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Bean;
  * @since 26.09.19
  */
 @SpringBootApplication
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 public class YdszCacheableTestConfiguration {
 
   /**
