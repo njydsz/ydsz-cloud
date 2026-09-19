@@ -5,7 +5,6 @@ import java.util.Locale;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.util.WebUtils;
@@ -104,14 +103,13 @@ public class UserPriorityLocaleResolver implements LocaleResolver {
    * @param request ServletRequest
    * @return 用户偏好 Locale；未登录或无偏好时返回 null
    */
-  @Nullable
   protected Locale resolveUserPreferredLocale(HttpServletRequest request) {
     return null;
   }
 
   @Override
   public void setLocale(
-      HttpServletRequest request, @Nullable HttpServletResponse response, @Nullable Locale locale) {
+      HttpServletRequest request, HttpServletResponse response, Locale locale) {
     // 参数/Cookie 驱动的解析流程无需在 setLocale 时额外处理（resolveLocale 已负责写入 Cookie）；
     // 仅当外部主动调用 setLocale 时才写入 Cookie
     if (locale != null && response != null) {

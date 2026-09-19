@@ -224,14 +224,7 @@ public class DefaultLockStrategy implements LockStrategy {
    */
   @Override
   public RedisMultiLock getMultiLock(List<DistributedLocker> locks) {
-    LockProperties.MultiLock config =
-        multiLockConfig != null ? multiLockConfig : new LockProperties.MultiLock();
-    return new RedisMultiLock(
-        stringRedisTemplate,
-        locks,
-        scheduler,
-        config.getMaxRenewCount(),
-        config.getRenewIntervalSeconds());
+    return new RedisMultiLock(stringRedisTemplate, locks, lockWatchDog);
   }
 
   /**

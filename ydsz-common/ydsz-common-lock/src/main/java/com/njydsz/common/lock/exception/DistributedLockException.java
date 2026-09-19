@@ -74,7 +74,7 @@ public class DistributedLockException extends BusinessException {
    * @param message 异常消息
    */
   public DistributedLockException(String message) {
-    this(builder().message(message));
+    this(create().message(message));
   }
 
   /**
@@ -84,7 +84,7 @@ public class DistributedLockException extends BusinessException {
    * @param cause 原始异常
    */
   public DistributedLockException(String message, Throwable cause) {
-    this(builder().message(message));
+    this(create().message(message));
     if (cause != null) {
       initCause(cause);
     }
@@ -95,7 +95,7 @@ public class DistributedLockException extends BusinessException {
    *
    * @return 新的构建器实例
    */
-  public static Builder builder() {
+  public static Builder create() {
     return new Builder();
   }
 

@@ -30,6 +30,7 @@ import com.njydsz.common.redis.interceptor.RedisRetryInterceptor;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
 import com.njydsz.common.redis.serializer.YdszJsonRedisSerializer;
 import com.njydsz.common.redis.service.CacheProvider;
+import com.njydsz.common.redis.service.RedisIdGenerator;
 import com.njydsz.common.redis.service.RedisKeyAnalyzer;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.RedisStringOpsCacheProvider;
@@ -37,11 +38,12 @@ import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisGeoOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.redis.service.ops.RedisPipelineOpsFactory;
 import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 import com.njydsz.common.redis.service.ops.RedisStreamOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.redis.service.ops.RedisTransactionOps;
-import com.njydsz.common.redis.service.ops.RedisPipelineOpsFactory;
+import com.njydsz.common.redis.service.ops.RedisBitmapOps;
 import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 
 /**
@@ -362,6 +364,30 @@ public class RedisConfiguration {
   }
 
   /**
+   * 注册 Bitmap 位图操作封装（setBit/getBit/bitCount）。
+   *
+   * <p>从 {@link RedisStringOps} 中拆分的独立组件，遵循单一职责原则。
+   * 位图适用于用户签到、活跃计数、资源分配标记等场景。
+   *
+   * @param redisTemplate 基础模板，由容器注入，不会为 null
+   * @param redisProperties 全局配置，不会为 null
+   * @param metricsProvider 指标采集器供应方，可能返回 null
+   * @param tenantPrefixerProvider 租户 Key 前缀器提供者，可能返回 null
+   * @return Bitmap 操作封装实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(RedisBitmapOps.class)
+  @ConditionalOnBean(RedisTemplate.class)
+  public RedisBitmapOps redisBitmapOps(
+      RedisTemplate<String, Object> redisTemplate,
+      RedisProperties redisProperties,
+      ObjectProvider<RedisMetricsCollector> metricsProvider,
+      ObjectProvider<TenantRedisKeyPrefixer> tenantPrefixerProvider) {
+    return new RedisBitmapOps(
+        redisTemplate, redisProperties, metricsProvider, tenantPrefixerProvider);
+  }
+
+  /**
    * 注册 Hash 结构操作封装（hGet/hSet/hMGet/hDel 等）。
    *
    * <p>指标采集器同样为可选依赖，缺失时降级不采集。租户 Key 前缀器同样可选。 其余装配条件同 {@link #redisStringOps}。
@@ -546,6 +572,22 @@ public class RedisConfiguration {
   public RedisKeyAnalyzer redisKeyAnalyzer(
       RedisTemplate<String, Object> redisTemplate, RedisProperties redisProperties) {
     return new RedisKeyAnalyzer(redisTemplate, redisProperties);
+  }
+
+  /**
+   * 注册分布式 ID 生成器（基于 Redis Lua 脚本原子操作）。
+   *
+   * <p>提供日序号和类 Snowflake 算法两种 ID 生成策略，全部通过 Lua 脚本保证原子性。
+   * 仅注入 {@link RedisTemplate}，不依赖其他组件，TTL 和日期逻辑在组件内部自管理。
+   *
+   * @param redisTemplate 基础模板，不会为 null
+   * @return 分布式 ID 生成器实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(RedisIdGenerator.class)
+  @ConditionalOnBean(RedisTemplate.class)
+  public RedisIdGenerator redisIdGenerator(RedisTemplate<String, Object> redisTemplate) {
+    return new RedisIdGenerator(redisTemplate);
   }
 
   /**

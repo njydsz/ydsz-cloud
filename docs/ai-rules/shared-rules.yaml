@@ -16,8 +16,8 @@ meta:
   version: "26.09.19"
   source: "docs/云顶编码规范.md v1.0.10"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-19（ydsz-common-locales 优化：新增 wildcard-scan-enabled 通配符自动发现；新增 missing-translation-log-enabled 缺失翻译 WARN 告警；§36.10 新增常见场景最佳实践；total_rules 66 不变）"
-  total_rules: 66
+  last_updated: "2026-09-19（ydsz-common-exception 全面优化 13 项落地；新增 §32 错误码静态门面引用；新增 YDIZ-ERRCODE-001/002；total_rules 66 → 68）"
+  total_rules: 68
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -1522,6 +1522,41 @@ rules:
     source: "编码规范 §30.2 共享流程模板化（YDIZ-CONFIG-002，P2）"
 
 # ============================================
+# 十七、错误码规范（errcode，2 条，P1+P2）
+# ============================================
+  - id: "YDIZ-ERRCODE-001"
+    category: "errcode"
+    severity: "P1"
+    title: "错误码必须通过静态门面引用，禁止手写字面量"
+    description: |
+      业务代码引用错误码时必须使用静态门面枚举（如 CoreErrorCode.PARAM_ERROR、SecurityErrorCode.UNAUTHORIZED），
+      禁止手写 error code 字符串（如 "A01052"）或 i18n key 字符串（如 "param.error"）。
+      静态门面提供编译期类型安全检查与 IDE 自动补全，杜绝拼写错误导致的运行时错误码不匹配。
+
+      正确使用层级：
+      - 核心模块码 → CoreErrorCode.XXX（委托 CoreExceptionCode）
+      - 安全模块码 → SecurityErrorCode.XXX（委托 SecurityExceptionCode）
+      - 限流模块码 → RateLimitExceptionCode.XXX 直接引用（枚举本身即门面）
+      - 业务模块码 → 对应模块静态门面枚举（如 WorkflowErrorCode、AgentErrorCode）
+    pattern: "throw 语句或异常构建器中直接使用 String 字面量 code/key"
+    fix: "替换为对应静态门面枚举常量的 getCode()/getKey()"
+    example_bad: "throw BusinessException.builder().code(\"A01052\").key(\"param.error\").build();"
+    example_good: "throw BusinessException.of(CoreErrorCode.PARAM_ERROR);"
+    source: "编码规范 §32.1 错误码静态门面引用（YDIZ-ERRCODE-001，P1）"
+
+  - id: "YDIZ-ERRCODE-002"
+    category: "errcode"
+    severity: "P2"
+    title: "新增 CoreExceptionCode 枚举常量必须同步更新 CoreErrorCode 门面"
+    description: |
+      启动时 ExceptionCodeScanner 自动调用 CoreErrorCode.validateConsistency() 校验枚举数量一致性。
+      新增 CoreExceptionCode 枚举常量后，必须在 CoreErrorCode 中添加对应的委托字段（构造器传入枚举常量），
+      否则应用启动将抛出 IllegalStateException。
+    pattern: "CoreExceptionCode.values().length != CoreErrorCode.values().length"
+    fix: "在 CoreErrorCode 中添加新枚举常量对应的静态委托字段"
+    source: "编码规范 §32.2 错误码门面一致性（YDIZ-ERRCODE-002，P2）"
+
+# ============================================
 # 十六、国际化规范（i18n，2 条，P0+P1）
 # ============================================
   - id: "YDIZ-I18N-001"
@@ -1604,5 +1639,6 @@ stats:
   testing: 3
   resilience: 1
   config: 2
+  errcode: 2
   i18n: 2
-  total: 66
+  total: 68

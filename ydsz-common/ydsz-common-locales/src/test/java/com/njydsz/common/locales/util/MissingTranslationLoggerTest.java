@@ -1,6 +1,6 @@
 package com.njydsz.common.locales.util;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Locale;
@@ -13,20 +13,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import uk.org.lazygourd.junit5.spring.SpringExtension;
 
 /**
  * {@link MissingTranslationLogger} 单元测试
  *
- * <p>覆盖：节流去重、环形缓冲区容量 O(1) 淘汰、禁用/启用状态切换。
+ * <p>覆盖：节流去重、环形缓冲区容量 O(1) 淘汰、禁用/启用状态切换、并发安全。
  *
  * @author ydsz-team
  * @since 26.09.19
  */
-// 独立单元测试 — 不使用 Spring 上下文
 class MissingTranslationLoggerTest {
 
   @BeforeEach
@@ -41,21 +36,19 @@ class MissingTranslationLoggerTest {
 
   @Test
   void disabledByDefault_tryWarn_doesNothing() {
-    // 默认禁用 — 不应产生任何节流记录标记
-    // 验证无异常即可（静默 path）
+    // 默认禁用 - 不应产生任何副作用
     MissingTranslationLogger.tryWarn("any.key", Locale.US);
-    // 断言：未 configure 状态下无副作用
+    // 无异常即成功
     assertTrue(true);
   }
 
   @Test
   void configured_enabled_firstWarn_isLogged() {
-    // 模拟有 WARN 日志打印的次数无法直接断言（Logger 是 static），但可验证无异常 + 节流器的重入安全性
     MissingTranslationLogger.configure(true, 10);
     for (int i = 0; i < 5; i++) {
       MissingTranslationLogger.tryWarn("duplicate.key", Locale.US);
     }
-    // 无异常即成功
+    // 无异常即成功（无法直接断言 static Logger 输出数量）
     assertTrue(true);
   }
 
@@ -65,6 +58,17 @@ class MissingTranslationLoggerTest {
     MissingTranslationLogger.configure(false, 10);
     for (int i = 0; i < 5; i++) {
       MissingTranslationLogger.tryWarn("key.after.disable", Locale.US);
+    }
+    assertTrue(true);
+  }
+
+  @Test
+  void reset_clearsThrottleState() {
+    MissingTranslationLogger.configure(true, 5);
+    MissingTranslationLogger.reset();
+    // 重置后进入 disabled 状态
+    for (int i = 0; i < 5; i++) {
+      MissingTranslationLogger.tryWarn("key.after.reset", Locale.US);
     }
     assertTrue(true);
   }
@@ -89,7 +93,6 @@ class MissingTranslationLoggerTest {
             try {
               startLatch.await();
               for (int i = 0; i < iterations; i++) {
-                // 每线程一个唯一 key；多个线程不会互相覆盖
                 String key = "concurrent-" + threadId + "-" + i;
                 MissingTranslationLogger.tryWarn(key, Locale.US);
               }

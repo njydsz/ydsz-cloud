@@ -17,6 +17,9 @@ import com.njydsz.common.core.context.TenantContextHolder;
  *   <li>全局默认值
  * </ol>
  *
+ * <p><b>迁移建议：</b>对于持久化、可审计的租户参数管理，建议使用 {@code ydsz-system} 引擎的参数管理模块；
+ * 本类仅适用于运行时临时覆盖（如功能开关 A/B 测试），配置保存在内存中不序列化。
+ *
  * <p><b>使用示例：</b>
  *
  * <pre>{@code

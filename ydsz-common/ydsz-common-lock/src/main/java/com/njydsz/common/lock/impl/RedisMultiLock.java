@@ -1,27 +1,24 @@
 package com.njydsz.common.lock.impl;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scheduling.TaskScheduler;
 
+import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.scheduler.LockWatchDog;
 
 /**
- * Redis 多Key联锁实现 - 支持同时获取多个锁，原子性保证
+ * Redis 多Key联锁实现 - 支持同时锁定多个资源，原子性保证
  *
  * <p>注意：本实现直接实现 {@link DistributedLocker} 接口（不继承 {@link
- * com.njydsz.common.lock.core.AbstractRedisDistributedLock}）， 因为多锁场景下续期逻辑需要直接操作 Redis 而非委托给子锁。
+ * com.njydsz.common.lock.core.AbstractRedisDistributedLock}）， 因为多锁场景下续期逻辑需要独立管理各子锁的续期状态。
  *
  * <p>用于需要同时锁定多个资源的场景（如：跨多实体的事务性操作）。 所有锁必须全部获取成功才算成功，否则回滚已获取的所有锁，避免死锁。
  *
@@ -31,7 +28,7 @@ import com.njydsz.common.lock.core.DistributedLocker;
  *   <li>按固定顺序依次获取每个锁，避免死锁
  *   <li>任何一把锁获取失败时，立即回滚已获取的所有锁
  *   <li>解锁时按相反顺序释放锁
- *   <li>支持对所有子锁统一续期（续期间隔与次数上限可配置）
+ *   <li>续期委托给 {@link LockWatchDog} 统一管理（P2-A2 改进：消除自建 TaskScheduler 续期线程）
  * </ul>
  *
  * <p><b>适用场景：</b>
@@ -49,104 +46,41 @@ import com.njydsz.common.lock.core.DistributedLocker;
 public class RedisMultiLock implements DistributedLocker {
 
   /** 子锁值拼接分隔符（使用不可打印 SOH 字符，避免与 lockValue 内容冲突） */
-  static final String VALUE_DELIMITER = "\u0001";
+  static final String VALUE_DELIMITER = "";
 
   /** 剩余时间错误码（键不存在或获取失败） */
   private static final long REMAIN_TIME_ERROR = -2L;
 
-  /**
-   * 安全续期 Lua 脚本：仅当 key 的当前值等于持有者 value 时刷新过期时间。
-   *
-   * <p>返回值 1 表示续期成功，0 表示 value 不匹配（锁已被抢占），nil 表示 key 不存在。
-   */
-  private static final DefaultRedisScript<Long> RENEW_SCRIPT;
-
-  static {
-    RENEW_SCRIPT = new DefaultRedisScript<>();
-    RENEW_SCRIPT.setScriptText(
-        "if redis.call('get', KEYS[1]) == ARGV[1] then "
-            + "return redis.call('pexpire', KEYS[1], ARGV[2]) "
-            + "else return 0 end");
-    RENEW_SCRIPT.setResultType(Long.class);
-  }
-
-  /** 默认最大续期次数（约 10 分钟） */
-  private static final int DEFAULT_MAX_RENEW_COUNT = 30;
-
-  /** 默认续期间隔（秒） */
-  private static final long DEFAULT_RENEW_INTERVAL_SECONDS = 10;
-
-  /** WatchDog 续期调度器（由 Spring 管理，支持优雅停机） */
-  private final TaskScheduler renewalScheduler;
-
-  /** 最大续期次数，超过后停止续期，锁自动过期 */
-  private final int maxRenewCount;
-
-  /** 续期间隔（秒） */
-  private final long renewIntervalSeconds;
-
-  /** Redis 操作模板（用于续期操作） */
+  /** Redis 操作模板（用于续期校验） */
   private final StringRedisTemplate stringRedisTemplate;
 
-  /**
-   * 构造多Key联锁（使用默认续期配置）
-   *
-   * @param stringRedisTemplate Redis 操作模板
-   * @param locks 底层分布式锁列表，至少需要 2 个锁
-   * @param renewalScheduler 续期调度器（由 Spring 管理）
-   */
-  public RedisMultiLock(
-      StringRedisTemplate stringRedisTemplate,
-      List<DistributedLocker> locks,
-      TaskScheduler renewalScheduler) {
-    this(
-        stringRedisTemplate,
-        locks,
-        renewalScheduler,
-        DEFAULT_MAX_RENEW_COUNT,
-        DEFAULT_RENEW_INTERVAL_SECONDS);
-  }
+  /** WatchDog 续期管理器（由 Spring 管理，统一处理所有锁类型的续期） */
+  private final LockWatchDog lockWatchDog;
+
+  /** 底层分布式锁列表（按获取顺序） */
+  private final List<DistributedLocker> locks;
+
+  /** 当前持有的锁值映射（compositeKey → 子锁值） */
+  private final Map<String, String> acquiredLockValues = new ConcurrentHashMap<>();
 
   /**
-   * 构造多Key联锁（可配置续期参数）
+   * 构造多Key联锁（使用统一 WatchDog 续期，P2-A2 改进）。
    *
    * @param stringRedisTemplate Redis 操作模板
    * @param locks 底层分布式锁列表，至少需要 2 个锁
-   * @param renewalScheduler 续期调度器（由 Spring 管理）
-   * @param maxRenewCount 最大续期次数
-   * @param renewIntervalSeconds 续期间隔（秒）
+   * @param lockWatchDog 续期看门狗（由框架统一管理）
    */
   public RedisMultiLock(
       StringRedisTemplate stringRedisTemplate,
       List<DistributedLocker> locks,
-      TaskScheduler renewalScheduler,
-      int maxRenewCount,
-      long renewIntervalSeconds) {
+      LockWatchDog lockWatchDog) {
     if (locks == null || locks.size() < 2) {
       throw new IllegalArgumentException("RedisMultiLock 至少需要 2 个底层锁");
     }
     this.stringRedisTemplate = stringRedisTemplate;
     this.locks = Collections.unmodifiableList(new ArrayList<>(locks));
-    this.renewalScheduler = renewalScheduler;
-    this.maxRenewCount = maxRenewCount > 0 ? maxRenewCount : DEFAULT_MAX_RENEW_COUNT;
-    this.renewIntervalSeconds =
-        renewIntervalSeconds > 0 ? renewIntervalSeconds : DEFAULT_RENEW_INTERVAL_SECONDS;
+    this.lockWatchDog = lockWatchDog;
   }
-
-  /** 每个实例的续期任务映射（lockKey → ScheduledFuture） */
-  private final Map<String, ScheduledFuture<?>> renewalFutures = new ConcurrentHashMap<>();
-
-  /** 底层分布式锁列表（按获取顺序） */
-  private final List<DistributedLocker> locks;
-
-  /** 当前持有的锁值映射（lockKey → lockValue） */
-  private final Map<String, String> acquiredLockValues = new ConcurrentHashMap<>();
-
-  /** WatchDog 续期状态 */
-  private final AtomicBoolean renewing = new AtomicBoolean(false);
-
-  /** 已续期次数 */
-  private final Map<String, Integer> renewCounts = new ConcurrentHashMap<>();
 
   /**
    * 尝试获取多Key联锁（非阻塞）
@@ -167,21 +101,20 @@ public class RedisMultiLock implements DistributedLocker {
         String subLockKey = buildSubLockKey(lockKey, i);
         String lockValue = lock.tryLock(subLockKey, leaseTime, timeUnit);
         if (lockValue == null) {
-          log.debug("RedisMultiLock 获取子锁失败, key={}, index={}", subLockKey, i);
+          log.debug("[ydsz-lock] [multi] 获取子锁失败 key={} index={}", subLockKey, i);
           return null;
         }
         acquired.add(lockValue);
         acquiredLockValues.put(subLockKey, lockValue);
       }
 
-      // 全部获取成功
+      // 全部获取成功，注册到统一 WatchDog 续期
       String compositeValue = String.join(VALUE_DELIMITER, acquired);
-      startWatchDog(lockKey, leaseTime, timeUnit);
-      log.debug("RedisMultiLock 获取成功, key={}, lockCount={}", lockKey, locks.size());
+      startWatchDogRenewal(lockKey, leaseTime, timeUnit);
+      log.debug("[ydsz-lock] [multi] 获取成功 key={} lockCount={}", lockKey, locks.size());
       return compositeValue;
     } catch (Exception e) {
-      log.error("RedisMultiLock 获取锁异常, key={}: {}", lockKey, e.getMessage(), e);
-      // 异常时也回滚已获取的锁
+      log.error("[ydsz-lock] [multi] 获取锁异常 key={} cause={}", lockKey, e.getMessage(), e);
       rollbackLocks(lockKey, acquired.size());
       return null;
     }
@@ -216,7 +149,7 @@ public class RedisMultiLock implements DistributedLocker {
         String subLockKey = buildSubLockKey(lockKey, i);
         String lockValue = lock.tryLock(subLockKey, remaining, leaseTime, timeUnit);
         if (lockValue == null) {
-          log.debug("RedisMultiLock 等待获取子锁超时, key={}, index={}", subLockKey, i);
+          log.debug("[ydsz-lock] [multi] 等待子锁超时 key={} index={}", subLockKey, i);
           rollbackLocks(lockKey, acquired.size());
           return null;
         }
@@ -225,8 +158,8 @@ public class RedisMultiLock implements DistributedLocker {
       }
 
       String compositeValue = String.join(VALUE_DELIMITER, acquired);
-      startWatchDog(lockKey, leaseTime, timeUnit);
-      log.debug("RedisMultiLock 获取成功, key={}, lockCount={}", lockKey, locks.size());
+      startWatchDogRenewal(lockKey, leaseTime, timeUnit);
+      log.debug("[ydsz-lock] [multi] 获取成功 key={} lockCount={}", lockKey, locks.size());
       return compositeValue;
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -238,7 +171,7 @@ public class RedisMultiLock implements DistributedLocker {
   /**
    * 释放多Key联锁
    *
-   * <p>按相反顺序释放每个子锁，确保资源安全释放。
+   * <p>停止 WatchDog 续期后按相反顺序释放每个子锁，确保资源安全释放。
    *
    * @param lockKey 锁的键
    * @param lockValue 复合锁值
@@ -246,7 +179,7 @@ public class RedisMultiLock implements DistributedLocker {
    */
   @Override
   public boolean unlock(String lockKey, String lockValue) {
-    stopWatchDog(lockKey);
+    stopWatchDogRenewal(lockKey);
     return releaseAllLocks(lockKey);
   }
 
@@ -338,7 +271,7 @@ public class RedisMultiLock implements DistributedLocker {
           lock.unlock(subLockKey, lockValue);
         }
       } catch (Exception e) {
-        log.warn("RedisMultiLock 回滚子锁失败, index={}: {}", i, e.getMessage());
+        log.warn("[ydsz-lock] [multi] 回滚子锁失败 index={} cause={}", i, e.getMessage());
       }
     }
   }
@@ -359,115 +292,58 @@ public class RedisMultiLock implements DistributedLocker {
         if (lockValue != null) {
           if (!lock.unlock(subLockKey, lockValue)) {
             allReleased = false;
-            log.warn("RedisMultiLock 释放子锁失败, index={}", i);
+            log.warn("[ydsz-lock] [multi] 释放子锁失败 index={}", i);
           }
         }
       } catch (Exception e) {
         allReleased = false;
-        log.warn("RedisMultiLock 释放子锁异常, index={}: {}", i, e.getMessage());
+        log.warn("[ydsz-lock] [multi] 释放子锁异常 index={} cause={}", i, e.getMessage());
       }
     }
     return allReleased;
   }
 
   /**
-   * 启动 WatchDog 自动续期
+   * 启动统一 WatchDog 续期（P2-A2 改进：委托给 LockWatchDog 而非自建 TaskScheduler）。
    *
-   * <p>对所有子锁统一进行续期操作，续期间隔与次数上限来自配置 （{@code ydsz.lock.multi-lock.renew-interval-seconds /
-   * max-renew-count}）。
+   * <p>遍历所有已获取的子锁，将每个子锁键注册到 {@link LockWatchDog}。 WatchDog 按租约时间的 1/3 间隔自动续期每个子锁。
+   *
+   * <p>如果 WatchDog 不可用（未配置），则跳过续期注册，依赖锁的 TTL 自动过期释放。
    *
    * @param lockKey 主锁键
    * @param leaseTime 租约时间
    * @param timeUnit 时间单位
    */
-  private void startWatchDog(String lockKey, long leaseTime, TimeUnit timeUnit) {
-    long renewIntervalMillis = renewIntervalSeconds * 1000L;
-    renewing.set(true);
-    renewCounts.put(lockKey, 0);
-
-    ScheduledFuture<?> future =
-        renewalScheduler.scheduleAtFixedRate(
-            () -> {
-              if (!renewing.get()) {
-                return;
-              }
-              int renewedTimes = renewCounts.getOrDefault(lockKey, 0);
-              if (renewedTimes >= maxRenewCount) {
-                log.warn("RedisMultiLock 续期次数超过最大限制（{}次），停止续期, key={}", maxRenewCount, lockKey);
-                stopWatchDog(lockKey);
-                return;
-              }
-              try {
-                boolean renewed = renewAllLocks(lockKey, leaseTime, timeUnit);
-                if (renewed) {
-                  renewCounts.put(lockKey, renewedTimes + 1);
-                  log.debug("RedisMultiLock WatchDog 续期成功, key={}", lockKey);
-                } else {
-                  log.warn("RedisMultiLock WatchDog 续期失败，停止续期, key={}", lockKey);
-                  stopWatchDog(lockKey);
-                }
-              } catch (Exception e) {
-                log.error("RedisMultiLock WatchDog 续期异常, key={}", lockKey, e);
-                stopWatchDog(lockKey);
-              }
-            },
-            Duration.ofMillis(renewIntervalMillis));
-
-    renewalFutures.put(lockKey, future);
-  }
-
-  /**
-   * 停止 WatchDog 续期
-   *
-   * @param lockKey 主锁键
-   */
-  private void stopWatchDog(String lockKey) {
-    if (renewing.compareAndSet(true, false)) {
-      ScheduledFuture<?> future = renewalFutures.remove(lockKey);
-      if (future != null) {
-        future.cancel(false);
-      }
-      renewCounts.remove(lockKey);
-      log.debug("RedisMultiLock WatchDog 已停止, key={}", lockKey);
+  private void startWatchDogRenewal(String lockKey, long leaseTime, TimeUnit timeUnit) {
+    if (lockWatchDog == null) {
+      log.info(
+          "[ydsz-lock] [multi] WatchDog 不可用，多锁续期将依赖 TTL 自动释放 key={}", lockKey);
+      return;
     }
-  }
-
-  /**
-   * 续期所有子锁
-   *
-   * @param lockKey 主锁键
-   * @param leaseTime 租约时间
-   * @param timeUnit 时间单位
-   * @return true-全部续期成功
-   */
-  /**
-   * 续期所有子锁。
-   *
-   * <p>通过 Lua 脚本原子校验锁持有者后续期（安全续期）：仅当 key 的当前值等于 本锁持有的 value 时才刷新过期时间， 避免续期到被抢占后的其他锁
-   * （裸 {@code EXPIRE} 无持有者校验的隐患）。
-   *
-   * @param lockKey 锁 key
-   * @param leaseTime 租约时长
-   * @param timeUnit 时间单位
-   * @return 全部续期成功返回 true；任一失败返回 false
-   */
-  private boolean renewAllLocks(String lockKey, long leaseTime, TimeUnit timeUnit) {
     long leaseTimeMs = timeUnit.toMillis(leaseTime);
     for (int i = 0; i < locks.size(); i++) {
       String subLockKey = buildSubLockKey(lockKey, i);
       String lockValue = acquiredLockValues.get(subLockKey);
-      if (lockValue == null) {
-        return false;
-      }
-      try {
-        Long renewed = stringRedisTemplate.execute(RENEW_SCRIPT, List.of(subLockKey), lockValue, leaseTimeMs);
-        if (!Long.valueOf(1L).equals(renewed)) {
-          return false;
-        }
-      } catch (Exception e) {
-        return false;
+      if (lockValue != null) {
+        lockWatchDog.startWatch(subLockKey, lockValue, leaseTimeMs, LockType.REENTRANT);
+        log.debug("[ydsz-lock] [multi] 子锁注册续期 key={} index={}", subLockKey, i);
       }
     }
-    return true;
+  }
+
+  /**
+   * 停止统一 WatchDog 续期（P2-A2 改进）。
+   *
+   * @param lockKey 主锁键
+   */
+  private void stopWatchDogRenewal(String lockKey) {
+    if (lockWatchDog == null) {
+      return;
+    }
+    for (int i = 0; i < locks.size(); i++) {
+      String subLockKey = buildSubLockKey(lockKey, i);
+      lockWatchDog.stopWatch(subLockKey);
+    }
+    log.debug("[ydsz-lock] [multi] 子锁续期已停止 key={}", lockKey);
   }
 }

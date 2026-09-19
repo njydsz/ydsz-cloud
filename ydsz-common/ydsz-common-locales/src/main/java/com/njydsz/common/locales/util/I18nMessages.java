@@ -4,7 +4,6 @@ import java.util.Locale;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.lang.Nullable;
 
 /**
  * 国际化消息工具类
@@ -87,7 +86,7 @@ public class I18nMessages {
    * @param params 消息参数（可为 null）
    * @return 解析后的消息；key 未找到或 MessageSourceHolder 未就绪时：返回 key 本身（fallback 走内部 messageSource）
    */
-  public String resolve(String key, @Nullable Object[] params) {
+  public String resolve(String key, Object[] params) {
     Locale currentLocale = currentLocale();
     // 若 MessageSourceHolder 已注入 resolver（应用启动后），走统一路径（负缓存 + 缺失节流）
     if (MessageSourceHolder.isAvailable()) {
@@ -105,7 +104,7 @@ public class I18nMessages {
    * @param defaultMsg key 未找到时的默认文案
    * @return 解析后的消息
    */
-  public String resolve(String key, @Nullable Object[] params, String defaultMsg) {
+  public String resolve(String key, Object[] params, String defaultMsg) {
     if (key == null) {
       return defaultMsg;
     }
@@ -127,7 +126,7 @@ public class I18nMessages {
    * @param locale 区域设置（可为 null，回退到系统默认）
    * @return 解析后的消息；key 未找到时返回 key 本身
    */
-  public String resolve(String key, @Nullable Object[] params, @Nullable Locale locale) {
+  public String resolve(String key, Object[] params, Locale locale) {
     if (key == null) {
       return null;
     }
@@ -149,7 +148,7 @@ public class I18nMessages {
    * @param defaultMsg key 未找到时返回的默认文案
    * @return 解析后的消息
    */
-  public String resolve(String key, @Nullable Object[] params, @Nullable Locale locale, String defaultMsg) {
+  public String resolve(String key, Object[] params, Locale locale, String defaultMsg) {
     if (key == null) {
       return defaultMsg;
     }
@@ -195,7 +194,7 @@ public class I18nMessages {
    * @param defaultMsg 解析失败时的返回
    * @return 解析后的消息
    */
-  private String directResolve(String key, @Nullable Object[] params, Locale locale, String defaultMsg) {
+  private String directResolve(String key, Object[] params, Locale locale, String defaultMsg) {
     try {
       return messageSource.getMessage(key, params, defaultMsg, locale);
     } catch (Exception e) {

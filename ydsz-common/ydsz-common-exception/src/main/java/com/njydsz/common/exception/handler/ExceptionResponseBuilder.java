@@ -1,11 +1,14 @@
 package com.njydsz.common.exception.handler;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -411,5 +414,75 @@ final class ExceptionResponseBuilder {
       root = root.getCause();
     }
     return root.getMessage();
+  }
+
+  // ==================== 静态工具方法（供 BaseExceptionHandler 静态委托） ====================
+
+  /**
+   * 为异常生成聚合指纹（静态版本）。
+   *
+   * <p>基于异常类名 + 堆栈前 5 个元素生成 16 位 hash，便于 ELK/Sentry 聚合同类根因。
+   *
+   * @param throwable 异常对象
+   * @return 16 位十六进制指纹字符串
+   */
+  static String generateFingerprint(Throwable throwable) {
+    if (throwable == null) {
+      return "null";
+    }
+    StackTraceElement[] stackTrace = throwable.getStackTrace();
+    if (stackTrace == null || stackTrace.length == 0) {
+      return hexHash(throwable.getClass().getName());
+    }
+    int depth = Math.min(5, stackTrace.length);
+    StringBuilder seed = new StringBuilder(128);
+    seed.append(throwable.getClass().getName());
+    for (int i = 0; i < depth; i++) {
+      StackTraceElement element = stackTrace[i];
+      seed.append('|').append(element.getClassName()).append('.').append(element.getMethodName());
+    }
+    return hexHash(seed.toString());
+  }
+
+  /**
+   * 生成字符串的 16 位十六进制 hash（基于 SHA-256 截断）
+   *
+   * @param input 输入字符串
+   * @return 16 位十六进制 hash
+   */
+  private static String hexHash(String input) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+      StringBuilder hex = new StringBuilder(16);
+      for (int i = 0; i < 8; i++) {
+        hex.append(String.format("%02x", hash[i]));
+      }
+      return hex.toString();
+    } catch (Exception e) {
+      return Integer.toHexString(input.hashCode());
+    }
+  }
+
+  /**
+   * 构建统一错误响应（静态工厂，供子类静态调用）
+   *
+   * @param code 错误码
+   * @param msg 错误消息
+   * @param data 附加数据
+   * @param level 异常级别
+   * @return 统一错误响应
+   */
+  static <T> YdszResponse<T> buildErrorResponse(
+      String code, String msg, T data, ExceptionLevel level) {
+    YdszResponse<T> response =
+        YdszResponse.<T>builder()
+            .code(code)
+            .msg(msg)
+            .data(data)
+            .timestamp(System.currentTimeMillis())
+            .build();
+    response.setLevel(level != null ? level.name() : null);
+    return response;
   }
 }

@@ -3,7 +3,6 @@ package com.njydsz.common.locales.util;
 import java.util.Locale;
 
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.lang.Nullable;
 
 /**
  * 国际化静态工具类
@@ -72,7 +71,7 @@ public final class I18n {
    * @param params 消息参数（可为 null）
    * @return 解析后的消息；key 未找到时返回 key 本身
    */
-  public static String message(String key, @Nullable Object[] params) {
+  public static String message(String key, Object[] params) {
     return message(key, params, currentLocale());
   }
 
@@ -84,7 +83,7 @@ public final class I18n {
    * @param locale 区域设置（可为 null，回退到系统默认）
    * @return 解析后的消息；key 未找到时返回 key 本身
    */
-  public static String message(String key, @Nullable Object[] params, @Nullable Locale locale) {
+  public static String message(String key, Object[] params, Locale locale) {
     MessageSourceHolder.MessageResolver resolver = MessageSourceHolder.getResolver();
     if (resolver == null) {
       return key;

@@ -1,14 +1,5 @@
 package com.njydsz.common.exception.handler;
 
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +9,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ServerWebExchange;
@@ -35,15 +25,25 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 import com.njydsz.common.exception.event.ExceptionHandledEvent;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.trace.OtelTraceInfo;
-import com.njydsz.common.exception.trace.OtelTraceInfoExtractor;
 import com.njydsz.common.exception.util.ExceptionDesensitizer;
 
 /**
- * 异常处理器抽象基类
+ * 异常处理器抽象基类（26.09.19 重构）。
  *
- * <p>提供通用的异常处理逻辑，子类只需实现特定的日志前缀和响应格式定制。 支持国际化消息、异常链追踪、差异化环境处理（开发/生产）、 RFC 7807 ProblemDetail
- * 输出格式切换、统一指标记录。
+ * <p>职责定位 — 编排与状态管理：
+ *
+ * <ul>
+ *   <li>环境/配置/指标/事件源状态维护</li>
+ *   <li>{@link ExceptionHandledEvent} 发布编排</li>
+ *   <li>国际化消息解析</li>
+ *   <li>子类模板方法（{@link #getLogPrefix()}）</li>
+ * </ul>
+ *
+ * <p>响应构建（ProblemDetail / YdszResponse / ExceptionInfo）已拆分委托给内部静态类 {@link
+ * ExceptionResponseBuilder}。本类的 protected 方法保持原有签名，子类（Mvc / WebFlux / Validation）无需任何修改。
+ *
+ * <p><b>为什么拆分：</b>原始单文件超过 750 行，混合了响应构建、指标记录、事件发布、i18n 解析四类职责，
+ * 导致单元测试需 mock 整个基类。拆分后 {@link ExceptionResponseBuilder} 可独立测试响应结构。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -54,21 +54,30 @@ import com.njydsz.common.exception.util.ExceptionDesensitizer;
 @Slf4j
 public abstract class BaseExceptionHandler {
 
+  /** Spring 环境（profile 与属性读取） */
   private final Environment environment;
+
+  /** 应用事件发布器（可选） */
   private ApplicationEventPublisher eventPublisher;
 
-  /** 国际化消息源（由子类注入后通过 {@link #setMessageSource(MessageSource)} 设置） */
+  /** 国际化消息源（由子类注入） */
   private MessageSource messageSource;
 
-  /**
-   * 响应构建器委托（26.09.19 拆分）：承载 ProblemDetail / YdszResponse 构造逻辑。
-   *
-   * <p>本类保留所有 protected 方法签名（子类Mvc/WebFlux/Validation 直接调用），内部委托给此构建器完成。
-   */
-  private final ExceptionResponseBuilder responseBuilder;
+  /** 异常模块配置属性 */
+  private ExceptionProperties properties;
+
+  /** 异常指标统计器 */
+  private ExceptionMetrics exceptionMetrics;
 
   /**
-   * 构造基类异常处理器（通过 Spring 注入 {@link Environment}）
+   * 响应构建器委托。
+   *
+   * <p>承载 ProblemDetail / YdszResponse / ExceptionInfo 构造逻辑，使本基类聚焦于编排与状态管理。
+   */
+  private ExceptionResponseBuilder responseBuilder;
+
+  /**
+   * 构造基类异常处理器
    *
    * @param environment Spring 环境对象
    */
@@ -77,15 +86,10 @@ public abstract class BaseExceptionHandler {
     this.responseBuilder = new ExceptionResponseBuilder(environment, null, null);
   }
 
-  /** 异常模块配置属性 */
-  private ExceptionProperties properties;
-
-  private ExceptionMetrics exceptionMetrics;
+  // ==================== Setter 装配（由 AutoConfiguration 注入） ====================
 
   /**
-   * 事件发布器（可选，由子类通过构造器注入）
-   *
-   * <p>当事件发布器可用时，异常处理完成后自动发布 {@link ExceptionHandledEvent}， 下游订阅者可用于告警通知、Sentry 上报等场景。
+   * 设置事件发布器（可选）
    *
    * @param publisher 事件发布器
    */
@@ -94,14 +98,7 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 获取日志前缀，由子类实现以定制不同端的日志前缀
-   *
-   * @return 日志前缀字符串
-   */
-  protected abstract String getLogPrefix();
-
-  /**
-   * 设置异常模块配置属性（由 AutoConfiguration 注入）
+   * 设置异常模块配置属性
    *
    * @param env Spring 环境对象
    * @param properties 异常模块配置属性
@@ -112,7 +109,7 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 设置异常指标统计器（由 AutoConfiguration 注入）
+   * 设置异常指标统计器
    *
    * @param env Spring 环境对象
    * @param exceptionMetrics 异常指标统计器
@@ -123,13 +120,24 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 设置国际化消息源（由子类注入后调用）
+   * 设置国际化消息源
    *
    * @param messageSource Spring MessageSource
    */
   protected void setMessageSource(MessageSource messageSource) {
     this.messageSource = messageSource;
   }
+
+  // ==================== 子类模板方法 ====================
+
+  /**
+   * 获取日志前缀，由子类实现以定制不同端的日志前缀
+   *
+   * @return 日志前缀字符串
+   */
+  protected abstract String getLogPrefix();
+
+  // ==================== 状态查询（子类可复用） ====================
 
   /**
    * 获取异常指标统计器
@@ -141,9 +149,162 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 记录异常指标（统一入口，所有 handler 调用此方法）
+   * 获取当前激活的 profile 名称
    *
-   * <p>如果异常指标统计器未注入或被禁用，此方法为空操作。
+   * @return 当前激活的 profile；无 profile 时返回 null
+   */
+  protected String[] getActiveProfiles() {
+    return environment != null ? environment.getActiveProfiles() : new String[0];
+  }
+
+  /**
+   * 判断是否为开发/测试环境
+   *
+   * @return 如果当前 profile 为 dev/test 返回 true，否则 false
+   */
+  protected boolean isDevOrTestProfile() {
+    if (environment == null) {
+      return false;
+    }
+    for (String profile : environment.getActiveProfiles()) {
+      if ("dev".equalsIgnoreCase(profile) || "test".equalsIgnoreCase(profile)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 是否需要包含 ExceptionInfo 详细信息（开发/测试环境或配置强制开启）
+   *
+   * @return true-包含详细信息，false-不包含
+   */
+  protected boolean includeExceptionInfo() {
+    boolean configFlag = properties != null && properties.isIncludeStackTrace();
+    return configFlag || isDevOrTestProfile();
+  }
+
+  /**
+   * 是否使用 ProblemDetail (RFC 7807) 响应格式
+   *
+   * @return true-使用 ProblemDetail 格式，false-使用 YdszResponse 格式
+   */
+  protected boolean useProblemDetail() {
+    return responseBuilder.useProblemDetail();
+  }
+
+  /**
+   * 获取 ProblemDetail type URI 基础 URL
+   *
+   * @return 配置的基础 URL，未配置时返回 "about:blank"
+   */
+  protected String getProblemDetailTypeBaseUrl() {
+    return responseBuilder.getProblemDetailTypeBaseUrl();
+  }
+
+  /**
+   * 是否在 Micrometer 指标中包含异常 code tag
+   *
+   * @return true-包含高基数 code tag，false-不包含
+   */
+  protected boolean metricsIncludeCodeTag() {
+    return properties != null && properties.isMetricsIncludeCodeTag();
+  }
+
+  // ==================== 静态工具方法（供子类直接调用，零依赖） ====================
+
+  /**
+   * 获取根本原因的消息
+   *
+   * @param throwable 异常对象
+   * @return 处理结果
+   */
+  protected static String getRootCauseMessage(Throwable throwable) {
+    if (throwable == null) {
+      return null;
+    }
+    Throwable root = throwable;
+    while (root.getCause() != null) {
+      root = root.getCause();
+    }
+    return root.getMessage();
+  }
+
+  /**
+   * 获取脱敏后的堆栈跟踪字符串
+   *
+   * <p>委托 {@link ExceptionDesensitizer#desensitizeStackTrace(Throwable)} 实现。
+   *
+   * @param throwable 异常对象
+   * @return 脱敏后的堆栈字符串
+   */
+  protected static String getStackTraceString(Throwable throwable) {
+    return ExceptionDesensitizer.desensitizeStackTrace(throwable);
+  }
+
+  /**
+   * 从 Servlet 请求上下文提取 traceId
+   *
+   * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）。
+   *
+   * @param request Servlet 请求，可为 null
+   * @return traceId，未提取到时返回 null
+   */
+  protected static String extractTraceId(HttpServletRequest request) {
+    String traceId = RequestContext.getTraceId();
+    if (traceId == null || traceId.isBlank()) {
+      traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+    }
+    if ((traceId == null || traceId.isBlank()) && request != null) {
+      traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
+      if (traceId == null) {
+        traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
+      }
+    }
+    return traceId;
+  }
+
+  /**
+   * 从 WebFlux 请求上下文提取 traceId
+   *
+   * @param exchange WebFlux 请求上下文，可为 null
+   * @return traceId，未提取到时返回 null
+   */
+  protected static String extractTraceId(ServerWebExchange exchange) {
+    String traceId = RequestContext.getTraceId();
+    if (traceId == null || traceId.isBlank()) {
+      traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+    }
+    if ((traceId == null || traceId.isBlank()) && exchange != null) {
+      traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.TRACE_ID_HEADER);
+      if (traceId == null) {
+        traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.X_REQUEST_ID);
+      }
+    }
+    return traceId;
+  }
+
+  /**
+   * 判断是否为生产环境
+   *
+   * @return true-生产环境，false-非生产环境
+   */
+  protected boolean isProductionEnvironment() {
+    if (environment == null) {
+      return false;
+    }
+    for (String profile : environment.getActiveProfiles()) {
+      if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ==================== 指标 / 事件 ====================
+
+  /**
+   * 记录异常指标（统一入口）
    *
    * @param throwable 异常对象
    */
@@ -154,17 +315,12 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 发布异常处理完成事件。
-   *
-   * <p>当 {@link ApplicationEventPublisher} 可用时，向 Spring 应用上下文发布 {@link
-   * ExceptionHandledEvent}，下游订阅者可据此实现告警、审计、APM 上报等扩展。
-   *
-   * <p>事件包含：错误码、key、消息、HTTP 状态码、路径、traceId、类别、级别、异常类型。
+   * 发布异常处理完成事件
    *
    * @param throwable 已处理的异常
    * @param path 请求路径
    * @param traceId 追踪 ID
-   * @param resolvedMsg 已解析的异常消息（i18n 文案或原始消息）
+   * @param resolvedMsg 已解析的异常消息
    */
   protected void publishExceptionEvent(
       Throwable throwable, String path, String traceId, String resolvedMsg) {
@@ -204,321 +360,56 @@ public abstract class BaseExceptionHandler {
               throwable.getClass().getSimpleName());
       eventPublisher.publishEvent(event);
     } catch (Exception e) {
-      // 事件发布失败不应影响主异常处理流程
       log.debug("发布异常处理事件失败: {}", e.getMessage());
     }
   }
 
-  /**
-   * 获取当前激活的 profile 名称
-   *
-   * @return 当前激活的 profile；无 profile 时返回 null
-   */
-  protected String[] getActiveProfiles() {
-    return environment != null ? environment.getActiveProfiles() : new String[0];
-  }
-
-  /**
-   * 判断是否为开发/测试环境
-   *
-   * @return 如果当前 profile 为 dev/test 返回 true，否则 false
-   */
-  protected boolean isDevOrTestProfile() {
-    if (environment == null) {
-      return false;
-    }
-    for (String profile : environment.getActiveProfiles()) {
-      if ("dev".equalsIgnoreCase(profile) || "test".equalsIgnoreCase(profile)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * 是否需要包含 ExceptionInfo 详细信息
-   *
-   * <p>开发/测试环境返回 true，生产环境返回 false。 也可通过 {@code ydsz.exception.include-stack-trace} 配置强制开启。
-   *
-   * @return true-包含详细信息，false-不包含
-   */
-  protected boolean includeExceptionInfo() {
-    boolean configFlag = properties != null && properties.isIncludeStackTrace();
-    return configFlag || isDevOrTestProfile();
-  }
-
-  /**
-   * 是否使用 ProblemDetail (RFC 7807) 响应格式
-   *
-   * @return true-使用 ProblemDetail 格式，false-使用 YdszResponse 格式
-   */
-  protected boolean useProblemDetail() {
-    if (properties != null) {
-      return properties.getResponseFormat() == ExceptionProperties.ResponseFormat.PROBLEM_DETAIL;
-    }
-    return false;
-  }
-
-  /**
-   * 获取 ProblemDetail type URI 基础 URL
-   *
-   * @return 配置的基础 URL，未配置时返回 "about:blank"
-   */
-  protected String getProblemDetailTypeBaseUrl() {
-    if (properties != null && properties.getProblemDetailTypeBaseUrl() != null) {
-      return properties.getProblemDetailTypeBaseUrl();
-    }
-    return "about:blank";
-  }
-
-  /**
-   * 是否在 Micrometer 指标中包含异常 code tag
-   *
-   * @return true-包含高基数 code tag，false-不包含
-   */
-  protected boolean metricsIncludeCodeTag() {
-    return properties != null && properties.isMetricsIncludeCodeTag();
-  }
-
-  /**
-   * 获取根本原因的消息
-   *
-   * @param throwable 异常对象
-   * @return 处理结果
-   */
-  protected static String getRootCauseMessage(Throwable throwable) {
-    if (throwable == null) {
-      return null;
-    }
-    Throwable root = throwable;
-    while (root.getCause() != null) {
-      root = root.getCause();
-    }
-    return root.getMessage();
-  }
-
-  /**
-   * 获取脱敏后的堆栈跟踪字符串
-   *
-   * <p>委托 {@link ExceptionDesensitizer#desensitizeStackTrace(Throwable)} 实现，
-   * 对外输出前统一完成敏感信息（密码/Token/身份证/手机号/JDBC 连接串）脱敏， 避免敏感数据泄露到响应详情与日志。
-   *
-   * @param throwable 异常对象
-   * @return 处理结果
-   */
-  protected static String getStackTraceString(Throwable throwable) {
-    return ExceptionDesensitizer.desensitizeStackTrace(throwable);
-  }
-
-  /**
-   * 从 Servlet 请求上下文提取 traceId（统一入口）。
-   *
-   * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）。 MVC / Validation /
-   * JDBC 处理器复用，消除重复实现。
-   *
-   * @param request Servlet 请求，可为 null
-   * @return traceId，未提取到时返回 null
-   */
-  protected static String extractTraceId(HttpServletRequest request) {
-    String traceId = RequestContext.getTraceId();
-    if (traceId == null || traceId.isBlank()) {
-      traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-    }
-    if ((traceId == null || traceId.isBlank()) && request != null) {
-      traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
-      if (traceId == null) {
-        traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
-      }
-    }
-    return traceId;
-  }
-
-  /**
-   * 从 WebFlux 请求上下文提取 traceId（统一入口）。
-   *
-   * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）。
-   *
-   * @param exchange WebFlux 请求上下文，可为 null
-   * @return traceId，未提取到时返回 null
-   */
-  protected static String extractTraceId(ServerWebExchange exchange) {
-    String traceId = RequestContext.getTraceId();
-    if (traceId == null || traceId.isBlank()) {
-      traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-    }
-    if ((traceId == null || traceId.isBlank()) && exchange != null) {
-      traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.TRACE_ID_HEADER);
-      if (traceId == null) {
-        traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.X_REQUEST_ID);
-      }
-    }
-    return traceId;
-  }
-
-  /**
-   * 判断是否为生产环境
-   *
-   * @return true-生产环境，false-非生产环境；无法判断时返回 false
-   */
-  protected boolean isProductionEnvironment() {
-    if (environment == null) {
-      return false;
-    }
-    for (String profile : environment.getActiveProfiles()) {
-      if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  // ==================== 响应构建委托（子类调用 → 内部转发给 ExceptionResponseBuilder） ====================
 
   /**
    * 构建异常信息对象
    *
    * @param throwable 异常对象
    * @param path 请求路径
-   * @param traceId 追踪 ID（可为 null）
+   * @param traceId 追踪 ID
    * @return 异常信息对象
    */
   protected ExceptionInfo buildExceptionInfo(Throwable throwable, String path, String traceId) {
-    ExceptionInfo info = new ExceptionInfo();
-    info.setPath(path);
-    if (traceId != null) {
-      info.setTraceId(traceId);
-    }
-    info.setTimestamp(LocalDateTime.now());
-
-    if (throwable instanceof AbstractYdszException) {
-      AbstractYdszException ex = (AbstractYdszException) throwable;
-      info.setCode(ex.getCode());
-      info.setKey(ex.getKey());
-      info.setMessage(ex.getMessage());
-      info.setHttpStatus(ex.getHttpStatus());
-      if (ex.getLevel() != null) {
-        info.setLevel(ex.getLevel().name());
-      }
-      if (includeExceptionInfo()) {
-        Map<String, Object> details = new LinkedHashMap<>(16);
-        details.put("stackTrace", getStackTraceString(throwable));
-        if (ex.getExtData() != null) {
-          ex.getExtData().forEach((k, v) -> details.put(k, v));
-        }
-        info.setDetails(details);
-      }
-    } else {
-      info.setCode(CoreExceptionCode.INTERNAL_ERROR.getCode());
-      info.setMessage(getRootCauseMessage(throwable));
-      info.setHttpStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-      info.setLevel(ExceptionLevel.ERROR.name());
-      // 异常指纹：非受检异常通过堆栈指纹聚合同类根因（26.09.19 新增）
-      info.setFingerprint(generateFingerprint(throwable));
-      if (includeExceptionInfo()) {
-       info.setDetails(Map.of("stackTrace", getStackTraceString(throwable), "fingerprint", info.getFingerprint()));
-      }
-    }
-
-    return info;
+    return responseBuilder.buildExceptionInfo(throwable, path, traceId, includeExceptionInfo());
   }
 
   /**
-   * 构建 RFC 7807 ProblemDetail 对象（基于 Spring 标准实现）。
-   *
-   * <p>ydsz-common-core 精简后不再提供自定义 ProblemDetail， 改用 Spring {@link
-   * org.springframework.http.ProblemDetail}， traceId / requestId / errorCode 等扩展字段通过 {@code
-   * setProperty} 输出。
+   * 构建 RFC 7807 ProblemDetail 对象
    *
    * @param throwable 异常对象
    * @param path 请求路径
-   * @param traceId 追踪 ID（可为 null）
+   * @param traceId 追踪 ID
    * @return ProblemDetail 对象
    */
   protected ProblemDetail buildProblemDetail(Throwable throwable, String path, String traceId) {
-    String baseUrl = getProblemDetailTypeBaseUrl();
-    ProblemDetail problem;
-
-    if (throwable instanceof AbstractYdszException) {
-      AbstractYdszException ex = (AbstractYdszException) throwable;
-      problem =
-          ProblemDetail.forStatusAndDetail(
-              HttpStatusCode.valueOf(ex.getHttpStatus()), ex.getMessage());
-      problem.setTitle(ex.getClass().getSimpleName());
-      problem.setType(URI.create(baseUrl + "/" + ex.getCategory().name().toLowerCase()));
-      problem.setProperty("errorCode", ex.getCode());
-      if (path != null) {
-        problem.setInstance(URI.create(path));
-      }
-      if (ex.getExtData() != null) {
-        ex.getExtData().forEach((k, v) -> problem.setProperty(k, v));
-      }
-    } else {
-      problem =
-          ProblemDetail.forStatusAndDetail(
-              HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()),
-              getRootCauseMessage(throwable));
-      problem.setTitle("System Error");
-      problem.setType(URI.create(baseUrl + "/system"));
-      problem.setProperty("errorCode", CoreExceptionCode.INTERNAL_ERROR.getCode());
-      if (path != null) {
-        problem.setInstance(URI.create(path));
-      }
-    }
-
-    problem.setProperty("traceId", traceId);
-    // requestId 语义：本系统生成的请求唯一标识（X-Request-Id），与 traceId（X-Trace-Id）区分；
-    // 上下文缺失时回退到 traceId，保证响应字段不缺失
-    String requestId = RequestContext.getRequestId();
-    problem.setProperty("requestId", requestId != null ? requestId : traceId);
-    problem.setProperty("timestamp", Instant.now().toString());
-
-    // 透传异常级别
-    String levelName = ExceptionLevel.ERROR.name();
-    if (throwable instanceof AbstractYdszException ex && ex.getLevel() != null) {
-      levelName = ex.getLevel().name();
-    }
-    problem.setProperty("level", levelName);
-
-    // 自动注入 OpenTelemetry traceId/spanId（当 OTel 可用时）
-    injectOtelTraceContext(problem);
-
-    return problem;
+    return responseBuilder.buildProblemDetail(throwable, path, traceId);
   }
 
   /**
-   * 注入 OpenTelemetry 链路追踪上下文到 ProblemDetail。
-   *
-   * <p>当 classpath 中存在 OpenTelemetry API 时，自动将 traceId、spanId 注入到 ProblemDetail 的扩展属性中，便于与
-   * APM（Grafana Tempo、Jaeger 等）关联。 当 OTel 未接入时本方法为静默空操作，对主流程零侵入。
-   *
-   * @param problem 待注入的 ProblemDetail
-   */
-  private void injectOtelTraceContext(ProblemDetail problem) {
-    try {
-      OtelTraceInfo otelTrace = OtelTraceInfoExtractor.currentTraceInfo();
-      if (otelTrace.isValid()) {
-        problem.setProperty("otelTraceId", otelTrace.traceId());
-        problem.setProperty("otelSpanId", otelTrace.spanId());
-        problem.setProperty("otelSampled", otelTrace.sampled());
-        // 同时更新 traceId（OTel 的 traceId 与 header 中的一致，优先使用）
-        problem.setProperty("traceId", otelTrace.traceId());
-        // requestId 保持本系统请求唯一标识语义（X-Request-Id），OTel 不覆盖
-        String requestId = RequestContext.getRequestId();
-        problem.setProperty("requestId", requestId != null ? requestId : otelTrace.traceId());
-      }
-    } catch (Exception e) {
-      // OTel 反射调用异常时降级（不影响主流程）
-      log.debug("[BaseExceptionHandler] OTel TraceContext 注入失败: {}", e.getMessage());
-    }
-  }
-
-  /**
-   * 构建统一错误响应（{@link YdszResponse} 格式，兼容 {@code YdszResponse.error(code, msg, data)} 旧语义）。
-   *
-   * <p>ydsz-common-core 精简后移除了三参数 {@code error} 静态方法， 此处统一通过 {@link YdszResponse#builder()} 构建，保持各
-   * handler 输出结构一致。
+   * 构建统一错误响应（YdszResponse 格式）
    *
    * @param code 错误码
    * @param msg 错误消息
-   * @param data 附加数据（可为 null，由 {@code @JsonInclude(NON_NULL)} 决定是否序列化）
+   * @param data 附加数据
+   * @param level 异常级别
+   * @return 统一错误响应
+   */
+  protected static <T> YdszResponse<T> errorResponse(
+      String code, String msg, T data, ExceptionLevel level) {
+    return ExceptionResponseBuilder.buildErrorResponse(code, msg, data, level);
+  }
+
+  /**
+   * 构建统一错误响应（默认 ERROR 级别）
+   *
+   * @param code 错误码
+   * @param msg 错误消息
+   * @param data 附加数据
    * @return 统一错误响应
    */
   protected static <T> YdszResponse<T> errorResponse(String code, String msg, T data) {
@@ -526,127 +417,15 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 构建统一错误响应（{@link YdszResponse} 格式，兼容 {@code YdszResponse.error(code, msg, data)} 旧语义）。
-   *
-   * <p>ydsz-common-core 精简后移除了三参数 {@code error} 静态方法， 此处统一通过 {@link YdszResponse#builder()} 构建，保持各
-   * handler 输出结构一致。
-   *
-   * @param code 错误码
-   * @param msg 错误消息
-   * @param data 附加数据（可为 null，由 {@code @JsonInclude(NON_NULL)} 决定是否序列化）
-   * @param level 异常级别（不可为 null）
-   * @return 统一错误响应
-   */
-  protected static <T> YdszResponse<T> errorResponse(
-      String code, String msg, T data, ExceptionLevel level) {
-    YdszResponse<T> response = YdszResponse.<T>builder()
-        .code(code)
-        .msg(msg)
-        .data(data)
-        .timestamp(System.currentTimeMillis())
-        .build();
-    response.setLevel(level != null ? level.name() : null);
-    return response;
-  }
-
-  /**
-   * 构建统一异常响应（根据配置自动选择 YdszResponse 或 ProblemDetail 格式）
-   *
-   * <p>统一在此处记录异常处理耗时（{@code exception.handler.duration} Timer）， 使全部走响应构建链路的 handler 均纳入耗时监控。
+   * 构建统一异常响应（根据配置自动选择格式并记录耗时）
    *
    * @param throwable 异常对象
    * @param path 请求路径
    * @param traceId 追踪 ID
-   * @return 响应对象（YdszResponse 或 ProblemDetail）
+   * @return 响应对象
    */
   protected Object buildResponse(Throwable throwable, String path, String traceId) {
-    long startNanos = System.nanoTime();
-    try {
-      return doBuildResponse(throwable, path, traceId);
-    } finally {
-      long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
-      if (exceptionMetrics != null) {
-        exceptionMetrics.recordHandlerDuration(durationMs, throwable);
-      }
-    }
-  }
-
-  /**
-   * 构建统一异常响应的内部实现。
-   *
-   * @param throwable 异常对象
-   * @param path 请求路径
-   * @param traceId 追踪 ID
-   * @return 响应对象（YdszResponse 或 ProblemDetail）
-   */
-  private Object doBuildResponse(Throwable throwable, String path, String traceId) {
-    if (useProblemDetail()) {
-      return buildProblemDetail(throwable, path, traceId);
-    }
-    ExceptionInfo info = buildExceptionInfo(throwable, path, traceId);
-    if (throwable instanceof AbstractYdszException) {
-      AbstractYdszException ex = (AbstractYdszException) throwable;
-      return errorResponse(
-          ex.getCode(),
-          ex.getMessage(),
-          includeExceptionInfo() ? info : null,
-          ex.getLevel() != null ? ex.getLevel() : ExceptionLevel.ERROR);
-    }
-    return errorResponse(
-        CoreExceptionCode.INTERNAL_ERROR.getCode(),
-        info.getMessage(),
-        includeExceptionInfo() ? info : null,
-        ExceptionLevel.ERROR);
-  }
-
-  /**
-   * 为异常生成聚合指纹（26.09.19 新增）。
-   *
-   * <p>基于异常类名 + 堆栈前 N 个元素的类名/方法名生成 hash。同类根因（如同一方法的 NPE） 即使在不同请求中抛出，指纹也相同，便于 ELK/Sentry 聚合统计同类异常。
-   *
-   * <p>对标 Sentry 的 {@code Event.Fingerprint} 机制，在日志层面支持异常去重， 减少告警风暴。
-   *
-   * @param throwable 异常对象
-   * @return 16 位十六进制指纹字符串；堆栈不可用时返回类名 hash
-   */
-  protected static String generateFingerprint(Throwable throwable) {
-    if (throwable == null) {
-      return "null";
-    }
-    StackTraceElement[] stackTrace = throwable.getStackTrace();
-    if (stackTrace == null || stackTrace.length == 0) {
-      return hexHash(throwable.getClass().getName());
-    }
-    // 取前 5 个堆栈元素生成指纹
-    int depth = Math.min(5, stackTrace.length);
-    StringBuilder seed = new StringBuilder(128);
-    seed.append(throwable.getClass().getName());
-    for (int i = 0; i < depth; i++) {
-      StackTraceElement element = stackTrace[i];
-      seed.append('|').append(element.getClassName()).append('.').append(element.getMethodName());
-    }
-    return hexHash(seed.toString());
-  }
-
-  /**
-   * 生成字符串的 16 位十六进制 hash（基于 SHA-256 截断）。
-   *
-   * @param input 输入字符串
-   * @return 16 位十六进制 hash
-   */
-  private static String hexHash(String input) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-      StringBuilder hex = new StringBuilder(16);
-      for (int i = 0; i < 8; i++) {
-        hex.append(String.format("%02x", hash[i]));
-      }
-      return hex.toString();
-    } catch (Exception e) {
-      // SHA-256 不可用时降级为 JDK hashCode
-      return Integer.toHexString(input.hashCode());
-    }
+    return responseBuilder.buildResponse(throwable, path, traceId);
   }
 
   /**
@@ -657,72 +436,30 @@ public abstract class BaseExceptionHandler {
    * @return ResponseEntity
    */
   protected ResponseEntity<Object> buildResponseEntity(Object body, Throwable throwable) {
-    int httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-    if (throwable instanceof AbstractYdszException) {
-      httpStatus = ((AbstractYdszException) throwable).getHttpStatus();
-    }
-    return ResponseEntity.status(httpStatus).body(body);
+    return responseBuilder.buildResponseEntity(body, throwable);
   }
 
   /**
-   * 对可恢复异常添加 {@code Retry-After} 响应头，引导客户端合理重试。
+   * 构建标准错误响应（含 ExceptionInfo 详情，受 includeExceptionInfo 开关控制）
    *
-   * <p>对标 Google API 的 {@code ErrorInfo.reason} 和 HTTP 标准 {@code Retry-After} 头， 仅当异常标记为 {@link
-   * com.njydsz.common.exception.enums.ExceptionCode#retryable() retryable=true} 且 {@link
-   * com.njydsz.common.exception.enums.ExceptionCode#retryAfterSeconds()} > 0 时生效。
-   *
-   * <p>Retry-After 头的值为建议等待秒数（相对时间），符合 RFC 7231 §7.1.3 标准。
-   *
-   * @param response HTTP 响应对象（可为 null，此时为空操作）
-   * @param throwable 异常对象
-   */
-  protected void addRetryAfterHeader(
-      HttpServletResponse response, Throwable throwable) {
-    if (response == null || !(throwable instanceof AbstractYdszException ex)) {
-      return;
-    }
-    if (!(ex.resultCode() instanceof ExceptionCode exceptionCode)) {
-      return;
-    }
-    if (!exceptionCode.retryable()) {
-      return;
-    }
-    int seconds = exceptionCode.retryAfterSeconds();
-    if (seconds > 0) {
-      response.setHeader("Retry-After", String.valueOf(seconds));
-    }
-  }
-
-  /**
-   * 按请求 Locale 解析国际化消息（统一入口）。
-   *
-   * <p>消除 MVC / WebFlux / JDBC 等处理器中重复的 {@code messageSource.getMessage(key, args, defaultMsg,
-   * LocaleContextHolder.getLocale())} 四参数调用模板。
-   *
+   * @param code 错误码
    * @param key i18n 消息键
-   * @param args 消息参数（可为 null）
-   * @param defaultMsg 当 MessageSource 不可用或 key 未找到时的兜底文案
-   * @return 解析后的消息文本
+   * @param message 已解析的错误消息
+   * @param httpStatus HTTP 状态码
+   * @param path 请求路径
+   * @param level 异常级别
+   * @return 统一 YdszResponse
    */
-  protected String resolveMessage(String key, Object[] args, String defaultMsg) {
-    if (messageSource == null) {
-      return defaultMsg;
-    }
-    try {
-      return messageSource.getMessage(key, args, defaultMsg, LocaleContextHolder.getLocale());
-    } catch (Exception e) {
-      return defaultMsg;
-    }
+  protected YdszResponse<?> buildStandardErrorResponse(
+      String code, String key, String message, int httpStatus, String path, ExceptionLevel level) {
+    return responseBuilder.buildStandardErrorResponse(code, key, message, httpStatus, path, level);
   }
 
   /**
-   * 构建标准错误响应（统一 {@link ExceptionInfo} + {@link YdszResponse} 组合）。
+   * 构建标准错误响应（默认 ERROR 级别）
    *
-   * <p>消除各处理器中重复的"new ExceptionInfo → setPath → errorResponse"三步模板。 开发/测试环境自动填充详细信息（path），生产环境仅返回
-   * code + message。
-   *
-   * @param code 错误码字符串
-   * @param key i18n 消息键（可为 null）
+   * @param code 错误码
+   * @param key i18n 消息键
    * @param message 已解析的错误消息
    * @param httpStatus HTTP 状态码
    * @param path 请求路径
@@ -734,44 +471,9 @@ public abstract class BaseExceptionHandler {
   }
 
   /**
-   * 构建标准错误响应（统一 {@link ExceptionInfo} + {@link YdszResponse} 组合）。
+   * 构建带详细信息的统一错误响应（强制包含 ExceptionInfo）
    *
-   * <p>消除各处理器中重复的"new ExceptionInfo → setPath → errorResponse"三步模板。 开发/测试环境自动填充详细信息（path），生产环境仅返回
-   * code + message。
-   *
-   * @param code 错误码字符串
-   * @param key i18n 消息键（可为 null）
-   * @param message 已解析的错误消息
-   * @param httpStatus HTTP 状态码
-   * @param path 请求路径
-   * @param level 异常级别
-   * @return 统一 YdszResponse
-   */
-  protected YdszResponse<?> buildStandardErrorResponse(
-      String code,
-      String key,
-      String message,
-      int httpStatus,
-      String path,
-      ExceptionLevel level) {
-    if (!includeExceptionInfo()) {
-      return errorResponse(code, message, null, level);
-    }
-    ExceptionInfo info = new ExceptionInfo(code, key, message, httpStatus);
-    info.setPath(path);
-    if (level != null) {
-      info.setLevel(level.name());
-    }
-    return errorResponse(code, message, info, level);
-  }
-
-  /**
-   * 构建带详细信息的统一错误响应（强制包含 ExceptionInfo，便于客户端排障）。
-   *
-   * <p>与 {@link #buildStandardErrorResponse} 不同，本方法不受 {@link #includeExceptionInfo()} 开关控制，始终填充
-   * ExceptionInfo。 适用于需要强制返回结构化错误详情的场景（如数据完整性异常分类）。
-   *
-   * @param code 错误码字符串
+   * @param code 错误码
    * @param key i18n 消息键
    * @param message 已解析的错误消息
    * @param httpStatus HTTP 状态码
@@ -780,9 +482,7 @@ public abstract class BaseExceptionHandler {
    */
   protected YdszResponse<?> buildWithInfo(
       String code, String key, String message, int httpStatus, String path) {
-    ExceptionInfo info = new ExceptionInfo(code, key, message, httpStatus);
-    info.setPath(path);
-    return errorResponse(code, message, info, ExceptionLevel.ERROR);
+    return responseBuilder.buildWithInfo(code, key, message, httpStatus, path);
   }
 
   /**
@@ -803,17 +503,60 @@ public abstract class BaseExceptionHandler {
       Throwable throwable) {
     log.error("{}校验异常 | 路径: {} | 消息: {}", getLogPrefix(), path, message, throwable);
     recordMetrics(throwable);
+    return responseBuilder.buildValidationErrorResponse(
+        errorCode, message, httpStatus, path, throwable);
+  }
 
-    ExceptionLevel level = errorCode.getLevel();
-    if (!includeExceptionInfo()) {
-      return errorResponse(errorCode.getCode(), message, null, level);
+  // ==================== 可恢复性 / 国际化 ====================
+
+  /**
+   * 对可恢复异常添加 {@code Retry-After} 响应头
+   *
+   * @param response HTTP 响应对象
+   * @param throwable 异常对象
+   */
+  protected void addRetryAfterHeader(HttpServletResponse response, Throwable throwable) {
+    if (response == null || !(throwable instanceof AbstractYdszException ex)) {
+      return;
     }
-    ExceptionInfo info =
-        new ExceptionInfo(errorCode.getCode(), errorCode.getKey(), message, httpStatus);
-    info.setPath(path);
-    if (level != null) {
-      info.setLevel(level.name());
+    if (!(ex.resultCode() instanceof ExceptionCode exceptionCode)) {
+      return;
     }
-    return errorResponse(errorCode.getCode(), message, info, level);
+    if (!exceptionCode.retryable()) {
+      return;
+    }
+    int seconds = exceptionCode.retryAfterSeconds();
+    if (seconds > 0) {
+      response.setHeader("Retry-After", String.valueOf(seconds));
+    }
+  }
+
+  /**
+   * 按请求 Locale 解析国际化消息
+   *
+   * @param key i18n 消息键
+   * @param args 消息参数
+   * @param defaultMsg 兜底文案
+   * @return 解析后的消息文本
+   */
+  protected String resolveMessage(String key, Object[] args, String defaultMsg) {
+    if (messageSource == null) {
+      return defaultMsg;
+    }
+    try {
+      return messageSource.getMessage(key, args, defaultMsg, LocaleContextHolder.getLocale());
+    } catch (Exception e) {
+      return defaultMsg;
+    }
+  }
+
+  /**
+   * 为异常生成聚合指纹（26.09.19 新增）
+   *
+   * @param throwable 异常对象
+   * @return 16 位十六进制指纹字符串
+   */
+  protected static String generateFingerprint(Throwable throwable) {
+    return ExceptionResponseBuilder.generateFingerprint(throwable);
   }
 }

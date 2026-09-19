@@ -81,7 +81,7 @@ public class I18nAdminController {
       if (locale == null) {
         continue;
       }
-      String cached = LocaleContextHolder.getLocale();
+      Locale cached = LocaleContextHolder.getLocale();
       try {
         LocaleContextHolder.setLocale(locale);
         String resolved = MessageSourceHolder.resolve(key, null, locale);

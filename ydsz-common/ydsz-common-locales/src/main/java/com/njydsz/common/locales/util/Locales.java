@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.lang.Nullable;
 
 /**
  * Locale 上下文工具类
@@ -63,7 +62,7 @@ public final class Locales {
    *
    * @param locale 要设置的 Locale；传 null 清除绑定（回退到系统默认）
    */
-  public static void set(@Nullable Locale locale) {
+  public static void set(Locale locale) {
     LocaleContextHolder.setLocale(locale);
   }
 
@@ -124,7 +123,7 @@ public final class Locales {
    * @param localeTag 语言标签（如 zh_CN、en_US）；未知格式返回 {@link Locale#ROOT}
    * @return 对应的 Locale；传入 null/空串时返回 null
    */
-  public static Locale parseLocaleTag(@Nullable String localeTag) {
+  public static Locale parseLocaleTag(String localeTag) {
     return com.njydsz.common.locales.util.KnownLocaleTags.toLocale(localeTag);
   }
 }

@@ -23,6 +23,7 @@ import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
+import com.njydsz.common.exception.code.CoreErrorCode;
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
@@ -146,6 +147,10 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
     }
     if (validateOnStartup && scanBasenames != null && scanBasenames.length > 0) {
       validateResourceBasenames();
+    }
+    // 校验静态门面枚举与基础枚举的一致性（26.09.19 新增）
+    if (validateOnStartup) {
+      CoreErrorCode.validateConsistency();
     }
   }
 

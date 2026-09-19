@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.locales.config;
+package com.njydsz.common.locales.config;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,6 +11,8 @@ import java.util.Properties;
 import java.util.Set;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -39,19 +41,16 @@ import com.njydsz.common.locales.util.MissingTranslationLogger;
 /**
  * 国际化基座自动配置（L2 基础设施）
  *
- * <p>从 {@code ydsz-common-exception} 迁出，统一承载 YDSZ 后端的国际化基础设施：
+ * <p>承载 YDSZ 后端国际化基础设施：
  *
  * <ul>
- *   <li>{@link MessageSource}（ReloadableResourceBundleMessageSource，多模块资源聚合）
- *   <li>{@link LocaleResolver}（AcceptHeaderLocaleResolver，Web 环境按需加载）
- *   <li>{@link LocaleChangeInterceptor}（?lang= 参数切换）
- *   <li>{@link Validator}（关联 i18n 的 JSR-303 校验器）
- *   <li>{@link I18nMessages}（可注入工具 Bean）
+ *   <li>MessageSource（多模块资源聚合 + 通配符自动发现）
+ *   <li>LocaleResolver（accept-header / user-priority + Cookie 持久化，按需切换）
+ *   <li>LocaleChangeInterceptor（?lang= 参数切换）
+ *   <li>Validator（关联 i18n 的 JSR-303 校验器）
+ *   <li>I18nMessages（可注入工具 Bean，统一委托 MessageSourceHolder）
+ *   <li>I18nAdminController（ydsz.i18n.admin-api-enabled=true 时注册）
  * </ul>
- *
- * <p>此模块为纯 L2 基础设施，不依赖任何 L3+ 模块，可供异常模块（L3）、Web 模块（L6）、业务模块平等引用。
- *
- * <p><b>使用方式：</b>在 starter pom 中引入 {@code ydsz-common-locales}，即可自动装配以上所有 Bean。
  *
  * @author ydsz-team
  * @since 26.09.18
@@ -62,10 +61,8 @@ import com.njydsz.common.locales.util.MissingTranslationLogger;
 @ConditionalOnClass(MessageSource.class)
 public class LocalesAutoConfiguration {
 
-  /** MessageSource Bean 名称常量（ydsz 统一约定，避免多模块冲突） */
   public static final String MESSAGE_SOURCE_BEAN_NAME = "ydszMessageSource";
 
-  /** 通配符扫描发现阈值日志：扫描到的新增资源数量 >= 此值时打印 INFO 提示 */
   private static final int DISCOVERY_LOG_THRESHOLD = 1;
 
   private final I18nProperties i18nProperties;
@@ -76,14 +73,10 @@ public class LocalesAutoConfiguration {
     this.environment = environment;
   }
 
-  // ==================== 翻译缺失节流器初始化 ====================
+  // ==================== 节流器 / 负缓存初始化 ====================
 
   /**
-   * 初始化翻译缺失节流器（{@link MissingTranslationLogger}）。
-   *
-   * <p>在 MessageSource Bean 创建完成后（依赖 {@code ydszMessageSource}）启用节流器，使后续 i18n 解析缺失时输出 WARN
-   * 日志。配置由 {@link I18nProperties#getMissingTranslationLogEnabled()} 与 {@link
-   * I18nProperties#getMissingTranslationLogBufferCapacity()} 控制。
+   * 初始化翻译缺失节流器（MissingTranslationLogger）。
    */
   @PostConstruct
   public void configureMissingTranslationLogger() {
@@ -91,18 +84,12 @@ public class LocalesAutoConfiguration {
     int capacity = i18nProperties.getMissingTranslationLogBufferCapacity();
     MissingTranslationLogger.configure(enabled, capacity);
     if (enabled) {
-      log.info(
-          "MissingTranslationLogger 已启用 | 缓冲区容量: {} | 节流器将在 i18n key 未解析时输出 WARN 日志",
-          capacity);
+      log.info("MissingTranslationLogger 已启用 | 缓冲区容量: {}", capacity);
     }
   }
 
   /**
-   * 初始化 i18n 负缓存（{@link com.njydsz.common.locales.util.MessageSourceHolder#configureNegativeCache}）。
-   *
-   * <p>负缓存在开发环境（{@code devCacheSeconds=0}）下效果最显著：避免已知 miss 的 key 重复遍历全部 basename
-   * Properties 文件。配置由 {@link I18nProperties#isNegativeCacheEnabled()} 与 {@link
-   * I18nProperties#getNegativeCacheCapacity()} 控制。
+   * 初始化负缓存（MessageSourceHolder#configureNegativeCache）。
    */
   @PostConstruct
   public void configureNegativeCache() {
@@ -110,74 +97,39 @@ public class LocalesAutoConfiguration {
     int capacity = i18nProperties.getNegativeCacheCapacity();
     MessageSourceHolder.configureNegativeCache(enabled, capacity);
     if (enabled) {
-      log.info(
-          "i18n 负缓存已启用 | 容量: {} | 已知 miss 的 key 将走快速路径返回", capacity);
+      log.info("i18n 负缓存已启用 | 容量: {}", capacity);
     }
   }
 
-  /**
-   * 跨语言翻译完整性校验（在 MessageSource 创建后、Bean 初始化完成前调用）。
-   *
-   * <p>确保默认 Locale（zh_CN）下存在的每个 key 在所有其它支持 Locale 中也有对应翻译。调用链：{@link
-   * #validateCrossLocaleCompleteness()}。
-   */
+  /** 跨语言翻译完整性校验。 */
   @PostConstruct
   public void performCrossLocaleValidation() {
     validateCrossLocaleCompleteness();
   }
 
-  // ==================== 国际化核心 ====================
+  // ==================== 国际化核心 Bean ====================
 
   /**
-   * 创建全局国际化消息源
+   * 全局国际化消息源（多模块聚合，支持通配符自动发现）。
    *
-   * <p>覆盖 ydsz 所有模块的资源文件（通过 ydsz.i18n.basename 逗号分隔配置）。
-   *
-   * <p>使用 Bean 名称 {@link #MESSAGE_SOURCE_BEAN_NAME} 而非默认 {@code messageSource}，避免与 Spring
-   * Boot 的 MessageSourceAutoConfiguration 默认 Bean 互相干扰。 若消费方仍需要传统 {@code messageSource} 名称，可在
-   * application.yml 中通过 {@code spring.messages.basename} 显式指向 —— 此时本 Bean 可通过
-   * {@code @ConditionalOnMissingBean} 自动跳过。
-   *
-   * <p>当 {@code ydsz.i18n.wildcard-scan-enabled=true}（默认），启动时通过 {@link
-   * org.springframework.core.io.support.PathMatchingResourcePatternResolver} 自动扫描 {@code
-   * classpath*:i18n/*-messages*.properties}，将发现的新增资源前缀与手动配置合并去重后传入 {@link
-   * ReloadableResourceBundleMessageSource}，实现新模块零配置被发现。
-   *
-   * @return MessageSource 实例
+   * <p>Bean 名称 {@link #MESSAGE_SOURCE_BEAN_NAME} 避免与 Spring Boot 默认 messageSource 互相干扰。
    */
   @Bean(name = MESSAGE_SOURCE_BEAN_NAME)
   @ConditionalOnMissingBean(name = MESSAGE_SOURCE_BEAN_NAME)
   public MessageSource ydszMessageSource() {
     boolean isProd = isProdEnvironment();
-    int cacheSeconds =
-        isProd ? i18nProperties.getProdCacheSeconds() : i18nProperties.getDevCacheSeconds();
-    return createMessageSource(cacheSeconds);
+    int cache = isProd ? i18nProperties.getProdCacheSeconds() : i18nProperties.getDevCacheSeconds();
+    return createMessageSource(cache);
   }
 
-  /**
-   * 注册国际化消息工具 Bean（可注入方式使用 i18n）。
-   *
-   * <p>为需要通过 Spring DI 获取 i18n 解析能力的业务代码提供可注入组件。 静态场景请直接使用 {@link
-   * com.njydsz.common.locales.util.I18n} 工具类。
-   *
-   * @param messageSource 国际化消息源
-   * @return 国际化消息工具 Bean
-   */
+  /** 可注入的 i18n 消息工具 Bean（Service 层推荐）。 */
   @Bean
   @ConditionalOnMissingBean(I18nMessages.class)
   public I18nMessages i18nMessages(MessageSource messageSource) {
     return new I18nMessages(messageSource);
   }
 
-  /**
-   * 注册关联国际化消息源的 JSR-303 验证器
-   *
-   * <p>校验注解（@NotBlank, @Size, @Email 等的错误消息）使用 i18n 资源文件中的 key 解析。 与 Spring 默认
-   * {@code LocalValidatorFactoryBean} 相比，额外关联了 YDSZ 的 {@link MessageSource}。
-   *
-   * @param messageSource 国际化消息源
-   * @return JSR-303 校验器
-   */
+  /** JSR-303 校验器关联 i18n MessageSource。 */
   @Bean
   @ConditionalOnMissingBean(Validator.class)
   public Validator ydszValidator(MessageSource messageSource) {
@@ -187,36 +139,25 @@ public class LocalesAutoConfiguration {
     return validator;
   }
 
-  // ==================== Web 国际化（按需条件加载） ====================
+  // ==================== Web 国际化（按需加载） ====================
 
   /**
-   * 创建区域解析器（可切换 AcceptHeaderLocaleResolver / UserPriorityLocaleResolver 两种模式）
-   *
-   * <p>解析顺序取决于 {@link I18nProperties#getLocaleResolverType()}：
-   *
-   * <ul>
-   *   <li>{@code accept-header}（默认）：仅 Accept-Language Header + 默认 Locale
-   *   <li>{@code user-priority}：参数 &gt; Cookie &gt; 用户偏好 SPI &gt; Header &gt; 默认 Locale
-   * </ul>
-   *
-   * <p>仅当类路径存在 {@link LocaleResolver} 且当前没有自定义 {@code LocaleResolver} Bean 时才注册，避免与 Spring Boot 自动配置冲突。
-   *
-   * @return 区域解析器
+   * 区域解析器（可切换 accept-header / user-priority 两种模式）。
    */
   @Bean
   @ConditionalOnClass({LocaleResolver.class, AcceptHeaderLocaleResolver.class})
   @ConditionalOnMissingBean(LocaleResolver.class)
   public LocaleResolver ydszLocaleResolver() {
     Locale defaultLocale = parseDefaultLocale();
-    String resolverType = i18nProperties.getLocaleResolverType();
-    if ("user-priority".equalsIgnoreCase(resolverType)) {
+    String type = i18nProperties.getLocaleResolverType();
+    if ("user-priority".equalsIgnoreCase(type)) {
       UserPriorityLocaleResolver resolver =
           new UserPriorityLocaleResolver(
               defaultLocale,
               UserPriorityLocaleResolver.DEFAULT_LOCALE_COOKIE_NAME,
               i18nProperties.getLangParamName());
       log.info(
-          "UserPriorityLocaleResolver 已注册 | 默认 Locale: {} | 支持语言: {} | Cookie 名称: {}",
+          "UserPriorityLocaleResolver 已注册 | defaultLocal {} | supported {} | cookie {}",
           defaultLocale,
           Arrays.toString(i18nProperties.getSupportedLocales()),
           UserPriorityLocaleResolver.DEFAULT_LOCALE_COOKIE_NAME);
@@ -224,37 +165,29 @@ public class LocalesAutoConfiguration {
     }
     AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
     resolver.setDefaultLocale(defaultLocale);
-
-    List<Locale> localeList = new ArrayList<>(8);
-    for (String localeStr : i18nProperties.getSupportedLocales()) {
-      localeList.add(parseLocale(localeStr));
+    List<Locale> list = new ArrayList<>(8);
+    for (String s : i18nProperties.getSupportedLocales()) {
+      list.add(parseLocale(s));
     }
-    resolver.setSupportedLocales(localeList);
-
+    resolver.setSupportedLocales(list);
     log.info(
-        "AcceptHeaderLocaleResolver 已注册 | 默认 Locale: {} | 支持语言: {}",
+        "AcceptHeaderLocaleResolver 已注册 | defaultLocal {} | supported {}",
         defaultLocale,
         Arrays.toString(i18nProperties.getSupportedLocales()));
-
     return resolver;
   }
 
   /**
-   * 注册用户偏好 Locale 写入拦截器（仅当 LocaleResolver 类型为 user-priority 时生效）。
+   * 用户偏好 Locale 持久化 — Cookie 写入拦截器（仅 user-priority 模式下注册）。
    *
-   * <p>与 {@link UserPriorityLocaleResolver} 配合，在请求完成后将本次切换的 Locale 写入 Cookie。
-   *
-   * @return WebMvcConfigurer 实例，仅增加拦截器而不覆盖用户自定义的配置
+   * <p>配合 {@link UserPriorityLocaleResolver}，在请求完成后将本次切换的 Locale 写入 Cookie。
    */
   @Bean
-  @ConditionalOnClass({HandlerInterceptor.class, UserPriorityLocaleResolver.class})
+  @ConditionalOnProperty(prefix = "ydsz.i18n", name = "locale-resolver-type", havingValue = "user-priority")
+  @ConditionalOnClass(HandlerInterceptor.class)
   @ConditionalOnMissingBean(name = "ydszLocaleWritingMvcConfigurer")
   public WebMvcConfigurer ydszLocaleWritingMvcConfigurer() {
-    if (!"user-priority".equalsIgnoreCase(i18nProperties.getLocaleResolverType())) {
-      // 无需注册拦截器，返回 noop configurer
-      return new WebMvcConfigurer() {};
-    }
-    final UserPriorityLocaleWritingInterceptor interceptor =
+    UserPriorityLocaleWritingInterceptor interceptor =
         new UserPriorityLocaleWritingInterceptor(
             UserPriorityLocaleResolver.DEFAULT_LOCALE_COOKIE_NAME,
             UserPriorityLocaleResolver.DEFAULT_COOKIE_MAX_AGE);
@@ -266,15 +199,20 @@ public class LocalesAutoConfiguration {
     };
   }
 
-  /**
-   * 注册 i18n Admin REST Controller（仅当 {@link I18nProperties#isAdminApiEnabled()} 且存在 I18nAdminController
-   * 类时才注册）。
-   *
-   * <p>提供端点：/api/admin/i18n/config | translate | missing | languages | overrides | override PUT | reload。
-   * 鉴权由 Spring Security 资源服务器在 ydsz-userinfo 模块中承担。
-   *
-   * @return Admin REST Controller
-   */
+  /** 语言切换 URL 参数拦截器。 */
+  @Bean
+  @ConditionalOnClass(LocaleChangeInterceptor.class)
+  @ConditionalOnMissingBean(LocaleChangeInterceptor.class)
+  public LocaleChangeInterceptor localeChangeInterceptor() {
+    LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
+    interceptor.setParamName(i18nProperties.getLangParamName());
+    log.info("LocaleChangeInterceptor 已注册 | param {}", i18nProperties.getLangParamName());
+    return interceptor;
+  }
+
+  // ==================== 管理端点 ====================
+
+  /** i18n 管理 REST Controller（ydsz.i18n.admin-api-enabled=true 时注册）。 */
   @Bean
   @ConditionalOnProperty(prefix = "ydsz.i18n", name = "admin-api-enabled", havingValue = "true")
   @ConditionalOnClass(I18nAdminController.class)
@@ -283,29 +221,11 @@ public class LocalesAutoConfiguration {
     return new I18nAdminController(i18nProperties);
   }
 
-  /**
-   * 创建语言切换拦截器
-   *
-   * <p>通过 URL 参数（默认 ?lang=en_US）覆盖 Accept-Language 与默认 Locale。
-   *
-   * @return 语言切换拦截器
-   */
-  @Bean
-  @ConditionalOnClass({LocaleChangeInterceptor.class})
-  @ConditionalOnMissingBean(LocaleChangeInterceptor.class)
-  public LocaleChangeInterceptor localeChangeInterceptor() {
-    LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
-    interceptor.setParamName(i18nProperties.getLangParamName());
-    log.info("LocaleChangeInterceptor 已注册 | 参数名: {}", i18nProperties.getLangParamName());
-    return interceptor;
-  }
-
   // ==================== 辅助方法 ====================
 
   private boolean isProdEnvironment() {
-    String[] activeProfiles = environment != null ? environment.getActiveProfiles() : new String[] {};
-    for (String profile : activeProfiles) {
-      if ("prod".equalsIgnoreCase(profile)) {
+    for (String p : (environment != null ? environment.getActiveProfiles() : new String[] {})) {
+      if ("prod".equalsIgnoreCase(p)) {
         return true;
       }
     }
@@ -313,13 +233,7 @@ public class LocalesAutoConfiguration {
   }
 
   /**
-   * 校验跨语言翻译完整性：默认 Locale（zh_CN）下的每个 i18n key 是否在所有支持的 Locale 中也有对应翻译。
-   *
-   * <p>校验在启用了 {@code validateOnStartup=true} 且支持的 Locale 数量 ≥ 2 时生效。若某 key 在 zh_CN 中存在但在
-   * en_US / zh_TW 等其它 Locale 中缺失（useCodeAsDefaultMessage=true 导致返回 key 本身），则以
-   * MissingTranslationLogger 节流器输出 WARN 日志。
-   *
-   * <p><b>自包含约束：</b>本方法不依赖 L3+ 模块（如 ydsz-common-exception），仅在 L2 locales 模块内完成资源加载与校验。
+   * 校验跨语言翻译完整性：默认 Locale 下的每个 i18n key 是否在所有支持的 Locale 中也有对应翻译。
    */
   private void validateCrossLocaleCompleteness() {
     if (!i18nProperties.isValidateOnStartup()) {
@@ -330,70 +244,50 @@ public class LocalesAutoConfiguration {
       return;
     }
     Locale defaultLocale = parseDefaultLocale();
-    // 加载默认 Locale 的 key 集合
-    Set<String> defaultLocaleKeys = loadKeysForLocale(defaultLocale);
-    if (defaultLocaleKeys.isEmpty()) {
-      log.debug("跨语言校验跳过：默认 Locale {} 下未找到任何 i18n key", defaultLocale);
+    Set<String> defaultKeys = loadKeysForLocale(defaultLocale);
+    if (defaultKeys.isEmpty()) {
       return;
     }
     int missingCount = 0;
-    for (String localeTag : supportedLocales) {
-      Locale locale = parseLocale(localeTag);
-      if (locale.equals(defaultLocale)) {
+    for (String tag : supportedLocales) {
+      Locale loc = parseLocale(tag);
+      if (loc.equals(defaultLocale)) {
         continue;
       }
-      Set<String> localeKeys = loadKeysForLocale(locale);
-      for (String key : defaultLocaleKeys) {
-        if (!localeKeys.contains(key)) {
+      Set<String> locKeys = loadKeysForLocale(loc);
+      for (String key : defaultKeys) {
+        if (!locKeys.contains(key)) {
           missingCount++;
           log.warn(
-              "i18n 跨语言翻译缺失：key='{}' 在默认 Locale ({}) 存在，但在 Locale ({}) 缺失对应翻译",
-              key,
-              defaultLocale,
-              localeTag);
+              "i18n 跨语言缺失：key='{}' 存在于 {} 但缺失于 {}", key, defaultLocale, tag);
         }
       }
     }
     if (missingCount > 0) {
-      log.warn(
-          "跨语言翻译完整性校验完成：发现 {} 个 key 在默认 Locale ({}) 存在但部分支持 Locale 中缺失",
-          missingCount,
-          defaultLocale);
+      log.warn("跨语言校验完成：发现 {} 个 miss 的 key（默认 Locale {}）", missingCount, defaultLocale);
     } else {
       log.info(
-          "跨语言翻译完整性校验通过：默认 Locale ({}) 中 {} 个 key 在所有 {} 个支持 Locale 中均有翻译",
-          defaultLocale,
-          defaultLocaleKeys.size(),
-          supportedLocales.length);
+          "跨语言校验通过：{} 个 key（默认 Locale {}）在所有 {} 个 Locale 中均有翻译",
+          defaultKeys.size(), defaultLocale, supportedLocales.length);
     }
   }
 
   /**
-   * 加载指定 Locale 下所有资源前缀中的 key 集合。
-   *
-   * <p>实现方式：通过 {@link PathMatchingResourcePatternResolver} 定位 `{prefix}_{locale}.properties` 文件，
-   * 逐文件读取 Properties 并提取所有 key。失败（文件不存在/IO 异常）时回退跳过，不阻断启动。
-   *
-   * @param locale 目标 Locale
-   * @return 该 Locale 下所有 basename 的 key 集合（可能为空但不为 null）
+   * 加载指定 Locale 下所有资源前缀中的 key 集合。失败时回退跳过，不阻断启动。
    */
   private Set<String> loadKeysForLocale(Locale locale) {
     Set<String> keys = new LinkedHashSet<>();
-    String localeSuffix =
+    String suffix =
         locale.getCountry().isEmpty()
             ? locale.getLanguage()
             : locale.getLanguage() + "_" + locale.getCountry();
     String[] basenames = i18nProperties.getEffectiveBasenames();
     PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
     for (String basename : basenames) {
-      String basenameTrimmed = normalizeBasename(basename);
-      // 构造资源路径：classpath:i18n/exception-messages_zh_CN.properties
-      String resourcePath = basenameTrimmed + "_" + localeSuffix + ".properties";
       try {
-        Resource[] resources = resolver.getResources(resourcePath);
-        for (Resource resource : resources) {
-          if (resource.exists()) {
-            try (InputStream is = resource.getInputStream()) {
+        for (Resource r : resolver.getResources(normalizeBasename(basename) + "_" + suffix + ".properties")) {
+          if (r.exists()) {
+            try (InputStream is = r.getInputStream()) {
               Properties props = new Properties();
               props.load(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8));
               keys.addAll(props.stringPropertyNames());
@@ -401,65 +295,49 @@ public class LocalesAutoConfiguration {
           }
         }
       } catch (Exception e) {
-        // 资源不存在或读取失败时跳过，不阻断
+        // ignore
       }
     }
     return keys;
   }
 
   private MessageSource createMessageSource(int cacheSeconds) {
-    ReloadableResourceBundleMessageSource messageSource =
-        new ReloadableResourceBundleMessageSource();
+    ReloadableResourceBundleMessageSource ms = new ReloadableResourceBundleMessageSource();
+    String[] effective = i18nProperties.getEffectiveBasenames();
 
-    // 获取有效的 basename 列表：手动配置 + 通配符扫描发现（如果启用） + 兜底框架级
-    String[] effectiveBasenames = i18nProperties.getEffectiveBasenames();
-
-    // 记录通配符扫描发现的新增资源
     if (i18nProperties.isWildcardScanEnabled()) {
-      int discoveredCount = effectiveBasenames.length - i18nProperties.getBasename().split(",").length;
-      if (discoveredCount >= DISCOVERY_LOG_THRESHOLD) {
-        log.info(
-            "通配符扫描已发现 {} 个 i18n 资源前缀 | 总计: {} 个",
-            discoveredCount,
-            effectiveBasenames.length);
+      int disc = effective.length - i18nProperties.getBasename().split(",").length;
+      if (disc >= DISCOVERY_LOG_THRESHOLD) {
+        log.info("通配符扫描发现 {} 个资源前缀 | 总计 {} 个", disc, effective.length);
       } else {
-        log.info("通配符扫描已执行 | 总计: {} 个 i18n 资源前缀", effectiveBasenames.length);
+        log.info("通配符扫描已执行 | 总计 {} 个资源前缀", effective.length);
       }
     }
 
-    // 清理 basename（去除空白，标准化 classpath 前缀）
-    String[] cleanedBasenames = new String[effectiveBasenames.length];
-    for (int i = 0; i < effectiveBasenames.length; i++) {
-      cleanedBasenames[i] = normalizeBasename(effectiveBasenames[i]);
+    String[] cleaned = new String[effective.length];
+    for (int i = 0; i < effective.length; i++) {
+      cleaned[i] = normalizeBasename(effective[i]);
     }
-    messageSource.setBasenames(cleanedBasenames);
-
-    messageSource.setDefaultEncoding(i18nProperties.getEncoding());
-    messageSource.setCacheSeconds(cacheSeconds);
-    messageSource.setFallbackToSystemLocale(i18nProperties.isFallbackToSystemLocale());
-    messageSource.setUseCodeAsDefaultMessage(true);
-
-    // 将 MessageSource 桥接至 MessageSourceHolder，使 I18nMessages / I18n 静态工具能走统一路径（负缓存 + 缺失节流）
-    bridgeMessageSourceHolder(messageSource);
+    ms.setBasenames(cleaned);
+    ms.setDefaultEncoding(i18nProperties.getEncoding());
+    ms.setCacheSeconds(cacheSeconds);
+    ms.setFallbackToSystemLocale(i18nProperties.isFallbackToSystemLocale());
+    ms.setUseCodeAsDefaultMessage(true);
+    bridgeMessageSourceHolder(ms);
 
     log.info(
-        "国际化配置已加载 | 资源前缀数: {} | 缓存时间: {}秒 | 支持语言: {} | profiles: {} | wildcardScan: {}",
-        cleanedBasenames.length,
+        "i18n 配置已加载 | basenames={} | 缓存={}s | 支持语言={} | profiles={} | wildcardScan={}",
+        cleaned.length,
         cacheSeconds,
         Arrays.toString(i18nProperties.getSupportedLocales()),
         Arrays.toString(environment != null ? environment.getActiveProfiles() : new String[] {}),
         i18nProperties.isWildcardScanEnabled());
 
-    return messageSource;
+    return ms;
   }
 
   /**
-   * 将 Spring MessageSource 桥接至 {@link MessageSourceHolder}，实现 I18nMessages（可注入 Bean）与
-   * {@link com.njydsz.common.locales.util.I18n}（静态工具）共享同一解析入口。
-   *
-   * <p>桥接后二者行为全等：负缓存命中、缺失节流、LRU 淘汰 — 解决此前双路径行为不对称的隐患（A1 修复点）。
-   *
-   * @param messageSource Spring 提供的 MessageSource 实例（不可为 null）
+   * 桥接 Spring MessageSource 至 MessageSourceHolder，实现 I18nMessages / I18n 双路径行为统一。
    */
   private void bridgeMessageSourceHolder(MessageSource messageSource) {
     MessageSourceHolder.setResolver(
@@ -467,49 +345,40 @@ public class LocalesAutoConfiguration {
           try {
             return messageSource.getMessage(key, params, defaultMsg, locale);
           } catch (Exception e) {
-            // MessageSource.getMessage 在 key 找不到时会抛 NoSuchMessageException，
-            // 此时 useCodeAsDefaultMessage=true 场景下 messageSource 已返回 key 本身，
-            // 正常分支不会进入此处；仅兜底极端场景（如 encoding 异常、Bundle 损坏）
             return defaultMsg;
           }
         });
-    log.info("MessageSource 已桥接至 MessageSourceHolder | 双路径行为统一启用");
+    log.info("MessageSource → MessageSourceHolder 桥接完成");
   }
 
-  /**
-   * 标准化 basename 条目：去除首尾空格、去掉尾部斜杠。
-   *
-   * @param basename 原始 basename 字符串（如 " classpath:i18n/userinfo-messages "）
-   * @return 标准化后的 basename（如 "classpath:i18n/userinfo-messages"）
-   */
   private String normalizeBasename(String basename) {
     if (basename == null) {
       return "";
     }
-    String trimmed = basename.trim();
-    // 去掉尾部斜杠（防止路径拼接异常）
-    while (trimmed.endsWith("/")) {
-      trimmed = trimmed.substring(0, trimmed.length() - 1);
+    String s = basename.trim();
+    while (s.endsWith("/")) {
+      s = s.substring(0, s.length() - 1);
     }
-    return trimmed;
+    return s;
   }
 
   private Locale parseDefaultLocale() {
-    String defaultLocaleTag = i18nProperties.getDefaultLocale();
-    if (defaultLocaleTag == null || defaultLocaleTag.isEmpty()) {
-      return Locale.CHINA;
-    }
-    return parseLocale(defaultLocaleTag);
+    String tag = i18nProperties.getDefaultLocale();
+    return (tag == null || tag.isEmpty()) ? Locale.CHINA : parseLocale(tag);
   }
 
-  private Locale parseLocale(String localeStr) {
-    if (localeStr == null || localeStr.isEmpty()) {
+  private Locale parseLocale(String s) {
+    if (s == null || s.isEmpty()) {
       return Locale.CHINA;
     }
-    String[] parts = localeStr.split("_");
+    String[] parts = s.split("_");
     if (parts.length == 2) {
       return new Locale.Builder().setLanguage(parts[0]).setRegion(parts[1]).build();
     }
     return Locale.CHINA;
   }
+
+  // 用不到的 import 占位，防止被裁剪
+  @SuppressWarnings("unused")
+  private static void keepImports(HttpServletRequest r, HttpServletResponse s) {}
 }
