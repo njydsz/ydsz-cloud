@@ -261,7 +261,7 @@ public class ExcelFacade {
    * @return ExcelTemplateWriter 实例
    */
   public static <T> ExcelTemplateWriter writeWithTemplate(
-      java.io.InputStream templateStream, String outputPath, Class<T> clazz) {
+      InputStream templateStream, String outputPath, Class<T> clazz) {
     return new ExcelTemplateWriter(templateStream, outputPath, clazz);
   }
 
@@ -290,9 +290,9 @@ public class ExcelFacade {
    * @param clazz 数据类型
    * @param <T> 泛型参数
    * @return CsvWriter 实例
-   * @throws java.io.IOException 文件创建异常
+   * @throws IOException 文件创建异常
    */
-  public static <T> CsvWriter<T> writeCsv(Path path, Class<T> clazz) throws java.io.IOException {
+  public static <T> CsvWriter<T> writeCsv(Path path, Class<T> clazz) throws IOException {
     return CsvWriter.write(path, clazz);
   }
 
@@ -315,9 +315,9 @@ public class ExcelFacade {
    * @param clazz 目标类型
    * @param <T> 泛型参数
    * @return CsvReader 实例
-   * @throws java.io.IOException 文件打开异常
+   * @throws IOException 文件打开异常
    */
-  public static <T> CsvReader<T> readCsv(Path path, Class<T> clazz) throws java.io.IOException {
+  public static <T> CsvReader<T> readCsv(Path path, Class<T> clazz) throws IOException {
     return CsvReader.read(path, clazz);
   }
 

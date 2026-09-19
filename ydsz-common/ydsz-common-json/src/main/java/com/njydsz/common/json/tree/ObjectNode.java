@@ -260,6 +260,115 @@ public final class ObjectNode extends JsonNode {
     return copy;
   }
 
+  // ==================== 容器字段访问（P1 能力补齐，对标 Jackson） ====================
+
+  /**
+   * 获取指定字段名的 ArrayNode，不存在时自动创建空数组并添加。
+   *
+   * <p>对标 Jackson {@code withArray()}：适用于输入字段缺失时仍需追加元素的场景（如构建过滤器列表）， 避免额外的 {@code has()} 检查。
+   *
+   * @param fieldName 字段名
+   * @return 该字段对应的 ArrayNode（永不为 null；类型不符时抛出 IllegalStateException）
+   * @since 26.09.01
+   */
+  public ArrayNode withArray(String fieldName) {
+    JsonNode existing = fields.get(fieldName);
+    if (existing == null) {
+      ArrayNode created = new ArrayNode();
+      fields.put(fieldName, created);
+      return created;
+    }
+    if (existing instanceof ArrayNode arrayNode) {
+      return arrayNode;
+    }
+    throw new IllegalStateException(
+        "Field '" + fieldName + "' is not an ArrayNode: " + existing.getClass().getSimpleName());
+  }
+
+  /**
+   * 获取指定字段名的 ObjectNode，不存在时自动创建空对象并添加。
+   *
+   * <p>对标 Jackson {@code withObject()}：适用于多层嵌套对象构建场景，避免逐层判空。
+   *
+   * @param fieldName 字段名
+   * @return 该字段对应的 ObjectNode（永不为 null；类型不符时抛出 IllegalStateException）
+   * @since 26.09.01
+   */
+  public ObjectNode withObject(String fieldName) {
+    JsonNode existing = fields.get(fieldName);
+    if (existing == null) {
+      ObjectNode created = new ObjectNode();
+      fields.put(fieldName, created);
+      return created;
+    }
+    if (existing instanceof ObjectNode objectNode) {
+      return objectNode;
+    }
+    throw new IllegalStateException(
+        "Field '" + fieldName + "' is not an ObjectNode: " + existing.getClass().getSimpleName());
+  }
+
+  /**
+   * 批量添加指定 ObjectNode 中的所有字段到当前节点。
+   *
+   * <p>对标 Jackson {@code setAll(ObjectNode)}：字段冲突时以后入覆盖。
+   *
+   * @param other 源 ObjectNode（为 null 时忽略）
+   * @return 当前对象节点（支持链式调用）
+   * @since 26.09.01
+   */
+  public ObjectNode setAll(ObjectNode other) {
+    if (other == null) {
+      return this;
+    }
+    fields.putAll(other.fields);
+    return this;
+  }
+
+  /**
+   * 批量添加指定 Map 中的所有字段到当前节点（值自动包装为 JsonNode）。
+   *
+   * <p>对标 Jackson {@code setAll(Map)}：值通过 {@link #wrapNode(Object)} 自动转换， 字符串 → TextNode、数字 → NumberNode、null → NullNode。
+   *
+   * @param map 字段名到原始值的映射（为 null 时忽略）
+   * @return 当前对象节点（支持链式调用）
+   * @since 26.09.01
+   */
+  public ObjectNode setAll(Map<String, ?> map) {
+    if (map == null) {
+      return this;
+    }
+    for (Map.Entry<String, ?> entry : map.entrySet()) {
+      fields.put(entry.getKey(), wrapNode(entry.getValue()));
+    }
+    return this;
+  }
+
+  /**
+   * 将 Java 原始值包装为对应的 JsonNode：null → NullNode、String → TextNode、Number → NumberNode、 Boolean → BooleanNode，其余类型回退为 TextNode(value.toString())。
+   *
+   * @param value 原始值
+   * @return 包装后的 JsonNode
+   */
+  private static JsonNode wrapNode(Object value) {
+    if (value == null) {
+      return NullNode.getInstance();
+    }
+    if (value instanceof JsonNode node) {
+      return node;
+    }
+    if (value instanceof String s) {
+      return new TextNode(s);
+    }
+    if (value instanceof Number n) {
+      return new NumberNode(n);
+    }
+    if (value instanceof Boolean b) {
+      return BooleanNode.of(b);
+    }
+    return new TextNode(value.toString());
+  }
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();

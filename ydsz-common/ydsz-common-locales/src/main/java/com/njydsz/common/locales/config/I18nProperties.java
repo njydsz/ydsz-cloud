@@ -4,10 +4,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -45,6 +47,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
  */
 @Getter
 @Setter
+@Slf4j
 @ConfigurationProperties(prefix = "ydsz.i18n")
 public class I18nProperties {
 
@@ -430,9 +433,9 @@ public class I18nProperties {
   }
 
   /**
-   * 合并手动配置 basename 与通配符扫描发现的 basename。
+   * 合并手动配置 basename、通配符扫描发现、SPI  Provider 声明的 basename。
    *
-   * <p>手动配置优先级更高：手动配置的 basename 在前，通配符发现的在后，去重合并。
+   * <p>合并优先级：手动配置 > 通配符扫描 > SPI Provider 声明，去重保留首次出现顺序。三类来源覆盖绝大多数资源定位场景。
    *
    * @return 合并后的 basename 数组
    */
@@ -454,7 +457,44 @@ public class I18nProperties {
       merged.addAll(discoverBasenamesViaWildcard());
     }
 
+    // 3. 最后加入 SPI Provider 声明的 basename（用于非标准路径的模块自声明）
+    merged.addAll(discoverBasenamesViaSpi());
+
     return merged.toArray(new String[0]);
+  }
+
+  /**
+   * 通过 ServiceLoader 发现业务模块实现的 {@link com.njydsz.common.locales.spi.I18nBasenameProvider}，收集其声明的 basename。
+   *
+   * <p>失败（无实现类 / ServiceLoader 异常）时返回空集合，不阻断启动。
+   *
+   * @return SPI Provider 声明的 basename 集合
+   */
+  private Set<String> discoverBasenamesViaSpi() {
+    Set<String> discovered = new LinkedHashSet<>();
+    try {
+      ServiceLoader<com.njydsz.common.locales.spi.I18nBasenameProvider> loader =
+          ServiceLoader.load(com.njydsz.common.locales.spi.I18nBasenameProvider.class);
+      for (com.njydsz.common.locales.spi.I18nBasenameProvider provider : loader) {
+        try {
+          Set<String> contributed = provider.getAdditionalBasenames();
+          if (contributed != null) {
+            for (String b : contributed) {
+              if (b != null && !b.trim().isEmpty()) {
+                discovered.add(b.trim());
+              }
+            }
+          }
+        } catch (Exception e) {
+          // SPI 实现抛出异常时跳过，防止一个模块异常影响全局 i18n
+          log.warn("I18nBasenameProvider.getAdditionalBasenames() 异常: {}", e.getMessage());
+        }
+      }
+    } catch (Exception e) {
+      // ServiceLoader 本身异常（如无 provider 文件）时静默跳过
+      log.debug("ServiceLoader I18nBasenameProvider 发现失败: {}", e.getMessage());
+    }
+    return discovered;
   }
 
   @Override
@@ -492,6 +532,8 @@ public class I18nProperties {
         + negativeCacheEnabled
         + ", negativeCacheCapacity="
         + negativeCacheCapacity
+        + ", metadataApiEnabled="
+        + metadataApiEnabled
         + '}';
   }
 }

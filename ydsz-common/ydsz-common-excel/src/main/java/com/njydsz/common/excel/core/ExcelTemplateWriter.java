@@ -2,6 +2,7 @@ package com.njydsz.common.excel.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +51,7 @@ public class ExcelTemplateWriter {
   private static final Logger LOG = LoggerFactory.getLogger(ExcelTemplateWriter.class);
 
   private final String templatePath;
-  private final InputStream templateInputStream;
+  private InputStream templateInputStream;
   private final WriteMetadata metadata;
   private final ValueFormatter valueFormatter;
   private int sheetIndex = 0;
@@ -150,9 +151,15 @@ public class ExcelTemplateWriter {
       return;
     }
 
-    InputStream templateIs =
-        templateInputStream != null ? templateInputStream : new FileInputStream(templatePath);
-    try (XSSFWorkbook workbook = new XSSFWorkbook(templateIs)) {
+    try {
+      if (templatePath != null && templateInputStream == null) {
+        templateInputStream = new FileInputStream(templatePath);
+      }
+    } catch (FileNotFoundException e) {
+      throw ExcelWriteException.fileAccessFailed(templatePath, e.getMessage());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(templateInputStream)) {
 
       Sheet sheet = workbook.getSheetAt(sheetIndex);
       Class<?> clazz = metadata.getClazz();
