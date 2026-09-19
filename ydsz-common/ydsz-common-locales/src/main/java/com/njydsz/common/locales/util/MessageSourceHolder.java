@@ -1,6 +1,8 @@
 package com.njydsz.common.locales.util;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
@@ -109,6 +111,15 @@ public final class MessageSourceHolder {
       new AtomicReference<>(NegativeCacheState.disabled());
 
   /**
+   * 运行时翻译覆盖层（重启失效）
+   *
+   * <p>key 格式为 "messageKey|localeTag"（如 "error.user.not.found|en_US"），value 为覆盖后的翻译文案。
+   * 通过 {@link #override(String, String, String)} 写入，通过 {@link #resolve(String, Object[], Locale)}
+   * 在解析时优先命中，绕过底层 MessageSource basename 扫描。用于紧急翻译修复或 A/B 测试文案，无需重启应用。
+   */
+  private static final Map<String, String> RUNTIME_OVERRIDES = new ConcurrentHashMap<>();
+
+  /**
    * 解析国际化消息（供 AbstractYdszException.getMessage() 与 I18n.message() 调用）。
    *
    * <p>按当前请求线程的 Locale 解析，保证同一异常在不同语言请求下返回对应文案。 若解析器未注入，直接返回 messageKey 本身（保持向后兼容）。 若解析器已注入但解析失败（如
@@ -137,7 +148,16 @@ public final class MessageSourceHolder {
     }
     Locale resolvedLocale = locale != null ? locale : Locale.ROOT;
 
-    // 负缓存快速路径：已知该 key+Locale 不存在，直接返回 key，避免重复遍历所有 basename Properties
+    // ① 运行时覆盖层最高优先级（重启失效的紧急翻译修复 / A/B 文案）
+    if (!RUNTIME_OVERRIDES.isEmpty()) {
+      String overrideKey = messageKey + "|" + resolvedLocale;
+      String override = RUNTIME_OVERRIDES.get(overrideKey);
+      if (override != null) {
+        return override;
+      }
+    }
+
+    // ② 负缓存快速路径：已知该 key+Locale 不存在，直接返回 key，避免重复遍历所有 basename Properties
     NegativeCacheState cacheState = NEG_CACHE_STATE.get();
     if (cacheState.isEnabled() && cacheState.getCache().isMissing(messageKey, resolvedLocale)) {
       return messageKey;
@@ -177,6 +197,79 @@ public final class MessageSourceHolder {
       return;
     }
     NEG_CACHE_STATE.set(NegativeCacheState.enabled(Math.max(1, capacity)));
+  }
+
+  /**
+   * 写入运行时翻译覆盖（重启失效）。
+   *
+   * <p>通过 admin API 调用；同样自动清空负缓存，让新翻译立即可见。覆盖层按 key+locale 独立存储； 不传 locale 则针对所有 Locale
+   * 生效（deprecated 路径，不推荐）。
+   *
+   * @param key i18n 消息键（非 null、非空）
+   * @param localeTag 语言标签（如 en_US、zh_CN）
+   * @param translatedText 翻译后的文案（非 null）
+   * @return 之前的覆盖值；首次写入返回 null
+   */
+  public static String override(String key, String localeTag, String translatedText) {
+    if (key == null || key.isEmpty() || localeTag == null || translatedText == null) {
+      throw new IllegalArgumentException(
+          "override parameters must not be null/empty: key=" + key + ", locale=" + localeTag);
+    }
+    String overrideKey = key + "|" + localeTag;
+    String previous = RUNTIME_OVERRIDES.put(overrideKey, translatedText);
+    // 自动清除负缓存：让刚写入的覆盖值立即可见（不需要等的缓存刷新）
+    NegativeCacheState cacheState = NEG_CACHE_STATE.get();
+    if (cacheState.isEnabled()) {
+      cacheState.getCache().clear();
+    }
+    return previous;
+  }
+
+  /**
+   * 移除单次运行时翻译覆盖。
+   *
+   * @param key i18n 消息键
+   * @param localeTag 语言标签
+   * @return 被移除的覆盖值；不存在返回 null
+   */
+  public static String removeOverride(String key, String localeTag) {
+    if (key == null || localeTag == null) {
+      return null;
+    }
+    return RUNTIME_OVERRIDES.remove(key + "|" + localeTag);
+  }
+
+  /**
+   * 获取当前运行时覆盖的只读视图（用于 admin API 展示）。
+   *
+   * @return 覆盖层的快照（key=messageKey|localeTag, value=已翻译文案）
+   */
+  public static Map<String, String> snapshotOverrides() {
+    return Map.copyOf(RUNTIME_OVERRIDES);
+  }
+
+  /**
+   * 清空运行时覆盖层（移除所有条目）。
+   *
+   * @return 被清空的条目数
+   */
+  public static int clearOverrides() {
+    int size = RUNTIME_OVERRIDES.size();
+    RUNTIME_OVERRIDES.clear();
+    return size;
+  }
+
+  /**
+   * 清空所有 i18n 缓存：负缓存 + 运行时覆盖层。
+   *
+   * <p>仅供 admin API reload 端点调用，在翻译资源文件变更后触发。
+   */
+  public static void clearCaches() {
+    NegativeCacheState cacheState = NEG_CACHE_STATE.get();
+    if (cacheState.isEnabled()) {
+      cacheState.getCache().clear();
+    }
+    MissingTranslationLogger.reset();
   }
 
   /** 负缓存状态对象（通过 AtomicReference CAS 切换，无锁读取） */

@@ -2,6 +2,7 @@ package com.njydsz.common.exception.endpoint;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -102,10 +103,12 @@ public class ExceptionCodeDocEndpoint {
         continue;
       }
 
-      String message = resolveMessage(code);
+      // 多语言消息（26.09.19 增强）：输出全部已配置语言的文案
+      Map<String, String> messages = resolveAllMessages(code);
+      String defaultMessage = messages.getOrDefault(Locale.ROOT.toString(), code.getKey());
       docs.add(
           new ExceptionCodeDoc(
-              code.getCode(), code.getKey(), code.getHttpStatus(), message, sourceName));
+              code.getCode(), code.getKey(), code.getHttpStatus(), defaultMessage, sourceName, messages));
     }
 
     docs.sort(Comparator.comparing(ExceptionCodeDoc::getCode));

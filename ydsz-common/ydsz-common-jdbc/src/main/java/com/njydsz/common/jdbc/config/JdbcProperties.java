@@ -3,6 +3,7 @@ package com.njydsz.common.jdbc.config;
 import java.util.Arrays;
 import java.util.List;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -26,6 +27,7 @@ import org.springframework.validation.annotation.Validated;
  * ydsz:
  *   jdbc:
  *     enabled: true
+ *     id-type: ASSIGN_ID          # 全局默认主键策略（与MP IdType对应）
  *     mapper-scan-packages: com.njydsz.**.mapper
  *     slow-sql:
  *       enabled: true
@@ -42,6 +44,16 @@ public class JdbcProperties {
 
   /** 是否启用 JDBC 模块（默认 true） */
   private boolean isEnabled = true;
+
+  /**
+   * 全局默认主键策略
+   *
+   * <p>未在实体 {@code @TableId(type=...)} 上显式声明的字段将使用此默认值，
+   * 统一跨模块 ID 生成策略。支持的值：AUTO、NONE、INPUT、ASSIGN_ID、ASSIGN_UUID。
+   *
+   * <p>默认值：ASSIGN_ID（雪花算法）
+   */
+  private IdType idType = IdType.ASSIGN_ID;
 
   /** Mapper 扫描包路径数组（默认 com.njydsz.**.mapper） */
   private List<String> mapperScanPackages = Arrays.asList("com.njydsz.**.mapper");
