@@ -76,18 +76,18 @@ class CollectionUtilsTest {
     @Test
     @DisplayName("listToMap: 正常转换取第一个")
     void listToMap_normalCase_takesFirstOnDuplicate() {
-      Map<String, Integer> result = CollectionUtils.listToMap(
+      Map<Integer, String> result = CollectionUtils.listToMap(
           List.of("aa", "bb", "cc"), String::length);
-      assertThat(result).containsEntry("aa", 2).containsEntry("bb", 2).containsEntry("cc", 2);
-      // 重复键只保留第一个
-      assertThat(result).hasSize(3);
+      assertThat(result).containsEntry(2, "aa");
+      // 全部长度都是 2，重复键只保留第一个
+      assertThat(result).hasSize(1);
     }
 
     @Test
     @DisplayName("listToMap: 空集返回空 Map")
     void listToMap_empty_returnsEmptyMap() {
-      Map<String, Integer> result = CollectionUtils.listToMap(
-          Collections.emptyList(), String::length);
+      Map<Integer, String> result = CollectionUtils.listToMap(
+          Collections.<String>emptyList(), String::length);
       assertThat(result).isEmpty();
     }
 

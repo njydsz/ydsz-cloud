@@ -419,6 +419,48 @@ public interface Cache<K, V> {
   }
 
   // ============================================================================
+  // 缓存预热
+  // ============================================================================
+
+  /**
+   * 缓存预热 — 使用给定的加载器预加载指定键集合到缓存。
+   *
+   * <p>对标 Caffeine 的 refreshAfterWrite 预热语义，用于应用启动阶段主动加载热点数据（配置、字典、权限等）到缓存。
+   * 已存在的 key 默认逐出并重新加载；loader 返回 null 的 key 不写入缓存。
+   *
+   * <p>预热操作应在缓存构建完成后、对外提供服务前执行一次，推荐通过 Spring {@code @PostConstruct} 或
+   * {@code ApplicationRunner} 调用。简单预热可直接调用此默认方法；异步预热场景可由实现类覆写。
+   *
+   * @param keys 待预热的键集合（非空）
+   * @param loader 值加载器（非空），为每个缺失或过期的键返回值
+   */
+  default void warmUp(Set<K> keys, Function<K, V> loader) {
+    if (keys == null || keys.isEmpty() || loader == null) {
+      return;
+    }
+    for (K key : keys) {
+      V value = loader.apply(key);
+      if (value != null) {
+        put(key, value);
+      }
+    }
+  }
+
+  /**
+   * 缓存预热 — 使用 {@link Warmer} SPI 预加载热点数据。
+   *
+   * <p>委托给 {@link Warmer#warm} 实现。此默认方法提供统一调用入口，实现类可覆写以支持异步预热。
+   *
+   * @param warmer 预热器 SPI（非空）
+   */
+  default void warmUp(com.njydsz.common.cache.support.Warmer warmer, Cache<K, V> target) {
+    if (warmer == null) {
+      return;
+    }
+    warmer.warm((com.njydsz.common.cache.api.Cache<String, Object>) target);
+  }
+
+  // ============================================================================
   // 维护操作
   // ============================================================================
 

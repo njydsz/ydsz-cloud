@@ -214,6 +214,50 @@ public class ExcelConfig {
   }
 
   /**
+   * 基于已有的 {@link ExcelConfig} 创建 {@link Builder} 实例。
+   *
+   * <p>新 Builder 的所有字段预填充为 source 的当前值，便于在已有配置上做增量覆盖。
+   * source 为 {@code null} 时行为等同于 {@link #builder()}（全部取默认值）。
+   *
+   * <h3>使用示例</h3>
+   * <pre>{@code
+   * ExcelConfig base = ExcelConfig.defaults();
+   * ExcelConfig fast = ExcelConfig.builder(base)
+   *     .useFastReader(true)
+   *     .useFastWriter(true)
+   *     .build();
+   * }</pre>
+   *
+   * @param source 拷贝源配置，可为 {@code null}
+   * @return 预填充源字段值的 Builder 实例
+   */
+  public static Builder builder(ExcelConfig source) {
+    Builder b = new Builder();
+    if (source == null) {
+      return b;
+    }
+    b.readBufferSize = source.readBufferSize;
+    b.writeBufferSize = source.writeBufferSize;
+    b.isAutomaticTrim = source.isAutomaticTrim;
+    b.defaultDateFormat = source.defaultDateFormat;
+    b.defaultNumberFormat = source.defaultNumberFormat;
+    b.maxReadCacheSize = source.maxReadCacheSize;
+    b.streamingParseThresholdMB = source.streamingParseThresholdMB;
+    b.isStrictNumberConversion = source.isStrictNumberConversion;
+    b.maxReadFileSizeMB = source.maxReadFileSizeMB;
+    b.maxWriteFileSizeMB = source.maxWriteFileSizeMB;
+    b.isFormulaInjectionProtection = source.isFormulaInjectionProtection;
+    b.isUseFastReader = source.isUseFastReader;
+    b.isUseFastWriter = source.isUseFastWriter;
+    b.compressionLevel = source.compressionLevel;
+    b.isUse1904Windowing = source.isUse1904Windowing;
+    b.headRowNumber = source.headRowNumber;
+    b.writeCacheSize = source.writeCacheSize;
+    b.validationMode = source.validationMode;
+    return b;
+  }
+
+  /**
    * 创建默认配置实例。
    *
    * @return 默认 ExcelConfig

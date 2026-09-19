@@ -84,9 +84,9 @@ class DigestUtilsTest {
     @Test
     @DisplayName("hmacSha256Hex: 签名可重复验证")
     void hmacSha256Hex_deterministic() {
-      String key = "secret";
-      String hmac1 = DigestUtils.hmacSha256Hex(TEST_INPUT, key);
-      String hmac2 = DigestUtils.hmacSha256Hex(TEST_INPUT, key);
+      byte[] key = "secret".getBytes(StandardCharsets.UTF_8);
+      String hmac1 = DigestUtils.hmacSha256Hex(TEST_INPUT, "secret");
+      String hmac2 = DigestUtils.hmacSha256Hex(TEST_INPUT, "secret");
       assertThat(hmac1).isEqualTo(hmac2);
     }
 

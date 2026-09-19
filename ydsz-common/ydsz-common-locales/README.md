@@ -79,6 +79,8 @@ public class UserService {
 | `ydsz.i18n.wildcard-scan-enabled` | true | 是否启用 classpath 通配符自动扫描（发现新增模块资源） |
 | `ydsz.i18n.missing-translation-log-enabled` | true | 是否启用翻译缺失 WARN 日志告警 |
 | `ydsz.i18n.missing-translation-log-buffer-capacity` | 200 | 翻译缺失日志节流器缓冲区容量 |
+| `ydsz.i18n.negative-cache-enabled` | true | 是否启用负缓存（避免已知 miss 的 key 重复遍历 basename） |
+| `ydsz.i18n.negative-cache-capacity` | 500 | 负缓存的 LRU 容量上限 |
 
 ## 命名规范
 
