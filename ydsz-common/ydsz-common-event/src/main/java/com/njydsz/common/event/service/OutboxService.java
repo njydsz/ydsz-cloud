@@ -1,9 +1,12 @@
 package com.njydsz.common.event.service;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +36,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  *   <li>自动注入 traceId（从 RequestContext / MDC 获取）
  *   <li>自动注入 tenantId（从 RequestContext 获取）
  *   <li>payload 大小校验（防数据库行过大 / MQ 投递失败）
+ *   <li>大 payload 自动压缩（超过 {@value #COMPRESS_THRESHOLD_BYTES} 字节启用 GZIP）
  *   <li>事务内事件发布（afterCommit 发布 Spring 事件供进程内订阅）
  * </ul>
  *
@@ -48,12 +52,11 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  *         Order order = orderMapper.insert(dto);
  *
  *         // 同一事务写入 Outbox
- *         outboxService.appendToOutbox(OutboxMessage.builder()
+ *         outboxService.appendToOutbox(DomainEvent.builder()
  *             .aggregateType("Order")
  *             .aggregateId(order.getId())
  *             .eventType("OrderCreated")
- *             .payload(toJson(order))
- *         );
+ *             .build());
  *     }
  * }
  * }</pre>
@@ -61,11 +64,17 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * @author ydsz-team
  * @since 26.09.01
  * @since 26.09.01 移除 JSON Schema 校验框架和同步投递模式，精简职责回归异步 Outbox 本质
+ * @since 26.09.19 E-2 字段对齐：deduplicationId → idempotencyKey
+ * @since 26.09.19 O-4 写入时自动设置 schemaVersion（默认 1）
+ * @since 26.09.19 P3 写入时检测 payload 大小，超过阈值自动 GZIP 压缩
  */
 public class OutboxService {
 
   /** 日志实例 */
   private static final Logger LOG = LoggerFactory.getLogger(OutboxService.class);
+
+  /** payload 超过此字节数自动启用 GZIP 压缩存储 */
+  private static final int COMPRESS_THRESHOLD_BYTES = 4096;
 
   /** Outbox 仓储 */
   private final OutboxRepository outboxRepository;
@@ -107,7 +116,9 @@ public class OutboxService {
    *   <li>id - 雪花 ID
    *   <li>tenantId - 从 RequestContext 获取
    *   <li>traceId - 从 RequestContext / MDC 获取
-   *   <li>deduplicationId - 若显式指定则使用
+   *   <li>idempotencyKey - 若显式指定则使用
+   *   <li>schemaVersion - 当前 schema 版本号（默认 1）
+   *   <li>compressed - 根据 payload 大小自动判断
    *   <li>status - PENDING
    *   <li>时间戳 - 当前时间
    * </ul>
@@ -124,17 +135,19 @@ public class OutboxService {
     Instant now = Instant.now();
     String tenantId = resolveTenantId();
     String traceId = resolveTraceId();
-    String deduplicationId = resolveDeduplicationId(partial);
+    String idempotencyKey = resolveIdempotencyKey(partial);
+    String processedPayload = maybeCompress(partial.getPayload());
+    boolean isCompressed = !processedPayload.equals(partial.getPayload());
 
-    // 幂等去重检查（仅当有 deduplicationId 时）
-    if (deduplicationId != null && outboxRepository.existsByDeduplicationId(deduplicationId)) {
+    // 幂等去重检查（仅当有 idempotencyKey 时）
+    if (idempotencyKey != null && outboxRepository.existsByIdempotencyKey(idempotencyKey)) {
       LOG.info(
           "Outbox message skipped (duplicate): aggregateType={}, aggregateId={}, eventType={}, "
-              + "deduplicationId={}",
+              + "idempotencyKey={}",
           partial.getAggregateType(),
           partial.getAggregateId(),
           partial.getEventType(),
-          deduplicationId);
+          idempotencyKey);
       return;
     }
 
@@ -143,7 +156,10 @@ public class OutboxService {
             .id(String.valueOf(snowflakeIdGenerator.nextId()))
             .tenantId(tenantId)
             .traceId(traceId)
-            .deduplicationId(deduplicationId)
+            .idempotencyKey(idempotencyKey)
+            .schemaVersion(1)
+            .isCompressed(isCompressed)
+            .payload(processedPayload)
             .status(OutboxStatus.PENDING)
             .retryCount(0)
             .maxRetries(properties.getMaxRetries())
@@ -154,12 +170,13 @@ public class OutboxService {
 
     outboxRepository.save(message);
     LOG.debug(
-        "Outbox message appended: id={}, type={}, aggregate={}/{}, tenant={}",
+        "Outbox message appended: id={}, type={}, aggregate={}/{}, tenant={}, compressed={}",
         message.getId(),
         message.getEventType(),
         message.getAggregateType(),
         message.getAggregateId(),
-        message.getTenantId());
+        message.getTenantId(),
+        message.isCompressed());
 
     // 注册事务提交后的事件发布回调
     registerDomainEventPublishCallback(message);
@@ -169,7 +186,7 @@ public class OutboxService {
    * 追加领域事件到 Outbox（便捷重载，自动序列化为 JSON payload）
    *
    * <p>等价于 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)} 的全构建方式， 避免调用方手动拼接 {@link
-   * OutboxMessageBuilder}。
+   * OutboxMessageBuilder}。 自动使用 eventId 作为 idempotencyKey 实现幂等去重。
    *
    * <p><b>使用示例：</b>
    *
@@ -195,7 +212,7 @@ public class OutboxService {
             .aggregateId(event.getAggregateId())
             .eventType(event.getEventType())
             .payload(YdszJson.toJson(event))
-            .deduplicationId(event.getEventId()));
+            .idempotencyKey(event.getEventId()));
   }
 
   /**
@@ -253,6 +270,7 @@ public class OutboxService {
     if (payload == null) {
       return;
     }
+    // 使用原始字节长度判断（压缩后仍超过限制则拒绝）
     int size = payload.getBytes(StandardCharsets.UTF_8).length;
     if (size > properties.getMaxPayloadSizeBytes()) {
       throw new IllegalArgumentException(
@@ -261,6 +279,39 @@ public class OutboxService {
               + " exceeds maximum "
               + properties.getMaxPayloadSizeBytes()
               + " bytes");
+    }
+  }
+
+  /**
+   * 大 payload 自动压缩
+   *
+   * <p>当 payload 超过 {@value #COMPRESS_THRESHOLD_BYTES} 字节时启用 GZIP 压缩， 以 Base64 编码存储为字符串，显著减少
+   * DB 存储和网络传输开销。
+   *
+   * @param payload 原始 payload
+   * @return 原始 payload 或压缩后 Base64 字符串
+   */
+  String maybeCompress(String payload) {
+    if (payload == null) {
+      return null;
+    }
+    if (payload.getBytes(StandardCharsets.UTF_8).length <= COMPRESS_THRESHOLD_BYTES) {
+      return payload;
+    }
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
+        gzip.write(payload.getBytes(StandardCharsets.UTF_8));
+      }
+      String compressed = Base64.getEncoder().encodeToString(baos.toByteArray());
+      LOG.debug(
+          "Payload compressed: original={} bytes, compressed={} bytes",
+          payload.length(),
+          compressed.length());
+      return compressed;
+    } catch (Exception e) {
+      LOG.warn("Failed to compress payload, fallback to original: {}", e.getMessage());
+      return payload;
     }
   }
 
@@ -294,8 +345,8 @@ public class OutboxService {
       if (traceId != null && !traceId.isBlank()) {
         return traceId;
       }
-    } catch (NoClassDefFoundError | Exception ignored) {
-      LOG.debug("RequestContext 不可用，降级从 MDC 获取 traceId", ignored);
+    } catch (NoClassDefFoundError | Exception e) {
+      LOG.debug("RequestContext 不可用，降级从 MDC 获取 traceId", e);
     }
     // 从 MDC 获取
     try {
@@ -303,23 +354,23 @@ public class OutboxService {
       if (mdcTraceId != null && !mdcTraceId.isBlank()) {
         return mdcTraceId;
       }
-    } catch (Exception ignored) {
-      LOG.debug("MDC 不可用，traceId 返回 null", ignored);
+    } catch (Exception e) {
+      LOG.debug("MDC 不可用，traceId 返回 null", e);
     }
     return null;
   }
 
   /**
-   * 解析幂等去重 ID
+   * 解析幂等去重键
    *
-   * <p>若调用方显式指定的 deduplicationId 非空则使用，否则返回 null（不进行去重）。
+   * <p>若调用方显式指定的 idempotencyKey 非空则使用，否则返回 null（不进行去重）。
    *
    * @param partial 消息快照
-   * @return 去重 ID，若不启用则返回 null
+   * @return 幂等去重键，若不启用则返回 null
    */
-  private String resolveDeduplicationId(OutboxMessage partial) {
-    if (partial.getDeduplicationId() != null && !partial.getDeduplicationId().isBlank()) {
-      return partial.getDeduplicationId();
+  private String resolveIdempotencyKey(OutboxMessage partial) {
+    if (partial.getIdempotencyKey() != null && !partial.getIdempotencyKey().isBlank()) {
+      return partial.getIdempotencyKey();
     }
     return null;
   }
@@ -333,7 +384,7 @@ public class OutboxService {
    * <p><b>注意：</b>
    *
    * <ul>
-   *   <li>幂等去重在批量模式下不做逐条检查（trade-off 性能）， 如需幂等保证请在调用前自行过滤或通过 deduplicationId 唯一约束保障
+   *   <li>幂等去重在批量模式下不做逐条检查（trade-off 性能）， 如需幂等保证请在调用前自行过滤或通过 idempotencyKey 唯一约束保障
    *   <li>Spring 事件发布在批量模式下会为每个消息独立发布（afterCommit）
    * </ul>
    *
@@ -351,8 +402,10 @@ public class OutboxService {
 
     List<OutboxMessage> messages = new ArrayList<>(events.size());
     for (DomainEvent event : events) {
-      String payload = YdszJson.toJson(event);
-      validatePayloadSize(payload);
+      String rawPayload = YdszJson.toJson(event);
+      validatePayloadSize(rawPayload);
+      String processedPayload = maybeCompress(rawPayload);
+      boolean isCompressed = !processedPayload.equals(rawPayload);
 
       OutboxMessage message =
           OutboxMessage.builder()
@@ -360,10 +413,12 @@ public class OutboxService {
               .aggregateType(event.getAggregateType())
               .aggregateId(event.getAggregateId())
               .eventType(event.getEventType())
-              .payload(payload)
-              .deduplicationId(event.getEventId())
+              .payload(processedPayload)
+              .idempotencyKey(event.getEventId())
               .tenantId(tenantId)
               .traceId(traceId)
+              .schemaVersion(1)
+              .isCompressed(isCompressed)
               .status(OutboxStatus.PENDING)
               .retryCount(0)
               .maxRetries(properties.getMaxRetries())

@@ -5,7 +5,7 @@ import org.owasp.html.PolicyFactory;
 /**
  * 基于 OWASP 的 XSS 清理器实现
  *
- * <p>替代自定义 HTMLFilter，使用 OWASP Java HTML Sanitizer 实现，提供更好的安全性和可维护性。
+ * <p>使用 OWASP Java HTML Sanitizer 实现，提供业界标准级的 XSS 防护。
  *
  * <p><b>核心特性：</b>
  *

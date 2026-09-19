@@ -23,7 +23,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * </ul>
  *
  * <p>启动时由 {@link TokenProperties#validate()} 校验 secretKey 是否已配置且长度满足 ≥32 字节，
- * 不满足将直接抛出 IllegalStateException 阻止服务启动。
+ * 不满足将直接抛出 IllegalStateException 阻止服务启动。若检测到弱密钥（如包含 "change-me"、"default"、"secret"、"123456"），
+ * 将输出醒目的 WARN 日志提醒更换。
  *
  * <p>配置模式：
  * <pre>
@@ -34,12 +35,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   issuer: "ydsz-auth"
  * </pre>
  *
+ * <p>生成推荐密钥可使用 {@link #generateSecureSecret()} 静态工具方法。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.auth.token")
 public class TokenProperties {
+
+  private static final Logger LOG = LoggerFactory.getLogger(TokenProperties.class);
+
+  /** 弱密钥模式：密钥包含以下子串将被判定为弱密钥并触发启动告警。 */
+  private static final String[] WEAK_SECRET_PATTERNS =
+      new String[] {"change-me", "changeme", "default", "secret", "123456", "password", "admin", "test", "ydsz"};
 
   /** 是否启用 Token 服务，默认 true */
   private boolean enabled = true;
@@ -91,6 +100,8 @@ public class TokenProperties {
    *
    * <p>启动时检查 secretKey 是否已配置且长度 >= 32 字节
    *
+   * <p>若检测到弱密钥（密钥包含常见弱模式如 "change-me"、"default"、"secret" 等）， 将输出醒目 WARN 日志，提醒在生产环境更换为安全的随机密钥。 可通过 {@link #generateSecureSecret()} 快速生成强密钥。
+   *
    * @throws IllegalStateException 若密钥未配置或长度不足
    */
   @PostConstruct
@@ -105,5 +116,39 @@ public class TokenProperties {
               + secretKey.getBytes(StandardCharsets.UTF_8).length
               + "，请使用更安全的密钥");
     }
+    // 弱密钥检测：启动时提醒更换
+    String lowerKey = secretKey.toLowerCase();
+    for (String weakPattern : WEAK_SECRET_PATTERNS) {
+      if (lowerKey.contains(weakPattern)) {
+        LOG.warn("╔══════════════════════════════════════════════════════════════════╗");
+        LOG.warn("║  ⚠  JWT SecretKey 疑似弱密钥，生产环境必须更换！                 ║");
+        LOG.warn("║  当前密钥包含弱模式: \"{}\"，建议立即替换为高熵随机字符串          ║", weakPattern);
+        LOG.warn("║  推荐生成方式: TokenProperties.generateSecureSecret()            ║");
+        LOG.warn("╚══════════════════════════════════════════════════════════════════╝");
+        break;
+      }
+    }
   }
-}
+
+  /**
+   * 生成安全的 JWT HMAC-SHA256 签名密钥。
+   *
+   * <p>使用 {@link SecureRandom} 高强度随机数生成 32 字节（256 位）熵源， 经 Base64 URL 安全编码后返回可直接配置到 {@code
+   * ydsz.auth.token.secret-key} 的字符串。
+   *
+   * <p>推荐在运维初始化脚本中调用：
+   *
+   * <pre>{@code
+   * // 在 main 方法或运维工具中调用
+   * String secret = TokenProperties.generateSecureSecret();
+   * System.out.println("推荐 secret-key: " + secret);
+   * }</pre>
+   *
+   * @return Base64 URL 安全编码的 256 位随机密钥字符串
+   */
+  public static String generateSecureSecret() {
+    byte[] raw = new byte[32];
+    SecureRandom secureRandom = new SecureRandom();
+    secureRandom.nextBytes(raw);
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
+  }

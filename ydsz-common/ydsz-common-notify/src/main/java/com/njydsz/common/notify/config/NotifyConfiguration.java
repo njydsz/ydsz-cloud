@@ -522,17 +522,27 @@ public class NotifyConfiguration {
   /**
    * 注册通知专用 {@link RestTemplate} Bean。
    *
-   * <p>供短信/第三方网关等 HTTP 调用复用，设置 5s 连接、10s 读取超时以约束外部依赖最大阻塞时间。 使用 {@code @ConditionalOnMissingBean}
-   * 允许业务侧提供带拦截器/连接池的定制实例。
+   * <p>供短信/第三方网关等 HTTP 调用复用，连接/读取超时从 {@code ydsz.notify.http} 配置读取。
+   * 使用 {@code @ConditionalOnMissingBean} 允许业务侧提供带拦截器/连接池的定制实例。
    *
+   * <p><b>P0-3 超时外部化</b>：超时参数由 {@link NotifyProperties.HttpConfig} 提供， 默认 5s 连接、10s
+   * 读取，可通过 {@code ydsz.notify.http.connect-timeout-millis} 与 {@code
+   * ydsz.notify.http.read-timeout-millis} 调整。
+   *
+   * @param properties 通知配置属性，取 {@code http} 节点下的连接/读取超时（毫秒）
    * @return 通知专用 {@code RestTemplate} 实例，不会为 {@code null}
    */
   @Bean
   @ConditionalOnMissingBean
-  public RestTemplate notifyRestTemplate() {
+  public RestTemplate notifyRestTemplate(NotifyProperties properties) {
+    NotifyProperties.HttpConfig httpConfig = properties.getHttp();
     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-    factory.setConnectTimeout(Duration.ofSeconds(5));
-    factory.setReadTimeout(Duration.ofSeconds(10));
+    factory.setConnectTimeout(Duration.ofMillis(httpConfig.getConnectTimeoutMillis()));
+    factory.setReadTimeout(Duration.ofMillis(httpConfig.getReadTimeoutMillis()));
+    LOG.info(
+        "[NotifyConfiguration] notifyRestTemplate 已创建，connectTimeout={}ms, readTimeout={}ms",
+        httpConfig.getConnectTimeoutMillis(),
+        httpConfig.getReadTimeoutMillis());
     return new RestTemplate(factory);
   }
 

@@ -205,7 +205,7 @@ public class EscapeUtils {
    * 清理内容中的 XSS 攻击代码（默认策略）
    *
    * <p>先过滤危险协议（javascript:、data:、vbscript:），再委托 OWASP Java HTML Sanitizer
-   * 的 STANDARD 策略清洗，替代早期基于自定义正则的 {@link HTMLFilter} 实现，提供业界标准级防护。
+   * 的 STANDARD 策略清洗，提供业界标准级防护。
    *
    * @param content 待清理的内容
    * @return 清理后的内容
@@ -277,20 +277,6 @@ public class EscapeUtils {
       return content;
     }
     return OwaspXssCleaner.clean(content, XssPolicyFactory.Policy.STRICT);
-  }
-
-  /**
-   * 使用自定义 HTMLFilter 清理内容中的 XSS 攻击代码
-   *
-   * @param content 待清理的内容
-   * @param filter 自定义 HTMLFilter 实例
-   * @return 清理后的内容
-   */
-  public static String cleanCustom(String content, HTMLFilter filter) {
-    if (StringUtils.isEmpty(content)) {
-      return content;
-    }
-    return filter.filter(content);
   }
 
   /**

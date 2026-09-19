@@ -167,7 +167,7 @@ public class SafeXssProperties {
   /**
    * 是否启用 HTML 标签白名单过滤
    *
-   * <p>启用后，只有 allowedTags 中的标签会被保留，其他标签会被过滤。 默认值为 false，即使用默认的 HTMLFilter 规则。
+   * <p>启用后，只有 allowedTags 中的标签会被保留，其他标签会被过滤。默认值为 false，即使用 OWASP 默认清洗规则。
    */
   private boolean isTagWhitelistEnabled = false;
 

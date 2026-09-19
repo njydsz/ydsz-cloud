@@ -19,8 +19,6 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
@@ -60,7 +58,8 @@ import com.njydsz.common.util.string.StringUtils;
  *       com.njydsz.common.audit.config.AuditProperties#getSensitiveParams()}
  *   <li>对超大参数（&gt;10KB）和深嵌套对象进行截断/占位，避免 OOM
  *   <li>审计记录通过 {@link AuditRecorder} 异步落盘，不阻塞业务主链路
- *   <li>支持 @Async 方法（自动透传 RequestAttributes）
+ *   <li>上下文通过 {@link com.njydsz.common.audit.context.AuditContext} 与 {@link
+ *       com.njydsz.common.core.context.RequestContext} TTL 承载，对 @Async 子线程透明传递
  *   <li>审计本身异常被 try-catch 隔离，绝不污染业务主链路
  * </ul>
  *
@@ -139,21 +138,13 @@ public class AuditAspect {
     long startTime = System.currentTimeMillis();
     AuditContextData context = initAuditContext(joinPoint, audit);
 
-    // 捕获 ServletRequestAttributes，用于异步线程中恢复请求上下文
-    ServletRequestAttributes servletRequestAttributes = null;
-    try {
-      servletRequestAttributes =
-          (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-    } catch (Exception ignored) {
-      LOG.debug("获取 ServletRequestAttributes 失败（非 Web 环境或上下文不可用）", ignored);
-    }
-    final ServletRequestAttributes capturedRequestAttributes = servletRequestAttributes;
-
     Object result = null;
     Throwable exception = null;
 
     try {
-      result = proceedWithContext(joinPoint, capturedRequestAttributes);
+      // AuditContext 已在 initAuditContext() 中 set 到 RequestContext（TTL），
+      // 对 @Async 子线程透明传递；无需在切面层额外包装 ServletRequestAttributes
+      result = joinPoint.proceed();
       return result;
     } catch (Throwable e) {
       exception = e;
@@ -168,46 +159,6 @@ public class AuditAspect {
         AuditContext.clear();
       }
     }
-  }
-
-  /**
-   * 在审计上下文中执行目标方法，自动恢复请求上下文以支持 @Async 方法。
-   *
-   * @param joinPoint 切点
-   * @param requestAttributes 原线程的请求属性
-   * @return 目标方法返回值
-   * @throws Throwable 目标方法抛出的异常
-   */
-  private Object proceedWithContext(
-      ProceedingJoinPoint joinPoint, ServletRequestAttributes requestAttributes) throws Throwable {
-    final Object[] resultHolder = new Object[1];
-    final Throwable[] errorHolder = new Throwable[1];
-
-    Runnable task =
-        () -> {
-          // 恢复请求上下文（支持 @Async 方法）
-          if (requestAttributes != null) {
-            try {
-              RequestContextHolder.setRequestAttributes(requestAttributes, true);
-            } catch (Exception ignored) {
-              LOG.debug("设置请求属性失败（请求属性不可设置时忽略）", ignored);
-            }
-          }
-          try {
-            resultHolder[0] = joinPoint.proceed();
-          } catch (Throwable e) {
-            errorHolder[0] = e;
-          }
-        };
-
-    // 使用 AuditContext.wrap 包装任务，自动传递 ThreadLocal 上下文
-    Runnable wrappedTask = AuditContext.wrap(task);
-    wrappedTask.run();
-
-    if (errorHolder[0] != null) {
-      throw errorHolder[0];
-    }
-    return resultHolder[0];
   }
 
   /**

@@ -57,6 +57,9 @@ public class NotifyProperties {
   /** 定时任务配置 */
   private SchedulerConfig scheduler = new SchedulerConfig();
 
+  /** HTTP 连接配置（P0-3 外部化 RestTemplate 超时参数） */
+  private HttpConfig http = new HttpConfig();
+
   // ==================== Getter / Setter ====================
 
   public boolean isEnabled() {
@@ -153,6 +156,14 @@ public class NotifyProperties {
 
   public void setScheduler(SchedulerConfig scheduler) {
     this.scheduler = scheduler;
+  }
+
+  public HttpConfig getHttp() {
+    return http;
+  }
+
+  public void setHttp(HttpConfig http) {
+    this.http = http;
   }
 
   // ==================== Inner Classes ====================
@@ -1402,6 +1413,48 @@ public class NotifyProperties {
 
     public void setThreadPoolSize(int threadPoolSize) {
       this.threadPoolSize = threadPoolSize;
+    }
+  }
+
+  /**
+   * HTTP 连接配置（P0-3 外部化）。
+   *
+   * <p>供 {@code notifyRestTemplate} 使用，控制短信/IM 等渠道 HTTP 调用的连接/读取超时。 路径：{@code ydsz.notify.http}。
+   *
+   * <p><b>配置示例：</b>
+   *
+   * <pre>{@code
+   * ydsz:
+   *   notify:
+   *     http:
+   *       connect-timeout-millis: 5000
+   *       read-timeout-millis: 10000
+   * }</pre>
+   */
+  public static class HttpConfig {
+
+    /** 连接超时时间（毫秒） */
+    private int connectTimeoutMillis = 5000;
+
+    /** 读取超时时间（毫秒） */
+    private int readTimeoutMillis = 10000;
+
+    // ==================== Getter / Setter ====================
+
+    public int getConnectTimeoutMillis() {
+      return connectTimeoutMillis;
+    }
+
+    public void setConnectTimeoutMillis(int connectTimeoutMillis) {
+      this.connectTimeoutMillis = connectTimeoutMillis;
+    }
+
+    public int getReadTimeoutMillis() {
+      return readTimeoutMillis;
+    }
+
+    public void setReadTimeoutMillis(int readTimeoutMillis) {
+      this.readTimeoutMillis = readTimeoutMillis;
     }
   }
 }
