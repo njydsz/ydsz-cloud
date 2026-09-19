@@ -47,11 +47,16 @@ public class SkyWalkingAutoConfiguration {
   /**
    * SkyWalking Agent classpath 标记类。
    *
+   * <p>使用 Agent core 的配置入口类（{@code Config}）而非内部初始化器（{@code Config$Initializer}） 作为检测锚点：
+   * <ul>
+   *   <li>{@code Config} 是 Agent 启动时必然加载的公共入口类，生命周期与 Agent 一致</li>
+   *   <li>内部类（{@code $Initializer}）路径可能随 SkyWalking 版本微调而变化</li>
+   * </ul>
+   *
    * <p>当 Agent 挂载时，其 core jar 会在应用 classpath 中引入此类型。
-   * 用于检测 Agent 是否已启用。
    */
   private static final String AGENT_CLASS_MARKER =
-      "org.apache.skywalking.apm.agent.core.conf.Config$Initializer";
+      "org.apache.skywalking.apm.agent.core.conf.Config";
 
   /**
    * Bean 条件：仅当 SkyWalking Agent 类存在于 classpath 且配置允许时创建 TraceSampler。

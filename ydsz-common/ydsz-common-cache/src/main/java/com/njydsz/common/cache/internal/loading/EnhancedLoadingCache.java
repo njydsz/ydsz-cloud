@@ -66,12 +66,12 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
   private static final AtomicReference<ScheduledExecutorService> SHARED_REFRESH_SCHEDULER =
       new AtomicReference<>();
 
-  /** 共享资源是否已关闭 */
-  private static volatile boolean sharedResourcesShutdown = false;
+  /** <!-- OOP-006 --> 共享资源是否已关闭 */
+  private static volatile boolean isSharedResourcesShutdown = false;
 
   /** 获取共享异步执行器（懒加载，线程安全） */
   private static Executor getSharedExecutor() {
-    if (sharedResourcesShutdown) {
+    if (isSharedResourcesShutdown) {
       return Runnable::run;
     }
     ExecutorService executor = SHARED_EXECUTOR.get();
@@ -89,7 +89,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
 
   /** 获取共享刷新调度器（懒加载，线程安全，通过 CacheThreadPoolManager 统一管理） */
   private static ScheduledExecutorService getSharedRefreshScheduler() {
-    if (sharedResourcesShutdown) {
+    if (isSharedResourcesShutdown) {
       return null;
     }
     ScheduledExecutorService scheduler = SHARED_REFRESH_SCHEDULER.get();
@@ -107,7 +107,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    * <p>调用后所有使用共享执行器的 EnhancedLoadingCache 实例将无法再使用自动刷新功能。 建议在应用关闭阶段调用。
    */
   public static void shutdownSharedResources() {
-    sharedResourcesShutdown = true;
+    isSharedResourcesShutdown = true;
     ExecutorService exec = SHARED_EXECUTOR.getAndSet(null);
     if (exec != null) {
       exec.shutdown();
@@ -153,8 +153,8 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
   /** 自动刷新间隔（纳秒），0 表示不自动刷新 */
   private final long refreshIntervalNanos;
 
-  /** 是否启用统计 */
-  private final boolean recordStats;
+  /** <!-- OOP-006 --> 是否启用统计 */
+  private final boolean isRecordStats;
 
   /** 加载计数器 */
   private final LongAdder loadCount = new LongAdder();
@@ -198,7 +198,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    * @param executor 异步执行器（可选）
    * @param refreshInterval 自动刷新间隔
    * @param refreshUnit 刷新间隔单位
-   * @param recordStats 是否启用统计
+   * @param isRecordStats 是否启用统计
    * @param <K> 键类型
    * @param <V> 值类型
    * @return 缓存实例
@@ -209,10 +209,10 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
       Executor executor,
       long refreshInterval,
       TimeUnit refreshUnit,
-      boolean recordStats) {
+      boolean isRecordStats) {
     EnhancedLoadingCache<K, V> instance =
         new EnhancedLoadingCache<>(
-            cache, loader, executor, refreshInterval, refreshUnit, recordStats);
+            cache, loader, executor, refreshInterval, refreshUnit, isRecordStats);
     instance.scheduleAutoRefresh();
     return instance;
   }
@@ -224,11 +224,11 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
       Executor executor,
       long refreshInterval,
       TimeUnit refreshUnit,
-      boolean recordStats) {
+      boolean isRecordStats) {
     this.cache = cache;
     this.loader = loader;
     this.executor = executor != null ? executor : getSharedExecutor();
-    this.recordStats = recordStats;
+    this.isRecordStats = isRecordStats;
 
     if (refreshInterval > 0 && refreshUnit != null) {
       this.refreshIntervalNanos = refreshUnit.toNanos(refreshInterval);
@@ -239,11 +239,11 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     }
 
     LOG.info(
-        "增强版加载缓存已创建，cache={}, loader={}, refreshInterval={}, recordStats={}",
+        "增强版加载缓存已创建，cache={}, loader={}, refreshInterval={}, isRecordStats={}",
         cache.getClass().getSimpleName(),
         loader.getClass().getSimpleName(),
         refreshInterval > 0 ? refreshInterval + " " + refreshUnit : "禁用",
-        recordStats);
+        isRecordStats);
   }
 
   /** 调度自动刷新任务 */
@@ -285,7 +285,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
   public V getIfPresent(K key) {
     V value = cache.getIfPresent(key);
     if (value != null) {
-      if (recordStats) {
+      if (isRecordStats) {
         hitCount.increment();
       }
 
@@ -299,7 +299,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
       return value;
     }
 
-    if (recordStats) {
+    if (isRecordStats) {
       missCount.increment();
     }
 
@@ -331,7 +331,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (existing == null) {
       long startTime = System.nanoTime();
       try {
-        if (recordStats) {
+        if (isRecordStats) {
           loadCount.increment();
         }
 
@@ -339,20 +339,20 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         if (value != null) {
           cache.put(key, value);
           lastRefreshTimes.put(key, System.nanoTime());
-          if (recordStats) {
+          if (isRecordStats) {
             loadSuccessCount.increment();
           }
         }
 
         long elapsed = System.nanoTime() - startTime;
-        if (recordStats) {
+        if (isRecordStats) {
           totalLoadTimeNanos.add(elapsed);
         }
 
         future.complete(value);
         return value;
       } catch (Exception e) {
-        if (recordStats) {
+        if (isRecordStats) {
           loadExceptionCount.increment();
           long elapsed = System.nanoTime() - startTime;
           totalLoadTimeNanos.add(elapsed);
@@ -370,7 +370,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     try {
       return existing.get();
     } catch (Exception e) {
-      if (recordStats) {
+      if (isRecordStats) {
         loadExceptionCount.increment();
       }
       // 等待其他线程的加载结果失败，尝试返回缓存中的值
@@ -408,13 +408,13 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
   public CompletableFuture<V> getAsync(K key) {
     V value = cache.getIfPresent(key);
     if (value != null) {
-      if (recordStats) {
+      if (isRecordStats) {
         hitCount.increment();
       }
       return CompletableFuture.completedFuture(value);
     }
 
-    if (recordStats) {
+    if (isRecordStats) {
       missCount.increment();
       loadCount.increment();
     }
@@ -426,7 +426,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
               if (v != null) {
                 cache.put(key, v);
                 lastRefreshTimes.put(key, System.nanoTime());
-                if (recordStats) {
+                if (isRecordStats) {
                   loadSuccessCount.increment();
                 }
               }
@@ -434,7 +434,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             })
         .exceptionally(
             e -> {
-              if (recordStats) {
+              if (isRecordStats) {
                 loadExceptionCount.increment();
               }
               LOG.warn("异步缓存加载失败, key={}", key, e);
@@ -455,13 +455,13 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
   public CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader) {
     V value = cache.getIfPresent(key);
     if (value != null) {
-      if (recordStats) {
+      if (isRecordStats) {
         hitCount.increment();
       }
       return CompletableFuture.completedFuture(value);
     }
 
-    if (recordStats) {
+    if (isRecordStats) {
       missCount.increment();
     }
 
@@ -497,12 +497,12 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     for (K key : keys) {
       V value = cache.getIfPresent(key);
       if (value != null) {
-        if (recordStats) {
+        if (isRecordStats) {
           hitCount.increment();
         }
         result.put(key, value);
       } else {
-        if (recordStats) {
+        if (isRecordStats) {
           missCount.increment();
         }
         missedKeys.add(key);
@@ -512,7 +512,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (!missedKeys.isEmpty()) {
       try {
         long startTime = System.nanoTime();
-        if (recordStats) {
+        if (isRecordStats) {
           loadCount.increment();
         }
 
@@ -523,12 +523,12 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         loaded.keySet().forEach(k -> lastRefreshTimes.put(k, System.nanoTime()));
 
         long elapsed = System.nanoTime() - startTime;
-        if (recordStats) {
+        if (isRecordStats) {
           loadSuccessCount.add(loaded.size());
           totalLoadTimeNanos.add(elapsed);
         }
       } catch (Exception e) {
-        if (recordStats) {
+        if (isRecordStats) {
           loadExceptionCount.increment();
         }
         LOG.warn("批量缓存加载失败", e);
@@ -558,7 +558,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             loaded -> {
               cache.putAll(loaded);
               loaded.keySet().forEach(k -> lastRefreshTimes.put(k, System.nanoTime()));
-              if (recordStats) {
+              if (isRecordStats) {
                 hitCount.add(loaded.size());
                 loadSuccessCount.add(loaded.size());
               }
@@ -579,7 +579,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         () -> {
           long startTime = System.nanoTime();
           try {
-            if (recordStats) {
+            if (isRecordStats) {
               loadCount.increment();
             }
 
@@ -587,13 +587,13 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             if (value != null) {
               cache.put(key, value);
               lastRefreshTimes.put(key, System.nanoTime());
-              if (recordStats) {
+              if (isRecordStats) {
                 loadSuccessCount.increment();
                 totalLoadTimeNanos.add(System.nanoTime() - startTime);
               }
             }
           } catch (Exception e) {
-            if (recordStats) {
+            if (isRecordStats) {
               loadExceptionCount.increment();
             }
             LOG.warn("刷新缓存失败, key={}", key, e);
@@ -695,7 +695,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    */
   @Override
   public double getHitRate() {
-    if (!recordStats) {
+    if (!isRecordStats) {
       return 0.0;
     }
     long total = hitCount.sum() + missCount.sum();
@@ -711,7 +711,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    */
   @Override
   public CacheStats getStats() {
-    if (!recordStats) {
+    if (!isRecordStats) {
       return new CacheStats(0, 0);
     }
     CacheStats delegateStats = cache.getStats();

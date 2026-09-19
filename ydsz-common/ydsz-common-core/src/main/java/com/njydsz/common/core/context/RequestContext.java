@@ -130,25 +130,6 @@ public final class RequestContext {
         }
       };
 
-  /**
-   * 请求级用户信息缓存的存储（与通用上下文分离）。
-   *
-   * <p>该缓存仅为性能优化（避免同一请求内反复访问远程缓存）， 不随 TTL 跨线程传播：子线程各自懒重建，避免共享可变 Map 的并发风险， 也避免大对象被无谓克隆放大拷贝成本。
-   */
-  private static final TransmittableThreadLocal<Map<String, Object>> CACHE_HOLDER =
-      new TransmittableThreadLocal<Map<String, Object>>() {
-        @Override
-        protected Map<String, Object> initialValue() {
-          return null;
-        }
-
-        @Override
-        public Map<String, Object> copy(Map<String, Object> parentValue) {
-          // 不跨线程传播：返回 null，子线程按需重建本地缓存
-          return null;
-        }
-      };
-
   private RequestContext() {
     throw new UnsupportedOperationException("Utility class");
   }
@@ -421,7 +402,7 @@ public final class RequestContext {
    */
   public static void clear() {
     CONTEXT_HOLDER.remove();
-    CACHE_HOLDER.remove();
+    RequestCacheHolder.clear();
   }
 
   /**
@@ -516,32 +497,6 @@ public final class RequestContext {
       return Collections.unmodifiableMap(result);
     }
     return Collections.emptyMap();
-  }
-
-  /**
-   * 在当前请求上下文基础上，克隆一份请求级用户信息缓存 Map。
-   *
-   * <p>由 RbacPermissionEvaluator 在启动时调用一次写入， 供同一请求内多次权限校验复用，避免反复 Redis 调用。
-   *
-   * @return 可变的缓存 Map
-   * @since 26.09.01
-   */
-  public static Map<String, Object> createCachedUserInfoMap() {
-    Map<String, Object> map = new LinkedHashMap<>(8);
-    CACHE_HOLDER.set(map);
-    return map;
-  }
-
-  /**
-   * 获取请求级用户信息缓存 Map。
-   *
-   * <p>该缓存存储于与通用上下文分离的 {@code CACHE_HOLDER}，不随 TTL 跨线程传播。
-   *
-   * @return 缓存 Map（可变），未创建返回 null
-   * @since 26.09.01
-   */
-  public static Map<String, Object> getCachedUserInfoMap() {
-    return CACHE_HOLDER.get();
   }
 
   /**

@@ -228,8 +228,7 @@ public final class BeanReader<T> {
     // P1 修复：统一走 resolveMaxDepth()（线程级调用覆盖 > 实例级 > 静态全局），
     // 原先硬编码 DEFAULT_MAX_DEPTH 导致多 Mapper 自定义深度在 BeanReader 路径失效
     if (depth > reader.resolveMaxDepth()) {
-      throw new JsonDeserializationException(
-          "JSON nesting depth exceeds limit: " + depth, reader.pos);
+      throw reader.newDepthException(depth);
     }
 
     T obj;
@@ -248,6 +247,14 @@ public final class BeanReader<T> {
         }
         return (T) creatorConstructor.newInstance(args);
       } catch (Exception e) {
+        String jsonSource = reader.getSourceJson();
+        if (jsonSource != null) {
+          throw new JsonDeserializationException(
+              JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
+              "Failed to create via @JsonCreator for " + beanType.getName(),
+              reader.pos,
+              jsonSource);
+        }
         throw new JsonDeserializationException(
             JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
             "Failed to create via @JsonCreator for " + beanType.getName(), e);
@@ -256,6 +263,14 @@ public final class BeanReader<T> {
     try {
       obj = defaultConstructor.newInstance();
     } catch (Exception e) {
+      String jsonSource = reader.getSourceJson();
+      if (jsonSource != null) {
+        throw new JsonDeserializationException(
+            JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
+            "Failed to create instance of " + beanType.getName(),
+            reader.pos,
+            jsonSource);
+      }
       throw new JsonDeserializationException(
           JsonDeserializationException.NO_DEFAULT_CONSTRUCTOR,
           "Failed to create " + beanType.getName(), e);
@@ -736,6 +751,14 @@ public final class BeanReader<T> {
             break;
         }
       } catch (IllegalAccessException e) {
+        String jsonSource = reader.getSourceJson();
+        if (jsonSource != null) {
+          throw new JsonDeserializationException(
+              JsonDeserializationException.FIELD_ACCESS_ERROR,
+              "Failed to set field: " + fieldName,
+              reader.pos,
+              jsonSource);
+        }
         throw new JsonDeserializationException(
             JsonDeserializationException.FIELD_ACCESS_ERROR,
             "Failed to set field: " + fieldName,

@@ -42,8 +42,14 @@ public class ExcelReadException extends ExcelException {
   /** 发生错误的列号 */
   private Integer columnNumber;
 
+  /** 发生错误的列友好名（Excel 表头名称），可按需回填 */
+  private String columnName;
+
   /** 原始单元格值 */
   private transient Object rawCellValue;
+
+  /** 发生错误时的 Sheet 名称 */
+  private String sheetName;
 
   public ExcelReadException() {
     super();
@@ -93,6 +99,22 @@ public class ExcelReadException extends ExcelException {
     this.rawCellValue = rawCellValue;
   }
 
+  public String getColumnName() {
+    return columnName;
+  }
+
+  public void setColumnName(String columnName) {
+    this.columnName = columnName;
+  }
+
+  public String getSheetName() {
+    return sheetName;
+  }
+
+  public void setSheetName(String sheetName) {
+    this.sheetName = sheetName;
+  }
+
   /**
    * 创建文件不存在的异常
    *
@@ -139,6 +161,25 @@ public class ExcelReadException extends ExcelException {
    */
   public static ExcelReadException conversionFailed(
       int row, int col, Object rawValue, Class<?> targetType, Throwable cause) {
+    return conversionFailed(row, col, rawValue, targetType, cause, null, null);
+  }
+
+  /**
+   * 创建数据类型转换异常（含完整上下文信息）。
+   *
+   * @param row 行对象
+   * @param col 列号
+   * @param rawValue 原始值
+   * @param targetType 目标类型
+   * @param cause 原因
+   * @param columnName Excel 列友好名（表头名称），可为 {@code null}
+   * @param sheetName 当前 Sheet 名称，可为 {@code null}
+   * @return 携带 {@code READ_CONVERSION_FAILED} 错误码的异常实例，不会为 {@code null}；
+   *     行号、列号、列名、Sheet 名与原始单元格值均已回填到异常上
+   */
+  public static ExcelReadException conversionFailed(
+      int row, int col, Object rawValue, Class<?> targetType, Throwable cause,
+      String columnName, String sheetName) {
     String message = ExcelI18nHelper.getMessage(
         "excel.read.conversionFailed.detail",
         new Object[] {row, col, rawValue, targetType.getSimpleName()},
@@ -150,6 +191,8 @@ public class ExcelReadException extends ExcelException {
     ex.setRowNumber(row);
     ex.setColumnNumber(col);
     ex.setRawCellValue(rawValue);
+    ex.setColumnName(columnName);
+    ex.setSheetName(sheetName);
     return ex;
   }
 
@@ -165,6 +208,24 @@ public class ExcelReadException extends ExcelException {
    */
   public static ExcelReadException validationFailed(
       int row, String fieldName, Object value, String reason) {
+    return validationFailed(row, fieldName, value, reason, null, null);
+  }
+
+  /**
+   * 创建数据验证失败的异常（含完整上下文信息）。
+   *
+   * @param row 行对象
+   * @param fieldName 字段名
+   * @param value 值
+   * @param reason 原因
+   * @param columnName Excel 列友好名（表头名称），可为 {@code null}
+   * @param sheetName 当前 Sheet 名称，可为 {@code null}
+   * @return 携带 {@code READ_VALIDATION_FAILED} 错误码的异常实例，不会为 {@code null}；
+   *     行号、列名、Sheet 名均已回填
+   */
+  public static ExcelReadException validationFailed(
+      int row, String fieldName, Object value, String reason,
+      String columnName, String sheetName) {
     String message = ExcelI18nHelper.getMessage(
         "excel.read.validationFailed.detail",
         new Object[] {row, fieldName, value, reason},
@@ -172,6 +233,8 @@ public class ExcelReadException extends ExcelException {
     ExcelReadException ex =
         new ExcelReadException(ExcelExceptionCode.READ_VALIDATION_FAILED, message);
     ex.setRowNumber(row);
+    ex.setColumnName(columnName);
+    ex.setSheetName(sheetName);
     return ex;
   }
 
@@ -230,10 +293,19 @@ public class ExcelReadException extends ExcelException {
       sb.append(" [").append(code).append("]");
     }
     sb.append(": ").append(getMessage());
-    if (rowNumber != null) {
+    if (sheetName != null) {
+      sb.append(" [Sheet=").append(sheetName);
+      if (rowNumber != null) {
+        sb.append(", 行号=").append(rowNumber);
+      }
+      sb.append("]");
+    } else if (rowNumber != null) {
       sb.append(" [行号=").append(rowNumber);
       if (columnNumber != null) {
         sb.append(", 列号=").append(columnNumber);
+        if (columnName != null) {
+          sb.append("(").append(columnName).append(")");
+        }
       }
       sb.append("]");
     }

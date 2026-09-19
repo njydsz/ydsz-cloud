@@ -90,7 +90,15 @@ public class ExcelReadResult<T> {
   /** 实际读取的 Sheet 索引，从 0 开始 */
   private int sheetIndex;
 
-  public ExcelReadResult() {}
+  /** 跳过的行数（校验失败、空行等被忽略的行） */
+  private int skippedRows;
+
+  /** 读取过程中的警告信息列表（非致命校验异常等） */
+  private List<String> warnings;
+
+  public ExcelReadResult() {
+    this.warnings = new ArrayList<>(4);
+  }
 
   private ExcelReadResult(Builder<T> builder) {
     this.data = builder.data;
@@ -102,6 +110,8 @@ public class ExcelReadResult<T> {
     this.fileName = builder.fileName;
     this.sheetName = builder.sheetName;
     this.sheetIndex = builder.sheetIndex;
+    this.skippedRows = builder.skippedRows;
+    this.warnings = builder.warnings != null ? builder.warnings : new ArrayList<>(4);
   }
 
   // ==================== 静态工厂方法 ====================
@@ -171,6 +181,14 @@ public class ExcelReadResult<T> {
 
   public int getSheetIndex() {
     return sheetIndex;
+  }
+
+  public int getSkippedRows() {
+    return skippedRows;
+  }
+
+  public List<String> getWarnings() {
+    return warnings;
   }
 
   // ==================== 异步获取方法 ====================
@@ -305,6 +323,8 @@ public class ExcelReadResult<T> {
     private String fileName;
     private String sheetName;
     private int sheetIndex;
+    private int skippedRows;
+    private List<String> warnings = new ArrayList<>(4);
 
     public Builder<T> data(List<T> data) {
       this.data = data;
@@ -348,6 +368,16 @@ public class ExcelReadResult<T> {
 
     public Builder<T> sheetIndex(int sheetIndex) {
       this.sheetIndex = sheetIndex;
+      return this;
+    }
+
+    public Builder<T> skippedRows(int skippedRows) {
+      this.skippedRows = skippedRows;
+      return this;
+    }
+
+    public Builder<T> warnings(List<String> warnings) {
+      this.warnings = warnings;
       return this;
     }
 

@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.SuperBuilder;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -52,7 +51,6 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
  */
 @Getter
 @Setter
-@SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
   "code",

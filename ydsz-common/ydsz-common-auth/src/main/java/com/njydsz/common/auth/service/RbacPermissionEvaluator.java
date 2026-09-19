@@ -28,6 +28,7 @@ import com.njydsz.common.auth.strategy.CacheKeyStrategy;
 import com.njydsz.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.common.auth.util.PermissionUtils;
 import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestCacheHolder;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.string.StringUtils;
@@ -123,12 +124,12 @@ public class RbacPermissionEvaluator {
    * @return 用户信息 Map
    */
   public Map<String, Object> loadCurrentUserInfo() {
-    Map<String, Object> cached = RequestContext.getCachedUserInfoMap();
+    Map<String, Object> cached = RequestCacheHolder.getCachedUserInfoMap();
     if (cached != null && !cached.isEmpty()) {
       return cached;
     }
     Map<String, Object> userInfo = loadUserInfo(userInfoService.loadCurrentToken());
-    RequestContext.put(BizContextKeys.KEY_CACHED_USER_INFO_MAP, userInfo);
+    RequestCacheHolder.setCachedUserInfoMap(userInfo);
     return userInfo;
   }
 

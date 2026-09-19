@@ -138,8 +138,11 @@ public final class TraceIdGenerator {
    *
    * <p>使用轻量级同步块保证时间戳进位与序号归零的原子性。锁内操作极少（<5 条字节码），对高并发影响极低。
    *
+   * <p>序号溢出处理：当同一毫秒内序号超过 {@link #MAX_SEQ_PER_MS} 时，自旋等待至下一毫秒再重新分配， 保证序号严格单调递增（不回绕、不跳号）。自旋窗口通常 <1ms，在高吞吐场景下可忽略不计。
+   *
    * @param nowMillis 当前毫秒时间戳
-   * @return 当前使用的序号
+   * @return 当前使用的序号（0 ~ MAX_SEQ_PER_MS）
+   * @since 26.09.01
    */
   private static long nextGlobalSeq(long nowMillis) {
     synchronized (SEQ_LOCK) {
@@ -148,7 +151,18 @@ public final class TraceIdGenerator {
         LAST_MILLIS.set(nowMillis);
         SEQ_COUNTER.set(0L);
       }
-      return SEQ_COUNTER.getAndIncrement() & MAX_SEQ_PER_MS;
+      long seq = SEQ_COUNTER.getAndIncrement();
+      if (seq >= MAX_SEQ_PER_MS) {
+        // 序号耗尽：自旋等待下一毫秒，保证单调性
+        long nextMillis = System.currentTimeMillis();
+        while (nextMillis <= last) {
+          nextMillis = System.currentTimeMillis();
+        }
+        LAST_MILLIS.set(nextMillis);
+        SEQ_COUNTER.set(0L);
+        return 0L;
+      }
+      return seq;
     }
   }
 

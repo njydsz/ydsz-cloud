@@ -6,6 +6,7 @@ import com.njydsz.common.auth.model.ColumnPermissionInfo;
 import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestCacheHolder;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.context.TenantContext;
 import com.njydsz.common.core.context.TenantContextHolder;
@@ -221,7 +222,7 @@ public final class AuthContextUtils {
    * @return 缓存的用户信息 Map，未设置时返回 null
    */
   public static Map<String, Object> getCachedUserInfoMap() {
-    return RequestContext.getCachedUserInfoMap();
+    return RequestCacheHolder.getCachedUserInfoMap();
   }
 
   /**
@@ -230,7 +231,7 @@ public final class AuthContextUtils {
    * @param userInfoMap 用户信息 Map
    */
   public static void setCachedUserInfoMap(Map<String, Object> userInfoMap) {
-    RequestContext.put(BizContextKeys.KEY_CACHED_USER_INFO_MAP, userInfoMap);
+    RequestCacheHolder.setCachedUserInfoMap(userInfoMap);
   }
 
   // ==================== 租户 ====================

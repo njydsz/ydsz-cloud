@@ -54,35 +54,35 @@ public final class StringUtils {
   /**
    * 判断字符串是否为 null 或空字符串（""）
    *
-   * @param cs cs
-   * @return 处理结果
+   * @param input 待判断的字符序列
+   * @return 是否为 null 或空字符串
    */
-  public static boolean isEmpty(CharSequence cs) {
-    return cs == null || cs.length() == 0;
+  public static boolean isEmpty(CharSequence input) {
+    return input == null || input.length() == 0;
   }
 
   /**
    * 判断字符串是否不为 null 且不为空字符串
    *
-   * @param cs cs
-   * @return 判断结果
+   * @param input 待判断的字符序列
+   * @return 是否不为 null 且不为空字符串
    */
-  public static boolean isNotEmpty(CharSequence cs) {
-    return !isEmpty(cs);
+  public static boolean isNotEmpty(CharSequence input) {
+    return !isEmpty(input);
   }
 
   /**
    * 判断字符串是否为 null、空字符串或只包含空白字符
    *
-   * @param cs cs
-   * @return 判断结果
+   * @param input 待判断的字符序列
+   * @return 是否为 null、空字符串或只包含空白字符
    */
-  public static boolean isBlank(CharSequence cs) {
-    if (cs == null || cs.length() == 0) {
+  public static boolean isBlank(CharSequence input) {
+    if (input == null || input.length() == 0) {
       return true;
     }
-    for (int i = 0; i < cs.length(); i++) {
-      if (!Character.isWhitespace(cs.charAt(i))) {
+    for (int i = 0; i < input.length(); i++) {
+      if (!Character.isWhitespace(input.charAt(i))) {
         return false;
       }
     }
@@ -92,11 +92,63 @@ public final class StringUtils {
   /**
    * 判断字符串是否不为 null、不为空字符串且包含非空白字符
    *
-   * @param cs cs
-   * @return 判断结果
+   * @param input 待判断的字符序列
+   * @return 是否包含非空白字符
    */
-  public static boolean isNotBlank(CharSequence cs) {
-    return !isBlank(cs);
+  public static boolean isNotBlank(CharSequence input) {
+    return !isBlank(input);
+  }
+
+  /**
+   * 判断所有字符串是否都不为 null、都不为空且都包含非空白字符。
+   *
+   * <p>等价于 Spring {@code StringUtils.hasText} 的多参扩展。
+   *
+   * <p>示例：
+   *
+   * <pre>{@code
+   * isNoneBlank("a", "b")      // true
+   * isNoneBlank("a", null)     // false
+   * isNoneBlank("a", "")       // false
+   * isNoneBlank("a", " ")      // false
+   * isNoneBlank()              // true（空参返回 true）
+   * }</pre>
+   *
+   * @param inputs 待判断的字符序列数组
+   * @return 全部包含非空白字符时返回 true
+   * @since 26.09.19
+   */
+  public static boolean isNoneBlank(CharSequence... inputs) {
+    if (inputs == null || inputs.length == 0) {
+      return true;
+    }
+    for (CharSequence cs : inputs) {
+      if (isBlank(cs)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * 判断任意一个字符串是否为 null、空字符串或只包含空白字符。
+   *
+   * <p>是 {@link #isNoneBlank(CharSequence...)} 的逻辑取反。存在任一空白时返回 true。
+   *
+   * @param inputs 待判断的字符序列数组
+   * @return 任一为空白时返回 true；全部非空白时返回 false
+   * @since 26.09.19
+   */
+  public static boolean isAnyBlank(CharSequence... inputs) {
+    if (inputs == null || inputs.length == 0) {
+      return false;
+    }
+    for (CharSequence cs : inputs) {
+      if (isBlank(cs)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -108,11 +160,11 @@ public final class StringUtils {
    *
    * <p>hasText(null) -> false
    *
-   * @param cs cs
-   * @return 判断结果
+   * @param input 待判断的字符序列
+   * @return 是否包含实际文本内容
    */
-  public static boolean hasText(CharSequence cs) {
-    return isNotBlank(cs);
+  public static boolean hasText(CharSequence input) {
+    return isNotBlank(input);
   }
 
   /**
@@ -164,26 +216,26 @@ public final class StringUtils {
   /**
    * 如果字符串为 null 或空白，返回默认值
    *
-   * @param str 字符串
-   * @param defaultStr defaultStr
-   * @return 判断结果
+   * @param input 待判断的字符序列
+   * @param defaultValue 空白时的默认返回值
+   * @return 原字符串或默认值
    */
-  public static String defaultIfBlank(CharSequence str, String defaultStr) {
-    return isBlank(str) ? defaultStr : str.toString();
+  public static String defaultIfBlank(CharSequence input, String defaultValue) {
+    return isBlank(input) ? defaultValue : input.toString();
   }
 
   /**
    * 判断字符串是否以指定前缀开头（忽略大小写）
    *
-   * @param str 待检查字符串
+   * @param input 待检查字符串
    * @param prefix 前缀
-   * @return 如果 str 以 prefix 开头（忽略大小写）返回 true；str 或 prefix 为 null 返回 false
+   * @return 如果 input 以 prefix 开头（忽略大小写）返回 true；str 或 prefix 为 null 返回 false
    */
-  public static boolean startsWithIgnoreCase(String str, String prefix) {
-    if (str == null || prefix == null) {
+  public static boolean startsWithIgnoreCase(String input, String prefix) {
+    if (input == null || prefix == null) {
       return false;
     }
-    return str.regionMatches(true, 0, prefix, 0, prefix.length());
+    return input.regionMatches(true, 0, prefix, 0, prefix.length());
   }
 
   /**
@@ -203,14 +255,14 @@ public final class StringUtils {
    * @param remove 要移除的前缀（可为 null）
    * @return 移除前缀后的字符串；如果输入为 null 或不以前缀开头，返回原字符串
    */
-  public static String removeStart(String str, String remove) {
-    if (str == null || remove == null || remove.isEmpty()) {
-      return str;
+  public static String removeStart(String input, String prefix) {
+    if (input == null || prefix == null || prefix.isEmpty()) {
+      return input;
     }
-    if (str.startsWith(remove)) {
-      return str.substring(remove.length());
+    if (input.startsWith(prefix)) {
+      return input.substring(prefix.length());
     }
-    return str;
+    return input;
   }
 
   // ==================== 命名转换方法 ====================

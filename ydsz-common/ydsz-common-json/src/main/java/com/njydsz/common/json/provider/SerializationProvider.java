@@ -101,7 +101,7 @@ public final class SerializationProvider {
         ThreadLocal.withInitial(
             () -> {
               SerializationContext ctx = new SerializationContext();
-              ctx.sbPool = new StringBuilder(SMALL_SB_CAPACITY);
+              ctx.sbPool = new StringBuilder(MEDIUM_SB_CAPACITY);
               ctx.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>());
               ctx.fastWriterPool = new JSONWriter();
               return ctx;
@@ -184,7 +184,7 @@ public final class SerializationProvider {
       ctx.fastWriterPool = new JSONWriter();
       ctx.currentViewClass = null;
       ctx.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>());
-      ctx.sbPool = new StringBuilder(SMALL_SB_CAPACITY);
+      ctx.sbPool = new StringBuilder(MEDIUM_SB_CAPACITY);
       ctx.namingStrategy = runtimeConfig.namingStrategy();
       return ctx;
     }

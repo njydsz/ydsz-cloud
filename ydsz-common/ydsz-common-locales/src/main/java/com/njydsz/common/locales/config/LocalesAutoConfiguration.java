@@ -1,9 +1,14 @@
 package com.njydsz.common.locales.config;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
+import java.util.Set;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +20,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.LocaleResolver;
@@ -83,6 +90,17 @@ public class LocalesAutoConfiguration {
           "MissingTranslationLogger 已启用 | 缓冲区容量: {} | 节流器将在 i18n key 未解析时输出 WARN 日志",
           capacity);
     }
+  }
+
+  /**
+   * 跨语言翻译完整性校验（在 MessageSource 创建后、Bean 初始化完成前调用）。
+   *
+   * <p>确保默认 Locale（zh_CN）下存在的每个 key 在所有其它支持 Locale 中也有对应翻译。调用链：{@link
+   * #validateCrossLocaleCompleteness()}。
+   */
+  @PostConstruct
+  public void performCrossLocaleValidation() {
+    validateCrossLocaleCompleteness();
   }
 
   // ==================== 国际化核心 ====================
@@ -207,6 +225,101 @@ public class LocalesAutoConfiguration {
       }
     }
     return false;
+  }
+
+  /**
+   * 校验跨语言翻译完整性：默认 Locale（zh_CN）下的每个 i18n key 是否在所有支持的 Locale 中也有对应翻译。
+   *
+   * <p>校验在启用了 {@code validateOnStartup=true} 且支持的 Locale 数量 ≥ 2 时生效。若某 key 在 zh_CN 中存在但在
+   * en_US / zh_TW 等其它 Locale 中缺失（useCodeAsDefaultMessage=true 导致返回 key 本身），则以
+   * MissingTranslationLogger 节流器输出 WARN 日志。
+   *
+   * <p><b>自包含约束：</b>本方法不依赖 L3+ 模块（如 ydsz-common-exception），仅在 L2 locales 模块内完成资源加载与校验。
+   */
+  private void validateCrossLocaleCompleteness() {
+    if (!i18nProperties.isValidateOnStartup()) {
+      return;
+    }
+    String[] supportedLocales = i18nProperties.getSupportedLocales();
+    if (supportedLocales == null || supportedLocales.length < 2) {
+      return;
+    }
+    Locale defaultLocale = parseDefaultLocale();
+    // 加载默认 Locale 的 key 集合
+    Set<String> defaultLocaleKeys = loadKeysForLocale(defaultLocale);
+    if (defaultLocaleKeys.isEmpty()) {
+      log.debug("跨语言校验跳过：默认 Locale {} 下未找到任何 i18n key", defaultLocale);
+      return;
+    }
+    int missingCount = 0;
+    for (String localeTag : supportedLocales) {
+      Locale locale = parseLocale(localeTag);
+      if (locale.equals(defaultLocale)) {
+        continue;
+      }
+      Set<String> localeKeys = loadKeysForLocale(locale);
+      for (String key : defaultLocaleKeys) {
+        if (!localeKeys.contains(key)) {
+          missingCount++;
+          log.warn(
+              "i18n 跨语言翻译缺失：key='{}' 在默认 Locale ({}) 存在，但在 Locale ({}) 缺失对应翻译",
+              key,
+              defaultLocale,
+              localeTag);
+        }
+      }
+    }
+    if (missingCount > 0) {
+      log.warn(
+          "跨语言翻译完整性校验完成：发现 {} 个 key 在默认 Locale ({}) 存在但部分支持 Locale 中缺失",
+          missingCount,
+          defaultLocale);
+    } else {
+      log.info(
+          "跨语言翻译完整性校验通过：默认 Locale ({}) 中 {} 个 key 在所有 {} 个支持 Locale 中均有翻译",
+          defaultLocale,
+          defaultLocaleKeys.size(),
+          supportedLocales.length);
+    }
+  }
+
+  /**
+   * 加载指定 Locale 下所有资源前缀中的 key 集合。
+   *
+   * <p>实现方式：通过 {@link PathMatchingResourcePatternResolver} 定位 `{prefix}_{locale}.properties` 文件，
+   * 逐文件读取 Properties 并提取所有 key。失败（文件不存在/IO 异常）时回退跳过，不阻断启动。
+   *
+   * @param locale 目标 Locale
+   * @return 该 Locale 下所有 basename 的 key 集合（可能为空但不为 null）
+   */
+  private Set<String> loadKeysForLocale(Locale locale) {
+    Set<String> keys = new LinkedHashSet<>();
+    String localeSuffix =
+        locale.getCountry().isEmpty()
+            ? locale.getLanguage()
+            : locale.getLanguage() + "_" + locale.getCountry();
+    String[] basenames = i18nProperties.getEffectiveBasenames();
+    PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+    for (String basename : basenames) {
+      String basenameTrimmed = normalizeBasename(basename);
+      // 构造资源路径：classpath:i18n/exception-messages_zh_CN.properties
+      String resourcePath = basenameTrimmed + "_" + localeSuffix + ".properties";
+      try {
+        Resource[] resources = resolver.getResources(resourcePath);
+        for (Resource resource : resources) {
+          if (resource.exists()) {
+            try (InputStream is = resource.getInputStream()) {
+              Properties props = new Properties();
+              props.load(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8));
+              keys.addAll(props.stringPropertyNames());
+            }
+          }
+        }
+      } catch (Exception e) {
+        // 资源不存在或读取失败时跳过，不阻断
+      }
+    }
+    return keys;
   }
 
   private MessageSource createMessageSource(int cacheSeconds) {

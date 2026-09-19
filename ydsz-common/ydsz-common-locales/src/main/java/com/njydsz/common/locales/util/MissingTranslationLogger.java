@@ -75,7 +75,7 @@ public final class MissingTranslationLogger {
    * @param key i18n 消息键
    * @param locale 请求的 Locale
    */
-  static void tryWarn(String key, Locale locale) {
+  public static void tryWarn(String key, Locale locale) {
     ThrottlerState state = STATE.get();
     if (!state.isEnabled()) {
       return;

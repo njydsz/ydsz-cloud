@@ -338,4 +338,55 @@ public final class CryptoUtils {
       Arrays.fill(key, (byte) 0);
     }
   }
+
+  // ==================== 密钥生命周期模板（try-with-resources 风格） ====================
+
+  /**
+   * 以自动擦除密钥的方式执行加解密操作。
+   *
+   * <p>退出时无论成功或异常，都会自动调用 {@link #destroyKey(byte[])} 擦除密钥。
+   *
+   * <p>推荐使用方式：
+   *
+   * <pre>{@code
+   * String ciphertext = CryptoUtils.withKey(base64DecodedKey, k -> {
+   *     return CryptoUtils.encrypt("sensitive data", k);
+   * });
+   * // 退出 withKey 后 key 已被安全擦除
+   * }</pre>
+   *
+   * @param key 密钥字节数组（不可为 null）；执行完毕后被清零
+   * @param action 接收密钥并返回计算结果的函数（不可为 null）
+   * @param <R> 返回值类型
+   * @return 执行结果
+   * @throws NullPointerException 如果 key 或 action 为 null
+   * @since 26.09.19
+   */
+  public static <R> R withKey(byte[] key, java.util.function.Function<byte[], R> action) {
+    Objects.requireNonNull(key, "key must not be null");
+    Objects.requireNonNull(action, "action must not be null");
+    try {
+      return action.apply(key);
+    } finally {
+      destroyKey(key);
+    }
+  }
+
+  /**
+   * 以自动擦除密钥的方式执行加解密操作（无返回值）。
+   *
+   * @param key 密钥字节数组（不可为 null）；执行完毕后被清零
+   * @param action 接收密钥执行操作的消费者（不可为 null）
+   * @throws NullPointerException 如果 key 或 action 为 null
+   * @since 26.09.19
+   */
+  public static void withKeyVoid(byte[] key, java.util.function.Consumer<byte[]> action) {
+    Objects.requireNonNull(key, "key must not be null");
+    Objects.requireNonNull(action, "action must not be null");
+    try {
+      action.accept(key);
+    } finally {
+      destroyKey(key);
+    }
+  }
 }

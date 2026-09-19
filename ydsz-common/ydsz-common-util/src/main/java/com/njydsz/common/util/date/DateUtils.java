@@ -2,12 +2,17 @@ package com.njydsz.common.util.date;
 
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.Period;
 import java.time.Year;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Objects;
 
 import com.njydsz.common.util.api.Experimental;
@@ -346,5 +351,109 @@ public final class DateUtils {
       }
     }
     return result;
+  }
+
+  // ==================== 时区转换 ====================
+
+  /**
+   * 将 {@link Instant} 按指定时区转换为 {@link ZonedDateTime}。
+   *
+   * <p>典型场景：UTC 时间戳 → 东八区（Asia/Shanghai）展示。
+   *
+   * @param instant 绝对时间戳（不可为 null）
+   * @param zoneId 目标时区（不可为 null），常用 {@code ZoneId.of("Asia/Shanghai")} 或 {@link ZoneId#systemDefault()}
+   * @return 带时区的日期时间
+   * @throws NullPointerException 如果任一参数为 null
+   * @since 26.09.19
+   */
+  public static ZonedDateTime atZone(Instant instant, ZoneId zoneId) {
+    Objects.requireNonNull(instant, "instant must not be null");
+    Objects.requireNonNull(zoneId, "zoneId must not be null");
+    return instant.atZone(zoneId);
+  }
+
+  /**
+   * 将 {@link LocalDateTime} 按指定时区转为 {@link ZonedDateTime}。
+   *
+   * @param localDateTime 本地日期时间（无时区信息，不可为 null）
+   * @param zoneId 要应用的时区（不可为 null）
+   * @return 带时区的日期时间
+   * @throws NullPointerException 如果任一参数为 null
+   * @since 26.09.19
+   */
+  public static ZonedDateTime atZone(LocalDateTime localDateTime, ZoneId zoneId) {
+    Objects.requireNonNull(localDateTime, "localDateTime must not be null");
+    Objects.requireNonNull(zoneId, "zoneId must not be null");
+    return localDateTime.atZone(zoneId);
+  }
+
+  // ==================== 季度边界 ====================
+
+  /**
+   * 获取指定日期所在季度的第一天 00:00:00。
+   *
+   * <p>Q1 起始 月=1，Q2 起始 月=4，Q3 起始 月=7，Q4 起始 月=10。
+   *
+   * @param date 日期（不可为 null）
+   * @return 当季 1 号 00:00:00 的 LocalDateTime
+   * @throws NullPointerException 如果 date 为 null
+   * @since 26.09.19
+   */
+  public static LocalDateTime getStartOfQuarter(LocalDate date) {
+    Objects.requireNonNull(date, "date must not be null");
+    Month firstMonthOfQuarter = date.getMonth().firstMonthOfQuarter();
+    LocalDate firstDay = date.withMonth(firstMonthOfQuarter.getValue()).withDayOfMonth(1);
+    return getStartOfDay(firstDay);
+  }
+
+  /**
+   * 获取指定日期所在季度的最后一天 23:59:59.999999999。
+   *
+   * @param date 日期（不可为 null）
+   * @return 当季最后一天的 23:59:59.999999999 的 LocalDateTime
+   * @throws NullPointerException 如果 date 为 null
+   * @since 26.09.19
+   */
+  public static LocalDateTime getEndOfQuarter(LocalDate date) {
+    Objects.requireNonNull(date, "date must not be null");
+    Month firstMonthOfQuarter = date.getMonth().firstMonthOfQuarter();
+    Month lastMonthOfQuarter = Month.of(firstMonthOfQuarter.getValue() + 2);
+    LocalDate lastDay = date.withMonth(lastMonthOfQuarter.getValue())
+        .withDayOfMonth(lastMonthOfQuarter.length(date.isLeapYear()));
+    return getEndOfDay(lastDay);
+  }
+
+  // ==================== 区间重叠判断 ====================
+
+  /**
+   * 判断两个日期区间是否存在重叠（闭区间，端点相交视为重叠）。
+   *
+   * <p>典型场景：会议室预订、排班冲突、资源占用检测。
+   *
+   * <p>算法：两个区间 [aStart, aEnd] 与 [bStart, bEnd] 重叠的充要条件是：
+   * {@code aStart <= bEnd && bStart <= aEnd}。
+   *
+   * @param startA 区间 A 起始日期（不可为 null）
+   * @param endA 区间 A 结束日期（不可为 null，允许等于 startA）
+   * @param startB 区间 B 起始日期（不可为 null）
+   * @param endB 区间 B 结束日期（不可为 null，允许等于 startB）
+   * @return 存在重叠返回 true；完全分离返回 false
+   * @throws NullPointerException 如果任一参数为 null
+   * @throws IllegalArgumentException 如果 endA < startA 或 endB < startB
+   * @since 26.09.19
+   */
+  public static boolean isOverlap(
+      LocalDate startA, LocalDate endA, LocalDate startB, LocalDate endB) {
+    Objects.requireNonNull(startA, "startA must not be null");
+    Objects.requireNonNull(endA, "endA must not be null");
+    Objects.requireNonNull(startB, "startB must not be null");
+    Objects.requireNonNull(endB, "endB must not be null");
+    if (endA.isBefore(startA)) {
+      throw new IllegalArgumentException("endA must not be before startA");
+    }
+    if (endB.isBefore(startB)) {
+      throw new IllegalArgumentException("endB must not be before startB");
+    }
+    return !startA.isAfter(endB) && !startB.isAfter(endA);
   }
 }

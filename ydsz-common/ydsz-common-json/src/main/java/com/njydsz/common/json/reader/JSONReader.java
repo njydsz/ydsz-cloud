@@ -216,6 +216,16 @@ public final class JSONReader {
   /** 有效数据长度 */
   int len;
 
+  /**
+   * 原始 JSON 字符串引用（可为 null）。
+   *
+   * <p>用于在反序列化异常中附加行号、列号和上下文片段（{@link JsonDeserializationException} 的 4 参构造）。 当通过 {@link
+   * #getPooledReader(String)} 创建时自动设置；通过 char[] 构造函数创建时为 null， 此时异常仅包含位置偏移量。
+   *
+   * @since 26.09.01
+   */
+  private String sourceJson;
+
   /** 最大嵌套深度（防止栈溢出攻击，默认 256） */
   private static volatile int maxDepth = DEFAULT_MAX_DEPTH;
 
@@ -279,6 +289,52 @@ public final class JSONReader {
   }
 
   /**
+   * 创建带行号/列号和上下文片段的反序列化解析异常。
+   *
+   * <p>当 {@link #sourceJson} 可用时（通过 String 构造或 {@link #reset(String)} 设置）， 自动附加行列号与上下文片段；不可用时回退到仅含位置偏移量的异常。
+   *
+   * @param message 错误消息
+   * @return 解析异常实例，永不为 null
+   * @since 26.09.01
+   */
+  public JsonDeserializationException newParseException(String message) {
+    if (sourceJson != null) {
+      return new JsonDeserializationException(
+          JsonDeserializationException.PARSE_ERROR, message, pos, sourceJson);
+    }
+    return new JsonDeserializationException(
+        JsonDeserializationException.PARSE_ERROR, message + " at position " + pos);
+  }
+
+  /**
+   * 创建带行号/列号和上下文片段的反序列化深度超限异常。
+   *
+   * @param depth 当前递归深度
+   * @return 深度超限异常实例
+   * @since 26.09.01
+   */
+  public JsonDeserializationException newDepthException(int depth) {
+    String message = "JSON nesting depth exceeds limit: " + depth;
+    if (sourceJson != null) {
+      return new JsonDeserializationException(
+          JsonDeserializationException.PARSE_ERROR, message, pos, sourceJson);
+    }
+    return new JsonDeserializationException(message, pos);
+  }
+
+  /**
+   * 获取原始 JSON 字符串引用。
+   *
+   * <p>供同包类（如 {@link BeanReader}）构造带行列号的异常时使用。
+   *
+   * @return 原始 JSON 字符串，可能为 null
+   * @since 26.09.01
+   */
+  String getSourceJson() {
+    return sourceJson;
+  }
+
+  /**
    * 构造函数
    * <p><b>性能提示：</b>此构造函数会调用 {@code String.toCharArray()} 创建防御性拷贝。 高频场景应优先使用 {@link
    * #getPooledReader(String)} + {@link #reset(String)} 复用 char[] 缓冲区， 避免每次反序列化都分配新的
@@ -290,6 +346,7 @@ public final class JSONReader {
     this.buf = json.toCharArray();
     this.pos = 0;
     this.len = buf.length;
+    this.sourceJson = json;
     this.instanceMaxDepth = null;
     this.instanceMaxGenericDepth = null;
   }
@@ -436,6 +493,7 @@ public final class JSONReader {
     json.getChars(0, newLen, buf, 0);
     pos = 0;
     len = newLen;
+    sourceJson = json;
   }
 
   /**
@@ -638,8 +696,7 @@ public final class JSONReader {
   public char nextChar() {
     skipWhitespace();
     if (pos >= len) {
-      throw new JsonDeserializationException(
-          JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
+      throw newParseException("Unexpected end of JSON");
     }
     return buf[pos++];
   }
@@ -1466,14 +1523,13 @@ public final class JSONReader {
   }
 
   private List<Object> readArray(Class<?> elementType, int depth) {
-    if (depth > resolveMaxDepth()) {
-      throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
-    }
-    skipWhitespace();
-    if (pos >= len || buf[pos] != '[') {
-      throw new JsonDeserializationException(
-          JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
-    }
+      if (depth > resolveMaxDepth()) {
+        throw newDepthException(depth);
+      }
+      skipWhitespace();
+      if (pos >= len || buf[pos] != '[') {
+        throw newParseException("Unexpected end of JSON while parsing array");
+      }
     pos++;
     List<Object> result = new ArrayList<>(16);
     while (pos < len) {
@@ -1574,12 +1630,11 @@ public final class JSONReader {
 
   private Map<String, Object> readObjectMap(int depth) {
     if (depth > resolveMaxDepth()) {
-      throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
+      throw newDepthException(depth);
     }
     skipWhitespace();
     if (pos >= len || buf[pos] != '{') {
-      throw new JsonDeserializationException(
-          JsonDeserializationException.PARSE_ERROR, "Unexpected end of JSON at position " + pos);
+      throw newParseException("Unexpected end of JSON while parsing object");
     }
     pos++;
     Map<String, Object> result = new HashMap<>(16);

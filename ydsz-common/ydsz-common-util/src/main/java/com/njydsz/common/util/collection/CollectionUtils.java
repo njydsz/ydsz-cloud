@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 集合工具类
@@ -473,5 +474,69 @@ public final class CollectionUtils {
       }
     }
     return result;
+  }
+
+  // ==================== Stream / Optional 适配 ====================
+
+  /**
+   * null 安全的 Stream 入口。
+   *
+   * <p>若集合为 null 返回空流，避免 NPE。
+   *
+   * <pre>{@code
+   * // 替换 list != null ? list.stream() : Stream.empty()
+   * Stream<List> stream = CollectionUtils.safeStream(maybeNull);
+   * }</pre>
+   *
+   * @param source 集合（可为 null）
+   * @param <T> 元素类型
+   * @return 集合的 Stream；为 null 时返回 {@link Stream#empty()}
+   * @since 26.09.19
+   */
+  public static <T> Stream<T> safeStream(Collection<T> source) {
+    if (isEmpty(source)) {
+      return Stream.empty();
+    }
+    return source.stream();
+  }
+
+  /**
+   * 将 Optional 转为单元素集合或空集合。
+   *
+   * <pre>{@code
+   * CollectionUtils.fromOptional(Optional.of("hello"))  // ["hello"]
+   * CollectionUtils.fromOptional(Optional.empty())       // []
+   * }</pre>
+   *
+   * @param optional 待转换的 Optional（不可为 null）
+   * @param <T> 元素类型
+   * @return 包含 Optional 值的 ArrayList 或空 ArrayList
+   * @throws NullPointerException 如果 optional 为 null
+   * @since 26.09.19
+   */
+  public static <T> List<T> fromOptional(Optional<T> optional) {
+    Objects.requireNonNull(optional, "optional must not be null");
+    List<T> result = new ArrayList<>(1);
+    optional.ifPresent(result::add);
+    return result;
+  }
+
+  /**
+   * 过滤 Map 中值为 null 的条目。
+   *
+   * <p>典型场景：对接 Jackson {@code @JsonInclude(NON_NULL)} 调优。
+   *
+   * @param source 源 Map（不可为 null）
+   * @param <K> 键类型
+   * @param <V> 值类型
+   * @return 不含 null value 的新 HashMap；全部为 null 值时返回空 Map
+   * @throws NullPointerException 如果 source 为 null
+   * @since 26.09.19
+   */
+  public static <K, V> Map<K, V> filterNullValues(Map<K, V> source) {
+    Objects.requireNonNull(source, "source must not be null");
+    return source.entrySet().stream()
+        .filter(entry -> entry.getValue() != null)
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 }

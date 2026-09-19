@@ -37,6 +37,9 @@ public class ExcelWriteException extends ExcelException {
   /** 写入失败的字段名 */
   private String fieldName;
 
+  /** 写入失败时的 Sheet 名称 */
+  private String sheetName;
+
   public ExcelWriteException() {
     super();
   }
@@ -75,6 +78,14 @@ public class ExcelWriteException extends ExcelException {
 
   public void setFieldName(String fieldName) {
     this.fieldName = fieldName;
+  }
+
+  public String getSheetName() {
+    return sheetName;
+  }
+
+  public void setSheetName(String sheetName) {
+    this.sheetName = sheetName;
   }
 
   /**
@@ -149,6 +160,22 @@ public class ExcelWriteException extends ExcelException {
    */
   public static ExcelWriteException dataWriteFailed(
       int index, String fieldName, Object value, Throwable cause) {
+    return dataWriteFailed(index, fieldName, value, cause, null);
+  }
+
+  /**
+   * 创建数据写入异常（含 Sheet 上下文）。
+   *
+   * @param index 索引
+   * @param fieldName 字段名
+   * @param value 值
+   * @param cause 原因
+   * @param sheetName 当前 Sheet 名称，可为 {@code null}
+   * @return 携带 {@code WRITE_DATA_FAILED} 错误码的异常实例，不会为 {@code null}；
+   *     数据索引、字段名与 Sheet 名已回填，底层写入异常被保留为 {@code cause}
+   */
+  public static ExcelWriteException dataWriteFailed(
+      int index, String fieldName, Object value, Throwable cause, String sheetName) {
     String message = ExcelI18nHelper.getMessage(
         "excel.write.dataFailed.detail",
         new Object[] {index, fieldName, value},
@@ -157,6 +184,7 @@ public class ExcelWriteException extends ExcelException {
         new ExcelWriteException(ExcelExceptionCode.WRITE_DATA_FAILED, message, cause);
     ex.setDataIndex(index);
     ex.setFieldName(fieldName);
+    ex.setSheetName(sheetName);
     return ex;
   }
 
@@ -172,6 +200,9 @@ public class ExcelWriteException extends ExcelException {
       sb.append(" [数据索引=").append(dataIndex);
       if (fieldName != null) {
         sb.append(", 字段=").append(fieldName);
+      }
+      if (sheetName != null) {
+        sb.append(", Sheet=").append(sheetName);
       }
       sb.append("]");
     }

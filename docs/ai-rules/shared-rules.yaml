@@ -13,10 +13,10 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.18"
-  source: "docs/云顶编码规范.md v1.0.9"
-  last_synced: "2026-09-18"
-  last_updated: "2026-09-18（§36 国际化规范：新增 YDIZ-I18N-001 P0 资源文件命名约束；新增 YDIZ-I18N-002 P1 硬编码文案禁令；total 64→66）"
+  version: "26.09.19"
+  source: "docs/云顶编码规范.md v1.0.10"
+  last_synced: "2026-09-19"
+  last_updated: "2026-09-19（ydsz-common-locales 优化：新增 wildcard-scan-enabled 通配符自动发现；新增 missing-translation-log-enabled 缺失翻译 WARN 告警；§36.10 新增常见场景最佳实践；total_rules 66 不变）"
   total_rules: 66
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
@@ -1581,7 +1581,7 @@ rules:
     source: "编码规范 §36.5.1 禁止硬编码用户可见文案（YDIZ-I18N-002，P1）"
 
 # ============================================
-# 附录：按 category 统计（26.09.18 更新，total 64→66）
+# 附录：按 category 统计（26.09.19 更新，total 66 不变；本次为模块优化非新增规则）
 # ============================================
 stats:
   encoding: 1

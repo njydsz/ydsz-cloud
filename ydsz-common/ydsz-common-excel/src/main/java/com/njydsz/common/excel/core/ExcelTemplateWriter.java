@@ -1,5 +1,6 @@
 package com.njydsz.common.excel.core;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -49,6 +50,7 @@ public class ExcelTemplateWriter {
   private static final Logger LOG = LoggerFactory.getLogger(ExcelTemplateWriter.class);
 
   private final String templatePath;
+  private final InputStream templateInputStream;
   private final WriteMetadata metadata;
   private final ValueFormatter valueFormatter;
   private int sheetIndex = 0;
@@ -56,6 +58,44 @@ public class ExcelTemplateWriter {
 
   public ExcelTemplateWriter(String templatePath, String outputPath, Class<?> clazz) {
     this.templatePath = templatePath;
+    this.templateInputStream = null;
+    this.metadata = new WriteMetadata();
+    this.metadata.setFilePath(outputPath);
+    this.metadata.setClazz(clazz);
+    this.valueFormatter = new ValueFormatter(true);
+  }
+
+  /**
+   * 从输入流加载模板文件。
+   *
+   * <p>适用于 Web 上传模板、云存储模板等场景——模板不以文件形式落地到本地文件系统，
+   * 而是以 {@link InputStream} 形式直接提供。
+   *
+   * @param templateStream 模板文件的输入流（调用方负责关闭）
+   * @param outputPath 输出文件路径
+   * @param clazz 映射的源类类型
+   */
+  public ExcelTemplateWriter(InputStream templateStream, String outputPath, Class<?> clazz) {
+    this.templatePath = null;
+    this.templateInputStream = templateStream;
+    this.metadata = new WriteMetadata();
+    this.metadata.setFilePath(outputPath);
+    this.metadata.setClazz(clazz);
+    this.valueFormatter = new ValueFormatter(true);
+  }
+
+  /**
+   * 从字节数组加载模板文件。
+   *
+   * <p>便捷工厂方法，适用于模板已完整加载到内存的场景（如数据库 BLOB、缓存等）。
+   *
+   * @param templateBytes 模板文件的字节内容
+   * @param outputPath 输出文件路径
+   * @param clazz 映射的源类类型
+   */
+  public ExcelTemplateWriter(byte[] templateBytes, String outputPath, Class<?> clazz) {
+    this.templatePath = null;
+    this.templateInputStream = new ByteArrayInputStream(templateBytes);
     this.metadata = new WriteMetadata();
     this.metadata.setFilePath(outputPath);
     this.metadata.setClazz(clazz);
@@ -110,8 +150,9 @@ public class ExcelTemplateWriter {
       return;
     }
 
-    try (InputStream templateIs = new FileInputStream(templatePath);
-        XSSFWorkbook workbook = new XSSFWorkbook(templateIs)) {
+    InputStream templateIs =
+        templateInputStream != null ? templateInputStream : new FileInputStream(templatePath);
+    try (XSSFWorkbook workbook = new XSSFWorkbook(templateIs)) {
 
       Sheet sheet = workbook.getSheetAt(sheetIndex);
       Class<?> clazz = metadata.getClazz();
@@ -149,7 +190,8 @@ public class ExcelTemplateWriter {
       }
 
     } catch (IOException e) {
-      throw ExcelWriteException.fileAccessFailed(templatePath, e.getMessage());
+      throw ExcelWriteException.fileAccessFailed(
+          templatePath != null ? templatePath : "<input-stream>", e.getMessage());
     }
   }
 
