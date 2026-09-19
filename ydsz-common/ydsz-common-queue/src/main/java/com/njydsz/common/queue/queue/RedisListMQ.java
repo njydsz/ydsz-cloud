@@ -30,7 +30,9 @@ import com.njydsz.common.queue.service.impl.RedisListSubscriber;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 自 26.09.01 起废弃，使用 {@link RedisStreamMQ} 替代。将在后续版本移除。
  */
+@Deprecated(since = "26.09.01", forRemoval = true)
 @Slf4j
 public class RedisListMQ extends AbstractMessageQueue {
 
