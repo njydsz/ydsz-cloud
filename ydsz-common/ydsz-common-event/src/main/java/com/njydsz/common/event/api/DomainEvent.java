@@ -47,6 +47,7 @@ import com.njydsz.common.util.id.IdGenerator;
  *     RequestContext 重复， 改由消费/落库方在需要时自行解析。
  * @since 26.09.01 由 common-domain 迁入 common-event，事件抽象与 Outbox 实现统一归属事件模块
  * @since 26.09.01 移除 Serializable 接口和 Builder 中的 clock 参数，回归简洁
+ * @since 26.09.19 O-4 增加 schemaVersion 字段（默认 1），用于事件 schema 向前兼容演进
  */
 public class DomainEvent extends ApplicationEvent {
 
@@ -68,6 +69,9 @@ public class DomainEvent extends ApplicationEvent {
   /** 扩展元数据 */
   private final Map<String, Object> metadata;
 
+  /** 事件 schema 版本号（默认 1，用于向前兼容） */
+  private final int schemaVersion;
+
   /**
    * 构造领域事件（全参数）
    *
@@ -77,6 +81,7 @@ public class DomainEvent extends ApplicationEvent {
    * @param aggregateId 聚合根ID
    * @param aggregateType 聚合根类型
    * @param metadata 扩展元数据
+   * @param schemaVersion 事件 schema 版本号（≥1）
    */
   public DomainEvent(
       String eventId,
@@ -84,13 +89,15 @@ public class DomainEvent extends ApplicationEvent {
       String eventType,
       String aggregateId,
       String aggregateType,
-      Map<String, Object> metadata) {
+      Map<String, Object> metadata,
+      int schemaVersion) {
     super(eventType);
     this.eventId = eventId;
     this.occurredAt = occurredAt;
     this.eventType = eventType;
     this.aggregateId = aggregateId;
     this.aggregateType = aggregateType;
+    this.schemaVersion = schemaVersion > 0 ? schemaVersion : 1;
     this.metadata =
         metadata != null
             ? Collections.unmodifiableMap(new HashMap<>(metadata))
@@ -170,6 +177,17 @@ public class DomainEvent extends ApplicationEvent {
     return metadata.get(key);
   }
 
+  /**
+   * 获取事件 schema 版本号。
+   *
+   * <p>消费方可据此做向前兼容适配。默认值 1 表示初始版本。
+   *
+   * @return schema 版本号（≥1）
+   */
+  public int getSchemaVersion() {
+    return schemaVersion;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -191,14 +209,14 @@ public class DomainEvent extends ApplicationEvent {
   public String toString() {
     return String.format(
         "DomainEvent{eventId='%s', occurredAt=%s, eventType='%s', aggregateId='%s', "
-            + "aggregateType='%s', metadata=%s}",
-        eventId, occurredAt, eventType, aggregateId, aggregateType, metadata);
+            + "aggregateType='%s', schemaVersion=%d, metadata=%s}",
+        eventId, occurredAt, eventType, aggregateId, aggregateType, schemaVersion, metadata);
   }
 
   /**
    * DomainEvent 构建器。
    *
-   * <p>提供链式调用方式创建不可变的领域事件。默认自动填充 eventId、occurredAt。
+   * <p>提供链式调用方式创建不可变的领域事件。默认自动填充 eventId、occurredAt、schemaVersion。
    */
   public static class Builder {
     private String eventId;
@@ -206,6 +224,7 @@ public class DomainEvent extends ApplicationEvent {
     private String eventType;
     private String aggregateId;
     private String aggregateType;
+    private int schemaVersion = 1;
     private final Map<String, Object> metadata = new HashMap<>(16);
 
     private Builder() {}
@@ -270,6 +289,20 @@ public class DomainEvent extends ApplicationEvent {
     }
 
     /**
+     * 设置事件 schema 版本号。
+     *
+     * <p>默认值 1（初始版本）。仅在需要声明新版本以向前兼容时显式指定。
+     *
+     * @param schemaVersion schema 版本号（≥1）
+     * @return 当前 Builder，便于链式调用
+     * @since 26.09.19
+     */
+    public Builder schemaVersion(int schemaVersion) {
+      this.schemaVersion = schemaVersion > 0 ? schemaVersion : 1;
+      return this;
+    }
+
+    /**
      * 追加单个元数据项（增量追加，重复 key 覆盖旧值）。
      *
      * @param key 元数据键，不建议为 {@code null}
@@ -298,8 +331,8 @@ public class DomainEvent extends ApplicationEvent {
     /**
      * 构建领域事件实例。
      *
-     * <p>组装 Builder 已设置的字段并自动填充缺失项：eventId 缺省时生成 UUID， occurredAt 缺省时取当前系统时间。构建完成后事件不可变（metadata
-     * 为不可变 Map）。
+     * <p>组装 Builder 已设置的字段并自动填充缺失项：eventId 缺省时生成 UUID， occurredAt 缺省时取当前系统时间，schemaVersion 缺省为 1。
+     * 构建完成后事件不可变（metadata 为不可变 Map）。
      *
      * @return 组装完成的领域事件
      * @throws EventBuildException 当 eventType 为 null 或空字符串时抛出， 事件类型是跨模块契约的必需字段
@@ -310,7 +343,8 @@ public class DomainEvent extends ApplicationEvent {
       }
       String eid = eventId != null ? eventId : IdGenerator.nextIdStr();
       LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now();
-      return new DomainEvent(eid, occurred, eventType, aggregateId, aggregateType, metadata);
+      return new DomainEvent(eid, occurred, eventType, aggregateId, aggregateType, metadata,
+          schemaVersion);
     }
   }
 }

@@ -79,8 +79,13 @@ public class AuditProperties {
   /** 是否启用分表（默认不启用） */
   private boolean shardingEnabled = false;
 
-  /** 分表类型：monthly / daily / yearly（默认 monthly） */
-  private String shardingType = "monthly";
+  /**
+   * 分表策略（默认 monthly）
+   *
+   * <p>可选值：monthly（按月分表）、daily（按天分表）、yearly（按年分表）。
+   * 强类型枚举，配置值拼写错误将直接启动失败（fail-fast）。
+   */
+  private AuditShardingType shardingType = AuditShardingType.MONTHLY;
 
   /** 基础表名（默认 sys_audit_log） */
   private String shardingBaseTableName = "sys_audit_log";
@@ -168,12 +173,12 @@ public class AuditProperties {
     this.shardingEnabled = shardingEnabled;
   }
 
-  public String getShardingType() {
+  public AuditShardingType getShardingType() {
     return shardingType;
   }
 
-  public void setShardingType(String shardingType) {
-    this.shardingType = shardingType;
+  public void setShardingType(AuditShardingType shardingType) {
+    this.shardingType = shardingType != null ? shardingType : AuditShardingType.MONTHLY;
   }
 
   public String getShardingBaseTableName() {

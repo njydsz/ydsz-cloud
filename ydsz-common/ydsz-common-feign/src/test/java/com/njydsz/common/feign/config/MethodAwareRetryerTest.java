@@ -103,7 +103,7 @@ class MethodAwareRetryerTest {
     void cloneShouldCreateNewInstance() {
       Set<String> methods = Collections.singleton("GET");
       MethodAwareRetryer original = new MethodAwareRetryer(100, 500, 3, methods);
-      MethodAwareRetryer cloned = original.clone();
+      MethodAwareRetryer cloned = (MethodAwareRetryer) original.clone();
 
       assertThat(cloned).isNotSameAs(original);
       // 验证是 MethodAwareRetryer 类型
