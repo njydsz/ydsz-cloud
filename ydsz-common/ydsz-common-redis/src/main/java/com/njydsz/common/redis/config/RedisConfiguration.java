@@ -531,6 +531,24 @@ public class RedisConfiguration {
   }
 
   /**
+   * 注册 Key 冷热度分析工具组件
+   *
+   * <p>提供 Redis Key 空间分析能力，包括大 Key 定位、TTL 统计分析、综合健康度评估等。
+   * 组件使用 SCAN（count=200）分批遍历，避免阻塞 Redis 服务器。
+   *
+   * @param redisTemplate 基础模板，不会为 null
+   * @param redisProperties 全局配置，不会为 null
+   * @return Key 分析工具组件实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(RedisKeyAnalyzer.class)
+  @ConditionalOnBean(RedisTemplate.class)
+  public RedisKeyAnalyzer redisKeyAnalyzer(
+      RedisTemplate<String, Object> redisTemplate, RedisProperties redisProperties) {
+    return new RedisKeyAnalyzer(redisTemplate, redisProperties);
+  }
+
+  /**
    * 注册分布式限流器封装（基于 Redis 原子计数/脚本实现的令牌桶或滑动窗口）。
    *
    * <p>依赖 {@code redisProperties} 中的限流阈值配置。Redis 不可用时限流判定无法执行，调用方应明确降级策略 （fail-open 放行还是

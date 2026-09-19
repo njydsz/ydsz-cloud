@@ -7,9 +7,10 @@ import java.sql.SQLException;
 
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.YdszJson;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * JSON 类型转换处理器
@@ -73,8 +74,9 @@ import lombok.extern.slf4j.Slf4j;
  * @see <a href="https://mybatis.org/mybatis-3/zh/configuration.html#typeHandlers">MyBatis
  *     TypeHandler</a>
  */
-@Slf4j
 public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
+
+  private static final Logger log = LoggerFactory.getLogger(JsonTypeHandler.class);
 
   private static final String PG_JSONB_TYPE = "jsonb";
   private static final String PG_JSON_TYPE = "json";
