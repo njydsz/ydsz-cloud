@@ -1,5 +1,6 @@
 package com.njydsz.common.auth.config;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,6 +18,8 @@ import com.njydsz.common.util.http.UrlPathUtils;
  *
  * <p>WebAuthFilter 通过该配置决定哪些请求放行、哪些需要校验 Token。
  *
+ * <p><b>性能优化：</b>合并后的忽略路径白名单通过 {@link #cachedIgnoreUrls} 惰性缓存， 仅在首次调用或配置变更时重新构建，避免每请求重复创建 {@link HashSet} 并执行三次 addAll。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -25,6 +28,12 @@ import com.njydsz.common.util.http.UrlPathUtils;
 public class AuthFilterConfiguration {
 
   private final AuthFilterProperties properties;
+
+  /** 缓存的合并忽略路径集合。volatile 保证多线程可见性。 */
+  private volatile Set<String> cachedIgnoreUrls;
+
+  /** 脏标记：true 表示配置已变更，下次访问需重建缓存。 */
+  private volatile boolean ignoreUrlsDirty = true;
 
   public AuthFilterConfiguration(AuthFilterProperties properties) {
     this.properties = properties;
@@ -49,6 +58,7 @@ public class AuthFilterConfiguration {
    */
   public void setCommonIgnoreUrl(List<String> commonIgnoreUrl) {
     properties.setCommonIgnoreUrl(commonIgnoreUrl);
+    markDirty();
   }
 
   /**
@@ -69,6 +79,7 @@ public class AuthFilterConfiguration {
    */
   public void setGatewayIgnoreUrl(List<String> gatewayIgnoreUrl) {
     properties.setGatewayIgnoreUrl(gatewayIgnoreUrl);
+    markDirty();
   }
 
   /**
@@ -89,6 +100,7 @@ public class AuthFilterConfiguration {
    */
   public void setCustomIgnoreUrl(List<String> customIgnoreUrl) {
     properties.setCustomIgnoreUrl(customIgnoreUrl);
+    markDirty();
   }
 
   /**
@@ -130,32 +142,58 @@ public class AuthFilterConfiguration {
    */
   public void setOnlyVerifyToken(List<String> onlyVerifyToken) {
     properties.setOnlyVerifyToken(onlyVerifyToken);
+    markDirty();
   }
 
   /**
-   * 获取所有忽略的 URL 集合（去重）
+   * 获取所有忽略的 URL 集合（去重）。
    *
-   * @return 所有忽略的 URL
+   * <p>使用惰性缓存策略，首次调用或配置变更时重建合并集合（不可变），后续直接返回缓存引用。 减少高 QPS 场景下的对象分配与 GC 压力。
+   *
+   * @return 所有忽略的 URL 集合（不可变）
    */
   public Set<String> getAllIgnoreUrls() {
-    Set<String> allUrls = new HashSet<>(16);
-    allUrls.addAll(FilterIgnoreConstants.getCommonIgnoreUrls());
-    allUrls.addAll(properties.getCommonIgnoreUrl());
-    allUrls.addAll(properties.getGatewayIgnoreUrl());
-    allUrls.addAll(properties.getCustomIgnoreUrl());
-    return allUrls;
+    if (!ignoreUrlsDirty && cachedIgnoreUrls != null) {
+      return cachedIgnoreUrls;
+    }
+    synchronized (this) {
+      if (!ignoreUrlsDirty && cachedIgnoreUrls != null) {
+        return cachedIgnoreUrls;
+      }
+      Set<String> allUrls = new HashSet<>(64);
+      allUrls.addAll(FilterIgnoreConstants.getCommonIgnoreUrls());
+      if (properties.getCommonIgnoreUrl() != null) {
+        allUrls.addAll(properties.getCommonIgnoreUrl());
+      }
+      if (properties.getGatewayIgnoreUrl() != null) {
+        allUrls.addAll(properties.getGatewayIgnoreUrl());
+      }
+      if (properties.getCustomIgnoreUrl() != null) {
+        allUrls.addAll(properties.getCustomIgnoreUrl());
+      }
+      cachedIgnoreUrls = Collections.unmodifiableSet(allUrls);
+      ignoreUrlsDirty = false;
+      return cachedIgnoreUrls;
+    }
   }
 
   /**
-   * 检查指定 URL 是否应该被忽略
+   * 检查指定 URL 是否应该被忽略。
    *
    * @param url 待检查的 URL
    * @return 如果应该忽略返回 true，否则返回 false
    */
   public boolean shouldIgnoreUrl(String url) {
-    return UrlPathUtils.isIgnoreUrl(FilterIgnoreConstants.getCommonIgnoreUrls(), url)
-        || UrlPathUtils.isIgnoreUrl(properties.getCommonIgnoreUrl(), url)
-        || UrlPathUtils.isIgnoreUrl(properties.getGatewayIgnoreUrl(), url)
-        || UrlPathUtils.isIgnoreUrl(properties.getCustomIgnoreUrl(), url);
+    return UrlPathUtils.isIgnoreUrl(getAllIgnoreUrls(), url)
+        || UrlPathUtils.isIgnoreUrl(properties.getOnlyVerifyToken(), url);
+  }
+
+  /**
+   * 将缓存标记为脏，下次 {@link #getAllIgnoreUrls()} 调用将重建合并集合。
+   *
+   * <p>在任意 setter 修改忽略路径后自动调用；也可由外部在运行时动态调用以强制刷新缓存。
+   */
+  public void markDirty() {
+    this.ignoreUrlsDirty = true;
   }
 }

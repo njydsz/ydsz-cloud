@@ -82,8 +82,10 @@ public class TokenBlacklistService {
     this.distributedLocker = distributedLocker;
     this.redisStringOps = redisStringOps;
     this.authProperties = authProperties;
-    // 预计最多容纳 10 万条黑名单，0.1% 误判率（约 14 哈希、175KB 位数组）
-    this.blacklistBloomFilter = new BloomFilter(100_000, 0.001);
+    AuthProperties.BloomFilterProperties bloomConfig = authProperties.getBloomFilter();
+    long expectedInsertions = bloomConfig != null ? bloomConfig.getExpectedInsertions() : 100_000L;
+    double fpp = bloomConfig != null ? bloomConfig.getFalsePositiveRate() : 0.001;
+    this.blacklistBloomFilter = new BloomFilter(expectedInsertions, fpp);
   }
 
   /**

@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Bean;
  *
  * <ul>
  *   <li>classpath 中存在 Resilience4j {@code CircuitBreakerConfig} 类
- *   <li>{@code ydsz.feign.resilience4j.enabled=true}
+ *   <li>{@code ydsz.feign.circuit-breaker.enabled=true}（推荐）或 {@code ydsz.feign.resilience4j.enabled=true}（兼容）
  * </ul>
  *
  * <p>全局默认熔断配置：
@@ -37,17 +37,17 @@ import org.springframework.context.annotation.Bean;
  *   <li>minimumNumberOfCalls: 10
  * </ul>
  *
- * <p>各参数均可通过 {@code ydsz.feign.resilience4j.*} 配置项覆盖。
+ * <p>配置路径：{@code ydsz.feign.circuit-breaker.*}（自 26.09.19 起统一入口）。
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see FeignProperties.Resilience4j
+ * @see FeignProperties.CircuitBreaker
  */
 @Slf4j
 @AutoConfiguration(after = FeignConfiguration.class)
 @ConditionalOnClass(CircuitBreakerConfig.class)
 @ConditionalOnProperty(
-    prefix = "ydsz.feign.resilience4j",
+    prefix = "ydsz.feign.circuit-breaker",
     name = "enabled",
     havingValue = "true")
 @EnableConfigurationProperties(FeignProperties.class)
@@ -56,7 +56,7 @@ public class FeignResilience4jAutoConfiguration {
   /**
    * 注册全局 Resilience4j CircuitBreakerRegistry。
    *
-   * <p>使用 {@link FeignProperties.Resilience4j} 中的配置构建默认 CircuitBreakerConfig，
+   * <p>使用 {@link FeignProperties.CircuitBreaker} 中的配置构建默认 CircuitBreakerConfig，
    * 作为所有 Feign 客户端熔断器的配置模板。运行时按服务名获取的 CircuitBreaker 继承此默认配置，
    * 可通过 {@code resilience4j.circuitbreaker.configs.<name>.*} 精细化覆盖。
    *
@@ -66,13 +66,13 @@ public class FeignResilience4jAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(CircuitBreakerRegistry.class)
   public CircuitBreakerRegistry feignCircuitBreakerRegistry(FeignProperties feignProperties) {
-    FeignProperties.Resilience4j config = feignProperties.getResilience4j();
+    FeignProperties.CircuitBreaker config = feignProperties.getCircuitBreaker();
     CircuitBreakerConfig defaultConfig =
         CircuitBreakerConfig.custom()
             .failureRateThreshold(config.getFailureRateThreshold())
             .slowCallRateThreshold(config.getSlowCallRateThreshold())
-            .slowCallDurationThreshold(Duration.ofMillis(config.getSlowCallDurationThresholdMs()))
-            .waitDurationInOpenState(Duration.ofMillis(config.getWaitDurationInOpenStateMs()))
+            .slowCallDurationThreshold(Duration.ofMillis(config.getSlowCallDurationMs()))
+            .waitDurationInOpenState(Duration.ofMillis(config.getWaitDurationMs()))
             .permittedNumberOfCallsInHalfOpenState(config.getPermittedNumberOfCallsInHalfOpenState())
             .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
             .slidingWindowSize(config.getSlidingWindowSize())
@@ -81,10 +81,13 @@ public class FeignResilience4jAutoConfiguration {
             .build();
     CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(defaultConfig);
     log.info(
-        "[FeignResilience4j] 全局 CircuitBreakerRegistry 已注册: failureRate={}, slowCallRate={}, waitTime={}ms",
+        "[FeignResilience4j] 全局 CircuitBreakerRegistry 已注册: failureRate={}, slowCallRate={}, "
+            + "waitTime={}ms, slidingWindow={}, halfOpenPermits={}",
         config.getFailureRateThreshold(),
         config.getSlowCallRateThreshold(),
-        config.getWaitDurationInOpenStateMs());
+        config.getWaitDurationMs(),
+        config.getSlidingWindowSize(),
+        config.getPermittedNumberOfCallsInHalfOpenState());
     return registry;
   }
 

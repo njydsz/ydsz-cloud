@@ -84,4 +84,46 @@ public class EventProperties {
 
   /** Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率 */
   private long statusCountCacheSeconds = 5;
+
+  // ==================== 健康检查配置 ====================
+
+  /** 健康检查阈值配置 */
+  private Health health = new Health();
+
+  /**
+   * 获取健康检查阈值配置
+   *
+   * @return 健康检查阈值配置
+   */
+  public Health getHealth() {
+    return health;
+  }
+
+  /**
+   * 设置健康检查阈值配置
+   *
+   * @param health 健康检查阈值配置
+   */
+  public void setHealth(Health health) {
+    this.health = health;
+  }
+
+  /**
+   * 健康检查阈值配置
+   *
+   * <p>配路径：ydsz.event.outbox.health.*
+   */
+  @Getter
+  @Setter
+  public static class Health {
+
+    /** PENDING 消息数健康阈值，超过此值标记 DEGRADED */
+    private long pendingThreshold = 10000L;
+
+    /** PROCESSING 消息数健康阈值（默认为 pendingThreshold 一半） */
+    private long processingThreshold = 5000L;
+
+    /** DEAD_LETTER 消息数健康阈值，超过此值标记 DOWN */
+    private long deadLetterThreshold = 10L;
+  }
 }

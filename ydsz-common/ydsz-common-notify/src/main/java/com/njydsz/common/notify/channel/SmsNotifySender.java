@@ -77,7 +77,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
   public SmsNotifySender(
       NotifyProperties notifyProperties,
       RestTemplate restTemplate,
-      @Qualifier("notifyVirtualThreadExecutor") ExecutorService virtualThreadExecutor,
+      @Qualifier("notifySmsExecutor") ExecutorService virtualThreadExecutor,
       ObjectProvider<SmsProvider> smsProviderProvider) {
     this.smsConfig = notifyProperties.getSms();
     this.restTemplate = restTemplate;

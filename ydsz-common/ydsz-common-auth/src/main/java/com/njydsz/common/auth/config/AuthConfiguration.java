@@ -215,12 +215,20 @@ public class AuthConfiguration {
    * 创建统一权限校验切面。
    *
    * @param evaluator 权限评估器
+   * @param metricsCollectorProvider 指标采集器提供者（可选）
    * @return 权限校验切面实例
    */
   @Bean
   @ConditionalOnMissingBean
-  public AuthPermissionAspect authPermissionAspect(RbacPermissionEvaluator evaluator) {
-    return new AuthPermissionAspect(evaluator);
+  public AuthPermissionAspect authPermissionAspect(
+      RbacPermissionEvaluator evaluator,
+      ObjectProvider<AuthMetricsCollector> metricsCollectorProvider) {
+    AuthPermissionAspect aspect = new AuthPermissionAspect(evaluator);
+    AuthMetricsCollector collector = metricsCollectorProvider.getIfAvailable();
+    if (collector != null) {
+      aspect.setMetricsCollector(collector);
+    }
+    return aspect;
   }
 
   /**

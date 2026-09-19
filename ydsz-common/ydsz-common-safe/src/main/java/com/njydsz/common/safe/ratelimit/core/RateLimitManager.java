@@ -11,7 +11,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.safe.ratelimit.algorithm.RateLimiter;
-import com.njydsz.common.safe.ratelimit.circuitbreaker.CircuitBreaker;
+import com.njydsz.common.safe.ratelimit.circuitbreaker.SafeCircuitBreaker;
 import com.njydsz.common.safe.ratelimit.cluster.ClusterRateLimiter;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
@@ -26,7 +26,7 @@ import com.njydsz.common.safe.ratelimit.spi.RateLimitRuleProvider;
  *
  * <p>统一入口：根据规则模式（LOCAL / CLUSTER / ADAPTIVE）分发到不同的限流器。
  *
- * <p><b>熔断保护：</b>集群模式下的 Redis 调用通过 {@link CircuitBreaker} 进行保护， 当 Redis
+ * <p><b>熔断保护：</b>集群模式下的 Redis 调用通过 {@link SafeCircuitBreaker} 进行保护， 当 Redis
  * 连续失败时自动熔断，避免级联故障。熔断期间直接降级为本地限流或放行。
  *
  * @author ydsz-team
@@ -44,7 +44,7 @@ public class RateLimitManager {
   private final ClusterRateLimiter clusterLimiter;
 
   /** Redis 集群调用的熔断器 */
-  private final CircuitBreaker circuitBreaker;
+  private final SafeCircuitBreaker circuitBreaker;
 
   /** 决策监听器（用于埋点） */
   private final List<DecisionListener> listeners = new CopyOnWriteArrayList<>();
@@ -76,7 +76,7 @@ public class RateLimitManager {
       RateLimitRuleProvider ruleProvider,
       RateLimitProperties properties,
       ClusterRateLimiter clusterLimiter,
-      CircuitBreaker circuitBreaker) {
+      SafeCircuitBreaker circuitBreaker) {
     this.ruleProvider = ruleProvider;
     this.properties = properties;
     this.ruleCache = new RateLimitRuleCache(ruleProvider);
@@ -88,7 +88,7 @@ public class RateLimitManager {
           properties.getFallbackOnError());
     }
     if (circuitBreaker != null) {
-      log.info("RateLimitManager initialized with CircuitBreaker for Redis cluster protection");
+      log.info("RateLimitManager initialized with SafeCircuitBreaker for Redis cluster protection");
     }
   }
 
@@ -104,7 +104,7 @@ public class RateLimitManager {
    * </ul>
     * @param properties properties 参数
    */
-  private static CircuitBreaker createDefaultCircuitBreaker(RateLimitProperties properties) {
+  private static SafeCircuitBreaker createDefaultCircuitBreaker(RateLimitProperties properties) {
     boolean cbEnabled =
         properties.getCircuitBreaker() != null && properties.getCircuitBreaker().isEnabled();
     if (!cbEnabled) {
@@ -122,7 +122,7 @@ public class RateLimitManager {
                 properties.getCircuitBreaker().getPermittedHalfOpenCalls())
             .slidingWindowSize(properties.getCircuitBreaker().getSlidingWindowSize())
             .build();
-    return new CircuitBreaker(config);
+    return new SafeCircuitBreaker(config);
   }
 
   /**
@@ -276,7 +276,7 @@ public class RateLimitManager {
    *
    * @return 熔断器实例（未配置时为 {@code Optional.empty()}
    */
-  public Optional<CircuitBreaker> getCircuitBreaker() {
+  public Optional<SafeCircuitBreaker> getCircuitBreaker() {
     return Optional.ofNullable(circuitBreaker);
   }
 

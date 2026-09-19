@@ -54,4 +54,41 @@ public interface AuditRecorder {
   default HealthInfo health() {
     return HealthInfo.up();
   }
+
+  /**
+   * 返回当前异步队列大小。
+   *
+   * <p>默认实现返回 0（同步记录器无队列概念），异步记录器应覆盖此方法。
+   *
+   * @return 队列中待写入的审计日志数量
+   * @since 26.09.19
+   */
+  default int getQueueSize() {
+    return 0;
+  }
+
+  /**
+   * 返回当前异步队列使用率（范围 0.0-1.0）。
+   *
+   * <p>默认实现返回 0.0（同步记录器无队列概念），异步记录器应覆盖此方法。
+   * 返回 {@code double} 而非 {@code BigDecimal}，避免 Micrometer Gauge 回调路径上的对象创建开销。
+   *
+   * @return 队列使用率，范围 [0.0, 1.0]
+   * @since 26.09.19
+   */
+  default double getQueueUsageRatio() {
+    return 0.0;
+  }
+
+  /**
+   * 返回队列满累计触发次数。
+   *
+   * <p>默认返回 0（同步记录器无队列概念），异步记录器应覆盖此方法。
+   *
+   * @return 队列满累计触发次数
+   * @since 26.09.19
+   */
+  default long getQueueFullWarnCount() {
+    return 0L;
+  }
 }

@@ -7,7 +7,7 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
  * 运行时异常以适配 {@link java.util.function.Supplier} 契约时抛出。
  *
  * <p>区别于调用方业务异常：本异常由熔断器框架内部产生，用于统计失败率并驱动
- * CLOSED → OPEN 状态迁移，调用方通常无需区分，交由 {@link CircuitBreaker#tryAcquire}
+ * CLOSED → OPEN 状态迁移，调用方通常无需区分，交由 {@link SafeCircuitBreaker#tryAcquire}
  * 统一转换为 {@code RateLimitDecision.BLOCKED}。
  *
  * @author ydsz-team

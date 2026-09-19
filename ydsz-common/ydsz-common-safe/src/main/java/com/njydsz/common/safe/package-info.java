@@ -11,7 +11,7 @@
  *   <li>IP 访问控制（{@code IpAccessService}）
  *   <li>密码强度校验（{@code PasswordStrengthValidator}）
  *   <li>接口幂等（{@code @Idempotent}）
- *   <li>限流熔断（{@code @RateLimit}、{@code CircuitBreaker}）
+ *   <li>限流熔断（{@code @RateLimit}、{@code SafeCircuitBreaker}）
  *   <li>安全事件上报（{@code SecurityEventPublisher}）
  *   <li>SSRF 防护（{@code HttpConnectionValidator}）
  * </ul>

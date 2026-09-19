@@ -14,6 +14,7 @@ import org.springframework.core.annotation.Order;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.annotation.AuthMenuPermission;
+import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 
 /**
@@ -27,6 +28,7 @@ import com.njydsz.common.auth.service.RbacPermissionEvaluator;
  *   <li>获取方法上的注解（优先）或类上的注解
  *   <li>加载当前用户信息
  *   <li>根据注解类型调用对应的 validate 方法
+ *   <li>通过 {@link AuthMetricsCollector} 记录权限校验耗时（纳秒级）
  *   <li>权限校验通过则执行目标方法，否则抛出业务异常
  * </ol>
  *
@@ -46,6 +48,9 @@ public class AuthPermissionAspect {
 
   private final RbacPermissionEvaluator evaluator;
 
+  /** 可选的指标采集器；为 null 时跳过指标采集（保持向后兼容）。 */
+  private AuthMetricsCollector metricsCollector;
+
   /** 缓存 Method -> [classAnnotation, methodAnnotation] 避免每次请求做反射查找 */
   private final ConcurrentHashMap<Method, CachedMenuAnnotation> menuAnnotationCache =
       new ConcurrentHashMap<>(256);
@@ -55,6 +60,15 @@ public class AuthPermissionAspect {
 
   public AuthPermissionAspect(RbacPermissionEvaluator evaluator) {
     this.evaluator = evaluator;
+  }
+
+  /**
+   * 设置指标采集器（由 AuthConfiguration 注入，可选）。
+   *
+   * @param metricsCollector 指标采集器，为 null 时跳过指标采集
+   */
+  public void setMetricsCollector(AuthMetricsCollector metricsCollector) {
+    this.metricsCollector = metricsCollector;
   }
 
   /**
@@ -107,17 +121,22 @@ public class AuthPermissionAspect {
       return joinPoint.proceed();
     }
 
-    Map<String, Object> userInfo = evaluator.loadCurrentUserInfo();
+    long startNanos = System.nanoTime();
+    try {
+      Map<String, Object> userInfo = evaluator.loadCurrentUserInfo();
 
-    if (cached.classAnnotation != null) {
-      evaluator.validateMenu(userInfo, cached.classAnnotation);
+      if (cached.classAnnotation != null) {
+        evaluator.validateMenu(userInfo, cached.classAnnotation);
+      }
+
+      if (cached.methodAnnotation != null) {
+        evaluator.validateMenu(userInfo, cached.methodAnnotation);
+      }
+
+      return joinPoint.proceed();
+    } finally {
+      recordCheckTime(System.nanoTime() - startNanos);
     }
-
-    if (cached.methodAnnotation != null) {
-      evaluator.validateMenu(userInfo, cached.methodAnnotation);
-    }
-
-    return joinPoint.proceed();
   }
 
   /**
@@ -150,17 +169,35 @@ public class AuthPermissionAspect {
       return joinPoint.proceed();
     }
 
-    Map<String, Object> userInfo = evaluator.loadCurrentUserInfo();
+    long startNanos = System.nanoTime();
+    try {
+      Map<String, Object> userInfo = evaluator.loadCurrentUserInfo();
 
-    if (cached.classAnnotation != null) {
-      evaluator.validateApi(userInfo, cached.classAnnotation);
+      if (cached.classAnnotation != null) {
+        evaluator.validateApi(userInfo, cached.classAnnotation);
+      }
+
+      if (cached.methodAnnotation != null) {
+        evaluator.validateApi(userInfo, cached.methodAnnotation);
+      }
+
+      return joinPoint.proceed();
+    } finally {
+      recordCheckTime(System.nanoTime() - startNanos);
     }
+  }
 
-    if (cached.methodAnnotation != null) {
-      evaluator.validateApi(userInfo, cached.methodAnnotation);
+  /**
+   * 记录权限校验耗时（纳秒）。
+   *
+   * <p>委托给 {@link AuthMetricsCollector} 记录到 {@code auth.permission.check.time} Timer。 采集器未配置时静默跳过，保持向后兼容。
+   *
+   * @param nanos 本次权限校验耗时（纳秒）
+   */
+  private void recordCheckTime(long nanos) {
+    if (metricsCollector != null) {
+      metricsCollector.recordCheckTime(nanos);
     }
-
-    return joinPoint.proceed();
   }
 
   /**

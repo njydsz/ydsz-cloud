@@ -48,8 +48,13 @@ public class RocketMQProperties extends QueueProperties {
   /** 密钥（阿里云 MQ 使用） */
   private String secretKey;
 
-  /** 是否启用顺序消息 */
-  private boolean orderly = false;
+  /**
+   * 是否启用顺序消息
+   *
+   * <p>开启后生产者通过队列选择器按 {@code messageGroupKey} 哈希路由到同一 MessageQueue，保证单队列内的顺序消费。
+   * 不同分组键仍可能路由到同一队列，互相之间不保证顺序。
+   */
+  private boolean isOrderly = false;
 
   /** 消费线程数 */
   private int consumeThreadMin = 10;

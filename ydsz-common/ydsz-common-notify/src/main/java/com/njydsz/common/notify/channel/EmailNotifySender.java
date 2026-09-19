@@ -72,10 +72,15 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
   private static final Logger LOG = LoggerFactory.getLogger(EmailNotifySender.class);
 
-  /** 邮箱地址格式正则 */
+  /**
+   * 邮箱地址格式正则。
+   *
+   * <p><b>P0-3 修复</b>：TLD 长度从 {2,7} 扩展为 {2,63}，支持现代长 TLD（如 .photography、.technology 等
+   * ICANN 允许的最大 63 字符 TLD）。同时支持国际化邮箱（UTF-8 字符）。
+   */
   private static final Pattern EMAIL_PATTERN =
       Pattern.compile(
-          "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$");
+          "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,63}$");
 
   /** 1MB 字节数，用于附件大小校验 */
   private static final long BYTES_PER_MB = 1024L * 1024L;
@@ -117,7 +122,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
       JavaMailSender mailSender,
       NotifyProperties notifyProperties,
       ObjectProvider<TemplateEngine> templateEngineProvider,
-      @Qualifier("notifyVirtualThreadExecutor") ExecutorService virtualThreadExecutor,
+      @Qualifier("notifyEmailExecutor") ExecutorService virtualThreadExecutor,
       ObjectProvider<NotifyMetrics> metricsProvider,
       ObjectProvider<EmailSmtpHealthChecker> healthCheckerProvider,
       ObjectProvider<EmailTrackingService> trackingServiceProvider,

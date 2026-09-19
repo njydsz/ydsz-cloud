@@ -69,27 +69,17 @@ public class AuditMetricsBinder implements MeterBinder {
 
   @Override
   public void bindTo(MeterRegistry registry) {
-    // Gauge: 队列大小
+    // Gauge: 队列大小（通过接口 default 方法获取，同步记录器返回 0）
     registry.gauge(
         METRIC_QUEUE_SIZE,
         auditRecorder,
-        recorder -> {
-          if (recorder instanceof AsyncAuditRecorder asyncRecorder) {
-            return (double) asyncRecorder.getQueueSize();
-          }
-          return 0.0;
-        });
+        recorder -> (double) recorder.getQueueSize());
 
-    // Gauge: 队列使用率
+    // Gauge: 队列使用率（通过接口 default 方法获取，同步记录器返回 0.0）
     registry.gauge(
         METRIC_QUEUE_USAGE,
         auditRecorder,
-        recorder -> {
-          if (recorder instanceof AsyncAuditRecorder asyncRecorder) {
-            return asyncRecorder.getQueueUsageRatio().doubleValue();
-          }
-          return 0.0;
-        });
+        AuditRecorder::getQueueUsageRatio);
 
     // Counter: 队列满触发次数
     Counter.builder(METRIC_QUEUE_FULL_COUNT)
@@ -119,10 +109,7 @@ public class AuditMetricsBinder implements MeterBinder {
    * @return 初始计数值
    */
   private double getInitialQueueFullCount() {
-    if (auditRecorder instanceof AsyncAuditRecorder asyncRecorder) {
-      return (double) asyncRecorder.getQueueFullWarnCount();
-    }
-    return 0.0;
+    return (double) auditRecorder.getQueueFullWarnCount();
   }
 
   /**

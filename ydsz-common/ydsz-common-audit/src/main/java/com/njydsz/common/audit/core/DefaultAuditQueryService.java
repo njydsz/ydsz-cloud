@@ -69,16 +69,51 @@ public class DefaultAuditQueryService implements AuditQueryService {
       BeanPropertyRowMapper.newInstance(AuditLog.class);
 
   /**
-   * 构造默认审计查询服务（无分表）
+   * 构造默认审计查询服务（无分表，复用 Spring 容器中的 JdbcTemplate）
+   *
+   * <p>推荐使用此构造器，确保与 Spring 容器中的数据源/连接池配置（如多数据源路由、连接池监控）保持一致。
+   *
+   * @param jdbcTemplate Spring 管理的 JdbcTemplate
+   */
+  public DefaultAuditQueryService(JdbcTemplate jdbcTemplate) {
+    this(jdbcTemplate, null, DEFAULT_BASE_TABLE_NAME);
+  }
+
+  /**
+   * 构造默认审计查询服务（无分表，数据源方式 — 兜底构造器）
+   *
+   * <p>当 Spring 容器中无 JdbcTemplate Bean 时使用。内部创建独立实例，
+   * 不会继承容器的连接池定制配置（如 HikariCP 监控名称等）。
    *
    * @param dataSource 数据源
    */
   public DefaultAuditQueryService(DataSource dataSource) {
-    this(dataSource, null, DEFAULT_BASE_TABLE_NAME);
+    this(new JdbcTemplate(
+        Objects.requireNonNull(dataSource, "DataSource must not be null")));
   }
 
   /**
-   * 构造默认审计查询服务（支持分表）
+   * 构造默认审计查询服务（支持分表，复用 Spring 容器中的 JdbcTemplate）
+   *
+   * <p>推荐使用此构造器，确保与 Spring 容器中的数据源/连接池配置保持一致。
+   *
+   * @param jdbcTemplate Spring 管理的 JdbcTemplate
+   * @param shardingType 分表类型（monthly/daily/yearly），为 null 表示不分表
+   * @param baseTableName 基础表名
+   */
+  public DefaultAuditQueryService(
+      JdbcTemplate jdbcTemplate, String shardingType, String baseTableName) {
+    this.jdbcTemplate =
+        Objects.requireNonNull(jdbcTemplate, "JdbcTemplate must not be null");
+    String resolvedTableName = baseTableName != null ? baseTableName : DEFAULT_BASE_TABLE_NAME;
+    validateTableName(resolvedTableName);
+    this.tableNameResolver = new TableNameResolver(shardingType, resolvedTableName);
+  }
+
+  /**
+   * 构造默认审计查询服务（支持分表，数据源方式 — 兜底构造器）
+   *
+   * <p>当 Spring 容器中无 JdbcTemplate Bean 时使用。内部创建独立实例。
    *
    * @param dataSource 数据源
    * @param shardingType 分表类型（monthly/daily/yearly），为 null 表示不分表
@@ -86,11 +121,9 @@ public class DefaultAuditQueryService implements AuditQueryService {
    */
   public DefaultAuditQueryService(
       DataSource dataSource, String shardingType, String baseTableName) {
-    this.jdbcTemplate =
-        new JdbcTemplate(Objects.requireNonNull(dataSource, "DataSource must not be null"));
-    String resolvedTableName = baseTableName != null ? baseTableName : DEFAULT_BASE_TABLE_NAME;
-    validateTableName(resolvedTableName);
-    this.tableNameResolver = new TableNameResolver(shardingType, resolvedTableName);
+    this(new JdbcTemplate(
+        Objects.requireNonNull(dataSource, "DataSource must not be null")),
+        shardingType, baseTableName);
   }
 
   /**

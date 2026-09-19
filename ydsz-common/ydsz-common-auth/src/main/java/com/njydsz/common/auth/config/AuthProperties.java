@@ -1,5 +1,7 @@
 package com.njydsz.common.auth.config;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
@@ -178,6 +180,28 @@ public class AuthProperties {
     private long expireSeconds = 7200;
   }
 
+  /** Bloom Filter 配置属性。 */
+  @Data
+  @Validated
+  public static class BloomFilterProperties {
+    /**
+     * Bloom Filter 预计插入元素数，默认 100 000。
+    
+     * <p>应根据业务规模调整：黑名单峰值容量（如并发登出峰值 × access_token TTL 内的活跃度）。 设置过小导致误判率升高（退化为每次仍需查 Redis）；设置过大浪费内存。
+     */
+    @Min(1000)
+    private long expectedInsertions = 100_000L;
+
+    /**
+     * Bloom Filter 目标误判率，默认 0.001（0.1%）。
+        
+     * <p>误判率越低，位数组越大、哈希函数越多（内存与计算成本越高）。 0.1% 表示每 1000 次 Redis 查询可短路 999 次。
+     */
+    @DecimalMin("0.0001")
+    @DecimalMax("0.1")
+    private double falsePositiveRate = 0.001;
+  }
+
   /**
    * Token 有效期（秒），默认 7200（2 小时）。
    *
@@ -198,6 +222,9 @@ public class AuthProperties {
 
   /** Token 黑名单配置 */
   private TokenBlacklistProperties blacklist = new TokenBlacklistProperties();
+
+  /** Bloom Filter 配置 */
+  private BloomFilterProperties bloomFilter = new BloomFilterProperties();
 
   /**
    * 获取降级策略枚举值。

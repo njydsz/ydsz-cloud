@@ -100,6 +100,10 @@ public final class SensitiveFieldMask {
    *
    * <p>解析 JSON 为 Map 结构后递归遍历，命中敏感词列表的字段值将被替换。 解析失败时降级返回原 JSON。
    *
+   * <p>性能优化：先通过 {@link #containsSensitiveKey(String, Set)} 对全部大小写
+   * 敏感词做一次快速 contains 检查，如果 JSON 字符串不包含任何敏感词子串则直接跳过
+   * 解析-修改-重序列化的完整流程，降低审计切面在主链路的 RT 开销。
+   *
    * @param json JSON 字符串
    * @param patterns 额外敏感字段名称集合（与默认模式合并生效）
    * @return 脱敏后的 JSON 字符串；解析失败时返回原 JSON
@@ -108,9 +112,13 @@ public final class SensitiveFieldMask {
     if (json == null || json.isEmpty() || patterns == null || patterns.isEmpty()) {
       return json;
     }
+    // 快速路径：先检查是否包含任何敏感词，避免无谓的 JSON 解析 + 重序列化
+    Set<String> combined = new HashSet<>(DEFAULT_PATTERNS);
+    combined.addAll(patterns);
+    if (!jsonContainsSensitiveKey(json, combined)) {
+      return json;
+    }
     try {
-      Set<String> combined = new HashSet<>(DEFAULT_PATTERNS);
-      combined.addAll(patterns);
       // 解析 JSON 为 Map/List 结构
       Object parsed = YdszJson.fromJson(json, Object.class);
       Object masked = maskValue(parsed, combined);
@@ -120,6 +128,29 @@ public final class SensitiveFieldMask {
       log.debug("[SensitiveFieldMask] JSON解析失败，降级返回原始JSON: {}", e.getMessage());
       return json;
     }
+  }
+
+  /**
+   * 快速检查 JSON 字符串是否可能包含敏感字段（不解析 JSON）。
+   *
+   * <p>使用字符串子串匹配代替 JSON 解析遍历，性能为 O(1) ~ O(n)（n 为敏感词数量），
+   * 可在绝大多数不含敏感词的请求路径上跳过完整的脱敏流程。
+   *
+   * <p>注意：可能存在误报（如敏感词作为字段值的一部分），但不会漏报，因此结果安全
+   * （多做了完整脱敏，不会少做）。
+   *
+   * @param json 待检查的 JSON 字符串
+   * @param patterns 敏感词集合
+   * @return 包含敏感词返回 false（需脱敏），否则返回 true
+   */
+  private static boolean jsonContainsSensitiveKey(String json, Set<String> patterns) {
+    String lowerJson = json.toLowerCase();
+    for (String pattern : patterns) {
+      if (lowerJson.contains(pattern.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

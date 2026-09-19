@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,9 +22,8 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 /**
  * 安全熔断器（基于 Resilience4j 适配器）。
  *
- * <p>对 Resilience4j CircuitBreaker 的统一包装，将底层受保护调用
- * 标准化为 {@link com.njydsz.common.safe.ratelimit.model.RateLimitDecision} 输出，
- * 解决与 Resilience4j {@code CircuitBreaker} 类名冲突。
+ * <p>对 Resilience4j {@link CircuitBreaker} 的统一包装，将底层受保护调用
+ * 标准化为 {@link com.njydsz.common.safe.ratelimit.model.RateLimitDecision} 输出。
  *
  * <p><b>三态机：</b>
  *
@@ -53,8 +53,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 public class SafeCircuitBreaker {
 
   /** 资源 → 底层 Resilience4j 熔断器实例 */
-  private final Map<String, io.github.resilience4j.circuitbreaker.CircuitBreaker> breakers =
-      new ConcurrentHashMap<>();
+  private final Map<String, CircuitBreaker> breakers = new ConcurrentHashMap<>();
 
   private final BreakerConfig config;
 
@@ -75,11 +74,10 @@ public class SafeCircuitBreaker {
    * @return 限流决策（含执行结果或拒绝原因）
    */
   public <T> RateLimitDecision tryAcquire(String resource, CircuitBreakerCallback<T> callback) {
-    // FQN-OK: name conflict with Resilience4j CircuitBreaker
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
+    CircuitBreaker cb = getOrCreate(resource);
     try {
       T result =
-          io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier( // FQN-OK: name conflict with Resilience4j CircuitBreaker
+          CircuitBreaker.decorateSupplier(
                   cb,
                   () -> {
                     try {
@@ -143,8 +141,7 @@ public class SafeCircuitBreaker {
    * @return 熔断器状态（未创建时返回 CLOSED）
    */
   public State getState(String resource) {
-    // FQN-OK: name conflict with Resilience4j CircuitBreaker
-    io.github.resilience4j.circuitbreaker.CircuitBreaker cb = breakers.get(resource);
+    CircuitBreaker cb = breakers.get(resource);
     if (cb == null) {
       return State.CLOSED;
     }
@@ -152,25 +149,20 @@ public class SafeCircuitBreaker {
   }
 
   /** 获取或创建指定资源的 Resilience4j 熔断器实例。 */
-  // FQN-OK: name conflict with Resilience4j CircuitBreaker
-  private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreate(String resource) {
+  private CircuitBreaker getOrCreate(String resource) {
     return breakers.computeIfAbsent(resource, key -> newEngineBreaker(config, key));
   }
 
   /** 由本类配置构建底层 Resilience4j 熔断器。 */
-  // FQN-OK: name conflict with Resilience4j CircuitBreaker
-  private static io.github.resilience4j.circuitbreaker.CircuitBreaker newEngineBreaker(
-      BreakerConfig config, String resource) {
+  private static CircuitBreaker newEngineBreaker(BreakerConfig config, String resource) {
     String prefix = config.getName() == null ? "ratelimit" : config.getName();
-    // FQN-OK: name conflict with Resilience4j CircuitBreaker Config
-    io.github.resilience4j.circuitbreaker.CircuitBreakerConfig engineConfig = config.toEngineConfig();
+    CircuitBreakerConfig engineConfig = config.toEngineConfig();
     return CircuitBreakerRegistry.of(engineConfig)
         .circuitBreaker(prefix + "-" + resource);
   }
 
   /** Resilience4j 状态 → 本地三态映射（FORCED_OPEN 视为 OPEN）。 */
-  private static State toLocalState(
-      io.github.resilience4j.circuitbreaker.CircuitBreaker.State engineState) { // FQN-OK: name conflict with Resilience4j CircuitBreaker
+  private static State toLocalState(CircuitBreaker.State engineState) {
     return switch (engineState) {
       case CLOSED -> State.CLOSED;
       case OPEN, FORCED_OPEN -> State.OPEN;
@@ -248,7 +240,7 @@ public class SafeCircuitBreaker {
      * 创建采用默认参数的熔断器配置。
      *
      * <p>默认策略：失败率阈值 50%、慢调用率阈值 100%、最小调用数 10、滑动窗口 100（COUNT_BASED）、OPEN 等待 10s、半开探测数 10。
-     * 等价于无参构造 {@link CircuitBreaker#CircuitBreaker()} 所引用配置。
+     * 等价于无参构造 {@link SafeCircuitBreaker#SafeCircuitBreaker()} 所引用配置。
      *
      * @return 默认配置实例
      */
@@ -256,9 +248,8 @@ public class SafeCircuitBreaker {
       return new BreakerConfig();
     }
 
-  /** 转换为 Resilience4j 配置（阈值 0-1 → 百分比）。 */
-  // FQN-OK: name conflict with Resilience4j CircuitBreaker Config
-  io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toEngineConfig() {
+    /** 转换为 Resilience4j 配置（阈值 0-1 → 百分比）。 */
+    CircuitBreakerConfig toEngineConfig() {
       return CircuitBreakerConfig.custom()
           .failureRateThreshold(this.failureRateThreshold.multiply(new BigDecimal("100")).floatValue())
           .slowCallRateThreshold(this.slowCallRateThreshold.multiply(new BigDecimal("100")).floatValue())

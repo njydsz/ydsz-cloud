@@ -735,18 +735,88 @@ public class NotifyConfiguration {
   // ==================== 虚拟线程池 =====================
 
   /**
-   * 注册通知共享虚拟线程池 Bean。
+   * 注册通知共享虚拟线程池 Bean（向后兼容，供异步通知服务使用）。
    *
    * <p>为异步发送、聚合刷新等提供高并发、低开销的虚拟线程执行器；{@code destroyMethod="shutdown"} 确保容器关闭时优雅回收。 以命名 bean
    * 避免与业务线程池冲突；无同名 Bean 时注册默认实现。
+   *
+   * <p><b>P0-1 渠道隔离</b>：各渠道内部异步/批量操作已迁移至渠道专属线程池， 本池主要供 {@link AsyncNotifyService} 和 {@link NotifyServiceImpl}
+   * 的并行批量发送使用。
    *
    * @return 虚拟线程池实例，不会为 {@code null}；容器关闭时通过 {@code shutdown} 优雅回收
    */
   @Bean(destroyMethod = "shutdown")
   @ConditionalOnMissingBean(name = "notifyVirtualThreadExecutor")
   public ExecutorService notifyVirtualThreadExecutor() {
-    LOG.info("[NotifyConfiguration] 创建共享虚拟线程池 notifyVirtualThreadExecutor");
+    LOG.info("[NotifyConfiguration] 创建共享虚拟线程池 notifyVirtualThreadExecutor（向后兼容）");
     return ExecutorUtils.newVirtualThreadExecutor("notify-virtual-");
+  }
+
+  /**
+   * 注册邮件渠道专属虚拟线程池 Bean。
+   *
+   * <p>用于 {@link com.njydsz.common.notify.channel.EmailNotifySender} 内部的异步发送和批量发送，
+   * 与其他渠道线程池隔离，避免大附件邮件阻塞短信/IM 渠道的低延迟操作。
+   *
+   * <p><b>P0-1 渠道隔离</b>：消除所有渠道共享单一线程池导致的资源耦合风险。
+   *
+   * @return 邮件渠道虚拟线程池实例，不会为 {@code null}
+   */
+  @Bean(destroyMethod = "shutdown")
+  @ConditionalOnMissingBean(name = "notifyEmailExecutor")
+  public ExecutorService notifyEmailExecutor() {
+    LOG.info("[NotifyConfiguration] 创建邮件渠道专属虚拟线程池 notifyEmailExecutor");
+    return ExecutorUtils.newVirtualThreadExecutor("notify-email-");
+  }
+
+  /**
+   * 注册短信渠道专属虚拟线程池 Bean。
+   *
+   * <p>用于 {@link com.njydsz.common.notify.channel.SmsNotifySender} 内部的异步发送操作，
+   * 与其他渠道线程池隔离，保证短信高延迟敏感场景不受其他渠道影响。
+   *
+   * <p><b>P0-1 渠道隔离</b>：消除渠道间资源耦合。
+   *
+   * @return 短信渠道虚拟线程池实例，不会为 {@code null}
+   */
+  @Bean(destroyMethod = "shutdown")
+  @ConditionalOnMissingBean(name = "notifySmsExecutor")
+  public ExecutorService notifySmsExecutor() {
+    LOG.info("[NotifyConfiguration] 创建短信渠道专属虚拟线程池 notifySmsExecutor");
+    return ExecutorUtils.newVirtualThreadExecutor("notify-sms-");
+  }
+
+  /**
+   * 注册 IM 渠道专属虚拟线程池 Bean。
+   *
+   * <p>用于企业微信、钉钉、飞书三个 Webhook 渠道的内部异步操作， 与其他渠道线程池隔离。
+   *
+   * <p><b>P0-1 渠道隔离</b>：三个 IM 渠道共享同一池，因为它们都是轻量 HTTP 调用，延迟特征相似。
+   *
+   * @return IM 渠道虚拟线程池实例，不会为 {@code null}
+   */
+  @Bean(destroyMethod = "shutdown")
+  @ConditionalOnMissingBean(name = "notifyImExecutor")
+  public ExecutorService notifyImExecutor() {
+    LOG.info("[NotifyConfiguration] 创建 IM 渠道专属虚拟线程池 notifyImExecutor");
+    return ExecutorUtils.newVirtualThreadExecutor("notify-im-");
+  }
+
+  /**
+   * 注册站内信渠道专属虚拟线程池 Bean。
+   *
+   * <p>用于 {@link com.njydsz.common.notify.channel.InsiteNotifySender} 内部的异步操作，
+   * 与其他渠道线程池隔离。
+   *
+   * <p><b>P0-1 渠道隔离</b>：站内信操作主要是 Redis 调用，延迟极低，需要独立线程池。
+   *
+   * @return 站内信渠道虚拟线程池实例，不会为 {@code null}
+   */
+  @Bean(destroyMethod = "shutdown")
+  @ConditionalOnMissingBean(name = "notifyInsiteExecutor")
+  public ExecutorService notifyInsiteExecutor() {
+    LOG.info("[NotifyConfiguration] 创建站内信渠道专属虚拟线程池 notifyInsiteExecutor");
+    return ExecutorUtils.newVirtualThreadExecutor("notify-insite-");
   }
 
   // ==================== 定时任务 ====================

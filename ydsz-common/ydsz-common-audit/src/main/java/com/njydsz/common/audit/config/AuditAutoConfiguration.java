@@ -18,6 +18,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import com.njydsz.common.audit.aspect.AuditAspect;
@@ -87,7 +89,33 @@ public class AuditAutoConfiguration {
   }
 
   /**
-   * 创建 JDBC 审计日志写入器 Bean 当存在 DataSource 且未提供自定义 AuditWriter 时创建
+   * 创建 JDBC 审计日志写入器 Bean（推荐：复用 Spring 容器 NamedParameterJdbcTemplate）
+   *
+   * <p>当容器中存在 {@link NamedParameterJdbcTemplate} Bean 时优先注入，
+   * 确保与容器中的数据源/连接池配置（多数据源路由、监控）保持一致。
+   *
+   * @param namedParameterJdbcTemplate Spring 管理的 NamedParameterJdbcTemplate
+   * @param properties 审计配置属性
+   * @return JDBC 审计日志写入器
+   */
+  @Bean
+  @ConditionalOnMissingBean(AuditWriter.class)
+  @ConditionalOnBean(NamedParameterJdbcTemplate.class)
+  public AuditWriter jdbcAuditWriter(
+      NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditProperties properties) {
+    String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
+    String baseTableName = properties.getShardingBaseTableName();
+    LOG.info(
+        "初始化 JDBC 审计日志写入器: JdbcAuditWriter(复用容器模板), 分表类型={}, 基础表名={}",
+        shardingType != null ? shardingType : "DISABLED",
+        baseTableName);
+    return new JdbcAuditStorage(namedParameterJdbcTemplate, shardingType, baseTableName);
+  }
+
+  /**
+   * 创建 JDBC 审计日志写入器 Bean（兜底：使用 DataSource 自行创建 NamedParameterJdbcTemplate）
+   *
+   * <p>当容器中不存在 NamedParameterJdbcTemplate Bean 时使用。
    *
    * @param dataSource 数据源
    * @param properties 审计配置属性
@@ -96,11 +124,11 @@ public class AuditAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(AuditWriter.class)
   @ConditionalOnBean(DataSource.class)
-  public AuditWriter jdbcAuditWriter(DataSource dataSource, AuditProperties properties) {
+  public AuditWriter jdbcAuditWriterFallback(DataSource dataSource, AuditProperties properties) {
     String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
     String baseTableName = properties.getShardingBaseTableName();
     LOG.info(
-        "初始化 JDBC 审计日志写入器: JdbcAuditWriter, 分表类型={}, 基础表名={}",
+        "初始化 JDBC 审计日志写入器: JdbcAuditWriter(数据源模式), 分表类型={}, 基础表名={}",
         shardingType != null ? shardingType : "DISABLED",
         baseTableName);
     return new JdbcAuditStorage(dataSource, shardingType, baseTableName);
@@ -228,7 +256,30 @@ public class AuditAutoConfiguration {
   }
 
   /**
-   * 创建默认审计查询服务 Bean 需要 DataSource 才可用，用于从数据库查询审计日志
+   * 创建默认审计查询服务 Bean（推荐：复用 Spring 容器 JdbcTemplate）
+   *
+   * <p>当容器中存在 {@link JdbcTemplate} Bean 时优先注入，
+   * 确保查询与容器中的数据源/连接池配置保持一致。
+   *
+   * @param jdbcTemplate Spring 管理的 JdbcTemplate
+   * @param properties 审计配置属性
+   * @return 默认审计查询服务
+   */
+  @Bean
+  @ConditionalOnMissingBean(AuditQueryService.class)
+  @ConditionalOnBean(JdbcTemplate.class)
+  public AuditQueryService auditQueryService(JdbcTemplate jdbcTemplate, AuditProperties properties) {
+    String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
+    String baseTableName = properties.getShardingBaseTableName();
+    LOG.info("初始化默认审计查询服务: DefaultAuditQueryService(复用容器模板), 分表类型={}",
+        shardingType != null ? shardingType : "DISABLED");
+    return new DefaultAuditQueryService(jdbcTemplate, shardingType, baseTableName);
+  }
+
+  /**
+   * 创建默认审计查询服务 Bean（兜底：使用 DataSource 自行创建 JdbcTemplate）
+   *
+   * <p>当容器中不存在 JdbcTemplate Bean 时使用。
    *
    * @param dataSource 数据源
    * @param properties 审计配置属性
@@ -237,11 +288,11 @@ public class AuditAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(AuditQueryService.class)
   @ConditionalOnBean(DataSource.class)
-  public AuditQueryService auditQueryService(DataSource dataSource, AuditProperties properties) {
+  public AuditQueryService auditQueryServiceFallback(
+      DataSource dataSource, AuditProperties properties) {
     String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
     String baseTableName = properties.getShardingBaseTableName();
-    LOG.info(
-        "初始化默认审计查询服务: DefaultAuditQueryService, 分表类型={}",
+    LOG.info("初始化默认审计查询服务: DefaultAuditQueryService(数据源模式), 分表类型={}",
         shardingType != null ? shardingType : "DISABLED");
     return new DefaultAuditQueryService(dataSource, shardingType, baseTableName);
   }

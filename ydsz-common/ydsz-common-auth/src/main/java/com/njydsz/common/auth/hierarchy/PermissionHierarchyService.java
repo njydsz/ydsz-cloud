@@ -20,6 +20,8 @@ import com.njydsz.common.auth.util.PermissionUtils;
  *
  * <p>线程安全：使用 {@link ConcurrentHashMap} 保证并发安全。
  *
+ * <p><b>性能优化：</b>每个租户维护一个展开缓存（ {@link TenantHierarchy#expandedCache}）， 缓存 {@code 父权限 → 展开后的所有后代权限集合} 的映射。 权限校验时直接从缓存获取展开结果，避免重复递归遍历。 缓存随 {@link #registerPermission}/{@link #clear} 等写操作自动失效。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -39,6 +41,8 @@ public class PermissionHierarchyService {
    * "sys:user", "sys:user:list", "sys:user:add")} 表示拥有 {@code sys:user} 自动拥有 {@code sys:user:list}
    * 和 {@code sys:user:add}。
    *
+   * <p>本方法会同时清空对应租户的展开缓存（懒失效），下一次 {@link #getImpliedPermissions} 调用重新计算。
+   *
    * @param tenantId 租户 ID，不可为 null
    * @param code 父权限码
    * @param impliedCodes 隐含的子权限码
@@ -56,15 +60,22 @@ public class PermissionHierarchyService {
         tenantHierarchies.computeIfAbsent(tenantId, k -> new TenantHierarchy());
     Set<String> childSet =
         hierarchy.parentToChildren.computeIfAbsent(parent, k -> ConcurrentHashMap.newKeySet());
+    boolean changed = false;
     for (String implied : impliedCodes) {
       if (implied != null && !implied.isBlank()) {
         String child = implied.trim();
-        childSet.add(child);
+        if (childSet.add(child)) {
+          changed = true;
+        }
         hierarchy
             .childToParents
             .computeIfAbsent(child, k -> ConcurrentHashMap.newKeySet())
             .add(parent);
       }
+    }
+    // 懒失效：标记缓存为脏，下次 getImpliedPermissions 重新计算
+    if (changed) {
+      hierarchy.expandedCache.clear();
     }
   }
 
@@ -73,6 +84,8 @@ public class PermissionHierarchyService {
    *
    * <p>返回拥有 {@code code} 后自动拥有的所有子权限。 例如：{@code getImpliedPermissions("tenant1", "sys:user")} 返回
    * {@code ["sys:user:list", "sys:user:add", "sys:user:edit", ...]}。
+   *
+   * <p>使用展开缓存（ {@link TenantHierarchy#expandedCache} ）避免每次递归遍历层级树。
    *
    * @param tenantId 租户 ID，不可为 null
    * @param code 父权限码
@@ -86,9 +99,19 @@ public class PermissionHierarchyService {
     if (hierarchy == null) {
       return Collections.emptySet();
     }
+    String key = code.trim();
+    // 先查缓存
+    Set<String> cached = hierarchy.expandedCache.get(key);
+    if (cached != null) {
+      return cached;
+    }
+    // 缓存未命中，递归计算
     Set<String> result = new HashSet<>(16);
-    collectChildren(hierarchy, code.trim(), result, new HashSet<>(16));
-    return Collections.unmodifiableSet(result);
+    collectChildren(hierarchy, key, result, new HashSet<>(16));
+    Set<String> immutableResult = Collections.unmodifiableSet(result);
+    // 放入缓存供后续使用
+    hierarchy.expandedCache.put(key, immutableResult);
+    return immutableResult;
   }
 
   /**
@@ -191,7 +214,7 @@ public class PermissionHierarchyService {
   /**
    * 单个租户的权限层级数据。
    *
-   * <p>包含父→子和子→父的双向索引，支持 O(1) 查找。
+   * <p>包含父→子和子→父的双向索引，支持 O(1) 查找。 同时维护展开缓存，避免重复递归遍历权限树。
    */
   private static class TenantHierarchy {
 
@@ -200,5 +223,12 @@ public class PermissionHierarchyService {
 
     /** 子权限 → 父权限集合的映射（反向索引） */
     private final Map<String, Set<String>> childToParents = new ConcurrentHashMap<>();
+
+    /**
+     * 展开缓存：父权限 → 展开后的所有后代权限集合。
+     *
+     * <p>懒填充：首次调用某父权限的 {@code getImpliedPermissions} 时递归计算并缓存结果。 写操作（注册权限、清理）后自动清空全部缓存。
+     */
+    private final Map<String, Set<String>> expandedCache = new ConcurrentHashMap<>();
   }
 }
