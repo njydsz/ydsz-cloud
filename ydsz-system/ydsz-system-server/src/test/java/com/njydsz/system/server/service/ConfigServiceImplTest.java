@@ -103,10 +103,10 @@ class ConfigServiceImplTest {
     void shouldNormalizePageSizeWhenZeroOrNegative() {
       when(configRepository.findForCursor("grp", "k", null, 1)).thenReturn(List.of());
 
-      PageResponse<ConfigVO> result = configService.pageByCursor("grp", "k", 0, null);
+      PageResponse<List<ConfigVO>> result = configService.pageByCursor("grp", "k", 0, null);
 
       verify(configRepository).findForCursor("grp", "k", null, 1);
-      assertThat((java.util.List<ConfigVO>) result.getData()).isEmpty();
+      assertThat(result.getData()).isEmpty();
       assertThat(result.getNextCursor()).isNull();
     }
 
@@ -130,7 +130,7 @@ class ConfigServiceImplTest {
       when(configRepository.findForCursor("grp", "k", null, 2)).thenReturn(List.of(record, record2));
       when(configRepository.existsAfterCursor("grp", "k", "last-id-2")).thenReturn(true);
 
-      PageResponse<ConfigVO> result = configService.pageByCursor("grp", "k", 2, null);
+      PageResponse<List<ConfigVO>> result = configService.pageByCursor("grp", "k", 2, null);
 
       assertThat(result.getNextCursor()).isEqualTo("last-id-2");
     }
@@ -143,7 +143,7 @@ class ConfigServiceImplTest {
       when(configRepository.findForCursor("grp", "k", null, 1)).thenReturn(List.of(record));
       when(configRepository.existsAfterCursor("grp", "k", "only-one")).thenReturn(false);
 
-      PageResponse<ConfigVO> result = configService.pageByCursor("grp", "k", 1, null);
+      PageResponse<List<ConfigVO>> result = configService.pageByCursor("grp", "k", 1, null);
 
       assertThat(result.getNextCursor()).isNull();
     }

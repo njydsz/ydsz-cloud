@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.JwtTokenService;
 import com.njydsz.common.auth.token.TokenProperties;
+import com.njydsz.common.auth.token.TokenRefreshStrategy;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -87,5 +88,22 @@ public class JwtConfiguration {
         tokenProperties,
         tokenBlacklistServiceProvider.getIfAvailable(),
         snowflakeIdGeneratorProvider.getIfAvailable());
+  }
+
+  /**
+   * 创建 Token 滑动窗口刷新策略 Bean。
+   *
+   * <p>阈值由配置项 {@code ydsz.auth.token-auto-refresh-threshold-seconds} 控制（默认 300 秒）， 通过 {@link
+   * AuthProperties#getTokenAutoRefreshThresholdSeconds()} 读取。 过滤器在检测到剩余有效期低于阈值时通过 {@code
+   * X-Token-Refresh: true} Response Header 提示前端静默刷新。
+   *
+   * @param authProperties 认证配置属性
+   * @return TokenRefreshStrategy 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(TokenRefreshStrategy.class)
+  public TokenRefreshStrategy tokenRefreshStrategy(AuthProperties authProperties) {
+    int threshold = authProperties.getTokenAutoRefreshThresholdSeconds();
+    return new TokenRefreshStrategy(threshold > 0, threshold);
   }
 }

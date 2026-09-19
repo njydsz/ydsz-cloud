@@ -97,21 +97,6 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
   private transient int totalCodes;
 
   /**
-   * 构造扫描注册器（不含 i18n basename 校验，兼容旧版调用方）。
-   *
-   * @param errorCodeTable 统一错误码表（可为 null，为 null 时跳过注册）
-   * @param messageSource 国际化消息源（用于 i18n key fail-fast 校验）
-   * @param validateOnStartup 是否启动时校验 i18n key 可解析
-   * @deprecated 推荐使用 4 参数构造器 {@link #ExceptionCodeScanner(ErrorCodeTable, MessageSource, boolean,
-   *     I18nProperties)}，以启用 basename 扫描校验
-   */
-  @Deprecated
-  public ExceptionCodeScanner(
-      ErrorCodeTable errorCodeTable, MessageSource messageSource, boolean validateOnStartup) {
-    this(errorCodeTable, messageSource, validateOnStartup, null);
-  }
-
-  /**
    * 构造扫描注册器（含 i18n basename 扫描校验，26.09.18 增强）。
    *
    * @param errorCodeTable 统一错误码表（可为 null，为 null 时跳过注册）

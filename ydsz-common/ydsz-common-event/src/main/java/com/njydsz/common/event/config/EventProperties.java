@@ -85,6 +85,102 @@ public class EventProperties {
   /** Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率 */
   private long statusCountCacheSeconds = 5;
 
+  // ==================== 归档配置 ====================
+
+  /** Outbox 消息归档配置 */
+  private Archive archive = new Archive();
+
+  /**
+   * 获取归档配置
+   *
+   * @return 归档配置对象
+   */
+  public Archive getArchive() {
+    return archive;
+  }
+
+  /**
+   * 设置归档配置
+   *
+   * @param archive 归档配置对象
+   */
+  public void setArchive(Archive archive) {
+    this.archive = archive;
+  }
+
+  /**
+   * Outbox 归档配置（F-4）
+   *
+   * <p>配置路径：ydsz.event.outbox.archive.*
+   */
+  @Getter
+  @Setter
+  public static class Archive {
+
+    /** 是否启用归档功能 */
+    private boolean enabled = false;
+
+    /** 归档表名 */
+    private String tableName = "ydsz_com_outbox_archive";
+
+    /** SENT 消息投递成功后保留天数（超过后自动归档） */
+    private int archiveAfterSentDays = 7;
+
+    /** 归档数据保留天数（超过后自动删除归档数据） */
+    private int archiveRetentionDays = 90;
+
+    /** 是否自动清理超期的归档数据 */
+    private boolean autoCleanupEnabled = true;
+
+    /** 归档清理任务执行间隔（小时） */
+    private long cleanupIntervalHours = 24;
+  }
+
+  // ==================== Observation 配置 ====================
+
+  /** Spring 6 Observation API 集成配置（O-1） */
+  private Observation observation = new Observation();
+
+  /**
+   * 获取 Observation 配置
+   *
+   * @return Observation 配置对象
+   */
+  public Observation getObservation() {
+    return observation;
+  }
+
+  /**
+   * 设置 Observation 配置
+   *
+   * @param observation Observation 配置对象
+   */
+  public void setObservation(Observation observation) {
+    this.observation = observation;
+  }
+
+  /**
+   * Observation 配置
+   *
+   * <p>当 classpath 存在 micrometer-observation 且启用时， 通过 Spring 6 Observation API 产出 Trace +
+   * Metrics，替代手写的 Counter/Timer/Gauge。
+   *
+   * <p>配置路径：ydsz.event.outbox.observation.*
+   */
+  @Getter
+  @Setter
+  public static class Observation {
+
+    /** 是否启用 Observation（需 micrometer-observation 在 classpath） */
+    private boolean enabled = false;
+
+    /** Observation 名称（用于 Trace 和 Metrics 命名） */
+    private String name = "ydsz.outbox.publish";
+
+    /** 是否记录批量投递耗时 */
+    private boolean recordBatchTimer = true;
+  }
+
   // ==================== 健康检查配置 ====================
 
   /** 健康检查阈值配置 */

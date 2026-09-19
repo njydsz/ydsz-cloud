@@ -144,30 +144,6 @@ public class PageResponse<T> extends YdszResponse<T> {
   }
 
   /**
-   * 返回游标分页成功响应。
-   *
-   * <p>使用游标分页模式时调用本方法，返回的数据直接在 {@link #getData()} 中， 无需 total/pageNum/pageSize 等偏移量字段。
-   *
-   * <p><b>已废弃：</b>本方法存在 unchecked cast（{@code (T) records}），推荐使用类型安全的 {@link #ofList(List, String)}。
-   *
-   * @param records 数据列表
-   * @param nextCursor 下一页游标（null 表示已无更多数据）
-   * @param <T> 数据类型
-   * @return 游标分页成功响应
-   * @deprecated 使用 {@link #ofList(List, String)} 替代，以消除 unchecked cast
-   */
-  @Deprecated
-  public static <T> PageResponse<T> ofCursor(List<T> records, String nextCursor) {
-    PageResponse<T> response = new PageResponse<>();
-    response.setCode(YdszResultCode.SUCCESS.getCode());
-    response.setMsg(resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"));
-    response.setData((T) records);
-    response.setNextCursor(nextCursor);
-    response.setIsMore(nextCursor != null);
-    return response;
-  }
-
-  /**
    * 返回游标分页空响应（无更多数据）。
    *
    * @param <T> 数据类型

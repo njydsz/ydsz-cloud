@@ -55,7 +55,6 @@ import com.njydsz.common.search.sync.IndexConsistencyChecker;
 import com.njydsz.common.search.sync.IndexSyncListener;
 import com.njydsz.common.search.sync.PersistentDeadLetterQueue;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
-import com.njydsz.common.thread.adapter.DelegatingTaskExecutor;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
@@ -248,27 +247,26 @@ public class SearchAutoConfiguration {
   /**
    * 基于 {@link InternalExecutorFactory} 创建受管理的搜索线程池。
    *
-   * <p>{@link InternalExecutorFactory#createThreadPool} 负责队列策略、拒绝策略与线程命名生命周期，
-   * 返回的 {@link ExecutorService} 通过 {@link DelegatingTaskExecutor} 适配为 Spring {@link ThreadPoolTaskExecutor}，
-   * 保证 {@code @PreDestroy} 关闭时触发 ManagedExecutorService 的优雅停机钩子。
+   * <p>使用 {@link ThreadPoolTaskExecutor} 直接配置核心参数，保证 {@code @PreDestroy} 时优雅停机。
    *
    * @param properties 搜索配置
    * @param factory 线程池统一工厂（由 ydz-common-thread 提供）
-   * @return 适配后的 ThreadPoolTaskExecutor
+   * @return 配置完成的 ThreadPoolTaskExecutor
    */
   private ThreadPoolTaskExecutor createManagedSearchExecutor(
       SearchProperties properties, InternalExecutorFactory factory) {
     int coreSize = Math.max(2, properties.getIndex().getThreadPoolSize());
     int maxSize = Math.max(4, coreSize * 2);
-    ExecutorService internal =
-        InternalExecutorFactory.newCustomThreadPool(
-            "searchExecutor",
-            coreSize,
-            maxSize,
-            60L,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(256));
-    return DelegatingTaskExecutor.wrap(internal);
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(coreSize);
+    executor.setMaxPoolSize(maxSize);
+    executor.setQueueCapacity(256);
+    executor.setKeepAliveSeconds(60);
+    executor.setThreadNamePrefix("ydsz-search-");
+    executor.setWaitForTasksToCompleteOnShutdown(true);
+    executor.setAwaitTerminationSeconds(5);
+    executor.afterPropertiesSet();
+    return executor;
   }
 
   /**

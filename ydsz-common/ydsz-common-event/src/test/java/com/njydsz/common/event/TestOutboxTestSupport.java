@@ -127,22 +127,6 @@ public final class TestOutboxTestSupport {
     }
 
     /**
-     * 批量原子 claim 消息（逐条降级）
-     *
-     * @param ids 消息 ID 列表
-     * @return 成功 claim 的数量
-     */
-    public int claimBatchForProcessing(List<String> ids) {
-      int count = 0;
-      for (String id : ids) {
-        if (claimForProcessing(id)) {
-          count++;
-        }
-      }
-      return count;
-    }
-
-    /**
      * 回收超时的 PROCESSING 消息
      *
      * @param thresholdMinutes 超时阈值（分钟）

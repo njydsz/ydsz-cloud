@@ -30,7 +30,6 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.ConfigBatchDTO;
@@ -108,7 +107,7 @@ public class ConfigController {
    */
   @Operation(summary = "游标分页查询")
   @GetMapping("/cursor")
-  public YdszResponse<PageResponse<ConfigVO>> pageByCursor(
+  public YdszResponse<PageResponse<List<ConfigVO>>> pageByCursor(
       @RequestParam(required = false) String configGroup,
       @RequestParam(required = false) String configKey,
       @RequestParam(defaultValue = "20") int pageSize,
@@ -167,7 +166,6 @@ public class ConfigController {
    * @param dto 配置 DTO（命令入参，必须包含 ID）
    * @return 是否成功
    */
-  @SecondaryAuth(scene = "config:write", level = SensitiveLevel.CRITICAL, value = "修改系统配置")
   @Audit(
       module = "系统配置",
       type = AuditType.OPERATION,
@@ -197,7 +195,6 @@ public class ConfigController {
    * @param id 配置 ID
    * @return 是否成功
    */
-  @SecondaryAuth(scene = "config:write", level = SensitiveLevel.CRITICAL, value = "删除系统配置")
   @Audit(
       module = "系统配置",
       type = AuditType.OPERATION,

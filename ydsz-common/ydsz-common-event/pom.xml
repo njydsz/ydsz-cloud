@@ -131,6 +131,12 @@
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
 
+        <!-- aspectj (F-3 OutboxIdempotentAspect AOP 切面) -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+        </dependency>
+
         <!-- test scope -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

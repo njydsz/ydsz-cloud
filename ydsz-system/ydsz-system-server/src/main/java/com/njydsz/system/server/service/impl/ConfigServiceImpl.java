@@ -136,7 +136,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public PageResponse<ConfigVO> pageByCursor(
+  public PageResponse<List<ConfigVO>> pageByCursor(
       String configGroup, String configKey, int pageSize, String cursor) {
     // 1. 校验并归一化页大小
     int safePageSize = Math.min(Math.max(pageSize, 1), MAX_CURSOR_PAGE_SIZE);
@@ -154,7 +154,7 @@ public class ConfigServiceImpl implements ConfigService {
       }
     }
 
-    return PageResponse.ofCursor(records, nextCursor);
+    return PageResponse.ofList(records, nextCursor);
   }
 
   @Override

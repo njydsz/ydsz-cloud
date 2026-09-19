@@ -232,6 +232,18 @@ public class AuthProperties {
   /** 会话管理配置 */
   private SessionProperties session = new SessionProperties();
 
+  /** API Key 认证通道配置 */
+  private ApiKeyProperties apiKey = new ApiKeyProperties();
+
+  /**
+   * Token 滑动窗口刷新阈值（秒），默认 300（5 分钟）。
+   *
+   * <p>当 Access Token 剩余有效期低于此阈值时，过滤器通过 Response Header {@code X-Token-Refresh: true}
+   * 通知前端发起静默刷新。值为 0 表示禁用此特性（默认启用，阈值 300 秒）。
+   */
+  @Min(0)
+  private int tokenAutoRefreshThresholdSeconds = 300;
+
   /** 登录防护配置属性 */
   @Data
   public static class LoginDefenseProperties {
@@ -312,6 +324,21 @@ public class AuthProperties {
         return KickoutPolicy.OLDEST;
       }
     }
+  }
+
+  /** API Key 认证通道配置属性 */
+  @Data
+  public static class ApiKeyProperties {
+    /** 是否启用 API Key 认证通道，默认 false（显式开启） */
+    private boolean enabled = false;
+
+    /** API Key 过期时间（秒），0 表示永不过期，默认 30 天 */
+    @Min(0)
+    private long expireSeconds = 2592000;
+
+    /** API Key 默认每分钟请求速率限制（QPS），0 表示不限 */
+    @Min(0)
+    private int defaultRateLimitPerMinute = 0;
   }
 
   /**

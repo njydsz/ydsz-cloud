@@ -35,7 +35,6 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
-import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
@@ -191,7 +190,6 @@ public class JobController {
    * @param dto 批量操作请求（含任务 ID 列表）
    * @return 成功处理数量
    */
-  @SecondaryAuth(scene = "batch:delete", level = SensitiveLevel.CRITICAL, value = "批量删除定时任务")
   @Operation(summary = "批量删除任务")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_DELETE)
   @Idempotent(key = "ydsz:cronjob:JobController:batchDelete:lock", ttlSeconds = 5)

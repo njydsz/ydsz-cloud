@@ -212,48 +212,6 @@ public class OutboxRepository {
   }
 
   /**
-   * 批量原子 claim 消息（单条 SQL，避免 N+1 查询）
-   *
-   * <p><b>已降级为弱一致路径：</b>高并发多实例场景下 IN (...) 条件竞争激烈， 推荐业务方使用 {@link #claimForProcessing(String)} 逐条 claim 替代。
-   *
-   * <p>适用于单实例部署或消息量极小（<10）的场景，此时批量 claim 效率更高。
-   *
-   * @param ids 消息 ID 列表
-   * @return 成功 claim 的数量
-   * @deprecated 高并发场景请改用 {@link #claimForProcessing(String)} 逐条 CAS 策略
-   */
-  @Deprecated
-  public int claimBatchForProcessing(List<String> ids) {
-    if (ids == null || ids.isEmpty()) {
-      return 0;
-    }
-    StringBuilder placeholders = new StringBuilder();
-    for (int i = 0; i < ids.size(); i++) {
-      if (i > 0) {
-        placeholders.append(",");
-      }
-      placeholders.append("?");
-    }
-    String sql =
-        "UPDATE "
-            + tableName
-            + " SET status = ?, updated_at = ?"
-            + " WHERE id IN ("
-            + placeholders
-            + ") AND status = ?";
-
-    Object[] params = new Object[ids.size() + 3];
-    params[0] = OutboxStatus.PROCESSING.name();
-    params[1] = Timestamp.from(Instant.now());
-    for (int i = 0; i < ids.size(); i++) {
-      params[i + 2] = ids.get(i);
-    }
-    params[ids.size() + 2] = OutboxStatus.PENDING.name();
-
-    return jdbcTemplate.update(sql, params);
-  }
-
-  /**
    * 回收超时的 PROCESSING 消息（实例宕机后恢复）
    *
    * @param thresholdMinutes 超时阈值（分钟）

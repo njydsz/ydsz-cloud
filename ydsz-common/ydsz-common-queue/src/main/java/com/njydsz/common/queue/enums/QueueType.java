@@ -13,12 +13,12 @@ package com.njydsz.common.queue.enums;
  *   <li>{@link #ROCKET}：支持事务消息和顺序消息
  * </ul>
  *
- * <p><b>已废弃（将在后续版本移除）：</b>
+ * <p><b>已废弃（已移除）：</b>
  *
  * <ul>
- *   <li>{@link #LIST}：建议使用 {@link #STREAM} 替代
- *   <li>{@link #PUBSUB}：建议使用 {@link #STREAM} 替代
- *   <li>{@link #RABBIT}：建议使用 {@link #KAFKA} 或 {@link #ROCKET} 替代
+ *   <li>LIST：已移除，使用 STREAM 替代
+ *   <li>PUBSUB：已移除，使用 STREAM 替代
+ *   <li>RABBIT：建议使用 KAFKA 或 ROCKET 替代
  * </ul>
  *
  * @author ydsz-team
@@ -27,25 +27,11 @@ package com.njydsz.common.queue.enums;
 public enum QueueType {
 
   /**
-   * Redis List 队列。
-   *
-   * <p>轻量级队列，基于 Redis 的 LPUSH/BRPOP 命令实现 FIFO。 适用于简单的任务队列场景，不支持消息确认、重试、死信等高级特性。
-   */
-  LIST("list"),
-
-  /**
    * Redis Stream 队列。
    *
-   * <p>支持消费组、消息确认、持久化等高级特性，是 List 的升级版。
+   * <p>支持消费组、消息确认、持久化等高级特性，是 Redis 队列的推荐实现。
    */
   STREAM("stream"),
-
-  /**
-   * Redis PubSub 发布/订阅。
-   *
-   * <p>支持多订阅者模式，但消息不持久化，适合实时通知场景。
-   */
-  PUBSUB("pubsub"),
 
   /**
    * RabbitMQ。

@@ -13,6 +13,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.mq.kafka.KafkaMQ;
+
 import com.njydsz.common.queue.mq.kafka.KafkaQueueProperties;
 import com.njydsz.common.queue.mq.rabbit.RabbitMQ;
 import com.njydsz.common.queue.mq.rabbit.RabbitMQProperties;
@@ -110,12 +111,6 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
     }
     IMessageQueue queue;
     switch (type) {
-      case LIST:
-        queue = createRedisListMQ();
-        break;
-      case PUBSUB:
-        queue = createRedisPubSubMQ();
-        break;
       case STREAM:
         queue = createRedisStreamMQ();
         break;
@@ -155,22 +150,6 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
       log.warn("[MessageQueueFactory] 关闭最老队列实例时异常", e);
     }
     createdQueues.remove(0);
-  }
-
-  private IMessageQueue createRedisListMQ() {
-    if (redisTemplate == null) {
-      throw BusinessException.builder().key("使用 Redis 队列需引入 ydsz-common-redis 模块").build();
-    }
-    log.info("[Factory] 创建 Redis List 队列（复用 ydsz-common-redis 连接）");
-    return new RedisListMQ(redisTemplate, properties, consumerExecutor);
-  }
-
-  private IMessageQueue createRedisPubSubMQ() {
-    if (redisTemplate == null) {
-      throw BusinessException.builder().key("使用 Redis 队列需引入 ydsz-common-redis 模块").build();
-    }
-    log.info("[Factory] 创建 Redis PubSub 队列（复用 ydsz-common-redis 连接）");
-    return new RedisPubSubMQ(redisTemplate, properties);
   }
 
   private IMessageQueue createRedisStreamMQ() {

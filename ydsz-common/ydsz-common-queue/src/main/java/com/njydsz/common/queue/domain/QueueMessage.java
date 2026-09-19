@@ -143,8 +143,104 @@ public class QueueMessage implements Serializable {
    */
   public static QueueMessage ofWithExpire(String body, long expireTime, TimeUnit timeUnit) {
     QueueMessage message = of(body);
-    message.addHeader("expireMillis", String.valueOf(timeUnit.toMillis(expireTime)));
+    message.addHeader(HEADER_EXPIRE_MILLIS, String.valueOf(timeUnit.toMillis(expireTime)));
     return message;
+  }
+
+  /**
+   * 创建二进制消息（字节数组载荷）。
+   *
+   * <p>字节数组会被 Base64（无填充）编码后存入 {@link #body}，消息头 {@code payloadType} 设为 {@code BINARY}。
+   * 消费端通过 {@link #isBinary()} 识别并调用 {@link #getBodyBytes()} 解码还原。
+   *
+   * <p>此方法支持 Protobuf / Avro / MessagePack 等二进制协议，无需业务侧额外处理 Base64。
+   *
+   * @param payloadBytes 二进制载荷（可为 null 或空数组，此时创建文本空消息）
+   * @return 构建好的 QueueMessage 实例
+   */
+  public static QueueMessage ofBytes(byte[] payloadBytes) {
+    QueueMessage message = of(payloadBytes == null || payloadBytes.length == 0 ? "" : "");
+    if (payloadBytes != null && payloadBytes.length > 0) {
+      message.setBody(java.util.Base64.getEncoder().withoutPadding().encodeToString(payloadBytes));
+      message.addHeader(HEADER_PAYLOAD_TYPE, PayloadType.BINARY.getCode());
+    }
+    return message;
+  }
+
+  /**
+   * 创建二进制消息（字节数组载荷），带逐项字段配置。
+   *
+   * @param payloadBytes 二进制载荷（可为 null 或空数组）
+   * @param headers 会被克隆并合并的消息头（不会被修改）
+   * @param traceId 追踪ID（空则自动生成）
+   * @param messageGroupKey 消息分组键（用于顺序消息，可为 null）
+   * @return 构建好的 QueueMessage 实例
+   */
+  public static QueueMessage ofBytes(
+      byte[] payloadBytes,
+      Map<String, String> headers,
+      String traceId,
+      String messageGroupKey) {
+    byte[] safeBytes = payloadBytes == null ? new byte[0] : payloadBytes;
+    Map<String, String> mergedHeaders = headers == null ? new HashMap<>(8) : new HashMap<>(headers);
+    if (safeBytes.length > 0) {
+      mergedHeaders.put(HEADER_PAYLOAD_TYPE, PayloadType.BINARY.getCode());
+    }
+    String body = safeBytes.length == 0 ? "" : java.util.Base64.getEncoder().withoutPadding().encodeToString(safeBytes);
+    return of(body, mergedHeaders, traceId, 0, messageGroupKey);
+  }
+
+  /**
+   * 判断当前消息是否为二进制载荷（Base64 编码）。
+   *
+   * @return true 如果消息头 {@code payloadType} 为 {@code BINARY}
+   */
+  public boolean isBinary() {
+    return PayloadType.BINARY.getCode().equalsIgnoreCase(getHeader(HEADER_PAYLOAD_TYPE));
+  }
+
+  /**
+   * 获取解码后的二进制载荷。
+   *
+   * <p>仅当 {@link #isBinary()} 为 true 时返回原始字节；对于文本消息（非二进制），返回 body 的 UTF-8 字节（无异常）。
+   *
+   * @return 解码后的字节数组
+   */
+  public byte[] getBodyBytes() {
+    String b = this.body;
+    if (b == null || b.isEmpty()) {
+      return new byte[0];
+    }
+    try {
+      return java.util.Base64.getDecoder().decode(b);
+    } catch (IllegalArgumentException e) {
+      // 非 Base64 编码（普通文本消息）：返回 UTF-8 字节
+      return b.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    }
+  }
+
+  /** 消息头键名：消息载荷类型（TEXT / BINARY）。 */
+  public static final String HEADER_PAYLOAD_TYPE = "payloadType";
+
+  /** 消息头键名：消息过期时间（毫秒）。 */
+  public static final String HEADER_EXPIRE_MILLIS = "expireMillis";
+
+  /**
+   * 载荷类型枚举（文本 or 二进制）。
+   */
+  public enum PayloadType {
+    TEXT("TEXT"),
+    BINARY("BINARY");
+
+    private final String code;
+
+    PayloadType(String code) {
+      this.code = code;
+    }
+
+    public String getCode() {
+      return code;
+    }
   }
 
   /**

@@ -180,7 +180,7 @@ public class QueueHealthIndicator implements HealthIndicator {
     return null;
   }
 
-  /** Kafka 协议级探测：AdminClient.describeCluster（验证连通 + 非空 controller）。 */
+  /** Kafka 协议级探测：AdminClient.describeCluster 后获取 clusterId（验证连通 + 非空 ID）。 */
   private ProtocolCheckResult tryKafkaProtocolCheck() {
     try {
       // 通过反射加载，避免在 classpath 没有 kafka-clients 时触发 NoClassDefFoundError
@@ -205,13 +205,10 @@ public class QueueHealthIndicator implements HealthIndicator {
 
       Object admin = adminClazz.getMethod("create", java.util.Properties.class).invoke(null, p);
       try {
-        Object cluster =
-            adminClazz.getMethod("describeCluster").invoke(admin);
-        Object controller =
-            cluster.getClass().getMethod("controller").invoke(cluster).get()
-                .orElse(null);
-        boolean ok = controller != null;
-        return new ProtocolCheckResult(ok, ok ? null : "broker controller 未就绪",
+        Object cluster = adminClazz.getMethod("describeCluster").invoke(admin);
+        String clusterId = (String) cluster.getClass().getMethod("clusterId").invoke(cluster);
+        boolean ok = clusterId != null && !clusterId.isEmpty();
+        return new ProtocolCheckResult(ok, ok ? null : "broker clusterId 为空",
             "kafka-admin-describe-cluster");
       } finally {
         adminClazz.getMethod("close", long.class, java.util.concurrent.TimeUnit.class)
@@ -232,11 +229,11 @@ public class QueueHealthIndicator implements HealthIndicator {
       factoryClazz.getMethod("setHost", String.class).invoke(factory, queueProperties.getHost());
       factoryClazz.getMethod("setPort", int.class).invoke(factory, queueProperties.getPort());
       factoryClazz.getMethod("setUsername", String.class)
-          .invoke(factory, queueProperties.getUsername() != null ? queueProperties.getUsername() : "guest");
+          .invoke(factory, queueProperties.getRabbitUsername());
       factoryClazz.getMethod("setPassword", String.class)
-          .invoke(factory, queueProperties.getPassword() != null ? queueProperties.getPassword() : "");
+          .invoke(factory, queueProperties.getRabbitPassword());
       factoryClazz.getMethod("setVirtualHost", String.class)
-          .invoke(factory, queueProperties.getVirtualHost() != null ? queueProperties.getVirtualHost() : "/");
+          .invoke(factory, queueProperties.getRabbitVirtualHost());
       factoryClazz.getMethod("setConnectionTimeout", int.class).invoke(factory, 3000);
 
       Object connection =
@@ -244,6 +241,7 @@ public class QueueHealthIndicator implements HealthIndicator {
       try {
         Object channel = connection.getClass().getMethod("createChannel").invoke(connection);
         try {
+          // passive declare：队列不存在时 AMQP 会抛异常，等同于连通性检查
           channel.getClass().getMethod("queueDeclarePassive", String.class).invoke(channel, "");
           return new ProtocolCheckResult(true, null, "rabbitmq-queueDeclarePassive");
         } finally {
@@ -310,6 +308,6 @@ public class QueueHealthIndicator implements HealthIndicator {
   }
 
   private boolean isRedisType(QueueType type) {
-    return type == QueueType.LIST || type == QueueType.PUBSUB || type == QueueType.STREAM;
+    return type == QueueType.STREAM;
   }
 }

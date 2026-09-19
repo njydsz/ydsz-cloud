@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -32,7 +31,6 @@ import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
-import com.njydsz.common.thread.adapter.DelegatingTaskExecutor;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
@@ -145,8 +143,8 @@ public class UnifiedSearchService {
    * 创建默认搜索线程池。
    *
    * <p>仅在未注入外部线程池时使用，线程池参数与原有逻辑保持一致。
-   * 使用 {@link InternalExecutorFactory} 创建符合云顶规范 15.4 的线程池， 并通过 {@link DelegatingTaskExecutor}
-   * 适配为 Spring {@link ThreadPoolTaskExecutor} 以保证优雅停机钩子生效。
+   * 使用 {@link InternalExecutorFactory} 创建符合云顶规范 15.4 的线程池，
+   * 并适配为 Spring {@link ThreadPoolTaskExecutor} 以保证优雅停机钩子生效。
    *
    * @param properties 搜索配置
    * @return 默认搜索线程池
@@ -156,10 +154,16 @@ public class UnifiedSearchService {
     int maxSize = Math.max(4, properties.getIndex().getThreadPoolSize() * 2);
     // 使用 InternalExecutorFactory 创建符合云顶规范 15.4 的兜底线程池
     // 兜底线程池：仅在外部未注入线程池时使用，生产环境由 ydsz.thread.pools.* 统一管理
-    return DelegatingTaskExecutor.wrap(
-        InternalExecutorFactory.newCustomThreadPool(
-            "searchFallback", coreSize, maxSize, 60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(256)));
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(coreSize);
+    executor.setMaxPoolSize(maxSize);
+    executor.setQueueCapacity(256);
+    executor.setKeepAliveSeconds(60);
+    executor.setThreadNamePrefix("ydsz-search-");
+    executor.setWaitForTasksToCompleteOnShutdown(true);
+    executor.setAwaitTerminationSeconds(5);
+    executor.afterPropertiesSet();
+    return executor;
   }
 
   /**

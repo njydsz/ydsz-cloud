@@ -21,13 +21,21 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminController;
 import com.njydsz.common.event.admin.OutboxAdminService;
+import com.njydsz.common.event.archive.OutboxArchiveRepository;
+import com.njydsz.common.event.archive.OutboxArchiveRepositoryJdbc;
+import com.njydsz.common.event.consumer.OutboxIdempotentAspect;
+import com.njydsz.common.event.gateway.ChannelEventPublishGateway;
+import com.njydsz.common.event.gateway.EventChannelDefinition;
+import com.njydsz.common.event.gateway.EventChannelRegistry;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.KafkaEventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
+import com.njydsz.common.event.gateway.OutboxObservationGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
 import com.njydsz.common.event.health.OutboxHealthIndicator;
 import com.njydsz.common.event.processor.OutboxProcessor;
 import com.njydsz.common.event.repository.OutboxRepository;
+import com.njydsz.common.event.saga.SagaManager;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
@@ -205,6 +213,128 @@ public class EventAutoConfiguration {
   @ConditionalOnMissingBean
   public OutboxAdminController outboxAdminController(OutboxAdminService outboxAdminService) {
     return new OutboxAdminController(outboxAdminService);
+  }
+
+  /**
+   * 创建事件通道注册表（O-3）
+   *
+   * <p>建立 eventType → channel 的默认通道映射（workflow/user/flow → flow-events， 其他 →
+   * default-events），并提供标准声明式配置入口，业务模块可在启动时动态注册自定义通道。
+   *
+   * @return 事件通道注册表 Bean 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public EventChannelRegistry eventChannelRegistry() {
+    EventChannelRegistry registry = new EventChannelRegistry();
+
+    // 默认通道
+    registry.setDefaultChannel(
+        new EventChannelDefinition("default-events", "ydsz-outbox-events", 0, "json"));
+
+    // 流程事件通道
+    registry.register(
+        new EventChannelDefinition("flow-events", "ydsz-flow-events", 0, "json"));
+    registry.registerEventType("FLOW_INSTANCE_STARTED", "flow-events");
+    registry.registerEventType("FLOW_INSTANCE_APPROVED", "flow-events");
+    registry.registerEventType("FLOW_INSTANCE_REJECTED", "flow-events");
+    registry.registerEventType("FLOW_INSTANCE_TERMINATED", "flow-events");
+    registry.registerEventType("FLOW_TASK_COMPLETED", "flow-events");
+    registry.registerEventType("FLOW_URGE_TRIGGERED", "flow-events");
+
+    // 用户事件通道
+    registry.register(
+        new EventChannelDefinition("user-events", "ydsz-user-events", 0, "json"));
+    registry.registerEventType("USER_CREATED", "user-events");
+    registry.registerEventType("USER_UPDATED", "user-events");
+    registry.registerEventType("USER_DELETED", "user-events");
+    registry.registerEventType("USER_ENABLED", "user-events");
+    registry.registerEventType("USER_DISABLED", "user-events");
+    registry.registerEventType("USER_LOGIN", "user-events");
+    registry.registerEventType("USER_ROLE_CHANGED", "user-events");
+
+    return registry;
+  }
+
+  /**
+   * 创建 Outbox 归档仓储（F-4）
+   *
+   * <p>仅在归档功能启用时注册（{@code ydsz.event.outbox.archive.enabled=true}）。
+   *
+   * @param jdbcTemplate JDBC 模板
+   * @param properties 事件配置属性
+   * @return Outbox 归档仓储 Bean 实例（未启用时返回 null）
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnProperty(
+      prefix = "ydsz.event.outbox.archive",
+      name = "enabled",
+      havingValue = "true")
+  public OutboxArchiveRepository outboxArchiveRepository(JdbcTemplate jdbcTemplate,
+      EventProperties properties) {
+    return new OutboxArchiveRepositoryJdbc(jdbcTemplate, properties.getArchive().getTableName());
+  }
+
+  /**
+   * 创建 Saga 编排管理器（F-1）
+   *
+   * <p>负责管理 AbstractSaga 实例的生命周期：路由事件、创建 Saga、清理已结束 Saga。 业务模块通过 {@code
+   * SagaManager.registerSagaFactory()} 注册自定义 Saga。
+   *
+   * @return Saga 编排管理器实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public SagaManager sagaManager() {
+    SagaManager manager = new SagaManager();
+    LOG.info("SagaManager initialized. Register saga factories using SagaManager.registerSagaFactory()");
+    return manager;
+  }
+
+  /**
+   * 创建 Observation 投递网关装饰器（O-1）
+   *
+   * <p>当 micrometer-observation 在 classpath 时注册，包装底层网关以产出 Trace + Metrics。
+   *
+   * @param properties 事件配置属性
+   * @param observationRegistryProvider ObservationRegistry 提供者（可选）
+   * @return Observation 包装网关实例
+   */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnClass(name = "io.micrometer.observation.ObservationRegistry")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+  @ConditionalOnProperty(
+      prefix = "ydsz.event.outbox.observation",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public OutboxObservationGateway outboxObservationGateway(EventProperties properties,
+      ObjectProvider<Object> observationRegistryProvider) {
+    LOG.info("OutboxObservationGateway enabled (micrometer-observation on classpath)");
+    return new OutboxObservationGateway(new NoopEventPublishGateway(), observationRegistryProvider);
+  }
+
+  /**
+   * 创建幂等消费 AOP 切面（F-3）
+   *
+   * <p>当 spring-boot-starter-aop 在 classpath 时注册切面 Bean，拦截 {@link
+   * com.njydsz.common.event.consumer.OutboxIdempotentConsumer} 注解的方法，实现消费去重。
+   *
+   * @param stringRedisTemplateProvider Redis 模板提供者（可选，不可用时降级为 JVM 本地缓存）
+   * @return 幂等消费切面 Bean 实例
+   */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnClass(name = "org.aspectj.lang.annotation.Aspect")
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+  public OutboxIdempotentAspect outboxIdempotentAspect(
+      ObjectProvider<Object> stringRedisTemplateProvider) {
+    LOG.info("OutboxIdempotentAspect registered (spring-aop on classpath)");
+    return new OutboxIdempotentAspect(stringRedisTemplateProvider);
   }
 
   /**

@@ -6,8 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.stereotype.Component;
-
 /**
  * 事件通道注解（O-3）
  *
@@ -32,7 +30,6 @@ import org.springframework.stereotype.Component;
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Component
 public @interface EventChannel {
 
   /**

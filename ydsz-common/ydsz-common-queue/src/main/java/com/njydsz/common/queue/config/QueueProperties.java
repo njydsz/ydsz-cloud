@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.queue.enums.QueueType;
+import com.njydsz.common.queue.mq.kafka.KafkaQueueProperties;
+import com.njydsz.common.queue.mq.rabbit.RabbitMQProperties;
 
 /**
  * 消息队列配置属性类
@@ -125,6 +127,21 @@ public class QueueProperties {
 
   /** 消息去重窗口（毫秒，默认 300000 = 5 分钟） */
   private long dedupWindowMillis = 300_000L;
+
+  /**
+   * Kafka 专属配置（独立前缀 {@code ydsz.queue.kafka.*}）。
+   *
+   * <p>使用 {@link org.springframework.boot.context.properties.NestedConfigurationProperty} 既保留 IDE 自动补全又兼容 relaxed binding。
+   * 当用户未配置任何 {@code ydsz.queue.kafka.*} 字段时，相关访问器回退到通用 host:port 配置。
+   */
+  @org.springframework.boot.context.properties.NestedConfigurationProperty
+  private KafkaQueueProperties kafka;
+
+  /**
+   * RabbitMQ 专属配置（独立前缀 {@code ydsz.queue.rabbitmq.*}）。
+   */
+  @org.springframework.boot.context.properties.NestedConfigurationProperty
+  private RabbitMQProperties rabbitmq;
 
   /**
    * 配置初始化校验

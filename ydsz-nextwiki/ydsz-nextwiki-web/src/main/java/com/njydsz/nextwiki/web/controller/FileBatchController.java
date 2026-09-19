@@ -27,7 +27,6 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -117,7 +116,6 @@ public class FileBatchController {
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为批量处理结果（successCount / failCount / failures）
    */
-  @SecondaryAuth(scene = "batch:delete", level = SensitiveLevel.CRITICAL, value = "批量删除文件")
   @Audit(
       module = "文件管理",
       type = AuditType.FILE,
@@ -237,7 +235,6 @@ public class FileBatchController {
    * @param userId 当前用户 ID
    * @return 统一响应结果，data 为任务 ID
    */
-  @SecondaryAuth(scene = "batch:delete", level = SensitiveLevel.CRITICAL, value = "异步批量删除文件")
   @Audit(
       module = "文件管理",
       type = AuditType.FILE,

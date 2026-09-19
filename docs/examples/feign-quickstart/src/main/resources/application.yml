@@ -1,0 +1,70 @@
+# Feign Quickstart 示例 - 最小化配置
+# 启动后访问: http://localhost:8080/demo/user/1
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: feign-quickstart
+
+ydsz:
+  feign:
+    enabled: true
+    logger-level: BASIC
+    retry:
+      enabled: true
+      max-attempts: 3
+      backoff:
+        delay: 100
+        maxDelay: 500
+      retry-on-methods:
+        - GET
+    trace:
+      enabled: true
+    propagation:
+      enabled: true
+      headers:
+        - traceparent
+        - X-Tenant-Id
+        - X-Access-Token
+        - X-Request-Id
+        - X-User-Userid
+        - X-User-Username
+        - X-User-Locale
+        - X-Request-Source
+        - X-Company-Ids
+        - X-Data-Scope
+        - X-Unique-Id
+        - X-Dept-Ids
+        - X-Service-Type
+    compress:
+      enabled: false
+      min-size: 1024
+    bulkhead:
+      enabled: false
+      default-max-concurrent: 50
+      acquire-timeout-ms: 100
+    rate-limiter:
+      enabled: false
+      default-limit-for-period: 100
+      limit-refresh-period-ms: 1000
+      timeout-duration-ms: 5000
+    circuit-breaker:
+      enabled: false
+      failure-rate-threshold: 50.0
+      slow-call-rate-threshold: 80.0
+      slow-call-duration-ms: 3000
+      wait-duration-ms: 10000
+      minimum-number-of-calls: 10
+      sliding-window-size: 20
+      permitted-number-of-calls-in-half-open-state: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

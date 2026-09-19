@@ -37,7 +37,6 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.sentry.sla.SlaMetric;
@@ -473,15 +472,15 @@ public class AuthController {
   /**
    * 场景化二级认证（P0-2 标准化）。
    *
-   * <p>校验当前登录用户的密码，通过后写入场景化的 Redis 安全标记，后续标记场景下的敏感操作无需再次验证。
+   * <p>校验当前登录用户的密码，通过后写入场景化的 Redis 安全标记。
    * 不同场景独立验证、独立过期，比全局 {@code /sensitive-verify} 更灵活安全。
+   * 业务方可通过 {@code SecondaryAuthService} 编程式校验场景标记。
    *
    * <p><b>流程：</b>
    *
    * <ol>
    *   <li>前端调用此端点，传入场景标识（scene）和当前密码</li>
    *   <li>后端校验密码通过后，写入场景化 Redis 标记：{@code userinfo:safe:{scene}:{userId}}</li>
-   *   <li>后续标注了 {@code @SecondaryAuth(scene="xxx")} 的方法自动校验该标记</li>
    * </ol>
    *
    * <p><b>常用场景：</b>{@code password_change}、{@code role_assign}、{@code data_export}、{@code tenant_config}
@@ -498,15 +497,14 @@ public class AuthController {
   @PostMapping("/secondary-auth")
   @Operation(
       summary = "场景化二级认证",
-      description = "校验密码后写入场景化安全标记，用于 @SecondaryAuth 注解鉴权")
+      description = "校验密码后写入场景化安全标记，供 SecondaryAuthService 编程式校验使用")
   public YdszResponse<Map<String, Object>> secondaryAuth(@RequestBody @Valid SecondaryAuthRequest request) {
     // 计算实际生效 TTL（CRITICAL 级别自动缩短）
     int ttlSeconds = request.getTtlSeconds() != null ? request.getTtlSeconds() : DEFAULT_SECONDARY_AUTH_TTL;
     SensitiveLevel level = request.getLevel() != null ? request.getLevel() : SensitiveLevel.HIGH;
 
-    // 构造 SecondaryAuth 注解实例以复用 TTL 计算逻辑
-    SecondaryAuth annotation = new SecondaryAuthImpl(request.getScene(), ttlSeconds, level);
-    Duration effectiveTtl = SecondaryAuthAspect.resolveEffectiveTtl(annotation);
+    // 复用 TTL 计算逻辑
+    Duration effectiveTtl = SecondaryAuthAspect.resolveEffectiveTtl(request.getScene(), ttlSeconds, level);
 
     // 开启安全操作模式
     secondaryAuthService.openSafe(request.getPassword(), request.getScene(), effectiveTtl);
@@ -628,51 +626,5 @@ public class AuthController {
       }
     }
     return YdszResponse.success();
-  }
-
-  /**
-   * {@link SecondaryAuth} 注解的具名实现，用于在 Controller 方法中动态构造注解实例。
-   *
-   * <p>替代匿名内部类，避免 Spring AOP 代理场景下的 this 引用逃逸问题。
-   *
-   * @author ydsz-team
-   * @since 26.09.01
-   */
-  private static class SecondaryAuthImpl implements SecondaryAuth {
-
-    private final String scene;
-    private final int ttlSeconds;
-    private final SensitiveLevel level;
-
-    SecondaryAuthImpl(String scene, int ttlSeconds, SensitiveLevel level) {
-      this.scene = scene;
-      this.ttlSeconds = ttlSeconds;
-      this.level = level;
-    }
-
-    @Override
-    public Class<SecondaryAuth> annotationType() {
-      return SecondaryAuth.class;
-    }
-
-    @Override
-    public String scene() {
-      return scene;
-    }
-
-    @Override
-    public int ttlSeconds() {
-      return ttlSeconds;
-    }
-
-    @Override
-    public SensitiveLevel level() {
-      return level;
-    }
-
-    @Override
-    public String value() {
-      return "secondary-auth-" + scene;
-    }
   }
 }

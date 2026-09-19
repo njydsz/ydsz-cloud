@@ -32,7 +32,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
@@ -208,7 +207,6 @@ public class FlowDefinitionController {
    * @param id 流程定义 ID
    * @return 统一响应结果
    */
-  @SecondaryAuth(scene = "flow:delete", level = SensitiveLevel.CRITICAL, value = "废弃流程定义")
   @Idempotent(key = "ydsz:workflow:definition:deprecate", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinition.deprecate", threshold = 50)
   @PostMapping("/definition/{id}/deprecate")

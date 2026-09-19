@@ -23,7 +23,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.annotation.SecondaryAuth;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
@@ -137,7 +136,6 @@ public class RoleController {
    * @param dto 角色创建 DTO（roleCode / roleName / description / dataScope 等）
    * @return 新创建的角色 ID
    */
-  @SecondaryAuth(scene = "role:write", level = SensitiveLevel.CRITICAL, value = "创建角色")
   @Audit(
       module = "角色管理",
       type = AuditType.OPERATION,
@@ -164,7 +162,6 @@ public class RoleController {
    * @param dto 角色更新 DTO（必须包含 ID）
    * @return 是否成功
    */
-  @SecondaryAuth(scene = "role:write", level = SensitiveLevel.CRITICAL, value = "更新角色")
   @Audit(
       module = "角色管理",
       type = AuditType.OPERATION,
@@ -197,7 +194,6 @@ public class RoleController {
    * @param id 角色 ID
    * @return 是否成功
    */
-  @SecondaryAuth(scene = "role:write", level = SensitiveLevel.CRITICAL, value = "删除角色")
   @Audit(
       module = "角色管理",
       type = AuditType.OPERATION,
@@ -224,7 +220,6 @@ public class RoleController {
    * @param dto 分配权限 DTO（permissionIds 列表）
    * @return 是否成功
    */
-  @SecondaryAuth(scene = "role:write", level = SensitiveLevel.CRITICAL, value = "分配角色权限")
   @Audit(
       module = "角色管理",
       type = AuditType.OPERATION,
