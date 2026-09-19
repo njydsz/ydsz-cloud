@@ -244,6 +244,67 @@ public class QueueProperties {
   }
 
   /**
+   * 多实例引擎配置（绑定前缀 {@code ydsz.queue.engines[*]}）。
+   *
+   * <p>当应用需要同时使用多个 MQ 引擎时（例如事件流走 Kafka、任务队列走 Redis Stream），
+   * 通过本列表声明每个引擎的实例名称与队列类型。{@link
+   * com.njydsz.common.queue.config.QueueEngineRegistrar} 会为每个声明的引擎注册独立的
+   * {@code IMessagePublisher} / {@code IMessageSubscriber} Bean，名称格式为 {@code <name>Publisher} /
+   * {@code <name>Subscriber}，便于通过 {@code @Qualifier} 注入。
+   *
+   * <p><b>配置示例：</b>
+   *
+   * <pre>{@code
+   * ydsz:
+   *   queue:
+   *     type: KAFKA
+   *     engines:
+   *       - name: order
+   *         type: KAFKA
+   *         topic: order-events
+   *       - name: notify
+   *         type: STREAM
+   *         topic: notification-stream
+   * }</pre>
+   */
+  @org.springframework.boot.context.properties.NestedConfigurationProperty
+  private List<EngineDefinition> engines = new java.util.ArrayList<>();
+
+  /** 多实例引擎定义（内嵌类，不导出独立 POJO）。 */
+  public static class EngineDefinition {
+    /** 实例名称，用作注册 Bean 名称的前缀（{@code <name>Publisher} / {@code <name>Subscriber}）。 */
+    private String name;
+    /** 该引擎实例的队列类型。 */
+    private QueueType type;
+    /** 该引擎默认发布/订阅的 topic 名称。 */
+    private String topic;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public QueueType getType() {
+      return type;
+    }
+
+    public void setType(QueueType type) {
+      this.type = type;
+    }
+
+    public String getTopic() {
+      return topic;
+    }
+
+    public void setTopic(String topic) {
+      this.topic = topic;
+    }
+  }
+
+  /**
    * 获取解析后的参与者 MQ 类型列表（逗号分隔字符串转枚举列表）
    *
    * @param participants 逗号分隔的 MQ 类型字符串，如 "STREAM,KAFKA"

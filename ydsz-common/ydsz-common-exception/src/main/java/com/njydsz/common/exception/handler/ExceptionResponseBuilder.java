@@ -318,13 +318,8 @@ final class ExceptionResponseBuilder {
    * @return 统一错误响应
    */
   <T> YdszResponse<T> errorResponse(String code, String msg, T data, ExceptionLevel level) {
-    YdszResponse<T> response =
-        YdszResponse.<T>builder()
-            .code(code)
-            .msg(msg)
-            .data(data)
-            .timestamp(System.currentTimeMillis())
-            .build();
+    YdszResponse<T> response = new YdszResponse<>(code, msg, data);
+    response.setTimestamp(System.currentTimeMillis());
     response.setLevel(level != null ? level.name() : null);
     return response;
   }
@@ -475,13 +470,8 @@ final class ExceptionResponseBuilder {
    */
   static <T> YdszResponse<T> buildErrorResponse(
       String code, String msg, T data, ExceptionLevel level) {
-    YdszResponse<T> response =
-        YdszResponse.<T>builder()
-            .code(code)
-            .msg(msg)
-            .data(data)
-            .timestamp(System.currentTimeMillis())
-            .build();
+    YdszResponse<T> response = new YdszResponse<>(code, msg, data);
+    response.setTimestamp(System.currentTimeMillis());
     response.setLevel(level != null ? level.name() : null);
     return response;
   }
