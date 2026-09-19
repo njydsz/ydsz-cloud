@@ -1,1 +1,2 @@
 com.njydsz.common.locales.config.LocalesAutoConfiguration
+com.njydsz.common.locales.config.LocalesWebMetadataAutoConfiguration

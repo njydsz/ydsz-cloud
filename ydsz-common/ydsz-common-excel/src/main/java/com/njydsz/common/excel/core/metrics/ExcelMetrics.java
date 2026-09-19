@@ -36,6 +36,7 @@ public class ExcelMetrics {
 
   private static final String TAG_RESULT = "result";
   private static final String TAG_ENGINE = "engine";
+  private static final String TAG_MODULE = "module";
 
   private static volatile MeterRegistry registry;
 
@@ -61,22 +62,38 @@ public class ExcelMetrics {
    * @param success 是否成功
    */
   public static void recordWrite(Duration duration, int rows, String engine, boolean success) {
+    recordWrite(duration, rows, engine, success, null);
+  }
+
+  /**
+   * 记录写入操作耗时（含模块标识）。
+   *
+   * @param duration 耗时
+   * @param rows 写入行数
+   * @param engine 引擎类型（fast/poi）
+   * @param success 是否成功
+   * @param module 来源模块标识（如 "userinfo"、"workflow"）；为 {@code null} 时不输出该 tag
+   */
+  public static void recordWrite(
+      Duration duration, int rows, String engine, boolean success, String module) {
     if (registry == null) {
       return;
     }
 
+    Tags baseTags = Tags.of(
+        Tag.of(TAG_ENGINE, engine), Tag.of(TAG_RESULT, success ? "success" : "failure"));
+    Tags moduleTags = module != null ? baseTags.and(Tag.of(TAG_MODULE, module)) : baseTags;
+
     Timer.builder("excel.write.duration")
         .description("Excel write operation duration")
-        .tags(
-            Tags.of(
-                Tag.of(TAG_ENGINE, engine), Tag.of(TAG_RESULT, success ? "success" : "failure")))
+        .tags(moduleTags)
         .register(registry)
         .record(duration);
 
     if (success) {
-      registry.counter("excel.rows.written", Tags.of(Tag.of(TAG_ENGINE, engine))).increment(rows);
+      registry.counter("excel.rows.written", moduleTags).increment(rows);
     } else {
-      registry.counter("excel.write.failures", Tags.of(Tag.of(TAG_ENGINE, engine))).increment();
+      registry.counter("excel.write.failures", moduleTags).increment();
     }
   }
 
@@ -89,22 +106,38 @@ public class ExcelMetrics {
    * @param success 是否成功
    */
   public static void recordRead(Duration duration, int rows, String engine, boolean success) {
+    recordRead(duration, rows, engine, success, null);
+  }
+
+  /**
+   * 记录读取操作耗时（含模块标识）。
+   *
+   * @param duration 耗时
+   * @param rows 读取行数
+   * @param engine 引擎类型（fast/poi）
+   * @param success 是否成功
+   * @param module 来源模块标识（如 "userinfo"、"workflow"）；为 {@code null} 时不输出该 tag
+   */
+  public static void recordRead(
+      Duration duration, int rows, String engine, boolean success, String module) {
     if (registry == null) {
       return;
     }
 
+    Tags baseTags = Tags.of(
+        Tag.of(TAG_ENGINE, engine), Tag.of(TAG_RESULT, success ? "success" : "failure"));
+    Tags moduleTags = module != null ? baseTags.and(Tag.of(TAG_MODULE, module)) : baseTags;
+
     Timer.builder("excel.read.duration")
         .description("Excel read operation duration")
-        .tags(
-            Tags.of(
-                Tag.of(TAG_ENGINE, engine), Tag.of(TAG_RESULT, success ? "success" : "failure")))
+        .tags(moduleTags)
         .register(registry)
         .record(duration);
 
     if (success) {
-      registry.counter("excel.rows.read", Tags.of(Tag.of(TAG_ENGINE, engine))).increment(rows);
+      registry.counter("excel.rows.read", moduleTags).increment(rows);
     } else {
-      registry.counter("excel.read.failures", Tags.of(Tag.of(TAG_ENGINE, engine))).increment();
+      registry.counter("excel.read.failures", moduleTags).increment();
     }
   }
 

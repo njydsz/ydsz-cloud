@@ -106,9 +106,9 @@ class DigestUtilsTest {
     @Test
     @DisplayName("pbkdf2Hex: 相同输入 + 盐 + 迭代 = 相同输出")
     void pbkdf2Hex_deterministic() {
-      String saltHex = DigestUtils.genSaltHex(16);
-      String result1 = DigestUtils.pbkdf2Hex("password".toCharArray(), saltHex, 10000, 256);
-      String result2 = DigestUtils.pbkdf2Hex("password".toCharArray(), saltHex, 10000, 256);
+      byte[] salt = DigestUtils.genSalt(16);
+      String result1 = DigestUtils.pbkdf2Hex("password".toCharArray(), salt, 10000, 256);
+      String result2 = DigestUtils.pbkdf2Hex("password".toCharArray(), salt, 10000, 256);
       assertThat(result1).isEqualTo(result2);
     }
 
