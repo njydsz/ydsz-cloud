@@ -111,6 +111,16 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+      <scope>test</scope>
+    </dependency>
     <!--
         注意：ydsz-common-cache 不依赖 ydsz-common-tenant。
         CacheConstants 中提及的 TenantContextHolder 仅在 Javadoc 注释中，无编译期耦合。
