@@ -18,6 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.queue.actuator.QueueEndpoint;
+import com.njydsz.common.queue.config.QueueEngines;
 import com.njydsz.common.queue.dedup.DedupCleanupScheduler;
 import com.njydsz.common.queue.dedup.MessageDeduplicator;
 import com.njydsz.common.queue.health.QueueHealthIndicator;
@@ -264,6 +265,24 @@ public class QueueConfiguration {
   public DedupCleanupScheduler dedupCleanupScheduler(MessageDeduplicator messageDeduplicator) {
     log.info("[Queue] 创建去重记录定时清理调度器");
     return new DedupCleanupScheduler(messageDeduplicator);
+  }
+
+  /**
+   * 多实例引擎路由器
+   *
+   * <p>当 {@link QueueProperties#getEngines()} 包含声明时自动启用，为每个引擎实例按名称暴露
+   * {@link IMessagePublisher}/{@link IMessageSubscriber}（按需懒缓存）。
+   *
+   * <p>业务代码注入 {@link QueueEngines} 后，通过 {@link QueueEngines#publisher(String)} /
+   * {@link QueueEngines#subscriber(String)} 按引擎名称路由即可。
+   *
+   * @param messageQueueProvider 消息队列提供者
+   * @return 路由器实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(QueueEngines.class)
+  public QueueEngines queueEngines(ObjectProvider<IMessageQueueProvider> messageQueueProvider) {
+    return new QueueEngines(messageQueueProvider, queueProperties);
   }
 
   // ==================== 健康检查配置 ====================

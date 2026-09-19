@@ -177,16 +177,19 @@ public class QueueEngines {
   }
 
   /** 当无任何 QueueProvider 可用时的兜底（用于极端降级场景，不应在正常场景触发）。 */
+  @SuppressWarnings("checkstyle:MissingJavadocMethod")
   private IMessageQueueProvider createNoOpProvider() {
     return new IMessageQueueProvider() {
       @Override
-      public IMessageQueue createMessageQueue(QueueType queueType) {
+      public IMessageQueue createMessageQueue(QueueType queueType, String... args) {
         throw new UnsupportedOperationException(
             "IMessageQueueProvider 不可用，无法创建引擎：" + queueType);
       }
 
       @Override
       public void close() {
+        // no-op
+      }
     };
   }
 }
