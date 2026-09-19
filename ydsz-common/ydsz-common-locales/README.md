@@ -81,6 +81,7 @@ public class UserService {
 | `ydsz.i18n.missing-translation-log-buffer-capacity` | 200 | 翻译缺失日志节流器缓冲区容量 |
 | `ydsz.i18n.negative-cache-enabled` | true | 是否启用负缓存（避免已知 miss 的 key 重复遍历 basename） |
 | `ydsz.i18n.negative-cache-capacity` | 500 | 负缓存的 LRU 容量上限 |
+| `ydsz.i18n.metadata-api-enabled` | false | 是否启用 i18n 元数据 REST API（Web 环境可用） |
 
 ## 命名规范
 

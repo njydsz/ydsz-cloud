@@ -92,6 +92,42 @@ public final class NumberNode extends JsonNode {
   }
 
   /**
+   * 转换为 short 类型（截断高位），缺失或非数值返回 0。
+   *
+   * <p>对标 Jackson {@code shortValue()}，补全基本数值类型覆盖。
+   *
+   * @return short 值
+   * @since 26.09.01
+   */
+  public short asShort() {
+    return value.shortValue();
+  }
+
+  /**
+   * 转换为 float 类型（可能损失精度），缺失或非数值返回 0。
+   *
+   * <p>对标 Jackson {@code floatValue()}，补全基本数值类型覆盖。
+   *
+   * @return float 值
+   * @since 26.09.01
+   */
+  public float asFloat() {
+    return value.floatValue();
+  }
+
+  /**
+   * 转换为 byte 类型（截断高位），缺失或非数值返回 0。
+   *
+   * <p>对标 Jackson {@code byteValue()}，补全基本数值类型覆盖。
+   *
+   * @return byte 值
+   * @since 26.09.01
+   */
+  public byte asByte() {
+    return value.byteValue();
+  }
+
+  /**
    * 获取原始数值对象
    *
    * @return 原始 Number 对象
