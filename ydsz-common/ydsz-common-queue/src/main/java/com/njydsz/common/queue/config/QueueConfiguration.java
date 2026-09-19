@@ -28,6 +28,7 @@ import com.njydsz.common.queue.mq.rabbit.RabbitMQProperties;
 import com.njydsz.common.queue.mq.rocket.RocketMQProperties;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.queue.MessageQueueFactory;
+import com.njydsz.common.queue.scheduler.DeadLetterReplayerRegistry;
 import com.njydsz.common.queue.scheduler.DeadLetterRetryScheduler;
 import com.njydsz.common.queue.service.DeadLetterQueueService;
 import com.njydsz.common.queue.service.impl.DeadLetterQueueServiceImpl;
@@ -188,11 +189,13 @@ public class QueueConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(DeadLetterQueueService.class)
-  public DeadLetterQueueService deadLetterQueueService(IMessageQueueProvider messageQueueProvider) {
+  public DeadLetterQueueService deadLetterQueueService(IMessageQueueProvider messageQueueProvider,
+      DeadLetterReplayerRegistry replayerRegistry) {
     RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
     if (redisTemplate != null) {
       log.info("[Queue] 创建死信队列服务（复用 ydsz-common-redis 连接）");
-      return new DeadLetterQueueServiceImpl(redisTemplate, messageQueueProvider, queueProperties);
+      return new DeadLetterQueueServiceImpl(redisTemplate, messageQueueProvider,
+          queueProperties, replayerRegistry);
     }
     log.warn("[Queue] RedisTemplate 不可用，返回空操作死信队列服务");
     return new NoOpDeadLetterQueueService();
