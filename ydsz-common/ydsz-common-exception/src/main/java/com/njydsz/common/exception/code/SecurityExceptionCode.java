@@ -2,6 +2,7 @@ package com.njydsz.common.exception.code;
 
 import lombok.Getter;
 
+import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
 
@@ -10,13 +11,20 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *
  * <p>认证异常（A02xxx）、权限异常（A03xxx）和安全异常（C01xxx）。 覆盖身份认证、会话管理、权限校验、Token 安全、CSRF 防护等安全场景。
  *
+ * <p><b>分类注解（26.09.19 增强）：</b>通过 {@link #getCategory()} 统一返回 {@link
+ * ExceptionCategory#SECURITY}，消除 {@code getCategory()} 基于 key 前缀推断的脆弱性（如
+ * {@code auth.} 前缀误判）。
+ *
  * @author ydsz-team
  * @since 26.09.01
  * @see CoreExceptionCode
  * @see RateLimitExceptionCode
  */
 @Getter
-@YdszExceptionCode(module = "security", description = "安全模块认证授权异常码")
+@YdszExceptionCode(
+    module = "security",
+    description = "安全模块认证授权异常码",
+    category = ExceptionCategory.SECURITY)
 public enum SecurityExceptionCode implements ExceptionCode {
 
   // ==================== A02 认证异常 ====================
@@ -186,5 +194,17 @@ public enum SecurityExceptionCode implements ExceptionCode {
   @Override
   public int getHttpStatus() {
     return httpStatus;
+  }
+
+  /**
+   * 统一返回 {@link ExceptionCategory#SECURITY}，消除基于 key 前缀推断的脆弱性（26.09.19 增强）。
+   *
+   * <p>该模块所有错误码（认证/权限/安全）均归为 SECURITY 分类，指标统计与告警等级一致。
+   *
+   * @return {@link ExceptionCategory#SECURITY}
+   */
+  @Override
+  public ExceptionCategory getCategory() {
+    return ExceptionCategory.SECURITY;
   }
 }

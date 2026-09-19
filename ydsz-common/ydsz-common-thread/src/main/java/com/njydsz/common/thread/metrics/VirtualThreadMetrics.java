@@ -65,6 +65,20 @@ public class VirtualThreadMetrics implements MeterBinder {
   }
 
   /**
+   * 批量增加已提交任务计数。
+   *
+   * <p>由 {@link MeteredVirtualExecutorService} 在 {@code invokeAll/invokeAny} 批量提交时回调。
+   *
+   * @param count 提交数量
+   * @since 26.09.19
+   */
+  public void addSubmitted(int count) {
+    if (count > 0) {
+      submittedCounter.add(count);
+    }
+  }
+
+  /**
    * 增加已完成任务计数。
    *
    * <p>由 {@link MeteredVirtualExecutorService} 在任务完成时回调。

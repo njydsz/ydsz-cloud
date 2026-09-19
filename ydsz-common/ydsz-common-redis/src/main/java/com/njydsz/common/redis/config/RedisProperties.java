@@ -496,4 +496,25 @@ public class RedisProperties {
     @Min(1)
     private long l1TtlSeconds = 60L;
   }
+
+  /** Key 命名规范校验配置类 */
+  @Data
+  public static class KeyNaming {
+
+    /**
+     * Key 命名校验模式
+     *
+     * <ul>
+     *   <li>{@code WARN}（默认）：违规时打印 WARN 日志，不阻断操作
+     *   <li>{@code STRICT}：违规时抛出 IllegalArgumentException
+     *   <li>{@code DISABLED}：不做任何校验
+     * </ul>
+     *
+     * <p>对应 {@link RedisKeyNamingConvention.ValidationMode} 枚举。
+     * 推荐生产环境使用 WARN 模式避免误拦截，CI/CD 流水线可使用 STRICT 模式强制规范。
+     *
+     * <p>默认：WARN
+     */
+    private String mode = "WARN";
+  }
 }

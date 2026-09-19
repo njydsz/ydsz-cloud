@@ -40,6 +40,7 @@ import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 import com.njydsz.common.redis.service.ops.RedisStreamOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.redis.service.ops.RedisTransactionOps;
+import com.njydsz.common.redis.service.ops.RedisPipelineOpsFactory;
 import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 
 /**

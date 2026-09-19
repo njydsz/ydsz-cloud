@@ -117,23 +117,14 @@ public final class Locales {
   }
 
   /**
-   * 解析语言标签字符串为 Locale
+   * 解析语言标签字符串为 Locale（委托至 {@link KnownLocaleTags#toLocale(String)} — 单一解析入口）。
    *
-   * @param localeTag 语言标签（如 zh_CN、en_US）
+   * <p>已知 locale tag 走白名单直接构造；未知 tag 回退到 Spring 默认解析。 三段及以上未知格式返回 {@link Locale#ROOT}。
+   *
+   * @param localeTag 语言标签（如 zh_CN、en_US）；未知格式返回 {@link Locale#ROOT}
    * @return 对应的 Locale；传入 null/空串时返回 null
-   * @throws IllegalArgumentException localeTag 格式非法时抛出
    */
   public static Locale parseLocaleTag(@Nullable String localeTag) {
-    if (localeTag == null || localeTag.isEmpty()) {
-      return null;
-    }
-    String[] parts = localeTag.split("_");
-    if (parts.length == 2) {
-      return new Locale.Builder().setLanguage(parts[0]).setRegion(parts[1]).build();
-    }
-    if (parts.length == 1) {
-      return new Locale.Builder().setLanguage(parts[0]).build();
-    }
-    throw new IllegalArgumentException("Invalid locale tag format: " + localeTag);
+    return com.njydsz.common.locales.util.KnownLocaleTags.toLocale(localeTag);
   }
 }

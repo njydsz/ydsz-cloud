@@ -30,9 +30,15 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * ThreadPoolTaskExecutor taskExecutor = DelegatingTaskExecutor.wrap(internal);
  * }</pre>
  *
+ * <p><b>Deprecated</b>：仅适用于少数需要同时使用 {@code InternalExecutorFactory} 和依赖 {@link ThreadPoolTaskExecutor}
+ * 接口的配置场景。建议优先采用配置驱动方式（{@code ydsz.thread.pools.<name>}）或 {@code ThreadPoolExecutorFactory}
+ * 直接创建 {@link ThreadPoolTaskExecutor}。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 26.09.19 过度设计件，配置驱动已能覆盖绝大多数场景，后续可能移除
  */
+@Deprecated(forRemoval = false, since = "26.09.19")
 public final class DelegatingTaskExecutor extends ThreadPoolTaskExecutor {
 
   private static final long serialVersionUID = 1L;

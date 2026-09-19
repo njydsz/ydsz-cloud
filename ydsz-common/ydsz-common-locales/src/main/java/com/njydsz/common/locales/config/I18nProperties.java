@@ -309,9 +309,15 @@ public class I18nProperties {
   /**
    * 判断是否启用翻译缺失 WARN 日志告警。
    *
+   * <p>优先看 {@link #runtimeStrictness}：非 null 时按枚举值决定；为 null 时回退到 legacy
+   * {@code missing-translation-log-enabled} 字段。
+   *
    * @return 启用返回 true
    */
   public boolean isMissingTranslationLogEnabled() {
+    if (runtimeStrictness != null) {
+      return runtimeStrictness.isMissingTranslationLogEnabled();
+    }
     return missingTranslationLogEnabled;
   }
 
@@ -335,14 +341,34 @@ public class I18nProperties {
   /**
    * 判断是否启用负缓存。
    *
+   * <p>优先看 {@link #runtimeStrictness}：非 null 时按枚举值决定；为 null 时回退到 legacy
+   * {@code negative-cache-enabled} 字段。
+   *
    * @return 启用返回 true
    */
   public boolean isNegativeCacheEnabled() {
+    if (runtimeStrictness != null) {
+      return runtimeStrictness.isNegativeCacheEnabled();
+    }
     return negativeCacheEnabled;
   }
 
   public void setNegativeCacheEnabled(boolean negativeCacheEnabled) {
     this.negativeCacheEnabled = negativeCacheEnabled;
+  }
+
+  /**
+   * 获取运行时严格度等级（可能为 null — 表示使用 legacy boolean 字段）。
+   *
+   * @return 严格度枚举，或 null
+   */
+  public com.njydsz.common.locales.util.RuntimeStrictness getRuntimeStrictness() {
+    return runtimeStrictness;
+  }
+
+  public void setRuntimeStrictness(
+      com.njydsz.common.locales.util.RuntimeStrictness runtimeStrictness) {
+    this.runtimeStrictness = runtimeStrictness;
   }
 
   /**

@@ -407,6 +407,8 @@ public class LockWatchDog {
    *
    * <p>26.09.01 变更：统一使用 {@link LockRenewalService} 执行续期，消除本地脚本冗余。
    *
+   * <p><b>P2-P3 增强：</b>续期最终失败时（锁已丢失或 Redis 不可达）升级日志级别为 ERROR， 触发告警系统感知"锁持有权丧失"风险。warn 级别仅用于单次可恢复的瞬时失败。
+   *
    * @param lockKey 锁的键
    * @param clientId 客户端标识
    * @param leaseTime 锁的过期时间（毫秒）
@@ -451,7 +453,13 @@ public class LockWatchDog {
             e.getMessage());
         if (retry == MAX_RETRY_COUNT - 1) {
           log.error(
-              "[ydsz-lock] [watchdog]锁续期最终失败，停止续期 | lockKey={} | lockType={}", lockKey, lockType);
+              "[ydsz-lock] [watchdog]锁续期最终失败，锁持有权可能已丧失 | lockKey={} | lockType={} | leaseTime={}ms | totalRetries={} | lastError={}",
+              lockKey,
+              lockType,
+              leaseTime,
+              MAX_RETRY_COUNT,
+              e.getMessage(),
+              e);
           stopWatch(lockKey);
         }
       }

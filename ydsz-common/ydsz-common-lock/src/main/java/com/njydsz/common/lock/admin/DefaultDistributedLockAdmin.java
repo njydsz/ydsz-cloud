@@ -189,4 +189,33 @@ public class DefaultDistributedLockAdmin implements DistributedLockAdmin {
     }
     return keys;
   }
+
+  /**
+   * 获取公平锁等待队列的运维信息（P2-E5）。
+   *
+   * <p>通过向锁键追加 {@code ":fair:queue"} 后缀构造公平锁队列键，使用 {@code LRANGE} 读取队列全量内容。 用于排查"队列头部是否被死锁客户端阻塞"等 P0-F2 问题。
+   *
+   * <p><b>安全兜底：</b>Redis 不可用或队列不存在时返回空列表；单条运维查询不影响锁主流程。
+   *
+   * @param lockKey 锁的 Redis 键（已含命名空间与 "lock:" 前缀）
+   * @return 队列条目列表（格式：{@code clientId:joinTimeMillis}）；队列不存在或不可用时返回空列表
+   */
+  @Override
+  public List<String> getFairQueue(String lockKey) {
+    if (stringRedisTemplate == null || lockKey == null || lockKey.isEmpty()) {
+      return Collections.emptyList();
+    }
+    String queueKey = lockKey + ":fair:queue";
+    try {
+      Long length = stringRedisTemplate.opsForList().size(queueKey);
+      if (length == null || length == 0) {
+        return Collections.emptyList();
+      }
+      List<String> entries = stringRedisTemplate.opsForList().range(queueKey, 0, length - 1);
+      return entries == null ? Collections.emptyList() : entries;
+    } catch (Exception e) {
+      log.warn("[ydsz-lock] [admin] 获取公平队列信息异常 lockKey={} cause={}", lockKey, e.getMessage());
+      return Collections.emptyList();
+    }
+  }
 }

@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供分布式锁、幂等、重复提交、分布式定时任务能力 |
 | **依赖** | ydsz-common-core、ydsz-common-util、ydsz-common-exception、ydsz-common-cache、ydsz-common-redis、ydsz-common-json；spring-boot-starter-aspectj；可选 spring-web、springdoc-openapi、jakarta.servlet-api、micrometer-core |
-| **版本** | 2.1.0 |
+| **版本** | 2.2.0 |
 
 ## 核心能力
 
@@ -90,18 +90,22 @@
 ydsz:
   lock:
     enabled: true
+    namespace: ${spring.application.name}   # 多应用共享 Redis 时的锁键命名空间前缀
+    fallback-enabled: false                # Redis 不可用时是否降级为本地锁（默认 false）
+    watchdog-enabled: true                 # 是否启用 WatchDog 自动续约（默认 true）
+    max-renew-times: 100                   # WatchDog 最大续约次数（约 30 分钟）
+    scheduler-pool-size: 2                 # WatchDog 调度线程池大小
+    acquire-pool:
+      core-size: 4
+      max-size: 32
+      queue-capacity: 256
+    multi-lock:
+      max-renew-count: 30
+      renew-interval-seconds: 10
     idempotent:
-      fail-open: true              # Redis 不可用时是否放行（默认 true）
-      ttl-seconds: 30              # 幂等键 TTL
-    repeat-submit:
-      token-ttl-seconds: 60        # Token 有效期
-    distributed:
-      watch-dog-enabled: true      # 是否启用 WatchDog 续约
-      watch-dog-interval-ms: 3000  # 续约间隔（锁 TTL 的 1/3）
-      metrics-enabled: true         # 是否采集锁指标
-    scheduler:
-      enabled: true                # 是否启用分布式定时任务
-      lock-ttl-seconds: 60
+      fail-open: true                      # Redis 不可用时是否放行（默认 true）
+      default-ttl-seconds: 5               # 幂等键 TTL
+      key-prefix: "ydsz:idem:"             # 幂等键 Redis 前缀
 ```
 
 ### 3. 注解使用
@@ -110,24 +114,33 @@ ydsz:
 @Service
 public class OrderService {
 
-    // 分布式锁（SpEL key，SpEL root = method args）
+    // 分布式锁（SpEL key）
     @YdszDistributedLock(key = "'order:lock:' + #orderId", leaseTime = 30)
     public void processOrder(Long orderId) {
         // 业务逻辑（锁自动释放）
     }
 
-    // 幂等注解（30s 内同一 requestId 仅处理一次）
-    @Idempotent(key = "#req.requestId", expire = 30)
+    // 幂等注解（5s 内同一 requestId 仅处理一次）
+    @Idempotent(key = "#req.requestId", ttlSeconds = 5, message = "请勿重复提交")
     public Result processRequest(IdempotentRequest req) { ... }
 
+    // 条件幂等（仅对 POST 请求做幂等校验，GET 查询放行）
+    @Idempotent(key = "#req.requestId", ttlSeconds = 30, condition = "#req.method == 'POST'")
+    public Result handleRequest(IdempotentRequest req) { ... }
+
     // 防重复提交（前端先 GET /api/repeat-token，再 POST 携带 token）
-    @RepeatSubmit(expire = 60)
+    @RepeatSubmit(interval = 3000, message = "请勿重复提交")
     public Result submitOrder(OrderRequest request) { ... }
 
     // 分布式定时任务（每小时执行，仅一个节点执行）
     @Scheduled(cron = "0 0 * * * *")
     @DistributedScheduled(lockKey = "order:cleanup:job", leaseTime = 300)
     public void cleanupExpiredOrders() { ... }
+
+    // 分片定时任务（3 个节点并行处理，当前节点处理 id mod 3 == shardIndex 的数据）
+    @Scheduled(fixedDelay = 60_000L)
+    @DistributedScheduled(lockKey = "order:archive", leaseTime = 600, shardTotal = 3, shardIndex = 0)
+    public void archiveOrders() { ... }
 }
 ```
 
@@ -182,6 +195,14 @@ distributedLocker.execute("order:lock:" + orderId, 30, TimeUnit.SECONDS, () -> {
 
 ## 变更记录
 
+- **2.2.0**（2026-09-19）：
+  - **【P0-F2 安全】** 公平锁等待队列增强：每条入队条目记录入队时间戳（格式 `clientId:joinTimeMillis`），获取锁前自动循环清理超过 30s 的过期队首条目，防止宕机/超时客户端残留在队列中阻塞后续锁获取
+  - **【P0-A1 安全】** 读写锁续期安全漏洞修复：引入安全续期 Lua 脚本（`SAFE_RENEW_SCRIPT`），续期前原子校验 key 当前值与持有者 lockValue 一致，避免将已被其他客户端抢占的锁 TTL 刷新
+  - **【P1-F4】** `@DistributedScheduled` 注解增强：新增 `misfirePolicy`（错失触发策略）、`shardTotal`/`shardIndex`（分片并行）、`onError`（失败处理策略）三个属性，支持多节点分片调度
+  - **【P1-F5】** `@Idempotent` 注解新增 `condition` 属性（SpEL 表达式），支持按业务条件决定是否执行幂等校验（如：仅 POST 校验、GET 放行）
+  - **【P2-E5】** `DistributedLockAdmin` 新增 `getFairQueue(String)` 运维 API：返回公平锁等待队列的完整条目列表（含入队时间戳），用于排查队列堵塞
+  - **【P2-P3】** WatchDog 续期最终失败日志升级为 ERROR 级别，补充完整上下文（leaseTime / totalRetries / lastError），触发告警系统感知锁持有权丧失风险
+  - **【P2-A3】** 新增 `LockConstants` 常量类（`ydsz.common.lock.constant` 子包）：集中管理锁键分段、队列字段名、分隔符等魔法字符串
 - **2.1.0**（2026-09-04）：新增 RedisReadWriteLock 读写锁；新增 @IdempotentExempt 幂等豁免标记；WatchDog 续约间隔改为可配置。
 - **2.0.0**（2026-09-01）：分布式锁 + 幂等体系重构（可重入 / 公平 / 联锁 / 信号量）；WatchDog 续约机制；分布式定时任务（@DistributedScheduled）。
 - **1.0.0**（2026-08-02）：初始版本。

@@ -4,14 +4,12 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
 import com.njydsz.common.json.YdszJson;
 import lombok.extern.slf4j.Slf4j;
-import org.postgresql.util.PGobject;
 
 /**
  * JSON 类型转换处理器

@@ -71,6 +71,15 @@ public final class ExecutorUtils {
   private static final String THREAD_NAME_PREFIX = "ydsz-";
   private static final AtomicInteger POOL_NUMBER = new AtomicInteger(1);
 
+  /**
+   * JVM 是否支持 VirtualThread 的缓存结果。
+   *
+   * <p>该判断结果在 JVM 生命周期内不会改变，缓存后避免每次调用都进行异常捕获和反射检查（P2-15）。
+   *
+   * @since 26.09.19
+   */
+  private static final boolean VIRTUAL_THREAD_SUPPORTED = probeVirtualThreadSupport();
+
   private ExecutorUtils() {
     throw new UnsupportedOperationException(
         "ExecutorUtils is a utility class and cannot be instantiated");
@@ -179,31 +188,33 @@ public final class ExecutorUtils {
     }
 
     /**
-     * 根据 threadNamePrefix 解析注册到 ThreadPoolRegistry 的名称。
+     * 根据 threadNamePrefix 解析注册到 ThreadPoolRegistry 的名称（P2-15 简化）。
      *
      * <p>规则：
      *
      * <ul>
-     *   <li>若设置了 threadNamePrefix，使用该名称（去除首尾连字符）作为注册名
-     *   <li>若未设置，使用 "pool-N" 格式自动生成
+     *   <li>若设置了自定义 threadNamePrefix，剥离固定 {@code THREAD_NAME_PREFIX} 头部后作为注册名
+     *   <li>若未设置或剥离后为空，使用 "pool-N" 格式自动生成
      * </ul>
      *
      * @return 注册到 ThreadPoolRegistry 的名称
      */
     private String resolveRegistryName() {
       if (threadNamePrefix != null && !threadNamePrefix.isEmpty()) {
-        // threadNamePrefix 由 createThreadFactory 自动追加 THREAD_PREFIX 前缀
-        // 注册名仅取用户指定的轻量名称，去除首尾连字符
-        String name = threadNamePrefix;
-        if (name.startsWith(THREAD_NAME_PREFIX)) {
-          name = name.substring(THREAD_NAME_PREFIX.length());
+        // strip THREAD_NAME_PREFIX ("ydsz-") to get user-specified short name
+        String prefixStripped = threadNamePrefix;
+        if (prefixStripped.startsWith(THREAD_NAME_PREFIX)) {
+          prefixStripped = prefixStripped.substring(THREAD_NAME_PREFIX.length());
         }
-        name = name.replaceAll("\\-$", "");
-        if (!name.isEmpty()) {
-          return name;
+        // remove trailing dash if present
+        if (prefixStripped.endsWith("-")) {
+          prefixStripped = prefixStripped.substring(0, prefixStripped.length() - 1);
+        }
+        if (!prefixStripped.isEmpty()) {
+          return prefixStripped;
         }
       }
-      return "pool-" + POOL_NUMBER.get();
+      return "pool-" + POOL_NUMBER.getAndIncrement();
     }
 
     private static BlockingQueue<Runnable> createQueue(BlockingQueueType type, int capacity) {
@@ -419,11 +430,25 @@ public final class ExecutorUtils {
   /**
    * 判断当前 JVM 是否支持 VirtualThread。
    *
+   * <p>基于 JVM 生命周期内不变的检测结果缓存（{@link #VIRTUAL_THREAD_SUPPORTED}），
+   * 避免每次都进行异常捕获和反射检查。
+   *
+   * @return 当前 JVM 支持 VirtualThread 返回 true
+   * @since 26.09.01
+   */
+  public static boolean isVirtualThreadSupported() {
+    return VIRTUAL_THREAD_SUPPORTED;
+  }
+
+  /**
+   * 探测当前 JVM 是否支持 VirtualThread。
+   *
    * <p>通过尝试构造一个 VirtualThread 来探测，无副作用（线程不会启动）。
+   * 结果在类加载时缓存为 {@link #VIRTUAL_THREAD_SUPPORTED} 字段。
    *
    * @return 当前 JVM 支持 VirtualThread 返回 true
    */
-  public static boolean isVirtualThreadSupported() {
+  private static boolean probeVirtualThreadSupport() {
     try {
       Thread.ofVirtual();
       return true;

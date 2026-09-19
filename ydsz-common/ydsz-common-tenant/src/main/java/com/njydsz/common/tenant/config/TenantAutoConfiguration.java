@@ -29,7 +29,7 @@ import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.tenant.cache.CacheKeyBuilderInitializer;
 import com.njydsz.common.tenant.datasource.DatasourceKeyResolver;
-import com.njydsz.common.tenant.datasource.SchemaFlywayInitializer;
+import com.njydsz.common.tenant.datasource.SchemaInitializer;
 import com.njydsz.common.tenant.datasource.SchemaSearchPathExecutor;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
@@ -482,24 +482,22 @@ public class TenantAutoConfiguration {
   }
 
   /**
-   * SCHEMA 模式 Flyway 迁移助手（可选，Flyway 在 classpath 时）。
+   * SCHEMA 模式 schema 初始化器（可选，SCHEMA 模式 + DataSource 在 classpath 时）。
    *
-   * <p>为新租户创建独立 schema 并执行迁移脚本。业务模块（ydsz-tenant-admin）获取此 Bean 后调用：
-   * {@link SchemaFlywayInitializer#createSchema(String)} 与
-   * {@link SchemaFlywayInitializer#migrateTenantSchema(String)}。
+   * <p>为新租户创建独立 schema 并从模板 schema 复制表结构（纯 JDBC，不依赖 Flyway）。
+   * 业务模块（ydsz-tenant-admin）获取此 Bean 后调用 {@link SchemaInitializer#provisionNewTenant}。
    *
    * @param properties 租户配置
-   * @param flywayProvider Flyway 实例提供者（可选，Flyway 在 classpath 时可用）
-   * @return Flyway 迁移助手
+   * @param dataSourceProvider 数据源提供者（可选）
+   * @return schema 初始化器
    */
   @Bean
   @ConditionalOnProperty(prefix = "ydsz.tenant", name = "mode", havingValue = "SCHEMA")
-  @ConditionalOnClass(name = "org.flywaydb.core.Flyway")
+  @ConditionalOnBean(DataSource.class)
   @ConditionalOnMissingBean
-  public SchemaFlywayInitializer schemaFlywayInitializer(
-      TenantProperties properties,
-      ObjectProvider<org.flywaydb.core.Flyway> flywayProvider) {
-    log.info("多租户 SCHEMA 模式 Flyway 迁移助手已注册");
-    return new SchemaFlywayInitializer(properties, flywayProvider.getIfAvailable());
+  public SchemaInitializer schemaInitializer(
+      TenantProperties properties, ObjectProvider<DataSource> dataSourceProvider) {
+    log.info("多租户 SCHEMA 模式 schema 初始化器已注册（纯 JDBC）");
+    return new SchemaInitializer(properties, dataSourceProvider.getIfAvailable());
   }
 }
