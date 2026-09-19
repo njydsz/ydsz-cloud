@@ -311,8 +311,7 @@ public class ResponseUnwrapDecoder implements Decoder {
       super(
           httpCode,
           String.format(
-              "Feign 业务失败, url: %s, httpCode: %d, code: %s, msg: %s", url, httpCode, code, msg),
-          null);
+              "Feign 业务失败, url: %s, httpCode: %d, code: %s, msg: %s", url, httpCode, code, msg));
       this.code = code;
       this.msg = msg;
       this.url = url;

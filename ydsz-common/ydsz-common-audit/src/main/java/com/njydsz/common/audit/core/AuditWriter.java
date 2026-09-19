@@ -66,4 +66,17 @@ public interface AuditWriter {
   default boolean isAvailable() {
     return true;
   }
+
+  /**
+   * 清理过期审计日志
+   *
+   * <p>默认实现返回 0（无清理能力），JDBC 等持久化实现应覆盖此方法。
+   *
+   * @param retentionDays 日志保留天数（超过此天数的记录将被删除）
+   * @return 实际清理的记录数
+   * @since 26.09.19
+   */
+  default int cleanupExpired(int retentionDays) {
+    return 0;
+  }
 }

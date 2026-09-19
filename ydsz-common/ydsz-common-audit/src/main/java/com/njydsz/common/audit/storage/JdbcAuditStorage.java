@@ -307,12 +307,13 @@ public class JdbcAuditStorage implements AuditWriter {
   // ====================== 工具方法 ======================
 
   /**
-   * 清理过期日志
+   * 清理过期审计日志
    *
    * @param retentionDays 日志保留天数
    * @return 清理的记录数
    */
-  public int cleanExpiredLogs(int retentionDays) {
+  @Override
+  public int cleanupExpired(int retentionDays) {
     if (!tableNameResolver.isShardingEnabled()) {
       return cleanFromTable(tableNameResolver.resolve(null), retentionDays);
     }

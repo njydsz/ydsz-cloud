@@ -23,6 +23,9 @@ import com.njydsz.common.queue.dedup.MessageDeduplicator;
 import com.njydsz.common.queue.health.QueueHealthIndicator;
 import com.njydsz.common.queue.manager.QueueManager;
 import com.njydsz.common.queue.metrics.QueueMetricsBinder;
+import com.njydsz.common.queue.mq.kafka.KafkaQueueProperties;
+import com.njydsz.common.queue.mq.rabbit.RabbitMQProperties;
+import com.njydsz.common.queue.mq.rocket.RocketMQProperties;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.queue.MessageQueueFactory;
 import com.njydsz.common.queue.scheduler.DeadLetterRetryScheduler;
@@ -60,7 +63,8 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  */
 @Slf4j
 @AutoConfiguration
-@EnableConfigurationProperties(QueueProperties.class)
+@EnableConfigurationProperties({QueueProperties.class, KafkaQueueProperties.class,
+    RocketMQProperties.class, RabbitMQProperties.class})
 @EnableScheduling
 @ConditionalOnProperty(
     prefix = "ydsz.queue",
@@ -159,14 +163,19 @@ public class QueueConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(IMessageQueueProvider.class)
-  public IMessageQueueProvider messageQueueProvider(ExecutorService consumerExecutor) {
+  public IMessageQueueProvider messageQueueProvider(ExecutorService consumerExecutor,
+      ObjectProvider<KafkaQueueProperties> kafkaPropertiesProvider,
+      ObjectProvider<RocketMQProperties> rocketPropertiesProvider,
+      ObjectProvider<RabbitMQProperties> rabbitPropertiesProvider) {
     RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
     if (redisTemplate != null) {
       log.info("[Queue] 创建消息队列提供者（复用 ydsz-common-redis 连接）");
-      return new MessageQueueFactory(queueProperties, redisTemplate, consumerExecutor);
+      return new MessageQueueFactory(queueProperties, redisTemplate, consumerExecutor,
+          kafkaPropertiesProvider, rocketPropertiesProvider, rabbitPropertiesProvider);
     }
     log.info("[Queue] 创建消息队列提供者（自建 JedisPool 连接）");
-    return new MessageQueueFactory(queueProperties, null, consumerExecutor);
+    return new MessageQueueFactory(queueProperties, null, consumerExecutor,
+        kafkaPropertiesProvider, rocketPropertiesProvider, rabbitPropertiesProvider);
   }
 
   /**
