@@ -13,6 +13,15 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  *
  * <p>用于标注 Java 类，控制整体序列化和反序列化行为。
  *
+ * <p><b>与 {@link JsonTypeInfo} 的分工（避免重叠）：</b>
+ *
+ * <ul>
+ *   <li><b>本类 {@code @JsonClass}</b>：用于"序列化增强"——指定字段排序、类级日期格式、null 输出策略、 命名策略、AutoType 白名单元信息
+ *   <li><b>{@code @JsonTypeInfo} + {@link JsonSubTypes}</b>：用于"多态类型处理"——反序列化时根据 JSON 中的类型标识自动选择具体子类实现，属于类型安全机制
+ * </ul>
+ *
+ * <p>简单区分：需要反序列化到多个子类用 {@code @JsonTypeInfo}；需要控制单类输出格式用 {@code @JsonClass}。两者可叠加使用（{@code @JsonClass} 增强输出格式，{@code @JsonTypeInfo} 解析多态）。
+ *
  * <p><b>主要功能：</b>
  *
  * <ul>

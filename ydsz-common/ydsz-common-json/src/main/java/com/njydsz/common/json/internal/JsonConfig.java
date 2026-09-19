@@ -248,8 +248,14 @@ public final class JsonConfig implements Serializable {
       try {
         listener.onConfigChanged(oldConfig, newConfig, newVersion);
       } catch (Exception e) {
-        // 监听器异常不应影响配置安装
-        // 使用 SLF4J 日志记录，但这里无法获取 Logger（静态初始化顺序），暂不记录
+        // P1 修复：监听器异常不应影响配置安装，但必须记录日志便于问题排查
+        // 使用 System.err 回退：静态初始化早于 SLF4J Logger 可用时（类加载阶段）至少保证异常可见
+        System.err.println(
+            "[YdszJson] ConfigChangeListener 异常: "
+                + listener.getClass().getName()
+                + " - "
+                + e.getMessage());
+        e.printStackTrace(System.err);
       }
     }
   }

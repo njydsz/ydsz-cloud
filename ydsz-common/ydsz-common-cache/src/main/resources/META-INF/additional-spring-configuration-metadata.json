@@ -34,6 +34,11 @@
       "name": "ydsz.cache.caches",
       "type": "java.util.Map",
       "description": "per-cache 配置（覆盖全局默认），key 为缓存名称。"
+    },
+    {
+      "name": "ydsz.cache.aopEnabled",
+      "type": "java.lang.Boolean",
+      "description": "@YdszCacheable 声明式缓存注解的切面开关（默认 true）。关闭后 YdszCacheableAspect 不再注册。"
     }
   ]
 }

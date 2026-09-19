@@ -286,7 +286,7 @@ public class CsvWriter<T> {
 
   private static List<Field> collectOrderedFields(Class<?> clazz) {
     Field[] all = ReflectCache.getCachedFields(clazz);
-    List<Field> annotated = new java.util.ArrayList<>(16);
+    List<Field> annotated = new ArrayList<>(16);
     for (Field f : all) {
       if (f.isAnnotationPresent(ExcelIgnore.class)) {
         continue;
@@ -296,7 +296,7 @@ public class CsvWriter<T> {
       }
     }
     annotated.sort(
-        java.util.Comparator.comparingInt(f -> f.getAnnotation(ExcelProperty.class).order()));
+        Comparator.comparingInt(f -> f.getAnnotation(ExcelProperty.class).order()));
     return annotated;
   }
 }
