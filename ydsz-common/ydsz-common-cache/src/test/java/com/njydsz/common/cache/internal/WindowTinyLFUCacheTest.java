@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.internal.tinylfu.WindowTinyLFUCache;
 import com.njydsz.common.cache.stats.CacheStats;
 
 /**
