@@ -14,7 +14,7 @@ import com.njydsz.common.util.api.Experimental;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Experimental("能力储备：数据脱敏工具，当前平台内暂无消费方；后续规划 @Mask 注解化与脱敏位可配置化")
+@Experimental(value = "能力储备：数据脱敏工具；后续规划 @Mask 注解化与脱敏位可配置化", since = "26.09.01")
 public final class MaskUtils {
 
   /** 默认掩码字符 */

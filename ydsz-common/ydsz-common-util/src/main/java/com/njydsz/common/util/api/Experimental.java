@@ -18,11 +18,13 @@ import java.lang.annotation.Target;
  *   <li>稳定版本，承诺兼容性
  * </ul>
  *
+ * <p><b>90 天试用期规则：</b>自 {@link #since()} 标注的版本日起，若 90 天内无消费方稳定调用， 该 API 将被移入 sandbox 模块或移除。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Documented
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.CONSTRUCTOR})
 public @interface Experimental {
 
@@ -32,4 +34,14 @@ public @interface Experimental {
    * @return 说明文本
    */
   String value() default "";
+
+  /**
+   * 起始版本号（格式 YY.MM.DD），用于 90 天试用期计算。
+   *
+   * <p>默认 {@code "0.0.0.0"} 表示未指定，不纳入试用期管理。
+   *
+   * @return 起始版本号字符串
+   * @since 26.09.19
+   */
+  String since() default "0.0.0.0";
 }

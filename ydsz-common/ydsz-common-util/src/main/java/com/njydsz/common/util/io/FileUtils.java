@@ -29,7 +29,8 @@ import com.njydsz.common.util.api.Experimental;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Experimental("零采用；常规文件操作建议优先使用 JDK NIO Files API")
+@Deprecated
+@Experimental(value = "零采用；常规文件操作建议优先使用 JDK NIO Files API", since = "26.09.01")
 @Slf4j
 public final class FileUtils {
 

@@ -183,6 +183,22 @@ public class I18nProperties {
   private boolean wildcardScanEnabled = true;
 
   /**
+   * 是否启用翻译缺失 WARN 日志告警（默认 true）。
+   *
+   * <p>启用后，当 {@link
+   * org.springframework.context.support.ReloadableResourceBundleMessageSource} 配置的 {@code
+   * useCodeAsDefaultMessage=true} 导致未解析 key 返回原始 key 时，通过 {@link
+   * com.njydsz.common.locales.util.MissingTranslationLogger} 节流器打印 WARN 日志。节流器确保同一 key
+   * 不重复刷日志，控制生产环境日志噪声。
+   *
+   * <p>禁用后完全不输出缺失翻译日志。
+   */
+  private boolean missingTranslationLogEnabled = true;
+
+  /** 翻译缺失日志节流器的环形缓冲区容量（默认 200）。 */
+  private int missingTranslationLogBufferCapacity = 200;
+
+  /**
    * 获取支持的 Locale 标签数组（返回副本，防止外部修改内部配置）
    *
    * @return 支持的 Locale 标签数组（如 zh_CN / en_US）
@@ -221,6 +237,32 @@ public class I18nProperties {
 
   public void setWildcardScanEnabled(boolean wildcardScanEnabled) {
     this.wildcardScanEnabled = wildcardScanEnabled;
+  }
+
+  /**
+   * 判断是否启用翻译缺失 WARN 日志告警。
+   *
+   * @return 启用返回 true
+   */
+  public boolean isMissingTranslationLogEnabled() {
+    return missingTranslationLogEnabled;
+  }
+
+  public void setMissingTranslationLogEnabled(boolean missingTranslationLogEnabled) {
+    this.missingTranslationLogEnabled = missingTranslationLogEnabled;
+  }
+
+  /**
+   * 获取翻译缺失日志节流器的环形缓冲区容量。
+   *
+   * @return 环形缓冲区容量
+   */
+  public int getMissingTranslationLogBufferCapacity() {
+    return missingTranslationLogBufferCapacity;
+  }
+
+  public void setMissingTranslationLogBufferCapacity(int missingTranslationLogBufferCapacity) {
+    this.missingTranslationLogBufferCapacity = missingTranslationLogBufferCapacity;
   }
 
   /**
@@ -382,6 +424,10 @@ public class I18nProperties {
         + validateOnStartup
         + ", wildcardScanEnabled="
         + wildcardScanEnabled
+        + ", missingTranslationLogEnabled="
+        + missingTranslationLogEnabled
+        + ", missingTranslationLogBufferCapacity="
+        + missingTranslationLogBufferCapacity
         + '}';
   }
 }

@@ -44,10 +44,9 @@ import com.njydsz.common.util.api.Experimental;
  */
 @Slf4j
 @Experimental(
-    "能力储备：Unchecked 风格轻量重试（无平台内自研重复实现）。平台级熔断/重试标准为"
-        + " Resilience4j（见根 pom 说明，全仓 0 个 RetryUtils 使用点）；引入 Resilience4j 的"
-        + " 模块应优先使用其 Retry 能力，本类保留给不愿引入 Resilience4j 依赖的轻量场景，"
-        + " 启用前请确认测试覆盖")
+    value = "能力储备：Unchecked 风格轻量重试。平台级标准为 Resilience4j，"
+        + "本类保留给轻量场景，启用前请确认测试覆盖",
+    since = "26.09.01")
 public final class RetryUtils {
 
   /** 默认指数退避乘数（每次延迟翻倍）。 */

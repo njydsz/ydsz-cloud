@@ -40,7 +40,7 @@ import com.njydsz.common.util.api.Experimental;
  * @see DiffField
  * @see DiffReport
  */
-@Experimental("能力储备：字段级差异对比（审计日志场景），当前平台内暂无消费方，启用前请确认测试覆盖")
+@Experimental(value = "能力储备：字段级差异对比（审计日志场景），启用前请确认测试覆盖", since = "26.09.01")
 public class DiffCalculator {
 
   private static final Logger LOG = LoggerFactory.getLogger(DiffCalculator.class);

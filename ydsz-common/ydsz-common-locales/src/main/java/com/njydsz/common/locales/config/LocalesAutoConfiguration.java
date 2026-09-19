@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -21,6 +22,7 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.locales.util.MissingTranslationLogger;
 
 /**
  * 国际化基座自动配置（L2 基础设施）
@@ -60,6 +62,27 @@ public class LocalesAutoConfiguration {
   public LocalesAutoConfiguration(I18nProperties i18nProperties, Environment environment) {
     this.i18nProperties = i18nProperties;
     this.environment = environment;
+  }
+
+  // ==================== 翻译缺失节流器初始化 ====================
+
+  /**
+   * 初始化翻译缺失节流器（{@link MissingTranslationLogger}）。
+   *
+   * <p>在 MessageSource Bean 创建完成后（依赖 {@code ydszMessageSource}）启用节流器，使后续 i18n 解析缺失时输出 WARN
+   * 日志。配置由 {@link I18nProperties#getMissingTranslationLogEnabled()} 与 {@link
+   * I18nProperties#getMissingTranslationLogBufferCapacity()} 控制。
+   */
+  @PostConstruct
+  public void configureMissingTranslationLogger() {
+    boolean enabled = i18nProperties.isMissingTranslationLogEnabled();
+    int capacity = i18nProperties.getMissingTranslationLogBufferCapacity();
+    MissingTranslationLogger.configure(enabled, capacity);
+    if (enabled) {
+      log.info(
+          "MissingTranslationLogger 已启用 | 缓冲区容量: {} | 节流器将在 i18n key 未解析时输出 WARN 日志",
+          capacity);
+    }
   }
 
   // ==================== 国际化核心 ====================

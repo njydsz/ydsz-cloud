@@ -133,7 +133,14 @@ public final class MessageSourceHolder {
     Locale resolvedLocale = locale != null ? locale : Locale.ROOT;
     try {
       String resolved = r.resolve(messageKey, messageParams, messageKey, resolvedLocale);
-      return resolved != null ? resolved : messageKey;
+      if (resolved == null) {
+        return messageKey;
+      }
+      // 当 useCodeAsDefaultMessage=true 时，未解析的 key 会返回 key 本身，此处触发缺失翻译告警
+      if (resolved.equals(messageKey)) {
+        MissingTranslationLogger.tryWarn(messageKey, resolvedLocale);
+      }
+      return resolved;
     } catch (Exception e) {
       // 解析失败时兜底返回 key，避免异常信息丢失
       return messageKey;
