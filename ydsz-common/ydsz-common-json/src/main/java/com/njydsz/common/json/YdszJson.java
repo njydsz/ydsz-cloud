@@ -957,4 +957,49 @@ public class YdszJson {
   public static <T> T applyMergePatch(String mergeJson, T target, Class<T> clazz) {
     return JsonPatch.applyMerge(mergeJson, target, clazz);
   }
+
+  // ==================== 流式 JSON Lines（JSONL）解析 ====================
+
+  /**
+   * 逐行解析 JSON Lines（JSONL）文本，返回解析后的对象列表。
+   *
+   * <p>JSONL 格式为每行一个独立的 JSON 对象，广泛用于日志流、批量数据导入等场景。 本方法内部逐行解析并将结果收集到 List 中返回。
+   *
+   * <p><b>使用示例：</b>
+   *
+   * <pre>{@code
+   * String jsonl = "{\"name\":\"Alice\"}\n{\"name\":\"Bob\"}";
+   * List<User> users = YdszJson.parseLines(jsonl, User.class);
+   * // users: [User(name=Alice), User(name=Bob)]
+   * }</pre>
+   *
+   * @param jsonl JSONL 文本（每行一个 JSON 对象）
+   * @param clazz 目标类型
+   * @param <T> 元素类型
+   * @return 解析后的对象列表（永不为 null）；空文本返回空列表；格式错误的行被跳过并在 DEBUG 日志记录
+   * @since 26.09.01
+   */
+  public static <T> List<T> parseLines(String jsonl, Class<T> clazz) {
+    if (jsonl == null || jsonl.isEmpty()) {
+      return new ArrayList<>(0);
+    }
+    List<T> results = new ArrayList<>(16);
+    String[] lines = jsonl.split("\n", -1);
+    for (String line : lines) {
+      String trimmed = line.trim();
+      if (trimmed.isEmpty()) {
+        continue;
+      }
+      try {
+        T item = fromJson(trimmed, clazz);
+        if (item != null) {
+          results.add(item);
+        }
+      } catch (Exception e) {
+        // 单行解析失败不应中断整批处理，记录 DEBUG 日志便于排查
+        LOGGER.warn("YdszJson.parseLines 跳过格式错误的行: {}, reason={}", trimmed, e.getMessage());
+      }
+    }
+    return results;
+  }
 }
