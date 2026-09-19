@@ -175,6 +175,58 @@ public class QueueProperties {
   }
 
   /**
+   * 获取 Kafka bootstrap-servers（优先使用独立前缀 {@code ydsz.queue.kafka.bootstrap-servers}）。
+   *
+   * @return Kafka bootstrap-servers，未配置时返回 host:port 拼接
+   */
+  public String getKafkaBootstrapServers() {
+    if (kafka != null && kafka.getBootstrapServers() != null
+        && !kafka.getBootstrapServers().isBlank()
+        && !"localhost:9092".equals(kafka.getBootstrapServers())) {
+      return kafka.getBootstrapServers();
+    }
+    return host + ":" + port;
+  }
+
+  /**
+   * 获取 RabbitMQ 虚拟主机（优先使用独立前缀 {@code ydsz.queue.rabbitmq.virtual-host}）。
+   *
+   * @return 虚拟主机，未配置时返回 "/"
+   */
+  public String getRabbitVirtualHost() {
+    if (rabbitmq != null && rabbitmq.getVirtualHost() != null
+        && !rabbitmq.getVirtualHost().isBlank()) {
+      return rabbitmq.getVirtualHost();
+    }
+    return "/";
+  }
+
+  /**
+   * 获取 RabbitMQ 用户名（优先使用独立前缀 {@code ydsz.queue.rabbitmq.username}）。
+   *
+   * @return 用户名，未配置时返回 "guest"
+   */
+  public String getRabbitUsername() {
+    if (rabbitmq != null && rabbitmq.getUsername() != null
+        && !rabbitmq.getUsername().isBlank()) {
+      return rabbitmq.getUsername();
+    }
+    return username != null ? username : "guest";
+  }
+
+  /**
+   * 获取 RabbitMQ 密码（优先使用独立前缀 {@code ydsz.queue.rabbitmq.password}）。
+   *
+   * @return 密码，未配置时返回空字符串
+   */
+  public String getRabbitPassword() {
+    if (rabbitmq != null && rabbitmq.getPassword() != null) {
+      return rabbitmq.getPassword();
+    }
+    return password != null ? password : "";
+  }
+
+  /**
    * 获取解析后的参与者 MQ 类型列表（逗号分隔字符串转枚举列表）
    *
    * @param participants 逗号分隔的 MQ 类型字符串，如 "STREAM,KAFKA"

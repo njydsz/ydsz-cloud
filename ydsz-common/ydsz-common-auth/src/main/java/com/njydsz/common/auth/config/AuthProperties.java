@@ -226,6 +226,94 @@ public class AuthProperties {
   /** Bloom Filter 配置 */
   private BloomFilterProperties bloomFilter = new BloomFilterProperties();
 
+  /** 登录防护配置 */
+  private LoginDefenseProperties loginDefense = new LoginDefenseProperties();
+
+  /** 会话管理配置 */
+  private SessionProperties session = new SessionProperties();
+
+  /** 登录防护配置属性 */
+  @Data
+  public static class LoginDefenseProperties {
+    /** 是否启用登录防护 */
+    private boolean enabled = true;
+
+    /** 最大连续失败次数（达到后锁定账号），默认 5 */
+    @Min(1)
+    @Max(100)
+    private int maxFailAttempts = 5;
+
+    /** 账号锁定时间（分钟），默认 15 */
+    @Min(1)
+    @Max(1440)
+    private int lockoutMinutes = 15;
+
+    /** IP 级限流：每窗口最大尝试次数，默认 100 */
+    @Min(1)
+    private int ipRateLimit = 100;
+
+    /** IP 级限流窗口（秒），默认 60 */
+    @Min(10)
+    private int ipRateWindowSeconds = 60;
+
+    /**
+     * 连续失败次数达到此阈值时强制验证码校验，默认 3。
+     * <p>值 0 表示禁用验证码策略。
+     */
+    @Min(0)
+    private int captchaThreshold = 3;
+
+    /** 失败计数过期时间（秒），默认 30 分钟 */
+    @Min(60)
+    private int failCountExpireSeconds = 1800;
+  }
+
+  /** 会话管理配置属性 */
+  @Data
+  public static class SessionProperties {
+    /** 是否启用会话注册表 */
+    private boolean enabled = false;
+
+    /** 同账号最大并发会话数，默认 5 */
+    @Min(1)
+    @Max(50)
+    private int maxConcurrentSessions = 5;
+
+    /**
+     * 超出最大并发时会话踢出策略。
+     * <p>OLDEST = 踢出最早的会话；NEWEST = 拒绝最新请求。
+     */
+    private String kickoutPolicy = "OLDEST";
+
+    /** 会话心跳保活间隔（毫秒），默认 30000 */
+    @Min(5000)
+    private long heartbeatIntervalMillis = 30000;
+
+    /** 踢出策略枚举。 */
+    public enum KickoutPolicy {
+      /** 踢出最早会话 */
+      OLDEST,
+      /** 拒绝最新请求 */
+      NEWEST
+    }
+
+    /**
+     * 获取踢出策略枚举值。
+     *
+     * @return 踢出策略，解析失败时返回 OLDEST
+     */
+    public KickoutPolicy getKickoutPolicyEnum() {
+      if (kickoutPolicy == null || kickoutPolicy.isBlank()) {
+        return KickoutPolicy.OLDEST;
+      }
+      try {
+        return KickoutPolicy.valueOf(kickoutPolicy.trim().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        return KickoutPolicy.OLDEST;
+      }
+    }
+  }
+
   /**
    * 获取降级策略枚举值。
    *

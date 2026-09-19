@@ -108,30 +108,165 @@ public class QueueHealthIndicator implements HealthIndicator {
         .withDetail("checkMethod", "redis-ping");
   }
 
-  /** 检查非 Redis 中间件的 TCP 连通性 */
+  /**
+   * 检查非 Redis 中间件的连通性
+   *
+   * <p>按以下顺序降级：
+   *
+   * <ol>
+   *   <li>Kafka：{@code AdminClient.describeCluster()} —— 协议级 Readiness（需要 kafka-clients）
+   *   <li>RabbitMQ：{@code Channel.queueDeclarePassive(...)} —— 协议级 Readiness（需要 spring-rabbit）
+   *   <li>兜底：TCP 端口连通性 —— Liveness 级别，仅表明进程存活
+   * </ol>
+   *
+   * <p>协议级探测失败但 TCP 连通时上报 DEGRADED（broker 存活但 topic/认证异常）。
+   */
   private Health.Builder checkMqConnectivity(QueueType type) {
     String host = queueProperties.getHost();
     int port = resolvePort(type);
-
     long startTime = System.currentTimeMillis();
-    boolean connected = checkTcpConnection(host, port);
+
+    // 尝试协议级探测
+    ProtocolCheckResult protocolResult = tryProtocolCheck(type);
     long responseTime = System.currentTimeMillis() - startTime;
 
-    if (connected) {
+    if (protocolResult != null && protocolResult.success) {
       return Health.up()
           .withDetail("mqType", type.getValue())
           .withDetail("host", host)
           .withDetail("port", port)
           .withDetail("responseTimeMs", responseTime)
-          .withDetail("checkMethod", "tcp-port");
-    } else {
-      return Health.down()
+          .withDetail("checkMethod", protocolResult.checkMethod);
+    }
+
+    // 兜底：TCP
+    boolean tcpOk = checkTcpConnection(host, port);
+    if (tcpOk) {
+      Health.Builder degraded = Health.status("DEGRADED")
           .withDetail("mqType", type.getValue())
           .withDetail("host", host)
           .withDetail("port", port)
           .withDetail("responseTimeMs", responseTime)
-          .withDetail("checkMethod", "tcp-port")
-          .withDetail("error", "无法连接到 " + type.getValue() + " 服务 " + host + ":" + port);
+          .withDetail("checkMethod", "tcp-port");
+      if (protocolResult != null) {
+        degraded.withDetail("protocolCheckError", protocolResult.errorMessage);
+      }
+      return degraded;
+    }
+
+    return Health.down()
+        .withDetail("mqType", type.getValue())
+        .withDetail("host", host)
+        .withDetail("port", port)
+        .withDetail("responseTimeMs", responseTime)
+        .withDetail("checkMethod", "tcp-port")
+        .withDetail("error", protocolResult != null
+            ? "TCP 连接失败（协议级错误：" + protocolResult.errorMessage + "）"
+            : "无法连接到 " + type.getValue() + " 服务 " + host + ":" + port);
+  }
+
+  /**
+   * 尝试协议级 Readiness 探测。非堵塞，任一异常返回 failed 结果。
+   *
+   * @return null 表示当前 classpath 不支持协议探测
+   */
+  private ProtocolCheckResult tryProtocolCheck(QueueType type) {
+    if (type == QueueType.KAFKA) {
+      return tryKafkaProtocolCheck();
+    }
+    if (type == QueueType.RABBIT) {
+      return tryRabbitProtocolCheck();
+    }
+    return null;
+  }
+
+  /** Kafka 协议级探测：AdminClient.describeCluster（验证连通 + 非空 controller）。 */
+  private ProtocolCheckResult tryKafkaProtocolCheck() {
+    try {
+      // 通过反射加载，避免在 classpath 没有 kafka-clients 时触发 NoClassDefFoundError
+      Class<?> adminClazz = Class.forName("org.apache.kafka.clients.admin.AdminClient");
+      Class<?> configClazz = Class.forName("org.apache.kafka.clients.admin.AdminClientConfig");
+      Class<?> producerConfigClazz = Class.forName("org.apache.kafka.clients.producer.ProducerConfig");
+      Class<?> stringSerializerClazz =
+          Class.forName("org.apache.kafka.common.serialization.StringSerializer");
+      Object props = Class.forName("java.util.Properties").getDeclaredConstructor().newInstance();
+      java.util.Properties p = (java.util.Properties) props;
+      p.put(
+          configClazz.getField("BOOTSTRAP_SERVERS_CONFIG").get(null),
+          queueProperties.getKafkaBootstrapServers());
+      p.put(
+          producerConfigClazz.getField("KEY_SERIALIZER_CLASS_CONFIG").get(null),
+          stringSerializerClazz.getName());
+      p.put(
+          producerConfigClazz.getField("VALUE_SERIALIZER_CLASS_CONFIG").get(null),
+          stringSerializerClazz.getName());
+      p.put(configClazz.getField("REQUEST_TIMEOUT_MS_CONFIG").get(null), 3000);
+      p.put(configClazz.getField("DEFAULT_API_TIMEOUT_MS_CONFIG").get(null), 3000);
+
+      Object admin = adminClazz.getMethod("create", java.util.Properties.class).invoke(null, p);
+      try {
+        Object cluster =
+            adminClazz.getMethod("describeCluster").invoke(admin);
+        Object controller =
+            cluster.getClass().getMethod("controller").invoke(cluster).get()
+                .orElse(null);
+        boolean ok = controller != null;
+        return new ProtocolCheckResult(ok, ok ? null : "broker controller 未就绪",
+            "kafka-admin-describe-cluster");
+      } finally {
+        adminClazz.getMethod("close", long.class, java.util.concurrent.TimeUnit.class)
+            .invoke(admin, 1L, java.util.concurrent.TimeUnit.SECONDS);
+      }
+    } catch (Exception e) {
+      return new ProtocolCheckResult(false, e.getMessage(), "kafka-admin-describe-cluster");
+    }
+  }
+
+  /**
+   * RabbitMQ 协议级探测：建立连接后对队列执行 passive declare（队列不存在时不创建，只校验连通）。
+   */
+  private ProtocolCheckResult tryRabbitProtocolCheck() {
+    try {
+      Class<?> factoryClazz = Class.forName("com.rabbitmq.client.ConnectionFactory");
+      Object factory = factoryClazz.getDeclaredConstructor().newInstance();
+      factoryClazz.getMethod("setHost", String.class).invoke(factory, queueProperties.getHost());
+      factoryClazz.getMethod("setPort", int.class).invoke(factory, queueProperties.getPort());
+      factoryClazz.getMethod("setUsername", String.class)
+          .invoke(factory, queueProperties.getUsername() != null ? queueProperties.getUsername() : "guest");
+      factoryClazz.getMethod("setPassword", String.class)
+          .invoke(factory, queueProperties.getPassword() != null ? queueProperties.getPassword() : "");
+      factoryClazz.getMethod("setVirtualHost", String.class)
+          .invoke(factory, queueProperties.getVirtualHost() != null ? queueProperties.getVirtualHost() : "/");
+      factoryClazz.getMethod("setConnectionTimeout", int.class).invoke(factory, 3000);
+
+      Object connection =
+          factoryClazz.getMethod("newConnection").invoke(factory);
+      try {
+        Object channel = connection.getClass().getMethod("createChannel").invoke(connection);
+        try {
+          channel.getClass().getMethod("queueDeclarePassive", String.class).invoke(channel, "");
+          return new ProtocolCheckResult(true, null, "rabbitmq-queueDeclarePassive");
+        } finally {
+          channel.getClass().getMethod("close").invoke(channel);
+        }
+      } finally {
+        connection.getClass().getMethod("close").invoke(connection);
+      }
+    } catch (Exception e) {
+      return new ProtocolCheckResult(false, e.getMessage(), "rabbitmq-queueDeclarePassive");
+    }
+  }
+
+  /** 协议级探测结果 */
+  private static final class ProtocolCheckResult {
+    final boolean success;
+    final String errorMessage;
+    final String checkMethod;
+
+    ProtocolCheckResult(boolean success, String errorMessage, String checkMethod) {
+      this.success = success;
+      this.errorMessage = errorMessage;
+      this.checkMethod = checkMethod;
     }
   }
 
