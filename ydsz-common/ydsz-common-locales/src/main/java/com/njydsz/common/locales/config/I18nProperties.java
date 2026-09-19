@@ -211,6 +211,15 @@ public class I18nProperties {
   private int negativeCacheCapacity = 500;
 
   /**
+   * 是否启用 i18n 元数据 REST API（默认 false）。
+   *
+   * <p>启用后暴露 {@code /api/internal/i18n/languages}、{@code /api/internal/i18n/languages/supported}、
+   * {@code /api/internal/i18n/config} 三个端点，供前端/运维查询 i18n 配置状态。需要 Web 环境（{@code
+   * spring-webmvc} 在类路径上）才生效；非 Web 环境配置了也不会报错（条件不满足自动跳过）。
+   */
+  private boolean metadataApiEnabled = false;
+
+  /**
    * 获取支持的 Locale 标签数组（返回副本，防止外部修改内部配置）
    *
    * @return 支持的 Locale 标签数组（如 zh_CN / en_US）
@@ -301,6 +310,19 @@ public class I18nProperties {
 
   public void setNegativeCacheCapacity(int negativeCacheCapacity) {
     this.negativeCacheCapacity = negativeCacheCapacity;
+  }
+
+  /**
+   * 判断是否启用 i18n 元数据 REST API。
+   *
+   * @return 启用返回 true
+   */
+  public boolean isMetadataApiEnabled() {
+    return metadataApiEnabled;
+  }
+
+  public void setMetadataApiEnabled(boolean metadataApiEnabled) {
+    this.metadataApiEnabled = metadataApiEnabled;
   }
 
   /**

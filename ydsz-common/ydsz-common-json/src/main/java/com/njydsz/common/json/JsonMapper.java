@@ -821,7 +821,14 @@ public class JsonMapper {
       T result = (T) TreeConverter.convertToJavaObject(node);
       return result;
     }
-    // Bean 目标类型：走现有字符串管道（Map 版 BeanReader 直绑为 F-2 二期）
+    // Bean 目标类型：P1-A2 优化——纯标量树走直绑路径，跳过"树 → 字符串 → 再解析"两次结构转换
+    if (node instanceof ObjectNode objectNode && TreeConverter.isFlatScalarTree(node)) {
+      T direct = TreeConverter.directConvertFlatObject(objectNode, clazz);
+      if (direct != null) {
+        return direct;
+      }
+      // 直绑失败时回退到字符串管道
+    }
     String json = node.toString();
     return toObject(json, clazz);
   }

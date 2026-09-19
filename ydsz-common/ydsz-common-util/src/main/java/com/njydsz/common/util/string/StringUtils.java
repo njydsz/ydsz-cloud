@@ -173,7 +173,7 @@ public final class StringUtils {
    * <p>注意：对 CharSequence 判断长度是否为 0（与 {@link #isEmpty(CharSequence)} 语义一致）， 不按空白字符判空。如需按空白判空请使用
    * {@link #isBlank(CharSequence)}。
    *
-   * @param obj obj
+   * @param obj 待判断对象
    * @return 判断结果
    */
   public static boolean isEmpty(Object obj) {
@@ -204,7 +204,7 @@ public final class StringUtils {
   /**
    * 判断对象是否不为空
    *
-   * @param obj obj
+   * @param obj 待判断对象
    * @return 判断结果
    */
   public static boolean isNotEmpty(Object obj) {
@@ -355,7 +355,7 @@ public final class StringUtils {
    *
    * @since 26.09.01
    * @param pattern 格式模式
-   * @param arguments arguments
+   * @param arguments 格式化参数（可为 null 或空）
    * @return 处理后的字符串
    */
   public static String format(String pattern, Object... arguments) {
