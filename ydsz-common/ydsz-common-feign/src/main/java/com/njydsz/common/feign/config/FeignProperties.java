@@ -361,63 +361,6 @@ public class FeignProperties {
     private long connectionTimeToLive = 60000;
   }
 
-  /**
-   * 熔断器 Resilience4j 专属配置（ydsz.feign.resilience4j.*）。
-   *
-   * <p><b>已废弃，自 26.09.19 起请统一使用 {@code ydzz.feign.circuit-breaker.*} 配置路径。</b>
-   * 保留一个版本用于兼容旧配置，下一版本移除。
-   *
-   * @deprecated 使用 {@link CircuitBreaker} 替代，配置路径 {@code ydsz.feign.circuit-breaker.*}
-   */
-  @Deprecated
-  private final Resilience4j resilience4j = new Resilience4j();
-
-  public Resilience4j getResilience4j() {
-    return resilience4j;
-  }
-
-  /**
-   * 已废弃的 Resilience4j 配置类。
-   *
-   * @deprecated 使用 {@link CircuitBreaker} 替代
-   */
-  @Deprecated
-  @Getter
-  @Setter
-  public static class Resilience4j {
-    /** @deprecated */
-    @Deprecated
-    private boolean isEnabled = false;
-
-    /** @deprecated */
-    @Deprecated
-    private float failureRateThreshold = 50.0f;
-
-    /** @deprecated */
-    @Deprecated
-    private float slowCallRateThreshold = 80.0f;
-
-    /** @deprecated */
-    @Deprecated
-    private long slowCallDurationThresholdMs = 3000L;
-
-    /** @deprecated */
-    @Deprecated
-    private long waitDurationInOpenStateMs = 10000L;
-
-    /** @deprecated */
-    @Deprecated
-    private int permittedNumberOfCallsInHalfOpenState = 10;
-
-    /** @deprecated */
-    @Deprecated
-    private int slidingWindowSize = 20;
-
-    /** @deprecated */
-    @Deprecated
-    private int minimumNumberOfCalls = 10;
-  }
-
   /** 错误解码配置 */
   private final Error error = new Error();
 

@@ -3,11 +3,14 @@ package com.njydsz.common.queue.service;
 import java.util.List;
 
 /**
- * 死信队列服务接口。
+ * 死信队列服务接口
  *
  * <p>消息多次重试失败后入队。
  *
- * <p>供后台告警/人工干预/归档。
+ * <p>引擎感知：{@link #retry(String, String)} 会优先尝试 {@link
+ * com.njydsz.common.queue.scheduler.DeadLetterReplayerRegistry} 中已注册的引擎专用回放器
+ * （Kafka: consumer.seek；RocketMQ: setConsumeTimestamp）；若无匹配回放器则降级为通用的
+ * "重新发布到 topic 末尾"语义。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -34,7 +37,7 @@ public interface DeadLetterQueueService {
   List<String> queryDeadLetters(String topic, int limit);
 
   /**
-   * 重试死信队列中的消息
+   * 重试死信队列中的消息（优先引擎回放器，降级为重新发布）
    *
    * @param topic 主题
    * @param messageId 消息 ID
