@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
+import com.njydsz.common.excel.csv.CsvReader;
+import com.njydsz.common.excel.csv.CsvWriter;
 import com.njydsz.common.excel.exception.ExcelReadException;
 
 /**
@@ -276,6 +278,58 @@ public class ExcelFacade {
   public static <T> ExcelTemplateWriter writeWithTemplate(
       byte[] templateBytes, String outputPath, Class<T> clazz) {
     return new ExcelTemplateWriter(templateBytes, outputPath, clazz);
+  }
+
+  // ==================== CSV 读写方法 ====================
+
+  /**
+   * 创建 CSV 写入器（输出到文件路径）。
+   *
+   * @param path 输出文件路径
+   * @param clazz 数据类型
+   * @param <T> 泛型参数
+   * @return CsvWriter 实例
+   * @throws java.io.IOException 文件创建异常
+   */
+  public static <T> CsvWriter<T> writeCsv(Path path, Class<T> clazz) throws java.io.IOException {
+    return CsvWriter.write(path, clazz);
+  }
+
+  /**
+   * 创建 CSV 写入器（输出到输出流）。
+   *
+   * @param outputStream 目标输出流
+   * @param clazz 数据类型
+   * @param <T> 泛型参数
+   * @return CsvWriter 实例
+   */
+  public static <T> CsvWriter<T> writeCsv(OutputStream outputStream, Class<T> clazz) {
+    return CsvWriter.write(outputStream, clazz);
+  }
+
+  /**
+   * 创建 CSV 读取器（从文件路径读取）。
+   *
+   * @param path CSV 文件路径
+   * @param clazz 目标类型
+   * @param <T> 泛型参数
+   * @return CsvReader 实例
+   * @throws java.io.IOException 文件打开异常
+   */
+  public static <T> CsvReader<T> readCsv(Path path, Class<T> clazz) throws java.io.IOException {
+    return CsvReader.read(path, clazz);
+  }
+
+  /**
+   * 创建 CSV 读取器（从输入流读取，UTF-8 编码）。
+   *
+   * @param inputStream 输入流
+   * @param clazz 目标类型
+   * @param <T> 泛型参数
+   * @return CsvReader 实例
+   */
+  public static <T> CsvReader<T> readCsv(InputStream inputStream, Class<T> clazz) {
+    return CsvReader.read(inputStream, clazz);
   }
 
   // ==================== 多Sheet写入方法 ====================

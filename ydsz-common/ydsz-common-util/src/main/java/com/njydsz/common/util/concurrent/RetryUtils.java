@@ -21,6 +21,9 @@ import com.njydsz.common.util.api.Experimental;
  * <p><b>异常模型：</b>所有方法均为 unchecked —— 重试耗尽后抛出 {@link RetryException}（包装最后一次异常），调用方无需强制捕获。 这与 Spring
  * Retry / Resilience4j 的异常模型一致。
  *
+ * <p><b>平台标准对齐：</b>平台推荐熔断/重试标准为 Resilience4j。本类作为轻量门面保留， 内部采用与 Resilience4j 对齐的异常语义和退避策略。对于需要完整熔断器能力的场景， 请直接引入
+ * {@code io.github.resilience4j:resilience4j-retry}。
+ *
  * <h2>使用示例</h2>
  *
  * <pre>{@code
@@ -45,7 +48,7 @@ import com.njydsz.common.util.api.Experimental;
 @Slf4j
 @Experimental(
     value = "能力储备：Unchecked 风格轻量重试。平台级标准为 Resilience4j，"
-        + "本类保留给轻量场景，启用前请确认测试覆盖",
+        + "本类保留给轻量场景（无 Resilience4j 依赖），启用前请确认测试覆盖",
     since = "26.09.01")
 public final class RetryUtils {
 
@@ -55,11 +58,7 @@ public final class RetryUtils {
   /** 抖动随机数下限（保证 nextLong(0, upper) 的 upper 至少为 1，避免边界崩溃）。 */
   private static final long JITTER_MIN_UPPER_BOUND = 1L;
 
-  /**
-   * 私有构造器，工具类不允许实例化。
-   *
-   * @return 处理结果
-   */
+  /** 私有构造器，工具类不允许实例化。 */
   private RetryUtils() {
     throw new UnsupportedOperationException(
         "RetryUtils is a utility class and cannot be instantiated");
@@ -76,6 +75,7 @@ public final class RetryUtils {
    * @param <T> 返回值类型
    * @return 操作成功时的返回值
    * @throws RetryException 所有重试均失败（或执行被中断）时抛出
+   * @throws IllegalArgumentException 如果 maxRetries < 0
    */
   public static <T> T executeWithRetry(Callable<T> action, int maxRetries, Duration delay) {
     return executeWithRetry(action, maxRetries, delay, e -> true);
@@ -93,6 +93,7 @@ public final class RetryUtils {
    * @param <T> 返回值类型
    * @return 操作成功时的返回值
    * @throws RetryException 所有重试均失败（或执行被中断）时抛出
+   * @throws IllegalArgumentException 如果 maxRetries < 0 或 delay 为 null/negative
    */
   public static <T> T executeWithRetry(
       Callable<T> action, int maxRetries, Duration delay, Predicate<Throwable> retryOn) {
@@ -104,6 +105,9 @@ public final class RetryUtils {
     }
     if (retryOn == null) {
       throw new IllegalArgumentException("retryOn must not be null");
+    }
+    if (maxRetries < 0) {
+      throw new IllegalArgumentException("maxRetries must be >= 0, got " + maxRetries);
     }
 
     Throwable lastException = null;
@@ -137,11 +141,14 @@ public final class RetryUtils {
    *
    * <p>每次重试的延迟时间按指数增长（initialDelay * multiplier^attempt）， 直到达到 maxDelay 上限，并叠加随机抖动避免"惊群效应"。
    *
+   * <p>与 Resilience4j Retry 的语义对齐：采用指数退避 + 随机抖动（jitter）， 确保多节点同时重试时不会产生同步浪涌。
+   *
    * @param action 待执行的操作（不可为 null）
    * @param config 重试配置（不可为 null）
    * @param <T> 返回值类型
    * @return 操作成功时的返回值
    * @throws RetryException 所有重试均失败（或执行被中断）时抛出
+   * @throws IllegalArgumentException 如果 action 或 config 为 null
    */
   public static <T> T executeWithBackoff(Callable<T> action, RetryConfig config) {
     if (action == null) {

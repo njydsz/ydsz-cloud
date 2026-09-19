@@ -78,6 +78,17 @@ public class JsonMapper {
   /** 此 Mapper 实例的预计算运行时配置（从 config 派生，不可变快照） */
   private final JsonRuntimeConfig runtimeConfig;
 
+  /**
+   * 当前线程最后一个激活配置的 Mapper 实例引用（身份快速路径，P1-E1）。
+   *
+   * <p>当同一 Mapper 在同一线程连续调用时，身份相等检查（{@code ==}）可替代 9 字段逐项比对， 消除最常见的热路径计算开销。仅当身份不匹配时才降级到完整字段比较。
+   *
+   * @since 26.09.01
+   */
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在 cleanupThread() 中调用 remove()（云顶规范 15.1）
+  private static final ThreadLocal<JsonMapper> CURRENT_MAPPER = new ThreadLocal<>();
+  // CHECKSTYLE.ON: RegexpSinglelineJava
+
   /** 创建默认配置的 Mapper 实例。 */
   public JsonMapper() {
     this(JsonConfig.copyOf(null));
@@ -177,6 +188,10 @@ public class JsonMapper {
    * @since 26.09.01
    */
   private boolean isRuntimeConfigActive() {
+    // P1-E1：身份快速路径——同一 Mapper 在同一线程连续调用时，== 检查替代 9 字段逐项比对
+    if (CURRENT_MAPPER.get() == this) {
+      return true;
+    }
     SerializationContext ctx = SerializationContext.CONTEXT.get();
     return ctx.isWriteNulls == runtimeConfig.isWriteNulls()
         && ctx.isPrettyPrint == runtimeConfig.isPrettyPrint()
@@ -263,6 +278,8 @@ public class JsonMapper {
       JSONReader.setCallDepthOverride(null, null);
       JsonParserUtil.setCallParseDepthOverride(null);
     }
+    // P1-E1：记录当前线程最后一个激活的 Mapper 实例，供下次身份快速路径检查
+    CURRENT_MAPPER.set(this);
   }
 
   /**
