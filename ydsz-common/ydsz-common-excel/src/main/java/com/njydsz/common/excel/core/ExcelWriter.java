@@ -725,6 +725,19 @@ public class ExcelWriter {
     }
   }
 
+  private void dispatchBeforeRowWrite(Row row, Object rowData, int rowIndex) {
+    if (!hasCallbacks()) {
+      return;
+    }
+    for (WriteLifecycleHandler cb : callbacks) {
+      try {
+        cb.onBeforeRowWrite(row, rowData, rowIndex);
+      } catch (Exception e) {
+        LOG.warn("WriteLifecycleHandler.onBeforeRowWrite 异常，跳过", e);
+      }
+    }
+  }
+
   private void dispatchAfterRowWrite(Row row, Object rowData, int rowIndex) {
     if (!hasCallbacks()) {
       return;
@@ -1075,6 +1088,9 @@ public class ExcelWriter {
     if (rowData == null) {
       return;
     }
+
+    // P2-5：行级回调——在单元格写入前触发，允许基于行数据动态设置样式
+    dispatchBeforeRowWrite(row, rowData, currentRowIndex);
 
     if (precomputedProps != null && ultraFastCellWriter != null && metadata.getClazz() != null) {
       writeRowUltraFast(row, rowData);

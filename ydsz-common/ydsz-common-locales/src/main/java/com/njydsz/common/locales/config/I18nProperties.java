@@ -199,6 +199,18 @@ public class I18nProperties {
   private int missingTranslationLogBufferCapacity = 200;
 
   /**
+   * 是否启用负缓存（默认 true）。
+   *
+   * <p>负缓存记录「key + Locale → 已知不存在」的映射，下次遇到相同 key+Locale 的 miss 请求直接走快速路径返回
+   * key，无需遍历全部 basename Properties 文件。开发环境（{@code devCacheSeconds=0}）下收益最显著，生产环境（大
+   * cacheSeconds）下同样减少 basename 列表扫描开销。
+   */
+  private boolean negativeCacheEnabled = true;
+
+  /** 负缓存容量上限（默认 500），超限时通过 LRU 驱逐最久未使用条目。 */
+  private int negativeCacheCapacity = 500;
+
+  /**
    * 获取支持的 Locale 标签数组（返回副本，防止外部修改内部配置）
    *
    * @return 支持的 Locale 标签数组（如 zh_CN / en_US）
@@ -263,6 +275,32 @@ public class I18nProperties {
 
   public void setMissingTranslationLogBufferCapacity(int missingTranslationLogBufferCapacity) {
     this.missingTranslationLogBufferCapacity = missingTranslationLogBufferCapacity;
+  }
+
+  /**
+   * 判断是否启用负缓存。
+   *
+   * @return 启用返回 true
+   */
+  public boolean isNegativeCacheEnabled() {
+    return negativeCacheEnabled;
+  }
+
+  public void setNegativeCacheEnabled(boolean negativeCacheEnabled) {
+    this.negativeCacheEnabled = negativeCacheEnabled;
+  }
+
+  /**
+   * 获取负缓存容量上限。
+   *
+   * @return 负缓存容量
+   */
+  public int getNegativeCacheCapacity() {
+    return negativeCacheCapacity;
+  }
+
+  public void setNegativeCacheCapacity(int negativeCacheCapacity) {
+    this.negativeCacheCapacity = negativeCacheCapacity;
   }
 
   /**
@@ -428,6 +466,10 @@ public class I18nProperties {
         + missingTranslationLogEnabled
         + ", missingTranslationLogBufferCapacity="
         + missingTranslationLogBufferCapacity
+        + ", negativeCacheEnabled="
+        + negativeCacheEnabled
+        + ", negativeCacheCapacity="
+        + negativeCacheCapacity
         + '}';
   }
 }

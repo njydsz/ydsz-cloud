@@ -19,6 +19,7 @@ import org.apache.poi.ss.usermodel.Workbook;
  *   <li>{@link #afterWorkbookCreate} — 工作簿初始化完成、首个 Sheet 就绪后
  *   <li>{@link #afterSheetCreate} — 每个 Sheet 创建后（含 newSheet 切 Sheet 场景）
  *   <li>{@link #afterHeaderWrite} — 表头行写入完成后
+ *   <li>{@link #onBeforeRowWrite} — 每行数据写入前（行已创建，单元格未写入）
  *   <li>{@link #afterRowWrite} — 每行数据写入完成后
  *   <li>{@link #afterCellWrite} — 每个单元格写入完成后（高频回调，实现应尽量轻量）
  *   <li>{@link #beforeWorkbookFlush} — 工作簿刷出到输出流之前
@@ -74,6 +75,27 @@ public interface WriteLifecycleHandler {
    * @param headerRow 表头行号（从 0 开始）
    */
   default void afterHeaderWrite(Sheet sheet, int headerRow) {
+    // default no-op
+  }
+
+  /**
+   * 每行数据写入前回调（行已创建，单元格未写入）。
+   *
+   * <p>此时可基于当前行数据动态设置行级样式（如负数行标红、根据状态值决定背景色等）。
+   * 回调发生在 {@code createRow} 之后、单元格写入之前，行对象 {@code row} 已就绪，
+   * 可通过 {@code row.createCell()} 预创建带样式的单元格，后续写入仍按列属性填充值。
+   *
+   * <p>典型用途：
+   * <ul>
+   *   <li>根据行数据动态设置行样式（如负数标红、状态变色）</li>
+   *   <li>预创建带条件格式的单元格</li>
+   * </ul>
+   *
+   * @param row 已创建的行对象
+   * @param rowData 当前行绑定的数据对象（可能为 {@code null}）
+   * @param rowIndex 行号（从 0 开始，含表头行）
+   */
+  default void onBeforeRowWrite(Row row, Object rowData, int rowIndex) {
     // default no-op
   }
 

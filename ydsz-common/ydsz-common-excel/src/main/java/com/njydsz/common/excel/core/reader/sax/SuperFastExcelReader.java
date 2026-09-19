@@ -26,6 +26,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.reader.ColumnMetadata;
+import com.njydsz.common.excel.api.validator.RowRule;
 import com.njydsz.common.excel.exception.ExcelReadException;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor.ObjectInstantiator;
 
@@ -507,6 +508,20 @@ public class SuperFastExcelReader {
    */
   public void setMetadataFactory(Function<Map<Integer, String>, ColumnMetadata[]> metadataFactory) {
     this.metadataFactory = metadataFactory;
+  }
+
+  /** 自定义行级校验规则列表（P2-4 新增）— 在 DataValidator 通过后调用 */
+  private List<RowRule<Object>> customRules;
+
+  /**
+   * 设置自定义行级校验规则列表。
+   *
+   * <p>在 JSR-303 注解校验通过后逐条调用，任一规则抛出异常即视为校验失败。
+   *
+   * @param customRules 自定义规则列表，可为 {@code null}
+   */
+  public void setCustomRules(List<RowRule<Object>> customRules) {
+    this.customRules = customRules;
   }
 
   /**

@@ -900,6 +900,8 @@ public class YdszJson {
    */
   public static void cleanupThread() {
     SerializationProvider.clearThreadLocals();
+    // P1-E1：清理身份快速路径标记，防止池化线程残留旧 Mapper 引用
+    com.njydsz.common.json.JsonMapper.clearCurrentMapper();
   }
 
   // ==================== JSON Patch (RFC 6902) ====================

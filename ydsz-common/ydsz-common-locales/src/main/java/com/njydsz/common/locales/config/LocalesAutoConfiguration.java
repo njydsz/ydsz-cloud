@@ -29,6 +29,7 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.locales.util.MessageSourceHolder;
 import com.njydsz.common.locales.util.MissingTranslationLogger;
 
 /**
@@ -89,6 +90,24 @@ public class LocalesAutoConfiguration {
       log.info(
           "MissingTranslationLogger 已启用 | 缓冲区容量: {} | 节流器将在 i18n key 未解析时输出 WARN 日志",
           capacity);
+    }
+  }
+
+  /**
+   * 初始化 i18n 负缓存（{@link com.njydsz.common.locales.util.MessageSourceHolder#configureNegativeCache}）。
+   *
+   * <p>负缓存在开发环境（{@code devCacheSeconds=0}）下效果最显著：避免已知 miss 的 key 重复遍历全部 basename
+   * Properties 文件。配置由 {@link I18nProperties#isNegativeCacheEnabled()} 与 {@link
+   * I18nProperties#getNegativeCacheCapacity()} 控制。
+   */
+  @PostConstruct
+  public void configureNegativeCache() {
+    boolean enabled = i18nProperties.isNegativeCacheEnabled();
+    int capacity = i18nProperties.getNegativeCacheCapacity();
+    MessageSourceHolder.configureNegativeCache(enabled, capacity);
+    if (enabled) {
+      log.info(
+          "i18n 负缓存已启用 | 容量: {} | 已知 miss 的 key 将走快速路径返回", capacity);
     }
   }
 

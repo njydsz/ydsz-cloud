@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.api.validator.DataValidator;
+import com.njydsz.common.excel.api.validator.RowRule;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.listener.ReadListener;
@@ -113,6 +114,9 @@ public class ExcelReader {
   /** 已注册的监听器列表，支持多个监听器链式调用 */
   private final List<ReadListener<?>> listeners;
 
+  /** 自定义行级校验规则列表（P2-4 新增） */
+  private final List<RowRule<Object>> customRules;
+
   /** 高性能列元数据缓存 - 预计算的Setter/Type/Format，避免运行时反射 */
   private ColumnMetadata[] columnMetadataArray;
 
@@ -140,6 +144,7 @@ public class ExcelReader {
     this.metadata = metadata;
     this.context = new AnalysisContext(metadata);
     this.listeners = new ArrayList<>(4);
+    this.customRules = new ArrayList<>(4);
     this.headerAnalyzer = new HeaderAnalyzer(metadata);
     this.rowParser = new RowParser(metadata, context);
     this.inputSourceDetector = new InputSourceDetector(metadata);
@@ -235,6 +240,26 @@ public class ExcelReader {
    */
   public ExcelReader registerReadListener(ReadListener<?> listener) {
     this.listeners.add(listener);
+    return this;
+  }
+
+  /**
+   * 注册自定义行级校验规则。
+   *
+   * <p>在 JSR-303 注解标准校验通过后，逐条调用已注册的规则校验当前行数据。
+   * 任一规则抛出异常即视为校验失败，该行进入 {@link ReadListener#onError} 处理流程。
+   *
+   * <p>典型用途：跨字段校验（如"开始日期早于结束日期"）、业务唯一性校验等注解无法表达的场景。
+   *
+   * @param rule 行级校验规则；为 {@code null} 时忽略
+   * @param <R> 规则类型
+   * @return 当前读取器实例，支持链式调用
+   */
+  @SuppressWarnings("unchecked")
+  public <R extends RowRule<?>> ExcelReader addRule(R rule) {
+    if (rule != null) {
+      this.customRules.add((RowRule<Object>) rule);
+    }
     return this;
   }
 
@@ -516,6 +541,7 @@ public class ExcelReader {
           superFastReader.setSheetName(metadata.getSheetName());
           superFastReader.setSheetIndex(metadata.getSheetIndex());
           superFastReader.setIsSkipEmptyRows(Boolean.TRUE.equals(metadata.getIsSkipEmptyRows()));
+          superFastReader.setCustomRules(customRules);
           // read(Path)：ZipFile 随机访问，支持 workbook.xml/rels 解析的 Sheet 选择与解压限流防护
           superFastReader.read(fastPath);
           notifyEnd();
@@ -745,6 +771,10 @@ public class ExcelReader {
                   ? metadata.getExcelConfig()
                   : ExcelConfig.defaults();
           DataValidator.validate(data, rowIndex, config.getValidationMode());
+          // P2-4：自定义行级校验规则（在注解校验通过后执行）
+          for (RowRule<Object> rule : customRules) {
+            rule.validate(data, rowIndex);
+          }
         } catch (Exception ve) {
           LOG.warn("Data validation failed, row={}", rowIndex, ve);
           for (int i = 0; i < listenerCount; i++) {

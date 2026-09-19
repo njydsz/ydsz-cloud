@@ -1,6 +1,7 @@
 package com.njydsz.common.locales.util;
 
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +104,10 @@ public final class MessageSourceHolder {
     return locale != null ? locale : Locale.ROOT;
   }
 
+  /** 负缓存运行状态引用（通过 CAS 切换，无锁读取） */
+  private static final AtomicReference<NegativeCacheState> NEG_CACHE_STATE =
+      new AtomicReference<>(NegativeCacheState.disabled());
+
   /**
    * 解析国际化消息（供 AbstractYdszException.getMessage() 与 I18n.message() 调用）。
    *
@@ -131,19 +136,73 @@ public final class MessageSourceHolder {
       return messageKey;
     }
     Locale resolvedLocale = locale != null ? locale : Locale.ROOT;
+
+    // 负缓存快速路径：已知该 key+Locale 不存在，直接返回 key，避免重复遍历所有 basename Properties
+    NegativeCacheState cacheState = NEG_CACHE_STATE.get();
+    if (cacheState.isEnabled() && cacheState.getCache().isMissing(messageKey, resolvedLocale)) {
+      return messageKey;
+    }
+
     try {
       String resolved = r.resolve(messageKey, messageParams, messageKey, resolvedLocale);
       if (resolved == null) {
         return messageKey;
       }
-      // 当 useCodeAsDefaultMessage=true 时，未解析的 key 会返回 key 本身，此处触发缺失翻译告警
+      // 当 useCodeAsDefaultMessage=true 时，未解析的 key 会返回 key 本身，此处触发缺失翻译告警 + 负缓存记录
       if (resolved.equals(messageKey)) {
         MissingTranslationLogger.tryWarn(messageKey, resolvedLocale);
+        if (cacheState.isEnabled()) {
+          cacheState.getCache().markMissing(messageKey, resolvedLocale);
+        }
       }
       return resolved;
     } catch (Exception e) {
       // 解析失败时兜底返回 key，避免异常信息丢失
       return messageKey;
+    }
+  }
+
+  /**
+   * 配置负缓存运行参数。
+   *
+   * <p>由 {@link com.njydsz.common.locales.config.LocalesAutoConfiguration} 在启动时调用，控制负缓存的启用/容量。负缓存在开发环境（{@code devCacheSeconds=0}）下效果最显著，
+   * 生产环境（大 cacheSeconds）因命中底层缓存而收益较小，但仍可减少重复遍历 basename 列表的开销。
+   *
+   * @param enabled 是否启用负缓存
+   * @param capacity 缓存容量上限（仅 enabled=true 时生效）
+   */
+  public static void configureNegativeCache(boolean enabled, int capacity) {
+    if (!enabled) {
+      NEG_CACHE_STATE.set(NegativeCacheState.disabled());
+      return;
+    }
+    NEG_CACHE_STATE.set(NegativeCacheState.enabled(Math.max(1, capacity)));
+  }
+
+  /** 负缓存状态对象（通过 AtomicReference CAS 切换，无锁读取） */
+  private static final class NegativeCacheState {
+    private final boolean enabled;
+    private final I18nNegativeCache cache;
+
+    NegativeCacheState(boolean enabled, I18nNegativeCache cache) {
+      this.enabled = enabled;
+      this.cache = cache;
+    }
+
+    static NegativeCacheState disabled() {
+      return new NegativeCacheState(false, null);
+    }
+
+    static NegativeCacheState enabled(int capacity) {
+      return new NegativeCacheState(true, new I18nNegativeCache(capacity));
+    }
+
+    boolean isEnabled() {
+      return enabled;
+    }
+
+    I18nNegativeCache getCache() {
+      return cache;
     }
   }
 }

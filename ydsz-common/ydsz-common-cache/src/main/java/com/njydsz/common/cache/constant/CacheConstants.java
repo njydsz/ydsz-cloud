@@ -33,6 +33,14 @@ public final class CacheConstants {
     throw new UnsupportedOperationException("Utility class");
   }
 
+  // ============================== CacheConstants 分拆警告 ==============================
+  // 以下模块级常量已拆分为各个模块内部的 CacheConstants/SystemConstants/FlowConstants：
+  // - FLOW_DEF_*       → ydsz-workflow/.../constant/FlowCacheConstants.java
+  // - NEXTWIKI_*       → ydsz-nextwiki/.../constant/NextwikiCacheConstants.java
+  // - SYSTEM_*         → ydsz-system/.../constant/SystemCacheConstants.java
+  // 此文件仅保留跨模块共享的基础设施常量（前缀、分隔符、默认租户）。
+  // @deprecated 使用各模块专用常量类替代，本文件仅作过渡兼容层。
+
   // ============================== Key 模板格式常量 ==============================
 
   /**

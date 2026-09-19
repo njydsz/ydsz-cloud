@@ -22,6 +22,7 @@ import java.util.TreeSet;
 import com.njydsz.common.json.annotation.JsonDeserialize;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.internal.JsonMetrics;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.reader.JSONReader;
 import com.njydsz.common.json.serializer.SerializerRegistry;
@@ -246,6 +247,8 @@ public final class DeserializationProvider {
       return null;
     }
 
+    // P2-D3：指标记录——仅对非空 JSON 输入计量
+    long startNanos = System.nanoTime();
     try {
       // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
       Object customDeserializer = getCustomDeserializer(clazz);
@@ -279,6 +282,8 @@ public final class DeserializationProvider {
           "Failed to deserialize JSON to " + clazz.getName() + ": " + e.getMessage(),
           0,
           json);
+    } finally {
+      JsonMetrics.recordDeserialize(System.nanoTime() - startNanos);
     }
   }
 

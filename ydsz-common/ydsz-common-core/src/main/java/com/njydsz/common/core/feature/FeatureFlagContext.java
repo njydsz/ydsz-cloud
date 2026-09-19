@@ -14,8 +14,22 @@ public final class FeatureFlagContext {
 
   private FeatureFlagContext() {}
 
+  /** 默认空实现：所有开关默认开启，保证未配置时业务零影响 */
+  private static final FeatureFlagService ALWAYS_ENABLED =
+      new FeatureFlagService() {
+        @Override
+        public boolean isEnabled(String name) {
+          return true;
+        }
+
+        @Override
+        public boolean isEnabled(String name, boolean defaultValue) {
+          return defaultValue;
+        }
+      };
+
   /** 当前生效的特性开关服务（默认空实现：全部开启） */
-  private static volatile FeatureFlagService service = new AlwaysEnabledService();
+  private static volatile FeatureFlagService service = ALWAYS_ENABLED;
 
   /**
    * 注入特性开关服务（应用启动时由自动配置调用）。
@@ -48,18 +62,5 @@ public final class FeatureFlagContext {
   public static boolean isEnabled(String name, boolean defaultValue) {
     return service.isEnabled(name, defaultValue);
   }
-
-  /** 默认空实现：所有开关默认开启，保证未配置时业务零影响 */
-  private static final class AlwaysEnabledService implements FeatureFlagService {
-
-    @Override
-    public boolean isEnabled(String name) {
-      return true;
-    }
-
-    @Override
-    public boolean isEnabled(String name, boolean defaultValue) {
-      return defaultValue;
-    }
-  }
 }
+

@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.internal.JsonConfig;
+import com.njydsz.common.json.internal.JsonMetrics;
+import com.njydsz.common.json.module.JsonModuleRegistry;
 
 /**
  * YdszJson 配置 JMX MBean 实现。
@@ -96,6 +98,35 @@ public class JsonConfigViewer implements JsonConfigViewerMBean {
   @Override
   public int getFieldMetaCacheSize() {
     return SerializerCache.size();
+  }
+
+  @Override
+  public String getRegisteredModuleNames() {
+    JsonModuleRegistry registry = JsonModuleRegistry.getInstance();
+    if (registry == null || registry.getModuleCount() == 0) {
+      return "none";
+    }
+    return String.join(", ", registry.getModuleNames());
+  }
+
+  @Override
+  public long getSerializeCount() {
+    return JsonMetrics.getSerializeCount();
+  }
+
+  @Override
+  public long getSerializeTimeNanos() {
+    return JsonMetrics.getSerializeTimeNanos();
+  }
+
+  @Override
+  public long getDeserializeCount() {
+    return JsonMetrics.getDeserializeCount();
+  }
+
+  @Override
+  public long getDeserializeTimeNanos() {
+    return JsonMetrics.getDeserializeTimeNanos();
   }
 
   @Override

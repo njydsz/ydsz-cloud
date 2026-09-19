@@ -28,6 +28,7 @@ import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.exception.JsonSerializationException;
 import com.njydsz.common.json.internal.JsonConfig;
+import com.njydsz.common.json.internal.JsonMetrics;
 import com.njydsz.common.json.internal.JsonRuntimeConfig;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
@@ -643,6 +644,22 @@ public final class SerializationProvider {
       return obj.toString();
     }
 
+    // P2-D3：指标记录——将完整序列化路径包裹在 try-finally 中，确保正常返回与异常退出均被计量
+    long startNanos = System.nanoTime();
+    try {
+      return serializeInternal(obj);
+    } finally {
+      JsonMetrics.recordSerialize(System.nanoTime() - startNanos);
+    }
+  }
+
+  /**
+   * 序列化对象内部实现（不含指标记录）。
+   *
+   * @param obj 对象（已排除 null 和 JsonNode 快速路径）
+   * @return JSON 字符串
+   */
+  private static String serializeInternal(Object obj) {
     // @JsonSerialize 快速路径：如果类有 @JsonSerialize 注解，使用自定义序列化器
     Object customSerializer = getCustomSerializer(obj.getClass());
     if (customSerializer == null) {

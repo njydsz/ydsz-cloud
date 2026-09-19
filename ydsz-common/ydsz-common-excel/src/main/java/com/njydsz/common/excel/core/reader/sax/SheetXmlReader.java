@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.api.validator.DataValidator;
+import com.njydsz.common.excel.api.validator.RowRule;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.common.excel.core.reader.SimpleCell;
@@ -164,6 +165,12 @@ public class SheetXmlReader {
         // P0-3: DataValidator integration in SuperFast read path
         try {
           DataValidator.validate(rowData, currentRow);
+          // P2-4：自定义行级校验规则（在注解校验通过后执行）
+          if (reader.customRules != null) {
+            for (RowRule<Object> rule : reader.customRules) {
+              rule.validate(rowData, currentRow);
+            }
+          }
         } catch (Exception ve) {
           LOG.warn("Data validation failed at row {}: {}", currentRow, ve.getMessage());
           for (ReadListener<?> listener : reader.listeners) {

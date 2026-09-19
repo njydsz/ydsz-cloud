@@ -297,6 +297,15 @@ public class JsonMapper {
   }
 
   /**
+   * 清理当前线程的身份快速路径标记（供 {@link YdszJson#cleanupThread()} 调用）。
+   *
+   * @since 26.09.01
+   */
+  static void clearCurrentMapper() {
+    CURRENT_MAPPER.remove();
+  }
+
+  /**
    * 恢复配置快照（ThreadLocal 序列化参数）。
    *
    * @param snapshot 配置快照（为 null 表示无需恢复）
@@ -304,6 +313,9 @@ public class JsonMapper {
   private void restoreConfig(ThreadLocalSnapshot snapshot) {
     if (snapshot != null) {
       snapshot.restore();
+      // P1-E1：快照恢复后清除身份标记，下次调用强制走完整字段比较一次，
+      // 避免不同 Mapper 交替使用时身份检查误判
+      CURRENT_MAPPER.remove();
     }
   }
 
