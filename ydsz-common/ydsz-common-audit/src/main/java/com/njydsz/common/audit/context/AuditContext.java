@@ -42,11 +42,9 @@ public class AuditContext {
 
   private static final Logger LOG = LoggerFactory.getLogger(AuditContext.class);
 
-  /** 缓存反射 Method 对象，避免重复查找 */
-  private static volatile Method cachedUsernameMethod;
-
-  /** 缓存反射查找失败的 Class，避免重复尝试 */
-  private static final Class<?>[] FAILED_CLASSES = new Class<?>[0];
+  /** 线程安全的反射 Method 缓存：Class → getUsername() Method */
+  private static final ConcurrentHashMap<Class<?>, Method> USERNAME_METHOD_CACHE =
+      new ConcurrentHashMap<>(8);
 
   /**
    * 获取当前线程的审计上下文
@@ -170,30 +168,39 @@ public class AuditContext {
   /**
    * 通过反射从用户对象中提取用户名
    *
-   * <p>尝试调用 {@code getUsername()} 方法。首次调用后缓存 Method 对象。 对于已知不含 getUsername() 方法的类型，跳过反射尝试（性能优化）。
+   * <p>尝试调用 {@code getUsername()} 方法。使用 {@link ConcurrentHashMap} 缓存
+   * Class → Method 映射，保证线程安全且无需 volatile 或同步块。
+   * 对于已知不含 getUsername() 方法的类型，缓存 null 跳过后续反射尝试。
    *
    * @param userObj 用户对象（如 LoginUser / UserInfo 等）
    * @return 用户名；获取失败返回 null
    */
   private static String extractUsernameViaReflection(Object userObj) {
     Class<?> clazz = userObj.getClass();
+    Method method = USERNAME_METHOD_CACHE.get(clazz);
+
+    if (method == null) {
+      // 缓存未命中：计算并放入；不含 getUsername() 时缓存 null Sentinel
+      try {
+        Method found = clazz.getMethod("getUsername");
+        found.setAccessible(true);
+        USERNAME_METHOD_CACHE.putIfAbsent(clazz, found);
+        method = found;
+      } catch (NoSuchMethodException e) {
+        // 该类不含 getUsername() 方法，缓存 null 跳过后续反射尝试
+        LOG.debug("[AuditContext] 不含 getUsername() 方法: {}", clazz.getName());
+        USERNAME_METHOD_CACHE.putIfAbsent(clazz, null);
+        return null;
+      }
+    }
+
+    if (method == null) {
+      return null;
+    }
 
     try {
-      Method method = cachedUsernameMethod;
-      if (method != null && method.getDeclaringClass().isAssignableFrom(clazz)) {
-        Object result = method.invoke(userObj);
-        return result instanceof String ? (String) result : null;
-      }
-
-      // 首次查找或 Method 不匹配当前 Class：重新查找
-      method = clazz.getMethod("getUsername");
-      method.setAccessible(true);
-      cachedUsernameMethod = method;
       Object result = method.invoke(userObj);
-      return result instanceof String ? (String) result : null;
-    } catch (NoSuchMethodException e) {
-      // 该类不含 getUsername() 方法，返回 null
-      return null;
+      return result instanceof String str && !str.isEmpty() ? str : null;
     } catch (Exception e) {
       LOG.debug("[AuditContext] 反射获取用户名失败: {}", e.getMessage());
       return null;

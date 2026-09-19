@@ -3,6 +3,7 @@ package com.njydsz.common.auth.config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.auth.security.CsrfTokenValidator;
 
@@ -16,6 +17,7 @@ import com.njydsz.common.auth.security.CsrfTokenValidator;
  * @author ydsz-team
  * @since 26.09.18
  */
+@Configuration
 public class SecurityConfiguration {
 
   /**

@@ -1,20 +1,10 @@
 package com.njydsz.common.queue.mq.kafka;
 
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.ListTopicsOptions;
-import org.apache.kafka.clients.admin.ListTopicsResult;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.queue.AbstractMessageQueue;
@@ -52,8 +42,9 @@ public class KafkaMQ extends AbstractMessageQueue {
     }
     this.properties = properties;
     this.consumerExecutor = consumerExecutor;
-    validateConnection();
-    log.info("[KafkaMQ] 初始化成功，bootstrapServers={}", properties.resolvedBootstrapServers());
+    // 连接校验延迟到首次 publish/subscribe（lazy init），避免 broker 启动顺序导致应用启动失败。
+    log.info("[KafkaMQ] 初始化成功（连接延迟校验），bootstrapServers={}",
+        properties.resolvedBootstrapServers());
   }
 
   @Override
@@ -100,23 +91,5 @@ public class KafkaMQ extends AbstractMessageQueue {
     subscribers.clear();
 
     log.info("[KafkaMQ] 所有资源已释放");
-  }
-
-  private void validateConnection() {
-    Properties props = new Properties();
-    props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, properties.resolvedBootstrapServers());
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-    try (AdminClient adminClient = AdminClient.create(props)) {
-      ListTopicsResult result = adminClient.listTopics(new ListTopicsOptions().timeoutMs(5000));
-      result.names().get(5, TimeUnit.SECONDS);
-      log.debug("[KafkaMQ] 连接验证成功");
-    } catch (TimeoutException | ExecutionException e) {
-      log.error("[KafkaMQ] 连接验证失败，bootstrapServers={}", properties.resolvedBootstrapServers(), e);
-      throw BusinessException.builder().key("Kafka 连接失败，请检查配置：" + e.getMessage()).build();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw BusinessException.builder().key("Kafka 连接验证被中断").build();
-    }
   }
 }

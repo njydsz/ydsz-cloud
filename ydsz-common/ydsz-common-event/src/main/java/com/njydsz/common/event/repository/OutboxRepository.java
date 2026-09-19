@@ -340,7 +340,7 @@ public class OutboxRepository {
    * @param errorMessage 原始错误信息，可为 null
    * @return 截断后的错误信息（长度可控）
    */
-  static String truncateErrorMessage(String errorMessage) {
+  public static String truncateErrorMessage(String errorMessage) {
     if (errorMessage == null) {
       return null;
     }

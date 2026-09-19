@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.JwtTokenService;
@@ -36,6 +37,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * @author ydsz-team
  * @since 26.09.18
  */
+@Configuration
 @EnableConfigurationProperties(TokenProperties.class)
 @ConditionalOnProperty(
     prefix = "ydsz.auth.token",

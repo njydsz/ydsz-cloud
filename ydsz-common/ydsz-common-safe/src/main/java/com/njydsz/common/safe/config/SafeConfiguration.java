@@ -103,6 +103,7 @@ public class SafeConfiguration {
   private final SecurityHeaderProperties securityHeaderProperties;
   private final IpAccessProperties ipAccessProperties;
   private final ApiSignatureProperties apiSignatureProperties;
+  private final AutoBlockProperties autoBlockProperties;
 
   /**
    * 构造方法，注入各子模块配置属性用于启动日志输出。
@@ -112,18 +113,21 @@ public class SafeConfiguration {
    * @param securityHeaderProperties 安全响应头配置
    * @param ipAccessProperties IP 访问控制配置
    * @param apiSignatureProperties API 签名配置
+   * @param autoBlockProperties 自动封禁配置
    */
   public SafeConfiguration(
       SafeXssProperties safeXssProperties,
       CsrfProperties csrfProperties,
       SecurityHeaderProperties securityHeaderProperties,
       IpAccessProperties ipAccessProperties,
-      ApiSignatureProperties apiSignatureProperties) {
+      ApiSignatureProperties apiSignatureProperties,
+      ObjectProvider<AutoBlockProperties> autoBlockPropertiesProvider) {
     this.safeXssProperties = safeXssProperties;
     this.csrfProperties = csrfProperties;
     this.securityHeaderProperties = securityHeaderProperties;
     this.ipAccessProperties = ipAccessProperties;
     this.apiSignatureProperties = apiSignatureProperties;
+    this.autoBlockProperties = autoBlockPropertiesProvider.getIfAvailable(AutoBlockProperties::new);
   }
 
   /**
@@ -151,7 +155,35 @@ public class SafeConfiguration {
         "  IP Access:      enabled={}, mode={}",
         ipAccessProperties.isEnabled(),
         ipAccessProperties.getMode());
+    LOG.info(
+        "  Auto Block:     enabled={}, threshold={}, window={}s",
+        autoBlockProperties.isEnabled(),
+        autoBlockProperties.getThreshold(),
+        autoBlockProperties.getWindowSeconds());
     LOG.info("==============================================================================");
+
+    // 配置联动校验：自动封禁依赖 ipAccessService Bean 完成封禁闭环
+    validateIpAccessAutoBlockCoupling();
+  }
+
+  /**
+   * 校验 IP 访问控制 与 自动封禁的配置联动关系。
+   *
+   * <p>根据规范 §17.6.3：自动封禁功能依赖 {@link IpAccessService#blockIp} 完成闭环，
+   * 因此需要 {@code ip-access.enabled=true} 和 {@code auto-block.enabled=true} 同时开启
+   * 才能发挥自动封禁效果。若仅启用 auto-block 而未启用 ip-access，仅会触发日志告警但不执行实际封禁。
+   */
+  private void validateIpAccessAutoBlockCoupling() {
+    if (!autoBlockProperties.isEnabled()) {
+      return;
+    }
+
+    if (!ipAccessProperties.isEnabled()) {
+      LOG.warn(
+          "【Safe Module】自动封禁已启用（auto-block.enabled=true）但 IP 访问控制未启用（"
+              + "ip-access.enabled=false）。IP 封禁操作将仅记录日志而无法写入黑名单，"
+              + "建议同时启用 ydsz.safe.ip-access.enabled=true 以确保自动封禁闭环生效。");
+    }
   }
 
   /**

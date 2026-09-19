@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import com.njydsz.common.event.admin.OutboxAdminController;
 import com.njydsz.common.event.admin.OutboxAdminService;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.KafkaEventPublishGateway;
@@ -189,6 +190,21 @@ public class EventAutoConfiguration {
   @ConditionalOnMissingBean
   public OutboxAdminService outboxAdminService(OutboxRepository outboxRepository) {
     return new OutboxAdminService(outboxRepository);
+  }
+
+  /**
+   * 创建 Outbox 运维管理控制器（F-2）
+   *
+   * <p>不依赖 spring-web，业务 web 模块可通过继承或委托本 Controller 快速暴露 REST 接口。 已注册为
+   * Bean，可被业务模块通过 {@code @Autowired} 注入使用。
+   *
+   * @param outboxAdminService Outbox 运维管理服务
+   * @return Outbox 运维管理控制器实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public OutboxAdminController outboxAdminController(OutboxAdminService outboxAdminService) {
+    return new OutboxAdminController(outboxAdminService);
   }
 
   /**

@@ -25,14 +25,14 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b>
  *
  * <pre>{@code
- * @SecondaryAuth(scene = "password_change", level = SensitiveLevel.HIGH)
- * @PutMapping("/api/user/password")
- * public YdszResponse<Void> changePassword(@RequestBody ChangePasswordDTO dto) {
+ * &#64;SecondaryAuth(scene = "password_change", level = SensitiveLevel.HIGH)
+ * &#64;PutMapping("/api/user/password")
+ * public YdszResponse&lt;Void&gt; changePassword(&#64;RequestBody ChangePasswordDTO dto) {
  *     // 业务逻辑
  * }
  * }</pre>
  *
- * <p><b>验证流程：</b>
+ * <p><b>验证流程（规划中）：</b>
  *
  * <ol>
  *   <li>前端先调用 {@code /api/auth/secondary-auth} 接口，传入场景标识和当前用户密码
@@ -41,11 +41,15 @@ import java.lang.annotation.Target;
  *   <li>未通过验证时抛出 {@code SECONDARY_AUTH_REQUIRED} 异常
  * </ol>
  *
+ * <p><b>当前状态：</b>注解已定义，AOP 切面实现后续迭代补充（依赖 ydsz-userinfo 的 Redis 能力）。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated AOP 切面尚未实现，标记二级校验暂不生效；如需临时方案，请使用 {@link SensitiveOperation} 或业务层自行校验
  * @see SensitiveOperation 全局敏感操作验证（无场景隔离）
  * @see com.njydsz.common.safe.annotation.SensitiveLevel 敏感操作等级
  */
+@Deprecated
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

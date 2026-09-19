@@ -73,8 +73,9 @@ public class RabbitMQ extends AbstractMessageQueue {
       throw BusinessException.builder().key("RabbitMQ 配置不能为空").build();
     }
     this.properties = properties;
-    validateConnection();
-    log.info("[RabbitMQ] 初始化成功，host={}:{}", properties.resolvedHost(), properties.resolvedPort());
+    // 连接校验延迟到首次 publish/subscribe（lazy init），避免 broker 启动顺序导致应用启动失败。
+    log.info("[RabbitMQ] 初始化成功（连接延迟校验），host={}:{}",
+        properties.resolvedHost(), properties.resolvedPort());
   }
 
   @Override

@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.auth.aspect.AuthColPermissionAspect;
 import com.njydsz.common.auth.aspect.AuthPermissionAspect;
@@ -50,6 +51,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * @author ydsz-team
  * @since 26.09.18
  */
+@Configuration
 public class RbacConfiguration {
 
   /**

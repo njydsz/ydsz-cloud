@@ -40,8 +40,9 @@ public class RocketMQ extends AbstractMessageQueue {
       throw BusinessException.builder().key("RocketMQ 配置不能为空").build();
     }
     this.properties = properties;
-    validateConnection();
-    log.info("[RocketMQ] 初始化成功，namesrvAddr={}", properties.resolvedNamesrvAddr());
+    // 连接校验延迟到首次 publish/subscribe（lazy init），避免 NameServer 启动顺序导致应用启动失败。
+    log.info("[RocketMQ] 初始化成功（连接延迟校验），namesrvAddr={}",
+        properties.resolvedNamesrvAddr());
   }
 
   @Override
