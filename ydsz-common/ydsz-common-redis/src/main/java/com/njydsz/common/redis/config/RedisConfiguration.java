@@ -30,6 +30,7 @@ import com.njydsz.common.redis.interceptor.RedisRetryInterceptor;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
 import com.njydsz.common.redis.serializer.YdszJsonRedisSerializer;
 import com.njydsz.common.redis.service.CacheProvider;
+import com.njydsz.common.redis.service.RedisKeyAnalyzer;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.RedisStringOpsCacheProvider;
 import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
@@ -498,6 +499,35 @@ public class RedisConfiguration {
       RedisTemplate<String, Object> redisTemplate,
       ObjectProvider<RedisMetricsCollector> metricsProvider) {
     return new RedisTransactionOps(redisTemplate, metricsProvider.getIfAvailable());
+  }
+
+  /**
+   * 注册 Redis Pipeline 操作工厂
+   *
+   * <p>工厂本身为单例，每次 Pipeline 回调时调用 {@link RedisPipelineOpsFactory#create}
+   * 构造新的 {@link RedisPipelineOps} 实例（传递给定的 {@link
+   * org.springframework.data.redis.connection.RedisConnection}）。
+   *
+   * <p>使用示例：
+   *
+   * <pre>{@code
+   * List<?> results = redisTemplate.executePipelined(connection -> {
+   *     RedisPipelineOps ops = pipelineOpsFactory.create(connection);
+   *     ops.setString("key1", "value1");
+   *     ops.setString("key2", "value2", 60);
+   *     return null;
+   * });
+   * }</pre>
+   *
+   * @param redisTemplate 基础模板（提供序列化器），不会为 null
+   * @return Pipeline 操作工厂实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(RedisPipelineOpsFactory.class)
+  @ConditionalOnBean(RedisTemplate.class)
+  public RedisPipelineOpsFactory redisPipelineOpsFactory(
+      RedisTemplate<String, Object> redisTemplate) {
+    return new RedisPipelineOpsFactory(redisTemplate);
   }
 
   /**

@@ -1,7 +1,5 @@
 package com.njydsz.common.thread.executor;
 
-import java.util.concurrent.ExecutorService;
-
 import com.njydsz.common.thread.config.ThreadPoolExecutorFactory;
 import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
 import com.njydsz.common.thread.config.ThreadPoolProperties.PoolType;
@@ -26,7 +24,7 @@ public class VirtualExecutorCreator implements ExecutorCreator {
   }
 
   @Override
-  public ExecutorService createExecutor(String name, PoolConfig config) {
+  public Object createExecutor(String name, PoolConfig config) {
     return factory.createVirtualExecutor(name, config);
   }
 

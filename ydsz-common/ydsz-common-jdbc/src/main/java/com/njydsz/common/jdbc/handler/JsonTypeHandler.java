@@ -23,18 +23,19 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li><b>MySQL / Oracle / SQLServer（VARCHAR / TEXT / CLOB 列）</b>：使用 {@link
  *       PreparedStatement#setString(int, String)} 写入，兼容性最佳。
- *   <li><b>PostgreSQL（原生 JSON / JSONB 列）</b>：使用 PostgreSQL {@link PGobject} 显式声明类型，
- *       驱动根据 PGobject 内部类型列名（{@code "json"} 或 {@code "jsonb"}）完成二进制 JSON 处理，
+ *   <li><b>PostgreSQL（原生 JSON / JSONB 列）</b>：通过反射加载 PostgreSQL {@code PGobject} 并设置
+ *       type 为 {@code jsonb}，使用 {@link PreparedStatement#setObject(int, Object)} 写入；
+ *       根据 PGobject 内部类型列名完成二进制 JSON 处理，
  *       避免"column is of type jsonb but expression is of type character varying"错误。
  * </ul>
  *
  * <p><b>PostgreSQL 写入策略说明：</b>
  *
  * <ul>
- *   <li>当字段显式声明 {@code jdbcType=OTHER} 且驱动为 PostgreSQL 时，构造 {@link PGobject}
- *       并设置其 type 为 {@code jsonb}，保证 PostgreSQL 驱动正确处理二进制编码
- *   <li>回退策略：PGobject 构造失败（非 PostgreSQL 驱动）时降级为 {@code setString}，
- *       由隐式类型转换完成写入（兼容性保障）
+ *   <li>当字段显式声明 {@code jdbcType=OTHER} 且驱动为 PostgreSQL 时，通过反射构造
+ *       {@code org.postgresql.util.PGobject} 实例并设置其 type 为 {@code jsonb}
+ *   <li>若 PostgreSQL 驱动不在 classpath（使用 MySQL/Oracle 等），
+ *       降级为 {@code setString} 写入，由数据库隐式类型转换完成
  *   <li>YAML 中推荐配置：{@code jdbctype=OTHER} 确保 JSONB 类型列的正确写入
  * </ul>
  *
@@ -147,10 +148,13 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
   }
 
   /**
-   * 使用 PGobject 写入 PostgreSQL JSONB 列。
+   * 使用反射构造 PostgreSQL PGobject 写入 JSONB 列。
    *
-   * <p>若 PGobject 不可用（ jdbcType=OTHER 但非 PostgreSQL 驱动），降级为 setString，
-   * 由数据库隐式类型转换完成写入，保证写入不中断。
+   * <p>由于 PostgreSQL 驱动为 optional+runtime scope，编译期 {@code org.postgresql.util.PGobject}
+   * 不可直接引用。通过反射加载 PGobject 类，避免编译期依赖。
+   *
+   * <p>若 PostgreSQL 驱动不可用（非 PG 数据源）或构造失败，降级为 setString，
+   * 由数据库隐式类型转换完成写入。
    *
    * @param ps PreparedStatement
    * @param i 参数索引
@@ -159,15 +163,21 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
    */
   private void writePostgresJsonb(PreparedStatement ps, int i, String json) throws SQLException {
     try {
-      PGobject pgObject = new PGobject();
-      pgObject.setType(PG_JSONB_TYPE);
-      pgObject.setValue(json);
+      // 反射加载 PostgreSQL PGobject（避免编译期依赖 optional+runtime 的 PG 驱动）
+      Class<?> pgObjectClass = Class.forName("org.postgresql.util.PGobject");
+      Object pgObject = pgObjectClass.getDeclaredConstructor().newInstance();
+      pgObjectClass.getMethod("setType", String.class).invoke(pgObject, PG_JSONB_TYPE);
+      pgObjectClass.getMethod("setValue", String.class).invoke(pgObject, json);
       ps.setObject(i, pgObject);
-    } catch (SQLException e) {
-      // PGobject 不可用（非 PG 驱动）或类型设置失败，降级为 setString
+    } catch (ClassNotFoundException e) {
+      // PostgreSQL 驱动不在 classpath（使用 MySQL/Oracle 等）
+      log.debug("JsonTypeHandler: PostgreSQL 驱动不可用，降级为 setString");
+      ps.setString(i, json);
+    } catch (Exception e) {
+      // PGobject 构造或设置失败，降级为 setString
       log.debug(
-          "JsonTypeHandler: PGobject 写入失败，降级为 setString（driver={}）",
-          ps.getConnection().getMetaData().getDriverName());
+          "JsonTypeHandler: PGobject 写入失败，降级为 setString（reason: {}）",
+          e.getMessage());
       ps.setString(i, json);
     }
   }

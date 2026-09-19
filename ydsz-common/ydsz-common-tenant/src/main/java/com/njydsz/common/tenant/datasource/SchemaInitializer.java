@@ -69,12 +69,12 @@ public class SchemaInitializer {
     validateSchemaName(schemaName);
 
     if (dataSource == null) {
-      LOG.warn("DataSource 未注入，跳过 schema 初始化: {}", schemaName);
+      log.warn("DataSource 未注入，跳过 schema 初始化: {}", schemaName);
       return;
     }
 
     if (isSchemaProvisioned(schemaName)) {
-      LOG.info("Schema [{}] 已初始化，跳过重复初始化", schemaName);
+      log.info("Schema [{}] 已初始化，跳过重复初始化", schemaName);
       return;
     }
 
@@ -87,9 +87,9 @@ public class SchemaInitializer {
       if (templateSchema != null && !templateSchema.isEmpty()) {
         copyTableStructures(conn, templateSchema, schemaName);
       }
-      LOG.info("租户 schema [{}] 初始化完成（模板 schema: {}）", schemaName, templateSchema);
+      log.info("租户 schema [{}] 初始化完成（模板 schema: {}）", schemaName, templateSchema);
     } catch (SQLException e) {
-      LOG.error("租户 schema [{}] 初始化失败: {}", schemaName, e.getMessage(), e);
+      log.error("租户 schema [{}] 初始化失败: {}", schemaName, e.getMessage(), e);
       throw new SchemaProvisionException("schema 初始化失败: " + schemaName, e);
     }
   }
@@ -104,7 +104,7 @@ public class SchemaInitializer {
     validateSchemaName(schemaName);
 
     if (dataSource == null) {
-      LOG.warn("DataSource 未注入，跳过 schema 创建");
+      log.warn("DataSource 未注入，跳过 schema 创建");
       return;
     }
 
@@ -120,11 +120,11 @@ public class SchemaInitializer {
       throws SQLException {
     try (Statement stmt = conn.createStatement()) {
       stmt.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
-      LOG.info("Schema [{}] 已创建/确认", schemaName);
+      log.info("Schema [{}] 已创建/确认", schemaName);
     } catch (SQLException e) {
       // 并发创建场景：schema 已存在时忽略
       if ("42P06".equals(e.getSQLState())) {  // duplicate_schema
-        LOG.info("Schema [{}] 已存在（并发），跳过创建", schemaName);
+        log.info("Schema [{}] 已存在（并发），跳过创建", schemaName);
       } else {
         throw e;
       }

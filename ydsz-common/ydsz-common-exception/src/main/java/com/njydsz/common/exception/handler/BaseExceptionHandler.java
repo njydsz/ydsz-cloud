@@ -61,12 +61,20 @@ public abstract class BaseExceptionHandler {
   private MessageSource messageSource;
 
   /**
+   * 响应构建器委托（26.09.19 拆分）：承载 ProblemDetail / YdszResponse 构造逻辑。
+   *
+   * <p>本类保留所有 protected 方法签名（子类Mvc/WebFlux/Validation 直接调用），内部委托给此构建器完成。
+   */
+  private final ExceptionResponseBuilder responseBuilder;
+
+  /**
    * 构造基类异常处理器（通过 Spring 注入 {@link Environment}）
    *
    * @param environment Spring 环境对象
    */
   protected BaseExceptionHandler(Environment environment) {
     this.environment = environment;
+    this.responseBuilder = new ExceptionResponseBuilder(environment, null, null);
   }
 
   /** 异常模块配置属性 */
@@ -100,6 +108,7 @@ public abstract class BaseExceptionHandler {
    */
   protected void setExceptionProperties(Environment env, ExceptionProperties properties) {
     this.properties = properties;
+    this.responseBuilder = new ExceptionResponseBuilder(environment, properties, exceptionMetrics);
   }
 
   /**
@@ -110,6 +119,7 @@ public abstract class BaseExceptionHandler {
    */
   protected void setExceptionMetrics(Environment env, ExceptionMetrics exceptionMetrics) {
     this.exceptionMetrics = exceptionMetrics;
+    this.responseBuilder = new ExceptionResponseBuilder(environment, properties, exceptionMetrics);
   }
 
   /**
