@@ -24,6 +24,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.socket.admin.WebSocketAdminController;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.auth.WebSocketAuthInterceptor;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
@@ -791,6 +792,26 @@ public class WebSocketAutoConfiguration {
     public void flush() {
       pushTemplate.flushRetryMessages();
     }
+  }
+
+  /**
+   * 注册运维诊断 REST Admin API Bean（UX-002）。
+   *
+   * <p>仅当 classpath 存在 Spring Web（{@code RestController} 可见）时装配，避免在非 web 工程中因导入
+   * {@code WebSocketAdminController} 出现 ClassNotFoundException。
+   *
+   * @param pushTemplate 推送模板，用于 /push/direct 诊断推送
+   * @param sessionRegistry 本地会话注册表
+   * @param messageDispatcher C-S 消息分发器
+   * @return Admin REST Controller
+   */
+  @Bean
+  @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestController")
+  public WebSocketAdminController webSocketAdminController(
+      RealtimePushTemplate pushTemplate,
+      LocalSessionRegistry sessionRegistry,
+      WebSocketMessageDispatcher messageDispatcher) {
+    return new WebSocketAdminController(pushTemplate, sessionRegistry, messageDispatcher);
   }
 
   /** No-op 集群发布者（集群未启用时的降级实现，始终返回 false 触发本地推送）。 */

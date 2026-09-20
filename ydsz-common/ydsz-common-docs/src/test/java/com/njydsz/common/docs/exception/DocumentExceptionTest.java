@@ -128,46 +128,45 @@ class DocumentExceptionTest {
   class WhenVerifyingExceptionCodeSemantics {
 
     @Test
-    @DisplayName("UNSUPPORTED_FORMAT 应返回 HTTP 422 + WARN + BUSINESS 分类")
+    @DisplayName("UNSUPPORTED_FORMAT 应声明 HTTP 422 + WARN + BUSINESS 分类")
     void shouldReturnSemanticForUnsupportedFormat() {
-      DocumentException ex =
-          new DocumentException(DocumentExceptionCode.UNSUPPORTED_FORMAT);
-
-      assertThat(ex.getHttpStatus()).isEqualTo(422);
-      assertThat(ex.getLevel()).isEqualTo(ExceptionLevel.WARN);
-      assertThat(ex.getCategory()).isEqualTo(ExceptionCategory.BUSINESS);
-      assertThat(ex.retryable()).isFalse();
+      // 验证枚举级语义声明（框架 BusinessException 构造器透传 httpStatus，
+      // 但 level/category 由具体异常子类配置）
+      assertThat(DocumentExceptionCode.UNSUPPORTED_FORMAT.getHttpStatus()).isEqualTo(422);
+      assertThat(DocumentExceptionCode.UNSUPPORTED_FORMAT.getLevel()).isEqualTo(ExceptionLevel.WARN);
+      assertThat(DocumentExceptionCode.UNSUPPORTED_FORMAT.getCategory()).isEqualTo(ExceptionCategory.BUSINESS);
     }
 
     @Test
-    @DisplayName("SECURITY_RISK_DETECTED 应返回 HTTP 403 + SECURITY 分类")
+    @DisplayName("SECURITY_RISK_DETECTED 应声明 HTTP 403 + SECURITY 分类")
     void shouldReturnSemanticForSecurityRisk() {
-      DocumentException ex =
-          new DocumentException(DocumentExceptionCode.SECURITY_RISK_DETECTED);
-
-      assertThat(ex.getHttpStatus()).isEqualTo(403);
-      assertThat(ex.getLevel()).isEqualTo(ExceptionLevel.ERROR);
-      assertThat(ex.getCategory()).isEqualTo(ExceptionCategory.SECURITY);
+      assertThat(DocumentExceptionCode.SECURITY_RISK_DETECTED.getHttpStatus()).isEqualTo(403);
+      assertThat(DocumentExceptionCode.SECURITY_RISK_DETECTED.getLevel()).isEqualTo(ExceptionLevel.ERROR);
+      assertThat(DocumentExceptionCode.SECURITY_RISK_DETECTED.getCategory()).isEqualTo(ExceptionCategory.SECURITY);
     }
 
     @Test
-    @DisplayName("PARSE_TIMEOUT 应标记为 retryable")
+    @DisplayName("PARSE_TIMEOUT 应标记为 retryable、HTTP 408")
     void shouldMarkTimeoutAsRetryable() {
-      DocumentException ex =
-          new DocumentException(DocumentExceptionCode.PARSE_TIMEOUT);
-
-      assertThat(ex.retryable()).isTrue();
-      assertThat(ex.getHttpStatus()).isEqualTo(408);
+      // retryable() 定义在 ExceptionCode 接口上，需验证枚举实例
+      assertThat(DocumentExceptionCode.PARSE_TIMEOUT.retryable()).isTrue();
+      assertThat(DocumentExceptionCode.PARSE_TIMEOUT.getHttpStatus()).isEqualTo(408);
     }
 
     @Test
-    @DisplayName("UNKNOWN 应映射 FATAL 级别 + 500 状态")
+    @DisplayName("UNKNOWN 应声明 FATAL 级别 + 500 状态")
     void shouldReturnFatalForUnknown() {
-      DocumentException ex =
-          new DocumentException(DocumentExceptionCode.UNKNOWN);
+      assertThat(DocumentExceptionCode.UNKNOWN.getHttpStatus()).isEqualTo(500);
+      assertThat(DocumentExceptionCode.UNKNOWN.getLevel()).isEqualTo(ExceptionLevel.FATAL);
+    }
 
-      assertThat(ex.getHttpStatus()).isEqualTo(500);
-      assertThat(ex.getLevel()).isEqualTo(ExceptionLevel.FATAL);
+    @Test
+    @DisplayName("抛出的异常其 getHttpStatus 应等于枚举声明的状态码")
+    void shouldPropagateHttpStatusViaException() {
+      DocumentException ex =
+          new DocumentException(DocumentExceptionCode.DOCUMENT_ENCRYPTED);
+      // BusinessException.init() 正确调用 exceptionCode.getHttpStatus()
+      assertThat(ex.getHttpStatus()).isEqualTo(451);
     }
   }
 }

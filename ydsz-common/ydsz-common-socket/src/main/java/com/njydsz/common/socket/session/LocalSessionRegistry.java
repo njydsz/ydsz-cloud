@@ -56,6 +56,49 @@ public class LocalSessionRegistry {
   }
 
   /**
+   * 注销 Session（通过 sessionId 反查 userId，仅供 Admin API 强制断开使用）。
+   *
+   * <p>当 userId 未知时遍历 userSessionsMap（代价较高，仅在运维诊断路径使用），
+   * 日常业务请优先使用 {@link #unregister(String, String)}。
+   *
+   * @param sessionId Session ID
+   * @return 是否成功移除
+   */
+  public boolean unregisterSession(String sessionId) {
+    WebSocketSession session = sessionMap.get(sessionId);
+    if (session == null) {
+      return false;
+    }
+    // 反查 userId
+    String foundUserId = null;
+    for (Map.Entry<String, Set<String>> entry : userSessionsMap.entrySet()) {
+      if (entry.getValue().contains(sessionId)) {
+        foundUserId = entry.getKey();
+        break;
+      }
+    }
+    // 关闭现存 WebSocket 连接
+    try {
+      if (session.isOpen()) {
+        session.close();
+      }
+    } catch (Exception e) {
+      // ignore shutdown error (idempotent)
+    }
+    sessionMap.remove(sessionId);
+    if (foundUserId != null) {
+      Set<String> sessionIds = userSessionsMap.get(foundUserId);
+      if (sessionIds != null) {
+        sessionIds.remove(sessionId);
+        if (sessionIds.isEmpty()) {
+          userSessionsMap.remove(foundUserId);
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
    * 获取指定用户在本节点的所有 Session ID。
    *
    * @param userId 用户 ID
