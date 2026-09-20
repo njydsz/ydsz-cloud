@@ -1,6 +1,11 @@
 package com.njydsz.common.socket.config;
 
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -643,6 +648,61 @@ public class WebSocketAutoConfiguration {
         circuitBreaker);
   }
 
+  // ==================== PERF-004: 异步批量推送线程池与信号量 ====================
+
+  /**
+   * 注册批量推送线程池 Bean。
+   *
+   * <p>使用固定大小线程池 + 有界队列 + CallerRunsPolicy（队列满时由调用线程执行，提供背压），
+   * 防止大规模广播时瞬时任务堆积 OOM。
+   *
+   * @param properties WebSocket 配置属性
+   * @return ThreadPoolExecutor 实例
+   */
+  @Bean(destroyMethod = "shutdown")
+  @ConditionalOnMissingBean(name = "wsBatchExecutor")
+  public ThreadPoolExecutor wsBatchExecutor(WebSocketProperties properties) {
+    int maxConcurrency = properties.getBatch() != null
+        ? properties.getBatch().getMaxConcurrency()
+        : Math.max(Runtime.getRuntime().availableProcessors() * 2, 4);
+    int queueCapacity = properties.getBatch() != null
+        ? properties.getBatch().getQueueCapacity()
+        : 10000;
+    ThreadPoolExecutor executor = new ThreadPoolExecutor(
+        maxConcurrency,
+        maxConcurrency,
+        60L,
+        TimeUnit.SECONDS,
+        new LinkedBlockingQueue<>(queueCapacity),
+        r -> {
+          Thread t = new Thread(r, "ws-batch-" + System.nanoTime());
+          t.setDaemon(true);
+          return t;
+        },
+        new ThreadPoolExecutor.CallerRunsPolicy());
+    log.info(
+        "[WebSocket] 注册批量推送线程池: corePoolSize={}, queueCapacity={}",
+        maxConcurrency, queueCapacity);
+    return executor;
+  }
+
+  /**
+   * 注册批量推送信号量 Bean（PERF-004 背压控制）。
+   *
+   * <p>信号量许可数 = maxConcurrency × 2（允许一定积压），防止无界任务入队。
+   *
+   * @param properties WebSocket 配置属性
+   * @return Semaphore 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(name = "wsBatchSemaphore")
+  public Semaphore wsBatchSemaphore(WebSocketProperties properties) {
+    int maxConcurrency = properties.getBatch() != null
+        ? properties.getBatch().getMaxConcurrency()
+        : Math.max(Runtime.getRuntime().availableProcessors() * 2, 4);
+    return new Semaphore(maxConcurrency * 2);
+  }
+
   // ==================== 统一推送模板 ====================
 
   /**
@@ -674,8 +734,12 @@ public class WebSocketAutoConfiguration {
       @Autowired(required = false) WebSocketAuditService auditService,
       @Autowired(required = false) MessageRetryQueue retryQueue,
       @Autowired(required = false) List<MessageFilter> messageFilters,
-      WebSocketProperties properties) {
-    log.info("[WebSocket] 注册 DefaultRealtimePushTemplate");
+      WebSocketProperties properties,
+      @Autowired(required = false) ThreadPoolExecutor wsBatchExecutor,
+      @Autowired(required = false) Semaphore wsBatchSemaphore) {
+    log.info("[WebSocket] 注册 DefaultRealtimePushTemplate (asyncBatch={}, batchExecutor={})",
+        properties.getBatch() != null && properties.getBatch().isEnabled(),
+        wsBatchExecutor != null ? "injected" : "absent");
     return new DefaultRealtimePushTemplate(
         messagingTemplate,
         clusterPublisher != null ? clusterPublisher : new NoOpClusterPublisher(),
@@ -686,7 +750,9 @@ public class WebSocketAutoConfiguration {
         auditService,
         retryQueue,
         messageFilters,
-        properties);
+        properties,
+        wsBatchExecutor,
+        wsBatchSemaphore);
   }
 
   /**

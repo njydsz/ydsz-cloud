@@ -2,6 +2,9 @@ package com.njydsz.common.socket.push;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -54,6 +57,10 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
   private final MessageRetryQueue retryQueue;
   private final List<MessageFilter> messageFilters;
   private final WebSocketProperties properties;
+  /** 批量推送线程池（PERF-004：异步分片），为 null 时退化同步模式 */
+  private final ThreadPoolExecutor batchExecutor;
+  /** 批量推送信号量（PERF-004：背压控制），为 null 时退化同步模式 */
+  private final Semaphore batchSemaphore;
 
   public DefaultRealtimePushTemplate(
       SimpMessagingTemplate messagingTemplate,
@@ -66,6 +73,42 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
       MessageRetryQueue retryQueue,
       List<MessageFilter> messageFilters,
       WebSocketProperties properties) {
+    this(
+        messagingTemplate,
+        clusterPublisher,
+        onlineUserService,
+        offlineMessageStore,
+        webSocketMetrics,
+        messageSerializer,
+        auditService,
+        retryQueue,
+        messageFilters,
+        properties,
+        null,
+        null);
+  }
+
+  /**
+   * 构造（含批量推送支持）。
+   *
+   * @param messageFilters 过滤链
+   * @param properties 配置属性
+   * @param batchExecutor 批量推送线程池，为 null 时异步批量退化同步
+   * @param batchSemaphore 批量推送信号量，为 null 时异步批量退化同步
+   */
+  public DefaultRealtimePushTemplate(
+      SimpMessagingTemplate messagingTemplate,
+      WebSocketClusterPublisher clusterPublisher,
+      OnlineUserService onlineUserService,
+      OfflineMessageStore offlineMessageStore,
+      WebSocketMetrics webSocketMetrics,
+      MessageSerializer messageSerializer,
+      WebSocketAuditService auditService,
+      MessageRetryQueue retryQueue,
+      List<MessageFilter> messageFilters,
+      WebSocketProperties properties,
+      ThreadPoolExecutor batchExecutor,
+      Semaphore batchSemaphore) {
     this.messagingTemplate = messagingTemplate;
     this.clusterPublisher = clusterPublisher;
     this.onlineUserService = onlineUserService;
@@ -76,6 +119,8 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     this.retryQueue = retryQueue;
     this.messageFilters = messageFilters != null ? messageFilters : List.of();
     this.properties = properties;
+    this.batchExecutor = batchExecutor;
+    this.batchSemaphore = batchSemaphore;
   }
 
   // ==================== 接口方法实现 ====================
@@ -383,33 +428,139 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     if (userIds == null || userIds.isEmpty()) {
       return;
     }
-    for (String userId : userIds) {
-      try {
-        pushToUser(userId, type, payload);
-      } catch (Exception e) {
-        log.warn("[WebSocket] 批量推送单个用户失败: userId={}, err={}", userId, e.getMessage());
-      }
-    }
+    submitBatch(userIds, type, payload, false);
   }
 
-  /**
-   * 批量向多个用户推送相同消息（带离线补偿）。
-   *
-   * @param userIds 用户 ID 列表
-   * @param type 消息类型标签
-   * @param payload 消息内容
-   */
   @Override
   public void batchPushToUsersWithOffline(List<String> userIds, String type, Object payload) {
     if (userIds == null || userIds.isEmpty()) {
       return;
     }
-    for (String userId : userIds) {
-      try {
-        pushToUserWithOffline(userId, type, payload);
-      } catch (Exception e) {
-        log.warn("[WebSocket] 批量推送(离线补偿)单个用户失败: userId={}, err={}", userId, e.getMessage());
+    submitBatch(userIds, type, payload, true);
+  }
+
+  /**
+   * 提交批量推送任务（PERF-004：异步分片 + 背压控制）。
+   *
+   * <p>当 {@code batch.enabled=true} 且批量量超过 {@code batch.chunkSize} 时，
+   * 切分为多个 chunk，通过信号量控制最大并发任务数；超过队列容量的 chunk 阻塞调用线程（背压）。
+   * 小批量（≤ chunkSize）仍同步投递以保持低延迟。
+   *
+   * @param userIds 目标用户 ID 列表
+   * @param type 消息类型
+   * @param payload 消息体
+   * @param withOffline 是否启用离线补偿
+   */
+  private void submitBatch(List<String> userIds, String type, Object payload, boolean withOffline) {
+    if (userIds == null || userIds.isEmpty()) {
+      return;
+    }
+    // 判断是否启用异步批量
+    boolean asyncEnabled = properties.getBatch() == null || properties.getBatch().isEnabled();
+    int chunkSize = properties.getBatch() != null ? properties.getBatch().getChunkSize() : 500;
+    // 小批量或未注入线程池 → 同步投递（低延迟路径）
+    if (!asyncEnabled || batchExecutor == null || batchSemaphore == null
+        || userIds.size() <= chunkSize) {
+      for (String userId : userIds) {
+        safePushSingle(userId, type, payload, withOffline);
       }
+      return;
+    }
+    // 大批量 → 异步分片 + 背压提交
+    doAsyncBatch(userIds, type, payload, withOffline, chunkSize);
+  }
+
+  /**
+   * 异步分片批量投递（PERF-004 信号量背压）。
+   *
+   * <p>将 userIds 切分为多个 chunk，每个 chunk 作为一个独立任务提交到线程池；
+   * 通过信号量 {@code batchSemaphore} 限制最大并发任务数，超限则阻塞调用方（背压），
+   * 防止瞬时广播大规模打满线程池/连接池。
+   *
+   * @param userIds 目标用户 ID 列表
+   * @param type 消息类型
+   * @param payload 消息体
+   * @param withOffline 是否启用离线补偿
+   * @param chunkSize 每个分片的用户数量
+   */
+  private void doAsyncBatch(
+      List<String> userIds, String type, Object payload, boolean withOffline, int chunkSize) {
+    int totalChunks = (userIds.size() + chunkSize - 1) / chunkSize;
+    log.info(
+        "[WebSocket] 异步批量推送: userCount={}, chunkSize={}, totalChunks={}",
+        userIds.size(), chunkSize, totalChunks);
+    try {
+      for (int i = 0; i < totalChunks; i++) {
+        int from = i * chunkSize;
+        int to = Math.min(from + chunkSize, userIds.size());
+        List<String> chunk = userIds.subList(from, to);
+        submitBatchChunkWithBackpressure(chunk, type, payload, withOffline);
+      }
+      // 等待全部 chunk 完成
+      batchSemaphore.acquire(totalChunks);
+      batchSemaphore.release(totalChunks);
+    } catch (InterruptedException ie) {
+      Thread.currentThread().interrupt();
+      log.warn("[WebSocket] 异步批量推送被中断");
+    } catch (RejectedExecutionException re) {
+      log.warn("[WebSocket] 批量推送队列已满, 降级同步投递: err={}", re.getMessage());
+      for (String userId : userIds) {
+        safePushSingle(userId, type, payload, withOffline);
+      }
+    }
+  }
+
+  /**
+   * 使用信号量背压提交单个 chunk 的批量投递任务。
+   *
+   * <p>若信号量许可不足，当前线程阻塞等待（背压）；若拒绝（线程池关闭），抛出
+   * {@link RejectedExecutionException} 由上层降级处理。
+   *
+   * @param chunk 用户 ID 分片
+   * @param type 消息类型
+   * @param payload 消息体
+   * @param withOffline 是否启用离线补偿
+   */
+  private void submitBatchChunkWithBackpressure(
+      List<String> chunk, String type, Object payload, boolean withOffline) {
+    try {
+      batchSemaphore.acquire();
+      batchExecutor.submit(
+          () -> {
+            try {
+              for (String userId : chunk) {
+                safePushSingle(userId, type, payload, withOffline);
+              }
+            } catch (Exception e) {
+              log.warn("[WebSocket] chunk 批量投递异常: err={}", e.getMessage());
+            } finally {
+              batchSemaphore.release();
+            }
+          });
+    } catch (InterruptedException ie) {
+      Thread.currentThread().interrupt();
+      batchSemaphore.release();
+      log.warn("[WebSocket] chunk 批量投递被中断");
+    }
+  }
+
+  /**
+   * 单个用户的容错推送（供批量分片内部调用）。
+   *
+   * @param userId 用户 ID
+   * @param type 消息类型
+   * @param payload 消息体
+   * @param withOffline 是否启用离线补偿
+   */
+  private void safePushSingle(String userId, String type, Object payload, boolean withOffline) {
+    try {
+      if (withOffline) {
+        pushToUserWithOffline(userId, type, payload);
+      } else {
+        pushToUser(userId, type, payload);
+      }
+    } catch (Exception e) {
+      log.warn("[WebSocket] 批量推送单个用户失败: userId={}, err={}", userId, e.getMessage());
     }
   }
 

@@ -6,8 +6,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.njydsz.common.exception.enums.ExceptionCategory;
+import com.njydsz.common.exception.enums.ExceptionLevel;
+
 /**
- * {@link DocumentException} 单元测试 — 验证 i18n 参数化消息构造路径。
+ * {@link DocumentException} 单元测试 — 验证 i18n 参数化消息构造路径与异常码三要素语义 (L-3)。
  *
  * <p>在无 Spring 上下文的环境下，{@code MessageSourceHolder} 未注入， {@link
  * com.njydsz.common.exception.custom.AbstractYdszException#getMessage()} 会降级返回 {@code messageKey} 自身。 测试重点验证字段语义而非文案展示（文案集成测试覆盖）。
@@ -117,6 +120,54 @@ class DocumentExceptionTest {
       assertThat(ex.getCause()).isSameAs(root);
       assertThat(ex.getParams()).isEmpty();
       assertThat(ex.getCode()).isEqualTo("G01002");
+    }
+  }
+
+  @Nested
+  @DisplayName("L-3 异常码三要素 (httpStatus / level / category / retryable)")
+  class WhenVerifyingExceptionCodeSemantics {
+
+    @Test
+    @DisplayName("UNSUPPORTED_FORMAT 应返回 HTTP 422 + WARN + BUSINESS 分类")
+    void shouldReturnSemanticForUnsupportedFormat() {
+      DocumentException ex =
+          new DocumentException(DocumentExceptionCode.UNSUPPORTED_FORMAT);
+
+      assertThat(ex.getHttpStatus()).isEqualTo(422);
+      assertThat(ex.getLevel()).isEqualTo(ExceptionLevel.WARN);
+      assertThat(ex.getCategory()).isEqualTo(ExceptionCategory.BUSINESS);
+      assertThat(ex.retryable()).isFalse();
+    }
+
+    @Test
+    @DisplayName("SECURITY_RISK_DETECTED 应返回 HTTP 403 + SECURITY 分类")
+    void shouldReturnSemanticForSecurityRisk() {
+      DocumentException ex =
+          new DocumentException(DocumentExceptionCode.SECURITY_RISK_DETECTED);
+
+      assertThat(ex.getHttpStatus()).isEqualTo(403);
+      assertThat(ex.getLevel()).isEqualTo(ExceptionLevel.ERROR);
+      assertThat(ex.getCategory()).isEqualTo(ExceptionCategory.SECURITY);
+    }
+
+    @Test
+    @DisplayName("PARSE_TIMEOUT 应标记为 retryable")
+    void shouldMarkTimeoutAsRetryable() {
+      DocumentException ex =
+          new DocumentException(DocumentExceptionCode.PARSE_TIMEOUT);
+
+      assertThat(ex.retryable()).isTrue();
+      assertThat(ex.getHttpStatus()).isEqualTo(408);
+    }
+
+    @Test
+    @DisplayName("UNKNOWN 应映射 FATAL 级别 + 500 状态")
+    void shouldReturnFatalForUnknown() {
+      DocumentException ex =
+          new DocumentException(DocumentExceptionCode.UNKNOWN);
+
+      assertThat(ex.getHttpStatus()).isEqualTo(500);
+      assertThat(ex.getLevel()).isEqualTo(ExceptionLevel.FATAL);
     }
   }
 }

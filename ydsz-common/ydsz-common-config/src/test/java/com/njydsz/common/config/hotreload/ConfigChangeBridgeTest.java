@@ -2,15 +2,11 @@ package com.njydsz.common.config.hotreload;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,9 +14,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
@@ -33,7 +29,9 @@ import com.njydsz.common.config.hotreload.ConfigChangeEvent.ChangeType;
  * {@link ConfigChangeBridge} 单元测试。
  *
  * <p>覆盖：快照初始化增量更新、diff 计算三态判定、监听器同步/异步分发、
- * 反射提取变更键、空/无变化事件静默处理、监听器异常隔离。
+ * 空事件静默处理、监听器异常隔离。
+ *
+ * <p>注意：Java 内部类不继承外部类的静态导入，故需在每个使用 Mockito 静态方法的嵌套类中显式声明。
  *
  * @since 26.09.20
  */
@@ -48,17 +46,15 @@ class ConfigChangeBridgeTest {
   private ApplicationEventPublisher publisher;
 
   @Mock
-  private ConfigProperties configProperties;
-
-  @Mock
   private ConfigProperties.ChangeMonitor changeMonitor;
 
   private List<ConfigChangeListener> listeners;
 
   @BeforeEach
   void setUp() {
-    when(configProperties.getChangeMonitor()).thenReturn(changeMonitor);
     listeners = new CopyOnWriteArrayList<>();
+    // lenient：仅快照相关测试使用此桩，避免 UnnecessaryStubbingException
+    lenient().when(changeMonitor.isSnapshotOldValues()).thenReturn(false);
   }
 
   private ConfigChangeBridge createBridge() {
@@ -116,8 +112,7 @@ class ConfigChangeBridgeTest {
       ConfigChangeBridge bridge = createBridge();
       bridge.addListener(listener);
 
-      // 模拟 EnvironmentChangeEvent（通过桥接器 onApplicationEvent 内部反射路径需要 mock）
-      // 直接验证 addListener 成功后 listener 列表增加
+      // 验证 addListener 成功后 listener 列表增加
       assertThat(bridge.getListenerCount()).isEqualTo(1);
     }
   }
@@ -129,7 +124,6 @@ class ConfigChangeBridgeTest {
     @Test
     @DisplayName("oldValue=null, newValue!=null → ADDED")
     void resolveChangeType_oldNullNewNotNull_isAdded() {
-      // 通过构造一个变更事件验证
       ConfigChangeEvent event = new ConfigChangeEvent(new Object(),
           List.of(new ConfigChangeEvent.ConfigChange("k", null, "v", ChangeType.ADDED)));
       assertThat(event.getChanges().get(0).changeType()).isEqualTo(ChangeType.ADDED);
@@ -165,7 +159,6 @@ class ConfigChangeBridgeTest {
       when(changeMonitor.getAsyncQueueCapacity()).thenReturn(256);
 
       ConfigChangeBridge bridge = createBridge();
-      // 异步模式创建完成表示线程池初始化成功
       assertThat(bridge).isNotNull();
     }
 
@@ -193,11 +186,8 @@ class ConfigChangeBridgeTest {
       TestListener listener = new TestListener();
       bridge.addListener(listener);
 
-      // 无关事件不触发监听器
-      org.springframework.context.event.ContextRefreshedEvent unrelatedEvent =
-          mock(org.springframework.context.event.ContextRefreshedEvent.class);
-      when(unrelatedEvent.getClass().getName())
-          .thenReturn("org.springframework.context.event.ContextRefreshedEvent");
+      // 使用无关事件类型（class name 不会匹配任何桥接事件名）
+      ApplicationEvent unrelatedEvent = mock(ApplicationEvent.class);
 
       assertThatCode(() -> bridge.onApplicationEvent(unrelatedEvent)).doesNotThrowAnyException();
       assertThat(listener.getCallCount()).isEqualTo(0);
@@ -209,17 +199,19 @@ class ConfigChangeBridgeTest {
   class ListenerExceptionIsolationTest {
 
     @Test
-    @DisplayName("单个监听器抛异常不影响后续监听器")
+    @DisplayName("单个监听器抛异常时被隔离（不向外传播）")
     void singleListenerException_doesNotPropagate() {
-      when(changeMonitor.isSnapshotOldValues()).thenReturn(false);
-
-      ConfigChangeBridge bridge = createBridge();
-
-      // 手动测试 invokeListener 的异常隔离（通过异常监听器调用不会抛出）
+      // 不重新桩 isSnapshotOldValues（lenient 默认值已由 setUp 提供）
       ConfigChangeEvent.ConfigChange change =
           new ConfigChangeEvent.ConfigChange("k", "old", "new", ChangeType.CHANGED);
 
-      assertThatCode(() -> bridge.invokeListener(null, change)).doesNotThrowAnyException();
+      // 构建一个抛出异常的监听器，验证 invokeListener 捕获异常而不传播
+      ConfigChangeListener throwingListener = (key, oldVal, newVal) -> {
+        throw new RuntimeException("test exception");
+      };
+
+      assertThatCode(() -> ConfigChangeBridge.invokeListener(throwingListener, change))
+          .doesNotThrowAnyException();
     }
   }
 

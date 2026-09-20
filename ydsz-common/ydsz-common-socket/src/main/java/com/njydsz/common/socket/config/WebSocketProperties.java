@@ -111,6 +111,9 @@ public class WebSocketProperties {
   /** 多端登录策略配置 */
   private MultiDevice multiDevice = new MultiDevice();
 
+  /** 批量推送配置（PERF-004：异步分片 + 背压控制） */
+  private Batch batch = new Batch();
+
   /** 网关透传认证配置（P1-5） */
   private Auth auth = new Auth();
 
@@ -263,16 +266,40 @@ public class WebSocketProperties {
   }
 
   /**
+   * 批量推送配置（PERF-004）。
+   *
+   * <p>控制 batchPushToUsers 的异步分片与背压策略，防止大规模广播时调用线程阻塞。
+   */
+  @Data
+  public static class Batch {
+    /** 是否启用异步批量推送（默认 true） */
+    private boolean isEnabled = true;
+
+    /** 每批分割数量（默认 500） */
+    private int chunkSize = 500;
+
+    /** 最大并发任务数（信号量许可数，默认 CPU 核心数 × 2） */
+    private int maxConcurrency = Math.max(Runtime.getRuntime().availableProcessors() * 2, 4);
+
+    /** 任务队列容量上限（超限阻塞调用线程，默认 10000） */
+    private int queueCapacity = 10000;
+
+    /** 批量推送超时时间（默认 30s） */
+    private Duration pushTimeout = Duration.ofSeconds(30);
+  }
+
+  /**
    * 网关透传认证配置（P1-5）。
    *
-   * <p>当 WebSocket 请求经过网关时，浏览器无法在 WebSocket 升级请求中设置 自定义请求头（如 Authorization），因此网关在认证后注入 {@code
+   * <p>当 WebSocket 请求经过网关时，浏览器无法在 WebSocket 升级请求中设置
+   * 自定义请求头（如 Authorization），因此网关在认证后注入 {@code
    * X-User-Id}、 {@code X-Username} 等头部透传用户身份。
    *
    * <p>安全机制：
    *
    * <ul>
    *   <li>共享密钥：网关同时注入 {@code X-Gateway-Secret}，后端验证通过后才信任 {@code X-User-Id} 等头部，防止客户端伪造
-   *   <li>IP 白名单：作为共享密钥的补充，当请求来源 IP 在白名单内时亦可信任 （适用于内网直连场景）
+   *   <li>IP 白名单：作为共享密钥的补充，当请求来源 IP 在白名单内时亦可信任（适用于内网直连场景）
    *   <li>两种方式满足其一即可；均未配置时网关透传认证不可用，必须依赖 JWT
    * </ul>
    */
