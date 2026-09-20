@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,12 +20,14 @@ import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.ParseOptions;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.domain.SecurityScanResult;
+import com.njydsz.common.docs.enums.PiiType;
 import com.njydsz.common.docs.enums.SecurityLevel;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
+import com.njydsz.common.docs.security.pii.PiiDetectionSummary;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.docs.security.scanner.DocumentSecurityScanner;
 import com.njydsz.common.util.io.TempFileManager;
@@ -249,7 +254,9 @@ public class DocumentProcessorPipeline {
 
         // 3. PII 检测（可选）
         if (piiDetectEnabled && properties.isPiiDetectionEnabled() && content != null) {
-          result.setPiiFindings(doDetectPii(content));
+          PiiDetectionResult piiResult = doDetectPiiWithMetrics(content);
+          result.setPiiFindings(piiResult.findings());
+          result.setPiiDetectionSummary(piiResult.summary());
         }
 
         // 4. 预处理（可选）
@@ -305,22 +312,47 @@ public class DocumentProcessorPipeline {
       }
     }
 
-    private List<PiiFinding> doDetectPii(DocumentContent content) {
+    /**
+     * 执行 PII 检测并同步收集运行时指标（P-4 指标分离）。
+     *
+     * <p>保持原有 doDetectPii 签名不变以兼容单元测试； 本方法是其增强版本，额外采集各类型命中数与总耗时， 分别通过 {@link PiiDetectionResult#findings()} 与 {@link PiiDetectionResult#summary()} 暴露。
+     *
+     * @param content 已解析的文档内容
+     * @return 纯 findings 列表 + 检测指标
+     */
+    private PiiDetectionResult doDetectPiiWithMetrics(DocumentContent content) {
       if (content == null || content.getText() == null) {
-        return List.of();
+        return new PiiDetectionResult(List.of(), null);
       }
+      Instant start = Instant.now();
       List<PiiFinding> allFindings = new ArrayList<>(16);
+      EnumMap<PiiType, Integer> countByType = new EnumMap<>(PiiType.class);
+      int failures = 0;
+
       for (PiiDetector detector : piiDetectors) {
         try {
           List<PiiFinding> findings = detector.detect(content);
           if (findings != null) {
             allFindings.addAll(findings);
+            PiiType type = detector.getSupportedType();
+            countByType.merge(type, findings.size(), Integer::sum);
           }
         } catch (Exception e) {
+          failures++;
           log.error("[Pipeline] PII 检测器 {} 执行失败", detector.getSupportedType(), e);
         }
       }
-      return allFindings;
+
+      Duration elapsed = Duration.between(start, Instant.now());
+      PiiDetectionSummary summary = new PiiDetectionSummary(
+          elapsed,
+          allFindings.size(),
+          failures,
+          countByType);
+      return new PiiDetectionResult(allFindings, summary);
     }
+
+    /** PII 检测的纯结果 + 指标（管道内部传输用） */
+    private record PiiDetectionResult(List<PiiFinding> findings, PiiDetectionSummary summary) {}
   }
 }

@@ -36,6 +36,12 @@ public class ConfigChangeEvent extends ApplicationEvent {
 
   private final List<ConfigChange> changes;
 
+  /** 配置来源命名空间（Nacos namespace / Apollo appId / 租户标识），用于多租户场景 */
+  private final String sourceNamespace;
+
+  /** 租户标识（多租户隔离），默认 "default" */
+  private final String tenant;
+
   /**
    * 配置变更事件。
    *
@@ -43,8 +49,27 @@ public class ConfigChangeEvent extends ApplicationEvent {
    * @param changes 变更的属性列表
    */
   public ConfigChangeEvent(Object source, List<ConfigChange> changes) {
+    this(source, changes, "default", "default");
+  }
+
+  /**
+   * 配置变更事件（指定命名空间和租户）。
+   *
+   * @param source 事件源（通常是 {@link ConfigChangeBridge} 实例）
+   * @param changes 变更的属性列表
+   * @param sourceNamespace 配置来源命名空间（Nacos namespace / Apollo appId）
+   * @param tenant 租户标识
+   * @since 26.09.20
+   */
+  public ConfigChangeEvent(
+      Object source,
+      List<ConfigChange> changes,
+      String sourceNamespace,
+      String tenant) {
     super(source);
-    this.changes = changes;
+    this.changes = changes != null ? List.copyOf(changes) : List.of();
+    this.sourceNamespace = sourceNamespace != null ? sourceNamespace : "default";
+    this.tenant = tenant != null ? tenant : "default";
   }
 
   /**
@@ -54,6 +79,30 @@ public class ConfigChangeEvent extends ApplicationEvent {
    */
   public List<ConfigChange> getChanges() {
     return Collections.unmodifiableList(changes);
+  }
+
+  /**
+   * 配置来源命名空间（Nacos namespace / Apollo appId）。
+   *
+   * <p>在多租户 / 多环境部署场景下，标识该条配置变更来自哪个命名空间。默认 "default"。
+   *
+   * @return 命名空间标识
+   * @since 26.09.20
+   */
+  public String getSourceNamespace() {
+    return sourceNamespace;
+  }
+
+  /**
+   * 租户标识（多租户隔离）。
+   *
+   * <p>在多租户部署场景下，标识该条配置变更所属的租户。默认 "default"。
+   *
+   * @return 租户标识
+   * @since 26.09.20
+   */
+  public String getTenant() {
+    return tenant;
   }
 
   /**

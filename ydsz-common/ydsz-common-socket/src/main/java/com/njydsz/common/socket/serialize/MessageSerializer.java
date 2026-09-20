@@ -24,8 +24,9 @@ public interface MessageSerializer {
    * @param json 序列化后的字符串
    * @param clazz 目标类型
    * @param <T> 目标类型
-   * @return 反序列化后的对象
+   * @return 反序列化后的对象（若 clazz 为 null，实现方可返回 String）
    */
+  <T> T deserialize(String json, Class<T> clazz);
 
   /**
    * 获取序列化器名称。

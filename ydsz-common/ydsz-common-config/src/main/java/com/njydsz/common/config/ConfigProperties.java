@@ -7,8 +7,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 配置增强属性
  *
- * <p>本模块作为 Jasypt 的增强层，不再自行实现加密逻辑。 加密 / 解密由 {@code jasypt-spring-boot-starter} 全局处理，
+ * <p>本模块作为 Jasypt 的增强层，不再自行实现加密逻辑。加密 / 解密由 {@code jasypt-spring-boot-starter} 全局处理，
  * 本属性类仅管理增强功能开关：配置变更监听、CLI 工具参数、健康检查。
+ *
+ * <p><b>OOP-006-EXEMPT</b>：本类及内部嵌套类标注 {@link ConfigurationProperties}，布尔字段名直接作为 YAML 对外属性键。
+ * 重命名 {@code isXxx} 字段将导致 {@code ydsz.config.*} 配置键失效，破坏向后兼容性。因此布尔字段带 {@code is}
+ * 前缀，按《云顶编码规范》YDIZ-OOP-006 豁免规则不改为裸名。
  *
  * <p>加密配置请使用 Jasypt 原生属性：
  *
@@ -83,12 +87,23 @@ public class ConfigProperties {
      * @since 26.09.20
      */
     private int asyncQueueCapacity = 256;
+
+    /**
+     * 是否启用配置变更审计发布（默认 true）。
+     *
+     * <p>启用后，每次配置变更时将发布一条审计日志，包含节点 IP、变更数量、来源命名空间、租户信息。
+     * 审计通过 {@link com.njydsz.common.config.hotreload.ConfigAuditPublisher} SPI 实现，
+     * 默认实现 {@link com.njydsz.common.config.hotreload.LogbackAuditPublisher} 以 INFO 日志输出。
+     *
+     * @since 26.09.20
+     */
+    private boolean auditEnabled = true;
   }
 
   /**
    * CLI 加密工具属性
    *
-   * <p>用于 {@link com.njydsz.common.config.cli.ConfigCliTool} 命令行工具， 默认值与 Jasypt 全局配置对齐。
+   * <p>用于 {@link com.njydsz.common.config.cli.ConfigCliTool} 命令行工具，默认值与 Jasypt 全局配置对齐。
    */
   @Getter
   @Setter

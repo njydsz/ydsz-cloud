@@ -7,6 +7,7 @@ import java.util.Map;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
 
+import com.njydsz.common.config.ConfigProperties;
 import com.njydsz.common.json.YdszJson;
 
 /**
@@ -200,6 +201,25 @@ public class ConfigCliTool {
     output.put("error", message);
     output.put("timestamp", Instant.now().toString());
     System.err.println(YdszJson.toJson(output));
+  }
+
+  /**
+   * 创建 Jasypt 加密器（使用 ConfigProperties.Cli 配置参数）
+   *
+   * <p>运行时 Spring 环境推荐使用此重载，从 {@link ConfigProperties.Cli} 读取算法/迭代次数/池大小，
+   * 避免 CLI 常量与运行时 Jasypt 配置不一致导致密文不兼容。
+   *
+   * @param masterPassword 主密码
+   * @param cliProps CLI 配置属性（来自 {@link ConfigProperties#getCli()}）
+   * @return 配置好的 PooledPBEStringEncryptor 实例
+   * @since 26.09.20
+   */
+  public static PooledPBEStringEncryptor createEncryptor(String masterPassword, ConfigProperties.Cli cliProps) {
+    return createEncryptor(
+        masterPassword,
+        cliProps.getAlgorithm(),
+        cliProps.getKeyObtentionIterations(),
+        cliProps.getPoolSize());
   }
 
   /**

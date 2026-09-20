@@ -3,7 +3,7 @@ package com.njydsz.common.config.hotreload;
 /**
  * 配置变更监听器
  *
- * <p>实现此接口可接收配置中心（Nacos / Apollo 等）下发的属性变更通知。 由 {@link ConfigChangeBridge} 在 Spring Cloud {@code
+ * <p>实现此接口可接收配置中心（Nacos / Apollo 等）下发的属性变更通知。由 {@link ConfigChangeBridge} 在 Spring Cloud {@code
  * EnvironmentChangeEvent} 触发时分发到所有注册的监听器实例。
  *
  * <h3>使用示例</h3>
@@ -16,6 +16,11 @@ package com.njydsz.common.config.hotreload;
  *         LOG.info("配置变更: {} | {} -> {}", key, oldValue, newValue);
  *         // 响应配置变更，刷新本地缓存等
  *     }
+ *
+ *     &#64;Override
+ *     public int getOrder() {
+ *         return 100;  // 升序执行，数值越小越先执行
+ *     }
  * }
  * }</pre>
  *
@@ -24,6 +29,16 @@ package com.njydsz.common.config.hotreload;
  * <ul>
  *   <li>Spring Bean：标注 {@code @Component} 即自动被 {@link ConfigChangeBridge} 发现
  *   <li>手动注册：调用 {@code ConfigChangeBridge.addListener()}
+ * </ul>
+ *
+ * <h3>执行顺序</h3>
+ *
+ * <p>通过 {@link #getOrder()} 控制监听器执行顺序：
+ *
+ * <ul>
+ *   <li>数值越小越先执行（升序排列）</li>
+ *   <li>默认顺序为 0</li>
+ *   <li>同序号监听器执行顺序不保证</li>
  * </ul>
  *
  * <h3>配置过滤</h3>
@@ -57,4 +72,16 @@ public interface ConfigChangeListener {
    * @param newValue 变更后的值；属性被删除时为 {@code null}
    */
   void onChange(String key, String oldValue, String newValue);
+
+  /**
+   * 监听器执行顺序（升序）。
+   *
+   * <p>数值越小越先执行，默认 0。适用于需要保证业务逻辑执行顺序的场景。
+   *
+   * @return 执行顺序优先级（升序）
+   * @since 26.09.20
+   */
+  default int getOrder() {
+    return 0;
+  }
 }

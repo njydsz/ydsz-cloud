@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.domain.SecurityScanResult;
+import com.njydsz.common.docs.security.pii.PiiDetectionSummary;
 
 /**
  * 文档管道处理结果 —— 聚合解析、安全扫描与 PII 检测三阶段输出。
@@ -31,6 +32,13 @@ public class DocumentProcessResult {
 
   /** PII 发现列表（仅当启用 PII 检测时填充） */
   private List<PiiFinding> piiFindings;
+
+  /**
+   * PII 检测过程汇总指标 (P-4 指标分离)。
+   *
+   * <p>含总耗时、命中数、失败检测器数与分类统计，供接入监控与日志审计。 为 {@code null} 代表 pipeline 未开启 PII 检测阶段或检测被跳过。
+   */
+  private PiiDetectionSummary piiDetectionSummary;
 
   /**
    * 判断整条管道是否成功（解析成功 且 未触发高风险阻止）。

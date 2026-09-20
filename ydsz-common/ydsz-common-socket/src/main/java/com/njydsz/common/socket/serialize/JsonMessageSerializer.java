@@ -35,4 +35,21 @@ public class JsonMessageSerializer implements MessageSerializer {
   public String getName() {
     return "JSON";
   }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public <T> T deserialize(String json, Class<T> clazz) {
+    if (json == null || json.isEmpty()) {
+      return null;
+    }
+    if (clazz == null || clazz == String.class) {
+      return (T) json;
+    }
+    try {
+      return YdszJson.fromJson(json, clazz);
+    } catch (Exception e) {
+      log.warn("[WS-Serialize] 反序列化失败, 降级 String: clazz={}, err={}", clazz.getSimpleName(), e.getMessage());
+      return (T) json;
+    }
+  }
 }

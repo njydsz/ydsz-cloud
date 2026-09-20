@@ -130,7 +130,7 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
     if (userId == null) {
       return List.of();
     }
-    return circuitBreaker.execute(() -> doDrainOffline(userId), Collections::emptyList);
+    return circuitBreaker.execute(() -> doDrainOffline(userId), () -> List.of());
   }
 
   private List<String> doDrainOffline(String userId) {

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -80,6 +81,9 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
 
   private static final String UNKNOWN_HOST = "unknown";
 
+  /** 异步执行器优雅关闭等待超时秒数 */
+  private static final long AWAIT_TERMINATION_SECONDS = 5L;
+
   private final ConfigurableEnvironment environment;
   private final ApplicationEventPublisher publisher;
   private final ConfigProperties.ChangeMonitor changeMonitorProps;
@@ -87,6 +91,7 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
   private final String nodeIp;
   private final ThreadPoolExecutor asyncExecutor;
   private final boolean isAsyncDispatch;
+  private final ConfigAuditPublisher auditPublisher;
 
   /**
    * 稳定视图快照（启动时一次性全量采集，后续增量更新）。
@@ -106,12 +111,14 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
    * @param publisher 事件发布器
    * @param changeMonitorProps 变更监控配置
    * @param listeners 监听器列表（允许 null 或空列表）
+   * @param auditPublisher 配置审计发布器（允许 null）
    */
   public ConfigChangeBridge(
       ConfigurableEnvironment environment,
       ApplicationEventPublisher publisher,
       ConfigProperties.ChangeMonitor changeMonitorProps,
-      List<ConfigChangeListener> listeners) {
+      List<ConfigChangeListener> listeners,
+      ConfigAuditPublisher auditPublisher) {
     this.environment = environment;
     this.publisher = publisher;
     this.changeMonitorProps = changeMonitorProps;
@@ -121,6 +128,9 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     this.nodeIp = resolveNodeIp();
     this.isAsyncDispatch = changeMonitorProps.isAsyncDispatch();
     this.asyncExecutor = this.isAsyncDispatch ? createAsyncExecutor(changeMonitorProps) : null;
+    this.auditPublisher = auditPublisher;
+    // 按 Order 排序监听器
+    sortListenersByOrder();
     initializeStableSnapshot();
   }
 
@@ -191,12 +201,23 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
   }
 
   /**
-   * 动态添加监听器
+   * 按 {@link ConfigChangeListener#getOrder()} 升序排列监听器。
+   *
+   * <p>数值越小越先执行。同序号执行顺序不保证。
+   */
+  private void sortListenersByOrder() {
+    listeners.sort(Comparator.comparingInt(ConfigChangeListener::getOrder));
+    LOG.debug("[ConfigChangeBridge] 监听器已按 Order 排序，数量: {}", listeners.size());
+  }
+
+  /**
+   * 动态添加监听器（添加后重新排序）。
    *
    * @param listener 要添加的监听器
    */
   public void addListener(ConfigChangeListener listener) {
     listeners.add(listener);
+    sortListenersByOrder();
   }
 
   /**
@@ -262,13 +283,16 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     }
 
     // 1. 发布 Spring 事件
-    ConfigChangeEvent changeEvent = new ConfigChangeEvent(this, changes);
+    ConfigChangeEvent changeEvent = new ConfigChangeEvent(this, changes, "default", "default");
     publisher.publishEvent(changeEvent);
 
     // 2. 通知监听器（异步 / 同步由 changeMonitor.asyncDispatch 控制）
     dispatchToListeners(changes);
 
-    // 3. 增量更新稳定视图（仅更新已变更的键）
+    // 3. 审计发布
+    publishAudit(changeEvent, changes.size());
+
+    // 4. 增量更新稳定视图（仅更新已变更的键）
     incrementalUpdateSnapshot(changes);
   }
 
@@ -417,6 +441,25 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     } catch (Exception e) {
       LOG.warn("[ConfigChangeBridge] 提取变更键失败: {}", e.getMessage());
       return Set.of();
+    }
+  }
+
+  /**
+   * 发布配置变更审计记录。
+   *
+   * <p>仅在审计启用且 auditPublisher 非空时执行。审计失败不影响主流程。
+   *
+   * @param event 配置变更事件
+   * @param changeCount 变更数量
+   */
+  private void publishAudit(ConfigChangeEvent event, int changeCount) {
+    if (!changeMonitorProps.isAuditEnabled() || auditPublisher == null) {
+      return;
+    }
+    try {
+      auditPublisher.publish(event, nodeIp, changeCount);
+    } catch (Exception e) {
+      LOG.warn("[ConfigChangeBridge] 审计发布失败(不影响主流程): {}", e.getMessage());
     }
   }
 

@@ -59,6 +59,7 @@ public class StompMessageInterceptor implements ChannelInterceptor {
     this.topicAclPolicy = topicAclPolicy;
   }
 
+  @SuppressWarnings("java:S3776")
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel channel) throws MessagingException {
     StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
@@ -70,7 +71,7 @@ public class StompMessageInterceptor implements ChannelInterceptor {
 
     switch (command) {
       case CONNECT -> handleConnect(accessor);
-      case SEND -> handleSend(accessor);
+      case SEND -> handleSend(message, accessor);
       case SUBSCRIBE -> handleSubscribe(accessor);
       default -> { /* 其他命令不处理 */ }
     }
@@ -89,7 +90,7 @@ public class StompMessageInterceptor implements ChannelInterceptor {
   }
 
   /** 处理 SEND 帧：速率限制 + C→S 路由分发（FEAT-002）+ 审计。 */
-  private void handleSend(StompHeaderAccessor accessor) {
+  private void handleSend(Message<?> message, StompHeaderAccessor accessor) {
     var sessionAttrs = accessor.getSessionAttributes();
     String userId = null;
     if (sessionAttrs != null) {

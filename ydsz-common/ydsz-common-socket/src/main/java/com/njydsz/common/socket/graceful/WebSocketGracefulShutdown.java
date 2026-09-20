@@ -235,10 +235,13 @@ public class WebSocketGracefulShutdown implements SmartLifecycle {
         WebSocketSession session = entry.getValue();
         if (session != null && session.isOpen()) {
           try {
-            session.close(CloseStatus.SERVER_SHUTDOWN);
+            session.close(new CloseStatus(1001, "Server shutdown"));
             count++;
           } catch (Exception e) {
-            log.warn("[WS-GracefulShutdown] 关闭 session 失败: sessionId={}, err={}", sessionId, e.getMessage());
+            log.warn(
+                "[WS-GracefulShutdown] 关闭 session 失败: sessionId={}, err={}",
+                sessionId,
+                e.getMessage());
           }
         }
       }
