@@ -34,8 +34,13 @@ import com.njydsz.common.file.storage.MultipartContextStore;
     matchIfMissing = true)
 public class FileScheduler {
 
-  /** 分片上传上下文过期时间（60 分钟） */
-  private static final int MULTIPART_CONTEXT_TIMEOUT_MINUTES = 60;
+  /**
+   * 分片上传上下文过期超时（分钟）
+   *
+   * <p>超过此时间未完成的分片上传将被清理。建议值与 {@code ydsz.file.multipart-context-ttl-seconds} 保持一致（换算为分钟）。 默认 1440
+   * 分钟 = 24 小时。
+   */
+  private static final int MULTIPART_CONTEXT_TIMEOUT_MINUTES = 24 * 60;
 
   private final MultipartContextStore multipartContextStore;
 

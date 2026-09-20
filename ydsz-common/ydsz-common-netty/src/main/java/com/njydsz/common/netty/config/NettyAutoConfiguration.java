@@ -24,6 +24,8 @@ import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.common.netty.server.AbstractNettyServer;
 import com.njydsz.common.netty.server.NettyServerLifecycle;
+import com.njydsz.common.netty.session.InMemorySessionRepository;
+import com.njydsz.common.netty.session.SessionRepository;
 
 /**
  * Netty 自动装配配置。
@@ -181,17 +183,33 @@ public class NettyAutoConfiguration {
   }
 
   /**
+   * 全局会话仓库 — 管理所有 Netty Server 的连接会话。
+   *
+   * <p>使用内存实现（单实例部署）。集群部署请替换为自定义实现（如基于 Redis）。 所有 AbstractNettyServer 共享同一个 SessionRepository 实例， 支持跨 Server 的 Session 查询。
+   *
+   * @return 会话仓库实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(SessionRepository.class)
+  public SessionRepository nettySessionRepository() {
+    log.info("[Netty] 注册 SessionRepository（内存实现）");
+    return new InMemorySessionRepository();
+  }
+
+  /**
    * BeanPostProcessor — 自动将 NettyChannelMetrics 和 NettyEventLoopPool 注入到所有 AbstractNettyServer 和
    * AbstractNettyClient Bean。
    *
    * @param metrics 指标收集器
    * @param eventLoopPool EventLoop 池
+   * @param sessionRepository 会话仓库
    * @return BeanPostProcessor
    */
   @Bean
   public BeanPostProcessor nettyDependencyInjector(
       NettyChannelMetrics metrics,
       NettyEventLoopPool eventLoopPool,
+      SessionRepository sessionRepository,
       @Autowired(required = false) ChannelEventDispatcher channelEventDispatcher) {
     return new BeanPostProcessor() {
       @Override
@@ -200,7 +218,8 @@ public class NettyAutoConfiguration {
         if (bean instanceof AbstractNettyServer server) {
           server.setMetrics(metrics);
           server.setEventLoopPool(eventLoopPool);
-          log.debug("[Netty] 注入 metrics + eventLoopPool 到 Server: {}", beanName);
+          server.setSessionRepository(sessionRepository);
+          log.debug("[Netty] 注入 metrics + eventLoopPool + sessionRepository 到 Server: {}", beanName);
         } else if (bean instanceof AbstractNettyClient client) {
           client.setMetrics(metrics);
           client.setEventLoopPool(eventLoopPool);
