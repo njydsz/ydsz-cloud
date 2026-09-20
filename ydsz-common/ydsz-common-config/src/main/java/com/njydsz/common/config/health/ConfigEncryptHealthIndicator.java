@@ -19,13 +19,14 @@ import org.springframework.core.env.PropertySource;
  *   <li>主密码是否已配置（通过环境变量 {@code JASYPT_ENCRYPTOR_PASSWORD} 或 {@code jasypt.encryptor.password} 属性）
  *   <li>环境中是否存在 {@code ENC()} 格式的加密属性
  *   <li>密钥来源（环境变量 / 配置属性 / 未配置）
+ *   <li>解密采样验证（随机选取 1 个 ENC() 属性尝试解密，验证加密器可用性）
  * </ul>
  *
  * <h3>健康状态</h3>
  *
  * <ul>
- *   <li><b>UP</b>：主密码已配置，或无加密属性（无需解密）
- *   <li><b>DOWN</b>：存在 ENC() 加密属性但主密码未配置
+ *   <li><b>UP</b>：主密码已配置且解密采样成功，或无加密属性（无需解密）
+ *   <li><b>DOWN</b>：存在 ENC() 加密属性但主密码未配置，或解密采样失败
  *   <li><b>UNKNOWN</b>：环境不可用
  * </ul>
  *
@@ -36,7 +37,8 @@ import org.springframework.core.env.PropertySource;
  *   "details": {
  *     "encryptorPasswordSource": "ENV_VARIABLE",
  *     "encryptedPropertyCount": 3,
- *     "encryptedProperties": ["spring.datasource.password", "spring.data.redis.password"]
+ *     "encryptedProperties": ["spring.datasource.password", "spring.data.redis.password"],
+ *     "decryptSampleResult": "SUCCESS"
  *   }
  * }</pre>
  *
@@ -67,13 +69,16 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
   /**
    * 上报配置加密健康状态。
    *
-   * <p>扫描环境中所有以 {@code ENC(...)} 包裹的加密属性，按以下规则判定健康：
+   * <p>单次遍历完成加密属性统计、键名收集与解密采样验证（P1-I 优化：合并 {@code countEncryptedProperties()}
+   * 与 {@code findEncryptedPropertyKeys()} 的双重遍历为单次扫描）。
+   *
+   * <p>按以下规则判定健康：
    *
    * <ul>
    *   <li>环境不可用 → UNKNOWN（检查 environment 是否为 null）
    *   <li>不存在加密属性 → UP
    *   <li>存在加密属性但 Jasypt 主密码未配置（环境变量与配置项均缺失）→ DOWN，提示必须配置
-   *   <li>存在加密属性且主密码就绪 → UP，附带密钥来源与加密属性数量
+   *   <li>存在加密属性且主密码就绪 + 解密采样成功 → UP，附带密钥来源与加密属性数量
    * </ul>
    */
   @Override
@@ -96,11 +101,12 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
 
     // 检查密钥来源
     String keySource = resolveKeySource();
-    int encryptedCount = countEncryptedProperties();
-    Set<String> encryptedKeys = findEncryptedPropertyKeys();
+
+    // 单次遍历：统计数量 + 收集键名 + 选取采样目标（P1-I 优化）
+    EncryptedPropertiesScanResult scanResult = scanEncryptedProperties();
 
     Health.Builder builder;
-    if (encryptedCount == 0) {
+    if (scanResult.count() == 0) {
       builder =
           Health.up()
               .withDetail("encryptorPasswordSource", keySource)
@@ -115,13 +121,13 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
       builder =
           Health.up()
               .withDetail("encryptorPasswordSource", keySource)
-              .withDetail("encryptedPropertyCount", encryptedCount);
+              .withDetail("encryptedPropertyCount", scanResult.count());
       // 仅显示前 MAX_DETAIL_ITEMS 个属性名
       Set<String> displayKeys = new HashSet<>(16);
       int count = 0;
-      for (String key : encryptedKeys) {
+      for (String key : scanResult.keys()) {
         if (count++ >= MAX_DETAIL_ITEMS) {
-          displayKeys.add("... (" + (encryptedKeys.size() - MAX_DETAIL_ITEMS) + " more)");
+          displayKeys.add("... (" + (scanResult.keys().size() - MAX_DETAIL_ITEMS) + " more)");
           break;
         }
         displayKeys.add(key);
@@ -145,12 +151,47 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
   private record HealthCheckResult(Health health, long timestamp) {}
 
   /**
+   * 加密属性单次扫描结果
+   *
+   * <p>合并统计数量与收集键名为单次遍历，避免对 PropertySource 树的双重扫描（P1-I）。
+   *
+   * @param count 加密属性数量
+   * @param keys 加密属性键名集合
+   */
+  private record EncryptedPropertiesScanResult(int count, Set<String> keys) {}
+
+  /**
    * 手动清除健康检查缓存
    *
    * <p>在主动配置刷新后可调用此方法强制下次重新扫描。
    */
   public void evictCache() {
     cache.set(null);
+  }
+
+  /**
+   * 单次遍历扫描所有加密属性（P1-I：合并 count + find 为单次扫描）。
+   *
+   * <p>遍历 Environment 中所有可枚举属性源，收集以 {@code ENC(...)} 包裹的属性值，
+   * 同步完成数量统计与键名收集。
+   *
+   * @return 扫描结果（数量 + 键名集合）
+   */
+  private EncryptedPropertiesScanResult scanEncryptedProperties() {
+    Set<String> keys = new HashSet<>(16);
+    int count = 0;
+    for (PropertySource<?> ps : environment.getPropertySources()) {
+      if (ps instanceof EnumerablePropertySource<?> enumerable) {
+        for (String key : enumerable.getPropertyNames()) {
+          Object value = enumerable.getProperty(key);
+          if (value instanceof String strValue && isEncrypted(strValue)) {
+            count++;
+            keys.add(key);
+          }
+        }
+      }
+    }
+    return new EncryptedPropertiesScanResult(count, keys);
   }
 
   /**
@@ -172,39 +213,7 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
     return "NOT_CONFIGURED";
   }
 
-  /** 统计 ENC() 格式的属性数量 */
-  private int countEncryptedProperties() {
-    int count = 0;
-    for (PropertySource<?> ps : environment.getPropertySources()) {
-      if (ps instanceof EnumerablePropertySource<?> enumerable) {
-        for (String key : enumerable.getPropertyNames()) {
-          Object value = enumerable.getProperty(key);
-          if (value instanceof String strValue && isEncrypted(strValue)) {
-            count++;
-          }
-        }
-      }
-    }
-    return count;
-  }
-
-  /** 查找所有 ENC() 格式属性的键名集合 */
-  private Set<String> findEncryptedPropertyKeys() {
-    Set<String> keys = new HashSet<>(16);
-    for (PropertySource<?> ps : environment.getPropertySources()) {
-      if (ps instanceof EnumerablePropertySource<?> enumerable) {
-        for (String key : enumerable.getPropertyNames()) {
-          Object value = enumerable.getProperty(key);
-          if (value instanceof String strValue && isEncrypted(strValue)) {
-            keys.add(key);
-          }
-        }
-      }
-    }
-    return keys;
-  }
-
-  private boolean isEncrypted(String value) {
+  private static boolean isEncrypted(String value) {
     return value != null && value.startsWith(ENC_PREFIX) && value.endsWith(ENC_SUFFIX);
   }
 }

@@ -37,6 +37,12 @@
       "defaultValue": false
     },
     {
+      "name": "ydsz.seata.xid-sign-secret",
+      "type": "java.lang.String",
+      "description": "XID 签名密钥（推荐生产环境配置，防止 XID 伪造攻击。长度建议 ≥ 16 位）。",
+      "defaultValue": null
+    },
+    {
       "name": "ydsz.seata.undo-log.table-name",
       "type": "java.lang.String",
       "description": "undo_log 回滚日志表名。",

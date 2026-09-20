@@ -153,6 +153,19 @@ public interface RealtimePushTemplate {
   PushResult pushToUserOfflineResult(String userId, String type, Object payload, String messageId);
 
   /**
+   * 向指定用户推送消息并返回带投递状态的结果（ARCH-002）。
+   *
+   * <p>相比 {@link #pushToUserWithResult}，返回结果包含 {@link WebSocketDeliveryStatus}，
+   * 明确告知调用方消息是"已广播"(TRANSMITTED)、"已入队待重试"(QUEUED)、还是"已客户端确认"(CLIENT_ACKNOWLEDGED)。
+   *
+   * @param userId 目标用户 ID
+   * @param type 业务类型标签
+   * @param payload 消息内容
+   * @return 带投递状态的推送结果
+   */
+  WebSocketDeliveryResult pushWithDeliveryResult(String userId, String type, Object payload);
+
+  /**
    * 立即重试积压的待重试消息。
    *
    * <p>由调度器或运维入口触发，将重试队列中的消息重新投递。
