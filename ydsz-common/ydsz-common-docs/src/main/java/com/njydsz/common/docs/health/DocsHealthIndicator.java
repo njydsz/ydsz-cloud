@@ -13,7 +13,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.common.docs.security.pii.PiiDetector;
-import com.njydsz.common.docs.service.AsyncDocumentParser;
+import com.njydsz.common.docs.service.internal.AsyncDocumentParser;
 
 /**
  * 文档处理模块健康指标

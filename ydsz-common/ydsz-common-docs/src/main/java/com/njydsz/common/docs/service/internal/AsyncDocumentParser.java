@@ -1,4 +1,4 @@
-package com.njydsz.common.docs.service;
+package com.njydsz.common.docs.service.internal;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -20,10 +20,14 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.ParseOptions;
+import com.njydsz.common.docs.service.DocumentService;
 import com.njydsz.common.util.io.TempFileManager;
 
 /**
- * 异步文档解析器。
+ * 异步文档解析器 — 模块内部实现。
+ *
+ * <p><b>模块内部类，不属于公共 API：</b>该类位于 {@code service.internal} 子包，仅供本模块的自动配置与健康检查使用，
+ * 应用层应通过 {@link com.njydsz.common.docs.service.DocumentService} 或其 {@code pipeline()} 组合能力编排异步流程, 不应直接注入本类。
  *
  * <p>基于 Spring 托管的线程池实现文档异步解析，避免大文件解析阻塞请求线程。
  *
