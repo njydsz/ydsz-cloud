@@ -1,8 +1,8 @@
 # ydsz-common-netty
 
-> Netty 网络通信框架（L5 业务服务层）— TCP Server/Client 抽象 + LengthField/JSON 双编解码 + SSL/TLS + Epoll 原生传输 + 断线重连 + 流量监控 + 连接数限制
+> Netty 网络通信框架（L5 业务服务层）— TCP Server/Client 抽象 + LengthField/JSON 双编解码 + SSL/TLS + Epoll 原生传输 + 断线重连 + 流量监控 + 连接数限制 + Session 管理 + RPC + 可靠消息 + 零拷贝传输
 
-提供 TCP Server/Client 抽象基类、LengthField 拆包粘包处理、JSON 消息编解码、SSL/TLS 双向认证、Epoll/KQueue 原生传输自动检测、断线重连（指数退避）、心跳空闲检测、连接数限制、流量监控与整形、Micrometer 指标采集、Actuator 端点与健康检查等开箱即用能力，是 YDSZ 项目所有 TCP 通信的统一基座。
+提供 TCP Server/Client 抽象基类、LengthField 拆包粘包处理、JSON 消息编解码（Encoder + Decoder 分离）、SSL/TLS 双向认证、Epoll/KQueue 原生传输自动检测、断线重连（指数退避）、心跳空闲检测、连接数限制、流量监控与整形、Micrometer 指标采集（含直接内存监控）、Actuator 端点与健康检查、Session 生命周期管理、Request-Response RPC、可靠消息 ACK、对象池、零拷贝文件传输等开箱即用能力，是 YDSZ 项目所有 TCP 通信的统一基座。
 
 ## 模块定位
 
@@ -91,16 +91,62 @@
 
 | 类 | 说明 |
 |---|---|
-| `NettyChannelMetrics` | Channel 指标采集（9 项 Micrometer 指标） |
+| `NettyChannelMetrics` | Channel 指标采集（12 项 Micrometer 指标，含直接内存监控） |
 | `NettyHealthIndicator` | Spring Boot Actuator 健康检查 |
-| `NettyActuatorEndpoint` | Actuator 端点 `/netty`，运行时查询 Server 状态、EventLoop 引用计数、Channel 列表 |
+| `NettyActuatorEndpoint` | Actuator 端点 `/netty`，运行时查询 Server 状态、EventLoop 引用计数、Channel 列表、Session 统计 |
+| `NettyStartupReporter` | 启动环境诊断报告（OS / JVM / 传输模式 / 内存 / SSL） |
 
-### 10. 配置
+### 10. Session 管理
+
+| 类 | 说明 |
+|---|---|
+| `ConnectionSession` | 连接会话抽象（sessionId / channel / bizId / state / attributes） |
+| `DefaultConnectionSession` | 默认实现，基于 AtomicReference 保证状态安全 |
+| `SessionRepository` | Session 存储接口（add / remove / find / countByBizId） |
+| `InMemorySessionRepository` | 内存实现，双索引（sessionId + bizId） |
+| `ChannelState` | 通道状态枚举（CONNECTING → CONNECTED → AUTHENTICATING → AUTHENTICATED → DRAINING → CLOSED） |
+
+### 11. RPC 请求-响应
+
+| 类 | 说明 |
+|---|---|
+| `NettyRpcClient` | 抽象 RPC 客户端，CompletableFuture 异步返回 |
+| `RpcMessage` | RPC 协议封装（REQUEST / RESPONSE / EXCEPTION） |
+| `RpcResponseHandler` | @Sharable 响应处理器，自动匹配 pending future |
+
+### 12. 连接认证
+
+| 类 | 说明 |
+|---|---|
+| `ConnectionAuthenticator` | 连接认证 SPI（authenticate / authTimeoutMs / isAuthRequired） |
+| `AuthenticationResult` | 认证结果（success / failed factory） |
+
+### 13. 可靠消息
+
+| 类 | 说明 |
+|---|---|
+| `ReliableMessage` | 可靠消息封装（requiresAck / maxRetryCount） |
+| `AckMessage` | 确认消息（ACK / NACK） |
+| `ReliableMessageHandler` | @Sharable，自动对 requiresAck=true 的消息回 ACK |
+
+### 14. 对象池
+
+| 类 | 说明 |
+|---|---|
+| `PooledMessage` | 可池化消息基类，基于 Netty Recycler 实现对象复用 |
+
+### 15. 零拷贝传输
+
+| 类 | 说明 |
+|---|---|
+| `ZeroCopyFileTransfer` | 零拷贝文件传输，封装 DefaultFileRegion + ChunkedFile |
+
+### 16. 配置
 
 | 类 | 说明 |
 |---|---|
 | `NettyProperties` | Netty 配置属性（JSR-303 校验，前缀 `ydsz.netty.*`） |
-| `NettyAutoConfiguration` | 自动配置，通过 `BeanPostProcessor` 自动注入 metrics + eventLoopPool 到所有 Server/Client |
+| `NettyAutoConfiguration` | 自动配置，通过 `BeanPostProcessor` 自动注入 metrics + eventLoopPool + sessionRepository 到所有 Server/Client |
 
 ## 接入方式
 
@@ -131,6 +177,12 @@ ydsz:
       pooled: true                   # 是否使用 PooledByteBufAllocator
       prefer-direct: true           # 是否优先直接内存
       num-direct-arenas: 0           # 直接内存竞技场数（0 = CPU 核数 × 2）
+    write-buffer:
+      low-water-mark: 33554432       # 写缓冲区低水位（32MB），低于此值恢复写入
+      high-water-mark: 67108864      # 写缓冲区高水位（64MB），高于此值暂停写入
+    leak-detection:
+      level: SIMPLE                  # 泄漏检测级别：DISABLED / SIMPLE / ADVANCED / PARANOID
+      sampling-rate: 1.0             # 采样率（SIMPLE 模式生效，1.0 = 100%）
     connection-control:
       max-connections: 0             # 最大连接数（0 = 不限制）
     idle:
@@ -225,6 +277,10 @@ public class MyTcpClient extends AbstractNettyClient {
 | `ydsz.netty.allocator.pooled` | true | 是否使用 PooledByteBufAllocator |
 | `ydsz.netty.allocator.prefer-direct` | true | 是否优先分配直接内存（堆外） |
 | `ydsz.netty.allocator.num-direct-arenas` | 0 | 直接内存竞技场数（0 = CPU 核数 × 2） |
+| `ydsz.netty.write-buffer.low-water-mark` | 33554432 | 写缓冲区低水位（字节，默认 32MB） |
+| `ydsz.netty.write-buffer.high-water-mark` | 67108864 | 写缓冲区高水位（字节，默认 64MB） |
+| `ydsz.netty.leak-detection.level` | SIMPLE | 泄漏检测级别（DISABLED / SIMPLE / ADVANCED / PARANOID） |
+| `ydsz.netty.leak-detection.sampling-rate` | 1.0 | 采样率（SIMPLE 模式生效） |
 | `ydsz.netty.connection-control.max-connections` | 0 | 最大连接数限制（0 = 不限制） |
 | `ydsz.netty.idle.reader-idle-seconds` | 60 | 读空闲超时（秒，0=不检测） |
 | `ydsz.netty.idle.writer-idle-seconds` | 30 | 写空闲超时（秒，0=不检测） |
@@ -339,6 +395,73 @@ ydsz:
       global: true                 # 限制整个 Server 总带宽
 ```
 
+### 6. JSON 编解码（Encoder + Decoder 分离）
+
+```java
+import com.njydsz.common.netty.codec.JsonMessageEncoder;
+import com.njydsz.common.netty.codec.JsonMessageDecoder;
+
+ch.pipeline().addLast(new JsonMessageEncoder<>(MyMessage.class));
+ch.pipeline().addLast(new JsonMessageDecoder<>(MyMessage.class));
+```
+
+### 7. 可靠消息 ACK
+
+```java
+import com.njydsz.common.netty.reliable.ReliableMessage;
+import com.njydsz.common.netty.reliable.ReliableMessageHandler;
+
+// Pipeline 中添加 ACK 自动处理器
+ch.pipeline().addLast(new ReliableMessageHandler());
+
+// 业务侧发送需要 ACK 的消息
+ReliableMessage msg = new ReliableMessage();
+msg.setBody(payload);
+msg.setRequiresAck(true);
+channel.writeAndFlush(msg);
+```
+
+### 8. Session 管理
+
+```java
+import com.njydsz.common.netty.session.SessionRepository;
+import com.njydsz.common.netty.session.ConnectionSession;
+
+// 通过 Server 获取 SessionRepository
+SessionRepository repo = server.getSessionRepository();
+
+// 按业务 ID 查找会话（如按 userId 推送）
+Set<ConnectionSession> sessions = repo.findByBizId("user-123");
+
+// 向目标用户推送消息
+sessions.forEach(session -> session.send(message));
+```
+
+### 9. Graceful Drain（引流关闭）
+
+```java
+// 等待现有连接处理完毕再关闭（最长等 30s 或连接数降至 100）
+CompletableFuture<Void> future = server.drain(100, 30_000);
+future.thenRun(() -> {
+    log.info("所有连接已处理完毕，可以安全关闭");
+});
+```
+
+### 10. 零拷贝文件传输
+
+```java
+import com.njydsz.common.netty.transfer.ZeroCopyFileTransfer;
+
+// 完整文件零拷贝发送
+ZeroCopyFileTransfer.sendFile(channel, new File("/data/video.mp4"));
+
+// 断点续传
+ZeroCopyFileTransfer.sendFile(channel, file, offset, length);
+
+// 分块流式传输（配合流量整形限速）
+ZeroCopyFileTransfer.sendChunked(channel, file);
+```
+
 ## SPI 扩展点
 
 | SPI 接口 | 用途 | 实现方 |
@@ -346,6 +469,8 @@ ydsz:
 | `AbstractNettyServer` | TCP Server 抽象基类，业务继承实现自定义 Pipeline | 业务模块实现 |
 | `AbstractNettyClient` | TCP Client 抽象基类，业务继承实现自定义 Pipeline | 业务模块实现 |
 | `ChannelEventListener` | Channel 事件监听器，业务实现订阅连接/断开/异常事件 | 业务模块实现 |
+| `ConnectionAuthenticator` | 连接认证 SPI，业务实现自定义认证逻辑（如 Token 校验） | 业务模块实现 |
+| `SessionRepository` | Session 存储实现，可替换为 Redis 等分布式存储 | 业务模块实现（可选，默认内存） |
 
 ## 健康检查
 
@@ -356,9 +481,10 @@ ydsz:
 
 健康检查暴露信息：
 
-- **Server 列表**：每个 Server 的 `running` / `port` / `activeChannels` / `ssl` / `businessGroups`
+- **Server 列表**：每个 Server 的 `running` / `port` / `activeChannels` / `ssl` / `businessGroups` / `sessions`
 - **EventLoop 池**：`bossRefCount` / `workerRefCount` / `bossGroupActive` / `workerGroupActive`
 - **连接控制**：`maxConnections` / `currentConnections`（超限时连接被拒绝）
+- **直接内存**：`directMemoryUsed` / `directMemoryMax` / `directMemoryUsageRatio`（≥80% 触发启动告警）
 - **指标摘要**：`activeChannels` / `totalBytesRead` / `totalBytesWritten`
 
 健康判定：所有 Server 都 `running=true` 时为 UP，任一 Server 未运行时为 DOWN。
@@ -370,6 +496,9 @@ ydsz:
 | `ydsz.netty.channels.active` | Gauge | 活跃 Channel 数 |
 | `ydsz.netty.bytes.read.total` | Gauge | 累计读取字节数 |
 | `ydsz.netty.bytes.written.total` | Gauge | 累计写入字节数 |
+| `ydsz.netty.direct.memory.used` | Gauge | Netty 直接内存当前使用量（字节） |
+| `ydsz.netty.direct.memory.max` | Gauge | JVM 最大直接内存限制（字节） |
+| `ydsz.netty.arenas.active` | Gauge | Netty PooledByteBufAllocator 活跃 Arena 数 |
 | `ydsz.netty.connections.total` | Counter | 累计连接数 |
 | `ydsz.netty.disconnections.total` | Counter | 累计断开数 |
 | `ydsz.netty.messages.received` | Counter | 消息接收数 |
@@ -396,9 +525,20 @@ ydsz:
 9. **优雅关闭**：`shutdown-quiet-period-seconds` + `shutdown-timeout-seconds` 控制 EventLoopGroup 优雅关闭，确保已接受连接处理完成。
 10. **PooledByteBufAllocator**：默认启用池化分配器（`allocator.pooled=true`）减少 GC；`prefer-direct=true` 优先堆外内存适合大流量场景；如果观察到堆外内存泄漏可设为 `false` 回退到堆内存分配。
 11. **连接限制**：`connection-control.max-connections` 超过上限时 `ConnectionLimitHandler` 直接拒绝新连接，防止服务过载。
+12. **直接内存监控**：`ydsz.netty.direct.memory.used` / `direct.memory.max` 指标实时监控堆外内存，使用率 ≥80% 时 `NettyStartupReporter` 输出告警。
+
+## 废弃类
+
+| 类 | 替代方案 | 说明 |
+|---|---|---|
+| `NettyChannelOptions` | 直接使用 `io.netty.channel.ChannelOption` | 仅为常量引用封装，无额外价值 |
+| `NettyBufferUtils` | 直接使用 `Unpooled.copiedBuffer` / `ByteBuf.toString(Charset)` | 方法过于简单 |
+| `IdleStateHandlerFactory` | 直接 `new IdleStateHandler(readerIdle, writerIdle, allIdle, TimeUnit.SECONDS)` | 工厂类无必要间接 |
+| `JsonMessageCodec` | `JsonMessageEncoder` + `JsonMessageDecoder` | 拆分为独立编解码器，职责更清晰 |
 
 ## 变更记录
 
+- **26.09.01**（2026-09-20）：Session 管理（ConnectionSession + SessionRepository + ChannelState）；RPC 请求-响应（NettyRpcClient + RpcMessage）；连接认证 SPI（ConnectionAuthenticator）；可靠消息 ACK（ReliableMessage + AckMessage + ReliableMessageHandler）；Graceful Drain 引流关闭；PooledMessage 对象池；ZeroCopyFileTransfer 零拷贝传输；JsonMessageCodec 拆分为 Encoder + Decoder + Util；直接内存监控指标（3 项新 Gauge）；缓存区水位线可配置；泄漏检测可配置；ReconnectHandler 并发修复；IdleStateHandlerFactory 内联清理；标记 NettyChannelOptions / NettyBufferUtils / JsonMessageCodec / IdleStateHandlerFactory 为 @Deprecated
 - **26.09.01**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 26.09.01 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式；新增 `allocator`（ByteBuf 分配器）、`connection-control`（连接数限制）配置段；新增 `ConnectionLimitHandler`、`ConnectionMetrics`、`NettyPipelineDiagnostics`、`NettyActuatorEndpoint`；provided 依赖 `micrometer-core` 改为通过 `@ConditionalOnClass` 可选装配
 - **26.09.01**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 26.09.01 移除）
 - **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README

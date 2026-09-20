@@ -24,6 +24,8 @@ import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
 import com.njydsz.common.socket.filter.MessageFilter;
 import com.njydsz.common.socket.filter.WebSocketDedupInterceptor;
+import com.njydsz.common.socket.graceful.WebSocketGracefulShutdown;
+import com.njydsz.common.socket.handler.WebSocketMessageDispatcher;
 import com.njydsz.common.socket.health.WebSocketHealthIndicator;
 import com.njydsz.common.socket.heartbeat.WebSocketHeartbeatHandler;
 import com.njydsz.common.socket.interceptor.StompMessageInterceptor;
@@ -525,6 +527,48 @@ public class WebSocketAutoConfiguration {
     return new WebSocketDedupInterceptor(redisTemplate);
   }
 
+  // ==================== ARCH-003: 优雅停机 ====================
+
+  /**
+   * 注册 WebSocket 优雅停机处理器 Bean。
+   *
+   * <p>在 Spring 容器关闭时执行排空流程：拒绝新握手 → 排空重试队列 → 等待 in-flight → 关闭现存会话。
+   * 实现 {@link SmartLifecycle} 接口自动参与 Spring 生命周期，无需手动调用。
+   *
+   * @param pushTemplate 推送模板，用于强制排空重试队列
+   * @param sessionRegistry 本地 Session 注册表，用于关闭现存连接
+   * @return 优雅停机处理器实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(WebSocketGracefulShutdown.class)
+  public WebSocketGracefulShutdown webSocketGracefulShutdown(
+      RealtimePushTemplate pushTemplate, LocalSessionRegistry sessionRegistry) {
+    log.info("[WebSocket] 注册 WebSocketGracefulShutdown（优雅停机排空）");
+    return new WebSocketGracefulShutdown(pushTemplate, sessionRegistry);
+  }
+
+  // ==================== FEAT-002: C→S 消息路由器 ====================
+
+  /**
+   * 注册 WebSocket 消息分发器 Bean。
+   *
+   * <p>扫描所有标注了 {@link com.njydsz.common.socket.handler.WebSocketHandler @WebSocketHandler}
+   * 的 Spring Bean 方法构建 action 路由表，在 STOMP SEND 帧到达时根据 {@code ws-action} 头分发到对应处理器。
+   *
+   * <p>实现 {@link SmartInitializingSingleton} 确保所有单例 Bean 都初始化完成后再扫描注册。
+   *
+   * @param applicationContext Spring 应用上下文
+   * @param messageSerializer 消息序列化器，用于反序列化 payload
+   * @return 消息分发器实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(WebSocketMessageDispatcher.class)
+  public WebSocketMessageDispatcher webSocketMessageDispatcher(
+      ApplicationContext applicationContext, MessageSerializer messageSerializer) {
+    log.info("[WebSocket] 注册 WebSocketMessageDispatcher（C→S 消息路由）");
+    return new WebSocketMessageDispatcher(applicationContext, messageSerializer);
+  }
+
   // ==================== P3-1: STOMP 消息拦截器 ====================
 
   /**
@@ -540,9 +584,10 @@ public class WebSocketAutoConfiguration {
   @ConditionalOnMissingBean(StompMessageInterceptor.class)
   public StompMessageInterceptor stompMessageInterceptor(
       @Autowired(required = false) WebSocketRateLimiter rateLimiter,
-      @Autowired(required = false) WebSocketAuditService auditService) {
+      @Autowired(required = false) WebSocketAuditService auditService,
+      @Autowired(required = false) WebSocketMessageDispatcher messageDispatcher) {
     log.info("[WebSocket] 注册 StompMessageInterceptor");
-    return new StompMessageInterceptor(rateLimiter, auditService);
+    return new StompMessageInterceptor(rateLimiter, auditService, messageDispatcher);
   }
 
   // ==================== P0-1: 健康检查 ====================

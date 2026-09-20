@@ -50,6 +50,24 @@ public class XidServletFilter implements Filter {
     /** Seata 是否可用的标志 */
     private static volatile Boolean seataAvailable;
 
+    /** XID 签名密钥（可选，配置时启用签名校验） */
+    private static volatile String xidSignSecret;
+
+    /**
+     * 设置 XID 签名密钥（由 SeataAutoConfiguration 在初始化时调用）。
+     *
+     * <p>当配置了密钥后，Filter 会对接收到的 XID 进行 HMAC-SHA256 签名校验。
+     * 验签失败的 XID 将被拒绝绑定（日志 WARN，防止 XID 伪造攻击）。
+     *
+     * @param secret XID 签名密钥（ydsz.seata.xid-sign-secret）
+     */
+    public static void setXidSignSecret(String secret) {
+        xidSignSecret = secret;
+        if (secret != null && !secret.isEmpty()) {
+            LOG.info("XID signature validation enabled (sign-secret configured)");
+        }
+    }
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -66,6 +84,21 @@ public class XidServletFilter implements Filter {
             // 无 XID Header，无需绑定，直接放行
             chain.doFilter(request, response);
             return;
+        }
+
+        // 若配置了签名密钥，对 XID 进行验签
+        if (xidSignSecret != null && !xidSignSecret.isEmpty()) {
+            String plainXid = XidSignatureValidator.verifyAndExtract(xid, xidSignSecret);
+            if (plainXid == null) {
+                LOG.warn("XID signature verification failed, rejecting binding. "
+                    + "Possible XID forgery attempt from {}",
+                    httpRequest.getRemoteAddr());
+                // 验签失败：拒绝绑定，但不阻断请求（降级处理）
+                chain.doFilter(request, response);
+                return;
+            }
+            xid = plainXid;
+            LOG.debug("XID signature verified successfully");
         }
 
         try {

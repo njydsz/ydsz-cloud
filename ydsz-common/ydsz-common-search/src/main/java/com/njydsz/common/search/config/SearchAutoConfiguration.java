@@ -378,8 +378,9 @@ public class SearchAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  public SearchTextProcessor searchTextProcessor(SearchProperties properties) {
-    return new SearchTextProcessor(properties);
+  public SearchTextProcessor searchTextProcessor(
+      SearchProperties properties, SearchPipeline pipeline) {
+    return new SearchTextProcessor(properties, pipeline);
   }
 
   /**

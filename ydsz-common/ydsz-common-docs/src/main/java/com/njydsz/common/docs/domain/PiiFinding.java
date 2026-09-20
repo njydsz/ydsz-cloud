@@ -48,6 +48,12 @@ public class PiiFinding {
   /** 文档格式，用于定位模型选择 */
   private DocumentFormat documentFormat;
 
+  /** 匹配位置前最多 30 字符的上下文（不含已脱敏的原文） */
+  private String contextBefore;
+
+  /** 匹配位置后最多 30 字符的上下文（不含已脱敏的原文） */
+  private String contextAfter;
+
   /**
    * 结构化文档（PDF/DOCX/XLSX）中的精确定位信息。
    *

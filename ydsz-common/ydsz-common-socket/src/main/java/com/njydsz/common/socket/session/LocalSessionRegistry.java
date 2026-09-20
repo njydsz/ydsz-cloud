@@ -92,4 +92,25 @@ public class LocalSessionRegistry {
     sessionMap.clear();
     userSessionsMap.clear();
   }
+
+  /**
+   * 获取当前注册的全部 Session 快照映射（供优雅停机使用）。
+   *
+   * <p>返回的映射是 sessionMap 的浅拷贝，对返回值的修改不会影响注册表本身；但返回值中保存的
+   * {@link WebSocketSession} 引用仍指向注册表内的实际实例，调用方应在外部同步块之外按引用操作。
+   *
+   * @return sessionId → WebSocketSession 的不可修改快照
+   */
+  public Map<String, WebSocketSession> getAllSessions() {
+    return Map.copyOf(sessionMap);
+  }
+
+  /**
+   * 获取本机当前注册的全部 Session 数量。
+   *
+   * @return Session 总数
+   */
+  public int getTotalSessionCount() {
+    return sessionMap.size();
+  }
 }

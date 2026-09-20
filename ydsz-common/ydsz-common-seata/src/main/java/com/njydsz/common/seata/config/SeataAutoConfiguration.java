@@ -8,6 +8,7 @@ import com.njydsz.common.seata.validator.SeataConfigurationValidator;
 import com.njydsz.common.seata.xid.FeignXidRequestInterceptor;
 import com.njydsz.common.seata.xid.XidServletFilter;
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -86,6 +87,18 @@ public class SeataAutoConfiguration {
     /** 日志实例 */
     private static final Logger LOG = LoggerFactory.getLogger(SeataAutoConfiguration.class);
 
+    /** Seata 配置属性（注入用于 @PostConstruct 初始化） */
+    private final SeataProperties properties;
+
+    /**
+     * 构造注入 Seata 配置属性。
+     *
+     * @param properties Seata 配置属性
+     */
+    public SeataAutoConfiguration(SeataProperties properties) {
+        this.properties = properties;
+    }
+
     /**
      * 注册健康检查指示器（运行时级：含 TC 连通性和 TransactionManager 初始化状态）。
      *
@@ -120,6 +133,18 @@ public class SeataAutoConfiguration {
     public FeignXidRequestInterceptor seataFeignXidRequestInterceptor() {
         LOG.info("FeignXidRequestInterceptor registered for XID cross-service propagation");
         return new FeignXidRequestInterceptor();
+    }
+
+    /**
+     * 注册 XID 签名密钥到 XidServletFilter（静态注入）。
+     *
+     * <p>当配置了 ydzs.seata.xid-sign-secret 后，Filter 自动启用 HMAC-SHA256 验签。
+     */
+    @PostConstruct
+    public void configureXidSignature() {
+        if (properties.getXidSignSecret() != null && !properties.getXidSignSecret().isEmpty()) {
+            XidServletFilter.setXidSignSecret(properties.getXidSignSecret());
+        }
     }
 
     /**

@@ -50,13 +50,14 @@ public class SearchTextProcessor {
   private volatile long pinyinFileLastModified;
 
   /**
-   * 创建搜索文本预处理器（加载同义词/拼音词典，构建管道）。
+   * 创建搜索文本预处理器（加载同义词/拼音词典，使用注入的搜索管道）。
    *
    * @param properties 搜索配置属性（含同义词/拼音词典路径）
+   * @param pipeline 搜索管道（由 Spring 容器统一管理，可插拔替换）
    */
-  public SearchTextProcessor(SearchProperties properties) {
+  public SearchTextProcessor(SearchProperties properties, SearchPipeline pipeline) {
     this.properties = properties;
-    this.pipeline = SearchPipeline.fromConfig(properties);
+    this.pipeline = pipeline;
     loadSynonyms();
     loadPinyin();
   }

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import com.njydsz.common.search.config.SearchProperties;
+
 /**
  * 搜索限流服务（基于 Redis 滑动窗口计数器）。
  *
