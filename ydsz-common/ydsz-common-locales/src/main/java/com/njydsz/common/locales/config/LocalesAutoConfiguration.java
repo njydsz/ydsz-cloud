@@ -2,6 +2,7 @@ package com.njydsz.common.locales.config;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -61,6 +62,7 @@ import com.njydsz.common.locales.util.MissingTranslationLogger;
 @ConditionalOnClass(MessageSource.class)
 public class LocalesAutoConfiguration {
 
+  /** 自定义 MessageSource Bean 名称（避免与 Spring Boot 默认 messageSource 互相干扰）。 */
   public static final String MESSAGE_SOURCE_BEAN_NAME = "ydszMessageSource";
 
   private static final int DISCOVERY_LOG_THRESHOLD = 1;
@@ -289,7 +291,7 @@ public class LocalesAutoConfiguration {
           if (r.exists()) {
             try (InputStream is = r.getInputStream()) {
               Properties props = new Properties();
-              props.load(new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8));
+              props.load(new InputStreamReader(is, StandardCharsets.UTF_8));
               keys.addAll(props.stringPropertyNames());
             }
           }

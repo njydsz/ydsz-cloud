@@ -1,7 +1,7 @@
 package com.njydsz.common.locales.util;
 
-import java.util.Locale;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;

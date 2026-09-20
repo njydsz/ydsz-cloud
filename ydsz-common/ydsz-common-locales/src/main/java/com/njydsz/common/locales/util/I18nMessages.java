@@ -186,7 +186,9 @@ public class I18nMessages {
   /**
    * 直接通过底层 messageSource 解析消息（不经过 MessageSourceHolder）。
    *
-   * <p>作为 resolver 不可用时的兜底（启动早期、{@code @PostConstruct} 中嵌套调用、MessageSourceHolder 卸载等极端场景）。 行为与改造前一致：调用 {@link MessageSource#getMessage(String, Object[], String, Locale)}，异常时返回 defaultMsg。
+   * <p>作为 resolver 不可用时的兜底（启动早期、{@code @PostConstruct} 中嵌套调用、MessageSourceHolder
+   * 卸载等极端场景）。行为与改造前一致：调用 {@link MessageSource#getMessage(String, Object[], String, Locale)}，
+   * 异常时返回 defaultMsg。
    *
    * @param key 消息键（非 null）
    * @param params 消息参数（可为 null）

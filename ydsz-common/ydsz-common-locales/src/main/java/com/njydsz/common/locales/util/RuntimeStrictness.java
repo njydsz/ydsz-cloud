@@ -35,12 +35,20 @@ public enum RuntimeStrictness {
     this.missingTranslationLogEnabled = missingTranslationLogEnabled;
   }
 
-  /** @return 是否启用负缓存 */
+  /**
+   * 是否启用负缓存（命中时跳过对底层 MessageSource 的重复扫描）。
+   *
+   * @return true = 启用负缓存
+   */
   public boolean isNegativeCacheEnabled() {
     return negativeCacheEnabled;
   }
 
-  /** @return 是否启用缺失翻译节流日志 */
+  /**
+   * 是否启用缺失翻译节流日志（生产环境建议开启，便于发现文案遗漏）。
+   *
+   * @return true = 启用缺失翻译节流日志
+   */
   public boolean isMissingTranslationLogEnabled() {
     return missingTranslationLogEnabled;
   }

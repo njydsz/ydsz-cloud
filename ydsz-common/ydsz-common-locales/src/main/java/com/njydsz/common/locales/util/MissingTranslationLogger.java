@@ -1,5 +1,6 @@
 package com.njydsz.common.locales.util;
 
+import java.util.Locale;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,7 +15,10 @@ import org.slf4j.LoggerFactory;
  *
  * <p>记录运行时 i18n 文案解析失败（返回原始 key 而非目标语言文案）的场景，帮助开发与测试团队发现翻译遗漏。
  *
- * <p><b>节流策略：</b>使用固定大小的环形缓冲区记录最近 N 个缺失 key，仅当 key 不在缓冲区中时才打印 WARN 日志，避免高频重复 key 打爆日志磁盘。 缓冲区去重通过 {@link ConcurrentHashMap#newKeySet()} 提供 O(1) 查找，FIFO 淘汰通过 {@link ConcurrentLinkedDeque} 维护顺序。 启动节流器默认禁用，需由 {@link com.njydsz.common.locales.config.LocalesAutoConfiguration} 显式启用。
+ * <p><b>节流策略：</b>使用固定大小的环形缓冲区记录最近 N 个缺失 key，仅当 key 不在缓冲区中时才打印
+ * WARN 日志，避免高频重复 key 打爆日志磁盘。缓冲区去重通过 {@link ConcurrentHashMap#newKeySet()}
+ * 提供 O(1) 查找，FIFO 淘汰通过 {@link ConcurrentLinkedDeque} 维护顺序。启动节流器默认禁用，
+ * 需由 {@link com.njydsz.common.locales.config.LocalesAutoConfiguration} 显式启用。
  *
  * <p><b>使用约束：</b>
  *
@@ -70,7 +74,7 @@ public final class MissingTranslationLogger {
    * @param key i18n 消息键
    * @param locale 请求的 Locale
    */
-  public static void tryWarn(String key, java.util.Locale locale) {
+  public static void tryWarn(String key, Locale locale) {
     ThrottlerState state = STATE.get();
     if (!state.isEnabled()) {
       return;

@@ -21,6 +21,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
  */
 public class UserPriorityLocaleWritingInterceptor implements HandlerInterceptor {
 
+  /** Request Attribute 标记：当前请求触发了语言切换、需将 Locale 写入 Cookie。 */
   public static final String PERSIST_LOCALE_ATTRIBUTE = "ydsz.locale.to.persist";
 
   private final String localeCookieName;

@@ -129,17 +129,29 @@ public class UserPriorityLocaleResolver implements LocaleResolver {
     request.setAttribute("ydsz.locale.to.persist", locale);
   }
 
-  /** @return 语言切换参数名称 */
+  /**
+   * 获取语言切换请求参数名称（默认 {@code lang}）。
+   *
+   * @return 请求参数名称
+   */
   public String getLangParamName() {
     return langParamName;
   }
 
-  /** @return Cookie 名称 */
+  /**
+   * 获取存储 Locale 的 Cookie 名称（默认 {@link #DEFAULT_LOCALE_COOKIE_NAME}）。
+   *
+   * @return Cookie 名称
+   */
   public String getLocaleCookieName() {
     return localeCookieName;
   }
 
-  /** @return 默认 Locale */
+  /**
+   * 获取兜底默认 Locale（当请求参数 / Cookie / Header 均未提供时生效）。
+   *
+   * @return 默认 Locale
+   */
   public Locale getDefaultLocale() {
     return defaultLocale;
   }

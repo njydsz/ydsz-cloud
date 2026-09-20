@@ -23,7 +23,9 @@ import com.njydsz.common.locales.util.MessageSourceHolder;
 /**
  * i18n Admin REST API（L2 管理端点）
  *
- * <p>提供翻译查询 / 缺失检测 / 缓存清理 / 运行时覆盖四项管理操作。 所有端点受 {@link I18nProperties#isAdminApiEnabled()} 总开关 控制，仅在 Web 环境下注册。鉴权由 Spring Security 承载（路径 {@code /api/admin/i18n/**}），本控制器不处理认证。
+ * <p>提供翻译查询 / 缺失检测 / 缓存清理 / 运行时覆盖四项管理操作。
+ * 所有端点受 {@link I18nProperties#isAdminApiEnabled()} 总开关控制，仅在 Web 环境下注册。
+ * 鉴权由 Spring Security 承载（路径 {@code /api/admin/i18n/**}），本控制器不处理认证。
  *
  * <dl>
  *   <dt>端点清单</dt>
