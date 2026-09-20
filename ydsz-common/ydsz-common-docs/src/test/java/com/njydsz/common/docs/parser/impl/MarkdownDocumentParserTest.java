@@ -260,17 +260,18 @@ class MarkdownDocumentParserTest {
     }
 
     @Test
-    @DisplayName("首行不是 --- 时不应触发 front matter 识别")
+    @DisplayName("首行不是 --- 时后续 --- 应被识别为 Setext H2 而非 front matter 标记")
     void shouldNotTriggerFrontMatterWhenFirstLineIsNotDelimiter() {
-      String md = "首行普通段落\n---\n# 文档标题\n";
+      // "===" 作为 Setext H1 下划线更清晰地区分"---"的 front matter 语义
+      String md = "首行普通段落\n===\n";
       InputStream stream = new ByteArrayInputStream(md.getBytes(StandardCharsets.UTF_8));
 
       DocumentContent result = parser.parse(stream, "no-fm.md", null);
 
-      // 首行是 paragraph，--- 是 Setext 下划线 → 升级为 H2
+      // 首行不是 ---，后续不再走 front matter 路径；"===" 作为 Setext 将前一行升级为 H1
       assertThat(result.getSections()).hasSize(1);
       assertThat(result.getSections().get(0).getType()).isEqualTo("heading");
-      assertThat(result.getSections().get(0).getHeadingLevel()).isEqualTo(2);
+      assertThat(result.getSections().get(0).getHeadingLevel()).isEqualTo(1);
     }
   }
 

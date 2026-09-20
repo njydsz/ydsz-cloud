@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.json.YdszJson;
@@ -42,6 +41,18 @@ public class WebSocketAuditService {
   /** 专用审计 Logger */
   private static final Logger AUDIT_LOG = LoggerFactory.getLogger("WS_AUDIT");
 
+  /** 敏感字段脱敏器（SEC-003）。 */
+  private final SensitiveFieldRedactor redactor;
+
+  /**
+   * 构造 WebSocket 审计服务。
+   *
+   * @param redactor 敏感字段脱敏器，不能为 null
+   */
+  public WebSocketAuditService(SensitiveFieldRedactor redactor) {
+    this.redactor = redactor;
+  }
+
   /**
    * 审计连接建立事件。
    *
@@ -59,7 +70,7 @@ public class WebSocketAuditService {
     if (remoteIp != null) {
       entry.put("remoteIp", remoteIp);
     }
-    AUDIT_LOG.info(YdszJson.toJson(entry));
+    AUDIT_LOG.info(YdszJson.toJson(redactor.redact(entry)));
   }
 
   /**
@@ -77,7 +88,7 @@ public class WebSocketAuditService {
     entry.put("userId", userId);
     entry.put("sessionId", sessionId);
     entry.put("durationMs", durationMs);
-    AUDIT_LOG.info(YdszJson.toJson(entry));
+    AUDIT_LOG.info(YdszJson.toJson(redactor.redact(entry)));
   }
 
   /**
@@ -113,7 +124,7 @@ public class WebSocketAuditService {
     if (error != null) {
       entry.put("error", truncate(error, 500));
     }
-    AUDIT_LOG.info(YdszJson.toJson(entry));
+    AUDIT_LOG.info(YdszJson.toJson(redactor.redact(entry)));
   }
 
   /**

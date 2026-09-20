@@ -71,8 +71,9 @@ public class MarkdownDocumentParser implements DocumentParser {
   /** Setext 下划线：H1 (===) 或 H2 (---)。 */
   private static final Pattern SETEXT_PATTERN = Pattern.compile("^([-=])\\1*\\s*$");
 
-  /** 独立的行内链接：[text](url)，去整行首尾空白后匹配。 */
-  private static final Pattern LINK_PATTERN = Pattern.compile("^\\s*\\[[^\\]]+]\\([^)]+\\)\\s*$");
+  /** 独立的行内链接：[text](url)，去整行首尾空白后匹配。group 1 = text，group 2 = url。 */
+  private static final Pattern LINK_PATTERN =
+      Pattern.compile("^\\s*\\[([^\\]]*)]\\(([^)]+)\\)\\s*$");
 
   /** YAML front matter 边界：单独的 ---。 */
   private static final String FRONT_MATTER_DELIMITER = "---";

@@ -45,6 +45,7 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.common.socket.presence.WebSocketPresenceService;
 import com.njydsz.common.socket.acl.DefaultTopicAclPolicy;
 import com.njydsz.common.socket.acl.TopicAclPolicy;
+import com.njydsz.common.socket.audit.SensitiveFieldRedactor;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketHandshakeRateLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketRateLimiter;
@@ -123,20 +124,37 @@ public class WebSocketAutoConfiguration {
         cb.getHalfOpenAfter().toMillis());
   }
 
-  // ==================== 审计日志 ====================
+  // ==================== 审计日志 + 脱敏（SEC-003）====================
+
+  /**
+   * 注册敏感字段脱敏器（SEC-003）。
+   *
+   * <p>通过 {@link SensitiveFieldRedactor#DEFAULT_SENSITIVE_KEYS} 覆盖 token、mobile、password 等字段，
+   * 业务方也可以提供自定义 {@link SensitiveFieldRedactor} Bean 来覆盖默认集合。
+   *
+   * @return 脱敏器 Bean
+   */
+  @Bean
+  @ConditionalOnMissingBean(SensitiveFieldRedactor.class)
+  public SensitiveFieldRedactor sensitiveFieldRedactor() {
+    return new SensitiveFieldRedactor();
+  }
 
   /**
    * 创建审计日志服务 Bean。
    *
-   * <p>通过专用 Logger {@code WS_AUDIT} 输出结构化审计日志。
+   * <p>通过专用 Logger {@code WS_AUDIT} 输出结构化审计日志。注入 {@link SensitiveFieldRedactor}
+   * 对所有审计 Map 在序列化前按敏感字段名集合执行脱敏。
    *
+   * @param redactor 敏感字段脱敏器
    * @return 审计日志服务实例
    */
   @Bean
   @ConditionalOnMissingBean(WebSocketAuditService.class)
-  public WebSocketAuditService webSocketAuditService() {
-    log.info("[WebSocket] 注册 WebSocketAuditService");
-    return new WebSocketAuditService();
+  public WebSocketAuditService webSocketAuditService(SensitiveFieldRedactor redactor) {
+    log.info("[WebSocket] 注册 WebSocketAuditService (redactor={})",
+        redactor.getClass().getSimpleName());
+    return new WebSocketAuditService(redactor);
   }
 
   // ==================== P3-5: 消息序列化扩展点 ====================
