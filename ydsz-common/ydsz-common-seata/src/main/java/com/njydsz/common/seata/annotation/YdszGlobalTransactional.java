@@ -1,5 +1,6 @@
 package com.njydsz.common.seata.annotation;
 
+import com.njydsz.common.seata.annotation.SeataFallbackMode;
 import io.seata.spring.annotation.GlobalTransactional;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -16,6 +17,7 @@ import org.springframework.core.annotation.AliasFor;
  *   <li>rollbackFor 默认包含 {@link Exception.class}</li>
  *   <li>name 参数继承原生语义，建议格式："模块名-操作名"（如 "order-create-order"）</li>
  *   <li>超时时间通过 {@code ydzs.seata.tm.global-transaction-timeout} 配置（默认 30000ms，符合 YDIZ-TX-002）</li>
+ *   <li>支持 {@link #fallbackMode()} 降级策略（Seata Server 不可用时自动降级）</li>
  * </ul>
  *
  * <p><b>规范引用：</b>
@@ -64,4 +66,16 @@ public @interface YdszGlobalTransactional {
      */
     @AliasFor(annotation = GlobalTransactional.class, attribute = "rollbackFor")
     Class<? extends Throwable>[] rollbackFor() default {Exception.class};
+
+    /**
+     * Seata Server 不可用时的降级策略（默认 {@link SeataFallbackMode#FAIL} 不降级）。
+     *
+     * <p>推荐场景：
+     * <ul>
+     *   <li>强一致性核心链路（库存扣减、资金变动）→ {@link SeataFallbackMode#FAIL}</li>
+     *   <li>最终一致性场景（通知同步、日志记录）→ {@link SeataFallbackMode#LOCAL_TRANSACTION}</li>
+     *   <li>弱一致性场景（数据统计、缓存刷新）→ {@link SeataFallbackMode#SKIP}</li>
+     * </ul>
+     */
+    SeataFallbackMode fallbackMode() default SeataFallbackMode.FAIL;
 }

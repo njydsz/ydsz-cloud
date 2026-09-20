@@ -1,5 +1,6 @@
 package com.njydsz.common.docs.pipeline;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +18,8 @@ import com.njydsz.common.docs.domain.ParseOptions;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.SecurityLevel;
+import com.njydsz.common.docs.exception.DocumentException;
+import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
@@ -266,9 +269,14 @@ public class DocumentProcessorPipeline {
       return result;
     }
 
-    private SecurityScanResult doScanSecurity(InputStream inputStream, String fileName) throws Exception {
+    private SecurityScanResult doScanSecurity(InputStream inputStream, String fileName) {
       var format = com.njydsz.common.docs.enums.DocumentFormat.fromFileName(fileName);
-      Path tempFile = tempFileManager.createAndWrite("ydsz-docs-pipeline-", ".tmp", inputStream);
+      Path tempFile;
+      try {
+        tempFile = tempFileManager.createAndWrite("ydsz-docs-pipeline-", ".tmp", inputStream);
+      } catch (IOException e) {
+        throw new DocumentException(DocumentExceptionCode.SECURITY_SCAN_FAILED, e);
+      }
       try {
         List<SecurityScanResult.SecurityFinding> allFindings = new ArrayList<>(16);
         try (InputStream fis = Files.newInputStream(tempFile)) {
@@ -278,6 +286,8 @@ public class DocumentProcessorPipeline {
               allFindings.addAll(scanResult.getFindings());
             }
           }
+        } catch (IOException e) {
+          throw new DocumentException(DocumentExceptionCode.SECURITY_SCAN_FAILED, e);
         }
         SecurityLevel level = allFindings.isEmpty()
             ? SecurityLevel.SAFE

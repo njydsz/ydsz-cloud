@@ -587,10 +587,23 @@ rules:
   - id: "YDIZ-COMMON-003"
     category: "common-reuse"
     severity: "P0"
-    title: "分布式事务禁止直接使用 Seata 原生 API"
-    description: "禁止业务代码直接 import org.apache.seata.*，所有 Seata 能力必须通过 com.njydsz.common.seata.* 包访问。"
-    pattern: "业务代码 import org.apache.seata."
-    fix: "使用 DistributedTransactionManager 接口"
+    title: "【强制】分布式事务禁止直接使用 Seata 原生 API"
+    description: |
+      禁止业务代码直接 import org.apache.seata.*（Seata 原生 API 定位为基础设施，不允许业务侧编译期依赖）。
+      所有 Seata 分布式事务能力必须通过 com.njydsz.common.seata.* 包提供的封装访问：
+      - 标注分布式事务：使用 @YdszGlobalTransactional 注解（位于 com.njydsz.common.seata.annotation）
+      - 配置事务属性：使用 ydsz.seata.* 前缀（SeataProperties）
+      - 运行时健康检查：通过 ydsz-common-seata 内置 SeataHealthIndicator
+      反射调用 Seata RootContext 的代码仅允许出现在 ydsz-common-seata 模块内部。
+    pattern: |
+      以下情形构成违规：
+      1. 业务代码或 ydsz-common-{非seata} 模块中直接 import org.apache.seata.*
+      2. 使用 @GlobalTransactional（Seata 原生注解）替代 @YdszGlobalTransactional
+      3. 在 Feign Interceptor 中直接调用 RootContext.getXID()（应使用 FeignXidRequestInterceptor）
+    fix: |
+      1. 替换 @GlobalTransactional → @YdszGlobalTransactional（在 ydzs-common-seata 中定义，通过元注解桥接）
+      2. 移除 org.apache.seata.* 的 import
+      3. 使用 ydzs-common-seata 提供的 FeignXidRequestInterceptor / XidServletFilter
     source: "编码规范 25.1 节"
 
   - id: "YDIZ-COMMON-004"
@@ -1208,11 +1221,12 @@ rules:
   - id: "YDIZ-TX-004"
     category: "tx"
     severity: "P1"
-    title: "【建议】Feign 调用链必须透传 XID（ydsz-common-feign 已内置拦截器，使用时无需额外配置）"
+    title: "【强制】Feign 调用链必须透传 XID（ydsz-common-seata 已内置拦截器 + Filter，引入依赖后自动生效）"
     description: |
       分布式事务中，XID（全局事务 ID）必须跨服务传播以确保事务上下文连续性。
-      ydsz-common-feign 已内置 FeignXidRequestInterceptor，自动将当前线程的 XID 注入 Feign 请求 Header。
-      使用时只要项目引入了 ydsz-common-feign 依赖，XID 透传自动生效，无需额外配置。
+      ydsz-common-seata 已内置 FeignXidRequestInterceptor（发出端：注入 XID Header）和 XidServletFilter（接收端：绑定 RootContext）。
+      引入 ydsz-common-seata 依赖后，SeataAutoConfiguration 自动注册两个 Bean，无需业务方手动配置。
+      XID 传播采用反射调用 Seata API 实现，避免编译期对 Seata 的硬依赖。
       禁止通过手动拼接 Header 方式传递 XID，禁止在 Feign Configuration 中覆盖默认拦截器。
     pattern: |
       以下情形构成违规：
@@ -1242,23 +1256,26 @@ rules:
           }
       }
     example_good: |
-      // ✅ 使用 ydsz-common-feign 默认配置，XID 自动透传
-      // 无需任何额外代码，只需确保 pom.xml 引入依赖：
+      // ✅ 引入 ydsz-common-seata 后 XID 自动透传（pom.xml）
       // <dependency>
       //     <groupId>com.njydsz</groupId>
-      //     <artifactId>ydsz-common-feign</artifactId>
+      //     <artifactId>ydsz-common-seata</artifactId>
       // </dependency>
 
-      // ✅ 当需要自定义拦截器时，继承并保留 XID 拦截器
-      @Configuration
-      public class FeignConfig {
-          @Bean
-          public RequestInterceptor customInterceptor() {
-              return new FeignXidRequestInterceptor()  // 先确保 XID 透传
-                  .andThen(template -> { /* 自定义逻辑 */ });
+      // ✅ 业务代码使用 @YdszGlobalTransactional 标注分布式事务
+      @Service
+      public class OrderService {
+          @YdszGlobalTransactional(name = "order-create-order")
+          public void createOrder(OrderDTO dto) {
+              orderRepository.save(order);
+              // Feign 调用自动透传 XID，无需手动注入 Header
+              inventoryClient.deduct(dto.getSkuId(), dto.getQuantity());
           }
       }
-    source: "编码规范 §25.5 - 【建议】"
+
+      // ✅ 当下游收到 XID 时，XidServletFilter 自动绑定到 RootContext
+      // 无需业务代码干预，Filter 已在 SeataAutoConfiguration 中自动注册
+    source: "编码规范 §25.5 - 【强制】"
 
   # ============================================
   # ============================================

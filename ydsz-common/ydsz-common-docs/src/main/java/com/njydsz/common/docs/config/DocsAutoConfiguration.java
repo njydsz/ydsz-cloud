@@ -93,6 +93,8 @@ public class DocsAutoConfiguration {
    */
   @Bean(name = "docsAsyncExecutor", destroyMethod = "shutdown")
   @ConditionalOnMissingBean(name = "docsAsyncExecutor")
+  // CHECKSTYLE.OFF: RegexpSinglelineJava — L5 业务模块提供默认线程池 Bean，
+  // 应用方可通过同名 Bean 覆盖。使用 ThreadPoolTaskExecutor 以便 Spring 容器托管生命周期
   public ThreadPoolTaskExecutor docsAsyncExecutor(DocsProperties properties) {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
     executor.setCorePoolSize(properties.getAsyncPoolSize());

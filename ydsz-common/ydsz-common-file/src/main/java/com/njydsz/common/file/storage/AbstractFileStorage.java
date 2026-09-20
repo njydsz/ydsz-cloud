@@ -1,11 +1,14 @@
 package com.njydsz.common.file.storage;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
@@ -112,7 +116,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
   protected volatile CheckpointService checkpointService;
 
   /** 分片上传并发控制信号量（防止大规模并发分片请求压垮存储后端） */
-  private volatile java.util.concurrent.Semaphore chunkUploadSemaphore;
+  private volatile Semaphore chunkUploadSemaphore;
 
   /** 并发上传保护器（可选） */
   protected UploadConcurrencyGuard concurrencyGuard;
@@ -227,12 +231,12 @@ public abstract class AbstractFileStorage implements IFileStorage {
    * 设置分片上传并发控制信号量
    *
    * <p>信号量由 {@link com.njydsz.common.file.config.FileConfiguration} 根据 {@code
-   * ydsz.file.concurrency-control.max-concurrent-chunks} 配置创建并注入。 使用静态 {@link java.util.concurrent.Semaphore}
+   * ydsz.file.concurrency-control.max-concurrent-chunks} 配置创建并注入。 使用静态 {@link Semaphore}
    * 支持存储实例维度的并发度控制。
    *
    * @param semaphore 信号量实例，为 null 时不进行并发控制
    */
-  public void setChunkUploadSemaphore(java.util.concurrent.Semaphore semaphore) {
+  public void setChunkUploadSemaphore(Semaphore semaphore) {
     this.chunkUploadSemaphore = semaphore;
   }
 
@@ -479,8 +483,8 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     try (contentSource) {
-      // P0-1: File dedup check — 基于已缓冲的内容计算秒传 hash，不重新读取上传流
-      String dedupHash = null;
+      // P0-1 + P2-1: File dedup check — 单遍流读取计算 adler32+SHA-256 双指纹，adler32 一级校验快速排除新文件
+      FileDedupService.FileContentHash dedupHash = null;
       if (fileDedupService != null) {
         try (InputStream dedupStream = contentSource.openStream()) {
           dedupHash = fileDedupService.calculateHash(dedupStream);
@@ -840,7 +844,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     validatePartNumber(partNumber);
 
     // P2-4: 分片上传并发度控制，防止大规模并发分片请求压垮存储后端
-    java.util.concurrent.Semaphore semaphore = chunkUploadSemaphore;
+    Semaphore semaphore = chunkUploadSemaphore;
     boolean acquired = false;
     if (semaphore != null) {
       try {

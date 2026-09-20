@@ -113,6 +113,10 @@ public class SeataPropertyBridgePostProcessor implements EnvironmentPostProcesso
         copyIfMissing(environment, "ydsz.seata.rm.report-retry-count",
             "seata.client.rm.report-retry-count", bridgedProperties);
 
+        // metrics-enabled → seata.metrics.enabled（规范 §25.7 强制要求）
+        copyIfMissing(environment, "ydsz.seata.metrics-enabled",
+            "seata.metrics.enabled", bridgedProperties);
+
         if (!bridgedProperties.isEmpty()) {
             MutablePropertySources propertySources = environment.getPropertySources();
             // 移除已存在的桥接源（防止重复添加）

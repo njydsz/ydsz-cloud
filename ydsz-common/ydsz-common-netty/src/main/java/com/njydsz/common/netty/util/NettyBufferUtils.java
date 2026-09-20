@@ -29,7 +29,10 @@ import io.netty.util.CharsetUtil;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 此类方法过于简单，直接使用 {@link io.netty.buffer.Unpooled#copiedBuffer(CharSequence,
+ *     java.nio.charset.Charset)} 和 {@link ByteBuf#toString(java.nio.charset.Charset)} 即可
  */
+@Deprecated(since = "26.09.01", forRemoval = false)
 public final class NettyBufferUtils {
 
   /** 私有构造 — 工具类禁止实例化 */

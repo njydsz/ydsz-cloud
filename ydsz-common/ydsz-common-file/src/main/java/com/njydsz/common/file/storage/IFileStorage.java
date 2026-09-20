@@ -2,6 +2,7 @@ package com.njydsz.common.file.storage;
 
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -524,10 +525,10 @@ public interface IFileStorage {
    * @param requests 批量上传请求列表（不可为 null）
    * @return 上传结果列表，顺序与输入一一对应。失败项 getUrl() 返回空字符串
    */
-  default java.util.List<FileStorage> batchUpload(
-      String bucketName, java.util.List<UploadRequest> requests) {
+  default List<FileStorage> batchUpload(
+      String bucketName, List<UploadRequest> requests) {
     if (requests == null || requests.isEmpty()) {
-      return java.util.Collections.emptyList();
+      return Collections.emptyList();
     }
     return requests.parallelStream()
         .map(

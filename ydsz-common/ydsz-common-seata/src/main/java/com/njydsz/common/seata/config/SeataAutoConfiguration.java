@@ -2,6 +2,7 @@ package com.njydsz.common.seata.config;
 
 import com.njydsz.common.seata.annotation.YdszGlobalTransactional;
 import com.njydsz.common.seata.datasource.SeataDynamicDataSourceAdapter;
+import com.njydsz.common.seata.fallback.SeataFallbackBeanPostProcessor;
 import com.njydsz.common.seata.health.SeataHealthIndicator;
 import com.njydsz.common.seata.validator.SeataConfigurationValidator;
 import com.njydsz.common.seata.xid.FeignXidRequestInterceptor;
@@ -165,6 +166,21 @@ public class SeataAutoConfiguration {
     public SeataDynamicDataSourceAdapter seataDynamicRoutingDataSource() {
         LOG.info("SeataDynamicDataSourceAdapter registered for AT mode + dynamic datasource integration");
         return new SeataDynamicDataSourceAdapter();
+    }
+
+    /**
+     * 注册 Seata 事务降级处理器。
+     *
+     * <p>为标注 {@code @YdszGlobalTransactional(fallbackMode != FAIL)} 的 Bean 生成代理，
+     * 拦截 Seata 不可用异常并按配置策略降级。
+     *
+     * @return 降级处理器
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SeataFallbackBeanPostProcessor seataFallbackBeanPostProcessor() {
+        LOG.info("SeataFallbackBeanPostProcessor registered (fallback mode support: FAIL / LOCAL_TRANSACTION / SKIP)");
+        return new SeataFallbackBeanPostProcessor();
     }
 
     /**

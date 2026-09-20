@@ -30,7 +30,9 @@ import io.netty.channel.ChannelOption;
  * @author ydsz-team
  * @since 26.09.01
  * @see ChannelOption
+ * @deprecated 直接引用 {@link ChannelOption} 常量即可（如 {@code ChannelOption.TCP_NODELAY}），无需额外封装类
  */
+@Deprecated(since = "26.09.01", forRemoval = false)
 public final class NettyChannelOptions {
 
   /** 私有构造 — 工具类禁止实例化 */

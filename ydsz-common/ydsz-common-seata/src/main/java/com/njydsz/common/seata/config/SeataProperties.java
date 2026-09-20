@@ -70,6 +70,9 @@ public class SeataProperties {
     /** XID 签名密钥（推荐生产环境配置，防止 XID 伪造攻击） */
     private String xidSignSecret;
 
+    /** 是否启用 Seata 原生 Metrics（规范 §25.7 强制要求暴露 seata.tx.count / seata.tx.duration） */
+    private boolean isMetricsEnabled = true;
+
     /** UndoLog 配置 */
     private UndoLog undoLog = new UndoLog();
 
