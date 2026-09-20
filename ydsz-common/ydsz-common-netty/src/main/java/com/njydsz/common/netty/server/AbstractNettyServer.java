@@ -31,6 +31,11 @@ import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
 import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
 import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
+import com.njydsz.common.netty.session.ChannelState;
+import com.njydsz.common.netty.session.ConnectionSession;
+import com.njydsz.common.netty.session.DefaultConnectionSession;
+import com.njydsz.common.netty.session.InMemorySessionRepository;
+import com.njydsz.common.netty.session.SessionRepository;
 import com.njydsz.common.netty.ssl.SslContextFactory;
 import com.njydsz.common.netty.transport.NativeTransportDetector;
 import com.njydsz.common.netty.diagnostics.NettyStartupReporter;
@@ -108,6 +113,9 @@ public abstract class AbstractNettyServer {
 
   /** 可选依赖 — Channel 事件分发器（由 NettyAutoConfiguration 通过 setter 注入） */
   private ChannelEventDispatcher channelEventDispatcher;
+
+  /** 可选依赖 — 会话仓库（用于业务层 Session 管理，默认使用内存实现） */
+  private SessionRepository sessionRepository = new InMemorySessionRepository();
 
   /**
    * 构造 Netty TCP Server。
@@ -428,10 +436,54 @@ public abstract class AbstractNettyServer {
         pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
       }
 
+      // Session 生命周期管理（在子类 Handler 之前注册，确保 Session 在业务处理前创建）
+      pipeline.addLast("sessionLifecycle", new SessionLifecycleHandler());
+
       // 子类自定义 Pipeline
       initChannelPipeline(ch);
 
       groupManager.add(ch);
+    }
+  }
+
+  /**
+   * Session 生命周期 Handler — 在 Channel 激活/关闭时自动管理 ConnectionSession 的生命周期。
+   *
+   * <p>此 Handler 负责：
+   *
+   * <ul>
+   *   <li>channelActive：创建 {@link DefaultConnectionSession} 并注册到 {@link SessionRepository}
+   *   <li>channelInactive：将 Session 状态流转到 {@link ChannelState#CLOSED}，并从仓库移除
+   * </ul>
+   *
+   * <p>设计为 {@code @Sharable} 的原因：此 Handler 不持有 Channel 特有状态， 所有状态由外部 {@link SessionRepository} 维护。
+   */
+  @ChannelHandler.Sharable
+  private final class SessionLifecycleHandler extends ChannelInboundHandlerAdapter {
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+      Channel channel = ctx.channel();
+      DefaultConnectionSession session = new DefaultConnectionSession(channel);
+      sessionRepository.add(session);
+      log.debug("[Netty-Session] Channel 激活, Session 创建: sessionId={}, remote={}",
+          session.getSessionId(), channel.remoteAddress());
+      super.channelActive(ctx);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+      Channel channel = ctx.channel();
+      // 通过 Channel 的 hashCode 推算 sessionId（sessionId 格式：channelId@timestamp）
+      // 更简洁的做法：遍历 sessionRepository 找到匹配的 Channel
+      sessionRepository.find(s -> s.getChannel().equals(channel))
+          .forEach(session -> {
+            session.transitionState(ChannelState.CLOSED);
+            sessionRepository.remove(session.getSessionId());
+            log.debug("[Netty-Session] Channel 关闭, Session 移除: sessionId={}",
+                session.getSessionId());
+          });
+      super.channelInactive(ctx);
     }
   }
 
@@ -534,6 +586,24 @@ public abstract class AbstractNettyServer {
 
   public void setChannelEventDispatcher(ChannelEventDispatcher channelEventDispatcher) {
     this.channelEventDispatcher = channelEventDispatcher;
+  }
+
+  /**
+   * 设置会话仓库。
+   *
+   * @param sessionRepository 会话仓库实例
+   */
+  public void setSessionRepository(SessionRepository sessionRepository) {
+    this.sessionRepository = sessionRepository;
+  }
+
+  /**
+   * 获取会话仓库（用于业务层 Session 管理）。
+   *
+   * @return 会话仓库实例
+   */
+  public SessionRepository getSessionRepository() {
+    return sessionRepository;
   }
 
   /**

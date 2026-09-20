@@ -130,6 +130,46 @@ public class FileProperties {
   /** 上传并发控制配置 */
   private ConcurrencyControl concurrencyControl = new ConcurrencyControl();
 
+  /**
+   * 下载缓冲区大小（字节，默认 64KB）
+   *
+   * <p>影响 {@code download()} 方法中字节拷贝的缓冲区大小。 64KB 是业界主流对象存储 SDK（阿里 OSS SDK / Spring Content）的默认值， 在高带宽场景下相比 8KB
+   * 能显著减少系统调用次数。
+   */
+  @Min(4096)
+  @Max(1048576)
+  private int downloadBufferSize = 64 * 1024;
+
+  /**
+   * 分片上传上下文 TTL（秒，默认 24 小时）
+   *
+   * <p>超时未完成的上传上下文将被 {@link com.njydsz.common.file.config.FileScheduler} 定时清理。
+   */
+  @Min(60)
+  private long multipartContextTtlSeconds = 24 * 3600;
+
+  /**
+   * 断点续传检查点 TTL（秒，默认 24 小时）
+   *
+   * <p>检查点过期后，断点续传将不再可用，需重新上传。
+   */
+  @Min(60)
+  private long checkpointTtlSeconds = 24 * 3600;
+
+  /**
+   * 是否启用服务端加密（SSE）
+   *
+   * <p>启用后上传的对象将在存储后端使用服务端加密保护。 支持算法由 {@link #encryptionAlgorithm} 指定。
+   */
+  private boolean encryptionEnabled = false;
+
+  /**
+   * 服务端加密算法
+   *
+   * <p>可选值：{@code AES256}（S3 默认）、{@code aws:KMS}（AWS KMS 托管密钥）、 {@code RSA}（RSA 公钥加密，部分云厂商支持）。
+   */
+  private String encryptionAlgorithm = "AES256";
+
   /** 上传并发控制配置 */
   @Data
   public static class ConcurrencyControl {

@@ -8,9 +8,6 @@ import com.njydsz.common.seata.validator.SeataConfigurationValidator;
 import com.njydsz.common.seata.xid.FeignXidRequestInterceptor;
 import com.njydsz.common.seata.xid.XidServletFilter;
 import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterRegistration;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -19,10 +16,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 
 /**
  * Seata 分布式事务自动配置

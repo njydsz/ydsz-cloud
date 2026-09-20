@@ -94,12 +94,6 @@ public abstract class AbstractFileStorage implements IFileStorage {
   /** 分片文件名格式 */
   protected static final String CHUNK_FILE_NAME_FORMAT = "part-%d";
 
-  /** 分片上下文 TTL（24 小时） */
-  private static final long MULTIPART_CONTEXT_TTL_SECONDS = 24 * 3600;
-
-  /** 检查点 TTL（24 小时） */
-  private static final long CHECKPOINT_TTL_SECONDS = 24 * 3600;
-
   /** 存储配置属性 */
   @Getter protected final FileProperties fileProperties;
 
@@ -178,7 +172,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
                   ? lister.listParts(bucket, object, uploadId)
                   : Collections.emptyList();
             },
-            CHECKPOINT_TTL_SECONDS);
+            fileProperties.getCheckpointTtlSeconds());
     listerHolder[0] = this::listParts;
   }
 
@@ -811,7 +805,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         result.getUploadId(),
         new MultipartContextStore.MultipartContextData(
             result.getUploadId(), resolvedBucket, resolvedObjectName),
-        MULTIPART_CONTEXT_TTL_SECONDS);
+        fileProperties.getMultipartContextTtlSeconds());
 
     log.info(
         "[Storage] chunked upload initiated, bucket={}, object={}, uploadId={}",
@@ -880,7 +874,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
               partChunkNames,
               context.createTime(),
               System.currentTimeMillis()),
-          MULTIPART_CONTEXT_TTL_SECONDS);
+          fileProperties.getMultipartContextTtlSeconds());
 
       // 更新检查点中的分片 MD5
       if (isChunkMd5CheckEnabled() && chunkMd5 != null) {

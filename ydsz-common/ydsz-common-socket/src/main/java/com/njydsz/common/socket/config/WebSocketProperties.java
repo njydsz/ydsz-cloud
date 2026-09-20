@@ -217,6 +217,12 @@ public class WebSocketProperties {
 
     /** 最大重试延迟（毫秒），退避后不超过此值 */
     private long maxRetryDelayMs = 60000L;
+
+    /** 定时刷新重试队列的执行间隔（毫秒），默认 10000ms */
+    private long flushIntervalMs = 10000L;
+
+    /** 每次刷新最大处理条数（dequeueExpired 的 maxCount），默认 100 */
+    private int batchFlushSize = 100;
   }
 
   /**
