@@ -97,6 +97,9 @@ public class SeataProperties {
 
         /** 仅特定列存入 undo_log：true=只序列化修改字段，false=整行的前后镜像 */
         private boolean isOnlyCareUpdateColumns = true;
+
+        /** 启动期是否校验 undo_log 表存在性（默认 false，生产环境建议 true） */
+        private boolean isValidateSchema = false;
     }
 
     /**

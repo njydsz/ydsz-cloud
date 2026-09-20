@@ -71,6 +71,9 @@ public final class WebSocketConstants {
   /** WebSocket 握手属性中的 username key */
   public static final String WS_ATTR_USERNAME = "username";
 
+  /** WebSocket 握手属性中的 tenantId key（ARCH-005 租户隔离） */
+  public static final String WS_ATTR_TENANT_ID = "tenantId";
+
   /** 握手请求中 JWT token 的查询参数名 */
   public static final String WS_TOKEN_PARAM = "token";
 

@@ -145,8 +145,9 @@ public class SearchProperties {
   /**
    * 搜索结果缓存配置，对应 {@code ydsz.search.cache.*}。
    *
-   * <p>缓存以「搜索请求 → 响应」为粒度存放在 JVM 堆内的 {@code ConcurrentHashMap}（见 {@code
-   * SearchCacheService}），不做跨实例同步，因此集群环境下各节点的缓存彼此独立。
+   * <p>采用 Caffeine（L1 进程内） + Redis（L2 跨进程）二级缓存架构：
+   * L1 亚毫秒级命中但容量小（默认 200 条 / 10s TTL），
+   * L2 毫秒级命中且集群共享（默认 1000 条 / 60s TTL）。
    *
    * <p>命中缓存可显著降低 PG / ES 等引擎压力，代价是索引更新后最长有 {@code ttl} 秒的陈旧窗口；
    * 对实时性要求高的检索场景建议关掉或调小 {@code ttl}。
@@ -157,11 +158,22 @@ public class SearchProperties {
     /** 是否启用结果缓存；关闭后每次查询都会回源引擎 */
     private boolean enabled = true;
 
-    /** 缓存条目存活时间，单位秒；空结果的 TTL 会在此基础上再缩短为三分之一以防缓存穿透 */
+    /** L2 Redis 缓存条目存活时间，单位秒；空结果的 TTL 会在此基础上再缩短为三分之一以防缓存穿透 */
     private long ttl = 60;
 
-    /** 缓存条目上限，超出后按容量策略淘汰；构造时会被收敛到不超过 {@code Integer.MAX_VALUE} */
+    /** L2 Redis 缓存条目上限 */
     private long maxSize = 1000;
+
+    /** L1 Caffeine 进程内缓存最大条目数 */
+    @Min(16)
+    @Max(10000)
+    private long l1MaxSize = 200;
+
+    /** L1 Caffeine 进程内缓存存活时间（秒），短 TTL 降低热点 key 竞争 */
+    @Min(1)
+    @Max(300)
+    private long l1Ttl = 10;
+  }
   }
 
   /** 索引构建与同步配置（批大小、线程池、重试策略）。 */

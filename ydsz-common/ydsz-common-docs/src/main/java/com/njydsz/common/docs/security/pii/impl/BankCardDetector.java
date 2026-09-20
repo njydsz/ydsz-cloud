@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.PiiType;
+import com.njydsz.common.docs.security.pii.PiiContextExtractor;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.safe.sensitive.SensitiveType;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
@@ -51,6 +52,8 @@ public class BankCardDetector implements PiiDetector {
       if (match.type() != SensitiveType.BANK_CARD) {
         continue;
       }
+      PiiContextExtractor.Context ctx =
+          PiiContextExtractor.extract(text, match.startIndex(), match.endIndex());
       findings.add(
           PiiFinding.builder()
               .type(PiiType.BANK_CARD)
@@ -58,6 +61,8 @@ public class BankCardDetector implements PiiDetector {
               .startIndex(match.startIndex())
               .endIndex(match.endIndex())
               .confidence(BigDecimal.valueOf(0.92))
+              .contextBefore(ctx.before())
+              .contextAfter(ctx.after())
               .build());
     }
 

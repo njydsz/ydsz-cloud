@@ -5,6 +5,7 @@ import com.njydsz.common.seata.datasource.SeataDynamicDataSourceAdapter;
 import com.njydsz.common.seata.fallback.SeataFallbackBeanPostProcessor;
 import com.njydsz.common.seata.health.SeataHealthIndicator;
 import com.njydsz.common.seata.validator.SeataConfigurationValidator;
+import com.njydsz.common.seata.validator.UndoLogSchemaValidator;
 import com.njydsz.common.seata.xid.FeignXidRequestInterceptor;
 import com.njydsz.common.seata.xid.XidServletFilter;
 import io.micrometer.core.instrument.MeterRegistry;
