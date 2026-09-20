@@ -79,7 +79,7 @@ public class RuleConfigRefreshEvent extends DomainEvent {
    * @param operator 操作人
    */
   public RuleConfigRefreshEvent(String ruleCode, ChangeType changeType, String operator) {
-    super(null, null, EVENT_TYPE, ruleCode, AGGREGATE_TYPE, buildMetadata(changeType, operator));
+    super(null, null, EVENT_TYPE, ruleCode, AGGREGATE_TYPE, buildMetadata(changeType, operator), 1);
   }
 
   /**

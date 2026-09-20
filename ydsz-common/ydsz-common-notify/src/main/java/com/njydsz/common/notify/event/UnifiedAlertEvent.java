@@ -98,7 +98,8 @@ public class UnifiedAlertEvent extends DomainEvent {
         DomainEventTypes.UNIFIED_ALERT,
         sourceId,
         sourceModule,
-        Collections.emptyMap());
+        Collections.emptyMap(),
+        1);
     this.alertCode = alertCode;
     this.alertType = alertType;
     this.alertLevel = alertLevel;

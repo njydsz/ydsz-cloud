@@ -1,8 +1,10 @@
 package com.njydsz.common.jdbc.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -43,7 +45,6 @@ import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
  * @see SqlTraceInnerInterceptor
  * @see MybatisPlusConfiguration
  */
-@Slf4j
 @AutoConfiguration
 @ConditionalOnClass(MybatisPlusInterceptor.class)
 @ConditionalOnExpression(
@@ -54,6 +55,8 @@ import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
   SqlAuditProperties.class
 })
 public class SqlTraceAutoConfiguration {
+
+  private static final Logger log = LoggerFactory.getLogger(SqlTraceAutoConfiguration.class);
 
   /**
    * 构造 SQL 链路追踪自动配置

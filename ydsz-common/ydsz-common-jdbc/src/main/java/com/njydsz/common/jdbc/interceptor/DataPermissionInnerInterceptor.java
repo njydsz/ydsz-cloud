@@ -1,11 +1,14 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
@@ -43,9 +46,10 @@ import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public abstract class DataPermissionInnerInterceptor extends CachingJsqlParserSupport
     implements InnerInterceptor {
+
+  private static final Logger log = LoggerFactory.getLogger(DataPermissionInnerInterceptor.class);
 
   /** 数据权限配置 */
   protected final DataPermissionConfiguration config;

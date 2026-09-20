@@ -4,12 +4,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 /**
@@ -47,8 +48,9 @@ import org.springframework.util.Assert;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public class NPlusOneDetectionInnerInterceptor implements InnerInterceptor {
+
+  private static final Logger log = LoggerFactory.getLogger(NPlusOneDetectionInnerInterceptor.class);
 
   /** 默认阈值：同一 Mapper 方法在当前上下文调用超过此值时告警 */
   public static final int DEFAULT_THRESHOLD = 3;

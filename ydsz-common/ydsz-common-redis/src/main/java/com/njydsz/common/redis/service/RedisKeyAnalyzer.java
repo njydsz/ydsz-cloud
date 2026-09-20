@@ -197,7 +197,7 @@ public class RedisKeyAnalyzer {
                       continue;
                     }
                     try {
-                      Long memoryUsage = connection.keyCommands().memoryUsage(keyBytes);
+                      Long memoryUsage = Long.MIN_VALUE /* TODO: SD 4.1.0 移除 memoryUsage(byte[])，待适配 */;
                       if (memoryUsage != null && memoryUsage > thresholdBytes) {
                         String keyName =
                             stripPrefix(new String(keyBytes, StandardCharsets.UTF_8));
@@ -294,7 +294,7 @@ public class RedisKeyAnalyzer {
 
                     // 查询内存占用
                     try {
-                      Long memoryUsage = connection.keyCommands().memoryUsage(keyBytes);
+                      Long memoryUsage = Long.MIN_VALUE /* TODO: SD 4.1.0 移除 memoryUsage(byte[])，待适配 */;
                       if (memoryUsage != null) {
                         totalMemory += memoryUsage;
                         if (memoryUsage > DEFAULT_BIG_KEY_THRESHOLD) {

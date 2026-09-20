@@ -1,7 +1,9 @@
 package com.njydsz.common.jdbc.interceptor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
-import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.delete.Delete;
@@ -36,8 +38,9 @@ import com.njydsz.common.jdbc.monitor.SqlAstCache;
  * @see SqlAstCache
  * @see JsqlParserSupport
  */
-@Slf4j
 public abstract class CachingJsqlParserSupport extends JsqlParserSupport {
+
+  private static final Logger log = LoggerFactory.getLogger(CachingJsqlParserSupport.class);
 
   /** SQL 解析缓存 */
   protected final SqlAstCache sqlAstCache;

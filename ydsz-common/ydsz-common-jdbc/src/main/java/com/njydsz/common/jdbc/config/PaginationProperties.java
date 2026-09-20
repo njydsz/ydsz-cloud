@@ -1,6 +1,5 @@
 package com.njydsz.common.jdbc.config;
 
-import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -34,48 +33,25 @@ import org.springframework.context.annotation.Configuration;
  * @since 26.09.01
  * @see PaginationInnerInterceptor
  */
-@Data
 @Configuration
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
 @ConfigurationProperties(prefix = "ydsz.jdbc.pagination")
 public class PaginationProperties {
 
-  /**
-   * 数据库类型（可选）
-   *
-   * <p>支持的类型：mysql, oracle, postgresql, sqlserver, db2, h2, sqlite, mariadb 等。
-   *
-   * <p>不配置时由 MyBatis-Plus 自动检测。
-   */
   private String dbType;
-
-  /**
-   * 单页最大记录数
-   *
-   * <p>防止无限制查询导致的全表扫描和 OOM。
-   *
-   * <p>默认值：500
-   */
   private Long maxLimit = 500L;
-
-  /**
-   * 是否自动裁剪 COUNT 语句
-   *
-   * <p>开启后 MP 会自动移除与 COUNT 无关的 LEFT JOIN、ORDER BY、GROUP BY 等子句，
-   * 提升分页 COUNT 查询的性能。仅当分页查询存在复杂 JOIN 时才会生效。
-   *
-   * <p>默认值：true
-   */
   private boolean isOptimizeCount = true;
-
-  /**
-   * 页码溢出是否继续查询
-   *
-   * <p>true: 页码超出总页数时继续查询（返回空结果）
-   *
-   * <p>false: 页码超出总页数时停止查询
-   *
-   * <p>默认值：false
-   */
   private boolean isOverflow = false;
+
+  public String getDbType() { return dbType; }
+  public void setDbType(String dbType) { this.dbType = dbType; }
+
+  public Long getMaxLimit() { return maxLimit; }
+  public void setMaxLimit(Long maxLimit) { this.maxLimit = maxLimit; }
+
+  public boolean isOptimizeCount() { return isOptimizeCount; }
+  public void setOptimizeCount(boolean isOptimizeCount) { this.isOptimizeCount = isOptimizeCount; }
+
+  public boolean isOverflow() { return isOverflow; }
+  public void setOverflow(boolean isOverflow) { this.isOverflow = isOverflow; }
 }

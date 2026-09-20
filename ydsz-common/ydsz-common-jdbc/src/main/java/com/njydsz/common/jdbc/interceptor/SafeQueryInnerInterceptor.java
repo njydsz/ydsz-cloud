@@ -1,15 +1,24 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.regex.Matcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
@@ -47,8 +56,9 @@ import com.njydsz.common.exception.custom.SysException;
  * @see com.njydsz.common.domain.query.PageQuery 原职责来源
  * @since 26.09.01
  */
-@Slf4j
 public class SafeQueryInnerInterceptor implements InnerInterceptor {
+
+  private static final Logger log = LoggerFactory.getLogger(SafeQueryInnerInterceptor.class);
 
   /** 安全字段校验正则（与 PageQuery 保持一致） */
   private static final Pattern SAFE_COLUMN_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$");

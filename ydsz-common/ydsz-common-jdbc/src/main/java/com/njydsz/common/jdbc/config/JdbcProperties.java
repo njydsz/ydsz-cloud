@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -37,7 +36,6 @@ import org.springframework.validation.annotation.Validated;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Data
 @Validated
 @ConfigurationProperties(prefix = "ydsz.jdbc")
 public class JdbcProperties {
@@ -74,4 +72,25 @@ public class JdbcProperties {
 
   /** 安全查询配置（ORDER BY 注入防护 + 深度分页检测） */
   private SafeQueryProperties safeQuery = new SafeQueryProperties();
+
+  public boolean isEnabled() { return isEnabled; }
+  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+
+  public IdType getIdType() { return idType; }
+  public void setIdType(IdType idType) { this.idType = idType; }
+
+  public int getQueryTimeoutSeconds() { return queryTimeoutSeconds; }
+  public void setQueryTimeoutSeconds(int queryTimeoutSeconds) { this.queryTimeoutSeconds = queryTimeoutSeconds; }
+
+  public List<String> getMapperScanPackages() { return mapperScanPackages; }
+  public void setMapperScanPackages(List<String> mapperScanPackages) { this.mapperScanPackages = mapperScanPackages; }
+
+  public SlowSqlProperties getSlowSql() { return slowSql; }
+  public void setSlowSql(SlowSqlProperties slowSql) { this.slowSql = slowSql; }
+
+  public SqlAuditProperties getSqlAudit() { return sqlAudit; }
+  public void setSqlAudit(SqlAuditProperties sqlAudit) { this.sqlAudit = sqlAudit; }
+
+  public SafeQueryProperties getSafeQuery() { return safeQuery; }
+  public void setSafeQuery(SafeQueryProperties safeQuery) { this.safeQuery = safeQuery; }
 }

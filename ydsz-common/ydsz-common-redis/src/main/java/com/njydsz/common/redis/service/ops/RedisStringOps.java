@@ -1024,6 +1024,14 @@ public class RedisStringOps {
    * @param <T> 返回值类型
    * @return 脚本执行结果；脚本为空或执行异常时返回 null
    */
+  /**
+   * 执行 Lua 脚本（等价于 {@link #executeScriptWithShaCache}，提供原始参数顺序的能力）。
+   */
+  public <T> T executeScript(
+      String script, Class<T> returnType, List<String> keys, Object... args) {
+    return executeScriptWithShaCache(script, returnType, keys, args);
+  }
+
   public <T> T executeScriptWithShaCache(
       String script, Class<T> returnType, List<String> keys, Object... args) {
     if (script == null || script.isEmpty()) {

@@ -1,12 +1,19 @@
 package com.njydsz.common.jdbc.datasource;
 
 import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import com.njydsz.common.jdbc.datasource.hint.HintManager;
@@ -29,8 +36,9 @@ import com.njydsz.common.jdbc.datasource.hint.HintType;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
+
+  private static final Logger log = LoggerFactory.getLogger(DynamicRoutingDataSource.class);
 
   private final Map<Object, DataSource> dataSourceMap = new ConcurrentHashMap<>();
   private Object defaultDataSourceKey;

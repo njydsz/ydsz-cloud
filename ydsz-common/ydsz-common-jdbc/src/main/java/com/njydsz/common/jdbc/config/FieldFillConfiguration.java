@@ -1,7 +1,5 @@
 package com.njydsz.common.jdbc.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -14,20 +12,23 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Getter
-@Setter
 @ConfigurationProperties(prefix = "ydsz.jdbc.field-fill")
 public class FieldFillConfiguration {
 
-  /** 创建人字段填充配置 */
   private InterceptConfig createdByIntercept = new InterceptConfig();
-
-  /** 更新人字段填充配置 */
   private InterceptConfig updateByIntercept = new InterceptConfig();
-
-  /** 创建时间字段填充配置 */
   private InterceptConfig createAtIntercept = new InterceptConfig();
-
-  /** 更新时间字段填充配置 */
   private InterceptConfig updateAtIntercept = new InterceptConfig();
+
+  public InterceptConfig getCreatedByIntercept() { return createdByIntercept; }
+  public void setCreatedByIntercept(InterceptConfig createdByIntercept) { this.createdByIntercept = createdByIntercept; }
+
+  public InterceptConfig getUpdateByIntercept() { return updateByIntercept; }
+  public void setUpdateByIntercept(InterceptConfig updateByIntercept) { this.updateByIntercept = updateByIntercept; }
+
+  public InterceptConfig getCreateAtIntercept() { return createAtIntercept; }
+  public void setCreateAtIntercept(InterceptConfig createAtIntercept) { this.createAtIntercept = createAtIntercept; }
+
+  public InterceptConfig getUpdateAtIntercept() { return updateAtIntercept; }
+  public void setUpdateAtIntercept(InterceptConfig updateAtIntercept) { this.updateAtIntercept = updateAtIntercept; }
 }

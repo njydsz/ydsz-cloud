@@ -1,12 +1,13 @@
 package com.njydsz.common.jdbc.datasource;
 
 import java.util.HashMap;
-import java.util.Map;
-import javax.sql.DataSource;
-
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import javax.sql.DataSource;
+
 import org.springframework.aop.Advisor;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
@@ -55,7 +56,6 @@ import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 @AutoConfiguration
 @AutoConfigureAfter(MultiDataSourcePoolCustomizer.class)
 @ConditionalOnProperty(
@@ -64,6 +64,8 @@ import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
     havingValue = "true",
     matchIfMissing = true)
 public class DynamicDataSourceAutoConfiguration {
+
+  private static final Logger log = LoggerFactory.getLogger(DynamicDataSourceAutoConfiguration.class);
 
   /**
    * 注册动态路由数据源
@@ -77,10 +79,9 @@ public class DynamicDataSourceAutoConfiguration {
    * @return DynamicRoutingDataSource 实例
    */
   @Bean
-  @ConditionalOnMissingBean(value = DynamicRoutingDataSource.class)
   @ConditionalOnMissingBean(
-      name =
-          "com.baomidou.dynamic.datasource.DynamicRoutingDataSource")
+      value = {DynamicRoutingDataSource.class},
+      name = "com.baomidou.dynamic.datasource.DynamicRoutingDataSource")
   public DynamicRoutingDataSource dynamicRoutingDataSource(
       ObjectProvider<DataSource> defaultDataSourceProvider) {
     DynamicRoutingDataSource routingDataSource = new DynamicRoutingDataSource();

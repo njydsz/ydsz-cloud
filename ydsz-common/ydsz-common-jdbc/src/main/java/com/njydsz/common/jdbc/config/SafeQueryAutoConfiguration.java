@@ -1,8 +1,10 @@
 package com.njydsz.common.jdbc.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -46,7 +48,6 @@ import com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor;
  * @see SafeQueryInnerInterceptor
  * @see MybatisPlusConfiguration
  */
-@Slf4j
 @AutoConfiguration
 @ConditionalOnClass(MybatisPlusInterceptor.class)
 @ConditionalOnProperty(
@@ -60,6 +61,8 @@ import com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor;
   DomainProperties.class
 })
 public class SafeQueryAutoConfiguration {
+
+  private static final Logger log = LoggerFactory.getLogger(SafeQueryAutoConfiguration.class);
 
   /**
    * 创建安全查询拦截器 Bean。

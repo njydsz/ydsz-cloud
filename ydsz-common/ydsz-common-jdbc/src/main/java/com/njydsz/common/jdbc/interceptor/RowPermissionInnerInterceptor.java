@@ -1,12 +1,19 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
@@ -63,8 +70,9 @@ import com.njydsz.common.util.string.StringUtils;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public class RowPermissionInnerInterceptor extends DataPermissionInnerInterceptor {
+
+  private static final Logger log = LoggerFactory.getLogger(RowPermissionInnerInterceptor.class);
 
   /** 安全值正则模式，仅允许字母、数字及常见安全字符 */
   private static final Pattern SAFE_VALUE_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-.:,@]+$");

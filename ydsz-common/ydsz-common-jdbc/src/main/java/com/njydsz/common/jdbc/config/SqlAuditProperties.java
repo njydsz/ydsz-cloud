@@ -3,7 +3,6 @@ package com.njydsz.common.jdbc.config;
 import java.util.List;
 
 import jakarta.validation.constraints.Min;
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -28,36 +27,47 @@ import org.springframework.validation.annotation.Validated;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Data
 @Validated
 @ConfigurationProperties(prefix = "ydsz.jdbc.sql-audit")
 public class SqlAuditProperties {
 
-  /** 是否启用 SQL 审计（默认 false） */
   private boolean isEnabled = false;
-
-  /** 是否审计 SELECT 语句（默认 false，生产环境建议关闭） */
   private boolean isAuditSelect = false;
-
-  /** 是否审计 INSERT 语句（默认 true） */
   private boolean isAuditInsert = true;
-
-  /** 是否审计 UPDATE 语句（默认 true） */
   private boolean isAuditUpdate = true;
-
-  /** 是否审计 DELETE 语句（默认 true） */
   private boolean isAuditDelete = true;
-
-  /** 是否记录 SQL 参数（默认 true） */
   private boolean isLogParameters = true;
 
-  /** 参数最大长度（超过则截断，默认 500） */
   @Min(1)
   private int maxParameterLength = 500;
 
-  /** 排除的表名列表（不审计这些表的 SQL） */
   private List<String> excludeTables;
-
-  /** 排除的 Mapper 方法名列表（不审计这些方法的 SQL） */
   private List<String> excludeMethods;
+
+  public boolean isEnabled() { return isEnabled; }
+  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+
+  public boolean isAuditSelect() { return isAuditSelect; }
+  public void setAuditSelect(boolean isAuditSelect) { this.isAuditSelect = isAuditSelect; }
+
+  public boolean isAuditInsert() { return isAuditInsert; }
+  public void setAuditInsert(boolean isAuditInsert) { this.isAuditInsert = isAuditInsert; }
+
+  public boolean isAuditUpdate() { return isAuditUpdate; }
+  public void setAuditUpdate(boolean isAuditUpdate) { this.isAuditUpdate = isAuditUpdate; }
+
+  public boolean isAuditDelete() { return isAuditDelete; }
+  public void setAuditDelete(boolean isAuditDelete) { this.isAuditDelete = isAuditDelete; }
+
+  public boolean isLogParameters() { return isLogParameters; }
+  public void setLogParameters(boolean isLogParameters) { this.isLogParameters = isLogParameters; }
+
+  public int getMaxParameterLength() { return maxParameterLength; }
+  public void setMaxParameterLength(int maxParameterLength) { this.maxParameterLength = maxParameterLength; }
+
+  public List<String> getExcludeTables() { return excludeTables; }
+  public void setExcludeTables(List<String> excludeTables) { this.excludeTables = excludeTables; }
+
+  public List<String> getExcludeMethods() { return excludeMethods; }
+  public void setExcludeMethods(List<String> excludeMethods) { this.excludeMethods = excludeMethods; }
 }

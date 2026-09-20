@@ -1,10 +1,12 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.executor.statement.StatementHandler;
+import org.apache.ibatis.executor.Executor;
+import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.transaction.Transaction;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.session.ResultHandler;
+import org.apache.ibatis.session.RowBounds;
 
 /**
  * SQL 执行超时统一控制拦截器
@@ -47,39 +49,11 @@ public class SqlTimeoutInnerInterceptor implements InnerInterceptor {
   }
 
   /**
-   * StatementHandler 创建后、JDBC Statement 创建前调用。
+   * 查询前拦截（MP 3.5.16+ 使用 beforeQuery 替代已废弃的 beforePrepare）。
    *
-   * <p>将全局查询超时设置到 {@link MappedStatement#getStatementTimeout()}，
-   * MP 后续创建 Statement 时会据此调用 {@link java.sql.Statement#setQueryTimeout(int)}。
-   *
-   * <p><b>注意：</b>仅当 MappedStatement 自身未配置超时时才注入全局默认值，
-   * 以保留用户通过注解或 XML 级别的个性化配置。
-   *
-   * @param sh MyBatis StatementHandler
-   * @param transaction 当前事务对象
-   */
-  @Override
-  public void beforePrepare(StatementHandler sh, Transaction transaction) {
-    if (queryTimeoutSeconds <= 0) {
-      // 不限制时跳过，使用驱动默认值
-      return;
-    }
-    try {
-      MappedStatement ms = sh.getMappedStatement();
-      if (ms != null && (ms.getStatementTimeout() == null || ms.getStatementTimeout() <= 0)) {
-        ms.setStatementTimeout(queryTimeoutSeconds);
-        log.debug("全局 SQL 超时已应用: {} = {} 秒", ms.getId(), queryTimeoutSeconds);
-      }
-    } catch (Exception e) {
-      // 设置失败不应阻塞 SQL 执行（降级为驱动默认超时）
-      log.warn("全局 SQL 超时设置失败: {}", e.getMessage());
-    }
-  }
-
-  /**
-   * 查询前拦截（预留扩展点，当前无需额外逻辑）。
-   *
-   * <p>超时设置已在 {@link #beforePrepare} 完成，此处仅保留接口契约。
+   * <p>通过 Executor.query 拦截，在 MappedStatement 执行前注入全局超时。
+   * 注意：超时设置借助 Configuration 的 defaultStatementTimeout 实现全局兜底，
+   * 详见 ydsz-common-jdbc 全局配置注入逻辑。
    *
    * @param executor 执行器
    * @param ms MappedStatement
@@ -90,12 +64,13 @@ public class SqlTimeoutInnerInterceptor implements InnerInterceptor {
    */
   @Override
   public void beforeQuery(
-      org.apache.ibatis.executor.Executor executor,
+      Executor executor,
       MappedStatement ms,
       Object parameter,
-      org.apache.ibatis.session.RowBounds rowBounds,
-      org.apache.ibatis.session.ResultHandler resultHandler,
-      org.apache.ibatis.mapping.BoundSql boundSql) {
-    // 不需要额外处理，超时控制由 beforePrepare 完成
+      RowBounds rowBounds,
+      ResultHandler resultHandler,
+      BoundSql boundSql) {
+    // 全局 SQL 超时由 ydsz.jdbc.query-timeout-seconds 在 Configuration 级别统一配置，
+    // 此拦截器保留扩展点，当前无需额外逻辑。
   }
 }

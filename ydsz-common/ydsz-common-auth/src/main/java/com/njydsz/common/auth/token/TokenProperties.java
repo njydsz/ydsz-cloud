@@ -152,3 +152,4 @@ public class TokenProperties {
     secureRandom.nextBytes(raw);
     return Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
   }
+}

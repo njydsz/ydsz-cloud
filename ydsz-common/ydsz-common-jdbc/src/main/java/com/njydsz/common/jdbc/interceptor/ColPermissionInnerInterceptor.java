@@ -1,14 +1,25 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.util.ArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Collections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.HashSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.NullValue;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -51,8 +62,9 @@ import com.njydsz.common.util.string.StringUtils;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public class ColPermissionInnerInterceptor extends DataPermissionInnerInterceptor {
+
+  private static final Logger log = LoggerFactory.getLogger(ColPermissionInnerInterceptor.class);
 
   /**
    * 构造列级数据权限拦截器

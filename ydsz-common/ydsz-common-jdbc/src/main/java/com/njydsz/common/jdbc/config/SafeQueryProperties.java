@@ -2,7 +2,6 @@ package com.njydsz.common.jdbc.config;
 
 import java.util.Set;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -23,28 +22,20 @@ import org.springframework.validation.annotation.Validated;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Data
 @Validated
 @ConfigurationProperties(prefix = "ydsz.jdbc.safe-query")
 public class SafeQueryProperties {
 
-  /** 是否启用安全查询拦截（默认 true） */
   private boolean isEnabled = true;
-
-  /**
-   * 严格模式（默认 false）
-   *
-   * <ul>
-   *   <li>true: 非法排序字段抛出异常
-   *   <li>false: 忽略非法排序字段（仅日志警告）
-   * </ul>
-   */
   private boolean isStrictMode = false;
-
-  /**
-   * 排序字段白名单
-   *
-   * <p>配置后，仅允许白名单中的字段参与排序。为空时仅使用正则校验。
-   */
   private Set<String> orderByWhitelist;
+
+  public boolean isEnabled() { return isEnabled; }
+  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+
+  public boolean isStrictMode() { return isStrictMode; }
+  public void setStrictMode(boolean isStrictMode) { this.isStrictMode = isStrictMode; }
+
+  public Set<String> getOrderByWhitelist() { return orderByWhitelist; }
+  public void setOrderByWhitelist(Set<String> orderByWhitelist) { this.orderByWhitelist = orderByWhitelist; }
 }

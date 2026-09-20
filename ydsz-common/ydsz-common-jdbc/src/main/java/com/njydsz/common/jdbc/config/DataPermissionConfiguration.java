@@ -13,7 +13,6 @@ package com.njydsz.common.jdbc.config;
 import java.util.HashSet;
 import java.util.Set;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
@@ -26,39 +25,42 @@ import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Data
 @ConfigurationProperties(prefix = "ydsz.jdbc.data-permission")
 public class DataPermissionConfiguration {
-  /** 是否启用数据权限拦截（行级 + 列级）。 */
   private Boolean isEnabled = false;
-
-  /** 拦截表策略：INCLUDE 仅拦截配置表；EXCLUDE 排除配置表。 */
   private InterceptTableStrategy interceptTableStrategy = InterceptTableStrategy.EXCLUDE;
-
-  /** 与 {@link #interceptTableStrategy} 配合使用的表清单（忽略大小写）。 */
   private Set<String> tables = new HashSet<>(16);
-
-  /**
-   * 行级权限字段映射：Header -> 列名。
-   *
-   * <p><b>注意：</b>租户隔离（TENANT 维度）已由独立的 {@code common-tenant} 模块 通过 {@code
-   * TenantIsolationInterceptor} 处理，不再在此配置。
-   */
-  /** 公司列名，对应数据权限维度 GROUP */
   private String companyColumn = "company_id";
-
-  /** 部门列名，对应数据权限维度 COMPANY/DEPT */
   private String deptColumn = "dept_id";
-
-  /** 用户列名，对应数据权限维度 USER */
   private String userColumn = "user_id";
-
-  /** 项目列名，对应数据权限维度 PROJECT */
   private String projectColumn = "project_id";
-
-  /** 区域列名，对应数据权限维度 REGION */
   private String regionColumn = "region_id";
-
-  /** 空间列名（P1-3：对应数据权限维度 SPACE），用于 NextWiki 文件空间隔离 */
   private String spaceColumn = "space_id";
+
+  public Boolean getIsEnabled() { return isEnabled; }
+  public void setIsEnabled(Boolean isEnabled) { this.isEnabled = isEnabled; }
+
+  public InterceptTableStrategy getInterceptTableStrategy() { return interceptTableStrategy; }
+  public void setInterceptTableStrategy(InterceptTableStrategy interceptTableStrategy) { this.interceptTableStrategy = interceptTableStrategy; }
+
+  public Set<String> getTables() { return tables; }
+  public void setTables(Set<String> tables) { this.tables = tables; }
+
+  public String getCompanyColumn() { return companyColumn; }
+  public void setCompanyColumn(String companyColumn) { this.companyColumn = companyColumn; }
+
+  public String getDeptColumn() { return deptColumn; }
+  public void setDeptColumn(String deptColumn) { this.deptColumn = deptColumn; }
+
+  public String getUserColumn() { return userColumn; }
+  public void setUserColumn(String userColumn) { this.userColumn = userColumn; }
+
+  public String getProjectColumn() { return projectColumn; }
+  public void setProjectColumn(String projectColumn) { this.projectColumn = projectColumn; }
+
+  public String getRegionColumn() { return regionColumn; }
+  public void setRegionColumn(String regionColumn) { this.regionColumn = regionColumn; }
+
+  public String getSpaceColumn() { return spaceColumn; }
+  public void setSpaceColumn(String spaceColumn) { this.spaceColumn = spaceColumn; }
 }

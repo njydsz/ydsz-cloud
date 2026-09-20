@@ -2,8 +2,10 @@ package com.njydsz.common.jdbc.health;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
@@ -17,8 +19,9 @@ import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public class DynamicDataSourceHealthIndicator implements HealthIndicator {
+
+  private static final Logger log = LoggerFactory.getLogger(DynamicDataSourceHealthIndicator.class);
 
   private final DynamicRoutingDataSource dynamicDataSource;
 

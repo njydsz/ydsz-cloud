@@ -3,8 +3,8 @@ package com.njydsz.common.jdbc.actuator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
@@ -36,7 +36,6 @@ import com.njydsz.common.jdbc.monitor.SqlAstCache;
  * @since 26.09.01
  * @see SqlAstCache
  */
-@Slf4j
 @Configuration
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(
@@ -58,11 +57,14 @@ public class JdbcHealthIndicator {
   }
 
   /** 健康指标实现 */
-  @Slf4j
-  @RequiredArgsConstructor
   static class JdbcHealthIndicatorImpl implements HealthIndicator {
 
+    private static final Logger log = LoggerFactory.getLogger(JdbcHealthIndicatorImpl.class);
     private final SqlAstCache sqlAstCache;
+
+    JdbcHealthIndicatorImpl(SqlAstCache sqlAstCache) {
+      this.sqlAstCache = sqlAstCache;
+    }
 
     @Override
     public Health health() {

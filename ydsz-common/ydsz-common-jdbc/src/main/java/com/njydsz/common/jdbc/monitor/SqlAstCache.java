@@ -9,8 +9,9 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
-import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,9 +80,10 @@ import org.springframework.stereotype.Component;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 @Component
 public final class SqlAstCache {
+
+  private static final Logger log = LoggerFactory.getLogger(SqlAstCache.class);
 
   /** Micrometer tag name for cache result (hit/miss). */
   public static final String METRIC_NAME = "ydsz.jdbc.sql.ast.cache";

@@ -259,11 +259,9 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
       String clientIp = extractClientIp(request);
       String tenantId = request.getHeaders().getFirst(DataPermissionHeaderConstants.X_TENANT_ID);
 
-      // 发布审计事件（异步消费，不阻塞响应式线程）
-      gatewayAuditEventBridge
-          .publishAuditEvent(
-              userId, clientIp, method.name(), path, statusCode, duration, traceId, tenantId)
-          .subscribe();
+      // 发布审计事件（fire-and-forget，不阻塞响应式线程）
+      gatewayAuditEventBridge.publishAuditEvent(
+          userId, clientIp, method.name(), path, statusCode, duration, traceId, tenantId);
     } catch (Exception e) {
       // 审计事件发布异常不影响主链路
       log.debug("[AuditLogFilter] 审计事件发布异常（非致命）: {}", e.getMessage());

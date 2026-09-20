@@ -1,13 +1,16 @@
 package com.njydsz.common.jdbc.config;
 
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariConfigMXBean;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -41,11 +44,12 @@ import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
  * @since 26.09.01
  * @see HikariCPPoolConfigurer
  */
-@Slf4j
 @AutoConfiguration
 @ConditionalOnClass({DynamicRoutingDataSource.class, HikariDataSource.class})
 @ConditionalOnBean(DynamicRoutingDataSource.class)
 public class MultiDataSourcePoolCustomizer implements SmartLifecycle {
+
+  private static final Logger log = LoggerFactory.getLogger(MultiDataSourcePoolCustomizer.class);
 
   private final DynamicRoutingDataSource dynamicRoutingDataSource;
   private final ObjectProvider<List<HikariCPPoolConfigurer>> poolConfigurerProvider;

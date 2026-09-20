@@ -124,10 +124,10 @@ public class ExcelMvcExceptionHandler {
           message);
     }
 
-    YdszResponse<Void> response = new YdszResponse<>();
-    response.setCode(code);
-    response.setMsg(message);
-    response.setTimestamp(System.currentTimeMillis());
-    return response;
+    YdszResponse<Void> errorResponse = new YdszResponse<>();
+    errorResponse.setCode(code);
+    errorResponse.setMsg(message);
+    errorResponse.setTimestamp(System.currentTimeMillis());
+    return errorResponse;
   }
 }

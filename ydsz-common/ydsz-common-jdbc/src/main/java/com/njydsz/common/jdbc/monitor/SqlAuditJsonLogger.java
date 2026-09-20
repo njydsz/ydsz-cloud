@@ -66,9 +66,6 @@ public final class SqlAuditJsonLogger {
   /** 参数最大长度 */
   private static final int MAX_PARAMETER_LENGTH = 500;
 
-  /** 私有构造方法，工具类禁止实例化。 */
-  private SqlAuditJsonLogger() {}
-
   /**
    * 输出结构化 JSON 审计日志
    *

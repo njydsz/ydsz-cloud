@@ -3,8 +3,9 @@ package com.njydsz.common.jdbc.health;
 import javax.sql.DataSource;
 
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 /**
@@ -25,8 +26,9 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public class DataSourceHealthIndicator implements HealthIndicator {
+
+  private static final Logger log = LoggerFactory.getLogger(DataSourceHealthIndicator.class);
 
   private final DataSource dataSource;
 

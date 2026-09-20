@@ -113,6 +113,19 @@ public class RedisMetricsCollector {
   }
 
   /**
+   * 创建或获取 Redis 指标收集器（带慢操作阈值，使用默认实例标识）
+   *
+   * @param registry MeterRegistry 实例
+   * @param slowOperationThresholdMillis 慢操作阈值（毫秒），0 表示禁用
+   * @return RedisMetricsCollector 实例
+   */
+  public static RedisMetricsCollector getOrCreate(
+      MeterRegistry registry, long slowOperationThresholdMillis) {
+    return INSTANCES.computeIfAbsent(
+        registry, r -> new RedisMetricsCollector(r, slowOperationThresholdMillis));
+  }
+
+  /**
    * 创建或获取 Redis 指标收集器（带慢操作阈值和实例标识）
    *
    * @param registry MeterRegistry 实例

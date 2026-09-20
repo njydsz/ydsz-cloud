@@ -10,6 +10,7 @@ import io.lettuce.core.ClientOptions;
 import io.lettuce.core.ReadFrom;
 import io.lettuce.core.cluster.ClusterClientOptions;
 import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -42,6 +43,7 @@ import org.springframework.util.ClassUtils;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Slf4j
 public class RedisConnectionFactoryConfigurer {
 
   private static final long DEFAULT_TOPOLOGY_REFRESH_SECONDS = 30;

@@ -55,7 +55,8 @@ public class AgentDomainEvent extends DomainEvent {
         eventType,
         executionId,
         aggregateType,
-        metadata != null ? metadata : Collections.emptyMap());
+        metadata != null ? metadata : Collections.emptyMap(),
+        1);
   }
 
   /**

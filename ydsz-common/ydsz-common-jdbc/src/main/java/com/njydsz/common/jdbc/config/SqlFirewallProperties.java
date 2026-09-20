@@ -3,7 +3,6 @@ package com.njydsz.common.jdbc.config;
 import java.util.HashSet;
 import java.util.Set;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -29,31 +28,39 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Data
 @ConfigurationProperties(prefix = "ydsz.jdbc.sql-firewall")
 public class SqlFirewallProperties {
 
-  /** 是否启用 SQL 防火墙（默认 false） */
   private boolean isEnabled = false;
-
-  /** 是否拦截 DROP TABLE/DATABASE/INDEX 操作（默认 true） */
   private boolean isBlockDropTable = true;
-
-  /** 是否拦截 TRUNCATE TABLE 操作（默认 true） */
   private boolean isBlockTruncate = true;
-
-  /** 是否拦截无 WHERE 条件的 DELETE 操作（默认 true） */
   private boolean isBlockDeleteWithoutWhere = true;
-
-  /** 是否拦截无 WHERE 条件的 UPDATE 操作（默认 true） */
   private boolean isBlockUpdateWithoutWhere = true;
-
-  /** 是否拦截分号分隔的多语句执行（默认 true） */
   private boolean isBlockMultiStatement = true;
-
-  /** 是否拦截 GRANT/REVOKE 权限操作（默认 true） */
   private boolean isBlockPermissionOps = true;
-
-  /** DROP/TRUNCATE 操作的表白名单（忽略大小写） */
   private Set<String> allowTables = new HashSet<>(16);
+
+  public boolean isEnabled() { return isEnabled; }
+  public void setIsEnabled(boolean isEnabled) { this.isEnabled = isEnabled; }
+
+  public boolean isBlockDropTable() { return isBlockDropTable; }
+  public void setBlockDropTable(boolean isBlockDropTable) { this.isBlockDropTable = isBlockDropTable; }
+
+  public boolean isBlockTruncate() { return isBlockTruncate; }
+  public void setBlockTruncate(boolean isBlockTruncate) { this.isBlockTruncate = isBlockTruncate; }
+
+  public boolean isBlockDeleteWithoutWhere() { return isBlockDeleteWithoutWhere; }
+  public void setBlockDeleteWithoutWhere(boolean isBlockDeleteWithoutWhere) { this.isBlockDeleteWithoutWhere = isBlockDeleteWithoutWhere; }
+
+  public boolean isBlockUpdateWithoutWhere() { return isBlockUpdateWithoutWhere; }
+  public void setBlockUpdateWithoutWhere(boolean isBlockUpdateWithoutWhere) { this.isBlockUpdateWithoutWhere = isBlockUpdateWithoutWhere; }
+
+  public boolean isBlockMultiStatement() { return isBlockMultiStatement; }
+  public void setBlockMultiStatement(boolean isBlockMultiStatement) { this.isBlockMultiStatement = isBlockMultiStatement; }
+
+  public boolean isBlockPermissionOps() { return isBlockPermissionOps; }
+  public void setBlockPermissionOps(boolean isBlockPermissionOps) { this.isBlockPermissionOps = isBlockPermissionOps; }
+
+  public Set<String> getAllowTables() { return allowTables; }
+  public void setAllowTables(Set<String> allowTables) { this.allowTables = allowTables; }
 }

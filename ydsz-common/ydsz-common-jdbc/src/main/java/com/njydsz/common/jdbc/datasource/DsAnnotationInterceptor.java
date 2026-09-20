@@ -1,9 +1,12 @@
 package com.njydsz.common.jdbc.datasource;
 
 import java.lang.reflect.Method;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -26,8 +29,9 @@ import com.njydsz.common.jdbc.annotation.DS;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Slf4j
 public class DsAnnotationInterceptor implements MethodInterceptor {
+
+  private static final Logger log = LoggerFactory.getLogger(DsAnnotationInterceptor.class);
 
   private final ExpressionParser parser = new SpelExpressionParser();
 

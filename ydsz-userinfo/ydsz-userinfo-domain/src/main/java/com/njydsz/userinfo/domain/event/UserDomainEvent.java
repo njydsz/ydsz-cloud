@@ -55,7 +55,8 @@ public class UserDomainEvent extends DomainEvent {
         eventType.getCode(),
         aggregateId,
         aggregateType,
-        metadata != null ? metadata : Collections.emptyMap());
+        metadata != null ? metadata : Collections.emptyMap(),
+        1);
   }
 
   /**

@@ -15,7 +15,6 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
@@ -29,6 +28,7 @@ import org.apache.ibatis.plugin.Plugin;
 import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -63,7 +63,6 @@ import com.njydsz.common.jdbc.monitor.SqlFingerprint;
  * @see SlowSqlInnerInterceptor
  * @see SqlAuditInterceptor
  */
-@Slf4j
 @Intercepts({
   @Signature(
       type = Executor.class,
@@ -93,6 +92,7 @@ import com.njydsz.common.jdbc.monitor.SqlFingerprint;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Slf4j
 public class SqlTraceInnerInterceptor
     implements InnerInterceptor, Ordered, MeterBinder, Interceptor {
 

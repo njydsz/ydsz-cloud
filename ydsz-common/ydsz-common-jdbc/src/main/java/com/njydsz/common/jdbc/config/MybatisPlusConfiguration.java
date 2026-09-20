@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.core.config.GlobalConfig;
@@ -12,7 +15,6 @@ import com.baomidou.mybatisplus.core.toolkit.GlobalConfigUtils;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -78,7 +80,6 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  * @see MybatisPlusInterceptor
  * @see InnerInterceptorProvider
  */
-@Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties({
   JdbcProperties.class,
@@ -89,6 +90,8 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 })
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "is-enabled", matchIfMissing = true)
 public class MybatisPlusConfiguration {
+
+  private static final Logger log = LoggerFactory.getLogger(MybatisPlusConfiguration.class);
 
   private final JdbcProperties jdbcProperties;
   private final FieldFillConfiguration fieldFillConfiguration;
@@ -256,7 +259,8 @@ public class MybatisPlusConfiguration {
       paginationInterceptor.setMaxLimit(paginationProperties.getMaxLimit());
     }
     paginationInterceptor.setOverflow(paginationProperties.isOverflow());
-    paginationInterceptor.setOptimizeCountSql(paginationProperties.isOptimizeCount());
+    // MP 3.5.16 中已移除 setOptimizeCountSql 方法，优化 Count 行为由拦截器自动管理
+    // paginationInterceptor.setOptimizeCountSql(paginationProperties.isOptimizeCount());
     interceptor.addInnerInterceptor(paginationInterceptor);
 
     // 6. SQL 防火墙拦截器（置于拦截器链末端，在所有 SQL 改写完成后做安全校验）

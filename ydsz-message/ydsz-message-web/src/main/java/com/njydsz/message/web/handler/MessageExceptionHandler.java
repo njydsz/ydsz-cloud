@@ -121,11 +121,11 @@ public class MessageExceptionHandler extends BaseExceptionHandler {
             messageCode.getCode(), userMessage, developerMessage, retryAfter);
 
     // 使用错误码 + 分层数据构造返回，保持错误语义
-    return YdszResponse.<MessageResult>builder()
-        .code(messageCode.getCode())
-        .msg(userMessage)
-        .data(result)
-        .build();
+    YdszResponse<MessageResult> ydszResponse = new YdszResponse<>();
+    ydszResponse.setCode(messageCode.getCode());
+    ydszResponse.setMsg(userMessage);
+    ydszResponse.setData(result);
+    return ydszResponse;
   }
 
   /**

@@ -194,7 +194,7 @@ public class LogCleaner {
       return 0;
     }
     try {
-      int deleted = jdbcAuditStorage.cleanExpiredLogs(retentionDays);
+      int deleted = jdbcAuditStorage.cleanupExpired(retentionDays);
       if (deleted > 0) {
         log.info("[LogCleaner] 审计日志表 ydsz_job_audit_log 清理完成: deleted={}", deleted);
       }
