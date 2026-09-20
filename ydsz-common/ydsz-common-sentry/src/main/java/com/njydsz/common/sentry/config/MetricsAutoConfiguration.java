@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration;
 import com.njydsz.common.sentry.metrics.InMemoryMetricsCollector;
 import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
-import com.njydsz.common.sentry.resilience.CircuitBreaker;
+import com.njydsz.common.sentry.resilience.SentryCircuitBreaker;
 import com.njydsz.common.sentry.spi.MetricsCollector;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
@@ -33,7 +33,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  *   <li>{@link MicrometerMetricsCollector}：Micrometer 指标采集（优先）
  *   <li>{@link InMemoryMetricsCollector}：内存指标采集（降级）
  *   <li>{@link SystemMetricsCollector}：系统资源指标（CPU/内存/磁盘/GC）
- *   <li>{@link CircuitBreaker}：ELK/Loki 通道独立熔断器（基于 Resilience4j）
+ *   <li>{@link SentryCircuitBreaker}：ELK/Loki 通道独立熔断器（基于 Resilience4j）
  * </ul>
  *
  * <h3>26.09.01 变更（2026-09-01）</h3>
@@ -153,11 +153,11 @@ public class MetricsAutoConfiguration {
   @Bean("elkCircuitBreaker")
   @ConditionalOnMissingBean(name = "elkCircuitBreaker")
   @ConditionalOnProperty(prefix = "ydsz.sentry.logging.elk", name = "enabled", havingValue = "true")
-  public CircuitBreaker elkCircuitBreaker(
+  public SentryCircuitBreaker elkCircuitBreaker(
       SentryProperties properties, CircuitBreakerRegistry registry) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     CircuitBreakerConfig config = buildChannelConfig(cb);
-    return CircuitBreaker.fromRegistry("elk-logstash", config, registry);
+    return SentryCircuitBreaker.fromRegistry("elk-logstash", config, registry);
   }
 
   /**
@@ -174,11 +174,11 @@ public class MetricsAutoConfiguration {
       name = "enabled",
       havingValue = "true",
       matchIfMissing = true)
-  public CircuitBreaker lokiCircuitBreaker(
+  public SentryCircuitBreaker lokiCircuitBreaker(
       SentryProperties properties, CircuitBreakerRegistry registry) {
     SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
     CircuitBreakerConfig config = buildChannelConfig(cb);
-    return CircuitBreaker.fromRegistry("loki", config, registry);
+    return SentryCircuitBreaker.fromRegistry("loki", config, registry);
   }
 
   /** 构建通道熔断配置（SentryProperties 0-1 比例 → Resilience4j 百分比）。 */

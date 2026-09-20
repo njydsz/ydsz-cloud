@@ -536,7 +536,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
 
   @Override
   public EngineCapability getCapability() {
-    return EngineCapability.full();
+    // PG tsvector 不原生支持向量检索（pgvector 扩展需额外启用），返回 withoutVector
+    return EngineCapability.withoutVector();
   }
 
   /**
@@ -881,13 +882,19 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
 
     @Override
     public SearchHit mapRow(ResultSet rs, int rowNum) throws SQLException {
+      // 摘要优先级：ts_headline 高亮片段（动态，贴合查询） > 静态 snippet（索引时预存）
+      String snippet = withHighlight ? rs.getString("highlight") : null;
+      if (snippet == null || snippet.isBlank()) {
+        snippet = rs.getString("snippet");
+      }
+
       SearchHit hit =
           SearchHit.builder()
               .id(rs.getString("id"))
               .type(rs.getString("doc_type"))
               .title(rs.getString("title"))
               .subtitle(rs.getString("subtitle"))
-              .snippet(rs.getString("snippet"))
+              .snippet(snippet)
               .status(rs.getString("status"))
               .score(rs.getFloat("rank"))
               .build();
@@ -922,9 +929,6 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         }
       } catch (SQLException ignored) {
         log.debug("Caught exception (ignored): {}", ignored.getMessage());
-      }
-      if (withHighlight) {
-        hit.setHighlight(rs.getString("highlight"));
       }
       return hit;
     }

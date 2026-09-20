@@ -16,7 +16,7 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
  * <p>P0-3: 补齐登录失败统一返回（消除用户名枚举）的 i18n 消息加载。
  *
  * <p>ydsz-common 的 {@code I18nAutoConfiguration} 仅加载了通用 basename （{@code i18n/messages}、{@code
- * i18n/core/messages}、{@code i18n/file-messages}）， 未覆盖 userinfo 模块的异常码 i18n key（如 {@code
+ * i18n/core/messages}、{@code i18n/common-file-messages}）， 未覆盖 userinfo 模块的异常码 i18n key（如 {@code
  * userinfo.password.incorrect}）。
  *
  * <p>本配置在 Spring Boot 应用上下文中声明一个扩展基名的 {@link MessageSource}， 将原 common 基名与 userinfo 模块的 {@code
@@ -28,7 +28,7 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
  * <ol>
  *   <li>{@code classpath:i18n/messages} — 通用 base 消息（common-base）
  *   <li>{@code classpath:i18n/core/messages} — 核心错误码（common-core）
- *   <li>{@code classpath:i18n/file-messages} — 文件存储（common-file）
+ *   <li>{@code classpath:i18n/common-file-messages} — 文件存储（common-file）
  *   <li>{@code classpath:i18n/userinfo-messages} — 用户中心模块消息
  * </ol>
  *
@@ -46,7 +46,7 @@ public class UserInfoMessageSourceConfiguration {
 
   /** 通用基名（与 ydsz-common I18nAutoConfiguration 保持一致） */
   private static final String[] COMMON_BASENAMES = {
-    "classpath:i18n/messages", "classpath:i18n/core/messages", "classpath:i18n/file-messages"
+    "classpath:i18n/messages", "classpath:i18n/core/messages", "classpath:i18n/common-file-messages"
   };
 
   /** 用户中心模块专属 i18n 基名 */

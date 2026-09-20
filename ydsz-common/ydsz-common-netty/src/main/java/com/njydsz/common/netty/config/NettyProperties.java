@@ -45,6 +45,16 @@ import org.springframework.validation.annotation.Validated;
  *       initial-delay-ms: 1000
  *       max-delay-ms: 60000
  *       max-retries: -1
+ *     allocator:
+ *       pooled: true          # 是否启用内存池（默认 true）
+ *       prefer-direct: true   # 是否优先使用直接内存（默认 true）
+ *       num-direct-arenas: 0  # Arena 数量（0=自动）
+ *     write-buffer:
+ *       low-water-mark: 32768   # 写缓冲区低水位线（字节，默认 32KB）
+ *       high-water-mark: 65536  # 写缓冲区高水位线（字节，默认 64KB）
+ *     leak-detection:
+ *       level: SIMPLE           # 泄漏检测级别：DISABLED/SIMPLE/ADVANCED/PARANOID
+ *       sampling-rate: 100      # 采样率（百分比）
  * }</pre>
  *
  * @author ydsz-team
@@ -244,11 +254,17 @@ public class NettyProperties {
     private int maxRetries = MAX_RETRIES_UNLIMITED;
   }
 
-  /** ByteBuf 内存池与水位线配置 */
+  /** ByteBuf 内存池配置 */
   private Allocator allocator = new Allocator();
 
   /** 连接控制配置 */
   private ConnectionControl connectionControl = new ConnectionControl();
+
+  /** 写缓冲区水位线配置 */
+  private WriteBuffer writeBuffer = new WriteBuffer();
+
+  /** ByteBuf 泄漏检测配置 */
+  private LeakDetection leakDetection = new LeakDetection();
 
   /**
    * ByteBuf 内存池配置。
@@ -258,10 +274,10 @@ public class NettyProperties {
   @Data
   public static class Allocator {
     /** 是否启用内存池 */
-    private boolean pooled = true;
+    private boolean isPooled = true;
 
     /** 是否优先使用直接内存 */
-    private boolean preferDirect = true;
+    private boolean isPreferDirect = true;
 
     /** Direct Arena 数量（0 = 默认，高并发场景建议等于 Worker 线程数） */
     @Min(0)
@@ -278,5 +294,44 @@ public class NettyProperties {
     /** 最大连接数（0 表示不限制） */
     @Min(0)
     private int maxConnections = 0;
+  }
+
+  /**
+   * 写缓冲区水位线配置。
+   *
+   * <p>控制 Netty 写缓冲区的背压（backpressure）阈值。 当待写字节数超过高水位线时，Channel.isWritable() 返回 false， 上层应暂停写入直至水位降到低水位线以下。
+   *
+   * <p>场景调优参考：
+   *
+   * <ul>
+   *   <li>IoT / 控制指令包（小包高频）：low=16KB, high=32KB
+   *   <li>通用业务：low=32KB, high=64KB（默认）
+   *   <li>文件 / 大消息传输：low=128KB, high=256KB
+   * </ul>
+   */
+  @Data
+  public static class WriteBuffer {
+    /** 写缓冲区低水位线（字节），默认 32KB */
+    @Min(1024)
+    private int lowWaterMark = 32 * 1024;
+
+    /** 写缓冲区高水位线（字节），默认 64KB */
+    @Min(2048)
+    private int highWaterMark = 64 * 1024;
+  }
+
+  /**
+   * ByteBuf 泄漏检测配置。
+   *
+   * <p>用于检测 {@link io.netty.buffer.ReferenceCounted} 对象未被正确释放的泄漏场景。 开启后有一定性能开销，建议仅在开发和预发环境使用 PARANOID 级别。
+   */
+  @Data
+  public static class LeakDetection {
+    /** 泄漏检测级别：DISABLED / SIMPLE / ADVANCED / PARANOID */
+    private String level = "SIMPLE";
+
+    /** 采样率（SIMPLE 模式下生效），100 表示 100%，10 表示 10% */
+    @Min(1)
+    private int samplingRate = 100;
   }
 }

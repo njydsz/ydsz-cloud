@@ -52,6 +52,37 @@ public class ConfigProperties {
      * <p>false：仅通知 key + newValue，oldValue 为 null（减少内存开销）。
      */
     private boolean snapshotOldValues = true;
+
+    /**
+     * 是否异步分发监听器回调。
+     *
+     * <p>true（默认）：通过线程池异步回调监听器，不阻塞 Spring Cloud 刷新主线程。
+     *
+     * <p>false：同步回调（适用于需要严格保证监听器执行顺序的场景）。
+     *
+     * <p>对标 Apollo 单线程异步回调与 Nacos 独立线程池分发。
+     *
+     * @since 26.09.20
+     */
+    private boolean asyncDispatch = true;
+
+    /**
+     * 异步分发线程池核心线程数。
+     *
+     * <p>默认 2，适合监听器数量 ≤ 10 的场景。监听器数量较多或回调耗时较大时适当调大。
+     *
+     * @since 26.09.20
+     */
+    private int asyncCorePoolSize = 2;
+
+    /**
+     * 异步分发线程池任务队列容量。
+     *
+     * <p>默认 256，满载时由调用线程执行（CallerRunsPolicy），避免任务丢失。
+     *
+     * @since 26.09.20
+     */
+    private int asyncQueueCapacity = 256;
   }
 
   /**

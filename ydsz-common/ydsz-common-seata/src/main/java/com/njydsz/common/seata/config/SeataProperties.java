@@ -67,6 +67,9 @@ public class SeataProperties {
     /** disableGlobalTransaction 全局开关（Seata 原生属性兼容） */
     private boolean isDisableGlobalTransaction = false;
 
+    /** XID 签名密钥（推荐生产环境配置，防止 XID 伪造攻击） */
+    private String xidSignSecret;
+
     /** UndoLog 配置 */
     private UndoLog undoLog = new UndoLog();
 
@@ -129,7 +132,12 @@ public class SeataProperties {
         /** 全局事务回滚重试次数 */
         private int rollbackRetryCount = 5;
 
-        /** 全局事务超时时间（毫秒，默认 60s） */
-        private int globalTransactionTimeout = 60000;
+        /**
+         * 全局事务超时时间（毫秒，默认 30000ms）。
+         *
+         * <p>规范 YDIZ-TX-002（P0 阻断级）要求此值不超过 30000ms。
+         * 全局事务长时持有全局锁会严重降低并发性能并增加死锁风险。
+         */
+        private int globalTransactionTimeout = 30000;
     }
 }

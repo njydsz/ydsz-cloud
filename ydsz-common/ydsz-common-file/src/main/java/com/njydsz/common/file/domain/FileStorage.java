@@ -21,7 +21,7 @@ import lombok.Data;
  *   <li>{@link #fileRename} - 重命名后的文件名
  *   <li>{@link #suffix} - 文件扩展名（小写）
  *   <li>{@link #dirIds} - 所属目录路径标识
- *   <li>{@link #isDir} - 是否为目录（1=是，0=否）
+ *   <li>{@link #isDir} - 是否为目录（true=是，false=否）
  *   <li>{@link #size} - 文件大小（字节）
  *   <li>{@link #type} - 文件分类（如 image、video、code 等，基于后缀动态推断，可用于前端图标渲染）
  *   <li>{@link #uploadAt} - 上传时间
@@ -63,8 +63,8 @@ public class FileStorage implements Serializable {
   /** 所属目录路径标识（多级目录时使用） */
   private String dirIds;
 
-  /** 是否为目录（1=是，0=否） */
-  private Integer isDir;
+  /** 是否为目录（true=是，false=否） */
+  private Boolean isDir;
 
   /** 文件大小（字节） */
   private Long size;

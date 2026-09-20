@@ -21,6 +21,14 @@ import org.springframework.context.ApplicationEvent;
  *   <li>发布 {@link ConfigChangeEvent}（本事件），通知所有 {@link ConfigChangeListener}
  * </ol>
  *
+ * <h3>changeType 语义</h3>
+ *
+ * <ul>
+ *   <li>{@link ChangeType#ADDED} — 属性在本次刷新中新增（刷新前不存在）
+ *   <li>{@link ChangeType#CHANGED} — 属性值在本次刷新中发生变化（刷新前后均存在且值不同）
+ *   <li>{@link ChangeType#DELETED} — 属性在本次刷新中被删除（刷新后不存在）
+ * </ul>
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -54,6 +62,27 @@ public class ConfigChangeEvent extends ApplicationEvent {
    * @param key 属性键
    * @param oldValue 变更前的值（可能为 {@code null}）
    * @param newValue 变更后的值（属性被删除时为 {@code null}）
+   * @param changeType 变更类型（新增 / 修改 / 删除）
    */
-  public record ConfigChange(String key, String oldValue, String newValue) {}
+  public record ConfigChange(String key, String oldValue, String newValue, ChangeType changeType) {}
+
+  /**
+   * 配置属性变更类型枚举
+   *
+   * <p>对标 Apollo {@code ConfigChangeEvent.changeType} 与 Nacos {@code ConfigChangeEvent.eventType}，
+   * 明确区分属性的新增、修改与删除，避免监听器通过 {@code oldValue/newValue == null} 推断导致的语义歧义。
+   *
+   * @since 26.09.20
+   */
+  public enum ChangeType {
+
+    /** 属性新增（刷新前不存在，刷新后存在） */
+    ADDED,
+
+    /** 属性值变更（刷新前后均存在且值不同） */
+    CHANGED,
+
+    /** 属性删除（刷新前存在，刷新后不存在） */
+    DELETED
+  }
 }

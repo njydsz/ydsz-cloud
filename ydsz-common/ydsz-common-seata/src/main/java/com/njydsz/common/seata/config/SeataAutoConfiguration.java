@@ -1,6 +1,16 @@
 package com.njydsz.common.seata.config;
 
+import com.njydsz.common.seata.annotation.YdszGlobalTransactional;
+import com.njydsz.common.seata.datasource.SeataDynamicDataSourceAdapter;
+import com.njydsz.common.seata.health.SeataHealthIndicator;
+import com.njydsz.common.seata.metrics.SeataTransactionMetricsAspect;
+import com.njydsz.common.seata.validator.SeataConfigurationValidator;
+import com.njydsz.common.seata.xid.FeignXidRequestInterceptor;
+import com.njydsz.common.seata.xid.XidServletFilter;
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterRegistration;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -11,8 +21,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import com.njydsz.common.seata.health.SeataHealthIndicator;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 /**
  * Seata 分布式事务自动配置
@@ -22,12 +32,24 @@ import com.njydsz.common.seata.health.SeataHealthIndicator;
  * <p>该模块不对 Seata 原生自动配置（{@code io.seata.spring.boot.autoconfigure.SeataAutoConfiguration}）
  * 做任何拦截覆盖，而是按照 Spring Cloud Alibaba 约定提供自研属性前缀 {@code ydsz.seata.*} 的桥接配置。
  *
+ * <h2>自动注册能力清单</h2>
+ * <ul>
+ *   <li>{@link SeataHealthIndicator}：健康检查（TC 连通性、TransactionManager 初始化状态）</li>
+ *   <li>{@link FeignXidRequestInterceptor}：XID 跨服务传播（Feign 请求拦截器）</li>
+ *   <li>{@link XidServletFilter}：XID 接收绑定（Servlet Filter）</li>
+ *   <li>{@link SeataDynamicDataSourceAdapter}：AT 模式与 DynamicRoutingDataSource 集成</li>
+ *   <li>{@link SeataTransactionMetricsAspect}：事务 Metrics（seata.tx.count / seata.tx.duration）</li>
+ *   <li>{@link SeataConfigurationValidator}：启动期配置校验（Fail Fast）</li>
+ *   <li>{@link SeataPropertyBridgeConfiguration}：属性桥接日志（ydsz.seata.* → seata.*）</li>
+ * </ul>
+ *
  * <h2>与现有系统的整合点</h2>
  * <ul>
  *   <li>{@code DynamicRoutingDataSource}（ydsz-common-jdbc）：Seata AT 模式的 {@code DataSourceProxy}
  *       会包装已有动态数据源，{@code ydsz.seata.data-source-proxy-mode=AT} 时自动生效</li>
  *   <li>Outbox 事件（ydsz-common-event）：分布式事务提交后，领域事件再通过 Outbox 投递，保证最终一致性</li>
- *   <li>Feign（ydsz-common-feign）：Seata 通过 RootContext 在 Feign 调用链中传播 XID</li>
+ *   <li>Feign（ydsz-common-feign）：通过 {@link FeignXidRequestInterceptor} + {@link XidServletFilter}
+ *       实现 XID 跨服务传播</li>
  * </ul>
  *
  * <h2>使用方式</h2>
@@ -36,16 +58,22 @@ import com.njydsz.common.seata.health.SeataHealthIndicator;
  * @Service
  * public class OrderService {
  *
- *     @GlobalTransactional(name = "create-order", rollbackFor = Exception.class)
+ *     @YdszGlobalTransactional(name = "order-create-order")
  *     public void createOrder(OrderDTO dto) {
- *         // 1. 落库 order
  *         orderRepository.save(order);
- *         // 2. Feign 调用库存服务
  *         inventoryClient.deduct(dto.getSkuId(), dto.getQuantity());
- *         // 3. 任何异常触发 AT 自动补偿（undo_log 反向 SQL 回滚）
  *     }
  * }
  * }</pre>
+ *
+ * <h2>接入 Checklist（规范 §25.8）</h2>
+ * <ul>
+ *   <li>pom.xml 中添加 ydsz-common-seata 依赖</li>
+ *   <li>application.yml 中配置 ydsz.seata.enabled: true 及 default-type</li>
+ *   <li>如使用 TCC 模式：实现 TccAction 接口</li>
+ *   <li>如使用 SEATA_AT 模式：确保 undo_log 表已初始化</li>
+ *   <li>生产环境：配置 ydsz.seata.xid-sign-secret</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 26.09.08
@@ -63,7 +91,7 @@ public class SeataAutoConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(SeataAutoConfiguration.class);
 
     /**
-     * 注册健康检查指示器
+     * 注册健康检查指示器（运行时级：含 TC 连通性和 TransactionManager 初始化状态）。
      *
      * @param properties Seata 配置属性
      * @param meterRegistryProvider Micrometer 指标注册器（可选）
@@ -77,7 +105,109 @@ public class SeataAutoConfiguration {
     public SeataHealthIndicator seataHealthIndicator(
             SeataProperties properties,
             ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        LOG.info("SeataHealthIndicator registered (runtime-level: TC connectivity + TM status)");
         return new SeataHealthIndicator(properties, meterRegistryProvider.getIfAvailable());
+    }
+
+    /**
+     * 注册 XID 跨服务传播拦截器（Feign 请求 → 注入 XID Header）。
+     *
+     * <p>规范 YDIZ-TX-004 要求 Feign 调用链透传 XID。
+     *
+     * @return XID 传播拦截器
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "seataFeignXidRequestInterceptor")
+    // CHECKSTYLE.OFF: RegexpSinglelineJava
+    @ConditionalOnClass(name = "feign.RequestInterceptor")
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    public FeignXidRequestInterceptor seataFeignXidRequestInterceptor() {
+        LOG.info("FeignXidRequestInterceptor registered for XID cross-service propagation");
+        return new FeignXidRequestInterceptor();
+    }
+
+    /**
+     * 注册 XID 接收 Filter（接收上游传播的 XID 并绑定到 RootContext）。
+     *
+     * <p>规范 YDIZ-TX-004 要求下游服务自动接收 XID。order 为 HIGHEST_PRECEDENCE + 100，
+     * 确保在业务 Filter 之前优先执行 XID 绑定。
+     *
+     * @return XID Filter 注册对象
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "seataXidServletFilterRegistration")
+    // CHECKSTYLE.OFF: RegexpSinglelineJava
+    @ConditionalOnClass(name = "jakarta.servlet.Filter")
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    public FilterRegistrationBean<XidServletFilter> seataXidServletFilterRegistration() {
+        FilterRegistrationBean<XidServletFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new XidServletFilter());
+        registration.addUrlPatterns("/*");
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 100);
+        registration.setName("seataXidServletFilter");
+        LOG.info("XidServletFilter registered with URL pattern /* (order={})",
+            Ordered.HIGHEST_PRECEDENCE + 100);
+        return registration;
+    }
+
+    /**
+     * 注册 Seata DynamicRoutingDataSource 适配器。
+     *
+     * <p>当 classpath 同时存在 Seata DataSourceProxy 和 DynamicRoutingDataSource 时自动生成，
+     * 解决 AT 模式与 YDSZ 动态数据源的路由冲突。
+     *
+     * @return Seata 动态数据源适配器
+     */
+    @Bean
+    @ConditionalOnMissingBean(SeataDynamicDataSourceAdapter.class)
+    // CHECKSTYLE.OFF: RegexpSinglelineJava
+    @ConditionalOnClass(
+        name = {
+            "io.seata.rm.datasource.DataSourceProxy",
+            "com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource"
+        })
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    public SeataDynamicDataSourceAdapter seataDynamicRoutingDataSource() {
+        LOG.info("SeataDynamicDataSourceAdapter registered for AT mode + dynamic datasource integration");
+        return new SeataDynamicDataSourceAdapter();
+    }
+
+    /**
+     * 注册 Seata 事务 Metrics 切面（seata.tx.count / seata.tx.duration）。
+     *
+     * <p>拦截所有 @YdszGlobalTransactional 标注的方法，自动记录事务执行次数和耗时。
+     * 规范 §25.7 强制要求暴露此指标。
+     *
+     * @param meterRegistry Micrometer 指标注册器
+     * @return 事务 Metrics 切面
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    // CHECKSTYLE.OFF: RegexpSinglelineJava
+    @ConditionalOnClass(
+        name = {
+            "io.micrometer.core.instrument.MeterRegistry",
+            "org.aspectj.lang.annotation.Aspect",
+            "org.aspectj.lang.ProceedingJoinPoint"
+        })
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    public SeataTransactionMetricsAspect seataTransactionMetricsAspect(MeterRegistry meterRegistry) {
+        LOG.info("SeataTransactionMetricsAspect registered (seata.tx.count / seata.tx.duration)");
+        return new SeataTransactionMetricsAspect(meterRegistry);
+    }
+
+    /**
+     * 注册启动期配置校验器（Fail Fast）。
+     *
+     * <p>在 Bean 初始化时校验 ydzs.seata.* 配置合法性，不合规时抛出 IllegalArgumentException。
+     *
+     * @param properties Seata 配置属性
+     * @return 配置校验器
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SeataConfigurationValidator seataConfigurationValidator(SeataProperties properties) {
+        return new SeataConfigurationValidator(properties);
     }
 
     /**
@@ -98,13 +228,14 @@ public class SeataAutoConfiguration {
         /**
          * 桥接日志输出
          *
-         * @param properties ydsz.seata 配置属性
+         * @param properties ydzs.seata 配置属性
          */
         public SeataPropertyBridgeConfiguration(SeataProperties properties) {
             LOG.info(
-                "Seata SEATA TxGroup bridged: txServiceGroup={}, proxyMode={}",
+                "Seata SEATA TxGroup bridged: txServiceGroup={}, proxyMode={}, timeout={}ms",
                 properties.getTxServiceGroup(),
-                properties.getDataSourceProxyMode());
+                properties.getDataSourceProxyMode(),
+                properties.getTm().getGlobalTransactionTimeout());
         }
     }
 }

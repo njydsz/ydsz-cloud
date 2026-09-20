@@ -86,12 +86,14 @@ public class OtelAutoConfiguration {
    * {@code initMethod} 可保证在容器 Bean 定义全部完成后再解析 {@link ObjectProvider}，避免过早触发循环依赖。 销毁阶段通过 {@code
    * destroyMethod} 关闭 SDK，触发 Span 缓冲区 flush，防止进程退出丢数据。
    *
+   * <p>同时以 {@code ydszOpenTelemetrySdk} 别名注册，业务模块可通过任一名义注入同一 Bean 实例，确保 OTel SDK 全局唯一。
+   *
    * @param sentryProperties 监控配置，读取 tracing.otel 子树
    * @param exporterProvider Span 导出器提供者；未提供时 SDK 仅内存处理，不向外导出
    * @param customProcessorsProvider 业务自定义 SpanProcessor 列表提供者，可为空
    * @return 初始化器实例，永不为 {@code null}
    */
-  @Bean(initMethod = "build", destroyMethod = "close")
+  @Bean(name = {"otelSdkInitializer", "ydszOpenTelemetrySdk"}, initMethod = "build", destroyMethod = "close")
   @ConditionalOnMissingBean
   public OtelSdkInitializer otelSdkInitializer(
       SentryProperties sentryProperties,
@@ -119,31 +121,6 @@ public class OtelAutoConfiguration {
    */
   public Tracer ydszDefaultTracer(OpenTelemetry openTelemetry) {
     return openTelemetry.getTracer("ydsz");
-  }
-
-  /**
-   * 提供 {@link OpenTelemetrySdk} Spring Bean。
-   *
-   * <p>由 {@link OtelSdkInitializer} 在 {@code initMethod} 阶段构建完成。 业务模块可通过 {@code @Resource(name =
-   * "ydszOpenTelemetrySdk")} 注入使用。
-   *
-   * <p>26.09.01 变更：不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播， 避免与
-   * opentelemetry-spring-boot-starter 等第三方配置冲突。
-   *
-   * @param sentryProperties 可观测配置，其中 {@code tracing.otel} 段决定采样率、导出方式与资源属性
-   * @param exporterProvider 用户自定义的 {@code SpanExporter} 延迟提供者；取不到时按配置构建默认导出器
-   * @param customProcessorsProvider 用户追加的 {@code SpanProcessor} 列表提供者；取不到时不追加任何处理器
-   * @return OpenTelemetrySdk 实例（以 {@code OtelSdkInitializer} 形式承载，{@code initMethod} 阶段完成构建）
-   */
-  @Bean(name = "ydszOpenTelemetrySdk", initMethod = "build", destroyMethod = "close")
-  @ConditionalOnMissingBean(name = "ydszOpenTelemetrySdk")
-  public OtelSdkInitializer otelSdkBean(
-      SentryProperties sentryProperties,
-      ObjectProvider<SpanExporter> exporterProvider,
-      ObjectProvider<List<SpanProcessor>> customProcessorsProvider) {
-
-    log.info("[Sentry] OtelSdkInitializer Bean 初始化：tracing.otel.enabled=true");
-    return new OtelSdkInitializer(sentryProperties, exporterProvider, customProcessorsProvider);
   }
 
   /**

@@ -2,6 +2,7 @@ package com.njydsz.common.search.core;
 
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
+import com.njydsz.common.search.api.VectorSearchRequest;
 
 /**
  * 搜索策略 SPI
@@ -18,12 +19,25 @@ import com.njydsz.common.search.api.SearchResponse;
 public interface SearchStrategy {
 
   /**
-   * 执行搜索
+   * 执行全文搜索
    *
    * @param request 搜索请求
    * @return 搜索响应
    */
   SearchResponse search(SearchRequest request);
+
+  /**
+   * 执行向量语义搜索。
+   *
+   * <p>默认返回空结果，支持向量搜索的引擎（如 Elasticsearch、Meilisearch）应覆盖此方法。 调用方应在执行前通过 {@link EngineCapability#supportsVector()}
+   * 检查引擎是否支持向量搜索。
+   *
+   * @param request 向量搜索请求
+   * @return 搜索响应；不支持向量搜索的引擎返回空响应，不会为 {@code null}
+   */
+  default SearchResponse vectorSearch(VectorSearchRequest request) {
+    return SearchResponse.empty(request.getPage(), request.getPageSize());
+  }
 
   /**
    * 获取引擎名称

@@ -99,8 +99,8 @@
     {
       "name": "ydsz.seata.tm.global-transaction-timeout",
       "type": "java.lang.Integer",
-      "description": "全局事务超时时间（毫秒）。",
-      "defaultValue": 60000
+      "description": "全局事务超时时间（毫秒），默认 30000ms。规范 YDIZ-TX-002（P0）要求此值不超过 30000ms，全局事务长时持有全局锁会严重降低并发性能。",
+      "defaultValue": 30000
     }
   ]
 }

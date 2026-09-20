@@ -4,8 +4,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.njydsz.common.search.api.SearchFilter;
-import com.njydsz.common.search.api.SearchHit;
-import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.core.IndexDocument;
 
 /**
@@ -58,28 +56,6 @@ public interface SearchProvider<T> {
    * @return 索引文档
    */
   IndexDocument toIndexDocument(T entity);
-
-  /**
-   * 将索引文档转换为搜索命中。
-   *
-   * @param document 索引文档
-   * @param request 搜索请求
-   * @return 搜索命中
-   */
-  default SearchHit toSearchHit(IndexDocument document, SearchRequest request) {
-    return SearchHit.builder()
-        .id(document.getId())
-        .type(document.getType())
-        .title(document.getTitle())
-        .subtitle(document.getSubtitle())
-        .snippet(document.getSnippet())
-        .path(document.getPath())
-        .status(document.getStatus())
-        .tags(document.getTags())
-        .createdAt(document.getCreatedAt() != null ? document.getCreatedAt().toString() : null)
-        .updatedAt(document.getUpdatedAt() != null ? document.getUpdatedAt().toString() : null)
-        .build();
-  }
 
   /**
    * 获取权限过滤条件。

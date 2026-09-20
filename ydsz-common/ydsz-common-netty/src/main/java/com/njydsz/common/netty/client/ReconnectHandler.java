@@ -3,7 +3,6 @@ package com.njydsz.common.netty.client;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +14,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>当达到 {@code maxRetries}（非 -1）时停止重连。 重连成功后重置重试计数器。
  *
+ * <p><b>注意：此 Handler 不是 {@code @Sharable} 的</b>，每个 Channel 应持有独立实例， 避免多 Channel 共享导致 {@code ChannelHandlerContext} 覆盖的并发问题。
+ *
  * <p>使用方式：
  *
  * <pre>{@code
- * @ChannelHandler.Sharable
  * public class MyReconnectHandler extends ReconnectHandler {
  *     private final Supplier<ChannelFuture> connectAction;
  *
@@ -28,11 +28,11 @@ import lombok.extern.slf4j.Slf4j;
  *         this.connectAction = connectAction;
  *     }
  *
- *     @Override
+ *     &#64;Override
  *     protected void doReconnect() {
  *         connectAction.get().addListener(f -> {
  *             if (!f.isSuccess()) {
- *                 scheduleReconnect(); // 重连失败，继续重试
+ *                 scheduleReconnect(ctx); // 重连失败，继续重试
  *             }
  *         });
  *     }
@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
  * @since 26.09.01
  */
 @Slf4j
-@ChannelHandler.Sharable
 public abstract class ReconnectHandler extends ChannelInboundHandlerAdapter {
 
   /** 指数退避最大移位值（2^30 = 1,073,741,824 ms ≈ 12.4 天，防止位移溢出） */
@@ -71,7 +70,7 @@ public abstract class ReconnectHandler extends ChannelInboundHandlerAdapter {
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     super.channelInactive(ctx);
     if (maxRetries < 0 || retryCount.get() < maxRetries) {
-      scheduleReconnect();
+      scheduleReconnect(ctx);
     } else {
       log.warn("[Netty-Reconnect] 已达最大重试次数 {}, 停止重连", maxRetries);
     }
@@ -87,8 +86,12 @@ public abstract class ReconnectHandler extends ChannelInboundHandlerAdapter {
     retryCount.set(0);
   }
 
-  /** 调度下一次重连（指数退避）。 */
-  public void scheduleReconnect() {
+  /**
+   * 调度下一次重连（指数退避）。
+   *
+   * @param ctx 当前 Channel 的上下文，由 {@link #channelInactive} 传入， 保证每个 Channel 使用独立的上下文
+   */
+  protected void scheduleReconnect(ChannelHandlerContext ctx) {
     int current = retryCount.incrementAndGet();
     long delay =
         Math.min(initialDelayMs * (1L << Math.min(current - 1, MAX_BACKOFF_SHIFT)), maxDelayMs);
@@ -102,7 +105,7 @@ public abstract class ReconnectHandler extends ChannelInboundHandlerAdapter {
                 doReconnect();
               } catch (Exception e) {
                 log.error("[Netty-Reconnect] 重连异常: {}", e.getMessage(), e);
-                scheduleReconnect();
+                scheduleReconnect(ctx);
               }
             },
             delay,
@@ -119,13 +122,5 @@ public abstract class ReconnectHandler extends ChannelInboundHandlerAdapter {
    */
   public int getRetryCount() {
     return retryCount.get();
-  }
-
-  private volatile ChannelHandlerContext ctx;
-
-  @Override
-  public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-    super.handlerAdded(ctx);
-    this.ctx = ctx;
   }
 }

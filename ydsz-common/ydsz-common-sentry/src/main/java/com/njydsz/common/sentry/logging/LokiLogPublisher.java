@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.domain.LogEvent;
-import com.njydsz.common.sentry.resilience.CircuitBreaker;
+import com.njydsz.common.sentry.resilience.SentryCircuitBreaker;
 import com.njydsz.common.sentry.spi.LogPublisher;
 
 /**
@@ -32,14 +32,14 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
   private final String pushUrl;
   private final HttpClient httpClient;
   private final int maxRetryAttempts;
-  private final CircuitBreaker circuitBreaker;
+  private final SentryCircuitBreaker circuitBreaker;
   private final int requestTimeoutSeconds;
 
   public LokiLogPublisher(
       String lokiUrl,
       int connectTimeoutSeconds,
       int maxRetryAttempts,
-      CircuitBreaker circuitBreaker) {
+      SentryCircuitBreaker circuitBreaker) {
     this.pushUrl =
         lokiUrl.endsWith("/") ? lokiUrl + "loki/api/push" : lokiUrl + "/loki/api/push";
     this.maxRetryAttempts = maxRetryAttempts;
@@ -215,7 +215,7 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
    * @return 结果
    */
   public boolean isAvailable() {
-    return circuitBreaker == null || circuitBreaker.getState() != CircuitBreaker.State.OPEN;
+    return circuitBreaker == null || circuitBreaker.getState() != SentryCircuitBreaker.State.OPEN;
   }
 
   @Override
@@ -241,8 +241,8 @@ public class LokiLogPublisher implements LogPublisher, AutoCloseable {
    * get circuit breaker。
    * @return 结果
    */
-  public CircuitBreaker.State getCircuitBreakerState() {
-    return circuitBreaker != null ? circuitBreaker.getState() : CircuitBreaker.State.CLOSED;
+  public SentryCircuitBreaker.State getCircuitBreakerState() {
+    return circuitBreaker != null ? circuitBreaker.getState() : SentryCircuitBreaker.State.CLOSED;
   }
 
   @Override

@@ -5,6 +5,7 @@ import java.util.List;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -22,6 +23,7 @@ import com.njydsz.common.socket.auth.WebSocketAuthInterceptor;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
 import com.njydsz.common.socket.filter.MessageFilter;
+import com.njydsz.common.socket.filter.WebSocketDedupInterceptor;
 import com.njydsz.common.socket.health.WebSocketHealthIndicator;
 import com.njydsz.common.socket.heartbeat.WebSocketHeartbeatHandler;
 import com.njydsz.common.socket.interceptor.StompMessageInterceptor;
@@ -222,7 +224,7 @@ public class WebSocketAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public OnlineUserService onlineUserService(
-      @Autowired(required = false) Object redisTemplate,
+      @Autowired(required = false) StringRedisTemplate redisTemplate,
       WebSocketProperties properties) {
     if (redisTemplate == null) {
       log.warn("[WebSocket] StringRedisTemplate 不存在，OnlineUserService 降级为 no-op");
@@ -248,9 +250,7 @@ public class WebSocketAutoConfiguration {
       };
     }
     log.info("[WebSocket] 注册 OnlineUserService");
-    return new OnlineUserService(
-        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
-        properties.getSessionTtlSeconds());
+    return new OnlineUserService(redisTemplate, properties.getSessionTtlSeconds());
   }
 
   // ==================== 离线消息存储 ====================
@@ -275,7 +275,7 @@ public class WebSocketAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public OfflineMessageStore offlineMessageStore(
-      @Autowired(required = false) Object redisTemplate,
+      @Autowired(required = false) StringRedisTemplate redisTemplate,
       WebSocketProperties properties,
       WebSocketCircuitBreaker circuitBreaker) {
     if (redisTemplate == null) {
@@ -296,10 +296,7 @@ public class WebSocketAutoConfiguration {
       };
     }
     log.info("[WebSocket] 注册 RedisOfflineMessageStore");
-    return new RedisOfflineMessageStore(
-        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
-        properties,
-        circuitBreaker);
+    return new RedisOfflineMessageStore(redisTemplate, properties, circuitBreaker);
   }
 
   // ==================== P0-3: 心跳保活 ====================
@@ -321,14 +318,11 @@ public class WebSocketAutoConfiguration {
   public WebSocketHeartbeatHandler webSocketHeartbeatHandler(
       OnlineUserService onlineUserService,
       WebSocketProperties properties,
-      @Autowired(required = false) Object redisTemplate) {
+      @Autowired(required = false) StringRedisTemplate redisTemplate) {
     log.info(
         "[WebSocket] 注册 WebSocketHeartbeatHandler (staleTimeout={}ms)",
         properties.getHeartbeat().getStaleSessionTimeout());
-    return new WebSocketHeartbeatHandler(
-        properties,
-        onlineUserService,
-        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate);
+    return new WebSocketHeartbeatHandler(properties, onlineUserService, redisTemplate);
   }
 
   // ==================== P0-4: 重试队列 + 死信队列 ====================
@@ -348,10 +342,9 @@ public class WebSocketAutoConfiguration {
       name = "dead-letter-enabled",
       havingValue = "true")
   public DeadLetterQueue deadLetterQueue(
-      @Autowired(required = false) Object redisTemplate) {
+      @Autowired(required = false) StringRedisTemplate redisTemplate) {
     log.info("[WebSocket] 注册 RedisDeadLetterQueue");
-    return new RedisDeadLetterQueue(
-        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate);
+    return new RedisDeadLetterQueue(redisTemplate);
   }
 
   /**
@@ -372,7 +365,7 @@ public class WebSocketAutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   public MessageRetryQueue messageRetryQueue(
-      @Autowired(required = false) Object redisTemplate,
+      @Autowired(required = false) StringRedisTemplate redisTemplate,
       WebSocketProperties properties,
       @Autowired(required = false) DeadLetterQueue deadLetterQueue) {
     if (redisTemplate == null) {
@@ -401,10 +394,7 @@ public class WebSocketAutoConfiguration {
     log.info(
         "[WebSocket] 注册 RedisMessageRetryQueue (maxRetries={})",
         properties.getRetry().getMaxRetries());
-    return new RedisMessageRetryQueue(
-        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
-        properties,
-        deadLetterQueue);
+    return new RedisMessageRetryQueue(redisTemplate, properties, deadLetterQueue);
   }
 
   // ==================== 会话事件监听器 ====================
@@ -484,15 +474,31 @@ public class WebSocketAutoConfiguration {
   @ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
   @ConditionalOnMissingBean(WebSocketRateLimiter.class)
   public WebSocketRateLimiter webSocketRateLimiter(
-      @Autowired(required = false) Object redisTemplate,
+      @Autowired(required = false) StringRedisTemplate redisTemplate,
       WebSocketProperties properties,
       WebSocketCircuitBreaker circuitBreaker) {
     log.info(
         "[WebSocket] 注册 WebSocketRateLimiter (enabled={})", properties.getRateLimit().isEnabled());
-    return new WebSocketRateLimiter(
-        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
-        properties,
-        circuitBreaker);
+    return new WebSocketRateLimiter(redisTemplate, properties, circuitBreaker);
+  }
+
+  // ==================== FEAT-001: 消息幂等去重拦截器 ====================
+
+  /**
+   * 注册消息幂等去重拦截器 Bean。
+   *
+   * <p>基于 Redis SETNX 实现 messageId 级别去重，防止因重试导致的重复推送。
+   * Redis 不可用时自动降级为放行（宁可重复也不丢消息）。
+   *
+   * @param redisTemplate Redis 模板，可选依赖；为 null 时去重功能降级为放行
+   * @return 消息幂等去重拦截器实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(WebSocketDedupInterceptor.class)
+  public WebSocketDedupInterceptor webSocketDedupInterceptor(
+      @Autowired(required = false) StringRedisTemplate redisTemplate) {
+    log.info("[WebSocket] 注册 WebSocketDedupInterceptor（Redis SETNX 幂等去重）");
+    return new WebSocketDedupInterceptor(redisTemplate);
   }
 
   // ==================== P3-1: STOMP 消息拦截器 ====================
@@ -535,13 +541,13 @@ public class WebSocketAutoConfiguration {
   public HealthIndicator webSocketHealthIndicator(
       WebSocketProperties properties,
       WebSocketSessionEventListener eventListener,
-      @Autowired(required = false) Object redisTemplate,
+      @Autowired(required = false) StringRedisTemplate redisTemplate,
       WebSocketCircuitBreaker circuitBreaker) {
     log.info("[WebSocket] 注册 WebSocketHealthIndicator");
     return new WebSocketHealthIndicator(
         properties,
         eventListener.getActiveConnectionsCounter(),
-        (org.springframework.data.redis.core.StringRedisTemplate) redisTemplate,
+        redisTemplate,
         circuitBreaker);
   }
 

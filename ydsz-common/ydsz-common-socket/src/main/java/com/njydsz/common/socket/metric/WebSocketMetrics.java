@@ -1,6 +1,8 @@
 package com.njydsz.common.socket.metric;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.micrometer.core.instrument.Counter;
@@ -24,6 +26,9 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code ydsz.websocket.push.duration}（Timer）— 推送耗时（含 P99 百分位）
  * </ul>
  *
+ * <p>推送结果计数器在构造时预构建（PushResultKey → Counter 映射），避免每次
+ * push 都做 Counter.builder() 构建与 register() 查找，减少高并发下对象分配。
+ *
  * <p>当 MeterRegistry 不在 classpath 时降级为空操作（no-op）。
  *
  * @author ydsz-team
@@ -39,6 +44,9 @@ public class WebSocketMetrics implements NetworkMetrics {
   private static final String METRIC_PUSH_TOTAL = "ydsz.websocket.push.total";
   private static final String METRIC_PUSH_DURATION = "ydsz.websocket.push.duration";
 
+  /** 推送结果计数器组合键（pushType × result）。 */
+  private record PushResultKey(String type, boolean success) {}
+
   private final MeterRegistry meterRegistry;
   private final AtomicLong activeChannels = new AtomicLong(0);
   private final AtomicLong totalBytesRead = new AtomicLong(0);
@@ -48,6 +56,9 @@ public class WebSocketMetrics implements NetworkMetrics {
   private Counter disconnectionsCounter;
   private Counter messagesReceivedCounter;
   private Counter messagesSentCounter;
+
+  /** 预构建的推送结果计数器映射。 */
+  private final Map<PushResultKey, Counter> pushCounterCache = new HashMap<>(8);
 
   /**
    * 构造 WebSocketMetrics。
@@ -76,7 +87,37 @@ public class WebSocketMetrics implements NetworkMetrics {
           Counter.builder(METRIC_MESSAGES_SENT)
               .description("WebSocket 消息发送数")
               .register(meterRegistry);
+      initPushCounters();
     }
+  }
+
+  /**
+   * 预构建所有 (pushType × result) 组合对应的 Counter。
+   *
+   * <p>固定组合仅为 3×2=6 种（USER/BROADCAST/TOPIC × success/failure），
+   * 在构造期一次性分配到缓存 Map，recordPush() 路径上零对象分配。
+   */
+  private void initPushCounters() {
+    String[] pushTypes = {"USER", "BROADCAST", "TOPIC"};
+    for (String type : pushTypes) {
+      registerPushCounter(type, true);
+      registerPushCounter(type, false);
+    }
+  }
+
+  /**
+   * 注册并缓存单个推送结果计数器。
+   *
+   * @param type 推送类型
+   * @param success 是否成功
+   */
+  private void registerPushCounter(String type, boolean success) {
+    Counter counter =
+        Counter.builder(METRIC_PUSH_TOTAL)
+            .tags(Tags.of("type", type, "result", success ? "success" : "failure"))
+            .description("WebSocket 推送次数")
+            .register(meterRegistry);
+    pushCounterCache.put(new PushResultKey(type, success), counter);
   }
 
   // ==================== NetworkMetrics 契约实现 ====================
@@ -158,7 +199,7 @@ public class WebSocketMetrics implements NetworkMetrics {
   // ==================== WebSocket 业务指标 ====================
 
   /**
-   * 记录一次推送结果。
+   * 记录一次推送结果（O(1) 查找，零对象分配）。
    *
    * @param pushType 推送类型（USER / BROADCAST / TOPIC）
    * @param success 是否成功
@@ -167,10 +208,17 @@ public class WebSocketMetrics implements NetworkMetrics {
     if (meterRegistry == null) {
       return;
     }
-    Counter.builder(METRIC_PUSH_TOTAL)
-        .tags(Tags.of("type", pushType, "result", success ? "success" : "failure"))
-        .register(meterRegistry)
-        .increment();
+    PushResultKey key = new PushResultKey(pushType, success);
+    Counter counter = pushCounterCache.get(key);
+    if (counter != null) {
+      counter.increment();
+    } else {
+      // 未知 pushType（如自定义扩展）降级为动态注册，兼容未来扩展
+      Counter.builder(METRIC_PUSH_TOTAL)
+          .tags(Tags.of("type", pushType, "result", success ? "success" : "failure"))
+          .register(meterRegistry)
+          .increment();
+    }
     // 同时更新消息发送计数
     incrementMessagesSent();
   }

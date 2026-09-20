@@ -26,7 +26,7 @@ import com.njydsz.common.search.config.SearchProperties;
  *
  * <ol>
  *   <li>NormalizerFilter — 标点清理、空白归一化、长度截断
- *   <li>StopWordFilter — 基于内置停用词表过滤无意义词
+ *   <li>ChineseTokenFilter — 中文分词（ICU4J）
  *   <li>同义词扩展 — 加载同义词词典，扩展关键词提升召回
  *   <li>拼音转换 — 将中文关键词转为拼音，支持拼音搜索
  * </ol>

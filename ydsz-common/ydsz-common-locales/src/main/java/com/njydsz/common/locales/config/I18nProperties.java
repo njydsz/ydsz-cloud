@@ -80,7 +80,7 @@ public class I18nProperties {
     "classpath:i18n/docs-messages",
     "classpath:i18n/excel-messages",
     "classpath:i18n/feign-messages",
-    "classpath:i18n/file-messages",
+    "classpath:i18n/common-file-messages",
     "classpath:i18n/jdbc-messages",
     "classpath:i18n/lock-messages",
     "classpath:i18n/notify-messages",

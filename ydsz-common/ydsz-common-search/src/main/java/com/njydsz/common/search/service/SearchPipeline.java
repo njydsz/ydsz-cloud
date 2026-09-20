@@ -2,7 +2,6 @@ package com.njydsz.common.search.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,6 @@ import com.njydsz.common.search.config.SearchProperties;
  *
  * <ol>
  *   <li>{@link NormalizerFilter} — 标点清理、空白归一化、长度截断
- *   <li>{@link StopWordFilter} — 停用词过滤
  *   <li>{@link ChineseTokenFilter} — 中文分词（ICU4J）
  * </ol>
  *
@@ -29,7 +27,6 @@ import com.njydsz.common.search.config.SearchProperties;
  * <pre>{@code
  * SearchPipeline pipeline = SearchPipeline.builder()
  *     .addFilter(new NormalizerFilter())
- *     .addFilter(new StopWordFilter(Set.of("的", "了", "是")))
  *     .addFilter(new ChineseTokenFilter(new ChineseTokenizer.IcuTokenizer()))
  *     .build();
  * String result = pipeline.process("项目管理系统");
@@ -87,6 +84,8 @@ public class SearchPipeline {
   public static SearchPipeline fromConfig(SearchProperties properties) {
     Builder builder = builder();
     builder.addFilter(new NormalizerFilter());
+    // 停用词过滤已交由 PostgreSQL 文本搜索配置（search_zh / simple）在索引侧统一处理，
+    // 查询管道中不再重复过滤，避免与引擎端停用词表不同步导致召回率下降。
     builder.addFilter(new ChineseTokenFilter(new ChineseTokenizer.IcuTokenizer()));
     return builder.build();
   }
@@ -167,40 +166,6 @@ public class SearchPipeline {
     @Override
     public String getName() {
       return "NormalizerFilter";
-    }
-  }
-
-  /** 停用词过滤器：移除常见无意义词。 */
-  @Slf4j
-  public static class StopWordFilter implements TextFilter {
-
-    private final Set<String> stopWords;
-
-    public StopWordFilter(Set<String> stopWords) {
-      this.stopWords = stopWords != null ? Set.copyOf(stopWords) : Set.of();
-    }
-
-    @Override
-    public String process(String text) {
-      if (text == null || text.isBlank() || stopWords.isEmpty()) {
-        return text;
-      }
-      String[] tokens = text.split("\\s+");
-      StringBuilder sb = new StringBuilder();
-      for (String token : tokens) {
-        if (!stopWords.contains(token.toLowerCase())) {
-          if (sb.length() > 0) {
-            sb.append(' ');
-          }
-          sb.append(token);
-        }
-      }
-      return sb.toString();
-    }
-
-    @Override
-    public String getName() {
-      return "StopWordFilter";
     }
   }
 

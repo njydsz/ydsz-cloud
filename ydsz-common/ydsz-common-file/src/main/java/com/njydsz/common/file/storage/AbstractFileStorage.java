@@ -1,17 +1,11 @@
 package com.njydsz.common.file.storage;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -467,9 +461,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
     // 内容源抽象：小文件走内存缓冲（多次复用高效），大文件落盘临时文件（避免 OOM）。
     // 后续秒传校验、病毒扫描、对象存储上传复用同一内容源，避免重复读取 IO。
-    FileContentSource contentSource;
+    FileContentBuffer contentSource;
     try {
-      contentSource = bufferFileContent(file);
+      contentSource = FileContentBuffer.create(file, fileProperties.getMemoryBufferThreshold());
     } catch (IOException e) {
       log.error("[Storage] failed to buffer file content, object={}", resolvedObjectName, e);
       throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
@@ -1235,7 +1229,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     fileStorage.setFileName(originalFilename);
     fileStorage.setSuffix(suffix);
     fileStorage.setSize(file.getSize());
-    fileStorage.setIsDir(0);
+    fileStorage.setIsDir(Boolean.FALSE);
     fileStorage.setType(inferFileType(suffix));
     fileStorage.setMimeType(detectMimeType(file));
     fileStorage.setUploadAt(LocalDateTime.now());

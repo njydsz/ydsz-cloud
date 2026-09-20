@@ -17,7 +17,7 @@ import com.njydsz.common.sentry.logging.DualLogPublisher;
 import com.njydsz.common.sentry.logging.ElkLogPublisher;
 import com.njydsz.common.sentry.logging.LokiLogPublisher;
 import com.njydsz.common.sentry.logging.NoOpLogPublisher;
-import com.njydsz.common.sentry.resilience.CircuitBreaker;
+import com.njydsz.common.sentry.resilience.SentryCircuitBreaker;
 import com.njydsz.common.sentry.spi.LogPublisher;
 
 /**
@@ -57,12 +57,12 @@ public class LoggingAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(LogPublisher.class)
   public LogPublisher logPublisher(
-      SentryProperties properties, ObjectProvider<CircuitBreaker> circuitBreakers) {
+      SentryProperties properties, ObjectProvider<SentryCircuitBreaker> circuitBreakers) {
     List<LogPublisher> publishers = new ArrayList<>(16);
 
     SentryProperties.ElkConfig elkConfig = properties.getLogging().getElk();
     if (elkConfig.isEnabled()) {
-      CircuitBreaker elkCb =
+      SentryCircuitBreaker elkCb =
           circuitBreakers.stream()
               .filter(cb -> "elk-logstash".equals(cb.getName()))
               .findFirst()
@@ -80,7 +80,7 @@ public class LoggingAutoConfiguration {
 
     SentryProperties.LokiConfig lokiConfig = properties.getLogging().getLoki();
     if (lokiConfig.isEnabled()) {
-      CircuitBreaker lokiCb =
+      SentryCircuitBreaker lokiCb =
           circuitBreakers.stream()
               .filter(cb -> "loki".equals(cb.getName()))
               .findFirst()

@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.sentry.domain.LogEvent;
-import com.njydsz.common.sentry.resilience.CircuitBreaker;
+import com.njydsz.common.sentry.resilience.SentryCircuitBreaker;
 import com.njydsz.common.sentry.spi.LogPublisher;
 
 /**
@@ -20,7 +20,7 @@ import com.njydsz.common.sentry.spi.LogPublisher;
  *
  * <p>通过 TCP/UDP 将结构化 JSON 日志推送到 Logstash。 Logstash 解析后写入 Elasticsearch，由 Kibana 展示。
  *
- * <p>TCP 模式下复用长连接，避免频繁 TCP 握手开销。 UDP 模式下复用 DatagramSocket（无连接，构造时创建）。 熔断保护由 {@link CircuitBreaker}
+ * <p>TCP 模式下复用长连接，避免频繁 TCP 握手开销。 UDP 模式下复用 DatagramSocket（无连接，构造时创建）。 熔断保护由 {@link SentryCircuitBreaker}
  * 统一管理。
  *
  * @author ydsz-team
@@ -35,7 +35,7 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
   private final int connectTimeoutMillis;
   private final int readTimeoutMillis;
   private final int maxRetryAttempts;
-  private final CircuitBreaker circuitBreaker;
+  private final SentryCircuitBreaker circuitBreaker;
 
   /** TCP 长连接（仅在 TCP 模式下使用） */
   private volatile Socket tcpSocket;
@@ -52,7 +52,7 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
       int connectTimeoutMillis,
       int readTimeoutMillis,
       int maxRetryAttempts,
-      CircuitBreaker circuitBreaker) {
+      SentryCircuitBreaker circuitBreaker) {
     this.host = host;
     this.port = port;
     this.protocol = protocol != null ? protocol.toLowerCase() : "tcp";
@@ -180,7 +180,7 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
    * @return 结果
    */
   public boolean isAvailable() {
-    return circuitBreaker == null || circuitBreaker.getState() != CircuitBreaker.State.OPEN;
+    return circuitBreaker == null || circuitBreaker.getState() != SentryCircuitBreaker.State.OPEN;
   }
 
   @Override
@@ -206,8 +206,8 @@ public class ElkLogPublisher implements LogPublisher, AutoCloseable {
    * get circuit breaker。
    * @return 结果
    */
-  public CircuitBreaker.State getCircuitBreakerState() {
-    return circuitBreaker != null ? circuitBreaker.getState() : CircuitBreaker.State.CLOSED;
+  public SentryCircuitBreaker.State getCircuitBreakerState() {
+    return circuitBreaker != null ? circuitBreaker.getState() : SentryCircuitBreaker.State.CLOSED;
   }
 
   @Override

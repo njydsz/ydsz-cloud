@@ -7,17 +7,24 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 统一搜索请求
  *
  * <p>封装所有搜索引擎通用的搜索参数，包括关键词、分页、排序、过滤、高亮等。 各业务模块通过 {@code SearchProvider} 补充特定于实体的搜索逻辑。
  *
+ * <p>布尔字段遵循 YDIZ-OOP-006 规范：字段以 {@code is} 前缀命名，
+ * Lombok 将生成 {@code isXxx()} / {@code setXxx()} 方法（非 {@code getIsXxx()}），
+ * Jackson 默认命名策略将前缀 {@code is} 剥离后映射到 JSON 属性 {@code "ascending"}、{@code "highlight"} 等。
+ * 如需控制 JSON 序列化名称，在字段上方添加 {@code @JsonProperty("isAscending")} 等注解。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
-@Data
+@Getter
+@Setter
 @Builder
 @Schema(description = "统一搜索请求")
 public class SearchRequest implements Serializable {
@@ -122,22 +129,4 @@ public class SearchRequest implements Serializable {
   /** 游标（用于 keyset 分页） */
   @Schema(description = "游标（用于 keyset 分页）")
   private String cursor;
-
-  // ==================== 手动 Getter/Setter（Lombok 兼容 fallback） ====================
-
-  public String getCursor() {
-    return cursor;
-  }
-
-  public void setCursor(String cursor) {
-    this.cursor = cursor;
-  }
-
-  public List<SearchAggregation> getAggregations() {
-    return aggregations;
-  }
-
-  public void setAggregations(List<SearchAggregation> aggregations) {
-    this.aggregations = aggregations;
-  }
 }

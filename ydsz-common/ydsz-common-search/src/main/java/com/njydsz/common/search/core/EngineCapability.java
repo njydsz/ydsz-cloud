@@ -12,6 +12,7 @@ package com.njydsz.common.search.core;
  * @param supportsCursor 是否支持游标分页
  * @param supportsSuggest 是否支持搜索建议
  * @param supportsIndexing 是否支持显式索引操作（false = 无需显式索引，如 RediSearch）
+ * @param supportsVector 是否支持向量搜索（dense_vector + HNSW / ivfflat）
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -22,14 +23,15 @@ public record EngineCapability(
     boolean supportsAggregation,
     boolean supportsCursor,
     boolean supportsSuggest,
-    boolean supportsIndexing) {
+    boolean supportsIndexing,
+    boolean supportsVector) {
   /**
    * 全部能力支持（PG/ES/Solr/OpenSearch）。
    *
-   * @return 七项能力全部为 {@code true} 的能力描述，不会为 {@code null}
+   * @return 八项能力全部为 {@code true} 的能力描述，不会为 {@code null}
    */
   public static EngineCapability full() {
-    return new EngineCapability(true, true, true, true, true, true, true);
+    return new EngineCapability(true, true, true, true, true, true, true, true);
   }
 
   /**
@@ -38,15 +40,24 @@ public record EngineCapability(
    * @return 关闭游标分页与显式索引的能力描述，不会为 {@code null}
    */
   public static EngineCapability searchOnly() {
-    return new EngineCapability(true, true, true, true, false, true, false);
+    return new EngineCapability(true, true, true, true, false, true, false, false);
   }
 
   /**
    * 最小能力（内存引擎）。
    *
-   * @return 仅开启全文检索、高亮、建议与显式索引，关闭模糊匹配、聚合与游标分页的能力描述，不会为 {@code null}
+   * @return 仅开启全文检索、高亮、建议与显式索引，关闭模糊匹配、聚合、游标分页与向量搜索的能力描述，不会为 {@code null}
    */
   public static EngineCapability minimal() {
-    return new EngineCapability(true, false, true, false, false, true, true);
+    return new EngineCapability(true, false, true, false, false, true, true, false);
+  }
+
+  /**
+   * 全文检索引擎但不支持向量搜索（如原生 PostgreSQL tsvector）。
+   *
+   * @return 开启全文检索、模糊匹配、高亮、聚合、游标分页、建议与显式索引，关闭向量搜索的能力描述，不会为 {@code null}
+   */
+  public static EngineCapability withoutVector() {
+    return new EngineCapability(true, true, true, true, true, true, true, false);
   }
 }

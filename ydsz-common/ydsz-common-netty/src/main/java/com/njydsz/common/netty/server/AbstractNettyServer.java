@@ -33,6 +33,7 @@ import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.common.netty.ssl.SslContextFactory;
 import com.njydsz.common.netty.transport.NativeTransportDetector;
+import com.njydsz.common.netty.diagnostics.NettyStartupReporter;
 
 /**
  * Netty TCP Server 抽象基类。
@@ -69,15 +70,24 @@ public abstract class AbstractNettyServer {
   /** 默认页拆分阶数（chunkSize = 8KB << 11 = 16MB） */
   private static final int DEFAULT_MAX_ORDER = 11;
 
-  /** 默认写缓冲区低水位线（32KB） */
-  private static final int DEFAULT_WRITE_BUFFER_LOW_WATER_MARK = 32 * 1024;
-
-  /** 默认写缓冲区高水位线（64KB） */
-  private static final int DEFAULT_WRITE_BUFFER_HIGH_WATER_MARK = 64 * 1024;
-
   static {
     // 强制 Netty 使用 SLF4J 日志门面
     InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
+  }
+
+  /**
+   * 配置 ByteBuf 泄漏检测级别。
+   *
+   * <p>在 Server 启动前根据配置设置系统属性 {@code io.netty.leakDetection.level}， 覆盖 Netty 默认值。
+   *
+   * @param properties Netty 配置
+   */
+  private static void configureLeakDetection(NettyProperties properties) {
+    NettyProperties.LeakDetection leakConfig = properties.getLeakDetection();
+    if (leakConfig != null && leakConfig.getLevel() != null && !"DISABLED".equalsIgnoreCase(leakConfig.getLevel())) {
+      System.setProperty("io.netty.leakDetection.level", leakConfig.getLevel());
+      System.setProperty("io.netty.leakDetection.targetRecords", "16");
+    }
   }
 
   protected final int port;
@@ -118,6 +128,9 @@ public abstract class AbstractNettyServer {
    * @throws InterruptedException 启动被中断
    */
   public void start() throws InterruptedException {
+    // 配置泄漏检测（必须在 Netty 类加载前设置）
+    configureLeakDetection(properties);
+
     NettyEventLoopPool pool = getEventLoopPool();
 
     initEventLoopGroups(pool);
@@ -129,6 +142,9 @@ public abstract class AbstractNettyServer {
 
     ServerBootstrap bootstrap = configureServerBootstrap(pool, trafficHandler, connectionHandler);
     bindServerPort(bootstrap);
+
+    // 输出启动环境诊断报告
+    NettyStartupReporter.report(pool, properties, getPort(), metrics);
 
     log.info(
         "[Netty-Server] {} 启动成功, 监听端口={}, ssl={}, trafficShaping={}",
@@ -250,13 +266,20 @@ public abstract class AbstractNettyServer {
   }
 
   /**
-   * 创建写缓冲区水位线。
+   * 创建写缓冲区水位线（基于配置）。
+   *
+   * <p>支持按业务场景调整水位线：
+   *
+   * <ul>
+   *   <li>IoT 小包场景：降低水位线减少内存占用
+   *   <li>文件传输场景：提高水位线减少背压触发频率
+   * </ul>
    *
    * @return WriteBufferWaterMark 实例
    */
   private WriteBufferWaterMark createWriteBufferWaterMark() {
-    return new WriteBufferWaterMark(
-        DEFAULT_WRITE_BUFFER_LOW_WATER_MARK, DEFAULT_WRITE_BUFFER_HIGH_WATER_MARK);
+    NettyProperties.WriteBuffer wb = properties.getWriteBuffer();
+    return new WriteBufferWaterMark(wb.getLowWaterMark(), wb.getHighWaterMark());
   }
 
   /**

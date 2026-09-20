@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.netty.util.internal.PlatformDependent;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.netty.api.ConnectionMetrics;
@@ -43,6 +44,9 @@ public class NettyChannelMetrics implements ConnectionMetrics {
   private static final String METRIC_MESSAGES_SENT = "ydsz.netty.messages.sent";
   private static final String METRIC_RECONNECT_ATTEMPTS = "ydsz.netty.reconnect.attempts";
   private static final String METRIC_RECONNECT_SUCCESSES = "ydsz.netty.reconnect.successes";
+  private static final String METRIC_DIRECT_MEMORY_USED = "ydsz.netty.direct.memory.used";
+  private static final String METRIC_DIRECT_MEMORY_MAX = "ydsz.netty.direct.memory.max";
+  private static final String METRIC_POOLED_ARENAS_ACTIVE = "ydsz.netty.arenas.active";
 
   private final AtomicLong activeChannels = new AtomicLong(0);
   private final AtomicLong totalBytesRead = new AtomicLong(0);
@@ -83,7 +87,19 @@ public class NettyChannelMetrics implements ConnectionMetrics {
           Counter.builder(METRIC_RECONNECT_ATTEMPTS).description("重连尝试次数").register(meterRegistry);
       reconnectSuccessesCounter =
           Counter.builder(METRIC_RECONNECT_SUCCESSES).description("重连成功次数").register(meterRegistry);
-      log.info("[Netty-Metrics] 指标已注册");
+      Gauge.builder(METRIC_DIRECT_MEMORY_USED, PlatformDependent.class,
+              PlatformDependent::usedDirectMemory)
+          .description("Netty 直接内存当前使用量（字节）")
+          .register(meterRegistry);
+      Gauge.builder(METRIC_DIRECT_MEMORY_MAX, this,
+              m -> estimateMaxDirectMemory())
+          .description("JVM 最大直接内存限制（字节）")
+          .register(meterRegistry);
+      Gauge.builder(METRIC_POOLED_ARENAS_ACTIVE, this,
+              m -> countActiveArenas())
+          .description("Netty PooledByteBufAllocator 活跃 Arena 数")
+          .register(meterRegistry);
+      log.info("[Netty-Metrics] 指标已注册（含直接内存监控）");
     }
   }
 
@@ -191,5 +207,67 @@ public class NettyChannelMetrics implements ConnectionMetrics {
   @Override
   public long getTotalBytesWritten() {
     return totalBytesWritten.get();
+  }
+
+  /**
+   * 估算 JVM 最大直接内存（Direct Memory）限制。
+   *
+   * <p>优先使用 {@code sun.misc.VM.maxDirectMemory()}， 回退到 {@code -XX:MaxDirectMemorySize} 默认值（通常为 -Xmx）。
+   *
+   * @return 最大直接内存字节数
+   */
+  private static long estimateMaxDirectMemory() {
+    try {
+      return PlatformDependent.maxDirectMemory();
+    } catch (Throwable t) {
+      // 兜底：若 PlatformDependent 不可用，回退到 Runtime.maxMemory()
+      return Runtime.getRuntime().maxMemory();
+    }
+  }
+
+  /**
+   * 估算 Netty PooledByteBufAllocator 的活跃 Arena 数。
+   *
+   * <p>用于监控 Arena 配置是否合理。Arena 数通常等于 {@code numDirectArena} 参数， 过多 Arena 会增加内存碎片，过少会降低并发性能。
+   *
+   * @return 活跃 Arena 估算数（当前为配置值，待接入 allocator 引用后精确计算）
+   */
+  private int countActiveArenas() {
+    // TODO: 接入 PooledByteBufAllocator 引用后，通过 metric() 接口获取精确值
+    try {
+      return PlatformDependent.directBufferPreferred() ? Runtime.getRuntime().availableProcessors() * 2 : 0;
+    } catch (Throwable t) {
+      return 0;
+    }
+  }
+
+  /**
+   * 获取直接内存当前使用量（字节）。
+   *
+   * @return 直接内存使用量
+   */
+  public long getDirectMemoryUsed() {
+    try {
+      return PlatformDependent.usedDirectMemory();
+    } catch (Throwable t) {
+      return -1;
+    }
+  }
+
+  /**
+   * 获取直接内存使用率（0.0 - 1.0）。
+   *
+   * <p>当使用率超过 0.8 时应触发告警，接近 1.0 时 {@link OutOfMemoryError: Direct buffer memory} 即将发生。
+   *
+   * @return 直接内存使用率，无法获取时返回 -1.0
+   */
+  public double getDirectMemoryUsageRatio() {
+    try {
+      long used = PlatformDependent.usedDirectMemory();
+      long max = estimateMaxDirectMemory();
+      return max <= 0 ? -1.0 : (double) used / max;
+    } catch (Throwable t) {
+      return -1.0;
+    }
   }
 }

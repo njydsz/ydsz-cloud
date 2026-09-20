@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +23,7 @@ import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 
 import com.njydsz.common.config.ConfigProperties;
+import com.njydsz.common.config.hotreload.ConfigChangeEvent.ChangeType;
 
 /**
  * 配置变更桥接器
@@ -36,10 +40,16 @@ import com.njydsz.common.config.ConfigProperties;
  * <h3>工作原理</h3>
  *
  * <ol>
- *   <li>收到 {@code RefreshEvent} → 快照当前 Environment 所有可枚举属性值
- *   <li>收到 {@code EnvironmentChangeEvent} → 遍历事件携带的 changedKeys， 与快照对比计算 oldValue / newValue
+ *   <li>构造函数中一次性采集当前 Environment 所有可枚举属性值作为<b>稳定视图</b>基线
+ *   <li>收到 {@code EnvironmentChangeEvent} → 遍历事件携带的 changedKeys，与稳定视图对比计算 oldValue / newValue
  *   <li>组装 {@link ConfigChangeEvent.ConfigChange} 列表 → 发布事件 + 回调监听器
+ *   <li>增量更新稳定视图（仅写入被变更的键，时间复杂度 O(changedKeys)）
  * </ol>
+ *
+ * <h3>性能优化</h3>
+ *
+ * <p>相比每次 RefreshEvent 全量扫描 PropertySource 树（O(allProperties)），增量快照将每次刷新的快照开销降为
+ * O(changedKeys)，配置项数量 > 500 时优势显著（Nacos 场景常见）。
  *
  * <h3>条件激活</h3>
  *
@@ -71,9 +81,19 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
   private final ConfigProperties.ChangeMonitor changeMonitorProps;
   private final List<ConfigChangeListener> listeners;
   private final String nodeIp;
+  private final ThreadPoolExecutor asyncExecutor;
+  private final boolean isAsyncDispatch;
 
-  /** 刷新前的属性值快照（仅在 snapshotOldValues=true 时维护） */
-  private final Map<String, String> snapshot = new ConcurrentHashMap<>();
+  /**
+   * 稳定视图快照（启动时一次性全量采集，后续增量更新）。
+   *
+   * <p>每次 EnvironmentChangeEvent 处理完成后，根据变更记录增量更新此 Map，避免下次 RefreshEvent 重复全量遍历
+   * PropertySource 树。
+   */
+  private final Map<String, String> stableSnapshot = new ConcurrentHashMap<>();
+
+  /** 快照是否已初始化的标志 */
+  private volatile boolean isSnapshotInitialized = false;
 
   /**
    * 处理配置变更事件。
@@ -95,6 +115,61 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     this.listeners =
         listeners != null ? new CopyOnWriteArrayList<>(listeners) : new CopyOnWriteArrayList<>();
     this.nodeIp = resolveNodeIp();
+    this.isAsyncDispatch = changeMonitorProps.isAsyncDispatch();
+    this.asyncExecutor = this.isAsyncDispatch ? createAsyncExecutor(changeMonitorProps) : null;
+    initializeStableSnapshot();
+  }
+
+  /**
+   * 初始化稳定视图快照（启动时执行一次）。
+   *
+   * <p>全量遍历当前 Environment 中所有可枚举属性源的属性值，作为后续 diff 计算的基线。
+   * 后续通过 {@link #incrementalUpdateSnapshot} 增量更新，避免重复全量扫描。
+   */
+  private void initializeStableSnapshot() {
+    if (!changeMonitorProps.isSnapshotOldValues()) {
+      isSnapshotInitialized = true;
+      return;
+    }
+    stableSnapshot.clear();
+    for (PropertySource<?> ps : environment.getPropertySources()) {
+      if (ps instanceof EnumerablePropertySource<?> enumerable) {
+        for (String key : enumerable.getPropertyNames()) {
+          Object value = enumerable.getProperty(key);
+          if (value instanceof String strValue) {
+            stableSnapshot.put(key, strValue);
+          } else if (value != null) {
+            stableSnapshot.put(key, value.toString());
+          }
+        }
+      }
+    }
+    isSnapshotInitialized = true;
+    LOG.debug("[ConfigChangeBridge] 稳定视图快照已初始化，共 {} 个属性", stableSnapshot.size());
+  }
+
+  /**
+   * 创建异步分发线程池
+   *
+   * <p>使用 CallerRunsPolicy 拒绝策略：队列满载时由调用线程（Spring Cloud 刷新线程）执行，
+   * 避免任务丢失代价，但会带来刷新线程短暂阻塞（通常 < 10ms 的单次监听器回调）。
+   *
+   * @param props 变更监控配置
+   * @return 线程池执行器
+   */
+  private static ThreadPoolExecutor createAsyncExecutor(ConfigProperties.ChangeMonitor props) {
+    return new ThreadPoolExecutor(
+        props.getAsyncCorePoolSize(),
+        props.getAsyncCorePoolSize(),
+        60L,
+        TimeUnit.SECONDS,
+        new LinkedBlockingQueue<>(props.getAsyncQueueCapacity()),
+        r -> {
+          Thread t = new Thread(r, "config-change-async");
+          t.setDaemon(true);
+          return t;
+        },
+        new ThreadPoolExecutor.CallerRunsPolicy());
   }
 
   /**
@@ -143,14 +218,13 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     }
   }
 
-  /** RefreshEvent 处理：快照当前属性值 */
+  /**
+   * RefreshEvent 处理：稳定视图已在构造函数中初始化，无需每次刷新前重复全量扫描。
+   *
+   * <p>此方法保留为空操作的钩子，兼容未来可能的扩展（如采集刷新前的全量扫描对比）。
+   */
   private void handleRefreshEvent() {
-    if (!changeMonitorProps.isSnapshotOldValues()) {
-      return;
-    }
-    snapshot.clear();
-    takeSnapshot();
-    LOG.debug("[ConfigChangeBridge] 快照已采集，共 {} 个属性", snapshot.size());
+    // 启动时已通过 initializeStableSnapshot() 全量采集，此处不再重复扫描
   }
 
   /** EnvironmentChangeEvent 处理：diff 计算变更并分发 */
@@ -162,13 +236,14 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
 
     List<ConfigChangeEvent.ConfigChange> changes = new ArrayList<>(changedKeys.size());
     for (String key : changedKeys) {
-      String oldValue = changeMonitorProps.isSnapshotOldValues() ? snapshot.get(key) : null;
+      String oldValue = changeMonitorProps.isSnapshotOldValues() ? stableSnapshot.get(key) : null;
       String newValue = environment.getProperty(key);
       // 跳过未实际变更的属性（值完全相同）
       if (oldValue != null && oldValue.equals(newValue)) {
         continue;
       }
-      changes.add(new ConfigChangeEvent.ConfigChange(key, oldValue, newValue));
+      ChangeType changeType = resolveChangeType(oldValue, newValue);
+      changes.add(new ConfigChangeEvent.ConfigChange(key, oldValue, newValue, changeType));
     }
 
     if (changes.isEmpty()) {
@@ -186,23 +261,87 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     ConfigChangeEvent changeEvent = new ConfigChangeEvent(this, changes);
     publisher.publishEvent(changeEvent);
 
-    // 2. 通知监听器
-    for (ConfigChangeListener listener : listeners) {
-      for (ConfigChangeEvent.ConfigChange c : changes) {
-        try {
-          listener.onChange(c.key(), c.oldValue(), c.newValue());
-        } catch (Exception e) {
-          LOG.warn(
-              "[ConfigChangeBridge] 监听器 {} 回调异常: {}",
-              listener.getClass().getSimpleName(),
-              e.getMessage(),
-              e);
+    // 2. 通知监听器（异步 / 同步由 changeMonitor.asyncDispatch 控制）
+    dispatchToListeners(changes);
+
+    // 3. 增量更新稳定视图（仅更新已变更的键）
+    incrementalUpdateSnapshot(changes);
+  }
+
+  /**
+   * 增量更新稳定视图快照。
+   *
+   * <p>根据变更记录更新 stableSnapshot：
+   *
+   * <ul>
+   *   <li>CHANGED / ADDED：将新值写入 stableSnapshot
+   *   <li>DELETED：从 stableSnapshot 中移除
+   * </ul>
+   *
+   * <p>时间复杂度 O(changedKeys)，远低于全量扫描的 O(allProperties)。
+   *
+   * @param changes 已处理的变更列表
+   */
+  private void incrementalUpdateSnapshot(List<ConfigChangeEvent.ConfigChange> changes) {
+    if (!changeMonitorProps.isSnapshotOldValues() || changes.isEmpty()) {
+      return;
+    }
+    for (ConfigChangeEvent.ConfigChange c : changes) {
+      if (c.newValue() != null) {
+        stableSnapshot.put(c.key(), c.newValue());
+      } else {
+        stableSnapshot.remove(c.key());
+      }
+    }
+    LOG.debug("[ConfigChangeBridge] 稳定视图增量更新完成，变更 {} 个键", changes.size());
+  }
+
+  /**
+   * 分发配置变更到所有监听器
+   *
+   * <p>根据 {@link ConfigProperties.ChangeMonitor#isAsyncDispatch()} 决定同步或异步回调：
+   *
+   * <ul>
+   *   <li>异步模式：通过线程池派发，不阻塞 Spring Cloud 刷新线程
+   *   <li>同步模式：直接在事件处理线程中回调
+   * </ul>
+   *
+   * <p>单次监听器回调异常不影响其他监听器执行。
+   *
+   * @param changes 变更列表
+   */
+  private void dispatchToListeners(List<ConfigChangeEvent.ConfigChange> changes) {
+    if (isAsyncDispatch) {
+      for (ConfigChangeListener listener : listeners) {
+        for (ConfigChangeEvent.ConfigChange c : changes) {
+          asyncExecutor.submit(() -> invokeListener(listener, c));
+        }
+      }
+    } else {
+      for (ConfigChangeListener listener : listeners) {
+        for (ConfigChangeEvent.ConfigChange c : changes) {
+          invokeListener(listener, c);
         }
       }
     }
+  }
 
-    // 清理快照
-    snapshot.clear();
+  /**
+   * 执行单次监听器回调（含异常隔离）
+   *
+   * @param listener 监听器实例
+   * @param change 变更记录
+   */
+  private static void invokeListener(ConfigChangeListener listener, ConfigChangeEvent.ConfigChange change) {
+    try {
+      listener.onChange(change.key(), change.oldValue(), change.newValue());
+    } catch (Exception e) {
+      LOG.warn(
+          "[ConfigChangeBridge] 监听器 {} 回调异常: {}",
+          listener.getClass().getSimpleName(),
+          e.getMessage(),
+          e);
+    }
   }
 
   /**
@@ -225,23 +364,28 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
   }
 
   /**
-   * 快照当前 Environment 中所有可枚举属性源的属性值
+   * 根据刷新前后的值推断变更类型
    *
-   * <p>仅当需要计算 oldValues 时才调用此方法。遍历整个 PropertySource 树 开销较大，因此默认通过 {@code snapshot-old-values}
-   * 配置控制是否启用。
+   * <p>推断规则：
+   *
+   * <ul>
+   *   <li>oldValue == null 且 newValue != null → {@link ChangeType#ADDED}
+   *   <li>oldValue != null 且 newValue == null → {@link ChangeType#DELETED}
+   *   <li>其余（值不同或均未变更但被事件携带）→ {@link ChangeType#CHANGED}
+   * </ul>
+   *
+   * @param oldValue 刷新前的值
+   * @param newValue 刷新后的值
+   * @return 变更类型
    */
-  private void takeSnapshot() {
-    for (PropertySource<?> ps : environment.getPropertySources()) {
-      if (ps instanceof EnumerablePropertySource<?> enumerable) {
-        for (String key : enumerable.getPropertyNames()) {
-          Object value = enumerable.getProperty(key);
-          if (value instanceof String strValue) {
-            snapshot.put(key, strValue);
-          } else if (value != null) {
-            snapshot.put(key, value.toString());
-          }
-        }
-      }
+  private static ChangeType resolveChangeType(String oldValue, String newValue) {
+    if (oldValue == null && newValue != null) {
+      return ChangeType.ADDED;
     }
+    if (oldValue != null && newValue == null) {
+      return ChangeType.DELETED;
+    }
+    return ChangeType.CHANGED;
   }
+
 }

@@ -37,6 +37,9 @@ public final class WebSocketConstants {
   /** 心跳 Redis Sorted Set key（score=最后心跳时间戳） */
   public static final String WS_HEARTBEAT_KEY = "ydsz:ws:heartbeat:sessions";
 
+  /** 消息幂等去重 Redis key 前缀（ydsz:ws:dedup:{messageId}） */
+  public static final String WS_DEDUP_KEY_PREFIX = "ydsz:ws:dedup:";
+
   // ========== 离线消息常量 ==========
 
   /**
