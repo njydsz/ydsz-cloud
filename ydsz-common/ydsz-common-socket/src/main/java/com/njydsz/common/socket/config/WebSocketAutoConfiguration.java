@@ -42,6 +42,7 @@ import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.socket.offline.RedisOfflineMessageStore;
 import com.njydsz.common.socket.push.DefaultRealtimePushTemplate;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
+import com.njydsz.common.socket.presence.WebSocketPresenceService;
 import com.njydsz.common.socket.acl.DefaultTopicAclPolicy;
 import com.njydsz.common.socket.acl.TopicAclPolicy;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
@@ -793,6 +794,37 @@ public class WebSocketAutoConfiguration {
       pushTemplate.flushRetryMessages();
     }
   }
+
+  // ==================== 在线状态广播（UX-003 Presence）====================
+
+  /**
+   * 注册 Presence 在线状态广播服务 Bean（UX-003）。
+   *
+   * <p>实现 {@link com.njydsz.common.socket.lifecycle.WebSocketConnectionListener} 接口，通过 Spring
+   * 自动收集所有 ConnectionListener Bean 的机制注册到 {@code WebSocketSessionEventListener}。
+   *
+   * <p>仅在 {@code ydsz.websocket.presence.enabled=true} 时开启实际广播逻辑；未启用时仍然实例化（维持 Bean
+   * 拓扑稳定），但 {@link WebSocketPresenceService#isEnabled()} 返回 false 会让事件回调短路。
+   * 业务侧可直接通过 {@code @Autowired WebSocketPresenceService} 调用 {@link
+   * WebSocketPresenceService#broadcastPresence} 主动刷新用户在线状态。
+   *
+   * @param messagingTemplate STOMP 消息模板
+   * @param onlineUserService 在线用户服务
+   * @param sessionRegistry 本地 Session 注册表
+   * @param properties WebSocket 配置属性
+   * @return Presence 服务 Bean
+   */
+  @Bean
+  @ConditionalOnMissingBean(WebSocketPresenceService.class)
+  public WebSocketPresenceService webSocketPresenceService(
+      SimpMessagingTemplate messagingTemplate,
+      OnlineUserService onlineUserService,
+      LocalSessionRegistry sessionRegistry,
+      WebSocketProperties properties) {
+    return new WebSocketPresenceService(messagingTemplate, onlineUserService, sessionRegistry, properties);
+  }
+
+  // ==================== 运维诊断 REST Admin API（UX-002）====================
 
   /**
    * 注册运维诊断 REST Admin API Bean（UX-002）。

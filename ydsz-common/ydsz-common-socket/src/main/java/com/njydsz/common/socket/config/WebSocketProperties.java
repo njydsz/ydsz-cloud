@@ -117,6 +117,9 @@ public class WebSocketProperties {
   /** 网关透传认证配置（P1-5） */
   private Auth auth = new Auth();
 
+  /** 在线状态广播配置（UX-003 Presence 功能，默认关闭） */
+  private Presence presence = new Presence();
+
   /**
    * 心跳保活配置。
    *
@@ -325,5 +328,22 @@ public class WebSocketProperties {
 
     /** 每分钟每 IP 最大握手次数（超限返回 HTTP 429） */
     private int maxPerMinutePerIp = 20;
+  }
+
+  /**
+   * 在线状态广播配置（UX-003 Presence）。
+   *
+   * <p>控制是否在用户首次上线 / 最后 Session 下线时广播 Presence 事件到 STOMP 主题
+   * {@code /topic/presence/{userId}}，业务侧（好友面板、会话列表）订阅此主题感知在线状态。
+   *
+   * <p>默认关闭（opt-in），避免对未开通业务的模块带来过多 STOMP 主题压力。
+   */
+  @Data
+  public static class Presence {
+    /** 是否启用在线状态广播（默认 false，业务侧按需开启） */
+    private boolean isEnabled = false;
+
+    /** 是否携带 lastSeenAt 字段（OFFLINE 事件末次在线时间，默认 true） */
+    private boolean isLastSeenEnabled = true;
   }
 }

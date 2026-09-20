@@ -100,6 +100,12 @@ public class WebSocketMetrics implements NetworkMetrics {
   /** Pong 帧接收计数。 */
   private final LongAdder pongReceived = new LongAdder();
 
+  /** Presence 上线事件广播计数（UX-003）。 */
+  private final LongAdder presenceOnlineBroadcast = new LongAdder();
+
+  /** Presence 下线事件广播计数（UX-003）。 */
+  private final LongAdder presenceOfflineBroadcast = new LongAdder();
+
   /** 预构建的推送结果计数器映射。 */
   private final Map<PushResultKey, Counter> pushCounterCache = new HashMap<>(8);
 
@@ -171,6 +177,10 @@ public class WebSocketMetrics implements NetworkMetrics {
         .description("Ping 帧发送计数").register(meterRegistry);
     Gauge.builder("ydsz.websocket.funnel.pong_received", pongReceived, LongAdder::sum)
         .description("Pong 帧接收计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.presence_online", presenceOnlineBroadcast, LongAdder::sum)
+        .description("Presence 上线事件广播计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.presence_offline", presenceOfflineBroadcast, LongAdder::sum)
+        .description("Presence 下线事件广播计数").register(meterRegistry);
   }
 
   /**
