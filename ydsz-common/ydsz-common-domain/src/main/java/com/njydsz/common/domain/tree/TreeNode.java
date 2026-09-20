@@ -7,9 +7,6 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.njydsz.common.json.annotation.JsonIgnore;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +15,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.json.annotation.JsonIgnore;
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * 树节点基础类
