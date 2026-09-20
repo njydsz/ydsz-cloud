@@ -16,8 +16,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import com.njydsz.common.config.health.ConfigEncryptHealthIndicator;
+import com.njydsz.common.config.hotreload.ConfigAuditPublisher;
 import com.njydsz.common.config.hotreload.ConfigChangeBridge;
 import com.njydsz.common.config.hotreload.ConfigChangeListener;
+import com.njydsz.common.config.hotreload.LogbackAuditPublisher;
 
 /**
  * 配置增强自动配置
@@ -58,6 +60,22 @@ public class ConfigAutoConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(ConfigAutoConfiguration.class);
 
   /**
+   * 默认配置审计发布器（基于日志输出）。
+   *
+   * <p>自定义 {@link ConfigAuditPublisher} Bean 后可替换此默认实现。
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnProperty(
+      prefix = "ydsz.config.change-monitor",
+      name = "audit-enabled",
+      havingValue = "true",
+      matchIfMissing = true)
+  public LogbackAuditPublisher logbackAuditPublisher() {
+    return new LogbackAuditPublisher();
+  }
+
+  /**
    * 配置变更桥接器
    *
    * <p>仅在 Spring Cloud Context 存在时激活。监听 RefreshEvent / EnvironmentChangeEvent，自动 diff 属性变更并通知
@@ -67,6 +85,7 @@ public class ConfigAutoConfiguration {
    * @param publisher 事件发布器
    * @param configProperties 配置属性
    * @param listenersProvider 所有 ConfigChangeListener Bean
+   * @param auditPublisherProvider 审计发布器 Bean（可选，默认使用日志）
    * @return ConfigChangeBridge 实例
    */
   @Bean
@@ -83,16 +102,22 @@ public class ConfigAutoConfiguration {
       ConfigurableEnvironment environment,
       ApplicationEventPublisher publisher,
       ConfigProperties configProperties,
-      ObjectProvider<List<ConfigChangeListener>> listenersProvider) {
+      ObjectProvider<List<ConfigChangeListener>> listenersProvider,
+      ObjectProvider<ConfigAuditPublisher> auditPublisherProvider) {
 
     List<ConfigChangeListener> listeners = listenersProvider.getIfAvailable(List::of);
-    LOG.info("[Config] 配置变更桥接已启用，监听器数量: {}", listeners.size());
+    ConfigAuditPublisher auditPublisher = auditPublisherProvider.getIfAvailable();
+    LOG.info(
+        "[Config] 配置变更桥接已启用，监听器数量: {}, 审计: {}",
+        listeners.size(),
+        auditPublisher != null);
 
     return new ConfigChangeBridge(
         environment,
         publisher,
         configProperties.getChangeMonitor(),
-        new CopyOnWriteArrayList<>(listeners));
+        new CopyOnWriteArrayList<>(listeners),
+        auditPublisher);
   }
 
   /**

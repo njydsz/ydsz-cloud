@@ -1,7 +1,6 @@
 package com.njydsz.common.config.health;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
@@ -25,6 +24,9 @@ import org.springframework.core.env.MutablePropertySources;
  * <p>覆盖：无加密属性返回 UP、主密码来源识别、存在 ENC() 但无主密码返回 DOWN、
  * 缓存命中与驱逐、边界值处理（非 String 类型、部分匹配 ENC）。
  *
+ * <p>注意：Spring Boot 4.x 中 {@link Health#getStatus()} 返回 {@code Status} 对象，
+ * 其 {@code getCode()} 返回字符串编码（"UP"/"DOWN"/"UNKNOWN"）。
+ *
  * @since 26.09.20
  */
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +43,15 @@ class ConfigEncryptHealthIndicatorTest {
     indicator = new ConfigEncryptHealthIndicator(environment, 0);
   }
 
+  /** 构建健康结果并断言状态编码 */
+  private static void assertUp(Health health) {
+    assertThat(health.getStatus().getCode()).isEqualTo("UP");
+  }
+
+  private static void assertDown(Health health) {
+    assertThat(health.getStatus().getCode()).isEqualTo("DOWN");
+  }
+
   @Nested
   @DisplayName("无加密属性场景")
   class NoEncryptedPropertiesTest {
@@ -52,8 +63,7 @@ class ConfigEncryptHealthIndicatorTest {
       sources.addFirst(new MapPropertySource("empty", new HashMap<String, Object>()));
       when(environment.getPropertySources()).thenReturn(sources);
 
-      Health health = indicator.health();
-      assertThat(health.getStatus()).isEqualTo(Health.status("UP").getStatus());
+      assertUp(indicator.health());
     }
 
     @Test
@@ -66,8 +76,7 @@ class ConfigEncryptHealthIndicatorTest {
       sources.addFirst(new MapPropertySource("test", props));
       when(environment.getPropertySources()).thenReturn(sources);
 
-      Health health = indicator.health();
-      assertThat(health.getStatus()).isEqualTo(Health.status("UP").getStatus());
+      assertUp(indicator.health());
     }
   }
 
@@ -84,8 +93,7 @@ class ConfigEncryptHealthIndicatorTest {
       sources.addFirst(new MapPropertySource("test", props));
       when(environment.getPropertySources()).thenReturn(sources);
 
-      Health health = indicator.health();
-      assertThat(health.getStatus()).isEqualTo(Health.status("DOWN").getStatus());
+      assertDown(indicator.health());
     }
 
     @Test
@@ -99,8 +107,7 @@ class ConfigEncryptHealthIndicatorTest {
       when(environment.getProperty("jasypt.encryptor.password"))
           .thenReturn("my-master-password");
 
-      Health health = indicator.health();
-      assertThat(health.getStatus()).isEqualTo(Health.status("UP").getStatus());
+      assertUp(indicator.health());
     }
   }
 
@@ -141,7 +148,7 @@ class ConfigEncryptHealthIndicatorTest {
   class CacheTest {
 
     @Test
-    @DisplayName("TTL > 0 时第二次调用不重新扫描（结果来自缓存）")
+    @DisplayName("TTL > 0 时第二次调用结果来自缓存")
     void cache_ttlPositive_returnsCachedResult() {
       ConfigEncryptHealthIndicator cachedIndicator =
           new ConfigEncryptHealthIndicator(environment, 60_000);
@@ -152,12 +159,10 @@ class ConfigEncryptHealthIndicatorTest {
       sources.addFirst(new MapPropertySource("test", props));
       when(environment.getPropertySources()).thenReturn(sources);
 
-      Health first = cachedIndicator.health();
-      assertThat(first.getStatus()).isEqualTo(Health.status("UP").getStatus());
+      assertUp(cachedIndicator.health());
 
       cachedIndicator.evictCache();
-      Health second = cachedIndicator.health();
-      assertThat(second.getStatus()).isEqualTo(Health.status("UP").getStatus());
+      assertUp(cachedIndicator.health());
     }
   }
 
@@ -177,7 +182,7 @@ class ConfigEncryptHealthIndicatorTest {
       when(environment.getPropertySources()).thenReturn(sources);
 
       Health health = indicator.health();
-      assertThat(health.getStatus()).isEqualTo(Health.status("UP").getStatus());
+      assertUp(health);
       assertThat(health.getDetails().get("encryptedPropertyCount")).isEqualTo(0);
     }
 
@@ -192,8 +197,7 @@ class ConfigEncryptHealthIndicatorTest {
       sources.addFirst(new MapPropertySource("test", props));
       when(environment.getPropertySources()).thenReturn(sources);
 
-      Health health = indicator.health();
-      assertThat(health.getStatus()).isEqualTo(Health.status("UP").getStatus());
+      assertUp(indicator.health());
     }
 
     @Test
@@ -210,7 +214,7 @@ class ConfigEncryptHealthIndicatorTest {
           .thenReturn("master-pass");
 
       Health health = indicator.health();
-      assertThat(health.getStatus()).isEqualTo(Health.status("UP").getStatus());
+      assertUp(health);
       assertThat(health.getDetails().get("encryptedPropertyCount")).isEqualTo(3);
     }
   }

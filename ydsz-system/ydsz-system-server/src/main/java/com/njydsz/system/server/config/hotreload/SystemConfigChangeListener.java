@@ -43,11 +43,22 @@ public class SystemConfigChangeListener implements ConfigChangeListener {
   /** 系统模块配置属性前缀 */
   private static final String SYSTEM_CONFIG_PREFIX = "ydsz.system.";
 
-  /** 缓存配置后缀（用于判断是否为缓存 TTL 类配置） */
-  private static final String CACHE_TTL_SUFFIX = "cache-ttl-minutes";
+  /** 配置缓存 TTL 完整键名 */
+  private static final String CONFIG_CACHE_TTL_KEY = "ydsz.system.config.cache-ttl-minutes";
 
-  /** 跨实例缓存失效开关配置键 */
+  /** 字典缓存 TTL 完整键名 */
+  private static final String DICT_CACHE_TTL_KEY = "ydsz.system.dict.cache-ttl-minutes";
+
+  /** 变量缓存 TTL 完整键名 */
+  private static final String VARIABLE_CACHE_TTL_KEY = "ydsz.system.variable.cache-ttl-minutes";
+
+  /** 跨实例缓存失效开关完整键名 */
   private static final String CROSS_INSTANCE_CONFIG_KEY = "ydsz.system.cache.cross-instance-enabled";
+
+  /** 缓存区域标识后缀：用于匹配配置键中的次级类目段 */
+  private static final String CONFIG_SEGMENT = ".config.";
+  private static final String DICT_SEGMENT = ".dict.";
+  private static final String VARIABLE_SEGMENT = ".variable.";
 
   private final CacheManager cacheManager;
 
@@ -68,32 +79,23 @@ public class SystemConfigChangeListener implements ConfigChangeListener {
 
     log.info("[System] 配置变更通知: key={}, {} -> {}", key, oldValue, newValue);
 
-    // 缓存 TTL 变更 → 清理对应本地缓存
-    if (key.endsWith(CACHE_TTL_SUFFIX)) {
-      handleCacheTtlChange(key);
+    // 缓存 TTL 变更 → 清理对应本地缓存（使用精确键名相等匹配，避免 contains 子串匹配歧义）
+    if (key.equals(CONFIG_CACHE_TTL_KEY)) {
+      evictCacheByName(SystemCacheConstants.SYSTEM_CONFIG_CACHE, "配置");
+      return;
+    }
+    if (key.equals(DICT_CACHE_TTL_KEY)) {
+      evictCacheByName(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE, "字典");
+      return;
+    }
+    if (key.equals(VARIABLE_CACHE_TTL_KEY)) {
+      evictCacheByName(SystemCacheConstants.SYSTEM_VARIABLE_CACHE, "变量");
       return;
     }
 
     // 跨实例缓存失效开关变更 → 日志提示
     if (CROSS_INSTANCE_CONFIG_KEY.equals(key)) {
       log.info("[System] 跨实例缓存失效开关变更: {} -> {}，请确认 Redis Pub/Sub 频道已正确配置", oldValue, newValue);
-    }
-  }
-
-  /**
-   * 处理缓存 TTL 配置变更
-   *
-   * <p>根据配置键中的缓存区域标识，清理对应 Spring Cache 使其下次读取时按新 TTL 重建。
-   *
-   * @param key 配置键
-   */
-  private void handleCacheTtlChange(String key) {
-    if (key.contains("config.")) {
-      evictCacheByName(SystemCacheConstants.SYSTEM_CONFIG_CACHE, "配置");
-    } else if (key.contains("dict.")) {
-      evictCacheByName(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE, "字典");
-    } else if (key.contains("variable.")) {
-      evictCacheByName(SystemCacheConstants.SYSTEM_VARIABLE_CACHE, "变量");
     }
   }
 
@@ -111,5 +113,17 @@ public class SystemConfigChangeListener implements ConfigChangeListener {
     } else {
       log.warn("[System] {} 缓存 {} 不存在，跳过清理", cacheLabel, cacheName);
     }
+  }
+
+  /**
+   * 获取监听器执行顺序。
+   *
+   * <p>系统缓存清理监听器优先级为 10（中等优先级）。
+   *
+   * @return 10
+   */
+  @Override
+  public int getOrder() {
+    return 10;
   }
 }

@@ -4,10 +4,10 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -105,7 +105,7 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
   private volatile boolean isSnapshotInitialized = false;
 
   /**
-   * 处理配置变更事件。
+   * 处理配置变更事件（完整参数）。
    *
    * @param environment 环境配置
    * @param publisher 事件发布器
@@ -132,6 +132,26 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     // 按 Order 排序监听器
     sortListenersByOrder();
     initializeStableSnapshot();
+  }
+
+  /**
+   * 处理配置变更事件（无审计发布器，向后兼容）。
+   *
+   * @param environment 环境配置
+   * @param publisher 事件发布器
+   * @param changeMonitorProps 变更监控配置
+   * @param listeners 监听器列表（允许 null 或空列表）
+   * @deprecated 使用 5 参数构造器 {@link #ConfigChangeBridge(ConfigurableEnvironment,
+   *             ApplicationEventPublisher, ConfigProperties.ChangeMonitor, List,
+   *             ConfigAuditPublisher)} 替代
+   */
+  @Deprecated
+  public ConfigChangeBridge(
+      ConfigurableEnvironment environment,
+      ApplicationEventPublisher publisher,
+      ConfigProperties.ChangeMonitor changeMonitorProps,
+      List<ConfigChangeListener> listeners) {
+    this(environment, publisher, changeMonitorProps, listeners, null);
   }
 
   /**

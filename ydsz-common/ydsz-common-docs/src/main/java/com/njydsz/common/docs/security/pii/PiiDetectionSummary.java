@@ -11,7 +11,10 @@ import com.njydsz.common.docs.enums.PiiType;
  *
  * <p>记录一轮完整 PII 检测的运行态数据：总耗时、各类型命中数、失败检测器数。
  *
- * <p>与 {@link com.njydsz.common.docs.domain.PiiFinding}（单条命中）严格分离： 后者是业务层敏感数据，前者是运行态指标供监控日志与排障使用。 避免在检测器内部混合统计逻辑（{@code PiiDetector.detect} 仅返回命中列表）， 让观测职责锚定在 {@code PiiDetectionSummary}。
+ * <p>与 {@link com.njydsz.common.docs.domain.PiiFinding}（单条命中）严格分离：
+ * 后者是业务层敏感数据，前者是运行态指标供监控日志与排障使用。
+ * 避免在检测器内部混合统计逻辑（{@code PiiDetector.detect} 仅返回命中列表），
+ * 让观测职责锚定在本记录类。
  *
  * @param totalDuration 本轮全部检测器的累计耗时
  * @param totalFindings 命中总数（所有类型合计）

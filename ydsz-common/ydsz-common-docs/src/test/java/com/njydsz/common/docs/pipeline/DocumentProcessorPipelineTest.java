@@ -21,13 +21,17 @@ import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.DocumentSection;
+import com.njydsz.common.docs.domain.DocumentTable;
 import com.njydsz.common.docs.domain.ParseOptions;
+import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
+import com.njydsz.common.docs.enums.PiiType;
 import com.njydsz.common.docs.enums.SecurityLevel;
 import com.njydsz.common.docs.parser.DocumentParser;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
+import com.njydsz.common.docs.security.pii.PiiDetectionSummary;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.util.io.TempFileManager;
 
@@ -161,5 +165,73 @@ class DocumentProcessorPipelineTest {
       java.nio.file.Files.deleteIfExists(tempFile);
     }
 
+    @Test
+    @DisplayName("PII 检测启用时 DocumentProcessResult 应附带 PiiDetectionSummary (P-4 指标分离)")
+    void shouldAttachPiiDetectionSummaryWhenPiiEnabled() throws Exception {
+      // 准备：模拟解析器返回一段含手机号的文本
+      DocumentContent contentWithPhone =
+          DocumentContent.builder()
+              .text("联系人张三电话 13812345678 地址北京")
+              .sections(
+                  List.of(
+                      DocumentSection.builder()
+                          .type("paragraph")
+                          .content("联系人张三电话 13812345678 地址北京")
+                          .build()))
+              .tables(List.of(DocumentTable.builder().build()))
+              .totalChars(19)
+              .totalPages(1)
+              .build();
+
+      DocumentParser mockParser = mock(DocumentParser.class);
+      when(parserRegistry.isSupported(DocumentFormat.TXT)).thenReturn(true);
+      when(parserRegistry.getParser(DocumentFormat.TXT)).thenReturn(mockParser);
+      when(mockParser.parse(any(), any(), any())).thenReturn(contentWithPhone);
+
+      // Mock 一个 PII 检测器：命中手机号一次
+      PiiDetector mockDetector = mock(PiiDetector.class);
+      PiiFinding mockFinding =
+          PiiFinding.builder()
+              .type(PiiType.PHONE)
+              .maskedValue("138****5678")
+              .startIndex(7)
+              .endIndex(18)
+              .contextBefore("联系人张三电话 ")
+              .contextAfter(" 地址北京")
+              .confidence(new java.math.BigDecimal("0.95"))
+              .build();
+      when(mockDetector.detect(any())).thenReturn(List.of(mockFinding));
+      when(mockDetector.getSupportedType()).thenReturn(PiiType.PHONE);
+
+      // 替换 processor，注入 mock detector
+      DocumentProcessorPipeline processorWithDetector =
+          new DocumentProcessorPipeline(
+              parserRegistry,
+              List.of(),
+              List.of(mockDetector),
+              preprocessPipeline,
+              properties,
+              tempFileManager);
+
+      DocumentProcessorPipeline.Pipeline pipeline =
+          DocumentProcessorPipeline.builder()
+              .parse(ParseOptions.builder().build())
+              .piiDetect(true)
+              .build(processorWithDetector);
+
+      InputStream stream = TestUtils.streamOf("dummy content");
+      DocumentProcessResult result = pipeline.execute(stream, "test.txt");
+
+      // 验证：findings 存在 + summary 亦存在
+      assertThat(result.getPiiFindings()).isNotEmpty();
+      PiiDetectionSummary summary = result.getPiiDetectionSummary();
+      assertThat(summary).isNotNull();
+      assertThat(summary.totalFindings()).isGreaterThanOrEqualTo(1);
+      assertThat(summary.totalDuration()).isNotNull();
+      assertThat(summary.hasFailure()).isFalse();
+      // per-type 统计
+      assertThat(summary.countByType()).containsKey(PiiType.PHONE);
+      assertThat(summary.countByType().get(PiiType.PHONE)).isGreaterThanOrEqualTo(1);
+    }
   }
 }
