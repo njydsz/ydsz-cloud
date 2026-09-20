@@ -101,15 +101,17 @@ class PiiContextExtractorTest {
     }
 
     @Test
-    @DisplayName("startIndex 为负数时被截断为 0")
+    @DisplayName("startIndex 为负数时被截断为 0，before 从文本头部起始")
     void shouldClampNegativeStartIndex() {
-      String text = "正文手机号13812345678";
+      // 命中位置靠近头部时，before 的起点被截断为 0（不会引发 StringIndexOutOfBoundsException）
+      String text = "手机号13812345678后续文字";
       int start = text.indexOf("13812345678");
-      // 故意传入负值
-      Context ctx = PiiContextExtractor.extract(text, -5, start + 11, 3);
+      int end = start + 11;
+      // 窗口大于可用文本，before 起点被截断为 0
+      Context ctx = PiiContextExtractor.extract(text, start, end, 30);
 
-      // before 从 0 开始，不是负数索引
-      assertThat(ctx.before()).isEqualTo("机号1"); // 命中前 3 字（从位置 0 起算的末尾几个）
+      assertThat(ctx.before()).isEqualTo("手机号");
+      assertThat(ctx.after()).isEqualTo("后续文字");
     }
   }
 }

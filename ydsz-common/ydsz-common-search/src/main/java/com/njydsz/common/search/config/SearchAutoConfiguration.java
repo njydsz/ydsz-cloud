@@ -33,6 +33,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.common.search.analytics.ClickFeedbackService;
+import com.njydsz.common.search.analytics.SearchResultFusionService;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
 import com.njydsz.common.search.core.SearchEngineRegistry;
@@ -429,6 +430,20 @@ public class SearchAutoConfiguration {
   public SearchRateLimiter searchRateLimiter(
       ObjectProvider<StringRedisTemplate> redisProvider, SearchProperties properties) {
     return new SearchRateLimiter(redisProvider, properties);
+  }
+
+  /**
+   * 装配搜索结果融合服务（RRF + WEIGHTED）。
+   *
+   * <p>接收两路搜索结果并合并为单一结果：一路来自 {@code SearchStrategy.search()}（关键词），
+   * 另一路来自 {@code SearchStrategy.vectorSearch()}（向量）。
+   *
+   * @return 结果融合服务实例，永不为 {@code null}
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public SearchResultFusionService searchResultFusionService() {
+    return new SearchResultFusionService();
   }
 
   /**

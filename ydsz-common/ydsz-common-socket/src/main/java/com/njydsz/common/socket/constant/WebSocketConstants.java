@@ -23,6 +23,14 @@ public final class WebSocketConstants {
   /** WebSocket 主题目的地前缀 */
   public static final String WS_TOPIC_DESTINATION_PREFIX = "/topic/";
 
+  // ========== 租户隔离路径段 (ARCH-005) ==========
+
+  /** 租户隔离目的地前缀（/topic/t/{tenantId}/） */
+  public static final String WS_TENANT_DESTINATION_PREFIX = "/topic/t/";
+
+  /** 租户隔离在线用户 Redis key 段分隔符 */
+  public static final String WS_TENANT_KEY_SEPARATOR = ":";
+
   // ========== Redis Key 前缀 ==========
 
   /** 在线用户 Redis key 前缀（Hash: ydsz:ws:online:{userId} -> sessionId） */
@@ -30,6 +38,12 @@ public final class WebSocketConstants {
 
   /** 离线消息 Redis List key 前缀（ydsz:ws:offline:{userId}） */
   public static final String WS_OFFLINE_KEY_PREFIX = "ydsz:ws:offline:";
+
+  /** 租户隔离在线用户 Redis key 前缀（ARCH-005: ydsz:ws:online:{tenantId}:{userId}） */
+  public static final String WS_TENANT_ONLINE_KEY_PREFIX = "ydsz:ws:online:";
+
+  /** 租户隔离离线消息 Redis key 前缀（ARCH-005: ydsz:ws:offline:{tenantId}:{userId}） */
+  public static final String WS_TENANT_OFFLINE_KEY_PREFIX = "ydsz:ws:offline:";
 
   /** 集群广播 Redis Channel */
   public static final String WS_CLUSTER_CHANNEL = "ydsz:ws:cluster:push";
@@ -87,6 +101,9 @@ public final class WebSocketConstants {
 
   /** 网关透传的用户名头（与 AuthHeaderConstants.X_USERNAME 保持一致） */
   public static final String WS_GATEWAY_USERNAME_HEADER = "X-Username";
+
+  /** 网关透传的租户 ID 头（与 AuthHeaderConstants.X_TENANT_ID 保持一致） */
+  public static final String WS_GATEWAY_TENANT_ID_HEADER = "X-Tenant-Id";
 
   /** 网关透传的共享密钥头，用于验证请求确实来自网关 */
   public static final String WS_GATEWAY_SECRET_HEADER = "X-Gateway-Secret";

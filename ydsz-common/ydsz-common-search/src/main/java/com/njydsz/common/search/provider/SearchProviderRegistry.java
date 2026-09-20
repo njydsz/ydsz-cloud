@@ -124,6 +124,26 @@ public class SearchProviderRegistry {
   }
 
   /**
+   * 按实体类型（Class）查找对应的带类型令牌的 Provider。
+   *
+   * <p>仅限注册为 {@link TypedSearchProvider} 的 Provider 可通过此方法查找。
+   *
+   * @param entityType 实体类型 Class
+   * @param <T> 实体类型
+   * @return 类型匹配的 Provider；不存在时返回 null
+   */
+  @SuppressWarnings("unchecked")
+  public <T> TypedSearchProvider<T> getTypedProvider(Class<T> entityType) {
+    for (SearchProvider<?> provider : providerMap.values()) {
+      if (provider instanceof TypedSearchProvider<?> typed
+          && typed.getEntityType().equals(entityType)) {
+        return (TypedSearchProvider<T>) typed;
+      }
+    }
+    return null;
+  }
+
+  /**
    * 获取指定类型列表的提供者
    *
    * @param types 类型列表，为空返回全部

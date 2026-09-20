@@ -32,8 +32,8 @@ class PhoneDetectorTest {
   class WhenDetecting {
 
     @Test
-    @DisplayName("含手机号的文本文档应检测出 PII 发现")
-    void shouldDetectPhoneNumber() {
+    @DisplayName("含手机号的文本文档应检测出 PII 发现并附带前后上下文")
+    void shouldDetectPhoneNumberWithSurroundingContext() {
       DocumentContent content =
           DocumentContent.builder()
               .text("联系人：张三，电话 13812345678，地址北京")
@@ -46,6 +46,11 @@ class PhoneDetectorTest {
       assertThat(finding.getType()).isEqualTo(PiiType.PHONE);
       assertThat(finding.getMaskedValue()).contains("****");
       assertThat(finding.getConfidence()).isGreaterThan(java.math.BigDecimal.ZERO);
+      // F-3: 上下文感知 —— 命中位置前后应携带可审查的片段
+      assertThat(finding.getContextBefore()).isNotBlank();
+      assertThat(finding.getContextAfter()).isNotBlank();
+      assertThat(finding.getContextBefore()).contains("电话");
+      assertThat(finding.getContextAfter()).contains("地址");
     }
 
     @Test

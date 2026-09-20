@@ -13,6 +13,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.annotation.PreDestroy;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
@@ -154,22 +158,22 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
    * <p>使用 CallerRunsPolicy 拒绝策略：队列满载时由调用线程（Spring Cloud 刷新线程）执行，
    * 避免任务丢失代价，但会带来刷新线程短暂阻塞（通常 < 10ms 的单次监听器回调）。
    *
+   * <p>通过 {@link ExecutorUtils} 创建（YDIZ-CONC-001 合规），统一线程命名、异常处理、JVM 关闭阻塞防护。
+   * 应用关闭时通过 {@link #shutdownAsyncExecutor()} 优雅关闭。
+   *
    * @param props 变更监控配置
    * @return 线程池执行器
    */
   private static ThreadPoolExecutor createAsyncExecutor(ConfigProperties.ChangeMonitor props) {
-    return new ThreadPoolExecutor(
-        props.getAsyncCorePoolSize(),
-        props.getAsyncCorePoolSize(),
-        60L,
-        TimeUnit.SECONDS,
-        new LinkedBlockingQueue<>(props.getAsyncQueueCapacity()),
-        r -> {
-          Thread t = new Thread(r, "config-change-async");
-          t.setDaemon(true);
-          return t;
-        },
-        new ThreadPoolExecutor.CallerRunsPolicy());
+    return ExecutorUtils.builder()
+        .corePoolSize(props.getAsyncCorePoolSize())
+        .maxPoolSize(props.getAsyncCorePoolSize())
+        .keepAliveTime(60L, TimeUnit.SECONDS)
+        .queueCapacity(props.getAsyncQueueCapacity())
+        .threadNamePrefix("config-change-")
+        .daemon(true)
+        .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
+        .build();
   }
 
   /**
@@ -332,7 +336,7 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
    * @param listener 监听器实例
    * @param change 变更记录
    */
-  private static void invokeListener(ConfigChangeListener listener, ConfigChangeEvent.ConfigChange change) {
+  static void invokeListener(ConfigChangeListener listener, ConfigChangeEvent.ConfigChange change) {
     try {
       listener.onChange(change.key(), change.oldValue(), change.newValue());
     } catch (Exception e) {
@@ -342,6 +346,59 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
           e.getMessage(),
           e);
     }
+  }
+
+  // ==================== 生命周期管理 ====================
+
+  /**
+   * 优雅关闭异步分发线程池。
+   *
+   * <p>由 Spring 容器在 Bean 销毁时调用（{@link PreDestroy}）。停机流程：
+   *
+   * <ol>
+   *   <li>调用 {@code shutdown()} 拒绝新任务</li>
+   *   <li>等待最多 {@code awaitTerminationSeconds} 秒让进行中任务完成</li>
+   *   <li>超时后强制 {@code shutdownNow()}</li>
+   * </ol>
+   */
+  @PreDestroy
+  public void shutdownAsyncExecutor() {
+    if (asyncExecutor == null) {
+      return;
+    }
+    asyncExecutor.shutdown();
+    try {
+      if (!asyncExecutor.awaitTermination(AWAIT_TERMINATION_SECONDS, TimeUnit.SECONDS)) {
+        LOG.warn(
+            "[ConfigChangeBridge] 异步执行器 {}s 内未完全终止，强制执行 shutdownNow",
+            AWAIT_TERMINATION_SECONDS);
+        asyncExecutor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      asyncExecutor.shutdownNow();
+    }
+    LOG.info("[ConfigChangeBridge] 异步执行器已关闭");
+  }
+
+  // ==================== 包可见测试方法 ====================
+
+  /**
+   * 当前注册的监听器数量（仅供单元测试使用）。
+   *
+   * @return 监听器数量
+   */
+  int getListenerCount() {
+    return listeners.size();
+  }
+
+  /**
+   * 是否处于异步分发模式（仅供单元测试使用）。
+   *
+   * @return true 表示异步分发
+   */
+  boolean isAsyncMode() {
+    return isAsyncDispatch;
   }
 
   /**

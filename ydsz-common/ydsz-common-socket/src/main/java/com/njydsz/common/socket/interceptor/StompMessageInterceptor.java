@@ -1,5 +1,7 @@
 package com.njydsz.common.socket.interceptor;
 
+import java.nio.charset.StandardCharsets;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -106,10 +108,11 @@ public class StompMessageInterceptor implements ChannelInterceptor {
     if (messageDispatcher != null) {
       String action = accessor.getFirstNativeHeader(WebSocketMessageDispatcher.ACTION_HEADER);
       if (StringUtils.hasText(action)) {
-        Object payload = accessor.getMessageHeaders().getOrDefault("simpPayload", null);
-        boolean dispatched =
-            messageDispatcher.dispatch(
-                action, payload != null ? payload.toString() : "", sessionAttrs);
+        Object payload = message.getPayload();
+        String payloadJson = payload instanceof byte[] bytes
+            ? new String(bytes, StandardCharsets.UTF_8)
+            : String.valueOf(payload);
+        boolean dispatched = messageDispatcher.dispatch(action, payloadJson, sessionAttrs);
         if (dispatched) {
           // 已分发的消息无需再审计（由处理器内部处理）
           return;
