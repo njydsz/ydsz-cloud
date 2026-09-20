@@ -1,0 +1,286 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "Prometheus 数据源（抓取 ydsz.websocket.* 指标）",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "推送漏斗 — 阶段快照（近 5 分钟）",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisLabel": "计数",
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineInterpolation": "linear",
+            "lineWidth": 2
+          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "expr": "idelta(ydsz_websocket_funnel_pushed[5m])",
+          "legendFormat": "推送发起",
+          "refId": "A"
+        },
+        {
+          "expr": "idelta(ydsz_websocket_funnel_filter_drop[5m])",
+          "legendFormat": "过滤命中",
+          "refId": "B"
+        },
+        {
+          "expr": "idelta(ydsz_websocket_funnel_dedup_hit[5m])",
+          "legendFormat": "去重命中",
+          "refId": "C"
+        },
+        {
+          "expr": "idelta(ydsz_websocket_funnel_backoff[5m])",
+          "legendFormat": "退避降级",
+          "refId": "D"
+        }
+      ],
+      "title": "推送漏斗 — 各阶段速率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 0.85 },
+              { "color": "green", "value": 0.95 }
+            ]
+          },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 1 },
+      "id": 2,
+      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "1 - (idelta(ydsz_websocket_funnel_filter_drop[5m]) + idelta(ydsz_websocket_funnel_dedup_hit[5m]) + idelta(ydsz_websocket_funnel_backoff[5m])) / clamp_min(idelta(ydsz_websocket_funnel_pushed[5m]), 1)",
+          "legendFormat": "推送成功率",
+          "refId": "A"
+        }
+      ],
+      "title": "推送成功率",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "bars", "fillOpacity": 60, "stacking": { "mode": "normal" } },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green" }] },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 1 },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "idelta(ydsz_websocket_funnel_retry_enqueued[5m])",
+          "legendFormat": "重试入队",
+          "refId": "A"
+        },
+        {
+          "expr": "idelta(ydsz_websocket_funnel_retry_flushed[5m])",
+          "legendFormat": "重试成功",
+          "refId": "B"
+        },
+        {
+          "expr": "idelta(ydsz_websocket_funnel_dead_letter[5m])",
+          "legendFormat": "转死信",
+          "refId": "C"
+        }
+      ],
+      "title": "重试漏斗 — 入队 / 成功 / 死信",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "id": 101,
+      "title": "消息投递 & ACK",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 8 },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "idelta(ydsz_websocket_funnel_ack_received[5m])",
+          "legendFormat": "ACK 接收",
+          "refId": "A"
+        },
+        {
+          "expr": "idelta(ydsz_websocket_funnel_ack_timeout[5m])",
+          "legendFormat": "ACK 超时",
+          "refId": "B"
+        }
+      ],
+      "title": "业务 ACK 接收 vs 超时（累计增量）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 8 },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "idelta(ydsz_websocket_funnel_ping_sent[5m])",
+          "legendFormat": "Ping 发送",
+          "refId": "A"
+        },
+        {
+          "expr": "idelta(ydsz_websocket_funnel_pong_received[5m])",
+          "legendFormat": "Pong 接收",
+          "refId": "B"
+        }
+      ],
+      "title": "STOMP 心跳（Ping / Pong）",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 102,
+      "title": "基础连接 & 推送成功率",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 15 },
+      "id": 6,
+      "targets": [
+        { "expr": "ydsz_websocket_channels_active", "legendFormat": "活跃连接", "refId": "A" }
+      ],
+      "title": "活跃 WebSocket 连接数",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 15 },
+      "id": 7,
+      "targets": [
+        { "expr": "rate(ydsz_websocket_connections_total[5m])", "legendFormat": "连接速率", "refId": "A" },
+        { "expr": "rate(ydsz_websocket_disconnections_total[5m])", "legendFormat": "断开速率", "refId": "B" }
+      ],
+      "title": "连接速率 / 断开速率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 15 },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "sum(rate(ydsz_websocket_push_total{result=\"success\"}[5m])) / clamp_min(sum(rate(ydsz_websocket_push_total[5m])), 1)",
+          "legendFormat": "推送成功率（按 result）",
+          "refId": "A"
+        }
+      ],
+      "title": "推送成功率（type 混合）",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["ydsz", "websocket", "push-funnel"],
+  "templating": {
+    "list": []
+  },
+  "time": { "from": "now-30m", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "YDSZ WebSocket — 推送漏斗 & 连接监控",
+  "uid": "ydsz-websocket-push-funnel",
+  "version": 1,
+  "weekStart": ""
+}

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.socket.handler.WebSocketMessageDispatcher;
+import com.njydsz.common.socket.metric.WebSocketMetrics;
 import com.njydsz.common.socket.push.PushResult;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.common.socket.session.LocalSessionRegistry;
@@ -24,15 +25,17 @@ import com.njydsz.common.socket.session.LocalSessionRegistry;
  * <p>提供运行时 Session 管理与推送诊断能力：
  *
  * <ul>
- *   <li>GET /admin/ws/stats — 模块实时统计（在线分布、过滤注册数、心跳存活数、批量线程池状态）
+ *   <li>GET /admin/ws/stats — 模块实时统计（在线 Session 数、分发器注册数、推送漏斗快照）
  *   <li>GET /admin/ws/sessions?userId={userId} — 查询指定用户的本地 Session 列表
  *   <li>DELETE /admin/ws/sessions/{sessionId} — 强制断开指定 Session
  *   <li>POST /admin/ws/push/direct — 管理端强制推送到指定用户（运维抢救通道，绕过常规业务过滤）
+ *   <li>GET /admin/ws/ping — 简易健康检查
  * </ul>
  *
  * <p>鉴权：本 Controller 端点仅应在内网/运维网关后暴露；生产部署建议在外层网关加 BA 鉴权或限流。
  *
- * <p>条件装配：{@code WebMvcConfigurer} 不存在时无注册，避免引入无 web 能力的模块时出错。
+ * <p>条件装配：仅在 classpath 存在 Spring Web（{@code RestController} 可见）时装配，避免引入无 web
+ * 能力的模块时出错。
  *
  * @author ydsz-team
  * @since 26.09.20
@@ -45,6 +48,7 @@ public class WebSocketAdminController {
   private final RealtimePushTemplate pushTemplate;
   private final LocalSessionRegistry sessionRegistry;
   private final WebSocketMessageDispatcher messageDispatcher;
+  private final WebSocketMetrics webSocketMetrics;
 
   /**
    * 模块实时统计（UX-002 /admin/ws/stats）。
@@ -56,6 +60,19 @@ public class WebSocketAdminController {
     Map<String, Object> result = new HashMap<>(16);
     result.put("sessionCount", sessionRegistry.getTotalSessionCount());
     result.put("handlerCount", messageDispatcher != null ? messageDispatcher.getHandlerCount() : 0);
+    if (webSocketMetrics != null) {
+      Map<String, Long> funnel = new HashMap<>(16);
+      funnel.put("pushedTotal", webSocketMetrics.getFunnelPushedTotal());
+      funnel.put("filterDrop", webSocketMetrics.getFunnelFilterDrop());
+      funnel.put("dedupHit", webSocketMetrics.getFunnelDedupHit());
+      funnel.put("backoff", webSocketMetrics.getFunnelBackoff());
+      funnel.put("retryEnqueued", webSocketMetrics.getFunnelRetryEnqueued());
+      funnel.put("retryFlushed", webSocketMetrics.getFunnelRetryFlushed());
+      funnel.put("deadLetter", webSocketMetrics.getFunnelDeadLetter());
+      funnel.put("ackReceived", webSocketMetrics.getAckReceived());
+      funnel.put("ackTimeout", webSocketMetrics.getAckTimeout());
+      result.put("funnel", funnel);
+    }
     return result;
   }
 

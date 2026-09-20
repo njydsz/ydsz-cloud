@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
@@ -24,10 +25,16 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code ydsz.websocket.messages.sent}（Counter）— 消息发送数
  *   <li>{@code ydsz.websocket.push.total}（Counter）— 推送次数，tag: type, result
  *   <li>{@code ydsz.websocket.push.duration}（Timer）— 推送耗时（含 P99 百分位）
+ *   <li>{@code ydsz.websocket.funnel.*}（Gauge）— 推送漏斗计数（发起/过滤/去重/退避/重试/ACK）
  * </ul>
  *
  * <p>推送结果计数器在构造时预构建（PushResultKey → Counter 映射），避免每次
  * push 都做 Counter.builder() 构建与 register() 查找，减少高并发下对象分配。
+ *
+ * <p>漏斗计数器使用 {@link LongAdder} 实现高并发无锁累加，Prometheus Exporter 通过
+ * {@code /actuator/prometheus} 抓取瞬时快照（Gauge function），用于 Grafana 漏斗面板计算：
+ * 推送成功率 = (pushed - filter_drop - dedup_hit) / pushed;
+ * 退避率 = backoff / pushed; 重试率 = retry_enqueued / pushed.
  *
  * <p>当 MeterRegistry 不在 classpath 时降级为空操作（no-op）。
  *
@@ -57,6 +64,42 @@ public class WebSocketMetrics implements NetworkMetrics {
   private Counter messagesReceivedCounter;
   private Counter messagesSentCounter;
 
+  /** Noop 降级标识： MeterRegistry=null 时所有指标方法成为空操作。 */
+  private final boolean noOp;
+
+  /** 漏斗计数器：推送发起总数（含过滤命中与 passed）。 */
+  private final LongAdder funnelPushedTotal = new LongAdder();
+
+  /** 漏斗计数器：消息过滤命中数（被业务 MessageFilter 拦截）。 */
+  private final LongAdder funnelFilterDrop = new LongAdder();
+
+  /** 漏斗计数器：去重命中数（Redis SETNX 命中）。 */
+  private final LongAdder funnelDedupHit = new LongAdder();
+
+  /** 漏斗计数器：退避降级数（离线存储/限流触发）。 */
+  private final LongAdder funnelBackoff = new LongAdder();
+
+  /** 漏斗计数器：重试消息入队数。 */
+  private final LongAdder funnelRetryEnqueued = new LongAdder();
+
+  /** 漏斗计数器：重试消息成功重投数。 */
+  private final LongAdder funnelRetryFlushed = new LongAdder();
+
+  /** 漏斗计数器：重试转死信数。 */
+  private final LongAdder funnelDeadLetter = new LongAdder();
+
+  /** ACK 接收计数。 */
+  private final LongAdder ackReceived = new LongAdder();
+
+  /** ACK 超时计数。 */
+  private final LongAdder ackTimeout = new LongAdder();
+
+  /** Ping 帧发送计数。 */
+  private final LongAdder pingSent = new LongAdder();
+
+  /** Pong 帧接收计数。 */
+  private final LongAdder pongReceived = new LongAdder();
+
   /** 预构建的推送结果计数器映射。 */
   private final Map<PushResultKey, Counter> pushCounterCache = new HashMap<>(8);
 
@@ -67,28 +110,67 @@ public class WebSocketMetrics implements NetworkMetrics {
    */
   public WebSocketMetrics(MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
-    if (meterRegistry != null) {
-      Gauge.builder(METRIC_CHANNELS_ACTIVE, activeChannels, AtomicLong::doubleValue)
-          .description("活跃 WebSocket 连接数")
-          .register(meterRegistry);
-      connectionsCounter =
-          Counter.builder(METRIC_CONNECTIONS)
-              .description("累计 WebSocket 连接数")
-              .register(meterRegistry);
-      disconnectionsCounter =
-          Counter.builder(METRIC_DISCONNECTIONS)
-              .description("累计 WebSocket 断开数")
-              .register(meterRegistry);
-      messagesReceivedCounter =
-          Counter.builder(METRIC_MESSAGES_RECEIVED)
-              .description("WebSocket 消息接收数")
-              .register(meterRegistry);
-      messagesSentCounter =
-          Counter.builder(METRIC_MESSAGES_SENT)
-              .description("WebSocket 消息发送数")
-              .register(meterRegistry);
+    this.noOp = (meterRegistry == null);
+    if (!noOp) {
+      initCounters();
       initPushCounters();
+      initFunnelGauges();
     }
+  }
+
+  /**
+   * 初始化网络层基础 Counter/Gauge。
+   */
+  private void initCounters() {
+    Gauge.builder(METRIC_CHANNELS_ACTIVE, activeChannels, AtomicLong::doubleValue)
+        .description("活跃 WebSocket 连接数")
+        .register(meterRegistry);
+    connectionsCounter =
+        Counter.builder(METRIC_CONNECTIONS)
+            .description("累计 WebSocket 连接数")
+            .register(meterRegistry);
+    disconnectionsCounter =
+        Counter.builder(METRIC_DISCONNECTIONS)
+            .description("累计 WebSocket 断开数")
+            .register(meterRegistry);
+    messagesReceivedCounter =
+        Counter.builder(METRIC_MESSAGES_RECEIVED)
+            .description("WebSocket 消息接收数")
+            .register(meterRegistry);
+    messagesSentCounter =
+        Counter.builder(METRIC_MESSAGES_SENT)
+            .description("WebSocket 消息发送数")
+            .register(meterRegistry);
+  }
+
+  /**
+   * 初始化推送漏斗 Gauge（基于 LongAdder 原子快照，Prometheus 通过 /actuator/prometheus 抓取瞬时值）。
+   * <p>指标：ydsz.websocket.funnel.pushed / filter_drop / dedup_hit / backoff /
+   * retry_enqueued / retry_flushed / dead_letter / ack_received / ack_timeout.
+   */
+  private void initFunnelGauges() {
+    Gauge.builder("ydsz.websocket.funnel.pushed", funnelPushedTotal, LongAdder::sum)
+        .description("推送发起总数（包含过滤命中与 passed）").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.filter_drop", funnelFilterDrop, LongAdder::sum)
+        .description("消息过滤命中计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.dedup_hit", funnelDedupHit, LongAdder::sum)
+        .description("Redis 去重命中计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.backoff", funnelBackoff, LongAdder::sum)
+        .description("退避降级计数（离线存储或限流触发）").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.retry_enqueued", funnelRetryEnqueued, LongAdder::sum)
+        .description("重试消息入队计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.retry_flushed", funnelRetryFlushed, LongAdder::sum)
+        .description("重试消息成功投递计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.dead_letter", funnelDeadLetter, LongAdder::sum)
+        .description("重试耗尽转死信计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.ack_received", ackReceived, LongAdder::sum)
+        .description("业务 ACK 接收计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.ack_timeout", ackTimeout, LongAdder::sum)
+        .description("业务 ACK 超时计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.ping_sent", pingSent, LongAdder::sum)
+        .description("Ping 帧发送计数").register(meterRegistry);
+    Gauge.builder("ydsz.websocket.funnel.pong_received", pongReceived, LongAdder::sum)
+        .description("Pong 帧接收计数").register(meterRegistry);
   }
 
   /**
@@ -256,6 +338,110 @@ public class WebSocketMetrics implements NetworkMetrics {
    */
   public void addBytesWritten(long bytes) {
     totalBytesWritten.addAndGet(bytes);
+  }
+
+  // ==================== 推送漏斗计数（FEAT-005）====================
+
+  /** 推送发起计入漏斗。 */
+  public void countFunnelPushed() {
+    funnelPushedTotal.increment();
+  }
+
+  /** 消息被业务 MessageFilter 拦截计入漏斗。 */
+  public void countFunnelFilterDrop() {
+    funnelFilterDrop.increment();
+  }
+
+  /** Redis SETNX 去重命中计入漏斗。 */
+  public void countFunnelDedupHit() {
+    funnelDedupHit.increment();
+  }
+
+  /** 触发退避降级（离线存储 / 限流保护）计入漏斗。 */
+  public void countFunnelBackoff() {
+    funnelBackoff.increment();
+  }
+
+  /** 消息入重试队列计入漏斗。 */
+  public void countFunnelRetryEnqueued() {
+    funnelRetryEnqueued.increment();
+  }
+
+  /** 重试消息成功投递计入漏斗。 */
+  public void countFunnelRetryFlushed() {
+    funnelRetryFlushed.increment();
+  }
+
+  /** 重试耗尽转死信计入漏斗。 */
+  public void countFunnelDeadLetter() {
+    funnelDeadLetter.increment();
+  }
+
+  /** 业务 ACK 接收计入漏斗。 */
+  public void countAckReceived() {
+    ackReceived.increment();
+  }
+
+  /** ACK 超时计数。 */
+  public void countAckTimeout() {
+    ackTimeout.increment();
+  }
+
+  /** 发送 Ping 帧计数。 */
+  public void countPingSent() {
+    pingSent.increment();
+  }
+
+  /** 接收 Pong 帧计数。 */
+  public void countPongReceived() {
+    pongReceived.increment();
+  }
+
+  // ==================== 漏斗快照（运维诊断 / Admin 接口读取）====================
+
+  /** 推送发起总数快照。 */
+  public long getFunnelPushedTotal() {
+    return funnelPushedTotal.sum();
+  }
+
+  /** 过滤命中快照。 */
+  public long getFunnelFilterDrop() {
+    return funnelFilterDrop.sum();
+  }
+
+  /** 去重命中快照。 */
+  public long getFunnelDedupHit() {
+    return funnelDedupHit.sum();
+  }
+
+  /** 退避降级快照。 */
+  public long getFunnelBackoff() {
+    return funnelBackoff.sum();
+  }
+
+  /** 重试入队快照。 */
+  public long getFunnelRetryEnqueued() {
+    return funnelRetryEnqueued.sum();
+  }
+
+  /** 重试成功投递快照。 */
+  public long getFunnelRetryFlushed() {
+    return funnelRetryFlushed.sum();
+  }
+
+  /** 死信快照。 */
+  public long getFunnelDeadLetter() {
+    return funnelDeadLetter.sum();
+  }
+
+  /** ACK 接收快照。 */
+  public long getAckReceived() {
+    return ackReceived.sum();
+  }
+
+  /** ACK 超时快照。 */
+  public long getAckTimeout() {
+    return ackTimeout.sum();
   }
 
   /**

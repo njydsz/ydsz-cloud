@@ -1,9 +1,11 @@
 package com.njydsz.common.socket.cluster;
 
+import java.util.Collections;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -32,13 +34,25 @@ import com.njydsz.common.socket.trace.WebSocketTraceContext;
  * @since 26.09.01
  */
 @Slf4j
-@RequiredArgsConstructor
 public class WebSocketClusterSubscriber implements MessageListener {
 
   private final SimpMessagingTemplate messagingTemplate;
-
-  /** P2-8: 本地 Session 注册表（KICK 消息处理时读取并关闭同用户 Session） */
   private final LocalSessionRegistry sessionRegistry;
+
+  /**
+   * 当前节点灰度标签（ARCH-006），由配置 {@code ydsz.websocket.cluster.nodeTags} 注入。
+   *
+   * <p>与消息中的 {@code tags} 取交集：无交集时跳过本节点下发，实现灰度节点子集推送。
+   */
+  @Value("${ydsz.websocket.cluster.nodeTags:}")
+  private String nodeTagsConfig;
+
+  /** 构造集群订阅者。 */
+  public WebSocketClusterSubscriber(
+      SimpMessagingTemplate messagingTemplate, LocalSessionRegistry sessionRegistry) {
+    this.messagingTemplate = messagingTemplate;
+    this.sessionRegistry = sessionRegistry;
+  }
 
   @Override
   public void onMessage(Message message, byte[] pattern) {
@@ -56,6 +70,22 @@ public class WebSocketClusterSubscriber implements MessageListener {
     if (clusterMsg == null) {
       return;
     }
+    // ARCH-006: 协议版本兼容性检查
+    if (!clusterMsg.isCompatibleWithCurrent()) {
+      log.warn(
+          "[WS-Cluster] 协议版本不兼容, 跳过: incoming={}, current={}",
+          clusterMsg.getProtocolVersion(),
+          WebSocketClusterMessage.CURRENT_PROTOCOL_VERSION);
+      return;
+    }
+    // ARCH-006: 灰度标签过滤
+    if (!clusterMsg.matchesNodeTags(parseNodeTags())) {
+      log.debug(
+          "[WS-Cluster] 灰度标签不匹配, 跳过: msgTags={}, nodeTags={}",
+          clusterMsg.getTags(),
+          nodeTagsConfig);
+      return;
+    }
     WebSocketTraceContext.runWithTrace(
         clusterMsg.getTraceId(),
         () -> {
@@ -66,6 +96,18 @@ public class WebSocketClusterSubscriber implements MessageListener {
                 "[WS-Cluster] 本地推送失败: type={} err={}", clusterMsg.getPushType(), e.getMessage());
           }
         });
+  }
+
+  /**
+   * 解析当前节点灰度标签字符串（逗号分隔）为 List。
+   *
+   * @return 标签列表，未配置时返回空列表
+   */
+  private List<String> parseNodeTags() {
+    if (nodeTagsConfig == null || nodeTagsConfig.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return List.of(nodeTagsConfig.split(","));
   }
 
   /**

@@ -803,6 +803,7 @@ public class WebSocketAutoConfiguration {
    * @param pushTemplate 推送模板，用于 /push/direct 诊断推送
    * @param sessionRegistry 本地会话注册表
    * @param messageDispatcher C-S 消息分发器
+   * @param webSocketMetrics WebSocket 指标收集器
    * @return Admin REST Controller
    */
   @Bean
@@ -810,8 +811,9 @@ public class WebSocketAutoConfiguration {
   public WebSocketAdminController webSocketAdminController(
       RealtimePushTemplate pushTemplate,
       LocalSessionRegistry sessionRegistry,
-      WebSocketMessageDispatcher messageDispatcher) {
-    return new WebSocketAdminController(pushTemplate, sessionRegistry, messageDispatcher);
+      WebSocketMessageDispatcher messageDispatcher,
+      WebSocketMetrics webSocketMetrics) {
+    return new WebSocketAdminController(pushTemplate, sessionRegistry, messageDispatcher, webSocketMetrics);
   }
 
   /** No-op 集群发布者（集群未启用时的降级实现，始终返回 false 触发本地推送）。 */
