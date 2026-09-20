@@ -2,26 +2,35 @@ package com.njydsz.common.search.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.util.security.HexUtils;
 
 /**
- * 搜索缓存服务接口。
+ * 搜索缓存服务（Caffeine L1 + Redis L2 二级缓存）。
  *
- * <p>缓存热门查询结果。
+ * <p>两级缓存架构：
  *
- * <p>降低 ES 压力。
+ * <ul>
+ *   <li>L1 Caffeine（进程内） — 亚毫秒级命中，小容量短 TTL（10s），减轻 JVM GC 压力与热点 key 竞争</li>
+ *   <li>L2 Redis（跨进程） — 毫秒级命中，按配置 TTL，集群多节点共享</li>
+ * </ul>
+ *
+ * <p>读取顺序：L1 → L2 → Engine；写入顺序：L2 + L1 同时写入。L2 不可用时降级到仅 L1（不影响可用性）。
+ *
+ * <p>空结果使用更短的 TTL（整体 TTL / {@link #EMPTY_TTL_RATIO}）防缓存穿透。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -29,25 +38,47 @@ import com.njydsz.common.util.security.HexUtils;
 @Slf4j
 public class SearchCacheService {
 
+  private static final String L2_CACHE_PREFIX = "search:cache:l2:";
+
+  /** 空结果空响应占位符（序列化到 Redis 的特殊标记） */
+  private static final String EMPTY_RESULT_MARKER = "__EMPTY__";
+
+  /** 空结果缓存使用更短的 TTL（防穿透） */
+  private static final int EMPTY_TTL_RATIO = 3;
+
+  private final Cache<String, SearchResponse> l1Cache;
+  private final ObjectProvider<StringRedisTemplate> redisProvider;
+  private final ObjectMapper objectMapper;
   private final SearchProperties properties;
-  private final ConcurrentHashMap<String, CacheEntry> cache;
-  private final int maxSize;
 
-  /** P1-4: 空结果哨兵值 — 区分缓存命中空结果和缓存未命中 */
-  private static final SearchResponse EMPTY_SENTINEL = SearchResponse.builder().total(-1L).build();
-
-  /** P1-4: 空结果缓存使用更短的 TTL（防穿透） */
-  private static final long EMPTY_TTL_RATIO = 3; // 空结果 TTL = 正常 TTL / 3
-
-  public SearchCacheService(SearchProperties properties) {
+  /**
+   * 创建搜索缓存服务。
+   *
+   * @param properties 搜索配置
+   * @param redisProvider Redis 惰性提供者（缺失时 L2 自动禁用）
+   * @param objectMapper Jackson 对象映射器（用于 L2 序列化）
+   */
+  public SearchCacheService(
+      SearchProperties properties,
+      ObjectProvider<StringRedisTemplate> redisProvider,
+      ObjectMapper objectMapper) {
     this.properties = properties;
-    long configMaxSize = properties.getCache().getMaxSize();
-    this.maxSize = (int) Math.min(configMaxSize, Integer.MAX_VALUE);
-    this.cache = new ConcurrentHashMap<>(Math.min(maxSize, 256));
+    this.redisProvider = redisProvider;
+    this.objectMapper = objectMapper;
+
+    long l1Size = properties.getCache().getL1MaxSize();
+    long l1Ttl = properties.getCache().getL1Ttl();
+    this.l1Cache =
+        Caffeine.newBuilder()
+            .maximumSize(Math.max(64, l1Size))
+            .expireAfterWrite(Duration.ofSeconds(Math.max(1, l1Ttl)))
+            .build();
   }
 
   /**
-   * 获取缓存的搜索结果
+   * 获取缓存的搜索结果。
+   *
+   * <p>先查 L1（进程内），再查 L2（Redis）；L2 命中后回填 L1 以加速后续请求。
    *
    * @param request 搜索请求
    * @return 缓存结果，不存在返回 null；空结果返回 SearchResponse.empty()
@@ -57,24 +88,40 @@ public class SearchCacheService {
       return null;
     }
     String key = buildCacheKey(request);
-    CacheEntry entry = cache.get(key);
-    if (entry == null) {
-      return null;
+
+    // L1: 进程内 Caffeine
+    SearchResponse l1Hit = l1Cache.getIfPresent(key);
+    if (l1Hit != null) {
+      return l1Hit;
     }
-    if (System.currentTimeMillis() > entry.expireAt) {
-      // P1-1: 使用 ConcurrentHashMap 原子删除，无锁升级死锁风险
-      cache.remove(key, entry);
-      return null;
+
+    // L2: Redis
+    StringRedisTemplate redis = getRedis();
+    if (redis != null) {
+      try {
+        String json = redis.opsForValue().get(L2_CACHE_PREFIX + key);
+        if (json != null) {
+          if (EMPTY_RESULT_MARKER.equals(json)) {
+            SearchResponse empty = SearchResponse.empty(request.getPage(), request.getPageSize());
+            l1Cache.put(key, empty); // 回填 L1
+            return empty;
+          }
+          SearchResponse response = objectMapper.readValue(json, SearchResponse.class);
+          l1Cache.put(key, response); // 回填 L1
+          return response;
+        }
+      } catch (Exception e) {
+        log.debug("[SearchCache] Redis 反序列化失败: {}", e.getMessage());
+      }
     }
-    // P1-4: 空结果哨兵返回空响应
-    if (entry.response == EMPTY_SENTINEL) {
-      return SearchResponse.empty(request.getPage(), request.getPageSize());
-    }
-    return entry.response;
+
+    return null;
   }
 
   /**
-   * 缓存搜索结果
+   * 缓存搜索结果。
+   *
+   * <p>同时写入 L1（进程内）和 L2（Redis，如果可用）。空结果使用更短的 TTL。
    *
    * @param request 搜索请求
    * @param response 搜索响应
@@ -84,64 +131,52 @@ public class SearchCacheService {
       return;
     }
     String key = buildCacheKey(request);
-    long ttlMs = properties.getCache().getTtl() * 1000;
 
-    // P1-4: 空结果使用更短 TTL 防穿透
-    if (response.getTotal() == 0) {
-      ttlMs = ttlMs / EMPTY_TTL_RATIO;
-      cache.put(key, new CacheEntry(EMPTY_SENTINEL, System.currentTimeMillis() + ttlMs));
-    } else {
-      cache.put(key, new CacheEntry(response, System.currentTimeMillis() + ttlMs));
+    // L1: 始终写入 Caffeine（Caffeine 的 expireAfterWrite 与 L2 的 TTL 解耦）
+    l1Cache.put(key, response);
+
+    // L2: 写入 Redis
+    StringRedisTemplate redis = getRedis();
+    if (redis == null) {
+      return;
     }
-
-    // P1-1: 惰性淘汰 — 超过最大容量时清理过期条目
-    if (cache.size() > maxSize) {
-      evictExpired();
+    try {
+      long ttl = computeTtlSeconds(response);
+      if (response.getTotal() == 0) {
+        redis.opsForValue().set(L2_CACHE_PREFIX + key, EMPTY_RESULT_MARKER, Duration.ofSeconds(ttl));
+      } else {
+        String json = objectMapper.writeValueAsString(response);
+        redis.opsForValue().set(L2_CACHE_PREFIX + key, json, Duration.ofSeconds(ttl));
+      }
+    } catch (JsonProcessingException e) {
+      log.debug("[SearchCache] 序列化失败: {}", e.getMessage());
     }
   }
 
-  /** 清空缓存 */
+  /** 清空所有级缓存 */
   public void clear() {
-    cache.clear();
-    log.info("[SearchCache] 缓存已清空");
+    l1Cache.invalidateAll();
+    log.info("[SearchCache] L1 缓存已清空（entries after: {})", l1Cache.estimatedSize());
   }
 
   /**
-   * 获取缓存大小。
+   * 获取当前 L1 缓存条数。
    *
-   * @return 缓存条目数
+   * @return 估计条数（Caffeine 返回近似值）
    */
-  public int size() {
-    return cache.size();
+  public long size() {
+    return l1Cache.estimatedSize();
   }
 
-  /** P1-1: 惰性淘汰过期条目 */
-  private void evictExpired() {
-    long now = System.currentTimeMillis();
-    AtomicInteger removed = new AtomicInteger(0);
-    cache.forEach(
-        (k, v) -> {
-          if (now > v.expireAt) {
-            if (cache.remove(k, v)) {
-              removed.incrementAndGet();
-            }
-          }
-        });
-    // 如果清理过期后仍然超限，随机淘汰
-    if (cache.size() > maxSize) {
-      int toRemove = cache.size() - maxSize;
-      List<Map.Entry<String, CacheEntry>> entries = new ArrayList<>(cache.entrySet());
-      entries.sort(Comparator.comparingLong(e -> e.getValue().expireAt));
-      for (int i = 0; i < toRemove && i < entries.size(); i++) {
-        cache.remove(entries.get(i).getKey(), entries.get(i).getValue());
-      }
+  private long computeTtlSeconds(SearchResponse response) {
+    long baseTtl = properties.getCache().getTtl();
+    if (response != null && response.getTotal() == 0) {
+      return Math.max(1, baseTtl / EMPTY_TTL_RATIO);
     }
-    if (removed.get() > 0) {
-      log.debug("[SearchCache] 惰性淘汰过期条目: {}", removed.get());
-    }
+    return baseTtl;
   }
 
-  /** P2-9: 构建缓存键 — 过滤条件排序后再拼接，确保顺序无关 */
+  /** 构建缓存键（MD5 规范化） */
   private String buildCacheKey(SearchRequest request) {
     StringBuilder sb = new StringBuilder();
     sb.append(request.getKeyword()).append('|');
@@ -153,9 +188,8 @@ public class SearchCacheService {
     sb.append(request.getTenantId()).append('|');
     sb.append(request.getUserId()).append('|');
     if (request.getTypes() != null) {
-      List<String> sortedTypes = new ArrayList<>(request.getTypes());
-      sortedTypes.sort(Comparator.naturalOrder());
-      sb.append(sortedTypes).append('|');
+      request.getTypes().stream().sorted().forEach(t -> sb.append(t).append(','));
+      sb.append('|');
     }
     if (request.getFilters() != null) {
       sb.append(request.getFilters()).append('|');
@@ -177,21 +211,7 @@ public class SearchCacheService {
     }
   }
 
-  /**
-   * 搜索缓存条目。
-   *
-   * <p>缓存响应体与过期时间戳，过期即视为未命中并从缓存中移除。
-   */
-  private static class CacheEntry {
-    /** 缓存的搜索结果 */
-    final SearchResponse response;
-
-    /** 过期时间戳（毫秒） */
-    final long expireAt;
-
-    CacheEntry(SearchResponse response, long expireAt) {
-      this.response = response;
-      this.expireAt = expireAt;
-    }
+  private StringRedisTemplate getRedis() {
+    return redisProvider.getIfAvailable();
   }
 }
