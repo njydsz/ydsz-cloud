@@ -1,9 +1,12 @@
 package com.njydsz.common.search.service;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +44,12 @@ public class SearchTextProcessor {
   private final SearchPipeline pipeline;
   private final Map<String, List<String>> synonymMap = new HashMap<>(16);
   private final Map<String, String> pinyinMap = new HashMap<>(16);
+
+  /** 同义词文件上次修改时间（0 表示尚未加载或非文件系统资源） */
+  private volatile long synonymFileLastModified;
+
+  /** 拼音文件上次修改时间（0 表示尚未加载或非文件系统资源） */
+  private volatile long pinyinFileLastModified;
 
   /**
    * 创建搜索文本预处理器（加载同义词/拼音词典，构建管道）。

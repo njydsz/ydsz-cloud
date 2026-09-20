@@ -4,7 +4,6 @@ import com.njydsz.common.util.string.StringUtils;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +46,6 @@ public class FeignXidRequestInterceptor implements RequestInterceptor {
 
     /** Seata 是否可用的标志（首次探测后缓存） */
     private static volatile Boolean seataAvailable;
-
-    /** 抑制反射调用中的 ClassNotFoundException 以提升性能 */
-    private static final Object NO_XID = new Object();
-
-    /** 上次 XID 查找缓存（避免同一线程连续反射的开销） */
-    private boolean xidLookupAttempted;
 
     /**
      * 为 Feign 请求注入 XID Header。

@@ -9,6 +9,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
+import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.enums.MessagePriority;
 import com.njydsz.common.socket.filter.MessageFilter;
@@ -52,6 +53,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
   private final WebSocketAuditService auditService;
   private final MessageRetryQueue retryQueue;
   private final List<MessageFilter> messageFilters;
+  private final WebSocketProperties properties;
 
   public DefaultRealtimePushTemplate(
       SimpMessagingTemplate messagingTemplate,
@@ -62,7 +64,8 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
       MessageSerializer messageSerializer,
       WebSocketAuditService auditService,
       MessageRetryQueue retryQueue,
-      List<MessageFilter> messageFilters) {
+      List<MessageFilter> messageFilters,
+      WebSocketProperties properties) {
     this.messagingTemplate = messagingTemplate;
     this.clusterPublisher = clusterPublisher;
     this.onlineUserService = onlineUserService;
@@ -72,6 +75,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     this.auditService = auditService;
     this.retryQueue = retryQueue;
     this.messageFilters = messageFilters != null ? messageFilters : List.of();
+    this.properties = properties;
   }
 
   // ==================== 接口方法实现 ====================
@@ -478,7 +482,10 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
       return;
     }
     try {
-      List<RetryableMessage> expired = retryQueue.dequeueExpired(100);
+      int batchFlushSize = properties != null && properties.getRetry() != null
+          ? properties.getRetry().getBatchFlushSize()
+          : 100;
+      List<RetryableMessage> expired = retryQueue.dequeueExpired(batchFlushSize);
       if (expired.isEmpty()) {
         return;
       }
@@ -600,8 +607,14 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
       return;
     }
     try {
+      int maxRetries = properties != null && properties.getRetry() != null
+          ? properties.getRetry().getMaxRetries()
+          : 3;
+      long retryDelayMs = properties != null && properties.getRetry() != null
+          ? properties.getRetry().getRetryDelay().toMillis()
+          : 5000L;
       RetryableMessage retryMsg =
-          RetryableMessage.forUser(messageId, userId, type, payloadJson, 3, 5000);
+          RetryableMessage.forUser(messageId, userId, type, payloadJson, maxRetries, retryDelayMs);
       retryMsg.setTraceId(WebSocketTraceContext.getTraceId());
       retryQueue.enqueue(retryMsg);
     } catch (Exception e) {

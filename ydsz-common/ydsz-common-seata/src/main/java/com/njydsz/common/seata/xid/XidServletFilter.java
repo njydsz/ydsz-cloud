@@ -50,9 +50,6 @@ public class XidServletFilter implements Filter {
     /** Seata 是否可用的标志 */
     private static volatile Boolean seataAvailable;
 
-    /** 标记当前请求中是否有 XID 被绑定（确保 finally 中对称解绑） */
-    private static final ThreadLocal<Boolean> XID_BOUND = ThreadLocal.withInitial(() -> Boolean.FALSE);
-
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -73,7 +70,6 @@ public class XidServletFilter implements Filter {
 
         try {
             bindXid(xid);
-            XID_BOUND.set(Boolean.TRUE);
             LOG.debug("XID bound to RootContext: {}", xid);
         } catch (Exception e) {
             LOG.warn("Failed to bind XID from request header: {}", e.getMessage());
@@ -90,8 +86,6 @@ public class XidServletFilter implements Filter {
                 LOG.debug("XID unbound from RootContext");
             } catch (Exception e) {
                 LOG.warn("Failed to unbind XID from RootContext: {}", e.getMessage());
-            } finally {
-                XID_BOUND.remove();
             }
         }
     }
