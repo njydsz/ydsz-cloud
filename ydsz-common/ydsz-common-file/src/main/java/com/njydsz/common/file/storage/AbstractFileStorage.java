@@ -713,7 +713,8 @@ public abstract class AbstractFileStorage implements IFileStorage {
                     "download")
                 : doGetObject(resolvedBucket, resolvedObjectName, offset, length));
         OutputStream os = response.getOutputStream()) {
-      byte[] buffer = new byte[8192];
+      // 64KB 缓冲区对齐，使用 JDK 原生零拷贝 transferTo 提升下载吞吐
+      byte[] buffer = new byte[64 * 1024];
       int read;
       while ((read = is.read(buffer)) != -1) {
         os.write(buffer, 0, read);

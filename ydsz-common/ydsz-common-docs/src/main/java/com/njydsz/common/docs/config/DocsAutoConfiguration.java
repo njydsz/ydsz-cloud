@@ -1,6 +1,7 @@
 package com.njydsz.common.docs.config;
 
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -9,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.docs.health.DocsHealthIndicator;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
@@ -22,8 +24,16 @@ import com.njydsz.common.docs.service.AsyncDocumentParser;
  *
  * <p><b>配置开关：</b> {@code ydsz.docs.enabled=true}（默认启用）
  *
- * <p><b>生命周期状态（§33.7 储备义务，26.09.14 标注）：</b>reserve · 可用。文档解析/导出能力储备（ADR-5 已与 agent
- * TextChunker 定界），接入方启用前需补齐解析流水线关键路径单测。
+ * <p><b>生命周期状态：</b>production · 稳定（Sprint 1 已补齐全部解析器集成测试，储备义务解除）。
+ *
+ * <p><b>SPI 扩展能力：</b>文档读取与结构化解析（文本提取 + 分节 + 表格 + 图片），PII 检测，安全扫描。
+ *
+ * <p><b>明确不负责：</b>
+ *
+ * <ul>
+ *   <li>embedding / 向量化（由 ydsz-agent 的 DocumentChunker + VectorStore 承接）
+ *   <li>文档格式互转（由外部 LibreOffice / OnlyOffice 服务承接）
+ * </ul>
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -68,5 +78,35 @@ public class DocsAutoConfiguration {
       DocsProperties properties,
       AsyncDocumentParser asyncDocumentParser) {
     return new DocsHealthIndicator(parserRegistry, piiDetectors, properties, asyncDocumentParser);
+  }
+
+  /**
+   * 默认的异步解析线程池，仅在应用层未定义名为 {@code docsAsyncExecutor} 的 Bean 时自动装配。
+   *
+   * <p>使用 {@link ThreadPoolTaskExecutor} 以获得 Spring 容器托管的生命周期（{@code @PreDestroy} 自动关闭）。
+   * 线程池大小与队列容量由 {@code ydsz.docs.async-pool-size} 与 {@code ydsz.docs.async-queue-capacity} 控制。
+   *
+   * <p>应用方可通过声明同名 Bean 覆盖本默认实现，从而实现更细粒度的调优（如自定义拒绝策略）。
+   *
+   * @param properties 文档模块配置属性
+   * @return 线程池 TaskExecutor
+   */
+  @Bean(name = "docsAsyncExecutor", destroyMethod = "shutdown")
+  @ConditionalOnMissingBean(name = "docsAsyncExecutor")
+  public ThreadPoolTaskExecutor docsAsyncExecutor(DocsProperties properties) {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(properties.getAsyncPoolSize());
+    executor.setMaxPoolSize(properties.getAsyncPoolSize());
+    executor.setQueueCapacity(properties.getAsyncQueueCapacity());
+    executor.setThreadNamePrefix("docs-async-");
+    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+    executor.setWaitForTasksToCompleteOnShutdown(true);
+    executor.setAwaitTerminationSeconds(10);
+    executor.initialize();
+    log.info(
+        "[DocsAutoConfiguration] 已创建默认 docsAsyncExecutor (poolSize={}, queueCapacity={})",
+        properties.getAsyncPoolSize(),
+        properties.getAsyncQueueCapacity());
+    return executor;
   }
 }

@@ -28,6 +28,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
@@ -46,6 +47,7 @@ import com.njydsz.common.search.service.IndexRebuildService;
 import com.njydsz.common.search.service.IndexSyncService;
 import com.njydsz.common.search.service.QueryParser;
 import com.njydsz.common.search.service.SearchCacheService;
+import com.njydsz.common.search.service.SearchDictionaryManager;
 import com.njydsz.common.search.service.SearchPipeline;
 import com.njydsz.common.search.service.SearchTextProcessor;
 import com.njydsz.common.search.service.SuggestionService;
@@ -76,6 +78,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
     havingValue = "true",
     matchIfMissing = true)
 @EnableConfigurationProperties(SearchProperties.class)
+@EnableScheduling
 public class SearchAutoConfiguration {
 
   private UnifiedSearchService unifiedSearchServiceInstance;

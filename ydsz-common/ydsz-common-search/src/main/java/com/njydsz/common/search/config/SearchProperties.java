@@ -114,6 +114,21 @@ public class SearchProperties {
   /** 文本处理配置（同义词 / 拼音） */
   private TextProcessorConfig textProcessor = new TextProcessorConfig();
 
+  /** 词典热加载配置 */
+  private DictionaryHotReloadConfig dictionaryHotReload = new DictionaryHotReloadConfig();
+
+  /** 词典热加载配置 */
+  @Data
+  public static class DictionaryHotReloadConfig {
+    /** 是否启用词典热加载 */
+    private boolean enabled = true;
+
+    /** 热加载扫描间隔（秒），默认 60 秒 */
+    @Min(5)
+    @Max(3600)
+    private long reloadIntervalSeconds = 60;
+  }
+
   // ==================== 引擎特定配置 ====================
 
   /** PG 引擎配置 */
