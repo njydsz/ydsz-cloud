@@ -3,7 +3,6 @@ package com.njydsz.common.socket.cluster;
 import java.util.Collections;
 import java.util.List;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.Message;

@@ -107,4 +107,15 @@ public final class WebSocketConstants {
 
   /** 网关透传的共享密钥头，用于验证请求确实来自网关 */
   public static final String WS_GATEWAY_SECRET_HEADER = "X-Gateway-Secret";
+
+  // ========== Presence 在线状态广播主题（UX-003） ==========
+
+  /** Presence 在线状态广播目的地前缀（订阅：/topic/presence/{userId}） */
+  public static final String WS_PRESENCE_DESTINATION_PREFIX = "/topic/presence/";
+
+  /** Presence 配置：是否启用在线状态广播（默认 false） */
+  public static final String WS_PRESENCE_ENABLED = "ydsz.websocket.presence.enabled";
+
+  /** Presence 配置：是否启用 LastSeen 记忆（默认 true） */
+  public static final String WS_PRESENCE_LASTSEEN_ENABLED = "ydsz.websocket.presence.lastSeenEnabled";
 }
