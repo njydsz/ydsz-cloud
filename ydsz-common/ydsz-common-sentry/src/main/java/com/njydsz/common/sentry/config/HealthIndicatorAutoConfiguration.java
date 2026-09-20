@@ -8,20 +8,25 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.sentry.alerting.AlertConverger;
 import com.njydsz.common.sentry.health.SentryHealthIndicator;
 import com.njydsz.common.sentry.health.SentryInfoContributor;
 import com.njydsz.common.sentry.health.SystemResourceHealthIndicator;
 import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
 import com.njydsz.common.sentry.spi.LogPublisher;
 import com.njydsz.common.sentry.spi.MetricsCollector;
+import com.njydsz.common.sentry.spi.SlaCollector;
 import com.njydsz.common.sentry.spi.TraceContext;
 
 /**
  * 健康检查自动配置。
  *
- * <p>装配健康探针，聚合指标 / 日志 / 链路三条通道的可用性到 Actuator health 端点。
+ * <p>装配健康探针，聚合指标 / 日志 / 链路 / 告警 / SLA 五条通道的可用性到 Actuator health 端点。
  *
  * <p>仅在 Actuator health 相关类存在时装配，避免非 Web 或未引入 Actuator 的模块启动失败。
+ *
+ * <p>26.09.20 变更：{@link SentryHealthIndicator} 构造器新增 {@link AlertConverger} 与
+ * {@link SlaCollector} 可选依赖，用于暴露内部健康详情。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -41,6 +46,8 @@ public class HealthIndicatorAutoConfiguration {
    * @param metricsCollector 指标采集器
    * @param logPublisher 日志发布器
    * @param traceContext 链路上下文
+   * @param alertConverger 告警收敛器（可选）
+   * @param slaCollector SLA 采集器（可选）
    * @return 健康探针
    */
   @Bean
@@ -49,8 +56,17 @@ public class HealthIndicatorAutoConfiguration {
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
   // CHECKSTYLE.ON: RegexpSinglelineJava
   public SentryHealthIndicator sentryHealthIndicator(
-      MetricsCollector metricsCollector, LogPublisher logPublisher, TraceContext traceContext) {
-    return new SentryHealthIndicator(metricsCollector, logPublisher, traceContext);
+      MetricsCollector metricsCollector,
+      LogPublisher logPublisher,
+      TraceContext traceContext,
+      org.springframework.beans.factory.ObjectProvider<AlertConverger> alertConverger,
+      org.springframework.beans.factory.ObjectProvider<SlaCollector> slaCollector) {
+    return new SentryHealthIndicator(
+        metricsCollector,
+        logPublisher,
+        traceContext,
+        alertConverger.getIfAvailable(),
+        slaCollector.getIfAvailable());
   }
 
   /**

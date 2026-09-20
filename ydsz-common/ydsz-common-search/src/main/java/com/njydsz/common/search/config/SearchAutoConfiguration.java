@@ -32,6 +32,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+import com.njydsz.common.search.analytics.ClickFeedbackService;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
 import com.njydsz.common.search.core.SearchEngineRegistry;
@@ -49,6 +50,7 @@ import com.njydsz.common.search.service.QueryParser;
 import com.njydsz.common.search.service.SearchCacheService;
 import com.njydsz.common.search.service.SearchDictionaryManager;
 import com.njydsz.common.search.service.SearchPipeline;
+import com.njydsz.common.search.service.SearchRateLimiter;
 import com.njydsz.common.search.service.SearchTextProcessor;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
@@ -346,6 +348,27 @@ public class SearchAutoConfiguration {
   }
 
   /**
+   * 装配词典热加载管理器，定期检测同义词/拼音文件变更并触发重加载。
+   *
+   * <p>间隔由 {@code ydsz.search.dictionary-hot-reload.reload-interval-seconds} 控制（默认 60 秒）。 变更词典文件后自动生效，无需重启服务。
+   *
+   * @param properties 搜索配置
+   * @param searchTextProcessor 文本预处理器（持有词典与 reloadIfChanged 方法）
+   * @return 词典热加载管理器实例，不会为 {@code null}
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnProperty(
+      prefix = "ydsz.search.dictionary-hot-reload",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = true)
+  public SearchDictionaryManager searchDictionaryManager(
+      SearchProperties properties, SearchTextProcessor searchTextProcessor) {
+    return new SearchDictionaryManager(properties, searchTextProcessor);
+  }
+
+  /**
    * 装配查询文本预处理器，负责分词、停用词过滤与同义词改写。
    *
    * <p>在请求进入引擎前对关键词做归一化，直接影响召回率； 处理结果为空时调用方会保留用户原始输入，避免把查询「洗没了」。
@@ -387,6 +410,41 @@ public class SearchAutoConfiguration {
   public SearchAnalyticsService searchAnalyticsService(
       ObjectProvider<StringRedisTemplate> redisProvider) {
     return new SearchAnalyticsService(redisProvider);
+  }
+
+  /**
+   * 装配搜索限流服务（基于 Redis 滑动窗口计数器）。
+   *
+   * <p>每次 {@link UnifiedSearchService#search} 调用前检查用户/租户维度的请求频率， 超限直接返回空结果而非抛异常（限流不应对上游报错）。
+   *
+   * @param redisProvider {@link StringRedisTemplate} 的惰性提供者，缺失时降级为无限流
+   * @param properties 搜索配置，提供限流阈值与开关
+   * @return 限流服务实例，永不为 {@code null}
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public SearchRateLimiter searchRateLimiter(
+      ObjectProvider<StringRedisTemplate> redisProvider, SearchProperties properties) {
+    return new SearchRateLimiter(redisProvider, properties);
+  }
+
+  /**
+   * 装配搜索点击反馈闭环服务。
+   *
+   * <p>接收前端回传的点击事件并写入 Redis，形成 keyword→docId CTR ZSet， 供 {@link BusinessRanker}
+   * 在重排阶段消费以 boost 高 CTR 文档。
+   *
+   * <p>Redis 不可用时该服务为 no-op，不影响主链路。
+   *
+   * @param redisProvider {@link StringRedisTemplate} 的惰性提供者
+   * @param properties 搜索配置，提供 ClickFeedback 开关
+   * @return 点击反馈服务实例，永不为 {@code null}
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public ClickFeedbackService clickFeedbackService(
+      ObjectProvider<StringRedisTemplate> redisProvider, SearchProperties properties) {
+    return new ClickFeedbackService(redisProvider, properties);
   }
 
   /**

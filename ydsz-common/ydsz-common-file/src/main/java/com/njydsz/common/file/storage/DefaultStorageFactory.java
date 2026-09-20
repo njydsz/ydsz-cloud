@@ -3,6 +3,7 @@ package com.njydsz.common.file.storage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +81,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
 
   /** 文件类型校验器 */
   private FileTypeValidator fileTypeValidator;
+
+  /** 分片上传并发度控制信号量 */
+  private Semaphore chunkUploadSemaphore;
 
   /** 批量删除专用线程池（ydsz-common-thread 管理） */
   private ExecutorService deleteExecutor;
@@ -235,6 +239,23 @@ public class DefaultStorageFactory implements IFileStorageProvider {
   }
 
   /**
+   * 设置分片上传并发度控制信号量，并同步更新已创建的存储实例
+   *
+   * @param semaphore 分片上传并发控制信号量
+   */
+  public void setChunkUploadSemaphore(Semaphore semaphore) {
+    this.chunkUploadSemaphore = semaphore;
+    storageCache
+        .values()
+        .forEach(
+            s -> {
+              if (s instanceof AbstractFileStorage afs) {
+                afs.setChunkUploadSemaphore(semaphore);
+              }
+            });
+  }
+
+  /**
    * 设置批量删除专用线程池，并同步更新已创建的存储实例
    *
    * @param executor 批量删除线程池（ydsz-common-thread 管理的 Bean）
@@ -281,6 +302,39 @@ public class DefaultStorageFactory implements IFileStorageProvider {
       throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
     }
     return storageCache.computeIfAbsent(storageType, this::createStorage);
+  }
+
+  /**
+   * 清除指定存储类型的缓存实例，支持运行时热切换。
+   *
+   * <p>清除后，下次 {@link #getStorage()} 将使用当前 {@code serverProperties} 中的配置重新创建实例。 典型场景：运维从控制台修改存储配置后调用本方法使新配置生效。
+   *
+   * @param storageType 存储类型标识，传 null 时使用当前配置的默认类型
+   * @return 被清除的实例，若无缓存则返回 null
+   */
+  @Override
+  public IFileStorage evictStorageCache(String storageType) {
+    String type = storageType != null ? storageType : serverProperties.getType();
+    if (type == null || type.isBlank()) {
+      return null;
+    }
+    IFileStorage removed = storageCache.remove(type);
+    if (removed != null) {
+      log.info("[DefaultStorageFactory] evicted storage cache, type={}", type);
+    }
+    return removed;
+  }
+
+  /**
+   * 清除全部缓存的存储实例。
+   *
+   * <p>建议在运维场景（如配置全面刷新）后调用，强制所有存储后端下次使用最新配置重新初始化。
+   */
+  @Override
+  public void clearStorageCache() {
+    int size = storageCache.size();
+    storageCache.clear();
+    log.info("[DefaultStorageFactory] cleared all storage cache, count={}", size);
   }
 
   /**
@@ -386,6 +440,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
       }
       if (asyncUploadExecutor != null) {
         afs.setAsyncUploadExecutor(asyncUploadExecutor);
+      }
+      if (chunkUploadSemaphore != null) {
+        afs.setChunkUploadSemaphore(chunkUploadSemaphore);
       }
     }
     return storage;

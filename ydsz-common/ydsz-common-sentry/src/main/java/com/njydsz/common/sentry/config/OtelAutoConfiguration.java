@@ -307,6 +307,39 @@ public class OtelAutoConfiguration {
     return rules;
   }
 
+  /**
+   * 配置一致性校验。
+   *
+   * <p>OTel 主开关关闭时，检查是否存在子配置（tailSampling / errorEvent）启用了独立策略。 若存在则输出 WARN，提醒用户这些配置因 OTel 未启用而不生效。
+   *
+   * @param sentryProperties 监控配置
+   */
+  @jakarta.annotation.PostConstruct
+  public void validateConfigConsistency(SentryProperties sentryProperties) {
+    SentryProperties.OtelConfig otelConfig = sentryProperties.getTracing().getOtel();
+    if (otelConfig.isEnabled()) {
+      return;
+    }
+
+    boolean hasSubConfigEnabled = false;
+    if (otelConfig.getTailSampling().isEnabled()) {
+      hasSubConfigEnabled = true;
+    }
+    if (otelConfig.getErrorEvent().isEnabled()) {
+      hasSubConfigEnabled = true;
+    }
+    if (otelConfig.isEnrichmentEnabled()) {
+      hasSubConfigEnabled = true;
+    }
+
+    if (hasSubConfigEnabled) {
+      log.warn(
+          "[Sentry] 配置不一致提醒：tracing.otel.enabled=false 但存在已启用的 OTel 子配置"
+              + "（tailSampling.enabled / errorEvent.enabled / enrichmentEnabled）。"
+              + "这些子配置不会生效，请设置 tracing.otel.enabled=true 激活 OTel SDK。");
+    }
+  }
+
   private static OtelExporterFactory.BatchConfig buildBatchConfig(
       SentryProperties.OtelConfig config) {
     SentryProperties.OtelConfig.BatchConfig batch = config.getBatch();

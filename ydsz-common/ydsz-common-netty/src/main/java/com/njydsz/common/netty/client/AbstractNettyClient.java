@@ -1,11 +1,13 @@
 package com.njydsz.common.netty.client;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
@@ -13,6 +15,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +23,6 @@ import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;
 import com.njydsz.common.netty.exception.NettyException;
 import com.njydsz.common.netty.handler.ConnectionEventHandler;
-import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
 import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
 import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
@@ -183,6 +185,15 @@ public abstract class AbstractNettyClient {
     channel = future.channel();
   }
 
+  /**
+   * 获取当前 Channel（供子类响应 Handler 使用）。
+   *
+   * @return Channel 实例（可能为 null 如果未连接）
+   */
+  protected Channel getRpcChannel() {
+    return channel;
+  }
+
   /** 断开连接。 */
   public void disconnect() {
     log.info("[Netty-Client] {} 正在断开...", getClass().getSimpleName());
@@ -297,13 +308,13 @@ public abstract class AbstractNettyClient {
         pipeline.addLast("ssl", sslContext.newHandler(ch.alloc(), host, port));
       }
 
-      // 空闲检测
-      IdleStateHandlerFactory idleFactory =
-          new IdleStateHandlerFactory(
+      // 空闲检测（内联创建 IdleStateHandler，避免工厂类不必要的间接层）
+      pipeline.addLast("idleState",
+          new IdleStateHandler(
               properties.getIdle().getReaderIdleSeconds(),
               properties.getIdle().getWriterIdleSeconds(),
-              properties.getIdle().getAllIdleSeconds());
-      pipeline.addLast("idleState", idleFactory.create());
+              properties.getIdle().getAllIdleSeconds(),
+              TimeUnit.SECONDS));
 
       // 流量整形
       if (properties.getTrafficShaping().isEnabled()) {
@@ -355,6 +366,15 @@ public abstract class AbstractNettyClient {
   protected ReconnectHandler createReconnectHandler() {
     NettyProperties.Reconnect rc = properties.getReconnect();
     return new ReconnectHandler(rc.getInitialDelayMs(), rc.getMaxDelayMs(), rc.getMaxRetries()) {
+      /** 当前 Channel 的上下文引用（在 channelInactive 时捕获） */
+      private volatile ChannelHandlerContext capturedCtx;
+
+      @Override
+      public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        this.capturedCtx = ctx;
+        super.channelInactive(ctx);
+      }
+
       @Override
       protected void doReconnect() {
         if (metrics != null) {
@@ -367,7 +387,9 @@ public abstract class AbstractNettyClient {
           }
         } catch (Exception e) {
           log.warn("[Netty-Client] 重连失败: {}", e.getMessage());
-          scheduleReconnect();
+          if (capturedCtx != null) {
+            scheduleReconnect(capturedCtx);
+          }
         }
       }
     };

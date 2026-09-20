@@ -14,7 +14,11 @@ import lombok.RequiredArgsConstructor;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 可直接内联创建 {@code new IdleStateHandler(readerIdle, writerIdle, allIdle, TimeUnit.SECONDS)}，
+ *     无需额外工厂类。{@link com.njydsz.common.netty.server.AbstractNettyServer} 和 {@link
+ *      com.njydsz.common.netty.client.AbstractNettyClient} 已内联此逻辑。
  */
+@Deprecated(since = "26.09.01", forRemoval = false)
 @RequiredArgsConstructor
 public class IdleStateHandlerFactory {
 

@@ -472,6 +472,57 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
   }
 
   /**
+   * 推送消息并返回带投递状态的结果（ARCH-002）。
+   *
+   * <p>明确告知调用方：
+   *
+   * <ul>
+   *   <li>TRANSMITTED — 集群广播/本地传输成功，但未经客户端确认
+   *   <li>QUEUED — 集群降级为本地重试队列，将异步重投
+   * </ul>
+   *
+   * @param userId 目标用户 ID
+   * @param type 业务类型标签
+   * @param payload 消息内容
+   * @return 带投递状态的结果
+   */
+  @Override
+  public WebSocketDeliveryResult pushWithDeliveryResult(String userId, String type, Object payload) {
+    if (userId == null) {
+      return WebSocketDeliveryResult.failed(null, "INVALID_PARAM", "userId cannot be null");
+    }
+    try {
+      String messageId = generateMessageId();
+      String priority = MessagePriority.NORMAL.name();
+      if (!applyFilters(PushContext.forUser(userId, type, payload, messageId, priority))) {
+        return WebSocketDeliveryResult.failed(messageId, "FILTER_REJECTED", "message filtered");
+      }
+      String payloadJson = messageSerializer.serialize(payload);
+      String traceId = WebSocketTraceContext.getOrGenerateTraceId();
+
+      WebSocketClusterMessage msg = WebSocketClusterMessage.forUser(userId, type, payloadJson);
+      msg.setTraceId(traceId);
+      msg.setPriority(priority);
+
+      if (clusterPublisher.publish(msg)) {
+        // 集群广播成功：仅表示远端收到 Transmit 请求，不等价于客户端送达
+        return WebSocketDeliveryResult.transmitted(messageId);
+      }
+      // 集群广播失败，降级本地推送
+      boolean localOk = localPushToUser(userId, payloadJson);
+      if (localOk) {
+        return WebSocketDeliveryResult.transmitted(messageId);
+      }
+      // 本地也失败，入重试队列
+      enqueueRetry(messageId, userId, type, payloadJson);
+      return WebSocketDeliveryResult.queued(messageId);
+    } catch (Exception e) {
+      log.warn("[WebSocket] 推送(带状态)失败: userId={}, err={}", userId, e.getMessage());
+      return WebSocketDeliveryResult.failed(null, "PUSH_EXCEPTION", e.getMessage());
+    }
+  }
+
+  /**
    * 刷新重试队列（由定时任务调用）。
    *
    * <p>从重试队列中取出到期的重试消息，最多 100 条， 重新尝试推送。重试成功后标记为成功，失败后重试次数+1（最大 3 次）， 超过最大重试次数则标记为失败。

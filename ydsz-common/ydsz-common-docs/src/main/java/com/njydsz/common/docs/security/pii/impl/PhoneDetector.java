@@ -75,13 +75,17 @@ public class PhoneDetector implements PiiDetector {
   /**
    * 遮蔽手机号中间 4 位，保留前 3 位与后 4 位。
    *
-   * <p>与 {@link SensitiveUtil#phone} 脱敏策略一致。
+   * <p>与 {@link SensitiveUtil#phone} 脱敏策略一致。入参为 {@code null} 或长度不足时返回
+   * {@code "****"}，保证脱敏调用方始终能拿到非 null 的掩码串。
    *
    * @param matchedText 命中的原始手机号，可为 {@code null}
-   * @return 形如 {@code 138****8000} 的脱敏串； 入参为 {@code null} 或不足 8 位时返回 {@code "****"}
+   * @return 形如 {@code 138****8000} 的脱敏串；入参为 {@code null} 或长度异常时返回 {@code "****"}
    */
   @Override
   public String mask(String matchedText) {
+    if (matchedText == null || matchedText.length() < 8) {
+      return "****";
+    }
     return SensitiveUtil.maskPhone(matchedText);
   }
 }

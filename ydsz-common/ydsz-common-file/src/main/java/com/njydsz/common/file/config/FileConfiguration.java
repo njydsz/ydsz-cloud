@@ -2,6 +2,7 @@ package com.njydsz.common.file.config;
 
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
@@ -144,13 +145,14 @@ public class FileConfiguration {
    * 注册文件监控指标收集器
    *
    * @param registryProvider Micrometer 指标注册中心提供者
+   * @param properties 文件存储配置（提取 storageType 标签值）
    * @return 文件指标收集器实例
    */
   @Bean
   @ConditionalOnMissingBean(FileMetrics.class)
   @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
-  public FileMetrics fileMetrics(ObjectProvider<MeterRegistry> registryProvider) {
-    return new FileMetrics(registryProvider.getIfAvailable());
+  public FileMetrics fileMetrics(ObjectProvider<MeterRegistry> registryProvider, FileProperties properties) {
+    return new FileMetrics(registryProvider.getIfAvailable(), properties.getType());
   }
 
   /**
@@ -309,6 +311,13 @@ public class FileConfiguration {
     ExecutorService asyncUploadExecutor = asyncUploadExecutorProvider.getIfAvailable();
     if (asyncUploadExecutor != null) {
       factory.setAsyncUploadExecutor(asyncUploadExecutor);
+    }
+    // P2-4: 分片上传并发度控制
+    int maxChunks = fileProperties.getConcurrencyControl() != null
+        ? fileProperties.getConcurrencyControl().getMaxConcurrentChunks() : 64;
+    if (maxChunks > 0) {
+      Semaphore chunkSemaphore = new Semaphore(maxChunks, true);
+      factory.setChunkUploadSemaphore(chunkSemaphore);
     }
     return factory;
   }

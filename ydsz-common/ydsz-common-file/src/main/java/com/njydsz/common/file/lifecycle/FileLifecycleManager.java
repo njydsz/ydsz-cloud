@@ -152,7 +152,8 @@ public class FileLifecycleManager {
     String cursor = null;
 
     while (true) {
-      ListObjectsResult listResult = storage.listObjects(bucketName, prefix, cursor, 1000);
+      int pageSize = lifecycleProperties.getListPageSize();
+      ListObjectsResult listResult = storage.listObjects(bucketName, prefix, cursor, pageSize);
 
       if (listResult == null
           || listResult.getObjects() == null

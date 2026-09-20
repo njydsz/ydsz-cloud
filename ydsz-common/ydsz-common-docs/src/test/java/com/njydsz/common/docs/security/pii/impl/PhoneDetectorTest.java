@@ -103,7 +103,7 @@ class PhoneDetectorTest {
     }
 
     @Test
-    @DisplayName("null 或不足 8 位应返回 ****")
+    @DisplayName("null 或不足 7 位应返回 ****")
     void shouldReturnDefaultForInvalidPhone() {
       assertThat(detector.mask(null)).isEqualTo("****");
       assertThat(detector.mask("1234567")).isEqualTo("****");

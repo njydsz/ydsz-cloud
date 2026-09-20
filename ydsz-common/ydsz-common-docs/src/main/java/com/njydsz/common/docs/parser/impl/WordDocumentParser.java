@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.xwpf.usermodel.IBodyElement;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -29,6 +30,9 @@ import com.njydsz.common.docs.parser.DocumentParser;
  *
  * <p>基于 Apache POI XWPF 解析 Word OOXML 文档，提取段落、标题层级和表格。
  *
+ * <p><b>关键改进（F-2 / Sprint 2）：</b>使用 {@link XWPFDocument#getBodyElements()}
+ * 单轮遍历替代"先段落、后表格"的两轮遍历，<b>还原段落与表格在原文中的混排顺序</b>。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -42,11 +46,12 @@ public class WordDocumentParser implements DocumentParser {
   /**
    * 抽取 Word 正文段落与表格，并依据样式名还原标题层级。
    *
-   * <p>标题层级来自段落<b>样式名</b>（如 {@code Heading1}）而非视觉字号， 因此仅靠手动放大字体、加粗模拟出的"标题"会被识别为普通段落。 这是可接受的取舍：样式名是
-   * Word 中唯一可靠的结构化信号。
+   * <p>标题层级来自段落<b>样式名</b>（如 {@code Heading1}）而非视觉字号， 因此仅靠手动放大字体、加粗模拟出的"标题"会被识别为普通段落。
+   * 这是可接受的取舍：样式名是 Word 中唯一可靠的结构化信号。
    *
-   * <p><b>抽取范围限于主文档正文：</b>页眉、页脚、脚注、尾注、批注、文本框 以及表格单元格内的嵌套表格<b>均不处理</b>。 另外段落与表格分两轮遍历（先全部段落、后全部表格），
-   * 因此表格在原文中的位置信息丢失，无法还原图文混排的原始次序。
+   * <p><b>抽取范围限于主文档正文：</b>页眉、页脚、脚注、尾注、批注、文本框 以及表格单元格内的嵌套表格<b>均不处理</b>。
+   *
+   * <p>使用 {@link XWPFDocument#getBodyElements()} 单轮遍历，<b>保持段落与表格在原文中混排顺序</b>。
    *
    * <p>Word 分页由渲染引擎动态决定，解析阶段无法获知，故 {@code pageNumber} 与 {@code totalPages} 统一填 1。图片抽取未实现，{@code
    * images} 恒为空列表。
@@ -64,34 +69,33 @@ public class WordDocumentParser implements DocumentParser {
       throw new DocumentException(DocumentExceptionCode.DOCUMENT_EMPTY);
     }
 
+    boolean extractTables = options == null || options.isExtractTables();
+
     try (XWPFDocument document = new XWPFDocument(inputStream)) {
       List<DocumentSection> sections = new ArrayList<>(16);
       List<DocumentTable> tables = new ArrayList<>(16);
       StringBuilder fullText = new StringBuilder();
 
-      // 解析段落
-      for (XWPFParagraph paragraph : document.getParagraphs()) {
-        String text = paragraph.getText();
-        if (text == null || text.isBlank()) {
-          continue;
-        }
+      // 单轮遍历 bodyElements，保持段落与表格的混排顺序
+      for (IBodyElement element : document.getBodyElements()) {
+        if (element instanceof XWPFParagraph paragraph) {
+          String text = paragraph.getText();
+          if (text == null || text.isBlank()) {
+            continue;
+          }
 
-        String style = paragraph.getStyle();
-        int headingLevel = extractHeadingLevel(style);
+          String style = paragraph.getStyle();
+          int headingLevel = extractHeadingLevel(style);
 
-        sections.add(
-            DocumentSection.builder()
-                .type(headingLevel > 0 ? "heading" : "paragraph")
-                .headingLevel(headingLevel > 0 ? headingLevel : null)
-                .content(text.trim())
-                .pageNumber(1)
-                .build());
-        fullText.append(text).append('\n');
-      }
-
-      // 解析表格
-      if (options == null || options.isExtractTables()) {
-        for (XWPFTable table : document.getTables()) {
+          sections.add(
+              DocumentSection.builder()
+                  .type(headingLevel > 0 ? "heading" : "paragraph")
+                  .headingLevel(headingLevel > 0 ? headingLevel : null)
+                  .content(text.trim())
+                  .pageNumber(1)
+                  .build());
+          fullText.append(text).append('\n');
+        } else if (element instanceof XWPFTable table && extractTables) {
           List<List<String>> rows = new ArrayList<>(16);
           for (XWPFTableRow row : table.getRows()) {
             List<String> cells = new ArrayList<>(16);
@@ -101,6 +105,7 @@ public class WordDocumentParser implements DocumentParser {
             rows.add(cells);
           }
           if (!rows.isEmpty()) {
+            // 表格也作为 section 输出，type=table，便于下游按序处理
             tables.add(
                 DocumentTable.builder()
                     .pageNumber(1)
@@ -108,6 +113,18 @@ public class WordDocumentParser implements DocumentParser {
                     .colCount(rows.get(0).size())
                     .rows(rows)
                     .build());
+            // 同时追加一个 table 类型的 section 以保留位置信息
+            String tableText = rows.stream()
+                .map(row -> String.join("\t", row))
+                .reduce((a, b) -> a + "\n" + b)
+                .orElse("");
+            sections.add(
+                DocumentSection.builder()
+                    .type("table")
+                    .content(tableText)
+                    .pageNumber(1)
+                    .build());
+            fullText.append(tableText).append('\n');
           }
         }
       }

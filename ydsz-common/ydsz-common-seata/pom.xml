@@ -73,10 +73,11 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Spring Boot AOP（Metrics 切面需要 @AspectJ @Around） -->
+        <!-- Feign Core（XID 传播拦截器直接实现 feign.RequestInterceptor 接口） -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <groupId>io.github.openfeign</groupId>
+            <artifactId>feign-core</artifactId>
+            <version>13.5</version>
             <optional>true</optional>
         </dependency>
 

@@ -149,6 +149,61 @@
       "name": "ydsz.search.pg.time-decay-days",
       "type": "java.lang.Double",
       "description": "PG 时间衰减半衰期（天），0 不衰减"
+    },
+    {
+      "name": "ydsz.search.dictionary-hot-reload.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用同义词/拼音词典热加载（检测文件变更并自动重加载，无需重启）"
+    },
+    {
+      "name": "ydsz.search.dictionary-hot-reload.reload-interval-seconds",
+      "type": "java.lang.Long",
+      "description": "词典热加载扫描间隔（秒），默认 60，最小 5"
+    },
+    {
+      "name": "ydsz.search.click-feedback.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用搜索点击反馈闭环（点击信号写入 Redis，供排序模块消费）"
+    },
+    {
+      "name": "ydsz.search.click-feedback.top-docs-limit",
+      "type": "java.lang.Integer",
+      "description": "热门点击文档排行 ZSet 容量上限（默认 1000）"
+    },
+    {
+      "name": "ydsz.search.click-feedback.keyword-doc-limit",
+      "type": "java.lang.Integer",
+      "description": "单个关键词下文档点击 ZSet 的 member 上限（默认 100）"
+    },
+    {
+      "name": "ydsz.search.rate-limit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用用户/租户维度搜索限流"
+    },
+    {
+      "name": "ydsz.search.rate-limit.user-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用用户维度限流"
+    },
+    {
+      "name": "ydsz.search.rate-limit.tenant-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用租户维度限流"
+    },
+    {
+      "name": "ydsz.search.rate-limit.user-limit",
+      "type": "java.lang.Integer",
+      "description": "用户维度限制：每窗口内最多请求次数（默认 30）"
+    },
+    {
+      "name": "ydsz.search.rate-limit.tenant-limit",
+      "type": "java.lang.Integer",
+      "description": "租户维度限制：每窗口内最多请求次数（默认 300）"
+    },
+    {
+      "name": "ydsz.search.rate-limit.window-size-seconds",
+      "type": "java.lang.Integer",
+      "description": "滑动窗口大小（秒，默认 60）"
     }
   ]
 }

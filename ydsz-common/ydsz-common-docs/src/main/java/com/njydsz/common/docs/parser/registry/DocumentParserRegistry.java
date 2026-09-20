@@ -89,7 +89,7 @@ public class DocumentParserRegistry {
   public DocumentParser getParser(DocumentFormat format) {
     DocumentParser parser = parserMap.get(format);
     if (parser == null) {
-      throw new DocumentException(DocumentExceptionCode.UNSUPPORTED_FORMAT, "不支持的文档格式: " + format);
+      throw new DocumentException(DocumentExceptionCode.UNSUPPORTED_FORMAT, format);
     }
     return parser;
   }

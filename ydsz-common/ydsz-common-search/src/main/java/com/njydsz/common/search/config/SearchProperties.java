@@ -117,6 +117,12 @@ public class SearchProperties {
   /** 词典热加载配置 */
   private DictionaryHotReloadConfig dictionaryHotReload = new DictionaryHotReloadConfig();
 
+  /** 点击反馈闭环配置 */
+  private ClickFeedbackConfig clickFeedback = new ClickFeedbackConfig();
+
+  /** 搜索限流配置（用户/租户维度） */
+  private RateLimitConfig rateLimit = new RateLimitConfig();
+
   /** 词典热加载配置 */
   @Data
   public static class DictionaryHotReloadConfig {
@@ -230,5 +236,60 @@ public class SearchProperties {
 
     /** 时间衰减半衰期（天），0 表示不衰减 */
     private BigDecimal timeDecayDays = new BigDecimal("0");
+  }
+
+  /**
+   * 搜索点击反馈闭环配置，对应 {@code ydsz.search.click-feedback.*}。
+   *
+   * <p>控制点击信号是否写入 Redis，用于 CTR 统计、关键词排序 boost 与用户行为分析。
+   */
+  /**
+   * 搜索请求限流配置，对应 {@code ydsz.search.rate-limit.*}。
+   *
+   * <p>基于 Redis 滑动窗口计数器实现；Redis 不可用时降级为无限流（避免 Redis 故障影响搜索可用性）。
+   */
+  @Data
+  public static class RateLimitConfig {
+
+    /** 是否启用搜索限流 */
+    private boolean enabled = true;
+
+    /** 是否启用用户维度限流 */
+    private boolean userEnabled = true;
+
+    /** 是否启用租户维度限流 */
+    private boolean tenantEnabled = true;
+
+    /** 用户维度限制：每 windowSize 秒内最多请求次数 */
+    @Min(1)
+    @Max(1000)
+    private int userLimit = 30;
+
+    /** 租户维度限制：每 windowSize 秒内最多请求次数 */
+    @Min(1)
+    @Max(5000)
+    private int tenantLimit = 300;
+
+    /** 滑动窗口大小（秒） */
+    @Min(1)
+    @Max(3600)
+    private int windowSizeSeconds = 60;
+  }
+
+  @Data
+  public static class ClickFeedbackConfig {
+
+    /** 是否启用点击反馈闭环 */
+    private boolean enabled = true;
+
+    /** 热门点击文档排行保留上限（ZSet cardinality 上限） */
+    @Min(100)
+    @Max(10000)
+    private int topDocsLimit = 1000;
+
+    /** 单个关键词下文档点击 ZSet 的 member 上限（超出后删除最低 score 的 member） */
+    @Min(10)
+    @Max(500)
+    private int keywordDocLimit = 100;
   }
 }

@@ -65,12 +65,13 @@ public class SentryService {
     this.alertPublisher = alertPublisher;
     this.slaCollector = slaCollector;
     log.info(
-        "[Sentry] SentryService 初始化完成: metrics={}, trace={}, logging={}, alerting={}, sla={}",
-        metricsCollector != null,
-        traceContext != null,
-        logPublisher != null,
-        alertPublisher != null,
-        slaCollector != null);
+        "[Sentry] SentryService 初始化完成: "
+            + "metrics={}, trace={}, logging={}, alerting={}, sla={}",
+        metricsCollector != null ? metricsCollector.getClass().getSimpleName() : "null",
+        traceContext != null ? traceContext.getClass().getSimpleName() : "null",
+        logPublisher != null ? logPublisher.getClass().getSimpleName() : "null",
+        alertPublisher != null ? alertPublisher.getClass().getSimpleName() : "null",
+        slaCollector != null ? slaCollector.getClass().getSimpleName() : "null");
   }
 
   // ==================== Metrics ====================

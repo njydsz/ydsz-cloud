@@ -15,10 +15,13 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
+import com.njydsz.common.search.api.SearchError;
+import com.njydsz.common.search.api.SearchErrorCode;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
@@ -61,6 +64,13 @@ public class UnifiedSearchService {
   private final Semaphore searchConcurrencyLimit;
 
   /**
+   * 搜索限流服务 — 用户/租户维度滑动窗口限流。
+   *
+   * <p>通过 {@link #setSearchRateLimiter} 注入（可选），{@code null} 时跳过限流（Redis 不可用时）。
+   */
+  private SearchRateLimiter searchRateLimiter;
+
+  /**
    * 创建统一搜索服务（使用外部注入的线程池和共享缓存）。
    *
    * <p>推荐用法：由 {@code SearchAutoConfiguration} 注入通过 {@code ydsz.thread.pools.searchExecutor}
@@ -100,6 +110,18 @@ public class UnifiedSearchService {
     this.searchExecutor = searchExecutor;
     this.searchConcurrencyLimit = new Semaphore(properties.getMaxPageSize(), true);
     this.circuitBreaker = createCircuitBreaker(properties);
+  }
+
+  /**
+   * 可选注入搜索限流服务（Redis 可用时才装配）。
+   *
+   * <p>限流在每次 {@link #search} 调用前执行，用户/租户维度任一超限即返回空结果，不抛异常。
+   *
+   * @param rateLimiter 限流服务，可为 {@code null}
+   */
+  @Autowired(required = false)
+  public void setSearchRateLimiter(SearchRateLimiter rateLimiter) {
+    this.searchRateLimiter = rateLimiter;
   }
 
   /**
@@ -195,10 +217,24 @@ public class UnifiedSearchService {
    * @throws IllegalArgumentException 翻页深度 {@code offset} 超过 {@code maxPageDepth} 时抛出， 用于阻断深分页拖垮引擎
    */
   public SearchResponse search(SearchRequest request) {
+    // Phase 3-F5: 用户/租户维度限流（在信号量之前，快速拒绝高频调用）
+    if (searchRateLimiter != null
+        && !searchRateLimiter.tryAcquire(request.getUserId(), request.getTenantId())) {
+      SearchErrorCode limitCode = (request.getTenantId() != null && !request.getTenantId().isBlank())
+          ? SearchErrorCode.RATE_LIMITED_TENANT
+          : SearchErrorCode.RATE_LIMITED_USER;
+      log.warn("[UnifiedSearch] 搜索请求被限流: userId={}, tenantId={}",
+          request.getUserId(), request.getTenantId());
+      return SearchResponse.rejected(
+          request.getPage(), request.getPageSize(), SearchError.of(limitCode));
+    }
     try {
       if (!searchConcurrencyLimit.tryAcquire(properties.getSearchTimeout(), TimeUnit.SECONDS)) {
         log.warn("[UnifiedSearch] 搜索并发数超限: keyword={}", request.getKeyword());
-        return SearchResponse.empty(request.getPage(), request.getPageSize());
+        return SearchResponse.rejected(
+            request.getPage(),
+            request.getPageSize(),
+            SearchError.of(SearchErrorCode.CONCURRENCY_LIMITED));
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -228,7 +264,10 @@ public class UnifiedSearchService {
       // Resilience4j 熔断器状态判断
       if (circuitBreaker.getState() == CircuitBreaker.State.OPEN) {
         log.warn("[UnifiedSearch] 熔断器开启，拒绝搜索: state={}", circuitBreaker.getState());
-        return SearchResponse.empty(request.getPage(), request.getPageSize());
+        return SearchResponse.rejected(
+            request.getPage(),
+            request.getPageSize(),
+            SearchError.of(SearchErrorCode.CIRCUIT_BREAKER_OPEN));
       }
       applyProviderFilters(request);
 

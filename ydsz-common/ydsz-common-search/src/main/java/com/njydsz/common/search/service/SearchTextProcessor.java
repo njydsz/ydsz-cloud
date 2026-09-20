@@ -4,9 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -97,7 +95,7 @@ public class SearchTextProcessor {
 
   // ==================== 词典加载 ====================
 
-  /** 加载同义词词典（本地文件 / classpath）。 */
+  /** 加载同义词词典到 synonymMap。 */
   private void loadSynonyms() {
     SearchProperties.TextProcessorConfig config = properties.getTextProcessor();
     if (!config.isSynonymEnabled()) {
@@ -105,7 +103,11 @@ public class SearchTextProcessor {
     }
     try (InputStream is = openDictionary(config.getSynonymFile())) {
       if (is != null) {
-        loadSynonyms(is);
+        Map<String, List<String>> newMap = new HashMap<>(16);
+        loadSynonymsInto(is, newMap);
+        synonymMap.clear();
+        synonymMap.putAll(newMap);
+        synonymFileLastModified = getFileLastModified(config.getSynonymFile());
       } else {
         log.warn("[SearchTextProcessor] 同义词文件未找到: {}", config.getSynonymFile());
       }
@@ -120,8 +122,9 @@ public class SearchTextProcessor {
    * <p>格式：每行 {@code word -> syn1, syn2, ...}，以 {@code #} 开头的行为注释。
    *
    * @param is 输入流
+   * @param target 目标 Map（写入加载结果）
    */
-  private void loadSynonyms(InputStream is) throws IOException {
+  private void loadSynonymsInto(InputStream is, Map<String, List<String>> target) throws IOException {
     try (InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
       StringBuilder sb = new StringBuilder();
       int ch;
@@ -150,17 +153,17 @@ public class SearchTextProcessor {
             }
           }
           if (!synList.isEmpty()) {
-            synonymMap.put(word, synList);
+            target.put(word, synList);
           }
         } else {
           sb.append((char) ch);
         }
       }
     }
-    log.info("[SearchTextProcessor] 同义词词典加载完成，共 {} 组", synonymMap.size());
+    log.info("[SearchTextProcessor] 同义词词典加载完成，共 {} 组", target.size());
   }
 
-  /** 加载拼音词典（本地文件 / classpath）。 */
+  /** 加载拼音词典到 pinyinMap。 */
   private void loadPinyin() {
     SearchProperties.TextProcessorConfig config = properties.getTextProcessor();
     if (!config.isPinyinEnabled()) {
@@ -168,7 +171,11 @@ public class SearchTextProcessor {
     }
     try (InputStream is = openDictionary(config.getPinyinFile())) {
       if (is != null) {
-        loadPinyin(is);
+        Map<String, String> newMap = new HashMap<>(16);
+        loadPinyinInto(is, newMap);
+        pinyinMap.clear();
+        pinyinMap.putAll(newMap);
+        pinyinFileLastModified = getFileLastModified(config.getPinyinFile());
       } else {
         log.warn("[SearchTextProcessor] 拼音文件未找到: {}", config.getPinyinFile());
       }
@@ -183,8 +190,9 @@ public class SearchTextProcessor {
    * <p>格式：每行 {@code 汉字 = pinyin}，以 {@code #} 开头的行为注释。
    *
    * @param is 输入流
+   * @param target 目标 Map（写入加载结果）
    */
-  private void loadPinyin(InputStream is) throws IOException {
+  private void loadPinyinInto(InputStream is, Map<String, String> target) throws IOException {
     try (InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
       StringBuilder sb = new StringBuilder();
       int ch;
@@ -202,15 +210,96 @@ public class SearchTextProcessor {
           String hanzi = line.substring(0, sep).trim();
           String pinyin = line.substring(sep + 1).trim();
           if (!hanzi.isEmpty() && !pinyin.isEmpty()) {
-            pinyinMap.put(hanzi, pinyin);
+            target.put(hanzi, pinyin);
           }
         } else {
           sb.append((char) ch);
         }
       }
     }
-    log.info("[SearchTextProcessor] 拼音词典加载完成，共 {} 条", pinyinMap.size());
+    log.info("[SearchTextProcessor] 拼音词典加载完成，共 {} 条", target.size());
   }
+
+  // ==================== 词典热加载 ====================
+
+  /**
+   * 如果词典文件在磁盘上被修改过，则重新加载。
+   *
+   * <p>热加载采用「检测 → 加载 → 原子替换引用」三步策略：先构建新 Map，确认无误后再整体替换字段引用， 保证搜索请求在加载过程中仍可使用旧词典，不产生中间状态。
+   *
+   * <p>仅对文件系统路径（非 classpath 资源）生效，因为 classpath 资源通常打包在 JAR 内，无法动态修改。
+   *
+   * @return 是否有任一词典被重新加载
+   */
+  public synchronized boolean reloadIfChanged() {
+    boolean reloaded = false;
+    SearchProperties.TextProcessorConfig config = properties.getTextProcessor();
+
+    // 同义词词典热加载
+    if (config.isSynonymEnabled()) {
+      long currentLastModified = getFileLastModified(config.getSynonymFile());
+      if (currentLastModified > 0 && currentLastModified != synonymFileLastModified) {
+        try (InputStream is = openDictionary(config.getSynonymFile())) {
+          if (is != null) {
+            Map<String, List<String>> newMap = new HashMap<>(16);
+            loadSynonymsInto(is, newMap);
+            if (!newMap.isEmpty()) {
+              synonymMap.clear();
+              synonymMap.putAll(newMap);
+              synonymFileLastModified = currentLastModified;
+              reloaded = true;
+              log.info("[SearchTextProcessor] 同义词词典热加载完成，共 {} 组", synonymMap.size());
+            }
+          }
+        } catch (IOException e) {
+          log.warn("[SearchTextProcessor] 同义词词典热加载失败，保留旧版本: {}", e.getMessage());
+        }
+      }
+    }
+
+    // 拼音词典热加载
+    if (config.isPinyinEnabled()) {
+      long currentLastModified = getFileLastModified(config.getPinyinFile());
+      if (currentLastModified > 0 && currentLastModified != pinyinFileLastModified) {
+        try (InputStream is = openDictionary(config.getPinyinFile())) {
+          if (is != null) {
+            Map<String, String> newMap = new HashMap<>(16);
+            loadPinyinInto(is, newMap);
+            if (!newMap.isEmpty()) {
+              pinyinMap.clear();
+              pinyinMap.putAll(newMap);
+              pinyinFileLastModified = currentLastModified;
+              reloaded = true;
+              log.info("[SearchTextProcessor] 拼音词典热加载完成，共 {} 条", pinyinMap.size());
+            }
+          }
+        } catch (IOException e) {
+          log.warn("[SearchTextProcessor] 拼音词典热加载失败，保留旧版本: {}", e.getMessage());
+        }
+      }
+    }
+    return reloaded;
+  }
+
+  /**
+   * 获取词典文件在磁盘上的最后修改时间。
+   *
+   * @param path 文件路径（支持 {@code classpath:} 前缀）
+   * @return 文件 {@code lastModified} 时间戳；文件不存在或非文件系统资源时返回 0
+   */
+  private long getFileLastModified(String path) {
+    if (path == null || path.isEmpty() || path.startsWith("classpath:")) {
+      return 0;
+    }
+    try {
+      File file = new File(path);
+      return file.exists() ? file.lastModified() : 0;
+    } catch (Exception e) {
+      return 0;
+    }
+  }
+
+  // ==================== 文件访问 ====================
 
   /**
    * 打开词典文件。

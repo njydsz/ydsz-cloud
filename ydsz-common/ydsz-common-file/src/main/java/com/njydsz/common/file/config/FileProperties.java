@@ -176,5 +176,14 @@ public class FileProperties {
 
     /** 是否启用并发控制（默认启用） */
     private boolean enabled = true;
+
+    /**
+     * 全局分片上传最大并发分片数（默认 64）
+     *
+     * <p>限制所有文件合计的并发分片上传数量，防止大规模分片上传场景下（如 100 个文件 × 10 分片 = 1000 并发请求） 对目标存储后端造成限流。设为 0 表示不限制。
+     */
+    @Min(0)
+    @Max(512)
+    private int maxConcurrentChunks = 64;
   }
 }

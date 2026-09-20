@@ -79,7 +79,9 @@ public class SearchQualityTracker {
   }
 
   /**
-   * 记录用户点击搜索结果
+   * 记录用户点击搜索结果（简单版，仅基于位置）。
+   *
+   * <p>向后兼容旧调用方。如需更精细的 CTR 信号，请使用 {@link #recordClick(String, String, int, String)}。
    *
    * @param position 点击结果的排名（从 1 开始）
    */
@@ -99,6 +101,48 @@ public class SearchQualityTracker {
       } catch (Exception e) {
         log.debug("[SearchQuality] Redis 写入失败", e);
       }
+    }
+  }
+
+  /**
+   * 记录用户点击搜索结果（精细版，携带关键词 / 文档 / 用户维度）。
+   *
+   * <p>在 {@link #recordClick(int)} 的基础上额外记录：
+   *
+   * <ul>
+   *   <li>原始 keyword 维度点击数 {@code search:quality:kw:{keyword}:clicks}（String/INCR）</li>
+   *   <li>文档维度点击数 {@code search:quality:doc:{docId}:clicks}（String/INCR）</li>
+   *   <li>用户维度点击数 {@code search:quality:user:{userId}:clicks}（String/INCR，未登录用户跳过）</li>
+   * </ul>
+   *
+   * <p>Redis 不可用时仅更新本地原子计数器，不抛异常。
+   *
+   * @param keyword 搜索关键词（原始输入）
+   * @param docId 文档 ID
+   * @param position 点击位置（从 1 开始）
+   * @param userId 用户 ID，为 {@code null} 时跳过用户维度记录
+   */
+  public void recordClick(String keyword, String docId, int position, String userId) {
+    // 先更新原始 MRR / CTR 统计，保持兼容
+    recordClick(position);
+
+    if (keyword == null || keyword.isBlank() || docId == null || docId.isBlank()) {
+      return;
+    }
+    StringRedisTemplate redis = getRedis();
+    if (redis == null) {
+      return;
+    }
+
+    try {
+      String normalizedKw = keyword.trim().toLowerCase();
+      redis.opsForValue().increment("search:quality:kw:" + normalizedKw + ":clicks");
+      redis.opsForValue().increment("search:quality:doc:" + docId + ":clicks");
+      if (userId != null && !userId.isBlank()) {
+        redis.opsForValue().increment("search:quality:user:" + userId + ":clicks");
+      }
+    } catch (Exception e) {
+      log.debug("[SearchQuality] Redis 写入失败（扩展维度）", e);
     }
   }
 

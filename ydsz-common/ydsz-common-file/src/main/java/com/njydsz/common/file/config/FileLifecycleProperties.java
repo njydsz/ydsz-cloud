@@ -3,6 +3,7 @@ package com.njydsz.common.file.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -21,8 +22,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       cron: "0 0 2 * * ?"
  *       bucket: ydsz-files
  *       dry-run: false
+ *       list-page-size: 1000
  *       rules:
- *         - prefix: "temp/"
  *           max-age-days: 7
  *           action: delete
  *         - prefix: "logs/"
@@ -51,6 +52,15 @@ public class FileLifecycleProperties {
 
   /** 是否仅模拟执行（true 时只打印日志不实际删除） */
   private boolean dryRun = false;
+
+  /**
+   * 清理扫描时 listObjects 每页最大返回数（默认 1000）
+   *
+   * <p>根据后端存储的并发承载能力与单页延迟，可通过配置调整扫描吞吐与占用内存的平衡点。
+   * 较低值可降低单次拉取的内存占用与延迟峰值，较高值可减少 API 调用次数、提升清理吞吐。
+   */
+  @Min(10)
+  private int listPageSize = 1000;
 
   /**
    * 生命周期清理规则

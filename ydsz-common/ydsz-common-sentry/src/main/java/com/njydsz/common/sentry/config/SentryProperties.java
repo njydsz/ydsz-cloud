@@ -31,6 +31,17 @@ public class SentryProperties {
   /** 是否启用 Sentry */
   private boolean isEnabled = true;
 
+  /**
+   * Fail-Fast 模式。
+   *
+   * <p>当 ydsz.sentry.enabled=true 但 {@link com.njydsz.common.sentry.SentryService} Bean 创建失败时（如 SPI 依赖缺失）， 若
+   * fail-fast=true（默认），容器启动阶段将直接抛出 {@link org.springframework.beans.factory.BeanCreationException}，
+   * 避免应用静默上线后丢失可观测能力。 若 fail-fase=false，允许 Sentry 模块降级为 no-op，启动不受影响。
+   *
+   * <p>26.09.20 新增。
+   */
+  private boolean isFailFast = true;
+
   /** 应用名 */
   @NotBlank(message = "应用名不能为空")
   private String appName = "ydsz";

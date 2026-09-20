@@ -106,7 +106,7 @@ class WordDocumentParserTest {
     @Test
     @DisplayName("空 DOCX（无段落）应返回零 sections")
     void shouldHandleEmptyDocx() throws IOException {
-      InputStream stream = TestUtils.minimalDocxStream();
+      InputStream stream = TestUtils.minimalDocxStream((String) null);
 
       DocumentContent result = parser.parse(stream, "empty.docx", null);
 

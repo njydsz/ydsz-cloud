@@ -78,6 +78,9 @@ public class WebSocketProperties {
   /** 心跳配置 */
   private Heartbeat heartbeat = new Heartbeat();
 
+  /** 握手频率限制配置（SEC-001） */
+  private Handshake handshake = new Handshake();
+
   /** 最大消息大小（字节） */
   private int messageSizeLimit = 64 * 1024;
 
@@ -280,5 +283,20 @@ public class WebSocketProperties {
 
     /** 受信任的来源 IP 列表（CIDR 或精确 IP），内网直连时可不依赖共享密钥 */
     private List<String> trustedIps = List.of();
+  }
+
+  /**
+   * 握手频率限制配置（SEC-001）。
+   *
+   * <p>防止攻击者通过高频 WebSocket 升级握手消耗服务端资源（TCP backlog、线程池）。
+   * 限制维度为 per-IP，独立于消息发送限流（{@link RateLimit}）。
+   */
+  @Data
+  public static class Handshake {
+    /** 是否启用握手频率限制 */
+    private boolean isEnabled = true;
+
+    /** 每分钟每 IP 最大握手次数（超限返回 HTTP 429） */
+    private int maxPerMinutePerIp = 20;
   }
 }

@@ -59,7 +59,11 @@ public final class TestUtils {
         content.showText("hello pdf content");
         content.endText();
       }
-      return savePdfToInputStream(doc);
+      Path temp = Files.createTempFile("ydsz-docs-test-", ".tmp");
+      doc.save(temp.toFile());
+      byte[] bytes = Files.readAllBytes(temp);
+      Files.deleteIfExists(temp);
+      return new ByteArrayInputStream(bytes);
     }
   }
 
@@ -81,7 +85,13 @@ public final class TestUtils {
         }
         para.createRun().setText(text);
       }
-      return savePoiToInputStream(doc);
+      Path temp = Files.createTempFile("ydsz-docs-test-", ".tmp");
+      try (var out = Files.newOutputStream(temp)) {
+        doc.write(out);
+      }
+      byte[] bytes = Files.readAllBytes(temp);
+      Files.deleteIfExists(temp);
+      return new ByteArrayInputStream(bytes);
     }
   }
 
@@ -100,26 +110,13 @@ public final class TestUtils {
       XSSFRow row2 = sheet.createRow(1);
       row2.createCell(0).setCellValue("row2col1");
       row2.createCell(1).setCellValue("100");
-      return savePoiToInputStream(wb);
+      Path temp = Files.createTempFile("ydsz-docs-test-", ".tmp");
+      try (var out = Files.newOutputStream(temp)) {
+        wb.write(out);
+      }
+      byte[] bytes = Files.readAllBytes(temp);
+      Files.deleteIfExists(temp);
+      return new ByteArrayInputStream(bytes);
     }
-  }
-
-  private static InputStream savePoiToInputStream(
-      org.apache.poi.POIXMLDocument doc) throws IOException {
-    Path temp = Files.createTempFile("ydsz-docs-test-", ".tmp");
-    try (var out = Files.newOutputStream(temp)) {
-      doc.write(out);
-    }
-    byte[] bytes = Files.readAllBytes(temp);
-    Files.deleteIfExists(temp);
-    return new ByteArrayInputStream(bytes);
-  }
-
-  private static InputStream savePdfToInputStream(PDDocument doc) throws IOException {
-    Path temp = Files.createTempFile("ydsz-docs-test-", ".tmp");
-    doc.save(temp.toFile());
-    byte[] bytes = Files.readAllBytes(temp);
-    Files.deleteIfExists(temp);
-    return new ByteArrayInputStream(bytes);
   }
 }

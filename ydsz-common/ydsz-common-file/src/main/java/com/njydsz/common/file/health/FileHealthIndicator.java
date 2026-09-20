@@ -2,6 +2,7 @@ package com.njydsz.common.file.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,13 @@ public class FileHealthIndicator implements HealthIndicator {
   private final ObjectProvider<VirusScanner> virusScannerProvider;
   private final ObjectProvider<StorageRetryHelper> retryHelperProvider;
   private final ObjectProvider<FileMetrics> metricsProvider;
+
+  /**
+   * 健康检查缓存锁
+   *
+   * <p>保护缓存的 check-then-act 操作，避免并发请求同时击穿缓存对存储后端发起重复探测。 使用 {@link ReentrantLock} 而非 {@code synchronized} 块，提供更细粒度的控制。
+   */
+  private final ReentrantLock healthCacheLock = new ReentrantLock();
 
   /** 健康检查缓存（volatile 保证多线程可见性）。 缓存命中时直接返回上次结果，避免 Actuator 高频轮询对存储后端造成压力。 */
   private volatile HealthCache healthCache;
@@ -83,18 +91,31 @@ public class FileHealthIndicator implements HealthIndicator {
   public Health health() {
     int cacheTtl = fileProperties.getHealthCheckIntervalSeconds();
     if (cacheTtl > 0) {
+      // 快速路径：无锁读取，缓存命中时直接返回
       HealthCache cache = healthCache;
       if (cache != null && !cache.isExpired(cacheTtl)) {
         return cache.getHealth();
       }
     }
 
-    Health result = performHealthCheck();
-
-    if (cacheTtl > 0) {
-      healthCache = new HealthCache(result);
+    // 慢路径：加锁执行健康检查，避免并发击穿缓存
+    healthCacheLock.lock();
+    try {
+      // 双重检查：可能在等待锁期间已由其他线程完成检查
+      if (cacheTtl > 0) {
+        HealthCache cache = healthCache;
+        if (cache != null && !cache.isExpired(cacheTtl)) {
+          return cache.getHealth();
+        }
+      }
+      Health result = performHealthCheck();
+      if (cacheTtl > 0) {
+        healthCache = new HealthCache(result);
+      }
+      return result;
+    } finally {
+      healthCacheLock.unlock();
     }
-    return result;
   }
 
   /** 实际执行健康检查逻辑（发起远端 bucketExists 探测） */

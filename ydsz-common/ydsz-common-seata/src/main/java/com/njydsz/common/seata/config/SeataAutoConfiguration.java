@@ -3,7 +3,6 @@ package com.njydsz.common.seata.config;
 import com.njydsz.common.seata.annotation.YdszGlobalTransactional;
 import com.njydsz.common.seata.datasource.SeataDynamicDataSourceAdapter;
 import com.njydsz.common.seata.health.SeataHealthIndicator;
-import com.njydsz.common.seata.metrics.SeataTransactionMetricsAspect;
 import com.njydsz.common.seata.validator.SeataConfigurationValidator;
 import com.njydsz.common.seata.xid.FeignXidRequestInterceptor;
 import com.njydsz.common.seata.xid.XidServletFilter;
@@ -35,7 +34,6 @@ import org.springframework.core.Ordered;
  *   <li>{@link FeignXidRequestInterceptor}：XID 跨服务传播（Feign 请求拦截器）</li>
  *   <li>{@link XidServletFilter}：XID 接收绑定（Servlet Filter）</li>
  *   <li>{@link SeataDynamicDataSourceAdapter}：AT 模式与 DynamicRoutingDataSource 集成</li>
- *   <li>{@link SeataTransactionMetricsAspect}：事务 Metrics（seata.tx.count / seata.tx.duration）</li>
  *   <li>{@link SeataConfigurationValidator}：启动期配置校验（Fail Fast）</li>
  *   <li>{@link SeataPropertyBridgeConfiguration}：属性桥接日志（ydsz.seata.* → seata.*）</li>
  * </ul>
@@ -167,30 +165,6 @@ public class SeataAutoConfiguration {
     public SeataDynamicDataSourceAdapter seataDynamicRoutingDataSource() {
         LOG.info("SeataDynamicDataSourceAdapter registered for AT mode + dynamic datasource integration");
         return new SeataDynamicDataSourceAdapter();
-    }
-
-    /**
-     * 注册 Seata 事务 Metrics 切面（seata.tx.count / seata.tx.duration）。
-     *
-     * <p>拦截所有 @YdszGlobalTransactional 标注的方法，自动记录事务执行次数和耗时。
-     * 规范 §25.7 强制要求暴露此指标。
-     *
-     * @param meterRegistry Micrometer 指标注册器
-     * @return 事务 Metrics 切面
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    // CHECKSTYLE.OFF: RegexpSinglelineJava
-    @ConditionalOnClass(
-        name = {
-            "io.micrometer.core.instrument.MeterRegistry",
-            "org.aspectj.lang.annotation.Aspect",
-            "org.aspectj.lang.ProceedingJoinPoint"
-        })
-    // CHECKSTYLE.ON: RegexpSinglelineJava
-    public SeataTransactionMetricsAspect seataTransactionMetricsAspect(MeterRegistry meterRegistry) {
-        LOG.info("SeataTransactionMetricsAspect registered (seata.tx.count / seata.tx.duration)");
-        return new SeataTransactionMetricsAspect(meterRegistry);
     }
 
     /**

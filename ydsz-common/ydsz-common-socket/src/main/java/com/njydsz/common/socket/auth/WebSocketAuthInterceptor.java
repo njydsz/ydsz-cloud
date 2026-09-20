@@ -3,7 +3,6 @@ package com.njydsz.common.socket.auth;
 import java.util.List;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
@@ -19,6 +18,7 @@ import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
+import com.njydsz.common.socket.ratelimit.WebSocketHandshakeRateLimiter;
 import com.njydsz.common.util.net.ClientIpResolver;
 
 /**
@@ -42,13 +42,35 @@ import com.njydsz.common.util.net.ClientIpResolver;
  * @since 26.09.01
  */
 @Slf4j
-@RequiredArgsConstructor
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
   private final TokenService tokenService;
   private final ConnectionLimiter connectionLimiter;
   private final WebSocketAuditService auditService;
   private final WebSocketProperties properties;
+  private final WebSocketHandshakeRateLimiter handshakeRateLimiter;
+
+  /**
+   * 构造握手鉴权拦截器。
+   *
+   * @param tokenService JWT 校验服务
+   * @param connectionLimiter 连接数限制器
+   * @param auditService 审计日志服务
+   * @param properties WebSocket 配置属性
+   * @param handshakeRateLimiter 握手频率限制器，可选依赖；为 null 时不做握手限流
+   */
+  public WebSocketAuthInterceptor(
+      TokenService tokenService,
+      ConnectionLimiter connectionLimiter,
+      WebSocketAuditService auditService,
+      WebSocketProperties properties,
+      WebSocketHandshakeRateLimiter handshakeRateLimiter) {
+    this.tokenService = tokenService;
+    this.connectionLimiter = connectionLimiter;
+    this.auditService = auditService;
+    this.properties = properties;
+    this.handshakeRateLimiter = handshakeRateLimiter;
+  }
 
   @Override
   public boolean beforeHandshake(
@@ -56,6 +78,13 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
       ServerHttpResponse response,
       WebSocketHandler wsHandler,
       Map<String, Object> attributes) {
+    // 0. 握手频率限制检查（SEC-001）
+    String remoteIp = resolveRemoteIp(request);
+    if (handshakeRateLimiter != null && !handshakeRateLimiter.allowHandshake(remoteIp)) {
+      log.warn("[WS-Auth] 握手拒绝: 握手频率超限, remoteIp={}", remoteIp);
+      response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
+      return false;
+    }
     // ① 优先尝试 JWT Token 鉴权
     String token = extractToken(request);
     if (StringUtils.hasText(token)) {

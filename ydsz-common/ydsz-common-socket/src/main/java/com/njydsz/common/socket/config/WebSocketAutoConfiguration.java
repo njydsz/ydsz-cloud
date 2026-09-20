@@ -34,6 +34,7 @@ import com.njydsz.common.socket.offline.RedisOfflineMessageStore;
 import com.njydsz.common.socket.push.DefaultRealtimePushTemplate;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
+import com.njydsz.common.socket.ratelimit.WebSocketHandshakeRateLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketRateLimiter;
 import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
 import com.njydsz.common.socket.retry.DeadLetterQueue;
@@ -169,6 +170,27 @@ public class WebSocketAutoConfiguration {
   // ==================== 认证拦截器 ====================
 
   /**
+   * 注册 WebSocket 握手频率限制器 Bean（SEC-001）。
+   *
+   * <p>在握手 IP 维度做滑动窗口限流，防止高频握手风暴消耗服务端资源。
+   *
+   * @param redisTemplate Redis 模板，可选依赖；为 null 时降级为不限制
+   * @param properties WebSocket 配置属性，取 handshake 下的限频阈值
+   * @return 握手频率限制器实例，不会为 {@code null}
+   */
+  @Bean
+  @ConditionalOnMissingBean(WebSocketHandshakeRateLimiter.class)
+  public WebSocketHandshakeRateLimiter webSocketHandshakeRateLimiter(
+      @Autowired(required = false) StringRedisTemplate redisTemplate,
+      WebSocketProperties properties) {
+    int maxPerMinute = properties.getHandshake() != null
+        ? properties.getHandshake().getMaxPerMinutePerIp()
+        : 20;
+    log.info("[WebSocket] 注册 WebSocketHandshakeRateLimiter (maxPerMinutePerIp={})", maxPerMinute);
+    return new WebSocketHandshakeRateLimiter(redisTemplate, maxPerMinute);
+  }
+
+  /**
    * 注册 WebSocket 握手鉴权拦截器 Bean。
    *
    * <p>在 STOMP 握手阶段校验 JWT、结合连接数限制器做准入控制，并联动审计服务记录连接事件。 依赖 TokenService 类存在时启用；无自定义 Bean 时注册默认实现。
@@ -186,9 +208,11 @@ public class WebSocketAutoConfiguration {
       TokenService tokenService,
       ConnectionLimiter connectionLimiter,
       WebSocketAuditService auditService,
-      WebSocketProperties properties) {
-    log.info("[WebSocket] 注册 JWT 握手鉴权拦截器 (含连接数检查 + 审计 + 网关透传 P1-5)");
-    return new WebSocketAuthInterceptor(tokenService, connectionLimiter, auditService, properties);
+      WebSocketProperties properties,
+      @Autowired(required = false) WebSocketHandshakeRateLimiter handshakeRateLimiter) {
+    log.info("[WebSocket] 注册 JWT 握手鉴权拦截器 (含连接数检查 + 审计 + 网关透传 P1-5 + 握手限流 SEC-001)");
+    return new WebSocketAuthInterceptor(
+        tokenService, connectionLimiter, auditService, properties, handshakeRateLimiter);
   }
 
   // ==================== 在线用户状态 + 多端策略 ====================
@@ -581,7 +605,8 @@ public class WebSocketAutoConfiguration {
       MessageSerializer messageSerializer,
       @Autowired(required = false) WebSocketAuditService auditService,
       @Autowired(required = false) MessageRetryQueue retryQueue,
-      @Autowired(required = false) List<MessageFilter> messageFilters) {
+      @Autowired(required = false) List<MessageFilter> messageFilters,
+      WebSocketProperties properties) {
     log.info("[WebSocket] 注册 DefaultRealtimePushTemplate");
     return new DefaultRealtimePushTemplate(
         messagingTemplate,
@@ -592,20 +617,21 @@ public class WebSocketAutoConfiguration {
         messageSerializer,
         auditService,
         retryQueue,
-        messageFilters);
+        messageFilters,
+        properties);
   }
 
   /**
    * 注册重试刷新定时任务 Bean。
    *
-   * <p>周期性触发推送模板的重试消息重投，是异步投递补偿的执行入口； 由 Spring 托管生命周期，无需手动启停。
-   *
    * @param pushTemplate 统一推送模板，其积压的待重试消息由本任务周期性驱动重投
+   * @param properties WebSocket 配置属性（用于获取重试刷新间隔）
    * @return 重试刷新定时任务实例，不会为 {@code null}
    */
   @Bean
-  public RetryFlushTask retryFlushTask(RealtimePushTemplate pushTemplate) {
-    return new RetryFlushTask(pushTemplate);
+  public RetryFlushTask retryFlushTask(
+      RealtimePushTemplate pushTemplate, WebSocketProperties properties) {
+    return new RetryFlushTask(pushTemplate, properties);
   }
 
   /**
@@ -614,19 +640,20 @@ public class WebSocketAutoConfiguration {
    * <p>由 Spring 调度线程周期性驱动：重投推送模板中待重试的消息。 作为异步投递的补偿执行入口，保证延迟消息最终可达。
    */
   public static class RetryFlushTask {
+
     private final RealtimePushTemplate pushTemplate;
 
-    public RetryFlushTask(RealtimePushTemplate pushTemplate) {
+    public RetryFlushTask(RealtimePushTemplate pushTemplate, WebSocketProperties properties) {
       this.pushTemplate = pushTemplate;
     }
 
     /**
      * 定时重投重试消息。
      *
-     * <p>每 10 秒执行一次（{@code fixedDelay=10000}），驱动 {@link RealtimePushTemplate#flushRetryMessages()}，
-     * 保障延迟消息最终可达。
+     * <p>间隔由 {@code ydsz.websocket.retry.flushIntervalMs} 控制（默认 10000ms），驱动 {@link
+     * RealtimePushTemplate#flushRetryMessages()}，保障延迟消息最终可达。
      */
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelayString = "${ydsz.websocket.retry.flushIntervalMs:10000}")
     public void flush() {
       pushTemplate.flushRetryMessages();
     }

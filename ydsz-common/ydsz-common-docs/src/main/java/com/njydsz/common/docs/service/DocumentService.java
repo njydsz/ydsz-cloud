@@ -28,6 +28,7 @@ import com.njydsz.common.docs.metrics.DocsMetrics;
 import com.njydsz.common.docs.ocr.OcrEngine;
 import com.njydsz.common.docs.ocr.OcrProvider;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
+import com.njydsz.common.docs.pipeline.DocumentProcessorPipeline;
 import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.docs.security.scanner.DocumentSecurityScanner;
@@ -65,6 +66,7 @@ public class DocumentService {
   private final ObjectProvider<OcrProvider> ocrProvider;
   private final ObjectProvider<DocsMetrics> metricsProvider;
   private final TempFileManager tempFileManager;
+  private final DocumentProcessorPipeline processorPipeline;
 
   public DocumentService(
       DocumentParserRegistry parserRegistry,
@@ -75,7 +77,8 @@ public class DocumentService {
       ObjectProvider<DocumentConverter> converterProvider,
       ObjectProvider<OcrProvider> ocrProvider,
       ObjectProvider<DocsMetrics> metricsProvider,
-      TempFileManager tempFileManager) {
+      TempFileManager tempFileManager,
+      DocumentProcessorPipeline processorPipeline) {
     this.parserRegistry = parserRegistry;
     this.preprocessPipeline = preprocessPipeline;
     this.securityScanners = securityScanners;
@@ -85,6 +88,7 @@ public class DocumentService {
     this.ocrProvider = ocrProvider;
     this.metricsProvider = metricsProvider;
     this.tempFileManager = tempFileManager;
+    this.processorPipeline = processorPipeline;
   }
 
   /**
@@ -256,6 +260,30 @@ public class DocumentService {
       throw new DocumentException(DocumentExceptionCode.PARSE_FAILED, "OCR 提供者未注册");
     }
     return provider.ocrScan(inputStream, fileName, engine);
+  }
+
+  /**
+   * 创建管道编排器的 Builder —— 推荐的新入口。
+   *
+   * <p>后续复杂编排（解析 + 安全扫描 + PII 检测 + 预处理）建议通过本方法获取 Builder，
+   * 而非调用 {@link #parseAndPreprocess}、{@link #parseWithSecurityCheck} 等碎片化方法，
+   * 后者将逐步迁移为前者的语法糖。
+   *
+   * @return 已绑定当前服务配置的 {@link DocumentProcessorPipeline.Builder}
+   * @since 26.09.20
+   */
+  public DocumentProcessorPipeline.Builder pipeline() {
+    return DocumentProcessorPipeline.builder();
+  }
+
+  /**
+   * 获取管道的可执行实例（已通过 Spring 容器注入依赖）。
+   *
+   * @return 容器管理的管道实例
+   * @since 26.09.20
+   */
+  public DocumentProcessorPipeline getProcessorPipeline() {
+    return processorPipeline;
   }
 
   /**

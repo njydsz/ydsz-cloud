@@ -13,9 +13,9 @@ import org.springframework.core.annotation.AliasFor;
  *
  * <p>针对 Seata 原生 {@code @GlobalTransactional} 做了以下规范合规增强：
  * <ul>
- *   <li>timeoutMillis 默认为 30000ms（规范 YDIZ-TX-002 P0 阻断级要求 ≤ 30000ms）</li>
  *   <li>rollbackFor 默认包含 {@link Exception.class}</li>
- *   <li>name 参数继承原生语义，建议格式："模块名-操作名"（如 "order-create-flow"）</li>
+ *   <li>name 参数继承原生语义，建议格式："模块名-操作名"（如 "order-create-order"）</li>
+ *   <li>超时时间通过 {@code ydzs.seata.tm.global-transaction-timeout} 配置（默认 30000ms，符合 YDIZ-TX-002）</li>
  * </ul>
  *
  * <p><b>规范引用：</b>
@@ -48,8 +48,7 @@ import org.springframework.core.annotation.AliasFor;
 @Documented
 @GlobalTransactional(
     name = "",
-    rollbackFor = Exception.class,
-    timeoutMillis = 30000)
+    rollbackFor = Exception.class)
 public @interface YdszGlobalTransactional {
 
     /**
@@ -65,13 +64,4 @@ public @interface YdszGlobalTransactional {
      */
     @AliasFor(annotation = GlobalTransactional.class, attribute = "rollbackFor")
     Class<? extends Throwable>[] rollbackFor() default {Exception.class};
-
-    /**
-     * 事务超时时间（毫秒，默认 30000ms）。
-     *
-     * <p>规范 YDIZ-TX-002（P0）要求此值不超过 30000ms。
-     * 如需更长超时，必须在注解上方注释说明理由。
-     */
-    @AliasFor(annotation = GlobalTransactional.class, attribute = "timeoutMillis")
-    int timeoutMillis() default 30000;
 }

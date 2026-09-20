@@ -32,10 +32,10 @@
 
 | 类 | 说明 |
 |---|---|
-| `FeignXidRequestInterceptor` | Feign 请求拦截器 — 读取当前线程 XID 并注入到请求 Header `TX_XID` |
-| `XidServletFilter` | Servlet 过滤器 — 接收上游 `TX_XID` Header 并绑定到 Seata `RootContext` |
+| `FeignXidRequestInterceptor` | Feign 请求拦截器 — 实现 `feign.RequestInterceptor` 接口，运行时通过反射读取 XID 并注入到请求 Header `TX_XID` |
+| `XidServletFilter` | Servlet 过滤器 — 接收上游 `TX_XID` Header，反射绑定到 Seata `RootContext`，请求完成后自动解绑 |
 
-**特性**：通过反射调用 Seata API，无编译期硬依赖；无 Seata 时自动降级为无操作。
+**特性**：Feign 拦截器编译期直接依赖 `feign-core`（optional），运行时反射调用 Seata API，避免对 Seata 的编译期硬依赖；无 Seata 时自动降级为无操作。Filter 运行时反射，编译期仅依赖 Servlet API。
 
 ### 2. Seata AT 模式与动态数据源适配（ADR-004 风险化解）
 
@@ -63,7 +63,7 @@
 |---|---|
 | `SeataHealthIndicator` | `/actuator/health/seata` 端点 — 含 TC 连通性、TM 初始化状态、数据源代理模式 |
 
-### 5. 属性自动桥接（EnvironmentPostProcessor）
+### 4. 属性自动桥接（EnvironmentPostProcessor）
 
 通过 `SeataPropertyBridgePostProcessor` 将 `ydzs.seata.*` 自动桥接到 Seata 原生 `seata.*` 命名空间，业务方只需维护 `ydsz.seata.*` 前缀。
 
@@ -71,17 +71,17 @@
 |---|---|
 | `SeataPropertyBridgePostProcessor` | EnvironmentPostProcessor 实现，宽松桥接策略（原生配置优先） |
 
-### 6. 启动期配置校验（Fail Fast）
+### 5. 启动期配置校验（Fail Fast）
 
 | 类 | 说明 |
 |---|---|
 | `SeataConfigurationValidator` | `@PostConstruct` 校验配置合法性，不合规时抛出 `IllegalArgumentException` 阻止启动 |
 
-### 7. 规范合规注解（规范 YDIZ-TX-001~004）
+### 6. 规范合规注解（规范 YDIZ-TX-001~004）
 
 | 类 | 说明 |
 |---|---|
-| `@YdszGlobalTransactional` | 封装原生 `@GlobalTransactional`，内置合规默认值（timeoutMillis=30000, rollbackFor=Exception） |
+| `@YdszGlobalTransactional` | 封装原生 `@GlobalTransactional`，内置合规默认值（rollbackFor=Exception，timeout 通过 ydzs.seata.tm.global-transaction-timeout 配置） |
 
 ## 接入 Checklist（规范 §25.8）
 
@@ -153,7 +153,6 @@ public class OrderService {
 | `FeignXidRequestInterceptor` | `com.njydsz.common.seata.xid` | XID Feign 传播 |
 | `XidServletFilter` | `com.njydsz.common.seata.xid` | XID 接收绑定 |
 | `SeataDynamicDataSourceAdapter` | `com.njydsz.common.seata.datasource` | AT + 动态数据源适配 |
-| `SeataTransactionMetricsAspect` | `com.njydsz.common.seata.metrics` | 事务 Metrics 切面 |
 | `@YdszGlobalTransactional` | `com.njydsz.common.seata.annotation` | 规范合规注解 |
 
 ## 注意事项
@@ -172,7 +171,7 @@ public class OrderService {
 | YDIZ-TX-002 | P0 | timeoutMillis ≤ 30000ms | `SeataProperties.Tm.globalTransactionTimeout = 30000` |
 | YDIZ-TX-003 | P1 | TCC 模式必须幂等 | 文档约束，SDK 能力待 TCC 模块补充 |
 | YDIZ-TX-004 | P1 | XID 跨服务传播 | `FeignXidRequestInterceptor` + `XidServletFilter` |
-| §25.7 | 强制 | 暴露 seata.tx.count / seata.tx.duration | `SeataTransactionMetricsAspect` |
+| §25.7 | 强制 | 暴露 seata.tx.count / seata.tx.duration | 通过 Seata 原生 metrics 配置（seata.metrics.enabled=true） |
 
 ## 变更记录
 
@@ -180,11 +179,11 @@ public class OrderService {
   - 修复 YDIZ-TX-002 P0 违规：超时默认值 60000 → 30000ms
   - 补齐 XID 跨服务传播链路（`FeignXidRequestInterceptor` + `XidServletFilter`，反射调用避免硬依赖）
   - 新增 `SeataDynamicDataSourceAdapter` 解决 AT + 动态数据源集成冲突
-  - 新增 `SeataTransactionMetricsAspect` 暴露事务 Metrics（seata.tx.count / seata.tx.duration）
   - 升级 `SeataHealthIndicator` 为运行时级（TransactionManager 初始化探测）
   - 新增 `SeataPropertyBridgePostProcessor` 实现属性自动桥接
   - 新增 `SeataConfigurationValidator` 启动期配置校验
   - 新增 `@YdszGlobalTransactional` 规范合规注解
-  - POM 补充 `ydsz-common-jdbc` 和 `spring-boot-starter-aop` optional 依赖
+  - Metrics（seata.tx.count / seata.tx.duration）建议通过 Seata 原生 metrics 配置实现：`seata.metrics.enabled=true`
+  - POM 补充 `feign-core` 和 `ydsz-common-jdbc` optional 依赖
 - **26.09.15**：补充生命周期与成熟度标注
 - **26.09.01**（2026-08-16）：初始版本

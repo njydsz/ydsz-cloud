@@ -135,4 +135,13 @@ public class ChannelGroupManager {
   public List<String> getGroupKeys() {
     return new ArrayList<>(businessGroups.keySet());
   }
+
+  /**
+   * 获取全局 Channel 组（用于遍历活跃 Channel）。
+   *
+   * @return 全局 ChannelGroup 实例
+   */
+  public ChannelGroup getGlobalGroup() {
+    return globalGroup;
+  }
 }

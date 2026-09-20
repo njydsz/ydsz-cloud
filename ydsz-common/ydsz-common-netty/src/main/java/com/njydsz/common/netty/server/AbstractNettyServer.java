@@ -2,12 +2,17 @@ package com.njydsz.common.netty.server;
 
 import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
@@ -16,6 +21,7 @@ import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -27,7 +33,7 @@ import com.njydsz.common.netty.event.ChannelEventDispatcher;
 import com.njydsz.common.netty.handler.ChannelGroupManager;
 import com.njydsz.common.netty.handler.ConnectionEventHandler;
 import com.njydsz.common.netty.handler.ConnectionLimitHandler;
-import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
+import io.netty.handler.timeout.IdleStateHandler;
 import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
 import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
@@ -116,6 +122,9 @@ public abstract class AbstractNettyServer {
 
   /** 可选依赖 — 会话仓库（用于业务层 Session 管理，默认使用内存实现） */
   private SessionRepository sessionRepository = new InMemorySessionRepository();
+
+  /** 是否处于引流关闭状态 */
+  private volatile boolean isDraining = false;
 
   /**
    * 构造 Netty TCP Server。
@@ -351,6 +360,81 @@ public abstract class AbstractNettyServer {
   }
 
   /**
+   * 引流关闭（Drain）— 优雅地将连接引流后终止 Server。
+   *
+   * <p>引流流程：
+   *
+   * <ol>
+   *   <li>标记 Server 为 DRAINING 状态，停止接受新连接（autoRead=false）
+   *   <li>向所有活跃连接发送 {@link DrainNotification} 通知（业务层可选择主动断开）
+   *   <li>等待活跃连接数降到 {@code targetCount} 以下或 {@code timeoutMs} 超时
+   *   <li>超时或连接达标后调用 {@link #stop()} 清理资源
+   * </ol>
+   *
+   * <p>典型场景：发布前先将连接引流到新版本，再关闭旧版本 Server。
+   *
+   * @param timeoutMs 最大等待超时（毫秒）
+   * @param targetCount 目标活跃连接数降到此值以下时立即结束引流，0 表示等待全部断开
+   * @return CompletableFuture，引流完成（或超时）时终结
+   * @throws InterruptedException 等待被中断
+   */
+  public CompletableFuture<Void> drain(long timeoutMs, int targetCount) throws InterruptedException {
+    if (!isRunning()) {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    this.isDraining = true;
+    log.info("[Netty-Server] {} 开始引流关闭, timeout={}ms, targetCount={}",
+        getClass().getSimpleName(), timeoutMs, targetCount);
+
+    // 停止接受新连接
+    if (serverChannel != null) {
+      serverChannel.config().setAutoRead(false);
+    }
+
+    // 广播 Draining 通知到所有连接
+    channelGroupManager.broadcast(new DrainNotification());
+
+    CompletableFuture<Void> result = new CompletableFuture<>();
+    long deadline = System.currentTimeMillis() + timeoutMs;
+
+    // 定时检查活跃连接数
+    io.netty.util.concurrent.ScheduledFuture<?>[] holder = new io.netty.util.concurrent.ScheduledFuture<?>[1];
+    holder[0] = serverChannel.eventLoop()
+        .scheduleWithFixedDelay(() -> {
+          int activeCount = channelGroupManager.globalSize();
+          if (activeCount <= targetCount || System.currentTimeMillis() >= deadline) {
+            log.info("[Netty-Server] {} 引流完成, remainingConnections={}, reason={}",
+                getClass().getSimpleName(), activeCount,
+                activeCount <= targetCount ? "target-reached" : "timeout");
+            holder[0].cancel(false);
+            stop();
+            result.complete(null);
+          }
+        }, 0, 2, TimeUnit.SECONDS);
+
+    return result;
+  }
+
+  /**
+   * 判断 Server 是否处于引流关闭状态。
+   *
+   * @return true 表示正在引流关闭
+   */
+  public boolean isDraining() {
+    return isDraining;
+  }
+
+  /**
+   * Drain 通知消息 — 广播给所有活跃连接告知 Server 即将关闭。
+   *
+   * <p>业务侧 Handler 收到此消息后可主动关闭连接（如：通知客户端重连到其他节点）。 此消息仅作为事件通知，{@code body} 为 {@code null}。
+   */
+  public static final class DrainNotification {
+    private DrainNotification() {}
+  }
+
+  /**
    * Netty Server Channel 初始化器（从 start() 中拆分的独立内部类，提升可测试性）。
    *
    * <p>添加通用 Handler 链：连接限制 → SSL → 流量整形 → 空闲检测 → 监控 → 业务 Handler。
@@ -400,13 +484,13 @@ public abstract class AbstractNettyServer {
         pipeline.addLast("globalTraffic", globalTrafficShapingHandler);
       }
 
-      // 空闲检测
-      IdleStateHandlerFactory idleFactory =
-          new IdleStateHandlerFactory(
+      // 空闲检测（内联创建 IdleStateHandler，避免工厂类不必要的间接层）
+      pipeline.addLast("idleState",
+          new IdleStateHandler(
               properties.getIdle().getReaderIdleSeconds(),
               properties.getIdle().getWriterIdleSeconds(),
-              properties.getIdle().getAllIdleSeconds());
-      pipeline.addLast("idleState", idleFactory.create());
+              properties.getIdle().getAllIdleSeconds(),
+              TimeUnit.SECONDS));
 
       // Per-Channel 流量整形（非全局模式时）
       if (properties.getTrafficShaping().isEnabled()

@@ -50,7 +50,8 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
   SlaAutoConfiguration.class,
   SelfMonitorAutoConfiguration.class,
   HealthIndicatorAutoConfiguration.class,
-  OtelAutoConfiguration.class
+  OtelAutoConfiguration.class,
+  SentryInitializationVerifier.class
 })
 public class SentryAutoConfiguration {
 

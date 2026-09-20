@@ -11,7 +11,7 @@ import io.micrometer.core.instrument.Timer;
 /**
  * 文件存储监控指标收集器
  *
- * <p>基于 Micrometer 实现，收集文件上传/下载/删除、文件去重命中/未命中、 病毒检测、上传/下载错误等监控指标。
+ * <p>基于 Micrometer 实现，收集文件上传/下载/删除、文件去重命中/未命中、 病毒检测、上传/下载错误等监控指标。所有指标均携带 {@code storageType} 标签， 支持在 Grafana/Prometheus 中按存储后端维度分组查询。
  *
  * <p><b>监控指标列表：</b>
  *
@@ -35,6 +35,9 @@ public class FileMetrics {
 
   /** 指标名称前缀 */
   private static final String PREFIX = "file.";
+
+  /** 统一的 storageType 标签值 */
+  private final String storageType;
 
   /** Micrometer 注册中心 */
   private final MeterRegistry registry;
@@ -73,40 +76,50 @@ public class FileMetrics {
    * 构造文件指标收集器
    *
    * @param registry Micrometer 指标注册中心，传 null 时所有指标变为无操作（禁用状态）
+   * @param storageType 存储类型标识（如 local/minio/oss/cos），将作为所有指标的标签
    */
-  public FileMetrics(MeterRegistry registry) {
+  public FileMetrics(MeterRegistry registry, String storageType) {
     this.registry = registry;
+    this.storageType = storageType != null ? storageType : "unknown";
     if (registry != null) {
       this.uploadCounter =
           Counter.builder(PREFIX + "upload.count")
+              .tag("storageType", this.storageType)
               .description("Total file upload count")
               .register(registry);
       this.downloadCounter =
           Counter.builder(PREFIX + "download.count")
+              .tag("storageType", this.storageType)
               .description("Total file download count")
               .register(registry);
       this.deleteCounter =
           Counter.builder(PREFIX + "delete.count")
+              .tag("storageType", this.storageType)
               .description("Total file delete count")
               .register(registry);
       this.dedupHitCounter =
           Counter.builder(PREFIX + "dedup.hit")
+              .tag("storageType", this.storageType)
               .description("File dedup hit count")
               .register(registry);
       this.dedupMissCounter =
           Counter.builder(PREFIX + "dedup.miss")
+              .tag("storageType", this.storageType)
               .description("File dedup miss count")
               .register(registry);
       this.virusDetectedCounter =
           Counter.builder(PREFIX + "virus.detected")
+              .tag("storageType", this.storageType)
               .description("Virus detected count")
               .register(registry);
       this.uploadTimer =
           Timer.builder(PREFIX + "upload.duration")
+              .tag("storageType", this.storageType)
               .description("File upload duration")
               .register(registry);
       this.downloadTimer =
           Timer.builder(PREFIX + "download.duration")
+              .tag("storageType", this.storageType)
               .description("File download duration")
               .register(registry);
     } else {
@@ -119,6 +132,17 @@ public class FileMetrics {
       this.uploadTimer = null;
       this.downloadTimer = null;
     }
+  }
+
+  /**
+   * 构造无指标收集的实例（兼容旧版调用）
+   *
+   * @param registry Micrometer 指标注册中心，传 null 时禁用
+   * @deprecated 推荐使用 {@link #FileMetrics(MeterRegistry, String)} 明确传入 storageType
+   */
+  @Deprecated
+  public FileMetrics(MeterRegistry registry) {
+    this(registry, "unspecified");
   }
 
   /**
@@ -190,6 +214,7 @@ public class FileMetrics {
               code,
               c ->
                   Counter.builder(PREFIX + "upload.errors")
+                      .tag("storageType", storageType)
                       .tag("code", c)
                       .description("File upload error count")
                       .register(registry))
@@ -210,6 +235,7 @@ public class FileMetrics {
               code,
               c ->
                   Counter.builder(PREFIX + "download.errors")
+                      .tag("storageType", storageType)
                       .tag("code", c)
                       .description("File download error count")
                       .register(registry))

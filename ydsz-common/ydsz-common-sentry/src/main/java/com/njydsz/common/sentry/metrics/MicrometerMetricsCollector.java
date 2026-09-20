@@ -34,7 +34,8 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  * <h3>缓存设计</h3>
  *
  * <p>使用 {@link ConcurrentHashMap} 缓存已注册的 Counter/Timer/DistributionSummary/Gauge， 避免重复注册（Micrometer
- * 不允许重复注册同名指标）。 缓存 Key 为 {@code name + tags.toString()}，保证相同 name+tags 复用同一实例。
+ * 不允许重复注册同名指标）。 缓存 Key 为 {@link CacheKey}（基于 name + Micrometer {@link Tags#hashCode()}），
+ * 避免 {@code tags.toString()} 的字符串分配开销，高频埋点场景下 O(1) 哈希计算替代 O(n) 字符串生成。
  *
  * <h3>降级策略</h3>
  *
@@ -55,18 +56,18 @@ public class MicrometerMetricsCollector implements MetricsCollector {
   /** 内存降级采集器（MeterRegistry 不可用时的兜底方案） */
   private final InMemoryMetricsCollector fallback;
 
-  /** Counter 缓存：name + tags → Counter */
-  private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
+  /** Counter 缓存：CacheKey → Counter */
+  private final ConcurrentHashMap<CacheKey, Counter> counterCache = new ConcurrentHashMap<>();
 
-  /** Timer 缓存：name + tags → Timer */
-  private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+  /** Timer 缓存：CacheKey → Timer */
+  private final ConcurrentHashMap<CacheKey, Timer> timerCache = new ConcurrentHashMap<>();
 
-  /** DistributionSummary 缓存：name + tags → DistributionSummary */
-  private final ConcurrentHashMap<String, DistributionSummary> histogramCache =
+  /** DistributionSummary 缓存：CacheKey → DistributionSummary */
+  private final ConcurrentHashMap<CacheKey, DistributionSummary> histogramCache =
       new ConcurrentHashMap<>();
 
-  /** Gauge 动态值引用缓存：name + tags → AtomicReference<Double> */
-  private final ConcurrentHashMap<String, AtomicReference<Double>> gaugeRefCache =
+  /** Gauge 动态值引用缓存：CacheKey → AtomicReference<Double> */
+  private final ConcurrentHashMap<CacheKey, AtomicReference<Double>> gaugeRefCache =
       new ConcurrentHashMap<>();
 
   /** Timer SLO 配置（启用百分位和直方图，支持 Prometheus Exemplar） */
@@ -109,14 +110,15 @@ public class MicrometerMetricsCollector implements MetricsCollector {
       return;
     }
     try {
-      String cacheKey = buildCacheKey(name, tags);
+      Tags micTags = toTags(tags);
+      CacheKey cacheKey = buildCacheKey(name, micTags);
       Counter counter =
           counterCache.computeIfAbsent(
               cacheKey,
               k ->
                   Counter.builder(name)
                       .description(description)
-                      .tags(toTags(tags))
+                      .tags(micTags)
                       .register(meterRegistry));
       counter.increment(amount);
     } catch (Exception e) {
@@ -150,7 +152,8 @@ public class MicrometerMetricsCollector implements MetricsCollector {
       return;
     }
     try {
-      String cacheKey = buildCacheKey(name, tags);
+      Tags micTags = toTags(tags);
+      CacheKey cacheKey = buildCacheKey(name, micTags);
       AtomicReference<Double> ref =
           gaugeRefCache.computeIfAbsent(
               cacheKey,
@@ -158,7 +161,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
                 AtomicReference<Double> newRef = new AtomicReference<>(value);
                 Gauge.builder(name, newRef, AtomicReference::get)
                     .description(description)
-                    .tags(toTags(tags))
+                    .tags(micTags)
                     .register(meterRegistry);
                 return newRef;
               });
@@ -187,14 +190,15 @@ public class MicrometerMetricsCollector implements MetricsCollector {
       return;
     }
     try {
-      String cacheKey = buildCacheKey(name, tags);
+      Tags micTags = toTags(tags);
+      CacheKey cacheKey = buildCacheKey(name, micTags);
       Timer timer =
           timerCache.computeIfAbsent(
               cacheKey,
               k ->
                   Timer.builder(name)
                       .description(description)
-                      .tags(toTags(tags))
+                      .tags(micTags)
                       .sla(TIMER_SLOS)
                       .register(meterRegistry));
       timer.record(duration);
@@ -222,14 +226,15 @@ public class MicrometerMetricsCollector implements MetricsCollector {
       return;
     }
     try {
-      String cacheKey = buildCacheKey(name, tags);
+      Tags micTags = toTags(tags);
+      CacheKey cacheKey = buildCacheKey(name, micTags);
       DistributionSummary summary =
           histogramCache.computeIfAbsent(
               cacheKey,
               k ->
                   DistributionSummary.builder(name)
                       .description(description)
-                      .tags(toTags(tags))
+                      .tags(micTags)
                       .sla(HISTOGRAM_SLOS)
                       .register(meterRegistry));
       summary.record(value);
@@ -306,16 +311,25 @@ public class MicrometerMetricsCollector implements MetricsCollector {
   /**
    * 构建指标缓存 Key。
    *
-   * <p>Key 格式为 {@code name + "|" + tags.toString()}， 保证相同 name + tags 组合复用同一指标实例。
+   * <p>26.09.20 优化：避免使用 {@code tags.toString()}（其内部遍历全部 Entry 并生成字符串）， 改为使用
+   * {@link CacheKey} 记录（基于 name + Micrometer {@link Tags#hashCode()} 组合）。 Micrometer 的
+   * {@link Tags} 内部维护不可变列表、hashCode 已缓存，哈希计算复杂度为 O(1)。
    *
    * @param name 指标名称
-   * @param tags 指标标签
-   * @return 缓存 Key 字符串
+   * @param tags 指标标签（已转为 Micrometer Tags）
+   * @return 缓存 Key 实例
    */
-  private String buildCacheKey(String name, Map<String, String> tags) {
-    if (tags == null || tags.isEmpty()) {
-      return name;
-    }
-    return name + "|" + tags.toString();
+  private CacheKey buildCacheKey(String name, Tags tags) {
+    return new CacheKey(name, tags);
+  }
+
+  /**
+   * 缓存 Key 内部记录（轻量值对象）。
+   *
+   * <p>hashCode 由 name.hashCode 与 Tags.hashCode 组合；equals 使用引用相等 + 字段相等双重校验。
+   */
+  private record CacheKey(String name, Tags tags) {
+    // record 自动生成 equals / hashCode；hashCode 对 Tags 字段调用 Tags.hashCode()
+    // （Micrometer Tags 不可变且缓存 hashCode，此处计算为 O(1)）
   }
 }

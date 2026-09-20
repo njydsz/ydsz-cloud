@@ -62,6 +62,17 @@ public interface IFileStorage {
    */
   record PartInfo(int partNumber, String eTag, long size) {}
 
+  /**
+   * 批量上传请求（Java 17+ record）
+   *
+   * <p>封装单次上传所需的全部输入参数，用于 {@link #batchUpload} 批量接口。
+   *
+   * @param objectName 对象路径
+   * @param file 待上传的 MultipartFile
+   * @param listener 上传进度回调，可传 null
+   */
+  record UploadRequest(String objectName, MultipartFile file, UploadProgressListener listener) {}
+
   // ==================== 上传相关方法 ====================
 
   /**
@@ -431,5 +442,106 @@ public interface IFileStorage {
   default String generatePresignedUrl(
       String bucketName, String objectName, Duration expiryDuration) {
     throw new UnsupportedOperationException("Presigned URL not supported by this storage backend");
+  }
+
+  // ==================== 对象访问控制（ACL） ====================
+
+  /**
+   * 对象访问控制级别枚举
+   *
+   * <p>对应主流对象存储的 Canned ACL 语义。
+   */
+  enum ObjectAcl {
+    /** 私有（仅对象拥有者可读写） */
+    PRIVATE,
+    /** 公开读（任何人可读，仅拥有者可写） */
+    PUBLIC_READ,
+    /** 公开读写（任何人可读写，慎用） */
+    PUBLIC_READ_WRITE,
+    /** 桶拥有者完全控制（复制对象时常用） */
+    BUCKET_OWNER_FULL_CONTROL
+  }
+
+  /**
+   * 设置对象的访问控制列表（ACL）
+   *
+   * <p>用于控制单个对象的公开/私有访问权限。不同云厂商对 ACL 的支持程度不同， 本接口仅定义语义契约。
+   *
+   * <p>默认实现抛出 UnsupportedOperationException，各云存储实现类按需覆盖。
+   *
+   * @param bucketName 存储桶名称，传 null 时使用配置默认值
+   * @param objectName 对象路径
+   * @param acl 目标 ACL 级别
+   * @throws UnsupportedOperationException 如果当前存储后端不支持 ACL 设置
+   */
+  default void setObjectAcl(String bucketName, String objectName, ObjectAcl acl) {
+    throw new UnsupportedOperationException("Object ACL not supported by this storage backend");
+  }
+
+  /**
+   * 获取对象的当前访问控制列表（ACL）
+   *
+   * <p>默认实现抛出 UnsupportedOperationException，各云存储实现类按需覆盖。
+   *
+   * @param bucketName 存储桶名称，传 null 时使用配置默认值
+   * @param objectName 对象路径
+   * @return 当前 ACL 级别，若未设置返回 null
+   * @throws UnsupportedOperationException 如果当前存储后端不支持 ACL 查询
+   */
+  default ObjectAcl getObjectAcl(String bucketName, String objectName) {
+    throw new UnsupportedOperationException("Object ACL not supported by this storage backend");
+  }
+
+  // ==================== 服务端加密（SSE） ====================
+
+  /**
+   * 服务端加密算法枚举
+   *
+   * <p>对应主流对象存储支持的服务端加密算法。
+   */
+  enum ServerSideEncryption {
+    /** AES-256 默认加密（S3/OSS/Minio 均支持） */
+    AES256,
+    /** AWS KMS 托管密钥加密 */
+    AWS_KMS,
+    /** 客户提供的密钥加密 */
+    CUSTOMER_PROVIDED
+  }
+
+  // ==================== 批量操作 ====================
+
+  /**
+   * 批量上传文件（并行）
+   *
+   * <p>对 {@code requests} 中的每个请求执行独立的上传操作 {@link #upload(String, String, MultipartFile,
+   * UploadProgressListener)}，使用并行流加速处理。
+   *
+   * <p><b>失败策略：</b>单个文件上传失败不影响其他文件，失败项的 URL 为空字符串， 可通过 {@link FileStorage#getUrl()} 判断是否成功。
+   *
+   * <p>默认实现使用 JDK 并行流，云存储 SDK 原生支持批量上传的子类（如 OSS / S3）可覆盖本方法以使用更高效的原生 API。
+   *
+   * @param bucketName 存储桶名称，传 null 时使用配置默认值
+   * @param requests 批量上传请求列表（不可为 null）
+   * @return 上传结果列表，顺序与输入一一对应。失败项 getUrl() 返回空字符串
+   */
+  default java.util.List<FileStorage> batchUpload(
+      String bucketName, java.util.List<UploadRequest> requests) {
+    if (requests == null || requests.isEmpty()) {
+      return java.util.Collections.emptyList();
+    }
+    return requests.parallelStream()
+        .map(
+            req -> {
+              try {
+                return upload(bucketName, req.objectName(), req.file(), req.listener());
+              } catch (Exception e) {
+                FileStorage failed = new FileStorage();
+                failed.setFileName(req.file() != null ? req.file().getOriginalFilename() : null);
+                failed.setUuidName(req.objectName());
+                failed.setUrl("");
+                return failed;
+              }
+            })
+        .toList();
   }
 }

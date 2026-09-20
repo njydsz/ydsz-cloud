@@ -30,6 +30,7 @@ import com.njydsz.common.docs.metrics.DocsMetrics;
 import com.njydsz.common.docs.ocr.OcrProvider;
 import com.njydsz.common.docs.parser.DocumentParser;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
+import com.njydsz.common.docs.pipeline.DocumentProcessorPipeline;
 import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
 import com.njydsz.common.util.io.TempFileManager;
 
@@ -52,6 +53,7 @@ class DocumentServiceTest {
   private ObjectProvider<DocumentConverter> converterProvider;
   private ObjectProvider<OcrProvider> ocrProviderProvider;
   private ObjectProvider<DocsMetrics> metricsProvider;
+  private DocumentProcessorPipeline processorPipeline;
   private DocumentService service;
 
   @BeforeEach
@@ -63,6 +65,7 @@ class DocumentServiceTest {
     ocrProvider = mock(OcrProvider.class);
     metrics = mock(DocsMetrics.class);
     tempFileManager = mock(TempFileManager.class);
+    processorPipeline = mock(DocumentProcessorPipeline.class);
     converterProvider = mock(ObjectProvider.class);
     ocrProviderProvider = mock(ObjectProvider.class);
     metricsProvider = mock(ObjectProvider.class);
@@ -80,7 +83,8 @@ class DocumentServiceTest {
             converterProvider,
             ocrProviderProvider,
             metricsProvider,
-            tempFileManager);
+            tempFileManager,
+            processorPipeline);
   }
 
   @Nested

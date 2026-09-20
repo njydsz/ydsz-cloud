@@ -66,6 +66,8 @@ public class NettyChannelMetrics implements ConnectionMetrics {
    */
   public NettyChannelMetrics(MeterRegistry meterRegistry) {
     if (meterRegistry != null) {
+      // 在本实例注册完成前，先保存 this 引用供 Gauge lambda 使用
+      NettyChannelMetrics self = this;
       Gauge.builder(METRIC_CHANNELS_ACTIVE, activeChannels, AtomicLong::doubleValue)
           .description("活跃 Netty Channel 数")
           .register(meterRegistry);
@@ -87,16 +89,15 @@ public class NettyChannelMetrics implements ConnectionMetrics {
           Counter.builder(METRIC_RECONNECT_ATTEMPTS).description("重连尝试次数").register(meterRegistry);
       reconnectSuccessesCounter =
           Counter.builder(METRIC_RECONNECT_SUCCESSES).description("重连成功次数").register(meterRegistry);
-      Gauge.builder(METRIC_DIRECT_MEMORY_USED, PlatformDependent.class,
-              PlatformDependent::usedDirectMemory)
+      Gauge.builder(METRIC_DIRECT_MEMORY_USED, self, m -> (double) m.getDirectMemoryUsed())
           .description("Netty 直接内存当前使用量（字节）")
           .register(meterRegistry);
-      Gauge.builder(METRIC_DIRECT_MEMORY_MAX, this,
-              m -> estimateMaxDirectMemory())
+      Gauge.builder(METRIC_DIRECT_MEMORY_MAX, self,
+              m -> (double) estimateMaxDirectMemory())
           .description("JVM 最大直接内存限制（字节）")
           .register(meterRegistry);
-      Gauge.builder(METRIC_POOLED_ARENAS_ACTIVE, this,
-              m -> countActiveArenas())
+      Gauge.builder(METRIC_POOLED_ARENAS_ACTIVE, self,
+              m -> (double) countActiveArenas())
           .description("Netty PooledByteBufAllocator 活跃 Arena 数")
           .register(meterRegistry);
       log.info("[Netty-Metrics] 指标已注册（含直接内存监控）");

@@ -31,8 +31,13 @@ public class AlertEvent {
   /** 告警详情 */
   private String description;
 
-  /** 告警分类（business/availability/resource/database/cache/mq） */
-  private String category;
+  /**
+   * 告警分类。
+   *
+   * <p>26.09.20 变更：由自由字符串改为 {@link AlertCategory} 枚举，保证分类一致性， 便于 APM 后端按类别路由通知策略。
+   * 为兼容历史数据，为 {@code null} 时序列化为 {@code UNKNOWN}。
+   */
+  private AlertCategory category;
 
   /** 告警标签 */
   private Map<String, String> labels;

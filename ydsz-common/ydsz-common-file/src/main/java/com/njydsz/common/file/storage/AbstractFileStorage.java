@@ -18,7 +18,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
@@ -111,6 +110,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
   /** 检查点服务（高层业务封装） */
   protected volatile CheckpointService checkpointService;
+
+  /** 分片上传并发控制信号量（防止大规模并发分片请求压垮存储后端） */
+  private volatile java.util.concurrent.Semaphore chunkUploadSemaphore;
 
   /** 并发上传保护器（可选） */
   protected UploadConcurrencyGuard concurrencyGuard;
@@ -219,6 +221,19 @@ public abstract class AbstractFileStorage implements IFileStorage {
    */
   public void setConcurrencyGuard(UploadConcurrencyGuard guard) {
     this.concurrencyGuard = guard;
+  }
+
+  /**
+   * 设置分片上传并发控制信号量
+   *
+   * <p>信号量由 {@link com.njydsz.common.file.config.FileConfiguration} 根据 {@code
+   * ydsz.file.concurrency-control.max-concurrent-chunks} 配置创建并注入。 使用静态 {@link java.util.concurrent.Semaphore}
+   * 支持存储实例维度的并发度控制。
+   *
+   * @param semaphore 信号量实例，为 null 时不进行并发控制
+   */
+  public void setChunkUploadSemaphore(java.util.concurrent.Semaphore semaphore) {
+    this.chunkUploadSemaphore = semaphore;
   }
 
   public void setFileDedupService(FileDedupService service) {
@@ -824,6 +839,18 @@ public abstract class AbstractFileStorage implements IFileStorage {
     validateUploadId(uploadId);
     validatePartNumber(partNumber);
 
+    // P2-4: 分片上传并发度控制，防止大规模并发分片请求压垮存储后端
+    java.util.concurrent.Semaphore semaphore = chunkUploadSemaphore;
+    boolean acquired = false;
+    if (semaphore != null) {
+      try {
+        semaphore.acquire();
+        acquired = true;
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+      }
+    }
     try {
       String chunkObjectName = buildChunkObjectName(resolvedObjectName, uploadId, partNumber);
       byte[] chunkData = null;
@@ -902,6 +929,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
           e.getMessage(),
           e);
       throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+    } finally {
+      // P2-4: 释放分片上传并发信号量
+      if (acquired && semaphore != null) {
+        semaphore.release();
+      }
     }
   }
 
@@ -999,9 +1031,6 @@ public abstract class AbstractFileStorage implements IFileStorage {
     return StringUtils.isNotBlank(bucketName) ? bucketName : defaultBucket;
   }
 
-  private static final Pattern PATH_TRAVERSAL_PATTERN =
-      Pattern.compile("(\\.\\.)|(%2e%2e)|(%2E%2E)");
-
   /**
    * 解析并校验对象路径，防止路径穿越攻击
    *
@@ -1009,11 +1038,13 @@ public abstract class AbstractFileStorage implements IFileStorage {
    *
    * <ul>
    *   <li>路径不能为空
-   *   <li>禁止包含空字节 {@code \0} 及控制字符
-   *   <li>禁止包含 {@code ..} 路径穿越符（含 URL 编码形式）
-   *   <li>规范化路径后禁止以 {@code ..} 作为路径段
-   *   <li>使用 {@code Paths.normalize()} 进行二次校验
+   *   <li>禁止包含空字节点 {@code \0} 及控制字符
+   *   <li>规范化后逐段检查，任何 {@code ..} 段判定为路径穿越
+   *   <li>使用 {@link java.nio.file.Paths#normalize()} 进行二次校验
    * </ul>
+   *
+   * <p><b>设计说明：</b>不通过子串匹配 {@code ..} 检测穿越，避免误伤合法文件名（如 {@code my..resume.pdf}、{@code file..backup.txt}）。
+   * 以规范化后逐段判定的方式只拦截真正的目录层级穿越。
    *
    * @param bucketName 存储桶名称
    * @param objectName 对象路径
@@ -1028,21 +1059,20 @@ public abstract class AbstractFileStorage implements IFileStorage {
       log.warn("[Storage] null byte detected in objectName={}", objectName);
       throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
     }
-    if (PATH_TRAVERSAL_PATTERN.matcher(objectName).find()) {
-      log.warn("[Storage] path traversal detected, objectName={}", objectName);
-      throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
-    }
+    // 规范化路径：统一斜杠 + 去除多余斜杠
     String resolved = objectName;
     if (!resolved.startsWith("/")) {
       resolved = "/" + resolved;
     }
     String normalized = resolved.replace("\\", "/").replaceAll("/+", "/");
+    // 逐段检查：任何 ".." 段均视为路径穿越
     for (String segment : normalized.split("/")) {
       if ("..".equals(segment)) {
-        log.warn("[Storage] path traversal after normalization, objectName={}", objectName);
+        log.warn("[Storage] path traversal detected (segment=..), objectName={}", objectName);
         throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
       }
     }
+    // 二次校验：normalize 后路径不能含 ".."
     try {
       String canonicalPath = Paths.get(normalized).normalize().toString();
       if (!canonicalPath.equals(normalized) && canonicalPath.contains("..")) {
@@ -1053,14 +1083,14 @@ public abstract class AbstractFileStorage implements IFileStorage {
             canonicalPath);
         throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
       }
+    } catch (BusinessException e) {
+      throw e;
     } catch (Exception e) {
       log.warn(
-          "[Storage] path canonicalization failed, objectName={}, message={}",
-          objectName,
-          e.getMessage());
+          "[Storage] path normalization failed, objectName={}, message={}", objectName, e.getMessage());
       throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
     }
-    return normalizeObjectKey(normalized);
+    return normalized;
   }
 
   /**

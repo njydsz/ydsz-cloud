@@ -2,8 +2,10 @@ package com.njydsz.common.docs.pipeline;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.PiiFinding;
@@ -17,6 +19,8 @@ import com.njydsz.common.docs.domain.SecurityScanResult;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DocumentProcessResult {
 
   /** 解析结果（必然存在） */
