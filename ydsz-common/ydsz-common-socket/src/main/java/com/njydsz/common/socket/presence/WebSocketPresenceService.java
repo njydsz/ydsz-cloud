@@ -5,6 +5,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;
+import com.njydsz.common.socket.metric.WebSocketMetrics;
 import com.njydsz.common.socket.session.LocalSessionRegistry;
 import com.njydsz.common.socket.session.OnlineUserService;
 
@@ -39,16 +40,19 @@ public class WebSocketPresenceService implements com.njydsz.common.socket.lifecy
   private final OnlineUserService onlineUserService;
   private final LocalSessionRegistry localSessionRegistry;
   private final WebSocketProperties properties;
+  private final WebSocketMetrics webSocketMetrics;
 
   public WebSocketPresenceService(
       SimpMessagingTemplate messagingTemplate,
       OnlineUserService onlineUserService,
       LocalSessionRegistry localSessionRegistry,
-      WebSocketProperties properties) {
+      WebSocketProperties properties,
+      WebSocketMetrics webSocketMetrics) {
     this.messagingTemplate = messagingTemplate;
     this.onlineUserService = onlineUserService;
     this.localSessionRegistry = localSessionRegistry;
     this.properties = properties;
+    this.webSocketMetrics = webSocketMetrics;
   }
 
   /**
@@ -114,6 +118,13 @@ public class WebSocketPresenceService implements com.njydsz.common.socket.lifecy
     String destination = WebSocketConstants.WS_PRESENCE_DESTINATION_PREFIX + userId;
     try {
       messagingTemplate.convertAndSend(destination, event);
+      if (webSocketMetrics != null) {
+        if (event.getType() == WebSocketPresenceEvent.Type.ONLINE) {
+          webSocketMetrics.countPresenceOnline();
+        } else if (event.getType() == WebSocketPresenceEvent.Type.OFFLINE) {
+          webSocketMetrics.countPresenceOffline();
+        }
+      }
       log.debug("[WS-Presence] 广播: userId={}, type={}", userId, event.getType());
     } catch (Exception e) {
       log.warn("[WS-Presence] 广播失败: userId={}, type={}, err={}",

@@ -139,6 +139,141 @@ class MarkdownDocumentParserTest {
     }
   }
 
+  @Nested
+  @DisplayName("场景：围栏代码块")
+  class WhenFencedCodeBlock {
+
+    @Test
+    @DisplayName("标准 ```fence``` 应输出 code 类型 section，块内行不触发标题或列表误判")
+    void shouldEmitCodeSectionAndSuppressInnerPatterns() {
+      String md =
+          "```java\n"
+              + "# 伪标题不应被解析\n"
+              + "- 伪列表项\n"
+              + "System.out.println(\"hello\");\n"
+              + "```\n";
+      InputStream stream = new ByteArrayInputStream(md.getBytes(StandardCharsets.UTF_8));
+
+      DocumentContent result = parser.parse(stream, "code.md", null);
+
+      // 只输出 1 个 section (code type)
+      assertThat(result.getSections()).hasSize(1);
+      DocumentSection code = result.getSections().get(0);
+      assertThat(code.getType()).isEqualTo("code");
+      assertThat(code.getLanguage()).isEqualTo("java");
+      // 内容包含三行有效行(不含 ``` 本身)
+      assertThat(code.getContent())
+          .contains("System.out.println")
+          .contains("# 伪标题不应被解析")
+          .contains("- 伪列表项");
+      assertThat(code.getContent()).doesNotContain("```");
+    }
+
+    @Test
+    @DisplayName("无语言提示时 language 字段为空字符串")
+    void shouldHandleEmptyLanguageHint() {
+      String md = "```\nnoop\n```\n";
+      InputStream stream = new ByteArrayInputStream(md.getBytes(StandardCharsets.UTF_8));
+
+      DocumentContent result = parser.parse(stream, "plain.md", null);
+
+      assertThat(result.getSections()).hasSize(1);
+      assertThat(result.getSections().get(0).getType()).isEqualTo("code");
+      assertThat(result.getSections().get(0).getLanguage()).isEmpty();
+    }
+  }
+
+  @Nested
+  @DisplayName("场景：Setext 标题")
+  class WhenSetextHeading {
+
+    @Test
+    @DisplayName("上一行段落 + 下一行 === 应升级为 H1")
+    void shouldPromoteToH1OnEquals() {
+      String md = "一级 Setext 标题\n===\n";
+      InputStream stream = new ByteArrayInputStream(md.getBytes(StandardCharsets.UTF_8));
+
+      DocumentContent result = parser.parse(stream, "setext.md", null);
+
+      assertThat(result.getSections()).hasSize(1);
+      assertHeading(result.getSections().get(0), 1, "一级 Setext 标题");
+    }
+
+    @Test
+    @DisplayName("上一行段落 + 下一行 --- 应升级为 H2")
+    void shouldPromoteToH2OnDashes() {
+      String ms = "二级 Setext 标题\n---\n";
+      InputStream stream = new ByteArrayInputStream(ms.getBytes(StandardCharsets.UTF_8));
+
+      DocumentContent result = parser.parse(stream, "setext2.md", null);
+
+      assertThat(result.getSections()).hasSize(1);
+      assertHeading(result.getSections().get(0), 2, "二级 Setext 标题");
+    }
+  }
+
+  @Nested
+  @DisplayName("场景：独立链接")
+  class WhenStandaloneLink {
+
+    @Test
+    @DisplayName("一行仅含 [text](url) 应输出 link 类型，content 为 text，url 为 url")
+    void shouldEmitLinkSection() {
+      String md =
+          "[文档](https://docs.example.com)\n" + "[指南](https://guide.example.com)\n";
+      InputStream stream = new ByteArrayInputStream(md.getBytes(StandardCharsets.UTF_8));
+
+      DocumentContent result = parser.parse(stream, "links.md", null);
+
+      assertThat(result.getSections()).hasSize(2);
+      DocumentSection first = result.getSections().get(0);
+      assertThat(first.getType()).isEqualTo("link");
+      assertThat(first.getContent()).isEqualTo("文档");
+      assertThat(first.getUrl()).isEqualTo("https://docs.example.com");
+      assertThat(result.getSections().get(1).getUrl())
+          .isEqualTo("https://guide.example.com");
+    }
+  }
+
+  @Nested
+  @DisplayName("场景：YAML front matter")
+  class WhenFrontMatter {
+
+    @Test
+    @DisplayName("首行 --- 包裹的内容应被跳过，后续正文正常解析")
+    void shouldSkipFrontMatterAndParseBody() {
+      String md =
+          "---\n"
+              + "title: 示例\n"
+              + "author: me\n"
+              + "---\n"
+              + "# 正文标题\n"
+              + "正文段落\n";
+      InputStream stream = new ByteArrayInputStream(md.getBytes(StandardCharsets.UTF_8));
+
+      DocumentContent result = parser.parse(stream, "fm.md", null);
+
+      assertThat(result.getSections()).hasSize(2);
+      assertThat(result.getSections().get(0).getType()).isEqualTo("heading");
+      assertThat(result.getSections().get(0).getContent()).isEqualTo("正文标题");
+      assertThat(result.getSections().get(1).getType()).isEqualTo("paragraph");
+    }
+
+    @Test
+    @DisplayName("首行不是 --- 时不应触发 front matter 识别")
+    void shouldNotTriggerFrontMatterWhenFirstLineIsNotDelimiter() {
+      String md = "首行普通段落\n---\n# 文档标题\n";
+      InputStream stream = new ByteArrayInputStream(md.getBytes(StandardCharsets.UTF_8));
+
+      DocumentContent result = parser.parse(stream, "no-fm.md", null);
+
+      // 首行是 paragraph，--- 是 Setext 下划线 → 升级为 H2
+      assertThat(result.getSections()).hasSize(1);
+      assertThat(result.getSections().get(0).getType()).isEqualTo("heading");
+      assertThat(result.getSections().get(0).getHeadingLevel()).isEqualTo(2);
+    }
+  }
+
   private static void assertHeading(DocumentSection section, int level, String text) {
     assertThat(section.getType()).isEqualTo("heading");
     assertThat(section.getHeadingLevel()).isEqualTo(level);

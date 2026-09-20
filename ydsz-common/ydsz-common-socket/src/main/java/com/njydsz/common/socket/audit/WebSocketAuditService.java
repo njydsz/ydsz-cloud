@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.json.YdszJson;
@@ -29,7 +30,9 @@ import com.njydsz.common.json.YdszJson;
  *   <li>error — 错误信息（失败时）
  * </ul>
  *
- * <p><b>日志脱敏：</b>用户 ID 脱敏由日志采集层（Filebeat / Fluentd pipeline）统一处理， 应用层不重复脱敏，避免多业务模块脱敏逻辑不一致。
+ * <p><b>日志脱敏（SEC-003）：</b>通过 {@link SensitiveFieldRedactor} 对审计 Map 命中的敏感字段
+ * （token、mobile、email 等，可由 {@code ydsz.websocket.audit.sensitiveKeys} 扩展）执行掩码，
+ * 收集侧脱敏与采集层脱敏互补：采集层保留原始字段以支持内部合规审查，收集侧掩码日志便于外部流转。
  *
  * @author ydsz-team
  * @since 26.09.01

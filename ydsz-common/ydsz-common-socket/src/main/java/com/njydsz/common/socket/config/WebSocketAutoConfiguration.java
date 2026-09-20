@@ -820,8 +820,10 @@ public class WebSocketAutoConfiguration {
       SimpMessagingTemplate messagingTemplate,
       OnlineUserService onlineUserService,
       LocalSessionRegistry sessionRegistry,
-      WebSocketProperties properties) {
-    return new WebSocketPresenceService(messagingTemplate, onlineUserService, sessionRegistry, properties);
+      WebSocketProperties properties,
+      WebSocketMetrics webSocketMetrics) {
+    return new WebSocketPresenceService(
+        messagingTemplate, onlineUserService, sessionRegistry, properties, webSocketMetrics);
   }
 
   // ==================== 运维诊断 REST Admin API（UX-002）====================

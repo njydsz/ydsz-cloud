@@ -7,8 +7,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -72,7 +72,7 @@ public class MarkdownDocumentParser implements DocumentParser {
   private static final Pattern SETEXT_PATTERN = Pattern.compile("^([-=])\\1*\\s*$");
 
   /** 独立的行内链接：[text](url)，去整行首尾空白后匹配。 */
-  private static final Pattern LINK_PATTERN = Pattern.compile("^\\s*\\[([^]]*)]\\(([^)]+)\\)\\s*$");
+  private static final Pattern LINK_PATTERN = Pattern.compile("^\\s*\\[[^\\]]+]\\([^)]+\\)\\s*$");
 
   /** YAML front matter 边界：单独的 ---。 */
   private static final String FRONT_MATTER_DELIMITER = "---";
@@ -142,8 +142,8 @@ public class MarkdownDocumentParser implements DocumentParser {
       if (state.inFrontMatter) {
         if (FRONT_MATTER_DELIMITER.equals(trimmed)) {
           state.inFrontMatter = false;
+          state.frontMatterConsumed = true;
         }
-        state.frontMatterConsumed = true;
         return;
       }
       // 首行不是 ---，后续不再走 front matter 路径

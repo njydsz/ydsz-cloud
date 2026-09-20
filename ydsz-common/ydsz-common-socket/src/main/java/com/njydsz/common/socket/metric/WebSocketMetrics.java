@@ -407,6 +407,16 @@ public class WebSocketMetrics implements NetworkMetrics {
     pongReceived.increment();
   }
 
+  /** Presence 上线事件广播计数。 */
+  public void countPresenceOnline() {
+    presenceOnlineBroadcast.increment();
+  }
+
+  /** Presence 下线事件广播计数。 */
+  public void countPresenceOffline() {
+    presenceOfflineBroadcast.increment();
+  }
+
   // ==================== 漏斗快照（运维诊断 / Admin 接口读取）====================
 
   /** 推送发起总数快照。 */
@@ -452,6 +462,16 @@ public class WebSocketMetrics implements NetworkMetrics {
   /** ACK 超时快照。 */
   public long getAckTimeout() {
     return ackTimeout.sum();
+  }
+
+  /** Presence 上线广播快照。 */
+  public long getPresenceOnline() {
+    return presenceOnlineBroadcast.sum();
+  }
+
+  /** Presence 下线广播快照。 */
+  public long getPresenceOffline() {
+    return presenceOfflineBroadcast.sum();
   }
 
   /**
