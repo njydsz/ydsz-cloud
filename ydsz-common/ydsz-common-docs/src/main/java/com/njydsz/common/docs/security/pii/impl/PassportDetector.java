@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.PiiType;
+import com.njydsz.common.docs.security.pii.PiiContextExtractor;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 
 /**
@@ -56,6 +57,8 @@ public class PassportDetector implements PiiDetector {
       boolean hasPassportContext = containsPassportKeyword(text, matcher.start(), matcher.end());
       double confidence = hasPassportContext ? 0.7 : 0.4;
 
+      PiiContextExtractor.Context ctx =
+          PiiContextExtractor.extract(text, matcher.start(), matcher.end());
       findings.add(
           PiiFinding.builder()
               .type(PiiType.PASSPORT)
@@ -63,6 +66,8 @@ public class PassportDetector implements PiiDetector {
               .startIndex(matcher.start())
               .endIndex(matcher.end())
               .confidence(BigDecimal.valueOf(confidence))
+              .contextBefore(ctx.before())
+              .contextAfter(ctx.after())
               .build());
     }
 

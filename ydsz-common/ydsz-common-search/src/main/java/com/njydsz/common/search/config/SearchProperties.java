@@ -174,7 +174,6 @@ public class SearchProperties {
     @Max(300)
     private long l1Ttl = 10;
   }
-  }
 
   /** 索引构建与同步配置（批大小、线程池、重试策略）。 */
   @Data

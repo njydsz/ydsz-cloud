@@ -1,12 +1,10 @@
 package com.njydsz.common.seata.validator;
 
-import com.njydsz.common.exception.BusinessException;
-import com.njydsz.common.exception.code.CoreErrorCode;
 import com.njydsz.common.seata.config.SeataProperties;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,11 +87,9 @@ public class UndoLogSchemaValidator {
                     + "or set ydzs.seata.undo-log.validate-schema=false to skip.",
                     tableName);
                 LOG.error(message);
-                throw BusinessException.of(
-                    CoreErrorCode.DATABASE_ERROR,
-                    message);
+                throw new IllegalArgumentException(message);
             }
-        } catch (BusinessException e) {
+        } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
             LOG.warn("Failed to validate undo_log schema: {}", e.getMessage());

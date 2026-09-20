@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.PiiType;
+import com.njydsz.common.docs.security.pii.PiiContextExtractor;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 
 /**
@@ -62,6 +63,8 @@ public class ApiKeyDetector implements PiiDetector {
     // key=value 格式
     Matcher kvMatcher = KEY_VALUE_PATTERN.matcher(text);
     while (kvMatcher.find()) {
+      PiiContextExtractor.Context ctx =
+          PiiContextExtractor.extract(text, kvMatcher.start(), kvMatcher.end());
       findings.add(
           PiiFinding.builder()
               .type(PiiType.API_KEY)
@@ -69,12 +72,16 @@ public class ApiKeyDetector implements PiiDetector {
               .startIndex(kvMatcher.start())
               .endIndex(kvMatcher.end())
               .confidence(BigDecimal.valueOf(0.9))
+              .contextBefore(ctx.before())
+              .contextAfter(ctx.after())
               .build());
     }
 
     // Bearer Token
     Matcher bearerMatcher = BEARER_PATTERN.matcher(text);
     while (bearerMatcher.find()) {
+      PiiContextExtractor.Context ctx =
+          PiiContextExtractor.extract(text, bearerMatcher.start(), bearerMatcher.end());
       findings.add(
           PiiFinding.builder()
               .type(PiiType.API_KEY)
@@ -82,12 +89,16 @@ public class ApiKeyDetector implements PiiDetector {
               .startIndex(bearerMatcher.start())
               .endIndex(bearerMatcher.end())
               .confidence(BigDecimal.valueOf(0.85))
+              .contextBefore(ctx.before())
+              .contextAfter(ctx.after())
               .build());
     }
 
     // AWS Access Key
     Matcher awsMatcher = AWS_PATTERN.matcher(text);
     while (awsMatcher.find()) {
+      PiiContextExtractor.Context ctx =
+          PiiContextExtractor.extract(text, awsMatcher.start(), awsMatcher.end());
       findings.add(
           PiiFinding.builder()
               .type(PiiType.API_KEY)
@@ -95,12 +106,16 @@ public class ApiKeyDetector implements PiiDetector {
               .startIndex(awsMatcher.start())
               .endIndex(awsMatcher.end())
               .confidence(BigDecimal.valueOf(0.95))
+              .contextBefore(ctx.before())
+              .contextAfter(ctx.after())
               .build());
     }
 
     // JWT
     Matcher jwtMatcher = JWT_PATTERN.matcher(text);
     while (jwtMatcher.find()) {
+      PiiContextExtractor.Context ctx =
+          PiiContextExtractor.extract(text, jwtMatcher.start(), jwtMatcher.end());
       findings.add(
           PiiFinding.builder()
               .type(PiiType.API_KEY)
@@ -108,6 +123,8 @@ public class ApiKeyDetector implements PiiDetector {
               .startIndex(jwtMatcher.start())
               .endIndex(jwtMatcher.end())
               .confidence(BigDecimal.valueOf(0.8))
+              .contextBefore(ctx.before())
+              .contextAfter(ctx.after())
               .build());
     }
 

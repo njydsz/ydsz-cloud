@@ -17,6 +17,7 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;
+import com.njydsz.common.socket.graceful.WebSocketGracefulShutdown;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketHandshakeRateLimiter;
 import com.njydsz.common.util.net.ClientIpResolver;
@@ -49,6 +50,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
   private final WebSocketAuditService auditService;
   private final WebSocketProperties properties;
   private final WebSocketHandshakeRateLimiter handshakeRateLimiter;
+  private final WebSocketGracefulShutdown gracefulShutdown;
 
   /**
    * 构造握手鉴权拦截器。
@@ -58,18 +60,21 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
    * @param auditService 审计日志服务
    * @param properties WebSocket 配置属性
    * @param handshakeRateLimiter 握手频率限制器，可选依赖；为 null 时不做握手限流
+   * @param gracefulShutdown 优雅停机控制器，可选依赖；为 null 时不检查准入
    */
   public WebSocketAuthInterceptor(
       TokenService tokenService,
       ConnectionLimiter connectionLimiter,
       WebSocketAuditService auditService,
       WebSocketProperties properties,
-      WebSocketHandshakeRateLimiter handshakeRateLimiter) {
+      WebSocketHandshakeRateLimiter handshakeRateLimiter,
+      WebSocketGracefulShutdown gracefulShutdown) {
     this.tokenService = tokenService;
     this.connectionLimiter = connectionLimiter;
     this.auditService = auditService;
     this.properties = properties;
     this.handshakeRateLimiter = handshakeRateLimiter;
+    this.gracefulShutdown = gracefulShutdown;
   }
 
   @Override
@@ -78,14 +83,20 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
       ServerHttpResponse response,
       WebSocketHandler wsHandler,
       Map<String, Object> attributes) {
-    // 0. 握手频率限制检查（SEC-001）
+    // 0. 优雅停机准入检查（ARCH-003）：拒绝停机期间的新握手
+    if (gracefulShutdown != null && !gracefulShutdown.isAcceptingNewConnections()) {
+      log.warn("[WS-Auth] 握手拒绝: 服务正在停机");
+      response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
+      return false;
+    }
+    // 1. 握手频率限制检查（SEC-001）
     String remoteIp = resolveRemoteIp(request);
     if (handshakeRateLimiter != null && !handshakeRateLimiter.allowHandshake(remoteIp)) {
       log.warn("[WS-Auth] 握手拒绝: 握手频率超限, remoteIp={}", remoteIp);
       response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
       return false;
     }
-    // ① 优先尝试 JWT Token 鉴权
+    // ① 优先尝试 JWT Token 鉴权（步骤序号已随优雅停机前置上移）
     String token = extractToken(request);
     if (StringUtils.hasText(token)) {
       return authenticateByJwt(request, response, attributes, token);

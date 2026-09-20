@@ -1,8 +1,5 @@
 package com.njydsz.common.docs.security.pii;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
 /**
  * PII 上下文提取工具
  *
@@ -13,11 +10,13 @@ import lombok.NoArgsConstructor;
  * @author ydsz-team
  * @since 26.09.20
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PiiContextExtractor {
 
   /** 默认上下文窗口大小（字符数） */
   public static final int DEFAULT_WINDOW_SIZE = 30;
+
+  /** 隐藏工具类构造器 */
+  private PiiContextExtractor() {}
 
   /**
    * 从文本中抽取指定位置的前后上下文。
@@ -59,6 +58,8 @@ public final class PiiContextExtractor {
     return extract(text, startIndex, endIndex, DEFAULT_WINDOW_SIZE);
   }
 
-  /** 上下文片段记录 */
+  /** 上下文片段记录 *
+   *  @param before 命中位置前最多 {@link #DEFAULT_WINDOW_SIZE} 字符 *
+   *  @param after 命中位置后最多 {@link #DEFAULT_WINDOW_SIZE} 字符 */
   public record Context(String before, String after) {}
 }

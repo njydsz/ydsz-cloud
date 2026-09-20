@@ -35,6 +35,8 @@ import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.socket.offline.RedisOfflineMessageStore;
 import com.njydsz.common.socket.push.DefaultRealtimePushTemplate;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
+import com.njydsz.common.socket.acl.DefaultTopicAclPolicy;
+import com.njydsz.common.socket.acl.TopicAclPolicy;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketHandshakeRateLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketRateLimiter;
@@ -211,10 +213,11 @@ public class WebSocketAutoConfiguration {
       ConnectionLimiter connectionLimiter,
       WebSocketAuditService auditService,
       WebSocketProperties properties,
-      @Autowired(required = false) WebSocketHandshakeRateLimiter handshakeRateLimiter) {
-    log.info("[WebSocket] 注册 JWT 握手鉴权拦截器 (含连接数检查 + 审计 + 网关透传 P1-5 + 握手限流 SEC-001)");
+      @Autowired(required = false) WebSocketHandshakeRateLimiter handshakeRateLimiter,
+      @Autowired(required = false) WebSocketGracefulShutdown gracefulShutdown) {
+    log.info("[WebSocket] 注册 JWT 握手鉴权拦截器 (含连接数检查 + 审计 + 网关透传 P1-5 + 握手限流 SEC-001 + 优雅停机 ARCH-003)");
     return new WebSocketAuthInterceptor(
-        tokenService, connectionLimiter, auditService, properties, handshakeRateLimiter);
+        tokenService, connectionLimiter, auditService, properties, handshakeRateLimiter, gracefulShutdown);
   }
 
   // ==================== 在线用户状态 + 多端策略 ====================
@@ -547,6 +550,24 @@ public class WebSocketAutoConfiguration {
     return new WebSocketGracefulShutdown(pushTemplate, sessionRegistry);
   }
 
+  // ==================== FEAT-003: 订阅 ACL 策略 ====================
+
+  /**
+   * 注册默认订阅 ACL 拦截策略 Bean（FEAT-003）。
+   *
+   * <p>当目标 Destination 为 {@code /topic/admin/**} 等受保护区、
+   * 用户私有前缀中的 userId 与当前用户不匹配、或跨租户订阅时拒绝。
+   * 业务方可注册自定义实现覆盖默认策略。
+   *
+   * @return ACL 策略默认实现
+   */
+  @Bean
+  @ConditionalOnMissingBean(TopicAclPolicy.class)
+  public TopicAclPolicy topicAclPolicy() {
+    log.info("[WebSocket] 注册 DefaultTopicAclPolicy（订阅 ACL 鉴权）");
+    return new DefaultTopicAclPolicy();
+  }
+
   // ==================== FEAT-002: C→S 消息路由器 ====================
 
   /**
@@ -585,9 +606,10 @@ public class WebSocketAutoConfiguration {
   public StompMessageInterceptor stompMessageInterceptor(
       @Autowired(required = false) WebSocketRateLimiter rateLimiter,
       @Autowired(required = false) WebSocketAuditService auditService,
-      @Autowired(required = false) WebSocketMessageDispatcher messageDispatcher) {
+      @Autowired(required = false) WebSocketMessageDispatcher messageDispatcher,
+      @Autowired(required = false) TopicAclPolicy topicAclPolicy) {
     log.info("[WebSocket] 注册 StompMessageInterceptor");
-    return new StompMessageInterceptor(rateLimiter, auditService, messageDispatcher);
+    return new StompMessageInterceptor(rateLimiter, auditService, messageDispatcher, topicAclPolicy);
   }
 
   // ==================== P0-1: 健康检查 ====================

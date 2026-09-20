@@ -343,8 +343,10 @@ public class SearchAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
-  public SearchCacheService searchCacheService(SearchProperties properties) {
-    return new SearchCacheService(properties);
+  @SuppressWarnings("unchecked")
+  public SearchCacheService searchCacheService(
+      SearchProperties properties, ObjectProvider<StringRedisTemplate> redisProvider) {
+    return new SearchCacheService(properties, redisProvider::getIfAvailable);
   }
 
   /**

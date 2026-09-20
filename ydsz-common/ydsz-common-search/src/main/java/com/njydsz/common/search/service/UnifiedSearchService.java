@@ -395,7 +395,7 @@ public class UnifiedSearchService {
    *
    * @return 缓存中的搜索响应条目数量
    */
-  public int getCacheSize() {
+  public long getCacheSize() {
     return cacheService.size();
   }
 

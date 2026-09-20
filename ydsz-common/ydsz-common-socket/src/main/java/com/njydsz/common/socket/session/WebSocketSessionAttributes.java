@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
+import com.njydsz.common.socket.constant.WebSocketConstants;
+
 /**
  * WebSocket Session 属性视图（FEAT-002 配套类）。
  *
@@ -57,7 +59,7 @@ public final class WebSocketSessionAttributes {
    * @return 用户 ID，不存在时返回 null
    */
   public String getUserId() {
-    return getString("WS_USER_ID");
+    return getString(WebSocketConstants.WS_ATTR_USER_ID);
   }
 
   /**
@@ -66,7 +68,7 @@ public final class WebSocketSessionAttributes {
    * @return 租户 ID，不存在时返回 null
    */
   public String getTenantId() {
-    return getString("WS_TENANT_ID");
+    return getString(WebSocketConstants.WS_ATTR_TENANT_ID);
   }
 
   /**
@@ -75,7 +77,7 @@ public final class WebSocketSessionAttributes {
    * @return 用户名，不存在时返回 null
    */
   public String getUsername() {
-    return getString("WS_USERNAME");
+    return getString(WebSocketConstants.WS_ATTR_USERNAME);
   }
 
   /**

@@ -10,6 +10,7 @@ import com.njydsz.common.seata.xid.FeignXidRequestInterceptor;
 import com.njydsz.common.seata.xid.XidServletFilter;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -192,6 +193,34 @@ public class SeataAutoConfiguration {
     public SeataDynamicDataSourceAdapter seataDynamicRoutingDataSource() {
         LOG.info("SeataDynamicDataSourceAdapter registered for AT mode + dynamic datasource integration");
         return new SeataDynamicDataSourceAdapter();
+    }
+
+    /**
+     * 注册 undo_log Schema 启动期校验器。
+     *
+     * <p>当配置 undo-log.validate-schema=true 时，启动期检查 undo_log 表是否存在。
+     * 仅在 DataSource Bean 存在时注册。
+     *
+     * @param dataSourceProvider 应用主数据源（由 ydsz-common-jdbc 或其他数据源组件提供）
+     * @return Schema 校验器
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    // CHECKSTYLE.OFF: RegexpSinglelineJava
+    @ConditionalOnClass(name = "javax.sql.DataSource")
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    @ConditionalOnProperty(
+        prefix = "ydsz.seata.undo-log",
+        name = "validate-schema",
+        havingValue = "true")
+    public UndoLogSchemaValidator undoLogSchemaValidator(ObjectProvider<DataSource> dataSourceProvider) {
+        DataSource ds = dataSourceProvider.getIfAvailable();
+        if (ds == null) {
+            LOG.warn("DataSource not available, undo_log schema validation disabled");
+            return null;
+        }
+        LOG.info("UndoLogSchemaValidator registered (startup validation enabled)");
+        return new UndoLogSchemaValidator(properties, ds);
     }
 
     /**

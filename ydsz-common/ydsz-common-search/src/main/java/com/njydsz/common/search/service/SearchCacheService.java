@@ -3,32 +3,30 @@ package com.njydsz.common.search.service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.util.security.HexUtils;
 
 /**
- * 搜索缓存服务（Caffeine L1 + Redis L2 二级缓存）。
+ * 搜索结果缓存服务（Caffeine L1 + Redis L2 二级缓存）。
  *
  * <p>两级缓存架构：
  *
  * <ul>
- *   <li>L1 Caffeine（进程内） — 亚毫秒级命中，小容量短 TTL（10s），减轻 JVM GC 压力与热点 key 竞争</li>
+ *   <li>L1 Caffeine（进程内） — 亚毫秒级命中，小容量短 TTL（10s），减轻热点 key 竞争</li>
  *   <li>L2 Redis（跨进程） — 毫秒级命中，按配置 TTL，集群多节点共享</li>
  * </ul>
  *
- * <p>读取顺序：L1 → L2 → Engine；写入顺序：L2 + L1 同时写入。L2 不可用时降级到仅 L1（不影响可用性）。
+ * <p>读取顺序：L1 → L2 → Engine；写入顺序：L1 + L2 同时写入。L2 不可用时降级到仅 L1（不影响可用性）。
  *
  * <p>空结果使用更短的 TTL（整体 TTL / {@link #EMPTY_TTL_RATIO}）防缓存穿透。
  *
@@ -40,31 +38,35 @@ public class SearchCacheService {
 
   private static final String L2_CACHE_PREFIX = "search:cache:l2:";
 
-  /** 空结果空响应占位符（序列化到 Redis 的特殊标记） */
+  /** 空结果占位符（序列化到 Redis 的特殊标记） */
   private static final String EMPTY_RESULT_MARKER = "__EMPTY__";
 
   /** 空结果缓存使用更短的 TTL（防穿透） */
   private static final int EMPTY_TTL_RATIO = 3;
 
   private final Cache<String, SearchResponse> l1Cache;
-  private final ObjectProvider<StringRedisTemplate> redisProvider;
-  private final ObjectMapper objectMapper;
+  private final Supplier<StringRedisTemplate> redisProvider;
   private final SearchProperties properties;
+
+  /**
+   * 创建搜索缓存服务（兼容旧构造器，等价于 {@code redisProvider = () -> null}）。
+   *
+   * @param properties 搜索配置
+   */
+  public SearchCacheService(SearchProperties properties) {
+    this(properties, () -> null);
+  }
 
   /**
    * 创建搜索缓存服务。
    *
    * @param properties 搜索配置
-   * @param redisProvider Redis 惰性提供者（缺失时 L2 自动禁用）
-   * @param objectMapper Jackson 对象映射器（用于 L2 序列化）
+   * @param redisProvider Redis 提供者（用于 L2；返回 {@code null} 时自动禁用 L2）
    */
   public SearchCacheService(
-      SearchProperties properties,
-      ObjectProvider<StringRedisTemplate> redisProvider,
-      ObjectMapper objectMapper) {
+      SearchProperties properties, Supplier<StringRedisTemplate> redisProvider) {
     this.properties = properties;
     this.redisProvider = redisProvider;
-    this.objectMapper = objectMapper;
 
     long l1Size = properties.getCache().getL1MaxSize();
     long l1Ttl = properties.getCache().getL1Ttl();
@@ -106,9 +108,11 @@ public class SearchCacheService {
             l1Cache.put(key, empty); // 回填 L1
             return empty;
           }
-          SearchResponse response = objectMapper.readValue(json, SearchResponse.class);
-          l1Cache.put(key, response); // 回填 L1
-          return response;
+          SearchResponse response = YdszJson.fromJson(json, SearchResponse.class);
+          if (response != null) {
+            l1Cache.put(key, response); // 回填 L1
+            return response;
+          }
         }
       } catch (Exception e) {
         log.debug("[SearchCache] Redis 反序列化失败: {}", e.getMessage());
@@ -132,7 +136,7 @@ public class SearchCacheService {
     }
     String key = buildCacheKey(request);
 
-    // L1: 始终写入 Caffeine（Caffeine 的 expireAfterWrite 与 L2 的 TTL 解耦）
+    // L1: 始终写入 Caffeine
     l1Cache.put(key, response);
 
     // L2: 写入 Redis
@@ -143,13 +147,14 @@ public class SearchCacheService {
     try {
       long ttl = computeTtlSeconds(response);
       if (response.getTotal() == 0) {
-        redis.opsForValue().set(L2_CACHE_PREFIX + key, EMPTY_RESULT_MARKER, Duration.ofSeconds(ttl));
+        redis.opsForValue().set(
+            L2_CACHE_PREFIX + key, EMPTY_RESULT_MARKER, Duration.ofSeconds(ttl));
       } else {
-        String json = objectMapper.writeValueAsString(response);
+        String json = YdszJson.toJson(response);
         redis.opsForValue().set(L2_CACHE_PREFIX + key, json, Duration.ofSeconds(ttl));
       }
-    } catch (JsonProcessingException e) {
-      log.debug("[SearchCache] 序列化失败: {}", e.getMessage());
+    } catch (Exception e) {
+      log.debug("[SearchCache] Redis 序列化/写入失败: {}", e.getMessage());
     }
   }
 
@@ -212,6 +217,10 @@ public class SearchCacheService {
   }
 
   private StringRedisTemplate getRedis() {
-    return redisProvider.getIfAvailable();
+    try {
+      return redisProvider.get();
+    } catch (Exception e) {
+      return null;
+    }
   }
 }
