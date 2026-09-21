@@ -62,7 +62,9 @@
 | `RateLimitRuleListener` | 限流规则热更新监听器 |
 | `RateLimiterProperties` | 限流配置属性（`ydsz.safe.rate-limit.*`） |
 
-### 5. 幂等
+### 5. 幂等与防重
+
+#### 5.1 接口幂等（@Idempotent）
 
 | 类 | 说明 |
 |---|---|
@@ -71,7 +73,6 @@
 | `IdempotentAspect` | 幂等 AOP 切面（拦截 `@Idempotent`，委托策略执行校验） |
 | `IdempotentStrategy` **SPI** | 幂等策略接口（acquire / release / exists） |
 | `RedisIdempotentStrategy`（impl） | Redis SET NX EX Lua 脚本实现（fail-open / fail-closed 可配置） |
-| `RepeatSubmitTokenService` | 表单重复提交 Token 服务（Token 生成 / 间隔去重 / 校验消费） |
 | `IdempotentException` | 幂等异常（HTTP 409 Conflict） |
 | `IdempotentUnavailableException` | 幂等能力不可用异常（Redis 宕机且 fail-closed 时抛出） |
 
@@ -85,7 +86,21 @@ public OrderResult createOrder(@RequestBody OrderRequest req) { ... }
 public PayResult pay(String orderId, boolean forceCheck) { ... }
 ```
 
-**迁移说明**：幂等能力从 `ydsz-common-lock`（L4）迁入本模块（L5）。lock 模块保留 `@Deprecated` 向后兼容类，通过 `Class.forName` 检测避免与新版切面重复拦截。
+#### 5.2 表单防重（@RepeatSubmit）
+
+| 类 | 说明 |
+|---|---|
+| `@RepeatSubmit` | 表单防重注解（interval / message / headerName） |
+| `RepeatSubmitAspect` | 表单防重 AOP 切面（Token 令牌模式） |
+| `RepeatSubmitTokenService` | Token 服务（生成 / 间隔去重 / 校验消费） |
+
+**使用流程**：
+
+```java
+@RepeatSubmit(interval = 3000, message = "请勿重复提交")
+@PostMapping("/orders")
+public Result<Order> createOrder(@RequestBody OrderDTO dto) { ... }
+```
 
 ### 6. 熔断器
 
@@ -279,6 +294,7 @@ yzsz:
 | `RateLimiter` **SPI** | 限流算法（令牌桶 / 并发限制） | `@Component` |
 | `ClusterRateLimiter` | 集群限流器 | `@Component` |
 | `IdempotentStrategy` **SPI** | 幂等策略（Redis / 自定义存储） | `@ConditionalOnMissingBean` |
+| `RepeatSubmitTokenService` **SPI** | 表单防重 Token 服务（自定义存储后端） | `@ConditionalOnMissingBean` |
 
 ## 健康检查
 
@@ -305,11 +321,11 @@ yzsz:
 3. **XSS 三模式不要同时开启`HttpMessageConverter` 和 `Advice` 同时开启会重复清理，建议根据架构选择其一（前后端 JSON 交互推荐 Converter）。
 4. **限流降级**：限流器内部设计了 `null == rule` 兜底逻辑（不会因规则未加载拒绝所有请求）。
 5. **fail-closed**：出站 SSRF 检测在无法解析目标 IP 时默认拒绝（fail-closed）。
-6. **幂等与锁模块关系**：幂等能力已从 `ydsz-common-lock` 迁入本模块。lock 模块保留 `@Deprecated` 向后兼容类，通过 `Class.forName` 检测避免与新版切面重复拦截。新项目请直接使用 `com.njydsz.common.safe.idempotent.annotation.Idempotent`。
+6. **幂等与防重已迁入本模块**：`@Idempotent`、`@IdempotentExempt`、`@RepeatSubmit`、`IdempotentStrategy`、`RepeatSubmitTokenService` 等幂等与防重能力已从 `ydsz-common-lock` 迁入。lock 模块仅保留分布式锁能力（`@YdszDistributedLock`、`DistributedLocker`），不再包含任何幂等/防重类。
 
 ## 变更记录
 
-- **2.3.0**（2026-09-21）：幂等能力从 `ydsz-common-lock` 迁入本模块（`@Idempotent` / `@IdempotentExempt` / `IdempotentAspect` / `RepeatSubmitTokenService` / `RedisIdempotentStrategy`），与限流、安全告警形成完整防重体系。
+- **2.3.0**（2026-09-21）：幂等与防重能力从 `ydsz-common-lock` 迁入本模块（`@Idempotent` / `@IdempotentExempt` / `IdempotentAspect` / `@RepeatSubmit` / `RepeatSubmitAspect` / `RepeatSubmitTokenService` / `RedisIdempotentStrategy`）。lock 模块仅保留分布式锁能力。
 - **2.2.0**（2026-09-04）：新增 Outbound SSRF 防护（HttpConnectionValidator）；安全事件告警新增`SecurityEventAggregator`聚合降噪；IP 黑白名单新增 `ClientIpResolver`。
 - **2.0.0**（2026-09-01）：XSS 三模式重构（Filter / HttpMessageConverter / Advice）；字段加密 TypeHandler 通用化（支持任意 Entity 加解密字段）。
 - **1.0.0**（2026-08-02）：初始版本（XSS Filter + CSRF + API 签名 + 限流）。
