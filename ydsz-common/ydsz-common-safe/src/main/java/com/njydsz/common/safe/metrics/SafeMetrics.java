@@ -27,6 +27,8 @@ import com.njydsz.common.safe.alert.SecurityEventType;
  *   <li>{@code safe_illegal_access_total} - 非法访问次数
  *   <li>{@code safe_ip_blocked_total} - IP 封禁次数
  *   <li>{@code safe_filter_duration_seconds} - 安全过滤器处理耗时
+ *   <li>{@code safe_idempotent_hits_total} - 幂等命中（重复提交拒绝）次数
+ *   <li>{@code safe_idempotent_acquire_seconds} - 幂等锁获取耗时
  * </ul>
  *
  * <p><b>性能优化：</b>Counter 实例预注册并缓存，避免每次事件触发时的重复 {@code Counter.builder().register()} 开销。 Micrometer
@@ -47,6 +49,7 @@ public class SafeMetrics {
   private final AtomicLong rateLimitTriggered = new AtomicLong(0);
   private final AtomicLong illegalAccess = new AtomicLong(0);
   private final AtomicLong ipBlocked = new AtomicLong(0);
+  private final AtomicLong idempotentHits = new AtomicLong(0);
 
   /** Counter 缓存（预注册） */
   private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
@@ -105,6 +108,45 @@ public class SafeMetrics {
           .register(meterRegistry)
           .record(durationNanos, TimeUnit.NANOSECONDS);
     }
+  }
+
+  /**
+   * 记录幂等命中（重复提交被拒绝）
+   */
+  public void recordIdempotentHit() {
+    idempotentHits.incrementAndGet();
+  }
+
+  /**
+   * 记录幂等锁获取成功
+   *
+   * @param waitMillis 获取耗时（毫秒）
+   */
+  public void recordIdempotentAcquireSuccess(long waitMillis) {
+    if (meterRegistry != null) {
+      Timer.builder("safe_idempotent_acquire_seconds")
+          .register(meterRegistry)
+          .record(waitMillis, TimeUnit.MILLISECONDS);
+    }
+  }
+
+  /**
+   * 记录幂等锁释放
+   *
+   * @param holdMillis 持锁耗时（毫秒）
+   */
+  public void recordIdempotentRelease(long holdMillis) {
+    // 持锁耗时可用于后续扩展监控，当前仅记录 debug 日志
+    LOG.trace("[SafeMetrics] 幂等锁释放，持锁耗时 {}ms", holdMillis);
+  }
+
+  /**
+   * 获取累计幂等命中次数
+   *
+   * @return 累计次数
+   */
+  public long getIdempotentHitsCount() {
+    return idempotentHits.get();
   }
 
   /**

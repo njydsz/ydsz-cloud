@@ -1,31 +1,24 @@
 package com.njydsz.common.lock.idempotent;
 
+import com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException;
+
 /**
- * 幂等能力不可用异常
+ * 幂等能力不可用异常（已迁移）
  *
- * <p>当幂等检查依赖的基础设施（如 Redis）不可用、且已配置为 fail-closed （{@code
- * ydsz.lock.idempotent.fail-open=false}）时抛出，拒绝请求以保证强幂等语义。
+ * <p><b>已迁移至 {@link com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException}。</b>
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 使用 {@link com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException} 替代
  */
-public class IdempotentUnavailableException extends RuntimeException {
+@Deprecated
+@SuppressWarnings("all")
+public class IdempotentUnavailableException extends com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException {
 
-  /**
-   * 以错误消息构造异常
-   *
-   * @param message 错误消息，需包含上下文信息
-   */
   public IdempotentUnavailableException(String message) {
     super(message);
   }
 
-  /**
-   * 以错误消息与根因构造异常
-   *
-   * @param message 错误消息，需包含上下文信息
-   * @param cause 根因异常
-   */
   public IdempotentUnavailableException(String message, Throwable cause) {
     super(message, cause);
   }

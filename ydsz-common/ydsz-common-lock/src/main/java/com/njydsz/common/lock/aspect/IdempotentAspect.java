@@ -105,6 +105,28 @@ public class IdempotentAspect {
   public Object around(ProceedingJoinPoint joinPoint, Idempotent idempotent) {
     Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
 
+    /*
+     * 兼容安全模块的 @Idempotent 注解。
+     *
+     * <p>当方法同时标注了 {@code com.njydsz.common.safe.idempotent.annotation.Idempotent}（新版）和
+     * {@code com.njydsz.common.lock.annotation.Idempotent}（旧版，即本注解）时，
+     * 由安全模块的幂等切面处理，本切面跳过处理避免重复拦截。
+     *
+     * <p>这保证了安全模块引入后，已迁移使用新版注解的方法不会被旧版切面重复拦截。
+     */
+    try {
+      Class<?> safeIdempotentClass =
+          Class.forName("com.njydsz.common.safe.idempotent.annotation.Idempotent");
+      if (method.isAnnotationPresent((Class<java.lang.annotation.Annotation>) safeIdempotentClass)) {
+        log.debug(
+            "[ydsz-lock] [idempotent] 方法已标注安全模块 @Idempotent，跳过旧版切面 method={}",
+            method.getName());
+        return proceed(joinPoint);
+      }
+    } catch (ClassNotFoundException e) {
+      // 安全模块未引入，正常执行旧版幂等逻辑
+    }
+
     // 方法级 @IdempotentExempt 检查：直接放行
     if (method.isAnnotationPresent(IdempotentExempt.class)) {
       log.debug(

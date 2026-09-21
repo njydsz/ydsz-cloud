@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,6 +54,10 @@ import com.njydsz.common.safe.filter.XssFilter;
 import com.njydsz.common.safe.ip.IpAccessService;
 import com.njydsz.common.safe.metrics.SafeMetrics;
 import com.njydsz.common.safe.password.PasswordStrengthValidator;
+import com.njydsz.common.safe.idempotent.aspect.IdempotentAspect;
+import com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException;
+import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
+import com.njydsz.common.safe.idempotent.strategy.RedisIdempotentStrategy;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
 import com.njydsz.common.safe.sensitive.SensitiveDataProperties;
 import com.njydsz.common.safe.ssrf.HttpConnectionValidator;

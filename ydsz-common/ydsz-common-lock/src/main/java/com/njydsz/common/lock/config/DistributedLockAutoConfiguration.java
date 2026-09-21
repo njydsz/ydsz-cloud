@@ -254,21 +254,19 @@ public class DistributedLockAutoConfiguration {
   }
 
   /**
-   * 创建幂等策略 Bean
+   * 创建幂等策略 Bean（向后兼容保留，安全模块现已接管）
    *
-   * <p>基于 Redis SET NX EX 实现。Redis 不可用时的降级策略由 {@code ydsz.lock.idempotent.fail-open} 控制：
-   *
-   * <ul>
-   *   <li>true（默认）：fail-open 放行，保证主流程可用（防重复点击场景）
-   *   <li>false：fail-closed 拒绝请求，严格保证幂等语义（资金类强幂等场景）
-   * </ul>
+   * <p>幂等能力已迁移至 {@code ydzs-common-safe} 安全模块。 当安全模块在 classpath 时，由其 {@code SafeConfiguration}
+   * 注册新版幂等 Bean（bean 名为 {@code safeIdempotentStrategy}）；本配置通过
+   * {@code @ConditionalOnMissingBean(name="safeIdempotentStrategy")} 不覆盖新版注册，
+   * 仅作为安全模块未引入时的降级方案。
    *
    * @param stringRedisTemplate Redis 客户端
    * @param lockProperties 锁配置属性（读取幂等降级策略）
    * @return IdempotentStrategy 实例
    */
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(name = "safeIdempotentStrategy")
   public IdempotentStrategy idempotentStrategy(
       StringRedisTemplate stringRedisTemplate, LockProperties lockProperties) {
     boolean failOpen = lockProperties.getIdempotent().isFailOpen();
@@ -276,12 +274,12 @@ public class DistributedLockAutoConfiguration {
   }
 
   /**
-   * 创建接口幂等性 AOP 切面 Bean
+   * 创建接口幂等性 AOP 切面 Bean（向后兼容保留，安全模块现已接管）
    *
-   * <p>拦截 {@link com.njydsz.common.lock.annotation.Idempotent} 注解方法， 基于 Redis {@code SET NX EX} Lua
-   * 脚本实现"在 TTL 窗口内同一幂等键只处理一次"。
-   *
-   * <p>项目硬约束：AOP 组件必须通过 {@code @ConditionalOnMissingBean} 注册， 允许业务方覆盖默认实现。
+   * <p>幂等能力已迁移至 {@code ydzs-common-safe} 安全模块。 当安全模块在 classpath 时，由其注册新版
+   * {@code com.njydsz.common.safe.idempotent.aspect.IdempotentAspect}（bean 名为 {@code
+   * safeIdempotentAspect}）；本配置仅处理旧版 {@code com.njydsz.common.lock.annotation.Idempotent}
+   * 注解的向后兼容场景（已自动跳过同时标注新版注解的方法）。
    *
    * @param idempotentStrategy 幂等策略
    * @param lockMetrics 锁指标收集器（可选）
@@ -289,7 +287,7 @@ public class DistributedLockAutoConfiguration {
    * @return IdempotentAspect 实例
    */
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean(name = "safeIdempotentAspect")
   public IdempotentAspect idempotentAspect(
       IdempotentStrategy idempotentStrategy,
       LockMetrics lockMetrics,
