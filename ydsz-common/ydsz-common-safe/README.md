@@ -1,8 +1,8 @@
 # ydzs-common-safe
 
-> 安全防护层（L5 业务服务层）— XSS / CSRF / API 签名 / 限流 / 熔断 / SSRF / 脱敏 / 验证码
+> 安全防护层（L5 业务服务层）— XSS / CSRF / API 签名 / 限流 / 幂等 / 熔断 / SSRF / 脱敏 / 验证码
 
-提供 XSS 三模式（Filter / HttpMessageConverter / Advice）、CSRF Token 防护、API Request 签名校验（Nonce / 防重放）、限流（令牌桶 + 并发限制）、熔断（Resilience4j 适配器）、出站 SSRF 防护、`@SensitiveData` 脱敏、字段加密 MyBatis TypeHandler、图形验证码、密码强度校验、安全事件告警、IP 黑白名单等企业级安全能力。默认 fail-closed 语义（宁可拒绝 / 不泄露 / 不越权）。
+提供 XSS 三模式（Filter / HttpMessageConverter / Advice）、CSRF Token 防护、API Request 签名校验（Nonce / 防重放）、限流（令牌桶 + 并发限制）、幂等（Redis SET NX EX + Token 防重提交）、熔断（Resilience4j 适配器）、出站 SSRF 防护、`@SensitiveData` 脱敏、字段加密 MyBatis TypeHandler、图形验证码、密码强度校验、安全事件告警、IP 黑白名单等企业级安全能力。默认 fail-closed 语义（宁可拒绝 / 不泄露 / 不越权）。
 
 ## 模块定位
 
@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供多维安全防护：XSS / CSRF / API 签名 / 限流 / 熔断 / SSRF / 脱敏 |
 | **依赖** | ydsz-common-core、ydsz-common-util、ydsz-common-exception、ydsz-common-cache、ydsz-common-json、ydsz-common-redis、ydsz-common-thread；spring-boot、spring-boot-starter-aspectj、owasp-java-html-sanitizer；可选 mybatis、resilience4j-circuitbreaker / resilience4j-consumer、spring-boot-actuator、spring-boot-health、http-converter、jackson-annotations、restclient |
-| **版本** | 2.2.0 |
+| **版本** | 2.3.0 |
 
 ## 核心能力
 
@@ -62,7 +62,32 @@
 | `RateLimitRuleListener` | 限流规则热更新监听器 |
 | `RateLimiterProperties` | 限流配置属性（`ydsz.safe.rate-limit.*`） |
 
-### 5. 熔断器
+### 5. 幂等
+
+| 类 | 说明 |
+|---|---|
+| `@Idempotent` | 幂等注解（key / ttlSeconds / message / condition） |
+| `@IdempotentExempt` | 幂等豁免注解（参数 / 字段 / 方法级） |
+| `IdempotentAspect` | 幂等 AOP 切面（拦截 `@Idempotent`，委托策略执行校验） |
+| `IdempotentStrategy` **SPI** | 幂等策略接口（acquire / release / exists） |
+| `RedisIdempotentStrategy`（impl） | Redis SET NX EX Lua 脚本实现（fail-open / fail-closed 可配置） |
+| `RepeatSubmitTokenService` | 表单重复提交 Token 服务（Token 生成 / 间隔去重 / 校验消费） |
+| `IdempotentException` | 幂等异常（HTTP 409 Conflict） |
+| `IdempotentUnavailableException` | 幂等能力不可用异常（Redis 宕机且 fail-closed 时抛出） |
+
+**核心注解用法**：
+
+```java
+@Idempotent(key = "order:#{#req.orderId}", ttlSeconds = 5, message = "订单正在处理中")
+public OrderResult createOrder(@RequestBody OrderRequest req) { ... }
+
+@Idempotent(key = "'pay:' + #orderId", condition = "#forceCheck == true")
+public PayResult pay(String orderId, boolean forceCheck) { ... }
+```
+
+**迁移说明**：幂等能力从 `ydsz-common-lock`（L4）迁入本模块（L5）。lock 模块保留 `@Deprecated` 向后兼容类，通过 `Class.forName` 检测避免与新版切面重复拦截。
+
+### 6. 熔断器
 
 | 类 | 说明 |
 |---|---|
@@ -72,7 +97,7 @@
 | `CircuitBreakerMetricsExporter`（circuitbreaker） | 熔断指标导出 |
 | `CircuitBreakerStrategy`（circuitbreaker） | 熔断策略接口 |
 
-### 6. 出站 SSRF 防护
+### 7. 出站 SSRF 防护
 
 | 类 | 说明 |
 |---|---|
@@ -81,7 +106,7 @@
 
 **拦截规则**：禁止访问 RFC1918 私网地址（10.x / 172.16-31.x / 192.168.x）和本地回环（127.x）。
 
-### 7. 字段加密
+### 8. 字段加密
 
 | 类 | 说明 |
 |---|---|
@@ -90,7 +115,7 @@
 | `FieldEncryptionTypeHandler` | MyBatis TypeHandler 加解密（读解密，写加密） |
 | `FieldEncryptionException` | 字段加密异常 |
 
-### 8. 安全事件与告警
+### 9. 安全事件与告警
 
 | 类 | 说明 |
 |---|---|
@@ -101,7 +126,7 @@
 | `SecurityAlertProperties`（alert） | 安全告警配置 |
 | `SecurityEvent*`（alert） | 安全事件聚合 / 发布 / 监听 + SafeAlertProperties |
 
-### 9. IP 黑白名单
+### 10. IP 黑白名单
 
 | 类 | 说明 |
 |---|---|
@@ -109,20 +134,20 @@
 | `IpAccessService`（ip） | IP 访问控制服务（加载黑白名单配置） |
 | `ClientIpResolver`（util） | 客户端真实 IP 解析（考虑 X-Forwarded-For / X-Real-IP） |
 
-### 10. 图形验证码
+### 11. 图形验证码
 
 | 类 | 说明 |
 |---|---|
 | `CaptchaGenerator` **SPI** | 验证码生成器（支持数字 / 字母 / 混合） |
 | `CaptchaProperties` | 验证码配置（`ydsz.safe.captcha.*`） |
 
-### 11. 密码强度校验
+### 12. 密码强度校验
 
 | 类 | 说明 |
 |---|---|
 | `PasswordStrengthValidator`（password） | 密码强度校验器（长度 / 大小写 / 数字 / 特殊字符） |
 
-### 12. 脱敏
+### 13. 脱敏
 
 | 类 | 说明 |
 |---|---|
@@ -132,7 +157,7 @@
 | `SensitiveDataSerializer`（sensitive） | Jackson 序列化器（序列化时自动脱敏） |
 | `SensitiveDataUtil`（sensitive） | 脱敏工具 |
 
-### 13. 其他安全注解
+### 14. 其他安全注解
 
 | 注解 | 说明 |
 |---|---|
@@ -253,6 +278,7 @@ yzsz:
 | `RateLimitRuleListener` | 限流规则热更新回调 | `@Component` |
 | `RateLimiter` **SPI** | 限流算法（令牌桶 / 并发限制） | `@Component` |
 | `ClusterRateLimiter` | 集群限流器 | `@Component` |
+| `IdempotentStrategy` **SPI** | 幂等策略（Redis / 自定义存储） | `@ConditionalOnMissingBean` |
 
 ## 健康检查
 
@@ -270,7 +296,7 @@ yzsz:
 | `XssAutoConfiguration` | XSS 启用 |
 | `RateLimitAutoConfiguration` | 限流启用 |
 | `FieldEncryptionAutoConfiguration` | 字段加密启用 |
-| `IdempotentAutoConfiguration` | 幂等启用 |
+| `SafeConfiguration` | 幂等 Bean 注册（idempotentStrategy / idempotentAspect），由 `@EnableYdszSafe` 触发 |
 
 ## 注意事项
 
@@ -279,9 +305,11 @@ yzsz:
 3. **XSS 三模式不要同时开启`HttpMessageConverter` 和 `Advice` 同时开启会重复清理，建议根据架构选择其一（前后端 JSON 交互推荐 Converter）。
 4. **限流降级**：限流器内部设计了 `null == rule` 兜底逻辑（不会因规则未加载拒绝所有请求）。
 5. **fail-closed**：出站 SSRF 检测在无法解析目标 IP 时默认拒绝（fail-closed）。
+6. **幂等与锁模块关系**：幂等能力已从 `ydsz-common-lock` 迁入本模块。lock 模块保留 `@Deprecated` 向后兼容类，通过 `Class.forName` 检测避免与新版切面重复拦截。新项目请直接使用 `com.njydsz.common.safe.idempotent.annotation.Idempotent`。
 
 ## 变更记录
 
+- **2.3.0**（2026-09-21）：幂等能力从 `ydsz-common-lock` 迁入本模块（`@Idempotent` / `@IdempotentExempt` / `IdempotentAspect` / `RepeatSubmitTokenService` / `RedisIdempotentStrategy`），与限流、安全告警形成完整防重体系。
 - **2.2.0**（2026-09-04）：新增 Outbound SSRF 防护（HttpConnectionValidator）；安全事件告警新增`SecurityEventAggregator`聚合降噪；IP 黑白名单新增 `ClientIpResolver`。
 - **2.0.0**（2026-09-01）：XSS 三模式重构（Filter / HttpMessageConverter / Advice）；字段加密 TypeHandler 通用化（支持任意 Entity 加解密字段）。
 - **1.0.0**（2026-08-02）：初始版本（XSS Filter + CSRF + API 签名 + 限流）。
