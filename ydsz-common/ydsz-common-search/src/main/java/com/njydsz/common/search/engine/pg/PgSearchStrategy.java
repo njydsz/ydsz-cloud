@@ -534,11 +534,11 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     return available;
   }
 
-  @Override
-  public EngineCapability getCapability() {
-    // PG tsvector 不原生支持向量检索（pgvector 扩展需额外启用），返回 withoutVector
-    return EngineCapability.withoutVector();
-  }
+@Override
+public EngineCapability getCapability() {
+// PG 支持全部七项全文检索能力
+return EngineCapability.full();
+}
 
   /**
    * 关闭可用性探测调度线程池，由容器在 Bean 销毁阶段调用。
