@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.lock.idempotent.IdempotentStrategy;
+import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.constant.MessageConstants;

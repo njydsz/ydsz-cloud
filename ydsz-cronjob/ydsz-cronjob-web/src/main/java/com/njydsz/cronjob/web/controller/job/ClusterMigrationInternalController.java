@@ -14,7 +14,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.vo.JobVO;

@@ -55,9 +55,11 @@ import com.njydsz.common.safe.ip.IpAccessService;
 import com.njydsz.common.safe.metrics.SafeMetrics;
 import com.njydsz.common.safe.password.PasswordStrengthValidator;
 import com.njydsz.common.safe.idempotent.aspect.IdempotentAspect;
+import com.njydsz.common.safe.idempotent.aspect.RepeatSubmitAspect;
 import com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.safe.idempotent.strategy.RedisIdempotentStrategy;
+import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
 import com.njydsz.common.safe.sensitive.SensitiveDataProperties;
 import com.njydsz.common.safe.ssrf.HttpConnectionValidator;
@@ -558,6 +560,48 @@ public class SafeConfiguration {
         "ydsz:idem:",
         null,
         safeMetricsProvider.getIfAvailable());
+  }
+
+  /**
+   * 注册表单重复提交 Token 服务 Bean
+   *
+   * <p>提供 Token 的生成、校验和删除功能，用于防止表单重复提交。
+   *
+   * @param stringRedisTemplate Redis 客户端
+   * @return RepeatSubmitTokenService 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnBean(StringRedisTemplate.class)
+  public RepeatSubmitTokenService repeatSubmitTokenService(
+      ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+    StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+    if (redisTemplate == null) {
+      LOG.warn("StringRedisTemplate 不可用，表单重复提交 Token 服务需要 Redis 支持");
+      return null;
+    }
+    LOG.info("注册表单重复提交 Token 服务");
+    return new RepeatSubmitTokenService(redisTemplate);
+  }
+
+  /**
+   * 注册表单重复提交 AOP 切面 Bean
+   *
+   * <p>拦截 {@code com.njydsz.common.safe.idempotent.annotation.RepeatSubmit} 注解方法，
+   * 基于 Token 令牌模式防止表单重复提交。
+   *
+   * @param repeatSubmitTokenService Token 服务
+   * @param userIdResolver 当前用户 ID 解析器（由业务层提供实现）
+   * @return RepeatSubmitAspect 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnBean(RepeatSubmitTokenService.class)
+  public RepeatSubmitAspect repeatSubmitAspect(
+      RepeatSubmitTokenService repeatSubmitTokenService,
+      ObjectProvider<com.njydsz.common.lock.spi.CurrentUserIdResolver> userIdResolver) {
+    LOG.info("注册表单重复提交 AOP 切面");
+    return new RepeatSubmitAspect(repeatSubmitTokenService, userIdResolver.getIfAvailable());
   }
 
   /**

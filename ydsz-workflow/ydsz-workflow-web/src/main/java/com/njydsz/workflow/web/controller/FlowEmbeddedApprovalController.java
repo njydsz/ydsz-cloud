@@ -22,7 +22,7 @@ import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;

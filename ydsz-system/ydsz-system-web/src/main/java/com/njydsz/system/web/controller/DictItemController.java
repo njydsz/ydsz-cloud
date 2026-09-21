@@ -26,7 +26,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.DictItemBatchDTO;
 import com.njydsz.system.domain.dto.DictItemDTO;

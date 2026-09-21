@@ -30,7 +30,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
-import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.socket.trace.WebSocketTraceContext;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;

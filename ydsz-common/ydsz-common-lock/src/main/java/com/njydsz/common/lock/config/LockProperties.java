@@ -23,9 +23,9 @@ import org.springframework.validation.annotation.Validated;
  *       max-size: 32
  *       queue-capacity: 256
  *     scheduler-pool-size: 2
- *     idempotent:
- *       default-ttl-seconds: 5
- *       key-prefix: ydsz:idem:
+ *     multi-lock:
+ *       max-renew-count: 30
+ *       renew-interval-seconds: 10
  * }</pre>
  *
  * <p><b>兼容性说明：</b> 当前配置前缀为 {@code ydsz.lock}，历史版本曾使用 {@code ydsz.distributed-lock} 前缀， 已统一迁移至
@@ -62,9 +62,6 @@ public class LockProperties {
 
   /** 默认多 Key 联锁续期间隔（秒） */
   private static final long DEFAULT_MULTI_LOCK_RENEW_INTERVAL = 10;
-
-  /** 默认幂等锁过期时间（秒） */
-  private static final int DEFAULT_IDEMPOTENT_TTL_SECONDS = 5;
 
   /** 是否启用分布式锁功能（控制整个分布式锁模块的开关，默认开启） */
   private boolean enabled = true;
@@ -117,9 +114,6 @@ public class LockProperties {
    */
   private MultiLock multiLock = new MultiLock();
 
-  /** 幂等配置 */
-  private Idempotent idempotent = new Idempotent();
-
   /**
    * 锁获取线程池配置。
    *
@@ -156,37 +150,4 @@ public class LockProperties {
     private long renewIntervalSeconds = DEFAULT_MULTI_LOCK_RENEW_INTERVAL;
   }
 
-  /** 幂等配置 */
-  @Data
-  public static class Idempotent {
-    /**
-     * 幂等锁默认过期时间（秒），默认 5 秒
-     *
-     * <p>覆盖大部分重复点击场景
-     */
-    @Min(1)
-    private int defaultTtlSeconds = DEFAULT_IDEMPOTENT_TTL_SECONDS;
-
-    /**
-     * 幂等键 Redis 前缀
-     *
-     * <p>所有幂等键统一以此前缀开头，便于排查和清理
-     */
-    private String keyPrefix = "ydsz:idem:";
-
-    /**
-     * Redis 不可用时的降级策略，默认 {@code true}（fail-open 放行）
-     *
-     * <p>权衡说明：
-     *
-     * <ul>
-     *   <li>{@code true}（fail-open）：Redis 抖动时接口放行，幂等语义临时失效， 但保证业务主流程可用（适用于非关键幂等场景，如防重复点击）
-     *   <li>{@code false}（fail-closed）：Redis 不可用时拒绝请求（抛异常）， 幂等语义严格保证，但 Redis
-     *       故障会导致接口不可用（适用于资金类等强幂等场景）
-     * </ul>
-     *
-     * <p>可通过配置 {@code ydsz.lock.idempotent.fail-open} 调整。
-     */
-    private boolean failOpen = true;
-  }
 }

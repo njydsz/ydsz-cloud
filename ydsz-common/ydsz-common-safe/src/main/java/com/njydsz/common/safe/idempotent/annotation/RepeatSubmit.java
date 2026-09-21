@@ -1,4 +1,4 @@
-package com.njydsz.common.lock.annotation;
+package com.njydsz.common.safe.idempotent.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 /**
  * 表单重复提交防护注解（Token 令牌模式）
  *
- * <p>与 {@link Idempotent} 的区别：
+ * <p>区别：
  *
  * <ul>
- *   <li>{@link Idempotent}：服务端去重，基于请求参数摘要，适用于接口幂等性
+ *   <li>幂等（Idempotent）：服务端去重，基于请求参数摘要，适用于接口幂等性
  *   <li>{@link RepeatSubmit}：表单 Token 模式，前端先获取 token 再提交，适用于表单重复提交防护
  * </ul>
  *
@@ -34,7 +34,6 @@ import java.lang.annotation.Target;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see Idempotent
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -51,14 +50,14 @@ public @interface RepeatSubmit {
   long interval() default 3000;
 
   /**
-   * 重复提交时的提示信息
+   * 重复提交时的提示信息。
    *
    * @return 提示信息
    */
   String message() default "请勿重复提交";
 
   /**
-   * Token 在请求头中的名称
+   * Token 请求头名称，默认 {@code X-Repeat-Token}
    *
    * @return 请求头名称
    */

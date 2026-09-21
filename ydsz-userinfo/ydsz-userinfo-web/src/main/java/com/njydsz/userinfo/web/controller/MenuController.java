@@ -24,7 +24,7 @@ import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.MenuDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;

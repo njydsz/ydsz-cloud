@@ -20,8 +20,7 @@ import java.util.concurrent.TimeUnit;
  * <p><b>注意：</b>{@link LockType#READ_WRITE} 与 {@link LockType#SEMAPHORE} 为键维度实例，不支持注解方式使用（将抛出 {@code
  * IllegalArgumentException}）， 请通过 {@code LockStrategy.getReadWriteLock / getSemaphore} 编程式获取。
  *
- * <p>与 {@link Idempotent} 的区别：本注解用于对同一资源的并发互斥（key 通常含 SpEL 表达式精确到资源 ID， 并可阻塞等待），而 {@link
- * Idempotent} 用于接口防重复提交（key 通常为静态串，不阻塞）。 典型场景下两者会配合使用形成分层防御。
+ * <p>与幂等注解的区别：本注解用于对同一资源的并发互斥（key 通常含 SpEL 表达式精确到资源 ID， 并可阻塞等待），而幂等注解用于接口防重复提交（key 通常为静态串，不阻塞）。
  *
  * <p><b>使用示例：</b>
  *

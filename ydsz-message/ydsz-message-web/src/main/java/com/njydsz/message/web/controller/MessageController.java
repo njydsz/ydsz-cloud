@@ -27,7 +27,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.BatchSendResultDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;

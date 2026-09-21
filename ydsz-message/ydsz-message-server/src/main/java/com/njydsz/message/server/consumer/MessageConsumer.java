@@ -20,7 +20,7 @@ import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.lock.idempotent.IdempotentStrategy;
+import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.trace.MessageTracer;

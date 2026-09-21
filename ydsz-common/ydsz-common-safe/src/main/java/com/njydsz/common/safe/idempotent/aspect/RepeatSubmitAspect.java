@@ -1,4 +1,4 @@
-package com.njydsz.common.lock.aspect;
+package com.njydsz.common.safe.idempotent.aspect;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -11,9 +11,9 @@ import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.lock.annotation.RepeatSubmit;
-import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
+import com.njydsz.common.safe.idempotent.annotation.RepeatSubmit;
+import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
 import com.njydsz.common.util.http.RequestContextUtils;
 
 /**
@@ -30,10 +30,10 @@ import com.njydsz.common.util.http.RequestContextUtils;
  *   <li>校验通过则执行业务方法，失败则抛出 {@link BusinessException}
  * </ol>
  *
- * <p><b>与 {@link IdempotentAspect} 的区别：</b>
+ * <p><b>与幂等切面的区别：</b>
  *
  * <ul>
- *   <li>{@link IdempotentAspect}：基于请求参数摘要的服务端去重，适用于接口幂等性
+ *   <li>幂等切面（IdempotentAspect）：基于请求参数摘要的服务端去重，适用于接口幂等性
  *   <li>本切面：基于前端 Token 的防重复提交，适用于表单提交场景
  * </ul>
  *
@@ -66,7 +66,7 @@ public class RepeatSubmitAspect {
   public Object around(ProceedingJoinPoint joinPoint, RepeatSubmit repeatSubmit) {
     HttpServletRequest request = getCurrentRequest();
     if (request == null) {
-      log.warn("[ydsz-lock] [repeat-submit] 非 Web 环境，跳过多提交校验");
+      log.warn("[ydsz-safe] [repeat-submit] 非 Web 环境，跳过多提交校验");
       return proceed(joinPoint);
     }
 
@@ -74,7 +74,7 @@ public class RepeatSubmitAspect {
     String token = request.getHeader(headerName);
 
     if (!StringUtils.hasText(token)) {
-      log.warn("[ydsz-lock] [repeat-submit] 缺少防重复提交 Token | header={}", headerName);
+      log.warn("[ydsz-safe] [repeat-submit] 缺少防重复提交 Token | header={}", headerName);
       throw BusinessException.builder()
           .code(CoreExceptionCode.FAIL.getCode())
           .message("缺少防重复提交 Token，请先获取 Token")
@@ -87,7 +87,7 @@ public class RepeatSubmitAspect {
         joinPoint.getSignature().getDeclaringTypeName() + "#" + joinPoint.getSignature().getName();
     if (!tokenService.acquireInterval(userId, businessKey, repeatSubmit.interval())) {
       log.warn(
-          "[ydsz-lock] [repeat-submit] 间隔窗口内重复提交 | userId={}, businessKey={} | interval={}ms",
+          "[ydsz-safe] [repeat-submit] 间隔窗口内重复提交 | userId={}, businessKey={} | interval={}ms",
           userId,
           businessKey,
           repeatSubmit.interval());
@@ -99,7 +99,7 @@ public class RepeatSubmitAspect {
 
     boolean valid = tokenService.validateAndConsume(userId, token);
     if (!valid) {
-      log.warn("[ydsz-lock] [repeat-submit] Token 无效或已过期 | header={}, token={}", headerName, token);
+      log.warn("[ydsz-safe] [repeat-submit] Token 无效或已过期 | header={}, token={}", headerName, token);
       throw BusinessException.builder()
           .code(CoreExceptionCode.FAIL.getCode())
           .message(repeatSubmit.message())
@@ -109,10 +109,10 @@ public class RepeatSubmitAspect {
     try {
       return joinPoint.proceed();
     } catch (RuntimeException | Error e) {
-      log.debug("[ydsz-lock] [repeat-submit] 业务方法执行异常 | cause={}", e.getMessage());
+      log.debug("[ydsz-safe] [repeat-submit] 业务方法执行异常 | cause={}", e.getMessage());
       throw e;
     } catch (Throwable ex) {
-      log.debug("[ydsz-lock] [repeat-submit] 检查型异常包装后抛出 | cause={}", ex.getMessage());
+      log.debug("[ydsz-safe] [repeat-submit] 检查型异常包装后抛出 | cause={}", ex.getMessage());
       throw wrapCheckedException(ex);
     }
   }

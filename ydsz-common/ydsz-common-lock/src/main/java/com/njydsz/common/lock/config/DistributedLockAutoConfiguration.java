@@ -17,16 +17,11 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
-import com.njydsz.common.lock.aspect.IdempotentAspect;
-import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.lock.core.LockWaitTimePolicy;
 import com.njydsz.common.lock.health.LockHealthIndicator;
-import com.njydsz.common.lock.idempotent.IdempotentStrategy;
-import com.njydsz.common.lock.idempotent.RedisIdempotentStrategy;
-import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.renewal.LockRenewalService;
@@ -254,52 +249,6 @@ public class DistributedLockAutoConfiguration {
   }
 
   /**
-   * 创建幂等策略 Bean（向后兼容保留，安全模块现已接管）
-   *
-   * <p>幂等能力已迁移至 {@code ydzs-common-safe} 安全模块。 当安全模块在 classpath 时，由其 {@code SafeConfiguration}
-   * 注册新版幂等 Bean（bean 名为 {@code safeIdempotentStrategy}）；本配置通过
-   * {@code @ConditionalOnMissingBean(name="safeIdempotentStrategy")} 不覆盖新版注册，
-   * 仅作为安全模块未引入时的降级方案。
-   *
-   * @param stringRedisTemplate Redis 客户端
-   * @param lockProperties 锁配置属性（读取幂等降级策略）
-   * @return IdempotentStrategy 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean(name = "safeIdempotentStrategy")
-  public IdempotentStrategy idempotentStrategy(
-      StringRedisTemplate stringRedisTemplate, LockProperties lockProperties) {
-    boolean failOpen = lockProperties.getIdempotent().isFailOpen();
-    return new RedisIdempotentStrategy(stringRedisTemplate, failOpen);
-  }
-
-  /**
-   * 创建接口幂等性 AOP 切面 Bean（向后兼容保留，安全模块现已接管）
-   *
-   * <p>幂等能力已迁移至 {@code ydzs-common-safe} 安全模块。 当安全模块在 classpath 时，由其注册新版
-   * {@code com.njydsz.common.safe.idempotent.aspect.IdempotentAspect}（bean 名为 {@code
-   * safeIdempotentAspect}）；本配置仅处理旧版 {@code com.njydsz.common.lock.annotation.Idempotent}
-   * 注解的向后兼容场景（已自动跳过同时标注新版注解的方法）。
-   *
-   * @param idempotentStrategy 幂等策略
-   * @param lockMetrics 锁指标收集器（可选）
-   * @param lockProperties 锁配置属性（用于获取 namespace）
-   * @return IdempotentAspect 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean(name = "safeIdempotentAspect")
-  public IdempotentAspect idempotentAspect(
-      IdempotentStrategy idempotentStrategy,
-      LockMetrics lockMetrics,
-      LockProperties lockProperties) {
-    return new IdempotentAspect(
-        idempotentStrategy,
-        lockProperties.getIdempotent().getKeyPrefix(),
-        lockProperties.getNamespace(),
-        lockMetrics);
-  }
-
-  /**
    * 注册分布式锁健康检查指示器 Bean。
    *
    * <p>探测 Redis 连接可用性、看门狗存活与锁指标采集状态，对外暴露锁子系统健康度。 依赖 Spring HealthIndicator 类与 Redis 连接工厂存在时启用；无自定义
@@ -317,38 +266,6 @@ public class DistributedLockAutoConfiguration {
       ObjectProvider<LockMetrics> lockMetricsProvider) {
     return new LockHealthIndicator(
         redisConnectionFactory, lockWatchDogProvider, lockMetricsProvider);
-  }
-
-  /**
-   * 创建表单重复提交 Token 服务 Bean
-   *
-   * <p>提供 Token 的生成、校验和删除功能，用于防止表单重复提交。
-   *
-   * @param stringRedisTemplate Redis 客户端
-   * @return RepeatSubmitTokenService 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  public RepeatSubmitTokenService repeatSubmitTokenService(
-      StringRedisTemplate stringRedisTemplate) {
-    return new RepeatSubmitTokenService(stringRedisTemplate);
-  }
-
-  /**
-   * 创建表单重复提交 AOP 切面 Bean
-   *
-   * <p>拦截 {@link com.njydsz.common.lock.annotation.RepeatSubmit} 注解方法， 基于 Token 令牌模式防止表单重复提交。
-   *
-   * @param repeatSubmitTokenService Token 服务
-   * @param userIdResolver 当前用户 ID 解析器（由业务层提供实现）
-   * @return RepeatSubmitAspect 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  public RepeatSubmitAspect repeatSubmitAspect(
-      RepeatSubmitTokenService repeatSubmitTokenService,
-      ObjectProvider<CurrentUserIdResolver> userIdResolver) {
-    return new RepeatSubmitAspect(repeatSubmitTokenService, userIdResolver.getIfAvailable());
   }
 
   /**

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.lock.idempotent.IdempotentStrategy;
+import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.message.server.service.core.MessageService;
 
