@@ -72,7 +72,7 @@ import com.njydsz.message.server.service.template.TemplateVersionService;
  *   <li>写接口（rollback / testSend）启用 {@link Idempotent} 5s 防重
  *   <li>写接口启用 {@link RateLimit} 50 QPS 限流
  *   <li>写接口启用 {@link Audit} 审计日志（异步持久化）
- *   <li>读接口（preview）通过 {@link com.njydsz.common.lock.annotation.IdempotentExempt} 豁免幂等
+ *   <li>读接口（preview）通过 {@link com.njydsz.common.safe.idempotent.annotation.IdempotentExempt} 豁免幂等
  *   <li>权限模型：通过 {@code @AuthApiPermission} 校验 {@link PermissionCodes#NOTIF_TEMPLATE_AUDIT} 权限码
  * </ul>
  *

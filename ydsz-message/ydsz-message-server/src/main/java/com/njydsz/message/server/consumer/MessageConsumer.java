@@ -37,8 +37,8 @@ import com.njydsz.message.server.service.core.MessageService;
 /**
  * RocketMQ 消息消费端。
  *
- * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE}，基于 ydsz-common-lock 的 {@link
- * com.njydsz.common.lock.idempotent.IdempotentStrategy} 实现消费端幂等防重。
+ * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE}，基于 ydsz-common-safe 的 {@link
+ * com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy} 实现消费端幂等防重。
  * 异常处理：SysException 保留锁并落库 FAILED 不重投；系统异常释放锁并抛出触发重投。
  *
  * <p>性能优化:Redis 健康时跳过 DB 二级幂等检查,减少每次消费的 DB 查询开销。
