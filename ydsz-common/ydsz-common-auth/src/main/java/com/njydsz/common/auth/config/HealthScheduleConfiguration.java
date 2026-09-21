@@ -16,8 +16,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.auth.event.PermissionChangeCacheInvalidator;
 import com.njydsz.common.auth.listener.PermissionKeyspaceNotificationListener;
-import com.njydsz.common.auth.service.ColumnPermissionResolver;
-import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -137,13 +135,7 @@ public class HealthScheduleConfiguration {
       matchIfMissing = false)
   public PermissionChangeCacheInvalidator permissionChangeCacheInvalidator(
       RolePermissionLoader rolePermissionLoader,
-      DataPermissionResolver dataPermissionResolver,
-      ColumnPermissionResolver columnPermissionResolver,
       RedisMessageListenerContainer redisMessageListenerContainer) {
-    return new PermissionChangeCacheInvalidator(
-        rolePermissionLoader,
-        dataPermissionResolver,
-        columnPermissionResolver,
-        redisMessageListenerContainer);
+    return new PermissionChangeCacheInvalidator(rolePermissionLoader, redisMessageListenerContainer);
   }
 }

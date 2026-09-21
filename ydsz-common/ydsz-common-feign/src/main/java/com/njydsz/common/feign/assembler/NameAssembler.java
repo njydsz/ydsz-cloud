@@ -22,7 +22,10 @@ import java.util.function.Function;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 通用 ID→名称富化能力不属于 Feign 职责，应迁移至 ydsz-common-core。当前保留以兼容
+ *     ydsz-workflow 调用方，新代码请直接使用核心模块。
  */
+@Deprecated(since = "26.09.21", forRemoval = true)
 public interface NameAssembler {
 
   /**

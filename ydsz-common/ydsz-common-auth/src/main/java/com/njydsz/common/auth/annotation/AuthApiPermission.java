@@ -47,8 +47,7 @@ import java.lang.annotation.Target;
  * @author ydsz-team
  * @since 26.09.01
  * @see AuthMenuPermission
- * @see AuthRowPermission
- * @see AuthColPermission
+ * @deprecated AuthRowPermission / AuthColPermission 已移除，行/列数据权限统一由 ydsz-common-jdbc 处理
  */
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})

@@ -20,7 +20,10 @@ import com.njydsz.common.auth.model.ColumnScopeInfo;
  * @since 26.09.01
  * @see ColumnScopeInfo
  * @see com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver
+ * @deprecated 列级数据权限 AOP 切面已移除，列级权限过滤统一由 {@code ydsz-common-jdbc} 的
+ *     {@code ColPermissionInnerInterceptor} 在 SQL 层处理。此接口仅作外部兼容保留，将在下一版本移除。
  */
+@Deprecated(since = "26.09.21", forRemoval = true)
 public interface ColumnPermissionResolver {
 
   /**

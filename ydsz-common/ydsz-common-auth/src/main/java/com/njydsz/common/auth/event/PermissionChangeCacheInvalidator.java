@@ -5,8 +5,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -14,8 +14,6 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
-import com.njydsz.common.auth.service.ColumnPermissionResolver;
-import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
@@ -36,9 +34,8 @@ import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
  *
  * <ul>
  *   <li>ROLE_PERMISSION_CHANGED：清除 RolePermissionLoader 中的缓存
- *   <li>ROLE_DATA_SCOPE_CHANGED：清除 RedisRoleDataPermissionResolver 中的缓存
- *   <li>ROLE_COLUMN_PERMISSION_CHANGED：清除 ColumnPermissionResolver 中的缓存
- *   <li>ROLE_DELETED：清除以上所有相关缓存
+ *   <li>ROLE_DELETEA：清除 RolePermissionLoader 中的缓存
+ *   <li>ROLE_DATA_SCOPE_CHANGED / ROLE_COLUMN_PERMISSION_CHANGED：DEPRECATED，不再有对应的 AOP 数据权限缓存需要失效
  * </ul>
  *
  * @author ydsz-team
@@ -47,15 +44,19 @@ import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
  * @see PermissionChangeNotifier
  */
 @Slf4j
-@RequiredArgsConstructor
 public class PermissionChangeCacheInvalidator {
 
   private static final String PERMISSION_CHANGE_CHANNEL = "ydsz-auth:permission:changed";
 
   private final RolePermissionLoader rolePermissionLoader;
-  private final DataPermissionResolver dataPermissionResolver;
-  private final ColumnPermissionResolver columnPermissionResolver;
   private final RedisMessageListenerContainer redisMessageListenerContainer;
+
+  public PermissionChangeCacheInvalidator(
+      RolePermissionLoader rolePermissionLoader,
+      RedisMessageListenerContainer redisMessageListenerContainer) {
+    this.rolePermissionLoader = rolePermissionLoader;
+    this.redisMessageListenerContainer = redisMessageListenerContainer;
+  }
 
   /**
    * Bean 初始化时订阅 Redis 权限变更频道。
@@ -114,14 +115,13 @@ public class PermissionChangeCacheInvalidator {
       case ROLE_PERMISSION_CHANGED:
         invalidateRolePermissionCache(roleCode);
         break;
-      case ROLE_DATA_SCOPE_CHANGED:
-        invalidateDataPermissionCache(roleCode);
-        break;
-      case ROLE_COLUMN_PERMISSION_CHANGED:
-        invalidateColumnPermissionCache(roleCode);
-        break;
       case ROLE_DELETED:
         invalidateAllCaches(roleCode);
+        break;
+      case ROLE_DATA_SCOPE_CHANGED:
+      case ROLE_COLUMN_PERMISSION_CHANGED:
+        // 行/列数据权限已迁移至 jdbc SQL 层，AOP 后处理缓存失效不再需要
+        log.info("忽略数据权限变更事件（已迁移至 jdbc 层）：changeType={}, roleCode={}", changeType, roleCode);
         break;
       default:
         log.warn("权限变更处理失败：未知变更类型 {}", changeType);
@@ -139,30 +139,18 @@ public class PermissionChangeCacheInvalidator {
     }
   }
 
+  @Deprecated
   private void invalidateDataPermissionCache(String roleCode) {
-    try {
-      dataPermissionResolver.invalidate(roleCode);
-      log.info("数据权限缓存已失效：roleCode={}", roleCode);
-    } catch (Exception e) {
-      log.error("数据权限缓存失效失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
-    }
+    log.debug("invalidateDataPermissionCache 已废弃，行级数据权限缓存不再由 auth 模块管理");
   }
 
+  @Deprecated
   private void invalidateColumnPermissionCache(String roleCode) {
-    try {
-      if (columnPermissionResolver instanceof RedisRoleColumnPermissionResolver) {
-        ((RedisRoleColumnPermissionResolver) columnPermissionResolver).invalidate(roleCode);
-        log.info("列权限缓存已失效：roleCode={}", roleCode);
-      }
-    } catch (Exception e) {
-      log.error("列权限缓存失效失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
-    }
+    log.debug("invalidateColumnPermissionCache 已废弃，列级数据权限缓存不再由 auth 模块管理");
   }
 
   private void invalidateAllCaches(String roleCode) {
     invalidateRolePermissionCache(roleCode);
-    invalidateDataPermissionCache(roleCode);
-    invalidateColumnPermissionCache(roleCode);
     log.info("角色所有权限缓存已失效：roleCode={}", roleCode);
   }
 

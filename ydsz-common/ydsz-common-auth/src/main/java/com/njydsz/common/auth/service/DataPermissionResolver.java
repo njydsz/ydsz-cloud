@@ -29,8 +29,10 @@ import com.njydsz.common.cache.api.Cache;
  * @author ydsz-team
  * @since 26.09.01
  * @see DataScopeInfo
- * @see com.njydsz.common.auth.aspect.AuthRowPermissionAspect
+ * @deprecated 行级数据权限 AOP 切面已移除，行级权限过滤统一由 {@code ydsz-common-jdbc} 的
+ *     {@code RowPermissionInnerInterceptor} 在 SQL 层处理。此接口仅作缓存失效联动保留，将在下一版本移除。
  */
+@Deprecated(since = "26.09.21", forRemoval = true)
 public interface DataPermissionResolver {
 
   /**

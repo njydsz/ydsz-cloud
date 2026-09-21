@@ -14,7 +14,10 @@ import org.springframework.context.annotation.Bean;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated NameAssembler 及其自动配置不属于 Feign 职责，应迁移至 ydsz-common-core。
+ *     当前保留以兼容 ydsz-workflow 调用方，迁移完后此配置将移除。
  */
+@Deprecated(since = "26.09.21", forRemoval = true)
 @AutoConfiguration
 @EnableConfigurationProperties(NameAssemblerProperties.class)
 @ConditionalOnProperty(

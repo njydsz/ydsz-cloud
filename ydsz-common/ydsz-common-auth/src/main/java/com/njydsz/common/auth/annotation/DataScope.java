@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.common.auth.aspect.AuthRowPermissionAspect 行级权限 AOP
+ * @deprecated 行级数据权限 AOP 已移除，参见 ydsz-common-jdbc 的 RowPermissionInnerInterceptor
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

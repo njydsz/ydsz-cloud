@@ -7,27 +7,16 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.common.auth.aspect.AuthColPermissionAspect;
 import com.njydsz.common.auth.aspect.AuthPermissionAspect;
-import com.njydsz.common.auth.aspect.AuthRowPermissionAspect;
-import com.njydsz.common.auth.desensitize.ColumnDesensitizationService;
 import com.njydsz.common.auth.event.PermissionCacheInvalidationListener;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
-import com.njydsz.common.auth.service.ColumnPermissionResolver;
-import com.njydsz.common.auth.service.ColumnScopeFallbackLoader;
-import com.njydsz.common.auth.service.DataPermissionResolver;
-import com.njydsz.common.auth.service.DataScopeFallbackLoader;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.auth.service.RolePermissionCacheService;
 import com.njydsz.common.auth.service.RolePermissionLoader;
-import com.njydsz.common.auth.service.impl.LocalRoleColumnPermissionResolver;
-import com.njydsz.common.auth.service.impl.LocalRoleDataPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
-import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
-import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
 import com.njydsz.common.auth.strategy.CacheKeyStrategy;
 import com.njydsz.common.auth.strategy.DefaultCacheKeyStrategy;
@@ -42,11 +31,13 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <ul>
  *   <li>{@link RolePermissionLoader}（Redis 加载器 + 可选层级）
  *   <li>{@link RbacPermissionEvaluator}（权限评估器）
- *   <li>{@link AuthPermissionAspect} / {@link AuthRowPermissionAspect} / {@link AuthColPermissionAspect}（权限切面）
- *   <li>{@link DataPermissionResolver} / {@link ColumnPermissionResolver}（行/列权限解析器）
+ *   <li>{@link AuthPermissionAspect}（接口权限切面）
  *   <li>{@link RolePermissionCacheService}（角色权限缓存）
  *   <li>{@link PermissionChangeNotifier}（权限变更事件发布器）
  * </ul>
+ *
+ * <p>行/列数据权限由 {@code ydsz-common-jdbc} 的 {@code RowPermissionInnerInterceptor} /
+ * {@code ColPermissionInnerInterceptor} 在 SQL 层统一处理，不再需要 auth 模块的 AOP 后处理。
  *
  * @author ydsz-team
  * @since 26.09.18
@@ -187,114 +178,6 @@ public class RbacConfiguration {
       aspect.setMetricsCollector(collector);
     }
     return aspect;
-  }
-
-  /**
-   * 创建 Redis 数据权限解析器。
-   *
-   * <p>当 RedisStringOps 可用时（ydsz-common-redis 在 classpath 上且 Redis 连接正常），注册此高性能实现。
-   *
-   * @param redisStringOps Redis String 操作
-   * @param properties 认证配置属性
-   * @param userInfoService 用户信息服务
-   * @return 数据权限解析器实例
-   */
-  @Bean
-  @ConditionalOnMissingBean(DataPermissionResolver.class)
-  @ConditionalOnBean(RedisStringOps.class)
-  public RedisRoleDataPermissionResolver redisDataPermissionResolver(
-      RedisStringOps redisStringOps,
-      AuthProperties properties,
-      RbacUserInfoService userInfoService) {
-    return new RedisRoleDataPermissionResolver(redisStringOps, properties, userInfoService);
-  }
-
-  /**
-   * 创建本地兜底数据权限解析器。
-   *
-   * <p>当 Redis 不可用时（{@link DataPermissionResolver} 尚无其他实现），注册此本地缓存兜底实现。 缓存 TTL 使用 {@code
-   * localPermissionCacheMinutes}（默认 5 分钟），并通过 {@link DataScopeFallbackLoader} SPI 允许业务方从本地 DB / 配置文件加载兜底数据。
-   *
-   * @param properties 认证配置属性
-   * @param userInfoServiceProvider 用户信息服务提供者（可选）
-   * @param fallbackLoaderProvider 兜底数据加载器提供者（可选）
-   * @return 本地兜底数据权限解析器
-   */
-  @Bean
-  @ConditionalOnMissingBean(DataPermissionResolver.class)
-  public LocalRoleDataPermissionResolver localDataPermissionResolver(
-      AuthProperties properties,
-      ObjectProvider<RbacUserInfoService> userInfoServiceProvider,
-      ObjectProvider<DataScopeFallbackLoader> fallbackLoaderProvider) {
-    return new LocalRoleDataPermissionResolver(
-        properties, userInfoServiceProvider, fallbackLoaderProvider);
-  }
-
-  /**
-   * 创建行级权限切面。
-   *
-   * @param resolver 数据权限解析器接口
-   * @return 行级权限切面实例
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  public AuthRowPermissionAspect authRowPermissionAspect(DataPermissionResolver resolver) {
-    return new AuthRowPermissionAspect(resolver);
-  }
-
-  /**
-   * 创建 Redis 列权限解析器。
-   *
-   * <p>当 RedisStringOps 可用时注册此实现。
-   *
-   * @param redisStringOps Redis String 操作
-   * @param properties 认证配置属性
-   * @param userInfoService 用户信息服务
-   * @return 列权限解析器实例
-   */
-  @Bean
-  @ConditionalOnMissingBean(ColumnPermissionResolver.class)
-  @ConditionalOnBean(RedisStringOps.class)
-  public ColumnPermissionResolver redisColumnPermissionResolver(
-      RedisStringOps redisStringOps,
-      AuthProperties properties,
-      RbacUserInfoService userInfoService) {
-    return new RedisRoleColumnPermissionResolver(redisStringOps, properties, userInfoService);
-  }
-
-  /**
-   * 创建本地兜底列权限解析器。
-   *
-   * <p>当 Redis 不可用时（{@link ColumnPermissionResolver} 尚无其他实现），注册此本地缓存兜底实现。 缓存 TTL 使用 {@code
-   * localPermissionCacheMinutes}（默认 5 分钟），并通过 {@link ColumnScopeFallbackLoader} SPI 允许业务方从本地 DB / 配置文件加载兜底数据。
-   *
-   * @param properties 认证配置属性
-   * @param userInfoServiceProvider 用户信息服务提供者（可选）
-   * @param fallbackLoaderProvider 兜底数据加载器提供者（可选）
-   * @return 本地兜底列权限解析器
-   */
-  @Bean
-  @ConditionalOnMissingBean(ColumnPermissionResolver.class)
-  public LocalRoleColumnPermissionResolver localColumnPermissionResolver(
-      AuthProperties properties,
-      ObjectProvider<RbacUserInfoService> userInfoServiceProvider,
-      ObjectProvider<ColumnScopeFallbackLoader> fallbackLoaderProvider) {
-    return new LocalRoleColumnPermissionResolver(
-        properties, userInfoServiceProvider, fallbackLoaderProvider);
-  }
-
-  /**
-   * 创建列权限切面。
-   *
-   * @param resolver 列权限解析器
-   * @param desensitizationService 列脱敏服务
-   * @return 列权限切面实例
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  public AuthColPermissionAspect authColPermissionAspect(
-      ColumnPermissionResolver resolver, ColumnDesensitizationService desensitizationService) {
-    return new AuthColPermissionAspect(resolver, desensitizationService);
   }
 
   /**
