@@ -2,7 +2,7 @@
 
 > YDSZ Web/App 公共 HTTP 基座模块（L6 应用层）
 
-提供 CORS、时区、I18n、安全响应头、TraceId、请求日志、上下文清理、全局响应包装、OpenAPI/Knife4j 文档、文档导出、健康检查、模块指标基类、限流与幂等等共享能力，是 `common-web` 与 `common-app` 两个应用层入口的统一抽象基座。本模块的所有 MVC 配置类、Properties、Filter、Interceptor、Advice 均为抽象基类或接口，子模块通过继承并提供具体 `@ConfigurationProperties` 前缀实现差异化装配。
+提供 CORS、时区、I18n、安全响应头、TraceId、请求日志、上下文清理、全局响应包装、OpenAPI/Knife4j 文档、文档导出、健康检查、模块指标基类等共享能力，是 `common-web` 与 `common-app` 两个应用层入口的统一抽象基座。本模块的所有 MVC 配置类、Properties、Filter、Interceptor、Advice 均为抽象基类或接口，子模块通过继承并提供具体 `@ConfigurationProperties` 前缀实现差异化装配。
 
 ## 模块定位
 
@@ -82,19 +82,7 @@
 | `DefaultDocExporter` | 默认导出器（简单格式） |
 | `MarkdownDocExporter` | Markdown 增强导出器 |
 
-### 8. 限流与幂等
-
-| 类 | 说明 |
-|---|---|
-| `RateLimiter` / `InMemoryRateLimiter` | 限流器接口与内存实现（令牌桶算法） |
-| `RateLimit` / `RateLimitInterceptor` | 限流注解与拦截器（按资源键限流） |
-| `RateLimitAutoConfiguration` | 限流自动配置 |
-| `IdempotentStore` / `InMemoryIdempotentStore` | 幂等存储接口与内存实现 |
-| `Idempotent` / `IdempotentInterceptor` | 幂等注解与拦截器（自动去重） |
-| `IdempotentException` | 幂等异常 |
-| `IdempotentAutoConfiguration` | 幂等自动配置 |
-
-### 9. 健康检查与 Actuator
+### 8. 健康检查与 Actuator
 
 | 类 | 说明 |
 |---|---|
@@ -102,13 +90,13 @@
 | `CoreHealthIndicator` | 核心模块健康指标（TraceId + i18n 状态） |
 | `ConfigRegistryEndpoint` | Actuator 端点（`config-registry`），暴露 `GET /actuator/config-registry` 查看所有 `ydsz.*` 配置 |
 
-### 10. 模块指标基类
+### 9. 模块指标基类
 
 | 类 | 说明 |
 |---|---|
 | `AbstractMetricsHolder` | 模块指标工具类，提供静态方法 `registerCounter` / `registerTimer` / `recordDuration`，统一管理 Micrometer 指标命名与实例缓存 |
 
-### 11. 常量与上下文基类
+### 10. 常量与上下文基类
 
 | 类 | 说明 |
 |---|---|
@@ -119,7 +107,7 @@
 | `HttpHeaderConstants` | HTTP 头部常量 |
 | `BaseAuthInfo` | 认证上下文信息抽象基类 |
 
-### 12. API 版本控制基类
+### 11. API 版本控制基类
 
 | 类 | 说明 |
 |---|---|
@@ -230,8 +218,6 @@ public class CustomTraceProperties extends BaseTraceProperties {
 | `DocExporter` | 文档导出器 SPI，支持 HTML/Markdown/YAML/JSON 多种格式 | 内置 `DefaultDocExporter`、`MarkdownDocExporter`，业务可扩展 |
 | `RequestIdResolver` | 请求 ID 解析器接口 | `BaseRequestIdResponseFilter`、`BaseRequestLogInterceptor` 实现 |
 | `HealthIndicator` | Spring Boot 健康指标接口 | 内置 `YdszHealthIndicator`、`CoreHealthIndicator` |
-| `RateLimiter` | 限流器接口 | 内置 `InMemoryRateLimiter`（令牌桶） |
-| `IdempotentStore` | 幂等存储接口 | 内置 `InMemoryIdempotentStore` |
 
 ### 抽象扩展基类（子模块通过继承实现差异化）
 
@@ -300,5 +286,5 @@ com.njydsz.common.base.i18n.I18nAutoConfiguration
 ## 变更记录
 
 - **26.09.01**（2026-08-17）：补全 `YdszSecurityHeadersProperties` / `YdszRequestProperties` / `RequestBodySizeLimitFilter` 文档；补全 api 包（`ApiVersion` / `ApiVersionOpenApiCustomizer` / `ApiVersionResolver`）文档
-- **26.09.01**（2026-08-17）：补全限流、幂等、i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
+- **26.09.01**（2026-08-17）：补全 i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
 - **26.09.01**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点、健康检查端点、注意事项；统一版本号
