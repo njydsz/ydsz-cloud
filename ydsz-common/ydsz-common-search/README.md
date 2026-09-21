@@ -23,7 +23,7 @@
 | `SearchStrategy` | 搜索策略 SPI — 所有引擎必须实现（`search` / `getEngineName` / `isAvailable` / `getCapability`） |
 | `IndexStrategy` | 索引维护 SPI — 需显式索引的引擎实现（`index` / `bulkIndex` / `deleteIndex` / `deleteAllIndices` / `count` / `getAllDocumentIds`） |
 | `SuggestStrategy` | 搜索建议 SPI — 支持自动补全的引擎实现（`suggest`） |
-| `EngineCapability` | 引擎能力描述（record：全文/模糊/高亮/聚合/游标/建议/索引），提供 `full()` / `searchOnly()` / `minimal()` 工厂 |
+| `EngineCapability` | 引擎能力描述（record：全文/模糊/高亮/聚合/游标/建议/索引），提供 `full()` / `searchOnly()` / `minimal()` 工厂；向量语义搜索已剥离至独立模块 |
 | `SearchEngineRegistry` | 引擎注册中心 — 主引擎 + 降级链，主引擎失败自动降级，`getIndexStrategy()` / `getSuggestStrategy()` 返回 Optional |
 | `IndexDocument` | 索引文档模型（引擎无关），含 id/type/title/subtitle/content/snippet/tags/status/path/tenantId/metadata 等 |
 | `IndexOperation` | 索引操作（`UPSERT` / `DELETE` / `BULK`），提供 `upsert` / `delete` / `bulkUpsert` 静态工厂 |
