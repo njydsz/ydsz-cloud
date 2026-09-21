@@ -43,7 +43,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
  *   <li>开启后等待时间（waitDurationInOpenState，默认 10s）
  * </ul>
  *
- * <p>每个资源标识对应一个独立的底层 Resilience4j 熔断器实例，
+ * <p>所有资源标识共享同一个 Resilience4j {@link CircuitBreakerRegistry}，
  * 由 Resilience4j 提供滑动窗口统计、状态自动流转、半开探测与事件总线能力。
  *
  * @author ydsz-team
@@ -55,10 +55,14 @@ public class SafeCircuitBreaker {
   /** 资源 → 底层 Resilience4j 熔断器实例 */
   private final Map<String, CircuitBreaker> breakers = new ConcurrentHashMap<>();
 
+  /** 共享的 Resilience4j 注册中心（实例级，所有 resource 复用） */
+  private final CircuitBreakerRegistry registry;
+
   private final BreakerConfig config;
 
   public SafeCircuitBreaker(BreakerConfig config) {
     this.config = config;
+    this.registry = CircuitBreakerRegistry.of(config.toEngineConfig());
   }
 
   public SafeCircuitBreaker() {
@@ -154,11 +158,9 @@ public class SafeCircuitBreaker {
   }
 
   /** 由本类配置构建底层 Resilience4j 熔断器。 */
-  private static CircuitBreaker newEngineBreaker(BreakerConfig config, String resource) {
+  private CircuitBreaker newEngineBreaker(BreakerConfig config, String resource) {
     String prefix = config.getName() == null ? "ratelimit" : config.getName();
-    CircuitBreakerConfig engineConfig = config.toEngineConfig();
-    return CircuitBreakerRegistry.of(engineConfig)
-        .circuitBreaker(prefix + "-" + resource);
+    return registry.circuitBreaker(prefix + "-" + resource);
   }
 
   /** Resilience4j 状态 → 本地三态映射（FORCED_OPEN 视为 OPEN）。 */
