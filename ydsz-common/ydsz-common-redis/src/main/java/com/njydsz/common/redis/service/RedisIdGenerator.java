@@ -123,72 +123,6 @@ public class RedisIdGenerator {
     }
   }
 
-  // ======================== Snowflake 方法 ========================
-
-  /**
-   * 基于类 Snowflake 算法生成分布式唯一 ID。
-   *
-   * <p>ID 结构（64-bit long）：
-   *
-   * <pre>
-   *   ((timestampMs - EPOCH) &lt;&lt; 22) | (workerId &lt;&lt; 12) | sequence
-   * </pre>
-   *
-   * <p>序列号在同一毫秒内自增，溢出（>4095 /ms/worker）时自动等待下一毫秒重试。
-   * 最大吞吐：409,6000 IDs/s/worker。
-   *
-   * <p><b>注意：</b>系统时钟回拨时不会主动检测，建议业务方配合 NTP 确保时钟单调递增。
-   *
-   * @param workerId Worker 标识（0 ~ 1023），用于多实例区分会话
-   * @return 64-bit Snowflake ID，异常时返回 -1
-   */
-  public long nextSnowflakeId(long workerId) {
-    if (workerId < 0 || workerId >= (1L << (int) SNOWFLAKE_WORKER_BITS)) {
-      log.warn("【RedisIdGenerator】nextSnowflakeId 参数非法 | workerId={} 超出有效范围 [0, {})",
-          workerId, (1L << (int) SNOWFLAKE_WORKER_BITS));
-      return -1L;
-    }
-    try {
-      String key = buildSnowflakeKey(workerId);
-      int maxRetries = 10;
-      for (int retry = 0; retry < maxRetries; retry++) {
-        long now = System.currentTimeMillis();
-        DefaultRedisScript<List> script =
-            getOrCreateScript(
-                "snowflake_seq", RedisScriptConstants.SNOWFLAKE_SEQ_LUA, List.class);
-        Object rawResult =
-            redisTemplate.execute(
-                script,
-                Collections.singletonList(key),
-                String.valueOf(now),
-                String.valueOf(SNOWFLAKE_MAX_SEQ));
-        List<Long> result = castToLongList(rawResult);
-        if (result.isEmpty() || result.size() < 2) {
-          log.warn("【RedisIdGenerator】Snowflake 脚本返回异常 | workerId={}", workerId);
-          return -1L;
-        }
-        long ts = result.get(0);
-        long seq = result.get(1);
-        if (ts == -1L && seq == -1L) {
-          // 序列溢出，等待 1ms 后重试
-          Thread.sleep(1L);
-          continue;
-        }
-        return composeSnowflakeId(ts, workerId, seq);
-      }
-      log.error("【RedisIdGenerator】Snowflake 连续重试 {} 次仍溢出 | workerId={}", maxRetries, workerId);
-      return -1L;
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      log.error("【RedisIdGenerator】nextSnowflakeId 中断 | workerId={}", workerId, e);
-      return -1L;
-    } catch (Exception e) {
-      log.error("【RedisIdGenerator】nextSnowflakeId 异常 | workerId={} | error={}",
-          workerId, e.getMessage(), e);
-      return -1L;
-    }
-  }
-
   // ======================== 查询与重置 ========================
 
   /**
@@ -245,21 +179,6 @@ public class RedisIdGenerator {
   // ======================== 私有方法 ========================
 
   /**
-   * 组合 Snowflake ID
-   *
-   * @param timestampMs 毫秒时间戳
-   * @param workerId Worker ID
-   * @param sequence 序列号
-   * @return 64-bit Snowflake ID
-   */
-  private long composeSnowflakeId(long timestampMs, long workerId, long sequence) {
-    long tsDelta = timestampMs - SNOWFLAKE_EPOCH;
-    return (tsDelta << (int) SNOWFLAKE_TIMESTAMP_SHIFT)
-        | (workerId << (int) SNOWFLAKE_WORKER_SHIFT)
-        | sequence;
-  }
-
-  /**
    * 构建日序号 Key
    *
    * @param businessKey 业务标识
@@ -268,16 +187,6 @@ public class RedisIdGenerator {
    */
   private String buildSeqKey(String businessKey, String dateStr) {
     return String.join(":", KEY_PREFIX, SEQ_SUB_PREFIX, businessKey, dateStr);
-  }
-
-  /**
-   * 构建 Snowflake Key
-   *
-   * @param workerId Worker ID
-   * @return 完整 Redis Key
-   */
-  private String buildSnowflakeKey(long workerId) {
-    return String.join(":", KEY_PREFIX, SNOWFLAKE_SUB_PREFIX, String.valueOf(workerId));
   }
 
   /**
@@ -330,28 +239,6 @@ public class RedisIdGenerator {
     } catch (Exception e) {
       return 86400L;
     }
-  }
-
-  /**
-   * 将 Redis 脚本执行结果安全转换为 List<Long>
-   *
-   * @param rawResult Redis 执行返回的原始对象
-   * @return 转换后的 Long 列表，无法转换时返回空列表
-   */
-  @SuppressWarnings("unchecked")
-  private static List<Long> castToLongList(Object rawResult) {
-    if (rawResult instanceof List<?> list) {
-      List<Long> result = new java.util.ArrayList<>(list.size());
-      for (Object item : list) {
-        if (item instanceof Number num) {
-          result.add(num.longValue());
-        } else {
-          result.add(0L);
-        }
-      }
-      return result;
-    }
-    return Collections.emptyList();
   }
 
   /**

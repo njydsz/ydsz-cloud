@@ -302,7 +302,11 @@ public final class RedisScriptConstants {
    * ((timestamp - EPOCH) &lt;&lt; 22 | workerId &lt;&lt; 12 | sequence)，避免 64 位精度问题。
    *
    * <p><b>序列溢出处理：</b>返回 {-1, -1} 时调用方应等待下一毫秒后重试。
+   *
+   * @deprecated Snowflake ID 生成已统一迁移至 ydzz-common-util 的 SnowflakeIdGenerator。
+   *     该 Lua 脚本无任何使用方，将在下一版本移除。
    */
+  @Deprecated(since = "26.09.21", forRemoval = true)
   public static final String SNOWFLAKE_SEQ_LUA =
       "local data = redis.call('HMGET', KEYS[1], 'ts', 'seq') "
           + "local lastTs = tonumber(data[1]) "
