@@ -24,16 +24,13 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.njydsz.common.redis.annotation.RedisKeyExpireListenerRegistry;
-import com.njydsz.common.redis.annotation.YdszCacheableAspect;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.common.redis.interceptor.RedisRetryInterceptor;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
 import com.njydsz.common.redis.serializer.YdszJsonRedisSerializer;
-import com.njydsz.common.redis.service.CacheProvider;
 import com.njydsz.common.redis.service.RedisIdGenerator;
 import com.njydsz.common.redis.service.RedisKeyAnalyzer;
 import com.njydsz.common.redis.service.RedisRateLimiter;
-import com.njydsz.common.redis.service.RedisStringOpsCacheProvider;
 import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisGeoOps;
@@ -259,39 +256,6 @@ public class RedisConfiguration {
   @ConditionalOnClass(HealthIndicator.class)
   public HealthIndicator redisHealthIndicator(RedisConnectionFactory connectionFactory) {
     return new RedisHealthIndicator(connectionFactory);
-  }
-
-  /**
-   * 注册 CacheProvider 默认实现
-   *
-   * <p>基于 {@link RedisStringOps} 提供 {@link CacheProvider} 接口的标准实现，
-   * 作为注解缓存切面与底层 Redis 操作之间的适配桥梁。
-   *
-   * <p>业务模块可通过提供自定义 {@link CacheProvider} Bean（配合 {@code @Primary}）
-   * 来替换为多级缓存或其他实现，无需修改切面代码。
-   *
-   * @param redisStringOps Redis String 操作组件
-   * @return CacheProvider 默认实现实例
-   */
-  @Bean
-  @ConditionalOnMissingBean(CacheProvider.class)
-  public CacheProvider cacheProvider(RedisStringOps redisStringOps) {
-    return new RedisStringOpsCacheProvider(redisStringOps);
-  }
-
-  /**
-   * 注册 YdszCacheable 注解切面
-   *
-   * <p>切面负责 SpEL 解析和 AOP 织入，提供缓存防护能力。
-   * 通过 {@link CacheProvider} 接口访问底层缓存实现，与具体 Redis 操作组件解耦。
-   *
-   * @param cacheProvider 缓存提供者接口
-   * @return YdszCacheableAspect 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  public YdszCacheableAspect ydszCacheableAspect(CacheProvider cacheProvider) {
-    return new YdszCacheableAspect(cacheProvider);
   }
 
   /**

@@ -35,9 +35,14 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *       l1-ttl-seconds: 60     # L1 过期秒数（建议为 L2 TTL 的 1/5 ~ 1/10）
  * }</pre>
  *
+ * <p><b>已废弃：</b>自 v26.09.21 起随 {@link CacheProvider} 接口一并废弃。多级缓存需求请直接使用
+ * {@code YdszCache} 编程式 API。本配置类将在后续主版本中移除。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 自 v26.09.21 起废弃，请直接使用 {@link com.njydsz.common.cache.YdszCache}
  */
+@Deprecated(since = "26.09.21", forRemoval = true)
 @Slf4j
 @AutoConfiguration
 @AutoConfigureAfter(name = {"com.njydsz.common.redis.config.RedisConfiguration"})

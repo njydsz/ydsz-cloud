@@ -7,7 +7,7 @@ package com.njydsz.common.base.constant;
  *
  * <p>Spring MVC Interceptor 使用自然数体系（0, 10, 20...）， 数值越小优先级越高（最先执行）。
  *
- * <p><b>注意：</b>仅保留 base 模块实际使用的常量，其他模块的 Interceptor 顺序常量 应定义在各自模块中。
+ * <p><b>注意：</b>base 模块定义全局共享的顺序常量，各业务模块的专属 Interceptor 顺序常量 应定义在各自模块中。
  *
  * @author ydsz-team
  * @since 26.09.01

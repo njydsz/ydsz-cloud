@@ -17,9 +17,14 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>如需替换为多级缓存（Caffeine + Redis）或自定义缓存策略，只需提供自定义 {@link CacheProvider} 实现并标注
  * {@code @Primary} 即可，无需修改切面代码。
  *
+ * <p><b>已废弃：</b>自 v26.09.21 起随 {@link CacheProvider} 接口一并废弃。多级缓存需求请直接使用
+ * {@code YdszCache} 作为 L1 + Redis 操作组件作为 L2 自行组合。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 自 v26.09.21 起废弃，请使用 {@link com.njydsz.common.cache.YdszCache} 替代
  */
+@Deprecated(since = "26.09.21", forRemoval = true)
 @RequiredArgsConstructor
 public class RedisStringOpsCacheProvider implements CacheProvider {
 

@@ -23,9 +23,15 @@ import java.util.function.Supplier;
  *   <li>其他自定义实现（可后续扩展）
  * </ul>
  *
+ * <p><b>已废弃：</b>声明式缓存注解体系已统一收敛至 {@code ydsz-common-cache} 模块的 {@code YdszCache}
+ * 编程式 API。多级缓存需求请直接使用 {@code YdszCache.newBuilder().build()} 作为 L1 + Redis 操作组件作为 L2
+ * 自行组合。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 自 v26.09.21 起废弃，请使用 {@link com.njydsz.common.cache.YdszCache} 替代
  */
+@Deprecated(since = "26.09.21", forRemoval = true)
 public interface CacheProvider {
 
   /**

@@ -113,6 +113,12 @@
       "defaultValue": 2097152
     },
     {
+      "name": "ydsz.web.api-version.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable API version response header interceptor (auto-write X-Api-Version, Deprecation, Sunset headers).",
+      "defaultValue": true
+    },
+    {
       "name": "ydsz.web.user-agent.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable User-Agent analyzer bean. Disable to save memory on non-web services.",

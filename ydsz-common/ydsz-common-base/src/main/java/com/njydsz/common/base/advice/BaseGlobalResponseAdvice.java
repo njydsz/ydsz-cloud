@@ -86,7 +86,6 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
       return true;
     }
     return SseEmitter.class.isAssignableFrom(paramType);
-    return false;
   }
 
   @Override

@@ -58,10 +58,16 @@ import com.njydsz.common.util.string.StringUtils;
  *   <li>不适用于写多读少或数据实时性要求极高的场景
  * </ul>
  *
+ * <p><b>已废弃：</b>自 v26.09.21 起随 {@link CacheProvider} 接口一并废弃。多级缓存需求请直接使用
+ * {@code YdszCache.newBuilder().build()} 作为 L1 + Redis 操作组件作为 L2 自行组合，本模块 {@code YdszCache}
+ * 已提供 TINYLFU 本地缓存实现与完整的过期、淘汰、统计能力。
+ *
  * @author ydsz-team
  * @since 26.09.01
  * @see CacheProvider
+ * @deprecated 自 v26.09.21 起废弃，请使用 {@link com.njydsz.common.cache.YdszCache} 替代
  */
+@Deprecated(since = "26.09.21", forRemoval = true)
 @Slf4j
 public class MultiLevelCacheProvider implements CacheProvider {
 
