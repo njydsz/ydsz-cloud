@@ -24,19 +24,9 @@ import com.njydsz.common.base.api.ApiVersionResolver;
  *   <li>{@code Sunset} — 计划移除时间（RFC 8594），值为 ISO 8601 日期或版本号
  * </ul>
  *
- * <p><b>装配方式：</b>通过 {@code WebMvcConfigurer.addInterceptors} 注册，无需自动装配。
+ * <p><b>装配方式：</b>由 {@code WebMvcConfiguration} 自动注册，无需手动装配。
  *
- * <p><b>使用示例：</b>
- *
- * <pre>{@code
- * @Configuration
- * public class WebConfig implements WebMvcConfigurer {
- *   @Override
- *   public void addInterceptors(InterceptorRegistry registry) {
- *     registry.addInterceptor(new ApiVersionInterceptor());
- *   }
- * }
- * }</pre>
+ * <p>可通过 {@code ydsz.web.api-version.enabled=false} 关闭，或通过自定义 {@link ApiVersionInterceptor} Bean 覆盖。
  *
  * @author ydsz-team
  * @since 26.09.01

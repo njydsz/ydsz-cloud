@@ -33,6 +33,7 @@ import com.njydsz.common.web.filter.SecurityHeaderFilter;
 import com.njydsz.common.web.filter.TraceIdResponseFilter;
 import com.njydsz.common.web.filter.WebAuthFilter;
 import com.njydsz.common.web.health.WebHealthIndicator;
+import com.njydsz.common.web.interceptor.ApiVersionInterceptor;
 import com.njydsz.common.web.interceptor.RequestLogInterceptor;
 import com.njydsz.common.web.metrics.WebMetrics;
 
@@ -86,6 +87,10 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         .addInterceptor(requestLogInterceptor)
         .addPathPatterns("/**")
         .order(InterceptorOrder.REQUEST_LOG);
+    registry
+        .addInterceptor(apiVersionInterceptor())
+        .addPathPatterns("/**")
+        .order(InterceptorOrder.API_VERSION);
   }
 
   /**
@@ -102,6 +107,27 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
   public RequestLogInterceptor requestLogInterceptor(
       ObjectProvider<WebMetrics> webMetricsProvider) {
     return new RequestLogInterceptor(webTraceProperties, webMetricsProvider.getIfAvailable());
+  }
+
+  /**
+   * 注册 API 版本响应头拦截器。
+   *
+   * <p>自动将 {@link com.njydsz.common.base.api.ApiVersion} 注解声明的版本信息写入 HTTP 响应头
+   * （{@code X-Api-Version}、{@code Deprecation}、{@code Link}、{@code Sunset}）。
+   *
+   * <p>可通过 {@code ydsz.web.api-version.enabled=false} 关闭，或通过 {@code @ConditionalOnMissingBean} 覆盖。
+   *
+   * @return API 版本拦截器
+   */
+  @Bean
+  @ConditionalOnMissingBean(ApiVersionInterceptor.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.web.api-version",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = true)
+  public ApiVersionInterceptor apiVersionInterceptor() {
+    return new ApiVersionInterceptor();
   }
 
   /**

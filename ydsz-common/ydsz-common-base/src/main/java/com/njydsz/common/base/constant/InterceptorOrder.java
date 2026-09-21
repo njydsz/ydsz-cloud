@@ -20,4 +20,7 @@ public final class InterceptorOrder {
 
   /** RequestLogInterceptor - 请求/响应日志 */
   public static final int REQUEST_LOG = 10;
+
+  /** ApiVersionInterceptor - 版本响应头注入（在 RequestLog 之后） */
+  public static final int API_VERSION = 20;
 }
