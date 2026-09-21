@@ -510,6 +510,56 @@ public class SafeConfiguration {
     return new SensitiveDataAdvice(configuration);
   }
 
+  // ======================== 幂等能力（从 ydzs-common-lock 迁 入） ========================
+
+  /**
+   * 注册幂等策略（Redis SET NX EX 原子锁）
+   *
+   * <p>Bean 名为 {@code safeIdempotentStrategy}，与 {@code ydzs-common-lock} 向后兼容。 当 lock 模块同时存在时，由其
+   * {@code @ConditionalOnMissingBean(name="safeIdempotentStrategy")} 跳过旧版注册，以本版为准。
+   *
+   * @param stringRedisTemplate Redis 客户端
+   * @return IdempotentStrategy 实例
+   */
+  @Bean(name = "safeIdempotentStrategy")
+  @ConditionalOnMissingBean(name = "safeIdempotentStrategy")
+  @ConditionalOnBean(StringRedisTemplate.class)
+  public IdempotentStrategy idempotentStrategy(ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+    StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+    if (redisTemplate == null) {
+      LOG.warn("StringRedisTemplate 不可用，幂等能力需要 Redis 支持");
+      return null;
+    }
+    LOG.info("注册幂等策略（Redis 实现）");
+    return new RedisIdempotentStrategy(redisTemplate);
+  }
+
+  /**
+   * 注册接口幂等性 AOP 切面
+   *
+   * <p>拦截 {@code com.njydsz.common.safe.idempotent.annotation.Idempotent} 注解方法， 基于 Redis SET NX EX Lua
+   * 脚本实现"在 TTL 窗口内同一幂等键只处理一次"。
+   *
+   * <p>Bean 名为 {@code safeIdempotentAspect}，与 {@code ydzs-common-lock} 向后兼容。
+   *
+   * @param idempotentStrategy 幂等策略
+   * @param safeMetrics 安全指标收集器（可选）
+   * @return IdempotentAspect 实例
+   */
+  @Bean(name = "safeIdempotentAspect")
+  @ConditionalOnMissingBean(name = "safeIdempotentAspect")
+  @ConditionalOnBean(IdempotentStrategy.class)
+  public IdempotentAspect idempotentAspect(
+      IdempotentStrategy idempotentStrategy,
+      ObjectProvider<SafeMetrics> safeMetricsProvider) {
+    LOG.info("注册接口幂等性 AOP 切面");
+    return new IdempotentAspect(
+        idempotentStrategy,
+        "ydsz:idem:",
+        null,
+        safeMetricsProvider.getIfAvailable());
+  }
+
   /**
    * P2-3: 限流相关 Bean（限流过滤器、方法级限流 AOP、多维度限流器）已迁移至 {@code
    * com.njydsz.common.safe.ratelimit.config.RateLimitAutoConfiguration}， 由其统一管理。

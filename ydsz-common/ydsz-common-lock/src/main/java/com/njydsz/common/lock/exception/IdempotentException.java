@@ -6,25 +6,20 @@ import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 
 /**
- * 接口幂等性异常
+ * 接口幂等性异常（已迁移）
  *
- * <p>在 {@link com.njydsz.common.lock.annotation.Idempotent} 注解拦截到重复提交时抛出。 与 {@link
- * DistributedLockException} 不同，本异常表示"同一业务键在 TTL 窗口内已处理过"， 属于业务约束冲突，对应 HTTP 409 Conflict。
- *
- * <p>错误码使用 {@link CoreExceptionCode#IDEMPOTENT_REJECT}（A07001）， i18n 消息键 {@code idempotent.reject}。
+ * <p><b>已迁移至 {@code com.njydsz.common.safe.idempotent.exception.IdempotentException}。</b>
+ * 本类保留原实现作为向后兼容，错误码 HTTP 409 Conflict 保持不变。
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 使用 {@code com.njydsz.common.safe.idempotent.exception.IdempotentException} 替代
  */
+@Deprecated
 public class IdempotentException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 
-  /**
-   * 构造幂等性异常
-   *
-   * @param message 异常消息（通常来自 {@code @Idempotent.message()}）
-   */
   public IdempotentException(String message) {
     super();
     initFields(
@@ -34,16 +29,9 @@ public class IdempotentException extends BusinessException {
     setHttpStatus(CoreExceptionCode.IDEMPOTENT_REJECT.getHttpStatus());
     setLevel(ExceptionLevel.WARN);
     setCategory(ExceptionCategory.BUSINESS);
-    // 使用 setMessage 确保 @Idempotent.message() 用户可读文案优先展示
     setMessage(message);
   }
 
-  /**
-   * 构造幂等性异常（带幂等键，便于日志追踪）
-   *
-   * @param message 异常消息
-   * @param idempotentKey 触发幂等的 Redis 键
-   */
   public IdempotentException(String message, String idempotentKey) {
     super();
     initFields(
@@ -53,7 +41,6 @@ public class IdempotentException extends BusinessException {
     setHttpStatus(CoreExceptionCode.IDEMPOTENT_REJECT.getHttpStatus());
     setLevel(ExceptionLevel.WARN);
     setCategory(ExceptionCategory.BUSINESS);
-    // 使用 setMessage 确保 @Idempotent.message() 用户可读文案优先展示
     setMessage(message);
   }
 }
