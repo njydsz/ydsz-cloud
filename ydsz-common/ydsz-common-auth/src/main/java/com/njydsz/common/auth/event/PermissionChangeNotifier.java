@@ -50,25 +50,6 @@ public class PermissionChangeNotifier {
     notify(PermissionChangedEvent.rolePermissionChanged(roleCode));
   }
 
-  /** 发布菜单变更事件。 */
-  public void notifyMenuChanged() {
-    notify(PermissionChangedEvent.menuChanged());
-  }
-
-  /**
-   * 发布接口权限变更事件。
-   *
-   * @param apiPath API 路径
-   */
-  public void notifyApiPermissionChanged(String apiPath) {
-    notify(
-        new PermissionChangedEvent(
-            apiPath,
-            PermissionChangedEvent.PermissionChangeType.ROLE_PERMISSION_CHANGED,
-            null,
-            null));
-  }
-
   /**
    * 发布权限变更事件。
    *

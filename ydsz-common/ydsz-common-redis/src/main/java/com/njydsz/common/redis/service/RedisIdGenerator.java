@@ -6,7 +6,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.RequiredArgsConstructor;
@@ -17,25 +16,11 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import com.njydsz.common.redis.constant.RedisScriptConstants;
 
 /**
- * 分布式 ID 生成器（基于 Redis Lua 脚本原子操作）
+ * 分布式序号生成器（基于 Redis Lua 脚本原子操作）
  *
- * <p>提供两种 ID 生成策略：
+ * <p>提供基于 {@code INCR + EXPIRE} 原子操作的按日序列号生成能力，按业务键和日期生成递增序号，每日自动重置。
  *
- * <ul>
- *   <li><b>日序号（Daily Sequence）</b> — 基于 {@code INCR + EXPIRE} 原子操作，按业务键和日期生成递增序号，每日自动重置
- *   <li><b>类 Snowflake 算法</b> — 基于时间戳 + WorkerId + 序列号的组合，通过 Lua 脚本原子获取序列号，
- *       返回 64-bit 长整型 ID
- * </ul>
- *
- * <p><b>日序号 Key 规则：</b>{@code idgen:seq:{businessKey}:{yyyyMMdd}}，TTL 自动设为当日剩余秒数。
- *
- * <p><b>Snowflake ID 位布局（64-bit）：</b>
- *
- * <pre>
- *   | 1 bit 符号位 | 41 bits 时间戳（毫秒，相对纪元） | 10 bits WorkerId | 12 bits 序列号 |
- * </pre>
- *
- * <p>纪元（Epoch）为 {@code 2024-01-01 00:00:00 UTC}（毫秒），时间戳部分可覆盖约 69 年。
+ * <p><b>Key 规则：</b>{@code idgen:seq:{businessKey}:{yyyyMMdd}}，TTL 自动设为当日剩余秒数。
  *
  * <p><b>使用示例：</b>
  *
@@ -46,9 +31,6 @@ import com.njydsz.common.redis.constant.RedisScriptConstants;
  * // 日序号（指定起始日期，epoch 毫秒 -> yyyyMMdd）
  * long seq2 = idGenerator.nextId("order", 1704067200000L);
  *
- * // Snowflake ID（workerId 建议 0~1023）
- * long snowflakeId = idGenerator.nextSnowflakeId(1L);
- *
  * // 查询当前序号（不递增）
  * long current = idGenerator.getCurrentCount("order");
  *
@@ -58,6 +40,9 @@ import com.njydsz.common.redis.constant.RedisScriptConstants;
  *
  * <p><b>线程安全：</b>所有方法均为线程安全，底层基于 Redis 单线程 + Lua 脚本原子性保证。
  *
+ * <p>如需 Snowflake 风格 64-bit 全局唯一 ID，请使用 {@code ydsz-common-util} 中的
+ * {@code com.njydsz.common.util.id.SnowflakeIdGenerator}。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -65,32 +50,11 @@ import com.njydsz.common.redis.constant.RedisScriptConstants;
 @RequiredArgsConstructor
 public class RedisIdGenerator {
 
-  /** Snowflake 纪元：2024-01-01 00:00:00 UTC（毫秒） */
-  private static final long SNOWFLAKE_EPOCH = 1704067200000L;
-
-  /** Snowflake Worker ID 位数 */
-  private static final long SNOWFLAKE_WORKER_BITS = 10L;
-
-  /** Snowflake 序列号位数 */
-  private static final long SNOWFLAKE_SEQ_BITS = 12L;
-
-  /** Snowflake 序列号上限（2^12 - 1 = 4095） */
-  private static final long SNOWFLAKE_MAX_SEQ = (1L << (int) SNOWFLAKE_SEQ_BITS) - 1;
-
-  /** Snowflake Worker ID 位移量 */
-  private static final long SNOWFLAKE_WORKER_SHIFT = SNOWFLAKE_SEQ_BITS;
-
-  /** Snowflake 时间戳位移量 */
-  private static final long SNOWFLAKE_TIMESTAMP_SHIFT = SNOWFLAKE_WORKER_BITS + SNOWFLAKE_SEQ_BITS;
-
   /** Key 前缀 */
   private static final String KEY_PREFIX = "idgen";
 
   /** 日序号 Key 子前缀 */
   private static final String SEQ_SUB_PREFIX = "seq";
-
-  /** Snowflake Key 子前缀 */
-  private static final String SNOWFLAKE_SUB_PREFIX = "snowflake";
 
   /** 日期格式化器（yyyyMMdd） */
   private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");

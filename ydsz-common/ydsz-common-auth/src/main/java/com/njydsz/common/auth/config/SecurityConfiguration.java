@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.auth.security.CsrfTokenValidator;
-import com.njydsz.common.auth.service.LoginDefenseService;
 import com.njydsz.common.auth.apikey.ApiKeyAuthService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -18,7 +17,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <ul>
  *   <li>{@link CsrfTokenValidator}（CSRF 防护）
- *   <li>{@link LoginDefenseService}（登录防爆破 / IP 限流 / 验证码阈值）
  * </ul>
  *
  * @author ydsz-team
@@ -41,28 +39,6 @@ public class SecurityConfiguration {
       matchIfMissing = false)
   public CsrfTokenValidator csrfTokenValidator() {
     return new CsrfTokenValidator(true);
-  }
-
-  /**
-   * 创建登录防护服务 Bean。
-   *
-   * <p>仅当 RedisStringOps 可用时装配（依赖 Redis 存储失败计数和 IP 限流窗口）。 Redis 不可用时登录防护功能被跳过，认证流程不受影响。
-   *
-   * @param redisStringOps Redis String 操作
-   * @param authProperties 认证配置属性
-   * @return LoginDefenseService 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean(LoginDefenseService.class)
-  @ConditionalOnBean(RedisStringOps.class)
-  @ConditionalOnProperty(
-      prefix = "ydsz.auth.login-defense",
-      name = "enabled",
-      havingValue = "true",
-      matchIfMissing = true)
-  public LoginDefenseService loginDefenseService(
-      RedisStringOps redisStringOps, AuthProperties authProperties) {
-    return new LoginDefenseService(redisStringOps, authProperties);
   }
 
   /**

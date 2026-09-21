@@ -53,14 +53,6 @@ public class JdbcProperties {
    */
   private IdType idType = IdType.ASSIGN_ID;
 
-  /**
-   * SQL 执行超时时间（秒）
-   *
-   * <p>全局默认 {@code 30} 秒。超过此时间 JDBC 驱动会自动取消执行中的语句，防止慢 SQL 堵塞线程池。
-   * 设为 {@code 0} 表示不限制（使用驱动默认值）。
-   */
-  private int queryTimeoutSeconds = 30;
-
   /** Mapper 扫描包路径数组（默认 com.njydsz.**.mapper） */
   private List<String> mapperScanPackages = Arrays.asList("com.njydsz.**.mapper");
 
@@ -78,9 +70,6 @@ public class JdbcProperties {
 
   public IdType getIdType() { return idType; }
   public void setIdType(IdType idType) { this.idType = idType; }
-
-  public int getQueryTimeoutSeconds() { return queryTimeoutSeconds; }
-  public void setQueryTimeoutSeconds(int queryTimeoutSeconds) { this.queryTimeoutSeconds = queryTimeoutSeconds; }
 
   public List<String> getMapperScanPackages() { return mapperScanPackages; }
   public void setMapperScanPackages(List<String> mapperScanPackages) { this.mapperScanPackages = mapperScanPackages; }

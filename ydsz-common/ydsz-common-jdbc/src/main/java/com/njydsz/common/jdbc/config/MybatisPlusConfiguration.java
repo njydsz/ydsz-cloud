@@ -36,7 +36,6 @@ import com.njydsz.common.jdbc.interceptor.ColPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.CombinedFieldFillInterceptor;
 import com.njydsz.common.jdbc.interceptor.RowPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
-import com.njydsz.common.jdbc.interceptor.SqlTimeoutInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
@@ -70,6 +69,7 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  *   <li>SPI Interceptors - 外部模块通过 {@link InnerInterceptorProvider} SPI 注入（按 order 排序）
  *   <li>DataPermissionInnerInterceptor - 数据权限（行级+列级）
  *   <li>PaginationInnerInterceptor - 分页
+ *   <li>SqlFirewallInnerInterceptor - SQL 防火墙（条件启用，置于链末端）
  * </ol>
  *
  * <p><b>SPI 扩展机制：</b>外部公共模块（如 common-tenant）通过实现 {@link InnerInterceptorProvider} 接口并注册为 Spring
@@ -214,11 +214,8 @@ public class MybatisPlusConfiguration {
   public MybatisPlusInterceptor mybatisPlusInterceptor() {
     MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
 
-    // 0. SQL 超时统一控制（最先加入，保证超时设置在 Prepare 阶段生效）
-    interceptor.addInnerInterceptor(
-        new SqlTimeoutInnerInterceptor(jdbcProperties.getQueryTimeoutSeconds()));
-    log.debug("MyBatis Plus: SqlTimeoutInnerInterceptor enabled ({} seconds)",
-        jdbcProperties.getQueryTimeoutSeconds());
+    // 0. SQL 超时由数据源层（Druid/HikariCP）或 MyBatis Configuration.defaultStatementTimeout 控制，不留拦截器占位
+    //    详见 ydsz-common-jdbc 升级指南：移除 SqlTimeoutInnerInterceptor 幽灵实现
 
     // 1. 乐观锁拦截器（MP 内置，处理实体 @Version 字段的参数映射与版本递增）
     interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
