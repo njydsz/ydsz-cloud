@@ -1,6 +1,5 @@
 package com.njydsz.common.base.advice;
 
-import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 import org.jspecify.annotations.NonNull;
@@ -14,6 +13,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.njydsz.common.core.response.YdszResponse;
@@ -85,17 +85,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
     if (StreamingResponseBody.class.isAssignableFrom(paramType)) {
       return true;
     }
-    // SseEmitter 是泛型类，直接比较类名避免强依赖类型解析失败
-    Class<?> current = paramType;
-    while (current != null && current != Object.class) {
-      // CHECKSTYLE.OFF: RegexpSinglelineJava — 反射类名字符串常量，非代码引用
-      if ("org.springframework.web.servlet.mvc.method.annotation.SseEmitter"
-          .equals(current.getName())) {
-        // CHECKSTYLE.ON: RegexpSinglelineJava
-        return true;
-      }
-      current = current.getSuperclass();
-    }
+    return SseEmitter.class.isAssignableFrom(paramType);
     return false;
   }
 
@@ -127,11 +117,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
     if (body == null) {
       return YdszResponse.success();
     }
-    if (body instanceof Serializable) {
-      return YdszResponse.success((Serializable) body);
-    }
-    // 不可序列化对象降级为 toString()，避免 ClassCastException
-    return YdszResponse.success(body.toString());
+    return YdszResponse.success(body);
   }
 
   /**
