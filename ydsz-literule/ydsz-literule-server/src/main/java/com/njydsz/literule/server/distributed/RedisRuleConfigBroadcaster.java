@@ -1,20 +1,18 @@
 package com.njydsz.literule.server.distributed;
 
-import org.redisson.api.RTopic;
-import org.redisson.api.RedissonClient;
-import org.redisson.api.listener.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 
 /**
  * 基于 Redis Pub/Sub 的规则配置广播器（生产环境实现）
  *
- * <p>利用 Redisson 的 {@code RTopic} 实现跨实例的规则变更事件广播， 确保所有节点的规则缓存一致。
+ * <p>利用 Redis Pub/Sub 实现跨实例的规则变更事件广播，确保所有节点的规则缓存一致。
  *
  * <p>广播流程：
  *
@@ -32,9 +30,8 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  *   {"sourceNodeId":"hostA:1234","event":{"ruleCode":"R001","changeType":"UPDATE","operator":"admin"}}
  * </pre>
  *
- * <p><b>Redisson 使用说明</b>：本文件使用 Redisson {@code RTopic} 作为 Redis Pub/Sub 的消息通道，
- * 属于<b>发布订阅</b>场景，非分布式锁用途，不违反 {@code YDIZ-COMMON-006}（该规则仅约束 {@code RLock} 直用）。
- * 豁免原因：{@code RTopic} 是跨实例配置同步的核心通道，{@code ydsz-common-redis} 当前未提供 Pub/Sub 封装。
+ * <p><b>依赖说明</b>：使用 {@link RedisPubSubOps} 收敛所有 Redis Pub/Sub 操作，
+ * 禁止直接注入 {@code RedissonClient}。豁免原因已随迁移消除（此前 RTopic 操作现由 {@link RedisPubSubOps} 替代）。
  *
  * @since 26.09.01
  * @author ydsz-team
@@ -46,8 +43,8 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
   /** Redis Topic 名称 */
   private static final String TOPIC_NAME = "literule:config:refresh";
 
-  /** Redisson 客户端，用于获取 RTopic 实现跨实例 Pub/Sub 通信 */
-  private final RedissonClient redissonClient;
+  /** Redis Pub/Sub 操作组件 */
+  private final RedisPubSubOps redisPubSubOps;
 
   /** 当前节点唯一标识（如 host:port），用于过滤本节点发出的广播消息防止广播风暴 */
   private final String selfNodeId;
@@ -58,9 +55,14 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
   /** 是否已订阅 */
   private volatile boolean subscribed = false;
 
+  /** 订阅 ID（用于取消订阅） */
+  private String subscriptionId;
+
   public RedisRuleConfigBroadcaster(
-      RedissonClient redissonClient, String selfNodeId, ApplicationEventPublisher eventPublisher) {
-    this.redissonClient = redissonClient;
+      RedisPubSubOps redisPubSubOps,
+      String selfNodeId,
+      ApplicationEventPublisher eventPublisher) {
+    this.redisPubSubOps = redisPubSubOps;
     this.selfNodeId = selfNodeId;
     this.eventPublisher = eventPublisher;
   }
@@ -73,8 +75,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
     try {
       BroadcastMessage message = new BroadcastMessage(sourceId, event);
       String json = YdszJson.toJson(message);
-      RTopic topic = redissonClient.getTopic(TOPIC_NAME);
-      topic.publish(json);
+      redisPubSubOps.publish(TOPIC_NAME, json);
       log.info(
           "[Distributed-Redis] 规则变更事件已广播: ruleCode={}, changeType={}, source={}",
           event.getRuleCode(),
@@ -87,13 +88,8 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
 
   @Override
   public boolean isAvailable() {
-    try {
-      redissonClient.getTopic(TOPIC_NAME).countListeners();
-      return true;
-    } catch (Exception e) {
-      log.warn("[RedisRuleConfigBroadcaster] Redis 广播器不可用: {}", e.getMessage(), e);
-      return false;
-    }
+    // Redis 操作组件已注入即视为可用（订阅失败不影响发布能力）
+    return redisPubSubOps != null;
   }
 
   /**
@@ -112,15 +108,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
       return;
     }
     try {
-      RTopic topic = redissonClient.getTopic(TOPIC_NAME);
-      topic.addListener(
-          String.class,
-          new MessageListener<String>() {
-            @Override
-            public void onMessage(CharSequence channel, String msg) {
-              handleReceivedMessage(msg);
-            }
-          });
+      subscriptionId = redisPubSubOps.subscribe(TOPIC_NAME, this::handleReceivedMessage);
       subscribed = true;
       log.info("[Distributed-Redis] 已订阅规则变更广播 Topic: {}", TOPIC_NAME);
     } catch (Exception e) {
@@ -129,27 +117,32 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
   }
 
   /** 处理接收到的广播消息 */
-  private void handleReceivedMessage(String msg) {
-    if (msg == null || msg.isEmpty()) {
+  @SuppressWarnings("unchecked")
+  private void handleReceivedMessage(RedisPubSubOps.PubSubMessage message) {
+    if (message == null || message.getBody() == null) {
       return;
     }
     try {
-      BroadcastMessage message = YdszJson.fromJson(msg, BroadcastMessage.class);
-      if (message == null || message.getEvent() == null) {
+      String payload = message.getBody(String.class);
+      if (payload == null || payload.isEmpty()) {
+        return;
+      }
+      BroadcastMessage broadcastMsg = YdszJson.fromJson(payload, BroadcastMessage.class);
+      if (broadcastMsg == null || broadcastMsg.getEvent() == null) {
         return;
       }
       // 忽略本节点发出的消息，防止循环
-      if (selfNodeId.equals(message.getSourceNodeId())) {
+      if (selfNodeId.equals(broadcastMsg.getSourceNodeId())) {
         return;
       }
       log.info(
           "[Distributed-Redis] 收到规则变更广播: ruleCode={}, changeType={}, source={}",
-          message.getEvent().getRuleCode(),
-          message.getEvent().getChangeType(),
-          message.getSourceNodeId());
+          broadcastMsg.getEvent().getRuleCode(),
+          broadcastMsg.getEvent().getChangeType(),
+          broadcastMsg.getSourceNodeId());
       // 在本地发布事件，触发 RuleHotReloader 热加载
       if (eventPublisher != null) {
-        eventPublisher.publishEvent(message.getEvent());
+        eventPublisher.publishEvent(broadcastMsg.getEvent());
       }
     } catch (Exception e) {
       log.warn("[Distributed-Redis] 广播消息处理失败: {}", e.getMessage());

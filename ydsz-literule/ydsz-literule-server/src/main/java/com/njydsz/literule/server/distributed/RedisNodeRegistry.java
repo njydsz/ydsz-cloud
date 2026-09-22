@@ -6,17 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.redisson.api.RMap;
-import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
 
 /**
  * 基于 Redis 的集群节点注册表（生产环境实现）
  *
- * <p>利用 Redisson 的 {@code RMap} 存储节点信息，所有节点共享同一份注册表， 实现跨实例的节点发现与心跳管理。
+ * <p>利用 Redis Hash 存储节点信息，所有节点共享同一份注册表，实现跨实例的节点发现与心跳管理。
  *
  * <p>存储结构：
  *
@@ -26,19 +25,18 @@ import com.njydsz.common.json.YdszJson;
  *   <li>Value: ClusterNode JSON
  * </ul>
  *
- * <p>心跳超时清理采用惰性删除策略：{@link #getAliveNodes()} 时过滤超时节点， 不依赖后台定时任务，降低系统复杂度。
+ * <p>心跳超时清理采用惰性删除策略：{@link #getAliveNodes()} 时过滤超时节点，不依赖后台定时任务，降低系统复杂度。
  *
- * <p><b>Redisson 使用说明</b>：本文件使用 Redisson {@code RMap} 作为 Redis Hash 数据结构的客户端，
- * 属于<b>缓存/数据结构</b>场景，非分布式锁用途，不违反 {@code YDIZ-COMMON-006}（该规则仅约束 {@code RLock} 直用）。
- * 豁免原因：{@code RMap} 提供原子性 hash 操作，且 {@code ydsz-common-redis} 当前未提供对应封装。
+ * <p><b>依赖说明</b>：使用 {@link RedisHashOps} 收敛所有 Redis 操作，禁止直接注入 {@code RedissonClient}。
+ * 豁免原因已随迁移消除（此前 RMap 操作现由 {@link RedisHashOps} 的 hSet/hGet/hDel/hGetAll 替代）。
  *
  * @since 26.09.01
  * @author ydsz-team
  */
 public class RedisNodeRegistry implements NodeRegistry {
+
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
-
 
   private static final Logger log = LoggerFactory.getLogger(RedisNodeRegistry.class);
 
@@ -48,17 +46,17 @@ public class RedisNodeRegistry implements NodeRegistry {
   /** 默认心跳超时时间（毫秒，30 秒） */
   private static final long DEFAULT_HEARTBEAT_TIMEOUT_MS = 30_000L;
 
-  private final RedissonClient redissonClient;
+  private final RedisHashOps redisHashOps;
   private final String selfNodeId;
   private final long heartbeatTimeoutMs;
 
-  public RedisNodeRegistry(RedissonClient redissonClient, String selfNodeId) {
-    this(redissonClient, selfNodeId, DEFAULT_HEARTBEAT_TIMEOUT_MS);
+  public RedisNodeRegistry(RedisHashOps redisHashOps, String selfNodeId) {
+    this(redisHashOps, selfNodeId, DEFAULT_HEARTBEAT_TIMEOUT_MS);
   }
 
   public RedisNodeRegistry(
-      RedissonClient redissonClient, String selfNodeId, long heartbeatTimeoutMs) {
-    this.redissonClient = redissonClient;
+      RedisHashOps redisHashOps, String selfNodeId, long heartbeatTimeoutMs) {
+    this.redisHashOps = redisHashOps;
     this.selfNodeId = selfNodeId;
     this.heartbeatTimeoutMs = heartbeatTimeoutMs;
   }
@@ -71,8 +69,7 @@ public class RedisNodeRegistry implements NodeRegistry {
     node.setRegisteredAt(System.currentTimeMillis());
     node.setLastHeartbeatAt(System.currentTimeMillis());
     try {
-      RMap<String, String> map = redissonClient.getMap(NODES_KEY);
-      map.put(node.getNodeId(), YdszJson.toJson(node));
+      redisHashOps.hSet(NODES_KEY, node.getNodeId(), YdszJson.toJson(node));
       log.info("[Distributed-Redis] 节点已注册: {}", node.getNodeId());
     } catch (Exception e) {
       log.warn("[Distributed-Redis] 节点注册失败: {}", e.getMessage());
@@ -85,8 +82,7 @@ public class RedisNodeRegistry implements NodeRegistry {
       return;
     }
     try {
-      RMap<String, String> map = redissonClient.getMap(NODES_KEY);
-      map.remove(nodeId);
+      redisHashOps.hDel(NODES_KEY, nodeId);
       log.info("[Distributed-Redis] 节点已注销: {}", nodeId);
     } catch (Exception e) {
       log.warn("[Distributed-Redis] 节点注销失败: {}", e.getMessage());
@@ -99,13 +95,12 @@ public class RedisNodeRegistry implements NodeRegistry {
       return;
     }
     try {
-      RMap<String, String> map = redissonClient.getMap(NODES_KEY);
-      String json = map.get(nodeId);
+      String json = redisHashOps.hGet(NODES_KEY, nodeId, String.class);
       if (json != null) {
         ClusterNode node = YdszJson.fromJson(json, ClusterNode.class);
         if (node != null) {
           node.setLastHeartbeatAt(System.currentTimeMillis());
-          map.put(nodeId, YdszJson.toJson(node));
+          redisHashOps.hSet(NODES_KEY, nodeId, YdszJson.toJson(node));
         }
       }
     } catch (Exception e) {
@@ -116,12 +111,15 @@ public class RedisNodeRegistry implements NodeRegistry {
   @Override
   public List<ClusterNode> getAliveNodes() {
     try {
-      RMap<String, String> map = redissonClient.getMap(NODES_KEY);
+      Map<String, String> allEntries = redisHashOps.hGetAll(NODES_KEY, String.class);
+      if (allEntries == null || allEntries.isEmpty()) {
+        return Collections.emptyList();
+      }
       long now = System.currentTimeMillis();
       List<ClusterNode> alive = new ArrayList<>(COLLECTION_CAPACITY);
       List<String> deadNodeIds = new ArrayList<>(COLLECTION_CAPACITY);
 
-      for (Map.Entry<String, String> entry : map.entrySet()) {
+      for (Map.Entry<String, String> entry : allEntries.entrySet()) {
         try {
           ClusterNode node = YdszJson.fromJson(entry.getValue(), ClusterNode.class);
           if (node == null || node.getNodeId() == null) {
@@ -141,7 +139,7 @@ public class RedisNodeRegistry implements NodeRegistry {
 
       // 惰性清理超时节点
       if (!deadNodeIds.isEmpty()) {
-        map.fastRemove(deadNodeIds.toArray(new String[0]));
+        redisHashOps.hDel(NODES_KEY, deadNodeIds.toArray());
         log.debug("[Distributed-Redis] 清理超时节点: count={}", deadNodeIds.size());
       }
 
@@ -176,11 +174,14 @@ public class RedisNodeRegistry implements NodeRegistry {
    */
   public int evictDeadNodes() {
     try {
-      RMap<String, String> map = redissonClient.getMap(NODES_KEY);
+      Map<String, String> allEntries = redisHashOps.hGetAll(NODES_KEY, String.class);
+      if (allEntries == null || allEntries.isEmpty()) {
+        return 0;
+      }
       long now = System.currentTimeMillis();
       List<String> deadNodeIds = new ArrayList<>(COLLECTION_CAPACITY);
 
-      for (Map.Entry<String, String> entry : map.entrySet()) {
+      for (Map.Entry<String, String> entry : allEntries.entrySet()) {
         try {
           ClusterNode node = YdszJson.fromJson(entry.getValue(), ClusterNode.class);
           if (node == null || !node.isAlive(now, heartbeatTimeoutMs)) {
@@ -192,7 +193,7 @@ public class RedisNodeRegistry implements NodeRegistry {
       }
 
       if (!deadNodeIds.isEmpty()) {
-        map.fastRemove(deadNodeIds.toArray(new String[0]));
+        redisHashOps.hDel(NODES_KEY, deadNodeIds.toArray());
         log.info("[Distributed-Redis] 主动清理超时节点: count={}", deadNodeIds.size());
       }
       return deadNodeIds.size();
