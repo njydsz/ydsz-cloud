@@ -36,9 +36,6 @@ public final class BizContextKeys {
 
   // ==================== 数据权限域 ====================
 
-  /** 列权限信息键名。 */
-  public static final String KEY_COLUMN_PERMISSION = "columnPermission";
-
   /** 虚拟请求头键名（数据权限相关 header 的透传容器，如 X-Data-Scope）。 */
   public static final String KEY_EXTRA_HEADERS = "extraHeaders";
 

@@ -2,7 +2,6 @@ package com.njydsz.common.auth.context;
 
 import java.util.Map;
 
-import com.njydsz.common.auth.model.ColumnPermissionInfo;
 import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.BizContextKeys;
@@ -21,7 +20,6 @@ import com.njydsz.common.exception.custom.SysException;
  * <ul>
  *   <li>登录用户：{@link #getCurrentOrNull()} / {@link #getUserId()} / {@link #getUsername()}
  *   <li>租户：{@link #getTenantIdOrDefault()} / {@link #getTenantId()}
- *   <li>列权限：{@link #getColumnPermission()} / {@link #setColumnPermission(ColumnPermissionInfo)}
  *   <li>请求级用户信息缓存：{@link #getCachedUserInfoMap()} / {@link #setCachedUserInfoMap(Map)}
  * </ul>
  *
@@ -180,36 +178,6 @@ public final class AuthContextUtils {
         .key("error.common.msg_ad4fff48")
         .httpStatus(403)
         .build();
-  }
-
-  // ==================== 列权限管理 ====================
-
-  /**
-   * 获取列权限信息。
-   *
-   * @return 列权限信息，未设置时返回 null
-   */
-  public static ColumnPermissionInfo getColumnPermission() {
-    return (ColumnPermissionInfo) RequestContext.get(BizContextKeys.KEY_COLUMN_PERMISSION);
-  }
-
-  /**
-   * 设置列权限信息。
-   *
-   * @param columnPermission 列权限信息
-   */
-  public static void setColumnPermission(ColumnPermissionInfo columnPermission) {
-    RequestContext.put(BizContextKeys.KEY_COLUMN_PERMISSION, columnPermission);
-  }
-
-  /**
-   * 判断是否有列权限。
-   *
-   * @return true 表示有列权限且权限信息非空
-   */
-  public static boolean hasColumnPermission() {
-    ColumnPermissionInfo info = getColumnPermission();
-    return info != null && !info.isEmpty();
   }
 
   // ==================== 请求级缓存 ====================

@@ -15,7 +15,6 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
 import com.njydsz.common.auth.service.RolePermissionLoader;
-import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
 
 /**

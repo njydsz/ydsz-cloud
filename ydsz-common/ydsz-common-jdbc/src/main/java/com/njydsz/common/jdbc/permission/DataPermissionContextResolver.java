@@ -47,8 +47,6 @@ import com.njydsz.common.util.string.StringUtils;
  * <ol>
  *   <li>认证上下文 AuthInfo（来自 ydsz-common-core，JWT 解析后填入）— 用于 userId
  *   <li>真实 HttpServletRequest Header（常规 Web 请求 / Feign 透传）— 用于 ID 集合、列权限
- *   <li>{@link RequestContext} extra headers（{@code @AuthRowPermission}/{@code @AuthColPermission}
- *       写入的虚拟请求头）
  * </ol>
  *
  * <p><b>安全说明：</b> userId 优先从 JWT 认证上下文获取（不可伪造）， HTTP Header 中的值仅在认证上下文不可用时作为兼容回退。生产环境应确保 API 网关
@@ -88,9 +86,9 @@ public class DataPermissionContextResolver {
    * <p>执行顺序：
    *
    * <ol>
-   *   <li>检查 {@link DataScopeContextHolder}（由 {@code @AuthRowPermission} 切面注入的结构化上下文）
+   * <li>检查 {@link DataScopeContextHolder}（由 HTTP 拦截器注入的结构化上下文）
    *   <li>若 Holder 中存在有效上下文，直接返回（优先路径，避免 HTTP Header 反序列化开销）
-   *   <li>降级到 HTTP Header 解析（兼容无注解场景或 Header 透传场景）
+   *   <li>降级到 HTTP Header 解析（兼容 Header 透传场景）
    *   <li>调用 {@link #expandIdsIfNecessary(DataPermissionContext)} 扩展子级 ID
    *   <li>返回完整的 DataPermissionContext
    * </ol>
@@ -98,7 +96,7 @@ public class DataPermissionContextResolver {
    * @return 数据权限上下文；所有字段均不为 null（集合为空 Set/Map）
    */
   public DataPermissionContext resolve() {
-    // P2: 优先从 DataScopeContextHolder 读取（由 @AuthRowPermission 切面注入的结构化上下文）
+    // 优先从 DataScopeContextHolder 读取（由 HTTP 拦截器注入的结构化上下文）
     DataPermissionContext holderContext = DataScopeContextHolder.get();
     if (holderContext != null) {
       return holderContext;

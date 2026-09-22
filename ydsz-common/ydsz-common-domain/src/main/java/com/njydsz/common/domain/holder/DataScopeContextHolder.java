@@ -5,27 +5,26 @@ import com.njydsz.common.domain.permission.DataPermissionContext;
 /**
  * 数据权限上下文 ThreadLocal 持有器。
  *
- * <p>由 {@code ydsz-common-auth} 的 {@code AuthRowPermissionAspect} 在执行数据权限解析后写入，
- * 供 SQL 拦截器解析器优先读取，实现注解层到 SQL 拦截层的直接数据传递，
- * 避免经过 HTTP Header 反序列化的性能开销与精度损失。
+ * <p>持有当前请求的数据权限上下文（数据行可见范围），供 SQL 拦截器（{@code ydsz-common-jdbc}）优先读取，
+ * 实现 HTTP 拦截层到 SQL 拦截层的结构化数据传递，避免经过 HTTP Header 反序列化的性能开销与精度损失。
  *
- * <p><b>生命周期：</b>请求级别。切面在 {@code try-finally} 块中确保清除， 即使发生异常也不会污染后续请求。
+ * <p><b>生命周期：</b>请求级别。写入方需在 {@code try-finally} 块中确保清除，即使发生异常也不会污染后续请求。
  *
  * <p><b>层级说明：</b>下沉至 domain 层，auth/jdbc/server 模块均可直接引用，
  * 避免 auth 反向依赖 jdbc 模块。
  *
- * <p><b>使用示例（切面侧）：</b>
+ * <p><b>使用示例（写入侧）：</b>
  *
  * <pre>{@code
  * DataScopeContextHolder.set(context);
  * try {
- *     return joinPoint.proceed();
+ *     // 业务处理
  * } finally {
  *     DataScopeContextHolder.remove();
  * }
  * }</pre>
  *
- * <p><b>使用示例（解析器侧）：</b>
+ * <p><b>使用示例（读取侧）：</b>
  *
  * <pre>{@code
  * DataPermissionContext context = DataScopeContextHolder.get();
