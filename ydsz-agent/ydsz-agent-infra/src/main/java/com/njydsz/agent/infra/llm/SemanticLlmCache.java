@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import com.njydsz.agent.domain.model.ChatMessage;
@@ -16,6 +15,8 @@ import com.njydsz.agent.domain.model.MessageRole;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
@@ -42,16 +43,12 @@ import com.njydsz.common.util.security.DigestUtils;
  *   <li>仅对 temperature=0 的确定性请求启用缓存（高 temperature 结果随机性高）
  * </ul>
  *
- * <p><b>线程安全</b>：YdszCache 与 {@link StringRedisTemplate} 均为线程安全实现。
+ * <p><b>线程安全</b>：YdszCache 与 ydss-common-redis 操作组件均为线程安全实现。
  *
- * <p><b>关于直接注入 {@link StringRedisTemplate} 的说明</b>：本类的 LRU 淘汰方法（{@link
- * #evictIfOverCapacity}）
- * 依赖 Spring Data Redis 的 {@code ZSetOperations.popMin} 实现原子性的「取出并删除最低 score 成员」，
- * 该操作在 ydzs-common-redis 的 {@code RedisCollectionOps} 中暂无对应封装
- * （仅提供 {@code zRemoveRange} 按排名删除，无法原子返回被删成员）。
- * 若强行替换为 {@code zRange} + {@code zRem} 两步非原子操作，则在并发写入时可能出现「已取出的成员被其他线程修改」的竞争问题，
- * 导致误删或漏删。因此保留 {@link StringRedisTemplate} 注入，key 命名已符合 {@link
- * com.njydsz.common.redis.config.RedisKeyNamingConvention} 规范。
+ * <p><b>依赖组件</b>：使用 {@link RedisStringOps} 处理缓存值的读写与删除，
+ * {@link RedisCollectionOps} 维护 LRU ZSet 索引（原子 popMin 淘汰）。
+ * 所有 Redis 操作收敛至 ydzs-common-redis，key 命名符合
+ * {@link com.njydsz.common.redis.config.RedisKeyNamingConvention} 规范。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -77,7 +74,8 @@ public class SemanticLlmCache {
   /** 缓存名称（用于健康检查和监控） */
   private static final String CACHE_NAME = "agent:semantic-llm";
 
-  private final StringRedisTemplate redisTemplate;
+  private final RedisStringOps redisStringOps;
+  private final RedisCollectionOps redisCollectionOps;
   private final Duration ttl;
   private final int maxCacheSize;
 
@@ -85,12 +83,14 @@ public class SemanticLlmCache {
   private final Cache<String, CachedLlmResponse> l1Cache;
 
   public SemanticLlmCache(
-      StringRedisTemplate redisTemplate,
+      RedisStringOps redisStringOps,
+      RedisCollectionOps redisCollectionOps,
       Duration ttl,
       int maxCacheSize,
       int l1MaxSize,
       int l1ExpireMinutes) {
-    this.redisTemplate = redisTemplate;
+    this.redisStringOps = redisStringOps;
+    this.redisCollectionOps = redisCollectionOps;
     this.ttl = ttl;
     this.maxCacheSize = maxCacheSize;
     this.l1MaxSize = l1MaxSize;
@@ -124,10 +124,10 @@ public class SemanticLlmCache {
     }
     // L2: Redis 分布式缓存查询
     try {
-      String json = redisTemplate.opsForValue().get(key);
+      String json = redisStringOps.get(key, String.class);
       if (json != null) {
         // 命中刷新 LRU 访问时间
-        redisTemplate.opsForZSet().add(LRU_INDEX_KEY, key, Instant.now().toEpochMilli());
+        redisCollectionOps.zAdd(LRU_INDEX_KEY, key, java.math.BigDecimal.valueOf(Instant.now().toEpochMilli()));
         CachedLlmResponse result = YdszJson.fromJson(json, CachedLlmResponse.class);
         // L2 命中后回填 L1，加速后续同进程请求
         if (result != null) {
@@ -163,9 +163,9 @@ public class SemanticLlmCache {
     // L2: 写入 Redis 分布式缓存
     try {
       String json = YdszJson.toJson(cached);
-      redisTemplate.opsForValue().set(key, json, ttl);
-      // 维护 LRU 索引并执行容量淘汰（P1 修复：原 maxCacheSize 参数从未使用，属死代码）
-      redisTemplate.opsForZSet().add(LRU_INDEX_KEY, key, Instant.now().toEpochMilli());
+      redisStringOps.set(key, json, ttl);
+      // 维护 LRU 索引并执行容量淘汰
+      redisCollectionOps.zAdd(LRU_INDEX_KEY, key, java.math.BigDecimal.valueOf(Instant.now().toEpochMilli()));
       evictIfOverCapacity();
       log.debug(
           "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...", ttl.toMinutes());
@@ -248,18 +248,18 @@ public class SemanticLlmCache {
       return;
     }
     try {
-      Long size = redisTemplate.opsForZSet().zCard(LRU_INDEX_KEY);
-      if (size == null || size <= maxCacheSize) {
+      long size = redisCollectionOps.zSize(LRU_INDEX_KEY);
+      if (size <= maxCacheSize) {
         return;
       }
       long toRemove = size - maxCacheSize + EVICT_MARGIN;
-      Set<ZSetOperations.TypedTuple<String>> oldest =
-          redisTemplate.opsForZSet().popMin(LRU_INDEX_KEY, toRemove);
-      if (oldest != null) {
-        for (ZSetOperations.TypedTuple<String> tuple : oldest) {
-          String member = tuple.getValue();
-          if (member != null) {
-            redisTemplate.delete(member);
+      Set<ZSetOperations.TypedTuple<Object>> oldest =
+          redisCollectionOps.popMin(LRU_INDEX_KEY, toRemove);
+      if (oldest != null && !oldest.isEmpty()) {
+        for (ZSetOperations.TypedTuple<Object> tuple : oldest) {
+          Object member = tuple.getValue();
+          if (member instanceof String memberKey) {
+            redisStringOps.del(memberKey);
           }
         }
         log.info("[SemanticCache] LRU 淘汰完成: 共删除 {} 条", oldest.size());

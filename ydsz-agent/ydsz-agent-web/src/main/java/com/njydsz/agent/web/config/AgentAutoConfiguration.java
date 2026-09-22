@@ -17,8 +17,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-// StringRedisTemplate 仅透传给 SemanticLlmCache 构造（后者需要 ZSetOperations.popMin 无法由 RedisCollectionOps 替代）
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -161,8 +159,8 @@ public class AgentAutoConfiguration {
   public LlmClient llmClient(
       AgentProperties properties,
       AgentMetrics agentMetrics,
-      ObjectProvider<StringRedisTemplate>
-          redisTemplateProvider) {
+            ObjectProvider<RedisStringOps> redisStringOpsProvider,
+      ObjectProvider<RedisCollectionOps> redisCollectionOpsProvider) {
     LlmClientRouter router = new LlmClientRouter();
     LlmProperties llmConfig = properties.getLlm();
 
@@ -193,12 +191,13 @@ public class AgentAutoConfiguration {
 
     // 启用语义缓存时包装路由器
     if (properties.getCache().isEnabled()) {
-      StringRedisTemplate redisTemplate =
-          redisTemplateProvider.getIfAvailable();
-      if (redisTemplate != null) {
+      RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
+      RedisCollectionOps redisCollectionOps = redisCollectionOpsProvider.getIfAvailable();
+      if (redisStringOps != null && redisCollectionOps != null) {
         SemanticLlmCache cache =
             new SemanticLlmCache(
-                redisTemplate,
+                redisStringOps,
+                redisCollectionOps,
                 Duration.ofMinutes(properties.getCache().getTtlMinutes()),
                 properties.getCache().getMaxSize(),
                 properties.getCache().getL1MaxSize(),
@@ -211,7 +210,7 @@ public class AgentAutoConfiguration {
             properties.getCache().getL1ExpireMinutes());
         return new CachedLlmClient(router, cache, agentMetrics);
       }
-      log.warn("[Agent] 语义缓存配置为开启但 RedisTemplate 不可用，跳过缓存");
+      log.warn("[Agent] 语义缓存配置为开启但 Redis 操作组件不可用，跳过缓存");
     }
     return router;
   }

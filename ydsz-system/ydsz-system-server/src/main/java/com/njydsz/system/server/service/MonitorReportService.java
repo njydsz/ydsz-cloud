@@ -21,7 +21,7 @@ import com.njydsz.system.domain.dto.MonitorErrorDTO;
 import com.njydsz.system.domain.dto.MonitorWebVitalBatchDTO;
 import com.njydsz.system.domain.dto.MonitorWebVitalDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
-import com.njydsz.system.server.support.ByteArrayMultipartFile;
+import com.njydsz.common.file.storage.AdaptiveMultipartFile;
 
 /**
  * 前端监控上报处理服务。
@@ -157,7 +157,8 @@ public class MonitorReportService {
 
     String objectName = buildSourcemapObjectName(release, file);
     try {
-      FileStorage stored = storage.upload(null, objectName, new ByteArrayMultipartFile(file, content));
+      String contentType = file.endsWith(".map") ? "application/json" : "application/octet-stream";
+      FileStorage stored = storage.upload(null, objectName, new AdaptiveMultipartFile(file, contentType, content));
       SentryObservation.count(
           METRIC_SOURCEMAP_TOTAL, "前端 sourcemap 上传次数", Map.of("status", "success"));
       log.info("[MonitorReport] sourcemap 已存储, release={}, object={}, size={}B", release, objectName, content.length);
