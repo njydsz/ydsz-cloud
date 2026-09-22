@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.middleware;
 
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * 中间件执行异常。
@@ -17,47 +18,48 @@ import com.njydsz.agent.domain.enums.AgentExceptionCode;
  * @author ydsz-team
  * @since 26.09.13
  */
-public class MiddlewareException extends RuntimeException {
+public class MiddlewareException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 
   /** 面向用户的拒绝原因（经安全审查，可透传前端） */
   private final String userMessage;
 
-  /** 错误码 */
-  private final AgentExceptionCode errorCode;
+  /** 错误码枚举 */
+  private final AgentExceptionCode agentErrorCode;
 
   /**
    * 构造中间件异常。
    *
    * @param userMessage 面向用户的拒绝原因
-   * @param errorCode 错误码
+   * @param errorCode 错误码枚举
    */
   public MiddlewareException(String userMessage, AgentExceptionCode errorCode) {
-    super(userMessage);
+    super(errorCode);
     this.userMessage = userMessage;
-    this.errorCode = errorCode;
+    this.agentErrorCode = errorCode;
   }
 
   /**
    * 构造中间件异常（含内部原因）。
    *
    * @param userMessage 面向用户的拒绝原因
-   * @param errorCode 错误码
+   * @param errorCode 错误码枚举
    * @param reason 内部诊断原因（用于日志）
    */
   public MiddlewareException(
       String userMessage, AgentExceptionCode errorCode, String reason) {
-    super(reason != null ? reason : userMessage);
+    super(errorCode);
     this.userMessage = userMessage;
-    this.errorCode = errorCode;
+    this.agentErrorCode = errorCode;
+    this.setMessage(reason != null ? reason : userMessage);
   }
 
   /**
    * 构造中间件异常（含根因）。
    *
    * @param userMessage 面向用户的拒绝原因
-   * @param errorCode 错误码
+   * @param errorCode 错误码枚举
    * @param reason 内部诊断原因
    * @param cause 根因异常
    */
@@ -66,9 +68,10 @@ public class MiddlewareException extends RuntimeException {
       AgentExceptionCode errorCode,
       String reason,
       Throwable cause) {
-    super(reason != null ? reason : userMessage, cause);
+    super(errorCode, cause);
     this.userMessage = userMessage;
-    this.errorCode = errorCode;
+    this.agentErrorCode = errorCode;
+    this.setMessage(reason != null ? reason : userMessage);
   }
 
   public String getUserMessage() {
@@ -76,6 +79,6 @@ public class MiddlewareException extends RuntimeException {
   }
 
   public AgentExceptionCode getErrorCode() {
-    return errorCode;
+    return agentErrorCode;
   }
 }

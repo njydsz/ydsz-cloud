@@ -15,7 +15,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -23,6 +22,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.redis.service.ops.ReactiveStringRedisOps;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.sentry.SentryObservation;
@@ -97,7 +97,7 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
   private static final long DEFAULT_BLACKLIST_CACHE_MAX_SIZE = 50_000L;
 
   private final IpAccessControlProperties properties;
-  private final ReactiveStringRedisTemplate redisTemplate;
+  private final ReactiveStringRedisOps reactiveRedis;
 
   /** L1 本地缓存：IP → 是否在黑名单中（延迟到 @PostConstruct 初始化，以便读取配置属性） */
   private Cache<String, Boolean> localCache;
@@ -214,7 +214,7 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
     }
 
     // L2: 查 Redis
-    return redisTemplate
+    return reactiveRedis
         .hasKey(IP_BLACKLIST_PREFIX + clientIp)
         .defaultIfEmpty(false)
         .flatMap(

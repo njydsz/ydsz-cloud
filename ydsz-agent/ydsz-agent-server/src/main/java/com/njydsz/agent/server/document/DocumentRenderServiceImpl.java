@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.document.DocumentFormat;
 import com.njydsz.agent.domain.document.DocumentRenderService;
 import com.njydsz.agent.domain.document.DocumentTemplate;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * 文档渲染服务实现。
@@ -312,7 +313,8 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
     /**
      * 文档渲染异常。
      */
-    public static class DocumentRenderException extends RuntimeException {
+    public static class DocumentRenderException extends BusinessException {
+
         public DocumentRenderException(String message) {
             super(message);
         }

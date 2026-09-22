@@ -1,7 +1,9 @@
 package com.njydsz.userinfo.domain.social;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
- * 社交认证运行时异常。
+ * 社交认证异常。
  *
  * <p>封装社交认证流程中的平台侧异常（网络超时、令牌失效、用户拒绝授权等），
  * 由 {@link SocialAuthProvider} 实现类抛出，上层 {@code SocialAuthService} 捕获后转换为对应的业务异常。
@@ -11,7 +13,7 @@ package com.njydsz.userinfo.domain.social;
  * @author ydsz-team
  * @since 26.09.01
  */
-public class SocialAuthException extends RuntimeException {
+public class SocialAuthException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 

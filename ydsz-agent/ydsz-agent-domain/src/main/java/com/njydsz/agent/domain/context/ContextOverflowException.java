@@ -1,5 +1,7 @@
 package com.njydsz.agent.domain.context;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 上下文溢出异常 — LLM 请求超出模型上下文窗口时抛出。
  *
@@ -11,7 +13,7 @@ package com.njydsz.agent.domain.context;
  * @author ydsz-team
  * @since 26.09.13
  */
-public class ContextOverflowException extends RuntimeException {
+public class ContextOverflowException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 

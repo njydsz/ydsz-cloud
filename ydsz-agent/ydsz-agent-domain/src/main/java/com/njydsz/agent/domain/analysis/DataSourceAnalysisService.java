@@ -1,5 +1,7 @@
 package com.njydsz.agent.domain.analysis;
 
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 数据分析服务领域网关接口。
  *
@@ -36,7 +38,7 @@ public interface DataSourceAnalysisService {
   /**
    * 数据分析异常。
    */
-  class DataSourceAnalysisException extends RuntimeException {
+  class DataSourceAnalysisException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 

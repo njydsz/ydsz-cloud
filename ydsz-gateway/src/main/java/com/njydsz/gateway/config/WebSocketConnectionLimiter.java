@@ -8,8 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.redis.service.ops.ReactiveStringRedisOps;
 import reactor.core.publisher.Mono;
 
 /**
@@ -25,7 +26,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * <p>Lua 脚本已移除：原内联 GET + INCR + EXPIRE 逻辑替换为
- * {@link ReactiveStringRedisTemplate#opsForValue()} 的原子操作，
+ * {@link ReactiveStringRedisOps} 的原子操作封装（INCR/DECR + 条件 EXPIRE），
  * 保持语义一致性同时消除自定义 Lua 脚本依赖。
  *
  * <h3>Redis 键设计</h3>
@@ -53,7 +54,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnClass(ReactiveStringRedisTemplate.class)
+@ConditionalOnClass(ReactiveStringRedisOps.class)
 @ConditionalOnProperty(prefix = "ydsz.gateway.websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebSocketConnectionLimiter {
 
@@ -75,7 +76,7 @@ public class WebSocketConnectionLimiter {
   /** 计数器初始值 */
   private static final long INITIAL_VALUE = 1L;
 
-  private final ReactiveStringRedisTemplate redisTemplate;
+  private final ReactiveStringRedisOps reactiveRedis;
 
   private final GatewayMetrics gatewayMetrics;
 
@@ -94,7 +95,7 @@ public class WebSocketConnectionLimiter {
   /**
    * 启动时预编译共享组件并打印初始化参数。
    *
-   * <p>Lua 脚本已在 ADR-4 收敛决策中移除，由 {@link ReactiveStringRedisTemplate} 原子 ops 替代。
+   * <p>Lua 脚本已在 ADR-4 收敛决策中移除，由 {@link ReactiveStringRedisOps} 原子 ops 封装替代。
    */
   @PostConstruct
   void init() {
@@ -136,10 +137,9 @@ public class WebSocketConnectionLimiter {
   public Mono<Void> release(String userId, String clientIp) {
     String userKey = buildUserKey(userId, clientIp);
     String ipKey = buildIpKey(clientIp);
-    return redisTemplate
-        .opsForValue()
+    return reactiveRedis
         .decrement(userKey)
-        .flatMap(u -> redisTemplate.opsForValue().decrement(ipKey))
+        .flatMap(u -> reactiveRedis.decrement(ipKey))
         .onErrorResume(
             e -> {
               log.warn("[WsConnectionLimiter] 释放配额异常: userId={}, ip={}", userId, clientIp);
@@ -156,8 +156,7 @@ public class WebSocketConnectionLimiter {
    * @return 当前连接数（Redis 异常时返回 0）
    */
   public Mono<Long> getCurrentConnections(String userId, String clientIp) {
-    return redisTemplate
-        .opsForValue()
+    return reactiveRedis
         .get(buildUserKey(userId, clientIp))
         .map(Long::parseLong)
         .defaultIfEmpty(0L)
@@ -182,20 +181,19 @@ public class WebSocketConnectionLimiter {
       return Mono.just(true);
     }
     String key = buildIpKey(clientIp);
-    return redisTemplate
-        .opsForValue()
+    return reactiveRedis
         .increment(key)
         .flatMap(
             count -> {
               // 首次创建时设置 TTL
               Mono<Void> ttlSetup = count == INITIAL_VALUE
-                  ? redisTemplate.expire(key, Duration.ofSeconds(counterTtlSeconds)).then()
+                  ? reactiveRedis.expire(key, Duration.ofSeconds(counterTtlSeconds)).then()
                   : Mono.empty();
 
               return ttlSetup.then(Mono.defer(() -> {
                 if (count > maxConnectionsPerIp) {
                   // 超限：回滚计数器
-                  redisTemplate.opsForValue().decrement(key).subscribe();
+                  reactiveRedis.decrement(key).subscribe();
                   log.warn("[WsConnectionLimiter] IP 连接数超限: ip={}, count={}, max={}",
                       clientIp, count, maxConnectionsPerIp);
                   gatewayMetrics.incrementWsRejected(DIMENSION_IP);
@@ -225,20 +223,19 @@ public class WebSocketConnectionLimiter {
       return Mono.just(true);
     }
     String key = buildUserKey(userId, clientIp);
-    return redisTemplate
-        .opsForValue()
+    return reactiveRedis
         .increment(key)
         .flatMap(
             count -> {
               // 首次创建时设置 TTL
               Mono<Void> ttlSetup = count == INITIAL_VALUE
-                  ? redisTemplate.expire(key, Duration.ofSeconds(counterTtlSeconds)).then()
+                  ? reactiveRedis.expire(key, Duration.ofSeconds(counterTtlSeconds)).then()
                   : Mono.empty();
 
               return ttlSetup.then(Mono.defer(() -> {
                 if (count > maxConnectionsPerUser) {
                   // 超限：回滚 IP 维度计数器
-                  redisTemplate.opsForValue().decrement(buildIpKey(clientIp)).subscribe();
+                  reactiveRedis.decrement(buildIpKey(clientIp)).subscribe();
                   log.warn("[WsConnectionLimiter] 用户连接数超限: userId={}, count={}, max={}",
                       userId, count, maxConnectionsPerUser);
                   gatewayMetrics.incrementWsRejected(DIMENSION_USER);

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.skill.LessonType;
 import com.njydsz.agent.domain.skill.SkillLesson;
 import com.njydsz.agent.domain.skill.SkillLessonRepository;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * Skill 经验记录器。
@@ -270,7 +271,8 @@ public class SkillLessonRecorder {
     /**
      * Skill 经验异常。
      */
-    public static class SkillLessonException extends RuntimeException {
+    public static class SkillLessonException extends BusinessException {
+
         public SkillLessonException(String message) {
             super(message);
         }

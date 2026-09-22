@@ -1,9 +1,10 @@
 package com.njydsz.agent.domain.execution;
 
+import com.njydsz.agent.domain.model.ToolCall;
+import com.njydsz.common.exception.custom.BusinessException;
+
 import java.util.List;
 import java.util.Objects;
-
-import com.njydsz.agent.domain.model.ToolCall;
 
 /**
  * 会话暂停异常 — 由工具审批门抛出，通知执行器暂停当前会话并保存检查点。
@@ -14,7 +15,7 @@ import com.njydsz.agent.domain.model.ToolCall;
  * @author ydsz-team
  * @since 26.09.14
  */
-public class SessionPausedException extends RuntimeException {
+public class SessionPausedException extends BusinessException {
 
   private static final long serialVersionUID = 1L;
 
