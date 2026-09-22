@@ -1155,6 +1155,41 @@ public class RedisCollectionOps {
     }
   }
 
+  /**
+   * 原子取出并删除 ZSet 中分数最低的 count 个成员（ZPOPMIN + 返回值语义）。
+   *
+   * <p>原子性保证：取出与删除在同一 Redis 命令中完成，并发写入不会导致「已取出的成员被其他线程修改」的竞争问题。
+   * 适用于 LRU 淘汰、任务调度等场景。
+   *
+   * @param key 键
+   * @param count 要取出的成员数量
+   * @return 被取出的成员-分数对集合（按分数升序）；key 不存在时返回空集合
+   */
+  public Set<ZSetOperations.TypedTuple<Object>> popMin(String key, long count) {
+    if (key == null || count <= 0) {
+      return Collections.emptySet();
+    }
+    String formattedKey = formatKey(key);
+    try {
+      if (metricsCollector != null) {
+        return metricsCollector.recordOperation(
+            "popMin",
+            () -> {
+              Set<ZSetOperations.TypedTuple<Object>> result =
+                  redisTemplate.opsForZSet().popMin(formattedKey, count);
+              return result != null ? result : Collections.emptySet();
+            });
+      }
+      Set<ZSetOperations.TypedTuple<Object>> result =
+          redisTemplate.opsForZSet().popMin(formattedKey, count);
+      return result != null ? result : Collections.emptySet();
+    } catch (Exception e) {
+      recordError("popMin", e);
+      log.error("【Redis】ZPOPMIN 操作失败 | key={} | count={} | error={}", key, count, e);
+      return Collections.emptySet();
+    }
+  }
+
   /** 记录指标错误 */
   private void recordError(String operationType, Throwable e) {
     if (metricsCollector != null) {
