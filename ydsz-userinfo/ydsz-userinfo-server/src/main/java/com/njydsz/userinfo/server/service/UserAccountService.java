@@ -229,4 +229,16 @@ public interface UserAccountService {
    * @return 成功禁用的用户数量
    */
   int batchDisable(List<String> ids);
+
+  /**
+   * 校验指定用户的明文密码是否正确（供跨服务内部调用）。
+   *
+   * <p>本方法仅做密码校验，不做任何副作用（不记录登录历史、不发布事件），
+   * 适用于二次认证等无需副作用的场景。
+   *
+   * @param userId 用户 ID
+   * @param plaintextPassword 明文密码
+   * @return true 表示密码校验通过；false 表示用户不存在或密码错误
+   */
+  boolean verifyPassword(String userId, String plaintextPassword);
 }

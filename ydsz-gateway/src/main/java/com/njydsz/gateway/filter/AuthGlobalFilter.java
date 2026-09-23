@@ -29,6 +29,7 @@ import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayFilterOrder;
+import com.njydsz.gateway.config.GatewayFilterUtils;
 import com.njydsz.gateway.config.PathGuard;
 import com.njydsz.gateway.exception.GatewayErrorWriter;
 
@@ -171,28 +172,18 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     // 统一写入 traceId 到响应头
     exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-    // 跨域预检直接放行
+    // 跨域预检直接放行（C2: 复用 GatewayFilterUtils 消除重复的剥离-注入-透传逻辑）
     if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
-      return withSecurityHeaders(exchange, chain.filter(exchange.mutate().request(r -> {
-        stripInternalHeaders(r);
-        r.header(GatewayConstants.HEADER_TRACE_ID, traceId);
-        String acceptLang = request.getHeaders().getFirst("Accept-Language");
-        if (acceptLang != null && !acceptLang.isEmpty()) {
-          r.header("Accept-Language", acceptLang);
-        }
-      }).build()));
+      ServerHttpRequest mutated =
+          GatewayFilterUtils.mutateRequestPreservingHeaders(request, traceId).build();
+      return withSecurityHeaders(exchange, chain.filter(exchange.mutate().request(mutated).build()));
     }
 
-    // 白名单直接放行
+    // 白名单直接放行（C2: 复用 GatewayFilterUtils 消除重复的剥离-注入-透传逻辑）
     if (PathGuard.matchWhiteList(path, WHITE_LIST)) {
-      return withSecurityHeaders(exchange, chain.filter(exchange.mutate().request(r -> {
-        stripInternalHeaders(r);
-        r.header(GatewayConstants.HEADER_TRACE_ID, traceId);
-        String acceptLang = request.getHeaders().getFirst("Accept-Language");
-        if (acceptLang != null && !acceptLang.isEmpty()) {
-          r.header("Accept-Language", acceptLang);
-        }
-      }).build()));
+      ServerHttpRequest mutated =
+          GatewayFilterUtils.mutateRequestPreservingHeaders(request, traceId).build();
+      return withSecurityHeaders(exchange, chain.filter(exchange.mutate().request(mutated).build()));
     }
 
     // 提取 Token
@@ -267,24 +258,16 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 剥离客户端可能伪造的内部头（Consumer 风格）。
+   * 剥离客户端可能伪造的内部头（HttpHeaders 风格）。
    *
-   * @param headers HttpHeaders builder
+   * <p>C2: Builder 风格的剥离已由 {@link GatewayFilterUtils#stripInternalHeaders(ServerHttpRequest.Builder)}
+   * 统一提供，本方法保留以兼容白名单路径场景的直接 HttpHeaders 操作（如认证成功后需要设置头之前先清空）。
+   *
+   * @param headers HttpHeaders 对象
    */
   private void stripInternalHeaders(HttpHeaders headers) {
     for (String name : PathGuard.internalHeaders()) {
       headers.remove(name);
-    }
-  }
-
-  /**
-   * 剥离客户端可能伪造的内部头（Builder 风格）。
-   *
-   * @param r ServerHttpRequest.Builder
-   */
-  private void stripInternalHeaders(ServerHttpRequest.Builder r) {
-    for (String name : PathGuard.internalHeaders()) {
-      r.headers(h -> h.remove(name));
     }
   }
 
