@@ -16,6 +16,7 @@ import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.generator.domain.tool.VelocityDateTool;
 import com.njydsz.generator.domain.tool.VelocityTextTool;
 import com.njydsz.generator.entity.GenColumnMeta;
+import com.njydsz.generator.entity.GenTableMeta;
 import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.vo.CodePreviewVO;
 
@@ -77,13 +78,29 @@ public class CodeGenEngine {
   /**
    * 构建列信息上下文（注入 table 对象）。
    *
-   * @param columns 列元数据列表
+   * <p>将表级元数据（tableName/comment/aliasName/moduleName）与列列表一起注入，
+   * 模板中可通过 {@code $table.tableName}、{@code $table.comment} 等直接访问。
+   *
+   * @param tableMeta 表元数据（不可为 null）
+   * @param columns   列元数据列表
    * @return 表格上下文映射
    */
-  public Map<String, Object> buildTableContext(List<GenColumnMeta> columns) {
+  public Map<String, Object> buildTableContext(GenTableMeta tableMeta, List<GenColumnMeta> columns) {
     Map<String, Object> table = new HashMap<>(TABLE_CONTEXT_CAPACITY);
     table.put("columns", columns);
     table.put("allColumns", columns);
+    // 表级元数据（修复 $table.xxx 空指针）
+    if (tableMeta != null) {
+      table.put("tableName", tableMeta.getTableName());
+      table.put("comment", tableMeta.getComment());
+      table.put("aliasName", tableMeta.getAliasName());
+      table.put("moduleName", tableMeta.getModuleName());
+    } else {
+      table.put("tableName", "");
+      table.put("comment", "");
+      table.put("aliasName", "");
+      table.put("moduleName", "");
+    }
     return table;
   }
 

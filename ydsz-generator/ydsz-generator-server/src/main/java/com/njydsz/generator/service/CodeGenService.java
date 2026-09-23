@@ -129,7 +129,7 @@ public class CodeGenService {
     List<GenTemplate> templates = templateService.listByGroup(templateGroupId);
 
     List<CodePreviewVO> previews = new ArrayList<>(templates.size());
-    Map<String, Object> tableCtx = codeGenEngine.buildTableContext(columns);
+    Map<String, Object> tableCtx = codeGenEngine.buildTableContext(tableMeta, columns);
     Map<String, Object> context = codeGenEngine.buildContext(
         tableMeta.getModuleName(), defaultBasePackage, defaultAuthor,
         tableCtx, new HashMap<>(templates.size()));
@@ -342,7 +342,7 @@ public class CodeGenService {
     List<GenColumnMeta> columns = tableMetadataService.refreshColumns(ds, tableMeta);
     List<GenTemplate> templates = templateService.listByGroup(query.getTemplateGroupId());
 
-    Map<String, Object> tableCtx = codeGenEngine.buildTableContext(columns);
+    Map<String, Object> tableCtx = codeGenEngine.buildTableContext(tableMeta, columns);
     Map<String, Object> context = codeGenEngine.buildContext(
         tableMeta.getModuleName(), defaultBasePackage, defaultAuthor,
         tableCtx, new HashMap<>(templates.size()));

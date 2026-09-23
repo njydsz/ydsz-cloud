@@ -16,7 +16,7 @@
     <version>26.09.01-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>ydsz-cloud</name>
-    <description>Ydsz Cloud — 企业级微服务开发平台，基于 Spring Boot 4 &amp; Spring Cloud，DDD 分层架构，覆盖认证、工作流、消息、调度、规则引擎、AI 智能体等业务场景</description>
+    <description>Ydsz Cloud — 企业级微服务开发平台，基于 Spring Boot 4 &amp; Spring Cloud , DDD 分层架构，覆盖认证、工作流、消息、调度、规则引擎、AI 智能体等业务场景</description>
 
     <modules>
         <module>ydsz-common</module>
