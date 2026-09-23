@@ -57,11 +57,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-server</artifactId>
         </dependency>
-        <!-- userinfo-infra: Repository 实现 + MyBatis Mapper 注入 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-userinfo-infra</artifactId>
-        </dependency>
+        <!--
+            ydsz-userinfo-infra 已通过 server → infra 传递依赖获取，
+            移除直接依赖：YDIZ-DDD-005 P0 web 层禁止跨层依赖 infra。
+            Spring scanBasePackages="com.njydsz.userinfo" 覆盖 infra bean 扫描。
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

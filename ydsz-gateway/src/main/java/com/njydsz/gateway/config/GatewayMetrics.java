@@ -6,12 +6,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
+import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 
 /**
  * 网关自定义 Prometheus 指标。
@@ -32,6 +34,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  *   <li>{@code ydsz_gateway_jwt_cache_hit_total} — JWT 缓存命中数（Gauge）
  *   <li>{@code ydsz_gateway_jwt_cache_miss_total} — JWT 缓存未命中数（Gauge）
  *   <li>{@code ydsz_gateway_ws_rejected_total} — WebSocket 连接被拒绝计数器（dimension 标签：user/ip）
+ *   <li>{@code ydsz_gateway_request_latency_seconds} — 请求延迟直方图（支持 Prometheus 的 {@code histogram_quantile()} 查询 P99/P95）
  * </ul>
  *
  * @since 26.09.01
@@ -56,6 +59,20 @@ public class GatewayMetrics extends SentryMetricsAdapter {
 
   /** 按 routeId 维护的熔断器状态引用（映射为 0=CLOSED, 1=OPEN, 2=HALF_OPEN）。 */
   private final ConcurrentMap<String, AtomicInteger> breakerStates = new ConcurrentHashMap<>();
+
+  /**
+   * P99 延迟直方图（DistributionSummary + 百分位直方图）。
+   *
+   * <p>支持 Prometheus {@code histogram_quantile(0.99, rate(ydsz_gateway_request_latency_seconds_bucket[5m]))} 查询。
+   * 分桶覆盖典型网关延迟范围（1ms-30s），满足 P95/P99 监控需求。
+   */
+  private volatile DistributionSummary requestLatencyHistogram;
+
+  /** 延迟直方图注册标志。 */
+  private final AtomicBoolean latencyHistogramRegistered = new AtomicBoolean(false);
+
+  /** 延迟直方图注册的 route 标签值（延迟直方图按 route 维度拆分）。 */
+  private static final String LATENCY_HISTOGRAM_NAME = "request_latency_seconds";
 
   /** 本地兜底限流配额引用（Gauge 上报用）。 */
   private final AtomicInteger fallbackQuotaRef = new AtomicInteger(0);
@@ -200,6 +217,72 @@ public class GatewayMetrics extends SentryMetricsAdapter {
    */
   public void incrementWsRejected(String dimension) {
     incrementCounter("ws_rejected_total", "dimension", safe(dimension));
+  }
+
+  /**
+   * 记录请求延迟直方图（用于 Prometheus P99/P95 查询）。
+   *
+   * <p>分桶覆盖 1ms-30s 范围，首次调用时注册 DistributionSummary。
+   * 通过 {@code publishPercentileHistogram()} 输出到 Prometheus 的 {@code _bucket} / {@code _count} / {@code _sum} 子指标，
+   * 支持 {@code histogram_quantile()} 查询。
+   *
+   * <p><b>与 {@link #recordRequestDuration} 的区别：</b>
+   * 后者使用 Micrometer Timer（统计 total/max/mean），本方法为直方图专用，
+   * 输出结构更适合 SLI/SLO 计费与百分位监控。
+   *
+   * @param durationMs 请求耗时（毫秒）
+   * @param routeId 路由 ID
+   */
+  public void recordRequestLatency(long durationMs, String routeId) {
+    registerLatencyHistogramIfAbsent(routeId);
+    if (requestLatencyHistogram != null) {
+      requestLatencyHistogram.record(Math.max(durationMs, 0));
+    }
+  }
+
+  /**
+   * 注册请求延迟直方图（首次请求时懒加载 + CAS 防 NPE）。
+   *
+   * <p>通过 {@link DistributionSummary.Builder} 配置百分位直方图和 SLO 分桶。
+   * 注册失败时静默降级（requestLatencyHistogram 保持 null，后续 record 调用为 no-op）。
+   *
+   * @param routeId 路由 ID（作为标签区分不同路由的延迟分布）
+   */
+  private void registerLatencyHistogramIfAbsent(String routeId) {
+    if (latencyHistogramRegistered.compareAndSet(false, true)) {
+      MeterRegistry registry = resolveMicrometerRegistry();
+      if (registry != null) {
+        requestLatencyHistogram = DistributionSummary.builder(prefix + LATENCY_HISTOGRAM_NAME)
+            .description("网关请求延迟直方图（用于 Prometheus P99/P95 查询）")
+            .tags("route", safe(routeId))
+            .publishPercentileHistogram()
+            .minimumExpectedValue(1.0)
+            .maximumExpectedValue(30_000.0)
+            .serviceLevelObjectives(
+                5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0,
+                1_000.0, 2_500.0, 5_000.0, 10_000.0)
+            .register(registry);
+        if (requestLatencyHistogram != null) {
+          log.info("[GatewayMetrics] 请求延迟直方图已注册：{}", LATENCY_HISTOGRAM_NAME);
+        }
+      } else {
+        log.warn("[GatewayMetrics] MetricsCollector 不可用，P99 延迟直方图未注册（降级模式）");
+      }
+    }
+  }
+
+  /**
+   * 从 MetricsCollector 获取原生 Micrometer MeterRegistry。
+   *
+   * <p>SentryMetricsAdapter 未暴露 getMicrometerRegistry()，此处通过 protected getMetricsCollector()
+   * 获取后做 instanceof 判断，避免直接依赖 sentry 实现细节。
+   *
+   * @return MicrometerRegistry 实例，未配置时返回 null
+   */
+  private MeterRegistry resolveMicrometerRegistry() {
+    return getMetricsCollector() instanceof MicrometerMetricsCollector micrometer
+        ? micrometer.getMeterRegistry()
+        : null;
   }
 
 }

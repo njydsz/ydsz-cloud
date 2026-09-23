@@ -19,6 +19,9 @@ import com.njydsz.generator.service.EntityReverseService;
 /**
  * 实体类反向生成 REST 控制器。
  *
+ * <p><b>实验性功能（Experimental）：</b>当前处于内部验证阶段，接口签名与响应格式可能在后续版本变动，
+ * 不建议外部系统直接调用。稳定后将移除此标注。
+ *
  * @author ydsz-team
  * @since 26.09.05
  */

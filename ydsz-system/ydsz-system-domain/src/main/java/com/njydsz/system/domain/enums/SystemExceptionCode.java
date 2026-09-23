@@ -103,6 +103,16 @@ public enum SystemExceptionCode implements ExceptionCode {
   /** MONITOR_SOURCE_STORE_FAILED */
   MONITOR_SOURCE_STORE_FAILED("B97001", "system.monitor.source.store.failed", 500); // sourcemap 存储失败（对象存储未配置或上传异常）
 
+  // ==================== B98001-B98099 二次身份验证 ====================
+  /** SECONDARY_AUTH_PASSWORD_INCORRECT */
+  SECONDARY_AUTH_PASSWORD_INCORRECT("B98001", "system.secondary.auth.password.incorrect"), // 二次认证密码错误
+  /** SECONDARY_AUTH_TOKEN_EXPIRED */
+  SECONDARY_AUTH_TOKEN_EXPIRED("B98002", "system.secondary.auth.token.expired"), // 二次认证令牌已过期
+  /** SECONDARY_AUTH_TOKEN_INVALID */
+  SECONDARY_AUTH_TOKEN_INVALID("B98003", "system.secondary.auth.token.invalid"), // 二次认证令牌无效
+  /** SECONDARY_AUTH_USER_NOT_FOUND */
+  SECONDARY_AUTH_USER_NOT_FOUND("B98004", "system.secondary.auth.user.not.found"); // 二次认证用户不存在
+
   /** HTTP 状态码：客户端参数错误 */
   private static final int HTTP_BAD_REQUEST = 400;
 

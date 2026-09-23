@@ -22,9 +22,9 @@ import org.springframework.core.Ordered;
  *   10  AuthGlobalFilter          主鉴权 + 内部头注入
  *   15  ApiKeyAuthFilter          API Key 认证
  *   20  GrayLoadBalancerRequestFilter 灰度标识注入
- *   30  RateLimitFilter           限流
- *   35  AuditLogFilter            审计日志
- *   45  CircuitBreakerGlobalFilter 熔断
+ *   35  AuditLogFilter            审计日志（记录被限流/熔断的请求）
+ *   45  CircuitBreakerGlobalFilter 熔断（先判断下游健康状态）
+ *   50  RateLimitFilter           限流（熔断通过后执行，避免浪费限流配额）
  *   200 ApiVersionHeaderFilter    API 版本响应头（响应阶段）
  * </pre>
  *
@@ -53,12 +53,12 @@ public enum GatewayFilterOrder {
   GRAY_LOADBALANCER(20),
   /** 灰度路由响应头过滤器（可观测性） */
   GRAY_RESPONSE_HEADER(150),
-  /** 限流过滤器 */
-  RATE_LIMIT(30),
-  /** 审计日志过滤器 */
+  /** 审计日志过滤器（记录被限流/熔断的请求） */
   AUDIT_LOG(35),
-  /** 熔断过滤器 */
+  /** 熔断过滤器（先判断下游健康状态，避免不健康的请求占用限流配额） */
   CIRCUIT_BREAKER(45),
+  /** 限流过滤器（熔断通过后执行，确保仅对下游可用的请求做限流统计） */
+  RATE_LIMIT(50),
   /** API 版本响应头过滤器 */
   API_VERSION_HEADER(200);
 

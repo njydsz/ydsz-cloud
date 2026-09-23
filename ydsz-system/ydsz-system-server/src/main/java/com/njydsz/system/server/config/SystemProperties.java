@@ -127,4 +127,29 @@ public class SystemProperties {
      */
     private boolean crossInstanceEnabled = false;
   }
+
+  /** 二次认证配置（{@code ydsz.system.secondary-auth.*}） */
+  private SecondaryAuth secondaryAuth = new SecondaryAuth();
+
+  /** 二次认证配置属性。 */
+  @Data
+  public static class SecondaryAuth {
+    /** 默认二次认证令牌有效期（分钟）：30 分钟 */
+    private static final int DEFAULT_TOKEN_TTL_MINUTES = 30;
+
+    /** 默认连续验证失败锁定阈值（次）：5 次 */
+    private static final int DEFAULT_MAX_FAIL_COUNT = 5;
+
+    /** 默认验证失败锁定时间（分钟）：15 分钟 */
+    private static final int DEFAULT_FAIL_LOCK_MINUTES = 15;
+
+    /** 二次认证令牌有效期（分钟），过期后需重新验证密码。 */
+    private int tokenTtlMinutes = DEFAULT_TOKEN_TTL_MINUTES;
+
+    /** 连续验证失败锁定阈值（次），达到后暂时禁止二次认证。 */
+    private int maxFailCount = DEFAULT_MAX_FAIL_COUNT;
+
+    /** 验证失败锁定时间（分钟），期间拒绝所有二次认证请求。 */
+    private int failLockMinutes = DEFAULT_FAIL_LOCK_MINUTES;
+  }
 }

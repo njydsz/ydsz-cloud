@@ -285,7 +285,9 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         case '\f' -> sb.append("\\f");
         default -> {
           if (c < 0x20) {
-            sb.append(String.format("\\u%04x", (int) c));
+            // C2: 直接 append 十六进制字符，避免 String.format 内部 StringBuilder 分配
+            sb.append("\\u");
+            appendHexChar(sb, c);
           } else {
             sb.append(c);
           }
@@ -294,6 +296,27 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     }
     return sb.toString();
   }
+
+  /**
+   * 将字符的低 16 位以 4 位十六进制形式（补零）追加到 StringBuilder。
+   *
+   * <p>纯字符数组查表法，零分配（无 {@code String.format}），将控制字符转义为 {@code \\uXXXX} JSON 形式。
+   *
+   * @param sb 目标 StringBuilder
+   * @param c  待转义字符
+   */
+  private static void appendHexChar(StringBuilder sb, char c) {
+    sb.append(HEX_DIGITS[(c >> 12) & 0xF]);
+    sb.append(HEX_DIGITS[(c >> 8) & 0xF]);
+    sb.append(HEX_DIGITS[(c >> 4) & 0xF]);
+    sb.append(HEX_DIGITS[c & 0xF]);
+  }
+
+  /** 十六进制字符查找表（0-15 → '0'-'9','a'-'f'）。 */
+  private static final char[] HEX_DIGITS = {
+    '0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+  };
 
   /**
    * P0-8: 查询参数脱敏 + 截断

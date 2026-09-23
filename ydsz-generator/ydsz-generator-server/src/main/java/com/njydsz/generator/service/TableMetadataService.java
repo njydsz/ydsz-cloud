@@ -41,6 +41,13 @@ public class TableMetadataService {
   private static final int TABLE_LIST_CAPACITY = 64;
   /** 主键列表初始容量。 */
   private static final int PK_LIST_CAPACITY = 8;
+  /** 枚举值正则：匹配 字段名(值1=标签1,值2=标签2) 格式。 */
+  private static final java.util.regex.Pattern ENUM_PATTERN =
+      java.util.regex.Pattern.compile("\\(([^)]+)\\)");
+  /** 基类审计字段集合（这些字段由 MpBaseAuditEntity / MpBaseIdEntity 提供）。 */
+  private static final java.util.Set<String> AUDIT_FIELD_COLUMNS = java.util.Set.of(
+      "id", "tenant_id", "created_at", "updated_at", "created_by", "updated_by",
+      "is_deleted", "deleted", "creator_id", "updater_id");
 
   private final GenTableMetaRepository tableMetaRepository;
   private final GenColumnMetaRepository columnMetaRepository;
@@ -214,6 +221,7 @@ public class TableMetadataService {
         while (rs.next()) {
           String colName = rs.getString("COLUMN_NAME");
           String dataType = rs.getString("TYPE_NAME");
+          String remark = rs.getString("REMARKS");
           GenColumnMeta col = GenColumnMeta.builder()
               .columnName(colName)
               .dataType(dataType)
@@ -221,7 +229,9 @@ public class TableMetadataService {
               .columnSize(rs.getInt("COLUMN_SIZE"))
               .isNullable(rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable)
               .isPk(pks.contains(colName))
-              .comment(rs.getString("REMARKS"))
+              .comment(remark)
+              .enumValues(parseEnumValues(remark))
+              .isAuditField(AUDIT_FIELD_COLUMNS.contains(colName.toLowerCase()))
               .isDtoSkipped(false)
               .isVoSkipped(false)
               .isQuerySkipped(false)
@@ -236,6 +246,30 @@ public class TableMetadataService {
   // ════════════════════════════════════════════════════════════
   // 辅助方法
   // ════════════════════════════════════════════════════════════
+
+  /**
+   * 从字段注释中解析枚举值列表。
+   *
+   * <p>匹配格式：{@code 字段名(值1=标签1,值2=标签2)}，提取括号内的内容。
+   * 例如：{@code 状态(0=禁用,1=启用)} → {@code "0=禁用,1=启用"}。
+   *
+   * @param comment 字段注释（可为 null）
+   * @return 枚举值字符串，未匹配时返回 null
+   */
+  private String parseEnumValues(String comment) {
+    if (comment == null || comment.isEmpty()) {
+      return null;
+    }
+    java.util.regex.Matcher matcher = ENUM_PATTERN.matcher(comment);
+    if (matcher.find()) {
+      String inner = matcher.group(1).trim();
+      // 验证格式：必须包含至少一个 "="
+      if (inner.contains("=")) {
+        return inner;
+      }
+    }
+    return null;
+  }
 
   private String extractModule(String tableName) {
     // 去掉前缀 t_ / T_ / tab_ / TAB_，取第一个下划线前的分段作为模块名

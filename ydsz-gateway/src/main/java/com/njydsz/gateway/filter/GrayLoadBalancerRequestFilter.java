@@ -13,6 +13,7 @@ import reactor.core.publisher.Mono;
 
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
+import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.loadbalancer.GrayLoadBalancer;
 
 /**
@@ -78,6 +79,18 @@ public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
   @Value("${ydsz.gateway.gray.ratio-percent:0}")
   private int grayRatioPercent;
 
+  /** P3-14: 网关自定义指标（灰度命中率上报）。 */
+  private final GatewayMetrics gatewayMetrics;
+
+  /**
+   * 构造灰度路由请求过滤器。
+   *
+   * @param gatewayMetrics 网关自定义指标
+   */
+  public GrayLoadBalancerRequestFilter(GatewayMetrics gatewayMetrics) {
+    this.gatewayMetrics = gatewayMetrics;
+  }
+
   /**
    * 过滤逻辑:解析灰度标识 → 写入 exchange attribute 与请求头 → 转发
    *
@@ -93,6 +106,8 @@ public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
     // 写入 exchange attribute,供 GrayLoadBalancer 通过 RequestData.getAttributes() 读取
     if (grayTag != null) {
       exchange.getAttributes().put(GrayLoadBalancer.GRAY_TAG_HEADER, grayTag);
+      // P3-14: 上报灰度命中指标，供 Grafana 灰度流量比例监控
+      gatewayMetrics.incrementGrayHit(GRAY_TAG_GRAY.equals(grayTag));
     }
 
     // 若请求头缺失 X-Gray-Tag 但已解析出灰度标识,则补写请求头

@@ -341,4 +341,22 @@ public class InternalApiController {
       @RequestBody @Valid @Size(max = 500) List<String> companyIds) {
     return YdszResponse.success(companyService.batchNamesByIds(companyIds));
   }
+
+  /**
+   * 校验指定用户的明文密码是否正确（供系统管理模块二次认证使用）。
+   *
+   * <p>本端点仅做密码校验，不做任何副作用（不记录登录历史、不发布事件），
+   * 适用于跨服务二次认证场景。
+   *
+   * @param userId 用户 ID
+   * @param password 明文密码
+   * @return true 表示密码校验通过；false 表示用户不存在或密码错误
+   */
+  @RateLimit(resource = "userinfo.internalapi.verifyPassword", threshold = 20)
+  @Idempotent(key = "'ydsz:userinfo:internal-api:verify-password:' + #userId", ttlSeconds = 3)
+  @GetMapping("/user/verify-password")
+  @Operation(summary = "校验用户明文密码（供系统管理模块二次认证使用）")
+  public YdszResponse<Boolean> verifyPassword(@RequestParam String userId, @RequestParam String password) {
+    return YdszResponse.success(userAccountService.verifyPassword(userId, password));
+  }
 }

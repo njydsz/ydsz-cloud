@@ -63,7 +63,7 @@ public final class WebFluxErrorUtils {
    */
   public static Mono<Void> buildErrorResponse(
       ServerHttpResponse response, int status, String code, String message) {
-    return buildErrorResponseInternal(response, status, code, message, null, false);
+    return buildErrorResponseInternal(response, status, code, message, null, false, List.of());
   }
 
   /**
@@ -80,7 +80,7 @@ public final class WebFluxErrorUtils {
    */
   public static Mono<Void> buildErrorResponse(
       ServerHttpResponse response, int status, String code, String message, String traceId) {
-    return buildErrorResponseInternal(response, status, code, message, traceId, false);
+    return buildErrorResponseInternal(response, status, code, message, traceId, false, List.of());
   }
 
   /**

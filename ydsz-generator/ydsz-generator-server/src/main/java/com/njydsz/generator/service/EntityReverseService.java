@@ -21,6 +21,9 @@ import com.njydsz.common.exception.custom.SysException;
  * <p>从已有的 Java Entity 源文件解析字段结构，生成 Service/Controller 骨架代码。
  * 解析流程：读取源文件 → 提取类名/包/字段 → 反推 Service/Controller。
  *
+ * <p><b>实验性功能（Experimental）：</b>当前仅在内部验证阶段，API 与输出格式可能在后续版本变动，
+ * 不建议外部系统直接集成。稳定后将移除此标注。
+ *
  * @author ydsz-team
  * @since 26.09.05
  */

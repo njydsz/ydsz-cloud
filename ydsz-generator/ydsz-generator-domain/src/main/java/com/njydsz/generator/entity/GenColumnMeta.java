@@ -60,6 +60,10 @@ public class GenColumnMeta extends MpBaseIdEntity<Long> {
   /** Query 跳过标记。 */
   @TableField("is_query_skipped")
   private Boolean isQuerySkipped;
+  /** 是否为审计字段（审计字段由基类 MpBaseAuditEntity 提供，子类无需重复生成）。 */
+  private Boolean isAuditField;
+  /** 枚举值列表（从注释中自动解析，格式: 字段名(值1=标签1,值2=标签2)）。 */
+  private String enumValues;
   /** 扩展配置 JSON。 */
   private String extraConfig;
 }

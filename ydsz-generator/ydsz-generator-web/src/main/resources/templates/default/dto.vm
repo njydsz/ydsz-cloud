@@ -2,14 +2,25 @@
 #set($entityName = $text.textFirstUpper($table.aliasName))
 #set($lowerName = $text.textFirstLower($entityName))
 #set($pkCol = null)
+#set($hasSizeImport = false)
+#set($hasMinImport = false)
+#set($hasDecimalImport = false)
 #foreach($col in $table.columns)
 #if($col.isPk)
 #set($pkCol = $col)
 #end
+#if($col.javaType == "String" && $col.isNullable == false)
+#if($hasSizeImport == false)
+#set($hasSizeImport = true)
 #end
-#foreach($col in $table.columns)
-#if($col.auditField)
-#set($hasParent = true)
+#elseif($col.javaType == "Integer" || $col.javaType == "Long" || $col.javaType == "BigDecimal")
+#if($hasMinImport == false)
+#set($hasMinImport = true)
+#end
+#elseif($col.javaType == "BigDecimal")
+#if($hasDecimalImport == false)
+#set($hasDecimalImport = true)
+#end
 #end
 #end
 
@@ -22,8 +33,14 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.NotBlank;
-#if($hasParent)
-import com.njydsz.common.util.constant.ValidGroup;
+#if($hasSizeImport)
+import javax.validation.constraints.Size;
+#end
+#if($hasMinImport)
+import javax.validation.constraints.NotNull;
+#end
+#if($hasDecimalImport)
+import java.math.BigDecimal;
 #end
 
 /**
@@ -39,23 +56,22 @@ import com.njydsz.common.util.constant.ValidGroup;
 public class ${entityName}Dto {
 
 #foreach($col in $table.columns)
-#if(!$col.auditField)
-#if($col.comment)
+#if($col.comment && $col.comment != "")
   /** ${col.comment} */
 #else
   /** ${col.javaFieldName} */
 #end
   @ApiModelProperty("${col.comment}")
 #if($col.isPk)
-  @NotBlank(groups = ValidGroup.Update.class, message = "${col.comment}不能为空")
+  @NotBlank(groups = javax.validation.groups.Default.class, message = "${col.comment}不能为空")
+#elseif($col.javaType == "String" && $col.isNullable == false)
+  @NotBlank(message = "${col.comment}不能为空")
+#if($col.columnSize && $col.columnSize > 0)
+  @Size(max = ${col.columnSize}, message = "${col.comment}长度不能超过${col.columnSize}")
+#end
+#elseif($col.isNullable == false && ($col.javaType == "Integer" || $col.javaType == "Long"))
+  @NotNull(message = "${col.comment}不能为空")
 #end
   private ${col.javaType} ${col.javaFieldName};
-#else
-#if($col.isPk)
-  /** ${col.comment}（引用基类字段） */
-  @ApiModelProperty("${col.comment}")
-  private ${col.javaType} ${col.javaFieldName};
-#end
-#end
 #end
 }

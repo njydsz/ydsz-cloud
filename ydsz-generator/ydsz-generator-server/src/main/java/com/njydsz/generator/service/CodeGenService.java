@@ -126,6 +126,7 @@ public class CodeGenService {
     if (columns == null || columns.isEmpty()) {
       columns = tableMetadataService.refreshColumns(ds, tableMeta);
     }
+    applyOverrideJavaType(columns);
     List<GenTemplate> templates = templateService.listByGroup(templateGroupId);
 
     List<CodePreviewVO> previews = new ArrayList<>(templates.size());
@@ -340,6 +341,7 @@ public class CodeGenService {
     GenDatasource ds = datasourceService.getById(query.getDatasourceId());
     GenTableMeta tableMeta = tableMetadataService.getOrRefresh(ds, query.getTableName());
     List<GenColumnMeta> columns = tableMetadataService.refreshColumns(ds, tableMeta);
+    applyOverrideJavaType(columns);
     List<GenTemplate> templates = templateService.listByGroup(query.getTemplateGroupId());
 
     Map<String, Object> tableCtx = codeGenEngine.buildTableContext(tableMeta, columns);
@@ -409,10 +411,20 @@ public class CodeGenService {
           Files.writeString(path, content, StandardCharsets.UTF_8);
           return "UPDATED";
         case APPEND:
-          // 在已有文件末尾追加生成内容（标记 AUTO-GEN 区块）
+          // 增量生成：若存在已有 AUTO-GEN 区块则替换，否则在末尾追加
           String existing = Files.readString(path, StandardCharsets.UTF_8);
-          String appended = existing + "\n// AUTO-GEN-BEGIN\n" + content + "\n// AUTO-GEN-END\n";
-          Files.writeString(path, appended, StandardCharsets.UTF_8);
+          String newBlock = "\n// AUTO-GEN-BEGIN\n" + content + "\n// AUTO-GEN-END\n";
+          String merged;
+          int beginIdx = existing.indexOf("// AUTO-GEN-BEGIN");
+          int endIdx = existing.indexOf("// AUTO-GEN-END");
+          if (beginIdx >= 0 && endIdx > beginIdx) {
+            // 已有区块 → 精确替换
+            merged = existing.substring(0, beginIdx) + newBlock + existing.substring(endIdx + "// AUTO-GEN-END".length());
+          } else {
+            // 无区块 → 末尾追加
+            merged = existing + newBlock;
+          }
+          Files.writeString(path, merged, StandardCharsets.UTF_8);
           return "UPDATED";
         default:
           return "UNCHANGED";
@@ -420,6 +432,26 @@ public class CodeGenService {
     } else {
       Files.writeString(path, content, StandardCharsets.UTF_8);
       return "CREATED";
+    }
+  }
+
+  /**
+   * 将用户配置的 overrideJavaType 应用到 javaType 字段。
+   *
+   * <p>用户可在列元数据管理界面手动指定某列的 Java 类型（overrideJavaType），
+   * 在模板渲染前将覆盖值同步到 javaType 以使模板无需感知覆盖逻辑。
+   * 若 overrideJavaType 为空白则保留自动推断的 javaType 不变。
+   *
+   * @param columns 列元数据列表
+   */
+  private void applyOverrideJavaType(List<GenColumnMeta> columns) {
+    if (columns == null) {
+      return;
+    }
+    for (GenColumnMeta col : columns) {
+      if (col.getOverrideJavaType() != null && !col.getOverrideJavaType().isEmpty()) {
+        col.setJavaType(col.getOverrideJavaType());
+      }
     }
   }
 
