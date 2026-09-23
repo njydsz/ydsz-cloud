@@ -19,6 +19,12 @@ import java.util.concurrent.atomic.LongAdder;
  * <p>{@link #tryAcquire()} 使用 AtomicLong 的 CAS 循环保证原子性：读当前令牌数 → 不足直接返回 false
  * → 足够则 CAS 扣减（失败重试）。无 synchronized，无 ThreadLocal，适合 Netty 单线程调用路径。
  *
+ * <h3>规范合规：</h3>
+ *
+ * <p>本对象仅作为 {@link LocalRateLimiter} 的内部值对象，不持有缓存结构本身。
+ * 缓存生命周期由 {@link LocalRateLimiter} 通过 {@code ydsz-common-cache} 统一管理，
+ * 符合云顶编码规范「禁止使用 Caffeine，统一使用 ydzs-common-cache」的要求。
+ *
  * @since 26.09.23
  * @author ydsz-team
  */
@@ -40,9 +46,6 @@ public class LocalTokenBucket {
   /** 上次重置时间戳（毫秒）。 */
   private volatile long lastRefillTime;
 
-  /** 最后访问时间戳（用于清理过期桶，volatile 保证多线程可见性）。 */
-  private volatile long lastAccessTime;
-
   /** 总请求计数（统计/可观测）。 */
   private final LongAdder requestCount = new LongAdder();
 
@@ -58,9 +61,7 @@ public class LocalTokenBucket {
     this.capacity = Math.max(1, (long) (ratePerSecond * capacityRatio));
     // 初始令牌数 = 桶容量（满桶启动）
     this.tokens = new AtomicLong(capacity * 1000L);
-    long now = System.currentTimeMillis();
-    this.lastRefillTime = now;
-    this.lastAccessTime = now;
+    this.lastRefillTime = System.currentTimeMillis();
   }
 
   /**
@@ -96,16 +97,6 @@ public class LocalTokenBucket {
       }
       // CAS 失败：其他线程并发修改，重试
     }
-  }
-
-  /**
-   * 检查令牌桶是否过期（超过指定毫秒未再消耗）。
-   *
-   * @param idleTimeoutMs 过期时间阈值（毫秒）
-   * @return true=已过期可清理
-   */
-  public boolean isStale(long idleTimeoutMs) {
-    return (System.currentTimeMillis() - lastRefillTime) > idleTimeoutMs;
   }
 
   /**

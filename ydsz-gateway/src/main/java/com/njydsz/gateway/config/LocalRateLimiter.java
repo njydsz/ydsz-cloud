@@ -1,14 +1,17 @@
 package com.njydsz.gateway.config;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
+
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheType;
 
 /**
- * A1: 网关本地令牌桶（L1 快速路径，避免每次请求都触发 Redis 网络 IO）。
+ * A1: 网关本地令牌桶（L1 快路径，避免每次请求都触发 Redis 网络 IO）。
  *
  * <p><b>设计定位：</b><br>
  * 原 {@code RateLimitFilter} 使用 {@code boundedElastic} 调度器包装同步 Redis 调用，存在：
@@ -26,10 +29,13 @@ import org.springframework.scheduling.annotation.Scheduled;
  * </ol>
  *
  * <p>本地桶容量 = QPS 配置的 80%，重置频率 50ms。当本地桶耗尽（突发流量）再走 Redis 精确计数。
- * 此举在高 QPS 场景下（>3000）可将限流延迟从毫秒级降至纳秒级（本地桶命中路径）。
+ *
+ * <p><b>缓存实现：</b><br>
+ * 使用 {@link YdszCache}（ydsz-common-cache）管理令牌桶映射，通过 {@code expireAfterAccess} 实现
+ * Stale 条目的自动淘汰（替代手写 {@code @Scheduled}），符合云顶编码规范禁止使用 Caffeine / ConcurrentHashMap
+ * 直接管理缓存的要求。
  *
  * <p><b>注意：</b>本组件仅作为快速路径优化，仍依赖 Redis 分布式限流保证全局准确性。
- * 本地令牌桶的 "80% capacity" 设计确保突发流量走 Redis 精确计数，防止短时间超发。
  *
  * @since 26.09.23
  * @author ydsz-team
@@ -43,19 +49,47 @@ public class LocalRateLimiter {
   /** 令牌重置间隔（毫秒）——每 50ms 重置一次，避免频率过高 */
   private static final long RESET_INTERVAL_MS = 50L;
 
-  /** 本地令牌桶映射（resource → bucket）。 */
-  private final ConcurrentMap<String, LocalTokenBucket> buckets = new ConcurrentHashMap<>(256);
+  /** 令牌桶最大数量（每个 IP / 用户独立一个桶，过期后自动淘汰）。 */
+  private static final long MAX_BUCKETS = 50_000L;
+
+  /** Stale 条目过期时间（5 分钟未访问 → 自动淘汰）。 */
+  private static final long EXPIRE_AFTER_ACCESS_MINUTES = 5L;
+
+  /**
+   * A1: 本地令牌桶缓存（使用 ydzs-common-cache 管理，符合编码规范；禁用 Caffeine 直接依赖）。
+   *
+   * <ul>
+   *   <li>type=STRIPED：高并发写入场景首选（令牌桶是典型的写多读少场景）</li>
+   *   <li>maximumSize：限制最大内存占用</li>
+   *   <li>expireAfterAccess：替代手写 @Scheduled 淘汰逻辑</li>
+   * </ul>
+   */
+  private final Cache<String, LocalTokenBucket> buckets;
 
   /** 限流配置属性（用于获取 QPS / 突发容量配置） */
   private final GatewayRateLimitProperties properties;
 
+  /** 累计令牌放行计数（可观测）。 */
+  private final AtomicLong totalAllowCount = new AtomicLong();
+
+  /** 累计令牌拒绝计数（触发 L2 Redis 校验）。 */
+  private final AtomicLong totalRejectCount = new AtomicLong();
+
   public LocalRateLimiter(GatewayRateLimitProperties properties) {
     this.properties = properties;
-    log.info("[LocalRateLimit] 本地令牌桶初始化（L1 快速路径，容量比例={}）", LOCAL_BUCKET_RATIO);
+    this.buckets = YdszCache.<String, LocalTokenBucket>newBuilder()
+        .type(CacheType.STRIPED)
+        .name("gateway:local-ratelimit")
+        .maximumSize(MAX_BUCKETS)
+        .expireAfterAccess(EXPIRE_AFTER_ACCESS_MINUTES, TimeUnit.MINUTES)
+        .recordStats()
+        .build();
+    log.info("[LocalRateLimit] 本地令牌桶初始化（L1 快路径，容量比例={}, maxBuckets={}, expireAfterAccess={}m）",
+        LOCAL_BUCKET_RATIO, MAX_BUCKETS, EXPIRE_AFTER_ACCESS_MINUTES);
   }
 
   /**
-   * A1: 尝试消耗本地令牌（L1 快速路径）。
+   * A1: 尝试消耗本地令牌（L1 快路径）。
    *
    * <p>扣除逻辑：基于时间流逝增量填充令牌，优先消耗本地配额。
    *
@@ -64,10 +98,24 @@ public class LocalRateLimiter {
    * @return true=本地桶有配额（快速放行）；false=本地桶耗尽（需走 L2 Redis 精确校验）
    */
   public boolean tryAcquireLocal(String resource, boolean isIpDimension) {
-    LocalTokenBucket bucket = buckets.computeIfAbsent(resource,
-        k -> new LocalTokenBucket(
-            effectiveQps(isIpDimension), LOCAL_BUCKET_RATIO, RESET_INTERVAL_MS));
-    return bucket.tryAcquire();
+    LocalTokenBucket bucket = buckets.getIfPresent(resource);
+    if (bucket == null) {
+      LocalTokenBucket created = new LocalTokenBucket(
+          effectiveQps(isIpDimension), LOCAL_BUCKET_RATIO, RESET_INTERVAL_MS);
+      buckets.put(resource, created);
+      // put 后重新 get 以应对并发创建场景（后者覆盖前者不影响正确性）
+      bucket = buckets.getIfPresent(resource);
+      if (bucket == null) {
+        bucket = created;
+      }
+    }
+    boolean allowed = bucket.tryAcquire();
+    if (allowed) {
+      totalAllowCount.incrementAndGet();
+    } else {
+      totalRejectCount.incrementAndGet();
+    }
+    return allowed;
   }
 
   /**
@@ -84,26 +132,30 @@ public class LocalRateLimiter {
   }
 
   /**
-   * 清理过期的本地令牌桶（防止内存泄漏）。
+   * 获取累计放行计数（L1 快路径命中）。
    *
-   * <p>定时清理超过 5 分钟未访问的桶（Scheduled 每 5 分钟执行一次）。
+   * @return 放行数
    */
-  @Scheduled(fixedDelay = 300_000)
-  public void evictStaleBuckets() {
-    int before = buckets.size();
-    buckets.entrySet().removeIf(e -> e.getValue().isStale(300_000));
-    int after = buckets.size();
-    if (before != after) {
-      log.debug("[LocalRateLimit] 清理过期令牌桶：{} → {}", before, after);
-    }
+  public long getTotalAllowCount() {
+    return totalAllowCount.get();
   }
 
   /**
-   * Spring 容器销毁时清理全部令牌桶。
+   * 获取累计拒绝计数（触发 L2 Redis 校验的次数）。
+   *
+   * @return 拒绝数
+   */
+  public long getTotalRejectCount() {
+    return totalRejectCount.get();
+  }
+
+  /**
+   * Spring 容器销毁时清理令牌桶缓存。
    */
   @PreDestroy
   public void cleanup() {
-    buckets.clear();
-    log.info("[LocalRateLimit] 本地令牌桶已清理");
+    buckets.invalidateAll();
+    log.info("[LocalRateLimit] 本地令牌桶已清理（totalAllow={}, totalReject={}）",
+        totalAllowCount.get(), totalRejectCount.get());
   }
 }

@@ -51,6 +51,13 @@ public class PermissionChangeNotifier {
   }
 
   /**
+   * 发布菜单变更事件（菜单变更影响所有角色）。
+   */
+  public void notifyMenuChanged() {
+    notify(PermissionChangedEvent.menuChanged());
+  }
+
+  /**
    * 发布权限变更事件。
    *
    * @param event 权限变更事件

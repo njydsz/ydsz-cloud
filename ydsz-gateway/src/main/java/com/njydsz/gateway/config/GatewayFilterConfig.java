@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -29,7 +28,6 @@ import com.njydsz.gateway.exception.GatewayExceptionHandler;
  */
 @Slf4j
 @Configuration
-@EnableScheduling
 @EnableConfigurationProperties(
     {CorsProperties.class, SqlInjectionProperties.class, DeprecationProperties.class,
      ApiKeyProperties.class})

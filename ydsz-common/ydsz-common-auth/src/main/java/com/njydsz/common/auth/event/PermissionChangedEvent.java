@@ -88,6 +88,16 @@ public class PermissionChangedEvent extends ApplicationEvent implements Serializ
   }
 
   /**
+   * 创建"菜单变更"事件（影响所有角色）。
+   *
+   * @return 变更类型为 {@link PermissionChangeType#MENU_CHANGED} 的事件实例
+   */
+  public static PermissionChangedEvent menuChanged() {
+    return new PermissionChangedEvent(
+        null, PermissionChangeType.MENU_CHANGED, null, null);
+  }
+
+  /**
    * 获取变更类型。
    *
    * @return 变更类型
