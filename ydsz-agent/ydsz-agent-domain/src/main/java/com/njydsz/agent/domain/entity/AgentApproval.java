@@ -2,20 +2,20 @@ package com.njydsz.agent.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+import com.njydsz.agent.entity.base.DomainBaseEntity;
 
 /**
- * Agent 人工审批请求（映射 ydsz_agt_approval 表）
+ * Agent 人工审批请求（domain 纯净 POJO，无 MP 注解）
  *
  * <p>持久化 Human-in-the-Loop 审批请求，支持多实例共享、重启不丢与长期审计。
+ *
+ * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解（@TableName/@TableId/@TableField）；
+ * 持久化映射由 {@code infra.entity.AgentApprovalPO} 承担。
  *
  * <p><b>DDL：</b>
  *
@@ -44,12 +44,9 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_agt_approval")
-public class AgentApproval extends MpBaseAuditEntity<String> {
+public class AgentApproval extends DomainBaseEntity<String> {
 
-  /** 审批请求 ID（主键，业务生成非自增；覆盖基类 ASSIGN_ID 为 INPUT）。 */
-  @TableId(type = IdType.INPUT)
-  private String id;
+  private static final long serialVersionUID = 1L;
 
   /** 所属对话 ID */
   private String conversationId;
@@ -71,9 +68,6 @@ public class AgentApproval extends MpBaseAuditEntity<String> {
 
   /** 审批意见 */
   private String comment;
-
-  /** 租户 ID */
-  private String tenantId;
 
   /** 审批完成时间 */
   private LocalDateTime resolvedAt;

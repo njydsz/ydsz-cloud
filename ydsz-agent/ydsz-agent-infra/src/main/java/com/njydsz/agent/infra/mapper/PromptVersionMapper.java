@@ -2,12 +2,13 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.domain.entity.PromptVersion;
+import com.njydsz.agent.infra.entity.PromptVersionPO;
 
 /**
  * Prompt 模板版本 Mapper
  *
  * <p>对应数据表 {@code ydsz_agt_prompt_version}。
+ * 使用 {@link PromptVersionPO}（基础设施层 PO）承载 MyBatis-Plus 注解。
  *
  * <p><b>主要索引：</b>
  *
@@ -16,11 +17,11 @@ import com.njydsz.agent.domain.entity.PromptVersion;
  *   <li>uk_template_code_version — 模板编码 + 版本号联合唯一索引
  * </ul>
  *
- * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 tenant_id 过滤条件，本接口不感知。
  *
  * <p><b>逻辑删除：</b>版本表不做逻辑删除，保留完整历史记录。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
-public interface PromptVersionMapper extends BaseMapper<PromptVersion> {}
+public interface PromptVersionMapper extends BaseMapper<PromptVersionPO> {}

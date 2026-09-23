@@ -30,6 +30,14 @@
         <artifactId>ydsz-common-json</artifactId>
     </dependency>
 
+    <!-- org.mapstruct（provided 被动声明）：AgentPoConverter 编译期需解析 domain 层 @Mapper 注解，
+         domain 的 mapstruct 为 provided 不传递（YDIZ-DDD-004 豁免情形） -->
+    <dependency>
+        <groupId>org.mapstruct</groupId>
+        <artifactId>mapstruct</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
     <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
         <dependency>
             <groupId>com.njydsz</groupId>

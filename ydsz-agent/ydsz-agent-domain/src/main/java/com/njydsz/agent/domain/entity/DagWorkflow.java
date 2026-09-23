@@ -1,41 +1,36 @@
 package com.njydsz.agent.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.agent.entity.base.DomainBaseEntity;
 
 /**
- * DAG 工作流持久化实体（存储 YAML DSL 供后续加载/编辑/执行）。
+ * DAG 工作流（domain 纯净 POJO，无 MP 注解）
  *
- * <p>支持工作流模板的 CRUD 生命周期，用户可通过可视化编辑器编排后保存为命名工作流，
- * 并在需要时加载、修改、重新执行。
+ * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
+ * 持久化映射由 {@code infra.entity.DagWorkflowPO} 承担。
  *
  * @author ydsz-team
- * @since 26.09.17
+ * @since 26.09.23
  */
 @Data
-@TableName("ydsz_agt_dag_workflow")
-public class DagWorkflow extends MpBaseEntity<String> {
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class DagWorkflow extends DomainBaseEntity<String> {
 
-  /** 工作流编码（业务唯一 key） */
-  private String workflowCode;
+  private static final long serialVersionUID = 1L;
+
+  /** 工作流编码（业务唯一标识） */
+  private String code;
 
   /** 工作流名称 */
-  private String workflowName;
+  private String name;
+
+  /** DAG 定义（YAML DSL） */
+  private String dsl;
 
   /** 工作流描述 */
   private String description;
-
-  /** YAML DSL 内容 */
-  private String dslContent;
-
-  /** 可视化布局 JSON（节点坐标等前端状态） */
-  private String layoutJson;
-
-  /** 分类标签 */
-  private String category;
-
-  /** 是否发布 */
-  private Boolean isPublished;
 }

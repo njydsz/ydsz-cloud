@@ -2,12 +2,13 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.domain.entity.TokenUsageRecord;
+import com.njydsz.agent.infra.entity.TokenUsageRecordPO;
 
 /**
  * Token 用量记录 Mapper
  *
  * <p>对应数据表 {@code ydsz_agt_token_usage}。
+ * 使用 {@link TokenUsageRecordPO}（基础设施层 PO）承载 MyBatis-Plus 注解。
  *
  * <p><b>主要索引：</b>
  *
@@ -17,11 +18,11 @@ import com.njydsz.agent.domain.entity.TokenUsageRecord;
  *   <li>idx_model_name — 模型名称索引（按模型分组统计）
  * </ul>
  *
- * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 tenant_id 过滤条件，本接口不感知。
  *
  * <p><b>逻辑删除：</b>用量记录不做逻辑删除，永久保留以供审计。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
-public interface TokenUsageRecordMapper extends BaseMapper<TokenUsageRecord> {}
+public interface TokenUsageRecordMapper extends BaseMapper<TokenUsageRecordPO> {}

@@ -1,26 +1,28 @@
 package com.njydsz.agent.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.agent.entity.base.DomainBaseEntity;
 
 /**
- * Token 用量记录（映射 ydsz_agt_token_usage 表）
+ * Token 用量记录（domain 纯净 POJO，无 MP 注解）
  *
- * <p>记录每次 LLM 调用的 Token 消耗明细，用于成本核算与用量分析。 每次 LLM 调用完成后异步写入，按 conversationId + createdAt 建立索引。
+ * <p>记录每次 LLM 调用的 Token 消耗明细，用于成本核算与用量分析。
  *
- * <p><b>线程安全</b>：由 @Data 生成 setter，属可变持久化实体； 仅在单请求/单事务内使用，勿跨线程共享。
+ * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
+ * 持久化映射由 {@code infra.entity.TokenUsageRecordPO} 承担。
  *
  * @author ydsz-team
  * @since 26.09.01
- */@Data
+ */
+@Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_agt_token_usage")
-public class TokenUsageRecord extends MpBaseEntity<String> {
+public class TokenUsageRecord extends DomainBaseEntity<String> {
+
+  private static final long serialVersionUID = 1L;
 
   /** 所属对话 ID（关联 ydsz_agt_conversation） */
   private String conversationId;
