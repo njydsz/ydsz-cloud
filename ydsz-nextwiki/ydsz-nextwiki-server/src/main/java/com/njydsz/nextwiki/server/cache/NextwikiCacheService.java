@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.server.cache;
+﻿package com.njydsz.nextwiki.server.cache;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +19,7 @@ import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
@@ -285,6 +285,43 @@ public class NextwikiCacheService {
    */
   public void evictQuotaOnChange(String scopeType, String scopeId) {
     evictQuota(scopeType, scopeId);
+  }
+
+  // ==================== 批量失效（P2-5） ====================
+
+  /**
+   * P2-5: 失效指定文件夹全部后代节点的文件详情与目录列表缓存。
+   *
+   * <p>在深层移动/重命名文件夹后调用，一次性查询全部后代节点 ID 并批量失效其文件详情缓存和目录列表缓存，
+   * 解决逐层失效仅覆盖直接父目录列表、未清除深层子节点缓存的问题。
+   *
+   * @param folderId 文件夹节点 ID
+   */
+  public void evictDescendantsCache(String folderId) {
+    try {
+      List<FileNodeVO> descendants = fileNodeRepository.findAllDescendants(folderId);
+      if (descendants == null || descendants.isEmpty()) {
+        return;
+      }
+      // 失效全部后代节点的文件详情缓存
+      Set<String> nodeIds = descendants.stream()
+          .map(FileNodeVO::getId)
+          .collect(Collectors.toSet());
+      for (String nodeId : nodeIds) {
+        evictFile(nodeId);
+      }
+      // 失效后代中全部文件夹的目录列表缓存
+      List<FileNodeVO> folderDescendants = descendants.stream()
+          .filter(FileNodeVO::isFolder)
+          .toList();
+      for (FileNodeVO folder : folderDescendants) {
+        evictChildren(folder.getId());
+      }
+      log.info("[NextwikiCacheService] 后代缓存批量失效: folderId={}, nodeCount={}, folderCount={}",
+          folderId, nodeIds.size(), folderDescendants.size());
+    } catch (Exception e) {
+      log.warn("[NextwikiCacheService] 后代缓存批量失效异常: folderId={}, err={}", folderId, e.getMessage(), e);
+    }
   }
 
   // ==================== AI 摘要缓存 ====================

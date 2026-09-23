@@ -57,6 +57,12 @@ public class FlowDefinitionCacheService {
    */
   private final ObjectProvider<FlowDefinitionCacheBroadcaster> broadcasterProvider;
 
+  /**
+   * 是否为集群模式（构造时一次性解析，避免每次 evict 执行 getIfAvailable 反射检查）。
+   *
+   * <p>单实例模式下广播路径完全跳过，无任何额外开销。
+   */
+  private final boolean clusterMode;
   private final Cache<String, FlowDefinitionMetadata> metadataCache;
 
   /**
@@ -77,6 +83,8 @@ public class FlowDefinitionCacheService {
     this.flowNodeRepository = flowNodeRepository;
     this.flowSkipRepository = flowSkipRepository;
     this.broadcasterProvider = broadcasterProvider;
+    // 一次性解析：集群模式下 broadcaster bean 存在，单实例模式下为 null
+    this.clusterMode = broadcasterProvider.getIfAvailable() != null;
     this.metadataCache =
         YdszCache.<String, FlowDefinitionMetadata>newBuilder()
             .type(CacheType.STRIPED)
@@ -102,10 +110,12 @@ public class FlowDefinitionCacheService {
       return;
     }
     evictLocal(definitionId);
-    // P0-3: 广播到集群其他节点（仅当 crossInstanceEnabled=true 时 broadcaster bean 存在）
-    FlowDefinitionCacheBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
-    if (broadcaster != null) {
-      broadcaster.broadcast(definitionId);
+    // 集群模式下广播到集群其他节点；单实例模式完全跳过，无额外开销
+    if (clusterMode) {
+      FlowDefinitionCacheBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
+      if (broadcaster != null) {
+        broadcaster.broadcast(definitionId);
+      }
     }
   }
 
