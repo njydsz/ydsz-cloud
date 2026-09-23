@@ -36,6 +36,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.version.RuleVersionDiff;
+import com.njydsz.literule.server.version.RuleVersionDiffService;
 
 /**
  * 规则管理服务

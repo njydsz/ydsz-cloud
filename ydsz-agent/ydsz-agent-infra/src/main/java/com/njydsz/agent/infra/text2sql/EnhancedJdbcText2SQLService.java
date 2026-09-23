@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.Text2SQLService;
-import com.njydsz.agent.domain.json.JsonParsingUtils;
+import com.njydsz.common.json.parser.TolerantJsonUtils;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
@@ -290,10 +290,10 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
       String reasoning = "可行性评估默认通过";
       if (content != null && !content.isBlank()) {
         try {
-          String json = JsonParsingUtils.stripMarkdownCodeBlock(content);
-          score = JsonParsingUtils.extractDoubleField(json, "score", DEFAULT_MATCH_SCORE);
+          String json = TolerantJsonUtils.stripMarkdownCodeBlock(content);
+          score = TolerantJsonUtils.extractDoubleField(json, "score", DEFAULT_MATCH_SCORE);
           score = Math.max(0.0, Math.min(1.0, score));
-          reasoning = JsonParsingUtils.extractStringField(json, "reasoning", reasoning);
+          reasoning = TolerantJsonUtils.extractStringField(json, "reasoning", reasoning);
         } catch (NumberFormatException e) {
           log.warn("[Text2SQL:Feasibility] 解析分数失败，使用默认值: {}", e.getMessage());
         }

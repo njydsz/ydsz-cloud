@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.agent.infra.mapper.AgentApprovalMapper">
+
+  <resultMap id="BaseResultMap" type="com.njydsz.agent.domain.entity.AgentApproval">
+    <id     property="id"              column="id"/>
+    <result property="conversationId"  column="conversation_id"/>
+    <result property="traceId"         column="trace_id"/>
+    <result property="stepDescription" column="step_description"/>
+    <result property="contextJson"     column="context_json"/>
+    <result property="status"          column="status"/>
+    <result property="approver"        column="approver"/>
+    <result property="comment"         column="comment"/>
+    <result property="tenantId"        column="tenant_id"/>
+    <result property="resolvedAt"      column="resolved_at"/>
+    <result property="createdBy"       column="created_by"/>
+    <result property="createdAt"       column="created_at"/>
+    <result property="updatedBy"       column="updated_by"/>
+    <result property="updatedAt"       column="updated_at"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, conversation_id, trace_id, step_description, context_json,
+    status, approver, comment, tenant_id, resolved_at,
+    created_by, created_at, updated_by, updated_at
+  </sql>
+
+</mapper>

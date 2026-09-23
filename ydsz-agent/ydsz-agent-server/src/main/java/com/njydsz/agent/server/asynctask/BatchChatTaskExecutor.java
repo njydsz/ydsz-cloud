@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.model.ChatRequest;
+import com.njydsz.agent.server.chat.TokenCostCalculator;
 import com.njydsz.common.json.YdszJson;
 
 /**

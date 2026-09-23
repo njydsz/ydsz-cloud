@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.query.LoginLogPageQuery;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
@@ -50,9 +51,9 @@ public class LoginLogController {
   @GetMapping("/page")
   @AuthApiPermission(apiCodes = "admin:security:alert")
   @Operation(summary = "分页查询登录日志", description = "按条件分页查询用户登录历史（含浏览器/操作系统解析）")
-  public PageResponse<List<UserLoginHistoryVO>> page(LoginLogPageQuery query) {
+  public YdszResponse<PageResponse<List<UserLoginHistoryVO>>> page(LoginLogPageQuery query) {
     log.debug("分页查询登录日志: username={}, ip={}, status={}",
         query.getUsername(), query.getLoginIp(), query.getStatus());
-    return loginHistoryRepository.page(query);
+    return YdszResponse.success(loginHistoryRepository.page(query));
   }
 }

@@ -19,10 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.insight.InsightReportRequest;
 import com.njydsz.agent.domain.insight.InsightReportResult;
 import com.njydsz.agent.domain.insight.InsightReportService;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * 洞察报告 REST 控制器。
@@ -60,28 +63,33 @@ public class InsightReportController {
    * @return 报告结果
    */
   @PostMapping("/report")
-  public ResponseEntity<InsightReportResult> generateReport(
+  public YdszResponse<InsightReportResult> generateReport(
       @RequestBody InsightReportRequest request) {
-    InsightReportResult result = insightReportService.generateReport(request);
-    return ResponseEntity.ok(result);
+    return YdszResponse.success(insightReportService.generateReport(request));
   }
 
   /**
    * 查询报告元数据。
    *
    * @param reportId 报告 ID
-   * @return 报告结果（404 当不存在时）
+   * @return 报告结果（不存在时抛 INSIGHT_REPORT_NOT_FOUND 业务异常，经统一异常处理映射为 404）
    */
   @GetMapping("/report/{reportId}")
-  public ResponseEntity<InsightReportResult> getReport(@PathVariable String reportId) {
+  public YdszResponse<InsightReportResult> getReport(@PathVariable String reportId) {
     InsightReportResult result = insightReportService.getReport(reportId);
-    return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
+    if (result == null) {
+      throw new BusinessException(AgentExceptionCode.INSIGHT_REPORT_NOT_FOUND);
+    }
+    return YdszResponse.success(result);
   }
 
   /**
    * 导出报告 HTML 渲染结果。
    *
    * <p>返回 text/html 内容，可在浏览器中直接打开查看。
+   *
+   * <p><b>API-RESP 豁免说明（P1-9）：</b>本端点返回 HTML 字节流供浏览器直接渲染，
+   * 非平台统一 JSON 响应体适用场景，豁免 {@code YdszResponse} 包装。
    *
    * @param reportId 报告 ID
    * @return HTML 字节流
@@ -113,23 +121,22 @@ public class InsightReportController {
    * @return 报告列表
    */
   @GetMapping("/reports")
-  public ResponseEntity<List<InsightReportResult>> listRecentReports(
+  public YdszResponse<List<InsightReportResult>> listRecentReports(
       @RequestParam String userId,
       @RequestParam(defaultValue = "10") int limit) {
-    List<InsightReportResult> reports = insightReportService.listRecentReports(userId, limit);
-    return ResponseEntity.ok(reports);
+    return YdszResponse.success(insightReportService.listRecentReports(userId, limit));
   }
 
   /**
    * 删除报告。
    *
    * @param reportId 报告 ID
-   * @return 204 No Content
+   * @return 删除结果（status=deleted）
    */
   @DeleteMapping("/report/{reportId}")
-  public ResponseEntity<Map<String, String>> deleteReport(@PathVariable String reportId) {
+  public YdszResponse<Map<String, String>> deleteReport(@PathVariable String reportId) {
     insightReportService.deleteReport(reportId);
-    return ResponseEntity.ok(Map.of("status", "deleted", "reportId", reportId));
+    return YdszResponse.success(Map.of("status", "deleted", "reportId", reportId));
   }
 
   /**

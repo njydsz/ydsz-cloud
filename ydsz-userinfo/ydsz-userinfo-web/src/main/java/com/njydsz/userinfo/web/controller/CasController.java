@@ -79,6 +79,10 @@ public class CasController {
    *   <li>{@code password} — 密码（登录表单提交）</li>
    * </ul>
    *
+   * <p><b>API-RESP 豁免说明（P1-9）：</b>CAS 协议端点（RFC 侧 CAS Protocol 3.x 规范）的
+   * 响应体格式由协议规范约束（XML/HTML 重定向），客户端为异构外部系统，
+   * <b>豁免平台统一响应体 {@code YdszResponse} 包装</b>（同 SCIM 标准协议豁免逻辑）。
+   *
    * @param service 服务 URL（必填）
    * @param username 用户名（登录时提交）
    * @param password 密码（登录时提交）

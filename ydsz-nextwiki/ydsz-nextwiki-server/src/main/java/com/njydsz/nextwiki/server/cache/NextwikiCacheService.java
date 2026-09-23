@@ -19,7 +19,7 @@ import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
@@ -97,7 +97,7 @@ public class NextwikiCacheService {
   private final RedisStringOps redisStringOps;
   private final NextwikiMetrics nextwikiMetrics;
   private final LockStrategy lockStrategy;
-  private final com.njyzsz.nextwiki.domain.repository.FileNodeRepository fileNodeRepository;
+  private final FileNodeRepository fileNodeRepository;
 
   // ==================== 文件详情缓存 ====================
 

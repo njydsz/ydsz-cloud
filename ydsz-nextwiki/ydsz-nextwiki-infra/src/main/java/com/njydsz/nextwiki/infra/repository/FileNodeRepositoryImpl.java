@@ -18,7 +18,7 @@ import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njyzsz.nextwiki.domain.converter.NextwikiStructMapper;
+import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
 import com.njydsz.nextwiki.domain.dto.FileNodeSortItemDTO;
 import com.njydsz.nextwiki.domain.entity.FileNode;

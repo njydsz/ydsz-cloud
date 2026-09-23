@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.agent.infra.mapper.PromptVersionMapper">
+
+  <resultMap id="BaseResultMap" type="com.njydsz.agent.domain.entity.PromptVersion">
+    <id     property="id"           column="id"/>
+    <result property="templateCode" column="template_code"/>
+    <result property="version"      column="version"/>
+    <result property="content"      column="content"/>
+    <result property="changeNote"   column="change_note"/>
+    <result property="isDeleted"    column="is_deleted"/>
+    <result property="status"       column="status"/>
+    <result property="revision"     column="revision"/>
+    <result property="tenantId"     column="tenant_id"/>
+    <result property="createdBy"    column="created_by"/>
+    <result property="createdAt"    column="created_at"/>
+    <result property="updatedBy"    column="updated_by"/>
+    <result property="updatedAt"    column="updated_at"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, template_code, version, content, change_note,
+    is_deleted, status, revision, tenant_id,
+    created_by, created_at, updated_by, updated_at
+  </sql>
+
+</mapper>

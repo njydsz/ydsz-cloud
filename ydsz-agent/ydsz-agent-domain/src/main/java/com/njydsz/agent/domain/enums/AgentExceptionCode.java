@@ -86,7 +86,11 @@ public enum AgentExceptionCode implements ExceptionCode {
   /** A2A 调用失败（网络/Agent 不可用/超时） */
   A2A_CALL_FAILED("B94501", "agent.a2a.call.failed", 502),
   /** A2A 协议错误（认证/拒绝/Task 失败/格式异常） */
-  A2A_PROTOCOL_ERROR("B94502", "agent.a2a.protocol.error", 400);
+  A2A_PROTOCOL_ERROR("B94502", "agent.a2a.protocol.error", 400),
+
+  // ==================== B94601-B94699 洞察报告 ====================
+  /** 洞察报告不存在（P1-9 响应体收敛新增，替代 Controller 404 语义） */
+  INSIGHT_REPORT_NOT_FOUND("B94601", "agent.insight.report.not.found", 404);
 
   /** 缺省 HTTP 状态码 */
   private static final int DEFAULT_HTTP_STATUS = 400;

@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import lombok.Builder;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.nextwiki.domain.enums.DiffTypeEnum;
+import com.njydsz.nextwiki.domain.vo.DiffEntryVO;
+import com.njydsz.nextwiki.domain.vo.DiffResultVO;
 
 /**
  * 文件版本对比服务。
@@ -45,7 +47,7 @@ public class VersionDiffService {
    * @param newContent 新版本文本内容
    * @return 差异结果（按行粒度的变更列表）
    */
-  public DiffResult diff(String oldContent, String newContent) {
+  public DiffResultVO diff(String oldContent, String newContent) {
     if (oldContent == null) {
       oldContent = "";
     }
@@ -57,14 +59,14 @@ public class VersionDiffService {
     List<String> newLines = splitLines(newContent);
 
     // 使用 LCS（最长公共子序列）算法计算差异
-    List<DiffEntry> entries = computeLcsDiff(oldLines, newLines);
+    List<DiffEntryVO> entries = computeLcsDiff(oldLines, newLines);
 
-    return DiffResult.builder()
+    return DiffResultVO.builder()
         .entries(entries)
         .oldLineCount(oldLines.size())
         .newLineCount(newLines.size())
-        .additions((int) entries.stream().filter(e -> e.getType() == DiffType.ADD).count())
-        .deletions((int) entries.stream().filter(e -> e.getType() == DiffType.DELETE).count())
+        .additions((int) entries.stream().filter(e -> e.getType() == DiffTypeEnum.ADD).count())
+        .deletions((int) entries.stream().filter(e -> e.getType() == DiffTypeEnum.DELETE).count())
         .build();
   }
 
@@ -133,7 +135,7 @@ public class VersionDiffService {
    * @param newLines 新版本行列表
    * @return diff 条目列表
    */
-  private List<DiffEntry> computeLcsDiff(List<String> oldLines, List<String> newLines) {
+  private List<DiffEntryVO> computeLcsDiff(List<String> oldLines, List<String> newLines) {
     int m = oldLines.size();
     int n = newLines.size();
     int[][] dp = new int[m + 1][n + 1];
@@ -146,15 +148,15 @@ public class VersionDiffService {
         }
       }
     }
-    List<DiffEntry> entries = new ArrayList<>(COLLECTION_CAPACITY);
+    List<DiffEntryVO> entries = new ArrayList<>(COLLECTION_CAPACITY);
     int i = m;
     int j = n;
     while (i > 0 || j > 0) {
       if (i > 0 && j > 0 && Objects.equals(oldLines.get(i - 1), newLines.get(j - 1))) {
         entries.add(
             0,
-            DiffEntry.builder()
-                .type(DiffType.UNCHANGED)
+            DiffEntryVO.builder()
+                .type(DiffTypeEnum.UNCHANGED)
                 .lineContent(oldLines.get(i - 1))
                 .oldLineNumber(i)
                 .newLineNumber(j)
@@ -164,8 +166,8 @@ public class VersionDiffService {
       } else if (j > 0 && (i == 0 || dp[i][j - 1] >= dp[i - 1][j])) {
         entries.add(
             0,
-            DiffEntry.builder()
-                .type(DiffType.ADD)
+            DiffEntryVO.builder()
+                .type(DiffTypeEnum.ADD)
                 .lineContent(newLines.get(j - 1))
                 .oldLineNumber(i == 0 ? 0 : i)
                 .newLineNumber(j)
@@ -174,8 +176,8 @@ public class VersionDiffService {
       } else if (i > 0) {
         entries.add(
             0,
-            DiffEntry.builder()
-                .type(DiffType.DELETE)
+            DiffEntryVO.builder()
+                .type(DiffTypeEnum.DELETE)
                 .lineContent(oldLines.get(i - 1))
                 .oldLineNumber(i)
                 .newLineNumber(j == 0 ? 0 : j)
@@ -184,45 +186,5 @@ public class VersionDiffService {
       }
     }
     return entries;
-  }
-
-  /** diff 条目类型枚举 */
-  public enum DiffType {
-    /** 新增行 */
-    ADD,
-    /** 删除行 */
-    DELETE,
-    /** 未变更行 */
-    UNCHANGED
-  }
-
-  /** diff 条目（单行变更记录） */
-  @Data
-  @Builder
-  public static class DiffEntry {
-    /** 变更类型 */
-    private DiffType type;
-    /** 行内容 */
-    private String lineContent;
-    /** 旧版本行号（0 表示不存在） */
-    private int oldLineNumber;
-    /** 新版本行号（0 表示不存在） */
-    private int newLineNumber;
-  }
-
-  /** diff 结果（版本对比的完整结果） */
-  @Data
-  @Builder
-  public static class DiffResult {
-    /** diff 条目列表 */
-    private List<DiffEntry> entries;
-    /** 旧版本总行数 */
-    private int oldLineCount;
-    /** 新版本总行数 */
-    private int newLineCount;
-    /** 新增行数 */
-    private int additions;
-    /** 删除行数 */
-    private int deletions;
   }
 }

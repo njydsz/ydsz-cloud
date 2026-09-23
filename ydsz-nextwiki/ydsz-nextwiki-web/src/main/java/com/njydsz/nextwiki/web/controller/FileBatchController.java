@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.web.controller;
+﻿package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
 
@@ -26,6 +26,7 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.nextwiki.domain.vo.DiffResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
@@ -35,7 +36,6 @@ import com.njydsz.nextwiki.server.service.BatchTaskService;
 import com.njydsz.nextwiki.server.service.BatchTaskService.BatchTaskStatus;
 import com.njydsz.nextwiki.server.service.FileApplicationService;
 import com.njydsz.nextwiki.server.service.VersionDiffApplicationService;
-import com.njydsz.nextwiki.server.service.VersionDiffService;
 
 /**
  * 文件批量操作与版本管理 REST API Controller。
@@ -216,7 +216,7 @@ public class FileBatchController {
   @GetMapping("/{nodeId}/versions/diff")
   @Operation(summary = "对比版本差异")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
-  public YdszResponse<VersionDiffService.DiffResult> diffVersions(
+  public YdszResponse<com.njyzsz.nextwiki.domain.vo.DiffResultVO> diffVersions(
       @PathVariable String nodeId,
       @RequestParam int oldVersion,
       @RequestParam int newVersion) {

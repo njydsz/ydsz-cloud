@@ -69,6 +69,9 @@ public class CodeGenController {
   /**
    * 预览并打包为 zip 下载（对齐 RuoYi-Vue 一键下载模式）。
    *
+   * <p><b>API-RESP 豁免说明（P1-9）：</b>本端点返回二进制文件流（zip 下载），
+   * 非平台统一 JSON 响应体适用场景，豁免 {@code YdszResponse} 包装。
+   *
    * @param datasourceId    数据源 ID
    * @param templateGroupId 模板分组 ID
    * @param tableName       表名

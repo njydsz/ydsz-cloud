@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchFilter.Operator;
@@ -182,7 +183,8 @@ public class SearchApplicationService {
     long totalProcessed = 0;
 
     while (true) {
-      PageResponse<List<FileNodeVO>> pageResult = fileNodeRepository.findAllWithPage(offset, REBUILD_BATCH_SIZE);
+      PageResponse<List<FileNodeVO>> pageResult =
+          fileNodeRepository.findAllWithPage(offset, REBUILD_BATCH_SIZE, TenantContextHolder.getTenantId());
       List<FileNodeVO> batch = pageResult.getData();
       if (batch == null || batch.isEmpty()) {
         break;

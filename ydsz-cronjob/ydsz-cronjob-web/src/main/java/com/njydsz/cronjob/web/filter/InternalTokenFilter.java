@@ -31,6 +31,14 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  *
  * <p>令牌比较使用 {@link DigestUtils#constantTimeEquals(String, String)} 常量时间比较，防止时序侧信道。
  *
+ * <h3>与 common 内部签名能力的边界（P1-7 评审结论，勿误用替换）</h3>
+ *
+ * <p>common-web 的 {@code InternalSignatureFilter} / common-auth 的 {@code InternalHeaderSigner}
+ * 面向"网关注入用户上下文头"的场景，验签 payload 为 {@code traceId|userId|username|roles|permissions}；
+ * 而本过滤器保护的是<b>节点间服务到服务派发</b>（无用户上下文可签），二者场景不同、并存不冲突
+ * （本模块已依赖 common-web）。安全前提：静态令牌无 timestamp/nonce，不可防重放，
+ * 仅限内网部署，且 {@code access-token} 必须定期轮换。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

@@ -34,6 +34,10 @@ import com.njydsz.common.lock.strategy.LockStrategy;
  * <p><b>改造说明（26.09.08）：</b>所有 Redis 操作收敛到 {@link DistributedLockAdmin}，
  * Controller 不再直接注入 {@code StringRedisTemplate}，避免 Controller 层绕过 common-lock 模块直接操作 Redis。
  *
+ * <p><b>API-RESP 豁免说明（P1-9）：</b>本类为 Spring Boot Actuator {@code @Endpoint}（非
+ * {@code @RestController}），端点方法返回裸 {@code Map} 是 Actuator 端点的标准契约
+ * （由 Actuator 映射层直接序列化），<b>豁免平台统一响应体 {@code YdszResponse} 包装</b>。
+ *
  * <h3>端点 URL 示例</h3>
  * <ul>
  *   <li>{@code GET    /actuator/lock}               — 锁指标快照（acquire/release/competition/timeout/watchdog 等）

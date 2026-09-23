@@ -66,4 +66,18 @@ public class SpaceTemplateDTO implements Serializable {
 
   @Schema(description = "更新人")
   private String updatedBy;
+
+  // ==================== P2-3: 文件模板扩展 ====================
+
+  /** P2-3: 模板类型（space=空间模板，file=文件模板） */
+  @Schema(description = "模板类型：space / file")
+  private String templateType;
+
+  /** P2-3: 源文件节点 ID（templateType=file 时必填） */
+  @Schema(description = "源文件节点ID")
+  private String sourceNodeId;
+
+  /** P2-3: 可见性级别（system/org/private） */
+  @Schema(description = "可见性：system / org / private")
+  private String visibility;
 }

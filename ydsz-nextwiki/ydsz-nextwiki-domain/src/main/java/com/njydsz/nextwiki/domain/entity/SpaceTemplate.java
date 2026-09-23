@@ -79,4 +79,42 @@ public class SpaceTemplate extends MpBaseAuditEntity<String> {
   /** 逻辑删除标识 */
   @TableLogic
   private Boolean isDeleted;
+
+  // ==================== P2-3: 文件模板扩展 ====================
+
+  /**
+   * P2-3: 模板类型（space=空间模板，file=文件模板）。
+   *
+   * <p>空间模板用于创建整个空间结构（含目录树与初始页面）；文件模板用于基于现有文件快速创建新文件。
+   */
+  private String templateType;
+
+  /** 模板类型：空间 */
+  public static final String TEMPLATE_TYPE_SPACE = "space";
+
+  /** 模板类型：文件 */
+  public static final String TEMPLATE_TYPE_FILE = "file";
+
+  /**
+   * P2-3: 源文件节点 ID（templateType=file 时必填）。
+   *
+   * <p>标识该模板是基于哪个文件节点创建的，使用此模板时将复制该节点的存储对象创建新文件。
+   */
+  private String sourceNodeId;
+
+  /**
+   * P2-3: 可见性级别（system=系统内置，org=组织内可见，private=仅创建者可见）。
+   *
+   * <p>控制模板的查询范围与可使用人群，对标竞品（飞书模板市场/语雀模板中心）的三级可见性体系。
+   */
+  private String visibility;
+
+  /** 可见性：系统内置（所有租户可见） */
+  public static final String VISIBILITY_SYSTEM = "system";
+
+  /** 可见性：组织内可见（同租户可见） */
+  public static final String VISIBILITY_ORG = "org";
+
+  /** 可见性：私有（仅创建者可见） */
+  public static final String VISIBILITY_PRIVATE = "private";
 }

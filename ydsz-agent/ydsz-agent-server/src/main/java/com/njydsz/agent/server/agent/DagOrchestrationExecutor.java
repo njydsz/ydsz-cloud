@@ -23,6 +23,7 @@ import com.njydsz.agent.domain.agent.AgentDag;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
+import com.njydsz.agent.domain.gateway.PromptTemplateProvider;
 import com.njydsz.agent.domain.agent.DagCheckpoint;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.config.AgentProperties;

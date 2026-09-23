@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
+import com.njydsz.nextwiki.domain.vo.DiffResultVO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
-import com.njydsz.nextwiki.server.service.VersionDiffService.DiffResult;
 
 /**
  * 版本对比应用服务。
@@ -40,7 +40,7 @@ public class VersionDiffApplicationService {
    * @param newVersion 新版本号
    * @return diff 结果
    */
-  public DiffResult diffVersions(String fileNodeId, int oldVersion, int newVersion) {
+  public DiffResultVO diffVersions(String fileNodeId, int oldVersion, int newVersion) {
     FileVersionVO oldVer = fileVersionRepository
         .findByFileNodeIdAndVersion(fileNodeId, oldVersion)
         .orElseThrow(() -> new IllegalArgumentException("版本不存在: " + oldVersion));

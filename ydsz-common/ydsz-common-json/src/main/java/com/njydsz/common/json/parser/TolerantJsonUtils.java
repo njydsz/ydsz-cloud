@@ -1,23 +1,23 @@
-package com.njydsz.agent.domain.json;
+package com.njydsz.common.json.parser;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * JSON 解析工具方法集。
+ * 容错 JSON 工具（面向 LLM 输出的非标准 JSON 解析，P2-12 自 ydsz-agent 下沉）。
  *
  * <p>统一处理 LLM 返回的非标准 JSON（如 markdown 代码块包裹、尾随逗号、注释等），
  * 消除各模块中重复的 extractJsonFromMarkdown / parseScoreFromJson 等手写逻辑。
  *
- * <p>所有方法均为静态纯函数，无可变状态，线程安全。
+ * <p>所有方法均为静态纯函数，无可变状态，线程安全；零依赖（纯 JDK 正则），符合 L1 工具层纯度要求。
  *
  * @author ydsz-team
  * @since 26.09.23
  */
-public final class JsonParsingUtils {
+public final class TolerantJsonUtils {
 
   /** 私有构造器防止实例化 */
-  private JsonParsingUtils() {
+  private TolerantJsonUtils() {
   }
 
   // ======================== Markdown 代码块剥离 ========================
