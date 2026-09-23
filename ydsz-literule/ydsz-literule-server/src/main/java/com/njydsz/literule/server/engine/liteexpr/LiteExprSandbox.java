@@ -103,7 +103,9 @@ public class LiteExprSandbox {
    * 沙箱校验结果缓存（P1-3 性能优化）
    *
    * <p>使用 {@link IdentityHashMap} 以 AST 对象引用为 key（{@link LiteExprCompiler} 按表达式字符串缓存 AST，
-   * 同一表达式返回相同对象引用）。 校验结果仅依赖静态 {@code FORBIDDEN_*} 集合， 与运行时白名单状态无关（白名单仅抑制误报，不产生新的违规项），因此可安全缓存。
+   * 同一表达式返回相同对象引用）。校验结果依赖静态 {@code FORBIDDEN_*} 集合和运行时白名单（函数不在白名单中的
+   * {@link FunctionCallNode} 也可能被标记违规），因此当白名单变化时（{@link #syncFunctions}/
+   * {@link #applyPolicy}）必须调用 {@link #clearCache()} 清空缓存。
    *
    * <p>缓存容量无限制，依赖 {@link LiteExprCompiler} 的编译缓存（默认 4096 条）作为天然上界。
    * 使用同步包装（P0-2 并发修复），避免并发求值下 IdentityHashMap 结构损坏。

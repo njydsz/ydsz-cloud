@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
+import com.njydsz.workflow.domain.vo.FlowSkipVO;
 
 /**
  * 流程推进器策略接口（Domain 层契约）。
@@ -36,13 +37,14 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
  * @since 26.09.23
  * @see com.njydsz.workflow.domain.vo.FlowInstanceVO
  * @see com.njydsz.workflow.domain.vo.FlowNodeVO
+ * @see com.njydsz.workflow.domain.vo.FlowSkipVO
  */
 public interface FlowAdvancer {
 
   /**
-   * 计算流程从当前节点正向推进后应到达的下一批节点（纯路由计算，无副作用）。
+   * 计算流程从当前节点正向推进后应到达的下一批跳转规则（纯路由计算，无副作用）。
    *
-   * <p><b>本方法是纯粹的「路由计算」</b>：只返回目标节点列表，<b>不</b>创建任务、<b>不</b>修改实例状态。
+   * <p><b>本方法是纯粹的「路由计算」</b>：只返回目标 skip 列表，<b>不</b>创建任务、<b>不</b>修改实例状态。
    * 任务生成与状态流转由调用方（{@code FlowInstanceService}）在同一事务中统一提交。
    *
    * <p><b>路由规则：</b>
@@ -54,12 +56,12 @@ public interface FlowAdvancer {
    * </ul>
    *
    * @param instance 当前流程实例（ {@code definitionId} 有效），不可为 {@code null}
-   * @param currentNodeCode 当前节点编码，不可为 {@code null}
+   * @param currentNode 当前节点，不可为 {@code null}
    * @param variables 流程变量（用于条件表达式求值），可为 {@code null}
-   * @return 下一批目标节点列表；空列表表示流程无下游
+   * @return 下一批正向跳转规则列表；空列表表示流程无下游
    * @throws com.njydsz.common.exception.custom.SysException 节点不存在时
    */
-  List<FlowNodeVO> resolveNextNodes(FlowInstanceVO instance, String currentNodeCode,
+  List<FlowSkipVO> resolvePassSkips(FlowInstanceVO instance, FlowNodeVO currentNode,
       Map<String, Object> variables);
 
   /**
@@ -90,7 +92,7 @@ public interface FlowAdvancer {
    * @param variables 流程变量，可为 {@code null}
    * @return {@code true} = 条件成立；{@code false} = 不成立
    */
-  boolean evaluateCondition(String condition, Map<String, Object> variables);
+  boolean evaluateSkipCondition(String condition, Map<String, Object> variables);
 
   /**
    * 判断 join 节点是否已满足聚合条件。

@@ -136,6 +136,9 @@ public class CronjobProperties {
   /** P2-5: 多云/多集群任务漂移配置 */
   private MultiClusterConfig multiCluster = new MultiClusterConfig();
 
+  /** P2-3: 节假日 API 配置（WORKDAY / HOLIDAY 策略的全局节假日数据源） */
+  private HolidayConfig holiday = new HolidayConfig();
+
   /**
    * 获取执行器配置。
    *
