@@ -1,15 +1,22 @@
 package com.njydsz.cronjob.domain.job;
 
+import com.njydsz.common.exception.custom.SysException;
+
 /**
- * 任务执行异常
+ * 任务执行异常。
  *
- * <p>定时任务执行失败时抛出，包括业务逻辑异常、外部服务调用失败、
- * 超时等场景。替代原始的 {@code throws Exception} 以提供明确的异常契约。
+ * <p>定时任务执行失败时抛出，包括业务逻辑异常、外部服务调用失败、超时等场景。
+ * 替代原始的 {@code throws Exception} 以提供明确的异常契约。
+ *
+ * <p>P1-8 整改：原为 checked exception（extends Exception），现纳入 common-exception
+ * 统一异常体系（extends SysException），支持统一错误码、i18n、异常监控等能力。
+ * 既有 {@code throws JobExecutionException} 声明对 unchecked 异常仍然合法，作为
+ * SPI 契约文档保留；调用方 catch 逻辑不受影响。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
-public class JobExecutionException extends Exception {
+public class JobExecutionException extends SysException {
 
   private static final long serialVersionUID = 1L;
 
@@ -17,35 +24,40 @@ public class JobExecutionException extends Exception {
   private final String paramsJson;
 
   /**
-   * 构造任务执行异常
+   * 构造任务执行异常。
    *
    * @param message 错误消息
    */
   public JobExecutionException(String message) {
-    super(message);
+    super();
+    setMessage(message);
     this.paramsJson = null;
   }
 
   /**
-   * 构造任务执行异常（带原始异常）
+   * 构造任务执行异常（带原始异常）。
    *
    * @param message 错误消息
    * @param cause 原始异常
    */
   public JobExecutionException(String message, Throwable cause) {
-    super(message, cause);
+    super();
+    setMessage(message);
+    initCause(cause);
     this.paramsJson = null;
   }
 
   /**
-   * 构造任务执行异常（带上下文）
+   * 构造任务执行异常（带上下文）。
    *
    * @param message 错误消息
    * @param paramsJson 任务参数 JSON
    * @param cause 原始异常
    */
   public JobExecutionException(String message, String paramsJson, Throwable cause) {
-    super(String.format("%s | params=%s", message, paramsJson), cause);
+    super();
+    setMessage(String.format("%s | params=%s", message, paramsJson));
+    initCause(cause);
     this.paramsJson = paramsJson;
   }
 

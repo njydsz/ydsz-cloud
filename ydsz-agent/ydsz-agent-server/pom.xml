@@ -107,11 +107,6 @@
             <artifactId>pdfbox</artifactId>
             <version>3.0.3</version>
         </dependency>
-        <!-- P0-3: 多租户隔离 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-tenant</artifactId>
-        </dependency>
         <!-- P1: 单元测试基础设施（JUnit 5 + Mockito） -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

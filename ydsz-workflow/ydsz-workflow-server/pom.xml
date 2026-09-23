@@ -80,10 +80,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-notify</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-queue</artifactId>
         </dependency>
         <!-- P0-1: 统一线程池管理（替代手动 ThreadPoolTaskExecutor 创建） -->

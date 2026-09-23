@@ -119,6 +119,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
+        <!-- common-tenant: 多租户隔离（bootstrap.yml 已配置 ydsz.tenant.* 渐进式启用，P0-1 租户三件套整改：显式依赖 + 配置 + TaskDecorator） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
             <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -36,6 +36,12 @@
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-safe</artifactId>
     </dependency>
+
+    <!-- common-tenant: 多租户隔离（bootstrap.yml 已配置 ydsz.tenant.*，与 web 模块声明保持一致，P0-1 整改） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-tenant</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-app</artifactId>

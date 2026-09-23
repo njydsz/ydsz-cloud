@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,6 +27,9 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
+import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
+import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 import com.njydsz.workflow.server.service.FlowI18nService;
@@ -252,6 +257,75 @@ public class FlowAnalyticsController {
       @RequestParam(required = false) Integer purgeDays) {
     log.info("[FlowAnalyticsController] 手动触发清理 purgeDays={}", purgeDays);
     return YdszResponse.success(archiveService.purge(purgeDays));
+  }
+
+  // ==================== F-05 瓶颈热力图 ====================
+
+  /**
+   * 瓶颈热力图分析
+   *
+   * <p>按节点维度统计平均耗时与处理数量，用于识别流程瓶颈节点和超时重灾区。
+   *
+   * @param startTime 查询起始时间（ISO 8601，可选，默认近 30 天）
+   * @param endTime 查询截止时间（ISO 8601，可选）
+   * @return 瓶颈节点列表（按平均耗时降序）
+   */
+  @GetMapping("/bottleneckHeatmap")
+  @Operation(summary = "瓶颈热力图分析")
+  public YdszResponse<List<FlowBottleneckVO>> bottleneckHeatmap(
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          LocalDateTime startTime,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          LocalDateTime endTime) {
+    return YdszResponse.success(
+        analyticsService.bottleneckHeatmap(startTime, endTime, TenantContextHolder.getTenantId()));
+  }
+
+  // ==================== F-06 异常告警检测 ====================
+
+  /**
+   * 异常告警检测
+   *
+   * <p>基于阈值规则检测异常：卡住实例（STUCK）、高驳回率（HIGH_REJECTION）、异常积压（BACKLOG）。
+   *
+   * @param stuckThresholdHours 卡住阈值（小时），默认 48（可空）
+   * @param rejectRateThreshold 驳回率阈值（0~1），默认 0.5（可空）
+   * @param backlogThreshold 积压阈值，默认 20（可空）
+   * @return 异常告警列表（按严重程度降序）
+   */
+  @GetMapping("/anomalyAlerts")
+  @Operation(summary = "异常告警检测")
+  public YdszResponse<List<FlowAnomalyVO>> anomalyAlerts(
+      @RequestParam(required = false) @Min(1) Integer stuckThresholdHours,
+      @RequestParam(required = false) @DecimalMin("0.0") @DecimalMax("1.0")
+          Double rejectRateThreshold,
+      @RequestParam(required = false) @Min(1) Integer backlogThreshold) {
+    return YdszResponse.success(
+        analyticsService.detectAnomalies(
+            TenantContextHolder.getTenantId(),
+            stuckThresholdHours,
+            rejectRateThreshold,
+            backlogThreshold));
+  }
+
+  // ==================== F-04 变更影响预览 ====================
+
+  /**
+   * 变更影响预览（发布前 dry-run）
+   *
+   * <p>分析流程定义发布时对在途实例的影响范围，识别可能受影响的活跃实例和阻塞节点。
+   *
+   * @param definitionId 流程定义 ID
+   * @param nodeIdToCheck 待校验的节点编码（可空，为空则全量返回活跃实例）
+   * @return 影响分析结果（风险等级 + 受影响实例 + 阻塞节点 + 发布建议）
+   */
+  @GetMapping("/impactPreview/{definitionId}")
+  @Operation(summary = "变更影响预览")
+  public YdszResponse<FlowMigrationImpactVO> impactPreview(
+      @PathVariable String definitionId,
+      @RequestParam(required = false) String nodeIdToCheck) {
+    return YdszResponse.success(
+        analyticsService.previewImpact(definitionId, nodeIdToCheck, TenantContextHolder.getTenantId()));
   }
 
   // ==================== 工作流国际化 (i18n) ====================

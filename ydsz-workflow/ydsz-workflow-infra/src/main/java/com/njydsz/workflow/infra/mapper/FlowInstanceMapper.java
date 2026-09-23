@@ -238,4 +238,41 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
    * @return 更新行数
    */
   int batchMarkError(@Param("instanceIds") List<String> instanceIds);
+
+  // ==================== F-06 异常告警检测 ====================
+
+  /**
+   * 查询卡住的运行实例（RUNNING 且 start_at 早于阈值）。
+   *
+   * @param tenantId 租户 ID
+   * @param threshold 开始时间阈值
+   * @return 卡住实例列表（instanceId / nodeCode / nodeName / stuckHours / createdAt）
+   */
+  List<Map<String, Object>> selectStuckInstances(
+      @Param("tenantId") String tenantId,
+      @Param("threshold") LocalDateTime threshold);
+
+  /**
+   * 统计超期未完成的运行实例数量。
+   *
+   * @param tenantId 租户 ID
+   * @param now 当前时间
+   * @return 超期实例数
+   */
+  long countOverdueInstances(
+      @Param("tenantId") String tenantId,
+      @Param("now") LocalDateTime now);
+
+  // ==================== F-04 变更影响预览 ====================
+
+  /**
+   * 查询指定流程定义下运行中的实例（含当前节点信息）。
+   *
+   * @param tenantId 租户 ID
+   * @param definitionId 流程定义 ID
+   * @return 运行中实例列表（instanceId / currentNodeCode / currentNodeName / businessId）
+   */
+  List<Map<String, Object>> selectRunningByDefinitionId(
+      @Param("tenantId") String tenantId,
+      @Param("definitionId") String definitionId);
 }

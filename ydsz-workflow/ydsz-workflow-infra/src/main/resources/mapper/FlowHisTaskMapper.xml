@@ -239,4 +239,39 @@
         GROUP BY flow_code
         ORDER BY totalCount DESC
     </select>
+
+    <!-- F-05: 瓶颈热力图 — 按节点编码 + 节点名称分组统计平均耗时和处理数量 -->
+    <select id="selectBottleneckStats" resultType="java.util.Map">
+        SELECT node_code                                                           AS "nodeCode",
+               MAX(node_name)                                                       AS "nodeName",
+               COUNT(*)                                                             AS "taskCount",
+               COALESCE(AVG(CASE WHEN duration_ms IS NOT NULL AND duration_ms > 0
+                   THEN duration_ms END), 0)                                        AS "avgDurationMs"
+        FROM ydsz_flow_his_task
+        WHERE status = 'ENABLED'
+          AND is_deleted = 0
+          AND task_status IN ('COMPLETED', 'REJECTED')
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND finish_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
+        GROUP BY node_code
+        ORDER BY avgDurationMs DESC
+    </select>
+
+    <!-- F-06: 按流程编码分组统计驳回率（异常告警检测用，计算时间窗口内的通过/驳回比） -->
+    <select id="selectRejectionByFlowCode" resultType="java.util.Map">
+        SELECT flow_code                                                           AS "flowCode",
+               SUM(CASE WHEN task_status IN ('COMPLETED', 'REJECTED') THEN 1 ELSE 0 END) AS "totalCount",
+               SUM(CASE WHEN task_status = 'REJECTED' THEN 1 ELSE 0 END)              AS "rejectedCount"
+        FROM ydsz_flow_his_task
+        WHERE status = 'ENABLED'
+          AND is_deleted = 0
+          AND task_status IN ('COMPLETED', 'REJECTED')
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND finish_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
+        GROUP BY flow_code
+        HAVING SUM(CASE WHEN task_status IN ('COMPLETED', 'REJECTED') THEN 1 ELSE 0 END) > 0
+        ORDER BY "totalCount" DESC
+    </select>
 </mapper>

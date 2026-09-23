@@ -20,7 +20,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @author ydsz-team
  * @since 26.09.01
  */
-@SpringBootApplication(scanBasePackages = "com.njydsz.nextwiki")
+@SpringBootApplication(scanBasePackages = {"com.njydsz.nextwiki", "com.njydsz.common"})
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.njydsz.nextwiki.api.client")
 public class NextwikiAppApplication {

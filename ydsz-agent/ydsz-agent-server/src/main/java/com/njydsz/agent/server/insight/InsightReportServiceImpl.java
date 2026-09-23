@@ -212,7 +212,8 @@ public class InsightReportServiceImpl implements InsightReportService {
       return Collections.emptyList();
     }
     try {
-      List<InsightSection> sections = YdszJson.fromJsonList(contentJson, InsightSection.class);
+      List<InsightSection> sections = YdszJson.fromJson(
+          contentJson, ArrayList.class, InsightSection.class);
       return sections != null ? sections : Collections.emptyList();
     } catch (Exception e) {
       log.warn("[Insight] 解析章节 JSON 失败，降级返回空列表: error={}", e.getMessage());

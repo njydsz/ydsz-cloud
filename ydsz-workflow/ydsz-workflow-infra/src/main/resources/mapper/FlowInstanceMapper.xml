@@ -325,4 +325,52 @@
         AND flow_status = 'RUNNING'
         AND is_deleted = 0
     </update>
+
+    <!-- F-06: 查询卡住的运行实例（RUNNING 且 start_at 早于阈值，用于 STUCK 告警） -->
+    <select id="selectStuckInstances" resultType="java.util.Map">
+        SELECT id                                   AS "instanceId",
+               flow_code                           AS "flowCode",
+               current_node_code                   AS "nodeCode",
+               current_node_name                   AS "nodeName",
+               start_at                            AS "createdAt",
+               TIMESTAMPDIFF(HOUR, start_at, CURRENT_TIMESTAMP) AS "stuckHours"
+        FROM ydsz_flow_instance
+        WHERE flow_status = 'RUNNING'
+          AND status = 'ENABLED'
+          AND is_deleted = 0
+          AND start_at &lt; #{threshold}
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+        ORDER BY start_at ASC
+    </select>
+
+    <!-- F-06: 统计超期未完成的运行实例数量（BACKLOG 告警用） -->
+    <select id="countOverdueInstances" resultType="long">
+        SELECT COUNT(*)
+        FROM ydsz_flow_instance
+        WHERE flow_status = 'RUNNING'
+          AND status = 'ENABLED'
+          AND is_deleted = 0
+          AND due_date IS NOT NULL
+          AND due_date &lt; #{now}
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+    </select>
+
+    <!-- F-04: 查询指定流程定义下运行中的实例及其当前节点（变更影响预览用） -->
+    <select id="selectRunningByDefinitionId" resultType="java.util.Map">
+        SELECT id                                   AS "instanceId",
+               flow_code                           AS "flowCode",
+               flow_name                           AS "flowName",
+               current_node_code                   AS "currentNodeCode",
+               current_node_name                   AS "currentNodeName",
+               business_type                       AS "businessType",
+               business_id                         AS "businessId",
+               start_at                            AS "createdAt"
+        FROM ydsz_flow_instance
+        WHERE flow_status = 'RUNNING'
+          AND status = 'ENABLED'
+          AND is_deleted = 0
+          AND definition_id = #{definitionId}
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+        ORDER BY start_at ASC
+    </select>
 </mapper>

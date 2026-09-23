@@ -134,11 +134,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
-        <!-- P0-2: 多租户隔离 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-tenant</artifactId>
-        </dependency>
         <!-- P2-3: 租户隔离缓存 key 构造器 -->
         <dependency>
             <groupId>com.njydsz</groupId>

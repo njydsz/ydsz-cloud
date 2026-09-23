@@ -20,6 +20,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.domain.gateway.NameServiceClient;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
+import com.njydsz.workflow.server.config.FlowAlertProperties;
 import com.njydsz.workflow.server.health.FlowHealthIndicator;
 import com.njydsz.workflow.server.message.FlowMessageListener;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
@@ -48,7 +49,7 @@ import com.njydsz.workflow.server.service.impl.integration.NameServiceClientAdap
     matchIfMissing = true)
 @EnableScheduling
 @EnableAsync
-@EnableConfigurationProperties(FlowProperties.class)
+@EnableConfigurationProperties({FlowProperties.class, FlowAlertProperties.class})
 public class FlowAutoConfiguration {
 
   /** 工作流健康检查 Bean */

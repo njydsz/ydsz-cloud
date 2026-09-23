@@ -39,16 +39,6 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-json</artifactId>
     </dependency>
-    <!-- P1-1: ydsz-common-sentry 提供统一监控/告警 -->
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-sentry</artifactId>
-    </dependency>
-    <!-- P1-3: ydsz-common-cache 提供 YdszCache 缓存抽象 -->
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-cache</artifactId>
-    </dependency>
     <!-- P1-3: ydsz-common-lock 提供 DistributedLocker 分布式锁 -->
     <dependency>
       <groupId>com.njydsz</groupId>

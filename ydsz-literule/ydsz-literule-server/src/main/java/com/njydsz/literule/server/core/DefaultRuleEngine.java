@@ -214,6 +214,8 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   @PostConstruct
   public void initRegistry() {
     ruleRegistry.setStatistics(statistics);
+    // P0-A1：注册引擎静态引用，供 ExpressionRule 等通过 getStaticAlphaCache() 访问 AlphaNode 缓存
+    ENGINE_REF.set(this);
   }
 
   /**
@@ -1212,6 +1214,54 @@ all.add(
    */
   public ModelInputRegistry getModelInputRegistry() {
     return modelInputRegistry;
+  }
+
+  /**
+   * P0-A1：获取当前线程评估期内的 AlphaNode 条件缓存
+   *
+   * <p>供 {@code ExpressionRule} 等调用方通过静态方法访问，无需传递引擎引用。未在 evaluate 调用内时返回 {@link ExprCache#EMPTY}。
+   *
+   * @return 当前 AlphaNode 缓存实例（不为 null）
+   */
+  public static com.njydsz.literule.server.engine.liteexpr.ExprCache getStaticAlphaCache() {
+    DefaultRuleEngine engine = ENGINE_REF.get();
+    if (engine == null || !engine.conditionCacheEnabled) {
+      return com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+    }
+    com.njydsz.literule.server.engine.liteexpr.ExprCache cache = engine.alphaCacheLocal.get();
+    return cache != null ? cache : com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+  }
+
+  /** 静态弱引用（仅供 getStaticAlphaCache 访问；实例 GC 后可回收） */
+  private static final java.util.concurrent.atomic.AtomicReference<DefaultRuleEngine> ENGINE_REF =
+      new java.util.concurrent.atomic.AtomicReference<>();
+
+  /**
+   * 设置是否启用 AlphaNode Phase 1 条件缓存
+   *
+   * @param conditionCacheEnabled 是否启用（默认 false）
+   */
+  public void setConditionCacheEnabled(boolean conditionCacheEnabled) {
+    this.conditionCacheEnabled = conditionCacheEnabled;
+  }
+
+  /** 当前是否启用条件缓存 */
+  public boolean isConditionCacheEnabled() {
+    return conditionCacheEnabled;
+  }
+
+  /**
+   * 设置条件缓存最大条目数
+   *
+   * @param alphaCacheMaxSize 最大条目数（<= 0 时重置为默认值 2048）
+   */
+  public void setAlphaCacheMaxSize(int alphaCacheMaxSize) {
+    this.alphaCacheMaxSize = alphaCacheMaxSize > 0 ? alphaCacheMaxSize : 2048;
+  }
+
+  /** 获取条件缓存最大条目数 */
+  public int getAlphaCacheMaxSize() {
+    return alphaCacheMaxSize;
   }
 
   /**

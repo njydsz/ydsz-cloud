@@ -72,11 +72,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
-        <!-- P0: 多租户隔离——RAG 向量/全文检索、Redis 记忆按 TenantContextHolder 解析租户 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-tenant</artifactId>
-        </dependency>
         <!-- OpenTelemetry API（optional：不在 classpath 时降级为 NoopAgentSpanExporter） -->
         <dependency>
             <groupId>io.opentelemetry</groupId>

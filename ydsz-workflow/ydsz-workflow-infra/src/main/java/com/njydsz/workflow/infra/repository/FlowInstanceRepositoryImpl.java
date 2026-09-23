@@ -310,4 +310,27 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
                 .orderByAsc(FlowInstance::getStartAt)
                 .last("LIMIT " + limit)));
   }
+
+  // ==================== F-06 异常告警检测 ====================
+
+  /** {@inheritDoc} */
+  @Override
+  public List<Map<String, Object>> selectStuckInstances(String tenantId, LocalDateTime threshold) {
+    return instanceMapper.selectStuckInstances(tenantId, threshold);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public long countOverdueInstances(String tenantId, LocalDateTime now) {
+    Long result = instanceMapper.countOverdueInstances(tenantId, now);
+    return result != null ? result : 0L;
+  }
+
+  // ==================== F-04 变更影响预览 ====================
+
+  /** {@inheritDoc} */
+  @Override
+  public List<Map<String, Object>> selectRunningByDefinitionId(String tenantId, String definitionId) {
+    return instanceMapper.selectRunningByDefinitionId(tenantId, definitionId);
+  }
 }

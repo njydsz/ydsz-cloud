@@ -7,11 +7,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.njydsz.common.thread.util.ExecutorUtils;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -72,13 +73,9 @@ public class SseEmitterService {
   /** 批次事件 ID 生成器（batchId → 递增计数器） */
   private final Map<String, AtomicLong> eventIdGenerators = new ConcurrentHashMap<>();
 
-  /** 心跳调度器（单线程，定期向所有活跃连接发送心跳） */
+  /** 心跳调度器（单线程，定期向所有活跃连接发送心跳）。统一走 ydsz-common-thread（YDIZ-CONC-001）。 */
   private final ScheduledExecutorService heartbeatScheduler =
-      Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread t = new Thread(r, "sse-heartbeat");
-        t.setDaemon(true);
-        return t;
-      });
+      ExecutorUtils.newScheduledThreadPool(1, "sse-heartbeat-");
 
   /** 服务启动标志（用于延迟启动心跳） */
   private volatile boolean started = false;
@@ -384,6 +381,16 @@ public class SseEmitterService {
           HEARTBEAT_INTERVAL_SECONDS,
           TimeUnit.SECONDS);
     }
+  }
+
+  /**
+   * 容器关闭时优雅停止心跳调度器。
+   *
+   * <p>心跳线程池经 ydsz-common-thread 创建为非守护线程， 必须在应用关闭时主动 shutdown，避免阻塞 JVM 退出。
+   */
+  @PreDestroy
+  public void shutdownHeartbeatScheduler() {
+    heartbeatScheduler.shutdownNow();
   }
 
   /**

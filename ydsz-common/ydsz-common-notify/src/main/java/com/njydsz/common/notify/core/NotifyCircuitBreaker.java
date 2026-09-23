@@ -29,6 +29,18 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  * <p>自 26.09.01 起，继承 {@link AbstractCircuitBreaker}（ydsz-common-safe）， 复用标准三态状态机，移除自研 AtomicReference
  * + CAS 状态管理代码。
  *
+ * <h3>熔断器选型指引（P1-5 收敛评审结论，勿重复建设）</h3>
+ *
+ * <p>全平台熔断能力统一收敛在 ydsz-common-safe（{@link AbstractCircuitBreaker} 状态机基类 +
+ * SafeCircuitBreaker/Resilience4j 引擎）。本类是<b>通知渠道域适配器</b>——采用连续失败计数语义
+ * （任一次成功即复位），与 SafeCircuitBreaker 的滑动窗口失败率语义不同，二者共享同一引擎而非重复造轮子：
+ *
+ * <ul>
+ *   <li>API 资源保护（滑动窗口失败率）→ safe 的 {@code SafeCircuitBreaker}
+ *   <li>通知渠道保护（连续失败计数）→ 本类（已复用 safe 基类）
+ *   <li>远程日志/LLM 调用韧性（Resilience4j 直连）→ sentry 的 {@code SentryCircuitBreaker}
+ * </ul>
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

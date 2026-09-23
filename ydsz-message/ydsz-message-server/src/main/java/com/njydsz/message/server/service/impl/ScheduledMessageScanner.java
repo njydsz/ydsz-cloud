@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
@@ -61,15 +61,10 @@ public class ScheduledMessageScanner {
   /** 单次扫描批量大小 */
   private static final int BATCH_SIZE = 200;
 
-  /** F2: 定时消息并发发送线程池（守护线程，核心数 = CPU 核数，最大 4）。 */
+  /** F2: 定时消息并发发送线程池（守护线程，核心数 = CPU 核数，最大 4）。统一走 ydsz-common-thread（YDIZ-CONC-001）。 */
   private final ExecutorService dispatcher =
-      Executors.newFixedThreadPool(
-          Math.min(Runtime.getRuntime().availableProcessors(), 4),
-          r -> {
-            Thread t = new Thread(r, "scheduled-dispatch");
-            t.setDaemon(true);
-            return t;
-          });
+      ExecutorUtils.newDaemonFixedThreadPool(
+          Math.min(Runtime.getRuntime().availableProcessors(), 4), "scheduled-dispatch-");
 
   private final MsgLogRepository msgLogRepository;
   private final ChannelRouter channelRouter;

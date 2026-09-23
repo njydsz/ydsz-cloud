@@ -27,6 +27,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>26.09.20 变更：由 {@code CircuitBreaker} 重命名为 {@code SentryCircuitBreaker}，避免与 Resilience4j
  * 同名冲突，消除底层 Resilience4j 引用的 FQN 依赖（满足 YDIZ-DDD-002 / YDIZ-CODE-001）。
  *
+ * <p><b>熔断器选型指引（P1-5 收敛评审结论）：</b>本类与 safe 的 {@code SafeCircuitBreaker}
+ * 同为 Resilience4j 引擎（共享底层实现，非重复建设），定位为远程日志发布（ELK/Loki）链路的
+ * 域内韧性适配器；与 YDIZ-RESILIENCE-001（LLM 外部调用必须走 Resilience4j 熔断）保持技术栈一致。
+ * API 资源保护请使用 safe 的 {@code SafeCircuitBreaker}；通知渠道保护使用 notify 的
+ * {@code NotifyCircuitBreaker}（safe 状态机基类派生）。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

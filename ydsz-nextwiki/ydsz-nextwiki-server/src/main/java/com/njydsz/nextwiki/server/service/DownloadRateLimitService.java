@@ -185,14 +185,17 @@ public class DownloadRateLimitService {
    *
    * @param sign 签名串
    * @param expireTime 签名中的过期时间戳（秒级）
-   * @return 还原出的 storageKey；过期、签名无效或已被使用返回 {@code null}
-   * @complexity O(1)（一次时间判断 + 一次 Redis 读取 + 一次删除）
-   * @security 一次性使用：校验成功后立即删除 Redis 记录，防止签名 URL 重放
-   * @note 无事务边界
+   * @return 还原出的 storageKey；过期、签名无效、已撤销或已被使用返回 {@code null}
+   * @complexity O(1)（一次时间判断 + 两次 Redis 读取 + 一次删除）
+   * @security P3-3: 签名一次性使用 + 支持主动撤销
    */
   public String verifySignedUrl(String sign, long expireTime) {
     if (System.currentTimeMillis() / 1000 > expireTime) {
       return null; // 已过期
+    }
+    // P3-3: 检查签名是否已被主动撤销
+    if (isSignRevoked(sign)) {
+      return null;
     }
     String signKey = "nextwiki:sign:" + sign;
     String storageKey = stringOps.get(signKey, String.class);
@@ -202,6 +205,48 @@ public class DownloadRateLimitService {
     // 验证后删除（一次性使用）
     stringOps.del(signKey);
     return storageKey;
+  }
+
+  /**
+   * P3-3: 主动撤销签名下载 URL（使已生成的签名立即失效）。
+   *
+   * <p>写入一条短期 Redis 撤销标记，TTL 与签名剩余有效期相同（最大不超过 24 小时）。
+   * 验证时发现撤销标记即拒绝访问，无需等待原始签名 TTL 过期。
+   *
+   * @param sign 签名串
+   * @param expireTime 签名中的原始过期时间戳（秒级）
+   */
+  public void revokeSign(String sign, long expireTime) {
+    try {
+      long now = System.currentTimeMillis() / 1000;
+      long ttl = expireTime - now;
+      if (ttl <= 0) {
+        return; // 已过期，无需撤销
+      }
+      // 最大 TTL 24 小时，避免超长残留
+      ttl = Math.min(ttl, 86400);
+      String revokeKey = "nextwiki:sign-revoke:" + sign;
+      stringOps.set(revokeKey, "1", Duration.ofSeconds(ttl));
+      log.info("[DownloadRateLimitService] 签名已撤销: sign={}", sign.substring(0, Math.min(8, sign.length())));
+    } catch (Exception e) {
+      log.warn("[DownloadRateLimitService] 撤销签名异常: err={}", e.getMessage(), e);
+    }
+  }
+
+  /**
+   * P3-3: 检查签名是否已被主动撤销。
+   *
+   * @param sign 签名串
+   * @return {@code true} 表示已撤销
+   */
+  public boolean isSignRevoked(String sign) {
+    try {
+      String revokeKey = "nextwiki:sign-revoke:" + sign;
+      return stringOps.hasKey(revokeKey);
+    } catch (Exception e) {
+      log.warn("[DownloadRateLimitService] 检查撤销状态异常: err={}", e.getMessage(), e);
+      return false;
+    }
   }
 
   /**

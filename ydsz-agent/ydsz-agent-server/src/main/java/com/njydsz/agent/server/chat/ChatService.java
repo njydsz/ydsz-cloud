@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.config.AgentProperties;
-import com.njydsz.agent.domain.config.properties.QuotaProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -17,7 +16,6 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.CostEstimate;
 import com.njydsz.agent.domain.model.MessageContent;
-import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
@@ -61,38 +59,29 @@ public class ChatService {
   /** LLM 客户端 */
   private final LlmClient llmClient;
 
-  /** 对话记忆 */
+  /** 对话记忆（用于保存/加载用户消息历史） */
   private final ConversationMemory memory;
 
   /** Agent 配置属性 */
   private final AgentProperties properties;
 
-  /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
+  /** 护栏编排服务 */
   private final GuardrailService guardrailService;
 
   /** Agent 指标采集 */
   private final AgentMetrics metrics;
 
-  /** Agent 运行态指标采集（P2 增强：活跃度、执行耗时、消息量等） */
+  /** Agent 运行态指标采集 */
   private final AgentRuntimeMetrics runtimeMetrics;
-
-  /** 成本分析服务 */
-  private final CostAnalysisService costAnalysisService;
 
   /** 链路记录器 */
   private final TraceRecorder traceRecorder;
 
-  /** Agent 事件统一发布器 */
-  private final AgentEventPublisher eventPublisher;
+  /** 对话后处理器（封装成本/配额/记忆/事件/护栏等 LLM 调用后副作用） */
+  private final ChatPostProcessor postProcessor;
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-
-  /** Token 预计算与成本核算 */
-  private final TokenCostCalculator tokenCostCalculator;
-
-  /** 租户配额管理服务 */
-  private final TenantQuotaService quotaService;
 
   public ChatService(
       LlmClient llmClient,
@@ -113,12 +102,18 @@ public class ChatService {
     this.guardrailService = guardrailService;
     this.metrics = metrics;
     this.runtimeMetrics = runtimeMetrics;
-    this.costAnalysisService = costAnalysisService;
     this.traceRecorder = traceRecorder;
-    this.eventPublisher = eventPublisher;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
-    this.tokenCostCalculator = tokenCostCalculator;
-    this.quotaService = quotaService;
+    // 将 5 个副作用依赖（含 memory/runtimeMetrics 副本）封装为 ChatPostProcessor
+    this.postProcessor = new ChatPostProcessor(
+        tokenCostCalculator,
+        costAnalysisService,
+        quotaService,
+        memory,
+        guardrailService,
+        runtimeMetrics,
+        eventPublisher,
+        properties);
   }
 
   // ======================== 公开 API ========================
@@ -506,7 +501,7 @@ public class ChatService {
   }
 
   /**
-   * 统一的成功后处理：成本核算 + 配额用量 + 输出护栏 + 记忆保存 + 指标 + 链路 + 事件。
+   * 统一的成功后处理：委托给 {@link ChatPostProcessor} 完成成本核算 + 配额用量 + 输出护栏 + 记忆保存 + 指标 + 链路 + 事件。
    *
    * @param response 同步模式的完整响应（流式模式传 null）
    * @param convId 对话 ID
@@ -517,38 +512,17 @@ public class ChatService {
       String convId, String traceId, String metricsLabel,
       String model, String provider, String executionId, String tenantId,
       ChatRequest request, long duration, String eventType) {
-    // P0: 调用后精确成本核算
-    CostEstimate actualCost = tokenCostCalculator.calculateActual(usage, model);
-    if (usage != null && !usage.equals(TokenUsage.zero()) && costAnalysisService != null) {
-      costAnalysisService.recordUsage(convId, model, usage);
-    }
-    // P0: 配额用量记录 — 累加实际用量
-    if (properties.getQuota().isEnabled()) {
-      quotaService.recordUsage(tenantId, actualCost);
-    }
-    log.info("{} 成本核算: convId={}, actualTokens={}, actualCostUsd={}",
-        logPrefix, convId, actualCost.getActualTotalTokens(), actualCost.getActualCostUsd());
+    // 链路追踪
     traceRecorder.recordStep(traceId, "LLM_CALL",
         request.isStream() ? "Stream LLM call" : "Chat LLM call",
         request, response != null ? response : rawContent, duration);
-
-    String output = guardrailService.applyOutputGuardrails(rawContent);
-    ChatMessage assistantMsg = ChatMessage.assistant(output, convId, usage);
-    memory.save(convId, assistantMsg);
-    runtimeMetrics.recordMessage("assistant");
-    runtimeMetrics.recordExecution(metricsLabel, true, duration);
-
     traceRecorder.endTrace(traceId, "SUCCESS");
-    eventPublisher.publishExecutionCompleted(
-        executionId, tenantId, eventType, model, duration,
-        actualCost.getActualTotalTokens(), actualCost.getActualCostUsd());
 
-    if (response != null) {
-      return new ChatResponse(
-          response.getId(), response.getModel(), assistantMsg, usage,
-          response.getFinishReason(), List.of(), actualCost);
-    }
-    return null;
+    // 委托给 ChatPostProcessor 处理成本/配额/记忆/指标/事件/护栏等操作
+    return postProcessor.finalizeSuccess(
+        logPrefix, usage, rawContent, response, convId, traceId,
+        metricsLabel, model, provider, executionId, tenantId,
+        request, duration, eventType);
   }
 
   /**

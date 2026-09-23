@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.agent.domain.AgentConstants;
 import com.njydsz.agent.domain.agent.AgentDag;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
@@ -25,12 +26,17 @@ import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.agent.DagCheckpoint;
 import com.njydsz.agent.domain.agent.DagProgressEvent;
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.DagCheckpointStore;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -65,39 +71,62 @@ import com.njydsz.common.util.id.IdGenerator;
  * @since 26.09.01
  */
 @Slf4j
-public class DagOrchestrationExecutor implements AgentExecutor {
+public class DagOrchestrationExecutor extends AbstractAgentExecutor {
 
   /** variables 中携带 DAG YAML 定义时使用的键 */
   private static final String VARIABLE_DSL_KEY = "dsl";
 
-  private final LlmClient llmClient;
-  private final AgentProperties properties;
+  /** Agent 工厂 */
   private final AgentFactory agentFactory;
+
+  /** YAML DSL 解析器 */
   private final DagDslParser dagDslParser;
+
+  /** 外部线程池（由 common-thread 管理） */
   private final ExecutorService executor;
 
   /** 检查点存储（可选依赖，Redis 不可用时降级） */
   private final DagCheckpointStore checkpointStore;
 
   /**
-   * 构造 DAG 执行器（强制使用外部线程池）
+   * 构造 DAG 执行器（继承 AbstractAgentExecutor 获取 trace/metrics/cost/guardrail/middleware 能力）
    *
    * @param llmClient LLM 客户端
+   * @param memory 对话记忆（DAG 编排器本身不使用，传递给基类保持接口统一）
    * @param properties Agent 配置
+   * @param traceRecorder 链路追踪记录器
+   * @param agentMetrics Agent 监控指标采集器
+   * @param costAnalysisService 成本分析服务
+   * @param guardrailService 护栏编排服务
+   * @param promptTemplateProvider Prompt 模板提供者
    * @param agentFactory Agent 工厂
-   * @param dagDslParser YAML DSL 解析器（AgentExecutor 适配入口使用）
+   * @param dagDslParser YAML DSL 解析器
    * @param executor 外部线程池（由 common-thread 管理）
    * @param checkpointStore 检查点存储（可为 null，null 时禁用断点续跑）
    */
   public DagOrchestrationExecutor(
       LlmClient llmClient,
+      ConversationMemory memory,
       AgentProperties properties,
+      TraceRecorder traceRecorder,
+      AgentMetrics agentMetrics,
+      CostAnalysisService costAnalysisService,
+      GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider,
       AgentFactory agentFactory,
       DagDslParser dagDslParser,
       ExecutorService executor,
       DagCheckpointStore checkpointStore) {
-    this.llmClient = llmClient;
-    this.properties = properties;
+    super(
+        llmClient,
+        memory,
+        properties,
+        traceRecorder,
+        agentMetrics,
+        costAnalysisService,
+        guardrailService,
+        promptTemplateProvider,
+        null);
     this.agentFactory = agentFactory;
     this.dagDslParser = dagDslParser;
     this.executor = executor;
