@@ -9,6 +9,13 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
@@ -66,4 +73,28 @@ public class GenColumnMeta extends MpBaseIdEntity<Long> {
   private String enumValues;
   /** 扩展配置 JSON。 */
   private String extraConfig;
+
+  // -- 非持久化方法（模板渲染辅助） --
+
+  /**
+   * 将 {@link #enumValues} 字符串解析为键值对列表供 Velocity 模板遍历。
+   *
+   * <p>解析格式：{@code "0=禁用,1=启用"} → {@code [(0,禁用),(1,启用)]}。
+   * 未配置枚举值时返回空列表。
+   *
+   * @return 枚举值键值对列表（code → label），永不为 null
+   */
+  public List<Map.Entry<String, String>> getEnumValueList() {
+    if (enumValues == null || enumValues.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return Stream.of(enumValues.split(","))
+        .map(String::trim)
+        .filter(part -> part.contains("="))
+        .map(part -> {
+          String[] kv = part.split("=", 2);
+          return new AbstractMap.SimpleEntry<>(kv[0].trim(), kv[1].trim());
+        })
+        .collect(Collectors.toList());
+  }
 }
