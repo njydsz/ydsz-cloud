@@ -315,4 +315,76 @@ public interface ConfigService {
       return defaultValue;
     }
   }
+
+  /**
+   * 查询当前用户可见的远程特性开关映射（前端 FeatureFlagsManager 数据源）。
+   *
+   * <p>读取全部公开配置并按约定过滤出开关项，键为开关名（剔除 {@code feature.} 前缀），
+   * 值为按内容解析后的布尔/数值/字符串。
+   *
+   * <p>约定：满足以下任一条件的公开配置视为特性开关：
+   *
+   * <ul>
+   *   <li>配置分组 {@code configGroup == "feature-flag"}
+   *   <li>配置键以 {@code feature.} 为前缀（返回时剔除前缀作为开关名）
+   * </ul>
+   *
+   * @return 开关名 → 开关值 的映射；无开关配置时返回空 Map
+   */
+  default Map<String, Object> getFeatureFlags() {
+    Map<String, Object> flags = new java.util.HashMap<>(16);
+    for (ConfigVO config : listPublicConfigs()) {
+      String flagKey = extractFeatureFlagKey(config);
+      if (flagKey == null) {
+        continue;
+      }
+      flags.put(flagKey, parseFeatureFlagValue(config.getConfigValue()));
+    }
+    return flags;
+  }
+
+  /**
+   * 提取特性开关键名；非开关配置返回 null。
+   *
+   * @param config 公开配置项
+   * @return 开关名；非开关配置返回 null
+   */
+  private static String extractFeatureFlagKey(ConfigVO config) {
+    if (config == null || config.getConfigKey() == null) {
+      return null;
+    }
+    if ("feature-flag".equals(config.getConfigGroup())) {
+      return config.getConfigKey();
+    }
+    if (config.getConfigKey().startsWith("feature.")) {
+      return config.getConfigKey().substring("feature.".length());
+    }
+    return null;
+  }
+
+  /**
+   * 按内容解析开关值：布尔 → 整数 → 小数 → 字符串。
+   *
+   * @param raw 配置原始值
+   * @return 解析后的开关值；原始值为空时返回空字符串
+   */
+  private static Object parseFeatureFlagValue(String raw) {
+    if (raw == null || raw.isBlank()) {
+      return "";
+    }
+    String value = raw.trim();
+    if ("true".equalsIgnoreCase(value)) {
+      return Boolean.TRUE;
+    }
+    if ("false".equalsIgnoreCase(value)) {
+      return Boolean.FALSE;
+    }
+    if (value.matches("-?\\d+")) {
+      return Long.parseLong(value);
+    }
+    if (value.matches("-?\\d+\\.\\d+")) {
+      return Double.parseDouble(value);
+    }
+    return value;
+  }
 }

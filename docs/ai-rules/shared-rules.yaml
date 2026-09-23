@@ -16,8 +16,8 @@ meta:
   version: "26.09.19"
   source: "docs/云顶编码规范.md v1.0.10"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-23（全局引用分析优化：YDIZ-CONC-001 增强 ArchUnit 约束；新增 YDIZ-EXCEPTION-001 全局异常处理器继承规范；新增 YDIZ-AUDIT-001 审计日志统一写入规范；total_rules 68 → 70）"
-  total_rules: 70
+  last_updated: "2026-09-23（新增 YDIZ-OUTBOX-001 Outbox 标准化规则；明确 message 自建 OutboxEventScheduler 迁移过渡期至 V26.10.x；total_rules 70 → 71）"
+  total_rules: 71
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -1180,6 +1180,56 @@ rules:
       // ✅ 通过统一审计通道写入
       AuditContext.record("workflow", "create_flow", flowId);
     source: "编码规范 §29（审计日志规范）"
+
+  - id: "YDIZ-OUTBOX-001"
+    category: "event"
+    severity: "P1"
+    title: "事务性 Outbox 必须基于 ydzs-common-event 实现"
+    description: |
+      禁止业务模块自建 OutboxEvent 实体、OutboxRepository、OutboxScheduler 等 Outbox 相关组件。
+      必须复用 ydzs-common-event 提供的标准化能力：
+
+      - 写入：OutboxService.appendToOutbox(DomainEvent) / appendAllToOutbox(List<DomainEvent>)
+      - 投递：OutboxProcessor（推拉结合 + 逐条 CAS claim + 指数退避重试 + Micrometer 指标）
+      - 运维：OutboxAdminController（分页查询 / 状态重置 / 批量修复）
+      - 归档：OutboxArchiveRepository（定时清理已投递消息）
+
+      已存在自建实现的模块（ydsz-message，包含 OutboxEvent /
+      OutboxEventEntity / OutboxEventRepository / OutboxEventScheduler 等）须在 V26.10.x 版本前完成迁移。
+      迁移期间新增代码必须使用 common-event，不得在自建实现上继续扩展。
+
+      **申请豁免条件**（须同时满足）：
+      1. 提交 DDL 差异对比（自建表 vs ydsz_com_outbox）
+      2. 提交数据迁移方案（停机窗口 / 双写过渡 / 回滚预案）
+      3. 技术负责人审批通过
+    pattern: |
+      以下情形构成违规：
+      1. 业务模块新建 OutboxEvent / OutboxMessage / Outbox 实体
+      2. 业务模块自建 OutboxRepository / OutboxMapper
+      3. 业务模块自建 OutboxScheduler / OutboxProcessor 轮询组件
+      4. 在已标记迁移范围内的模块（ydsz-message）继续扩展自建 Outbox
+    fix: |
+      1. 引入 ydzs-common-event 依赖
+      2. 使用 OutboxService.appendToOutbox() 替代自建写入逻辑
+      3. 删除自建 OutboxEvent 实体、Repository、Scheduler
+      4. 迁移数据从自建表至 ydsz_com_outbox（或使用 OutboxRepository 指定表名）
+      5. 复用 OutboxAdminController 运维端点
+    example_bad: |
+      // ❌ 业务模块自建 Outbox 组件
+      @Data
+      @TableName("ydsz_msg_outbox")
+      public class OutboxEventEntity { ... }
+
+      @Component
+      public class OutboxEventScheduler { ... }
+    example_good: |
+      // ✅ 复用 common-event 标准 Outbox
+      outboxService.appendToOutbox(DomainEvent.builder()
+          .aggregateType("Message").aggregateId(msgId)
+          .eventType("MessageSent").build());
+
+      // Processor、投递、运维均由 OutboxProcessor / OutboxAdminController 自动完成
+    source: "编码规范 §28（领域事件规范）"
 
 # ============================================
 # 十八、分布式事务规范（4 条）
