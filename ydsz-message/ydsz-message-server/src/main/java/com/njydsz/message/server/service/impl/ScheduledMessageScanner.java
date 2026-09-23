@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -135,13 +137,25 @@ public class ScheduledMessageScanner {
     messageMetrics.recordScheduledScan((int) due.size(), (int) success);
     log.info("[ScheduledScanner] 扫描完成: total={} success={} failed={}", due.size(), success, failed);
   }
-
   /**
-   * 发送单条定时消息：状态流转 SCHEDULED → dispatch → SUCCESS/RETRY。
+   * F2: 容器关闭时优雅停止定时消息分发线程池。
    *
-   * @param logDO 消息日志实体
+   * <p>触发 {@code shutdown()} 停止接收新任务，并等待已提交任务完成；超时后强制退出。
    */
-  private void sendScheduledMessage(MsgLogVO logDO) {
+  @EventListener(ContextClosedEvent.class)
+  public void onContextClosed() {
+    dispatcher.shutdown();
+    try {
+      if (!dispatcher.awaitTermination(10, TimeUnit.SECONDS)) {
+        log.warn("[ScheduledScanner] 线程池未在 10s 内完成关闭,执行强制 shutdown");
+        dispatcher.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      dispatcher.shutdownNow();
+    }
+  }
+}
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
       long start = System.currentTimeMillis();
       try {

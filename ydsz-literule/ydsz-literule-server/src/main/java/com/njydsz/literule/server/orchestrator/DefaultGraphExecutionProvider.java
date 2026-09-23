@@ -61,6 +61,16 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
   private final Map<String, RuleChainGraph> graphRegistry = new ConcurrentHashMap<>();
 
   /**
+   * P1-F4（26.09.23）：Rule 编码 → Rule 实例的 volatile 缓存，避免每次节点解析都线性扫描 getRules()
+   *
+   * <p>在首次解析或规则引擎注册表变化时惰性重建。使用 volatile 保证多线程可见性。
+   */
+  private volatile Map<String, Rule> ruleCodeCache;
+
+  /** 上一次重建缓存时的规则数（用于检测规则集变化） */
+  private volatile int lastRulesCount = -1;
+
+  /**
    * 构造默认画布执行提供者
    *
    * @param ruleEngine 规则引擎
@@ -188,20 +198,49 @@ public class DefaultGraphExecutionProvider implements GraphExecutionProvider {
     return graphRegistry.get(ruleCode);
   }
 
-  /** 按规则编码解析 Rule 实例（从引擎注册表查找） */
+  /** 按规则编码解析 Rule 实例（P1-F4：通过缓存查找，O(1) 替代 O(N*R) 线性扫描） */
   private Rule resolveRule(String code) {
     if (code == null || ruleEngine == null) {
       return null;
     }
     try {
-      for (Rule rule : ruleEngine.getRules()) {
-        if (code.equals(rule.getCode())) {
-          return rule;
-        }
-      }
+      Map<String, Rule> cache = getRuleCache();
+      return cache.get(code);
     } catch (Exception e) {
       log.debug("[LiteRule-Graph] 规则解析异常: code={}, err={}", code, e.getMessage());
     }
     return null;
+  }
+
+  /**
+   * P1-F4：获取或重建规则编码缓存
+   *
+   * <p>通过对比当前规则数与上次缓存时的规则数检测变化。如果规则引擎发生热加载（规则数变化），触发缓存重建。
+   */
+  private Map<String, Rule> getRuleCache() {
+    Map<String, Rule> cache = ruleCodeCache;
+    if (cache != null && ruleEngine != null && ruleEngine.getRules().size() == lastRulesCount) {
+      return cache;
+    }
+    return rebuildCache();
+  }
+
+  /** 重建规则编码缓存（synchronized 防止并发重建） */
+  private synchronized Map<String, Rule> rebuildCache() {
+    // 双重检查（其他线程可能已重建）
+    if (ruleCodeCache != null && ruleEngine != null
+        && ruleEngine.getRules().size() == lastRulesCount) {
+      return ruleCodeCache;
+    }
+    List<Rule> rules = ruleEngine.getRules();
+    Map<String, Rule> newCache = new ConcurrentHashMap<>(Math.max(16, rules.size() * 2));
+    for (Rule rule : rules) {
+      if (rule.getCode() != null) {
+        newCache.put(rule.getCode(), rule);
+      }
+    }
+    ruleCodeCache = newCache;
+    lastRulesCount = rules.size();
+    return newCache;
   }
 }

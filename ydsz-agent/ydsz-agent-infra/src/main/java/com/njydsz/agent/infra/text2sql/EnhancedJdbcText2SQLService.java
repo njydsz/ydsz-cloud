@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.Text2SQLService;
+import com.njydsz.agent.domain.json.JsonParsingUtils;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
@@ -289,37 +290,10 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
       String reasoning = "可行性评估默认通过";
       if (content != null && !content.isBlank()) {
         try {
-          int scoreStart = content.indexOf("\"score\"");
-          if (scoreStart >= 0) {
-            int colonIdx = content.indexOf(':', scoreStart);
-            int commaIdx = content.indexOf(',', colonIdx);
-            int braceIdx = content.indexOf('}', colonIdx);
-            int endIdx;
-            if (commaIdx > 0) {
-              endIdx = commaIdx;
-            } else if (braceIdx > 0) {
-              endIdx = braceIdx;
-            } else {
-              endIdx = content.length();
-            }
-            if (colonIdx > 0 && endIdx > colonIdx) {
-              score =
-                  Double.parseDouble(content.substring(colonIdx + 1, endIdx).trim());
-              score = Math.max(0.0, Math.min(1.0, score));
-            }
-          }
-          int reasonStart = content.indexOf("\"reasoning\"");
-          if (reasonStart > 0) {
-            int reasonColon = content.indexOf(':', reasonStart);
-            if (reasonColon > 0) {
-              int reasonEnd = content.indexOf('}', reasonColon);
-              if (reasonEnd > reasonColon) {
-                reasoning =
-                    content.substring(reasonColon + 1, reasonEnd).trim()
-                        .replaceAll("^\"|\"$", "");
-              }
-            }
-          }
+          String json = JsonParsingUtils.stripMarkdownCodeBlock(content);
+          score = JsonParsingUtils.extractDoubleField(json, "score", DEFAULT_MATCH_SCORE);
+          score = Math.max(0.0, Math.min(1.0, score));
+          reasoning = JsonParsingUtils.extractStringField(json, "reasoning", reasoning);
         } catch (NumberFormatException e) {
           log.warn("[Text2SQL:Feasibility] 解析分数失败，使用默认值: {}", e.getMessage());
         }

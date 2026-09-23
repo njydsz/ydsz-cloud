@@ -81,7 +81,8 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  *   <li><b>读写分离</b>：归档后查询历史数据走历史表（{@code ydsz_flow_his_instance}）， 查询活跃数据走主表（{@code
  *       ydsz_flow_instance}），互不影响
  *   <li><b>外键无依赖</b>：归档表与主表<b>无外键关联</b>（避免循环依赖）， 关联关系通过应用层维护
- *   <li><b>断点续传</b>：归档进度持久化到 {@code ydsz_flow_archive_log}， 异常中断后可从上次断点继续
+ * <p><b>断点续传</b>：基于 {@code ydsz_flow_archive_cursor} 游标持久化（{@code archive_type=INSTANCE}），
+ * 记录上次归档的最大 end_at，异常中断后可从上次断点继续
  *   <li><b>合规保留</b>：合规要求保留的历史数据<b>不清理</b>， 通过 {@code legalHold} 字段标记
  *   <li><b>冷热分离</b>：归档表可迁移至冷库（如 OSS / 冷数据存储）， 进一步降低存储成本
  * </ul>
