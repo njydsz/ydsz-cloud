@@ -322,13 +322,13 @@ public class DagOrchestrationExecutor extends AbstractAgentExecutor {
   }
 
   /** 默认节点超时（秒），当节点未配置 timeoutSeconds 时使用（引用 AgentConstants） */
-  private static final int DEFAULT_NODE_TIMEOUT_SECONDS = com.njydsz.agent.domain.AgentConstants.DAG_NODE_TIMEOUT_SECONDS;
+  private static final int DEFAULT_NODE_TIMEOUT_SECONDS = AgentConstants.DAG_NODE_TIMEOUT_SECONDS;
 
   /** 整图总超时（秒，5 分钟）：任一节点超时即视为编排失败，避免长尾任务长期占用线程（引用 AgentConstants） */
-  private static final int DAG_TOTAL_TIMEOUT_SECONDS = com.njydsz.agent.domain.AgentConstants.DAG_TOTAL_TIMEOUT_SECONDS;
+  private static final int DAG_TOTAL_TIMEOUT_SECONDS = AgentConstants.DAG_TOTAL_TIMEOUT_SECONDS;
 
   /** 节点子 Agent 默认最大迭代次数（引用 AgentConstants.DEFAULT_MAX_ITERATIONS） */
-  private static final int DEFAULT_NODE_MAX_ITERATIONS = com.njydsz.agent.domain.AgentConstants.DEFAULT_MAX_ITERATIONS;
+  private static final int DEFAULT_NODE_MAX_ITERATIONS = AgentConstants.DEFAULT_MAX_ITERATIONS;
 
   /** 执行单个节点的业务逻辑 */
   private void executeNodeLogic(
@@ -425,7 +425,7 @@ public class DagOrchestrationExecutor extends AbstractAgentExecutor {
    * @return 循环体节点 ID 集合
    */
   private static Set<String> collectLoopBodyNodeIds(AgentDag dag) {
-    Set<String> loopBodyNodeIds = new HashSet<>(com.njydsz.agent.domain.AgentConstants.COLLECTION_CAPACITY);
+    Set<String> loopBodyNodeIds = new HashSet<>(AgentConstants.COLLECTION_CAPACITY);
     for (AgentDag.Node node : dag.getNodes().values()) {
       String nodeType = (String) node.getConfig().getOrDefault("nodeType", "AGENT");
       if ("LOOP".equalsIgnoreCase(nodeType)) {
@@ -672,8 +672,8 @@ public class DagOrchestrationExecutor extends AbstractAgentExecutor {
    */
   private List<String> topologicalSort(AgentDag dag) {
     List<String> result = new ArrayList<>(dag.getNodes().size());
-    Set<String> visited = new HashSet<>(com.njydsz.agent.domain.AgentConstants.COLLECTION_CAPACITY);
-    Set<String> visiting = new HashSet<>(com.njydsz.agent.domain.AgentConstants.COLLECTION_CAPACITY);
+    Set<String> visited = new HashSet<>(AgentConstants.COLLECTION_CAPACITY);
+    Set<String> visiting = new HashSet<>(AgentConstants.COLLECTION_CAPACITY);
     for (String nodeId : dag.getNodes().keySet()) {
       topologicalVisit(dag, nodeId, visited, visiting, result);
     }

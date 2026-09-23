@@ -3,7 +3,7 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -108,8 +108,8 @@ public class AppInfoServiceImpl implements AppInfoService {
   /** 系统监控指标采集器 */
   private final SystemMetrics metrics;
 
-  /** BCrypt 密码编码器，用于 appSecret 加密存储（strength 默认 10） */
-  private final BCryptPasswordEncoder passwordEncoder;
+  /** 密码编码器，用于 appSecret 加密存储（平台统一 BCrypt Bean，见 PasswordEncoderAutoConfiguration） */
+  private final PasswordEncoder passwordEncoder;
 
   /** Redis String 操作组件（用于校验缓存 + 失败锁定） */
   private final RedisStringOps redisStringOps;

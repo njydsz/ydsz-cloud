@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
@@ -22,8 +21,8 @@ import com.njydsz.system.server.health.SystemHealthIndicator;
  * <ul>
  *   <li>注册 {@link SystemProperties}（{@code @ConfigurationProperties(prefix = "ydsz.system")}）， 通过
  *       {@code @EnableConfigurationProperties} 激活
- *   <li>注册 {@link BCryptPasswordEncoder} Bean，强度由 {@code ydsz.system.app.bcrypt-strength} 配置（合法范围
- *       4-31，默认 10）
+ *   <li>BCrypt {@code PasswordEncoder} 由 ydsz-common-auth 的 PasswordEncoderAutoConfiguration
+ *       统一提供（P1-7 收敛，强度经 {@code ydsz.auth.bcrypt-strength} 配置），本模块不再重复注册
  * </ul>
  *
  * <p><b>BCrypt 强度建议：</b>
@@ -44,34 +43,6 @@ import com.njydsz.system.server.health.SystemHealthIndicator;
 @Configuration
 @EnableConfigurationProperties(SystemProperties.class)
 public class SystemConfiguration {
-
-  /** BCrypt 加密强度下限（4） */
-  private static final int BCRYPT_MIN_STRENGTH = 4;
-
-  /** BCrypt 加密强度上限（31） */
-  private static final int BCRYPT_MAX_STRENGTH = 31;
-
-  /** BCrypt 默认加密强度（10） */
-  private static final int BCRYPT_DEFAULT_STRENGTH = 10;
-
-  /**
-   * BCrypt 密码编码器 Bean
-   *
-   * <p>用于 {@link com.njydsz.system.server.service.AppInfoService} 加密 {@code appSecret} 字段。 BCrypt
-   * 是<b>单向</b>哈希函数，不可逆；同一明文每次加密结果不同（盐值随机）。
-   *
-   * @param properties 系统配置
-   * @return {@link BCryptPasswordEncoder} 实例，强度取自 {@code ydsz.system.app.bcrypt-strength}（合法
-   *     4-31，越界回退 10）
-   */
-  @Bean
-  public BCryptPasswordEncoder bCryptPasswordEncoder(SystemProperties properties) {
-    int strength = properties.getApp().getBcryptStrength();
-    if (strength < BCRYPT_MIN_STRENGTH || strength > BCRYPT_MAX_STRENGTH) {
-      strength = BCRYPT_DEFAULT_STRENGTH;
-    }
-    return new BCryptPasswordEncoder(strength);
-  }
 
   /** P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component） */
   @Bean

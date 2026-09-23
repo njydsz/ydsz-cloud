@@ -1,2 +1,3 @@
 com.njydsz.common.auth.config.AuthConfiguration
 com.njydsz.common.auth.config.AuthFilterConfiguration
+com.njydsz.common.auth.config.PasswordEncoderAutoConfiguration

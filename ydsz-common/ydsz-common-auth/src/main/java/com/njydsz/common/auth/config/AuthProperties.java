@@ -42,6 +42,14 @@ public class AuthProperties {
   private boolean wildcardEnabled = true;
 
   /**
+   * BCrypt 加密强度（4-31，越界回退默认 10），默认 10。
+   *
+   * <p>平台统一 BCrypt 密码编码器（{@code PasswordEncoderAutoConfiguration}）读取本值。
+   * 强度越大单次加密越慢、暴力破解越难；生产环境推荐 10-12。
+   */
+  private int bcryptStrength = 10;
+
+  /**
    * 角色菜单/按钮权限的 Redis Key 模板。
    *
    * <p>占位符 {@code {}} 会被替换为角色编码，例如： {@code ydsz-auth:role-menu:admin}
