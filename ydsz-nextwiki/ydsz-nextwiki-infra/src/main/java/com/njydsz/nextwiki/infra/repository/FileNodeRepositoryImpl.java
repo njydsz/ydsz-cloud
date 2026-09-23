@@ -18,8 +18,9 @@ import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
+import com.njyzsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
+import com.njydsz.nextwiki.domain.dto.FileNodeSortItemDTO;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.query.FileNodeQuery;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
@@ -521,14 +522,36 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
    * @param limit 每页条数
    * @return 分页文件节点视图列表
    */
+  /**
+   * P0-4: 分页查询当前租户下全部未删除节点（修复多租户安全隔离缺陷）。
+   *
+   * @param offset 分页偏移量
+   * @param limit 每页条数
+   * @param tenantId 租户 ID（必填）
+   * @return 分页文件节点视图列表
+   */
   @Override
-  public PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit) {
+  public PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit, String tenantId) {
     Page<FileNode> pageParam = new Page<>(offset / limit + 1, limit);
-    IPage<FileNode> result = fileNodeMapper.selectAllWithPage(pageParam);
+    IPage<FileNode> result = fileNodeMapper.selectAllWithPage(pageParam, tenantId);
     List<FileNodeVO> vos = mapper.fileNodeListToVO(result.getRecords());
     Page<FileNodeVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     voPage.setRecords(vos);
     return PageResponses.success(voPage);
+  }
+
+  /**
+   * P0-3: 批量更新节点排序值（CASE WHEN 单条 SQL，替代循环单条 UPDATE）。
+   *
+   * @param items 排序条目列表
+   * @return 受影响行数
+   */
+  @Override
+  public int batchUpdateSort(List<FileNodeSortItemDTO> items) {
+    if (items == null || items.isEmpty()) {
+      return 0;
+    }
+    return fileNodeMapper.batchUpdateSort(items);
   }
 }
 

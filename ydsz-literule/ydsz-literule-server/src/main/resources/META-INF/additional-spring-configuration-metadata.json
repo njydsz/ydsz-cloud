@@ -141,7 +141,7 @@
     {
       "name": "ydsz.literule.cache.l2-enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用 Redis L2（需 Redisson）。",
+      "description": "是否启用 Redis L2（需 Spring Data Redis）。"
       "defaultValue": true
     },
     {

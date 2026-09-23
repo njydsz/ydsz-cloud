@@ -70,13 +70,15 @@ public class RuleChain {
    * 生产环境应配置 common-thread 统一管理。
    *
    * <p>P1-T4：提供 {@link #shutdownFallbackExecutor()} 方法用于优雅关闭， 建议在应用关闭时（如 @PreDestroy 方法中）调用。
+   *
+   * <p>P0-A2（26.09.23）：keepAliveTime 从 0ms 调整为 60s，避免 WHEN 链突发流量下线程反复创建销毁的抖动问题。
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava - 降级兜底，common-thread 未配置时使用
   private static final ExecutorService WHEN_FALLBACK_EXECUTOR =
       ExecutorUtils.builder()
           .corePoolSize(Math.max(2, Runtime.getRuntime().availableProcessors()))
           .maxPoolSize(Math.max(2, Runtime.getRuntime().availableProcessors()))
-          .keepAliveTime(0L, TimeUnit.MILLISECONDS)
+          .keepAliveTime(60L, TimeUnit.SECONDS)
           .queueCapacity(QUEUE_CAPACITY)
           .threadNamePrefix("literule-when-fallback")
           .daemon(true)

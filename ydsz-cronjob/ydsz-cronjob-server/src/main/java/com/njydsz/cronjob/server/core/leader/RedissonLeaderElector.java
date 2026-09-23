@@ -51,7 +51,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@ConditionalOnClass(name = "org.redisson.api.RedissonClient")
+@ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
 @ConditionalOnProperty(prefix = "ydsz.cronjob.leader", name = "enabled", havingValue = "true")
 public class RedissonLeaderElector implements LeaderElector {
 

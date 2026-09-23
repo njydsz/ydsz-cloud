@@ -510,9 +510,9 @@ public class LiteRuleProperties {
     private int l2TtlSeconds = DEFAULT_L2_TTL_SECONDS;
 
     /**
-     * 是否启用 L2（需 Redisson 在 classpath）
+     * 是否启用 L2（需 Spring Data Redis 在 classpath）
      *
-     * <p>true：RedissonClient 可用时启用 L2； false：强制仅用 L1，即便 RedissonClient 存在也不使用。
+     * <p>true：RedisStringOps 可用时启用 L2； false：强制仅用 L1。
      */
     private boolean l2Enabled = true;
   }

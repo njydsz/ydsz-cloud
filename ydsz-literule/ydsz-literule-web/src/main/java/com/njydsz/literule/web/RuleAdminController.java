@@ -242,30 +242,17 @@ public class RuleAdminController {
   @GetMapping("/{ruleCode}/version-diff")
   public YdszResponse<RuleVersionDiffVO> versionDiff(
       @PathVariable String ruleCode, @RequestParam int oldVersion, @RequestParam int newVersion) {
-    List<RuleVersionVO> versions = ruleAdminService.listVersions(ruleCode);
-    RuleVersionVO oldV =
-        versions.stream().filter(v -> v.getVersion() == oldVersion).findFirst().orElse(null);
-    RuleVersionVO newV =
-        versions.stream().filter(v -> v.getVersion() == newVersion).findFirst().orElse(null);
-
-    if (oldV == null || newV == null) {
-      return YdszResponse.error(
-          LiteruleExceptionCode.RULE_VERSION_NOT_FOUND,
-          "版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
-    }
-
+    // P0-X3：使用按需查询 Repository，避免加载所有版本到内存
     try {
-      RuleDefinitionDTO oldDef = YdszJson.fromJson(oldV.getDefinitionJson(), RuleDefinitionDTO.class);
-      RuleDefinitionDTO newDef = YdszJson.fromJson(newV.getDefinitionJson(), RuleDefinitionDTO.class);
-      return YdszResponse.success(
-          literuleWebConverter.entityToVO(ruleVersionDiffService.diff(oldDef, newDef)));
+      RuleVersionDiff diff = ruleAdminService.getVersionDiff(ruleCode, oldVersion, newVersion);
+      return YdszResponse.success(literuleWebConverter.entityToVO(diff));
+    } catch (IllegalArgumentException e) {
+      return YdszResponse.error(LiteruleExceptionCode.RULE_VERSION_NOT_FOUND, e.getMessage());
+    } catch (IllegalStateException e) {
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, e.getMessage());
     } catch (Exception e) {
-      log.error(
-          "[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}",
-          ruleCode,
-          oldVersion,
-          newVersion,
-          e);
+      log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}, error={}",
+          ruleCode, oldVersion, newVersion, e.getMessage(), e);
       return YdszResponse.error(
           YdszResultCode.VALIDATION_FAILED, "版本 Diff 解析失败: " + e.getMessage());
     }

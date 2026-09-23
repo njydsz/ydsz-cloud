@@ -11,14 +11,16 @@ import lombok.Data;
  *
  * <p>控制定时任务集群的 Leader 选举行为，包括租约、续期、分区调度等。
  *
+ * <p>基于 ydzs-common-lock 的 DistributedLocker（RedisReentrantLock）实现锁语义，
+ * 基于 ydzs-common-redis 的 RedisStringOps 管理 holder key 与 epoch。
+ *
  * <h3>P0-2: HA 切换优化</h3>
  *
  * <p>默认 leaseSeconds 从 30s 下调至 10s，renewIntervalSeconds 从 10s 下调至 3s。
- * 配合 Redisson WatchDog（lockWatchdogTimeout 建议同步配置为 10s），Leader 宕机后
- * 10s 内锁自动释放，新 Leader 接管，故障切换时间从 30s 缩短至 10s 级。
+ * Leader 宕机后 leaseSeconds 内锁自动释放，新 Leader 接管，故障切换时间从 30s 缩短至 10s 级。
  *
- * <p><b>注意</b>：{@link #leaseSeconds} 仅用于 holder key 的 TTL；RLock 本体由 Redisson WatchDog 续期，
- * 实际故障检测时间取决于 Redisson {@code lockWatchdogTimeout} 配置（建议 ≤ leaseSeconds）。
+ * <p><b>注意</b>{@link #leaseSeconds} 用于 holder key 的 TTL 和锁过期时间，
+ * 实际故障检测时间取决于 leaseSeconds 配置。
  *
  * <h3>P1-12: 配置校验</h3>
  *
@@ -33,7 +35,7 @@ public class LeaderConfig {
   /**
    * 默认租约时长（秒）。
    *
-   * <p>P0-2: 从 30s 下调至 10s，加快故障切换。需同步配置 Redisson {@code lockWatchdogTimeout ≤ 10000}。
+   * <p>P0-2: 从 30s 下调至 10s，加快故障切换。
    */
   private static final long DEFAULT_LEASE_SECONDS = 10;
 

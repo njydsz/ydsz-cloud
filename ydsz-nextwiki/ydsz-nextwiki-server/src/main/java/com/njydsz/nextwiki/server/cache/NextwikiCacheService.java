@@ -3,9 +3,11 @@ package com.njydsz.nextwiki.server.cache;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,7 @@ import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
@@ -94,6 +97,7 @@ public class NextwikiCacheService {
   private final RedisStringOps redisStringOps;
   private final NextwikiMetrics nextwikiMetrics;
   private final LockStrategy lockStrategy;
+  private final com.njyzsz.nextwiki.domain.repository.FileNodeRepository fileNodeRepository;
 
   // ==================== 文件详情缓存 ====================
 

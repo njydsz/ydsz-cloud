@@ -14,7 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.workflow.domain.entity.FlowArchiveCursor;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.repository.FlowArchiveCursorRepository;
 import com.njydsz.workflow.domain.repository.FlowHisInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
@@ -44,7 +46,7 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  *         <li>{@code retainYears} — 历史表保留 N 年（默认 5 年）
  *         <li>{@code archiveBatchSize} — 单次归档批次大小（默认 500）
  *       </ul>
- *   <li><b>归档进度</b>：定时任务记录归档进度，支持断点续传
+ *   <li><b>归档进度</b>：基于 {@code ydsz_flow_archive_cursor} 游标持久化，支持断点续传
  * </ul>
  *
  * <p><b>归档流程：</b>
@@ -131,6 +133,12 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   /** 历史归档配置属性，控制保留天数/批大小/最大耗时等 */
   private final FlowProperties.History history;
 
+  /** 归档断点续传游标仓储，持久化上次归档的最大 end_at */
+  private final FlowArchiveCursorRepository archiveCursorRepository;
+
+  /** 归档游标 archive_type 常量 */
+  private static final String CURSOR_TYPE_INSTANCE = "INSTANCE";
+
   /** {@inheritDoc} */
   @Override
   public Map<String, Object> archive(Integer retentionDays, Integer batchSize, Long maxProcessMs) {
@@ -152,6 +160,19 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         FlowInstanceStatus.COMPLETED.name(),
         FlowInstanceStatus.TERMINATED.name(),
         FlowInstanceStatus.REJECTED.name());
+
+    // 【断点续传】读取归档游标（上次归档的最大 end_time），用于可观测性与兜底续传
+    String cursorValue = null;
+    try {
+      FlowArchiveCursor cursor = archiveCursorRepository.findByTypeAndTenant(
+          CURSOR_TYPE_INSTANCE, "0");
+      if (cursor != null && cursor.getCursorValue() != null) {
+        cursorValue = cursor.getCursorValue();
+        log.info("[FlowHistoryArchive] 读取归档游标: lastEndAt={}", cursorValue);
+      }
+    } catch (Exception e) {
+      log.warn("[FlowHistoryArchive] 读取归档游标失败（不影响归档执行）: {}", e.getMessage());
+    }
 
     List<FlowInstanceVO> candidates;
     try {
@@ -178,6 +199,14 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     int missing = 0;
     int errors = 0;
     List<String> archivedIds = new ArrayList<>(COLLECTION_CAPACITY);
+    LocalDateTime maxEndAt = null;
+    if (cursorValue != null) {
+      try {
+        maxEndAt = LocalDateTime.parse(cursorValue);
+      } catch (Exception e) {
+        log.warn("[FlowHistoryArchive] 游标值解析失败: {}", cursorValue);
+      }
+    }
 
     for (FlowInstanceVO instance : candidates) {
       if (System.currentTimeMillis() - start > maxMs) {
@@ -190,6 +219,12 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         if (archiveOne(instance)) {
           archived++;
           archivedIds.add(instance.getId());
+          // 追踪本轮归档的最大 end_time 作为断点
+          if (instance.getEndAt() != null) {
+            if (maxEndAt == null || instance.getEndAt().isAfter(maxEndAt)) {
+              maxEndAt = instance.getEndAt();
+            }
+          }
         } else {
           missing++;
         }
@@ -201,6 +236,11 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
             e.getMessage(),
             e);
       }
+    }
+
+    // 【断点续传】持久化本轮归档断点游标（当前归档的最大 end_time）
+    if (maxEndAt != null) {
+      persistArchiveCursor(maxEndAt);
     }
 
     // 批量物理删除主表已归档的实例
@@ -229,6 +269,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     result.put("errors", errors);
     result.put("days", days);
     result.put("costMs", cost);
+    result.put("cursorEndAt", maxEndAt != null ? maxEndAt.toString() : cursorValue);
     return result;
   }
 
@@ -433,5 +474,26 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
    */
   private long resolveLong(Long input, long defaultVal) {
     return input == null || input <= 0 ? defaultVal : input;
+  }
+
+  /**
+   * 持久化归档断点游标（upsert 语义）。
+   *
+   * <p>幂等安全：异常仅记录 warn 日志，不中断归档主流程。
+   *
+   * @param endAt 本轮归档的最大 end_time
+   */
+  private void persistArchiveCursor(LocalDateTime endAt) {
+    try {
+      FlowArchiveCursor cursor = new FlowArchiveCursor();
+      cursor.setArchiveType(CURSOR_TYPE_INSTANCE);
+      cursor.setCursorValue(endAt.toString());
+      cursor.setTenantId("0");
+      cursor.setCursorData("{\"source\":\"FlowHistoryArchiveServiceImpl.archive\"}");
+      archiveCursorRepository.saveOrUpdate(cursor);
+      log.debug("[FlowHistoryArchive] 归档断点游标已更新: endAt={}", endAt);
+    } catch (Exception e) {
+      log.warn("[FlowHistoryArchive] 归档断点游标更新失败（不影响归档结果）: {}", e.getMessage());
+    }
   }
 }

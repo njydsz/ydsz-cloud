@@ -2,6 +2,10 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,13 +52,35 @@ public class ScheduledMessageScanner {
   /** 下次重试偏移（秒） */
   private static final int NEXT_RETRY_OFFSET_SECONDS = 30;
 
+  /** 单次扫描批量大小 */
+  private static final int BATCH_SIZE = 200;
+
+  /** F2: 定时消息并发发送线程池（守护线程，核心数 = CPU 核数，最大 4）。 */
+  private final ExecutorService dispatcher = Executors.newFixedThreadPool(
+      Math.min(Runtime.getRuntime().availableProcessors(), 4),
+      r -> {
+        Thread t = new Thread(r, "scheduled-dispatch");
+        t.setDaemon(true);
+        return t;
+      });
 
   private final MsgLogRepository msgLogRepository;
   private final ChannelRouter channelRouter;
   private final MessageMetrics messageMetrics;
 
-  /** 单次扫描批量大小 */
-  private static final int BATCH_SIZE = 200;
+  /**
+   * F2: 查询当前到期但未发送的定时消息数量（计划发送时间 ≤ 当前时间）。
+   *
+   * <p>供运维接口暴露积压指标，判断扫描器是否跟上生产能力。
+   *
+   * @return 积压数量
+   */
+  public long getBacklogCount() {
+    MessageLogQueryDTO query = new MessageLogQueryDTO();
+    query.setStatus(MessageStatusEnum.SCHEDULED.name());
+    query.setScheduledAtEnd(LocalDateTime.now());
+    return msgLogRepository.count(query);
+  }
 
   /**
    * 定时扫描到期消息。
@@ -71,7 +97,7 @@ public class ScheduledMessageScanner {
     }
   }
 
-  /** 执行定时消息扫描。 */
+  /** 执行定时消息扫描（并发分发提升吞吐量）。 */
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
     MessageLogQueryDTO query = new MessageLogQueryDTO();
@@ -83,17 +109,30 @@ public class ScheduledMessageScanner {
       return;
     }
     log.info("[ScheduledScanner] 到期定时消息 {} 条", due.size());
-    int success = 0;
-    int failed = 0;
-    for (MsgLogVO logDO : due) {
+    // F2: 并发分发，单条失败不影响其他消息
+    List<CompletableFuture<Boolean>> futures = due.stream()
+        .map(logDO -> CompletableFuture.supplyAsync(
+            () -> {
+              try {
+                sendScheduledMessage(logDO);
+                return true;
+              } catch (Exception e) {
+                log.error("[ScheduledScanner] 定时消息发送异常: logId={} err={}", logDO.getId(), e.getMessage(), e);
+                return false;
+              }
+            },
+            dispatcher))
+        .toList();
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+    long success = futures.stream().filter(f -> {
       try {
-        sendScheduledMessage(logDO);
-        success++;
+        return f.get(30, TimeUnit.SECONDS);
       } catch (Exception e) {
-        log.error("[ScheduledScanner] 定时消息发送异常: logId={} err={}", logDO.getId(), e.getMessage(), e);
-        failed++;
+        return false;
       }
-    }
+    }).count();
+    long failed = due.size() - success;
+    messageMetrics.recordScheduledScan((int) due.size(), (int) success);
     log.info("[ScheduledScanner] 扫描完成: total={} success={} failed={}", due.size(), success, failed);
   }
 

@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.PipelineTopologyVO;
 
 /**
  * 管线模板门面：根据请求特征自动选择 {@link PipelineTemplate} 并执行对应的 Handler 链。
@@ -205,5 +206,40 @@ public class SendPipelineFacade {
   public void clearCache() {
     templateCache.clear();
     log.info("[PipelineFacade] 模板缓存已清除");
+  }
+
+  /**
+   * F1: 获取所有管线模板的 Handler 链拓扑信息。
+   *
+   * <p>返回每个模板对应的 Handler 链（名称 + 顺序 + 描述），供运维看板可视化渲染管线结构与执行顺序。
+   *
+   * @return 按模板分组的拓扑信息列表
+   */
+  public List<PipelineTopologyVO> topology() {
+    List<SendHandler> allHandlers = sendPipeline.getHandlers();
+    return List.of(PipelineTemplate.values()).stream()
+        .map(
+            template -> {
+              List<Class<? extends SendHandler>> targetClasses = template.getHandlerClasses();
+              List<PipelineTopologyVO.HandlerNode> nodes =
+                  allHandlers.stream()
+                      .filter(h -> targetClasses.contains(h.getClass()))
+                      .sorted(Comparator.comparingInt(SendHandler::order))
+                      .map(
+                          h ->
+                              PipelineTopologyVO.HandlerNode.builder()
+                                  .name(h.name())
+                                  .className(h.getClass().getName())
+                                  .order(h.order())
+                                  .description(HandlerDescription.get(h.getClass()))
+                                  .build())
+                      .collect(Collectors.toList());
+              return PipelineTopologyVO.builder()
+                  .template(template.getCode())
+                  .handlers(nodes)
+                  .totalHandlerCount(allHandlers.size())
+                  .build();
+            })
+        .toList();
   }
 }

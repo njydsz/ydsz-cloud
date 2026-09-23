@@ -8,15 +8,18 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
+import com.njydsz.agent.server.trigger.TriggerExecutionService;
 
 /**
  * 定时触发器调度器。
  *
  * <p>定期扫描所有启用的 CRON 类型触发器，根据 cron 表达式判断是否到达执行时间。
- * 简化实现：每分钟扫描一次，检查 cron 表达式是否匹配当前时间。</p>
+ * 通过 {@link Scheduled} 注解注册为 Spring 定时任务，默认每分钟扫描一次。</p>
  *
  * <p>注意：此为轻量级实现，生产环境建议迁移至 Quartz 或 Spring Scheduling 的动态 cron 注册。</p>
  *
@@ -24,10 +27,11 @@ import com.njydsz.agent.domain.trigger.TriggerRepository;
  * @since 26.09.01
  */
 @Slf4j
+@Service
 public class CronTriggerScheduler {
 
     private final TriggerRepository triggerRepository;
-    private final TriggerEvaluationService evaluationService;
+    private final TriggerExecutionService executionService;
 
     /** 记录每个触发器上次执行时间，防止同一分钟内重复执行 */
     private final ConcurrentHashMap<String, LocalDateTime> lastExecutionTimes = new ConcurrentHashMap<>();
@@ -69,16 +73,17 @@ public class CronTriggerScheduler {
     private static final int DAY_OF_WEEK_MAX = 7;
 
     public CronTriggerScheduler(TriggerRepository triggerRepository,
-                                TriggerEvaluationService evaluationService) {
+                                TriggerExecutionService executionService) {
         this.triggerRepository = Objects.requireNonNull(triggerRepository, "triggerRepository 不能为 null");
-        this.evaluationService = Objects.requireNonNull(evaluationService, "evaluationService 不能为 null");
+        this.executionService = Objects.requireNonNull(executionService, "executionService 不能为 null");
     }
 
     /**
      * 扫描并执行到期的定时触发器。
      *
-     * <p>此方法由 @Scheduled 每分钟调用一次。</p>
+     * <p>按配置的 fixedDelay 轮询（默认 60000ms = 60s），匹配 cron 表达式并执行到期触发器。
      */
+    @Scheduled(fixedDelayString = "${ydsz.agent.trigger.cron-scan-interval-ms:60000}")
     public void scanAndExecuteCronTriggers() {
         try {
             List<AgentTrigger> cronTriggers = triggerRepository.findAllEnabledCronTriggers();
@@ -231,7 +236,7 @@ public class CronTriggerScheduler {
         context.put("scheduledAt", now.toString());
 
         try {
-            evaluationService.evaluateContentTriggers(trigger.getTenantId(), trigger.getCronExpression(), context);
+            executionService.executeTrigger(trigger, context);
         } catch (Exception e) {
             log.error("[CronScheduler] 定时触发器执行异常: triggerId={}, error={}",
                     triggerId, e.getMessage(), e);

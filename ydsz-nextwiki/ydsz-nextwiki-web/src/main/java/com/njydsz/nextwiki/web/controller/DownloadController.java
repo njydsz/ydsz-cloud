@@ -148,7 +148,7 @@ public class DownloadController {
 
     try (ZipOutputStream zos =
         new ZipOutputStream(response.getOutputStream(), StandardCharsets.UTF_8)) {
-      downloadFolderRecursive(folder, zos, userId, "");
+      downloadFolderFromFlatList(folder, zos, userId);
       zos.finish();
       zos.flush();
     } catch (Exception e) {
@@ -161,49 +161,74 @@ public class DownloadController {
   }
 
   /**
-   * 递归将文件夹内容写入 ZIP 流。
+   * P0-2: 基于一次查询全量后代节点的文件夹打包下载（替代递归 N+1 查询）。
    *
-   * <p>深度优先遍历文件夹：先写入空目录条目（{@code xxx/}），再递归处理子节点。 对每个文件，从 {@link IFileStorage} 读取输入流并写入 ZIP。
+   * <p>通过 {@link FileNodeRepository#findAllDescendants} 一次性加载全部子节点，
+   * 按 {@code path} 字段在内存中组装 ZIP 目录结构，消除深层嵌套场景下的数据库往返。
    *
    * @param folder 当前处理的文件夹节点
    * @param zos ZIP 输出流
    * @param userId 当前用户 ID
-   * @param basePath 当前 ZIP 条目的父路径（递归累加）
    */
-  private void downloadFolderRecursive(
-      FileNodeVO folder, ZipOutputStream zos, String userId, String basePath) {
-    List<FileNodeVO> children = fileNodeRepository.findChildren(folder.getId());
-    if (children == null) {
+  private void downloadFolderFromFlatList(
+      FileNodeVO folder, ZipOutputStream zos, String userId) {
+
+    List<FileNodeVO> allDescendants;
+    try {
+      allDescendants = fileNodeRepository.findAllDescendants(folder.getId());
+    } catch (Exception e) {
+      log.warn("[DownloadController] 查询后代节点失败: folderId={}", folder.getId(), e);
+      return;
+    }
+    if (allDescendants == null || allDescendants.isEmpty()) {
       return;
     }
 
+    String folderBasePath = folder.getPath();
     IFileStorage storage = downloadApplicationService.resolveStorageForDownload();
 
-    for (FileNodeVO child : children) {
-      String entryPath = basePath.isEmpty() ? child.getName() : basePath + "/" + child.getName();
-      if (child.isFolder()) {
+    for (FileNodeVO node : allDescendants) {
+      String relativePath = computeRelativePath(folderBasePath, node.getPath(), node.getName());
+      if (node.isFolder()) {
         try {
-          zos.putNextEntry(new ZipEntry(entryPath + "/"));
+          zos.putNextEntry(new ZipEntry(relativePath + "/"));
           zos.closeEntry();
         } catch (Exception e) {
-          log.warn("[DownloadController] 添加目录条目失败: {}", entryPath, e);
+          log.warn("[DownloadController] 添加目录条目失败: {}", relativePath, e);
         }
-        downloadFolderRecursive(child, zos, userId, entryPath);
       } else {
         try {
-          zos.putNextEntry(new ZipEntry(entryPath));
-          if (storage != null && child.getStorageKey() != null) {
+          zos.putNextEntry(new ZipEntry(relativePath));
+          if (storage != null && node.getStorageKey() != null) {
             try (InputStream is =
-                storage.downloadAsStream(child.getBucketName(), child.getStorageKey())) {
+                storage.downloadAsStream(node.getBucketName(), node.getStorageKey())) {
               is.transferTo(zos);
             }
           }
           zos.closeEntry();
         } catch (Exception e) {
-          log.warn("[DownloadController] 添加文件条目失败: {}", entryPath, e);
+          log.warn("[DownloadController] 添加文件条目失败: {}", relativePath, e);
         }
       }
     }
+  }
+
+  /**
+   * 根据节点完整路径和根文件夹路径计算 ZIP 内部相对路径。
+   *
+   * @param rootPath 根文件夹的 path
+   * @param nodePath 节点的完整 path
+   * @param nodeName 节点名称（兜底拼接）
+   * @return ZIP 条目相对路径
+   */
+  private String computeRelativePath(String rootPath, String nodePath, String nodeName) {
+    if (nodePath == null || nodePath.isEmpty() || rootPath == null || rootPath.equals(nodePath)) {
+      return nodeName;
+    }
+    if (nodePath.startsWith(rootPath + "/")) {
+      return nodePath.substring(rootPath.length() + 1);
+    }
+    return nodePath.replaceFirst(".*/", "") ;
   }
 
   /**

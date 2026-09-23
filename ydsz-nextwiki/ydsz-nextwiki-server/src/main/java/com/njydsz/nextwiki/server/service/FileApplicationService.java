@@ -43,6 +43,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
+import com.njydsz.nextwiki.domain.dto.FileNodeSortItemDTO;
 import com.njydsz.nextwiki.domain.dto.FileVersionDTO;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
@@ -1035,24 +1036,18 @@ public class FileApplicationService {
       }
     }
 
-    // 组装更新 DTO 列表
-    List<FileNodeDTO> updateDTOs = new ArrayList<>(items.size());
+    // P0-3: 批量排序（CASE WHEN 单条 SQL，替代循环单条 UPDATE）
+    List<FileNodeSortItemDTO> sortItems = new ArrayList<>(items.size());
     LocalDateTime now = LocalDateTime.now();
     for (NextwikiDto.SortItem item : items) {
-      FileNodeDTO dto = new FileNodeDTO();
-      dto.setId(item.getNodeId());
-      dto.setSort(item.getSort());
-      dto.setUpdatedBy(userId);
-      dto.setUpdatedAt(now);
-      updateDTOs.add(dto);
+      sortItems.add(FileNodeSortItemDTO.builder()
+          .id(item.getNodeId())
+          .sort(item.getSort())
+          .updatedBy(userId)
+          .updatedAt(now)
+          .build());
     }
-
-    // 批量更新（循环单条，因字段级部分更新批量 SQL 较复杂；数据量 < 100 场景性能可接受）
-    int updated = 0;
-    for (FileNodeDTO dto : updateDTOs) {
-      fileNodeRepository.update(dto);
-      updated++;
-    }
+    int updated = fileNodeRepository.batchUpdateSort(sortItems);
 
     // 失效父目录缓存
     if (parentId != null && !parentId.isEmpty()) {

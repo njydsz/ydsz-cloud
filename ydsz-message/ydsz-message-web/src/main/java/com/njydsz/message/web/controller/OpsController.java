@@ -16,7 +16,10 @@ import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.message.domain.vo.BloomFilterStatsVO;
 import com.njydsz.message.domain.vo.CacheStatsVO;
+import com.njydsz.message.domain.vo.PipelineTopologyVO;
 import com.njydsz.message.server.consumer.BloomFilterDeduplicator;
+import com.njydsz.message.server.service.chain.SendPipelineFacade;
+import com.njydsz.message.server.service.impl.ScheduledMessageScanner;
 import com.njydsz.message.server.template.cache.CachedTemplateEngine;
 
 /**
@@ -55,6 +58,12 @@ public class OpsController {
 
   /** 基于 BloomFilter 的消息去重过滤器 */
   private final BloomFilterDeduplicator bloomFilterDeduplicator;
+
+  /** 管线编排门面（拓扑查询） */
+  private final SendPipelineFacade sendPipelineFacade;
+
+  /** 定时消息扫描器（积压统计） */
+  private final ScheduledMessageScanner scheduledMessageScanner;
 
   /**
    * 获取模板缓存统计信息。
@@ -127,5 +136,33 @@ public class OpsController {
         .windowAgeSeconds(bloomFilterDeduplicator.getWindowAgeSeconds())
         .build();
     return YdszResponse.success(vo);
+  }
+
+  /**
+   * F1: 查询管线 Handler 链拓扑。
+   *
+   * <p>返回每种模板下 Handler 的执行顺序、名称与中文描述，供运维看板可视化渲染管线 DAG 结构。
+   *
+   * @return 管线拓扑信息列表
+   */
+  @Operation(summary = "管线拓扑查询")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
+  @GetMapping("/pipeline/topology")
+  public YdszResponse<java.util.List<PipelineTopologyVO>> getPipelineTopology() {
+    return YdszResponse.success(sendPipelineFacade.topology());
+  }
+
+  /**
+   * F2: 查询定时消息积压数量。
+   *
+   * <p>返回当前到期但未发送的 {@code status=SCHEDULED} 消息数量（计划发送时间 ≤ 当前时间）， 供监控告警判断扫描器是否跟上生产能力。
+   *
+   * @return 积压数量
+   */
+  @Operation(summary = "定时消息积压统计")
+  @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")
+  @GetMapping("/scheduled/backlog")
+  public YdszResponse<Long> getScheduledBacklog() {
+    return YdszResponse.success(scheduledMessageScanner.getBacklogCount());
   }
 }

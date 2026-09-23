@@ -20,6 +20,7 @@ import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.dto.RuleVersionDTO;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
@@ -34,6 +35,7 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+import com.njydsz.literule.server.version.RuleVersionDiff;
 
 /**
  * 规则管理服务
@@ -87,6 +89,9 @@ public class RuleAdminService {
   /** 规则搜索服务（数据库级搜索，替代内存过滤） */
   private final RuleSearchService searchService;
 
+  /** 规则版本 Diff 服务（P0-X3） */
+  private final RuleVersionDiffService ruleVersionDiffService;
+
   /** 当前节点标识（用于广播防循环） */
   private String nodeId;
 
@@ -111,6 +116,7 @@ public class RuleAdminService {
    * @param versionRepository 版本仓库（可为 null）
    * @param eventPublisher 事件发布器
    * @param ruleDefinitionRepository 规则定义仓库（用于分页查询和搜索）
+   * @param ruleVersionDiffService 版本 Diff 服务（P0-X3）
    */
   public RuleAdminService(
       RuleEngine ruleEngine,
@@ -118,13 +124,15 @@ public class RuleAdminService {
       RuleConfigProvider configProvider,
       RuleVersionRepository versionRepository,
       ApplicationEventPublisher eventPublisher,
-      RuleDefinitionRepository ruleDefinitionRepository) {
+      RuleDefinitionRepository ruleDefinitionRepository,
+      RuleVersionDiffService ruleVersionDiffService) {
     this.ruleEngine = ruleEngine;
     this.evaluator = evaluator;
     this.configProvider = configProvider;
     this.versionRepository = versionRepository;
     this.eventPublisher = eventPublisher;
     this.ruleDefinitionRepository = ruleDefinitionRepository;
+    this.ruleVersionDiffService = ruleVersionDiffService;
     this.searchService = new RuleSearchService(ruleDefinitionRepository);
     this.nodeId = IdGenerator.nextIdStr().substring(0, NODE_ID_PREFIX_LENGTH);
   }
@@ -507,6 +515,40 @@ public class RuleAdminService {
     }
     return versionRepository.pageVersions(
         ruleCode, pageQuery.getPageNum(), pageQuery.getPageSize());
+  }
+
+  /**
+   * P0-X3：按版本号按需查询两个版本的定义并 Diff（避免全量加载所有版本）
+   *
+   * @param ruleCode 规则编码
+   * @param oldVersion 旧版本号
+   * @param newVersion 新版本号
+   * @return Diff 结果
+   * @since 26.09.23
+   */
+  public RuleVersionDiff getVersionDiff(String ruleCode, int oldVersion, int newVersion) {
+    if (versionRepository == null) {
+      throw new IllegalStateException("版本仓库未配置，不支持版本 Diff");
+    }
+    RuleDefinitionDTO oldDef =
+        versionRepository
+            .findVersionDefinition(ruleCode, oldVersion)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        LiteruleExceptionCode.RULE_VERSION_NOT_FOUND.getMsg()
+                            + ": oldVersion="
+                            + oldVersion));
+    RuleDefinitionDTO newDef =
+        versionRepository
+            .findVersionDefinition(ruleCode, newVersion)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        LiteruleExceptionCode.RULE_VERSION_NOT_FOUND.getMsg()
+                            + ": newVersion="
+                            + newVersion));
+    return ruleVersionDiffService.diff(oldDef, newDef);
   }
 
   /**
