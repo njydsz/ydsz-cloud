@@ -169,15 +169,8 @@ public class ApiSignatureFilter extends com.njydsz.common.safe.filter.ApiSignatu
       return false;
     }
 
-    // 4. nonce 防重放校验
-    if (!nonceCache.verifyAndConsume(nonce)) {
-      log.warn("API signature: nonce reused (possible replay attack), uri={}, nonce={}",
-          wrappedRequest.getRequestURI(), nonce);
-      writeUnauthorized(response, UserInfoExceptionCode.NONCE_REUSED);
-      return false;
-    }
-
-    // 5. 计算并比对签名
+    // 4. 计算并比对签名（P1-7 整改：先验签后消费 nonce，对齐 common-safe ApiSignatureFilter 顺序；
+    // 原顺序"先消费 nonce 后验签"允许攻击者用随机 nonce 打满防重放缓存，造成 DoS）
     String method = wrappedRequest.getMethod();
     String path = wrappedRequest.getRequestURI();
     String query = wrappedRequest.getQueryString();
@@ -194,6 +187,14 @@ public class ApiSignatureFilter extends com.njydsz.common.safe.filter.ApiSignatu
       log.warn("API signature: invalid signature, uri={}, method={}, nonce={}",
           wrappedRequest.getRequestURI(), method, nonce);
       writeUnauthorized(response, UserInfoExceptionCode.SIGNATURE_INVALID);
+      return false;
+    }
+
+    // 5. nonce 防重放校验（签名合法后才消费 nonce，防止无效请求耗尽 nonce 缓存）
+    if (!nonceCache.verifyAndConsume(nonce)) {
+      log.warn("API signature: nonce reused (possible replay attack), uri={}, nonce={}",
+          wrappedRequest.getRequestURI(), nonce);
+      writeUnauthorized(response, UserInfoExceptionCode.NONCE_REUSED);
       return false;
     }
     return true;

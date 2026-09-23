@@ -625,19 +625,33 @@ public class AgentAutoConfiguration {
   }
 
   /**
-   * 装配 DAG 编排执行器。
+   * 装配 DAG 编排执行器（继承 AbstractAgentExecutor 获取 trace/metrics/cost/guardrail 能力）。
    *
    * @param llmClient 节点执行时调用的模型客户端
+   * @param memory 对话记忆
    * @param properties Agent 配置
+   * @param traceRecorder 链路追踪记录器
+   * @param agentMetrics Agent 监控指标采集器
+   * @param costAnalysisService 成本分析服务
+   * @param guardrailService 护栏编排服务
+   * @param promptTemplateProvider Prompt 模板提供者
    * @param agentFactory Agent 工厂
+   * @param dagDslParser YAML DSL 解析器
    * @param applicationContext 用于按名称获取统一线程池
+   * @param checkpointStoreProvider 检查点存储（可选）
    * @return DAG 执行器
    */
   @Bean
   @ConditionalOnMissingBean(DagOrchestrationExecutor.class)
   public DagOrchestrationExecutor dagOrchestrationExecutor(
       LlmClient llmClient,
+      ConversationMemory memory,
       AgentProperties properties,
+      TraceRecorder traceRecorder,
+      AgentMetrics agentMetrics,
+      CostAnalysisService costAnalysisService,
+      GuardrailService guardrailService,
+      PromptTemplateProvider promptTemplateProvider,
       AgentFactory agentFactory,
       DagDslParser dagDslParser,
       ApplicationContext applicationContext,
@@ -645,9 +659,20 @@ public class AgentAutoConfiguration {
     ExecutorService dagExecutor =
         applicationContext.getBean("agentDagExecutor", ExecutorService.class);
     DagCheckpointStore checkpointStore = checkpointStoreProvider.getIfAvailable();
-    log.info("[Agent] DagOrchestrationExecutor 使用统一线程池 agentDagExecutor，断点续跑已启用");
+    log.info("[Agent] DagOrchestrationExecutor 使用统一线程池 agentDagExecutor，继承 AbstractAgentExecutor 获取可观测性能力");
     return new DagOrchestrationExecutor(
-        llmClient, properties, agentFactory, dagDslParser, dagExecutor, checkpointStore);
+        llmClient,
+        memory,
+        properties,
+        traceRecorder,
+        agentMetrics,
+        costAnalysisService,
+        guardrailService,
+        promptTemplateProvider,
+        agentFactory,
+        dagDslParser,
+        dagExecutor,
+        checkpointStore);
   }
 
   /**
