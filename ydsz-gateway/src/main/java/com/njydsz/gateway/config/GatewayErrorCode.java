@@ -161,9 +161,22 @@ public enum GatewayErrorCode {
   /** i18n 消息键（前端根据此键 + 语言环境翻译） */
   private final String messageKey;
 
+  /**
+   * 针对该错误码的建议操作列表。
+   *
+   * <p>前端 / 调用方可据此展示给用户的可行动作集合。{@link GatewayErrorWriter} 在构建错误响应时将此列表
+   * 序列化为 {@code suggestions} 字段，帮助调用方理解错误并采取正确的后续操作。
+   */
+  private final List<String> suggestions;
+
   GatewayErrorCode(int code, String messageKey) {
+    this(code, messageKey, List.of());
+  }
+
+  GatewayErrorCode(int code, String messageKey, List<String> suggestions) {
     this.code = code;
     this.messageKey = messageKey;
+    this.suggestions = suggestions != null ? List.copyOf(suggestions) : List.of();
   }
 
   /**

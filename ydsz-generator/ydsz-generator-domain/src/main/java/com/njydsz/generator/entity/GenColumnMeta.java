@@ -35,8 +35,10 @@ public class GenColumnMeta extends MpBaseIdEntity<Long> {
   private Long tableMetaId;
   /** 列名。 */
   private String columnName;
-  /** 数据类型。 */
+  /** 数据类型（数据库原生类型名，如 VARCHAR、BIGINT）。 */
   private String dataType;
+  /** Java 类型（由 dataType 经 type-mapping 自动推断，可被 overrideJavaType 覆盖）。 */
+  private String javaType;
   /** 字段长度。 */
   private Integer columnSize;
   /** 是否可为空。 */
