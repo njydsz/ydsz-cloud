@@ -21,6 +21,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
+import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.identity.IdGenerator;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
@@ -232,7 +233,7 @@ public class NotificationServiceImpl implements NotificationService {
         groupMap.put(groupKey, vo);
       }
       vo.setTotalCount(vo.getTotalCount() + 1);
-      if (n.getReadStatus() != null && n.getReadStatus() == 0) {
+      if (n.getReadStatus() == ReadStatusEnum.UNREAD) {
         vo.setUnreadCount(vo.getUnreadCount() + 1);
       }
     }
@@ -329,7 +330,7 @@ public class NotificationServiceImpl implements NotificationService {
     n.setIcon(dto.getIcon());
     n.setExtra(dto.getExtra());
     n.setSourceModule(dto.getSourceModule());
-    n.setReadStatus(0);
+    n.setReadStatus(ReadStatusEnum.UNREAD);
     n.setRecallStatus(RecallStatusEnum.NONE.name());
     n.setExpiredAt(dto.getExpiredAt());
     // P2-7: 补齐租户隔离,与其他消息实体一致(原依赖 DB DEFAULT '1',多租户场景会越权)

@@ -12,9 +12,15 @@
     <name>ydsz-cronjob-api</name>
     <description>DDD Module</description>
     <dependencies>
+        <!--
+          P1-2: api 模块的 CronjobServiceClient 实际仅使用 YdszResponse / Map / FeignClientConstants，
+          无需直接引用 domain 中的 DTO/VO/Entity。将 domain 依赖降级为 provided，
+          避免 api 打包时带入 common-jdbc + MyBatis-Plus 等传递依赖，减小下游接入方 classpath 污染。
+        -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-cronjob-domain</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>

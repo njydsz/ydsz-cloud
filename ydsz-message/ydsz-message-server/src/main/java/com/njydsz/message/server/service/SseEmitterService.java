@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +54,16 @@ public class SseEmitterService {
   /** 每个批次保留的事件日志条数上限（环形缓冲区，超过时丢弃最旧条目） */
   private static final int EVENT_LOG_SIZE = 100;
 
-  /** 活跃的 SSE 订阅（batchId → emitter 列表） */
+  /** 每个批次最大并发 SSE 连接数 */
+  private static final int MAX_CONNECTIONS_PER_BATCH = 50;
+
+  /** SSE 心跳间隔（秒），防止 nginx/proxy 超时断开（nginx 默认 60s） */
+  private static final long HEARTBEAT_INTERVAL_SECONDS = 30L;
+
+  /** 活跃订阅总数上限（全局） */
+  private static final int MAX_TOTAL_CONNECTIONS = 500;
+
+  /** 活跃 SSE 订阅（batchId → emitter 列表） */
   private final Map<String, List<SseEmitterSubscription>> subscriptions = new ConcurrentHashMap<>();
 
   /** 批次事件日志（batchId → 有序事件列表），供 Last-Event-ID 重连回放 */
@@ -59,6 +71,17 @@ public class SseEmitterService {
 
   /** 批次事件 ID 生成器（batchId → 递增计数器） */
   private final Map<String, AtomicLong> eventIdGenerators = new ConcurrentHashMap<>();
+
+  /** 心跳调度器（单线程，定期向所有活跃连接发送心跳） */
+  private final ScheduledExecutorService heartbeatScheduler =
+      Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "sse-heartbeat");
+        t.setDaemon(true);
+        return t;
+      });
+
+  /** 服务启动标志（用于延迟启动心跳） */
+  private volatile boolean started = false;
 
   /**
    * 为指定批次创建新的 SSE 订阅。
@@ -109,6 +132,20 @@ public class SseEmitterService {
    */
   public SseEmitter subscribe(
       String batchId, long timeoutMs, Object initialSnapshot, String lastEventId) {
+    // 连接数限制校验
+    if (!tryAcquireConnection(batchId)) {
+      log.warn("[SSE] 连接数超限,拒绝订阅: batchId={}", batchId);
+      SseEmitter emitter = new SseEmitter(1000L);
+      try {
+        emitter.send(SseEmitter.event().name("error").data("连接数超限,请稍后重试"));
+      } catch (IOException e) {
+        // ignore
+      }
+      emitter.complete();
+      return emitter;
+    }
+    // 首次订阅时启动心跳调度
+    startHeartbeatIfNeeded();
     SseEmitter emitter = new SseEmitter(timeoutMs);
     String subscriptionId = UUID.randomUUID().toString();
     SseEmitterSubscription subscription = new SseEmitterSubscription(subscriptionId, batchId, emitter, lastEventId);
@@ -302,5 +339,79 @@ public class SseEmitterService {
   public int getSubscriptionCount(String batchId) {
     List<SseEmitterSubscription> subs = subscriptions.get(batchId);
     return subs == null ? 0 : subs.size();
+  }
+
+  /**
+   * 获取全局活跃订阅总数。
+   *
+   * @return 全局订阅数量
+   */
+  public int getTotalSubscriptionCount() {
+    return subscriptions.values().stream().mapToInt(List::size).sum();
+  }
+
+  /**
+   * 尝试获取连接许可（批次级 + 全局级双重限流）。
+   *
+   * @param batchId 批次 ID
+   * @return true 表示获取成功，false 表示超限
+   */
+  private boolean tryAcquireConnection(String batchId) {
+    // 全局限制
+    if (getTotalSubscriptionCount() >= MAX_TOTAL_CONNECTIONS) {
+      return false;
+    }
+    // 批次级限制
+    List<SseEmitterSubscription> subs = subscriptions.get(batchId);
+    return subs == null || subs.size() < MAX_CONNECTIONS_PER_BATCH;
+  }
+
+  /**
+   * 启动心跳调度（仅启动一次）。
+   */
+  private void startHeartbeatIfNeeded() {
+    if (started) {
+      return;
+    }
+    synchronized (this) {
+      if (started) {
+        return;
+      }
+      started = true;
+      heartbeatScheduler.scheduleAtFixedRate(
+          this::sendHeartbeat,
+          HEARTBEAT_INTERVAL_SECONDS,
+          HEARTBEAT_INTERVAL_SECONDS,
+          TimeUnit.SECONDS);
+    }
+  }
+
+  /**
+   * 向所有活跃连接发送心跳事件（注释类型，不占用事件 ID）。
+   *
+   * <p> nginx 默认 60 秒无数据则关闭连接，30 秒心跳可确保连接持续。 心跳使用 SSE comment 格式（冒号开头），不影响业务事件。
+   */
+  private void sendHeartbeat() {
+    try {
+      for (Map.Entry<String, List<SseEmitterSubscription>> entry : subscriptions.entrySet()) {
+        List<SseEmitterSubscription> subs = entry.getValue();
+        if (subs == null || subs.isEmpty()) {
+          continue;
+        }
+        List<SseEmitterSubscription> dead = new ArrayList<>(2);
+        for (SseEmitterSubscription sub : subs) {
+          try {
+            sub.getEmitter().send(SseEmitter.event().comment("heartbeat"));
+          } catch (IllegalStateException | IOException e) {
+            dead.add(sub);
+          }
+        }
+        if (!dead.isEmpty()) {
+          subs.removeAll(dead);
+        }
+      }
+    } catch (Exception e) {
+      log.warn("[SSE] 心跳发送异常: err={}", e.getMessage());
+    }
   }
 }

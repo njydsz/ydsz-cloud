@@ -15,6 +15,7 @@ import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.MsgNotificationDTO;
 import com.njydsz.message.domain.dto.NotificationQueryDTO;
 import com.njydsz.message.domain.entity.MsgNotification;
+import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
 import com.njydsz.message.domain.repository.MsgNotificationRepository;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
@@ -113,8 +114,8 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
       wrapper.eq("biz_type", bizType);
     }
     MsgNotification entity = new MsgNotification();
-    entity.setReadStatus(1);
-      entity.setReadTime(LocalDateTime.now());
+    entity.setReadStatus(ReadStatusEnum.READ);
+    entity.setReadTime(LocalDateTime.now());
     return msgNotificationMapper.update(entity, wrapper);
   }
 
@@ -146,7 +147,7 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
       wrapper.eq("level", query.getLevel());
     }
     if (query.getReadStatus() != null) {
-      wrapper.eq("read_status", query.getReadStatus());
+      wrapper.eq("read_status", query.getReadStatus().toDbValue());
     }
     if (query.getIds() != null && !query.getIds().isEmpty()) {
       wrapper.in("id", query.getIds());

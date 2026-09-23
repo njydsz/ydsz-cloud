@@ -11,6 +11,9 @@ import lombok.Data;
  *
  * <p>用于 Controller 层返回告警规则数据，对应实体 {@link com.njydsz.cronjob.domain.entity.job.JobAlertRule}。
  *
+ * <p><b>YDIZ-OOP-006 合规：</b>VO {@code isEnabled}（primitive {@code boolean}）与实体一致，
+ * Lombok 生成 {@code isEnabled()} getter，保持跨层命名统一。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -52,8 +55,13 @@ public class JobAlertRuleVO implements Serializable {
   /** 冷却时间（分钟），同一规则在冷却期内不重复告警（默认 10） */
   private Integer cooldownMinutes;
 
-  /** 是否启用: 0 禁用 / 1 启用 */
-  private Integer enabled;
+  /**
+   * 是否启用（true=启用，false=禁用）。
+   *
+   * <p>YDIZ-OOP-006 合规：字段 {@code isEnabled}（primitive {@code boolean}），
+   * Lombok 生成 {@code isEnabled()} getter。
+   */
+  private boolean isEnabled;
 
   /** 来源类型（如 SLA，用于区分规则业务来源） */
   private String sourceType;

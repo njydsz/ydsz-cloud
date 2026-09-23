@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.message.domain.event.OutboxEvent;
+import com.njydsz.message.domain.event.OutboxEntry;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -49,10 +49,10 @@ public class MessageSendTxService {
    * @param outboxEvent Outbox 事件（可为 null，为 null 时仅落库 msgLog）
    */
   @Transactional(propagation = Propagation.REQUIRED)
-  public void insertLogAndOutbox(MsgLogVO logVO, OutboxEvent outboxEvent) {
+  public void insertLogAndOutbox(MsgLogVO logVO, OutboxEntry outboxEntry) {
     msgLogRepository.save(logVO);
-    if (outboxEvent != null) {
-      outboxEventRepository.save(outboxEvent);
+    if (outboxEntry != null) {
+      outboxEventRepository.save(outboxEntry);
     }
     messageTraceService.recordTrace(
         logVO.getMsgId(),

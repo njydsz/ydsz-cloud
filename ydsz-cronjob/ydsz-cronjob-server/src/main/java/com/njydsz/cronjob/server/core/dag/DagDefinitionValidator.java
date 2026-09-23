@@ -274,14 +274,14 @@ public class DagDefinitionValidator {
           }
         }
         case SUB_WORKFLOW -> {
-          // P1-5: 子工作流节点要求 subWorkflowDagKey 非空
-          if (node.subWorkflowDagKey() == null || node.subWorkflowDagKey().isBlank()) {
-            throw SysException.builder()
-                .resultCode(YdszResultCode.BAD_REQUEST)
-                .key("error.cronjob.msg_dag_sub_workflow_key_missing")
-                .params(node.jobKey())
-                .build();
-          }
+          // P1-1: SUB_WORKFLOW 节点类型已下线（流程编排由 ydsz-workflow 引擎承担）。
+          // 存量 DAG 中含 SUB_WORKFLOW 节点时由 DagInstanceExecutor 兼容处理（标记 SKIPPED），
+          // 但不再允许新建/更新 DAG 时声明该节点类型。
+          throw SysException.builder()
+              .resultCode(YdszResultCode.BAD_REQUEST)
+              .key("error.cronjob.msg_dag_sub_workflow_no_longer_supported")
+              .params(node.jobKey())
+              .build();
         }
         case APPROVAL -> {
           // P1-6: 审批节点要求 approvalUsers 非空

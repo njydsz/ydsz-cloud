@@ -13,13 +13,15 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
-// 引入 fastjson2 仅用于 beforeSnapshot 字段的序列化说明, 实际序列化由 Service 层完成
-
 /**
  * 任务配置历史版本实体（P1-6 任务版本管理）。
  *
  * <p>对应 {@code ydsz_job_history} 表，每次任务配置更新前自动保存一份完整 JSON 快照， 支持版本列表查询、版本对比和一键回滚。回滚操作会基于历史快照恢复配置字段，
  * 同时保留当前任务的统计字段（触发次数等），并产生新的历史版本。
+ *
+ * <p><b>YDIZ-OOP-006 合规：</b>{@code isDeleted}（primitive {@code boolean}）+
+ * {@link TableLogic} 映射 DB 列 {@code is_deleted}，Lombok 生成 {@code isDeleted()} getter，
+ * 与 MyBatis-Plus 逻辑删除约定一致。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -76,6 +78,11 @@ public class JobHistory extends MpBaseIdEntity<String> {
   /** 修改时间 */
   private LocalDateTime changedAt;
 
-  /** 逻辑删除标记: 0 未删除 / 1 已删除 */
-  @TableLogic private Integer historyDeleted;
+  /**
+   * 是否逻辑删除（DB 列为 {@code is_deleted}，0=未删除，1=已删除）。
+   *
+   * <p>YDIZ-OOP-006 合规：{@code isDeleted}（primitive {@code boolean}）+
+   * {@link TableLogic} 自动映射 {@code is_deleted} 列，Lombok 生成 {@code isDeleted()} getter。
+   */
+  @TableLogic private boolean isDeleted;
 }

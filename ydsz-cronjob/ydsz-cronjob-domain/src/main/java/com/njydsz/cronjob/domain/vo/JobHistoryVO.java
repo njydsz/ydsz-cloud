@@ -64,8 +64,13 @@ public class JobHistoryVO implements Serializable {
   /** 修改时间 */
   private LocalDateTime changedAt;
 
-  /** 逻辑删除标记: 0 未删除 / 1 已删除 */
-  private Integer historyDeleted;
+  /**
+   * 是否逻辑删除（true=已删除，false=未删除）。
+   *
+   * <p>YDIZ-OOP-006 合规：字段 {@code isDeleted}（primitive {@code boolean}），
+   * Lombok 生成 {@code isDeleted()} getter，与实体命名保持一致。
+   */
+  private boolean isDeleted;
 
   /** 创建人 */
   private String createdBy;

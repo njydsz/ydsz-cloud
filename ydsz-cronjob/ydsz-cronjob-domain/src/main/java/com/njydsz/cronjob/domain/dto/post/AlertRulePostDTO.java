@@ -12,6 +12,8 @@ import lombok.Data;
 /**
  * AlertRule 新增请求 DTO。
  *
+ * <p><b>YDIZ-OOP-006 合规：</b>DTO {@code isEnabled}（primitive {@code boolean}）与实体/VO 一致。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -52,7 +54,10 @@ public class AlertRulePostDTO implements Serializable {
   @Schema(description = "冷却时间（分钟），同一规则在冷却期内不重复告警（默认 10）")
   private Integer cooldownMinutes;
 
+  /**
+   * 是否启用（YDIZ-OOP-006 合规：{@code isEnabled} primitive {@code boolean}）。
+   */
   @NotNull(message = "启用状态不能为空")
-  @Schema(description = "是否启用: 0 禁用 / 1 启用", requiredMode = Schema.RequiredMode.REQUIRED)
-  private Integer enabled;
+  @Schema(description = "是否启用: true=启用 / false=禁用", requiredMode = Schema.RequiredMode.REQUIRED)
+  private boolean isEnabled;
 }

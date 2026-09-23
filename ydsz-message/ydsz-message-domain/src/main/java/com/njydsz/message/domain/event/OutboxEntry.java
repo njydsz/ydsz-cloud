@@ -7,10 +7,16 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * Outbox 事件实体（领域层）。
+ * Outbox 事件条目（领域层）。
  *
  * <p>实现事务性 Outbox 模式：领域事件先落库到 Outbox 表，再通过异步扫描器发布到 Spring 事件总线。
  * 保证事件发布的 at-least-once 语义，即使应用崩溃也能从 Outbox 表恢复未发布的事件。
+ *
+ * <p>与 {@code OutboxEvent}（entity 包）的区别：
+ * <ul>
+ *   <li>本类位于 {@code event} 包，代表 Outbox 扫描任务的领域概念（业务实体 + 状态机），供 Repository 和 Scheduler 使用</li>
+ *   <li>{@code entity.OutboxEvent} 是持久化 PO，映射数据库表 {@code ydsz_msg_outbox}</li>
+ * </ul>
  *
  * <p>Outbox 表结构（infra 层建表）：
  * <pre>
@@ -33,7 +39,7 @@ import lombok.Data;
  * @since 26.09.01
  */
 @Data
-public class OutboxEvent implements Serializable {
+public class OutboxEntry implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1L;
@@ -69,7 +75,7 @@ public class OutboxEvent implements Serializable {
   private String status = "PENDING";
 
   /**
-   * 创建 Outbox 事件。
+   * 创建 Outbox 事件条目。
    *
    * @param aggregateType 聚合根类型
    * @param aggregateId 聚合根 ID
@@ -77,7 +83,7 @@ public class OutboxEvent implements Serializable {
    * @param payload 事件负载 JSON
    * @param tenantId 租户 ID
    */
-  public OutboxEvent(
+  public OutboxEntry(
       String aggregateType,
       String aggregateId,
       String eventType,
@@ -94,7 +100,7 @@ public class OutboxEvent implements Serializable {
   }
 
   /** 默认构造器（序列化用）。 */
-  public OutboxEvent() {
+  public OutboxEntry() {
     this.createdAt = LocalDateTime.now();
     this.publishAttempts = 0;
     this.status = "PENDING";

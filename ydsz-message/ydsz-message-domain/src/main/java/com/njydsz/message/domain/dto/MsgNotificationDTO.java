@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 import lombok.Data;
 
+import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
+
 /**
  * 站内通知 DTO（命令请求参数）。
  *
@@ -76,8 +78,8 @@ public class MsgNotificationDTO implements Serializable {
   /** 来源模块 */
   private String sourceModule;
 
-  /** 已读状态（0=未读，1=已读） */
-  private Integer readStatus;
+  /** 已读状态（UNREAD=未读，READ=已读） */
+  private ReadStatusEnum readStatus;
 
   /** 已读时间 */
   private LocalDateTime readTime;

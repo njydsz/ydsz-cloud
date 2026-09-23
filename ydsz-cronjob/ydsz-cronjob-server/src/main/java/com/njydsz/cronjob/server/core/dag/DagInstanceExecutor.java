@@ -33,6 +33,7 @@ import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.core.TaskCompletedEvent;
+import com.njydsz.cronjob.server.core.dag.join.DagJoinCounterRedisBridge;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 
 /**
@@ -82,12 +83,25 @@ public class DagInstanceExecutor {
   private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
 
   /**
-   * P1-1: 并行网关 Join 模式的入边完成计数。
+   * P0-1: DAG 并行网关 Join 计数器 Redis 持久化桥接。
    *
-   * <p>Key = dagInstanceId + jobKey（PARALLEL_GATEWAY 节点），
-   * Value = 已完成入边的计数。用于 Join 模式判断是否所有前置节点都已完成。
+   * <p>替代原内存 {@code ConcurrentHashMap<String,Integer> parallelJoinCounter}，
+   * 将 Join 入边完成计数持久化到 Redis，解决多实例部署 / Leader 切换后计数丢失
+   * 导致 Join 条件永远不满足的 DAG 实例卡死问题。
+   *
+   * <p>Key 设计：{@code ydzs:job:dag:join:{dagInstanceId}:{jobKey}}；TTL 默认 24h。
    */
-  private final ConcurrentHashMap<String, Integer> parallelJoinCounter = new ConcurrentHashMap<>();
+  private final DagJoinCounterRedisBridge dagJoinCounterBridge;
+
+  /**
+   * P0-1: 内存 Join 计数器降级缓存。
+   *
+   * <p>Redis 异常（网络抖动、Redis 主切）时读写返回 -1/0，本缓存作为同 JVM 内的兜底，
+   * 保证单次 Leader 任期内 Join 计数连续性。Leader 切换后本缓存失效（JVM 局部），
+   * 但 Redis 中枢计数已持久化，新 Leader 从 Redis 读取即可继续。
+   */
+  private final ConcurrentHashMap<String, Integer> localJoinCounterFallback =
+      new ConcurrentHashMap<>();
 
   private final DagInstanceRepository dagInstanceRepository;
   private final DagNodeInstanceRepository dagNodeInstanceRepository;
@@ -353,9 +367,11 @@ public class DagInstanceExecutor {
   }
 
   /**
-   * P2-4: 派发 SUB_WORKFLOW 子工作流节点（P1-5 预留，当前暂不支持）。
+   * P1-1: 派发 SUB_WORKFLOW 子工作流节点（已下线，仅作存量兼容处理）。
    *
-   * <p>TODO: 触发子 DAG 实例，等待子 DAG 完成后继续当前 DAG。
+   * <p>SUB_WORKFLOW 节点类型自 26.09.23 起下线，流程编排能力由 ydsz-workflow 引擎承担。
+   * 存量 DAG 定义中如仍含 SUB_WORKFLOW 节点，执行时自动标记为 SKIPPED，
+   * 不阻断整体 DAG 流程。
    *
    * @param dagInstanceId DAG 实例 ID
    * @param dagId DAG 定义 ID
@@ -365,10 +381,9 @@ public class DagInstanceExecutor {
   private void dispatchSubWorkflowNode(
       String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
     log.warn(
-        "[DagInstance] 子工作流节点类型暂不支持, 标记 SKIPPED: instanceId={} jobKey={} subWorkflowDagKey={}",
+        "[DagInstance] SUB_WORKFLOW 已下线(由 ydsz-workflow 承接), 标记 SKIPPED: instanceId={} jobKey={}",
         dagInstanceId,
-        node.jobKey(),
-        node.subWorkflowDagKey());
+        node.jobKey());
     markNodeSkipped(dagInstanceId, node.jobKey());
   }
 
@@ -581,9 +596,23 @@ public class DagInstanceExecutor {
         }
       }
     } else if (isJoinMode) {
-      // Join 模式：增加完成计数，当所有前置节点都完成时才触发后继
+      // P0-1: Join 模式通过 Redis 持久化计数器记录入边完成数，Leader 切换后由新 Leader 继续读取
       String counterKey = dagInstanceId + ":" + node.jobKey();
-      int completedCount = parallelJoinCounter.merge(counterKey, 1, Integer::sum);
+      long redisCount = dagJoinCounterBridge.incrementJoinCount(dagInstanceId, node.jobKey());
+      int completedCount;
+      if (redisCount < 0L) {
+        // P0-1: Redis 异常降级 — 使用本地内存缓存兜底（仅保证本 JVM 任期内连续）
+        completedCount = localJoinCounterFallback.merge(counterKey, 1, Integer::sum);
+        log.warn(
+            "[DagInstance] Join 计数器 Redis 异常, 降级本地缓存: instanceId={} jobKey={}"
+                + " completed={}/{}",
+            dagInstanceId,
+            node.jobKey(),
+            completedCount,
+            incoming.size());
+      } else {
+        completedCount = (int) redisCount;
+      }
 
       log.info(
           "[DagInstance] 并行网关 Join 计数: instanceId={} jobKey={} completed={}/{}",
@@ -594,7 +623,9 @@ public class DagInstanceExecutor {
 
       if (completedCount >= incoming.size()) {
         // 所有前置节点已完成，触发后继
-        parallelJoinCounter.remove(counterKey);
+        // P0-1: 清理 Redis Join 计数器（本地缓存同步清理）
+        dagJoinCounterBridge.clearJoinCounter(dagInstanceId, node.jobKey());
+        localJoinCounterFallback.remove(counterKey);
         LocalDateTime now = LocalDateTime.now();
         dagNodeInstanceRepository.markFinished(
             nodeInstance.getId(), DagNodeStatus.SUCCESS.name(), now, 0, null, null, null);

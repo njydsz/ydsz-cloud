@@ -76,6 +76,9 @@ public class MsgBatch extends MpBaseEntity<String> {
   /** 触发发送的用户 ID */
   private String senderId;
 
+  /** 优先级 LOW/NORMAL/HIGH/URGENT */
+  private String priority;
+
   /**
    * P1-A3: 消息请求列表 JSON（断点续传恢复用）。
    *

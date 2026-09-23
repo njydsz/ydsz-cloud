@@ -11,6 +11,9 @@ import lombok.Data;
  *
  * <p>用于 Controller 层返回租户配额数据，对应实体 {@link com.njydsz.cronjob.domain.entity.job.TenantQuota}。
  *
+ * <p><b>YDIZ-OOP-006 合规：</b>VO {@code isEnabled}（primitive {@code boolean}）与实体一致，
+ * Lombok 生成 {@code isEnabled()} getter。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -34,8 +37,13 @@ public class TenantQuotaVO implements Serializable {
   /** 日执行量上限（NULL=unlimited） */
   private Integer maxDailyExecutions;
 
-  /** 是否启用配额检查: 0 禁用 / 1 启用 */
-  private Integer enabled;
+  /**
+   * 是否启用配额检查（true=启用，false=禁用）。
+   *
+   * <p>YDIZ-OOP-006 合规：字段 {@code isEnabled}（primitive {@code boolean}），
+   * Lombok 生成 {@code isEnabled()} getter。
+   */
+  private boolean isEnabled;
 
   /** 创建人 */
   private String createdBy;

@@ -112,11 +112,16 @@ public record DagNode(
   /**
    * P1-5: 工厂方法：创建 SUB_WORKFLOW 子工作流节点。
    *
+   * <p><b>已下线（YDIZ-P1-1）：</b>流程编排由 ydsz-workflow 引擎承担。
+   * 存量兼容；新代码禁止调用本方法。
+   *
    * @param jobKey 节点 KEY
    * @param label 显示名称
    * @param subWorkflowDagKey 子工作流 DAG KEY（必须存在于 ydsz_job_dag 表）
    * @return SUB_WORKFLOW 节点
+   * @deprecated 流程编排由 ydsz-workflow 引擎承担，不再在 cronjob 内嵌 DAG 中支持
    */
+  @Deprecated
   public static DagNode subWorkflow(String jobKey, String label, String subWorkflowDagKey) {
     return new DagNode(
         jobKey,
@@ -251,7 +256,17 @@ public record DagNode(
     CONDITION,
     /** P1-1: 并行网关节点：Fork/Join 并行执行 */
     PARALLEL_GATEWAY,
-    /** P1-5: 子工作流节点：嵌套触发另一个 DAG 工作流 */
+    /**
+     * P1-5: 子工作流节点：嵌套触发另一个 DAG 工作流。
+     *
+     * <p><b>已下线（YDIZ-P1-1）：</b>跨 DAG 编排能力由 ydsz-workflow 引擎承接，
+     * cronjob 模块专注于分布式调度与本模块内嵌 DAG；存量 DAG 中的 SUB_WORKFLOW 节点
+     * 由 {@link com.njydsz.cronjob.server.core.dag.DagInstanceExecutor}
+     * 兼容处理（标记 SKIPPED），新 DAG 不允许声明该节点类型（校验器拒绝）。
+     *
+     * @deprecated 流程编排由 ydsz-workflow 引擎承担，不再在 cronjob 内嵌 DAG 中支持
+     */
+    @Deprecated
     SUB_WORKFLOW,
     /** P1-6: 审批节点：等待人工审批后继续执行 */
     APPROVAL;

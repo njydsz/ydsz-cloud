@@ -35,7 +35,7 @@ import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
-import com.njydsz.message.domain.event.OutboxEvent;
+import com.njydsz.message.domain.event.OutboxEntry;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.domain.vo.MsgBatchVO;
@@ -230,21 +230,21 @@ public class MessageServiceImpl implements MessageService {
    * @return 发送结果（含 msgId 供追踪）
    */
   private MessageResult dispatchAsync(MsgLogVO logDO, SendContext ctx) {
-    // P2-A6: 构造 OutboxEvent, 与 msgLog 落库在同一事务中(原子性保证)；主键经 common Snowflake 生成（ADR-008）
-    OutboxEvent outboxEvent =
-        new OutboxEvent(
+    // P2-A6: 构造 OutboxEntry, 与 msgLog 落库在同一事务中(原子性保证)；主键经 common Snowflake 生成（ADR-008）
+    OutboxEntry outboxEntry =
+        new OutboxEntry(
             "Message",
             logDO.getMsgId(),
             "MessageAsyncDispatch",
             YdszJson.toJson(buildMessageRequestFromLog(logDO, ctx)),
             TenantContextHolder.getTenantId());
-    outboxEvent.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+    outboxEntry.setId(String.valueOf(snowflakeIdGenerator.nextId()));
     // P2-A6: 落库 PENDING + 写 Outbox 在同一事务中(OutboxDomainEventPublisher 因此感知事务上下文)
-    messageSendTxService.insertLogAndOutbox(logDO, outboxEvent);
+    messageSendTxService.insertLogAndOutbox(logDO, outboxEntry);
     log.info(
         "[Message] 异步模式: 消息已写入 Outbox: msgId={} outboxId={} channel={}",
         logDO.getMsgId(),
-        outboxEvent.getId(),
+        outboxEntry.getId(),
         ctx.getChannel());
     return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
   }
@@ -664,20 +664,20 @@ public class MessageServiceImpl implements MessageService {
     }
     // ② 写入 Outbox 表（与业务同事务语义，由 OutboxEventScheduler 异步投递 MQ）
     try {
-      OutboxEvent outboxEvent =
-          new OutboxEvent(
+      OutboxEntry outboxEntry =
+          new OutboxEntry(
               "Message",
               logDO.getMsgId(),
               "MessageAsyncDispatch",
               YdszJson.toJson(request),
               TenantContextHolder.getTenantId());
       // 主键经 common Snowflake 生成（ADR-008 整改：原 UUID.randomUUID 违反主键边界）
-      outboxEvent.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-      outboxEventRepository.save(outboxEvent);
+      outboxEntry.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+      outboxEventRepository.save(outboxEntry);
       log.info(
           "[Message] 异步消息已写入 Outbox: msgId={} outboxId={}",
           request.getMessageId(),
-          outboxEvent.getId());
+          outboxEntry.getId());
     } catch (Exception e) {
       // Outbox 落库失败不阻塞主流程，PENDING 记录由恢复扫描器补偿
       log.error(

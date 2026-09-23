@@ -11,6 +11,7 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.NotificationCategoryEnum;
 import com.njydsz.message.domain.enums.core.NotificationLevelEnum;
+import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 
 /**
@@ -62,7 +63,7 @@ public class MsgNotification implements Serializable {
   private String icon;
   private String extra;
   private String sourceModule;
-  private Integer readStatus;
+  private ReadStatusEnum readStatus;
   private LocalDateTime readTime;
   private RecallStatusEnum recallStatus;
   private LocalDateTime recallAt;

@@ -149,7 +149,8 @@ public class AlertServiceImpl implements AlertService {
     dto.setChannels(exists.getChannels());
     dto.setReceivers(exists.getReceivers());
     dto.setCooldownMinutes(exists.getCooldownMinutes());
-    dto.setEnabled(enabled);
+    // YDIZ-OOP-006: DTO 层已改为 boolean isEnabled，由 Integer 0/1 转换为 boolean
+    dto.setEnabled(enabled != null && enabled == 1);
     jobAlertRuleRepository.update(dto);
     // P1-P5: 规则变更后失效本地缓存
     alertTrigger.invalidateAlertRuleCache(exists.getJobId());

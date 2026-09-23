@@ -243,9 +243,14 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         : null;
   }
 
-  /** 判断租户配额记录是否启用检查。 */
-  private Boolean isEnabled(TenantQuotaVO quota) {
-    return quota.getEnabled() != null && quota.getEnabled() == 1;
+  /**
+   * 判断租户配额记录是否启用检查。
+   *
+   * <p>YDIZ-OOP-006 合规：VO {@code isEnabled} 已改为 primitive {@code boolean}，
+   * 直接读取无需 null 判断。
+   */
+  private boolean isEnabled(TenantQuotaVO quota) {
+    return quota.isEnabled();
   }
 
   private Optional<TenantQuotaVO> getQuotaOpt(String tenantId) {

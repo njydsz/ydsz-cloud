@@ -98,7 +98,9 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     history.setRemark(job.getJobRemark());
     history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
     history.setChangedAt(LocalDateTime.now());
-    history.setHistoryDeleted(0);
+    // YDIZ-OOP-006: VO 已改 isDeleted(boolean)，新建历史版本默认未删除
+    // Lombok 对 boolean isDeleted 生成 setter 为 setDeleted(boolean)
+    history.setDeleted(false);
     String newId = jobHistoryRepository.insert(history);
     log.info("[History] 保存任务历史版本: jobId={} version={} newId={}", job.getId(), job.getVersion(), newId);
     return history;
@@ -127,10 +129,12 @@ public class JobHistoryServiceImpl implements JobHistoryService {
       history.setCronExpression(displayJob.getCronExpression());
       history.setParamsJson(displayJob.getParamsJson());
       history.setRemark(displayJob.getJobRemark());
-      history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
-      history.setChangedAt(LocalDateTime.now());
-      history.setHistoryDeleted(0);
-      jobHistoryRepository.insert(history);
+    history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
+    history.setChangedAt(LocalDateTime.now());
+    // YDIZ-OOP-006: VO 已改 isDeleted(boolean)，新建历史版本默认未删除
+    // Lombok 对 boolean isDeleted 生成 setter 为 setDeleted(boolean)
+    history.setDeleted(false);
+    jobHistoryRepository.insert(history);
       log.info(
           "[History] 版本记录: jobId={} key={} version={} type={}",
           referenceJob.getId(),

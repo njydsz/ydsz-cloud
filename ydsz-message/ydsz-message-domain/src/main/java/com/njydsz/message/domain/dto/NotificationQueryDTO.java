@@ -7,6 +7,8 @@ import lombok.EqualsAndHashCode;
 
 import com.njydsz.common.domain.query.PageQuery;
 
+import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
+
 /**
  * 站内通知分页查询 DTO
  *
@@ -23,8 +25,8 @@ public class NotificationQueryDTO extends PageQuery {
   /** 通知级别 */
   private String level;
 
-  /** 已读状态: 0 未读 / 1 已读 */
-  private Integer readStatus;
+  /** 已读状态: UNREAD(未读) / READ(已读) */
+  private ReadStatusEnum readStatus;
 
   /** 接收人 ID */
   private String receiverId;

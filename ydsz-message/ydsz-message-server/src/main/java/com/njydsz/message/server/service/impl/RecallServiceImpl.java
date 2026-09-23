@@ -106,6 +106,8 @@ public class RecallServiceImpl implements RecallService {
           .message("仅可撤回本人的通知")
           .build();
     }
+    // P1-F3: 站内通知撤回时间窗口校验
+    checkRecallWindow(n.getCreatedAt(), "站内通知");
     n.setRecallStatus(RecallStatusEnum.RECALLED.name());
     n.setRecallAt(LocalDateTime.now());
     msgNotificationRepository.update(convertToNotificationDTO(n));
@@ -137,6 +139,15 @@ public class RecallServiceImpl implements RecallService {
     Optional<MsgLogVO> optLog = msgLogRepository.findById(logId);
     if (optLog.isPresent()) {
       MsgLogVO logDO = optLog.get();
+      // P1-F3: 按 logId 撤回时同样校验时间窗口
+      if (logDO.getStatus() != null && logDO.getCreatedAt() != null) {
+        try {
+          checkRecallWindow(logDO.getCreatedAt(), "消息");
+        } catch (SysException e) {
+          log.warn("[Recall] 按 logId 撤回超过窗口期: logId={}", logId);
+          throw e;
+        }
+      }
       if (StringUtils.hasText(logDO.getReceiver())) {
         // P2-19: 推送撤回事件（携带消息 ID/撤回原因/时间戳）
         messageRecallPushService.pushRecall(logDO.getReceiver(), logDO.getMsgId(), "消息撤回");
@@ -285,6 +296,29 @@ public class RecallServiceImpl implements RecallService {
     log.info(
         "[Recall] 批量撤回: bizType={} bizId={} notif={} log={}", bizType, bizId, notifCount, logCount);
     return notifCount + logCount;
+  }
+
+  /**
+   * 校验撤回时间窗口。
+   *
+   * <p>通用方法：所有撤回入口（按 msgId / logId / 通知 ID）统一调用，超过 {@link
+   * RecallService#RECALL_WINDOW_MINUTES} 分钟不可撤回。
+   *
+   * @param createdAt 消息/通知的创建时间
+   * @param label 用于日志描述（如 "站内通知"、"消息"）
+   * @throws SysException 超过撤回窗口时抛出
+   */
+  private void checkRecallWindow(LocalDateTime createdAt, String label) {
+    if (createdAt == null) {
+      return;
+    }
+    long minutesElapsed = Duration.between(createdAt, LocalDateTime.now()).toMinutes();
+    if (minutesElapsed > RECALL_WINDOW_MINUTES) {
+      throw SysException.builder()
+          .resultCode(YdszResultCode.BAD_REQUEST)
+          .message(label + "发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤回")
+          .build();
+    }
   }
 
   /**

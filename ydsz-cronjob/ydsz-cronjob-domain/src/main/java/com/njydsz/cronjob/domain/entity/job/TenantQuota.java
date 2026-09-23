@@ -2,6 +2,7 @@ package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,6 +17,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * <p>对应 {@code ydsz_job_tenant_quota} 表，存储每个租户的任务数 / 并发数 / 日执行量上限。 表物理位置在 ydsz-cronjob 模块（{@code
  * TenantQuotaMapper} 在 ydsz-cronjob-infra）， 因此本实体归属 ydsz-cronjob-domain，不归 ydsz-system。
+ *
+ * <p><b>YDIZ-OOP-006 合规：</b>布尔字段统一使用 {@code is} 前缀 + primitive {@code boolean} 类型；
+ * DB 列映射 {@code is_enabled} 通过 {@link TableField} 显式声明。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -39,6 +43,12 @@ public class TenantQuota extends MpBaseEntity<String> {
   /** 日执行量上限（NULL=unlimited；超过此值拒绝派发，P7-3 实现） */
   private Integer maxDailyExecutions;
 
-  /** 是否启用配额检查（0=禁用，1=启用） */
-  private Boolean isEnabled;
+  /**
+   * 是否启用配额检查（DB 列为 {@code is_enabled}，0=禁用，1=启用）。
+   *
+   * <p>YDIZ-OOP-006 合规：字段 {@code isEnabled}（primitive {@code boolean}），Lombok 生成
+   * {@code isEnabled()} getter，MyBatis-Plus 经 {@link TableField} 映射 {@code is_enabled} 列。
+   */
+  @TableField("is_enabled")
+  private boolean isEnabled;
 }

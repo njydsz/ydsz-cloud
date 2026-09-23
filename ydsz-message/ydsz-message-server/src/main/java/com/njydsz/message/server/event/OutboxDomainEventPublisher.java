@@ -10,7 +10,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.event.MessageDomainEvent;
-import com.njydsz.message.domain.event.OutboxEvent;
+import com.njydsz.message.domain.event.OutboxEntry;
 import com.njydsz.message.domain.identity.IdGenerator;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
 
@@ -75,14 +75,14 @@ public class OutboxDomainEventPublisher {
       String eventType = event.getClass().getName();
 
       // 构造 Outbox 事件（主键经 IdGenerator 雪花生成，ADR-008 整改：原 UUID.randomUUID 违反主键边界）
-      OutboxEvent outboxEvent =
-          new OutboxEvent(
+      OutboxEntry outboxEntry =
+          new OutboxEntry(
               event.getClass().getSimpleName(),
               event.getMessageId() != null ? event.getMessageId() : "unknown",
               eventType,
               payload,
               event.getTenantId());
-      outboxEvent.setId(idGenerator.nextId());
+      outboxEntry.setId(idGenerator.nextId());
 
       // 注册事务同步器：事务提交后写入 Outbox（与业务操作同事务）
       TransactionSynchronizationManager.registerSynchronization(
@@ -90,10 +90,10 @@ public class OutboxDomainEventPublisher {
             @Override
             public void afterCommit() {
               try {
-                outboxEventRepository.save(outboxEvent);
+                outboxEventRepository.save(outboxEntry);
                 log.debug(
                     "[OutboxPublisher] 事件已写入 Outbox: eventId={} type={}",
-                    outboxEvent.getId(),
+                    outboxEntry.getId(),
                     eventType);
               } catch (Exception e) {
                 // Outbox 落库失败不抛出，记录严重日志（事件可能丢失）

@@ -30,7 +30,9 @@ import com.njydsz.message.server.metric.MessageMetrics;
  *   <li>用户打开率权重 20%：openRate（0-1）× 100 × 0.2 → 贡献 0-20 分
  * </ul>
  *
- * <p>成功率默认 0.95（无可用指标时兜底），用户打开率默认 0.5（预留扩展口，待用户行为数据接入后替换）。
+ * <p><b>降级模式：</b>当统计功能未就绪时（默认状态），{@link #getSuccessRate(String)} 与
+ * {@link #getUserOpenRate(String, String)} 返回常量（各通道相同），评分退化为<b>成本单维度排序</b>。
+ * 待用户行为数据与通道指标接入后启用完整三因子加权模型。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -38,18 +40,9 @@ import com.njydsz.message.server.metric.MessageMetrics;
 @Slf4j
 @Component
 public class ChannelScoreCalculator {
-  /** 成功率权重 */
-  private static final double SUCCESS_WEIGHT = 0.5;
-
-  /** 成本权重 */
-  private static final double COST_WEIGHT = 0.3;
-
-  /** 打开率权重 */
-  private static final double OPEN_WEIGHT = 0.2;
 
   /** 计算精度 */
   private static final int SCALE = 4;
-
 
   /** 成功率默认值（无可用指标时兜底） */
   private static final double DEFAULT_SUCCESS_RATE = 0.95;
@@ -63,7 +56,6 @@ public class ChannelScoreCalculator {
 
   /**
    * 构造器注入。
-   *
    *
    * @param messageMetrics 消息指标（用于后续查询通道成功率，当前为预留扩展口）
    * @param messageProperties 消息模块配置属性（含 cost 子配置项评分权重）

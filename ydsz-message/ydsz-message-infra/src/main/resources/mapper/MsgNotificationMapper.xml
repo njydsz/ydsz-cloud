@@ -20,7 +20,7 @@
         <result column="icon" property="icon"/>
         <result column="extra" property="extra"/>
         <result column="source_module" property="sourceModule"/>
-        <result column="read_status" property="readStatus"/>
+        <result column="read_status" property="readStatus" typeHandler="com.njydsz.message.infra.handler.ReadStatusTypeHandler"/>
         <result column="read_time" property="readTime"/>
         <result column="recall_status" property="recallStatus"/>
         <result column="recall_at" property="recallAt"/>
@@ -55,7 +55,7 @@
              #{item.bizType}, #{item.bizId}, #{item.messageGroup}, #{item.batchId},
              #{item.actionUrl}, #{item.actionText}, #{item.icon},
              #{item.extra}, #{item.sourceModule},
-             COALESCE(#{item.readStatus}, 0),
+             COALESCE(#{item.readStatus, typeHandler=com.njydsz.message.infra.handler.ReadStatusTypeHandler}, 0),
              COALESCE(#{item.recallStatus}, 'NONE'),
              #{item.recallAt}, #{item.expiredAt}, #{item.mentionUserIds},
              COALESCE(#{item.createdBy}, 'SYSTEM'), CURRENT_TIMESTAMP,

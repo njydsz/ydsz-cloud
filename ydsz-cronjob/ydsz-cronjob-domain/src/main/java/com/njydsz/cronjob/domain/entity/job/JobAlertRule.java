@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.entity.job;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,6 +17,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 任务告警规则实体（ydsz_job_alert_rule 表，P5 告警 + 监控）。
  *
  * <p>定义告警触发条件、级别、通知通道与去重策略。规则可绑定到具体任务 （{@link #jobId} 非空），也可作为全局规则（{@link #jobId} 为 NULL）应用于所有任务。
+ *
+ * <p><b>YDIZ-OOP-006 合规：</b>布尔字段统一使用 {@code is} 前缀 + primitive {@code boolean} 类型。
  *
  * <h3>告警类型</h3>
  *
@@ -77,8 +80,14 @@ public class JobAlertRule extends MpBaseEntity<String> {
   /** 冷却时间（分钟），同一规则在冷却期内不重复告警 */
   private Integer cooldownMinutes;
 
-  /** 是否启用（0=禁用，1=启用） */
-  private Boolean isEnabled;
+  /**
+   * 是否启用（DB 列为 {@code is_enabled}，0=禁用，1=启用）。
+   *
+   * <p>YDIZ-OOP-006 合规：字段 {@code isEnabled}（primitive {@code boolean}），Lombok 生成
+   * {@code isEnabled()} getter。
+   */
+  @TableField("is_enabled")
+  private boolean isEnabled;
 
   /** 规则来源: MANUAL 手动创建(默认) / SLA 由SLA规则自动生成 */
   private String sourceType;

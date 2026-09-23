@@ -3,6 +3,7 @@ package com.njydsz.message.domain.dto;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 
 import com.njydsz.common.feign.MessageRequest;
@@ -50,9 +51,27 @@ public class BatchSendRequestDTO {
   /** 是否异步发送（默认 true；false 时同步返回结果） */
   private Boolean isAsync = true;
 
+  /** 优先级 LOW/NORMAL/HIGH/URGENT（默认 NORMAL） */
+  @Xss private String priority;
+
   /** 触发发送的用户 ID */
   @Xss private String senderId;
 
   /** 直接传入的请求列表（requests 模式，优先于 receiverList） */
   private List<MessageRequest> requests;
+
+  /**
+   * 互斥校验：receiverList 与 requests 不能同时非空。
+   *
+   * <p>两种接收人模式互斥：receiverList 模式由 engine 自动展开，requests 模式由调用方显式构造。 同时传入时优先走 requests 模式，但要求调用方确认未误填。
+   *
+   * @return true 表示校验通过
+   */
+  @AssertTrue(message = "receiverList 与 requests 不能同时传入，请选择一种接收人模式")
+  public boolean isExclusiveReceiveMode() {
+    boolean hasReceivers = receiverList != null && !receiverList.isEmpty();
+    boolean hasRequests = requests != null && !requests.isEmpty();
+    // 允许同时为空（走模板测试等场景），但不允许同时非空
+    return !(hasReceivers && hasRequests);
+  }
 }

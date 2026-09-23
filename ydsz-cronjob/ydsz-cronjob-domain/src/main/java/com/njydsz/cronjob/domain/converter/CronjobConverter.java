@@ -82,7 +82,7 @@ public interface CronjobConverter {
   CronjobConverter INSTANT = Mappers.getMapper(CronjobConverter.class);
 
   // ===== TenantQuota =====
-  @Mapping(target = "enabled", source = "isEnabled", qualifiedByName = "booleanToInteger")
+  // YDIZ-OOP-006 合规：entity.isEnabled（boolean）↔ vo.isEnabled（boolean）同名自动映射
   TenantQuotaVO entityToVO(TenantQuota entity);
 
   List<TenantQuotaVO> tenantQuotaListToVO(List<TenantQuota> entities);
@@ -95,7 +95,6 @@ public interface CronjobConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "isEnabled", source = "enabled", qualifiedByName = "integerToBoolean")
   TenantQuota voToEntity(TenantQuotaVO vo);
 
   // ===== GlueCode =====
@@ -137,7 +136,7 @@ public interface CronjobConverter {
   JobAlertLog voToEntity(JobAlertLogVO vo);
 
   // ===== JobAlertRule =====
-  @Mapping(target = "enabled", source = "isEnabled", qualifiedByName = "booleanToInteger")
+  // YDIZ-OOP-006 合规：entity.isEnabled（boolean）↔ vo.isEnabled（boolean）同名自动映射
   JobAlertRuleVO entityToVO(JobAlertRule entity);
 
   List<JobAlertRuleVO> jobAlertRuleListToVO(List<JobAlertRule> entities);
@@ -148,7 +147,6 @@ public interface CronjobConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "isEnabled", source = "enabled", qualifiedByName = "integerToBoolean")
   JobAlertRule voToEntity(JobAlertRuleVO vo);
 
   @Mapping(target = "isDeleted", ignore = true)
@@ -157,7 +155,6 @@ public interface CronjobConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "isEnabled", source = "enabled", qualifiedByName = "integerToBoolean")
   JobAlertRule dtoToEntity(AlertRuleSaveDTO dto);
 
   /**
