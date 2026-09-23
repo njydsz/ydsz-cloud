@@ -1,27 +1,26 @@
-package com.njydsz.agent.domain.entity;
+package com.njydsz.agent.infra.entity;
 
 import java.math.BigDecimal;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * Agent 执行链路步骤（domain 纯净 POJO，无 MP 注解）
+ * Agent 执行链路步骤持久化对象（映射 ydsz_agt_trace_step 表）。
  *
- * <p>记录 Agent 执行过程中的单个步骤，如 LLM 调用、工具执行、意图路由等。
- * 输入/输出以 JSON 字符串存储，支持回放与调试。
- *
- * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
- * 持久化映射由 {@code infra.entity.AgentTraceStepPO} 承担。
+ * <p>该表使用 (traceId, stepIndex) 作为复合业务键，无独立 id 列。
+ * 不使用 BaseMapper（避免主键映射冲突），改为纯 MyBatis XML Mapper 方式。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.09.23
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
-public class AgentTraceStep {
+@TableName("ydsz_agt_trace_step")
+public class AgentTraceStepPO {
 
   private static final long serialVersionUID = 1L;
 

@@ -4,16 +4,28 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.entity.AgentApproval;
-import com.njydsz.agent.domain.entity.PromptTemplate;
+import com.njydsz.agent.domain.entity.AgentDefinition;
+import com.njydsz.agent.domain.entity.AgentTrace;
+import com.njydsz.agent.domain.entity.AgentTraceStep;
 import com.njydsz.agent.domain.entity.DagWorkflow;
+import com.njydsz.agent.domain.entity.PromptTemplate;
 import com.njydsz.agent.domain.entity.PromptVersion;
 import com.njydsz.agent.domain.entity.TokenUsageRecord;
+import com.njydsz.agent.domain.insight.InsightReport;
+import com.njydsz.agent.domain.profile.UserProfile;
 import com.njydsz.agent.infra.entity.AgentApprovalPO;
-import com.njydsz.agent.infra.entity.PromptTemplatePO;
+import com.njydsz.agent.infra.entity.AgentDefinitionPO;
+import com.njydsz.agent.infra.entity.AgentTracePO;
+import com.njydsz.agent.infra.entity.AgentTraceStepPO;
+import com.njydsz.agent.infra.entity.AsyncTaskPO;
 import com.njydsz.agent.infra.entity.DagWorkflowPO;
+import com.njydsz.agent.infra.entity.InsightReportPO;
+import com.njydsz.agent.infra.entity.PromptTemplatePO;
 import com.njydsz.agent.infra.entity.PromptVersionPO;
 import com.njydsz.agent.infra.entity.TokenUsageRecordPO;
+import com.njydsz.agent.infra.entity.UserProfilePO;
 
 /**
  * Domain 实体 ↔ 持久化对象（PO）双向 MapStruct 转换器。
@@ -74,4 +86,52 @@ public interface AgentPoConverter {
 
   /** PO → Domain */
   PromptTemplate poToDomain(PromptTemplatePO po);
+
+  // ===== AgentDefinition ↔ AgentDefinitionPO =====
+
+  /** Domain → PO */
+  AgentDefinitionPO domainToPo(AgentDefinition domain);
+
+  /** PO → Domain */
+  AgentDefinition poToDomain(AgentDefinitionPO po);
+
+  // ===== InsightReport ↔ InsightReportPO =====
+
+  /** Domain → PO */
+  InsightReportPO domainToPo(InsightReport domain);
+
+  /** PO → Domain */
+  InsightReport poToDomain(InsightReportPO po);
+
+  // ===== UserProfile ↔ UserProfilePO =====
+
+  /** Domain → PO */
+  UserProfilePO domainToPo(UserProfile domain);
+
+  /** PO → Domain */
+  UserProfile poToDomain(UserProfilePO po);
+
+  // ===== AsyncTask ↔ AsyncTaskPO =====
+
+  /** Domain → PO */
+  AsyncTaskPO domainToPo(AsyncTask domain);
+
+  /** PO → Domain */
+  AsyncTask poToDomain(AsyncTaskPO po);
+
+  // ===== AgentTrace ↔ AgentTracePO =====
+
+  /** Domain → PO */
+  AgentTracePO domainToPo(AgentTrace domain);
+
+  /** PO → Domain */
+  AgentTrace poToDomain(AgentTracePO po);
+
+  // ===== AgentTraceStep ↔ AgentTraceStepPO =====
+
+  /** Domain → PO */
+  AgentTraceStepPO domainToPo(AgentTraceStep domain);
+
+  /** PO → Domain */
+  AgentTraceStep poToDomain(AgentTraceStepPO po);
 }

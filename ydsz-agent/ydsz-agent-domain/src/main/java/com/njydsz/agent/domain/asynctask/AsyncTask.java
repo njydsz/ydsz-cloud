@@ -4,30 +4,31 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.agent.entity.base.DomainBaseEntity;
 
 /**
- * 异步任务实体
+ * 异步任务实体（domain 纯净 POJO，无 MP 注解）
  *
  * <p>封装一次异步执行请求的完整生命周期数据，包括任务类型、输入参数、状态、进度和结果。
  *
- * <p>对应 agents-flex 的 async-task 模块概念，支持长任务的持久化、恢复和配额管理。
+ * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
+ * 持久化映射由 {@code infra.entity.AsyncTaskPO} 承担。
  *
  * @author ydsz-team
  * @since 26.09.17
  */
-@TableName("ydsz_agt_async_task")
-public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
+@Data
+public class AsyncTask extends DomainBaseEntity<Long> implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  /** 默认最大重试次数 */
+  private static final int DEFAULT_MAX_RETRY = 3;
+
   /** 任务类型编码（REPORT_GENERATE / DOC_INGEST / BATCH_CHAT 等） */
   private String taskType;
-
-  /** 任务状态 */
-  private String status;
 
   /** 租户编码（多租户隔离） */
   private String tenantCode;
@@ -71,6 +72,9 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
   /** 任务过期时间（超时未完成则自动取消） */
   private LocalDateTime expireAt;
 
+  /** 备注信息 */
+  private String remark;
+
   /**
    * 创建异步任务。
    *
@@ -88,141 +92,6 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
     this.progressPercent = 0;
     this.retryCount = 0;
     this.maxRetry = DEFAULT_MAX_RETRY;
-  }
-
-  /** 默认最大重试次数 */
-  private static final int DEFAULT_MAX_RETRY = 3;
-
-  /** 默认构造器（MyBatis Plus 需要）。 */
-  public AsyncTask() {
-  }
-
-  public String getTaskType() {
-    return taskType;
-  }
-
-  public void setTaskType(String taskType) {
-    this.taskType = taskType;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
-
-  public String getTenantCode() {
-    return tenantCode;
-  }
-
-  public void setTenantCode(String tenantCode) {
-    this.tenantCode = tenantCode;
-  }
-
-  public String getUserId() {
-    return userId;
-  }
-
-  public void setUserId(String userId) {
-    this.userId = userId;
-  }
-
-  public String getInputPayload() {
-    return inputPayload;
-  }
-
-  public void setInputPayload(String inputPayload) {
-    this.inputPayload = inputPayload;
-  }
-
-  public String getOutputPayload() {
-    return outputPayload;
-  }
-
-  public void setOutputPayload(String outputPayload) {
-    this.outputPayload = outputPayload;
-  }
-
-  public String getErrorMessage() {
-    return errorMessage;
-  }
-
-  public void setErrorMessage(String errorMessage) {
-    this.errorMessage = errorMessage;
-  }
-
-  public Integer getProgressPercent() {
-    return progressPercent;
-  }
-
-  public void setProgressPercent(Integer progressPercent) {
-    this.progressPercent = progressPercent;
-  }
-
-  public Integer getRetryCount() {
-    return retryCount;
-  }
-
-  public void setRetryCount(Integer retryCount) {
-    this.retryCount = retryCount;
-  }
-
-  public Integer getMaxRetry() {
-    return maxRetry;
-  }
-
-  public void setMaxRetry(Integer maxRetry) {
-    this.maxRetry = maxRetry;
-  }
-
-  public LocalDateTime getNextRetryAt() {
-    return nextRetryAt;
-  }
-
-  public void setNextRetryAt(LocalDateTime nextRetryAt) {
-    this.nextRetryAt = nextRetryAt;
-  }
-
-  public Long getTimeoutSeconds() {
-    return timeoutSeconds;
-  }
-
-  public void setTimeoutSeconds(Long timeoutSeconds) {
-    this.timeoutSeconds = timeoutSeconds;
-  }
-
-  public String getWorkerId() {
-    return workerId;
-  }
-
-  public void setWorkerId(String workerId) {
-    this.workerId = workerId;
-  }
-
-  public LocalDateTime getStartedAt() {
-    return startedAt;
-  }
-
-  public void setStartedAt(LocalDateTime startedAt) {
-    this.startedAt = startedAt;
-  }
-
-  public LocalDateTime getCompletedAt() {
-    return completedAt;
-  }
-
-  public void setCompletedAt(LocalDateTime completedAt) {
-    this.completedAt = completedAt;
-  }
-
-  public LocalDateTime getExpireAt() {
-    return expireAt;
-  }
-
-  public void setExpireAt(LocalDateTime expireAt) {
-    this.expireAt = expireAt;
   }
 
   /**

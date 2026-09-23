@@ -2,7 +2,6 @@ package com.njydsz.agent.infra.repository;
 
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -11,19 +10,19 @@ import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
 import com.njydsz.agent.domain.entity.AgentTraceStep;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.vo.AgentTraceStepVO;
+import com.njydsz.agent.infra.converter.AgentPoConverter;
+import com.njydsz.agent.infra.entity.AgentTraceStepPO;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 
 /**
  * Agent 执行链路步骤 Repository 实现
  *
- * <p>基于 MyBatis-Plus 实现 {@link AgentTraceStepRepository} 接口。
+ * <p>基于自定义 MyBatis Mapper 实现 {@link AgentTraceStepRepository} 接口（不使用 BaseMapper，
+ * 因该表使用复合业务键）。
+ * 写入时通过 {@link AgentPoConverter} 将 domain 实体转为 PO，
+ * 读取时通过 {@link AgentPoConverter} 将 PO 转为 domain 后再经 {@link AgentConverter} 转为 VO。
  *
- * <p><b>设计要点：</b>
- *
- * <ul>
- *   <li>通过 {@link AgentConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link AgentConverter} 转换为 DO 后执行数据库操作
- * </ul>
+ * <p><b>DDD 分层：</b> domain 层 AgentTraceStep 为纯净 POJO；PO 层承载 MyBatis 映射注解。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -36,19 +35,22 @@ public class AgentTraceStepRepositoryImpl implements AgentTraceStepRepository {
 
   private final AgentConverter converter;
 
+  private final AgentPoConverter poConverter;
+
   @Override
   public boolean insert(AgentTraceStepDTO dto) {
     AgentTraceStep entity = converter.dtoToEntity(dto);
-    return agentTraceStepMapper.insert(entity) > 0;
+    return agentTraceStepMapper.batchInsert(
+        java.util.List.of(poConverter.domainToPo(entity))) > 0;
   }
 
   @Override
   public List<AgentTraceStepVO> findByTraceId(String traceId) {
-    return converter.agentTraceStepListToVO(
-        agentTraceStepMapper.selectList(
-            new LambdaQueryWrapper<AgentTraceStep>()
-                .eq(AgentTraceStep::getTraceId, traceId)
-                .orderByAsc(AgentTraceStep::getStepIndex)));
+    List<AgentTraceStepPO> poList = agentTraceStepMapper.selectByTraceId(traceId);
+    List<AgentTraceStep> domainList = poList.stream()
+        .map(poConverter::poToDomain)
+        .toList();
+    return converter.agentTraceStepListToVO(domainList);
   }
 
   /**

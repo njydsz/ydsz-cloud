@@ -9,13 +9,14 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
+import com.njydsz.agent.infra.entity.AsyncTaskPO;
 
 /**
  * 异步任务 Mapper
  *
  * <p>映射 {@code ydsz_agt_async_task} 表，持久化异步任务的完整生命周期数据。
- * <b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ * 使用 {@link AsyncTaskPO}（基础设施层 PO）承载 MyBatis-Plus 注解。
+ * <b>多租户：</b>由 MyBatis 拦截器自动注入 tenant_id 过滤条件，本接口不感知。
  *
  * <p>自定义方法说明：
  * <ul>
@@ -28,7 +29,7 @@ import com.njydsz.agent.domain.asynctask.AsyncTask;
  * @since 26.09.17
  */
 @Mapper
-public interface AsyncTaskMapper extends BaseMapper<AsyncTask> {
+public interface AsyncTaskMapper extends BaseMapper<AsyncTaskPO> {
 
   /**
    * 查询已过期的 RUNNING 任务（expire_at &lt; 当前时间）。
@@ -39,7 +40,7 @@ public interface AsyncTaskMapper extends BaseMapper<AsyncTask> {
    * @return 过期任务列表
    */
   @Select("SELECT * FROM ydsz_agt_async_task WHERE status = 'RUNNING' AND expire_at < #{now}")
-  List<AsyncTask> selectExpiredTasks(@Param("now") LocalDateTime now);
+  List<AsyncTaskPO> selectExpiredTasks(@Param("now") LocalDateTime now);
 
   /**
    * 按类型查询 PENDING 任务，按创建时间正序（优先分配最早创建的任务）。
@@ -53,7 +54,7 @@ public interface AsyncTaskMapper extends BaseMapper<AsyncTask> {
       + "<if test='taskType != null'>AND task_type = #{taskType} </if>"
       + "ORDER BY created_at ASC LIMIT #{limit}"
       + "</script>")
-  List<AsyncTask> selectPendingTasks(@Param("taskType") String taskType, @Param("limit") int limit);
+  List<AsyncTaskPO> selectPendingTasks(@Param("taskType") String taskType, @Param("limit") int limit);
 
   /**
    * 统计租户下活跃（非终态）任务数。

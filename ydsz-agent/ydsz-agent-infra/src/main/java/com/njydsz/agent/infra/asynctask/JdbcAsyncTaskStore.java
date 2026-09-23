@@ -14,23 +14,19 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
+import com.njydsz.agent.infra.converter.AgentPoConverter;
+import com.njydsz.agent.infra.entity.AsyncTaskPO;
 import com.njydsz.agent.infra.mapper.AsyncTaskMapper;
 
 /**
  * 基于 PostgreSQL 的异步任务持久化实现 — 生产环境首选。
  *
  * <p>使用 MyBatis Plus Mapper 操作 {@code ydsz_agt_async_task} 表。
- * 认领操作使用乐观锁（UPDATE ... WHERE id=? AND status='PENDING'）保证并发安全。
+ * 写入时通过 {@link AgentPoConverter} 将 domain 实体转为 PO（含 MP 注解），
+ * 读取时通过 {@link AgentPoConverter} 将 PO 转为 domain 实体。
  *
- * <p><b>生产就绪</b>：
- * <ul>
- *   <li>多副本部署安全（数据库行级锁保证 Worker 认领互斥）</li>
- *   <li>任务不因应用重启丢失</li>
- *   <li>定时任务可回收超时 RUNNING 任务</li>
- * </ul>
- *
- * <p><b>装配条件</b>：由 {@link AgentAsyncTaskAutoConfiguration} 按条件注册，
- * 非直接 {@code @Component}，避免与内存实现产生重复 Bean。
+ * <p><b>DDD 分层：</b> domain 层 AsyncTask 为纯净 POJO；PO 层承载 MP 注解。
+ * <b>生产就绪</b>：多副本部署安全（数据库行级锁保证 Worker 认领互斥）。
  *
  * @author ydsz-team
  * @since 26.09.17
@@ -42,7 +38,7 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   /** 存储后端标识 */
   private static final String STORE_TYPE = "jdbc";
 
-  /** 活�的北态编码列表（用于 countActiveByTenant IN 查询） */
+  /** 活跃状态编码列表 */
   private static final List<String> ACTIVE_STATUSES;
 
   static {
@@ -57,13 +53,17 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
 
   private final AsyncTaskMapper asyncTaskMapper;
 
+  private final AgentPoConverter poConverter;
+
   @Override
   public AsyncTask submit(AsyncTask task) {
     Objects.requireNonNull(task, "task 不能为 null");
     task.setStatus(AsyncTaskStatus.PENDING.getCode());
     task.setProgressPercent(0);
     task.setRetryCount(task.getRetryCount() != null ? task.getRetryCount() : 0);
-    asyncTaskMapper.insert(task);
+    AsyncTaskPO po = poConverter.domainToPo(task);
+    asyncTaskMapper.insert(po);
+    task.setId(po.getId());
     log.debug("[AsyncTask-JDBC] 提交任务: id={}, type={}", task.getId(), task.getTaskType());
     return task;
   }
@@ -73,21 +73,23 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
     if (taskId == null) {
       return Optional.empty();
     }
-    return Optional.ofNullable(asyncTaskMapper.selectById(taskId));
+    return Optional.ofNullable(asyncTaskMapper.selectById(taskId))
+        .map(poConverter::poToDomain);
   }
 
   @Override
   public AsyncTask updateStatus(Long taskId, AsyncTaskStatus newStatus) {
     Objects.requireNonNull(newStatus, "newStatus 不能为 null");
-    AsyncTask existing = asyncTaskMapper.selectById(taskId);
-    if (existing == null) {
+    AsyncTaskPO existingPo = asyncTaskMapper.selectById(taskId);
+    if (existingPo == null) {
       throw new IllegalStateException("任务不存在: id=" + taskId);
     }
+    AsyncTask existing = poConverter.poToDomain(existingPo);
     existing.setStatus(newStatus.getCode());
     if (AsyncTaskStatus.isTerminal(newStatus.getCode())) {
       existing.setCompletedAt(LocalDateTime.now());
     }
-    asyncTaskMapper.updateById(existing);
+    asyncTaskMapper.updateById(poConverter.domainToPo(existing));
     log.debug("[AsyncTask-JDBC] 更新状态: id={}, status={}", taskId, newStatus.getCode());
     return existing;
   }
@@ -104,7 +106,10 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   @Override
   public List<AsyncTask> pollPending(String taskType, int limit) {
     int safeLimit = Math.max(limit, 1);
-    return asyncTaskMapper.selectPendingTasks(taskType, safeLimit);
+    List<AsyncTaskPO> poList = asyncTaskMapper.selectPendingTasks(taskType, safeLimit);
+    return poList.stream()
+        .map(poConverter::poToDomain)
+        .toList();
   }
 
   @Override
@@ -117,7 +122,8 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
       return Optional.empty();
     }
     log.debug("[AsyncTask-JDBC] 认领任务: id={}, worker={}", taskId, workerId);
-    return Optional.ofNullable(asyncTaskMapper.selectById(taskId));
+    return Optional.ofNullable(asyncTaskMapper.selectById(taskId))
+        .map(poConverter::poToDomain);
   }
 
   @Override
@@ -132,13 +138,14 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
 
   @Override
   public AsyncTask cancel(Long taskId) {
-    AsyncTask existing = asyncTaskMapper.selectById(taskId);
-    if (existing == null) {
+    AsyncTaskPO existingPo = asyncTaskMapper.selectById(taskId);
+    if (existingPo == null) {
       throw new IllegalStateException("任务不存在: id=" + taskId);
     }
+    AsyncTask existing = poConverter.poToDomain(existingPo);
     existing.setStatus(AsyncTaskStatus.CANCELED.getCode());
     existing.setCompletedAt(LocalDateTime.now());
-    asyncTaskMapper.updateById(existing);
+    asyncTaskMapper.updateById(poConverter.domainToPo(existing));
     log.debug("[AsyncTask-JDBC] 取消任务: id={}", taskId);
     return existing;
   }
@@ -146,10 +153,12 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   @Override
   public void save(AsyncTask task) {
     Objects.requireNonNull(task, "task 不能为 null");
+    AsyncTaskPO po = poConverter.domainToPo(task);
     if (task.getId() == null) {
-      asyncTaskMapper.insert(task);
+      asyncTaskMapper.insert(po);
+      task.setId(po.getId());
     } else {
-      asyncTaskMapper.updateById(task);
+      asyncTaskMapper.updateById(po);
     }
   }
 
@@ -158,11 +167,14 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
     if (tenantCode == null || tenantCode.isBlank()) {
       return List.of();
     }
-    LambdaQueryWrapper<AsyncTask> wrapper = new LambdaQueryWrapper<AsyncTask>()
-        .eq(AsyncTask::getTenantCode, tenantCode)
-        .in(AsyncTask::getStatus, ACTIVE_STATUSES)
-        .orderByAsc(AsyncTask::getCreatedAt);
-    return asyncTaskMapper.selectList(wrapper);
+    List<AsyncTaskPO> poList = asyncTaskMapper.selectList(
+        new LambdaQueryWrapper<AsyncTaskPO>()
+            .eq(AsyncTaskPO::getTenantCode, tenantCode)
+            .in(AsyncTaskPO::getStatus, ACTIVE_STATUSES)
+            .orderByAsc(AsyncTaskPO::getCreatedAt));
+    return poList.stream()
+        .map(poConverter::poToDomain)
+        .toList();
   }
 
   @Override

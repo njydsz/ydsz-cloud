@@ -12,6 +12,8 @@ import com.njydsz.agent.domain.repository.AgentTraceRepository;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.domain.vo.AgentTraceVO;
+import com.njydsz.agent.infra.converter.AgentPoConverter;
+import com.njydsz.agent.infra.entity.AgentTracePO;
 import com.njydsz.agent.infra.mapper.AgentTraceMapper;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 import com.njydsz.agent.infra.trace.PgTraceRecorder;
@@ -20,13 +22,10 @@ import com.njydsz.agent.infra.trace.PgTraceRecorder;
  * Agent 执行链路 Repository 实现
  *
  * <p>基于 MyBatis-Plus 实现 {@link AgentTraceRepository} 接口。
+ * 写入时通过 {@link AgentPoConverter} 将 domain 实体转为 PO（含 MP 注解），
+ * 读取时通过 {@link AgentPoConverter} 将 PO 转为 domain 后再经 {@link AgentConverter} 转为 VO。
  *
- * <p><b>设计要点：</b>
- *
- * <ul>
- *   <li>通过 {@link AgentConverter} 将 DO 转换为 VO 后返回
- *   <li>CUD 入参 DTO 通过 {@link AgentConverter} 转换为 DO 后执行数据库操作
- * </ul>
+ * <p><b>DDD 分层：</b> domain 层 AgentTrace 为纯净 POJO；PO 层承载 MP 注解。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -39,21 +38,26 @@ public class AgentTraceRepositoryImpl implements AgentTraceRepository {
 
   private final AgentConverter converter;
 
+  private final AgentPoConverter poConverter;
+
   @Override
   public boolean insert(AgentTraceDTO dto) {
     AgentTrace entity = converter.dtoToEntity(dto);
-    return agentTraceMapper.insert(entity) > 0;
+    return agentTraceMapper.insert(poConverter.domainToPo(entity)) > 0;
   }
 
   @Override
   public Optional<AgentTraceVO> findById(String traceId) {
-    return Optional.ofNullable(agentTraceMapper.selectById(traceId)).map(converter::entityToVO);
+    AgentTracePO po = agentTraceMapper.selectById(traceId);
+    return Optional.ofNullable(po)
+        .map(poConverter::poToDomain)
+        .map(converter::entityToVO);
   }
 
   @Override
   public boolean updateById(AgentTraceDTO dto) {
     AgentTrace entity = converter.dtoToEntityWithId(dto);
-    return agentTraceMapper.updateById(entity) > 0;
+    return agentTraceMapper.updateById(poConverter.domainToPo(entity)) > 0;
   }
 
   @Override

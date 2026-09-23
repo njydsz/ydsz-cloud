@@ -1,20 +1,20 @@
 package com.njydsz.agent.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.njydsz.agent.entity.base.DomainBaseEntity;
+
 /**
- * Agent 执行链路（映射 ydsz_agt_trace 表）
+ * Agent 执行链路（domain 纯净 POJO，无 MP 注解）
  *
- * <p>记录一次 Agent 执行的完整元数据，包括所属对话、Agent 类型、执行状态与总耗时。 步骤明细存储在 {@code ydsz_agt_trace_step} 表中，通过
- * {@code traceId} 关联。
+ * <p>记录一次 Agent 执行的完整元数据，包括所属对话、Agent 类型、执行状态与总耗时。
+ * 步骤明细存储在 {@code ydsz_agt_trace_step} 表中，通过 traceId 关联。
  *
- * <p><b>线程安全</b>：持久化实体，可变；仅在单请求/单事务内使用，勿跨线程共享。
+ * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
+ * 持久化映射由 {@code infra.entity.AgentTracePO} 承担。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -22,22 +22,16 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@EqualsAndHashCode
-@TableName("ydsz_agt_trace")
-public class AgentTrace {
+@EqualsAndHashCode(callSuper = true)
+public class AgentTrace extends DomainBaseEntity<String> {
 
-  /** 链路唯一 ID（主键，业务生成非自增）。 */
-  @TableId(type = IdType.INPUT)
-  private String traceId;
+  private static final long serialVersionUID = 1L;
 
   /** 所属对话 ID */
   private String conversationId;
 
   /** Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR） */
   private String agentId;
-
-  /** 执行状态（RUNNING/SUCCESS/FAILED/MAX_ITERATIONS/GUARDRAIL_REJECTED） */
-  private String status;
 
   /** 总耗时（毫秒） */
   private Long totalDurationMs;
