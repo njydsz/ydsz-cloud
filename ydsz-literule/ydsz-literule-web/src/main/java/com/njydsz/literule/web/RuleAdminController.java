@@ -27,6 +27,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
@@ -352,9 +353,9 @@ public class RuleAdminController {
   public YdszResponse<List<RuleResultVO>> evaluate(
       @RequestParam(required = false) String ruleCode,
       @RequestParam(required = false) String scenario,
-      @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
       @RequestHeader(value = "X-Trace-Id", required = false) String traceId,
       @RequestBody Map<String, Object> facts) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String scen = scenario != null ? scenario : "DEFAULT";
     RuleContextVO context =
         tenantId != null

@@ -35,7 +35,9 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
  * <li><b>模板缓存统计</b>：{@code GET /ops/template-cache/stats} — 返回 YdszCache 缓存条目数、命中率、淘汰次数等指标
  *   <li><b>模板缓存清除</b>：{@code DELETE /ops/template-cache?template=xxx} — 失效指定模板的编译缓存
  *   <li><b>模板缓存全清</b>：{@code DELETE /ops/template-cache/all} — 清空所有模板编译缓存
- *   <li><b>BloomFilter 统计</b>：{@code GET /ops/bloomfilter/stats} — 返回 BloomFilter 容量、误判率、窗口年龄等指标
+ * <li><b>BloomFilter 统计</b>：{@code GET /ops/bloomfilter/stats} — 返回 BloomFilter 容量、误判率、窗口年龄等指标
+ *   <li><b>管线拓扑</b>：{@code GET /ops/pipeline/topology} — 返回各模板下 Handler 链执行顺序与中文描述
+ *   <li><b>定时消息积压</b：{@code GET /ops/scheduled/backlog} — 返回到期未发送的定时消息积压数量
  * </ul>
  *
  * <p><b>安全要求：</b>所有接口均需高权限认证（{@code MESSAGE_LOG_VIEW} 或 {@code MESSAGE_TEMPLATE_EDIT}），防止越权操作。

@@ -2,6 +2,8 @@ package com.njydsz.workflow.server.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -9,9 +11,25 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 批量操作结果
+ * 批量操作结果。
  *
- * <p>封装批量审批操作的执行结果，包含成功/失败计数和失败详情。
+ * <p>统一封装所有批量操作的执行结果（批量通过、批量驳回、批量转办、批量催办等）。
+ * 结构固定为 totalCount / successCount / failCount + 失败详情列表 + 耗时。
+ *
+ * <p><b>响应标准化约定（P0-7）：所有批量操作 API 返回此结构或其子类的 data 字段，
+ *
+ * <pre>{@code
+ * {
+ *   "code": 200,
+ *   "data": {
+ *     "totalCount": 10,
+ *     "successCount": 8,
+ *     "failCount": 2,
+ *     "failures": [{"targetId": "t1", "reason": "已审批"}],
+ *     "durationMs": 340
+ *   }
+ * }
+ * }</pre>
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -21,7 +39,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BatchOperationResult implements Serializable {
 
-  @Serial private static final long serialVersionUID = 1L;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   /** 总操作数量 */
   private int totalCount;
@@ -35,63 +54,91 @@ public class BatchOperationResult implements Serializable {
   /** 失败详情列表 */
   private List<FailureDetail> failures;
 
+  /** 操作耗时（毫秒） */
+  private long durationMs;
+
+  /** 是否全部成功（计算属性：failCount == 0） */
+  public boolean isAllSuccess() {
+    return failCount == 0;
+  }
+
+  // ============================== 工厂方法 ==============================
+
   /**
-   * 创建成功结果
+   * 创建全部成功结果。
    *
    * @param totalCount 总数
-   * @param successCount 成功数
+   * @param durationMs 耗时毫秒
    * @return 批量操作结果
    */
-  public static BatchOperationResult success(int totalCount, int successCount) {
+  public static BatchOperationResult allSuccess(int totalCount, long durationMs) {
     BatchOperationResult result = new BatchOperationResult();
     result.setTotalCount(totalCount);
-    result.setSuccessCount(successCount);
-    result.setFailCount(totalCount - successCount);
+    result.setSuccessCount(totalCount);
+    result.setFailCount(0);
+    result.setFailures(Collections.emptyList());
+    result.setDurationMs(durationMs);
     return result;
   }
 
   /**
-   * 创建失败结果
+   * 创建部分失败结果。
    *
    * @param totalCount 总数
    * @param successCount 成功数
    * @param failures 失败详情
+   * @param durationMs 耗时毫秒
    * @return 批量操作结果
    */
-  public static BatchOperationResult withFailures(
-      int totalCount, int successCount, List<FailureDetail> failures) {
+  public static BatchOperationResult partial(int totalCount, int successCount,
+      List<FailureDetail> failures, long durationMs) {
     BatchOperationResult result = new BatchOperationResult();
     result.setTotalCount(totalCount);
     result.setSuccessCount(successCount);
     result.setFailCount(totalCount - successCount);
     result.setFailures(failures);
+    result.setDurationMs(durationMs);
     return result;
   }
 
   /**
-   * 失败详情
+   * 便捷方法：构建一个失败详情列表（ Builder 风格用法）。
+   *
+   * @return 失败详情列表（可变，可 add 后传入 partial 工厂方法）
+   */
+  public static List<FailureDetail> newFailureList() {
+    return new ArrayList<>(8);
+  }
+
+  // ============================== 失败详情 ==============================
+
+  /**
+   * 批量操作失败详情。
+   *
+   * <p>taskId / targetId 为操作目标标识，reason 为失败原因。
    */
   @Data
   @NoArgsConstructor
+  @AllArgsConstructor
   public static class FailureDetail implements Serializable {
 
-    @Serial private static final long serialVersionUID = 1L;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-    /** 任务 ID */
-    private String taskId;
+    /** 操作目标标识（任务 ID / 实例 ID / 定义 ID 等，由调用方赋值） */
+    private String targetId;
 
     /** 失败原因 */
     private String reason;
 
-    
     /**
-     * 构造批量失败明细。
+     * 构造失败详情。
      *
-     * @param taskId 失败的任务 ID
+     * @param targetId 目标标识
      * @param reason 失败原因
      */
-    public FailureDetail(String taskId, String reason) {
-      this.taskId = taskId;
+    public FailureDetail(String targetId, String reason) {
+      this.targetId = targetId;
       this.reason = reason;
     }
   }

@@ -667,6 +667,79 @@ rules:
     fix: "注入 NotifyHelper"
     source: "编码规范 23.6 节"
 
+  # ============================================
+  # COMMON-009 ~ COMMON-013: AI 红线（本次全局引用分析补充）
+  # ============================================
+  - id: "YDIZ-COMMON-009"
+    category: "common-reuse"
+    severity: "P0"
+    title: "【AI 红线】Redis 操作禁止使用 RedissonClient，必须通过 ydzz-common-redis"
+    description: |
+      禁止业务代码直接 import org.redisson.* 注入 RedissonClient。
+      所有 Redis 操作必须通过 ydzz-common-redis 封装的类型安全接口：
+      - 字符串/计数器：RedisStringOps（set/get/incr/decr/expire）
+      - 哈希：RedisHashOps（hSet/hGet/hDel/hGetAll）
+      - 列表：RedisListOps（lPush/lRange/lRem）
+      - 集合：RedisSetOps（sAdd/sMembers/sRem）
+      - 有序集合：RedisZSetOps（zAdd/zRange/zRem）
+      - Pub/Sub：RedisPubSubOps（publish/subscribe）
+    pattern: "直接 import org.redisson.api.RedissonClient / RBucket / RAtomicLong / RMap"
+    fix: "注入对应 RedisXxxOps 接口"
+    source: "P0-lock：Redisson → RedisStringOps 统一迁移"
+
+  - id: "YDIZ-COMMON-010"
+    category: "common-reuse"
+    severity: "P0"
+    title: "【AI 红线】JSON 操作禁止使用 Jackson ObjectMapper，必须使用 YdszJson"
+    description: |
+      禁止业务代码中直接 new ObjectMapper() 或注入 com.fasterxml.jackson.databind.ObjectMapper。
+      所有 JSON 序列化/反序列化必须通过 ydzs-common-json 的 YdszJson：
+      - 对象 → JSON：YdszJson.toJson(obj)
+      - JSON → 对象：YdszJson.fromJson(json, Clazz.class)
+      - JSON → Map：YdszJson.parseMap(json)
+      - JSON → List：YdszJson.parseArray(json, elementClazz)
+    pattern: "直接 import com.fasterxml.jackson.databind.ObjectMapper 或 new ObjectMapper()"
+    fix: "使用 YdszJson.toJson/fromJson/parseMap/parseArray"
+    source: "P1-1 修复：Jackson → YdszJson"
+
+  - id: "YDIZ-COMMON-011"
+    category: "common-reuse"
+    severity: "P0"
+    title: "【AI 红线】租户 ID 禁止从 @RequestHeader 获取，必须使用 AuthContextUtils"
+    description: |
+      禁止 Controller 方法参数中使用 @RequestHeader("X-Tenant-Id") 手动获取租户 ID。
+      所有需要租户 ID 的场景必须通过 AuthContextUtils.getTenantIdOrDefault() 获取，
+      保证租户解析逻辑统一、安全、可测试。
+    pattern: "@RequestHeader.*X-Tenant-Id 或 @RequestHeader.*tenant"
+    fix: "String tenantId = AuthContextUtils.getTenantIdOrDefault();"
+    source: "P0-2 修复：手动租户解析 → AuthContextUtils"
+
+  - id: "YDIZ-COMMON-012"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【AI 红线】JDBC 元数据探索禁止直接调用 DatabaseMetaData，必须通过 JdbcSchemaExplorer"
+    description: |
+      禁止业务代码直接使用 java.sql.DatabaseMetaData / Connection.getMetaData() 获取表/列/索引元数据。
+      必须通过 ydzz-common-jdbc 的 JdbcSchemaExplorer 统一探索接口。
+    pattern: "直接调用 connection.getMetaData() 或 DatabaseMetaData.getColumns/getTables"
+    fix: "注入 JdbcSchemaExplorer"
+    source: "P2-jdbc-explorer：统一 JDBC 元数据探索"
+
+  - id: "YDIZ-COMMON-013"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【AI 红线】配额计数器禁止直接使用 Redis INCR/DECR，必须通过 QuotaCounter"
+    description: |
+      禁止业务代码自行编写 Redis INCR/DECR + 本地降级逻辑实现租户用量统计。
+      必须使用 ydzz-common-safe 的 QuotaCounter，该组件提供：
+      - 首次 INCR 自动设 TTL
+      - DECR 带下限保护（floor）
+      - Redis 异常自动降级到本地 AtomicLong
+      - 统一 key 前缀管理
+    pattern: "自行编写 Redis INCR/DECR + try-catch + AtomicLong 降级实现租户计数"
+    fix: "注入 QuotaCounter"
+    source: "P2-quota：QuotaCounter 抽象下沉至 common-safe"
+
   # =
   十三、安全规范（2 条）
   # ============================================

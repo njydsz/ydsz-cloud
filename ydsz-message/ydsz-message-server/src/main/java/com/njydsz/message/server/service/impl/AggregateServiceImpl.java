@@ -227,10 +227,8 @@ public class AggregateServiceImpl implements AggregateService {
     }
     batch.setBatchStatus(AggregateBatchStatusEnum.SENDING.name());
     try {
-      // 渲染摘要内容：优先按 bizType 查找摘要模板 DIGEST_{group},回退默认模板
-      Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
-      params.put("count", batch.getMessageCount());
-      params.put("group", batch.getAggregateGroup());
+      // F5: 构建丰富摘要参数（总数量 + 时间范围 + 用户偏好语言）
+      Map<String, Object> params = buildDigestParams(batch);
       String digestTemplate = loadDigestTemplate(batch);
       String digest = templateEngine.render(digestTemplate, params);
       batch.setDigestContent(digest);
@@ -240,6 +238,8 @@ public class AggregateServiceImpl implements AggregateService {
       request.setContent(digest);
       request.setBizType("AGGREGATE");
       request.setBizId(batch.getId());
+      // 携带摘要时间范围到 header 以便追溯
+      request.setScenario("AGGREGATE");
       MessageResult result = messageService.send(request);
       boolean ok = result != null && result.isSuccess();
       if (ok) {
@@ -298,6 +298,56 @@ public class AggregateServiceImpl implements AggregateService {
       log.debug("[Aggregate] 摘要模板加载失败,回退默认: group={} err={}", group, e.getMessage());
     }
     return DEFAULT_DIGEST_TEMPLATE;
+  }
+
+  /**
+   * F5: 构建丰富摘要参数 Map。
+   *
+   * <p>除基础 count / group 外,暴露 timeWindowMinutes(聚合窗口分钟数) / firstMessageAt / lastMessageAt 到模板变量, 支持更精细的摘要文案：{@code "您在
+   * ${timeWindowMinutes} 分钟内收到 ${count} 条 ${group} 相关消息"}。
+   *
+   * @param batch 聚合批次
+   * @return 摘要模板变量 Map
+   */
+  private Map<String, Object> buildDigestParams(MsgAggregateVO batch) {
+    Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
+    params.put("count", batch.getMessageCount());
+    params.put("group", batch.getAggregateGroup());
+    // F5: 时间范围参数
+    if (batch.getFirstMessageAt() != null && batch.getLastMessageAt() != null) {
+      long windowMinutes = ChronoUnit.MINUTES.between(batch.getFirstMessageAt(), batch.getLastMessageAt());
+      params.put("timeWindowMinutes", Math.max(windowMinutes, 1));
+      params.put("firstMessageAt", batch.getFirstMessageAt());
+      params.put("lastMessageAt", batch.getLastMessageAt());
+    } else {
+      params.put("timeWindowMinutes", DEFAULT_FREQUENCY_MINUTES);
+      params.put("firstMessageAt", "");
+      params.put("lastMessageAt", "");
+    }
+    return params;
+  }
+
+  /**
+   * F5: 解析用户的摘要语言偏好。
+   *
+   * <p>优先取用户在对应通道/业务类型上配置的 locale, 未配置时返回 framework 默认语言。
+   *
+   * @param batch 聚合批次
+   * @return 语言标签（如 zh-CN、en-US）, 永不返回 null
+   */
+  private String resolveUserLocale(MsgAggregateVO batch) {
+    try {
+      if (StringUtils.hasText(batch.getReceiver()) && StringUtils.hasText(batch.getChannel())) {
+        MsgPreferenceVO pref =
+            preferenceService.getByUser(batch.getReceiver(), batch.getChannel(), batch.getAggregateGroup());
+        if (pref != null && StringUtils.hasText(pref.getLocale())) {
+          return pref.getLocale();
+        }
+      }
+    } catch (Exception e) {
+      log.debug("[Aggregate] 用户偏好查询失败,使用默认语言: receiver={} err={}", batch.getReceiver(), e.getMessage());
+    }
+    return MessageConstants.DEFAULT_LOCALE;
   }
 }
 

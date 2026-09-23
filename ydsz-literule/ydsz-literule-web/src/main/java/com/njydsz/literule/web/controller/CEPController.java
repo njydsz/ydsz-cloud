@@ -326,7 +326,7 @@ public class CEPController {
             "totalHits", engine.totalHits()));
   }
 
-  /** CEPPattern → CEPPatternVO 转换 */
+  /** CEPPattern → CEPPatternVO 转换（P0-F1：包含窗口类型和聚合类型字段） */
   private CEPPatternVO toPatternVO(CEPPattern p) {
     CEPPatternVO vo = new CEPPatternVO();
     vo.setId(p.getId());
@@ -337,6 +337,10 @@ public class CEPController {
     vo.setEventType(p.getEventType());
     vo.setFilter(p.getFilter());
     vo.setDescription(p.getDescription());
+    // P0-F1：传递窗口类型和聚合配置
+    vo.setWindowType(p.getWindowType() != null ? p.getWindowType().name() : null);
+    vo.setAggregationType(p.getAggregationType() != null ? p.getAggregationType().name() : null);
+    vo.setAggregationField(p.getAggregationField());
     return vo;
   }
 

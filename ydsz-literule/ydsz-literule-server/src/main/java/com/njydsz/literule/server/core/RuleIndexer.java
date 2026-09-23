@@ -72,9 +72,6 @@ public class RuleIndexer {
   /** 正排索引：规则编码 -> 该规则引用的全部字段名集合（P1-2） */
   private final Map<String, Set<String>> ruleToFields = new ConcurrentHashMap<>();
 
-  /** α 节点共享索引（P2 轻量 RETE α 网络）：字段|操作符 -> 规则编码集合 */
-  private final Map<String, Set<String>> fieldOpIndex = new ConcurrentHashMap<>();
-
   /** 全局规则列表（兼容无场景过滤的场景） */
   private volatile List<Rule> allRules = Collections.emptyList();
 
@@ -124,7 +121,6 @@ public class RuleIndexer {
       mutexGroupIndex.clear();
       fieldToRules.clear();
       ruleToFields.clear();
-      fieldOpIndex.clear();
 
       allRules = new ArrayList<>(rules);
       indexEnabled = rules.size() >= INDEX_THRESHOLD;
@@ -139,9 +135,9 @@ public class RuleIndexer {
       }
 
       log.info(
-          "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, mutexGroups={}, fieldIndexSize={}, alphaNodes={}",
+          "[LiteRule-Indexer] 索引重建完成: totalRules={}, tenants={}, envs={}, scopes={}, mutexGroups={}, fieldIndexSize={}",
           rules.size(), tenantIndex.size(), environmentIndex.size(), scopeIndex.size(),
-          mutexGroupIndex.size(), fieldToRules.size(), fieldOpIndex.size());
+          mutexGroupIndex.size(), fieldToRules.size());
     });
   }
 
@@ -186,11 +182,7 @@ public class RuleIndexer {
           }
         }
       }
-      fieldOpIndex.entrySet().removeIf(entry -> {
-        Set<String> codes = entry.getValue();
-        codes.remove(ruleCode);
-        return codes.isEmpty();
-      });
+      // P1-P5：fieldOpIndex 已移除（建而不用死代码）
     });
   }
 
@@ -365,11 +357,7 @@ public class RuleIndexer {
       for (String field : fields) {
         fieldToRules.computeIfAbsent(field, k -> new LinkedHashSet<>()).add(rule.getCode());
       }
-      // α 节点索引（P2）
-      Set<String> fieldOps = extractFieldOps(rule);
-      for (String fieldOp : fieldOps) {
-        fieldOpIndex.computeIfAbsent(fieldOp, k -> new LinkedHashSet<>()).add(rule.getCode());
-      }
+      // P1-P5：fieldOpIndex（α 节点索引）已移除，减少每次注册/注销的无效维护成本
     }
   }
 

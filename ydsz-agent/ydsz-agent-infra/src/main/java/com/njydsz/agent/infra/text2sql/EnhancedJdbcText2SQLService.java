@@ -1,6 +1,7 @@
 package com.njydsz.agent.infra.text2sql;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
 import lombok.extern.slf4j.Slf4j;
@@ -106,6 +108,9 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
   /** tenantId 格式校验正则（仅允许字母数字和下划线） */
   private static final Pattern TENANT_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
+  /** Schema 缓存 TTL（毫秒），默认 5 分钟 */
+  private static final long SCHEMA_CACHE_TTL_MS = 300_000L;
+
   private final LlmClient llmClient;
   private final DataSource dataSource;
   private final SchemaRecallService schemaRecallService;
@@ -116,6 +121,11 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
   private final boolean feasibilityCheckEnabled;
   private final boolean consistencyCheckEnabled;
   private final double consistencyThreshold;
+  private final List<String> exposedTables;
+
+  /** Schema 简易缓存：全量 Schema 加载时间戳 + 数据 */
+  private volatile long schemaCacheTimestamp = 0L;
+  private volatile List<TableSchema> schemaCacheData = null;
 
   /**
    * 构造增强版 Text2SQL 服务（五步 StateGraph 编排）。
@@ -131,6 +141,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
    * @param feasibilityCheckEnabled 可行性评估步骤是否启用
    * @param consistencyCheckEnabled 语义一致性校验步骤是否启用
    * @param consistencyThreshold 语义一致性通过阈值（≥ 该值才执行 SQL）
+   * @param exposedTables 暴露的表白名单（可为 null，表示暴露全部用户表）
    */
   public EnhancedJdbcText2SQLService(
       LlmClient llmClient,
@@ -145,7 +156,8 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
           boolean feasibilityCheckEnabled,
       @Value("${ydsz.agent.text2sql.consistency-check-enabled:true}")
           boolean consistencyCheckEnabled,
-      @Value("${ydsz.agent.text2sql.consistency-threshold:0.7}") double consistencyThreshold) {
+      @Value("${ydsz.agent.text2sql.consistency-threshold:0.7}") double consistencyThreshold,
+      @Value("${ydsz.agent.text2sql.exposed-tables:#{null}}") List<String> exposedTables) {
     this.llmClient = llmClient;
     this.dataSource = dataSource;
     this.schemaRecallService = schemaRecallService;
@@ -156,6 +168,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
     this.feasibilityCheckEnabled = feasibilityCheckEnabled;
     this.consistencyCheckEnabled = consistencyCheckEnabled;
     this.consistencyThreshold = consistencyThreshold;
+    this.exposedTables = exposedTables;
   }
 
   /**
@@ -620,13 +633,107 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
   }
 
   /**
-   * 加载全量表 Schema（当前版本返回空列表，实际项目中应从数据库元数据加载或配置注入）。
+   * 加载全量表 Schema（通过 JDBC DatabaseMetaData 动态获取）。
+   *
+   * <p>查询当前数据库中所有用户表（排除系统表），获取表名、列名、类型等元数据。
+   * 支持 {@code ydsz.agent.text2sql.exposed-tables} 配置白名单过滤；
+   * 未配置时暴露全部用户表。结果缓存 5 分钟，避免频繁访问数据库元数据。
    *
    * @return 全量表 Schema
    */
   private List<TableSchema> loadAllSchemas() {
-    // TODO: 从数据库元数据或配置中加载
-    return List.of();
+    // 缓存命中时直接返回
+    long now = System.currentTimeMillis();
+    if (schemaCacheData != null && (now - schemaCacheTimestamp) < SCHEMA_CACHE_TTL_MS) {
+      return schemaCacheData;
+    }
+
+    List<TableSchema> schemas = loadSchemasFromMetaData();
+
+    // 写入缓存
+    schemaCacheData = schemas;
+    schemaCacheTimestamp = System.currentTimeMillis();
+
+    if (schemas.isEmpty()) {
+      log.warn("[Text2SQL:Schema] 未加载到任何表 Schema，Text2SQL 召回将无效");
+    } else {
+      log.info("[Text2SQL:Schema] 加载表 Schema 完成: count={}", schemas.size());
+    }
+    return schemas;
+  }
+
+  /**
+   * 从数据库元数据中读取表结构。
+   *
+   * @return 表 Schema 列表
+   */
+  private List<TableSchema> loadSchemasFromMetaData() {
+    List<TableSchema> result = new ArrayList<>(COLLECTION_CAPACITY);
+    try (Connection conn = dataSource.getConnection()) {
+      DatabaseMetaData metaData = conn.getMetaData();
+      String catalog = conn.getCatalog();
+      String schema = conn.getSchema();
+
+      // 白名单过滤
+      Set<String> exposedTableSet = exposedTables != null
+          ? exposedTables.stream().map(String::toLowerCase).collect(Collectors.toSet())
+          : null;
+
+      try (ResultSet tables = metaData.getTables(catalog, schema, null, new String[]{"TABLE", "VIEW"})) {
+        while (tables.next()) {
+          String tableName = tables.getString("TABLE_NAME");
+          String tableRemarks = tables.getString("REMARKS");
+
+          if (tableName == null || tableName.isBlank()) {
+            continue;
+          }
+
+          // 排除系统表（pg_ 开头为 PostgreSQL 系统表，sql_ 开头为信息模式）
+          if (tableName.startsWith("pg_") || tableName.startsWith("sql_")) {
+            continue;
+          }
+
+          // 白名单过滤
+          if (exposedTableSet != null && !exposedTableSet.contains(tableName.toLowerCase())) {
+            continue;
+          }
+
+          // 读取列信息
+          List<TableSchema.ColumnDefinition> columns = loadColumns(metaData, catalog, schema, tableName);
+          result.add(new TableSchema(tableName, columns, tableRemarks));
+        }
+      }
+    } catch (Exception e) {
+      log.error("[Text2SQL:Schema] 加载数据库元数据失败: {}", e.getMessage(), e);
+    }
+    return result;
+  }
+
+  /**
+   * 读取指定表的列信息。
+   *
+   * @param metaData  数据库元数据
+   * @param catalog   数据库 catalog
+   * @param schema    数据库 schema
+   * @param tableName 表名
+   * @return 列定义列表
+   */
+  private List<TableSchema.ColumnDefinition> loadColumns(
+      DatabaseMetaData metaData, String catalog, String schema, String tableName) {
+    List<TableSchema.ColumnDefinition> columns = new ArrayList<>();
+    try (ResultSet cols = metaData.getColumns(catalog, schema, tableName, null)) {
+      while (cols.next()) {
+        String colName = cols.getString("COLUMN_NAME");
+        String colType = cols.getString("TYPE_NAME");
+        String colRemarks = cols.getString("REMARKS");
+        if (colName != null) {
+          columns.add(new TableSchema.ColumnDefinition(colName, colType != null ? colType : "text", colRemarks));
+        }
+      }
+    } catch (Exception e) {
+      log.warn("[Text2SQL:Schema] 读取列信息失败: table={}, error={}", tableName, e.getMessage());
+    }
+    return columns;
   }
 
   /**

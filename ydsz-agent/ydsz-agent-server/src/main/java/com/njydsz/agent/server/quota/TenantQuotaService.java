@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.quota;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -16,6 +17,7 @@ import com.njydsz.agent.domain.model.CostEstimate;
 import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.safe.quota.QuotaCounter;
 
 /**
  * 租户 LLM 配额管理服务
@@ -45,19 +47,24 @@ public class TenantQuotaService {
   /** 月度配额 Key 前缀 */
   private static final String MONTHLY_KEY_PREFIX = "agent:quota:monthly:";
 
-  /** 日期格式化 */
-  private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+  /** 每日 Key 保留 48 小时，覆盖跨时区边界 */
+  private static final Duration DAILY_TTL = Duration.ofHours(48);
 
-  /** 月份格式化 */
-  private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
+  /** 月度 Key 保留 35 天 */
+  private static final Duration MONTHLY_TTL = Duration.ofDays(35);
 
-  private final RedisStringOps redisStringOps;
+  /** 每日 Token 计数器（带 TTL 自动过期 + 本地降级） */
+  private final QuotaCounter dailyTokenCounter;
 
-  /** 本地降级缓存（Redis 不可用时使用） */
+  /** 月度成本计数器（微美元单位，带 TTL 自动过期 + 本地降级） */
+  private final QuotaCounter monthlyCostCounter;
+
+  /** 本地降级缓存（保留用于微美元精度本地降级） */
   private final ConcurrentMap<String, AtomicLong> localFallback = new ConcurrentHashMap<>();
 
   public TenantQuotaService(RedisStringOps redisStringOps) {
-    this.redisStringOps = redisStringOps;
+    this.dailyTokenCounter = new QuotaCounter(redisStringOps, DAILY_KEY_PREFIX, DAILY_TTL);
+    this.monthlyCostCounter = new QuotaCounter(redisStringOps, MONTHLY_KEY_PREFIX, MONTHLY_TTL);
   }
 
   /**
@@ -135,14 +142,7 @@ public class TenantQuotaService {
    * @return 今日已用 Token 数
    */
   public long getDailyTokenCount(String tenantId) {
-    String key = buildDailyKey(tenantId != null ? tenantId : "default");
-    try {
-      Long val = redisStringOps.get(key, Long.class);
-      return val != null ? val : 0L;
-    } catch (Exception e) {
-      log.debug("[Quota] Redis 获取每日 Token 计数失败，降级本地缓存: {}", e.getMessage());
-      return localFallback.getOrDefault(key, new AtomicLong(0)).get();
-    }
+    return dailyTokenCounter.get(buildDateSuffix(tenantId));
   }
 
   /**
@@ -152,45 +152,34 @@ public class TenantQuotaService {
    * @return 本月已用成本（USD）
    */
   public double getMonthlyCostUsd(String tenantId) {
-    String key = buildMonthlyKey(tenantId != null ? tenantId : "default");
-    try {
-      Double val = redisStringOps.get(key, Double.class);
-      return val != null ? val : 0.0;
-    } catch (Exception e) {
-      log.debug("[Quota] Redis 获取月度成本失败，降级本地缓存: {}", e.getMessage());
-      return localFallback.getOrDefault(key, new AtomicLong(0)).get() / 10000.0;
-    }
+    String suffix = buildMonthSuffix(tenantId != null ? tenantId : "default");
+    // 微美元单位的 long 值转为 USD
+    return monthlyCostCounter.get(suffix) / 10000.0;
   }
 
   // ======================== 内部方法 ========================
 
   private long incrementDailyTokens(String tenantId, long delta) {
-    String key = buildDailyKey(tenantId);
-    try {
-      return redisStringOps.incr(key, delta);
-    } catch (Exception e) {
-      log.warn("[Quota] Redis INCR 失败，降级本地缓存: key={}, delta={}", key, delta);
-      return localFallback.computeIfAbsent(key, k -> new AtomicLong(0)).addAndGet(delta);
-    }
+    return dailyTokenCounter.incr(buildDateSuffix(tenantId), delta);
   }
 
   private double incrementMonthlyCost(String tenantId, double deltaUsd) {
-    String key = buildMonthlyKey(tenantId);
+    long microUsd = Math.round(deltaUsd * 10000);
+    String suffix = buildMonthSuffix(tenantId);
     try {
-      return redisStringOps.incrByFloat(key, deltaUsd);
+      return monthlyCostCounter.incr(suffix, microUsd) / 10000.0;
     } catch (Exception e) {
-      log.warn("[Quota] Redis INCR BY FLOAT 失败，降级本地缓存: key={}, delta={}", key, deltaUsd);
-      // 本地缓存以微美元为单位存储（double -> long 转换）
-      long microUsd = Math.round(deltaUsd * 10000);
-      return localFallback.computeIfAbsent(key, k -> new AtomicLong(0)).addAndGet(microUsd) / 10000.0;
+      // QuotaCounter 内部降级异常后再次失败时，回退到本地缓存
+      log.warn("[Quota] Redis 月度成本 INCR 双重失败，本地降级: tenantId={}, delta={}", tenantId, deltaUsd);
+      return localFallback.computeIfAbsent(suffix, k -> new AtomicLong(0)).addAndGet(microUsd) / 10000.0;
     }
   }
 
-  private static String buildDailyKey(String tenantId) {
-    return DAILY_KEY_PREFIX + tenantId + ":" + LocalDate.now(ZoneId.of("Asia/Shanghai")).format(DATE_FMT);
+  private static String buildDateSuffix(String tenantId) {
+    return tenantId + ":" + LocalDate.now(ZoneId.of("Asia/Shanghai")).format(DATE_FMT);
   }
 
-  private static String buildMonthlyKey(String tenantId) {
-    return MONTHLY_KEY_PREFIX + tenantId + ":" + YearMonth.now(ZoneId.of("Asia/Shanghai")).format(MONTH_FMT);
+  private static String buildMonthSuffix(String tenantId) {
+    return tenantId + ":" + YearMonth.now(ZoneId.of("Asia/Shanghai")).format(MONTH_FMT);
   }
 }

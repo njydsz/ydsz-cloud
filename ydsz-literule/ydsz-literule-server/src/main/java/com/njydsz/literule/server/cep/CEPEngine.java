@@ -179,7 +179,12 @@ public class CEPEngine implements Serializable {
             .computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>())
             .computeIfAbsent(partitionKey, k -> new ConcurrentLinkedDeque<>());
 
-    handleTumblingWindow(pattern, event, queue);
+    // 根据窗口类型分发
+    if (pattern.getWindowType() == CEPPattern.CEPWindowType.SLIDING) {
+      handleSlidingWindow(pattern, event, queue);
+    } else {
+      handleTumblingWindow(pattern, event, queue);
+    }
   }
 
   private boolean matchesType(CEPPattern pattern, CEPEvent event) {
@@ -192,6 +197,51 @@ public class CEPEngine implements Serializable {
     return true;
   }
 
+  /** 计算窗口内聚合指标（P0-F1：支持 COUNT/SUM/AVG） */
+  private double computeAggregation(
+      CEPPattern pattern, ConcurrentLinkedDeque<CEPEvent> events, Instant windowStart) {
+    CEPPattern.CEPAggregationType aggType = pattern.getAggregationType();
+    // 先过滤窗口内事件（重用作裁剪后结果）
+    List<CEPEvent> windowed = new ArrayList<>();
+    for (CEPEvent e : events) {
+      if (!e.getTimestamp().isBefore(windowStart)) {
+        windowed.add(e);
+      }
+    }
+    if (windowed.isEmpty()) {
+      return 0.0;
+    }
+    if (aggType == CEPPattern.CEPAggregationType.COUNT) {
+      return windowed.size();
+    }
+    // SUM / AVG 需要提取 aggregationField 数值
+    String field = pattern.getAggregationField();
+    if (field == null || field.isBlank()) {
+      // 无聚合字段时退化回计数
+      return windowed.size();
+    }
+    double sum = 0.0;
+    int validCount = 0;
+    for (CEPEvent e : windowed) {
+      Object val = e.getAttributes() != null ? e.getAttributes().get(field) : null;
+      if (val instanceof Number num) {
+        sum += num.doubleValue();
+        validCount++;
+      } else if (val != null) {
+        try {
+          sum += Double.parseDouble(val.toString());
+          validCount++;
+        } catch (NumberFormatException ignored) {
+          // 忽略无法解析的值
+        }
+      }
+    }
+    if (validCount == 0) {
+      return 0.0;
+    }
+    return aggType == CEPPattern.CEPAggregationType.AVG ? sum / validCount : sum;
+  }
+
   /** 滚动窗口：固定大小不重叠，到期后清空 */
   private void handleTumblingWindow(
       CEPPattern pattern, CEPEvent event, ConcurrentLinkedDeque<CEPEvent> queue) {
@@ -199,15 +249,40 @@ public class CEPEngine implements Serializable {
     Instant windowStart = now.minus(pattern.getWindow());
     queue.addLast(event);
     enforceQueueLimit(queue);
-    // 裁剪窗口外
     while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
       queue.pollFirst();
     }
-    int count = queue.size();
-    if (count >= pattern.getThreshold()) {
-      emitHit(pattern, new ArrayList<>(queue), count, event);
-      // 滚动窗口命中后清空，开启下一个窗口
+    // P0-F1：使用聚合函数计算指标（COUNT = 旧行为 queue.size()）
+    double metric = computeAggregation(pattern, queue, windowStart);
+    if (metric >= pattern.getThreshold()) {
+      List<CEPEvent> matched = new ArrayList<>(queue);
+      emitHit(pattern, matched, metric, event);
       queue.clear();
+    }
+  }
+
+  /**
+   * 滑动窗口（P0-F1 26.09.23）：重叠窗口，每次事件到达重新计算窗口内聚合。
+   *
+   * <p>命中后不清空队列，仅移除最旧事件实现窗口滑动。适用于需要连续监测的场景（如：10 分钟内连续累计交易金额 > 100 万）。
+   */
+  private void handleSlidingWindow(
+      CEPPattern pattern, CEPEvent event, ConcurrentLinkedDeque<CEPEvent> queue) {
+    Instant now = event.getTimestamp();
+    Instant windowStart = now.minus(pattern.getWindow());
+    queue.addLast(event);
+    enforceQueueLimit(queue);
+    while (!queue.isEmpty() && queue.peekFirst().getTimestamp().isBefore(windowStart)) {
+      queue.pollFirst();
+    }
+    double metric = computeAggregation(pattern, queue, windowStart);
+    if (metric >= pattern.getThreshold()) {
+      List<CEPEvent> matched = new ArrayList<>(queue);
+      emitHit(pattern, matched, metric, event);
+      // 滑动窗口命中后：移除最旧事件让窗口自然前移，避免连续重复命中
+      if (!queue.isEmpty()) {
+        queue.pollFirst();
+      }
     }
   }
 
@@ -225,6 +300,17 @@ public class CEPEngine implements Serializable {
     if (trigger != null) {
       hit.getContext().put("partitionKey", trigger.getPartitionKey());
       hit.getContext().put("triggerType", trigger.getType());
+    }
+    // P0-F1：记录窗口类型和聚合类型到上下文
+    if (pattern.getWindowType() != null) {
+      hit.getContext().put("windowType", pattern.getWindowType().name());
+    }
+    if (pattern.getAggregationType() != null) {
+      hit.getContext().put("aggregationType", pattern.getAggregationType().name());
+    }
+    String aggField = pattern.getAggregationField();
+    if (aggField != null && !aggField.isBlank()) {
+      hit.getContext().put("aggregationField", aggField);
     }
     totalHits.incrementAndGet();
     for (Consumer<CEPHit> l : listeners) {

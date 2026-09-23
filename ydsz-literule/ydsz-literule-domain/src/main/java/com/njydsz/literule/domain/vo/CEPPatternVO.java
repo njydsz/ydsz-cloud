@@ -39,4 +39,19 @@ public class CEPPatternVO {
 
   /** 模式描述 */
   private String description;
+
+  /**
+   * 窗口类型（P0-F1 26.09.23）：TUMBLING(滚动窗口，不重叠) / SLIDING(滑动窗口，重叠)。默认 TUMBLING。
+   */
+  private String windowType;
+
+  /**
+   * 聚合类型（P0-F1 26.09.23）：COUNT(计数) / SUM(求和) / AVG(平均值)。默认 COUNT。
+   */
+  private String aggregationType;
+
+  /**
+   * 聚合字段（P0-F1 26.09.23）：SUM/AVG 模式下从事件 attributes 中取该字段做数值聚合。COUNT 模式忽略。
+   */
+  private String aggregationField;
 }

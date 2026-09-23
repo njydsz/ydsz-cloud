@@ -523,6 +523,14 @@ public class ScriptRule implements Rule {
       customizerClass
           .getMethod("setStaticImportsWhitelist", List.class)
           .invoke(customizer, Collections.emptyList());
+      // P1-X5（26.09.23）：启用间接 import 检查 — 禁止通过全限定类名访问（如 java.lang.Runtime.exec）
+      try {
+        customizerClass
+            .getMethod("setIndirectImportCheckEnabled", boolean.class)
+            .invoke(customizer, Boolean.TRUE);
+      } catch (NoSuchMethodException ignored) {
+        log.debug("[ScriptRule] setIndirectImportCheckEnabled 不可用，跳过间接 import 检查");
+      }
       // 接收者白名单：仅允许安全类型
       List<Class<?>> receivers =
           List.of(
