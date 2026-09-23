@@ -39,6 +39,13 @@ public class BytecodeInterpreter {
   /** 操作数栈最小初始容量 */
   private static final int MIN_STACK_CAPACITY = 16;
 
+  /**
+   * P1-P3（26.09.23）：ThreadLocal 复用栈帧，避免每次 execute 都 new Object[]
+   *
+   * <p>栈按需扩容，最大容量不设上界但受 maxSteps 限制栈深度。在多线程场景下每个线程独立持有自己的栈副本。
+   */
+  private static final ThreadLocal<Object[]> STACK_HOLDER = new ThreadLocal<>();
+
   private final FunctionRegistry functionRegistry;
   private final long maxSteps;
   private final long timeoutMs;
@@ -96,7 +103,8 @@ public class BytecodeInterpreter {
     long deadlineNanos = timeoutMs > 0 ? System.nanoTime() + timeoutMs * 1_000_000L : 0L;
 
     // 操作数栈（使用数组 + 栈指针实现，避免 ArrayList 扩容开销）
-    Object[] stack = createStack(constants);
+    // P1-P3：从 ThreadLocal 获取栈帧（按需创建/扩容），减少 GC 压力
+    Object[] stack = acquireStack(constants);
     int sp = 0; // 栈指针
 
     while (ip < code.length) {
@@ -290,9 +298,32 @@ public class BytecodeInterpreter {
         | (code[offset + 1] & BytecodeCompiler.BYTE_MASK);
   }
 
-  /** 创建操作数栈 — 基于常量池大小给出合理初始容量 */
+  /**
+   * 创建操作数栈 — 基于常量池大小给出合理初始容量
+   *
+   * @deprecated 已被 {@link #acquireStack} 替代（P1-P3：支持栈帧复用）
+   */
+  @Deprecated
   private static Object[] createStack(List<Object> constants) {
     return new Object[Math.max(MIN_STACK_CAPACITY, constants.size() * 2 + MIN_STACK_CAPACITY)];
+  }
+
+  /**
+   * P1-P3：从 ThreadLocal 获取/创建栈帧
+   *
+   * <p>如果当前线程的栈为 null 或容量不足，创建新数组；否则复用现有栈。
+   *
+   * @param constants 常量池（用于估算初始容量）
+   * @return 操作数栈数组
+   */
+  private static Object[] acquireStack(List<Object> constants) {
+    int required = Math.max(MIN_STACK_CAPACITY, constants.size() * 2 + MIN_STACK_CAPACITY);
+    Object[] stack = STACK_HOLDER.get();
+    if (stack == null || stack.length < required) {
+      stack = new Object[required];
+      STACK_HOLDER.set(stack);
+    }
+    return stack;
   }
 
   // ===== 算术运算 =====

@@ -20,8 +20,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <p>使用方式：注入 {@link CronjobRedisOps} 替代直接注入 {@link RedisStringOps}。
  *
- * <p><b>例外</b>：{@code RedissonLeaderElector} 因选举语义需要 Redisson WatchDog + 线程持有判定，
- * 依据 §22.5.3 报备保留 {@code RLock} 直用，不通过本入口。
+ * <p>统一封装 ydzs-common-redis 的 RedisStringOps/RedisHashOps/RedisListOps/RedisSetOps/ZSetOps。
  *
  * @author ydsz-team
  * @since 26.09.01

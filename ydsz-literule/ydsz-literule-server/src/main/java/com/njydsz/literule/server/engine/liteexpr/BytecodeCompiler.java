@@ -1,7 +1,9 @@
 package com.njydsz.literule.server.engine.liteexpr;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * LiteExpr 字节码编译器 — 将 AST 编译为栈式虚拟机字节码
@@ -34,6 +36,9 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
 
   /** 常量池 */
   private final ArrayList<Object> constantPool = new ArrayList<>(16);
+
+  /** P1-P2（26.09.23）：常量值 → 索引映射，O(1) 去重查找，替代 ArrayList.indexOf() 的 O(n) */
+  private final Map<Object, Integer> constantIndexMap = new HashMap<>(32);
 
   /** 源表达式文本 */
   private final String sourceExpression;
@@ -272,18 +277,24 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
   }
 
   /**
-   * 添加常量到常量池，返回索引
+   * 添加常量到常量池，返回索引（P1-P2：使用 HashMap 实现 O(1) 去重）
    *
    * @param value 常量值
    * @return 常量池索引
    */
   private int addToConstantPool(Object value) {
-    int index = constantPool.indexOf(value);
-    if (index >= 0) {
-      return index;
+    Integer existing = constantIndexMap.get(value);
+    if (existing != null) {
+      return existing;
     }
+    // null 值特殊处理（HashMap 允许 null key，但 indexOf 对 null 的语义不同）
+    if (value == null && constantIndexMap.containsKey(null)) {
+      return constantIndexMap.get(null);
+    }
+    int index = constantPool.size();
     constantPool.add(value);
-    return constantPool.size() - 1;
+    constantIndexMap.put(value, index);
+    return index;
   }
 
   /**

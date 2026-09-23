@@ -156,4 +156,19 @@ public class MessageMetrics extends SentryMetricsAdapter {
   public void recordException(String channel, String exceptionType) {
     incrementCounter("exception", "channel", safe(channel), "exception", safe(exceptionType));
   }
+
+  /**
+   * F2: 记录一次定时消息扫描批次结果。
+   *
+   * @param total 本次扫描取出的到期消息总数
+   * @param success 成功发送数
+   */
+  public void recordScheduledScan(int total, int success) {
+    incrementCounter("scheduled.scan.total", "result", "total");
+    if (success < total) {
+      incrementCounter("scheduled.scan.total", "result", "partial");
+    } else if (success > 0) {
+      incrementCounter("scheduled.scan.total", "result", "success");
+    }
+  }
 }
