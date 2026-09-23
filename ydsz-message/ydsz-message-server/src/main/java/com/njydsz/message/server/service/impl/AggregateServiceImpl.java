@@ -1,9 +1,11 @@
 package com.njydsz.message.server.service.impl.batch;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
@@ -25,9 +27,11 @@ import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.domain.query.MsgAggregateQuery;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
+import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.service.batch.AggregateService;
+import com.njydsz.message.server.service.config.PreferenceService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.template.TemplateEngine;
 
@@ -80,6 +84,9 @@ public class AggregateServiceImpl implements AggregateService {
 
   /** 分布式锁 */
   private final DistributedLocker distributedLocker;
+
+  /** F5: 用户偏好服务（用于读取摘要语言偏好） */
+  private final PreferenceService preferenceService;
 
   @Override
   public MsgAggregateVO appendOrStart(

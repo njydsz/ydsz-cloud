@@ -245,16 +245,40 @@ public class RuleIndexer {
     }
     envFilteredRules.sort((r1, r2) -> Integer.compare(r1.getPriority(), r2.getPriority()));
 
-    // 2. 场景过滤
+    // 2. 场景过滤（P1-P4：利用 scopeIndex 预建索引加速匹配）
     List<Rule> scopedRules;
     if (scenario == null || "DEFAULT".equals(scenario)) {
       scopedRules = envFilteredRules;
     } else {
-      scopedRules = new ArrayList<>(COLLECTION_CAPACITY_16);
-      for (Rule rule : envFilteredRules) {
-        String scopeVal = rule.getScope();
-        if (scopeVal == null || scopeVal.isBlank() || "ALL".equals(scopeVal) || scopeVal.equals(scenario)) {
-          scopedRules.add(rule);
+      // 先从 scopeIndex 获取该 tenant+scope 的规则集合，再与环境过滤结果取交集
+      List<Rule> scopeMatched = scopeIndex.get(tenantKey + "|" + scenario);
+      if (scopeMatched == null || scopeMatched.isEmpty()) {
+        // 该 scope 下无任何规则 → 环境过滤结果中只有 scopeVal 为 null/ALL 的规则可能命中
+        scopedRules = new ArrayList<>(COLLECTION_CAPACITY_16);
+        for (Rule rule : envFilteredRules) {
+          String scopeVal = rule.getScope();
+          if (scopeVal == null || scopeVal.isBlank() || "ALL".equals(scopeVal)) {
+            scopedRules.add(rule);
+          }
+        }
+      } else {
+        // 将 scopeIndex 命中的规则编码放入 HashSet，O(1) 判断
+        Set<String> scopeMatchedCodes = new HashSet<>(scopeMatched.size() * 2);
+        for (Rule r : scopeMatched) {
+          if (r.getCode() != null) {
+            scopeMatchedCodes.add(r.getCode());
+          }
+        }
+        scopedRules = new ArrayList<>(Math.min(envFilteredRules.size(), scopeMatched.size() + COLLECTION_CAPACITY_16));
+        for (Rule rule : envFilteredRules) {
+          String code = rule.getCode();
+          String scopeVal = rule.getScope();
+          // 规则命中当且仅当：(a) 在 scopeIndex 匹配集中，或 (b) scopeVal 为空/null/ALL（scope 不限）
+          if (code != null && scopeMatchedCodes.contains(code)) {
+            scopedRules.add(rule);
+          } else if (scopeVal == null || scopeVal.isBlank() || "ALL".equals(scopeVal)) {
+            scopedRules.add(rule);
+          }
         }
       }
     }
