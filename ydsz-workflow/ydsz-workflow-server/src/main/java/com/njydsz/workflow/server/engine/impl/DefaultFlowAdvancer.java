@@ -16,6 +16,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
+import com.njydsz.workflow.domain.engine.FlowAdvancer;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
@@ -36,12 +37,16 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceLifecycleMan
  *
  * <p>P0 修复：排他网关互斥（CONDITION 只取第一条匹配）、并行网关 join 聚合。
  *
+ * <p><b>架构合规说明（YDIZ-ARCH-001）：</b>实现 domain 层 {@link FlowAdvancer} 接口，
+ * server 层可依赖 domain 接口，domain 层禁止反向依赖 server 层。
+ *
  * @since 26.09.01
  * @author ydsz-team
+ * @see FlowAdvancer 流程推进器策略接口（domain 层）
  */
 @Slf4j
 @Component
-public class DefaultFlowAdvancer {
+public class DefaultFlowAdvancer implements FlowAdvancer {
 
 
   /** P1: 流程定义元数据缓存（节点 + skip），替代直查 nodeMapper/skipMapper */
@@ -365,7 +370,8 @@ public class DefaultFlowAdvancer {
    * @param joinNode join 类型目标节点
    * @return true=允许通过聚合检查；false=继续等待
    */
-  private boolean tryAggregateJoin(FlowInstanceVO currentInstance, FlowNodeVO joinNode) {
+  @Override
+  public boolean tryAggregateJoin(FlowInstanceVO currentInstance, FlowNodeVO joinNode) {
     String definitionId = currentInstance.getDefinitionId();
     String joinCode = joinNode.getNodeCode();
     String instId = currentInstance.getId();

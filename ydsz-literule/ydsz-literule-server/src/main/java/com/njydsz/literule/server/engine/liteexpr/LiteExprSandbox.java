@@ -116,11 +116,15 @@ public class LiteExprSandbox {
   /**
    * 从函数注册表初始化白名单
    *
+   * <p>P0-P1（26.09.23）：白名单缩小后必须清空校验缓存，确保不在新白名单中的表达式不会命中旧的通过缓存。
+   *
    * @param registry 函数注册表，从中提取所有已注册函数名作为白名单
    */
   public void syncFunctions(FunctionRegistry registry) {
     allowedFunctions.clear();
     allowedFunctions.addAll(registry.getFunctionNames());
+    // 白名单变化 → 清空校验缓存（避免旧缓存包含已移除函数的"通过"结果）
+    clearCache();
   }
 
   // ===== O2 沙箱规则外置化（配置可追加，非 static 硬编码） =====

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -272,13 +273,19 @@ public class EvaluationResultCache {
    *
    * <p>替代原有的全量字符串拼接方案，将键长从 O(总 facts 序列化长度) 降至固定 ~80 字符， 减少内存占用和 equals 比较开销。
    *
+   * <p>P0-A3（26.09.23）：使用 TreeMap 对 facts 排序后再计算 hashCode， 避免 HashMap
+   * 迭代顺序不确定导致等价事实集产生不同缓存键。
+   *
    * @param context 规则上下文
    * @return 缓存键
    */
   private String buildCacheKey(RuleContextVO context) {
+    Map<String, Object> facts = context.getFacts();
+    // TreeMap 保证迭代顺序确定性：语义等价的 facts 集合得到相同键
+    Map<String, Object> sortedFacts = new TreeMap<>(facts);
     return CacheKeyBuilder.buildPattern(
         "eval",
         context.getScenario() != null ? context.getScenario() : "default",
-        String.valueOf(context.getFacts().hashCode()));
+        String.valueOf(sortedFacts.hashCode()));
   }
 }
