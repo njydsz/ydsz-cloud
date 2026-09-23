@@ -1,4 +1,4 @@
-package com.njydsz.nextwiki.infra.mapper;
+﻿package com.njydsz.nextwiki.infra.mapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import com.njydsz.nextwiki.domain.dto.FileNodeSortItemDTO;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.vo.FileStatVO;
 
@@ -420,5 +421,5 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
    * @param items 排序条目列表（含 id / sort / updatedBy / updatedAt）
    * @return 受影响行数
    */
-  int batchUpdateSort(@Param("items") java.util.List<com.njyzsz.nextwiki.domain.dto.NextwikiDto.SortItem> items);
+  int batchUpdateSort(@Param("items") List<FileNodeSortItemDTO> items);
 }

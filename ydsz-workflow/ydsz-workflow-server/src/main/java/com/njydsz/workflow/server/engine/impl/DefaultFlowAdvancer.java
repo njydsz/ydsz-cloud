@@ -517,6 +517,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     return targets;
   }
 
+  @Override
   public List<FlowSkipVO> resolvePassSkips(
       FlowInstanceVO instance, FlowNodeVO currentNode, Map<String, Object> variables) {
     // P1: 通过缓存获取当前节点的出发跳转，并在内存中按 skipType=PASS 过滤
@@ -598,6 +599,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    * @param variables 流程变量
    * @return true=条件成立，false=不成立
    */
+  @Override
   public boolean evaluateSkipCondition(String condition, Map<String, Object> variables) {
     if (condition == null || condition.isBlank()) {
       return true;
@@ -643,6 +645,23 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     // 兜底：无前驱时退回到开始节点
     FlowNodeVO start = flowDefinitionCacheService.getStartNode(definitionId);
     return start == null ? null : start.getNodeCode();
+  }
+
+  // ============================== 接口实现补全 ==============================
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>接口 3-arg 实现：显式传入 {@code targetNodeCode} 时优先按其回退；
+   * 未指定时（null）委托现有 2-arg 推导逻辑。
+   */
+  @Override
+  public String resolveRejectTarget(String definitionId, String currentNodeCode,
+      String targetNodeCode) {
+    if (targetNodeCode != null && !targetNodeCode.isBlank()) {
+      return targetNodeCode;
+    }
+    return resolveRejectTarget(definitionId, currentNodeCode);
   }
 
   // ============================== 私有 ==============================

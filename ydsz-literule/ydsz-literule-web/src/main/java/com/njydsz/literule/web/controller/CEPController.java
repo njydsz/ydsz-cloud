@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,7 +53,7 @@ import com.njydsz.literule.server.cep.CEPPattern;
  *   <li><b>引擎状态</b>：返回当前模式数、累计命中数
  * </ul>
  *
- * <p>CEP 引擎通过 {@code ydsz.literule.cep.enabled} 控制装配， 未启用时所有接口返回 503（通过 {@link ObjectProvider} 判空）。
+ * <p>CEP 引擎通过 {@code ydsz.literule.cep.enabled} 控制装配，未启用时所有接口返回 {@link YdszResultCode#SERVICE_UNAVAILABLE} 503（通过 {@link ObjectProvider} 判空）。
  *
  * <p><b>拆分说明：</b>本类从原 {@code CEPController} 拆分而来，保留模式管理 / 事件投递 / 命中查询 / 引擎状态。 CEP 模式测试（注册临时模式 →
  * 投递测试事件 → 收集命中 → 注销）见 {@link CEPTestController}。
@@ -93,10 +95,10 @@ public class CEPController {
   /** 规则引擎（条件装配，未启用时为空） */
   private final ObjectProvider<RuleEngine> ruleEngineProvider;
 
-  /** 最近命中记录（内存暂存，最多 200 条，用于运维查看） */
+  /** 最近命中记录（内存暂存，最多 200 条，用于运维查看，并发安全） */
   private static final int MAX_RECENT_HITS = 200;
 
-  private final List<CEPHit> recentHits = new ArrayList<>(COLLECTION_CAPACITY_4);
+  private final ConcurrentLinkedDeque<CEPHit> recentHits = new ConcurrentLinkedDeque<>();
 
   /**
    * 启动时注册 CEP 命中监听器。
@@ -113,18 +115,16 @@ public class CEPController {
     }
     engine.addListener(
         hit -> {
-          // 1. 存入最近命中
-          synchronized (recentHits) {
-            recentHits.add(hit);
-            while (recentHits.size() > MAX_RECENT_HITS) {
-              recentHits.remove(0);
-            }
+          // 1. 存入最近命中（P0-X2：使用 ConcurrentLinkedDeque 无锁并发）
+          recentHits.addLast(hit);
+          while (recentHits.size() > MAX_RECENT_HITS) {
+            recentHits.pollFirst();
           }
           // 2. 触发关联规则评估
           RuleEngine ruleEngine = ruleEngineProvider.getIfAvailable();
           if (ruleEngine != null && hit.getRuleCode() != null) {
             try {
-              Map<String, Object> facts = new HashMap<>(COLLECTION_CAPACITY_16);
+              Map<String, Object> facts = new ConcurrentHashMap<>(COLLECTION_CAPACITY_16);
               facts.put("cepHit", hit);
               facts.put("patternId", hit.getPatternId());
               facts.put("ruleCode", hit.getRuleCode());
@@ -145,7 +145,8 @@ public class CEPController {
                     results.size());
               }
             } catch (Exception e) {
-              log.warn("[CEPController] CEP 命中触发规则评估异常: {}", e.getMessage());
+              // P0-X2：保留完整堆栈用于故障排查
+              log.warn("[CEPController] CEP 命中触发规则评估异常: {}", e.getMessage(), e);
             }
           }
         });
@@ -162,7 +163,7 @@ public class CEPController {
   public YdszResponse<List<CEPPatternVO>> listPatterns() {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
     }
     return YdszResponse.success(engine.listPatterns().stream().map(this::toPatternVO).toList());
   }
@@ -185,7 +186,7 @@ public class CEPController {
   public YdszResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
     }
     try {
       engine.registerPattern(pattern);
@@ -213,7 +214,7 @@ public class CEPController {
   public YdszResponse<Void> unregisterPattern(@PathVariable String patternId) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
     }
     engine.unregisterPattern(patternId);
     return YdszResponse.success();
@@ -248,13 +249,14 @@ public class CEPController {
   public YdszResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
     }
-    int hitsBefore = (int) engine.totalHits();
+    // P0-X2：使用 long 避免高吞吐场景 long → int 溢出
+    long hitsBefore = engine.totalHits();
     CEPEvent event = toEvent(body);
     engine.feed(event);
-    int hitsAfter = (int) engine.totalHits();
-    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY_16);
+    long hitsAfter = engine.totalHits();
+    Map<String, Object> result = new ConcurrentHashMap<>(COLLECTION_CAPACITY_16);
     result.put("fed", true);
     result.put("triggeredHits", hitsAfter - hitsBefore);
     return YdszResponse.success(result);
@@ -279,16 +281,17 @@ public class CEPController {
       @RequestBody List<Map<String, Object>> events) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
     }
     if (events == null || events.isEmpty()) {
-      return YdszResponse.success(Map.of("fed", 0, "triggeredHits", 0));
+      return YdszResponse.success(Map.of("fed", 0, "triggeredHits", 0L));
     }
-    int hitsBefore = (int) engine.totalHits();
+    // P0-X2：使用 long 避免溢出
+    long hitsBefore = engine.totalHits();
     for (Map<String, Object> body : events) {
       engine.feed(toEvent(body));
     }
-    int hitsAfter = (int) engine.totalHits();
+    long hitsAfter = engine.totalHits();
     return YdszResponse.success(
         Map.of("fed", events.size(), "triggeredHits", hitsAfter - hitsBefore));
   }
@@ -301,9 +304,8 @@ public class CEPController {
   @GetMapping("/hits")
   @Operation(summary = "查询最近命中记录", description = "返回最近 200 条 CEP 命中记录（内存暂存）")
   public YdszResponse<List<CEPHitVO>> recentHits() {
-    synchronized (recentHits) {
-      return YdszResponse.success(new ArrayList<>(recentHits).stream().map(this::toHitVO).toList());
-    }
+    // P0-X2：ConcurrentLinkedDeque 无需显式同步
+    return YdszResponse.success(new ArrayList<>(recentHits).stream().map(this::toHitVO).toList());
   }
 
   /**
@@ -316,7 +318,7 @@ public class CEPController {
   public YdszResponse<Map<String, Object>> stats() {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
-      return YdszResponse.error(YdszResultCode.FORBIDDEN, "CEP 引擎未启用");
+      return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
     }
     return YdszResponse.success(
         Map.of(

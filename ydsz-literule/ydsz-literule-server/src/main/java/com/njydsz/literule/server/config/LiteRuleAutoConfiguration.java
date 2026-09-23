@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -31,6 +30,7 @@ import com.njydsz.common.event.repository.OutboxRepository;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -940,7 +940,7 @@ public class LiteRuleAutoConfiguration {
    * <p>L2 启用条件：
    *
    * <ul>
-   *   <li>classpath 存在 {@code RedissonClient}（通过 {@code ObjectProvider} 安全获取）
+   *   <li>classpath 存在 {@code RedisStringOps}（通过 {@code ObjectProvider} 安全获取）
    *   <li>{@code ydsz.literule.cache.l2-enabled=true}（默认 true）
    * </ul>
    *
@@ -950,7 +950,7 @@ public class LiteRuleAutoConfiguration {
    * Provider。
    *
    * @param providers 所有 RuleConfigProvider Bean（过滤掉 CachingRuleConfigProvider 自身）
-   * @param redissonClientProvider Redisson 客户端（可选，不存在时降级为仅 L1）
+   * @param redisStringOpsProvider Redis String 操作组件（可选，不存在时降级为仅 L1）
    * @param properties 配置属性
    * @return CachingRuleConfigProvider 实例
    * @since 26.09.01
@@ -966,7 +966,7 @@ public class LiteRuleAutoConfiguration {
   @Primary
   public CachingRuleConfigProvider cachingRuleConfigProvider(
       List<RuleConfigProvider> providers,
-      ObjectProvider<RedissonClient> redissonClientProvider,
+      ObjectProvider<RedisStringOps> redisStringOpsProvider,
       LiteRuleProperties properties) {
     // 过滤掉 CachingRuleConfigProvider 自身（避免循环装饰），取第一个作为委托
     RuleConfigProvider delegate =
@@ -974,12 +974,12 @@ public class LiteRuleAutoConfiguration {
             .filter(p -> !(p instanceof CachingRuleConfigProvider))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("未找到可装饰的 RuleConfigProvider 委托实现"));
-    RedissonClient redissonClient = redissonClientProvider.getIfAvailable();
+    RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
     log.info(
         "[LiteRule-Cache] 多级缓存 RuleConfigProvider 已初始化 (delegate={}, L2={})",
         delegate.getClass().getSimpleName(),
-        redissonClient != null);
-    return new CachingRuleConfigProvider(delegate, redissonClient, properties);
+        redisStringOps != null);
+    return new CachingRuleConfigProvider(delegate, redisStringOps, properties);
   }
 
   // ------------------------------------------------------------------

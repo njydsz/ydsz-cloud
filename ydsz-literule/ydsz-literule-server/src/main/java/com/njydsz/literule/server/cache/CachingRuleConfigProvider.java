@@ -7,9 +7,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RAtomicLong;
-import org.redisson.api.RBucket;
-import org.redisson.api.RedissonClient;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -18,6 +15,7 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.server.config.LiteRuleProperties;
@@ -89,7 +87,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
   private final RuleConfigProvider delegate;
 
   /** L2 客户端；null 表示禁用 L2（仅 L1） */
-  private final RedissonClient redissonClient;
+  private final RedisStringOps redisStringOps;
 
   private final LiteRuleProperties.CacheConfig cacheConfig;
 
@@ -109,29 +107,29 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    * Spring 注入构造器，使用系统时钟。
    *
    * @param delegate 被装饰的 RuleConfigProvider（DB/配置中心实现）
-   * @param redissonClient Redisson 客户端（null 时禁用 L2）
+   * @param redisStringOps Redis String 操作组件（null 时禁用 L2）
    * @param properties 配置属性
    */
   public CachingRuleConfigProvider(
-      RuleConfigProvider delegate, RedissonClient redissonClient, LiteRuleProperties properties) {
-    this(delegate, redissonClient, properties.getCache());
+      RuleConfigProvider delegate, RedisStringOps redisStringOps, LiteRuleProperties properties) {
+    this(delegate, redisStringOps, properties.getCache());
   }
 
   /**
    * 测试用构造器。
    *
    * @param delegate 被装饰的 RuleConfigProvider
-   * @param redissonClient Redisson 客户端（null 时禁用 L2）
+   * @param redisStringOps Redis String 操作组件（null 时禁用 L2）
    * @param cacheConfig 缓存配置
    */
   CachingRuleConfigProvider(
       RuleConfigProvider delegate,
-      RedissonClient redissonClient,
+      RedisStringOps redisStringOps,
       LiteRuleProperties.CacheConfig cacheConfig) {
     this.delegate = delegate;
-    // L2 启用条件：RedissonClient 非空 且 配置启用 L2
-    this.redissonClient =
-        (redissonClient != null && cacheConfig.isL2Enabled()) ? redissonClient : null;
+    // L2 启用条件：RedisStringOps 非空 且 配置启用 L2
+    this.redisStringOps =
+        (redisStringOps != null && cacheConfig.isL2Enabled()) ? redisStringOps : null;
     this.cacheConfig = cacheConfig;
     this.listCache =
         YdszCache.<String, List<RuleDefinitionDTO>>newBuilder()
@@ -149,7 +147,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
         "[LiteRule-Cache] 多级缓存已初始化 (L1 ttl={}s maxSize={}, L2 enabled={})",
         cacheConfig.getL1TtlSeconds(),
         cacheConfig.getL1MaxSize(),
-        this.redissonClient != null);
+        this.redisStringOps != null);
   }
 
   @Override
@@ -233,7 +231,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    * <p>使用 1 秒间隔的限流，避免每次 L1 命中都打 Redis。 Redis 不可用时跳过检查（降级为仅 L1 TTL 失效）。
    */
   private void checkVersionAndInvalidate() {
-    if (redissonClient == null) {
+    if (redisStringOps == null) {
       return;
     }
     long now = System.nanoTime();
@@ -241,8 +239,8 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
       return;
     }
     try {
-      RAtomicLong versionAtomic = redissonClient.getAtomicLong(VERSION_KEY);
-      long currentVersion = versionAtomic.get();
+      Object versionObj = redisStringOps.get(VERSION_KEY);
+      long currentVersion = versionObj instanceof Number ? ((Number) versionObj).longValue() : 0L;
       long lastSeen = lastSeenVersion;
       if (lastSeen >= 0 && lastSeen != currentVersion) {
         log.info("[LiteRule-Cache] 检测到版本号变化: {} -> {}, 清除 L1", lastSeen, currentVersion);
@@ -263,10 +261,9 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
   private List<RuleDefinitionDTO> loadListFromL2OrDb(
       String l2Key, Supplier<List<RuleDefinitionDTO>> loader) {
     // 1. 尝试 L2
-    if (redissonClient != null) {
+    if (redisStringOps != null) {
       try {
-        RBucket<String> bucket = redissonClient.getBucket(l2Key);
-        String json = bucket.get();
+        String json = (String) redisStringOps.get(l2Key);
         if (json != null) {
           List<RuleDefinitionDTO> l2Value =
               YdszJson.fromJson(json, new JsonType<List<RuleDefinitionDTO>>() {});
@@ -300,10 +297,9 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    */
   private RuleDefinitionDTO loadSingleFromL2OrDb(String l2Key, Supplier<RuleDefinitionDTO> loader) {
     // 1. 尝试 L2
-    if (redissonClient != null) {
+    if (redisStringOps != null) {
       try {
-        RBucket<String> bucket = redissonClient.getBucket(l2Key);
-        String json = bucket.get();
+        String json = (String) redisStringOps.get(l2Key);
         if (json != null) {
           if (L2_NULL_MARKER.equals(json)) {
             log.debug("[LiteRule-Cache] L2 命中 NULL 标记: {}", l2Key);
@@ -340,7 +336,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    * @param value 值；String 直接写入（用于 NULL 标记），其他对象 JSON 序列化
    */
   private void fillL2(String key, Object value) {
-    if (redissonClient == null) {
+    if (redisStringOps == null) {
       return;
     }
     try {
@@ -350,8 +346,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
       } else {
         json = YdszJson.toJson(value);
       }
-      RBucket<String> bucket = redissonClient.getBucket(key);
-      bucket.set(json, Duration.ofSeconds(cacheConfig.getL2TtlSeconds()));
+      redisStringOps.set(key, json, Duration.ofSeconds(cacheConfig.getL2TtlSeconds()));
     } catch (Exception e) {
       log.warn("[LiteRule-Cache] L2 写入失败: {}", e.getMessage());
     }
@@ -377,10 +372,9 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    */
   private void invalidateAll(String reason) {
     invalidateL1();
-    if (redissonClient != null) {
+    if (redisStringOps != null) {
       try {
-        RAtomicLong versionAtomic = redissonClient.getAtomicLong(VERSION_KEY);
-        long newVersion = versionAtomic.incrementAndGet();
+        long newVersion = redisStringOps.incr(VERSION_KEY, 1L);
         lastSeenVersion = newVersion;
         log.debug("[LiteRule-Cache] L2 版本号递增: {} -> reason={}", newVersion, reason);
       } catch (Exception e) {

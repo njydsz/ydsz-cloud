@@ -38,7 +38,11 @@ public class LiteExprSandbox {
   private static final int COLLECTION_CAPACITY = 16;
 
 
-  /** 危险方法名（任意类上调用这些方法即阻断） */
+  /**
+   * 危险方法名（任意类上调用这些方法即阻断）
+   *
+   * <p>P0-X1（26.09.23）：增加反射/类加载相关方法，防止通过表达式获取 Class 对象或操作类成员。
+   */
   private static final Set<String> FORBIDDEN_METHODS =
       Set.of(
           "exec",
@@ -63,9 +67,29 @@ public class LiteExprSandbox {
           "mkdir",
           "openConnection",
           "connect",
-          "openStream");
+          "openStream",
+          // P0-X1：反射/类加载攻击面封堵
+          "class",
+          "getClass",
+          "getCanonicalName",
+          "getTypeName",
+          "getDeclaredMethods",
+          "getDeclaredFields",
+          "getMethods",
+          "getFields",
+          "getConstructor",
+          "getDeclaredConstructor",
+          "getDeclaredClasses",
+          "getEnclosingMethod",
+          "getProtectionDomain",
+          "getSigners",
+          "getModule");
 
-  /** 危险属性链根标识符 */
+  /**
+   * 危险属性链根标识符
+   *
+   * <p>P0-X1（26.09.23）：增加反射/动态代理/序列化相关类。
+   */
   private static final Set<String> FORBIDDEN_ROOTS =
       Set.of(
           "System",
@@ -88,7 +112,17 @@ public class LiteExprSandbox {
           "Files",
           "Paths",
           "ObjectInputStream",
-          "ObjectOutputStream");
+          "ObjectOutputStream",
+          // P0-X1：反射/动态代理/序列化攻击面封堵
+          "Reflect",
+          "ReflectPermission",
+          "Proxy",
+          "Unsafe",
+          "Annotation",
+          "Module",
+          "Compiler",
+          "InetAddress",
+          "DriverManager");
 
   /** 允许的函数名白名单（由 FunctionRegistry 初始化，并发安全） */
   private final Set<String> allowedFunctions = ConcurrentHashMap.newKeySet();
