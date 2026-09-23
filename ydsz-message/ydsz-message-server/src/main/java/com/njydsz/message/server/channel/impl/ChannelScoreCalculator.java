@@ -216,14 +216,14 @@ public class ChannelScoreCalculator {
   public static class ScoreConfig {
     /** 成功率权重（默认 0.5） */
     @Default
-    private double successWeight = SUCCESS_WEIGHT;
+    private double successWeight = 0.5;
 
     /** 成本权重（默认 0.3） */
     @Default
-    private double costWeight = COST_WEIGHT;
+    private double costWeight = 0.3;
 
     /** 用户打开率权重（默认 0.2） */
     @Default
-    private double openWeight = OPEN_WEIGHT;
+    private double openWeight = 0.2;
   }
 }

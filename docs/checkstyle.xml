@@ -97,7 +97,7 @@
         上述任一环节失败即阻断，BOM 文件不会进入主干。
     -->
 
-    <!-- 能力提供者模块豁免：common-excel/docs/file/netty/seata 允许直接 import 对应 SDK -->
+    <!-- 能力提供者模块豁免：common-excel/docs/file/netty 允许直接 import 对应 SDK -->
     <!-- 豁免清单见同目录 checkstyle-suppressions.xml（v3.3 恢复 SuppressionFilter：
          此前因 checkstyle 全局 skip 误判「0 违规」而移除，恢复后豁免仅限能力提供者
          模块的合法 SDK 使用与自研引擎（common-json/common-excel）的算法类规则，

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.entity.OutboxEventEntity;
-import com.njydsz.message.domain.event.OutboxEvent;
+import com.njydsz.message.domain.event.OutboxEntry;
 import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.infra.mapper.OutboxEventMapper;
 
@@ -43,18 +43,18 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   private static final int DEFAULT_MAX_RETRIES = 5;
 
   @Override
-  public boolean save(OutboxEvent event) {
-    OutboxEventEntity entity = toEntity(event);
+  public boolean save(OutboxEntry entry) {
+    OutboxEventEntity entity = toEntity(entry);
     return outboxEventMapper.insert(entity) > 0;
   }
 
   @Override
-  public Optional<OutboxEvent> findById(String id) {
-    return Optional.ofNullable(outboxEventMapper.selectById(id)).map(this::toEvent);
+  public Optional<OutboxEntry> findById(String id) {
+    return Optional.ofNullable(outboxEventMapper.selectById(id)).map(this::toEntry);
   }
 
   @Override
-  public List<OutboxEvent> findPending(int limit, LocalDateTime beforeTime) {
+  public List<OutboxEntry> findPending(int limit, LocalDateTime beforeTime) {
     Page<OutboxEventEntity> page = new Page<>(1, limit);
     LambdaQueryWrapper<OutboxEventEntity> wrapper =
         new LambdaQueryWrapper<OutboxEventEntity>()
@@ -63,7 +63,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
             .orderByAsc(OutboxEventEntity::getCreatedAt);
     List<OutboxEventEntity> records =
         outboxEventMapper.selectPage(page, wrapper).getRecords();
-    return records.stream().map(this::toEvent).toList();
+    return records.stream().map(this::toEntry).toList();
   }
 
   @Override
@@ -98,7 +98,7 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
   }
 
   @Override
-  public PageResponse<List<OutboxEvent>> findPage(String status, int pageNum, int pageSize) {
+  public PageResponse<List<OutboxEntry>> findPage(String status, int pageNum, int pageSize) {
     Page<OutboxEventEntity> page =
         new Page<>(pageNum, Math.min(pageSize, 100));
     LambdaQueryWrapper<OutboxEventEntity> wrapper =
@@ -109,43 +109,43 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
     wrapper.orderByDesc(OutboxEventEntity::getCreatedAt);
     Page<OutboxEventEntity> resultPage =
         outboxEventMapper.selectPage(page, wrapper);
-    List<OutboxEvent> events = resultPage.getRecords().stream().map(this::toEvent).toList();
+    List<OutboxEntry> entries = resultPage.getRecords().stream().map(this::toEntry).toList();
     return PageResponse.success(
         resultPage.getTotal(),
         (long) pageNum,
         (long) pageSize,
-        events);
+        entries);
   }
 
-  /** Entity → Event 转换。 */
-  private OutboxEvent toEvent(OutboxEventEntity entity) {
-    OutboxEvent event = new OutboxEvent();
-    event.setId(entity.getId());
-    event.setAggregateType(entity.getAggregateType());
-    event.setAggregateId(entity.getAggregateId());
-    event.setEventType(entity.getEventType());
-    event.setPayload(entity.getPayload());
-    event.setTenantId(entity.getTenantId());
-    event.setCreatedAt(entity.getCreatedAt());
-    event.setPublishedAt(entity.getPublishedAt());
-    event.setPublishAttempts(entity.getPublishAttempts());
-    event.setStatus(entity.getStatus());
-    return event;
+  /** Entity → Entry 转换。 */
+  private OutboxEntry toEntry(OutboxEventEntity entity) {
+    OutboxEntry entry = new OutboxEntry();
+    entry.setId(entity.getId());
+    entry.setAggregateType(entity.getAggregateType());
+    entry.setAggregateId(entity.getAggregateId());
+    entry.setEventType(entity.getEventType());
+    entry.setPayload(entity.getPayload());
+    entry.setTenantId(entity.getTenantId());
+    entry.setCreatedAt(entity.getCreatedAt());
+    entry.setPublishedAt(entity.getPublishedAt());
+    entry.setPublishAttempts(entity.getPublishAttempts());
+    entry.setStatus(entity.getStatus());
+    return entry;
   }
 
-  /** Event → Entity 转换。 */
-  private OutboxEventEntity toEntity(OutboxEvent event) {
+  /** Entry → Entity 转换。 */
+  private OutboxEventEntity toEntity(OutboxEntry entry) {
     var entity = new OutboxEventEntity();
-    entity.setId(event.getId());
-    entity.setAggregateType(event.getAggregateType());
-    entity.setAggregateId(event.getAggregateId());
-    entity.setEventType(event.getEventType());
-    entity.setPayload(event.getPayload());
-    entity.setTenantId(event.getTenantId());
-    entity.setCreatedAt(event.getCreatedAt());
-    entity.setPublishedAt(event.getPublishedAt());
-    entity.setPublishAttempts(event.getPublishAttempts());
-    entity.setStatus(event.getStatus());
+    entity.setId(entry.getId());
+    entity.setAggregateType(entry.getAggregateType());
+    entity.setAggregateId(entry.getAggregateId());
+    entity.setEventType(entry.getEventType());
+    entity.setPayload(entry.getPayload());
+    entity.setTenantId(entry.getTenantId());
+    entity.setCreatedAt(entry.getCreatedAt());
+    entity.setPublishedAt(entry.getPublishedAt());
+    entity.setPublishAttempts(entry.getPublishAttempts());
+    entity.setStatus(entry.getStatus());
     return entity;
   }
 }
