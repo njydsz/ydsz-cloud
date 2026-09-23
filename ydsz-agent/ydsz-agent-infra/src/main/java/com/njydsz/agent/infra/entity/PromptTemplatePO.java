@@ -1,18 +1,14 @@
-package com.njydsz.agent.domain.entity;
+package com.njydsz.agent.infra.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.agent.entity.base.DomainBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * Prompt 模板（domain 纯净 POJO，无 MP 注解）
- *
- * <p>存储 Prompt 模板的当前版本信息，包含编码、名称、内容、分类等。
- *
- * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
- * 持久化映射由 {@code infra.entity.PromptTemplatePO} 承担。
+ * Prompt 模板持久化对象（映射 ydsz_agt_prompt_template 表）。
  *
  * @author ydsz-team
  * @since 26.09.23
@@ -20,7 +16,8 @@ import com.njydsz.agent.entity.base.DomainBaseEntity;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class PromptTemplate extends DomainBaseEntity<String> {
+@TableName("ydsz_agt_prompt_template")
+public class PromptTemplatePO extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 
@@ -39,13 +36,13 @@ public class PromptTemplate extends DomainBaseEntity<String> {
   /** 分类（用于分组检索） */
   private String category;
 
-  /** 当前版本号，自 1 起每次更新递增 */
+  /** 当前版本号 */
   private Integer currentVersion;
 
   /** 是否启用 A/B 灰度测试 */
   private Boolean isAbTestEnabled;
 
-  /** A/B 灰度目标版本（canary 版本号） */
+  /** A/B 灰度目标版本 */
   private Integer abTargetVersion;
 
   /** A/B 灰度流量百分比（1-100） */
