@@ -28,6 +28,9 @@ public class PrecisionConfig {
   /** 默认batchSize值（可被配置文件覆盖） */
   private static final int DEFAULT_BATCH_SIZE = 200;
 
+  /** 默认线程数：max(2, CPU核数/2)，可被 ydsz.cronjob.preload.threads 覆盖 */
+  private static final int DEFAULT_THREADS = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
+
   /** 是否启用秒级预读调度（默认开启，CRON 任务获得毫秒级触发精度；主扫描器兜底） */
   private boolean enabled = true;
 
@@ -39,4 +42,14 @@ public class PrecisionConfig {
 
   /** 单批预读最大任务数 */
   private int batchSize = DEFAULT_BATCH_SIZE;
+
+  /**
+   * 精准触发线程池大小。
+   *
+   * <p>默认 {@code max(2, CPU核数/2)}：单核/双核机器使用 2 线程，四核及以上使用核数的一半。
+   * 可配置 {@code ydsz.cronjob.preload.threads} 覆盖。
+   *
+   * <p>P1-3 改进：单线程 → N 线程分层时间轮，解决大量 CRON 任务同一秒到期时串行触发吞吐瓶颈。
+   */
+  private int threads = DEFAULT_THREADS;
 }

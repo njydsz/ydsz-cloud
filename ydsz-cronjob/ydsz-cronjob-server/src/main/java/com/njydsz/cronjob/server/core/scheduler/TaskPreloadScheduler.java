@@ -69,7 +69,11 @@ public class TaskPreloadScheduler {
   private final CronjobProperties cronjobProperties;
   private final NextFireTimeCalculator nextFireTimeCalculator;
 
-  /** 内存精准触发线程池（单线程，daemon） */
+  /**
+   * 内存精准触发线程池（daemon）。
+   *
+   * <p>P1-3: 线程数由 {@link PrecisionConfig#getThreads()} 控制，默认 {@code max(2, CPU/2)}。
+   */
   private ScheduledExecutorService precisionScheduler;
 
   /** 已注册的预读任务: jobId → ScheduledFuture（防止重复注册） */
@@ -85,14 +89,15 @@ public class TaskPreloadScheduler {
 
   @PostConstruct
   public void init() {
-    this.precisionScheduler = ExecutorUtils.newScheduledThreadPool(1, "job-preload-");
     PrecisionConfig cfg = cronjobProperties.getPreload();
+    this.precisionScheduler = ExecutorUtils.newScheduledThreadPool(cfg.getThreads(), "job-preload-");
     log.info(
-        "[Preload] 秒级预读调度器初始化: enabled={} scanInterval={}ms window={}s batch={}",
+        "[Preload] 秒级预读调度器初始化: enabled={} scanInterval={}ms window={}s batch={} threads={}",
         cfg.isEnabled(),
         cfg.getScanIntervalMs(),
         cfg.getWindowSeconds(),
-        cfg.getBatchSize());
+        cfg.getBatchSize(),
+        cfg.getThreads());
   }
 
   @PreDestroy

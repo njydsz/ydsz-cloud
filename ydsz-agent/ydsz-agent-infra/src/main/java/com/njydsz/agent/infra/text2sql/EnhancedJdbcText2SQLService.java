@@ -1,6 +1,7 @@
 package com.njydsz.agent.infra.text2sql;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
@@ -451,7 +452,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
             .orElseThrow(
                 () -> new Text2SQLException("无法执行：未生成 SQL", "TEXT2SQL_NO_SQL"));
     validateSql(sql);
-    Text2SQLResult baseResult = executeSql(sql);
+    Text2SQLResult baseResult = executeSql(sql, context.getTenantId());
     List<String> recalledTableNames = buildRecalledTableNames(context);
     return new Text2SQLEnhancedResult(
         baseResult.columns(),
@@ -497,13 +498,14 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
    * @return 查询结果
    * @throws Text2SQLException 执行失败
    */
-  private Text2SQLResult executeSql(String sql) throws Text2SQLException {
+  private Text2SQLResult executeSql(String sql, String tenantId) throws Text2SQLException {
     long start = System.currentTimeMillis();
     try (Connection conn = dataSource.getConnection();
-        Statement stmt = conn.createStatement()) {
-      stmt.setQueryTimeout(EXEC_TIMEOUT_SECONDS);
-      stmt.setMaxRows(MAX_RESULT_ROWS);
-      try (ResultSet rs = stmt.executeQuery(sql)) {
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setQueryTimeout(EXEC_TIMEOUT_SECONDS);
+      ps.setMaxRows(MAX_RESULT_ROWS);
+      ps.setString(1, tenantId);
+      try (ResultSet rs = ps.executeQuery()) {
         ResultSetMetaData meta = rs.getMetaData();
         int colCount = meta.getColumnCount();
         List<String> columns = new ArrayList<>(colCount);
@@ -555,11 +557,12 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
    * @return 添加租户条件后的 SQL
    */
   private static String appendTenantCondition(String sql, String tenantId) {
+    validateTenantId(tenantId);
     String trimmed = sql.trim().toUpperCase();
     if (trimmed.contains("WHERE")) {
-      return sql.replaceFirst("(?i)WHERE", "WHERE tenant_id = '" + tenantId + "' AND ");
+      return sql.replaceFirst("(?i)WHERE", "WHERE tenant_id = ? AND ");
     } else {
-      return sql + " WHERE tenant_id = '" + tenantId + "'";
+      return sql + " WHERE tenant_id = ?";
     }
   }
 

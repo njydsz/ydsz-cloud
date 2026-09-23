@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,6 +26,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -78,9 +78,8 @@ public class TriggerController {
   @RateLimit(resource = "agent.trigger.create", threshold = 20)
   @PostMapping
   @Operation(summary = "创建触发器", description = "为指定 Agent 创建定时或事件触发器")
-  public YdszResponse<AgentTrigger> createTrigger(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
-      @Valid @RequestBody CreateTriggerRequest request) {
+  public YdszResponse<AgentTrigger> createTrigger(@Valid @RequestBody CreateTriggerRequest request) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[Trigger-API] 创建触发器: tenantId={}, name={}, type={}",
         tenantId, request.name(), request.triggerType());
     AgentTrigger trigger = triggerManagementService.createTrigger(
@@ -116,9 +115,9 @@ public class TriggerController {
   @PutMapping("/{triggerId}")
   @Operation(summary = "更新触发器", description = "更新触发器的配置信息")
   public YdszResponse<AgentTrigger> updateTrigger(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
       @PathVariable @NotBlank String triggerId,
       @Valid @RequestBody UpdateTriggerRequest request) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[Trigger-API] 更新触发器: tenantId={}, triggerId={}", tenantId, triggerId);
     AgentTrigger trigger = triggerManagementService.updateTrigger(
         triggerId,
@@ -148,8 +147,8 @@ public class TriggerController {
   @PostMapping("/{triggerId}/enable")
   @Operation(summary = "启用触发器")
   public YdszResponse<Void> enableTrigger(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
       @PathVariable @NotBlank String triggerId) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[Trigger-API] 启用触发器: tenantId={}, triggerId={}", tenantId, triggerId);
     triggerManagementService.enableTrigger(triggerId, tenantId);
     return YdszResponse.success();
@@ -171,8 +170,8 @@ public class TriggerController {
   @PostMapping("/{triggerId}/disable")
   @Operation(summary = "禁用触发器")
   public YdszResponse<Void> disableTrigger(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
       @PathVariable @NotBlank String triggerId) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[Trigger-API] 禁用触发器: tenantId={}, triggerId={}", tenantId, triggerId);
     triggerManagementService.disableTrigger(triggerId, tenantId);
     return YdszResponse.success();
@@ -194,8 +193,8 @@ public class TriggerController {
   @DeleteMapping("/{triggerId}")
   @Operation(summary = "删除触发器")
   public YdszResponse<Void> deleteTrigger(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
       @PathVariable @NotBlank String triggerId) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[Trigger-API] 删除触发器: tenantId={}, triggerId={}", tenantId, triggerId);
     triggerManagementService.deleteTrigger(triggerId, tenantId);
     return YdszResponse.success();
@@ -216,9 +215,8 @@ public class TriggerController {
       content = "'getTrigger: ' + #triggerId")
   @GetMapping("/{triggerId}")
   @Operation(summary = "获取触发器详情")
-  public YdszResponse<AgentTrigger> getTrigger(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
-      @PathVariable @NotBlank String triggerId) {
+  public YdszResponse<AgentTrigger> getTrigger(@PathVariable @NotBlank String triggerId) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     AgentTrigger trigger = triggerManagementService.getTrigger(triggerId, tenantId);
     return YdszResponse.success(trigger);
   }
@@ -237,8 +235,8 @@ public class TriggerController {
       content = "'listTriggers'")
   @GetMapping
   @Operation(summary = "列出租户下所有启用触发器")
-  public YdszResponse<List<AgentTrigger>> listTriggers(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId) {
+  public YdszResponse<List<AgentTrigger>> listTriggers() {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<AgentTrigger> triggers = triggerManagementService.listEnabledTriggers(tenantId);
     return YdszResponse.success(triggers);
   }

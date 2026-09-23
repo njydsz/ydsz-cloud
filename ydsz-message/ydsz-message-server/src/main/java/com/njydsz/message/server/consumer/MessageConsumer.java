@@ -25,7 +25,6 @@ import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.constant.MessageConstants;
-import java.util.Objects;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
@@ -199,6 +198,9 @@ public class MessageConsumer implements RocketMQListener<String> {
    * @return true 表示疑似重复消息（应跳过处理），false 表示新消息可继续处理
    */
   private boolean bloomFilterDedup(MessageRequest request) {
+    if (bloomFilter == null) {
+      return false;
+    }
     String msgId = request.getMessageId();
     if (msgId == null || msgId.isBlank()) {
       return false;

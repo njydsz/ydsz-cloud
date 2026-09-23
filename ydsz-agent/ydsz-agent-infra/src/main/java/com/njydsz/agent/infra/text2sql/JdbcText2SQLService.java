@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -261,8 +260,7 @@ public class JdbcText2SQLService implements Text2SQLService {
   /**
    * 执行 SQL 并返回结果。
    *
-   * <p><b>安全说明：</b>本服务用于执行 LLM 生成的 SELECT 语句，SQL 由模型动态生成无法参数化， 因此使用 Statement 而非
-   * PreparedStatement。 已通过以下机制降低风险：
+   * <p><b>安全说明：</b>本服务用于执行 LLM 生成的 SELECT 语句，租户 ID 通过 PreparedStatement 参数化绑定。
    *
    * <ul>
    *   <li>{@link #validateSql(String)} 严格校验仅允许 SELECT/WITH 开头
