@@ -198,6 +198,8 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     // P3-14: 记录 Prometheus 指标（全量，不随日志采样）
     gatewayMetrics.recordRequestDuration(routeId, method, status, duration);
     gatewayMetrics.incrementRequestTotal(routeId, method, status);
+    // P99 延迟直方图（用于 Prometheus histogram_quantile() 查询 P99/P95）
+    gatewayMetrics.recordRequestLatency(duration, routeId);
 
     // P0-C2: 日志采样（4xx/5xx 全量，2xx/3xx 按采样率）
     if (!shouldLog(status)) {

@@ -155,5 +155,11 @@
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
         </dependency>
+        <!-- ydzs-common-lock（@DistributedScheduled 分布式一致性巡检任务，可选） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-lock</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>
