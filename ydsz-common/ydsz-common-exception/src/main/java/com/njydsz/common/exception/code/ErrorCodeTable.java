@@ -393,7 +393,7 @@ public class ErrorCodeTable {
    * @param httpStatus HTTP 状态码（如 400、404、500）
    * @return 匹配的 CodeEntry 列表（不可变），无匹配时返回空列表
    */
-  public java.util.List<CodeEntry> codesByHttpStatus(int httpStatus) {
+  public List<CodeEntry> codesByHttpStatus(int httpStatus) {
     return codeIndex.values().stream()
         .filter(c -> c.getHttpStatus() == httpStatus)
         .map(c -> {
@@ -410,12 +410,12 @@ public class ErrorCodeTable {
    * @param module 模块名
    * @return 错误码列表（不可变），模块不存在时返回空列表
    */
-  public java.util.List<CodeEntry> codesByModule(String module) {
+  public List<CodeEntry> codesByModule(String module) {
     ModuleEntry entry = moduleIndex.get(module);
     if (entry == null) {
-      return java.util.List.of();
+      return List.of();
     }
-    return java.util.List.copyOf(entry.codes().values());
+    return List.copyOf(entry.codes().values());
   }
 
   /**

@@ -222,34 +222,8 @@ public class WebAuthnService {
    */
   public String verifyPasskeyAuthentication(String challenge, String credentialId,
       String clientDataJSON, String authenticatorData, String signature) {
-    // 验证挑战码（使用 AUTHENTICATE_PASSKEY 类型）
-    validateChallenge(challenge, null, "AUTHENTICATE_PASSKEY");
-
-    // 查找凭证（通过 credentialId 找到用户）
-    WebAuthnCredentialVO credential = credentialRepository.findByCredentialId(credentialId)
-        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.WEBAUTHN_CREDENTIAL_NOT_FOUND));
-
-    // 验证客户端数据
-    validateClientData(clientDataJSON, challenge, "webauthn.get");
-
-    // 使用 webauthn4j 进行真实的密码学签名验证
-    long newSignCount = verifySignatureWithWebAuthn(credential, clientDataJSON,
-        authenticatorData, signature);
-
-    // 克隆检测：验证 signCount 是否递增
-    validateSignCount(credential, newSignCount);
-
-    // 更新签名计数器和最后使用时间
-    credentialRepository.updateSignCount(credentialId, newSignCount);
-    credentialRepository.updateLastUsedAt(credentialId, LocalDateTime.now());
-
-    // 清除已使用的挑战码
-    deleteChallenge(challenge);
-
-    log.info("Passkey 认证成功（usernameless）: userId={}, credentialId={}",
-        credential.getUserId(),
-        credentialId.substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credentialId.length())));
-    return credential.getUserId();
+    return verifyAuthenticationInternal(challenge, credentialId, clientDataJSON,
+        authenticatorData, signature, "AUTHENTICATE_PASSKEY");
   }
 
   // ==================== 原有方法 ====================
@@ -390,34 +364,8 @@ public class WebAuthnService {
    */
   public String verifyAuthenticationResponse(String challenge, String credentialId,
       String clientDataJSON, String authenticatorData, String signature) {
-    // 验证挑战码
-    validateChallenge(challenge, null, "AUTHENTICATE");
-
-    // 查找凭证
-    WebAuthnCredentialVO credential = credentialRepository.findByCredentialId(credentialId)
-        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.WEBAUTHN_CREDENTIAL_NOT_FOUND));
-
-    // 验证客户端数据
-    validateClientData(clientDataJSON, challenge, "webauthn.get");
-
-    // 使用 webauthn4j 进行真实的密码学签名验证
-    long newSignCount = verifySignatureWithWebAuthn(credential, clientDataJSON,
-        authenticatorData, signature);
-
-    // 克隆检测：验证 signCount 是否递增
-    validateSignCount(credential, newSignCount);
-
-    // 更新签名计数器和最后使用时间
-    credentialRepository.updateSignCount(credentialId, newSignCount);
-    credentialRepository.updateLastUsedAt(credentialId, LocalDateTime.now());
-
-    // 清除已使用的挑战码
-    deleteChallenge(challenge);
-
-    log.info("WebAuthn 认证成功: userId={}, credentialId={}",
-        credential.getUserId(),
-        credentialId.substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credentialId.length())));
-    return credential.getUserId();
+    return verifyAuthenticationInternal(challenge, credentialId, clientDataJSON,
+        authenticatorData, signature, "AUTHENTICATE");
   }
 
   /**
@@ -462,6 +410,53 @@ public class WebAuthnService {
   }
 
   // ==================== 私有方法 ====================
+
+  /**
+   * WebAuthn 认证验证内部复用方法（A-2：消除 verifyAuthenticationResponse 与
+   * verifyPasskeyAuthentication 的重复代码）。
+   *
+   * <p>封装"挑战码验证 → 凭证查找 → 客户端数据校验 → 签名验证 → 克隆检测 →
+   * 计数器更新 → 挑战码清除"链路；唯一差异为挑战类型（AUTHENTICATE / AUTHENTICATE_PASSKEY）。
+   *
+   * @param challenge         挑战码
+   * @param credentialId      凭证 ID
+   * @param clientDataJSON    客户端数据
+   * @param authenticatorData 认证器数据
+   * @param signature         签名
+   * @param challengeType     期望的挑战类型
+   * @return 验证通过的用户 ID
+   */
+  private String verifyAuthenticationInternal(String challenge, String credentialId,
+      String clientDataJSON, String authenticatorData, String signature, String challengeType) {
+    // 验证挑战码
+    validateChallenge(challenge, null, challengeType);
+
+    // 查找凭证（通过 credentialId 找到用户）
+    WebAuthnCredentialVO credential = credentialRepository.findByCredentialId(credentialId)
+        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.WEBAUTHN_CREDENTIAL_NOT_FOUND));
+
+    // 验证客户端数据
+    validateClientData(clientDataJSON, challenge, "webauthn.get");
+
+    // 使用 webauthn4j 进行真实的密码学签名验证
+    long newSignCount = verifySignatureWithWebAuthn(credential, clientDataJSON,
+        authenticatorData, signature);
+
+    // 克隆检测：验证 signCount 是否递增
+    validateSignCount(credential, newSignCount);
+
+    // 更新签名计数器和最后使用时间
+    credentialRepository.updateSignCount(credentialId, newSignCount);
+    credentialRepository.updateLastUsedAt(credentialId, LocalDateTime.now());
+
+    // 清除已使用的挑战码
+    deleteChallenge(challenge);
+
+    log.info("WebAuthn 认证成功: challengeType={}, userId={}, credentialId={}",
+        challengeType, credential.getUserId(),
+        credentialId.substring(0, Math.min(CREDENTIAL_LOG_PREFIX_LENGTH, credentialId.length())));
+    return credential.getUserId();
+  }
 
   /**
    * 使用 webauthn4j 进行真实的密码学签名验证

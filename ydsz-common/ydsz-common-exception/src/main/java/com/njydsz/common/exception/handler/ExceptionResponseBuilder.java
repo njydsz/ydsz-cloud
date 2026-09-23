@@ -4,6 +4,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +13,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
@@ -81,7 +83,7 @@ final class ExceptionResponseBuilder {
     if (traceId != null) {
       info.setTraceId(traceId);
     }
-    info.setTimestamp(java.time.LocalDateTime.now());
+    info.setTimestamp(LocalDateTime.now());
 
     if (throwable instanceof AbstractYdszException ex) {
       info.setCode(ex.getCode());
@@ -248,13 +250,13 @@ final class ExceptionResponseBuilder {
    * @param throwable 异常对象
    * @return ResponseEntity
    */
-  org.springframework.http.ResponseEntity<Object> buildResponseEntity(
+  ResponseEntity<Object> buildResponseEntity(
       Object body, Throwable throwable) {
     int httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
     if (throwable instanceof AbstractYdszException ex) {
       httpStatus = ex.getHttpStatus();
     }
-    return org.springframework.http.ResponseEntity.status(httpStatus).body(body);
+    return ResponseEntity.status(httpStatus).body(body);
   }
 
   /**

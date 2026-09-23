@@ -23,10 +23,13 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
  *
  * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → String（List&lt;RoleVO&gt; 的 JSON 序列化）
  *
+ * <p><b>缓存穿透防护（A-5）：</b>空结果（无角色用户）写入 60 秒短期占位缓存，防止恶意
+ * 请求不存在的 userId 冲击数据库。
+ *
  * @author ydsz-team
  * @since 26.09.01
- * @see UserRole 用户-角色关联实体
- * @see Role 角色实体
+ * @see com.njydsz.userinfo.domain.entity.UserRole 用户-角色关联实体
+ * @see com.njydsz.userinfo.domain.entity.Role 角色实体
  */
 @Slf4j
 @Component
@@ -39,6 +42,12 @@ public class RoleCacheService {
   /** 用户角色缓存 TTL（秒）：10 分钟 */
   private static final long USER_ROLES_CACHE_TTL = 600L;
 
+  /** 空结果缓存 TTL（秒）：60 秒，防缓存穿透 */
+  private static final long EMPTY_RESULT_CACHE_TTL = 60L;
+
+  /** 空结果占位符（JSON 空数组） */
+  private static final String EMPTY_RESULT_PLACEHOLDER = "[]";
+
   private final UserRoleRepository userRoleRepository;
   private final RoleRepository roleRepository;
   private final RedisStringOps redisStringOps;
@@ -47,6 +56,8 @@ public class RoleCacheService {
 
   /**
    * 按 user_role 关联表查询用户角色（带 Redis 缓存）。
+   *
+   * <p>空结果写入短期缓存防止缓存穿透（A-5）。
    *
    * @param userId 用户 ID
    * @return 用户持有的有效角色列表，无角色时返回空列表
@@ -57,6 +68,11 @@ public class RoleCacheService {
     try {
       String cachedJson = redisStringOps.get(cacheKey, String.class);
       if (cachedJson != null && !cachedJson.isEmpty()) {
+        // 空结果占位符：用户无角色，直接返回空列表
+        if (EMPTY_RESULT_PLACEHOLDER.equals(cachedJson)) {
+          log.debug("User roles cache hit (empty): userId={}", userId);
+          return List.of();
+        }
         List<RoleVO> cachedRoles = YdszJson.parseArray(cachedJson, RoleVO.class);
         if (!cachedRoles.isEmpty()) {
           log.debug("User roles cache hit: userId={}", userId);
@@ -73,14 +89,18 @@ public class RoleCacheService {
     List<RoleVO> roles = loadUserRolesFromDb(userId);
 
     // 3. 写入 Redis 缓存（List<RoleVO> 序列化为 JSON 字符串）
-    if (!roles.isEmpty()) {
-      try {
+    try {
+      if (roles.isEmpty()) {
+        // 空结果写入短期占位缓存，防止缓存穿透
+        redisStringOps.set(cacheKey, EMPTY_RESULT_PLACEHOLDER, Duration.ofSeconds(EMPTY_RESULT_CACHE_TTL));
+        log.debug("User roles cached (empty placeholder): userId={}", userId);
+      } else {
         String json = YdszJson.toJson(roles);
         redisStringOps.set(cacheKey, json, Duration.ofSeconds(USER_ROLES_CACHE_TTL));
         log.debug("User roles cached: userId={}, count={}", userId, roles.size());
-      } catch (Exception e) {
-        log.warn("Failed to cache user roles: userId={}, error={}", userId, e.getMessage(), e);
       }
+    } catch (Exception e) {
+      log.warn("Failed to cache user roles: userId={}, error={}", userId, e.getMessage(), e);
     }
     return roles;
   }
