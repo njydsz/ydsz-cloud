@@ -28,6 +28,7 @@ import com.njydsz.gateway.exception.GatewayExceptionHandler;
  */
 @Slf4j
 @Configuration
+@EnableScheduling
 @EnableConfigurationProperties(
     {CorsProperties.class, SqlInjectionProperties.class, DeprecationProperties.class,
      ApiKeyProperties.class})
@@ -103,6 +104,24 @@ public class GatewayFilterConfig {
           "CORS 安全违规：allowCredentials=true 时 allowed-origin 不能为空，"
               + "必须配置单一可信来源（如 https://ydsz.example.com）");
     }
+  }
+
+  // =========================================================================
+  // 本地令牌桶（A1: RateLimitFilter L1 快路径）
+  // =========================================================================
+
+  /**
+   * A1: 注册本地令牌桶 (L1 快路径组件)。
+   *
+   * <p>作为 RateLimitFilter 的 L1 快速判定：本地桶命中直接放行（纳秒级），耗尽时再走 Redis L2 分布式计数。
+   * 减少 80% 正常流量路径上的 Redis 网络 IO。
+   *
+   * @param properties 限流配置
+   * @return 本地令牌桶实例
+   */
+  @Bean
+  public LocalRateLimiter localRateLimiter(GatewayRateLimitProperties properties) {
+    return new LocalRateLimiter(properties);
   }
 
   // =========================================================================

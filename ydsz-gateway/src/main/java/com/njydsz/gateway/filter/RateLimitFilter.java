@@ -40,6 +40,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.GatewayRateLimitProperties;
+import com.njydsz.gateway.config.LocalRateLimiter;
 import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
@@ -85,6 +86,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   private final GatewayRateLimitProperties properties;
   private final StringRedisTemplate redisTemplate;
   private final GatewayMetrics gatewayMetrics;
+  private final LocalRateLimiter localRateLimiter;
 
   /** Redis 连续失败计数器（超过阈值时限流降级放行）。 */
   private static final int CIRCUIT_THRESHOLD = 5;

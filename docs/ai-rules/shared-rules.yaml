@@ -16,7 +16,7 @@ meta:
   version: "26.09.19"
   source: "docs/云顶编码规范.md v1.0.10"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-23（新增 YDIZ-OUTBOX-001 Outbox 标准化规则；明确 message 自建 OutboxEventScheduler 迁移过渡期至 V26.10.x；total_rules 70 → 71）"
+  last_updated: "2026-09-23（YDIZ-OUTBOX-001 豁免条款完善：message 因双重分发架构确认豁免，迁移过渡期条款移除）"
   total_rules: 71
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
@@ -1194,20 +1194,25 @@ rules:
       - 运维：OutboxAdminController（分页查询 / 状态重置 / 批量修复）
       - 归档：OutboxArchiveRepository（定时清理已投递消息）
 
-      已存在自建实现的模块（ydsz-message，包含 OutboxEvent /
-      OutboxEventEntity / OutboxEventRepository / OutboxEventScheduler 等）须在 V26.10.x 版本前完成迁移。
-      迁移期间新增代码必须使用 common-event，不得在自建实现上继续扩展。
+      **豁免清单（已确认保持独立实现）：**
+      - **ydsz-message**：包含 OutboxEvent / OutboxEventEntity / OutboxEventRepository /
+        OutboxEventScheduler / OutboxDomainEventPublisher / MessageSendTxService 等自建 Outbox 体系。
+        经 2026-09-23 架构评审确认豁免，理由：
+        (1) 双重分发架构（MQ 异步投递 + Spring 事件总线领域事件）——common-event 仅支持 MQ 单通道投递，无法替代；
+        (2) MyBatis-Plus 持久化机制 + ydsz_msg_outbox 专属 schema——替换将导致现有 Spring 事件驱动链路断裂；
+        (3) 业务风险高：迁移涉及 DDL 变更、数据迁移、MQ 幂等保障，收益不确定。
 
-      **申请豁免条件**（须同时满足）：
-      1. 提交 DDL 差异对比（自建表 vs ydsz_com_outbox）
+      除上述豁免模块外，其他业务模块新建 Outbox 实现前须提交豁免申请。
+      豁免申请条件（须同时满足）：
+      1. 提交 DDL 差异对比（自建表 vs ydzz_com_outbox）
       2. 提交数据迁移方案（停机窗口 / 双写过渡 / 回滚预案）
       3. 技术负责人审批通过
     pattern: |
       以下情形构成违规：
-      1. 业务模块新建 OutboxEvent / OutboxMessage / Outbox 实体
-      2. 业务模块自建 OutboxRepository / OutboxMapper
-      3. 业务模块自建 OutboxScheduler / OutboxProcessor 轮询组件
-      4. 在已标记迁移范围内的模块（ydsz-message）继续扩展自建 Outbox
+      1. 非豁免业务模块新建 OutboxEvent / OutboxMessage / Outbox 实体
+      2. 非豁免业务模块自建 OutboxRepository / OutboxMapper
+      3. 非豁免业务模块自建 OutboxScheduler / OutboxProcessor 轮询组件
+      4. 在豁免模块（ydsz-message）为 OutboxEventScheduler 添加新的分发通道类型（如 Kafka 直连）——新增通道应在 common-event 中扩展
     fix: |
       1. 引入 ydzs-common-event 依赖
       2. 使用 OutboxService.appendToOutbox() 替代自建写入逻辑
