@@ -41,10 +41,38 @@ generator:
   default-package: com.njydsz
   # 模板分组
   template-group: default
-  # 冲突策略: SKIP / OVERRIDE / MERGE
+  # 冲突策略: SKIP / OVERRIDE / APPEND（追加模式）
   conflict-strategy: SKIP
   # 表前缀（生成类名时去除）
   table-prefix: t_,tab_
+  # 数据库类型到 Java 类型的映射（key 为大写的 SQL 类型名，value 为 Java 类型全限定名）
+  type-mapping:
+    VARCHAR: String
+    CHAR: String
+    TEXT: String
+    LONGTEXT: String
+    MEDIUMTEXT: String
+    TINYTEXT: String
+    INT: Integer
+    INTEGER: Integer
+    TINYINT: Integer
+    SMALLINT: Integer
+    MEDIUMINT: Integer
+    BIGINT: Long
+    FLOAT: Float
+    DOUBLE: Double
+    DECIMAL: java.math.BigDecimal
+    NUMERIC: java.math.BigDecimal
+    DATE: java.time.LocalDate
+    DATETIME: java.time.LocalDateTime
+    TIMESTAMP: java.time.LocalDateTime
+    TIME: java.time.LocalTime
+    BOOLEAN: Boolean
+    BOOL: Boolean
+    BIT: Boolean
+    BLOB: "[B"
+    LONGBLOB: "[B"
+    BYTEA: "[B"
   # 批量生成单表超时（分钟）
   batch-timeout-minutes: 5
   # 代码生成异步线程池

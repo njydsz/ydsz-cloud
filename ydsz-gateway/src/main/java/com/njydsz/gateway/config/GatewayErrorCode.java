@@ -58,7 +58,9 @@ public enum GatewayErrorCode {
   /** BAD_REQUEST */
   BAD_REQUEST(40000, "error.BAD_REQUEST"),
   /** PATH_TRAVERSAL */
-  PATH_TRAVERSAL(40001, "error.PATH_TRAVERSAL"),
+  PATH_TRAVERSAL(40001, "error.PATH_TRAVERSAL",
+      List.of("请求路径包含非法字符序列，请检查 URL 构造是否正确",
+          "合法路径不应包含 .. 或 %2e%2e 等目录跳跃序列")),
   /** PAYLOAD_TOO_LARGE */
   PAYLOAD_TOO_LARGE(40002, "error.PAYLOAD_TOO_LARGE"),
   /** CONTENT_TYPE_MISSING */
@@ -98,7 +100,8 @@ public enum GatewayErrorCode {
 
   // ===== 403xx 权限不足 =====
   /** FORBIDDEN */
-  FORBIDDEN(40300, "error.FORBIDDEN"),
+  FORBIDDEN(40300, "error.FORBIDDEN",
+      List.of("当前账号无该资源的访问权限，请联系管理员授权")),
   /** IP_FORBIDDEN */
   IP_FORBIDDEN(40301, "error.IP_FORBIDDEN"),
   /** IP_BLACKLISTED */
@@ -116,29 +119,41 @@ public enum GatewayErrorCode {
 
   // ===== 429xx 限流 =====
   /** RATE_LIMITED */
-  RATE_LIMITED(42900, "error.RATE_LIMITED"),
+  RATE_LIMITED(42900, "error.RATE_LIMITED",
+      List.of("请降低请求频率，遵守接口调用间隔限制",
+          "如业务确实需要更高配额，请联系管理员申请提额",
+          "根据 Retry-After 响应头控制重试节奏")),
   /** RATE_LIMITED_IP */
-  RATE_LIMITED_IP(42901, "error.RATE_LIMITED_IP"),
+  RATE_LIMITED_IP(42901, "error.RATE_LIMITED_IP",
+      List.of("当前 IP 触发限流，请降低该 IP 的请求频率")),
   /** RATE_LIMITED_USER */
-  RATE_LIMITED_USER(42902, "error.RATE_LIMITED_USER"),
+  RATE_LIMITED_USER(42902, "error.RATE_LIMITED_USER",
+      List.of("当前用户触发限流，请降低请求频率或申请提额")),
 
   // ===== 500xx 网关内部错误 =====
   /** INTERNAL_ERROR */
-  INTERNAL_ERROR(50000, "error.INTERNAL_ERROR"),
+  INTERNAL_ERROR(50000, "error.INTERNAL_ERROR",
+      List.of("网关内部错误，请联系运维人员",
+          "请保留 X-Trace-Id 响应头以便排查")),
 
   // ===== 502xx 下游服务异常 =====
   /** BAD_GATEWAY */
-  BAD_GATEWAY(50200, "error.BAD_GATEWAY"),
+  BAD_GATEWAY(50200, "error.BAD_GATEWAY",
+      List.of("下游服务返回异常响应，请稍后重试")),
 
   // ===== 503xx 熔断/服务不可用 =====
   /** SERVICE_UNAVAILABLE */
-  SERVICE_UNAVAILABLE(50300, "error.SERVICE_UNAVAILABLE"),
+  SERVICE_UNAVAILABLE(50300, "error.SERVICE_UNAVAILABLE",
+      List.of("服务暂时不可用，请稍后重试")),
   /** CIRCUIT_BREAKER_OPEN */
-  CIRCUIT_BREAKER_OPEN(50301, "error.CIRCUIT_BREAKER_OPEN"),
+  CIRCUIT_BREAKER_OPEN(50301, "error.CIRCUIT_BREAKER_OPEN",
+      List.of("下游服务异常触发熔断，系统正在自动恢复中",
+          "熔断恢复时间视下游服务健康状态而定")),
 
   // ===== 504xx 下游响应超时 =====
   /** GATEWAY_TIMEOUT */
-  GATEWAY_TIMEOUT(50400, "error.GATEWAY_TIMEOUT");
+  GATEWAY_TIMEOUT(50400, "error.GATEWAY_TIMEOUT",
+      List.of("下游服务响应超时，请稍后重试或检查下游服务状态"));
 
   /** 5 位业务错误码 */
   private final int code;

@@ -98,6 +98,18 @@ public class DatasourceService {
   }
 
   /**
+   * 创建数据源并返回响应 VO（不含敏感字段）。
+   *
+   * @param datasource 数据源实体
+   * @return 持久化后的响应 VO
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public GenDatasourceRespVO createAndReturnVO(GenDatasource datasource) {
+    GenDatasource saved = create(datasource);
+    return DatasourceConverter.toRespVO(saved);
+  }
+
+  /**
    * 更新数据源。
    *
    * @param datasource 数据源实体
@@ -109,6 +121,18 @@ public class DatasourceService {
       datasource.setDialect(DbDialectEnum.fromUrl(datasource.getJdbcUrl()).getDialect());
     }
     return datasourceRepository.save(datasource);
+  }
+
+  /**
+   * 更新数据源并返回响应 VO（不含敏感字段）。
+   *
+   * @param datasource 数据源实体
+   * @return 持久化后的响应 VO
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public GenDatasourceRespVO updateAndReturnVO(GenDatasource datasource) {
+    GenDatasource saved = update(datasource);
+    return DatasourceConverter.toRespVO(saved);
   }
 
   /**
