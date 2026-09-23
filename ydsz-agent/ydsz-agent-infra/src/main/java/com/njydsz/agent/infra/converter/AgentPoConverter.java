@@ -5,9 +5,11 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.njydsz.agent.domain.entity.AgentApproval;
+import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.entity.PromptVersion;
 import com.njydsz.agent.domain.entity.TokenUsageRecord;
 import com.njydsz.agent.infra.entity.AgentApprovalPO;
+import com.njydsz.agent.infra.entity.DagWorkflowPO;
 import com.njydsz.agent.infra.entity.PromptVersionPO;
 import com.njydsz.agent.infra.entity.TokenUsageRecordPO;
 
@@ -54,4 +56,12 @@ public interface AgentPoConverter {
 
   /** PO → Domain */
   TokenUsageRecord poToDomain(TokenUsageRecordPO po);
+
+  // ===== DagWorkflow ↔ DagWorkflowPO =====
+
+  /** Domain → PO */
+  DagWorkflowPO domainToPo(DagWorkflow domain);
+
+  /** PO → Domain */
+  DagWorkflow poToDomain(DagWorkflowPO po);
 }

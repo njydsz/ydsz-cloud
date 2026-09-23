@@ -1,16 +1,14 @@
-package com.njydsz.agent.domain.entity;
+package com.njydsz.agent.infra.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.agent.entity.base.DomainBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * DAG 工作流（domain 纯净 POJO，无 MP 注解）
- *
- * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
- * 持久化映射由 {@code infra.entity.DagWorkflowPO} 承担。
+ * DAG 工作流持久化对象（映射 ydsz_agt_dag_workflow 表）。
  *
  * @author ydsz-team
  * @since 26.09.23
@@ -18,7 +16,8 @@ import com.njydsz.agent.entity.base.DomainBaseEntity;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class DagWorkflow extends DomainBaseEntity<String> {
+@TableName("ydsz_agt_dag_workflow")
+public class DagWorkflowPO extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 
