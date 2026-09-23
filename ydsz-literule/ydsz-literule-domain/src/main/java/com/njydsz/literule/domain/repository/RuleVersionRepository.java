@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.dto.RuleVersionDTO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
@@ -46,6 +47,18 @@ public interface RuleVersionRepository {
    * @return 分页结果
    */
   PageResponse<List<RuleVersionVO>> pageVersions(String ruleCode, int pageNum, int pageSize);
+
+  /**
+   * 按需查询指定版本的规则定义 DTO（P0-X3：避免全量加载全部版本）
+   *
+   * <p>仅查询一条 version 记录并反序列化为 RuleDefinitionDTO，比 {@link #listVersions(String)} 全量加载更轻量。
+   *
+   * @param ruleCode 规则编码
+   * @param version 版本号
+   * @return 规则定义 DTO；版本不存在时返回 {@link Optional#empty()}
+   * @since 26.09.23
+   */
+  Optional<RuleDefinitionDTO> findVersionDefinition(String ruleCode, int version);
 
   /**
    * 回滚到指定版本
