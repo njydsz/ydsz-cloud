@@ -40,8 +40,8 @@ public class LocalTokenBucket {
   /** 上次重置时间戳（毫秒）。 */
   private volatile long lastRefillTime;
 
-  /** 最后访问时间戳（用于清理过期桶）。 */
-  private final volatile long lastAccessTime;
+  /** 最后访问时间戳（用于清理过期桶，volatile 保证多线程可见性）。 */
+  private volatile long lastAccessTime;
 
   /** 总请求计数（统计/可观测）。 */
   private final LongAdder requestCount = new LongAdder();

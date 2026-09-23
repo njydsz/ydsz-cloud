@@ -20,6 +20,7 @@ import org.springframework.core.Ordered;
  *   5   SqlInjectionFilter        SQL 注入检测
  *   8   WebSocketAuthFilter       WebSocket 认证
  *   10  AuthGlobalFilter          主鉴权 + 内部头注入
+ *   11  IdempotentGlobalFilter     幂等拦截（X-Idempotency-Key 窗口去重）
  *   15  ApiKeyAuthFilter          API Key 认证
  *   20  GrayLoadBalancerRequestFilter 灰度标识注入
  *   35  AuditLogFilter            审计日志（记录被限流/熔断的请求）
@@ -47,6 +48,8 @@ public enum GatewayFilterOrder {
   WEBSOCKET_AUTH(8),
   /** 主鉴权过滤器 */
   AUTH(10),
+  /** 幂等拦截过滤器（X-Idempotency-Key 窗口去重） */
+  IDEMPOTENT(11),
   /** API Key 认证过滤器 */
   API_KEY_AUTH(15),
   /** 灰度路由标识注入过滤器 */

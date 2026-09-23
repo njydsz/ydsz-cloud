@@ -165,7 +165,7 @@ public class SamlService {
    * 根据 IdP Entity ID 生成 AuthnRequest URL（P2-1 多租户路由）。
    *
    * <p>从 DB 配置中查找指定 IdP 的 SSO 端点，生成对应的 AuthnRequest。
-   * 如果 DB 中未找到指定 IdP，回落到 YAML 全局配置。
+   * DB 中未找到指定 IdP 或状态非 ENABLED 时直接拒绝，禁止回落 YAML 全局配置（防跨租户越权）。
    *
    * @param idpEntityId IdP Entity ID（如 "https://qy.weixin.qq.com/..."）
    * @return 重定向 URL
@@ -176,14 +176,10 @@ public class SamlService {
     String idpSsoUrl;
     if (idpConfig != null && "ENABLED".equals(idpConfig.getStatus())) {
       idpSsoUrl = idpConfig.getSsoUrl();
-      log.info("多租户 IdP 路由: entityId={}, ssoUrl={}", idpEntityId, idpSsoUrl);
+      log.info("多租户 IdP 路由: idpEntityId={}, ssoUrl={}", idpEntityId, idpSsoUrl);
     } else {
-      // 回落到 YAML 全局配置
-      idpSsoUrl = samlProperties.getIdpSsoUrl();
-      if (idpSsoUrl == null || idpSsoUrl.isBlank()) {
-        throw new BusinessException(UserInfoExceptionCode.SAML_CONFIG_MISSING);
-      }
-      log.debug("SAML 回落到 YAML 全局配置: idp={}", samlProperties.getIdpEntityId());
+      log.warn("多租户 SSO 发起拒绝: IdP 不存在或未启用, idpEntityId={}", idpEntityId);
+      throw new BusinessException(UserInfoExceptionCode.SAML_CONFIG_MISSING);
     }
 
     String entityId = samlProperties.getEntityId();
@@ -300,7 +296,7 @@ public class SamlService {
   /**
    * 使用指定 IdP 的证书验证 XML 签名（P2-1 多租户）。
    *
-   * <p>优先使用 DB 中指定 IdP 的证书，未找到时回落到 YAML 全局配置。
+   * <p>仅使用 DB 中指定 IdP 的证书验证签名，未找到对应 DB 配置时直接拒绝，禁止回落 YAML 全局配置（防跨租户越权）。
    *
    * @param document    SAML Response XML 文档
    * @param idpEntityId IdP Entity ID
@@ -312,11 +308,10 @@ public class SamlService {
     String idpCertPem;
     if (idpConfig != null && idpConfig.getCertificate() != null && !idpConfig.getCertificate().isBlank()) {
       idpCertPem = idpConfig.getCertificate();
-      log.debug("使用 DB 配置的 IdP 证书验证签名: entityId={}", idpEntityId);
+      log.debug("使用 DB 配置的 IdP 证书验证签名: idpEntityId={}", idpEntityId);
     } else {
-      // 回落到 YAML 全局配置
-      idpCertPem = samlProperties.getIdpCertificate();
-      log.debug("回落到 YAML 全局 IdP 证书验证签名");
+      log.warn("多租户 ACS 拒绝: IdP 未配置数据库证书, idpEntityId={}", idpEntityId);
+      throw new BusinessException(UserInfoExceptionCode.SAML_CONFIG_MISSING);
     }
 
     if (idpCertPem == null || idpCertPem.isBlank()) {

@@ -30,7 +30,7 @@ public class OidcProperties {
   private String issuer = "https://userinfo.ydsz.com";
 
   /** 是否在校验 ID Token 时强制验证 nonce 声明 */
-  private boolean nonceRequired = false;
+  private boolean nonceRequired = true;
 
   /**
    * ID Token 有效期（秒）

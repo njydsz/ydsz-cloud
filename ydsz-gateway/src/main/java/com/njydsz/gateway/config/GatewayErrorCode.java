@@ -73,6 +73,10 @@ public enum GatewayErrorCode {
   /** XSS_DETECTED */
   XSS_DETECTED(40011, "error.XSS_DETECTED",
       List.of("请求包含跨站脚本攻击特征，已被拦截")),
+  /** IDEMPOTENT_DUPLICATE — 幂等 Key 重复请求被拦截（客户端可安全重试 PUT/POST）。 */
+  IDEMPOTENT_DUPLICATE(40012, "error.IDEMPOTENT_DUPLICATE",
+      List.of("相同 X-Idempotency-Key 的请求已在处理中，请勿重复提交",
+          "如确需重试，请使用新的 X-Idempotency-Key 值")),
 
   // ===== 401xx 认证失败 =====
   /** UNAUTHORIZED */

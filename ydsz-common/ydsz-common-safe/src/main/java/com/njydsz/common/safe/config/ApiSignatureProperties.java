@@ -3,6 +3,7 @@ package com.njydsz.common.safe.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -19,7 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     api-signature:
  *       enabled: true
  *       app-id: "ydsz-web"
- *       app-secret: "Base64EncodedSecretKey"
+ *       app-secret: "${API_SIGNATURE_SECRET}"
  *       timestamp-tolerance-seconds: 300
  *       nonce-expire-seconds: 600
  *       header-timestamp: X-Timestamp
@@ -37,6 +38,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties(prefix = "ydsz.safe.api-signature")
 public class ApiSignatureProperties {
+
+  /** 占位密钥默认值（生产环境必须覆盖） */
+  private static final String PLACEHOLDER_SECRET = "change-me-in-production";
 
   /** 是否启用 API 签名验证 */
   private boolean isEnabled = false;
@@ -67,4 +71,19 @@ public class ApiSignatureProperties {
 
   /** 排除签名验证的路径列表（Ant 风格） */
   private List<String> excludes = new ArrayList<>(4);
+
+  /**
+   * 启动校验：若启用签名验证但密钥为占位值则拒绝启动。
+   *
+   * <p>防止生产环境使用默认占位密钥导致签名形同虚设。
+   */
+  @PostConstruct
+  public void validateConfig() {
+    if (isEnabled && PLACEHOLDER_SECRET.equals(appSecret)) {
+      throw new IllegalStateException(
+          "ydsz.safe.api-signature 已启用但 appSecret 使用了占位值 "
+              + PLACEHOLDER_SECRET
+              + "，请在生产环境通过环境变量注入真实密钥");
+    }
+  }
 }

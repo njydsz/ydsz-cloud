@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.server.config;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -69,4 +70,18 @@ public class ScimProperties {
 
   /** 是否允许通过 SCIM PATCH 进行部分更新（RFC 7644 Section 3.5.2）。 */
   private boolean allowPatch = true;
+
+  /**
+   * 启动校验：SCIM 启用时 authToken 不可为空或占位值。
+   *
+   * <p>防止生产环境使用空 token 导致接口未授权访问。
+   */
+  @PostConstruct
+  public void validateConfig() {
+    if (enabled && (authToken == null || authToken.isBlank() || "change-me-in-production".equals(authToken))) {
+      throw new IllegalStateException(
+          "ydsz.userinfo.scim 已启用但 authToken 为空或占位值，"
+              + "请通过 SCIM_AUTH_TOKEN 环境变量注入真实密钥");
+    }
+  }
 }

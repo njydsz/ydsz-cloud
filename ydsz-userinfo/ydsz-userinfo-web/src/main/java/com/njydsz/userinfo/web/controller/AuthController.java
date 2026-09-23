@@ -454,6 +454,8 @@ public class AuthController {
    *
    * <p>将指定 accessToken 加入黑名单，使其立即失效。 可用于"退出其他设备"场景。
    *
+   * <p><b>安全约束：</b>仅允许下线当前用户自己的 token，禁止越权下线他人会话（防 P0 越权漏洞）。
+   *
    * @param token 要下线的 accessToken
    * @return 是否成功
    */
@@ -465,6 +467,16 @@ public class AuthController {
   @DeleteMapping("/sessions/{token}")
   @Operation(summary = "下线指定会话")
   public YdszResponse<Void> kickOutSession(@PathVariable String token) {
+    String currentUserId = RequestContext.getUserId();
+    if (currentUserId == null || currentUserId.isBlank()) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    // 解析目标 token 获取归属用户，校验归属权
+    String tokenOwnerUserId = tokenService.parseAccessToken(token).getUserId();
+    if (tokenOwnerUserId == null || !currentUserId.equals(tokenOwnerUserId)) {
+      log.warn("越权下线会话被拒绝: currentUserId={}, targetTokenUserId={}", currentUserId, tokenOwnerUserId);
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
     authService.logout(token);
     return YdszResponse.success();
   }
