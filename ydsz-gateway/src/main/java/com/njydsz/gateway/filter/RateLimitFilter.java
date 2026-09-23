@@ -163,6 +163,29 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             && !clientIp.isEmpty()
             && properties.getPerIp().getWhitelist().contains(clientIp);
 
+    // A1: L1 本地令牌桶快路径 — 纳秒级判定，命中即放行（无 Redis IO）
+    boolean localIpAllowed = !properties.getPerIp().isEnabled()
+        || ipWhitelisted
+        || clientIp == null
+        || clientIp.isEmpty()
+        || localRateLimiter.tryAcquireLocal("ip:" + clientIp, true);
+    boolean localUserAllowed = !properties.getPerUser().isEnabled()
+        || userId == null
+        || userId.isEmpty()
+        || localRateLimiter.tryAcquireLocal("user:" + userId, false);
+
+    // 本地桶命中时直接放行，仅耗尽时需要 Redis L2 精确计数
+    if (localIpAllowed && localUserAllowed) {
+      return chain.filter(exchange);
+    }
+    if (localIpAllowed && !properties.getPerUser().isEnabled()) {
+      return chain.filter(exchange);
+    }
+    if (localUserAllowed && !properties.getPerIp().isEnabled()) {
+      return chain.filter(exchange);
+    }
+
+    // L2: 本地桶耗尽，走 Redis 分布式精确计数
     return executeRateLimit(exchange, clientIp, userId, ipWhitelisted)
         .flatMap(
             result -> {
