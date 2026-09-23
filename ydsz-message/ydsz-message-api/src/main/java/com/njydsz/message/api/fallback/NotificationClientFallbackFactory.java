@@ -11,6 +11,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.api.client.NotificationClient;
 
 /**
@@ -34,6 +35,10 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
 
   private static final Logger log = LoggerFactory.getLogger(NotificationClientFallbackFactory.class);
 
+  /** 降级消息（走 i18n，不可用时回退到中文） */
+  private static final String MESSAGE_UNAVAILABLE =
+      MessageUtils.getMessage("message.service.unavailable", "消息中心服务不可用");
+
   @Override
   public NotificationClient create(Throwable cause) {
     log.warn("[NotificationClient] 降级触发: {}", cause.getMessage());
@@ -41,24 +46,25 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
       @Override
       public YdszResponse<MessageResult> sendMessage(MessageRequest request) {
         log.warn(
-            "[NotificationClient] sendMessage 降级: receiver={}, subject={}, reason=消息中心服务不可用",
+            "[NotificationClient] sendMessage 降级: receiver={}, subject={}, reason={}",
             request == null ? null : request.getReceiver(),
-            request == null ? null : request.getSubject());
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+            request == null ? null : request.getSubject(),
+            MESSAGE_UNAVAILABLE);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, MESSAGE_UNAVAILABLE);
       }
 
       @Override
       public YdszResponse<MessageResult> broadcast(BroadcastRequestDTO request) {
         String topic = request == null ? null : request.getTopic();
-        log.warn("[NotificationClient] broadcast 降级: topic={}, reason=消息中心服务不可用", topic);
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+        log.warn("[NotificationClient] broadcast 降级: topic={}, reason={}", topic, MESSAGE_UNAVAILABLE);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, MESSAGE_UNAVAILABLE);
       }
 
       @Override
       public YdszResponse<MessageResult> pushRealtime(PushRealtimeRequestDTO request) {
         String userId = request == null ? null : request.getUserId();
-        log.warn("[NotificationClient] pushRealtime 降级: userId={}, reason=消息中心服务不可用", userId);
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+        log.warn("[NotificationClient] pushRealtime 降级: userId={}, reason={}", userId, MESSAGE_UNAVAILABLE);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, MESSAGE_UNAVAILABLE);
       }
     };
   }
