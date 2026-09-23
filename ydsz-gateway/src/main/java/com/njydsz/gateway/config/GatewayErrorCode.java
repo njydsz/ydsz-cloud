@@ -1,5 +1,7 @@
 package com.njydsz.gateway.config;
 
+import java.util.List;
+
 import lombok.Getter;
 
 /**
@@ -64,21 +66,29 @@ public enum GatewayErrorCode {
   /** INVALID_PARAMETER */
   INVALID_PARAMETER(40004, "error.INVALID_PARAMETER"),
   /** SQL_INJECTION_DETECTED */
-  SQL_INJECTION_DETECTED(40010, "error.SQL_INJECTION_DETECTED"),
+  SQL_INJECTION_DETECTED(40010, "error.SQL_INJECTION_DETECTED",
+      List.of("请求参数包含 SQL 特殊字符，请检查输入")),
   /** XSS_DETECTED */
-  XSS_DETECTED(40011, "error.XSS_DETECTED"),
+  XSS_DETECTED(40011, "error.XSS_DETECTED",
+      List.of("请求包含跨站脚本攻击特征，已被拦截")),
 
   // ===== 401xx 认证失败 =====
   /** UNAUTHORIZED */
-  UNAUTHORIZED(40100, "error.UNAUTHORIZED"),
+  UNAUTHORIZED(40100, "error.UNAUTHORIZED",
+      List.of("请检查 Authorization 请求头格式是否为 Bearer <token>",
+          "Token 可能已过期，请调用 /auth/refresh 刷新")),
   /** TOKEN_INVALID */
-  TOKEN_INVALID(40101, "error.TOKEN_INVALID"),
+  TOKEN_INVALID(40101, "error.TOKEN_INVALID",
+      List.of("Token 签名无效，请重新登录获取有效 Token")),
   /** TOKEN_EXPIRED */
-  TOKEN_EXPIRED(40102, "error.TOKEN_EXPIRED"),
+  TOKEN_EXPIRED(40102, "error.TOKEN_EXPIRED",
+      List.of("Token 已过期，请调用 /auth/refresh 或重新登录")),
   /** TOKEN_BLACKLISTED */
-  TOKEN_BLACKLISTED(40103, "error.TOKEN_BLACKLISTED"),
+  TOKEN_BLACKLISTED(40103, "error.TOKEN_BLACKLISTED",
+      List.of("Token 已被撤销（可能因修改密码或安全策略），请重新登录")),
   /** REPLAY_DETECTED */
-  REPLAY_DETECTED(40104, "error.REPLAY_DETECTED"),
+  REPLAY_DETECTED(40104, "error.REPLAY_DETECTED",
+      List.of("请求存在重放攻击特征，请确保每次请求使用唯一的 X-Request-Id")),
   /** API_KEY_MISSING */
   API_KEY_MISSING(40105, "error.API_KEY_MISSING"),
   /** API_KEY_INVALID */

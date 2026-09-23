@@ -77,20 +77,20 @@ public class DatasourceController {
    */
   @Audit(module = "数据源管理", action = AuditAction.CREATE, excludeParams = {"password", "url"}, recordRequest = false)
   @PostMapping
-  public YdszResponse<GenDatasource> create(@RequestBody GenDatasource datasource) {
-    return YdszResponse.success(datasourceService.create(datasource));
+  public YdszResponse<GenDatasourceRespVO> create(@RequestBody GenDatasource datasource) {
+    return YdszResponse.success(datasourceService.createAndReturnVO(datasource));
   }
 
   /**
    * 更新数据源。
    *
    * @param datasource 数据源实体
-   * @return 持久化后实体
+   * @return 持久化后响应 VO（不含密码）
    */
   @Audit(module = "数据源管理", action = AuditAction.UPDATE, excludeParams = {"password", "url"}, recordRequest = false)
   @PostMapping("/update")
-  public YdszResponse<GenDatasource> update(@RequestBody GenDatasource datasource) {
-    return YdszResponse.success(datasourceService.update(datasource));
+  public YdszResponse<GenDatasourceRespVO> update(@RequestBody GenDatasource datasource) {
+    return YdszResponse.success(datasourceService.updateAndReturnVO(datasource));
   }
 
   /**

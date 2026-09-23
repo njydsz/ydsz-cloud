@@ -408,10 +408,11 @@ public class CodeGenService {
           Files.copy(path, backup);
           Files.writeString(path, content, StandardCharsets.UTF_8);
           return "UPDATED";
-        case MERGE:
-          // 简单追加以 // AUTO-GEN 开头
+        case APPEND:
+          // 在已有文件末尾追加生成内容（标记 AUTO-GEN 区块）
           String existing = Files.readString(path, StandardCharsets.UTF_8);
-          Files.writeString(path, existing + "\n// AUTO-GEN\n" + content, StandardCharsets.UTF_8);
+          String appended = existing + "\n// AUTO-GEN-BEGIN\n" + content + "\n// AUTO-GEN-END\n";
+          Files.writeString(path, appended, StandardCharsets.UTF_8);
           return "UPDATED";
         default:
           return "UNCHANGED";
