@@ -499,12 +499,20 @@ public class DictItemServiceImpl implements DictItemService {
 
     // 2. 逐条校验并转换（必填 / DB 唯一性）
     List<String> errors = new ArrayList<>(excelRows.size());
+    List<ImportResultVO.ImportErrorItem> errorItems = new ArrayList<>(excelRows.size());
     List<DictItemVO> validItems = new ArrayList<>(excelRows.size());
     int skipCount = 0;
     for (int i = 0; i < excelRows.size(); i++) {
-      String error = validateExcelRow(excelRows.get(i), i + 2);
-      if (error != null) {
-        errors.add(error);
+      int rowNum = i + 2;
+      ValidationError validationError = validateExcelRowStructured(excelRows.get(i), rowNum);
+      if (validationError != null) {
+        errors.add(validationError.message);
+        ImportResultVO.ImportErrorItem errorItem = new ImportResultVO.ImportErrorItem();
+        errorItem.setRow(rowNum);
+        errorItem.setField(validationError.field);
+        errorItem.setCode(validationError.code);
+        errorItem.setMessage(validationError.message);
+        errorItems.add(errorItem);
         skipCount++;
       } else {
         validItems.add(toDictItemVO(excelRows.get(i)));
@@ -512,15 +520,16 @@ public class DictItemServiceImpl implements DictItemService {
     }
 
     // 3. 批量保存有效数据
-    int successCount = saveValidItemsBatch(validItems, errors);
+    int successCount = saveValidItemsBatch(validItems, errors, errorItems);
 
-    // 4. 构建导入结果
+    // 4. 构建导入结果（旧 errors 列表 + 新 errorItems 结构化列表双写）
     return ImportResultVO.builder()
         .totalCount(excelRows.size())
         .successCount(successCount)
         .failCount(excelRows.size() - successCount - skipCount)
         .skipCount(skipCount)
         .errors(errors)
+        .errorItems(errorItems)
         .message(
             String.format(
                 "导入完成: 成功 %d 条, 跳过 %d 条, 失败 %d 条",
@@ -549,30 +558,47 @@ public class DictItemServiceImpl implements DictItemService {
   /**
    * 校验单条 Excel 行（私有）。
    *
-   * <p>校验必填字段、DB 唯一性；通过返回 null，否则返回错误描述。
+   * <p>校验必填字段、DB 唯一性；通过返回 {@code null}，否则返回结构化错误信息。
    *
    * @param excelRow Excel 行数据
    * @param rowNum Excel 行号（从 2 开始，第 1 行为表头）
-   * @return 错误描述；校验通过返回 null
+   * @return 结构化错误；校验通过返回 {@code null}
    */
-  private String validateExcelRow(DictItemExcelVO excelRow, int rowNum) {
-    String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
+  private ValidationError validateExcelRowStructured(DictItemExcelVO excelRow, int rowNum) {
     if (excelRow.getTypeCode() == null || excelRow.getTypeCode().isBlank()) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.dictTypeCode.required", "字典类型编码不能为空");
+      return ValidationError.of("typeCode", "REQUIRED",
+          MessageUtils.getMessage("system.excel.dictTypeCode.required", "字典类型编码不能为空"));
     }
     if (excelRow.getItemCode() == null || excelRow.getItemCode().isBlank()) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.dictItemCode.required", "字典项编码不能为空");
+      return ValidationError.of("itemCode", "REQUIRED",
+          MessageUtils.getMessage("system.excel.dictItemCode.required", "字典项编码不能为空"));
     }
     if (excelRow.getItemValue() == null || excelRow.getItemValue().isBlank()) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.dictItemValue.required", "字典项展示值不能为空");
+      return ValidationError.of("itemValue", "REQUIRED",
+          MessageUtils.getMessage("system.excel.dictItemValue.required", "字典项展示值不能为空"));
     }
     // DB 唯一性校验
     if (dictRepository.existsItemByTypeAndCode(excelRow.getTypeCode(), excelRow.getItemCode())) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.dictItem.duplicate",
-          new Object[] {excelRow.getTypeCode(), excelRow.getItemCode()},
-          "字典项已存在(" + excelRow.getTypeCode() + "/" + excelRow.getItemCode() + ")");
+      return ValidationError.of("itemCode", "DUPLICATE",
+          MessageUtils.getMessage("system.excel.dictItem.duplicate",
+              new Object[] {excelRow.getTypeCode(), excelRow.getItemCode()},
+              "字典项已存在(" + excelRow.getTypeCode() + "/" + excelRow.getItemCode() + ")"));
     }
     return null;
+  }
+
+  /**
+   * 行内校验错误（内部 DTO：承载字段名、错误码、消息）。
+   */
+  @Data
+  private static class ValidationError {
+    private final String field;
+    private final String code;
+    private final String message;
+
+    static ValidationError of(String field, String code, String message) {
+      return new ValidationError(field, code, message);
+    }
   }
 
   /**
@@ -618,9 +644,11 @@ public class DictItemServiceImpl implements DictItemService {
    *
    * @param validItems 校验通过的字典项列表
    * @param errors 错误收集器（保存失败时追加）
+   * @param errorItems 结构化错误收集器
    * @return 保存成功条数
    */
-  private int saveValidItemsBatch(List<DictItemVO> validItems, List<String> errors) {
+  private int saveValidItemsBatch(List<DictItemVO> validItems, List<String> errors,
+      List<ImportResultVO.ImportErrorItem> errorItems) {
     if (validItems.isEmpty()) {
       return 0;
     }
@@ -641,13 +669,13 @@ public class DictItemServiceImpl implements DictItemService {
       log.warn("批量插入字典项返回 false，降级逐条插入");
       errors.add(MessageUtils.getMessage("system.excel.dictItem.batchSaveFallback",
           "批量保存未成功，已回退到逐条插入"));
-      return saveValidItemsOneByOne(dtos, errors);
+      return saveValidItemsOneByOne(dtos, errors, errorItems);
     } catch (Exception e) {
       log.warn("批量插入字典项异常，降级逐条: {}", e.getMessage());
       errors.add(MessageUtils.getMessage("system.excel.dictItem.batchSaveFailed",
           new Object[] {e.getMessage()},
           "批量导入失败: " + e.getMessage()));
-      return saveValidItemsOneByOne(dtos, errors);
+      return saveValidItemsOneByOne(dtos, errors, errorItems);
     }
   }
 
@@ -656,9 +684,11 @@ public class DictItemServiceImpl implements DictItemService {
    *
    * @param dtos 字典项 DTO 列表
    * @param errors 错误收集器（单条失败时追加，但不中断后续处理）
+   * @param errorItems 结构化错误收集器
    * @return 保存成功条数
    */
-  private int saveValidItemsOneByOne(List<DictItemDTO> dtos, List<String> errors) {
+  private int saveValidItemsOneByOne(List<DictItemDTO> dtos, List<String> errors,
+      List<ImportResultVO.ImportErrorItem> errorItems) {
     int count = 0;
     Set<String> evictedTypeCodes = new HashSet<>();
     for (DictItemDTO dto : dtos) {
@@ -671,9 +701,16 @@ public class DictItemServiceImpl implements DictItemService {
       } catch (Exception e) {
         log.warn("单条插入字典项失败: typeCode={}, itemCode={}, error={}",
             dto.getTypeCode(), dto.getItemCode(), e.getMessage());
-        errors.add(MessageUtils.getMessage("system.excel.dictItem.singleSaveFailed",
+        String errorMsg = MessageUtils.getMessage("system.excel.dictItem.singleSaveFailed",
             new Object[] {dto.getTypeCode(), dto.getItemCode(), e.getMessage()},
-            dto.getTypeCode() + "/" + dto.getItemCode() + " 保存失败: " + e.getMessage()));
+            dto.getTypeCode() + "/" + dto.getItemCode() + " 保存失败: " + e.getMessage());
+        errors.add(errorMsg);
+        ImportResultVO.ImportErrorItem errorItem = new ImportResultVO.ImportErrorItem();
+        errorItem.setRow(0);
+        errorItem.setField("itemCode");
+        errorItem.setCode("DB_ERROR");
+        errorItem.setMessage(errorMsg);
+        errorItems.add(errorItem);
       }
     }
     // 统一失效已涉及 typeCode 的缓存

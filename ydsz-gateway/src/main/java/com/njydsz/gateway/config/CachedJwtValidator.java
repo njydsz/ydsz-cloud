@@ -4,8 +4,10 @@ import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -18,7 +20,10 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
+import com.njydsz.common.redis.service.ops.ReactiveStringRedisOps;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import com.njydsz.common.util.security.DigestUtils;
+
 
 /**
  * JWT 校验结果本地缓存。
@@ -74,6 +79,13 @@ public class CachedJwtValidator {
   /** 缓存未命中计数器 */
   private final AtomicLong cacheMissCount = new AtomicLong(0);
 
+ /**
+   * C1: JWT 失效广播频道名称（多网关实例间同步缓存失效）。
+   *
+   * <p>频道内容为 JWT Token 的 SHA-256 摘要（64 字符），订阅方根据摘要反查本地缓存并清除对应条目。
+   */
+  private static final String INVALIDATION_CHANNEL = "gateway:jwt:invalidate";
+
   /** 本地缓存实例（值包含 UserInfo 和 Token 过期时间，用于自适应 TTL） */
   private final Cache<String, JwtCacheEntry> claimsCache;
 
@@ -84,18 +96,28 @@ public class CachedJwtValidator {
   private final GatewayMetrics gatewayMetrics;
 
   /**
+   * C1: 响应式 Redis 操作组件（可选，用于多实例 JWT 缓存失效 Pub/Sub 广播）。
+   *
+   * <p>未配置时广播功能降级（仍可 TTL 最终一致性同步）；配置后通过 Pub/Sub 实现毫秒级失效传播。
+   */
+  private final ReactiveStringRedisOps redisOps;
+
+  /**
    * 构造 JWT 缓存校验器。
    *
    * @param tokenService Token 服务
    * @param gatewayMetrics 网关指标组件（可选，用于记录 JWT 校验耗时）
+   * @param redisOps 响应式 Redis 操作组件（可选，用于 JWT 失效广播）
    * @param cacheTtlSeconds 缓存 TTL（秒），通过配置注入
    */
   public CachedJwtValidator(
       TokenService tokenService,
       GatewayMetrics gatewayMetrics,
+      ObjectProvider<ReactiveStringRedisOps> redisOpsProvider,
       @Value("${ydsz.gateway.jwt.cache-ttl-seconds:10}") long cacheTtlSeconds) {
     this.tokenService = tokenService;
     this.gatewayMetrics = gatewayMetrics;
+    this.redisOps = redisOpsProvider.getIfAvailable();
     this.cacheTtlSeconds = cacheTtlSeconds;
     this.claimsCache =
         YdszCache.<String, JwtCacheEntry>newBuilder()
@@ -105,12 +127,54 @@ public class CachedJwtValidator {
             .maximumSize(CACHE_MAX_SIZE)
             .recordStats()
             .build();
-    log.info("[JwtCache] JWT 校验缓存初始化完成, TTL={}s, maxSize={}", cacheTtlSeconds, CACHE_MAX_SIZE);
+    log.info("[JwtCache] JWT 校验缓存初始化完成, TTL={}s, maxSize={}, redisBroadcast={}",
+        cacheTtlSeconds, CACHE_MAX_SIZE, (redisOps != null));
 
     // 注册缓存命中/未命中 Prometheus 指标
     if (gatewayMetrics != null) {
       gatewayMetrics.registerJwtCacheCounters(cacheHitCount, cacheMissCount);
     }
+  }
+
+  /**
+   * C1: 订阅 JWT 失效广播频道（毫秒级多实例缓存同步）。
+   *
+   * <p>启动时调用，监听 {@value #INVALIDATION_CHANNEL} 频道。收到其他网关实例发布的 JWT 摘要后，
+   * 遍历本地缓存查找 SHA-256 摘要匹配的 Token 并清除，实现跨实例 TTL 同步降级为毫秒级失效。
+   *
+   * <p>Redis 未配置时无操作，降级为 TTL 最终一致性。
+   */
+  @PostConstruct
+  private void subscribeToInvalidationChannel() {
+    if (redisOps == null) {
+      return;
+    }
+    redisOps.getTemplate()
+        .listenToChannel(INVALIDATION_CHANNEL)
+        .subscribe(
+            message -> {
+              String hash = message.getMessage();
+              if (hash != null && !hash.isBlank()) {
+                evictByHash(hash);
+              }
+            },
+            error -> log.warn("[JwtCache] Pub/Sub 订阅异常（降级为 TTL 兜底）: {}", error.getMessage()),
+            () -> log.info("[JwtCache] JWT 失效广播订阅已关闭"));
+    log.info("[JwtCache] JWT 失效广播订阅已启动 (channel={})", INVALIDATION_CHANNEL);
+  }
+
+  /**
+   * C1: 根据 SHA-256 摘要反查本地缓存并清除匹配的 JWT Token。
+   *
+   * <p>遍历缓存的所有 entry，计算每个 JWT 的 SHA-256 摘要与广播摘要比对，匹配则清除。
+   * 缓存最大 10,000 条，遍历开销可忽略（通常在 Netty 线程无阻塞）。
+   *
+   * @param targetHash 目标 JWT Token 的 SHA-256 摘要（64 位 hex）
+   */
+  private void evictByHash(String targetHash) {
+    claimsCache.asMap().keySet().stream()
+        .filter(jwt -> targetHash.equals(DigestUtils.sha256Hex(jwt)))
+        .forEach(jwt -> claimsCache.invalidate(jwt));
   }
 
   /**
@@ -270,9 +334,12 @@ public class CachedJwtValidator {
   }
 
   /**
-   * 失效单个 Token（黑名单加入后清除缓存）。
+   * 失效单个 Token（黑名单加入后清除缓存 + C1: 广播到其他实例）。
    *
-   * <p>多实例场景下，其他实例通过 TTL 过期自动同步（延迟最长 {@code cacheTtlSeconds} 秒）。
+   * <p>本地缓存移除后，通过 Redis Pub/Sub {@value #INVALIDATION_CHANNEL} 频道广播 JWT SHA-256 摘要，
+   * 订阅该频道的其他网关实例将毫秒级接收并清除各自本地缓存中对应的 Token。
+   *
+   * <p>Redis 未配置时降级为 TTL 最终一致性（最长 {@code cacheTtlSeconds} 秒自动同步）。
    *
    * @param jwt 需要失效的 JWT Token
    */
@@ -282,6 +349,16 @@ public class CachedJwtValidator {
     }
     claimsCache.invalidate(jwt);
     log.debug("[JwtCache] Token 已从本地缓存移除 jwt={}", maskToken(jwt));
+
+    // C1: 广播 SHA-256 摘要到其他网关实例（fire-and-forget，失败不影响主流程）
+    if (redisOps != null) {
+      String hash = DigestUtils.sha256Hex(jwt);
+      redisOps.getTemplate()
+          .convertAndSend(INVALIDATION_CHANNEL, hash)
+          .subscribe(
+              null,
+              error -> log.debug("[JwtCache] JWT 失效广播发送失败（降级为 TTL 兜底）: {}", error.getMessage()));
+    }
   }
 
   /**
