@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
@@ -62,6 +63,7 @@ public interface SmsProvider {
    * @return 回执结果：状态（DELIVERED/FAILED/UNKNOWN）+ 错误码 + 错误描述
    */
   default MessageResult queryReceipt(String providerTraceId, String phone) {
-    return MessageResult.fail("SMS", null, "当前 provider 未实现回执查询", "当前 provider 未实现回执查询", null);
+    String msg = MessageUtils.getMessage("sms.provider.receipt.not.supplemented", "当前 provider 未实现回执查询");
+    return MessageResult.fail("SMS", null, msg, msg, null);
   }
 }

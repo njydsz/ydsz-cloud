@@ -12,12 +12,14 @@ import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
 import com.njydsz.common.feign.MessageResult;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 
 /**
@@ -88,7 +90,11 @@ public class MessageExceptionHandler extends BaseExceptionHandler {
     // 仅处理 MessageExceptionCode 类型的异常（通过 key 匹配，因为 resultCode() 返回匿名 ResultCode）
     Optional<MessageExceptionCode> matched = matchMessageExceptionCode(e);
     if (matched.isEmpty()) {
-      return null;
+      // 非消息业务异常：构造通用降级响应而非返回 null，避免响应体为空
+      String userMsg = MessageUtils.getMessage("message.error.general", "消息服务处理异常，请稍后重试");
+      return YdszResponse.error(
+          YdszResultCode.INTERNAL_ERROR.getCode(),
+          userMsg);
     }
     MessageExceptionCode messageCode = matched.get();
 

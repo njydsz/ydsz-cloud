@@ -5,8 +5,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -151,6 +153,34 @@ public class FileNodeVO implements Serializable {
 
   @Schema(description = "标签列表")
   private List<String> tags;
+
+  // ==================== P1-4: 面包屑导航 ====================
+
+  /**
+   * P1-4: 面包屑导航路径（从根到直接父节点的有序列表）。
+   *
+   * <p>前端打开深层目录时一次性获取完整面包屑路径，避免逐层请求父节点构建导航。
+   * 列表首位为根节点，末位为直接父节点。当前节点自身不包含在内。
+   */
+  @Schema(description = "面包屑导航路径（根到直接父节点）")
+  private List<BreadcrumbItem> ancestors;
+
+  /** 面包屑单项（P1-4 轻量结构，仅含导航必要字段）。 */
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Schema(description = "面包屑导航项")
+  public static class BreadcrumbItem implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = "节点 ID")
+    private String id;
+
+    @Schema(description = "节点名称")
+    private String name;
+  }
 
   // ==================== 领域行为方法 ====================
 

@@ -529,6 +529,38 @@ public class ChunkUploadApplicationService {
     return uploaded.stream().map(Integer::parseInt).collect(Collectors.toSet());
   }
 
+  // ==================== P3-2: 上传进度查询 ====================
+
+  /**
+   * P3-2: 查询分片上传进度（含已上传数、总数、完成百分比）。
+   *
+   * <p>前端轮询此接口获取实时进度，展示上传进度条。
+   *
+   * @param uploadId 上传任务 ID
+   * @return {@link UploadProgress}（会话不存在时 uploaded=0, total=0, percent=0）
+   */
+  public UploadProgress getUploadProgress(String uploadId) {
+    ChunkUploadSession session = getSession(uploadId);
+    if (session == null) {
+      return UploadProgress.builder()
+          .uploadId(uploadId)
+          .uploadedChunks(0)
+          .totalChunks(0)
+          .percent(0)
+          .build();
+    }
+    Set<Integer> uploaded = getUploadedChunks(uploadId);
+    int total = session.getTotalChunks();
+    int uploadedCount = uploaded.size();
+    int percent = total > 0 ? (int) ((uploadedCount * 100.0) / total) : 0;
+    return UploadProgress.builder()
+        .uploadId(uploadId)
+        .uploadedChunks(uploadedCount)
+        .totalChunks(total)
+        .percent(percent)
+        .build();
+  }
+
   // ==================== 私有方法 ====================
 
   private ChunkUploadSession validateSession(String uploadId) {
@@ -835,6 +867,27 @@ public class ChunkUploadApplicationService {
 
     /** 单分片大小上限（字节），见 {@link #MAX_CHUNK_SIZE} */
     private long chunkSize;
+  }
+
+  /**
+   * P3-2: 分片上传进度（前端轮询展示进度条）。
+   *
+   * <p>包含已上传分片数、总分片数与完成百分比（0-100）。
+   */
+  @Data
+  @Builder
+  public static class UploadProgress {
+    /** 上传会话 ID */
+    private String uploadId;
+
+    /** 已上传分片数 */
+    private int uploadedChunks;
+
+    /** 总分片数 */
+    private int totalChunks;
+
+    /** 完成百分比（0-100） */
+    private int percent;
   }
 
   /**

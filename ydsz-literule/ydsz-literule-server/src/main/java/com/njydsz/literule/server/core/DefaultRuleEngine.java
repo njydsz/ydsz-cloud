@@ -109,6 +109,50 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
   private volatile boolean canaryEnabled = true;
 
   /**
+   * P0-A1 AlphaNode Phase 1：是否启用子表达式条件结果缓存（默认 false）
+   *
+   * <p>启用后，同一 evaluate 调用内多条规则包含相同子表达式时（如规则 A 条件为 {@code age > 18}、规则 B 为 {@code age > 18 && vipLevel > 3}），
+   * 子表达式的求值结果会被缓存复用，避免重复 evaluate。
+   *
+   * <p>配置键：{@code ydsz.literule.performance.alphaCacheEnabled}
+   *
+   * @since 26.09.23
+   */
+  private volatile boolean conditionCacheEnabled = false;
+
+  /**
+   * P0-A1 条件缓存最大条目数（默认 2048）
+   *
+   * <p>超出后 put 静默失败（不写入不淘汰），避免无限增长。适用于表达式总数 < 2000 条的中等规则集。
+   *
+   * <p>配置键：{@code ydsz.literule.performance.alphaCacheMaxSize}
+   *
+   * @since 26.09.23
+   */
+  private volatile int alphaCacheMaxSize = 2048;
+
+  /**
+   * P0-A1：评估期内的条件结果子表达式缓存，跨规则共享
+   *
+   * <p>使用 InheritableThreadLocal 使并行评估的子线程也能访问同一缓存（同一 evaluate 调用内 facts 不变，缓存线程安全）。
+   * 注意：ForkJoinPool 等复用线程池不会自动继承值，仅 Thread 线程池 + {@code InheritableThreadLocal} 语义。
+   */
+  private final InheritableThreadLocal<com.njydsz.literule.server.engine.liteexpr.ExprCache>
+      alphaCacheLocal =
+          new InheritableThreadLocal<>() {
+            @Override
+            protected com.njydsz.literule.server.engine.liteexpr.ExprCache initialValue() {
+              return com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+            }
+
+            @Override
+            protected com.njydsz.literule.server.engine.liteexpr.ExprCache childValue(
+                com.njydsz.literule.server.engine.liteexpr.ExprCache parentValue) {
+              return parentValue;
+            }
+          };
+
+  /**
    * 模型输入注册表（可选，1.8.0 起 P3-1 规则+模型融合）
    *
    * <p>非 null 且已注册 provider 时，引擎在评估前调用 {@link ModelInputRegistry#collectAllModelOutputs} 获取模型输出，
@@ -292,20 +336,69 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
       return prep.cached;
     }
 
-    // 2. 选择候选规则（索引或全量）
-    List<Rule> candidateRules = selectCandidateRules(prep.enrichedContext);
-
-    // 3. 并行评估路径（大规则量场景）
-    if (shouldUseParallelEvaluation(candidateRules)) {
-      return evaluateInParallel(
-          candidateRules, prep.enrichedContext, prep.enrichedContext.getScenario());
+    // 2. P0-A1 AlphaNode Phase 1：启用条件评估缓存（同一 evaluate 调用内跨规则共享子表达式求值结果）
+    com.njydsz.literule.server.engine.liteexpr.ExprCache previousCache = alphaCacheLocal.get();
+    if (conditionCacheEnabled) {
+      alphaCacheLocal.set(
+          new com.njydsz.literule.server.engine.liteexpr.SimpleExprCache(alphaCacheMaxSize));
     }
 
-    // 4. 串行评估规则
-    EvaluationState state = evaluateRules(candidateRules, prep.enrichedContext);
+    try {
+      // 3. 选择候选规则（索引或全量）
+      List<Rule> candidateRules = selectCandidateRules(prep.enrichedContext);
 
-    // 5. 收尾处理（排序、指标、分发、缓存）
-    return finalizeResults(state, prep.enrichedContext);
+      List<RuleResultVO> results;
+      // 4. 并行 / 串行评估路径
+      if (shouldUseParallelEvaluation(candidateRules)) {
+        results = evaluateInParallel(
+            candidateRules, prep.enrichedContext, prep.enrichedContext.getScenario());
+      } else {
+        EvaluationState state = evaluateRules(candidateRules, prep.enrichedContext);
+        results = processResults(state, prep.enrichedContext);
+      }
+
+      // P0-A1：记录缓存统计
+      if (conditionCacheEnabled) {
+        com.njydsz.literule.server.engine.liteexpr.ExprCache cache = alphaCacheLocal.get();
+        if (cache != null && cache.hitRate() >= 0) {
+          log.debug("[LiteRule] AlphaNode 缓存统计: size={}, hits={}, misses={}, hitRate={}",
+              cache.size(), cache.hitCount(), cache.missCount(),
+              String.format("%.2f%%", cache.hitRate() * 100));
+        } else if (cache != null) {
+          log.debug("[LiteRule] AlphaNode 缓存条目数: {}, 候选规则数: {}", cache.size(),
+              candidateRules.size());
+        }
+      }
+      return results;
+    } finally {
+      // P0-A1：恢复之前的缓存引用（避免 ThreadLocal 污染）
+      alphaCacheLocal.set(previousCache);
+    }
+  }
+
+  /**
+   * P0-A1：收尾处理（排序、指标、分发、缓存）
+   *
+   * <p>从 {@link #finalizeResults} 重命名并包入统一的返回值处理。
+   */
+  private List<RuleResultVO> processResults(EvaluationState state, RuleContextVO context) {
+    return finalizeResults(state, context);
+  }
+
+  /**
+   * P0-A1：获取当前评估期内的条件结果缓存（供 Rule 实现调用）
+   *
+   * <p>仅在同一线程的 evaluate 调用内有效。未启用或不在 evaluate 上下文内时返回 {@link ExprCache#EMPTY}。
+   *
+   * @return 当前缓存实例（从不返回 null）
+   * @since 26.09.23
+   */
+  public com.njydsz.literule.server.engine.liteexpr.ExprCache getCurrentAlphaCache() {
+    if (!conditionCacheEnabled) {
+      return com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+    }
+    com.njydsz.literule.server.engine.liteexpr.ExprCache cache = alphaCacheLocal.get();
+    return cache != null ? cache : com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
   }
 
   /** 准备评估上下文结果封装 */

@@ -23,6 +23,7 @@ import com.njydsz.common.netty.codec.LengthFieldCodec;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.server.AbstractNettyServer;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.server.channel.MessageChannel;
 
 /**
@@ -100,7 +101,8 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
   @Override
   public MessageResult send(MessageRequest request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "推送接收人不能为空", "推送接收人不能为空", null);
+      String msg = MessageUtils.getMessage("push.receiver.not.empty", "推送接收人不能为空");
+      return MessageResult.fail(CHANNEL_TYPE, null, msg, msg, null);
     }
     String traceId = "PUSH-" + snowflakeIdGenerator.nextId();
     String userId = request.getReceiver();
@@ -109,7 +111,9 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     // 通过 ChannelGroupManager 按用户分组推送
     if (channelGroupManager.groupSize(groupKey) == 0) {
       log.warn("[TCP-PUSH] 用户不在线,无法推送: userId={}", userId);
-      return MessageResult.fail(CHANNEL_TYPE, null, "用户不在线: " + userId, "用户不在线: " + userId, null);
+      String offlineMsg = MessageUtils.getMessage("push.user.offline", "用户不在线: {0}");
+      offlineMsg = offlineMsg.replace("{0}", userId);
+      return MessageResult.fail(CHANNEL_TYPE, null, offlineMsg, offlineMsg, null);
     }
     try {
       // 构建推送消息 JSON
@@ -133,7 +137,9 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
       return MessageResult.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
       log.error("[TCP-PUSH] 推送异常: userId={} err={}", userId, e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, null, "推送异常: " + e.getMessage(), "推送异常: " + e.getMessage(), null);
+      String exMsg = MessageUtils.getMessage("push.exception", "推送异常: {0}");
+      exMsg = exMsg.replace("{0}", e.getMessage());
+      return MessageResult.fail(CHANNEL_TYPE, null, exMsg, exMsg, null);
     }
   }
 

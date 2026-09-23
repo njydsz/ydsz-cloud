@@ -65,7 +65,26 @@ public class BatchOperationResult implements Serializable {
   // ============================== 工厂方法 ==============================
 
   /**
-   * 创建全部成功结果。
+   * 创建全部成功结果（单参数简写，total = successCount = failCount = 0）。
+   *
+   * <p>兼容旧代码：{@code success(0, 0)} 表示空成功。
+   *
+   * @param totalCount 总数（= 成功数）
+   * @param successCount 成功数
+   * @return 批量操作结果
+   */
+  public static BatchOperationResult success(int totalCount, int successCount) {
+    BatchOperationResult result = new BatchOperationResult();
+    result.setTotalCount(totalCount);
+    result.setSuccessCount(successCount);
+    result.setFailCount(totalCount - successCount);
+    result.setFailures(Collections.emptyList());
+    result.setDurationMs(0L);
+    return result;
+  }
+
+  /**
+   * 创建全部成功结果（含耗时）。
    *
    * @param totalCount 总数
    * @param durationMs 耗时毫秒
@@ -115,11 +134,10 @@ public class BatchOperationResult implements Serializable {
   /**
    * 批量操作失败详情。
    *
-   * <p>taskId / targetId 为操作目标标识，reason 为失败原因。
+   * <p>targetId 为操作目标标识（任务 ID / 实例 ID / 定义 ID 等），reason 为失败原因。
    */
   @Data
   @NoArgsConstructor
-  @AllArgsConstructor
   public static class FailureDetail implements Serializable {
 
     @Serial

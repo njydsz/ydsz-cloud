@@ -23,6 +23,7 @@ import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
+import com.njydsz.agent.server.knowledge.KnowledgeGraphService;
 
 /**
  * 文档摄入服务
@@ -64,18 +65,31 @@ public class DocumentIngestionService {
   private final VectorStore vectorStore;
   private final ObjectProvider<OcrService> ocrServiceProvider;
   private final AgentProperties properties;
+  private final ObjectProvider<KnowledgeGraphService> knowledgeGraphServiceProvider;
 
+  /**
+   * 构造文档摄入服务。
+   *
+   * @param textChunker              文本分块器
+   * @param embeddingClient          向量化客户端
+   * @param vectorStore              向量存储
+   * @param ocrServiceProvider        OCR 服务（可选）
+   * @param properties               Agent 配置属性
+   * @param knowledgeGraphServiceProvider 知识图谱服务（可选，未配置则跳过 KG 摄入）
+   */
   public DocumentIngestionService(
       TextChunker textChunker,
       EmbeddingClient embeddingClient,
       VectorStore vectorStore,
       ObjectProvider<OcrService> ocrServiceProvider,
-      AgentProperties properties) {
+      AgentProperties properties,
+      ObjectProvider<KnowledgeGraphService> knowledgeGraphServiceProvider) {
     this.textChunker = textChunker;
     this.embeddingClient = embeddingClient;
     this.vectorStore = vectorStore;
     this.ocrServiceProvider = ocrServiceProvider;
     this.properties = properties;
+    this.knowledgeGraphServiceProvider = knowledgeGraphServiceProvider;
   }
 
   /**
@@ -120,7 +134,36 @@ public class DocumentIngestionService {
     vectorStore.storeBatch(embeddedChunks);
 
     log.info("[RAG-Ingest] 摄入完成: docId={}, chunks={}", documentId, chunks.size());
+
+    // P1-3: 知识图谱摄入（可选）—— 实体抽取 + 图谱入库，失败不影响 RAG 主流程
+    ingestKnowledgeGraph(documentId, content);
+
     return chunks.size();
+  }
+
+  /**
+   * 知识图谱摄入（可选步骤）。
+   *
+   * <p>从文档原文中抽取实体和关系，写入知识图谱供精确实体查找使用。
+   * KG 服务不可用时静默跳过，异常不传播到主流程。
+   *
+   * @param documentId 文档 ID
+   * @param content    文档内容
+   */
+  private void ingestKnowledgeGraph(String documentId, String content) {
+    KnowledgeGraphService kgService = knowledgeGraphServiceProvider.getIfAvailable();
+    if (kgService == null) {
+      log.debug("[RAG-Ingest] KG 服务不可用，跳过图谱摄入: docId={}", documentId);
+      return;
+    }
+    try {
+      KnowledgeGraphService.IngestResult kgResult = kgService.ingestDocument(documentId, content);
+      log.info("[RAG-Ingest] KG 摄入完成: docId={}, entities={}, relations={}",
+          documentId, kgResult.entityCount(), kgResult.relationCount());
+    } catch (Exception e) {
+      log.warn("[RAG-Ingest] KG 摄入失败（不影响 RAG 主流程）: docId={}, error={}",
+          documentId, e.getMessage());
+    }
   }
 
   /**

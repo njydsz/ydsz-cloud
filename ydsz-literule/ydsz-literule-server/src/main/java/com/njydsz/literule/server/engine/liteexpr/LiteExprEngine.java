@@ -129,12 +129,35 @@ public class LiteExprEngine implements ExpressionEngine {
 
   @Override
   public boolean evalBoolean(String expression, RuleContextVO context) {
+    return evalBoolean(expression, context, null);
+  }
+
+  /**
+   * P0-A1 AlphaNode Phase 1：带条件结果缓存的布尔求值
+   *
+   * <p>当同一 evaluate 调用内多条规则包含相同子表达式时（如规则 A 条件为 {@code age > 18}、规则 B 为 {@code age > 18 && vipLevel > 3}），
+   * 子表达式 {@code age > 18} 的结果可被第二条规则复用，避免重复求值。
+   *
+   * @param expression 表达式文本
+   * @param context 规则上下文
+   * @param cache 条件结果缓存（key = AST 身份 + 相关 fact 值快照）；null = 不使用缓存（向后兼容）
+   * @return 求值结果
+   * @since 26.09.23
+   */
+  public boolean evalBoolean(String expression, RuleContextVO context, ExprCache cache) {
     if (expression == null || expression.isBlank()) {
       return false;
     }
     try {
       ExprNode ast = compileAndCheck(expression);
       Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
+      // P0-A1：先查缓存（AST 身份 + 相关 fact 值组合键）
+      if (cache != null) {
+        Boolean cached = cache.getIfPresent(ast, facts);
+        if (cached != null) {
+          return cached;
+        }
+      }
       // P0-2：字节码编译执行路径
       Object result;
       if (bytecodeEnabled) {
@@ -142,16 +165,21 @@ public class LiteExprEngine implements ExpressionEngine {
       } else {
         result = interpreter.eval(ast, facts, maxEvalNanos);
       }
+      boolean boolResult;
       if (result instanceof Boolean b) {
-        return b;
+        boolResult = b;
+      } else if (result instanceof Number n) {
+        boolResult = n.doubleValue() != 0;
+      } else if (result == null) {
+        boolResult = false;
+      } else {
+        boolResult = Boolean.parseBoolean(String.valueOf(result));
       }
-      if (result instanceof Number n) {
-        return n.doubleValue() != 0;
+      // P0-A1：写入缓存
+      if (cache != null) {
+        cache.put(ast, facts, boolResult);
       }
-      if (result == null) {
-        return false;
-      }
-      return Boolean.parseBoolean(String.valueOf(result));
+      return boolResult;
     } catch (SecurityException e) {
       // 沙箱拦截 = 表达式内容本身存在风险，属配置事故，须 ERROR 级可观测（P0-8）
       log.error("[LiteExpr] 安全拦截（请立即检查表达式内容）: expr='{}', error={}", expression, e.getMessage());

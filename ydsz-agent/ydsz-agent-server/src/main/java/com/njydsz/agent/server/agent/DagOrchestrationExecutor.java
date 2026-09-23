@@ -66,9 +66,6 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class DagOrchestrationExecutor implements AgentExecutor {
-  /** 集合初始容量 */
-  private static final int COLLECTION_CAPACITY = 16;
-
 
   /** variables 中携带 DAG YAML 定义时使用的键 */
   private static final String VARIABLE_DSL_KEY = "dsl";
@@ -295,14 +292,14 @@ public class DagOrchestrationExecutor implements AgentExecutor {
     }
   }
 
-  /** 默认节点超时（秒），当节点未配置 timeoutSeconds 时使用 */
-  private static final int DEFAULT_NODE_TIMEOUT_SECONDS = 60;
+  /** 默认节点超时（秒），当节点未配置 timeoutSeconds 时使用（引用 AgentConstants） */
+  private static final int DEFAULT_NODE_TIMEOUT_SECONDS = com.njydsz.agent.domain.AgentConstants.DAG_NODE_TIMEOUT_SECONDS;
 
-  /** 整图总超时（秒，5 分钟）：任一节点超时即视为编排失败，避免长尾任务长期占用线程 */
-  private static final int DAG_TOTAL_TIMEOUT_SECONDS = 300;
+  /** 整图总超时（秒，5 分钟）：任一节点超时即视为编排失败，避免长尾任务长期占用线程（引用 AgentConstants） */
+  private static final int DAG_TOTAL_TIMEOUT_SECONDS = com.njydsz.agent.domain.AgentConstants.DAG_TOTAL_TIMEOUT_SECONDS;
 
-  /** 节点子 Agent 默认最大迭代次数（ReAct/Plan 循环兜底熔断） */
-  private static final int DEFAULT_NODE_MAX_ITERATIONS = 10;
+  /** 节点子 Agent 默认最大迭代次数（引用 AgentConstants.DEFAULT_MAX_ITERATIONS） */
+  private static final int DEFAULT_NODE_MAX_ITERATIONS = com.njydsz.agent.domain.AgentConstants.DEFAULT_MAX_ITERATIONS;
 
   /** 执行单个节点的业务逻辑 */
   private void executeNodeLogic(
@@ -399,7 +396,7 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    * @return 循环体节点 ID 集合
    */
   private static Set<String> collectLoopBodyNodeIds(AgentDag dag) {
-    Set<String> loopBodyNodeIds = new HashSet<>(COLLECTION_CAPACITY);
+    Set<String> loopBodyNodeIds = new HashSet<>(com.njydsz.agent.domain.AgentConstants.COLLECTION_CAPACITY);
     for (AgentDag.Node node : dag.getNodes().values()) {
       String nodeType = (String) node.getConfig().getOrDefault("nodeType", "AGENT");
       if ("LOOP".equalsIgnoreCase(nodeType)) {
@@ -646,8 +643,8 @@ public class DagOrchestrationExecutor implements AgentExecutor {
    */
   private List<String> topologicalSort(AgentDag dag) {
     List<String> result = new ArrayList<>(dag.getNodes().size());
-    Set<String> visited = new HashSet<>(COLLECTION_CAPACITY);
-    Set<String> visiting = new HashSet<>(COLLECTION_CAPACITY);
+    Set<String> visited = new HashSet<>(com.njydsz.agent.domain.AgentConstants.COLLECTION_CAPACITY);
+    Set<String> visiting = new HashSet<>(com.njydsz.agent.domain.AgentConstants.COLLECTION_CAPACITY);
     for (String nodeId : dag.getNodes().keySet()) {
       topologicalVisit(dag, nodeId, visited, visiting, result);
     }

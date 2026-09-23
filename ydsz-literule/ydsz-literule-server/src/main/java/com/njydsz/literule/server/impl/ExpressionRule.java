@@ -355,26 +355,40 @@ public class ExpressionRule implements Rule {
   }
 
   /**
-   * 带缓存的布尔表达式求值（P2-9 条件冗余计算缓存）
+   * 带缓存的布尔表达式求值（P2-9 条件冗余计算缓存 + P0-A1 AlphaNode Phase 1 跨规则缓存）
    *
-   * <p>同一 {@link RuleContextVO} 内，相同条件表达式仅求值一次；命中缓存直接返回， 避免多条规则或同规则内（条件+严重度+模板）重复表达式的冗余计算。 缓存随 {@code
+   * <p>同一 {@link RuleContextVO} 内，相同条件表达式仅求值一次；命中缓存直接返回，
+   * 避免多条规则或同规则内（条件+严重度+模板）重复表达式的冗余计算。 缓存随 {@code
    * context} 生命周期自动失效，无需额外清理。
+   *
+   * <p>P0-A1 增强：若当前线程处于 DefaultRuleEngine.evaluate 调用上下文内且 AlphaNode 缓存已启用，
+   * 先检查跨规则子表达式缓存（基于 AST identity + facts hash），命中则直接返回。
    *
    * @param expr 条件表达式
    * @param context 评估上下文
    * @return 布尔结果；expr 为 null/空返回 null
+   * @since 26.09.01（26.09.23 增加 AlphaNode 缓存）
    */
   private Boolean evalBooleanCached(String expr, RuleContextVO context) {
     if (expr == null || expr.isBlank()) {
       return null;
     }
+    // P2-9：先查 per-context 缓存
     Map<String, Object> cache = context.getExpressionCache();
     String key = "B:" + expr;
     Object cached = cache.get(key);
     if (cached != null) {
       return cached instanceof Boolean ? (Boolean) cached : Boolean.valueOf(String.valueOf(cached));
     }
-    Boolean result = evaluator.evalBoolean(expr, context);
+    // P0-A1 AlphaNode Phase 1：使用带跨规则缓存的求值
+    Boolean result;
+    if (evaluator instanceof com.njydsz.literule.server.engine.liteexpr.LiteExprEngine liteEng) {
+      com.njydsz.literule.server.engine.liteexpr.ExprCache alphaCache =
+          com.njydsz.literule.server.core.DefaultRuleEngine.getStaticAlphaCache();
+      result = liteEng.evalBoolean(expr, context, alphaCache);
+    } else {
+      result = evaluator.evalBoolean(expr, context);
+    }
     cache.put(key, result);
     return result;
   }

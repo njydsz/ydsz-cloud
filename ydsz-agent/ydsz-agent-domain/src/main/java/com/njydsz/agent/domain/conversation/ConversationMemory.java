@@ -29,6 +29,14 @@ public interface ConversationMemory {
   int TOOL_CALL_TOKEN_ESTIMATE = 50;
 
   /**
+   * Token 感知加载时单次获取的最大消息数上限。
+   *
+   * <p>防止 {@link #loadWithTokenBudget} 调用 {@code load(convId, Integer.MAX_VALUE)} 导致全量加载，
+   * 单次最多获取此数量的消息做 Token 预算截断。绝大多数会话的历史消息远小于此值。
+   */
+  int TOKEN_BUDGET_FETCH_LIMIT = 200;
+
+  /**
    * 保存一条消息到对话历史
    *
    * @param conversationId 对话 ID
@@ -51,7 +59,8 @@ public interface ConversationMemory {
    * <p>从最新消息向前累加，直到估算 Token 数超过预算为止。保证返回的消息总 Token 不超过 {@code tokenBudget}，
    * 同时至少返回 1 条消息（即使单条已超预算）。
    *
-   * <p>默认实现基于字符数估算（字符数 / tokenCharRatio），子类可覆盖为更精确的实现（如基于 Tokenizer）。
+   * <p>默认实现最多获取 {@link #TOKEN_BUDGET_FETCH_LIMIT} 条最新消息做 Token 预算截断，
+   * 避免加载全量历史导致 OOM 或超长延迟。对于绝大多数会话（消息数 < 200），返回结果与全量加载完全一致。
    *
    * @param conversationId 对话 ID
    * @param tokenBudget Token 预算（估算值）
@@ -60,15 +69,15 @@ public interface ConversationMemory {
    */
   default List<ChatMessage> loadWithTokenBudget(
       String conversationId, int tokenBudget, double tokenCharRatio) {
-    // 默认实现：委托 load 后做 Token 感知截断
-    List<ChatMessage> all = load(conversationId, Integer.MAX_VALUE);
-    if (all.isEmpty()) {
-      return all;
+    // P1-修复：使用有界加载替代 load(convId, Integer.MAX_VALUE)，防止全量加载导致 OOM
+    List<ChatMessage> recentMessages = load(conversationId, TOKEN_BUDGET_FETCH_LIMIT);
+    if (recentMessages.isEmpty()) {
+      return recentMessages;
     }
     long currentTokens = 0;
-    int includeUpTo = all.size() - 1;
-    for (int i = all.size() - 1; i >= 0; i--) {
-      ChatMessage msg = all.get(i);
+    int includeUpTo = recentMessages.size() - 1;
+    for (int i = recentMessages.size() - 1; i >= 0; i--) {
+      ChatMessage msg = recentMessages.get(i);
       int msgTokens = estimateTokens(msg, tokenCharRatio);
       if (currentTokens + msgTokens > tokenBudget) {
         break;
@@ -76,7 +85,7 @@ public interface ConversationMemory {
       currentTokens += msgTokens;
       includeUpTo = i;
     }
-    return all.subList(includeUpTo, all.size());
+    return recentMessages.subList(includeUpTo, recentMessages.size());
   }
 
   /**

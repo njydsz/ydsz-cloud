@@ -208,4 +208,22 @@ public class FlowHisTaskRepositoryImpl implements FlowHisTaskRepository {
                 .orderByDesc(FlowHisTask::getFinishAt)
                 .last("LIMIT " + limit)));
   }
+
+  // ==================== F-05 瓶颈热力图 ====================
+
+  /** {@inheritDoc} */
+  @Override
+  public List<Map<String, Object>> selectBottleneckStats(
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime) {
+    return hisTaskMapper.selectBottleneckStats(tenantId, startTime, endTime);
+  }
+
+  // ==================== F-06 异常告警检测 ====================
+
+  /** {@inheritDoc} */
+  @Override
+  public List<Map<String, Object>> selectRejectionByFlowCode(
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime) {
+    return hisTaskMapper.selectRejectionByFlowCode(tenantId, startTime, endTime);
+  }
 }

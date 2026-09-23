@@ -11,10 +11,14 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
+import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
+import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
 import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
+import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
 import com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO;
+import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
 import com.njydsz.workflow.domain.vo.FlowNodeDurationVO;
 import com.njydsz.workflow.domain.vo.FlowTrendVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
@@ -108,6 +112,18 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
   /** 运行时任务仓储（domain 层契约），提供基础 CRUD 与统计方法 */
   private final FlowRunTaskRepository runTaskRepository;
+
+  /** 流程实例仓储（domain 层契约），用于查询在途实例和影响分析 */
+  private final FlowInstanceRepository instanceRepository;
+
+  /** 默认卡住阈值（小时） */
+  private static final int DEFAULT_STUCK_THRESHOLD_HOURS = 48;
+
+  /** 默认驳回率告警阈值 */
+  private static final double DEFAULT_REJECT_RATE_THRESHOLD = 0.5;
+
+  /** 默认积压告警阈值 */
+  private static final int DEFAULT_BACKLOG_THRESHOLD = 20;
 
   /** {@inheritDoc} */
   @Override
@@ -237,7 +253,212 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     }).toList();
   }
 
+  // ==================== F-05 瓶颈热力图 ====================
+
+  /** {@inheritDoc} */
+  @Override
+  public List<FlowBottleneckVO> bottleneckHeatmap(
+      LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
+    String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+    LocalDateTime end = endTime != null ? endTime : LocalDateTime.now();
+    LocalDateTime start = startTime != null ? startTime : end.minusDays(30);
+
+    List<Map<String, Object>> rows =
+        hisTaskRepository.selectBottleneckStats(tid, start, end);
+    if (rows == null || rows.isEmpty()) {
+      return List.of();
+    }
+    return rows.stream().map(row -> {
+      FlowBottleneckVO vo = new FlowBottleneckVO();
+      vo.setNodeCode(row.get("nodeCode") != null ? row.get("nodeCode").toString() : null);
+      vo.setNodeName(row.get("nodeName") != null ? row.get("nodeName").toString() : null);
+      vo.setAvgDurationMs(toLong(row.get("avgDurationMs")));
+      vo.setCount(toLong(row.get("taskCount")));
+      return vo;
+    }).toList();
+  }
+
+  // ==================== F-06 异常告警检测 ====================
+
+  /** {@inheritDoc} */
+  @Override
+  public List<FlowAnomalyVO> detectAnomalies(
+      String tenantId,
+      Integer stuckThresholdHours,
+      Double rejectRateThreshold,
+      Integer backlogThreshold) {
+    String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+    int stuckHours = stuckThresholdHours != null ? stuckThresholdHours : DEFAULT_STUCK_THRESHOLD_HOURS;
+    double rejectRate = rejectRateThreshold != null ? rejectRateThreshold : DEFAULT_REJECT_RATE_THRESHOLD;
+    int backlog = backlogThreshold != null ? backlogThreshold : DEFAULT_BACKLOG_THRESHOLD;
+
+    List<FlowAnomalyVO> anomalies = new ArrayList<>(COLLECTION_CAPACITY);
+    LocalDateTime now = LocalDateTime.now();
+
+    // 1. 检测卡住实例（RUNNING 状态超过 stuckHours）
+    List<Map<String, Object>> stuckRows =
+        instanceRepository.selectStuckInstances(tid, now.minusHours(stuckHours));
+    if (stuckRows != null) {
+      for (Map<String, Object> row : stuckRows) {
+        FlowAnomalyVO vo = new FlowAnomalyVO();
+        vo.setType("STUCK");
+        vo.setWarnLevel("RED");
+        vo.setAnomalyType("实例卡住（长时间未完成）");
+        vo.setInstanceId(row.get("instanceId") != null ? row.get("instanceId").toString() : null);
+        vo.setNodeCode(row.get("nodeCode") != null ? row.get("nodeCode").toString() : null);
+        vo.setNodeName(row.get("nodeName") != null ? row.get("nodeName").toString() : null);
+        Object stuckObj = row.get("stuckHours");
+        vo.setStuckHours(stuckObj instanceof Number n ? n.longValue() : null);
+        vo.setDescription(String.format("实例 %s 卡住 %d 小时未完成",
+            vo.getInstanceId(), vo.getStuckHours()));
+        LocalDateTime created = row.get("createdAt") instanceof LocalDateTime ldt ? ldt : now;
+        vo.setCreatedAt(created);
+        anomalies.add(vo);
+      }
+    }
+
+    // 2. 检测异常积压（超期实例数超过 backlog）
+    long overdueBacklogCount = instanceRepository.countOverdueInstances(tid, now);
+    if (overdueBacklogCount >= backlog) {
+      FlowAnomalyVO backlogAlert = new FlowAnomalyVO();
+      backlogAlert.setType("BACKLOG");
+      backlogAlert.setWarnLevel("ORANGE");
+      backlogAlert.setAnomalyType("异常积压（超期实例过多）");
+      backlogAlert.setDescription(String.format("在途超期实例 %d 个（阈值 %d）", overdueBacklogCount, backlog));
+      backlogAlert.setCreatedAt(now);
+      anomalies.add(backlogAlert);
+    }
+
+    // 3. 检测高驳回率（按流程编码维度）
+    LocalDateTime rejectWindowStart = now.minusDays(7);
+    List<Map<String, Object>> rejectRows =
+        hisTaskRepository.selectRejectionByFlowCode(tid, rejectWindowStart, now);
+    if (rejectRows != null) {
+      for (Map<String, Object> row : rejectRows) {
+        long total = toLong(row.get("totalCount"));
+        long rejected = toLong(row.get("rejectedCount"));
+        if (total <= 0) {
+          continue;
+        }
+        double rate = (double) rejected / total;
+        if (rate >= rejectRate) {
+          FlowAnomalyVO vo = new FlowAnomalyVO();
+          vo.setType("HIGH_REJECTION");
+          vo.setWarnLevel(rate >= 0.8 ? "RED" : "YELLOW");
+          vo.setAnomalyType("高驳回率");
+          vo.setTotalCount(total);
+          vo.setRejectedCount(rejected);
+          vo.setRejectionRate(Math.round(rate * 10000.0) / 10000.0);
+          String flowCode = row.get("flowCode") != null ? row.get("flowCode").toString() : "unknown";
+          vo.setDescription(String.format("流程 %s 近 7 天驳回率 %.1f%%（%d/%d）",
+              flowCode, rate * 100, rejected, total));
+          vo.setCreatedAt(now);
+          anomalies.add(vo);
+        }
+      }
+    }
+
+    // 按 warnLevel 严重程度排序：RED > ORANGE > YELLOW
+    anomalies.sort((a, b) -> {
+      int levelA = warnLevelPriority(a.getWarnLevel());
+      int levelB = warnLevelPriority(b.getWarnLevel());
+      return Integer.compare(levelB, levelA);
+    });
+
+    return anomalies;
+  }
+
+  // ==================== F-04 变更影响预览 ====================
+
+  /** {@inheritDoc} */
+  @Override
+  public FlowMigrationImpactVO previewImpact(
+      String definitionId, String nodeIdToCheck, String tenantId) {
+    String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+    FlowMigrationImpactVO impact = new FlowMigrationImpactVO();
+    impact.setOldDefinitionId(definitionId);
+    impact.setNewDefinitionId(definitionId);
+
+    // 查询活跃实例（RUNNING 状态）
+    List<Map<String, Object>> runningInstances =
+        instanceRepository.selectRunningByDefinitionId(tid, definitionId);
+    int runningCount = runningInstances != null ? runningInstances.size() : 0;
+    impact.setRunningInstanceCount(runningCount);
+
+    if (runningCount == 0) {
+      impact.setRiskLevel("NONE");
+      impact.setAffectedInstances(List.of());
+      impact.setBlockedNodes(List.of());
+      impact.setAffectedNodes(List.of());
+      impact.setRecommendation("无在途实例，可安全发布");
+      return impact;
+    }
+
+    // 若指定了待检查节点，分析是否有实例卡在该节点
+    List<Map<String, Object>> affectedInstances = new ArrayList<>(COLLECTION_CAPACITY);
+    List<Map<String, Object>> blockedNodes = new ArrayList<>(COLLECTION_CAPACITY);
+
+    if (nodeIdToCheck != null && !nodeIdToCheck.isBlank()) {
+      for (Map<String, Object> inst : runningInstances) {
+        String currentNodeCode = inst.get("currentNodeCode") != null
+            ? inst.get("currentNodeCode").toString() : null;
+        if (nodeIdToCheck.equals(currentNodeCode)) {
+          affectedInstances.add(inst);
+        }
+      }
+
+      if (!affectedInstances.isEmpty()) {
+        Map<String, Object> blockedNode = new LinkedHashMap<>(4);
+        blockedNode.put("nodeCode", nodeIdToCheck);
+        blockedNode.put("affectedCount", affectedInstances.size());
+        blockedNodes.add(blockedNode);
+      }
+    } else {
+      // 未指定节点时返回所有活跃实例（前端自行展示）
+      affectedInstances = new ArrayList<>(runningInstances);
+    }
+
+    impact.setAffectedInstances(affectedInstances);
+    impact.setBlockedNodes(blockedNodes);
+
+    // 风险评估
+    if (!blockedNodes.isEmpty()) {
+      impact.setRiskLevel("HIGH");
+      impact.setRecommendation(String.format(
+          "发布将影响 %d 个在途实例（卡在待变更节点 %s），建议先在测试环境验证并分批发布",
+          affectedInstances.size(), nodeIdToCheck));
+    } else if (runningCount > 50) {
+      impact.setRiskLevel("MEDIUM");
+      impact.setRecommendation(String.format(
+          "%d 个在途实例但无节点阻塞风险，建议分批灰度发布", runningCount));
+    } else {
+      impact.setRiskLevel("LOW");
+      impact.setRecommendation(String.format(
+          "%d 个在途实例，可直接发布，发布后观察", runningCount));
+    }
+
+    return impact;
+  }
+
   // ============================== 工具方法 ==============================
+
+  /**
+   * 告警等级优先级映射（数值越大越严重）。
+   *
+   * @param warnLevel 告警等级字符串
+   * @return 优先级数值
+   */
+  private int warnLevelPriority(String warnLevel) {
+    if (warnLevel == null) {
+      return 0;
+    }
+    return switch (warnLevel) {
+      case "RED" -> 3;
+      case "ORANGE" -> 2;
+      case "YELLOW" -> 1;
+      default -> 0;
+    };
+  }
 
   /**
    * 安全类型转换：Object → long，解析失败返回 0

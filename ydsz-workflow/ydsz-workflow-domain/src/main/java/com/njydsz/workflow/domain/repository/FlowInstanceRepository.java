@@ -316,4 +316,41 @@ public interface FlowInstanceRepository {
    * @return 流程实例 VO 列表
    */
   List<FlowInstanceVO> findLongRunning(String tenantId, LocalDateTime threshold, int limit);
+
+  // ==================== F-06 异常告警检测 ====================
+
+  /**
+   * 查询卡住的运行实例（RUNNING 状态且启动时间早于阈值）。
+   *
+   * <p>用于 STUCK 告警：识别长时间未完成且在途的活跃实例。
+   *
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @param threshold 查询此时间之前开始运行的实例
+   * @return 卡住实例列表（instanceId / nodeCode / nodeName / stuckHours / createdAt）
+   */
+  List<Map<String, Object>> selectStuckInstances(String tenantId, LocalDateTime threshold);
+
+  /**
+   * 统计超期未完成的运行实例数量。
+   *
+   * <p>用于 BACKLOG 告警：识别超期积压的在途实例数。
+   *
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @param now 当前时间（在此时间之前 due_date 已过期）
+   * @return 超期实例数
+   */
+  long countOverdueInstances(String tenantId, LocalDateTime now);
+
+  // ==================== F-04 变更影响预览 ====================
+
+  /**
+   * 查询指定流程定义下的运行中实例。
+   *
+   * <p>用于变更影响预览：识别发布时仍活跃的在途实例。
+   *
+   * @param tenantId 租户 ID（可为 null，表示不过滤）
+   * @param definitionId 流程定义 ID
+   * @return 运行中实例列表（instanceId / currentNodeCode / currentNodeName / businessId 等）
+   */
+  List<Map<String, Object>> selectRunningByDefinitionId(String tenantId, String definitionId);
 }

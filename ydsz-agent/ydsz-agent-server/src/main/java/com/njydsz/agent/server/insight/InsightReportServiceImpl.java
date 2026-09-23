@@ -2,6 +2,7 @@ package com.njydsz.agent.server.insight;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -198,14 +199,25 @@ public class InsightReportServiceImpl implements InsightReportService {
   }
 
   /**
-   * 从 contentJson 反序列化章节列表（简化处理：返回空列表）。
+   * 从 contentJson 反序列化章节列表（列表 API 返回精简摘要）。
    *
-   * <p>为避免暴露 JSON 解析逻辑给 server 层，实际生产可调用 Converter。
-   * 当前返回空章节列表（列表 API 不需要完整内容）。
+   * <P1-修复：原实现返回空列表导致前端需对每个报告单独调用 getReport 获取章节内容，产生 N+1 查询问题。
+   * 现通过 YdszJson 安全反序列化 contentJson 保存的 InsightSection 数组（仅返回标题 + snippet，不含完整 HTML 内容）。
+   *
+   * @param contentJson 章节 JSON 字符串（{@link InsightSection} 序列化格式）
+   * @return 章节列表（全量）；解析失败返回空列表
    */
   private List<InsightSection> parseSectionsFromJson(String contentJson) {
-    // 列表查询时不解析详细内容，返回空
-    return new ArrayList<>(0);
+    if (contentJson == null || contentJson.isBlank()) {
+      return Collections.emptyList();
+    }
+    try {
+      List<InsightSection> sections = YdszJson.fromJsonList(contentJson, InsightSection.class);
+      return sections != null ? sections : Collections.emptyList();
+    } catch (Exception e) {
+      log.warn("[Insight] 解析章节 JSON 失败，降级返回空列表: error={}", e.getMessage());
+      return Collections.emptyList();
+    }
   }
 
   /**

@@ -253,4 +253,32 @@ public interface FlowHisTaskRepository {
    * @return 历史任务 VO 列表
    */
   List<FlowHisTaskVO> selectRecentByTenant(String tenantId, int limit);
+
+  // ==================== F-05 瓶颈热力图 ====================
+
+  /**
+   * 查询瓶颈热力图统计（按节点维度聚合）。
+   *
+   * <p>按 nodeCode + nodeName 分组统计各节点的平均耗时与处理数量。
+   *
+   * @param tenantId 租户 ID
+   * @param startTime 开始时间
+   * @param endTime 结束时间
+   * @return 瓶颈统计列表（nodeCode / nodeName / avgDurationMs / taskCount）
+   */
+  List<Map<String, Object>> selectBottleneckStats(
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime);
+
+  // ==================== F-06 异常告警检测 ====================
+
+  /**
+   * 按流程编码统计近 7 天的驳回率。
+   *
+   * @param tenantId 租户 ID
+   * @param startTime 开始时间
+   * @param endTime 结束时间
+   * @return 驳回率统计列表（flowCode / totalCount / rejectedCount）
+   */
+  List<Map<String, Object>> selectRejectionByFlowCode(
+      String tenantId, LocalDateTime startTime, LocalDateTime endTime);
 }

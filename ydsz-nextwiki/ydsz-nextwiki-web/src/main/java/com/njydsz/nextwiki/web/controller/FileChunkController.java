@@ -229,4 +229,20 @@ public class FileChunkController {
   public YdszResponse<Set<Integer>> getUploadedChunks(@PathVariable String uploadId) {
     return YdszResponse.success(chunkUploadService.getUploadedChunks(uploadId));
   }
+
+  /**
+   * P3-2: 查询分片上传进度（含百分比）。
+   *
+   * <p>返回已上传分片数、总分片数与完成百分比，前端可据此实时展示上传进度条。
+   *
+   * @param uploadId 上传任务 ID
+   * @return 统一响应结果，data 为 {@link ChunkUploadApplicationService.UploadProgress}
+   */
+  @GetMapping("/chunk/{uploadId}/progress")
+  @Operation(summary = "查询分片上传进度", description = "返回已上传数、总数与百分比")
+  @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+  public YdszResponse<ChunkUploadApplicationService.UploadProgress> getUploadProgress(
+      @PathVariable String uploadId) {
+    return YdszResponse.success(chunkUploadService.getUploadProgress(uploadId));
+  }
 }

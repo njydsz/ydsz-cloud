@@ -27,11 +27,9 @@ import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.domain.query.MsgAggregateQuery;
 import com.njydsz.message.domain.repository.MsgAggregateRepository;
 import com.njydsz.message.domain.vo.MsgAggregateVO;
-import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.service.batch.AggregateService;
-import com.njydsz.message.server.service.config.PreferenceService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.template.TemplateEngine;
 
@@ -84,9 +82,6 @@ public class AggregateServiceImpl implements AggregateService {
 
   /** 分布式锁 */
   private final DistributedLocker distributedLocker;
-
-  /** F5: 用户偏好服务（用于读取摘要语言偏好） */
-  private final PreferenceService preferenceService;
 
   @Override
   public MsgAggregateVO appendOrStart(
@@ -325,29 +320,6 @@ public class AggregateServiceImpl implements AggregateService {
       params.put("lastMessageAt", "");
     }
     return params;
-  }
-
-  /**
-   * F5: 解析用户的摘要语言偏好。
-   *
-   * <p>优先取用户在对应通道/业务类型上配置的 locale, 未配置时返回 framework 默认语言。
-   *
-   * @param batch 聚合批次
-   * @return 语言标签（如 zh-CN、en-US）, 永不返回 null
-   */
-  private String resolveUserLocale(MsgAggregateVO batch) {
-    try {
-      if (StringUtils.hasText(batch.getReceiver()) && StringUtils.hasText(batch.getChannel())) {
-        MsgPreferenceVO pref =
-            preferenceService.getByUser(batch.getReceiver(), batch.getChannel(), batch.getAggregateGroup());
-        if (pref != null && StringUtils.hasText(pref.getLocale())) {
-          return pref.getLocale();
-        }
-      }
-    } catch (Exception e) {
-      log.debug("[Aggregate] 用户偏好查询失败,使用默认语言: receiver={} err={}", batch.getReceiver(), e.getMessage());
-    }
-    return MessageConstants.DEFAULT_LOCALE;
   }
 }
 
