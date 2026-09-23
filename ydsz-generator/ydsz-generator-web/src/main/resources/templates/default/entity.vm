@@ -2,17 +2,10 @@
 #set($entityName = $text.textFirstUpper($table.aliasName))
 #set($hasDateTime = false)
 #set($hasDecimal = false)
-#macro(resolveJavaType $col)
-#if($col.overrideJavaType && $col.overrideJavaType != "")
-${col.overrideJavaType}
-#else
-${col.javaType}
-#end
-#end
 #foreach($col in $table.columns)
-#if("$this.resolveJavaType($col)" == "LocalDateTime" || "$this.resolveJavaType($col)" == "LocalDate" || "$this.resolveJavaType($col)" == "Date")
+#if($col.javaType == "LocalDateTime" || $col.javaType == "LocalDate" || $col.javaType == "Date")
 #set($hasDateTime = true)
-#elseif("$this.resolveJavaType($col)" == "BigDecimal")
+#elseif($col.javaType == "BigDecimal")
 #set($hasDecimal = true)
 #end
 #end
@@ -54,6 +47,6 @@ public class ${entityName} extends MpBaseEntity<String> {
 #if($col.comment && $col.comment != "")
     /** ${col.comment} */
 #end
-    private #resolveJavaType($col) ${col.javaFieldName};
+    private ${col.javaType} ${col.javaFieldName};
 #end
 }

@@ -129,6 +129,27 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- ArchUnit 架构守护测试（scope: test，禁止业务模块直接 new ThreadPoolExecutor） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JUnit 5（ArchUnit 依赖） -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- AssertJ（ArchUnit 测试断言） -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>
