@@ -223,4 +223,34 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTask> {
       @Param("startTime") LocalDateTime startTime,
       @Param("endTime") LocalDateTime endTime,
       @Param("granularity") String granularity);
+
+  // ==================== F-05 瓶颈热力图 ====================
+
+  /**
+   * 查询瓶颈热力图统计（按 nodeCode nodeName 聚合）。
+   *
+   * @param tenantId 租户 ID
+   * @param startTime 开始时间
+   * @param endTime 结束时间
+   * @return 瓶颈统计列表（nodeCode / nodeName / avgDurationMs / taskCount）
+   */
+  List<Map<String, Object>> selectBottleneckStats(
+      @Param("tenantId") String tenantId,
+      @Param("startTime") LocalDateTime startTime,
+      @Param("endTime") LocalDateTime endTime);
+
+  // ==================== F-06 异常告警检测 ====================
+
+  /**
+   * 按流程编码统计时间范围内的驳回率。
+   *
+   * @param tenantId 租户 ID
+   * @param startTime 开始时间
+   * @param endTime 结束时间
+   * @return 驳回率统计（flowCode / totalCount / rejectedCount）
+   */
+  List<Map<String, Object>> selectRejectionByFlowCode(
+      @Param("tenantId") String tenantId,
+      @Param("startTime") LocalDateTime startTime,
+      @Param("endTime") LocalDateTime endTime);
 }
