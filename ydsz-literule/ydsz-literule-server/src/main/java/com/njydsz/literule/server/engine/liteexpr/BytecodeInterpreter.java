@@ -30,6 +30,9 @@ public class BytecodeInterpreter {
   /** 默认单次求值节点访问预算 */
   private static final long DEFAULT_MAX_STEPS = 1_000_000L;
 
+  /** 默认墙上时钟超时（毫秒），0 表示无限制 */
+  private static final long DEFAULT_TIMEOUT_MS = 5_000L;
+
   /** 墙上时钟超时检查采样间隔 */
   private static final long DEADLINE_CHECK_INTERVAL = 0xFF;
 
@@ -38,6 +41,7 @@ public class BytecodeInterpreter {
 
   private final FunctionRegistry functionRegistry;
   private final long maxSteps;
+  private final long timeoutMs;
 
   /**
    * 创建字节码解释器
@@ -45,7 +49,7 @@ public class BytecodeInterpreter {
    * @param functionRegistry 函数注册表
    */
   public BytecodeInterpreter(FunctionRegistry functionRegistry) {
-    this(functionRegistry, DEFAULT_MAX_STEPS);
+    this(functionRegistry, DEFAULT_MAX_STEPS, DEFAULT_TIMEOUT_MS);
   }
 
   /**
@@ -55,22 +59,41 @@ public class BytecodeInterpreter {
    * @param maxSteps 单次求值节点访问预算
    */
   public BytecodeInterpreter(FunctionRegistry functionRegistry, long maxSteps) {
-    this.functionRegistry = functionRegistry;
-    this.maxSteps = maxSteps;
+    this(functionRegistry, maxSteps, DEFAULT_TIMEOUT_MS);
   }
 
   /**
-   * 执行字节码程序
+   * 创建字节码解释器（带预算限制和超时）
+   *
+   * <p>P0-F2（26.09.23）：增加 wall-clock timeout 参数，避免病态表达式通过高步数消耗 CPU 而不被中断。
+   *
+   * @param functionRegistry 函数注册表
+   * @param maxSteps 单次求值节点访问预算
+   * @param timeoutMs 墙上时钟超时（毫秒），&le; 0 表示无限制
+   * @since 26.09.23
+   */
+  public BytecodeInterpreter(FunctionRegistry functionRegistry, long maxSteps, long timeoutMs) {
+    this.functionRegistry = functionRegistry;
+    this.maxSteps = maxSteps;
+    this.timeoutMs = timeoutMs;
+  }
+
+  /**
+   * 执行字节码程序（P0-F2：增加 wall-clock timeout 检查）
    *
    * @param program 编译后的字节码程序
    * @param variables 变量上下文（facts）
    * @return 执行结果
+   * @since 26.09.01（26.09.23 增加超时检查）
    */
   public Object execute(CompiledProgram program, Map<String, Object> variables) {
     byte[] code = program.getBytecode();
     List<Object> constants = program.getConstantPool();
     int ip = 0; // 指令指针
     int stepCount = 0;
+
+    // P0-F2：计算墙上时钟截止时间（与 TreeInterpreter 行为一致）
+    long deadlineNanos = timeoutMs > 0 ? System.nanoTime() + timeoutMs * 1_000_000L : 0L;
 
     // 操作数栈（使用数组 + 栈指针实现，避免 ArrayList 扩容开销）
     Object[] stack = createStack(constants);
@@ -82,6 +105,13 @@ public class BytecodeInterpreter {
         throw new LiteExprException(
             "表达式执行超出节点预算限制（" + maxSteps + " 步）: " + program.getSourceExpression(),
             0, 0);
+      }
+
+      // P0-F2：wall-clock 超时检查（采样：每 256 步检查一次，减少 System.nanoTime() 开销）
+      if (deadlineNanos > 0 && (stepCount & DEADLINE_CHECK_INTERVAL) == 0
+          && System.nanoTime() > deadlineNanos) {
+        throw new LiteExprException(
+            "表达式执行超时（" + timeoutMs + "ms）: " + program.getSourceExpression(), 0, 0);
       }
 
       int opcodeByte = code[ip++] & BytecodeCompiler.BYTE_MASK;

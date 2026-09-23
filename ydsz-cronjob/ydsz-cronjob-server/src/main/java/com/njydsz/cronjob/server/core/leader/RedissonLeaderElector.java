@@ -11,7 +11,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -21,6 +20,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.lock.impl.RedisReentrantLock;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -67,7 +67,7 @@ public class RedissonLeaderElector implements LeaderElector {
   /** 纳秒到毫秒的换算系数 */
   private static final long NANOS_PER_MILLIS = 1_000_000L;
 
-  private final RedissonClient redissonClient;
+  private final RedisStringOps redisStringOps;
   private final CronjobProperties cronjobProperties;
 
   /**
@@ -142,11 +142,11 @@ public class RedissonLeaderElector implements LeaderElector {
     if (lockValue != null) {
       heldLockValues.put(role, lockValue);
       // P1-F4: 抢占成功即递增任期号（fencing token），后续派发前比对，防双主双写
-      long epoch = redissonClient.getAtomicLong(EPOCH_KEY_PREFIX + role).incrementAndGet();
+      long epoch = redisStringOps.incr(EPOCH_KEY_PREFIX + role, 1L);
       heldEpochs.put(role, epoch);
       // P0-3: 写入 Leader 持有者标识，供 getCurrentLeader 返回真实节点
       String holderKey = HOLDER_KEY_PREFIX + role;
-      redissonClient.<String>getBucket(holderKey).set(nodeId, lease);
+      redisStringOps.set(holderKey, nodeId, lease);
       log.info(
           "[LeaderElector] 抢占 Leader 成功: role={} lease={}ms nodeId={} epoch={}",
           role,
@@ -211,7 +211,7 @@ public class RedissonLeaderElector implements LeaderElector {
         // 锁由 WatchDog 自动续期；这里仅续期 holder 标识 key，供 getCurrentLeader() 读取真实节点
         Duration lease = Duration.ofSeconds(cronjobProperties.getLeader().getLeaseSeconds());
         String holderKey = HOLDER_KEY_PREFIX + role;
-        redissonClient.<String>getBucket(holderKey).set(nodeId, lease);
+        redisStringOps.set(holderKey, nodeId, lease);
         log.debug(
             "[LeaderElector] 续期 holder key: role={} lease={}s nodeId={}",
             role,
@@ -265,7 +265,7 @@ public class RedissonLeaderElector implements LeaderElector {
         distributedLocker.unlock(key, lockValue);
         // 清理 holder key
         String holderKey = HOLDER_KEY_PREFIX + role;
-        redissonClient.getBucket(holderKey).delete();
+        redisStringOps.del(holderKey);
         log.info("[LeaderElector] 释放 Leader: role={}", role);
       } catch (Exception e) {
         log.warn("[LeaderElector] 释放 Leader 失败: role={} reason={}", role, e.getMessage());
@@ -287,7 +287,7 @@ public class RedissonLeaderElector implements LeaderElector {
     // P0-3: 从 holder key 读取真实 Leader 节点标识
     // 修复之前返回 "unknown" 的问题
     String holderKey = HOLDER_KEY_PREFIX + role;
-    String holder = redissonClient.<String>getBucket(holderKey).get();
+    String holder = (String) redisStringOps.get(holderKey);
     if (holder != null && !holder.isBlank()) {
       return holder;
     }
