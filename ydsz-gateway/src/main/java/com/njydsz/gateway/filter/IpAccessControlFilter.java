@@ -26,6 +26,7 @@ import com.njydsz.common.redis.service.ops.ReactiveStringRedisOps;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertCategory;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.GatewayErrorCode;
@@ -252,7 +253,7 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
             .severity(AlertSeverity.P2)
             .summary("IP 黑名单命中（" + cacheLevel + "）")
             .description("恶意 IP 请求被网关拦截")
-            .category("security")
+            .category(AlertCategory.SECURITY)
             .labels(Map.of("ip", clientIp, "path", exchange.getRequest().getURI().getPath(), "cache_level", cacheLevel))
             .build());
     log.warn("[IpAccess] {} 命中黑名单 ip={} path={}", cacheLevel, clientIp, exchange.getRequest().getURI().getPath());

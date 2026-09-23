@@ -1,0 +1,36 @@
+#parse("../../velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#set($lowerName = $text.textFirstLower($entityName))
+-- ============================================================
+-- ${table.comment} - 菜单权限初始化脚本
+-- 由 ydzs-generator 自动生成，日期 ${date}
+-- 模块: ${table.moduleName} / ${lowerName}
+-- ============================================================
+-- 注意: 执行前请确认 sys_menu 表结构符合项目规范
+
+-- 主菜单（业务模块）
+INSERT INTO sys_menu (id, parent_id, name, path, component, icon, sort, status, is_deleted, created_at)
+VALUES (${entityName}MenuId, 0, '${table.comment}管理', '/${lowerName}', null, 'el-icon-document', 0, 1, 0, NOW());
+
+-- 页面菜单
+INSERT INTO sys_menu (id, parent_id, name, path, component, icon, sort, status, is_deleted, created_at)
+VALUES (${entityName}ListId, ${entityName}MenuId, '${table.comment}列表', '${lowerName}/${lowerName}-list', '${lowerName}/index', null, 0, 1, 0, NOW());
+
+-- 功能按钮权限
+INSERT INTO sys_menu (id, parent_id, name, permission, type, sort, status, is_deleted, created_at)
+VALUES (${entityName}CreateId, ${entityName}ListId, '${table.comment}-新增', '${lowerName}:create', 2, 0, 1, 0, NOW());
+
+INSERT INTO sys_menu (id, parent_id, name, permission, type, sort, status, is_deleted, created_at)
+VALUES (${entityName}UpdateId, ${entityName}ListId, '${table.comment}-编辑', '${lowerName}:update', 2, 1, 1, 0, NOW());
+
+INSERT INTO sys_menu (id, parent_id, name, permission, type, sort, status, is_deleted, created_at)
+VALUES (${entityName}DeleteId, ${entityName}ListId, '${table.comment}-删除', '${lowerName}:delete', 2, 2, 1, 0, NOW());
+
+-- ============================================================
+-- 替换说明:
+-- ${entityName}MenuId   → 主菜单 ID（可使用雪花 ID 生成）
+-- ${entityName}ListId   → 列表页面菜单 ID
+-- ${entityName}CreateId → 新增按钮权限 ID
+-- ${entityName}UpdateId → 编辑按钮权限 ID
+-- ${entityName}DeleteId → 删除按钮权限 ID
+-- ============================================================

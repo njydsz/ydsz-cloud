@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.auth.annotation.CurrentUser;
+import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.system.domain.vo.SecondaryAuthVO;
@@ -57,8 +57,8 @@ public class SecondaryAuthController {
    */
   @PostMapping
   @Operation(summary = "发起二次身份验证", description = "验证当前用户密码，返回短期认证令牌")
-  public YdszResponse<SecondaryAuthVO> verify(@RequestBody @Valid SecondaryAuthRequest body,
-      @CurrentUser String userId) {
+  public YdszResponse<SecondaryAuthVO> verify(@RequestBody @Valid SecondaryAuthRequest body) {
+    String userId = SecurityUtils.getCurrentUserId();
     SecondaryAuthVO vo = secondaryAuthService.verify(userId, body.getPassword(), body.getScene());
     return YdszResponse.success(vo);
   }

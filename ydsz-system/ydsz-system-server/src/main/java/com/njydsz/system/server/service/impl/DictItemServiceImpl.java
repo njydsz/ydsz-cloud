@@ -1,8 +1,10 @@
 package com.njydsz.system.server.service.impl;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -610,7 +612,9 @@ public class DictItemServiceImpl implements DictItemService {
   }
 
   /**
-   * 批量保存有效字典项（私有）。
+   * 批量保存有效字典项（私有）：使用 1 次批量 INSERT 降低 DB 往返开销。
+   *
+   * <p>批量插入失败时降级为逐条插入，尽可能保留成功写入的记录。
    *
    * @param validItems 校验通过的字典项列表
    * @param errors 错误收集器（保存失败时追加）
@@ -620,24 +624,61 @@ public class DictItemServiceImpl implements DictItemService {
     if (validItems.isEmpty()) {
       return 0;
     }
+    List<DictItemDTO> dtos = validItems.stream()
+        .map(this::toDto)
+        .collect(Collectors.toList());
+    // 优先尝试批量插入（1 次 DB 往返）
     try {
-      List<DictItemDTO> dtos = validItems.stream()
-          .map(this::toDto)
-          .collect(Collectors.toList());
-      // 逐条插入（使用 insertBatch 需要 XML 支持，此处保持一致性）
-      for (DictItemDTO dto : dtos) {
-        dictRepository.insertItem(dto);
+      boolean success = dictRepository.insertItemsBatch(dtos);
+      if (success) {
+        // 精准失效缓存：按涉及 typeCode 逐一失效
+        dtos.stream()
+            .map(DictItemDTO::getTypeCode)
+            .distinct()
+            .forEach(this::evictDictList);
+        return dtos.size();
       }
-      // 精准失效缓存：按涉及 typeCode 逐一失效
-      dtos.stream()
-          .map(DictItemDTO::getTypeCode)
-          .distinct()
-          .forEach(this::evictDictList);
-      return dtos.size();
+      log.warn("批量插入字典项返回 false，降级逐条插入");
+      errors.add(MessageUtils.getMessage("system.excel.dictItem.batchSaveFallback",
+          "批量保存未成功，已回退到逐条插入"));
+      return saveValidItemsOneByOne(dtos, errors);
     } catch (Exception e) {
-      errors.add("批量导入失败: " + e.getMessage());
-      return 0;
+      log.warn("批量插入字典项异常，降级逐条: {}", e.getMessage());
+      errors.add(MessageUtils.getMessage("system.excel.dictItem.batchSaveFailed",
+          new Object[] {e.getMessage()},
+          "批量导入失败: " + e.getMessage()));
+      return saveValidItemsOneByOne(dtos, errors);
     }
+  }
+
+  /**
+   * 逐条保存字典项（私有）：批量失败时的降级策略，尽可能保留成功写入的记录。
+   *
+   * @param dtos 字典项 DTO 列表
+   * @param errors 错误收集器（单条失败时追加，但不中断后续处理）
+   * @return 保存成功条数
+   */
+  private int saveValidItemsOneByOne(List<DictItemDTO> dtos, List<String> errors) {
+    int count = 0;
+    Set<String> evictedTypeCodes = new HashSet<>();
+    for (DictItemDTO dto : dtos) {
+      try {
+        if (dictRepository.insertItem(dto)) {
+          count++;
+          // 收集涉及 typeCode，统一失效缓存
+          evictedTypeCodes.add(dto.getTypeCode());
+        }
+      } catch (Exception e) {
+        log.warn("单条插入字典项失败: typeCode={}, itemCode={}, error={}",
+            dto.getTypeCode(), dto.getItemCode(), e.getMessage());
+        errors.add(MessageUtils.getMessage("system.excel.dictItem.singleSaveFailed",
+            new Object[] {dto.getTypeCode(), dto.getItemCode(), e.getMessage()},
+            dto.getTypeCode() + "/" + dto.getItemCode() + " 保存失败: " + e.getMessage()));
+      }
+    }
+    // 统一失效已涉及 typeCode 的缓存
+    evictedTypeCodes.forEach(this::evictDictList);
+    return count;
   }
 
   /**

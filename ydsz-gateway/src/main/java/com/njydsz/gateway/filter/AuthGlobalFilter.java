@@ -23,6 +23,7 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.safe.config.SecurityHeaderConfigurer;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertCategory;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.CachedJwtValidator;
@@ -151,7 +152,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
           .severity(AlertSeverity.P1)
           .summary("拒绝路径穿越攻击")
           .description("客户端尝试路径穿越攻击，已被网关拦截")
-          .category("security")
+          .category(AlertCategory.SECURITY)
           .labels(Map.of("raw_path", rawPath, "trace_id", existingTraceId != null ? existingTraceId : "n/a"))
           .build());
       log.warn("[AuthFilter] 拒绝路径穿越攻击 rawPath={}", rawPath);

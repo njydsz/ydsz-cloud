@@ -1,16 +1,15 @@
 #parse("velocity_implicit.vm")
 #set($entityName = $text.textFirstUpper($table.aliasName))
-#set($enumName = ${entityName})
 #set($hasEnum = false)
 #foreach($col in $table.columns)
-#if($col.enumValues && $col.enumValues.size() > 0)
+#if($col.enumValueList && $col.enumValueList.size() > 0)
 #set($hasEnum = true)
 #end
 #end
 
 #if($hasEnum)
 #foreach($col in $table.columns)
-#if($col.enumValues && $col.enumValues.size() > 0)
+#if($col.enumValueList && $col.enumValueList.size() > 0)
 #set($enumClassName = $text.textFirstUpper($text.textCamelCase($col.javaFieldName)) + "Enum")
 
 package ${package}.domain.enums;
@@ -28,9 +27,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ${enumClassName} {
 
-#foreach($ev in $col.enumValues)
-  /** ${ev.label} */
-  ${ev.code}("${ev.code}", "${ev.label}")#if($foreach.hasNext),
+#foreach($ev in $col.enumValueList)
+  /** ${ev.value} */
+  ${ev.key}("${ev.key}", "${ev.value}")#if($foreach.hasNext),
   #else;
 
 #end

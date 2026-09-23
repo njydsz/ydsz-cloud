@@ -385,14 +385,52 @@ public class CodeGenService {
     return strategy == null ? ConflictStrategyEnum.SKIP : ConflictStrategyEnum.valueOf(strategy);
   }
 
+  /** 模板输出文件扩展名：Java 源码。 */
+  private static final String JAVA_EXT = ".java";
+  /** 模板输出文件扩展名：TypeScript 源码。 */
+  private static final String TS_EXT = ".ts";
+  /** 模板输出文件扩展名：Vue SFC。 */
+  private static final String VUE_EXT = ".vue";
+  /** 模板输出文件扩展名：SQL 脚本。 */
+  private static final String SQL_EXT = ".sql";
+  /** 模板输出扩展名：通用模板后缀。 */
+  private static final String TEMPLATE_EXT = ".vm";
+  /** 前端模板父路径标识。 */
+  private static final String FRONTEND_PATH = "vue";
+  /** SQL 模板父路径标识。 */
+  private static final String SQL_PATH = "sql";
+
+  /**
+   * 解析模板输出文件路径（根据父路径与文件名推断输出扩展名）。
+   *
+   * <p>推断规则：
+   * <ul>
+   *   <li>父路径包含 {@code vue/} 且文件名为 Index → {@code .vue}（Vue SFC）</li>
+   *   <li>父路径包含 {@code vue/} 且文件名非 Index → {@code .ts}</li>
+   *   <li>父路径包含 {@code sql/} → {@code .sql}</li>
+   *   <li>其他 / 父路径为空（后端模板）→ {@code .java}</li>
+   * </ul>
+   *
+   * @param tpl       模板实体
+   * @param tableMeta 表元数据（当前未使用，预留扩展）
+   * @return 输出文件路径
+   */
   private String resolveOutputPath(GenTemplate tpl, GenTableMeta tableMeta) {
-    // 根据模板文件名映射到目标路径（如 entity.vm → domain/entity/TableName.java）
-    String fileName = tpl.getFileName().replace(".vm", ".java");
+    String baseName = tpl.getFileName().replace(TEMPLATE_EXT, "");
     String parent = tpl.getParentPath();
-    if (parent == null || parent.isEmpty()) {
-      return fileName;
+    String extension;
+    if (parent != null && parent.contains(SQL_PATH)) {
+      extension = SQL_EXT;
+    } else if (parent != null && parent.contains(FRONTEND_PATH)) {
+      if (baseName.startsWith("index") || baseName.startsWith("Index")) {
+        extension = VUE_EXT;
+      } else {
+        extension = TS_EXT;
+      }
+    } else {
+      extension = JAVA_EXT;
     }
-    return parent + fileName;
+    return (parent == null ? "" : parent) + baseName + extension;
   }
 
   private String writeFile(String filePath, String content, ConflictStrategyEnum strategy)

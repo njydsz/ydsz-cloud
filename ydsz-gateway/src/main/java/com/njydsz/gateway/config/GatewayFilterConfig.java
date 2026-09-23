@@ -29,7 +29,8 @@ import com.njydsz.gateway.exception.GatewayExceptionHandler;
 @Slf4j
 @Configuration
 @EnableConfigurationProperties(
-    {CorsProperties.class, SqlInjectionProperties.class, DeprecationProperties.class})
+    {CorsProperties.class, SqlInjectionProperties.class, DeprecationProperties.class,
+     ApiKeyProperties.class})
 public class GatewayFilterConfig {
 
   /** 凭据模式下禁止使用的通配符来源标记（{@code *} 与 {@code allowCredentials=true} 互斥）。 */

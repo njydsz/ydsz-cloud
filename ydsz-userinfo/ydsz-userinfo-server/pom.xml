@@ -33,11 +33,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-domain</artifactId>
         </dependency>
-        <!-- ydsz-userinfo-infra: Repository 实现 + MapStruct Converter（DDD server → infra 正向依赖） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-userinfo-infra</artifactId>
-        </dependency>
         <!-- P2-3: 显式声明 common-util（LdapAuthenticationProvider 使用工具类） -->
         <dependency>
             <groupId>com.njydsz</groupId>

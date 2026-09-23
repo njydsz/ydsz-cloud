@@ -58,6 +58,7 @@ import com.njydsz.common.search.service.ZeroResultHandler;
 import com.njydsz.common.search.sync.IndexConsistencyChecker;
 import com.njydsz.common.search.sync.IndexSyncListener;
 import com.njydsz.common.search.sync.PersistentDeadLetterQueue;
+import com.njydsz.common.search.sync.SearchConsistencyScanTask;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
@@ -79,7 +80,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
     name = "enabled",
     havingValue = "true",
     matchIfMissing = true)
-@EnableConfigurationProperties(SearchProperties.class)
+@EnableConfigurationProperties({SearchProperties.class, SearchConsistencyProperties.class})
 @EnableScheduling
 public class SearchAutoConfiguration {
 
@@ -745,6 +746,26 @@ public class SearchAutoConfiguration {
   public IndexConsistencyChecker indexConsistencyChecker(
       SearchEngineRegistry engineRegistry, SearchProviderRegistry providerRegistry) {
     return new IndexConsistencyChecker(engineRegistry, providerRegistry);
+  }
+
+  /**
+   * 装配索引一致性巡检任务，定时检测并修复数据库与索引间的文档数量偏差。
+   *
+   * <p>通过 {@link SearchConsistencyScanTask} 固定间隔触发 {@link IndexConsistencyChecker#check}，
+   * 不一致时根据配置决定是否自动修复（重建丢失索引、删除冗余索引）。
+   *
+   * <p>使用 {@code @DistributedScheduled} 确保多实例部署时仅一个节点执行。
+   *
+   * @param consistencyChecker 索引一致性校验器
+   * @param consistencyProperties 一致性巡检配置
+   * @return 一致性巡检任务实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public SearchConsistencyScanTask searchConsistencyScanTask(
+      IndexConsistencyChecker consistencyChecker,
+      SearchConsistencyProperties consistencyProperties) {
+    return new SearchConsistencyScanTask(consistencyChecker, consistencyProperties);
   }
 
   /**

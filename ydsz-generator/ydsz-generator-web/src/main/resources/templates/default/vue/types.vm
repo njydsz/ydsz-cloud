@@ -1,0 +1,53 @@
+#parse("../../velocity_implicit.vm")
+#set($entityName = $text.textFirstUpper($table.aliasName))
+#foreach($col in $table.columns)
+#if($col.tsImportRequired)
+#set($hasDateTime = $col.javaType == "LocalDateTime" || $col.javaType == "LocalDate")
+#set($hasArray = $col.javaType == "[B")
+#end
+#end
+
+/**
+ * ${table.comment} - TypeScript 类型定义。
+ *
+ * <p>由 ydzs-generator 自动生成，日期 ${date}。
+ * 服务端对应 Java 类：${entityName}
+ */
+
+/** ${table.comment} 实体 VO */
+export interface ${entityName}Vo {
+#foreach($col in $table.columns)
+#if($col.comment && $col.comment != "")
+  /** ${col.comment} */
+#end
+  ${col.javaFieldName}${col.isNullable ? '?' : ''}: ${col.tsType};
+#end
+}
+
+/** ${table.comment} 数据传输 DTO */
+export interface ${entityName}Dto {
+#foreach($col in $table.columns)
+#if(!$col.isDtoSkipped && !$col.isAuditField)
+#if($col.comment && $col.comment != "")
+  /** ${col.comment} */
+#end
+  ${col.javaFieldName}${col.isNullable ? '?' : ''}: ${col.tsType};
+#end
+#end
+}
+
+/** ${table.comment} 查询参数 */
+export interface ${entityName}Query {
+  /** 页码 */
+  pageNum?: number;
+  /** 每页数量 */
+  pageSize?: number;
+#foreach($col in $table.columns)
+#if(!$col.isQuerySkipped)
+#if($col.comment && $col.comment != "")
+  /** ${col.comment} */
+#end
+  ${col.javaFieldName}?: ${col.tsType};
+#end
+#end
+}

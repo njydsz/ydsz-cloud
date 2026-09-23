@@ -23,8 +23,9 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.safe.idempotent.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njyzsz.common.safe.idempotent.annotation.Idempotent;
+import com.njyzsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.system.domain.vo.ConfigDiffVO;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.EntityVersionService;
@@ -77,6 +78,28 @@ public class ConfigVersionController {
     return YdszResponse.success(
         entityVersionService.listByResourceTypeAndKey(
             EntityVersionService.RESOURCE_TYPE_CONFIG, resourceKey));
+  }
+
+  /**
+   * 对比两个配置版本的差异
+   *
+   * <p>对两个版本的快照 JSON 做字段级 diff，返回变更类型（MODIFIED / ADDED / REMOVED）和对应旧值/新值。
+   * 前端可据此渲染「配置对比视图」并高亮变更行（对标 Nacos / Apollo 的 diff 能力）。
+   *
+   * @param resourceKey 配置键
+   * @param fromVersion 源版本号（基准版本）
+   * @param toVersion 目标版本号（对比版本）
+   * @return 配置版本对比结果
+   */
+  @Operation(summary = "对比两个配置版本的差异", description = "返回两个版本间按字段粒度的变更列表")
+  @GetMapping("/{resourceKey}/diff")
+  public YdszResponse<ConfigDiffVO> diffVersions(
+      @Parameter(description = "配置键") @PathVariable @NotBlank String resourceKey,
+      @Parameter(description = "源版本号") @RequestParam @NotBlank String fromVersion,
+      @Parameter(description = "目标版本号") @RequestParam @NotBlank String toVersion) {
+    return YdszResponse.success(
+        entityVersionService.diffConfigVersions(
+            EntityVersionService.RESOURCE_TYPE_CONFIG, resourceKey, fromVersion, toVersion));
   }
 
   /**

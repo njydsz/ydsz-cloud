@@ -22,6 +22,8 @@ import com.njydsz.generator.entity.GenTemplate;
 import com.njydsz.generator.entity.GenTemplateGroup;
 import com.njydsz.generator.service.TemplateGroupService;
 import com.njydsz.generator.service.TemplateService;
+import com.njydsz.generator.vo.DiffLineVO;
+import com.njydsz.generator.vo.TemplateValidateVO;
 
 /**
  * 模板管理 REST 控制器（含分组管理）。
@@ -147,5 +149,31 @@ public class TemplateController {
   public YdszResponse<List<GenTemplate>> search(
       @RequestParam Long groupId, @RequestParam String keyword) {
     return YdszResponse.success(templateService.search(groupId, keyword));
+  }
+
+  // ══════════════ 模板编辑器增强 ══════════════
+
+  /**
+   * 校验 Velocity 模板语法。
+   *
+   * @param content 模板内容
+   * @return 校验结果（通过/错误行号/错误消息）
+   */
+  @PostMapping("/templates/validate")
+  public YdszResponse<TemplateValidateVO> validateTemplate(@RequestBody String content) {
+    return YdszResponse.success(templateService.validateTemplate(content));
+  }
+
+  /**
+   * 对比两个版本模板内容，生成 diff 结果。
+   *
+   * @param oldContent 旧版本内容
+   * @param newContent 新版本内容
+   * @return diff 行列表（changeType: UNCHANGED/ADDED/REMOVED）
+   */
+  @PostMapping("/templates/diff")
+  public YdszResponse<List<DiffLineVO>> diffTemplates(
+      @RequestParam String oldContent, @RequestParam String newContent) {
+    return YdszResponse.success(templateService.diffTemplate(oldContent, newContent));
   }
 }

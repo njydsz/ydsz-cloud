@@ -4,6 +4,7 @@ import java.util.List;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
+import com.njydsz.system.domain.vo.ConfigDiffVO;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.server.service.rollback.RollbackStrategy;
 
@@ -101,4 +102,20 @@ public interface EntityVersionService {
       String targetVersion,
       String operatorId,
       RollbackStrategy rollbackStrategy);
+
+  /**
+   * 对比两个版本的快照 JSON，生成字段级差异。
+   *
+   * <p>仅适用于快照为单层扁平 JSON 结构的资源类型（CONFIG / DICT / VARIABLE 均符合）。
+   * 以源版本（fromVersion）为基准，列出目标版本（toVersion）相对于源版本的字段级变更。
+   *
+   * @param resourceType 资源类型（CONFIG/DICT/VARIABLE）
+   * @param resourceKey 资源唯一标识
+   * @param fromVersion 源版本号（基准）
+   * @param toVersion 目标版本号（对比对象）
+   * @return 版本对比结果（含字段级 diff 列表）
+   * @throws com.njydsz.common.exception.custom.BusinessException 任一版本不存在时抛出
+   */
+  ConfigDiffVO diffConfigVersions(
+      String resourceType, String resourceKey, String fromVersion, String toVersion);
 }

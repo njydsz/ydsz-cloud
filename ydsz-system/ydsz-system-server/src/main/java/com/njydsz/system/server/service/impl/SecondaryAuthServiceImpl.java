@@ -199,7 +199,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
   private void clearFailCount(String userId) {
     try {
       String key = buildFailCountKey(userId);
-      redisStringOps.delete(key);
+      redisStringOps.del(key);
     } catch (Exception e) {
       log.warn("清除二次认证失败计数异常: userId={}, error={}", userId, e.getMessage());
     }

@@ -32,6 +32,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * ${table.comment}实体
  *
  * <p>对应数据库表 ${table.tableName}。
+ * 审计字段（id/tenantId/createdAt/updatedAt/createdBy/updatedAt/isDeleted）由基类
+ * {@link com.njydsz.common.jdbc.entity.MpBaseEntity} 提供，不在子类中重复声明。
  *
  * @author ${author}
  * @since ${date}
@@ -44,9 +46,11 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 public class ${entityName} extends MpBaseEntity<String> {
 
 #foreach($col in $table.columns)
+#if(!$col.isAuditField)
 #if($col.comment && $col.comment != "")
     /** ${col.comment} */
 #end
     private ${col.javaType} ${col.javaFieldName};
+#end
 #end
 }

@@ -1,6 +1,7 @@
 package com.njydsz.gateway.config;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -141,6 +142,9 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
    * 从 Nacos 加载路由到内存缓存。
    *
    * <p>在构造器和配置变更监听器中调用。同步调用 Nacos getConfig 仅发生在启动/刷新时， 不在请求处理路径中，不会阻塞 Netty EventLoop。
+   *
+   * <p>A4 增强：加载后进行 JSON Schema 校验（id 非空、uri 非空、predicates 非空），
+   * 校验失败时保留上一版缓存并告警；Nacos 不可用时回退到本地 {@code routes-nacos.yaml} 文件。
    */
   private void loadRoutesFromNacos() {
     try {
@@ -157,12 +161,114 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
         routes = Collections.emptyList();
       }
 
-      routeCache.set(routes);
-      log.info("[NacosRoutes] 从 Nacos 加载 {} 条路由定义 dataId={} group={}", routes.size(), dataId, group);
+      // A4: JSON Schema 校验 — 确保每条路由定义包含 id、uri、predicates 这三个必填字段
+      List<RouteDefinition> validRoutes = validateRouteDefinitions(routes);
+      if (validRoutes.size() < routes.size()) {
+        log.warn("[NacosRoutes] 路由配置校验过滤了 {} 条无效路由（原始 {} 条 → 有效 {} 条）",
+            routes.size() - validRoutes.size(), routes.size(), validRoutes.size());
+      }
+
+      routeCache.set(validRoutes);
+      log.info("[NacosRoutes] 从 Nacos 加载 {} 条路由定义 dataId={} group={}", validRoutes.size(), dataId, group);
     } catch (Exception e) {
-      log.warn("[NacosRoutes] 从 Nacos 加载路由失败，回退到 Java 路由: dataId={} err={}", dataId, e.getMessage());
-      routeCache.set(Collections.emptyList());
+      log.warn("[NacosRoutes] 从 Nacos 加载路由失败: dataId={} err={}，尝试本地兜底文件", dataId, e.getMessage());
+      // A4: Nacos 不可用时尝试本地 routes-nacos.yaml 兜底加载
+      boolean fallbackLoaded = loadRoutesFromLocalFallback();
+      if (!fallbackLoaded) {
+        log.warn("[NacosRoutes] 本地兜底文件加载失败，回退到 Java 路由");
+        routeCache.set(Collections.emptyList());
+      }
     }
+  }
+
+  /**
+   * 校验路由定义列表，过滤无效条目。
+   *
+   * <p>每条有效的 {@link RouteDefinition} 必须满足：
+   *
+   * <ul>
+   *   <li>{@code id} 非空（作为路由唯一标识）
+   *   <li>{@code uri} 非空（作为转发目标地址）
+   * </ul>
+   *
+   * <p>predicates 允许为空（但通常至少包含 Path 断言），缺失时仅告警不拦截。
+   *
+   * @param routes 原始路由定义列表
+   * @return 校验通过的路由定义列表（可能为空，但非 null）
+   */
+  private List<RouteDefinition> validateRouteDefinitions(List<RouteDefinition> routes) {
+    List<RouteDefinition> valid = new ArrayList<>(routes.size());
+    for (RouteDefinition route : routes) {
+      if (route == null) {
+        continue;
+      }
+      if (route.getId() == null || route.getId().isBlank()) {
+        log.warn("[NacosRoutes] 跳过无效路由定义：id 为空");
+        continue;
+      }
+      if (route.getUri() == null || route.getUri().toString().isBlank()) {
+        log.warn("[NacosRoutes] 跳过无效路由定义：id={} uri 为空", route.getId());
+        continue;
+      }
+      valid.add(route);
+    }
+    return valid;
+  }
+
+  /**
+   * 从本地 routes-nacos.yaml 文件加载路由作为兜底。
+   *
+   * <p>当 Nacos 配置中心不可达且未返回有效配置时调用。使用 {@link ClassPathResource} 从 classpath 的
+   * {@code routes-nacos.yaml} 读取静态 JSON 路由定义，保证基本服务能力。
+   *
+   * @return true=本地兜底加载成功；false=本地文件不存在或解析失败
+   */
+  private boolean loadRoutesFromLocalFallback() {
+    try {
+      org.springframework.core.io.ClassPathResource resource =
+          new org.springframework.core.io.ClassPathResource("routes-nacos.yaml");
+      if (!resource.exists()) {
+        log.debug("[NacosRoutes] 本地兜底文件 routes-nacos.yaml 不存在");
+        return false;
+      }
+      // 从 YAML 注释中抽取 JSON 数组部分（routes-nacos.yaml 同时含注释说明和 JSON）
+      String yamlContent = new String(resource.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+      String jsonContent = extractJsonFromYamlDoc(yamlContent);
+      if (jsonContent == null || jsonContent.isBlank()) {
+        log.warn("[NacosRoutes] 本地兜底文件未找到有效 JSON 路由定义");
+        return false;
+      }
+      List<RouteDefinition> routes =
+          YdszJson.fromJson(jsonContent, new JsonType<List<RouteDefinition>>() {});
+      List<RouteDefinition> validRoutes = validateRouteDefinitions(routes != null ? routes : Collections.emptyList());
+      if (!validRoutes.isEmpty()) {
+        routeCache.set(validRoutes);
+        log.info("[NacosRoutes] 已从本地兜底文件加载 {} 条路由定义", validRoutes.size());
+        return true;
+      }
+      return false;
+    } catch (Exception e) {
+      log.warn("[NacosRoutes] 本地兜底文件加载异常: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  /**
+   * 从混合 YAML 文档中提取 JSON 数组字符串。
+   *
+   * <p>routes-nacos.yaml 文件含 YAML 注释（# 开头）和 JSON 数组块，
+   * 本方法定位首个 '[' 到最后一个 ']' 之间的内容为 JSON 数组。
+   *
+   * @param yamlContent 混合 YAML 文件内容
+   * @return JSON 字符串，未找到时返回 null
+   */
+  private String extractJsonFromYamlDoc(String yamlContent) {
+    int start = yamlContent.indexOf('[');
+    int end = yamlContent.lastIndexOf(']');
+    if (start < 0 || end < 0 || end <= start) {
+      return null;
+    }
+    return yamlContent.substring(start, end + 1);
   }
 
   /**

@@ -74,6 +74,19 @@ public class GenColumnMeta extends MpBaseIdEntity<Long> {
   /** 扩展配置 JSON。 */
   private String extraConfig;
 
+  // -- 非持久化字段与辅助方法（模板渲染辅助） --
+
+  /** TypeScript 类型（由 dataType 经 GeneratorTypeMapper 推断）。 */
+  private String tsType;
+  /**
+   * 判断当前列是否需要额外的 TS import（如 Date、BigDecimal 等）。
+   *
+   * @return 是否需要额外引入
+   */
+  public boolean isTsImportRequired() {
+    return "LocalDateTime".equals(javaType) || "BigDecimal".equals(javaType) || "byte[]".equals(javaType);
+  }
+
   // -- 非持久化方法（模板渲染辅助） --
 
   /**

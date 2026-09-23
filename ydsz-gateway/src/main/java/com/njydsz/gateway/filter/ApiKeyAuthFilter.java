@@ -1,13 +1,11 @@
 package com.njydsz.gateway.filter;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -20,9 +18,11 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertCategory;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.gateway.config.ApiKeyProperties;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayFilterOrder;
@@ -76,24 +76,22 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
   /** 网关注入下游的 API Key 认证标识头，前缀 {@code apikey:} + 脱敏 Key。 */
   private static final String HEADER_API_KEY_USER = "X-API-Key-User";
 
+  /** B3: API Key 认证配置属性（类型安全绑定，替代分散的 @Value）。 */
+  private final ApiKeyProperties properties;
+
   private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
-  @Value("${ydsz.gateway.api-key.enabled:false}")
-  private boolean isEnabled;
-
-  /**
-   * API Key 白名单（Spring 自动将逗号分隔的配置解析为 List）。
-   *
-   * <p>使用 List 注入替代 String + split，避免每次请求重复解析。 Spring EL 处理空值情况，未配置时返回空 List。
-   */
-  @Value("#{'${ydsz.gateway.api-key.keys:}'.trim().isEmpty() ? new String[]{} : '${ydsz.gateway.api-key.keys:}'.trim().split(' *, *')}")
-  private List<String> validKeyList;
-
-  @Value("${ydsz.gateway.api-key.protected-paths:}")
-  private String protectedPaths;
 
   /** 有效 API Key 的 SHA-256 摘要集合（P1-B1：配置启动时预计算，运行期仅比对摘要） */
   private volatile Set<String> hashedKeys = Set.of();
+
+  /**
+   * 构造 API Key 认证过滤器。
+   *
+   * @param properties API Key 认证配置属性
+   */
+  public ApiKeyAuthFilter(ApiKeyProperties properties) {
+    this.properties = properties;
+  }
 
   /**
    * 启动时预计算有效 API Key 的 SHA-256 摘要。
@@ -103,12 +101,8 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
   @PostConstruct
   private void initHashedKeys() {
     Set<String> hashes = new HashSet<>(16);
-    if (validKeyList != null) {
-      for (String key : validKeyList) {
-        if (key != null && !key.isBlank()) {
-          hashes.add(DigestUtils.sha256Hex(key.trim()));
-        }
-      }
+    for (String key : properties.getValidKeys()) {
+      hashes.add(DigestUtils.sha256Hex(key));
     }
     this.hashedKeys = Set.copyOf(hashes);
     log.info("[ApiKeyAuth] 已加载 {} 个 API Key（SHA-256 摘要存储）", hashes.size());
@@ -126,7 +120,8 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
    */
   @Override
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-    if (!isEnabled) {
+    // B3: 使用 ApiKeyProperties.isAvailable() 统一判断是否启用
+    if (!properties.isAvailable()) {
       return chain.filter(exchange);
     }
 
@@ -189,14 +184,22 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     return hashedKeys.contains(DigestUtils.sha256Hex(apiKey.trim()));
   }
 
-  /** 检查路径是否需要 API Key 认证 */
+  /**
+   * 检查路径是否需要 API Key 认证。
+   *
+   * <p>B3: 路径模式集合由 {@link ApiKeyProperties#getValidPathsAsSet()} 维护，
+   * 避免运行期重复 split。
+   *
+   * @param path 请求路径
+   * @return true=需要 API Key 认证
+   */
   private boolean isProtectedPath(String path) {
-    if (protectedPaths == null || protectedPaths.isBlank()) {
+    Set<String> patterns = properties.getValidPathsAsSet();
+    if (patterns.isEmpty()) {
       return false;
     }
-    String[] patterns = protectedPaths.split(",");
     for (String pattern : patterns) {
-      if (pathMatcher.match(pattern.trim(), path)) {
+      if (pathMatcher.match(pattern, path)) {
         return true;
       }
     }
@@ -214,7 +217,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
             .severity(AlertSeverity.P2)
             .summary("API Key 缺失")
             .description("请求未提供有效的 API Key")
-            .category("security")
+            .category(AlertCategory.SECURITY)
             .labels(Map.of("path", exchange.getRequest().getURI().getPath()))
             .build());
     log.warn("[ApiKeyAuth] API Key 缺失 path={}", exchange.getRequest().getURI().getPath());
@@ -237,7 +240,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
             .severity(AlertSeverity.P1)
             .summary("API Key 无效")
             .description("提供了无效的 API Key，可能是伪造或过期")
-            .category("security")
+            .category(AlertCategory.SECURITY)
             .labels(
                 Map.of(
                     "api_key_masked",

@@ -222,10 +222,12 @@ public class TableMetadataService {
           String colName = rs.getString("COLUMN_NAME");
           String dataType = rs.getString("TYPE_NAME");
           String remark = rs.getString("REMARKS");
+          String javaType = typeMapper.resolveJavaType(dataType);
           GenColumnMeta col = GenColumnMeta.builder()
               .columnName(colName)
               .dataType(dataType)
-              .javaType(typeMapper.resolveJavaType(dataType))
+              .javaType(javaType)
+              .tsType(typeMapper.resolveTsType(dataType))
               .columnSize(rs.getInt("COLUMN_SIZE"))
               .isNullable(rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable)
               .isPk(pks.contains(colName))

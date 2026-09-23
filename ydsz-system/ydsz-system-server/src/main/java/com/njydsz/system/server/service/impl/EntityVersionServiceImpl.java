@@ -1,6 +1,12 @@
 package com.njydsz.system.server.service.impl;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +18,10 @@ import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
 import com.njydsz.system.domain.repository.EntityVersionRepository;
+import com.njydsz.system.domain.vo.ConfigDiffVO;
+import com.njydsz.system.domain.vo.ConfigDiffVO.ChangeType;
+import com.njydsz.system.domain.vo.ConfigDiffVO.FieldDiff;
+import com.njydsz.system.domain.vo.ConfigDiffVO.VersionBrief;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.rollback.RollbackStrategy;
@@ -112,5 +122,127 @@ public class EntityVersionServiceImpl implements EntityVersionService {
         targetVersion,
         newVersion);
     return newVersionVO.getId();
+  }
+
+  /**
+   * 对比两个版本的快照 JSON，生成字段级差异。
+   *
+   * <p>对两个版本的快照 JSON 做字段级 diff，返回变更类型（MODIFIED / ADDED / REMOVED）和对应旧值/新值。
+   *
+   * @param resourceType 资源类型（CONFIG/DICT/VARIABLE）
+   * @param resourceKey 资源唯一标识
+   * @param fromVersion 源版本号（基准）
+   * @param toVersion 目标版本号（对比对象）
+   * @return 版本对比结果（含字段级 diff 列表）
+   * @throws BusinessException 任一版本不存在时抛出
+   */
+  @Override
+  public ConfigDiffVO diffConfigVersions(
+      String resourceType, String resourceKey, String fromVersion, String toVersion) {
+    // 1. 查询两个版本
+    EntityVersionVO fromVersionVO =
+        entityVersionRepository
+            .findByTypeAndKeyAndVersion(resourceType, resourceKey, fromVersion)
+            .orElseThrow(
+                () ->
+                    BusinessException.of(SystemExceptionCode.ENTITY_VERSION_NOT_FOUND)
+                        .data("resourceType", resourceType)
+                        .data("resourceKey", resourceKey)
+                        .data("version", fromVersion));
+    EntityVersionVO toVersionVO =
+        entityVersionRepository
+            .findByTypeAndKeyAndVersion(resourceType, resourceKey, toVersion)
+            .orElseThrow(
+                () ->
+                    BusinessException.of(SystemExceptionCode.ENTITY_VERSION_NOT_FOUND)
+                        .data("resourceType", resourceType)
+                        .data("resourceKey", resourceKey)
+                        .data("version", toVersion));
+
+    // 2. 组装版本摘要
+    ConfigDiffVO result = new ConfigDiffVO();
+    VersionBrief fromBrief = new VersionBrief();
+    fromBrief.setVersion(fromVersionVO.getVersion());
+    fromBrief.setSnapshotJson(fromVersionVO.getSnapshotJson());
+    fromBrief.setEffectiveDate(fromVersionVO.getEffectiveDate() != null
+        ? fromVersionVO.getEffectiveDate().toString() : null);
+    result.setFromVersion(fromBrief);
+    VersionBrief toBrief = new VersionBrief();
+    toBrief.setVersion(toVersionVO.getVersion());
+    toBrief.setSnapshotJson(toVersionVO.getSnapshotJson());
+    toBrief.setEffectiveDate(toVersionVO.getEffectiveDate() != null
+        ? toVersionVO.getEffectiveDate().toString() : null);
+    result.setToVersion(toBrief);
+
+    // 3. 执行 JSON diff
+    List<FieldDiff> diffs = computeJsonDiff(
+        resolveSnapshot(fromVersionVO.getSnapshotJson()),
+        resolveSnapshot(toVersionVO.getSnapshotJson()));
+    result.setDiffs(diffs);
+    return result;
+  }
+
+  /**
+   * 将快照 JSON 反序列化为扁平 Map；解析失败时返回空 Map（避免影响 diff 主流程）。
+   *
+   * @param snapshotJson 快照 JSON 字符串
+   * @return 字段名 → 字段值字符串 的 Map；解析失败时返回空 Map
+   */
+  private Map<String, String> resolveSnapshot(String snapshotJson) {
+    if (snapshotJson == null || snapshotJson.isBlank()) {
+      return new LinkedHashMap<>();
+    }
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+      Map<String, Object> rawMap = mapper.readValue(snapshotJson, mapper.getTypeFactory()
+          .constructMapType(Map.class, String.class, Object.class));
+      Map<String, String> resultMap = new LinkedHashMap<>();
+      for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
+        resultMap.put(entry.getKey(), entry.getValue() != null ? entry.getValue().toString() : null);
+      }
+      return resultMap;
+    } catch (Exception e) {
+      log.warn("解析快照 JSON 进行 diff 失败: {}", e.getMessage());
+      return new LinkedHashMap<>();
+    }
+  }
+
+  /**
+   * 计算两个快照 Map 的字段级 diff。
+   *
+   * @param fromMap 源版本字段值
+   * @param toMap 目标版本字段值
+   * @return 字段差异列表（有序）
+   */
+  private List<FieldDiff> computeJsonDiff(Map<String, String> fromMap, Map<String, String> toMap) {
+    List<FieldDiff> diffs = new ArrayList<>();
+    // 合并所有 key（保持插入顺序）
+    List<String> allKeys = new ArrayList<>(fromMap.keySet());
+    for (String key : toMap.keySet()) {
+      if (!allKeys.contains(key)) {
+        allKeys.add(key);
+      }
+    }
+    for (String key : allKeys) {
+      String fromVal = fromMap.get(key);
+      String toVal = toMap.get(key);
+      if (Objects.equals(fromVal, toVal)) {
+        continue;
+      }
+      FieldDiff diff = new FieldDiff();
+      diff.setField(key);
+      diff.setOldValue(fromVal);
+      diff.setNewValue(toVal);
+      if (fromVal == null) {
+        diff.setChangeType(ChangeType.ADDED);
+      } else if (toVal == null) {
+        diff.setChangeType(ChangeType.REMOVED);
+      } else {
+        diff.setChangeType(ChangeType.MODIFIED);
+      }
+      diffs.add(diff);
+    }
+    return diffs;
   }
 }

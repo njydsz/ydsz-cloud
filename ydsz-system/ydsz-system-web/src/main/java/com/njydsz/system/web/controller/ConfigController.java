@@ -1,6 +1,8 @@
 package com.njydsz.system.web.controller;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -328,14 +330,17 @@ public class ConfigController {
   }
 
   /**
-   * 构造导出文件名（{@code config_{group}_{timestamp}.xlsx}，group 为空时使用 {@code all}）。
+   * 构造导出文件名（{@code config_{group}_{yyyyMMdd_HHmmss}.xlsx}，group 为空时使用 {@code all}）。
+   *
+   * <p>文件名使用 ISO8601 紧凑格式（{@code yyyyMMdd_HHmmss}），避免时间戳毫秒数导致的文件名不友好问题。
    *
    * @param configGroup 配置分组（可为空）
-   * @return 导出文件名
+   * @return 导出文件名（如 {@code config_all_20260923_143022.xlsx}）
    */
   private String buildExportFilename(String configGroup) {
     String group = configGroup != null ? configGroup : "all";
-    return "config_" + group + "_" + System.currentTimeMillis() + ".xlsx";
+    String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    return "config_" + group + "_" + timestamp + ".xlsx";
   }
 
   /**

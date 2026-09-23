@@ -18,6 +18,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertCategory;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.GatewayErrorCode;
@@ -299,7 +300,7 @@ public class SqlInjectionFilter implements GlobalFilter, Ordered {
             .severity(AlertSeverity.P1)
             .summary("SQL 注入检测命中")
             .description("网关层 SQL 注入检测过滤器拦截可疑请求")
-            .category("security")
+            .category(AlertCategory.SECURITY)
             .labels(
                 Map.of(
                     "ip", clientIp,

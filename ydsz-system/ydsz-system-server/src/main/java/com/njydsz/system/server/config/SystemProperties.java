@@ -126,6 +126,20 @@ public class SystemProperties {
      * <p>默认 false（单实例部署或接受最终一致性场景）。多实例部署且需实时一致性时开启。
      */
     private boolean crossInstanceEnabled = false;
+
+    /**
+     * 是否启用缓存一致性兜底刷新（周期性全量刷新本地缓存）。
+     *
+     * <p>默认 false。开启后每隔 {@code consistencyRefreshIntervalMs} 从 DB 全量刷新本地缓存，
+     * 提供最终一致性兜底。建议仅在 {@code crossInstanceEnabled=false} 的多实例部署场景开启。
+     */
+    private boolean consistencyRefreshEnabled = false;
+
+    /** 缓存一致性兜底刷新间隔（毫秒），默认 5 分钟（300000ms）。 */
+    private long consistencyRefreshIntervalMs = 300000L;
+
+    /** 缓存一致性兜底刷新首次执行延迟（毫秒），默认 2 分钟（120000ms）。 */
+    private long consistencyRefreshInitialDelayMs = 120000L;
   }
 
   /** 二次认证配置（{@code ydsz.system.secondary-auth.*}） */

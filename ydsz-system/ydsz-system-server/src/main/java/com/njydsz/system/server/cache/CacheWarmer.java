@@ -81,6 +81,86 @@ public class CacheWarmer {
   }
 
   /**
+   * 从数据库全量刷新本地缓存（供 CacheConsistencyScheduler 周期调用）。
+   *
+   * <p>与 {@link #onApplicationReady()} 的区别：本方法可被多次调用，用于全量刷新以兜底多实例间缓存不一致。
+   * 实现逻辑：先清除全部本地缓存数据，再从 DB 重新加载。
+   */
+  public void refreshFromDatabase() {
+    log.info("[CacheWarmer.refreshFromDatabase] 开始从 DB 全量刷新本地缓存...");
+    // Step1: 清除全部缓存（确保不残留过期数据）
+    clearAllCaches();
+    // Step2: 重新从 DB 加载
+    warmConfigCache();
+    warmDictCache();
+    // 刷新配置分组缓存
+    warmConfigGroupCache();
+  }
+
+  /**
+   * 清除本地缓存中的全部数据（用于全量刷新前的清理）。
+   */
+  private void clearAllCaches() {
+    try {
+      Cache configCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE);
+      if (configCache != null) {
+        configCache.clear();
+      }
+      Cache dictCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE);
+      if (dictCache != null) {
+        dictCache.clear();
+      }
+      Cache dictTypeCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE);
+      if (dictTypeCache != null) {
+        dictTypeCache.clear();
+      }
+      Cache variableCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_VARIABLE_CACHE);
+      if (variableCache != null) {
+        variableCache.clear();
+      }
+      log.info("[CacheWarmer.refreshFromDatabase] 本地缓存全部清除完成");
+    } catch (Exception e) {
+      log.warn("[CacheWarmer.refreshFromDatabase] 清除缓存异常: {}", e.getMessage(), e);
+    }
+  }
+
+  /**
+   * 预热配置分组缓存。
+   *
+   * <p>按 configGroup 分组预热配置列表缓存。
+   */
+  private void warmConfigGroupCache() {
+    try {
+      List<ConfigVO> configs = configRepository.findEnabledConfigs();
+      if (configs.isEmpty()) {
+        return;
+      }
+      Cache configCache = cacheManager.getCache(SystemCacheConstants.SYSTEM_CONFIG_CACHE);
+      if (configCache == null) {
+        return;
+      }
+      // 按 configGroup 分组预热列表缓存
+      Map<String, List<ConfigVO>> groupedConfigs = configs.stream()
+          .filter(c -> c.getConfigGroup() != null)
+          .collect(Collectors.groupingBy(ConfigVO::getConfigGroup));
+      for (Map.Entry<String, List<ConfigVO>> entry : groupedConfigs.entrySet()) {
+        try {
+          List<String> values = entry.getValue().stream()
+              .map(ConfigVO::getConfigValue)
+              .collect(Collectors.toList());
+          String groupKey = cacheKeyBuilder.configGroup(entry.getKey());
+          configCache.put(groupKey, values);
+        } catch (Exception e) {
+          log.debug("[CacheWarmer] 预热配置分组失败: group={}", entry.getKey());
+        }
+      }
+      log.info("[CacheWarmer] 配置分组缓存预热完成，共 {} 个分组", groupedConfigs.size());
+    } catch (Exception e) {
+      log.warn("[CacheWarmer] 配置分组缓存预热失败: {}", e.getMessage(), e);
+    }
+  }
+
+  /**
    * 预热系统配置缓存。
    *
    * <p>加载全部启用配置，按 configKey 预热单条值缓存。
