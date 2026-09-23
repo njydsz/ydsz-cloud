@@ -82,6 +82,24 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
   }
 
   @Override
+  public Optional<RuleDefinitionDTO> findVersionDefinition(String ruleCode, int version) {
+    LambdaQueryWrapper<RuleVersionHistory> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(RuleVersionHistory::getRuleCode, ruleCode)
+           .eq(RuleVersionHistory::getVersion, version);
+    RuleVersionHistory entity = ruleVersionHistoryMapper.selectOne(wrapper);
+    if (entity == null || entity.getDefinitionJson() == null) {
+      return Optional.empty();
+    }
+    try {
+      return Optional.of(YdszJson.fromJson(entity.getDefinitionJson(), RuleDefinitionDTO.class));
+    } catch (Exception e) {
+      log.error("[LiteRule] findVersionDefinition 反序列化失败: ruleCode={}, version={}, error={}",
+          ruleCode, version, e.getMessage(), e);
+      return Optional.empty();
+    }
+  }
+
+  @Override
   public Optional<RuleDefinitionVO> rollback(String ruleCode, int version, String operator) {
     // 1. 查询目标版本
     LambdaQueryWrapper<RuleVersionHistory> versionWrapper = new LambdaQueryWrapper<>();

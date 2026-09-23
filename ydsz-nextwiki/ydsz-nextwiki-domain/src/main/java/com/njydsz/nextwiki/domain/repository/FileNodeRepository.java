@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
+import com.njydsz.nextwiki.domain.dto.FileNodeSortItemDTO;
 import com.njydsz.nextwiki.domain.query.FileNodeQuery;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.domain.vo.FileStatVO;
@@ -288,14 +289,21 @@ public interface FileNodeRepository {
   long countColdNodes(LocalDateTime threshold);
 
   /**
-   * 分页查询全部未删除节点（用于全量索引重建等批量场景）
-   *
-   * <p>相比已废弃的 {@code findAll()}，分页批次处理可避免一次性加载全部数据导致内存溢出。
+   * P0-4: 分页查询当前租户下全部未删除节点（修复多租户安全隔离缺陷）。
    *
    * @param offset 偏移量
    * @param limit 每页数量
+   * @param tenantId 租户 ID（必填）
    * @return 分页结果
    */
-  PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit);
+  PageResponse<List<FileNodeVO>> findAllWithPage(int offset, int limit, String tenantId);
+
+  /**
+   * P0-3: 批量更新节点排序值（单条 CASE WHEN SQL，替代循环单条 UPDATE）。
+   *
+   * @param items 排序条目列表
+   * @return 受影响行数
+   */
+  int batchUpdateSort(List<FileNodeSortItemDTO> items);
 
 }
