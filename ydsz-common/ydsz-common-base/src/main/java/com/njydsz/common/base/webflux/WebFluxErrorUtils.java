@@ -1,6 +1,8 @@
 package com.njydsz.common.base.webflux;
 
 import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.List;
 
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
@@ -101,7 +103,33 @@ public final class WebFluxErrorUtils {
       String message,
       String traceId,
       boolean preferProblemJson) {
-    return buildErrorResponseInternal(response, status, code, message, traceId, preferProblemJson);
+    return buildErrorResponseInternal(response, status, code, message, traceId, preferProblemJson, List.of());
+  }
+
+  /**
+   * 构建并写出统一错误响应（含建议操作列表）。
+   *
+   * <p>在完整参数基础上增加 {@code suggestions} 字段，将建议操作列表序列化到响应体的
+   * {@code suggestions} 字段中。调用方可据此向用户提供明确的后续操作步骤。
+   *
+   * @param response 服务器 HTTP 响应对象
+   * @param status HTTP 状态码
+   * @param code 业务错误码
+   * @param message 错误消息
+   * @param traceId 链路追踪 ID（可为 null）
+   * @param preferProblemJson 是否输出 RFC 7807 ProblemDetail 格式
+   * @param suggestions 建议操作列表（可为空，为 null 时按空列表处理）
+   * @return 写出完成信号 Mono
+   */
+  public static Mono<Void> buildErrorResponse(
+      ServerHttpResponse response,
+      int status,
+      String code,
+      String message,
+      String traceId,
+      boolean preferProblemJson,
+      List<String> suggestions) {
+    return buildErrorResponseInternal(response, status, code, message, traceId, preferProblemJson, suggestions);
   }
 
   /**
@@ -147,6 +175,7 @@ public final class WebFluxErrorUtils {
    * @param message 错误消息
    * @param traceId 链路追踪 ID（可为 null）
    * @param preferProblemJson 是否输出 ProblemDetail 格式
+   * @param suggestions 建议操作列表（非 null）
    * @return 写出完成信号 Mono
    */
   private static Mono<Void> buildErrorResponseInternal(
@@ -155,7 +184,8 @@ public final class WebFluxErrorUtils {
       String code,
       String message,
       String traceId,
-      boolean preferProblemJson) {
+      boolean preferProblemJson,
+      List<String> suggestions) {
     if (response.isCommitted()) {
       return response.setComplete();
     }
@@ -169,6 +199,11 @@ public final class WebFluxErrorUtils {
     body.putExtension("timestamp", OffsetDateTime.now().toString());
     String helpUrl = "https://docs.njydsz.com/errors/" + code;
     body.putExtension("type", helpUrl);
+
+    // P3-7: 将建议操作列表写入响应体（非空时才被序列化，避免污染无建议的错误码响应）
+    if (suggestions != null && !suggestions.isEmpty()) {
+      body.putExtension("suggestions", suggestions);
+    }
 
     if (preferProblemJson) {
       body.putExtension("title", httpStatus.getReasonPhrase());

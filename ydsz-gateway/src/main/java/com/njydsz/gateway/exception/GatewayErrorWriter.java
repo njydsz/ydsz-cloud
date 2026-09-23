@@ -1,5 +1,7 @@
 package com.njydsz.gateway.exception;
 
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -145,12 +147,16 @@ public final class GatewayErrorWriter {
       response.getHeaders().add(HttpHeaders.LINK, "<" + helpUrl + ">; rel=\"help\"");
     }
 
+    // P3-7: 将错误码对应的建议操作列表写入响应，帮助调用方了解后续可执行动作
+    List<String> suggestions = errorCode.getSuggestions();
+
     return WebFluxErrorUtils.buildErrorResponse(
         response,
         httpStatus.value(),
         String.valueOf(errorCode.getCode()),
         message,
         finalTraceId,
-        preferProblemJson);
+        preferProblemJson,
+        suggestions);
   }
 }

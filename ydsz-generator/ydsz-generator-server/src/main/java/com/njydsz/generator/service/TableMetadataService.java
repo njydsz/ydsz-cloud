@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.util.string.StringUtils;
+import com.njydsz.generator.engine.GeneratorTypeMapper;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;
@@ -43,6 +44,8 @@ public class TableMetadataService {
 
   private final GenTableMetaRepository tableMetaRepository;
   private final GenColumnMetaRepository columnMetaRepository;
+  /** 数据库类型到 Java 类型的映射器。 */
+  private final GeneratorTypeMapper typeMapper;
 
   /**
    * 查询数据源下全部已缓存表（按表名升序）。
@@ -210,9 +213,11 @@ public class TableMetadataService {
       try (ResultSet rs = metaData.getColumns(conn.getCatalog(), null, tableName, "%")) {
         while (rs.next()) {
           String colName = rs.getString("COLUMN_NAME");
+          String dataType = rs.getString("TYPE_NAME");
           GenColumnMeta col = GenColumnMeta.builder()
               .columnName(colName)
-              .dataType(rs.getString("TYPE_NAME"))
+              .dataType(dataType)
+              .javaType(typeMapper.resolveJavaType(dataType))
               .columnSize(rs.getInt("COLUMN_SIZE"))
               .isNullable(rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable)
               .isPk(pks.contains(colName))
