@@ -25,6 +25,7 @@ import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.constant.MessageConstants;
+import java.util.Objects;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
@@ -72,6 +73,8 @@ public class MessageConsumer implements RocketMQListener<String> {
   private final MessageMetrics messageMetrics;
   private final MessageProperties messageProperties;
   private final RedisHealthStatus redisHealthStatus;
+  /** P1-2: BloomFilter 前置过滤器（减少重复消息的 Redis 查询压力） */
+  private final BloomFilterDeduplicator bloomFilter;
 
   /** P1-10: 优雅停机标志 */
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
@@ -121,6 +124,11 @@ public class MessageConsumer implements RocketMQListener<String> {
       return;
     }
 
+    // P1-2: BloomFilter 前置过滤——快速判定重复消息，减少 Redis 查询
+    if (bloomFilterDedup(request)) {
+      return;
+    }
+
     // 构造幂等键
     String idempotentKey = buildIdempotentKey(request);
     String idempotentToken = null;
@@ -155,6 +163,8 @@ public class MessageConsumer implements RocketMQListener<String> {
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(request.getMessageId())) {
       inFlight.incrementAndGet();
       messageService.send(request);
+      // P1-2: 成功消费后记录 msgId 到 BloomFilter，后续重复消息直接跳过
+      bloomFilter.put(request.getMessageId());
       // P3-23: 记录消费延迟（从开始消费到消费完成的耗时）
       long consumeDuration = System.currentTimeMillis() - consumeStart;
       String channel = request.getChannel() != null ? request.getChannel() : "UNKNOWN";
@@ -177,6 +187,33 @@ public class MessageConsumer implements RocketMQListener<String> {
     } finally {
       inFlight.decrementAndGet();
     }
+  }
+
+  /**
+   * P1-2: BloomFilter 前置去重判定。
+   *
+   * <p>在 Redis 锁之前通过本地 BloomFilter 做快速判定（零网络开销）， 判定"可能存在"时直接视为重复消息跳过，
+   * 避免对绝大多数重复消息发起 Redis GET 请求。 判定"一定不存在"时仍需走后续 Redis 锁流程（防并发首次消息的竞态）。
+   *
+   * @param request 已反序列化的消息请求
+   * @return true 表示疑似重复消息（应跳过处理），false 表示新消息可继续处理
+   */
+  private boolean bloomFilterDedup(MessageRequest request) {
+    String msgId = request.getMessageId();
+    if (msgId == null || msgId.isBlank()) {
+      return false;
+    }
+    try {
+      boolean mightContain = bloomFilter.mightContain(msgId);
+      if (mightContain) {
+        log.info("[MessageConsumer] BloomFilter 疑似重复,跳过: messageId={}", msgId);
+        return true;
+      }
+    } catch (Exception e) {
+      // BloomFilter 异常时不能阻塞消息处理，降级放行
+      log.warn("[BloomFilter] 判定异常,降级放行: messageId={} err={}", msgId, e.getMessage());
+    }
+    return false;
   }
 
   /**

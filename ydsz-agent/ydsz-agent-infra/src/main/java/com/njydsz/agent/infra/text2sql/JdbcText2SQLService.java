@@ -1,6 +1,7 @@
 package com.njydsz.agent.infra.text2sql;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
@@ -122,8 +123,8 @@ public class JdbcText2SQLService implements Text2SQLService {
     String sql = generateSql(naturalLanguageQuery, tenantId);
     // 2. 安全校验
     validateSql(sql);
-    // 3. 执行
-    return executeSql(sql);
+    // 3. 执行（使用 PreparedStatement 参数化绑定租户 ID）
+    return executeSql(sql, tenantId);
   }
 
   /**
@@ -182,13 +183,12 @@ public class JdbcText2SQLService implements Text2SQLService {
    * @return 添加租户条件后的 SQL
    */
   private static String appendTenantCondition(String sql, String tenantId) {
+    validateTenantId(tenantId);
     String trimmed = sql.trim().toUpperCase();
     if (trimmed.contains("WHERE")) {
-      // 已有 WHERE 条件，追加 AND tenant_id = 'xxx'
-      return sql.replaceFirst("(?i)WHERE", "WHERE tenant_id = '" + tenantId + "' AND ");
+      return sql.replaceFirst("(?i)WHERE", "WHERE tenant_id = ? AND ");
     } else {
-      // 无 WHERE 条件，添加 WHERE tenant_id = 'xxx'
-      return sql + " WHERE tenant_id = '" + tenantId + "'";
+      return sql + " WHERE tenant_id = ?";
     }
   }
 
@@ -275,14 +275,14 @@ public class JdbcText2SQLService implements Text2SQLService {
    * @return 查询结果
    * @throws Text2SQLException 执行失败
    */
-  private Text2SQLResult executeSql(String sql) throws Text2SQLException {
+  private Text2SQLResult executeSql(String sql, String tenantId) throws Text2SQLException {
     long start = System.currentTimeMillis();
-    // 使用 Statement 执行 LLM 生成的 SQL（无法参数化，依赖前置安全校验）
     try (Connection conn = dataSource.getConnection();
-        Statement stmt = conn.createStatement()) {
-      stmt.setQueryTimeout(EXEC_TIMEOUT_SECONDS);
-      stmt.setMaxRows(MAX_RESULT_ROWS);
-      try (ResultSet rs = stmt.executeQuery(sql)) {
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setQueryTimeout(EXEC_TIMEOUT_SECONDS);
+      ps.setMaxRows(MAX_RESULT_ROWS);
+      ps.setString(1, tenantId);
+      try (ResultSet rs = ps.executeQuery()) {
         ResultSetMetaData meta = rs.getMetaData();
         int colCount = meta.getColumnCount();
         List<String> columns = new ArrayList<>(colCount);
