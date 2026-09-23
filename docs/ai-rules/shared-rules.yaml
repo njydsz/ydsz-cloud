@@ -521,23 +521,30 @@ rules:
     title: "禁止业务代码自建线程池"
     description: |
       所有异步任务必须通过 ydsz-common-thread 模块统一管理，禁止业务代码直接 new ThreadPoolExecutor 或 ThreadPoolTaskExecutor。
+      2026-09-23 扩展：Executors.newFixedThreadPool / newSingleThreadScheduledExecutor 等快捷工厂方法
+      本质等价于直接实例化线程池，一并禁止（ArchUnit 已覆盖 java.util.concurrent.Executors 依赖检测）。
       ArchUnit 测试规则：业务模块（ydsz-*/src/main/java 下，ydsz-common-thread 自身豁免）禁止出现
       `new ThreadPoolExecutor(` 或 `new ScheduledThreadPoolExecutor(` 直接实例化，
-      必须通过 ThreadPoolExecutorFactory.getBean(name) 获取命名线程池。
-    pattern: "new ThreadPoolExecutor 或 new ThreadPoolTaskExecutor（非 common-thread 模块）"
+      禁止依赖 java.util.concurrent.Executors 工厂类，
+      必须通过 ThreadPoolExecutorFactory.getBean(name) 或 ExecutorUtils 获取命名线程池。
+    pattern: "new ThreadPoolExecutor、new ThreadPoolTaskExecutor 或 Executors.new*（非 common-thread 模块）"
     fix: |
       通过 ydsz-common-thread 声明式获取线程池：
       `ThreadPoolExecutor executor = ThreadPoolExecutorFactory.getBean("poolName");`
+      或工具式创建：`ExecutorUtils.newDaemonFixedThreadPool(n, "prefix-")` / `ExecutorUtils.newScheduledThreadPool(n, "prefix-")`，
       或配置 `ydsz.thread.pools.<name>` 属性。
     example_bad: |
       // ydsz-agent/SubAgentExecutorPool.java
-      // 违规：直接 new ThreadPoolExecutor
+      // 违规：直接 new ThreadPoolExecutor 或 Executors 快捷工厂
       private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
           2, 8, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000));
+      private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     example_good: |
       // 通过 ydsz-common-thread 工厂获取
       private final ThreadPoolExecutor executor =
           ThreadPoolExecutorFactory.getBean("subAgentExecutor");
+      private final ScheduledExecutorService scheduler =
+          ExecutorUtils.newScheduledThreadPool(1, "sse-heartbeat-");
     source: "编码规范 16.4 节"
 
   - id: "YDIZ-CONC-002"

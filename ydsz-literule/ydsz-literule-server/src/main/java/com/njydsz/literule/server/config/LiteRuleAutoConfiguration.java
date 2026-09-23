@@ -90,6 +90,7 @@ import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.RuleActionHandler;
 import com.njydsz.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
+import com.njydsz.literule.server.version.RuleVersionDiffService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RulePackProvider;
 import com.njydsz.literule.server.spi.RuleSourceManager;
@@ -666,6 +667,7 @@ public class LiteRuleAutoConfiguration {
    * @param evaluator 表达式求值器
    * @param configProvider 规则配置提供者
    * @param eventPublisher 事件发布器
+   * @param ruleVersionDiffService 规则版本 Diff 服务（P0-X3，RuleAdminService 构造依赖）
    * @return RuleAdminService 实例
    */
   @Bean
@@ -675,6 +677,7 @@ public class LiteRuleAutoConfiguration {
       RuleEngine ruleEngine,
       ExpressionEngine evaluator,
       RuleConfigProvider configProvider,
+      RuleVersionDiffService ruleVersionDiffService,
       ObjectProvider<RuleVersionRepository> versionRepoProvider,
       ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
       ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider,
@@ -689,7 +692,8 @@ public class LiteRuleAutoConfiguration {
             configProvider,
             versionRepoProvider.getIfAvailable(),
             eventPublisher,
-            ruleDefinitionRepository);
+            ruleDefinitionRepository,
+            ruleVersionDiffService);
     service.setDryRunEnabled(properties.isDryRunEnabled());
     RuleConfigBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
     if (broadcaster != null) {

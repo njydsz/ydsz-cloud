@@ -17,7 +17,8 @@ import static com.njydsz.common.base.architecture.ArchitecturePredicates.inBusin
  *
  * <p>验证 YDIZ-CONC-001 规范：业务模块禁止直接依赖 {@link java.util.concurrent.ThreadPoolExecutor}
  * 或 {@link java.util.concurrent.ScheduledThreadPoolExecutor}（包括 new 构造、类型引用、方法返回值），
- * 必须通过 ydsz-common-thread 模块统一管理。
+ * 同时禁止依赖 {@link java.util.concurrent.Executors} 工厂类（newFixedThreadPool/newSingleThreadScheduledExecutor
+ * 等快捷方法本质等价于直接实例化），必须通过 ydsz-common-thread 模块统一管理。
  *
  * <p>豁免范围：ydsz-common-thread 模块（线程池工厂本身）、ydsz-common-cache（缓存调度）、
  * ydsz-common-socket（WebSocket 内部推送调度）、ydsz-common-util（TempFileManager 异步任务）、
@@ -71,6 +72,29 @@ class ThreadPoolArchitectureTest {
 
     rule.check(importedClasses);
     taskExecutorRule.check(importedClasses);
+  }
+
+  @Test
+  @DisplayName("YDIZ-CONC-001: 业务模块禁止依赖 Executors 工厂类")
+  void businessModulesMustNotDependOnExecutors() {
+    JavaClass executors = importClass(java.util.concurrent.Executors.class);
+
+    ArchRule rule =
+        noClasses()
+            .that(inBusinessModules())
+            .should()
+            .dependOnClassesThat(HasName.Predicates.name(executors.getName()))
+            .as(
+                "业务模块禁止使用 Executors.newFixedThreadPool / newSingleThreadScheduledExecutor 等"
+                    + "快捷工厂方法（等价于直接实例化线程池），"
+                    + "必须通过 ydsz-common-thread 的 ExecutorUtils / ThreadPoolExecutorFactory 获取线程池");
+
+    var importedClasses =
+        new ClassFileImporter()
+            .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+            .importPackages(ROOT_PACKAGE);
+
+    rule.check(importedClasses);
   }
 
   private JavaClass importClass(Class<?> clazz) {
