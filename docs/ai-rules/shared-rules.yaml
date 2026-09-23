@@ -16,8 +16,8 @@ meta:
   version: "26.09.19"
   source: "docs/云顶编码规范.md v1.0.10"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-19（ydsz-common-exception 全面优化 13 项落地；新增 §32 错误码静态门面引用；新增 YDIZ-ERRCODE-001/002；total_rules 66 → 68）"
-  total_rules: 68
+  last_updated: "2026-09-23（全局引用分析优化：YDIZ-CONC-001 增强 ArchUnit 约束；新增 YDIZ-EXCEPTION-001 全局异常处理器继承规范；新增 YDIZ-AUDIT-001 审计日志统一写入规范；total_rules 68 → 70）"
+  total_rules: 70
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -519,9 +519,25 @@ rules:
     category: "concurrency"
     severity: "P0"
     title: "禁止业务代码自建线程池"
-    description: "所有异步任务必须通过 ydsz-common-thread 模块统一管理，禁止业务代码直接 new ThreadPoolExecutor 或 ThreadPoolTaskExecutor。"
+    description: |
+      所有异步任务必须通过 ydsz-common-thread 模块统一管理，禁止业务代码直接 new ThreadPoolExecutor 或 ThreadPoolTaskExecutor。
+      ArchUnit 测试规则：业务模块（ydsz-*/src/main/java 下，ydsz-common-thread 自身豁免）禁止出现
+      `new ThreadPoolExecutor(` 或 `new ScheduledThreadPoolExecutor(` 直接实例化，
+      必须通过 ThreadPoolExecutorFactory.getBean(name) 获取命名线程池。
     pattern: "new ThreadPoolExecutor 或 new ThreadPoolTaskExecutor（非 common-thread 模块）"
-    fix: "配置 ydsz.thread.pools.<name> 声明式创建"
+    fix: |
+      通过 ydsz-common-thread 声明式获取线程池：
+      `ThreadPoolExecutor executor = ThreadPoolExecutorFactory.getBean("poolName");`
+      或配置 `ydsz.thread.pools.<name>` 属性。
+    example_bad: |
+      // ydsz-agent/SubAgentExecutorPool.java
+      // 违规：直接 new ThreadPoolExecutor
+      private final ThreadPoolExecutor executor = new ThreadPoolExecutor(
+          2, 8, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000));
+    example_good: |
+      // 通过 ydsz-common-thread 工厂获取
+      private final ThreadPoolExecutor executor =
+          ThreadPoolExecutorFactory.getBean("subAgentExecutor");
     source: "编码规范 16.4 节"
 
   - id: "YDIZ-CONC-002"
@@ -1077,6 +1093,93 @@ rules:
       将 @ApiVersion 注解从 @RequestMapping 下方移动到上方，
       置于 Javadoc 之后、@Tag 等其他注解之前。
     source: "编码规范 §26.3（API 版本控制策略）"
+
+  - id: "YDIZ-EXCEPTION-001"
+    category: "exception"
+    severity: "P1"
+    title: "全局异常处理器必须继承 BaseExceptionHandler"
+    description: |
+      业务模块的全局异常处理器（@RestControllerAdvice / @ControllerAdvice）必须继承
+      ydsz-common-exception 提供的基类，禁止自建异常处理器而不继承基类。
+
+      **MVC 项目**：继承 `com.njydsz.common.exception.handler.MvcExceptionHandler`
+      **WebFlux 项目**（如 gateway）：继承 `com.njydsz.common.exception.handler.WebFluxExceptionHandler`
+
+      继承后自动获得：统一错误响应格式（YdszResponse）、国际化错误消息解析、
+      多环境适配（MVC/WebFlux/JDBC/Validation）、全局异常日志记录。
+
+      **豁免情形**：仅当基类确实不满足特殊需求时，可组合使用基类 protected 方法，
+      但仍须继承而非从零自建。
+    pattern: |
+      以下情形构成违规：
+      1. 业务模块 @RestControllerAdvice 类未继承 MvcExceptionHandler 也未继承 WebFluxExceptionHandler
+      2. 业务模块自建异常处理器但有多个方法完全重写基类逻辑
+    fix: |
+      1. 将自建异常处理器类改为 extends MvcExceptionHandler（或 WebFluxExceptionHandler）
+      2. 利用基类提供的 handleBusinessException / handleSysException 等 protected 方法
+      3. 删除重复的错误响应构造逻辑
+    example_bad: |
+      // ❌ 自建异常处理器不继承基类
+      @RestControllerAdvice
+      public class SystemExceptionHandler {
+          @ExceptionHandler(Exception.class)
+          public ResponseEntity<Map<String, Object>> handle(Exception e) {
+              Map<String, Object> body = new HashMap<>();
+              body.put("code", 500);
+              body.put("message", e.getMessage());
+              return ResponseEntity.status(500).body(body);
+          }
+      }
+    example_good: |
+      // ✅ 继承 MvcExceptionHandler 基类
+      @RestControllerAdvice
+      @Slf4j
+      public class SystemExceptionHandler extends MvcExceptionHandler {
+          // 仅需处理模块特有异常，通用逻辑由基类处理
+          @ExceptionHandler(ConfigNotFoundException.class)
+          public YdszResponse<Void> handleConfigNotFound(ConfigNotFoundException e) {
+              return YdszResponse.error(e.getCode(), e.getMessage());
+          }
+      }
+    source: "编码规范 §30（统一异常处理）"
+
+  - id: "YDIZ-AUDIT-001"
+    category: "audit"
+    severity: "P1"
+    title: "业务操作审计必须通过 ydsz-common-audit 写入"
+    description: |
+      禁止业务模块自建审计表和审计写入逻辑。所有业务操作审计数据必须通过
+      `ydsz-common-audit` 提供的 `AuditContext` + `AuditQueryService` 将审计记录写入
+      平台统一审计表（ydsz_audit_log），保证全平台审计数据可联查。
+
+      **为什么统一审计**：
+      - 全平台审计数据集中存储，避免跨模块联查时数据碎片化
+      - 统一的审计搜索接口（AuditSearchQuery），支持按时间/操作人/模块/类型检索
+      - 审计报告生成无需多数据源聚合
+
+      **接入方式**：
+      1. 引入 `ydsz-common-audit` 依赖（scope: compile）
+      2. 在业务操作方法中通过 `AuditContext.record(module, action, target)` 写入审计
+      3. 查询时使用 `AuditSearchQuery` 构建检索条件
+
+      **豁免情形**：审计数据的"前置采集"允许模块内临时缓存，但最终落库必须经过统一审计通道。
+    pattern: |
+      以下情形构成违规：
+      1. 业务模块自建审计表（如 ydsz_xxx_audit_log）
+      2. 业务模块自建 Repository/Mapper 直接写入审计数据
+      3. 审计数据落库未通过 AuditContext/AuditQueryService 通道
+    fix: |
+      1. 引入 ydsz-common-audit 依赖
+      2. 将自建的审计写入改为 AuditContext.record(...)
+      3. 将自建的审计查询改为 AuditSearchQuery 检索
+      4. 自建审计表数据迁移至 ydsz_audit_log 统一表
+    example_bad: |
+      // ❌ 自建审计表和写入逻辑
+      auditLogMapper.insert(new FlowAuditLog(userId, "CREATE_FLOW", flowId));
+    example_good: |
+      // ✅ 通过统一审计通道写入
+      AuditContext.record("workflow", "create_flow", flowId);
+    source: "编码规范 §29（审计日志规范）"
 
 # ============================================
 # 十八、分布式事务规范（4 条）
