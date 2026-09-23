@@ -1,35 +1,35 @@
-package com.njydsz.agent.domain.insight;
+package com.njydsz.agent.infra.entity;
 
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.agent.entity.base.DomainAuditBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 
 /**
- * 洞察报告领域实体（domain 纯净 POJO，无 MP 注解）。
- *
- * <p>记录 BI 洞察报告从创建到导出的完整生命周期，包含原始数据分析结果 JSON（dataJson）、
- * 报告内容 JSON（含 sections）、状态、格式和错误信息。
- *
- * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
- * 持久化映射由 {@code infra.entity.InsightReportPO} 承担。
- *
- * <p><b>线程安全</b>：持久化实体，可变；仅在单请求/单事务内使用，勿跨线程共享。
+ * 洞察报告持久化对象（映射 ydsz_agt_insight_report 表）。
  *
  * @author ydsz-team
- * @since 26.09.07
+ * @since 26.09.23
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class InsightReport extends DomainAuditBaseEntity<Long> {
+@TableName("ydsz_agt_insight_report")
+public class InsightReportPO extends MpBaseAuditEntity<Long> {
 
   private static final long serialVersionUID = 1L;
+
+  /** 自增主键（与数据库 SERIAL/BIGSERIAL 自增列对齐）。 */
+  @TableId(type = IdType.AUTO)
+  private Long id;
 
   /** 唯一业务 ID */
   private String reportId;
@@ -69,4 +69,10 @@ public class InsightReport extends DomainAuditBaseEntity<Long> {
 
   /** 生成耗时（毫秒） */
   private Integer durationMs;
+
+  /** 创建时间 */
+  private LocalDateTime createdAt;
+
+  /** 更新时间 */
+  private LocalDateTime updatedAt;
 }

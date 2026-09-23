@@ -216,7 +216,7 @@ public class FileBatchController {
   @GetMapping("/{nodeId}/versions/diff")
   @Operation(summary = "对比版本差异")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
-  public YdszResponse<com.njyzsz.nextwiki.domain.vo.DiffResultVO> diffVersions(
+  public YdszResponse<DiffResultVO> diffVersions(
       @PathVariable String nodeId,
       @RequestParam int oldVersion,
       @RequestParam int newVersion) {
