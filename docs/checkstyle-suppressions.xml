@@ -6,8 +6,8 @@
     云顶编码规范 - Checkstyle 豁免清单
     Ydsz Cloud Coding Standards - Checkstyle Suppressions
 
-    说明：能力提供者模块（common-excel / common-docs / common-file / common-netty / common-seata）
-    本身负责封装第三方 SDK（POI / Tika / PDFBox / Minio / OSS / Netty / Seata），
+    说明：能力提供者模块（common-excel / common-docs / common-file / common-netty）
+    本身负责封装第三方 SDK（POI / Tika / PDFBox / Minio / OSS / Netty），
     允许直接 import 对应 SDK；业务模块必须通过它们的能力抽象使用，禁止直接 import。
     本清单与 pom.xml Enforcer bannedImports 的 excludeModules 语义保持一致。
 -->
@@ -23,9 +23,6 @@
 
     <!-- 网络通信能力提供者：Netty -->
     <suppress files=".*[\\/]ydsz-common-netty[\\/].*" checks="IllegalImport"/>
-
-    <!-- 分布式事务能力提供者：Seata -->
-    <suppress files=".*[\\/]ydsz-common-seata[\\/].*" checks="IllegalImport"/>
 
     <!-- Spring Boot 启动类与 CLI 工具：含 main 入口，非纯工具类，HideUtilityClassConstructor 误报 -->
     <suppress files=".*[\\/][A-Za-z]+Application\.java" checks="HideUtilityClassConstructor"/>

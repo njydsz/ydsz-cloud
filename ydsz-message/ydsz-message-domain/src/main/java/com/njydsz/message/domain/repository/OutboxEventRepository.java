@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.message.domain.event.OutboxEvent;
+import com.njydsz.message.domain.event.OutboxEntry;
 
 /**
  * Outbox 事件仓储接口（domain 层契约）。
@@ -30,7 +30,7 @@ public interface OutboxEventRepository {
    * @param event Outbox 事件
    * @return 保存成功返回 true
    */
-  boolean save(OutboxEvent event);
+  boolean save(OutboxEntry entry);
 
   /**
    * 根据 ID 查询 Outbox 事件。
@@ -38,7 +38,7 @@ public interface OutboxEventRepository {
    * @param id 事件 ID
    * @return Outbox 事件，不存在返回 Optional.empty()
    */
-  Optional<OutboxEvent> findById(String id);
+  Optional<OutboxEntry> findById(String id);
 
   /**
    * 扫描待发布的事件（按创建时间升序，分页）。
@@ -47,7 +47,7 @@ public interface OutboxEventRepository {
    * @param beforeTime 扫描此时间之前创建的 PENDING 事件
    * @return 待发布事件列表
    */
-  List<OutboxEvent> findPending(int limit, LocalDateTime beforeTime);
+  List<OutboxEntry> findPending(int limit, LocalDateTime beforeTime);
 
   /**
    * 标记事件为发布中。
@@ -89,5 +89,5 @@ public interface OutboxEventRepository {
    * @param pageSize 每页大小
    * @return 分页结果
    */
-  PageResponse<List<OutboxEvent>> findPage(String status, int pageNum, int pageSize);
+  PageResponse<List<OutboxEntry>> findPage(String status, int pageNum, int pageSize);
 }

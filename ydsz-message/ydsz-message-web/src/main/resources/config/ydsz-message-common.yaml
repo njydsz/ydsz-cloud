@@ -62,6 +62,44 @@ ydsz:
     message-ttl-seconds: 3600
     # P2-6: 全部已读分批大小，避免长事务；0 表示不分批
     mark-all-read-batch-size: 500
+    # P1-2: 消费者 BloomFilter 去重前置过滤器配置
+    consumer:
+      bloom-filter-enabled: true
+      bloom-filter-capacity: 1000000
+      bloom-filter-fpp: 0.001
+      bloom-filter-rotate-seconds: 60
+    # P3: 模板 AST 缓存最大容量
+    template:
+      cache-max-size: 1000
+    # F3: 消息撤回时间窗口（分钟），超时不允许撤回
+    recall-window-minutes: 30
+    # P4: SSE 批次进度推送配置
+    sse:
+      max-connections-per-batch: 50
+      heartbeat-interval-seconds: 30
+      max-total-connections: 500
+    # Outbox 事件发布开关
+    outbox:
+      enabled: true
+    # 消息守卫幂等 TTL（秒）
+    guard:
+      default-ttl-seconds: 60
+      lock-extend-minutes: 5
+    # 限流失败策略：true=fail-open / false=fail-fast
+    rate-limit:
+      fail-open: true
+    # 发送配额缓存 TTL
+    quota:
+      daily-ttl-days: 2
+      hourly-ttl-hours: 2
+    # 路由规则缓存 TTL
+    route-rule:
+      cache-ttl-minutes: 5
+      local-cache-ttl-seconds: 30
+    # 发送管线配置
+    pipeline:
+      template:
+        enabled: true
     sms:
       provider: ${YDSZ_SMS_PROVIDER:mock}
     push:

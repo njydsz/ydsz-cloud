@@ -58,4 +58,20 @@ public class ScannerConfig {
    * <p>控制单次扫描中并行派发的并发度。过大可能压垮 DB 连接池（CAS 操作）， 过小则并行效果不明显。
    */
   private int parallelDispatchPoolSize = DEFAULT_PARALLEL_DISPATCH_POOL_SIZE;
+
+  /**
+   * P1-4: 自适应扫描间隔的最小值（毫秒，默认 500ms）。
+   *
+   * <p>控制高负载时扫描频率上限（不低于此值），避免过度消耗 CPU/DB。 仅当 {@code adaptiveEnabled=true} 时生效。
+   */
+  private long minIntervalMs = 500L;
+
+  /**
+   * P1-4: 是否启用自适应扫描频率（默认 true）。
+   *
+   * <p>启用后，JobScanner 在一次扫描发现 batch 满载（暗示仍有大量到期任务）时，
+   * 下次扫描间隔自动缩短到 {@code minIntervalMs}；空闲时（扫描无到期任务）间隔渐变回 {@code intervalMs}。
+   * 关闭时固定使用 {@code intervalMs}。
+   */
+  private boolean adaptiveEnabled = true;
 }

@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,6 +29,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.ScannerConfig;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.core.leader.PartitionLeaderManager;
 import com.njydsz.cronjob.server.core.scheduler.CalendarScheduleFilter;
@@ -94,6 +98,16 @@ public class JobScanner {
   /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
   private final AtomicBoolean scanning = new AtomicBoolean(false);
 
+  /**
+   * P1-4: 自适应扫描调度器（单线程 daemon）。
+   *
+   * <p>替代 Spring {@code @Scheduled}，支持运行时动态调整下次扫描间隔。
+   */
+  private ScheduledExecutorService scanScheduler;
+
+  /** P1-4: 当前扫描任务句柄（用于 shutdown 时取消） */
+  private ScheduledFuture<?> currentScanFuture;
+
   /** Leader 角色（从配置读取，便于多套调度集群隔离） */
   private String leaderRole;
 
@@ -121,6 +135,9 @@ public class JobScanner {
   @PostConstruct
   public void init() {
     this.leaderRole = cronjobProperties.getLeader().getRole();
+    // P1-4: 初始化自适应扫描调度器（daemon 线程；核心线程数 1，允许空闲回收）
+    this.scanScheduler =
+        ExecutorUtils.newScheduledThreadPool(1, "job-scanner-adaptive-");
     if (cronjobProperties.getLeader().isEnabled()) {
       // P1-8: 优先使用 common-thread 统一管理的 cronjobDispatchExecutor 线程池
       if (cronjobProperties.getScanner().isParallelDispatchEnabled()) {
@@ -160,9 +177,46 @@ public class JobScanner {
             cronjobProperties.getScanner().getIntervalMs(),
             cronjobProperties.getScanner().getBatchSize());
       }
+      // P1-4: 注册首次自适应扫描（使用配置的基础间隔）
+      scheduleNextScan(cronjobProperties.getScanner().getIntervalMs(), false);
     } else {
       log.info("[JobScanner] leader.enabled=false, 扫描器不启用（Leaderless 模式）");
     }
+  }
+
+  /**
+   * P1-4: 调度下次扫描（自适应间隔）。
+   *
+   * <p>当 {@code adaptiveEnabled=true} 且上次扫描 batch 满载（暗示仍有大量到期任务等待处理）时，
+   * 下次间隔缩短为 {@code minIntervalMs}（默认 500ms，高频处理积压）；
+   * 空闲时（上次扫描无到期任务）间隔渐变回 {@code intervalMs}。
+   * 关闭自适应时始终使用 {@code intervalMs}。
+   *
+   * @param delayMs 本次指定的扫描间隔；首次启动使用配置的 intervalMs
+   * @param batchFull 上次扫描的 batch 是否满载
+   */
+  private void scheduleNextScan(long delayMs, boolean batchFull) {
+    if (scanScheduler == null || scanScheduler.isShutdown()) {
+      return;
+    }
+    ScannerConfig cfg = cronjobProperties.getScanner();
+    long nextDelay = delayMs;
+    if (cfg.isAdaptiveEnabled() && batchFull) {
+      nextDelay = Math.max(cfg.getMinIntervalMs(), delayMs / 2);
+      nextDelay = Math.max(nextDelay, cfg.getMinIntervalMs());
+      if (nextDelay < delayMs) {
+        log.debug(
+            "[JobScanner] 自适应加速: 上次 batch 满载, 间隔 {}ms → {}ms", delayMs, nextDelay);
+      }
+    }
+    // 保证不低于 minIntervalMs
+    nextDelay = Math.max(nextDelay, cfg.getMinIntervalMs());
+    // 不超过 intervalMs（避免空闲时比固定模式还慢）
+    nextDelay = Math.min(nextDelay, cfg.getIntervalMs());
+    if (currentScanFuture != null) {
+      currentScanFuture.cancel(false);
+    }
+    currentScanFuture = scanScheduler.schedule(this::scan, nextDelay, TimeUnit.MILLISECONDS);
   }
 
   /**
@@ -178,20 +232,24 @@ public class JobScanner {
   }
 
   /**
-   * 定时扫描待触发任务。
+   * 扫描待触发任务（P1-4: 由自适应调度器调用，替代原 {@code @Scheduled} 固定间隔）。
    *
-   * <p>使用 {@code fixedDelayString} 而非 {@code fixedRateString}， 避免上次扫描耗时较长时任务堆积。
+   * <p>扫描结束后根据 batch 满载情况动态调整下次间隔：满载时加速到 {@code minIntervalMs}，
+   * 空闲时回到 {@code intervalMs}。
    */
-  @Scheduled(fixedDelayString = "${ydsz.cronjob.scanner.interval-ms:5000}")
   public void scan() {
     if (!cronjobProperties.getLeader().isEnabled()) {
+      // P1-4: 非启用状态下仍使用基础间隔轮询（Leaderless 模式下等待 Leader 切换回来）
+      scheduleNextScan(cronjobProperties.getScanner().getIntervalMs(), false);
       return;
     }
     if (!leaderElector.isLeader(leaderRole)) {
+      scheduleNextScan(cronjobProperties.getScanner().getIntervalMs(), false);
       return;
     }
     if (!scanning.compareAndSet(false, true)) {
       log.debug("[JobScanner] 上次扫描尚未完成, 跳过本次执行");
+      scheduleNextScan(cronjobProperties.getScanner().getIntervalMs(), false);
       return;
     }
     // P6-2: 更新扫描中状态指标
@@ -199,11 +257,11 @@ public class JobScanner {
     if (metrics != null) {
       metrics.setScanning(true);
     }
+    boolean batchFull = false;
     try {
-      // P1-F4: 捕获 Leader 任期号（epoch/fencing token），doScan 派发前逐任务比对，
-      // 若任期号已变化说明 Leader 已被其他节点接管（Redis 主从切换窗口），立即中止本轮派发
+      // P1-F4: 捕获 Leader 任期号（epoch/fencing token），doScan 派发前逐任务比对
       long scanEpoch = leaderElector.getEpoch(leaderRole);
-      doScan(scanEpoch);
+      batchFull = doScan(scanEpoch);
     } catch (Exception e) {
       log.error("[JobScanner] 扫描异常: role={} reason={}", leaderRole, e.getMessage(), e);
     } finally {
@@ -212,6 +270,8 @@ public class JobScanner {
       if (metrics != null) {
         metrics.setScanning(false);
       }
+      // P1-4: 调度下次执行（自适应间隔）
+      scheduleNextScan(cronjobProperties.getScanner().getIntervalMs(), batchFull);
     }
   }
 
@@ -229,8 +289,10 @@ public class JobScanner {
    * <p>P6-1: 在派发前通过 {@link TracerUtils#getOrCreate()} 初始化 traceId 到 MDC， 使 DefaultTaskDispatcher 写入
    * job_log.trace_id 时能取到非空值， 实现"扫描 → 派发 → 执行 → 日志"全链路 traceId 串联。 单个任务派发完成后立即清理 MDC，避免 traceId
    * 串任务。
+   *
+   * @return true 表示 batch 满载（暗示仍有大量到期任务等待处理，下次应加速扫描）
    */
-  private void doScan(long scanEpoch) {
+  private boolean doScan(long scanEpoch) {
     LocalDateTime now = LocalDateTime.now();
     int batchSize = cronjobProperties.getScanner().getBatchSize();
     List<JobVO> dueJobs = jobTransactionService.acquireDueJobs(now, batchSize);
@@ -240,7 +302,7 @@ public class JobScanner {
       metrics.setLastScanDueJobs(dueJobs.size());
     }
     if (dueJobs.isEmpty()) {
-      return;
+      return false;
     }
     log.info("[JobScanner] 扫描到 {} 个待触发任务: role={}", dueJobs.size(), leaderRole);
 
@@ -250,6 +312,8 @@ public class JobScanner {
     } else {
       doSequentialDispatch(dueJobs, now, metrics, scanEpoch);
     }
+    // P1-4: batch 满载表示有积压，应加速下次扫描
+    return dueJobs.size() >= batchSize;
   }
 
   /**
@@ -463,10 +527,18 @@ public class JobScanner {
     nextFireTimeCalculator.cleanup();
   }
 
-  /** 优雅下线：无需特殊处理，{@link LeaderElector#release(String)} 会释放 Leader 锁。 */
+  /** 优雅下线：关闭并行派发池与自适应扫描调度器。 */
   @PreDestroy
   public void shutdown() {
     log.info("[JobScanner] 关闭: role={}", leaderRole);
+    // P1-4: 关闭自适应扫描调度器
+    if (currentScanFuture != null) {
+      currentScanFuture.cancel(false);
+    }
+    if (scanScheduler != null && !scanScheduler.isShutdown()) {
+      scanScheduler.shutdownNow();
+      log.info("[JobScanner] 自适应扫描调度器已关闭");
+    }
     // P0-2: 关闭并行派发线程池
     if (dispatchPool != null && !dispatchPool.isShutdown()) {
       dispatchPool.shutdown();

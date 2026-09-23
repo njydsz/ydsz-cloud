@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,6 +24,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -76,9 +76,8 @@ public class TeamRunController {
   @RateLimit(resource = "agent.teamrun.create", threshold = 10)
   @PostMapping
   @Operation(summary = "创建 Team Run", description = "创建多 Agent 协作任务")
-  public YdszResponse<TeamRun> createTeamRun(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
-      @Valid @RequestBody CreateTeamRunRequest request) {
+  public YdszResponse<TeamRun> createTeamRun(@Valid @RequestBody CreateTeamRunRequest request) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[TeamRun-API] 创建 Team Run: tenantId={}, title={}, pattern={}",
         tenantId, request.title(), request.pattern());
     TeamRun teamRun = orchestrationService.createTeamRun(
@@ -108,9 +107,9 @@ public class TeamRunController {
   @PostMapping("/{teamRunId}/members")
   @Operation(summary = "添加成员", description = "向 Team Run 添加 Agent 成员")
   public YdszResponse<TeamRun> addMember(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
       @PathVariable @NotBlank String teamRunId,
       @Valid @RequestBody AddMemberRequest request) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[TeamRun-API] 添加成员: tenantId={}, teamRunId={}, agentCode={}",
         tenantId, teamRunId, request.agentCode());
     TeamRun teamRun = orchestrationService.addMember(
@@ -139,9 +138,8 @@ public class TeamRunController {
       content = "'startTeamRun: ' + #teamRunId")
   @PostMapping("/{teamRunId}/start")
   @Operation(summary = "启动 Team Run", description = "启动多 Agent 协作执行")
-  public YdszResponse<TeamRun> startTeamRun(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
-      @PathVariable @NotBlank String teamRunId) {
+  public YdszResponse<TeamRun> startTeamRun(@PathVariable @NotBlank String teamRunId) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[TeamRun-API] 启动 Team Run: tenantId={}, teamRunId={}", tenantId, teamRunId);
     TeamRun teamRun = orchestrationService.startTeamRun(teamRunId, tenantId);
     return YdszResponse.success(teamRun);
@@ -162,9 +160,8 @@ public class TeamRunController {
       content = "'cancelTeamRun: ' + #teamRunId")
   @PostMapping("/{teamRunId}/cancel")
   @Operation(summary = "取消 Team Run", description = "取消正在执行的多 Agent 协作")
-  public YdszResponse<TeamRun> cancelTeamRun(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
-      @PathVariable @NotBlank String teamRunId) {
+  public YdszResponse<TeamRun> cancelTeamRun(@PathVariable @NotBlank String teamRunId) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     log.info("[TeamRun-API] 取消 Team Run: tenantId={}, teamRunId={}", tenantId, teamRunId);
     TeamRun teamRun = orchestrationService.cancelTeamRun(teamRunId, tenantId);
     return YdszResponse.success(teamRun);
@@ -185,9 +182,8 @@ public class TeamRunController {
       content = "'getTeamRun: ' + #teamRunId")
   @GetMapping("/{teamRunId}")
   @Operation(summary = "获取 Team Run 详情")
-  public YdszResponse<TeamRun> getTeamRun(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId,
-      @PathVariable @NotBlank String teamRunId) {
+  public YdszResponse<TeamRun> getTeamRun(@PathVariable @NotBlank String teamRunId) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     TeamRun teamRun = orchestrationService.getTeamRun(teamRunId, tenantId);
     return YdszResponse.success(teamRun);
   }
@@ -206,8 +202,8 @@ public class TeamRunController {
       content = "'listActiveTeamRuns'")
   @GetMapping
   @Operation(summary = "列出租户下活跃的 Team Run")
-  public YdszResponse<List<TeamRun>> listActiveTeamRuns(
-      @RequestHeader("X-Tenant-Id") @NotBlank String tenantId) {
+  public YdszResponse<List<TeamRun>> listActiveTeamRuns() {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<TeamRun> teamRuns = orchestrationService.listActiveTeamRuns(tenantId);
     return YdszResponse.success(teamRuns);
   }
