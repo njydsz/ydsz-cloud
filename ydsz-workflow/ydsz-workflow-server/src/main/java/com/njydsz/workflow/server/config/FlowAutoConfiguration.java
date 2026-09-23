@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.feign.assembler.NameAssembler;
@@ -46,6 +47,7 @@ import com.njydsz.workflow.server.service.impl.integration.NameServiceClientAdap
     havingValue = "true",
     matchIfMissing = true)
 @EnableScheduling
+@EnableAsync
 @EnableConfigurationProperties(FlowProperties.class)
 public class FlowAutoConfiguration {
 
