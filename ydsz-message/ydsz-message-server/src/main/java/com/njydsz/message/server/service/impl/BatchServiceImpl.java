@@ -2,7 +2,9 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
@@ -15,10 +17,13 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.BatchProgressDTO;
 import com.njydsz.message.domain.dto.BatchSendRequestDTO;
+import com.njydsz.message.domain.enums.MessageExceptionCode;
+import com.njydsz.message.domain.event.BatchCompletedEvent;
 import com.njydsz.message.domain.query.MsgBatchQuery;
 import com.njydsz.message.domain.repository.MsgBatchRepository;
 import com.njydsz.message.domain.vo.MsgBatchVO;
@@ -54,6 +59,24 @@ public class BatchServiceImpl implements BatchService {
 
   /** 默认批次大小（初始容量） */
   private static final int DEFAULT_BATCH_SIZE = 16;
+
+  /** SSE 进度推送间隔（每处理 N 条触发一次） */
+  private static final int SSE_FLUSH_INTERVAL = 10;
+
+  /** SSE 进度推送时间间隔阈值（毫秒） */
+  private static final long SSE_FLUSH_TIME_INTERVAL_MS = 2000L;
+
+  /** 批次执行状态：处理中 */
+  private static final String STATUS_PROCESSING = "PROCESSING";
+
+  /** 批次执行状态：已完成 */
+  private static final String STATUS_COMPLETED = "COMPLETED";
+
+  /** 批次执行状态：部分失败 */
+  private static final String STATUS_PARTIAL_FAILED = "PARTIAL_FAILED";
+
+  /** 批次执行状态：全部失败 */
+  private static final String STATUS_FAILED = "FAILED";
 
   /** 批次记录 Repository */
   /** 分布式 ID 生成器 */
@@ -267,9 +290,195 @@ public class BatchServiceImpl implements BatchService {
     return requests;
   }
 
+  /**
+   * 逐条执行批次发送。
+   *
+   * <p>遍历请求列表逐条调用 {@link MessageService#send}，根据返回结果累加 success/failed/skipped 计数。
+   * 每 {@link #SSE_FLUSH_INTERVAL} 条或超过 {@link #SSE_FLUSH_TIME_INTERVAL_MS} 毫秒，触发一次 SSE
+   * 进度推送并持久化计数。全部完成后发布 {@link BatchCompletedEvent}。
+   *
+   * <p><b>乐观锁保护：</b>通过 {@link MsgBatchVO#getRevision()} 与 MyBatis-Plus {@code @Version}
+   * 自动检测并发覆盖。若持久化时发现 revision 已被修改，记 WARN 并重试一次加载。
+   *
+   * @param batchId 批次 ID
+   * @param requests 待发送消息请求列表（非空）
+   * @param incremental 是否增量累加（首次执行=true，会从当前 DB 计数开始累加）
+   */
   private void doExecuteBatch(String batchId, List<MessageRequest> requests, boolean incremental) {
-    log.info("[Batch] doExecuteBatch: batchId={}, requests={}", batchId, requests.size());
-    updateBatchStatus(batchId, "COMPLETED", null);
+    log.info("[Batch] doExecuteBatch 开始: batchId={}, requests={}, incremental={}", batchId, requests.size(), incremental);
+
+    // 1. 加载批次，初始化计数器
+    MsgBatchVO batch = loadBatch(batchId);
+    if (batch == null) {
+      log.error("[Batch] 批次不存在，无法执行: batchId={}", batchId);
+      return;
+    }
+
+    int total = requests.size();
+    int initSuccess = incremental && batch.getSuccess() != null ? batch.getSuccess() : 0;
+    int initFailed = incremental && batch.getFailed() != null ? batch.getFailed() : 0;
+    int initSkipped = incremental && batch.getSkipped() != null ? batch.getSkipped() : 0;
+
+    batch.setTotal(total);
+    batch.setSuccess(initSuccess);
+    batch.setFailed(initFailed);
+    batch.setSkipped(initSkipped);
+    batch.setStatus(STATUS_PROCESSING);
+    batch.setStartedAt(LocalDateTime.now());
+    msgBatchRepository.save(batch);
+
+    int success = initSuccess;
+    int failed = initFailed;
+    int skipped = initSkipped;
+    long lastFlushAt = System.currentTimeMillis();
+
+    // 2. 逐条发送
+    for (int i = 0; i < requests.size(); i++) {
+      MessageRequest request = requests.get(i);
+      try {
+        MessageResult result = messageService.send(request);
+        if (result != null && result.isSuccess()) {
+          success++;
+        } else {
+          log.warn("[Batch] 单条发送失败: batchId={}, index={}, error={}",
+              batchId, i, result != null ? result.getUserMessage() : "null result");
+          failed++;
+        }
+      } catch (SysException e) {
+        // 业务异常：记失败，保留堆栈供排查
+        log.warn("[Batch] 单条业务异常: batchId={}, index={}, code={}, msg={}",
+            batchId, i, e.getCode(), e.getMessage());
+        failed++;
+      } catch (Exception e) {
+        // 系统异常：记失败，继续执行下一条
+        log.error("[Batch] 单条系统异常: batchId={}, index={}", batchId, i, e);
+        failed++;
+      }
+
+      batch.setSuccess(success);
+      batch.setFailed(failed);
+      batch.setSkipped(skipped);
+
+      // 3. 按数量或时间阈值触发中间推送/持久化
+      long now = System.currentTimeMillis();
+      boolean hitCountThreshold = (i + 1) % SSE_FLUSH_INTERVAL == 0;
+      boolean hitTimeThreshold = (now - lastFlushAt) >= SSE_FLUSH_TIME_INTERVAL_MS;
+      if (hitCountThreshold || hitTimeThreshold || i == requests.size() - 1) {
+        flushProgress(batchId, batch, total, success, failed, skipped);
+        pushSseProgress(batchId, STATUS_PROCESSING, total, success, failed, skipped);
+        lastFlushAt = now;
+      }
+    }
+
+    // 4. 确定最终状态并持久化
+    String finalStatus;
+    if (failed == 0) {
+      finalStatus = STATUS_COMPLETED;
+    } else if (success > 0) {
+      finalStatus = STATUS_PARTIAL_FAILED;
+    } else {
+      finalStatus = STATUS_FAILED;
+    }
+
+    batch.setStatus(finalStatus);
+    batch.setSuccess(success);
+    batch.setFailed(failed);
+    batch.setSkipped(skipped);
+    batch.setCompletedAt(LocalDateTime.now());
+    msgBatchRepository.save(batch);
+
+    // 5. 最终 SSE 推送
+    pushSseProgress(batchId, finalStatus, total, success, failed, skipped);
+
+    // 6. 发布领域事件
+    String mode = incremental ? "RESUME" : "FULL";
+    domainEventPublisher.publish(
+        new BatchCompletedEvent(
+            TenantContextHolder.getTenantId(),
+            batchId, total, success, failed, skipped, mode));
+
+    log.info("[Batch] doExecuteBatch 完成: batchId={}, status={}, success={}, failed={}, skipped={}",
+        batchId, finalStatus, success, failed, skipped);
+  }
+
+  /**
+   * 加载批次（内联 findOne + null 检查）。
+   *
+   * @param batchId 批次 ID
+   * @return 批次 VO，不存在返回 null
+   */
+  private MsgBatchVO loadBatch(String batchId) {
+    MsgBatchQuery query = new MsgBatchQuery();
+    query.setBatchId(batchId);
+    return msgBatchRepository.findOne(query).orElse(null);
+  }
+
+  /**
+   * 将批次进度持久化到 DB（利用乐观锁保护并发写入）。
+   *
+   * <p>当 MyBatis-Plus 返回 0 行更新时（说明 revision 冲突），重新加载最新值后变更重试一次。
+   *
+   * @param batchId 批次 ID
+   * @param batch 当前批次对象（含新计数）
+   * @param total 总数
+   * @param success 成功数
+   * @param failed 失败数
+   * @param skipped 跳过数
+   */
+  private void flushProgress(
+      String batchId, MsgBatchVO batch, int total, int success, int failed, int skipped) {
+    try {
+      boolean ok = msgBatchRepository.save(batch);
+      if (!ok) {
+        // 乐观锁冲突：加载最新值后合并再写
+        log.warn("[Batch] 进度持久化冲突，重试加载: batchId={}", batchId);
+        MsgBatchVO fresh = loadBatch(batchId);
+        if (fresh != null) {
+          fresh.setSuccess(success);
+          fresh.setFailed(failed);
+          fresh.setSkipped(skipped);
+          fresh.setStatus(STATUS_PROCESSING);
+          msgBatchRepository.save(fresh);
+        }
+      }
+    } catch (Exception e) {
+      // 持久化异常不影响发送主流程，仅记日志
+      log.error("[Batch] 进度持久化异常: batchId={}, err={}", batchId, e.getMessage());
+    }
+  }
+
+  /**
+   * 推送批次进度 SSE 事件。
+   *
+   * <p>构建包含总数/成功/失败/跳过/百分比的进度数据，广播给所有订阅者。
+   *
+   * @param batchId 批次 ID
+   * @param status 状态标识
+   * @param total 总数
+   * @param success 成功数
+   * @param failed 失败数
+   * @param skipped 跳过数
+   */
+  private void pushSseProgress(
+      String batchId, String status, int total, int success, int failed, int skipped) {
+    try {
+      int processed = success + failed + skipped;
+      double percent = total > 0 ? Math.round(processed * 10000.0 / total) / 100.0 : 0.0;
+      Map<String, Object> data = new HashMap<>(8);
+      data.put("batchId", batchId);
+      data.put("status", status);
+      data.put("total", total);
+      data.put("success", success);
+      data.put("failed", failed);
+      data.put("skipped", skipped);
+      data.put("processed", processed);
+      data.put("progressPercent", percent);
+      data.put("timestamp", System.currentTimeMillis());
+      sseEmitterService.broadcastProgress(batchId, data);
+    } catch (Exception e) {
+      // SSE 推送异常不影响主流程
+      log.warn("[Batch] SSE 推送异常: batchId={}, err={}", batchId, e.getMessage());
+    }
   }
 
   private void updateBatchStatus(String batchId, String status, String errorMessage) {
@@ -281,7 +490,8 @@ public class BatchServiceImpl implements BatchService {
     }
     batch.setStatus(status);
     batch.setErrorMessage(errorMessage);
-    if ("COMPLETED".equals(status) || "FAILED".equals(status)) {
+    if (STATUS_COMPLETED.equals(status) || STATUS_FAILED.equals(status)
+        || STATUS_PARTIAL_FAILED.equals(status)) {
       batch.setCompletedAt(LocalDateTime.now());
     }
     msgBatchRepository.save(batch);

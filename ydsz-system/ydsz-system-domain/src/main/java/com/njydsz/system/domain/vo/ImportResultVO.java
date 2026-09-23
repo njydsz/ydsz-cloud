@@ -6,7 +6,6 @@ import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.excel.api.result.ExcelImportResult;
 
@@ -21,7 +20,6 @@ import com.njydsz.common.excel.api.result.ExcelImportResult;
  * @since 26.09.01
  */
 @Data
-@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class ImportResultVO extends ExcelImportResult {
@@ -34,7 +32,6 @@ public class ImportResultVO extends ExcelImportResult {
    *
    * <p>前端可按此渲染错误定位单元格，无需解析字符串。若为空则兼容旧的 {@link #errors} 纯文本列表。
    */
-  @SuperBuilder.Default
   private List<ImportErrorItem> errorItems = new ArrayList<>(16);
 
   /**

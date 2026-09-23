@@ -101,7 +101,7 @@ public enum SystemExceptionCode implements ExceptionCode {
 
   // ==================== B97001-B97099 前端监控上报 ====================
   /** MONITOR_SOURCE_STORE_FAILED */
-  MONITOR_SOURCE_STORE_FAILED("B97001", "system.monitor.source.store.failed", 500); // sourcemap 存储失败（对象存储未配置或上传异常）
+  MONITOR_SOURCE_STORE_FAILED("B97001", "system.monitor.source.store.failed", 500), // sourcemap 存储失败（对象存储未配置或上传异常）
 
   // ==================== B98001-B98099 二次身份验证 ====================
   /** SECONDARY_AUTH_PASSWORD_INCORRECT */
