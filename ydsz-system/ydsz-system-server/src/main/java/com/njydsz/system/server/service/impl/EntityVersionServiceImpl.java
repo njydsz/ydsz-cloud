@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.EntityVersionPageQuery;
@@ -193,10 +192,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
       return new LinkedHashMap<>();
     }
     try {
-      ObjectMapper mapper = new ObjectMapper();
-      mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-      Map<String, Object> rawMap = mapper.readValue(snapshotJson, mapper.getTypeFactory()
-          .constructMapType(Map.class, String.class, Object.class));
+      Map<String, Object> rawMap = YdszJson.parseMap(snapshotJson);
       Map<String, String> resultMap = new LinkedHashMap<>();
       for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
         resultMap.put(entry.getKey(), entry.getValue() != null ? entry.getValue().toString() : null);

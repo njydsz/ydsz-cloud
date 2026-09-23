@@ -404,12 +404,21 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
   long countColdNodes(@Param("threshold") LocalDateTime threshold);
 
   /**
-   * 分页查询全部未删除节点（用于全量索引重建等批量场景）。
+   * 分页查询当前租户下全部未删除节点（用于全量索引重建等批量场景）。
    *
    * <p>通过 MyBatis-Plus Page 对象自动添加 LIMIT/OFFSET，避免一次性全量加载导致 OOM。
    *
    * @param page MyBatis-Plus 分页对象
+   * @param tenantId 租户 ID（P0-4: 多租户隔离过滤）
    * @return 分页结果
    */
-  IPage<FileNode> selectAllWithPage(IPage<FileNode> page);
+  IPage<FileNode> selectAllWithPage(IPage<FileNode> page, @Param("tenantId") String tenantId);
+
+  /**
+   * P0-3: 批量更新节点排序值（单条 CASE WHEN SQL，替代循环单条 UPDATE）。
+   *
+   * @param items 排序条目列表（含 id / sort / updatedBy / updatedAt）
+   * @return 受影响行数
+   */
+  int batchUpdateSort(@Param("items") java.util.List<com.njyzsz.nextwiki.domain.dto.NextwikiDto.SortItem> items);
 }

@@ -136,12 +136,38 @@
         LIMIT 1
     </select>
 
-    <!-- 分页查询全部未删除节点（用于全量索引重建等批量场景，避免 OOM） -->
+    <!-- 分页查询当前租户下全部未删除节点（用于全量索引重建等批量场景，避免 OOM） -->
+    <!-- P0-4: 增加 tenant_id 过滤，修复多租户隔离安全缺陷 -->
     <select id="selectAllWithPage" resultMap="FileNodeResult">
         SELECT id, parent_id, name, node_type, suffix, size, storage_key, bucket_name, mime_type, path, level, sort, current_version, file_hash, thumbnail_key, is_preview_ready, is_starred, share_status, status, created_by, created_at, updated_by, updated_at, revision, is_deleted, tenant_id
         FROM ydsz_wiki_file_node
         WHERE is_deleted = 0
+          AND tenant_id = #{tenantId}
         ORDER BY created_at ASC
     </select>
+
+    <!-- P0-3: 批量更新节点排序值（CASE WHEN 单条 SQL，替代循环单条 UPDATE） -->
+    <update id="batchUpdateSort">
+        UPDATE ydsz_wiki_file_node
+        <set>
+            sort = CASE id
+            <foreach collection="items" item="item">
+                WHEN #{item.id} THEN #{item.sort}
+            </END>,
+            updated_by = CASE id
+            <foreach collection="items" item="item">
+                WHEN #{item.id} THEN #{item.updatedBy}
+            </END>,
+            updated_at = CASE id
+            <foreach collection="items" item="item">
+                WHEN #{item.id} THEN #{item.updatedAt}
+            </END>
+        </set>
+        WHERE id IN
+        <foreach collection="items" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+        AND is_deleted = 0
+    </update>
 
 </mapper>

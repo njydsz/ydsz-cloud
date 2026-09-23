@@ -52,6 +52,9 @@ public class MsgBatchVO implements Serializable {
   /** 批次状态（PENDING/RUNNING/COMPLETED/FAILED/CANCELLED） */
   private String status;
 
+  /** 优先级（LOW/NORMAL/HIGH/URGENT，默认 NORMAL） */
+  private String priority;
+
   /** 受众来源（MANUAL/TAG/DEPT/FILE） */
   private String audienceSource;
 
