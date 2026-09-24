@@ -46,8 +46,8 @@ import com.njydsz.gateway.loadbalancer.GrayLoadBalancer;
  * <p>{@link Ordered#HIGHEST_PRECEDENCE} + 20,晚于 {@link AuthGlobalFilter}(+10), 确保 AuthFilter
  * 完成鉴权后再注入灰度标识,避免白名单请求干扰。
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

@@ -34,8 +34,8 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p><b>容错策略</b>：每个步骤包入 try-catch，LLM 失败时 Generator 会返回降级章节，
  * Renderer 失败时仅保留章节数据（content 为空），确保最终状态始终可达 COMPLETED（有降级内容）。
  *
- * @author ydsz-team
- * @since 26.09.07
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Service

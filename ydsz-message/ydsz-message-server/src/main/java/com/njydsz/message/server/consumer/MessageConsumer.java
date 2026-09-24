@@ -35,16 +35,15 @@ import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.core.MessageService;
 
 /**
- * RocketMQ 消息消费端。
+ * RocketMQ 普通消息消费端，监听消息 Topic 处理单条消息的发送与状态流转。
  *
- * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE}，基于 ydsz-common-safe 的 {@link
- * com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy} 实现消费端幂等防重。
- * 异常处理：SysException 保留锁并落库 FAILED 不重投；系统异常释放锁并抛出触发重投。
+ * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE} Topic，消费模式 ORDERLY（顺序消费）。
+ * 幂等策略：通过 {@link IdempotentStrategy} 分布式锁（TTL 可配）防止重复消费，
+ * Redis 异常时启用 DB 二级幂等检查（GAP-1）；BloomFilter 前置过滤进一步降低 Redis 压力。
+ * 异常处理：SysException 保留锁并落库 FAILED 不重投；系统异常释放锁触发重投。
  *
- * <p>性能优化:Redis 健康时跳过 DB 二级幂等检查,减少每次消费的 DB 查询开销。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

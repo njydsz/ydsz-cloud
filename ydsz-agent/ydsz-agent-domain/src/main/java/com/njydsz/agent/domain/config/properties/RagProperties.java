@@ -4,6 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 知识检索（RAG）配置属性。
+ *
+ * <p>绑定配置前缀 {@code ydzs.agent.rag}，控制向量检索的核心参数：TopK 召回数量、
+ * 最低相似度分数、上下文 Token 预算、向量存储后端、Embedding 模型与维度、
+ * 文档分块策略（大小/重叠/策略类型/分隔符）以及租户隔离开关。
+ * 默认启用（isEnabled=true），TopK=5，最低分数 0.7，向量存储为 in-memory。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

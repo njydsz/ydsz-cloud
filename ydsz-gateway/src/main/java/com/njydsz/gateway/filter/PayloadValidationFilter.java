@@ -47,8 +47,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *       strict-content-type: true      # 是否强制校验 Content-Type
  * </pre>
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

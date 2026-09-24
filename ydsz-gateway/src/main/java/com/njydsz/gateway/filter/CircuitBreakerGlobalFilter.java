@@ -86,8 +86,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *
  * <p><b>处理顺序：</b>{@code HIGHEST_PRECEDENCE + 45}，位于限流（+30）之后，路由转发（+100）之前。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

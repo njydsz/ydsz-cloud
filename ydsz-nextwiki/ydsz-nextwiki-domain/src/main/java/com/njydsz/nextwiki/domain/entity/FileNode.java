@@ -26,8 +26,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code deletedTime} 支持回收站功能（逻辑删除 + 过期清理）
  * </ul>
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

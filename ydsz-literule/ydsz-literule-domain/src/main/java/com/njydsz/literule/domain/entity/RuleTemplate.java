@@ -9,12 +9,17 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * LiteRule 规则模板
+ * LiteRule 规则模板。
  *
- * <p>映射 ydsz_rule_template 表，存储规则模板市场中的预置模板。 用户可从模板一键导入生成规则定义。
+ * <p>对应 {@code ydsz_rule_template} 表，存储规则模板市场中的预置模板。
+ * 模板预置了条件表达式（{@code conditionExpression}）、严重度表达式（{@code severityExpression}）、
+ * 告警标题/描述模板（{@code titleTemplate} / {@code descriptionTemplate}）等字段，用户可基于模板一键导入生成完整的规则定义，
+ * 降低规则配置门槛。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>支持按行业（{@code industry}）、分类（{@code category}）和适用范围（{@code scope}）检索。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @Data 与 JPA 继承共用，父类字段泛型擦除
 @SuppressWarnings("unchecked")

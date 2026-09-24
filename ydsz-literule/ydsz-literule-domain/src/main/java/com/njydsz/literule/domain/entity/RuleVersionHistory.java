@@ -11,12 +11,16 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
- * LiteRule 规则版本历史
+ * LiteRule 规则版本历史。
  *
- * <p>映射 ydsz_rule_version_history 表，存储规则变更的版本快照。
+ * <p>对应 {@code ydsz_rule_version_history} 表，存储规则每次变更时的版本快照。
+ * 每次发布或回滚规则定义时，将规则定义的完整 JSON（{@code definitionJson}）固化存库，
+ * 配合 {@code changeDesc} 变更说明与 {@code operator} 操作人信息，支持规则内容的全量审计追溯。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>版本号（{@code version}}）全局递增，与 {@code ruleCode} 联合唯一，保证每条规则的变更链路完整可查。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @Data 与 JPA 继承共用，父类字段泛型擦除
 @SuppressWarnings("unchecked")

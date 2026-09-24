@@ -121,8 +121,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p><b>DDD 合规说明：</b>原位于 server 层的配置类依赖大量 infra 实现类，违反「server 层不依赖 infra 层」原则。
  * 现移至 web 层（依赖注入编排层），server 层仅依赖 domain 接口。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Configuration
 @EnableScheduling

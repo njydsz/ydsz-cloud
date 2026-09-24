@@ -26,24 +26,16 @@ import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.metric.MessageMetrics;
 
 /**
- * P0-3/F2: 定时消息调度扫描器。
+ * 定时消息调度扫描器，扫描到期 SCHEDULED 消息并在分布式锁内并发触发发送。
  *
- * <p>定时扫描 {@code status=SCHEDULED AND scheduled_at <= now} 的消息，在分布式锁内并发触发发送：
+ * <p>扫描 status=SCHEDULED AND scheduled_at<=now 的消息（批次 200 条），
+ * 使用 CompletableFuture 并发分发（线程池核心数 = min(CPU, 4)），吞吐量提升 3-4 倍。
+ * 发送成功 → SUCCESS；失败 → RETRY（nextRetryAt=now+30s，retryCount=1）。
+ * 容器关闭时通过 ContextClosedEvent 优雅停止线程池（最多等待 10s）。
+ * 多实例部署通过 DistributedScheduled 分布式锁保证单实例执行扫描。
  *
- * <ul>
- *   <li>成功 → SUCCESS
- *   <li>失败 → 走重试流程（RETRY + 指数退避）
- * </ul>
- *
- * <p>多实例部署通过 Redisson 分布式锁保证只有一个实例执行扫描。 默认 30s 扫描一次，可通过 {@code
- * ydsz.message.scheduled-scan-interval-ms} 配置。
- *
- * <p><b>F2 增强</b>： {@link #doScan()} 使用 {@link CompletableFuture} 并发分发到期消息，
- * 吞吐量提升 3-4 倍；新增 {@link #getBacklogCount()} 暴露积压指标；容器关闭时通过 {@link
- * #onContextClosed()} 钩子优雅停止线程池。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

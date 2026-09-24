@@ -15,27 +15,14 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.constant.MessageConstants;
 
 /**
- * 基于 Redis INCR 的聚合计数器服务（替代分布式锁方案）。
+ * 基于 Redis INCR 的聚合计数器服务，以无锁原子操作替代分布式锁方案实现攒批计数。
  *
- * <p>聚合场景：同一用户同一业务的消息在短时间窗口内需要合并为一条摘要发送。
- * 原方案使用分布式锁 + DB 操作，高并发下锁竞争严重。
+ * <p>聚合场景：同一用户同一业务的消息在短时间窗口内合并为一条摘要发送。
+ * 使用 Redis 原子 INCR 递增计数（无锁竞争），首次计数时占位新建聚合批次标记，
+ * DB 异步批量刷新（最终一致性）。Redis 异常时返回 -1 触发降级回退分布式锁方案。
  *
- * <p>新方案使用 Redis 原子计数 + 异步落库：
- * <ol>
- *   <li>Redis INCR 原子递增计数（无锁竞争）</li>
- *   <li>首次计数（返回1）时占位新建聚合批次标记</li>
- *   <li>写入成功即返回，DB 异步批量刷新（最终一致性）</li>
- * </ol>
- *
- * <p>优势：
- * <ul>
- *   <li>无锁竞争：Redis 单线程原子操作</li>
- *   <li>高性能：单次操作 &lt; 1ms</li>
- *   <li>降级兜底：Redis 异常时回退到原分布式锁方案</li>
- * </ul>
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Service

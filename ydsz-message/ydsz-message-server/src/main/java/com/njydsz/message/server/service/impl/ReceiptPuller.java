@@ -25,27 +25,15 @@ import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.core.MessageLogService;
 
 /**
- * P2-9: 回执闭环调度器 —— 主动拉取回执 + 超时补偿。
+ * 回执闭环调度器，通过主动拉取和超时补偿两阶段补齐消息回执闭环。
  *
- * <p>对标阿里云 MessageCenter / 腾讯云 CAM 的回执闭环能力。仅依赖服务商被动回调会导致 大量消息长期停留在「回执未知」状态（{@code
- * receiptStatus=NONE}），本调度器通过两个阶段 补齐闭环：
+ * <p>阶段一（主动拉取）：扫描 status=SUCCESS AND receiptStatus=NONE AND createdAt<pullDelayMinutes 的消息，
+ * 调用对应渠道 MessageChannel.queryReceipt 向服务商查询最新回执状态；
+ * 阶段二（超时补偿）：对 createdAt<timeoutMinutes 仍无回执的消息标记 receiptStatus=TIMEOUT。
+ * 多实例部署通过 DistributedScheduled 分布式锁保证单实例执行扫描（非阻塞，TTL 60s）。
  *
- * <ol>
- *   <li><b>主动拉取阶段</b>：扫描 {@code status=SUCCESS AND receiptStatus=NONE AND createdAt < now -
- *       pullDelayMinutes} 的消息，调用对应渠道 {@link MessageChannel#queryReceipt} 向服务商查询最新回执状态。
- *       <ul>
- *         <li>渠道支持且返回结果 → {@link MessageLogService#updateReceipt} 更新回执状态
- *         <li>渠道不支持（{@link Optional#empty()}）→ 跳过，仅等待被动回调
- *         <li>拉取异常 → 记录 WARN，不中断后续消息处理
- *       </ul>
- *   <li><b>超时补偿阶段</b>：对于 {@code createdAt < now - timeoutMinutes} 仍无回执的消息， 标记 {@code
- *       receiptStatus=TIMEOUT}，避免消息永远停留在「回执未知」状态。 超时判定优先于拉取（说明此前已尝试拉取但仍无结果）。
- * </ol>
- *
- * <p>多实例部署通过 {@link DistributedScheduled} 注解保证只有一个实例执行扫描， 锁等待 0s（非阻塞），TTL 60s，获取失败直接跳过本次扫描。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

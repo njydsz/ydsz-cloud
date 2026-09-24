@@ -2,12 +2,10 @@ package com.njydsz.common.event.consumer;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
 
 import com.njydsz.common.event.model.OutboxMessage;
@@ -34,7 +32,7 @@ import com.njydsz.common.event.model.OutboxMessage;
  * @since 26.09.24
  * @see OutboxSubscriber 订阅者 SPI 接口
  */
-public class OutboxSubscriberDispatcher implements ApplicationListener<OutboxMessage> {
+public class OutboxSubscriberDispatcher {
 
   private static final Logger LOG = LoggerFactory.getLogger(OutboxSubscriberDispatcher.class);
 
@@ -65,13 +63,12 @@ public class OutboxSubscriberDispatcher implements ApplicationListener<OutboxMes
   /**
    * 监听 OutboxMessage 事件并分发。
    *
-   * <p>由 Spring 事件机制触发（{@link EventListener} 语义）。
+   * <p>由 Spring事件机制触发（{@link EventListener} 语义）。
    *
    * @param message Outbox 消息事件
    */
-  @Override
   @EventListener
-  public void onApplicationEvent(OutboxMessage message) {
+  public void onOutboxMessage(OutboxMessage message) {
     if (message == null || message.getTopic() == null) {
       LOG.warn("[OutboxDispatcher] 收到无效消息: topic={}", message != null ? message.getTopic() : "null");
       return;

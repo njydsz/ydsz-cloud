@@ -6,6 +6,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Agent 代码执行配置属性。
+ *
+ * <p>绑定配置前缀 {@code ydsz.agent.code-execution}，控制 Python 代码沙箱的执行模式（docker/local）、
+ * 超时时间、Docker 资源限制（内存/CPU）、允许导入的模块白名单与镜像配置。
+ * 默认不开启（isEnabled=false），Docker 模式内存上限 128m、CPU 限制 0.5 核、超时 30 秒。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

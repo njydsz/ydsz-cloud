@@ -12,14 +12,14 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
- * Redis 健康状态持有者。
+ * Redis 健康状态持有与定期探测组件，辅助消费者决策是否启用 DB 幂等兜底查询。
  *
- * <p>定期检测 Redis 连通性，供消费者在幂等判断时决定是否启用 DB 兜底查询。
+ * <p>定期（默认 10s）通过 SET + GET + DEL 组合验证 Redis 读写正常，
+ * 使用 AtomicBoolean 维护健康标志。当 Redis 健康时，消费者跳过 DB 二级幂等检查；
+ * Redis 故障恢复窗口期内启用 DB 幂等兜底，避免消息重复发送。
  *
- * <p>当 Redis 健康时，消费者跳过 DB 二级幂等检查，避免每次消费都额外查询数据库。 仅在 Redis 故障恢复窗口期内启用 DB 幂等兜底。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

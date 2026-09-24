@@ -35,8 +35,8 @@ import com.njydsz.agent.domain.code.CodeExecutionService;
  *
  * <p>注意：本地模式安全性低于 Docker 模式。建议生产环境使用 Docker 沙箱。
  *
- * @author ydsz-team
- * @since 26.09.07
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

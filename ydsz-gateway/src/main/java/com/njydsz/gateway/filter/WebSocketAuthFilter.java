@@ -69,8 +69,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  * <p>{@code HIGHEST_PRECEDENCE + 8}，在 {@link AuthGlobalFilter}(+10) 之前执行， WebSocket
  * 请求由本过滤器处理并标记为已认证，{@link AuthGlobalFilter} 检测到标记后跳过。
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

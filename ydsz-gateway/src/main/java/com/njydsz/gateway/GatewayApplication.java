@@ -51,8 +51,8 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
  *   HIGHEST_PRECEDENCE + 100 ReactiveLoadBalancerClientFilter (Spring Cloud LB)
  * </pre>
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @SpringBootApplication
 @EnableDiscoveryClient

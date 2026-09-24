@@ -60,8 +60,8 @@ import com.njydsz.gateway.config.GatewayIpUtils;
  *
  * <p>{@code HIGHEST_PRECEDENCE + 35}，在限流(+30)之后， 在 AccessLogGlobalFilter 之后（使用其 traceId 关联）。
  *
- * @since 26.09.01 (P2-2)
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

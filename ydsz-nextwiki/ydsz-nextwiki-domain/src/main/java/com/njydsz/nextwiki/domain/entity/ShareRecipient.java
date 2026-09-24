@@ -13,10 +13,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 分享目标用户实体（定向分享）。
  *
- * <p>记录分享链接的目标接收者，支持指定用户/部门/角色分享。
+ * <p>记录分享链接的目标接收者，实现文件级定向分享能力。每条记录关联一条 {@link ShareLink}（{@link #shareId}），
+ * 通过 {@link #recipientType} 标识接收者维度（USER/DEPT/ROLE），对应 {@link #recipientId} 和
+ * {@link #recipientName}。状态机为 ACTIVE → VIEWED → REVOKED，{@link #viewedAt} 记录首次查看时间。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p><b>表名：</b>{@code ydsz_wiki_share_recipient}
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

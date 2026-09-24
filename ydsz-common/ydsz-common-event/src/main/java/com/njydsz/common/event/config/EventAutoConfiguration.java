@@ -1,5 +1,7 @@
 package com.njydsz.common.event.config;
 
+import java.util.List;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;

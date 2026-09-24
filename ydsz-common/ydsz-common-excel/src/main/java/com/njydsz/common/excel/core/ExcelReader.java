@@ -441,7 +441,7 @@ public class ExcelReader {
    * @return 当前读取器实体
    */
   public ExcelReader includeColumnFiledNames(String... includeColumnFiledNames) {
-    Set<String> set = new HashSet<>(Arrays.asList(includeColumnFiledNames));
+    Set<String> set = new HashSet(Arrays.asList(includeColumnFiledNames));
     return includeColumnFiledNames(set);
   }
 
@@ -459,34 +459,41 @@ public class ExcelReader {
   /**
    * 执行读取(带监听器版本)
    *
-   * <p>核心读取方法，会根据文件类型自动选择XLS或XLSX解析器。 读取过程中会触发监听器的回调方法。
+   * <p>核心读取方法，根据文件类型与配置自动选择最优解析引擎。读取过程中会触发监听器的回调方法。
    *
-   * <p><b>大文件风险警告：</b>SuperFastExcelReader 虽然性能优异，但内部仍会将 Sheet XML
-   * 数据一次性加载到内存中解析。对于超大文件（行数超过10万行或文件超过50MB）， 可能存在 OOM 风险。建议大文件场景优先使用 {@link ReadListener} 流式读取方式，
-   * 并通过 {@link #maxRows(int)} 设置最大读取行数以防止内存溢出。
+   * <p><b>引擎选择策略</b>：
    *
-   * <p>执行流程:
+   * <ul>
+   *   <li>{@code isUseFastReader=true} + 文件源 → SuperFast 零 POI 引擎（手工 ZIP/XML 流式解析，
+   *       大文件采用文件管道 + BoundedInputStream 解压限流，内存占用恒定）</li>
+   *   <li>其余场景 → POI 兼容引擎（XSSFWorkbook / HSSFWorkbook，全功能但内存占用较高）</li>
+   * </ul>
+   *
+   * <p><b>SuperFast 路径内存安全</b>：sheet XML 通过临时文件管道流式解析，BoundedInputStream
+   * 限制解压后体积（上限 {@code maxReadFileSizeMB} MB），不会随文件增大线性增长。
+   *
+   * <p>执行流程：
    *
    * <ol>
-   *   <li>调用所有监听器的onStart
-   *   <li>根据文件类型选择解析器并读取
-   *   <li>每读取一行调用监听器的onData
-   *   <li>读取完成后调用所有监听器的onEnd
+   *   <li>调用所有监听器的 onStart</li>
+   *   <li>根据文件类型与配置选择解析器</li>
+   *   <li>每解析一行调用监听器的 onData</li>
+   *   <li>读取完成后调用所有监听器的 onEnd</li>
    * </ol>
    *
-     * @param listener 数据监听器，可为null(使用前请先调用registerReadListener)
-     * @param <T> 泛型参数,表示映射的数据类型
-     * @throws ExcelReadException 读取过程中发生错误时抛出
-     * @throws RuntimeException 其他未预期异常
-     */
-    public <T> void doRead(ReadListener<T> listener) {
-      long startTime = System.nanoTime();
-      boolean useFastReader = false;
-      try {
-        if (listener != null) {
-          listeners.add(listener);
-        }
-        notifyStart();
+   * @param listener 数据监听器，可为null(使用前请先调用registerReadListener)
+   * @param <T> 泛型参数,表示映射的数据类型
+   * @throws ExcelReadException 读取过程中发生业务异常时抛出
+   * @throws RuntimeException 其他未预期异常
+   */
+  public <T> void doRead(ReadListener<T> listener) {
+    long startTime = System.nanoTime();
+    boolean useFastReader = false;
+    try {
+      if (listener != null) {
+        listeners.add(listener);
+      }
+      notifyStart();
 
       String filePath = metadata.getFilePath();
       boolean isXlsx = filePath != null && filePath.toLowerCase().endsWith(".xlsx");

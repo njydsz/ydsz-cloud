@@ -24,21 +24,15 @@ import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
 
 /**
- * 微信小程序订阅消息通道实现。
+ * 微信小程序订阅消息通道实现，通过微信公众平台 API 下发小程序订阅消息。
  *
- * <p>实现 {@link MessageChannel} SPI，通过微信小程序订阅消息 API 下发通知。 需要用户在小程序端主动订阅消息模板后才能发送，每次发送消耗一次订阅配额。
+ * <p>实现 {@link MessageChannel} SPI，调用 subscribeMessage/send 接口
+ * 以 JSON POST 方式提交请求。access_token 通过 Redis 缓存（7200s 有效期），
+ * 避免频繁刷新。依赖的第三方服务：微信公众平台接口网关。
+ * 降级条件：未配置 AppID/AppSecret 或 provider=mock 时降级为日志输出。
  *
- * <p>降级策略：未配置 AppID/AppSecret 或 provider=mock 时降级为日志输出。
- *
- * <p>API 流程：
- *
- * <ol>
- *   <li>获取 access_token（缓存到 Redis，7200s 有效期）
- *   <li>调用 subscribeMessage/send 下发订阅消息
- * </ol>
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

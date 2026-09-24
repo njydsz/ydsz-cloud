@@ -62,8 +62,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *
  * <p>{@code HIGHEST_PRECEDENCE + 3}，在认证(+10)之前执行，尽早拦截恶意请求。
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

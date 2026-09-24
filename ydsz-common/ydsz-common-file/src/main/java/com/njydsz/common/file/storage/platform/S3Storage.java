@@ -608,7 +608,7 @@ public class S3Storage extends AbstractFileStorage {
       }
       ListObjectsResult result = new ListObjectsResult();
       result.setObjects(objects);
-      result.setIsHasMore(hasMore);
+      result.setHasMore(hasMore);
       result.setNextCursor(nextCursor);
       result.setObjectCount(objects.size());
       return result;

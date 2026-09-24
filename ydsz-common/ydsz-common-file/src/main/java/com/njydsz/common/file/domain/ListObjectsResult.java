@@ -40,7 +40,7 @@ public class ListObjectsResult {
     ListObjectsResult result = new ListObjectsResult();
     result.setObjects(List.of());
     result.setNextCursor(null);
-    result.setIsHasMore(false);
+    result.setHasMore(false);
     result.setObjectCount(0);
     return result;
   }

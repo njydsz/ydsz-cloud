@@ -41,8 +41,8 @@ import com.njydsz.agent.domain.skill.SkillRuntime;
  *
  * <p>脚本通过容器内 COPY 映射或本地挂载方式提供；输入参数通过环境变量传入。
  *
- * @author ydsz-team
- * @since 26.09.17
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

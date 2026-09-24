@@ -4,6 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 网络搜索配置属性。
+ *
+ * <p>绑定配置前缀 {@code ydzs.agent.web-search}，控制 Hybrid Search 中网络搜索的启用状态、
+ * 搜索引擎提供商（如 DuckDuckGo）、自定义端点、API Key、超时时间与 TopK 结果数。
+ * 默认不开启网络搜索（isEnabled=false），使用 DuckDuckGo，超时 10 秒，返回 Top 5 结果。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

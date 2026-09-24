@@ -18,8 +18,8 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
  *
  * <p>对应空间模板表 {@code nw_space_template}，预定义可复用的空间结构模板（如"项目管理模板"、"会议纪要模板"）。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

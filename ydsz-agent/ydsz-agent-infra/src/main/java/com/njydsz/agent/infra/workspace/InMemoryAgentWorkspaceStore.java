@@ -16,8 +16,8 @@ import com.njydsz.agent.domain.workspace.AgentWorkspaceStore;
  * <p>使用 ConcurrentHashMap 存储工作区，重启后数据丢失。
  * 标注 {@code matchIfMissing = true} 确保无配置时自动启用。
  *
- * @author ydsz-team
- * @since 26.09.13
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

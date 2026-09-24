@@ -251,6 +251,11 @@ public class SuperFastExcelWriter {
 
         sheetBos.write(SHEET_HEADER_BYTES);
 
+        // 写入自定义列宽（<cols> 段）
+        if (hasCustomColumnWidths()) {
+          sheetBos.write(buildColsXml());
+        }
+
         rowBuffer = new byte[ROW_BUFFER_SIZE];
         rowBufferPos = 0;
 
@@ -328,6 +333,11 @@ public class SuperFastExcelWriter {
 
       zipOut.putNextEntry(new ZipEntry("xl/worksheets/sheet1.xml"));
       zipOut.write(SHEET_HEADER_BYTES);
+
+      // 写入自定义列宽（<cols> 段）
+      if (hasCustomColumnWidths()) {
+        zipOut.write(buildColsXml());
+      }
 
       // 写入表头行
       if (fieldInfoSize > 0) {
@@ -751,10 +761,13 @@ public class SuperFastExcelWriter {
   }
 
   private void ensureCapacity(int needed) {
-    if (rowBufferPos + needed > rowBuffer.length) {
-      int newSize = rowBufferPos + needed + 1024;
-      rowBuffer = Arrays.copyOf(rowBuffer, newSize);
+    int required = rowBufferPos + needed;
+    if (required <= rowBuffer.length) {
+      return;
     }
+    // 2x 指数扩容（标准 StringBuilder 策略），减少高频扩容时的数组拷贝次数
+    int newSize = Math.max(required, rowBuffer.length * 2);
+    rowBuffer = Arrays.copyOf(rowBuffer, newSize);
   }
 
   private void analyzeClass(Class<?> clazz) {
@@ -804,6 +817,11 @@ public class SuperFastExcelWriter {
             (dateFormat != null && !dateFormat.isEmpty())
                 ? DateTimeFormatter.ofPattern(dateFormat)
                 : DEFAULT_DATE_FORMATTER;
+        // 列宽：@ExcelProperty.width() > 0 时启用自定义宽度
+        int widthAnn = prop.width();
+        if (widthAnn > 0) {
+          info.width = (short) widthAnn;
+        }
         fieldInfoMap.put(originalOrder, info);
 
         fieldInfoArray[compactIdx] = info;
@@ -833,7 +851,7 @@ public class SuperFastExcelWriter {
   }
 
   /**
-   * 单列访问元数据，绑定反射字段、表头文本、ASM 访问器与日期格式。
+   * 单列访问元数据，绑定反射字段、表头文本、ASM 访问器、日期格式与列宽。
    *
    * <p>在 {@link #analyzeClass(Class)} 阶段构建；ASM 访问器生成失败时 {@code getter} 为 {@code null}，写入阶段回退为直接反射访问
    * {@code field}。
@@ -843,6 +861,44 @@ public class SuperFastExcelWriter {
     String headerName;
     ASMFieldAccessor.FieldGetter getter;
     DateTimeFormatter dateFormatObj;
+    /** 自定义列宽（单位：字符），null 表示使用默认宽度。 */
+    Short width;
+  }
+
+  private boolean hasCustomColumnWidths() {
+    for (int i = 0; i < fieldInfoSize; i++) {
+      if (fieldInfoArray[i] != null && fieldInfoArray[i].width != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 构建 OOXML 规范的 <cols> 自定义列宽段。
+   *
+   * <p>仅包含 {@code width > 0} 的列，Excel 未指定的列使用默认宽度。
+   * 输出格式示例：{@code <cols><col min="1" max="1" width="15" customWidth="1"/></cols>}
+   *
+   * @return <cols> XML 段的字节数组
+   */
+  private byte[] buildColsXml() {
+    StringBuilder sb = new StringBuilder(fieldInfoSize * 48);
+    sb.append("<cols>");
+    for (int col = 0; col < fieldInfoSize; col++) {
+      FieldAccessorInfo info = fieldInfoArray[col];
+      if (info == null || info.width == null) {
+        continue;
+      }
+      // OOXML 列编号从 1 开始
+      int colOneBased = col + 1;
+      sb.append("<col min=\"").append(colOneBased)
+          .append("\" max=\"").append(colOneBased)
+          .append("\" width=\"").append(info.width)
+          .append("\" customWidth=\"1\"/>");
+    }
+    sb.append("</cols>");
+    return sb.toString().getBytes(StandardCharsets.UTF_8);
   }
 
   /**
@@ -913,10 +969,12 @@ public class SuperFastExcelWriter {
    *
    * <p>内部采用「数组 + HashMap」双结构：数组按插入顺序保存字符串以顺序生成 XML， HashMap 建立去重映射以复用索引、压缩文件体积。超过 50 字符的长字符串不走此表。
    * 实例非线程安全，仅用于单线程的写入流程。
+   *
+   * <p>初始容量 256（绝大多数 Sheet 唯一字符串数 < 256），按需指数扩容。
    */
   private static class UltraFastSharedStrings {
-    /** 字符串数组 */
-    private String[] strings = new String[4096];
+    /** 字符串数组。初始容量 256，按需 2x 指数扩容。 */
+    private String[] strings = new String[256];
 
     /** 字符串计数 */
     private int count = 0;

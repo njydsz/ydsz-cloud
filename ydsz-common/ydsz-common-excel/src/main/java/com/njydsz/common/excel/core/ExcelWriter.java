@@ -1246,7 +1246,6 @@ public class ExcelWriter {
             ultraFastCellWriter.writeFast(cell, value, prop.dateFormat);
           }
         } catch (Exception e) {
-          CachedProperty prop = cached.properties[j];
           LOG.warn("writeBatch 单元格写入异常: 行={}, 列={}, 字段={}",
               rowNum + 1, j, prop.name, e);
           cell.setBlank();

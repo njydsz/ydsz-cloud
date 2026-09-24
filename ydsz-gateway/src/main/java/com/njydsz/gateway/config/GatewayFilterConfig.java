@@ -23,8 +23,8 @@ import com.njydsz.gateway.exception.GatewayExceptionHandler;
  *   <li>{@link GatewayExceptionHandler}：统一异常 → RFC 7807 / YdszResponse JSON 映射
  * </ul>
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Configuration

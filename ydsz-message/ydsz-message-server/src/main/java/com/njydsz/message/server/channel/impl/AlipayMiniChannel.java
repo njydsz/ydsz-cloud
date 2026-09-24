@@ -26,15 +26,15 @@ import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
 
 /**
- * 支付宝小程序模板消息通道实现。
+ * 支付宝小程序模板消息通道实现，通过支付宝开放平台 API 下发小程序订阅消息。
  *
- * <p>实现 {@link MessageChannel} SPI，通过支付宝小程序模板消息 API 下发通知。 支付宝模板消息通过 openapi 中的
- * alipay.open.app.mini.templatemessage.send 接口发送。
+ * <p>实现 {@link MessageChannel} SPI，调用 alipay.open.app.mini.templatemessage.send
+ * 接口以 form 表单方式提交请求（含 RSA2 签名、UTF-8 编码）。
+ * 依赖的第三方服务：支付宝开放平台小程序网关。
+ * 降级条件：未配置 AppID/privateKey 或 provider=mock 时降级为日志输出。
  *
- * <p>降级策略：未配置 AppID/privateKey 或 provider=mock 时降级为日志输出。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

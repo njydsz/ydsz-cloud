@@ -22,39 +22,15 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
- * 基于 BloomFilter + Redis 的消息去重前置过滤器。
+ * 基于 BloomFilter + Redis 的消息去重前置过滤器，降低重复消息处理的 Redis 查询压力。
  *
- * <p>在 RocketMQ 消费者处理消息前，使用 BloomFilter 做第一层去重判定，
- * 减少绝大多数场景下的 Redis 查询（BloomFilter 判定"一定不存在"则必定未处理过）。
+ * <p>在消费者处理消息前做第一层去重判定：本地 BloomFilter 作为快速路径（减少 Redis 调用），
+ * Redis 共享 Set 作为误判兜底（多实例部署时各 BloomFilter 互相独立，需 Redis 保证一致性）。
+ * BloomFilter 双缓冲滑动窗口设计（窗口可配，默认 60s 翻转），读写分离避免并发竞争。
+ * 降级策略：Redis 异常时仅使用本地 BloomFilter（fail-open）。
  *
- * <h3>多实例一致性策略</h3>
- * <p>本地 BloomFilter 作为快速路径（减少 Redis 调用），Redis 共享 Set 作为误判兜底。
- * 当本地 BloomFilter 判定"可能存在"时，进一步查 Redis 确认，消除多实例部署时
- * 各实例 BloomFilter 互相独立导致的去重失效问题。
- *
- * <p>BloomFilter 特性：
- * <ul>
- *   <li>判定"可能存在" → 需要进一步查 Redis 确认（少量误判）</li>
- *   <li>判定"一定不存在" → 直接放行，跳过 Redis 查询</li>
- * </ul>
- *
- * <p>性能收益：
- * <ul>
- *   <li>热点消息（首次消费后重复投递）：Redis 查询减少 90%+</li>
- *   <li>内存占用：每 100 万条目约 1.2MB（0.1% 误判率）</li>
- * </ul>
- *
- * <p>设计要点：
- * <ul>
- *   <li>滑动窗口：每秒创建新 BloomFilter，过期数据自然淘汰</li>
- *   <li>双缓冲：读写分离，避免并发创建时的竞争</li>
- *   <li>Redis 兜底：多实例共享去重状态，消除单实例内存方案的局限</li>
- *   <li>降级策略：Redis 异常时仅使用本地 BloomFilter（fail-open）</li>
- *   <li>可关闭：配置 {@code ydsz.message.consumer.bloom-filter-enabled=false} 禁用</li>
- * </ul>
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

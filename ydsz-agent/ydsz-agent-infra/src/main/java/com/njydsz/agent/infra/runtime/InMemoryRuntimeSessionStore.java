@@ -20,8 +20,8 @@ import com.njydsz.agent.domain.runtime.RuntimeSessionStore;
  * 适用于单实例部署或开发环境。生产环境多副本部署请设置
  * {@code ydsz.agent.runtime.backend=redis} 切换为 Redis 实现。
  *
- * @author ydsz-agent
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Component
 @ConditionalOnProperty(

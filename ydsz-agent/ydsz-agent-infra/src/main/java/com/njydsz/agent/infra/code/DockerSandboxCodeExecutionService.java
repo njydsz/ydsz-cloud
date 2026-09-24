@@ -36,8 +36,8 @@ import com.njydsz.agent.domain.code.CodeExecutionService;
  *   <li>环境变量传递代码和输入（避免 shell 注入）</li>
  * </ul>
  *
- * @author ydsz-team
- * @since 26.09.07
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

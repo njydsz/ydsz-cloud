@@ -10,13 +10,17 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 文件搜索索引实体
+ * 文件搜索索引实体。
  *
- * <p>数据库 fallback 搜索索引，当 Elasticsearch 不可用时由本表提供文件名/路径/内容搜索。 每条记录与 {@link FileNode} 一一对应（通过
- * fileNodeId 关联）。
+ * <p>数据库 fallback 搜索索引，当 Elasticsearch 不可用时由本表提供文件名/路径/内容搜索。
+ * 每条记录与 {@link FileNode} 一一对应（通过 {@link #fileNodeId} 关联），
+ * 索引字段包含文件名（{@link #name}）、目录路径（{@link #path}）、聚合文本内容（{@link #content}，
+ * 含文件名+路径+文档提取文本）、文件后缀（{@link #suffix}）和标签（{@link #tags}，逗号分隔）。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p><b>表名：</b>{@code ydsz_wiki_search_index}
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

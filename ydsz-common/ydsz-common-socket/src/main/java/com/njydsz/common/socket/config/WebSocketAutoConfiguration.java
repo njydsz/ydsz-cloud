@@ -42,6 +42,8 @@ import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.socket.offline.RedisOfflineMessageStore;
 import com.njydsz.common.socket.push.DefaultRealtimePushTemplate;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
+import com.njydsz.common.socket.push.SsePushChannelFactory;
+import com.njydsz.common.socket.push.SsePushChannelMvcFactory;
 import com.njydsz.common.socket.presence.WebSocketPresenceService;
 import com.njydsz.common.socket.acl.DefaultTopicAclPolicy;
 import com.njydsz.common.socket.acl.TopicAclPolicy;
@@ -554,6 +556,24 @@ public class WebSocketAutoConfiguration {
       @Autowired(required = false) StringRedisTemplate redisTemplate) {
     log.info("[WebSocket] 注册 WebSocketDedupInterceptor（Redis SETNX 幂等去重）");
     return new WebSocketDedupInterceptor(redisTemplate);
+  }
+
+  // ==================== SSE 通道工厂（P2-1 下沉） ====================
+
+  /**
+   * 注册 SSE 通道工厂 Bean（Spring MVC SseEmitter 适配）。
+   *
+   * <p>当 classpath 中存在 {@code SseEmitter} 时自动注册。业务模块通过 {@link SsePushChannelFactory}
+   * 创建 SSE 连接通道，无需自行管理心跳/断连/cleanup 逻辑。
+   *
+   * @return SSE 通道工厂实例
+   */
+  @Bean
+  @ConditionalOnClass(name = "org.springframework.web.servlet.mvc.method.annotation.SseEmitter")
+  @ConditionalOnMissingBean(SsePushChannelFactory.class)
+  public SsePushChannelFactory ssePushChannelFactory() {
+    log.info("[WebSocket] 注册 SsePushChannelFactory（SSE 通道抽象）");
+    return new SsePushChannelMvcFactory();
   }
 
   // ==================== ARCH-003: 优雅停机 ====================

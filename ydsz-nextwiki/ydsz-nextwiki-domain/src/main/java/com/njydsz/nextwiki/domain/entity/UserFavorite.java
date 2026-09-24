@@ -14,14 +14,16 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 
 /**
- * 用户收藏夹持久化实体
+ * 用户收藏夹持久化实体。
  *
  * <p><b>S2-P1-06：快捷访问入口</b>
  *
- * <p>对应用户收藏夹表 {@code nw_user_favorite}，记录用户收藏的文件/目录节点， 支持排序与软删除。
+ * <p>对应用户收藏夹表 {@code ydsz_wiki_user_favorite}，记录用户收藏的文件/目录节点（{@link #nodeId}），
+ * 通过 {@link #sort} 控制收藏列表的展示顺序（值越小越靠前）。支持软删除（{@link #isDeleted}），
+ * 删除操作仅翻转标记位而不移除记录。每个用户对同一节点仅保留一条收藏记录。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

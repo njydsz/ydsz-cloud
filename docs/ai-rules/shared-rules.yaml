@@ -16,8 +16,8 @@ meta:
   version: "26.09.29"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-29（新增 YDIZ-EVENT-001/ARCH-002/ARCH-003/ARCH-004/UTIL-001：OutboxMessage 唯一归属、安全过滤器唯一归属、线程池唯一归属、Outbox 表命名唯一、统一 ID 生成入口）"
-  total_rules: 81
+  last_updated: "2026-09-24（新增 YDIZ-TX-005/EVENT-002/CONFIG-003：分布式事务统一封装、OutboxSubscriber SPI、配置基类规范；撤销 seata 归档错误决策）"
+  total_rules: 84
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -1608,6 +1608,61 @@ rules:
       // 无需业务代码干预，Filter 已在 SeataAutoConfiguration 中自动注册
     source: "编码规范 §25.5 - 【强制】"
 
+  - id: "YDIZ-TX-005"
+    category: "tx"
+    severity: "P1"
+    title: "【强制】分布式事务必须使用 @YdszGlobalTransactional，禁止裸用 Seata API"
+    description: |
+      跨服务/跨库事务必须使用 ydzs-common-seata 提供的 @YdszGlobalTransactional 注解 或 SeataAutoConfiguration
+      自动注册的 YdszGlobalTransactionalAspect 切面驱动，禁止业务模块直接引入 Seata 官方 starter
+      （seata-spring-boot-starter / spring-cloud-starter-alibaba-seata）并裸调 io.seata.tm.api.GlobalTransaction API。
+
+      **为什么禁止裸用**：
+      - 裸用 Seata API 会导致 XID 透传链断裂（缺少 FeignXidRequestInterceptor + XidServletFilter 自动注册）
+      - 全局事务嵌套语义失控（框架已通过 @YdszGlobalTransactional 内嵌 Ordered.LOWEST_PRECEDENCE 保证不嵌套）
+      - 业务代码与 Seata 版本强耦合，升级需逐模块改造
+      - ydsz-common-seata 通过反射桥接实现编译期零硬依赖，业务模块仅依赖 common 层，Seata 客户端按需引入
+    pattern: |
+      以下任一情形构成违规：
+      1. pom.xml 中直接引入 seata-spring-boot-starter / spring-cloud-starter-alibaba-seata（应通过 ydzs-common-seata 中转）
+      2. 业务代码 import io.seata.tm.api.GlobalTransaction / io.seata.spring.annotation.GlobalTransactionScanner
+      3. 业务代码调用 GlobalTransactionContext.load(...) / getCurrentOrCreate() 手动创建全局事务
+      4. 业务 Feign @Configuration 覆盖 FeignXidRequestInterceptor，破坏 XID 透传
+    fix: |
+      1. pom 引入 ydsz-common-seata（可选依赖；未引入 Seata 客户端时所有 Bean 不注册，业务无感）
+      2. 业务方法标注 @YdszGlobalTransactional(name = "xxx-method")
+      3. 配置 ydsz.seata.enabled=true 激活自动配置
+      4. 配置 Seata 客户端第三方依赖（业务方按需引入，版本由 spring-cloud-alibaba BOM 管控）
+    example_bad: |
+      // ❌ pom 直接引入 Seata starter
+      <dependency>
+          <groupId>io.seata</groupId>
+          <artifactId>seata-spring-boot-starter</artifactId>
+      </dependency>
+
+      // ❌ 裸调 Seata GlobalTransaction API
+      import io.seata.tm.api.GlobalTransaction;
+      GlobalTransaction tx = GlobalTransactionContext.getCurrentOrCreate();
+      tx.begin();
+    example_good: |
+      // ✅ pom 仅引入 ydzs-common-seata（可选）
+      <dependency>
+          <groupId>com.njydsz</groupId>
+          <artifactId>ydsz-common-seata</artifactId>
+          <optional>true</optional>
+      </dependency>
+
+      // ✅ 使用框架封装的 @YdszGlobalTransactional
+      @Service
+      public class OrderService {
+          @YdszGlobalTransactional(name = "order-create", timeoutMills = 30000)
+          public void createOrder(OrderDTO dto) {
+              orderRepository.save(order);
+              inventoryClient.deduct(dto.getSkuId(), dto.getQuantity());  // Feign 自动透传 XID
+          }
+      }
+    source: "编码规范 §25.6 分布式事务统一封装（YDIZ-TX-005，P1）"
+
   # ============================================
   # ============================================
   # 十七、测试规范（26.09.14 起生效，1.0.8 扩充至 3 条：2 P0 + 1 P1）
@@ -1869,6 +1924,23 @@ rules:
     fix: "提取私有模板方法 + Supplier/Runnable 回调注入差异"
     source: "编码规范 §30.2 共享流程模板化（YDIZ-CONFIG-002，P2）"
 
+  - id: "YDIZ-CONFIG-003"
+    category: "config"
+    severity: "P2"
+    title: "@ConfigurationProperties 类必须继承 BaseProperties 基类（可选引入，GDPR 审计追溯）"
+    description: |
+      当配置需要满足合规审计（记录配置变更者/变更时间/变更前值/变更后值）、动态刷新广播、
+      或统一格式校验时，@ConfigurationProperties 类必须继承 ydsz-common-config 提供的 BaseProperties 基类，
+      而非仅使用原生 @ConfigurationProperties注解裸配置。
+
+      **为什么引入基类**：
+      - 合规需要：GDPR/等保要求配置变更可追溯，BaseProperties 提供变更审计钩子
+      - 热刷新需要：cloud-config/Nacos 动态推送需注册变更监听器，基类统一实现 RefreshEventListener
+      - 格式校验需要：@PostConstruct 校验注解（@Range/@Pattern）统一处理
+    pattern: "@ConfigurationProperties 类直接裸注解未继承 BaseProperties"
+    fix: "1. 引入 ydsz-common-config 依赖 2. 类 extends BaseProperties 3. 调用 super.init() 初始化基类钩子"
+    source: "编码规范 §30.3 配置基类规范（YDIZ-CONFIG-003，P2）"
+
 # ============================================
 # 十七、错误码规范（errcode，2 条，P1+P2）
 # ============================================
@@ -1978,20 +2050,81 @@ rules:
       4. 通过 OutboxService.appendToOutbox() 统一写入
     source: "编码规范 §22.5.5 Outbox 事务消息归属（YDIZ-EVENT-001，P0）"
 
+  - id: "YDIZ-EVENT-002"
+    category: "event"
+    severity: "P1"
+    title: "【强制】Outbox 消费必须实现 OutboxSubscriber SPI，禁止手动 @EventListener + 自建过滤"
+    description: |
+      Outbox 消息消费端必须实现 ydzs-common-event 的 OutboxSubscriber 接口（声明 getTopic() 返回订阅主题），
+      由 OutboxSubscriberDispatcher 统一接收 OutboxMessage Spring 事件并按 topic 自动路由。
+      禁止业务模块使用 @EventListener 监听 OutboxMessage 后在方法体内手写 topic 过滤。
+
+      **为什么统一 SPI**：
+      - 消除重复过滤逻辑：各 Cronjob/Msg/Workflow 模块原来自行解析 topic 并 if-return（重复 15+ 处）
+      - 集中可观测：Dispatcher 统一记录 topic 无匹配订阅者、消费异常等关键事件
+      - 通配广播：Dispatcher 支持 topic="*" 通配订阅者，业务无需自行实现广播分发
+      - 类型安全：实现接口即获编译期约束，避免手写过滤条件遗漏
+    pattern: |
+      以下任一情形构成违规：
+      1. 业务 @Component/@Service 类方法标注 @EventListener 且参数为 OutboxMessage
+      2. 在 @EventListener 方法体内通过 if (!\"xxx\".equals(message.getTopic())) return; 手动过滤
+      3. 一个订阅者类内硬编码多个 topic 过滤（拆分为多个 OutboxSubscriber 实现或注册通配 topic="*"）
+      4. 自行实现 OutboxMessage 事件路由逻辑（如 ApplicationListener<OutboxMessage>）
+    fix: |
+      1. 删除 @EventListener 方法
+      2. 类实现 OutboxSubscriber 接口（getTopic() 返回主题，onMessage() 实现业务逻辑）
+      3. 多个 topic 使用多个实现类或通配 + 内部 switch（通配仅限确实需要订阅 >3 个 topic 的场景）
+      4. @OutboxIdempotentConsumer 注解可继续标注在 onMessage() 方法上（幂等由 outbox_idempotent 表保证）
+    example_bad: |
+      // ❌ @EventListener + 手动 topic 过滤（YDIZ-EVENT-002 违规）
+      @Component
+      public class AuditListener {
+          @EventListener
+          public void onEvent(OutboxMessage message) {
+              if (!"audit".equals(message.getTopic())) return;  // 手写过滤，违反 SPI 约束
+              // ... 业务逻辑
+          }
+      }
+    example_good: |
+      // ✅ 实现 OutboxSubscriber SPI（YDIZ-EVENT-002 合规）
+      @Component
+      public class AuditOutboxSubscriber implements OutboxSubscriber {
+          @Override
+          public String getTopic() { return "audit"; }
+
+          @Override
+          public void onMessage(OutboxMessage message) {
+              // ... 业务逻辑（无需 topic 过滤，Dispatcher 已路由）
+          }
+      }
+    source: "编码规范 §28.6 Outbox 消费端 SPI 规范（YDIZ-EVENT-002，P1）"
+
   - id: "YDIZ-ARCH-004"
     category: "architecture"
     severity: "P0"
     title: "安全过滤器唯一归属"
     description: |
-      安全过滤器（ApiSignatureFilter/ApiKeyAuthFilter/SecurityHeaderFilter）统一在 ydsz-common-safe 中定义，
+      安全过滤器（ApiSignatureFilter/GatewayApiKeyAuthFilter/SignatureAuthFilter 等鉴权/验签名过滤器）统一在 ydzs-common-safe 中定义，
       业务模块通过配置属性（ydsz.safe.*）差异化行为，禁止在业务模块包内重复定义安全过滤器类。
-    pattern: "业务模块 web/api 层实现 javax.servlet.Filter 或 OncePerRequestFilter"
+
+      例外（业务特异过滤器允许自建）：同时满足以下三项的业务过滤器可保留在业务模块内：
+      （1）过滤器职责承载模块特有安全语义（如 SCIM Bearer Token、OAuth2 Token 续签、模块级 Remember-Me、模块 RBAC 桥接、API Key 校验等）；
+      （2）过滤器 Javadoc 已明确说明"不可下沉"的技术原因（场景差异/协议约束/模块上下文依赖）；
+      （3）过滤器 Order 与执行链路已通过 common-safe 标准过滤器明确隔离。
+
+      判定示例：
+      - ScimAuthFilter — SCIM 2.0 专有 Bearer 认证（RFC 7644），SCIM 错误格式无法由通用过滤器承载，保留
+      - TokenAutoRenewalFilter — OAuth2 Token 滑动续签依赖 ydsz UserInfo TokenService，保留
+      - RequestContextAuthenticationFilter — SecurityContext 桥接，依赖 generator 模块角色枚举，保留
+      - ApiSignatureFilter 在 userinfo-web 重复定义，违规，必须下沉至 common-safe
+    pattern: "业务模块 web/api 层实现 OncePerRequestFilter 且不具备上述三项例外特征"
     fix: |
-      1. 删除业务模块中自建的 Filter/OncePerRequestFilter 实现
-      2. 引入 ydsz-common-safe 依赖
+      1. 删除业务模块中无正当理由自建的安全 Filter/OncePerRequestFilter 实现
+      2. 引入 ydzs-common-safe 依赖
       3. 通过 ydsz.safe.* 配置属性差异化行为
       4. 如确需定制，向 ydzs-common-safe 提交 enhancement PR
-    source: "编码规范 §19.6 末尾（YDIZ-ARCH-002→重编号为 P0，重分配 ID YDIZ-ARCH-004）"
+      5. 业务特异过滤器保留时必须在 Javadoc 顶部注明"不可下沉"的技术原因及 Order 隔离说明
+    source: "编码规范 §19.6 末尾（v1.0.13 新增例外条款：允许文档化的业务特异过滤器）"
 
   # ==================== 工具与架构（util，1 条） ====================
   - id: "YDIZ-UTIL-001"
@@ -2058,12 +2191,12 @@ stats:
   api: 2
   exception: 1
   audit: 1
-  event: 2
-  tx: 4
+  event: 3
+  tx: 5
   testing: 3
   resilience: 1
-  config: 2
+  config: 3
   errcode: 2
   i18n: 2
   util: 1
-  total: 81
+  total: 84

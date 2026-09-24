@@ -52,8 +52,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *
  * <p>{@code internalSignSecret} 使用独立配置项 {@code ydsz.gateway.internal-sign-secret}，与 JWT 密钥隔离。
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

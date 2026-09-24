@@ -79,8 +79,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  * common-jdbc 的 {@code SqlFirewallInnerInterceptor} 在 JDBC 层做深度防护，本过滤器在网关层做入口拦截，
  * 二者构成<b>纵深防御</b>而非重复建设；网关层为响应式栈，无法直接复用 Servlet 端实现。
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

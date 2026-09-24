@@ -18,15 +18,15 @@ import com.njydsz.message.domain.vo.MsgAggregateVO;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**
- * 聚合批次调度器。
+ * 聚合批次调度器，定时扫描到达发送时间的 PENDING 批次并触发摘要发送。
  *
- * <p>定时扫描 PENDING 且到期的批次,流转为 READY 后触发 {@link AggregateService#flushDue} 发送。
+ * <p>扫描 scheduled_send_at<=now 的 PENDING 聚合批次，先流转为 READY 状态，
+ * 再调用 AggregateService.flushDue 批量发送聚合摘要。
+ * 多实例部署通过 DistributedScheduled 分布式锁保证单实例执行扫描
+ * （非阻塞，TTL 300s，获取失败跳过由下一周期接管）。
  *
- * <p>通过 {@link DistributedScheduled} 注解保证多实例部署时同一时刻只有一个实例执行扫描, 避免重复流转状态、重复发送聚合消息。锁等待 0s(非阻塞),TTL
- * 300s, 获取失败直接跳过本次扫描,由下一个周期接管。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

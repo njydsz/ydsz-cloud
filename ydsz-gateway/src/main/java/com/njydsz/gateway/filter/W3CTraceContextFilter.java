@@ -50,8 +50,8 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  * {@code TracerUtils#parseTraceparent}。本过滤器承载的协议逻辑后续应下沉至
  * {@code ydsz-common-sentry} 的 {@code TraceContext} SPI，网关侧仅保留响应式接线。
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

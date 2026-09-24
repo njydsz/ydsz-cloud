@@ -1,6 +1,5 @@
 package com.njydsz.common.excel.spring;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -11,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.http.HttpHeaders;
 
 import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 
 /**
@@ -18,6 +18,9 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  *
  * <p>提供直接将 Excel 写入 {@link HttpServletResponse} 的便捷方法， 适用于 Controller 层直接下载场景。仅当 servlet API 在
  * classpath 上时生效。
+ *
+ * <p><b>流式导出</b>：数据直接从内存序列化到 {@link HttpServletResponse#getOutputStream()}，
+ * 无需 {@code ByteArrayOutputStream} 中间缓冲。适合大文件场景，第一个字节在表头写入后即可推送给客户端。
  *
  * <h3>使用示例</h3>
  *
@@ -48,6 +51,9 @@ public class ExcelWebSupport {
   /**
    * 写入 Excel 到 HTTP 响应。
    *
+   * <p><b>流式写入</b>：直接向 {@link HttpServletResponse#getOutputStream()} 写入，
+   * 不经过中间 ByteArrayOutputStream 缓冲，适合大文件场景。
+   *
    * @param response HTTP 响应
    * @param clazz 数据类
    * @param data 数据列表
@@ -65,6 +71,9 @@ public class ExcelWebSupport {
   /**
    * 写入 Excel 到 HTTP 响应（使用自定义下载上下文）。
    *
+   * <p><b>流式写入</b>：直接向 {@link HttpServletResponse#getOutputStream()} 写入，
+   * 不经过中间 ByteArrayOutputStream 缓冲，适合大文件场景。
+   *
    * @param response HTTP 响应
    * @param clazz 数据类
    * @param data 数据列表
@@ -80,10 +89,14 @@ public class ExcelWebSupport {
         HttpHeaders.CONTENT_DISPOSITION,
         "attachment; filename=" + encodeFilename(context.getFullFilename()));
 
-    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    ExcelFacade.write(buffer, clazz).config(config).sheet(context.getFilename()).doWrite(data);
-    response.setContentLength(buffer.size());
-    buffer.writeTo(response.getOutputStream());
+    // 流式写入：直接输出到 response.getOutputStream()，无需 ByteArrayOutputStream 中间缓冲
+    // 注意：Content-Length 无法预知（流式写入），由 Servlet 容器启用 chunked transfer
+    ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), clazz)
+        .config(config)
+        .sheet(context.getFilename());
+    writer.doWrite(data);
+    writer.finish();
+    response.getOutputStream().flush();
   }
 
   /**

@@ -447,7 +447,7 @@ public class LocalStorage extends AbstractFileStorage {
 
         ListObjectsResult result = new ListObjectsResult();
         result.setObjects(objects);
-        result.setIsHasMore(nextCursor != null);
+        result.setHasMore(nextCursor != null);
         result.setNextCursor(nextCursor);
         result.setObjectCount(objects.size());
         return result;

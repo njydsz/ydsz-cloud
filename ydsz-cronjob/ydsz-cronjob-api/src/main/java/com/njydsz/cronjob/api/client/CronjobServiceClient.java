@@ -13,10 +13,10 @@ import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.cronjob.api.fallback.CronjobServiceClientFallback;
 
 /**
- * 定时任务服务 Feign 客户端（P1-2 规则与定时任务联动）
+ * 定时任务服务 Feign 客户端。
  *
- * <p>供 literule 等模块通过 Feign 远程触发 cronjob 定时任务。 当规则触发时，可通过此客户端立即执行一次指定的定时任务， 实现规则命中 →
- * 自动触发数据采集/报表生成/告警处理等后续动作。
+ * <p>供 literule 等业务模块通过 Feign 远程触发 cronjob 定时任务，实现规则命中 → 自动触发后续动作的联动能力。
+ * 提供任务的远程触发（支持分布式锁抢占）、详情查询、暂停与恢复等运行时管理能力。
  *
  * <h3>典型场景</h3>
  *
@@ -26,10 +26,10 @@ import com.njydsz.cronjob.api.fallback.CronjobServiceClientFallback;
  *   <li>EVM 偏差规则命中 → 触发"EVM 数据刷新"定时任务
  * </ul>
  *
- * <p>使用 {@link CronjobServiceClientFallback} 保证 cronjob 服务不可用时 不影响调用方主流程（降级为 WARN 日志）。
+ * <p>使用 {@link CronjobServiceClientFallback} 保证 cronjob 服务不可用时降级为 WARN 日志，不影响调用方主流程。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @FeignClient(
     name = FeignClientConstants.CRONJOB,

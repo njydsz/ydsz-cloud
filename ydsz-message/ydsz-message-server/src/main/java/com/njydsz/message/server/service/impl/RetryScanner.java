@@ -23,20 +23,16 @@ import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.metric.MessageMetrics;
 
 /**
- * 消息重试调度器。
+ * 消息重试调度器，定时扫描 RETRY 状态的到期消息在分布式锁内重新发送。
  *
- * <p>定时扫描 {@code status=RETRY AND next_retry_at<=now} 的消息,在分布式锁内重新发送:
+ * <p>扫描 status=RETRY AND next_retry_at<=now 的消息，逐条调用渠道 dispatch：
+ * 成功 → SUCCESS；失败 + retryCount < MAX → RETRY + 指数退避更新下次发送时间；
+ * 失败 + retryCount >= MAX → DEAD。重试次数上限由 RetryStrategyResolver 按通道独立配置，
+ * 退避计算带随机抖动（0~1s）避免多实例惊群。
+ * 多实例部署通过 DistributedScheduled 分布式锁保证单实例执行扫描。
  *
- * <ul>
- *   <li>成功 → SUCCESS
- *   <li>失败 + retryCount &lt; MAX → RETRY + 更新 nextRetryAt(指数退避)
- *   <li>失败 + retryCount &gt;= MAX → DEAD
- * </ul>
- *
- * <p>多实例部署通过 Redisson 分布式锁保证只有一个实例执行扫描。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

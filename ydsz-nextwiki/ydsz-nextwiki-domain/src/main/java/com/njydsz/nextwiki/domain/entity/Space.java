@@ -20,8 +20,8 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
  *
  * <p>对应知识库空间表 {@code ydsz_wiki_space}，表示一个知识库空间（类似 Confluence 的 Space）。 空间是文件节点的顶级容器，每个文件节点必须属于一个空间。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

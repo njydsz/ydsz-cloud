@@ -325,7 +325,12 @@ public class SuperFastExcelReader {
     List<SheetRef> result = new ArrayList<>(16);
     int pos = 0;
     while (true) {
+      // 标准路径：匹配 "<sheet "（无命名空间前缀）
       int start = xml.indexOf("<sheet ", pos);
+      // namespace-aware fallback：匹配 "<prefix:sheet "（含命名空间前缀，如 WPS/LibreOffice）
+      if (start < 0) {
+        start = xml.indexOf(":sheet ", pos);
+      }
       if (start < 0) {
         break;
       }

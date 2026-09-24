@@ -537,7 +537,7 @@ public class QiniuStorage extends AbstractFileStorage {
       String nextCursor = hasMore && !objects.isEmpty() ? objects.get(objects.size() - 1).getObjectName() : null;
       ListObjectsResult result = new ListObjectsResult();
       result.setObjects(objects);
-      result.setIsHasMore(hasMore);
+      result.setHasMore(hasMore);
       result.setNextCursor(nextCursor);
       result.setObjectCount(objects.size());
       return result;

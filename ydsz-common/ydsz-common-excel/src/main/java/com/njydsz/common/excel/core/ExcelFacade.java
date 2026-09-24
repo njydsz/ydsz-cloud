@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
+import com.njydsz.common.excel.core.reader.ExcelStream;
 import com.njydsz.common.excel.csv.CsvReader;
 import com.njydsz.common.excel.csv.CsvWriter;
 import com.njydsz.common.excel.exception.ExcelReadException;
@@ -383,6 +384,57 @@ public class ExcelFacade {
     }
   }
 
+  // ==================== Stream API 读取 ====================
+
+  /**
+   * 以 Stream API 方式流式读取 Excel 文件，适用于大数据量场景和与 Reactor / Spring Batch 等框架集成。
+   *
+   * <p>示例：
+   *
+   * <pre>{@code
+   * try (ExcelStream<User> stream = ExcelFacade.readAsStream("demo.xlsx", User.class)) {
+   *   List<String> names = stream.stream()
+   *       .filter(u -> u.getAge() != null && u.getAge() > 18)
+   *       .map(User::getName)
+   *       .limit(1000)
+   *       .collect(Collectors.toList());
+   * }
+   * }</pre>
+   *
+   * <p>内部使用有界阻塞队列（默认容量 256）实现背压控制，解析线程在缓冲区满时自动阻塞，避免内存溢出。
+   *
+   * @param filePath Excel 文件路径（.xlsx 或 .xls）
+   * @param clazz 映射数据类型
+   * @param <T> 数据类型
+   * @return ExcelStream 实例，须由调用方通过 try-with-resources 关闭
+   * @throws ExcelReadException 读取失败时抛出
+   * @see ExcelStream
+   */
+  public static <T> ExcelStream<T> readAsStringStream(String filePath, Class<T> clazz) {
+    ReadMetadata metadata = new ReadMetadata();
+    metadata.setFilePath(filePath);
+    metadata.setClazz(clazz);
+    ExcelReader reader = new ExcelReader(metadata);
+    return ExcelStream.of(reader, clazz, 256);
+  }
+
+  /**
+   * 以 Stream API 方式流式读取 Excel 文件（自定义缓冲区容量）。
+   *
+   * @param filePath Excel 文件路径
+   * @param clazz 映射数据类型
+   * @param capacity 背压缓冲区大小（行数）
+   * @param <T> 数据类型
+   * @return ExcelStream 实例
+   */
+  public static <T> ExcelStream<T> readAsStringStream(String filePath, Class<T> clazz, int capacity) {
+    ReadMetadata metadata = new ReadMetadata();
+    metadata.setFilePath(filePath);
+    metadata.setClazz(clazz);
+    ExcelReader reader = new ExcelReader(metadata);
+    return ExcelStream.of(reader, clazz, capacity);
+  }
+
   // ==================== 无类型全 Sheet 读取 ====================
 
   /**
@@ -394,18 +446,20 @@ public class ExcelFacade {
    * <p>第一行作为表头（{@code headers}），后续行作为数据行（{@code rows}）。 全空行自动过滤。单元格值统一转为字符串，日期按 {@code yyyy-MM-dd
    * HH:mm:ss} 格式输出， 数字为整数时去掉小数部分。
    *
-   * <p><b>注意：</b>本方法使用 DOM 方式载入工作簿，大文件内存占用约为文件体积的数倍。 调用方应按 {@code maxFileSizeMb} 提前拦截超大文件。
+   * <p><b>警告：</b>本方法使用 POI DOM 方式（{@link WorkbookFactory#create}）全量载入工作簿，
+   * 大文件内存占用约为文件体积的 3-5 倍。超大文件场景请通过
+   * {@link #read(InputStream)} + {@link ExcelReader#doRead(ReadListener)} 逐 Sheet 流式消费。
    *
    * <h3>使用示例</h3>
    *
    * <pre>{@code
    * List<RawSheetData> sheets = ExcelFacade.readAllSheets(inputStream);
-* for (RawSheetData sheet : sheets) {
- *     log.debug("Sheet={}, Headers={}", sheet.sheetName(), sheet.headers());
- *     for (List<String> row : sheet.rows()) {
- *         log.debug("row={}", row);
- *     }
- * }
+   * for (RawSheetData sheet : sheets) {
+   *     log.debug("Sheet={}, Headers={}", sheet.sheetName(), sheet.headers());
+   *     for (List<String> row : sheet.rows()) {
+   *         log.debug("row={}", row);
+   *     }
+   * }
    * }</pre>
    *
    * @param inputStream Excel 字节流，由调用方负责关闭；为 {@code null} 时返回空列表

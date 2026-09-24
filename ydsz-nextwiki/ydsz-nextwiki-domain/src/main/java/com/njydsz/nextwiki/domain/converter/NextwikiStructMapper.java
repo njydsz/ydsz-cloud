@@ -67,8 +67,8 @@ import com.njydsz.nextwiki.domain.vo.TrashItemVO;
  *   <li>集合转换（{@code List<X>}）由 MapStruct 自动派生
  * </ul>
  *
- * @author ydsz-team
- * @since 26.09.06
+ * @author ydsz
+ * @since 26.09.24
  */
 @Mapper(
     componentModel = "spring",

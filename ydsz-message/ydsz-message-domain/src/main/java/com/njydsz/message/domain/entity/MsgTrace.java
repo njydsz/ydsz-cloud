@@ -12,13 +12,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
- * 消息轨迹记录表: 记录消息从接入到投递全链路的每个关键节点。
+ * 消息轨迹记录实体，记录消息从接入到投递全链路的每个关键节点。
  *
- * <p>P0-2: 端到端消息追踪能力，支撑消息全生命周期可视化。 每条消息在每个关键节点（接收、校验、路由、渲染、投递、回执等）产生一条轨迹记录， 通过 msgId
- * 关联，按时间顺序串联形成完整链路。
+ * <p>对应数据库表 {@code ydsz_msg_trace}。每条消息在每个关键节点
+ * （接收、校验、路由、渲染、投递、回执等）产生一条轨迹记录，
+ * 通过 msgId 关联、按 eventAt 时间顺序串联形成完整链路，支撑端到端消息追踪与可视化。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

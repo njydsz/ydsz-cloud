@@ -10,12 +10,16 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 文件评论实体（P1-5）
+ * 文件评论实体（P1-5）。
  *
- * <p>支持文件级别的评论和回复，用于知识库协作讨论。
+ * <p>支持文件级别的评论和回复，用于知识库协作讨论。每条评论关联一个文件节点（{@link #fileNodeId}），
+ * 通过 {@link #parentCommentId} 构建评论回复树（顶级评论为 null）。支持批注模式（{@link #position}
+ * 存储文档内定位信息），并可通过 {@link #isResolved} 标记批注的解决状态。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p><b>表名：</b>{@code ydsz_wiki_file_comment}
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

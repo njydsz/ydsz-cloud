@@ -18,21 +18,15 @@ import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 
 /**
- * 消息模块健康检查指示器。
+ * 消息模块健康检查指示器，探测消息引擎关键运行状态并暴露 /actuator/health/message 端点。
  *
- * <p>报告消息引擎关键运行状态，暴露 {@code /actuator/health/message} 端点：
+ * <p>探测范围：已注册通道列表（ChannelRouter 缓存）、Redis 连通性（PING）、
+ * 死信队列积压数（DEAD 状态，命中即标记 DOWN）、重试队列积压数（RETRY）、
+ * 定时消息积压数（SCHEDULED）、发送中消息数（SENDING）。
+ * 各探针使用轻量 LIMIT 1 查询，避免 COUNT 扫描大表。
  *
- * <ul>
- *   <li>已注册通道列表 + 通道数量
- *   <li>Redis 连通性（PING）
- *   <li>死信队列积压数（DEAD 状态，轻量探针 LIMIT 1）
- *   <li>重试队列积压数（RETRY 状态，轻量探针 LIMIT 1）
- *   <li>定时消息积压数（SCHEDULED 状态，轻量探针 LIMIT 1）
- *   <li>发送中消息数（SENDING 状态，轻量探针 LIMIT 1）
- * </ul>
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)

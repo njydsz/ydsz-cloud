@@ -27,8 +27,8 @@ import com.njydsz.agent.infra.mapper.AsyncTaskMapper;
  *   <li>路由器始终注册，委托当前生效的 {@link AsyncTaskStore} Bean</li>
  * </ul>
  *
- * @author ydsz-team
- * @since 26.09.17
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Configuration

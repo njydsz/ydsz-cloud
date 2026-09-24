@@ -74,8 +74,8 @@ import com.njydsz.gateway.config.GatewayMetrics;
  *   <li>服务端错误 (5xx) — ERROR
  * </ul>
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

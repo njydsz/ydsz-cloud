@@ -20,8 +20,8 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
  *
  * <p>对应空间成员表 {@code nw_space_member}，记录用户与空间的归属关系及角色。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

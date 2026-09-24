@@ -24,8 +24,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>支持提取码（4 位数字）二次验证
  * </ul>
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

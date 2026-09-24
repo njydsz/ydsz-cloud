@@ -11,12 +11,15 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 消息变量数据源绑定表。
+ * 消息变量数据源绑定实体，定义模板占位符(var)到外部数据源的映射关系。
  *
- * <p>P0-4: 模板变量可绑定到数据源(BEAN/SQL/HTTP/STATIC), 渲染前自动拉取变量值,免除调用方手动传入所有参数。
+ * <p>对应数据库表 {@code ydsz_msg_variable_source}。templateCode + variableName
+ * 粒度绑定数据源，sourceType 支持 BEAN/SQL/HTTP/STATIC 四种类型，
+ * sourceExpr 为数据源查询表达式，cacheTtl 控制缓存有效期（秒）。
+ * 渲染前自动拉取变量值，免除调用方手动传入所有参数。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

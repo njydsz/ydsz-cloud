@@ -36,8 +36,8 @@ import com.njydsz.agent.domain.state.AgentStateStore;
  * 全局扫描可能无法命中带前缀的键；此时按租户查询（{@link #findActiveSessionsByTenant}）
  * 仍可正常工作，因为租户信息已固化在会话数据中。
  *
- * @author ydsz-team
- * @since 26.09.14
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

@@ -56,8 +56,8 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  *   Link: &lt;/api/v2&gt;; rel="successor-version"
  * </pre>
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

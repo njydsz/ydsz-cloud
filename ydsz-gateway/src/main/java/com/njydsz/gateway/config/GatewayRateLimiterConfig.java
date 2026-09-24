@@ -24,8 +24,8 @@ import reactor.core.publisher.Mono;
  * 引入 {@code application-resilience4j.yml} 中的 {@code default-filters.RequestRateLimiter} 配置，
  * 本配置类提供限流参数属性绑定与 KeyResolver Bean。
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  * @see GatewayRateLimiterProperties
  * @see UserKeyResolver
  * @see IpKeyResolver

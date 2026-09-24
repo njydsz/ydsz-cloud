@@ -81,8 +81,8 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
  *                                   ydsz_wiki_tag / ydsz_wiki_file_tag
  * </pre>
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @ApiVersion("26.09.01")
 @Slf4j

@@ -52,8 +52,8 @@ import com.njydsz.agent.domain.text2sql.Text2SqlStateContext;
  * <p>通过 {@code @ConditionalOnProperty} 控制是否启用：当配置 {@code ydsz.agent.text2sql.enhanced=true}
  * 时激活，否则回退到 {@link JdbcText2SQLService}。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Primary

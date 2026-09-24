@@ -11,12 +11,17 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 回收站条目实体
+ * 回收站条目实体。
  *
- * <p>记录被逻辑删除的文件/文件夹，支持恢复和自动清理。 默认保留 30 天，超期自动永久删除。
+ * <p>记录被逻辑删除的文件/文件夹，支持恢复和自动清理。条目由原文件节点（{@link #fileNodeId}）的逻辑删除触发创建，
+ * 快照原始文件名（{@link #originalName}）、路径（{@link #originalPath}）、父节点（{@link #originalParentId}）
+ * 和大小（{@link #size}）以支持完整恢复。默认保留 30 天（{@link #DEFAULT_RETENTION_DAYS}），
+ * 超期（{@link #purgeTime}）自动永久删除。状态机为 in_trash → restored / purged。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p><b>表名：</b>{@code ydsz_wiki_trash_item}
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

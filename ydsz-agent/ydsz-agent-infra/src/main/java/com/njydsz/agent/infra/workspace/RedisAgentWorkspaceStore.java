@@ -27,8 +27,8 @@ import com.njydsz.agent.domain.workspace.AgentWorkspaceStore;
  *
  * <p><b>启用方式</b>：{@code ydsz.agent.workspace.backend=redis}（默认 memory）。
  *
- * @author ydsz-team
- * @since 26.09.13
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

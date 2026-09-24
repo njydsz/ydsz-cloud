@@ -14,10 +14,17 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
- * 决策表实体
+ * 决策表实体。
+ *
+ * <p>对应 {@code ydsz_rule_decision_table} 表，以行-列矩阵形式描述条件与动作的映射关系。
+ * 每行代表一条规则，条件列（{@code conditionColumns}）定义输入事实的匹配条件，动作列（{@code actionColumns}）
+ * 定义命中时输出的动作参数。命中策略（{@code hitPolicy}）支持 UNIQUE / FIRST / PRIORITY / COLLECT / ANY 五种模式，
+ * 默认 FIRST（命中即停）。
+ *
+ * <p>决策行（{@code rows}）为 JSON 列表，每行包含条件值与动作值键值对；{@code defaultActions} 定义无行命中时的兜底输出。
  *
  * @author ydsz
- * @since 26.09.01
+ * @since 26.09.24
  */
 @Data
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 与泛型继承产生 unchecked 警告

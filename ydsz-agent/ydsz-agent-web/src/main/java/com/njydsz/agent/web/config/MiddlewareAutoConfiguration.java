@@ -24,8 +24,8 @@ import com.njydsz.agent.server.middleware.MiddlewareChainImpl;
  *   <li>前置条件 {@code ydsz.agent.enabled=true} 与 AgentAutoConfiguration 对齐</li>
  * </ul>
  *
- * @author ydsz-team
- * @since 26.09.13
+ * @author ydsz
+ * @since 26.09.24
  */
 @Configuration
 @ConditionalOnProperty(

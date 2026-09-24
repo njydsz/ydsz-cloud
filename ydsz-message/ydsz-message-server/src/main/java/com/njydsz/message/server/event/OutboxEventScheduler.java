@@ -19,21 +19,16 @@ import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.producer.MessageQueueOperations;
 
 /**
- * Outbox 事件扫描发布调度器 — 委托 common-event 标准仓储。
+ * Outbox 事件扫描发布调度器，定时扫描待处理事件并分发到 MQ 或 Spring 事件总线。
  *
- * <p>定时扫描 Outbox 表中 PENDING 事件，根据事件类型分发：
- * <ul>
- *   <li>{@code MessageAsyncDispatch} —— 反序列化为 {@link MessageRequest} 后投递到 MQ</li>
- *   <li>其他领域事件 —— 发布到 Spring 事件总线</li>
- * </ul>
+ * <p>扫描 Outbox 表中 PENDING 事件（委托 common-event OutboxRepository），
+ * 根据事件类型分发：MessageAsyncDispatch → 反序列化为 MessageRequest 投递到 MQ；
+ * 其他领域事件 → 发布到 Spring 事件总线。
+ * 发布成功标记为 SENT，失败则根据重试次数决定指数退避重试或标记为 DEAD_LETTER。
+ * 多实例部署通过 DistributedScheduled 分布式锁保证单实例执行扫描。
  *
- * <p>发布成功标记为 SENT，失败则根据重试次数决定重试或标记为 DEAD_LETTER。
- *
- * <p>多实例部署通过 {@link DistributedScheduled} 分布式锁保证只有一个实例执行扫描。
- *
- * @author ydsz-team
- * @since 26.09.01
- * @since 26.09.29 迁移至 common-event OutboxRepository，删除自建 OutboxEventRepository
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

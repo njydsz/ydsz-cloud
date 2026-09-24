@@ -13,13 +13,16 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
- * 规则评分卡实体
+ * 规则评分卡实体。
  *
- * <p>评分卡规则：基于 factors 列表（条件表达式 + 扣分）逐项评估。 基础分 base_score，低于 red_threshold 为红灯、低于 yellow_threshold
- * 为黄灯。
+ * <p>对应 {@code ydsz_rule_scorecard} 表，以扣分制评分卡模式评估业务对象的风险等级。
+ * 评估流程：从 {@code baseScore} 基础分出发，依次判断评分因子（{@code factors}，JSON 列表，每项含条件表达式与扣分值），
+ * 满足条件则减去对应分数。最终得分低于 {@code redThreshold} 判定为红灯风险，低于 {@code yellowThreshold} 判定为黄灯预警。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>算法复杂度为 O(F)，F 为评分因子数量。适用于多维度累加扣分、总分阈值判级的典型风控场景。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 与泛型继承产生 unchecked 警告
 @SuppressWarnings("unchecked")

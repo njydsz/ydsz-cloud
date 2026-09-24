@@ -14,14 +14,16 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 
 /**
- * 用户最近访问持久化实体
+ * 用户最近访问持久化实体。
  *
  * <p><b>S2-P1-06：快捷访问入口</b>
  *
- * <p>对应用户最近访问表 {@code nw_user_recent}，记录用户的文件访问历史， 自动保留最新访问记录（同一节点只保留一条），支持按访问时间倒序查询。
+ * <p>对应用户最近访问表 {@code ydsz_wiki_user_recent}，记录用户的文件/目录访问历史。
+ * 同一节点只保留一条记录（覆盖更新 {@link #accessedAt}），访问类型由 {@link #accessType} 标识
+ * （view/edit/download）。前端"最近访问"模块按 {@link #accessedAt} 倒序展示，支持软删除（{@link #isDeleted}）。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

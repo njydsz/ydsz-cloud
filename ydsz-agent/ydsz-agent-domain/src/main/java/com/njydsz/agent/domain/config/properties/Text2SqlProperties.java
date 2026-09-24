@@ -4,6 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Text2SQL 增强五步编排配置属性。
+ *
+ * <p>绑定配置前缀 {@code ydzs.agent.text2sql}，控制自然语言转 SQL 能力的启用状态、
+ * 增强模式（五步 StateGraph 编排）、Schema 召回、可行性评估、语义一致性校验、
+ * JDBC 连接信息以及查询结果行数与超时限制。默认启用基础能力，增强模式关闭。
+ * 一致性阈值默认 0.7，Schema 召回最多 5 张表。
+ *
+ * @author ydsz
+ * @since 26.09.24
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

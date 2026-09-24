@@ -521,7 +521,7 @@ public class MinioStorage extends AbstractFileStorage {
         } else {
           ListObjectsResult listResult = new ListObjectsResult();
           listResult.setObjects(objects);
-          listResult.setIsHasMore(true);
+          listResult.setHasMore(true);
           listResult.setNextCursor(lastKey);
           listResult.setObjectCount(objects.size());
           return listResult;
@@ -530,7 +530,7 @@ public class MinioStorage extends AbstractFileStorage {
       }
       ListObjectsResult listResult = new ListObjectsResult();
       listResult.setObjects(objects);
-      listResult.setIsHasMore(false);
+      listResult.setHasMore(false);
       listResult.setNextCursor(null);
       listResult.setObjectCount(objects.size());
       return listResult;

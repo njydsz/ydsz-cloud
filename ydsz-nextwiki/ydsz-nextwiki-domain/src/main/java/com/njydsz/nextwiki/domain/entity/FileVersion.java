@@ -23,8 +23,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>已分享/星标的文件版本不自动清理
  * </ul>
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

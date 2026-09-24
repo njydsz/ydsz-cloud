@@ -20,8 +20,8 @@ import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
  *   <li>其他模块：查询租户/空间维度剩余可用存储
  * </ul>
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @FeignClient(
     name = FeignClientConstants.NEXTWIKI,

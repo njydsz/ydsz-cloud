@@ -24,15 +24,15 @@ import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.metric.MessageMetrics;
 
 /**
- * RocketMQ 死信队列消费者。
+ * RocketMQ 死信队列消费者，处理重试耗尽的消息并持久化到日志表。
  *
- * <p>监听 {@link YdszMessageTopics#DLQ_MESSAGE},将重试耗尽的消息落库 status=DEAD, 不抛出异常避免 DLQ 循环重投。
+ * <p>监听 {@link YdszMessageTopics#DLQ_MESSAGE} Topic，将 maxReconsumeTimes 耗尽的消息
+ * 落库标记为 DEAD 状态。幂等策略：通过 Redis SET NX EX（前缀 ydsz:msg:dlq:idempotent:）
+ * 防止 rebalance 重投导致重复处理；落库时优先按 bizMsgId 更新已有记录状态为 DEAD，
+ * 避免产生重复 msgId 记录。
  *
- * <p>幂等去重:Redis SET NX EX 防止 rebalance 重投导致重复处理; 落库时优先按 msgId 更新已有记录状态为 DEAD,未匹配才 insert,避免重复 msgId
- * 记录。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

@@ -10,12 +10,17 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 存储配额实体
+ * 存储配额实体。
  *
- * <p>按用户/租户/项目维度设置存储上限，上传时校验配额。
+ * <p>按用户/租户/项目维度设置存储上限，上传时校验配额。每条记录通过 {@link #scopeType} 标识配额维度
+ * （user/tenant/project），{@link #scopeId} 对应维度 ID，{@link #quotaLimit} 和 {@link #quotaUsed}
+ * 分别记录字节级配额上限和已用量，{@link #fileCountLimit} 和 {@link #fileCountUsed} 记录文件数量维度的上限和已用量。
+ * 为 null 或 0 表示不限制。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p><b>表名：</b>{@code ydsz_wiki_storage_quota}
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

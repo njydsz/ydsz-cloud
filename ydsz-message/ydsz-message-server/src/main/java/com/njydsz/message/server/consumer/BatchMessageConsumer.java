@@ -18,23 +18,15 @@ import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.message.server.service.core.MessageService;
 
 /**
- * P1-11: 批量消息消费者。
+ * 批量消息消费者，监听 RocketMQ 批量消费 Topic 异步处理大批量非实时通知。
  *
- * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE_BATCH} Topic， 批量消费消息（单次拉取多条，统一处理），提升消费吞吐量。
+ * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE_BATCH} Topic，消息体为 JSON 数组格式
+ * （[MessageRequest, MessageRequest, ...]）。批量大小由 RocketMQ pullBatchSize 控制。
+ * 幂等策略：批量内逐条通过 {@link IdempotentStrategy#acquire} 获取分布式锁
+ * （前缀 msg:batch:），失败则跳过；成功发送后释放锁允许重试。
  *
- * <p>适用场景：
- *
- * <ul>
- *   <li>大批量站内通知推送（如全员公告）
- *   <li>批量短信/邮件发送
- *   <li>非实时通知（允许延迟几秒）
- * </ul>
- *
- * <p>批量大小由 RocketMQ {@code pullBatchSize} 参数控制（默认 32）。 消息体格式为 JSON 数组：{@code [MessageRequest,
- * MessageRequest, ...]}
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

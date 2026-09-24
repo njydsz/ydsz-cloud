@@ -38,8 +38,8 @@ import com.njydsz.agent.domain.profile.UserProfileService;
  *   <li>规则分析模式（默认）— 基于已知领域列表的关键词匹配</li>
  * </ul>
  *
- * @author ydsz-agent
- * @since 26.09.07
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Service

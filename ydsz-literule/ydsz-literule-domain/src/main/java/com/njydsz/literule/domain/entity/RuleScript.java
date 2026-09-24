@@ -9,12 +9,17 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 规则脚本实体
+ * 规则脚本实体。
  *
- * <p>脚本规则：script 字段为 Groovy 脚本源码，运行在沙箱中。 通过 sandbox_enabled 控制是否启用沙箱安全限制。
+ * <p>对应 {@code ydsz_rule_script} 表，以 Groovy 脚本作为规则条件与动作的执行载体，
+ * 通过 {@code script} 字段存储脚本源码。脚本运行时通过 Aviator / Groovy Shell 引擎求值，
+ * 可使用 {@code isSandboxEnabled} 开关控制是否在安全沙箱中执行，防止恶意代码访问系统资源。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>适用于表达式引擎无法满足的复杂业务逻辑场景，如多表关联查询、递归计算、自定义聚合等。
+ * 优先级（{@code priority}）与其他规则类型统一排序，数字越小越先执行。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @Data 与 JPA 继承共用，父类字段泛型擦除
 @SuppressWarnings("unchecked")

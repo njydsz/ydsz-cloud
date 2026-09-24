@@ -67,8 +67,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *
  * <p>Redis 不可用时按 {@code fallbackOnError} 配置决定策略（默认 PASS=直接放行），保证可用性。
  *
- * @since 26.09.01
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component

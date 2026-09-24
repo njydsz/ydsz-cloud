@@ -57,8 +57,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  * <p>位于 {@link AuthGlobalFilter}(+10) 之后、{@code GatewayApiKeyAuthFilter}(+15) 之前，确保已注入的身份信息可融入幂等 Key
  * （同一用户对不同业务操作的幂等 Key 独立、不同用户间的同名 Key 相互隔离）。
  *
- * @since 26.09.23
- * @author ydsz-team
+ * @author ydsz
+ * @since 26.09.24
  */
 @Slf4j
 @Component
