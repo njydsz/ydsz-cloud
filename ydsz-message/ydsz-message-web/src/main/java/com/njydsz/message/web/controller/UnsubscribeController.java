@@ -90,10 +90,11 @@ public class UnsubscribeController {
   /**
    * token 一键退订（无需登录态）。
    *
-   * <p>对应邮件 footer 中的退订链接 / SMS 短链。token 校验通过后立即执行退订， 幂等：重复点击不会报错。
+   * <p>对应邮件 footer 中的退订链接 / SMS 短链。token 校验通过后立即执行退订，幂等：重复点击不会报错。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
    *
-   * @param token 退订 token
-   * @return 退订后的订阅记录
+   * @param token 退订 token（含 HMAC-SHA256 签名 + payload，格式为 Base64(payload).signature）
+   * @return 退订后的订阅记录 VO（含 userId、topicCode、channel 等）
    */
   @Operation(summary = "token 一键退订")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
@@ -115,10 +116,10 @@ public class UnsubscribeController {
   /**
    * 预览 token 内容（不执行退订）。
    *
-   * <p>供退订确认页渲染：先展示 "您即将退订 [主题] 的 [通道] 通知"， 用户确认后再调用 {@code /one-click} 执行退订。
+   * <p>供退订确认页渲染：先展示 "您即将退订 [主题] 的 [通道] 通知"，用户确认后再调用 {@code /one-click} 执行退订。
    *
-   * @param token 退订 token
-   * @return token 载荷
+   * @param token 退订 token（含 HMAC-SHA256 签名 + payload）
+   * @return token 载荷（含 userId / topicCode / channel / expireAt 等字段）
    */
   @Operation(summary = "预览退订 token")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
@@ -133,8 +134,10 @@ public class UnsubscribeController {
   /**
    * 分页查询已退订记录（管理后台）。
    *
-   * @param query 查询参数
-   * @return 分页结果
+   * <p>管理后台分页浏览已退订记录，支持按用户 / 主题 / 通道 / 时间范围过滤。
+   *
+   * @param query 查询参数（userId / topicCode / channel / unsubscribeTimeStart / unsubscribeTimeEnd / pageNum / pageSize）
+   * @return 退订记录分页结果（data 为 MsgSubscriptionVO 列表）
    */
   @Operation(summary = "分页查询已退订记录")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
@@ -146,10 +149,13 @@ public class UnsubscribeController {
   /**
    * 恢复订阅（管理后台 / 用户自助）。
    *
-   * @param userId 用户 ID
-   * @param topicCode 主题编码
-   * @param channel 通道
-   * @return 操作结果
+   * <p>恢复已退订的订阅关系，恢复后用户将重新接收该主题+通道的通知。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param userId 用户 ID（Query 参数，不可为空）
+   * @param topicCode 主题编码（Query 参数，不可为空）
+   * @param channel 通道（Query 参数，不可为空）
+   * @return 无业务数据（仅返回操作成功标识）
    */
   @Operation(summary = "恢复订阅")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)

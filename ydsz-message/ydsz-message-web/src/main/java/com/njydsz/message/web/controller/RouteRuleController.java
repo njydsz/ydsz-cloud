@@ -86,8 +86,11 @@ public class RouteRuleController {
   /**
    * 创建路由规则。
    *
-   * @param dto 路由规则保存请求体
-   * @return 统一响应结果，包含路由规则详情
+   * <p>新增一条消息渠道路由规则，按 (msgType, businessType, priority) 多维匹配，命中后选取对应渠道发送。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 路由规则保存请求体（经 {@code @Valid} 校验；含 msgType / businessType / channel / priority 等）
+   * @return 路由规则详情 VO（含规则 ID、匹配条件、目标渠道、优先级）
    */
   @Operation(summary = "创建路由规则")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
@@ -106,9 +109,11 @@ public class RouteRuleController {
   /**
    * 更新路由规则。
    *
-   * @param id 规则 ID
-   * @param dto 路由规则保存请求体
-   * @return 统一响应结果，包含更新后规则详情
+   * <p>按规则 ID 更新已有路由规则。启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param id 规则 ID（路径变量，不可为空）
+   * @param dto 路由规则保存请求体（经 {@code @Valid} 校验）
+   * @return 更新后路由规则详情 VO
    */
   @Operation(summary = "更新路由规则")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
@@ -128,8 +133,10 @@ public class RouteRuleController {
   /**
    * 删除路由规则。
    *
-   * @param id 规则 ID
-   * @return 统一响应结果
+   * <p>物理删除指定路由规则；删除后该规则不再参与渠道路由决策。
+   *
+   * @param id 规则 ID（路径变量，不可为空）
+   * @return 无业务数据（仅返回操作成功标识）
    */
   @Operation(summary = "删除路由规则")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
@@ -149,8 +156,8 @@ public class RouteRuleController {
   /**
    * 查询路由规则详情。
    *
-   * @param id 规则 ID
-   * @return 统一响应结果，包含路由规则详情
+   * @param id 规则 ID（路径变量，不可为空）
+   * @return 路由规则详情 VO（含 ID、msgType、businessType、channel、priority、条件表达式等）
    */
   @Operation(summary = "路由规则详情")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
@@ -162,8 +169,10 @@ public class RouteRuleController {
   /**
    * 分页查询路由规则列表。
    *
-   * @param query 分页查询参数
-   * @return 统一响应结果，包含路由规则分页数据
+   * <p>按租户隔离，支持按渠道 / 消息类型 / 状态多维过滤。
+   *
+   * @param query 分页查询参数（channel / msgType / enabled / pageNum / pageSize）
+   * @return 路由规则分页结果（data 为 MsgRouteRuleVO 列表；无匹配时 data 为空列表）
    */
   @Operation(summary = "路由规则分页")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
@@ -175,7 +184,9 @@ public class RouteRuleController {
   /**
    * 查询全部启用的路由规则。
    *
-   * @return 统一响应结果，包含启用的路由规则列表
+   * <p>返回当前租户下所有 {@code enabled=true} 的路由规则，用于渠道路由决策时的规则匹配。
+   *
+   * @return 启用状态的路由规则列表（无启用规则时返回空列表）
    */
   @Operation(summary = "查询启用的路由规则")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)

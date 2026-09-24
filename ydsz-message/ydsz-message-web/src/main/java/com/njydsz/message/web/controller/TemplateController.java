@@ -87,8 +87,12 @@ public class TemplateController {
   /**
    * 创建消息模板。
    *
-   * @param dto 模板创建请求体
-   * @return 统一响应结果，包含模板详情
+   * <p>新建一条消息模板记录，初始状态为 {@code DRAFT}（需审核通过后才能发布使用）。
+   * 模板内容支持 {@code ${var}} 占位符语法，由 {@code TemplateEngine} 在发送时替换实际值。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 模板创建请求体（经 {@code @Valid} 校验；含 templateCode / name / content / subject / channel 等）
+   * @return 模板详情 VO（含模板 ID、编码、名称、内容、状态、渠道）
    */
   @Operation(summary = "创建模板")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_CREATE)
@@ -107,9 +111,11 @@ public class TemplateController {
   /**
    * 更新消息模板。
    *
-   * @param id 模板 ID
-   * @param dto 模板创建请求体
-   * @return 统一响应结果，包含更新后模板详情
+   * <p>按模板 ID 更新已有模板的信息（内容、名称、变量定义等）。启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param id 模板 ID（路径变量，不可为空）
+   * @param dto 模板创建请求体（经 {@code @Valid} 校验）
+   * @return 更新后模板详情 VO
    */
   @Operation(summary = "更新模板")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
@@ -129,8 +135,10 @@ public class TemplateController {
   /**
    * 删除消息模板。
    *
-   * @param id 模板 ID
-   * @return 统一响应结果
+   * <p>仅 {@code DRAFT} 状态的模板可物理删除；已发布/已下线的模板需先下线后再删除。
+   *
+   * @param id 模板 ID（路径变量，不可为空）
+   * @return 无业务数据（仅返回操作成功标识）
    */
   @Operation(summary = "删除模板")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_DELETE)
@@ -150,8 +158,8 @@ public class TemplateController {
   /**
    * 查询模板详情。
    *
-   * @param id 模板 ID
-   * @return 统一响应结果，包含模板详情
+   * @param id 模板 ID（路径变量，不可为空）
+   * @return 模板详情 VO（含模板 ID、编码、名称、内容、状态、渠道、变量定义、版本号等）
    */
   @Operation(summary = "模板详情")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
@@ -163,8 +171,10 @@ public class TemplateController {
   /**
    * 分页查询模板列表。
    *
-   * @param query 查询参数
-   * @return 统一响应结果，包含模板分页数据
+   * <p>按租户隔离，支持按渠道 / 状态 / 关键字多维过滤。
+   *
+   * @param query 查询参数（channel / status / keyword / pageNum / pageSize）
+   * @return 模板分页结果（data 为 MsgTemplateVO 列表；无匹配时 data 为空列表）
    */
   @Operation(summary = "模板分页")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
@@ -176,9 +186,11 @@ public class TemplateController {
   /**
    * 审核模板（通过/驳回）。
    *
-   * @param id 模板 ID
-   * @param dto 审核请求体
-   * @return 统一响应结果
+   * <p>对 {@code DRAFT} 状态的模板执行审核：{@code PASS} → 状态变为 {@code PUBLISHED}；{@code REJECT} → 状态变为 {@code REJECTED}。
+   *
+   * @param id 模板 ID（路径变量，不可为空）
+   * @param dto 审核请求体（含审核结果 PASS/REJECT、审核意见）
+   * @return 无业务数据（仅返回操作成功标识）
    */
   @Operation(summary = "审核模板")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_APPROVE)

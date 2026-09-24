@@ -59,8 +59,24 @@ public class InsightReportController {
   /**
    * 生成洞察报告。
    *
-   * @param request 报告生成请求 JSON
-   * @return 报告结果
+   * <p>处理流程（典型耗时 30-120 秒，取决于数据源复杂度和报告长度）：
+   *
+   * <ol>
+   *   <li>解析请求参数：数据源类型（DB查询/API接入/文件上传）、报告模板、分析维度</li>
+   *   <li>从指定数据源拉取原始数据（SQL 查询 / API 调用 / 文件解析）</li>
+   *   <li>调用 LLM 对数据进行多维度分析（趋势识别、异常检测、归因分析、建议生成）</li>
+   *   <li>构建 {@link InsightReportResult}（含 title / content / sections / dataSnapshot）</li>
+   *   <li>持久化报告到数据库，便于后续查询和导出</li>
+   * </ol>
+   *
+   * <p>Token 消耗：与数据量和报告长度相关，估算 {@code ≈ 数据摘要字数 / 4 * 3}（输入+多轮生成），
+   * 大报表（>10000 字数据摘要）单次消耗可能超过 10K Token。
+   *
+   * <p>数据来源：支持 MySQL / PostgreSQL 数据库查询、HTTP API 拉取、CSV/文件解析，具体由请求参数指定。
+   * 报告生成算法采用"数据摘要 → LLM 多维度分析 → 结构化输出"的 ReAct 模式。
+   *
+   * @param request 报告生成请求（必填：dataSource / template / analysisDimensions；可选：title / filters / outputSections）
+   * @return 统一响应结果，data 为 {@link InsightReportResult}（含 reportId / title / content / sections / generatedAt 等）
    */
   @PostMapping("/report")
   public YdszResponse<InsightReportResult> generateReport(
@@ -71,8 +87,12 @@ public class InsightReportController {
   /**
    * 查询报告元数据。
    *
-   * @param reportId 报告 ID
-   * @return 报告结果（不存在时抛 INSIGHT_REPORT_NOT_FOUND 业务异常，经统一异常处理映射为 404）
+   * <p>按报告 ID 查询已持久化报告的完整元数据（含标题 / 内容 / 各章节 / 数据快照 / 生成时间）。
+   * 报告数据在生成后长期保留，不受 Token 配额影响。
+   *
+   * @param reportId 报告 ID（路径参数，由生成接口返回）
+   * @return 统一响应结果，data 为 {@link InsightReportResult}
+   * @throws com.njydsz.common.exception.custom.BusinessException 报告不存在时抛 {@link AgentExceptionCode#INSIGHT_REPORT_NOT_FOUND}，经统一异常处理映射为 HTTP 404
    */
   @GetMapping("/report/{reportId}")
   public YdszResponse<InsightReportResult> getReport(@PathVariable String reportId) {

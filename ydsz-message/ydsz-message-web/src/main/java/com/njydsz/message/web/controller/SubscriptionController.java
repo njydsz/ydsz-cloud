@@ -82,8 +82,11 @@ public class SubscriptionController {
   /**
    * 新增或更新用户订阅关系。
    *
-   * @param dto 订阅保存请求体
-   * @return 统一响应结果，包含订阅记录
+   * <p>覆盖式保存用户的 (topicCode, channel) 订阅关系；已存在则更新，不存在则新增。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 订阅保存请求体（经 {@code @Valid} 校验；含 topicCode / channel / userId 等）
+   * @return 订阅记录 VO（含订阅 ID、用户 ID、主题编码、通道）
    */
   @Operation(summary = "新增/更新订阅")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
@@ -102,8 +105,10 @@ public class SubscriptionController {
   /**
    * 查询用户全部订阅关系。
    *
-   * @param userId 用户 ID
-   * @return 统一响应结果，包含订阅列表
+   * <p>查询某用户在所有主题 / 通道组合下的订阅记录。
+   *
+   * @param userId 用户 ID（路径变量，不可为空）
+   * @return 订阅列表（无订阅时返回空列表）
    */
   @Operation(summary = "查询用户所有订阅")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
@@ -115,9 +120,11 @@ public class SubscriptionController {
   /**
    * 按主题和通道查询订阅列表。
    *
-   * @param topicCode 主题编码
-   * @param channel 通道（SMS/EMAIL/PUSH 等）
-   * @return 统一响应结果，包含订阅列表
+   * <p>查询某主题在某通道下的全部订阅用户，用于消息发送时的 fan-out 分发。
+   *
+   * @param topicCode 主题编码（路径变量，不可为空）
+   * @param channel 通道（路径变量，如 SMS / EMAIL / PUSH）
+   * @return 订阅列表（无订阅时返回空列表）
    */
   @Operation(summary = "按主题+通道查询订阅")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
@@ -131,10 +138,12 @@ public class SubscriptionController {
   /**
    * 退订指定主题和通道。
    *
-   * @param userId 用户 ID
-   * @param topicCode 主题编码
-   * @param channel 通道
-   * @return 统一响应结果
+   * <p>取消 (userId, topicCode, channel) 组合的订阅关系；幂等：重复退订不报错。
+   *
+   * @param userId 用户 ID（Query 参数）
+   * @param topicCode 主题编码（Query 参数）
+   * @param channel 通道（Query 参数）
+   * @return 无业务数据（仅返回操作成功标识）
    */
   @Operation(summary = "退订")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)

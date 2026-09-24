@@ -145,7 +145,7 @@ public class OpsController {
    *
    * <p>返回每种模板下 Handler 的执行顺序、名称与中文描述，供运维看板可视化渲染管线 DAG 结构。
    *
-   * @return 管线拓扑信息列表
+   * @return 管线拓扑信息列表（含模板编码、Handler 链顺序与描述）；无 Handler 链时返回空列表
    */
   @Operation(summary = "管线拓扑查询")
   @AuthApiPermission(apiCodes = "MESSAGE_LOG_VIEW")

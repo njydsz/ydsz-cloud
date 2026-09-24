@@ -95,8 +95,10 @@ public class TemplateVersionController {
   /**
    * 查询模板版本历史。
    *
-   * @param templateCode 模板编码
-   * @return 统一响应结果，包含版本列表
+   * <p>按版本号倒序返回某模板的全部历史版本（含每个版本的快照内容与发布信息）。
+   *
+   * @param templateCode 模板编码（路径变量，不可为空）
+   * @return 版本列表（按版本号倒序；无版本记录时返回空列表）
    */
   @Operation(summary = "查询模板版本历史")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
@@ -108,9 +110,12 @@ public class TemplateVersionController {
   /**
    * 回滚到指定版本。
    *
-   * @param templateCode 模板编码
-   * @param version 目标版本号
-   * @return 统一响应结果，包含新版本 ID
+   * <p>基于指定历史版本生成新版本（版本号 +1），保留完整版本历史，避免覆盖式回滚导致历史丢失。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param templateCode 模板编码（Query 参数，不可为空）
+   * @param version 目标版本号（Query 参数，须为正整数）
+   * @return 新版本 ID（UUID）
    */
   @Operation(summary = "回滚到指定版本")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_AUDIT)
@@ -130,8 +135,10 @@ public class TemplateVersionController {
   /**
    * 预览模板渲染结果。
    *
-   * @param dto 预览请求体
-   * @return 统一响应结果，包含渲染后的内容
+   * <p>给定模板和参数预览渲染结果，不保存到数据库。通过 {@link com.njydsz.common.safe.idempotent.annotation.IdempotentExempt} 豁免幂等。
+   *
+   * @param dto 预览请求体（含 templateCode / params / channel / locale 等）
+   * @return 渲染后的完整模板内容字符串
    */
   @Operation(summary = "预览模板渲染结果")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_VIEW)
@@ -149,8 +156,11 @@ public class TemplateVersionController {
   /**
    * 试发模板（向测试接收人发送）。
    *
-   * @param dto 试发请求体
-   * @return 统一响应结果，包含发送结果
+   * <p>仅向 {@code testReceivers} 中配置的测试接收人发送，不计入正式统计。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 试发请求体（含 templateCode / testReceivers / params / channel 等，经 {@code @Valid} 校验）
+   * @return 发送结果（含 traceId；发送失败时 success=false 并携带错误信息）
    */
   @Operation(summary = "试发模板（向测试接收人发送）")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_TEMPLATE_AUDIT)

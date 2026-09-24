@@ -65,12 +65,24 @@ public class ToolController {
   /**
    * 语义搜索工具
    *
-   * <p>通过 embedding 向量相似度匹配，返回与查询最相关的工具列表。
-   * 当 LLM 不可用时自动降级为字符串包含匹配。
+   * <p>通过 Embedding 向量相似度匹配，返回与查询最相关的工具列表。
+   * 处理流程：
    *
-   * @param query 自然语言查询（非空）
-   * @param topK 返回数量上限（默认 5，最大 20）
-   * @return 按相关度降序排列的工具列表
+   * <ol>
+   *   <li>对 {@code query} 调用 Embedding 模型（如 OpenAI text-embedding-3-small / 自部署模型）生成查询向量</li>
+   *   <li>在预构建的工具向量索引中执行 ANN（近似最近邻）检索，候选集大小为 topK * 2</li>
+   *   <li>对候选集按 cosine 相似度精排，取 TopK 返回</li>
+   * </ol>
+   *
+   * <p>降级策略：当 Embedding 模型不可用或超时时，自动降级为字符串包含匹配（case-insensitive substring），
+   * 标注 {@code degraded=true} 供前端提示用户。
+   *
+   * <p>Token 消耗：Embedding 调用消耗极少 Token（约 query 长度 / 4），
+   * 可忽略不计。语义搜索本身不使用 LLM 生成能力。
+   *
+   * @param query 自然语言查询（非空，建议长度 5-200 字符），如"查询订单状态"、"发送邮件"
+   * @param topK 返回数量上限（默认 5，有效范围 1-20），null 或 <= 0 时使用默认值 5
+   * @return 统一响应结果，data 为 {@code [{name, description}]} 列表，按相似度降序排列；query 为空时返回空列表
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_METADATA_VIEW)
   @GetMapping("/tool/search")
@@ -97,7 +109,13 @@ public class ToolController {
   /**
    * 全量列出已注册工具
    *
-   * @return 全部已注册工具的名称和描述列表
+   * <p>返回工具注册中心（{@link ToolRegistry}）中所有已注册工具的元数据列表。
+   * 数据来源：应用启动时通过 SPI / 注解扫描加载的工具定义集合。
+   *
+   * <p>不消耗 LLM Token。返回结果通常供前端 Agent 编辑器展示"可选工具列表"全量数据。
+   * 若仅需与当前查询相关的子集，建议使用语义搜索接口 {@link #searchTools}。
+   *
+   * @return 统一响应结果，data 为 {@code [{name, description}]} 列表；无注册工具时返回空列表
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_METADATA_VIEW)
   @GetMapping("/tool/list")

@@ -50,12 +50,15 @@ public class InternalMessageApiController {
   private final MessageService messageService;
 
   /**
-   * 发送多通道消息（邮件 / 短信 / Webhook / 站内信等）
+   * 发送多通道消息（邮件 / 短信 / Webhook / 站内信等）。
    *
-   * <p>对应消息模块：POST /api/internal/message/send
+   * <p>为跨服务 Feign 调用提供统一 HTTP 入口（{@code POST /api/internal/message/send}），端点仅用于服务间通信，不应直接对外暴露。
+   * 启用接口级限流（200 QPS）+ 幂等保护（5 秒，按 receiver + templateCode 维度），避免重试风暴与重复发送。
+   * 敏感参数（接收人、模板变量）通过 POST body 传输，严禁出现在 URL 中。
    *
-   * @param request 消息请求（channel / receiver / templateCode / variables / businessType）
-   * @return 消息 ID
+   * @param request 消息请求（含 channel / receiver / templateCode / variables / businessType 等字段）
+   * @return 成功时返回 traceId；失败时返回错误码 + 用户可读的错误信息
+   * @throws com.njydsz.common.core.exception.BusinessException 消息发送失败（通道不可用 / 限流 / 供应商异常等）
    */
   @RateLimit(resource = "message.internalapi.sendMessage", threshold = 200)
   @Idempotent(
