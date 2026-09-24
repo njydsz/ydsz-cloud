@@ -467,18 +467,19 @@ public class ExcelReader {
    *   <li>读取完成后调用所有监听器的onEnd
    * </ol>
    *
-   * @param listener 数据监听器，可为null(使用前请先调用registerReadListener)
-   * @param <T> 泛型参数,表示映射的数据类型
-   * @throws RuntimeException 读取过程中发生错误时抛出
-   */
-  public <T> void doRead(ReadListener<T> listener) {
-    long startTime = System.nanoTime();
-    boolean useFastReader = false;
-    try {
-      if (listener != null) {
-        listeners.add(listener);
-      }
-      notifyStart();
+     * @param listener 数据监听器，可为null(使用前请先调用registerReadListener)
+     * @param <T> 泛型参数,表示映射的数据类型
+     * @throws ExcelReadException 读取过程中发生错误时抛出
+     * @throws RuntimeException 其他未预期异常
+     */
+    public <T> void doRead(ReadListener<T> listener) {
+      long startTime = System.nanoTime();
+      boolean useFastReader = false;
+      try {
+        if (listener != null) {
+          listeners.add(listener);
+        }
+        notifyStart();
 
       String filePath = metadata.getFilePath();
       boolean isXlsx = filePath != null && filePath.toLowerCase().endsWith(".xlsx");

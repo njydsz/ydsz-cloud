@@ -114,7 +114,7 @@ public class TokenBlacklistService {
    * @param token JWT Token（可能为 null 或空，方法内已做防护）
    */
   public void addToBlacklist(String token) {
-    if (!authProperties.getBlacklist().getIsEnabled()) {
+    if (!authProperties.getBlacklist().isIsEnabled()) {
       return;
     }
     if (token == null || token.isBlank()) {
@@ -143,7 +143,7 @@ public class TokenBlacklistService {
    * @return true 表示在黑名单中（需拒绝请求）；false 表示正常
    */
   public boolean isBlacklisted(String token) {
-    if (!authProperties.getBlacklist().getIsEnabled()) {
+    if (!authProperties.getBlacklist().isIsEnabled()) {
       return false;
     }
     if (token == null || token.isBlank()) {

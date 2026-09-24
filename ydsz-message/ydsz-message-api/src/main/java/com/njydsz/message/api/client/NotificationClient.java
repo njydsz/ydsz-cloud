@@ -15,33 +15,17 @@ import com.njydsz.message.api.fallback.NotificationClientFallbackFactory;
 /**
  * 通知中心 Feign 客户端（通用通知能力）。
  *
- * <p>提供跨服务消息通知的统一入口，封装多通道路由（邮件/短信/Webhook/站内信/实时推送）。 与 {@code MessageSendClient}（message-api
- * 模块）的区别：
+ * <p>提供跨服务消息通知的统一入口，封装多通道路由（邮件/短信/Webhook/站内信/实时推送）。
+ * 支持单条消息发送（{@link #sendMessage}）、WebSocket/SSE 广播推送（{@link #broadcast}）、
+ * 单播实时推送（{@link #pushRealtime}）三种远程调用方法。
  *
- * <ul>
- *   <li>{@code MessageSendClient} 定义在 message-api 模块，可引用 message-domain 的 VO/DTO
- *   <li>{@code NotificationClient} 同样定义在 message-api 模块，使用 common-feign 的 DTO（{@link
- *       MessageRequest}）
- *   <li>两者互补：通用 DTO 场景使用 NotificationClient，需要消息领域对象的场景使用 MessageSendClient
- * </ul>
+ * <p>使用场景：工作流审批通知、定时任务执行结果告警、规则引擎触发通知等。
  *
- * <p>使用场景：
+ * <p>降级策略：通过 {@code fallbackFactory = NotificationClientFallbackFactory.class}
+ * 在消息服务不可用时返回降级响应，避免调用方阻塞。
  *
- * <ul>
- *   <li>工作流审批通知
- *   <li>定时任务执行结果告警
- *   <li>规则引擎触发通知
- * </ul>
- *
- * <p><b>P0-3-fix</b>：
- *
- * <ul>
- *   <li>{@link #broadcast(BroadcastRequestDTO)} 将 topic 并入请求体，返回 {@link YdszResponse} 使调用方可感知结果
- *   <li>新增 {@link #pushRealtime(PushRealtimeRequestDTO)} 单播实时推送方法
- * </ul>
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  * @see MessageSendClient message-api 的细粒度消息客户端
  */
 @FeignClient(
