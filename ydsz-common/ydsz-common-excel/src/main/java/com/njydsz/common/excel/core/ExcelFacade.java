@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.reader.ExcelStream;
+import com.njydsz.common.excel.core.writer.MultiSheetFastWriter;
 import com.njydsz.common.excel.csv.CsvReader;
 import com.njydsz.common.excel.csv.CsvWriter;
 import com.njydsz.common.excel.exception.ExcelReadException;
@@ -382,6 +383,34 @@ public class ExcelFacade {
     } catch (IOException e) {
       throw new RuntimeException("Failed to write Excel file: " + fileName, e);
     }
+  }
+
+  // ==================== 多 Sheet 零 POI 写入（SuperFast 引擎） ====================
+
+  /**
+   * 创建多 Sheet 快速写入器 — 一次生成包含多个 Sheet 的 xlsx 工作簿，完全不依赖 POI。
+   *
+   * <p>每 Sheet 可独立指定数据类型与数据。所有 Sheet 共享 SST、样式表与 theme， 生成符合 ECMA-376 规范的
+   * OOXML 包，兼容 Excel / WPS / LibreOffice。
+   *
+   * <p>示例：
+   *
+   * <pre>{@code
+   * ExcelFacade.writeMultiSheet(outputStream)
+   *     .sheet("用户", User.class, users)
+   *     .sheet("部门", Department.class, departments)
+   *     .finish();
+   * }</pre>
+   *
+   * <p>限制：不支持 WriteLifecycleHandler 回调、@ExcelStyle 样式注解、XLS 格式、追加模式。
+   * 需要这些能力时请使用 {@link #write(OutputStream, Class)} + {@link ExcelWriter#newSheet()}。
+   *
+   * @param out 目标输出流
+   * @return MultiSheetFastWriter 构建器
+   * @since 26.10.01
+   */
+  public static MultiSheetFastWriter writeMultiSheet(OutputStream out) {
+    return new MultiSheetFastWriter(out);
   }
 
   // ==================== Stream API 读取 ====================

@@ -61,9 +61,21 @@ public class ObservabilityController {
   /**
    * 获取面板概览数据。
    *
-   * <p>返回今日成本、活跃会话数、模型用量分布等聚合数据， 用于面板顶部卡片和概览图表。
+   * <p>返回租户级聚合统计数据，用于面板顶部 KPI 卡片和概览图表。数据来源：
+   * 本地持久化审计日志表（MySQL / ClickHouse），由 Agent 执行流程异步写入。
    *
-   * @return 统一响应结果，data 为 {@link DashboardOverviewDTO}
+   * <p>统计维度包含：
+   * <ul>
+   *   <li>今日 Token 消耗量（区分 prompt/completion）</li>
+   *   <li>今日预估成本（按各 LLM Provider 计费单价加权计算）</li>
+   *   <li>活跃会话数（当日存在对话请求的去重 conversationId 数量）</li>
+   *   <li>总调用次数和平均响应耗时</li>
+   * </ul>
+   *
+   * <p>Cost 计算方式：{@code Σ (model_prompt_tokens * prompt_price + model_completion_tokens * completion_price)}，
+   * 单价来自系统配置表中各模型的每 Token 价格。
+   *
+   * @return 统一响应结果，data 为 {@link DashboardOverviewDTO}（含 costToday / tokenUsageToday / activeSessionCount / avgResponseTimeMs 等字段）
    */
   @GetMapping("/overview")
   public YdszResponse<DashboardOverviewDTO> getOverview() {
@@ -74,10 +86,14 @@ public class ObservabilityController {
   /**
    * 获取模型使用分布。
    *
-   * <p>返回最近 N 天内各模型的 Token 用量与成本分布， 用于面板的模型占比饼图。
+   * <p>返回最近 N 天内各 LLM 模型的 Token 用量与成本分布，用于面板的模型占比饼图。
+   * 数据来源：本地持久化审计日志表，按模型维度聚合。
    *
-   * @param days 统计天数（默认 7，最大 30）
-   * @return 统一响应结果，data 为 {@link ModelUsageDTO} 列表
+   * <p>单条 {@link ModelUsageDTO} 包含：模型名称 / 总 Token 消耗 / 调用次数 / 平均响应耗时 / 预估成本。
+   * 成本计算采用各模型配置的计费单价（ Prompt 单价和 Completion 单价可能不同）。
+   *
+   * @param days 统计天数（默认 7，有效范围 1-30），超出范围自动截断到边界值
+   * @return 统一响应结果，data 为 {@link ModelUsageDTO} 列表，按总 Token 消耗降序排列；无数据时返回空列表
    */
   @GetMapping("/model-usage")
   public YdszResponse<List<ModelUsageDTO>> getModelUsage(

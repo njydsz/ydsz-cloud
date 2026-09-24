@@ -48,11 +48,11 @@ public class UserFavoriteController {
   /**
    * 查询用户收藏列表。
    *
-   * <p>返回当前用户收藏的全部文件/目录节点列表（按排序号升序）。
+   * <p>返回当前用户收藏的全部文件/目录节点列表，按排序号升序排列（sort 值越小越靠前）。
    *
    * @param userId 当前用户 ID
-   * @param limit 返回数量限制（默认 50）
-   * @return 收藏视图列表
+   * @param limit 返回数量限制（默认 50，最大 200）
+   * @return 统一响应结果，data 为 {@link UserFavoriteVO} 列表
    */
   @GetMapping
   public YdszResponse<List<UserFavoriteVO>> listFavorites(
@@ -66,9 +66,12 @@ public class UserFavoriteController {
   /**
    * 添加收藏。
    *
+   * <p>将指定节点（文件或文件夹）添加到当前用户的收藏夹。
+   * 同一节点不可重复收藏，重复调用会返回已存在的收藏记录。
+   *
    * @param nodeId 要收藏的节点 ID
    * @param userId 当前用户 ID
-   * @return 收藏记录 ID
+   * @return 统一响应结果，data 为收藏记录 ID（新增或已存在）
    */
   @PostMapping("/{nodeId}")
   public YdszResponse<String> addFavorite(
@@ -82,9 +85,11 @@ public class UserFavoriteController {
   /**
    * 取消收藏。
    *
+   * <p>从当前用户的收藏夹中移除指定节点。若节点未被收藏则返回 false。
+   *
    * @param nodeId 要取消收藏的节点 ID
    * @param userId 当前用户 ID
-   * @return 是否成功删除
+   * @return 统一响应结果，data 为 true 表示成功移除，false 表示节点未被收藏
    */
   @DeleteMapping("/{nodeId}")
   public YdszResponse<Boolean> removeFavorite(
@@ -98,9 +103,11 @@ public class UserFavoriteController {
   /**
    * 检查节点是否已被收藏。
    *
+   * <p>查询指定节点是否在当前用户的收藏夹中，用于前端收藏按钮状态展示。
+   *
    * @param nodeId 节点 ID
    * @param userId 当前用户 ID
-   * @return true 表示已收藏
+   * @return 统一响应结果，data 为 true 表示已收藏，false 表示未收藏
    */
   @GetMapping("/{nodeId}/is-favorited")
   public YdszResponse<Boolean> isFavorited(
@@ -114,10 +121,13 @@ public class UserFavoriteController {
   /**
    * 更新收藏排序号。
    *
+   * <p>调整指定节点在收藏夹中的排序位置，sort 值越小越靠前。
+   * 仅已收藏的节点可更新排序。
+   *
    * @param nodeId 节点 ID
-   * @param sort 新排序号
+   * @param sort 新排序号（非负整数，值越小越靠前）
    * @param userId 当前用户 ID
-   * @return 是否成功更新
+   * @return 统一响应结果，data 为 true 表示更新成功
    */
   @PostMapping("/{nodeId}/sort")
   public YdszResponse<Boolean> updatesort(
@@ -132,8 +142,10 @@ public class UserFavoriteController {
   /**
    * 获取收藏数量。
    *
+   * <p>返回当前用户收藏夹中的节点总数，用于前端角标展示。
+   *
    * @param userId 当前用户 ID
-   * @return 收藏数量
+   * @return 统一响应结果，data 为收藏数量
    */
   @GetMapping("/count")
   public YdszResponse<Integer> getFavoriteCount(

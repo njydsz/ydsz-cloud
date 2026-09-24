@@ -64,9 +64,9 @@ public class RetryPreviewController {
   /**
    * 对比所有预设档位的重试策略。
    *
-   * <p>返回所有预设档位的完整信息（参数 + 时间线），便于前端展示对比表格。
+   * <p>返回所有预设档位（none / fast / standard / relaxed）的完整信息（参数 + 时间线），便于前端展示对比表格。
    *
-   * @return 所有预设的对比视图
+   * @return 所有预设的对比视图（key = 预设档位 code，value = 含参数与时间线的 Map）
    */
   @Operation(summary = "对比所有预设档位的重试策略")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)

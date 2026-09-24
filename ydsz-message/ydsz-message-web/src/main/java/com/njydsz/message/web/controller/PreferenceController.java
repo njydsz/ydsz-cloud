@@ -91,8 +91,11 @@ public class PreferenceController {
   /**
    * 新增或更新用户消息偏好。
    *
-   * @param dto 偏好保存请求体
-   * @return 统一响应结果，包含偏好记录
+   * <p>设置 (userId, channel, bizType) 的接收偏好（启用/免打扰/时段）。
+   * 启用租户隔离、5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 偏好保存请求体（经 {@code @Valid} 校验；含 userId / channel / bizType / 静默时段等）
+   * @return 偏好记录 VO（含偏好 ID、用户 ID、通道、业务类型、偏好设置）
    */
   @Operation(summary = "新增/更新偏好")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
@@ -111,8 +114,10 @@ public class PreferenceController {
   /**
    * 查询用户全部消息偏好。
    *
-   * @param userId 用户 ID
-   * @return 统一响应结果，包含偏好列表
+   * <p>查询某用户在所有通道 / 业务类型组合下的偏好配置，用于管理后台或用户设置页展示。
+   *
+   * @param userId 用户 ID（路径变量，不可为空）
+   * @return 偏好列表（无配置时返回空列表）
    */
   @Operation(summary = "查询用户所有偏好")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
@@ -124,10 +129,12 @@ public class PreferenceController {
   /**
    * 按用户、通道和业务类型查询偏好。
    *
-   * @param userId 用户 ID
-   * @param channel 通道
-   * @param bizType 业务类型
-   * @return 统一响应结果，包含偏好记录
+   * <p>精确查询某用户在某通道某业务类型下的偏好设置，用于消息发送前判断是否应走该通道。
+   *
+   * @param userId 用户 ID（路径变量）
+   * @param channel 通道（路径变量，如 SMS / EMAIL / IN_APP）
+   * @param bizType 业务类型（路径变量）
+   * @return 偏好记录 VO（不存在时返回 null 包装在 success 中）
    */
   @Operation(summary = "按用户+通道+业务类型查询偏好")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_VIEW)
@@ -140,8 +147,10 @@ public class PreferenceController {
   /**
    * 删除用户消息偏好。
    *
-   * @param id 偏好记录 ID
-   * @return 统一响应结果
+   * <p>删除指定偏好记录，删除后该 (userId, channel, bizType) 组合退回到默认路由逻辑。
+   *
+   * @param id 偏好记录 ID（路径变量，不可为空）
+   * @return 无业务数据（仅返回操作成功标识）
    */
   @Operation(summary = "删除偏好")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_PREFERENCE_DELETE)

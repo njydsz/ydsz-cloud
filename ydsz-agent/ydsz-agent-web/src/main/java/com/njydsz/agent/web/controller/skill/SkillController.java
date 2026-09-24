@@ -118,8 +118,28 @@ public class SkillController {
   /**
    * 执行 Skill。
    *
-   * @param request Skill 执行请求体
-   * @return 统一响应结果，data 为执行结果视图
+   * <p>处理流程：
+   *
+   * <ol>
+   *   <li>根据 {@code skillCode} 从 {@code SkillRegistry} 加载 Skill 定义（含脚本列表和执行配置）</li>
+   *   <li>校验输入参数是否符合 Skill 的 {@code inputSchema}（JSON Schema 校验）</li>
+   *   <li>判断执行环境：{@code targetType=sandbox} 时在隔离沙箱中执行，{@code targetType=local} 时在宿主 JVM 中执行</li>
+   *   <li>沙箱执行时：构建独立容器/进程 → 注入输入参数 → 执行脚本 → 捕获 stdout/stderr → 收集输出文件</li>
+   *   <li>返回执行结果（含 stdout / stderr / outputFileUrls / metrics）</li>
+   * </ol>
+   *
+   * <p>执行环境与资源限制：
+   * <ul>
+   *   <li>沙箱模式：Docker 容器 / gVisor / Firecracker 等隔离运行时，内存上限 512MB，CPU 限制 0.5 核</li>
+   *   <li>超时策略：默认 60s，可通过 {@code timeoutMs} 自定义（最大 600s）；超时后强制终止进程</li>
+   *   <li>网络隔离：沙箱默认禁止外网访问，仅允许访问白名单域名</li>
+   *   <li>文件系统隔离：沙箱拥有独立文件系统，执行结束后自动清理</li>
+   * </ul>
+   *
+   * <p>Token 说明：脚本执行本身不消耗 LLM Token；但如果脚本内部调用了 LLM 工具，则消耗计入租户配额。
+   *
+   * @param request Skill 执行请求体（必填：skillCode；可选：inputParams / timeoutMs）
+   * @return 统一响应结果，data 为 {@link SkillExecutionResponseVO}（含 success / stdout / stderr / outputFiles / errorMessage / completedAt）
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_EXECUTE)
   @Audit(
@@ -145,7 +165,19 @@ public class SkillController {
   /**
    * 清空沙箱缓存（运维接口）。
    *
-   * @return 统一响应结果
+   * <p>清理沙箱运行时的内部缓存层，包括但不限于：
+   * <ul>
+   *   <li>预构建的沙箱镜像层（Sandbox Image Layers）</li>
+   *   <li>Skill 脚本编译/缓存结果（如 Python 字节码、Node.js 模块缓存）</li>
+   *   <li>临时文件系统中的过期产物</li>
+   * </ul>
+   *
+   * <p>典型场景：Skill 脚本更新后旧缓存未失效、沙箱镜像升级后清理历史层以释放磁盘空间。
+   * 清缓存期间新建沙箱请求可能短暂排队等待。
+   *
+   * <p>Token 说明：本接口仅涉及基础设施操作，不消耗 LLM Token。
+   *
+   * @return 统一响应结果，data 为 null
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_EXECUTE)
   @Audit(

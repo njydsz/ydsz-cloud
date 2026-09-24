@@ -87,9 +87,12 @@ public class RecallController {
   /**
    * 撤回站内通知。
    *
-   * @param userId 用户 ID
-   * @param dto 撤回请求体（含通知 ID）
-   * @return 统一响应结果，true 表示撤回成功
+   * <p>撤回已发送的站内通知；仅发送者本人或管理员可操作（Service 层校验）。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param userId 用户 ID（Query 参数，显式传入，支持管理员代为撤回）
+   * @param dto 撤回请求体（含通知 ID，经 {@code @Valid} 校验）
+   * @return true 表示撤回成功；false 表示通知不存在、超出撤回窗口或无权限
    */
   @Operation(summary = "撤回站内通知")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
@@ -109,8 +112,10 @@ public class RecallController {
   /**
    * 撤回已发送消息。
    *
-   * @param logId 发送日志 ID
-   * @return 统一响应结果，true 表示撤回成功
+   * <p>按发送日志 ID 撤回单条已发消息。仅通道支持撤回（IM/企业微信）且未超出撤回窗口（默认 30 分钟）时可撤回。
+   *
+   * @param logId 发送日志 ID（路径变量，不可为空）
+   * @return true 表示撤回成功；false 表示消息不存在、超出窗口或不具备撤回条件
    */
   @Operation(summary = "撤回已发送消息")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
@@ -129,10 +134,11 @@ public class RecallController {
   /**
    * P0-4: 按 msgId 撤回已发送消息。
    *
-   * <p>支持撤回时间窗口校验（默认 30 分钟内可撤回）。
+   * <p>支持撤回时间窗口校验（默认 {@code ydsz.message.recall-window-minutes} = 30 分钟内可撤回）。
+   * 超时后由 Service 层拒绝并返回 false。
    *
-   * @param msgId 消息 ID
-   * @return 撤回结果
+   * @param msgId 消息 ID（路径变量，不可为空；对应发送时返回的 messageId）
+   * @return true 表示撤回成功；false 表示消息不存在、超出窗口或无权限
    */
   @Operation(summary = "按消息 ID 撤回消息")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)
@@ -151,8 +157,10 @@ public class RecallController {
   /**
    * 按业务类型和单据 ID 批量撤回消息。
    *
-   * @param dto 批量撤回请求体（含 bizType + bizId）
-   * @return 统一响应结果，包含撤回条数
+   * <p>撤回某业务单据（如订单、审批单）关联的全部通知；按撤回窗口逐条校验，仅撤回满足条件的消息。
+   *
+   * @param dto 批量撤回请求体（含 bizType 业务类型 + bizId 单据 ID，经 {@code @Valid} 校验）
+   * @return 实际撤回成功的条数（0 表示无满足条件的消息）
    */
   @Operation(summary = "按业务类型+单据 ID 批量撤回")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECALL_ACT)

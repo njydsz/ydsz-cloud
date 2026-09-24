@@ -143,11 +143,24 @@ public class MemoryController {
   /**
    * 触发记忆整合。
    *
-   * <p>对指定对话的历史执行事实提取、画像刷新等整合操作。
+   * <p>对指定对话的历史消息执行"提取事实 → 更新画像"的整合操作，处理流程：
    *
-   * @param conversationId 对话 ID
-   * @param request 整合请求（可选租户 ID）
-   * @return 触发成功返回空
+   * <ol>
+   *   <li>加载对话历史（按时间正序），拼接为 LLM 可消费的上下文</li>
+   *   <li>调用 LLM 提取关键事实（用户偏好 / 决策 / 实体关系 / 任务状态等）</li>
+   *   <li>将提取的事实持久化到长期记忆存储（用于后续对话的上下文注入）</li>
+   *   <li>可选：刷新用户画像数据（更新用户级事实集合）</li>
+   * </ol>
+   *
+   * <p>Token 消耗估算：约 {@code 对话历史总字数 / 4 * 2}（输入 Token + 输出 Token），
+   * 对话越长消耗越大。Token 配额计入发起租户当日配额。
+   *
+   * <p>数据来源：对话消息历史（system / user / assistant / tool 角色均参与事实提取）。
+   * 更新频率：每次调用触发一次全量整合，通常建议在对话结束或用户长时间离线后调用。
+   *
+   * @param conversationId 对话 ID（路径参数，必须为已存在的活跃对话）
+   * @param request 整合请求体（可选：tenantId 指定租户隔离，为空时使用默认租户上下文）
+   * @return 统一响应结果，data 为 null（操作异步执行或同步返回空）
    */
   @PostMapping("/{conversationId}/consolidate")
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_EXECUTE)

@@ -129,6 +129,30 @@ public class SuperFastExcelReader {
    */
   private ExcelConfig excelConfig;
 
+  /**
+   * Sheet XML 落地策略。默认 {@link TempFileStrategy#AUTO}（按文件大小自适应）。
+   *
+   * <p>影响 read(Path) 中大 sheet 的解析方式：
+   *
+   * <ul>
+   *   <li>{@link TempFileStrategy#AUTO}：≤ 2MB 走堆内存字节数组，&gt; 2MB 走 MappedByteBuffer</li>
+   *   <li>{@link TempFileStrategy#MEMORY}：始终堆内存（零磁盘 I/O，适合小文件）</li>
+   *   <li>{@link TempFileStrategy#MAPPED_FILE}：始终内存映射（适合超大文件，不占 JVM 堆）</li>
+   *   <li>{@link TempFileStrategy#DISK}：始终磁盘临时文件（兼容性最好）</li>
+   * </ul>
+   */
+  private TempFileStrategy effectiveStrategy = TempFileStrategy.AUTO;
+
+  /** 设置 sheet XML 落地策略。 */
+  public void setTempFileStrategy(TempFileStrategy strategy) {
+    this.effectiveStrategy = strategy != null ? strategy : TempFileStrategy.AUTO;
+  }
+
+  /** 获取当前 sheet XML 落地策略。 */
+  public TempFileStrategy getTempFileStrategy() {
+    return effectiveStrategy;
+  }
+
   /** Sheet 选择：按名称（精确匹配，优先于 sheetIndex） */
   private String sheetName;
 
@@ -198,37 +222,183 @@ public class SuperFastExcelReader {
         }
       }
 
-      // Sheet 数据：bounded 复制到临时文件（大小可信化——zip 头的 getSize 可伪造），
-      // 再按实际大小决定内存加载或文件流式解析
-      Path tempSheetFile = Files.createTempFile("ydsz_sheet_", ".xml");
-      try {
-        Files.copy(
-            bounded(zipFile.getInputStream(sheetEntry)),
-            tempSheetFile,
-            StandardCopyOption.REPLACE_EXISTING);
-        long actualSize = Files.size(tempSheetFile);
+      // Sheet 数据：bounded 决定落地方式
+      long inflateLimit = inflateLimitBytes();
+      long sheetEntrySize = sheetEntry.getSize();
 
-        if (actualSize <= IN_MEMORY_THRESHOLD) {
+      if (sheetEntrySize > 0 && sheetEntrySize <= inflateLimit) {
+        // zip 头可信（未伪造）：按 Entry getSize 决定策略
+        readSheetWithStrategy(zipFile, sheetEntry, strategiesForSize(sheetEntrySize), ssReader, stylesReader);
+      } else {
+        // zip 头不可信（getSize == -1 或超大）：必须落临时文件后再决定
+        readSheetWithTempFile(zipFile, sheetEntry, ssReader, stylesReader);
+      }
+    }
+  }
+
+  /**
+   * 根据文件大小选择落地策略。
+   *
+   * <p>策略为 {@link TempFileStrategy#AUTO} 时：≤ IN_MEMORY_THRESHOLD 走内存，否则走内存映射。
+   * 策略为 {@link TempFileStrategy#DISK} / {@link TempFileStrategy#MAPPED_FILE} / {@link TempFileStrategy#MEMORY}
+   * 时直接使用对应策略。
+   */
+  private TempFileStrategy strategiesForSize(long sizeBytes) {
+    switch (effectiveStrategy) {
+      case MEMORY:
+      case DISK:
+      case MAPPED_FILE:
+        return effectiveStrategy;
+      case AUTO:
+      default:
+        return sizeBytes <= IN_MEMORY_THRESHOLD ? TempFileStrategy.MEMORY : TempFileStrategy.MAPPED_FILE;
+    }
+  }
+
+  /**
+   * zip 头可信路径：按 Entry 已知大小和选定策略直接处理，可能跳过临时文件。
+   */
+  private void readSheetWithStrategy(ZipFile zipFile, ZipEntry sheetEntry,
+      TempFileStrategy strategy, SharedStringsReader ssReader, StylesReader stylesReader)
+      throws Exception {
+    switch (strategy) {
+      case MEMORY:
+        // 直接读入堆内存字节数组，零磁盘 I/O
+        try (InputStream is = bounded(zipFile.getInputStream(sheetEntry))) {
+          byte[] bytes = readAll(is);
+          parseSheetStream(new ByteArrayInputStream(bytes), ssReader, stylesReader);
+        }
+        break;
+      case MAPPED_FILE:
+        // 落临时文件后通过 MappedByteBuffer 内存映射解析
+        readSheetMapped(zipFile, sheetEntry, ssReader, stylesReader);
+        break;
+      case DISK:
+      case AUTO:
+      default:
+        // 回落磁盘临时文件管道（兼容路径）
+        readSheetTempFile(zipFile, sheetEntry, ssReader, stylesReader);
+        break;
+    }
+  }
+
+  /**
+   * zip 头不可信路径：必须先将 sheet XML 落到临时文件，再按实际大小选择策略。
+   */
+  private void readSheetWithTempFile(ZipFile zipFile, ZipEntry sheetEntry,
+      SharedStringsReader ssReader, StylesReader stylesReader) throws Exception {
+    Path tempSheetFile = Files.createTempFile("ydsz_sheet_", ".xml");
+    try {
+      Files.copy(
+          bounded(zipFile.getInputStream(sheetEntry)),
+          tempSheetFile,
+          StandardCopyOption.REPLACE_EXISTING);
+      long actualSize = Files.size(tempSheetFile);
+
+      TempFileStrategy strategy = (effectiveStrategy == TempFileStrategy.AUTO)
+          ? (actualSize <= IN_MEMORY_THRESHOLD ? TempFileStrategy.MEMORY : TempFileStrategy.MAPPED_FILE)
+          : effectiveStrategy;
+
+      switch (strategy) {
+        case MEMORY:
           byte[] bytes = Files.readAllBytes(tempSheetFile);
           Files.deleteIfExists(tempSheetFile);
-          tempSheetFile = null;
           parseSheetStream(new ByteArrayInputStream(bytes), ssReader, stylesReader);
-        } else {
-          LOG.debug(
-              "大文件模式: sheet XML 大小={}MB, 使用临时文件流式解析", actualSize / 1024 / 1024);
+          break;
+        case MAPPED_FILE:
+          try (java.nio.channels.FileChannel channel = java.nio.channels.FileChannel.open(
+              tempSheetFile, java.nio.file.StandardOpenOption.READ)) {
+            long size = channel.size();
+            java.nio.MappedByteBuffer mappedBuffer = channel.map(
+                java.nio.channels.FileChannel.MapMode.READ_ONLY, 0, size);
+            // MappedByteBuffer → InputStream 桥接
+            try (InputStream sheetStream = new MappedByteBufferInputStream(mappedBuffer)) {
+              parseSheetStream(sheetStream, ssReader, stylesReader);
+            }
+          } catch (IOException e) {
+            LOG.warn("内存映射失败，回退到磁盘流式读取: {}", e.getMessage());
+            try (InputStream sheetStream =
+                new BufferedInputStream(Files.newInputStream(tempSheetFile))) {
+              parseSheetStream(sheetStream, ssReader, stylesReader);
+            }
+          }
+          break;
+        case DISK:
+        case AUTO:
+        default:
           try (InputStream sheetStream =
               new BufferedInputStream(Files.newInputStream(tempSheetFile))) {
             parseSheetStream(sheetStream, ssReader, stylesReader);
           }
+          break;
+      }
+    } finally {
+      try {
+        Files.deleteIfExists(tempSheetFile);
+      } catch (IOException e) {
+        LOG.warn("清理临时文件失败: {}", tempSheetFile, e);
+      }
+    }
+  }
+
+  /**
+   * 已知文件大小的 MappedByteBuffer 读取路径。
+   *
+   * <p>适用条件：zip 头可信且策略为 MAPPED_FILE / AUTO 模式下的"大 sheet"。
+   * 由于 ZipEntry 数据已被压缩，无法在 zip 流上直接 mmap，因此仍需要先复制到临时文件再映射。
+   */
+  private void readSheetMapped(ZipFile zipFile, ZipEntry sheetEntry,
+      SharedStringsReader ssReader, StylesReader stylesReader) throws Exception {
+    Path tempSheetFile = Files.createTempFile("ydsz_sheet_mapped_", ".xml");
+    try {
+      Files.copy(
+          bounded(zipFile.getInputStream(sheetEntry)),
+          tempSheetFile,
+          StandardCopyOption.REPLACE_EXISTING);
+      try (java.nio.channels.FileChannel channel = java.nio.channels.FileChannel.open(
+          tempSheetFile, java.nio.file.StandardOpenOption.READ)) {
+        long size = channel.size();
+        java.nio.MappedByteBuffer mappedBuffer = channel.map(
+            java.nio.channels.FileChannel.MapMode.READ_ONLY, 0, size);
+        try (InputStream sheetStream = new MappedByteBufferInputStream(mappedBuffer)) {
+          parseSheetStream(sheetStream, ssReader, stylesReader);
         }
-      } finally {
-        if (tempSheetFile != null) {
-          try {
-            Files.deleteIfExists(tempSheetFile);
-          } catch (IOException e) {
-            LOG.warn("清理临时文件失败: {}", tempSheetFile, e);
-          }
+      } catch (IOException e) {
+        LOG.warn("MAPPED_FILE 策略失败，回退到磁盘流式: {}", e.getMessage());
+        try (InputStream sheetStream =
+            new BufferedInputStream(Files.newInputStream(tempSheetFile))) {
+          parseSheetStream(sheetStream, ssReader, stylesReader);
         }
+      }
+    } finally {
+      try {
+        Files.deleteIfExists(tempSheetFile);
+      } catch (IOException e) {
+        LOG.warn("清理临时文件失败: {}", tempSheetFile, e);
+      }
+    }
+  }
+
+  /**
+   * 磁盘临时文件管道读取路径（旧行为，兼容性最好）。
+   */
+  private void readSheetTempFile(ZipFile zipFile, ZipEntry sheetEntry,
+      SharedStringsReader ssReader, StylesReader stylesReader) throws Exception {
+    Path tempSheetFile = Files.createTempFile("ydsz_sheet_", ".xml");
+    try {
+      Files.copy(
+          bounded(zipFile.getInputStream(sheetEntry)),
+          tempSheetFile,
+          StandardCopyOption.REPLACE_EXISTING);
+      try (InputStream sheetStream =
+          new BufferedInputStream(Files.newInputStream(tempSheetFile))) {
+        parseSheetStream(sheetStream, ssReader, stylesReader);
+      }
+    } finally {
+      try {
+        Files.deleteIfExists(tempSheetFile);
+      } catch (IOException e) {
+        LOG.warn("清理临时文件失败: {}", tempSheetFile, e);
       }
     }
   }

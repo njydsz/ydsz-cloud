@@ -61,12 +61,6 @@ public class FlowCcController {
       content = "'pageCc'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
   @Operation(summary = "抄送中心分页查询")
-  /** 分页查询抄送列表。
-   *
-   * @param query 抄送查询条件（分页 / 已读状态）
-   * @return 抄送分页结果
-   */
-  
   public YdszResponse<List<FlowCcVO>> pageCc(@Valid @RequestBody FlowCcQuery query) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
@@ -104,12 +98,6 @@ public class FlowCcController {
       action = AuditAction.CREATE,
       content = "'ccMarkRead'")
   @Operation(summary = "抄送标记已读")
-  /** 标记单条抄送已读。
-   *
-   * @param id 抄送 ID
-   * @return 操作结果
-   */
-  
   public YdszResponse<Boolean> ccMarkRead(@PathVariable String id) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();
@@ -131,11 +119,6 @@ public class FlowCcController {
       action = AuditAction.CREATE,
       content = "'ccMarkAllRead'")
   @Operation(summary = "抄送全部标记已读")
-  /** 标记当前用户所有抄送为已读。
-   *
-   * @return 标记已读的数量
-   */
-  
   public YdszResponse<Integer> ccMarkAllRead() {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     String userId = AuthContextUtils.getUserId();

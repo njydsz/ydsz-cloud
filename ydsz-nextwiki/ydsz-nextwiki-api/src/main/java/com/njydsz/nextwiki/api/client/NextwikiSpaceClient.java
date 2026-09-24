@@ -37,8 +37,11 @@ public interface NextwikiSpaceClient {
   /**
    * 按空间 ID 查询空间详情。
    *
-   * @param spaceId 空间 ID
-   * @return 空间 VO
+   * <p>远程调用对应文件引擎能力：根据空间 ID 获取知识库空间的完整信息，
+   * 包含空间名称、描述、可见性、所有者、创建时间、成员数量等。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @return 统一响应结果，data 为 {@link SpaceVO}；空间不存在时 data 为 null
    */
   @GetMapping(FeignClientConstants.NEXTWIKI_PATH_SPACE_GET)
   YdszResponse<SpaceVO> getSpaceById(@RequestParam String spaceId);
@@ -46,8 +49,11 @@ public interface NextwikiSpaceClient {
   /**
    * 批量按空间 ID 查询空间详情。
    *
-   * @param spaceIds 空间 ID 列表
-   * @return 空间 VO 列表
+   * <p>远程调用对应文件引擎能力：根据空间 ID 批量获取多个知识库空间的信息。
+   * 不存在的空间 ID 会被自动过滤，返回列表仅包含有效空间。
+   *
+   * @param spaceIds 空间 ID 列表（雪花算法字符串列表）
+   * @return 统一响应结果，data 为 {@link SpaceVO} 列表；不存在/无权限的空间会被过滤
    */
   @PostMapping(FeignClientConstants.NEXTWIKI_PATH_SPACE_BATCH)
   YdszResponse<List<SpaceVO>> batchGetSpaces(@RequestBody List<String> spaceIds);

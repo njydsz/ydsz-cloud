@@ -166,8 +166,11 @@ public class MessageController {
   /**
    * 分页查询发送日志。
    *
-   * @param query 日志查询参数
-   * @return 日志分页结果
+   * <p>按租户隔离，支持按 bizId、channelCode、status、时间范围等多维过滤；
+   * 当查询参数为空时默认返回当前租户下按时间倒序的分页列举。
+   *
+   * @param query 日志查询参数（bizId / channelCode / status / startTime / endTime / pageNum / pageSize）
+   * @return 日志分页结果（data 为 MsgLogVO 列表，含消息 ID、通道、接收人、状态、回执 ID、发送时间；无匹配时 data 为空列表）
    */
   @Operation(summary = "发送日志分页", description = "分页查询消息发送日志。支持按 bizId、channelCode、status、时间范围等条件过滤。"
             + "返回分页结果含 MsgLogVO（消息 ID、通道、接收人、状态、回执 ID、发送时间）。")
@@ -204,10 +207,12 @@ public class MessageController {
   /**
    * 查询批次发送进度：按 bizId=batchId 分页查询发送日志。
    *
-   * @param batchId 批次 ID
-   * @param page 页码
-   * @param size 每页大小
-   * @return 分页日志
+   * <p>用于前端展示批次执行明细，按批次 ID 过滤当前租户下的发送日志。
+   *
+   * @param batchId 批次 ID（路径变量，不可为空）
+   * @param page 页码（默认 1）
+   * @param size 每页大小（默认 20）
+   * @return 分页日志（data 为各消息当前状态、通道、接收人、回执 ID；批次不存在时 data 为空列表）
    */
   @Operation(summary = "查询批次发送进度", description = "按批次 ID 分页查询发送日志，用于追踪批量发送任务的执行进度。"
             + "返回分页结果含各消息当前状态（PENDING/SENT/FAILED）、通道、接收人、回执 ID。")

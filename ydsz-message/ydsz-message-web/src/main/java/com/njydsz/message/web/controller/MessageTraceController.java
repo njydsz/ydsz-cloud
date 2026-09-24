@@ -91,8 +91,10 @@ public class MessageTraceController {
   /**
    * 按消息 ID 查询完整轨迹。
    *
-   * @param msgId 消息 ID
-   * @return 统一响应结果，包含轨迹列表
+   * <p>返回该消息在生命周期各阶段（创建 / 入队 / 消费 / 发送 / 回执 / 撤回）的全部轨迹节点。
+   *
+   * @param msgId 消息 ID（路径变量，不可为空）
+   * @return 轨迹列表（按时间正序；消息不存在时返回空列表）
    */
   @Operation(summary = "按消息 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
@@ -104,8 +106,10 @@ public class MessageTraceController {
   /**
    * 按链路追踪 ID 查询完整轨迹。
    *
-   * @param traceId 链路追踪 ID
-   * @return 统一响应结果，包含轨迹列表
+   * <p>返回关联到同一 traceId 的全部消息轨迹（可能跨多条消息），用于端到端链路追踪分析。
+   *
+   * @param traceId 链路追踪 ID（路径变量，不可为空；对应 ydsz:traceId）
+   * @return 轨迹列表（按时间正序；无匹配时返回空列表）
    */
   @Operation(summary = "按链路追踪 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
@@ -117,9 +121,11 @@ public class MessageTraceController {
   /**
    * 按业务类型和单据 ID 查询轨迹。
    *
-   * @param bizType 业务类型
-   * @param bizId 单据 ID
-   * @return 统一响应结果，包含轨迹列表
+   * <p>查询某业务单据（如订单、审批单）触发的全部消息轨迹，用于运营审计和异常排查。
+   *
+   * @param bizType 业务类型（如 ORDER / APPROVAL / TASK）
+   * @param bizId 单据 ID（如订单号、审批单 ID）
+   * @return 轨迹列表（按时间正序；无匹配时返回空列表）
    */
   @Operation(summary = "按业务类型+单据 ID 查询轨迹")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)

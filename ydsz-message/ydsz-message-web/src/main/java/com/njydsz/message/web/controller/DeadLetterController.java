@@ -93,10 +93,11 @@ public class DeadLetterController {
   /**
    * 分页查询死信列表。
    *
-   * <p>强制 {@code status=DEAD},支持按通道 / 业务类型 / 接收人 / 租户等过滤。
+   * <p>强制过滤 {@code status=DEAD} 状态消息，支持按通道 / 业务类型 / 接收人 / 租户等多维过滤；
+   * 按租户隔离，跨租户数据不可见。
    *
-   * @param query 查询参数（status 字段被忽略,固定为 DEAD）
-   * @return 死信分页
+   * @param query 查询参数（status 字段被忽略，固定为 DEAD；含 pageNum / pageSize 分页信息）
+   * @return 死信分页结果（data 为 MsgLogVO 列表，含消息 ID、通道、接收人、状态、回执 ID、发送时间；无匹配时 data 为空列表）
    */
   @Operation(summary = "分页查询死信列表")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
@@ -112,11 +113,12 @@ public class DeadLetterController {
   /**
    * 手动重发死信。
    *
-   * <p>仅 DEAD 状态可重发。重置 retryCount / errorMessage / nextRetryAt 后立即重新投递, 投递成功 → SUCCESS,投递失败 →
-   * RETRY（进入正常重试调度）。
+   * <p>仅 {@code status=DEAD} 的消息可重发。重置 {@code retryCount / errorMessage / nextRetryAt} 后立即重新投递：
+   * 投递成功 → {@code SUCCESS}；投递失败 → {@code RETRY}（进入正常重试调度，不立即再次置为 DEAD）。
+   * 启用 5s 幂等防重与 50 QPS 限流，并记录审计日志。
    *
-   * @param logId 死信日志 ID
-   * @return 操作结果
+   * @param logId 死信日志 ID（路径变量，不可为空或空白）
+   * @return 无业务数据（仅返回操作成功标识）
    */
   @Operation(summary = "手动重发死信")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)

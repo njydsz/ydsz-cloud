@@ -85,9 +85,11 @@ public class ReadStatusController {
   /**
    * 标记消息为已读。
    *
-   * @param msgId 消息 ID
-   * @param userId 用户 ID
-   * @return 统一响应结果，true 表示标记成功
+   * <p>用户在前端主动标记某条消息已读。启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param msgId 消息 ID（路径变量，不可为空）
+   * @param userId 用户 ID（Query 参数，不可为空；须与登录态一致）
+   * @return true 表示标记成功；false 表示消息不存在或无权限
    */
   @Operation(summary = "标记消息已读")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
@@ -106,9 +108,11 @@ public class ReadStatusController {
   /**
    * 批量标记消息为已读。
    *
-   * @param msgIds 消息 ID 列表
-   * @param userId 用户 ID
-   * @return 统一响应结果，包含已标记条数
+   * <p>一次性标记多条消息已读，适用于「一键已读」场景。启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param msgIds 消息 ID 列表（请求体，不可为 null）
+   * @param userId 用户 ID（Query 参数，不可为空；须与登录态一致）
+   * @return 本次成功标记的条数（≤ msgIds.size()）
    */
   @Operation(summary = "批量标记消息已读")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
@@ -128,9 +132,11 @@ public class ReadStatusController {
   /**
    * 标记站内通知为已读。
    *
-   * @param notificationId 通知 ID
-   * @param userId 用户 ID
-   * @return 统一响应结果，true 表示标记成功
+   * <p>将某条站内通知标记为已读状态，同时同步更新其他通道的未读计数。
+   *
+   * @param notificationId 通知 ID（路径变量，不可为空）
+   * @param userId 用户 ID（Query 参数，不可为空；须与登录态一致）
+   * @return true 表示标记成功；false 表示通知不存在或无权限
    */
   @Operation(summary = "标记站内通知已读")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
@@ -150,9 +156,11 @@ public class ReadStatusController {
   /**
    * 将用户全部通知标记为已读。
    *
-   * @param userId 用户 ID
-   * @param bizType 业务类型过滤（可选）
-   * @return 统一响应结果，包含已标记条数
+   * <p>将某用户全部未读通知（或指定 bizType 下的未读通知）批量标记为已读。
+   *
+   * @param userId 用户 ID（Query 参数，不可为空；须与登录态一致）
+   * @param bizType 业务类型过滤（可选；为空时标记全部业务类型）
+   * @return 本次成功标记的条数（≥ 0）
    */
   @Operation(summary = "全部通知标记已读")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
@@ -173,9 +181,11 @@ public class ReadStatusController {
   /**
    * 查询用户未读消息数量。
    *
-   * @param userId 用户 ID
-   * @param channel 通道过滤（可选）
-   * @return 统一响应结果，包含 total 和 byChannel 两个未读计数
+   * <p>通过 Redis 缓存返回用户的未读数量，支持按通道维度拆分。
+   *
+   * @param userId 用户 ID（Query 参数，不可为空）
+   * @param channel 通道过滤（可选；为空时不按通道拆分）
+   * @return Map，key = "total" 表示总未读数，key = "byChannel" 表示该通道未读数（channel 为空时等于 total）
    */
   @Operation(summary = "查询用户未读消息数量")
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)

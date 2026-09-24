@@ -94,9 +94,12 @@ public class MessageStatsController {
   /**
    * 发送总览统计。
    *
-   * @param start 起始时间（ISO 格式 yyyy-MM-dd'T'HH:mm:ss，可选）
-   * @param end 结束时间（ISO 格式，可选）
-   * @return 总览统计
+   * <p>按当前租户统计发送总数 / 成功数 / 失败数 / 重试数 / 死信数 / 成功率；
+   * 不指定时间范围时默认最近 24 小时。
+   *
+   * @param start 发送时间下界（ISO 8601，可空；空时取 24h 前）
+   * @param end 发送时间上界（ISO 8601，可空；空时取当前时刻）
+   * @return 发送总览统计 VO（含各状态计数与成功率）
    */
   @Operation(summary = "发送总览统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
@@ -112,9 +115,11 @@ public class MessageStatsController {
   /**
    * 按通道维度的发送统计。
    *
-   * @param start 起始时间（可选）
-   * @param end 结束时间（可选）
-   * @return 各通道统计列表
+   * <p>按通道（SMS / EMAIL / IN_APP / DINGTALK / FEISHU / WECOM / WEBSOCKET 等）分组统计发送指标。
+   *
+   * @param start 发送时间下界（ISO 8601，可空）
+   * @param end 发送时间上界（ISO 8601，可空）
+   * @return 各通道统计列表（含通道名、成功数、失败数、重试数、成功率）
    */
   @Operation(summary = "通道维度发送统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
@@ -130,9 +135,11 @@ public class MessageStatsController {
   /**
    * 回执统计。
    *
-   * @param start 起始时间（可选）
-   * @param end 结束时间（可选）
-   * @return 回执统计
+   * <p>统计各回执状态（NONE / DELIVERED / READ / CLICKED / FAILED）的数量分布。
+   *
+   * @param start 发送时间下界（ISO 8601，可空）
+   * @param end 发送时间上界（ISO 8601，可空）
+   * @return 回执状态统计 VO（含各状态计数）
    */
   @Operation(summary = "回执统计")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
@@ -173,11 +180,11 @@ public class MessageStatsController {
   /**
    * P2-4: 成本看板。
    *
-   * <p>按通道维度统计发送成本：单条成本 × 成功发送数 = 通道总成本。
+   * <p>按通道维度统计发送成本：单条成本（来自供应商合同价）× 成功发送数 = 通道总成本。
    *
-   * @param start 起始时间（可选）
-   * @param end 结束时间（可选）
-   * @return 成本统计
+   * @param start 发送时间下界（ISO 8601，可空）
+   * @param end 发送时间上界（ISO 8601，可空）
+   * @return 成本统计 VO（含各通道单条成本、发送数、总成本）
    */
   @Operation(summary = "成本看板")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)

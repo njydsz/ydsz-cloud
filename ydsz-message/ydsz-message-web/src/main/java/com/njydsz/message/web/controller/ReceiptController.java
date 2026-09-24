@@ -89,8 +89,12 @@ public class ReceiptController {
   /**
    * 服务商回执回调接口。
    *
-   * @param dto 回执回调请求体
-   * @return 统一响应结果
+   * <p>接收三方短信/邮件服务商（阿里云/腾讯云/华为云/IM）在送达、阅读、点击等节点的回执回调。
+   * 回调包含签名校验、幂等处理（同一 providerMsgId 多次回调仅生效一次）和状态机转换校验。
+   * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 回执回调请求体（含 channel / providerMsgId / 回执状态等，经 {@code @Valid} 校验）
+   * @return 无业务数据（处理成功返回 success；签名校验失败返回错误）
    */
   @Operation(summary = "回执回调")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
@@ -110,8 +114,10 @@ public class ReceiptController {
   /**
    * 按发送日志 ID 查询回执列表。
    *
-   * @param logId 发送日志 ID
-   * @return 统一响应结果，包含回执列表
+   * <p>查询某条发送日志的全部回执记录（含 DELIVERED / READ / CLICKED / FAILED 等），按时间正序。
+   *
+   * @param logId 发送日志 ID（路径变量，不可为空）
+   * @return 回执列表（按时间正序；无回执记录时返回空列表）
    */
   @Operation(summary = "按日志 ID 查询回执列表")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_RECEIPT_VIEW)

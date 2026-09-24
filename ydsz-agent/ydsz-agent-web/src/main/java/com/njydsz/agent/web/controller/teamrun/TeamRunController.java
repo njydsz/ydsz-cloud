@@ -62,9 +62,22 @@ public class TeamRunController {
   /**
    * 创建 Team Run。
    *
-   * @param tenantId 租户 ID
-   * @param request 创建请求体
-   * @return 创建的 Team Run
+   * <p>创建一个多 Agent 协作任务实例，指定协作模式和初始上下文。
+   * 协作模式（{@link TeamRunPattern}）决定 Agent 间的任务分配策略：
+   * <ul>
+   *   <li>{@code PIPELINE} — 串行流水线：Agent A → Agent B → Agent C，前一个 Agent 的输出是后一个的输入</li>
+   *   <li>{@code PARALLEL} — 并行执行：所有 Agent 同时执行，各自独立输入，最终聚合输出</li>
+   *   <li>{@code HIERARCHY} — 层级汇报：Manager Agent 分配任务 → Worker Agent 执行 → Manager 汇总</li>
+   *   <li>{@code NETWORK} — 网络协作：Agent 间可互相通信，动态决定消息路由</li>
+   * </ul>
+   *
+   * <p>Token 预估：创建一个 Team Run 本身不消耗 LLM Token；
+   * 实际 Token 消耗在启动后由成员 Agent 数量和调用轮次决定，
+   * 粗略估算 {@code ≈ sum(单个 Agent 预估 Token * Agent 数量 * 平均轮次)}。
+   *
+   * @param tenantId 租户 ID（从请求头自动获取）
+   * @param request 创建请求体（必填：title / pattern；可选：description / initiatedBy / context）
+   * @return 统一响应结果，data 为创建的 {@link TeamRun}（含 teamRunId / status / createdAt 等）
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_TEAMRUN_CREATE)
   @Audit(
@@ -93,10 +106,16 @@ public class TeamRunController {
   /**
    * 添加成员到 Team Run。
    *
-   * @param tenantId 租户 ID
-   * @param teamRunId Team Run ID
-   * @param request 添加成员请求体
-   * @return 更新后的 Team Run
+   * <p>将一个 Agent（通过 {@code agentCode} 标识）注册为 Team Run 的成员，
+   * 并指定其角色（{@code role}）和执行顺序（{@code executionOrder}）。
+   *
+   * <p>Token 配额影响：每个成员 Agent 在启动后都会独立消耗 LLM Token，
+   * 新增成员会线性增加总 Token 消耗。租户需确保配额足以支撑所有成员的总调用需求。
+   *
+   * @param tenantId 租户 ID（从请求头自动获取）
+   * @param teamRunId Team Run ID（路径参数）
+   * @param request 添加成员请求体（必填：agentCode / role / executionOrder；可选：agentName / inputContext）
+   * @return 统一响应结果，data 为更新后的 {@link TeamRun}（含最新成员列表）
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_TEAMRUN_UPDATE)
   @Audit(
@@ -126,9 +145,18 @@ public class TeamRunController {
   /**
    * 启动 Team Run。
    *
-   * @param tenantId 租户 ID
-   * @param teamRunId Team Run ID
-   * @return 启动后的 Team Run
+   * <p>触发多 Agent 协作任务的执行。根据创建时指定的协作模式（{@link TeamRunPattern}），
+   * 编排引擎将按拓扑顺序或并行调度成员 Agent 开始执行。
+   *
+   * <p>Token 消耗：所有成员 Agent 的实际 LLM 调用均从启动时开始计费，
+   * Token 配额消耗 {@code ≈ Σ(每个 Agent 的 prompt+completion tokens)}。
+   * 建议在启动前检查租户 Token 配额是否足以支撑预估消耗（通过可观测性面板查询单 Agent 历史用量推算）。
+   *
+   * <p>启动时机会话状态从 READY 切换为 RUNNING；已启动的任务不可重复启动。
+   *
+   * @param tenantId 租户 ID（从请求头自动获取）
+   * @param teamRunId Team Run ID（路径参数）
+   * @return 统一响应结果，data 为启动后的 {@link TeamRun}（status 变为 RUNNING）
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_TEAMRUN_UPDATE)
   @Audit(
@@ -148,9 +176,15 @@ public class TeamRunController {
   /**
    * 取消 Team Run。
    *
-   * @param tenantId 租户 ID
-   * @param teamRunId Team Run ID
-   * @return 取消后的 Team Run
+   * <p>中止正在执行的多 Agent 协作任务。取消后所有正在运行的 Agent 执行将被终止，
+   * 已完成的 Agent 结果保留为最终输出的一部分。状态从 RUNNING 切换为 CANCELLED。
+   *
+   * <p>Token 说明：取消后已消耗的 Token 不予退还（LLM 调用已完成），
+   * 但可以防止后续未启动的 Agent 继续消耗 Token。建议发现异常时尽早取消以减少损失。
+   *
+   * @param tenantId 租户 ID（从请求头自动获取）
+   * @param teamRunId Team Run ID（路径参数）
+   * @return 统一响应结果，data 为取消后的 {@link TeamRun}（status 变为 CANCELLED）
    */
   @AuthApiPermission(apiCodes = PermissionCodes.AGENT_TEAMRUN_UPDATE)
   @Audit(

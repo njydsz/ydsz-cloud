@@ -57,10 +57,13 @@ public class SpaceController {
   private final SpaceApplicationService spaceApplicationService;
 
   /**
-   * 查询当前租户的空间列表。
+   * 查询当前用户可见的空间列表。
    *
-   * @param userId 当前用户ID
-   * @return 空间视图列表
+   * <p>返回当前租户下有权限访问的知识库空间列表，结果按创建时间倒序排列。
+   * 可见性受空间权限模型约束：私有空间仅对成员可见，组织内空间对同租户用户可见。
+   *
+   * @param userId 当前用户 ID（由网关通过 X-User-Id 头注入）
+   * @return 统一响应结果，data 为 {@link SpaceVO} 列表
    */
   @GetMapping
   @Operation(summary = "查询空间列表", description = "查询当前用户可见的空间列表")
@@ -74,9 +77,12 @@ public class SpaceController {
   /**
    * 创建知识库空间。
    *
-   * @param request 创建请求
-   * @param userId 当前用户ID
-   * @return 新创建的空间视图
+   * <p>创建新的知识库空间，创建者自动成为空间所有者（owner 角色）。
+   * 空间名称在租户内唯一，重复创建会被拒绝。
+   *
+   * @param request 创建请求（name: 空间名称，description: 空间描述，visibility: 可见性 private/organization/public）
+   * @param userId 当前用户 ID（由网关通过 X-User-Id 头注入）
+   * @return 统一响应结果，data 为新创建的 {@link SpaceVO}
    */
   @PostMapping
   @Operation(summary = "创建空间", description = "创建新的知识库空间，创建者自动成为所有者")
@@ -90,11 +96,13 @@ public class SpaceController {
   }
 
   /**
-   * 获取空间详情。
+   * 获取知识库空间详情。
    *
-   * @param spaceId 空间ID
-   * @param userId 当前用户ID
-   * @return 空间视图
+   * <p>返回空间的基本信息、权限配置、成员数量等。仅空间成员或租户管理员可查看。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @param userId 当前用户 ID（用于权限校验）
+   * @return 统一响应结果，data 为 {@link SpaceVO}；无权限时返回 403
    */
   @GetMapping("/{spaceId}")
   @Operation(summary = "获取空间详情")
@@ -109,10 +117,13 @@ public class SpaceController {
   /**
    * 更新空间信息。
    *
-   * @param spaceId 空间ID
-   * @param request 更新请求
-   * @param userId 当前用户ID
-   * @return 更新后的空间视图
+   * <p>更新空间的名称、描述和可见性配置。仅空间所有者和管理员可执行。
+   * 缩小可见性范围不会影响已加入的成员权限。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @param request 更新请求（name: 空间名称，description: 空间描述，visibility: 可见性 private/organization/public）
+   * @param userId 当前用户 ID（仅空间所有者/管理员可执行）
+   * @return 统一响应结果，data 为更新后的 {@link SpaceVO}
    */
   @PutMapping("/{spaceId}")
   @Operation(summary = "更新空间", description = "更新空间名称、描述、可见性（仅所有者/管理员）")
@@ -127,11 +138,14 @@ public class SpaceController {
   }
 
   /**
-   * 归档空间。
+   * 归档知识库空间。
    *
-   * @param spaceId 空间ID
-   * @param userId 当前用户ID
-   * @return 操作结果
+   * <p>将空间状态更改为 archived，归档后空间内容只读不可修改，成员无法新增文件。
+   * 归档操作可由空间所有者或管理员执行，需要时可恢复。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @param userId 当前用户 ID（仅空间所有者/管理员可执行）
+   * @return 统一响应结果，data 为 true 表示归档成功
    */
   @PostMapping("/{spaceId}/archive")
   @Operation(summary = "归档空间", description = "将空间状态改为 archived（仅所有者/管理员）")
@@ -144,11 +158,14 @@ public class SpaceController {
   }
 
   /**
-   * 删除空间（逻辑删除）。
+   * 删除知识库空间（逻辑删除）。
    *
-   * @param spaceId 空间ID
-   * @param userId 当前用户ID
-   * @return 操作结果
+   * <p>将空间标记为已删除（deleted=1），数据保留但不可访问。仅空间所有者和管理员可执行。
+   * 空间内的文件记录不会被物理删除，仅解除与空间的关联。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @param userId 当前用户 ID（仅空间所有者/管理员可执行）
+   * @return 统一响应结果，data 为 true 表示删除成功
    */
   @DeleteMapping("/{spaceId}")
   @Operation(summary = "删除空间", description = "逻辑删除空间（仅所有者/管理员）")
@@ -161,12 +178,15 @@ public class SpaceController {
   }
 
   /**
-   * 添加空间成员。
+   * 添加空间成员并赋予角色。
    *
-   * @param spaceId 空间ID
-   * @param request 添加成员请求
-   * @param userId 当前用户ID
-   * @return 操作结果
+   * <p>将指定用户添加到空间，并赋予对应角色（owner/admin/editor/viewer）。
+   * 仅空间所有者和管理员可执行。角色权限层级：owner > admin > editor > viewer。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @param request 添加成员请求（userId: 目标用户 ID，role: 角色 owner/admin/editor/viewer）
+   * @param userId 当前用户 ID（仅空间所有者/管理员可执行）
+   * @return 统一响应结果，data 为 true 表示添加成功
    */
   @PostMapping("/{spaceId}/members")
   @Operation(summary = "添加成员", description = "添加用户到空间并赋予角色（仅所有者/管理员）")
@@ -182,10 +202,13 @@ public class SpaceController {
   /**
    * 移除空间成员。
    *
-   * @param spaceId 空间ID
-   * @param targetUserId 目标用户ID
-   * @param userId 当前用户ID
-   * @return 操作结果
+   * <p>从空间中移除指定用户的所有权限。不能移除空间所有者（owner）。
+   * 仅空间所有者和管理员可执行。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @param targetUserId 待移除的目标用户 ID
+   * @param userId 当前用户 ID（仅空间所有者/管理员可执行）
+   * @return 统一响应结果，data 为 true 表示移除成功
    */
   @DeleteMapping("/{spaceId}/members/{targetUserId}")
   @Operation(summary = "移除成员", description = "从空间中移除用户（仅所有者/管理员，不能移除所有者）")
@@ -201,9 +224,11 @@ public class SpaceController {
   /**
    * 查询空间成员列表。
    *
-   * @param spaceId 空间ID
-   * @param userId 当前用户ID
-   * @return 成员列表
+   * <p>返回空间所有成员信息，包含用户 ID、角色、加入时间等。仅空间成员可查看。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @param userId 当前用户 ID（用于权限校验，仅空间成员可查看）
+   * @return 统一响应结果，data 为 {@link SpaceMemberDTO} 列表
    */
   @GetMapping("/{spaceId}/members")
   @Operation(summary = "查询成员列表", description = "查询空间的所有成员（需有读取权限）")

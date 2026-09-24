@@ -85,8 +85,10 @@ public class AggregateController {
   /**
    * 分页查询聚合批次列表。
    *
-   * @param query 分页查询参数
-   * @return 统一响应结果，包含聚合批次分页数据
+   * <p>按租户隔离，支持分页浏览全部聚合批次记录（含组标识、接收人、窗口期、状态等）。
+   *
+   * @param query 分页查询参数（含 pageNum / pageSize 等分页信息）
+   * @return 聚合批次分页结果（data 为 MsgAggregateVO 列表，total 为匹配总数；无匹配时 data 为空列表）
    */
   @Operation(summary = "聚合批次分页")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
@@ -98,9 +100,12 @@ public class AggregateController {
   /**
    * 按聚合组和接收人强制刷新聚合批次。
    *
-   * @param group 聚合组标识
-   * @param receiver 接收人标识
-   * @return 统一响应结果，包含刷新的消息数量
+   * <p>绕过时间窗口等待，立即将指定聚合组+接收人的待发送消息下发；用于紧急场景（如告警需即时推送）。
+   * 启用租户隔离、5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param group 聚合组标识（不可为空，对应 {@code MsgAggregate.group} 维度）
+   * @param receiver 接收人标识（不可为空，对应 {@code MsgAggregate.receiver} 维度）
+   * @return 实际下发的消息数量（0 表示无到期消息）
    */
   @Operation(summary = "按聚合组+接收人强制刷新")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
@@ -120,7 +125,10 @@ public class AggregateController {
   /**
    * 刷新全部到期聚合批次。
    *
-   * @return 统一响应结果，包含刷新的消息数量
+   * <p>立即处理所有到达时间窗口的聚合批次，逐条下发待发送消息；通常由 {@code AggregateFlushScheduler} 定时调用，
+   * 也可由运维人员手动触发以加快积压消息下发。
+   *
+   * @return 实际下发的消息总数（0 表示无到期批次）
    */
   @Operation(summary = "刷新到期批次")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)

@@ -58,8 +58,11 @@ public class SpaceTemplateController {
   /**
    * 查询可用模板列表。
    *
-   * @param category 模板分类（可选）
-   * @return 模板DTO列表
+   * <p>返回系统公开模板和当前租户自定义模板的列表。支持按分类筛选。
+   * 系统模板对所有租户可见可用，自定义模板仅创建者所属租户可见。
+   *
+   * @param category 模板分类（可选，如 general / project / meeting / knowledge）
+   * @return 统一响应结果，data 为 {@link SpaceTemplateDTO} 列表
    */
   @GetMapping
   @Operation(summary = "查询模板列表", description = "查询可用模板（系统公开模板 + 租户自定义模板）")
@@ -73,8 +76,11 @@ public class SpaceTemplateController {
   /**
    * 获取模板详情。
    *
-   * @param templateId 模板ID
-   * @return 模板DTO
+   * <p>返回模板的完整信息，包含名称、描述、分类和结构 JSON（定义目录树）。
+   * 系统模板和当前租户自定义模板均可查询。
+   *
+   * @param templateId 模板 ID
+   * @return 统一响应结果，data 为 {@link SpaceTemplateDTO}；不存在时返回 404
    */
   @GetMapping("/{templateId}")
   @Operation(summary = "获取模板详情")
@@ -84,11 +90,14 @@ public class SpaceTemplateController {
   }
 
   /**
-   * 创建自定义模板。
+   * 创建租户自定义模板。
    *
-   * @param request 创建请求
-   * @param userId 当前用户ID
-   * @return 新创建的模板DTO
+   * <p>基于 structureJson 定义的目录树结构创建自定义模板。
+   * 系统模板不可通过此接口创建，仅管理员可通过数据脚本初始化。
+   *
+   * @param request 创建请求（name: 模板名称，description: 描述，category: 分类，structureJson: 模板结构 JSON）
+   * @param userId 当前用户 ID（作为模板创建者）
+   * @return 统一响应结果，data 为新创建的 {@link SpaceTemplateDTO}
    */
   @PostMapping
   @Operation(summary = "创建模板", description = "创建租户自定义模板")
@@ -103,12 +112,15 @@ public class SpaceTemplateController {
   }
 
   /**
-   * 更新自定义模板。
+   * 更新租户自定义模板。
    *
-   * @param templateId 模板ID
-   * @param request 更新请求
-   * @param userId 当前用户ID
-   * @return 更新后的模板DTO
+   * <p>更新自定义模板的名称、描述、分类和结构 JSON。系统内置模板（system 级别）不可修改。
+   * 仅模板创建者或租户管理员可执行。
+   *
+   * @param templateId 模板 ID
+   * @param request 更新请求（name: 模板名称，description: 描述，category: 分类，structureJson: 模板结构 JSON）
+   * @param userId 当前用户 ID（仅模板创建者/管理员可执行）
+   * @return 统一响应结果，data 为更新后的 {@link SpaceTemplateDTO}
    */
   @PutMapping("/{templateId}")
   @Operation(summary = "更新模板", description = "更新租户自定义模板（系统模板不可修改）")
@@ -124,11 +136,14 @@ public class SpaceTemplateController {
   }
 
   /**
-   * 删除自定义模板。
+   * 删除租户自定义模板。
    *
-   * @param templateId 模板ID
-   * @param userId 当前用户ID
-   * @return 操作结果
+   * <p>删除指定的自定义模板。系统内置模板（system 级别）不允许删除。
+   * 仅模板创建者或租户管理员可执行。已通过该模板创建的空间不受影响。
+   *
+   * @param templateId 模板 ID
+   * @param userId 当前用户 ID（仅模板创建者/管理员可执行）
+   * @return 统一响应结果，data 为 true 表示删除成功
    */
   @DeleteMapping("/{templateId}")
   @Operation(summary = "删除模板", description = "删除租户自定义模板（系统模板不可删除）")
@@ -141,12 +156,15 @@ public class SpaceTemplateController {
   }
 
   /**
-   * 使用模板创建空间。
+   * 基于模板创建新空间。
    *
-   * @param templateId 模板ID
-   * @param request 创建空间请求
-   * @param userId 当前用户ID
-   * @return 新创建的空间视图
+   * <p>使用预定义的空间模板创建新空间，自动按模板结构 JSON 在空间内创建目录树。
+   * 创建者自动成为空间所有者。模板可以是系统模板或当前租户自定义模板。
+   *
+   * @param templateId 模板 ID
+   * @param request 使用模板请求（spaceName: 新空间名称，必填且租户内唯一）
+   * @param userId 当前用户 ID（自动成为新空间所有者）
+   * @return 统一响应结果，data 为新创建的 {@link SpaceVO}
    */
   @PostMapping("/{templateId}/use")
   @Operation(summary = "使用模板创建空间", description = "基于模板预定义结构创建新空间")

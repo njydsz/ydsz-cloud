@@ -298,12 +298,6 @@ public class FlowTemplateController {
       type = AuditType.OPERATION,
       action = AuditAction.SYNC,
       content = "'syncFromParent'")
-  /** 从父模板同步：将父模板的最新 BPMN / 表单配置同步到子模板。
-   *
-   * @param childTemplateCode 子模板编码
-   * @return 同步的字段数量
-   */
-  
   public YdszResponse<Integer> syncFromParent(@PathVariable String childTemplateCode) {
     return YdszResponse.success(templateService.syncFromParent(childTemplateCode));
   }

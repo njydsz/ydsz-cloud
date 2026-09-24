@@ -87,8 +87,11 @@ public class MessageFeedbackController {
   /**
    * 提交消息质量反馈。
    *
-   * @param dto 反馈请求体
-   * @return 统一响应结果，包含反馈记录 ID
+   * <p>用户对单条消息提交 1-5 星评分 + 文本意见；同一用户对同一消息多次提交幂等处理（取首次提交）。
+   * 启用租户隔离、5s 幂等防重、50 QPS 限流，并记录审计日志。
+   *
+   * @param dto 反馈请求体（含消息 ID、评分、意见等，经 {@code @Valid} 校验）
+   * @return 反馈记录唯一 ID
    */
   @Operation(summary = "提交消息反馈")
   @Idempotent(key = "ydsz:message:feedback:submit", ttlSeconds = 5)
@@ -106,9 +109,11 @@ public class MessageFeedbackController {
   /**
    * 查询用户和通道的平均评分。
    *
-   * @param userId 用户 ID
-   * @param channel 通道（可选）
-   * @return 统一响应结果，包含用户评分与通道评分
+   * <p>返回维度：userRating = 某用户所有评分的平均值；channelRating = 某通道所有评分的平均值（channel 为空时返回 0）。
+   *
+   * @param userId 用户 ID（必填）
+   * @param channel 通道（可选，如 SMS / EMAIL / IN_APP）
+   * @return Map，key = "userRating" / "channelRating"，value 为对应平均分（0.0 ~ 5.0）
    */
   @Operation(summary = "查询用户平均评分")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
@@ -127,11 +132,13 @@ public class MessageFeedbackController {
   /**
    * 分页查询反馈记录。
    *
+   * <p>管理后台查看全部反馈记录，支持按通道 / 用户 ID 过滤，按租户隔离。
+   *
    * @param page 页码（默认 1）
    * @param size 每页条数（默认 20）
-   * @param channel 通道过滤（可选）
+   * @param channel 通道过滤（可选，如 SMS / EMAIL / IN_APP）
    * @param userId 用户 ID 过滤（可选）
-   * @return 统一响应结果，包含反馈分页数据
+   * @return 反馈分页结果（data 为 MsgFeedbackVO 列表；无匹配时 data 为空列表）
    */
   @Operation(summary = "分页查询反馈记录")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
@@ -147,8 +154,10 @@ public class MessageFeedbackController {
   /**
    * 检查用户是否需要降频推送。
    *
-   * @param userId 用户 ID
-   * @return 统一响应结果，包含 shouldReduce 标记
+   * <p>当用户近 N 条消息评分持续低于阈值（默认 2.0）时返回 {@code true}，后续非必要通知将自动降频或改用低频通道。
+   *
+   * @param userId 用户 ID（必填）
+   * @return Map，key = "shouldReduce"，value = true 表示应降频 / false 表示正常发送
    */
   @Operation(summary = "检查用户是否需要降频")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)

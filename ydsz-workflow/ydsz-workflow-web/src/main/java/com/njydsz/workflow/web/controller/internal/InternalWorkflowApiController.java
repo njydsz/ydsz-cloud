@@ -66,12 +66,6 @@ public class InternalWorkflowApiController {
       key = "'ydsz:workflow:internal-api:start-process:' + #dto.flowCode + ':' + #dto.businessKey",
       ttlSeconds = 5)
   @PostMapping("/engine/instance/start")
-  /** 内部发起流程：供其他微服务通过内部 API 启动工作流实例。
-   *
-   * @param dto 发起流程参数
-   * @return 新建的流程实例 ID
-   */
-  
   public YdszResponse<String> startProcess(@RequestBody FlowStartProcessDTO dto) {
     return YdszResponse.success(workflowFacade.startProcess(dto));
   }

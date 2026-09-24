@@ -84,10 +84,22 @@ public class KnowledgeGraphController {
   /**
    * 摄入文档到知识图谱。
    *
-   * <p>从文档原文中抽取实体和关系，写入知识图谱存储。
+   * <p>处理流程：
    *
-   * @param request 摄入请求（docId / content 必填）
-   * @return 抽取并入库的实体数和关系数
+   * <ol>
+   *   <li>对 {@code content} 进行段落切分（按语义分段）</li>
+   *   <li>调用 LLM（配置默认模型）逐段抽取实体（人名、产品名、技术栈、事件等）和关系（属于、使用、依赖等）</li>
+   *   <li>实体去重合并（同名同类型实体合并，置信度取最大值），同名异义实体通过上下文消歧</li>
+   *   <li>将去重后的实体和关系写入图存储（Neo4j / 关系型图存储）</li>
+   * </ol>
+   *
+   * <p>Token 消耗：与文档长度正相关，估算公式 {@code ≈ content.length / 4 * 2}（输入+输出 Token）。
+   * 抽取模型优先级：配置的实体抽取模型 > 系统默认 LLM。Token 配额消耗计入发起租户当日配额。
+   *
+   * <p>幂等性：同一 docId 重复摄入会触发全量覆盖（先删除旧实体关系，再写入新结果），不会产生重复数据。
+   *
+   * @param request 摄入请求 Map（必填：docId / content；可选：metadata 等扩展字段）
+   * @return 统一响应结果，data 为 {@code {docId, entityCount, relationCount, status}} Map；status 为 "ingested" 表示成功
    */
   @AuthApiPermission(apiCodes = {"agent:knowledge:ingest"})
   @Audit(
@@ -119,11 +131,19 @@ public class KnowledgeGraphController {
   /**
    * 按名称搜索实体（含邻域扩展）。
    *
-   * <p>先按名称精确匹配，再扩展 N 跳邻域获得相关实体集合。
+   * <p>处理流程：
    *
-   * @param query 搜索关键词（必填）
-   * @param depth 邻域扩展深度，默认 2
-   * @return 匹配的实体列表
+   * <ol>
+   *   <li>在图存储中按实体名称精确匹配（case-insensitive）</li>
+   *   <li>对匹配实体执行 {@code depth} 跳邻域扩展（沿关系边 BFS 遍历）</li>
+   *   <li>去重后返回实体集合（含核心实体 + 邻域实体）</li>
+   * </ol>
+   *
+   * <p>本接口为纯图检索，不消耗 LLM Token。如需语义模糊匹配请结合 RAG 向量检索使用。
+   *
+   * @param query 搜索关键词（必填，匹配实体名称），支持中英文
+   * @param depth 邻域扩展深度（默认 2，范围 1-5），0 表示仅返回核心实体不扩展
+   * @return 统一响应结果，data 为 {@link EntityVO} 列表（含 id / name / type / description / sourceDocId）；无匹配时返回空列表
    */
   @AuthApiPermission(apiCodes = {"agent:knowledge:search"})
   @Audit(
@@ -147,9 +167,14 @@ public class KnowledgeGraphController {
   /**
    * 查询实体子图（N 跳邻域内的实体和关系）。
    *
-   * @param entityId 实体 ID（路径参数）
-   * @param depth 跳数，默认 3
-   * @return 子图数据（实体 + 关系）
+   * <p>以指定实体为起点，执行 {@code depth} 跳 BFS 遍历获取子图（实体集合 + 关系边集合）。
+   * 用于前端知识图谱可视化渲染或 Agent 关联推理。depth=0 仅返回实体本身。
+   *
+   * <p>本接口为纯图检索，不消耗 LLM Token。
+   *
+   * @param entityId 实体 ID（路径参数，由摄入接口返回）
+   * @param depth 跳数（默认 3，范围 0-5），0 表示仅返回实体本身
+   * @return 统一响应结果，data 为 {@link SubGraphVO}（含 entities / relations 两个列表）；实体 ID 不存在时返回空子图（非 null）
    */
   @AuthApiPermission(apiCodes = {"agent:knowledge:search"})
   @Audit(
@@ -178,8 +203,11 @@ public class KnowledgeGraphController {
   /**
    * 查询实体的所有关系边。
    *
-   * @param entityId 实体 ID
-   * @return 关系列表
+   * <p>返回指定实体作为起始节点或目标节点的全部关系边（包括入边和出边）。
+   * 本接口为纯图检索，不消耗 LLM Token。
+   *
+   * @param entityId 实体 ID（路径参数）
+   * @return 统一响应结果，data 为 {@link RelationVO} 列表（含 id / fromEntityId / toEntityId / type / confidence）；无关系时返回空列表
    */
   @AuthApiPermission(apiCodes = {"agent:knowledge:search"})
   @Audit(
@@ -201,7 +229,10 @@ public class KnowledgeGraphController {
   /**
    * 获取图谱统计信息。
    *
-   * @return 实体总数、关系总数
+   * <p>返回知识图谱存储的全局统计数据。数据来源：图存储层执行 count 查询（如 Neo4j 的 MATCH COUNT），
+   * 不消耗 LLM Token。统计值为实时快照，不同请求间可能因并发摄入而略有差异。
+   *
+   * @return 统一响应结果，data 为 {@code {entityCount: Long, relationCount: Long}} Map（具体字段名由 {@link KnowledgeGraphService#getStats()} 返回）
    */
   @AuthApiPermission(apiCodes = {"agent:knowledge:search"})
   @Audit(

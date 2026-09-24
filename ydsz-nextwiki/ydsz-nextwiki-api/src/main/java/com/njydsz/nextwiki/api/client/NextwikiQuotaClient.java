@@ -32,8 +32,11 @@ public interface NextwikiQuotaClient {
   /**
    * 按租户 ID 查询存储配额。
    *
-   * @param tenantId 租户 ID
-   * @return 存储配额 DTO
+   * <p>远程调用对应文件引擎能力：查询租户维度的存储配额配置及当前使用情况。
+   * 返回已用容量（usedBytes）、总配额（quotaLimit）、文件数（fileCount/fileCountLimit）等指标。
+   *
+   * @param tenantId 租户 ID（雪花算法字符串）
+   * @return 统一响应结果，data 为 {@link StorageQuotaDTO}；配额未配置时 data 为 null
    */
   @GetMapping(FeignClientConstants.NEXTWIKI_PATH_QUOTA_GET)
   YdszResponse<StorageQuotaDTO> getQuotaByTenantId(@RequestParam String tenantId);
@@ -41,8 +44,11 @@ public interface NextwikiQuotaClient {
   /**
    * 按空间 ID 查询存储配额。
    *
-   * @param spaceId 空间 ID
-   * @return 存储配额 DTO
+   * <p>远程调用对应文件引擎能力：查询指定知识库空间维度的存储配额配置及使用情况。
+   * 空间配额独立于租户配额，用于限制单个空间的存储使用上限。
+   *
+   * @param spaceId 空间 ID（雪花算法字符串）
+   * @return 统一响应结果，data 为 {@link StorageQuotaDTO}；配额未配置时 data 为 null
    */
   @GetMapping(FeignClientConstants.NEXTWIKI_PATH_QUOTA_GET_BY_SPACE)
   YdszResponse<StorageQuotaDTO> getQuotaBySpaceId(@RequestParam String spaceId);

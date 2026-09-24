@@ -135,12 +135,6 @@ public class FlowDefinitionController {
       content = "'deploy'")
   @Operation(summary = "部署流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
-  /** 部署流程定义：上传 BPMN XML + 表单配置，创建新流程定义。
-   *
-   * @param dto 部署参数（BPMN XML / flowCode / formConfig 等）
-   * @return 新建的流程定义 ID
-   */
-  
   public YdszResponse<String> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
     String id = definitionService.deploy(dto);
     return YdszResponse.success(id);
@@ -202,10 +196,11 @@ public class FlowDefinitionController {
   /**
    * 废弃流程定义
    *
-   * <p><b>需要二次身份验证：</b>废弃流程定义属于极敏感操作，可能导致在途流程实例无法正常流转，需管理员输入当前登录密码确认身份后方可执行。
+   * <p>需要二次身份验证：废弃流程定义属于极敏感操作，可能导致在途流程实例无法正常流转，
+   * 需管理员输入当前登录密码确认身份后方可执行。已废弃的定义不可再发起新实例，但不影响在途实例。
    *
    * @param id 流程定义 ID
-   * @return 统一响应结果
+   * @return 统一响应结果，无数据内容
    */
   @Idempotent(key = "ydsz:workflow:definition:deprecate", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinition.deprecate", threshold = 50)
@@ -217,11 +212,6 @@ public class FlowDefinitionController {
       content = "'deprecate'")
   @Operation(summary = "废弃流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-  /** 停用流程定义：将指定定义标记为失效状态（不可再发起）。
-   *
-   * @param id 流程定义 ID
-   */
-  
   public YdszResponse<Void> deprecate(@PathVariable String id) {
     definitionService.deprecate(id);
     return YdszResponse.success();
@@ -230,10 +220,13 @@ public class FlowDefinitionController {
   /**
    * 按编码查询已发布流程定义
    *
-   * @param code 流程编码
-   * @param version 版本号（可选）
-   * @param tenantId 租户 ID（可选）
-   * @return 统一响应结果，包含流程定义
+   * <p>根据流程编码（flowCode）查询当前激活或指定版本的已发布流程定义详情。
+   * 如果未指定版本号且未指定租户，则返回该 flowCode 下当前激活的已发布版本。
+   *
+   * @param code 流程编码（flowCode），唯一标识一类流程定义
+   * @param version 版本号（可选，为空时返回当前激活版本）
+   * @param tenantId 租户 ID（可选，为空时使用默认租户）
+   * @return 统一响应结果，包含流程定义视图对象，不存在时返回 null
    */
   @GetMapping("/definition/code/{code}")
   @Operation(summary = "按编码查询已发布流程定义")
@@ -247,11 +240,14 @@ public class FlowDefinitionController {
   /**
    * 分页查询流程定义
    *
-   * @param pageNo 页码
-   * @param pageSize 每页大小
-   * @param category 分类（可选）
-   * @param flowCode 流程编码（可选）
-   * @return 统一响应结果，包含流程定义列表
+   * <p>按分页参数查询流程定义列表，支持按分类和流程编码进行过滤。
+   * 结果按创建时间降序排列。
+   *
+   * @param pageNo 页码（从 1 开始）
+   * @param pageSize 每页大小（1~100，默认 20）
+   * @param category 分类（可选，为空则不过滤）
+   * @param flowCode 流程编码（可选，为空则不过滤）
+   * @return 统一响应结果，包含流程定义视图列表
    */
   @GetMapping("/definition/page")
   @Operation(summary = "分页查询流程定义")
@@ -266,8 +262,11 @@ public class FlowDefinitionController {
   /**
    * P2-21: 流程定义详情查询（含节点 + 跳转）
    *
+   * <p>查询指定流程定义的完整信息，包括定义元数据、全部节点（含坐标/属性）和跳转关系。
+   * 用于设计器加载、定义详情页渲染等场景。
+   *
    * @param id 流程定义 ID
-   * @return 统一响应结果，包含 definition / nodes / skips
+   * @return 统一响应结果，包含 definition（定义元数据）/ nodes（节点列表）/ skips（跳转列表）
    */
   @GetMapping("/definition/{id}")
   @Operation(summary = "查询流程定义详情（含节点与跳转）")
@@ -298,10 +297,13 @@ public class FlowDefinitionController {
   /**
    * P2-27: 切换流程定义的激活版本
    *
-   * @param code 流程编码
-   * @param definitionId 目标流程定义 ID
-   * @param tenantId 租户 ID（可选）
-   * @return 统一响应结果
+   * <p>将指定 flowCode 的激活版本切换到另一个已发布版本。
+   * 切换后新发起的流程将使用目标版本，已运行的实例不受影响。
+   *
+   * @param code 流程编码（flowCode）
+   * @param definitionId 目标流程定义 ID（必须是已发布状态）
+   * @param tenantId 租户 ID（可选，为空使用默认租户）
+   * @return 统一响应结果，无数据内容
    */
   @Idempotent(key = "ydsz:workflow:definition:switchVersion", ttlSeconds = 5)
   @PostMapping("/definition/{code}/switchVersion")
@@ -336,11 +338,6 @@ public class FlowDefinitionController {
       content = "'enable'")
   @Operation(summary = "启用流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-  /** 启用流程定义：将已停用的定义恢复为激活状态。
-   *
-   * @param id 流程定义 ID
-   */
-  
   public YdszResponse<Void> enable(@PathVariable String id) {
     definitionService.enable(id);
     return YdszResponse.success();
@@ -362,11 +359,6 @@ public class FlowDefinitionController {
       content = "'disable'")
   @Operation(summary = "停用流程定义")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-  /** 禁用流程定义：临时禁用，不可发起新实例。
-   *
-   * @param id 流程定义 ID
-   */
-  
   public YdszResponse<Void> disable(@PathVariable String id) {
     definitionService.disable(id);
     return YdszResponse.success();
@@ -375,8 +367,10 @@ public class FlowDefinitionController {
   /**
    * 列出流程定义的所有历史版本
    *
+   * <p>查询指定 flowCode 对应的所有发布历史版本，按版本号降序排列。
+   *
    * @param id 流程定义 ID
-   * @return 统一响应结果，包含版本列表
+   * @return 统一响应结果，包含版本列表（含 version / publishedAt / publishedBy 等字段）
    */
   @GetMapping("/definition/{id}/versions")
   @Operation(summary = "列出流程定义的所有历史版本")
@@ -388,10 +382,12 @@ public class FlowDefinitionController {
   /**
    * 版本差异对比
    *
-   * @param id 流程定义 ID
-   * @param v1 版本号 1
-   * @param v2 版本号 2
-   * @return 统一响应结果，包含 nodeChanges 和 skipChanges
+   * <p>对比两个版本的节点和跳转增删改差异，返回可用于前端渲染 diff 视图的数据。
+   *
+   * @param id 流程定义 ID（用于定位 flowCode）
+   * @param v1 版本号 1（较早版本）
+   * @param v2 版本号 2（较新版本）
+   * @return 统一响应结果，包含 nodeChanges（节点增删改）和 skipChanges（跳转增删改）
    */
   @GetMapping("/definition/{id}/diff")
   @Operation(summary = "流程定义版本差异对比")
@@ -404,10 +400,11 @@ public class FlowDefinitionController {
   /**
    * P0-2: 流程定义一键回滚
    *
-   * <p>将指定 flowCode 的激活版本切换回上一个已发布版本， 并自动迁移在途实例。HIGH 风险时阻止回滚。
+   * <p>将指定 flowCode 的激活版本切换回上一个已发布版本，并自动迁移在途实例。
+   * 回滚前会执行变更影响分析，HIGH 风险时阻止回滚。
    *
    * @param flowCode 流程编码
-   * @return 统一响应结果，包含回滚报告
+   * @return 统一响应结果，包含回滚报告（含影响的实例数、迁移结果等）
    */
   @PostMapping("/definition/rollback")
   @Operation(summary = "一键回滚流程定义到上一版本")
@@ -421,10 +418,12 @@ public class FlowDefinitionController {
   /**
    * P2-40: 更新节点坐标（供前端设计器保存布局）
    *
+   * <p>用户在设计器中拖拽节点后调用，保存节点在画布上的位置坐标。
+   *
    * @param id 流程定义 ID
    * @param nodeCode 节点编码
-   * @param coordinate 坐标 JSON 字符串
-   * @return 统一响应结果
+   * @param coordinate 坐标 JSON 字符串（含 x / y 等字段）
+   * @return 统一响应结果，无数据内容
    */
   @Idempotent(
       key = "ydsz:workflow:FlowDefinitionController:updateNodeCoordinate:lock",
@@ -449,9 +448,12 @@ public class FlowDefinitionController {
   /**
    * P2-41: 编辑未发布的流程定义草稿
    *
+   * <p>更新已存在但未发布的流程定义草稿，覆盖元数据、节点和跳转配置。
+   * 仅对未发布的草稿状态定义生效。
+   *
    * @param id 流程定义 ID
-   * @param dto 部署参数（含更新后的元数据与节点/跳转）
-   * @return 统一响应结果
+   * @param dto 部署参数（含更新后的元数据与节点/跳转信息）
+   * @return 统一响应结果，无数据内容
    */
   @Idempotent(key = "ydsz:workflow:definition:update", ttlSeconds = 5)
   @RateLimit(resource = "workflow.FlowDefinition.updateDefinition", threshold = 50)
@@ -472,8 +474,10 @@ public class FlowDefinitionController {
   /**
    * GAP-V2-06: 导出流程定义为 JSON（含定义元数据 + 节点 + 跳转）
    *
+   * <p>将流程定义序列化为 JSON 字符串，可用于跨环境迁移或备份。
+   *
    * @param id 流程定义 ID
-   * @return 统一响应结果，包含 JSON 字符串
+   * @return 统一响应结果，包含 JSON 格式的流程定义字符串
    */
   @GetMapping("/definition/{id}/export")
   @Operation(summary = "导出流程定义为 JSON")
@@ -484,8 +488,11 @@ public class FlowDefinitionController {
   /**
    * GAP-V2-06: 从 JSON 导入流程定义（创建为草稿）
    *
-   * @param json 导出的 JSON 字符串
-   * @param tenantId 租户 ID（可选，默认从上下文获取）
+   * <p>将 JSON 字符串反序列化并创建为新的流程定义草稿。
+   * 导入的定义为草稿状态，需经过发布流程后方可使用。
+   *
+   * @param json 导出的 JSON 字符串（需为 exportDefinition 输出格式）
+   * @param tenantId 租户 ID（可选，为空从 SecurityContext 获取）
    * @return 统一响应结果，包含新创建的流程定义 ID
    */
   @Idempotent(key = "ydsz:workflow:definition:import", ttlSeconds = 5)
@@ -535,7 +542,9 @@ public class FlowDefinitionController {
   /**
    * 查询引擎信息
    *
-   * @return 统一响应结果，包含引擎类型与可用性
+   * <p>返回工作流引擎的类型标识和健康状态，可用作服务探活。
+   *
+   * @return 统一响应结果，包含 engineType（引擎类型）和 available（是否可用）
    */
   @GetMapping("/info")
   @Operation(summary = "查询工作流引擎信息")
@@ -601,8 +610,11 @@ public class FlowDefinitionController {
   /**
    * P0-1: 查询实例的事件订阅列表
    *
-   * @param instanceId 实例 ID
-   * @return 订阅列表（含 WAITING / COMPLETED / CANCELLED 状态）
+   * <p>返回指定流程实例当前所有的事件订阅（消息关联 / 错误抛出），
+   * 包括 WAITING（等待中）/ COMPLETED（已完成）/ CANCELLED（已取消）三种状态。
+   *
+   * @param instanceId 流程实例 ID
+   * @return 统一响应结果，包含订阅列表
    */
   @GetMapping("/instance/{instanceId}/eventSubscriptions")
   @Operation(summary = "查询实例的事件订阅列表")
@@ -629,11 +641,6 @@ public class FlowDefinitionController {
       content = "'slaScan'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "手动触发 SLA 扫描")
-  /** SLA 扫描：扫描所有超期待办任务，触发超时动作。
-   *
-   * @return 本次触发的超期任务数
-   */
-  
   public YdszResponse<Integer> slaScan() {
     int processed = slaService.scanAndProcess();
     return YdszResponse.success(processed);
@@ -655,12 +662,6 @@ public class FlowDefinitionController {
       content = "'slaProcess'")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
   @Operation(summary = "手动触发单条任务的 SLA 处理")
-  /** 处理单个任务 SLA：执行超时策略（自动通过 / 转办 / 催办）。
-   *
-   * @param taskId 任务 ID
-   * @return 是否触发了超时动作
-   */
-  
   public YdszResponse<Boolean> slaProcess(@PathVariable String taskId) {
     Boolean ok = taskService.slaProcessByTaskId(taskId);
     if (ok == null) {
@@ -686,12 +687,6 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'buildExpression'")
   @Operation(summary = "结构化条件 JSON → 表达式字符串")
-  /** 构建条件表达式：将前端条件面板转换为可执行表达式。
-   *
-   * @param body 条件面板配置
-   * @return 生成的高阶表达式字符串
-   */
-  
   public YdszResponse<String> buildExpression(@RequestBody Map<String, String> body) {
     String conditionJson = body.get("conditionJson");
     String engine = body.getOrDefault("engine", "AVIATOR");
@@ -713,12 +708,6 @@ public class FlowDefinitionController {
       action = AuditAction.CREATE,
       content = "'parseExpression'")
   @Operation(summary = "表达式字符串 → 结构化条件 JSON")
-  /** 解析条件表达式：将可执行表达式反向解析为前端条件面板配置。
-   *
-   * @param body 原始条件表达式
-   * @return 前端条件面板配置 JSON
-   */
-  
   public YdszResponse<String> parseExpression(@RequestBody Map<String, String> body) {
     String expression = body.get("expression");
     String engine = body.getOrDefault("engine", "AVIATOR");
@@ -728,8 +717,10 @@ public class FlowDefinitionController {
   /**
    * 校验表达式语法。
    *
+   * <p>对条件表达式进行语法校验，不执行表达式，仅验证语法正确性。
+   *
    * @param body 请求体，需包含 expression 和可选的 engine（默认 AVIATOR）
-   * @return 校验结果（valid / errors 等字段）
+   * @return 统一响应结果，包含 valid（是否合法）/ errors（错误信息列表）等字段
    */
   @Idempotent(key = "ydsz:workflow:conditionExpr:validate", ttlSeconds = 5)
   @PostMapping("/definition/conditionExpr/validate")
@@ -743,7 +734,10 @@ public class FlowDefinitionController {
   /**
    * 获取可用的操作符列表。
    *
-   * @return 操作符列表
+   * <p>返回当前表达式引擎支持的全部操作符（如 EQ、GT、IN 等），
+   * 供前端条件面板渲染可用操作符下拉框。
+   *
+   * @return 统一响应结果，包含操作符列表（含 code / symbol / desc 字段）
    */
   @GetMapping("/definition/conditionExpr/operators")
   @Operation(summary = "获取可用的操作符列表")
@@ -754,7 +748,10 @@ public class FlowDefinitionController {
   /**
    * 获取可用的值类型列表。
    *
-   * @return 值类型列表
+   * <p>返回当前表达式引擎支持的全部值类型（如 STRING、NUMBER、DATE 等），
+   * 供前端条件面板渲染类型选择器。
+   *
+   * @return 统一响应结果，包含值类型列表（含 code / desc 字段）
    */
   @GetMapping("/definition/conditionExpr/valueTypes")
   @Operation(summary = "获取可用的值类型列表")
@@ -765,8 +762,11 @@ public class FlowDefinitionController {
   /**
    * 获取指定流程定义的可用变量列表。
    *
+   * <p>返回流程定义中已注册的全部变量（含变量名、类型），
+   * 供前端条件面板做变量选择。
+   *
    * @param id 流程定义 ID
-   * @return 变量列表
+   * @return 统一响应结果，包含变量列表（含 name / type / desc 字段）
    */
   @GetMapping("/definition/conditionExpr/variables/{id}")
   @Operation(summary = "获取流程定义的可用变量列表")
@@ -777,8 +777,11 @@ public class FlowDefinitionController {
   /**
    * 预览表达式执行结果。
    *
-   * @param body 请求体，需包含 expression、variables、可选的 engine
-   * @return 执行结果
+   * <p>使用给定的变量值执行表达式并返回结果，用于前端条件面板
+   * 的「试运行」功能，不影响流程运行时。
+   *
+   * @param body 请求体，需包含 expression（表达式）、variables（变量 Map）、可选的 engine
+   * @return 统一响应结果，包含表达式执行结果（含 success / result / error 字段）
    */
   @PostMapping("/definition/conditionExpr/preview")
   @Operation(summary = "预览表达式执行结果")
@@ -794,7 +797,10 @@ public class FlowDefinitionController {
   /**
    * 获取条件模板列表。
    *
-   * @return 模板列表
+   * <p>返回预置的常用条件模板（如「金额大于 X」「部门等于 Y」），
+   * 供前端条件面板预填充。
+   *
+   * @return 统一响应结果，包含条件模板列表（含 templateName / expression 等字段）
    */
   @GetMapping("/definition/conditionExpr/templates")
   @Operation(summary = "获取条件模板列表")

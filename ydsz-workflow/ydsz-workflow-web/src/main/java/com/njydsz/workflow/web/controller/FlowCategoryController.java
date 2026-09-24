@@ -121,12 +121,6 @@ public class FlowCategoryController {
       action = AuditAction.CREATE,
       content = "'create'")
   @Operation(summary = "新增分类")
-  /** 创建流程分类。
-   *
-   * @param dto 分类参数（name / code / parentId）
-   * @return 新建分类 ID
-   */
-  
   public YdszResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
     return YdszResponse.success(categoryService.create(dto, TenantContextHolder.getTenantId()));
   }
@@ -152,11 +146,6 @@ public class FlowCategoryController {
       action = AuditAction.UPDATE,
       content = "'update'")
   @Operation(summary = "编辑分类")
-  /** 更新流程分类。
-   *
-   * @param dto 分类参数（id / name / code）
-   */
-  
   public YdszResponse<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
     categoryService.update(dto);
     return YdszResponse.success();
@@ -188,11 +177,6 @@ public class FlowCategoryController {
       action = AuditAction.DELETE,
       content = "'delete'")
   @Operation(summary = "删除分类")
-  /** 删除流程分类（校验无子分类且无关联定义后才可删除）。
-   *
-   * @param id 分类 ID
-   */
-  
   public YdszResponse<Void> delete(@PathVariable String id) {
     categoryService.delete(id);
     return YdszResponse.success();
