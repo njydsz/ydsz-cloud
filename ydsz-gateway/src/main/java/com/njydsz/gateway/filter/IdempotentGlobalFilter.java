@@ -54,7 +54,7 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *
  * <h3>执行顺序</h3>
  *
- * <p>位于 {@link AuthGlobalFilter}(+10) 之后、{@code ApiKeyAuthFilter}(+15) 之前，确保已注入的身份信息可融入幂等 Key
+ * <p>位于 {@link AuthGlobalFilter}(+10) 之后、{@code GatewayApiKeyAuthFilter}(+15) 之前，确保已注入的身份信息可融入幂等 Key
  * （同一用户对不同业务操作的幂等 Key 独立、不同用户间的同名 Key 相互隔离）。
  *
  * @since 26.09.23
@@ -180,7 +180,7 @@ public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 过滤器顺序：位于 AuthGlobalFilter(+10) 之后、ApiKeyAuthFilter(+15) 之前。
+   * 过滤器顺序：位于 AuthGlobalFilter(+10) 之后、GatewayApiKeyAuthFilter(+15) 之前。
    *
    * <p>左边界：确保 X-User-Id 已填充，为 userId 维度隔离提供支持。<br>
    * 右边界：早于 IP / API Key 鉴权，避免重复请求消耗宝贵的限流配额。

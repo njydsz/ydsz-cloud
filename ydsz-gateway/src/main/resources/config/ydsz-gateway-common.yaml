@@ -62,7 +62,7 @@ ydsz:
       w3c-trace: true         # W3C Trace Context（W3CTraceContextFilter）
       ip-access-control: true # IP 黑白名单（IpAccessControlFilter）
       auth: true              # JWT 鉴权（AuthGlobalFilter）
-      api-key-auth: false     # API Key 认证（ApiKeyAuthFilter）
+      api-key-auth: false     # API Key 认证（GatewayApiKeyAuthFilter）
       websocket-auth: true    # WebSocket 鉴权（WebSocketAuthFilter）
       payload-validation: true # 请求体校验（PayloadValidationFilter）
       # 注：ApiVersionHeaderFilter 开关为 ydsz.gateway.api-version.enabled

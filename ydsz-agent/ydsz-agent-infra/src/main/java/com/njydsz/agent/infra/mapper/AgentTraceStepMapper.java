@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import com.njydsz.agent.infra.entity.AgentTraceStepPO;
+import com.njydsz.agent.domain.entity.AgentTraceStep;
 
 /**
  * Agent 执行链路步骤 Mapper（domain 去 MP 注解版）
@@ -37,7 +37,7 @@ public interface AgentTraceStepMapper {
       + "#{s.inputJson}, #{s.outputJson}, #{s.durationMs}, #{s.cost})"
       + "</foreach>"
       + "</script>")
-  int batchInsert(@Param("list") List<AgentTraceStepPO> steps);
+  int batchInsert(@Param("list") List<AgentTraceStep> steps);
 
   /**
    * 查询指定链路的所有步骤。
@@ -47,7 +47,7 @@ public interface AgentTraceStepMapper {
    */
   @Select("SELECT trace_id, step_index, step_type, content, input_json, output_json, duration_ms, cost "
       + "FROM ydsz_agt_trace_step WHERE trace_id = #{traceId} ORDER BY step_index ASC")
-  List<AgentTraceStepPO> selectByTraceId(@Param("traceId") String traceId);
+  List<AgentTraceStep> selectByTraceId(@Param("traceId") String traceId);
 
   /**
    * 查询指定链路指定类型的步骤。
@@ -59,6 +59,6 @@ public interface AgentTraceStepMapper {
   @Select("SELECT trace_id, step_index, step_type, content, input_json, output_json, duration_ms, cost "
       + "FROM ydsz_agt_trace_step WHERE trace_id = #{traceId} AND step_type = #{stepType} "
       + "ORDER BY step_index ASC")
-  List<AgentTraceStepPO> selectByTraceIdAndType(@Param("traceId") String traceId,
+  List<AgentTraceStep> selectByTraceIdAndType(@Param("traceId") String traceId,
       @Param("stepType") String stepType);
 }

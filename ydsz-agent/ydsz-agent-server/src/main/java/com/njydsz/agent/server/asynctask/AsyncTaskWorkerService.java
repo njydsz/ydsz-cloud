@@ -10,9 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
+import com.njydsz.agent.domain.entity.AsyncTask;
 
 /**
  * 异步任务 Worker 调度服务。

@@ -13,10 +13,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.config.ApiSignatureProperties;
+import com.njydsz.common.safe.filter.ApiSignatureFilter;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.config.InternalCallProperties;
 import com.njydsz.userinfo.web.annotation.RequireInternal;
-import com.njydsz.userinfo.web.filter.ApiSignatureFilter;
 
 /**
  * 内部接口调用校验切面（P0-6）。
@@ -102,7 +102,17 @@ public class RequireInternalAspect {
     if (!signatureProperties.isEnabled()) {
       return false;
     }
-    Object attr = request.getAttribute(ApiSignatureFilter.SIGNATURE_VERIFIED_ATTR);
-    return Boolean.TRUE.equals(attr);
+    // 读取 common-safe ApiSignatureFilter 注入的默认签名校验通过属性
+    Object attr = request.getAttribute(ApiSignatureFilter.DEFAULT_SUCCESS_ATTRIBUTE);
+    if (Boolean.TRUE.equals(attr)) {
+      return true;
+    }
+    // 兼容旧版 userinfo-web 自定义属性名（过渡期双读）
+    String legacyAttr = signatureProperties.getSuccessAttribute();
+    if (legacyAttr != null && !legacyAttr.isEmpty()) {
+      Object legacyValue = request.getAttribute(legacyAttr);
+      return Boolean.TRUE.equals(legacyValue);
+    }
+    return false;
   }
 }

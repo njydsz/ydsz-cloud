@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
+import com.njydsz.agent.domain.entity.AsyncTask;
 
 /**
  * 基于内存的异步任务存储实现 — 开发环境默认 fallback。

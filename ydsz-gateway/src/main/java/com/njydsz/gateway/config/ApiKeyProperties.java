@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 网关 API Key 认证配置属性（{@code ydsz.gateway.api-key.*}，B3 优化）。
  *
- * <p>替代 ApiKeyAuthFilter 中分散的 {@code @Value} 注入，提供类型安全的配置绑定与 IDE 自动补全。
+ * <p>替代 GatewayApiKeyAuthFilter 中分散的 {@code @Value} 注入，提供类型安全的配置绑定与 IDE 自动补全。
  *
  * <h3>热更新机制</h3>
  *
@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @since 26.09.23
  * @author ydsz-team
- * @see ApiKeyAuthFilter
+ * @see com.njydsz.gateway.filter.GatewayApiKeyAuthFilter
  */
 @ConfigurationProperties(prefix = "ydsz.gateway.api-key")
 public class ApiKeyProperties {

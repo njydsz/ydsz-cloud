@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.infra.entity.AgentDefinitionPO;
+import com.njydsz.agent.domain.entity.AgentDefinition;
 
 /**
  * Agent 定义 Mapper
@@ -26,4 +26,4 @@ import com.njydsz.agent.infra.entity.AgentDefinitionPO;
  * @author ydsz-team
  * @since 26.09.01
  */
-public interface AgentDefinitionMapper extends BaseMapper<AgentDefinitionPO> {}
+public interface AgentDefinitionMapper extends BaseMapper<AgentDefinition> {}

@@ -1,34 +1,45 @@
-package com.njydsz.agent.domain.asynctask;
+package com.njydsz.agent.domain.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import com.njydsz.agent.entity.base.DomainBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 异步任务实体（domain 纯净 POJO，无 MP 注解）
+ * 异步任务（domain 层持久化实体，YDIZ-DDD-007 单包模式）
  *
  * <p>封装一次异步执行请求的完整生命周期数据，包括任务类型、输入参数、状态、进度和结果。
  *
- * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
- * 持久化映射由 {@code infra.entity.AsyncTaskPO} 承担。
+ * <p><b>YDIZ-DDD-007</b>：domain Entity 直接携带 MyBatis-Plus ORM 注解，
+ * infra 层通过依赖 domain 模块引用本类，禁止自建 PO/DO 副本。
  *
  * @author ydsz-team
  * @since 26.09.17
  */
 @Data
-public class AsyncTask extends DomainBaseEntity<Long> implements Serializable {
+@TableName("ydsz_agt_async_task")
+public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
   /** 默认最大重试次数 */
   private static final int DEFAULT_MAX_RETRY = 3;
 
+  /** 主键 ID（自增，对应数据库 sequence）。 */
+  @TableId(type = IdType.AUTO)
+  private Long id;
+
   /** 任务类型编码（REPORT_GENERATE / DOC_INGEST / BATCH_CHAT 等） */
   private String taskType;
+
+  /** 任务状态 */
+  private String status;
 
   /** 租户编码（多租户隔离） */
   private String tenantCode;
@@ -74,6 +85,13 @@ public class AsyncTask extends DomainBaseEntity<Long> implements Serializable {
 
   /** 备注信息 */
   private String remark;
+
+  /**
+   * Creates a new {@code AsyncTask} instance.
+   *
+   * <p>默认无参构造器（MyBatis-Plus 要求）。
+   */
+  public AsyncTask() {}
 
   /**
    * 创建异步任务。

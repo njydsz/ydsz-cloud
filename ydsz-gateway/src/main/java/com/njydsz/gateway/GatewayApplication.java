@@ -44,7 +44,7 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
  *   HIGHEST_PRECEDENCE + 4   PayloadValidationFilter   (请求体大小校验)
  *   HIGHEST_PRECEDENCE + 8   WebSocketAuthFilter       (WebSocket 独立鉴权)
  *   HIGHEST_PRECEDENCE + 10  AuthGlobalFilter          (主鉴权 + 内部头注入)
- *   HIGHEST_PRECEDENCE + 15  ApiKeyAuthFilter          (API Key 备选认证)
+ *   HIGHEST_PRECEDENCE + 15  GatewayApiKeyAuthFilter    (API Key 备选认证)
  *   HIGHEST_PRECEDENCE + 20  GrayLoadBalancerRequestFilter (灰度标识注入)
  *   HIGHEST_PRECEDENCE + 30  RateLimitFilter           (令牌桶限流)
  *   HIGHEST_PRECEDENCE + 35  AuditLogFilter            (审计日志)

@@ -3,7 +3,7 @@ package com.njydsz.agent.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.agent.infra.entity.AgentApprovalPO;
+import com.njydsz.agent.domain.entity.AgentApproval;
 
 /**
  * Agent 人工审批请求 Mapper
@@ -18,4 +18,4 @@ import com.njydsz.agent.infra.entity.AgentApprovalPO;
  * @since 26.09.01
  */
 @Mapper
-public interface AgentApprovalMapper extends BaseMapper<AgentApprovalPO> {}
+public interface AgentApprovalMapper extends BaseMapper<AgentApproval> {}

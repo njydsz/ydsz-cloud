@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
+import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.agent.domain.code.CodeExecutionRequest;
 import com.njydsz.agent.domain.code.CodeExecutionResult;
 import com.njydsz.agent.domain.code.CodeExecutionService;

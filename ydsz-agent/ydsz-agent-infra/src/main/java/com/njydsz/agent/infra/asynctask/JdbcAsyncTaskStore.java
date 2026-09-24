@@ -11,9 +11,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
+import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.agent.infra.converter.AgentPoConverter;
 import com.njydsz.agent.infra.entity.AsyncTaskPO;
 import com.njydsz.agent.infra.mapper.AsyncTaskMapper;

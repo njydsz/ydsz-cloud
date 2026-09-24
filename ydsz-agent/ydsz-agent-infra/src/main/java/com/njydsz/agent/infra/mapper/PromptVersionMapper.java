@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.infra.entity.PromptVersionPO;
+import com.njydsz.agent.domain.entity.PromptVersion;
 
 /**
  * Prompt 模板版本 Mapper
@@ -24,4 +24,4 @@ import com.njydsz.agent.infra.entity.PromptVersionPO;
  * @author ydsz-team
  * @since 26.09.01
  */
-public interface PromptVersionMapper extends BaseMapper<PromptVersionPO> {}
+public interface PromptVersionMapper extends BaseMapper<PromptVersion> {}

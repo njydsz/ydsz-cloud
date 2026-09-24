@@ -91,7 +91,7 @@ ydsz-gateway/
     │   │   └── CachedJwtValidator.java          # JWT 校验缓存（防击穿/穿透 + 自适应 TTL + 命中率指标）
     │   ├── filter/
     │   │   ├── AccessLogGlobalFilter.java       # 访问日志（JSON 转义 + 采样 + 敏感参数脱敏 + Prometheus 指标）
-    │   │   ├── ApiKeyAuthFilter.java            # API Key 认证（SHA-256 摘要比对，备选 JWT）
+    │   │   ├── GatewayApiKeyAuthFilter.java  # API Key 认证（SHA-256 摘要比对，备选 JWT）
     │   │   ├── ApiVersionHeaderFilter.java      # API 版本协商（X-API-Version / Sunset 头）
     │   │   ├── AuditLogFilter.java              # 审计日志（双轨制：SLF4J + 审计事件桥接 sys_audit_log）
     │   │   ├── AuthGlobalFilter.java            # JWT 解析 + 内部头注入（验签切出事件循环）+ Token 黑名单 + 路径穿越拦截
@@ -320,7 +320,7 @@ ydsz-gateway/
   4        PayloadValidationFilter                 请求体大小 + Content-Type + JSON 深度校验
   8        WebSocketAuthFilter                     WebSocket 独立鉴权
   10       AuthGlobalFilter                        主鉴权 + 内部头注入 + Token 黑名单 + 路径穿越拦截
-  15       ApiKeyAuthFilter                        API Key 备选认证（SHA-256 摘要比对）
+  15       GatewayApiKeyAuthFilter              API Key 备选认证（SHA-256 摘要比对）
   20       GrayLoadBalancerRequestFilter           灰度标识注入
   30       RateLimitFilter                        令牌桶限流（Redis + Lua）
   35       AuditLogFilter                          审计日志（双轨制）

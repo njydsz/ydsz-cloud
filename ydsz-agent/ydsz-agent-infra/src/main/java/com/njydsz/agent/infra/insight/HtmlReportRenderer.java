@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.agent.domain.insight.InsightReport;
+import com.njydsz.agent.domain.entity.InsightReport;
 import com.njydsz.agent.domain.insight.InsightSection;
 import com.njydsz.agent.domain.insight.ReportRenderer;
 

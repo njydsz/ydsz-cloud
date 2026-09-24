@@ -16,7 +16,7 @@ import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.memory.MemoryExtractedFact;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.MessageRole;
-import com.njydsz.agent.domain.profile.UserProfile;
+import com.njydsz.agent.domain.entity.UserProfile;
 import com.njydsz.agent.domain.profile.UserProfileContext;
 import com.njydsz.agent.domain.profile.UserProfileRepository;
 import com.njydsz.agent.domain.profile.UserProfileService;

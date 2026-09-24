@@ -2,7 +2,7 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.infra.entity.TokenUsageRecordPO;
+import com.njydsz.agent.domain.entity.TokenUsageRecord;
 
 /**
  * Token 用量记录 Mapper
@@ -25,4 +25,4 @@ import com.njydsz.agent.infra.entity.TokenUsageRecordPO;
  * @author ydsz-team
  * @since 26.09.01
  */
-public interface TokenUsageRecordMapper extends BaseMapper<TokenUsageRecordPO> {}
+public interface TokenUsageRecordMapper extends BaseMapper<TokenUsageRecord> {}

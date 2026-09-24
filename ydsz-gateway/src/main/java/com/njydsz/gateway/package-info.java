@@ -7,7 +7,7 @@
  *
  * <p>核心能力覆盖：</p>
  * <ul>
- *   <li>鉴权体系：{@code AuthGlobalFilter} 负责 JWT 校验；{@code ApiKeyAuthFilter} 处理 API Key 认证；
+ *   <li>鉴权体系：{@code AuthGlobalFilter} 负责 JWT 校验；{@code GatewayApiKeyAuthFilter} 处理 API Key 认证；
  *       {@code WebSocketAuthFilter} 保障 WebSocket 握手安全</li>
  *   <li>流量治理：{@code RateLimitFilter} 基于令牌桶算法实现限流；{@code CircuitBreakerGlobalFilter} 提供熔断降级</li>
  *   <li>灰度路由：{@code GrayLoadBalancer} 配合 {@code GrayLoadBalancerRequestFilter} 实现按标签的灰度流量分发</li>

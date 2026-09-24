@@ -2,7 +2,7 @@ package com.njydsz.agent.server.asynctask;
 
 import java.util.function.Consumer;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
+import com.njydsz.agent.domain.entity.AsyncTask;
 
 /**
  * 异步任务执行器接口。

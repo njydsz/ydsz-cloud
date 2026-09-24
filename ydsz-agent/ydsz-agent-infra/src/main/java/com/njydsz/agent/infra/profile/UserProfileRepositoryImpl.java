@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.agent.domain.profile.UserProfile;
+import com.njydsz.agent.domain.entity.UserProfile;
 import com.njydsz.agent.domain.profile.UserProfileRepository;
 import com.njydsz.agent.infra.converter.AgentPoConverter;
 import com.njydsz.agent.infra.entity.UserProfilePO;

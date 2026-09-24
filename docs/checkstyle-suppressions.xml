@@ -99,8 +99,8 @@
     <suppress files="ydsz-gateway[\\/]src[\\/]main[\\/]"
               checks="MagicNumber|CyclomaticComplexity|ParameterNumber|MethodLength|NestedIfDepth|IllegalThrows"/>
 
-    <!-- gateway：ApiKeyAuthFilter 的 @Value SpEL 表达式为单行字符串（Spring EL 语法限制，不可拆行） -->
-    <suppress files="ApiKeyAuthFilter\.java" checks="LineLength"/>
+    <!-- gateway：GatewayApiKeyAuthFilter 的 @Value SpEL 表达式为单行字符串（Spring EL 语法限制，不可拆行） -->
+    <suppress files="GatewayApiKeyAuthFilter\.java" checks="LineLength"/>
 
     <!-- userinfo MapStruct Converter：enum 导入仅用于 expression 字符串，UnusedImports 静态分析无法识别，豁免 -->
     <suppress files="OAuth2ApplicationConverter\.java|SecurityAlertConverter\.java"

@@ -29,7 +29,11 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.exception.GatewayErrorWriter;
 
 /**
- * P1-3: API Key 认证过滤器
+ * P1-3: 网关 API Key 认证过滤器
+ *
+ * <p><b>命名说明：</b>类名以 {@code Gateway} 前缀区分 userinfo-web 同名的
+ * {@code ApiKeyAuthFilter}（后者基于 Bearer Token + DB 校验）。本过滤器使用
+ * 预配置白名单 + SHA-256 摘要比对，仅用于网关层的外部系统备选认证。
  *
  * <p>支持通过 API Key 认证的外部系统接入。
  *
@@ -65,7 +69,7 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
     name = "api-key-auth",
     havingValue = "true",
     matchIfMissing = true)
-public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
+public class GatewayApiKeyAuthFilter implements GlobalFilter, Ordered {
 
   /** 客户端传递 API Key 的 HTTP 请求头名称。 */
   private static final String HEADER_API_KEY = "X-API-Key";
@@ -89,7 +93,7 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
    *
    * @param properties API Key 认证配置属性
    */
-  public ApiKeyAuthFilter(ApiKeyProperties properties) {
+  public GatewayApiKeyAuthFilter(ApiKeyProperties properties) {
     this.properties = properties;
   }
 

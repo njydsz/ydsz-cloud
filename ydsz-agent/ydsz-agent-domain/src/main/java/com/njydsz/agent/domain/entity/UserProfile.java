@@ -1,4 +1,4 @@
-package com.njydsz.agent.domain.profile;
+package com.njydsz.agent.domain.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,31 +7,26 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.agent.entity.base.DomainAuditBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 import com.njydsz.common.json.YdszJson;
 
 /**
- * 用户画像（domain 纯净 POJO，无 MP 注解）
+ * 用户画像（domain 层持久化实体，YDIZ-DDD-007 单包模式）
  *
  * <p>持久化存储用户偏好、习惯、关注领域等信息，构成三层长期记忆体系中的"画像层"。
- * 通过对话分析和记忆整合自动更新，为 System Prompt 注入提供个性化上下文。</p>
+ * 通过对话分析和记忆整合自动更新，为 System Prompt 注入提供个性化上下文。
  *
- * <p><b>三层记忆体系中的定位：</b></p>
- * <ul>
- *   <li>短期记忆 — Redis 对话历史（会话级）</li>
- *   <li>事实记忆 — MemoryExtractedFact（提取的知识点）</li>
- *   <li>用户画像 — UserProfile（本类，长期偏好与习惯模型）</li>
- * </ul>
- *
- * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
- * 持久化映射由 {@code infra.entity.UserProfilePO} 承担。
- *
- * <p><b>线程安全</b>：持久化实体，可变；仅在单请求/单事务内使用，勿跨线程共享。</p>
+ * <p><b>YDIZ-DDD-007</b>：domain Entity 直接携带 MyBatis-Plus ORM 注解，
+ * infra 层通过依赖 domain 模块引用本类，禁止自建 PO/DO 副本。
  *
  * @author ydsz-agent
  * @since 26.09.07
@@ -40,7 +35,8 @@ import com.njydsz.common.json.YdszJson;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class UserProfile extends DomainAuditBaseEntity<String> {
+@TableName("ydsz_agt_user_profile")
+public class UserProfile extends MpBaseAuditEntity<String> {
 
   private static final long serialVersionUID = 1L;
 
@@ -50,22 +46,27 @@ public class UserProfile extends DomainAuditBaseEntity<String> {
   /** 默认 Top 领域数 */
   private static final int DEFAULT_TOP_DOMAINS = 5;
 
-  /** 用户 ID（主键，业务 ID，非自增） */
+  /** 用户 ID（主键，业务 ID，非自增，对应数据库 user_id 列）。 */
+  @TableId(type = IdType.INPUT)
+  @TableField("user_id")
   private String userId;
 
   /** 偏好语言（zh-CN / en-US） */
   private String preferredLanguage;
 
   /** 关注领域列表（JSON 列存储） */
+  @TableField("interested_domains")
   private String interestedDomainsJson;
 
   /** 领域查询频次统计（JSON 列，领域 -> 次数映射） */
+  @TableField("domain_frequency")
   private String domainFrequencyJson;
 
   /** 查询风格（如"简洁"、"详细"、"分析型"、"探索型"） */
   private String queryStyle;
 
   /** 高频意图标签（JSON 列存储） */
+  @TableField("common_intents")
   private String commonIntentsJson;
 
   /** 总交互次数 */
@@ -77,7 +78,7 @@ public class UserProfile extends DomainAuditBaseEntity<String> {
   /**
    * 获取关注领域列表（从 JSON 列解析）。
    *
-   * <p>计算属性，非持久化字段。当 JSON 列为空时返回空列表。</p>
+   * <p>计算属性，非持久化字段。当 JSON 列为空时返回空列表。
    *
    * @return 关注领域列表（不可变）
    */
@@ -101,7 +102,7 @@ public class UserProfile extends DomainAuditBaseEntity<String> {
   /**
    * 获取领域查询频次统计（从 JSON 列解析）。
    *
-   * <p>计算属性，非持久化字段。当 JSON 列为空时返回空 Map。</p>
+   * <p>计算属性，非持久化字段。当 JSON 列为空时返回空 Map。
    *
    * @return 领域 -> 频次 的不可变映射
    */
@@ -125,7 +126,7 @@ public class UserProfile extends DomainAuditBaseEntity<String> {
   /**
    * 获取高频意图标签（从 JSON 列解析）。
    *
-   * <p>计算属性，非持久化字段。当 JSON 列为空时返回空列表。</p>
+   * <p>计算属性，非持久化字段。当 JSON 列为空时返回空列表。
    *
    * @return 高频意图标签列表（不可变）
    */
@@ -150,7 +151,7 @@ public class UserProfile extends DomainAuditBaseEntity<String> {
    * 获取 Top N 关注领域（按频次降序排列）。
    *
    * <p>综合 interestedDomains 和 domainFrequency 两个维度：
-   * 优先按频次排序，频次相同则保留原顺序。</p>
+   * 优先按频次排序，频次相同则保留原顺序。
    *
    * @param n 返回的领域数量上限
    * @return Top N 关注领域列表

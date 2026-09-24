@@ -746,7 +746,7 @@ public class SafeConfiguration {
             new ApiSignatureFilter(properties, nonceCache, eventPublisher));
     registrationBean.setName("apiSignatureFilter");
     registrationBean.addUrlPatterns("/*");
-    registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
+    registrationBean.setOrder(properties.getFilterOrder());
     return registrationBean;
   }
 

@@ -6,10 +6,10 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
+import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.common.exception.custom.BusinessException;
 
 /**

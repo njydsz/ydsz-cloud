@@ -1,4 +1,4 @@
-package com.njydsz.agent.infra.entity;
+package com.njydsz.agent.domain.entity;
 
 import java.time.LocalDateTime;
 
@@ -13,17 +13,25 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 
 /**
- * 洞察报告持久化对象（映射 ydsz_agt_insight_report 表）。
+ * 洞察报告（domain 层持久化实体，YDIZ-DDD-007 单包模式）
+ *
+ * <p>记录 BI 洞察报告从创建到导出的完整生命周期，包含原始数据分析结果 JSON（dataJson）、
+ * 报告内容 JSON（含 sections）、状态、格式和错误信息。
+ *
+ * <p><b>YDIZ-DDD-007</b>：domain Entity 直接携带 MyBatis-Plus ORM 注解，
+ * infra 层通过依赖 domain 模块引用本类，禁止自建 PO/DO 副本。
+ *
+ * <p><b>线程安全</b>：持久化实体，可变；仅在单请求/单事务内使用，勿跨线程共享。
  *
  * @author ydsz-team
- * @since 26.09.23
+ * @since 26.09.07
  */
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_insight_report")
-public class InsightReportPO extends MpBaseAuditEntity<Long> {
+public class InsightReport extends MpBaseAuditEntity<Long> {
 
   private static final long serialVersionUID = 1L;
 

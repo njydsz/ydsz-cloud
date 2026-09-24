@@ -3,7 +3,7 @@ package com.njydsz.agent.infra.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.njydsz.agent.infra.entity.InsightReportPO;
+import com.njydsz.agent.domain.insight.InsightReport;
 
 /**
  * 洞察报告 Mapper。
@@ -14,4 +14,4 @@ import com.njydsz.agent.infra.entity.InsightReportPO;
  * @since 26.09.07
  */
 @Mapper
-public interface InsightReportMapper extends BaseMapper<InsightReportPO> {}
+public interface InsightReportMapper extends BaseMapper<InsightReport> {}

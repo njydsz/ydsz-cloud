@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.agent.domain.insight.InsightReport;
+import com.njydsz.agent.domain.entity.InsightReport;
 import com.njydsz.agent.domain.insight.InsightReportRepository;
 import com.njydsz.agent.infra.mapper.InsightReportMapper;
 

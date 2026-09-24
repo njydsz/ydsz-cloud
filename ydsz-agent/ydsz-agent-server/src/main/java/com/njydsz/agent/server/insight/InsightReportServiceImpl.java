@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.agent.domain.insight.InsightReport;
+import com.njydsz.agent.domain.entity.InsightReport;
 import com.njydsz.agent.domain.insight.InsightReportGenerator;
 import com.njydsz.agent.domain.insight.InsightReportRepository;
 import com.njydsz.agent.domain.insight.InsightReportRequest;

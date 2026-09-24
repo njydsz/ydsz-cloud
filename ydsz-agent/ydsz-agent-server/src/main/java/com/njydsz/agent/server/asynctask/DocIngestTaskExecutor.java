@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
+import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.agent.server.rag.DocumentIngestionService;
 import com.njydsz.common.json.YdszJson;
 

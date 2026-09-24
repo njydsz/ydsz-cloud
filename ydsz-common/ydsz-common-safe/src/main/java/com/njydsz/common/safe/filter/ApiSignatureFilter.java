@@ -23,6 +23,7 @@ import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.common.safe.config.ApiSignatureProperties;
+import com.njydsz.common.safe.config.ApiSignatureProperties.SigningProtocol;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.util.http.UrlPathUtils;
 import com.njydsz.common.util.net.ClientIpResolver;
@@ -39,13 +40,19 @@ import com.njydsz.common.util.security.HexUtils;
  * <ol>
  *   <li>提取请求头中的 {@code X-Timestamp}、{@code X-Nonce}、{@code X-Signature}、{@code X-App-Id}
  *   <li>校验时间戳偏移量（±{@link ApiSignatureProperties#getTimestampToleranceSeconds()} 秒），防止重放
- *   <li>重组签名串（含规范化 Query String）：{@code method + "\n" + path + "\n" + normalizedQuery + "\n" +
- *       timestamp + "\n" + nonce + "\n" + bodySha256}
+ *   <li>重组签名串（含规范化 Query String，协议可配）：
+ *       <table>
+ *         <tr><th>协议</th><th>签名串格式</th></tr>
+ *         <tr><td>standard</td><td>{@code method + "\n" + path + "\n" + normalizedQuery + "\n" +
+ *             timestamp + "\n" + nonce + "\n" + bodySha256}</td></tr>
+ *         <tr><td>legacy-raw-body</td><td>{@code method + "\n" + path + "\n" + query + "\n" + body + "\n" +
+ *             timestamp + "\n" + nonce}</td></tr>
+ *       </table>
  *   <li>使用 HMAC-SHA256 + appSecret 计算签名，与请求头签名比对（常量时间比较）
  *   <li><b>先验签、后消费 nonce</b>：签名校验通过后才写入 nonce 缓存， 防止攻击者用伪造签名 + 随机 nonce 打满缓存导致合法请求被误判重放（DoS）
  * </ol>
  *
- * <p><b>签名计算示例：</b>
+ * <p><b>签名计算示例（standard 模式）：</b>
  *
  * <pre>{@code
  * // GET 请求（无 query）：query 行固定为 `\n` 后的空串
@@ -63,7 +70,7 @@ import com.njydsz.common.util.security.HexUtils;
  * long timestamp = System.currentTimeMillis();
  * String nonce = UUID.randomUUID().toString();
  *
- * // 2. 计算请求体 SHA-256
+ * // 2. 计算请求体 SHA-256（standard 模式）
  * String bodySha256 = Hex(SHA256(requestBody));
  *
  * // 3. 规范化 Query String：按 key 字典序排序，key=value 用 & 连接；无 query 为空串
@@ -82,6 +89,9 @@ import com.njydsz.common.util.security.HexUtils;
  * request.setHeader("X-Signature", signature);
  * }</pre>
  *
+ * <p><b>成功属性注入：</b>当配置 {@code successAttribute} 非空时，签名校验通过后将 {@link Boolean#TRUE}
+ * 注入到 request attribute，供下游过滤器或切面读取。
+ *
  * @author ydsz-team
  * @since 26.09.01
  * @see ApiSignatureProperties
@@ -95,6 +105,15 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   private static final String SHA_256 = "SHA-256";
   private static final String QUERY_SEPARATOR = "&";
   private static final String QUERY_KV_SEPARATOR = "=";
+
+  /**
+   * 默认签名校验成功属性名。
+   *
+   * <p>当 {@link ApiSignatureProperties#getSuccessAttribute()} 为空时，使用此默认值注入 request attribute。
+   * 兼容 ydzuserinfo 的 {@code RequireInternalAspect}，避免修改下游代码。
+   */
+  public static final String DEFAULT_SUCCESS_ATTRIBUTE =
+      ApiSignatureFilter.class.getName() + ".SIGNATURE_VERIFIED";
 
   private final ApiSignatureProperties properties;
   private final NonceCache nonceCache;
@@ -164,34 +183,15 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       return;
     }
 
-    byte[] bodyBytes = new byte[0];
-    CachedBodyHttpServletRequestWrapper wrappedRequest = null;
-    String contentType = request.getContentType();
-    if (contentType != null && contentType.contains("application/json")) {
-      bodyBytes = extractBodyBytes(request);
-      // 仅在请求未被包装时才创建新包装器
-      if (!(request instanceof CachedBodyHttpServletRequestWrapper)) {
-        wrappedRequest = new CachedBodyHttpServletRequestWrapper(request, bodyBytes);
-      }
+    // 根据签名协议构建签名串并校验
+    SigningProtocol protocol = properties.getSigningProtocol();
+    String computedContent = buildSignContent(request, timestamp, nonce, protocol);
+    if (computedContent == null) {
+      reject(response, "Invalid signature");
+      return;
     }
 
-    // 签名串包含规范化 Query String，防止 GET 参数被篡改
-    String normalizedQuery = normalizeQuery(request.getQueryString());
-    String bodySha256 = sha256Hex(bodyBytes);
-    String raw =
-        request.getMethod()
-            + "\n"
-            + request.getRequestURI()
-            + "\n"
-            + normalizedQuery
-            + "\n"
-            + timestamp
-            + "\n"
-            + nonce
-            + "\n"
-            + bodySha256;
-
-    String expectedSignature = hmacSha256Base64(raw, properties.getAppSecret());
+    String expectedSignature = hmacSha256Base64(computedContent, properties.getAppSecret());
     // 使用 MessageDigest.isEqual() 进行恒定时间比较，替代自实现逻辑
     if (!MessageDigest.isEqual(
         expectedSignature.getBytes(StandardCharsets.UTF_8),
@@ -210,8 +210,61 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       return;
     }
 
+    // 签名校验通过，注入成功属性供下游消费
+    injectSuccessAttribute(request);
+
+    CachedBodyHttpServletRequestWrapper wrappedRequest = buildWrappedRequest(request);
     filterChain.doFilter(wrappedRequest != null ? wrappedRequest : request, response);
   }
+
+  // ======================== 签名串构建（可覆写） ========================
+
+  /**
+   * 根据签名协议构建签名字符串。
+   *
+   * <p>子类可覆写此方法以实现自定义签名算法；默认行为由 {@link ApiSignatureProperties#getSigningProtocol()} 决定。
+   *
+   * @param request HTTP 请求
+   * @param timestamp 时间戳字符串
+   * @param nonce Nonce 字符串
+   * @param protocol 签名协议
+   * @return 签名字符串；构建失败时返回 null
+   */
+  protected String buildSignContent(
+      HttpServletRequest request, String timestamp, String nonce, SigningProtocol protocol) {
+    String method = request.getMethod();
+    String path = request.getRequestURI();
+    String query = request.getQueryString();
+    byte[] bodyBytes = extractBodyBytes(request);
+
+    if (!StringUtils.hasText(method) || !StringUtils.hasText(path) || !StringUtils.hasText(nonce)) {
+      return null;
+    }
+
+    switch (protocol) {
+      case LEGACY_RAW_BODY -> {
+        // 旧版：method\npath\nquery\nbody\ntimestamp\nnonce（body 原文，query 不排序）
+        String safeQuery = query != null ? query : "";
+        String safeBody = bodyBytes.length > 0
+            ? new String(bodyBytes, StandardCharsets.UTF_8) : "";
+        return method + "\n" + path + "\n" + safeQuery + "\n" + safeBody + "\n" + timestamp
+            + "\n" + nonce;
+      }
+      case STANDARD -> {
+        // 标准：method\npath\nnormalizedQuery\ntimestamp\nnonce\nbodySha256
+        String normalizedQuery = normalizeQuery(query);
+        String bodySha256 = sha256Hex(bodyBytes);
+        return method + "\n" + path + "\n" + normalizedQuery + "\n" + timestamp + "\n" + nonce
+            + "\n" + bodySha256;
+      }
+      default -> {
+        LOG.warn("【API签名】不支持的签名协议: {}", protocol);
+        return null;
+      }
+    }
+  }
+
+  // ======================== 私有工具方法 ========================
 
   /**
    * 规范化 Query String：按 key 字典序排序，{@code key=value} 用 {@code &} 连接。
@@ -234,6 +287,22 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     }
     pairs.sort(String::compareTo);
     return String.join(QUERY_SEPARATOR, pairs);
+  }
+
+  /**
+   * 注入签名校验成功属性。
+   *
+   * <p>当 {@link ApiSignatureProperties#getSuccessAttribute()} 非空时，使用配置的属性名注入；
+   * 否则使用默认属性名 {@link #DEFAULT_SUCCESS_ATTRIBUTE}。
+   *
+   * @param request HTTP 请求
+   */
+  private void injectSuccessAttribute(HttpServletRequest request) {
+    String attrName = properties.getSuccessAttribute();
+    if (!StringUtils.hasText(attrName)) {
+      attrName = DEFAULT_SUCCESS_ATTRIBUTE;
+    }
+    request.setAttribute(attrName, Boolean.TRUE);
   }
 
   /** 拒绝请求并返回 401 响应 */
@@ -268,12 +337,40 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     if (request instanceof CachedBodyHttpServletRequestWrapper cachedWrapper) {
       return cachedWrapper.getCachedBody();
     }
-    try {
-      return request.getInputStream().readAllBytes();
-    } catch (IOException e) {
-      LOG.warn("【API签名验证】读取请求体失败 | uri={}", request.getRequestURI());
-      return new byte[0];
+    if (request.getContentType() != null && request.getContentType().contains("application/json")) {
+      try {
+        return request.getInputStream().readAllBytes();
+      } catch (IOException e) {
+        LOG.warn("【API签名验证】读取请求体失败 | uri={}", request.getRequestURI());
+        return new byte[0];
+      }
     }
+    return new byte[0];
+  }
+
+  /**
+   * 构建包装后的请求对象（用于支持下游多次读取 body）。
+   *
+   * <p>仅在原请求未被包装且存在 body 时创建包装器。
+   *
+   * @param request 原始 HTTP 请求
+   * @return 包装后的请求对象；无需包装时返回 null
+   */
+  private static CachedBodyHttpServletRequestWrapper buildWrappedRequest(
+      HttpServletRequest request) {
+    if (request instanceof CachedBodyHttpServletRequestWrapper) {
+      return null;
+    }
+    if (request.getContentType() != null && request.getContentType().contains("application/json")) {
+      try {
+        byte[] bodyBytes = request.getInputStream().readAllBytes();
+        return new CachedBodyHttpServletRequestWrapper(request, bodyBytes);
+      } catch (IOException e) {
+        LOG.warn("【API签名验证】包装请求失败 | uri={}", request.getRequestURI());
+        return null;
+      }
+    }
+    return null;
   }
 
   private boolean isExcluded(HttpServletRequest request) {
