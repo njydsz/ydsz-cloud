@@ -10,8 +10,6 @@ import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
 import com.njydsz.agent.domain.entity.AgentTraceStep;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.vo.AgentTraceStepVO;
-import com.njydsz.agent.infra.converter.AgentPoConverter;
-import com.njydsz.agent.infra.entity.AgentTraceStepPO;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 
 /**
@@ -35,21 +33,16 @@ public class AgentTraceStepRepositoryImpl implements AgentTraceStepRepository {
 
   private final AgentConverter converter;
 
-  private final AgentPoConverter poConverter;
-
   @Override
   public boolean insert(AgentTraceStepDTO dto) {
     AgentTraceStep entity = converter.dtoToEntity(dto);
     return agentTraceStepMapper.batchInsert(
-        java.util.List.of(poConverter.domainToPo(entity))) > 0;
+        java.util.List.of(entity)) > 0;
   }
 
   @Override
   public List<AgentTraceStepVO> findByTraceId(String traceId) {
-    List<AgentTraceStepPO> poList = agentTraceStepMapper.selectByTraceId(traceId);
-    List<AgentTraceStep> domainList = poList.stream()
-        .map(poConverter::poToDomain)
-        .toList();
+    List<AgentTraceStep> domainList = agentTraceStepMapper.selectByTraceId(traceId);
     return converter.agentTraceStepListToVO(domainList);
   }
 

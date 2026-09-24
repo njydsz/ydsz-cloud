@@ -15,8 +15,6 @@ import com.njydsz.agent.domain.dto.AgentApprovalDTO;
 import com.njydsz.agent.domain.entity.AgentApproval;
 import com.njydsz.agent.domain.repository.AgentApprovalRepository;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
-import com.njydsz.agent.infra.converter.AgentPoConverter;
-import com.njydsz.agent.infra.entity.AgentApprovalPO;
 
 /**
  * Agent 人工审批请求 Repository 实现
@@ -39,37 +37,30 @@ import com.njydsz.agent.infra.entity.AgentApprovalPO;
 @RequiredArgsConstructor
 public class AgentApprovalRepositoryImpl implements AgentApprovalRepository {
 
-  private final BaseMapper<AgentApprovalPO> agentApprovalMapper;
+  private final BaseMapper<AgentApproval> agentApprovalMapper;
 
   private final AgentConverter converter;
-
-  private final AgentPoConverter poConverter;
 
   @Override
   public boolean insert(AgentApprovalDTO dto) {
     AgentApproval domainEntity = converter.dtoToEntity(dto);
-    AgentApprovalPO po = poConverter.domainToPo(domainEntity);
-    return agentApprovalMapper.insert(po) > 0;
+    return agentApprovalMapper.insert(domainEntity) > 0;
   }
 
   @Override
   public Optional<AgentApprovalVO> findById(String id) {
-    AgentApprovalPO po = agentApprovalMapper.selectById(id);
-    return Optional.ofNullable(po)
-        .map(poConverter::poToDomain)
+    AgentApproval entity = agentApprovalMapper.selectById(id);
+    return Optional.ofNullable(entity)
         .map(converter::entityToVO);
   }
 
   @Override
   public List<AgentApprovalVO> findPending(String status) {
-    LambdaQueryWrapper<AgentApprovalPO> wrapper = new LambdaQueryWrapper<AgentApprovalPO>()
-        .eq(AgentApprovalPO::getStatus, status)
-        .orderByDesc(AgentApprovalPO::getCreatedAt);
-    List<AgentApprovalPO> poList = agentApprovalMapper.selectList(wrapper);
-    return poList.stream()
-        .map(poConverter::poToDomain)
-        .collect(java.util.stream.Collectors.toList())
-        .stream()
+    LambdaQueryWrapper<AgentApproval> wrapper = new LambdaQueryWrapper<AgentApproval>()
+        .eq(AgentApproval::getStatus, status)
+        .orderByDesc(AgentApproval::getCreatedAt);
+    List<AgentApproval> entityList = agentApprovalMapper.selectList(wrapper);
+    return entityList.stream()
         .map(converter::entityToVO)
         .toList();
   }
@@ -84,18 +75,17 @@ public class AgentApprovalRepositoryImpl implements AgentApprovalRepository {
         .comment(comment)
         .resolvedAt(resolvedAt)
         .build();
-    AgentApprovalPO po = poConverter.domainToPo(update);
-    return agentApprovalMapper.updateById(po) > 0;
+    return agentApprovalMapper.updateById(update) > 0;
   }
 
   @Override
   public int expirePendingBefore(
       String status, LocalDateTime cutoff, String expiredStatus, LocalDateTime now) {
-    LambdaUpdateWrapper<AgentApprovalPO> wrapper = new LambdaUpdateWrapper<AgentApprovalPO>()
-        .eq(AgentApprovalPO::getStatus, status)
-        .lt(AgentApprovalPO::getCreatedAt, cutoff)
-        .set(AgentApprovalPO::getStatus, expiredStatus)
-        .set(AgentApprovalPO::getResolvedAt, now);
+    LambdaUpdateWrapper<AgentApproval> wrapper = new LambdaUpdateWrapper<AgentApproval>()
+        .eq(AgentApproval::getStatus, status)
+        .lt(AgentApproval::getCreatedAt, cutoff)
+        .set(AgentApproval::getStatus, expiredStatus)
+        .set(AgentApproval::getResolvedAt, now);
     agentApprovalMapper.update(null, wrapper);
     return wrapper.getEntity() != null ? 1 : 0;
   }

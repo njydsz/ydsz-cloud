@@ -13,8 +13,6 @@ import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
 import com.njydsz.agent.domain.entity.TokenUsageRecord;
 import com.njydsz.agent.domain.repository.TokenUsageRecordRepository;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
-import com.njydsz.agent.infra.converter.AgentPoConverter;
-import com.njydsz.agent.infra.entity.TokenUsageRecordPO;
 
 /**
  * Token 用量记录 Repository 实现
@@ -32,29 +30,23 @@ import com.njydsz.agent.infra.entity.TokenUsageRecordPO;
 @RequiredArgsConstructor
 public class TokenUsageRecordRepositoryImpl implements TokenUsageRecordRepository {
 
-  private final BaseMapper<TokenUsageRecordPO> tokenUsageRecordMapper;
+  private final BaseMapper<TokenUsageRecord> tokenUsageRecordMapper;
 
   private final AgentConverter converter;
-
-  private final AgentPoConverter poConverter;
 
   @Override
   public boolean insert(TokenUsageRecordDTO dto) {
     TokenUsageRecord domainEntity = converter.dtoToEntity(dto);
-    TokenUsageRecordPO po = poConverter.domainToPo(domainEntity);
-    return tokenUsageRecordMapper.insert(po) > 0;
+    return tokenUsageRecordMapper.insert(domainEntity) > 0;
   }
 
   @Override
   public List<TokenUsageRecordVO> findByCreatedAtRange(LocalDateTime startTime, LocalDateTime endTime) {
-    List<TokenUsageRecordPO> poList = tokenUsageRecordMapper.selectList(
-        new LambdaQueryWrapper<TokenUsageRecordPO>()
-            .ge(TokenUsageRecordPO::getCreatedAt, startTime)
-            .le(TokenUsageRecordPO::getCreatedAt, endTime)
-            .orderByAsc(TokenUsageRecordPO::getCreatedAt));
-    List<TokenUsageRecord> domainList = poList.stream()
-        .map(poConverter::poToDomain)
-        .toList();
-    return converter.tokenUsageRecordListToVO(domainList);
+    List<TokenUsageRecord> entityList = tokenUsageRecordMapper.selectList(
+        new LambdaQueryWrapper<TokenUsageRecord>()
+            .ge(TokenUsageRecord::getCreatedAt, startTime)
+            .le(TokenUsageRecord::getCreatedAt, endTime)
+            .orderByAsc(TokenUsageRecord::getCreatedAt));
+    return converter.tokenUsageRecordListToVO(entityList);
   }
 }

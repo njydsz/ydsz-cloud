@@ -13,8 +13,6 @@ import com.njydsz.agent.domain.dto.PromptVersionDTO;
 import com.njydsz.agent.domain.entity.PromptVersion;
 import com.njydsz.agent.domain.repository.PromptVersionRepository;
 import com.njydsz.agent.domain.vo.PromptVersionVO;
-import com.njydsz.agent.infra.converter.AgentPoConverter;
-import com.njydsz.agent.infra.entity.PromptVersionPO;
 
 /**
  * Prompt 模板版本 Repository 实现
@@ -32,39 +30,32 @@ import com.njydsz.agent.infra.entity.PromptVersionPO;
 @RequiredArgsConstructor
 public class PromptVersionRepositoryImpl implements PromptVersionRepository {
 
-  private final BaseMapper<PromptVersionPO> promptVersionMapper;
+  private final BaseMapper<PromptVersion> promptVersionMapper;
 
   private final AgentConverter converter;
-
-  private final AgentPoConverter poConverter;
 
   @Override
   public boolean insert(PromptVersionDTO dto) {
     PromptVersion domainEntity = converter.dtoToEntity(dto);
-    PromptVersionPO po = poConverter.domainToPo(domainEntity);
-    return promptVersionMapper.insert(po) > 0;
+    return promptVersionMapper.insert(domainEntity) > 0;
   }
 
   @Override
   public Optional<PromptVersionVO> findByTemplateCodeAndVersion(String templateCode, int version) {
-    PromptVersionPO po = promptVersionMapper.selectOne(
-        new LambdaQueryWrapper<PromptVersionPO>()
-            .eq(PromptVersionPO::getTemplateCode, templateCode)
-            .eq(PromptVersionPO::getVersion, version));
-    return Optional.ofNullable(po)
-        .map(poConverter::poToDomain)
+    PromptVersion entity = promptVersionMapper.selectOne(
+        new LambdaQueryWrapper<PromptVersion>()
+            .eq(PromptVersion::getTemplateCode, templateCode)
+            .eq(PromptVersion::getVersion, version));
+    return Optional.ofNullable(entity)
         .map(converter::entityToVO);
   }
 
   @Override
   public List<PromptVersionVO> findByTemplateCode(String templateCode) {
-    List<PromptVersionPO> poList = promptVersionMapper.selectList(
-        new LambdaQueryWrapper<PromptVersionPO>()
-            .eq(PromptVersionPO::getTemplateCode, templateCode)
-            .orderByAsc(PromptVersionPO::getVersion));
-    List<PromptVersion> domainList = poList.stream()
-        .map(poConverter::poToDomain)
-        .toList();
-    return converter.promptVersionListToVO(domainList);
+    List<PromptVersion> entityList = promptVersionMapper.selectList(
+        new LambdaQueryWrapper<PromptVersion>()
+            .eq(PromptVersion::getTemplateCode, templateCode)
+            .orderByAsc(PromptVersion::getVersion));
+    return converter.promptVersionListToVO(entityList);
   }
 }

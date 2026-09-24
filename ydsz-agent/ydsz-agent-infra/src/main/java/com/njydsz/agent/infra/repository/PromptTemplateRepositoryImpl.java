@@ -13,8 +13,6 @@ import com.njydsz.agent.domain.dto.PromptTemplateDTO;
 import com.njydsz.agent.domain.entity.PromptTemplate;
 import com.njydsz.agent.domain.repository.PromptTemplateRepository;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
-import com.njydsz.agent.infra.converter.AgentPoConverter;
-import com.njydsz.agent.infra.entity.PromptTemplatePO;
 
 /**
  * Prompt 模板 Repository 实现
@@ -32,22 +30,20 @@ import com.njydsz.agent.infra.entity.PromptTemplatePO;
 @RequiredArgsConstructor
 public class PromptTemplateRepositoryImpl implements PromptTemplateRepository {
 
-  private final BaseMapper<PromptTemplatePO> promptTemplateMapper;
+  private final BaseMapper<PromptTemplate> promptTemplateMapper;
 
   private final AgentConverter converter;
-
-  private final AgentPoConverter poConverter;
 
   @Override
   public boolean insert(PromptTemplateDTO dto) {
     PromptTemplate domainEntity = converter.dtoToEntity(dto);
-    return promptTemplateMapper.insert(poConverter.domainToPo(domainEntity)) > 0;
+    return promptTemplateMapper.insert(domainEntity) > 0;
   }
 
   @Override
   public boolean updateById(PromptTemplateDTO dto) {
     PromptTemplate domainEntity = converter.dtoToEntityWithId(dto);
-    return promptTemplateMapper.updateById(poConverter.domainToPo(domainEntity)) > 0;
+    return promptTemplateMapper.updateById(domainEntity) > 0;
   }
 
   @Override
@@ -57,7 +53,7 @@ public class PromptTemplateRepositoryImpl implements PromptTemplateRepository {
     domainEntity.setIsAbTestEnabled(dto.getIsAbTestEnabled());
     domainEntity.setAbTargetVersion(dto.getAbTargetVersion());
     domainEntity.setAbTrafficPercent(dto.getAbTrafficPercent());
-    return promptTemplateMapper.updateById(poConverter.domainToPo(domainEntity)) > 0;
+    return promptTemplateMapper.updateById(domainEntity) > 0;
   }
 
   @Override
@@ -67,21 +63,17 @@ public class PromptTemplateRepositoryImpl implements PromptTemplateRepository {
 
   @Override
   public Optional<PromptTemplateVO> findByCode(String templateCode) {
-    PromptTemplatePO po = promptTemplateMapper.selectOne(
-        new LambdaQueryWrapper<PromptTemplatePO>()
-            .eq(PromptTemplatePO::getTemplateCode, templateCode));
-    return Optional.ofNullable(po)
-        .map(poConverter::poToDomain)
+    PromptTemplate entity = promptTemplateMapper.selectOne(
+        new LambdaQueryWrapper<PromptTemplate>()
+            .eq(PromptTemplate::getTemplateCode, templateCode));
+    return Optional.ofNullable(entity)
         .map(converter::entityToVO);
   }
 
   @Override
   public List<PromptTemplateVO> findAllActive() {
-    List<PromptTemplatePO> poList = promptTemplateMapper.selectList(
-        new LambdaQueryWrapper<PromptTemplatePO>().orderByDesc(PromptTemplatePO::getCreatedAt));
-    List<PromptTemplate> domainList = poList.stream()
-        .map(poConverter::poToDomain)
-        .toList();
-    return converter.promptTemplateListToVO(domainList);
+    List<PromptTemplate> entityList = promptTemplateMapper.selectList(
+        new LambdaQueryWrapper<PromptTemplate>().orderByDesc(PromptTemplate::getCreatedAt));
+    return converter.promptTemplateListToVO(entityList);
   }
 }

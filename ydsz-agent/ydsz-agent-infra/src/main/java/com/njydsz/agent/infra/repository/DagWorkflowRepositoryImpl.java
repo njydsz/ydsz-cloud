@@ -10,8 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.repository.DagWorkflowRepository;
-import com.njydsz.agent.infra.converter.AgentPoConverter;
-import com.njydsz.agent.infra.entity.DagWorkflowPO;
 
 /**
  * DAG 工作流仓储实现。
@@ -28,56 +26,48 @@ import com.njydsz.agent.infra.entity.DagWorkflowPO;
 @Repository
 public class DagWorkflowRepositoryImpl implements DagWorkflowRepository {
 
-  private final BaseMapper<DagWorkflowPO> mapper;
+  private final BaseMapper<DagWorkflow> mapper;
 
-  private final AgentPoConverter poConverter;
 
-  public DagWorkflowRepositoryImpl(BaseMapper<DagWorkflowPO> mapper, AgentPoConverter poConverter) {
+  public DagWorkflowRepositoryImpl(BaseMapper<DagWorkflow> mapper) {
     this.mapper = mapper;
-    this.poConverter = poConverter;
   }
 
   @Override
   public boolean insert(DagWorkflow workflow) {
-    return mapper.insert(poConverter.domainToPo(workflow)) > 0;
+    return mapper.insert(workflow) > 0;
   }
 
   @Override
   public boolean updateById(DagWorkflow workflow) {
-    return mapper.updateById(poConverter.domainToPo(workflow)) > 0;
+    return mapper.updateById(workflow) > 0;
   }
 
   @Override
   public Optional<DagWorkflow> findById(String id) {
-    return Optional.ofNullable(mapper.selectById(id))
-        .map(poConverter::poToDomain);
+    return Optional.ofNullable(mapper.selectById(id));
   }
 
   @Override
   public Optional<DagWorkflow> findByCode(String workflowCode) {
-    LambdaQueryWrapper<DagWorkflowPO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DagWorkflowPO::getWorkflowCode, workflowCode);
-    return Optional.ofNullable(mapper.selectOne(wrapper))
-        .map(poConverter::poToDomain);
+    LambdaQueryWrapper<DagWorkflow> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DagWorkflow::getWorkflowCode, workflowCode);
+    return Optional.ofNullable(mapper.selectOne(wrapper));
   }
 
   @Override
   public List<DagWorkflow> findAll() {
-    LambdaQueryWrapper<DagWorkflowPO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.orderByDesc(DagWorkflowPO::getUpdatedAt);
-    return mapper.selectList(wrapper).stream()
-        .map(poConverter::poToDomain)
-        .toList();
+    LambdaQueryWrapper<DagWorkflow> wrapper = new LambdaQueryWrapper<>();
+    wrapper.orderByDesc(DagWorkflow::getUpdatedAt);
+    return mapper.selectList(wrapper);
   }
 
   @Override
   public List<DagWorkflow> findByCategory(String category) {
-    LambdaQueryWrapper<DagWorkflowPO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DagWorkflowPO::getCategory, category);
-    wrapper.orderByDesc(DagWorkflowPO::getUpdatedAt);
-    return mapper.selectList(wrapper).stream()
-        .map(poConverter::poToDomain)
-        .toList();
+    LambdaQueryWrapper<DagWorkflow> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DagWorkflow::getCategory, category);
+    wrapper.orderByDesc(DagWorkflow::getUpdatedAt);
+    return mapper.selectList(wrapper);
   }
 
   @Override
@@ -87,8 +77,8 @@ public class DagWorkflowRepositoryImpl implements DagWorkflowRepository {
 
   @Override
   public boolean existsByCode(String workflowCode) {
-    LambdaQueryWrapper<DagWorkflowPO> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DagWorkflowPO::getWorkflowCode, workflowCode);
+    LambdaQueryWrapper<DagWorkflow> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(DagWorkflow::getWorkflowCode, workflowCode);
     return mapper.exists(wrapper);
   }
 }

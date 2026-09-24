@@ -12,8 +12,6 @@ import com.njydsz.agent.domain.repository.AgentTraceRepository;
 import com.njydsz.agent.domain.repository.AgentTraceStepRepository;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.domain.vo.AgentTraceVO;
-import com.njydsz.agent.infra.converter.AgentPoConverter;
-import com.njydsz.agent.infra.entity.AgentTracePO;
 import com.njydsz.agent.infra.mapper.AgentTraceMapper;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 import com.njydsz.agent.infra.trace.PgTraceRecorder;
@@ -38,26 +36,23 @@ public class AgentTraceRepositoryImpl implements AgentTraceRepository {
 
   private final AgentConverter converter;
 
-  private final AgentPoConverter poConverter;
-
   @Override
   public boolean insert(AgentTraceDTO dto) {
     AgentTrace entity = converter.dtoToEntity(dto);
-    return agentTraceMapper.insert(poConverter.domainToPo(entity)) > 0;
+    return agentTraceMapper.insert(entity) > 0;
   }
 
   @Override
   public Optional<AgentTraceVO> findById(String traceId) {
-    AgentTracePO po = agentTraceMapper.selectById(traceId);
-    return Optional.ofNullable(po)
-        .map(poConverter::poToDomain)
+    AgentTrace entity = agentTraceMapper.selectById(traceId);
+    return Optional.ofNullable(entity)
         .map(converter::entityToVO);
   }
 
   @Override
   public boolean updateById(AgentTraceDTO dto) {
     AgentTrace entity = converter.dtoToEntityWithId(dto);
-    return agentTraceMapper.updateById(poConverter.domainToPo(entity)) > 0;
+    return agentTraceMapper.updateById(entity) > 0;
   }
 
   @Override
