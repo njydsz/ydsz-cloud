@@ -27,6 +27,9 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code excel.cache.misses} — 缓存未命中次数（Counter）
  * </ul>
  *
+ * <p>Timer 实例按 Tags 组合缓存，避免高并发下 Meter 无限增长（此前每次 recordWrite/recordRead
+ * 调用 {@code Timer.builder().register()} 隐式创建新 Meter）。Counter/Gauge 同理。
+ *
  * <p>当 MeterRegistry 不可用时（micrometer 未引入），所有方法为空操作， 不影响业务逻辑。
  *
  * @author ydsz-team
@@ -42,6 +45,9 @@ public class ExcelMetrics {
 
   private static final ConcurrentHashMap<String, AtomicLong> GAUGE_MAP = new ConcurrentHashMap<>();
 
+  /** Timer 缓存：key = metricName + tags hash，避免重复注册 */
+  private static final ConcurrentHashMap<String, Timer> TIMER_CACHE = new ConcurrentHashMap<>();
+
   private ExcelMetrics() {}
 
   /**
@@ -51,6 +57,7 @@ public class ExcelMetrics {
    */
   public static void setRegistry(MeterRegistry meterRegistry) {
     registry = meterRegistry;
+    TIMER_CACHE.clear();
   }
 
   /**
@@ -84,11 +91,13 @@ public class ExcelMetrics {
         Tag.of(TAG_ENGINE, engine), Tag.of(TAG_RESULT, success ? "success" : "failure"));
     Tags moduleTags = module != null ? baseTags.and(Tag.of(TAG_MODULE, module)) : baseTags;
 
-    Timer.builder("excel.write.duration")
-        .description("Excel write operation duration")
-        .tags(moduleTags)
-        .register(registry)
-        .record(duration);
+    Timer timer = TIMER_CACHE.computeIfAbsent(
+        cacheKey("excel.write.duration", moduleTags),
+        k -> Timer.builder("excel.write.duration")
+            .description("Excel write operation duration")
+            .tags(moduleTags)
+            .register(registry));
+    timer.record(duration);
 
     if (success) {
       registry.counter("excel.rows.written", moduleTags).increment(rows);
@@ -128,11 +137,13 @@ public class ExcelMetrics {
         Tag.of(TAG_ENGINE, engine), Tag.of(TAG_RESULT, success ? "success" : "failure"));
     Tags moduleTags = module != null ? baseTags.and(Tag.of(TAG_MODULE, module)) : baseTags;
 
-    Timer.builder("excel.read.duration")
-        .description("Excel read operation duration")
-        .tags(moduleTags)
-        .register(registry)
-        .record(duration);
+    Timer timer = TIMER_CACHE.computeIfAbsent(
+        cacheKey("excel.read.duration", moduleTags),
+        k -> Timer.builder("excel.read.duration")
+            .description("Excel read operation duration")
+            .tags(moduleTags)
+            .register(registry));
+    timer.record(duration);
 
     if (success) {
       registry.counter("excel.rows.read", moduleTags).increment(rows);
@@ -163,6 +174,21 @@ public class ExcelMetrics {
       return;
     }
     registry.counter("excel.cache.misses", Tags.of(Tag.of("cache", cacheName))).increment();
+  }
+
+  /**
+   * 生成 Timer 缓存 key。
+   *
+   * <p>由指标名 + Tags 组合拼接而成，保证不同 engine/module/result 组合各有唯一缓存条目。
+   *
+   * @param metricName 指标名称
+   * @param tags 标签集合
+   * @return 缓存 key 字符串
+   */
+  private static String cacheKey(String metricName, Tags tags) {
+    StringBuilder sb = new StringBuilder(metricName);
+    tags.forEach(tag -> sb.append('|').append(tag.getKey()).append('=').append(tag.getValue()));
+    return sb.toString();
   }
 
   /**

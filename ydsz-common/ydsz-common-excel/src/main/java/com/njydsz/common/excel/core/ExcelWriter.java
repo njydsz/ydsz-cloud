@@ -1137,7 +1137,8 @@ public class ExcelWriter {
           valueFormatter.setCellValueFast(cell, value, property.getDateFormat());
           dispatchAfterCellWrite(cell, value, currentRowNum, colIndex);
         } catch (Exception e) {
-          LOG.warn("获取字段值异常", e);
+          LOG.warn("单元格写入异常: 行={}, 列={}, 字段={}",
+              currentRowNum, colIndex, property.getName(), e);
           cell.setBlank();
         }
       }
@@ -1176,7 +1177,9 @@ public class ExcelWriter {
           ultraFastCellWriter.writeFast(cell, value, precomputedProps.getDateFormat(i));
           dispatchAfterCellWrite(cell, value, currentRowNum, i);
         } catch (Exception e) {
-          LOG.warn("获取字段值异常", e);
+          WriteHeaderProperty property = metadata.getHeadList().get(i);
+          LOG.warn("单元格写入异常: 行={}, 列={}, 字段={}",
+              currentRowNum, i, property.getName(), e);
           cell.setBlank();
         }
       }
@@ -1243,7 +1246,9 @@ public class ExcelWriter {
             ultraFastCellWriter.writeFast(cell, value, prop.dateFormat);
           }
         } catch (Exception e) {
-          LOG.warn("写入第{}行第{}列异常", rowNum + 1, j, e);
+          CachedProperty prop = cached.properties[j];
+          LOG.warn("writeBatch 单元格写入异常: 行={}, 列={}, 字段={}",
+              rowNum + 1, j, prop.name, e);
           cell.setBlank();
         }
       }
