@@ -36,12 +36,16 @@ public class ReverseController {
   private final EntityReverseService reverseService;
 
   /**
-   * 反向分析单个 Java 源文件。
+   * 反向分析单个 Java 源文件并生成代码。
    *
-   * @param sourceFilePath 源文件路径
-   * @param templateGroupId 模板分组 ID
-   * @param outputDir 输出目录
-   * @return 分析报告
+   * <p>通过解析 Java 源文件（Entity/POJO 类）中的字段和注解，
+   * 结合模板分组生成对应的技术栈代码文件。
+   * 属于实验性功能，接口签名可能在后续版本变动。
+   *
+   * @param sourceFilePath  待分析的 Java 源文件绝对路径（需服务器可访问）
+   * @param templateGroupId 模板分组 ID，决定生成的目标技术栈与代码风格
+   * @param outputDir       生成文件的输出目录
+   * @return 分析报告（JSON 格式），包含生成的文件列表及状态
    */
   @PostMapping("/analyze")
   @Audit(module = "反向生成", action = AuditAction.OTHER, content = "'反向分析Java源文件'", recordRequest = false)
@@ -54,12 +58,15 @@ public class ReverseController {
   }
 
   /**
-   * 批量反向分析目录。
+   * 批量反向分析指定目录下的所有 Java 源文件。
    *
-   * @param sourceDirPath 源文件目录
-   * @param templateGroupId 模板分组 ID
-   * @param outputDir 输出目录
-   * @return 分析报告列表
+   * <p>递归扫描目录中所有 .java 文件，逐一解析并生成代码。
+   * 属于实验性功能，接口签名可能在后续版本变动。
+   *
+   * @param sourceDirPath   待分析的 Java 源文件目录绝对路径（需服务器可访问）
+   * @param templateGroupId 模板分组 ID，决定生成的目标技术栈与代码风格
+   * @param outputDir       生成文件的输出目录
+   * @return 分析报告列表（JSON 格式），每项对应一个 Java 源文件的分析结果
    */
   @PostMapping("/analyze-batch")
   @Audit(module = "反向生成", action = AuditAction.OTHER, content = "'批量反向分析目录'", recordRequest = false)

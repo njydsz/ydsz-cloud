@@ -48,12 +48,17 @@ public class CodeGenController {
   private final CodeGenService codeGenService;
 
   /**
-   * 预览生成结果。
+   * 预览代码生成结果（渲染模板后展示，不写入文件系统）。
    *
-   * @param datasourceId    数据源 ID
-   * @param templateGroupId 模板分组 ID
-   * @param tableName       表名
-   * @return 预览列表
+   * <p>支持 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库作为数据源，
+   * 目标技术栈由所选模板分组决定（如 Spring Boot + MyBatis-Plus、Vue3 等）。
+   * 生成产物包含 Entity/VO/DTO、Mapper、Service、Controller、XML 及前端页面等文件。
+   *
+   * @param datasourceId    数据源 ID，需为已配置且连接正常的数据源
+   * @param templateGroupId 模板分组 ID，决定目标技术栈与代码风格
+   * @param tableName       物理表名，需存在于指定数据源中
+   * @return 预览结果列表，每项包含 fileName（文件名）、filePath（相对路径）、
+   *         content（渲染后的代码文本）、isConflict（目标文件是否已存在）
    */
   @Audit(module = "代码生成", action = AuditAction.QUERY, recordRequest = false)
   @GetMapping("/preview")
@@ -107,10 +112,29 @@ public class CodeGenController {
   }
 
   /**
-   * 正式生成代码到指定目录。
+   * 根据表结构正式生成代码到指定输出目录。
    *
-   * @param query 生成参数（数据源、模板分组、表名、输出目录、冲突策略、触发人）
-   * @return 生成结果
+   * <p>支持 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库作为数据源，
+   * 目标技术栈由所选模板分组决定。
+   * 生成产物包含 Entity/VO/DTO、Mapper 接口与 XML、Service 接口与实现、
+   * Controller、前端 API 及页面等全栈文件。
+   *
+   * <p>冲突策略：
+   * <ul>
+   *   <li>SKIP：跳过已存在文件（默认）</li>
+   *   <li>OVERRIDE：覆盖已存在文件并备份原文件</li>
+   *   <li>APPEND：追加到已存在文件末尾</li>
+   * </ul>
+   *
+   * @param query 生成请求参数，包含：
+   *              datasourceId（数据源 ID，非空）、
+   *              templateGroupId（模板分组 ID，非空）、
+   *              tableName（物理表名，非空）、
+   *              outputDir（输出目录绝对路径，非空）、
+   *              conflictStrategy（冲突策略：SKIP / OVERRIDE / APPEND，可空，默认 SKIP）、
+   *              triggeredBy（触发人标识，可空，默认 system）
+   * @return 生成结果，包含 historyId（任务 ID）、fileCount（总文件数）、
+   *         successCount（成功数）、skipCount（跳过数）、failCount（失败数）
    */
   @Audit(module = "代码生成", action = AuditAction.CREATE, content = "'生成代码:' + #query.tableName", recordRequest = false)
   @PostMapping("/generate")
@@ -122,14 +146,22 @@ public class CodeGenController {
   }
 
   /**
-   * 批量生成（全库）。
+   * 对数据源下全部表批量生成代码。
    *
-   * @param datasourceId      数据源 ID
-   * @param templateGroupId   模板分组 ID
-   * @param outputDir         输出目录
-   * @param conflictStrategy  冲突策略
-   * @param triggeredBy       触发人
-   * @return 生成结果汇总
+   * <p>遍历数据源中所有表，逐表应用模板分组进行代码生成。
+   * 支持 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库，
+   * 目标技术栈由模板分组决定。生成产物与单表生成一致。
+   *
+   * <p>冲突策略与 {@link #generate(GenCodeGenerateQuery)} 相同。
+   * 建议在非高峰时段执行，大库可能耗时较长。
+   *
+   * @param datasourceId     数据源 ID，需为已配置且连接正常的数据源
+   * @param templateGroupId  模板分组 ID，决定目标技术栈与代码风格
+   * @param outputDir        输出目录绝对路径
+   * @param conflictStrategy 冲突策略（SKIP / OVERRIDE / APPEND），默认 SKIP
+   * @param triggeredBy      触发人标识，默认 system
+   * @return 汇总结果，包含 historyId（批次任务 ID）、fileCount（总文件数）、
+   *         successCount（成功数）、skipCount（跳过数）、failCount（失败数）
    */
   @Audit(module = "代码生成", action = AuditAction.CREATE, content = "'全量生成代码:' + #datasourceId", recordRequest = false)
   @PostMapping("/generate/all")

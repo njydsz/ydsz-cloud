@@ -43,26 +43,32 @@ public interface GeneratorFeignClient {
   // ════════════════════════════════════════════════════════════
 
   /**
-   * 查询全部数据源。
+   * 查询全部已配置的数据源（Feign 远程调用）。
    *
-   * @return 数据源列表
+   * <p>支持 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库。
+   *
+   * @return 数据源列表，每个元素包含 id、name、jdbcUrl、username、dialect 等；
+   *         调用失败时由 {@code GeneratorClientFallbackFactory} 处理
    */
   @GetMapping("/datasources")
   YdszResponse<List<GenDatasource>> listDatasources();
 
   /**
-   * 获取默认数据源。
+   * 获取标记为默认的数据源（Feign 远程调用）。
    *
-   * @return 默认数据源
+   * @return 默认数据源配置；未配置时返回 null
    */
   @GetMapping("/datasources/default")
   YdszResponse<GenDatasource> getDefaultDatasource();
 
   /**
-   * 测试数据源连接。
+   * 测试数据源 JDBC 连接是否可用（Feign 远程调用）。
    *
-   * @param datasource 数据源配置
-   * @return 连接是否成功
+   * <p>不保存配置，仅使用传入参数尝试建立数据库连接。
+   * 支持 MySQL、PostgreSQL、Oracle、SQL Server 等。
+   *
+   * @param datasource 数据源配置，至少需包含 jdbcUrl、username、password
+   * @return true 表示连接成功，false 表示连接失败
    */
   @PostMapping("/datasources/test")
   YdszResponse<Boolean> testDatasource(@RequestBody GenDatasource datasource);
@@ -72,18 +78,20 @@ public interface GeneratorFeignClient {
   // ════════════════════════════════════════════════════════════
 
   /**
-   * 查询全部分组。
+   * 查询全部模板分组（Feign 远程调用）。
    *
-   * @return 分组列表
+   * @return 全部分组列表，每个元素包含 id、name、description、isActive 等
    */
   @GetMapping("/groups")
   YdszResponse<List<GenTemplateGroup>> listGroups();
 
   /**
-   * 激活指定分组。
+   * 激活指定的模板分组（Feign 远程调用）。
+   *
+   * <p>同一时刻只有一个分组处于激活状态。
    *
    * @param groupId 分组 ID
-   * @return 操作结果
+   * @return 操作结果，成功时 data 为 null
    */
   @PostMapping("/groups/{groupId}/activate")
   YdszResponse<Void> activateGroup(@PathVariable("groupId") Long groupId);
@@ -93,28 +101,35 @@ public interface GeneratorFeignClient {
   // ════════════════════════════════════════════════════════════
 
   /**
-   * 查询数据源下全部表。
+   * 查询数据源下全部表结构元数据（Feign 远程调用）。
+   *
+   * <p>兼容 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库。
    *
    * @param datasourceId 数据源 ID
-   * @return 表元数据列表
+   * @return 表元数据列表，包含 tableName、comment、aliasName、moduleName 等
    */
   @GetMapping("/tables")
   YdszResponse<List<GenTableMeta>> listTables(@RequestParam("datasourceId") Long datasourceId);
 
   /**
-   * 刷新数据源表缓存。
+   * 重新连接数据库刷新表元数据缓存（Feign 远程调用）。
+   *
+   * <p>从目标数据库实时读取表结构信息替换本地缓存。
+   * 兼容 MySQL、PostgreSQL、Oracle、SQL Server 等。
    *
    * @param datasourceId 数据源 ID
-   * @return 刷新后列表
+   * @return 刷新后的表元数据列表
    */
   @PostMapping("/tables/refresh")
   YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam("datasourceId") Long datasourceId);
 
   /**
-   * 查询表的列元数据。
+   * 查询指定表的列元数据（Feign 远程调用）。
+   *
+   * <p>兼容 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库字段类型映射。
    *
    * @param tableMetaId 表元数据 ID
-   * @return 列元数据列表
+   * @return 列元数据列表，包含 columnName、columnType、javaType、columnComment、isPrimaryKey 等
    */
   @GetMapping("/tables/columns")
   YdszResponse<List<GenColumnMeta>> getColumns(@RequestParam("tableMetaId") Long tableMetaId);
@@ -124,11 +139,15 @@ public interface GeneratorFeignClient {
   // ════════════════════════════════════════════════════════════
 
   /**
-   * 预览代码。
+   * 预览代码生成结果（Feign 远程调用，展示不写入）。
+   *
+   * <p>预览返回渲染后的代码文本，每项包含 fileName、filePath、content（代码文本）、
+   * isConflict（是否与已有文件冲突）。
+   * 支持 MySQL、PostgreSQL、Oracle、SQL Server 等作为数据源。
    *
    * @param datasourceId    数据源 ID
    * @param templateGroupId 模板分组 ID
-   * @param tableName       表名
+   * @param tableName       物理表名
    * @return 预览结果列表
    */
   @GetMapping("/code/preview")
@@ -138,10 +157,15 @@ public interface GeneratorFeignClient {
       @RequestParam("tableName") String tableName);
 
   /**
-   * 正式生成代码。
+   * 根据表结构正式生成代码到指定目录（Feign 远程调用）。
    *
-   * @param query 生成参数（数据源、模板分组、表名、输出目录、冲突策略、触发人）
-   * @return 生成结果
+   * <p>生成产物包含 Entity/VO/DTO、Mapper 接口与 XML、Service、Controller、
+   * 前端页面等全栈文件。
+   * 冲突策略（conflictStrategy）：SKIP（默认跳过）/ OVERRIDE（覆盖并备份）/ APPEND（追加）。
+   *
+   * @param query 生成请求参数，包含 datasourceId、templateGroupId、tableName、
+   *              outputDir、conflictStrategy、triggeredBy
+   * @return 生成结果摘要（JSON 格式字符串），包含 historyId、fileCount 等
    */
   @PostMapping("/code/generate")
   YdszResponse<String> generate(@RequestBody GenCodeGenerateQuery query);
@@ -151,19 +175,21 @@ public interface GeneratorFeignClient {
   // ════════════════════════════════════════════════════════════
 
   /**
-   * 查询生成历史。
+   * 查询最近的生成历史记录（Feign 远程调用）。
    *
-   * @param limit 数量上限
-   * @return 历史列表
+   * @param limit 返回数量上限，默认 20
+   * @return 历史任务列表，按时间倒序排列
    */
   @GetMapping("/history")
   YdszResponse<List<GenHistory>> listHistory(@RequestParam(value = "limit", defaultValue = "20") int limit);
 
   /**
-   * 回滚任务。
+   * 回滚指定的代码生成任务（Feign 远程调用）。
+   *
+   * <p>恢复生成前的文件状态：新生成的文件被删除，被覆盖的文件从备份中恢复。
    *
    * @param historyId 任务 ID
-   * @return 操作结果
+   * @return 操作结果，成功时 data 为 null
    */
   @PostMapping("/history/{historyId}/rollback")
   YdszResponse<Void> rollback(@PathVariable("historyId") Long historyId);

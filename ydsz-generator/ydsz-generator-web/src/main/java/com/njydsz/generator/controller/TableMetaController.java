@@ -39,10 +39,14 @@ public class TableMetaController {
   private final TableMetadataService tableMetadataService;
 
   /**
-   * 查询数据源下全部表（缓存）。
+   * 查询数据源下全部表结构元数据（本地缓存）。
    *
-   * @param datasourceId 数据源 ID
-   * @return 表元数据列表
+   * <p>兼容 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库。
+   * 首次查询或缓存过期时自动从数据库实时加载并缓存。
+   *
+   * @param datasourceId 数据源 ID，需为已配置且连接正常的数据源
+   * @return 表元数据列表，包含 tableName（物理表名）、comment（表注释）、
+   *         aliasName（别名/类名来源）、moduleName（模块名）等；无表时返回空列表
    */
   @GetMapping
   public YdszResponse<List<GenTableMeta>> listTables(@RequestParam Long datasourceId) {
@@ -50,10 +54,14 @@ public class TableMetaController {
   }
 
   /**
-   * 刷新数据源表元数据。
+   * 重新连接数据库刷新表元数据缓存。
    *
-   * @param datasourceId 数据源 ID
-   * @return 刷新后列表
+   * <p>兼容 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库。
+   * 从目标数据库实时读取表结构信息替换本地缓存，用于表结构发生变更后同步。
+   *
+   * @param datasourceId 数据源 ID，需为已配置且连接正常的数据源
+   * @return 刷新后的表元数据列表
+   * @throws IllegalArgumentException 数据源不存在或已删除
    */
   @PostMapping("/refresh")
   @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新表元数据:' + #datasourceId")
@@ -66,10 +74,15 @@ public class TableMetaController {
   }
 
   /**
-   * 查询表的列元数据。
+   * 查询指定表的列元数据（字段名、类型、注释、主键标识等）。
    *
-   * @param tableMetaId 表元数据 ID
-   * @return 列元数据列表
+   * <p>兼容 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库的字段类型映射。
+   * 自动将数据库原生类型转换为 Java 类型映射。
+   *
+   * @param tableMetaId 表元数据 ID（由 {@link #listTables(Long)} 返回的 GenTableMeta.id）
+   * @return 列元数据列表，包含 columnName（列名）、columnType（数据库类型）、
+   *         javaType（Java 类型映射）、columnComment（列注释）、
+   *         isPrimaryKey（是否主键）等；无列时返回空列表
    */
   @GetMapping("/columns")
   public YdszResponse<List<GenColumnMeta>> getColumns(@RequestParam Long tableMetaId) {
@@ -77,11 +90,15 @@ public class TableMetaController {
   }
 
   /**
-   * 刷新表的列元数据。
+   * 从数据库重新读取并刷新指定表的列元数据。
    *
-   * @param datasourceId 数据源 ID
-   * @param tableName    表名
-   * @return 列元数据列表
+   * <p>兼容 MySQL、PostgreSQL、Oracle、SQL Server 等主流关系型数据库。
+   * 当表结构发生变更（新增/删除/修改字段）后调用此接口同步缓存。
+   *
+   * @param datasourceId 数据源 ID，需为已配置且连接正常的数据源
+   * @param tableName    需刷新的物理表名
+   * @return 刷新后的列元数据列表
+   * @throws IllegalArgumentException 数据源不存在
    */
   @PostMapping("/columns/refresh")
   @Audit(module = "表元数据", action = AuditAction.SYNC, content = "'刷新列元数据:' + #tableName")

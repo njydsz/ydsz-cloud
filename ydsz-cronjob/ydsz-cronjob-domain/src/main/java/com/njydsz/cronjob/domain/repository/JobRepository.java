@@ -320,12 +320,27 @@ public interface JobRepository {
    *
    * @param <T> 记录类型
    */
+  /**
+   * 分页查询内部结果对象。
+   *
+   * <p>携带 pageNum/pageSize 完整分页信息，Service/Controller 层可直接构造 {@link PageResponse}。
+   *
+   * @param <T> 记录类型
+   */
   class PageResult<T> {
     private final List<T> records;
     private final long total;
     private final int pageNum;
     private final int pageSize;
 
+    /**
+     * 构造分页结果对象。
+     *
+     * @param records  当前页记录列表
+     * @param total    总记录数
+     * @param pageNum  页码（从 1 开始）
+     * @param pageSize 每页条数
+     */
     public PageResult(List<T> records, long total, int pageNum, int pageSize) {
       this.records = records;
       this.total = total;
@@ -333,18 +348,38 @@ public interface JobRepository {
       this.pageSize = pageSize;
     }
 
+    /**
+     * 获取当前页记录列表。
+     *
+     * @return 当前页记录列表（非 {@code null}）
+     */
     public List<T> getRecords() {
       return records;
     }
 
+    /**
+     * 获取总记录数。
+     *
+     * @return 总记录数
+     */
     public long getTotal() {
       return total;
     }
 
+    /**
+     * 获取页码。
+     *
+     * @return 页码（从 1 开始）
+     */
     public int getPageNum() {
       return pageNum;
     }
 
+    /**
+     * 获取每页条数。
+     *
+     * @return 每页条数
+     */
     public int getPageSize() {
       return pageSize;
     }

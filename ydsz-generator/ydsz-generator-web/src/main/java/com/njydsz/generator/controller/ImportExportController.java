@@ -39,10 +39,16 @@ public class ImportExportController {
   private final TemplateImportExportService importExportService;
 
   /**
-   * 导出模板分组为 zip 文件。
+   * 将分组下所有 Velocity 模板导出为 zip 压缩包。
    *
-   * @param groupId 分组 ID
-   * @return zip 二进制流
+   * <p>zip 包内包含该分组下所有模板文件（文件名保留原始命名），
+   * 可直接用于模板迁移或备份。返回二进制文件流，前端需处理下载。
+   *
+   * <p><b>API-RESP 豁免说明：</b>本端点返回二进制文件流（zip 下载），
+   * 非平台统一 JSON 响应体适用场景，豁免 {@code YdszResponse} 包装。
+   *
+   * @param groupId 模板分组 ID
+   * @return zip 二进制流，响应头包含 Content-Disposition: attachment; filename="xxx.zip"
    */
   @GetMapping("/export")
   @Audit(module = "模板管理", action = AuditAction.EXPORT, content = "'导出模板分组:' + #groupId", recordRequest = false)
@@ -58,12 +64,16 @@ public class ImportExportController {
   }
 
   /**
-   * 导入模板 zip 到指定分组。
+   * 从 zip 压缩包导入 Velocity 模板到指定分组。
    *
-   * @param groupId   目标分组 ID
-   * @param file      zip 文件
-   * @param overwrite 是否覆盖已有模板
-   * @return 导入数量
+   * <p>zip 包中的每个文件将被导入为一个独立 Velocity 模板。
+   * 文件格式要求：zip 内包含模板文本文件（.java/.xml/.vue/.html 等），
+   * 文件名作为模板的 fileName 字段。
+   *
+   * @param groupId   目标模板分组 ID
+   * @param file      zip 压缩包文件（multipart/form-data 上传）
+   * @param overwrite 是否覆盖同名模板：true 覆盖已有模板，false 跳过同名文件
+   * @return 实际导入成功的模板数量
    */
   @PostMapping("/import")
   @Audit(module = "模板管理", action = AuditAction.IMPORT, content = "'导入模板:' + #groupId", recordRequest = false)
