@@ -72,6 +72,14 @@ public class IpAccessProperties {
   private List<String> excludes = new ArrayList<>(4);
 
   /**
+   * 包含路径列表（支持 Ant 风格路径匹配）。
+   *
+   * <p>非空时仅对这些路径执行 IP 检查，其他路径放行为空时对所有路径生效（配合 excludes 排除部分路径）。
+   * 示例：{@code includes: ["/internal/*"]} 仅对内部 API 实施访问控制。
+   */
+  private List<String> includes = new ArrayList<>(4);
+
+  /**
    * IP 访问控制模式枚举
    */
   public enum AccessMode {

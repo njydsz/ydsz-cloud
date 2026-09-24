@@ -63,13 +63,15 @@ public class OutboxMessage {
   private final String eventType;
 
   /** 事件路由主题（可选，如 "webhook"/"metrics"/"audit"），由 EventChannelRegistry 按 topic 分发到不同订阅者 */
-  private final String topic;
+  @Builder.Default
+  private final String topic = null;
 
   /** 事件负载（JSON 字符串，compressed=true 时为 GZIP 压缩数据 Base64 编码） */
   private final String payload;
 
   /** 业务扩展信息（JSON 字符串，用于携带各业务差异化属性，避免 OutboxMessage 频繁加列） */
-  private final String extInfo;
+  @Builder.Default
+  private final String extInfo = null;
 
   /** 投递状态 */
   private final OutboxStatus status;

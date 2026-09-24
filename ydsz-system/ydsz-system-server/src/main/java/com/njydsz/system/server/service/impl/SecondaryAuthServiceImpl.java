@@ -1,7 +1,6 @@
 package com.njydsz.system.server.service.impl;
 
 import java.time.Duration;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.system.api.client.UserCredentialClient;
 import com.njydsz.system.domain.dto.VerifyPasswordRequest;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -49,6 +49,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
   private final UserCredentialClient userCredentialClient;
   private final RedisStringOps redisStringOps;
   private final SystemProperties systemProperties;
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
 
   /**
    * 发起二次身份验证：校验密码，通过后颁发令牌。
@@ -137,7 +138,7 @@ public class SecondaryAuthServiceImpl implements SecondaryAuthService {
    * @return 令牌 VO
    */
   private SecondaryAuthVO issueToken(String userId) {
-    String token = UUID.randomUUID().toString();
+    String token = String.valueOf(snowflakeIdGenerator.nextId());
     Duration ttl = Duration.ofMinutes(systemProperties.getSecondaryAuth().getTokenTtlMinutes());
     String key = buildTokenKey(userId, token);
     redisStringOps.set(key, TOKEN_VERIFIED_VALUE, ttl);

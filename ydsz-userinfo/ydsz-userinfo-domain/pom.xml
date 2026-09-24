@@ -73,6 +73,7 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!-- P1-5: common-excel（UserImportResultDTO 继承 ExcelImportResult 基类） -->
         <dependency>

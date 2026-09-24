@@ -3,7 +3,7 @@ package com.njydsz.message.domain.event;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 消息领域事件基类。
@@ -28,7 +28,7 @@ public abstract class MessageDomainEvent implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 事件唯一 ID */
-  private final String eventId = UUID.randomUUID().toString();
+  private final String eventId = IdGenerator.nextIdStr();
 
   /** 事件发生时间 */
   private final LocalDateTime occurredAt = LocalDateTime.now();

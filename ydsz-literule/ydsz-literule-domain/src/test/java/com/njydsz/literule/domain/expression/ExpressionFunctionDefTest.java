@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -114,7 +115,7 @@ class ExpressionFunctionDefTest {
       Set<String> stringFunctions = ExpressionFunctionDef.defaults().stream()
           .filter(def -> "string".equals(def.getCategory()))
           .map(ExpressionFunctionDef::getName)
-          .collect(java.util.stream.Collectors.toSet());
+          .collect(Collectors.toSet());
 
       assertThat(stringFunctions).isNotEmpty();
     }
@@ -125,7 +126,7 @@ class ExpressionFunctionDefTest {
       Set<String> mathFunctions = ExpressionFunctionDef.defaults().stream()
           .filter(def -> "math".equals(def.getCategory()))
           .map(ExpressionFunctionDef::getName)
-          .collect(java.util.stream.Collectors.toSet());
+          .collect(Collectors.toSet());
 
       assertThat(mathFunctions).contains("abs", "max", "min", "round");
     }

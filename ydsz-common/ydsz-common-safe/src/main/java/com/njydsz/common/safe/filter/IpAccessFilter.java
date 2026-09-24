@@ -43,11 +43,13 @@ public class IpAccessFilter extends OncePerRequestFilter {
   private final IpAccessService ipAccessService;
   private final SecurityEventPublisher eventPublisher;
   private final List<String> excludes;
+  private final List<String> includes;
 
   /**
    * 构造 IP 访问控制过滤器，绑定判定服务与拒绝事件发布通道。
    *
    * <p>{@code excludes} 为 {@code null} 时按空列表处理，即所有路径都参与 IP 判定；
+   * {@code includes} 为非空时仅对匹配路径执行检查，其他路径放行；
    * 该过滤器以 {@code HIGHEST_PRECEDENCE} 顺序执行，早于鉴权与参数校验相关的过滤器。
    *
    * @param ipAccessService IP 访问控制服务
@@ -58,9 +60,26 @@ public class IpAccessFilter extends OncePerRequestFilter {
       IpAccessService ipAccessService,
       SecurityEventPublisher eventPublisher,
       List<String> excludes) {
+    this(ipAccessService, eventPublisher, excludes, new ArrayList<>(4));
+  }
+
+  /**
+   * 构造 IP 访问控制过滤器（含路径包含列表）。
+   *
+   * @param ipAccessService IP 访问控制服务
+   * @param eventPublisher 安全事件发布器
+   * @param excludes 排除路径列表
+   * @param includes 包含路径列表（非空时仅对这些路径生效）
+   */
+  public IpAccessFilter(
+      IpAccessService ipAccessService,
+      SecurityEventPublisher eventPublisher,
+      List<String> excludes,
+      List<String> includes) {
     this.ipAccessService = ipAccessService;
     this.eventPublisher = eventPublisher;
     this.excludes = excludes != null ? excludes : new ArrayList<>(16);
+    this.includes = includes != null ? includes : new ArrayList<>(4);
   }
 
   @Override
@@ -69,6 +88,12 @@ public class IpAccessFilter extends OncePerRequestFilter {
       @NonNull HttpServletResponse response,
       @NonNull FilterChain filterChain)
       throws ServletException, IOException {
+
+    // includes 非空时，仅对匹配路径执行检查
+    if (!includes.isEmpty() && !UrlPathUtils.matchAny(includes, request.getServletPath())) {
+      filterChain.doFilter(request, response);
+      return;
+    }
 
     if (isExcluded(request)) {
       filterChain.doFilter(request, response);

@@ -16,6 +16,7 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-domain</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!-- 统一响应 -->
         <dependency>

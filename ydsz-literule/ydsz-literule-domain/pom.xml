@@ -55,6 +55,7 @@
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!-- ydsz-common-jdbc：MpBaseEntity 基类 + IntegerStringTypeHandler（Domain Entity 使用） -->
         <dependency>

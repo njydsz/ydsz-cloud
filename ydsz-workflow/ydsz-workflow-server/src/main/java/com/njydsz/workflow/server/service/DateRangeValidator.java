@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeParseException;
 
 import lombok.AccessLevel;
@@ -90,7 +91,7 @@ public final class DateRangeValidator {
     }
 
     // 校验范围不超过 MAX_RANGE_DAYS
-    long rangeDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate);
+    long rangeDays = ChronoUnit.DAYS.between(startDate, endDate);
     if (rangeDays > MAX_RANGE_DAYS) {
       throw new IllegalArgumentException(
           "查询时间范围不能超过 " + MAX_RANGE_DAYS + " 天（当前 " + rangeDays + " 天）");

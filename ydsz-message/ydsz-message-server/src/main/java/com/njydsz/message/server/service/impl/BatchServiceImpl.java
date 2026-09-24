@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -280,7 +278,7 @@ public class BatchServiceImpl implements BatchService {
     List<MessageRequest> requests = new ArrayList<>(dto.getReceiverList().size());
     for (String receiver : dto.getReceiverList()) {
       MessageRequest req = new MessageRequest();
-      req.setMessageId(UUID.randomUUID().toString());
+      req.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
       req.setChannel(dto.getChannel());
       req.setReceiver(receiver);
       req.setTemplateCode(dto.getTemplateCode());

@@ -1,7 +1,14 @@
 package com.njydsz.literule.server.dsl;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
@@ -83,8 +90,8 @@ public final class DecisionTableDmnExporter {
     }
 
     try {
-      javax.xml.parsers.DocumentBuilderFactory factory =
-          javax.xml.parsers.DocumentBuilderFactory.newInstance();
+      DocumentBuilderFactory factory =
+          DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
       Document doc = factory.newDocumentBuilder().newDocument();
 
@@ -207,16 +214,16 @@ public final class DecisionTableDmnExporter {
    */
   private static String serializeXml(Document doc) {
     try {
-      javax.xml.transform.TransformerFactory factory =
-          javax.xml.transform.TransformerFactory.newInstance();
-      javax.xml.transform.Transformer transformer = factory.newTransformer();
-      transformer.setOutputProperty(javax.xml.transform.OutputKeys.ENCODING, XML_ENCODING);
-      transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+      TransformerFactory factory =
+          TransformerFactory.newInstance();
+      Transformer transformer = factory.newTransformer();
+      transformer.setOutputProperty(OutputKeys.ENCODING, XML_ENCODING);
+      transformer.setOutputProperty(OutputKeys.INDENT, "yes");
       transformer.setOutputProperty(
           "{http://xml.apache.org/xslt}indent-amount", "2");
-      java.io.StringWriter writer = new java.io.StringWriter();
-      transformer.transform(new javax.xml.transform.dom.DOMSource(doc),
-          new javax.xml.transform.stream.StreamResult(writer));
+      StringWriter writer = new StringWriter();
+      transformer.transform(new DOMSource(doc),
+          new StreamResult(writer));
       return writer.toString();
     } catch (Exception e) {
       log.error("[LiteRule-DMN] XML 序列化异常: {}", e.getMessage());

@@ -128,10 +128,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-system-domain</artifactId>
         </dependency>
-        <!-- ydsz-system-api: SecondaryAuthServiceImpl 跨服务二次鉴权调用 UserCredentialClient（Feign 契约） -->
+        <!-- ydsz-system-api: SecondaryAuthServiceImpl 跨服务二次鉴权调用 UserCredentialClient（Feign 契约）-->
+        <!-- YDIZ-DDD-001 合规：api 依赖置 provided，避免 server 层反向引入 api 污染下游 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-system-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!-- ydsz-common-json: YdszJson / JsonMapper，Config/DictItem/Variable 读写 JSON 字段 -->
         <dependency>

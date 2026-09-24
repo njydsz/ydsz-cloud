@@ -20,6 +20,7 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-generator-domain</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
     <!-- Feign 契约（纯接口，不引入 Spring Cloud 启动依赖） -->
     <dependency>

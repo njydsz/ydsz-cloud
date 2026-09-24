@@ -15,6 +15,7 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-agent-domain</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>

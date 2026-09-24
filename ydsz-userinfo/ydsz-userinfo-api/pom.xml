@@ -15,6 +15,7 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-domain</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>

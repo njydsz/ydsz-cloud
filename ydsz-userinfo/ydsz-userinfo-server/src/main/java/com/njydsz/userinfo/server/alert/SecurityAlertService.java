@@ -2,13 +2,13 @@ package com.njydsz.userinfo.server.alert;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
@@ -65,6 +65,7 @@ public class SecurityAlertService {
   private final List<AlertNotificationChannel> notificationChannels;
   private final RedisStringOps redisStringOps;
   private final UserInfoProperties properties;
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
 
   /**
    * 触发账号锁定告警。
@@ -267,7 +268,7 @@ public class SecurityAlertService {
 
     // 保存告警到数据库
     SecurityAlert alert = new SecurityAlert(
-        UUID.randomUUID().toString(),
+        String.valueOf(snowflakeIdGenerator.nextId()),
         command.alertType(),
         command.riskLevel(),
         command.userId(),

@@ -658,7 +658,7 @@ public class SafeConfiguration {
       IpAccessProperties properties) {
     FilterRegistrationBean<IpAccessFilter> registrationBean =
         new FilterRegistrationBean<>(
-            new IpAccessFilter(ipAccessService, eventPublisher, properties.getExcludes()));
+            new IpAccessFilter(ipAccessService, eventPublisher, properties.getExcludes(), properties.getIncludes()));
     registrationBean.setName("ipAccessFilter");
     registrationBean.addUrlPatterns("/*");
     registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);

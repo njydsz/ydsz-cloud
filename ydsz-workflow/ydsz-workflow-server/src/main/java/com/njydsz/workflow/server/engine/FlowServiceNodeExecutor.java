@@ -100,8 +100,7 @@ public class FlowServiceNodeExecutor {
       return;
     }
     log.info("[Flow-Service] WS通知: node={} assignees={}", node.getNodeCode(), assigneeIds);
-    // TODO: 实际项目中注入 FlowTodoCountPushService 执行推送
-    // 保留接口扩展点
+    // 推送扩展点：FlowTodoCountPushService 待实际项目注入后替换下方 log 占位
   }
 
   /**

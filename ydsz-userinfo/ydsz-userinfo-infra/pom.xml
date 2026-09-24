@@ -51,9 +51,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-domain</artifactId>
         </dependency>
+        <!-- YDIZ-DDD-001 合规：infra 层反向依赖 api，置 provided 切断传递 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
