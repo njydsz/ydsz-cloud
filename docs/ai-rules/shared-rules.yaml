@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.24"
-  source: "docs/云顶编码规范.md v1.0.11"
+  version: "26.09.29"
+  source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-24（新增 YDIZ-DDD-007：全局禁用 Entity/PO 分层，Entity 仅在 domain 层定义，infra 层仅做引用）"
-  total_rules: 72
+  last_updated: "2026-09-29（新增 YDIZ-EVENT-001/ARCH-002/ARCH-003/ARCH-004/UTIL-001：OutboxMessage 唯一归属、安全过滤器唯一归属、线程池唯一归属、Outbox 表命名唯一、统一 ID 生成入口）"
+  total_rules: 77
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -1961,8 +1961,80 @@ rules:
       ```
     source: "编码规范 §36.5.1 禁止硬编码用户可见文案（YDIZ-I18N-002，P1）"
 
+  - id: "YDIZ-EVENT-001"
+    category: "event"
+    severity: "P0"
+    title: "OutboxMessage 唯一归属"
+    description: |
+      事务性 Outbox 模式事务消息表统一使用 ydsz-common-event 的 OutboxMessage 实体与 OutboxService，
+      禁止业务模块自建 OutboxEvent/OutboxEntry 等替身类。差异化字段序列化进 extContext JSON。
+    pattern: "业务模块中定义 OutboxEvent/OutboxEntry/OutboxMessage 等名称的类（ydsz-common-event 除外）"
+    fix: |
+      1. 删除自建 OutboxEvent/OutboxEntry 等替身类
+      2. 引入 ydzs-common-event 依赖
+      3. 差异化字段序列化进 OutboxMessage.extContext JSON
+      4. 通过 OutboxService.appendToOutbox() 统一写入
+    source: "编码规范 §22.5.5 Outbox 事务消息归属（YDIZ-EVENT-001，P0）"
+
+  - id: "YDIZ-ARCH-004"
+    category: "architecture"
+    severity: "P0"
+    title: "安全过滤器唯一归属"
+    description: |
+      安全过滤器（ApiSignatureFilter/ApiKeyAuthFilter/SecurityHeaderFilter）统一在 ydsz-common-safe 中定义，
+      业务模块通过配置属性（ydsz.safe.*）差异化行为，禁止在业务模块包内重复定义安全过滤器类。
+    pattern: "业务模块 web/api 层实现 javax.servlet.Filter 或 OncePerRequestFilter"
+    fix: |
+      1. 删除业务模块中自建的 Filter/OncePerRequestFilter 实现
+      2. 引入 ydsz-common-safe 依赖
+      3. 通过 ydsz.safe.* 配置属性差异化行为
+      4. 如确需定制，向 ydzs-common-safe 提交 enhancement PR
+    source: "编码规范 §19.6 末尾（YDIZ-ARCH-002→重编号为 P0，重分配 ID YDIZ-ARCH-004）"
+
+  # ==================== 工具与架构（util，1 条） ====================
+  - id: "YDIZ-UTIL-001"
+    category: "util"
+    severity: "P1"
+    title: "统一 ID 生成入口"
+    description: |
+      全局 ID 生成必须使用 ydsz-common-util 提供的 IdGenerator（SnowflakeIdGenerator/RedisIdGenerator），
+      禁止在 Service/Domain/Infra 层直接使用 UUID.randomUUID() 或数据库自增 ID 作为业务主键。
+    pattern: "业务 Service/Domain 层出现 UUID.randomUUID().toString() 用于业务主键 ID"
+    fix: |
+      1. 注入 IdGenerator 或使用 Spring 容器获取 SnowflakeIdGenerator
+      2. UUID.randomUUID() 仅允许用于非业务主键的临时标识
+    source: "编码规范编码规范新增（YDIZ-UTIL-001，P1）"
+
+  # ==================== 并发与架构（architecture 续） ====================
+  - id: "YDIZ-ARCH-005"
+    category: "architecture"
+    severity: "P1"
+    title: "线程池唯一归属"
+    description: |
+      所有线程池创建必须通过 ydzs-common-thread 的 ThreadPoolRegistrar 或 ExecutorCreator，
+      禁止业务模块直接 new ThreadPoolExecutor() 或 new ThreadPoolTaskExecutor()。
+    pattern: "业务模块出现 new ThreadPoolExecutor( 或 new ThreadPoolTaskExecutor("
+    fix: |
+      1. 注入 ydsz-common-thread 管理的线程池
+      2. 业务线程隔离需求应向 common-thread 提交 enhancement PR
+      3. 应急场景可使用 ExecutorUtils.newDaemonFixedThreadPool/newScheduledThreadPool
+    source: "编码规范 §16.4 末尾（YDIZ-ARCH-003→重编号为 YDIZ-ARCH-005）"
+
+  - id: "YDIZ-ARCH-006"
+    category: "architecture"
+    severity: "P2"
+    title: "Outbox 表命名唯一"
+    description: |
+      Outbox 事务消息表命名统一为 ydsz_common_outbox（单表多租户隔离），
+      禁止业务模块独立建 ydsz_job_outbox / ydsz_msg_outbox 等分表。
+    pattern: "DDL 中出现 ydsz_%_outbox 表名（ydsz-common-event 除外）"
+    fix: |
+      1. 新增 Outbox 事件使用 common-event 的 OutboxMessage + ydsz_common_outbox
+      2. 已有业务分表保留但不再演进
+    source: "编码规范新增（YDIZ-ARCH-004→重编号为 P2，重分配 ID YDIZ-ARCH-006）"
+
 # ============================================
-# 附录：按 category 统计（26.09.19 更新，total 66 不变；本次为模块优化非新增规则）
+# 附录：按 category 统计（26.09.29 更新，total 72→77）
 # ============================================
 stats:
   encoding: 1
@@ -1977,7 +2049,7 @@ stats:
   performance: 2
   common-reuse: 8
   security: 2
-  architecture: 3
+  architecture: 6
   engineering: 3
   warnings: 1
   api: 2
@@ -1987,4 +2059,6 @@ stats:
   config: 2
   errcode: 2
   i18n: 2
-  total: 68
+  event: 2
+  util: 1
+  total: 77

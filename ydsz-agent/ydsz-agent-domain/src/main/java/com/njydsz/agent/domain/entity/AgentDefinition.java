@@ -6,15 +6,16 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.agent.entity.base.DomainBaseEntity;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * Agent 定义（domain 纯净 POJO，无 MP 注解）
+ * Agent 定义（domain 层持久化实体，YDIZ-DDD-007 单包模式）
  *
  * <p>存储 Agent 的完整配置信息，包括类型、系统提示词、绑定工具、模型参数等。
  *
- * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
- * 持久化映射由 {@code infra.entity.AgentDefinitionPO} 承担。
+ * <p><b>YDIZ-DDD-007</b>：domain Entity 直接携带 MyBatis-Plus ORM 注解，
+ * infra 层通过依赖 domain 模块引用本类，禁止自建 PO/DO 副本。
  *
  * @author ydsz-team
  * @since 26.09.23
@@ -22,7 +23,8 @@ import com.njydsz.agent.entity.base.DomainBaseEntity;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class AgentDefinition extends DomainBaseEntity<String> {
+@TableName("ydsz_agt_definition")
+public class AgentDefinition extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 
