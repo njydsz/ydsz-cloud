@@ -1,20 +1,19 @@
-package com.njydsz.agent.domain.entity;
+package com.njydsz.agent.infra.entity;
 
 import java.math.BigDecimal;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import com.njydsz.agent.entity.base.DomainBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * Agent 定义（domain 纯净 POJO，无 MP 注解）
+ * Agent 定义持久化对象（映射 ydsz_agt_definition 表）。
  *
- * <p>存储 Agent 的完整配置信息，包括类型、系统提示词、绑定工具、模型参数等。
- *
- * <p><b>DDD 分层</b>：domain 层不携带 MyBatis-Plus 注解；
- * 持久化映射由 {@code infra.entity.AgentDefinitionPO} 承担。
+ * <p>基础设施层 PO，包含 MyBatis-Plus 持久化注解。
+ * 对应的领域模型 {@code domain.entity.AgentDefinition} 为纯净 POJO。
  *
  * @author ydsz-team
  * @since 26.09.23
@@ -22,7 +21,8 @@ import com.njydsz.agent.entity.base.DomainBaseEntity;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class AgentDefinition extends DomainBaseEntity<String> {
+@TableName("ydsz_agt_definition")
+public class AgentDefinitionPO extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 
@@ -41,13 +41,13 @@ public class AgentDefinition extends DomainBaseEntity<String> {
   /** 系统提示词 */
   private String systemPrompt;
 
-  /** 模型配置 JSON（temperature/maxTokens/modelId 等） */
+  /** 模型配置 JSON */
   private String modelConfig;
 
-  /** 工具名称列表 JSON（["tool1","tool2"]） */
+  /** 工具名称列表 JSON */
   private String toolNames;
 
-  /** 温度参数（LLM 采样温度，范围 0~2） */
+  /** 温度参数 */
   private BigDecimal temperature;
 
   /** 最大生成 Token 数 */

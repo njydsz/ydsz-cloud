@@ -2,12 +2,13 @@ package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import com.njydsz.agent.domain.entity.AgentDefinition;
+import com.njydsz.agent.infra.entity.AgentDefinitionPO;
 
 /**
  * Agent 定义 Mapper
  *
- * <p>对应数据表 <code>ydsz_agt_def</code>。
+ * <p>对应数据表 {@code ydsz_agt_definition}。
+ * 使用 {@link AgentDefinitionPO}（基础设施层 PO）承载 MyBatis-Plus 持久化注解。
  *
  * <p>Agent 是可调用的 AI 智能体（对话/任务型），由 LLM + Tools + Prompt 组成，按业务场景定义。
  *
@@ -18,14 +19,11 @@ import com.njydsz.agent.domain.entity.AgentDefinition;
  *   <li>idx_status — 状态过滤索引（DRAFT/PUBLISHED/DEPRECATED）
  * </ul>
  *
- * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件，本接口不感知。
+ * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 tenant_id 过滤条件，本接口不感知。
  *
- * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
+ * <p><b>逻辑删除：</b>is_deleted 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.agent.domain.entity.AgentDefinition Agent 定义实体
- * @see com.njydsz.agent.server.service.AgentDefinitionService Agent Service
- * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
-public interface AgentDefinitionMapper extends BaseMapper<AgentDefinition> {}
+public interface AgentDefinitionMapper extends BaseMapper<AgentDefinitionPO> {}

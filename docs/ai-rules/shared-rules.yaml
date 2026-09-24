@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.19"
-  source: "docs/云顶编码规范.md v1.0.10"
+  version: "26.09.24"
+  source: "docs/云顶编码规范.md v1.0.11"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-23（YDIZ-OUTBOX-001 豁免条款完善：message 因双重分发架构确认豁免，迁移过渡期条款移除）"
-  total_rules: 71
+  last_updated: "2026-09-24（新增 YDIZ-DDD-007：全局禁用 Entity/PO 分层，Entity 仅在 domain 层定义，infra 层仅做引用）"
+  total_rules: 72
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -357,7 +357,7 @@ rules:
     source: "编码规范 9.2 节"
 
   # =
-  九、DDD 分层架构（6 条，全部 P0）
+  九、DDD 分层架构（7 条，6 条 P0 + 1 条 P1）
   # ============================================
   - id: "YDIZ-DDD-001"
     category: "ddd"
@@ -511,6 +511,95 @@ rules:
     pattern: "Repository 实现类中存在 getMapper 或类似方法"
     fix: "封装具体的数据访问方法，不暴露 Mapper 引用"
     source: "编码规范附录 D 第 24 项"
+
+  - id: "YDIZ-DDD-007"
+    category: "ddd"
+    severity: "P0"
+    title: "【强制】全局禁用 Entity/PO 分层，仅在 domain 层定义 Entity，infra 层仅做引用"
+    description: |
+      全局禁止传统的 domain Entity 与 infra PO（Persistence Object，持久化对象）双包分层模式。
+      传统 DDD 实践中，domain 层放置纯净的领域 Entity（不带 ORM 注解），infra 层放置带有 `@TableName`/`@TableField` 等 ORM 注解的 PO（常以 `DO` 结尾，如 `MsgLogDO`）。
+      **本规范禁用此分层，统一为单包模式：Entity 仅在 `{module}-domain/entity/` 下定义，直接携带 MyBatis-Plus ORM 注解；infra 层通过 pom 依赖 domain 模块对 Entity 做引用，禁止自行维护任何持久化实体类（PO/DO/Entity）副本。**
+
+      **核心约束**：
+      1. `{module}-infra/` 下**禁止存在** `entity/`、`po/`、`do/` 包，禁止任何以 `DO`/`PO` 结尾的类文件
+      2. infra 层的 Mapper 接口、Repository 实现必须直接 import `{module}-domain/entity/` 下的 Entity 类
+      3. 禁止通过继承、拷贝、`BeanUtils.copyProperties` 等方式在 infra 层创建 Entity 的替身类
+      4. 数据库表映射关系（`@TableName`、`@TableField`、`@TableId`）直接定义在 domain Entity 上，不拆分到 infra 层
+
+      **为什么禁用 Entity/PO 分层**：
+      - 减少模型重复：Entity 与 PO 字段高度重叠（>95%），维护两份类带来同步负担和隐患
+      - 简化转换链路：去除 Entity↔PO Mapper 后，Repository 仅需处理 Entity↔DTO/VO 一套转换
+      - domain 层"拥有"业务实体定义是 YDSZ 架构的一贯定位（参见 YDIZ-DDD-004）
+      - infra 层作为 domain 的插件实现，职责仅为提供持久化能力，不应"拥有"领域模型
+
+      **适用边界**：本规则约束 Business Entity（业务持久化实体）。与业务实体无关的纯技术类（如 `SeataUndoLog`、`FlywaySchemaHistory` 等框架内部表映射）不在此列，但若属于本业务模块的表映射，仍须遵守本规则。
+    pattern: |
+      以下任一情形构成违规：
+      1. {module}-infra 下存在以 DO / PO 结尾的类文件（如 MsgLogDO.java、OrderPO.java）
+      2. {module}-infra 下存在 entity/ 包且包含带 @TableName 注解的类
+      3. Repository 实现或 Mapper 接口 import 了 infra 模块的 DO/PO 类
+      4. 通过 BeanUtils.copyProperties / 手动 setter 将 domain Entity 复制到 infra 层替代类
+    fix: |
+      1. 将 infra 层 DO/PO 类删除，所有引用点改为 import domain/entity/ 下对应 Entity
+      2. 若 DO/PO 与 Entity 存在字段差异，将差异字段补充到 domain Entity
+      3. Mapper 接口（infra/mapper/）的入参/返回类型全部改为 domain Entity
+      4. 若 Mapper XML 中 resultType/parameterType 引用了 DO/PO 的全路径，改为 domain Entity 路径
+      5. 确认 infra 模块 pom.xml 已依赖 {module}-domain
+    example_bad: |
+      // ❌ 违规：infra 层维护 DO 类（Entity/PO 分层）
+      // 文件：ydsz-message-infra/src/main/java/com/njydsz/message/infra/entity/MsgLogDO.java
+      package com.njydsz.message.infra.entity;
+      import com.baomidou.mybatisplus.annotation.TableName;
+      @Data
+      @TableName("ydsz_msg_log")
+      public class MsgLogDO {
+          private String msgTitle;
+      }
+
+      // ❌ 违规：Mapper import infra DO 类
+      // 文件：ydsz-message-infra/src/main/java/com/njydsz/message/infra/mapper/MsgLogMapper.java
+      package com.njydsz.message.infra.mapper;
+      import com.njydsz.message.infra.entity.MsgLogDO; // ❌ 应引用 domain Entity
+      public interface MsgLogMapper extends BaseMapper<MsgLogDO> { }
+
+      // ❌ 违规：Repository 实现通过 BeanUtils 复制 domain Entity 到 infra PO
+      MsgLogDO po = new MsgLogDO();
+      BeanUtils.copyProperties(domainEntity, po); // ❌ 禁止的拷贝替身模式
+
+    example_good: |
+      // ✅ 正确：Entity 仅在 domain 层定义
+      // 文件：ydsz-message-domain/src/main/java/com/njydsz/message/domain/entity/MsgLog.java
+      package com.njydsz.message.domain.entity;
+      import com.baomidou.mybatisplus.annotation.TableName;
+      @Data
+      @TableName("ydsz_msg_log")
+      public class MsgLog {
+          private String msgTitle;
+      }
+
+      // ✅ 正确：Mapper 直接引用 domain Entity
+      // 文件：ydsz-message-infra/src/main/java/com/njydsz/message/infra/mapper/MsgLogMapper.java
+      package com.njydsz.message.infra.mapper;
+      import com.njydsz.message.domain.entity.MsgLog; // ✅ 来自 domain
+      public interface MsgLogMapper extends BaseMapper<MsgLog> { }
+
+      // ✅ 正确：Repository 实现直接使用 domain Entity
+      // 文件：ydsz-message-infra/src/main/java/com/njydsz/message/infra/repository/MsgLogRepositoryImpl.java
+      package com.njydsz.message.infra.repository;
+      import com.njydsz.message.domain.entity.MsgLog;          // ✅ 来自 domain
+      import com.njydsz.message.domain.converter.MsgConverter; // ✅ 来自 domain
+      @Repository
+      public class MsgLogRepositoryImpl implements MsgLogRepository {
+          @Autowired private MsgLogMapper mapper;
+          @Autowired private MsgConverter converter;
+          @Override
+          public MsgLogVO findById(String id) {
+              MsgLog entity = mapper.selectById(id);           // 直接使用 domain Entity
+              return converter.entityToVo(entity);
+          }
+      }
+    source: "编码规范 §34.1、§34.5"
 
   # ============================================
   # 十、并发规范（3 条）
