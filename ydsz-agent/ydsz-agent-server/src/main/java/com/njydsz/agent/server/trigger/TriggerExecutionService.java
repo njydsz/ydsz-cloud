@@ -4,11 +4,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.exception.custom.BusinessException;
 
 /**
@@ -95,7 +94,7 @@ public class TriggerExecutionService {
      * @return 唯一执行 ID
      */
     private String generateExecutionId() {
-        return "trigger-" + UUID.randomUUID().toString().substring(0, EXECUTION_ID_UUID_LENGTH);
+        return "trigger-" + IdGenerator.nextIdStr();
     }
 
     /**

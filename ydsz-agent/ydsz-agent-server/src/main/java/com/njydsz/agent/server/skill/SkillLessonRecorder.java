@@ -4,14 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.skill.LessonType;
 import com.njydsz.agent.domain.skill.SkillLesson;
 import com.njydsz.agent.domain.skill.SkillLessonRepository;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * Skill 经验记录器。
@@ -265,7 +264,7 @@ public class SkillLessonRecorder {
      * @return 唯一经验 ID
      */
     private String generateLessonId() {
-        return "lsn-" + UUID.randomUUID().toString().substring(0, LESSON_ID_UUID_LENGTH);
+        return "lsn-" + IdGenerator.nextIdStr();
     }
 
     /**

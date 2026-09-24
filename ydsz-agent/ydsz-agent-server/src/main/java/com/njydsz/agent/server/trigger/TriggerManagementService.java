@@ -4,12 +4,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
 import com.njydsz.agent.domain.trigger.TriggerType;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -267,7 +266,7 @@ public class TriggerManagementService {
      * @return 唯一触发器 ID
      */
     private String generateTriggerId() {
-        return "trg-" + UUID.randomUUID().toString().substring(0, TRIGGER_ID_UUID_LENGTH);
+        return "trg-" + IdGenerator.nextIdStr();
     }
 
     /**
