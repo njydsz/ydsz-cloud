@@ -14,7 +14,7 @@
 
 ## L1-L6 分层架构
 
-本模块按 DDD 分层组织 **28 个子模块**（L1-L6），依赖方向严格自下而上（上层依赖下层，不可反向）：
+本模块按 DDD 分层组织 **29 个子模块**（L1-L6），依赖方向严格自下而上（上层依赖下层，不可反向）：
 
 ```
 L1 工具模块层  → ydsz-common-json, ydsz-common-util, ydsz-common-cache, ydsz-common-excel
@@ -24,7 +24,7 @@ L4 基础数据层  → ydsz-common-jdbc, ydsz-common-redis, ydsz-common-lock,
                  ydsz-common-thread, ydsz-common-tenant
 L5 业务服务层  → ydsz-common-auth, ydsz-common-safe, ydsz-common-feign,
                  ydsz-common-audit, ydsz-common-notify, ydsz-common-queue,
-                 ydsz-common-event, ydsz-common-config,
+                 ydsz-common-event, ydsz-common-config, ydsz-common-seata,
                  ydsz-common-socket, ydsz-common-netty, ydsz-common-file,
                  ydsz-common-docs, ydsz-common-search, ydsz-common-sentry
 L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
@@ -216,6 +216,7 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-search | `ContentIndexer` | 内容索引器 | `@ConditionalOnMissingBean` |
 | common-event | `EventPublishGateway` **SPI** | 事件投递网关（RocketMQ / Noop） | `@ConditionalOnMissingBean` |
 | common-config | `ConfigChangeListener` **SPI** | 配置变更回调（Spring Cloud RefreshEvent） | `ObjectProvider<List<ConfigChangeListener>>` |
+| common-seata | `YdszGlobalTransactionalAspect` | 全局事务切面（反射桥接 Seata API，业务代码不得 import seata 原生类） | `@ConditionalOnProperty(ydsz.seata.enabled)` |
 | common-sentry | `MetricsCollector` **SPI** | 指标采集（Micrometer/其他） | `@ConditionalOnMissingBean` |
 | common-sentry | `AlertPublisher` **SPI** | 告警发布（PagerDuty/企微/IM） | `@ConditionalOnMissingBean` |
 | common-sentry | `LogPublisher` **SPI** | 日志发布（ELK/Loki/Kafka） | `@ConditionalOnMissingBean` |

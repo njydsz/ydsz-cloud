@@ -33,12 +33,16 @@ CREATE TABLE IF NOT EXISTS ydsz_com_outbox (
     retry_count         INT UNSIGNED    NOT NULL DEFAULT 0 COMMENT '当前重试次数',
     max_retries         INT UNSIGNED    NOT NULL DEFAULT 5 COMMENT '最大重试次数',
     next_retry_at       DATETIME(3)             COMMENT '下次重试时间（指数退避）',
-    error_message       TEXT                     COMMENT '最后一次失败的错误信息',
+    error_message       VARCHAR(4000)            COMMENT '错误信息（智能截断，保留首尾各 800/1200 字符）',
+
+    -- ========== 新增：A/B 灰度与压缩标记 ==========
+    schema_version      INT             NOT NULL DEFAULT 1 COMMENT '事件 schema 版本（向前兼容）',
+    compressed          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT 'payload 是否 GZIP 压缩存储',
 
     -- ========== 上下文 ==========
     tenant_id           VARCHAR(64)              COMMENT '租户 ID（多租户隔离）',
     trace_id            VARCHAR(64)              COMMENT '链路追踪 ID',
-    deduplication_id    VARCHAR(64)              COMMENT '幂等去重 ID',
+    idempotency_key     VARCHAR(64)              COMMENT '幂等去重 ID',
 
     -- ========== 时间戳 ==========
     created_at          DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
@@ -59,7 +63,7 @@ CREATE TABLE IF NOT EXISTS ydsz_com_outbox (
     -- 租户隔离索引
     INDEX idx_ydsz_com_outbox_tenant (tenant_id, status),
     -- 幂等去重索引
-    INDEX idx_ydsz_com_outbox_dedup (deduplication_id, status),
+    INDEX idx_ydsz_com_outbox_idempotency (idempotency_key, status),
     -- 聚合根查询索引
     INDEX idx_ydsz_com_outbox_aggregate (aggregate_type, aggregate_id, created_at DESC)
 ) ENGINE=InnoDB
@@ -68,7 +72,38 @@ CREATE TABLE IF NOT EXISTS ydsz_com_outbox (
   COMMENT='事务性 Outbox 表：存储领域事件，保障业务写操作与事件投递的事务一致性';
 
 -- ============================================================================
--- 2. 搜索索引死信队列表（ydsz-common-search）
+-- 2. Outbox 归档表（ydsz-common-event）
+-- ============================================================================
+-- 用途：存储已投递完成或已丢弃的消息，降低主 Outbox 表压力，支持事件回溯。
+-- 启用条件：ydsz.event.outbox.archive.enabled=true（默认不启用）
+
+CREATE TABLE IF NOT EXISTS ydsz_com_outbox_archive (
+    id              VARCHAR(64)     PRIMARY KEY,
+    aggregate_id    VARCHAR(128)    NOT NULL,
+    aggregate_type  VARCHAR(128)    DEFAULT NULL,
+    event_type      VARCHAR(256)    NOT NULL,
+    payload         MEDIUMTEXT      NOT NULL,
+    status          VARCHAR(16)     NOT NULL,
+    retry_count     INT             NOT NULL DEFAULT 0,
+    max_retries     INT             NOT NULL DEFAULT 5,
+    tenant_id       VARCHAR(64)     DEFAULT NULL,
+    idempotency_key VARCHAR(128)    DEFAULT NULL,
+    trace_id        VARCHAR(64)     DEFAULT NULL,
+    schema_version  INT             NOT NULL DEFAULT 1,
+    compressed      TINYINT(1)      NOT NULL DEFAULT 0,
+    created_at      DATETIME        NOT NULL,
+    updated_at      DATETIME        NOT NULL,
+    sent_at         DATETIME        DEFAULT NULL,
+    archived_at     DATETIME        NOT NULL,
+    error_message   VARCHAR(4000)   DEFAULT NULL,
+    INDEX idx_archive_aggregate (aggregate_id, created_at),
+    INDEX idx_archive_event_type (event_type, created_at),
+    INDEX idx_archive_created_at (created_at),
+    INDEX idx_archive_archived_at (archived_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Outbox 事件归档表（已投递或已丢弃的消息）';
+
+-- ============================================================================
+-- 3. 搜索索引死信队列表（ydsz-common-search）
 -- ============================================================================
 -- 用途：持久化存储索引写入失败的操作，
 --       支持定时重放补偿 + 告警监控 + 人工介入。
@@ -94,7 +129,7 @@ CREATE TABLE IF NOT EXISTS ydsz_com_search_dead_letter (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
 
 -- ============================================================================
--- 3. 审计日志表（ydsz-common-audit）
+-- 4. 审计日志表（ydsz-common-audit）
 -- ============================================================================
 -- 用途：存储全平台操作审计日志，支持按时间范围、操作人、行为、模块等多维度检索。
 --       由审计切面（AuditAspect）自动写入，AuditAdminController 提供查询接口。

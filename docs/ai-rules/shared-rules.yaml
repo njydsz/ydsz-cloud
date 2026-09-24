@@ -525,7 +525,8 @@ rules:
       1. `{module}-infra/` 下**禁止存在** `entity/`、`po/`、`do/` 包，禁止任何以 `DO`/`PO` 结尾的类文件
       2. infra 层的 Mapper 接口、Repository 实现必须直接 import `{module}-domain/entity/` 下的 Entity 类
       3. 禁止通过继承、拷贝、`BeanUtils.copyProperties` 等方式在 infra 层创建 Entity 的替身类
-      4. 数据库表映射关系（`@TableName`、`@TableField`、`@TableId`）直接定义在 domain Entity 上，不拆分到 infra 层
+4. 数据库表映射关系（`@TableName`、`@TableField`、`@TableId`）直接定义在 domain Entity 上，不拆分到 infra 层
+      5. Converter（MapStruct 对象转换器）仅在 `{module}-domain/converter/` 下定义（参见 YDIZ-DDD-004），infra 层禁止自行声明或复制 Converter
 
       **为什么禁用 Entity/PO 分层**：
       - 减少模型重复：Entity 与 PO 字段高度重叠（>95%），维护两份类带来同步负担和隐患
@@ -544,8 +545,9 @@ rules:
       1. 将 infra 层 DO/PO 类删除，所有引用点改为 import domain/entity/ 下对应 Entity
       2. 若 DO/PO 与 Entity 存在字段差异，将差异字段补充到 domain Entity
       3. Mapper 接口（infra/mapper/）的入参/返回类型全部改为 domain Entity
-      4. 若 Mapper XML 中 resultType/parameterType 引用了 DO/PO 的全路径，改为 domain Entity 路径
+4. 若 Mapper XML 中 resultType/parameterType 引用了 DO/PO 的全路径，改为 domain Entity 路径
       5. 确认 infra 模块 pom.xml 已依赖 {module}-domain
+      6. 确认 Converter 仅在 domain 层定义（domain/converter/），infra 层无自建 Converter
     example_bad: |
       // ❌ 违规：infra 层维护 DO 类（Entity/PO 分层）
       // 文件：ydsz-message-infra/src/main/java/com/njydsz/message/infra/entity/MsgLogDO.java
