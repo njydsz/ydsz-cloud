@@ -11,24 +11,15 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 灰度实验持久化实体 — 支撑消息模板 A/B 对照实验。
+ * 灰度实验持久化实体，支撑消息模板 A/B 对照实验。
  *
- * <p>对应数据库表 {@code ydsz_msg_canary}。记录灰度实验的完整生命周期：实验创建、流量分桶、结果记录。
+ * <p>对应数据库表 {@code ydsz_msg_canary}。记录灰度实验的完整生命周期：
+ * 实验创建、流量分桶、结果记录。canaryKey 为实验唯一标识（格式 canary_{templateCode}_{timestamp}），
+ * bucketTotal 划分等宽桶，bucketSelected 控制 VARIANT 组命中范围，
+ * experimentGroup 区分 CONTROL/VARIANT，metricsGoal 指定优化目标指标。
  *
- * <p><b>核心字段语义：</b>
- *
- * <ul>
- *   <li>{@code canaryKey} — 实验唯一标识，格式 {@code canary_{templateCode}_{timestamp}}
- *   <li>{@code bucketTotal} — 总分桶数（默认 100），将流量划分为等宽桶
- *   <li>{@code bucketSelected} — 命中桶数，桶号 {@code < bucketSelected} 的请求归入 VARIANT 组
- *   <li>{@code percentage} — 当前放量百分比（0~100），与 bucketSelected 保持同步
- *   <li>{@code experimentGroup} — 实验组标识：CONTROL（对照组）/ VARIANT（实验组）
- *   <li>{@code metricsGoal} — 目标指标：DELIVERY_RATE（送达率）/ READ_RATE（阅读率）/ CLICK_RATE（点击率）
- *   <li>{@code status} — 实验状态：ACTIVE（运行中）/ PAUSED（已暂停）/ COMPLETED（已结束）
- * </ul>
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

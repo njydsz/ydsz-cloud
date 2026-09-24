@@ -15,18 +15,14 @@ import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 
 /**
- * 站内通知领域实体 — 系统消息/待办/预警/公告统一入口。
+ * 站内通知领域实体，系统消息/待办/预警/公告统一入口。
  *
- * <p>对应数据库表 {@code ydsz_msg_notification}。
- * 与 {@code MsgNotification} 的区别：
- * <ul>
- *   <li>去除 MyBatis-Plus 持久化注解
- *   <li>级别/分类/优先级/撤回状态字段使用枚举类型替代 String
- *   <li>不继承 {@code MpBaseEntity}，审计字段平铺定义
- * </ul>
+ * <p>对应数据库表 {@code ydsz_msg_notification}。与普通消息的区别是面向站内用户，
+ * 不经过第三方通道下发，直接写入数据库供用户登录后拉取展示。
+ * 支持阅读状态（readStatus）、撤回状态（recallStatus）、过期时间、@提及等站内特有属性。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

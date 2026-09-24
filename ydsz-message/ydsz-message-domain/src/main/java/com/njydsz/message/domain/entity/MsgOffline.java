@@ -12,12 +12,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * P0-3: 离线消息持久化表。
+ * 离线消息持久化实体，当 Redis 缓存超过阈值或用户长时间未上线时溢出到数据库存储。
  *
- * <p>当 Redis 离线消息缓存超过阈值或用户长时间未上线时， 将消息从 Redis 溢出到数据库持久化存储，支持 30 天回溯。 用户上线时合并 Redis 缓存和数据库记录一并推送。
+ * <p>对应数据库表 {@code ydsz_msg_offline}。消息体 JSON 存入 payload 字段，
+ * 推送状态 PENDING（待推送）→ PUSHED（已推送）/ EXPIRED（已过期）。
+ * 用户上线时合并 Redis 缓存和数据库记录一并推送，支持 30 天回溯。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

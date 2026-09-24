@@ -11,19 +11,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * P1-4: 消息用户反馈表。
+ * 消息用户反馈实体，记录接收人对推送消息的评分与反馈内容。
  *
- * <p>记录用户对消息质量的评分和反馈，用于：
+ * <p>对应数据库表 {@code ydsz_msg_feedback}。支持评估消息推送满意度、
+ * 优化模板内容、智能防骚扰（多次差评降频）及推送时间优化。
+ * rating 为 1-5 分评分，feedbackType 标识反馈分类（频繁/不相关/太长/垃圾/有用/其他）。
  *
- * <ul>
- *   <li>评估消息推送质量（用户满意度）
- *   <li>优化消息内容（基于反馈调整模板）
- *   <li>智能防骚扰（用户多次差评后降低推送频率）
- *   <li>智能推送时间优化（结合 P1-1）
- * </ul>
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

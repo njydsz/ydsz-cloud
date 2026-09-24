@@ -10,28 +10,17 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.api.fallback.MessageSendClientFallback;
 
 /**
- * 消息发送 Feign 客户端（供跨服务调用）。
+ * 消息发送 Feign 客户端接口，声明跨服务远程调用能力。
  *
- * <p>提供消息发送的远程调用能力，支持多通道路由（邮件/短信/Webhook/站内信）。 典型场景：工作流审批通知、定时任务执行结果告警、规则引擎触发动作等。
+ * <p>基于 OpenFeign 声明式 HTTP 客户端，提供多通道消息发送的远程调用入口
+ * （邮件/短信/Webhook/站内信等）。典型场景：工作流审批通知、定时任务执行结果告警、
+ * 规则引擎触发动作等。
  *
- * <p>与同模块 {@link NotificationClient} 的区别：
+ * <p>通过 {@code fallbackFactory = MessageSendClientFallback.class} 实现熔断降级，
+ * 当消息服务不可用时返回降级响应而非抛出异常。
  *
- * <ul>
- *   <li>{@link NotificationClient} 使用 common-feign 的 DTO（{@code MessageRequest} 等）
- *   <li>{@code MessageSendClient} 可引用 message-domain 的 VO/DTO
- *   <li>两者互补：通用 DTO 场景使用 {@link NotificationClient}，需要消息领域对象的场景使用 {@code MessageSendClient}
- * </ul>
- *
- * @author ydsz-team
- * @since 26.09.01
- */
-/**
- * MessageSendClient Feign 客户端接口，声明跨服务远程调用。
- *
- * <p>所属包：{@code com.njydsz.message.api.client}
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 @FeignClient(
     name = FeignClientConstants.MESSAGE,

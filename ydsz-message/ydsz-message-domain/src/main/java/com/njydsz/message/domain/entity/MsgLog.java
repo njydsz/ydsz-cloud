@@ -16,19 +16,14 @@ import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 
 /**
- * 消息发送日志领域实体 — 全通道发送全量记录的事实表。
+ * 消息发送日志领域实体，全通道发送全量记录的事实表。
  *
- * <p>对应数据库表 {@code ydsz_msg_log}，是消息中心的核心事实表。
+ * <p>对应数据库表 {@code ydsz_msg_log}。记录每条消息的完整生命周期（接收→校验→路由→渲染→投递→回执），
+ * 状态/优先级/通道字段使用枚举类型。含领域行为方法（markAsSending/Success/Failed/Recalled/Skipped）
+ * 驱动状态流转，通过 canTransitionTo 校验合法性。
  *
- * <p>与 {@code MsgLog} 的区别：
- * <ul>
- *   <li>去除 MyBatis-Plus 持久化注解（{@code @TableName} 等）
- *   <li>状态/优先级/通道字段使用枚举类型替代 String
- *   <li>不继承 {@code MpBaseEntity}，审计字段平铺定义
- * </ul>
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

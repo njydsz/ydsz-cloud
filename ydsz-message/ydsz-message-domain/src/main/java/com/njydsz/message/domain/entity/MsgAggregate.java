@@ -12,10 +12,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送
+ * 消息聚合批次实体，记录同一接收人在同一聚合组内攒批待发的摘要发送状态。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>对应数据库表 {@code ydsz_msg_aggregate}。通过 aggregate_group + receiver 唯一聚合，
+ * 当多条消息命中同一聚合窗口时合并为一条摘要发送，减少高频推送对用户的打扰。
+ * 生命周期：PENDING（攒批中）→ READY（就绪待发）→ SENT（已发送）/ CANCELLED（已取消）。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

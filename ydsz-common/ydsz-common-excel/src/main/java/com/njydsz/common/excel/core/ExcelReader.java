@@ -42,7 +42,14 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 /**
  * Excel读取器 - 核心读取组件
  *
- * <p>负责Excel文件的读取解析工作，支持.xls和.xlsx两种格式。 采用用户模式(UserMode)进行读取，通过注解实现列与字段的映射关系。
+ * <p>负责Excel文件的读取解析工作，支持.xls和.xlsx两种格式。
+ * 读取策略根据配置自动选择：
+ *
+ * <ul>
+ *   <li><b>POI 兼容路径</b>（默认）：使用 POI 用户模式（XSSFWorkbook / HSSFWorkbook），全功能但内存占用较高</li>
+ *   <li><b>SuperFast 零 POI 路径</b>（{@code isUseFastReader=true} + 文件源）：手工解析 ZIP/XML，
+ *       大文件采用文件流式管道 + BoundedInputStream 解压限流，内存占用约为文件大小的 1/10</li>
+ * </ul>
  *
  * <h3>读取流程</h3>
  *

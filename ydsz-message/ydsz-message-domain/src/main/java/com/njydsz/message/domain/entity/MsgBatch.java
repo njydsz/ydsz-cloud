@@ -13,15 +13,15 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 消息发送批次实体：记录异步批量发送的批次状态与进度。
+ * 消息发送批次实体，记录异步批量发送的批次状态与进度。
  *
- * <p>批次生命周期：PENDING（待处理）→ PROCESSING（处理中）→ COMPLETED（已完成）/ FAILED（失败）。 每次单条发送完成后更新
- * success/failed/skipped 计数，前端轮询查询进度。
+ * <p>对应数据库表 {@code ydsz_msg_batch}。调用方提交批量消息后由
+ * {@code executeBatch(batchId)} 异步处理，前端轮询 total/success/failed/skipped 计数监控进度。
+ * 批次生命周期：PENDING（待处理）→ PROCESSING（处理中）→ COMPLETED（已完成）/ FAILED（失败）。
+ * payload 字段存放 JSON 序列化的消息请求列表，支持断点续传恢复。
  *
- * <p>P1-A3：payload 字段存放 JSON 序列化的消息请求列表，支持断点续传（{@code executeBatch(batchId)} 即可恢复）。
- *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

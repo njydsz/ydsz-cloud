@@ -32,17 +32,18 @@ public class AuthProperties {
    * 是否启用 RBAC 权限校验，默认 true。
    *
    * <p>设为 false 时，所有权限校验将被跳过，适用于开发/测试环境。
+   * 字段名 enabled（非 isEnabled）以兼容 Lombok @Data 的 getter 命名（避免生成 isIsEnabled）。
    */
-  @JsonProperty("enabled")
-  private boolean isEnabled = true;
+  @JsonProperty("is-enabled")
+  private boolean enabled = true;
 
   /**
    * 是否启用通配符权限匹配，默认 true。
    *
    * <p>启用后，权限码支持通配符模式（如 {@code sys:user:*}）， 可匹配 {@code sys:user:add}、{@code sys:user:edit} 等具体权限。
    */
-  @JsonProperty("wildcard-enabled")
-  private boolean isWildcardEnabled = true;
+  @JsonProperty("is-wildcard-enabled")
+  private boolean wildcardEnabled = true;
 
   /**
    * BCrypt 加密强度（4-31，越界回退默认 10），默认 10。
@@ -170,8 +171,8 @@ public class AuthProperties {
    * <p>单实例场景无需启用，避免不必要的 Redis 订阅开销。
    * 集群部署时启用，确保权限变更即时同步到所有节点的本地缓存。
    */
-  @JsonProperty("cross-instance-enabled")
-  private boolean isCrossInstanceEnabled = false;
+  @JsonProperty("is-cross-instance-enabled")
+  private boolean crossInstanceEnabled = false;
 
   /** 降级策略枚举。 */
   public enum FallbackPolicy {
@@ -185,8 +186,8 @@ public class AuthProperties {
   @Data
   public static class TokenBlacklistProperties {
     /** 是否启用 Token 黑名单 */
-    @JsonProperty("enabled")
-    private boolean isEnabled = true;
+    @JsonProperty("is-enabled")
+    private boolean enabled = true;
 
     /** 黑名单过期时间（秒），应与 Token 有效期一致 */
     @Min(1)
@@ -261,8 +262,8 @@ public class AuthProperties {
   @Data
   public static class LoginDefenseProperties {
     /** 是否启用登录防护 */
-    @JsonProperty("enabled")
-    private boolean isEnabled = true;
+    @JsonProperty("is-enabled")
+    private boolean enabled = true;
 
     /** 最大连续失败次数（达到后锁定账号），默认 5 */
     @Min(1)
@@ -298,8 +299,8 @@ public class AuthProperties {
   @Data
   public static class SessionProperties {
     /** 是否启用会话注册表 */
-    @JsonProperty("enabled")
-    private boolean isEnabled = false;
+    @JsonProperty("is-enabled")
+    private boolean enabled = false;
 
     /** 同账号最大并发会话数，默认 5 */
     @Min(1)
@@ -345,8 +346,8 @@ public class AuthProperties {
   @Data
   public static class ApiKeyProperties {
     /** 是否启用 API Key 认证通道，默认 false（显式开启） */
-    @JsonProperty("enabled")
-    private boolean isEnabled = false;
+    @JsonProperty("is-enabled")
+    private boolean enabled = false;
 
     /** API Key 过期时间（秒），0 表示永不过期，默认 30 天 */
     @Min(0)

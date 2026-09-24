@@ -3,8 +3,6 @@ package com.njydsz.workflow.server.service;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowSaveDraftDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
@@ -59,6 +58,9 @@ public class DraftInstanceService {
   /** 流程推进引擎 */
   private final DefaultFlowAdvancer advancer;
 
+  /** 分布式 ID 生成器 */
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
+
   /**
    * 构造器注入依赖。
    *
@@ -66,14 +68,16 @@ public class DraftInstanceService {
    * @param definitionRepository 流程定义仓储
    * @param stateMachine 流程实例状态机
    * @param advancer 流程推进引擎
+   * @param snowflakeIdGenerator 分布式 ID 生成器
    */
   public DraftInstanceService(FlowInstanceRepository instanceRepository,
       FlowDefinitionRepository definitionRepository, FlowInstanceStateMachine stateMachine,
-      DefaultFlowAdvancer advancer) {
+      DefaultFlowAdvancer advancer, SnowflakeIdGenerator snowflakeIdGenerator) {
     this.instanceRepository = instanceRepository;
     this.definitionRepository = definitionRepository;
     this.stateMachine = stateMachine;
     this.advancer = advancer;
+    this.snowflakeIdGenerator = snowflakeIdGenerator;
     log.info("[Flow-Draft] 草稿实例服务已初始化");
   }
 
@@ -111,7 +115,7 @@ public class DraftInstanceService {
     }
 
     // 创建新草稿实例
-    String instanceId = UUID.randomUUID().toString();
+    String instanceId = String.valueOf(snowflakeIdGenerator.nextId());
 
     // 保存草稿数据到 variables
     Map<String, Object> variables = dto.getDraftData();

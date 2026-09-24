@@ -50,7 +50,7 @@ public class ReactiveTokenBlacklistService {
     this.authProperties = authProperties;
     LOG.info(
         "[ReactiveTokenBlacklist] 初始化完成, blacklist.enabled={}",
-        authProperties.getBlacklist().isIsEnabled());
+        authProperties.getBlacklist().isEnabled());
   }
 
   /**
@@ -67,7 +67,7 @@ public class ReactiveTokenBlacklistService {
    * @return Mono&lt;true&gt; 表示在黑名单中，Mono&lt;false&gt; 表示不在
    */
   public Mono<Boolean> isBlacklisted(String token) {
-    if (!authProperties.getBlacklist().isIsEnabled()) {
+    if (!authProperties.getBlacklist().isEnabled()) {
       return Mono.just(false);
     }
     if (token == null || token.isBlank()) {
@@ -98,7 +98,7 @@ public class ReactiveTokenBlacklistService {
    * @return 完成信号 Mono
    */
   public Mono<Void> addToBlacklist(String token) {
-    if (!authProperties.getBlacklist().isIsEnabled()) {
+    if (!authProperties.getBlacklist().isEnabled()) {
       return Mono.empty();
     }
     if (token == null || token.isBlank()) {
