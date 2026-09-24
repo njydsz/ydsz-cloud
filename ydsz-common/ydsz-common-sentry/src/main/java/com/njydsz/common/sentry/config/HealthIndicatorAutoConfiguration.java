@@ -8,6 +8,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.beans.factory.ObjectProvider;
+
 import com.njydsz.common.sentry.alerting.AlertConverger;
 import com.njydsz.common.sentry.health.SentryHealthIndicator;
 import com.njydsz.common.sentry.health.SentryInfoContributor;
@@ -59,8 +61,8 @@ public class HealthIndicatorAutoConfiguration {
       MetricsCollector metricsCollector,
       LogPublisher logPublisher,
       TraceContext traceContext,
-      org.springframework.beans.factory.ObjectProvider<AlertConverger> alertConverger,
-      org.springframework.beans.factory.ObjectProvider<SlaCollector> slaCollector) {
+      ObjectProvider<AlertConverger> alertConverger,
+      ObjectProvider<SlaCollector> slaCollector) {
     return new SentryHealthIndicator(
         metricsCollector,
         logPublisher,

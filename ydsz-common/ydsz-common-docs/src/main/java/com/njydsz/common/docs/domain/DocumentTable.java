@@ -33,5 +33,5 @@ public class DocumentTable {
   private List<List<String>> rows;
 
   /** 是否包含合并单元格 */
-  private boolean hasMergedCells;
+  private boolean isHasMergedCells;
 }

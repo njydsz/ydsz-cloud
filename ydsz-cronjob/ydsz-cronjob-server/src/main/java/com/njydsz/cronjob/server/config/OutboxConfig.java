@@ -5,21 +5,15 @@ import lombok.Data;
 /**
  * Outbox 事务性事件发布配置（P0-2 优化：扫描间隔可配置化）。
  *
- * <p>控制 OutboxScanTask 的扫描行为，保证事件投递的实时性与系统负载之间的平衡。
+ * <p><b>迁移说明（26.09.29）：</b>自建 {@code OutboxEvent} / {@code OutboxScanTask} 体系收敛至
+ * ydsz-common-event {@code OutboxProcessor} + {@code @EventListener} 订阅模式。
+ * 本类配置项在过渡期保留（避免 yml 前缀绑定报错），新写入链路使用 common-event {@code EventProperties}。
  *
- * <p>对应配置前缀 {@code ydsz.cronjob.outbox.*}。
- *
- * <h3>配置项说明</h3>
- *
- * <ul>
- *   <li>{@link #scanIntervalMs} 扫描间隔（毫秒），默认 1000ms，可根据事件投递 SLA 调整
- *   <li>{@link #batchSize} 每次扫描批量处理的事件数，默认 100
- * </ul>
- *
- * <p>依据《云顶编码规范》§24 配置管理规范：所有可调整参数必须通过配置项暴露，禁止硬编码。
+ * <p>对应配置前缀 {@code ydsz.cronjob.outbox.*}（过渡期兼容，新代码不再使用）。
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.09.29 迁移至 ydsz-common-event OutboxProcessor，标记过渡期兼容
  */
 @Data
 public class OutboxConfig {

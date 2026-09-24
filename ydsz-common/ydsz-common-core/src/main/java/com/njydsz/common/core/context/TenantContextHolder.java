@@ -20,7 +20,7 @@ package com.njydsz.common.core.context;
 public class TenantContextHolder {
 
   /** 类型安全键 */
-  // YDIZ-WARN-001 允许保留：兼容 API，SonarQube java:S1075 误报（变量名含 KEY 被误判为路径硬编码）
+  // YDIZ-WARN-001 允许保留：租户 URL 前缀常量，Sonar 建议定义为常量但此处需保持 Spring 注入语义
   @SuppressWarnings("java:S1075")
   public static final ContextKey<TenantContext> KEY =
       ContextKey.of(BizContextKeys.KEY_TENANT_CONTEXT, TenantContext.class);

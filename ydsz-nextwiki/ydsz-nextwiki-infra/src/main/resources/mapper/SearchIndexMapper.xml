@@ -51,9 +51,10 @@
         SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index WHERE file_node_id = #{fileNodeId} AND is_deleted = 0 LIMIT 1
     </select>
 
-    <!-- 查询所有未删除的索引记录 -->
+    <!-- 查询所有未删除的索引记录（含 content 大字段，限制单次返回上限防止 OOM） -->
     <select id="selectAll" resultMap="SearchIndexResult">
         SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index WHERE is_deleted = 0 ORDER BY created_at ASC
+        LIMIT 1000
     </select>
 
     <!-- 数据库分页搜索索引（支持 name/path/content/tags 多维度 LIKE 搜索） -->

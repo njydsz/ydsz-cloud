@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -153,7 +154,7 @@ public class ResilientLlmClient implements LlmClient {
   private <T> T executeWithCircuitBreaker(String operation, Supplier<T> supplier) {
     try {
       return CircuitBreaker.decorateSupplier(circuitBreaker, supplier).get();
-    } catch (io.github.resilience4j.circuitbreaker.CallNotPermittedException e) {
+    } catch (CallNotPermittedException e) {
       String provider = delegate.getProvider();
       log.warn("[LLM-{}] 熔断器 OPEN 态快速拒绝: operation={}, message={}",
           provider, operation, e.getMessage());

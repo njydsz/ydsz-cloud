@@ -1,16 +1,21 @@
 package com.njydsz.message.server.config;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
+import com.njydsz.message.server.config.ChannelProperties.FeishuConfig;
+import com.njydsz.message.server.config.ChannelProperties.WebhookConfig;
 import com.njydsz.message.server.health.MessageHealthIndicator;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.template.TemplateEngine;
@@ -32,6 +37,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
  * @author ydsz-team
  * @since 26.09.01
  */
+@Slf4j
 @Configuration
 @EnableConfigurationProperties({MessageProperties.class, ChannelProperties.class})
 public class MessageAutoConfiguration {
@@ -88,5 +94,34 @@ public class MessageAutoConfiguration {
   public MessageHealthIndicator messageHealthIndicator(
       RedisStringOps redisStringOps, MsgLogRepository msgLogRepository, ChannelRouter channelRouter) {
     return new MessageHealthIndicator(redisStringOps, msgLogRepository, channelRouter);
+  }
+
+  /**
+   * 通道配置启动预检。
+   *
+   * <p>应用启动时校验 Webhook / 飞书 / 钉钉 / 企业微信的关键配置是否已填写。
+   * 未配置时打印 WARN 日志（不阻断启动），避免运行时发送消息才发现无 Hook 地址的静默失败。
+   *
+   * @param channelProperties 通道配置属性
+   * @return ApplicationRunner 预检逻辑
+   */
+  @Bean
+  public ApplicationRunner channelConfigValidator(ChannelProperties channelProperties) {
+    return args -> {
+      ChannelProperties.WebhookConfig webhook = channelProperties.getWebhook();
+      if (!StringUtils.hasText(webhook.getDefaultUrl())) {
+        log.warn("[Message] ydsz.webhook.default-url 未配置，Webhook 通道仅支持显式 URL 发送");
+      }
+      ChannelProperties.FeishuConfig feishu = channelProperties.getChannel().getFeishu();
+      if (!StringUtils.hasText(feishu.getDefaultHook())) {
+        log.warn("[Message] ydsz.channel.feishu.default-hook 未配置，飞书通道仅支持显式 hook 发送");
+      }
+      if (!StringUtils.hasText(channelProperties.getChannel().getDingtalk().getDefaultToken())) {
+        log.warn("[Message] ydsz.channel.dingtalk.default-token 未配置，钉钉通道仅支持显式 token 发送");
+      }
+      if (!StringUtils.hasText(channelProperties.getChannel().getWechatWork().getDefaultKey())) {
+        log.warn("[Message] ydsz.channel.wechat-work.default-key 未配置，企业微信群机器人仅支持显式 key 发送");
+      }
+    };
   }
 }

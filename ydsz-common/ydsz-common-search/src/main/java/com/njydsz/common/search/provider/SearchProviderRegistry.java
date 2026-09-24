@@ -132,6 +132,7 @@ public class SearchProviderRegistry {
    * @param <T> 实体类型
    * @return 类型匹配的 Provider；不存在时返回 null
    */
+  // YDIZ-WARN-001 允许保留：Provider 注册表返回原始类型 SearchProvider 接口
   @SuppressWarnings("unchecked")
   public <T> TypedSearchProvider<T> getTypedProvider(Class<T> entityType) {
     for (SearchProvider<?> provider : providerMap.values()) {

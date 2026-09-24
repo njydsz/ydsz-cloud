@@ -10,19 +10,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.config.properties.A2aProperties;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.agent.domain.gateway.A2aClient;
 import com.njydsz.agent.domain.gateway.A2aException;
 import com.njydsz.agent.domain.model.a2a.A2aAgentCard;
 import com.njydsz.agent.domain.model.a2a.A2aTask;
 import com.njydsz.agent.domain.model.a2a.A2aTask.A2aTaskStatus;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.ObjectNode;
 
 /**
  * A2A 协议的 HTTP JSON-RPC 客户端实现。
@@ -212,7 +213,7 @@ public class HttpA2aClient implements A2aClient {
       requestBody.put("jsonrpc", JSONRPC_VERSION);
       requestBody.put("method", method);
       requestBody.put("params", params);
-      requestBody.put("id", UUID.randomUUID().toString());
+      requestBody.put("id", IdGenerator.nextIdStr());
       String jsonBody = YdszJson.toJson(requestBody);
       String endpointUrl = agentUrl.endsWith("/")
           ? agentUrl + "api/v1"
@@ -260,6 +261,7 @@ public class HttpA2aClient implements A2aClient {
     return message;
   }
 
+  // YDIZ-WARN-001 允许保留：A2A 协议返回原始 JSON 节点，反序列化时类型已校验
   @SuppressWarnings("unchecked")
   private Map<String, Object> parseJsonRpcResponse(String responseBody) {
     try {
@@ -286,6 +288,7 @@ public class HttpA2aClient implements A2aClient {
   /**
    * 解析 Task 响应 JSON 为 A2aTask 对象。
    */
+  // YDIZ-WARN-001 允许保留：A2A 协议返回原始 JSON 节点，反序列化时类型已校验
   @SuppressWarnings("unchecked")
   private A2aTask parseTaskResponse(Map<String, Object> result) {
     A2aTask task = new A2aTask();
@@ -309,7 +312,7 @@ public class HttpA2aClient implements A2aClient {
    */
   private A2aAgentCard parseAgentCard(String json) {
     try {
-      com.njydsz.common.json.tree.ObjectNode node = YdszJson.parseObject(json);
+      ObjectNode node = YdszJson.parseObject(json);
       A2aAgentCard card = new A2aAgentCard();
       card.setName(node.get("name") != null ? node.get("name").asText() : null);
       card.setDescription(node.get("description") != null ? node.get("description").asText() : null);

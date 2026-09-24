@@ -25,6 +25,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.concurrent.ScheduledFuture;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import lombok.extern.slf4j.Slf4j;
 
@@ -399,7 +400,7 @@ public abstract class AbstractNettyServer {
     long deadline = System.currentTimeMillis() + timeoutMs;
 
     // 定时检查活跃连接数
-    io.netty.util.concurrent.ScheduledFuture<?>[] holder = new io.netty.util.concurrent.ScheduledFuture<?>[1];
+    ScheduledFuture<?>[] holder = new ScheduledFuture<?>[1];
     holder[0] = serverChannel.eventLoop()
         .scheduleWithFixedDelay(() -> {
           int activeCount = channelGroupManager.globalSize();

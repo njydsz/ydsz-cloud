@@ -95,6 +95,12 @@ public class MonitorReportController {
    * 文件原始字节（{@code Content-Type: application/octet-stream}），版本与文件名经查询
    * 参数传入。文件落对象存储，供前端错误堆栈符号化使用。
    *
+   * <p><b>路径中的 {@code v1} 说明：</b>前端构建脚本（{@code upload-sourcemaps.mjs}）
+   * 硬编码 {@code /api/v1/monitor/sourcemaps} 端点，属于发布时既定契约，
+   * 不随后端 API 版本演进而变化。同时兼容无版本段的 {@code /monitor/sourcemaps}。
+   *
+   * <!-- YDIZ-API-001 豁免：前端 sourcemap 上传硬编码契约，v1 与后端 API 版本无关 -->
+   *
    * @param release 发布版本标识（commit hash / 版本号），必填
    * @param file 前端构建产物内的相对文件路径，必填
    * @param content sourcemap 文件字节内容

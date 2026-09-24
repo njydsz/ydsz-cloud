@@ -476,6 +476,7 @@ public class RuleAuditLogService {
     // 从 diffBeforeSnapshot 还原 beforeSnapshot
     if (auditLog.getDiffBeforeSnapshot() != null && !auditLog.getDiffBeforeSnapshot().isEmpty()) {
       try {
+        // YDIZ-WARN-001 允许保留：审计日志流式查询返回原始类型，调用方保证类型安全
         @SuppressWarnings("unchecked")
         Map<String, Object> before =
             YdszJson.fromJson(auditLog.getDiffBeforeSnapshot(), Map.class);
@@ -488,6 +489,7 @@ public class RuleAuditLogService {
     // 从 diffAfterSnapshot 还原 afterSnapshot
     if (auditLog.getDiffAfterSnapshot() != null && !auditLog.getDiffAfterSnapshot().isEmpty()) {
       try {
+        // YDIZ-WARN-001 允许保留：审计日志流式查询返回原始类型，调用方保证类型安全
         @SuppressWarnings("unchecked")
         Map<String, Object> after =
             YdszJson.fromJson(auditLog.getDiffAfterSnapshot(), Map.class);

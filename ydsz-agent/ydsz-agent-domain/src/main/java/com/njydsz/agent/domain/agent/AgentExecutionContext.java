@@ -2,7 +2,8 @@ package com.njydsz.agent.domain.agent;
 
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.UUID;
+
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * Agent 执行上下文值对象
@@ -43,7 +44,7 @@ public final class AgentExecutionContext implements Serializable {
       String conversationId,
       String source,
       String clientIp) {
-    this.executionId = executionId != null ? executionId : UUID.randomUUID().toString().replace("-", "");
+    this.executionId = executionId != null ? executionId : IdGenerator.nextIdStr();
     this.tenantId = Objects.requireNonNull(tenantId, "tenantId 不能为 null");
     this.userId = Objects.requireNonNull(userId, "userId 不能为 null");
     this.conversationId = conversationId;
@@ -108,11 +109,11 @@ public final class AgentExecutionContext implements Serializable {
    */
   public AgentExecutionContext copyForSubTask(String subTaskCode, String subTaskPrompt) {
     String subConversationId =
-        (conversationId != null ? conversationId : UUID.randomUUID().toString().replace("-", ""))
+        (conversationId != null ? conversationId : IdGenerator.nextIdStr())
             + ":"
             + subTaskCode;
     return new AgentExecutionContext(
-        UUID.randomUUID().toString().replace("-", ""),
+        IdGenerator.nextIdStr(),
         tenantId,
         userId,
         subConversationId,

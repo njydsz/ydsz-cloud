@@ -2,6 +2,7 @@ package com.njydsz.common.sentry.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,7 @@ import com.njydsz.common.sentry.SentryService;
 public class SentryInitializationVerifier implements ApplicationListener<ApplicationReadyEvent> {
 
   private final SentryProperties sentryProperties;
-  private final org.springframework.beans.factory.ObjectProvider<SentryService> sentryServiceProvider;
+  private final ObjectProvider<SentryService> sentryServiceProvider;
 
   /**
    * 构造验证器。
@@ -37,7 +38,7 @@ public class SentryInitializationVerifier implements ApplicationListener<Applica
    */
   public SentryInitializationVerifier(
       SentryProperties sentryProperties,
-      org.springframework.beans.factory.ObjectProvider<SentryService> sentryServiceProvider) {
+      ObjectProvider<SentryService> sentryServiceProvider) {
     this.sentryProperties = sentryProperties;
     this.sentryServiceProvider = sentryServiceProvider;
   }

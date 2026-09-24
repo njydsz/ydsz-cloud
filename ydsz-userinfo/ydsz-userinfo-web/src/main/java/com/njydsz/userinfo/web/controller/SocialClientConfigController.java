@@ -39,12 +39,12 @@ import com.njydsz.userinfo.server.service.SocialClientConfigService;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Slf4j
+@Tag(name = "社交平台配置", description = "社交平台 OAuth2 客户端配置管理（热更新）")
 @RestController
 @RequestMapping("/social-client-config")
 @RequiredArgsConstructor
-@Tag(name = "社交平台配置", description = "社交平台 OAuth2 客户端配置管理（热更新）")
-@ApiVersion("26.09.01")
 public class SocialClientConfigController {
 
   private final SocialClientConfigService configService;

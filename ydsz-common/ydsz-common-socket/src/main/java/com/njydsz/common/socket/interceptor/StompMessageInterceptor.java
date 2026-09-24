@@ -59,6 +59,7 @@ public class StompMessageInterceptor implements ChannelInterceptor {
     this.topicAclPolicy = topicAclPolicy;
   }
 
+  // YDIZ-WARN-001 允许保留：鉴权与限流判断相互独立，拆分嵌套会损害可读性
   @SuppressWarnings("java:S3776")
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel channel) throws MessagingException {

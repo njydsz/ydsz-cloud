@@ -29,7 +29,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
+// YDIZ-WARN-001 允许保留：泛型父类字段类型擦除，子类继承链强转
 @SuppressWarnings("unchecked")
 public class MpBaseIdEntity<T extends Serializable> implements Serializable {
 

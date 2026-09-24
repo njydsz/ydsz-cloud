@@ -252,7 +252,7 @@ public class MarkdownDocumentParser implements DocumentParser {
           DocumentSection.builder()
               .type("list")
               .content(text)
-              .ordered(false)
+              .isOrdered(false)
               .pageNumber(1)
               .build());
       state.paragraphPreview = null;
@@ -268,7 +268,7 @@ public class MarkdownDocumentParser implements DocumentParser {
           DocumentSection.builder()
               .type("list")
               .content(text)
-              .ordered(true)
+              .isOrdered(true)
               .pageNumber(1)
               .build());
       state.paragraphPreview = null;

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.PiiType;
+import java.math.BigDecimal;
 
 /**
  * {@link PhoneDetector} 单元测试。
@@ -45,7 +46,7 @@ class PhoneDetectorTest {
       PiiFinding finding = findings.get(0);
       assertThat(finding.getType()).isEqualTo(PiiType.PHONE);
       assertThat(finding.getMaskedValue()).contains("****");
-      assertThat(finding.getConfidence()).isGreaterThan(java.math.BigDecimal.ZERO);
+      assertThat(finding.getConfidence()).isGreaterThan(BigDecimal.ZERO);
       // F-3: 上下文感知 —— 命中位置前后应携带可审查的片段
       assertThat(finding.getContextBefore()).isNotBlank();
       assertThat(finding.getContextAfter()).isNotBlank();

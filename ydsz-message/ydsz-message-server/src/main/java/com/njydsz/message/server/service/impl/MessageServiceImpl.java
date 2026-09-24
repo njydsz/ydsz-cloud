@@ -18,7 +18,9 @@ import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -35,9 +37,7 @@ import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
-import com.njydsz.message.domain.event.OutboxEntry;
 import com.njydsz.message.domain.repository.MsgLogRepository;
-import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelRouter;
@@ -117,8 +117,8 @@ public class MessageServiceImpl implements MessageService {
 
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
-  /** P0-A1: Outbox 事件仓储（异步消息投递） */
-  private final OutboxEventRepository outboxEventRepository;
+  /** Outbox 写入服务（委托 common-event 标准体系） */
+  private final OutboxService outboxService;
 
   /** P1-A3: 消息内容渲染服务（从本类拆分，降低 God Class 复杂度） */
   private final MessageRenderService messageRenderService;
@@ -203,7 +203,7 @@ public class MessageServiceImpl implements MessageService {
       return earlyResult;
     }
 
-    // P1-A4: 异步发送模式 —— 落库 PENDING + 写入 OutboxEvent 后立即返回，由 OutboxEventScheduler 异步投递 MQ
+    // P1-A4: 异步发送模式 —— 落库 PENDING + 写入 Outbox 后立即返回，由 OutboxProcessor 异步投递 MQ
     if (messageProperties.isDefaultAsync()) {
       return dispatchAsync(logDO, ctx);
     }
@@ -221,7 +221,7 @@ public class MessageServiceImpl implements MessageService {
   }
 
   /**
-   * P1-A4: 异步分发 —— 落库 PENDING + 写入 OutboxEvent，由 OutboxEventScheduler 异步投递 MQ。
+   * P1-A4: 异步分发 —— 落库 PENDING + 写入 Outbox，由 OutboxProcessor 异步投递 MQ。
    *
    * <p>对标阿里消息中心发送入口 100% 异步化：API 仅落库 PENDING + 返回 msgId，实际发送由 Worker 池消费。
    *
@@ -230,21 +230,12 @@ public class MessageServiceImpl implements MessageService {
    * @return 发送结果（含 msgId 供追踪）
    */
   private MessageResult dispatchAsync(MsgLogVO logDO, SendContext ctx) {
-    // P2-A6: 构造 OutboxEntry, 与 msgLog 落库在同一事务中(原子性保证)；主键经 common Snowflake 生成（ADR-008）
-    OutboxEntry outboxEntry =
-        new OutboxEntry(
-            "Message",
-            logDO.getMsgId(),
-            "MessageAsyncDispatch",
-            YdszJson.toJson(buildMessageRequestFromLog(logDO, ctx)),
-            TenantContextHolder.getTenantId());
-    outboxEntry.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-    // P2-A6: 落库 PENDING + 写 Outbox 在同一事务中(OutboxDomainEventPublisher 因此感知事务上下文)
-    messageSendTxService.insertLogAndOutbox(logDO, outboxEntry);
+    // P2-A6: 委托 OutboxService 写入标准 Outbox 表，与 msgLog 落库在同一事务中
+    MessageRequest request = buildMessageRequestFromLog(logDO, ctx);
+    messageSendTxService.insertLogAndOutbox(logDO, request);
     log.info(
-        "[Message] 异步模式: 消息已写入 Outbox: msgId={} outboxId={} channel={}",
+        "[Message] 异步模式: 消息已写入 Outbox: msgId={} channel={}",
         logDO.getMsgId(),
-        outboxEntry.getId(),
         ctx.getChannel());
     return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
   }
@@ -662,22 +653,18 @@ public class MessageServiceImpl implements MessageService {
       log.error("[Message] 异步消息落库失败: msgId={} err={}", request.getMessageId(), e.getMessage(), e);
       return MessageResult.fail(request.getChannel(), null, "消息落库失败: " + e.getMessage(), "消息落库失败: " + e.getMessage(), null);
     }
-    // ② 写入 Outbox 表（与业务同事务语义，由 OutboxEventScheduler 异步投递 MQ）
+    // ② 写入 Outbox 表（委托 OutboxService，由 OutboxProcessor 异步投递 MQ）
     try {
-      OutboxEntry outboxEntry =
-          new OutboxEntry(
-              "Message",
-              logDO.getMsgId(),
-              "MessageAsyncDispatch",
-              YdszJson.toJson(request),
-              TenantContextHolder.getTenantId());
-      // 主键经 common Snowflake 生成（ADR-008 整改：原 UUID.randomUUID 违反主键边界）
-      outboxEntry.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-      outboxEventRepository.save(outboxEntry);
+      outboxService.appendToOutbox(
+          OutboxMessage.builder()
+              .aggregateType("Message")
+              .aggregateId(logDO.getMsgId())
+              .eventType("MessageAsyncDispatch")
+              .payload(YdszJson.toJson(request))
+              .idempotencyKey(logDO.getMsgId()));
       log.info(
-          "[Message] 异步消息已写入 Outbox: msgId={} outboxId={}",
-          request.getMessageId(),
-          outboxEntry.getId());
+          "[Message] 异步消息已写入 Outbox: msgId={}",
+          request.getMessageId());
     } catch (Exception e) {
       // Outbox 落库失败不阻塞主流程，PENDING 记录由恢复扫描器补偿
       log.error(

@@ -65,7 +65,19 @@ public final class ExecutorUtils {
 
   private static final int CPU_CORES = Runtime.getRuntime().availableProcessors();
 
+  /**
+   * 默认最大线程数：{@code max(CPU_CORES × 4, 64)}。
+   *
+   * <p>计算公式适用于 IO 密集型任务（HTTP 调用、DB 操作等等待型业务），
+   * 每核心 4 线程可充分利用等待时间。CPU 密集型任务请通过 {@link ThreadPoolBuilder#maxPoolSize(int)} 调低至 {@code CPU_CORES + 1}。
+   */
   private static final int DEFAULT_MAX_POOL_SIZE = Math.max(CPU_CORES * 4, 64);
+
+  /**
+   * 默认队列容量：1024。使用有界 {@link java.util.concurrent.LinkedBlockingQueue}，防无限堆积导致 OOM。
+   *
+   * <p>适用绝大多数业务场景。若任务耗时极长或内存敏感，请通过 {@link ThreadPoolBuilder#queueCapacity(int)} 调低至 256~512。
+   */
   private static final int DEFAULT_QUEUE_CAPACITY = 1024;
 
   private static final String THREAD_NAME_PREFIX = "ydsz-";
@@ -279,7 +291,10 @@ public final class ExecutorUtils {
   }
 
   /**
-   * 创建缓存线程池。
+   * 创建缓存线程池（弹性线程池）。
+   *
+   * <p><b>慎用：</b>适用于短时异步任务（毫秒~秒级）。长时使用或有持续流量时，最大线程数可达 {@link #DEFAULT_MAX_POOL_SIZE}（{@code max(CPU*4,64)}），
+   * 可能产生大量线程。长耗时任务请使用 {@link #builder()} 显式配置核心/最大线程数。
    *
    * @param threadNamePrefix 线程名前缀
    * @return 线程池实例

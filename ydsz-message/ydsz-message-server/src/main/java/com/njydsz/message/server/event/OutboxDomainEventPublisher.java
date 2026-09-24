@@ -5,35 +5,28 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.njydsz.common.event.model.OutboxMessage;
+import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.event.MessageDomainEvent;
-import com.njydsz.message.domain.event.OutboxEntry;
-import com.njydsz.message.domain.identity.IdGenerator;
-import com.njydsz.message.domain.repository.OutboxEventRepository;
 
 /**
- * 支持事务性 Outbox 的领域事件发布器。
+ * 事务性 Outbox 领域事件发布器 — 委托 common-event 标准体系。
  *
  * <p>提供两种发布模式：
  * <ol>
- *   <li> {@link #publish(MessageDomainEvent)}：Outbox 模式，先落库再异步发布（默认，保证 at-least-once）</li>
- *   <li> {@link #publishImmediate(MessageDomainEvent)}：同步立即发布（不保证持久化，仅用于非关键通知）</li>
+ *   <li>{@link #publish(MessageDomainEvent)}：Outbox 模式，委托 {@link OutboxService} 写入 ydsz_com_outbox 表</li>
+ *   <li>{@link #publishImmediate(MessageDomainEvent)}：同步立即发布（不经过 Outbox，仅用于非关键通知）</li>
  * </ol>
  *
- * <p>Outbox 模式优势：
- * <ul>
- *   <li>事件与业务操作同事务落库，保证事件不丢失</li>
- *   <li>异步扫描器独立发布，即使应用崩溃也能恢复</li>
- *   <li>支持失败重试，最终一致性</li>
- * </ul>
- *
- * <p><b>编码规范合规：</b>使用 {@link YdszJson} 替代 Jackson ObjectMapper，符合《云顶编码规范》"禁止第三方 JSON 库"要求。
+ * <p>Outbox 模式通过 {@link OutboxService#appendToOutbox(OutboxMessage.OutboxMessageBuilder)} 实现，
+ * 业务操作与 Outbox 写入在同一事务中完成，保证 at-least-once 语义。
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.09.29 迁移至 common-event OutboxService，删除自建 OutboxEvent/OutboxEntry/OutboxEventRepository
  */
 @Slf4j
 @Component
@@ -41,10 +34,7 @@ import com.njydsz.message.domain.repository.OutboxEventRepository;
 public class OutboxDomainEventPublisher {
 
   private final ApplicationEventPublisher eventPublisher;
-  private final OutboxEventRepository outboxEventRepository;
-
-  /** 唯一 ID 生成器（实现委托 common-util Snowflake，ADR-008：Outbox 主键禁用 UUID） */
-  private final IdGenerator idGenerator;
+  private final OutboxService outboxService;
 
   /** Outbox 模式开关（关闭后等同原直接发布行为） */
   @Value("${ydsz.message.outbox.enabled:true}")
@@ -53,8 +43,8 @@ public class OutboxDomainEventPublisher {
   /**
    * 通过 Outbox 模式发布领域事件（推荐）。
    *
-   * <p>先将事件序列化后落库到 Outbox 表，再通过 {@link OutboxEventScheduler} 异步发布到 Spring 事件总线。
-   * 如果未开启 Outbox 模式（配置关闭），回退为直接发布。
+   * <p>委托 {@link OutboxService} 将事件写入标准 Outbox 表，事务提交后由 OutboxProcessor 异步投递。
+   * 如果未开启 Outbox 模式（配置关闭）或未在事务中，回退为直接发布。
    *
    * @param event 领域事件
    */
@@ -73,38 +63,21 @@ public class OutboxDomainEventPublisher {
       // 序列化事件载荷（使用 YdszJson，符合编码规范）
       String payload = YdszJson.toJson(event);
       String eventType = event.getClass().getName();
+      String messageId = event.getMessageId() != null ? event.getMessageId() : "unknown";
 
-      // 构造 Outbox 事件（主键经 IdGenerator 雪花生成，ADR-008 整改：原 UUID.randomUUID 违反主键边界）
-      OutboxEntry outboxEntry =
-          new OutboxEntry(
-              event.getClass().getSimpleName(),
-              event.getMessageId() != null ? event.getMessageId() : "unknown",
-              eventType,
-              payload,
-              event.getTenantId());
-      outboxEntry.setId(idGenerator.nextId());
+      // 委托 OutboxService 写入标准 Outbox（事务内原子性与业务操作一致）
+      outboxService.appendToOutbox(
+          OutboxMessage.builder()
+              .aggregateType("Message")
+              .aggregateId(messageId)
+              .eventType(eventType)
+              .payload(payload)
+              .idempotencyKey(messageId));
 
-      // 注册事务同步器：事务提交后写入 Outbox（与业务操作同事务）
-      TransactionSynchronizationManager.registerSynchronization(
-          new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-              try {
-                outboxEventRepository.save(outboxEntry);
-                log.debug(
-                    "[OutboxPublisher] 事件已写入 Outbox: eventId={} type={}",
-                    outboxEntry.getId(),
-                    eventType);
-              } catch (Exception e) {
-                // Outbox 落库失败不抛出，记录严重日志（事件可能丢失）
-                log.error(
-                    "[OutboxPublisher] Outbox 落库失败: eventType={} err={}",
-                    eventType,
-                    e.getMessage(),
-                    e);
-              }
-            }
-          });
+      log.debug(
+          "[OutboxPublisher] 事件已写入 Outbox: messageId={} type={}",
+          messageId,
+          eventType);
     } catch (Exception e) {
       log.error(
           "[OutboxPublisher] 事件序列化失败，回退直接发布: eventType={} err={}",

@@ -129,6 +129,7 @@ public class DefaultConnectionSession implements ConnectionSession {
   }
 
   @Override
+  // YDIZ-WARN-001 允许保留：会话 Attribute 泛型擦除，调用方显式转型
   @SuppressWarnings("unchecked")
   public <T> T getAttr(String key, T defaultValue) {
     Object value = attributes.get(ATTR_PREFIX + key);
@@ -136,6 +137,7 @@ public class DefaultConnectionSession implements ConnectionSession {
   }
 
   @Override
+  // YDIZ-WARN-001 允许保留：会话 Attribute 泛型擦除，调用方显式转型
   @SuppressWarnings("unchecked")
   public <T> T removeAttr(String key) {
     Object removed = attributes.remove(ATTR_PREFIX + key);

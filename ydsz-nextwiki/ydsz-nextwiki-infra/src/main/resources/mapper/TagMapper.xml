@@ -30,6 +30,7 @@
 
     <select id="selectAll" resultMap="TagResult">
         SELECT id, name, color, type, usage_count, status, created_by, created_at, updated_by, updated_at, revision, is_deleted, tenant_id FROM ydsz_wiki_tag WHERE is_deleted = 0 ORDER BY usage_count DESC, name ASC
+        LIMIT 500
     </select>
 
     <select id="selectByFileNodeId" resultMap="TagResult">

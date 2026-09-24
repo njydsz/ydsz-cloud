@@ -1,5 +1,6 @@
 package com.njydsz.agent.infra.llm;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -127,7 +128,7 @@ public class SemanticLlmCache {
       String json = redisStringOps.get(key, String.class);
       if (json != null) {
         // 命中刷新 LRU 访问时间
-        redisCollectionOps.zAdd(LRU_INDEX_KEY, key, java.math.BigDecimal.valueOf(Instant.now().toEpochMilli()));
+        redisCollectionOps.zAdd(LRU_INDEX_KEY, key, BigDecimal.valueOf(Instant.now().toEpochMilli()));
         CachedLlmResponse result = YdszJson.fromJson(json, CachedLlmResponse.class);
         // L2 命中后回填 L1，加速后续同进程请求
         if (result != null) {
@@ -165,7 +166,7 @@ public class SemanticLlmCache {
       String json = YdszJson.toJson(cached);
       redisStringOps.set(key, json, ttl);
       // 维护 LRU 索引并执行容量淘汰
-      redisCollectionOps.zAdd(LRU_INDEX_KEY, key, java.math.BigDecimal.valueOf(Instant.now().toEpochMilli()));
+      redisCollectionOps.zAdd(LRU_INDEX_KEY, key, BigDecimal.valueOf(Instant.now().toEpochMilli()));
       evictIfOverCapacity();
       log.debug(
           "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...", ttl.toMinutes());

@@ -97,12 +97,12 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @see AgentFacade Agent 应用门面
  * @see AgentRequestGuard 请求守卫（幂等 + 限流 + 业务校验）
  */
-@Slf4j
 @ApiVersion("26.09.01")
+@Tag(name = "Agent 统一入口", description = "Agent 执行 / 对话 / 历史")
+@Slf4j
 @RestController
 @RequestMapping("/agent")
 @RequiredArgsConstructor
-@Tag(name = "Agent 统一入口", description = "Agent 执行 / 对话 / 历史")
 public class AgentController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;

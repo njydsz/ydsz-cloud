@@ -50,6 +50,7 @@ public abstract class PooledMessage<T extends PooledMessage<T>> {
   private static final int DEFAULT_MAX_CAPACITY = 262144;
 
   /** 关联的 Recycler 句柄 */
+  // YDIZ-WARN-001 允许保留：消息缓冲池泛型擦除，调用方承担转型
   @SuppressWarnings({"unchecked", "rawtypes"})
   private Handle<T> handle;
 
@@ -67,6 +68,7 @@ public abstract class PooledMessage<T extends PooledMessage<T>> {
    *
    * <p>调用后<strong>不可再使用此对象</strong>，所有引用应置为 null。
    */
+  // YDIZ-WARN-001 允许保留：消息体反序列化原始类型，由具体消息类限定
   @SuppressWarnings("unchecked")
   public final void recycle() {
     reset();

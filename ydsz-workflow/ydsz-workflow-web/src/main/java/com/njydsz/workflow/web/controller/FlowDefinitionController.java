@@ -92,10 +92,10 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * @see FlowDefinitionService 流程定义服务
  * @see FlowDeployProcessDTO 部署参数 DTO
  */
-@Slf4j
 @ApiVersion("26.09.01")
-@RestController
 @Tag(name = "workflow-definition", description = "工作流流程定义统一接口")
+@Slf4j
+@RestController
 @RequestMapping("/workflow/engine")
 @RequiredArgsConstructor
 @Validated

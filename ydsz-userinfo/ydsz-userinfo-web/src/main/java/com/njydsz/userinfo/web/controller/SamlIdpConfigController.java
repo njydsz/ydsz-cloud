@@ -37,12 +37,12 @@ import com.njydsz.userinfo.server.service.SamlIdpConfigService;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Slf4j
+@Tag(name = "SAML IdP 配置", description = "SAML 身份提供者配置管理（多租户）")
 @RestController
 @RequestMapping("/saml-idp-config")
 @RequiredArgsConstructor
-@Tag(name = "SAML IdP 配置", description = "SAML 身份提供者配置管理（多租户）")
-@ApiVersion("26.09.01")
 public class SamlIdpConfigController {
 
   private final SamlIdpConfigService configService;

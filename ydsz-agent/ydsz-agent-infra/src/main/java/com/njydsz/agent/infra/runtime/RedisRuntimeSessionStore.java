@@ -212,6 +212,7 @@ public class RedisRuntimeSessionStore implements RuntimeSessionStore {
    * @param key 会话分区键
    * @return 状态映射；不存在时返回空
    */
+  // YDIZ-WARN-001 允许保留：Redis 反序列化泛型擦除，依赖后续 instanceof 校验
   @SuppressWarnings("unchecked")
   private Optional<Map<String, Object>> loadRawState(AgentStateKey key) {
     return stateStore.get(key, (Class<Map<String, Object>>) (Class<?>) Map.class);

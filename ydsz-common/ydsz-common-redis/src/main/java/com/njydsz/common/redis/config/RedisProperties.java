@@ -144,6 +144,48 @@ public class RedisProperties {
   /** 空值缓存 TTL（秒），用于缓存防护的空值占位过期时间 默认值：1800（30 分钟） */
   private int nullValueTtlSeconds = 1800;
 
+  /** 内部随机数生成器（static 避免每次调用创建开销） */
+  private static final java.util.Random TTL_RANDOM = new java.util.Random();
+
+  /**
+   * TTL 抖动幅度百分比（±ttlJitterPercent%），用于分散缓存过期时间、防缓存雪崩。
+   *
+   * <p>取值 0 表示不抖动。建议值 10（±10%），与业界主流 Redis 防雪崩策略（美团 Squirrel、阿里 Tair）一致。
+   */
+  private int ttlJitterPercent = 10;
+
+  /**
+   * 获取空值缓存 TTL（防缓存雪崩优化：施加 ±ttlJitterPercent% 随机抖动）。
+   *
+   * <p>当批量空值占位写入 Redis 时，加入随机抖动分散过期时刻，避免所有空值在同一秒集中失效
+   * 导致 DB 压力骤增（缓存雪崩 / 惊群效应）。
+   *
+   * <p>示例：nullValueTtlSeconds=1800、ttlJitterPercent=10，返回值范围 [1620, 1980] 秒。
+   *
+   * @return 施加抖动后的 TTL（秒），最小值为 1
+   */
+  public int getNullValueTtlSeconds() {
+    int base = nullValueTtlSeconds;
+    if (ttlJitterPercent <= 0 || base <= 1) {
+      return base;
+    }
+    int range = base * ttlJitterPercent / 100;
+    if (range <= 0) {
+      return base;
+    }
+    int jitter = TTL_RANDOM.nextInt(range * 2 + 1) - range;
+    return Math.max(1, base + jitter);
+  }
+
+  /**
+   * 获取原始空值 TTL（不施加抖动），用于需要精确过期的场景。
+   *
+   * @return 原始配置值（秒）
+   */
+  public int getNullValueTtlSecondsRaw() {
+    return nullValueTtlSeconds;
+  }
+
   /** 可观测性配置 */
   private Metrics metrics = new Metrics();
 

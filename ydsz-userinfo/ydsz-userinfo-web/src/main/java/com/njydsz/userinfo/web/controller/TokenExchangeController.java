@@ -52,12 +52,12 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
  * @see CrossDomainSsoProperties 跨域 SSO 配置
  * @see CrossDomainTokenService 跨域 Token 服务
  */
+@ApiVersion("26.09.01")
 @Slf4j
+@Tag(name = "跨域 SSO", description = "令牌交换/验证/登出通知")
 @RestController
 @RequestMapping("/sso")
 @RequiredArgsConstructor
-@Tag(name = "跨域 SSO", description = "令牌交换/验证/登出通知")
-@ApiVersion("26.09.01")
 public class TokenExchangeController {
   /** "Bearer " 前缀长度 */
   private static final int BEARER_PREFIX_LENGTH = 7;

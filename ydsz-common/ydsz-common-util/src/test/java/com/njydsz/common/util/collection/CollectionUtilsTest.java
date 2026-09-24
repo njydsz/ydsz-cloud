@@ -157,6 +157,7 @@ class CollectionUtilsTest {
     @Test
     @DisplayName("concat: 空数组返回空 List")
     void concat_emptyVarargs_returnsEmptyList() {
+      // YDIZ-WARN-001 允许保留：测试用例强制转换原始集合，运行时类型安全由 fixture 保证
       @SuppressWarnings("unchecked")
       List<Integer> result = CollectionUtils.concat(new Collection[0]);
       assertThat(result).isEmpty();

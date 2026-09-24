@@ -25,7 +25,7 @@ public class DirectoryTree {
   private String title;
 
   /** 节点是否默认展开 */
-  private Boolean spread = true;
+  private Boolean isSpread = true;
 
   /** 子节点列表 */
   private List<DirectoryTree> children;

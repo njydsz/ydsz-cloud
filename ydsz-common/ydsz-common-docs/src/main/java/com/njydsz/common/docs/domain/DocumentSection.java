@@ -31,7 +31,7 @@ public class DocumentSection {
   private String url;
 
   /** 是否有序列表；无序列表为 false */
-  private Boolean ordered;
+  private Boolean isOrdered;
 
   /** 语言标识，仅对 code 类型有效（如 ```java 中的 java） */
   private String language;

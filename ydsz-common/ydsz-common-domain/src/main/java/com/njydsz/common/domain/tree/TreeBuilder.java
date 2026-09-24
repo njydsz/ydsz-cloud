@@ -161,6 +161,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
    *
    * @param roots 根节点列表
    */
+  // YDIZ-WARN-001 允许保留：递归填充 level/path，泛型数组无法直接创建
   @SuppressWarnings("unchecked")
   private void fillLevelAndPath(List<T> roots) {
     Deque<Object[]> stack = new ArrayDeque<>(roots.size() * 2);
@@ -290,6 +291,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     while (!stack.isEmpty()) {
       Object[] frame = stack.pop();
+      // YDIZ-WARN-001 允许保留：栈帧泛型类型擦除，调用方强制转换为强类型
       @SuppressWarnings("unchecked")
       T node = (T) frame[0];
       int depth = (int) frame[1];

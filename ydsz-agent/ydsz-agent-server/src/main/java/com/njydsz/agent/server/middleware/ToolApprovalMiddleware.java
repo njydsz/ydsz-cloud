@@ -167,6 +167,7 @@ public class ToolApprovalMiddleware implements AgentMiddleware {
    * @param context 中间件上下文
    * @return 已审批调用 ID 集合
    */
+  // YDIZ-WARN-001 允许保留：中间件上下文返回泛型字段，由子类强转
   @SuppressWarnings("unchecked")
   private Set<String> resolveBypassIds(MiddlewareContext context) {
     Object value = context.getAttribute(BYPASS_CALL_IDS_KEY);

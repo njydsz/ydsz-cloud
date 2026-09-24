@@ -117,6 +117,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
   }
 
   /** 处理接收到的广播消息 */
+  // YDIZ-WARN-001 允许保留：Redis 反序列化配置快照，由 DTO 反序列化后强校验
   @SuppressWarnings("unchecked")
   private void handleReceivedMessage(RedisPubSubOps.PubSubMessage message) {
     if (message == null || message.getBody() == null) {

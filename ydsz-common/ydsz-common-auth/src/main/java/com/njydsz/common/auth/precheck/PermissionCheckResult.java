@@ -4,7 +4,6 @@ import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
@@ -33,17 +32,16 @@ import lombok.NoArgsConstructor;
  * @author ydsz-team
  * @since 26.09.01
  */
-@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PermissionCheckResult {
 
   /** 是否通过预检 */
-  private boolean checkPassed;
+  private boolean isCheckPassed;
 
   /** 当前用户是否拥有所需权限 */
-  private boolean hasPermission;
+  private boolean isHasPermission;
 
   /** 缺少的权限列表 */
   private Set<String> missingPermissions;
@@ -73,8 +71,8 @@ public class PermissionCheckResult {
    */
   public static PermissionCheckResult pass() {
     return PermissionCheckResult.builder()
-        .checkPassed(true)
-        .hasPermission(true)
+        .isCheckPassed(true)
+        .isHasPermission(true)
         .message("权限校验通过")
         .build();
   }
@@ -87,8 +85,8 @@ public class PermissionCheckResult {
    */
   public static PermissionCheckResult pass(String message) {
     return PermissionCheckResult.builder()
-        .checkPassed(true)
-        .hasPermission(true)
+        .isCheckPassed(true)
+        .isHasPermission(true)
         .message(message)
         .build();
   }
@@ -103,8 +101,8 @@ public class PermissionCheckResult {
   public static PermissionCheckResult deny(
       Set<String> missingPermissions, Set<String> grantedPermissions) {
     return PermissionCheckResult.builder()
-        .checkPassed(false)
-        .hasPermission(false)
+        .isCheckPassed(false)
+        .isHasPermission(false)
         .missingPermissions(missingPermissions)
         .grantedPermissions(grantedPermissions)
         .message("权限不足")
@@ -123,8 +121,8 @@ public class PermissionCheckResult {
   public static PermissionCheckResult deny(
       String message, Set<String> missingPermissions, Set<String> grantedPermissions) {
     return PermissionCheckResult.builder()
-        .checkPassed(false)
-        .hasPermission(false)
+        .isCheckPassed(false)
+        .isHasPermission(false)
         .missingPermissions(missingPermissions)
         .grantedPermissions(grantedPermissions)
         .message(message)
@@ -141,8 +139,8 @@ public class PermissionCheckResult {
    */
   public static PermissionCheckResult deny(String message, Set<String> missingPermissions) {
     return PermissionCheckResult.builder()
-        .checkPassed(false)
-        .hasPermission(false)
+        .isCheckPassed(false)
+        .isHasPermission(false)
         .missingPermissions(missingPermissions)
         .message(message)
         .errorCode("A03000")
@@ -150,7 +148,7 @@ public class PermissionCheckResult {
   }
 
   public boolean isCheckPassed() {
-    return checkPassed;
+    return isCheckPassed;
   }
 
   /**
@@ -162,6 +160,6 @@ public class PermissionCheckResult {
    * @return {@code true} 表示拥有所需权限，否则为 {@code false}
    */
   public boolean hasPermission() {
-    return hasPermission;
+    return isHasPermission;
   }
 }

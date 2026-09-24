@@ -344,6 +344,7 @@ public class SearchAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean
+  // YDIZ-WARN-001 允许保留：搜索提供者泛型擦除，由 SearchClient 强转
   @SuppressWarnings("unchecked")
   public SearchCacheService searchCacheService(
       SearchProperties properties, ObjectProvider<StringRedisTemplate> redisProvider) {

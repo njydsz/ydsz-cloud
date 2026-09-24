@@ -18,6 +18,7 @@ import com.njydsz.agent.domain.skill.SkillRuntime;
 import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.agent.domain.tool.ToolRegistration;
 import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.agent.infra.tool.DefaultToolRegistry;
 
 /**
  * Skill → Tool 适配器，桥接已有 {@link ToolRegistry}。
@@ -96,7 +97,7 @@ public class SkillToolAdapter {
     ToolRegistration registration = new ToolRegistration(definition, executor);
 
     // 使用 ToolRegistration 注册（保留 description 和 schema）
-    if (toolRegistry instanceof com.njydsz.agent.infra.tool.DefaultToolRegistry defaultRegistry) {
+    if (toolRegistry instanceof DefaultToolRegistry defaultRegistry) {
       defaultRegistry.register(registration);
     } else {
       toolRegistry.register(descriptor.skillCode(), executor);

@@ -36,6 +36,7 @@ public class JsonMessageSerializer implements MessageSerializer {
     return "JSON";
   }
 
+  // YDIZ-WARN-001 允许保留：序列化原始类型到 Message 负载，由协议前置校验限定
   @SuppressWarnings("unchecked")
   @Override
   public <T> T deserialize(String json, Class<T> clazz) {

@@ -79,6 +79,7 @@ public class CodeExecutionTaskExecutor implements AsyncTaskExecutor {
       }
 
       // 解析模块白名单
+      // YDIZ-WARN-001 允许保留：泛型擦除，强制类型转换编译期无法验证
       @SuppressWarnings("unchecked")
       List<String> allowedModules = params.get("allowedModules") instanceof List<?> list
           ? list.stream().map(Object::toString).toList()

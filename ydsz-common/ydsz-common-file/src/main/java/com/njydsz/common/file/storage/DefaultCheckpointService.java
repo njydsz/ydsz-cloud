@@ -134,7 +134,7 @@ public class DefaultCheckpointService implements CheckpointService {
         uploadedPart.setPartNumber(part.partNumber());
         uploadedPart.setSize(part.size());
         uploadedPart.setETag(part.eTag());
-        uploadedPart.setUploaded(true);
+        uploadedPart.setIsUploaded(true);
         recoveredParts.add(uploadedPart);
         uploadedBytes += part.size();
       }
@@ -184,7 +184,7 @@ public class DefaultCheckpointService implements CheckpointService {
         newPart.setPartNumber(partNumber);
         newPart.setChunkMd5(chunkMd5);
         newPart.setSize(chunkSize);
-        newPart.setUploaded(true);
+        newPart.setIsUploaded(true);
         parts.add(newPart);
       }
 

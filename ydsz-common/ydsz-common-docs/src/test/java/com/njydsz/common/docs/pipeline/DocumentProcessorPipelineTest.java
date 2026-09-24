@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -145,8 +147,8 @@ class DocumentProcessorPipelineTest {
     @DisplayName("安全扫描高风险 + blockOnHighRisk 应阻止解析")
     void shouldBlockWhenHighRiskDetected() throws Exception {
       // 模拟临时文件写入成功
-      java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("test-", ".tmp");
-      java.nio.file.Files.write(tempFile, "data".getBytes(StandardCharsets.UTF_8));
+      Path tempFile = Files.createTempFile("test-", ".tmp");
+      Files.write(tempFile, "data".getBytes(StandardCharsets.UTF_8));
       when(tempFileManager.createAndWrite(any(), any(), any())).thenReturn(tempFile);
 
       DocumentProcessorPipeline.Pipeline pipeline =
@@ -162,7 +164,7 @@ class DocumentProcessorPipelineTest {
       // 注意：DOCX 未注册解析器，但安全扫描会在解析前触发，若扫描结果为 SAFE，则进入解析阶段失败
       // 本测试主要验证管道不抛出异常
       assertThat(result).isNotNull();
-      java.nio.file.Files.deleteIfExists(tempFile);
+      Files.deleteIfExists(tempFile);
     }
 
     @Test

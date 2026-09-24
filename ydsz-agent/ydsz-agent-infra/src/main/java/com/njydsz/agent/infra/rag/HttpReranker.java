@@ -142,6 +142,7 @@ public class HttpReranker implements Reranker {
    * @return 按相关性降序排列的文本块列表
    */
   @Override
+  // YDIZ-WARN-001 允许保留：Reranker 返回原始分值集合，由调用方转换为强类型
   @SuppressWarnings("unchecked")
   public List<TextChunk> rerank(String query, List<TextChunk> chunks, int topK) {
     if (chunks == null || chunks.isEmpty()) {
@@ -181,6 +182,7 @@ public class HttpReranker implements Reranker {
     return false;
   }
 
+  // YDIZ-WARN-001 允许保留：Reranker 返回原始分值集合，由调用方转换为强类型
   @SuppressWarnings("unchecked")
   private List<TextChunk> callRerankApi(String query, List<TextChunk> chunks, int topK) {
     try {

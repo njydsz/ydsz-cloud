@@ -65,12 +65,12 @@ import com.njydsz.userinfo.server.auth.UserSessionAdminService;
  * @see UserBanService 账号封禁服务
  * @see UserSessionAdminService 会话治理服务
  */
+@ApiVersion("26.09.01")
 @Slf4j
+@Tag(name = "管理员封禁与会话治理", description = "账号封禁/解封、在线会话管理与强制下线")
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
-@Tag(name = "管理员封禁与会话治理", description = "账号封禁/解封、在线会话管理与强制下线")
-@ApiVersion("26.09.01")
 public class AdminSessionController {
 
   private final UserBanService userBanService;

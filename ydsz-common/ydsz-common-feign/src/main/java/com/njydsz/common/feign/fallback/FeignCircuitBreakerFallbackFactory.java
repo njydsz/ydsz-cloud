@@ -63,7 +63,7 @@ public class FeignCircuitBreakerFallbackFactory<T> implements FallbackFactory<T>
    * @return 降级代理实例
    */
   @Override
-  // YDIZ-WARN-001 泛型擦除：FallbackFactory.create 返回类型为 T 但实际返回代理对象，unchecked cast 不可避免
+  // YDIZ-WARN-001 允许保留：Fallback 工厂返回泛型，由 Feign 框架强转为具体类型
   @SuppressWarnings("unchecked")
   public T create(Throwable cause) {
     Throwable effectiveCause = cause != null ? cause : this.cause;

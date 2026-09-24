@@ -292,7 +292,7 @@ public class SseMcpClientProvider implements McpClientProvider {
    * @param response JSON-RPC 响应字符串
    * @return 工具结果内容文本
    */
-  // YDIZ-WARN-001 允许保留：泛型擦除，YdszJson.parseMap() 返回 Map<?, ?> 编译期无法验证 Map<String, Object> 强转
+  // YDIZ-WARN-001 允许保留：MCP SDK 返回原始类型 Map，由协议层保证结构
   @SuppressWarnings("unchecked")
   private String extractToolResult(String response) {
     try {

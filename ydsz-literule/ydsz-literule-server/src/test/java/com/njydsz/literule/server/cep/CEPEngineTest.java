@@ -177,6 +177,7 @@ class CEPEngineTest {
 
   @Nested
   @DisplayName("事件投递与类型匹配")
+  // YDIZ-WARN-001 允许保留：测试用例 mock CEP 事件，原始类型转换由 fixture 保证
   @SuppressWarnings("unchecked")
   class EventFeeding {
 

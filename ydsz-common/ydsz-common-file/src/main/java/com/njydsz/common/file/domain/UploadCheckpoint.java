@@ -111,7 +111,7 @@ public class UploadCheckpoint {
     private String localFilePath;
 
     /** 是否已上传完成 */
-    private Boolean uploaded;
+    private Boolean isUploaded;
 
     /** 分片数据的 MD5 校验值 */
     private String chunkMd5;

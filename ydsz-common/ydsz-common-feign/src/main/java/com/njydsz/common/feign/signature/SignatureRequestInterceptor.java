@@ -114,6 +114,7 @@ public class SignatureRequestInterceptor implements RequestInterceptor {
    * @param requestTemplate Feign 请求模板
    * @return Content-Type 值，不存在时返回 null
    */
+  // YDIZ-WARN-001 允许保留：签名头泛型集合擦除，由 HTTP 层强转为 String
   @SuppressWarnings("unchecked")
   private String getContentType(RequestTemplate requestTemplate) {
     Map<String, Collection<String>> headers = requestTemplate.headers();

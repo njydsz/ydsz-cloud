@@ -150,6 +150,7 @@ public class BatchChatTaskExecutor implements AsyncTaskExecutor {
     }
   }
 
+  // YDIZ-WARN-001 允许保留：泛型擦除，强制类型转换编译期无法验证
   @SuppressWarnings("unchecked")
   private List<Map<String, Object>> getListParam(Map<String, Object> params, String key) {
     Object value = params.get(key);

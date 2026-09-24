@@ -4,8 +4,11 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -754,18 +757,22 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   public BatchResultDTO<String> batchUpdateGroup(List<String> jobIds, String newGroup) {
     List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
+    // 一次性批量加载，消除 N+1 查询
+    Set<String> idSet = new HashSet<>(jobIds);
+    List<JobVO> allJobs = jobRepository.findAllById(idSet);
+    Map<String, JobVO> jobMap = new HashMap<>();
+    for (JobVO j : allJobs) {
+      jobMap.put(j.getId(), j);
+    }
     for (String jobId : jobIds) {
       try {
-        JobVO vo =
-            jobRepository
-                .findById(jobId)
-                .orElseThrow(
-                    () ->
-                        SysException.builder()
-                            .resultCode(YdszResultCode.NOT_FOUND)
-                            .message("任务不存在")
-                            .build());
-        JobVO j = voToJob(vo);
+        JobVO j = jobMap.get(jobId);
+        if (j == null) {
+          throw SysException.builder()
+              .resultCode(YdszResultCode.NOT_FOUND)
+              .message("任务不存在")
+              .build();
+        }
         j.setJobGroup(newGroup);
         jobRepository.updateById(j);
         details.add(BatchResultDTO.ItemResult.success(jobId));
@@ -795,18 +802,22 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     validateCron(cronExpression);
     List<BatchResultDTO.ItemResult<String>> details = new ArrayList<>(jobIds.size());
     int success = 0;
+    // 一次性批量加载，消除 N+1 查询
+    Set<String> idSet = new HashSet<>(jobIds);
+    List<JobVO> allJobs = jobRepository.findAllById(idSet);
+    Map<String, JobVO> jobMap = new HashMap<>();
+    for (JobVO j : allJobs) {
+      jobMap.put(j.getId(), j);
+    }
     for (String jobId : jobIds) {
       try {
-        JobVO vo =
-            jobRepository
-                .findById(jobId)
-                .orElseThrow(
-                    () ->
-                        SysException.builder()
-                            .resultCode(YdszResultCode.NOT_FOUND)
-                            .message("任务不存在")
-                            .build());
-        JobVO j = voToJob(vo);
+        JobVO j = jobMap.get(jobId);
+        if (j == null) {
+          throw SysException.builder()
+              .resultCode(YdszResultCode.NOT_FOUND)
+              .message("任务不存在")
+              .build();
+        }
         // 仅 CRON 类型任务支持修改 Cron 表达式
         ScheduleType type = ScheduleType.parse(j.getScheduleType());
         if (type != ScheduleType.CRON) {

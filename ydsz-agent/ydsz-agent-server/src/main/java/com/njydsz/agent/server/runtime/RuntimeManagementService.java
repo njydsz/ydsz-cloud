@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.runtime.RuntimeSession;
 import com.njydsz.agent.domain.runtime.RuntimeSessionStatus;
 import com.njydsz.agent.domain.runtime.RuntimeSessionStore;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * Agent 运行时管理服务。
@@ -62,7 +62,7 @@ public class RuntimeManagementService {
      */
     public String registerSession(String tenantId, String userId, String agentCode,
                                   String agentType, String model, String source) {
-        String executionId = UUID.randomUUID().toString();
+        String executionId = IdGenerator.nextIdStr();
         LocalDateTime now = LocalDateTime.now();
 
         RuntimeSession session = RuntimeSession.builder()

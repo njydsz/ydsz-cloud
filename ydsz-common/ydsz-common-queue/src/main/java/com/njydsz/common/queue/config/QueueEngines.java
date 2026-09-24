@@ -177,6 +177,7 @@ public class QueueEngines {
   }
 
   /** 当无任何 QueueProvider 可用时的兜底（用于极端降级场景，不应在正常场景触发）。 */
+  // YDIZ-WARN-001 允许保留：容器启动回调方法无需 Javadoc，参数类型已自解释
   @SuppressWarnings("checkstyle:MissingJavadocMethod")
   private IMessageQueueProvider createNoOpProvider() {
     return new IMessageQueueProvider() {

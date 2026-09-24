@@ -30,6 +30,7 @@ import com.njydsz.common.socket.constant.WebSocketConstants;
 public final class WebSocketSessionAttributes {
 
   /** 空实例（不可变空映射） */
+  // YDIZ-WARN-001 允许保留：WebSocket 会话属性键名复用字符串，避免重复字面量
   @SuppressWarnings("java:S1192")
   public static final WebSocketSessionAttributes EMPTY =
       new WebSocketSessionAttributes(Collections.emptyMap());

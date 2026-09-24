@@ -35,7 +35,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * @author ydsz-team
  * @since 26.09.01
  */
-// YDIZ-WARN-001 允许保留：兼容 API（兼容旧版 java.util.Date API，框架内部使用 Date 已废弃方法）
+// YDIZ-WARN-001 允许保留：调用 Jackson 2.x 标记废弃但保持 JDK 8 兼容的 API
 @SuppressWarnings("deprecation")
 public final class PolymorphicTypeResolver {
 

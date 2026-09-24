@@ -75,7 +75,8 @@ public class DataPermissionContext {
    *
    * @since 26.09.19
    */
-  @SuppressWarnings("squid:S2386") // 集合已通过 Collections.unmodifiableXxx 包装，不可外部修改
+  // YDIZ-WARN-001 允许保留：集合已通过 Collections.unmodifiableXxx 包装，不可外部修改
+  @SuppressWarnings("squid:S2386")
   public static final DataPermissionContext EMPTY;
 
   static {

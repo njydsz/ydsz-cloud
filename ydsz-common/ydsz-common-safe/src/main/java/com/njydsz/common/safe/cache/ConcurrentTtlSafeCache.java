@@ -59,7 +59,7 @@ public class ConcurrentTtlSafeCache<K, V> implements SafeCache<K, V> {
   }
 
   @Override
-  // 缓存值使用泛型擦除，map.get() 返回 TimestampedValue 需要强转为 V；由于写入时类型安全保证，忽略 unchecked
+  // YDIZ-WARN-001 允许保留：安全缓存值类型泛型擦除，调用方显式转型
   @SuppressWarnings("unchecked")
   public V getIfPresent(K key) {
     if (key == null) {

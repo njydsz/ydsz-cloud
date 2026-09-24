@@ -59,6 +59,9 @@ public final class FileOps {
   public static final Set<String> OFFICE_SUFFIXES =
       Set.of("doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf");
 
+  /** getBytes() 安全阈值（字节）：50MB。超过此值建议使用 getInputStream() 流式读取 */
+  public static final long SAFE_GETBYTES_THRESHOLD_BYTES = 50L * 1024 * 1024;
+
   /** 支持直接预览的文件后缀（无需转换） */
   public static final Set<String> DIRECT_PREVIEW_SUFFIXES =
       Set.of("pdf", "txt", "md", "html", "htm", "csv", "json", "xml");
@@ -184,11 +187,47 @@ public final class FileOps {
       return size;
     }
 
+    /**
+     * 读取文件全部字节（小文件场景）。
+     *
+     * <p><b>注意：</b>本方法将整个文件读入 JVM 堆内存，文件大小不应超过 {@link #SAFE_GETBYTES_THRESHOLD_BYTES}。
+     * 对于大文件（导出 Excel/PDF 等），请使用 {@link #getInputStream()} 流式读取，
+     * 或先调用 {@link #getSize()} 判断体积。超限调用将抛出 {@link OutOfMemoryError} 或 {@link IOException}。
+     *
+     * @return 文件字节数组
+     * @throws IOException 读取失败或文件大小超过安全阈值 {@link #SAFE_GETBYTES_THRESHOLD_BYTES}
+     * @see #getInputStream()
+     * @see #getSize()
+     */
     @Override
     public byte[] getBytes() throws IOException {
+      if (size > SAFE_GETBYTES_THRESHOLD_BYTES) {
+        throw new IOException(
+            String.format(
+                "文件过大不宜使用 getBytes() 读入内存（size=%d bytes > 阈值=%d bytes），"
+                    + "请使用 getInputStream() 流式读取或与 getSize() 配合分块处理",
+                size, SAFE_GETBYTES_THRESHOLD_BYTES));
+      }
       return Files.readAllBytes(filePath);
     }
 
+    /**
+     * 获取文件输入流（大文件场景推荐）。
+     *
+     * <p>使用 try-with-resources 包裹，避免文件句柄泄漏：
+     *
+     * <pre>{@code
+     * try (InputStream in = multipartFile.getInputStream()) {
+     *   // 分块读取，每次 8KB
+     *   byte[] buf = new byte[8192];
+     *   int n;
+     *   while ((n = in.read(buf)) != -1) { ... }
+     * }
+     * }</pre>
+     *
+     * @return 输入流，调用方负责关闭
+     * @throws IOException 打开文件失败
+     */
     @Override
     public InputStream getInputStream() throws IOException {
       return Files.newInputStream(filePath);

@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -20,6 +18,7 @@ import com.njydsz.agent.domain.insight.InsightReportStatus;
 import com.njydsz.agent.domain.insight.InsightSection;
 import com.njydsz.agent.domain.insight.ReportRenderer;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 洞察报告服务实现。
@@ -178,7 +177,7 @@ public class InsightReportServiceImpl implements InsightReportService {
    * 生成唯一报告业务 ID。
    */
   private String generateReportId() {
-    return "rpt_" + UUID.randomUUID().toString().replace("-", "").substring(0, REPORT_ID_RANDOM_LENGTH);
+    return "rpt_" + IdGenerator.nextIdStr();
   }
 
   /**

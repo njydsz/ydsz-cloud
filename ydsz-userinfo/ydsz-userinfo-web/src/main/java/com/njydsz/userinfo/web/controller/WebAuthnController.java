@@ -55,12 +55,12 @@ import com.njydsz.userinfo.server.auth.WebAuthnService;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Slf4j
+@Tag(name = "WebAuthn", description = "FIDO2 Passkey 无密码认证")
 @RestController
 @RequestMapping("/webauthn")
 @RequiredArgsConstructor
-@Tag(name = "WebAuthn", description = "FIDO2 Passkey 无密码认证")
-@ApiVersion("26.09.01")
 public class WebAuthnController {
 
   /** WebAuthn 服务 */

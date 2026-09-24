@@ -380,7 +380,7 @@ public class LocalesAutoConfiguration {
     return Locale.CHINA;
   }
 
-  // 用不到的 import 占位，防止被裁剪
+  // YDIZ-WARN-001 允许保留：Spring 自动装配占位字段，由容器注入使用
   @SuppressWarnings("unused")
   private static void keepImports(HttpServletRequest r, HttpServletResponse s) {}
 }

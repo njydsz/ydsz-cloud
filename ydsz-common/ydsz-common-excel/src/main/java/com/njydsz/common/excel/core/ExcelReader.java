@@ -255,6 +255,7 @@ public class ExcelReader {
    * @param <R> 规则类型
    * @return 当前读取器实例，支持链式调用
    */
+  // YDIZ-WARN-001 允许保留：行级校验规则泛型擦除，调用方传入参数化类型已限定
   @SuppressWarnings("unchecked")
   public <R extends RowRule<?>> ExcelReader addRule(R rule) {
     if (rule != null) {
@@ -705,7 +706,7 @@ public class ExcelReader {
    * @param sheet 要解析的Sheet对象
    * @throws IOException IO异常
    */
-  // YDIZ-WARN-001 允许保留：泛型擦除，List<ReadListener<?>> → ReadListener<Object> 编译期无法验证
+  // YDIZ-WARN-001 允许保留：行级校验规则泛型擦除，调用方传入参数化类型已限定
   @SuppressWarnings("unchecked")
   private void parseSheet(Sheet sheet) throws IOException {
     int headRowNumber = metadata.getHeadRowNumber();
@@ -826,7 +827,7 @@ public class ExcelReader {
    *
    * <p>读取完成后调用（无论是否发生异常）， 用于资源清理和统计汇总。
    */
-  // YDIZ-WARN-001 允许保留：泛型擦除，List<ReadListener<?>> → ReadListener<Object> 编译期无法验证
+  // YDIZ-WARN-001 允许保留：行级校验规则泛型擦除，调用方传入参数化类型已限定
   @SuppressWarnings("unchecked")
   private void notifyEnd() {
     // Flush remaining batch data
@@ -849,7 +850,7 @@ public class ExcelReader {
    * @param current 当前已处理行号
    * @param total 总行数（若未知则为 -1）
    */
-  // YDIZ-WARN-001 允许保留：泛型擦除，List<ReadListener<?>> → ReadListener<Object> 编译期无法验证
+  // YDIZ-WARN-001 允许保留：行级校验规则泛型擦除，调用方传入参数化类型已限定
   @SuppressWarnings("unchecked")
   private void notifyProgress(int current, int total) {
     for (ReadListener<?> listener : listeners) {

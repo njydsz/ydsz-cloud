@@ -44,12 +44,12 @@ import com.njydsz.common.core.response.YdszResponse;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
+@Tag(name = "审计日志管理", description = "审计日志查询（运营/管理后台）")
 @Slf4j
 @RestController
 @RequestMapping("/admin/audit")
 @RequiredArgsConstructor
-@ApiVersion("26.09.01")
-@Tag(name = "审计日志管理", description = "审计日志查询（运营/管理后台）")
 @AuthApiPermission(apiCodes = "sys:audit:list")
 public class AuditAdminController {
 

@@ -113,7 +113,7 @@ public class SheetXmlReader {
    * @param is Sheet XML 输入流
    * @throws IOException 读取异常
    */
-  // YDIZ-WARN-001 允许保留：泛型擦除，List<ReadListener<?>> → ReadListener<Object> 编译期无法验证
+  // YDIZ-WARN-001 允许保留：SAX 解析单元格类型泛型擦除，值转换由调用方承担
   @SuppressWarnings("unchecked")
   void parse(InputStream is) throws IOException {
     byte[] data = readAllBytesDirect(is);

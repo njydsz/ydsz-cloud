@@ -84,10 +84,10 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  */
 @ApiVersion("26.09.01")
 @Slf4j
+@Tag(name = "用户管理", description = "用户账号 CRUD、密码管理、角色分配")
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
-@Tag(name = "用户管理", description = "用户账号 CRUD、密码管理、角色分配")
 public class UserAccountController {
 
   private final UserAccountService service;

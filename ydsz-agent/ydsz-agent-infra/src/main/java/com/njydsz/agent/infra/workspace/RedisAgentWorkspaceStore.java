@@ -129,6 +129,7 @@ public class RedisAgentWorkspaceStore implements AgentWorkspaceStore {
    * @param stateKey 工作区分区键
    * @return 状态映射；不存在时返回空
    */
+  // YDIZ-WARN-001 允许保留：Redis 反序列化泛型擦除，依赖后续 instanceof 校验
   @SuppressWarnings("unchecked")
   private Optional<Map<String, Object>> loadRawState(AgentStateKey stateKey) {
     return stateStore.get(stateKey, (Class<Map<String, Object>>) (Class<?>) Map.class);

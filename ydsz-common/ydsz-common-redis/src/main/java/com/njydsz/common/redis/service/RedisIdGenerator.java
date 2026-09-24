@@ -249,6 +249,7 @@ public class RedisIdGenerator {
    * @param returnType 返回类型
    * @return 编译后的 DefaultRedisScript 实例
    */
+  // YDIZ-WARN-001 允许保留：Redis Lua 返回值泛型擦除，强转为 Number
   @SuppressWarnings("unchecked")
   private <T> DefaultRedisScript<T> getOrCreateScript(
       String name, String scriptText, Class<T> returnType) {

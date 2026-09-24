@@ -29,12 +29,12 @@ import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
  * @author ydsz-team
  * @since 26.09.13
  */
+@ApiVersion("26.09.13")
 @Slf4j
+@Tag(name = "登录日志", description = "用户登录历史查询（审计用）")
 @RestController
 @RequestMapping("/userinfo/login-log")
 @RequiredArgsConstructor
-@ApiVersion("26.09.13")
-@Tag(name = "登录日志", description = "用户登录历史查询（审计用）")
 public class LoginLogController {
 
   private final UserLoginHistoryRepository loginHistoryRepository;

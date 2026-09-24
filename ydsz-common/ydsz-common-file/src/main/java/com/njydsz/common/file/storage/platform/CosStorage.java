@@ -170,7 +170,7 @@ public class CosStorage extends AbstractFileStorage {
           folderName.endsWith(FileConstant.DIR_SPLIT)
               ? folderName
               : folderName + FileConstant.DIR_SPLIT;
-      // FQN-OK: name conflict with ObjectMetadata
+      // FQN-OK: 与 domain ObjectMetadata 冲突，必须使用全限定名区分
       com.qcloud.cos.model.ObjectMetadata metadata =
           cosClient.getObjectMetadata(bucketName, key);
       return metadata != null;
@@ -193,9 +193,11 @@ public class CosStorage extends AbstractFileStorage {
               : folderName + FileConstant.DIR_SPLIT;
       if (!doFolderExists(bucketName, key)) {
         InputStream emptyStream = new ByteArrayInputStream(new byte[] {});
-        com.qcloud.cos.model.ObjectMetadata objectMetadata =
-            new com.qcloud.cos.model.ObjectMetadata(); // FQN-OK: name conflict with ObjectMetadata
+      // FQN-OK: 与 domain ObjectMetadata 冲突，必须使用全限定名区分
+      com.qcloud.cos.model.ObjectMetadata objectMetadata =
+          new com.qcloud.cos.model.ObjectMetadata();
         objectMetadata.setContentLength(0);
+
         PutObjectRequest putObjectRequest =
             new PutObjectRequest(bucketName, key, emptyStream, objectMetadata);
         cosClient.putObject(putObjectRequest);
@@ -219,8 +221,9 @@ public class CosStorage extends AbstractFileStorage {
       long size,
       String contentType) {
     try {
+      // FQN-OK: 与 domain ObjectMetadata 冲突，必须使用全限定名区分
       com.qcloud.cos.model.ObjectMetadata objectMetadata =
-          new com.qcloud.cos.model.ObjectMetadata(); // FQN-OK: name conflict with ObjectMetadata
+          new com.qcloud.cos.model.ObjectMetadata();
       objectMetadata.setContentLength(size);
       if (contentType != null) {
         objectMetadata.setContentType(contentType);
@@ -323,7 +326,7 @@ public class CosStorage extends AbstractFileStorage {
       long size) {
     try {
       com.qcloud.cos.model.ObjectMetadata metadata =
-          new com.qcloud.cos.model.ObjectMetadata(); // FQN-OK: name conflict with ObjectMetadata
+          new com.qcloud.cos.model.ObjectMetadata(); // FQN-OK: 与 domain ObjectMetadata 冲突
       metadata.setContentLength(size);
       UploadPartRequest uploadPartRequest = new UploadPartRequest();
       uploadPartRequest.setBucketName(bucketName);
@@ -493,7 +496,7 @@ public class CosStorage extends AbstractFileStorage {
       }
       ListObjectsResult result = new ListObjectsResult();
       result.setObjects(objects);
-      result.setHasMore(hasMore);
+      result.setIsHasMore(hasMore);
       result.setNextCursor(nextCursor);
       result.setObjectCount(objects.size());
       return result;

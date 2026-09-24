@@ -52,7 +52,7 @@ public class WebSocketCircuitBreaker {
   }
 
   private final String name;
-  private final io.github.resilience4j.circuitbreaker.CircuitBreaker delegate;
+  private final CircuitBreaker delegate;
 
   /**
    * 构造 WebSocket 熔断器。
@@ -95,7 +95,7 @@ public class WebSocketCircuitBreaker {
    */
   public <T> T execute(Supplier<T> operation, Supplier<T> fallback) {
     try {
-      return io.github.resilience4j.circuitbreaker.CircuitBreaker
+      return CircuitBreaker
           .decorateSupplier(delegate, operation)
           .get();
     } catch (CallNotPermittedException e) {
@@ -117,7 +117,7 @@ public class WebSocketCircuitBreaker {
    */
   public void execute(Runnable operation, Runnable fallback) {
     try {
-      io.github.resilience4j.circuitbreaker.CircuitBreaker
+      CircuitBreaker
           .decorateRunnable(delegate, operation)
           .run();
     } catch (CallNotPermittedException e) {

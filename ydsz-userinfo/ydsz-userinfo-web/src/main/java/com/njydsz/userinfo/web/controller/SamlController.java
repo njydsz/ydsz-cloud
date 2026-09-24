@@ -58,12 +58,12 @@ import com.njydsz.userinfo.server.service.SamlIdpConfigService;
  * @author ydsz-team
  * @since 26.09.01
  */
+@ApiVersion("26.09.01")
 @Slf4j
+@Tag(name = "SAML 2.0", description = "SAML Service Provider 标准端点")
 @RestController
 @RequestMapping("/saml")
 @RequiredArgsConstructor
-@Tag(name = "SAML 2.0", description = "SAML Service Provider 标准端点")
-@ApiVersion("26.09.01")
 public class SamlController {
 
   /** SAML 2.0 SP 服务 */

@@ -45,12 +45,12 @@ import com.njydsz.userinfo.server.service.ApiKeyService;
  * @author ydsz-team
  * @since 26.09.07
  */
+@ApiVersion("26.09.01")
 @Slf4j
+@Tag(name = "API Key 管理", description = "API Key 的创建、查询、撤销、启用/禁用")
 @RestController
 @RequestMapping("/apikey")
 @RequiredArgsConstructor
-@Tag(name = "API Key 管理", description = "API Key 的创建、查询、撤销、启用/禁用")
-@ApiVersion("26.09.01")
 public class ApiKeyController {
 
   private final ApiKeyService apiKeyService;

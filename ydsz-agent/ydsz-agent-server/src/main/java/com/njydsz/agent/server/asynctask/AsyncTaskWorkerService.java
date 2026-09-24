@@ -3,7 +3,6 @@ package com.njydsz.agent.server.asynctask;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
 import com.njydsz.agent.domain.entity.AsyncTask;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 异步任务 Worker 调度服务。
@@ -66,7 +66,7 @@ public class AsyncTaskWorkerService {
                                  AsyncTaskExecutorRegistry executorRegistry) {
     this.taskStore = taskStore;
     this.executorRegistry = executorRegistry;
-    this.workerId = "worker-" + UUID.randomUUID().toString().substring(0, WORKER_ID_SUFFIX_LENGTH);
+    this.workerId = "worker-" + IdGenerator.nextIdStr();
     log.info("[AsyncTask-Worker] Worker 初始化完成: workerId={}, storeType={}",
         workerId, taskStore.getType());
   }

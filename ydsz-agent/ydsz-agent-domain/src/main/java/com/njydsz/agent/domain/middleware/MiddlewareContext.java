@@ -304,6 +304,7 @@ public class MiddlewareContext {
    * @param <T> 类型参数
    * @return 属性值，不存在或类型不匹配返回 null
    */
+  // YDIZ-WARN-001 允许保留：中间件上下文返回泛型字段，由子类强转
   @SuppressWarnings("unchecked")
   public <T> T getAttribute(String key, Class<T> type) {
     Object value = this.attributes.get(key);

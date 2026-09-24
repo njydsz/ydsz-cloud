@@ -88,6 +88,7 @@ public class EnumConverter implements CellValueConverter {
    * @param targetType 枚举类型（已由 {@link #supports} 确认为枚举）
    * @return 该类型所有常量的名称映射，永不为 {@code null}
    */
+  // YDIZ-WARN-001 允许保留：枚举常量泛型转型，Class.getEnumConstants() 返回原始类型
   @SuppressWarnings("unchecked")
   private static Map<String, Enum<?>> nameIndex(Class<?> targetType) {
     return NAME_INDEX_CACHE.computeIfAbsent(
@@ -109,6 +110,7 @@ public class EnumConverter implements CellValueConverter {
    * @param stringValue 字符串值
    * @param enumValue 枚举值
    */
+  // YDIZ-WARN-001 允许保留：枚举常量泛型转型，Class.getEnumConstants() 返回原始类型
   @SuppressWarnings("unchecked")
   public static void registerMapping(Class<?> enumClass, String stringValue, Enum<?> enumValue) {
     CUSTOM_MAPPINGS

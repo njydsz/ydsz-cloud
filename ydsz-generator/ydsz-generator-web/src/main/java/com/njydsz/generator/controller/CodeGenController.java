@@ -37,8 +37,8 @@ import com.njydsz.generator.vo.GenResultVO;
  * @author ydsz-team
  * @since 26.09.05
  */
-@Slf4j
 @ApiVersion("26.09.01")
+@Slf4j
 @Secured("ROLE_GENERATOR_USER")
 @RestController
 @RequestMapping("/generator/code")

@@ -188,7 +188,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
       String contentType) {
     try {
       PutObjectRequest request = new PutObjectRequest(bucketName, objectName, inputStream);
-      // FQN-OK: name conflict with ObjectMetadata
+      // FQN-OK: 与 domain com.njydsz.common.file.domain.ObjectMetadata 命名冲突
       com.obs.services.model.ObjectMetadata metadata =
           new com.obs.services.model.ObjectMetadata();
       metadata.setContentLength(size);
@@ -440,7 +440,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
       if (obsObject == null) {
         return null;
       }
-      // FQN-OK: name conflict with ObjectMetadata
+      // FQN-OK: 与 domain com.njydsz.common.file.domain.ObjectMetadata 命名冲突
       com.obs.services.model.ObjectMetadata obsMetadata =
           obsObject.getMetadata();
       ObjectMetadata metadata = new ObjectMetadata();
@@ -492,7 +492,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         if (objects.size() >= maxKeys) {
           break;
         }
-        // FQN-OK: name conflict with ObjectMetadata
+        // FQN-OK: 与 domain com.njydsz.common.file.domain.ObjectMetadata 命名冲突
         com.obs.services.model.ObjectMetadata obsMetadata =
             obsObject.getMetadata();
         ObjectMetadata om = new ObjectMetadata();
@@ -513,7 +513,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
 
       ListObjectsResult result = new ListObjectsResult();
       result.setObjects(objects);
-      result.setHasMore(hasMore);
+      result.setIsHasMore(hasMore);
       result.setNextCursor(nextCursor);
       result.setObjectCount(objects.size());
       return result;

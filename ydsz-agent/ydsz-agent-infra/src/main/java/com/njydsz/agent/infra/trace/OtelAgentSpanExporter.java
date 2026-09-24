@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import lombok.extern.slf4j.Slf4j;
@@ -111,16 +112,16 @@ public class OtelAgentSpanExporter implements AgentSpanExporter {
   /**
    * 映射内部 Span 类型字符串到 OTel SpanKind 枚举。
    */
-  private io.opentelemetry.api.trace.SpanKind mapSpanKind(String kind) {
+  private SpanKind mapSpanKind(String kind) {
     if (kind == null) {
-      return io.opentelemetry.api.trace.SpanKind.INTERNAL;
+      return SpanKind.INTERNAL;
     }
     return switch (kind.toUpperCase()) {
-      case "CLIENT" -> io.opentelemetry.api.trace.SpanKind.CLIENT;
-      case "SERVER" -> io.opentelemetry.api.trace.SpanKind.SERVER;
-      case "PRODUCER" -> io.opentelemetry.api.trace.SpanKind.PRODUCER;
-      case "CONSUMER" -> io.opentelemetry.api.trace.SpanKind.CONSUMER;
-      default -> io.opentelemetry.api.trace.SpanKind.INTERNAL;
+      case "CLIENT" -> SpanKind.CLIENT;
+      case "SERVER" -> SpanKind.SERVER;
+      case "PRODUCER" -> SpanKind.PRODUCER;
+      case "CONSUMER" -> SpanKind.CONSUMER;
+      default -> SpanKind.INTERNAL;
     };
   }
 

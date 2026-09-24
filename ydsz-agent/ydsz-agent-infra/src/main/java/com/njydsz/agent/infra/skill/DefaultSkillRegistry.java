@@ -176,6 +176,7 @@ public class DefaultSkillRegistry implements SkillRegistry {
         String paramName = entry.getKey();
         Object paramDef = entry.getValue();
         if (paramDef instanceof Map) {
+          // YDIZ-WARN-001 允许保留：Skill 注册器返回原始类型，调用方保证 subtype 关系
           @SuppressWarnings("unchecked")
           Map<String, Object> paramMap = (Map<String, Object>) paramDef;
           Object required = paramMap.get("required");

@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +17,7 @@ import com.njydsz.agent.domain.memory.MemoryExtractedFact;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 基于 LLM 的记忆整合服务实现。
@@ -219,7 +219,7 @@ public class LlmMemoryConsolidationService implements MemoryConsolidationService
                 double importance = Double.parseDouble(matcher.group(IMPORTANCE_GROUP_INDEX));
 
                 MemoryExtractedFact fact = MemoryExtractedFact.builder()
-                        .factId(UUID.randomUUID().toString())
+                        .factId(IdGenerator.nextIdStr())
                         .tenantId(tenantId)
                         .userId(extractUserId(conversation))
                         .conversationId(conversation.getId())

@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.message.domain.event.OutboxEntry;
+import com.njydsz.common.event.model.OutboxMessage;
+import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.domain.repository.MsgLogRepository;
-import com.njydsz.message.domain.repository.OutboxEventRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 
 /**
@@ -25,7 +27,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.message.server.event.OutboxDomainEventPublisher
+ * @since 26.09.29 迁移至 common-event OutboxService，删除自建 OutboxEventRepository
  */
 @Slf4j
 @Service
@@ -33,7 +35,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
 public class MessageSendTxService {
 
   private final MsgLogRepository msgLogRepository;
-  private final OutboxEventRepository outboxEventRepository;
+  private final OutboxService outboxService;
   private final MessageTraceService messageTraceService;
 
   /**
@@ -46,13 +48,20 @@ public class MessageSendTxService {
    * <p>同时记录轨迹节点 {@code "PERSISTED"}, 与 {@code MessageServiceImpl} 中其他 trace 节点保持一致。
    *
    * @param logVO 消息日志 VO（已构造，未落库）
-   * @param outboxEvent Outbox 事件（可为 null，为 null 时仅落库 msgLog）
+   * @param messageRequest 消息发送请求（可为 null，为 null 时仅落库 msgLog）
    */
   @Transactional(propagation = Propagation.REQUIRED)
-  public void insertLogAndOutbox(MsgLogVO logVO, OutboxEntry outboxEntry) {
+  public void insertLogAndOutbox(MsgLogVO logVO, MessageRequest messageRequest) {
     msgLogRepository.save(logVO);
-    if (outboxEntry != null) {
-      outboxEventRepository.save(outboxEntry);
+    if (messageRequest != null) {
+      // 委托 OutboxService 写入标准 Outbox 表
+      outboxService.appendToOutbox(
+          OutboxMessage.builder()
+              .aggregateType("Message")
+              .aggregateId(logVO.getMsgId())
+              .eventType("MessageAsyncDispatch")
+              .payload(YdszJson.toJson(messageRequest))
+              .idempotencyKey(logVO.getMsgId()));
     }
     messageTraceService.recordTrace(
         logVO.getMsgId(),
