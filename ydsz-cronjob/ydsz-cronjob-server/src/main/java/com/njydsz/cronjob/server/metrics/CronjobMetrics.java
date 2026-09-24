@@ -3,6 +3,7 @@ package com.njydsz.cronjob.server.metrics;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
+import com.sun.management.OperatingSystemMXBean;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -487,8 +488,7 @@ public class CronjobMetrics extends SentryMetricsAdapter {
    */
   private BigDecimal getCpuUsage() {
     try {
-      if (osMXBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
-        // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
+      if (osMXBean instanceof OperatingSystemMXBean sunOs) {
         double load = sunOs.getCpuLoad();
         return load >= 0 ? BigDecimal.valueOf(load).multiply(HUNDRED) : BigDecimal.ZERO;
       }

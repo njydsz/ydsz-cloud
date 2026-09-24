@@ -47,9 +47,6 @@ public class AsyncTaskWorkerService {
   /** 单次轮询最大任务数 */
   private static final int POLL_LIMIT = 10;
 
-  /** Worker ID 随机后缀长度 */
-  private static final int WORKER_ID_SUFFIX_LENGTH = 8;
-
   /** 超时阈值偏移量（秒）：RUNNING 任务超过此秒未完成视为超时 */
   private static final int TIMEOUT_OFFSET_SECONDS = 300;
 

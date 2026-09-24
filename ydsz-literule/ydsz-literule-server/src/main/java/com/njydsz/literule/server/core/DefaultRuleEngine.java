@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import jakarta.annotation.PostConstruct;
@@ -33,6 +33,8 @@ import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.StatsRecorderVO;
+import com.njydsz.literule.server.engine.liteexpr.ExprCache;
+import com.njydsz.literule.server.engine.liteexpr.SimpleExprCache;
 import com.njydsz.literule.server.model.ModelInputRegistry;
 import com.njydsz.literule.server.spi.FactCollectionException;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
@@ -137,17 +139,17 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * <p>使用 InheritableThreadLocal 使并行评估的子线程也能访问同一缓存（同一 evaluate 调用内 facts 不变，缓存线程安全）。
    * 注意：ForkJoinPool 等复用线程池不会自动继承值，仅 Thread 线程池 + {@code InheritableThreadLocal} 语义。
    */
-  private final InheritableThreadLocal<com.njydsz.literule.server.engine.liteexpr.ExprCache>
+  private final InheritableThreadLocal<ExprCache>
       alphaCacheLocal =
           new InheritableThreadLocal<>() {
             @Override
-            protected com.njydsz.literule.server.engine.liteexpr.ExprCache initialValue() {
-              return com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+            protected ExprCache initialValue() {
+              return ExprCache.EMPTY;
             }
 
             @Override
-            protected com.njydsz.literule.server.engine.liteexpr.ExprCache childValue(
-                com.njydsz.literule.server.engine.liteexpr.ExprCache parentValue) {
+            protected ExprCache childValue(
+                ExprCache parentValue) {
               return parentValue;
             }
           };
@@ -339,10 +341,10 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
     }
 
     // 2. P0-A1 AlphaNode Phase 1：启用条件评估缓存（同一 evaluate 调用内跨规则共享子表达式求值结果）
-    com.njydsz.literule.server.engine.liteexpr.ExprCache previousCache = alphaCacheLocal.get();
+    ExprCache previousCache = alphaCacheLocal.get();
     if (conditionCacheEnabled) {
       alphaCacheLocal.set(
-          new com.njydsz.literule.server.engine.liteexpr.SimpleExprCache(alphaCacheMaxSize));
+          new SimpleExprCache(alphaCacheMaxSize));
     }
 
     try {
@@ -361,7 +363,7 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
 
       // P0-A1：记录缓存统计
       if (conditionCacheEnabled) {
-        com.njydsz.literule.server.engine.liteexpr.ExprCache cache = alphaCacheLocal.get();
+        ExprCache cache = alphaCacheLocal.get();
         if (cache != null && cache.hitRate() >= 0) {
           log.debug("[LiteRule] AlphaNode 缓存统计: size={}, hits={}, misses={}, hitRate={}",
               cache.size(), cache.hitCount(), cache.missCount(),
@@ -395,12 +397,12 @@ private final RuleRegistry ruleRegistry = new RuleRegistry();
    * @return 当前缓存实例（从不返回 null）
    * @since 26.09.23
    */
-  public com.njydsz.literule.server.engine.liteexpr.ExprCache getCurrentAlphaCache() {
+  public ExprCache getCurrentAlphaCache() {
     if (!conditionCacheEnabled) {
-      return com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+      return ExprCache.EMPTY;
     }
-    com.njydsz.literule.server.engine.liteexpr.ExprCache cache = alphaCacheLocal.get();
-    return cache != null ? cache : com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+    ExprCache cache = alphaCacheLocal.get();
+    return cache != null ? cache : ExprCache.EMPTY;
   }
 
   /** 准备评估上下文结果封装 */
@@ -1223,18 +1225,18 @@ all.add(
    *
    * @return 当前 AlphaNode 缓存实例（不为 null）
    */
-  public static com.njydsz.literule.server.engine.liteexpr.ExprCache getStaticAlphaCache() {
+  public static ExprCache getStaticAlphaCache() {
     DefaultRuleEngine engine = ENGINE_REF.get();
     if (engine == null || !engine.conditionCacheEnabled) {
-      return com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+      return ExprCache.EMPTY;
     }
-    com.njydsz.literule.server.engine.liteexpr.ExprCache cache = engine.alphaCacheLocal.get();
-    return cache != null ? cache : com.njydsz.literule.server.engine.liteexpr.ExprCache.EMPTY;
+    ExprCache cache = engine.alphaCacheLocal.get();
+    return cache != null ? cache : ExprCache.EMPTY;
   }
 
   /** 静态弱引用（仅供 getStaticAlphaCache 访问；实例 GC 后可回收） */
-  private static final java.util.concurrent.atomic.AtomicReference<DefaultRuleEngine> ENGINE_REF =
-      new java.util.concurrent.atomic.AtomicReference<>();
+  private static final AtomicReference<DefaultRuleEngine> ENGINE_REF =
+      new AtomicReference<>();
 
   /**
    * 设置是否启用 AlphaNode Phase 1 条件缓存

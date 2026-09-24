@@ -3,6 +3,7 @@ package com.njydsz.cronjob.web.controller.dashboard;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
+import com.sun.management.OperatingSystemMXBean;
 import java.net.InetAddress;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -390,8 +391,7 @@ public class HealthDashboardController {
    */
   private double getCpuUsage() {
     try {
-      // FQN-OK: name conflict with OperatingSystemMXBean
-      if (osMXBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
+      if (osMXBean instanceof OperatingSystemMXBean sunOs) {
         double load = sunOs.getCpuLoad();
         return load >= 0 ? load * 100 : 0;
       }

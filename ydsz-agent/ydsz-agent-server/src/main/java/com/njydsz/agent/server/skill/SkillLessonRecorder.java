@@ -45,9 +45,6 @@ public class SkillLessonRecorder {
     /** 简化记录时的默认置信度 */
     private static final int DEFAULT_SIMPLIFIED_CONFIDENCE = 50;
 
-    /** 经验 ID 中 UUID 的截取长度 */
-    private static final int LESSON_ID_UUID_LENGTH = 8;
-
     public SkillLessonRecorder(SkillLessonRepository lessonRepository) {
         this.lessonRepository = Objects.requireNonNull(lessonRepository, "lessonRepository 不能为 null");
     }

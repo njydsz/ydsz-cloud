@@ -34,9 +34,6 @@ public class TriggerManagementService {
     /** 默认每小时最大执行次数 */
     private static final int DEFAULT_MAX_EXECUTIONS_PER_HOUR = 60;
 
-    /** 触发器 ID 中 UUID 的截取长度 */
-    private static final int TRIGGER_ID_UUID_LENGTH = 8;
-
     public TriggerManagementService(TriggerRepository triggerRepository) {
         this.triggerRepository = Objects.requireNonNull(triggerRepository, "triggerRepository 不能为 null");
     }

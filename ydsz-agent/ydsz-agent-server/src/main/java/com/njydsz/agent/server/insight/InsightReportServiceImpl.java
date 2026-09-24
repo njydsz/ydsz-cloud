@@ -48,8 +48,6 @@ public class InsightReportServiceImpl implements InsightReportService {
 
   /** 错误信息最大保留长度 */
   private static final int MAX_ERROR_MESSAGE_LENGTH = 500;
-  /** 报告 ID 随机段长度 */
-  private static final int REPORT_ID_RANDOM_LENGTH = 16;
   /** JSON 拼接缓冲区初始容量 */
   private static final int JSON_BUFFER_CAPACITY = 512;
 

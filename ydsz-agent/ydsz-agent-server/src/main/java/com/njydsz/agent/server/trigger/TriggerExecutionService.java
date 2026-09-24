@@ -22,9 +22,6 @@ import com.njydsz.common.exception.custom.BusinessException;
 @Slf4j
 public class TriggerExecutionService {
 
-    /** 执行 ID 中 UUID 的截取长度 */
-    private static final int EXECUTION_ID_UUID_LENGTH = 8;
-
     private final AgentExecutionDelegate executionDelegate;
 
     public TriggerExecutionService(AgentExecutionDelegate executionDelegate) {

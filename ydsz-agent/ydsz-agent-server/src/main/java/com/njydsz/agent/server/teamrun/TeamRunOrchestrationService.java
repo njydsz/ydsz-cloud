@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -19,6 +18,7 @@ import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.domain.teamrun.TeamRunRepository;
 import com.njydsz.agent.domain.teamrun.TeamRunStatus;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
@@ -56,9 +56,6 @@ public class TeamRunOrchestrationService {
 
     /** 单次 Team Run 最大成员数 */
     private static final int MAX_MEMBERS_PER_TEAM_RUN = 10;
-
-    /** 各类 ID 中 UUID 的截取长度 */
-    private static final int ID_UUID_LENGTH = 8;
 
     public TeamRunOrchestrationService(TeamRunRepository teamRunRepository,
                                          AgentExecutionService agentExecutionService) {
@@ -473,21 +470,21 @@ public class TeamRunOrchestrationService {
      * 生成 Team Run ID。
      */
     private String generateTeamRunId() {
-        return "tr-" + UUID.randomUUID().toString().substring(0, ID_UUID_LENGTH);
+        return "tr-" + IdGenerator.nextIdStr();
     }
 
     /**
      * 生成成员 ID。
      */
     private String generateMemberId() {
-        return "mbr-" + UUID.randomUUID().toString().substring(0, ID_UUID_LENGTH);
+        return "mbr-" + IdGenerator.nextIdStr();
     }
 
     /**
      * 生成执行 ID。
      */
     private String generateExecutionId() {
-        return "exec-" + UUID.randomUUID().toString().substring(0, ID_UUID_LENGTH);
+        return "exec-" + IdGenerator.nextIdStr();
     }
 
     /**

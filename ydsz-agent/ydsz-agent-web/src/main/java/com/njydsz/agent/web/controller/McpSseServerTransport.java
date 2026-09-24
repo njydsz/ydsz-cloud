@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.PostConstruct;
@@ -30,6 +29,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.infra.mcp.McpJsonRpcMessage;
 import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * MCP HTTP+SSE 服务端传输层 Controller
@@ -122,7 +122,7 @@ public class McpSseServerTransport {
    */
   @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter connect() {
-    String sessionId = UUID.randomUUID().toString().replace("-", "");
+    String sessionId = IdGenerator.nextIdStr();
     SseEmitter emitter = new SseEmitter(0L); // 0 = 无超时（长连接保持）
     sessions.put(sessionId, emitter);
 

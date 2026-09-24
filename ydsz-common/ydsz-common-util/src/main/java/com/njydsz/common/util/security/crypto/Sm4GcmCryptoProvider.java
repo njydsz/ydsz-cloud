@@ -98,6 +98,18 @@ public final class Sm4GcmCryptoProvider implements CryptoProvider {
     return iv;
   }
 
+  /**
+   * SM4-GCM 加密。
+   *
+   * <p>密文格式：IV(12 bytes) || ciphertext + GCM tag(16 bytes)。 IV 由本方法内部随机生成，调用方无需传入。
+   *
+   * @param plaintext 明文数据，不可为 null
+   * @param key 加密密钥（16 bytes），长度不符将抛出 IllegalArgumentException
+   * @param aad 附加认证数据（AAD），可为 null（不参与认证）
+   * @return 密文数据（IV + ciphertext + GCM tag）
+   * @throws IllegalArgumentException 密钥长度非 16 bytes 或明文为 null
+   * @throws CryptoException 加密失败（如 BouncyCastle Provider 不可用）
+   */
   @Override
   public byte[] encrypt(byte[] plaintext, byte[] key, byte[] aad) {
     Objects.requireNonNull(plaintext, "plaintext must not be null");
@@ -126,6 +138,18 @@ public final class Sm4GcmCryptoProvider implements CryptoProvider {
     }
   }
 
+  /**
+   * SM4-GCM 解密。
+   *
+   * <p>密文格式必须为 IV(12 bytes) || ciphertext + GCM tag(16 bytes)，与 {@link #encrypt(byte[], byte[], byte[])} 输出一致。
+   *
+   * @param ciphertext 密文数据（IV + ciphertext + GCM tag），长度至少 28 bytes，不可为 null
+   * @param key 解密密钥（16 bytes），需与加密时使用的密钥相同
+   * @param aad 附加认证数据（AAD），需与加密时传入的 AAD 完全一致，可为 null
+   * @return 明文数据
+   * @throws IllegalArgumentException 密文长度不足、密钥长度非 16 bytes 或参数为 null
+   * @throws CryptoException 认证失败（数据被篡改）或解密过程异常
+   */
   @Override
   public byte[] decrypt(byte[] ciphertext, byte[] key, byte[] aad) {
     Objects.requireNonNull(ciphertext, "ciphertext must not be null");
