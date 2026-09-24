@@ -12,10 +12,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 用户消息偏好表: 免打扰时段 / 频率上限 / 聚合开关 / 偏好语言
+ * 用户消息偏好实体，管控接收人的免打扰时段、频率上限、聚合开关及偏好语言。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>对应数据库表 {@code ydsz_msg_preference}。以 userId + channel + bizType 为粒度配置，
+ * bizType=__DEFAULT__ 表示该通道全局偏好。dndStart/dndEnd 定义免打扰时段，
+ * dailyLimit/hourlyLimit 控制发送频率，isDigestEnabled 决定是否启用摘要聚合。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

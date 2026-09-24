@@ -12,10 +12,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 消息回执表: 服务商送达/已读/点击/失败回调记录
+ * 消息回执实体，记录服务商送达/已读/点击/失败的回调数据。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>对应数据库表 {@code ydsz_msg_receipt}。关联日志表的 logId 字段回查原始发送记录，
+ * providerTraceId 为服务商侧回执唯一标识。receiptType 区分事件类型：
+ * DELIVERED（送达）、READ（已读）、CLICKED（点击）、FAILED（失败）。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor
