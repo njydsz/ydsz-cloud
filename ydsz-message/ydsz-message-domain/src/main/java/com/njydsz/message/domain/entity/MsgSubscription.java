@@ -12,10 +12,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 订阅关系表: 用户对主题(topic_code)在指定通道的订阅/退订状态
+ * 消息订阅关系实体，记录用户对指定主题(topic_code)在指定通道的订阅/退订状态。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>对应数据库表 {@code ydsz_msg_subscription}。userId + topicCode + channel 粒度控制，
+ * status 区分 SUBSCRIBED（已订阅）/ UNSUBSCRIBED（已退订），
+ * roleScope 限定角色可见范围，unsubscribedAt 记录退订时间。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

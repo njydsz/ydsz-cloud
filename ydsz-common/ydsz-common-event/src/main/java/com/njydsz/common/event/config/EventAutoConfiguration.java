@@ -24,6 +24,8 @@ import com.njydsz.common.event.admin.OutboxAdminService;
 import com.njydsz.common.event.archive.OutboxArchiveRepository;
 import com.njydsz.common.event.archive.OutboxArchiveRepositoryJdbc;
 import com.njydsz.common.event.consumer.OutboxIdempotentAspect;
+import com.njydsz.common.event.consumer.OutboxSubscriber;
+import com.njydsz.common.event.consumer.OutboxSubscriberDispatcher;
 import com.njydsz.common.event.gateway.ChannelEventPublishGateway;
 import com.njydsz.common.event.gateway.EventChannelDefinition;
 import com.njydsz.common.event.gateway.EventChannelRegistry;
@@ -126,6 +128,28 @@ public class EventAutoConfiguration {
       SnowflakeIdGenerator snowflakeIdGenerator,
       ApplicationEventPublisher eventPublisher) {
     return new OutboxService(outboxRepository, properties, snowflakeIdGenerator, eventPublisher);
+  }
+
+  /**
+   * 创建 Outbox 订阅者分发器（YDIZ-EVENT-002）。
+   *
+   * <p>自动收集容器中所有 {@link OutboxSubscriber} 实现 Bean，按 topic 索引后接收
+   * OutboxMessage 事件并路由到匹配的订阅者。
+   *
+   * <p>当容器中不存在任何 OutboxSubscriber 实现 Bean 时，不注册分发器（避免无意义的事件监听开销）。
+   *
+   * @param subscribers 容器中所有 OutboxSubscriber 实现 Bean（可为空列表）
+   * @return 分发器实例；若无可注册订阅者则返回 null（不注册 Bean）
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public OutboxSubscriberDispatcher outboxSubscriberDispatcher(
+      List<OutboxSubscriber> subscribers) {
+    if (subscribers == null || subscribers.isEmpty()) {
+      LOG.info("容器中无 OutboxSubscriber 实现，跳过分发器注册");
+      return null;
+    }
+    return new OutboxSubscriberDispatcher(subscribers);
   }
 
   /**

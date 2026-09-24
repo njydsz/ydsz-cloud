@@ -11,12 +11,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 消息模板版本历史实体。
+ * 消息模板版本历史实体，记录模板每次审核通过/拒绝的版本快照。
  *
- * <p>P1-6: 记录模板每次审核通过/拒绝的版本快照，支持版本回滚和历史对比。 每次模板内容变更并审核通过后，自动插入一条版本记录。
+ * <p>对应数据库表 {@code ydsz_msg_template_version}。每次模板内容变更并审核通过后，
+ * 自动插入一条版本记录（version 自增），content/variableDefs 保存完整快照，
+ * 支持版本回滚和历史对比。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

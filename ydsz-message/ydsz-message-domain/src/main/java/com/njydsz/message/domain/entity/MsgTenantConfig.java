@@ -9,22 +9,15 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
- * 多租户消息配置持久化实体 — 提供租户级发送配额与通道覆盖能力。
+ * 多租户消息配置实体，提供租户级发送配额与通道覆盖能力。
  *
- * <p>对应数据库表 {@code ydsz_msg_tenant_config}。每个租户可独立配置：
- *
- * <ul>
- *   <li><b>发送配额</b>：每日 / 每小时发送上限（{@link #dailyLimit} / {@link #hourlyLimit}）
- *   <li><b>通道开关覆盖</b>：租户级覆盖全局 {@code ydsz.message.channelEnabled}（{@link #channelOverrides}）
- *   <li><b>通道映射覆盖</b>：租户级指定通道使用的服务商（{@link #providerOverrides}）
- * </ul>
- *
- * <p><b>多租户硬隔离（P2-A5）：</b>本实体实现租户级配置覆盖，
- * 与 ydsz-common-tenant 的逻辑隔离（MyBatis 拦截器自动注入 tenantId）互补：
+ * <p>对应数据库表 {@code ydsz_msg_tenant_config}。每个租户可独立配置发送配额
+ * （dailyLimit/hourlyLimit）、通道开关覆盖（channelOverrides）和
+ * 通道映射覆盖（providerOverrides），与 common-tenant 逻辑隔离互补：
  * common-tenant 负责数据层过滤，本实体负责业务层配额与通道策略。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor

@@ -13,18 +13,14 @@ import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
 import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
 
 /**
- * 消息模板领域实体 — 支持 {@code ${var}} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景。
+ * 消息模板领域实体，支持 var 嵌套占位符、多语言 i18n、版本、审核、分类与场景。
  *
- * <p>对应数据库表 {@code ydsz_msg_template}。
- * 与 {@code MsgTemplate} 的区别：
- * <ul>
- *   <li>去除 MyBatis-Plus 持久化注解
- *   <li>通道/状态/审核状态字段使用枚举类型替代 String
- *   <li>不继承 {@code MpBaseEntity}，审计字段平铺定义
- * </ul>
+ * <p>对应数据库表 {@code ydsz_msg_template}。templateCode 全局唯一标识模板，
+ * channel 关联发送通道，status 标识启用/禁用，auditStatus 跟踪审核流程。
+ * content 字段存放含 var 占位符的模板正文，variableDefs 定义变量元数据。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * @author ydsz
+ * @since 26.09.24
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

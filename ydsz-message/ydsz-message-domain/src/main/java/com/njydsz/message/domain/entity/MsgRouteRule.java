@@ -11,10 +11,14 @@ import lombok.experimental.SuperBuilder;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
- * 消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级
+ * 消息路由规则实体，按 bizType + channel + SpEL 条件表达式将消息路由到目标通道并支持降级。
  *
- * @author ydsz-team
- * @since 26.09.01
+ * <p>对应数据库表 {@code ydsz_msg_route_rule}。规则引擎按 priority 升序匹配规则，
+ * conditionExpr（SpEL 表达式）命中后路由到 targetChannel；
+ * 目标通道发送失败时自动降级到 fallbackChannel，保证消息可达性。
+ *
+ * @author ydsz
+ * @since 26.09.24
  */@Data
 @SuperBuilder
 @NoArgsConstructor
