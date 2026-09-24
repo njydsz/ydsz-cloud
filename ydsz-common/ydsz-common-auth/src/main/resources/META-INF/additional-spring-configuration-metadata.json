@@ -1,14 +1,14 @@
 {
   "properties": [
     {
-      "name": "ydsz.auth.enabled",
+      "name": "ydsz.auth.is-enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用 RBAC 权限校验（默认 true）。设为 false 时所有权限校验将被跳过。"
+      "description": "是否启用 RBAC 权限校验（默认 true）。设为 false 时所有权限校验将被跳过。兼容旧键名 ydsz.auth.enabled。"
     },
     {
-      "name": "ydsz.auth.wildcard-enabled",
+      "name": "ydsz.auth.is-wildcard-enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用通配符权限匹配（默认 true）。支持权限码模式如 sys:user:*。"
+      "description": "是否启用通配符权限匹配（默认 true）。支持权限码模式如 sys:user:*。兼容旧键名 ydsz.auth.wildcard-enabled。"
     },
     {
       "name": "ydsz.auth.role-menu-key",

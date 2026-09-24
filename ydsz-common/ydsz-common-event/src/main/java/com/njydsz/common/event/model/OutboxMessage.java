@@ -41,13 +41,16 @@ import lombok.ToString;
  * @since 26.09.19 E-2 字段对齐：deduplicationId → idempotencyKey，对齐 DDL 列名 idempotency_key
  * @since 26.09.19 O-4 增加 schemaVersion 字段（默认 1），用于事件 schema 向前兼容
  * @since 26.09.19 P3 增加 compressed 字段，标记 payload 是否 GZIP 压缩存储
+ * @since 26.09.29 P0 Outbox 统一（YDIZ-EVENT-001）：新增 {@code topic}（事件路由主题）和 {@code extInfo}（业务扩展 JSON）。
+ *     业务模块差异化字段统一进 {@code extInfo}（JSON 格式），避免在 {@code OutboxMessage} 频繁增加列。
+ *     topic 用于事件通道路由（webhook / metrics / audit 等），由 {@link com.njydsz.common.event.gateway.EventChannelRegistry} 根据此字段分发。
  */
 @Getter
 @Builder
 @ToString
 public class OutboxMessage {
 
-  /** 主键 ID（雪花 ID） */
+  /** 主键 ID（雪花 ID，由 IdGenerator 生成，禁止自增主键） */
   private final String id;
 
   /** 聚合根 ID（如订单号） */
@@ -56,11 +59,17 @@ public class OutboxMessage {
   /** 聚合根类型（如 "Order"） */
   private final String aggregateType;
 
-  /** 事件类型（如 "OrderCreated"） */
+  /** 事件类型（如 "OrderCreated"），FQN 限定名（YDIZ-CODE-006：代码体禁止 FQN，但 eventType 内部字符串不受此限） */
   private final String eventType;
+
+  /** 事件路由主题（可选，如 "webhook"/"metrics"/"audit"），由 EventChannelRegistry 按 topic 分发到不同订阅者 */
+  private final String topic;
 
   /** 事件负载（JSON 字符串，compressed=true 时为 GZIP 压缩数据 Base64 编码） */
   private final String payload;
+
+  /** 业务扩展信息（JSON 字符串，用于携带各业务差异化属性，避免 OutboxMessage 频繁加列） */
+  private final String extInfo;
 
   /** 投递状态 */
   private final OutboxStatus status;

@@ -157,7 +157,7 @@ public class RbacPermissionEvaluator {
       String[] roleCodes,
       AuthMenuPermission.PermissionType type,
       PermissionMode mode) {
-    if (!properties.isEnabled()) {
+    if (!properties.getIsEnabled()) {
       return;
     }
     Set<String> requiredRoles = arrayToSet(roleCodes);
@@ -226,7 +226,7 @@ public class RbacPermissionEvaluator {
 
   private void validateApi0(
       Map<String, Object> userInfo, String[] apiCodes, String[] roleCodes, PermissionMode mode) {
-    if (!properties.isEnabled()) {
+    if (!properties.getIsEnabled()) {
       return;
     }
     Set<String> requiredRoles = arrayToSet(roleCodes);
@@ -605,10 +605,10 @@ public class RbacPermissionEvaluator {
   private boolean hasPermission(Set<String> granted, String required) {
     if (hierarchyService != null) {
       return hierarchyService.hasPermission(
-          resolveTenantIdOrDefault(), granted, required, properties.isWildcardEnabled());
+          resolveTenantIdOrDefault(), granted, required, properties.getIsWildcardEnabled());
     }
     // 向后兼容：回退到 PermissionUtils 静态调用
-    return PermissionUtils.hasPermission(granted, required, properties.isWildcardEnabled());
+    return PermissionUtils.hasPermission(granted, required, properties.getIsWildcardEnabled());
   }
 
   /**

@@ -17,7 +17,6 @@ import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
-import com.njydsz.cronjob.domain.entity.OutboxEvent;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagContext;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
@@ -55,7 +54,6 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookRetryVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
-import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
 
 /**
@@ -441,18 +439,6 @@ public interface CronjobConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   JobDag putDtoToEntity(JobDagPutDTO dto);
-
-  // ===== OutboxEvent =====
-  OutboxEventVO entityToVO(OutboxEvent entity);
-
-  List<OutboxEventVO> outboxEventListToVO(List<OutboxEvent> entities);
-
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "createTime", ignore = true)
-  @Mapping(target = "updateTime", ignore = true)
-  OutboxEvent voToEntity(OutboxEventVO vo);
-
-  List<OutboxEvent> outboxEventVOsToEntities(List<OutboxEventVO> vos);
 
   // ===== JobDagContext（P0-13：DAG 节点上下文独立存储） =====
 

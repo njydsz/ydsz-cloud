@@ -58,7 +58,7 @@ public class ApiKeyAuthService {
    */
   public ApiKeyAuthService(RedisStringOps redisStringOps, AuthProperties properties) {
     this.redisStringOps = redisStringOps;
-    this.enabled = properties.getApiKey() != null && properties.getApiKey().isEnabled();
+    this.enabled = properties.getApiKey() != null && properties.getApiKey().getIsEnabled();
   }
 
   /**

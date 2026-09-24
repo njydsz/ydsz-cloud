@@ -130,7 +130,7 @@ public class HealthScheduleConfiguration {
   @ConditionalOnBean({RedisStringOps.class, RedisMessageListenerContainer.class})
   @ConditionalOnProperty(
       prefix = "ydsz.auth",
-      name = "cross-instance-enabled",
+      name = "is-cross-instance-enabled",
       havingValue = "true",
       matchIfMissing = false)
   public PermissionChangeCacheInvalidator permissionChangeCacheInvalidator(

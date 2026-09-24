@@ -1,42 +1,38 @@
 package com.njydsz.cronjob.server.core.outbox.subscriber;
 
 import java.time.LocalDateTime;
-import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.cronjob.domain.vo.OutboxEventVO;
 
 /**
- * 审计事件订阅者（P1-14：操作审计 — ydsz-common-audit 驱动模式）。
+ * 审计事件订阅者（Outbox 模式收敛至 ydsz-common-event）。
  *
  * <p>消费 Outbox 事件中 topic={@code audit} 的事件，通过 {@link AuditRecorder} 异步写入审计日志。
  *
- * <p><b>迁移说明（26.09.01-P1-F9）：</b>
- *
- * <ul>
- *   <li>原实现：直接调用 {@code AuditWriter.write()} 同步落库，无异步/批量/降级保障
- *   <li>现实现：委托 common-audit 的 {@link AuditRecorder}，享受异步队列 + 批量写入 + 磁盘兜底等能力
- *   <li>审计表：写入 {@code ydsz_job_audit_log}（由 {@code ydsz.audit.sharding-base-table-name} 配置）
- * </ul>
+ * <p><b>迁移说明（26.09.29）：</b>自建 {@code OutboxEvent} 体系迁移至 ydsz-common-event 标准
+ * {@link OutboxMessage}。topic 字段对应原 OutboxEvent.topic；eventKey 由 extInfo JSON 携带。
  *
  * <p><b>降级策略：</b>容器中若无 {@link AuditRecorder} Bean（未引入 common-audit 时），
  * 降级为日志记录（保留事件全貌，不丢失关键审计信息）。
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.09.29 迁移至 ydsz-common-event {@link OutboxMessage}，废弃自建 OutboxEventVO
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
+public class AuditOutboxSubscriber {
 
   /** 日志 payload 截断长度 */
   private static final int MAX_PAYLOAD_LOG_LENGTH = 200;
@@ -74,35 +70,30 @@ public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
   /** 审计状态：失败 */
   private static final int STATUS_FAILURE = 0;
 
-  /**
-   * 审计记录器（common-audit 异步批量写入器）。
-   *
-   * <p>通过 {@link ObjectProvider} 延迟获取：若容器中未引入 common-audit 则为 null，降级为日志记录。
-   */
   private final ObjectProvider<AuditRecorder> auditRecorderProvider;
 
-  /**
-   * 分布式 ID 生成器（用于审计记录主键）。
-   *
-   * <p>通过 {@link ObjectProvider} 延迟获取：若容器中未引入 common-util 则为 null，降级为日志记录。
-   */
   private final ObjectProvider<SnowflakeIdGenerator> snowflakeIdGeneratorProvider;
 
-  @Override
-  public void accept(OutboxEventVO event) {
-    if (!TOPIC.equals(event.getTopic())) {
+  /**
+   * 监听 OutboxMessage 事件，过滤 topic=audit 的事件并写入审计日志。
+   *
+   * @param message Outbox 消息
+   */
+  @EventListener
+  public void onOutboxMessage(OutboxMessage message) {
+    if (!TOPIC.equals(message.getTopic())) {
       return;
     }
     try {
-      writeAudit(event);
+      writeAudit(message);
       log.info(
           "[AuditSubscriber] 审计事件处理完成: eventKey={} eventType={} topic={}",
-          event.getEventKey(),
-          event.getEventType(),
-          event.getTopic());
+          message.getId(),
+          message.getEventType(),
+          message.getTopic());
     } catch (Exception e) {
       log.error(
-          "[AuditSubscriber] 审计记录异常: eventKey={} reason={}", event.getEventKey(), e.getMessage(), e);
+          "[AuditSubscriber] 审计记录异常: eventKey={} reason={}", message.getId(), e.getMessage(), e);
       throw e;
     }
   }
@@ -110,65 +101,52 @@ public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
   /**
    * 将审计事件写入 ydsz_job_audit_log（通过 AuditRecorder 异步），否则降级为日志记录。
    *
-   * @param event Outbox 审计事件
+   * @param message Outbox 审计消息
    */
-  private void writeAudit(OutboxEventVO event) {
+  private void writeAudit(OutboxMessage message) {
     AuditRecorder recorder = auditRecorderProvider.getIfAvailable();
     SnowflakeIdGenerator idGenerator = snowflakeIdGeneratorProvider.getIfAvailable();
 
     if (recorder == null || idGenerator == null) {
-      // 未引入 ydsz-common-audit 或 SnowflakeIdGenerator 不可用：降级为日志记录，保留事件全貌
       log.info(
           "[AuditSubscriber] 审计组件不可用，降级为日志记录: eventKey={} eventType={} topic={} payload={} recorderAvailable={} idGenAvailable={}",
-          event.getEventKey(),
-          event.getEventType(),
-          event.getTopic(),
-          truncate(event.getPayload(), MAX_PAYLOAD_LOG_LENGTH),
+          message.getId(),
+          message.getEventType(),
+          message.getTopic(),
+          truncate(message.getPayload(), MAX_PAYLOAD_LOG_LENGTH),
           recorder != null,
           idGenerator != null);
       return;
     }
 
+    String eventKey = OutboxEventKeyExtractor.extractEventKey(message.getExtInfo());
+
     AuditLog auditLog = new AuditLog();
     auditLog.setId(String.valueOf(idGenerator.nextId()));
     auditLog.setAuditType(AUDIT_TYPE_BUSINESS);
-    auditLog.setAction(resolveActionCode(event.getEventType()));
-    auditLog.setStatus(resolveStatus(event.getPayload()));
+    auditLog.setAction(resolveActionCode(message.getEventType()));
+    auditLog.setStatus(resolveStatus(message.getPayload()));
     auditLog.setModule(AUDIT_MODULE);
-    auditLog.setBusinessNo(event.getEventKey());
-    auditLog.setContent(truncate(event.getPayload(), MAX_PAYLOAD_STORE_LENGTH));
+    auditLog.setBusinessNo(eventKey);
+    auditLog.setContent(truncate(message.getPayload(), MAX_PAYLOAD_STORE_LENGTH));
     auditLog.setOperationTime(LocalDateTime.now());
     auditLog.setCreatedAt(LocalDateTime.now());
 
-    // 从 RequestContext 补充操作人与租户信息（Web/API 上下文中可能为空，仅作尽力而为填充）
     auditLog.setOperatorId(RequestContext.getUserId());
     auditLog.setTenantId(RequestContext.getTenantId());
 
-    // 链路追踪 ID（通过 extra 透传）
     String traceId = RequestContext.getTraceId();
     if (traceId != null && !traceId.isEmpty()) {
       auditLog.setTraceId(traceId);
     }
 
-    // 走 common-audit 异步通道：享受批量写入 + 队列背压 + 磁盘兜底
     recorder.record(auditLog);
   }
 
   /**
-   * 根据 Outbox 事件类型解析审计动作编码（复用 common-audit 的语义枚举）。
+   * 根据 Outbox 事件类型解析审计动作编码。
    *
-   * <p>映射关系（简化）：
-   *
-   * <ul>
-   *   <li>JOB_CREATED → CREATE (1)
-   *   <li>JOB_UPDATED / JOB_RESUMED → UPDATE (2)
-   *   <li>JOB_DELETED → DELETE (3)
-   *   <li>JOB_PAUSED → DISABLE (14)
-   *   <li>JOB_TRIGGERED → OTHER (99)
-   *   <li>其他 → OTHER (99)
-   * </ul>
-   *
-   * @param eventType Outbox 事件类型
+   * @param eventType 事件类型
    * @return 审计动作编码
    */
   private int resolveActionCode(String eventType) {
@@ -188,9 +166,7 @@ public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
   /**
    * 根据 payload 解析操作结果状态（成功/失败）。
    *
-   * <p>简单启发式：payload 包含 "FAILED" 或 "ERROR" 视为失败，否则为成功。
-   *
-   * @param payload Outbox 事件 payload
+   * @param payload 事件 payload
    * @return STATUS_SUCCESS 或 STATUS_FAILURE
    */
   private int resolveStatus(String payload) {
@@ -201,13 +177,6 @@ public class AuditOutboxSubscriber implements Consumer<OutboxEventVO> {
     return (upper.contains("FAILED") || upper.contains("ERROR")) ? STATUS_FAILURE : STATUS_SUCCESS;
   }
 
-  /**
-   * 安全截断字符串，避免审计表/日志膨胀。
-   *
-   * @param value 原始值（可为 null）
-   * @param maxLength 最大长度
-   * @return 截断后的字符串；null 输入返回 null
-   */
   private String truncate(String value, int maxLength) {
     if (value == null) {
       return null;

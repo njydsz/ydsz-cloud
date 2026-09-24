@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Import;
 @AutoConfiguration
 @ConditionalOnProperty(
     prefix = "ydsz.auth",
-    name = "enabled",
+    name = {"enabled", "is-enabled"},
     havingValue = "true",
     matchIfMissing = true)
 @EnableConfigurationProperties({
