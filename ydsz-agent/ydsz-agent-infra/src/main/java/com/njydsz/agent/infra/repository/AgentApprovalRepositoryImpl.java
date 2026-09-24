@@ -20,14 +20,12 @@ import com.njydsz.agent.domain.vo.AgentApprovalVO;
  * Agent 人工审批请求 Repository 实现
  *
  * <p>基于 MyBatis-Plus 实现 {@link AgentApprovalRepository} 接口。
- * 写入时通过 {@link AgentPoConverter} 将 domain 实体转为 PO（含 MP 注解），
- * 读取时通过 {@link AgentPoConverter} 将 PO 转为 domain 实体后再经 {@link AgentConverter} 转为 VO。
+ * 读取时通过 {@link AgentConverter} 将 domain 实体转为 VO。
  *
  * <p><b>设计要点：</b>
  * <ul>
- *   <li>domain 层实体不携带 MP 注解 — 由 PO 层承载持久化映射</li>
- *   <li>通过 {@link AgentPoConverter} 实现 Domain ↔ PO 转换</li>
- *   <li>CUD 入参 DTO 通过 {@link AgentConverter} 转换为 Domain 后再转 PO 执行数据库操作</li>
+ *   <li>domain 层实体直接承载 MP 持久化注解</li>
+ *   <li>CUD 入参 DTO 通过 {@link AgentConverter} 转换为 Domain 后执行数据库操作</li>
  * </ul>
  *
  * @author ydsz-team

@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**

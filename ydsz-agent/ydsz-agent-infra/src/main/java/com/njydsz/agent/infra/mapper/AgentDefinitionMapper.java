@@ -8,7 +8,7 @@ import com.njydsz.agent.domain.entity.AgentDefinition;
  * Agent 定义 Mapper
  *
  * <p>对应数据表 {@code ydsz_agt_definition}。
- * 使用 {@link AgentDefinitionPO}（基础设施层 PO）承载 MyBatis-Plus 持久化注解。
+ * 使用 domain 层 {@link com.njydsz.agent.domain.entity.AgentDefinition} 承载 MyBatis-Plus 持久化注解。
  *
  * <p>Agent 是可调用的 AI 智能体（对话/任务型），由 LLM + Tools + Prompt 组成，按业务场景定义。
  *

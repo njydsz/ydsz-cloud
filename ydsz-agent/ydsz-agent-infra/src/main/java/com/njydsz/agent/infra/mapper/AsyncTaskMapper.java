@@ -9,13 +9,13 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
-import com.njydsz.agent.domain.asynctask.AsyncTask;
+import com.njydsz.agent.domain.entity.AsyncTask;
 
 /**
  * 异步任务 Mapper
  *
  * <p>映射 {@code ydsz_agt_async_task} 表，持久化异步任务的完整生命周期数据。
- * 使用 {@link AsyncTaskPO}（基础设施层 PO）承载 MyBatis-Plus 注解。
+ * 使用 domain 层 {@link com.njydsz.agent.domain.entity.AsyncTask} 承载 MyBatis-Plus 注解。
  * <b>多租户：</b>由 MyBatis 拦截器自动注入 tenant_id 过滤条件，本接口不感知。
  *
  * <p>自定义方法说明：

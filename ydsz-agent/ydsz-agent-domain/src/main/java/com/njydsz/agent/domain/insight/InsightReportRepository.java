@@ -3,6 +3,8 @@ package com.njydsz.agent.domain.insight;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.agent.domain.entity.InsightReport;
+
 /**
  * 洞察报告仓储接口（领域层）。
  *

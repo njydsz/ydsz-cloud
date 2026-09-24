@@ -2,6 +2,8 @@ package com.njydsz.agent.domain.insight;
 
 import java.util.List;
 
+import com.njydsz.agent.domain.entity.InsightReport;
+
 /**
  * 报告渲染器接口（领域网关）。
  *

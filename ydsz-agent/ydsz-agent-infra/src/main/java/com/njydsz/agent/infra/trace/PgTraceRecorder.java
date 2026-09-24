@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.entity.AgentTrace;
@@ -72,7 +71,7 @@ public class PgTraceRecorder implements TraceRecorder {
     String traceId = TraceIdGenerator.generateSortableTraceId();
     AgentTrace trace =
         AgentTrace.builder()
-            .traceId(traceId)
+            .id(traceId)
             .conversationId(conversationId)
             .agentId(agentId)
             .status("RUNNING")
@@ -152,11 +151,7 @@ public class PgTraceRecorder implements TraceRecorder {
 
   @Override
   public List<TraceStep> getSteps(String traceId) {
-    List<AgentTraceStep> steps =
-        traceStepMapper.selectList(
-            new LambdaQueryWrapper<AgentTraceStep>()
-                .eq(AgentTraceStep::getTraceId, traceId)
-                .orderByAsc(AgentTraceStep::getStepIndex));
+    List<AgentTraceStep> steps = traceStepMapper.selectByTraceId(traceId);
     return steps.stream().map(this::toTraceStep).toList();
   }
 

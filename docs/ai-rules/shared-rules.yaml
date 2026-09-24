@@ -17,7 +17,7 @@ meta:
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
   last_updated: "2026-09-29（新增 YDIZ-EVENT-001/ARCH-002/ARCH-003/ARCH-004/UTIL-001：OutboxMessage 唯一归属、安全过滤器唯一归属、线程池唯一归属、Outbox 表命名唯一、统一 ID 生成入口）"
-  total_rules: 77
+  total_rules: 81
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -525,7 +525,7 @@ rules:
       1. `{module}-infra/` 下**禁止存在** `entity/`、`po/`、`do/` 包，禁止任何以 `DO`/`PO` 结尾的类文件
       2. infra 层的 Mapper 接口、Repository 实现必须直接 import `{module}-domain/entity/` 下的 Entity 类
       3. 禁止通过继承、拷贝、`BeanUtils.copyProperties` 等方式在 infra 层创建 Entity 的替身类
-4. 数据库表映射关系（`@TableName`、`@TableField`、`@TableId`）直接定义在 domain Entity 上，不拆分到 infra 层
+      4. 数据库表映射关系（`@TableName`、`@TableField`、`@TableId`）直接定义在 domain Entity 上，不拆分到 infra 层
       5. Converter（MapStruct 对象转换器）仅在 `{module}-domain/converter/` 下定义（参见 YDIZ-DDD-004），infra 层禁止自行声明或复制 Converter
 
       **为什么禁用 Entity/PO 分层**：
@@ -541,11 +541,13 @@ rules:
       2. {module}-infra 下存在 entity/ 包且包含带 @TableName 注解的类
       3. Repository 实现或 Mapper 接口 import 了 infra 模块的 DO/PO 类
       4. 通过 BeanUtils.copyProperties / 手动 setter 将 domain Entity 复制到 infra 层替代类
+      5. infra 层类 extends MpBaseEntity 或 extends MpBaseIdEntity（持久化实体基类不应出现在 infra 层，domain 层 Entity 才应继承 MP 基类）
+      6. infra 层定义带 @Mapper(componentModel = "spring") 的 MapStruct 转换器接口
     fix: |
       1. 将 infra 层 DO/PO 类删除，所有引用点改为 import domain/entity/ 下对应 Entity
       2. 若 DO/PO 与 Entity 存在字段差异，将差异字段补充到 domain Entity
       3. Mapper 接口（infra/mapper/）的入参/返回类型全部改为 domain Entity
-4. 若 Mapper XML 中 resultType/parameterType 引用了 DO/PO 的全路径，改为 domain Entity 路径
+      4. 若 Mapper XML 中 resultType/parameterType 引用了 DO/PO 的全路径，改为 domain Entity 路径
       5. 确认 infra 模块 pom.xml 已依赖 {module}-domain
       6. 确认 Converter 仅在 domain 层定义（domain/converter/），infra 层无自建 Converter
     example_bad: |
@@ -656,8 +658,8 @@ rules:
     fix: "提取为 private static final Pattern"
     source: "编码规范 21.1 节"
 
-  # =
-  十一、性能规范（2 条）
+  # ============================================
+  # 十一、性能规范（2 条，P0+P1）
   # ============================================
   - id: "YDIZ-PERF-001"
     category: "performance"
@@ -677,8 +679,8 @@ rules:
     fix: "改用 try (Resource r = ...) { ... } 语法"
     source: "编码规范通用最佳实践"
 
-  # =
-  十二、common 模块能力复用（8 条，全部 P0 或 P1）
+  # ============================================
+  # 十二、common 模块能力复用规范（8 条，P0+P1）
   # ============================================
   - id: "YDIZ-COMMON-001"
     category: "common-reuse"
@@ -838,8 +840,8 @@ rules:
     fix: "注入 QuotaCounter"
     source: "P2-quota：QuotaCounter 抽象下沉至 common-safe"
 
-  # =
-  十三、安全规范（2 条）
+  # ============================================
+  # 十三、安全规范（2 条，P0+P1）
   # ============================================
   - id: "YDIZ-SEC-001"
     category: "security"
@@ -859,8 +861,8 @@ rules:
     fix: "脱敏处理后打印或直接省略"
     source: "编码规范 13 章"
 
-  # =
-  十四、编译器警告处理（1 条，P0）
+  # ============================================
+  # 十四、编译器警告处理规范（1 条，P0）
   # ============================================
   - id: "YDIZ-WARN-001"
     category: "warnings"
@@ -913,8 +915,8 @@ rules:
       4. CR 时重点审查所有 @SuppressWarnings
     source: "编码规范 §6.10（强制）"
 
-  # =
-  十五、工程约束（3 条）
+  # ============================================
+  # 十五、工程约束规范（3 条，P0+P1）
   # ============================================
   - id: "YDIZ-ENG-001"
     category: "engineering"
@@ -2034,31 +2036,34 @@ rules:
     source: "编码规范新增（YDIZ-ARCH-004→重编号为 P2，重分配 ID YDIZ-ARCH-006）"
 
 # ============================================
-# 附录：按 category 统计（26.09.29 更新，total 72→77）
+# 附录：按 category 统计（26.09.29 更新，total 81，修正历史统计偏差）
 # ============================================
 stats:
   encoding: 1
   import: 5
   naming: 4
-  oop: 4
+  oop: 5
+  database: 1
   logging: 3
   datetime: 2
   collection: 2
-  ddd: 6
+  ddd: 7
   concurrency: 3
   performance: 2
-  common-reuse: 8
+  common-reuse: 13
   security: 2
   architecture: 6
   engineering: 3
   warnings: 1
   api: 2
+  exception: 1
+  audit: 1
+  event: 2
   tx: 4
   testing: 3
   resilience: 1
   config: 2
   errcode: 2
   i18n: 2
-  event: 2
   util: 1
-  total: 77
+  total: 81

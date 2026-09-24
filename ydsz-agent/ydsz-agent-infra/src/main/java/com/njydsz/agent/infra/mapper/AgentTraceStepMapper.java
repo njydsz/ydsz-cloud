@@ -15,7 +15,7 @@ import com.njydsz.agent.domain.entity.AgentTraceStep;
  * <p>映射 {@code ydsz_agt_trace_step} 表，该表使用 (traceId, stepIndex) 复合业务键，
  * 不使用 BaseMapper（避免主键映射冲突）。基于 MyBatis 注解直接操作 PO。
  *
- * <p>使用 {@link AgentTraceStepPO}（基础设施层 PO）承载 MyBatis-Plus @TableName 注解。
+ * <p>使用 domain 层 {@link com.njydsz.agent.domain.entity.AgentTraceStep} 承载 MyBatis-Plus @TableName 注解。
  *
  * @author ydsz-team
  * @since 26.09.23
@@ -24,9 +24,21 @@ import com.njydsz.agent.domain.entity.AgentTraceStep;
 public interface AgentTraceStepMapper {
 
   /**
+   * 单条插入步骤明细。
+   *
+   * @param step 步骤 domain Entity
+   * @return 影响行数
+   */
+  @Insert("INSERT INTO ydsz_agt_trace_step (trace_id, step_index, step_type, content, "
+      + "input_json, output_json, duration_ms, cost) "
+      + "VALUES (#{step.traceId}, #{step.stepIndex}, #{step.stepType}, #{step.content}, "
+      + "#{step.inputJson}, #{step.outputJson}, #{step.durationMs}, #{step.cost})")
+  int insert(@Param("step") AgentTraceStep step);
+
+  /**
    * 批量插入步骤明细。
    *
-   * @param steps 步骤 PO 列表
+   * @param steps 步骤 domain Entity 列表
    * @return 影响行数
    */
   @Insert("<script>"

@@ -20,6 +20,14 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Seata 能力自动配置。
  *
+ * @deprecated 自 26.09.19 起归档至 {@code attic/} 目录。
+ *     <p><b>退役原因：</b>经全项目代码扫描确认零外部引用，Seata 客户端（seata-spring-boot-starter 等）
+ *     由业务模块按需自行引入，不再需要 common 层统一封装。
+ *     <p><b>替代方案：</b>业务模块直接引入 Seata 官方 starter 并配置 {@code seata.*} 属性即可；
+ *     如需 XID 透传，可自行实现 ServletFilter / Feign RequestInterceptor（参考本模块源码）。
+ *     <p><b>移除时间：</b>下一大版本（27.01.01）起彻底删除本模块及 {@code attic/ydsz-common-seata} 目录。
+ *     <p>在 27.01.01 之前本模块仍可被编译和引用，但 IDE 会显示删除线警告，引导消费方迁移。
+ *
  * <p>本配置类在满足以下任一条件时激活相应 bean：
  * <ul>
  *   <li>{@code ydsz.seata.enabled=true}（总开关，见 {@link SeataProperties}）；</li>
@@ -44,6 +52,7 @@ import org.springframework.context.annotation.Configuration;
  * @since ACC-1
  */
 @Slf4j
+@Deprecated(since = "26.09.19", forRemoval = true)
 @AutoConfiguration
 @EnableConfigurationProperties(SeataProperties.class)
 @ConditionalOnProperty(prefix = SeataProperties.PREFIX, name = "enabled", havingValue = "true")

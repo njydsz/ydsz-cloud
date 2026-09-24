@@ -56,6 +56,12 @@
             <artifactId>ydsz-common-locales</artifactId>
         </dependency>
 
+        <!-- 公共配置加密热加载模块（ydsz-common-config 提供 Jasypt 增强、配置变更桥接、加密健康检查） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-config</artifactId>
+        </dependency>
+
         <!-- Micrometer Core（AbstractModuleMetrics 基类需要，optional 按需引入） -->
         <dependency>
             <groupId>io.micrometer</groupId>

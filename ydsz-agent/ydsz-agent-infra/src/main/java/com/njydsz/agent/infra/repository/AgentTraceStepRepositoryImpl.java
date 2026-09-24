@@ -17,10 +17,9 @@ import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
  *
  * <p>基于自定义 MyBatis Mapper 实现 {@link AgentTraceStepRepository} 接口（不使用 BaseMapper，
  * 因该表使用复合业务键）。
- * 写入时通过 {@link AgentPoConverter} 将 domain 实体转为 PO，
- * 读取时通过 {@link AgentPoConverter} 将 PO 转为 domain 后再经 {@link AgentConverter} 转为 VO。
+ * 读取时通过 {@link AgentConverter} 将 domain 实体转为 VO。
  *
- * <p><b>DDD 分层：</b> domain 层 AgentTraceStep 为纯净 POJO；PO 层承载 MyBatis 映射注解。
+ * <p><b>DDD 分层：</b> domain 层 AgentTraceStep 直接承载 MyBatis 映射注解。
  *
  * @author ydsz-team
  * @since 26.09.01

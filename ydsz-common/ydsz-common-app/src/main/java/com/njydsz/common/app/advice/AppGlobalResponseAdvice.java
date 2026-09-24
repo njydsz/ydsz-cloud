@@ -5,13 +5,13 @@ import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.njydsz.common.app.annotation.AppApi;
-import com.njydsz.common.base.advice.BaseGlobalResponseAdvice;
+import com.njydsz.common.base.advice.AbstractGlobalResponseAdvice;
 import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * App 端全局响应包装 Advice
  *
- * <p>继承 {@link BaseGlobalResponseAdvice}，对 Controller 返回的字符串类型响应 进行统一封装为 {@link YdszResponse}
+ * <p>继承 {@link AbstractGlobalResponseAdvice}，对 Controller 返回的字符串类型响应 进行统一封装为 {@link YdszResponse}
  * 标准格式。与 Web 端的差异在于：
  *
  * <ul>
@@ -37,7 +37,7 @@ import com.njydsz.common.core.response.YdszResponse;
  */
 @RestControllerAdvice(annotations = AppApi.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
-public class AppGlobalResponseAdvice extends BaseGlobalResponseAdvice {
+public class AppGlobalResponseAdvice extends AbstractGlobalResponseAdvice {
 
   /**
    * 将 Controller 返回的字符串响应包装为标准 {@link YdszResponse}

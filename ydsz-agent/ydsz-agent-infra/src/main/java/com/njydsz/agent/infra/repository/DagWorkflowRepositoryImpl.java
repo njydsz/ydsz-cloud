@@ -14,10 +14,7 @@ import com.njydsz.agent.domain.repository.DagWorkflowRepository;
 /**
  * DAG 工作流仓储实现。
  *
- * <p>写入时通过 {@link AgentPoConverter} 将 domain 实体转为 PO，
- * 读取时通过 {@link AgentPoConverter} 将 PO 转为 domain 实体。
- *
- * <p><b>DDD 分层：</b> domain 层 DagWorkflow 为纯净 POJO；PO 层承载 MP 注解。
+ * <p><b>DDD 分层：</b> domain 层 DagWorkflow 直接承载 MP 注解用于持久化。
  *
  * @author ydsz-team
  * @since 26.09.17

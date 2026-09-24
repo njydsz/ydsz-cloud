@@ -1,129 +1,39 @@
 package com.njydsz.common.base.advice;
 
-import java.nio.ByteBuffer;
-
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.springframework.core.MethodParameter;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.server.ServerHttpRequest;
-import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.json.YdszJson;
 
 /**
- * 全局响应包装基类（Web/App 共享）
+ * PC Web 端全局响应包装
  *
- * <p>自动将非 {@link YdszResponse} 类型的返回值包装为 {@link YdszResponse#success(Object)} 格式。
+ * <p>继承 {@link AbstractGlobalResponseAdvice}，为 PC Web 场景提供默认响应包装。 对 Controller 返回的字符串类型响应统一封装为 {@link YdszResponse}
+ * 标准格式：{@code YdszResponse.success(body)}。
  *
- * <p><b>跳过包装的类型：</b>
+ * <p><b>装配：</b>由 {@code WebMvcConfiguration} 通过 {@code @Bean} + {@code @ConditionalOnMissingBean}
+ * 注册，{@code @RestControllerAdvice} 会被 Spring MVC 自动发现为控制器增强。
  *
- * <ul>
- *   <li>{@link YdszResponse} — 已是标准响应
- *   <li>{@code void} — 无返回值（如文件下载、204 No Content）
- *   <li>{@link ResponseEntity} — Spring MVC 特殊处理，包装会丢失原始状态码和 Header
- *   <li>{@link HttpEntity} — 同 ResponseEntity
- *   <li>{@link Resource} — 文件下载场景
- * </ul>
- *
- * <p>子类覆盖 {@link #wrapStringBody(String)} 处理 String 类型返回值的差异： Web 端调用 {@code
- * YdszResponse.success(msg)}，App 端调用 {@code YdszResponse.successMsg(msg)}。
+ * <p><b>执行顺序：</b>{@link Ordered#HIGHEST_PRECEDENCE} + 10， 保证在所有异常处理 Advice 之前包装响应体。
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @see AbstractGlobalResponseAdvice
+ * @see YdszResponse
  */
-public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Object> {
-
-  @Override
-  public boolean supports(
-      @NonNull MethodParameter returnType,
-      @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
-    Class<?> paramType = returnType.getParameterType();
-    // 跳过已包装类型、void、ResponseEntity/HttpEntity、Resource
-    if (paramType == YdszResponse.class
-        || paramType == void.class
-        || paramType == Void.class
-        || ResponseEntity.class.isAssignableFrom(paramType)
-        || HttpEntity.class.isAssignableFrom(paramType)
-        || Resource.class.isAssignableFrom(paramType)) {
-      return false;
-    }
-    // 跳过流式响应类型：SSE / StreamingResponseBody / byte[] / ByteBuffer
-    // 这些返回值由 Spring MVC 直接写回，包装会破坏流式协议（如 AI 对话流式输出）
-    if (isStreamingType(paramType)) {
-      return false;
-    }
-    return true;
-  }
+@RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE + 10)
+public class BaseGlobalResponseAdvice extends AbstractGlobalResponseAdvice {
 
   /**
-   * 判断返回类型是否为流式响应类型。
+   * PC Web 端将原始字符串直接包装为 {@link YdszResponse#success(Object)} 的消息体。
    *
-   * <p>流式响应必须保持原始字节流/事件流输出，全局响应包装会导致：
-   *
-   * <ul>
-   *   <li>SSE（text/event-stream）被包装为 JSON，破坏事件流协议
-   *   <li>{@link StreamingResponseBody} 被序列化为错误内容
-   *   <li>文件下载（byte[]）被包装成 JSON 字符串
-   * </ul>
-   *
-   * @param paramType 返回类型
-   * @return true-为流式类型，需跳过包装
+   * @param body Controller 原始返回的字符串
+   * @return 包装后的标准响应
    */
-  private static boolean isStreamingType(Class<?> paramType) {
-    if (paramType == byte[].class || paramType == ByteBuffer.class) {
-      return true;
-    }
-    if (StreamingResponseBody.class.isAssignableFrom(paramType)) {
-      return true;
-    }
-    return SseEmitter.class.isAssignableFrom(paramType);
-  }
-
   @Override
-  public @Nullable Object beforeBodyWrite(
-      @Nullable Object body,
-      @NonNull MethodParameter returnType,
-      @NonNull MediaType selectedContentType,
-      @NonNull Class<? extends HttpMessageConverter<?>> selectedConverterType,
-      @NonNull ServerHttpRequest request,
-      @NonNull ServerHttpResponse response) {
-    if (body instanceof YdszResponse) {
-      return body;
-    }
-    if (body instanceof String) {
-      // 仅当 String 返回值仍为默认 text/plain 时修正为 application/json；
-      // 若 Controller 已显式指定（如 text/csv、text/html），保留原 Content-Type
-      MediaType contentType = selectedContentType;
-      if (contentType == null || MediaType.TEXT_PLAIN.isCompatibleWith(contentType)) {
-        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-      }
-      YdszResponse<String> result = wrapStringBody((String) body);
-      try {
-        return YdszJson.toJson(result);
-      } catch (Exception e) {
-        return result;
-      }
-    }
-    if (body == null) {
-      return YdszResponse.success();
-    }
+  protected YdszResponse<String> wrapStringBody(String body) {
     return YdszResponse.success(body);
   }
-
-  /**
-   * 子类覆盖此方法处理 String 类型返回值的包装差异
-   *
-   * @param body 原始 String 返回值
-   * @return 包装后的 YdszResponse
-   */
-  protected abstract YdszResponse<String> wrapStringBody(String body);
 }

@@ -3,6 +3,8 @@ package com.njydsz.agent.domain.profile;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.agent.domain.entity.UserProfile;
+
 /**
  * 用户画像 Repository 接口。
  *

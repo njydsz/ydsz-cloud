@@ -4,3 +4,5 @@ com.njydsz.common.base.config.DocSecurityConfiguration
 com.njydsz.common.base.config.OpenApiAutoConfiguration
 com.njydsz.common.base.config.Knife4jAutoConfiguration
 com.njydsz.common.base.config.I18nMetadataAutoConfiguration
+com.njydsz.common.locales.config.LocalesAutoConfiguration
+com.njydsz.common.config.ConfigAutoConfiguration

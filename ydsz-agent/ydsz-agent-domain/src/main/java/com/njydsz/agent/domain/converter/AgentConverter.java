@@ -190,7 +190,6 @@ public interface AgentConverter {
    * @param dto 审批请求 DTO
    * @return 数据库实体
    */
-  @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -203,7 +202,6 @@ public interface AgentConverter {
    * @param dto 审批请求 DTO（含 id）
    * @return 数据库实体
    */
-  @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)

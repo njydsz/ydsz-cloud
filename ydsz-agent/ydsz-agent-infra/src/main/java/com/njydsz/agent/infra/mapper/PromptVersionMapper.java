@@ -8,7 +8,7 @@ import com.njydsz.agent.domain.entity.PromptVersion;
  * Prompt 模板版本 Mapper
  *
  * <p>对应数据表 {@code ydsz_agt_prompt_version}。
- * 使用 {@link PromptVersionPO}（基础设施层 PO）承载 MyBatis-Plus 注解。
+ * 使用 domain 层 {@link com.njydsz.agent.domain.entity.PromptVersion} 承载 MyBatis-Plus 注解。
  *
  * <p><b>主要索引：</b>
  *

@@ -4,13 +4,13 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.njydsz.common.base.advice.BaseGlobalResponseAdvice;
+import com.njydsz.common.base.advice.AbstractGlobalResponseAdvice;
 import com.njydsz.common.core.response.YdszResponse;
 
 /**
  * Web 端全局响应包装
  *
- * <p>继承 {@link BaseGlobalResponseAdvice}，对 Controller 返回的字符串类型响应 进行统一封装为 {@link YdszResponse} 标准格式。
+ * <p>继承 {@link AbstractGlobalResponseAdvice}，对 Controller 返回的字符串类型响应 进行统一封装为 {@link YdszResponse} 标准格式。
  *
  * <p><b>触发条件：</b>返回类型为 {@code String} 且未被 {@code @ResponseBody} 注解处理的情况。
  *
@@ -20,13 +20,13 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p><b>执行顺序：</b>{@link Ordered#HIGHEST_PRECEDENCE} + 10， 保证在所有异常处理 Advice 之前包装响应体。
  *
  * @author ydsz-team
- * @see BaseGlobalResponseAdvice
+ * @see AbstractGlobalResponseAdvice
  * @see YdszResponse
  * @since 26.09.01
  */
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
-public class GlobalResponseAdvice extends BaseGlobalResponseAdvice {
+public class GlobalResponseAdvice extends AbstractGlobalResponseAdvice {
 
   @Override
   protected YdszResponse<String> wrapStringBody(String body) {

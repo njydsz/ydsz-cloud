@@ -18,10 +18,9 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
  * Agent 定义 Repository 实现
  *
  * <p>基于 MyBatis-Plus 实现 {@link AgentDefinitionRepository} 接口。
- * 写入时通过 {@link AgentPoConverter} 将 domain 实体转为 PO（含 MP 注解），
- * 读取时通过 {@link AgentPoConverter} 将 PO 转为 domain 后再经 {@link AgentConverter} 转为 VO。
+ * 读取时通过 {@link AgentConverter} 将 domain 实体转为 VO。
  *
- * <p><b>DDD 分层：</b> domain 层 AgentDefinition 为纯净 POJO；PO 层承载 MP 注解。
+ * <p><b>DDD 分层：</b> domain 层 AgentDefinition 直接承载 MP 注解用于持久化。
  *
  * @author ydsz-team
  * @since 26.09.01
