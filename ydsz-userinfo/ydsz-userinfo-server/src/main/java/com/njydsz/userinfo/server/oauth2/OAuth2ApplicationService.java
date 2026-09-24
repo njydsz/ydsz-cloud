@@ -4,7 +4,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.domain.oauth2.OAuth2ApplicationRepository;
@@ -51,6 +51,7 @@ public class OAuth2ApplicationService {
 
   private final OAuth2ApplicationRepository applicationRepository;
   private final BCryptPasswordEncoder passwordEncoder;
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final SecureRandom secureRandom = new SecureRandom();
 
   /**
@@ -77,7 +78,7 @@ public class OAuth2ApplicationService {
     String encodedClientSecret = passwordEncoder.encode(plainClientSecret);
 
     OAuth2Application application = new OAuth2Application(
-        UUID.randomUUID().toString(),
+        String.valueOf(snowflakeIdGenerator.nextId()),
         clientId,
         command.clientName(),
         encodedClientSecret,

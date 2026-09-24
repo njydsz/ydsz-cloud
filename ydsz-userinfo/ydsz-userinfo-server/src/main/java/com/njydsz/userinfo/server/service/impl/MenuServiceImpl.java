@@ -339,7 +339,7 @@ public class MenuServiceImpl implements MenuService {
     meta.setTitle(menu.getMenuName());
     meta.setIcon(menu.getIcon());
     meta.setOrder(menu.getSort());
-    meta.setHideInMenu(menu.getVisible() != null && menu.getVisible() == 0);
+    meta.setIsHideInMenu(menu.getVisible() != null && menu.getVisible() == 0);
     route.setMeta(meta);
 
     List<MenuVO> children =

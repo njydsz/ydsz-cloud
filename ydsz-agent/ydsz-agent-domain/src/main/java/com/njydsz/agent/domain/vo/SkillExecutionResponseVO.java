@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -25,7 +26,8 @@ public class SkillExecutionResponseVO implements Serializable {
   private String skillCode;
 
   /** 执行是否成功 */
-  private boolean success;
+  @JsonProperty("success")
+  private boolean isSuccess;
 
   /** 标准输出内容 */
   private String stdout;

@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -31,8 +32,9 @@ public class UserPreferenceDTO {
   /** 菜单布局 */
   private String menuLayout;
 
-  /** 菜单手风琴 */
-  private Boolean accordionMenu;
+  /** 菜单手风琴模式（true = 手风琴） */
+  @JsonProperty("accordionMenu")
+  private Boolean isAccordionMenu;
 
   /** 表格密度 */
   private String tableSize;

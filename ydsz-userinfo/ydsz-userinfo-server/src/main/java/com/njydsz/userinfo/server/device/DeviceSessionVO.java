@@ -2,6 +2,7 @@ package com.njydsz.userinfo.server.device;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -34,7 +35,8 @@ public class DeviceSessionVO {
   private LocalDateTime lastActiveTime;
 
   /** 是否为当前会话（用户正在使用的会话） */
-  private boolean currentSession;
+  @JsonProperty("currentSession")
+  private boolean isCurrentSession;
 
   /** 设备指纹（User-Agent 摘要） */
   private String deviceFingerprint;
