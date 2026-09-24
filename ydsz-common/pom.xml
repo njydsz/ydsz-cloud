@@ -86,6 +86,7 @@
         <module>ydsz-common-queue</module>
         <module>ydsz-common-event</module>
         <module>ydsz-common-config</module>
+        <module>ydsz-common-seata</module>
         <module>ydsz-common-socket</module>
         <module>ydsz-common-netty</module>
         <module>ydsz-common-file</module>

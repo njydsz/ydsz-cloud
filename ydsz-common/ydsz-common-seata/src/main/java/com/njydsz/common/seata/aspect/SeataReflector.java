@@ -1,7 +1,6 @@
 package com.njydsz.common.seata.aspect;
 
 import com.njydsz.common.seata.annotation.YdszGlobalTransactional;
-import com.njydsz.common.util.JacksonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 

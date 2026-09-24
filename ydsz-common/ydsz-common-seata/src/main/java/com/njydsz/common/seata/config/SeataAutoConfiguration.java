@@ -7,8 +7,6 @@ import com.njydsz.common.seata.health.SeataHealthIndicator;
 import com.njydsz.common.seata.interceptor.FeignXidRequestInterceptor;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.actuate.health.HealthContributor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -111,12 +109,13 @@ public class SeataAutoConfiguration {
   // ---- Seata 组件健康指示器 ----
 
   @Configuration(proxyBeanMethods = false)
-  @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthContributor")
+  @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
   static class SeataHealthConfig {
 
     @Bean
     @ConditionalOnMissingBean(name = "seataHealthIndicator")
-    public HealthContributor seataHealthIndicator(final SeataProperties properties) {
+    public org.springframework.boot.health.contributor.HealthContributor seataHealthIndicator(
+        final SeataProperties properties) {
       return new SeataHealthIndicator(properties);
     }
   }

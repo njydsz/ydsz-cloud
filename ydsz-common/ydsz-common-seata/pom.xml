@@ -62,9 +62,11 @@
         </dependency>
 
         <!-- Spring 基座 -->
+        <!-- spring-boot-starter-aspectj（AspectJ 织入，用于 YdszGlobalTransactionalAspect；
+             不可用 spring-boot-starter-aop，该 artifact 不在内部 Boot BOM 中） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -98,10 +100,12 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- spring-boot-health（HealthIndicator / HealthContributor / Status；
+             Boot 4 将 actuator health 拆到 spring-boot-health，故不可使用 -actuator） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-            <optional>true</optional>
+            <artifactId>spring-boot-health</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>
