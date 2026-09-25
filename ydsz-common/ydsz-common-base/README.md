@@ -30,6 +30,15 @@
 
 ### 2. 时区与国际化
 
+> **基座层实现：** base 的国际化能力由 `ydsz-common-locales`（L2 基座）提供。`LocalesAutoConfiguration` 完成 MessageSource / LocaleResolver / Validator 的自动装配；base 在此基础上封装了 `BaseI18nConfiguration` 等抽象子类，便于 Web/App 模块差异化配置。
+>
+> **base 提供的 i18n 能力一览：**
+>
+> - `SpringMessageResolver` + `MessageResolverRegistry` + `MessageResolverHolder`：将 Spring MessageSource 适配到框架统一消息体系，支持静态访问
+> - `BaseI18nConfiguration`：封装 `AbstractMessageSource` 的子类配置，子类只需覆盖 `getBasenames()` 即可接入不同资源文件
+> - `I18nAutoConfiguration`：base 层自动配置，注册 `MessageSource`、`LocaleResolver`、`MessageResolverRegistry` 等基础设施 Bean，并桥接 locales 模块的 `MessageSourceHolder`
+> - `@EnableYdszI18n`（可选）：在启动类上显式标注以声明启用意图（省略也能自动装配）
+
 | 类 | 说明 |
 |---|---|
 | `BaseTimezoneConfiguration` | 时区配置抽象基类，`@PostConstruct` 强制设置 JVM 默认时区（`Asia/Shanghai`，UTC+8）；通过 `ydsz.base.timezone` 自定义 |

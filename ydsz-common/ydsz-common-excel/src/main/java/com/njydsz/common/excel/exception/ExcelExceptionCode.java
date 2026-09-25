@@ -85,12 +85,12 @@ public enum ExcelExceptionCode {
   CONVERT_ENUM_INVALID("H03004", "excel.convert.enumInvalid"),
 
   // ==================== 配置异常 H04xxx ====================
-/** config invalid parameter */
+
+  /** 配置参数非法 */
   CONFIG_INVALID_PARAMETER("H04001", "excel.config.invalidParameter"),
-/** config bean mapping */
-  CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping"),
-/** engine capability mismatch */
-  ENGINE_CAPABILITY_MISMATCH("H04003", "excel.engine.capabilityMismatch");
+
+  /** Bean 映射配置错误 */
+  CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping");
 
   /** 错误码 */
   private final String code;

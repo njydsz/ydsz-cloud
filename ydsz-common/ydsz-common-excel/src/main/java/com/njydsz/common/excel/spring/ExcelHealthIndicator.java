@@ -55,7 +55,7 @@ public class ExcelHealthIndicator implements HealthIndicator {
    * <p>探测项包括：
    *
    * <ul>
-   *   <li>fastReader / fastWriter / dateFormat / maxReadMb / maxWriteMb（配置摘要）
+   *   <li>engine / dateFormat / maxReadMb / maxWriteMb（配置摘要）
    *   <li>临时目录可写性（写入 + 读回校验 + 清理，不可写则报告 DOWN）
    *   <li>tempDir 路径（方便排查权限问题）
    * </ul>
@@ -65,8 +65,7 @@ public class ExcelHealthIndicator implements HealthIndicator {
   @Override
   public Health health() {
     Map<String, Object> details = new LinkedHashMap<>(16);
-    details.put("fastReader", properties.getIsUseFastReader());
-    details.put("fastWriter", properties.getIsUseFastWriter());
+    details.put("engine", "super_fast");
     details.put("dateFormat", properties.getDefaultDateFormat());
     details.put("maxReadMb", properties.getMaxReadFileSizeMb());
     details.put("maxWriteMb", properties.getMaxWriteFileSizeMb());

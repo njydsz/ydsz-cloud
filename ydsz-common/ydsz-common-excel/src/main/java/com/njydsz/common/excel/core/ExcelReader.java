@@ -1,10 +1,8 @@
 package com.njydsz.common.excel.core;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -15,12 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,61 +32,39 @@ import com.njydsz.common.excel.exception.ExcelReadException;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
 /**
- * Excel读取器 - 核心读取组件
+ * Excel 读取器 — 统一门面（零 POI 依赖）。
  *
- * <p>负责Excel文件的读取解析工作，支持.xls和.xlsx两种格式。
- * 读取策略根据配置自动选择：
- *
- * <ul>
- *   <li><b>POI 兼容路径</b>（默认）：使用 POI 用户模式（XSSFWorkbook / HSSFWorkbook），全功能但内存占用较高</li>
- *   <li><b>SuperFast 零 POI 路径</b>（{@code isUseFastReader=true} + 文件源）：手工解析 ZIP/XML，
- *       大文件采用文件流式管道 + BoundedInputStream 解压限流，内存占用约为文件大小的 1/10</li>
- * </ul>
+ * <p>自 v26.10.01 起，底层完全委托 {@link SuperFastExcelReader}，不再依赖 Apache POI。
+ * 提供链式 API（sheet、headRowNumber、includeColumnFiledNames 等），全部能力由 SuperFastExcelReader 实现。
  *
  * <h3>读取流程</h3>
  *
  * <ol>
- *   <li><b>格式识别</b> - 根据文件扩展名或输入流类型选择解析器
- *   <li><b>Sheet定位</b> - 根据sheetName或sheetIndex获取目标Sheet
- *   <li><b>表头解析</b> - 解析表头，建立列索引与字段的映射关系
- *   <li><b>数据读取</b> - 遍历数据行，通过反射设置对象属性
- *   <li><b>回调通知</b> - 触发监听器回调，通知每行数据的读取结果
+ *   <li><b>格式识别</b> - 根据文件扩展名或输入流魔数判断 xlsx 格式</li>
+ *   <li><b>输入源适配</b> - 文件路径 / File 对象直接使用；InputStream 先落盘到临时文件</li>
+ *   <li><b>Sheet 定位</b> - 解析 workbook.xml + rels 找到目标 Sheet 条目</li>
+ *   <li>手工 ZIP/XML 流式解析 Sheet 数据，BoundedInputStream 解压限流防护</li>
+ *   <li>逐行解析并通过 MethodHandle 反射设置对象属性</li>
+ *   <li>触发 ReadListener 回调通知每行数据</li>
  * </ol>
- *
- * <h3>性能优化策略</h3>
- *
- * <ul>
- *   <li>使用LinkedHashMap保持列顺序，避免HashMap的无序开销
- *   <li>反射设置时提前调用setAccessible提高访问效率
- *   <li>监听器批量处理减少频繁回调的开销
- *   <li>日期格式缓存避免重复解析
- * </ul>
  *
  * <h3>使用示例</h3>
  *
  * <pre>{@code
- * // 示例1: 基本读取
+ * // 基本读取
  * ExcelFacade.read("demo.xlsx", User.class)
  *     .sheet("用户数据")
  *     .doRead(new ReadListener<User>() {
- *         @Override
+ *         &#64;Override
  *         public void onData(AnalysisContext context, User data) {
  *             log.info("读取到用户: {}", data.getName());
  *         }
  *     });
  *
- * // 示例2: 使用Lambda简化
+ * // 便捷 lambda
  * ExcelFacade.read("demo.xlsx", User.class, (context, user) -> {
- *     // 处理每行数据
  *     saveToDatabase(user);
  * });
- *
- * // 示例3: 读取所有Sheet
- * for (int i = 0; i < sheetCount; i++) {
- *     ExcelFacade.read("demo.xlsx")
- *         .sheet(i)
- *         .doRead(listener);
- * }
  * }</pre>
  *
  * @author ydsz-team
@@ -103,6 +73,7 @@ import com.njydsz.common.excel.support.mh.MHFieldAccessor;
  * @see ReadListener
  * @see ReadMetadata
  * @see AnalysisContext
+ * @see SuperFastExcelReader
  */
 public class ExcelReader {
 
@@ -112,28 +83,28 @@ public class ExcelReader {
   /** 字节到MB的换算常量（1024 × 1024） */
   private static final long BYTES_PER_MB = 1024L * 1024L;
 
-  /** 读取配置元数据，包含文件路径、映射类型等配置信息 */
+  /** 读取配置元数据 */
   private final ReadMetadata metadata;
 
-  /** 分析上下文，用于在监听器回调中传递读取状态如当前行号 */
+  /** 分析上下文 */
   private final AnalysisContext context;
 
-  /** 已注册的监听器列表，支持多个监听器链式调用 */
+  /** 已注册的监听器列表 */
   private final List<ReadListener<?>> listeners;
 
-  /** 自定义行级校验规则列表（P2-4 新增） */
+  /** 自定义行级校验规则列表 */
   private final List<RowRule<Object>> customRules;
 
-  /** 高性能列元数据缓存 - 预计算的Setter/Type/Format，避免运行时反射 */
+  /** 高性能列元数据缓存 */
   private ColumnMetadata[] columnMetadataArray;
 
-  /** 表头分析器 - 负责解析表头行并建立列与字段的映射关系 */
+  /** 表头分析器 */
   private final HeaderAnalyzer headerAnalyzer;
 
-  /** 行解析器 - 负责解析Excel数据行 */
+  /** 行解析器 */
   private final RowParser rowParser;
 
-  /** 输入源检测器 - 负责检测输入源类型和格式 */
+  /** 输入源检测器 */
   private final InputSourceDetector inputSourceDetector;
 
   /** 批量读取大小 */
@@ -143,9 +114,9 @@ public class ExcelReader {
   private List<Object> batchBuffer;
 
   /**
-   * 构造函数 - 根据元数据创建读取器
+   * 构造函数。
    *
-   * @param metadata 读取配置元数据，包含文件路径、映射类型、Sheet信息等
+   * @param metadata 读取配置元数据
    */
   public ExcelReader(ReadMetadata metadata) {
     this.metadata = metadata;
@@ -157,27 +128,22 @@ public class ExcelReader {
     this.inputSourceDetector = new InputSourceDetector(metadata);
   }
 
-  // ==================== Sheet选择配置 ====================
+  // ==================== Sheet 选择配置 ====================
 
   /**
-   * 使用默认配置读取
+   * 使用默认配置读取。
    *
-   * <p>默认读取第一个Sheet(pageIndex=0)，表头行号为1。
-   *
-   * @return 当前读取器实体，支持链式调用
+   * @return 当前读取器实体
    */
   public ExcelReader sheet() {
     return this;
   }
 
   /**
-   * 指定要读取的Sheet名称
+   * 指定要读取的 Sheet 名称。
    *
-   * <p>根据Sheet名称精确定位要读取的Sheet页。 如果找不到对应名称的Sheet，会抛出异常。
-   *
-   * @param sheetName Sheet名称(区分大小写)
+   * @param sheetName Sheet 名称
    * @return 当前读取器实体
-   * @throws IllegalArgumentException 当Sheet不存在时
    */
   public ExcelReader sheet(String sheetName) {
     metadata.setSheetName(sheetName);
@@ -185,11 +151,9 @@ public class ExcelReader {
   }
 
   /**
-   * 指定要读取的Sheet序号
+   * 指定要读取的 Sheet 序号（从 0 开始）。
    *
-   * <p>Sheet序号从1开始，0表示第一个Sheet。 如果序号超出范围，会读取最后一个Sheet。
-   *
-   * @param sheetNo Sheet序号(从1开始)
+   * @param sheetNo Sheet 序号
    * @return 当前读取器实体
    */
   public ExcelReader sheet(int sheetNo) {
@@ -198,30 +162,9 @@ public class ExcelReader {
   }
 
   /**
-   * 设置 Excel 全局配置。
+   * 指定表头行号。
    *
-   * <p>与 {@link ExcelWriter#config(ExcelConfig)} 对称。 P1-2 修复：Spring 接入层（如 ExcelTemplate）通过本方法将
-   * {@code ydsz.excel.*} 配置注入读取链路； 此前读取器无此入口，doRead 内部恒回退 {@link ExcelConfig#defaults()}，
-   * Spring 配置（maxReadFileSizeMb / useFastReader / validationMode 等）完全断线。
-   *
-   * <p><b>注意：</b>须在 {@link #doRead(ReadListener)} 之前调用。
-   *
-   * @param config Excel 全局配置，可为 {@code null}（null 时回退默认配置）
-   * @return 当前读取器实例，支持链式调用
-   */
-  public ExcelReader config(ExcelConfig config) {
-    metadata.setExcelConfig(config);
-    return this;
-  }
-
-  // ==================== 读取参数配置 ====================
-
-  /**
-   * 指定表头行号
-   *
-   * <p>表头行用于建立Excel列与Java字段的映射关系。 默认表头行号为1（因为第一行是index=0）。
-   *
-   * @param headRowNumber 表头行号(从1开始计数)
+   * @param headRowNumber 表头行号（从 1 开始）
    * @return 当前读取器实体
    */
   public ExcelReader headRowNumber(int headRowNumber) {
@@ -230,162 +173,34 @@ public class ExcelReader {
   }
 
   /**
-   * 注册数据读取监听器
+   * 注册读取监听器。
    *
-   * <p>每读取一行数据会触发监听器的onData方法。 可以注册多个监听器，按注册顺序依次调用。
-   *
-   * <p>监听器通常用于:
-   *
-   * <ul>
-   *   <li>数据持久化(如写入数据库)
-   *   <li>数据验证
-   *   <li>进度展示
-   * </ul>
-   *
-   * @param listener 数据读取监听器，不能为null
+   * @param listener 数据监听器
    * @return 当前读取器实体
    */
-  public ExcelReader registerReadListener(ReadListener<?> listener) {
-    this.listeners.add(listener);
+  public <T> ExcelReader registerReadListener(ReadListener<T> listener) {
+    if (listener != null) {
+      this.listeners.add(listener);
+    }
     return this;
   }
 
   /**
    * 注册自定义行级校验规则。
    *
-   * <p>在 JSR-303 注解标准校验通过后，逐条调用已注册的规则校验当前行数据。
-   * 任一规则抛出异常即视为校验失败，该行进入 {@link ReadListener#onError} 处理流程。
-   *
-   * <p>典型用途：跨字段校验（如"开始日期早于结束日期"）、业务唯一性校验等注解无法表达的场景。
-   *
-   * @param rule 行级校验规则；为 {@code null} 时忽略
-   * @param <R> 规则类型
-   * @return 当前读取器实例，支持链式调用
+   * @param rules 校验规则列表
+   * @return 当前读取器实体
    */
-  // YDIZ-WARN-001 允许保留：行级校验规则泛型擦除，调用方传入参数化类型已限定
   @SuppressWarnings("unchecked")
-  public <R extends RowRule<?>> ExcelReader addRule(R rule) {
-    if (rule != null) {
-      this.customRules.add((RowRule<Object>) rule);
+  public ExcelReader registerCustomRules(List<RowRule<Object>> rules) {
+    if (rules != null) {
+      this.customRules.addAll(rules);
     }
     return this;
   }
 
   /**
-   * 设置Sheet密码保护
-   *
-   * <p>如果Excel文件有密码保护，使用此方法提供密码进行解密。 注意:此方法仅适用于有密码保护的Sheet。
-   *
-   * @param password Sheet保护密码
-   * @return 当前读取器实体
-   */
-  public ExcelReader password(String password) {
-    metadata.setPassword(password);
-    return this;
-  }
-
-  /**
-   * 设置跳过空行
-   *
-   * <p>设置为true时，读取过程中会自动跳过完全为空的行。 默认不跳过空行。
-   *
-   * <h3>使用示例</h3>
-   *
-   * <pre>{@code
-   * ExcelFacade.read("data.xlsx", User.class)
-   *     .skipEmptyRows()
-   *     .doRead(listener);
-   * }</pre>
-   *
-   * @return 当前读取器实体
-   */
-  public ExcelReader skipEmptyRows() {
-    metadata.setIsSkipEmptyRows(true);
-    return this;
-  }
-
-  /**
-   * 设置跳过空行(带参数版本)
-   *
-   * @param skip 是否跳过空行
-   * @return 当前读取器实体
-   */
-  public ExcelReader skipEmptyRows(boolean skip) {
-    metadata.setIsSkipEmptyRows(skip);
-    return this;
-  }
-
-  /**
-   * 设置校验列数
-   *
-   * <p>设置为true时，每行数据的列数必须与表头列数一致。 如果不一致会在日志中输出警告，默认不校验。
-   *
-   * @param expectedColumnCount 期望的列数
-   * @return 当前读取器实体
-   */
-  public ExcelReader checkColumnCount(int expectedColumnCount) {
-    metadata.setIsCheckColumnCount(true);
-    metadata.setExpectedColumnCount(expectedColumnCount);
-    return this;
-  }
-
-  /**
-   * 设置最大读取行数，超出部分的数据行将被忽略。
-   *
-   * <p>用于超大文件的采样读取或防止一次性载入过多数据导致内存溢出； 小于等于 0 表示不限制（默认行为）。
-   *
-   * @param maxRows 最大读取行数，小于等于 0 表示不限制
-   * @return 当前读取器实体
-   */
-  public ExcelReader maxRows(int maxRows) {
-    metadata.setMaxRows(maxRows);
-    return this;
-  }
-
-  /**
-   * 设置日期格式
-   *
-   * <p>用于解析Excel中的日期类型单元格。 支持的格式如:"yyyy-MM-dd"、"yyyy/MM/dd HH:mm:ss"等。
-   *
-   * @param dateFormat 日期格式字符串
-   * @return 当前读取器实体
-   */
-  public ExcelReader dateFormat(String dateFormat) {
-    metadata.setDateFormat(dateFormat);
-    return this;
-  }
-
-  /**
-   * 使用1904日期窗口
-   *
-   * <p>某些Mac版Excel使用1904日期窗口，与Windows的1900窗口有差异。 如果读取的日期明显偏大或偏小，尝试调用此方法进行修正。
-   *
-   * @return 当前读取器实体
-   */
-  public ExcelReader use1904Windowing() {
-    ExcelConfig config = metadata.getExcelConfig();
-    if (config != null && !config.getIsUse1904Windowing()) {
-      LOG.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
-    }
-    return this;
-  }
-
-  /**
-   * 强制使用输入流模式
-   *
-   * <p>某些特殊场景下需要强制从输入流读取而不是文件路径。 例如需要先下载文件再解析的场景。
-   *
-   * @return 当前读取器实体
-   */
-  public ExcelReader mandatoryUseInputStream() {
-    metadata.setIsMandatoryUseInputStream(true);
-    return this;
-  }
-
-  /**
-   * 设置批量读取大小
-   *
-   * <p>每读取指定数量的行后，触发一次onBatchData回调， 适合需要批量入库的场景，减少数据库交互次数。
+   * 设置批量读取大小。
    *
    * @param batchSize 批量大小
    * @return 当前读取器实体
@@ -395,12 +210,96 @@ public class ExcelReader {
     return this;
   }
 
-  // ==================== 列过滤配置 ====================
+  /**
+   * 设置是否跳过空行。
+   *
+   * @param skipEmptyRows true 跳过空行
+   * @return 当前读取器实体
+   */
+  public ExcelReader skipEmptyRows(boolean skipEmptyRows) {
+    metadata.setIsSkipEmptyRows(skipEmptyRows);
+    return this;
+  }
 
   /**
-   * 排除指定字段
+   * 设置是否校验列数。
    *
-   * <p>排除后这些字段不会参与Excel读取，即便是实体类中定义了映射。
+   * @param checkColumnCount true 校验列数
+   * @return 当前读取器实体
+   */
+  public ExcelReader checkColumnCount(boolean checkColumnCount) {
+    metadata.setIsCheckColumnCount(checkColumnCount);
+    return this;
+  }
+
+  /**
+   * 设置期望的列数。
+   *
+   * @param expectedColumnCount 期望列数
+   * @return 当前读取器实体
+   */
+  public ExcelReader expectedColumnCount(int expectedColumnCount) {
+    metadata.setExpectedColumnCount(expectedColumnCount);
+    return this;
+  }
+
+  /**
+   * 设置最大读取行数。
+   *
+   * @param maxRows 最大行数
+   * @return 当前读取器实体
+   */
+  public ExcelReader maxRows(int maxRows) {
+    metadata.setMaxRows(maxRows);
+    return this;
+  }
+
+  /**
+   * 设置日期格式。
+   *
+   * @param dateFormat 日期格式
+   * @return 当前读取器实体
+   */
+  public ExcelReader dateFormat(String dateFormat) {
+    metadata.setDateFormat(dateFormat);
+    return this;
+  }
+
+  /**
+   * 设置数字格式。
+   *
+   * @param numberFormat 数字格式
+   * @return 当前读取器实体
+   */
+  public ExcelReader numberFormat(String numberFormat) {
+    metadata.setNumberFormat(numberFormat);
+    return this;
+  }
+
+  /**
+   * 是否自动去除字符串首尾空格。
+   *
+   * @param automaticTrim true 启用自动去空格
+   * @return 当前读取器实体
+   */
+  public ExcelReader automaticTrim(boolean automaticTrim) {
+    metadata.setIsAutomaticTrim(automaticTrim);
+    return this;
+  }
+
+  /**
+   * 设置 Excel 全局配置。
+   *
+   * @param config Excel 配置
+   * @return 当前读取器实体
+   */
+  public ExcelReader config(ExcelConfig config) {
+    metadata.setExcelConfig(config);
+    return this;
+  }
+
+  /**
+   * 排除指定字段。
    *
    * @param excludeColumnFiledNames 要排除的字段名集合
    * @return 当前读取器实体
@@ -411,7 +310,7 @@ public class ExcelReader {
   }
 
   /**
-   * 排除指定字段
+   * 排除指定字段。
    *
    * @param excludeColumnFiledNames 要排除的字段名数组
    * @return 当前读取器实体
@@ -422,9 +321,7 @@ public class ExcelReader {
   }
 
   /**
-   * 只包含指定字段
-   *
-   * <p>设置后只有指定的字段会被读取，其他字段会被忽略。
+   * 只包含指定字段。
    *
    * @param includeColumnFiledNames 要包含的字段名集合
    * @return 当前读取器实体
@@ -435,7 +332,7 @@ public class ExcelReader {
   }
 
   /**
-   * 只包含指定字段
+   * 只包含指定字段。
    *
    * @param includeColumnFiledNames 要包含的字段名数组
    * @return 当前读取器实体
@@ -445,147 +342,90 @@ public class ExcelReader {
     return includeColumnFiledNames(set);
   }
 
+  // ==================== 便捷读取方法 ====================
+
+  /**
+   * 便捷方法：一次性读取所有数据到列表。
+   *
+   * <p>适用于小数据量场景。大文件场景请使用 {@code doRead(ReadListener)} 流式处理。
+   *
+   * @param <T> 数据类型
+   * @param fileName 文件路径
+   * @param clazz 映射类型
+   * @param dataConsumer 数据消费者
+   * @param <T> 数据类型
+   */
+  public static <T> void read(String fileName, Class<T> clazz, ReadListener<T> dataConsumer) {
+    ReadMetadata metadata = new ReadMetadata();
+    metadata.setFilePath(fileName);
+    metadata.setClazz(clazz);
+    new ExcelReader(metadata).doRead(dataConsumer);
+  }
+
   // ==================== 核心读取方法 ====================
 
   /**
-   * 执行读取(无监听器版本)
-   *
-   * <p>适用于不需要逐行处理的场景，如只需要获取行数等简单操作。
+   * 执行读取（无监听器版本）。
    */
   public void doRead() {
     doRead(null);
   }
 
   /**
-   * 执行读取(带监听器版本)
+   * 执行读取（带监听器版本）。
    *
-   * <p>核心读取方法，根据文件类型与配置自动选择最优解析引擎。读取过程中会触发监听器的回调方法。
-   *
-   * <p><b>引擎选择策略</b>：
+   * <p>核心读取方法，全部委托 {@link SuperFastExcelReader}：
    *
    * <ul>
-   *   <li>{@code isUseFastReader=true} + 文件源 → SuperFast 零 POI 引擎（手工 ZIP/XML 流式解析，
-   *       大文件采用文件管道 + BoundedInputStream 解压限流，内存占用恒定）</li>
-   *   <li>其余场景 → POI 兼容引擎（XSSFWorkbook / HSSFWorkbook，全功能但内存占用较高）</li>
+   *   <li>文件源（filePath / File）：直接使用 ZipFile 随机访问</li>
+   *   <li>InputStream 源：先落盘到临时文件再读取（InputStream 不可随机访问）</li>
+   *   <li>手工 ZIP/XML 流式解析 + BoundedInputStream 解压限流防护（zip bomb 防护）</li>
    * </ul>
    *
-   * <p><b>SuperFast 路径内存安全</b>：sheet XML 通过临时文件管道流式解析，BoundedInputStream
-   * 限制解压后体积（上限 {@code maxReadFileSizeMB} MB），不会随文件增大线性增长。
-   *
-   * <p>执行流程：
-   *
-   * <ol>
-   *   <li>调用所有监听器的 onStart</li>
-   *   <li>根据文件类型与配置选择解析器</li>
-   *   <li>每解析一行调用监听器的 onData</li>
-   *   <li>读取完成后调用所有监听器的 onEnd</li>
-   * </ol>
-   *
-   * @param listener 数据监听器，可为null(使用前请先调用registerReadListener)
-   * @param <T> 泛型参数,表示映射的数据类型
+   * @param listener 数据监听器，可为 null（使用前请先调用 registerReadListener）
+   * @param <T> 泛型参数
    * @throws ExcelReadException 读取过程中发生业务异常时抛出
    * @throws RuntimeException 其他未预期异常
    */
   public <T> void doRead(ReadListener<T> listener) {
     long startTime = System.nanoTime();
-    boolean useFastReader = false;
     try {
       if (listener != null) {
         listeners.add(listener);
       }
       notifyStart();
 
-      String filePath = metadata.getFilePath();
-      boolean isXlsx = filePath != null && filePath.toLowerCase().endsWith(".xlsx");
-
-      if (!isXlsx && filePath == null && metadata.getFile() != null) {
-        String fileName = metadata.getFile().getName();
-        isXlsx = fileName != null && fileName.toLowerCase().endsWith(".xlsx");
-      }
-
-      if (!isXlsx && metadata.getInputStream() != null && filePath == null) {
-        isXlsx = inputSourceDetector.detectXlsxFormat(metadata.getInputStream());
-      }
+      // 检测文件格式
+      boolean isXlsx = detectXlsxFormat();
 
       ExcelConfig config =
           metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
 
-      if (filePath != null) {
-        File file = new File(filePath);
-        long fileSizeMB = file.length() / BYTES_PER_MB;
-        int maxFileSizeMB = config.getMaxReadFileSizeMB();
-        if (fileSizeMB > maxFileSizeMB) {
-          throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
-        }
-      } else if (metadata.getFile() != null) {
-        long fileSizeMB = metadata.getFile().length() / BYTES_PER_MB;
-        int maxFileSizeMB = config.getMaxReadFileSizeMB();
-        if (fileSizeMB > maxFileSizeMB) {
-          throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
-        }
+      // 文件大小校验
+      validateFileSize(config);
+
+      if (!isXlsx) {
+        throw ExcelReadException.unsupportedFormat(
+            "当前版本仅支持 .xlsx 格式，不支持 .xls。请将文件另存为 .xlsx 格式后重试。");
       }
 
-      if (isXlsx && metadata.getClazz() != null) {
-        // P0 修复：fast 引擎仅支持文件源，InputStream 输入回退 POI 兼容路径。
-        // 此前 InputStream 场景 filePath 与 file 均为 null，metadata.getFile().getAbsolutePath() 必然 NPE。
-        // 同时移除"大文件自动升级 fast"逻辑：fast 引擎为显式 opt-in，避免未开启时被阈值静默升级。
-        boolean hasFileSource = filePath != null || metadata.getFile() != null;
+      // 委托 SuperFastExcelReader 完成全部读取
+      SuperFastExcelReader superFastReader = createSuperFastReader(config);
+      executeRead(superFastReader);
 
-        if (config.getIsUseFastReader() && hasFileSource) {
-          useFastReader = true;
-          Path fastPath =
-              filePath != null ? Path.of(filePath) : metadata.getFile().toPath();
-          SuperFastExcelReader superFastReader = new SuperFastExcelReader();
-          superFastReader.setColumnMetadataArray(columnMetadataArray);
-          // P0 修复：fast 路径列元数据此前恒为 null（仅 POI parseSheet 构建），
-          // 此处接入元数据工厂，由 SheetXmlReader 收集表头后按注解规则（index 优先、名称匹配）惰性构建
-          superFastReader.setMetadataFactory(
-              headerNames ->
-                  headerAnalyzer.analyzeClassMetadataFromNames(headerNames, new HashMap<>(16)));
-          superFastReader.setInstantiator(MHFieldAccessor.getInstantiator(metadata.getClazz()));
-          superFastReader.setContext(context);
-          superFastReader.setListeners(listeners);
-          // headRowNumber 语义为 1-based 表头行号（1=第一行是表头），fast 引擎内部使用 0-based 索引
-          superFastReader.setHeadRowNumber(Math.max(0, metadata.getHeadRowNumber() - 1));
-          Integer maxRows = metadata.getMaxRows();
-          if (maxRows != null && maxRows > 0) {
-            superFastReader.setMaxRows(maxRows);
-          }
-          // P1-4：fast 引擎接入 ExcelConfig（解压限流等安全配置）与 Sheet 选择（sheetName/sheetIndex），
-          // skipEmptyRows 语义与 POI 路径对齐（metadata 缺省时不过滤空行）
-          superFastReader.setExcelConfig(config);
-          superFastReader.setSheetName(metadata.getSheetName());
-          superFastReader.setSheetIndex(metadata.getSheetIndex());
-          superFastReader.setIsSkipEmptyRows(Boolean.TRUE.equals(metadata.getIsSkipEmptyRows()));
-          superFastReader.setCustomRules(customRules);
-          // read(Path)：ZipFile 随机访问，支持 workbook.xml/rels 解析的 Sheet 选择与解压限流防护
-          superFastReader.read(fastPath);
-          notifyEnd();
-          ExcelMetrics.recordRead(
-              Duration.ofNanos(System.nanoTime() - startTime),
-              context.getCurrentRow(),
-              useFastReader ? "fast" : "poi",
-              true);
-          return;
-        }
-      }
-
-      if (isXlsx) {
-        readXlsx();
-      } else {
-        readXls();
-      }
+      notifyEnd();
       ExcelMetrics.recordRead(
           Duration.ofNanos(System.nanoTime() - startTime),
           context.getCurrentRow(),
-          useFastReader ? "fast" : "poi",
+          "super_fast",
           true);
+
     } catch (ExcelReadException e) {
       LOG.error("Excel 读取业务异常", e);
       ExcelMetrics.recordRead(
           Duration.ofNanos(System.nanoTime() - startTime),
           context.getCurrentRow(),
-          useFastReader ? "fast" : "poi",
+          "super_fast",
           false);
       throw e;
     } catch (OutOfMemoryError e) {
@@ -593,7 +433,7 @@ public class ExcelReader {
       ExcelMetrics.recordRead(
           Duration.ofNanos(System.nanoTime() - startTime),
           context.getCurrentRow(),
-          useFastReader ? "fast" : "poi",
+          "super_fast",
           false);
       throw ExcelReadException.outOfMemory(e);
     } catch (Exception e) {
@@ -601,18 +441,14 @@ public class ExcelReader {
       ExcelMetrics.recordRead(
           Duration.ofNanos(System.nanoTime() - startTime),
           context.getCurrentRow(),
-          useFastReader ? "fast" : "poi",
+          "super_fast",
           false);
       throw ExcelReadException.ioError(context.getCurrentRow(), e);
     }
   }
 
-  // ==================== 私有解析方法 ====================
-
   /**
-   * 读取全部数据到列表
-   *
-   * <p>便捷方法，将所有数据读取到List中返回。 注意：大文件场景下可能导致OOM，建议使用doRead + ReadListener流式处理。
+   * 读取全部数据到列表。
    *
    * @param <T> 数据类型
    * @return 数据列表
@@ -635,202 +471,113 @@ public class ExcelReader {
     return result;
   }
 
-  // ==================== 私有解析方法 ====================
+  // ==================== 私有方法 ====================
 
   /**
-   * 读取XLSX格式(Excel 2007+)
+   * 检测输入源是否为 xlsx 格式。
    *
-   * <p>使用 POI 用户模式进行解析。 对于大数据量场景，建议使用SuperFastExcelReader。
-   *
-   * @throws IOException 文件读取异常
+   * @return true 表示为 xlsx 格式
    */
-  private void readXlsx() throws IOException {
-    InputStream is = inputSourceDetector.getInputStream();
-    if (is == null) {
-      is = new FileInputStream(metadata.getFilePath());
+  private boolean detectXlsxFormat() {
+    String filePath = metadata.getFilePath();
+    if (filePath != null) {
+      return filePath.toLowerCase().endsWith(".xlsx");
     }
-
-    try (XSSFWorkbook workbook = new XSSFWorkbook(is)) {
-      Sheet sheet = getSheet(workbook);
-      if (sheet == null) {
-        throw new IllegalArgumentException("Sheet不存在");
-      }
-
-      parseSheet(sheet);
+    if (metadata.getFile() != null) {
+      String fileName = metadata.getFile().getName();
+      return fileName != null && fileName.toLowerCase().endsWith(".xlsx");
     }
+    if (metadata.getInputStream() != null) {
+      return inputSourceDetector.detectXlsxFormat(metadata.getInputStream());
+    }
+    throw ExcelReadException.fileAccessFailed("unknown", "未指定输入源");
   }
 
   /**
-   * 读取XLS格式(Excel 97-2003)
+   * 校验文件大小是否超过限制。
    *
-   * <p>使用Apache POI的HSSFWorkbook进行解析。 通过POIFSFileSystem包装输入流以支持加密文档的读取。
-   *
-   * @throws IOException 文件读取异常
+   * @param config Excel 配置
    */
-  private void readXls() throws IOException {
-    InputStream is = inputSourceDetector.getInputStream();
-    if (is == null) {
-      is = new FileInputStream(metadata.getFilePath());
-    }
+  private void validateFileSize(ExcelConfig config) {
+    int maxFileSizeMB = config.getMaxReadFileSizeMB();
+    String filePath = metadata.getFilePath();
 
-    try (POIFSFileSystem fs = new POIFSFileSystem(is);
-        HSSFWorkbook workbook = new HSSFWorkbook(fs)) {
-      Sheet sheet = getSheet(workbook);
-      if (sheet == null) {
-        throw new IllegalArgumentException("Sheet不存在");
+    if (filePath != null) {
+      File file = new File(filePath);
+      long fileSizeMB = file.length() / BYTES_PER_MB;
+      if (fileSizeMB > maxFileSizeMB) {
+        throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
       }
-
-      parseSheet(sheet);
+    } else if (metadata.getFile() != null) {
+      long fileSizeMB = metadata.getFile().length() / BYTES_PER_MB;
+      if (fileSizeMB > maxFileSizeMB) {
+        throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
+      }
     }
+    // InputStream 模式下无法提前校验大小，由 SuperFastExcelReader 的 BoundedInputStream 兜底
   }
 
   /**
-   * 根据配置获取目标Sheet
+   * 创建并配置 SuperFastExcelReader 实例。
    *
-   * <p>优先级：sheetName > sheetIndex > 默认第一个Sheet(pageIndex=0)
-   *
-   * @param workbook 工作簿对象
-   * @return Sheet对象,若不存在返回null
+   * @param config Excel 配置
+   * @return 配置完毕的 SuperFastExcelReader 实例
    */
-  private Sheet getSheet(Workbook workbook) {
-    String sheetName = metadata.getSheetName();
-    Integer sheetIndex = metadata.getSheetIndex();
+  private SuperFastExcelReader createSuperFastReader(ExcelConfig config) {
+    SuperFastExcelReader superFastReader = new SuperFastExcelReader();
+    superFastReader.setColumnMetadataArray(columnMetadataArray);
 
-    if (sheetName != null && !sheetName.isEmpty()) {
-      return workbook.getSheet(sheetName);
-    } else if (sheetIndex != null && sheetIndex >= 0) {
-      int sheetCount = workbook.getNumberOfSheets();
-      if (sheetIndex < sheetCount) {
-        return workbook.getSheetAt(sheetIndex);
-      }
-    }
-    return workbook.getSheetAt(0);
-  }
-
-  /**
-   * 解析Sheet数据
-   *
-   * <p>主要解析流程:
-   *
-   * <ol>
-   *   <li>验证表头行存在
-   *   <li>建立列与字段的映射关系
-   *   <li>逐行解析并触发监听器
-   * </ol>
-   *
-   * @param sheet 要解析的Sheet对象
-   * @throws IOException IO异常
-   */
-  // YDIZ-WARN-001 允许保留：行级校验规则泛型擦除，调用方传入参数化类型已限定
-  @SuppressWarnings("unchecked")
-  private void parseSheet(Sheet sheet) throws IOException {
-    int headRowNumber = metadata.getHeadRowNumber();
-    // P0 修复：headRowNumber 语义为 1-based 表头行号（1=第一行是表头，数据从第 2 行起）。
-    // 此前直接作为 0-based 索引使用（getRow(1) 取到第二行），默认配置下静默丢弃首行。
-    int headerRowIndex = Math.max(0, headRowNumber - 1);
-    Row headRow = sheet.getRow(headerRowIndex);
-
-    if (headRow == null) {
-      throw new IllegalArgumentException("Excel文件为空或没有表头行");
-    }
-
-    List<String> headers = new ArrayList<>(16);
-    Map<Integer, Field> fieldMap = new HashMap<>(16);
-
+    // 元数据工厂：由 SheetXmlReader 收集表头后按注解规则惰性构建
     if (metadata.getClazz() != null) {
-      columnMetadataArray = headerAnalyzer.analyzeClassMetadata(headRow, headers, fieldMap);
-    } else {
-      headerAnalyzer.analyzeHeaders(headRow, headers);
+      superFastReader.setMetadataFactory(
+          headerNames ->
+              headerAnalyzer.analyzeClassMetadataFromNames(headerNames, new HashMap<>(16)));
+      superFastReader.setInstantiator(MHFieldAccessor.getInstantiator(metadata.getClazz()));
     }
 
-    int lastRowNum = sheet.getLastRowNum();
-    int startRow = headerRowIndex + 1;
+    superFastReader.setContext(context);
+    superFastReader.setListeners(listeners);
+    // headRowNumber 语义为 1-based 表头行号（1=第一行是表头），fast 引擎内部使用 0-based 索引
+    superFastReader.setHeadRowNumber(Math.max(0, metadata.getHeadRowNumber() - 1));
 
-    boolean skipEmptyRows = Boolean.TRUE.equals(metadata.getIsSkipEmptyRows());
-    boolean checkColumnCount = Boolean.TRUE.equals(metadata.getIsCheckColumnCount());
-    Integer expectedColumnCount = metadata.getExpectedColumnCount();
-    boolean hasListeners = !listeners.isEmpty();
-    int listenerCount = listeners.size();
-    int[] checkColumnIndices = rowParser.buildCheckColumnIndices(columnMetadataArray);
     Integer maxRows = metadata.getMaxRows();
-    int dataRowCount = 0;
+    if (maxRows != null && maxRows > 0) {
+      superFastReader.setMaxRows(maxRows);
+    }
 
-    for (int rowIndex = startRow; rowIndex <= lastRowNum; rowIndex++) {
-      Row row = sheet.getRow(rowIndex);
-      if (row == null) {
-        continue;
+    superFastReader.setExcelConfig(config);
+    superFastReader.setSheetName(metadata.getSheetName());
+    superFastReader.setSheetIndex(metadata.getSheetIndex());
+    superFastReader.setIsSkipEmptyRows(Boolean.TRUE.equals(metadata.getIsSkipEmptyRows()));
+    superFastReader.setCustomRules(customRules);
+
+    return superFastReader;
+  }
+
+  /**
+   * 根据输入源类型选择调用方式并执行读取。
+   *
+   * @param superFastReader 已配置的读取器实例
+   * @throws Exception 读取异常
+   */
+  private void executeRead(SuperFastExcelReader superFastReader) throws Exception {
+    String filePath = metadata.getFilePath();
+
+    if (filePath != null) {
+      superFastReader.read(Path.of(filePath));
+    } else if (metadata.getFile() != null) {
+      superFastReader.read(metadata.getFile().toPath());
+    } else {
+      InputStream is = metadata.getInputStream();
+      if (is == null) {
+        throw ExcelReadException.fileAccessFailed("unknown", "未指定输入源");
       }
-
-      if (skipEmptyRows && rowParser.isRowEmptyFast(row, checkColumnIndices)) {
-        continue;
-      }
-
-      if (maxRows != null && maxRows > 0 && dataRowCount >= maxRows) {
-        break;
-      }
-
-      if (checkColumnCount) {
-        int actualCount = row.getLastCellNum();
-        if (expectedColumnCount != null && actualCount != expectedColumnCount.intValue()) {
-          LOG.warn("列数不匹配: 期望={}, 实际={}, 行号={}", expectedColumnCount, actualCount, rowIndex);
-        }
-      }
-
-      context.setCurrentRow(rowIndex);
-      Object data = rowParser.parseRow(row, headers, fieldMap, columnMetadataArray);
-
-      if (data != null && hasListeners) {
-        context.incrementRow();
-        try {
-          ExcelConfig config =
-              metadata.getExcelConfig() != null
-                  ? metadata.getExcelConfig()
-                  : ExcelConfig.defaults();
-          DataValidator.validate(data, rowIndex, config.getValidationMode());
-          // P2-4：自定义行级校验规则（在注解校验通过后执行）
-          for (RowRule<Object> rule : customRules) {
-            rule.validate(data, rowIndex);
-          }
-        } catch (Exception ve) {
-          LOG.warn("Data validation failed, row={}", rowIndex, ve);
-          for (int i = 0; i < listenerCount; i++) {
-            // YDIZ-WARN-001 允许保留：泛型擦除，List<ReadListener<?>> → ReadListener<Object> 编译期无法验证
-            ((ReadListener<Object>) listeners.get(i)).onError(context, ve);
-          }
-          continue;
-        }
-        // 每处理 1000 行触发一次进度回调
-        int currentDataRow = context.getCurrentRow();
-        if (currentDataRow % 1000 == 0) {
-          notifyProgress(currentDataRow, lastRowNum);
-        }
-        if (batchSize > 0) {
-          if (batchBuffer == null) {
-            batchBuffer = new ArrayList<>(batchSize);
-          }
-          batchBuffer.add(data);
-          if (batchBuffer.size() >= batchSize) {
-            for (int i = 0; i < listenerCount; i++) {
-              ((ReadListener<Object>) listeners.get(i)).onBatchData(context, batchBuffer);
-            }
-            batchBuffer.clear();
-          }
-        } else {
-          for (int i = 0; i < listenerCount; i++) {
-            ((ReadListener<Object>) listeners.get(i)).onData(context, data);
-          }
-        }
-      }
+      superFastReader.read(is);
     }
   }
 
   // ==================== 监听器通知方法 ====================
 
-  /**
-   * 通知所有监听器读取开始
-   *
-   * <p>在开始解析之前调用，让监听器进行初始化操作。
-   */
   private void notifyStart() {
     for (ReadListener<?> listener : listeners) {
       listener.onStart(context);
@@ -838,14 +585,12 @@ public class ExcelReader {
   }
 
   /**
-   * 通知所有监听器读取结束
+   * 通知所有监听器读取结束。
    *
-   * <p>读取完成后调用（无论是否发生异常）， 用于资源清理和统计汇总。
+   * <p>刷新剩余批次数据并触发 onEnd 回调。
    */
-  // YDIZ-WARN-001 允许保留：行级校验规则泛型擦除，调用方传入参数化类型已限定
   @SuppressWarnings("unchecked")
   private void notifyEnd() {
-    // Flush remaining batch data
     if (batchBuffer != null && !batchBuffer.isEmpty()) {
       for (ReadListener<?> listener : listeners) {
         ((ReadListener<Object>) listener).onBatchData(context, batchBuffer);
@@ -854,27 +599,6 @@ public class ExcelReader {
     }
     for (ReadListener<?> listener : listeners) {
       listener.onEnd(context);
-    }
-  }
-
-  /**
-   * 通知所有监听器读取进度
-   *
-   * <p>在解析大文件时定期回调，让监听器能够更新 UI 或记录日志。
-   *
-   * @param current 当前已处理行号
-   * @param total 总行数（若未知则为 -1）
-   */
-  // YDIZ-WARN-001 允许保留：行级校验规则泛型擦除，调用方传入参数化类型已限定
-  @SuppressWarnings("unchecked")
-  private void notifyProgress(int current, int total) {
-    for (ReadListener<?> listener : listeners) {
-      try {
-        ((ReadListener<Object>) listener).onProgress(context, current, total);
-      } catch (Exception e) {
-        LOG.warn(
-            "监听器进度回调异常, listener={}, current={}, total={}", listener.getName(), current, total, e);
-      }
     }
   }
 }
