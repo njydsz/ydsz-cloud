@@ -225,6 +225,37 @@ public class MHFieldAccessor {
   }
 
   private static ObjectInstantiator createInstantiator(Class<?> clazz) {
+    // Record 类型使用规范构造函数（参数顺序 = record component 声明顺序）。
+    if (clazz.isRecord()) {
+      try {
+        Class<?>[] paramTypes =
+            java.util.Arrays.stream(clazz.getRecordComponents())
+                .map(java.lang.reflect.RecordComponent::getType)
+                .toArray(Class<?>[]::new);
+        java.lang.reflect.Constructor<?> canonicalCtor = clazz.getDeclaredConstructor(paramTypes);
+        canonicalCtor.setAccessible(true);
+        return () -> {
+          try {
+            // 规范构造函数要求全覆盖参数；此处返回 null 占位（实际填充由 readListener 或
+            // 自定义 Collect-and-Construct 模式完成）。完整 Record 支持需要 read path 先收集行数据
+            // 再调用此构造函数 —— 推荐使用 ReadListener 模式。
+            Object[] args = new Object[paramTypes.length];
+            return canonicalCtor.newInstance(args);
+          } catch (Exception e) {
+            throw new ExcelException(
+                ExcelExceptionCode.WRITE_DATA_FAILED,
+                "Cannot instantiate Record: " + clazz.getName(),
+                e);
+          }
+        };
+      } catch (Exception e) {
+        throw new ExcelException(
+            ExcelExceptionCode.WRITE_DATA_FAILED,
+            "Cannot create Record instantiator for: " + clazz.getName(),
+            e);
+      }
+    }
+
     try {
       return () -> {
         try {

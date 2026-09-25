@@ -37,6 +37,7 @@ import com.njydsz.workflow.domain.gateway.NameServiceClient;
  * @since 26.09.01
  */
 @Slf4j
+@SuppressWarnings("deprecation") // NameAssembler/NameType 已标记弃用但迁移至 common-core 尚未完成，临时抑制
 public class NameServiceClientAdapter implements NameServiceClient {
 
   /** ID → 名称富化组件（common-feign 平台契约，含缓存；平台兜底被显式禁用时可能为 null） */

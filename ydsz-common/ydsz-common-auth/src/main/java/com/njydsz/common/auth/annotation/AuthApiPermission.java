@@ -47,12 +47,12 @@ import java.lang.annotation.Target;
  * @author ydsz-team
  * @since 26.09.01
  * @see AuthMenuPermission
- * @deprecated AuthRowPermission / AuthColPermission 已移除，行/列数据权限统一由 ydsz-common-jdbc 处理
+ * @apiNote AuthRowPermission / AuthColPermission 已移除，行/列数据权限统一由 ydsz-common-jdbc 处理；
+ *     本注解（AuthApiPermission）仍有效，用于接口级别的访问权限校验，不会被移除。
  */
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@Deprecated
 public @interface AuthApiPermission {
 
   /**

@@ -59,6 +59,7 @@ import com.njydsz.workflow.server.engine.FlowNodeExt;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@SuppressWarnings("deprecation") // NameAssembler/NameType 已标记弃用但迁移至 common-core 尚未完成，临时抑制
 public class FlowInstanceQueryService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;

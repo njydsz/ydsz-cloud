@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.channel.ChannelScoreCalculator.ChannelScore;
@@ -137,7 +137,7 @@ public class ChannelRouter {
    * @param request 消息请求
    * @return 发送结果
    */
-  public MessageResult dispatch(MessageRequest request) {
+  public MessageSendResultVO dispatch(MessageRequest request) {
     String channel = request.getChannel();
     MessageChannel target = route(channel);
     CircuitBreaker breaker = breakerCache.get(channel.trim().toUpperCase());
@@ -145,11 +145,11 @@ public class ChannelRouter {
     if (breaker != null && breaker.getState() == CircuitBreaker.State.OPEN) {
       log.warn("[ChannelRouter] 通道熔断中，快速失败: channel={} state={}", channel, breaker.getState());
       messageMetrics.recordChannelError(channel, "CIRCUIT_BREAKER");
-      return MessageResult.fail(channel, null, "通道熔断中，请稍后重试", "通道熔断中，请稍后重试", null);
+      return MessageSendResultVO.fail(channel, null, "通道熔断中，请稍后重试", "通道熔断中，请稍后重试", null);
     }
     long start = System.currentTimeMillis();
     try {
-      MessageResult result = target.send(request);
+      MessageSendResultVO result = target.send(request);
       long cost = System.currentTimeMillis() - start;
       log.info(
           "[ChannelRouter] channel={} status={} costMs={} cbState={}",
@@ -185,7 +185,7 @@ public class ChannelRouter {
           breaker == null ? "N/A" : breaker.getState(),
           e);
       // P3-2: 透传 root cause 链，避免包装异常掩盖真实错误原因
-      return MessageResult.fail(channel, null, buildErrorMessageWithCause(e), buildErrorMessageWithCause(e), null);
+      return MessageSendResultVO.fail(channel, null, buildErrorMessageWithCause(e), buildErrorMessageWithCause(e), null);
     }
   }
 
@@ -197,7 +197,7 @@ public class ChannelRouter {
    * @param request 消息请求
    * @return 发送结果（首个成功或最后一个失败）
    */
-  public MessageResult dispatchWithScore(MessageRequest request) {
+  public MessageSendResultVO dispatchWithScore(MessageRequest request) {
     return dispatchWithScore(request, null);
   }
 
@@ -217,7 +217,7 @@ public class ChannelRouter {
    * @param scoreConfig 评分权重配置，为 null 时使用默认权重
    * @return 发送结果（首个成功或最后一个失败）
    */
-  public MessageResult dispatchWithScore(MessageRequest request, ScoreConfig scoreConfig) {
+  public MessageSendResultVO dispatchWithScore(MessageRequest request, ScoreConfig scoreConfig) {
     if (request == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -235,7 +235,7 @@ public class ChannelRouter {
 
     if (enabledChannels.isEmpty()) {
       log.warn("[ChannelRouter] dispatchWithScore: 无可用启用通道");
-      return MessageResult.fail(null, null, "无可用启用通道", "无可用启用通道", null);
+      return MessageSendResultVO.fail(null, null, "无可用启用通道", "无可用启用通道", null);
     }
 
     // 2. 按评分降序排序
@@ -251,7 +251,7 @@ public class ChannelRouter {
             .orElse(""));
 
     // 3. 依次尝试 dispatch，首次成功即返回
-    MessageResult lastResult = null;
+    MessageSendResultVO lastResult = null;
     for (ChannelScore channelScore : rankedScores) {
       // 构建针对当前评分通道的请求副本
       MessageRequest channelRequest = cloneRequestWithChannel(request, channelScore.channel());
@@ -362,7 +362,7 @@ public class ChannelRouter {
             e.getMessage());
       }
     }
-    MessageResult result = dispatch(request);
+    MessageSendResultVO result = dispatch(request);
     if (!result.isSuccess()) {
       throw SysException.builder().message(result.getUserMessage()).build();
     }

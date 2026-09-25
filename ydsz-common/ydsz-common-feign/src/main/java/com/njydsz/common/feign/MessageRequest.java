@@ -15,10 +15,9 @@ import lombok.Data;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @deprecated 消息 DTO 不属于 Feign 职责，应迁移至 ydsz-common-core 或 ydsz-message。
- *     当前保留以兼容旧调用方，新代码请直接使用核心模块。
+ * @apiNote 消息 DTO 原有职责在 Feign 层定义，目前已扩展为项目全局使用的消息发送请求 DTO；
+ *     后续计划将其迁移至 ydsz-common-core 或 ydsz-message，在此之前继续在此处定义以兼容全量调用方。
  */
-@Deprecated(since = "26.09.21", forRemoval = true)
 @Data
 public class MessageRequest implements Serializable {
 
