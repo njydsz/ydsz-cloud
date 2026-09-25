@@ -87,6 +87,12 @@ public class SheetXmlReader {
   /** 当前行是否有数据（用于空行跳过） */
   private boolean isRowHasData;
 
+  /** 流式解析滑动窗口大小 — 64KB，覆盖绝大多数单行超大场景 */
+  private static final int STREAM_WINDOW_SIZE = 64 * 1024;
+
+  /** 流式解析最小触发阈值 — 输入流大于此大小时启用窗口流 */
+  private static final int STREAM_THRESHOLD = 32 * 1024;
+
   /**
    * 构造 Sheet 读取器。
    *
@@ -113,9 +119,212 @@ public class SheetXmlReader {
   // YDIZ-WARN-001 允许保留：SAX 解析单元格类型泛型擦除，值转换由调用方承担
   @SuppressWarnings("unchecked")
   void parse(InputStream is) throws IOException {
-    byte[] data = readAllBytesDirect(is);
-    int pos = 0;
-    int len = data.length;
+    // P0-2 优化：根据输入大小选择解析模式
+    // — 小文件 (< 32KB)：走原有全量 byte[] 路径（mark/reset 无开销）
+    // — 大文件 (≥ 32KB)：走滑动窗口流式路径（内存峰值从 5MB+ 降至 ~64KB）
+    if (is.markSupported()) {
+      is.mark(STREAM_THRESHOLD + 1);
+      byte[] preview = new byte[STREAM_THRESHOLD];
+      int previewLen = 0;
+      int read;
+      while (previewLen < STREAM_THRESHOLD
+          && (read = is.read(preview, previewLen, STREAM_THRESHOLD - previewLen)) > 0) {
+        previewLen += read;
+      }
+      if (previewLen < STREAM_THRESHOLD) {
+        // 小文件：全量加载并走原有解析路径
+        byte[] fullData = new byte[previewLen];
+        System.arraycopy(preview, 0, fullData, 0, previewLen);
+        parseFullArray(fullData, 0, fullData.length);
+        return;
+      }
+      // 大文件：reset 后走流式解析
+      is.reset();
+      parseStreaming(is);
+    } else {
+      // 不支持 mark 的流：直接走流式解析
+      parseStreaming(is);
+    }
+  }
+
+  /**
+   * 流式滑动窗口解析器 — 将内存峰值从整个 XML 降至一个滑动窗口（64 KB）。
+   *
+   * <p>工作流程：
+   * <ol>
+   *   <li>从 InputStream 读入固定窗口</li>
+   *   <li>扫描完整 {@code <row>...</row>} 片段后提取为 shard</li>
+   *   <li>调用 {@link #processRowShard} 处理单行（复用已有 parseRowContent 逻辑）</li>
+   *   <li>将未处理完的窗口尾部滑动到头部，继续读取下一批</li>
+   * </ol>
+   */
+  private void parseStreaming(InputStream is) throws IOException {
+    byte[] window = new byte[STREAM_WINDOW_SIZE];
+    int winLen = 0;
+    byte[] chunk = new byte[8192];
+
+    int n;
+    while ((n = is.read(chunk)) > 0) {
+      // 扩容窗口（如果出现窗口装不下一行的情况）
+      if (winLen + n > window.length) {
+        byte[] bigger = new byte[Math.max(window.length * 2, winLen + n + 8192)];
+        System.arraycopy(window, 0, bigger, 0, winLen);
+        window = bigger;
+      }
+      System.arraycopy(chunk, 0, window, winLen, n);
+      winLen += n;
+
+      // 消费窗口中所有完整的 row 片段
+      int consumed = emitCompleteRows(window, winLen);
+      if (consumed > 0) {
+        // 将残留数据滑动到窗口头部
+        if (consumed < winLen) {
+          System.arraycopy(window, consumed, window, 0, winLen - consumed);
+        }
+        winLen -= consumed;
+      }
+    }
+
+    // 处理窗口中残留的尾部数据（可能不含 </row> 的最后半行）
+    if (winLen > 0) {
+      emitCompleteRows(window, winLen);
+    }
+  }
+
+  /**
+   * 从窗口中消费所有完整的 {@code <row>...</row>} 片段，返回消费到的字节数。
+   */
+  private int emitCompleteRows(byte[] window, int winLen) {
+    int consumedUpTo = 0;
+    int searchFrom = 0;
+
+    while (searchFrom < winLen) {
+      int rowStart = findTag(window, searchFrom, winLen, "row");
+      if (rowStart == -1) {
+        break;
+      }
+
+      int rowAttrEnd = findChar(window, rowStart, winLen, '>');
+      if (rowAttrEnd == -1) {
+        break;  // row 标签不完整，需要更多数据
+      }
+
+      int rowEnd = findClosingTag(window, rowAttrEnd + 1, winLen, "row");
+      if (rowEnd == -1) {
+        break;  // </row> 未找到，需要更多数据
+      }
+
+      // 提取完整的 row 片段长度
+      int shardLen = rowEnd + 6 - rowStart;
+      byte[] shard = new byte[shardLen];
+      System.arraycopy(window, rowStart, shard, 0, shardLen);
+
+      // 处理单行 shard
+      processRowShard(shard, 0, rowAttrEnd - rowStart, rowEnd - rowStart);
+
+      if (shouldStopBreak()) {
+        return winLen;  // 熔断：消费到末尾退出
+      }
+
+      searchFrom = rowEnd + 6;
+      consumedUpTo = searchFrom;
+    }
+
+    return consumedUpTo;
+  }
+
+  /**
+   * 处理单行 shard（一个完整的 {@code <row>...</row>} byte 片段）。
+   *
+   * <p>shard 是独立的 byte[]，所有现有解析方法（parseRowAttributes、parseRowContent）
+   * 均接受 (data, start, end) 边界参数，可直接复用而无需修改。
+   *
+   * @param shard 完整的 row XML 字节
+   * @param rowStart shard 内的 <row 起始偏移
+   * @param rowAttrEnd shard 内的 <row ...> 结束偏移
+   * @param rowEnd shard 内的 </row> 起始偏移
+   */
+  private void processRowShard(byte[] shard, int rowStart, int rowAttrEnd, int rowEnd) {
+    parseRowAttributes(shard, rowStart, rowAttrEnd);
+    isRowHasData = false;
+
+    if (currentRow > reader.headRowNumber && rowData == null && reader.instantiator != null) {
+      try {
+        rowData = reader.instantiator.newInstance();
+      } catch (Exception e) {
+        rowData = null;
+      }
+    }
+
+    int rowContentStart = rowAttrEnd + 1;
+    parseRowContent(shard, rowContentStart, rowEnd);
+
+    if (reader.context != null && reader.listeners != null) {
+      finishAndEmitRow();
+    }
+  }
+
+  /**
+   * 完成当前 rowData 的校验并分发给监听器。
+   */
+  @SuppressWarnings("unchecked")
+  private void finishAndEmitRow() {
+    if (rowData == null) {
+      return;
+    }
+
+    // skipEmptyRows: 跳过无单元格数据的行
+    if (reader.skipEmptyRows && !isRowHasData) {
+      rowData = null;
+      return;
+    }
+
+    reader.context.incrementRow();
+
+    try {
+      DataValidator.validate(rowData, currentRow);
+      if (reader.customRules != null) {
+        for (RowRule<Object> rule : reader.customRules) {
+          rule.validate(rowData, currentRow);
+        }
+      }
+    } catch (Exception ve) {
+      LOG.warn("Data validation failed at row {}: {}", currentRow, ve.getMessage());
+      for (ReadListener<?> listener : reader.listeners) {
+        try {
+          ReadListener<Object> typedListener = (ReadListener<Object>) listener;
+          typedListener.onError(reader.context, ve);
+        } catch (Exception ex) {
+          LOG.warn("Listener onError callback failed at row {}", currentRow, ex);
+        }
+      }
+      rowData = null;
+      return;
+    }
+
+    for (ReadListener<?> listener : reader.listeners) {
+      try {
+        ReadListener<Object> typedListener = (ReadListener<Object>) listener;
+        typedListener.onData(reader.context, rowData);
+      } catch (Exception e) {
+        LOG.warn("Listener onData callback failed at row {}", currentRow, e);
+      }
+    }
+    rowData = null;
+  }
+
+  /** 检查是否已达到 maxRows 熔断上限。 */
+  private boolean shouldStopBreak() {
+    return reader.maxRows > 0
+        && reader.context != null
+        && reader.context.getCurrentRow() - reader.headRowNumber >= reader.maxRows;
+  }
+
+  /**
+   * 全量 byte[] 解析路径（原有逻辑，用于小文件性能最优）。
+   */
+  private void parseFullArray(byte[] data, int start, int len) {
+    int pos = start;
 
     while (pos < len) {
       int rowStart = findTag(data, pos, len, "row");
@@ -129,84 +338,36 @@ public class SheetXmlReader {
         continue;
       }
 
-      parseRowAttributes(data, rowStart, rowAttrEnd);
-      isRowHasData = false;
-
-      if (currentRow > reader.headRowNumber && rowData == null && reader.instantiator != null) {
-        try {
-          rowData = reader.instantiator.newInstance();
-        } catch (Exception e) {
-          rowData = null;
-        }
-      }
-
-      int rowContentStart = rowAttrEnd + 1;
-      int rowEnd = findClosingTag(data, rowContentStart, len, "row");
+      int rowEnd = findClosingTag(data, rowAttrEnd + 1, len, "row");
       if (rowEnd == -1) {
-        pos = rowContentStart + 1;
+        pos = rowAttrEnd + 2;
         continue;
       }
 
-      parseRowContent(data, rowContentStart, rowEnd);
+      // 复用 shard 处理逻辑：将单行 slice 视为一个 mini-shard
+      int shardLen = rowEnd + 6 - rowStart;
+      byte[] shard = new byte[shardLen];
+      System.arraycopy(data, rowStart, shard, 0, shardLen);
 
-      if (rowData != null && reader.context != null && reader.listeners != null) {
-        // skipEmptyRows: skip rows with no cell data
-        if (reader.skipEmptyRows && !isRowHasData) {
-          rowData = null;
-          pos = rowEnd + 6;
-          continue;
-        }
+      processRowShard(shard, 0, rowAttrEnd - rowStart, rowEnd - rowStart);
 
-        reader.context.incrementRow();
-
-        // P0-3: DataValidator integration in SuperFast read path
-        try {
-          DataValidator.validate(rowData, currentRow);
-          // P2-4：自定义行级校验规则（在注解校验通过后执行）
-          if (reader.customRules != null) {
-            for (RowRule<Object> rule : reader.customRules) {
-              rule.validate(rowData, currentRow);
-            }
-          }
-        } catch (Exception ve) {
-          LOG.warn("Data validation failed at row {}: {}", currentRow, ve.getMessage());
-          for (ReadListener<?> listener : reader.listeners) {
-            try {
-              ReadListener<Object> typedListener = (ReadListener<Object>) listener;
-              typedListener.onError(reader.context, ve);
-            } catch (Exception ex) {
-              LOG.warn("Listener onError callback failed at row {}", currentRow, ex);
-            }
-          }
-          rowData = null;
-          if (reader.maxRows > 0
-              && reader.context.getCurrentRow() - reader.headRowNumber >= reader.maxRows) {
-            break;
-          }
-          pos = rowEnd + 6;
-          continue;
-        }
-
-        List<ReadListener<?>> safeListeners = reader.listeners;
-        for (ReadListener<?> listener : safeListeners) {
-          try {
-            ReadListener<Object> typedListener = (ReadListener<Object>) listener;
-            typedListener.onData(reader.context, rowData);
-          } catch (Exception e) {
-            LOG.warn("Listener onData callback failed at row {}", currentRow, e);
-          }
-        }
-      }
-      rowData = null;
-
-      if (reader.maxRows > 0
-          && reader.context != null
-          && reader.context.getCurrentRow() - reader.headRowNumber >= reader.maxRows) {
+      if (shouldStopBreak()) {
         break;
       }
 
       pos = rowEnd + 6;
     }
+
+    // 清理残留引用
+    rowData = null;
+  }
+
+  /**
+   * 检查当前是否允许继续读取。由父级读取器回调以支持外部中断。
+   * 若父级未传入上下文则默认返回 true（兼容旧调用场景）。
+   */
+  private boolean isReadAllowed() {
+    return reader.context == null || reader.context.isReadAllowed();
   }
 
   private byte[] readAllBytesDirect(InputStream is) throws IOException {
