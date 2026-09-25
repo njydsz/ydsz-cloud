@@ -71,7 +71,21 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-netty</artifactId>
         </dependency>
-        <!-- P0-1: ydsz-common-web 已移除（server 层无直接 import，web 层由 message-web 模块承载HTTP 基座能力） -->
+        <!-- ydzs-common-web：提供 WebhookDispatcher/WebhookSubscription（OutboundWebhookService 使用） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-web</artifactId>
+        </dependency>
+        <!-- ydzs-common-auth：提供 AuthContextUtils（MQ 消费者中多租户/安全上下文获取） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
+        <!-- ydzs-common-base：提供 AbstractModuleHealthIndicator（MessageHealthIndicator 使用） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-base</artifactId>
+        </dependency>
         <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
         <dependency>
             <groupId>com.njydsz</groupId>

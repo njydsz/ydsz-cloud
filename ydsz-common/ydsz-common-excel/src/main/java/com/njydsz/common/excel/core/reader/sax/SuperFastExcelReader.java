@@ -190,8 +190,44 @@ public class SuperFastExcelReader {
           StandardCopyOption.REPLACE_EXISTING);
       read(tempFile);
     } finally {
-      Files.deleteIfExists(tempFile);
+      secureDeleteTempFile(tempFile);
     }
+  }
+
+  /**
+   * 安全删除临时文件（含重试 + deleteOnExit 兜底）。
+   *
+   * <p>清理策略：先尝试 3 次重试（指数退避 100ms/200ms/400ms），仍失败则标记
+   * {@link java.io.File#deleteOnExit()} 让 JVM 退出时兜底清理——避免敏感数据残留磁盘。
+   *
+   * @param tempFile 临时文件路径
+   */
+  private static void secureDeleteTempFile(Path tempFile) {
+    if (tempFile == null || !Files.exists(tempFile)) {
+      return;
+    }
+    int maxRetries = 3;
+    long backoffMs = 100;
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (Files.deleteIfExists(tempFile)) {
+          return;
+        }
+      } catch (IOException e) {
+        LOG.warn("临时文件删除失败: path={}, attempt={}/{}", tempFile, attempt, maxRetries, e);
+      }
+      if (attempt < maxRetries) {
+        try {
+          java.util.concurrent.TimeUnit.MILLISECONDS.sleep(backoffMs);
+          backoffMs *= 2;
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+      }
+    }
+    tempFile.toFile().deleteOnExit();
+    LOG.warn("已标记临时文件 JVM 退出时删除: path={}", tempFile);
   }
 
   /**
@@ -442,7 +478,10 @@ public class SuperFastExcelReader {
 
     List<SheetRef> sheets;
     try (InputStream is = bounded(zipFile.getInputStream(workbookEntry))) {
-      sheets = parseWorkbookSheets(new String(readAll(is), StandardCharsets.UTF_8));
+      byte[] workbookBytes = readAll(is);
+      // XXE 防护：检测并拒绝外部实体声明
+      com.njydsz.common.excel.core.util.XmlSecurityUtils.detectXxeAndThrow(workbookBytes, "xl/workbook.xml");
+      sheets = parseWorkbookSheets(new String(workbookBytes, StandardCharsets.UTF_8));
     }
     if (sheets.isEmpty()) {
       return fallbackFirstSheetEntry(zipFile);
@@ -452,7 +491,10 @@ public class SuperFastExcelReader {
     ZipEntry relsEntry = zipFile.getEntry("xl/_rels/workbook.xml.rels");
     if (relsEntry != null) {
       try (InputStream is = bounded(zipFile.getInputStream(relsEntry))) {
-        rels = parseRelationships(new String(readAll(is), StandardCharsets.UTF_8));
+        byte[] relsBytes = readAll(is);
+        // XXE 防护：检测并拒绝 rels 中的外部实体声明
+        com.njydsz.common.excel.core.util.XmlSecurityUtils.detectXxeAndThrow(relsBytes, "xl/_rels/workbook.xml.rels");
+        rels = parseRelationships(new String(relsBytes, StandardCharsets.UTF_8));
       }
     }
 

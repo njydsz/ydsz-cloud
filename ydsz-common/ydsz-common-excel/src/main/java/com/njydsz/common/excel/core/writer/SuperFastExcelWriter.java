@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -336,14 +337,65 @@ public class SuperFastExcelWriter {
 
       zipOut.finish();
     } finally {
+      secureDeleteTempDir(tempDir, filePath);
+    }
+  }
+
+  /**
+   * 安全删除临时目录（含重试 + deleteOnExit 兜底）。
+   *
+   * <p>清理策略：先尝试 3 次重试（指数退避 100ms/200ms/400ms），仍失败则标记
+   * {@link File#deleteOnExit()} 让 JVM 退出时兜底清理——避免敏感数据残留磁盘。
+   *
+   * @param tempDir 临时目录路径
+   * @param filePath 关联的目标文件路径（仅用于日志定位）
+   */
+  private static void secureDeleteTempDir(Path tempDir, String filePath) {
+    if (tempDir == null || !Files.exists(tempDir)) {
+      return;
+    }
+
+    int maxRetries = 3;
+    long backoffMs = 100;
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         Files.walk(tempDir)
             .sorted(Comparator.reverseOrder())
-            .map(p -> p.toFile())
-            .forEach(f -> f.delete());
-      } catch (Exception e) {
-        LOG.warn("清理临时文件异常", e);
+            .forEach(p -> {
+              try {
+                Files.deleteIfExists(p);
+              } catch (IOException e) {
+                LOG.warn("临时文件删除失败: path={}, attempt={}/{}",
+                    p, attempt, maxRetries, e);
+              }
+            });
+        // 校验是否清理完毕
+        if (!Files.exists(tempDir)) {
+          return;
+        }
+      } catch (IOException e) {
+        LOG.warn("遍历临时目录异常: dir={}, attempt={}/{}",
+            tempDir, attempt, maxRetries, e);
       }
+      if (attempt < maxRetries) {
+        try {
+          TimeUnit.MILLISECONDS.sleep(backoffMs);
+          backoffMs *= 2;
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+      }
+    }
+
+    // 兜底：标记目录及残留文件在 JVM 退出时删除
+    try {
+      Files.walk(tempDir)
+          .sorted(Comparator.reverseOrder())
+          .forEach(p -> p.toFile().deleteOnExit());
+      LOG.warn("已标记临时目录 JVM 退出时清理: dir={}, targetFile={}", tempDir, filePath);
+    } catch (IOException e) {
+      LOG.warn("标记 deleteOnExit 失败: dir={}, targetFile={}", tempDir, filePath, e);
     }
   }
 
