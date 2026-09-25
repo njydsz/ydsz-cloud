@@ -3,6 +3,7 @@ package com.njydsz.common.redis.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.ResolvableType;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -223,7 +224,7 @@ public class RedisConfiguration {
       RedisTemplate<String, Object> redisTemplate, RedisRetryInterceptor redisRetryInterceptor) {
     ProxyFactory proxyFactory = new ProxyFactory(redisTemplate);
     proxyFactory.addAdvice(redisRetryInterceptor);
-    return (RedisTemplate<String, Object>) proxyFactory.getProxy();
+    return proxyFactory.getProxy();
   }
 
   /**

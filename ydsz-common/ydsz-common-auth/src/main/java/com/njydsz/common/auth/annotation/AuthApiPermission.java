@@ -52,6 +52,7 @@ import java.lang.annotation.Target;
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
+@Deprecated
 public @interface AuthApiPermission {
 
   /**

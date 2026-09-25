@@ -13,11 +13,11 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.alert.SecurityEvent;
 
 /**
- * 安全审计日志记录器
+ * 安全审计日志记录器。
  *
- * <p>将安全事件以结构化 JSON 格式输出到独立的审计日志， 支持 traceId 关联，可与 Loki/Sentry 集成。
+ * <p>将安全事件以结构化 JSON 格式输出到独立的审计日志，支持 traceId 关联，可与 Loki/Sentry 集成。
  *
- * <p>traceId 优先从 {@link RequestContext}（统一上下文主源）读取， 回退 MDC（兼容 Brave / 旧逻辑写入的 B3 traceId）。
+ * <p>traceId 优先从 {@link RequestContext}（统一上下文主源）读取，回退 MDC（兼容 Brave / 旧逻辑写入的 B3 traceId）。
  *
  * <p><b>日志格式：</b>
  *
@@ -37,7 +37,14 @@ import com.njydsz.common.safe.alert.SecurityEvent;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 自 26.09.25 起废弃（forRemoval=true）。安全事件审计请迁移至
+ *             {@link com.njydsz.common.audit.aspect.AuditAspect AuditAspect} +
+ *             {@link com.njydsz.common.audit.recorder.AuditRecorder AuditRecorder}
+ *             （ydsz-common-audit 模块），安全告警则使用
+ *             {@link com.njydsz.common.safe.alert.SecurityEventPublisher SecurityEventPublisher}。
+ *             本工具类在 26.12 版本中计划移除。
  */
+@Deprecated(forRemoval = true)
 public class SecurityAuditLogger {
 
   private static final Logger AUDIT_LOG = LoggerFactory.getLogger("SECURITY_AUDIT");
