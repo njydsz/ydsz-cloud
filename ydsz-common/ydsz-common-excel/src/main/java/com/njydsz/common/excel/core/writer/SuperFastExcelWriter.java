@@ -1685,56 +1685,70 @@ public class SuperFastExcelWriter {
       return idx;
     }
 
-    byte[] buildXmlDirect() throws Exception {
-      StringBuilder sb = new StringBuilder(200 + count * 128);
+    byte[] buildXmlDirect() throws IOException {
+      // P1-1：字节级直接构造 SST XML，消除 StringBuilder → String → byte[] 三次拷贝
+      // 原理：XML 转义仅涉及 ASCII 字符（& < > " '），UTF-8 中均为单字节，可字节级判断替换
+      byte[] countBytes = Integer.toString(count).getBytes(StandardCharsets.UTF_8);
 
-      sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
-      sb.append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"");
-      sb.append(count);
-      sb.append("\" uniqueCount=\"");
-      sb.append(count);
-      sb.append("\">");
+      // 预分配大小：头部 + 每行开销 + 字符串长度
+      int estimatedSize = SST_HEADER_PART1.length + countBytes.length * 2
+          + SST_HEADER_PART2.length + SST_HEADER_FOOTER.length
+          + count * (SI_OPEN.length + SI_CLOSE.length + 32);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream(Math.max(estimatedSize, 256));
+
+      baos.write(SST_HEADER_PART1, 0, SST_HEADER_PART1.length);
+      baos.write(countBytes, 0, countBytes.length);     // count
+      baos.write(SST_HEADER_PART2, 0, SST_HEADER_PART2.length);
+      baos.write(countBytes, 0, countBytes.length);     // uniqueCount（已去重，==count）
+      baos.write(SST_HEADER_FOOTER, 0, SST_HEADER_FOOTER.length);
 
       for (int i = 0; i < count; i++) {
-        sb.append("<si><t>");
+        baos.write(SI_OPEN, 0, SI_OPEN.length);        // "<si><t>"
         String s = strings[i];
         if (s != null) {
-          int len = s.length();
-          for (int j = 0; j < len; j++) {
-            char c = s.charAt(j);
-            switch (c) {
-              case '&':
-                sb.append("&amp;");
-                break;
-              case '<':
-                sb.append("&lt;");
-                break;
-              case '>':
-                sb.append("&gt;");
-                break;
-              case '"':
-                sb.append("&quot;");
-                break;
-              case '\'':
-                sb.append("&apos;");
-                break;
-              default:
-                sb.append(c);
-                break;
-            }
-          }
+          writeEscapedUtf8(baos, s);
         }
-        sb.append("</t></si>");
+        baos.write(SI_CLOSE, 0, SI_CLOSE.length);       // "</t></si>"
       }
 
-      sb.append("</sst>");
-      return sb.toString().getBytes(StandardCharsets.UTF_8);
+      baos.write(SST_FOOTER, 0, SST_FOOTER.length);     // "</sst>"
+      return baos.toByteArray();
+    }
+
+    /**
+     * 字节级 XML UTF-8 转义写入。仅 ASCII 危险字符需要转义，UTF-8 中均为单字节。
+     */
+    private static void writeEscapedUtf8(ByteArrayOutputStream out, String value) throws IOException {
+      byte[] utf8 = value.getBytes(StandardCharsets.UTF_8);
+      for (byte b : utf8) {
+        switch (b) {
+          case 0x26:  out.write(AMP_BYTES);  break;  // '&'
+          case 0x3C:  out.write(LT_BYTES);   break;  // '<'
+          case 0x3E:  out.write(GT_BYTES);   break;  // '>'
+          case 0x22:  out.write(QUOT_BYTES); break;  // '"'
+          case 0x27:  out.write(APOS_BYTES); break;  // '\''
+          default:    out.write(b);          break;
+        }
+      }
     }
   }
 
-  private static final byte[] AMP_BYTES = "&amp;".getBytes(StandardCharsets.UTF_8);
-  private static final byte[] LT_BYTES = "&lt;".getBytes(StandardCharsets.UTF_8);
-  private static final byte[] GT_BYTES = "&gt;".getBytes(StandardCharsets.UTF_8);
+  /* ==================== SST XML 字节常量（P1-1 优化） ==================== */
+  private static final byte[] SST_HEADER_PART1 = (
+      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+          + "<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"")
+      .getBytes(StandardCharsets.UTF_8);
+  private static final byte[] SST_HEADER_PART2 = "\" uniqueCount=\""
+      .getBytes(StandardCharsets.UTF_8);
+  private static final byte[] SST_HEADER_FOOTER = "\">".getBytes(StandardCharsets.UTF_8);
+  private static final byte[] SI_OPEN  = "<si><t>".getBytes(StandardCharsets.UTF_8);
+  private static final byte[] SI_CLOSE = "</t></si>".getBytes(StandardCharsets.UTF_8);
+  private static final byte[] SST_FOOTER = "</sst>".getBytes(StandardCharsets.UTF_8);
+
+  /* XML 转义实体字节常量 */
+  private static final byte[] AMP_BYTES  = "&amp;".getBytes(StandardCharsets.UTF_8);
+  private static final byte[] LT_BYTES   = "&lt;".getBytes(StandardCharsets.UTF_8);
+  private static final byte[] GT_BYTES   = "&gt;".getBytes(StandardCharsets.UTF_8);
   private static final byte[] QUOT_BYTES = "&quot;".getBytes(StandardCharsets.UTF_8);
   private static final byte[] APOS_BYTES = "&apos;".getBytes(StandardCharsets.UTF_8);
 }
