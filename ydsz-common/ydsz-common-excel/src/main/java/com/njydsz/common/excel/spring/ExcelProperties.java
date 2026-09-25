@@ -59,6 +59,9 @@ public class ExcelProperties {
   /** 读缓存大小（条），默认 1024 */
   private Integer maxReadCacheSize = 1024;
 
+  /** SST 字符串内联阈值（字符数），默认 50 */
+  private Integer sstInlineThreshold = 50;
+
   public Integer getReadBufferSize() {
     return readBufferSize;
   }
@@ -163,6 +166,14 @@ public class ExcelProperties {
     this.maxReadCacheSize = maxReadCacheSize;
   }
 
+  public Integer getSstInlineThreshold() {
+    return sstInlineThreshold;
+  }
+
+  public void setSstInlineThreshold(Integer sstInlineThreshold) {
+    this.sstInlineThreshold = sstInlineThreshold;
+  }
+
   /**
    * 将 Spring {@code ydsz.excel.*} 配置桥接为不可变的 {@link ExcelConfig}。
    *
@@ -189,6 +200,7 @@ public class ExcelProperties {
         .use1904Windowing(getOrElse(isUse1904Windowing, false))
         .headRowNumber(getOrElse(headRowNumber, 1))
         .validationMode(getOrElse(validationMode, ValidationMode.FAIL_FAST))
+        .sstInlineThreshold(getOrElse(sstInlineThreshold, 50))
         .build();
   }
 

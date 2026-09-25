@@ -192,7 +192,9 @@ public class ExcelWriter {
    * <p>注意：需在构建 ExcelConfig 时设置，本方法仅保留接口兼容性。
    *
    * @return 当前写入器实例
+   * @deprecated 自 v26.10.01 起无效。日期窗口配置通过 {@link ExcelConfig.Builder#use1904Windowing(boolean)} 设置
    */
+  @Deprecated(forRemoval = true)
   public ExcelWriter use1904Windowing() {
     LOG.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
     return this;
@@ -229,7 +231,9 @@ public class ExcelWriter {
    *
    * @param password 保护密码
    * @return 当前写入器实例
+   * @deprecated 自 v26.10.01 起无效，当前版本不支持密码保护
    */
+  @Deprecated(forRemoval = true)
   public ExcelWriter password(String password) {
     LOG.warn("当前版本不支持 Sheet 密码保护");
     metadata.setPassword(password);
@@ -298,7 +302,9 @@ public class ExcelWriter {
    *
    * @return 当前写入器实例
    * @throws UnsupportedOperationException 始终抛出
+   * @deprecated 自 v26.10.01 起不支持。替代方案：{@link ExcelFacade#writeMultiSheet(java.io.OutputStream)}
    */
+  @Deprecated(forRemoval = true)
   public ExcelWriter append() {
     throw new UnsupportedOperationException(
         "追加模式已不支持。如需增量写入，请使用 MultiSheetFastWriter 或重新构建完整数据后写入。");
@@ -482,7 +488,9 @@ public class ExcelWriter {
    * 本方法保留仅为兼容原有调用方惯用写法（幂等无操作）。
    *
    * @throws IOException 不会抛出
+   * @deprecated 自 v26.10.01 起无需调用，SuperFastExcelWriter 在 doWrite 中自动完成输出
    */
+  @Deprecated(forRemoval = true)
   public void finish() throws IOException {
     // SuperFastExcelWriter 在 doWrite 中已完成全部输出操作
     // 无需额外 finish 步骤，保留此方法仅为兼容调用方惯用写法
@@ -496,7 +504,9 @@ public class ExcelWriter {
    * 本方法保留仅为兼容原有调用方。
    *
    * @param dataList 数据列表
+   * @deprecated 自 v26.10.01 起直接调用 {@link #doWrite(Object)} 即可
    */
+  @Deprecated(forRemoval = true)
   public void writeBatch(List<?> dataList) {
     doWrite(dataList);
   }
@@ -506,7 +516,9 @@ public class ExcelWriter {
    *
    * @param multiSheet 是否多Sheet写入（被忽略）
    * @return 当前写入器实例
+   * @deprecated 自 v26.10.01 起无效，使用 {@link ExcelFacade#writeMultiSheet(java.io.OutputStream)}
    */
+  @Deprecated(forRemoval = true)
   public ExcelWriter setMultiSheetWriting(boolean multiSheet) {
     if (multiSheet) {
       LOG.warn("多 Sheet 共享 Workbook 模式已废弃，请使用 ExcelFacade.writeMultiSheet(OutputStream)");
@@ -514,7 +526,12 @@ public class ExcelWriter {
     return this;
   }
 
-  /** 清空日期格式化缓存 */
+  /**
+   * 清空日期格式化缓存。
+   *
+   * @deprecated 自 v26.10.01 起无需调用，已无内部缓存
+   */
+  @Deprecated(forRemoval = true)
   public static void clearDateFormatCache() {
     // 已无缓存需要清空，保留此方法仅为兼容调用
   }

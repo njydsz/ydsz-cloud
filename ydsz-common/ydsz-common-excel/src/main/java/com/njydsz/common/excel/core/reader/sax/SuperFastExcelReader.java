@@ -214,7 +214,7 @@ public class SuperFastExcelReader {
           return;
         }
       } catch (IOException e) {
-        LOG.warn("临时文件删除失败: path={}, attempt={}/{}", tempFile, attempt, maxRetries, e);
+        LOG.warn("Temp file deletion failed: path={}, attempt={}/{}", tempFile, attempt, maxRetries, e);
       }
       if (attempt < maxRetries) {
         try {
@@ -227,7 +227,7 @@ public class SuperFastExcelReader {
       }
     }
     tempFile.toFile().deleteOnExit();
-    LOG.warn("已标记临时文件 JVM 退出时删除: path={}", tempFile);
+    LOG.warn("Temp file marked for JVM exit deletion: path={}", tempFile);
   }
 
   /** xlsx 文件允许的最大 ZipEntry 数量（防止恶意构造的 65535+ entry zip） */
@@ -244,11 +244,11 @@ public class SuperFastExcelReader {
    */
   public void read(Path file) throws Exception {
     try (ZipFile zipFile = new ZipFile(file.toFile())) {
-      // ZipEntry 数量上限防护：恶意构造的 zip 可包含 65535+ 个 entry
+      // ZipEntry count limit protection: malicious zip files may contain 65535+ entries
       if (zipFile.size() > MAX_ZIP_ENTRIES) {
         throw ExcelReadException.invalidFormat(
             file.toString(),
-            "ZipEntry 数量超过安全上限: " + zipFile.size() + " > " + MAX_ZIP_ENTRIES);
+            "ZipEntry count exceeds safety limit: " + zipFile.size() + " > " + MAX_ZIP_ENTRIES);
       }
       String targetEntry = resolveTargetSheetEntry(zipFile);
 

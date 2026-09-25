@@ -165,7 +165,11 @@ public class SuperFastExcelTemplateWriter {
     this.excelConfig =
         metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
     metadata.setFilePath(outputPath);
-    loadTemplateFromStream(templateStream);
+    try {
+      loadTemplateFromStream(templateStream);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("模板流读取失败: " + e.getMessage(), e);
+    }
   }
 
   /**

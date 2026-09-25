@@ -53,6 +53,8 @@ public class ExcelConfig {
   private final boolean isUse1904Windowing;
   private final int headRowNumber;
   private final ValidationMode validationMode;
+  /** SST 字符串内联阈值（字符数），超过此长度的字符串直接以 inlineStr 写入 */
+  private final int sstInlineThreshold;
 
   /** 私有构造函数，仅通过 {@link Builder} 构建。 */
   private ExcelConfig(Builder builder) {
@@ -69,6 +71,7 @@ public class ExcelConfig {
     this.isUse1904Windowing = builder.isUse1904Windowing;
     this.headRowNumber = builder.headRowNumber;
     this.validationMode = builder.validationMode;
+    this.sstInlineThreshold = builder.sstInlineThreshold;
   }
 
   public int getReadBufferSize() {
@@ -163,6 +166,10 @@ public class ExcelConfig {
 
   public ValidationMode getValidationMode() {
     return validationMode;
+  }
+
+  public int getSstInlineThreshold() {
+    return sstInlineThreshold;
   }
 
   /**
@@ -260,6 +267,8 @@ public class ExcelConfig {
     private boolean isUse1904Windowing = false;
     private int headRowNumber = DEFAULT_HEAD_ROW_NUMBER;
     private ValidationMode validationMode = ValidationMode.FAIL_FAST;
+    /** SST 字符串内联阈值（字符数），默认 50 */
+    private int sstInlineThreshold = 50;
 
     private Builder() {}
 
@@ -325,6 +334,11 @@ public class ExcelConfig {
 
     public Builder validationMode(ValidationMode validationMode) {
       this.validationMode = validationMode;
+      return this;
+    }
+
+    public Builder sstInlineThreshold(int sstInlineThreshold) {
+      this.sstInlineThreshold = Math.max(1, sstInlineThreshold);
       return this;
     }
 

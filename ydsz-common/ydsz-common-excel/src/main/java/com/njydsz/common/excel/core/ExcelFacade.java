@@ -26,7 +26,9 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.reader.ExcelStream;
+import com.njydsz.common.excel.core.template.TemplateRegion;
 import com.njydsz.common.excel.core.writer.MultiSheetFastWriter;
+import com.njydsz.common.excel.core.writer.SuperFastExcelTemplateWriter;
 import com.njydsz.common.excel.csv.CsvReader;
 import com.njydsz.common.excel.csv.CsvWriter;
 import com.njydsz.common.excel.exception.ExcelReadException;
@@ -237,6 +239,109 @@ public class ExcelFacade {
     metadata.setClazz(clazz);
     metadata.setOutputStream(outputStream);
     return new ExcelWriter(metadata);
+  }
+
+  // ==================== 模板填充相关方法 ====================
+
+  /**
+   * 创建模板写入器（基于文件路径加载模板，零 POI）。
+   *
+   * <p>读取现有 .xlsx 模板文件，保留列宽/合并区域/冻结窗格/样式引用，
+   * 在数据区填充数据行。新数据行复用模板对应列的 styleId，不含 POI 依赖。
+   *
+   * @param templatePath 模板文件路径（.xlsx）
+   * @param outputPath 输出文件路径（.xlsx）
+   * @param clazz 映射的源类类型
+   * @param <T> 泛型参数
+   * @return SuperFastExcelTemplateWriter 实例
+   */
+  public static <T> SuperFastExcelTemplateWriter writeWithTemplate(
+      String templatePath, String outputPath, Class<T> clazz) {
+    WriteMetadata metadata = new WriteMetadata();
+    metadata.setClazz(clazz);
+    return new SuperFastExcelTemplateWriter(templatePath, outputPath, metadata);
+  }
+
+  /**
+   * 创建模板写入器（基于 InputStream 加载模板）。
+   *
+   * @param templateStream 模板文件输入流（调用方负责关闭）
+   * @param outputPath 输出文件路径
+   * @param clazz 映射的源类类型
+   * @param <T> 泛型参数
+   * @return SuperFastExcelTemplateWriter 实例
+   */
+  public static <T> SuperFastExcelTemplateWriter writeWithTemplate(
+      InputStream templateStream, String outputPath, Class<T> clazz) {
+    WriteMetadata metadata = new WriteMetadata();
+    metadata.setClazz(clazz);
+    return new SuperFastExcelTemplateWriter(templateStream, outputPath, metadata);
+  }
+
+  /**
+   * 创建模板写入器（基于字节数组加载模板）。
+   *
+   * @param templateBytes 模板文件字节内容
+   * @param outputPath 输出文件路径
+   * @param clazz 映射的源类类型
+   * @param <T> 泛型参数
+   * @return SuperFastExcelTemplateWriter 实例
+   */
+  public static <T> SuperFastExcelTemplateWriter writeWithTemplate(
+      byte[] templateBytes, String outputPath, Class<T> clazz) {
+    WriteMetadata metadata = new WriteMetadata();
+    metadata.setClazz(clazz);
+    return new SuperFastExcelTemplateWriter(templateBytes, outputPath, metadata);
+  }
+
+  /**
+   * 区域循环填充模板（零 POI，对标 poi-tl {{#each}} 语义）。
+   *
+   * <p>将模板中源行区间（sourceStartRow..sourceEndRow）克隆到目标行，每条数据项一份。
+   * 公式中的行引用按偏移自动调整（仅含相对引用的简单公式支持）。
+   *
+   * <pre>{@code
+   * ExcelFacade.writeLoopTemplate("template.xlsx", "output.xlsx", User.class,
+   *     TemplateRegion.builder()
+   *         .sourceStartRow(4).sourceEndRow(4).targetStartRow(4).build())
+   *     .doWrite(userList);
+   * }</pre>
+   *
+   * @param templatePath 模板文件路径
+   * @param outputPath 输出文件路径
+   * @param clazz 映射的源类类型
+   * @param region 模板区域描述符（不能为 null）
+   * @param <T> 泛型参数
+   * @return SuperFastExcelTemplateWriter 实例
+   */
+  public static <T> SuperFastExcelTemplateWriter writeLoopTemplate(
+      String templatePath, String outputPath, Class<T> clazz, TemplateRegion region) {
+    if (region == null) {
+      throw new IllegalArgumentException("TemplateRegion must not be null");
+    }
+    WriteMetadata metadata = new WriteMetadata();
+    metadata.setClazz(clazz);
+    return new SuperFastExcelTemplateWriter(templatePath, outputPath, metadata);
+  }
+
+  /**
+   * 区域循环填充模板（InputStream 来源）。
+   *
+   * @param templateStream 模板文件输入流
+   * @param outputPath 输出文件路径
+   * @param clazz 映射的源类类型
+   * @param region 模板区域描述符
+   * @param <T> 泛型参数
+   * @return SuperFastExcelTemplateWriter 实例
+   */
+  public static <T> SuperFastExcelTemplateWriter writeLoopTemplate(
+      InputStream templateStream, String outputPath, Class<T> clazz, TemplateRegion region) {
+    if (region == null) {
+      throw new IllegalArgumentException("TemplateRegion must not be null");
+    }
+    WriteMetadata metadata = new WriteMetadata();
+    metadata.setClazz(clazz);
+    return new SuperFastExcelTemplateWriter(templateStream, outputPath, metadata);
   }
 
   // ==================== CSV 读写方法 ====================

@@ -188,11 +188,12 @@ public class MultiSheetFastWriter {
   private List<SheetFieldMeta> analyzeFields(Class<?> clazz) {
     List<SheetFieldMeta> result = new ArrayList<>(16);
 
-    int declOrder = 0;
-    for (Field field : clazz.getDeclaredFields()) {
-      if (Modifier.isStatic(field.getModifiers())) {
-        continue;
-      }
+    // 使用统一的列排序解析器（替代原 <=10000 魔法数判断）
+    List<Field> orderedFields =
+        com.njydsz.common.excel.core.util.ColumnOrderResolver.resolveOrderedFields(clazz);
+
+    int compactIdx = 0;
+    for (Field field : orderedFields) {
       ExcelProperty prop = field.getAnnotation(ExcelProperty.class);
       if (prop == null) {
         continue;
@@ -200,9 +201,7 @@ public class MultiSheetFastWriter {
 
       SheetFieldMeta info = new SheetFieldMeta();
       info.field = field;
-
-      int idx = prop.index();
-      info.originalOrder = (idx >= 0) ? idx : declOrder;
+      info.compactIndex = compactIdx;
 
       String value = prop.value();
       info.headerName = (value != null && !value.isEmpty()) ? value : field.getName();
@@ -219,20 +218,8 @@ public class MultiSheetFastWriter {
       }
 
       result.add(info);
-      declOrder++;
+      compactIdx++;
     }
-
-    result.sort((a, b) -> {
-      boolean aIndexed = a.originalOrder <= 10000;
-      boolean bIndexed = b.originalOrder <= 10000;
-      if (aIndexed && bIndexed) {
-        return Integer.compare(a.originalOrder, b.originalOrder);
-      }
-      if (aIndexed != bIndexed) {
-        return aIndexed ? -1 : 1;
-      }
-      return 0;
-    });
 
     return result;
   }
@@ -431,7 +418,8 @@ public class MultiSheetFastWriter {
     Field field;
     String headerName;
     MHFieldAccessor.FieldGetter getter;
-    int originalOrder;
+    /** 紧凑列索引（写入时由 analyzeFields 按 ColumnOrderResolver 排序顺序分配） */
+    int compactIndex;
     Short width;
   }
 

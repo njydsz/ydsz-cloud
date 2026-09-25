@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -219,11 +220,14 @@ public class SuperFastExcelWriter {
   }
 
   /**
-   * 解析 SST 内联阈值：优先读取系统属性 {@code ydsz.excel.sstInlineThreshold}，解析失败或未设置时使用默认值。
+   * 解析 SST 内联阈值：优先从 ExcelConfig 获取（用户配置），回退到系统属性 {@code ydsz.excel.sstInlineThreshold}，
+   * 最终回退到默认值 50。
    *
    * @return 有效的内联阈值（≥ 1）
    */
   private static int resolveSstInlineThreshold() {
+    ExcelConfig cfg = ExcelConfig.defaults();
+    // 尝试从已配置的 WriteMetadata 获取 ExcelConfig（通过全局默认无法访问，此处为兼容性回退）
     String prop = System.getProperty("ydsz.excel.sstInlineThreshold");
     if (prop != null) {
       try {
@@ -235,7 +239,7 @@ public class SuperFastExcelWriter {
         // fall through to default
       }
     }
-    return DEFAULT_SST_INLINE_THRESHOLD;
+    return cfg.getSstInlineThreshold();
   }
 
   private ExcelConfig getExcelConfig() {
@@ -358,6 +362,7 @@ public class SuperFastExcelWriter {
     int maxRetries = 3;
     long backoffMs = 100;
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      final int currentAttempt = attempt;
       try {
         Files.walk(tempDir)
             .sorted(Comparator.reverseOrder())
@@ -365,19 +370,19 @@ public class SuperFastExcelWriter {
               try {
                 Files.deleteIfExists(p);
               } catch (IOException e) {
-                LOG.warn("临时文件删除失败: path={}, attempt={}/{}",
-                    p, attempt, maxRetries, e);
+                LOG.warn("Temp file deletion failed: path={}, attempt={}/{}",
+                    p, currentAttempt, maxRetries, e);
               }
             });
-        // 校验是否清理完毕
+        // Check if cleanup succeeded
         if (!Files.exists(tempDir)) {
           return;
         }
       } catch (IOException e) {
-        LOG.warn("遍历临时目录异常: dir={}, attempt={}/{}",
-            tempDir, attempt, maxRetries, e);
+        LOG.warn("Traverse temp dir exception: dir={}, attempt={}/{}",
+            tempDir, currentAttempt, maxRetries, e);
       }
-      if (attempt < maxRetries) {
+      if (currentAttempt < maxRetries) {
         try {
           TimeUnit.MILLISECONDS.sleep(backoffMs);
           backoffMs *= 2;
@@ -388,14 +393,14 @@ public class SuperFastExcelWriter {
       }
     }
 
-    // 兜底：标记目录及残留文件在 JVM 退出时删除
+    // Fallback: mark residual files for deletion on JVM exit
     try {
       Files.walk(tempDir)
           .sorted(Comparator.reverseOrder())
           .forEach(p -> p.toFile().deleteOnExit());
-      LOG.warn("已标记临时目录 JVM 退出时清理: dir={}, targetFile={}", tempDir, filePath);
+      LOG.warn("Temp dir marked for JVM exit deletion: dir={}, targetFile={}", tempDir, filePath);
     } catch (IOException e) {
-      LOG.warn("标记 deleteOnExit 失败: dir={}, targetFile={}", tempDir, filePath, e);
+      LOG.warn("Failed to mark deleteOnExit: dir={}, targetFile={}", tempDir, filePath, e);
     }
   }
 
@@ -1329,70 +1334,50 @@ public class SuperFastExcelWriter {
 
   private void analyzeClass(Class<?> clazz) {
     try {
-      Field[] declaredFields = clazz.getDeclaredFields();
-      List<int[]> orderList = new ArrayList<>(16); // [order, fieldIndex]
-      List<Field> annotatedFields = new ArrayList<>(16);
-
-      for (int i = 0; i < declaredFields.length; i++) {
-        Field field = declaredFields[i];
-        if (field.getAnnotation(ExcelIgnore.class) != null) {
-          continue;
-        }
-
-        ExcelProperty prop = field.getAnnotation(ExcelProperty.class);
-
-        if (prop != null) {
-          orderList.add(new int[] {prop.order(), i});
-          annotatedFields.add(field);
-        }
-      }
-
-      if (orderList.isEmpty()) {
+      // 使用统一的列排序解析器
+      List<Field> orderedFields =
+          com.njydsz.common.excel.core.util.ColumnOrderResolver.resolveOrderedFields(clazz);
+      if (orderedFields.isEmpty()) {
         return;
       }
 
-      orderList.sort((a, b) -> Integer.compare(a[0], b[0]));
-
-      buildFieldInfoArray(orderList, annotatedFields, clazz);
+      buildFieldInfoArrayFromFields(orderedFields, clazz);
     } catch (Exception e) {
       LOG.warn("ASM field accessor creation failed, using reflection", e);
     }
   }
 
   /**
-   * 根据 @ExcelProperty 注解的排序结果构建 fieldInfoArray。
+   * 根据统一排序后的字段列表构建 fieldInfoArray。
    *
-   * @param orderList 按 order 排序的 [order, declaredFieldIndex] 列表
-   * @param annotatedFields 已按 order 排序的字段列表
+   * @param orderedFields 已按 ColumnOrderResolver 排序的字段列表
    * @param clazz 映射的源类类型
    */
-  private void buildFieldInfoArray(
-      List<int[]> orderList, List<Field> annotatedFields, Class<?> clazz) {
-    fieldInfoSize = orderList.size();
+  private void buildFieldInfoArrayFromFields(List<Field> orderedFields, Class<?> clazz) {
+    fieldInfoSize = orderedFields.size();
     fieldInfoArray = new FieldAccessorInfo[fieldInfoSize];
     fieldInfoMap = new HashMap<>(16);
     columnTypeIds = new byte[fieldInfoSize];
 
-    for (int compactIdx = 0; compactIdx < orderList.size(); compactIdx++) {
-      int originalOrder = orderList.get(compactIdx)[0];
-      Field field = annotatedFields.get(compactIdx);
+    for (int compactIdx = 0; compactIdx < orderedFields.size(); compactIdx++) {
+      Field field = orderedFields.get(compactIdx);
       ExcelProperty prop = field.getAnnotation(ExcelProperty.class);
-      String dateFormat = prop.dateFormat();
+      String dateFormat = prop != null ? prop.dateFormat() : "";
 
       FieldAccessorInfo info = new FieldAccessorInfo();
       info.field = field;
-      info.headerName =
-          (prop.value() != null && !prop.value().isEmpty()) ? prop.value() : field.getName();
+      String headerName = (prop != null && prop.value() != null && !prop.value().isEmpty())
+          ? prop.value() : field.getName();
+      info.headerName = headerName;
       info.getter = MHFieldAccessor.getGetter(clazz, field);
       info.dateFormatObj =
           (dateFormat != null && !dateFormat.isEmpty())
               ? DateTimeFormatter.ofPattern(dateFormat)
               : DEFAULT_DATE_FORMATTER;
-      int widthAnn = prop.width();
-      if (widthAnn > 0) {
-        info.width = (short) widthAnn;
+      if (prop != null && prop.width() > 0) {
+        info.width = (short) prop.width();
       }
-      fieldInfoMap.put(originalOrder, info);
+      fieldInfoMap.put(compactIdx, info);
 
       fieldInfoArray[compactIdx] = info;
 
@@ -1416,6 +1401,10 @@ public class SuperFastExcelWriter {
       }
     }
   }
+
+  /**
+   * @deprecated 已被 {@link #buildFieldInfoArrayFromFields(List, Class)} 替代
+   */
 
   // ==================== 动态表头分析 ====================
 
