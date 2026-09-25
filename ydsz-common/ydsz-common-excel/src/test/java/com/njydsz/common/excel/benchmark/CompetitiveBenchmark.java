@@ -30,8 +30,8 @@ import com.alibaba.excel.event.AnalysisEventListener;
 import com.njydsz.common.excel.core.ExcelFacade;
 
 /**
- * 真实竞品对比 Benchmark — 在同数据集、同迭代策略下，同时运行 SuperFast (自研)、
- * EasyExcel 3.x、Apache POI XSSF、Apache POI SXSSF 四个引擎。
+ * 真实竞品对比 Benchmark — 在同数据集、同迭代策略下，同时运行 YdszExcel (自研)、
+ * EasyExcel 4.x、Apache POI XSSF、Apache POI SXSSF 四个引擎。
  *
  * <p>测试输出直接打印到控制台，可重定向到文件：
  * {@code mvn test-compile exec:java ... > benchmark-results/benchmark-raw.txt}
@@ -352,10 +352,10 @@ public class CompetitiveBenchmark {
       final List<EasyExcelRecord> eeData = eeDataBySize.get(idx);
       final Object[][] poiData = poiDataBySize.get(idx);
 
-      // SuperFast
+      // YdszExcel
       ByteArrayOutputStream[] holder = new ByteArrayOutputStream[1];
       BenchmarkRunner.BenchResult sfWrite = BenchmarkRunner.run(
-          "SuperFast-write-" + rows, 3, measured, () -> {
+          "YdszExcel-write-" + rows, 3, measured, () -> {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             writeSuperFast(sfData, bos);
             holder[0] = bos;
@@ -405,7 +405,7 @@ public class CompetitiveBenchmark {
       // SuperFast
       final byte[] sfBytesFinal = sfBytes;
       BenchmarkRunner.BenchResult sfRead = BenchmarkRunner.run(
-          "SuperFast-read-" + rows, 3, 5, () -> readSuperFast(sfBytesFinal));
+          "YdszExcel-read-" + rows, 3, 5, () -> readSuperFast(sfBytesFinal));
       System.out.println(" | parsed rows = " + readSuperFast(sfBytes));
 
       // EasyExcel
@@ -443,7 +443,7 @@ public class CompetitiveBenchmark {
     System.out.println("  OS         : " + System.getProperty("os.name") + " ("
         + os.getAvailableProcessors() + " cores)");
     System.out.println("  Max Heap   : " + (rt.maxMemory() / 1024 / 1024) + " MB");
-    System.out.println("  Engines    : SuperFast (YDSZ) vs EasyExcel 3.x vs POI XSSF/SXSSF 5.x");
+    System.out.println("  Engines    : YdszExcel (YDSZ) vs EasyExcel 4.x vs POI XSSF/SXSSF 5.x");
     System.out.println("  Iterations : warmup=3, measured=5 (100k→2)");
     System.out.println("==============================================================");
   }
@@ -458,7 +458,7 @@ public class CompetitiveBenchmark {
     System.out.println("Single-run snapshots are indicative, not statistically definitive.");
     System.out.println("");
     System.out.println("  NOTE:");
-    System.out.println("  • SuperFast 数据为 9 列宽表（订单ID/地区/城市/等级/产品线/数量/单价/金额/日期）；");
+    System.out.println("  • YdszExcel 数据为 9 列宽表（订单ID/地区/城市/等级/产品线/数量/单价/金额/日期）；");
     System.out.println("    POI/SXSSF 写入含表头行；EasyExcel 写入含表头（@ExcelProperty 自动识别）；");
     System.out.println("  • 读取时各引擎读取同一行数（1k/10k，跳过 POI XSSF 100k 因 DOM 过大）；");
     System.out.println("  • RSS 增量近似堆变化（未含 off-heap），POI XSSF 实际 RSS 更高；");

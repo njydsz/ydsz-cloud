@@ -1,5 +1,8 @@
 # ydsz-common-excel 性能基准报告
 
+> ⚠️ **重要声明**：本报告中的 SuperFast 数据是当前机器真实运行结果，但 **EasyExcel / POI 的对比数据为参考区间估算，非实测数据**。  
+> 真实竞品对比见同级文件 `BENCHMARK-REPORT-REAL.md`。
+
 > 测试日期：2026-09-25  
 > 测试引擎：SuperFast（自研零 POI 依赖）  
 > JDK：OpenJDK 21  
