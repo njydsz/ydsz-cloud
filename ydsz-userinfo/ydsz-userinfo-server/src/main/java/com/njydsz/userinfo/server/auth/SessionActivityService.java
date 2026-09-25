@@ -17,6 +17,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.ActiveUserVO;
 import com.njydsz.userinfo.domain.vo.AnomalySessionVO;
@@ -686,7 +687,7 @@ public class SessionActivityService {
       return "***";
     }
     // keepPrefix=8, keepSuffix=4：保留前 8 位 + 后 4 位
-    return com.njydsz.common.util.mask.MaskUtils.mask(token, 8, 4);
+    return MaskUtils.mask(token, 8, 4);
   }
 
   /**
