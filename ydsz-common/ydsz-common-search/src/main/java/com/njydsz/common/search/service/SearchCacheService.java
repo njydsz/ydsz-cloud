@@ -3,13 +3,14 @@ package com.njydsz.common.search.service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
@@ -17,12 +18,12 @@ import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.util.security.HexUtils;
 
 /**
- * 搜索结果缓存服务（Caffeine L1 + Redis L2 二级缓存）。
+ * 搜索结果缓存服务（YdszCache L1 + Redis L2 二级缓存）。
  *
  * <p>两级缓存架构：
  *
  * <ul>
- *   <li>L1 Caffeine（进程内） — 亚毫秒级命中，小容量短 TTL（10s），减轻热点 key 竞争</li>
+ *   <li>L1 YdszCache（进程内 Window-TinyLFU） — 亚毫秒级命中，小容量短 TTL（10s），减轻热点 key 竞争</li>
  *   <li>L2 Redis（跨进程） — 毫秒级命中，按配置 TTL，集群多节点共享</li>
  * </ul>
  *
@@ -71,9 +72,11 @@ public class SearchCacheService {
     long l1Size = properties.getCache().getL1MaxSize();
     long l1Ttl = properties.getCache().getL1Ttl();
     this.l1Cache =
-        Caffeine.newBuilder()
+        YdszCache.<String, SearchResponse>newBuilder()
+            .name("search:l1")
             .maximumSize(Math.max(64, l1Size))
-            .expireAfterWrite(Duration.ofSeconds(Math.max(1, l1Ttl)))
+            .expireAfterWrite(Math.max(1, l1Ttl), TimeUnit.SECONDS)
+            .recordStats()
             .build();
   }
 

@@ -9,8 +9,8 @@ import com.njydsz.common.excel.core.reader.sax.ExcelCellType;
  * 读取器内部单元格抽象接口 — 零 POI 依赖。
  *
  * <p>替代 Apache POI {@code org.apache.poi.ss.usermodel.Cell} 作为 {@link
- * ColumnMetadata.TypeConvertStrategy} 和 {@link RowParser} 的入参类型，使整个 reader 包在编译期
- * 不再绑定 POI。实现类 {@link SimpleCell} 包含类型转换所需的最小状态（原始值 + 类型 + 日期值），
+ * ColumnMetadata.TypeConvertStrategy} 的入参类型，使整个 reader 包在编译期不再绑定 POI。
+ * 实现类 {@link SimpleCell} 包含类型转换所需的最小状态（原始值 + 类型 + 日期值），
  * 不含 POI 内部表示的任何语义。
  *
  * <p>本接口仅覆盖读取路径实际用到的方法；单元格写入、样式、公式、超链接、注释等写操作

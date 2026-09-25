@@ -10,7 +10,7 @@ import com.njydsz.common.excel.core.reader.sax.ExcelCellType;
  *
  * <p>在 SAX 流式解析中不需要完整 POI Cell 对象，此实现仅保留类型转换所需的最小状态
  * （原始字符串值 + 本地 ExcelCellType + 日期值）。实现 {@link ICell} 接口供 {@link
- * ColumnMetadata.TypeConvertStrategy} 和 {@link RowParser} 消费。
+ * ColumnMetadata.TypeConvertStrategy} 消费。
  *
  * <h3>设计说明</h3>
  *

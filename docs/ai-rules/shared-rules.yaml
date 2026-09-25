@@ -16,7 +16,7 @@ meta:
   version: "26.09.25"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-24（新增 YDIZ-TX-005/EVENT-002/CONFIG-003：分布式事务统一封装、OutboxSubscriber SPI、配置基类规范；撤销 seata 归档错误决策）"
+  last_updated: "2026-09-25（新增 YDIZ-I18N-003/TENANT-001：i18n 骨架强制要求、多租户上下文异步防护；全引擎多租户启用；8 引擎 i18n 资源骨架创建）"
   total_rules: 88
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
