@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
@@ -131,7 +131,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         logVO.setErrorMessage(errorMessage);
         logVO.setTopic(originTopic);
         logVO.setReconsumeTimes(reconsumeTimes);
-        logVO.setTenantId(TenantContextHolder.getTenantId());
+        logVO.setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
         msgLogRepository.save(logVO);
         messageMetrics.recordDead(logVO.getChannel());
       } catch (Exception e) {

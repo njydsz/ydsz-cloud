@@ -11,7 +11,7 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.cronjob.server.annotation.TenantQuotaCheck;
 import com.njydsz.cronjob.server.annotation.TenantQuotaCheck.QuotaType;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
@@ -110,7 +110,7 @@ public class TenantQuotaAspect {
     }
 
     // 3. 从 TenantContext 获取
-    return TenantContextHolder.getTenantId();
+    return AuthContextUtils.getTenantIdOrDefault("1");
   }
 
   /**

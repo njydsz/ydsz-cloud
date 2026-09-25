@@ -364,3 +364,489 @@
         type: health-indicator
         entry: com.njydsz.common.config.health.ConfigEncryptHealthIndicator
         usage: "Jasypt 加密健康检查"
+  # ---- ydsz-common-socket -----------------------------------------
+  ydsz-common-socket:
+    layer: L5
+    package: com.njydsz.common.socket
+    description: "WebSocket 实时推送；STOMP + Redis 集群广播 + 离线消息 + 限流"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: WebSocketAutoConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.socket.config.WebSocketAutoConfiguration
+        usage: "主自动配置（@EnableScheduling 心跳+重试）"
+      - name: WebSocketConfigurer
+        type: spring-configuration
+        entry: com.njydsz.common.socket.config.WebSocketConfigurer
+        usage: "STOMP 端点注册（/topic/queue/app 前缀）"
+      - name: RealtimePushTemplate
+        type: injectable-bean
+        entry: com.njydsz.common.socket.push.RealtimePushTemplate
+        usage: "统一推送接口（单播/广播/离线补偿）"
+      - name: WebSocketClusterPublisher
+        type: spring-bean
+        entry: com.njydsz.common.socket.cluster.WebSocketClusterPublisher
+        usage: "集群消息发布者（Redis Pub/Sub）"
+      - name: WebSocketRateLimiter
+        type: spring-bean
+        entry: com.njydsz.common.socket.ratelimit.WebSocketRateLimiter
+        usage: "消息速率限制器（滑动窗口+熔断保护）"
+
+  # ---- ydsz-common-netty ------------------------------------------
+  ydsz-common-netty:
+    layer: L5
+    package: com.njydsz.common.netty
+    description: "Netty TCP 通信；Server/Client + LengthField + SSL/TLS + RPC + 零拷贝"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: AbstractNettyServer
+        type: abstract-class
+        entry: com.njydsz.common.netty.server.AbstractNettyServer
+        usage: "TCP Server 抽象基类（Bootstrap+Pipeline+优雅关闭）"
+      - name: AbstractNettyClient
+        type: abstract-class
+        entry: com.njydsz.common.netty.client.AbstractNettyClient
+        usage: "TCP Client 抽象基类（CAS 连接保护）"
+      - name: LengthFieldFrameDecoder
+        type: netty-decoder
+        entry: com.njydsz.common.netty.codec.LengthFieldFrameDecoder
+        usage: "LengthField 拆包器（TCP 粘包/半包）"
+      - name: ReconnectHandler
+        type: netty-handler
+        entry: com.njydsz.common.netty.reconnect.ReconnectHandler
+        usage: "断线重连（指数退避 + volatile ctx）"
+      - name: SslContextFactory
+        type: spring-bean
+        entry: com.njydsz.common.netty.ssl.SslContextFactory
+        usage: "SSL Context 工厂（双向认证支持）"
+      - name: NettyRpcClient
+        type: abstract-class
+        entry: com.njydsz.common.netty.rpc.NettyRpcClient
+        usage: "RPC 客户端抽象（CompletableFuture 异步返回）"
+
+  # ---- ydsz-common-file -------------------------------------------
+  ydsz-common-file:
+    layer: L5
+    package: com.njydsz.common.file
+    description: "统一文件存储；7 种存储 + 分片上传 + 断点续传 + 秒传 + 病毒扫描"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: IFileStorage
+        type: injectable-bean
+        entry: com.njydsz.common.file.storage.IFileStorage
+        usage: "文件存储统一接口（upload/download/delete）"
+      - name: IFileStorageProvider
+        type: spi
+        entry: com.njydsz.common.file.storage.IFileStorageProvider
+        usage: "存储提供者接口（getStorage() 返回实现）"
+      - name: DefaultStorageFactory
+        type: spring-bean
+        entry: com.njydsz.common.file.storage.DefaultStorageFactory
+        usage: "默认工厂（Local/OSS/MinIO/S3/COS/OBS/Qiniu）"
+      - name: CheckpointService
+        type: injectable-bean
+        entry: com.njydsz.common.file.upload.CheckpointService
+        usage: "断点续传检查点服务（保存/加载/删除/校验）"
+      - name: FileDedupService
+        type: injectable-bean
+        entry: com.njydsz.common.file.dedup.FileDedupService
+        usage: "文件去重服务（SHA-256 + 文件大小，秒传）"
+      - name: VirusScanner
+        type: spi
+        entry: com.njydsz.common.file.virus.VirusScanner
+        usage: "病毒扫描接口（默认 NoOp，生产需对接 ClamAV）"
+
+  # ---- ydsz-common-docs -------------------------------------------
+  ydsz-common-docs:
+    layer: L5
+    package: com.njydsz.common.docs
+    description: "文档解析与安全扫描；8 格式 + PII 检测 + PDF 安全扫描 + OCR"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: DocumentService
+        type: injectable-bean
+        entry: com.njydsz.common.docs.service.DocumentService
+        usage: "文档服务门面（parse/preprocess/scanSecurity/detectPii）"
+      - name: DocumentParser
+        type: spi
+        entry: com.njydsz.common.docs.parser.DocumentParser
+        usage: "文档解析器 SPI（PDF/Word/Excel/PPT/HTML/MD/TXT/CSV）"
+      - name: DocumentParserRegistry
+        type: spring-registry
+        entry: com.njydsz.common.docs.parser.DocumentParserRegistry
+        usage: "解析器注册表（Spring 自动注入所有 Parser Bean）"
+      - name: PiiDetector
+        type: spi
+        entry: com.njydsz.common.docs.pii.PiiDetector
+        usage: "PII 检测 SPI（7 类：手机/身份证/邮箱/银行卡/API Key/IP/护照）"
+      - name: DocumentSecurityScanner
+        type: spi
+        entry: com.njydsz.common.docs.security.DocumentSecurityScanner
+        usage: "文档安全扫描（宏检测 + PDF JavaScript 检测）"
+  # ---- ydsz-common-search -----------------------------------------
+  ydsz-common-search:
+    layer: L5
+    package: com.njydsz.common.search
+    description: "统一搜索服务；策略模式多引擎 + PG tsvector + 索引同步/重建"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: SearchStrategy
+        type: spi
+        entry: com.njydsz.common.search.strategy.SearchStrategy
+        usage: "搜索策略 SPI（search/getEngineName/isAvailable）"
+      - name: IndexStrategy
+        type: spi
+        entry: com.njydsz.common.search.strategy.IndexStrategy
+        usage: "索引维护 SPI（index/bulkIndex/deleteIndex）"
+      - name: SearchProvider
+        type: spi
+        entry: com.njydsz.common.search.provider.SearchProvider
+        usage: "业务数据提供者 SPI（toIndexDocument/toSearchHit/getFilters）"
+      - name: PgSearchStrategy
+        type: injectable-bean
+        entry: com.njydsz.common.search.strategy.impl.PgSearchStrategy
+        usage: "PostgreSQL tsvector 引擎（zhparser 中文分词）"
+      - name: InMemorySearchStrategy
+        type: injectable-bean
+        entry: com.njydsz.common.search.strategy.impl.InMemorySearchStrategy
+        usage: "内存引擎（降级兜底）"
+      - name: UnifiedSearchService
+        type: injectable-bean
+        entry: com.njydsz.common.search.service.UnifiedSearchService
+        usage: "统一搜索入口（并发检索 + 熔断降级 + 结果缓存）"
+
+  # ---- ydsz-common-sentry -----------------------------------------
+  ydsz-common-sentry:
+    layer: L5
+    package: com.njydsz.common.sentry
+    description: "统一可观测性；OpenTelemetry + SkyWalking + 双路日志 + SLA + 告警"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: MetricsCollector
+        type: spi
+        entry: com.njydsz.common.sentry.spi.MetricsCollector
+        usage: "指标采集 SPI（Counter/Gauge/Timer/Histogram）"
+      - name: LogPublisher
+        type: spi
+        entry: com.njydsz.common.sentry.spi.LogPublisher
+        usage: "日志发布 SPI（ELK/Loki/Dual/Async/NoOp 五种）"
+      - name: TraceContext
+        type: spi
+        entry: com.njydsz.common.sentry.spi.TraceContext
+        usage: "追踪上下文 SPI（SkyWalking/OpenTelemetry/MDC）"
+      - name: AlertPublisher
+        type: spi
+        entry: com.njydsz.common.sentry.spi.AlertPublisher
+        usage: "告警发布 SPI（经 AlertConverger 收敛后发布）"
+      - name: SlaMetric
+        type: annotation
+        entry: com.njydsz.common.sentry.sla.SlaMetric
+        usage: "SLA 注解（name/thresholdMillis/slaTarget）"
+      - name: CircuitBreaker
+        type: spring-bean
+        entry: com.njydsz.common.sentry.circuitbreaker.CircuitBreaker
+        usage: "统一熔断器（Resilience4j，CAS HALF_OPEN 安全）"
+  # ---- ydsz-common-base -------------------------------------------
+  ydsz-common-base:
+    layer: L6
+    package: com.njydsz.common.base
+    description: "HTTP 公共基座；CORS/I18n/安全头/TraceId/请求日志/全局响应包装"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: BaseMvcConfiguration
+        type: abstract-class
+        entry: com.njydsz.common.base.config.BaseMvcConfiguration
+        usage: "MVC 配置抽象基类（web/app 继承）"
+      - name: BaseGlobalResponseAdvice
+        type: abstract-class
+        entry: com.njydsz.common.base.advice.BaseGlobalResponseAdvice
+        usage: "全局响应包装抽象基类（YdszResponse 自动包装）"
+      - name: TraceFilter
+        type: servlet-filter
+        entry: com.njydsz.common.base.filter.TraceFilter
+        usage: "链路追踪过滤器（traceId 生成/注入 MDC）"
+      - name: SecurityHeadersFilter
+        type: servlet-filter
+        entry: com.njydsz.common.base.filter.SecurityHeadersFilter
+        usage: "安全响应头（CSP/HSTS/X-Frame-Options 等）"
+      - name: RequestContextCleanupFilter
+        type: servlet-filter
+        entry: com.njydsz.common.base.filter.RequestContextCleanupFilter
+        usage: "请求上下文清理（finally 块清理 TTL/MDC）"
+      - name: YdszHealthIndicator
+        type: health-indicator
+        entry: com.njydsz.common.base.health.YdszHealthIndicator
+        usage: "base 模块健康指标（时区+安全头+堆内存）"
+
+  # ---- ydsz-common-web --------------------------------------------
+  ydsz-common-web:
+    layer: L6
+    package: com.njydsz.common.web
+    description: "PC Web 端基座；base + Spring Security + WebAuthFilter + Session"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: WebMvcConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.web.config.WebMvcConfiguration
+        usage: "MVC 配置（继承 BaseMvcConfiguration）"
+      - name: WebSecurityConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.web.config.WebSecurityConfiguration
+        usage: "Spring Security 配置（SecurityFilterChain + 401/403）"
+      - name: WebAuthFilter
+        type: servlet-filter
+        entry: com.njydsz.common.web.security.WebAuthFilter
+        usage: "Web 认证过滤器（Token → SecurityContext）"
+      - name: GlobalResponseAdvice
+        type: controller-advice
+        entry: com.njydsz.common.web.advice.GlobalResponseAdvice
+        usage: "全局响应包装（继承 BaseGlobalResponseAdvice）"
+      - name: ApiVersionAutoConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.web.version.ApiVersionAutoConfiguration
+        usage: "API 版本控制自动配置（URL 路径版本路由）"
+
+  # ---- ydsz-common-app --------------------------------------------
+  ydsz-common-app:
+    layer: L6
+    package: com.njydsz.common.app
+    description: "移动端 App 基座；base + AppAuthFilter + @AppApi 作用域隔离"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: AppMvcConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.app.config.AppMvcConfiguration
+        usage: "App 端 MVC 核心配置（继承 BaseMvcConfiguration）"
+      - name: AppAuthFilter
+        type: servlet-filter
+        entry: com.njydsz.common.app.security.AppAuthFilter
+        usage: "App 认证过滤器（优先 AuthenticationProvider）"
+      - name: AppGlobalResponseAdvice
+        type: controller-advice
+        entry: com.njydsz.common.app.advice.AppGlobalResponseAdvice
+        usage: "App 全局响应（@AppApi 作用域隔离）"
+      - name: AppHealthIndicator
+        type: health-indicator
+        entry: com.njydsz.common.app.health.AppHealthIndicator
+        usage: "App 模块健康指标（API 签名+指标采集状态）"
+# ======================================================================
+# 查找指南（按能力域分类索引表）
+# ======================================================================
+lookup_guide:
+
+  serialization:
+    description: "JSON 序列化与反序列化"
+    primary: ydsz-common-json
+    alternatives: []
+    note: "禁止引入 Jackson/fastjson2 运行时依赖"
+
+  utility:
+    description: "通用工具类（ID 生成/加解密/Bean/Diff/脱敏）"
+    primary: ydsz-common-util
+    alternatives: []
+
+  caching:
+    description: "缓存能力"
+    primary: ydsz-common-cache
+    alternatives: [ydsz-common-redis]
+    note: "本地缓存用 cache 模块；分布式缓存用 redis 模块"
+
+  excel:
+    description: "Excel 读写"
+    primary: ydsz-common-excel
+    alternatives: []
+
+  response_context:
+    description: "统一响应/请求上下文/TraceId"
+    primary: ydsz-common-core
+    alternatives: []
+
+  i18n:
+    description: "国际化"
+    primary: ydsz-common-locales
+    alternatives: []
+
+  domain:
+    description: "领域模型（分页/树/类型化 ID/规约）"
+    primary: ydsz-common-domain
+    alternatives: []
+
+  exception:
+    description: "统一异常处理"
+    primary: ydsz-common-exception
+    alternatives: []
+
+  database:
+    description: "数据库访问（MyBatis-Plus/动态数据源/权限/防火墙）"
+    primary: ydsz-common-jdbc
+    alternatives: []
+
+  redis:
+    description: "Redis 操作与限流"
+    primary: ydsz-common-redis
+    alternatives: []
+
+  lock:
+    description: "分布式锁与幂等"
+    primary: ydsz-common-lock
+    alternatives: []
+
+  thread:
+    description: "线程池治理"
+    primary: ydsz-common-thread
+    alternatives: []
+
+  tenant:
+    description: "多租户隔离"
+    primary: ydsz-common-tenant
+    alternatives: []
+
+  auth:
+    description: "认证与权限（JWT/RBAC/DataScope）"
+    primary: ydsz-common-auth
+    alternatives: []
+
+  safety:
+    description: "安全防护（XSS/CSRF/签名/限流/脱敏/SSRF）"
+    primary: ydsz-common-safe
+    alternatives: []
+
+  feign:
+    description: "Feign HTTP 客户端增强"
+    primary: ydsz-common-feign
+    alternatives: []
+
+  audit:
+    description: "操作审计"
+    primary: ydsz-common-audit
+    alternatives: []
+
+  notify:
+    description: "消息通知（Email/SMS/企微/钉钉/飞书）"
+    primary: ydsz-common-notify
+    alternatives: []
+
+  queue:
+    description: "消息队列（Redis/Kafka/RocketMQ/RabbitMQ）"
+    primary: ydsz-common-queue
+    alternatives: []
+
+  event:
+    description: "领域事件 / Outbox 模式"
+    primary: ydsz-common-event
+    alternatives: []
+
+  config:
+    description: "配置热更新 / Jasypt 加密"
+    primary: ydsz-common-config
+    alternatives: []
+
+  socket:
+    description: "WebSocket 实时推送"
+    primary: ydsz-common-socket
+    alternatives: []
+
+  netty:
+    description: "Netty TCP 通信"
+    primary: ydsz-common-netty
+    alternatives: []
+
+  file:
+    description: "文件存储（Local/MinIO/S3/OSS/COS/OBS/Qiniu）"
+    primary: ydsz-common-file
+    alternatives: []
+
+  docs:
+    description: "文档解析与安全扫描"
+    primary: ydsz-common-docs
+    alternatives: []
+
+  search:
+    description: "统一搜索（PG tsvector + 内存引擎）"
+    primary: ydsz-common-search
+    alternatives: []
+
+  sentry:
+    description: "可观测性（指标/日志/追踪/SLA/告警/熔断）"
+    primary: ydsz-common-sentry
+    alternatives: []
+
+  base:
+    description: "HTTP 公共基座（CORS/安全头/请求日志/响应包装）"
+    primary: ydsz-common-base
+    alternatives: []
+
+  web_entry:
+    description: "PC Web 端入口（base + Security + Session）"
+    primary: ydsz-common-web
+    alternatives: []
+
+  app_entry:
+    description: "移动端 App 入口（base + AppAuthFilter）"
+    primary: ydsz-common-app
+    alternatives: []
+
+# ======================================================================
+# 违规举报与补充流程
+# ======================================================================
+violation_reporting:
+  capability_missing:
+    description: "能力遗漏举报"
+    steps:
+      - "在 ydsz-common 仓库提交 Issue，标题：[Capability-Add] <模块名> - <能力>"
+      - "说明能力用途、API 入口类和所属层级"
+      - "平台团队审核后合并"
+
+  capability_violation:
+    description: "能力违规举报（业务自建已有公共能力）"
+    steps:
+      - "在 ydsz-common 仓库提交 Issue，标题：[Capability-Violation] <业务模块> - <违规能力>"
+      - "说明违规代码位置和已有公共能力模块名"
+      - "平台团队评估后推动迁移或补录"
+
+  layer_violation:
+    description: "层级违规举报（L1 依赖 L3 等）"
+    steps:
+      - "在 ydsz-common 仓库提交 Issue，标题：[Layer-Violation] <模块A> -> <模块B>"
+      - "说明违规依赖的类名和方法"
+      - "平台团队评估后推动重构"
+
+  version_update:
+    description: "版本更新流程"
+    steps:
+      - "ydsz-common 每次发版前，模块维护者更新本注册表"
+      - "新增能力需在 capabilities 列表中添加条目"
+      - "废弃能力需标注 deprecated 并注明替代方案"
+      - "版本号按语义化版本规则递增"
+
+# ======================================================================
+# 层级依赖规范速查
+# ======================================================================
+layer_rules:
+  L1:
+    allowed_dependencies: []
+    description: "工具模块，仅依赖 JDK 和第三方库"
+  L2:
+    allowed_dependencies: [L1]
+    description: "基础设施层，可依赖 L1"
+  L3:
+    allowed_dependencies: [L1, L2]
+    description: "基础服务层，可依赖 L1/L2"
+  L4:
+    allowed_dependencies: [L1, L2, L3]
+    description: "基础数据层；L4→L4 横切依赖例外（tenant→jdbc/redis/thread, lock→redis）"
+  L5:
+    allowed_dependencies: [L1, L2, L3, L4]
+    description: "业务服务层，可依赖 L1-L4"
+  L6:
+    allowed_dependencies: [L1, L2, L3, L4, L5]
+    description: "应用层入口，可依赖所有下层模块"

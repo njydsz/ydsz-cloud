@@ -283,7 +283,29 @@ public class ExcelReader {
    * @return 当前读取器实体
    */
   public ExcelReader automaticTrim(boolean automaticTrim) {
-    metadata.setIsAutomaticTrim(automaticTrim);
+    ExcelConfig config = metadata.getExcelConfig();
+    if (config == null) {
+      config = ExcelConfig.builder().automaticTrim(automaticTrim).build();
+      metadata.setExcelConfig(config);
+    } else {
+      // ExcelConfig 是不可变对象，需要重建
+      metadata.setExcelConfig(
+          ExcelConfig.builder()
+              .readBufferSize(config.getReadBufferSize())
+              .writeBufferSize(config.getWriteBufferSize())
+              .automaticTrim(automaticTrim)
+              .defaultDateFormat(config.getDefaultDateFormat())
+              .defaultNumberFormat(config.getDefaultNumberFormat())
+              .maxReadCacheSize(config.getMaxReadCacheSize())
+              .maxReadFileSizeMB(config.getMaxReadFileSizeMB())
+              .maxWriteFileSizeMB(config.getMaxWriteFileSizeMB())
+              .formulaInjectionProtection(config.getIsFormulaInjectionProtection())
+              .compressionLevel(config.getCompressionLevel())
+              .use1904Windowing(config.getIsUse1904Windowing())
+              .headRowNumber(config.getHeadRowNumber())
+              .validationMode(config.getValidationMode())
+              .build());
+    }
     return this;
   }
 
@@ -491,7 +513,7 @@ public class ExcelReader {
     if (metadata.getInputStream() != null) {
       return inputSourceDetector.detectXlsxFormat(metadata.getInputStream());
     }
-    throw ExcelReadException.fileAccessFailed("unknown", "未指定输入源");
+    throw ExcelReadException.fileNotFound("unknown");
   }
 
   /**
@@ -571,7 +593,7 @@ public class ExcelReader {
     } else {
       InputStream is = metadata.getInputStream();
       if (is == null) {
-        throw ExcelReadException.fileAccessFailed("unknown", "未指定输入源");
+        throw ExcelReadException.fileNotFound("unknown");
       }
       superFastReader.read(is);
     }

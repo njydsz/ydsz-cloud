@@ -11,7 +11,7 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
@@ -178,7 +178,8 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     }
     MsgTemplateVO tpl =
         templateService.loadByCodeAndChannel(
-            req.getTemplateCode(), req.getChannel(), null, TenantContextHolder.getTenantId());
+            req.getTemplateCode(), req.getChannel(), null,
+            AuthContextUtils.getTenantIdOrDefault("1"));
     if (tpl == null) {
       return MessageUtils.getMessage("message.send.templateNotExist",
           new Object[] {req.getTemplateCode()}, "模板不存在: " + req.getTemplateCode());
