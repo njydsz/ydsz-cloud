@@ -186,6 +186,95 @@ public class MessageController {
   }
 
   /**
+   * 导出消息投递日志（Excel）
+   *
+   * <p>根据当前过滤条件（channelCode/bizId/status/时间范围等）导出投递日志，自动处理多页分页与流式写入（每次 200 条）。
+   * 文件名为 {@code msg_logs_yyyyMMddHHmmss.xlsx}。接收人字段使用 {@link MaskUtils#mask(String, int, int)} 脱敏。
+   *
+   * @param query 日志查询参数（同 {@link #pageLog}）
+   */
+  @Operation(summary = "导出投递日志（Excel）",
+      description = "根据筛选条件导出投递日志为 Excel 文件，支持多页分页流式写入。")
+  @ApiResponse(responseCode = "200", description = "导出成功（返回 xlsx 文件流）")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+  @GetMapping("/log/export")
+  public void exportLogs(MessageLogQueryDTO query,
+      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+    String fileName =
+        "msg_logs_" + java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+            .format(java.time.LocalDateTime.now()) + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader("Content-Disposition", "attachment; filename="
+        + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+            .replace("+", "%20"));
+
+    // 设置大页大小用于流式导出
+    query.setPageSize(200);
+    query.setIsUseSearchAfter(false);
+
+    final int pageSize = 200;
+    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        ExcelWriter writer = ExcelFacade.write(out, MsgLogExportVO.class);) {
+      int pageNum = 1;
+      while (true) {
+        query.setPageNum(pageNum);
+        PageResponse<List<MsgLogVO>> page = messageService.pageLog(query);
+        if (page == null || page.getData() == null || page.getData().isEmpty()) {
+          break;
+        }
+        List<MsgLogExportVO> rows = new java.util.ArrayList<>(page.getData().size());
+        for (MsgLogVO vo : page.getData()) {
+          rows.add(toMsgLogExportVO(vo));
+        }
+        writer.doWrite(rows);
+        if (page.getData().size() < pageSize || pageNum * pageSize >= page.getTotal()) {
+          break;
+        }
+        pageNum++;
+      }
+      writer.finish();
+      response.getOutputStream().write(out.toByteArray());
+    }
+  }
+
+  // ==================== 私有转换方法（domain VO → excel VO） ====================
+
+  /**
+   * 将 {@link MsgLogVO} 转换为 Excel 导出行。
+   *
+   * <p>接收人字段使用 {@link MaskUtils#mask(String, int, int)} 脱敏（前 3 + 后 4）。
+   *
+   * @param vo 消息投递日志领域 VO
+   * @return Excel 导出行
+   */
+  private MsgLogExportVO toMsgLogExportVO(MsgLogVO vo) {
+    MsgLogExportVO export = new MsgLogExportVO();
+    export.setMsgId(vo.getMsgId());
+    export.setChannel(vo.getChannel());
+    export.setBizType(vo.getBizType());
+    export.setBizId(vo.getBizId());
+    // 接收人脱敏：前 3 位 + 后 4 位可见
+    export.setReceiver(vo.getReceiver() != null ? MaskUtils.mask(vo.getReceiver(), 3, 4) : null);
+    export.setTemplateCode(vo.getTemplateCode());
+    export.setStatus(vo.getStatus());
+    export.setPriority(vo.getPriority());
+    export.setSenderId(vo.getSenderId());
+    export.setMessageGroup(vo.getMessageGroup());
+    export.setBatchId(vo.getBatchId());
+    export.setReceiptStatus(vo.getReceiptStatus());
+    export.setReceiptAt(vo.getReceiptAt() != null ? vo.getReceiptAt().toString() : null);
+    export.setRetryCount(vo.getRetryCount());
+    export.setNextRetryAt(vo.getNextRetryAt() != null ? vo.getNextRetryAt().toString() : null);
+    export.setCostMs(vo.getCostMs());
+    export.setCost(vo.getCost());
+    export.setTraceId(vo.getTraceId());
+    export.setScheduledAt(vo.getScheduledAt() != null ? vo.getScheduledAt().toString() : null);
+    export.setProviderTraceId(vo.getProviderTraceId());
+    export.setCreatedAt(vo.getCreatedAt() != null ? vo.getCreatedAt().toString() : null);
+    return export;
+  }
+
+  /**
    * P1-F3: 取消定时消息（仅允许取消状态为 SCHEDULED 的消息）。
    *
    * @param msgId 定时消息 ID（发送定时消息时返回的 messageId）
