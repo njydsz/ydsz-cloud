@@ -405,7 +405,8 @@ public class ExcelReader {
       validateFileSize(config);
 
       if (!isXlsx) {
-        throw ExcelReadException.unsupportedFormat(
+        throw ExcelReadException.invalidFormat(
+            metadata.getFilePath() != null ? metadata.getFilePath() : "input",
             "当前版本仅支持 .xlsx 格式，不支持 .xls。请将文件另存为 .xlsx 格式后重试。");
       }
 

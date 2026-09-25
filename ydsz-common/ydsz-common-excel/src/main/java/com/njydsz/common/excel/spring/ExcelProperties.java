@@ -35,9 +35,6 @@ public class ExcelProperties {
   /** 是否自动 trim 字符串，默认 true */
   private Boolean isAutomaticTrim = true;
 
-  /** 流式解析阈值（MB），默认 10；保留字段，当前版本未使用 */
-  private Integer streamingParseThresholdMb = 10;
-
   /** 最大读取文件大小（MB），默认 100 */
   private Integer maxReadFileSizeMb = 100;
 
@@ -100,14 +97,6 @@ public class ExcelProperties {
 
   public void setIsAutomaticTrim(Boolean isAutomaticTrim) {
     this.isAutomaticTrim = isAutomaticTrim;
-  }
-
-  public Integer getStreamingParseThresholdMb() {
-    return streamingParseThresholdMb;
-  }
-
-  public void setStreamingParseThresholdMb(Integer streamingParseThresholdMb) {
-    this.streamingParseThresholdMb = streamingParseThresholdMb;
   }
 
   public Integer getMaxReadFileSizeMb() {
@@ -180,8 +169,8 @@ public class ExcelProperties {
    * <p>所有 getter 均已做 null-safe 处理——{@code ExcelConfig.Builder} 提供合理的内置默认值，
    * 未配置的字段不需要显式设值。
    *
-   * <p>引擎类型由 {@code isUseFastWriter} 隐式推导：fast writer 未启用时使用 {@link
-   * EngineType#POI_STREAMING}，否则由 {@link EngineType#AUTO} 在运行期按文件大小自动选择。
+   * <p>当前版本统一使用 SuperFast 引擎（零 POI 依赖），{@code readBufferSize} / {@code writeBufferSize}
+   * 等参数由 SuperFastExcelReader / SuperFastExcelWriter 消费。
    *
    * @return 根据当前属性构建的不可变 {@link ExcelConfig} 实例
    */

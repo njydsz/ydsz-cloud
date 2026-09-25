@@ -124,3 +124,22 @@ ydsz:
         # - 192.168.1.100   # 运维办公网单个 IP
       excludes:
         - /actuator/**
+
+  # P0: 多租户隔离（ydsz-common-tenant）— A1 修复启动失败（TenantProperties Bean 不存在）
+  # system 引擎作为「多租户管理中心」必须启用，超级管理员（tenantId=0）由拦截器内置豁免全量查询
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    # 租户管理 / 认证等基础表不参与隔离（超级管理员需跨租户读取）
+    ignore-tables:
+      - ydsz_sys_tenant
+      - ydsz_sys_tenant_plan
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language

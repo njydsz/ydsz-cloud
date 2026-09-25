@@ -58,6 +58,7 @@ public class ExcelTemplateWriter {
   private final ValueFormatter valueFormatter;
   private int sheetIndex = 0;
   private int dataStartRow = -1; // -1 means auto-detect
+  private TemplateRegion defaultRegion; // 区域循环填充时的默认区域描述符
 
   public ExcelTemplateWriter(String templatePath, String outputPath, Class<?> clazz) {
     this.templatePath = templatePath;
@@ -132,6 +133,21 @@ public class ExcelTemplateWriter {
   }
 
   /**
+   * 设置区域循环填充的默认 {@link TemplateRegion}。
+   *
+   * <p>由 {@link ExcelFacade#writeLoopTemplate} 自动设置，也可由调用方手动调用
+   * 以复用同一 writer 上的区域配置执行多次 {@code doWrite(...)} 而无需每次传入区域参数。
+   *
+   * @param region 模板区域描述符；传入 {@code null} 清除默认区域
+   * @return 当前写入器，便于链式调用
+   * @since 26.10.01
+   */
+  public ExcelTemplateWriter setDefaultRegion(TemplateRegion region) {
+    this.defaultRegion = region;
+    return this;
+  }
+
+  /**
    * 将数据填充到模板并输出到目标文件。
    *
    * <p><b>列映射</b>：不按字段声明顺序硬填，而是读取模板表头行文本，与 {@link ExcelProperty#value()}（为空时回退字段名）做名称匹配后按列下标写入。
@@ -143,6 +159,9 @@ public class ExcelTemplateWriter {
    *
    * <p><b>容错</b>：单个字段取值或格式化失败时不中断整体写入，仅记录 warn 日志并将该单元格置空。 入参为空集合时直接返回，不会生成输出文件。
    *
+   * <p><b>区域模式</b>：若已通过 {@link #setDefaultRegion} 设置了默认区域描述符，则本方法等价于
+   * {@code doWrite(data, defaultRegion)}——无区域时退化为普通模板覆盖写入。
+   *
    * @param data 待写入数据；非 {@link List} 时按单条记录处理，空列表则直接返回
    * @throws ExcelWriteException 模板读取或结果落盘发生 IO 失败时抛出， 由 {@link
    *     ExcelWriteException#fileAccessFailed} 构造
@@ -150,6 +169,12 @@ public class ExcelTemplateWriter {
   public void doWrite(Object data) {
     List<?> list = data instanceof List ? (List<?>) data : Collections.singletonList(data);
     if (list.isEmpty()) {
+      return;
+    }
+
+    // 区域模式：有默认区域描述符时走区域循环写入路径
+    if (defaultRegion != null) {
+      doWrite(list, defaultRegion);
       return;
     }
 
