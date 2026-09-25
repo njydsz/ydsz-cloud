@@ -19,7 +19,8 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageSendDTO;
+import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
@@ -364,7 +365,8 @@ public class AlertDispatcher {
       AlertChannel channel, AlertContext context, JobAlertRuleVO rule, List<String> receivers) {
     String title = buildTitle(context, rule);
     String content = buildContent(context, rule);
-    MessageRequest request = new MessageRequest();
+    MessageSendDTO request = new MessageSendDTO();
+    request.setStrategy(SendStrategyEnum.SYNC);
     request.setChannel(channel.name());
     request.setSubject(title);
     request.setContent(content);
