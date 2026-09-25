@@ -63,7 +63,6 @@ public class ExcelExportHelper {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
       ExcelWriter writer = ExcelFacade.write(out, dataClass).config(config).sheet(sheetName);
       writer.doWrite(dataList);
-      writer.finish();
       return out.toByteArray();
     } catch (Exception e) {
       LOG.error("[ExcelExportHelper] 导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);
@@ -99,7 +98,6 @@ public class ExcelExportHelper {
       // P1-2 修复：接线 config；headRowNumber 语义统一为 1-based（1=表头在第一行），此前传 0 依赖 clamp 兜底
       ExcelWriter writer = ExcelFacade.write(out).config(config).head(headers).headRowNumber(1).sheet(sheetName);
       writer.doWrite(rows);
-      writer.finish();
       return out.toByteArray();
     } catch (Exception e) {
       LOG.error("[ExcelExportHelper] 动态导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);

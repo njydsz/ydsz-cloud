@@ -13,7 +13,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
+import com.njydsz.common.excel.core.util.ColumnOrderResolver;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
+
+import static com.njydsz.common.excel.core.writer.OoxmlPackShared.*;
 
 /**
  * 多 Sheet 快速写入器 — 一次生成包含多个 Sheet 的 xlsx 工作簿。
@@ -35,52 +38,10 @@ import com.njydsz.common.excel.support.mh.MHFieldAccessor;
  */
 public class MultiSheetFastWriter {
 
-  private static final byte[] SHEET_HEADER = (
-      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-          + "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
-          + "<sheetData>")
-      .getBytes(StandardCharsets.UTF_8);
-  private static final byte[] SHEET_FOOTER =
-      "</sheetData></worksheet>".getBytes(StandardCharsets.UTF_8);
-  private static final byte[] RELS = (
-      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-          + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
-          + "<Relationship Id=\"rId1\" "
-          + "Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" "
-          + "Target=\"xl/workbook.xml\"/>"
-          + "</Relationships>")
-      .getBytes(StandardCharsets.UTF_8);
-  private static final byte[] THEME = (
-      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-          + "<a:theme xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" name=\"Office Theme\">"
-          + "<a:themeElements><a:clrScheme name=\"Office\"><a:dk1><a:sysClr val=\"windowText\" lastClr=\"000000\"/>"
-          + "</a:dk1><a:lt1><a:sysClr val=\"window\" lastClr=\"FFFFFF\"/></a:lt1><a:dk2><a:srgbClr val=\"44546A\"/>"
-          + "</a:dk2><a:lt2><a:srgbClr val=\"E7E6E6\"/></a:lt2><a:accent1><a:srgbClr val=\"4472C4\"/></a:accent1>"
-          + "<a:accent2><a:srgbClr val=\"ED7D31\"/></a:accent2><a:accent3><a:srgbClr val=\"A5A5A5\"/></a:accent3>"
-          + "<a:accent4><a:srgbClr val=\"FFC000\"/></a:accent4><a:accent5><a:srgbClr val=\"5B9BD5\"/></a:accent5>"
-          + "<a:accent6><a:srgbClr val=\"70AD47\"/></a:accent6><a:hlink><a:srgbClr val=\"0563C1\"/></a:hlink>"
-          + "<a:folHlink><a:srgbClr val=\"954F72\"/></a:folHlink></a:clrScheme><a:fontScheme name=\"Office\">"
-          + "<a:majorFont><a:latin typeface=\"Calibri Light\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/>"
-          + "</a:majorFont><a:minorFont><a:latin typeface=\"Calibri\"/><a:ea typeface=\"\"/><a:cs typeface=\"\"/>"
-          + "</a:minorFont></a:fontScheme><a:fmtScheme name=\"Office\"><a:fillStyleLst>"
-          + "<a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/>"
-          + "</a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill></a:fillStyleLst>"
-          + "<a:lnStyleLst><a:ln/><a:ln/><a:ln/></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/>"
-          + "</a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/>"
-          + "</a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val=\"phClr\"/>"
-          + "</a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill><a:solidFill><a:schemeClr val=\"phClr\"/>"
-          + "</a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>")
-      .getBytes(StandardCharsets.UTF_8);
-  private static final byte[] STYLES = (
-      "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-          + "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
-          + "<numFmts count=\"0\"/><fonts count=\"1\"><font><sz val=\"11\"/><name val=\"Calibri\"/></font></fonts>"
-          + "<fills count=\"1\"><fill><patternFill patternType=\"none\"/></fill></fills>"
-          + "<borders count=\"1\"><border><left/><right/><top/><bottom/></border></borders>"
-          + "<cellStyleXfs count=\"1\"><xf/></cellStyleXfs>"
-          + "<cellXfs count=\"1\"><xf/></cellXfs>"
-          + "</styleSheet>")
-      .getBytes(StandardCharsets.UTF_8);
+  // 共享 OOXML 常量引用（实质指向 OoxmlPackShared 的字节数组）
+  private static final byte[] RELS = OoxmlPackShared.ROOT_RELS;
+  private static final byte[] THEME = OoxmlPackShared.THEME;
+  private static final byte[] STYLES = OoxmlPackShared.STYLES;
 
   private final OutputStream out;
   private final List<SheetData<?>> sheets = new ArrayList<>(4);

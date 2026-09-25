@@ -1402,10 +1402,6 @@ public class SuperFastExcelWriter {
     }
   }
 
-  /**
-   * @deprecated 已被 {@link #buildFieldInfoArrayFromFields(List, Class)} 替代
-   */
-
   // ==================== 动态表头分析 ====================
 
   /**

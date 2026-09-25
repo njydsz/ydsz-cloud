@@ -95,7 +95,6 @@ public class ExcelWebSupport {
         .config(config)
         .sheet(context.getFilename());
     writer.doWrite(data);
-    writer.finish();
     response.getOutputStream().flush();
   }
 

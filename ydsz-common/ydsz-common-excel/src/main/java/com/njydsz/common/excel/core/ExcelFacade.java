@@ -437,8 +437,7 @@ public class ExcelFacade {
         currentWriter.doWrite(entry.getValue());
         index++;
       }
-      writer.finish();
-    } catch (IOException e) {
+    } catch (RuntimeException e) {
       throw new RuntimeException("Failed to write Excel file: " + fileName, e);
     }
   }
