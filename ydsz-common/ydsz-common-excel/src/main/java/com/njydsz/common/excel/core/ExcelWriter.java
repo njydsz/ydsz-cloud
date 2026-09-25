@@ -423,6 +423,9 @@ public class ExcelWriter implements AutoCloseable {
       // 应用 @ExcelSheet 注解配置到 metadata
       applyExcelSheetAnnotation();
 
+      // 扫描 @ExcelMerge / @ExcelDataValidation 注解并自动注册后处理器
+      registerPostProcessorsFromAnnotations();
+
       // 委托 SuperFastExcelWriter 完成全部写入
       SuperFastExcelWriter fastWriter = new SuperFastExcelWriter(metadata);
       fastWriter.doWrite(data);
