@@ -555,7 +555,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
     Object emailEnabled = payload.get("emailEnabled");
     if (emailEnabled instanceof Boolean b) {
-      dto.setEmailEnabled(b);
+      dto.setIsEmailEnabled(b);
     }
     dto.setReceiverEmail(asString(payload.get("receiverEmail")));
     if (dto.getReceiverEmail() == null) {

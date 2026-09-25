@@ -239,14 +239,6 @@ public class FeignConfiguration {
   }
 
   /**
-   * 创建 GZIP 请求压缩拦截器。
-   *
-   * <p>对 Feign 请求体进行 GZIP 压缩，减少网络传输量。 仅当 {@code ydsz.feign.compress.enabled=true} 时生效。
-   *
-   * @param feignProperties Feign 配置属性
-   * @return GzipRequestCompressInterceptor 实例
-   */
-  /**
    * 创建 Feign 健康状态快照 Bean。
    *
    * <p>提供 Feign 模块的状态快照（不依赖 Spring Actuator API）。 上层 web 包可通过此 Bean 桥接到 {@code HealthIndicator}
@@ -261,6 +253,14 @@ public class FeignConfiguration {
     return FeignHealthSnapshot.from(feignProperties);
   }
 
+  /**
+   * 创建 GZIP 请求压缩拦截器。
+   *
+   * <p>对 Feign 请求体进行 GZIP 压缩，减少网络传输量。 仅当 {@code ydsz.feign.compress.enabled=true} 时生效。
+   *
+   * @param feignProperties Feign 配置属性
+   * @return GzipRequestCompressInterceptor 实例
+   */
   @Bean
   @ConditionalOnMissingBean(GzipRequestCompressInterceptor.class)
   @ConditionalOnProperty(prefix = "ydsz.feign.compress", name = "enabled", havingValue = "true")

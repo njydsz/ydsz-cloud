@@ -225,103 +225,119 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
   }
 
   /**
-   * 创建YdszResponse实例
+   * 构造指定状态码、消息与数据的响应对象（静态工厂）。
    *
-   * @param code 状态码
-   * @param msg 消息
-   * @param data 数据
-   * @param <T> 数据类型
-   * @return YdszResponse实例
+   * <p>不走 i18n 解析，msg 将直接作为响应消息返回给调用方， 适用于已包含最终展示文案的场景（如从异常中直接提取）。
+   *
+   * @param code 响应码，参考 {@link YdszResultCode} 体系
+   * @param msg 响应消息（不走 i18n），直接写入响应体
+   * @param data 为 {@code null} 时不序列化（{@code @JsonInclude(NON_NULL)}）
+   * @param <T> 数据泛型
+   * @return 携带完整三要素的响应实例，不会为 {@code null}
    */
   public static <T> YdszResponse<T> of(String code, String msg, T data) {
     return new YdszResponse<>(code, msg, data);
   }
 
   /**
-   * 返回成功消息
+   * 返回无数据的成功响应，消息走 i18n 解析（key: {@code core.success}）。
    *
-   * @param <T> 数据类型
-   * @return 成功消息
+   * <p>适用于写操作（删除/更新/触发类）无需返回业务数据的场景。
+   *
+   * @param <T> 数据泛型占位
+   * @return 成功响应，data 为 {@code null}，msg 由当前 {@link LocaleContextHolder} 解析
    */
   public static <T> YdszResponse<T> success() {
     return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), null);
   }
 
   /**
-   * 返回成功数据
+   * 返回携带业务数据的成功响应，消息走 i18n 解析。
    *
-   * @param data 数据内容
-   * @param <T> 数据类型
-   * @return 成功消息
+   * <p>最常用的成功返回路径，适用于查询类接口。
+   *
+   * @param data 业务数据，为 {@code null} 时响应体不含 data 字段
+   * @param <T> 数据泛型
+   * @return 成功响应，data 字段为传入值，msg 由 i18n 解析
    */
   public static <T> YdszResponse<T> success(T data) {
     return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), data);
   }
 
   /**
-   * 返回成功消息
+   * 返回自定义消息的成功响应（不走 i18n）。
    *
-   * @param msg 消息内容
-   * @param <T> 数据类型
-   * @return 成功消息
+   * <p>当业务需要在成功时返回非标准提示（如"还有 N 条待审核"）时使用此方法。
+   *
+   * @param msg 自定义消息，直接写入响应体；不可为 {@code null}
+   * @param <T> 数据泛型占位
+   * @return 成功响应，data 为 {@code null}
    */
   public static <T> YdszResponse<T> successMsg(String msg) {
     return of(SUCCESS, msg, null);
   }
 
   /**
-   * 返回成功消息
+   * 返回自定义消息与数据的成功响应（消息不走 i18n）。
    *
-   * @param msg 消息内容
-   * @param data 数据内容
-   * @param <T> 数据类型
-   * @return 成功消息
+   * @param msg 自定义消息，直接写入响应体；不可为 {@code null}
+   * @param data 业务数据，为 {@code null} 时响应体不含 data 字段
+   * @param <T> 数据泛型
+   * @return 成功响应
    */
   public static <T> YdszResponse<T> success(String msg, T data) {
     return of(SUCCESS, msg, data);
   }
 
   /**
-   * 返回失败消息
+   * 返回系统级未知错误（code: {@code C99999}），消息走 i18n 解析。
    *
-   * @param <T> 数据类型
-   * @return 失败消息
+   * <p>作为兜底失败响应，适用于未映射到具体 ResultCode 的未知异常场景。
+   *
+   * @param <T> 数据泛型占位
+   * @return code 为 {@code C99999} 的失败响应，data 为 {@code null}
    */
   public static <T> YdszResponse<T> error() {
     return of(UNKNOWN_CODE, resolveMessage(MSG_OPERATION_FAIL, "操作失败"), null);
   }
 
   /**
-   * 返回失败消息
+   * 返回携带自定义消息的未知错误响应（code: {@code C99999}，不走 i18n）。
    *
-   * @param msg 消息内容
-   * @param <T> 数据类型
-   * @return 失败消息
+   * <p>适用于需要直接透传底层错误描述（如来自 {@link Throwable#getMessage()}）的场景。
+   *
+   * @param msg 自定义错误消息，直接写入响应体
+   * @param <T> 数据泛型占位
+   * @return code 为 {@code C99999} 的失败响应，data 为 {@code null}
    */
   public static <T> YdszResponse<T> error(String msg) {
     return of(UNKNOWN_CODE, msg, null);
   }
 
   /**
-   * 返回失败消息
+   * 返回指定错误码与消息的失败响应（不走 i18n）。
    *
-   * @param code 错误码
-   * @param msg 消息内容
-   * @param <T> 数据类型
-   * @return 失败消息
+   * <p>适用于业务中已知错误码但需自定义提示的场景，或用于兼容旧接口直接透传错误码。
+   *
+   * @param code 自定义错误码（需符合 ydsz 错误码体系格式，如 Axxxxx/Bxxxxx/Cxxxxx）
+   * @param msg 错误消息，直接写入响应体；不可为 {@code null}
+   * @param <T> 数据泛型占位
+   * @return 指定 code/msg 的失败响应，data 为 {@code null}
    */
   public static <T> YdszResponse<T> error(String code, String msg) {
     return of(code, msg, null);
   }
 
   /**
-   * 返回失败消息
+   * 返回指定错误码、消息与数据的失败响应（不走 i18n）。
    *
-   * @param code 错误码
-   * @param msg 消息内容
-   * @param data 数据内容
-   * @param <T> 数据类型
-   * @return 失败消息
+   * <p>适用于需要在错误响应中携带额外诊断信息（如参数校验失败的字段详情）的场景。
+   *
+   * @param code 自定义错误码
+   * @param msg 错误消息，直接写入响应体
+   * @param data 扩展数据（如校验错误字段列表），为 {@code null} 时不序列化
+   * @param <T> 数据泛型
+   * @return 携带 code/msg/data 三要素的失败响应
    */
   public static <T> YdszResponse<T> error(String code, String msg, T data) {
     return of(code, msg, data);
@@ -393,37 +409,39 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
   }
 
   /**
-   * 返回失败消息。
+   * 根据 {@link ResultCode} 构造失败响应，消息走 i18n 解析。
    *
-   * <p>走 i18n 链路：使用 {@link ResultCode#getKey()} 作为国际化 key 解析消息， 解析失败时回退到 {@link
-   * ResultCode#getMsg()}。 HTTP 状态码通过 {@code ExceptionCode.getHttpStatus()} 由异常处理器决定。
+   * <p>使用 {@link ResultCode#getKey()} 作为国际化 key 解析消息，解析失败时回退到 {@link ResultCode#getMsg()}。 HTTP
+   * 状态码不在响应体中体现，由异常处理器通过 {@code ExceptionCode.getHttpStatus()} 设置。
    *
-   * @param resultCode 结果码
-   * @param <T> 数据类型
-   * @return 失败消息
+   * @param resultCode 预定义的结果码枚举，决定响应码、i18n key 与默认消息
+   * @param <T> 数据泛型占位
+   * @return code/msg 取自 {@link ResultCode} 的失败响应，data 为 {@code null}
    */
   public static <T> YdszResponse<T> error(ResultCode resultCode) {
     return of(resultCode.getCode(), resolveMessage(resultCode.getKey(), resultCode.getMsg()), null);
   }
 
   /**
-   * 返回失败消息（自定义消息覆盖）。
+   * 根据 {@link ResultCode} 构造失败响应，但使用自定义消息覆盖默认消息。
    *
-   * <p>自定义消息直接作为响应 message，不走 i18n 解析。
+   * <p>适用于持有结果码（便于前端按 code 分支）但需附加动态信息（如"文件 123 不存在"）的场景。
    *
-   * @param resultCode 结果码
-   * @param msg 自定义消息（覆盖 ResultCode 默认消息，不走 i18n）
-   * @param <T> 数据类型
-   * @return 失败消息
+   * @param resultCode 预定义的结果码枚举，决定响应码
+   * @param msg 自定义消息，覆盖 {@link ResultCode#getMsg()} 与 i18n 解析结果；不可为 {@code null}
+   * @param <T> 数据泛型占位
+   * @return code 取自 {@link ResultCode}、msg 取自参数的失败响应，data 为 {@code null}
    */
   public static <T> YdszResponse<T> error(ResultCode resultCode, String msg) {
     return of(resultCode.getCode(), msg, null);
   }
 
   /**
-   * 获取响应时间戳
+   * 返回响应生成时的时间戳（毫秒）。
    *
-   * @return 响应时间戳（毫秒）
+   * <p>时间戳在构造函数中赋值，代表响应对象创建时刻，而非请求到达时刻。 用于客户端排序、日志关联等场景。
+   *
+   * @return 响应创建时的 Unix 时间戳（毫秒），不会为 {@code null}
    */
   @Override
   public Long getTimestamp() {
@@ -431,9 +449,11 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
   }
 
   /**
-   * 判断是否成功
+   * 判断当前响应是否表示业务成功。
    *
-   * @return 成功返回 true，否则返回 false
+   * <p>成功判定依据为 {@code code} 等于 {@link #SUCCESS}（A00000）。 code 为 {@code null} 或不匹配任何已知成功码时返回 {@code false}。
+   *
+   * @return {@code true} 表示业务处理成功（code = A00000）
    */
   @Override
   public boolean isSuccess() {
@@ -441,9 +461,11 @@ public class YdszResponse<T> implements IResponse<T>, Serializable {
   }
 
   /**
-   * 判断是否失败
+   * 判断当前响应是否表示业务失败，是 {@link #isSuccess()} 的逻辑取反。
    *
-   * @return 失败返回true，否则返回false
+   * <p>等价于 {@code !isSuccess()}，语义更清晰，便于调用方在条件分支中直接阅读意图。
+   *
+   * @return {@code true} 表示业务处理失败（code 非 A00000）
    */
   public boolean isFailed() {
     return !isSuccess();

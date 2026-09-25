@@ -36,10 +36,12 @@ import org.springframework.core.Ordered;
 import com.njydsz.common.jdbc.monitor.SqlFingerprint;
 
 /**
- * SQL 链路追踪拦截器（慢 SQL + 审计一体化）
+ * SQL 链路追踪拦截器（慢 SQL + 审计一体化）。
  *
  * <p>将慢 SQL 检测与 SQL 审计合并为单个拦截器，避免对同一条 SQL 进行多次解析和多次 {@link MappedStatement#getBoundSql(Object)}
  * 调用，降低 MyBatis 拦截器链开销。
+ *
+ * <p>基于 MyBatis-Plus {@link InnerInterceptor} 实现 SQL 执行追踪、审计日志和 Micrometer 指标采集。
  *
  * <p>执行阶段说明：
  *
@@ -84,14 +86,6 @@ import com.njydsz.common.jdbc.monitor.SqlFingerprint;
       method = "update",
       args = {MappedStatement.class, Object.class})
 })
-/**
- * SQL 追踪内部拦截器
- *
- * <p>基于 MyBatis-Plus InnerInterceptor 实现 SQL 执行追踪、审计日志和 Micrometer 指标采集。
- *
- * @author ydsz-team
- * @since 26.09.01
- */
 @Slf4j
 public class SqlTraceInnerInterceptor
     implements InnerInterceptor, Ordered, MeterBinder, Interceptor {

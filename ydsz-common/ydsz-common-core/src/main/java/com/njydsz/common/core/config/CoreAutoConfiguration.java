@@ -96,7 +96,15 @@ public class CoreAutoConfiguration {
     return resolver;
   }
 
-  /** 将 CoreProperties 中的分页配置传播到 PageConstants 运行时覆盖值。 */
+  /**
+   * 注册分页常量初始化器，在所有单例就绪后将 {@link CoreProperties} 中的分页默认值灌入 {@link PageConstants}。
+   *
+   * <p>使用 {@link SmartInitializingSingleton} 而非 {@code @PostConstruct} 是为了确保分页常量被其他 Bean
+   * 在初始化阶段读取前已完成赋值，避免读到未绑定的默认值。
+   *
+   * @param properties Core 配置属性
+   * @return 分页常量初始化器
+   */
   @Bean
   PageConstantsInitializer pageConstantsInitializer(CoreProperties properties) {
     return new PageConstantsInitializer(properties);

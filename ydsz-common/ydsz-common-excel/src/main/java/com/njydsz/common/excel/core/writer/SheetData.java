@@ -1,5 +1,7 @@
 package com.njydsz.common.excel.core.writer;
 
+import java.util.List;
+
 /**
  * 多 Sheet 写入场景下，单个 Sheet 的数据封装。
  *
@@ -11,9 +13,9 @@ public class SheetData<T> {
 
   private final String sheetName;
   private final Class<T> clazz;
-  private final java.util.List<T> data;
+  private final List<T> data;
 
-  private SheetData(String sheetName, Class<T> clazz, java.util.List<T> data) {
+  private SheetData(String sheetName, Class<T> clazz, List<T> data) {
     this.sheetName = sheetName;
     this.clazz = clazz;
     this.data = data;
@@ -28,7 +30,7 @@ public class SheetData<T> {
    * @param <T> 数据类型
    * @return SheetData 实例
    */
-  public static <T> SheetData<T> of(String sheetName, Class<T> clazz, java.util.List<T> data) {
+  public static <T> SheetData<T> of(String sheetName, Class<T> clazz, List<T> data) {
     return new SheetData<>(sheetName, clazz, data);
   }
 
@@ -40,7 +42,7 @@ public class SheetData<T> {
     return clazz;
   }
 
-  public java.util.List<T> getData() {
+  public List<T> getData() {
     return data;
   }
 }

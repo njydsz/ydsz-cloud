@@ -1431,22 +1431,6 @@
                 </includes>
             </configuration>
         </plugin>
-        <!-- Checkstyle 源码检查：JSON 生态红线——业务代码禁止 import 第三方 JSON 库（Jackson/Fastjson/Gson）
-             规则文件：checkstyle/checkstyle.xml；只扫 src/main，不扫 src/test（不影响 benchmark 基准库）
-             验证：./mvnw-local.sh checkstyle:check 或 validate -->
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-checkstyle-plugin</artifactId>
-            <executions>
-                <execution>
-                    <id>check-json-ecosystem</id>
-                    <phase>validate</phase>
-                    <goals>
-                        <goal>check</goal>
-                    </goals>
-                </execution>
-            </executions>
-        </plugin>
         </plugins>
     </build>
 

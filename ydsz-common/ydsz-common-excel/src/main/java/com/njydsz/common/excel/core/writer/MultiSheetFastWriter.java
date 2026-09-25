@@ -4,11 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -190,7 +190,7 @@ public class MultiSheetFastWriter {
 
     int declOrder = 0;
     for (Field field : clazz.getDeclaredFields()) {
-      if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+      if (Modifier.isStatic(field.getModifiers())) {
         continue;
       }
       ExcelProperty prop = field.getAnnotation(ExcelProperty.class);

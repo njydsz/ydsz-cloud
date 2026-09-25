@@ -6,10 +6,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -143,12 +146,20 @@ public class SuperFastExcelReader {
    */
   private TempFileStrategy effectiveStrategy = TempFileStrategy.AUTO;
 
-  /** 设置 sheet XML 落地策略。 */
+  /**
+   * 设置 sheet XML 落地策略。
+   *
+   * @param strategy 落地策略，{@code null} 回退默认值 {@link TempFileStrategy#AUTO}
+   */
   public void setTempFileStrategy(TempFileStrategy strategy) {
     this.effectiveStrategy = strategy != null ? strategy : TempFileStrategy.AUTO;
   }
 
-  /** 获取当前 sheet XML 落地策略。 */
+  /**
+   * 获取当前 sheet XML 落地策略。
+   *
+   * @return 当前落地策略
+   */
   public TempFileStrategy getTempFileStrategy() {
     return effectiveStrategy;
   }
@@ -306,11 +317,11 @@ public class SuperFastExcelReader {
           parseSheetStream(new ByteArrayInputStream(bytes), ssReader, stylesReader);
           break;
         case MAPPED_FILE:
-          try (java.nio.channels.FileChannel channel = java.nio.channels.FileChannel.open(
-              tempSheetFile, java.nio.file.StandardOpenOption.READ)) {
+          try (FileChannel channel = FileChannel.open(
+              tempSheetFile, StandardOpenOption.READ)) {
             long size = channel.size();
-            java.nio.MappedByteBuffer mappedBuffer = channel.map(
-                java.nio.channels.FileChannel.MapMode.READ_ONLY, 0, size);
+            MappedByteBuffer mappedBuffer = channel.map(
+                FileChannel.MapMode.READ_ONLY, 0, size);
             // MappedByteBuffer → InputStream 桥接
             try (InputStream sheetStream = new MappedByteBufferInputStream(mappedBuffer)) {
               parseSheetStream(sheetStream, ssReader, stylesReader);
@@ -355,11 +366,11 @@ public class SuperFastExcelReader {
           bounded(zipFile.getInputStream(sheetEntry)),
           tempSheetFile,
           StandardCopyOption.REPLACE_EXISTING);
-      try (java.nio.channels.FileChannel channel = java.nio.channels.FileChannel.open(
-          tempSheetFile, java.nio.file.StandardOpenOption.READ)) {
+      try (FileChannel channel = FileChannel.open(
+          tempSheetFile, StandardOpenOption.READ)) {
         long size = channel.size();
-        java.nio.MappedByteBuffer mappedBuffer = channel.map(
-            java.nio.channels.FileChannel.MapMode.READ_ONLY, 0, size);
+        MappedByteBuffer mappedBuffer = channel.map(
+            FileChannel.MapMode.READ_ONLY, 0, size);
         try (InputStream sheetStream = new MappedByteBufferInputStream(mappedBuffer)) {
           parseSheetStream(sheetStream, ssReader, stylesReader);
         }

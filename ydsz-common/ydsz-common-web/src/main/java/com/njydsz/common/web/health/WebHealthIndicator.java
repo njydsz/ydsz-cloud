@@ -70,6 +70,15 @@ public class WebHealthIndicator implements HealthIndicator {
   private final boolean sessionRedisEnabled;
   private final boolean securityEnabled;
 
+  /**
+   * 构造 Web 模块健康指标。
+   *
+   * @param corsProperties CORS 跨域配置属性，用于报告跨域状态与 origin 数量
+   * @param traceProperties Trace 追踪配置属性，用于报告采样率与响应头开关
+   * @param userAgentAnalyzerProvider User-Agent 解析器（懒加载 Bean），用于运行时探测 UA 解析能力
+   * @param sessionRedisEnabled 是否启用了 Redis Session 共享
+   * @param securityEnabled 是否启用了安全过滤器链
+   */
   public WebHealthIndicator(
       WebCorsProperties corsProperties,
       WebTraceProperties traceProperties,

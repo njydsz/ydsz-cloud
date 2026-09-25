@@ -5,7 +5,6 @@ import java.util.zip.Deflater;
 
 import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
-import com.njydsz.common.excel.core.config.EngineType;
 
 /**
  * Excel 全局配置 — 不可变配置对象。
@@ -145,7 +144,11 @@ public class ExcelConfig {
     return isUseFastWriter;
   }
 
-  /** 获取写引擎类型。 */
+  /**
+   * 获取写引擎类型。
+   *
+   * @return 引擎类型
+   */
   public EngineType getEngineType() {
     return engineType;
   }

@@ -1,6 +1,8 @@
 package com.njydsz.common.excel.core.reader;
 
+import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -8,6 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -19,8 +22,8 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.excel.core.ExcelReader;
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.listener.ReadListener;
-import com.njydsz.common.excel.exception.ExcelReadException;
 import com.njydsz.common.excel.exception.ExcelExceptionCode;
+import com.njydsz.common.excel.exception.ExcelReadException;
 
 /**
  * Excel 流式读取器 — 适配 Java 8+ Stream API，实现与 Reactor / Spring Batch 等框架的无缝集成。
@@ -191,13 +194,13 @@ public class ExcelStream<T> implements AutoCloseable {
     public void onData(AnalysisContext context, T data) {
       try {
         while (!closed.get()) {
-          if (queue.offer(data, 500, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+          if (queue.offer(data, 500, TimeUnit.MILLISECONDS)) {
             return;
           }
         }
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
-        throw new UncheckedIOException(new java.io.IOException("Stream 已关闭", ie));
+        throw new UncheckedIOException(new IOException("Stream 已关闭", ie));
       }
     }
 
@@ -221,7 +224,7 @@ public class ExcelStream<T> implements AutoCloseable {
  *
  * @param <T> 元素类型
  */
-class ExcelIterator<T> implements java.util.Iterator<T> {
+class ExcelIterator<T> implements Iterator<T> {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExcelIterator.class);
   private static final long POLL_TIMEOUT_MS = 500;
@@ -251,7 +254,7 @@ class ExcelIterator<T> implements java.util.Iterator<T> {
     }
     try {
       while (!isClosed.get()) {
-        nextElement = buffer.poll(POLL_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
+        nextElement = buffer.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         if (nextElement == ExcelStream.END_SENTINEL) {
           finished = true;
           return false;

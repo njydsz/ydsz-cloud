@@ -4,7 +4,17 @@ import java.io.Serializable;
 import java.time.Instant;
 
 /**
- * 安全事件
+ * 安全事件值对象，封装一次攻击检测的完整上下文。
+ *
+ * <p>由安全过滤器（XSS/SQL注入/CSRF/IP访问控制/API签名）检测到攻击时构造，
+ * 通过 {@link com.njydsz.common.safe.alert.SecurityEventPublisher} 发布，
+ * 供 {@link com.njydsz.common.safe.metrics.SafeMetrics} 指标采集、
+ * {@link com.njydsz.common.safe.audit.SecurityAuditLogger} 审计日志、
+ * {@link com.njydsz.common.safe.alert.SecurityEventAggregator} 自动封禁等下游消费。
+ *
+ * <p>攻击载荷截断到 200 字符，防止恶意超长 payload 膨胀内存与日志存储。
+ *
+ * <p>本类为不可变对象，线程安全。
  *
  * @author ydsz-team
  * @since 26.09.01

@@ -172,6 +172,9 @@ public class SsePushChannelMvcAdapter implements SsePushChannel {
       heartbeatFuture = heartbeatScheduler.scheduleAtFixedRate(() -> {
         try {
           sendHeartbeat();
+        } catch (IOException e) {
+          closed.set(true);
+          stopHeartbeat();
         } catch (RuntimeException e) {
           stopHeartbeat();
         }
