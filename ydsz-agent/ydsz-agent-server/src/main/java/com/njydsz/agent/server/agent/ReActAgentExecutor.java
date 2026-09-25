@@ -38,6 +38,7 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
+import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.IdGenerator;
@@ -91,6 +92,9 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   /** 执行暂停服务（可选，为 null 时不支持会话级暂停/恢复） */
   private final ExecutionPauseService pauseService;
 
+  /** 特性开关服务（P1-pilot：LLM 流式调用/工具沙箱等开关） */
+  private final FeatureFlagService featureFlagService;
+
   public ReActAgentExecutor(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -104,7 +108,8 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       RagService ragService,
       MiddlewareChain middlewareChain,
       ExecutionPauseService pauseService,
-      I18nMessages i18nMessages) {
+      I18nMessages i18nMessages,
+      FeatureFlagService featureFlagService) {
     super(
         llmClient,
         memory,
@@ -119,6 +124,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
     this.toolRegistry = toolRegistry;
     this.ragService = ragService;
     this.pauseService = pauseService;
+    this.featureFlagService = featureFlagService;
   }
 
   @Override
@@ -476,7 +482,14 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
 
       mwContext.setLlmRequest(llmRequest);
       notifyReasoning(mwContext);
-      ChatResponse response = executeLlmCall(mwContext, () -> llmClient.chat(llmRequest));
+      // P1-pilot: agent.llm.streaming.enabled 控制 LLM 调用方式。
+      //   true  — 走 llmClient.stream() 真实 SSE 流，逐 token 推送 chunkConsumer
+      //   false — 走 llmClient.chat() 同步调用，由当前方法模拟流式推送（默认行为）
+      ChatResponse response =
+          featureFlagService != null
+                  && featureFlagService.isEnabled("agent.llm.streaming.enabled")
+              ? collectStreamingResponse(llmRequest)
+              : executeLlmCall(mwContext, () -> llmClient.chat(llmRequest));
       if (mwContext.getLlmResponse() == null) {
         mwContext.setLlmResponse(response);
       }
@@ -800,6 +813,58 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       log.warn("[ReAct] RAG 检索失败，跳过知识增强: {}", e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * P1-pilot：通过 llmClient.stream() 收集完整流式文本内容，构建为 ChatResponse（纯文本，不含工具调用）。
+   *
+   * <p>流式 token 在此处汇聚为完整 content，不直接推送 chunkConsumer — 下游原有逻辑会按迭代轮次将
+   * 完整思考内容以 ChatChunk 形式推送给调用方，保证行为一致性。
+   *
+   * <p><b>重要限制（pilot 阶段）：</b>流式 Function Calling 协议推送的 tool_call 增量的 arguments 为
+   * 不完整 JSON 片段（如 {@code {"location":"}），若直接传给工具执行会产生参数异常。
+   * 因此 pilot 阶段流式路径<b>仅汇聚文本内容</b>，不做工具调用。后续迭代可引入流式 tool_call 拼接协议
+   * （arguments 完整 JSON 拼接后再反序列化）以支持流式场景的工具调用。
+   *
+   * <p>如需改为「边生成边推送」，可在本方法内注入 chunkConsumer。
+   *
+   * @param llmRequest LLM 请求
+   * @return 汇聚后的 ChatResponse（仅 content + usage + finishReason，无 toolCalls）
+   */
+  private ChatResponse collectStreamingResponse(ChatRequest llmRequest) {
+    StringBuilder contentBuilder = new StringBuilder();
+    TokenUsage[] usageHolder = {TokenUsage.zero()};
+    String[] responseIdHolder = {IdGenerator.nextIdStr()};
+    String[] finishReasonHolder = {null};
+    String model = llmRequest.getModel();
+
+    llmClient.stream(
+        llmRequest,
+        chunk -> {
+          if (chunk == null) {
+            return;
+          }
+          if (chunk.getDeltaContent() != null) {
+            contentBuilder.append(chunk.getDeltaContent());
+          }
+          if (chunk.isFinished()) {
+            finishReasonHolder[0] = chunk.getFinishReason();
+            if (chunk.getUsage() != null) {
+              usageHolder[0] = chunk.getUsage();
+            }
+          }
+          // pilot 阶段不收集流式 tool_call 增量（arguments 为不完整 JSON 片段，直接执行会引发参数异常）
+        });
+
+    String content = contentBuilder.toString();
+    ChatMessage message = ChatMessage.assistant(content, null, usageHolder[0]);
+    return new ChatResponse(
+        responseIdHolder[0],
+        model,
+        message,
+        usageHolder[0],
+        finishReasonHolder[0],
+        List.of());
   }
 
   private ChatResponse buildMaxIterationsResponse(String convId, TokenUsage usage) {

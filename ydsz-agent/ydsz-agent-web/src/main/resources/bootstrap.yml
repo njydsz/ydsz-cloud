@@ -53,8 +53,17 @@ spring:
             group: ${spring.profiles.active}
             refresh: true
 
+# ---------- 特性开关（Feature Flags）配置 ----------
+# 试点接入 ydzs-agent LLM 开关（P1-pilot），详见 ydsz-common-core ConfigDrivenFeatureFlagService
+# 全局默认值也在此定义，Nacos 配置中心可动态覆盖
+
 # ---------- Agent 模块特有配置 ----------
 ydsz:
+  core:
+    feature-flags:
+      agent.llm.streaming.enabled: true
+      agent.tool.code-execution.enabled: true
+      agent.rag.hybrid-search.enabled: false
   # JSON 引擎配置（ydsz-common-json）
   json:
     enabled: true

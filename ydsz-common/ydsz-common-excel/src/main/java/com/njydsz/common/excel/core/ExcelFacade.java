@@ -147,6 +147,63 @@ public class ExcelFacade {
     return new ExcelReader(metadata);
   }
 
+  // ==================== XLS 兼容读取（BIFF8/HSSF） ====================
+
+  /**
+   * 读取 Excel 97-2003（.xls，BIFF8/HSSF 格式）。
+   *
+   * <p>通过 OLE2 复合文档解析 + BIFF8 记录解析实现，无需 Apache POI。
+   * 返回的 {@link com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader} 支持
+   * {@code read()} / {@code readAllRows()} / {@code sheet(int|String)}。
+   *
+   * <h3>使用示例</h3>
+   *
+   * <pre>{@code
+   * HssfCompatibleReader reader = ExcelFacade.readXls(inputStream);
+   * reader.sheet(0).headerRow(0);
+   * List&lt;List&lt;String&gt; rows = reader.readAllRows();
+   * reader.close();
+   * }</pre>
+   *
+   * @param inputStream .xls 文件输入流
+   * @return HSSF 兼容读取器
+   * @throws IOException 读取或解析异常
+   */
+  public static com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader readXls(
+      InputStream inputStream) throws IOException {
+    return com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader.of(inputStream);
+  }
+
+  /**
+   * 智能检测 Excel 文件格式（XLS / XLSX），选择对应读取器。
+   *
+   * <p>检测前 8 字节：OLE2 魔数走 HSSF 引擎，ZIP 魔数走原有 XLSX 引擎。
+   *
+   * @param inputStream 输入流（需支持 mark/reset）
+   * @return XLSX: {@link ExcelReader}；XLS: {@link com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader}
+   * @throws IOException 读取异常
+   */
+  public static Object readAuto(InputStream inputStream) throws IOException {
+    if (!inputStream.markSupported()) {
+      throw new IllegalArgumentException("InputStream must support mark/reset for auto detection");
+    }
+    inputStream.mark(8);
+    byte[] header = new byte[8];
+    int read = inputStream.read(header);
+    inputStream.reset();
+    if (read < 8) {
+      throw new IOException("File too short to detect format");
+    }
+    // OLE2 magic: D0 CF 11 E0 A1 B1 1A E1
+    if (header[0] == (byte) 0xD0 && header[1] == (byte) 0xCF
+        && header[2] == (byte) 0x11 && header[3] == (byte) 0xE0) {
+      return com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader.of(inputStream);
+    }
+    ReadMetadata metadata = new ReadMetadata();
+    metadata.setInputStream(inputStream);
+    return new ExcelReader(metadata);
+  }
+
   // ==================== 写入相关方法 ====================
 
   /**

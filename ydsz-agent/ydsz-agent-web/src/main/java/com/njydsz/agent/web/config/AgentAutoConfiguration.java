@@ -106,6 +106,7 @@ import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.profile.LlmProfileAnalyzer;
 import com.njydsz.agent.server.profile.UserProfileServiceImpl;
 import com.njydsz.agent.server.rag.RagService;
+import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.lock.core.DistributedLocker;
@@ -572,7 +573,8 @@ public class AgentAutoConfiguration {
       @Lazy SupervisorAgentExecutor supervisorExecutor,
       ObjectProvider<MiddlewareChain> middlewareChainProvider,
       ExecutionPauseService pauseService,
-      I18nMessages i18nMessages) {
+      I18nMessages i18nMessages,
+      ObjectProvider<FeatureFlagService> featureFlagServiceProvider) {
     return new AgentFactory(
         llmClient,
         memory,
@@ -588,7 +590,8 @@ public class AgentAutoConfiguration {
         supervisorExecutor,
         middlewareChainProvider,
         pauseService,
-        i18nMessages);
+        i18nMessages,
+        featureFlagServiceProvider.getIfAvailable());
   }
 
   /**

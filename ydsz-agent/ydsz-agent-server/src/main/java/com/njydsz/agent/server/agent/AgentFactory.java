@@ -18,6 +18,7 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
+import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.locales.util.I18nMessages;
 
 /**
@@ -89,6 +90,9 @@ public class AgentFactory {
   /** 国际化消息工具 */
   private final I18nMessages i18nMessages;
 
+  /** 特性开关服务（P1-pilot：试点接入 LLM 流控/搜索融合等开关） */
+  private final FeatureFlagService featureFlagService;
+
   /**
    * DAG 编排执行器（延迟注入打破循环依赖）。
    *
@@ -118,7 +122,8 @@ public class AgentFactory {
       @Lazy SupervisorAgentExecutor supervisorExecutor,
       ObjectProvider<MiddlewareChain> middlewareChainProvider,
       ExecutionPauseService pauseService,
-      I18nMessages i18nMessages) {
+      I18nMessages i18nMessages,
+      FeatureFlagService featureFlagService) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.toolRegistry = toolRegistry;
@@ -134,6 +139,7 @@ public class AgentFactory {
     this.middlewareChain = middlewareChainProvider.getIfAvailable();
     this.pauseService = pauseService;
     this.i18nMessages = i18nMessages;
+    this.featureFlagService = featureFlagService;
   }
 
   /**
@@ -184,7 +190,8 @@ public class AgentFactory {
               ragService,
               middlewareChain,
               pauseService,
-              i18nMessages);
+              i18nMessages,
+              featureFlagService);
       case "RAG" ->
           // RAG 模式：检索增强生成，复用 ReAct 执行器（ragService 不为 null 时自动启用知识增强）
           new ReActAgentExecutor(
@@ -200,7 +207,8 @@ public class AgentFactory {
               ragService,
               middlewareChain,
               pauseService,
-              i18nMessages);
+              i18nMessages,
+              featureFlagService);
       case "CHAT" ->
           // Simple 模式：单轮对话，无工具调用
           new SimpleAgentExecutor(
@@ -249,7 +257,8 @@ public class AgentFactory {
             ragService,
             middlewareChain,
             pauseService,
-            i18nMessages);
+            i18nMessages,
+            featureFlagService);
       }
     };
   }
