@@ -145,7 +145,7 @@ public class SearchProperties {
   /**
    * 搜索结果缓存配置，对应 {@code ydsz.search.cache.*}。
    *
-   * <p>采用 Caffeine（L1 进程内） + Redis（L2 跨进程）二级缓存架构：
+   * <p>采用 YdszCache（L1 进程内 Window-TinyLFU） + Redis（L2 跨进程）二级缓存架构：
    * L1 亚毫秒级命中但容量小（默认 200 条 / 10s TTL），
    * L2 毫秒级命中且集群共享（默认 1000 条 / 60s TTL）。
    *
@@ -164,12 +164,12 @@ public class SearchProperties {
     /** L2 Redis 缓存条目上限 */
     private long maxSize = 1000;
 
-    /** L1 Caffeine 进程内缓存最大条目数 */
+    /** L1 YdszCache 进程内缓存最大条目数 */
     @Min(16)
     @Max(10000)
     private long l1MaxSize = 200;
 
-    /** L1 Caffeine 进程内缓存存活时间（秒），短 TTL 降低热点 key 竞争 */
+    /** L1 YdszCache 进程内缓存存活时间（秒），短 TTL 降低热点 key 竞争 */
     @Min(1)
     @Max(300)
     private long l1Ttl = 10;
