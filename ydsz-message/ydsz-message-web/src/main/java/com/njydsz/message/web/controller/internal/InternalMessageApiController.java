@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -69,7 +69,7 @@ public class InternalMessageApiController {
       ttlSeconds = 5)
   @PostMapping("/message/send")
   public YdszResponse<String> sendMessage(@RequestBody MessageSendDTO dto) {
-    MessageRequest request = new MessageRequest();
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     BeanUtils.copyProperties(dto, request);
     MessageSendResultVO result = messageService.send(request);
     if (result.isSuccess()) {

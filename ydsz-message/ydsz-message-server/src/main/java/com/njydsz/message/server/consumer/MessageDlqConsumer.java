@@ -12,7 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.context.TenantContextHolder;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
@@ -84,9 +84,9 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
 
     // P1-3: 死信处理进入追踪上下文（无原始 traceId 时自动生成）
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(null)) {
-      MessageRequest request = null;
+      MessageItemRequestDTO request = null;
       try {
-        request = YdszJson.fromJson(body, MessageRequest.class);
+        request = YdszJson.fromJson(body, MessageItemRequestDTO.class);
       } catch (Exception e) {
         log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage(), e);
       }

@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -82,7 +82,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
   }
 
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     ChannelProperties.DingTalkWorkConfig cfg = channelProperties.getChannel().getDingtalkWork();
 
     // 降级 mock
@@ -91,17 +91,17 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
           "[DINGTALK_WORK] 未启用或未配置 AppKey, 降级 mock: receiver={} content={}",
           request.getReceiver(),
           truncate(request.getContent(), 100));
-      return MessageResult.ok(CHANNEL_TYPE, "mock-" + System.currentTimeMillis());
+      return MessageSendResultVO.ok(CHANNEL_TYPE, "mock-" + System.currentTimeMillis());
     }
 
     String accessToken = getAccessToken(cfg);
     if (accessToken == null) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "获取钉钉 access_token 失败", "获取钉钉 access_token 失败", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "获取钉钉 access_token 失败", "获取钉钉 access_token 失败", null);
     }
 
     String receiver = request.getReceiver();
     if (!StringUtils.hasText(receiver)) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "接收人(userId)不能为空", "接收人(userId)不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "接收人(userId)不能为空", "接收人(userId)不能为空", null);
     }
 
     Map<String, Object> payload = buildPayload(request, cfg.getAgentId(), receiver);
@@ -126,19 +126,19 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
           log.info("[DINGTALK_WORK] 发送成功: receiver={}", receiver);
-          return MessageResult.ok(CHANNEL_TYPE, traceId);
+          return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
         log.error("[DINGTALK_WORK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
-        return MessageResult.fail(
+        return MessageSendResultVO.fail(
             CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg,
             "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
       log.error("[DINGTALK_WORK] 发送失败: status={}", response.getStatusCode());
-      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[DINGTALK_WORK] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
@@ -184,7 +184,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
   }
 
   /** 构造钉钉工作通知请求体。 */
-  private Map<String, Object> buildPayload(MessageRequest request, Long agentId, String receiver) {
+  private Map<String, Object> buildPayload(MessageItemRequestDTO request, Long agentId, String receiver) {
     String content = request.getContent() == null ? "" : request.getContent();
     String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
     String msgType = "text";

@@ -12,8 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.PipelineTopologyVO;
 
 /**
@@ -63,7 +63,7 @@ public class SendPipelineFacade {
    * @param ctx 管线上下文
    * @return 执行后的上下文（ctx.errorResult != null 表示失败）
    */
-  public SendContext execute(MessageRequest request, SendContext ctx) {
+  public SendContext execute(MessageItemRequestDTO request, SendContext ctx) {
     PipelineTemplate template = resolveTemplate(request);
     return execute(request, ctx, template);
   }
@@ -78,7 +78,7 @@ public class SendPipelineFacade {
    * @param template 指定的管线模板
    * @return 执行后的上下文
    */
-  public SendContext execute(MessageRequest request, SendContext ctx, PipelineTemplate template) {
+  public SendContext execute(MessageItemRequestDTO request, SendContext ctx, PipelineTemplate template) {
     if (!templateEnabled) {
       log.debug("[PipelineFacade] 模板功能已关闭,回退全量管线");
       return sendPipeline.execute(request, ctx);
@@ -110,7 +110,7 @@ public class SendPipelineFacade {
             e.getMessage(),
             e);
         ctx.setErrorResult(
-            MessageResult.fail(
+            MessageSendResultVO.fail(
                 ctx.getChannel(),
                 null,
                 "管线处理异常 [" + handler.name() + "]: " + e.getMessage(),
@@ -138,7 +138,7 @@ public class SendPipelineFacade {
    * @param request 消息请求
    * @return 识别出的管线模板
    */
-  public PipelineTemplate resolveTemplate(MessageRequest request) {
+  public PipelineTemplate resolveTemplate(MessageItemRequestDTO request) {
     if (request == null) {
       return PipelineTemplate.FULL_PROCESS;
     }

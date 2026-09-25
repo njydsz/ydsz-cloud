@@ -3,8 +3,8 @@ package com.njydsz.message.server.service.core;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.dto.BatchSendResultDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
@@ -47,12 +47,12 @@ public interface MessageService {
   /**
    * 基于跨模块共享请求发送消息（标准 Feign 入口）
    *
-   * <p>通过 {@code MessageRequest} 跨服务传递参数，是各业务模块通过 {@code MessageClient}（Feign）调用的标准入口。
+   * <p>通过 {@code MessageItemRequestDTO} 跨服务传递参数，是各业务模块通过 {@code MessageClient}（Feign）调用的标准入口。
    *
    * @param request 消息发送请求（channel / receiver / templateCode / variables / businessType）
    * @return 发送结果（success / messageId / errorCode / errorMessage）
    */
-  MessageResult send(MessageRequest request);
+  MessageSendResultVO send(MessageItemRequestDTO request);
 
   /**
    * 直接发送消息（走本模块 DTO）
@@ -63,7 +63,7 @@ public interface MessageService {
    * @param dto 发送参数
    * @return 发送结果
    */
-  MessageResult sendDirect(MessageSendDTO dto);
+  MessageSendResultVO sendDirect(MessageSendDTO dto);
 
   /**
    * 批量发送消息（同步循环，限制 100 条/批）。
@@ -74,7 +74,7 @@ public interface MessageService {
    * @param batchId 批次 ID（业务侧生成）
    * @return 批量发送结果（含成功/失败/跳过计数 + 失败明细）
    */
-  BatchSendResultDTO batchSend(List<MessageRequest> requests, String batchId);
+  BatchSendResultDTO batchSend(List<MessageItemRequestDTO> requests, String batchId);
 
   /**
    * 分页查询消息发送日志
@@ -96,7 +96,7 @@ public interface MessageService {
    * @param request 消息发送请求
    * @return 发送结果（success=true 表示半消息已提交，实际发送由消费端异步完成）
    */
-  MessageResult sendTransactionally(MessageRequest request);
+  MessageSendResultVO sendTransactionally(MessageItemRequestDTO request);
 
   /**
    * P0-3: 异步发送消息（先落库 PENDING → 再投递 MQ）。
@@ -107,7 +107,7 @@ public interface MessageService {
    * @param request 消息发送请求
    * @return 发送结果（含 messageId 供追踪，success=true 表示已落库+已投递 MQ）
    */
-  MessageResult sendAsync(MessageRequest request);
+  MessageSendResultVO sendAsync(MessageItemRequestDTO request);
 
   /**
    * P1-F3: 取消定时消息（仅允许取消状态为 SCHEDULED 的消息）。
@@ -119,5 +119,5 @@ public interface MessageService {
    * @param msgId 消息 ID（定时消息落库时返回的 msgId）
    * @return 取消结果（success=true 表示已取消）
    */
-  MessageResult cancelScheduledMessage(String msgId);
+  MessageSendResultVO cancelScheduledMessage(String msgId);
 }

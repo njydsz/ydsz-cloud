@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
 
@@ -48,19 +48,19 @@ public class MessageSendTxService {
    * <p>同时记录轨迹节点 {@code "PERSISTED"}, 与 {@code MessageServiceImpl} 中其他 trace 节点保持一致。
    *
    * @param logVO 消息日志 VO（已构造，未落库）
-   * @param messageRequest 消息发送请求（可为 null，为 null 时仅落库 msgLog）
+   * @param MessageItemRequestDTO 消息发送请求（可为 null，为 null 时仅落库 msgLog）
    */
   @Transactional(propagation = Propagation.REQUIRED)
-  public void insertLogAndOutbox(MsgLogVO logVO, MessageRequest messageRequest) {
+  public void insertLogAndOutbox(MsgLogVO logVO, MessageItemRequestDTO MessageItemRequestDTO) {
     msgLogRepository.save(logVO);
-    if (messageRequest != null) {
+    if (MessageItemRequestDTO != null) {
       // 委托 OutboxService 写入标准 Outbox 表
       outboxService.appendToOutbox(
           OutboxMessage.builder()
               .aggregateType("Message")
               .aggregateId(logVO.getMsgId())
               .eventType("MessageAsyncDispatch")
-              .payload(YdszJson.toJson(messageRequest))
+              .payload(YdszJson.toJson(MessageItemRequestDTO))
               .idempotencyKey(logVO.getMsgId()));
     }
     messageTraceService.recordTrace(

@@ -19,8 +19,8 @@ import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
@@ -227,7 +227,7 @@ public class AggregateServiceImpl implements AggregateService {
       String digestTemplate = loadDigestTemplate(batch);
       String digest = templateEngine.render(digestTemplate, params);
       batch.setDigestContent(digest);
-      MessageRequest request = new MessageRequest();
+      MessageItemRequestDTO request = new MessageItemRequestDTO();
       request.setChannel(batch.getChannel());
       request.setReceiver(batch.getReceiver());
       request.setContent(digest);
@@ -235,7 +235,7 @@ public class AggregateServiceImpl implements AggregateService {
       request.setBizId(batch.getId());
       // 携带摘要时间范围到 header 以便追溯
       request.setScenario("AGGREGATE");
-      MessageResult result = messageService.send(request);
+      MessageSendResultVO result = messageService.send(request);
       boolean ok = result != null && result.isSuccess();
       if (ok) {
         batch.setBatchStatus(AggregateBatchStatusEnum.SENT.name());

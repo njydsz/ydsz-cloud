@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.TenantContextHolder;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
@@ -45,7 +45,7 @@ public class DedupHandler implements SendHandler {
   private final DomainEventPublisher domainEventPublisher;
 
   @Override
-  public boolean handle(MessageRequest request, SendContext ctx) {
+  public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
     String dedupKey = buildDedupKey(request);
     if (!StringUtils.hasText(dedupKey)) {
       return true;
@@ -67,7 +67,7 @@ public class DedupHandler implements SendHandler {
               "DEDUP",
               ctx.getChannel(),
               ctx.getBizType()));
-      ctx.setErrorResult(MessageResult.fail(
+      ctx.setErrorResult(MessageSendResultVO.fail(
           ctx.getChannel(),
           MessageExceptionCode.MESSAGE_DUPLICATED.getCode(),
           "消息重复,已忽略",
@@ -95,7 +95,7 @@ public class DedupHandler implements SendHandler {
    * @param request 消息发送请求（取 bizId/receiver/templateCode/channel 字段）
    * @return 去重 key 字符串，bizId 为空时返回 null
    */
-  private String buildDedupKey(MessageRequest request) {
+  private String buildDedupKey(MessageItemRequestDTO request) {
     if (!StringUtils.hasText(request.getBizId())) {
       return null;
     }

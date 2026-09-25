@@ -48,16 +48,89 @@ public class ExcelMetrics {
   /** Timer 缓存：key = metricName + tags hash，避免重复注册 */
   private static final ConcurrentHashMap<String, Timer> TIMER_CACHE = new ConcurrentHashMap<>();
 
+  /** 当前活跃的读写操作数（Gauge 用） */
+  private static final AtomicLong ACTIVE_OPERATIONS = new AtomicLong(0);
+
+  /** 累计错误数（Gauge 用） */
+  private static final AtomicLong TOTAL_ERRORS = new AtomicLong(0);
+
+  /** 最后一次错误的时间戳（epoch ms），无错误时为 0 */
+  private static final AtomicLong LAST_ERROR_TIMESTAMP = new AtomicLong(0);
+
   private ExcelMetrics() {}
+
+  static {
+    GAUGE_MAP.put("active.operations", ACTIVE_OPERATIONS);
+    GAUGE_MAP.put("total.errors", TOTAL_ERRORS);
+    //LAST_ERROR_TIMESTAMP 不设 Gauge —— 异常值（epoch ms）不适合作为指标；由 HealthIndicator 直接读取
+  }
 
   /**
    * 设置 MeterRegistry（由 AutoConfiguration 注入）
+   *
+   * <p>注册时将注册所有预定义的 Gauge 指标（{@code active.operations}, {@code total.errors}）。
    *
    * @param meterRegistry Micrometer 注册表
    */
   public static void setRegistry(MeterRegistry meterRegistry) {
     registry = meterRegistry;
     TIMER_CACHE.clear();
+    // 注册预定义 Gauge
+    GAUGE_MAP.forEach(
+        (name, value) -> {
+          if (registry != null) {
+            registry.gauge("excel." + name, value);
+          }
+        });
+  }
+
+  /**
+   * 标记一个读写操作开始（活跃操作数 +1）。
+   */
+  public static void incrementActiveOperations() {
+    ACTIVE_OPERATIONS.incrementAndGet();
+  }
+
+  /**
+   * 标记一个读写操作结束（活跃操作数 -1）。
+   */
+  public static void decrementActiveOperations() {
+    ACTIVE_OPERATIONS.decrementAndGet();
+  }
+
+  /**
+   * 记录一次错误：累计错误数 +1，并刷新最后错误时间戳。
+   */
+  public static void recordError() {
+    TOTAL_ERRORS.incrementAndGet();
+    LAST_ERROR_TIMESTAMP.set(System.currentTimeMillis());
+  }
+
+  /**
+   * 返回当前活跃的读写操作数。
+   *
+   * @return 活跃操作计数
+   */
+  public static long getActiveOperations() {
+    return ACTIVE_OPERATIONS.get();
+  }
+
+  /**
+   * 返回累计错误总数。
+   *
+   * @return 错误计数
+   */
+  public static long getTotalErrors() {
+    return TOTAL_ERRORS.get();
+  }
+
+  /**
+   * 返回最后一次错误的时间戳（epoch ms），从未出错时为 0。
+   *
+   * @return 最后错误时间戳
+   */
+  public static long getLastErrorTimestamp() {
+    return LAST_ERROR_TIMESTAMP.get();
   }
 
   /**

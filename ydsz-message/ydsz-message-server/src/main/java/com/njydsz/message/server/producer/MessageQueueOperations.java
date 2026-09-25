@@ -1,6 +1,6 @@
 package com.njydsz.message.server.producer;
 
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 
 /**
  * 消息队列操作抽象接口。
@@ -27,14 +27,14 @@ public interface MessageQueueOperations {
    * @param req 消息请求
    * @return MQ 消息 ID
    */
-  String syncSend(MessageRequest req);
+  String syncSend(MessageItemRequestDTO req);
 
   /**
    * 异步发送消息（不阻塞，结果通过回调通知）。
    *
    * @param req 消息请求
    */
-  void asyncSend(MessageRequest req);
+  void asyncSend(MessageItemRequestDTO req);
 
   /**
    * 发送事务消息（半消息）。
@@ -44,5 +44,5 @@ public interface MessageQueueOperations {
    * @param req 消息请求
    * @return MQ 消息 ID
    */
-  String sendTransactionMessage(MessageRequest req);
+  String sendTransactionMessage(MessageItemRequestDTO req);
 }

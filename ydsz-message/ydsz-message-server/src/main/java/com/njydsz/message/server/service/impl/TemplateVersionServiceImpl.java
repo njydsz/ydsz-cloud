@@ -11,8 +11,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.dto.MsgTemplateDTO;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateQueryDTO;
@@ -218,7 +218,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
    * @throws SysException 模板编码或接收人为空时抛出
    */
   @Override
-  public MessageResult testSend(TemplateTestSendDTO dto) {
+  public MessageSendResultVO testSend(TemplateTestSendDTO dto) {
     if (dto == null || !StringUtils.hasText(dto.getTemplateCode())) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -231,7 +231,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
           .message("测试接收人不能为空")
           .build();
     }
-    MessageRequest request = new MessageRequest();
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setTemplateCode(dto.getTemplateCode());
     request.setReceiver(dto.getTestReceiver());
     request.setParams(dto.getParams());

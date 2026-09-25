@@ -23,7 +23,7 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.domain.constant.MessageConstants;
@@ -229,14 +229,14 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   /**
    * 按 priority 升序遍历启用规则，SpEL 求值首个命中即返回。
    *
-   * <p>将 {@code MessageRequest} 注入 SpEL 上下文（变量名 {@code request}），
+   * <p>将 {@code MessageItemRequestDTO} 注入 SpEL 上下文（变量名 {@code request}），
    * 条件表达式为空视为恒真命中；单条规则求值异常仅告警并跳过，不影响整体匹配。 全不匹配返回 null，由调用方决定兜底通道。
    *
    * @param request 消息请求（含 bizType/bizId/receiver/channel 等）
    * @return 命中的路由规则；未命中返回 null
    */
   @Override
-  public MsgRouteRuleVO match(MessageRequest request) {
+  public MsgRouteRuleVO match(MessageItemRequestDTO request) {
     if (request == null) {
       return null;
     }

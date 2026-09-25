@@ -18,6 +18,7 @@ import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.hc.core5.util.TimeValue;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -419,7 +420,7 @@ public class FeignConfiguration {
         .setDefaultRequestConfig(
             RequestConfig.custom()
                 // 连接获取超时 5s
-                .setConnectionRequestTimeout(5, TimeUnit.SECONDS)
+                .setConnectionRequestTimeout(Timeout.ofSeconds(5))
                 .build())
         .disableCookieManagement()
         .disableRedirectHandling()

@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -33,7 +33,7 @@ import com.njydsz.message.server.metric.MessageMetrics;
  *
  * <p>启动时通过 {@link ApplicationContext#getBeansOfType(Class)} 收集所有 {@link MessageChannel} Bean，按
  * {@link MessageChannel#channelType()} 大写形式 注册到内部缓存，供 {@link #route(String)} 与 {@link
- * #dispatch(MessageRequest)} 使用。
+ * #dispatch(MessageItemRequestDTO)} 使用。
  *
  * <p>通道开关由 {@code ydsz.message.channel-enabled.*} 配置控制， 通过 {@link
  * MessageProperties#getChannelEnabled()} 读取。
@@ -137,7 +137,7 @@ public class ChannelRouter {
    * @param request 消息请求
    * @return 发送结果
    */
-  public MessageSendResultVO dispatch(MessageRequest request) {
+  public MessageSendResultVO dispatch(MessageItemRequestDTO request) {
     String channel = request.getChannel();
     MessageChannel target = route(channel);
     CircuitBreaker breaker = breakerCache.get(channel.trim().toUpperCase());
@@ -197,7 +197,7 @@ public class ChannelRouter {
    * @param request 消息请求
    * @return 发送结果（首个成功或最后一个失败）
    */
-  public MessageSendResultVO dispatchWithScore(MessageRequest request) {
+  public MessageSendResultVO dispatchWithScore(MessageItemRequestDTO request) {
     return dispatchWithScore(request, null);
   }
 
@@ -209,7 +209,7 @@ public class ChannelRouter {
    * <ol>
    *   <li>从 channelCache 获取所有启用（isChannelEnabled）的通道</li>
    *   <li>调用 {@link ChannelScoreCalculator#rankChannels(List, String, ScoreConfig)} 获取排序后的评分列表</li>
-   *   <li>依次调用 {@link #dispatch(MessageRequest)}，将 request.channel 替换为当前评分通道</li>
+   *   <li>依次调用 {@link #dispatch(MessageItemRequestDTO)}，将 request.channel 替换为当前评分通道</li>
    *   <li>首次成功即返回，全部失败时返回最后一个失败结果</li>
    * </ol>
    *
@@ -217,7 +217,7 @@ public class ChannelRouter {
    * @param scoreConfig 评分权重配置，为 null 时使用默认权重
    * @return 发送结果（首个成功或最后一个失败）
    */
-  public MessageSendResultVO dispatchWithScore(MessageRequest request, ScoreConfig scoreConfig) {
+  public MessageSendResultVO dispatchWithScore(MessageItemRequestDTO request, ScoreConfig scoreConfig) {
     if (request == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -254,7 +254,7 @@ public class ChannelRouter {
     MessageSendResultVO lastResult = null;
     for (ChannelScore channelScore : rankedScores) {
       // 构建针对当前评分通道的请求副本
-      MessageRequest channelRequest = cloneRequestWithChannel(request, channelScore.channel());
+      MessageItemRequestDTO channelRequest = cloneRequestWithChannel(request, channelScore.channel());
       lastResult = dispatch(channelRequest);
       if (lastResult.isSuccess()) {
         log.info(
@@ -277,14 +277,14 @@ public class ChannelRouter {
   }
 
   /**
-   * 克隆 MessageRequest 并替换为指定通道（避免修改原始请求的通道字段）。
+   * 克隆 MessageItemRequestDTO 并替换为指定通道（避免修改原始请求的通道字段）。
    *
    * @param original 原始请求
    * @param channel 目标通道
    * @return 替换通道后的请求副本
    */
-  private MessageRequest cloneRequestWithChannel(MessageRequest original, String channel) {
-    MessageRequest copy = new MessageRequest();
+  private MessageItemRequestDTO cloneRequestWithChannel(MessageItemRequestDTO original, String channel) {
+    MessageItemRequestDTO copy = new MessageItemRequestDTO();
     copy.setChannel(channel);
     copy.setReceiver(original.getReceiver());
     copy.setSubject(original.getSubject());
@@ -328,7 +328,7 @@ public class ChannelRouter {
   }
 
   /**
-   * 基于 {@link MsgLogVO} 的分发重载：将日志 VO 转换为 {@link MessageRequest} 后委托 {@link #dispatch(MessageRequest)}
+   * 基于 {@link MsgLogVO} 的分发重载：将日志 VO 转换为 {@link MessageItemRequestDTO} 后委托 {@link #dispatch(MessageItemRequestDTO)}
    * 执行，便于上层 service 直接传入日志 VO。
    *
    * <p>返回供应商侧追踪 ID（{@code providerTraceId}）；发送失败时抛 {@link SysException}， 由调用方 catch 处理。
@@ -343,7 +343,7 @@ public class ChannelRouter {
     if (logVO == null) {
       throw SysException.builder().resultCode(YdszResultCode.BAD_REQUEST).message("消息日志为空").build();
     }
-    MessageRequest request = new MessageRequest();
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(logVO.getChannel());
     request.setReceiver(logVO.getReceiver());
     request.setContent(logVO.getContent());

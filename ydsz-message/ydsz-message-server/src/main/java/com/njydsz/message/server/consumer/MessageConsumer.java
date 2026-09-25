@@ -18,7 +18,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.queue.compress.MessageCompressor;
@@ -100,9 +100,9 @@ public class MessageConsumer implements RocketMQListener<String> {
     }
     // P2-21: 消息解压（如果带 GZIP: 前缀则自动解压）
     body = MessageCompressor.decompressIfNeeded(body);
-    MessageRequest request;
+    MessageItemRequestDTO request;
     try {
-      request = YdszJson.fromJson(body, MessageRequest.class);
+      request = YdszJson.fromJson(body, MessageItemRequestDTO.class);
     } catch (Exception e) {
       log.error("[MessageConsumer] 解析失败: body={} err={}", body, e.getMessage(), e);
       return;
@@ -196,7 +196,7 @@ public class MessageConsumer implements RocketMQListener<String> {
    * @param request 已反序列化的消息请求
    * @return true 表示疑似重复消息（应跳过处理），false 表示新消息可继续处理
    */
-  private boolean bloomFilterDedup(MessageRequest request) {
+  private boolean bloomFilterDedup(MessageItemRequestDTO request) {
     if (bloomFilter == null) {
       return false;
     }
@@ -225,7 +225,7 @@ public class MessageConsumer implements RocketMQListener<String> {
    * @param request 原始消息请求
    * @param errorMessage 错误信息
    */
-  private void recordFailedLog(MessageRequest request, String errorMessage) {
+  private void recordFailedLog(MessageItemRequestDTO request, String errorMessage) {
     try {
       // 先尝试按 msgId 更新已有记录状态为 FAILED
       String msgId = request.getMessageId();
@@ -276,7 +276,7 @@ public class MessageConsumer implements RocketMQListener<String> {
     return msgLogRepository.findOne(query).orElse(null);
   }
 
-  private String buildIdempotentKey(MessageRequest request) {
+  private String buildIdempotentKey(MessageItemRequestDTO request) {
     if (request.getMessageId() != null && !request.getMessageId().isBlank()) {
       return MessageConstants.IDEMPOTENT_KEY_PREFIX + request.getMessageId();
     }
@@ -328,7 +328,7 @@ public class MessageConsumer implements RocketMQListener<String> {
    * @param request 消息请求
    * @return true 表示已过期
    */
-  private boolean isMessageExpired(MessageRequest request) {
+  private boolean isMessageExpired(MessageItemRequestDTO request) {
     long ttlSeconds = messageProperties.getMessageTtlSeconds();
     if (ttlSeconds <= 0) {
       return false;

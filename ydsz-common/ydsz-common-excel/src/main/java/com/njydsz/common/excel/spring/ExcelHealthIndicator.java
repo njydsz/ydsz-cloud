@@ -12,7 +12,9 @@ import java.util.Map;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-  // CHECKSTYLE.ON: RegexpSinglelineJava
+
+import com.njydsz.common.excel.core.metrics.ExcelMetrics;
+// CHECKSTYLE.ON: RegexpSinglelineJava
 
 /**
  * Excel 模块健康检查指示器
@@ -68,6 +70,14 @@ public class ExcelHealthIndicator implements HealthIndicator {
     details.put("dateFormat", properties.getDefaultDateFormat());
     details.put("maxReadMb", properties.getMaxReadFileSizeMb());
     details.put("maxWriteMb", properties.getMaxWriteFileSizeMb());
+
+    // 运行时指标（来自 ExcelMetrics）
+    details.put("activeOperations", ExcelMetrics.getActiveOperations());
+    details.put("totalErrors", ExcelMetrics.getTotalErrors());
+    long lastErrorTs = ExcelMetrics.getLastErrorTimestamp();
+    if (lastErrorTs > 0) {
+      details.put("lastErrorAt", java.time.Instant.ofEpochMilli(lastErrorTs).toString());
+    }
 
     // 真实探测：临时目录可写（写入 + 读回校验 + 清理）
     File probe = null;

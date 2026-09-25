@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.server.channel.MessageChannel;
@@ -88,11 +88,11 @@ public class WechatWorkChannel implements MessageChannel {
    * @return 发送结果
    */
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn("[WECOM] 未配置 key，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, null, "企业微信 key 未配置", "企业微信 key 未配置", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "企业微信 key 未配置", "企业微信 key 未配置", null);
     }
 
     Map<String, Object> payload = buildPayload(request);
@@ -113,19 +113,19 @@ public class WechatWorkChannel implements MessageChannel {
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
           log.info("[WECOM] 发送成功");
-          return MessageResult.ok(CHANNEL_TYPE, traceId);
+          return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
         log.error("[WECOM] 发送失败: errcode={} errmsg={}", errcode, errmsg);
-        return MessageResult.fail(
+        return MessageSendResultVO.fail(
             CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg,
             "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
       log.error("[WECOM] 发送失败: status={}", response.getStatusCode());
-      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[WECOM] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
@@ -142,7 +142,7 @@ public class WechatWorkChannel implements MessageChannel {
    * @param request 消息请求
    * @return 请求体 Map
    */
-  Map<String, Object> buildPayload(MessageRequest request) {
+  Map<String, Object> buildPayload(MessageItemRequestDTO request) {
     String content = request.getContent() == null ? "" : request.getContent();
     String msgType = "text";
     if (request.getParams() != null) {
@@ -172,7 +172,7 @@ public class WechatWorkChannel implements MessageChannel {
    * @param request 消息请求
    * @return 解析到的 URL，无则返回 null
    */
-  String resolveUrl(MessageRequest request) {
+  String resolveUrl(MessageItemRequestDTO request) {
     Map<String, Object> params = request.getParams();
     if (params != null) {
       Object explicit = params.get("wechatWorkKey");

@@ -25,12 +25,11 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.BatchSendResultDTO;
-import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
@@ -80,7 +79,7 @@ import com.njydsz.message.server.service.core.MessageService;
  * @author ydsz-team
  * @since 26.09.01
  * @see com.njydsz.message.server.service.core.MessageService 消息发送服务
- * @see com.njydsz.common.feign.MessageRequest 共享消息请求 DTO
+ * @see com.njydsz.message.domain.dto.MessageItemRequestDTO 共享消息请求 DTO
  * @see com.njydsz.message.domain.enums.core.SendStrategyEnum 发送策略枚举
  */
 @Slf4j
@@ -157,7 +156,7 @@ public class MessageController {
         if (items == null || items.isEmpty()) {
           yield YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量请求列表为空");
         }
-        List<MessageRequest> requests = toMessageRequestList(items);
+        List<MessageItemRequestDTO> requests = toMessageRequestList(items);
         BatchSendResultDTO result = messageService.batchSend(requests, dto.getBatchId());
         yield YdszResponse.success(result);
       }
@@ -234,13 +233,13 @@ public class MessageController {
   // ===== 私有辅助方法 =====
 
   /**
-   * 将 MessageSendDTO 转换为 MessageRequest（用于 SYNC / ASYNC / TRANSACTIONAL 模式）。
+   * 将 MessageSendDTO 转换为 MessageItemRequestDTO（用于 SYNC / ASYNC / TRANSACTIONAL 模式）。
    *
    * @param dto 本模块 DTO
    * @return 共享请求 DTO
    */
-  private MessageRequest toMessageRequest(MessageSendDTO dto) {
-    MessageRequest request = new MessageRequest();
+  private MessageItemRequestDTO toMessageRequest(MessageSendDTO dto) {
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(dto.getChannel());
     request.setReceiver(dto.getReceiver());
     request.setSubject(dto.getSubject());
@@ -255,23 +254,23 @@ public class MessageController {
   }
 
   /**
-   * 将批量请求子项 DTO 列表转换为内部的 MessageRequest 列表。
+   * 将批量请求子项 DTO 列表转换为内部的 MessageItemRequestDTO 列表。
    *
    * @param items 批量请求子项 DTO 列表
-   * @return MessageRequest 列表
+   * @return MessageItemRequestDTO 列表
    */
-  private List<MessageRequest> toMessageRequestList(List<MessageItemRequestDTO> items) {
+  private List<MessageItemRequestDTO> toMessageRequestList(List<MessageItemRequestDTO> items) {
     return items.stream().map(this::toMessageRequestItem).toList();
   }
 
   /**
-   * 将单个 MessageItemRequestDTO 转换为 MessageRequest。
+   * 将单个 MessageItemRequestDTO 转换为 MessageItemRequestDTO。
    *
    * @param item 子项 DTO
-   * @return MessageRequest
+   * @return MessageItemRequestDTO
    */
-  private MessageRequest toMessageRequestItem(MessageItemRequestDTO item) {
-    MessageRequest request = new MessageRequest();
+  private MessageItemRequestDTO toMessageRequestItem(MessageItemRequestDTO item) {
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(item.getChannel());
     request.setReceiver(item.getReceiver());
     request.setSubject(item.getSubject());

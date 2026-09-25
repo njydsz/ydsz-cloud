@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.channel.push.PushProvider;
 import com.njydsz.message.server.config.MessageProperties;
@@ -41,12 +41,12 @@ public class PushChannel implements MessageChannel {
   }
 
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "推送目标不能为空", "推送目标不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "推送目标不能为空", "推送目标不能为空", null);
     }
     PushProvider provider = selectProvider();
-    MessageResult result = provider.send(request, null);
+    MessageSendResultVO result = provider.send(request, null);
     log.info(
         "[PushChannel] provider={} status={} target={}",
         provider.providerType(),
@@ -61,17 +61,17 @@ public class PushChannel implements MessageChannel {
    * @param requests 消息请求列表
    * @return 发送结果列表
    */
-  public List<MessageResult> batchSend(List<MessageRequest> requests) {
+  public List<MessageSendResultVO> batchSend(List<MessageItemRequestDTO> requests) {
     if (requests == null || requests.isEmpty()) {
       return List.of();
     }
     PushProvider provider = selectProvider();
-    List<MessageResult> results = provider.batchSend(requests, null);
+    List<MessageSendResultVO> results = provider.batchSend(requests, null);
     log.info(
         "[PushChannel] 批量推送: provider={} count={} success={}",
         provider.providerType(),
         requests.size(),
-        results.stream().filter(MessageResult::isSuccess).count());
+        results.stream().filter(MessageSendResultVO::isSuccess).count());
     return results;
   }
 

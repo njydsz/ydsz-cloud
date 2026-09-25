@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 
 /**
  * 消息发送管线编排引擎。
@@ -50,7 +50,7 @@ public class SendPipeline implements InitializingBean {
    * @param ctx 调用方创建的上下文实例
    * @return 管线执行后的上下文（ctx.errorResult != null 表示失败）
    */
-  public SendContext execute(MessageRequest request, SendContext ctx) {
+  public SendContext execute(MessageItemRequestDTO request, SendContext ctx) {
     for (SendHandler handler : handlers) {
       try {
         boolean passed = handler.handle(request, ctx);
@@ -61,7 +61,7 @@ public class SendPipeline implements InitializingBean {
       } catch (Exception e) {
         log.error("[Pipeline] Handler 执行异常: handler={} err={}", handler.name(), e.getMessage(), e);
         ctx.setErrorResult(
-            MessageResult.fail(
+            MessageSendResultVO.fail(
                 ctx.getChannel(),
                 null,
                 "管线处理异常 [" + handler.name() + "]: " + e.getMessage(),

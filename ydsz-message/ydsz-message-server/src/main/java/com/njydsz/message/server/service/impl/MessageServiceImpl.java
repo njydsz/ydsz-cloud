@@ -22,8 +22,8 @@ import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
@@ -133,7 +133,7 @@ public class MessageServiceImpl implements MessageService {
   private final Executor cascadeExecutor = InternalExecutorFactory.newFixedThreadPool("message-cascade", 4);
 
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     return sendInternal(request, 0);
   }
 
@@ -141,7 +141,7 @@ public class MessageServiceImpl implements MessageService {
    * P2-6: 内部发送方法,携带级联深度。
    *
    * <p>顶层消息 depth=0,级联子消息 depth 递增,超过 {@link MessageConstants#MAX_CASCADE_DEPTH} 跳过。 级联触发时机：父消息
-   * {@code doDispatch} 成功后,遍历 {@link MessageRequest#getCascadeTo()}, 为每个子消息设置 {@code parentMsgId =
+   * {@code doDispatch} 成功后,遍历 {@link MessageItemRequestDTO#getCascadeTo()}, 为每个子消息设置 {@code parentMsgId =
    * 父 msgId} 后递归调用本方法。 单条级联消息失败不影响其他级联消息(try-catch 吞异常记 WARN)。
    *
    * <p>P1-3: 拆分为 preprocess → renderContent → persistAndDispatch 三个阶段, 聚合路径(insert + appendOrStart
@@ -155,9 +155,9 @@ public class MessageServiceImpl implements MessageService {
    * @param depth 当前级联深度（0 表示顶层消息）
    * @return 发送结果
    */
-  private MessageResult sendInternal(MessageRequest request, int depth) {
+  private MessageSendResultVO sendInternal(MessageItemRequestDTO request, int depth) {
     if (request == null) {
-      return MessageResult.fail(null, null, "消息请求为空", "消息请求为空", null);
+      return MessageSendResultVO.fail(null, null, "消息请求为空", "消息请求为空", null);
     }
     // P2-6: 级联深度保护(防御性,正常路径下 triggerCascade 已提前拦截)
     if (depth > MessageConstants.MAX_CASCADE_DEPTH) {
@@ -166,7 +166,7 @@ public class MessageServiceImpl implements MessageService {
           depth,
           MessageConstants.MAX_CASCADE_DEPTH,
           SensitiveUtil.scanAndMask(request.getReceiver()));
-      return MessageResult.fail(request.getChannel(), null, "级联深度超限", "级联深度超限", null);
+      return MessageSendResultVO.fail(request.getChannel(), null, "级联深度超限", "级联深度超限", null);
     }
 
     // ① 预处理管线：P2-1 根据场景自动选择模板（模板发送/简单直发/批量/回调）
@@ -190,7 +190,7 @@ public class MessageServiceImpl implements MessageService {
           maxLen,
           ctx.getChannel());
       String tooLongMsg = "消息内容超过最大长度限制: " + rendered.content().length() + " > " + maxLen;
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           ctx.getChannel(), null, tooLongMsg, tooLongMsg, null);
     }
 
@@ -198,7 +198,7 @@ public class MessageServiceImpl implements MessageService {
     MsgLogVO logDO = buildLogDO(request, ctx, rendered);
 
     // ④ 定时/聚合早期 return 路径
-    MessageResult earlyResult = handleEarlyReturns(request, ctx, logDO, rendered);
+    MessageSendResultVO earlyResult = handleEarlyReturns(request, ctx, logDO, rendered);
     if (earlyResult != null) {
       return earlyResult;
     }
@@ -212,7 +212,7 @@ public class MessageServiceImpl implements MessageService {
     messageSendTxService.insertLogAndOutbox(logDO, null);
 
     // ⑥ 通道分发 + 级联
-    MessageResult result =
+    MessageSendResultVO result =
         messageSendService.dispatch(logDO, ctx.getMatchedRule(), ctx.getReceiver());
     if (result != null && result.isSuccess()) {
       triggerCascade(request, logDO, depth);
@@ -229,26 +229,26 @@ public class MessageServiceImpl implements MessageService {
    * @param ctx 管线上下文
    * @return 发送结果（含 msgId 供追踪）
    */
-  private MessageResult dispatchAsync(MsgLogVO logDO, SendContext ctx) {
+  private MessageSendResultVO dispatchAsync(MsgLogVO logDO, SendContext ctx) {
     // P2-A6: 委托 OutboxService 写入标准 Outbox 表，与 msgLog 落库在同一事务中
-    MessageRequest request = buildMessageRequestFromLog(logDO, ctx);
+    MessageItemRequestDTO request = buildMessageRequestFromLog(logDO, ctx);
     messageSendTxService.insertLogAndOutbox(logDO, request);
     log.info(
         "[Message] 异步模式: 消息已写入 Outbox: msgId={} channel={}",
         logDO.getMsgId(),
         ctx.getChannel());
-    return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
+    return MessageSendResultVO.ok(ctx.getChannel(), logDO.getMsgId());
   }
 
   /**
-   * P1-A4: 从 MsgLogVO 和 SendContext 重建 MessageRequest（用于 Outbox 序列化）。
+   * P1-A4: 从 MsgLogVO 和 SendContext 重建 MessageItemRequestDTO（用于 Outbox 序列化）。
    *
    * @param logDO 消息日志实体
    * @param ctx 管线上下文
-   * @return MessageRequest
+   * @return MessageItemRequestDTO
    */
-  private MessageRequest buildMessageRequestFromLog(MsgLogVO logDO, SendContext ctx) {
-    MessageRequest request = new MessageRequest();
+  private MessageItemRequestDTO buildMessageRequestFromLog(MsgLogVO logDO, SendContext ctx) {
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(ctx.getChannel());
     request.setReceiver(logDO.getReceiver());
     request.setContent(logDO.getContent());
@@ -268,7 +268,7 @@ public class MessageServiceImpl implements MessageService {
    * @param rendered 渲染后的消息内容
    * @return 构造好的消息日志实体
    */
-  private MsgLogVO buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
+  private MsgLogVO buildLogDO(MessageItemRequestDTO request, SendContext ctx, RenderedContent rendered) {
     MsgLogVO logDO = new MsgLogVO();
     logDO.setChannel(ctx.getChannel());
     logDO.setBizType(ctx.getBizType());
@@ -312,11 +312,11 @@ public class MessageServiceImpl implements MessageService {
    * @param rendered 渲染结果(含 templateMissing 标志)
    * @return 非 null 表示已处理(调用方直接返回),null 表示继续走常规分发
    */
-  private MessageResult handleEarlyReturns(
-      MessageRequest request, SendContext ctx, MsgLogVO logDO, RenderedContent rendered) {
+  private MessageSendResultVO handleEarlyReturns(
+      MessageItemRequestDTO request, SendContext ctx, MsgLogVO logDO, RenderedContent rendered) {
     // 模板缺失: renderContent 标记 templateMissing=true 时直接返回失败
     if (rendered.templateMissing()) {
-      return MessageResult.fail(ctx.getChannel(), null, "模板不存在: " + ctx.getTemplateCode(), "模板不存在: " + ctx.getTemplateCode(), null);
+      return MessageSendResultVO.fail(ctx.getChannel(), null, "模板不存在: " + ctx.getTemplateCode(), "模板不存在: " + ctx.getTemplateCode(), null);
     }
     // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
     if (request.getScheduledAt() != null && request.getScheduledAt().isAfter(LocalDateTime.now())) {
@@ -327,7 +327,7 @@ public class MessageServiceImpl implements MessageService {
           logDO.getMsgId(),
           logDO.getScheduledAt(),
           ctx.getChannel());
-      return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
+      return MessageSendResultVO.ok(ctx.getChannel(), logDO.getMsgId());
     }
 
     // P1-1: 智能推送时间优化
@@ -353,7 +353,7 @@ public class MessageServiceImpl implements MessageService {
               logDO.getMsgId(),
               SensitiveUtil.scanAndMask(ctx.getReceiver()),
               optimalTime);
-          return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
+          return MessageSendResultVO.ok(ctx.getChannel(), logDO.getMsgId());
         }
       } catch (Exception e) {
         log.debug(
@@ -370,7 +370,7 @@ public class MessageServiceImpl implements MessageService {
         && StringUtils.hasText(ctx.getReceiver())) {
       aggregatePersistenceService.persistAggregated(
           logDO, ctx.getBizType(), ctx.getReceiver(), ctx.getChannel(), logDO.getTenantId());
-      return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
+      return MessageSendResultVO.ok(ctx.getChannel(), logDO.getMsgId());
     }
     return null;
   }
@@ -385,8 +385,8 @@ public class MessageServiceImpl implements MessageService {
    * @param parentLog 父消息落库记录(提供 msgId 作为子消息的 parentMsgId)
    * @param depth 父消息的级联深度
    */
-  private void triggerCascade(MessageRequest request, MsgLogVO parentLog, int depth) {
-    List<MessageRequest> cascadeTo = request.getCascadeTo();
+  private void triggerCascade(MessageItemRequestDTO request, MsgLogVO parentLog, int depth) {
+    List<MessageItemRequestDTO> cascadeTo = request.getCascadeTo();
     if (cascadeTo == null || cascadeTo.isEmpty()) {
       return;
     }
@@ -428,11 +428,11 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
-  public MessageResult sendDirect(MessageSendDTO dto) {
+  public MessageSendResultVO sendDirect(MessageSendDTO dto) {
     if (dto == null) {
-      return MessageResult.fail(null, null, "发送参数为空", "发送参数为空", null);
+      return MessageSendResultVO.fail(null, null, "发送参数为空", "发送参数为空", null);
     }
-    MessageRequest request = new MessageRequest();
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(dto.getChannel());
     request.setTemplateCode(dto.getTemplateCode());
     request.setReceiver(dto.getReceiver());
@@ -446,15 +446,15 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
-  public BatchSendResultDTO batchSend(List<MessageRequest> requests, String batchId) {
+  public BatchSendResultDTO batchSend(List<MessageItemRequestDTO> requests, String batchId) {
     if (requests == null || requests.isEmpty() || !StringUtils.hasText(batchId)) {
       return new BatchSendResultDTO(batchId, 0, 0, 0, 0);
     }
     // 限制单批最大 100 条,防止阻塞过久
     int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
-    List<MessageRequest> batch = requests.subList(0, limit);
+    List<MessageItemRequestDTO> batch = requests.subList(0, limit);
     // 统一设置 bizId = batchId 便于进度查询
-    for (MessageRequest req : batch) {
+    for (MessageItemRequestDTO req : batch) {
       if (req != null) {
         req.setBizId(batchId);
       }
@@ -481,9 +481,9 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
-  public MessageResult cancelScheduledMessage(String msgId) {
+  public MessageSendResultVO cancelScheduledMessage(String msgId) {
     if (!StringUtils.hasText(msgId)) {
-      return MessageResult.fail(null, null, "消息 ID 不能为空", "消息 ID 不能为空", null);
+      return MessageSendResultVO.fail(null, null, "消息 ID 不能为空", "消息 ID 不能为空", null);
     }
     MessageLogQueryDTO query = new MessageLogQueryDTO();
     query.setMsgId(msgId);
@@ -491,17 +491,17 @@ public class MessageServiceImpl implements MessageService {
     query.setPageSize(1);
     MsgLogVO logVO = msgLogRepository.findOne(query).orElse(null);
     if (logVO == null) {
-      return MessageResult.fail(null, null, "消息不存在: " + msgId, "消息不存在: " + msgId, null);
+      return MessageSendResultVO.fail(null, null, "消息不存在: " + msgId, "消息不存在: " + msgId, null);
     }
     if (!MessageStatusEnum.SCHEDULED.name().equals(logVO.getStatus())) {
       String cancelErrMsg = "仅允许取消定时消息（当前状态: " + logVO.getStatus() + "）";
-      return MessageResult.fail(logVO.getChannel(), null, cancelErrMsg, cancelErrMsg, null);
+      return MessageSendResultVO.fail(logVO.getChannel(), null, cancelErrMsg, cancelErrMsg, null);
     }
     logVO.setStatus(MessageStatusEnum.SKIPPED.name());
     logVO.setErrorMessage("USER_CANCELLED");
     msgLogRepository.update(logVO);
     log.info("[Message] 定时消息已取消: msgId={} channel={}", msgId, logVO.getChannel());
-    return MessageResult.ok(logVO.getChannel(), msgId);
+    return MessageSendResultVO.ok(logVO.getChannel(), msgId);
   }
 
   private String resolvePriority() {
@@ -519,7 +519,7 @@ public class MessageServiceImpl implements MessageService {
    * @param request 消息发送请求（优先取请求中的 priority 字段）
    * @return 优先级字符串（如 NORMAL、URGENT）
    */
-  private String resolvePriority(MessageRequest request) {
+  private String resolvePriority(MessageItemRequestDTO request) {
     if (request != null && StringUtils.hasText(request.getPriority())) {
       return request.getPriority().trim().toUpperCase();
     }
@@ -531,7 +531,7 @@ public class MessageServiceImpl implements MessageService {
   }
 
   /**
-   * private String buildDedupKey(MessageRequest request) { if
+   * private String buildDedupKey(MessageItemRequestDTO request) { if
    * (StringUtils.hasText(request.getMessageId())) { return request.getMessageId(); } if
    * (StringUtils.hasText(request.getBizType()) && StringUtils.hasText(request.getBizId()) &&
    * StringUtils.hasText(request.getTemplateCode()) && StringUtils.hasText(request.getReceiver())) {
@@ -550,7 +550,7 @@ public class MessageServiceImpl implements MessageService {
    * @return 发送结果
    */
   @Override
-  public MessageResult sendTransactionally(MessageRequest request) {
+  public MessageSendResultVO sendTransactionally(MessageItemRequestDTO request) {
     if (request == null) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -569,7 +569,7 @@ public class MessageServiceImpl implements MessageService {
           request.getMessageId(),
           msgId,
           request.getChannel());
-      return MessageResult.ok(request.getChannel(), msgId);
+      return MessageSendResultVO.ok(request.getChannel(), msgId);
     } catch (Exception e) {
       log.error(
           "[Message] 事务消息发送失败,降级同步发送: channel={} err={}", request.getChannel(), e.getMessage());
@@ -597,9 +597,9 @@ public class MessageServiceImpl implements MessageService {
    * @return 发送结果
    */
   @Override
-  public MessageResult sendAsync(MessageRequest request) {
+  public MessageSendResultVO sendAsync(MessageItemRequestDTO request) {
     if (request == null) {
-      return MessageResult.fail(null, null, "消息请求为空", "消息请求为空", null);
+      return MessageSendResultVO.fail(null, null, "消息请求为空", "消息请求为空", null);
     }
     // 确保有 messageId
     if (!StringUtils.hasText(request.getMessageId())) {
@@ -625,7 +625,7 @@ public class MessageServiceImpl implements MessageService {
           "[Message] 异步消息幂等命中,跳过重复落库: msgId={} status={}",
           request.getMessageId(),
           existingLog.getStatus());
-      return MessageResult.ok(existingLog.getChannel(), existingLog.getMsgId());
+      return MessageSendResultVO.ok(existingLog.getChannel(), existingLog.getMsgId());
     }
     // ① 先落库 PENDING（DB 是 Source of Truth）
     MsgLogVO logDO = new MsgLogVO();
@@ -651,7 +651,7 @@ public class MessageServiceImpl implements MessageService {
           "[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
     } catch (Exception e) {
       log.error("[Message] 异步消息落库失败: msgId={} err={}", request.getMessageId(), e.getMessage(), e);
-      return MessageResult.fail(request.getChannel(), null, "消息落库失败: " + e.getMessage(), "消息落库失败: " + e.getMessage(), null);
+      return MessageSendResultVO.fail(request.getChannel(), null, "消息落库失败: " + e.getMessage(), "消息落库失败: " + e.getMessage(), null);
     }
     // ② 写入 Outbox 表（委托 OutboxService，由 OutboxProcessor 异步投递 MQ）
     try {
@@ -672,7 +672,7 @@ public class MessageServiceImpl implements MessageService {
           request.getMessageId(),
           e.getMessage());
     }
-    return MessageResult.ok(request.getChannel(), request.getMessageId());
+    return MessageSendResultVO.ok(request.getChannel(), request.getMessageId());
   }
 
   /**

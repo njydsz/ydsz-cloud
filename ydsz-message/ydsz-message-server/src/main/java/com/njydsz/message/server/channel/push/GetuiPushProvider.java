@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.common.util.http.RestTemplateUtils;
@@ -96,15 +96,15 @@ public class GetuiPushProvider implements PushProvider {
   }
 
   @Override
-  public MessageResult send(MessageRequest request, MsgTemplateVO template) {
+  public MessageSendResultVO send(MessageItemRequestDTO request, MsgTemplateVO template) {
     String cid = extractClientId(request);
     if (!StringUtils.hasText(cid)) {
-      return MessageResult.fail("PUSH", null, "推送目标 clientId/deviceToken 不能为空", "推送目标 clientId/deviceToken 不能为空", null);
+      return MessageSendResultVO.fail("PUSH", null, "推送目标 clientId/deviceToken 不能为空", "推送目标 clientId/deviceToken 不能为空", null);
     }
     if (!StringUtils.hasText(config.getAppId())
         || !StringUtils.hasText(config.getAppKey())
         || !StringUtils.hasText(config.getMasterSecret())) {
-      return MessageResult.fail("PUSH", null, "个推凭证未配置", "个推凭证未配置", null);
+      return MessageSendResultVO.fail("PUSH", null, "个推凭证未配置", "个推凭证未配置", null);
     }
     try {
       String token = getToken();
@@ -132,16 +132,16 @@ public class GetuiPushProvider implements PushProvider {
       if ("10000".equals(code)) {
         String taskId = MapUtils.getString(json, "data");
         log.info("[GetuiPush] 推送成功: cid={} taskId={}", cid, taskId);
-        return MessageResult.ok("PUSH", "GETUI-" + taskId);
+        return MessageSendResultVO.ok("PUSH", "GETUI-" + taskId);
       }
       log.warn(
           "[GetuiPush] 推送失败: cid={} code={} msg={}", cid, code, MapUtils.getString(json, "msg"));
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           "PUSH", null, code + ": " + MapUtils.getString(json, "msg"),
           code + ": " + MapUtils.getString(json, "msg"), null);
     } catch (Exception e) {
       log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           "PUSH", null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
@@ -153,7 +153,7 @@ public class GetuiPushProvider implements PushProvider {
    * @param request 消息请求
    * @return 设备标识
    */
-  private String extractClientId(MessageRequest request) {
+  private String extractClientId(MessageItemRequestDTO request) {
     Map<String, String> meta = request.getChannelMeta();
     if (meta != null && StringUtils.hasText(meta.get("deviceToken"))) {
       return meta.get("deviceToken");

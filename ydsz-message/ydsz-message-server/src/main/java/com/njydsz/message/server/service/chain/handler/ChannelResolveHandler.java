@@ -8,8 +8,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.channel.ChannelRouter;
@@ -42,15 +42,15 @@ public class ChannelResolveHandler implements SendHandler {
   private final UserChannelBindingService userChannelBindingService;
 
   @Override
-  public boolean handle(MessageRequest request, SendContext ctx) {
+  public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
     String channel = request.getChannel();
     if (!StringUtils.hasText(channel)) {
-      ctx.setErrorResult(MessageResult.fail(null, null, "消息通道不能为空", "消息通道不能为空", null));
+      ctx.setErrorResult(MessageSendResultVO.fail(null, null, "消息通道不能为空", "消息通道不能为空", null));
       return false;
     }
     if (!isChannelEnabled(channel)) {
       log.warn("[Message] 通道未启用: {}", channel);
-      ctx.setErrorResult(MessageResult.fail(
+      ctx.setErrorResult(MessageSendResultVO.fail(
           channel,
           MessageExceptionCode.CHANNEL_NOT_ENABLED.getCode(),
           "通道未启用: " + channel,
@@ -104,7 +104,7 @@ public class ChannelResolveHandler implements SendHandler {
    * @param request 消息发送请求（receiver 可能是 userId，需解析为通道原生标识）
    * @param ctx 管线输出上下文（解析后更新 receiver）
    */
-  private void resolveChannelUser(MessageRequest request, SendContext ctx) {
+  private void resolveChannelUser(MessageItemRequestDTO request, SendContext ctx) {
     String receiver = ctx.getReceiver();
     String channel = ctx.getChannel();
     if (!StringUtils.hasText(receiver) || !StringUtils.hasText(channel)) {

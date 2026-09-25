@@ -17,6 +17,9 @@ import com.njydsz.message.api.client.NotificationClient;
 /**
  * {@link NotificationClient} 的降级工厂。
  *
+ * <p>使用已废弃的 {@link MessageResult}（{@code common-feign}），
+ * 因 Feign 合约兼容暂时保留；待 {@link NotificationClient} 整体迁移后一并移除。
+ *
  * <p>消息中心服务不可用时降级处理，保证调用方主流程不受影响 （消息发送是辅助功能，不应阻断业务）。
  *
  * <p>降级策略：
@@ -31,6 +34,7 @@ import com.njydsz.message.api.client.NotificationClient;
  * @since 26.09.01
  */
 @Component
+@SuppressWarnings({"deprecation", "removal"})
 public class NotificationClientFallbackFactory implements FallbackFactory<NotificationClient> {
 
   private static final Logger log = LoggerFactory.getLogger(NotificationClientFallbackFactory.class);

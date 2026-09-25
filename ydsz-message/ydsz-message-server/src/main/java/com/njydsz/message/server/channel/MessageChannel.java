@@ -2,7 +2,7 @@ package com.njydsz.message.server.channel;
 
 import java.util.Optional;
 
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.dto.ReceiptResultDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -31,7 +31,7 @@ public interface MessageChannel {
    * @param request 消息请求
    * @return 发送结果（含供应商侧追踪 ID），失败时返回 {@code fail}
    */
-  MessageSendResultVO send(MessageRequest request);
+  MessageSendResultVO send(MessageItemRequestDTO request);
 
   /**
    * P2-9: 主动拉取回执状态。

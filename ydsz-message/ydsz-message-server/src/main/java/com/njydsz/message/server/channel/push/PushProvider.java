@@ -2,8 +2,8 @@ package com.njydsz.message.server.channel.push;
 
 import java.util.List;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
@@ -12,7 +12,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
  * <p>不同服务商（个推 / 极光 / Mock 降级）实现此接口， 由 {@link com.njydsz.message.server.channel.impl.PushChannel} 根据
  * {@code ydsz.message.push.provider} 配置选择实际 provider。
  *
- * <p>目标设备标识（clientId/deviceToken）从 {@link MessageRequest#getChannelMeta()} 的 {@code deviceToken}
+ * <p>目标设备标识（clientId/deviceToken）从 {@link MessageItemRequestDTO#getChannelMeta()} 的 {@code deviceToken}
  * 获取，无则回退到 {@code receiver}。
  *
  * <p>P1-10 增强：支持批量推送（{@link #batchSend}）和富媒体推送（通过 channelMeta 传入 imageUrl / actionUrl）。
@@ -36,7 +36,7 @@ public interface PushProvider {
    * @param template 模板实体，可为 null
    * @return 发送结果（含 providerTraceId）
    */
-  MessageResult send(MessageRequest request, MsgTemplateVO template);
+  MessageSendResultVO send(MessageItemRequestDTO request, MsgTemplateVO template);
 
   /**
    * P1-10: 批量推送到多个设备。
@@ -47,7 +47,7 @@ public interface PushProvider {
    * @param template 模板实体
    * @return 发送结果列表
    */
-  default List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplateVO template) {
+  default List<MessageSendResultVO> batchSend(List<MessageItemRequestDTO> requests, MsgTemplateVO template) {
     return requests.stream().map(req -> send(req, template)).toList();
   }
 }

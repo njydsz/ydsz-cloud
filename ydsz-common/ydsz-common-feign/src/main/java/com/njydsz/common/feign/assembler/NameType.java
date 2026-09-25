@@ -5,12 +5,12 @@ package com.njydsz.common.feign.assembler;
  *
  * <p>定义跨服务 ID → 名称解析的业务对象类型，每种类型对应不同的查询策略。
  *
+ * <p>整个 assembler 包（{@link NameAssembler} / {@link NoOpNameAssembler}）计划于 26.09.21 迁移至 ydsz-common-core
+ * 后删除，届时本枚举一并移除。
+ *
  * @author ydsz-team
  * @since 26.09.01
- * @deprecated NameType 不属于 Feign 职责，应迁移至 ydsz-common-core。
- *     当前保留以兼容 ydsz-workflow 调用方，迁移完后此枚举将移除。
  */
-@Deprecated(since = "26.09.21", forRemoval = true)
 public enum NameType {
 
   /** 用户（姓名） */

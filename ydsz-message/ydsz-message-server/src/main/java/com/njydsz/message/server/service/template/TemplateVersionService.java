@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.template;
 
 import java.util.List;
 
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.dto.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.TemplateTestSendDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
@@ -81,5 +81,5 @@ public interface TemplateVersionService {
    * @param dto 试发请求
    * @return 发送结果
    */
-  MessageResult testSend(TemplateTestSendDTO dto);
+  MessageSendResultVO testSend(TemplateTestSendDTO dto);
 }

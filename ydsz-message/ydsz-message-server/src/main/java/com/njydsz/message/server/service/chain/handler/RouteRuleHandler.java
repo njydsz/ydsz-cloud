@@ -6,7 +6,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
@@ -32,7 +32,7 @@ public class RouteRuleHandler implements SendHandler {
   private final RouteRuleService routeRuleService;
 
   @Override
-  public boolean handle(MessageRequest request, SendContext ctx) {
+  public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
     MsgRouteRuleVO matchedRule = routeRuleService.match(request);
     if (matchedRule != null && StringUtils.hasText(matchedRule.getTargetChannel())) {
       String newChannel = matchedRule.getTargetChannel();

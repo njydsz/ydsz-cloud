@@ -14,8 +14,8 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.BatchProgressDTO;
@@ -100,7 +100,7 @@ public class BatchServiceImpl implements BatchService {
           .build();
     }
     // 构建请求列表
-    List<MessageRequest> requests = buildRequests(dto);
+    List<MessageItemRequestDTO> requests = buildRequests(dto);
     if (requests.isEmpty()) {
       throw SysException.builder()
           .resultCode(YdszResultCode.BAD_REQUEST)
@@ -160,7 +160,7 @@ public class BatchServiceImpl implements BatchService {
       log.warn("[Batch] executeBatch 批次不存在: batchId={}", batchId);
       return;
     }
-    List<MessageRequest> requests = parsePayload(batch.getPayload());
+    List<MessageItemRequestDTO> requests = parsePayload(batch.getPayload());
     if (requests.isEmpty()) {
       log.warn("[Batch] executeBatch payload 为空: batchId={}", batchId);
       updateBatchStatus(batchId, "FAILED", "payload 为空");
@@ -218,7 +218,7 @@ public class BatchServiceImpl implements BatchService {
    * @param requests 待发送消息请求列表（非空，已在 {@link #submitBatch} 校验上限）
    */
   @Async("messageBatchExecutor")
-  public void executeBatchAsync(String batchId, List<MessageRequest> requests) {
+  public void executeBatchAsync(String batchId, List<MessageItemRequestDTO> requests) {
     // 首次执行：batch 计数为 0，使用增量累加模式（效果等同全量覆盖）
     doExecuteBatch(batchId, requests, true);
   }
@@ -229,7 +229,7 @@ public class BatchServiceImpl implements BatchService {
    * @param batchId 批次 ID
    * @param requests 待发送消息请求列表
    */
-  private void executeBatchSync(String batchId, List<MessageRequest> requests) {
+  private void executeBatchSync(String batchId, List<MessageItemRequestDTO> requests) {
     doExecuteBatch(batchId, requests, true);
   }
 
@@ -241,13 +241,13 @@ public class BatchServiceImpl implements BatchService {
    */
   // YDIZ-WARN-001 允许保留：批量消息构建返回泛型集合，调用方承担类型安全
   @SuppressWarnings("unchecked")
-  private List<MessageRequest> parsePayload(String payload) {
+  private List<MessageItemRequestDTO> parsePayload(String payload) {
     if (!StringUtils.hasText(payload)) {
       return new ArrayList<>(0);
     }
     try {
-      List<MessageRequest> requests =
-          (List<MessageRequest>) YdszJson.fromJson(payload, List.class, MessageRequest.class);
+      List<MessageItemRequestDTO> requests =
+          (List<MessageItemRequestDTO>) YdszJson.fromJson(payload, List.class, MessageItemRequestDTO.class);
       return requests != null ? requests : new ArrayList<>(0);
     } catch (Exception e) {
       log.warn("[Batch] payload 解析失败: {}", e.getMessage(), e);
@@ -263,7 +263,7 @@ public class BatchServiceImpl implements BatchService {
    * @param dto 批量发送请求
    * @return 消息请求列表
    */
-  private List<MessageRequest> buildRequests(BatchSendRequestDTO dto) {
+  private List<MessageItemRequestDTO> buildRequests(BatchSendRequestDTO dto) {
     if (dto == null) {
       return new ArrayList<>(0);
     }
@@ -275,9 +275,9 @@ public class BatchServiceImpl implements BatchService {
     if (dto.getReceiverList() == null || dto.getReceiverList().isEmpty()) {
       return new ArrayList<>(0);
     }
-    List<MessageRequest> requests = new ArrayList<>(dto.getReceiverList().size());
+    List<MessageItemRequestDTO> requests = new ArrayList<>(dto.getReceiverList().size());
     for (String receiver : dto.getReceiverList()) {
-      MessageRequest req = new MessageRequest();
+      MessageItemRequestDTO req = new MessageItemRequestDTO();
       req.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
       req.setChannel(dto.getChannel());
       req.setReceiver(receiver);
@@ -303,7 +303,7 @@ public class BatchServiceImpl implements BatchService {
    * @param requests 待发送消息请求列表（非空）
    * @param incremental 是否增量累加（首次执行=true，会从当前 DB 计数开始累加）
    */
-  private void doExecuteBatch(String batchId, List<MessageRequest> requests, boolean incremental) {
+  private void doExecuteBatch(String batchId, List<MessageItemRequestDTO> requests, boolean incremental) {
     log.info("[Batch] doExecuteBatch 开始: batchId={}, requests={}, incremental={}", batchId, requests.size(), incremental);
 
     // 1. 加载批次，初始化计数器
@@ -333,9 +333,9 @@ public class BatchServiceImpl implements BatchService {
 
     // 2. 逐条发送
     for (int i = 0; i < requests.size(); i++) {
-      MessageRequest request = requests.get(i);
+      MessageItemRequestDTO request = requests.get(i);
       try {
-        MessageResult result = messageService.send(request);
+        MessageSendResultVO result = messageService.send(request);
         if (result != null && result.isSuccess()) {
           success++;
         } else {

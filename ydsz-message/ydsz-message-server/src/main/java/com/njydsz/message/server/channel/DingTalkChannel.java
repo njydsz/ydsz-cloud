@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
@@ -90,18 +90,18 @@ public class DingTalkChannel implements MessageChannel {
    * @return 发送结果
    */
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn("[DINGTALK] 未配置 access_token，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, null, "钉钉 access_token 未配置", "钉钉 access_token 未配置", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "钉钉 access_token 未配置", "钉钉 access_token 未配置", null);
     }
 
     String secret = channelProperties.getChannel().getDingtalk().getSecret();
     if (StringUtils.hasText(secret)) {
       String signedUrl = appendSign(webhookUrl, secret);
       if (signedUrl == null) {
-        return MessageResult.fail(CHANNEL_TYPE, null, "钉钉加签失败,请检查 secret 配置", "钉钉加签失败,请检查 secret 配置", null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "钉钉加签失败,请检查 secret 配置", "钉钉加签失败,请检查 secret 配置", null);
       }
       webhookUrl = signedUrl;
     }
@@ -124,19 +124,19 @@ public class DingTalkChannel implements MessageChannel {
         int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
         if (errcode == 0) {
           log.info("[DINGTALK] 发送成功");
-          return MessageResult.ok(CHANNEL_TYPE, traceId);
+          return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String errmsg = (String) body.getOrDefault("errmsg", "unknown");
         log.error("[DINGTALK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
-        return MessageResult.fail(
+        return MessageSendResultVO.fail(
             CHANNEL_TYPE, null, "errcode=" + errcode + ", errmsg=" + errmsg,
             "errcode=" + errcode + ", errmsg=" + errmsg, null);
       }
       log.error("[DINGTALK] 发送失败: status={}", response.getStatusCode());
-      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[DINGTALK] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
@@ -153,7 +153,7 @@ public class DingTalkChannel implements MessageChannel {
    * @param request 消息请求
    * @return 请求体 Map
    */
-  Map<String, Object> buildPayload(MessageRequest request) {
+  Map<String, Object> buildPayload(MessageItemRequestDTO request) {
     String content = request.getContent() == null ? "" : request.getContent();
     String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
     String msgType = "text";
@@ -185,7 +185,7 @@ public class DingTalkChannel implements MessageChannel {
    * @param request 消息请求
    * @return 解析到的 URL，无则返回 null
    */
-  String resolveUrl(MessageRequest request) {
+  String resolveUrl(MessageItemRequestDTO request) {
     Map<String, Object> params = request.getParams();
     if (params != null) {
       Object explicit = params.get("dingtalkToken");

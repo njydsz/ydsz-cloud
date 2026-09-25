@@ -5,8 +5,8 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
@@ -55,13 +55,13 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
     if (!enabled) {
       return NotifySendResult.failure("通道已禁用", notifyChannel.getName());
     }
-    MessageRequest request = new MessageRequest();
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(delegate.channelType());
     request.setReceiver(receiver);
     request.setSubject(title);
     request.setContent(content);
     try {
-      MessageResult result = delegate.send(request);
+      MessageSendResultVO result = delegate.send(request);
       if (result.isSuccess()) {
         return NotifySendResult.success(result.getTraceId(), notifyChannel.getName());
       }
@@ -82,7 +82,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
     if (!enabled) {
       return NotifySendResult.failure("通道已禁用", notifyChannel.getName());
     }
-    MessageRequest request = new MessageRequest();
+    MessageItemRequestDTO request = new MessageItemRequestDTO();
     request.setChannel(delegate.channelType());
     request.setReceiver(receiver);
     request.setTemplateCode(templateCode);
@@ -92,7 +92,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
       request.setParams(params);
     }
     try {
-      MessageResult result = delegate.send(request);
+      MessageSendResultVO result = delegate.send(request);
       if (result.isSuccess()) {
         return NotifySendResult.success(result.getTraceId(), notifyChannel.getName());
       }

@@ -193,11 +193,12 @@ class ResponseUnwrapDecoderTest {
     byte[] bytes = body != null ? body.getBytes(StandardCharsets.UTF_8) : new byte[0];
     Request request =
         Request.create(
-            feign.Request.HttpMethod.GET,
+            Request.HttpMethod.GET,
             "http://localhost/test",
             java.util.Collections.emptyMap(),
             null,
-            StandardCharsets.UTF_8);
+            StandardCharsets.UTF_8,
+            null);
     return Response.builder()
         .status(200)
         .body(bytes)

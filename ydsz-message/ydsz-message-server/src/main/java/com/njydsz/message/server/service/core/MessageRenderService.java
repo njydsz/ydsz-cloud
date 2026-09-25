@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.TenantContextHolder;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.dto.RichMediaContentDTO;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.filter.SensitiveWordFilter;
@@ -71,7 +71,7 @@ public class MessageRenderService {
    * @param ctx 管线上下文（含 templateCode / channel / preference 等）
    * @return 渲染后的 content/subject
    */
-  public RenderedContent renderContent(MessageRequest request, SendContext ctx) {
+  public RenderedContent renderContent(MessageItemRequestDTO request, SendContext ctx) {
     String content = request.getContent();
     String subject = request.getSubject();
     String prefLocale = ctx.getPreference() != null ? ctx.getPreference().getLocale() : null;

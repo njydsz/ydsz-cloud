@@ -359,6 +359,7 @@ public class AlertDispatcher {
    * <p>Builds MessageRequest and calls NotificationClient.sendMessage(), message module routes to
    * specific channel implementation.
    */
+  @SuppressWarnings("removal")
   private void sendViaMessageCenter(
       AlertChannel channel, AlertContext context, JobAlertRuleVO rule, List<String> receivers) {
     String title = buildTitle(context, rule);

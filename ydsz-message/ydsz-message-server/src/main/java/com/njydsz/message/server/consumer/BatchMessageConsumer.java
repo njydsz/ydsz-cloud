@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
@@ -21,7 +21,7 @@ import com.njydsz.message.server.service.core.MessageService;
  * 批量消息消费者，监听 RocketMQ 批量消费 Topic 异步处理大批量非实时通知。
  *
  * <p>监听 {@link YdszMessageTopics#TOPIC_MESSAGE_BATCH} Topic，消息体为 JSON 数组格式
- * （[MessageRequest, MessageRequest, ...]）。批量大小由 RocketMQ pullBatchSize 控制。
+ * （[MessageItemRequestDTO, MessageItemRequestDTO, ...]）。批量大小由 RocketMQ pullBatchSize 控制。
  * 幂等策略：批量内逐条通过 {@link IdempotentStrategy#acquire} 获取分布式锁
  * （前缀 msg:batch:），失败则跳过；成功发送后释放锁允许重试。
  *
@@ -60,14 +60,14 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
       log.warn("[BatchConsumer] 空消息体,跳过");
       return;
     }
-    List<MessageRequest> requests;
+    List<MessageItemRequestDTO> requests;
     try {
-      requests = YdszJson.parseArray(body, MessageRequest.class);
+      requests = YdszJson.parseArray(body, MessageItemRequestDTO.class);
     } catch (Exception e) {
       log.error("[BatchConsumer] 批量消息解析失败,尝试单条解析: err={}", e.getMessage(), e);
       // 降级：尝试作为单条消息处理
       try {
-        MessageRequest single = YdszJson.fromJson(body, MessageRequest.class);
+        MessageItemRequestDTO single = YdszJson.fromJson(body, MessageItemRequestDTO.class);
         if (single != null) {
           requests = List.of(single);
         } else {
@@ -84,7 +84,7 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
     log.info("[BatchConsumer] 收到批量消息: count={}", requests.size());
     int success = 0;
     int failure = 0;
-    for (MessageRequest request : requests) {
+    for (MessageItemRequestDTO request : requests) {
       // 批量内逐条幂等检查
       String idempotentKey = BATCH_IDEMPOTENT_PREFIX + request.getMessageId();
       String batchToken = null;

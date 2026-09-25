@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.repository.MsgLogRepository;
@@ -65,7 +65,7 @@ public class MessageSendService {
    * @param receiver 收方标识（仅用于频率记录与日志，会脱敏打印）
    * @return 发送结果
    */
-  public MessageResult dispatch(MsgLogVO logVO, MsgRouteRuleVO matchedRule, String receiver) {
+  public MessageSendResultVO dispatch(MsgLogVO logVO, MsgRouteRuleVO matchedRule, String receiver) {
     String channel = logVO.getChannel();
     long start = System.currentTimeMillis();
     try {
@@ -95,7 +95,7 @@ public class MessageSendService {
           channel,
           SensitiveUtil.scanAndMask(receiver),
           cost);
-      return MessageResult.ok(channel, providerTraceId);
+      return MessageSendResultVO.ok(channel, providerTraceId);
     } catch (Exception e) {
       long cost = System.currentTimeMillis() - start;
       logVO.setCostMs(cost);
@@ -105,7 +105,7 @@ public class MessageSendService {
       messageMetrics.recordException(channel, e.getClass().getSimpleName());
       List<String> fallbackChannels = resolveFallbackChannels(matchedRule, channel);
       if (!fallbackChannels.isEmpty()) {
-        MessageResult fallback = tryFallbackChain(logVO, fallbackChannels, cost);
+        MessageSendResultVO fallback = tryFallbackChain(logVO, fallbackChannels, cost);
         if (fallback != null) {
           return fallback;
         }
@@ -141,7 +141,7 @@ public class MessageSendService {
    * @param prevCost 上次发送已消耗的毫秒时间（累积计算）
    * @return 降级返回的发送结果；若全部降级失败则返回 null
    */
-  public MessageResult tryFallbackChain(
+  public MessageSendResultVO tryFallbackChain(
       MsgLogVO logVO, List<String> fallbackChannels, long prevCost) {
     String origChannel = logVO.getChannel();
     long accumulatedCost = prevCost;
@@ -165,7 +165,7 @@ public class MessageSendService {
             tried,
             fallbackChannel,
             cost);
-        return MessageResult.ok(fallbackChannel, providerTraceId);
+        return MessageSendResultVO.ok(fallbackChannel, providerTraceId);
       } catch (Exception fe) {
         long cost = System.currentTimeMillis() - start;
         accumulatedCost += cost;
@@ -190,7 +190,7 @@ public class MessageSendService {
    * @param cost 本次已消耗的毫秒时间
    * @return 发送结果（包含重试或失败信息）
    */
-  public MessageResult handleFailure(MsgLogVO logVO, Exception e, long cost) {
+  public MessageSendResultVO handleFailure(MsgLogVO logVO, Exception e, long cost) {
     int retryCount = logVO.getRetryCount() == null ? 0 : logVO.getRetryCount();
     String maskedReceiver = SensitiveUtil.scanAndMask(logVO.getReceiver());
     if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logVO.getChannel())) {
@@ -206,7 +206,7 @@ public class MessageSendService {
           retryCount,
           logVO.getNextRetryAt(),
           e.getMessage());
-      return MessageResult.fail(logVO.getChannel(), null, "发送失败,已加入重试队列: " + e.getMessage(), "发送失败,已加入重试队列: " + e.getMessage(), null);
+      return MessageSendResultVO.fail(logVO.getChannel(), null, "发送失败,已加入重试队列: " + e.getMessage(), "发送失败,已加入重试队列: " + e.getMessage(), null);
     }
     logVO.setStatus(MessageStatusEnum.FAILED.name());
     msgLogRepository.update(logVO);
@@ -218,7 +218,7 @@ public class MessageSendService {
         maskedReceiver,
         retryCount,
         e.getMessage());
-    return MessageResult.fail(logVO.getChannel(), null, e.getMessage(), e.getMessage(), null);
+    return MessageSendResultVO.fail(logVO.getChannel(), null, e.getMessage(), e.getMessage(), null);
   }
 
   /**

@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.NotificationSendDTO;
 import com.njydsz.message.server.channel.MessageChannel;
@@ -19,7 +19,7 @@ import com.njydsz.message.server.service.core.NotificationService;
  * <p>P0-4 修复：不再返回空壳成功结果，而是调用 {@link NotificationService#send} 将通知落库到 {@code ydsz_msg_notification}
  * 表，确保站内信真正可被用户看到。
  *
- * <p>支持从 {@link MessageRequest} 中提取：
+ * <p>支持从 {@link MessageItemRequestDTO} 中提取：
  *
  * <ul>
  *   <li>{@code receiver} → 接收人 ID
@@ -55,9 +55,9 @@ public class InAppChannel implements MessageChannel {
   }
 
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "站内信接收人不能为空", "站内信接收人不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "站内信接收人不能为空", "站内信接收人不能为空", null);
     }
     String traceId = "INAPP-" + String.valueOf(snowflakeIdGenerator.nextId());
     try {
@@ -68,7 +68,7 @@ public class InAppChannel implements MessageChannel {
             "[INAPP] 站内信发送未落库: receiver={} bizType={}",
             request.getReceiver(),
             request.getBizType());
-        return MessageResult.fail(CHANNEL_TYPE, null, "站内信发送失败：未落库", "站内信发送失败：未落库", null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "站内信发送失败：未落库", "站内信发送失败：未落库", null);
       }
       log.info(
           "[INAPP] 站内信发送成功: receiver={} bizType={} count={} traceId={}",
@@ -76,20 +76,20 @@ public class InAppChannel implements MessageChannel {
           request.getBizType(),
           count,
           traceId);
-      return MessageResult.ok(CHANNEL_TYPE, traceId);
+      return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
       log.error("[INAPP] 站内信发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(CHANNEL_TYPE, null, "站内信发送异常: " + e.getMessage(), "站内信发送异常: " + e.getMessage(), null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "站内信发送异常: " + e.getMessage(), "站内信发送异常: " + e.getMessage(), null);
     }
   }
 
   /**
-   * 从 {@link MessageRequest} 构建 {@link NotificationSendDTO}。
+   * 从 {@link MessageItemRequestDTO} 构建 {@link NotificationSendDTO}。
    *
    * @param request 消息请求
    * @return 通知发送 DTO
    */
-  private NotificationSendDTO buildNotificationDTO(MessageRequest request) {
+  private NotificationSendDTO buildNotificationDTO(MessageItemRequestDTO request) {
     NotificationSendDTO dto = new NotificationSendDTO();
     dto.setReceiverId(request.getReceiver());
     dto.setTitle(request.getSubject());

@@ -574,7 +574,7 @@ public class MessageProperties {
    *   <li>{@code EXACTLY_ONCE} — 精确一次（需分布式锁 + DB 事务保证，性能较低）
    * </ul>
    *
-   * 消息级覆盖：在 MessageRequest 中设置 deliveryGuarantee 字段优先于此全局默认值。
+   * 消息级覆盖：在 MessageItemRequestDTO 中设置 deliveryGuarantee 字段优先于此全局默认值。
    */
   private String defaultDeliveryGuarantee = "AT_LEAST_ONCE";
 

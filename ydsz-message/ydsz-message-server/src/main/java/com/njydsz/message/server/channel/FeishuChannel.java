@@ -20,8 +20,8 @@ import org.springframework.web.client.RestClient;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
@@ -103,11 +103,11 @@ public class FeishuChannel implements MessageChannel {
    * @return 发送结果
    */
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn("[FEISHU] 未配置 hook，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, null, "飞书 hook 未配置", "飞书 hook 未配置", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "飞书 hook 未配置", "飞书 hook 未配置", null);
     }
 
     try {
@@ -128,17 +128,17 @@ public class FeishuChannel implements MessageChannel {
         int code = ((Number) body.getOrDefault("code", -1)).intValue();
         if (code == 0) {
           log.info("[FEISHU] 发送成功");
-          return MessageResult.ok(CHANNEL_TYPE, traceId);
+          return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         }
         String msg = (String) body.getOrDefault("msg", "unknown");
         log.error("[FEISHU] 发送失败: code={} msg={}", code, msg);
-        return MessageResult.fail(CHANNEL_TYPE, null, "code=" + code + ", msg=" + msg, "code=" + code + ", msg=" + msg, null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "code=" + code + ", msg=" + msg, "code=" + code + ", msg=" + msg, null);
       }
       log.error("[FEISHU] 发送失败: status={}", response.getStatusCode());
-      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + response.getStatusCode(), "HTTP " + response.getStatusCode(), null);
     } catch (Exception e) {
       log.error("[FEISHU] 发送异常: reason={}", e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
@@ -155,7 +155,7 @@ public class FeishuChannel implements MessageChannel {
    * @param request 消息请求
    * @return 请求体 Map
    */
-  Map<String, Object> buildPayload(MessageRequest request) {
+  Map<String, Object> buildPayload(MessageItemRequestDTO request) {
     String content = request.getContent() == null ? "" : request.getContent();
     String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
     String msgType = "text";
@@ -213,7 +213,7 @@ public class FeishuChannel implements MessageChannel {
    * @param request 消息请求
    * @return 解析到的 URL，无则返回 null
    */
-  String resolveUrl(MessageRequest request) {
+  String resolveUrl(MessageItemRequestDTO request) {
     Map<String, Object> params = request.getParams();
     if (params != null) {
       Object explicit = params.get("feishuHook");

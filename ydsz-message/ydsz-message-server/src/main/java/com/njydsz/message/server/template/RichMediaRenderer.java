@@ -29,7 +29,7 @@ import com.njydsz.message.domain.dto.RichMediaContentDTO;
 @Component
 public class RichMediaRenderer {
 
-  /** MessageRequest.params 中存储富媒体内容的 key */
+  /** MessageItemRequestDTO.params 中存储富媒体内容的 key */
   public static final String RICH_MEDIA_KEY = "_richMedia";
 
   /**

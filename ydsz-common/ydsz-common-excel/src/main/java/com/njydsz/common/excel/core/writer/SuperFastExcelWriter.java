@@ -165,8 +165,40 @@ public class SuperFastExcelWriter {
   private static final DateTimeFormatter DEFAULT_DATE_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+  /**
+   * 字符串长度超过此阈值时直接以 inlineStr 方式写入，不进入 SST 共享字符串表。
+   *
+   * <p>阈值过低 → 高基数字符串场景 SST 膨胀，序列化性能下降；阈值过高 → inline 单元格占用更多体积。
+   * 默认 50 字符，与主流工具（EasyExcel）一致；需要调整时通过系统属性 {@code ydsz.excel.sstInlineThreshold} 覆盖。
+   */
+  private static final int DEFAULT_SST_INLINE_THRESHOLD = 50;
+
+  /** SST 字符串内联阈值（字符数），超过此长度的字符串直接 inlineStr */
+  private final int sstInlineThreshold;
+
   public SuperFastExcelWriter(WriteMetadata metadata) {
     this.metadata = metadata;
+    this.sstInlineThreshold = resolveSstInlineThreshold();
+  }
+
+  /**
+   * 解析 SST 内联阈值：优先读取系统属性 {@code ydsz.excel.sstInlineThreshold}，解析失败或未设置时使用默认值。
+   *
+   * @return 有效的内联阈值（≥ 1）
+   */
+  private static int resolveSstInlineThreshold() {
+    String prop = System.getProperty("ydsz.excel.sstInlineThreshold");
+    if (prop != null) {
+      try {
+        int v = Integer.parseInt(prop);
+        if (v >= 1) {
+          return v;
+        }
+      } catch (NumberFormatException ignored) {
+        // fall through to default
+      }
+    }
+    return DEFAULT_SST_INLINE_THRESHOLD;
   }
 
   private ExcelConfig getExcelConfig() {
@@ -516,7 +548,8 @@ public class SuperFastExcelWriter {
       value = FormulaInjectionGuard.sanitizeForXlsx(value);
     }
     int strLen = value.length();
-    if (strLen > 50) {
+    // 超长字符串使用 inlineStr，避免 SST 膨胀。阈值通过 sstInlineThreshold 配置，默认 50 字符。
+    if (strLen > sstInlineThreshold) {
       writeStringCellInline(col, value);
       return;
     }
@@ -1009,55 +1042,50 @@ public class SuperFastExcelWriter {
     private final HashMap<String, Integer> stringToIndex = new HashMap<>(1024);
 
     byte[] buildXmlDirect() throws Exception {
-      ByteArrayOutputStream baos = new ByteArrayOutputStream(count * 128);
+      // 预分配 StringBuilder：每字符串约 128 字节（含 XML 标签 + 转义膨胀），避免多次扩容。
+      StringBuilder sb = new StringBuilder(200 + count * 128);
 
-      baos.write(
-          "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-              .getBytes(StandardCharsets.UTF_8));
-      baos.write(
-          "<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\""
-              .getBytes(StandardCharsets.UTF_8));
-      baos.write(String.valueOf(count).getBytes());
-      baos.write("\" uniqueCount=\"".getBytes(StandardCharsets.UTF_8));
-      baos.write(String.valueOf(count).getBytes());
-      baos.write("\">".getBytes(StandardCharsets.UTF_8));
+      sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
+      sb.append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"");
+      sb.append(count);
+      sb.append("\" uniqueCount=\"");
+      sb.append(count);
+      sb.append("\">");
 
       for (int i = 0; i < count; i++) {
-        baos.write("<si><t>".getBytes(StandardCharsets.UTF_8));
+        sb.append("<si><t>");
         String s = strings[i];
         if (s != null) {
           int len = s.length();
           for (int j = 0; j < len; j++) {
             char c = s.charAt(j);
-            if (c < 128) {
-              if (c == '&') {
-                baos.write(AMP_BYTES);
-              } else if (c == '<') {
-                baos.write(LT_BYTES);
-              } else if (c == '>') {
-                baos.write(GT_BYTES);
-              } else if (c == '"') {
-                baos.write(QUOT_BYTES);
-              } else if (c == '\'') {
-                baos.write(APOS_BYTES);
-              } else {
-                baos.write((byte) c);
-              }
-            } else if (c >= 0x80 && c <= 0x7FF) {
-              baos.write((byte) (0xC0 | (c >> 6)));
-              baos.write((byte) (0x80 | (c & 0x3F)));
-            } else if (c >= 0x800 && c <= 0xFFFF) {
-              baos.write((byte) (0xE0 | (c >> 12)));
-              baos.write((byte) (0x80 | ((c >> 6) & 0x3F)));
-              baos.write((byte) (0x80 | (c & 0x3F)));
+            switch (c) {
+              case '&':
+                sb.append("&amp;");
+                break;
+              case '<':
+                sb.append("&lt;");
+                break;
+              case '>':
+                sb.append("&gt;");
+                break;
+              case '"':
+                sb.append("&quot;");
+                break;
+              case '\'':
+                sb.append("&apos;");
+                break;
+              default:
+                sb.append(c);
+                break;
             }
           }
         }
-        baos.write("</t></si>".getBytes(StandardCharsets.UTF_8));
+        sb.append("</t></si>");
       }
 
-      baos.write("</sst>".getBytes(StandardCharsets.UTF_8));
-      return baos.toByteArray();
+      sb.append("</sst>");
+      return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
   }
 

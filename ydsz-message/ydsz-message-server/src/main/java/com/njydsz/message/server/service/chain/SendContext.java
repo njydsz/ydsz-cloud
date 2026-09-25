@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import lombok.Data;
 
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 
@@ -57,5 +57,5 @@ public class SendContext {
   private LocalDateTime scheduledAt;
 
   /** 非 null 表示预处理失败，调用方应直接返回此结果 */
-  private MessageResult errorResult;
+  private MessageSendResultVO errorResult;
 }

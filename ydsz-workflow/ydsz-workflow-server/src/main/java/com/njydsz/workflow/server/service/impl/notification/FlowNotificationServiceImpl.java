@@ -115,6 +115,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("removal") // MessageRequest/MessageResult 标记 @Deprecated(forRemoval=true)，message 模块尚未迁移至 MessageSendDTO 新契约
 public class FlowNotificationServiceImpl implements FlowNotificationService {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;

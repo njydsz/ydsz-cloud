@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.domain.QueueMessage;
@@ -59,7 +59,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
   }
 
   @Override
-  public String syncSend(MessageRequest req) {
+  public String syncSend(MessageItemRequestDTO req) {
     if (req == null) {
       throw new IllegalArgumentException("MessageRequest must not be null");
     }
@@ -78,18 +78,18 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
   }
 
   @Override
-  public void asyncSend(MessageRequest req) {
+  public void asyncSend(MessageItemRequestDTO req) {
     // common-queue 的 publish 本身是异步的（取决于底层实现）
     syncSend(req);
   }
 
   @Override
-  public String sendTransactionMessage(MessageRequest req) {
+  public String sendTransactionMessage(MessageItemRequestDTO req) {
     log.warn("[CommonQueueMQ] 事务消息降级为同步发送（common-queue 抽象暂不支持事务消息）");
     return syncSend(req);
   }
 
-  private void ensureMessageId(MessageRequest req) {
+  private void ensureMessageId(MessageItemRequestDTO req) {
     if (!StringUtils.hasText(req.getMessageId())) {
       req.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
     }

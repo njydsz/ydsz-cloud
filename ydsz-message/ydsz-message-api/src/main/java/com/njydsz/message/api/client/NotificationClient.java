@@ -15,6 +15,10 @@ import com.njydsz.message.api.fallback.NotificationClientFallbackFactory;
 /**
  * 通知中心 Feign 客户端（通用通知能力）。
  *
+ * <p>接口返回类型使用已废弃的 {@link MessageResult}（{@code common-feign}），
+ * 因跨版本 Feign 合约兼容暂时保留；内部实现已迁移至 {@code MessageSendResultVO}。
+ * 待所有调用方升级后，再整体移除对 {@code common-feign} 的依赖。
+ *
  * <p>提供跨服务消息通知的统一入口，封装多通道路由（邮件/短信/Webhook/站内信/实时推送）。
  * 支持单条消息发送（{@link #sendMessage}）、WebSocket/SSE 广播推送（{@link #broadcast}）、
  * 单播实时推送（{@link #pushRealtime}）三种远程调用方法。
@@ -32,6 +36,7 @@ import com.njydsz.message.api.fallback.NotificationClientFallbackFactory;
     name = FeignClientConstants.MESSAGE,
     contextId = "notificationClient",
     fallbackFactory = NotificationClientFallbackFactory.class)
+@SuppressWarnings({"deprecation", "removal"})
 public interface NotificationClient {
 
   /**

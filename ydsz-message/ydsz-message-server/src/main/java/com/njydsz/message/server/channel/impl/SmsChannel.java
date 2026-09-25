@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.TenantContextHolder;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.dto.ReceiptResultDTO;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -29,7 +29,7 @@ import com.njydsz.message.server.service.TemplateService;
  * <p>模板元数据（signName / providerKey）解析顺序：
  *
  * <ol>
- *   <li>优先从 {@link MessageRequest#getChannelMeta()} 获取（上游填充）
+ *   <li>优先从 {@link MessageItemRequestDTO#getChannelMeta()} 获取（上游填充）
  *   <li>回退到 {@link TemplateService} 按 templateCode 查询模板
  * </ol>
  *
@@ -61,13 +61,13 @@ public class SmsChannel implements MessageChannel {
   }
 
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "接收人手机号不能为空", "接收人手机号不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "接收人手机号不能为空", "接收人手机号不能为空", null);
     }
     SmsProvider provider = selectProvider();
     MsgTemplateVO template = resolveTemplate(request);
-    MessageResult result = provider.send(request, template);
+    MessageSendResultVO result = provider.send(request, template);
     log.info(
         "[SmsChannel] provider={} status={} phone={}",
         provider.providerType(),
@@ -82,18 +82,18 @@ public class SmsChannel implements MessageChannel {
    * @param requests 消息请求列表
    * @return 发送结果列表
    */
-  public List<MessageResult> batchSend(List<MessageRequest> requests) {
+  public List<MessageSendResultVO> batchSend(List<MessageItemRequestDTO> requests) {
     if (requests == null || requests.isEmpty()) {
       return List.of();
     }
     SmsProvider provider = selectProvider();
     MsgTemplateVO template = resolveTemplate(requests.get(0));
-    List<MessageResult> results = provider.batchSend(requests, template);
+    List<MessageSendResultVO> results = provider.batchSend(requests, template);
     log.info(
         "[SmsChannel] 批量发送: provider={} count={} success={}",
         provider.providerType(),
         requests.size(),
-        results.stream().filter(MessageResult::isSuccess).count());
+        results.stream().filter(MessageSendResultVO::isSuccess).count());
     return results;
   }
 
@@ -114,7 +114,7 @@ public class SmsChannel implements MessageChannel {
     if (!StringUtils.hasText(traceId) || !StringUtils.hasText(phone)) {
       return Optional.empty();
     }
-    MessageResult result = provider.queryReceipt(traceId, phone);
+    MessageSendResultVO result = provider.queryReceipt(traceId, phone);
     if ("SUCCESS".equals(result.getStatus())) {
       return Optional.of(ReceiptResultDTO.of(ReceiptStatusEnum.DELIVERED, traceId));
     } else if ("FAILED".equals(result.getStatus())) {
@@ -154,7 +154,7 @@ public class SmsChannel implements MessageChannel {
    * @param request 消息请求
    * @return 模板实体（含 signName / providerKey），均无时返回 null
    */
-  private MsgTemplateVO resolveTemplate(MessageRequest request) {
+  private MsgTemplateVO resolveTemplate(MessageItemRequestDTO request) {
     Map<String, String> meta = request.getChannelMeta();
     if (meta != null
         && (StringUtils.hasText(meta.get("signName"))

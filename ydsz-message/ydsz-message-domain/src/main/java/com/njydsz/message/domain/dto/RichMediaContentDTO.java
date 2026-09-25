@@ -9,7 +9,7 @@ import lombok.Data;
  *
  * <p>支持在消息中嵌入图片、音频、视频、文件等富媒体内容， 适配多通道（邮件HTML、站内信富文本、推送卡片、IM卡片消息等）。
  *
- * <p>使用方式：在 {@code MessageRequest.params} 中设置 {@code _richMedia} 键， 值为 {@link RichMediaContent} 的
+ * <p>使用方式：在 {@code MessageItemRequestDTO.params} 中设置 {@code _richMedia} 键， 值为 {@link RichMediaContent} 的
  * JSON 序列化结果。 通道实现按需解析并渲染为通道特定的富媒体格式。
  *
  * @author ydsz-team

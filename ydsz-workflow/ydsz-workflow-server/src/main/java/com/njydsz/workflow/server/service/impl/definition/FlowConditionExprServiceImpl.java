@@ -785,6 +785,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
           result.add(varInfo);
         }
         // 处理子表单字段
+        @SuppressWarnings("unchecked")
         List<Map<String, Object>> subFieldsMap =
             (List<Map<String, Object>>) fieldMap.get("subFields");
         if (subFieldsMap != null && !subFieldsMap.isEmpty()) {

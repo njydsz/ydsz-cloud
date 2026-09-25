@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.repository.OutboxRepository;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -22,7 +22,7 @@ import com.njydsz.message.server.producer.MessageQueueOperations;
  * Outbox 事件扫描发布调度器，定时扫描待处理事件并分发到 MQ 或 Spring 事件总线。
  *
  * <p>扫描 Outbox 表中 PENDING 事件（委托 common-event OutboxRepository），
- * 根据事件类型分发：MessageAsyncDispatch → 反序列化为 MessageRequest 投递到 MQ；
+ * 根据事件类型分发：MessageAsyncDispatch → 反序列化为 MessageItemRequestDTO 投递到 MQ；
  * 其他领域事件 → 发布到 Spring 事件总线。
  * 发布成功标记为 SENT，失败则根据重试次数决定指数退避重试或标记为 DEAD_LETTER。
  * 多实例部署通过 DistributedScheduled 分布式锁保证单实例执行扫描。
@@ -133,7 +133,7 @@ public class OutboxEventScheduler {
    * 根据 Outbox 事件类型分发到不同处理器。
    *
    * <ul>
-   *   <li>{@code MessageAsyncDispatch} —— 反序列化为 {@link MessageRequest} 后投递到 MQ</li>
+   *   <li>{@code MessageAsyncDispatch} —— 反序列化为 {@link MessageItemRequestDTO} 后投递到 MQ</li>
    *   <li>其他 —— 发布到 Spring 事件总线</li>
    * </ul>
    *
@@ -159,12 +159,12 @@ public class OutboxEventScheduler {
   }
 
   /**
-   * 异步消息投递：将 Outbox 事件反序列化为 {@link MessageRequest} 后投递到 MQ。
+   * 异步消息投递：将 Outbox 事件反序列化为 {@link MessageItemRequestDTO} 后投递到 MQ。
    *
    * @param outboxMessage Outbox 消息
    */
   private void dispatchAsyncMessage(OutboxMessage outboxMessage) {
-    MessageRequest request = YdszJson.fromJson(outboxMessage.getPayload(), MessageRequest.class);
+    MessageItemRequestDTO request = YdszJson.fromJson(outboxMessage.getPayload(), MessageItemRequestDTO.class);
     if (request == null) {
       log.error(
           "[OutboxScheduler] 异步消息反序列化失败: eventId={} aggregateId={}",

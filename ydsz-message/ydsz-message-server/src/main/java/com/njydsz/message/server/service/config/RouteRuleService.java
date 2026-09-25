@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.dto.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.vo.MsgRouteRuleVO;
 
@@ -25,7 +25,7 @@ import com.njydsz.message.domain.vo.MsgRouteRuleVO;
  *
  * <p><b>匹配算法：</b>按 priority 升序遍历 {@code enabled} 规则,对每条规则的 {@code conditionExpr}（SpEL 表达式）求值,首次
  * {@code true} 即返回。 上下文变量包括 {@code request.bizType / bizId / receiver / channel / priority /
- * locale} 等 {@link MessageRequest} 字段。
+ * locale} 等 {@link MessageItemRequestDTO} 字段。
  *
  * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
@@ -89,5 +89,5 @@ public interface RouteRuleService {
    * @param request 消息请求
    * @return 命中的路由规则,未命中返回 null
    */
-  MsgRouteRuleVO match(MessageRequest request);
+  MsgRouteRuleVO match(MessageItemRequestDTO request);
 }

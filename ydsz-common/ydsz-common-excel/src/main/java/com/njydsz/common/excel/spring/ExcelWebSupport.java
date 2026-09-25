@@ -121,12 +121,31 @@ public class ExcelWebSupport {
   }
 
   /**
-   * 对文件名进行 URL 编码，处理中文等非 ASCII 字符。
+   * 构建符合 RFC 6266 / RFC 5987 的 Content-Disposition 文件名编码。
+   *
+   * <p>生成双重格式：
+   * <pre>{@code
+   * attachment; filename="fallback.txt"; filename*=UTF-8''%E4%B8%AD%E6%96%87.txt
+   * }</pre>
+   *
+   * <ul>
+   *   <li>{@code filename}（传统 ASCII 兜底）：含非 ASCII 字符时用下划线替换，保证旧浏览器兼容</li>
+   *   <li>{@code filename*}（RFC 5987 扩展）：完整的 UTF-8 编码，现代浏览器优先使用</li>
+   * </ul>
    *
    * @param filename 文件名
-   * @return 编码后的文件名
+   * @return RFC 6266 双重编码的文件名表达式
    */
   private String encodeFilename(String filename) {
-    return URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+    if (filename == null || filename.isEmpty()) {
+      return "attachment; filename=\"export.xlsx\"";
+    }
+    // ASCII 兜底：非 ASCII → 下划线
+    String asciiFallback = filename.replaceAll("[^\\x20-\\x7E]", "_");
+    // RFC 5987 扩展（UTF-8 percent-encoding）
+    String utf8Encoded =
+        URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+    return String.format(
+        "attachment; filename=\"%s\"; filename*=UTF-8''%s", asciiFallback, utf8Encoded);
   }
 }

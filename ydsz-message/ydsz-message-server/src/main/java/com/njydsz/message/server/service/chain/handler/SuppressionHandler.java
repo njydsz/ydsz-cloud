@@ -6,8 +6,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -36,7 +36,7 @@ public class SuppressionHandler implements SendHandler {
   private final MessageMetrics messageMetrics;
 
   @Override
-  public boolean handle(MessageRequest request, SendContext ctx) {
+  public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
     String bizType = ctx.getBizType();
     String bizId = request.getBizId();
     String receiver = ctx.getReceiver();
@@ -54,7 +54,7 @@ public class SuppressionHandler implements SendHandler {
           SensitiveUtil.scanAndMask(receiver),
           channel);
       messageMetrics.recordSend(channel, "SUPPRESSED", 0);
-      ctx.setErrorResult(MessageResult.fail(
+      ctx.setErrorResult(MessageSendResultVO.fail(
           channel,
           MessageExceptionCode.CHANNEL_SUPPRESSED.getCode(),
           "跨渠道抑制: 已有其他渠道发送",

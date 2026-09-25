@@ -148,7 +148,8 @@ public abstract class AbstractFlowInstanceLifecycle {
   @Lazy
   protected final FlowTimerService timerService;
 
-  /** 跨服务名称解析门面 */
+  /** 跨服务名称解析门面（NameAssembler 已标记弃用但迁移至 common-core 尚未完成，临时抑制） */
+  @SuppressWarnings("deprecation")
   protected final NameAssembler nameAssembler;
 
   // ============================== 子类需实现的策略方法 ==============================

@@ -16,8 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.server.channel.MessageChannel;
@@ -76,9 +76,9 @@ public class WxMiniChannel implements MessageChannel {
   }
 
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "微信小程序接收人(OpenID)不能为空", "微信小程序接收人(OpenID)不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "微信小程序接收人(OpenID)不能为空", "微信小程序接收人(OpenID)不能为空", null);
     }
 
     MessageProperties.WxMiniConfig config = messageProperties.getWxMini();
@@ -92,7 +92,7 @@ public class WxMiniChannel implements MessageChannel {
     try {
       String accessToken = getAccessToken(config);
       if (accessToken == null) {
-        return MessageResult.fail(CHANNEL_TYPE, null, "获取微信 access_token 失败", "获取微信 access_token 失败", null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "获取微信 access_token 失败", "获取微信 access_token 失败", null);
       }
 
       String url =
@@ -129,7 +129,7 @@ public class WxMiniChannel implements MessageChannel {
             "[WxMiniChannel] 发送成功: receiver={} template={}",
             request.getReceiver(),
             request.getTemplateCode());
-        return MessageResult.ok(CHANNEL_TYPE, traceId);
+        return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
       } else {
         String errMsg = resultBody != null ? String.valueOf(resultBody.get("errmsg")) : "未知错误";
         log.error(
@@ -137,12 +137,12 @@ public class WxMiniChannel implements MessageChannel {
             request.getReceiver(),
             resultBody != null ? resultBody.get("errcode") : "N/A",
             errMsg);
-        return MessageResult.fail(CHANNEL_TYPE, null, "微信小程序发送失败: " + errMsg, "微信小程序发送失败: " + errMsg, null);
+        return MessageSendResultVO.fail(CHANNEL_TYPE, null, "微信小程序发送失败: " + errMsg, "微信小程序发送失败: " + errMsg, null);
       }
     } catch (Exception e) {
       log.error(
           "[WxMiniChannel] 发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
@@ -188,7 +188,7 @@ public class WxMiniChannel implements MessageChannel {
   }
 
   /** 构造模板消息 data 字段。 微信小程序订阅消息的 data 格式为 { "key": { "value": "xxx" } } */
-  private Map<String, Object> buildTemplateData(MessageRequest request) {
+  private Map<String, Object> buildTemplateData(MessageItemRequestDTO request) {
     if (request.getParams() == null) {
       return Map.of();
     }
@@ -207,13 +207,13 @@ public class WxMiniChannel implements MessageChannel {
    * @param request 消息请求（含 receiver/templateCode/content）
    * @return 模拟发送结果（status=SUCCESS，traceId 含 MOCK 前缀）
    */
-  private MessageResult mockSend(MessageRequest request) {
+  private MessageSendResultVO mockSend(MessageItemRequestDTO request) {
     String traceId = "WX_MINI-MOCK-" + String.valueOf(snowflakeIdGenerator.nextId());
     log.info(
         "[WxMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
         request.getReceiver(),
         request.getTemplateCode(),
         request.getContent());
-    return MessageResult.ok(CHANNEL_TYPE, traceId);
+    return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
   }
 }

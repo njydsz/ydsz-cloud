@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
@@ -101,11 +101,11 @@ public class WebhookChannel implements MessageChannel {
    * @return 发送结果
    */
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     String webhookUrl = resolveUrl(request);
     if (!StringUtils.hasText(webhookUrl)) {
       log.warn("[WEBHOOK] 未配置 Webhook URL，跳过发送: receiver={}", request.getReceiver());
-      return MessageResult.fail(CHANNEL_TYPE, null, "Webhook URL 未配置", "Webhook URL 未配置", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "Webhook URL 未配置", "Webhook URL 未配置", null);
     }
     Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
     payload.put("text", request.getContent() == null ? "" : request.getContent());
@@ -138,17 +138,17 @@ public class WebhookChannel implements MessageChannel {
       if (response.getStatusCode().is2xxSuccessful()) {
         String traceId = CHANNEL_TYPE + "-" + String.valueOf(snowflakeIdGenerator.nextId());
         log.info("[WEBHOOK] 发送成功: url={} status={}", maskUrl(webhookUrl), statusCode);
-        return MessageResult.ok(CHANNEL_TYPE, traceId);
+        return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
       }
       log.error(
           "[WEBHOOK] 发送失败: url={} status={} body={}",
           maskUrl(webhookUrl),
           statusCode,
           response.getBody());
-      return MessageResult.fail(CHANNEL_TYPE, null, "HTTP " + statusCode, "HTTP " + statusCode, null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "HTTP " + statusCode, "HTTP " + statusCode, null);
     } catch (Exception e) {
       log.error("[WEBHOOK] 发送异常: url={} reason={}", maskUrl(webhookUrl), e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
@@ -160,7 +160,7 @@ public class WebhookChannel implements MessageChannel {
    * @param request 消息请求
    * @return 签名密钥，无则返回 null
    */
-  private String resolveSecret(MessageRequest request) {
+  private String resolveSecret(MessageItemRequestDTO request) {
     Map<String, Object> params = request.getParams();
     if (params != null) {
       Object secret = params.get("webhookSecret");
@@ -191,7 +191,7 @@ public class WebhookChannel implements MessageChannel {
    * @param request 消息请求
    * @return 解析到的 URL，无则返回 null
    */
-  String resolveUrl(MessageRequest request) {
+  String resolveUrl(MessageItemRequestDTO request) {
     Map<String, Object> params = request.getParams();
     if (params != null) {
       Object explicit = params.get("webhookUrl");

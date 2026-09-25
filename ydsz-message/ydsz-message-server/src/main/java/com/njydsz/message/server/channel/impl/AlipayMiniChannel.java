@@ -17,8 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -69,9 +69,9 @@ public class AlipayMiniChannel implements MessageChannel {
   }
 
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "支付宝小程序接收人(UserID)不能为空", "支付宝小程序接收人(UserID)不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝小程序接收人(UserID)不能为空", "支付宝小程序接收人(UserID)不能为空", null);
     }
 
     MessageProperties.AlipayMiniConfig config = messageProperties.getAlipayMini();
@@ -144,7 +144,7 @@ public class AlipayMiniChannel implements MessageChannel {
               "[AlipayMiniChannel] 发送成功: receiver={} template={}",
               request.getReceiver(),
               request.getTemplateCode());
-          return MessageResult.ok(CHANNEL_TYPE, traceId);
+          return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
         } else {
           String errMsg = alipayResp != null ? String.valueOf(alipayResp.get("sub_msg")) : "未知错误";
           String errCode = alipayResp != null ? String.valueOf(alipayResp.get("sub_code")) : "N/A";
@@ -153,14 +153,14 @@ public class AlipayMiniChannel implements MessageChannel {
               request.getReceiver(),
               errCode,
               errMsg);
-          return MessageResult.fail(CHANNEL_TYPE, null, "支付宝小程序发送失败: " + errMsg, "支付宝小程序发送失败: " + errMsg, null);
+          return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝小程序发送失败: " + errMsg, "支付宝小程序发送失败: " + errMsg, null);
         }
       }
-      return MessageResult.fail(CHANNEL_TYPE, null, "支付宝返回空响应", "支付宝返回空响应", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "支付宝返回空响应", "支付宝返回空响应", null);
     } catch (Exception e) {
       log.error(
           "[AlipayMiniChannel] 发送异常: receiver={} err={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }
@@ -172,13 +172,13 @@ public class AlipayMiniChannel implements MessageChannel {
    * @param request 消息请求（含 receiver/templateCode/content）
    * @return 模拟发送结果（status=SUCCESS，traceId 含 MOCK 前缀）
    */
-  private MessageResult mockSend(MessageRequest request) {
+  private MessageSendResultVO mockSend(MessageItemRequestDTO request) {
     String traceId = "ALIPAY_MINI-MOCK-" + String.valueOf(snowflakeIdGenerator.nextId());
     log.info(
         "[AlipayMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
         request.getReceiver(),
         request.getTemplateCode(),
         request.getContent());
-    return MessageResult.ok(CHANNEL_TYPE, traceId);
+    return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
   }
 }

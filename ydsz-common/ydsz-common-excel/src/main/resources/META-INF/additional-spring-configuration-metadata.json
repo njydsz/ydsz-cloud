@@ -3,92 +3,110 @@
     {
       "name": "ydsz.excel.read-buffer-size",
       "type": "java.lang.Integer",
-      "description": "Read buffer size in bytes, default 8192.",
+      "description": "读缓冲区大小（字节），默认 8192。",
       "defaultValue": 8192
     },
     {
       "name": "ydsz.excel.write-buffer-size",
       "type": "java.lang.Integer",
-      "description": "Write buffer size in bytes, default 8192.",
+      "description": "写缓冲区大小（字节），默认 8192。",
       "defaultValue": 8192
     },
     {
       "name": "ydsz.excel.default-date-format",
       "type": "java.lang.String",
-      "description": "Default date format.",
+      "description": "默认日期格式，默认 yyyy-MM-dd HH:mm:ss。",
       "defaultValue": "yyyy-MM-dd HH:mm:ss"
     },
     {
       "name": "ydsz.excel.default-number-format",
       "type": "java.lang.String",
-      "description": "Default number format.",
+      "description": "默认数字格式（Excel cell number format），默认 #,##0.00。",
       "defaultValue": "#,##0.00"
     },
     {
       "name": "ydsz.excel.automatic-trim",
       "type": "java.lang.Boolean",
-      "description": "Auto trim strings.",
+      "description": "自动 trim 字符串类型单元格值，默认 true。",
       "defaultValue": true
     },
     {
       "name": "ydsz.excel.use-fast-reader",
       "type": "java.lang.Boolean",
-      "description": "Use fast reader (zero POI). Default false: POI-compatible path wins on correctness; opt in explicitly for large-file scenarios.",
-      "defaultValue": false
+      "description": "使用零 POI 的高速读取引擎（SuperFast），默认 true。大文件或高并发场景强制使用。",
+      "defaultValue": true
     },
     {
       "name": "ydsz.excel.use-fast-writer",
       "type": "java.lang.Boolean",
-      "description": "Use fast writer (zero POI). Default false: POI-compatible path wins on correctness; opt in explicitly for large-file scenarios.",
-      "defaultValue": false
+      "description": "使用零 POI 的高速写入引擎（SuperFast），默认 true。大批量导出（10 万行+）建议开启。",
+      "defaultValue": true
     },
     {
       "name": "ydsz.excel.streaming-parse-threshold-mb",
       "type": "java.lang.Integer",
-      "description": "Streaming parse threshold in MB.",
+      "description": "流式解析阈值（MB），默认 10。",
       "defaultValue": 10
     },
     {
       "name": "ydsz.excel.max-read-file-size-mb",
       "type": "java.lang.Integer",
-      "description": "Max read file size in MB.",
+      "description": "最大读取文件大小（MB），默认 100。",
       "defaultValue": 100
     },
     {
       "name": "ydsz.excel.max-write-file-size-mb",
       "type": "java.lang.Integer",
-      "description": "Max write file size in MB.",
+      "description": "最大写入文件大小（MB），默认 50。",
       "defaultValue": 50
     },
     {
       "name": "ydsz.excel.compression-level",
       "type": "java.lang.Integer",
-      "description": "ZIP compression level.",
+      "description": "ZIP 压缩级别（0-9），默认 1（BEST_SPEED）。",
       "defaultValue": 1
     },
     {
       "name": "ydsz.excel.formula-injection-protection",
       "type": "java.lang.Boolean",
-      "description": "Enable formula injection protection.",
+      "description": "启用公式注入防护（OWASP 标准：转义 =、+、-、@、' 开头单元格），默认 true。",
       "defaultValue": true
     },
     {
       "name": "ydsz.excel.strict-number-conversion",
       "type": "java.lang.Boolean",
-      "description": "Strict number conversion.",
+      "description": "严格数字转换（解析失败时抛出异常而非返回 null），默认 false。",
       "defaultValue": false
     },
     {
       "name": "ydsz.excel.head-row-number",
       "type": "java.lang.Integer",
-      "description": "Default head row number.",
+      "description": "默认表头行号（从 1 计），默认 1。",
       "defaultValue": 1
     },
     {
       "name": "ydsz.excel.write-cache-size",
       "type": "java.lang.Integer",
-      "description": "SXSSF write cache size.",
+      "description": "SXSSF 流式写入的内存保留行数窗口，默认 100。",
       "defaultValue": 100
+    },
+    {
+      "name": "ydsz.excel.use1904-windowing",
+      "type": "java.lang.Boolean",
+      "description": "使用 1904 日期窗口（Mac Excel 兼容），默认 false（1900 窗口）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.excel.validation-mode",
+      "type": "java.lang.String",
+      "description": "数据校验模式：FAIL_FAST（遇错即抛，默认）/ COLLECT_ALL（全量收集所有行错误后一次性抛出）。",
+      "defaultValue": "FAIL_FAST"
+    },
+    {
+      "name": "ydsz.excel.max-read-cache-size",
+      "type": "java.lang.Integer",
+      "description": "读缓存大小（条目数），默认 1024。",
+      "defaultValue": 1024
     }
   ]
 }

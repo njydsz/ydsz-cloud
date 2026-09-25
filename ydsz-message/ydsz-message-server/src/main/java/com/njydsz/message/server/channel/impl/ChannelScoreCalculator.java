@@ -20,7 +20,7 @@ import com.njydsz.message.server.metric.MessageMetrics;
  * 通道综合评分计算器。
  *
  * <p>基于「通道成功率 + 成本 + 用户打开率」三因子加权评分选优，为 {@link
- * ChannelRouter#dispatchWithScore(com.njydsz.common.feign.MessageRequest)} 提供排序依据。
+ * ChannelRouter#dispatchWithScore(com.njydsz.message.domain.dto.MessageItemRequestDTO)} 提供排序依据。
  *
  * <p>评分模型（加权求和，总分 0-100）：
  *

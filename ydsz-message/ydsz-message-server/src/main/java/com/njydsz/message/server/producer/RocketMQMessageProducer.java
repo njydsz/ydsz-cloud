@@ -12,7 +12,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
@@ -56,7 +56,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
    * @return RocketMQ 消息 ID
    */
   @Override
-  public String syncSend(MessageRequest req) {
+  public String syncSend(MessageItemRequestDTO req) {
     if (req == null) {
       throw new IllegalArgumentException("MessageRequest must not be null");
     }
@@ -92,7 +92,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
    * @param req 消息请求
    */
   @Override
-  public void asyncSend(MessageRequest req) {
+  public void asyncSend(MessageItemRequestDTO req) {
     if (req == null) {
       throw new IllegalArgumentException("MessageRequest must not be null");
     }
@@ -127,7 +127,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
     }
   }
 
-  private void ensureMessageId(MessageRequest req) {
+  private void ensureMessageId(MessageItemRequestDTO req) {
     if (!StringUtils.hasText(req.getMessageId())) {
       req.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
     }
@@ -148,7 +148,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
    * @param req 消息请求
    * @return destination 字符串（topic:tag）
    */
-  private String buildDestination(MessageRequest req) {
+  private String buildDestination(MessageItemRequestDTO req) {
     String priority = req.getPriority();
     String tag = resolvePriorityTag(priority);
     return YdszMessageTopics.TOPIC_MESSAGE + ":" + tag;
@@ -182,7 +182,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
    * @return RocketMQ 半消息 ID（后续 commit/rollback 由 TransactionListener 决定）
    */
   @Override
-  public String sendTransactionMessage(MessageRequest req) {
+  public String sendTransactionMessage(MessageItemRequestDTO req) {
     if (req == null) {
       throw new IllegalArgumentException("MessageRequest must not be null");
     }

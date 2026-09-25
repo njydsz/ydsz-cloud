@@ -1,6 +1,6 @@
 package com.njydsz.message.server.service.chain;
 
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 
 /**
  * 消息发送管线处理器接口。
@@ -29,7 +29,7 @@ public interface SendHandler {
    * @param ctx 管线上下文（各 Handler 共享）
    * @return true 表示通过，false 表示短路
    */
-  boolean handle(MessageRequest request, SendContext ctx);
+  boolean handle(MessageItemRequestDTO request, SendContext ctx);
 
   /**
    * Handler 执行顺序（升序，值越小越先执行）。

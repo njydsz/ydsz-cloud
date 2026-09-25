@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.chain.SendContext;
@@ -45,7 +45,7 @@ public class ThrottlingHandler implements SendHandler {
   private final MessageMetrics messageMetrics;
 
   @Override
-  public boolean handle(MessageRequest request, SendContext ctx) {
+  public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
     String channel = ctx.getChannel();
     String bizType = ctx.getBizType();
     String receiver = ctx.getReceiver();
@@ -53,7 +53,7 @@ public class ThrottlingHandler implements SendHandler {
     // 1. 通道级 QPS 限流
     if (!guardService.tryAcquire(buildChannelLimitKey(channel, bizType), 1)) {
       messageMetrics.recordSend(channel, "FAILED", 0);
-      ctx.setErrorResult(MessageResult.fail(
+      ctx.setErrorResult(MessageSendResultVO.fail(
           channel,
           MessageExceptionCode.SEND_RATE_LIMITED.getCode(),
           "发送限流，请稍后重试",
@@ -65,7 +65,7 @@ public class ThrottlingHandler implements SendHandler {
     if (!guardService.checkSendLimit(
         channel, receiver, templateCode, ctx.getTenantId(), request.getPriority())) {
       messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
-      ctx.setErrorResult(MessageResult.fail(
+      ctx.setErrorResult(MessageSendResultVO.fail(
           channel,
           MessageExceptionCode.SEND_DIMENSION_LIMITED.getCode(),
           "多维度限流：receiver/template/tenant 超限",
@@ -77,7 +77,7 @@ public class ThrottlingHandler implements SendHandler {
     if (StringUtils.hasText(receiver)
         && !guardService.checkFrequency(receiver, channel, bizType)) {
       messageMetrics.recordSend(channel, "FAILED", 0);
-      ctx.setErrorResult(MessageResult.fail(
+      ctx.setErrorResult(MessageSendResultVO.fail(
           channel,
           MessageExceptionCode.SEND_FREQUENCY_LIMITED.getCode(),
           "发送频率超限",
@@ -92,7 +92,7 @@ public class ThrottlingHandler implements SendHandler {
             : SystemConstants.SYSTEM_USER_ID;
     if (!senderQuotaService.checkQuota(senderId, channel)) {
       messageMetrics.recordSend(channel, "QUOTA_EXCEEDED", 0);
-      ctx.setErrorResult(MessageResult.fail(
+      ctx.setErrorResult(MessageSendResultVO.fail(
           channel,
           MessageExceptionCode.SEND_QUOTA_EXHAUSTED.getCode(),
           "发送方配额已用尽: senderId=" + senderId,

@@ -10,8 +10,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
@@ -54,7 +54,7 @@ public class UserPreferenceHandler implements SendHandler {
   private final MessageMetrics messageMetrics;
 
   @Override
-  public boolean handle(MessageRequest request, SendContext ctx) {
+  public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
     String receiver = ctx.getReceiver();
     String templateCode = ctx.getTemplateCode();
     String channel = ctx.getChannel();
@@ -67,7 +67,7 @@ public class UserPreferenceHandler implements SendHandler {
             templateCode,
             channel);
         messageMetrics.recordSend(channel, "BLOCKED", 0);
-        ctx.setErrorResult(MessageResult.fail(
+        ctx.setErrorResult(MessageSendResultVO.fail(
             channel,
             MessageExceptionCode.USER_UNSUBSCRIBED.getCode(),
             "用户已退订该消息",
@@ -109,7 +109,7 @@ public class UserPreferenceHandler implements SendHandler {
       return handleSmartTiming(request, ctx, pref, stc, channel, receiver);
     }
     messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
-    ctx.setErrorResult(MessageResult.fail(
+    ctx.setErrorResult(MessageSendResultVO.fail(
         channel,
         MessageExceptionCode.DND_PERIOD_ACTIVE.getCode(),
         "当前为免打扰时段",
@@ -135,7 +135,7 @@ public class UserPreferenceHandler implements SendHandler {
    * @return true 表示继续管线，false 表示中断（延迟到定时后发送）
    */
   private boolean handleSmartTiming(
-      MessageRequest request,
+      MessageItemRequestDTO request,
       SendContext ctx,
       MsgPreferenceVO pref,
       MessageProperties.SmartTimingConfig stc,
@@ -145,7 +145,7 @@ public class UserPreferenceHandler implements SendHandler {
     LocalTime end = parseTimeSafely(pref.getDndEnd());
     if (start == null || end == null) {
       messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
-      ctx.setErrorResult(MessageResult.fail(channel, null, "当前为免打扰时段", "当前为免打扰时段", null));
+      ctx.setErrorResult(MessageSendResultVO.fail(channel, null, "当前为免打扰时段", "当前为免打扰时段", null));
       return false;
     }
     LocalDateTime now = LocalDateTime.now();
@@ -161,7 +161,7 @@ public class UserPreferenceHandler implements SendHandler {
           deferSeconds,
           maxDeferSeconds);
       messageMetrics.recordSend(channel, "DND_DROPPED", 0);
-      ctx.setErrorResult(MessageResult.fail(
+      ctx.setErrorResult(MessageSendResultVO.fail(
           channel,
           MessageExceptionCode.DND_DEFER_EXCEED.getCode(),
           "免打扰时段消息延迟过久,已丢弃",
@@ -228,7 +228,7 @@ public class UserPreferenceHandler implements SendHandler {
    * @param request 消息发送请求
    * @return 优先级字符串（如 NORMAL、URGENT）
    */
-  private String parsePriority(MessageRequest request) {
+  private String parsePriority(MessageItemRequestDTO request) {
     return request.getPriority() != null ? request.getPriority() : "NORMAL";
   }
 }

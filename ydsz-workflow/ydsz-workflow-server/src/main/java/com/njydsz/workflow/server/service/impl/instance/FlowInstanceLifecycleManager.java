@@ -118,7 +118,7 @@ public class FlowInstanceLifecycleManager extends AbstractFlowInstanceLifecycle 
       FlowAuditLogRepository auditLogRepository,
       FlowHisTaskRepository hisTaskRepository,
       FlowTimerService timerService,
-      NameAssembler nameAssembler,
+      @SuppressWarnings("deprecation") NameAssembler nameAssembler,
       FlowInstanceVariableManager variableManager) {
     super(
         instanceRepository,

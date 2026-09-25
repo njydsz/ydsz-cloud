@@ -152,4 +152,27 @@
         <!-- P0 整改（云顶规范 34.6 Step 6）：server 不依赖 infra，
              通过 Spring 注入 domain 层 Repository 接口，运行时由 infra 实现提供 -->
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!--
+                        抑制弃用告警：ydsz-common-feign 的 NameAssembler/NameType/MessageRequest/MessageResult
+                        以及 ydzs-common-auth 的 @DataScope 已标记弃用，但迁移至 common-core 尚未完成。
+                        由于 Lombok @RequiredArgsConstructor 生成的构造函数参数无法通过 @SuppressWarnings
+                        在源码级抑制，故通过 compilerArgs 在模块级关闭 deprecation lint。
+                        待 common-core 迁移完成后移除此配置。
+                    -->
+                    <compilerArgs>
+                        <arg>-Xlint:-deprecation,-classfile</arg>
+                        <arg>-processor</arg>
+                        <arg>lombok.launch.AnnotationProcessorHider$AnnotationProcessor,lombok.launch.AnnotationProcessorHider$ClaimingProcessor,org.mapstruct.ap.MappingProcessor</arg>
+                    </compilerArgs>
+                    <showDeprecation>false</showDeprecation>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

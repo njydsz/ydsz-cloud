@@ -9,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.channel.EmailMessage;
 import com.njydsz.common.notify.channel.EmailNotifySender;
@@ -82,12 +82,12 @@ public class EmailChannel implements MessageChannel {
    * @return 发送结果（含供应商侧追踪 ID）
    */
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (!emailNotifySender.isEnabled()) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "邮件通知未启用", "邮件通知未启用", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "邮件通知未启用", "邮件通知未启用", null);
     }
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-      return MessageResult.fail(CHANNEL_TYPE, null, "收件人邮箱不能为空", "收件人邮箱不能为空", null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, "收件人邮箱不能为空", "收件人邮箱不能为空", null);
     }
     try {
       String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
@@ -119,15 +119,15 @@ public class EmailChannel implements MessageChannel {
       String traceId = CHANNEL_TYPE + "-" + snowflakeIdGenerator.nextId();
       if (result.isSuccess()) {
         log.info("[EMAIL] 发送成功: to={} subject={}", request.getReceiver(), subject);
-        return MessageResult.ok(CHANNEL_TYPE, traceId);
+        return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
       } else {
         log.warn("[EMAIL] 发送失败: to={}, reason={}", request.getReceiver(), result.getErrorMessage());
-        return MessageResult.fail(CHANNEL_TYPE, traceId, result.getErrorMessage(),
+        return MessageSendResultVO.fail(CHANNEL_TYPE, traceId, result.getErrorMessage(),
             result.getErrorMessage(), null);
       }
     } catch (Exception e) {
       log.error("[EMAIL] 发送异常: to={} reason={}", request.getReceiver(), e.getMessage(), e);
-      return MessageResult.fail(
+      return MessageSendResultVO.fail(
           CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
           e.getClass().getSimpleName() + ": " + e.getMessage(), null);
     }

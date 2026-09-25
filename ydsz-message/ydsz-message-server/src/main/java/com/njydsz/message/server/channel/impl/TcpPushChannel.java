@@ -16,8 +16,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.netty.codec.LengthFieldCodec;
 import com.njydsz.common.netty.config.NettyProperties;
@@ -99,10 +99,10 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
   }
 
   @Override
-  public MessageResult send(MessageRequest request) {
+  public MessageSendResultVO send(MessageItemRequestDTO request) {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
       String msg = MessageUtils.getMessage("push.receiver.not.empty", "推送接收人不能为空");
-      return MessageResult.fail(CHANNEL_TYPE, null, msg, msg, null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, msg, msg, null);
     }
     String traceId = "PUSH-" + snowflakeIdGenerator.nextId();
     String userId = request.getReceiver();
@@ -113,7 +113,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
       log.warn("[TCP-PUSH] 用户不在线,无法推送: userId={}", userId);
       String offlineMsg = MessageUtils.getMessage("push.user.offline", "用户不在线: {0}");
       offlineMsg = offlineMsg.replace("{0}", userId);
-      return MessageResult.fail(CHANNEL_TYPE, null, offlineMsg, offlineMsg, null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, offlineMsg, offlineMsg, null);
     }
     try {
       // 构建推送消息 JSON
@@ -134,12 +134,12 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
           userId,
           traceId,
           request.getSubject());
-      return MessageResult.ok(CHANNEL_TYPE, traceId);
+      return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
     } catch (Exception e) {
       log.error("[TCP-PUSH] 推送异常: userId={} err={}", userId, e.getMessage(), e);
       String exMsg = MessageUtils.getMessage("push.exception", "推送异常: {0}");
       exMsg = exMsg.replace("{0}", e.getMessage());
-      return MessageResult.fail(CHANNEL_TYPE, null, exMsg, exMsg, null);
+      return MessageSendResultVO.fail(CHANNEL_TYPE, null, exMsg, exMsg, null);
     }
   }
 

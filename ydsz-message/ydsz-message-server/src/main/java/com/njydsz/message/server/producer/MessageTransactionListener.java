@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.TenantContextHolder;
-import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.message.MessageUtils;
@@ -40,7 +40,7 @@ import com.njydsz.message.server.service.TemplateService;
  * <p>半消息发送成功后,RocketMQ 回调 {@link #executeLocalTransaction} 执行校验：
  *
  * <ol>
- *   <li>解析 MessageRequest
+ *   <li>解析 MessageItemRequestDTO
  *   <li>校验通道启用 + 模板存在且 ENABLED
  *   <li>校验通过 → COMMIT（半消息投递,消费端可消费）
  *   <li>校验失败 → ROLLBACK（半消息丢弃,消费端不可见）
@@ -64,7 +64,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
 
   @Override
   public RocketMQLocalTransactionState executeLocalTransaction(Message message, Object arg) {
-    MessageRequest req = resolveRequest(message, arg);
+    MessageItemRequestDTO req = resolveRequest(message, arg);
     if (req == null) {
       log.warn("[TxListener] executeLocalTransaction: 请求为 null,ROLLBACK");
       return RocketMQLocalTransactionState.ROLLBACK;
@@ -95,7 +95,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
 
   @Override
   public RocketMQLocalTransactionState checkLocalTransaction(Message message) {
-    MessageRequest req = resolveRequest(message, null);
+    MessageItemRequestDTO req = resolveRequest(message, null);
     if (req == null) {
       log.warn("[TxListener] checkLocalTransaction: 无法解析请求,ROLLBACK");
       return RocketMQLocalTransactionState.ROLLBACK;
@@ -121,21 +121,21 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
   }
 
   /**
-   * 从 RocketMQ Message + arg 中解析 MessageRequest。
+   * 从 RocketMQ Message + arg 中解析 MessageItemRequestDTO。
    *
    * <p>优先从 arg（sendMessageInTransaction 的第三个参数）解析, arg 为 null 时从 message payload 解析。
    *
-   * @param message RocketMQ 消息对象（payload 中可能含 MessageRequest JSON）
-   * @param arg  sendMessageInTransaction 的第三个参数（可能含 MessageRequest）
-   * @return 解析出的 MessageRequest，无法解析时返回 null
+   * @param message RocketMQ 消息对象（payload 中可能含 MessageItemRequestDTO JSON）
+   * @param arg  sendMessageInTransaction 的第三个参数（可能含 MessageItemRequestDTO）
+   * @return 解析出的 MessageItemRequestDTO，无法解析时返回 null
    */
-  private MessageRequest resolveRequest(Message message, Object arg) {
-    if (arg instanceof MessageRequest req) {
+  private MessageItemRequestDTO resolveRequest(Message message, Object arg) {
+    if (arg instanceof MessageItemRequestDTO req) {
       return req;
     }
     if (arg != null) {
       try {
-        return JsonMapper.getDefault().convertValue(arg, MessageRequest.class);
+        return JsonMapper.getDefault().convertValue(arg, MessageItemRequestDTO.class);
       } catch (Exception ignored) {
         // fall through to payload parsing
       }
@@ -145,10 +145,10 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     }
     Object payload = message.getPayload();
     if (payload instanceof String str) {
-      return YdszJson.fromJson(str, MessageRequest.class);
+      return YdszJson.fromJson(str, MessageItemRequestDTO.class);
     }
     try {
-      return JsonMapper.getDefault().convertValue(payload, MessageRequest.class);
+      return JsonMapper.getDefault().convertValue(payload, MessageItemRequestDTO.class);
     } catch (Exception e) {
       log.warn("[TxListener] resolveRequest: 解析失败: {}", e.getMessage(), e);
       return null;
@@ -162,7 +162,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
    * @param req 待校验的消息发送请求
    * @return 校验失败原因，null 表示校验通过
    */
-  private String validateRequest(MessageRequest req) {
+  private String validateRequest(MessageItemRequestDTO req) {
     if (!StringUtils.hasText(req.getChannel())) {
       return MessageUtils.getMessage("message.send.channelEmpty", "通道为空");
     }
