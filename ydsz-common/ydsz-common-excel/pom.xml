@@ -17,7 +17,7 @@
 
     <artifactId>ydsz-common-excel</artifactId>
     <name>ydsz-common-excel</name>
-    <description>高性能 Excel 处理模块 — 双引擎架构（零 POI 快速路径 + POI 兼容路径）、MethodHandle 字段访问优化、公式注入防护</description>
+    <description>高性能 Excel 处理模块 — 纯手工 OOXML 字节流引擎（零 POI 依赖）、MethodHandle 字段访问优化、公式注入防护</description>
 
     <dependencies>
         <!-- ==================== 同层模块依赖 ==================== -->
@@ -28,15 +28,7 @@
         </dependency>
 
         <!-- ==================== 第三方依赖 ==================== -->
-        <!-- Apache POI -->
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-        </dependency>
+        <!-- 零 POI 依赖：纯手工 OOXML 字节流读写 -->
 
         <!-- Jakarta Bean Validation API（JSR-303 标准校验） -->
         <dependency>
