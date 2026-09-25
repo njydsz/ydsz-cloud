@@ -65,11 +65,16 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>
         </dependency>
-        <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-core</artifactId>
-        </dependency>
+    <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-core</artifactId>
+    </dependency>
+    <!-- P3-3: Excel 导出能力（投递日志流式导出，使用 ydsz-common-excel） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-excel</artifactId>
+    </dependency>
 
         <!-- P1-1: 审计模块（@EnableYdszAudit + @Audit AOP 切面） -->
         <dependency>

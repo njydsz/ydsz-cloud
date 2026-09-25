@@ -33,6 +33,8 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.idempotent.annotation.IdempotentExempt;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
@@ -46,6 +48,8 @@ import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
+import com.njydsz.cronjob.server.vo.JobExportVO;
+import com.njydsz.cronjob.server.vo.JobLogExportVO;
 
 /**
  * 任务调度 Controller
@@ -492,7 +496,155 @@ public class JobController {
   }
 
   /**
-   * 重新加载所有任务
+   * 导出任务列表（Excel）
+   *
+   * <p>根据当前过滤（keyword/status/group）条件导出任务列表，自动处理多页分页与流式写入（每次 100 条）。数据量较大时也能保持低内存占用。
+   * 文件名为 {@code jobs_yyyyMMddHHmmss.xlsx}。
+   *
+   * <p>Excel 文件名、表头、列宽通过 {@link JobExportVO} 上的 {@code @ExcelProperty} 注解定义。
+   *
+   * @param keyword 关键字过滤（同 {@link #page}）
+   * @param status 状态过滤（同 {@link #page}）
+   * @param group 分组过滤（同 {@link #page}）
+   */
+  @Operation(summary = "导出任务列表（Excel）")
+  @GetMapping("/export")
+  public void exportJobs(@RequestParam(required = false) String keyword,
+      @RequestParam(required = false) String status, @RequestParam(required = false) String group,
+      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+    String fileName = "jobs_" + java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+        .format(LocalDateTime.now()) + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader("Content-Disposition", "attachment; filename="
+        + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+            .replace("+", "%20"));
+
+    final int pageSize = 200;
+    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        ExcelWriter writer = ExcelFacade.write(out, JobExportVO.class);) {
+      int pageNum = 1;
+      while (true) {
+        PageResponse<List<JobVO>> page = jobService.page(pageNum, pageSize, keyword, status, group);
+        if (page == null || page.getData() == null || page.getData().isEmpty()) {
+          break;
+        }
+        List<JobExportVO> rows = new ArrayList<>(page.getData().size());
+        for (JobVO vo : page.getData()) {
+          rows.add(toJobExportVO(vo));
+        }
+        writer.doWrite(rows);
+        if (pageNum * pageSize >= page.getTotal()) {
+          break;
+        }
+        pageNum++;
+      }
+      writer.finish();
+      response.getOutputStream().write(out.toByteArray());
+    }
+  }
+
+  /**
+   * 导出任务执行日志（Excel）
+   *
+   * <p>根据当前过滤（jobKey/status）条件导出执行日志，自动处理多页分页与流式写入（每次 200 条）。
+   * 文件名为 {@code job_logs_yyyyMMddHHmmss.xlsx}。
+   *
+   * @param jobKey 任务 JOB_KEY 过滤（同 {@link #pageLog}）
+   * @param status 状态过滤（同 {@link #pageLog}）
+   */
+  @Operation(summary = "导出执行日志（Excel）")
+  @GetMapping("/log/export")
+  public void exportJobLogs(@RequestParam(required = false) String jobKey,
+      @RequestParam(required = false) String status,
+      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+    String fileName =
+        "job_logs_" + java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+            .format(LocalDateTime.now()) + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader("Content-Disposition", "attachment; filename="
+        + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+            .replace("+", "%20"));
+
+    final int pageSize = 200;
+    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        ExcelWriter writer = ExcelFacade.write(out, JobLogExportVO.class);) {
+      int pageNum = 1;
+      while (true) {
+        PageResponse<List<JobLogVO>> page = jobService.pageLog(pageNum, pageSize, jobKey, status);
+        if (page == null || page.getData() == null || page.getData().isEmpty()) {
+          break;
+        }
+        List<JobLogExportVO> rows = new ArrayList<>(page.getData().size());
+        for (JobLogVO vo : page.getData()) {
+          rows.add(toJobLogExportVO(vo));
+        }
+        writer.doWrite(rows);
+        if (pageNum * pageSize >= page.getTotal()) {
+          break;
+        }
+        pageNum++;
+      }
+      writer.finish();
+      response.getOutputStream().write(out.toByteArray());
+    }
+  }
+
+  // ==================== 私有转换方法（domain VO → excel VO） ====================
+
+  /**
+   * 将 {@link JobVO} 转换为 Excel 导出行。
+   *
+   * @param vo 任务列表领域 VO
+   * @return Excel 导出行
+   */
+  private JobExportVO toJobExportVO(JobVO vo) {
+    JobExportVO export = new JobExportVO();
+    export.setId(vo.getId());
+    export.setJobName(vo.getJobName());
+    export.setJobGroup(vo.getJobGroup());
+    export.setStatus(vo.getStatus());
+    export.setJobKey(vo.getJobKey());
+    export.setHandler(vo.getHandler());
+    export.setCronExpression(vo.getCronExpression());
+    export.setScheduleType(vo.getScheduleType());
+    export.setNextFireTime(vo.getNextFireTime() != null ? vo.getNextFireTime().toString() : null);
+    export.setLastFireTime(vo.getLastFireTime() != null ? vo.getLastFireTime().toString() : null);
+    export.setFireCount(vo.getFireCount());
+    export.setSuccessCount(vo.getSuccessCount());
+    export.setFailCount(vo.getFailCount());
+    export.setCreatedBy(vo.getCreatedBy());
+    return export;
+  }
+
+  /**
+   * 将 {@link JobLogVO} 转换为 Excel 导出行。
+   *
+   * @param vo 任务执行日志领域 VO
+   * @return Excel 导出行
+   */
+  private JobLogExportVO toJobLogExportVO(JobLogVO vo) {
+    JobLogExportVO export = new JobLogExportVO();
+    export.setId(vo.getId());
+    export.setJobKey(vo.getJobKey());
+    export.setStartTime(vo.getStartTime() != null ? vo.getStartTime().toString() : null);
+    export.setEndTime(vo.getEndTime() != null ? vo.getEndTime().toString() : null);
+    export.setDurationMs(vo.getDurationMs());
+    export.setStatus(vo.getStatus());
+    export.setTriggerType(vo.getTriggerType());
+    export.setExecNodeId(vo.getExecNodeId());
+    export.setShardIndex(vo.getShardIndex());
+    export.setSlow(vo.getSlow() != null && vo.getSlow() == 1);
+    export.setCreatedAt(vo.getCreatedAt() != null ? vo.getCreatedAt().toString() : null);
+    if (vo.getErrorMessage() != null && vo.getErrorMessage().length() > 200) {
+      export.setErrorMessage(vo.getErrorMessage().substring(0, 200) + "...");
+    } else {
+      export.setErrorMessage(vo.getErrorMessage());
+    }
+    return export;
+  }
+
+  /**
+   * 重新加载全部任务定义
    *
    * <p>从数据库 ydsz_job 表重新加载全部任务到内存调度器。 典型场景：① 多实例部署时强制全集群对齐；② 调度器异常重启后人工恢复； ③ 任务被外部直接修改 DB 后强制重载。
    *

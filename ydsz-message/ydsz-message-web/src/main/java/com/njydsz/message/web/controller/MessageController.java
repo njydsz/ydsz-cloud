@@ -25,6 +25,9 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -35,6 +38,7 @@ import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
 import com.njydsz.message.server.service.core.MessageService;
+import com.njydsz.message.web.vo.MsgLogExportVO;
 
 /**
  * 消息发送 Controller。

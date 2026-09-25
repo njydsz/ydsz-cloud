@@ -181,6 +181,8 @@ class ExcelBenchmarkTest {
           .sheet(0)
           .doRead(new ReadListener<SalesRecord>() {
             @Override
+            public void onStart(AnalysisContext ctx) {}
+            @Override
             public void onData(AnalysisContext ctx, SalesRecord data) {
               result.add(data);
             }
@@ -202,6 +204,8 @@ class ExcelBenchmarkTest {
       ExcelFacade.read(new ByteArrayInputStream(xlsx), SalesRecord.class)
           .sheet(0)
           .doRead(new ReadListener<SalesRecord>() {
+            @Override
+            public void onStart(AnalysisContext ctx) {}
             @Override
             public void onData(AnalysisContext ctx, SalesRecord data) {
               result.add(data);
