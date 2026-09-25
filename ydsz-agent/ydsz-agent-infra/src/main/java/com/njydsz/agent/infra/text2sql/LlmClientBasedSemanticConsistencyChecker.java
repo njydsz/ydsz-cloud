@@ -11,6 +11,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
+import com.njydsz.common.json.parser.TolerantJsonUtils;
 
 /**
  * 基于 LLM 的语义一致性校验实现。
@@ -105,55 +106,20 @@ public class LlmClientBasedSemanticConsistencyChecker implements SemanticConsist
    */
   private ConsistencyCheckResult parseCheckResult(
       String content, String userQuery, String generatedSql) {
-    try {
-      // 简单 JSON 解析（避免引入额外依赖）
-      String trimmed = content.trim();
-      // 移除可能的 markdown 代码块包裹
-      if (trimmed.startsWith("```")) {
-        int firstNewline = trimmed.indexOf('\n');
-        int lastFence = trimmed.lastIndexOf("```");
-        if (firstNewline > 0 && lastFence > firstNewline) {
-          trimmed = trimmed.substring(firstNewline + 1, lastFence).trim();
-        }
-      }
-      // 提取 score
-      int scoreStart = trimmed.indexOf("\"score\"");
-      if (scoreStart < 0) {
-        return new ConsistencyCheckResult(1.0, "无法解析 LLM 响应，默认通过");
-      }
-      int colonIndex = trimmed.indexOf(':', scoreStart);
-      int commaIndex = trimmed.indexOf(',', colonIndex);
-      int braceIndex = trimmed.indexOf('}', colonIndex);
-      int endIndex = commaIndex > 0 ? commaIndex : braceIndex;
-      if (colonIndex < 0 || endIndex < 0) {
-        return new ConsistencyCheckResult(1.0, "无法解析 LLM 响应格式，默认通过");
-      }
-      double score = Double.parseDouble(trimmed.substring(colonIndex + 1, endIndex).trim());
-      // 限制分数范围
-      score = Math.max(0.0, Math.min(1.0, score));
+    // 剥离 LLM 输出中可能存在的 markdown 代码块包裹（P2-12 统一容错 JSON 解析）
+    String json = TolerantJsonUtils.stripMarkdownCodeBlock(content);
+    // 提取 score（默认值 1.0 表示解析失败时默认通过）
+    double score = TolerantJsonUtils.extractDoubleField(json, "score", 1.0);
+    score = Math.max(0.0, Math.min(1.0, score));
+    // 提取 reasoning（默认值 "LLM 校验通过"）
+    String reasoning = TolerantJsonUtils.extractStringField(json, "reasoning", "LLM 校验通过");
 
-      // 提取 reasoning
-      String reasoning = "LLM 校验通过";
-      int reasonStart = trimmed.indexOf("\"reasoning\"");
-      if (reasonStart > 0) {
-        int reasonColon = trimmed.indexOf(':', reasonStart);
-        if (reasonColon > 0) {
-          int reasonEnd = trimmed.indexOf('}', reasonColon);
-          if (reasonEnd > reasonColon) {
-            reasoning =
-                trimmed.substring(reasonColon + 1, reasonEnd).trim().replaceAll("^\"|\"$", "");
-          }
-        }
-      }
-
-      log.info(
-          "[SemanticConsistency] 校验完成: score={}, query='{}'",
-          score,
-          userQuery.length() > QUERY_PREVIEW_LENGTH ? userQuery.substring(0, QUERY_PREVIEW_LENGTH) + "..." : userQuery);
-      return new ConsistencyCheckResult(score, reasoning);
-    } catch (NumberFormatException e) {
-      log.warn("[SemanticConsistency] 解析 LLM 响应失败: {}", e.getMessage());
-      return new ConsistencyCheckResult(1.0, "解析失败，默认通过");
-    }
+    log.info(
+        "[SemanticConsistency] 校验完成: score={}, query='{}'",
+        score,
+        userQuery.length() > QUERY_PREVIEW_LENGTH
+            ? userQuery.substring(0, QUERY_PREVIEW_LENGTH) + "..."
+            : userQuery);
+    return new ConsistencyCheckResult(score, reasoning);
   }
 }
