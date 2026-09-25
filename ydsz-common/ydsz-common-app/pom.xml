@@ -102,5 +102,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
+
+        <!-- P1-3: 显式声明 ydzs-common-locales（消除传递性依赖假零引用，保障 i18n 基座版本可控） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-locales</artifactId>
+        </dependency>
     </dependencies>
 </project>

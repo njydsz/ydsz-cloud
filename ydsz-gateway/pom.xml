@@ -184,6 +184,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
+        <!-- P1-2: ydzs-common-tenant 多租户透传（网关转发需透传 tenant context 给下游引擎） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
         <!-- P1-C: 审计日志集成（EventBridge 桥接 Reactive → Servlet-AOP 审计链路） -->
         <!-- provided 作用域避免传递 servlet 依赖（gateway 为 WebFlux 栈） -->
         <dependency>

@@ -2,7 +2,6 @@ package com.njydsz.cronjob.server.metrics;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
 import com.sun.management.OperatingSystemMXBean;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -108,7 +107,7 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   private final AtomicInteger poolActivePct = new AtomicInteger(0);
 
   private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-  private final OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
+  private final OperatingSystemMXBean osMXBean = (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 
   // ============================== Gauge 数据源（可选注入，避免循环依赖） ==============================
   /** 调度引擎配置属性 */

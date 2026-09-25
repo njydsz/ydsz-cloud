@@ -116,8 +116,8 @@ public class JobGroupController {
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size) {
     // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
-    JobRepository.PageResult<JobVO> result = jobRepository.pageByGroup(jobGroup, page, size);
-    return YdszResponse.success(PageResponse.success((long) page, (long) size, result.getTotal(), result.getRecords()));
+    PageResponse<List<JobVO>> result = jobRepository.pageByGroup(jobGroup, page, size);
+    return YdszResponse.success(result);
   }
 
   /**

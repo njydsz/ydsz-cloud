@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
@@ -133,7 +134,7 @@ public class JobRepositoryImpl implements JobRepository {
   // ===== Web 层查询方法实现 =====
 
   @Override
-  public PageResult<JobVO> page(String keyword, String status, String group, int page, int size) {
+  public PageResponse<List<JobVO>> page(String keyword, String status, String group, int page, int size) {
     Page<Job> pageObj = new Page<>(page, size);
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     if (keyword != null && !keyword.isBlank()) {
@@ -153,16 +154,18 @@ public class JobRepositoryImpl implements JobRepository {
     }
     wrapper.eq(Job::getIsDeleted, 0).orderByDesc(Job::getCreatedAt);
     Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
-    return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal(), page, size);
+    return
+    PageResponse.success(Long.valueOf(result.getTotal()), Long.valueOf(page), Long.valueOf(size), converter.jobListToVO(result.getRecords()));
   }
 
   @Override
-  public PageResult<JobVO> pageByGroup(String jobGroup, int page, int size) {
+  public PageResponse<List<JobVO>> pageByGroup(String jobGroup, int page, int size) {
     Page<Job> pageObj = new Page<>(page, size);
     LambdaQueryWrapper<Job> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Job::getJobGroup, jobGroup).eq(Job::getIsDeleted, 0).orderByDesc(Job::getCreatedAt);
     Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
-    return new PageResult<>(converter.jobListToVO(result.getRecords()), result.getTotal(), page, size);
+    return
+    PageResponse.success(Long.valueOf(result.getTotal()), Long.valueOf(page), Long.valueOf(size), converter.jobListToVO(result.getRecords()));
   }
 
   @Override

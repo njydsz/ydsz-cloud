@@ -1031,7 +1031,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   @Override
   @Transactional(readOnly = true)
   public PageResponse<List<JobVO>> page(int page, int size, String keyword, String status, String group) {
-    return jobRepository.page(keyword, status, group, page, size).toPageResponse();
+    return jobRepository.page(keyword, status, group, page, size);
   }
 
   /**
@@ -1046,7 +1046,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   @Override
   @Transactional(readOnly = true)
   public PageResponse<List<JobLogVO>> pageLog(int page, int size, String jobKey, String status) {
-    return jobLogRepository.pageByJobKeyAndStatus(jobKey, status, page, size).toPageResponse();
+    return jobLogRepository.pageByJobKeyAndStatus(jobKey, status, page, size);
   }
 
   // ==================== 内部执行逻辑 ====================

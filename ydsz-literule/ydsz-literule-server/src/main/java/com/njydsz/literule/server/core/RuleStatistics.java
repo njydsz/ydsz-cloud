@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertCategory;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
@@ -114,7 +115,7 @@ public class RuleStatistics {
             .severity(AlertSeverity.P2)
             .summary("慢规则检测：规则 " + ruleCode + " 评估耗时超阈值")
             .description("规则评估耗时 " + elapsedMs + "ms，超过阈值 " + slowRuleThresholdMs + "ms")
-            .category("performance")
+            .category(AlertCategory.PERFORMANCE)
             .labels(
                 Map.of(
                     "rule_code",

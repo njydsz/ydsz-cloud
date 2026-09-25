@@ -98,8 +98,8 @@ public class JobTaskController {
           @Max(100)
           int size) {
     // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
-    JobRepository.PageResult<JobTaskVO> result = jobTaskRepository.pageByLogId(logId, page, size);
-    return YdszResponse.success(PageResponse.success((long) page, (long) size, result.getTotal(), result.getRecords()));
+    PageResponse<List<JobTaskVO>> result = jobTaskRepository.pageByLogId(logId, page, size);
+    return YdszResponse.success(result);
   }
 
   /**

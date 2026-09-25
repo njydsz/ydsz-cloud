@@ -29,10 +29,5 @@
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>
         </dependency>
-        <!-- ydsz-common-redis -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-        </dependency>
     </dependencies>
 </project>

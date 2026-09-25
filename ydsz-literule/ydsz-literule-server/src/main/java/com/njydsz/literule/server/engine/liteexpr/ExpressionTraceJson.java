@@ -99,7 +99,7 @@ public final class ExpressionTraceJson {
     }
     try {
       Map<String, Object> map = nodeToMap(root);
-      return YdszJson.toJsonPretty(map);
+      return YdszJson.format(map);
     } catch (Exception e) {
       log.warn("[LiteExpr-Trace] Pretty JSON 序列化失败: {}", e.getMessage());
       return String.format("{\n  \"error\": \"%s\"\n}", e.getMessage());

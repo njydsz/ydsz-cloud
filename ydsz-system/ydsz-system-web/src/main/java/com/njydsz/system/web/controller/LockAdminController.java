@@ -125,7 +125,6 @@ public class LockAdminController {
     result.put("activeLocks", lockMetrics.getActiveLocks());
     result.put("lockTimeoutCount", lockMetrics.getLockTimeoutCount());
     result.put("watchdogRenewCount", lockMetrics.getWatchdogRenewCount());
-    result.put("idempotentHitCount", lockMetrics.getIdempotentHitCount());
     result.put("activeRenewalTasks", lockWatchDog.getActiveTaskCount());
     log.info("[ydsz-lock] [admin] 查询锁指标 active={}", lockMetrics.getActiveLocks());
     return result;

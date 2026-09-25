@@ -21,7 +21,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
  *   <li>返回领域 VO（{@link JobVO}），非 DTO / infra 实体
  *   <li>CUD 入参使用 DTO，查询入参使用具体字段
- *   <li>分页结果使用内部 {@link PageResult}，禁止 MyBatis-Plus API 透传
+ *   <li>分页结果使用 {@link PageResponse}，禁止 MyBatis-Plus API 透传
  * </ul>
  *
  * @author ydsz-team
@@ -177,9 +177,9 @@ public interface JobRepository {
    * @param jobGroup 任务分组（精确匹配）
    * @param page 页码（从 1 开始）
    * @param size 每页条数
-   * @return 分页结果（records=VO列表, total=总条数）
+   * @return 分页结果（{@link PageResponse}，data=VO列表）
    */
-  PageResult<JobVO> pageByGroup(String jobGroup, int page, int size);
+  PageResponse<List<JobVO>> pageByGroup(String jobGroup, int page, int size);
 
   /**
    * 按任务分组和状态查询任务列表。
@@ -232,9 +232,9 @@ public interface JobRepository {
    * @param group 分组过滤（可为空）
    * @param page 页码（从 1 开始）
    * @param size 每页条数
-   * @return 分页结果（records=VO列表, total=总条数）
+   * @return 分页结果（{@link PageResponse}，data=VO列表）
    */
-  PageResult<JobVO> page(String keyword, String status, String group, int page, int size);
+  PageResponse<List<JobVO>> page(String keyword, String status, String group, int page, int size);
 
   // ===== CUD 操作（入参 DTO，返回影响行数/主键） =====
 
@@ -312,94 +312,4 @@ public interface JobRepository {
    * @return 任务 VO 列表
    */
   List<JobVO> findByStatus(String status);
-
-  /**
-   * 分页查询内部结果对象。
-   *
-   * <p>携带 pageNum/pageSize 完整分页信息，Service/Controller 层可直接构造 PageResponse。
-   *
-   * @param <T> 记录类型
-   */
-  /**
-   * 分页查询内部结果对象。
-   *
-   * <p>携带 pageNum/pageSize 完整分页信息，Service/Controller 层可直接构造 {@link PageResponse}。
-   *
-   * @param <T> 记录类型
-   */
-  class PageResult<T> {
-    private final List<T> records;
-    private final long total;
-    private final int pageNum;
-    private final int pageSize;
-
-    /**
-     * 构造分页结果对象。
-     *
-     * @param records  当前页记录列表
-     * @param total    总记录数
-     * @param pageNum  页码（从 1 开始）
-     * @param pageSize 每页条数
-     */
-    public PageResult(List<T> records, long total, int pageNum, int pageSize) {
-      this.records = records;
-      this.total = total;
-      this.pageNum = pageNum;
-      this.pageSize = pageSize;
-    }
-
-    /**
-     * 获取当前页记录列表。
-     *
-     * @return 当前页记录列表（非 {@code null}）
-     */
-    public List<T> getRecords() {
-      return records;
-    }
-
-    /**
-     * 获取总记录数。
-     *
-     * @return 总记录数
-     */
-    public long getTotal() {
-      return total;
-    }
-
-    /**
-     * 获取页码。
-     *
-     * @return 页码（从 1 开始）
-     */
-    public int getPageNum() {
-      return pageNum;
-    }
-
-    /**
-     * 获取每页条数。
-     *
-     * @return 每页条数
-     */
-    public int getPageSize() {
-      return pageSize;
-    }
-
-    /**
-     * 转换为 PageResponse（供 Service 层直接返回给 Controller）。
-     *
-     * <p>携带完整分页信息（pageNum / pageSize / total / records），无信息丢失。
-     *
-     * @return PageResponse 对象
-     */
-    public PageResponse<List<T>> toPageResponse() {
-      PageResponse<List<T>> response = new PageResponse<>();
-      response.setCode("A00000");
-      response.setMsg("操作成功");
-      response.setData(records);
-      response.setTotal(total);
-      response.setPageNum((long) pageNum);
-      response.setPageSize((long) pageSize);
-      return response;
-    }
-  }
 }

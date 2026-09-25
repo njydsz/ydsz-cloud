@@ -169,9 +169,8 @@ public class JobWebhookController {
       @RequestParam(required = false) String eventType,
       @RequestParam(required = false) String jobKey) {
     // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
-    JobRepository.PageResult<JobWebhookVO> result = webhookRepository.pageBy(pageNum, size, eventType, jobKey);
-    return YdszResponse.success(
-        PageResponse.success((long) pageNum, (long) size, result.getTotal(), result.getRecords()));
+    PageResponse<List<JobWebhookVO>> result = webhookRepository.pageBy(pageNum, size, eventType, jobKey);
+    return YdszResponse.success(result);
   }
 
   /**

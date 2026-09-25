@@ -145,7 +145,7 @@ public class JobScanner {
           ThreadPoolTaskExecutor threadPool =
               applicationContext.getBean("cronjobDispatchExecutor", ThreadPoolTaskExecutor.class);
           this.dispatchPool = threadPool.getThreadPoolExecutor();
-          this.useExternalDispatchPool = true;
+          this.isUseExternalDispatchPool = true;
           log.info(
               "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true pool=common-thread(cronjobDispatchExecutor)",
               leaderRole,
@@ -162,7 +162,7 @@ public class JobScanner {
                   .threadNamePrefix("job-scanner-dispatch-")
                   .daemon(true)
                   .build();
-          this.useExternalDispatchPool = false;
+          this.isUseExternalDispatchPool = false;
           log.info(
               "[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={} (manual fallback)",
               leaderRole,

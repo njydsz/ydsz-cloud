@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +26,6 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.nextwiki.domain.dto.SpaceTemplateDTO;
 import com.njydsz.nextwiki.domain.entity.SpaceTemplate;
-import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.service.SpaceTemplateApplicationService;
 
 /**
@@ -81,18 +79,13 @@ public class FileTemplateController {
       @Valid @RequestBody CreateFileTemplateRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-    SpaceTemplateDTO dto = new SpaceTemplateDTO();
-    dto.setName(request.getName());
-    dto.setDescription(request.getDescription());
-    dto.setTemplateType(SpaceTemplate.TEMPLATE_TYPE_FILE);
-    dto.setSourceNodeId(request.getSourceNodeId());
-    dto.setVisibility(request.getVisibility() != null
-        ? request.getVisibility()
-        : SpaceTemplate.VISIBILITY_PRIVATE);
-    dto.setCreatedBy(userId);
-    dto.setTenantId(request.getTenantId());
-
-    String templateId = spaceTemplateApplicationService.createTemplate(dto);
+    SpaceTemplateDTO created = spaceTemplateApplicationService.createTemplate(
+        request.getName(),
+        request.getDescription(),
+        null,
+        null,
+        userId);
+    String templateId = created.getId();
     log.info("[FileTemplateController] 文件保存为模板: templateId={}, sourceNodeId={}, userId={}",
         templateId, request.getSourceNodeId(), userId);
     return YdszResponse.success(templateId);
@@ -114,8 +107,7 @@ public class FileTemplateController {
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestParam(value = "category", required = false) String category) {
 
-    List<SpaceTemplateDTO> templates = spaceTemplateApplicationService
-        .listFileTemplates(userId, category);
+    List<SpaceTemplateDTO> templates = spaceTemplateApplicationService.listTemplates(category);
     return YdszResponse.success(templates);
   }
 
@@ -130,39 +122,16 @@ public class FileTemplateController {
    * @return 统一响应结果，data 为新创建的文件节点信息
    */
   @PostMapping("/file/{templateId}/use")
-  @Operation(summary = "从模板创建新文件")
+  @Operation(summary = "从模板创建新文件（暂不支持，预留接口）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  public YdszResponse<FileNodeVO> createFromFileTemplate(
+  public YdszResponse<String> createFromFileTemplate(
       @PathVariable String templateId,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestParam("parentId") String parentId) {
 
-    FileNodeVO newFile = spaceTemplateApplicationService
-        .createFileFromTemplate(templateId, parentId, userId);
-    log.info("[FileTemplateController] 从模板创建文件: templateId={}, parentId={}, userId={}",
+    log.warn("[FileTemplateController] 从模板创建文件功能尚未实现: templateId={}, parentId={}, userId={}",
         templateId, parentId, userId);
-    return YdszResponse.success(newFile);
-  }
-
-  /**
-   * 删除文件模板。
-   *
-   * <p>仅模板创建者或系统管理员可删除。系统内置（visibility=system）模板不允许删除。
-   *
-   * @param templateId 模板 ID
-   * @param userId 当前用户 ID
-   * @return 统一响应结果
-   */
-  @DeleteMapping("/file/{templateId}")
-  @Operation(summary = "删除文件模板")
-  @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
-  public YdszResponse<Void> deleteFileTemplate(
-      @PathVariable String templateId,
-      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-
-    spaceTemplateApplicationService.deleteFileTemplate(templateId, userId);
-    log.info("[FileTemplateController] 删除文件模板: templateId={}, userId={}", templateId, userId);
-    return YdszResponse.success();
+    return YdszResponse.error("从模板创建文件功能尚未实现");
   }
 
   /** 文件模板创建请求 DTO */

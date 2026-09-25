@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 
 /**
@@ -188,9 +189,9 @@ public interface JobLogRepository {
    * @param status 状态过滤（可为空表示不限）
    * @param page 页码（从 1 开始）
    * @param size 每页条数
-   * @return 分页结果（records=VO列表, total=总条数）
+   * @return 分页结果（{@code PageResponse}，data=VO列表）
    */
-  JobRepository.PageResult<JobLogVO> pageByJobKeyAndStatus(String jobKey, String status, int page, int size);
+  PageResponse<List<JobLogVO>> pageByJobKeyAndStatus(String jobKey, String status, int page, int size);
 
   /**
    * 按 ID 查询执行日志。

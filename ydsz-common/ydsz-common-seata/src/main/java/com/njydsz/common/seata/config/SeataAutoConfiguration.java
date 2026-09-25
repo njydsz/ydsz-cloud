@@ -42,8 +42,11 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author ydsz-team
  * @since ACC-1
+ * @deprecated 自 26.09.25 起废弃（forRemoval=true）。当前零业务模块引用，分布式事务场景尚未启用。
+ *             计划 26.12 版本归档至 attic/ 目录，如有需要可在新项目中独立引入 Seata 官方 starter。
  */
 @Slf4j
+@Deprecated(forRemoval = true)
 @AutoConfiguration
 @EnableConfigurationProperties(SeataProperties.class)
 @ConditionalOnProperty(prefix = SeataProperties.PREFIX, name = "enabled", havingValue = "true")

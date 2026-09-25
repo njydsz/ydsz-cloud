@@ -53,6 +53,12 @@ public class TenantQuotaService {
   /** 月度 Key 保留 35 天 */
   private static final Duration MONTHLY_TTL = Duration.ofDays(35);
 
+  /** 日期格式化（yyyy-MM-dd） */
+  private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+  /** 月份格式化（yyyy-MM） */
+  private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
+
   /** 每日 Token 计数器（带 TTL 自动过期 + 本地降级） */
   private final QuotaCounter dailyTokenCounter;
 

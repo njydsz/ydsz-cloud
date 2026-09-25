@@ -20,8 +20,9 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
+import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
 import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
 
 /**
@@ -48,8 +49,8 @@ public class ActivityController {
   /** 最近访问记录仓储 */
   private final UserRecentRepository userRecentRepository;
 
-  /** 分享访问日志仓储 */
-  private final ShareAccessLogRepository shareAccessLogRepository;
+  /** 分享接收者仓储 */
+  private final ShareRecipientRepository shareRecipientRepository;
 
   /** 默认每页返回条数 */
   private static final int DEFAULT_LIMIT = 20;
@@ -75,27 +76,25 @@ public class ActivityController {
 
     int safeLimit = Math.min(Math.max(limit, 1), 50);
     int offset = Math.max((page - 1) * safeLimit, 0);
+    String tenantId = TenantContextHolder.getTenantId();
 
     // 1. 最近访问记录
-    var recents = userRecentRepository.findByUserIdOrderByAccessTimeDesc(userId, offset, safeLimit);
-    // 2. 分享给当前用户的记录
-    var shares = shareAccessLogRepository.findByRecipientUserIdOrderByAccessTimeDesc(userId,
-        offset, safeLimit);
+    var recents = userRecentRepository.findByUserIdWithPage(userId, tenantId, offset, safeLimit);
+    // 2. 分享给当前用户的记录（通过接收者仓储查询当前用户被分享的通知）
+    var shareRecipients = shareRecipientRepository.findByRecipientId(userId);
 
     // 合并、去重、排序（按时间倒序），取前 safeLimit 条
     List<ActivityItem> activities = Stream.concat(
         recents.stream().map(r -> ActivityItem.builder()
             .type(ActivityItem.TYPE_RECENT)
-            .fileNodeId(r.getFileNodeId())
-            .fileName(r.getFileName())
-            .activityTime(r.getAccessTime())
+            .fileNodeId(r.getNodeId())
+            .activityTime(r.getAccessedAt())
             .build()),
-        shares.stream().map(s -> ActivityItem.builder()
+        shareRecipients.stream().map(sr -> ActivityItem.builder()
             .type(ActivityItem.TYPE_SHARED)
-            .fileNodeId(s.getFileNodeId())
-            .fileName(s.getFileName())
-            .activityTime(s.getAccessTime())
-            .operatorId(s.getSharerUserId())
+            .fileNodeId(sr.getShareId())
+            .activityTime(sr.getViewedAt() != null ? sr.getViewedAt() : sr.getCreatedAt())
+            .operatorId(sr.getCreatedBy())
             .build()))
         .sorted((a, b) -> {
           if (a.getActivityTime() == null || b.getActivityTime() == null) {

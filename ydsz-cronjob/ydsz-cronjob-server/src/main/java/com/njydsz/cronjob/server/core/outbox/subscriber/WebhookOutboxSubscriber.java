@@ -5,6 +5,8 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.consumer.OutboxSubscriber;
@@ -29,6 +31,8 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
 @Component
 @RequiredArgsConstructor
 public class WebhookOutboxSubscriber implements OutboxSubscriber {
+
+  private static final Logger LOG = LoggerFactory.getLogger(WebhookOutboxSubscriber.class);
 
   private final WebhookEventDispatcher webhookEventDispatcher;
 

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
@@ -149,7 +150,7 @@ public class JobLogRepositoryImpl implements JobLogRepository {
   }
 
   @Override
-  public JobRepository.PageResult<JobLogVO> pageByJobKeyAndStatus(String jobKey, String status, int page, int size) {
+  public PageResponse<List<JobLogVO>> pageByJobKeyAndStatus(String jobKey, String status, int page, int size) {
     Page<JobLog> pageObj = new Page<>(page, size);
     LambdaQueryWrapper<JobLog> wrapper = new LambdaQueryWrapper<>();
     if (jobKey != null && !jobKey.isBlank()) {
@@ -160,7 +161,8 @@ public class JobLogRepositoryImpl implements JobLogRepository {
     }
     wrapper.orderByDesc(JobLog::getStartTime);
     Page<JobLog> result = jobLogMapper.selectPage(pageObj, wrapper);
-    return new JobRepository.PageResult<>(converter.jobLogListToVO(result.getRecords()), result.getTotal(), page, size);
+    return
+    PageResponse.success(Long.valueOf(result.getTotal()), Long.valueOf(page), Long.valueOf(size), converter.jobLogListToVO(result.getRecords()));
   }
 
   @Override

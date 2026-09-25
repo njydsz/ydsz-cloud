@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.domain.repository.JobRepository;
@@ -64,12 +65,13 @@ public class JobTaskRepositoryImpl implements JobTaskRepository {
   }
 
   @Override
-  public JobRepository.PageResult<JobTaskVO> pageByLogId(String logId, int page, int size) {
+  public PageResponse<List<JobTaskVO>> pageByLogId(String logId, int page, int size) {
     Page<JobTask> pageObj = new Page<>(page, size);
         LambdaQueryWrapper<JobTask> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobTask::getLogId, logId).eq(JobTask::getIsDeleted, 0).orderByAsc(JobTask::getCreatedAt);
     Page<JobTask> result = jobTaskMapper.selectPage(pageObj, wrapper);
-    return new JobRepository.PageResult<>(converter.jobTaskListToVO(result.getRecords()), result.getTotal(), page, size);
+    return
+    PageResponse.success(Long.valueOf(result.getTotal()), Long.valueOf(page), Long.valueOf(size), converter.jobTaskListToVO(result.getRecords()));
   }
 
   @Override

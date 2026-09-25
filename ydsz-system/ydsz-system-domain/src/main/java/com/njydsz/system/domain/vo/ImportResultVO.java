@@ -5,7 +5,9 @@ import java.util.List;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.excel.api.result.ExcelImportResult;
 
@@ -20,6 +22,8 @@ import com.njydsz.common.excel.api.result.ExcelImportResult;
  * @since 26.09.01
  */
 @Data
+@SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class ImportResultVO extends ExcelImportResult {

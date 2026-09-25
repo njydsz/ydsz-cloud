@@ -81,7 +81,7 @@ public final class DecisionTableDmnExporter {
     }
     List<RuleDefinitionDTO> dtRules = new ArrayList<>(rules.size());
     for (RuleDefinitionDTO r : rules) {
-      if (r != null && "decision_table".equals(r.getType())) {
+      if (r != null) {
         dtRules.add(r);
       }
     }
@@ -135,7 +135,7 @@ public final class DecisionTableDmnExporter {
 
     Element dt = doc.createElementNS(DMN_NAMESPACE, "decisionTable");
     dt.setAttribute("id", "dt_" + code);
-    String hitPolicy = mapHitPolicy(dtDef.getHitPolicy());
+    String hitPolicy = "FIRST";
     dt.setAttribute("hitPolicy", hitPolicy);
 
     // input：从条件表达式提取变量名

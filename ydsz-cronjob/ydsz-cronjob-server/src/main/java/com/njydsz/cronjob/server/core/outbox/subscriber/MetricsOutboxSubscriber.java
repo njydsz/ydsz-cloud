@@ -2,6 +2,8 @@ package com.njydsz.cronjob.server.core.outbox.subscriber;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.consumer.OutboxSubscriber;
@@ -24,6 +26,8 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @Component
 @RequiredArgsConstructor
 public class MetricsOutboxSubscriber implements OutboxSubscriber {
+
+  private static final Logger LOG = LoggerFactory.getLogger(MetricsOutboxSubscriber.class);
 
   /** 事件类型：任务执行成功（发布方约定的事件类型字符串） */
   private static final String JOB_SUCCESS = "JOB_SUCCESS";

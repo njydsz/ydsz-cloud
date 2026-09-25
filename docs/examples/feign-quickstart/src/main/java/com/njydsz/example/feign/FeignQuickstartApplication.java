@@ -17,6 +17,9 @@ import com.njydsz.common.feign.annotation.EnableYdszFeign;
  * </ul>
  *
  * <p><b>启动前提：</b>需要 Nacos 注册中心（或 Spring Cloud Config）准备好 user-service 的目标地址。
+ *
+ * @author ydsz-team
+ * @since 26.09.01
  */
 @SpringBootApplication
 @EnableYdszFeign

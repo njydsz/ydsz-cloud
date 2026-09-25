@@ -1,5 +1,6 @@
 package com.njydsz.common.file.domain;
 
+import java.util.Collections;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -38,7 +39,7 @@ public class ListObjectsResult {
    */
   public static ListObjectsResult empty() {
     ListObjectsResult result = new ListObjectsResult();
-    result.setObjects(List.of());
+    result.setObjects(Collections.emptyList());
     result.setNextCursor(null);
     result.setHasMore(false);
     result.setObjectCount(0);

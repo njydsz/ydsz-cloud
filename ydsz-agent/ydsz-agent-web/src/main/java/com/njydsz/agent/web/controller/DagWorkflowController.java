@@ -68,15 +68,13 @@ public class DagWorkflowController {
     if (isCreate) {
       entity = new DagWorkflow();
       entity.setWorkflowCode(generateWorkflowCode());
-      entity.setIsPublished(false);
     } else {
       entity = repository.findByCode(dto.getWorkflowCode())
           .orElseThrow(() -> new IllegalArgumentException("工作流不存在: " + dto.getWorkflowCode()));
     }
-    entity.setWorkflowName(dto.getWorkflowName());
+    entity.setName(dto.getWorkflowName());
     entity.setDescription(dto.getDescription());
-    entity.setDslContent(dto.getDslContent());
-    entity.setLayoutJson(dto.getLayoutJson());
+    entity.setDsl(dto.getDslContent());
     entity.setCategory(dto.getCategory());
     boolean ok = isCreate ? repository.insert(entity) : repository.updateById(entity);
     if (!ok) {

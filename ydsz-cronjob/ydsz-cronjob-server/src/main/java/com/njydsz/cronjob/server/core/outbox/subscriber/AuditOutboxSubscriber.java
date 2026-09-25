@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +34,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @Component
 @RequiredArgsConstructor
 public class AuditOutboxSubscriber implements OutboxSubscriber {
+
+  private static final Logger LOG = LoggerFactory.getLogger(AuditOutboxSubscriber.class);
 
   /** 日志 payload 截断长度 */
   private static final int MAX_PAYLOAD_LOG_LENGTH = 200;

@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 
 /**
@@ -94,9 +95,9 @@ public interface JobTaskRepository {
    * @param logId 执行日志 ID
    * @param page 页码（从 1 开始）
    * @param size 每页条数
-   * @return 分页结果（records=VO列表, total=总条数）
+   * @return 分页结果（{@code PageResponse}，data=VO列表）
    */
-  JobRepository.PageResult<JobTaskVO> pageByLogId(String logId, int page, int size);
+  PageResponse<List<JobTaskVO>> pageByLogId(String logId, int page, int size);
 
   /**
    * 统计指定日志 ID 的子任务总数（所有状态）。

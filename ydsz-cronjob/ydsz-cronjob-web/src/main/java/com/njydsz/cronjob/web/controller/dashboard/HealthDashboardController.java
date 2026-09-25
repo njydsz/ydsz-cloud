@@ -2,7 +2,6 @@ package com.njydsz.cronjob.web.controller.dashboard;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.lang.management.OperatingSystemMXBean;
 import com.sun.management.OperatingSystemMXBean;
 import java.net.InetAddress;
 import java.time.LocalDate;
@@ -120,7 +119,8 @@ public class HealthDashboardController {
   private final ObjectProvider<LeaderElector> leaderElectorProvider;
 
   private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-  private final OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
+  private final com.sun.management.OperatingSystemMXBean osMXBean =
+      (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 
   /**
    * 获取系统整体健康状态。

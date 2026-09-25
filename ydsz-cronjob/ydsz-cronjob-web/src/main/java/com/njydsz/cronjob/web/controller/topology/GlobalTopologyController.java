@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.cronjob.domain.repository.JobDagRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
@@ -93,9 +94,9 @@ public class GlobalTopologyController {
   @GetMapping("/global")
   public YdszResponse<Map<String, Object>> getGlobalTopology() {
     // 1. 查询所有任务（使用大分页获取全量）
-    JobRepository.PageResult<JobVO> pageResult =
+    PageResponse<List<JobVO>> pageResult =
         jobRepository.page(null, null, null, 1, MAX_TOPOLOGY_JOBS);
-    List<JobVO> jobs = pageResult.getRecords();
+    List<JobVO> jobs = pageResult.getData();
 
     if (jobs.size() >= MAX_TOPOLOGY_JOBS) {
       log.warn(

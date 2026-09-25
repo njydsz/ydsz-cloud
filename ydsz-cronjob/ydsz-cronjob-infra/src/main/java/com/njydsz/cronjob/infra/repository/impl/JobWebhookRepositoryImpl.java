@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
 import com.njydsz.cronjob.domain.repository.JobRepository;
@@ -74,7 +75,7 @@ public class JobWebhookRepositoryImpl implements JobWebhookRepository {
   }
 
   @Override
-  public JobRepository.PageResult<JobWebhookVO> pageBy(int pageNum, int size, String eventType, String jobKey) {
+  public PageResponse<List<JobWebhookVO>> pageBy(int pageNum, int size, String eventType, String jobKey) {
     Page<JobWebhook> pageObj = new Page<>(pageNum, size);
     LambdaQueryWrapper<JobWebhook> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(JobWebhook::getIsDeleted, false);
@@ -86,6 +87,7 @@ public class JobWebhookRepositoryImpl implements JobWebhookRepository {
     }
     wrapper.orderByDesc(JobWebhook::getCreatedAt);
     Page<JobWebhook> result = jobWebhookMapper.selectPage(pageObj, wrapper);
-    return new JobRepository.PageResult<>(converter.jobWebhookListToVO(result.getRecords()), result.getTotal(), pageNum, size);
+    return
+    PageResponse.success(Long.valueOf(result.getTotal()), Long.valueOf(pageNum), Long.valueOf(size), converter.jobWebhookListToVO(result.getRecords()));
   }
 }

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.config.properties.QuotaProperties;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -84,6 +85,15 @@ public class ChatService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
+  /** Token 成本计算器 */
+  private final TokenCostCalculator tokenCostCalculator;
+
+  /** 事件发布器 */
+  private final AgentEventPublisher eventPublisher;
+
+  /** 租户配额服务 */
+  private final TenantQuotaService quotaService;
+
   public ChatService(
       LlmClient llmClient,
       ConversationMemory memory,
@@ -105,6 +115,9 @@ public class ChatService {
     this.runtimeMetrics = runtimeMetrics;
     this.traceRecorder = traceRecorder;
     this.snowflakeIdGenerator = snowflakeIdGenerator;
+    this.tokenCostCalculator = tokenCostCalculator;
+    this.eventPublisher = eventPublisher;
+    this.quotaService = quotaService;
     // 将 5 个副作用依赖（含 memory/runtimeMetrics 副本）封装为 ChatPostProcessor
     this.postProcessor = new ChatPostProcessor(
         tokenCostCalculator,

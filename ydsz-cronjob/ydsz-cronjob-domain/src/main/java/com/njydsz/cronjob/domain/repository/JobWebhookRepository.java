@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 
 /**
@@ -83,7 +84,7 @@ public interface JobWebhookRepository {
    * @param size 每页条数
    * @param eventType 事件类型过滤（可为 null 表示不限）
    * @param jobKey 任务 KEY 过滤（可为 null 表示不限）
-   * @return 分页结果（records=VO列表, total=总条数）
+   * @return 分页结果（{@code PageResponse}，data=VO列表）
    */
-  JobRepository.PageResult<JobWebhookVO> pageBy(int pageNum, int size, String eventType, String jobKey);
+  PageResponse<List<JobWebhookVO>> pageBy(int pageNum, int size, String eventType, String jobKey);
 }

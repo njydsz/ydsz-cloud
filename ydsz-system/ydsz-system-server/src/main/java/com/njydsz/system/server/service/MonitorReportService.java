@@ -14,6 +14,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertCategory;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.system.domain.dto.MonitorErrorBatchDTO;
@@ -83,9 +84,6 @@ public class MonitorReportService {
 
   /** sourcemap 对象存储路径前缀 */
   private static final String SOURCEMAP_OBJECT_PREFIX = "sourcemaps/";
-
-  /** 告警分类：业务类告警 */
-  private static final String ALERT_CATEGORY_BUSINESS = "business";
 
   /** 告警名称：前端性能阈值告警 */
   private static final String ALERT_NAME_VITAL = "frontend-web-vital-alert";
@@ -203,7 +201,7 @@ public class MonitorReportService {
             .severity(AlertSeverity.P2)
             .summary("前端性能指标超出阈值: " + name)
             .description("Web Vital " + name + " 评级为 " + rating + ", 实测值 " + value)
-            .category(ALERT_CATEGORY_BUSINESS)
+            .category(AlertCategory.BUSINESS)
             .labels(Map.of("metric", name, "rating", rating))
             .value(BigDecimal.valueOf(value))
             .build());
