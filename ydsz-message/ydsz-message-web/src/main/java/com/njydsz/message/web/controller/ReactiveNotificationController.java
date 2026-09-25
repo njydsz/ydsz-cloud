@@ -3,7 +3,6 @@ package com.njydsz.message.web.controller;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +19,7 @@ import reactor.core.publisher.Sinks;
 
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.message.server.reactive.ReactiveEvent;
 import com.njydsz.message.server.reactive.ReactiveSseRegistry;
 
@@ -121,7 +121,7 @@ public class ReactiveNotificationController {
     public YdszResponse<String> publishEvent(@RequestBody ReactiveEvent event) {
         // 补充必要字段
         if (event.getEventId() == null || event.getEventId().isBlank()) {
-            event.setEventId(UUID.randomUUID().toString());
+            event.setEventId(IdGenerator.nextIdStr());
         }
         if (event.getTimestamp() == null) {
             event.setTimestamp(Instant.now());

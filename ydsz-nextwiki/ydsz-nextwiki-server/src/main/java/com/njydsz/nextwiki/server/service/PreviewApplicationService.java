@@ -10,7 +10,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
@@ -187,7 +187,7 @@ public class PreviewApplicationService {
     Path tempDirPath = Path.of(properties.getPreview().getTempDir());
     Files.createDirectories(tempDirPath);
 
-    String tempFileId = UUID.randomUUID().toString().replace("-", "");
+    String tempFileId = IdGenerator.nextIdStr();
     String suffix = node.getSuffix() != null ? node.getSuffix() : "tmp";
     Path tempFile = tempDirPath.resolve(tempFileId + "." + suffix);
 
@@ -210,7 +210,7 @@ public class PreviewApplicationService {
     try {
       inputFile = downloadToTemp(node);
 
-      String tempFileId = UUID.randomUUID().toString().replace("-", "");
+      String tempFileId = IdGenerator.nextIdStr();
       String tempDir = properties.getPreview().getTempDir();
       String libreofficePath = properties.getPreview().getLibreofficePath();
       outputDir = Path.of(tempDir).resolve("output-" + tempFileId);
