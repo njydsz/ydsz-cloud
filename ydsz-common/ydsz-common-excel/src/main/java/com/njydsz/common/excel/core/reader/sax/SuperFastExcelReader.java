@@ -230,6 +230,9 @@ public class SuperFastExcelReader {
     LOG.warn("已标记临时文件 JVM 退出时删除: path={}", tempFile);
   }
 
+  /** xlsx 文件允许的最大 ZipEntry 数量（防止恶意构造的 65535+ entry zip） */
+  private static final int MAX_ZIP_ENTRIES = 1024;
+
   /**
    * 读取 XLSX 文件（文件源，推荐入口）。
    *
@@ -241,6 +244,12 @@ public class SuperFastExcelReader {
    */
   public void read(Path file) throws Exception {
     try (ZipFile zipFile = new ZipFile(file.toFile())) {
+      // ZipEntry 数量上限防护：恶意构造的 zip 可包含 65535+ 个 entry
+      if (zipFile.size() > MAX_ZIP_ENTRIES) {
+        throw ExcelReadException.invalidFormat(
+            file.toString(),
+            "ZipEntry 数量超过安全上限: " + zipFile.size() + " > " + MAX_ZIP_ENTRIES);
+      }
       String targetEntry = resolveTargetSheetEntry(zipFile);
 
       ZipEntry sheetEntry = zipFile.getEntry(targetEntry);

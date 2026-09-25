@@ -588,9 +588,12 @@ public class SuperFastExcelWriter {
   /**
    * 计算冻结窗格后可见区域左上角单元格引用。
    *
+   * <p>列名转换算法：标准 26 进制（0=A, 25=Z, 26=AA, 701=ZZ, 702=AAA ...）。
+   * 使用 {@code c / 26 - 1} 进位策略（而非简单的 c--），正确处理 "Z → AA"、"AZ → BA" 等进位边界。
+   *
    * @param rowSplit 冻结行数
    * @param colSplit 冻结列数
-   * @return 单元格引用字符串（如 "A1"、"B2"）
+   * @return 单元格引用字符串（如 "A1"、"B2"、"AA2"、"AE6"）
    */
   private static String computeTopLeftCell(int rowSplit, int colSplit) {
     // 行号 1-based

@@ -8,17 +8,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
@@ -29,10 +32,9 @@ import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
-import com.njydsz.common.excel.core.reader.HeaderAnalyzer;
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
-import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 import com.njydsz.common.excel.support.cache.ReflectCache;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
 /**
  * 零 POI 模板引擎 — 基于 .xlsx 模板文件填充数据，保留模板样式/列宽/合并区域/条件格式。
@@ -126,7 +128,6 @@ public class SuperFastExcelTemplateWriter {
   private final WriteMetadata metadata;
   private final AnalysisContext context;
   private final ExcelConfig excelConfig;
-  private final HeaderAnalyzer headerAnalyzer;
 
   /** 目标 sheet 的名称（用于日志与错误消息）。 */
   private String targetSheetName = "sheet1";
@@ -146,7 +147,6 @@ public class SuperFastExcelTemplateWriter {
     this.context = new AnalysisContext(metadata);
     this.excelConfig =
         metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
-    this.headerAnalyzer = new HeaderAnalyzer(metadata);
     metadata.setFilePath(outputPath);
     loadTemplate(templatePath);
   }
@@ -164,7 +164,6 @@ public class SuperFastExcelTemplateWriter {
     this.context = new AnalysisContext(metadata);
     this.excelConfig =
         metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
-    this.headerAnalyzer = new HeaderAnalyzer(metadata);
     metadata.setFilePath(outputPath);
     loadTemplateFromStream(templateStream);
   }
@@ -181,7 +180,6 @@ public class SuperFastExcelTemplateWriter {
     this.context = new AnalysisContext(metadata);
     this.excelConfig =
         metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
-    this.headerAnalyzer = new HeaderAnalyzer(metadata);
     metadata.setFilePath(outputPath);
     loadTemplateFromBytes(templateBytes);
   }
@@ -235,7 +233,7 @@ public class SuperFastExcelTemplateWriter {
   /**
    * 解析 workbook.xml.rels 确定模板 entry 名对应的 sheet ZIP entry 路径。
    *
-   * <p>按 metadata.sheetName 精确匹配 → metadata.sheetIndex 顺序 → 第一个 sheet。
+   * <p>按 metadata.sheetName 精确匹配 → metadata.sheetNo 顺序 → 第一个 sheet。
    */
   private void parseWorkbook() {
     byte[] relsBytes = templateEntries.get("xl/_rels/workbook.xml.rels");
@@ -246,7 +244,8 @@ public class SuperFastExcelTemplateWriter {
     }
     String rels = new String(relsBytes, StandardCharsets.UTF_8);
     List<String[]> sheetRefs = new ArrayList<>();
-    Pattern p = Pattern.compile("<Relationship[^>]*Id=\"([^\"]*)\"[^>]*?Target=\"([^\"]*?)\"", Pattern.DOTALL);
+    Pattern p = Pattern.compile(
+        "<Relationship[^>]*Id=\"([^\"]*)\"[^>]*?Target=\"([^\"]*?)\"", Pattern.DOTALL);
     Matcher m = p.matcher(rels);
     while (m.find()) {
       String target = m.group(2);
@@ -259,11 +258,12 @@ public class SuperFastExcelTemplateWriter {
       return;
     }
 
-    // 按 sheetName 或 sheetIndex 选择目标 sheet
+    // 按 sheetName 或 sheetNo 选择目标 sheet
     String sheetName = metadata.getSheetName();
     byte[] workbookBytes = templateEntries.get("xl/workbook.xml");
     if (sheetName != null && !sheetName.isEmpty() && workbookBytes != null) {
-      List<String> sheetNamesInOrder = parseWorkbookSheetNames(new String(workbookBytes, StandardCharsets.UTF_8));
+      List<String> sheetNamesInOrder = extractSheetNamesFromWorkbook(
+          new String(workbookBytes, StandardCharsets.UTF_8));
       for (int i = 0; i < sheetNamesInOrder.size(); i++) {
         if (sheetName.equals(sheetNamesInOrder.get(i)) && i < sheetRefs.size()) {
           targetSheetEntryPath = toAbsoluteEntryPath(sheetRefs.get(i)[1]);
@@ -272,21 +272,25 @@ public class SuperFastExcelTemplateWriter {
         }
       }
     }
-    Integer sheetIndex = metadata.getSheetIndex();
-    int idx = (sheetIndex != null && sheetIndex >= 0 && sheetIndex < sheetRefs.size()) ? sheetIndex : 0;
+    Integer sheetNo = metadata.getSheetNo();
+    int idx = (sheetNo != null && sheetNo >= 0 && sheetNo < sheetRefs.size()) ? sheetNo : 0;
     targetSheetEntryPath = toAbsoluteEntryPath(sheetRefs.get(idx)[1]);
   }
 
-  private void parseWorkbookSheetNames(String xml) {
+  /**
+   * 从 workbook.xml 提取 Sheet 名称列表（声明顺序）。
+   *
+   * @param xml workbook.xml 内容
+   * @return Sheet 名称列表
+   */
+  private List<String> extractSheetNamesFromWorkbook(String xml) {
     List<String> names = new ArrayList<>();
     Pattern p = Pattern.compile("<sheet\\s+name=\"([^\"]*)\"", Pattern.DOTALL);
     Matcher m = p.matcher(xml);
     while (m.find()) {
       names.add(m.group(1));
     }
-    // store to metadata for sheet selection
-    // Since we don't have a return, let's store in a temp list via parsing
-    workbookSheetNames = names;
+    return names;
   }
 
   private List<String> workbookSheetNames = new ArrayList<>();
@@ -707,7 +711,7 @@ public class SuperFastExcelTemplateWriter {
     }
   }
 
-  private void appendListDataCellsStringBuilder sb, List<?> rowList, int rowNum) {
+  private void appendListDataCells(StringBuilder sb, List<?> rowList, int rowNum) {
     for (int colIdx = 0; colIdx < rowList.size(); colIdx++) {
       Object val = rowList.get(colIdx);
       String cellRef = toCellRef(colIdx, rowNum);
@@ -740,10 +744,7 @@ public class SuperFastExcelTemplateWriter {
     }
     // 尝试数值
     if (isNumeric(value)) {
-      sb.append(">").append(value).append("</v></c>");
-      sb.setLength(sb.length() - "</c>".length()); // remove extra close
-      sb.append("<v>").append(value).append("</v></c>");
-      // fix: rewrite the last few chars
+      sb.append("><v>").append(value).append("</v></c>");
       return;
     }
     // 字符串 → SST
