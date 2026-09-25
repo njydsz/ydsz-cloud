@@ -46,3 +46,201 @@ modules:
       - import com.alibaba.fastjson2.*
     related_rules:
       - YDIZ-WARN-001
+  # ---- ydsz-common-util -------------------------------------------
+  ydsz-common-util:
+    layer: L1
+    package: com.njydsz.common.util
+    description: "通用工具集：雪花 ID / 国密算法 / Bean 工具 / 网络工具 / 安全工具"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: SnowflakeIdGenerator
+        type: singleton
+        entry: com.njydsz.common.util.id.SnowflakeIdGenerator
+        usage: "雪花 ID 生成器（PodOrdinal → IpHash 策略链）"
+      - name: CryptoUtils
+        type: static-utility
+        entry: com.njydsz.common.util.security.crypto.CryptoUtils
+        usage: "国密 SM2/SM3/SM4 + AES-GCM 加解密统一入口"
+      - name: BeanMapper
+        type: static-utility
+        entry: com.njydsz.common.util.bean.BeanMapper
+        usage: "Bean 属性拷贝（不同名映射 + 空值跳过）"
+      - name: DiffCalculator
+        type: static-utility
+        entry: com.njydsz.common.util.bean.DiffCalculator
+        usage: "对象字段差异计算（审计日志场景）"
+      - name: MaskUtils
+        type: static-utility
+        entry: com.njydsz.common.util.text.MaskUtils
+        usage: "脱敏工具（手机号/身份证/银行卡/邮箱/姓名/地址）"
+
+  # ---- ydsz-common-cache ------------------------------------------
+  ydsz-common-cache:
+    layer: L1
+    package: com.njydsz.common.cache
+    description: "高性能本地缓存框架：Window-TinyLFU/Striped 双策略 + 三防"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: YdszCache
+        type: fluent-builder
+        entry: com.njydsz.common.cache.YdszCache
+        usage: "YdszCache.newBuilder().type(TINYLFU).maximumSize(N).build()"
+      - name: CacheBuilder
+        type: fluent-builder
+        entry: com.njydsz.common.cache.builder.CacheBuilder
+        usage: "链式配置容量、过期、loader、writer，对标 Caffeine"
+      - name: CacheProtectionGuard
+        type: internal-delegate
+        entry: com.njydsz.common.cache.core.CacheProtectionGuard
+        usage: "防穿透/防击穿/防雪崩三防守卫"
+      - name: WriteThroughCache
+        type: decorator
+        entry: com.njydsz.common.cache.support.WriteThroughCache
+        usage: "写穿透装饰器，put 时同步写入后端存储"
+      - name: YdszCacheManager
+        type: spring-integration
+        entry: com.njydsz.common.cache.YdszCacheManager
+        usage: "Spring CacheManager，支持 @Cacheable/@CacheEvict/@CachePut"
+
+  # ---- ydsz-common-excel ------------------------------------------
+  ydsz-common-excel:
+    layer: L1
+    package: com.njydsz.common.excel
+    description: "高性能 Excel 读写引擎：双引擎 + 模板导出 + 公式注入防护"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: ExcelFacade
+        type: facade
+        entry: com.njydsz.common.excel.core.ExcelFacade
+        usage: "Excel 门面入口（SuperFast/POI 自动路由）"
+      - name: ExcelReader
+        type: api
+        entry: com.njydsz.common.excel.core.ExcelReader
+        usage: "读取器入口（统一 API，内部路由 SuperFast/POI）"
+      - name: ExcelWriter
+        type: api
+        entry: com.njydsz.common.excel.core.ExcelWriter
+        usage: "写入器入口（@ExcelProperty 声明式映射）"
+      - name: ExcelTemplateWriter
+        type: api
+        entry: com.njydsz.common.excel.core.ExcelTemplateWriter
+        usage: "模板填充写入器（报表导出）"
+      - name: FormulaInjectionGuard
+        type: static-utility
+        entry: com.njydsz.common.excel.core.FormulaInjectionGuard
+        usage: "公式注入防护（=+@-开头值自动加单引号）"
+
+  # ---- ydsz-common-core -------------------------------------------
+  ydsz-common-core:
+    layer: L2
+    package: com.njydsz.common.core
+    description: "统一响应/请求/上下文基座；TraceId / 特性开关 / 常量"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: YdszResponse
+        type: static-factory
+        entry: com.njydsz.common.core.response.YdszResponse
+        usage: "统一响应封装：YdszResponse.success(data)"
+      - name: PageResponse
+        type: static-factory
+        entry: com.njydsz.common.core.response.PageResponse
+        usage: "分页响应（增加 total/pageNum/pageSize）"
+      - name: RequestContext
+        type: thread-local
+        entry: com.njydsz.common.core.context.RequestContext
+        usage: "请求上下文（TTL 传播，父子线程自动传递）"
+      - name: TenantContextHolder
+        type: thread-local
+        entry: com.njydsz.common.core.context.TenantContextHolder
+        usage: "租户上下文 ThreadLocal 持有器"
+      - name: FeatureFlagService
+        type: spi
+        entry: com.njydsz.common.core.feature.FeatureFlagService
+        usage: "特性开关服务接口"
+
+  # ---- ydsz-common-locales ----------------------------------------
+  ydsz-common-locales:
+    layer: L2
+    package: com.njydsz.common.locales
+    description: "国际化基座：统一 i18n（MessageSource + LocaleResolver + Validator）"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: I18nMessages
+        type: injectable-bean
+        entry: com.njydsz.common.locales.i18n.I18nMessages
+        usage: "可注入 Bean，i18n.resolve(key, args)"
+      - name: I18n
+        type: static-utility
+        entry: com.njydsz.common.locales.i18n.I18n
+        usage: "静态工具，I18n.message(key, args)"
+      - name: Locales
+        type: static-utility
+        entry: com.njydsz.common.locales.i18n.Locales
+        usage: "Locales.current() 获取当前 Locale"
+      - name: ydszMessageSource
+        type: spring-bean
+        entry: com.njydsz.common.locales.config.YdszMessageSourceConfiguration
+        usage: "多模块聚合 MessageSource"
+
+  # ---- ydsz-common-domain -----------------------------------------
+  ydsz-common-domain:
+    layer: L3
+    package: com.njydsz.common.domain
+    description: "领域基础组件：分页查询 / 树形结构 / 类型化 ID / 规约模式"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: PageQuery
+        type: pojo
+        entry: com.njydsz.common.domain.page.PageQuery
+        usage: "分页查询对象（pageNum/pageSize/orderItems）"
+      - name: TreeBuilder
+        type: builder
+        entry: com.njydsz.common.domain.tree.TreeBuilder
+        usage: "build() 全量构建 / buildLazy() 懒加载构建"
+      - name: TypedId
+        type: phantom-type
+        entry: com.njydsz.common.domain.id.TypedId
+        usage: "编译期类型安全 ID（Phantom Type 模式）"
+      - name: DataPermissionContext
+        type: pojo
+        entry: com.njydsz.common.domain.permission.DataPermissionContext
+        usage: "数据权限上下文（EMPTY/empty()/ofSpaceId() 工厂）"
+      - name: Specification
+        type: spi
+        entry: com.njydsz.common.domain.spec.Specification
+        usage: "规约模式接口（and/or/negate/allOf/anyOf/noneOf）"
+
+  # ---- ydsz-common-exception --------------------------------------
+  ydsz-common-exception:
+    layer: L3
+    package: com.njydsz.common.exception
+    description: "统一异常体系与错误码注册；RFC 7807 + i18n"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: BusinessException
+        type: exception-class
+        entry: com.njydsz.common.exception.core.BusinessException
+        usage: "业务异常基类（客户端请求错误，HTTP 4xx）"
+      - name: SysException
+        type: exception-class
+        entry: com.njydsz.common.exception.core.SysException
+        usage: "系统异常（服务端内部错误，HTTP 5xx）"
+      - name: BaseExceptionHandler
+        type: spring-controller-advice
+        entry: com.njydsz.common.exception.handler.BaseExceptionHandler
+        usage: "MVC 统一异常处理入口（@RestControllerAdvice）"
+      - name: ErrorCodeTable
+        type: static-registry
+        entry: com.njydsz.common.exception.code.ErrorCodeTable
+        usage: "错误码注册表（自动扫描 @YdszExceptionCode 枚举）"
+      - name: ExceptionDesensitizer
+        type: internal-util
+        entry: com.njydsz.common.exception.core.ExceptionDesensitizer
+        usage: "异常脱敏器（移除密码/Token 等敏感信息）"
