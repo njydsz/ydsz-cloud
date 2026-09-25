@@ -1,0 +1,366 @@
+  # ---- ydsz-common-jdbc -------------------------------------------
+  ydsz-common-jdbc:
+    layer: L4
+    package: com.njydsz.common.jdbc
+    description: "MyBatis-Plus 增强；动态数据源 / 数据权限 / SQL 防火墙"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: DynamicRoutingDataSource
+        type: spring-bean
+        entry: com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource
+        usage: "运行时动态增删数据源、栈式嵌套切换"
+      - name: DsAnnotationInterceptor
+        type: aop-interceptor
+        entry: com.njydsz.common.jdbc.aop.DsAnnotationInterceptor
+        usage: "@DS 注解 AOP 拦截器（方法级优先于类级）"
+      - name: RowPermissionInnerInterceptor
+        type: mybatis-interceptor
+        entry: com.njydsz.common.jdbc.permission.RowPermissionInnerInterceptor
+        usage: "行级数据权限（SQL 解析注入 WHERE）"
+      - name: ColPermissionInnerInterceptor
+        type: mybatis-interceptor
+        entry: com.njydsz.common.jdbc.permission.ColPermissionInnerInterceptor
+        usage: "列级权限（SELECT 字段过滤）"
+      - name: SqlFirewallInnerInterceptor
+        type: mybatis-interceptor
+        entry: com.njydsz.common.jdbc.firewall.SqlFirewallInnerInterceptor
+        usage: "SQL 防火墙（DROP/TRUNCATE/无 WHERE DML/多语句）"
+      - name: MybatisPlusConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.jdbc.config.MybatisPlusConfiguration
+        usage: "MP 全局配置（乐观锁+字段填充+权限+分页+防火墙）"
+
+  # ---- ydsz-common-redis ------------------------------------------
+  ydsz-common-redis:
+    layer: L4
+    package: com.njydsz.common.redis
+    description: "Redis 服务增强；9 类 Ops + 三算法限流 + 多级缓存 + Key 过期监听"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: RedisStringOps
+        type: injectable-bean
+        entry: com.njydsz.common.redis.service.ops.RedisStringOps
+        usage: "String + Bitmap 操作"
+      - name: RedisHashOps
+        type: injectable-bean
+        entry: com.njydsz.common.redis.service.ops.RedisHashOps
+        usage: "Hash 操作"
+      - name: RedisCollectionOps
+        type: injectable-bean
+        entry: com.njydsz.common.redis.service.ops.RedisCollectionOps
+        usage: "Set + List + ZSet 操作"
+      - name: RedisRateLimiter
+        type: api
+        entry: com.njydsz.common.redis.service.RedisRateLimiter
+        usage: "分布式限流（固定窗口/滑动窗口/令牌桶）"
+      - name: YdszCacheableAspect
+        type: aop-aspect
+        entry: com.njydsz.common.redis.aspect.YdszCacheableAspect
+        usage: "@YdszCacheable 切面（防穿透/防击穿/防雪崩）"
+      - name: RedisKeyExpireListener
+        type: annotation-listener
+        entry: com.njydsz.common.redis.annotation.RedisKeyExpireListener
+        usage: "Key 过期事件监听（Keyspace Notifications）"
+
+  # ---- ydsz-common-lock -------------------------------------------
+  ydsz-common-lock:
+    layer: L4
+    package: com.njydsz.common.lock
+    description: "分布式锁；Reentrant/Fair/Multi + WatchDog + @DistributedScheduled"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: DistributedLocker
+        type: injectable-bean
+        entry: com.njydsz.common.lock.core.DistributedLocker
+        usage: "分布式锁核心接口（lock/tryLock/unlock/可重入）"
+      - name: RedisReentrantLock
+        type: injectable-bean
+        entry: com.njydsz.common.lock.impl.RedisReentrantLock
+        usage: "可重入锁（默认实现）"
+      - name: RedisFairLock
+        type: injectable-bean
+        entry: com.njydsz.common.lock.impl.RedisFairLock
+        usage: "公平锁（按请求时序获取）"
+      - name: IdempotentAspect
+        type: aop-aspect
+        entry: com.njydsz.common.lock.aop.IdempotentAspect
+        usage: "@Idempotent 注解切面（Redis Lua SETNX）"
+      - name: DistributedScheduledAspect
+        type: aop-aspect
+        entry: com.njydsz.common.lock.aop.DistributedScheduledAspect
+        usage: "@DistributedScheduled 分布式定时任务注解"
+
+  # ---- ydsz-common-thread -----------------------------------------
+  ydsz-common-thread:
+    layer: L4
+    package: com.njydsz.common.thread
+    description: "共享线程池自动配置；按业务隔离 / 监控 / Nacos 热更新"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: ThreadPoolRegistry
+        type: injectable-bean
+        entry: com.njydsz.common.thread.registry.ThreadPoolRegistry
+        usage: "线程池注册中心"
+      - name: ThreadPoolExecutorFactory
+        type: spring-bean
+        entry: com.njydsz.common.thread.factory.ThreadPoolExecutorFactory
+        usage: "线程池工厂（ydsz.thread-pool.<name>.* 配置）"
+      - name: ThreadPoolMetrics
+        type: micrometer-collector
+        entry: com.njydsz.common.thread.metrics.ThreadPoolMetrics
+        usage: "线程池指标（活跃线程/队列/拒绝/计时）"
+      - name: TimedTaskDecorator
+        type: utility
+        entry: com.njydsz.common.thread.decorator.TimedTaskDecorator
+        usage: "任务装饰器（自动测量耗时并上报 Timer）"
+
+  # ---- ydsz-common-tenant -----------------------------------------
+  ydsz-common-tenant:
+    layer: L4
+    package: com.njydsz.common.tenant
+    description: "多租户隔离；SQL 改写 + 多数据源路由 + TTL 传播"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: TenantAutoConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.tenant.config.TenantAutoConfiguration
+        usage: "多租户自动配置（WebFilter + MP InnerInterceptor）"
+      - name: TenantProperties
+        type: configuration-properties
+        entry: com.njydsz.common.tenant.config.TenantProperties
+        usage: "租户配置属性（ydsz.tenant.*）"
+      - name: TenantIsolationInterceptor
+        type: mybatis-interceptor
+        entry: com.njydsz.common.tenant.interceptor.TenantIsolationInterceptor
+        usage: "SQL 拦截器（WHERE 追加 tenant_id = ?）"
+      - name: TenantDataSourceRouter
+        type: spring-bean
+        entry: com.njydsz.common.tenant.datasource.TenantDataSourceRouter
+        usage: "租户数据源路由器（ISOLATE_DB 模式）"
+      - name: TenantContextTaskDecorator
+        type: thread-decorator
+        entry: com.njydsz.common.tenant.async.TenantContextTaskDecorator
+        usage: "线程池任务装饰器（TTL 传播兜底）"
+  # ---- ydsz-common-auth -------------------------------------------
+  ydsz-common-auth:
+    layer: L5
+    package: com.njydsz.common.auth
+    description: "JWT 认证与 RBAC；4 注解+3 切面+@DataScope+OIDC+Redis 失效监听"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: JwtTokenService
+        type: injectable-bean
+        entry: com.njydsz.common.auth.token.JwtTokenService
+        usage: "JWT Token 服务（双 Token：access/refresh）"
+      - name: AuthPermissionAspect
+        type: aop-aspect
+        entry: com.njydsz.common.auth.aspect.AuthPermissionAspect
+        usage: "API 权限切面（@AuthApiPermission + @AuthMenuPermission）"
+      - name: AuthRowPermissionAspect
+        type: aop-aspect
+        entry: com.njydsz.common.auth.aspect.AuthRowPermissionAspect
+        usage: "行级数据权限切面（@DataScope SQL 注入，fail-closed）"
+      - name: AuthColPermissionAspect
+        type: aop-aspect
+        entry: com.njydsz.common.auth.aspect.AuthColPermissionAspect
+        usage: "列级数据权限切面（移除无权限列）"
+      - name: AuthFilterConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.auth.config.AuthFilterConfiguration
+        usage: "认证过滤器装配（Token 解析 → AuthContext）"
+
+  # ---- ydsz-common-safe -------------------------------------------
+  ydsz-common-safe:
+    layer: L5
+    package: com.njydsz.common.safe
+    description: "安全防护层；XSS/CSRF/API 签名/限流/熔断/脱敏/SSRF"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: XssFilter
+        type: servlet-filter
+        entry: com.njydsz.common.safe.xss.XssFilter
+        usage: "XSS 过滤器（HTTP Request 层清理）"
+      - name: XssJsonMessageConverter
+        type: spring-converter
+        entry: com.njydsz.common.safe.xss.XssJsonMessageConverter
+        usage: "XSS JSON 消息转换器（String 字段清理）"
+      - name: ApiSignatureFilter
+        type: servlet-filter
+        entry: com.njydsz.common.safe.signature.ApiSignatureFilter
+        usage: "API 签名校验（HMAC-SHA256 + Nonce 防重放）"
+      - name: RateLimitAutoConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.safe.ratelimit.RateLimitAutoConfiguration
+        usage: "限流自动配置"
+      - name: SafeCircuitBreakerAdapter
+        type: adapter
+        entry: com.njydsz.common.safe.circuitbreaker.SafeCircuitBreakerAdapter
+        usage: "Resilience4j CircuitBreaker 适配器"
+      - name: SensitiveDataAdvice
+        type: controller-advice
+        entry: com.njydsz.common.safe.sensitive.SensitiveDataAdvice
+        usage: "脱敏 AOP 切面（@ResponseBody 返回值处理）"
+
+  # ---- ydsz-common-feign ------------------------------------------
+  ydsz-common-feign:
+    layer: L5
+    package: com.njydsz.common.feign
+    description: "OpenFeign 增强；请求头透传/编解码/重试/链路追踪/熔断"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: FeignRequestInterceptor
+        type: feign-interceptor
+        entry: com.njydsz.common.feign.interceptor.FeignRequestInterceptor
+        usage: "请求头透传（13 个核心业务头）"
+      - name: ResponseUnwrapDecoder
+        type: feign-decoder
+        entry: com.njydsz.common.feign.decoder.ResponseUnwrapDecoder
+        usage: "YdszResponse 自动解包（客户端直接获取 data）"
+      - name: MethodAwareRetryer
+        type: feign-retryer
+        entry: com.njydsz.common.feign.retry.MethodAwareRetryer
+        usage: "HTTP 方法感知重试器（仅白名单方法重试）"
+      - name: TraceRequestInterceptor
+        type: feign-interceptor
+        entry: com.njydsz.common.feign.interceptor.TraceRequestInterceptor
+        usage: "链路追踪（traceparent/spanId 透传）"
+
+  # ---- ydsz-common-audit ------------------------------------------
+  ydsz-common-audit:
+    layer: L5
+    package: com.njydsz.common.audit
+    description: "操作审计留痕；@Audit + SpEL + JDBC 分表 + Gateway 事件桥接"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: AuditAspect
+        type: aop-aspect
+        entry: com.njydsz.common.audit.core.AuditAspect
+        usage: "核心切面（拦截 @Audit 自动采集请求上下文）"
+      - name: AsyncAuditRecorder
+        type: injectable-bean
+        entry: com.njydsz.common.audit.recorder.AsyncAuditRecorder
+        usage: "异步审计记录器（LinkedBlockingQueue 批量写入）"
+      - name: JdbcAuditStorage
+        type: spring-bean
+        entry: com.njydsz.common.audit.storage.JdbcAuditStorage
+        usage: "JDBC 审计存储（按月/日/年分表）"
+      - name: AuditFallbackWriter
+        type: spring-bean
+        entry: com.njydsz.common.audit.fallback.AuditFallbackWriter
+        usage: "磁盘兜底写入器（JDBC 失败时写本地文件）"
+  # ---- ydsz-common-notify -----------------------------------------
+  ydsz-common-notify:
+    layer: L5
+    package: com.njydsz.common.notify
+    description: "统一消息通知；7 大渠道 + 模板引擎 + DKIM + 时间窗聚合"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: NotifyService
+        type: injectable-bean
+        entry: com.njydsz.common.notify.service.NotifyService
+        usage: "统一通知服务接口"
+      - name: NotifyServiceImpl
+        type: injectable-bean
+        entry: com.njydsz.common.notify.service.NotifyServiceImpl
+        usage: "默认实现（限流+熔断+降级+去重+偏好管理）"
+      - name: TransactionalNotifyPublisher
+        type: injectable-bean
+        entry: com.njydsz.common.notify.publisher.TransactionalNotifyPublisher
+        usage: "事务安全发布器（事务提交后才发送）"
+      - name: NotifyChannelStrategy
+        type: spi
+        entry: com.njydsz.common.notify.channel.NotifyChannelStrategy
+        usage: "渠道策略 SPI（Email/SMS/钉钉/飞书/企微/站内/Webhook）"
+
+  # ---- ydsz-common-queue ------------------------------------------
+  ydsz-common-queue:
+    layer: L5
+    package: com.njydsz.common.queue
+    description: "多引擎消息队列；Redis/Kafka/RocketMQ/RabbitMQ + 死信/延迟/去重"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: IMessageQueue
+        type: spi
+        entry: com.njydsz.common.queue.api.IMessageQueue
+        usage: "队列核心接口（publish/subscribe/acknowledge）"
+      - name: IMessageQueueProvider
+        type: spi
+        entry: com.njydsz.common.queue.api.IMessageQueueProvider
+        usage: "队列提供者 SPI（根据 QueueType 创建引擎）"
+      - name: MessageQueueFactory
+        type: spring-bean
+        entry: com.njydsz.common.queue.provider.MessageQueueFactory
+        usage: "默认 Provider（Stream/List/PubSub/Kafka/RocketMQ/RabbitMQ）"
+      - name: DeadLetterQueueService
+        type: injectable-bean
+        entry: com.njydsz.common.queue.deadletter.DeadLetterQueueService
+        usage: "死信队列服务（sendToDLQ/retryFromDLQ/listDLQ）"
+      - name: DelayedMessageSender
+        type: injectable-bean
+        entry: com.njydsz.common.queue.delay.DelayedMessageSender
+        usage: "延迟消息发送器（时间轮实现）"
+      - name: MessageDeduplicator
+        type: injectable-bean
+        entry: com.njydsz.common.queue.dedup.MessageDeduplicator
+        usage: "消息去重器（内容指纹+滑动时间窗）"
+
+  # ---- ydsz-common-event ------------------------------------------
+  ydsz-common-event:
+    layer: L5
+    package: com.njydsz.common.event
+    description: "Outbox 事务消息模式；JDBC 落库 + RocketMQ 投递 + Noop 降级"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: OutboxService
+        type: injectable-bean
+        entry: com.njydsz.common.event.outbox.OutboxService
+        usage: "Outbox 写入服务（save(DomainEvent)，同一事务）"
+      - name: OutboxProcessor
+        type: background-processor
+        entry: com.njydsz.common.event.outbox.OutboxProcessor
+        usage: "后台轮询处理器（CAS 防并发重复投递）"
+      - name: EventPublishGateway
+        type: spi
+        entry: com.njydsz.common.event.gateway.EventPublishGateway
+        usage: "投递网关接口（RocketMQ/Noop/自定义）"
+      - name: DomainEventPublisher
+        type: injectable-bean
+        entry: com.njydsz.common.event.publisher.DomainEventPublisher
+        usage: "领域事件发布器（Spring ApplicationEventPublisher）"
+
+  # ---- ydsz-common-config -----------------------------------------
+  ydsz-common-config:
+    layer: L5
+    package: com.njydsz.common.config
+    description: "配置变更桥接层；RefreshEvent 监听 + 监听器 SPI + Jasypt CLI"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: ConfigChangeBridge
+        type: spring-bean
+        entry: com.njydsz.common.config.hotreload.ConfigChangeBridge
+        usage: "核心桥接器（RefreshEvent + 增量快照 diff + 异步分发）"
+      - name: ConfigChangeListener
+        type: spi
+        entry: com.njydsz.common.config.hotreload.ConfigChangeListener
+        usage: "配置变更监听器接口（getOrder 优先级排序）"
+      - name: ConfigCliTool
+        type: cli-tool
+        entry: com.njydsz.common.config.cli.ConfigCliTool
+        usage: "Jasypt 加解密 CLI（encrypt/decrypt/re-encrypt）"
+      - name: ConfigEncryptHealthIndicator
+        type: health-indicator
+        entry: com.njydsz.common.config.health.ConfigEncryptHealthIndicator
+        usage: "Jasypt 加密健康检查"
