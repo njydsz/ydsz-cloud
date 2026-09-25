@@ -31,7 +31,7 @@ import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.common.excel.exception.ExcelReadException;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor.ObjectInstantiator;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor.ObjectInstantiator;
 
 /**
  * 超高性能 Excel 读取器，基于 XML 流式解析实现

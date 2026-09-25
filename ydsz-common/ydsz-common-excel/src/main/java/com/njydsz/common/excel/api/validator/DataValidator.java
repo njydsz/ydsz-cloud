@@ -16,8 +16,8 @@ import jakarta.validation.constraints.Size;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.exception.ExcelReadException;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor.FieldGetter;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor.FieldGetter;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 
 /**
@@ -325,7 +325,7 @@ public class DataValidator {
       }
 
       String fieldName = annotation.value().isEmpty() ? field.getName() : annotation.value();
-      FieldGetter getter = ASMFieldAccessor.getGetter(clazz, field);
+      FieldGetter getter = MHFieldAccessor.getGetter(clazz, field);
 
       try {
         Object value = getter.get(obj);
@@ -359,7 +359,7 @@ public class DataValidator {
       }
 
       String fieldName = annotation.value().isEmpty() ? field.getName() : annotation.value();
-      FieldGetter getter = ASMFieldAccessor.getGetter(clazz, field);
+      FieldGetter getter = MHFieldAccessor.getGetter(clazz, field);
 
       try {
         Object value = getter.get(obj);

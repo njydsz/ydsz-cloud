@@ -1,24 +1,20 @@
 package com.njydsz.common.safe.spi;
 
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
+import com.njydsz.common.safe.desensitize.SensitiveType;
+import com.njydsz.common.safe.desensitize.SensitiveUtils;
 
 /**
  * 默认数据脱敏策略提供者。
  *
- * <p>基于 ydzs-common-safe 内置的 {@link
- * com.njydsz.common.safe.desensitize.SensitiveUtils SensitiveUtils} 和 {@link
- * com.njydsz.common.safe.desensitize.SensitiveType SensitiveType} 提供标准脱敏规则。
+ * <p>基于 ydzz-common-safe 内置的 {@link SensitiveUtils} 和 {@link SensitiveType} 提供标准脱敏规则。
  *
- * <p>声明为 {@link Primary} 保证在业务模块未自定义实现时自动生效；
- * 业务模块可通过实现 {@link DesensitizeProvider} 并使用 {@code @Primary} 覆盖本默认实现。
+ * <p>由 {@link com.njydsz.common.safe.config.SafeConfiguration} 以 {@code @Bean} + {@code @Primary} 注册，
+ * 业务模块可声明自定义 {@link DesensitizeProvider} 并使用 {@code @Primary} 覆盖本默认实现。
  *
  * @author ydsz-team
  * @since 26.09.25
  * @see DesensitizeProvider
  */
-@Component
-@Primary
 public class DefaultDesensitizeProvider implements DesensitizeProvider {
 
   @Override
@@ -29,7 +25,7 @@ public class DefaultDesensitizeProvider implements DesensitizeProvider {
   @Override
   public boolean supports(String type) {
     try {
-      com.njydsz.common.safe.desensitize.SensitiveType.valueOf(type.toUpperCase());
+      SensitiveType.valueOf(type.toUpperCase());
       return true;
     } catch (IllegalArgumentException e) {
       return false;

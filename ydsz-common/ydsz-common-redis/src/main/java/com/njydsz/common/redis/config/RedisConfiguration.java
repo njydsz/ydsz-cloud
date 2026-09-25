@@ -3,7 +3,6 @@ package com.njydsz.common.redis.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.core.ResolvableType;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -156,6 +155,8 @@ public class RedisConfiguration {
       name = "ydsz.redis.serializer",
       havingValue = "ydsz-json",
       matchIfMissing = true)
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  // YDIZ-WARN-001 允许保留：YdszJsonRedisSerializer 为框架内部组件，构造时使用原始类型 Class + 返回原始类型，调用端安全
   public YdszJsonRedisSerializer ydszJsonRedisSerializer() {
     return new YdszJsonRedisSerializer(Object.class);
   }
@@ -220,11 +221,13 @@ public class RedisConfiguration {
   @ConditionalOnBean(RedisRetryInterceptor.class)
   @ConditionalOnProperty(name = "ydsz.redis.retry.proxy-template", havingValue = "true")
   @ConditionalOnMissingBean(name = "retryableRedisTemplate")
+  @SuppressWarnings("unchecked")
   public RedisTemplate<String, Object> retryableRedisTemplate(
+      // YDIZ-WARN-001 允许保留：ProxyFactory.getProxy() 返回 Object，实际代理对象安全实现 RedisTemplate
       RedisTemplate<String, Object> redisTemplate, RedisRetryInterceptor redisRetryInterceptor) {
     ProxyFactory proxyFactory = new ProxyFactory(redisTemplate);
     proxyFactory.addAdvice(redisRetryInterceptor);
-    return proxyFactory.getProxy();
+    return (RedisTemplate<String, Object>) proxyFactory.getProxy();
   }
 
   /**

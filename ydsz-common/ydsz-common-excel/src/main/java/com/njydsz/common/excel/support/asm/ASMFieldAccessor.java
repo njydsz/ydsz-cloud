@@ -14,10 +14,11 @@ import com.njydsz.common.excel.support.mh.MHFieldAccessor;
  * 实际基于 {@code java.lang.invoke.MethodHandle} 实现。
  *
  * <h3>迁移指南</h3>
+ *
  * <pre>{@code
  * // 旧写法（已废弃）
- * import com.njydsz.common.excel.support.mh.MHFieldAccessor;
- * MHFieldAccessor.FieldGetter g = MHFieldAccessor.getGetter(clazz, field);
+ * import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+ * ASMFieldAccessor.FieldGetter g = ASMFieldAccessor.getGetter(clazz, field);
  *
  * // 新写法
  * import com.njydsz.common.excel.support.mh.MHFieldAccessor;
@@ -30,9 +31,9 @@ import com.njydsz.common.excel.support.mh.MHFieldAccessor;
  * @see com.njydsz.common.excel.support.mh.MHFieldAccessor
  */
 @Deprecated
-public class MHFieldAccessor {
+public class ASMFieldAccessor {
 
-  private MHFieldAccessor() {}
+  private ASMFieldAccessor() {}
 
   /**
    * @deprecated 请使用 {@link MHFieldAccessor.FieldGetter} 替代

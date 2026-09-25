@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 import com.njydsz.common.excel.tabular.TabularRowMapper;
 
@@ -65,22 +65,22 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
   private final List<Field> orderedFields;
   /** 各字段（与 orderedFields 同序）的 @ExcelProperty.dateFormat，空串表示未指定 */
   private final String[] dateFormats;
-  private final ASMFieldAccessor.FieldGetter[] getters;
-  private final ASMFieldAccessor.FieldSetter[] setters;
+  private final MHFieldAccessor.FieldGetter[] getters;
+  private final MHFieldAccessor.FieldSetter[] setters;
 
   public DefaultAnnotationRowMapper(Class<T> clazz) {
     this.clazz = clazz;
     this.orderedFields = collectOrderedFields(clazz);
     this.headers = buildHeaders(orderedFields);
     this.dateFormats = new String[orderedFields.size()];
-    this.getters = new ASMFieldAccessor.FieldGetter[orderedFields.size()];
-    this.setters = new ASMFieldAccessor.FieldSetter[orderedFields.size()];
+    this.getters = new MHFieldAccessor.FieldGetter[orderedFields.size()];
+    this.setters = new MHFieldAccessor.FieldSetter[orderedFields.size()];
     for (int i = 0; i < orderedFields.size(); i++) {
       Field f = orderedFields.get(i);
       f.setAccessible(true);
       this.dateFormats[i] = f.getAnnotation(ExcelProperty.class).dateFormat();
-      this.getters[i] = ASMFieldAccessor.getGetter(clazz, f);
-      this.setters[i] = ASMFieldAccessor.getSetter(clazz, f);
+      this.getters[i] = MHFieldAccessor.getGetter(clazz, f);
+      this.setters[i] = MHFieldAccessor.getSetter(clazz, f);
     }
   }
 

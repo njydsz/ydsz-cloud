@@ -48,12 +48,12 @@ import java.lang.annotation.Target;
  * @since ACC-1
  * @see com.njydsz.common.seata.aspect.YdszGlobalTransactionalAspect
  * @see com.njydsz.common.seata.config.SeataProperties
- * @deprecated 自 26.09.25 起废弃（forRemoval=true）。当前零业务模块引用，分布式事务场景尚未启用。
+ * @deprecated 自 26.09.25 起废弃。当前零业务模块引用，分布式事务场景尚未启用。
  *             计划 26.12 版本随 ydsz-common-seata 归档至 attic/。
  */
 @Inherited
 @Documented
-@Deprecated(forRemoval = true)
+@Deprecated
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface YdszGlobalTransactional {

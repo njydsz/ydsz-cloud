@@ -45,7 +45,7 @@ import com.njydsz.common.excel.exception.ExcelExceptionCode;
  *
  * @author ydsz-team
  * @since 26.09.25
- * @see com.njydsz.common.excel.support.asm.ASMFieldAccessor
+ * @see com.njydsz.common.excel.support.asm.MHFieldAccessor
  */
 public class MHFieldAccessor {
 

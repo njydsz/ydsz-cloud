@@ -7,7 +7,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
 /**
  * 反射缓存 - 提升反射访问性能
@@ -62,7 +62,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  *
  * @see Field
  * @see MethodHandle
- * @see ASMFieldAccessor
+ * @see MHFieldAccessor
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -79,16 +79,16 @@ public class ReflectCache {
   /** 类字段数组缓存: 类名 -> Field[] */
   private static final Map<Class<?>, Field[]> CLASS_FIELDS_CACHE = new ConcurrentHashMap<>();
 
-  /** ASM Getter缓存: 类名#字段名 -> ASMFieldAccessor.FieldGetter */
-  private static final Map<String, ASMFieldAccessor.FieldGetter> ASM_GETTER_CACHE =
+  /** ASM Getter缓存: 类名#字段名 -> MHFieldAccessor.FieldGetter */
+  private static final Map<String, MHFieldAccessor.FieldGetter> ASM_GETTER_CACHE =
       new ConcurrentHashMap<>();
 
-  /** ASM Setter缓存: 类名#字段名 -> ASMFieldAccessor.FieldSetter */
-  private static final Map<String, ASMFieldAccessor.FieldSetter> ASM_SETTER_CACHE =
+  /** ASM Setter缓存: 类名#字段名 -> MHFieldAccessor.FieldSetter */
+  private static final Map<String, MHFieldAccessor.FieldSetter> ASM_SETTER_CACHE =
       new ConcurrentHashMap<>();
 
-  /** ASM 实例化器缓存: 类名 -> ASMFieldAccessor.ObjectInstantiator */
-  private static final Map<Class<?>, ASMFieldAccessor.ObjectInstantiator> ASM_INSTANTIATOR_CACHE =
+  /** ASM 实例化器缓存: 类名 -> MHFieldAccessor.ObjectInstantiator */
+  private static final Map<Class<?>, MHFieldAccessor.ObjectInstantiator> ASM_INSTANTIATOR_CACHE =
       new ConcurrentHashMap<>();
 
   /**
@@ -220,9 +220,9 @@ public class ReflectCache {
    * @param field 目标字段
    * @return Getter访问器
    */
-  public static ASMFieldAccessor.FieldGetter getFieldGetter(Class<?> clazz, Field field) {
+  public static MHFieldAccessor.FieldGetter getFieldGetter(Class<?> clazz, Field field) {
     String key = clazz.getName() + "#" + field.getName();
-    return ASM_GETTER_CACHE.computeIfAbsent(key, k -> ASMFieldAccessor.getGetter(clazz, field));
+    return ASM_GETTER_CACHE.computeIfAbsent(key, k -> MHFieldAccessor.getGetter(clazz, field));
   }
 
   /**
@@ -234,9 +234,9 @@ public class ReflectCache {
    * @param field 目标字段
    * @return Setter访问器
    */
-  public static ASMFieldAccessor.FieldSetter getFieldSetter(Class<?> clazz, Field field) {
+  public static MHFieldAccessor.FieldSetter getFieldSetter(Class<?> clazz, Field field) {
     String key = clazz.getName() + "#" + field.getName() + "#setter";
-    return ASM_SETTER_CACHE.computeIfAbsent(key, k -> ASMFieldAccessor.getSetter(clazz, field));
+    return ASM_SETTER_CACHE.computeIfAbsent(key, k -> MHFieldAccessor.getSetter(clazz, field));
   }
 
   /**
@@ -247,9 +247,9 @@ public class ReflectCache {
    * @param clazz 目标类
    * @return 对象实例化器
    */
-  public static ASMFieldAccessor.ObjectInstantiator getInstantiator(Class<?> clazz) {
+  public static MHFieldAccessor.ObjectInstantiator getInstantiator(Class<?> clazz) {
     return ASM_INSTANTIATOR_CACHE.computeIfAbsent(
-        clazz, k -> ASMFieldAccessor.getInstantiator(clazz));
+        clazz, k -> MHFieldAccessor.getInstantiator(clazz));
   }
 
   /**

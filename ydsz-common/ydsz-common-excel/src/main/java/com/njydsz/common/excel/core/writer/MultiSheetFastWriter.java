@@ -13,7 +13,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.njydsz.common.excel.annotation.ExcelProperty;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
 /**
  * 多 Sheet 快速写入器 — 一次生成包含多个 Sheet 的 xlsx 工作簿。
@@ -208,7 +208,7 @@ public class MultiSheetFastWriter {
       info.headerName = (value != null && !value.isEmpty()) ? value : field.getName();
 
       try {
-        info.getter = ASMFieldAccessor.getGetter(clazz, field);
+        info.getter = MHFieldAccessor.getGetter(clazz, field);
       } catch (Exception e) {
         info.getter = field::get;
         field.setAccessible(true);
@@ -430,7 +430,7 @@ public class MultiSheetFastWriter {
   static class SheetFieldMeta {
     Field field;
     String headerName;
-    ASMFieldAccessor.FieldGetter getter;
+    MHFieldAccessor.FieldGetter getter;
     int originalOrder;
     Short width;
   }

@@ -47,7 +47,7 @@ import com.njydsz.common.excel.core.writer.ValueFormatter;
 import com.njydsz.common.excel.core.writer.WorkbookFactory;
 import com.njydsz.common.excel.exception.ExcelExceptionCode;
 import com.njydsz.common.excel.exception.ExcelWriteException;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 
 /**
@@ -959,7 +959,7 @@ public class ExcelWriter {
       property.setField(field);
       field.setAccessible(true);
 
-      ASMFieldAccessor.FieldGetter asmGetter = ASMFieldAccessor.getGetter(clazz, field);
+      MHFieldAccessor.FieldGetter asmGetter = MHFieldAccessor.getGetter(clazz, field);
       property.setAsmFieldGetter(asmGetter);
 
       String name = ann.value();

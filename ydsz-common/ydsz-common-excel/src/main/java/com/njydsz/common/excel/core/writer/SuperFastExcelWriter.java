@@ -35,7 +35,7 @@ import com.njydsz.common.excel.annotation.ExcelSheet;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
 /**
  * 高性能 Excel 写入器 — 纯手工 XML 序列化。
@@ -83,7 +83,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  * @author ydsz-team
  * @since 26.09.01
  * @see FormulaInjectionGuard
- * @see ASMFieldAccessor
+ * @see MHFieldAccessor
  */
 public class SuperFastExcelWriter {
 
@@ -812,7 +812,7 @@ public class SuperFastExcelWriter {
         info.field = field;
         info.headerName =
             (prop.value() != null && !prop.value().isEmpty()) ? prop.value() : field.getName();
-        info.getter = ASMFieldAccessor.getGetter(clazz, field);
+        info.getter = MHFieldAccessor.getGetter(clazz, field);
         info.dateFormatObj =
             (dateFormat != null && !dateFormat.isEmpty())
                 ? DateTimeFormatter.ofPattern(dateFormat)
@@ -859,7 +859,7 @@ public class SuperFastExcelWriter {
   private static class FieldAccessorInfo {
     Field field;
     String headerName;
-    ASMFieldAccessor.FieldGetter getter;
+    MHFieldAccessor.FieldGetter getter;
     DateTimeFormatter dateFormatObj;
     /** 自定义列宽（单位：字符），null 表示使用默认宽度。 */
     Short width;

@@ -25,6 +25,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * @deprecated 自 v26.09.21 起废弃，请使用 {@link com.njydsz.common.cache.YdszCache} 替代
  */
 @Deprecated(since = "26.09.21", forRemoval = true)
+@SuppressWarnings({"deprecation", "removal"})
+// YDIZ-WARN-001 允许保留：实现已标记 forRemoval 的 CacheProvider 接口，自身也一并 @Deprecated(forRemoval=true)，等待迁移完成后整体删除
 @RequiredArgsConstructor
 public class RedisStringOpsCacheProvider implements CacheProvider {
 

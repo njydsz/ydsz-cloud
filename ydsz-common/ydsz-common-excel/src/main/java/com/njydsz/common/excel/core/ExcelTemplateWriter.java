@@ -26,7 +26,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.writer.ValueFormatter;
 import com.njydsz.common.excel.exception.ExcelWriteException;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 
 /**
@@ -181,7 +181,7 @@ public class ExcelTemplateWriter {
           Cell cell = row.createCell(colIndex);
 
           try {
-            Object value = ASMFieldAccessor.getGetter(clazz, field).get(item);
+            Object value = MHFieldAccessor.getGetter(clazz, field).get(item);
             String dateFormat = getDateFormat(field);
             valueFormatter.setCellValueFast(cell, value, dateFormat);
           } catch (Exception e) {

@@ -9,7 +9,7 @@ import java.util.Set;
 
 import com.njydsz.common.excel.annotation.ExcelStyle;
 import com.njydsz.common.excel.core.config.ExcelConfig;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
 /**
  * 写入元数据 - 封装Excel写入配置信息
@@ -392,7 +392,7 @@ public class WriteMetadata {
     private Field field;
 
     /** ASM字节码生成的FieldGetter - 高性能字段访问器 */
-    private transient ASMFieldAccessor.FieldGetter asmFieldGetter;
+    private transient MHFieldAccessor.FieldGetter asmFieldGetter;
 
     /** 列索引(从0开始) */
     private Integer columnIndex;
@@ -455,7 +455,7 @@ public class WriteMetadata {
      *
      * @return 字段访问器；尚未注入时返回 {@code null}，调用方需自行回退到反射取值
      */
-    public ASMFieldAccessor.FieldGetter getAsmFieldGetter() {
+    public MHFieldAccessor.FieldGetter getAsmFieldGetter() {
       return asmFieldGetter;
     }
 
@@ -464,7 +464,7 @@ public class WriteMetadata {
      *
      * @param asmFieldGetter ASM FieldGetter
      */
-    public void setAsmFieldGetter(ASMFieldAccessor.FieldGetter asmFieldGetter) {
+    public void setAsmFieldGetter(MHFieldAccessor.FieldGetter asmFieldGetter) {
       this.asmFieldGetter = asmFieldGetter;
     }
 

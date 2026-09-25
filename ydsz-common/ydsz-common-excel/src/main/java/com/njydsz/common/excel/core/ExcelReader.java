@@ -37,7 +37,7 @@ import com.njydsz.common.excel.core.reader.InputSourceDetector;
 import com.njydsz.common.excel.core.reader.RowParser;
 import com.njydsz.common.excel.core.reader.sax.SuperFastExcelReader;
 import com.njydsz.common.excel.exception.ExcelReadException;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
 /**
  * Excel读取器 - 核心读取组件
@@ -542,7 +542,7 @@ public class ExcelReader {
           superFastReader.setMetadataFactory(
               headerNames ->
                   headerAnalyzer.analyzeClassMetadataFromNames(headerNames, new HashMap<>(16)));
-          superFastReader.setInstantiator(ASMFieldAccessor.getInstantiator(metadata.getClazz()));
+          superFastReader.setInstantiator(MHFieldAccessor.getInstantiator(metadata.getClazz()));
           superFastReader.setContext(context);
           superFastReader.setListeners(listeners);
           // headRowNumber 语义为 1-based 表头行号（1=第一行是表头），fast 引擎内部使用 0-based 索引

@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 
 /**
@@ -63,7 +63,7 @@ public class CsvWriter<T> {
   private final Class<T> clazz;
   private final List<Field> orderedFields;
   private final String[] headers;
-  private final ASMFieldAccessor.FieldGetter[] getters;
+  private final MHFieldAccessor.FieldGetter[] getters;
 
   private boolean writeHeader = true;
   private boolean withBom = false;
@@ -76,14 +76,14 @@ public class CsvWriter<T> {
     this.clazz = clazz;
     this.orderedFields = collectOrderedFields(clazz);
     this.headers = new String[orderedFields.size()];
-    this.getters = new ASMFieldAccessor.FieldGetter[orderedFields.size()];
+    this.getters = new MHFieldAccessor.FieldGetter[orderedFields.size()];
     for (int i = 0; i < orderedFields.size(); i++) {
       Field f = orderedFields.get(i);
       f.setAccessible(true);
       ExcelProperty ann = f.getAnnotation(ExcelProperty.class);
       String name = ann != null ? ann.value() : "";
       this.headers[i] = (name.isEmpty() ? f.getName() : name);
-      this.getters[i] = ASMFieldAccessor.getGetter(clazz, f);
+      this.getters[i] = MHFieldAccessor.getGetter(clazz, f);
     }
   }
 

@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
-import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 
 /**
@@ -58,7 +58,7 @@ public class CsvReader<T> {
   private final Reader reader;
   private final Class<T> clazz;
   private final List<Field> orderedFields;
-  private final ASMFieldAccessor.FieldSetter[] setters;
+  private final MHFieldAccessor.FieldSetter[] setters;
   private final String[] fieldDateFormats;
 
   private char delimiter = CSV_DELIMITER;
@@ -69,14 +69,14 @@ public class CsvReader<T> {
     this.reader = reader;
     this.clazz = clazz;
     this.orderedFields = collectOrderedFields(clazz);
-    this.setters = new ASMFieldAccessor.FieldSetter[orderedFields.size()];
+    this.setters = new MHFieldAccessor.FieldSetter[orderedFields.size()];
     this.fieldDateFormats = new String[orderedFields.size()];
     for (int i = 0; i < orderedFields.size(); i++) {
       Field f = orderedFields.get(i);
       f.setAccessible(true);
       ExcelProperty ann = f.getAnnotation(ExcelProperty.class);
       this.fieldDateFormats[i] = ann != null ? ann.dateFormat() : "";
-      this.setters[i] = ASMFieldAccessor.getSetter(clazz, f);
+      this.setters[i] = MHFieldAccessor.getSetter(clazz, f);
     }
   }
 
