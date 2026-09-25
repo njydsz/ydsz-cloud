@@ -16,8 +16,8 @@ meta:
   version: "26.09.25"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-25（P2-3 ExceptionLevel 分类体系落地：新增 YDIZ-EXC-001/I18N-004/COMMON-001 共 3 条；BaseExceptionHandler 增加 resolveDefaultLevel / logByLevel 级别自动映射工具方法）"
-  total_rules: 95
+  last_updated: "2026-09-25（公共模块利用率修复：新增 YDIZ-COMMON-014~017 共 4 条 P1/P2 规则，消除 7 处业务模块自实现重复代码，Excel 导出接入 cronjob / message 模块）"
+  total_rules: 96
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -2447,12 +2447,10 @@ rules:
       2. 已有业务分表保留但不再演进
     source: "编码规范新增（YDIZ-ARCH-004→重编号为 P2，重分配 ID YDIZ-ARCH-006）"
 
-  # ==================== 公共模块复用（common，4 条） ====================
+  # ==================== 公共模块复用（common，4 条，YDIZ-COMMON-014~017） ====================
   # P6: 新增 4 条 YDIZ-COMMON 规则，收敛业务模块对 common-json/cache/excel/util 的自实现
-  - id: "YDIZ-COMMON-001"
-    category: "common"
-    severity: "P1"
-    title: "缓存防击穿必须使用 CacheProtectionGuard，禁止手写 ConcurrentMap + Future"
+  # 编号 014~017：001~013 已被 P0-1/P0-2/P0-3 批次占用（文件存储/Excel/Seata/缓存等 P0 规则）
+  - id: "YDIZ-COMMON-014"
     description: |
       缓存防穿透/防击穿/防雪崩场景必须使用 ydsz-common-cache 提供的 {@code Cache#getWithProtection}（封装 CacheProtectionGuard），
       禁止业务模块使用原生 {@code ConcurrentHashMap + CompletableFuture / Future}、双重检查锁等手写方案实现 Singleflight 语义。
@@ -2474,12 +2472,9 @@ rules:
       2. 使用 YdszCache.newBuilder() 创建短 TTL 去重缓存
       3. 调用 cache.getWithProtection(key, loader, minMs, maxMs) 替代手写逻辑
       4. 删除原 ConcurrentHashMap + Future 相关字段
-    source: "编码规范附录新增（YDIZ-COMMON-001，P1，26.09.25 公共模块利用率修复）"
+    source: "编码规范附录新增（YDIZ-COMMON-014，P1，26.09.25 公共模块利用率修复）"
 
-  - id: "YDIZ-COMMON-002"
-    category: "common"
-    severity: "P2"
-    title: "JSON 序列化/反序列化必须使用 YdszJson/JsonMapper，禁止手写 extractField"
+  - id: "YDIZ-COMMON-015"
     description: |
       JSON 操作必须使用 ydsz-common-json 提供的 {@code YdszJson.toJson / YdszJson.fromJson / JsonMapper}，
       禁止在业务模块中手写 {@code extractDoubleField}、{@code extractIntField}、字符串拼接 {@code "{\"field\":" + value + "}"} 等解析逻辑。
@@ -2505,12 +2500,9 @@ rules:
       2. 序列化替换为 YdszJson.toJson(object)
       3. 反序列化替换为 YdszJson.fromJson(json, TargetClass.class)
       4. 删除所有 extract*Field 方法
-    source: "编码规范附录新增（YDIZ-COMMON-002，P2，26.09.25 公共模块利用率修复）"
+    source: "编码规范附录新增（YDIZ-COMMON-015，P2，26.09.25 公共模块利用率修复）"
 
-  - id: "YDIZ-COMMON-003"
-    category: "common"
-    severity: "P1"
-    title: "密码哈希必须使用 PwdUtils，禁止直接 new BCryptPasswordEncoder"
+  - id: "YDIZ-COMMON-016"
     description: |
       密码哈希与验证必须使用 ydsz-common-util 提供的 {@code PwdUtils.hashPasswordBCrypt / PwdUtils.verifyPasswordBCrypt}，
       禁止业务模块直接 {@code new BCryptPasswordEncoder()} 或注入 Spring Security 的 BCryptPasswordEncoder Bean 用于非安全框架场景。
@@ -2521,12 +2513,9 @@ rules:
       2. 哈希替换为 PwdUtils.hashPasswordBCrypt(rawPassword)
       3. 校验替换为 PwdUtils.verifyPasswordBCrypt(rawPassword, hashedPassword)
       4. 移除原 BCryptPasswordEncoder Bean 注册
-    source: "编码规范附录新增（YDIZ-COMMON-003，P1，26.09.25 公共模块利用率修复）"
+    source: "编码规范附录新增（YDIZ-COMMON-016，P1，26.09.25 公共模块利用率修复）"
 
-  - id: "YDIZ-COMMON-004"
-    category: "common"
-    severity: "P2"
-    title: "业务主键必须使用 SnowflakeIdGenerator，禁止 AtomicLong 自增"
+  - id: "YDIZ-COMMON-017"
     description: |
       分布式场景下生成业务主键（如任务 ID、审批单号）必须使用 ydsz-common-util 的 {@code SnowflakeIdGenerator}，
       禁止业务模块使用 {@code AtomicLong.getAndIncrement()}、{@code System.currentTimeMillis()} 等本地自增方案
@@ -2536,7 +2525,7 @@ rules:
       1. 引入 SnowflakeIdGenerator：import com.njydsz.common.util.id.SnowflakeIdGenerator
       2. 通过依赖注入获取 SnowflakeIdGenerator bean
       3. 调用 snowflakeIdGenerator.nextId() 或 IdGenerator.nextIdStr()
-    source: "编码规范附录新增（YDIZ-COMMON-004，P2，26.09.25 公共模块利用率修复）"
+    source: "编码规范附录新增（YDIZ-COMMON-017，P2，26.09.25 公共模块利用率修复）"
 
   # ============================================
   # 异常处理规范（1 条新增，P0）
@@ -2568,7 +2557,7 @@ rules:
   # ============================================
   # 公共模块规范（1 条新增，P1）
   # ============================================
-  - id: "YDIZ-COMMON-001"
+  - id: "YDIZ-COMMON-018"
     level: "P1"
     category: "common"
     title: "模块查询对象应继承 PageQuery 基类"
@@ -2576,10 +2565,10 @@ rules:
       分页查询对象应 extends PageQuery 统一管理分页参数（pageNum、pageSize 等），
       避免各模块自行定义分页字段导致分页逻辑不一致、无法复用通用分页工具方法。
     rule: "包含 pageNum/pageSize 的查询类必须 extends PageQuery"
-    source: "P2-3 ExceptionLevel 分类体系落地（YDIZ-COMMON-001，P1，26.09.25）"
+    source: "P2-3 ExceptionLevel 分类体系落地（YDIZ-COMMON-018，P1，26.09.25）"
 
 # ============================================
-# 附录：按 category 统计（26.09.25 更新，total 95，新增 YDIZ-EXC-001/I18N-004/COMMON-001）
+# 附录：按 category 统计（26.09.25 更新，total 97，公共模块利用率修复追加 COMMON-014~018）
 # ============================================
 stats:
   encoding: 1
@@ -2614,4 +2603,4 @@ stats:
   search: 1
   util: 1
   common: 5
-  total: 95
+  total: 96

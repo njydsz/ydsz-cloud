@@ -176,6 +176,9 @@ public class ExcelWriter implements AutoCloseable {
     newMetadata.setFreezePaneCol(metadata.getFreezePaneCol());
     newMetadata.setIsAutoColumnWidth(metadata.getIsAutoColumnWidth());
     newMetadata.setMergedRegions(metadata.getMergedRegions());
+    // 传播后处理器和注解扫描状态（避免 newSheet 时重复注册注解处理器）
+    newMetadata.setPostProcessors(metadata.getPostProcessors());
+    newMetadata.setScannedAnnotations(metadata.getScannedAnnotations());
     return newMetadata;
   }
 
@@ -480,6 +483,178 @@ public class ExcelWriter implements AutoCloseable {
       }
       metadata.setMergedRegions(regionList);
     }
+  }
+
+  /**
+   * 扫描 POJO 类上的 {@code @ExcelMerge} 和 {@code @ExcelDataValidation} 注解，
+   * 自动为匹配字段注册对应的 {@link com.njydsz.common.excel.core.postprocess.XlsxPostProcessor}。
+   *
+   * <p>已在 metadata 中手动注册过后处理器时，注解扫描结果会追加到已有列表末尾（不重复添加同类型）。
+   * 本方法幂等：第二次调用不会重复注册。
+   *
+   * <h3>列位置解析</h3>
+   *
+   * <p>字段到列位置的映射遵循与写入管线一致的规则（{@link ColumnOrderResolver}）：
+   *
+   * <ul>
+   *   <li>有显式 {@code @ExcelProperty(index=N)} 时，列位置 = N</li>
+   *   <li>否则按 order 优先级 / 声明顺序决定列位置</li>
+   * </ul>
+   *
+   * <p>合并单元格仅合并连续的同值行区间，空行自动打断。
+   * 数据验证的 sqref 使用列字母 + 整列行号范围（C2:C1048576），适配 Excel 最大行数。
+   */
+  private void registerPostProcessorsFromAnnotations() {
+    Class<?> clazz = metadata.getClazz();
+    if (clazz == null) {
+      return;
+    }
+
+    // 幂等：扫描一次后标记，避免重复注册
+    if (metadata.getScannedAnnotations()) {
+      return;
+    }
+    metadata.setScannedAnnotations(true);
+
+    // 字段 -> 列位置映射
+    List<Field> orderedFields = ColumnOrderResolver.resolveOrderedFields(clazz);
+    if (orderedFields.isEmpty()) {
+      return;
+    }
+
+    // 构建 field -> colIndex 映射（显式 index 优先，否则用顺序位置）
+    // 先处理显式 index 的字段
+    java.util.Map<Field, Integer> fieldToCol = new java.util.IdentityHashMap<>(orderedFields.size());
+    java.util.Set<Integer> claimedCols = new java.util.HashSet<>();
+    for (Field f : orderedFields) {
+      ExcelProperty prop = f.getAnnotation(ExcelProperty.class);
+      if (prop != null && prop.index() >= 0) {
+        fieldToCol.put(f, prop.index());
+        claimedCols.add(prop.index());
+      }
+    }
+    // 再填充没有显式 index 的字段（跳过已被显式占用的列）
+    int implicitCol = 0;
+    for (Field f : orderedFields) {
+      if (fieldToCol.containsKey(f)) {
+        continue;
+      }
+      while (claimedCols.contains(implicitCol)) {
+        implicitCol++;
+      }
+      fieldToCol.put(f, implicitCol);
+      claimedCols.add(implicitCol);
+      implicitCol++;
+    }
+
+    // 收集合并列和验证规则
+    final java.util.List<Integer> mergeCols = new java.util.ArrayList<>();
+    final java.util.List<DataValidation> validations = new java.util.ArrayList<>();
+
+    for (Field field : orderedFields) {
+      Integer col = fieldToCol.get(field);
+      if (col == null) {
+        continue;
+      }
+
+      // @ExcelMerge
+      if (field.isAnnotationPresent(ExcelMerge.class)) {
+        mergeCols.add(col);
+      }
+
+      // @ExcelDataValidation
+      ExcelDataValidation dv = field.getAnnotation(ExcelDataValidation.class);
+      if (dv != null && dv.type() != ExcelDataValidation.ValidationType.ANY) {
+        String colLetter = toColumnLetter(col);
+        // 整列 sqref：跳过第 1 行（表头），应用到最大行
+        String sqref = colLetter + "2:" + colLetter + "1048576";
+        DataValidation dvEntry = buildDataValidation(dv, sqref);
+        if (dvEntry != null) {
+          validations.add(dvEntry);
+        }
+      }
+    }
+
+    // 注册后处理器（合并与验证对 sheet 0 生效；多 Sheet 可通过手动 addPostProcessor 指定其他 sheet）
+    if (!mergeCols.isEmpty()) {
+      metadata.addPostProcessor((is, os) -> MergeCellHelper.apply(is, os, config -> {
+        MergeCellHelper.SheetConfig sc = config.sheet(0);
+        for (int c : mergeCols) {
+          sc.mergeColumn(c);
+        }
+      }));
+    }
+
+    if (!validations.isEmpty()) {
+      metadata.addPostProcessor((is, os) -> DataValidationHelper.apply(is, os,
+          (sheetIndex, vs) -> {
+            // 仅对第一个 Sheet 应用注解验证，其余 sheet 由手动注册或忽略
+            if (sheetIndex == 0) {
+              vs.addAll(validations);
+            }
+          }));
+    }
+  }
+
+  /**
+   * 根据 {@code @ExcelDataValidation} 注解配置构建 {@link DataValidation} 实例。
+   *
+   * <p>使用 {@link DataValidationHelper} 的静态工厂方法创建基础对象，
+   * 然后补充错误/提示文案等公共属性。返回 {@code null} 表示类型未识别（ANY）。
+   */
+  private static DataValidation buildDataValidation(ExcelDataValidation anno, String sqref) {
+    ExcelDataValidation.ValidationType type = anno.type();
+    DataValidation v;
+
+    switch (type) {
+      case LIST:
+        v = DataValidationHelper.listValidation(sqref, anno.formula1());
+        v.showDropdown = anno.showDropdown();
+        break;
+      case INTEGER:
+      case DECIMAL:
+      case DATE:
+      case TIME:
+        v = DataValidationHelper.rangeValidation(sqref, type.ooxmlType,
+            anno.operator().ooxmlOperator, anno.formula1(), anno.formula2());
+        break;
+      case LENGTH:
+        v = DataValidationHelper.lengthValidation(sqref, anno.formula1(), anno.formula2());
+        break;
+      case CUSTOM:
+        v = DataValidationHelper.customValidation(sqref, anno.formula1());
+        break;
+      default:
+        return null; // ANY / 未识别
+    }
+
+    // 补充公共字段（错误/提示文案、样式）
+    v.ignoreBlank = anno.ignoreBlank();
+    v.errorStyle = anno.errorStyle().value;
+    v.errorTitle = anno.errorTitle();
+    v.errorContent = anno.errorMessage();
+    v.promptTitle = anno.promptTitle();
+    v.promptContent = anno.promptContent();
+    return v;
+  }
+
+  /**
+   * 列索引转 Excel 列字母（0 → A, 1 → B, ..., 25 → Z, 26 → AA）。
+   */
+  static String toColumnLetter(int col) {
+    if (col < 0) {
+      throw new IllegalArgumentException("Column index must be >= 0: " + col);
+    }
+    StringBuilder sb = new StringBuilder();
+    int n = col;
+    while (n >= 0) {
+      sb.append((char) ('A' + (n % 26)));
+      n = n / 26 - 1;
+      if (n < 0) {
+        break;
+      }
+    }
+    return sb.reverse().toString();
   }
 
   /**

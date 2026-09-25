@@ -23,13 +23,13 @@ import com.njydsz.common.excel.annotation.ExcelDataValidation;
  * <pre>{@code
  * // 先写入基础 xlsx
  * ExcelFacade.write("base.xlsx", Dto.class).doWrite(data);
- * // 后处理注入数据验证
+ * // 后处理注入数据验证（单 Sheet：仅 sheet 0）
  * try (FileInputStream fis = new FileInputStream("base.xlsx");
  *      FileOutputStream fos = new FileOutputStream("validated.xlsx")) {
  *   DataValidationHelper.apply(fis, fos, (sheetIndex, validations) -&gt; {
- *     // I3 = 第3行第3列单元格（0-based row 2, col 2）
- *     validations.add(DataValidationHelper.listValidation("I3", "男,女"));
- *     validations.add(DataValidationHelper.rangeValidation("J3", "DECIMAL", "BETWEEN", "0", "999999"));
+ *     if (sheetIndex != 0) return; // 仅对第一个 Sheet 应用
+ *     validations.add(DataValidationHelper.listValidation("C2:C1048576", "男,女"));
+ *     validations.add(DataValidationHelper.rangeValidation("D2:D1048576", "DECIMAL", "BETWEEN", "0", "999999"));
  *   });
  * }
  * }</pre>
@@ -112,18 +112,33 @@ public final class DataValidationHelper {
   /**
    * 对 xlsx 应用数据验证。
    *
+   * <p>单 Sheet 调用示例：
+   *
+   * <pre>{@code
+   * DataValidationHelper.apply(fis, fos, (sheetIndex, validations) -> {
+   *   if (sheetIndex == 0) {
+   *     validations.add(DataValidationHelper.listValidation("C2:C1048576", "男,女"));
+   *   }
+   * });
+   * }</pre>
+   *
+   * <p>多 Sheet 调用时为每个 sheet 分别调用一次 {@code put(sheetIndex, list)}。
+   * 当前简单实现仅对 sheet 0 回调一次，供单 Sheet 场景使用。
+   *
    * @param source 源 xlsx 输入流
    * @param dest 输出流
-   * @param configurer 配置回调（.sheetIndex -> 该 sheet 的验证列表）
+   * @param callback 配置回调，通过 {@link ValidationCallback#put(int, List)} 提供验证规则
    * @throws IOException IO 或 ZIP 解析异常
    */
   public static void apply(InputStream source, OutputStream dest,
-      ValidationConfigurer configurer) throws IOException {
+      ValidationCallback callback) throws IOException {
     Map<Integer, List<DataValidation>> validationsBySheet = new LinkedHashMap<>();
-    configurer.configure((sheetIndex, validations) -> {
-      validationsBySheet.computeIfAbsent(sheetIndex, k -> new ArrayList<>());
-      validationsBySheet.get(sheetIndex).addAll(validations);
-    });
+    // 单 Sheet 场景（最常见）：为 sheet 0 准备可变列表，交给调用方填充
+    List<DataValidation> sheet0List = new ArrayList<>();
+    callback.put(0, sheet0List);
+    if (!sheet0List.isEmpty()) {
+      validationsBySheet.put(0, sheet0List);
+    }
 
     if (validationsBySheet.isEmpty()) {
       byte[] buf = new byte[8192];
@@ -176,11 +191,6 @@ public final class DataValidationHelper {
       }
       zos.finish();
     }
-  }
-
-  @FunctionalInterface
-  public interface ValidationConfigurer {
-    void configure(ValidationCallback callback);
   }
 
   @FunctionalInterface

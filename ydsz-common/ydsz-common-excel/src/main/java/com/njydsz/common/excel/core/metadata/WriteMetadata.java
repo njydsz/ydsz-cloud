@@ -124,6 +124,9 @@ public class WriteMetadata {
   /** xlsx 后处理器列表，在写入完成后依次应用到输出 ZIP 包上 */
   private List<XlsxPostProcessor> postProcessors;
 
+  /** 是否已执行过注解扫描（防止 registerPostProcessorsFromAnnotations 重复注册） */
+  private boolean scannedAnnotations;
+
   /**
    * 默认构造方法
    *
@@ -381,6 +384,14 @@ public class WriteMetadata {
       this.postProcessors = new ArrayList<>(4);
     }
     this.postProcessors.add(postProcessor);
+  }
+
+  public boolean getScannedAnnotations() {
+    return scannedAnnotations;
+  }
+
+  public void setScannedAnnotations(boolean scannedAnnotations) {
+    this.scannedAnnotations = scannedAnnotations;
   }
 
   /**

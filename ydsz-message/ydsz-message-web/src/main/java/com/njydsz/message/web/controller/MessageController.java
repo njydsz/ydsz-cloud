@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
