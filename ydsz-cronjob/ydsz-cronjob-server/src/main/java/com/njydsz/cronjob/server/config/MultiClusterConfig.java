@@ -49,7 +49,7 @@ public class MultiClusterConfig {
 
 
   /** 是否启用多云漂移能力（默认 false，显式开启） */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 远程集群配置映射（key = 集群名称，如 "beijing"、"shanghai"） */
   private Map<String, RemoteCluster> clusters = new HashMap<>(COLLECTION_CAPACITY);

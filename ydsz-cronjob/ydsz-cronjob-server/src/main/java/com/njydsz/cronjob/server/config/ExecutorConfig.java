@@ -38,7 +38,7 @@ public class ExecutorConfig {
   private static final int DEFAULT_ISOLATION_BUCKETS = 8;
 
   /** 启动时注册到 ydsz_job_node 表 */
-  private boolean registerOnStartup = true;
+  private boolean isRegisterOnStartup = true;
 
   /** 心跳上报间隔（秒，默认 10s） */
   private long heartbeatIntervalSeconds = DEFAULT_HEARTBEAT_INTERVAL_SECONDS;
@@ -47,7 +47,7 @@ public class ExecutorConfig {
   private long offlineThresholdSeconds = DEFAULT_OFFLINE_THRESHOLD_SECONDS;
 
   /** 优雅下线时排空在执行任务 */
-  private boolean drainOnShutdown = true;
+  private boolean isDrainOnShutdown = true;
 
   /** 排空超时时间（秒） */
   private long drainTimeoutSeconds = DEFAULT_DRAIN_TIMEOUT_SECONDS;

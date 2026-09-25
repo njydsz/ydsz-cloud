@@ -22,7 +22,7 @@ import lombok.Data;
 public class QuotaConfig {
 
   /** 是否启用租户级配额检查（false=不检查，所有租户 unlimited） */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 默认任务数上限（当租户未在 ydsz_job_tenant_quota 表配置时使用，null=unlimited） */
   private Integer defaultMaxJobs = null;

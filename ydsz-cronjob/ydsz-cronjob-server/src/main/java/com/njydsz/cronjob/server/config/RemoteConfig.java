@@ -37,7 +37,7 @@ public class RemoteConfig {
   private static final int DEFAULT_REQUEST_TIMEOUT_SECONDS = 60;
 
   /** 是否启用远程派发（false=所有分片在 Leader 本地执行，兼容旧行为） */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 内部通信鉴权令牌（节点间 HTTP 派发的共享密钥，对应请求头 X-Ydsz-Internal-Token）。 为空表示不鉴权（仅限可信内网，生产环境建议配置）；非空时接收端强制校验。 */
   private String accessToken = "";
@@ -48,7 +48,7 @@ public class RemoteConfig {
    * <p>云顶安全规范要求默认拒绝：access-token 未配置时，内部派发端点直接返回 401，
    * 防止节点间通信在无鉴权状态下开放。仅限可信内网开发环境可显式置为 true 恢复旧行为。
    */
-  private boolean allowEmptyToken = false;
+  private boolean isAllowEmptyToken = false;
 
   /** HTTP 连接超时（秒） */
   private int connectTimeoutSeconds = DEFAULT_CONNECT_TIMEOUT_SECONDS;
@@ -57,5 +57,5 @@ public class RemoteConfig {
   private int requestTimeoutSeconds = DEFAULT_REQUEST_TIMEOUT_SECONDS;
 
   /** 远程派发失败时是否降级到 Leader 本地执行（true=保证分片不丢失） */
-  private boolean fallbackToLocal = true;
+  private boolean isFallbackToLocal = true;
 }

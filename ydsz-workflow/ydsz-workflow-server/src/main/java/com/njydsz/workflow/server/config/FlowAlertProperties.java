@@ -20,7 +20,7 @@ import org.springframework.validation.annotation.Validated;
 public class FlowAlertProperties {
 
   /** 是否启用异常告警检测定时任务 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 异常检测定时任务 Cron 表达式（默认每小时执行一次） */
   private String cronExpression = "0 0 * * * ?";

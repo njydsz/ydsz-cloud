@@ -118,10 +118,12 @@ public class FlowFormField implements Serializable {
     private String label;
 
     /** 是否默认选中 */
-    private Boolean selected;
+    @com.fasterxml.jackson.annotation.JsonProperty("selected")
+    private Boolean isSelected;
 
     /** 排他（多选时选中此项后其他不可选） */
-    private Boolean exclusive;
+    @com.fasterxml.jackson.annotation.JsonProperty("exclusive")
+    private Boolean isExclusive;
   }
 
   /** 校验规则 */

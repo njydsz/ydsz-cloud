@@ -32,7 +32,7 @@ public class PrecisionConfig {
   private static final int DEFAULT_THREADS = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
 
   /** 是否启用秒级预读调度（默认开启，CRON 任务获得毫秒级触发精度；主扫描器兜底） */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 预读扫描周期（毫秒），默认 3s 一次将窗口内任务注册到内存调度器 */
   private int scanIntervalMs = DEFAULT_SCAN_INTERVAL_MS;

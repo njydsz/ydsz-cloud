@@ -29,7 +29,8 @@ public class SimulationResult implements Serializable {
   private String endNode;
 
   /** 是否到达结束节点 */
-  private boolean reachedEnd;
+  @com.fasterxml.jackson.annotation.JsonProperty("reachedEnd")
+  private boolean isReachedEnd;
 
   /** 警告信息列表（如条件永远不满足） */
   private List<String> warnings;

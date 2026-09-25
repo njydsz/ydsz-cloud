@@ -42,7 +42,7 @@ public class AdaptiveBatchConfig {
   private static final int DEFAULT_EVAL_INTERVAL_SECONDS = 10;
 
   /** 是否启用自适应批量调度（false=使用固定 batchSize，向后兼容） */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /** 最小批量大小（高负载时不低于此值，防止饥饿） */
   private int minBatchSize = DEFAULT_MIN_BATCH_SIZE;

@@ -29,5 +29,5 @@ public class HttpConfig {
   private String successStatusRange = "200-299";
 
   /** 是否跟随重定向 */
-  private boolean followRedirects = true;
+  private boolean isFollowRedirects = true;
 }

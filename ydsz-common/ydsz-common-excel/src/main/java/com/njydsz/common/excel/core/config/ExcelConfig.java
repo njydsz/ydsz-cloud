@@ -312,7 +312,7 @@ public class ExcelConfig {
         .maxReadFileSizeMB(10)
         .maxWriteFileSizeMB(10)
         .strictNumberConversion(true)
-        .isFormulaInjectionProtection(true)
+        .formulaInjectionProtection(true)
         .validationMode(ValidationMode.FAIL_FAST)
         .build();
   }

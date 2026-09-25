@@ -27,7 +27,7 @@ public class SandboxConfig {
    *
    * <p>P0-3: 默认改为 true，防止脚本任务代码注入风险。 可通过 {@code ydsz.cronjob.sandbox.enabled=false} 关闭。
    */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 默认超时时间（秒） */
   private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
@@ -48,7 +48,7 @@ public class SandboxConfig {
    *
    * <p>P1-4: 默认改为 true，提升脚本执行安全性。若 Docker 不可用，自动降级为进程沙箱。
    */
-  private boolean dockerEnabled = true;
+  private boolean isDockerEnabled = true;
 
   /** P2-11: 默认 Docker 镜像（Python 脚本） */
   private String dockerImage = "python:3.11-slim";
@@ -78,7 +78,7 @@ public class SandboxConfig {
   private String dockerTmpfsSize = "10m";
 
   /** P2-11: 是否只读文件系统（--read-only） */
-  private boolean dockerReadOnly = true;
+  private boolean isDockerReadOnly = true;
 
   // ==================== P1-4: Groovy Docker 沙箱 ====================
 
@@ -96,7 +96,7 @@ public class SandboxConfig {
    *
    * <p>注意：启用后会增加启动时间（需拉取镜像、启动容器），建议在对安全要求较高的场景启用。
    */
-  private boolean groovyDockerEnabled = false;
+  private boolean isGroovyDockerEnabled = false;
 
   /** P1-4: Groovy Docker 镜像（需包含 Groovy 运行时） */
   private String groovyDockerImage = "groovy:4.0-jdk17-slim";

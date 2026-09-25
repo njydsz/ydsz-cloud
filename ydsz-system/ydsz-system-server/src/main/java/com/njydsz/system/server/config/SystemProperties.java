@@ -35,7 +35,7 @@ public class SystemProperties {
   private static final int DEFAULT_DICT_CACHE_TTL_MINUTES = 30;
 
   /** 是否启用系统模块健康检查（影响 {@code /actuator/health} 是否暴露 system 详情） */
-  private boolean healthEnabled = true;
+  private boolean isHealthEnabled = true;
 
   /** 配置缓存配置（{@code ydsz.system.config.*}） */
   private ConfigCache config = new ConfigCache();
@@ -59,7 +59,7 @@ public class SystemProperties {
   @Data
   public static class ConfigCache {
     /** 是否启用配置缓存（false 时所有 {@code ydsz_sys_config} 走 DB） */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /**
      * 配置缓存 TTL（分钟），影响 {@code ConfigServiceImpl.getConfigValue/getConfigsByGroup/listPublicConfigs}
@@ -69,14 +69,14 @@ public class SystemProperties {
     /**
      * 配置值格式严格校验开关（P1-6）：true 时值格式非法将阻止保存，false 时仅告警放行（向后兼容存量非法值）。
      */
-    private boolean strictValidation = false;
+    private boolean isStrictValidation = false;
   }
 
   /** 字典缓存配置。 */
   @Data
   public static class DictCache {
     /** 是否启用字典缓存（false 时所有 {@code ydsz_sys_dict_item} 走 DB） */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 字典缓存 TTL（分钟），影响 {@code DictItemServiceImpl} 所有缓存命中路径 */
     private int cacheTtlMinutes = DEFAULT_DICT_CACHE_TTL_MINUTES;
@@ -86,7 +86,7 @@ public class SystemProperties {
   @Data
   public static class VariableCache {
     /** 是否启用系统变量缓存。 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 系统变量缓存 TTL（分钟）。 */
     private int cacheTtlMinutes = DEFAULT_CACHE_TTL_MINUTES;
@@ -125,7 +125,7 @@ public class SystemProperties {
      *
      * <p>默认 false（单实例部署或接受最终一致性场景）。多实例部署且需实时一致性时开启。
      */
-    private boolean crossInstanceEnabled = false;
+    private boolean isCrossInstanceEnabled = false;
 
     /**
      * 是否启用缓存一致性兜底刷新（周期性全量刷新本地缓存）。
@@ -133,7 +133,7 @@ public class SystemProperties {
      * <p>默认 false。开启后每隔 {@code consistencyRefreshIntervalMs} 从 DB 全量刷新本地缓存，
      * 提供最终一致性兜底。建议仅在 {@code crossInstanceEnabled=false} 的多实例部署场景开启。
      */
-    private boolean consistencyRefreshEnabled = false;
+    private boolean isConsistencyRefreshEnabled = false;
 
     /** 缓存一致性兜底刷新间隔（毫秒），默认 5 分钟（300000ms）。 */
     private long consistencyRefreshIntervalMs = 300000L;

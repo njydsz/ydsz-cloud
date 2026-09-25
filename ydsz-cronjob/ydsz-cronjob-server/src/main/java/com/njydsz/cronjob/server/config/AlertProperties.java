@@ -34,7 +34,7 @@ public class AlertProperties {
 
 
   /** 默认是否启用告警通道（false 时所有 Notifier 直接返回成功，用于本地开发） */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** HTTP 请求超时时间（连接 + 读取） */
   private Duration httpTimeout = DEFAULT_HTTP_TIMEOUT;
@@ -61,7 +61,7 @@ public class AlertProperties {
   @Data
   public static class Email {
     /** 是否启用邮件通道 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 发件人邮箱地址（如 alert@ydszsoft.com） */
     private String from = "alert@ydszsoft.com";
@@ -77,7 +77,7 @@ public class AlertProperties {
   @Data
   public static class Dingtalk {
     /** 是否启用钉钉通道 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 钉钉机器人 Webhook URL（如 https://oapi.dingtalk.com/robot/send?access_token=xxx） */
     private String webhookUrl;
@@ -90,7 +90,7 @@ public class AlertProperties {
   @Data
   public static class Wecom {
     /** 是否启用企业微信通道 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** 企业微信机器人 Webhook URL（如 https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx） */
     private String webhookUrl;
@@ -100,7 +100,7 @@ public class AlertProperties {
   @Data
   public static class Webhook {
     /** 是否启用 Webhook 通道 */
-    private boolean enabled = true;
+    private boolean isEnabled = true;
 
     /** Webhook URL（业务系统自行实现接收逻辑） */
     private String webhookUrl;
@@ -118,7 +118,7 @@ public class AlertProperties {
   @Data
   public static class Feishu {
     /** 是否启用飞书通道（默认禁用） */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 飞书机器人 Webhook URL（如 https://open.feishu.cn/open-apis/bot/v2/hook/xxx） */
     private String webhookUrl;
@@ -133,7 +133,7 @@ public class AlertProperties {
   @Data
   public static class Sms {
     /** 是否启用短信通道（默认禁用） */
-    private boolean enabled = false;
+    private boolean isEnabled = false;
 
     /** 短信转发 Webhook URL（由 message-service 或第三方短信网关提供） */
     private String webhookUrl;

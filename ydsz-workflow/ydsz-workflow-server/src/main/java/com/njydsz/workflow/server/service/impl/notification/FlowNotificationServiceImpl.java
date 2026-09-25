@@ -601,7 +601,8 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     private String bizType;
     private String bizId;
     private LocalDateTime expiredAt;
-    private Boolean emailEnabled;
+    @com.fasterxml.jackson.annotation.JsonProperty("emailEnabled")
+    private Boolean isEmailEnabled;
     private String receiverEmail;
   }
 }

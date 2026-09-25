@@ -32,7 +32,7 @@ public class HolidayConfig {
    *
    * <p>默认 false（仅使用任务级手动配置的节假日）。
    */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /**
    * 节假日 API URL。

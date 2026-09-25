@@ -27,9 +27,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * @author ydsz-team
  * @since 26.09.01
  */
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-  // CHECKSTYLE.ON: RegexpSinglelineJava
 public class ExcelHealthIndicator implements HealthIndicator {
 
   /** 临时目录探测写入内容（非空字节，确保真实落盘） */

@@ -115,7 +115,7 @@ public class JobScanner {
   private ExecutorService dispatchPool;
 
   /** P1-8: 是否使用外部线程池（true=common-thread 管理，不负责关闭） */
-  private boolean useExternalDispatchPool = false;
+  private boolean isUseExternalDispatchPool = false;
 
   /**
    * 初始化扫描器：解析 Leader 角色，并决策并行派发线程池来源。

@@ -44,7 +44,7 @@ public class FlowListenerConfig implements Serializable {
   private String pluginName;
 
   /** 是否启用 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 优先级（数值越小越先执行，默认 100） */
   private int priority = 100;

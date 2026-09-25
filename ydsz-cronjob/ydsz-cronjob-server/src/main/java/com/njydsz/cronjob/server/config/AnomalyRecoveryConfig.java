@@ -38,10 +38,10 @@ public class AnomalyRecoveryConfig {
   private static final int DEFAULT_MAX_REDISPATCH_RETRIES = 3;
 
   /** 是否启用故障转移扫描（检测下线节点任务） */
-  private boolean failoverEnabled = true;
+  private boolean isFailoverEnabled = true;
 
   /** 是否启用自愈系统（卡死修复 + AUTO_PAUSED 恢复） */
-  private boolean selfHealingEnabled = false;
+  private boolean isSelfHealingEnabled = false;
 
   /** 扫描间隔（秒，默认 30s） */
   private int scanIntervalSeconds = DEFAULT_SCAN_INTERVAL_SECONDS;
@@ -59,7 +59,7 @@ public class AnomalyRecoveryConfig {
   private int maxHealPerScan = DEFAULT_MAX_HEAL_PER_SCAN;
 
   /** 是否自动重新派发修复后的任务 */
-  private boolean autoRedispatch = true;
+  private boolean isAutoRedispatch = true;
 
   /** 重新派发最大重试次数（超过此数不再自动派发，标记为需人工介入） */
   private int maxRedispatchRetries = DEFAULT_MAX_REDISPATCH_RETRIES;

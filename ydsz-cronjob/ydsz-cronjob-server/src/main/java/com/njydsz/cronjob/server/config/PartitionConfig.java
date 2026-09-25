@@ -21,7 +21,7 @@ public class PartitionConfig {
    *
    * <p>启用后，JobScanner 仅扫描属于当前节点 Leader 分区的任务， 多个节点可同时作为不同分区的 Leader，提升调度吞吐量。
    */
-  private boolean enabled = false;
+  private boolean isEnabled = false;
 
   /**
    * 分区总数（默认 4）。

@@ -32,7 +32,7 @@ public class SchedulerExecutorSeparationConfig {
    * <p>启用后，Leader 节点通过 WorkerNodeSelector 选定 Worker 节点远程派发任务， 无可用 Worker 时自动降级为 Leader
    * 本地执行（保证向后兼容）。 运行条件：remote.enabled=true 且 WorkerNodeSelector Bean 已注册。
    */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** Worker 节点选择策略: round_robin(轮询) / least_load(最小负载) */
   private String workerSelectionStrategy = "round_robin";

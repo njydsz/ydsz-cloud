@@ -64,13 +64,13 @@ public class FlowProperties {
   private static final long DEFAULT_FORM_SCHEMA_CACHE_MAX_SIZE = 500L;
 
   /** 是否启用工作流模块 */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 是否启用健康检查 */
-  private boolean healthEnabled = true;
+  private boolean isHealthEnabled = true;
 
   /** 发布流程时是否阻断 HIGH 风险（在途实例卡在已删除节点）。true=阻断（推荐）；false=仅警告 */
-  private boolean publishBlockOnHighRisk = true;
+  private boolean isPublishBlockOnHighRisk = true;
 
   /** 设计器协同编辑锁定超时阈值（分钟） */
   @Min(1)
@@ -141,7 +141,7 @@ public class FlowProperties {
   @Data
   public static class History {
     /** 是否启用自动归档（JobHandler 调度时检查，false 则跳过执行） */
-    private boolean archiveEnabled = true;
+    private boolean isArchiveEnabled = true;
 
     /** 归档阈值天数：已结束实例结束时间超过该天数后归档（默认 30 天） */
     @Min(1)
@@ -160,7 +160,7 @@ public class FlowProperties {
     private String cronExpression = "0 0 3 * * ?";
 
     /** 是否启用归档数据清理（purge）：清理已归档超过 purgeDays 的冷数据，默认关闭 */
-    private boolean purgeEnabled = false;
+    private boolean isPurgeEnabled = false;
 
     /** 归档数据清理阈值天数：archived_at 超过该天数的归档记录将被物理删除（默认 5 年 = 1825 天） */
     @Min(30)
@@ -186,7 +186,7 @@ public class FlowProperties {
     private long definitionCacheMaxSize = 1000L;
 
     /** 是否启用跨实例缓存失效 Pub/Sub 总线（默认关闭，单实例场景无需启用） */
-    private boolean crossInstanceEnabled = false;
+    private boolean isCrossInstanceEnabled = false;
   }
 
   /**

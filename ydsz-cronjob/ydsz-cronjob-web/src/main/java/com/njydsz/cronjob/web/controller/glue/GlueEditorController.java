@@ -124,7 +124,8 @@ public class GlueEditorController {
   public static class SaveResult implements Serializable {
     @Serial private static final long serialVersionUID = 1L;
     /** 是否成功 */
-    private boolean success;
+    @com.fasterxml.jackson.annotation.JsonProperty("success")
+    private boolean isSuccess;
     /** 结果消息 */
     private String message;
     /** 保存时间 */
@@ -138,7 +139,8 @@ public class GlueEditorController {
   public static class ValidateResult implements Serializable {
     @Serial private static final long serialVersionUID = 1L;
     /** 是否合法 */
-    private boolean valid;
+    @com.fasterxml.jackson.annotation.JsonProperty("valid")
+    private boolean isValid;
     /** 校验消息 */
     private String message;
     /** 错误详情（如有） */

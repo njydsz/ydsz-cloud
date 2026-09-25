@@ -48,7 +48,7 @@ public class SimulationContext implements Serializable {
   private static final int MAX_STEPS = 1000;
 
   /** 是否到达结束节点 */
-  private boolean reachedEnd = false;
+  private boolean isReachedEnd = false;
 
   /** 结束节点编码 */
   private String endNode;
@@ -112,7 +112,7 @@ public class SimulationContext implements Serializable {
    * @param endNodeCode 结束节点编码
    */
   public void markReachedEnd(String endNodeCode) {
-    this.reachedEnd = true;
+    this.isReachedEnd = true;
     this.endNode = endNodeCode;
   }
 }

@@ -50,7 +50,7 @@ public class ScannerConfig {
    * <p>启用后，JobScanner 扫描到待触发任务后，使用独立线程池并行执行 CAS 推进 + dispatch，避免大批量任务时单线程串行派发延迟。 CAS
    * 推进本身是幂等的（WHERE next_fire_time = old），并行不会导致重复派发。
    */
-  private boolean parallelDispatchEnabled = true;
+  private boolean isParallelDispatchEnabled = true;
 
   /**
    * P0-2: 并行派发线程池大小（默认 8）。
@@ -73,5 +73,5 @@ public class ScannerConfig {
    * 下次扫描间隔自动缩短到 {@code minIntervalMs}；空闲时（扫描无到期任务）间隔渐变回 {@code intervalMs}。
    * 关闭时固定使用 {@code intervalMs}。
    */
-  private boolean adaptiveEnabled = true;
+  private boolean isAdaptiveEnabled = true;
 }

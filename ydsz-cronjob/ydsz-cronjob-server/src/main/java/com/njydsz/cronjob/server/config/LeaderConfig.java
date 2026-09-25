@@ -51,7 +51,7 @@ public class LeaderConfig {
    *
    * <p>P0-4: 默认改为 true，确保多实例环境下任务不会重复执行。 单节点环境也会正常工作（自己成为 Leader）。
    */
-  private boolean enabled = true;
+  private boolean isEnabled = true;
 
   /** 角色（多套调度集群隔离时使用） */
   @NotBlank(message = "Leader 选举角色 role 不能为空")
