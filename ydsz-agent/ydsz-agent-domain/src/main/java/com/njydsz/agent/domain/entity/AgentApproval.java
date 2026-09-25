@@ -45,6 +45,8 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+// YDIZ-WARN-001 允许保留：@SuperBuilder 在多层泛型继承链中生成代码的类型擦除
+@SuppressWarnings("unchecked")
 @TableName("ydsz_agt_approval")
 public class AgentApproval extends MpBaseAuditEntity<String> {
 

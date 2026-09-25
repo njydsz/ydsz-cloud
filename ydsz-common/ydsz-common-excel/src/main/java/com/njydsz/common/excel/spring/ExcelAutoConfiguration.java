@@ -88,33 +88,15 @@ public class ExcelAutoConfiguration {
   /**
    * 基于配置属性构建 ExcelConfig。
    *
+   * <p>派生委托给 {@link ExcelProperties#toExcelConfig()}——单一映射源，消除两个类之间的重复 setter 绑定逻辑。
+   *
    * @param properties 配置属性
    * @return ExcelConfig 实例
    */
   @Bean
   @ConditionalOnMissingBean
   public ExcelConfig excelConfig(ExcelProperties properties) {
-    return ExcelConfig.builder()
-        .readBufferSize(properties.getReadBufferSize())
-        .writeBufferSize(properties.getWriteBufferSize())
-        .defaultDateFormat(properties.getDefaultDateFormat())
-        .defaultNumberFormat(properties.getDefaultNumberFormat())
-        .automaticTrim(properties.getIsAutomaticTrim())
-        .useFastReader(properties.getIsUseFastReader())
-        .useFastWriter(properties.getIsUseFastWriter())
-        .streamingParseThresholdMB(properties.getStreamingParseThresholdMb())
-        .maxReadFileSizeMB(properties.getMaxReadFileSizeMb())
-        .maxWriteFileSizeMB(properties.getMaxWriteFileSizeMb())
-        .compressionLevel(properties.getCompressionLevel())
-        .formulaInjectionProtection(properties.getIsFormulaInjectionProtection())
-        .strictNumberConversion(properties.getIsStrictNumberConversion())
-        .headRowNumber(properties.getHeadRowNumber())
-        .writeCacheSize(properties.getWriteCacheSize())
-        // P2-12 修复：补齐 ExcelConfig 预留配置的绑定（此前配置了不生效）
-        .use1904Windowing(properties.getIsUse1904Windowing())
-        .validationMode(properties.getValidationMode())
-        .maxReadCacheSize(properties.getMaxReadCacheSize())
-        .build();
+    return properties.toExcelConfig();
   }
 
   /**

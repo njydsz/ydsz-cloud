@@ -27,7 +27,7 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -320,10 +320,10 @@ public class NotificationController {
       action = AuditAction.CREATE,
       content = "'postmapping'")
   @PostMapping("/broadcast")
-  public YdszResponse<MessageResult> broadcast(@Valid @RequestBody BroadcastRequestDTO request) {
+  public YdszResponse<MessageSendResultVO> broadcast(@Valid @RequestBody BroadcastRequestDTO request) {
     realtimePushService.broadcast(request.getTopic(), request.getData());
     String traceId = WebSocketTraceContext.getTraceId();
-    return YdszResponse.success(MessageResult.ok(request.getTopic(), traceId));
+    return YdszResponse.success(MessageSendResultVO.ok(request.getTopic(), traceId));
   }
 
   /**
@@ -343,10 +343,10 @@ public class NotificationController {
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_PUSH)
   @Idempotent(key = "ydsz:message:NotificationController:push-realtime:lock", ttlSeconds = 5)
   @PostMapping("/push-realtime")
-  public YdszResponse<MessageResult> pushRealtime(
+  public YdszResponse<MessageSendResultVO> pushRealtime(
       @Valid @RequestBody PushRealtimeRequestDTO request) {
     realtimePushService.pushToUser(request.getUserId(), request.getType(), request.getData());
     String traceId = WebSocketTraceContext.getTraceId();
-    return YdszResponse.success(MessageResult.ok(request.getType(), traceId));
+    return YdszResponse.success(MessageSendResultVO.ok(request.getType(), traceId));
   }
 }

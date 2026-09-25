@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -103,7 +104,10 @@ public class FlowNextDueScheduler implements SchedulingConfigurer {
   public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
     taskRegistrar.setScheduler(taskScheduler);
     // 兜底触发器（仅在动态调度未触发时生效）
-    taskRegistrar.addFixedDelayTask(this::fallbackScan, fallbackInterval.toMillis());
+    // Spring Boot 4.1 / Framework 7.0: addFixedDelayTask(Runnable, long) 已弃用，
+    // 使用新重载指定 initialDelay + TimeUnit 避免弃用告警
+    taskRegistrar.addFixedDelayTask(
+        this::fallbackScan, 0L, fallbackInterval.toMillis(), TimeUnit.MILLISECONDS);
   }
 
   /**

@@ -23,7 +23,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.idempotent.annotation.IdempotentExempt;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -172,7 +172,7 @@ public class TemplateVersionController {
       content = "'testSend'")
   @RateLimit(resource = "message.templateversion.testSend", threshold = 50)
   @PostMapping("/testSend")
-  public YdszResponse<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
+  public YdszResponse<MessageSendResultVO> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
     if (dto == null) {
       return YdszResponse.error(YdszResultCode.BAD_REQUEST, "试发参数为空");
     }

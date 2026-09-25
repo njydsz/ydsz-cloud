@@ -12,7 +12,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.MessageSendDTO;
@@ -71,7 +71,7 @@ public class InternalMessageApiController {
   public YdszResponse<String> sendMessage(@RequestBody MessageSendDTO dto) {
     MessageRequest request = new MessageRequest();
     BeanUtils.copyProperties(dto, request);
-    MessageResult result = messageService.send(request);
+    MessageSendResultVO result = messageService.send(request);
     if (result.isSuccess()) {
       return YdszResponse.success(result.getTraceId());
     }

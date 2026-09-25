@@ -112,6 +112,7 @@ public class FlowAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(NameServiceClient.class)
+  @SuppressWarnings("deprecation") // NameAssembler 已标记弃用但迁移至 common-core 尚未完成，临时抑制
   public NameServiceClient nameServiceClient(ObjectProvider<NameAssembler> nameAssemblerProvider) {
     // 平台兜底 NoOpNameAssembler 缺省必在；显式禁用 ydsz.feign.name-assembler 时降级为空适配器，保证可启动
     return new NameServiceClientAdapter(nameAssemblerProvider.getIfAvailable());

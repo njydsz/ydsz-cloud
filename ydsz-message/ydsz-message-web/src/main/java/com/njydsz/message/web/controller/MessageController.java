@@ -26,10 +26,11 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.BatchSendResultDTO;
+import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
@@ -133,29 +134,30 @@ public class MessageController {
 
     return switch (strategy) {
       case SYNC -> {
-        MessageResult result = messageService.send(toMessageRequest(dto));
+        MessageSendResultVO result = messageService.send(toMessageRequest(dto));
         yield YdszResponse.success(result);
       }
       case DIRECT -> {
-        MessageResult result = messageService.sendDirect(dto);
+        MessageSendResultVO result = messageService.sendDirect(dto);
         yield YdszResponse.success(result);
       }
       case ASYNC -> {
         // P0-3: 先落库 PENDING 再投递 MQ，保证消息不丢失
-        MessageResult result = messageService.sendAsync(toMessageRequest(dto));
-        YdszResponse<MessageResult> response = YdszResponse.success(result);
+        MessageSendResultVO result = messageService.sendAsync(toMessageRequest(dto));
+        YdszResponse<MessageSendResultVO> response = YdszResponse.success(result);
         response.setMsg("ASYNC_QUEUED");
         yield response;
       }
       case TRANSACTIONAL -> {
-        MessageResult result = messageService.sendTransactionally(toMessageRequest(dto));
+        MessageSendResultVO result = messageService.sendTransactionally(toMessageRequest(dto));
         yield YdszResponse.success(result);
       }
       case BATCH -> {
-        List<MessageRequest> requests = dto.getBatchRequests();
-        if (requests == null || requests.isEmpty()) {
+        List<MessageItemRequestDTO> items = dto.getBatchRequests();
+        if (items == null || items.isEmpty()) {
           yield YdszResponse.error(YdszResultCode.BAD_REQUEST, "批量请求列表为空");
         }
+        List<MessageRequest> requests = toMessageRequestList(items);
         BatchSendResultDTO result = messageService.batchSend(requests, dto.getBatchId());
         yield YdszResponse.success(result);
       }
@@ -199,7 +201,7 @@ public class MessageController {
       action = AuditAction.DELETE,
       content = "'取消定时消息: msgId=' + #msgId")
   @PostMapping("/cancelScheduled")
-  public YdszResponse<MessageResult> cancelScheduled(@RequestParam String msgId) {
+  public YdszResponse<MessageSendResultVO> cancelScheduled(@RequestParam String msgId) {
     return YdszResponse.success(messageService.cancelScheduledMessage(msgId));
   }
 
@@ -249,6 +251,41 @@ public class MessageController {
     request.setParams(dto.getParams());
     request.setPriority(dto.getPriority());
     request.setMessageId(dto.getMessageId());
+    return request;
+  }
+
+  /**
+   * 将批量请求子项 DTO 列表转换为内部的 MessageRequest 列表。
+   *
+   * @param items 批量请求子项 DTO 列表
+   * @return MessageRequest 列表
+   */
+  private List<MessageRequest> toMessageRequestList(List<MessageItemRequestDTO> items) {
+    return items.stream().map(this::toMessageRequestItem).toList();
+  }
+
+  /**
+   * 将单个 MessageItemRequestDTO 转换为 MessageRequest。
+   *
+   * @param item 子项 DTO
+   * @return MessageRequest
+   */
+  private MessageRequest toMessageRequestItem(MessageItemRequestDTO item) {
+    MessageRequest request = new MessageRequest();
+    request.setChannel(item.getChannel());
+    request.setReceiver(item.getReceiver());
+    request.setSubject(item.getSubject());
+    request.setContent(item.getContent());
+    request.setBizType(item.getBizType());
+    request.setBizId(item.getBizId());
+    request.setTemplateCode(item.getTemplateCode());
+    request.setParams(item.getParams());
+    request.setChannelMeta(item.getChannelMeta());
+    request.setPriority(item.getPriority());
+    request.setMessageId(item.getMessageId());
+    request.setScheduledAt(item.getScheduledAt());
+    request.setParentMsgId(item.getParentMsgId());
+    request.setScenario(item.getScenario());
     return request;
   }
 }

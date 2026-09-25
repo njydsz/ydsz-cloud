@@ -18,7 +18,7 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
-import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 
@@ -84,7 +84,7 @@ public class MessageExceptionHandler extends BaseExceptionHandler {
    * @return 分层错误响应；非 {@link MessageExceptionCode} 异常返回 null 由上层处理
    */
   @ExceptionHandler({SysException.class, BusinessException.class})
-  public YdszResponse<MessageResult> handleMessageException(
+  public YdszResponse<MessageSendResultVO> handleMessageException(
       AbstractYdszException e, HttpServletRequest request, HttpServletResponse response) {
 
     // 仅处理 MessageExceptionCode 类型的异常（通过 key 匹配，因为 resultCode() 返回匿名 ResultCode）
@@ -122,12 +122,12 @@ public class MessageExceptionHandler extends BaseExceptionHandler {
     addRetryAfterHeader(response, e);
 
     // 构造分层 MessageResult 响应
-    MessageResult result =
-        MessageResult.fail(
+    MessageSendResultVO result =
+        MessageSendResultVO.fail(
             messageCode.getCode(), userMessage, developerMessage, retryAfter);
 
     // 使用错误码 + 分层数据构造返回，保持错误语义
-    YdszResponse<MessageResult> ydszResponse = new YdszResponse<>();
+    YdszResponse<MessageSendResultVO> ydszResponse = new YdszResponse<>();
     ydszResponse.setCode(messageCode.getCode());
     ydszResponse.setMsg(userMessage);
     ydszResponse.setData(result);

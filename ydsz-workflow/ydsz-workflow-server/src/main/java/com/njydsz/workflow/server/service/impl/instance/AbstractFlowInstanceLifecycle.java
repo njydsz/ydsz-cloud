@@ -86,6 +86,7 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  */
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("deprecation") // NameAssembler 已标记弃用但迁移至 common-core 尚未完成，临时抑制
 public abstract class AbstractFlowInstanceLifecycle {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;

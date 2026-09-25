@@ -28,6 +28,8 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+// YDIZ-WARN-001 允许保留：@SuperBuilder 在多层泛型继承链中生成代码的类型擦除
+@SuppressWarnings("unchecked")
 @TableName("ydsz_agt_trace")
 public class AgentTrace extends MpBaseEntity<String> {
 
