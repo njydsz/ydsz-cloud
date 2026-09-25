@@ -24,7 +24,7 @@ import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
  * @author ydsz
  * @since 26.09.24
  */
-// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
+// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 配合 JPA 继承，Builder 返回原始父类类型
 @SuppressWarnings("unchecked")
 @Data
 @SuperBuilder

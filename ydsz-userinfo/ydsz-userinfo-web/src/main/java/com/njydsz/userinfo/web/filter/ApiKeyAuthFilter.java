@@ -52,6 +52,7 @@ import com.njydsz.userinfo.server.service.ApiKeyService;
  *
  * @author ydsz-team
  * @since 26.09.07
+ * 业务特异过滤器（YDIZ-ARCH-004 例外）：ydsz 专有 API Key 校验（DB-backed ak_ <REDACTED>），不可下沉至 common-safe。Order=HIGHEST_PRECEDENCE+40。
  */
 @Slf4j
 @Component

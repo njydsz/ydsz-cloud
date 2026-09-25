@@ -88,7 +88,9 @@ public enum ExcelExceptionCode {
 /** config invalid parameter */
   CONFIG_INVALID_PARAMETER("H04001", "excel.config.invalidParameter"),
 /** config bean mapping */
-  CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping");
+  CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping"),
+/** engine capability mismatch */
+  ENGINE_CAPABILITY_MISMATCH("H04003", "excel.engine.capabilityMismatch");
 
   /** 错误码 */
   private final String code;

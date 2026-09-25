@@ -2099,6 +2099,90 @@ rules:
       }
     source: "编码规范 §28.6 Outbox 消费端 SPI 规范（YDIZ-EVENT-002，P1）"
 
+  - id: "YDIZ-SAFE-001"
+    category: "safe"
+    severity: "P1"
+    title: "【强制】IP 访问控制必须使用 ydsz-common-safe IpAccessFilter，禁止自建 Servlet Filter 实现 CIDR"
+    description: |
+      IP 黑白名单过滤必须使用 ydsz-common-safe 提供的 `IpAccessFilter`（`OncePerRequestFilter` 子类）+
+      `IpAccessService` 实现，禁止业务模块自建 Servlet Filter 实现 CIDR 网段匹配。
+
+      **为什么禁止自建**：
+      - ydsz-common-safe 提供生产级能力：CIDR 匹配、Redis 动态黑白名单、本地缓存、自动封禁（超限 IP 自动加入黑名单 + TTL）
+      - 安全事件上报（`SecurityEventPublisher`），统一对接安全运营平台
+      - 支持 includes / excludes 参数，同一 Filter Bean 可适配全局和路径特定两种场景
+
+      **能力矩阵**：
+
+      | 自建 Filter 典型实现 | ydzs-common-safe IpAccessFilter |
+      |---------------------|----------------------------------|
+      | contains 逐个 IP 匹配 | CIDR 网段匹配（10.0.0.0/8 一次命中） |
+      | 静态名单，改了就重启 | Redis 动态名单 + 热加载 |
+      | 无审计日志 | 安全事件写入 SecurityEvent |
+      | 无限流计数 | X 次/分钟超限自动封禁（默认 3600 秒 TTL） |
+      | 单路径适用 | 通过 includes/excludes 适配不同 URL 模式 |
+    pattern: |
+      以下任一情形构成违规：
+      1. 业务模块实现 Servlet Filter 并在内部实现 IP 白/黑名单匹配逻辑（正则匹配、网段遍历等）
+      2. 业务模块继承 OncePerRequestFilter 或实现 javax.Filter 接口实现类似功能
+      3. 业务模块通过 @Component 注册自定义 IP 过滤切面/拦截器（HandlerInterceptor 白名单过滤违规）
+      4. 通过 nginx/apache 配置文件做 IP 过滤时，未在 application.yml 保留开关兜底（最佳实践：两层防御）
+    fix: |
+      1. 引入 ydzz-common-safe 依赖（scope: compile）
+      2. 通过 FilterRegistrationBean 注册 IpAccessFilter，配置 includes 参数指定生效路径
+      3. 配置 ydsz.safe.ip-access.* 属性（模式/Redis 前缀/封禁时长）
+      4. 删除自建 Filter 类
+    example_bad: |
+      ```java
+      // ❌ 自建 Filter 实现 CIDR 匹配（YDIZ-SAFE-001 违规）
+      @Component
+      public class InternalApiIpFilter implements Filter {
+          private final List<String> whitelist = List.of("10.0.0.0/8", "172.16.0.0/12");
+
+          public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) {
+              String ip = ((HttpServletRequest) req).getRemoteAddr();
+              if (!matchesAny(ip, whitelist)) {  // 自建 CIDR 匹配
+                  ((HttpServletResponse) res).sendError(403);
+                  return;
+              }
+              chain.doFilter(req, res);
+          }
+      }
+      ```
+    example_good: |
+      ```java
+      // ✅ 使用 ydzz-common-safe IpAccessFilter + includes 约束路径（YDIZ-SAFE-001 合规）
+      @Configuration
+      public class InternalApiIpAccessConfig {
+          @Bean
+          public FilterRegistrationBean<IpAccessFilter> internalApiIpFilterRegistration(
+              IpAccessService ipAccessService) {
+              IpAccessFilter filter = new IpAccessFilter(ipAccessService, null,
+                  List.of(), List.of("/internal/*", "/api/internal/*"));
+              FilterRegistrationBean<IpAccessFilter> reg = new FilterRegistrationBean<>(filter);
+              reg.addUrlPatterns("/*");
+              reg.setOrder(Ordered.HIGHEST_PRECEDENCE + 10);
+              return reg;
+          }
+      }
+      ```
+      ```yaml
+      # ydzs.safe.ip-access 配置
+      ydsz:
+        safe:
+          ip-access:
+            enabled: true
+            mode: WHITELIST            # 白名单模式（仅白名单 IP 放行）
+            default-block-seconds: 3600
+            static-whitelist:
+              - "127.0.0.1"
+              - "10.0.0.0/8"
+      ```
+    violations:
+      - "ydsz-system: InternalApiIpFilter.java（已于 26.09.24 重构删除，使用 common-safe IpAccessFilter + includes）"
+    source: "编码规范 §18.2 IP 访问控制白名单（YDIZ-SAFE-001，P1）"
+    tags: ["safe", "security", "ip-filtering", "YDIZ-SAFE-001"]
+
   - id: "YDIZ-ARCH-004"
     category: "architecture"
     severity: "P0"
@@ -2198,5 +2282,6 @@ stats:
   config: 3
   errcode: 2
   i18n: 2
+  safe: 1
   util: 1
-  total: 84
+  total: 85

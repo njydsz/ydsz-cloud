@@ -33,6 +33,7 @@ import com.njydsz.common.core.context.RequestContext;
  *
  * @author ydsz-team
  * @since 26.09.16
+ * 业务特异过滤器（YDIZ-ARCH-004 例外）：SecurityContext 桥接（依赖 generator 模块角色枚举 GENERATOR_USER/GENERATOR_ADMIN），不可下沉至 common-safe。Order=HIGHEST_PRECEDENCE+4。
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE + 4)

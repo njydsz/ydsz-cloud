@@ -41,6 +41,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * 业务特异过滤器（YDIZ-ARCH-004 例外）：节点间静态令牌校验（X-Ydsz-Internal-Token），实现简单可泛化，但当前仅 cronjob 使用；建议下次迭代下沉至 common-safe。
  */
 @Slf4j
 @Component

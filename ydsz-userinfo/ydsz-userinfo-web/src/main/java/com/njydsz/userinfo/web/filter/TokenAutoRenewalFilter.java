@@ -48,6 +48,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * 业务特异过滤器（YDIZ-ARCH-004 例外）：ydsz 专有 OAuth2 Token 滑动续签（TokenService），不可下沉至 common-safe。Order=200 响应阶段续签，不阻塞原请求。
  */
 @Slf4j
 @Component

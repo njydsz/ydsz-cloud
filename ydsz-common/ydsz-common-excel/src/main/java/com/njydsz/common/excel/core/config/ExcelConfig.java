@@ -5,6 +5,7 @@ import java.util.zip.Deflater;
 
 import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
+import com.njydsz.common.excel.core.config.EngineType;
 
 /**
  * Excel 全局配置 — 不可变配置对象。
@@ -55,6 +56,13 @@ public class ExcelConfig {
   private final boolean isFormulaInjectionProtection;
   private final boolean isUseFastReader;
   private final boolean isUseFastWriter;
+  /**
+   * 写引擎显式选择。默认 {@link EngineType#AUTO}（行为等价于旧版 {@link #isUseFastWriter} 逻辑）。
+   *
+   * <p>显式设为 {@link EngineType#SUPER_FAST} 时，能力超出手工引擎范围抛异常而非静默降级。
+   * 显式设为 {@link EngineType#POI_STREAMING} 时始终走 POI 路径。
+   */
+  private final EngineType engineType;
   private final int compressionLevel;
   private final boolean isUse1904Windowing;
   private final int headRowNumber;
@@ -76,6 +84,8 @@ public class ExcelConfig {
     this.isFormulaInjectionProtection = builder.isFormulaInjectionProtection;
     this.isUseFastReader = builder.isUseFastReader;
     this.isUseFastWriter = builder.isUseFastWriter;
+    this.engineType =
+        builder.engineType != null ? builder.engineType : EngineType.AUTO;
     this.compressionLevel = builder.compressionLevel;
     this.isUse1904Windowing = builder.isUse1904Windowing;
     this.headRowNumber = builder.headRowNumber;
@@ -133,6 +143,11 @@ public class ExcelConfig {
 
   public boolean getIsUseFastWriter() {
     return isUseFastWriter;
+  }
+
+  /** 获取写引擎类型。 */
+  public EngineType getEngineType() {
+    return engineType;
   }
 
   /**
@@ -249,6 +264,7 @@ public class ExcelConfig {
     b.isFormulaInjectionProtection = source.isFormulaInjectionProtection;
     b.isUseFastReader = source.isUseFastReader;
     b.isUseFastWriter = source.isUseFastWriter;
+    b.engineType = source.engineType;
     b.compressionLevel = source.compressionLevel;
     b.isUse1904Windowing = source.isUse1904Windowing;
     b.headRowNumber = source.headRowNumber;
@@ -281,8 +297,10 @@ public class ExcelConfig {
     private int maxWriteFileSizeMB = DEFAULT_MAX_WRITE_FILE_SIZE_MB;
     private boolean isFormulaInjectionProtection = true;
     private boolean isUseFastReader = false;
-    private boolean isUseFastWriter = false;
-    private int compressionLevel = Deflater.BEST_SPEED;
+  private boolean isUseFastWriter = false;
+  /** 写引擎显式选择。默认 {@link EngineType#AUTO}。 */
+  private EngineType engineType = EngineType.AUTO;
+  private int compressionLevel = Deflater.BEST_SPEED;
     private boolean isUse1904Windowing = false;
     private int headRowNumber = DEFAULT_HEAD_ROW_NUMBER;
     private int writeCacheSize = DEFAULT_WRITE_CACHE_SIZE;
@@ -352,6 +370,17 @@ public class ExcelConfig {
 
     public Builder useFastWriter(boolean isUseFastWriter) {
       this.isUseFastWriter = isUseFastWriter;
+      return this;
+    }
+
+    /**
+     * 显式选择写引擎类型。
+     *
+     * @param engineType 引擎类型，{@code null} 自动回退到默认值 {@link EngineType#AUTO}
+     * @return Builder 自身
+     */
+    public Builder engineType(EngineType engineType) {
+      this.engineType = engineType != null ? engineType : EngineType.AUTO;
       return this;
     }
 

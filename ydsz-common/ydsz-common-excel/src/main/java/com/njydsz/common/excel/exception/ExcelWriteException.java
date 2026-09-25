@@ -1,6 +1,7 @@
 package com.njydsz.common.excel.exception;
 
 import com.njydsz.common.excel.util.ExcelI18nHelper;
+import com.njydsz.common.excel.core.config.EngineType;
 
 /**
  * Excel 写入异常类
@@ -127,16 +128,47 @@ public class ExcelWriteException extends ExcelException {
   }
 
   /**
-   * 创建注解配置错误异常
+   * 创建引擎能力不匹配异常。
    *
-   * @param clazz 目标类型
-   * @param fieldName 字段名
-   * @param reason 原因
-   * @return 携带 {@code WRITE_ANNOTATION_ERROR} 错误码的异常实例，不会为 {@code null}；
-   *     出错字段名已回填，上下文参数使用 {@code clazz} 的全限定名而非简单名
+   * <p>当显式选择 {@link EngineType#SUPER_FAST} 但当前写入场景不满足 fast 引擎前置条件时抛出——
+   * 不可应用回调/@ExcelStyle 注解、非 xlsx 格式、追加模式或多 Sheet 写入。
+   *
+   * @param engineType 显式选择的引擎
+   * @param isXlsx 是否为 xlsx 格式
+   * @param isAppend 是否为追加模式
+   * @param isMultiSheetWriting 是否为多 Sheet 写入
+   * @param hasCallbacks 是否注册了 WriteLifecycleHandler
+   * @param hasStyleAnnotations DTO 是否携带样式注解
+   * @return 携带 {@code ENGINE_CAPABILITY_MISMATCH} 错误码的异常实例，不会为 {@code null}
    */
-  public static ExcelWriteException invalidAnnotation(
-      Class<?> clazz, String fieldName, String reason) {
+  public static ExcelWriteException engineCapabilityMismatch(
+      EngineType engineType, boolean isXlsx, boolean isAppend,
+      boolean isMultiSheetWriting, boolean hasCallbacks, boolean hasStyleAnnotations) {
+    String reason;
+    if (!isXlsx) {
+      reason = "SUPER_FAST 引擎仅支持 .xlsx 格式";
+    } else if (isAppend) {
+      reason = "SUPER_FAST 引擎不支持追加模式";
+    } else if (isMultiSheetWriting) {
+      reason = "SUPER_FAST 引擎单 doWrite 不支持多 Sheet 写入";
+    } else if (hasCallbacks) {
+      reason = "SUPER_FAST 引擎不触发 WriteLifecycleHandler 回调";
+    } else if (hasStyleAnnotations) {
+      reason = "SUPER_FAST 引擎不应用 @ExcelStyle 样式注解";
+    } else {
+      reason = "写入能力约束不满足";
+    }
+    String message = ExcelI18nHelper.getMessage(
+        "excel.engine.capabilityMismatch.detail",
+        new Object[] {engineType, reason},
+        String.format("引擎能力不匹配: engineType=%s, 原因=%s", engineType, reason));
+    ExcelWriteException ex =
+        new ExcelWriteException(ExcelExceptionCode.ENGINE_CAPABILITY_MISMATCH, message);
+    return ex;
+  }
+
+  /**
+   * 创建注解配置错误异常
     String message = ExcelI18nHelper.getMessage(
         "excel.write.annotationError.detail",
         new Object[] {clazz.getSimpleName(), fieldName, reason},

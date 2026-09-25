@@ -29,6 +29,7 @@ import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.annotation.ExcelSheet;
 import com.njydsz.common.excel.annotation.ExcelStyle;
+import com.njydsz.common.excel.core.config.EngineType;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.context.WriteContext;
 import com.njydsz.common.excel.core.listener.WriteLifecycleHandler;
@@ -543,22 +544,31 @@ public class ExcelWriter {
 
       ExcelConfig config =
           metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
-      boolean useFastWriter = config.getIsUseFastWriter();
+
+      // P1 重构：使用 EngineType 显式引擎选择，替代此前 4 条件联合静默降级逻辑。
+      // 新逻辑语义：
+      //   AUTO           → 能力满足时 SUPER_FAST，否则 POI_STREAMING（向后兼容）
+      //   SUPER_FAST     → 能力不满足时显式抛异常（而非静默降级）
+      //   POI_STREAMING  → 始终走 POI 路径
+      EngineType engineType = config.getEngineType();
       boolean isXlsx = true;
       if (metadata.getFilePath() != null) {
         isXlsx = !metadata.getFilePath().toLowerCase().endsWith(".xls");
       }
-
-      if (useFastWriter
-          && isXlsx
+      boolean fastCapable = isXlsx
           && !isAppend
           && metadata.getClazz() != null
           && !isMultiSheetWriting
-          // 深度完善·方案 B：显式降级——fast 引擎不触发 WriteLifecycleHandler 回调、
-          // 不应用样式注解。注册了回调或 DTO 带样式注解时回落 POI 路径，
-          // 消除"配置了但静默失效"的能力差异（此前仅 javadoc 标注限制）
           && callbacks.isEmpty()
-          && !hasStyleAnnotations(metadata.getClazz())) {
+          && !hasStyleAnnotations(metadata.getClazz());
+
+      if (engineType == EngineType.SUPER_FAST && !fastCapable) {
+        throw ExcelWriteException.engineCapabilityMismatch(
+            engineType, isXlsx, isAppend, isMultiSheetWriting, !callbacks.isEmpty(),
+            hasStyleAnnotations(metadata.getClazz()));
+      }
+
+      if ((engineType == EngineType.AUTO || engineType == EngineType.SUPER_FAST) && fastCapable) {
         useFastPath = true;
         SuperFastExcelWriter fastWriter = new SuperFastExcelWriter(metadata);
         fastWriter.doWrite(data);
@@ -566,6 +576,8 @@ public class ExcelWriter {
             Duration.ofNanos(System.nanoTime() - startTime), rowCount, "fast", true);
         return;
       }
+
+      // engineType == POI_STREAMING 或 fastCapable == false (AUTO 模式)：走 POI 路径
 
       initWorkbook();
 

@@ -35,6 +35,7 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * 业务特异过滤器（YDIZ-ARCH-004 例外）：ydsz 用户中心专有 HTTP 指标收集（UserInfoMetrics），不可下沉至 common-safe。Order=LOWEST_PRECEDENCE-100 在认证之后执行。
  */
 @Slf4j
 @Component
