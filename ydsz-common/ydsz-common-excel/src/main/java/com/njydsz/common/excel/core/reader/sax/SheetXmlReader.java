@@ -1,6 +1,5 @@
 package com.njydsz.common.excel.core.reader.sax;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -90,9 +89,6 @@ public class SheetXmlReader {
   /** 流式解析滑动窗口大小 — 64KB，覆盖绝大多数单行超大场景 */
   private static final int STREAM_WINDOW_SIZE = 64 * 1024;
 
-  /** 流式解析最小触发阈值 — 输入流大于此大小时启用窗口流 */
-  private static final int STREAM_THRESHOLD = 32 * 1024;
-
   /**
    * 构造 Sheet 读取器。
    *
@@ -119,32 +115,11 @@ public class SheetXmlReader {
   // YDIZ-WARN-001 允许保留：SAX 解析单元格类型泛型擦除，值转换由调用方承担
   @SuppressWarnings("unchecked")
   void parse(InputStream is) throws IOException {
-    // P0-2 优化：根据输入大小选择解析模式
-    // — 小文件 (< 32KB)：走原有全量 byte[] 路径（mark/reset 无开销）
-    // — 大文件 (≥ 32KB)：走滑动窗口流式路径（内存峰值从 5MB+ 降至 ~64KB）
-    if (is.markSupported()) {
-      is.mark(STREAM_THRESHOLD + 1);
-      byte[] preview = new byte[STREAM_THRESHOLD];
-      int previewLen = 0;
-      int read;
-      while (previewLen < STREAM_THRESHOLD
-          && (read = is.read(preview, previewLen, STREAM_THRESHOLD - previewLen)) > 0) {
-        previewLen += read;
-      }
-      if (previewLen < STREAM_THRESHOLD) {
-        // 小文件：全量加载并走原有解析路径
-        byte[] fullData = new byte[previewLen];
-        System.arraycopy(preview, 0, fullData, 0, previewLen);
-        parseFullArray(fullData, 0, fullData.length);
-        return;
-      }
-      // 大文件：reset 后走流式解析
-      is.reset();
-      parseStreaming(is);
-    } else {
-      // 不支持 mark 的流：直接走流式解析
-      parseStreaming(is);
-    }
+    // P0-2 优化：统一滑动窗口流式解析
+    // — 消除 readAllBytesDirect 全量 byte[] 分配（100k 行 5.8MB → 仅 64KB 窗口）
+    // — 小文件 (< 32KB)：单次 read 进入窗口，完整消费后退出（I/O 与原路径相同）
+    // — 大文件 (≥ 32KB)：逐次 read 入窗，完整行切片后 emit，残留数据滑动到窗首
+    parseStreaming(is);
   }
 
   /**
@@ -320,57 +295,8 @@ public class SheetXmlReader {
         && reader.context.getCurrentRow() - reader.headRowNumber >= reader.maxRows;
   }
 
-  /**
-   * 全量 byte[] 解析路径（原有逻辑，用于小文件性能最优）。
-   */
-  private void parseFullArray(byte[] data, int start, int len) {
-    int pos = start;
-
-    while (pos < len) {
-      int rowStart = findTag(data, pos, len, "row");
-      if (rowStart == -1) {
-        break;
-      }
-
-      int rowAttrEnd = findChar(data, rowStart, len, '>');
-      if (rowAttrEnd == -1) {
-        pos = rowStart + 4;
-        continue;
-      }
-
-      int rowEnd = findClosingTag(data, rowAttrEnd + 1, len, "row");
-      if (rowEnd == -1) {
-        pos = rowAttrEnd + 2;
-        continue;
-      }
-
-      // 复用 shard 处理逻辑：将单行 slice 视为一个 mini-shard
-      int shardLen = rowEnd + 6 - rowStart;
-      byte[] shard = new byte[shardLen];
-      System.arraycopy(data, rowStart, shard, 0, shardLen);
-
-      processRowShard(shard, 0, rowAttrEnd - rowStart, rowEnd - rowStart);
-
-      if (shouldStopBreak()) {
-        break;
-      }
-
-      pos = rowEnd + 6;
-    }
-
-    // 清理残留引用
-    rowData = null;
-  }
-
-  private byte[] readAllBytesDirect(InputStream is) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream(65536);
-    byte[] buffer = new byte[8192];
-    int len;
-    while ((len = is.read(buffer)) > 0) {
-      baos.write(buffer, 0, len);
-    }
-    return baos.toByteArray();
-  }
+  // P0-2 优化：全量 byte[] 加载（readAllBytesDirect + parseFullArray）已移除，
+  // 替换为 parseStreaming() 统一滑动窗口路径。内存峰值从文件等长降至 64KB 窗口。
 
   private int findTag(byte[] data, int start, int len, String tagName) {
     byte[] tagStart = ("<" + tagName).getBytes(StandardCharsets.UTF_8);
