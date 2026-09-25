@@ -111,7 +111,6 @@ public class UserAccountServiceImpl implements UserAccountService {
    * {@inheritDoc}
    */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "id")
   public PageResponse<List<UserAccountVO>> page(UserAccountPageQuery query) {
     return userAccountRepository.page(query);
   }
@@ -122,7 +121,6 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @return 全部未删除用户列表
    */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "id")
   public List<UserAccountVO> list() {
     return userAccountRepository.list(new UserAccountPageQuery());
   }

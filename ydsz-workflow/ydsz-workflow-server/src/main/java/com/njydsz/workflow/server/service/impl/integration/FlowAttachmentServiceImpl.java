@@ -170,14 +170,12 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
 
   /** {@inheritDoc} */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<FlowAttachmentVO> listByTask(String taskId) {
     return attachmentRepository.findByTaskId(taskId);
   }
 
   /** {@inheritDoc} */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<FlowAttachmentVO> listByInstance(String instanceId) {
     return attachmentRepository.findByInstanceId(instanceId);
   }

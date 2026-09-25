@@ -15,7 +15,6 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.common.auth.annotation.PermissionMode;
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.constant.AuthErrorCode;
@@ -41,7 +40,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <ul>
  *   <li>根据 accessToken 加载用户信息（Map）
  *   <li>从用户信息中解析用户角色（固定字段 roleCode）
- *   <li>根据角色加载权限集合（菜单/按钮/接口）
+ *   <li>根据角色加载权限集合（接口级）
  *   <li>按注解要求（AND/OR、权限类型）进行校验
  * </ul>
  *
@@ -134,57 +133,6 @@ public class RbacPermissionEvaluator {
   }
 
   /**
-   * 校验是否满足注解要求的角色与权限。
-   *
-   * @param userInfo 用户信息 Map
-   * @param required 目标方法/类上的 {@link AuthMenuPermission} 注解
-   */
-  public void validateMenu(Map<String, Object> userInfo, AuthMenuPermission required) {
-    if (required == null) {
-      return;
-    }
-    validateMenu0(
-        userInfo,
-        required.permissionCodes(),
-        required.roleCodes(),
-        required.type(),
-        required.mode());
-  }
-
-  private void validateMenu0(
-      Map<String, Object> userInfo,
-      String[] permissionCodes,
-      String[] roleCodes,
-      AuthMenuPermission.PermissionType type,
-      PermissionMode mode) {
-    if (!properties.isEnabled()) {
-      return;
-    }
-    Set<String> requiredRoles = arrayToSet(roleCodes);
-    Set<String> requiredPerms = arrayToSet(permissionCodes);
-    if (requiredRoles.isEmpty() && requiredPerms.isEmpty()) {
-      return;
-    }
-
-    Set<String> userRoles = userInfo != null ? parseUserRoles(userInfo) : new HashSet<>(16);
-    if (isSuperAdmin(userRoles)) {
-      return;
-    }
-
-    PermissionType permType = mapToPermissionType(type);
-    boolean orMode = mode == PermissionMode.OR;
-
-    if (!requiredRoles.isEmpty()) {
-      validateRoles(userRoles, requiredRoles, orMode, permType);
-    }
-    if (!requiredPerms.isEmpty()) {
-      RolePermissions rp = getPermissionsByRoleCodes(userRoles);
-      Set<String> userPerms = selectPermissions(rp, type);
-      validatePermissions(userPerms, requiredPerms, orMode, permType, userPerms);
-    }
-  }
-
-  /**
    * 校验当前用户是否满足接口权限要求。
    *
    * @param apiCodes 需要校验的接口权限码数组
@@ -193,22 +141,6 @@ public class RbacPermissionEvaluator {
    */
   public void validateApi(String[] apiCodes, String[] roleCodes, PermissionMode mode) {
     validateApi0(loadCurrentUserInfo(), apiCodes, roleCodes, mode);
-  }
-
-  /**
-   * 校验当前用户是否满足菜单/按钮权限要求。
-   *
-   * @param permissionCodes 需要校验的权限码数组
-   * @param roleCodes 需要校验的角色编码数组
-   * @param type 权限类型（菜单/按钮）
-   * @param mode 校验模式（AND/OR）
-   */
-  public void validateMenu(
-      String[] permissionCodes,
-      String[] roleCodes,
-      AuthMenuPermission.PermissionType type,
-      PermissionMode mode) {
-    validateMenu0(loadCurrentUserInfo(), permissionCodes, roleCodes, type, mode);
   }
 
   /**
@@ -508,20 +440,6 @@ public class RbacPermissionEvaluator {
     }
   }
 
-  private Set<String> selectPermissions(
-      RolePermissions rolePermissions, AuthMenuPermission.PermissionType type) {
-    if (rolePermissions == null) {
-      return Collections.emptySet();
-    }
-    switch (type) {
-      case MENU:
-        return rolePermissions.getMenuPermissions();
-      case BUTTON:
-      default:
-        return rolePermissions.getButtonPermissions();
-    }
-  }
-
   private boolean isSuperAdmin(Set<String> userRoles) {
     return PermissionUtils.isSuperAdmin(userRoles, properties.getIgnoreRoles());
   }
@@ -675,19 +593,5 @@ public class RbacPermissionEvaluator {
         .map(String::trim)
         .filter(StringUtils::isNotBlank)
         .collect(Collectors.toSet());
-  }
-
-  private PermissionType mapToPermissionType(AuthMenuPermission.PermissionType type) {
-    if (type == null) {
-      return PermissionType.MENU;
-    }
-    switch (type) {
-      case MENU:
-        return PermissionType.MENU;
-      case BUTTON:
-        return PermissionType.BUTTON;
-      default:
-        return PermissionType.MENU;
-    }
   }
 }

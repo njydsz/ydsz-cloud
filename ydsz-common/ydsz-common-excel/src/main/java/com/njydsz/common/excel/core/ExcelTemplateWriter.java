@@ -28,6 +28,7 @@ import com.njydsz.common.excel.core.writer.ValueFormatter;
 import com.njydsz.common.excel.exception.ExcelWriteException;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 import com.njydsz.common.excel.support.cache.ReflectCache;
+import com.njydsz.common.excel.core.template.TemplateRegion;
 
 /**
  * Excel模板写入器 - 基于模板文件写入数据
@@ -249,5 +250,174 @@ public class ExcelTemplateWriter {
     ExcelConfig config =
         metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
     return config.getDefaultDateFormat();
+  }
+
+  // ==================== 区域循环写入（P1-6 新增：对标 poi-tl {{#each}}） ====================
+
+  /**
+   * 区域循环写入 — 将数据列表按 {@link TemplateRegion} 定义的模板行区域循环复制并填充。
+   *
+   * <p>对标 poi-tl 的 {@code {{#each items}}...{{/each}}} 语义：
+   * <ul>
+   *   <li>每条数据项按"模板行样式复制 → 字段值填充"流程追加写入</li>
+   *   <li>源模板行的列宽、单元格样式、公式均被复制到目标行（注：公式引用会按行偏移自动调整，
+   *       前提是模板中使用相对引用）</li>
+   *   <li>区域内的字段映射复用 {@link #buildColumnMapping} 的表头 → 字段名匹配逻辑</li>
+   * </ul>
+   *
+   * <h3>示例</h3>
+   *
+   * <pre>{@code
+   * // 模板第 4-6 行为数据区域的"样式模板"（行号从 0 计）
+   * TemplateRegion region = TemplateRegion.builder()
+   *     .sourceStartRow(4)
+   *     .sourceEndRow(4)
+   *     .targetStartRow(4)
+   *     .build();
+   * templateWriter.doWrite(userList, region);
+   * }</pre>
+   *
+   * @param data 待写入数据列表（空列表直接返回不写）
+   * @param region 模板区域描述符
+   * @throws ExcelWriteException 模板读取、偏移计算或 IO 失败时抛出
+   */
+  public void doWrite(List<?> data, TemplateRegion region) {
+    if (data == null || data.isEmpty()) {
+      return;
+    }
+    validateRegion(region);
+
+    try {
+      if (templatePath != null && templateInputStream == null) {
+        templateInputStream = new FileInputStream(templatePath);
+      }
+    } catch (FileNotFoundException e) {
+      throw ExcelWriteException.fileAccessFailed(templatePath, e.getMessage());
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(templateInputStream)) {
+      Sheet sheet = workbook.getSheetAt(sheetIndex);
+      Class<?> clazz = metadata.getClazz();
+      Field[] fields = ReflectCache.getCachedFields(clazz);
+      Map<Integer, Field> columnFieldMap;
+      try {
+        columnFieldMap = buildColumnMapping(sheet, region.getSourceStartRow(), fields);
+      } catch (Exception e) {
+        throw ExcelWriteException.fileAccessFailed(
+            templatePath != null ? templatePath : "<input-stream>",
+            "Failed to build column mapping: " + e.getMessage());
+      }
+
+      int rowSpan = region.getRowSpan();
+      // 预计算总行数需求，不足时预先 shiftRows 腾出空间（避免段错误）
+      int totalTargetRows = region.getTargetStartRow() + data.size() * rowSpan;
+      int available = sheet.getLastRowNum() + 1;
+      if (totalTargetRows > available) {
+        // 从模板区域末尾起向下平移足够行，保证目标区域不被覆盖
+        int shiftFrom = Math.max(region.getSourceEndRow() + 1, region.getTargetStartRow());
+        if (shiftFrom <= sheet.getLastRowNum()) {
+          sheet.shiftRows(shiftFrom, sheet.getLastRowNum(), totalTargetRows - available, true,
+              false);
+        }
+      }
+
+      for (int i = 0; i < data.size(); i++) {
+        Object item = data.get(i);
+        int targetBase = region.resolveTargetRow(i);
+
+        // 复制模板行到目标位置（列宽 + 样式 + 值暂不复制）
+        for (int r = 0; r < rowSpan; r++) {
+          int srcRow = region.getSourceStartRow() + r;
+          int dstRow = targetBase + r;
+          copyRowStyle(sheet, srcRow, dstRow);
+        }
+
+        // 使用 columnFieldMap 仅填充每区域第一行（数据行）
+        int fillerRow = targetBase;
+        Row row = sheet.getRow(fillerRow);
+        if (row == null) {
+          row = sheet.createRow(fillerRow);
+        }
+
+        for (Map.Entry<Integer, Field> entry : columnFieldMap.entrySet()) {
+          int colIndex = entry.getKey();
+          Field field = entry.getValue();
+          Cell cell = row.getCell(colIndex);
+          if (cell == null) {
+            cell = row.createCell(colIndex);
+          }
+          try {
+            Object value = MHFieldAccessor.getGetter(clazz, field).get(item);
+            String dateFormat = getDateFormat(field);
+            valueFormatter.setCellValueFast(cell, value, dateFormat);
+          } catch (Exception e) {
+            LOG.warn("模板区域写入字段值异常 — field={}, rowIndex={}", field.getName(), i, e);
+            cell.setBlank();
+          }
+        }
+      }
+
+      try (FileOutputStream fos = new FileOutputStream(metadata.getFilePath())) {
+        workbook.write(fos);
+        fos.flush();
+      }
+    } catch (IOException e) {
+      throw ExcelWriteException.fileAccessFailed(
+          templatePath != null ? templatePath : "<input-stream>", e.getMessage());
+    }
+  }
+
+  /**
+   * 行样式复制（单元格类型、列宽、行高、CellStyle）。复用源行每一列的 CellStyle 到新行。
+   *
+   * @param sheet 目标 Sheet
+   * @param srcRowNum 源行下标
+   * @param dstRowNum 目标行下标
+   */
+  private void copyRowStyle(Sheet sheet, int srcRowNum, int dstRowNum) {
+    Row srcRow = sheet.getRow(srcRowNum);
+    if (srcRow == null) {
+      return;
+    }
+    Row dstRow = sheet.getRow(dstRowNum);
+    if (dstRow == null) {
+      dstRow = sheet.createRow(dstRowNum);
+    }
+    // 行高
+    dstRow.setHeight(srcRow.getHeight());
+    // 复制单元格样式
+    for (int col = 0; col < srcRow.getLastCellNum(); col++) {
+      Cell srcCell = srcRow.getCell(col);
+      if (srcCell == null) {
+        continue;
+      }
+      Cell dstCell = dstRow.getCell(col);
+      if (dstCell == null) {
+        dstCell = dstRow.createCell(col);
+      }
+      CellStyle srcStyle = srcCell.getCellStyle();
+      if (srcStyle != null) {
+        // 复用同名 CellStyle（避免创建冗余样式对象）
+        dstCell.setCellStyle(srcStyle);
+      }
+    }
+  }
+
+  private void validateRegion(TemplateRegion region) {
+    if (region == null) {
+      throw new IllegalArgumentException("TemplateRegion must not be null");
+    }
+    if (region.getTargetStartRow() < 0) {
+      // 原地覆盖模式不校验重叠（用户明确有意覆盖）
+      return;
+    }
+    // 校验目标区域不超出源模板区域（避免写冲突）
+    if (region.getTargetStartRow() < region.getSourceEndRow() + 1
+        && region.getTargetStartRow() >= region.getSourceStartRow()) {
+      LOG.warn(
+          "Target region overlaps with source region — data overwrites template. "
+              + "Consider setting targetStartRow >= sourceEndRow + 1. region={}",
+          region);
+    }
   }
 }

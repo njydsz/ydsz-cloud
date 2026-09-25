@@ -3,7 +3,7 @@ package com.njydsz.common.auth.annotation;
 /**
  * 权限校验模式枚举。
  *
- * <p>统一用于 {@link AuthMenuPermission} 和 {@link AuthApiPermission} 注解的多权限码校验模式。
+ * <p>统一用于 {@link AuthApiPermission} 注解的多权限码校验模式。
  *
  * @author ydsz-team
  * @since 26.09.01

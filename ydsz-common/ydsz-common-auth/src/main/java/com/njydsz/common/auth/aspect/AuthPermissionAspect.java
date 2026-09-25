@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -13,7 +14,6 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 
@@ -38,12 +38,9 @@ import com.njydsz.common.auth.service.RbacPermissionEvaluator;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see AuthMenuPermission
  * @see AuthApiPermission
  * @see RbacPermissionEvaluator
- * @deprecated 服务于已废弃的 {@link AuthMenuPermission}，后续随 AuthMenuPermission 移除一并清理
  */
-@Deprecated
 @Aspect
 @Order(10)
 public class AuthPermissionAspect {
@@ -54,9 +51,6 @@ public class AuthPermissionAspect {
   private AuthMetricsCollector metricsCollector;
 
   /** 缓存 Method -> [classAnnotation, methodAnnotation] 避免每次请求做反射查找 */
-  private final ConcurrentHashMap<Method, CachedMenuAnnotation> menuAnnotationCache =
-      new ConcurrentHashMap<>(256);
-
   private final ConcurrentHashMap<Method, CachedApiAnnotation> apiAnnotationCache =
       new ConcurrentHashMap<>(256);
 
@@ -74,16 +68,6 @@ public class AuthPermissionAspect {
   }
 
   /**
-   * 菜单/按钮权限切点：匹配标注或元标注了 {@link AuthMenuPermission} 的方法或类。
-   *
-   * <p>作为 {@link #doMenuAround} 的引用锚点；命中后由该通知完成菜单/按钮权限校验。
-   */
-  @Pointcut(
-      "@annotation(com.njydsz.common.auth.annotation.AuthMenuPermission)"
-          + " || @within(com.njydsz.common.auth.annotation.AuthMenuPermission)")
-  public void menuPointCut() {}
-
-  /**
    * 接口权限切点：匹配标注或元标注了 {@link AuthApiPermission} 的方法或类。
    *
    * <p>作为 {@link #doApiAround} 的引用锚点；命中后由该通知完成接口权限校验。
@@ -92,54 +76,6 @@ public class AuthPermissionAspect {
       "@annotation(com.njydsz.common.auth.annotation.AuthApiPermission)"
           + " || @within(com.njydsz.common.auth.annotation.AuthApiPermission)")
   public void apiPointCut() {}
-
-  /**
-   * 菜单/按钮权限切面环绕通知。
-   *
-   * <p>拦截标注了 {@link AuthMenuPermission} 的方法，在方法执行前校验用户是否拥有指定的菜单或按钮权限， 校验失败时抛出 {@link
-   * com.njydsz.common.auth.exception.PermissionDeniedException}。
-   *
-   * @param joinPoint 切面连接点
-   * @return 方法返回值
-   * @throws Throwable 方法执行异常或权限校验异常
-   */
-  @Around("menuPointCut()")
-  public Object doMenuAround(ProceedingJoinPoint joinPoint) throws Throwable {
-    Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
-    Class<?> targetClass = joinPoint.getTarget().getClass();
-
-    CachedMenuAnnotation cached =
-        menuAnnotationCache.computeIfAbsent(
-            method,
-            m -> {
-              AuthMenuPermission classAnn =
-                  AnnotationUtils.findAnnotation(targetClass, AuthMenuPermission.class);
-              AuthMenuPermission methodAnn =
-                  AnnotationUtils.findAnnotation(m, AuthMenuPermission.class);
-              return new CachedMenuAnnotation(classAnn, methodAnn);
-            });
-
-    if (cached.classAnnotation == null && cached.methodAnnotation == null) {
-      return joinPoint.proceed();
-    }
-
-    long startNanos = System.nanoTime();
-    try {
-      Map<String, Object> userInfo = evaluator.loadCurrentUserInfo();
-
-      if (cached.classAnnotation != null) {
-        evaluator.validateMenu(userInfo, cached.classAnnotation);
-      }
-
-      if (cached.methodAnnotation != null) {
-        evaluator.validateMenu(userInfo, cached.methodAnnotation);
-      }
-
-      return joinPoint.proceed();
-    } finally {
-      recordCheckTime(System.nanoTime() - startNanos);
-    }
-  }
 
   /**
    * 接口权限切面环绕通知。
@@ -201,14 +137,6 @@ public class AuthPermissionAspect {
       metricsCollector.recordCheckTime(nanos);
     }
   }
-
-  /**
-   * 菜单/按钮权限注解的缓存条目。
-   *
-   * <p>同时持有类级与方法级 {@link AuthMenuPermission}，避免每次请求重复反射解析注解； 两者可同时为 {@code null}，表示方法及其所在类上均未标注注解。
-   */
-  private record CachedMenuAnnotation(
-      AuthMenuPermission classAnnotation, AuthMenuPermission methodAnnotation) {}
 
   /**
    * 接口权限注解的缓存条目。

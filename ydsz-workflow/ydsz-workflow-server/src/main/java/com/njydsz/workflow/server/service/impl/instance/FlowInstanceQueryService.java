@@ -199,7 +199,6 @@ public class FlowInstanceQueryService {
    * @return 分页结果（VO）
    */
   @Transactional(readOnly = true)
-  @DataScope(deptAlias = "", userAlias = "", userColumn = "initiator_id")
   public PageResponse<List<FlowInstanceVO>> page(FlowInstancePageQuery query) {
     // P1-3: 数据权限 SQL 片段（由 DataScopeAspect ThreadLocal 传递，DataScopeHelper 构造）
     try {

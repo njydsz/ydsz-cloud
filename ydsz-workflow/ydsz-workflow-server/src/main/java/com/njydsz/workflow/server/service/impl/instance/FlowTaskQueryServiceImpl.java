@@ -156,7 +156,6 @@ private static final int MAX_PAGE_SIZE = 100;
    * @param tenantId 租户 ID
    * @return 待办任务列表
    */
-  @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
   public List<FlowRunTaskVO> listTodoByAssignee(String assigneeId, String tenantId) {
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
     String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
@@ -173,7 +172,6 @@ private static final int MAX_PAGE_SIZE = 100;
    * @param tenantId 租户 ID
    * @return 多维匹配的待办任务列表
    */
-  @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
   public List<FlowRunTaskVO> listTodoByUser(
       String userId, List<String> roleCodes, List<String> deptIds, String tenantId) {
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
@@ -213,7 +211,6 @@ private static final int MAX_PAGE_SIZE = 100;
    * @param tenantId 租户 ID
    * @return 已办任务列表
    */
-  @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
   public List<FlowRunTaskVO> listDoneByAssignee(String assigneeId, String tenantId) {
     // P0-3: 改查历史表
     // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取

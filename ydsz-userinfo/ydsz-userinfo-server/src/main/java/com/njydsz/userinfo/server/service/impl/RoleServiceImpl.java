@@ -116,7 +116,6 @@ public class RoleServiceImpl implements RoleService {
    * <p>支持按 roleCode/roleName 模糊匹配、status 精确匹配过滤，结果按 sort 升序。
    */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public PageResponse<List<RoleVO>> page(RolePageQuery query) {
     return roleRepository.page(query);
   }
@@ -127,7 +126,6 @@ public class RoleServiceImpl implements RoleService {
    * @return 全部未删除角色列表（按 sort 升序）
    */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<RoleVO> list() {
     return roleRepository.list(new RolePageQuery());
   }
