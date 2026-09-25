@@ -1,6 +1,7 @@
 package com.njydsz.message.web.controller.internal;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.server.service.core.MessageService;
 
 /**
@@ -56,17 +58,19 @@ public class InternalMessageApiController {
    * 启用接口级限流（200 QPS）+ 幂等保护（5 秒，按 receiver + templateCode 维度），避免重试风暴与重复发送。
    * 敏感参数（接收人、模板变量）通过 POST body 传输，严禁出现在 URL 中。
    *
-   * @param request 消息请求（含 channel / receiver / templateCode / variables / businessType 等字段）
+   * @param dto 消息发送 DTO（含 channel / receiver / templateCode / content 等字段）
    * @return 成功时返回 traceId；失败时返回错误码 + 用户可读的错误信息
    * @throws com.njydsz.common.core.exception.BusinessException 消息发送失败（通道不可用 / 限流 / 供应商异常等）
    */
   @RateLimit(resource = "message.internalapi.sendMessage", threshold = 200)
   @Idempotent(
       key =
-          "'ydsz:message:internal-api:send-message:' + #request.receiver + ':' + #request.templateCode",
+          "'ydsz:message:internal-api:send-message:' + #dto.receiver + ':' + #dto.templateCode",
       ttlSeconds = 5)
   @PostMapping("/message/send")
-  public YdszResponse<String> sendMessage(@RequestBody MessageRequest request) {
+  public YdszResponse<String> sendMessage(@RequestBody MessageSendDTO dto) {
+    MessageRequest request = new MessageRequest();
+    BeanUtils.copyProperties(dto, request);
     MessageResult result = messageService.send(request);
     if (result.isSuccess()) {
       return YdszResponse.success(result.getTraceId());

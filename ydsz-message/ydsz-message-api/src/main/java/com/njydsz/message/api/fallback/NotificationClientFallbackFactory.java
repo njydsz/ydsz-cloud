@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.common.util.message.MessageUtils;
@@ -44,7 +44,7 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
     log.warn("[NotificationClient] 降级触发: {}", cause.getMessage());
     return new NotificationClient() {
       @Override
-      public YdszResponse<MessageResult> sendMessage(MessageRequest request) {
+      public YdszResponse<MessageResult> sendMessage(MessageSendDTO request) {
         log.warn(
             "[NotificationClient] sendMessage 降级: receiver={}, subject={}, reason={}",
             request == null ? null : request.getReceiver(),

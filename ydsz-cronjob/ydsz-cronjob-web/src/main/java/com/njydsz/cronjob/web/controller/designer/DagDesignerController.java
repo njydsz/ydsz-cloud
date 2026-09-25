@@ -94,7 +94,7 @@ public class DagDesignerController {
     private String jobKey;
     /** 显示名称 */
     private String label;
-    /** 节点类型（TASK/APPROVAL/SUB_WORKFLOW） */
+    /** 节点类型（TASK/APPROVAL） */
     private String nodeType;
     /** X 坐标 */
     private int x;
@@ -104,7 +104,7 @@ public class DagDesignerController {
     private String approvalUsers;
     /** 审批超时分钟（APPROVAL 节点） */
     private Integer approvalTimeoutMinutes;
-    /** 子工作流 DAG KEY（SUB_WORKFLOW 节点） */
+    /** 子工作流 DAG KEY（已废弃，保留用于反序列化兼容） */
     private String subWorkflowDagKey;
     /** 节点级参数 JSON */
     private String paramsJson;

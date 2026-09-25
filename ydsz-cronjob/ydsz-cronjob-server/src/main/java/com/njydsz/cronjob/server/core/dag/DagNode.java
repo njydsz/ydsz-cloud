@@ -10,13 +10,12 @@ import com.njydsz.common.json.annotation.JsonProperty;
  *
  * <p>对应 dag_definition JSON 中的 nodes 数组元素，描述一个任务节点及其在前端可视化画布上的坐标位置。
  *
- * <p>支持五种节点类型：
+ * <p>支持四种节点类型：
  *
  * <ul>
  *   <li>{@link NodeType#TASK}：普通任务节点，调用 handler 执行
  *   <li>{@link NodeType#CONDITION}：条件分支节点，根据 SpEL 表达式结果选择分支（P1-1）
  *   <li>{@link NodeType#PARALLEL_GATEWAY}：并行网关节点，Fork/Join 并行执行（P1-1）
- *   <li>{@link NodeType#SUB_WORKFLOW}：子工作流节点，嵌套触发另一个 DAG 工作流（P1-5）
  *   <li>{@link NodeType#APPROVAL}：审批节点，等待人工审批后继续执行（P1-6）
  * </ul>
  *
@@ -30,7 +29,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * @param conditionExpression 条件表达式（CONDITION 节点必填，SpEL 语法，如 "${a.result=='success'}"）
  * @param loopCount 保留字段（已废弃，序列化兼容用）
  * @param parallelBranches 并行分支数（PARALLEL_GATEWAY 节点可选，默认按出边数确定）
- * @param subWorkflowDagKey 子工作流 DAG KEY（SUB_WORKFLOW 节点，P1-5）
+ * @param subWorkflowDagKey 子工作流 DAG KEY（已废弃，保留用于反序列化兼容）
  * @param approvalUsers 审批人列表（APPROVAL 节点，逗号分隔，P1-6）
  * @param approvalTimeoutMinutes 审批超时时间（分钟，超时自动拒绝，P1-6）
  * @author ydsz-team
@@ -107,36 +106,6 @@ public record DagNode(
   public static DagNode of(
       String jobKey, String jobId, String label, int x, int y, String paramsJson) {
     return new DagNode(jobKey, jobId, label, x, y, paramsJson, DEFAULT_NODE_TYPE, null, null, null);
-  }
-
-  /**
-   * P1-5: 工厂方法：创建 SUB_WORKFLOW 子工作流节点。
-   *
-   * <p><b>已下线（YDIZ-P1-1）：</b>流程编排由 ydsz-workflow 引擎承担。
-   * 存量兼容；新代码禁止调用本方法。
-   *
-   * @param jobKey 节点 KEY
-   * @param label 显示名称
-   * @param subWorkflowDagKey 子工作流 DAG KEY（必须存在于 ydsz_job_dag 表）
-   * @return SUB_WORKFLOW 节点
-   * @deprecated 流程编排由 ydsz-workflow 引擎承担，不再在 cronjob 内嵌 DAG 中支持
-   */
-  @Deprecated
-  public static DagNode subWorkflow(String jobKey, String label, String subWorkflowDagKey) {
-    return new DagNode(
-        jobKey,
-        null,
-        label,
-        0,
-        0,
-        null,
-        NodeType.SUB_WORKFLOW.name(),
-        null,
-        null,
-        null,
-        subWorkflowDagKey,
-        null,
-        null);
   }
 
   /**
@@ -244,10 +213,8 @@ public record DagNode(
   /**
    * DAG 节点类型枚举。
    *
-   * <p>支持 5 种节点类型：TASK（任务）、CONDITION（条件分支）、PARALLEL_GATEWAY（并行网关）、
-   * SUB_WORKFLOW（子工作流）、APPROVAL（审批）。
-   *
-   * <p>LOOP 类型已废弃，保留枚举值仅用于反序列化兼容旧数据。
+   * <p>支持 4 种节点类型：TASK（任务）、CONDITION（条件分支）、PARALLEL_GATEWAY（并行网关）、
+   * APPROVAL（审批）。
    */
   public enum NodeType {
     /** 普通任务节点：调用 handler 执行 */
@@ -256,18 +223,6 @@ public record DagNode(
     CONDITION,
     /** P1-1: 并行网关节点：Fork/Join 并行执行 */
     PARALLEL_GATEWAY,
-    /**
-     * P1-5: 子工作流节点：嵌套触发另一个 DAG 工作流。
-     *
-     * <p><b>已下线（YDIZ-P1-1）：</b>跨 DAG 编排能力由 ydsz-workflow 引擎承接，
-     * cronjob 模块专注于分布式调度与本模块内嵌 DAG；存量 DAG 中的 SUB_WORKFLOW 节点
-     * 由 {@link com.njydsz.cronjob.server.core.dag.DagInstanceExecutor}
-     * 兼容处理（标记 SKIPPED），新 DAG 不允许声明该节点类型（校验器拒绝）。
-     *
-     * @deprecated 流程编排由 ydsz-workflow 引擎承担，不再在 cronjob 内嵌 DAG 中支持
-     */
-    @Deprecated
-    SUB_WORKFLOW,
     /** P1-6: 审批节点：等待人工审批后继续执行 */
     APPROVAL;
 

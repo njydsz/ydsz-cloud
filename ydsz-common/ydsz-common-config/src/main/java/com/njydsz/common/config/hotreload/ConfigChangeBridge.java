@@ -135,26 +135,6 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
   }
 
   /**
-   * 处理配置变更事件（无审计发布器，向后兼容）。
-   *
-   * @param environment 环境配置
-   * @param publisher 事件发布器
-   * @param changeMonitorProps 变更监控配置
-   * @param listeners 监听器列表（允许 null 或空列表）
-   * @deprecated 使用 5 参数构造器 {@link #ConfigChangeBridge(ConfigurableEnvironment,
-   *             ApplicationEventPublisher, ConfigProperties.ChangeMonitor, List,
-   *             ConfigAuditPublisher)} 替代
-   */
-  @Deprecated
-  public ConfigChangeBridge(
-      ConfigurableEnvironment environment,
-      ApplicationEventPublisher publisher,
-      ConfigProperties.ChangeMonitor changeMonitorProps,
-      List<ConfigChangeListener> listeners) {
-    this(environment, publisher, changeMonitorProps, listeners, null);
-  }
-
-  /**
    * 初始化稳定视图快照（启动时执行一次）。
    *
    * <p>全量遍历当前 Environment 中所有可枚举属性源的属性值，作为后续 diff 计算的基线。

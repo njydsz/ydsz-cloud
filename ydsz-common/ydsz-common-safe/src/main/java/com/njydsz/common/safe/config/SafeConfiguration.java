@@ -32,6 +32,8 @@ import com.njydsz.common.safe.alert.SecurityEventAggregator;
 import com.njydsz.common.safe.alert.SecurityEventListener;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.audit.SecurityAuditLogger;
+import com.njydsz.common.safe.spi.DefaultDesensitizeProvider;
+import com.njydsz.common.safe.spi.DesensitizeProvider;
 import com.njydsz.common.safe.cache.SafeCacheFactoryHelper;
 import com.njydsz.common.safe.captcha.CaptchaGenerator;
 import com.njydsz.common.safe.captcha.CaptchaProperties;
@@ -511,6 +513,22 @@ public class SafeConfiguration {
     LOG.info("注册敏感数据脱敏 AOP 拦截器，启用状态: {}", configuration.isEnabled());
     return new SensitiveDataAdvice(configuration);
   }
+  /**
+   * P0-3: 注册数据脱敏策略提供者（DesensitizeProvider SPI 默认实现）。
+   *
+   * <p>默认实现基于 ydzs-common-safe 内置 SensitiveType 枚举。
+   * 业务模块可声明 DesensitizeProvider + @Primary 覆盖默认。
+   *
+   * @return 数据脱敏策略提供者实例
+   */
+  @Bean
+  @Primary
+  @ConditionalOnMissingBean(DesensitizeProvider.class)
+  public DesensitizeProvider desensitizeProvider() {
+    LOG.info("Registering default DesensitizeProvider (built-in SensitiveType rules)");
+    return new DefaultDesensitizeProvider();
+  }
+
 
   // ======================== 幂等能力（从 ydzs-common-lock 迁 入） ========================
 

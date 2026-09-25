@@ -6,7 +6,6 @@ import java.util.Map;
 import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 
-import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
@@ -58,7 +57,7 @@ public class BatchSendRequestDTO {
   @Xss private String senderId;
 
   /** 直接传入的请求列表（requests 模式，优先于 receiverList） */
-  private List<MessageRequest> requests;
+  private List<MessageItemRequestDTO> requests;
 
   /**
    * 互斥校验：receiverList 与 requests 不能同时非空。

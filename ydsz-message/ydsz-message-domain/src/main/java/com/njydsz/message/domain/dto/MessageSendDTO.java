@@ -6,7 +6,6 @@ import java.util.Map;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 
@@ -88,7 +87,7 @@ public class MessageSendDTO {
    *
    * <p>单次最多 100 条，超出返回 400。
    */
-  private List<MessageRequest> batchRequests;
+  private List<MessageItemRequestDTO> batchRequests;
 
   /**
    * 批次 ID（仅 strategy=BATCH 时使用，业务侧生成，用于进度查询）。

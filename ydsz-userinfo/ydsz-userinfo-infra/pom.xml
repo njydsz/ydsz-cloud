@@ -51,6 +51,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-userinfo-domain</artifactId>
         </dependency>
+        <!-- 编译期 classpath 需要：domain 模块 MapStruct 注解内联引用 ReportingPolicy.IGNORE，
+             传递依赖不携带 provided 域的 mapstruct，需在本模块显式声明（YDIZ-WARN-001 例外：仅消除枚举常量解析告警） -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
         <!-- YDIZ-DDD-001 合规：infra 层反向依赖 api，置 provided 切断传递 -->
         <dependency>
             <groupId>com.njydsz</groupId>

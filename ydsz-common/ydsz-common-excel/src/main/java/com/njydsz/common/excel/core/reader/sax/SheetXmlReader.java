@@ -5,12 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +15,7 @@ import com.njydsz.common.excel.api.validator.RowRule;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.common.excel.core.reader.SimpleCell;
+import com.njydsz.common.excel.core.reader.sax.ExcelDateConverter;
 
 /**
  * Sheet XML 数据读取器 — 纯手工 XML 解析。
@@ -517,16 +514,17 @@ public class SheetXmlReader {
     }
 
     // 深度完善·方案 B：数值单元格且样式为日期格式（styles.xml numFmt 判定）时，
-    // 序列值按 1900/1904 窗口转换为 Date 交付转换链——此前一律按纯数字读入，
+    // 序列值按 1900/1904 窗口转换为 LocalDateTime 后装载到 SimpleCell——此前一律按纯数字读入，
     // Date/LocalDateTime 字段拿到错误值（fastNumericDateCellIsKnownLimitation 已解除）
     if (isDateStyledNumericCell()) {
       try {
         double serial = Double.parseDouble(actualValue);
-        // POI DateUtil 返回 java.util.Date，桥接为 LocalDateTime 后装载到 SimpleCell
-        Date date = DateUtil.getJavaDate(serial, reader.excelConfig().getIsUse1904Windowing());
-        LocalDateTime ldt = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        // ExcelDateConverter：零 POI 实现的 Excel 序号 → LocalDateTime 转换
+        LocalDateTime ldt =
+            ExcelDateConverter.getLocalDateTime(
+                serial, reader.excelConfig().getIsUse1904Windowing());
         SimpleCell dateCell = SimpleCell.forDate(actualValue, ldt);
-        return colMeta.convertStrategy.convert(dateCell, CellType.NUMERIC);
+        return colMeta.convertStrategy.convert(dateCell, ExcelCellType.NUMERIC);
       } catch (NumberFormatException e) {
         // 非数值内容按原路径处理（异常生成器的坏数据不在此放大）
       }
@@ -547,17 +545,17 @@ public class SheetXmlReader {
     return stylesReader != null && stylesReader.isDateFormat(cellStyleIndex);
   }
 
-  private CellType mapCellType(String type) {
+  private ExcelCellType mapCellType(String type) {
     if ("s".equals(type) || "inlineStr".equals(type)) {
-      return CellType.STRING;
+      return ExcelCellType.STRING;
     } else if ("b".equals(type)) {
-      return CellType.BOOLEAN;
+      return ExcelCellType.BOOLEAN;
     } else if ("e".equals(type)) {
-      return CellType.ERROR;
+      return ExcelCellType.ERROR;
     } else if ("str".equals(type)) {
-      return CellType.FORMULA;
+      return ExcelCellType.FORMULA;
     } else {
-      return CellType.NUMERIC;
+      return ExcelCellType.NUMERIC;
     }
   }
 

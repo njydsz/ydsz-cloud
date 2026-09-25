@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameAssemblerProperties;
+
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.api.client.OrgQueryClient;
 
@@ -36,6 +37,9 @@ import com.njydsz.userinfo.api.client.OrgQueryClient;
  * @author ydsz-team
  * @since 26.09.01
  */
+// YDIZ-WARN-001 例外：NameAssembler/NameAssemblerProperties 已标注 @Deprecated(forRemoval=true)，
+// 暂未迁移至 ydsz-common-core，过渡期允许抑制，迁移完成后移除该注解
+@SuppressWarnings("removal")
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(OrgQueryClient.class)
 @ConditionalOnMissingBean(NameAssembler.class)

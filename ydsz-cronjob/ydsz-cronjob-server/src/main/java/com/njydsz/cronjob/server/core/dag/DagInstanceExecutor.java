@@ -47,7 +47,7 @@ import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
  *   <li>所有节点完成后，更新 DAG 实例终态（SUCCESS/FAILED/PARTIAL_SUCCESS）
  * </ol>
  *
- * <p>支持 5 种节点类型：TASK / CONDITION / PARALLEL_GATEWAY / SUB_WORKFLOW / APPROVAL。
+ * <p>支持 4 种节点类型：TASK / CONDITION / PARALLEL_GATEWAY / APPROVAL。
  *
  * <h3>跨节点上下文传递（P2-5）</h3>
  *
@@ -312,7 +312,6 @@ public class DagInstanceExecutor {
    *   <li>{@link DagNode.NodeType#TASK}：调用任务 handler 执行</li>
    *   <li>{@link DagNode.NodeType#CONDITION}：求值 SpEL 条件表达式，选择后继分支（P1-1）</li>
    *   <li>{@link DagNode.NodeType#PARALLEL_GATEWAY}：Fork/Join 并行执行（P1-1）</li>
-   *   <li>{@link DagNode.NodeType#SUB_WORKFLOW}：嵌套触发子 DAG 实例（P1-5）</li>
    *   <li>{@link DagNode.NodeType#APPROVAL}：标记为 WAITING_FOR_APPROVAL，等待人工审批（P2-4）</li>
    * </ul>
    *
@@ -330,8 +329,6 @@ public class DagInstanceExecutor {
       dispatchParallelGatewayNode(dagInstanceId, dagId, node, definition);
     } else if (nodeType == DagNode.NodeType.APPROVAL) {
       dispatchApprovalNode(dagInstanceId, node);
-    } else if (nodeType == DagNode.NodeType.SUB_WORKFLOW) {
-      dispatchSubWorkflowNode(dagInstanceId, dagId, node, definition);
     } else {
       dispatchTaskNode(dagInstanceId, dagId, node, definition);
     }
@@ -364,27 +361,6 @@ public class DagInstanceExecutor {
         node.jobKey(),
         node.approvalUsers(),
         node.approvalTimeoutMinutes());
-  }
-
-  /**
-   * P1-1: 派发 SUB_WORKFLOW 子工作流节点（已下线，仅作存量兼容处理）。
-   *
-   * <p>SUB_WORKFLOW 节点类型自 26.09.23 起下线，流程编排能力由 ydsz-workflow 引擎承担。
-   * 存量 DAG 定义中如仍含 SUB_WORKFLOW 节点，执行时自动标记为 SKIPPED，
-   * 不阻断整体 DAG 流程。
-   *
-   * @param dagInstanceId DAG 实例 ID
-   * @param dagId DAG 定义 ID
-   * @param node 子工作流节点
-   * @param definition DAG 定义
-   */
-  private void dispatchSubWorkflowNode(
-      String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
-    log.warn(
-        "[DagInstance] SUB_WORKFLOW 已下线(由 ydsz-workflow 承接), 标记 SKIPPED: instanceId={} jobKey={}",
-        dagInstanceId,
-        node.jobKey());
-    markNodeSkipped(dagInstanceId, node.jobKey());
   }
 
   /**

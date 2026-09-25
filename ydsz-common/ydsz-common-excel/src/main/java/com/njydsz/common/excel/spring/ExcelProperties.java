@@ -3,6 +3,8 @@ package com.njydsz.common.excel.spring;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
+import com.njydsz.common.excel.core.config.EngineType;
+import com.njydsz.common.excel.core.config.ExcelConfig;
 
 /**
  * Excel 模块配置属性
@@ -34,11 +36,11 @@ public class ExcelProperties {
   /** 是否自动 trim 字符串，默认 true */
   private Boolean isAutomaticTrim = true;
 
-  /** 是否使用快速读取（零 POI），默认 false（POI 兼容路径，正确性优先） */
-  private Boolean isUseFastReader = false;
+  /** 是否使用快速读取（零 POI），默认 true（fast 引擎优先） */
+  private Boolean isUseFastReader = true;
 
-  /** 是否使用快速写入（零 POI），默认 false（POI 兼容路径，正确性优先） */
-  private Boolean isUseFastWriter = false;
+  /** 是否使用快速写入（零 POI），默认 true（fast 引擎优先） */
+  private Boolean isUseFastWriter = true;
 
   /** 流式解析阈值（MB），默认 10 */
   private Integer streamingParseThresholdMb = 10;
@@ -215,5 +217,54 @@ public class ExcelProperties {
 
   public void setMaxReadCacheSize(Integer maxReadCacheSize) {
     this.maxReadCacheSize = maxReadCacheSize;
+  }
+
+  /**
+   * 将 Spring {@code ydsz.excel.*} 配置桥接为不可变的 {@link ExcelConfig}。
+   *
+   * <p>所有 getter 均已做 null-safe 处理——{@code ExcelConfig.Builder} 提供合理的内置默认值，
+   * 未配置的字段不需要显式设值。
+   *
+   * <p>引擎类型由 {@code isUseFastWriter} 隐式推导：fast writer 未启用时使用 {@link
+   * EngineType#POI_STREAMING}，否则由 {@link EngineType#AUTO} 在运行期按文件大小自动选择。
+   *
+   * @return 根据当前属性构建的不可变 {@link ExcelConfig} 实例
+   */
+  public ExcelConfig toExcelConfig() {
+    boolean fastReader = getOrElse(isUseFastReader, true);
+    boolean fastWriter = getOrElse(isUseFastWriter, true);
+    EngineType inferredEngine = fastWriter ? EngineType.AUTO : EngineType.POI_STREAMING;
+    return ExcelConfig.builder()
+        .readBufferSize(getOrElse(readBufferSize, 8192))
+        .writeBufferSize(getOrElse(writeBufferSize, 8192))
+        .automaticTrim(getOrElse(isAutomaticTrim, true))
+        .defaultDateFormat(getOrElse(defaultDateFormat, "yyyy-MM-dd HH:mm:ss"))
+        .defaultNumberFormat(getOrElse(defaultNumberFormat, "#,##0.00"))
+        .maxReadCacheSize(getOrElse(maxReadCacheSize, 1024))
+        .streamingParseThresholdMB(getOrElse(streamingParseThresholdMb, 10))
+        .strictNumberConversion(getOrElse(isStrictNumberConversion, false))
+        .maxReadFileSizeMB(getOrElse(maxReadFileSizeMb, 100))
+        .maxWriteFileSizeMB(getOrElse(maxWriteFileSizeMb, 50))
+        .formulaInjectionProtection(getOrElse(isFormulaInjectionProtection, true))
+        .useFastReader(fastReader)
+        .useFastWriter(fastWriter)
+        .engineType(inferredEngine)
+        .compressionLevel(getOrElse(compressionLevel, 1))
+        .use1904Windowing(getOrElse(isUse1904Windowing, false))
+        .headRowNumber(getOrElse(headRowNumber, 1))
+        .writeCacheSize(getOrElse(writeCacheSize, 100))
+        .validationMode(getOrElse(validationMode, ValidationMode.FAIL_FAST))
+        .build();
+  }
+
+  /**
+   * 返回属性的非空值，若为 {@code null} 则返回指定的默认值。
+   *
+   * @param value 属性原始值
+   * @param defaultValue 属性为 {@code null} 时的回退值
+   * @return value 不为 {@code null} 时返回 value，否则返回 defaultValue
+   */
+  private static <T> T getOrElse(T value, T defaultValue) {
+    return value != null ? value : defaultValue;
   }
 }

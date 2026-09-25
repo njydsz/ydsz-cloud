@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.context.annotation.Primary;
 
 import com.njydsz.common.file.health.FileHealthIndicator;
 import com.njydsz.common.file.lifecycle.FileLifecycleManager;
@@ -23,6 +24,9 @@ import com.njydsz.common.file.metrics.FileMetrics;
 import com.njydsz.common.file.service.FileDedupService;
 import com.njydsz.common.file.storage.CheckpointService;
 import com.njydsz.common.file.storage.CheckpointStore;
+
+import com.njydsz.common.file.spi.DefaultImageProcessor;
+import com.njydsz.common.file.spi.ImageProcessor;
 import com.njydsz.common.file.storage.DefaultCheckpointService;
 import com.njydsz.common.file.storage.DefaultStorageFactory;
 import com.njydsz.common.file.storage.DelegatingCheckpointStore;
@@ -377,4 +381,21 @@ public class FileConfiguration {
     return new FileHealthIndicator(
         provider, props, dedupProvider, virusScannerProvider, retryHelperProvider, metricsProvider);
   }
+
+  /**
+   * P0-3: 注册图片处理器（ImageProcessor SPI 默认实现）。
+   *
+   * <p>默认实现基于 Java AWT + ImageIO（无需额外 native 依赖）。
+   * 业务模块可通过声明 ImageProcessor + @Primary 覆盖为 libvips / ImageMagick 实现。
+   *
+   * @return 图片处理器实例
+   */
+  @Bean
+  @Primary
+  @ConditionalOnMissingBean(ImageProcessor.class)
+  public ImageProcessor imageProcessor() {
+    log.info("Registering default ImageProcessor (AWT + ImageIO based)");
+    return new DefaultImageProcessor();
+  }
+
 }

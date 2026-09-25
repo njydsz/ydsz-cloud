@@ -56,7 +56,6 @@ import com.njydsz.cronjob.domain.dag.DagNodeStatus;
  *
  * <ul>
  *   <li>TASK: round-rectangle（圆角矩形）
- *   <li>SUB_WORKFLOW: barrel（圆筒形）
  *   <li>APPROVAL: star（星形）
  * </ul>
  *
@@ -160,7 +159,7 @@ public final class DagCytoscapeHelper {
   /**
    * 根据节点类型返回对应的 Cytoscape.js 形状名称。
    *
-   * @param nodeType 节点类型字符串（TASK / SUB_WORKFLOW / APPROVAL）
+   * @param nodeType 节点类型字符串（TASK / APPROVAL）
    * @return Cytoscape.js 形状名称，未知/废弃类型统一返回 round-rectangle
    */
   public static String shapeForNodeType(String nodeType) {
@@ -169,7 +168,6 @@ public final class DagCytoscapeHelper {
     }
     return switch (nodeType.toUpperCase()) {
       // P2-E2: CONDITION/LOOP/PARALLEL_GATEWAY 已于 26.09.01 废弃（反序列化降级为 TASK），统一矩形渲染
-      case "SUB_WORKFLOW" -> "barrel";
       case "APPROVAL" -> "star";
       default -> "round-rectangle";
     };

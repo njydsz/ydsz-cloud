@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.message.api.fallback.NotificationClientFallbackFactory;
@@ -43,7 +43,7 @@ public interface NotificationClient {
    * @return 发送结果（包含 MessageResult 详细信息）
    */
   @PostMapping(FeignClientConstants.MESSAGE_PATH_SEND)
-  YdszResponse<MessageResult> sendMessage(@RequestBody MessageRequest request);
+  YdszResponse<MessageResult> sendMessage(@RequestBody MessageSendDTO request);
 
   /**
    * 实时广播推送（WebSocket/SSE）。

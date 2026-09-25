@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
@@ -24,6 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * @since 26.09.17
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @TableName("ydsz_agt_async_task")
 public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
 

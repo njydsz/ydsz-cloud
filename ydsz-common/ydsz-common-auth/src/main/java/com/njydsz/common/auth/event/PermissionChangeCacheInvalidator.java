@@ -138,16 +138,6 @@ public class PermissionChangeCacheInvalidator {
     }
   }
 
-  @Deprecated
-  private void invalidateDataPermissionCache(String roleCode) {
-    log.debug("invalidateDataPermissionCache 已废弃，行级数据权限缓存不再由 auth 模块管理");
-  }
-
-  @Deprecated
-  private void invalidateColumnPermissionCache(String roleCode) {
-    log.debug("invalidateColumnPermissionCache 已废弃，列级数据权限缓存不再由 auth 模块管理");
-  }
-
   private void invalidateAllCaches(String roleCode) {
     invalidateRolePermissionCache(roleCode);
     log.info("角色所有权限缓存已失效：roleCode={}", roleCode);

@@ -10,9 +10,9 @@ import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
 
+import com.njydsz.common.excel.core.reader.sax.ExcelCellType;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor.FieldSetter;
 
 /**
@@ -199,11 +199,13 @@ public final class ColumnMetadata {
   /**
    * 类型转换策略接口。
    *
-   * <p>将 Apache POI {@code Cell} 的值转换为目标字段类型。通过预计算策略对象，避免每行每列的
+   * <p>将 {@link Cell} 的值转换为目标字段类型。通过预计算策略对象，避免每行每列的
    * {@code instanceof} 判断，使 switch 分支直接进入对应的高速转换路径。
+   *
+   * <p><b>注意</b>：{@code forcedType} 使用本地 {@link ExcelCellType}，此接口不依赖 POI 枚举。
    */
   public interface TypeConvertStrategy {
-    Object convert(Cell cell, CellType forcedType);
+    Object convert(Cell cell, ExcelCellType forcedType);
 
     static TypeConvertStrategy create(
         Class<?> targetType, boolean automaticTrim, String dateFormat) {
@@ -211,9 +213,27 @@ public final class ColumnMetadata {
           convertCellValue(cell, forcedType, targetType, automaticTrim, dateFormat);
     }
 
+    /**
+     * 安全解析单元格的 {@link ExcelCellType}（兼容 SimpleCell 和 POI Cell）。
+     *
+     * @param cell 单元格对象（SimpleCell 或 POI Cell）
+     * @return 本地 ExcelCellType，null 安全
+     */
+    private static ExcelCellType resolveExcelCellType(Cell cell) {
+      if (cell instanceof SimpleCell simpleCell) {
+        return simpleCell.getExcelCellType();
+      }
+      // POI Cell 桥接：将 POI CellType 映射为本地 ExcelCellType
+      try {
+        return SimpleCell.mapToPoiCellTypeReverse(cell.getCellType());
+      } catch (Exception e) {
+        return ExcelCellType.BLANK;
+      }
+    }
+
     private static Object convertCellValue(
         Cell cell,
-        CellType forcedType,
+        ExcelCellType forcedType,
         Class<?> targetType,
         boolean automaticTrim,
         String dateFormat) {
@@ -221,7 +241,7 @@ public final class ColumnMetadata {
         return null;
       }
 
-      CellType cellType = (forcedType != null) ? forcedType : cell.getCellType();
+      ExcelCellType cellType = (forcedType != null) ? forcedType : resolveExcelCellType(cell);
 
       switch (cellType) {
         case STRING:
@@ -235,8 +255,8 @@ public final class ColumnMetadata {
           // 深度完善·方案 B：fast 路径 SimpleCell 预转换的日期优先（其 getCellStyle()
           // 为 null，DateUtil.isCellDateFormatted 恒 false——此前数值型日期单元格被当
           // 纯数字读入 Date 字段产生错值）。POI 路径（真实 Cell）不受影响。
-          if (cell instanceof SimpleCell) {
-            LocalDateTime fastLdt = ((SimpleCell) cell).getLocalDateTimeCellValue();
+          if (cell instanceof SimpleCell simpleCell) {
+            LocalDateTime fastLdt = simpleCell.getLocalDateTimeCellValue();
             if (fastLdt != null) {
               return convertDateToTarget(fastLdt, targetType);
             }
@@ -257,7 +277,7 @@ public final class ColumnMetadata {
 
         case FORMULA:
           return convertCellValue(
-              cell, cell.getCachedFormulaResultType(), targetType, automaticTrim, dateFormat);
+              cell, resolveExcelCellType(cell), targetType, automaticTrim, dateFormat);
 
         case BLANK:
           return null;

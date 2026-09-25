@@ -58,7 +58,7 @@ class ConfigChangeBridgeTest {
   }
 
   private ConfigChangeBridge createBridge() {
-    return new ConfigChangeBridge(environment, publisher, changeMonitor, listeners);
+    return new ConfigChangeBridge(environment, publisher, changeMonitor, listeners, null);
   }
 
   @Nested
@@ -96,7 +96,7 @@ class ConfigChangeBridgeTest {
       when(changeMonitor.isSnapshotOldValues()).thenReturn(false);
 
       ConfigChangeBridge bridge = new ConfigChangeBridge(
-          environment, publisher, changeMonitor, null);
+          environment, publisher, changeMonitor, null, null);
 
       // 应能成功添加监听器而不抛 NPE
       assertThatCode(() -> bridge.addListener(new TestListener())).doesNotThrowAnyException();

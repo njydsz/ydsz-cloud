@@ -14,6 +14,11 @@
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-message-domain</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
         <dependency>

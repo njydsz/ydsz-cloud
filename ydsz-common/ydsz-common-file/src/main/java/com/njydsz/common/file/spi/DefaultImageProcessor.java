@@ -11,9 +11,6 @@ import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
 
 /**
  * 默认图片处理器实现（基于 Java AWT + ImageIO + TwelveMonkeys SPI）。
@@ -29,9 +26,6 @@ import org.springframework.stereotype.Component;
  * @since 26.09.25
  * @see ImageProcessor
  */
-@Component
-@Primary
-@ConditionalOnMissingBean(ImageProcessor.class)
 public class DefaultImageProcessor implements ImageProcessor {
 
   private static final String DEFAULT_FORMAT = "JPEG";

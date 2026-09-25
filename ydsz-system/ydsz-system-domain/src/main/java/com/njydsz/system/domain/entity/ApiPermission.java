@@ -37,6 +37,8 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_sys_api_permission")
+// YDIZ-WARN-001 允许保留：@SuperBuilder 在泛型继承链（MpBaseEntity<T>）中生成代码触发 unchecked 警告，无法在源码层面修复
+@SuppressWarnings("unchecked")
 public class ApiPermission extends MpBaseEntity<String> {
 
   /** 权限码（如 sys:config:list），同租户内唯一 */

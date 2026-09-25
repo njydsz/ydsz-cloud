@@ -3,6 +3,7 @@ package com.njydsz.system.domain.vo;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -36,6 +37,7 @@ public class ImportResultVO extends ExcelImportResult {
    *
    * <p>前端可按此渲染错误定位单元格，无需解析字符串。若为空则兼容旧的 {@link #errors} 纯文本列表。
    */
+  @Builder.Default
   private List<ImportErrorItem> errorItems = new ArrayList<>(16);
 
   /**

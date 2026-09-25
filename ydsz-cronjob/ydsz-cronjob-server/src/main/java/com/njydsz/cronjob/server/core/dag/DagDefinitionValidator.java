@@ -28,12 +28,11 @@ import com.njydsz.common.exception.custom.SysException;
  *   <li><b>无环检测</b>：DAG 不允许存在环（DFS 三色标记法）
  *   <li><b>根节点</b>：至少存在一个无入边的根节点
  *   <li><b>节点类型校验</b>：
- *       <ul>
- *         <li>CONDITION: conditionExpression 非空，SpEL 表达式语法合法
- *         <li>PARALLEL_GATEWAY: 入边数和出边数符合 Fork/Join 模式
- *         <li>SUB_WORKFLOW: subWorkflowDagKey 非空
- *         <li>APPROVAL: approvalUsers 非空
- *       </ul>
+   *       <ul>
+   *         <li>CONDITION: conditionExpression 非空，SpEL 表达式语法合法
+   *         <li>PARALLEL_GATEWAY: 入边数和出边数符合 Fork/Join 模式
+   *         <li>APPROVAL: approvalUsers 非空
+   *       </ul>
  *   <li><b>规模限制</b>：节点数 ≤ 200，边数 ≤ 500（防止过大 DAG 拖慢调度）
  * </ol>
  *
@@ -219,7 +218,6 @@ public class DagDefinitionValidator {
    *   <li>TASK: jobId 非空</li>
    *   <li>CONDITION: conditionExpression 非空且 SpEL 语法合法</li>
    *   <li>PARALLEL_GATEWAY: 入边数和出边数符合 Fork/Join 模式</li>
-   *   <li>SUB_WORKFLOW: subWorkflowDagKey 非空</li>
    *   <li>APPROVAL: approvalUsers 非空</li>
    * </ul>
    */
@@ -272,16 +270,6 @@ public class DagDefinitionValidator {
                 .params(node.jobKey())
                 .build();
           }
-        }
-        case SUB_WORKFLOW -> {
-          // P1-1: SUB_WORKFLOW 节点类型已下线（流程编排由 ydsz-workflow 引擎承担）。
-          // 存量 DAG 中含 SUB_WORKFLOW 节点时由 DagInstanceExecutor 兼容处理（标记 SKIPPED），
-          // 但不再允许新建/更新 DAG 时声明该节点类型。
-          throw SysException.builder()
-              .resultCode(YdszResultCode.BAD_REQUEST)
-              .key("error.cronjob.msg_dag_sub_workflow_no_longer_supported")
-              .params(node.jobKey())
-              .build();
         }
         case APPROVAL -> {
           // P1-6: 审批节点要求 approvalUsers 非空

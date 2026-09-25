@@ -299,16 +299,6 @@ public class BytecodeInterpreter {
   }
 
   /**
-   * 创建操作数栈 — 基于常量池大小给出合理初始容量
-   *
-   * @deprecated 已被 {@link #acquireStack} 替代（P1-P3：支持栈帧复用）
-   */
-  @Deprecated
-  private static Object[] createStack(List<Object> constants) {
-    return new Object[Math.max(MIN_STACK_CAPACITY, constants.size() * 2 + MIN_STACK_CAPACITY)];
-  }
-
-  /**
    * P1-P3：从 ThreadLocal 获取/创建栈帧
    *
    * <p>如果当前线程的栈为 null 或容量不足，创建新数组；否则复用现有栈。
