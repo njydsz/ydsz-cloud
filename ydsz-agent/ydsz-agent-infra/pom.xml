@@ -25,10 +25,16 @@
     </dependency>
 
     <!-- 显式声明：本模块源码直接使用该公共能力（原先仅经传递依赖获得，P1-5 整改） -->
-    <dependency>
-        <groupId>com.njydsz</groupId>
-        <artifactId>ydsz-common-json</artifactId>
-    </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+
+        <!-- P1-5: 显式声明 common-locales（DefaultToolRegistry/Text2SQLTool 等注入 I18nMessages） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-locales</artifactId>
+        </dependency>
 
     <!-- org.mapstruct（provided 被动声明）：AgentPoConverter 编译期需解析 domain 层 @Mapper 注解，
          domain 的 mapstruct 为 provided 不传递（YDIZ-DDD-004 豁免情形） -->

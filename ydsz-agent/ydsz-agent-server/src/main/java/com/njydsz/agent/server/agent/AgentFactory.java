@@ -18,6 +18,7 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * Agent 工厂
@@ -85,6 +86,9 @@ public class AgentFactory {
   /** 执行暂停服务（可选，为 null 时不支持会话级暂停/恢复） */
   private final ExecutionPauseService pauseService;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * DAG 编排执行器（延迟注入打破循环依赖）。
    *
@@ -113,7 +117,8 @@ public class AgentFactory {
       @Lazy DagOrchestrationExecutor dagExecutor,
       @Lazy SupervisorAgentExecutor supervisorExecutor,
       ObjectProvider<MiddlewareChain> middlewareChainProvider,
-      ExecutionPauseService pauseService) {
+      ExecutionPauseService pauseService,
+      I18nMessages i18nMessages) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.toolRegistry = toolRegistry;
@@ -128,6 +133,7 @@ public class AgentFactory {
     this.supervisorExecutor = supervisorExecutor;
     this.middlewareChain = middlewareChainProvider.getIfAvailable();
     this.pauseService = pauseService;
+    this.i18nMessages = i18nMessages;
   }
 
   /**
@@ -177,7 +183,8 @@ public class AgentFactory {
               promptTemplateProvider,
               ragService,
               middlewareChain,
-              pauseService);
+              pauseService,
+              i18nMessages);
       case "RAG" ->
           // RAG 模式：检索增强生成，复用 ReAct 执行器（ragService 不为 null 时自动启用知识增强）
           new ReActAgentExecutor(
@@ -192,7 +199,8 @@ public class AgentFactory {
               promptTemplateProvider,
               ragService,
               middlewareChain,
-              pauseService);
+              pauseService,
+              i18nMessages);
       case "CHAT" ->
           // Simple 模式：单轮对话，无工具调用
           new SimpleAgentExecutor(
@@ -204,7 +212,8 @@ public class AgentFactory {
               costAnalysisService,
               guardrailService,
               promptTemplateProvider,
-              middlewareChain);
+              middlewareChain,
+              i18nMessages);
       case "PLAN_EXECUTE", "WORKFLOW" ->
           // Plan-Execute 模式：先规划后执行，复杂任务分解
           new PlanExecuteAgentExecutor(
@@ -217,7 +226,8 @@ public class AgentFactory {
               costAnalysisService,
               guardrailService,
               promptTemplateProvider,
-              middlewareChain);
+              middlewareChain,
+              i18nMessages);
       case "SUPERVISOR" ->
           // Supervisor 模式：主管-子 Agent 协同（仅首次创建时初始化，后续走缓存）
           supervisorExecutor;
@@ -238,7 +248,8 @@ public class AgentFactory {
             promptTemplateProvider,
             ragService,
             middlewareChain,
-            pauseService);
+            pauseService,
+            i18nMessages);
       }
     };
   }

@@ -95,7 +95,7 @@ public class SearchQueryParser {
     // 使用 @Singular 生成的单项添加方法逐个收集解析结果
     SearchQuery.SearchQueryBuilder builder = SearchQuery.builder()
         .scope(scope != null ? scope : "all")
-        .page(page)
+        .pageNum(page)
         .pageSize(pageSize)
         .createdBy(createdBy);
 

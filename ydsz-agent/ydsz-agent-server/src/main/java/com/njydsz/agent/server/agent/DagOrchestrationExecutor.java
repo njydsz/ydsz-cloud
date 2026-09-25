@@ -38,6 +38,7 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -117,7 +118,8 @@ public class DagOrchestrationExecutor extends AbstractAgentExecutor {
       AgentFactory agentFactory,
       DagDslParser dagDslParser,
       ExecutorService executor,
-      DagCheckpointStore checkpointStore) {
+      DagCheckpointStore checkpointStore,
+      I18nMessages i18nMessages) {
     super(
         llmClient,
         memory,
@@ -127,7 +129,8 @@ public class DagOrchestrationExecutor extends AbstractAgentExecutor {
         costAnalysisService,
         guardrailService,
         promptTemplateProvider,
-        null);
+        null,
+        i18nMessages);
     this.agentFactory = agentFactory;
     this.dagDslParser = dagDslParser;
     this.executor = executor;

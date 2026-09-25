@@ -16,7 +16,9 @@ import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.agent.domain.tool.ToolParam;
 import com.njydsz.agent.domain.tool.ToolRegistration;
 import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 工具注解（{@code @Tool}）自动扫描注册器。
@@ -53,13 +55,18 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 构造工具注解扫描器。
    *
    * @param toolRegistry 工具注册中心（扫描到 @Tool 方法后注册到此）
+   * @param i18nMessages 国际化消息工具
    */
-  public ToolAnnotationScanner(ToolRegistry toolRegistry) {
+  public ToolAnnotationScanner(ToolRegistry toolRegistry, I18nMessages i18nMessages) {
     this.toolRegistry = toolRegistry;
+    this.i18nMessages = i18nMessages;
   }
 
   /**
@@ -112,10 +119,12 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
             return YdszJson.toJson(result);
           } catch (IllegalAccessException e) {
             log.error("工具方法访问权限不足: tool={}, error={}", toolName, e.getMessage());
-            throw new RuntimeException("工具调用失败（权限不足）: " + toolName, e);
+            throw new BusinessException(AgentExceptionCode.TOOL_EXECUTION_FAILED, e)
+                .msg(i18nMessages.resolve("agent.skill.execution.error", new Object[] {toolName}));
           } catch (Exception e) {
             log.error("工具执行异常: tool={}, error={}", toolName, e.getMessage());
-            throw new RuntimeException("工具调用失败: " + toolName, e);
+            throw new BusinessException(AgentExceptionCode.TOOL_EXECUTION_FAILED, e)
+                .msg(i18nMessages.resolve("agent.skill.execution.error", new Object[] {toolName}));
           }
         };
 

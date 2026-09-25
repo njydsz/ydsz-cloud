@@ -2,6 +2,8 @@ package com.njydsz.workflow.server.simulator;
 
 import java.util.Map;
 
+import com.njydsz.workflow.domain.exception.WorkflowException;
+import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +31,7 @@ public class FlowSimulationServiceImpl implements FlowSimulationService {
     log.info("[Flow-Simulate] 开始模拟: definitionId={} variables={}", definitionId, variables);
 
     if (definitionId == null || definitionId.isBlank()) {
-      throw new IllegalArgumentException("流程定义 ID 不能为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY, "流程定义 ID 不能为空");
     }
 
     // 创建轻量级模拟上下文（不持久化）

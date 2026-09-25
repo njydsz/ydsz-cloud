@@ -2,8 +2,6 @@ package com.njydsz.nextwiki.server.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
@@ -30,20 +28,6 @@ import com.njydsz.nextwiki.server.service.SearchQueryParser;
  */
 @Configuration
 public class NextwikiBeanConfig {
-
-  // ==================== 基础设施 Bean ====================
-
-  /**
-   * 注册 BCrypt 密码编码器 Bean。
-   *
-   * <p>用于对分享链接的访问密码进行安全散列存储与校验，供 {@link ShareLinkDomainService} 使用。
-   *
-   * @return BCryptPasswordEncoder 实例（线程安全，可全局复用）
-   */
-  @Bean
-  public BCryptPasswordEncoder bCryptPasswordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
 
   // ==================== 领域服务 Bean ====================
 

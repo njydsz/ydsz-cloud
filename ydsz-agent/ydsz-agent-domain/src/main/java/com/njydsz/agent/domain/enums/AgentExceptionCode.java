@@ -90,7 +90,14 @@ public enum AgentExceptionCode implements ExceptionCode {
 
   // ==================== B94601-B94699 洞察报告 ====================
   /** 洞察报告不存在（P1-9 响应体收敛新增，替代 Controller 404 语义） */
-  INSIGHT_REPORT_NOT_FOUND("B94601", "agent.insight.report.not.found", 404);
+  INSIGHT_REPORT_NOT_FOUND("B94601", "agent.insight.report.not.found", 404),
+
+  // ==================== B94701-B94799 参数校验 ====================
+  /** 参数错误（通用校验失败、字段缺失、格式/范围非法等） */
+  PARAM_ERROR("B94701", "agent.param.range.invalid");
+
+  /** 参数缺失（预留，用于需要独立错误码区分"字段缺失"与"格式非法"的场景） */
+  // PARAM_REQUIRED("B94702", "agent.param.required");
 
   /** 缺省 HTTP 状态码 */
   private static final int DEFAULT_HTTP_STATUS = 400;

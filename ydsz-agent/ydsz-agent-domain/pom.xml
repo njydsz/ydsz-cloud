@@ -33,6 +33,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
+        <!-- P1-5: 显式声明 common-locales（Citation/CodeExecutionRequest 等 validate() 直接使用 I18n 静态工具） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-locales</artifactId>
+        </dependency>
         <!-- P1-5: ydsz-common-domain 显式依赖（AgentStatusEnum/AgentDomainEvent 实现 BaseStatusEnum/DomainEvent） -->
         <dependency>
             <groupId>com.njydsz</groupId>

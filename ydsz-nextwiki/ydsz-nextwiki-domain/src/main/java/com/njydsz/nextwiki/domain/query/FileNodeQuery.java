@@ -2,8 +2,10 @@ package com.njydsz.nextwiki.domain.query;
 
 import java.io.Serializable;
 
+import com.njydsz.common.domain.query.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -17,9 +19,10 @@ import lombok.experimental.SuperBuilder;
  */
 @Data
 @SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Schema(description = "文件节点分页查询参数")
-public class FileNodeQuery implements Serializable {
+public class FileNodeQuery extends PageQuery implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -34,10 +37,4 @@ public class FileNodeQuery implements Serializable {
 
   @Schema(description = "排序方向：asc / desc")
   private String sortDir;
-
-  @Schema(description = "页码（从 1 开始）")
-  private Integer page;
-
-  @Schema(description = "每页大小")
-  private Integer pageSize;
 }

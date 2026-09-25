@@ -27,6 +27,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 
 /**
@@ -72,13 +73,19 @@ public class KnowledgeGraphController {
   /** 图谱服务 */
   private final KnowledgeGraphService knowledgeGraphService;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 构造知识图谱 Controller。
    *
    * @param knowledgeGraphService 知识图谱服务
+   * @param i18nMessages 国际化消息工具
    */
-  public KnowledgeGraphController(KnowledgeGraphService knowledgeGraphService) {
+  public KnowledgeGraphController(KnowledgeGraphService knowledgeGraphService,
+      I18nMessages i18nMessages) {
     this.knowledgeGraphService = knowledgeGraphService;
+    this.i18nMessages = i18nMessages;
   }
 
   /**
@@ -113,10 +120,10 @@ public class KnowledgeGraphController {
     String docId = request.get("docId");
     String content = request.get("content");
     if (docId == null || docId.isBlank()) {
-      return YdszResponse.error("docId 不能为空");
+      return YdszResponse.error(i18nMessages.resolve("agent.param.required", new Object[] {"docId"}));
     }
     if (content == null || content.isBlank()) {
-      return YdszResponse.error("content 不能为空");
+      return YdszResponse.error(i18nMessages.resolve("agent.param.required", new Object[] {"content"}));
     }
     log.info("[KG-API] 摄入文档: docId={}, contentLength={}", docId, content.length());
 

@@ -42,6 +42,18 @@ public enum WorkflowExceptionCode implements ExceptionCode {
   BPMN_PARSE_ERROR("B70005", "workflow.bpmn.parse.error"),
   /** Unsupported bpmn element (fail-fast on deploy) */
   UNSUPPORTED_BPMN_ELEMENT("B70006", "workflow.bpmn.unsupported.element"),
+  /** Flow definition node list is empty */
+  FLOW_NODE_LIST_EMPTY("B70007", "workflow.flow.node.list.empty"),
+  /** Flow node not found */
+  FLOW_NODE_NOT_FOUND("B70008", "workflow.flow.node.not.found"),
+  /** Flow edge configuration error */
+  FLOW_EDGE_INVALID("B70009", "workflow.flow.edge.invalid"),
+  /** Invalid flow state */
+  FLOW_STATE_INVALID("B70010", "workflow.flow.state.invalid"),
+  /** Flow definition contains cycle */
+  FLOW_CYCLE_DETECTED("B70011", "workflow.flow.cycle.detected"),
+  /** Flow parsing error */
+  FLOW_PARSING_ERROR("B70012", "workflow.flow.parsing.error"),
 
   // ==================== B71001-B71099 流程实例 ====================
   /** Instance not found */

@@ -17,7 +17,7 @@ meta:
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
   last_updated: "2026-09-25（新增 YDIZ-I18N-003/TENANT-001：i18n 骨架强制要求、多租户上下文异步防护；全引擎多租户启用；8 引擎 i18n 资源骨架创建）"
-  total_rules: 88
+  total_rules: 92
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -2447,8 +2447,99 @@ rules:
       2. 已有业务分表保留但不再演进
     source: "编码规范新增（YDIZ-ARCH-004→重编号为 P2，重分配 ID YDIZ-ARCH-006）"
 
+  # ==================== 公共模块复用（common，4 条） ====================
+  # P6: 新增 4 条 YDIZ-COMMON 规则，收敛业务模块对 common-json/cache/excel/util 的自实现
+  - id: "YDIZ-COMMON-001"
+    category: "common"
+    severity: "P1"
+    title: "缓存防击穿必须使用 CacheProtectionGuard，禁止手写 ConcurrentMap + Future"
+    description: |
+      缓存防穿透/防击穿/防雪崩场景必须使用 ydsz-common-cache 提供的 {@code Cache#getWithProtection}（封装 CacheProtectionGuard），
+      禁止业务模块使用原生 {@code ConcurrentHashMap + CompletableFuture / Future}、双重检查锁等手写方案实现 Singleflight 语义。
+      <p><b>违反示例：</b></p>
+      <pre>
+      // 禁止：手写 inflight 表
+      ConcurrentHashMap&lt;String, CompletableFuture&lt;X&gt;&gt; inflight = new ConcurrentHashMap&lt;&gt;();
+      CompletableFuture&lt;X&gt; existing = inflight.putIfAbsent(key, future);
+      if (existing != null) { return existing.get(); }
+      </pre>
+      <p><b>正确示例：</b></p>
+      <pre>
+      // 使用 ydsz-common-cache 的 Cache#getWithProtection
+      return dedupCache.getWithProtection(key, () -&gt; loader.load(key), 2000L, 30_000L);
+      </pre>
+    pattern: "业务代码出现 ConcurrentHashMap.*CompletableFuture|ConcurrentHashMap.*Future，且上下文为缓存未命中后的回源"
+    fix: |
+      1. 引入 ydsz-common-cache 的 YdszCache 实例
+      2. 使用 YdszCache.newBuilder() 创建短 TTL 去重缓存
+      3. 调用 cache.getWithProtection(key, loader, minMs, maxMs) 替代手写逻辑
+      4. 删除原 ConcurrentHashMap + Future 相关字段
+    source: "编码规范附录新增（YDIZ-COMMON-001，P1，26.09.25 公共模块利用率修复）"
+
+  - id: "YDIZ-COMMON-002"
+    category: "common"
+    severity: "P2"
+    title: "JSON 序列化/反序列化必须使用 YdszJson/JsonMapper，禁止手写 extractField"
+    description: |
+      JSON 操作必须使用 ydsz-common-json 提供的 {@code YdszJson.toJson / YdszJson.fromJson / JsonMapper}，
+      禁止在业务模块中手写 {@code extractDoubleField}、{@code extractIntField}、字符串拼接 {@code "{\"field\":" + value + "}"} 等解析逻辑。
+      <p><b>违反示例：</b></p>
+      <pre>
+      // 禁止：手写字符串字段抽取
+      private double extractDoubleField(String json, String fieldName) {
+          String search = "\\"" + fieldName + "\\":";
+          int start = json.indexOf(search);
+          ...
+      }
+      </pre>
+      <p><b>正确示例：</b></p>
+      <pre>
+      // 使用 ydsz-common-json（支持 POJO 自动映射、record、泛型）
+      SessionActivityVO vo = YdszJson.fromJson(json, SessionActivityVO.class);
+      String json = YdszJson.toJson(vo);
+      </pre>
+      特殊场景：TolerantJsonUtils 专用于 LLM 非标准 JSON 解析（stripMarkdownCodeBlock / extractDoubleField）。
+    pattern: "业务代码出现 private.*extract(Int|Double|Long|String)Field\\(String json|String fieldName\\)"
+    fix: |
+      1. 引入 YdszJson：import com.njydsz.common.json.YdszJson
+      2. 序列化替换为 YdszJson.toJson(object)
+      3. 反序列化替换为 YdszJson.fromJson(json, TargetClass.class)
+      4. 删除所有 extract*Field 方法
+    source: "编码规范附录新增（YDIZ-COMMON-002，P2，26.09.25 公共模块利用率修复）"
+
+  - id: "YDIZ-COMMON-003"
+    category: "common"
+    severity: "P1"
+    title: "密码哈希必须使用 PwdUtils，禁止直接 new BCryptPasswordEncoder"
+    description: |
+      密码哈希与验证必须使用 ydsz-common-util 提供的 {@code PwdUtils.hashPasswordBCrypt / PwdUtils.verifyPasswordBCrypt}，
+      禁止业务模块直接 {@code new BCryptPasswordEncoder()} 或注入 Spring Security 的 BCryptPasswordEncoder Bean 用于非安全框架场景。
+      <p>独立 domain 层严禁依赖 Spring Security 类型（如 BCryptPasswordEncoder），保持 domain 层纯净。</p>
+    pattern: "业务模块直接 new BCryptPasswordEncoder()（springsecurity OAuth 授权服务器除外）"
+    fix: |
+      1. 引入 PwdUtils：import com.njydsz.common.util.password.PwdUtils
+      2. 哈希替换为 PwdUtils.hashPasswordBCrypt(rawPassword)
+      3. 校验替换为 PwdUtils.verifyPasswordBCrypt(rawPassword, hashedPassword)
+      4. 移除原 BCryptPasswordEncoder Bean 注册
+    source: "编码规范附录新增（YDIZ-COMMON-003，P1，26.09.25 公共模块利用率修复）"
+
+  - id: "YDIZ-COMMON-004"
+    category: "common"
+    severity: "P2"
+    title: "业务主键必须使用 SnowflakeIdGenerator，禁止 AtomicLong 自增"
+    description: |
+      分布式场景下生成业务主键（如任务 ID、审批单号）必须使用 ydsz-common-util 的 {@code SnowflakeIdGenerator}，
+      禁止业务模块使用 {@code AtomicLong.getAndIncrement()}、{@code System.currentTimeMillis()} 等本地自增方案
+      （dev/test 环境的内存兜底实现除外，且需 Javadoc 明确标注"）。
+    pattern: "业务模块出现 new AtomicLong\\(1\\).getAndIncrement\\(\\) 或 AtomicLong\\b.*业务主键上下文"
+    fix: |
+      1. 引入 SnowflakeIdGenerator：import com.njydsz.common.util.id.SnowflakeIdGenerator
+      2. 通过依赖注入获取 SnowflakeIdGenerator bean
+      3. 调用 snowflakeIdGenerator.nextId() 或 IdGenerator.nextIdStr()
+    source: "编码规范附录新增（YDIZ-COMMON-004，P2，26.09.25 公共模块利用率修复）"
+
 # ============================================
-# 附录：按 category 统计（26.09.29 更新，total 81，修正历史统计偏差）
+# 附录：按 category 统计（26.09.25 更新，total 92，新增 common 分类 4 条）
 # ============================================
 stats:
   encoding: 1
@@ -2482,4 +2573,5 @@ stats:
   queue: 1
   search: 1
   util: 1
-  total: 88
+  common: 4
+  total: 92

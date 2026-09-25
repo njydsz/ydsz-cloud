@@ -465,7 +465,7 @@ public class FileApplicationService {
                 .nodeType(type)
                 .sortBy(normalizeSortBy(sortBy))
                 .sortDir(normalizeSortDir(sortDir))
-                .page(page)
+                .pageNum(page)
                 .pageSize(pageSize)
                 .build());
 

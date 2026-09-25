@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
+
+import com.njydsz.workflow.domain.exception.WorkflowException;
+import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -107,7 +110,7 @@ public class ExpressionEvaluatorRegistry {
   public void setActiveStrategy(ExpressionEvalStrategy strategy) {
     ExpressionEvaluator evaluator = registry.get(strategy);
     if (evaluator == null) {
-      throw new IllegalArgumentException("表达式引擎策略未注册: " + strategy);
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_PARSING_ERROR, "表达式引擎策略未注册: " + strategy);
     }
     this.activeStrategy = strategy;
     this.activeEvaluator = evaluator;

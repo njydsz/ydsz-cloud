@@ -65,7 +65,39 @@ public enum CronjobExceptionCode implements ExceptionCode {
   /** Webhook send failed */
   WEBHOOK_SEND_FAILED("B92304", "cronjob.webhook.send.failed", 502),
   /** Connector not found */
-  CONNECTOR_NOT_FOUND("B92303", "cronjob.connector.not.found", 404);
+  CONNECTOR_NOT_FOUND("B92303", "cronjob.connector.not.found", 404),
+
+  // ==================== B92006-B92099 参数校验 ====================
+  /** Generic parameter error */
+  PARAM_ERROR("B92006", "cronjob.param.required"),
+  /** Invalid job configuration */
+  CONFIG_INVALID("B92007", "cronjob.config.invalid"),
+  /** Thread pool name is required */
+  THREAD_POOL_NAME_REQUIRED("B92008", "cronjob.thread.pool.name.required"),
+  /** Thread pool instance cannot be null */
+  THREAD_POOL_INSTANCE_REQUIRED("B92009", "cronjob.thread.pool.instance.required"),
+
+  // ==================== B92105-B92199 DAG 校验 ====================
+  /** DAG edge disallows self-loop */
+  DAG_EDGE_SELF_LOOP("B92105", "cronjob.dag.edge.self.loop"),
+
+  // ==================== B92401-B92499 GLUE ====================
+  /** GLUE job execution context missing jobId */
+  GLUE_CONTEXT_MISSING_JOBID("B92401", "cronjob.glue.context.missing.jobId"),
+  /** GlueCodeService unregistered */
+  GLUE_SERVICE_UNREGISTERED("B92402", "cronjob.glue.service.unregistered"),
+  /** GLUE code is empty */
+  GLUE_CODE_EMPTY("B92403", "cronjob.glue.code.empty"),
+  /** Unsupported GLUE language type */
+  GLUE_LANGUAGE_UNSUPPORTED("B92404", "cronjob.glue.language.unsupported"),
+  /** GLUE code instantiation failed */
+  GLUE_INSTANTIATION_FAILED("B92405", "cronjob.glue.instantiation.failed"),
+  /** GroovyDockerSandboxExecutor unregistered */
+  GLUE_SANDBOX_UNREGISTERED("B92406", "cronjob.glue.sandbox.unregistered"),
+  /** Groovy Docker sandbox execution failed */
+  GLUE_SANDBOX_FAILED("B92407", "cronjob.glue.sandbox.failed"),
+  /** SandboxScriptExecutor unregistered (Python GLUE) */
+  GLUE_PYTHON_EXECUTOR_UNREGISTERED("B92408", "cronjob.glue.python.executor.unregistered");
 
   /** 错误码 */
   private final String code;

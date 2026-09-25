@@ -9,6 +9,9 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.workflow.domain.exception.WorkflowException;
+import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
+
 /**
  * 时间范围校验器。
  *
@@ -80,20 +83,20 @@ public final class DateRangeValidator {
 
     // 校验 startDate <= endDate
     if (startDate.isAfter(endDate)) {
-      throw new IllegalArgumentException(
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID,
           "开始日期不能晚于结束日期: startDate=" + startDate + " endDate=" + endDate);
     }
 
     // 校验 endDate <= today
     if (endDate.isAfter(today)) {
-      throw new IllegalArgumentException(
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID,
           "结束日期不能晚于今天: endDate=" + endDate);
     }
 
     // 校验范围不超过 MAX_RANGE_DAYS
     long rangeDays = ChronoUnit.DAYS.between(startDate, endDate);
     if (rangeDays > MAX_RANGE_DAYS) {
-      throw new IllegalArgumentException(
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID,
           "查询时间范围不能超过 " + MAX_RANGE_DAYS + " 天（当前 " + rangeDays + " 天）");
     }
 
@@ -112,7 +115,7 @@ public final class DateRangeValidator {
     try {
       return LocalDate.parse(dateStr.trim(), DATE_FORMAT);
     } catch (DateTimeParseException e) {
-      throw new IllegalArgumentException(
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_PARSING_ERROR,
           paramName + " 格式不合法（期望 yyyy-MM-dd）: " + dateStr);
     }
   }

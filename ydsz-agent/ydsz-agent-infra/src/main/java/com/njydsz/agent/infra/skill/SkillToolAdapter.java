@@ -19,6 +19,7 @@ import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.agent.domain.tool.ToolRegistration;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * Skill → Tool 适配器，桥接已有 {@link ToolRegistry}。
@@ -59,15 +60,21 @@ public class SkillToolAdapter {
   /** Skill 运行时（组合路由器） */
   private final SkillRuntime skillRuntime;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 构造 Skill-Tool 适配器。
    *
    * @param skillRegistry Skill 注册中心
    * @param skillRuntime  Skill 运行时（应注入组合路由 CompositeSkillRuntime）
+   * @param i18nMessages 国际化消息工具
    */
-  public SkillToolAdapter(SkillRegistry skillRegistry, SkillRuntime skillRuntime) {
+  public SkillToolAdapter(SkillRegistry skillRegistry, SkillRuntime skillRuntime,
+      I18nMessages i18nMessages) {
     this.skillRegistry = skillRegistry;
     this.skillRuntime = skillRuntime;
+    this.i18nMessages = i18nMessages;
   }
 
   /**
@@ -152,7 +159,7 @@ public class SkillToolAdapter {
       SkillDescriptor latest = skillRegistry.findByCode(skillCode);
       if (latest == null) {
         log.warn("[SkillToolAdapter] Skill 未注册: {}", skillCode);
-        return "{\"error\":\"Skill 未注册: " + skillCode + "\"}";
+        return "{\"error\":\"" + i18nMessages.resolve("agent.skill.not.registered", new Object[] {skillCode}) + "\"}";
       }
 
       // 构建执行上下文

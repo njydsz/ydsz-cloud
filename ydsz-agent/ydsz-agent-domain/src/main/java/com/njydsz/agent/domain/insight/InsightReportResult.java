@@ -3,6 +3,10 @@ package com.njydsz.agent.domain.insight;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 洞察报告生成结果值对象（不可变 record）。
  *
@@ -45,10 +49,11 @@ public record InsightReportResult(
    * @param createdAt 创建时间
    * @param durationMs 生成耗时（毫秒）
    */
-  public InsightReportResult {
-    if (reportId == null || reportId.isBlank()) {
-      throw new IllegalArgumentException("reportId 不能为空");
-    }
+    public InsightReportResult {
+        if (reportId == null || reportId.isBlank()) {
+            throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+                .msg(I18n.message("agent.param.required", new Object[] {"reportId"}));
+        }
     if (title == null) {
       title = "";
     }

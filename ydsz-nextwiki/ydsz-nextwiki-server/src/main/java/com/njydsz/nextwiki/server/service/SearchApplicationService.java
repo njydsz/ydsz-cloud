@@ -386,7 +386,7 @@ public class SearchApplicationService {
         SearchIndexQuery.builder()
             .keyword(keyword)
             .scope(scope)
-            .page(page)
+            .pageNum(page)
             .pageSize(pageSize)
             .build();
     PageResponse<List<SearchIndexVO>> pageResult = searchIndexRepository.searchPage(query);
@@ -601,7 +601,7 @@ public class SearchApplicationService {
     SearchRequest request = SearchRequest.builder()
         .keyword(keyword)
         .types(List.of("wiki"))
-        .page(searchQuery.getPage())
+        .page(searchQuery.getPageNum())
         .pageSize(searchQuery.getPageSize())
         .userId(userId)
         .isHighlight(true)
@@ -638,7 +638,7 @@ public class SearchApplicationService {
         indices != null ? indices : List.of(),
         total,
         allKeywords.toString(),
-        searchQuery.getPage(),
+        searchQuery.getPageNum(),
         searchQuery.getPageSize());
   }
 }

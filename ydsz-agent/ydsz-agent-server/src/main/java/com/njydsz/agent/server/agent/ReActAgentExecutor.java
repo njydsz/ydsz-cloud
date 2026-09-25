@@ -38,6 +38,7 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -102,7 +103,8 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       PromptTemplateProvider promptTemplateProvider,
       RagService ragService,
       MiddlewareChain middlewareChain,
-      ExecutionPauseService pauseService) {
+      ExecutionPauseService pauseService,
+      I18nMessages i18nMessages) {
     super(
         llmClient,
         memory,
@@ -112,7 +114,8 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
         costAnalysisService,
         guardrailService,
         promptTemplateProvider,
-        middlewareChain);
+        middlewareChain,
+        i18nMessages);
     this.toolRegistry = toolRegistry;
     this.ragService = ragService;
     this.pauseService = pauseService;

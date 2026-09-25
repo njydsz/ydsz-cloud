@@ -191,6 +191,25 @@ public class BusinessException extends AbstractYdszException {
   }
 
   /**
+   * 设置异常消息（跳过 i18n 解析，直接覆盖）。
+   *
+   * <p>与 {@link #setMessage(String)} 区别在于本方法支持链式调用，适用于需要同时设置错误码和自定义消息的场景。
+   *
+   * <pre>{@code
+   * throw BusinessException.of(CronjobExceptionCode.JOB_NOT_FOUND)
+   *     .msg(I18n.message("cronjob.job.not.found", new Object[]{taskId.toString()}));
+   * }</pre>
+   *
+   * @param message 异常消息
+   * @return 当前异常对象
+   * @since 26.09.01
+   */
+  public BusinessException msg(String message) {
+    setMessage(message);
+    return this;
+  }
+
+  /**
    * 转换为可序列化的异常响应体，供全局异常处理器写回 HTTP 响应。
    *
    * <p>会触发国际化消息的懒加载解析，应在请求线程内调用以保证取到正确的 Locale。 注意：通过 {@link #data(String, Object)}

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -685,30 +686,31 @@ public class SessionActivityService {
   }
 
   /**
-   * 序列化 SessionActivityVO 为 JSON 字符串（简化实现）。
+   * 序列化 SessionActivityVO 为 JSON 字符串。
+   *
+   * <p>使用 ydsz-common-json 的 {@link YdszJson#toJson} 替代手工字符串拼接，
+   * 符合 YDIZ-COMMON-002 规范：禁止业务自建 toJson/fromJson 工具。
    *
    * @param vo 活跃度概览
    * @return JSON 字符串
    */
   private String serializeSessionActivityVO(SessionActivityVO vo) {
-    return "{\"totalActiveSessions\":" + vo.totalActiveSessions()
-        + ",\"activeUserCount\":" + vo.activeUserCount()
-        + ",\"avgSessionDuration\":" + vo.avgSessionDuration() + "}";
+    return YdszJson.toJson(vo);
   }
 
   /**
    * 解析 JSON 字符串为 SessionActivityVO。
+   *
+   * <p>使用 ydsz-common-json 的 {@link YdszJson#fromJson} 替代手动字段提取，
+   * 符合 YDIZ-COMMON-002 规范：禁止业务自建 toJson/fromJson 工具。
    *
    * @param json JSON 字符串
    * @return 活跃度概览
    */
   private SessionActivityVO parseSessionActivityVO(String json) {
     try {
-      // 简化的 JSON 解析（不使用正则，手动提取）
-      int totalActiveSessions = extractIntField(json, "totalActiveSessions");
-      int activeUserCount = extractIntField(json, "activeUserCount");
-      double avgSessionDuration = extractDoubleField(json, "avgSessionDuration");
-      return new SessionActivityVO(totalActiveSessions, activeUserCount, avgSessionDuration);
+      SessionActivityVO result = YdszJson.fromJson(json, SessionActivityVO.class);
+      return result != null ? result : new SessionActivityVO(0, 0, 0.0);
     } catch (Exception e) {
       log.warn("Failed to parse SessionActivityVO from cache, error={}", e.getMessage());
       return new SessionActivityVO(0, 0, 0.0);
@@ -750,51 +752,5 @@ public class SessionActivityService {
     return List.of();
   }
 
-  /**
-   * 从 JSON 字符串中提取整数字段。
-   *
-   * @param json JSON 字符串
-   * @param fieldName 字段名
-   * @return 字段值
-   */
-  private int extractIntField(String json, String fieldName) {
-    String search = "\"" + fieldName + "\":";
-    int start = json.indexOf(search);
-    if (start < 0) {
-      return 0;
-    }
-    start += search.length();
-    int end = json.indexOf(",", start);
-    if (end < 0) {
-      end = json.indexOf("}", start);
-    }
-    if (end < 0) {
-      return 0;
-    }
-    return Integer.parseInt(json.substring(start, end).trim());
-  }
-
-  /**
-   * 从 JSON 字符串中提取浮点数字段。
-   *
-   * @param json JSON 字符串
-   * @param fieldName 字段名
-   * @return 字段值
-   */
-  private double extractDoubleField(String json, String fieldName) {
-    String search = "\"" + fieldName + "\":";
-    int start = json.indexOf(search);
-    if (start < 0) {
-      return 0.0;
-    }
-    start += search.length();
-    int end = json.indexOf(",", start);
-    if (end < 0) {
-      end = json.indexOf("}", start);
-    }
-    if (end < 0) {
-      return 0.0;
-    }
-    return Double.parseDouble(json.substring(start, end).trim());
-  }
+  // extractIntField / extractDoubleField 已移除：由 YdszJson.fromJson 替代，符合 YDIZ-COMMON-002 规范。
 }

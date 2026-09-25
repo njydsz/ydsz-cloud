@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.workflow.domain.enums.FlowNodeType;
+import com.njydsz.workflow.domain.exception.WorkflowException;
+import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 
@@ -52,7 +54,7 @@ public class FlowGraphValidator {
    */
   public void validate(List<FlowNodeVO> nodes, List<FlowSkipVO> skips) {
     if (nodes == null || nodes.isEmpty()) {
-      throw new IllegalArgumentException("流程定义节点列表为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY);
     }
 
     // 1. 构建节点索引
@@ -85,10 +87,10 @@ public class FlowGraphValidator {
     for (FlowNodeVO node : nodes) {
       String code = node.getNodeCode();
       if (!StringUtils.hasText(code)) {
-        throw new IllegalArgumentException("存在 nodeCode 为空的节点");
+        throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_NOT_FOUND, "存在 nodeCode 为空的节点");
       }
       if (nodeMap.containsKey(code)) {
-        throw new IllegalArgumentException("节点编码重复: " + code);
+        throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_NOT_FOUND, "节点编码重复: " + code);
       }
       nodeMap.put(code, node);
     }
@@ -105,14 +107,14 @@ public class FlowGraphValidator {
     List<FlowNodeVO> startNodes = nodes.stream()
         .filter(n -> FlowNodeType.START.getCode() == n.getNodeType()).toList();
     if (startNodes.isEmpty()) {
-      throw new IllegalArgumentException("流程定义缺少开始节点（nodeType=0）");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY, "流程定义缺少开始节点（nodeType=0）");
     }
     if (startNodes.size() > 1) {
-      throw new IllegalArgumentException("流程定义存在多个开始节点（仅允许一个）");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY, "流程定义存在多个开始节点（仅允许一个）");
     }
     boolean hasEnd = nodes.stream().anyMatch(n -> FlowNodeType.END.getCode() == n.getNodeType());
     if (!hasEnd) {
-      throw new IllegalArgumentException("流程定义缺少结束节点（nodeType=2）");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY, "流程定义缺少结束节点（nodeType=2）");
     }
     return startNodes.get(0).getNodeCode();
   }
@@ -155,10 +157,10 @@ public class FlowGraphValidator {
           continue;
         }
         if (!nodeMap.containsKey(source)) {
-          throw new IllegalArgumentException("跳转 sourceRef 指向不存在的节点: " + source);
+          throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "跳转 sourceRef 指向不存在的节点: " + source);
         }
         if (!nodeMap.containsKey(target)) {
-          throw new IllegalArgumentException("跳转 nextNodeCode 指向不存在的节点: " + target);
+          throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "跳转 nextNodeCode 指向不存在的节点: " + target);
         }
         outEdges.get(source).add(target);
         inEdges.get(target).add(source);
@@ -182,7 +184,7 @@ public class FlowGraphValidator {
         .filter(code -> !reachable.contains(code))
         .toList();
     if (!unreachable.isEmpty()) {
-      throw new IllegalArgumentException("以下节点从开始节点不可达: " + unreachable);
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "以下节点从开始节点不可达: " + unreachable);
     }
   }
 
@@ -207,7 +209,7 @@ public class FlowGraphValidator {
         .filter(code -> !canReachEnd.contains(code))
         .toList();
     if (!cannotReachEnd.isEmpty()) {
-      throw new IllegalArgumentException("以下节点无法到达结束节点（死胡同）: " + cannotReachEnd);
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "以下节点无法到达结束节点（死胡同）: " + cannotReachEnd);
     }
   }
 
@@ -222,10 +224,10 @@ public class FlowGraphValidator {
       String code = node.getNodeCode();
       int type = node.getNodeType();
       if (type != FlowNodeType.START.getCode() && edges.inEdges.get(code).isEmpty()) {
-        throw new IllegalArgumentException("节点 " + code + " 没有入边（非开始节点必须有入边）");
+        throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "节点 " + code + " 没有入边（非开始节点必须有入边）");
       }
       if (type != FlowNodeType.END.getCode() && edges.outEdges.get(code).isEmpty()) {
-        throw new IllegalArgumentException("节点 " + code + " 没有出边（非结束节点必须有出边）");
+        throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "节点 " + code + " 没有出边（非结束节点必须有出边）");
       }
     }
   }

@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 
 /**
@@ -106,7 +107,7 @@ public class FlowTaskStateMachine {
    */
   public boolean validateTransition(FlowTaskStatus current, FlowTaskStatus target) {
     if (current == null || target == null) {
-      throw new IllegalArgumentException(
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID,
           "状态流转校验参数不能为空: current=" + current + ", target=" + target);
     }
     if (current == target) {
@@ -133,7 +134,7 @@ public class FlowTaskStateMachine {
    */
   public void requireTransition(FlowTaskStatus current, FlowTaskStatus target) {
     if (current == null || target == null) {
-      throw new IllegalArgumentException(
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID,
           "状态流转校验参数不能为空: current=" + current + ", target=" + target);
     }
     if (!validateTransition(current, target)) {
@@ -155,7 +156,7 @@ public class FlowTaskStateMachine {
    */
   public Set<FlowTaskStatus> getAvailableTransitions(FlowTaskStatus current) {
     if (current == null) {
-      throw new IllegalArgumentException("当前状态不能为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "当前状态不能为空");
     }
     if (current.isTerminal()) {
       return Set.of();
@@ -177,7 +178,7 @@ public class FlowTaskStateMachine {
    */
   public boolean isTerminal(FlowTaskStatus status) {
     if (status == null) {
-      throw new IllegalArgumentException("状态不能为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态不能为空");
     }
     return status.isTerminal();
   }
@@ -187,11 +188,11 @@ public class FlowTaskStateMachine {
    *
    * @param status 状态（不可为 null）
    * @return true=活跃态；false=非活跃态
-   * @throws IllegalArgumentException 当 status 为 null 时
+   * @throws WorkflowException 当 status 为 null 时
    */
   public boolean isActive(FlowTaskStatus status) {
     if (status == null) {
-      throw new IllegalArgumentException("状态不能为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态不能为空");
     }
     return status == FlowTaskStatus.PENDING
         || status == FlowTaskStatus.CLAIMED

@@ -25,6 +25,7 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -76,6 +77,9 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
   /** 中间件链（可选，为 null 时跳过中间件调用） */
   protected final MiddlewareChain middlewareChain;
 
+  /** 国际化消息工具 */
+  protected final I18nMessages i18nMessages;
+
   /**
    * 构造函数（注入公共依赖）。
    *
@@ -88,6 +92,7 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
    * @param guardrailService 护栏编排服务
    * @param promptTemplateProvider Prompt 模板提供者
    * @param middlewareChain 中间件链（可为 null）
+   * @param i18nMessages 国际化消息工具
    */
   protected AbstractAgentExecutor(
       LlmClient llmClient,
@@ -98,7 +103,8 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
-      MiddlewareChain middlewareChain) {
+      MiddlewareChain middlewareChain,
+      I18nMessages i18nMessages) {
     this.llmClient = llmClient;
     this.memory = memory;
     this.properties = properties;
@@ -108,6 +114,7 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
     this.guardrailService = guardrailService;
     this.promptTemplateProvider = promptTemplateProvider;
     this.middlewareChain = middlewareChain;
+    this.i18nMessages = i18nMessages;
   }
 
   /**
@@ -242,7 +249,7 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
    * @return 拒绝响应
    */
   protected ChatResponse buildRejectedResponse(String reason) {
-    ChatMessage msg = ChatMessage.assistant("抱歉，" + reason + "。", null, TokenUsage.zero());
+    ChatMessage msg = ChatMessage.assistant(i18nMessages.resolve("agent.guardrail.rejected"), null, TokenUsage.zero());
     return new ChatResponse(
         IdGenerator.nextIdStr(),
         "guardrail",
@@ -260,7 +267,7 @@ public abstract class AbstractAgentExecutor implements AgentExecutor {
    */
   protected void emitRejectionStream(String responseId, Consumer<ChatChunk> chunkConsumer) {
     String model = properties.getLlm().getDefaultModel();
-    chunkConsumer.accept(ChatChunk.content(responseId, model, "抱歉，您的输入被安全护栏拒绝。"));
+    chunkConsumer.accept(ChatChunk.content(responseId, model, i18nMessages.resolve("agent.guardrail.rejected")));
     chunkConsumer.accept(ChatChunk.finish(responseId, model, "guardrail_rejected", null));
   }
 

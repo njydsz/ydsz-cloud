@@ -13,6 +13,7 @@ import com.njydsz.agent.domain.code.CodeExecutionService;
 import com.njydsz.agent.domain.tool.Tool;
 import com.njydsz.agent.domain.tool.ToolParam;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * Python 代码执行工具包装类（注册到 ToolRegistry）。
@@ -40,6 +41,9 @@ public class CodeExecutionTool {
 
   /** 代码执行服务 */
   private final CodeExecutionService codeExecutionService;
+
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
 
   /**
    * 执行 Python 代码块（供 LLM 通过工具调用执行）。
@@ -70,11 +74,11 @@ public class CodeExecutionTool {
       @ToolParam("执行超时秒数（可选，默认30，最大60）") Integer timeoutSeconds) {
 
     if (code == null || code.isBlank()) {
-      return YdszJson.toJson(Map.of("error", "代码不能为空"));
+      return YdszJson.toJson(Map.of("error", i18nMessages.resolve("agent.code.required")));
     }
 
     if (!codeExecutionService.isAvailable()) {
-      return YdszJson.toJson(Map.of("error", "代码执行环境不可用，请检查配置"));
+      return YdszJson.toJson(Map.of("error", i18nMessages.resolve("agent.code.env.unavailable")));
     }
 
     // 限制超时范围

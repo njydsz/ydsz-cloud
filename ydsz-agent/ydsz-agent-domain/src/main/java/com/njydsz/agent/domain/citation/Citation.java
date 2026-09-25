@@ -1,5 +1,9 @@
 package com.njydsz.agent.domain.citation;
 
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 知识引用（Citation）值对象。
  *
@@ -39,13 +43,15 @@ public record Citation(
      */
     public Citation {
         if (documentId == null || documentId.isBlank()) {
-            throw new IllegalArgumentException("documentId 不能为空");
+            throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+                .msg(I18n.message("agent.param.required", new Object[] {"documentId"}));
         }
         if (textExcerpt == null) {
             textExcerpt = "";
         }
         if (score < 0.0 || score > 1.0) {
-            throw new IllegalArgumentException("score 必须在 0.0-1.0 之间: " + score);
+            throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+                .msg(I18n.message("agent.param.range.invalid", new Object[] {"score", "0.0", "1.0"}));
         }
     }
 

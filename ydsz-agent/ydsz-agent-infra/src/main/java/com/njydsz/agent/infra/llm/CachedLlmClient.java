@@ -2,8 +2,6 @@ package com.njydsz.agent.infra.llm;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -16,6 +14,8 @@ import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 
 /**
  * 带缓存的 LLM 客户端（装饰器模式）
@@ -31,8 +31,9 @@ import com.njydsz.agent.domain.model.TokenUsage;
  *   <li>缓存命中时返回包含特殊标记 {@code [cached]} 的响应
  * </ul>
  *
- * <p><b>缓存击穿防护（P1 修复）</b>：同一缓存 key 高并发未命中时，仅放行一个线程发起 LLM 调用， 其余线程等待其结果，
- * 避免全部请求同时打穿到 LLM（Singleflight 语义）。
+ * <p><b>缓存击穿防护（YDIZ-COMMON-001 合规）</b>：同一缓存 key 高并发未命中时，仅放行一个线程发起 LLM 调用，
+ * 其余线程等待其结果。使用 ydsz-common-cache 的 {@code Cache#getWithProtection} 实现 Singleflight 语义，
+ * 禁止使用原生 {@code ConcurrentHashMap + Future} 自实现防击穿。
  *
  * <p><b>缓存命中率指标（P1 增强）</b>：通过 {@link CacheMetricsRecorder} SPI（domain 层接口）上报
  * {@code agent_cache_hits_total} / {@code agent_cache_misses_total}，便于度量缓存效果； 具体采集由 server 层实现注入。
@@ -41,7 +42,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * <p><b>与安全护栏的交互</b>：输出护栏（PII 脱敏 / 内容拦截）在应用服务层执行， 本装饰器位于 LLM 客户端层，缓存写入的是 LLM
  * 原始输出；命中缓存后仍会经过服务层输出护栏，不会绕过安全管控。
  *
- * <p><b>线程安全</b>：无状态装饰器 + {@link ConcurrentHashMap} 互斥表，可安全并发调用。
+ * <p><b>线程安全</b>：无状态装饰器 + YdszCache 去重缓存（Cache#getWithProtection），可安全并发调用。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -49,8 +50,11 @@ import com.njydsz.agent.domain.model.TokenUsage;
 @Slf4j
 public class CachedLlmClient implements LlmClient {
 
-  /** 等待在途 LLM 调用的最大时间（秒），超时后降级为直接调用避免饿死 */
-  private static final long INFLIGHT_WAIT_SECONDS = 30;
+  /** 等待在途 LLM 调用的最大时间（毫秒），用于 CacheProtectionGuard 的防空 TTL 抖动上限。 */
+  private static final long INFLIGHT_WAIT_MS = 30_000L;
+
+  /** 空值占位最小过期时间（毫秒）——防穿透。 */
+  private static final long NULL_CACHE_MIN_MS = 2_000L;
 
   /** 被装饰的实际 LLM 客户端 */
   private final LlmClient delegate;
@@ -61,8 +65,21 @@ public class CachedLlmClient implements LlmClient {
   /** 指标采集组件（记录缓存命中率，可为 null） */
   private final CacheMetricsRecorder metrics;
 
-  /** 在途调用表（key=缓存 key，value=对应 LLM 调用结果 Future），用于缓存击穿防护 */
-  private final Map<String, CompletableFuture<ChatResponse>> inflight = new ConcurrentHashMap<>();
+  /**
+   * LLM 调用去重缓存（防击穿）。
+   *
+   * <p>使用 ydsz-common-cache 的 {@link Cache#getWithProtection} 保证同一 key 并发请求仅执行一次 LLM 调用，
+   * 替代原手写 {@code ConcurrentHashMap + Future} 方案（消除约 30 行代码）符合 YDIZ-COMMON-001 规范。
+   *
+   * <p>TTL 设为 {@link #INFLIGHT_WAIT_MS} 毫秒，覆盖单次 LLM 调用的最大耗时；此缓存仅用于去重，
+   * 不存储实际 LLM 响应（响应由 {@link SemanticLlmCache} 负责持久化缓存）。
+   */
+  private final Cache<String, ChatResponse> dedupCache =
+      YdszCache.<String, ChatResponse>newBuilder()
+          .name("agent:llm-dedup")
+          .expireAfterWrite(INFLIGHT_WAIT_MS, TimeUnit.MILLISECONDS)
+          .maximumSize(200)
+          .build();
 
   public CachedLlmClient(LlmClient delegate, SemanticLlmCache cache, CacheMetricsRecorder metrics) {
     this.delegate = delegate;
@@ -95,32 +112,12 @@ public class CachedLlmClient implements LlmClient {
       metrics.recordCacheMiss(delegate.getProvider());
     }
 
-    // 2. 缓存击穿防护：同 key 并发未命中仅放行一个 LLM 调用，其余等待其结果
+    // 2. LLM 调用去重（防击穿）：同 key 并发请求仅放行一个 LLM 调用，其余等待其结果
+    // 使用 ydsz-common-cache 的 CacheProtectionGuard（Cache#getWithProtection）替代原手写方案，
+    // 符合 YDIZ-COMMON-001 规范：禁止使用原生 ConcurrentHashMap + Future 实现缓存防击穿
     String lockKey = cache.buildKey(model, cacheContent.getKey(), cacheContent.getValue());
-    CompletableFuture<ChatResponse> future = new CompletableFuture<>();
-    CompletableFuture<ChatResponse> existing = inflight.putIfAbsent(lockKey, future);
-    if (existing != null) {
-      // 已有调用在途：等待其结果（带超时兜底，避免极端场景饿死）
-      try {
-        return existing.get(INFLIGHT_WAIT_SECONDS, TimeUnit.SECONDS);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        return delegate.chat(request);
-      } catch (Exception e) {
-        log.warn("[CachedLLM] 等待在途调用超时，降级直接调用: {}", e.getMessage());
-        return doChatAndCache(request, cacheContent);
-      }
-    }
-    try {
-      ChatResponse response = doChatAndCache(request, cacheContent);
-      future.complete(response);
-      return response;
-    } catch (RuntimeException e) {
-      future.completeExceptionally(e);
-      throw e;
-    } finally {
-      inflight.remove(lockKey);
-    }
+    return dedupCache.getWithProtection(
+        lockKey, () -> doChatAndCache(request, cacheContent), NULL_CACHE_MIN_MS, INFLIGHT_WAIT_MS);
   }
 
   /**

@@ -2,6 +2,10 @@ package com.njydsz.agent.domain.code;
 
 import java.util.List;
 
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 代码执行请求值对象（不可变 record）。
  *
@@ -45,10 +49,11 @@ public record CodeExecutionRequest(
    * @param timeoutSeconds 超时秒数
    * @param allowedModules 允许 import 的模块白名单
    */
-  public CodeExecutionRequest {
-    if (code == null || code.isBlank()) {
-      throw new IllegalArgumentException("代码不能为空");
-    }
+    public CodeExecutionRequest {
+        if (code == null || code.isBlank()) {
+            throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+                .msg(I18n.message("agent.code.required"));
+        }
     if (timeoutSeconds <= 0) {
       timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
     }

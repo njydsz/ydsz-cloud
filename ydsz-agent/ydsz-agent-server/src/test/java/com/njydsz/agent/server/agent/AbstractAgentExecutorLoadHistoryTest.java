@@ -62,6 +62,7 @@ class AbstractAgentExecutorLoadHistoryTest {
             null,
             null,
             null,
+            null,
             null);
   }
 
@@ -137,7 +138,8 @@ class AbstractAgentExecutorLoadHistoryTest {
         CostAnalysisService costAnalysisService,
         GuardrailService guardrailService,
         PromptTemplateProvider promptTemplateProvider,
-        MiddlewareChain middlewareChain) {
+        MiddlewareChain middlewareChain,
+        I18nMessages i18nMessages) {
       super(
           llmClient,
           memory,
@@ -147,7 +149,8 @@ class AbstractAgentExecutorLoadHistoryTest {
           costAnalysisService,
           guardrailService,
           promptTemplateProvider,
-          middlewareChain);
+          middlewareChain,
+          i18nMessages);
     }
 
     @Override

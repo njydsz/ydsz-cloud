@@ -13,6 +13,7 @@ import com.njydsz.agent.domain.tool.ToolExecutionException;
 import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * Text2SQL 工具实现（注册到 ToolRegistry）。
@@ -32,6 +33,20 @@ public class Text2SQLTool implements ToolExecutor {
 
   private final Text2SQLService text2SQLService;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
+  /**
+   * 构造 Text2SQL 工具。
+   *
+   * @param text2SQLService Text2SQL 服务
+   * @param i18nMessages 国际化消息工具
+   */
+  public Text2SQLTool(Text2SQLService text2SQLService, I18nMessages i18nMessages) {
+    this.text2SQLService = text2SQLService;
+    this.i18nMessages = i18nMessages;
+  }
+
   /**
    * 执行 Text2SQL 工具调用：从参数中提取 query，委托 {@link Text2SQLService} 执行并返回 JSON 结果。
    *
@@ -42,11 +57,11 @@ public class Text2SQLTool implements ToolExecutor {
   @Override
   public String execute(Map<String, Object> arguments) throws ToolExecutionException {
     if (arguments == null || !arguments.containsKey(PARAM_QUERY)) {
-      return YdszJson.toJson(Map.of("error", "缺少必需参数: query"));
+      return YdszJson.toJson(Map.of("error", i18nMessages.resolve("agent.text2sql.missing.param", new Object[] {"query"})));
     }
     String query = String.valueOf(arguments.get(PARAM_QUERY));
     if (query.isBlank()) {
-      return YdszJson.toJson(Map.of("error", "参数 query 不能为空"));
+      return YdszJson.toJson(Map.of("error", i18nMessages.resolve("agent.text2sql.param.empty", new Object[] {"query"})));
     }
     String tenantId = resolveTenantId();
     log.info("[Text2SQLTool] 执行自然语言查询: tenant={}, query={}", tenantId, query);
@@ -64,7 +79,7 @@ public class Text2SQLTool implements ToolExecutor {
       return YdszJson.toJson(Map.of("error", e.getMessage(), "errorCode", e.getErrorCode()));
     } catch (Exception e) {
       log.error("[Text2SQLTool] Text2SQL 未知异常: {}", e.getMessage(), e);
-      return YdszJson.toJson(Map.of("error", "Text2SQL 执行异常: " + e.getMessage()));
+      return YdszJson.toJson(Map.of("error", i18nMessages.resolve("agent.text2sql.execution.error", new Object[] {e.getMessage()})));
     }
   }
 

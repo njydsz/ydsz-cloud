@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.workflow.domain.event.DomainEventPublisher;
 import com.njydsz.workflow.domain.event.FlowDomainEvent;
+import com.njydsz.workflow.domain.exception.WorkflowException;
+import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 
 /**
  * 工作流领域事件发布适配器 — 委托 ydsz-common-event Outbox 门面统一发布。
@@ -70,7 +72,7 @@ public class OutboxFlowDomainEventPublisher implements DomainEventPublisher {
   @Override
   public void publish(FlowDomainEvent event) {
     if (event == null) {
-      throw new IllegalArgumentException("event must not be null");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_PARSING_ERROR, "event must not be null");
     }
     com.njydsz.common.event.publish.DomainEventPublisher delegate =
         publisherProvider.getIfAvailable();

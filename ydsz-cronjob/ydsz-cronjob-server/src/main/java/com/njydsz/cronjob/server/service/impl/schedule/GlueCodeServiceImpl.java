@@ -21,7 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.repository.GlueCodeRepository;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
@@ -406,8 +409,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         SandboxScriptExecutor.SandboxResult sandboxResult =
             executor.execute(sourceCode, language, (int) (TEST_TIMEOUT_MS / 1000), envVars);
         if (!sandboxResult.success()) {
-          throw new IllegalStateException(
-              language + " 脚本执行失败: " + sandboxResult.errorMessage());
+          throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
+              .msg(language + " 脚本执行失败: " + sandboxResult.errorMessage());
         }
         return sandboxResult.output();
       }

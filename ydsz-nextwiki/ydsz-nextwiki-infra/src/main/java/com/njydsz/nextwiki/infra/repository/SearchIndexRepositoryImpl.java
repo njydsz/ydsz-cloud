@@ -100,7 +100,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
    */
   @Override
   public PageResponse<List<SearchIndexVO>> searchPage(SearchIndexQuery query) {
-    Page<SearchIndex> pageParam = new Page<>(query.getPage(), query.getPageSize());
+    Page<SearchIndex> pageParam = new Page<>(query.getPageNum(), query.getPageSize());
     IPage<SearchIndex> result =
         searchIndexMapper.searchPage(
             pageParam, query.getKeyword(), query.getCreatedBy(), query.getScope());
@@ -119,7 +119,7 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
   @Override
   public PageResponse<List<SearchIndexVO>> searchAdvanced(SearchQuery query) {
     Page<SearchIndex> pageParam = new Page<>(
-        query.getPage() != null ? query.getPage() : DEFAULT_PAGE,
+        query.getPageNum() != null ? query.getPageNum() : DEFAULT_PAGE,
         query.getPageSize() != null ? query.getPageSize() : DEFAULT_PAGE_SIZE);
     IPage<SearchIndex> result =
         searchIndexMapper.searchAdvanced(pageParam, query);

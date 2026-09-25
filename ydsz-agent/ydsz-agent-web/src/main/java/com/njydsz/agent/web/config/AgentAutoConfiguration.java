@@ -107,6 +107,7 @@ import com.njydsz.agent.server.profile.LlmProfileAnalyzer;
 import com.njydsz.agent.server.profile.UserProfileServiceImpl;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -263,9 +264,9 @@ public class AgentAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(ToolRegistry.class)
-  public ToolRegistry toolRegistry(AgentProperties properties) {
+  public ToolRegistry toolRegistry(AgentProperties properties, I18nMessages i18nMessages) {
     int timeout = properties.getTool().getTimeoutSeconds();
-    return new DefaultToolRegistry(timeout);
+    return new DefaultToolRegistry(timeout, i18nMessages);
   }
 
   /**
@@ -276,8 +277,8 @@ public class AgentAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(ToolAnnotationScanner.class)
-  public ToolAnnotationScanner toolAnnotationScanner(ToolRegistry toolRegistry) {
-    return new ToolAnnotationScanner(toolRegistry);
+  public ToolAnnotationScanner toolAnnotationScanner(ToolRegistry toolRegistry, I18nMessages i18nMessages) {
+    return new ToolAnnotationScanner(toolRegistry, i18nMessages);
   }
 
   /**
@@ -338,8 +339,8 @@ public class AgentAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(InputGuardrail.class)
   @ConditionalOnProperty(prefix = "ydsz.agent.guardrail", name = "promptInjectionEnabled", havingValue = "true")
-  public InputGuardrail promptInjectionGuardrail() {
-    return new PromptInjectionGuardrail();
+  public InputGuardrail promptInjectionGuardrail(I18nMessages i18nMessages) {
+    return new PromptInjectionGuardrail(i18nMessages);
   }
 
   /**
@@ -570,7 +571,8 @@ public class AgentAutoConfiguration {
       @Lazy DagOrchestrationExecutor dagExecutor,
       @Lazy SupervisorAgentExecutor supervisorExecutor,
       ObjectProvider<MiddlewareChain> middlewareChainProvider,
-      ExecutionPauseService pauseService) {
+      ExecutionPauseService pauseService,
+      I18nMessages i18nMessages) {
     return new AgentFactory(
         llmClient,
         memory,
@@ -585,7 +587,8 @@ public class AgentAutoConfiguration {
         dagExecutor,
         supervisorExecutor,
         middlewareChainProvider,
-        pauseService);
+        pauseService,
+        i18nMessages);
   }
 
   /**
@@ -655,7 +658,8 @@ public class AgentAutoConfiguration {
       AgentFactory agentFactory,
       DagDslParser dagDslParser,
       ApplicationContext applicationContext,
-      ObjectProvider<DagCheckpointStore> checkpointStoreProvider) {
+      ObjectProvider<DagCheckpointStore> checkpointStoreProvider,
+      I18nMessages i18nMessages) {
     ExecutorService dagExecutor =
         applicationContext.getBean("agentDagExecutor", ExecutorService.class);
     DagCheckpointStore checkpointStore = checkpointStoreProvider.getIfAvailable();
@@ -672,7 +676,8 @@ public class AgentAutoConfiguration {
         agentFactory,
         dagDslParser,
         dagExecutor,
-        checkpointStore);
+        checkpointStore,
+        i18nMessages);
   }
 
   /**

@@ -69,7 +69,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
   @Override
   public PageResponse<List<FileNodeVO>> findPageChildren(FileNodeQuery query) {
-    Page<FileNode> pageParam = new Page<>(query.getPage(), query.getPageSize());
+    Page<FileNode> pageParam = new Page<>(query.getPageNum(), query.getPageSize());
     IPage<FileNode> result =
         fileNodeMapper.selectPageByParentId(
             pageParam,

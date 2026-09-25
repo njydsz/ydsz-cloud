@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * Prompt 注入检测护栏
@@ -24,6 +25,18 @@ import com.njydsz.agent.domain.guardrail.InputGuardrail;
  */
 @Slf4j
 public class PromptInjectionGuardrail implements InputGuardrail {
+
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
+  /**
+   * 构造 Prompt 注入检测护栏。
+   *
+   * @param i18nMessages 国际化消息工具
+   */
+  public PromptInjectionGuardrail(I18nMessages i18nMessages) {
+    this.i18nMessages = i18nMessages;
+  }
 
   /** Prompt 注入检测模式集合 */
   private static final Set<Pattern> INJECTION_PATTERNS =
@@ -54,7 +67,7 @@ public class PromptInjectionGuardrail implements InputGuardrail {
     for (Pattern pattern : INJECTION_PATTERNS) {
       if (pattern.matcher(input).find()) {
         log.warn("[Guardrail] 检测到 Prompt 注入: pattern={}", pattern.pattern());
-        return GuardrailResult.reject("检测到潜在的 Prompt 注入攻击");
+        return GuardrailResult.reject(i18nMessages.resolve("agent.guardrail.rejected"));
       }
     }
     return GuardrailResult.pass(input);

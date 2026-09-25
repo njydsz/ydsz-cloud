@@ -8,7 +8,10 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.config.properties.McpProperties;
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.model.ToolDefinition;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * MCP 工具适配器
@@ -52,15 +55,21 @@ public class McpToolAdapter {
   /** MCP 配置 */
   private final McpProperties mcpConfig;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 构造 MCP 工具适配器。
    *
    * @param clientProvider MCP 客户端提供者（封装传输层实现）
    * @param mcpConfig MCP 全局配置（含 Server 列表与传输类型等）
+   * @param i18nMessages 国际化消息工具
    */
-  public McpToolAdapter(McpClientProvider clientProvider, McpProperties mcpConfig) {
+  public McpToolAdapter(McpClientProvider clientProvider, McpProperties mcpConfig,
+      I18nMessages i18nMessages) {
     this.clientProvider = clientProvider;
     this.mcpConfig = mcpConfig;
+    this.i18nMessages = i18nMessages;
   }
 
   /**
@@ -117,7 +126,8 @@ public class McpToolAdapter {
   public String executeTool(String qualifiedName, String arguments) {
     String[] parts = qualifiedName.split(TOOL_NAME_SEPARATOR, 2);
     if (parts.length != 2) {
-      throw new IllegalArgumentException("MCP 工具名格式错误: " + qualifiedName);
+      throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+          .msg(i18nMessages.resolve("agent.mcp.tool.name.format.invalid", new Object[] {qualifiedName}));
     }
     String serverName = parts[0];
     String toolName = parts[1];
@@ -146,7 +156,8 @@ public class McpToolAdapter {
     return mcpConfig.getServers().stream()
         .filter(s -> serverName.equals(s.getName()))
         .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("MCP Server 未配置: " + serverName));
+        .orElseThrow(() -> BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+            .msg(i18nMessages.resolve("agent.tool.not.found", new Object[] {serverName})));
   }
 
   /**

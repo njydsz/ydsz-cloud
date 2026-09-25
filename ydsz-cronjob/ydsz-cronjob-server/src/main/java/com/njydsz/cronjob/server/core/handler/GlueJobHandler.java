@@ -26,7 +26,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.cronjob.domain.job.JobExecutionContext;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
@@ -275,12 +277,14 @@ public class GlueJobHandler implements JobHandler {
     // 从 JobExecutionContext 获取当前 jobId
     String jobId = JobExecutionContext.getShardingContext().getJobId();
     if (!StringUtils.hasText(jobId)) {
-      throw new IllegalStateException("GLUE 任务执行上下文缺少 jobId，请确认 JobExecutionContext 已正确设置");
+      throw BusinessException.of(CronjobExceptionCode.GLUE_CONTEXT_MISSING_JOBID)
+          .msg(I18n.message("cronjob.glue.context.missing.jobId", new Object[]{}));
     }
 
     GlueCodeService glueCodeService = glueCodeServiceProvider.getIfAvailable();
     if (glueCodeService == null) {
-      throw new IllegalStateException("GlueCodeService 未注册，GLUE 任务无法执行");
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SERVICE_UNREGISTERED)
+          .msg(I18n.message("cronjob.glue.service.unregistered", new Object[]{}));
     }
 
     // 获取最新版本代码
@@ -288,7 +292,8 @@ public class GlueJobHandler implements JobHandler {
     if (glueCode == null
         || glueCode.getSourceCode() == null
         || glueCode.getSourceCode().isBlank()) {
-      throw new IllegalStateException("未找到 GLUE 代码或代码为空: jobId=" + jobId);
+      throw BusinessException.of(CronjobExceptionCode.GLUE_CODE_EMPTY)
+          .msg(I18n.message("cronjob.glue.code.empty", new Object[]{jobId}));
     }
 
     String sourceCode = glueCode.getSourceCode();
@@ -306,7 +311,8 @@ public class GlueJobHandler implements JobHandler {
       case "PYTHON" -> executePython(sourceCode, paramsJson);
       case "SHELL" -> executeShell(sourceCode, paramsJson);
       case "JAVASCRIPT", "JS" -> executeJavaScript(sourceCode, paramsJson);
-      default -> throw new IllegalStateException("不支持的 GLUE 语言类型: " + language);
+      default -> throw BusinessException.of(CronjobExceptionCode.GLUE_LANGUAGE_UNSUPPORTED)
+          .msg(I18n.message("cronjob.glue.language.unsupported", new Object[]{language}));
     };
   }
 
@@ -333,7 +339,8 @@ public class GlueJobHandler implements JobHandler {
     try {
       instance = clazz.getDeclaredConstructor().newInstance();
     } catch (Exception e) {
-      throw new IllegalStateException("GLUE 代码实例化失败: " + e.getMessage(), e);
+      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e)
+          .msg("GLUE 代码实例化失败: " + e.getMessage());
     }
     return invokeExecute(instance, paramsJson);
   }
@@ -362,14 +369,16 @@ public class GlueJobHandler implements JobHandler {
       throws JobExecutionException {
     GroovyDockerSandboxExecutor dockerExecutor = groovyDockerExecutorProvider.getIfAvailable();
     if (dockerExecutor == null) {
-      throw new IllegalStateException("GroovyDockerSandboxExecutor 未注册");
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_UNREGISTERED)
+          .msg(I18n.message("cronjob.glue.sandbox.unregistered", new Object[]{}));
     }
 
     GroovyDockerSandboxExecutor.GroovySandboxResult result =
         dockerExecutor.execute(sourceCode, paramsJson, SCRIPT_TIMEOUT_SECONDS);
 
     if (!result.success()) {
-      throw new IllegalStateException("Groovy Docker 沙箱执行失败: " + result.message());
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
+          .msg("Groovy Docker 沙箱执行失败: " + result.message());
     }
     return result.output();
   }
@@ -382,14 +391,16 @@ public class GlueJobHandler implements JobHandler {
   private Object executePython(String sourceCode, String paramsJson) throws JobExecutionException {
     SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
     if (executor == null) {
-      throw new IllegalStateException("SandboxScriptExecutor 未注册，Python GLUE 任务无法执行");
+      throw BusinessException.of(CronjobExceptionCode.GLUE_PYTHON_EXECUTOR_UNREGISTERED)
+          .msg(I18n.message("cronjob.glue.python.executor.unregistered", new Object[]{}));
     }
     Map<String, String> envVars = new HashMap<>(COLLECTION_CAPACITY);
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "PYTHON", SCRIPT_TIMEOUT_SECONDS, envVars);
     if (!result.success()) {
-      throw new IllegalStateException("Python 脚本执行失败: " + result.errorMessage());
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
+          .msg("Python 脚本执行失败: " + result.errorMessage());
     }
     return result.output();
   }
@@ -402,14 +413,16 @@ public class GlueJobHandler implements JobHandler {
   private Object executeShell(String sourceCode, String paramsJson) throws JobExecutionException {
     SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
     if (executor == null) {
-      throw new IllegalStateException("SandboxScriptExecutor 未注册，Shell GLUE 任务无法执行");
+      throw BusinessException.of(CronjobExceptionCode.GLUE_PYTHON_EXECUTOR_UNREGISTERED)
+          .msg(I18n.message("cronjob.glue.python.executor.unregistered", new Object[]{}));
     }
     Map<String, String> envVars = new HashMap<>(COLLECTION_CAPACITY);
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "SHELL", SCRIPT_TIMEOUT_SECONDS, envVars);
     if (!result.success()) {
-      throw new IllegalStateException("Shell 脚本执行失败: " + result.errorMessage());
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
+          .msg("Shell 脚本执行失败: " + result.errorMessage());
     }
     return result.output();
   }
@@ -422,7 +435,8 @@ public class GlueJobHandler implements JobHandler {
    */
   private Object executeJavaScript(String sourceCode, String paramsJson) throws JobExecutionException {
     if (jsEngine == null) {
-      throw new IllegalStateException("JavaScript 引擎不可用，请添加 Nashorn 或 GraalJS 依赖");
+      throw BusinessException.of(CronjobExceptionCode.GLUE_LANGUAGE_UNSUPPORTED)
+          .msg("JavaScript 引擎不可用，请添加 Nashorn 或 GraalJS 依赖");
     }
     try {
       jsEngine.put("paramsJson", paramsJson != null ? paramsJson : "{}");
@@ -430,7 +444,8 @@ public class GlueJobHandler implements JobHandler {
       logToJobLogger("JavaScript 脚本执行完成: result={}", result);
       return result != null ? result.toString() : "null";
     } catch (Exception e) {
-      throw new IllegalStateException("JavaScript 脚本执行失败: " + e.getMessage(), e);
+      throw new BusinessException(CronjobExceptionCode.GLUE_SANDBOX_FAILED, e)
+          .msg("JavaScript 脚本执行失败: " + e.getMessage());
     }
   }
 
@@ -470,8 +485,8 @@ public class GlueJobHandler implements JobHandler {
                 clazz.getName());
             return clazz;
           } catch (Exception e) {
-            throw new IllegalStateException(
-                "GLUE 代码编译失败（沙箱安全检查未通过）: " + e.getMessage(), e);
+            throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e)
+                .msg("GLUE 代码编译失败（沙箱安全检查未通过）: " + e.getMessage());
           }
         });
   }
@@ -503,11 +518,12 @@ public class GlueJobHandler implements JobHandler {
       logToJobLogger("GLUE 脚本执行完成: result={}", result);
       return result;
     } catch (NoSuchMethodException e) {
-      throw new IllegalStateException(
-          "GLUE 代码未实现 JobHandler 接口，也未定义 execute(String) 方法: " + instance.getClass().getName(), e);
+      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e)
+          .msg("GLUE 代码未实现 JobHandler 接口，也未定义 execute(String) 方法: " + instance.getClass().getName());
     } catch (Exception e) {
       Throwable cause = e.getCause() != null ? e.getCause() : e;
-      throw new IllegalStateException("GLUE 代码执行失败: " + cause.getMessage(), cause);
+      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, cause)
+          .msg("GLUE 代码执行失败: " + cause.getMessage());
     }
   }
 

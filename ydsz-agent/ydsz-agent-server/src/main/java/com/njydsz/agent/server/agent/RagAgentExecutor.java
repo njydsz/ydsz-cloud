@@ -24,6 +24,7 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.chat.StreamingPiiMasker;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -53,7 +54,8 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
-      MiddlewareChain middlewareChain) {
+      MiddlewareChain middlewareChain,
+      I18nMessages i18nMessages) {
     super(
         llmClient,
         memory,
@@ -63,7 +65,8 @@ public class RagAgentExecutor extends AbstractAgentExecutor {
         costAnalysisService,
         guardrailService,
         promptTemplateProvider,
-        middlewareChain);
+        middlewareChain,
+        i18nMessages);
     this.ragService = ragService;
   }
 

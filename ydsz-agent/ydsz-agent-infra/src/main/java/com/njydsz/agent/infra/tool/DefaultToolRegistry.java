@@ -16,7 +16,9 @@ import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.tool.ToolExecutor;
 import com.njydsz.agent.domain.tool.ToolRegistration;
 import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
@@ -42,21 +44,26 @@ public class DefaultToolRegistry implements ToolRegistry {
   /** 工具执行线程池（JDK 21 虚拟线程，规范豁免场景） */
   private final ExecutorService toolExecutorPool;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * 构造工具注册中心（使用默认 30 秒超时）。
    */
-  public DefaultToolRegistry() {
-    this(DEFAULT_TOOL_TIMEOUT_SECONDS);
+  public DefaultToolRegistry(I18nMessages i18nMessages) {
+    this(DEFAULT_TOOL_TIMEOUT_SECONDS, i18nMessages);
   }
 
   /**
    * 构造工具注册中心。
    *
    * @param defaultTimeoutSeconds 工具执行超时（秒），0 表示不限时
+   * @param i18nMessages 国际化消息工具
    */
-  public DefaultToolRegistry(int defaultTimeoutSeconds) {
+  public DefaultToolRegistry(int defaultTimeoutSeconds, I18nMessages i18nMessages) {
     this.defaultTimeoutSeconds = defaultTimeoutSeconds > 0 ? defaultTimeoutSeconds : 0;
     this.toolExecutorPool = ExecutorUtils.newVirtualThreadExecutor("agent-tool-registry-");
+    this.i18nMessages = i18nMessages;
   }
 
   /**
@@ -69,10 +76,12 @@ public class DefaultToolRegistry implements ToolRegistry {
   @Override
   public void register(String name, ToolExecutor executor) {
     if (name == null || name.isBlank()) {
-      throw new IllegalArgumentException("工具名称不能为空");
+      throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+          .msg(i18nMessages.resolve("agent.tool.name.required"));
     }
     if (executor == null) {
-      throw new IllegalArgumentException("工具执行器不能为 null");
+      throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+          .msg(i18nMessages.resolve("agent.tool.executor.required"));
     }
     ToolRegistration registration =
         ToolRegistration.builder()
@@ -129,7 +138,8 @@ public class DefaultToolRegistry implements ToolRegistry {
     ToolRegistration registration = registry.get(toolCall.getName());
     if (registration == null) {
       log.warn("[Tool-Registry] 工具未找到: {}", toolCall.getName());
-      return YdszJson.toJson(Map.of("error", "工具未找到: " + toolCall.getName()));
+      return YdszJson.toJson(Map.of("error",
+          i18nMessages.resolve("agent.tool.not.found", new Object[] {toolCall.getName()})));
     }
     long startTime = System.currentTimeMillis();
     // 无超时配置时直接同步执行
@@ -145,12 +155,18 @@ public class DefaultToolRegistry implements ToolRegistry {
       long duration = System.currentTimeMillis() - startTime;
       log.error("[Tool-Registry] 工具执行超时: {} ({}ms > {}s)", toolCall.getName(), duration, defaultTimeoutSeconds);
       return YdszJson.toJson(
-          Map.of("error", "工具执行超时（" + defaultTimeoutSeconds + "s）", "tool", toolCall.getName()));
+          Map.of("error",
+              i18nMessages.resolve("agent.tool.execution.failed",
+                  new Object[] {toolCall.getName() + " (timeout " + defaultTimeoutSeconds + "s)"}),
+              "tool", toolCall.getName()));
     } catch (Exception e) {
       long duration = System.currentTimeMillis() - startTime;
       log.error("[Tool-Registry] 工具执行失败: {} ({}ms): {}", toolCall.getName(), duration, e.getMessage(), e);
       return YdszJson.toJson(
-          Map.of("error", "工具执行失败: " + e.getMessage(), "tool", toolCall.getName()));
+          Map.of("error",
+              i18nMessages.resolve("agent.tool.execution.failed",
+                  new Object[] {e.getMessage()}),
+              "tool", toolCall.getName()));
     }
   }
 
@@ -166,7 +182,10 @@ public class DefaultToolRegistry implements ToolRegistry {
       log.error(
           "[Tool-Registry] 工具执行失败: {} ({}ms): {}", toolCall.getName(), duration, e.getMessage(), e);
       return YdszJson.toJson(
-          Map.of("error", "工具执行失败: " + e.getMessage(), "tool", toolCall.getName()));
+          Map.of("error",
+              i18nMessages.resolve("agent.tool.execution.failed",
+                  new Object[] {e.getMessage()}),
+              "tool", toolCall.getName()));
     }
   }
 

@@ -6,12 +6,12 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.password.PwdUtils;
 import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -72,8 +72,7 @@ public class ShareApplicationService {
   /** 文件节点数据仓储（查询文件节点获取 storageKey 等元数据） */
   private final FileNodeRepository fileNodeRepository;
 
-  /** 密码加密器（BCrypt 哈希生成与匹配） */
-  private final BCryptPasswordEncoder passwordEncoder;
+  // 密码哈希由 ydsz-common-util PwdUtils 提供（符合 YDIZ-COMMON-003 规范：禁止直接 new BCryptPasswordEncoder）
 
   /** Redis 字符串操作（防暴力破解失败计数与锁） */
   private final RedisStringOps stringOps;
@@ -103,9 +102,10 @@ public class ShareApplicationService {
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId));
     filePermissionService.checkShare(fileNodeId, userId);
 
-    // DDD 合规：密码哈希由应用层（基础设施）完成后传入 domain 层
+    // DDD 合规：密码哈希由应用层完成后传入 domain 层
+    // 使用 ydsz-common-util PwdUtils（符合 YDIZ-COMMON-003 规范：禁止直接 new BCryptPasswordEncoder）
     String hashedPassword =
-        password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null;
+        password != null && !password.isEmpty() ? PwdUtils.hashPasswordBCrypt(password) : null;
     ShareLinkDomainService.CreateShareResult result = shareLinkDomainService.createShare(
         node, shareType, hashedPassword, expireTime, maxAccessCount, userId);
     ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
@@ -142,9 +142,10 @@ public class ShareApplicationService {
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("fileNodeId", fileNodeId));
     filePermissionService.checkShare(fileNodeId, userId);
 
-    // DDD 合规：密码哈希由应用层（基础设施）完成后传入 domain 层
+    // DDD 合规：密码哈希由应用层完成后传入 domain 层
+    // 使用 ydsz-common-util PwdUtils（符合 YDIZ-COMMON-003 规范：禁止直接 new BCryptPasswordEncoder）
     String hashedPassword =
-        password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null;
+        password != null && !password.isEmpty() ? PwdUtils.hashPasswordBCrypt(password) : null;
     ShareLinkDomainService.CreateShareResult result = shareLinkDomainService.createShare(
         node, shareType, hashedPassword, expireTime, maxAccessCount, targetUserIds, title, userId);
     ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
@@ -181,9 +182,9 @@ public class ShareApplicationService {
     // 领域层验证（状态/过期/访问次数/提取码）
     ShareLinkDTO verified = shareLinkDomainService.verifyAccess(dto, extractCode);
 
-    // DDD 合规：密码匹配由应用层（BCrypt 基础设施）负责
+    // DDD 合规：密码匹配由应用层负责（使用 ydsz-common-util PwdUtils，符合 YDIZ-COMMON-003 规范）
     if (verified.getPassword() != null && !verified.getPassword().isEmpty()) {
-      if (password == null || !passwordEncoder.matches(password, verified.getPassword())) {
+      if (password == null || !PwdUtils.verifyPasswordBCrypt(password, verified.getPassword())) {
         // 记录失败次数
         Long failCount = stringOps.incr(failKey, 1);
         if (failCount != null && failCount == 1) {

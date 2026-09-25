@@ -178,6 +178,12 @@ public class MultiSheetFastWriter {
         info.width = (short) prop.width();
       }
 
+      // 设置公式（如有）
+      String formulaExpr = prop.formula();
+      if (formulaExpr != null && !formulaExpr.isEmpty()) {
+        info.formula = formulaExpr;
+      }
+
       result.add(info);
       compactIdx++;
     }
@@ -209,7 +215,12 @@ public class MultiSheetFastWriter {
       SheetFieldMeta info = fields.get(col);
       try {
         Object value = info.getter.get(rowObj);
-        appendCell(sb, ref, value);
+        // 公式单元格处理
+        if (info.formula != null && !info.formula.isEmpty()) {
+          appendFormulaCell(sb, ref, info.formula, value);
+        } else {
+          appendCell(sb, ref, value);
+        }
       } catch (Exception e) {
         sb.append("<c r=\"").append(ref).append("\"/>");
       }
@@ -237,6 +248,33 @@ public class MultiSheetFastWriter {
       sb.append(escapeXml(value.toString()));
       sb.append("</t></is></c>");
     }
+  }
+
+  /**
+   * 写入公式单元格 — 产出 &lt;c r="REF"&gt;&lt;f&gt;FORMULA&lt;/f&gt;&lt;v&gt;CACHED&lt;/v&gt;&lt;/c&gt; 双节点。
+   */
+  private void appendFormulaCell(StringBuilder sb, String ref, String formula, Object cachedValue) {
+    String cached = (cachedValue == null) ? "" : cachedValue.toString();
+    sb.append("<c r=\"").append(ref).append("\">");
+    sb.append("<f>").append(escapeXml(formula)).append("</f>");
+    sb.append("<v>").append(escapeCachedValue(cached)).append("</v>");
+    sb.append("</c>");
+  }
+
+  /** 缓存值转义（防止 <v/> 首字符小于号等破坏 XML） */
+  private static String escapeCachedValue(String v) {
+    if (v == null) return "";
+    StringBuilder sb = new StringBuilder(v.length());
+    for (int i = 0; i < v.length(); i++) {
+      char c = v.charAt(i);
+      switch (c) {
+        case '&': sb.append("&amp;"); break;
+        case '<': sb.append("&lt;"); break;
+        case '>': sb.append("&gt;"); break;
+        default: sb.append(c);
+      }
+    }
+    return sb.toString();
   }
 
   private String sanitizeSheetName(String name, int sheetIndex) {
@@ -382,6 +420,8 @@ public class MultiSheetFastWriter {
     /** 紧凑列索引（写入时由 analyzeFields 按 ColumnOrderResolver 排序顺序分配） */
     int compactIndex;
     Short width;
+    /** 公式表达式（来自 @ExcelProperty.formula()），null 表示无公式。 */
+    String formula;
   }
 
   /** 共享字符串表（有序去重） */

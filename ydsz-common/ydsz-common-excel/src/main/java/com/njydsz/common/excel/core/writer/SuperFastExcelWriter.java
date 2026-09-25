@@ -790,7 +790,12 @@ public class SuperFastExcelWriter {
         value = info.field.get(item);
       }
 
-      writeCellTyped(col, value, info.dateFormatObj, columnTypeIds[col], ss);
+      // 公式单元格处理
+      if (info.formula != null && !info.formula.isEmpty()) {
+        writeFormulaCell(col, info.formula, value);
+      } else {
+        writeCellTyped(col, value, info.dateFormatObj, columnTypeIds[col], ss);
+      }
     }
 
     ensureCapacity(16);
@@ -1179,6 +1184,81 @@ public class SuperFastExcelWriter {
     writeStringCellInline(col, value.toString());
   }
 
+  /**
+   * 写入公式单元格 — 产出 {@code <c r="REF"><f>FORMULA</f><v>CACHED</v></c>} 双节点。
+   *
+   * <p>公式通过 {@link com.njydsz.common.excel.annotation.ExcelProperty#formula()} 指定文本表达式，
+   * 如 {@code SUM(B2:D2)}。Excel 打开时会重新计算公式；写入时同步输出字段当前值作为 {@code <v>} 缓存值，
+   * 避免打开时依赖计算。公式文本经过 XML 转义防止破坏文档结构。
+   *
+   * @param col 列索引
+   * @param formula 公式表达式文本（非 null 非空）
+   * @param cachedValue 缓存值（toString 输出到 {@code <v>}），可为 null
+   */
+  private void writeFormulaCell(int col, String formula, Object cachedValue) {
+    String cached = (cachedValue == null) ? "" : cachedValue.toString();
+    String escapedFormula = escapeFormula(formula);
+    String cellXml = "<c r=\"" + toCellRefPlain(currentRow, col) + "\">"
+        + "<f>" + escapedFormula + "</f>"
+        + "<v>" + escapeCachedValue(cached) + "</v>"
+        + "</c>";
+    byte[] cellBytes = cellXml.getBytes(StandardCharsets.UTF_8);
+    ensureCapacity(cellBytes.length);
+    System.arraycopy(cellBytes, 0, rowBuffer, rowBufferPos, cellBytes.length);
+    rowBufferPos += cellBytes.length;
+  }
+
+  /** 公式表达式转义（防 XML 结构破坏） */
+  private static String escapeFormula(String formula) {
+    if (formula == null) return "";
+    StringBuilder sb = new StringBuilder(formula.length());
+    for (int i = 0; i < formula.length(); i++) {
+      char c = formula.charAt(i);
+      switch (c) {
+        case '&': sb.append("&amp;"); break;
+        case '<': sb.append("&lt;"); break;
+        case '>': sb.append("&gt;"); break;
+        case '"': sb.append("&quot;"); break;
+        default: sb.append(c);
+      }
+    }
+    return sb.toString();
+  }
+
+  /** 缓存值转义（防止 <v/> 首字符小于号等破坏 XML） */
+  private static String escapeCachedValue(String v) {
+    if (v == null) return "";
+    StringBuilder sb = new StringBuilder(v.length());
+    for (int i = 0; i < v.length(); i++) {
+      char c = v.charAt(i);
+      switch (c) {
+        case '&': sb.append("&amp;"); break;
+        case '<': sb.append("&lt;"); break;
+        case '>': sb.append("&gt;"); break;
+        default: sb.append(c);
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * 将列索引转换为列字母（AA 格式），供公式单元格使用。
+   *
+   * @param row 行索引（0-based）
+   * @param col 列索引（0-based）
+   * @return 单元格引用字符串（如 "A1"、"AE6"）
+   */
+  static String toCellRefPlain(int row, int col) {
+    StringBuilder colRef = new StringBuilder(3);
+    int c = col;
+    while (c >= 0) {
+      colRef.insert(0, (char) ('A' + c % 26));
+      c = c / 26 - 1;
+      if (c < 0) break;
+    }
+    return colRef.toString() + (row + 1);
+  }
+
   private void closeCellTag() {
     rowBuffer[rowBufferPos++] = '<';
     rowBuffer[rowBufferPos++] = '/';
@@ -1330,6 +1410,8 @@ public class SuperFastExcelWriter {
     DateTimeFormatter dateFormatObj;
     /** 自定义列宽（单位：字符），null 表示使用默认宽度。 */
     Short width;
+    /** 公式表达式（来自 @ExcelProperty.formula()），null/空 表示无公式。 */
+    String formula;
   }
 
   private void analyzeClass(Class<?> clazz) {
@@ -1376,6 +1458,13 @@ public class SuperFastExcelWriter {
               : DEFAULT_DATE_FORMATTER;
       if (prop != null && prop.width() > 0) {
         info.width = (short) prop.width();
+      }
+      // 设置公式（如有）
+      if (prop != null) {
+        String formulaExpr = prop.formula();
+        if (formulaExpr != null && !formulaExpr.isEmpty()) {
+          info.formula = formulaExpr;
+        }
       }
       fieldInfoMap.put(compactIdx, info);
 

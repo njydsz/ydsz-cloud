@@ -2,6 +2,10 @@ package com.njydsz.agent.domain.insight;
 
 import java.util.Map;
 
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 洞察报告生成请求值对象（不可变 record）。
  *
@@ -41,13 +45,15 @@ public record InsightReportRequest(
    * @param reportFormat 报告格式（html / pdf / markdown）
    * @param extraParams 额外参数
    */
-  public InsightReportRequest {
-    if (userId == null || userId.isBlank()) {
-      throw new IllegalArgumentException("userId 不能为空");
-    }
-    if (reportTitle == null || reportTitle.isBlank()) {
-      throw new IllegalArgumentException("reportTitle 不能为空");
-    }
+    public InsightReportRequest {
+        if (userId == null || userId.isBlank()) {
+            throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+                .msg(I18n.message("agent.data.source.missing.userId"));
+        }
+        if (reportTitle == null || reportTitle.isBlank()) {
+            throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+                .msg(I18n.message("agent.insight.report.title.required"));
+        }
     if (dataJson == null) {
       dataJson = "{}";
     }

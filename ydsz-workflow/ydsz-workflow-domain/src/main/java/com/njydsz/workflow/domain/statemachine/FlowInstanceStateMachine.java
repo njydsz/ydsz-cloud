@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 
 /**
@@ -107,8 +108,7 @@ public class FlowInstanceStateMachine {
    */
   public boolean validateTransition(FlowInstanceStatus current, FlowInstanceStatus target) {
     if (current == null || target == null) {
-      throw new IllegalArgumentException(
-          "状态流转校验参数不能为空: current=" + current + ", target=" + target);
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态流转校验参数不能为空: current=" + current + ", target=" + target);
     }
     if (current == target) {
       log.debug("[FlowInstanceStateMachine] 状态未变化: {}", current);
@@ -128,14 +128,13 @@ public class FlowInstanceStateMachine {
    *
    * @param current 当前状态（不可为 null）
    * @param target 目标状态（不可为 null）
-   * @throws BusinessException 当状态流转非法时，异常码为 {@link
-   *     WorkflowExceptionCode#ILLEGAL_STATE_TRANSITION}
-   * @throws IllegalArgumentException 当 current 或 target 为 null 时
+   * @throws WorkflowException 当状态流转非法时，异常码为 {@link
+   *     WorkflowExceptionCode#ILLEGAL_STATE_TRANSITION} 或参数为 null 时码为 {@link
+   *     WorkflowExceptionCode#FLOW_STATE_INVALID}
    */
   public void requireTransition(FlowInstanceStatus current, FlowInstanceStatus target) {
     if (current == null || target == null) {
-      throw new IllegalArgumentException(
-          "状态流转校验参数不能为空: current=" + current + ", target=" + target);
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态流转校验参数不能为空: current=" + current + ", target=" + target);
     }
     if (!validateTransition(current, target)) {
       throw BusinessException.builder()
@@ -156,7 +155,7 @@ public class FlowInstanceStateMachine {
    */
   public Set<FlowInstanceStatus> getAvailableTransitions(FlowInstanceStatus current) {
     if (current == null) {
-      throw new IllegalArgumentException("当前状态不能为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "当前状态不能为空");
     }
     if (current.isTerminal()) {
       return Set.of();
@@ -182,7 +181,7 @@ public class FlowInstanceStateMachine {
    */
   public boolean isTerminal(FlowInstanceStatus status) {
     if (status == null) {
-      throw new IllegalArgumentException("状态不能为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态不能为空");
     }
     return status.isTerminal();
   }
@@ -192,11 +191,11 @@ public class FlowInstanceStateMachine {
    *
    * @param status 状态（不可为 null）
    * @return true=活跃态；false=非活跃态
-   * @throws IllegalArgumentException 当 status 为 null 时
+   * @throws WorkflowException 当 status 为 null 时
    */
   public boolean isActive(FlowInstanceStatus status) {
     if (status == null) {
-      throw new IllegalArgumentException("状态不能为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态不能为空");
     }
     return status == FlowInstanceStatus.RUNNING
         || status == FlowInstanceStatus.SUSPENDED
@@ -231,11 +230,11 @@ public class FlowInstanceStateMachine {
    *
    * @param status 状态（不可为 null）
    * @return true=运行中；false=非运行中
-   * @throws IllegalArgumentException 当 status 为 null 时
+   * @throws WorkflowException 当 status 为 null 时
    */
   public boolean isRunning(FlowInstanceStatus status) {
     if (status == null) {
-      throw new IllegalArgumentException("状态不能为空");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态不能为空");
     }
     return status == FlowInstanceStatus.RUNNING;
   }

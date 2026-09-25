@@ -3,10 +3,15 @@ package com.njydsz.nextwiki.domain.query;
 import java.io.Serializable;
 import java.util.List;
 
+import com.njydsz.common.domain.query.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.Singular;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 高级语法搜索查询（解析后）。
@@ -29,9 +34,12 @@ import lombok.Singular;
  * @since 26.09.01
  */
 @Data
-@Builder
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "高级语法搜索查询")
-public class SearchQuery implements Serializable {
+public class SearchQuery extends PageQuery implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -63,14 +71,6 @@ public class SearchQuery implements Serializable {
   /** 搜索作用域（all / name / content / Tag / Path） */
   @Schema(description = "搜索作用域")
   private String scope;
-
-  /** 页码（从 1 开始） */
-  @Schema(description = "页码")
-  private Integer page;
-
-  /** 每页大小 */
-  @Schema(description = "每页大小")
-  private Integer pageSize;
 
   /** 创建人（null 表示全部） */
   @Schema(description = "创建人过滤")

@@ -2,6 +2,10 @@ package com.njydsz.agent.domain.analysis;
 
 import java.util.Map;
 
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 数据分析请求值对象（不可变 record）。
  *
@@ -35,13 +39,15 @@ public record DataSourceAnalysisRequest(
    * @param tenantId 租户 ID
    * @param extraParams 额外参数
    */
-  public DataSourceAnalysisRequest {
-    if (userId == null || userId.isBlank()) {
-      throw new IllegalArgumentException("userId 不能为空");
-    }
-    if (query == null || query.isBlank()) {
-      throw new IllegalArgumentException("query 不能为空");
-    }
+    public DataSourceAnalysisRequest {
+        if (userId == null || userId.isBlank()) {
+            throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+                .msg(I18n.message("agent.data.source.missing.userId"));
+        }
+        if (query == null || query.isBlank()) {
+            throw BusinessException.of(AgentExceptionCode.PARAM_ERROR)
+                .msg(I18n.message("agent.data.source.missing.query"));
+        }
     if (dataSourceType == null || dataSourceType.isBlank()) {
       dataSourceType = "mixed";
     }

@@ -141,7 +141,8 @@ class ReActAgentExecutorPauseResumeTest {
         promptTemplateProvider,
         ragService,
         middlewareChain,
-        pauseService);
+        pauseService,
+        null);
   }
 
   /**

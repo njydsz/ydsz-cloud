@@ -2,8 +2,10 @@ package com.njydsz.nextwiki.domain.query;
 
 import java.io.Serializable;
 
+import com.njydsz.common.domain.query.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -17,9 +19,10 @@ import lombok.experimental.SuperBuilder;
  */
 @Data
 @SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Schema(description = "搜索索引查询参数")
-public class SearchIndexQuery implements Serializable {
+public class SearchIndexQuery extends PageQuery implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -31,10 +34,4 @@ public class SearchIndexQuery implements Serializable {
 
   @Schema(description = "搜索范围：all / filename / content / tag")
   private String scope;
-
-  @Schema(description = "页码（从 1 开始）")
-  private Integer page;
-
-  @Schema(description = "每页大小")
-  private Integer pageSize;
 }

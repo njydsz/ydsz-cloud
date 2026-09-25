@@ -34,6 +34,7 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.chat.StreamingPiiMasker;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.util.message.MessageUtils;
 
@@ -122,7 +123,8 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
       AgentFactory agentFactory,
-      MiddlewareChain middlewareChain) {
+      MiddlewareChain middlewareChain,
+      I18nMessages i18nMessages) {
     super(
         llmClient,
         memory,
@@ -132,7 +134,8 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
         costAnalysisService,
         guardrailService,
         promptTemplateProvider,
-        middlewareChain);
+        middlewareChain,
+        i18nMessages);
     this.agentFactory = agentFactory;
   }
 

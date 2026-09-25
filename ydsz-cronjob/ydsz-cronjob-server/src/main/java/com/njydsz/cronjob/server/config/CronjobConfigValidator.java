@@ -6,6 +6,10 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -88,7 +92,8 @@ public class CronjobConfigValidator {
       }
       String errorMessage = sb.toString();
       log.error("[ConfigValidator] {}", errorMessage);
-      throw new IllegalStateException(errorMessage);
+      throw BusinessException.of(CronjobExceptionCode.CONFIG_INVALID)
+          .msg(errorMessage);
     }
   }
 
@@ -102,12 +107,14 @@ public class CronjobConfigValidator {
         && cronjobProperties.getJobLockTtlMin().compareTo(cronjobProperties.getJobLockTtlMax()) > 0) {
       String msg = "配置校验失败: ydsz.cronjob.job-lock-ttl-min 不能大于 job-lock-ttl-max";
       log.error("[ConfigValidator] {}", msg);
-      throw new IllegalStateException(msg);
+      throw BusinessException.of(CronjobExceptionCode.CONFIG_INVALID)
+          .msg(msg);
     }
     if (cronjobProperties.getSchedulerPoolSize() <= 0) {
       String msg = "配置校验失败: ydsz.cronjob.scheduler-pool-size 必须大于 0";
       log.error("[ConfigValidator] {}", msg);
-      throw new IllegalStateException(msg);
+      throw BusinessException.of(CronjobExceptionCode.CONFIG_INVALID)
+          .msg(msg);
     }
   }
 }

@@ -278,6 +278,11 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
       if (prop.width() > 0) {
         info.width = (short) prop.width();
       }
+      // 设置公式（如有）
+      String formulaExpr = prop.formula();
+      if (formulaExpr != null && !formulaExpr.isEmpty()) {
+        info.formula = formulaExpr;
+      }
       result.add(info);
     }
     result.sort((a, b) -> Integer.compare(a.order, b.order));
@@ -321,7 +326,12 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
       SheetFieldMeta info = fields.get(col);
       try {
         Object value = info.getter.get(rowObj);
-        appendCell(sb, ref, value, sst);
+        // 公式单元格处理
+        if (info.formula != null && !info.formula.isEmpty()) {
+          appendFormulaCell(sb, ref, info.formula, value);
+        } else {
+          appendCell(sb, ref, value, sst);
+        }
       } catch (Exception e) {
         LOG.warn("取值异常: rowNum={}, field={}", rowNum, info.field.getName(), e);
         sb.append("<c r=\"").append(ref).append("\"/>");
@@ -358,6 +368,33 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
         sb.append("</t></is></c>");
       }
     }
+  }
+
+  /**
+   * 写入公式单元格 — 产出 <c r="REF"><f>FORMULA</f><v>CACHED</v></c> 双节点。
+   */
+  private void appendFormulaCell(StringBuilder sb, String ref, String formula, Object cachedValue) {
+    String cached = (cachedValue == null) ? "" : cachedValue.toString();
+    sb.append("<c r=\"").append(ref).append("\">");
+    sb.append("<f>").append(escapeXml(formula)).append("</f>");
+    sb.append("<v>").append(escapeCachedFormulaValue(cached)).append("</v>");
+    sb.append("</c>");
+  }
+
+  /** 公式缓存值转义（防止 <v/> 首字符小于号等破坏 XML） */
+  private static String escapeCachedFormulaValue(String v) {
+    if (v == null) return "";
+    StringBuilder sb = new StringBuilder(v.length());
+    for (int i = 0; i < v.length(); i++) {
+      char c = v.charAt(i);
+      switch (c) {
+        case '&': sb.append("&amp;"); break;
+        case '<': sb.append("&lt;"); break;
+        case '>': sb.append("&gt;"); break;
+        default: sb.append(c);
+      }
+    }
+    return sb.toString();
   }
 
   // ==================== ZIP 静态部分 ====================
@@ -510,6 +547,8 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
     MHFieldAccessor.FieldGetter getter;
     int order = 0;
     Short width;
+    /** 公式表达式（来自 @ExcelProperty.formula()），null 表示无公式。 */
+    String formula;
   }
 
   /** 轻量级共享字符串表（有序去重） */

@@ -98,6 +98,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
+        <!-- ydsz-common-base: AbstractModuleHealthIndicator（FlowHealthIndicator 基类）显式声明 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-base</artifactId>
+        </dependency>
         <!-- P3: engine 合并后显式声明 common-json（FlowListenerConfigReader 使用 YdszJson） -->
         <dependency>
             <groupId>com.njydsz</groupId>

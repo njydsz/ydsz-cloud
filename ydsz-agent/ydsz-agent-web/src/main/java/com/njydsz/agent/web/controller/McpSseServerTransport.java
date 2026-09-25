@@ -22,6 +22,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.config.AgentProperties;
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.mcp.McpExposedTool;
 import com.njydsz.agent.domain.mcp.McpServerCapabilityProvider;
 import com.njydsz.agent.domain.mcp.McpServerDescriptor;
@@ -29,6 +30,8 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.infra.mcp.McpJsonRpcMessage;
 import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -101,6 +104,9 @@ public class McpSseServerTransport {
   /** Agent 配置 */
   private final AgentProperties agentProperties;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /** MCP Server 描述符 */
   private McpServerDescriptor serverDescriptor;
 
@@ -172,7 +178,8 @@ public class McpSseServerTransport {
           ? (Map<String, Object>) map : new HashMap<>(0);
 
       if (method == null || method.isBlank()) {
-        return errorResponse(id, McpJsonRpcMessage.ERROR_INVALID_REQUEST, "缺少 method 字段");
+        return errorResponse(id, McpJsonRpcMessage.ERROR_INVALID_REQUEST,
+            i18nMessages.resolve("agent.param.required", new Object[] {"method"}));
       }
 
       return switch (method) {
@@ -184,13 +191,13 @@ public class McpSseServerTransport {
           yield null;
         }
         default -> errorResponse(id, McpJsonRpcMessage.ERROR_METHOD_NOT_FOUND,
-            "未知方法: " + method);
+            i18nMessages.resolve("agent.tool.not.found", new Object[] {method}));
       };
     } catch (Exception e) {
       log.error("[MCP-Server] JSON-RPC 处理异常: err={}", e.getMessage(), e);
       Object id = body != null ? body.get("id") : null;
       return errorResponse(id, McpJsonRpcMessage.ERROR_INTERNAL,
-          "内部错误: " + e.getMessage());
+          i18nMessages.resolve("agent.skill.execution.error", new Object[] {e.getMessage()}));
     }
   }
 
@@ -264,7 +271,8 @@ public class McpSseServerTransport {
   private Map<String, Object> handleToolsCall(Object id, Map<String, Object> params) {
     String toolName = params.get("name") != null ? params.get("name").toString() : null;
     if (toolName == null || toolName.isBlank()) {
-      return errorResponse(id, McpJsonRpcMessage.ERROR_INVALID_PARAMS, "缺少工具名称(name)");
+      return errorResponse(id, McpJsonRpcMessage.ERROR_INVALID_PARAMS,
+          i18nMessages.resolve("agent.tool.name.required"));
     }
 
     // YDIZ-WARN-001 允许保留：泛型擦除，JSON-RPC 参数 Map<?, ?> 编译期无法验证 Map<String, Object> 强转
@@ -279,7 +287,8 @@ public class McpSseServerTransport {
       return successResponse(id, buildToolResult(resultText, false));
     } catch (Exception e) {
       log.error("[MCP-Server] 工具执行失败: toolName={}, err={}", toolName, e.getMessage(), e);
-      return successResponse(id, buildToolResult("工具执行失败: " + e.getMessage(), true));
+      return successResponse(id, buildToolResult(
+          i18nMessages.resolve("agent.tool.execution.failed", new Object[] {e.getMessage()}), true));
     }
   }
 
@@ -296,7 +305,8 @@ public class McpSseServerTransport {
       case "execute_agent" -> executeAgent(arguments);
       case "text2sql" -> executeText2Sql(arguments);
       case "rag_query" -> executeRagQuery(arguments);
-      default -> throw new IllegalArgumentException("不支持的工具: " + toolName);
+      default -> throw BusinessException.of(AgentExceptionCode.TOOL_NOT_FOUND)
+          .msg(i18nMessages.resolve("agent.tool.not.found", new Object[] {toolName}));
     };
   }
 

@@ -20,9 +20,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
@@ -118,19 +121,22 @@ public class ScriptJobHandler implements JobHandler {
   @Override
   public Object execute(String paramsJson) throws JobExecutionException {
     if (!StringUtils.hasText(paramsJson)) {
-      throw new IllegalArgumentException("SHELL 任务参数(paramsJson)为空");
+      throw BusinessException.of(CronjobExceptionCode.PARAM_ERROR)
+          .msg(I18n.message("cronjob.param.required", new Object[]{"paramsJson"}));
     }
 
     ObjectNode params = YdszJson.parseObject(paramsJson);
     String language = params.getString("language");
     if (!StringUtils.hasText(language)) {
-      throw new IllegalArgumentException("SHELL 任务参数缺少 language（shell/python）");
+      throw BusinessException.of(CronjobExceptionCode.PARAM_ERROR)
+          .msg(I18n.message("cronjob.param.required", new Object[]{"language"}));
     }
     language = language.toLowerCase();
 
     String script = params.getString("script");
     if (!StringUtils.hasText(script)) {
-      throw new IllegalArgumentException("SHELL 任务参数缺少 script（脚本内容或路径）");
+      throw BusinessException.of(CronjobExceptionCode.PARAM_ERROR)
+          .msg(I18n.message("cronjob.param.required", new Object[]{"script"}));
     }
 
     List<String> args = parseArgs(params.getArrayNode("args"));
@@ -232,7 +238,8 @@ public class ScriptJobHandler implements JobHandler {
     SandboxScriptExecutor.SandboxResult result =
         sandboxExecutor.execute(scriptContent, language, timeoutSeconds, envVars);
     if (!result.success()) {
-      throw new IllegalStateException("沙箱脚本执行失败: " + result.errorMessage());
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
+          .msg("沙箱脚本执行失败: " + result.errorMessage());
     }
     return new ScriptResult(
         result.exitCode(),
@@ -284,7 +291,8 @@ public class ScriptJobHandler implements JobHandler {
           process.destroyForcibly();
           stdoutThread.interrupt();
           stderrThread.interrupt();
-          throw new IllegalStateException("脚本执行超时: timeoutMs=" + timeoutMs + " language=" + language);
+          throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
+              .msg("脚本执行超时: timeoutMs=" + timeoutMs + " language=" + language);
         }
       } else {
         finished = process.waitFor() == 0;
@@ -303,8 +311,8 @@ public class ScriptJobHandler implements JobHandler {
           stderrStr.length());
 
       if (exitCode != 0) {
-        throw new IllegalStateException(
-            "脚本执行失败: exitCode=" + exitCode + " stderr=" + truncate(stderrStr));
+        throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
+            .msg("脚本执行失败: exitCode=" + exitCode + " stderr=" + truncate(stderrStr));
       }
 
       return new ScriptResult(exitCode, stdoutStr, stderrStr);
@@ -378,7 +386,8 @@ public class ScriptJobHandler implements JobHandler {
         }
         command.add(scriptFile.toString());
       }
-      default -> throw new IllegalArgumentException("不支持的脚本语言: " + language);
+      default -> throw BusinessException.of(CronjobExceptionCode.PARAM_ERROR)
+          .msg(I18n.message("cronjob.param.required", new Object[]{"language: " + language}));
     }
     if (args != null) {
       command.addAll(args);

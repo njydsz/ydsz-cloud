@@ -22,6 +22,7 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.chat.StreamingPiiMasker;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -47,7 +48,8 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
       CostAnalysisService costAnalysisService,
       GuardrailService guardrailService,
       PromptTemplateProvider promptTemplateProvider,
-      MiddlewareChain middlewareChain) {
+      MiddlewareChain middlewareChain,
+      I18nMessages i18nMessages) {
     super(
         llmClient,
         memory,
@@ -57,7 +59,8 @@ public class SimpleAgentExecutor extends AbstractAgentExecutor {
         costAnalysisService,
         guardrailService,
         promptTemplateProvider,
-        middlewareChain);
+        middlewareChain,
+        i18nMessages);
   }
 
   /**
