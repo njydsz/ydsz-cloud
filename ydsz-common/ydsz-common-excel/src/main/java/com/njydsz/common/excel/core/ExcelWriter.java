@@ -270,19 +270,6 @@ public class ExcelWriter {
   }
 
   /**
-   * 注册写入处理器（已废弃）。
-   *
-   * <p>当前版本不触发 WriteLifecycleHandler 回调，调用仅保留接口兼容性。
-   *
-   * @param handler 写入处理器（将被忽略）
-   * @return 当前写入器实例
-   */
-  public ExcelWriter registerWriteHandler(com.njydsz.common.excel.core.listener.WriteLifecycleHandler handler) {
-    LOG.warn("当前版本不触发 WriteLifecycleHandler 回调，registerWriteHandler 调用将被忽略");
-    return this;
-  }
-
-  /**
    * 设置是否自动去除字符串首尾空格。
    *
    * @param automaticTrim true 启用自动去空格，默认 true

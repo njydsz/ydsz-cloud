@@ -14,7 +14,7 @@ import com.njydsz.common.excel.core.reader.sax.ExcelCellType;
  * 不含 POI 内部表示的任何语义。
  *
  * <p>本接口仅覆盖读取路径实际用到的方法；单元格写入、样式、公式、超链接、注释等写操作
- * 语义不属于读取器契约（需这些能力时请使用 {@code ExcelTemplateWriter} POI 路径）。
+ * 语义不属于读取器契约。
  *
  * @author ydsz-team
  * @since 26.10.01

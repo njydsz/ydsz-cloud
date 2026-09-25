@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.reader.ExcelStream;
-import com.njydsz.common.excel.core.template.TemplateRegion;
 import com.njydsz.common.excel.core.writer.MultiSheetFastWriter;
 import com.njydsz.common.excel.csv.CsvReader;
 import com.njydsz.common.excel.csv.CsvWriter;
@@ -238,108 +237,6 @@ public class ExcelFacade {
     metadata.setClazz(clazz);
     metadata.setOutputStream(outputStream);
     return new ExcelWriter(metadata);
-  }
-
-  // ==================== 模板填充相关方法 ====================
-
-  /**
-   * 创建模板写入器（基于文件路径加载模板）。
-   *
-   * <p><b>注意：</b>当前模板写入器（{@link ExcelTemplateWriter}）唯一使用 Apache POI 路径。
-   * 模板模式按定义需要富样式/公式的语义操作（整行样式复制、列宽保留、公式偏移），这些语义
-   * 是手工 OOXML 字节流无法可靠维护的。模板写入时请确保 classpath 存在 poi/poi-ooxml。
-   *
-   * @param templatePath 模板文件路径
-   * @param outputPath 输出文件路径
-   * @param clazz 映射的源类类型
-   * @param <T> 泛型参数
-   * @return ExcelTemplateWriter 实例
-   */
-  public static <T> ExcelTemplateWriter writeWithTemplate(
-      String templatePath, String outputPath, Class<T> clazz) {
-    return new ExcelTemplateWriter(templatePath, outputPath, clazz);
-  }
-
-  /**
-   * 创建模板写入器（基于输入流加载模板）。
-   *
-   * <p>适用于 Web 上传模板、云存储模板等场景——模板不以文件形式落地到本地文件系统。
-   *
-   * @param templateStream 模板文件输入流（调用方负责关闭）
-   * @param outputPath 输出文件路径
-   * @param clazz 映射的源类类型
-   * @param <T> 泛型参数
-   * @return ExcelTemplateWriter 实例
-   */
-  public static <T> ExcelTemplateWriter writeWithTemplate(
-      InputStream templateStream, String outputPath, Class<T> clazz) {
-    return new ExcelTemplateWriter(templateStream, outputPath, clazz);
-  }
-
-  /**
-   * 创建模板写入器（基于字节数组加载模板）。
-   *
-   * <p>适用于模板已完整加载到内存的场景（如数据库 BLOB、缓存等）。
-   *
-   * @param templateBytes 模板文件字节内容
-   * @param outputPath 输出文件路径
-   * @param clazz 映射的源类类型
-   * @param <T> 泛型参数
-   * @return ExcelTemplateWriter 实例
-   */
-  public static <T> ExcelTemplateWriter writeWithTemplate(
-      byte[] templateBytes, String outputPath, Class<T> clazz) {
-    return new ExcelTemplateWriter(templateBytes, outputPath, clazz);
-  }
-
-  /**
-   * 区域循环填充模板 — 一行代码完成"模板加载 + 区域定义 + 数据填充"。
-   *
-   * <p>对标 poi-tl 的 {@code {{#each items}}...{{/each}}} 语义：
-   *
-   * <pre>{@code
-   * ExcelFacade.writeLoopTemplate("template.xlsx", "output.xlsx", User.class,
-   *     TemplateRegion.builder()
-   *         .sourceStartRow(4).sourceEndRow(4).targetStartRow(4).build())
-   *     .doWrite(userList);
-   * }</pre>
-   *
-   * @param templatePath 模板文件路径
-   * @param outputPath 输出文件路径
-   * @param clazz 映射的源类类型
-   * @param region 模板区域描述符
-   * @param <T> 泛型参数
-   * @return ExcelTemplateWriter 实例（可进一步配置，最终调用 {@code doWrite(List)} 写入）
-   */
-  public static <T> ExcelTemplateWriter writeLoopTemplate(
-      String templatePath, String outputPath, Class<T> clazz, TemplateRegion region) {
-    if (region == null) {
-      throw new IllegalArgumentException("TemplateRegion must not be null");
-    }
-    // P2 修复：此前 region 参数被完全忽略，现在保留到 writer 供 doWrite(data, region) 使用
-    ExcelTemplateWriter writer = new ExcelTemplateWriter(templatePath, outputPath, clazz);
-    writer.setDefaultRegion(region);
-    return writer;
-  }
-
-  /**
-   * 区域循环填充模板（{@link InputStream} 来源）。
-   *
-   * @param templateStream 模板文件输入流
-   * @param outputPath 输出文件路径
-   * @param clazz 映射的源类类型
-   * @param region 模板区域描述符
-   * @param <T> 泛型参数
-   * @return ExcelTemplateWriter 实例
-   */
-  public static <T> ExcelTemplateWriter writeLoopTemplate(
-      InputStream templateStream, String outputPath, Class<T> clazz, TemplateRegion region) {
-    if (region == null) {
-      throw new IllegalArgumentException("TemplateRegion must not be null");
-    }
-    ExcelTemplateWriter writer = new ExcelTemplateWriter(templateStream, outputPath, clazz);
-    writer.setDefaultRegion(region);
-    return writer;
   }
 
   // ==================== CSV 读写方法 ====================
