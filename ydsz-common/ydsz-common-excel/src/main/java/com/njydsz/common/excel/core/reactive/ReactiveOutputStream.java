@@ -86,7 +86,7 @@ public class ReactiveOutputStream extends OutputStream implements Flow.Publisher
         return;
       }
       this.subscriber = subscriber;
-      subscriber.onSubscription(createSubscription());
+      subscriber.onSubscribe(createSubscription());
     } finally {
       lock.unlock();
     }
@@ -98,7 +98,7 @@ public class ReactiveOutputStream extends OutputStream implements Flow.Publisher
       public void request(long n) {
         if (n <= 0) {
           // Reactive Streams 3.9 规范：非法参数 → onError
-          onError(new IllegalArgumentException("Non-positive request: " + n));
+          subscriber.onError(new IllegalArgumentException("Non-positive request: " + n));
           return;
         }
         requested.addAndGet(n);

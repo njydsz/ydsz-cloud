@@ -14,9 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.api.client.NotificationClient;
+import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 
@@ -115,7 +115,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("removal") // MessageRequest/MessageResult 标记 @Deprecated(forRemoval=true)，message 模块尚未迁移至 MessageSendDTO 新契约
+@SuppressWarnings("removal") // MessageResult 仍标记 @Deprecated(forRemoval=true)，跨版本 Feign 合约兼容暂时保留
 public class FlowNotificationServiceImpl implements FlowNotificationService {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;
@@ -357,7 +357,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     payload.put("content", content);
     payload.put("channel", "PUSH");
     try {
-      MessageRequest req = new MessageRequest();
+      MessageSendDTO req = new MessageSendDTO();
       req.setChannel(asString(payload.get("channel")));
       req.setReceiver(asString(payload.get("userId")));
       req.setSubject(asString(payload.get("title")));
@@ -396,7 +396,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       payload.put("receiver", receiver);
     }
     try {
-      MessageRequest req = new MessageRequest();
+      MessageSendDTO req = new MessageSendDTO();
       req.setChannel("EMAIL");
       req.setReceiver(asString(payload.get("receiver") != null ? payload.get("receiver") : payload.get("userId")));
       req.setSubject(asString(payload.get("title")));
@@ -428,7 +428,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       log.debug("[FlowNotify][WEBHOOK] 未配置 webhookUrl，跳过: userId={} title={}", userId, title);
       return;
     }
-    MessageRequest request = new MessageRequest();
+    MessageSendDTO request = new MessageSendDTO();
     request.setChannel("WEBHOOK");
     request.setReceiver(userId);
     request.setSubject(title);
