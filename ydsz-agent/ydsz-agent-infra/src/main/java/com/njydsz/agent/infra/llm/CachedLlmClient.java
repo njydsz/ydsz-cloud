@@ -117,7 +117,7 @@ public class CachedLlmClient implements LlmClient {
     // 符合 YDIZ-COMMON-001 规范：禁止使用原生 ConcurrentHashMap + Future 实现缓存防击穿
     String lockKey = cache.buildKey(model, cacheContent.getKey(), cacheContent.getValue());
     return dedupCache.getWithProtection(
-        lockKey, () -> doChatAndCache(request, cacheContent), NULL_CACHE_MIN_MS, INFLIGHT_WAIT_MS);
+        lockKey, key -> doChatAndCache(request, cacheContent), NULL_CACHE_MIN_MS, INFLIGHT_WAIT_MS);
   }
 
   /**
