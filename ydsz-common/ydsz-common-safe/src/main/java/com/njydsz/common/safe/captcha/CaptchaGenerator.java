@@ -13,7 +13,7 @@ import javax.imageio.ImageIO;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 

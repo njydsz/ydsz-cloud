@@ -110,6 +110,7 @@ public final class SensitiveDataProcessor {
    * @param visited 已处理对象集合，用于循环引用检测
    * @return 脱敏后的对象副本
    */
+  @SuppressWarnings("unchecked")
   private static <T> T processInternal(
       T obj, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
     if (obj == null) {
@@ -185,6 +186,7 @@ public final class SensitiveDataProcessor {
    * @param <T> Record 类型
    * @return 脱敏后的 Record 新实例
    */
+  @SuppressWarnings("unchecked")
   private static <T> T processRecord(
       T record, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
     Class<?> clazz = record.getClass();
@@ -264,6 +266,7 @@ public final class SensitiveDataProcessor {
    * @param <T> Bean 类型
    * @return 脱敏后的 Bean 副本
    */
+  @SuppressWarnings("unchecked")
   private static <T> T processBean(T bean, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
     if (bean == null) {
       return null;

@@ -86,7 +86,6 @@
         <module>ydsz-common-queue</module>
         <module>ydsz-common-event</module>
         <module>ydsz-common-config</module>
-        <module>ydsz-common-seata</module>
         <module>ydsz-common-socket</module>
         <module>ydsz-common-netty</module>
         <module>ydsz-common-file</module>
@@ -270,13 +269,6 @@
                 <artifactId>ydsz-common-sentry</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!-- ydzs-common-seata -->
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-seata</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <!-- MyBatis（版本覆盖声明，必须在 Spring Boot BOM 之后声明才能生效） -->
             <dependency>
                 <groupId>org.mybatis</groupId>

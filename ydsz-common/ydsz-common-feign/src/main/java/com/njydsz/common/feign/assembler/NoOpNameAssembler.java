@@ -13,12 +13,12 @@ import java.util.function.Function;
  *
  * <p>通过 {@code @ConditionalOnMissingBean} 确保仅在无其他实现时生效。
  *
+ * TODO: NoOpNameAssembler 不属于 Feign 职责，应迁移至 ydsz-common-core。
+ *     当前保留以兼容 ydsz-workflow 调用方。
+ *
  * @author ydsz-team
  * @since 26.09.01
- * @deprecated NoOpNameAssembler 不属于 Feign 职责，应迁移至 ydsz-common-core。
- *     当前保留以兼容 ydsz-workflow 调用方，迁移完后此实现将移除。
  */
-@Deprecated(since = "26.09.21", forRemoval = true)
 public class NoOpNameAssembler implements NameAssembler {
 
   @Override

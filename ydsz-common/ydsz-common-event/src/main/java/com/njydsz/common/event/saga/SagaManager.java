@@ -48,7 +48,7 @@ import com.njydsz.common.event.api.OutboxNewMessageEvent;
  * }</pre>
  *
  * <p><b>设计参考：</b>Axon Framework 的 {@code SagaManager} + {@code AssociationValue} 路由，
- * * 但简化为内存实例管理（无 AxonServer 依赖），状态持久化由 ydsz-common-seata 保障。
+ * 但简化为内存实例管理（无 AxonServer 依赖），状态持久化由 OutboxMessage 重放保障。
  *
  * @author ydsz-team
  * @since 26.09.19

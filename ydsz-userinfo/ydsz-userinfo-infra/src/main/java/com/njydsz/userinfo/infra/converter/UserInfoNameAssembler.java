@@ -16,9 +16,9 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.feign.assembler.NameAssembler;
-import com.njydsz.common.feign.assembler.NameAssemblerProperties;
-import com.njydsz.common.feign.assembler.NameType;
+import com.njydsz.common.core.assembler.NameAssembler;
+import com.njydsz.common.core.assembler.NameAssemblerProperties;
+import com.njydsz.common.core.assembler.NameType;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.api.client.OrgQueryClient;
 
@@ -47,9 +47,6 @@ import com.njydsz.userinfo.api.client.OrgQueryClient;
  * @since 26.09.01
  */
 @Slf4j
-// YDIZ-WARN-001 例外：NameAssembler/NameType 已标注 @Deprecated(forRemoval=true)；
-// 暂未迁移至 ydsz-common-core（保留以兼容 ydsz-workflow 调用方），过渡期允许抑制，迁移完成后移除该注解
-@SuppressWarnings("removal")
 public class UserInfoNameAssembler implements NameAssembler {
 
   private static final String REDIS_KEY_PREFIX = "userinfo:name:";

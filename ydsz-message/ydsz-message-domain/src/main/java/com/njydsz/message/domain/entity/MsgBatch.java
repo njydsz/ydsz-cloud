@@ -22,7 +22,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz
  * @since 26.09.24
- */@Data
+ */// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 配合泛型父类继承，Builder 返回原始父类类型
+@SuppressWarnings("unchecked")
+@Data
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

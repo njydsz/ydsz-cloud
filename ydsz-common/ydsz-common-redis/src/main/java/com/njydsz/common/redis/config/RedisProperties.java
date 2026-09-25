@@ -426,8 +426,7 @@ public class RedisProperties {
     /**
      * 是否启用多级缓存
      *
-     * <p>启用后，可通过 {@link com.njydsz.common.redis.service.multilevel.MultiLevelCacheProvider} 提供
-     * L1+L2 二级缓存能力。
+     * <p>启用后，可通过 MultiLevelCacheProvider 提供 L1+L2 二级缓存能力。
      *
      * <p>默认：false
      */

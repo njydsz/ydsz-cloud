@@ -49,6 +49,7 @@ import java.lang.annotation.Target;
  * @since 26.09.01
  * @deprecated 行级数据权限 AOP 已移除，参见 ydsz-common-jdbc 的 RowPermissionInnerInterceptor
  */
+@Deprecated
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

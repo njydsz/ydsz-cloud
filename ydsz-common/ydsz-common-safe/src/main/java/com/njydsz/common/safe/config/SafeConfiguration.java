@@ -31,7 +31,6 @@ import com.njydsz.common.safe.alert.SafeAlertProperties;
 import com.njydsz.common.safe.alert.SecurityEventAggregator;
 import com.njydsz.common.safe.alert.SecurityEventListener;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
-import com.njydsz.common.safe.audit.SecurityAuditLogger;
 import com.njydsz.common.safe.spi.DefaultDesensitizeProvider;
 import com.njydsz.common.safe.spi.DesensitizeProvider;
 import com.njydsz.common.safe.cache.SafeCacheFactoryHelper;
@@ -277,35 +276,20 @@ public class SafeConfiguration {
   }
 
   /**
-   * 注册安全审计日志记录器
-   *
-   * <p>将安全事件以结构化 JSON 格式输出到独立的审计日志， 支持 traceId 关联，可与 Loki/Sentry 集成。
-   *
-   * @return 安全审计日志记录器实例
-   */
-  @Bean
-  @ConditionalOnMissingBean(SecurityAuditLogger.class)
-  public SecurityAuditLogger securityAuditLogger() {
-    LOG.info("注册安全审计日志记录器");
-    return new SecurityAuditLogger();
-  }
-
-  /**
    * 注册安全事件监听器
    *
-   * <p>串联安全事件处理链：监听 {@link SecurityEvent} 事件， 分发给 {@link SafeMetrics}（指标采集）和 {@link
-   * SecurityAuditLogger}（审计日志）。
+   * <p>串联安全事件处理链：监听 {@link SecurityEvent} 事件， 分发给 {@link SafeMetrics}（指标采集）。
+   * 安全审计日志已迁移至 ydzs-common-audit 模块（AuditAspect + AuditRecorder），本监听器不再重复记录。
    *
    * @param safeMetrics 安全指标采集器（可选）
-   * @param auditLogger 安全审计日志记录器（可选）
    * @return 安全事件监听器实例
    */
   @Bean
   @ConditionalOnMissingBean(SecurityEventListener.class)
   public SecurityEventListener securityEventListener(
-      ObjectProvider<SafeMetrics> safeMetrics, ObjectProvider<SecurityAuditLogger> auditLogger) {
-    LOG.info("注册安全事件监听器（串联指标采集 + 审计日志）");
-    return new SecurityEventListener(safeMetrics.getIfAvailable(), auditLogger.getIfAvailable());
+      ObjectProvider<SafeMetrics> safeMetrics) {
+    LOG.info("注册安全事件监听器（串联指标采集）");
+    return new SecurityEventListener(safeMetrics.getIfAvailable());
   }
 
   /**

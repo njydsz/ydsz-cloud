@@ -12,12 +12,12 @@ import org.springframework.context.annotation.Bean;
  * <p>在未注册自定义 NameAssembler 时，注册 {@link NoOpNameAssembler} 兜底。 业务模块（如 ydsz-userinfo-api）通过
  * {@code @ConditionalOnMissingBean(NameAssembler.class)} 覆盖此兜底。
  *
+ * TODO: NameAssembler 及其自动配置不属于 Feign 职责，应迁移至 ydsz-common-core。
+ *     当前保留以兼容 ydsz-workflow 调用方。
+ *
  * @author ydsz-team
  * @since 26.09.01
- * @deprecated NameAssembler 及其自动配置不属于 Feign 职责，应迁移至 ydsz-common-core。
- *     当前保留以兼容 ydsz-workflow 调用方，迁移完后此配置将移除。
  */
-@Deprecated(since = "26.09.21", forRemoval = true)
 @AutoConfiguration
 @EnableConfigurationProperties(NameAssemblerProperties.class)
 @ConditionalOnProperty(

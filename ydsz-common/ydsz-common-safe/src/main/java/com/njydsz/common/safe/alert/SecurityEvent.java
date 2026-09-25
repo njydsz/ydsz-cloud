@@ -9,7 +9,6 @@ import java.time.Instant;
  * <p>由安全过滤器（XSS/SQL注入/CSRF/IP访问控制/API签名）检测到攻击时构造，
  * 通过 {@link com.njydsz.common.safe.alert.SecurityEventPublisher} 发布，
  * 供 {@link com.njydsz.common.safe.metrics.SafeMetrics} 指标采集、
- * {@link com.njydsz.common.safe.audit.SecurityAuditLogger} 审计日志、
  * {@link com.njydsz.common.safe.alert.SecurityEventAggregator} 自动封禁等下游消费。
  *
  * <p>攻击载荷截断到 200 字符，防止恶意超长 payload 膨胀内存与日志存储。

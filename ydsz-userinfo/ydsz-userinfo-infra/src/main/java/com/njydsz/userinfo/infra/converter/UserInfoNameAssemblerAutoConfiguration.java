@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.common.feign.assembler.NameAssembler;
-import com.njydsz.common.feign.assembler.NameAssemblerProperties;
+import com.njydsz.common.core.assembler.NameAssembler;
+import com.njydsz.common.core.assembler.NameAssemblerProperties;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.api.client.OrgQueryClient;
@@ -29,17 +29,11 @@ import com.njydsz.userinfo.api.client.OrgQueryClient;
  * ydsz.feign.name-assembler.redis-cache-enabled=true} 且 classpath 中存在 {@link RedisStringOps}
  * 时，Redis L2 缓存才会启用。
  *
- * <p>本配置注册的 {@link UserInfoNameAssembler} Bean 优先级高于 {@link
- * com.njydsz.common.feign.assembler.NameAssemblerAutoConfiguration} 中的 {@link
- * com.njydsz.common.feign.assembler.NoOpNameAssembler} 兜底实现 （因 NoOp 带
- * {@code @ConditionalOnMissingBean(NameAssembler.class)}）。
+ * <p>本配置注册 {@link UserInfoNameAssembler} Bean 以 {@code @ConditionalOnMissingBean(NameAssembler.class)} 优先级生效
  *
  * @author ydsz-team
  * @since 26.09.01
  */
-// YDIZ-WARN-001 例外：NameAssembler/NameAssemblerProperties 已标注 @Deprecated(forRemoval=true)，
-// 暂未迁移至 ydsz-common-core，过渡期允许抑制，迁移完成后移除该注解
-@SuppressWarnings("removal")
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(OrgQueryClient.class)
 @ConditionalOnMissingBean(NameAssembler.class)

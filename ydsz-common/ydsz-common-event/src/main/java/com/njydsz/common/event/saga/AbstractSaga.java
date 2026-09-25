@@ -49,7 +49,7 @@ import java.util.Objects;
  * <p><b>约束：</b>
  *
  * <ul>
- *   <li>Saga 实例无状态（stateless），所有状态持久化由 SagaManager / ydsz-common-seata 保障
+ *   <li>Saga 实例无状态（stateless），所有状态持久化由 SagaManager / OutboxMessage 重放保障
  *   <li>Saga 编排步骤应幂等（下游服务需支持幂等）
  *   <li>不可逆操作（发送消息、写入审计日志）应放在最后一步使用 {@code SagaStep.terminal()} 标注
  * </ul>

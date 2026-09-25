@@ -34,7 +34,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.common.netty.util.NettyChannelOptions;
+import io.netty.channel.ChannelOption;
 
 /**
  * 兼容 Chat Completions API 的 LLM 客户端实现
@@ -199,7 +199,7 @@ public class CompatibleLlmClient implements LlmClient {
    */
   private HttpClient createNettyHttpClient(ConnectionProvider provider) {
     return HttpClient.create(provider)
-        .option(NettyChannelOptions.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS)
+        .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MILLIS)
         .responseTimeout(Duration.ofSeconds(this.timeoutSeconds));
   }
 

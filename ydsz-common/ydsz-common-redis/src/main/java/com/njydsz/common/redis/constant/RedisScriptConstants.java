@@ -282,48 +282,4 @@ public final class RedisScriptConstants {
           + "if v == false then return 0 end "
           + "return v";
 
-  /**
-   * Snowflake 原子序列号获取 Lua 脚本。
-   *
-   * <p>逻辑：
-   *
-   * <ol>
-   *   <li>读取 Hash 中保存的上次时间戳（ts）和序列号（seq）
-   *   <li>若当前时间戳 == 上次时间戳：seq + 1（检查溢出）
-   *   <li>若当前时间戳 != 上次时间戳：seq 重置为 0
-   *   <li>写回 Hash 并设置 60 秒 TTL（防止 worker 长期不用时 key 占用内存）
-   * </ol>
-   *
-   * <p>参数：KEYS[1]=worker_key, ARGV[1]=now_ms（当前毫秒时间戳）, ARGV[2]=max_seq（序列号上限，如 4095）
-   *
-   * <p>返回：{timestamp_ms, sequence} (List<Long>)；序列溢出时返回 {-1, -1}
-   *
-   * <p><b>使用方职责：</b>调用方需根据返回的 timestamp 和 sequence 在 Java 层组合成完整的 Snowflake ID
-   * ((timestamp - EPOCH) &lt;&lt; 22 | workerId &lt;&lt; 12 | sequence)，避免 64 位精度问题。
-   *
-   * <p><b>序列溢出处理：</b>返回 {-1, -1} 时调用方应等待下一毫秒后重试。
-   *
-   * @deprecated Snowflake ID 生成已统一迁移至 ydzz-common-util 的 SnowflakeIdGenerator。
-   *     该 Lua 脚本无任何使用方，将在下一版本移除。
-   */
-  @Deprecated(since = "26.09.21", forRemoval = true)
-  public static final String SNOWFLAKE_SEQ_LUA =
-      "local data = redis.call('HMGET', KEYS[1], 'ts', 'seq') "
-          + "local lastTs = tonumber(data[1]) "
-          + "local seq = tonumber(data[2]) "
-          + "local now = tonumber(ARGV[1]) "
-          + "local maxSeq = tonumber(ARGV[2]) "
-          + "if lastTs == nil then "
-          + "  seq = 0 "
-          + "elseif lastTs == now then "
-          + "  seq = (seq or 0) + 1 "
-          + "else "
-          + "  seq = 0 "
-          + "end "
-          + "if seq > maxSeq then "
-          + "  return {-1, -1} "
-          + "end "
-          + "redis.call('HMSET', KEYS[1], 'ts', now, 'seq', seq) "
-          + "redis.call('EXPIRE', KEYS[1], 60) "
-          + "return {now, seq}";
 }

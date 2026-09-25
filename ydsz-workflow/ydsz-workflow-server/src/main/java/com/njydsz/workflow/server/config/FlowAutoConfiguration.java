@@ -15,7 +15,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.njydsz.common.feign.assembler.NameAssembler;
+import com.njydsz.common.core.assembler.NameAssembler;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.domain.gateway.NameServiceClient;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;

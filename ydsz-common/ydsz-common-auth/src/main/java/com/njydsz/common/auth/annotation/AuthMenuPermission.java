@@ -67,6 +67,7 @@ import java.lang.annotation.Target;
  * @see AuthApiPermission
  * @deprecated AuthRowPermission / AuthColPermission 已移除，行/列数据权限统一由 ydsz-common-jdbc 处理
  */
+@Deprecated
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

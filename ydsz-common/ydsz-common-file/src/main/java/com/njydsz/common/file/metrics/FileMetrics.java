@@ -135,17 +135,6 @@ public class FileMetrics {
   }
 
   /**
-   * 构造无指标收集的实例（兼容旧版调用）
-   *
-   * @param registry Micrometer 指标注册中心，传 null 时禁用
-   * @deprecated 推荐使用 {@link #FileMetrics(MeterRegistry, String)} 明确传入 storageType
-   */
-  @Deprecated
-  public FileMetrics(MeterRegistry registry) {
-    this(registry, "unspecified");
-  }
-
-  /**
    * 记录一次上传操作
    *
    * @param durationNanos 上传耗时（纳秒）

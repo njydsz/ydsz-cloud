@@ -41,7 +41,9 @@ import com.njydsz.common.auth.service.RbacPermissionEvaluator;
  * @see AuthMenuPermission
  * @see AuthApiPermission
  * @see RbacPermissionEvaluator
+ * @deprecated 服务于已废弃的 {@link AuthMenuPermission}，后续随 AuthMenuPermission 移除一并清理
  */
+@Deprecated
 @Aspect
 @Order(10)
 public class AuthPermissionAspect {

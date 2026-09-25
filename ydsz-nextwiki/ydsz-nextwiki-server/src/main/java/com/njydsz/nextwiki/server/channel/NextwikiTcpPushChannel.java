@@ -4,11 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,8 +20,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.netty.codec.LengthFieldCodec;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.server.AbstractNettyServer;
-import com.njydsz.common.netty.util.NettyBufferUtils;
-
 /**
  * NextWiki TCP 推送通道（基于 common-netty，P1-2 Netty 推送能力扩展）。
  *
@@ -144,7 +144,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       eventData.put("payload", payload);
       eventData.put("timestamp", System.currentTimeMillis());
       String json = YdszJson.toJson(eventData);
-      ByteBuf buf = NettyBufferUtils.toUtf8ByteBuf(json);
+      ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
       channelGroupManager.broadcastToGroup(groupKey, buf);
       int count = channelGroupManager.groupSize(groupKey);
       log.info(
@@ -182,7 +182,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       eventData.put("payload", payload);
       eventData.put("timestamp", System.currentTimeMillis());
       String json = YdszJson.toJson(eventData);
-      ByteBuf buf = NettyBufferUtils.toUtf8ByteBuf(json);
+      ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
       channelGroupManager.broadcastToGroup(groupKey, buf);
       return true;
     } catch (Exception e) {
@@ -274,7 +274,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       if (!(msg instanceof ByteBuf buf)) {
         return;
       }
-      String json = NettyBufferUtils.toUtf8String(buf);
+      String json = buf.toString(CharsetUtil.UTF_8);
       try {
         Map<String, Object> data = YdszJson.parseMap(json);
         String type = (String) data.get("type");
@@ -307,13 +307,13 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
         ack.put("type", "AUTH_ACK");
         ack.put("success", true);
         ack.put("message", "ok");
-        ctx.writeAndFlush(NettyBufferUtils.toUtf8ByteBuf(YdszJson.toJson(ack)));
+        ctx.writeAndFlush(Unpooled.copiedBuffer(YdszJson.toJson(ack), CharsetUtil.UTF_8));
       } else {
         Map<String, Object> ack = new HashMap<>(MAP_CAPACITY_4);
         ack.put("type", "AUTH_ACK");
         ack.put("success", false);
         ack.put("message", "userId is required");
-        ctx.writeAndFlush(NettyBufferUtils.toUtf8ByteBuf(YdszJson.toJson(ack)));
+        ctx.writeAndFlush(Unpooled.copiedBuffer(YdszJson.toJson(ack), CharsetUtil.UTF_8));
       }
     }
 

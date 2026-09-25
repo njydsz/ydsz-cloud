@@ -7,15 +7,15 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.feign.assembler.NameAssembler;
-import com.njydsz.common.feign.assembler.NameType;
+import com.njydsz.common.core.assembler.NameAssembler;
+import com.njydsz.common.core.assembler.NameType;
 import com.njydsz.workflow.domain.gateway.NameServiceClient;
 
 /**
  * 名称查询网关适配器（GAP-A2 装配缺口修复）。
  *
  * <p>为 domain 层 {@link NameServiceClient} 网关接口提供落地实现：
- * 内部委托 common-feign 的 {@link NameAssembler}（ID → 名称富化组件，带缓存与
+ * 内部委托 ydsz-common-core 的 {@link NameAssembler}（ID → 名称富化组件，带缓存与
  * N+1 防护），由 {@code FlowAutoConfiguration} 以
  * {@code @ConditionalOnMissingBean(NameServiceClient.class)} 注册。
  *

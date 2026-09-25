@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.feign.assembler.NameAssembler;
+import com.njydsz.common.core.assembler.NameAssembler;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;

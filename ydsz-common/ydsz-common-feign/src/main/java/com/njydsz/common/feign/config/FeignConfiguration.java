@@ -1,6 +1,6 @@
 package com.njydsz.common.feign.config;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import feign.Feign;
 import feign.Logger;
@@ -219,10 +219,8 @@ public class FeignConfiguration {
   public Request.Options feignOptions(FeignProperties feignProperties) {
     FeignProperties.Timeout timeoutConfig = feignProperties.getTimeout();
     return new Request.Options(
-        timeoutConfig.getConnect(),
-        TimeUnit.MILLISECONDS,
-        timeoutConfig.getRead(),
-        TimeUnit.MILLISECONDS,
+        Duration.ofMillis(timeoutConfig.getConnect()),
+        Duration.ofMillis(timeoutConfig.getRead()),
         true);
   }
 
@@ -383,8 +381,6 @@ public class FeignConfiguration {
     PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
     cm.setMaxTotal(clientConfig.getMaxConnections());
     cm.setDefaultMaxPerRoute(clientConfig.getMaxPerRoute());
-    cm.setValidateAfterInactivity(
-        TimeValue.ofMilliseconds(clientConfig.getValidateAfterInactivity()));
     return cm;
   }
 

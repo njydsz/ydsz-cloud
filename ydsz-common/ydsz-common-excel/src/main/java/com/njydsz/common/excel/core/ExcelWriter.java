@@ -126,13 +126,27 @@ public class ExcelWriter {
    * @param metadata 写入配置元数据,包含目标路径、映射类型等信息
    */
   public ExcelWriter(WriteMetadata metadata) {
+    this(metadata, new StyleManager(512), new WorkbookFactory());
+  }
+
+  /**
+   * 共享 Workbook/StyleManager 的构造器 — 仅用于 {@link #newSheet(String)} 避免重复创建。
+   *
+   * <p>多 Sheet 场景下每个 newSheet() 原本会重新创建 {@link StyleManager}(512) 与 {@link
+   * WorkbookFactory}，随后立即被父.writer 替换，变为 GC 压力。此构造器允许调用方传入已存在的实例。
+   *
+   * @param metadata 写入元数据
+   * @param sharedStyleManager 共享的 StyleManager（通常传入父 writer 的实例）
+   * @param sharedWorkbookFactory 共享的 WorkbookFactory
+   */
+  ExcelWriter(WriteMetadata metadata, StyleManager sharedStyleManager, WorkbookFactory sharedWorkbookFactory) {
     this.metadata = metadata;
     this.context = new WriteContext(metadata);
     this.currentRowIndex = 0;
     this.isAppend = false;
     this.callbacks = new ArrayList<>(16);
-    this.styleManager = new StyleManager(512);
-    this.workbookFactory = new WorkbookFactory();
+    this.styleManager = sharedStyleManager;
+    this.workbookFactory = sharedWorkbookFactory;
     rebuildValueFormatter();
   }
 
@@ -207,14 +221,16 @@ public class ExcelWriter {
     newMetadata.setSheetNo(workbook != null ? workbook.getNumberOfSheets() : 0);
     newMetadata.setHeadRowNumber(1);
 
-    ExcelWriter newWriter = new ExcelWriter(newMetadata);
+    // 复用父 writer 的 StyleManager + WorkbookFactory，避免每个 newSheet() 重新分配 StyleManager(512) 又被
+    // 替换为无用对象 —— 统一由父 writer 的实例接管样式和 Workbook 工厂。
+    ExcelWriter newWriter =
+        new ExcelWriter(newMetadata, this.styleManager, this.workbookFactory);
     if (this.workbook != null) {
       newWriter.workbook = this.workbook;
       newWriter.setMultiSheetWriting(true);
       Sheet newSheet = this.workbook.createSheet(sheetName);
       newWriter.sheet = newSheet;
       newWriter.context.setSheet(newSheet);
-      newWriter.styleManager.setStyleHandler(this.styleManager.getStyleHandler());
     }
     return newWriter;
   }

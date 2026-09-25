@@ -1,7 +1,7 @@
 package com.njydsz.common.safe.idempotent.strategy;
 
+import java.time.Duration;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -61,7 +61,7 @@ public class RepeatSubmitTokenService {
     String token = UUID.randomUUID().toString().replace("-", "");
     String redisKey = buildRedisKey(userId, token);
 
-    redisTemplate.opsForValue().set(redisKey, TOKEN_VALUE, ttlMillis, TimeUnit.MILLISECONDS);
+    redisTemplate.opsForValue().set(redisKey, TOKEN_VALUE, Duration.ofMillis(ttlMillis));
 
     log.debug(
         "[ydsz-safe] [repeat-submit] 生成 Token | userId={}, token={}, ttl={}ms",
@@ -95,7 +95,7 @@ public class RepeatSubmitTokenService {
       return Boolean.TRUE.equals(
           redisTemplate
               .opsForValue()
-              .setIfAbsent(redisKey, TOKEN_VALUE, intervalMillis, TimeUnit.MILLISECONDS));
+              .setIfAbsent(redisKey, TOKEN_VALUE, Duration.ofMillis(intervalMillis)));
     } catch (Exception e) {
       log.warn(
           "[ydsz-safe] [repeat-submit] 获取间隔窗口失败，放行 | key={} | error={}", redisKey, e.getMessage());

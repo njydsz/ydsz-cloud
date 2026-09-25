@@ -1,4 +1,4 @@
-package com.njydsz.common.feign.assembler;
+package com.njydsz.common.core.assembler;
 
 import java.time.Duration;
 
@@ -9,13 +9,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 名称富化组件配置属性。
  *
- * <p>配置前缀：ydsz.feign.name-assembler
- *
- * TODO: NameAssembler 配置不属于 Feign 职责，应迁移至 ydsz-common-core。
- *     当前保留以兼容 ydsz-workflow 调用方。
+ * <p>配置前缀：ydsz.name-assembler
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.09.25
  */
 @Getter
 @Setter
