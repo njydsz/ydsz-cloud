@@ -60,6 +60,15 @@ spring:
 # P0-2: 统一线程池配置（ydsz-common-thread）— 本地兜底，与 Nacos 环境配置保持同名
 # 注意：池名必须与代码 getBean("xxxExecutor") 一致（common-thread 生成 Bean 名 = 池名 + "Executor"）
 ydsz:
+  # P0: 多租户隔离（ydsz-common-tenant）— A6 全引擎启用
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
   thread:
     enabled: true
     pools:

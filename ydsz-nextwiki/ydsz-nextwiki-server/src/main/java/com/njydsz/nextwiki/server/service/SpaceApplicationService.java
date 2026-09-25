@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
@@ -48,6 +49,9 @@ public class SpaceApplicationService {
 
   /** MapStruct 统一转换器 */
   private final NextwikiStructMapper mapper;
+
+  /** i18n 消息工具（YDIZ-I18N-002：Service 层文案必须走 i18n key） */
+  private final I18nMessages i18nMessages;
 
   /** 默认查询数量限制 */
   private static final int DEFAULT_LIMIT = 50;
@@ -348,7 +352,8 @@ public class SpaceApplicationService {
         .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.SPACE_MEMBER_NOT_FOUND).data("userId", targetUserId));
 
     if ("owner".equals(member.getRole())) {
-      throw BusinessException.of(NextwikiExceptionCode.SPACE_MEMBER_ROLE_INVALID).data("msg", "不能移除空间所有者");
+      throw BusinessException.of(NextwikiExceptionCode.SPACE_MEMBER_ROLE_INVALID)
+          .data("msg", i18nMessages.resolve("nextwiki.collab.ownerCannotRemove"));
     }
 
     spaceMemberRepository.deleteBySpaceIdAndUserId(spaceId, targetUserId);

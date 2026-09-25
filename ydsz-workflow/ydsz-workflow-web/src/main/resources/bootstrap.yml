@@ -61,6 +61,15 @@ spring:
 
 # P0: JDBC 安全加固（ydsz-common-jdbc）
 ydsz:
+  # P0: 多租户隔离（ydsz-common-tenant）— A6 全引擎启用
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
   jdbc:
     # SQL 防火墙：拦截 DDL（DROP/TRUNCATE）、无 WHERE 写操作、多语句注入、GRANT/REVOKE
     sql-firewall:

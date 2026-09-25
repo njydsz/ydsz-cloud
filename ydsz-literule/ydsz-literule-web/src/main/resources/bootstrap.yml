@@ -64,6 +64,15 @@ spring:
 # LiteRuleAutoConfiguration 通过 lookupExecutor() 查找以下命名线程池，
 # 找到则注入管理，找不到则降级为 Executors.new*（测试环境可用）
 ydsz:
+  # P0: 多租户隔离（ydsz-common-tenant）— A6 全引擎启用
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
   thread:
     enabled: true
     pools:

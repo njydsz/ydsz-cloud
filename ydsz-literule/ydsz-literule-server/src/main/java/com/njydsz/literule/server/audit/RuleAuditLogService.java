@@ -20,6 +20,8 @@ import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.enums.AuditStatus;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.diff.DiffCalculator;
+import com.njydsz.common.util.diff.DiffReport;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
@@ -134,7 +136,7 @@ public class RuleAuditLogService {
       String operator,
       String source,
       String changeDesc) {
-    Map<String, FieldDiff> diffs = computeFieldDiff(oldDef, newDef);
+    DiffReport diffReport = DiffCalculator.INSTANCE.calculate(oldDef, newDef);
     Map<String, Object> beforeSnapshot = toSnapshot(oldDef);
     Map<String, Object> afterSnapshot = toSnapshot(newDef);
     AuditLogEntry entry =
@@ -147,7 +149,7 @@ public class RuleAuditLogService {
             .changeDesc(changeDesc)
             .beforeSnapshot(beforeSnapshot)
             .afterSnapshot(afterSnapshot)
-            .fieldDiffs(diffs)
+            .diffReport(diffReport)
             .result(AuditResult.SUCCESS)
             .createdAt(LocalDateTime.now())
             .build();
@@ -668,51 +670,6 @@ public class RuleAuditLogService {
     return snapshot;
   }
 
-  private Map<String, FieldDiff> computeFieldDiff(RuleDefinitionDTO oldDef, RuleDefinitionDTO newDef) {
-    Map<String, FieldDiff> diffs = new LinkedHashMap<>(COLLECTION_CAPACITY);
-    if (oldDef == null || newDef == null) {
-      return diffs;
-    }
-
-    compareField(
-        diffs, "conditionExpression", oldDef.getConditionExpression(), newDef.getConditionExpression());
-    compareField(
-        diffs, "severityExpression", oldDef.getSeverityExpression(), newDef.getSeverityExpression());
-    compareField(
-        diffs,
-        "defaultSeverity",
-        oldDef.getDefaultSeverity() != null ? oldDef.getDefaultSeverity().name() : null,
-        newDef.getDefaultSeverity() != null ? newDef.getDefaultSeverity().name() : null);
-    compareField(diffs, "priority", oldDef.getPriority(), newDef.getPriority());
-    compareField(diffs, "enabled", oldDef.isEnabled(), newDef.isEnabled());
-    compareField(diffs, "status", oldDef.getStatus(), newDef.getStatus());
-    compareField(diffs, "category", oldDef.getCategory(), newDef.getCategory());
-    compareField(diffs, "categoryPath", oldDef.getCategoryPath(), newDef.getCategoryPath());
-    compareField(diffs, "owner", oldDef.getOwner(), newDef.getOwner());
-    compareField(diffs, "scope", oldDef.getScope(), newDef.getScope());
-    compareField(diffs, "mutexGroup", oldDef.getMutexGroup(), newDef.getMutexGroup());
-    compareField(diffs, "titleTemplate", oldDef.getTitleTemplate(), newDef.getTitleTemplate());
-    compareField(
-        diffs,
-        "descriptionTemplate",
-        oldDef.getDescriptionTemplate(),
-        newDef.getDescriptionTemplate());
-    compareField(diffs, "description", oldDef.getDescription(), newDef.getDescription());
-    return diffs;
-  }
-
-  private void compareField(
-      Map<String, FieldDiff> diffs, String fieldName, Object oldValue, Object newValue) {
-    if (!Objects.equals(oldValue, newValue)) {
-      diffs.put(
-          fieldName,
-          FieldDiff.builder()
-              .field(fieldName)
-              .oldValue(oldValue != null ? oldValue.toString() : null)
-              .newValue(newValue != null ? newValue.toString() : null)
-              .build());
-    }
-  }
 
   // ==================== 内部枚举与模型 ====================
 
@@ -883,8 +840,8 @@ public class RuleAuditLogService {
     /** 操作后快照 */
     private Map<String, Object> afterSnapshot;
 
-    /** 字段级差异 */
-    private Map<String, FieldDiff> fieldDiffs;
+    /** 字段级差异报告（由 ydsz-common-util DiffCalculator 注解驱动生成） */
+    private DiffReport diffReport;
 
     /** 操作结果 */
     private AuditResult result;
@@ -894,14 +851,5 @@ public class RuleAuditLogService {
 
     /** 操作时间 */
     private LocalDateTime createdAt;
-  }
-
-  /** 字段级差异 */
-  @Data
-  @Builder
-  public static class FieldDiff {
-    private String field;
-    private String oldValue;
-    private String newValue;
   }
 }

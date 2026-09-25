@@ -68,6 +68,16 @@ ydsz:
       - com.njydsz.agent.domain.model.ToolCall
       - com.njydsz.agent.domain.model.ToolDefinition
       - com.njydsz.agent.domain.model.TokenUsage
+  # P0: 多租户隔离（ydsz-common-tenant）— A6 全引擎启用
+  # 注意：agent 部分表使用 org_id 作为租户标识，上线前需确认拦截器是否能正确处理
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
   # P1-1: LLM 语义缓存配置（YDIZ-ENG-002 — TTL/容量已外部化，禁止硬编码）
   agent:
     enabled: true
