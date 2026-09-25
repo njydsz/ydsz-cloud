@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.njydsz.common.excel.annotation.ExcelStyle;
 import com.njydsz.common.excel.core.config.ExcelConfig;
+import com.njydsz.common.excel.core.postprocess.XlsxPostProcessor;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
 /**
@@ -119,6 +120,9 @@ public class WriteMetadata {
 
   /** 合并单元格区域列表: [startRow, endRow, startCol, endCol] */
   private List<int[]> mergedRegions;
+
+  /** xlsx 后处理器列表，在写入完成后依次应用到输出 ZIP 包上 */
+  private List<XlsxPostProcessor> postProcessors;
 
   /**
    * 默认构造方法
@@ -362,6 +366,32 @@ public class WriteMetadata {
 
   public void setMergedRegions(List<int[]> mergedRegions) {
     this.mergedRegions = mergedRegions;
+  }
+
+  public List<XlsxPostProcessor> getPostProcessors() {
+    return postProcessors;
+  }
+
+  public void setPostProcessors(List<XlsxPostProcessor> postProcessors) {
+    this.postProcessors = postProcessors;
+  }
+
+  public void addPostProcessor(XlsxPostProcessor postProcessor) {
+    if (this.postProcessors == null) {
+      this.postProcessors = new ArrayList<>(4);
+    }
+    this.postProcessors.add(postProcessor);
+  }
+
+  /**
+   * 是否有待应用的后处理器。
+   *
+   * <p>用于快速判断是否需要启用"写入-后处理"管道模式（临时文件）。
+   *
+   * @return {@code true} 当存在至少一个后处理器时
+   */
+  public boolean hasPostProcessors() {
+    return postProcessors != null && !postProcessors.isEmpty();
   }
 
   /**
