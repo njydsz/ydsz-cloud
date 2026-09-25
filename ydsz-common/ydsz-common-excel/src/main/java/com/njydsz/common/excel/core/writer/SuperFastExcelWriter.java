@@ -403,10 +403,14 @@ public class SuperFastExcelWriter {
   // ==================== Sheet 内容写入 ====================
 
   /**
-   * 向输出流写入完整的 worksheet XML 内容。
+   * 向目标输出流写入完整的 worksheet XML 内容。
    *
    * <p>按照 OOXML 规范顺序输出：worksheet 头部 → sheetViews(冻结) → cols(列宽) →
    * sheetData(表头+数据) → mergeCells(合并区域) → worksheet 尾部。
+   *
+   * <p><b>自动列宽实现策略</b>：因为列宽需在 {@code <sheetData>} 之前输出，而宽度值需在写入过程中逐步估算，
+   * 故先用 ByteArrayOutputStream 收集 sheet body（不含 {@code <cols>} 段），数据全部写入后
+   * 再根据追踪结果生成 {@code <cols>} 段并前置输出。
    *
    * @param out 目标输出流（BufferedOutputStream 或 ZipOutputStream）
    * @param list 要写入的数据列表
@@ -423,14 +427,20 @@ public class SuperFastExcelWriter {
       out.write(sheetViewsXml);
     }
 
-    // 2. 列宽（cols）— 先写自定义列宽，数据写完后再补自动列宽
-    //    如果有自定义列宽此处写入；如果有自动列宽则延迟到数据写完
+    // 2. 列宽（cols）— 自定义列宽先写，自动列宽延迟到数据写完
     if (!trackColumnWidths && hasCustomColumnWidths()) {
       out.write(buildColsXml());
     }
 
-    // 3. 数据区
-    out.write(SHEET_DATA_OPEN_BYTES);
+    // 3. 数据区 — 自动列宽模式下先收集到内存缓冲
+    ByteArrayOutputStream bodyBuffer = null;
+    OutputStream dataOut = out;
+    if (trackColumnWidths) {
+      bodyBuffer = new ByteArrayOutputStream(fieldInfoSize * 64 + list.size() * 32);
+      dataOut = bodyBuffer;
+    }
+
+    dataOut.write(SHEET_DATA_OPEN_BYTES);
 
     rowBuffer = new byte[ROW_BUFFER_SIZE];
     rowBufferPos = 0;
@@ -441,7 +451,7 @@ public class SuperFastExcelWriter {
     if (fieldInfoSize > 0) {
       currentRow++;
       int headerLen = writeHeaderRow(ss);
-      out.write(rowBuffer, 0, headerLen);
+      dataOut.write(rowBuffer, 0, headerLen);
       rowBufferPos = 0;
     }
 
@@ -456,33 +466,28 @@ public class SuperFastExcelWriter {
       } else {
         rowLen = writeDynamicRowToBuffer(item, ss);
       }
-      out.write(rowBuffer, 0, rowLen);
+      dataOut.write(rowBuffer, 0, rowLen);
       rowBufferPos = 0;
     }
 
-    out.write(SHEET_DATA_CLOSE_BYTES);
+    dataOut.write(SHEET_DATA_CLOSE_BYTES);
 
     // 4. 合并区域（mergeCells）
     byte[] mergeCellsXml = buildMergeCellsXml();
     if (mergeCellsXml != null) {
-      out.write(mergeCellsXml);
+      dataOut.write(mergeCellsXml);
     }
 
-    // 5. 自动列宽延迟写入（此时已完成宽度估算）
-    if (trackColumnWidths) {
+    dataOut.write(FOOTER_BYTES);
+
+    // 5. 自动列宽模式：根据追踪结果生成 <cols> 段前置输出
+    if (trackColumnWidths && bodyBuffer != null) {
       byte[] autoColsXml = buildAutoColsXml();
       if (autoColsXml != null && autoColsXml.length > 0) {
-        // 需要回写：列宽段在 <sheetData> 之前
-        // 由于当前是流式写入无法回退，此处采用"先收集再写"策略：
-        // 实际 buildAutoColsXml 返回完整的工作表修正片段，由调用方在内存中修正。
-        // 为简化实现：对于流模式，自动列宽在 writeXlsxToStream 中通过 ByteArrayOutputStream 缓冲解决。
-        // 文件模式已通过 tempFile 落地后整体读入，此处不处理（延迟列宽在文件模式下由外部修正）。
-        // 注：实际实现中，对于流模式使用预扫描+再写策略，或放宽为导出后提示用户手动调整列宽。
-        // 当前版本：列宽追踪用于生成 <cols> 段，在 writeSheetContent 之前写入（见下方两阶段设计）。
+        out.write(autoColsXml);
       }
+      out.write(bodyBuffer.toByteArray());
     }
-
-    out.write(FOOTER_BYTES);
   }
 
   // ==================== 冻结窗格 XML ====================
@@ -643,6 +648,8 @@ public class SuperFastExcelWriter {
    * <p>估算规则：ASCII 字符计 1 单位，CJK 字符计 2 单位（近似中文字符宽度），
    * 最终列宽 = min(max(maxContentWidth + 2, 8), 255)（OOXML 列宽限制）。
    *
+   * <p>若某列已通过 {@code @ExcelProperty(width=)} 指定自定义宽度，则取自定义宽度与自动估算的较大值。
+   *
    * @return XML 字节数组；未启用自动列宽或无数据时返回空数组
    */
   private byte[] buildAutoColsXml() {
@@ -655,11 +662,22 @@ public class SuperFastExcelWriter {
     for (int col = 0; col < fieldInfoSize; col++) {
       int rawWidth = columnWidthTracker[col];
       if (rawWidth < 0) {
-        // 该列无内容，使用默认宽度
+        // 该列无内容，回退到自定义宽度或默认值
         rawWidth = 8;
       }
       // 加 padding 2，最小 8，最大 255
-      int width = Math.min(Math.max(rawWidth + 2, 8), 255);
+      int autoWidth = Math.min(Math.max(rawWidth + 2, 8), 255);
+
+      // 若存在自定义宽度，取较大值
+      int width = autoWidth;
+      if (fieldInfoArray != null && col < fieldInfoArray.length
+          && fieldInfoArray[col] != null && fieldInfoArray[col].width != null) {
+        int customWidth = fieldInfoArray[col].width.intValue();
+        if (customWidth > 0) {
+          width = Math.max(autoWidth, customWidth);
+        }
+      }
+
       int colOneBased = col + 1;
       sb.append("<col min=\"").append(colOneBased)
           .append("\" max=\"").append(colOneBased)

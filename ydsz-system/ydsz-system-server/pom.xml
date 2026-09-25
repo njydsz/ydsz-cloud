@@ -46,10 +46,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
-        </dependency>
         <!-- ydsz-common-exception: explicit declaration for direct BusinessException usage -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -139,11 +135,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-        <!-- P0-1: 前端 sourcemap 落对象存储（IFileStorage，MinIO 等具体后端由 common-file 自动装配） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-file</artifactId>
         </dependency>
             <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
         <dependency>
