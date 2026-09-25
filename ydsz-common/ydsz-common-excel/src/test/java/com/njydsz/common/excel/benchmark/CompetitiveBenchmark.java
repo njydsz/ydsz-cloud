@@ -402,7 +402,7 @@ public class CompetitiveBenchmark {
       File poiFile = new File(tempDir, "read-poi-xssf-" + rows + ".xlsx");
       writePoiXssf(poiDataBySize.get(idx), poiFile);
 
-      // SuperFast
+      // YdszExcel
       final byte[] sfBytesFinal = sfBytes;
       BenchmarkRunner.BenchResult sfRead = BenchmarkRunner.run(
           "YdszExcel-read-" + rows, 3, 5, () -> readSuperFast(sfBytesFinal));
