@@ -3,6 +3,8 @@ package com.njydsz.common.excel.core.reader;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+import com.njydsz.common.excel.core.reader.sax.ExcelCellType;
+
 /**
  * 读取器内部单元格抽象接口 — 零 POI 依赖。
  *
