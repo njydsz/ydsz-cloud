@@ -672,7 +672,11 @@ public class SessionActivityService {
   }
 
   /**
-   * 脱敏展示 Token。
+   * 脱敏展示 Token（日志/Redis key 打印）。
+   *
+   * <p>使用 ydsz-common-util {@link com.njydsz.common.util.mask.MaskUtils#mask(String, int, int)}
+   * 替代手写 substring 方案，符合 YDIZ-COMMON 规范：禁止业务模块自建字符串截断脱敏逻辑。
+   * 保留前 8 位 + 后 4 位可见字符。
    *
    * @param token 原始 Token
    * @return 脱敏后的 Token
@@ -681,8 +685,8 @@ public class SessionActivityService {
     if (token == null || token.length() < MIN_TOKEN_LENGTH) {
       return "***";
     }
-    return token.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "..."
-        + token.substring(token.length() - TOKEN_LOG_SUFFIX_LENGTH);
+    // keepPrefix=8, keepSuffix=4：保留前 8 位 + 后 4 位
+    return com.njydsz.common.util.mask.MaskUtils.mask(token, 8, 4);
   }
 
   /**

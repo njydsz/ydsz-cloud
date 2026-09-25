@@ -16,8 +16,8 @@ meta:
   version: "26.09.25"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-25（新增 YDIZ-I18N-003/TENANT-001：i18n 骨架强制要求、多租户上下文异步防护；全引擎多租户启用；8 引擎 i18n 资源骨架创建）"
-  total_rules: 92
+  last_updated: "2026-09-25（P2-3 ExceptionLevel 分类体系落地：新增 YDIZ-EXC-001/I18N-004/COMMON-001 共 3 条；BaseExceptionHandler 增加 resolveDefaultLevel / logByLevel 级别自动映射工具方法）"
+  total_rules: 95
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -2538,8 +2538,48 @@ rules:
       3. 调用 snowflakeIdGenerator.nextId() 或 IdGenerator.nextIdStr()
     source: "编码规范附录新增（YDIZ-COMMON-004，P2，26.09.25 公共模块利用率修复）"
 
+  # ============================================
+  # 异常处理规范（1 条新增，P0）
+  # ============================================
+  - id: "YDIZ-EXC-001"
+    level: "P0"
+    category: "exception"
+    title: "全局异常处理器必须继承 BaseExceptionHandler"
+    description: |
+      web 模块的全局异常处理器应继承 BaseExceptionHandler 以获得统一响应格式、指标采集和 i18n 能力。
+      禁止单独使用 @ControllerAdvice + @ExceptionHandler 手写兜底逻辑，避免绕开统一的异常事件发布和度量统计链路。
+    rule: "新建 @RestControllerAdvice 类必须 extends BaseExceptionHandler"
+    source: "P2-3 ExceptionLevel 分类体系落地（YDIZ-EXC-001，P0，26.09.25）"
+
+  # ============================================
+  # i18n 规范（1 条新增，P0）
+  # ============================================
+  - id: "YDIZ-I18N-004"
+    level: "P0"
+    category: "i18n"
+    title: "禁止异常消息硬编码中文"
+    description: |
+      抛出业务异常时禁止使用硬编码中文消息，应使用 i18n key 由 MessageSource 解析。
+      硬编码中文会导致多语言环境下返回非期望语言，且无法根据请求 Locale 动态切换。
+      正确做法：通过异常码枚举（ExceptionCode）或 builder 指定 key，由框架按请求 Locale 解析文案。
+    rule: "throw new BusinessException/IllegalArgumentException 时禁止拼接中文字符串"
+    source: "P2-3 ExceptionLevel 分类体系落地（YDIZ-I18N-004，P0，26.09.25）"
+
+  # ============================================
+  # 公共模块规范（1 条新增，P1）
+  # ============================================
+  - id: "YDIZ-COMMON-001"
+    level: "P1"
+    category: "common"
+    title: "模块查询对象应继承 PageQuery 基类"
+    description: |
+      分页查询对象应 extends PageQuery 统一管理分页参数（pageNum、pageSize 等），
+      避免各模块自行定义分页字段导致分页逻辑不一致、无法复用通用分页工具方法。
+    rule: "包含 pageNum/pageSize 的查询类必须 extends PageQuery"
+    source: "P2-3 ExceptionLevel 分类体系落地（YDIZ-COMMON-001，P1，26.09.25）"
+
 # ============================================
-# 附录：按 category 统计（26.09.25 更新，total 92，新增 common 分类 4 条）
+# 附录：按 category 统计（26.09.25 更新，total 95，新增 YDIZ-EXC-001/I18N-004/COMMON-001）
 # ============================================
 stats:
   encoding: 1
@@ -2559,7 +2599,7 @@ stats:
   engineering: 3
   warnings: 1
   api: 2
-  exception: 1
+  exception: 2
   audit: 1
   event: 3
   tx: 5
@@ -2567,11 +2607,11 @@ stats:
   resilience: 1
   config: 3
   errcode: 2
-  i18n: 3
+  i18n: 4
   tenant: 1
   safe: 1
   queue: 1
   search: 1
   util: 1
-  common: 4
-  total: 92
+  common: 5
+  total: 95

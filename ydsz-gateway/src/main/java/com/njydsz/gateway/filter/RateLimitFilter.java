@@ -34,6 +34,7 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitContext;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayFilterOrder;
@@ -457,12 +458,21 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             || path.equals("/auth/refresh"));
   }
 
-  /** 身份标识脱敏 */
+  /**
+   * 身份标识脱敏（日志打印）。
+   *
+   * <p>使用 ydsz-common-util {@link MaskUtils#mask(String, int, int)} 替代手写 substring 方案，
+   * 符合 YDIZ-COMMON 规范：禁止业务模块自建字符串截断脱敏逻辑。保留 2 前缀 + 2 后缀可见字符。
+   *
+   * @param identity 原始身份标识（可能为 null）
+   * @return 脱敏后字符串（过短则完全隐藏为 "***"）
+   */
   private String maskIdentity(String identity) {
     if (identity == null || identity.length() <= 4) {
       return "***";
     }
-    return identity.substring(0, 2) + "***" + identity.substring(identity.length() - 2);
+    // keepPrefix=2, keepSuffix=2：长度 5 以上可见头尾各 2 字符，中间动态掩码
+    return MaskUtils.mask(identity, 2, 2);
   }
 
   @Override

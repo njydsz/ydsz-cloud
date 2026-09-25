@@ -1,5 +1,7 @@
 package com.njydsz.common.exception.handler;
 
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -501,10 +503,88 @@ public abstract class BaseExceptionHandler {
       int httpStatus,
       String path,
       Throwable throwable) {
-    log.error("{}校验异常 | 路径: {} | 消息: {}", getLogPrefix(), path, message, throwable);
+    // 按 ExceptionLevel 分流日志：校验异常默认 ERROR，但可通过 resolveDefaultLevel 覆盖
+    // SecurityException/AuthException 未来映射 FATAL，此处使用 ERROR 作为校验异常默认值
+    logByLevel(ExceptionLevel.ERROR, "{}校验异常 | 路径: {} | 消息: {}", getLogPrefix(), path, message, throwable);
     recordMetrics(throwable);
     return responseBuilder.buildValidationErrorResponse(
         errorCode, message, httpStatus, path, throwable);
+  }
+
+  // ==================== 异常级别自动映射 / 级别感知日志 ====================
+  // TODO 26.09.25 日志级别按 ExceptionLevel 分流规划：
+  //   BusinessException → WARN（子类 Mvc/WebFlux handler 已实现 log.warn）
+  //   SysException / LlmException → ERROR（子类已实现 log.error）
+  //   SecurityException / AuthException → FATAL（最高级，事件订阅者应触发即时告警）
+  //   本工具方法 logByLevel / resolveDefaultLevel 为基类提供统一入口，供子类或未来扩展使用
+
+  /**
+   * 根据异常类型自动解析对应的 ExceptionLevel（用于日志分流和事件元数据）。
+   *
+   * <p>映射规则：
+   *
+   * <ul>
+   *   <li>{@link com.njydsz.common.exception.custom.BusinessException} → {@link ExceptionLevel#WARN}
+   *   <li>{@link com.njydsz.common.exception.custom.SysException} → {@link ExceptionLevel#ERROR}
+   *   <li>SecException / AuthException（待引入） → {@link ExceptionLevel#FATAL}
+   *   <li>其他未知异常 → {@link ExceptionLevel#ERROR}（默认）
+   * </ul>
+   *
+   * <p>对于实现了 {@link com.njydsz.common.exception.custom.AbstractYdszException} 的异常，
+   * 优先使用异常自身携带的 level（由构造时设置），未提供时再按类型默认推断。
+   *
+   * @param throwable 异常对象
+   * @return 对应的 ExceptionLevel，永不为 {@code null}
+   */
+  protected ExceptionLevel resolveDefaultLevel(Throwable throwable) {
+    if (throwable instanceof AbstractYdszException ex && ex.getLevel() != null) {
+      return ex.getLevel();
+    }
+    if (throwable instanceof BusinessException) {
+      return ExceptionLevel.WARN;
+    }
+    if (throwable instanceof SysException) {
+      return ExceptionLevel.ERROR;
+    }
+    // TODO: 待 SecurityException / AuthException / LlmException 引入后增加对应分支
+    // if (throwable instanceof SecurityException || throwable instanceof AuthException) {
+    //   return ExceptionLevel.FATAL;
+    // }
+    // if (throwable instanceof LlmException) {
+    //   return ExceptionLevel.ERROR;
+    // }
+    return ExceptionLevel.ERROR;
+  }
+
+  /**
+   * 按 ExceptionLevel 分流日志输出级别。
+   *
+   * <p>替代直接调用 {@code log.error()} / {@code log.warn()}，根据级别自动选择 SLF4J 日志方法，
+   * 确保日志级别与 {@link ExceptionLevel} 元数据一致（便于日志告警规则按级别过滤）。
+   *
+   * <p><b>级别映射：</b>
+   *
+   * <ul>
+   *   <li>{@link ExceptionLevel#INFO} → {@code log.info()}
+   *   <li>{@link ExceptionLevel#WARN} → {@code log.warn()}
+   *   <li>{@link ExceptionLevel#ERROR} / {@link ExceptionLevel#FATAL} → {@code log.error()}
+   * </ul>
+   *
+   * <p><b>注意：</b>如果可变参数最后一个参数为 {@link Throwable}，SLF4J 会自动将其作为异常对象输出堆栈。
+   *
+   * @param level 异常级别
+   * @param format SLF4J 格式化字符串
+   * @param args 格式化参数（最后一位可传 Throwable 以输出堆栈）
+   */
+  protected void logByLevel(ExceptionLevel level, String format, Object... args) {
+    if (level == null) {
+      level = ExceptionLevel.ERROR;
+    }
+    switch (level) {
+      case INFO -> log.info(format, args);
+      case WARN -> log.warn(format, args);
+      case ERROR, FATAL -> log.error(format, args);
+    }
   }
 
   // ==================== 可恢复性 / 国际化 ====================
