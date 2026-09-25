@@ -244,3 +244,151 @@ modules:
         type: internal-util
         entry: com.njydsz.common.exception.core.ExceptionDesensitizer
         usage: "异常脱敏器（移除密码/Token 等敏感信息）"
+  # ---- ydsz-common-jdbc -------------------------------------------
+  ydsz-common-jdbc:
+    layer: L4
+    package: com.njydsz.common.jdbc
+    description: "MyBatis-Plus 增强；动态数据源 / 数据权限 / SQL 防火墙"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: DynamicRoutingDataSource
+        type: spring-bean
+        entry: com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource
+        usage: "运行时动态增删数据源、栈式嵌套切换"
+      - name: DsAnnotationInterceptor
+        type: aop-interceptor
+        entry: com.njydsz.common.jdbc.aop.DsAnnotationInterceptor
+        usage: "@DS 注解 AOP 拦截器（方法级优先于类级）"
+      - name: RowPermissionInnerInterceptor
+        type: mybatis-interceptor
+        entry: com.njydsz.common.jdbc.permission.RowPermissionInnerInterceptor
+        usage: "行级数据权限（SQL 解析注入 WHERE）"
+      - name: ColPermissionInnerInterceptor
+        type: mybatis-interceptor
+        entry: com.njydsz.common.jdbc.permission.ColPermissionInnerInterceptor
+        usage: "列级权限（SELECT 字段过滤）"
+      - name: SqlFirewallInnerInterceptor
+        type: mybatis-interceptor
+        entry: com.njydsz.common.jdbc.firewall.SqlFirewallInnerInterceptor
+        usage: "SQL 防火墙（DROP/TRUNCATE/无 WHERE DML/多语句）"
+      - name: MybatisPlusConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.jdbc.config.MybatisPlusConfiguration
+        usage: "MP 全局配置（乐观锁+字段填充+权限+分页+防火墙）"
+
+  # ---- ydsz-common-redis ------------------------------------------
+  ydsz-common-redis:
+    layer: L4
+    package: com.njydsz.common.redis
+    description: "Redis 服务增强；9 类 Ops + 三算法限流 + 多级缓存 + Key 过期监听"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: RedisStringOps
+        type: injectable-bean
+        entry: com.njydsz.common.redis.service.ops.RedisStringOps
+        usage: "String + Bitmap 操作"
+      - name: RedisHashOps
+        type: injectable-bean
+        entry: com.njydsz.common.redis.service.ops.RedisHashOps
+        usage: "Hash 操作"
+      - name: RedisCollectionOps
+        type: injectable-bean
+        entry: com.njydsz.common.redis.service.ops.RedisCollectionOps
+        usage: "Set + List + ZSet 操作"
+      - name: RedisRateLimiter
+        type: api
+        entry: com.njydsz.common.redis.service.RedisRateLimiter
+        usage: "分布式限流（固定窗口/滑动窗口/令牌桶）"
+      - name: YdszCacheableAspect
+        type: aop-aspect
+        entry: com.njydsz.common.redis.aspect.YdszCacheableAspect
+        usage: "@YdszCacheable 切面（防穿透/防击穿/防雪崩）"
+      - name: RedisKeyExpireListener
+        type: annotation-listener
+        entry: com.njydsz.common.redis.annotation.RedisKeyExpireListener
+        usage: "Key 过期事件监听（Keyspace Notifications）"
+
+  # ---- ydsz-common-lock -------------------------------------------
+  ydsz-common-lock:
+    layer: L4
+    package: com.njydsz.common.lock
+    description: "分布式锁；Reentrant/Fair/Multi + WatchDog + @DistributedScheduled"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: DistributedLocker
+        type: injectable-bean
+        entry: com.njydsz.common.lock.core.DistributedLocker
+        usage: "分布式锁核心接口（lock/tryLock/unlock/可重入）"
+      - name: RedisReentrantLock
+        type: injectable-bean
+        entry: com.njydsz.common.lock.impl.RedisReentrantLock
+        usage: "可重入锁（默认实现）"
+      - name: RedisFairLock
+        type: injectable-bean
+        entry: com.njydsz.common.lock.impl.RedisFairLock
+        usage: "公平锁（按请求时序获取）"
+      - name: IdempotentAspect
+        type: aop-aspect
+        entry: com.njydsz.common.lock.aop.IdempotentAspect
+        usage: "@Idempotent 注解切面（Redis Lua SETNX）"
+      - name: DistributedScheduledAspect
+        type: aop-aspect
+        entry: com.njydsz.common.lock.aop.DistributedScheduledAspect
+        usage: "@DistributedScheduled 分布式定时任务注解"
+
+  # ---- ydsz-common-thread -----------------------------------------
+  ydsz-common-thread:
+    layer: L4
+    package: com.njydsz.common.thread
+    description: "共享线程池自动配置；按业务隔离 / 监控 / Nacos 热更新"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: ThreadPoolRegistry
+        type: injectable-bean
+        entry: com.njydsz.common.thread.registry.ThreadPoolRegistry
+        usage: "线程池注册中心"
+      - name: ThreadPoolExecutorFactory
+        type: spring-bean
+        entry: com.njydsz.common.thread.factory.ThreadPoolExecutorFactory
+        usage: "线程池工厂（ydsz.thread-pool.<name>.* 配置）"
+      - name: ThreadPoolMetrics
+        type: micrometer-collector
+        entry: com.njydsz.common.thread.metrics.ThreadPoolMetrics
+        usage: "线程池指标（活跃线程/队列/拒绝/计时）"
+      - name: TimedTaskDecorator
+        type: utility
+        entry: com.njydsz.common.thread.decorator.TimedTaskDecorator
+        usage: "任务装饰器（自动测量耗时并上报 Timer）"
+
+  # ---- ydsz-common-tenant -----------------------------------------
+  ydsz-common-tenant:
+    layer: L4
+    package: com.njydsz.common.tenant
+    description: "多租户隔离；SQL 改写 + 多数据源路由 + TTL 传播"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: TenantAutoConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.tenant.config.TenantAutoConfiguration
+        usage: "多租户自动配置（WebFilter + MP InnerInterceptor）"
+      - name: TenantProperties
+        type: configuration-properties
+        entry: com.njydsz.common.tenant.config.TenantProperties
+        usage: "租户配置属性（ydsz.tenant.*）"
+      - name: TenantIsolationInterceptor
+        type: mybatis-interceptor
+        entry: com.njydsz.common.tenant.interceptor.TenantIsolationInterceptor
+        usage: "SQL 拦截器（WHERE 追加 tenant_id = ?）"
+      - name: TenantDataSourceRouter
+        type: spring-bean
+        entry: com.njydsz.common.tenant.datasource.TenantDataSourceRouter
+        usage: "租户数据源路由器（ISOLATE_DB 模式）"
+      - name: TenantContextTaskDecorator
+        type: thread-decorator
+        entry: com.njydsz.common.tenant.async.TenantContextTaskDecorator
+        usage: "线程池任务装饰器（TTL 传播兜底）"
