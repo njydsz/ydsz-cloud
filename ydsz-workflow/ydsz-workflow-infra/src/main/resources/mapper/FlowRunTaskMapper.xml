@@ -164,7 +164,7 @@ ORDER BY priority DESC, created_at ASC
             comment = #{comment},
             finish_at = #{finishAt},
             duration_ms = #{durationMs},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND task_status IN ('PENDING', 'CLAIMED')
@@ -174,7 +174,7 @@ ORDER BY priority DESC, created_at ASC
     <update id="incrementFinished">
         UPDATE ydsz_flow_run_task
         SET approve_finished = approve_finished + 1,
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0
@@ -183,7 +183,7 @@ ORDER BY priority DESC, created_at ASC
     <update id="cancelByInstance">
         UPDATE ydsz_flow_run_task
         SET task_status = #{taskStatus},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE instance_id = #{instanceId}
           AND task_status IN ('PENDING', 'CLAIMED')
@@ -205,7 +205,7 @@ ORDER BY priority DESC, created_at ASC
     <update id="skipByNode">
         UPDATE ydsz_flow_run_task
         SET task_status = #{taskStatus},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE instance_id = #{instanceId}
           AND node_code = #{nodeCode}
@@ -217,7 +217,7 @@ ORDER BY priority DESC, created_at ASC
     <update id="freezeByInstance">
         UPDATE ydsz_flow_run_task
         SET task_status = 'FROZEN',
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE instance_id = #{instanceId}
           AND task_status IN ('PENDING', 'CLAIMED')
@@ -228,7 +228,7 @@ ORDER BY priority DESC, created_at ASC
     <update id="unfreezeByInstance">
         UPDATE ydsz_flow_run_task
         SET task_status = 'PENDING',
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE instance_id = #{instanceId}
           AND task_status = 'FROZEN'
@@ -250,7 +250,7 @@ ORDER BY priority DESC, created_at ASC
     <update id="updateApproveFinished">
         UPDATE ydsz_flow_run_task
         SET approve_finished = #{approveFinished},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0
@@ -261,7 +261,7 @@ ORDER BY priority DESC, created_at ASC
     <update id="incrementApproveFinished">
         UPDATE ydsz_flow_run_task
         SET approve_finished = approve_finished + 1,
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND (approve_count IS NULL OR approve_finished &lt; approve_count)
@@ -272,7 +272,7 @@ ORDER BY priority DESC, created_at ASC
     <update id="incrementApproveWeight">
         UPDATE ydsz_flow_run_task
         SET approve_weight = approve_weight + #{weight},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0
@@ -284,7 +284,7 @@ ORDER BY priority DESC, created_at ASC
         SET assignee_id = #{assigneeId},
             assignee_name = #{assigneeName},
             assignee_type = #{assigneeType},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0
@@ -339,7 +339,7 @@ ORDER BY priority DESC, created_at ASC
                assignee_id     AS "assigneeId",
                assignee_name   AS "assigneeName",
                due_at          AS "dueAt",
-               TIMESTAMPDIFF(HOUR, due_at, CURRENT_TIMESTAMP) AS "overdueHours",
+               EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - due_at)) / 3600 AS "overdueHours",
                urge_count      AS "urgeCount"
         FROM ydsz_flow_run_task
         WHERE due_at &lt; CURRENT_TIMESTAMP
@@ -376,7 +376,7 @@ ORDER BY priority DESC, created_at ASC
         UPDATE ydsz_flow_run_task
         SET urge_count = #{urgeCount},
             last_urged_at = #{lastUrgedAt},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0
@@ -387,7 +387,7 @@ ORDER BY priority DESC, created_at ASC
         UPDATE ydsz_flow_run_task
         SET sla_action = #{slaAction},
             sla_escalated = #{slaEscalated},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0
@@ -434,7 +434,7 @@ ORDER BY priority DESC, created_at ASC
         SET assignee_id = #{userId},
             comment = #{comment},
             effective_time = #{processedAt},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0

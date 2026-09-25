@@ -396,16 +396,64 @@ public class SuperFastExcelWriter {
   // ==================== 写入核心（文件目标） ====================
 
   private void writeXlsxDirect(String filePath, List<?> list) throws Exception {
-    // P0-1 优化：消除 sheet 临时文件往返 — 改用 ByteArrayOutputStream 一次性落地 ZIP
-    // 原来路径：内存 rowBuffer → sheet 临时文件（磁盘写） → FileInputStream（磁盘读） → ZIP 写
-    // 优化路径：内存 rowBuffer → ByteArrayOutputStream（堆内） → ZIP 写（一次完成）
-    // 100k 行 ~5MB sheet 场景：消除 ~60% I/O 时间
+    // P0-1 优化 v2：双路径写入
+    // — 默认路径（无自动列宽）：行数据直接写入 ZIP 条目的压缩流
+    //   → 内存峰值 O(rowBuffer) = 1MB（不再持有整份 sheet 的 byte[]）
+    //   → 消除了 ByteArrayOutputStream 5MB 堆 + GC 压力
+    // — 自动列宽路径：必须先收集列宽后才能写 <cols> 段，仍需 ByteArrayOutputStream
+    boolean autoColWidth = Boolean.TRUE.equals(getExcelConfig().getAutoColumnWidth())
+        || Boolean.TRUE.equals(metadata.getIsAutoColumnWidth());
+
+    if (autoColWidth) {
+      writeXlsxDirectWithColumnWidth(filePath, list);
+    } else {
+      writeXlsxDirectDirect(filePath, list);
+    }
+  }
+
+  /**
+   * 直接写入 ZIP，不经 ByteArrayOutputStream 中间堆缓存。
+   * 行数据通过 rowBuffer 逐批进入 ZipOutputStream 的 Deflater，
+   * 内存峰值从「全量 sheet byte[]」降至「ZIP 内部缓冲 + 1MB rowBuffer」。
+   */
+  private void writeXlsxDirectDirect(String filePath, List<?> list) throws Exception {
     try (FileOutputStream fos = new FileOutputStream(filePath);
         BufferedOutputStream bos = new BufferedOutputStream(fos, ZIP_BUFFER_SIZE);
         ZipOutputStream zipOut = new ZipOutputStream(bos)) {
 
       zipOut.setLevel(getExcelConfig().getCompressionLevel());
+      writeStaticZipEntries(zipOut);
 
+      zipOut.putNextEntry(new ZipEntry("xl/workbook.xml"));
+      zipOut.write(getWorkbookBytes());
+      zipOut.closeEntry();
+
+      UltraFastSharedStrings ss = new UltraFastSharedStrings();
+
+      // 直接打开 sheet ZIP 条目，行数据写入即压缩
+      zipOut.putNextEntry(new ZipEntry("xl/worksheets/sheet1.xml"));
+      writeSheetContent(zipOut, list, ss);
+      zipOut.closeEntry();
+
+      byte[] ssBytes = ss.buildXmlDirect();
+      zipOut.putNextEntry(new ZipEntry("xl/sharedStrings.xml"));
+      zipOut.write(ssBytes);
+      zipOut.closeEntry();
+
+      zipOut.finish();
+    }
+  }
+
+  /**
+   * 带自动列宽的全量缓存路径（列宽需在 <sheetData> 前写入 <cols>）。
+   * 此路径下 ByteArrayOutputStream 不可避免，但只在用户启用 autoColumnWidth 时触发。
+   */
+  private void writeXlsxDirectWithColumnWidth(String filePath, List<?> list) throws Exception {
+    try (FileOutputStream fos = new FileOutputStream(filePath);
+        BufferedOutputStream bos = new BufferedOutputStream(fos, ZIP_BUFFER_SIZE);
+        ZipOutputStream zipOut = new ZipOutputStream(bos)) {
+
+      zipOut.setLevel(getExcelConfig().getCompressionLevel());
       writeStaticZipEntries(zipOut);
 
       ZipEntry entry = new ZipEntry("xl/workbook.xml");
@@ -413,20 +461,17 @@ public class SuperFastExcelWriter {
       zipOut.write(getWorkbookBytes());
       zipOut.closeEntry();
 
-      // 预估 sheet 大小（每行约 300 字节 + 表头 1KB），预分配避免 ByteArrayOutputStream 扩容
       int listSize = list.size();
       int estimatedSheetBytes = 1024 + listSize * 300;
 
       UltraFastSharedStrings ss = new UltraFastSharedStrings();
 
-      // 堆内缓冲：消除临时文件磁盘往返
       ByteArrayOutputStream sheetBaos = new ByteArrayOutputStream(
           Math.min(estimatedSheetBytes, 8 * 1024 * 1024));
       writeSheetContent(sheetBaos, list, ss);
 
       ZipEntry sheetEntry = new ZipEntry("xl/worksheets/sheet1.xml");
       zipOut.putNextEntry(sheetEntry);
-      // 关键：ByteArrayOutputStream.writeTo 直接输出内部 byte[]，零复制
       sheetBaos.writeTo(zipOut);
       zipOut.closeEntry();
 

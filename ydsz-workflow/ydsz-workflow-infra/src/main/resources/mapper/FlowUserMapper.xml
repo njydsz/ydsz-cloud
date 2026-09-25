@@ -43,7 +43,7 @@
         SET processed = 1,
             process_at = #{processAt},
             comment = #{comment},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE task_id = #{taskId}
           AND user_id = #{userId}

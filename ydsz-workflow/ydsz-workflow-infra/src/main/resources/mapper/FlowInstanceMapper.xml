@@ -77,7 +77,7 @@
             <if test="currentNodeName != null">current_node_name = #{currentNodeName},</if>
             <if test="endAt != null">end_at = #{endAt},</if>
             <if test="durationMs != null">duration_ms = #{durationMs},</if>
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         </set>
         WHERE id = #{id}
@@ -88,7 +88,7 @@
     <update id="updateVariable">
         UPDATE ydsz_flow_instance
         SET variable = #{variable},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0
@@ -180,7 +180,7 @@
     <update id="updateDueAt">
         UPDATE ydsz_flow_instance
         SET due_at = #{dueAt},
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
           AND is_deleted = 0
@@ -333,7 +333,7 @@
                current_node_code                   AS "nodeCode",
                current_node_name                   AS "nodeName",
                start_at                            AS "createdAt",
-               TIMESTAMPDIFF(HOUR, start_at, CURRENT_TIMESTAMP) AS "stuckHours"
+               EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - start_at)) / 3600 AS "stuckHours"
         FROM ydsz_flow_instance
         WHERE flow_status = 'RUNNING'
           AND status = 'ENABLED'
@@ -350,8 +350,8 @@
         WHERE flow_status = 'RUNNING'
           AND status = 'ENABLED'
           AND is_deleted = 0
-          AND due_date IS NOT NULL
-          AND due_date &lt; #{now}
+          AND due_at IS NOT NULL
+          AND due_at &lt; #{now}
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
     </select>
 
