@@ -22,6 +22,7 @@ import com.njydsz.common.sentry.domain.AlertCategory;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.gateway.config.ApiKeyProperties;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
@@ -264,12 +265,21 @@ public class GatewayApiKeyAuthFilter implements GlobalFilter, Ordered {
         traceId);
   }
 
-  /** API Key 脱敏 */
+  /**
+   * API Key 脱敏（日志打印）。
+   *
+   * <p>使用 ydsz-common-util {@link MaskUtils#mask(String, int, int)} 替代手写 substring 方案，
+   * 符合 YDIZ-COMMON 规范：禁止业务模块自建字符串截断脱敏逻辑。保留 4 前缀 + 4 后缀可见字符。
+   *
+   * @param apiKey 原始 API Key（可能为 null）
+   * @return 脱敏后字符串（过短则完全隐藏为 "***"）
+   */
   private String maskApiKey(String apiKey) {
     if (apiKey == null || apiKey.length() <= 8) {
       return "***";
     }
-    return apiKey.substring(0, 4) + "***" + apiKey.substring(apiKey.length() - 4);
+    // keepPrefix=4, keepSuffix=4：长度 9 以上可见头尾各 4 字符，中间动态掩码
+    return MaskUtils.mask(apiKey, 4, 4);
   }
 
   /**
