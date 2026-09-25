@@ -2035,6 +2035,41 @@ rules:
       ```
     source: "编码规范 §36.5.1 禁止硬编码用户可见文案（YDIZ-I18N-002，P1）"
 
+  - id: "YDIZ-I18N-003"
+    category: "i18n"
+    severity: "P1"
+    title: "【强制】业务模块必须创建 i18n 资源文件骨架，禁止零 i18n 资源文件部署（YDIZ-I18N-003）"
+    description: |
+      每个业务引擎模块（ydsz-{module}）的 domain 或 web 骨架必须在发布版本内携带至少一组 i18n 资源文件
+      （含 `{module}-messages.properties` 兜底 + `{module}-messages_en_US.properties` 英文翻译），
+      禁止业务模块部署时 classpath 下无任何 `{module}-messages*.properties` 文件。
+
+      **为什么**：i18n 是国际化基座的基本契约；缺少骨架意味着该模块尚未接入国际化体系，
+      后续各引擎的海外部署将因缺少本地化文案而不可用。骨架文件中的 key 数量允许随迭代递增，
+      ——但基础骨架（≥ 5 个 key 覆盖核心业务异常 + 通用操作结果）必须在首个发布版本内具备。
+
+      **规范**：
+      - 兜底：`{module}-properties`（UTF-8 无 BOM）
+      - 英文：`{module}-messages_en_US.properties`
+      - 放置路径：`src/main/resources/i18n/` 下（ydsz-common-locales 通配符扫描自动发现）
+    pattern: "业务模块（ydsz-{module}-{domain|web}）classpath 下不存在任何 {module}-messages*.properties"
+    fix: |
+      在 `src/main/resources/i18n/` 下创建 `{module}-messages.properties` 与 `{module}-messages_en_US.properties` 骨架；
+      初始 key 至少覆盖：common.success、common.failed、{module}.xxx.notFound、{module}.xxx.duplicate、
+      param.required、param.invalid、auth.forbidden、auth.unauthorized、error.internal。
+    example_bad: |
+      ```
+      ydsz-message/ydsz-message-domain/src/main/resources/
+        └── (无 i18n/ 目录)                ← 违反 YDIZ-I18N-003
+      ```
+    example_good: |
+      ```
+      ydsz-message/ydsz-message-domain/src/main/resources/i18n/
+        ├── message-messages.properties
+        └── message-messages_en_US.properties
+      ```
+    source: "编码规范 §36.4.2 业务模块 i18n 骨架强制要求（YDIZ-I18N-003，P1）"
+
 # ============================================
 # 十七、消息队列规范（queue，1 条，P2）
 # ============================================
@@ -2396,9 +2431,10 @@ stats:
   resilience: 1
   config: 3
   errcode: 2
-  i18n: 2
+  i18n: 3
+  tenant: 1
   safe: 1
   queue: 1
   search: 1
   util: 1
-  total: 87
+  total: 88

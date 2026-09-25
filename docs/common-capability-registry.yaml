@@ -503,3 +503,110 @@ modules:
         type: spring-bean
         entry: com.njydsz.common.audit.fallback.AuditFallbackWriter
         usage: "磁盘兜底写入器（JDBC 失败时写本地文件）"
+  # ---- ydsz-common-notify -----------------------------------------
+  ydsz-common-notify:
+    layer: L5
+    package: com.njydsz.common.notify
+    description: "统一消息通知；7 大渠道 + 模板引擎 + DKIM + 时间窗聚合"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: NotifyService
+        type: injectable-bean
+        entry: com.njydsz.common.notify.service.NotifyService
+        usage: "统一通知服务接口"
+      - name: NotifyServiceImpl
+        type: injectable-bean
+        entry: com.njydsz.common.notify.service.NotifyServiceImpl
+        usage: "默认实现（限流+熔断+降级+去重+偏好管理）"
+      - name: TransactionalNotifyPublisher
+        type: injectable-bean
+        entry: com.njydsz.common.notify.publisher.TransactionalNotifyPublisher
+        usage: "事务安全发布器（事务提交后才发送）"
+      - name: NotifyChannelStrategy
+        type: spi
+        entry: com.njydsz.common.notify.channel.NotifyChannelStrategy
+        usage: "渠道策略 SPI（Email/SMS/钉钉/飞书/企微/站内/Webhook）"
+
+  # ---- ydsz-common-queue ------------------------------------------
+  ydsz-common-queue:
+    layer: L5
+    package: com.njydsz.common.queue
+    description: "多引擎消息队列；Redis/Kafka/RocketMQ/RabbitMQ + 死信/延迟/去重"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: IMessageQueue
+        type: spi
+        entry: com.njydsz.common.queue.api.IMessageQueue
+        usage: "队列核心接口（publish/subscribe/acknowledge）"
+      - name: IMessageQueueProvider
+        type: spi
+        entry: com.njydsz.common.queue.api.IMessageQueueProvider
+        usage: "队列提供者 SPI（根据 QueueType 创建引擎）"
+      - name: MessageQueueFactory
+        type: spring-bean
+        entry: com.njydsz.common.queue.provider.MessageQueueFactory
+        usage: "默认 Provider（Stream/List/PubSub/Kafka/RocketMQ/RabbitMQ）"
+      - name: DeadLetterQueueService
+        type: injectable-bean
+        entry: com.njydsz.common.queue.deadletter.DeadLetterQueueService
+        usage: "死信队列服务（sendToDLQ/retryFromDLQ/listDLQ）"
+      - name: DelayedMessageSender
+        type: injectable-bean
+        entry: com.njydsz.common.queue.delay.DelayedMessageSender
+        usage: "延迟消息发送器（时间轮实现）"
+      - name: MessageDeduplicator
+        type: injectable-bean
+        entry: com.njydsz.common.queue.dedup.MessageDeduplicator
+        usage: "消息去重器（内容指纹+滑动时间窗）"
+
+  # ---- ydsz-common-event ------------------------------------------
+  ydsz-common-event:
+    layer: L5
+    package: com.njydsz.common.event
+    description: "Outbox 事务消息模式；JDBC 落库 + RocketMQ 投递 + Noop 降级"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: OutboxService
+        type: injectable-bean
+        entry: com.njydsz.common.event.outbox.OutboxService
+        usage: "Outbox 写入服务（save(DomainEvent)，同一事务）"
+      - name: OutboxProcessor
+        type: background-processor
+        entry: com.njydsz.common.event.outbox.OutboxProcessor
+        usage: "后台轮询处理器（CAS 防并发重复投递）"
+      - name: EventPublishGateway
+        type: spi
+        entry: com.njydsz.common.event.gateway.EventPublishGateway
+        usage: "投递网关接口（RocketMQ/Noop/自定义）"
+      - name: DomainEventPublisher
+        type: injectable-bean
+        entry: com.njydsz.common.event.publisher.DomainEventPublisher
+        usage: "领域事件发布器（Spring ApplicationEventPublisher）"
+
+  # ---- ydsz-common-config -----------------------------------------
+  ydsz-common-config:
+    layer: L5
+    package: com.njydsz.common.config
+    description: "配置变更桥接层；RefreshEvent 监听 + 监听器 SPI + Jasypt CLI"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: ConfigChangeBridge
+        type: spring-bean
+        entry: com.njydsz.common.config.hotreload.ConfigChangeBridge
+        usage: "核心桥接器（RefreshEvent + 增量快照 diff + 异步分发）"
+      - name: ConfigChangeListener
+        type: spi
+        entry: com.njydsz.common.config.hotreload.ConfigChangeListener
+        usage: "配置变更监听器接口（getOrder 优先级排序）"
+      - name: ConfigCliTool
+        type: cli-tool
+        entry: com.njydsz.common.config.cli.ConfigCliTool
+        usage: "Jasypt 加解密 CLI（encrypt/decrypt/re-encrypt）"
+      - name: ConfigEncryptHealthIndicator
+        type: health-indicator
+        entry: com.njydsz.common.config.health.ConfigEncryptHealthIndicator
+        usage: "Jasypt 加密健康检查"
