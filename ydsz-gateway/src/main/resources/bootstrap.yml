@@ -70,6 +70,15 @@ spring:
 # P1-1: Nacos 路由配置变更监听器托管线程池（ydsz-common-thread 统一管理，替代原自建 ThreadPoolExecutor）
 # 对应 Bean 名称: nacosRouteListenerExecutor（默认 beanNamePrefix 为空，命名规则为 key + "Executor"）
 ydsz:
+  # P0: 多租户隔离（ydsz-common-tenant）— A6/A7 全引擎启用 + Feign 透传
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
   thread:
     pools:
       nacosRouteListener:

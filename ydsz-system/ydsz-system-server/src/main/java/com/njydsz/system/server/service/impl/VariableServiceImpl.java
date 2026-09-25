@@ -32,7 +32,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.VariablePageQuery;
 import com.njydsz.system.domain.repository.VariableRepository;
-import com.njydsz.system.domain.vo.ImportResultVO;
+import com.njydsz.system.server.vo.ImportResultVO;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;

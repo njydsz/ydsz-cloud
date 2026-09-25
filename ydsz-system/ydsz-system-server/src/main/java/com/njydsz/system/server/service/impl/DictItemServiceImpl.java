@@ -32,7 +32,7 @@ import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.repository.DictRepository;
 import com.njydsz.system.domain.vo.DictItemVO;
-import com.njydsz.system.domain.vo.ImportResultVO;
+import com.njydsz.system.server.vo.ImportResultVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.DictItemService;

@@ -6,7 +6,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemVO;
-import com.njydsz.system.domain.vo.ImportResultVO;
+import com.njydsz.system.server.vo.ImportResultVO;
 
 
 

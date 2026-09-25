@@ -38,7 +38,7 @@ import com.njydsz.system.domain.dto.ConfigBatchDTO;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.ImportResultVO;
+import com.njydsz.system.server.vo.ImportResultVO;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.ConfigService;
 

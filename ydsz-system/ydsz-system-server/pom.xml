@@ -31,7 +31,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
         </dependency>
-        <!-- P2-3: 配置导入导出（基于 ydsz-common-excel） -->
+        <!-- P2-3/P1-4: 配置导入导出 + ImportResultVO（基于 ydsz-common-excel） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-excel</artifactId>

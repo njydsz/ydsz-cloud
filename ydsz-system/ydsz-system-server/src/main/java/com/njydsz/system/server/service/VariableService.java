@@ -5,7 +5,7 @@ import java.util.List;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.query.VariablePageQuery;
-import com.njydsz.system.domain.vo.ImportResultVO;
+import com.njydsz.system.server.vo.ImportResultVO;
 import com.njydsz.system.domain.vo.VariableVO;
 
 

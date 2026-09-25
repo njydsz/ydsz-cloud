@@ -1,4 +1,4 @@
-package com.njydsz.system.domain.vo;
+package com.njydsz.system.server.vo;
 
 import java.util.ArrayList;
 import java.util.List;

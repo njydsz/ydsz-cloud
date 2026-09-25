@@ -1,7 +1,7 @@
 package com.njydsz.system.server.service;
 import java.io.InputStream;
 
-import com.njydsz.system.domain.vo.ImportResultVO;
+import com.njydsz.system.server.vo.ImportResultVO;
 
 
 

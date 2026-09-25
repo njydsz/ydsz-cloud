@@ -29,7 +29,7 @@ import com.njydsz.system.domain.event.VersionSnapshotEvent;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.domain.vo.ImportResultVO;
+import com.njydsz.system.server.vo.ImportResultVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;

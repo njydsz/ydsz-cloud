@@ -37,7 +37,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
-        <!-- P1-3: common-safe 保留（@Xss 是领域安全约束）；common-json/common-excel 已剥离（YdszJson 校验改为轻量级括号匹配，*ExcelVO 移至 server 层） -->
+        <!-- P1-3: common-safe 保留（@Xss 是领域安全约束）；common-json/common-excel 已剥离（YdszJson 校验改为轻量级括号匹配，*ExcelVO/ImportResultVO 移至 server 层，消除 domain 对 common-excel 的依赖） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
@@ -63,12 +63,7 @@
             <artifactId>mapstruct</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- P1-5: common-excel（ImportResultVO 继承 ExcelImportResult 基类） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-excel</artifactId>
-            <scope>provided</scope>
-        </dependency>
+        <!-- P1-4/P1-5: common-excel 已剥离（ImportResultVO 移至 server 层，不再需要继承 ExcelImportResult 基类） -->
             <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

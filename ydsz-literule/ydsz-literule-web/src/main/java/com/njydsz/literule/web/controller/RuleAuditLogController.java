@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.util.diff.DiffReport;
+import com.njydsz.common.util.diff.FieldDiff;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
 import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
@@ -194,9 +196,14 @@ public class RuleAuditLogController {
     vo.setChangeDesc(e.getChangeDesc());
     vo.setBeforeSnapshot(e.getBeforeSnapshot());
     vo.setAfterSnapshot(e.getAfterSnapshot());
-    if (e.getFieldDiffs() != null) {
+    if (e.getDiffReport() != null && e.getDiffReport().hasChanges()) {
       Map<String, Object> diffs = new LinkedHashMap<>(COLLECTION_CAPACITY);
-      e.getFieldDiffs().forEach(diffs::put);
+      for (FieldDiff fd : e.getDiffReport().getDiffs()) {
+        Map<String, String> change = new LinkedHashMap<>(4);
+        change.put("old", fd.getOldValue());
+        change.put("new", fd.getNewValue());
+        diffs.put(fd.getFieldLabel(), change);
+      }
       vo.setFieldDiffs(diffs);
     }
     vo.setResult(e.getResult() != null ? e.getResult().name() : null);
