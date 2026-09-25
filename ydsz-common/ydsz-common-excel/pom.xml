@@ -10,9 +10,11 @@
         <version>26.09.01-SNAPSHOT</version>
     </parent>
 
-    <!-- L1 工具模块层：激活 purity 检查，禁止依赖 L2+ 内部模块 -->
+        <!-- L1 工具模块层：激活 purity 检查，禁止依赖 L2+ 内部模块 -->
     <properties>
         <l1.module.skip>false</l1.module.skip>
+        <easyexcel.version>4.0.3</easyexcel.version>
+        <poi.version>5.3.0</poi.version>
     </properties>
 
     <artifactId>ydsz-common-excel</artifactId>
@@ -116,5 +118,32 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- ==================== Benchmark 竞品依赖（仅 test scope） ==================== -->
+        <!-- EasyExcel 3.x for competitive benchmark -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>${easyexcel.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Apache POI — explicit SXSSF/XSSF benchmark baseline -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- exec-maven-plugin for running benchmark Main classes during development -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
