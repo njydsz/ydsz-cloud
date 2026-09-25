@@ -169,6 +169,15 @@ public class ExcelWriteException extends ExcelException {
 
   /**
    * 创建注解配置错误异常
+   *
+   * @param clazz 目标类型
+   * @param fieldName 字段名
+   * @param reason 原因
+   * @return 携带 {@code WRITE_ANNOTATION_ERROR} 错误码的异常实例，不会为 {@code null}；
+   *     出错字段名已回填，上下文参数使用 {@code clazz} 的全限定名而非简单名
+   */
+  public static ExcelWriteException invalidAnnotation(
+      Class<?> clazz, String fieldName, String reason) {
     String message = ExcelI18nHelper.getMessage(
         "excel.write.annotationError.detail",
         new Object[] {clazz.getSimpleName(), fieldName, reason},

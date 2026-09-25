@@ -282,6 +282,41 @@ public class ExcelConfig {
     return new Builder().build();
   }
 
+  /**
+   * 创建面向性能的极速模式配置 — 启用快速读写引擎、大文件限制放宽到 500MB、大缓冲区 + 宽松校验（COLLECT_ALL）。
+   *
+   * <p>适用场景：大数据量导出（10 万行+）、内部系统对账、ETL 批处理。
+   *
+   * @return 极速模式 ExcelConfig
+   */
+  public static ExcelConfig fastMode() {
+    return new Builder()
+        .engineType(EngineType.SUPER_FAST)
+        .maxReadFileSizeMB(500)
+        .readBufferSize(65536)
+        .writeCacheSize(500)
+        .validationMode(ValidationMode.COLLECT_ALL)
+        .build();
+  }
+
+  /**
+   * 创建面向安全的严格模式配置 — 强制 POI 兼容路径、最大文件 10MB、严格数字转换、启用公式注入防护。
+   *
+   * <p>适用场景：面向外部用户的文件上传解析、合规审计场景、不可信数据源。
+   *
+   * @return 安全模式 ExcelConfig
+   */
+  public static ExcelConfig safeMode() {
+    return new Builder()
+        .engineType(EngineType.POI_STREAMING)
+        .maxReadFileSizeMB(10)
+        .maxWriteFileSizeMB(10)
+        .strictNumberConversion(true)
+        .isFormulaInjectionProtection(true)
+        .validationMode(ValidationMode.FAIL_FAST)
+        .build();
+  }
+
   /** {@link ExcelConfig} 的流式构建器。 */
   public static final class Builder {
 

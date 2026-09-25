@@ -63,7 +63,7 @@ public class FlowMessageListener implements MessageListener {
       }
 
       // 提取 correlationKeys
-      // YDIZ-WARN-001 允许保留：泛型擦除，消息队列反序列化后 Map 类型编译期无法验证
+      // YDIZ-WARN-001 允许保留：Mafka 消息反序列化 unchecked，由 MessageType 枚举前置校验保证
       @SuppressWarnings("unchecked")
       Map<String, Object> correlationKeys = messageMap.get("correlationKeys") instanceof Map
           ? (Map<String, Object>) messageMap.get("correlationKeys") : null;

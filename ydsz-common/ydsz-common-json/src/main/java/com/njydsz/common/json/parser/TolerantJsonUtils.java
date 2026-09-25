@@ -168,15 +168,17 @@ public final class TolerantJsonUtils {
    * @return 闭合引号索引，未找到返回 -1
    */
   private static int findClosingQuote(String json, int start) {
-    for (int i = start; i < json.length(); i++) {
+    int i = start;
+    while (i < json.length()) {
       char c = json.charAt(i);
       if (c == '\\') {
-        i++; // 跳过转义字符
+        i += 2; // 跳过转义字符及其转义的内容
         continue;
       }
       if (c == '"') {
         return i;
       }
+      i++;
     }
     return -1;
   }

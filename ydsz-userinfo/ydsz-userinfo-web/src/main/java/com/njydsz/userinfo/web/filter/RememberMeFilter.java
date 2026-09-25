@@ -36,6 +36,7 @@ import com.njydsz.userinfo.server.config.RememberMeProperties;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.09.29 业务特异过滤器（YDIZ-ARCH-004 例外）：ydsz Remember-Me 滑动续期（依赖 ydsz 专有 session 体系 + TokenService），不可下沉至 common-safe。Order=HIGHEST_PRECEDENCE+40。
  * @see RememberMeService Remember-Me 服务
  * @see RememberMeProperties Remember-Me 配置
  */

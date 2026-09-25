@@ -2035,6 +2035,121 @@ rules:
       ```
     source: "编码规范 §36.5.1 禁止硬编码用户可见文案（YDIZ-I18N-002，P1）"
 
+# ============================================
+# 十七、消息队列规范（queue，1 条，P2）
+# ============================================
+  - id: "YDIZ-QUEUE-001"
+    category: "queue"
+    severity: "P2"
+    title: "【建议】跨进程消息通信必须通过 IMessageQueueProvider，禁止直调 MQ Client"
+    description: |
+      业务模块间的跨进程消息通信必须使用 ydsz-common-queue 提供的 IMessageQueueProvider 接口
+      （含 Kafka/RabbitMQ/ROCKETMQ 多实现网关），禁止业务模块直接引入 Kafka Client /
+      RabbitMQ AMQP Client / RocketMQ Producer API。
+
+      **为什么禁止直调**：
+      - 统一抽象：渠道切换（如 RocketMQ → Kafka）时仅需修改 application.yml，业务代码无感
+      - 测试友好：单元测试可注入 Mock 实现，无需启动真实 MQ Broker
+      - 模板封装：Publisher 模板内置分区选择、消息幂等、异常转换（MqException）
+      - 与 Outbox 协同：MQ 投递默认由 Outbox 触发（推模式），保证消息持久化后再投递
+    pattern: |
+      以下任一情形构成违规：
+      1. 业务代码 import org.apache.kafka.clients.producer.KafkaProducer 直接发送消息
+      2. 业务代码 import com.rabbitmq.client.Channel 直接发布 AMQP 消息
+      3. 业务代码 import org.apache.rocketmq.client.producer.DefaultMQProducer 直接发送 RocketMQ
+      4. 新的 OutboxSubscriber 在 onMessage() 内调用 MQ API 而不通过 IMessageQueueProvider
+    fix: |
+      1. 引入 ydzs-common-queue 依赖
+      2. 注入 IMessageQueueProvider 并调用 publish(topic, payload)
+      3. 配置 spring.kafka.bootstrap-servers 或 spring.rabbitmq.addresses 等标准 Spring Boot MQ 属性
+      4. ydzs-common-queue 网关自动读取配置并连接对应 Broker
+    example_bad: |
+      ```java
+      // ❌ 直接引入 Kafka Producer（YDIZ-QUEUE-001 违规）
+      @Service
+      public class OrderEventPublisher {
+          private final KafkaProducer<String, String> producer = new KafkaProducer<>(props);
+          public void publish(OrderEvent event) {
+              producer.send(new ProducerRecord<>("order-topic", YdszJson.toJson(event)));
+          }
+      }
+      ```
+    example_good: |
+      ```java
+      // ✅ 通过 IMessageQueueProvider 抽象（YDIZ-QUEUE-001 合规）
+      @Service
+      public class OrderEventPublisher {
+          private final IMessageQueueProvider mqProvider;
+
+          public OrderEventPublisher(IMessageQueueProvider mqProvider) {
+              this.mqProvider = mqProvider;
+          }
+
+          public void publish(OrderEvent event) {
+              mqProvider.publish("order-topic", YdszJson.toJson(event));
+          }
+      }
+      ```
+    source: "编码规范 §27.2 消息队列抽象层规范（YDIZ-QUEUE-001，P2）"
+
+# ============================================
+# 十八、搜索引擎规范（search，1 条，P2）
+# ============================================
+  - id: "YDIZ-SEARCH-001"
+    category: "search"
+    severity: "P2"
+    title: "【建议】全文检索必须通过 SearchClient 抽象，禁止直接注入 RestHighLevelClient"
+    description: |
+      业务模块的全文检索（Elasticsearch / OpenSearch / PG tsvector）必须使用 ydzz-common-search
+      提供的 SearchClient 接口及 SearchQuery/SearchClause 查询对象，禁止业务模块直接引入
+      elasticsearch-rest-high-level-client 或 opensearch-client。
+
+      **为什么禁止直调**：
+      - ES 版本升级（7.x → 8.x / OpenSearch 迁移）仅需修改 ydzz-common-search 适配器，业务代码零改动
+      - 统一查询构造：SearchClause 查询对象内置 BoolQueryBuilder 预校验，避免 raw JSON 拼接导致注入
+      - 降级保护：ES 不可用且未配置降级时，框架抛 SearchException(ErrorCode.SEARCH_UNAVAILABLE)，而非 ES 原生异常
+      - 协议兼容：ydsz-common-search 支持 PG tsvector 默认实现（零 ES 依赖），业务模块通过配置切换底层引擎
+    pattern: |
+      以下任一情形构成违规：
+      1. 业务代码 import org.elasticsearch.client.RestHighLevelClient
+      2. 业务代码 import org.opensearch.client.RestHighLevelClient
+      3. 业务 DAO 层直接构造 SearchRequest / BoolQueryBuilder 等 ES 原生查询对象
+      4. 业务代码调用 indicesOptions(IndicesOptions.lenientExpandOpen()) 等 ES SDK 底层 API
+    fix: |
+      1. 引入 ydzz-common-seaqrch 依赖（默认实现为 PG tsvector）
+      2. 注入 SearchClient，通过 SearchQuery.builder() 构造查询条件
+      3. 如需 ES，额外配置 spring.elasticsearch.uris + ydsz.search.backend=elasticsearch
+    example_bad: |
+      ```java
+      // ❌ 直接注入 ES Client（YDIZ-SEARCH-001 违规）
+      @Repository
+      public class ArticleSearchDao {
+          private final RestHighLevelClient esClient;
+
+          public List<Article> search(String keyword) {
+              SearchRequest request = new SearchRequest("articles");
+              request.source().query(QueryBuilders.matchQuery("content", keyword));
+              return esClient.search(request, RequestOptions.DEFAULT).getHits();
+          }
+      }
+      ```
+    example_good: |
+      ```java
+      // ✅ 通过 SearchClient 抽象（YDIZ-SEARCH-001 合规）
+      @Repository
+      public class ArticleSearchDao {
+          private final SearchClient searchClient;
+
+          public List<Article> search(String keyword) {
+              SearchQuery query = SearchQuery.builder()
+                  .must(SearchClause.match("content", keyword))
+                  .build();
+              return searchClient.search(query, Article.class).getItems();
+          }
+      }
+      ```
+    source: "编码规范 §22.4.5 全文检索 SPI 抽象规范（YDIZ-SEARCH-001，P2）"
+
   - id: "YDIZ-EVENT-001"
     category: "event"
     severity: "P0"
@@ -2283,5 +2398,7 @@ stats:
   errcode: 2
   i18n: 2
   safe: 1
+  queue: 1
+  search: 1
   util: 1
-  total: 85
+  total: 87

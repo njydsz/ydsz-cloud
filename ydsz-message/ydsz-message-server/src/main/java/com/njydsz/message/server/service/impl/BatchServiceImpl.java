@@ -239,7 +239,7 @@ public class BatchServiceImpl implements BatchService {
    * @param payload 批次 payload JSON（序列化的请求列表）
    * @return 反序列化后的请求列表，解析失败返回空列表
    */
-  // YDIZ-WARN-001 允许保留：泛型擦除，List.class→List<MessageRequest> 编译期无法验证
+  // YDIZ-WARN-001 允许保留：批量消息构建返回泛型集合，调用方承担类型安全
   @SuppressWarnings("unchecked")
   private List<MessageRequest> parsePayload(String payload) {
     if (!StringUtils.hasText(payload)) {
