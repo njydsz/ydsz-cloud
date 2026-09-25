@@ -136,6 +136,21 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydsz-common-base: AbstractModuleHealthIndicator（SystemHealthIndicator 基类）显式声明 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-base</artifactId>
+        </dependency>
+        <!-- ydsz-common-file: IFileStorage / FileStorage / AdaptiveMultipartFile（MonitorReportService sourcemap 存储）显式声明 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-file</artifactId>
+        </dependency>
+        <!-- spring-boot-starter-web: RequestMappingHandlerMapping / RequestMappingInfo（ApiPermissionServiceImpl 注解扫描） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
             <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -2071,7 +2071,52 @@ rules:
     source: "编码规范 §36.4.2 业务模块 i18n 骨架强制要求（YDIZ-I18N-003，P1）"
 
 # ============================================
-# 十七、消息队列规范（queue，1 条，P2）
+# 十七、多租户规范（tenant，1 条，P1）
+# ============================================
+  - id: "YDIZ-TENANT-001"
+    category: "tenant"
+    severity: "P1"
+    title: "【强制】多租户上下文在异步/ MQ / 定时任务中的防护规则（YDIZ-TENANT-001）"
+    description: |
+      在 MQ 消费者、异步任务和定时任务执行链路中，禁止直接调用 `TenantContextHolder.getTenantId()`
+      （可能返回 null），必须使用 `AuthContextUtils.getTenantIdOrDefault(defaultTenantId)` 获取当前租户 ID。
+
+      **为什么**：`TenantContextHolder` 依赖 `TenantContextWebFilter` 填充 ThreadLocal 上下文。
+      只有通过 HTTP 请求进入 Controller 的链路才由 Filter 自动注入；以下场景 Holder 值为 null：
+      - RocketMQ / Kafka 消费者的 onMessage() 方法
+      - @Scheduled / XXL-Job / Crane 定时任务
+      - @Async / CompletableFuture 手动创建线程池（尽管 TenantContextTaskDecorator 覆盖了 Spring 托管 Executor）
+      - 单元测试中未调用 TenantContext.set() 的场景
+
+      **安全替代**：
+      - 取值场景：`AuthContextUtils.getTenantIdOrDefault("1")` — 返回租户 ID，默认 "1"
+      - 需要判断是否为「无上下文」：`AuthContextUtils.getTenantId()` 来自 Holder，返回 null 表示无上下文
+      - 主动设置上下文：`SystemTenantContextRunner.runWithContext("1", () -> { ... })`
+    pattern: |
+      以下文件类型中直接调用 TenantContextHolder.getTenantId() 且无 null 检查：
+      1. *Consumer.java / *Listener.java / *Subscriber.java 的 onMessage/handle 方法体
+      2. *Task.java / *Scheduler.java /*JobHandler.java 的 execute/handle 方法体
+      3. @Async 标注的方法体及其内部 Lambda
+    fix: |
+      将 `TenantContextHolder.getTenantId()` 替换为 `AuthContextUtils.getTenantIdOrDefault("1")`
+      （"1" 为系统默认租户 ID，可根据模块实际替换为 `super-tenant-id` 配置值）；
+      如需跨线程手动设置，使用 `SystemTenantContextRunner.runWithContext()` 包装。
+    example_bad: |
+      ```java
+      // ❌ MQ 消费链路（无 Web Filter 上下文），可能 NPE
+      String tenantId = TenantContextHolder.getTenantId();
+      logVO.setTenantId(tenantId);  // null → DB 写入失败
+      ```
+    example_good: |
+      ```java
+      // ✅ 带默认值的安全取值
+      String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+      logVO.setTenantId(tenantId);
+      ```
+    source: "编码规范 §36.6.1 多租户上下文传播（YDIZ-TENANT-001，P1）"
+
+# ============================================
+# 十八、消息队列规范（queue，1 条，P2）
 # ============================================
   - id: "YDIZ-QUEUE-001"
     category: "queue"
