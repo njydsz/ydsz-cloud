@@ -37,17 +37,6 @@ public class Text2SQLTool implements ToolExecutor {
   private final I18nMessages i18nMessages;
 
   /**
-   * 构造 Text2SQL 工具。
-   *
-   * @param text2SQLService Text2SQL 服务
-   * @param i18nMessages 国际化消息工具
-   */
-  public Text2SQLTool(Text2SQLService text2SQLService, I18nMessages i18nMessages) {
-    this.text2SQLService = text2SQLService;
-    this.i18nMessages = i18nMessages;
-  }
-
-  /**
    * 执行 Text2SQL 工具调用：从参数中提取 query，委托 {@link Text2SQLService} 执行并返回 JSON 结果。
    *
    * @param arguments 工具参数映射（需含 "query" 键）

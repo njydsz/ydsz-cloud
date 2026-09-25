@@ -142,6 +142,7 @@ class ReActAgentExecutorPauseResumeTest {
         ragService,
         middlewareChain,
         pauseService,
+        null,
         null);
   }
 
