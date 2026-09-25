@@ -125,8 +125,8 @@ ydsz:
       excludes:
         - /actuator/**
 
-  # P0: 多租户隔离（ydsz-common-tenant）— A1 修复启动失败（TenantProperties Bean 不存在）
-  # system 引擎作为「多租户管理中心」必须启用，超级管理员（tenantId=0）由拦截器内置豁免全量查询
+  # P0: 多租户隔离（ydsz-common-tenant）— A1 修复启动失败（TenantProperties Bean 不存在）+ A6 全引擎启用
+  # system 引擎作为「多租户管理中心」必须启用；超级管理员（tenantId=0）由拦截器内置豁免全量查询
   tenant:
     enabled: true
     mode: SINGLE

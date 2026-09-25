@@ -55,6 +55,7 @@
 
 | 类 | 说明 |
 |---|---|
+| `AbstractJsonTcpHandler` | JSON 协议 TCP 推送 Handler 抽象基类（P1-1 公共能力下沉），封装 ByteBuf → UTF-8 → JSON 解析、空闲超时关闭、异常关闭、AUTH 认证响应等通用逻辑，子类仅需实现 `onJsonMessage` |
 | `ChannelEventDispatcher` | Channel 事件分发器（连接 / 断开 / 异常等事件分发到监听器） |
 | `ChannelEventListener` | Channel 事件监听器 SPI 接口，业务侧实现订阅 Channel 生命周期事件 |
 | `NettyPipelineDiagnostics` | Pipeline 诊断工具，运行时打印 Handler 链结构与事件传播路径，辅助排查 Handler 顺序问题 |

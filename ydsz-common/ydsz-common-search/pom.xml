@@ -41,11 +41,10 @@
             <artifactId>ydsz-common-jdbc</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--common-cache（搜索结果缓存，可选）-->
+        <!--common-cache（搜索结果 L1 本地缓存 + L2 多级缓存模板）-->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
-            <optional>true</optional>
         </dependency>
         <!-- Spring Context -->
         <dependency>
@@ -149,11 +148,6 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <!-- Caffeine 本地缓存（L1） -->
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
         </dependency>
         <!-- ydzs-common-lock（@DistributedScheduled 分布式一致性巡检任务，可选） -->
         <dependency>

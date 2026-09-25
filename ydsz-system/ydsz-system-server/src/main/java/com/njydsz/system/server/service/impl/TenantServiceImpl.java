@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -50,6 +51,9 @@ public class TenantServiceImpl implements TenantService {
 
   /** 多租户配置属性 */
   private final TenantProperties tenantProperties;
+
+  /** i18n 消息工具（YDIZ-I18N-002：Service 层文案必须走 i18n key） */
+  private final I18nMessages i18nMessages;
 
   /**
    * 按 ID 查询租户
@@ -163,7 +167,7 @@ public class TenantServiceImpl implements TenantService {
     if ("ENABLED".equals(tenant.getStatus())) {
       throw BusinessException.of(SystemExceptionCode.TENANT_LINKED)
           .data("tenantCode", tenant.getTenantCode())
-          .data("reason", "租户仍处于启用状态，请先停用租户并清理其业务数据后再删除");
+          .data("reason", i18nMessages.resolve("system.tenant.linkedProtected"));
     }
     return tenantRepository.deleteById(id);
   }
