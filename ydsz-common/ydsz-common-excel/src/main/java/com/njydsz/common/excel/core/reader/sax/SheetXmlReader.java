@@ -362,14 +362,6 @@ public class SheetXmlReader {
     rowData = null;
   }
 
-  /**
-   * 检查当前是否允许继续读取。由父级读取器回调以支持外部中断。
-   * 若父级未传入上下文则默认返回 true（兼容旧调用场景）。
-   */
-  private boolean isReadAllowed() {
-    return reader.context == null || reader.context.isReadAllowed();
-  }
-
   private byte[] readAllBytesDirect(InputStream is) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream(65536);
     byte[] buffer = new byte[8192];
