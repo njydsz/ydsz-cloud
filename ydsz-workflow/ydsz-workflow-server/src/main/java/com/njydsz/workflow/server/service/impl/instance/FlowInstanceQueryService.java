@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.auth.service.DataScopeHelper;
 import com.njydsz.common.core.code.YdszResultCode;

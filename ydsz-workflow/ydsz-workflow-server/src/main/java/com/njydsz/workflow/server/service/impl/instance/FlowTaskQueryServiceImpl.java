@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
