@@ -3,7 +3,6 @@ package com.njydsz.common.excel.spring;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
-import com.njydsz.common.excel.core.config.EngineType;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 
 /**
@@ -36,13 +35,7 @@ public class ExcelProperties {
   /** 是否自动 trim 字符串，默认 true */
   private Boolean isAutomaticTrim = true;
 
-  /** 是否使用快速读取（零 POI），默认 true（fast 引擎优先） */
-  private Boolean isUseFastReader = true;
-
-  /** 是否使用快速写入（零 POI），默认 true（fast 引擎优先） */
-  private Boolean isUseFastWriter = true;
-
-  /** 流式解析阈值（MB），默认 10 */
+  /** 流式解析阈值（MB），默认 10；保留字段，当前版本未使用 */
   private Integer streamingParseThresholdMb = 10;
 
   /** 最大读取文件大小（MB），默认 100 */
@@ -57,14 +50,8 @@ public class ExcelProperties {
   /** 是否启用公式注入防护，默认 true */
   private Boolean isFormulaInjectionProtection = true;
 
-  /** 是否使用严格数字转换，默认 false */
-  private Boolean isStrictNumberConversion = false;
-
   /** 默认表头行号，默认 1 */
   private Integer headRowNumber = 1;
-
-  /** SXSSF 写入缓存大小，默认 100 */
-  private Integer writeCacheSize = 100;
 
   /** 是否使用 1904 日期窗口（Mac Excel 兼容），默认 false（1900 窗口） */
   private Boolean isUse1904Windowing = false;
@@ -115,22 +102,6 @@ public class ExcelProperties {
     this.isAutomaticTrim = isAutomaticTrim;
   }
 
-  public Boolean getIsUseFastReader() {
-    return isUseFastReader;
-  }
-
-  public void setIsUseFastReader(Boolean isUseFastReader) {
-    this.isUseFastReader = isUseFastReader;
-  }
-
-  public Boolean getIsUseFastWriter() {
-    return isUseFastWriter;
-  }
-
-  public void setIsUseFastWriter(Boolean isUseFastWriter) {
-    this.isUseFastWriter = isUseFastWriter;
-  }
-
   public Integer getStreamingParseThresholdMb() {
     return streamingParseThresholdMb;
   }
@@ -171,28 +142,12 @@ public class ExcelProperties {
     this.isFormulaInjectionProtection = isFormulaInjectionProtection;
   }
 
-  public Boolean getIsStrictNumberConversion() {
-    return isStrictNumberConversion;
-  }
-
-  public void setIsStrictNumberConversion(Boolean isStrictNumberConversion) {
-    this.isStrictNumberConversion = isStrictNumberConversion;
-  }
-
   public Integer getHeadRowNumber() {
     return headRowNumber;
   }
 
   public void setHeadRowNumber(Integer headRowNumber) {
     this.headRowNumber = headRowNumber;
-  }
-
-  public Integer getWriteCacheSize() {
-    return writeCacheSize;
-  }
-
-  public void setWriteCacheSize(Integer writeCacheSize) {
-    this.writeCacheSize = writeCacheSize;
   }
 
   public Boolean getIsUse1904Windowing() {
@@ -231,9 +186,6 @@ public class ExcelProperties {
    * @return 根据当前属性构建的不可变 {@link ExcelConfig} 实例
    */
   public ExcelConfig toExcelConfig() {
-    boolean fastReader = getOrElse(isUseFastReader, true);
-    boolean fastWriter = getOrElse(isUseFastWriter, true);
-    EngineType inferredEngine = fastWriter ? EngineType.AUTO : EngineType.POI_STREAMING;
     return ExcelConfig.builder()
         .readBufferSize(getOrElse(readBufferSize, 8192))
         .writeBufferSize(getOrElse(writeBufferSize, 8192))
@@ -241,18 +193,12 @@ public class ExcelProperties {
         .defaultDateFormat(getOrElse(defaultDateFormat, "yyyy-MM-dd HH:mm:ss"))
         .defaultNumberFormat(getOrElse(defaultNumberFormat, "#,##0.00"))
         .maxReadCacheSize(getOrElse(maxReadCacheSize, 1024))
-        .streamingParseThresholdMB(getOrElse(streamingParseThresholdMb, 10))
-        .strictNumberConversion(getOrElse(isStrictNumberConversion, false))
         .maxReadFileSizeMB(getOrElse(maxReadFileSizeMb, 100))
         .maxWriteFileSizeMB(getOrElse(maxWriteFileSizeMb, 50))
         .formulaInjectionProtection(getOrElse(isFormulaInjectionProtection, true))
-        .useFastReader(fastReader)
-        .useFastWriter(fastWriter)
-        .engineType(inferredEngine)
         .compressionLevel(getOrElse(compressionLevel, 1))
         .use1904Windowing(getOrElse(isUse1904Windowing, false))
         .headRowNumber(getOrElse(headRowNumber, 1))
-        .writeCacheSize(getOrElse(writeCacheSize, 100))
         .validationMode(getOrElse(validationMode, ValidationMode.FAIL_FAST))
         .build();
   }
