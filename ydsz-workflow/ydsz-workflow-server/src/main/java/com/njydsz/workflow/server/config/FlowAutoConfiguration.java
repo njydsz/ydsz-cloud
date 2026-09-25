@@ -123,10 +123,14 @@ public class FlowAutoConfiguration {
   // Bean 名称: flowQueueExecutor（key + "Executor"）
 
   /**
-   * Redis 消息监听容器 Bean。
+   * Redis 消息监听容器 Bean（P1-3 技术债务标记：当前直接依赖 Spring Data Redis Pub/Sub 原生 API）。
    *
    * <p>注册 FlowMessageListener 订阅流程事件频道，使跨服务 Redis Pub/Sub 消息能被当前服务接收并处理。
    * 订阅频道模式：{@code flow:message:*}（匹配所有 flow:message: 前缀的频道）。
+   *
+   * <p><b>演进方向：</b>后续应迁移到 ydsz-common-event 的 Outbox 模式（需补充 Redis 引擎网关）或
+   * ydsz-common-queue 的 RedisStreamMQ 引擎，消除对 RedisMessageListenerContainer / PatternTopic 的直接依赖，
+   * 使流程事件消息具备持久化、重试、死信队列等企业级消息保障能力。
    *
    * @param connectionFactory Redis 连接工厂
    * @param flowMessageListener 流程消息监听器

@@ -26,7 +26,6 @@ import com.njydsz.common.excel.core.metrics.ExcelMetrics;
 import com.njydsz.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.common.excel.core.reader.HeaderAnalyzer;
 import com.njydsz.common.excel.core.reader.InputSourceDetector;
-import com.njydsz.common.excel.core.reader.RowParser;
 import com.njydsz.common.excel.core.reader.sax.SuperFastExcelReader;
 import com.njydsz.common.excel.exception.ExcelReadException;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
@@ -101,9 +100,6 @@ public class ExcelReader {
   /** 表头分析器 */
   private final HeaderAnalyzer headerAnalyzer;
 
-  /** 行解析器 */
-  private final RowParser rowParser;
-
   /** 输入源检测器 */
   private final InputSourceDetector inputSourceDetector;
 
@@ -124,7 +120,6 @@ public class ExcelReader {
     this.listeners = new ArrayList<>(4);
     this.customRules = new ArrayList<>(4);
     this.headerAnalyzer = new HeaderAnalyzer(metadata);
-    this.rowParser = new RowParser(metadata, context);
     this.inputSourceDetector = new InputSourceDetector(metadata);
   }
 

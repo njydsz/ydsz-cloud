@@ -9,28 +9,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DateUtil;
-
 import com.njydsz.common.excel.core.reader.sax.ExcelCellType;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor.FieldSetter;
 
 /**
- * 高性能列元数据 - 预计算的列信息
+ * 高性能列元数据 — 预计算的列信息。
  *
- * <p>将列索引、字段、Setter访问器、目标类型等信息预先计算并缓存， 避免在每行每列的解析过程中重复查找和反射调用。
- *
- * <h3>优化策略</h3>
- *
- * <ul>
- *   <li>预计算所有Setter访问器 - 避免运行时反射查找
- *   <li>预计算目标类型 - 避免重复调用field.getType()
- *   <li>数组化存储 - 使用数组代替HashMap，O(1)访问
- * </ul>
- *
- * <h3>性能收益</h3>
- *
- * <p>在100K行场景下，可减少约20-30%的CPU开销， 读取性能提升约15-25%。
+ * <p>将列索引、字段、Setter 访问器、目标类型等信息预先计算并缓存，避免在每行每列的解析过程中
+ * 重复查找和反射调用。类型转换策略接收零 POI 依赖的 {@link ICell} 接口。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -108,10 +94,10 @@ public final class ColumnMetadata {
       new ConcurrentHashMap<>();
 
   /**
-   * 构造列元数据
+   * 构造列元数据。
    *
    * @param columnIndex 列索引
-   * @param setter 字段Setter访问器
+   * @param setter 字段 Setter 访问器
    * @param targetType 目标类型
    * @param dateFormat 日期格式
    * @param automaticTrim 是否自动修剪字符串
@@ -132,11 +118,10 @@ public final class ColumnMetadata {
   }
 
   /**
-   * 解析目标类型的typeId
+   * 解析目标类型的 typeId。
    *
-   * @author ydsz-team
-
-   * @version 26.09.01
+   * @param targetType 目标类型
+   * @return 类型 ID 常量
    */
   private static int resolveTypeId(Class<?> targetType) {
     if (targetType == String.class) {
@@ -185,7 +170,8 @@ public final class ColumnMetadata {
   }
 
   /**
-   * 判断目标类型是否为 java.util.Date 的子类（如 java.sql.Date / java.sql.Time），但不包括 java.util.Date 本身。
+   * 判断目标类型是否为 java.util.Date 的子类（如 java.sql.Date / java.sql.Time），
+   * 但不包括 java.util.Date 本身。
    *
    * @param targetType 目标类型
    * @return 是子类返回 true
@@ -199,14 +185,28 @@ public final class ColumnMetadata {
   /**
    * 类型转换策略接口。
    *
-   * <p>将 {@link Cell} 的值转换为目标字段类型。通过预计算策略对象，避免每行每列的
-   * {@code instanceof} 判断，使 switch 分支直接进入对应的高速转换路径。
-   *
-   * <p><b>注意</b>：{@code forcedType} 使用本地 {@link ExcelCellType}，此接口不依赖 POI 枚举。
+   * <p>将 {@link ICell} 的值转换为目标字段类型。通过预计算策略对象，避免每行每列的 {@code
+   * instanceof} 判断，使 switch 分支直接进入对应的高速转换路径。
    */
   public interface TypeConvertStrategy {
-    Object convert(Cell cell, ExcelCellType forcedType);
 
+    /**
+     * 将单元格值转换为目标字段类型。
+     *
+     * @param cell 单元格对象（零 POI 依赖的 {@link ICell}）
+     * @param forcedType 强制类型提示（fast 路径样式判定提供；可为 null 让策略自行判定）
+     * @return 转换后的目标字段值
+     */
+    Object convert(ICell cell, ExcelCellType forcedType);
+
+    /**
+     * 创建默认的类型转换策略。
+     *
+     * @param targetType 目标字段类型
+     * @param automaticTrim 是否自动 trim 字符串
+     * @param dateFormat 日期格式
+     * @return 预计算的策略实例
+     */
     static TypeConvertStrategy create(
         Class<?> targetType, boolean automaticTrim, String dateFormat) {
       return (cell, forcedType) ->
@@ -214,25 +214,25 @@ public final class ColumnMetadata {
     }
 
     /**
-     * 安全解析单元格的 {@link ExcelCellType}（兼容 SimpleCell 和 POI Cell）。
+     * 核心转换逻辑。
      *
-     * @param cell 单元格对象（SimpleCell 或 POI Cell）
-     * @return 本地 ExcelCellType，null 安全
+     * <p>处理路径：
+     *
+     * <ul>
+     *   <li>优先使用 {@code forcedType}（fast 路径样式判定提供）</li>
+     *   <li>回退到 cell 自身的 {@link ICell#getExcelCellType()}</li>
+     *   <li>日期单元格（fast 路径预转换的 LocalDateTime）优先交付</li>
+     * </ul>
+     *
+     * @param cell 单元格对象
+     * @param forcedType 强制类型（可为 null）
+     * @param targetType 目标字段类型
+     * @param automaticTrim 自动 trim
+     * @param dateFormat 日期格式
+     * @return 转换后的值
      */
-    private static ExcelCellType resolveExcelCellType(Cell cell) {
-      if (cell instanceof SimpleCell simpleCell) {
-        return simpleCell.getExcelCellType();
-      }
-      // POI Cell 桥接：将 POI CellType 映射为本地 ExcelCellType
-      try {
-        return SimpleCell.mapToPoiCellTypeReverse(cell.getCellType());
-      } catch (Exception e) {
-        return ExcelCellType.BLANK;
-      }
-    }
-
     private static Object convertCellValue(
-        Cell cell,
+        ICell cell,
         ExcelCellType forcedType,
         Class<?> targetType,
         boolean automaticTrim,
@@ -241,7 +241,7 @@ public final class ColumnMetadata {
         return null;
       }
 
-      ExcelCellType cellType = (forcedType != null) ? forcedType : resolveExcelCellType(cell);
+      ExcelCellType cellType = (forcedType != null) ? forcedType : cell.getExcelCellType();
 
       switch (cellType) {
         case STRING:
@@ -252,24 +252,16 @@ public final class ColumnMetadata {
           return convertStringToTarget(str, targetType, dateFormat);
 
         case NUMERIC:
-          // 深度完善·方案 B：fast 路径 SimpleCell 预转换的日期优先（其 getCellStyle()
-          // 为 null，DateUtil.isCellDateFormatted 恒 false——此前数值型日期单元格被当
-          // 纯数字读入 Date 字段产生错值）。POI 路径（真实 Cell）不受影响。
-          if (cell instanceof SimpleCell simpleCell) {
-            LocalDateTime fastLdt = simpleCell.getLocalDateTimeCellValue();
+          // 深度完善·方案 B：fast 路径 SimpleCell 预转换的日期优先
+          // （其 isDateFormatted() == true 表示样式的数值已转 LocalDateTime）。
+          if (cell.isDateFormatted()) {
+            LocalDateTime fastLdt = cell.getLocalDateTimeCellValue();
             if (fastLdt != null) {
               return convertDateToTarget(fastLdt, targetType);
             }
           }
-          if (DateUtil.isCellDateFormatted(cell)) {
-            // POI getDateCellValue 返回 java.util.Date，桥接为 LocalDateTime 后交付转换链
-            Date date = cell.getDateCellValue();
-            LocalDateTime ldt = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-            return convertDateToTarget(ldt, targetType);
-          } else {
-            double num = cell.getNumericCellValue();
-            return convertNumberToTarget(num, targetType);
-          }
+          double num = cell.getNumericCellValue();
+          return convertNumberToTarget(num, targetType);
 
         case BOOLEAN:
           boolean bool = cell.getBooleanCellValue();
@@ -277,7 +269,7 @@ public final class ColumnMetadata {
 
         case FORMULA:
           return convertCellValue(
-              cell, resolveExcelCellType(cell), targetType, automaticTrim, dateFormat);
+              cell, cell.getExcelCellType(), targetType, automaticTrim, dateFormat);
 
         case BLANK:
           return null;
@@ -296,7 +288,6 @@ public final class ColumnMetadata {
       if (targetType == String.class) {
         return str;
       }
-
       if (targetType == Integer.class || targetType == int.class) {
         return Integer.valueOf(str);
       }
@@ -364,7 +355,8 @@ public final class ColumnMetadata {
     }
 
     /**
-     * 判断目标类型是否为 java.util.Date 的子类（如 java.sql.Date / java.sql.Time），但不包括 java.util.Date 本身。
+     * 判断目标类型是否为 java.util.Date 的子类（如 java.sql.Date / java.sql.Time），
+     * 但不包括 java.util.Date 本身。
      *
      * @param targetType 目标类型
      * @return 是子类返回 true
@@ -380,7 +372,7 @@ public final class ColumnMetadata {
         return null;
       }
       if (targetType == Date.class) {
-        // @deprecated 桥接：目标字段类型为 java.util.Date 时，将 LocalDateTime 转回 Date
+        // 桥接：目标字段类型为 java.util.Date 时，将 LocalDateTime 转回 Date
         return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
       }
       if (targetType == LocalDateTime.class) {

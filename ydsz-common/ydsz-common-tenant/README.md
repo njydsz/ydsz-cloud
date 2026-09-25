@@ -4,12 +4,14 @@
 
 提供基于 WebFilter + MyBatis-Plus InnerInterceptor 的租户 ID 注入与 SQL 行级隔离（SINGLE / MULTI / ISOLATE_DB / SCHEMA 四模式），多数据源路由，Feign / 线程池异步上下文传播（基于阿里巴巴 TTL），租户级限流，Redis Key 自动拼接租户前缀，数据库索引校验、fail-closed 诊断信息等能力。
 
+> **⚠️ 模块状态**：当前为**预留基础设施**。模块能力已完整实现并通过基础验证，但业务模块全面接入需要先评估数据源改造方案和存量数据迁移计划。如有业务需要接入多租户隔离，请参考[业务模块接入评估指南](business-onboarding-checklist.md)（待建设）。
+
 ## 模块定位
 
 | 属性 | 值 |
 |---|---|
 | **层级** | L4 基础数据层 |
-| **类型** | 公共依赖库（不独立部署） |
+| **类型** | 公共依赖库（不独立部署，预留基础设施） |
 | **作用** | 提供多租户上下文注入、SQL 改写、数据源路由、跨服务传播、运行时诊断 |
 | **依赖** | ydsz-common-core、ydsz-common-jdbc、ydsz-common-util、ydsz-common-domain、ydsz-common-cache、ydsz-common-redis；可选 feign-core、ydsz-common-thread、spring-boot-starter-web、micrometer-core |
 | **版本** | 1.4.0 |
