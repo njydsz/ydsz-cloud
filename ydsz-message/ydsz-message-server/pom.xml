@@ -71,10 +71,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-netty</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
-        </dependency>
+        <!-- P0-1: ydsz-common-web 已移除（server 层无直接 import，web 层由 message-web 模块承载HTTP 基座能力） -->
         <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
         <dependency>
             <groupId>com.njydsz</groupId>
