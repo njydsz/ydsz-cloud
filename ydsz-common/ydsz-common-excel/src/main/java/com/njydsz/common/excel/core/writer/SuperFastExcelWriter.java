@@ -1,13 +1,16 @@
 package com.njydsz.common.excel.core.writer;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.nio.file.StandardCopyOption;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -37,6 +40,7 @@ import com.njydsz.common.excel.annotation.ExcelSheet;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata.WriteHeaderProperty;
+import com.njydsz.common.excel.core.postprocess.XlsxPostProcessor;
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 
@@ -287,14 +291,107 @@ public class SuperFastExcelWriter {
       Arrays.fill(this.columnWidthTracker, -1);
     }
 
-    if (filePath != null) {
-      writeXlsxDirect(filePath, list);
-    } else if (file != null) {
-      writeXlsxDirect(file.getAbsolutePath(), list);
+    String targetPath = filePath;
+    if (targetPath == null && file != null) {
+      targetPath = file.getAbsolutePath();
+    }
+
+    if (targetPath != null) {
+      if (metadata.hasPostProcessors()) {
+        applyPostProcessorsToFile(targetPath, list);
+      } else {
+        writeXlsxDirect(targetPath, list);
+      }
     } else if (os != null) {
-      writeXlsxToStream(os, list);
+      if (metadata.hasPostProcessors()) {
+        applyPostProcessorsToStream(os, list);
+      } else {
+        writeXlsxToStream(os, list);
+      }
     } else {
       throw new IllegalArgumentException("No output target specified");
+    }
+  }
+
+  /**
+   * 写入基础 xlsx 后，通过管道依次应用 {@link XlsxPostProcessor}，
+   * 最终结果写入目标文件路径。
+   *
+   * <p>管道模式：base → temp1 → temp2 → ... → targetPath。
+   * 中间产物使用 JVM 临时目录，最终通过 {@link Files#move} 原子替换目标文件。
+   *
+   * @param targetPath 最终目标文件路径
+   * @param list 数据列表
+   */
+  private void applyPostProcessorsToFile(String targetPath, List<?> list) throws Exception {
+    Path tempBase = Files.createTempFile("ydsz_base_", ".xlsx");
+    try {
+      // 1. 写入基础 xlsx 到临时文件
+      writeXlsxDirect(tempBase.toString(), list);
+
+      // 2. 管道式应用后处理器链
+      Path current = tempBase;
+      List<XlsxPostProcessor> processors = metadata.getPostProcessors();
+      Path[] intermediates = new Path[processors.size()];
+      for (int i = 0; i < processors.size(); i++) {
+        Path next = Files.createTempFile("ydsz_pp" + i + "_", ".xlsx");
+        intermediates[i] = next;
+        try (InputStream is = new BufferedInputStream(new FileInputStream(current.toFile()), ZIP_BUFFER_SIZE);
+             OutputStream os = new BufferedOutputStream(new FileOutputStream(next.toFile()), ZIP_BUFFER_SIZE)) {
+          processors.get(i).process(is, os);
+        }
+        // 清理上一个中间文件（避免残留）
+        if (i > 0) {
+          Files.deleteIfExists(current);
+        }
+        current = next;
+      }
+
+      // 3. 原子替换目标文件
+      Files.move(current, Path.of(targetPath), StandardCopyOption.REPLACE_EXISTING);
+    } finally {
+      // best-effort 清理暂存文件（Files.move 成功则 current 已被移除）
+      try { Files.deleteIfExists(tempBase); } catch (IOException ignored) {}
+    }
+  }
+
+  /**
+   * 写入基础 xlsx 后，通过管道依次应用 {@link XlsxPostProcessor}，
+   * 最终结果写入输出流。
+   *
+   * <p>管道模式：base → temp1 → ... → ByteArrayOutputStream → os。
+   *
+   * @param os 目标输出流（由调用方管理关闭）
+   * @param list 数据列表
+   */
+  private void applyPostProcessorsToStream(OutputStream os, List<?> list) throws Exception {
+    Path tempBase = Files.createTempFile("ydsz_base_", ".xlsx");
+    try {
+      // 1. 写入基础 xlsx 到临时文件
+      writeXlsxDirect(tempBase.toString(), list);
+
+      // 2. 管道式应用后处理器链（与 applyPostProcessorsToFile 逻辑一致，最终不 move 而是 copy 到 os）
+      Path current = tempBase;
+      List<XlsxPostProcessor> processors = metadata.getPostProcessors();
+      for (int i = 0; i < processors.size(); i++) {
+        Path next = Files.createTempFile("ydsz_pp" + i + "_", ".xlsx");
+        try (InputStream is = new BufferedInputStream(new FileInputStream(current.toFile()), ZIP_BUFFER_SIZE);
+             OutputStream outs = new BufferedOutputStream(new FileOutputStream(next.toFile()), ZIP_BUFFER_SIZE)) {
+          processors.get(i).process(is, outs);
+        }
+        if (i > 0) {
+          Files.deleteIfExists(current);
+        }
+        current = next;
+      }
+
+      // 3. 将最终结果复制到输出流
+      try (InputStream is = new BufferedInputStream(new FileInputStream(current.toFile()), ZIP_BUFFER_SIZE)) {
+        is.transferTo(os);
+      }
+      Files.deleteIfExists(current);
+    } finally {
+      try { Files.deleteIfExists(tempBase); } catch (IOException ignored) {}
     }
   }
 

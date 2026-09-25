@@ -1,6 +1,7 @@
 package com.njydsz.common.excel.core;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,13 +12,19 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.excel.annotation.ExcelDataValidation;
 import com.njydsz.common.excel.annotation.ExcelIgnore;
+import com.njydsz.common.excel.annotation.ExcelMerge;
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.annotation.ExcelSheet;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata.WriteHeaderProperty;
 import com.njydsz.common.excel.core.metrics.ExcelMetrics;
+import com.njydsz.common.excel.core.postprocess.DataValidationHelper;
+import com.njydsz.common.excel.core.postprocess.DataValidationHelper.DataValidation;
+import com.njydsz.common.excel.core.postprocess.MergeCellHelper;
+import com.njydsz.common.excel.core.util.ColumnOrderResolver;
 import com.njydsz.common.excel.core.writer.SuperFastExcelWriter;
 import com.njydsz.common.excel.exception.ExcelWriteException;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
@@ -71,7 +78,7 @@ import com.njydsz.common.excel.support.mh.MHFieldAccessor;
  * @author ydsz-team
  * @since 26.09.01
  */
-public class ExcelWriter {
+public class ExcelWriter implements AutoCloseable {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExcelWriter.class);
 
@@ -494,6 +501,19 @@ public class ExcelWriter {
   public void finish() throws IOException {
     // SuperFastExcelWriter 在 doWrite 中已完成全部输出操作
     // 无需额外 finish 步骤，保留此方法仅为兼容调用方惯用写法
+    isWriteCompleted = true;
+  }
+
+  /**
+   * 关闭写入器（AutoCloseable 实现）。
+   *
+   * <p>当前版本 SuperFastExcelWriter 在 doWrite 中已自行完成输出和清理，
+   * 本方法为幂等无操作，仅用于支持 try-with-resources 语法。
+   */
+  @Override
+  public void close() {
+    // SuperFastExcelWriter 在 doWrite 中已完成全部输出操作
+    // 无需额外关闭步骤，标记写入已完成
     isWriteCompleted = true;
   }
 
