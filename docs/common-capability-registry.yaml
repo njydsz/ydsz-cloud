@@ -392,3 +392,114 @@ modules:
         type: thread-decorator
         entry: com.njydsz.common.tenant.async.TenantContextTaskDecorator
         usage: "线程池任务装饰器（TTL 传播兜底）"
+  # ---- ydsz-common-auth -------------------------------------------
+  ydsz-common-auth:
+    layer: L5
+    package: com.njydsz.common.auth
+    description: "JWT 认证与 RBAC；4 注解+3 切面+@DataScope+OIDC+Redis 失效监听"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: JwtTokenService
+        type: injectable-bean
+        entry: com.njydsz.common.auth.token.JwtTokenService
+        usage: "JWT Token 服务（双 Token：access/refresh）"
+      - name: AuthPermissionAspect
+        type: aop-aspect
+        entry: com.njydsz.common.auth.aspect.AuthPermissionAspect
+        usage: "API 权限切面（@AuthApiPermission + @AuthMenuPermission）"
+      - name: AuthRowPermissionAspect
+        type: aop-aspect
+        entry: com.njydsz.common.auth.aspect.AuthRowPermissionAspect
+        usage: "行级数据权限切面（@DataScope SQL 注入，fail-closed）"
+      - name: AuthColPermissionAspect
+        type: aop-aspect
+        entry: com.njydsz.common.auth.aspect.AuthColPermissionAspect
+        usage: "列级数据权限切面（移除无权限列）"
+      - name: AuthFilterConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.auth.config.AuthFilterConfiguration
+        usage: "认证过滤器装配（Token 解析 → AuthContext）"
+
+  # ---- ydsz-common-safe -------------------------------------------
+  ydsz-common-safe:
+    layer: L5
+    package: com.njydsz.common.safe
+    description: "安全防护层；XSS/CSRF/API 签名/限流/熔断/脱敏/SSRF"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: XssFilter
+        type: servlet-filter
+        entry: com.njydsz.common.safe.xss.XssFilter
+        usage: "XSS 过滤器（HTTP Request 层清理）"
+      - name: XssJsonMessageConverter
+        type: spring-converter
+        entry: com.njydsz.common.safe.xss.XssJsonMessageConverter
+        usage: "XSS JSON 消息转换器（String 字段清理）"
+      - name: ApiSignatureFilter
+        type: servlet-filter
+        entry: com.njydsz.common.safe.signature.ApiSignatureFilter
+        usage: "API 签名校验（HMAC-SHA256 + Nonce 防重放）"
+      - name: RateLimitAutoConfiguration
+        type: spring-configuration
+        entry: com.njydsz.common.safe.ratelimit.RateLimitAutoConfiguration
+        usage: "限流自动配置"
+      - name: SafeCircuitBreakerAdapter
+        type: adapter
+        entry: com.njydsz.common.safe.circuitbreaker.SafeCircuitBreakerAdapter
+        usage: "Resilience4j CircuitBreaker 适配器"
+      - name: SensitiveDataAdvice
+        type: controller-advice
+        entry: com.njydsz.common.safe.sensitive.SensitiveDataAdvice
+        usage: "脱敏 AOP 切面（@ResponseBody 返回值处理）"
+
+  # ---- ydsz-common-feign ------------------------------------------
+  ydsz-common-feign:
+    layer: L5
+    package: com.njydsz.common.feign
+    description: "OpenFeign 增强；请求头透传/编解码/重试/链路追踪/熔断"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: FeignRequestInterceptor
+        type: feign-interceptor
+        entry: com.njydsz.common.feign.interceptor.FeignRequestInterceptor
+        usage: "请求头透传（13 个核心业务头）"
+      - name: ResponseUnwrapDecoder
+        type: feign-decoder
+        entry: com.njydsz.common.feign.decoder.ResponseUnwrapDecoder
+        usage: "YdszResponse 自动解包（客户端直接获取 data）"
+      - name: MethodAwareRetryer
+        type: feign-retryer
+        entry: com.njydsz.common.feign.retry.MethodAwareRetryer
+        usage: "HTTP 方法感知重试器（仅白名单方法重试）"
+      - name: TraceRequestInterceptor
+        type: feign-interceptor
+        entry: com.njydsz.common.feign.interceptor.TraceRequestInterceptor
+        usage: "链路追踪（traceparent/spanId 透传）"
+
+  # ---- ydsz-common-audit ------------------------------------------
+  ydsz-common-audit:
+    layer: L5
+    package: com.njydsz.common.audit
+    description: "操作审计留痕；@Audit + SpEL + JDBC 分表 + Gateway 事件桥接"
+    since: "26.01.01"
+    stability: stable
+    capabilities:
+      - name: AuditAspect
+        type: aop-aspect
+        entry: com.njydsz.common.audit.core.AuditAspect
+        usage: "核心切面（拦截 @Audit 自动采集请求上下文）"
+      - name: AsyncAuditRecorder
+        type: injectable-bean
+        entry: com.njydsz.common.audit.recorder.AsyncAuditRecorder
+        usage: "异步审计记录器（LinkedBlockingQueue 批量写入）"
+      - name: JdbcAuditStorage
+        type: spring-bean
+        entry: com.njydsz.common.audit.storage.JdbcAuditStorage
+        usage: "JDBC 审计存储（按月/日/年分表）"
+      - name: AuditFallbackWriter
+        type: spring-bean
+        entry: com.njydsz.common.audit.fallback.AuditFallbackWriter
+        usage: "磁盘兜底写入器（JDBC 失败时写本地文件）"
