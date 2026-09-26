@@ -1393,7 +1393,7 @@
                         <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                     </configuration>
                 </execution>
-                <!-- check：覆盖率门禁（全模块聚合行覆盖率 ≥ 30%，26.09-26 由 10% 上调） -->
+                <!-- check：覆盖率门禁（全模块聚合行覆盖率 ≥ 50%，分支 ≥ 35%，26.09-29 上调至规范基线） -->
                 <execution>
                     <id>check</id>
                     <phase>verify</phase>
@@ -1408,12 +1408,12 @@
                                     <limit>
                                         <counter>LINE</counter>
                                         <value>COVEREDRATIO</value>
-                                        <minimum>0.30</minimum>
+                                        <minimum>0.50</minimum>
                                     </limit>
                                     <limit>
                                         <counter>BRANCH</counter>
                                         <value>COVEREDRATIO</value>
-                                        <minimum>0.20</minimum>
+                                        <minimum>0.35</minimum>
                                     </limit>
                                 </limits>
                             </rule>

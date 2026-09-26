@@ -2,7 +2,6 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -54,8 +53,7 @@ public class FlowCategory extends MpBaseEntity<String> {
   /** 父分类 ID（支持多级树形结构，顶级为 {@code NULL}） */
   private String parentId;
 
-  /** 排序号（越小越靠前，数据库列名 sort_num）。 */
-  @TableField("sort_num")
+  /** 排序号（越小越靠前，YDIZ-DB-001 统一命名为 sort）。 */
   private Integer sort;
 
   /** 图标（前端展示用，如 Element Plus icon 名称） */

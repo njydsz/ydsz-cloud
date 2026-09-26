@@ -9,6 +9,7 @@ import com.njydsz.common.excel.annotation.ExcelIgnore;
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
+import com.njydsz.common.excel.support.mh.MHFieldAccessor;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor.FieldSetter;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 
@@ -144,10 +145,12 @@ public class HeaderAnalyzer {
       int col = entry.getKey();
       Field field = entry.getValue();
       FieldSetter setter = ReflectCache.getFieldSetter(clazz, field);
+      // P0-VarHandle：预创建 VarHandle Setter 以加速读取路径字段赋值
+      java.lang.invoke.VarHandle vh = MHFieldAccessor.getVarHandleSetter(clazz, field);
       Class<?> targetType = field.getType();
       String dateFormat = dateFormats.get(col);
       columnMetadataArray[idx++] =
-          new ColumnMetadata(col, setter, targetType, dateFormat, isAutomaticTrim);
+          new ColumnMetadata(col, setter, vh, targetType, dateFormat, isAutomaticTrim);
     }
 
     return columnMetadataArray;

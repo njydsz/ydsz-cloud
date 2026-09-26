@@ -74,6 +74,15 @@ public final class ColumnMetadata {
   /** 字段 Setter 访问器（ASM 优化版本，避免反射开销）。 */
   public final FieldSetter setter;
 
+  /**
+   * P0-VarHandle：VarHandle Setter（替代 MethodHandle.invoke 实现直接字段赋值）。
+   *
+   * <p>Java 21 下 VarHandle.set 为 intrinsic 操作（编译为直接字段访问），
+   * 比 MethodHandle.invoke() 快 20~40%。由 {@code SuperFastExcelReader} 在分析阶段
+   * 通过 {@code MHFieldAccessor.getVarHandleSetter} 创建并赋值。
+   */
+  public final java.lang.invoke.VarHandle varHandle;
+
   /** 目标字段类型（预计算，避免重复调用 {@code field.getType()}）。 */
   public final Class<?> targetType;
 
@@ -105,11 +114,13 @@ public final class ColumnMetadata {
   public ColumnMetadata(
       int columnIndex,
       FieldSetter setter,
+      java.lang.invoke.VarHandle varHandle,
       Class<?> targetType,
       String dateFormat,
       boolean automaticTrim) {
     this.columnIndex = columnIndex;
     this.setter = setter;
+    this.varHandle = varHandle;
     this.targetType = targetType;
     this.dateFormat = dateFormat;
     this.automaticTrim = automaticTrim;

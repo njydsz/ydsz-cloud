@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 洞察报告（domain 层持久化实体，YDIZ-DDD-007 单包模式）
@@ -33,7 +33,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 // YDIZ-WARN-001 允许保留：@SuperBuilder 在多层泛型继承链中生成代码的类型擦除
 @SuppressWarnings("unchecked")
 @TableName("ydsz_agt_insight_report")
-public class InsightReport extends MpBaseAuditEntity<Long> {
+public class InsightReport extends MpBaseEntity<Long> {
 
   private static final long serialVersionUID = 1L;
 
@@ -80,9 +80,4 @@ public class InsightReport extends MpBaseAuditEntity<Long> {
   /** 生成耗时（毫秒） */
   private Integer durationMs;
 
-  /** 创建时间 */
-  private LocalDateTime createdAt;
-
-  /** 更新时间 */
-  private LocalDateTime updatedAt;
 }

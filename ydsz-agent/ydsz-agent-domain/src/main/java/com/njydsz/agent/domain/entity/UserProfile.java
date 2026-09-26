@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.json.YdszJson;
 
 /**
@@ -38,7 +38,7 @@ import com.njydsz.common.json.YdszJson;
 // YDIZ-WARN-001 允许保留：@SuperBuilder 在多层泛型继承链中生成代码的类型擦除
 @SuppressWarnings("unchecked")
 @TableName("ydsz_agt_user_profile")
-public class UserProfile extends MpBaseAuditEntity<String> {
+public class UserProfile extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 

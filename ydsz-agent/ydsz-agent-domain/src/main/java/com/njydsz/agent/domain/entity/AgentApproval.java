@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * Agent 人工审批请求（domain 层持久化实体，YDIZ-DDD-007 单包模式）
@@ -48,7 +48,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 // YDIZ-WARN-001 允许保留：@SuperBuilder 在多层泛型继承链中生成代码的类型擦除
 @SuppressWarnings("unchecked")
 @TableName("ydsz_agt_approval")
-public class AgentApproval extends MpBaseAuditEntity<String> {
+public class AgentApproval extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
 
