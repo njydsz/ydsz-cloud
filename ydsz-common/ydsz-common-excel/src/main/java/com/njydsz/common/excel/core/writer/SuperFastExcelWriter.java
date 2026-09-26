@@ -1103,6 +1103,15 @@ public class SuperFastExcelWriter {
     rowBuffer[rowBufferPos++] = '>';
   }
 
+  // ==================== 单元格写入（字符串路径） ====================
+
+  // P1-2 回退说明：(writeStringCellSmart / isAsciiPlainText / looksLikeLiteralValue 已移除)
+  // 原因：流式写入无法预知 SST 引用频次，任何启发式 inline 决策均会导致高频重复值
+  // （如 "A"/"B"/"2026-09-25"/"华东"）被错误 inline → 文件体积反增 4-8%。
+  // 原始纯 SST 路径经实测验证为稳定最优策略，保留为唯一入口。
+  // 如未来需要 inline 优化，必须引入两遍遍历（先统计引用频次再决策），
+  // 这会牺牲流式写入的 O(1) 内存优势，需作为可选特性单独评估。
+
   private void writeStringCellInline(int col, String value) {
     if (getExcelConfig().getIsFormulaInjectionProtection()) {
       value = FormulaInjectionGuard.sanitizeForXlsx(value);

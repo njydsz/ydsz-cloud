@@ -74,18 +74,22 @@
           AND is_deleted = 0
     </update>
 
+    <!-- markAllRead: 使用 CTE + FOR UPDATE SKIP LOCKED 避免子查询锁竞争 -->
     <update id="markAllRead">
-        UPDATE ydsz_msg_notification
-        SET read_status = 1, read_time = CURRENT_TIMESTAMP
-        WHERE id IN (
+        WITH to_update AS (
             SELECT id FROM ydsz_msg_notification
             WHERE receiver_id = #{userId}
               AND read_status = 0
               AND is_deleted = 0
-            <if test="batchSize != null and batchSize > 0">
-              LIMIT #{batchSize}
-            </if>
+            &lt;if test="batchSize != null and batchSize &gt; 0">
+                LIMIT #{batchSize}
+            &lt;/if>
+            FOR UPDATE SKIP LOCKED
         )
+        UPDATE ydsz_msg_notification n
+        SET read_status = 1, read_time = CURRENT_TIMESTAMP
+        FROM to_update t
+        WHERE n.id = t.id
     </update>
 
     <select id="countUnread" resultType="java.lang.Long">

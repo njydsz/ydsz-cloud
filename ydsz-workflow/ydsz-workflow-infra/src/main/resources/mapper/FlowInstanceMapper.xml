@@ -104,6 +104,7 @@
           AND status = 'ENABLED'
           AND is_deleted = 0
         ORDER BY start_at DESC
+        LIMIT 100
     </select>
 
     <!-- P2-23: 实例多维分页查询 -->
