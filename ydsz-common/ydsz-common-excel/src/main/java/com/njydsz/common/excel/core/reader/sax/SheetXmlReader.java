@@ -286,6 +286,14 @@ public class SheetXmlReader {
    */
   // YDIZ-WARN-001 允许保留：SAX 解析单元格类型泛型擦除，值转换由调用方承担
   @SuppressWarnings("unchecked")
+  void parse(InputStream is) throws IOException {
+    try {
+      parseStreaming(is);
+    } finally {
+      resetPool();
+    }
+  }
+
 
   /**
    * 流式滑动窗口解析器 — 将内存峰值从整个 XML 降至一个滑动窗口（64 KB）。
