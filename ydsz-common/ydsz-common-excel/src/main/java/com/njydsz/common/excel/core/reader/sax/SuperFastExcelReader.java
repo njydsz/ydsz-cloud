@@ -126,6 +126,16 @@ public class SuperFastExcelReader {
   /** 对象实例化器 */
   ObjectInstantiator instantiator;
 
+  /**
+   * P0-B：行对象池开关（默认 {@code false}）。
+   *
+   * <p>启用后读取路径复用 DTO 实例，100k 行读取 RSS 可降低 30~50%。
+   * <b>风险</b>：监听器必须在 {@code onData} 回调内同步处理数据，不得持有 rowData 引用超过回调范围，
+   * 否则后续行复用对象后会导致数据被覆盖。
+   * 仅建议在"即时消费"场景（如写入数据库、流式处理）中启用。
+   */
+  boolean enableRowPool = false;
+
   /** 分析上下文 */
   AnalysisContext context;
 

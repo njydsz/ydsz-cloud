@@ -189,9 +189,29 @@ public class SheetXmlReader {
    *
    * @return 行对象池（非 null）
    */
+  /**
+   * P0-B：获取线程级行对象池（仅在 {@link SuperFastExcelReader#enableRowPool} 启用时生效）。
+   *
+   * <p>当监听器不在 {@code onData} 回调外持有 rowData 引用时，可启用对象池以减少 GC 压力。
+   *
+   * @return 对象池，若未启用则返回 null（写入路径自动回落到 newInstance 新对象）
+   */
   private RowPool<Object> getRowPool() {
+    if (!reader.enableRowPool) {
+      return null;  // 安全默认：不启用池
+    }
     if (rowPool == null && reader.instantiator != null) {
-      rowPool = new RowPool<Object>(reader.instantiator::getInstance);
+      // ObjectInstantiator.newInstance() throws Exception — wrap in unchecked lambda for Supplier
+      java.util.function.Supplier<Object> supplier = () -> {
+        try {
+          return reader.instantiator.newInstance();
+        } catch (RuntimeException e) {
+          throw e;
+        } catch (Exception e) {
+          throw new IllegalStateException("Failed to instantiate row object", e);
+        }
+      };
+      rowPool = new RowPool<>(supplier);
     }
     return rowPool;
   }
@@ -459,10 +479,18 @@ public class SheetXmlReader {
     parseRowAttributes(data, rowStart, rowAttrEnd);
     isRowHasData = false;
 
-    // P0-B：从行对象池获取实例（复用已有 DTO，消除 100k 次 new 分配）
+    // P0-B：从行对象池获取实例（池未启用时回落到 newInstance 新对象分配）
     if (currentRow > reader.headRowNumber && rowData == null && reader.instantiator != null) {
       RowPool<Object> pool = getRowPool();
-      rowData = pool != null ? pool.acquire() : null;
+      if (pool != null) {
+        rowData = pool.acquire();
+      } else {
+        try {
+          rowData = reader.instantiator.newInstance();
+        } catch (Exception e) {
+          rowData = null;
+        }
+      }
     }
 
     int rowContentStart = rowAttrEnd + 1;

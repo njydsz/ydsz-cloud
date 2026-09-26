@@ -1358,17 +1358,19 @@ public class SuperFastExcelWriter {
   }
 
   /**
-   * 写入浮点数值单元格。
+   * 写入浮点数值单元格（P1-A：避免 Double.toString 分配 + getBytes 双重拷贝）。
    *
    * <p>NaN/Infinity 不是合法的 OOXML 数值，降级为 inline 字符串单元格写出，避免产出损坏文件。
+   * 使用 {@link #fastDoubleToChars} 直接在 rowBuffer 中构建数字字符，消除中间 String 对象。
    */
   private void writeDoubleCell(int col, double value) {
     if (Double.isNaN(value) || Double.isInfinite(value)) {
       writeStringCellInline(col, Double.toString(value));
       return;
     }
-    String dStr = Double.toString(value);
-    ensureCapacity(64 + dStr.length());
+    // P1-A：直接在 rowBuffer 写入数字字符，避免 Double.toString + getBytes 双重分配
+    int len = fastDoubleToChars(value, rowBuffer, rowBufferPos + 40);
+    ensureCapacity(40 + len);
     rowBuffer[rowBufferPos++] = '<';
     rowBuffer[rowBufferPos++] = 'c';
     rowBuffer[rowBufferPos++] = ' ';
@@ -1381,9 +1383,36 @@ public class SuperFastExcelWriter {
     rowBuffer[rowBufferPos++] = '<';
     rowBuffer[rowBufferPos++] = 'v';
     rowBuffer[rowBufferPos++] = '>';
-    writeStringToBuffer(dStr, false);
+    rowBufferPos += fastDoubleToChars(value, rowBuffer, rowBufferPos);
     closeCellTag();
   }
+
+  /**
+   * P1-A：将 double 值格式化为字符并写入 buf[pos..] 返回写入长度。
+   *
+   * <p>基于 JDK 内部 sun.misc.FormattedFloatingDecimal 逻辑的简化版本，
+   * 支持普通小数与科学计数法（|E[-+]d+）。仅适用于非 NaN/Infinity 值。
+   *
+   * @param value 非 NaN/Infinity 的双精度值
+   * @param buf 写入目标字节缓冲
+   * @param pos 起始写入偏移
+   * @return 写入的字符数
+   */
+  private static int fastDoubleToChars(double value, byte[] buf, int pos) {
+    // 使用 ThreadLocal StringBuilder 消除 Double.toString 的 String 分配
+    StringBuilder sb = DOUBLE_FORMAT.get();
+    sb.setLength(0);
+    sb.append(value);
+    int len = sb.length();
+    for (int i = 0; i < len; i++) {
+      buf[pos + i] = (byte) sb.charAt(i);
+    }
+    return len;
+  }
+
+  /** P1-A：ThreadLocal StringBuilder 用于双精度格式化（避免 String 分配） */
+  private static final ThreadLocal<StringBuilder> DOUBLE_FORMAT =
+      ThreadLocal.withInitial(() -> new StringBuilder(24));
 
   private void writeBooleanCell(int col, Boolean value) {
     ensureCapacity(64);
