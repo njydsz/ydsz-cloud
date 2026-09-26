@@ -14,7 +14,6 @@ import com.njydsz.agent.domain.entity.AgentTraceStep;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.mapper.AgentTraceMapper;
 import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
-import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;

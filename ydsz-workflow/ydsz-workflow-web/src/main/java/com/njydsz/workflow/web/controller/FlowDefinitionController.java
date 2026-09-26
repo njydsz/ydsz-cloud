@@ -30,12 +30,14 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
+import com.njydsz.workflow.domain.dto.RollbackRequestDTO;
 import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDetailVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionDiffVO;
@@ -247,16 +249,16 @@ public class FlowDefinitionController {
    * @param pageSize 每页大小（1~100，默认 20）
    * @param category 分类（可选，为空则不过滤）
    * @param flowCode 流程编码（可选，为空则不过滤）
-   * @return 统一响应结果，包含流程定义视图列表
+   * @return 分页结果（含总记录数、当前页码、每页大小、数据列表）
    */
   @GetMapping("/definition/page")
   @Operation(summary = "分页查询流程定义")
-  public YdszResponse<List<FlowDefinitionVO>> page(
+  public PageResponse<List<FlowDefinitionVO>> page(
       @RequestParam(defaultValue = "1") @Min(1) int pageNo,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
       @RequestParam(required = false) String category,
       @RequestParam(required = false) String flowCode) {
-    return YdszResponse.success(definitionService.page(pageNo, pageSize, category, flowCode));
+    return definitionService.page(pageNo, pageSize, category, flowCode);
   }
 
   /**
@@ -403,15 +405,16 @@ public class FlowDefinitionController {
    * <p>将指定 flowCode 的激活版本切换回上一个已发布版本，并自动迁移在途实例。
    * 回滚前会执行变更影响分析，HIGH 风险时阻止回滚。
    *
-   * @param flowCode 流程编码
+   * @param request 回滚请求 DTO（含 flowCode）
    * @return 统一响应结果，包含回滚报告（含影响的实例数、迁移结果等）
    */
   @PostMapping("/definition/rollback")
   @Operation(summary = "一键回滚流程定义到上一版本")
   @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-  public YdszResponse<FlowRollbackResultVO> rollbackDefinition(@RequestParam String flowCode) {
+  public YdszResponse<FlowRollbackResultVO> rollbackDefinition(
+      @Valid @RequestBody RollbackRequestDTO request) {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    FlowRollbackResultVO result = definitionService.rollbackDefinition(flowCode, tenantId);
+    FlowRollbackResultVO result = definitionService.rollbackDefinition(request.getFlowCode(), tenantId);
     return YdszResponse.success(result);
   }
 
