@@ -44,8 +44,8 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
   /** 任务状态 */
   private String status;
 
-  /** 租户编码（多租户隔离） */
-  private String tenantCode;
+  /** 租户 ID（多租户隔离，对齐 MpBaseEntity.tenantId 命名约定） */
+  private String tenantId;
 
   /** 触发用户 ID */
   private String userId;
@@ -100,13 +100,13 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
    * 创建异步任务。
    *
    * @param taskType    任务类型
-   * @param tenantCode  租户编码
+   * @param tenantId    租户 ID
    * @param userId      用户 ID
    * @param inputPayload 输入参数 JSON
    */
-  public AsyncTask(String taskType, String tenantCode, String userId, String inputPayload) {
+  public AsyncTask(String taskType, String tenantId, String userId, String inputPayload) {
     this.taskType = Objects.requireNonNull(taskType, "taskType 不能为 null");
-    this.tenantCode = tenantCode;
+    this.tenantId = tenantId;
     this.userId = userId;
     this.inputPayload = inputPayload;
     this.status = AsyncTaskStatus.PENDING.getCode();

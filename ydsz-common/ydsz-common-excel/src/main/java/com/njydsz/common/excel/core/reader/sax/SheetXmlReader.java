@@ -475,14 +475,13 @@ public class SheetXmlReader {
     if (effectiveType == null) {
       effectiveType = "n";
     }
-    Object convertedValue;
-    if ("s".equals(effectiveType)) {
-      // 字符串（共享字符串表引用）
-      convertedValue = lookupSharedString(value, colMeta);
-    } else {
-      // 数值 / inlineStr / 日期
-      convertedValue = colMeta.convertStrategy.convert(value, colMeta.targetType, colMeta.dateFormat);
-    }
+    // 类型转换 — 复用现有 convertCellValue 方法（含 SST 解析分支）。
+    // convertCellValue 内部通过 instance field cellType 判定是否为 SST 引用，
+    // StAX 路径暂存有效类型至 cellType 后调用，再恢复原值（线程安全：实例字段）。
+    String prevCellType = this.cellType;
+    this.cellType = effectiveType;
+    Object convertedValue = convertCellValue(value, colMeta);
+    this.cellType = prevCellType;
     // P0-VarHandle：快速字段赋值
     java.lang.invoke.VarHandle vh = colMeta.varHandle;
     if (vh != null) {
@@ -493,6 +492,19 @@ public class SheetXmlReader {
       } catch (Exception e) {
         LOG.warn("Field set failed at row={}, col={}: {}", currentRow, col, e.getMessage());
       }
+    }
+  }
+
+  /**
+   * P0-StAX：创建新的行 DTO 实例（池不可用时的回退）。
+   *
+   * @return 新 DTO 实例（非 null），创建失败返回 null
+   */
+  private Object newRowInstance() {
+    try {
+      return reader.instantiator.newInstance();
+    } catch (Exception e) {
+      return null;
     }
   }
 
@@ -529,7 +541,7 @@ public class SheetXmlReader {
     try {
       int idx = Integer.parseInt(sstIndex);
       if (ssReader != null) {
-        String resolved = ssReader.getStringByIndex(idx);
+        String resolved = ssReader.getString(idx);
         if (resolved != null) {
           return resolved;
         }

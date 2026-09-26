@@ -53,8 +53,9 @@ jobs:
 
       # Step 5: Maven verify（编译 + 测试 + 打包验证 — surefire 跑单元测试 + failsafe 跑 IT 集成测试）
       - name: Maven verify (Compile + Unit Test + Integration Test)
-        run: mvn verify -B -fae
-        # -fae: 失败继续（避免模块 A 失败遮断 B 的测试报告归档），但最终步骤会检查测试结果
+        run: mvn verify -B
+        # 26.09-29: 移除 -fae 参数，改为 fail-fast 模式，确保每个模块的测试失败都能立即阻断
+        # （此前 -fae 导致中间失败被遮断，问题容易累积；覆盖率门禁上调后需更严格）
 
       # Step 6: 测试报告归档（surefire-reports / failsafe-reports 产物收集 — 云顶编码规范 §14.4）
       # 由 Maven Surefire 与 Failsafe 插件在 target/surefire-reports 与 target/failsafe-reports 生成的 XML 报告

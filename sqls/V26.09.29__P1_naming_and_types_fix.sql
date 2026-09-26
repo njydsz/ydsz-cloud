@@ -1,7 +1,7 @@
 -- ============================================================================
--- V26.09.29: P1 命名规范与数据类型统一迁移
+-- V26.09.29: P1/P2 命名规范与数据类型统一迁移
 --
--- 修复项（全维度分析 P1 高优）：
+-- 修复项：
 --   1. ydsz_job_history.history_deleted → is_deleted（YDIZ-OOP-006 布尔命名统一）
 --   2. ydsz_flow_category.sort_num → sort（YDIZ-DB-001 排序字段统一）
 --   3. ydsz_agt_dag_workflow.is_deleted BOOLEAN → SMALLINT
@@ -9,6 +9,7 @@
 --   5. ydsz_agt_document_chunk.is_deleted BOOLEAN → SMALLINT
 --   6. ydsz_agt_definition.temperature DOUBLE PRECISION → NUMERIC(5,2)
 --   7. 高频复合索引补充（flow_run_task / job_main / acct_user.email）
+--   8. ydsz_agt_async_task.tenant_code → tenant_id（租户字段命名统一）
 --
 -- 执行方式: psql -U <user> -d <db> -f V26.09.29__P1_naming_and_types_fix.sql
 -- 回滚: 见文件末尾 ROLLBACK 段落（如需）
@@ -72,3 +73,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_email ON ydsz_acct_user (email);
 
 -- ydsz_acct_user: 增加 (tenant_id, is_deleted) 复合索引（用户列表高频过滤）
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_tenant_is_deleted ON ydsz_acct_user (tenant_id, is_deleted);
+
+-- ----------------------------------------------------------------------------
+-- 8. ydsz_agt_async_task.tenant_code → tenant_id（租户字段命名统一）
+-- ----------------------------------------------------------------------------
+ALTER TABLE ydsz_agt_async_task
+    RENAME COLUMN tenant_code TO tenant_id;
+
+-- 同步更新索引
+ALTER INDEX IF EXISTS idx_ydsz_agt_async_task_tenant_status RENAME TO idx_ydsz_agt_async_task_tenant_id_status;
+
+COMMENT ON COLUMN ydsz_agt_async_task.tenant_id IS '租户 ID（多租户隔离）';
