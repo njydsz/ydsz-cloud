@@ -7,6 +7,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
@@ -124,7 +125,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
   /** {@inheritDoc} */
   @Override
-  public List<FlowDefinitionVO> page(int pageNo, int pageSize, String category, String flowCode) {
+  public PageResponse<List<FlowDefinitionVO>> page(int pageNo, int pageSize, String category, String flowCode) {
     return queryService.page(pageNo, pageSize, category, flowCode);
   }
 

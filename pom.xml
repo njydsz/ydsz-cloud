@@ -1393,7 +1393,7 @@
                         <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                     </configuration>
                 </execution>
-                <!-- check：覆盖率门禁（核心模块行覆盖率 ≥ 40%） -->
+                <!-- check：覆盖率门禁（全模块聚合行覆盖率 ≥ 30%，26.09-26 由 10% 上调） -->
                 <execution>
                     <id>check</id>
                     <phase>verify</phase>
@@ -1408,11 +1408,20 @@
                                     <limit>
                                         <counter>LINE</counter>
                                         <value>COVEREDRATIO</value>
-                                        <minimum>0.10</minimum>
+                                        <minimum>0.30</minimum>
+                                    </limit>
+                                    <limit>
+                                        <counter>BRANCH</counter>
+                                        <value>COVEREDRATIO</value>
+                                        <minimum>0.20</minimum>
                                     </limit>
                                 </limits>
                             </rule>
                         </rules>
+                        <!-- 排除 auto-generated 代码（gen-contract.py 生成的纯 API 封装不参与覆盖率计算） -->
+                        <excludes>
+                            <exclude>**/api/**/*</exclude>
+                        </excludes>
                     </configuration>
                 </execution>
             </executions>

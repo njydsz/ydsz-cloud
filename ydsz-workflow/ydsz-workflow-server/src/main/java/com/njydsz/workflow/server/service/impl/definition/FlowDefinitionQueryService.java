@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -138,23 +139,25 @@ public class FlowDefinitionQueryService {
         .orElse(null);
   }
 
-  /**
-   * 分页查询流程定义列表
-   *
-   * <p>仅返回 {@code activityStatus=1}（启用）且未逻辑删除的记录，
-   * 按 {@code created_at} 倒序排列。支持按 {@code category}（精确）和 {@code flowCode}（模糊）过滤。
-   *
-   * @param pageNo 页码（从 1 开始）
-   * @param pageSize 每页大小
-   * @param category 分类编码过滤（可选）
-   * @param flowCode 流程编码模糊过滤（可选）
-   * @return 流程定义列表
-   */
-  @Transactional(readOnly = true)
-  public List<FlowDefinitionVO> page(int pageNo, int pageSize, String category, String flowCode) {
-    return definitionRepository
-        .findActivePage(pageNo, pageSize, category, flowCode);
-  }
+/**
+ * 分页查询流程定义列表
+ *
+ * <p>仅返回 {@code activityStatus=1}（启用）且未逻辑删除的记录，
+ * 按 {@code created_at} 倒序排列。支持按 {@code category}（精确）和 {@code flowCode}（模糊）过滤。
+ *
+ * @param pageNo 页码（从 1 开始）
+ * @param pageSize 每页大小
+ * @param category 分类编码过滤（可选）
+ * @param flowCode 流程编码模糊过滤（可选）
+ * @return 分页结果（含 total）
+ */
+@Transactional(readOnly = true)
+public PageResponse<List<FlowDefinitionVO>> page(int pageNo, int pageSize, String category, String flowCode) {
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
+    long total = definitionRepository.countPage(flowCode, null, tenantId);
+    List<FlowDefinitionVO> list = definitionRepository.findActivePage(pageNo, pageSize, category, flowCode);
+    return PageResponse.success(total, (long) pageNo, (long) pageSize, list);
+}
 
   /**
    * 查询流程定义详情（含节点 + 跳转）

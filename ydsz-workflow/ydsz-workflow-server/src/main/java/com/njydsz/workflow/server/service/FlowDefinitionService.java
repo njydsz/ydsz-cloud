@@ -3,6 +3,7 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.vo.FlowBatchDeployResultVO;
@@ -118,9 +119,9 @@ public interface FlowDefinitionService {
    * @param pageSize 每页大小
    * @param category 分类过滤（可空）
    * @param flowCode 流程编码模糊过滤（可空）
-   * @return 流程定义列表（按更新时间倒序）
+   * @return 分页结果（含 total / pageNum / pageSize）
    */
-  List<FlowDefinitionVO> page(int pageNo, int pageSize, String category, String flowCode);
+  PageResponse<List<FlowDefinitionVO>> page(int pageNo, int pageSize, String category, String flowCode);
 
   /**
    * P2-21: 流程定义详情查询（含节点 + 跳转）

@@ -10,7 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.auth.util.SecurityUtils;
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.system.domain.vo.DashboardOverviewItemVO;
 import com.njydsz.system.domain.vo.DashboardWorkspaceVO;
 import com.njydsz.system.domain.vo.TenantVO;
@@ -120,6 +121,9 @@ public class DashboardServiceImpl implements DashboardService {
    * <p>时段划分：凌晨（0-4）/ 早安（5-11）/ 中午好（12-13）/ 下午好（14-17）/
    * 晚上好（18-21）/ 夜深了（22-23）。
    *
+   * <p>使用 {@link AuthContextUtils#getCurrentOrNull()} 安全获取用户名，
+   * 认证上下文缺失时降级为纯问候语（不抛异常），避免 50001 服务内部错误。
+   *
    * @return 问候文案（如「下午好，admin」）
    */
   private String buildGreeting() {
@@ -138,7 +142,12 @@ public class DashboardServiceImpl implements DashboardService {
     } else {
       salutation = "夜深了";
     }
-    String username = SecurityUtils.getCurrentUserName();
+    // 安全获取用户名：认证上下文缺失时降级为空，不抛异常
+    String username = null;
+    LoginUser currentUser = AuthContextUtils.getCurrentOrNull();
+    if (currentUser != null) {
+      username = currentUser.getUsername();
+    }
     return (username == null || username.isBlank())
         ? salutation
         : salutation + "，" + username;

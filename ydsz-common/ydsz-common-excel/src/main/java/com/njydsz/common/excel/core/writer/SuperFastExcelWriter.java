@@ -224,9 +224,37 @@ public class SuperFastExcelWriter {
   /** SST 字符串内联阈值（字符数），超过此长度的字符串直接 inlineStr */
   private final int sstInlineThreshold;
 
+  /**
+   * P0-E：公式注入防护开关（构造函数一次性读取，消除写入路径中 100k×9=90 万次重复 Config#get 调用）。
+   * 写入路径直接使用此 boolean 字段判断，未开启时完全跳过 FormulaInjectionGuard 分支。
+   */
+  private final boolean formulaInjectionEnabled;
+
+  /**
+   * P1-C：列级 SST vs inline 决策数组（下标=列索引）。
+   *
+   * <p>{@code true} 表示该字符串列使用 inlineStr（值直写单元格）；{@code false} 表示走 SST 引用。
+   * 仅在 {@link #HIGH_CARDINALITY_RATIO} 以上唯一值比例的列才决策 SST → inline，减少高频列的 SST 条目膨胀。
+   * {@code null} 表示未进行决策（行数不多或列类型非字符串），保持原有 SST 行为。
+   */
+  private boolean[] columnInlineDecision;
+
+  /** 采样行数阈值：行数 ≤ 此值时不进行基数采样决策（保持 SST 原行为） */
+  private static final int CARDINALITY_SAMPLE_MIN_ROWS = 1000;
+
+  /** 采样大小：用于基数估计的样本行数 */
+  private static final int CARDINALITY_SAMPLE_SIZE = 200;
+
+  /** 高基数阈值：唯一值比例 > 此值时决策为 inlineStr（避免为唯一值建 SST 条目） */
+  private static final double HIGH_CARDINALITY_RATIO = 0.8;
+
   public SuperFastExcelWriter(WriteMetadata metadata) {
     this.metadata = metadata;
     this.sstInlineThreshold = resolveSstInlineThreshold();
+    // P0-E：公式注入开关一次性读取（避免写入路径 90 万次 getExcelConfig().getIsFormulaInjectionProtection()）
+    ExcelConfig cfg = metadata.getExcelConfig();
+    this.formulaInjectionEnabled =
+        cfg != null && Boolean.TRUE.equals(cfg.getIsFormulaInjectionProtection());
   }
 
   /**
@@ -564,6 +592,9 @@ public class SuperFastExcelWriter {
    */
   private void writeSheetContent(OutputStream out, List<?> list, UltraFastSharedStrings ss)
       throws Exception {
+
+    // P1-C：大文件基数采样决策（字符串列 SST vs inlineStr）
+    sampleColumnCardinality(list, ss);
     out.write(SHEET_HEADER_BYTES);
 
     // 1. 冻结窗格（sheetViews）
@@ -633,6 +664,75 @@ public class SuperFastExcelWriter {
       }
       out.write(bodyBuffer.toByteArray());
     }
+  }
+
+  // ==================== P1-C：列级基数采样决策 ====================
+
+  /**
+   * P1-C：对字符串列进行基数采样，决策列级 SST vs inlineStr。
+   *
+   * <h3>决策逻辑</h3>
+   *
+   * <ul>
+   *   <li>行数 {@code <= CARDINALITY_SAMPLE_MIN_ROWS} → 不决策（保持 SST 原行为）</li>
+   *   <li>行数 {@code > CARDINALITY_SAMPLE_MIN_ROWS} → 采样前 {@code CARDINALITY_SAMPLE_SIZE} 行，
+   *       统计每列唯一字符串值数量 {@code D}，列基数比例 = {@code D / sampleSize}</li>
+   *   <li>基数比例 {@code > HIGH_CARDINALITY_RATIO}（默认 80%）→ 决策 inlineStr（避免 SST 条目膨胀）</li>
+   *   <li>基数比例 {@code <= HIGH_CARDINALITY_RATIO} → 保持 SST 引用（去重收益 > 单条目开销）</li>
+   *   <li>列类型非字符串（数值/布尔/日期）→ 不参与决策（保持原有行为）</li>
+   * </ul>
+   *
+   * <h3>复杂度分析</h3>
+   *
+   * <p>时间 O(S×F) — S(200) × F(9) = 1800 次-field-access，相对于 100k 行写入可忽略不计。
+   * 空间 O(S×F) — 每列使用 ObjectOpenHashSet（LongObjectHashMap 不可用退而求次），200 × 9 = 1800 条目。
+   *
+   * @param list 数据列表（从中采样）
+   * @param ss 共享字符串表（仅作类型参考，不做写入）
+   */
+  private void sampleColumnCardinality(List<?> list, UltraFastSharedStrings ss) {
+    int listSize = list.size();
+    if (listSize <= CARDINALITY_SAMPLE_MIN_ROWS || fieldInfoArray == null) {
+      return;  // 行数不足或无类型信息 → 保持 SST 原行为
+    }
+
+    int sampleSize = Math.min(CARDINALITY_SAMPLE_SIZE, listSize);
+    boolean[] decision = new boolean[fieldInfoSize];
+
+    for (int col = 0; col < fieldInfoSize; col++) {
+      FieldAccessorInfo info = fieldInfoArray[col];
+      // 仅对字符串类型列进行决策（数值/Boolean/Date 列已有独立路径）
+      if (info == null || columnTypeIds[col] != 1) {
+        continue;
+      }
+
+      // 采样统计唯一值数量
+      java.util.HashSet<String> seen = new java.util.HashSet<>(sampleSize * 2);
+      for (int rowIdx = 0; rowIdx < sampleSize; rowIdx++) {
+        Object item = list.get(rowIdx);
+        Object value;
+        try {
+          if (info.getter != null) {
+            value = info.getter.get(item);   // FieldGetter.get() throws Exception
+          } else {
+            info.field.setAccessible(true);
+            value = info.field.get(item);    // Field.get() throws IllegalAccessException
+          }
+        } catch (Exception e) {
+          LOG.debug("Sampling getter failed for col={}: {}", col, e.getMessage());
+          continue;
+        }
+        if (value instanceof String s && !s.isEmpty()) {
+          seen.add(s);
+        }
+      }
+
+      // 高基数决策：唯一值比例 > 阈值 → inline
+      double ratio = (double) seen.size() / sampleSize;
+      decision[col] = ratio > HIGH_CARDINALITY_RATIO;
+    }
+
+    this.columnInlineDecision = decision;
   }
 
   // ==================== 冻结窗格 XML ====================
@@ -1144,7 +1244,8 @@ public class SuperFastExcelWriter {
   private static final int COMPRESSION_FAST_THRESHOLD = 5_000;
 
   private void writeStringCellInline(int col, String value) {
-    if (getExcelConfig().getIsFormulaInjectionProtection()) {
+    // P0-E：使用构造函数缓存的 formulaInjectionEnabled（消除每列 getExcelConfig() 调用）
+    if (formulaInjectionEnabled) {
       value = FormulaInjectionGuard.sanitizeForXlsx(value);
     }
     int strLen = value.length();
@@ -1197,11 +1298,19 @@ public class SuperFastExcelWriter {
   }
 
   private void writeStringCell(int col, String value, UltraFastSharedStrings ss) {
-    if (getExcelConfig().getIsFormulaInjectionProtection()) {
+    // P0-E：使用构造函数缓存的 formulaInjectionEnabled（消除每列 getExcelConfig() 调用）
+    if (formulaInjectionEnabled) {
       value = FormulaInjectionGuard.sanitizeForXlsx(value);
     }
     int strLen = value.length();
     if (strLen > sstInlineThreshold) {
+      writeStringCellInline(col, value);
+      return;
+    }
+
+    // P1-C：高基数列决策为 inlineStr（避免为唯一值高频列建立大量 SST 条目）
+    if (columnInlineDecision != null && col < columnInlineDecision.length
+        && columnInlineDecision[col]) {
       writeStringCellInline(col, value);
       return;
     }
