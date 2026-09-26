@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -151,8 +152,7 @@ class JobServiceImplTest {
           .thenReturn(LocalDateTime.now().plusMinutes(5));
       // taskScheduler 返回 mock future
       ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
-      when(taskScheduler.schedule(any(Runnable.class), any(CronTrigger.class)))
-          .thenReturn(mockFuture);
+      doReturn(mockFuture).when(taskScheduler).schedule(any(Runnable.class), any(CronTrigger.class));
 
       String result = jobService.create(dto);
 
@@ -198,8 +198,7 @@ class JobServiceImplTest {
       when(nextFireTimeCalculator.calculate(any(JobVO.class)))
           .thenReturn(LocalDateTime.now().plusMinutes(5));
       ScheduledFuture<?> mockFuture = mock(ScheduledFuture.class);
-      when(taskScheduler.schedule(any(Runnable.class), any(CronTrigger.class)))
-          .thenReturn(mockFuture);
+      doReturn(mockFuture).when(taskScheduler).schedule(any(Runnable.class), any(CronTrigger.class));
 
       jobService.resume("job-1");
 

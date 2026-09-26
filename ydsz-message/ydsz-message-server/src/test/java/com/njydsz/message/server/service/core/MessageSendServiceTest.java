@@ -289,7 +289,7 @@ class MessageSendServiceTest {
       when(messageProperties.getCost()).thenReturn(cfg);
 
       BigDecimal cost = messageSendService.calculateCost("SMS");
-      assertThat(cost).isEqualByCompareTo(new BigDecimal("0.05"));
+      assertThat(cost).isEqualByComparingTo(new BigDecimal("0.05"));
     }
   }
 }
