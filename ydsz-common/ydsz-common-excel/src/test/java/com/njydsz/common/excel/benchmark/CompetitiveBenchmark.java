@@ -385,12 +385,10 @@ public class CompetitiveBenchmark {
       System.out.println(" | file bytes = " + sxssfFile.length());
     }
 
-    // ====== 读取基准 (1k + 10k) ======
-    System.out.println("\n╔══════════════════════════════════════════════════════════════╗");
-    System.out.println("║                     READ BENCHMARK                          ║");
-    System.out.println("╚══════════════════════════════════════════════════════════════╝");
-
-    int[] readSizes = {1000, 10_000};
+    // ====== 读取基准 (1k + 10k + 100k) ======
+    // 注：POI XSSF 仅跑 1k/10k（DOM 全量加载 100k 行会 OOM）；
+    //     100k 读取仅测 YdszExcel + EasyExcel。
+    int[] readSizes = {1000, 10_000, 100_000};
     for (int idx = 0; idx < readSizes.length; idx++) {
       int rows = readSizes[idx];
       System.out.println("\n>>> " + rows + " rows read benchmark <<<");
@@ -399,8 +397,6 @@ public class CompetitiveBenchmark {
       byte[] sfBytes = writeSuperFastToBytes(sfDataBySize.get(idx));
       File eeFile = new File(tempDir, "read-easyexcel-" + rows + ".xlsx");
       writeEasyExcel(eeDataBySize.get(idx), eeFile);
-      File poiFile = new File(tempDir, "read-poi-xssf-" + rows + ".xlsx");
-      writePoiXssf(poiDataBySize.get(idx), poiFile);
 
       // YdszExcel
       final byte[] sfBytesFinal = sfBytes;
@@ -413,10 +409,16 @@ public class CompetitiveBenchmark {
           "EasyExcel-read-" + rows, 3, 5, () -> readEasyExcel(eeFile));
       System.out.println(" | parsed rows = " + readEasyExcel(eeFile));
 
-      // POI XSSF
-      BenchmarkRunner.BenchResult poiRead = BenchmarkRunner.run(
-          "POI-XSSF-read-" + rows, 3, 5, () -> readPoiXssf(poiFile));
-      System.out.println(" | parsed rows = " + readPoiXssf(poiFile));
+      // POI XSSF — 仅 1k / 10k（DOM 引擎 100k 行会 OOM）
+      if (rows <= 10_000) {
+        File poiFile = new File(tempDir, "read-poi-xssf-" + rows + ".xlsx");
+        writePoiXssf(poiDataBySize.get(idx), poiFile);
+        BenchmarkRunner.BenchResult poiRead = BenchmarkRunner.run(
+            "POI-XSSF-read-" + rows, 3, 5, () -> readPoiXssf(poiFile));
+        System.out.println(" | parsed rows = " + readPoiXssf(poiFile));
+      } else {
+        System.out.println("[POI-XSSF-read-" + rows + "] SKIPPED (DOM engine: OOM on 100k rows)");
+      }
     }
 
     // ====== 汇总表格 ======

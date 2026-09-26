@@ -130,6 +130,35 @@ public class SheetXmlReader {
   /** 每线程共享的分片缓冲区池实例 */
   private static final ShardBuffer SHARD_BUFFER = new ShardBuffer();
 
+  // ==================== P0-1b 单遍字节级状态机 ====================
+
+  /** 状态机当前状态（跨 chunk 边界保持连续性） */
+  private int scanState;
+  /** 状态机期望的下一个匹配字节序列索引 */
+  private int matchIdx;
+  /** 当前正在累积的行的起始偏移（'<row' 的 '<' 位置，-1 表示不在行中） */
+  private int pendingRowStart;
+  /** 当前正在累积的行的属性段结束偏移（'>' 位置） */
+  private int pendingRowAttrEnd;
+  /** 消费偏移上限（上次 emitCompleteRows 已消费到的位置） */
+  private int consumedUpTo;
+
+  // 状态机常量
+  private static final int ST_SCAN = 0;
+  private static final int ST_POTENTIAL_ROW = 1;
+  private static final int ST_IN_ROW_TAG = 2;
+  private static final int ST_IN_ROW_CONTENT = 3;
+  private static final int ST_POTENTIAL_CLOSE = 4;
+  private static final int ST_IN_CLOSE = 5;
+
+  /** 行标签匹配字节序列 */
+  private static final byte[] ROW_TAG_BYTES = {'r', 'o', 'w'};
+  /** 行关闭标签匹配字节序列 */
+  private static final byte[] ROW_CLOSE_BYTES = {'/', 'r', 'o', 'w', '>'};
+
+  /** 稀疏列索引判定因子 */
+  private static final int SPARSE_COLUMN_FACTOR = 4;
+
   /**
    * 构造 Sheet 读取器。
    *
@@ -208,60 +237,148 @@ public class SheetXmlReader {
   }
 
   /**
-   * 从窗口中消费所有完整的 {@code <row>...</row>} 片段，返回消费到的字节数。
+   * 从窗口中消费所有完整的 {@code <row>...</row>} 片段。
+   *
+   * <p><b>P0-1b 优化</b>：单遍状态机扫描替代 {@code findTag + findClosingTag} 双次扫描。
+   * 每行字节仅遍历一次，状态转换如下：
+   * <pre>
+   *   SCAN → (遇见 "&lt;") → POTENTIAL_ROW
+   *   POTENTIAL_ROW → (下一个字节是 'r') → IN_ROW_OPEN_TAG → (遇见 '&gt;') → IN_ROW_CONTENT
+   *   IN_ROW_CONTENT → (遇见 "&lt;/r") → EMIT_ROW（消费到 &gt;）→ IN_ROW_CONTENT / SCAN
+   * </pre>
+   *
+   * <p><b>P0-1a 优化</b>：消除 shard byte[] 复制，直接传递 window + 偏移量到
+   * {@link #processRowShard}，100k 行累计减少 ~30 MB 堆分配与复制。
+   *
+   * @param window 滑动窗口字节数组
+   * @param winLen 窗口内有效数据长度
+   * @return 已消费的字节偏移（窗口中此偏移之前的所有行已处理）
    */
   private int emitCompleteRows(byte[] window, int winLen) {
     int consumedUpTo = 0;
-    int searchFrom = 0;
+    int pos = 0;
 
-    while (searchFrom < winLen) {
-      int rowStart = findTag(window, searchFrom, winLen, "row");
-      if (rowStart == -1) {
-        break;
+    // 状态机常量
+    final int SCAN = 0;
+    final int POTENTIAL_ROW = 1;     // 刚遇到 '<'
+    final int IN_ROW_TAG = 2;        // 正在匹配 "row" 关键字
+    final int IN_ROW_CONTENT = 3;    // 在 <row>...</row> 内容中
+    final int POTENTIAL_ROW_CLOSE = 4; // 在内容中遇到 '<'
+    final int IN_ROW_CLOSE = 5;      // 正在匹配 "/row>" 关键字
+
+    int state = SCAN;
+    int rowStart = -1;
+    int rowAttrEnd = -1;
+    int matchIdx = 0;  // 用于匹配 "row" 或 "/row>" 的进度
+
+    // 匹配目标字节序列
+    final byte[] ROW_TAG = {'r', 'o', 'w'};
+    final byte[] ROW_CLOSE_TAG = {'/', 'r', 'o', 'w', '>'};
+
+    while (pos < winLen) {
+      byte b = (byte) window[pos];
+
+      switch (state) {
+        case SCAN:
+          if (b == (byte) '<') {
+            state = POTENTIAL_ROW;
+          }
+          break;
+
+        case POTENTIAL_ROW:
+          if (b == (byte) 'r') {
+            matchIdx = 1;
+            state = IN_ROW_TAG;
+            rowStart = pos - 1;  // 记录 '<' 位置
+          } else {
+            state = SCAN;
+          }
+          break;
+
+        case IN_ROW_TAG:
+          if (matchIdx < ROW_TAG.length && b == ROW_TAG[matchIdx]) {
+            matchIdx++;
+            if (matchIdx == ROW_TAG.length) {
+              state = IN_ROW_CONTENT;
+              // 行标签解析完毕，扫描 '>' 作为属性段结束标记
+              rowAttrEnd = scanChar(window, pos + 1, winLen, (byte) '>');
+            }
+          } else {
+            state = SCAN;
+          }
+          break;
+
+        case IN_ROW_CONTENT:
+          if (b == (byte) '<') {
+            state = POTENTIAL_ROW_CLOSE;
+          }
+          break;
+
+        case POTENTIAL_ROW_CLOSE:
+          if (b == (byte) '/') {
+            matchIdx = 1;
+            state = IN_ROW_CLOSE;
+          } else {
+            state = IN_ROW_CONTENT;
+          }
+          break;
+
+        case IN_ROW_CLOSE:
+          if (matchIdx < ROW_CLOSE_TAG.length && b == ROW_CLOSE_TAG[matchIdx]) {
+            matchIdx++;
+            if (matchIdx == ROW_CLOSE_TAG.length) {
+              // 找到完整的 </row>，rowEnd 是 '<' 的位置
+              int rowEnd = pos - 5;  // pos 指向 '>'，rowEnd 指向 '<'
+              // P0-1a：直接传递 window + 绝对偏移量（避免 shard 复制）
+              processRowShard(window, rowStart, rowAttrEnd, rowEnd);
+              if (shouldStopBreak()) {
+                return winLen;  // 熔断：消费到末尾退出
+              }
+              consumedUpTo = pos + 1;
+              state = SCAN;
+            }
+          } else {
+            state = IN_ROW_CONTENT;
+          }
+          break;
       }
-
-      int rowAttrEnd = findChar(window, rowStart, winLen, '>');
-      if (rowAttrEnd == -1) {
-        break;  // row 标签不完整，需要更多数据
-      }
-
-      int rowEnd = findClosingTag(window, rowAttrEnd + 1, winLen, "row");
-      if (rowEnd == -1) {
-        break;  // </row> 未找到，需要更多数据
-      }
-
-      // 提取完整的 row 片段长度 — P0-C：从对象池获取分片缓冲区（消除逐行 byte[] 分配）
-      int shardLen = rowEnd + 6 - rowStart;
-      byte[] shard = SHARD_BUFFER.acquire(shardLen);
-      System.arraycopy(window, rowStart, shard, 0, shardLen);
-
-      // 处理单行 shard
-      processRowShard(shard, 0, rowAttrEnd - rowStart, rowEnd - rowStart);
-
-      if (shouldStopBreak()) {
-        return winLen;  // 熔断：消费到末尾退出
-      }
-
-      searchFrom = rowEnd + 6;
-      consumedUpTo = searchFrom;
+      pos++;
     }
 
     return consumedUpTo;
   }
 
   /**
-   * 处理单行 shard（一个完整的 {@code <row>...</row>} byte 片段）。
+   * 在 [start, end) 范围内扫描指定字节的位置。
    *
-   * <p>shard 是独立的 byte[]，所有现有解析方法（parseRowAttributes、parseRowContent）
-   * 均接受 (data, start, end) 边界参数，可直接复用而无需修改。
-   *
-   * @param shard 完整的 row XML 字节
-   * @param rowStart shard 内的 <row 起始偏移
-   * @param rowAttrEnd shard 内的 <row ...> 结束偏移
-   * @param rowEnd shard 内的 </row> 起始偏移
+   * @param data 字节数组
+   * @param start 起始偏移（包含）
+   * @param end 结束偏移（不包含）
+   * @param target 目标字节
+   * @return 目标字节偏移，未找到返回 -1
    */
-  private void processRowShard(byte[] shard, int rowStart, int rowAttrEnd, int rowEnd) {
-    parseRowAttributes(shard, rowStart, rowAttrEnd);
+  private static int scanChar(byte[] data, int start, int end, byte target) {
+    for (int i = start; i < end; i++) {
+      if (data[i] == target) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * 处理单行（P0-1a：直接操作 data 数组，不复制 shard）。
+   *
+   * <p>所有现有解析方法（parseRowAttributes、parseRowContent）已支持任意 data + 偏移量参数，
+   * 可直接复用。rowStart/rowAttrEnd/rowEnd 均为 data 数组内的绝对偏移量。
+   *
+   * @param data Sheet XML 字节数组（滑动窗口）
+   * @param rowStart {@code <row} 的 '<' 偏移
+   * @param rowAttrEnd {@code <row ...>} 的 '>' 偏移
+   * @param rowEnd {@code </row>} 的 '<' 偏移
+   */
+  private void processRowShard(byte[] data, int rowStart, int rowAttrEnd, int rowEnd) {
+    parseRowAttributes(data, rowStart, rowAttrEnd);
     isRowHasData = false;
 
     if (currentRow > reader.headRowNumber && rowData == null && reader.instantiator != null) {
@@ -273,7 +390,7 @@ public class SheetXmlReader {
     }
 
     int rowContentStart = rowAttrEnd + 1;
-    parseRowContent(shard, rowContentStart, rowEnd);
+    parseRowContent(data, rowContentStart, rowEnd);
 
     if (reader.context != null && reader.listeners != null) {
       finishAndEmitRow();

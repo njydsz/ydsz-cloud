@@ -178,5 +178,11 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- spring-boot-starter-test: 提供spring-boot-test、spring-boot-test-autoconfigure、spring-test、jackson-databind（BaseWebMvcTest 需要 @SpringBootTest/@AutoConfigureMockMvc/MockMvc/ObjectMapper） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
