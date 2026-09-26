@@ -23,9 +23,19 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      # Step 1: 检出源码
-      - name: Checkout repository
+      # Step 1: 检出源码（前端 + 后端仓库并排）
+      - name: Checkout backend repository
         uses: actions/checkout@v4
+        with:
+          path: ydsz-cloud
+
+      - name: Checkout frontend repository
+        uses: actions/checkout@v4
+        with:
+          repository: njydsz/ydsz-micro
+          path: ydsz-micro
+        continue-on-error: true
+        # 前端仓库为 private 或路径不同时允许跳过；前端检查步骤以继续观察模式运行
 
       # Step 2: 设置 Java 21 并缓存 Maven 本地仓库
       - name: Set up Java 21 (Temurin) & Maven cache
@@ -50,6 +60,27 @@ jobs:
       - name: Run Checkstyle
         run: mvn checkstyle:check -B
         # 失败即构建中断（failOnViolation=true，已在 pom 中配置）
+
+      # Step 4a: 错误码 i18n 覆盖度检查（YDIZ-ERRCODE-001）
+      - name: 错误码 i18n 覆盖度检查
+        run: |
+          python data/scripts/check-error-code-i18n.py \
+            --backend-root . \
+            --frontend-root ../ydsz-micro \
+            --verbose
+        continue-on-error: true
+        # 当前为观察模式（不阻断 PR）；待前端补齐 25 个缺失码后切换为 --fail-on-missing
+
+      # Step 4b: SpringDoc @Operation 注解完整性检查（API 文档覆盖率）
+      - name: SpringDoc @Operation 覆盖率检查
+        run: |
+          python data/scripts/check-springdoc-coverage.py \
+            --backend-root . \
+            --min-coverage 20 \
+            --verbose
+        continue-on-error: true
+        # 当前为观察模式（覆盖率 ~24%，阈值设为 20% 仅做趋势监控）；
+        # 随 API 文档补齐进度分批上调至 50% → 80% → 95%
 
       # Step 5: Maven verify（编译 + 测试 + 打包验证 — surefire 跑单元测试 + failsafe 跑 IT 集成测试）
       - name: Maven verify (Compile + Unit Test + Integration Test)

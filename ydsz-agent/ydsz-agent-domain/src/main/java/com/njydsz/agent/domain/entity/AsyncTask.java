@@ -90,6 +90,15 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
   private String remark;
 
   /**
+   * 获取租户编码（与 {@link #tenantId} 等价，对齐 Store 接口命名约定）。
+   *
+   * @return 租户编码
+   */
+  public String getTenantCode() {
+    return tenantId;
+  }
+
+  /**
    * Creates a new {@code AsyncTask} instance.
    *
    * <p>默认无参构造器（MyBatis-Plus 要求）。
