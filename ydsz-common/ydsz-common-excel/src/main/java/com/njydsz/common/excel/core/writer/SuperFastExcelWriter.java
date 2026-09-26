@@ -454,7 +454,8 @@ public class SuperFastExcelWriter {
         BufferedOutputStream bos = new BufferedOutputStream(fos, ZIP_BUFFER_SIZE);
         ZipOutputStream zipOut = new ZipOutputStream(bos)) {
 
-      zipOut.setLevel(getExcelConfig().getCompressionLevel());
+      // P1-A：大文件自动降级压缩级别
+      zipOut.setLevel(resolveCompressionLevel(list.size()));
       writeStaticZipEntries(zipOut);
 
       ZipEntry entry = new ZipEntry("xl/workbook.xml");
