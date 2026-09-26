@@ -130,6 +130,79 @@ public class SheetXmlReader {
   /** 每线程共享的分片缓冲区池实例 */
   private static final ShardBuffer SHARD_BUFFER = new ShardBuffer();
 
+  // ==================== P0-B：行级对象池 ====================
+
+  /**
+   * P0-B：ThreadLocal 行对象池。
+   *
+   * <p>消除 100k 行读取路径中每行 new DTO() 的重复对象分配与 GC 压力。
+   * 监听器返回（{@code onData} 回调结束）后自动回收对象，供下一行复用。
+   *
+   * <p>使用数组栈实现（无锁、TLAB 友好），线程单写无需同步。
+   * 容量上限 {@link #ROW_POOL_MAX}，超出部分自然丢弃由 GC 回收。
+   */
+  private static final class RowPool<T> {
+    /** 对象池容量上限 — 超出后 acquire() 返回新实例 */
+    private static final int ROW_POOL_MAX = 16;
+
+    private final java.util.function.Supplier<T> factory;
+    private final Object[] stack = new Object[ROW_POOL_MAX];
+    private int size;
+
+    RowPool(java.util.function.Supplier<T> factory) {
+      this.factory = factory;
+    }
+
+    /**
+     * 从池中获取一个对象（或创建新对象）。
+     *
+     * @return 可用实例（非 null）
+     */
+    @SuppressWarnings("unchecked")
+    T acquire() {
+      if (size > 0) {
+        T obj = (T) stack[--size];
+        stack[size] = null;  // _help GC_
+        return obj;
+      }
+      return factory.get();
+    }
+
+    /**
+     * 释放对象回池（供后续行复用）。
+     *
+     * @param obj 监听器处理完毕的行对象
+     */
+    void release(T obj) {
+      if (size < ROW_POOL_MAX) {
+        stack[size++] = obj;
+      }
+      // 溢出部分自然由 GC 回收
+    }
+  }
+
+  /** 当前线程的行对象池（延迟初始化，绑定到 reader.instantiator） */
+  private RowPool<Object> rowPool;
+
+  /**
+   * P0-B：获取或初始化当前线程的行对象池。
+   *
+   * @return 行对象池（非 null）
+   */
+  private RowPool<Object> getRowPool() {
+    if (rowPool == null && reader.instantiator != null) {
+      rowPool = new RowPool<Object>(reader.instantiator::getInstance);
+    }
+    return rowPool;
+  }
+
+  /**
+   * P0-B：重置行对象池（每次 doRead 结束后调用，释放引用避免内存泄漏）。
+   */
+  void resetPool() {
+    rowPool = null;
+  }
+
   // ==================== P0-1b 单遍字节级状态机 ====================
 
   /** 状态机当前状态（跨 chunk 边界保持连续性） */
@@ -189,7 +262,12 @@ public class SheetXmlReader {
     // — 消除 readAllBytesDirect 全量 byte[] 分配（100k 行 5.8MB → 仅 64KB 窗口）
     // — 小文件 (< 32KB)：单次 read 进入窗口，完整消费后退出（I/O 与原路径相同）
     // — 大文件 (≥ 32KB)：逐次 read 入窗，完整行切片后 emit，残留数据滑动到窗首
-    parseStreaming(is);
+    try {
+      parseStreaming(is);
+    } finally {
+      // P0-B：解析结束后释放对象池，避免 ThreadLocal 内存泄漏
+      resetPool();
+    }
   }
 
   /**
@@ -381,12 +459,10 @@ public class SheetXmlReader {
     parseRowAttributes(data, rowStart, rowAttrEnd);
     isRowHasData = false;
 
+    // P0-B：从行对象池获取实例（复用已有 DTO，消除 100k 次 new 分配）
     if (currentRow > reader.headRowNumber && rowData == null && reader.instantiator != null) {
-      try {
-        rowData = reader.instantiator.newInstance();
-      } catch (Exception e) {
-        rowData = null;
-      }
+      RowPool<Object> pool = getRowPool();
+      rowData = pool != null ? pool.acquire() : null;
     }
 
     int rowContentStart = rowAttrEnd + 1;
@@ -408,7 +484,8 @@ public class SheetXmlReader {
 
     // skipEmptyRows: 跳过无单元格数据的行
     if (reader.skipEmptyRows && !isRowHasData) {
-      rowData = null;
+      // P0-B：空行也释放回池
+      releaseRowData();
       return;
     }
 
@@ -431,7 +508,8 @@ public class SheetXmlReader {
           LOG.warn("Listener onError callback failed at row {}", currentRow, ex);
         }
       }
-      rowData = null;
+      // P0-B：校验失败也释放回池
+      releaseRowData();
       return;
     }
 
@@ -442,6 +520,18 @@ public class SheetXmlReader {
       } catch (Exception e) {
         LOG.warn("Listener onData callback failed at row {}", currentRow, e);
       }
+    }
+    // P0-B：监听器处理完毕后释放回池（要求监听器不持有 rowData 引用超过 onData() 调用）
+    releaseRowData();
+  }
+
+  /**
+   * P0-B：将当前 rowData 释放回对象池（或置 null）。
+   */
+  private void releaseRowData() {
+    RowPool<Object> pool = getRowPool();
+    if (pool != null && rowData != null) {
+      pool.release(rowData);
     }
     rowData = null;
   }
