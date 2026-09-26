@@ -90,6 +90,47 @@ public class SheetXmlReader {
   private static final int STREAM_WINDOW_SIZE = 64 * 1024;
 
   /**
+   * P0-C：Shard 分片字节缓冲区对象池。
+   *
+   * <p>消除 10k 读路径中每行 ~300 字节 shard 的独立分配（总计 ~3 MB 堆分配 + GC 压力）。
+   * 使用 ThreadLocal 保证线程安全，按 2x 指数扩容复用，最大上限 {@link ShardBuffer#SHARD_BUFFER_MAX_BYTES}。
+   */
+  private static final class ShardBuffer {
+    /** 单 shard 缓冲区最大限制 — 超出则不再缓存（避免大分片长期占内存） */
+    private static final int SHARD_BUFFER_MAX_BYTES = 8 * 1024;
+
+    private final ThreadLocal<byte[]> slot = ThreadLocal.withInitial(() -> new byte[512]);
+
+    /**
+     * 获取不少于 minLen 字节的缓冲区（复用或重建）。
+     *
+     * @param minLen 所需最小字节数
+     * @return 可用字节数组，长度 ≥ minLen
+     */
+    byte[] acquire(int minLen) {
+      if (minLen > SHARD_BUFFER_MAX_BYTES) {
+        // 超限分片直接分配，不入池（避免大分片长期占内存）
+        return new byte[minLen];
+      }
+      byte[] cached = slot.get();
+      if (cached.length >= minLen) {
+        return cached;
+      }
+      // 2x 指数扩容直至 ≥ minLen
+      int newLen = cached.length;
+      while (newLen < minLen) {
+        newLen *= 2;
+      }
+      byte[] bigger = new byte[newLen];
+      slot.set(bigger);
+      return bigger;
+    }
+  }
+
+  /** 每线程共享的分片缓冲区池实例 */
+  private static final ShardBuffer SHARD_BUFFER = new ShardBuffer();
+
+  /**
    * 构造 Sheet 读取器。
    *
    * @param reader 父级读取器
@@ -189,9 +230,9 @@ public class SheetXmlReader {
         break;  // </row> 未找到，需要更多数据
       }
 
-      // 提取完整的 row 片段长度
+      // 提取完整的 row 片段长度 — P0-C：从对象池获取分片缓冲区（消除逐行 byte[] 分配）
       int shardLen = rowEnd + 6 - rowStart;
-      byte[] shard = new byte[shardLen];
+      byte[] shard = SHARD_BUFFER.acquire(shardLen);
       System.arraycopy(window, rowStart, shard, 0, shardLen);
 
       // 处理单行 shard

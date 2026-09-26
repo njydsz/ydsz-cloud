@@ -434,10 +434,10 @@ public class SuperFastExcelWriter {
       writeSheetContent(zipOut, list, ss);
       zipOut.closeEntry();
 
-      byte[] ssBytes = ss.buildXmlDirect();
-      zipOut.putNextEntry(new ZipEntry("xl/sharedStrings.xml"));
-      zipOut.write(ssBytes);
-      zipOut.closeEntry();
+      // P0-A：SST 直写 ZIP（消除 SST byte[] 全量堆分配）
+      if (ss.count > 0) {
+        ss.writeToZip(zipOut, "xl/sharedStrings.xml");
+      }
 
       zipOut.finish();
     }
@@ -474,11 +474,10 @@ public class SuperFastExcelWriter {
       sheetBaos.writeTo(zipOut);
       zipOut.closeEntry();
 
-      byte[] ssBytes = ss.buildXmlDirect();
-      ZipEntry ssEntry = new ZipEntry("xl/sharedStrings.xml");
-      zipOut.putNextEntry(ssEntry);
-      zipOut.write(ssBytes);
-      zipOut.closeEntry();
+      // P0-A：SST 直写 ZIP（仅 count > 0 时写入）
+      if (ss.count > 0) {
+        ss.writeToZip(zipOut, "xl/sharedStrings.xml");
+      }
 
       zipOut.finish();
     }
@@ -502,11 +501,10 @@ public class SuperFastExcelWriter {
       writeSheetContent(zipOut, list, ss);
       zipOut.closeEntry();
 
-      byte[] ssBytes = ss.buildXmlDirect();
-      ZipEntry ssEntry = new ZipEntry("xl/sharedStrings.xml");
-      zipOut.putNextEntry(ssEntry);
-      zipOut.write(ssBytes);
-      zipOut.closeEntry();
+      // P0-A：SST 直写 ZIP（仅 count > 0 时写入）
+      if (ss.count > 0) {
+        ss.writeToZip(zipOut, "xl/sharedStrings.xml");
+      }
 
       zipOut.finish();
     }
@@ -1769,9 +1767,45 @@ public class SuperFastExcelWriter {
     }
 
     /**
-     * 字节级 XML UTF-8 转义写入。仅 ASCII 危险字符需要转义，UTF-8 中均为单字节。
+     * P0-A：直写 SST 到 ZIP 条目。
+     *
+     * <p>绕过 {@link #buildXmlDirect()} 的中间 byte[] 分配，逐条写入 ZipOutputStream 的压缩流。
+     * 100k 行 SST 约 200KB，原本需在堆中持有完整 byte[]；直写路径下仅使用 ~8KB ZIP 内部缓冲。
+     *
+     * <p>适用场景：count > 0（空 SST 无需写入）；count == 0 时调用方应跳过本方法。
+     *
+     * @param zipOut 已打开的 ZIP 输出流
+     * @param entryName SST 条目名称（如 "xl/sharedStrings.xml"）
      */
-    private static void writeEscapedUtf8(ByteArrayOutputStream out, String value) throws IOException {
+    void writeToZip(ZipOutputStream zipOut, String entryName) throws IOException {
+      byte[] countBytes = Integer.toString(count).getBytes(StandardCharsets.UTF_8);
+      zipOut.putNextEntry(new ZipEntry(entryName));
+
+      zipOut.write(SST_HEADER_PART1, 0, SST_HEADER_PART1.length);
+      zipOut.write(countBytes, 0, countBytes.length);     // count
+      zipOut.write(SST_HEADER_PART2, 0, SST_HEADER_PART2.length);
+      zipOut.write(countBytes, 0, countBytes.length);     // uniqueCount（已去重，==count）
+      zipOut.write(SST_HEADER_FOOTER, 0, SST_HEADER_FOOTER.length);
+
+      for (int i = 0; i < count; i++) {
+        zipOut.write(SI_OPEN, 0, SI_OPEN.length);        // "<si><t>"
+        String s = strings[i];
+        if (s != null) {
+          writeEscapedUtf8(zipOut, s);
+        }
+        zipOut.write(SI_CLOSE, 0, SI_CLOSE.length);       // "</t></si>"
+      }
+
+      zipOut.write(SST_FOOTER, 0, SST_FOOTER.length);     // "</sst>"
+      zipOut.closeEntry();
+    }
+
+    /**
+     * 字节级 XML UTF-8 转义写入。仅 ASCII 危险字符需要转义，UTF-8 中均为单字节。
+     *
+     * <p>接受 {@link OutputStream} 以支持 writeToZip 直接写 ZipOutputStream 或 buildXmlDirect 写 ByteArrayOutputStream。
+     */
+    private static void writeEscapedUtf8(OutputStream out, String value) throws IOException {
       byte[] utf8 = value.getBytes(StandardCharsets.UTF_8);
       for (byte b : utf8) {
         switch (b) {
