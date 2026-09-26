@@ -566,28 +566,40 @@ public class SheetXmlReader {
   }
 
   private void parseDataCell(int col, String value) {
-    // P0-2 修复：此前 columnMetadataArray 恒为 null 直接 return，fast 路径整行数据丢失；
-    // 改为通过 resolveMetadata() 惰性构建（首个数据单元格到达时表头行已收集完毕）
-    ColumnMetadata[] metadataArray = reader.resolveMetadata();
-    if (metadataArray == null) {
+    // P1-B：优先使用 O(1) 稠密索引查找（替代线性扫描）
+    ColumnMetadata colMeta = null;
+    ColumnMetadata[] index = reader.columnMetadataIndex;
+    if (index != null && col < index.length) {
+      colMeta = index[col];
+      if (colMeta == null || colMeta.columnIndex != col) {
+        colMeta = null;  // 位置存在但列号不匹配（不应发生）
+      }
+    } else {
+      // 回退：线性扫描（列索引稀疏或索引未构建时）
+      ColumnMetadata[] metadataArray = reader.resolveMetadata();
+      if (metadataArray == null) {
+        return;
+      }
+      for (ColumnMetadata meta : metadataArray) {
+        if (meta.columnIndex == col) {
+          colMeta = meta;
+          break;
+        }
+      }
+    }
+    if (colMeta == null) {
       return;
     }
-
-    for (ColumnMetadata colMeta : metadataArray) {
-      if (colMeta.columnIndex == col) {
-        Object convertedValue = convertCellValue(value, colMeta);
-        try {
-          colMeta.setter.set(rowData, convertedValue);
-        } catch (Exception e) {
-          LOG.warn(
-              "Failed to set field value at row={}, col={}, value={}",
-              currentRow,
-              col,
-              convertedValue,
-              e);
-        }
-        break;
-      }
+    Object convertedValue = convertCellValue(value, colMeta);
+    try {
+      colMeta.setter.set(rowData, convertedValue);
+    } catch (Exception e) {
+      LOG.warn(
+          "Failed to set field value at row={}, col={}, value={}",
+          currentRow,
+          col,
+          convertedValue,
+          e);
     }
   }
 

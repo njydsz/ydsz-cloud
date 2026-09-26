@@ -29,6 +29,13 @@ public class AgentTraceStep {
 
   private static final long serialVersionUID = 1L;
 
+  /**
+   * 租户 ID（多租户隔离字段，由 Repository 层或拦截器透明注入）
+   *
+   * <p>该字段不参与复合业务键，仅用于数据隔离过滤。
+   */
+  private String tenantId;
+
   /** 链路 ID（关联 ydsz_agt_trace.traceId） */
   private String traceId;
 

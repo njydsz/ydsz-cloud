@@ -89,15 +89,19 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     trace_id            VARCHAR(64)     PRIMARY KEY COMMENT '链路唯一 ID（主键，业务生成非自增）',
+    tenant_id           VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     conversation_id     VARCHAR(64)     NOT NULL COMMENT '所属对话 ID',
     agent_id            VARCHAR(64)     NOT NULL COMMENT 'Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR）',
     status              VARCHAR(32)     NOT NULL COMMENT '执行状态（RUNNING/SUCCESS/FAILED/MAX_ITERATIONS/GUARDRAIL_REJECTED）',
     total_duration_ms   BIGINT          DEFAULT NULL COMMENT '总耗时（毫秒）',
 
     -- 索引
+    INDEX idx_trace_tenant (tenant_id),
     INDEX idx_trace_conversation (conversation_id),
     INDEX idx_trace_agent (agent_id),
-    INDEX idx_trace_status (status)
+    INDEX idx_trace_status (status),
+    INDEX idx_trace_tenant_conversation (tenant_id, conversation_id),
+    INDEX idx_trace_tenant_status (tenant_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 执行链路（记录一次 Agent 执行的完整元数据）';
 
 -- ----------------------------------------------------------------------------
@@ -106,6 +110,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     trace_id        VARCHAR(64)     NOT NULL COMMENT '链路 ID（关联 ydsz_agt_trace.trace_id）',
     step_index      INT             NOT NULL COMMENT '步骤序号（从 0 开始递增）',
+    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     step_type       VARCHAR(32)     NOT NULL COMMENT '步骤类型（LLM_CALL/TOOL_CALL/THOUGHT/OBSERVATION/ROUTE/LLM_CALL_ERROR）',
     content         TEXT            DEFAULT NULL COMMENT '步骤内容描述',
     input_json      JSON            DEFAULT NULL COMMENT '步骤输入（JSON 字符串）',
@@ -115,7 +120,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
 
     -- 索引
     PRIMARY KEY (trace_id, step_index),
-    INDEX idx_trace_step_cost (cost)
+    INDEX idx_step_tenant (tenant_id),
+    INDEX idx_trace_step_cost (cost),
+    INDEX idx_step_tenant_trace (tenant_id, trace_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 执行链路步骤（记录单个执行步骤，支持回放与调试）';
 
 -- ----------------------------------------------------------------------------

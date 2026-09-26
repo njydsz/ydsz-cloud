@@ -99,7 +99,8 @@ public class SuperFastExcelReader {
    * <p>替代 {@link #parseDataCell} 线性扫描（每单元格 O(cols) → 全量 O(rows × cols²)）。
    * 在 {@link #resolveMetadata()} 内惰性构建；稠密列场景下以空间换时间。
    */
-  private ColumnMetadata[] columnMetadataIndex;
+  // P1-B：package-private 允许同包 SheetXmlReader 直接访问（避免 getter 方法调用开销）
+  ColumnMetadata[] columnMetadataIndex;
 
   /**
    * 列索引稀疏度因子 — 当 {@code maxColIndex > SPARSE_FACTOR × metadataSize} 时判定为稀疏，
@@ -778,13 +779,45 @@ public class SuperFastExcelReader {
   /**
    * 获取列元数据数组；若未预置且配置了工厂，则基于已收集的表头列名惰性构建。
    *
+   * <p>P1-B：首次构建 {@link #columnMetadataArray} 时同步构建
+   * {@link #columnMetadataIndex} 稠密索引，使 {@code parseDataCell} 查找从 O(cols) 降至 O(1)。
+   *
    * @return 列元数据数组；无预置且无工厂时返回 null
    */
   ColumnMetadata[] resolveMetadata() {
     if (columnMetadataArray == null && metadataFactory != null) {
       columnMetadataArray = metadataFactory.apply(headerNames);
+      buildColumnIndex();  // P1-B：同步构建稠密索引（一次性 O(cols) 开销）
     }
     return columnMetadataArray;
+  }
+
+  /**
+   * P1-B：根据已构建的 {@link #columnMetadataArray} 构建稠密列索引（O(1) 查找）。
+   *
+   * <p>仅当列索引稠密（maxCol ≤ SPARSE_FACTOR × cols）时构建大数组，否则退化为线性扫描
+   * （保持超宽表稀疏列场景的内存效率）。
+   */
+  private void buildColumnIndex() {
+    if (columnMetadataArray == null || columnMetadataArray.length == 0) {
+      return;
+    }
+    int cols = columnMetadataArray.length;
+    int maxCol = 0;
+    for (ColumnMetadata meta : columnMetadataArray) {
+      if (meta.columnIndex > maxCol) {
+        maxCol = meta.columnIndex;
+      }
+    }
+    // 稀疏列判定：最大列号超过 SPARSE_FACTOR 倍列数时，数组空洞率 > 75%，退化为扫描
+    if (maxCol > SPARSE_FACTOR * cols) {
+      return;
+    }
+    ColumnMetadata[] index = new ColumnMetadata[maxCol + 1];
+    for (ColumnMetadata meta : columnMetadataArray) {
+      index[meta.columnIndex] = meta;
+    }
+    columnMetadataIndex = index;
   }
 
   /**

@@ -131,6 +131,13 @@ public class SuperFastExcelWriter {
   private static final byte[] SHEET_DATA_OPEN_BYTES;
   private static final byte[] SHEET_DATA_CLOSE_BYTES;
 
+  /**
+   * P0-D：系统默认时区（ZoneId.systemDefault() 调用涉及 DNS/环境变量查找，
+   * 每行每列调用累计百万次开销显著）。
+   * 提升为 static final 一次性引用，消除 100k 行 × 9 列 = 90 万次重复查找。
+   */
+  private static final java.time.ZoneId SYSTEM_ZONE = java.time.ZoneId.systemDefault();
+
   static {
     CONTENT_TYPES_BYTES =
         ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
@@ -975,8 +982,9 @@ public class SuperFastExcelWriter {
     } else if (value instanceof Boolean) {
       writeBooleanCell(col, (Boolean) value);
     } else if (value instanceof Date) {
+      // P0-D：使用 SYSTEM_ZONE 替代 ZoneId.systemDefault() 消除每行每列重复时区查找
       String dateStr = ((Date) value).toInstant()
-          .atZone(ZoneId.systemDefault())
+          .atZone(SYSTEM_ZONE)
           .format(DEFAULT_DATE_FORMATTER);
       writeStringCellInline(col, dateStr);
       trackColumnWidth(col, dateStr);
@@ -1086,7 +1094,7 @@ public class SuperFastExcelWriter {
     } else if (value instanceof LocalDate ld) {
       return ld.format(dateFormat);
     } else {
-      return ((Date) value).toInstant().atZone(ZoneId.systemDefault()).format(dateFormat);
+      return ((Date) value).toInstant().atZone(SYSTEM_ZONE).format(dateFormat);
     }
   }
 

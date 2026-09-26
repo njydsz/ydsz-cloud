@@ -29,10 +29,10 @@ public interface AgentTraceStepMapper {
    * @param step 步骤 domain Entity
    * @return 影响行数
    */
-  @Insert("INSERT INTO ydsz_agt_trace_step (trace_id, step_index, step_type, content, "
+  @Insert("INSERT INTO ydsz_agt_trace_step (tenant_id, trace_id, step_index, step_type, content, "
       + "input_json, output_json, duration_ms, cost) "
-      + "VALUES (#{step.traceId}, #{step.stepIndex}, #{step.stepType}, #{step.content}, "
-      + "#{step.inputJson}, #{step.outputJson}, #{step.durationMs}, #{step.cost})")
+      + "VALUES (#{step.tenantId}, #{step.traceId}, #{step.stepIndex}, #{step.stepType}, "
+      + "#{step.content}, #{step.inputJson}, #{step.outputJson}, #{step.durationMs}, #{step.cost})")
   int insert(@Param("step") AgentTraceStep step);
 
   /**
@@ -42,10 +42,10 @@ public interface AgentTraceStepMapper {
    * @return 影响行数
    */
   @Insert("<script>"
-      + "INSERT INTO ydsz_agt_trace_step (trace_id, step_index, step_type, content, "
+      + "INSERT INTO ydsz_agt_trace_step (tenant_id, trace_id, step_index, step_type, content, "
       + "input_json, output_json, duration_ms, cost) VALUES "
       + "<foreach collection='list' item='s' separator=','>"
-      + "(#{s.traceId}, #{s.stepIndex}, #{s.stepType}, #{s.content}, "
+      + "(#{s.tenantId}, #{s.traceId}, #{s.stepIndex}, #{s.stepType}, #{s.content}, "
       + "#{s.inputJson}, #{s.outputJson}, #{s.durationMs}, #{s.cost})"
       + "</foreach>"
       + "</script>")
