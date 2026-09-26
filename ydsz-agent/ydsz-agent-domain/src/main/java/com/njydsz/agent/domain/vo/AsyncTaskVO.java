@@ -124,7 +124,7 @@ public class AsyncTaskVO implements Serializable {
     AsyncTaskStatus status = AsyncTaskStatus.fromCode(task.getStatus());
     vo.setStatusDesc(status != null ? status.getDescription() : task.getStatus());
 
-    vo.setTenantCode(task.getTenantCode());
+    vo.setTenantCode(task.getTenantId());
     vo.setUserId(task.getUserId());
     vo.setProgressPercent(task.getProgressPercent());
     vo.setOutputPayload(task.getOutputPayload());

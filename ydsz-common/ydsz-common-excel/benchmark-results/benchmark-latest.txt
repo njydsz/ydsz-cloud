@@ -9,7 +9,7 @@
 ==============================================================
   REAL COMPETITIVE BENCHMARK — ydsz-common-excel
 ==============================================================
-  Date       : 2026-09-26T19:01:55.767598100
+  Date       : 2026-09-26T19:04:29.189725500
   JVM        : OpenJDK 64-Bit Server VM 21.0.8
   OS         : Windows 11 (16 cores)
   Max Heap   : 8064 MB
@@ -26,91 +26,91 @@
 SLF4J(W): No SLF4J providers were found.
 SLF4J(W): Defaulting to no-operation (NOP) logger implementation
 SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
-[YdszExcel-write-1000] iter=5 | avg=5.94ms | p50=5.88ms | p95=6.92ms | p99=6.92ms | ops/s=172.4 | rssDelta=11.3MB | total=29ms
+[YdszExcel-write-1000] iter=5 | avg=11.71ms | p50=9.58ms | p95=23.59ms | p99=23.59ms | ops/s=86.2 | rssDelta=11.0MB | total=58ms
  | file bytes = 57364
 
 === Benchmark EasyExcel-write-1000 ===
-2026-09-26T11:01:56.595199Z com.njydsz.common.excel.benchmark.CompetitiveBenchmark.main() ERROR Log4j API could not find a logging provider.
-[EasyExcel-write-1000] iter=5 | avg=26.38ms | p50=25.98ms | p95=30.35ms | p99=30.35ms | ops/s=38.2 | rssDelta=13.7MB | total=131ms
+2026-09-26T11:04:30.422844200Z com.njydsz.common.excel.benchmark.CompetitiveBenchmark.main() ERROR Log4j API could not find a logging provider.
+[EasyExcel-write-1000] iter=5 | avg=50.52ms | p50=44.73ms | p95=63.77ms | p99=63.77ms | ops/s=19.8 | rssDelta=13.7MB | total=252ms
  | file bytes = 6172
 
 === Benchmark POI-XSSF-write-1000 ===
-[POI-XSSF-write-1000] iter=5 | avg=114.35ms | p50=122.52ms | p95=150.60ms | p99=150.60ms | ops/s=8.8 | rssDelta=134.8MB | total=571ms
+[POI-XSSF-write-1000] iter=5 | avg=160.80ms | p50=172.40ms | p95=180.26ms | p99=180.26ms | ops/s=6.2 | rssDelta=131.2MB | total=804ms
  | file bytes = 48032
 
 === Benchmark POI-SXSSF-write-1000 ===
-[POI-SXSSF-write-1000] iter=5 | avg=33.26ms | p50=33.03ms | p95=37.02ms | p99=37.02ms | ops/s=30.1 | rssDelta=31.8MB | total=166ms
- | file bytes = 50154
+[POI-SXSSF-write-1000] iter=5 | avg=54.16ms | p50=52.95ms | p95=58.44ms | p99=58.44ms | ops/s=18.5 | rssDelta=31.8MB | total=270ms
+ | file bytes = 50155
 
 >>> 10000 rows write benchmark <<<
 
 === Benchmark YdszExcel-write-10000 ===
-[YdszExcel-write-10000] iter=5 | avg=20.97ms | p50=20.97ms | p95=21.95ms | p99=21.95ms | ops/s=48.1 | rssDelta=42.0MB | total=104ms
+[YdszExcel-write-10000] iter=5 | avg=35.09ms | p50=34.33ms | p95=39.10ms | p99=39.10ms | ops/s=28.6 | rssDelta=42.0MB | total=175ms
  | file bytes = 541132
 
 === Benchmark EasyExcel-write-10000 ===
-[EasyExcel-write-10000] iter=5 | avg=20.58ms | p50=19.95ms | p95=23.40ms | p99=23.40ms | ops/s=49.0 | rssDelta=31.8MB | total=102ms
- | file bytes = 29684
+[EasyExcel-write-10000] iter=5 | avg=47.88ms | p50=47.79ms | p95=50.97ms | p99=50.97ms | ops/s=20.9 | rssDelta=31.8MB | total=239ms
+ | file bytes = 29685
 
 === Benchmark POI-XSSF-write-10000 ===
-[POI-XSSF-write-10000] iter=5 | avg=643.63ms | p50=570.25ms | p95=1054.61ms | p99=1054.61ms | ops/s=1.6 | rssDelta=469.0MB | total=3218ms
+[POI-XSSF-write-10000] iter=5 | avg=948.37ms | p50=958.69ms | p95=971.29ms | p99=971.29ms | ops/s=1.1 | rssDelta=671.0MB | total=4741ms
  | file bytes = 442030
 
 === Benchmark POI-SXSSF-write-10000 ===
-[POI-SXSSF-write-10000] iter=5 | avg=129.35ms | p50=127.93ms | p95=138.85ms | p99=138.85ms | ops/s=7.7 | rssDelta=33.8MB | total=646ms
- | file bytes = 461691
+[POI-SXSSF-write-10000] iter=5 | avg=231.27ms | p50=236.11ms | p95=252.49ms | p99=252.49ms | ops/s=4.3 | rssDelta=25.1MB | total=1156ms
+ | file bytes = 461692
 
 >>> 100000 rows write benchmark <<<
 
 === Benchmark YdszExcel-write-100000 ===
-[YdszExcel-write-100000] iter=2 | avg=180.87ms | p50=176.05ms | p95=185.69ms | p99=185.69ms | ops/s=5.5 | rssDelta=172.0MB | total=361ms
+[YdszExcel-write-100000] iter=2 | avg=464.27ms | p50=357.94ms | p95=570.60ms | p99=570.60ms | ops/s=2.2 | rssDelta=172.0MB | total=928ms
  | file bytes = 5519111
 
 === Benchmark EasyExcel-write-100000 ===
-[EasyExcel-write-100000] iter=2 | avg=64.65ms | p50=64.03ms | p95=65.26ms | p99=65.26ms | ops/s=15.5 | rssDelta=97.9MB | total=129ms
+[EasyExcel-write-100000] iter=2 | avg=113.73ms | p50=108.84ms | p95=118.62ms | p99=118.62ms | ops/s=8.8 | rssDelta=97.9MB | total=227ms
  | file bytes = 265510
 [POI-XSSF-write-100000] SKIPPED (DOM engine: too slow for 100k rows)
 
 === Benchmark POI-SXSSF-write-100000 ===
-[POI-SXSSF-write-100000] iter=2 | avg=1146.59ms | p50=1143.98ms | p95=1149.20ms | p99=1149.20ms | ops/s=0.9 | rssDelta=143.1MB | total=2293ms
- | file bytes = 4567559
+[POI-SXSSF-write-100000] iter=2 | avg=2009.63ms | p50=1970.28ms | p95=2048.97ms | p99=2048.97ms | ops/s=0.5 | rssDelta=151.1MB | total=4019ms
+ | file bytes = 4567560
 
 >>> 1000 rows read benchmark <<<
 
 === Benchmark YdszExcel-read-1000 ===
-[YdszExcel-read-1000] iter=5 | avg=14.79ms | p50=14.70ms | p95=15.35ms | p99=15.35ms | ops/s=68.5 | rssDelta=28.0MB | total=73ms
+[YdszExcel-read-1000] iter=5 | avg=23.41ms | p50=21.16ms | p95=33.38ms | p99=33.38ms | ops/s=42.7 | rssDelta=28.0MB | total=117ms
  | parsed rows = 1000
 
 === Benchmark EasyExcel-read-1000 ===
-[EasyExcel-read-1000] iter=5 | avg=10.83ms | p50=9.81ms | p95=16.75ms | p99=16.75ms | ops/s=92.6 | rssDelta=8.3MB | total=54ms
+[EasyExcel-read-1000] iter=5 | avg=50.57ms | p50=47.49ms | p95=95.49ms | p99=95.49ms | ops/s=19.8 | rssDelta=8.0MB | total=252ms
  | parsed rows = 0
 
 === Benchmark POI-XSSF-read-1000 ===
-[POI-XSSF-read-1000] iter=5 | avg=39.28ms | p50=44.05ms | p95=46.06ms | p99=46.06ms | ops/s=25.5 | rssDelta=128.0MB | total=196ms
+[POI-XSSF-read-1000] iter=5 | avg=35.28ms | p50=35.37ms | p95=43.24ms | p99=43.24ms | ops/s=28.4 | rssDelta=132.0MB | total=176ms
  | parsed rows = 1000
 
 >>> 10000 rows read benchmark <<<
 
 === Benchmark YdszExcel-read-10000 ===
-[YdszExcel-read-10000] iter=5 | avg=29.84ms | p50=29.83ms | p95=30.92ms | p99=30.92ms | ops/s=33.6 | rssDelta=53.1MB | total=149ms
+[YdszExcel-read-10000] iter=5 | avg=47.22ms | p50=46.94ms | p95=53.13ms | p99=53.13ms | ops/s=21.2 | rssDelta=53.1MB | total=236ms
  | parsed rows = 10000
 
 === Benchmark EasyExcel-read-10000 ===
-[EasyExcel-read-10000] iter=5 | avg=8.45ms | p50=8.20ms | p95=10.59ms | p99=10.59ms | ops/s=119.0 | rssDelta=14.0MB | total=42ms
+[EasyExcel-read-10000] iter=5 | avg=11.57ms | p50=11.76ms | p95=13.19ms | p99=13.19ms | ops/s=87.7 | rssDelta=16.0MB | total=57ms
  | parsed rows = 0
 
 === Benchmark POI-XSSF-read-10000 ===
-[POI-XSSF-read-10000] iter=5 | avg=146.72ms | p50=146.43ms | p95=167.71ms | p99=167.71ms | ops/s=6.8 | rssDelta=190.0MB | total=733ms
+[POI-XSSF-read-10000] iter=5 | avg=229.22ms | p50=239.69ms | p95=250.31ms | p99=250.31ms | ops/s=4.4 | rssDelta=193.8MB | total=1146ms
  | parsed rows = 10000
 
 >>> 100000 rows read benchmark <<<
 
 === Benchmark YdszExcel-read-100000 ===
-[YdszExcel-read-100000] iter=5 | avg=279.98ms | p50=277.33ms | p95=293.18ms | p99=293.18ms | ops/s=3.6 | rssDelta=148.1MB | total=1399ms
+[YdszExcel-read-100000] iter=5 | avg=482.27ms | p50=470.57ms | p95=525.85ms | p99=525.85ms | ops/s=2.1 | rssDelta=148.1MB | total=2411ms
  | parsed rows = 100000
 
 === Benchmark EasyExcel-read-100000 ===
-[EasyExcel-read-100000] iter=5 | avg=21.68ms | p50=21.18ms | p95=24.23ms | p99=24.23ms | ops/s=46.3 | rssDelta=94.0MB | total=108ms
+[EasyExcel-read-100000] iter=5 | avg=55.69ms | p50=56.00ms | p95=68.11ms | p99=68.11ms | ops/s=18.0 | rssDelta=94.0MB | total=278ms
  | parsed rows = 0
 [POI-XSSF-read-100000] SKIPPED (DOM engine: OOM on 100k rows)
 
@@ -131,6 +131,6 @@ Single-run snapshots are indicative, not statistically definitive.
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  28.086 s
-[INFO] Finished at: 2026-09-26T19:02:22+08:00
+[INFO] Total time:  45.249 s
+[INFO] Finished at: 2026-09-26T19:05:12+08:00
 [INFO] ------------------------------------------------------------------------
