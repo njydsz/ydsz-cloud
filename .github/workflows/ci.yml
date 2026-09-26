@@ -44,46 +44,40 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
-          # key 包含 Runner OS 与 pom.xml hash，确保跨版本隔离
           cache-dependency-path: |
-            **/pom.xml
+            ydsz-cloud/**/pom.xml
 
-      # Step 3: 编码规范前置校验（云顶编码规范 1.1 节 / YDIZ-CODE-001，P0 阻断级）
-      # 必须早于 Checkstyle：BOM 会使 Checkstyle 的 ANTLR 解析器抛 NoViableAltException，
-      # 中断整个模块并掩盖后续模块，导致「零违规」假象。此处前置拦截并给出明确诊断。
+      # Step 3: 编码规范前置校验
       - name: 编码规范前置校验（BOM / CRLF / 末尾换行）
+        working-directory: ydsz-cloud
         run: python3 data/scripts/fix-file-encoding.py
-        # 默认检查模式：发现问题以退出码 1 阻断。本地修复：
-        #   python3 data/scripts/fix-file-encoding.py --apply
 
-      # Step 4: Checkstyle 验证（严格执行云顶编码规范红线）
+      # Step 4: Checkstyle 验证
       - name: Run Checkstyle
+        working-directory: ydsz-cloud
         run: mvn checkstyle:check -B
-        # 失败即构建中断（failOnViolation=true，已在 pom 中配置）
 
-      # Step 4a: 错误码 i18n 覆盖度检查（YDIZ-ERRCODE-001）
+      # Step 4a: 错误码 i18n 覆盖度检查（观察模式）
       - name: 错误码 i18n 覆盖度检查
+        working-directory: ydsz-cloud
         run: |
           python data/scripts/check-error-code-i18n.py \
-            --backend-root . \
-            --frontend-root ../ydsz-micro \
-            --verbose
-        continue-on-error: true
-        # 当前为观察模式（不阻断 PR）；待前端补齐 25 个缺失码后切换为 --fail-on-missing
+            --backend-root ./ydsz-cloud \
+            --frontend-root ./ydsz-micro \
+            --verbose || echo "[CONTINUE] i18n check finished (observe mode)"
 
-      # Step 4b: SpringDoc @Operation 注解完整性检查（API 文档覆盖率）
+      # Step 4b: SpringDoc @Operation 覆盖率检查（观察模式）
       - name: SpringDoc @Operation 覆盖率检查
+        working-directory: ydsz-cloud
         run: |
           python data/scripts/check-springdoc-coverage.py \
-            --backend-root . \
+            --backend-root ./ydsz-cloud \
             --min-coverage 20 \
-            --verbose
-        continue-on-error: true
-        # 当前为观察模式（覆盖率 ~24%，阈值设为 20% 仅做趋势监控）；
-        # 随 API 文档补齐进度分批上调至 50% → 80% → 95%
+            --verbose || echo "[CONTINUE] SpringDoc check finished (observe mode)"
 
-      # Step 5: Maven verify（编译 + 测试 + 打包验证 — surefire 跑单元测试 + failsafe 跑 IT 集成测试）
+      # Step 5: Maven verify
       - name: Maven verify (Compile + Unit Test + Integration Test)
+        working-directory: ydsz-cloud
         run: mvn verify -B
         # 26.09-29: 移除 -fae 参数，改为 fail-fast 模式，确保每个模块的测试失败都能立即阻断
         # （此前 -fae 导致中间失败被遮断，问题容易累积；覆盖率门禁上调后需更严格）

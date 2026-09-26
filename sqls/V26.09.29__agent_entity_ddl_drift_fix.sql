@@ -5,7 +5,7 @@
 --   1. AgentApproval 继承 MpBaseAuditEntity 导致缺少 is_deleted/revision 列映射
 --   2. InsightReport 缺少 tenant_id/is_deleted/revision，且主键用 BIGSERIAL 而非雪花
 --   3. UserProfile 缺少 tenant_id/is_deleted/revision
---   4. AgentTrace 缺少 created_by/updated_by/is_deleted/revision 等审计字段
+--   4. AgentTrace 缺少 tenant_id/created_by/updated_by/is_deleted/revision 等字段
 --
 -- 修复策略：
 --   - 同步 DDL 与 Entity 基类 MpBaseEntity 的全字段体系
@@ -49,10 +49,11 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_user_profile_tenant_id ON ydsz_agt_user_
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_user_profile_tenant_is_deleted ON ydsz_agt_user_profile (tenant_id, is_deleted);
 
 -- ----------------------------------------------------------------------------
--- 修复 ydsz_agt_trace：补充审计字段 + is_deleted + revision + created_at
---   （tenant_id 已由 V26.09-26__agent_trace_add_tenant_id.sql 添加）
+-- 修复 ydsz_agt_trace：补充 tenant_id + 审计字段 + is_deleted + revision
+--   （tenant_id 在原 V26.09-26 脚本中遗漏，现合并到本子集中统一补充）
 -- ----------------------------------------------------------------------------
 ALTER TABLE ydsz_agt_trace
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(32) NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     ADD COLUMN IF NOT EXISTS is_deleted SMALLINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     ADD COLUMN IF NOT EXISTS revision INTEGER NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     ADD COLUMN IF NOT EXISTS created_by VARCHAR(64) DEFAULT NULL COMMENT '创建人 ID',
@@ -61,6 +62,7 @@ ALTER TABLE ydsz_agt_trace
     ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_is_deleted ON ydsz_agt_trace (is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_tenant_is_deleted ON ydsz_agt_trace (tenant_id, is_deleted);
 
 -- 自动更新 updated_at 触发器
 CREATE OR REPLACE FUNCTION fn_ydsz_agt_trace_set_updated_at()
@@ -78,10 +80,11 @@ CREATE TRIGGER trg_ydsz_agt_trace_updated_at
     EXECUTE FUNCTION fn_ydsz_agt_trace_set_updated_at();
 
 -- ----------------------------------------------------------------------------
--- 修复 ydsz_agt_trace_step：补充审计字段 + is_deleted + revision
---   （tenant_id 已由 V26.09-26__agent_trace_add_tenant_id.sql 添加）
+-- 修复 ydsz_agt_trace_step：补充 tenant_id + 审计字段 + is_deleted + revision
+--   （tenant_id 在原 V26.09-26 脚本中遗漏，现合并到本子集中统一补充）
 -- ----------------------------------------------------------------------------
 ALTER TABLE ydsz_agt_trace_step
+    ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(32) NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     ADD COLUMN IF NOT EXISTS is_deleted SMALLINT NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     ADD COLUMN IF NOT EXISTS revision INTEGER NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     ADD COLUMN IF NOT EXISTS created_by VARCHAR(64) DEFAULT NULL COMMENT '创建人 ID',
@@ -90,6 +93,7 @@ ALTER TABLE ydsz_agt_trace_step
     ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_step_is_deleted ON ydsz_agt_trace_step (is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_step_tenant_is_deleted ON ydsz_agt_trace_step (tenant_id, is_deleted);
 
 -- 自动更新 updated_at 触发器
 CREATE OR REPLACE FUNCTION fn_ydsz_agt_trace_step_set_updated_at()

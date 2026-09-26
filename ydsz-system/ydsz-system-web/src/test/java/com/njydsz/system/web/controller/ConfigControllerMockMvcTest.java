@@ -13,11 +13,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -49,11 +48,11 @@ import com.njydsz.system.web._support.WebMvcTestApplication;
 @ActiveProfiles("test")
 class ConfigControllerMockMvcTest {
 
-  @MockBean private ConfigService configService;
+  @MockitoBean private ConfigService configService;
 
-  @MockBean private ConfigBatchService configBatchService;
+  @MockitoBean private ConfigBatchService configBatchService;
 
-  @MockBean private ExcelWebSupport excelWebSupport;
+  @MockitoBean private ExcelWebSupport excelWebSupport;
 
   @org.springframework.beans.factory.annotation.Autowired
   private org.springframework.test.web.servlet.MockMvc mockMvc;
@@ -90,7 +89,7 @@ class ConfigControllerMockMvcTest {
               .andReturn();
 
       // assert: HTTP 200 + 业务响应码 A00000 + 数据列表
-      assertThat(result.getResponse().getStatusCode()).isEqualTo(200);
+      assertThat(result.getResponse().getStatus()).isEqualTo(200);
       String body = result.getResponse().getContentAsString();
       YdszResponse<?> resp = objectMapper.readValue(body, YdszResponse.class);
       assertThat(resp.getCode()).isEqualTo("A00000");
@@ -111,7 +110,7 @@ class ConfigControllerMockMvcTest {
                       .header("X-Tenant-Id", TENANT_ID))
               .andReturn();
 
-      assertThat(result.getResponse().getStatusCode()).isEqualTo(200);
+      assertThat(result.getResponse().getStatus()).isEqualTo(200);
       String body = result.getResponse().getContentAsString();
       YdszResponse<?> resp = objectMapper.readValue(body, YdszResponse.class);
       assertThat(resp.getCode()).isEqualTo("A00000");
@@ -142,7 +141,7 @@ class ConfigControllerMockMvcTest {
               .andReturn();
 
       // assert
-      assertThat(result.getResponse().getStatusCode()).isEqualTo(200);
+      assertThat(result.getResponse().getStatus()).isEqualTo(200);
       String body = result.getResponse().getContentAsString();
       YdszResponse<?> resp = objectMapper.readValue(body, YdszResponse.class);
       assertThat(resp.getCode()).isEqualTo("A00000");
@@ -150,10 +149,9 @@ class ConfigControllerMockMvcTest {
     }
 
     @ParameterizedTest(name = "参数校验: pageNum={0}")
-    @NullAndSource
     @ValueSource(strings = {"-1", "0"})
-    @DisplayName("pageNum 非法值时 Spring 应绑定为默认值 1（MethodArgumentTypeMismatch 由全局处理器返回 400）")
-    void shouldHandleInvalidPageNum Gracefully(String invalidPageNum) throws Exception {
+    @DisplayName("pageNum 非法值时 Spring 应处理为默认值（不返回 500）")
+    void shouldHandleInvalidPageNumWithout500(String invalidPageNum) throws Exception {
       // arrange: 即使参数缺失或非法，Service 侧应能被调用（参数绑定由 Spring 处理）
       when(configService.page(any(ConfigPageQuery.class))).thenReturn(PageResponse.empty(0L, 20L));
 
@@ -169,7 +167,7 @@ class ConfigControllerMockMvcTest {
       MvcResult result = mockMvc.perform(requestBuilder).andReturn();
 
       // assert: 请求不应产生 500（要么成功绑定默认值，要么返回 400，但不能是未处理的异常）
-      assertThat(result.getResponse().getStatusCode()).isIn(200, 400);
+      assertThat(result.getResponse().getStatus()).isIn(200, 400);
     }
   }
 
@@ -190,7 +188,7 @@ class ConfigControllerMockMvcTest {
                       .header("X-Tenant-Id", TENANT_ID))
               .andReturn();
 
-      assertThat(result.getResponse().getStatusCode()).isEqualTo(200);
+      assertThat(result.getResponse().getStatus()).isEqualTo(200);
       String body = result.getResponse().getContentAsString();
       YdszResponse<?> resp = objectMapper.readValue(body, YdszResponse.class);
       assertThat(resp.getCode()).isEqualTo("A00000");
@@ -211,7 +209,7 @@ class ConfigControllerMockMvcTest {
                       .header("X-Tenant-Id", TENANT_ID))
               .andReturn();
 
-      assertThat(result.getResponse().getStatusCode()).isEqualTo(200);
+      assertThat(result.getResponse().getStatus()).isEqualTo(200);
       String body = result.getResponse().getContentAsString();
       YdszResponse<?> resp = objectMapper.readValue(body, YdszResponse.class);
       assertThat(resp.getCode()).isEqualTo("A00000");
@@ -244,7 +242,7 @@ class ConfigControllerMockMvcTest {
               .andReturn();
 
       // assert
-      assertThat(result.getResponse().getStatusCode()).isEqualTo(200);
+      assertThat(result.getResponse().getStatus()).isEqualTo(200);
       String body = result.getResponse().getContentAsString();
       YdszResponse<?> resp = objectMapper.readValue(body, YdszResponse.class);
       assertThat(resp.getCode()).isEqualTo("A00000");
@@ -269,7 +267,7 @@ class ConfigControllerMockMvcTest {
               .andReturn();
 
       // @NotBlank 校验失败 → 400 Bad Request
-      assertThat(result.getResponse().getStatusCode()).isEqualTo(400);
+      assertThat(result.getResponse().getStatus()).isEqualTo(400);
     }
   }
 }

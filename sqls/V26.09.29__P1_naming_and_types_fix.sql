@@ -71,8 +71,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_main_status_is_deleted_next_fire
 -- ydsz_acct_user: 增加 email 索引（登录/查找高频场景）
 CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_email ON ydsz_acct_user (email);
 
--- ydsz_acct_user: 增加 (tenant_id, is_deleted) 复合索引（用户列表高频过滤）
-CREATE INDEX IF NOT EXISTS idx_ydsz_acct_user_tenant_is_deleted ON ydsz_acct_user (tenant_id, is_deleted);
+-- ydsz_acct_user: (tenant_id, is_deleted) 复合索引已在 ydsz-userinfo.sql base DDL 中定义，
+--   此处跳过避免重复创建（CREATE INDEX IF NOT EXISTS 兼容）
 
 -- ----------------------------------------------------------------------------
 -- 8. ydsz_agt_async_task.tenant_code → tenant_id（租户字段命名统一）

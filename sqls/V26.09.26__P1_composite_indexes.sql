@@ -1,28 +1,34 @@
 -- ============================================================================
--- V26.09.26: P1 核心表复合索引补齐
+-- V26.09.26: P1 核心表复合索引补齐（PostgreSQL 方言）
 -- 解决慢查询：高频 WHERE 条件缺少复合索引导致全表扫描
+--
+-- ⚠️  原 MySQL 脚本中的表名已按 PostgreSQL 实际 DDL 对齐：
+--   - ydsz_cronjob_log  → ydsz_job_log（无 tenant_id，使用 job_key 替代）
+--   - ydsz_nextwiki_file_node → ydsz_wiki_file_node
+--   - ydsz_user_session  → 该表在 PostgreSQL 模块中不存在，已移除
+--   - ydsz_workflow_instance → ydsz_flow_instance（def_code → flow_code）
+--   - ydsz_literule_version  → ydsz_rule_version_history（无 tenant_id，
+--     且 base DDL 已有 idx_ydsz_rule_version_history_rule_version，跳过）
+--
+-- 执行方式: psql -U <user> -d <db> -f V26.09.26__P1_composite_indexes.sql
 -- ============================================================================
 
 -- 【message】渠道消息历史查询：按租户+渠道+时间范围
-ALTER TABLE ydsz_msg_log
-    ADD INDEX idx_msg_tenant_channel_time (tenant_id, channel, created_at);
+-- 高频场景：消息列表按渠道过滤 + 时间倒序分页
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_tenant_channel_time
+    ON ydsz_msg_log (tenant_id, channel, created_at);
 
--- 【cronjob】任务执行历史检索：按租户+任务编码+状态
-ALTER TABLE ydsz_cronjob_log
-    ADD INDEX idx_cronjob_tenant_code_status (tenant_id, job_code, status);
+-- 【cronjob】任务执行历史检索：按任务编码+状态+创建时间
+-- 高频场景：调度日志查询（注：ydsz_job_log 无 tenant_id 列，按 job_key 替代）
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_job_key_status_created
+    ON ydsz_job_log (job_key, status, created_at);
 
 -- 【nextwiki】目录树懒加载：按租户+父节点+删除标记
-ALTER TABLE ydsz_nextwiki_file_node
-    ADD INDEX idx_filenode_tenant_parent_deleted (tenant_id, parent_id, is_deleted);
+-- 高频场景：file_node 目录树展开时过滤已删除子节点
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_tenant_parent_is_deleted
+    ON ydsz_wiki_file_node (tenant_id, parent_id, is_deleted);
 
--- 【userinfo】在线用户统计：按租户+用户ID+最后访问时间
-ALTER TABLE ydsz_user_session
-    ADD INDEX idx_session_tenant_user_access (tenant_id, user_id, last_access_time);
-
--- 【workflow】流程实例查询优化：按租户+流程定义编码+创建时间
-ALTER TABLE ydsz_workflow_instance
-    ADD INDEX idx_wfins_tenant_def_time (tenant_id, def_code, created_at);
-
--- 【literule】规则版本查询：按租户+规则编码+版本号
-ALTER TABLE ydsz_literule_version
-    ADD INDEX idx_literule_tenant_rule_ver (tenant_id, rule_code, version);
+-- 【workflow】流程实例查询优化：按租户+流程编码+创建时间
+-- 高频场景：流程实例列表按 flow_code 过滤 + 时间排序
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_tenant_flow_code_time
+    ON ydsz_flow_instance (tenant_id, flow_code, created_at);

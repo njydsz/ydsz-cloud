@@ -88,11 +88,17 @@
 
             <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- JUnit Jupiter Params（@ParameterizedTest 支持，修复 TemplateInvocationValidationException） -->
+        <!-- 【Spring Boot 4.x 适配】@AutoConfigureMockMvc 已从 spring-boot-test-autoconfigure 拆出到独立模块 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit Jupiter Params（@ParameterizedTest 支持） -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
