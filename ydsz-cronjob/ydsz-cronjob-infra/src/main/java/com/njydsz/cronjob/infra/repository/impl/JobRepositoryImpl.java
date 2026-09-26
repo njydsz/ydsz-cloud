@@ -9,6 +9,7 @@ import java.util.Set;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.cronjob.domain.converter.CronjobConverter;
@@ -37,6 +38,10 @@ public class JobRepositoryImpl implements JobRepository {
   private final JobMapper jobMapper;
 
   private final CronjobConverter converter;
+
+  /** 启动时单次加载 NORMAL 任务上限（防止 OOM），可通过 ydsz.cronjob.scan.normal-load-limit 配置 */
+  @Value("${ydsz.cronjob.scan.normal-load-limit:10000}")
+  private int normalLoadLimit;
 
   @Override
   public Optional<JobVO> findByJobKey(String jobKey) {
@@ -67,7 +72,7 @@ public class JobRepositoryImpl implements JobRepository {
 
   @Override
   public List<JobVO> findAllNormal() {
-    return converter.jobListToVO(jobMapper.selectAllNormal());
+    return converter.jobListToVO(jobMapper.selectAllNormal(normalLoadLimit));
   }
 
   @Override

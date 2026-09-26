@@ -19,6 +19,7 @@ import com.njydsz.workflow.domain.query.FlowInstancePageQuery;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
+import com.njydsz.common.auth.util.SecurityUtils;
 
 /**
  * 流程实例仓储实现（Infra 层）。
@@ -169,7 +170,7 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   /** {@inheritDoc} */
   @Override
   public void updateVariable(String id, String variable) {
-    instanceMapper.updateVariable(id, variable);
+    instanceMapper.updateVariable(id, variable, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
@@ -181,13 +182,13 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
       String currentNodeName,
       LocalDateTime endAt,
       Long durationMs) {
-    instanceMapper.updateStatus(id, flowStatus, currentNodeCode, currentNodeName, endAt, durationMs);
+    instanceMapper.updateStatus(id, flowStatus, currentNodeCode, currentNodeName, endAt, durationMs, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
   @Override
   public void updateDueAt(String id, LocalDateTime dueAt) {
-    instanceMapper.updateDueAt(id, dueAt);
+    instanceMapper.updateDueAt(id, dueAt, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
@@ -332,5 +333,24 @@ public class FlowInstanceRepositoryImpl implements FlowInstanceRepository {
   @Override
   public List<Map<String, Object>> selectRunningByDefinitionId(String tenantId, String definitionId) {
     return instanceMapper.selectRunningByDefinitionId(tenantId, definitionId);
+  }
+
+  /**
+   * 解析当前操作人 ID。
+   *
+   * <p>从安全上下文获取当前登录用户 ID（String 格式），转为 Long。未登录时返回 0（系统操作）。
+   *
+   * @return 当前操作人 ID；未登录时返回 0
+   */
+  private Long resolveUpdatedBy() {
+    String userId = SecurityUtils.getCurrentUserIdOrNull();
+    if (userId == null || userId.isEmpty()) {
+      return 0L;
+    }
+    try {
+      return Long.parseLong(userId);
+    } catch (NumberFormatException e) {
+      return 0L;
+    }
   }
 }

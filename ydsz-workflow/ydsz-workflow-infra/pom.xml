@@ -47,5 +47,10 @@
             <artifactId>mapstruct</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- ydsz-common-auth: 审计字段填充（SecurityUtils.getCurrentUserIdOrNull） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
     </dependencies>
 </project>

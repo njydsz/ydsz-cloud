@@ -56,7 +56,7 @@
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_job_main
         WHERE status = 'NORMAL' AND is_deleted = 0
-        LIMIT 5000
+        LIMIT #{limit}
     </select>
 
     <!-- P1-7: Leader 模式扫描待触发任务，FOR UPDATE SKIP LOCKED 抢占式行锁 -->

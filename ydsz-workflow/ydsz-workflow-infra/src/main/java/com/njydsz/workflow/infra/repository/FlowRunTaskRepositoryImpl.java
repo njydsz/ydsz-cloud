@@ -20,6 +20,7 @@ import com.njydsz.workflow.domain.query.FlowTaskQuery;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.common.auth.util.SecurityUtils;
 
 /**
  * 运行时任务仓储实现（Infra 层）。
@@ -316,19 +317,19 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   /** {@inheritDoc} */
   @Override
   public void incrementUrgeCount(String taskId, int newUrgeCount, LocalDateTime urgeAt) {
-    taskMapper.incrementUrgeCount(taskId, newUrgeCount, urgeAt);
+    taskMapper.incrementUrgeCount(taskId, newUrgeCount, urgeAt, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
   @Override
   public void markSlaAction(String taskId, String slaAction, int slaEscalated) {
-    taskMapper.markSlaAction(taskId, slaAction, slaEscalated);
+    taskMapper.markSlaAction(taskId, slaAction, slaEscalated, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
   @Override
   public void completeTask(String taskId, String taskStatus, LocalDateTime finishAt, Long durationMs) {
-    taskMapper.completeTask(taskId, taskStatus, FLOW_TIMER_COMMENT, finishAt, durationMs);
+    taskMapper.completeTask(taskId, taskStatus, FLOW_TIMER_COMMENT, finishAt, durationMs, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
@@ -336,7 +337,7 @@ public class FlowRunTaskRepositoryImpl implements FlowRunTaskRepository {
   public int completeTaskWithComment(
       String taskId, String taskStatus, String comment, LocalDateTime finishAt, Long durationMs) {
     // 返回受影响行数（CAS 并发防护：0=已被并发处理）
-    return taskMapper.completeTask(taskId, taskStatus, comment, finishAt, durationMs);
+    return taskMapper.completeTask(taskId, taskStatus, comment, finishAt, durationMs, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
@@ -450,21 +451,21 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   /** {@inheritDoc} */
   @Override
   public void markProcessed(String taskId, String userId, String comment, LocalDateTime processedAt) {
-    taskMapper.markProcessed(taskId, userId, comment, processedAt);
+    taskMapper.markProcessed(taskId, userId, comment, processedAt, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
   @Override
   public int incrementApproveFinished(String taskId) {
     // GAP-A1: 原子自增受影响行数直接透出，0 = 任务不存在或计数已饱和
-    return taskMapper.incrementApproveFinished(taskId);
+    return taskMapper.incrementApproveFinished(taskId, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
   @Override
   public int incrementApproveWeight(String taskId, int weight) {
     // GAP-A1: 权重原子累加，确保并发投票加和精确
-    return taskMapper.incrementApproveWeight(taskId, weight);
+    return taskMapper.incrementApproveWeight(taskId, weight, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
@@ -481,7 +482,7 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
   /** {@inheritDoc} */
   @Override
   public void updateApproveFinished(String taskId, int approveFinished) {
-    taskMapper.updateApproveFinished(taskId, approveFinished);
+    taskMapper.updateApproveFinished(taskId, approveFinished, resolveUpdatedBy());
   }
 
   /** {@inheritDoc} */
@@ -520,5 +521,24 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
             .eq(FlowRunTask::getIsDeleted, 0)
             .in(FlowRunTask::getTaskStatus, TASK_STATUS_PENDING, TASK_STATUS_CLAIMED)
             .lt(FlowRunTask::getDueAt, LocalDateTime.now()));
+  }
+
+  /**
+   * 解析当前操作人 ID。
+   *
+   * <p>从安全上下文获取当前登录用户 ID（String 格式），转为 Long。未登录时返回 0（系统操作）。
+   *
+   * @return 当前操作人 ID；未登录时返回 0
+   */
+  private Long resolveUpdatedBy() {
+    String userId = SecurityUtils.getCurrentUserIdOrNull();
+    if (userId == null || userId.isEmpty()) {
+      return 0L;
+    }
+    try {
+      return Long.parseLong(userId);
+    } catch (NumberFormatException e) {
+      return 0L;
+    }
   }
 }

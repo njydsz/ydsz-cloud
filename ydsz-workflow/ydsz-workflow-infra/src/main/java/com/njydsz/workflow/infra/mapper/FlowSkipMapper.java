@@ -73,5 +73,7 @@ public interface FlowSkipMapper extends BaseMapper<FlowSkip> {
    * @param definitionId 流程定义 ID
    * @return 受影响行数
    */
-  int deleteByDefinitionId(@Param("definitionId") String definitionId);
+  int deleteByDefinitionId(
+      @Param("definitionId") String definitionId,
+      @Param("updatedBy") Long updatedBy);
 }

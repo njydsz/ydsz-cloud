@@ -59,6 +59,10 @@ ydsz:
       - com.njydsz.cronjob.domain.entity.dag.JobDag
       - com.njydsz.cronjob.domain.entity.dag.JobDagInstance
 
+  # P1-6: 扫描器配置 — NORMAL 任务单次加载上限（防 OOM），原硬编码 5000 → 可配置
+  scan:
+    normal-load-limit: 10000
+
   # P0: JDBC 安全加固（ydsz-common-jdbc）
   jdbc:
     # SQL 防火墙：拦截 DDL（DROP/TRUNCATE）、无 WHERE 写操作、多语句注入、GRANT/REVOKE

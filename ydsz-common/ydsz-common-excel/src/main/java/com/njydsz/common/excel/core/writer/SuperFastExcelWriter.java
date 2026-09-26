@@ -401,8 +401,7 @@ public class SuperFastExcelWriter {
     //   → 内存峰值 O(rowBuffer) = 1MB（不再持有整份 sheet 的 byte[]）
     //   → 消除了 ByteArrayOutputStream 5MB 堆 + GC 压力
     // — 自动列宽路径：必须先收集列宽后才能写 <cols> 段，仍需 ByteArrayOutputStream
-    boolean autoColWidth = Boolean.TRUE.equals(getExcelConfig().getAutoColumnWidth())
-        || Boolean.TRUE.equals(metadata.getIsAutoColumnWidth());
+    boolean autoColWidth = Boolean.TRUE.equals(metadata.getIsAutoColumnWidth());
 
     if (autoColWidth) {
       writeXlsxDirectWithColumnWidth(filePath, list);

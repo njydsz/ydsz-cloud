@@ -69,7 +69,7 @@
     <delete id="deleteByDefinitionId">
         UPDATE ydsz_flow_skip
         SET is_deleted = 1,
-            updated_by = 0,
+            updated_by = #{updatedBy},
             updated_at = CURRENT_TIMESTAMP
         WHERE definition_id = #{definitionId}
           AND is_deleted = 0

@@ -12,6 +12,7 @@ import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.repository.FlowSkipRepository;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
+import com.njydsz.common.auth.util.SecurityUtils;
 
 /**
  * 节点跳转仓储实现（Infra 层）。
@@ -101,6 +102,25 @@ public class FlowSkipRepositoryImpl implements FlowSkipRepository {
   /** {@inheritDoc} */
   @Override
   public int deleteByDefinitionId(String definitionId) {
-    return skipMapper.deleteByDefinitionId(definitionId);
+    return skipMapper.deleteByDefinitionId(definitionId, resolveUpdatedBy());
+  }
+
+  /**
+   * 解析当前操作人 ID。
+   *
+   * <p>从安全上下文获取当前登录用户 ID（String 格式），转为 Long。未登录时返回 0（系统操作）。
+   *
+   * @return 当前操作人 ID；未登录时返回 0
+   */
+  private Long resolveUpdatedBy() {
+    String userId = SecurityUtils.getCurrentUserIdOrNull();
+    if (userId == null || userId.isEmpty()) {
+      return 0L;
+    }
+    try {
+      return Long.parseLong(userId);
+    } catch (NumberFormatException e) {
+      return 0L;
+    }
   }
 }

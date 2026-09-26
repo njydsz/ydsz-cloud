@@ -83,7 +83,8 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
       @Param("currentNodeCode") String currentNodeCode,
       @Param("currentNodeName") String currentNodeName,
       @Param("endAt") LocalDateTime endAt,
-      @Param("durationMs") Long durationMs);
+      @Param("durationMs") Long durationMs,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * P2-18: 更新流程变量 JSON（用于持久化 terminate reason 等元信息）
@@ -93,7 +94,10 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
    * @param variable 流程变量 JSON 字符串
    * @return 受影响行数
    */
-  int updateVariable(@Param("id") String id, @Param("variable") String variable);
+    int updateVariable(
+      @Param("id") String id,
+      @Param("variable") String variable,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * 发起人维度查询
@@ -131,7 +135,10 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstance> {
    * @param dueAt 截止日期时间
    * @return 受影响行数
    */
-  int updateDueAt(@Param("id") String id, @Param("dueAt") LocalDateTime dueAt);
+  int updateDueAt(
+      @Param("id") String id,
+      @Param("dueAt") LocalDateTime dueAt,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * 查询超期的子流程实例（dueAt < now 且状态为 RUNNING 且有 parentInstanceId）

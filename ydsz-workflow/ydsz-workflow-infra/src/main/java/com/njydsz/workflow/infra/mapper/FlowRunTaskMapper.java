@@ -159,7 +159,8 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
       @Param("taskStatus") String taskStatus,
       @Param("comment") String comment,
       @Param("finishAt") LocalDateTime finishAt,
-      @Param("durationMs") Long durationMs);
+      @Param("durationMs") Long durationMs,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * 会签计数器 +1
@@ -167,7 +168,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param id 任务 ID
    * @return 受影响行数
    */
-  int incrementFinished(@Param("id") String id);
+  int incrementFinished(@Param("id") String id, @Param("updatedBy") Long updatedBy);
 
   /**
    * 取消某实例下所有 PENDING 任务
@@ -177,7 +178,9 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @return 受影响行数
    */
   int cancelByInstance(
-      @Param("instanceId") String instanceId, @Param("taskStatus") String taskStatus);
+      @Param("instanceId") String instanceId,
+      @Param("taskStatus") String taskStatus,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * P0-1: 取消单个任务（边界事件触发时使用）
@@ -204,7 +207,8 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   int skipByNode(
       @Param("instanceId") String instanceId,
       @Param("nodeCode") String nodeCode,
-      @Param("taskStatus") String taskStatus);
+      @Param("taskStatus") String taskStatus,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * P2-18: 冻结某实例下所有 PENDING/CLAIMED 任务（流程挂起时调用）
@@ -213,7 +217,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param instanceId 流程实例 ID
    * @return 受影响行数
    */
-  int freezeByInstance(@Param("instanceId") String instanceId);
+  int freezeByInstance(@Param("instanceId") String instanceId, @Param("updatedBy") Long updatedBy);
 
   /**
    * P2-18: 解冻某实例下所有 FROZEN 任务（流程激活时调用，回到 PENDING）
@@ -222,7 +226,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param instanceId 流程实例 ID
    * @return 受影响行数
    */
-  int unfreezeByInstance(@Param("instanceId") String instanceId);
+  int unfreezeByInstance(@Param("instanceId") String instanceId, @Param("updatedBy") Long updatedBy);
 
   /**
    * 统计某实例某节点的未完成任务数（用于并行网关 join 判断）
@@ -242,7 +246,9 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @return 受影响行数
    */
   int updateApproveFinished(
-      @Param("id") String id, @Param("approveFinished") Integer approveFinished);
+      @Param("id") String id,
+      @Param("approveFinished") Integer approveFinished,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * 更新任务办理人信息（用于会签场景下多人共用一个任务时切换办理人）
@@ -257,7 +263,8 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
       @Param("id") String id,
       @Param("assigneeId") String assigneeId,
       @Param("assigneeName") String assigneeName,
-      @Param("assigneeType") String assigneeType);
+      @Param("assigneeType") String assigneeType,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）
@@ -349,7 +356,8 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   int incrementUrgeCount(
       @Param("id") String id,
       @Param("urgeCount") int urgeCount,
-      @Param("lastUrgedAt") LocalDateTime lastUrgedAt);
+      @Param("lastUrgedAt") LocalDateTime lastUrgedAt,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * P1-6: 标记 SLA 动作（用于审计：AUTO_PASS / AUTO_REJECT / ESCALATE 等）
@@ -362,7 +370,8 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
   int markSlaAction(
       @Param("id") String id,
       @Param("slaAction") String slaAction,
-      @Param("slaEscalated") Integer slaEscalated);
+      @Param("slaEscalated") Integer slaEscalated,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * P2-1: 标记任务已处理（补录审批场景）。
@@ -377,7 +386,8 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
       @Param("id") String id,
       @Param("userId") String userId,
       @Param("comment") String comment,
-      @Param("processedAt") LocalDateTime processedAt);
+      @Param("processedAt") LocalDateTime processedAt,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * GAP-A1: 会签通过计数原子自增（带饱和守卫，防并发丢失更新与越界计数）。
@@ -388,7 +398,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param id 任务 ID
    * @return 受影响行数；0 表示任务不存在或计数已饱和
    */
-  int incrementApproveFinished(@Param("id") String id);
+  int incrementApproveFinished(@Param("id") String id, @Param("updatedBy") Long updatedBy);
 
   /**
    * GAP-A1: 票签权重原子累加（防并发丢失更新）。
@@ -397,5 +407,8 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
    * @param weight 本次累加的权重值
    * @return 受影响行数
    */
-  int incrementApproveWeight(@Param("id") String id, @Param("weight") int weight);
+  int incrementApproveWeight(
+      @Param("id") String id,
+      @Param("weight") int weight,
+      @Param("updatedBy") Long updatedBy);
 }

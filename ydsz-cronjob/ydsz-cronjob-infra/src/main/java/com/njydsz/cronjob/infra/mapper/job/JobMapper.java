@@ -33,9 +33,10 @@ public interface JobMapper extends BaseMapper<Job> {
   /**
    * 查询所有 NORMAL 状态任务（启动时加载）
    *
+   * @param limit 单次加载上限（防止任务数异常增长时 OOM）
    * @return NORMAL 状态任务列表
    */
-  List<Job> selectAllNormal();
+  List<Job> selectAllNormal(@Param("limit") int limit);
 
   /**
    * 扫描已到触发时间的 NORMAL 任务（P1-7 Leader 模式专用）。

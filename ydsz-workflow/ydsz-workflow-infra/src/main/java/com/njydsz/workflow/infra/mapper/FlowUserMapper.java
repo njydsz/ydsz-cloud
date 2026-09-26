@@ -57,7 +57,8 @@ public interface FlowUserMapper extends BaseMapper<FlowUser> {
       @Param("taskId") String taskId,
       @Param("userId") String userId,
       @Param("comment") String comment,
-      @Param("processAt") LocalDateTime processAt);
+      @Param("processAt") LocalDateTime processAt,
+      @Param("updatedBy") Long updatedBy);
 
   /**
    * 查某实例某节点未处理的用户（会签场景）
