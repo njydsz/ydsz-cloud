@@ -94,6 +94,20 @@ public class SuperFastExcelReader {
   ColumnMetadata[] columnMetadataArray;
 
   /**
+   * P1-B：列索引 → ColumnMetadata 直接映射（O(1) 查找）。
+   *
+   * <p>替代 {@link #parseDataCell} 线性扫描（每单元格 O(cols) → 全量 O(rows × cols²)）。
+   * 在 {@link #resolveMetadata()} 内惰性构建；稠密列场景下以空间换时间。
+   */
+  private ColumnMetadata[] columnMetadataIndex;
+
+  /**
+   * 列索引稀疏度因子 — 当 {@code maxColIndex > SPARSE_FACTOR × metadataSize} 时判定为稀疏，
+   * 不构建 columnMetadataIndex 数组，沿用线性扫描（避免大数组空洞）
+   */
+  private static final int SPARSE_FACTOR = 4;
+
+  /**
    * 表头行收集的列名（0-based 列索引 → 列名），由 SheetXmlReader 在解析表头行时填充。
    *
    * <p>P0-2 修复：fast 路径此前无法构建列元数据（POI 路径在 parseSheet 中通过 HeaderAnalyzer
