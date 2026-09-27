@@ -265,7 +265,11 @@ public class HumanApprovalService {
    */
   public boolean approve(
       String approvalId, String approver, String comment, Consumer<SseEvent> eventConsumer) {
-    return SentryObservation.time("agent.approval.approve", null, null, () -> resolve(approvalId, ApprovalStatus.APPROVED, approver, comment, eventConsumer));
+    try {
+      return SentryObservation.<Boolean>time("agent.approval.approve", null, null, () -> resolve(approvalId, ApprovalStatus.APPROVED, approver, comment, eventConsumer));
+    } catch (Throwable t) {
+      throw new RuntimeException("approve observation error", t);
+    }
   }
 
   /**
@@ -293,7 +297,11 @@ public class HumanApprovalService {
    */
   public boolean reject(
       String approvalId, String approver, String comment, Consumer<SseEvent> eventConsumer) {
-    return SentryObservation.time("agent.approval.reject", null, null, () -> resolve(approvalId, ApprovalStatus.REJECTED, approver, comment, eventConsumer));
+    try {
+      return SentryObservation.<Boolean>time("agent.approval.reject", null, null, () -> resolve(approvalId, ApprovalStatus.REJECTED, approver, comment, eventConsumer));
+    } catch (Throwable t) {
+      throw new RuntimeException("reject observation error", t);
+    }
   }
 
   /**

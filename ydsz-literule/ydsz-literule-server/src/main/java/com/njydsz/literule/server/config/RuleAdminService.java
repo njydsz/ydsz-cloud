@@ -479,10 +479,10 @@ public class RuleAdminService {
   /** 校验分类路径合法性 */
   private void validateCategoryPath(String path) {
     if (path == null || path.isBlank()) {
-      throw new IllegalArgumentException("分类路径不能为空");
+      throw new IllegalArgumentException("rule.error.category_path_required");
     }
     if (path.length() > MAX_PATH_LENGTH) {
-      throw new IllegalArgumentException("分类路径长度不能超过 512");
+      throw new IllegalArgumentException("rule.error.category_path_length_exceed");
     }
     if (path.startsWith("/") || path.endsWith("/")) {
       throw new IllegalArgumentException("分类路径不能以 / 开头或结尾: " + path);
@@ -529,7 +529,7 @@ public class RuleAdminService {
    */
   public RuleVersionDiff getVersionDiff(String ruleCode, int oldVersion, int newVersion) {
     if (versionRepository == null) {
-      throw new IllegalStateException("版本仓库未配置，不支持版本 Diff");
+      throw new IllegalStateException("rule.error.version_repo_not_configured_diff");
     }
     RuleDefinitionDTO oldDef =
         versionRepository
@@ -578,7 +578,7 @@ public class RuleAdminService {
   @Transactional(rollbackFor = Exception.class)
   public Optional<RuleDefinitionVO> rollback(String ruleCode, int version, String operator) {
     if (versionRepository == null) {
-      throw new IllegalStateException("版本仓库未配置，不支持回滚");
+      throw new IllegalStateException("rule.error.version_repo_not_configured_rollback");
     }
     Optional<RuleDefinitionVO> restored = versionRepository.rollback(ruleCode, version, operator);
     publishRefreshEvent(

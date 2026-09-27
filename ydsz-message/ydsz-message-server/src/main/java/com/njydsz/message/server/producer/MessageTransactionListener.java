@@ -164,16 +164,16 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
    */
   private String validateRequest(MessageItemRequestDTO req) {
     if (!StringUtils.hasText(req.getChannel())) {
-      return MessageUtils.getMessage("message.send.channelEmpty", "通道为空");
+      return MessageUtils.getMessage("message.send.channel.empty", "通道为空");
     }
     if (!StringUtils.hasText(req.getTemplateCode())) {
-      return MessageUtils.getMessage("message.send.templateCodeEmpty", "模板编码为空");
+      return MessageUtils.getMessage("message.send.template.code.empty", "模板编码为空");
     }
     if (!StringUtils.hasText(req.getReceiver())) {
-      return MessageUtils.getMessage("message.send.receiverEmpty", "接收人为空");
+      return MessageUtils.getMessage("message.send.receiver.empty", "接收人为空");
     }
     if (!channelRouter.isChannelEnabled(req.getChannel())) {
-      return MessageUtils.getMessage("message.send.channelDisabled",
+      return MessageUtils.getMessage("message.send.channel.disabled",
           new Object[] {req.getChannel()}, "通道未启用: " + req.getChannel());
     }
     MsgTemplateVO tpl =
@@ -181,11 +181,11 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
             req.getTemplateCode(), req.getChannel(), null,
             AuthContextUtils.getTenantIdOrDefault("1"));
     if (tpl == null) {
-      return MessageUtils.getMessage("message.send.templateNotExist",
+      return MessageUtils.getMessage("message.send.template.not.exist",
           new Object[] {req.getTemplateCode()}, "模板不存在: " + req.getTemplateCode());
     }
     if (!"ENABLED".equals(tpl.getStatus())) {
-      return MessageUtils.getMessage("message.send.templateDisabled",
+      return MessageUtils.getMessage("message.send.template.disabled",
           new Object[] {tpl.getStatus()}, "模板未启用: " + tpl.getStatus());
     }
     return null;

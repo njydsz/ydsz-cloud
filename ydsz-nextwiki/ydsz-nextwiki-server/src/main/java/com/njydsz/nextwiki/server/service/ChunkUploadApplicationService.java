@@ -279,59 +279,60 @@ public class ChunkUploadApplicationService {
    * @note 分片合并、SHA-256 计算与存储上传均在事务外执行，仅数据库操作使用短事务
    */
   public FileNodeVO completeChunkUpload(String uploadId, String userId) {
-    return SentryObservation.time("nextwiki.upload.merge", null, null, () -> {
-      ChunkUploadSession session = validateSession(uploadId);
+    try {
+      return SentryObservation.<FileNodeVO>time("nextwiki.upload.merge", null, null, () -> {
+        ChunkUploadSession session = validateSession(uploadId);
 
-      // 检查所有分片是否已上传
-      Set<String> uploaded = collectionOps.sMembers(KEY_UPLOADED_CHUNKS + uploadId, String.class);
-      if (uploaded == null || uploaded.size() < session.getTotalChunks()) {
-        throw BusinessException.of(NextwikiExceptionCode.CHUNK_INCOMPLETE)
-            .data("uploaded", uploaded != null ? uploaded.size() : 0)
-            .data("total", session.getTotalChunks());
-      }
+        // 检查所有分片是否已上传
+        Set<String> uploaded = collectionOps.sMembers(KEY_UPLOADED_CHUNKS + uploadId, String.class);
+        if (uploaded == null || uploaded.size() < session.getTotalChunks()) {
+          throw BusinessException.of(NextwikiExceptionCode.CHUNK_INCOMPLETE)
+              .data("uploaded", uploaded != null ? uploaded.size() : 0)
+              .data("total", session.getTotalChunks());
+        }
 
-      // ===== 阶段1：准备阶段（无事务边界） =====
-      Path mergedFile = null;
-      try {
-        mergedFile = getMergedPath(uploadId, session.getFileName());
-        Files.createDirectories(mergedFile.getParent());
-        try (OutputStream os = Files.newOutputStream(mergedFile)) {
-          for (int i = 1; i <= session.getTotalChunks(); i++) {
-            Path chunkFile = getChunkPath(uploadId, i);
-            Files.copy(chunkFile, os);
+        // ===== 阶段1：准备阶段（无事务边界） =====
+        Path mergedFile = null;
+        try {
+          mergedFile = getMergedPath(uploadId, session.getFileName());
+          Files.createDirectories(mergedFile.getParent());
+          try (OutputStream os = Files.newOutputStream(mergedFile)) {
+            for (int i = 1; i <= session.getTotalChunks(); i++) {
+              Path chunkFile = getChunkPath(uploadId, i);
+              Files.copy(chunkFile, os);
+            }
           }
+
+          long actualSize = Files.size(mergedFile);
+          if (actualSize != session.getFileSize()) {
+            log.warn(
+                "[ChunkUploadApplicationService] 合并文件大小不匹配: expected={}, actual={}",
+                session.getFileSize(),
+                actualSize);
+          }
+        } catch (IOException e) {
+          log.error("[ChunkUploadApplicationService] 合并失败: uploadId={}", uploadId, e);
+          throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
         }
 
-        long actualSize = Files.size(mergedFile);
-        if (actualSize != session.getFileSize()) {
-          log.warn(
-              "[ChunkUploadApplicationService] 合并文件大小不匹配: expected={}, actual={}",
-              session.getFileSize(),
-              actualSize);
+        // 计算 SHA-256（IO 操作，在事务外执行）
+        String fileHash = calculateSha256(mergedFile);
+
+        // 秒传去重检查（只读查询）
+        FileNodeVO dedupExisting = null;
+        if (fileHash != null) {
+          dedupExisting = fileNodeRepository.findByFileHash(fileHash).orElse(null);
         }
-      } catch (IOException e) {
-        log.error("[ChunkUploadApplicationService] 合并失败: uploadId={}", uploadId, e);
-        throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
-      }
 
-      // 计算 SHA-256（IO 操作，在事务外执行）
-      String fileHash = calculateSha256(mergedFile);
-
-      // 秒传去重检查（只读查询）
-      FileNodeVO dedupExisting = null;
-      if (fileHash != null) {
-        dedupExisting = fileNodeRepository.findByFileHash(fileHash).orElse(null);
-      }
-
-      // 存储上传（IO 操作，在事务外执行）
-      FileStorage stored = null;
-      String storageKey = null;
-      if (dedupExisting == null) {
-        IFileStorage storage = resolveStorage();
-        if (storage == null) {
-          throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
-        }
-        storageKey = generateStorageKey(userId, session.getFileName());
+        // 存储上传（IO 操作，在事务外执行）
+        FileStorage stored = null;
+        String storageKey = null;
+        if (dedupExisting == null) {
+          IFileStorage storage = resolveStorage();
+          if (storage == null) {
+            throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
+          }
+          storageKey = generateStorageKey(userId, session.getFileName());
         try {
           MultipartFile multipartFile = createMultipartFile(mergedFile, session.getFileName());
           stored = storage.upload(null, storageKey, multipartFile);
@@ -377,7 +378,10 @@ public class ChunkUploadApplicationService {
       stringOps.del(KEY_UPLOADED_CHUNKS + uploadId);
 
       return result;
-    });
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("chunk_upload_merge observation error", t);
+    }
   }
 
   /**

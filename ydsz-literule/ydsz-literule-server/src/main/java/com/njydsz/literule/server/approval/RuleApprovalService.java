@@ -171,7 +171,7 @@ public class RuleApprovalService {
    */
   public void registerFlow(ApprovalFlow flow) {
     if (flow == null || flow.getFlowCode() == null || flow.getFlowCode().isBlank()) {
-      throw new IllegalArgumentException("审批流配置非法：flowCode 不能为空");
+      throw new IllegalArgumentException("rule.error.approval_flow_code_required");
     }
     if (flow.getSteps() == null || flow.getSteps().isEmpty()) {
       throw new IllegalArgumentException("审批流配置非法：steps 不能为空: " + flow.getFlowCode());

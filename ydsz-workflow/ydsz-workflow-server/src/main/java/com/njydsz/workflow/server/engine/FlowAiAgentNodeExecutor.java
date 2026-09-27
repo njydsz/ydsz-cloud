@@ -129,21 +129,25 @@ public class FlowAiAgentNodeExecutor {
         nodeCode, config.getAgentId(), config.getTimeoutMs());
 
     Map<String, Object> context = buildContext(instanceId, nodeCode, variables);
-    return SentryObservation.time("workflow.node.execute", null, null, () -> {
-      // 执行（带重试）
-      AgentExecutionResult result = executeWithRetry(config, resolvedPrompt, context, instanceId,
-          nodeCode);
+    try {
+      return SentryObservation.<Boolean>time("workflow.node.execute", null, null, () -> {
+        // 执行（带重试）
+        AgentExecutionResult result = executeWithRetry(config, resolvedPrompt, context, instanceId,
+            nodeCode);
 
-      if (result == null) {
-        log.warn("[Flow-AI-Agent] 实例 {} 节点 {} Agent 返回 null，触发兜底策略", instanceId, nodeCode);
-        return applyFallback(config, instanceId, nodeCode, "Agent 返回 null");
-      }
+        if (result == null) {
+          log.warn("[Flow-AI-Agent] 实例 {} 节点 {} Agent 返回 null，触发兜底策略", instanceId, nodeCode);
+          return applyFallback(config, instanceId, nodeCode, "Agent 返回 null");
+        }
 
-      log.info("[Flow-AI-Agent] 实例 {} 节点 {} AI 审批完成, approve={}, confidence={}, reason={}",
-          instanceId, nodeCode, result.approve(), result.confidence(), result.reason());
+        log.info("[Flow-AI-Agent] 实例 {} 节点 {} AI 审批完成, approve={}, confidence={}, reason={}",
+            instanceId, nodeCode, result.approve(), result.confidence(), result.reason());
 
-      return result.approve();
-    });
+        return result.approve();
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("node_execute observation error", t);
+    }
   }
 
   /**

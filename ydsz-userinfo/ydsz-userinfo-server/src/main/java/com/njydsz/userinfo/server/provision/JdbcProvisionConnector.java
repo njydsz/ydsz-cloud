@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.jdbc.datasource.DynamicDataSourceContextHolder;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.userinfo.domain.provision.ProvisionException;
 import com.njydsz.userinfo.domain.provision.ProvisionRecord;
@@ -125,7 +126,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
   private String resolveQuery() {
     String query = properties.getUserQuery();
     if (query == null || query.isBlank()) {
-      throw new ProvisionException(CONNECTOR_TYPE, "JDBC 查询 SQL 未配置");
+      throw new ProvisionException(CONNECTOR_TYPE, I18n.message("userinfo.error.jdbc.query.not.configured"));
     }
     // 自动添加 LIMIT 子句防止一次拉取过多数据
     if (!query.toLowerCase().contains("limit")) {

@@ -63,7 +63,7 @@ public interface SmsProvider {
    * @return 回执结果：状态（DELIVERED/FAILED/UNKNOWN）+ 错误码 + 错误描述
    */
   default MessageSendResultVO queryReceipt(String providerTraceId, String phone) {
-    String msg = MessageUtils.getMessage("sms.provider.receipt.not.supplemented", "当前 provider 未实现回执查询");
+    String msg = MessageUtils.getMessage("message.sms.provider.receipt.not.supplemented", "当前 provider 未实现回执查询");
     return MessageSendResultVO.fail("SMS", null, msg, msg, null);
   }
 }

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
@@ -109,7 +110,7 @@ public class CaptchaService {
     if (storedCode == null) {
       throw BusinessException.builder()
           .resultCode(UserInfoExceptionCode.CAPTCHA_INVALID)
-          .params("验证码已过期")
+          .params(I18n.message("userinfo.error.captcha.expired"))
           .build();
     }
 
@@ -118,7 +119,7 @@ public class CaptchaService {
     if (!storedCode.equalsIgnoreCase(userInput)) {
       throw BusinessException.builder()
           .resultCode(UserInfoExceptionCode.CAPTCHA_INVALID)
-          .params("验证码错误")
+          .params(I18n.message("userinfo.error.captcha.wrong"))
           .build();
     }
 

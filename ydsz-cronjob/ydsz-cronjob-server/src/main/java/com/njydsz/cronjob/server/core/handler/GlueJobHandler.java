@@ -279,7 +279,7 @@ public class GlueJobHandler implements JobHandler {
     String jobId = JobExecutionContext.getShardingContext().getJobId();
     if (!StringUtils.hasText(jobId)) {
       throw BusinessException.of(CronjobExceptionCode.GLUE_CONTEXT_MISSING_JOBID)
-          .msg(I18n.message("cronjob.glue.context.missing.jobId", new Object[]{}));
+          .msg(I18n.message("cronjob.glue.context.missing.job.id", new Object[]{}));
     }
 
     GlueCodeService glueCodeService = glueCodeServiceProvider.getIfAvailable();

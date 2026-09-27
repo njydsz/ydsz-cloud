@@ -83,7 +83,7 @@ public enum CronjobExceptionCode implements ExceptionCode {
 
   // ==================== B92401-B92499 GLUE ====================
   /** GLUE job execution context missing jobId */
-  GLUE_CONTEXT_MISSING_JOBID("B92401", "cronjob.glue.context.missing.jobId"),
+  GLUE_CONTEXT_MISSING_JOBID("B92401", "cronjob.glue.context.missing.job.id"),
   /** GlueCodeService unregistered */
   GLUE_SERVICE_UNREGISTERED("B92402", "cronjob.glue.service.unregistered"),
   /** GLUE code is empty */

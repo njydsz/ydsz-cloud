@@ -201,16 +201,16 @@ public class DecisionTableAdminService {
 
   private void validate(DecisionTableDefinitionDTO def) {
     if (def.getTableCode() == null || def.getTableCode().isBlank()) {
-      throw new IllegalArgumentException("决策表编码 tableCode 不能为空");
+      throw new IllegalArgumentException("rule.error.decision_table_code_required");
     }
     if (def.getTableName() == null || def.getTableName().isBlank()) {
-      throw new IllegalArgumentException("决策表名称 tableName 不能为空");
+      throw new IllegalArgumentException("rule.error.decision_table_name_required");
     }
     if (def.getConditionColumns() == null || def.getConditionColumns().isEmpty()) {
-      throw new IllegalArgumentException("决策表条件列 conditionColumns 不能为空");
+      throw new IllegalArgumentException("rule.error.decision_table_condition_required");
     }
     if (def.getActionColumns() == null || def.getActionColumns().isEmpty()) {
-      throw new IllegalArgumentException("决策表动作列 actionColumns 不能为空");
+      throw new IllegalArgumentException("rule.error.decision_table_action_required");
     }
     if (def.getRows() == null) {
       def.setRows(Collections.emptyList());

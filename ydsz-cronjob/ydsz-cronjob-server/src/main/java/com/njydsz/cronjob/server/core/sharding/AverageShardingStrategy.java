@@ -56,7 +56,7 @@ public class AverageShardingStrategy implements ShardingStrategy {
       throw new IllegalArgumentException("shardTotal 必须 >= 1, 实际: " + shardTotal);
     }
     if (onlineNodes == null || onlineNodes.isEmpty()) {
-      throw new IllegalArgumentException("onlineNodes 不能为空");
+      throw new IllegalArgumentException("job.error.online_nodes_required");
     }
     int nodeCount = onlineNodes.size();
     List<ShardAssignment> result = new ArrayList<>(shardTotal);

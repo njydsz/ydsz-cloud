@@ -263,7 +263,7 @@ public class FlowTaskStateMachine {
       return MessageUtils.getMessage("workflow.transition.unknown", "未知状态流转");
     }
     if (current == target) {
-      return MessageUtils.getMessage("workflow.transition.noChange", new Object[] {current.name()},
+      return MessageUtils.getMessage("workflow.transition.no.change", new Object[] {current.name()},
           current.name() + ": 状态未变化");
     }
     return switch (target) {

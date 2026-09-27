@@ -66,17 +66,21 @@ public class SmsChannel implements MessageChannel {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "接收人手机号不能为空", "接收人手机号不能为空", null);
     }
-    return SentryObservation.time("message.channel.sms_send", "短信通道发送", null, () -> {
-      SmsProvider provider = selectProvider();
-      MsgTemplateVO template = resolveTemplate(request);
-      MessageSendResultVO result = provider.send(request, template);
-      log.info(
-          "[SmsChannel] provider={} status={} phone={}",
-          provider.providerType(),
-          result.getStatus(),
-          request.getReceiver());
-      return result;
-    });
+    try {
+      return SentryObservation.<MessageSendResultVO>time("message.channel.sms_send", "短信通道发送", null, () -> {
+        SmsProvider provider = selectProvider();
+        MsgTemplateVO template = resolveTemplate(request);
+        MessageSendResultVO result = provider.send(request, template);
+        log.info(
+            "[SmsChannel] provider={} status={} phone={}",
+            provider.providerType(),
+            result.getStatus(),
+            request.getReceiver());
+        return result;
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("sms_send observation error", t);
+    }
   }
 
   /**

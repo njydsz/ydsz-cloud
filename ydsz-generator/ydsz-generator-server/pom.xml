@@ -49,6 +49,11 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-redis</artifactId>
     </dependency>
+    <!-- P8: ydsz-common-sentry 提供 SentryObservation 可观测埋点 -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-sentry</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity-engine-core</artifactId>

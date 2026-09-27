@@ -85,7 +85,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    */
   @Override
   public String start(FlowStartProcessDTO dto) {
-    return SentryObservation.time("workflow.instance.create", null, null, () -> lifecycleManager.start(dto));
+    try {
+      return SentryObservation.<String>time("workflow.instance.create", null, null, () -> lifecycleManager.start(dto));
+    } catch (Throwable t) {
+      throw new RuntimeException("instance_create observation error", t);
+    }
   }
 
   /**

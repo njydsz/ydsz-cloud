@@ -64,7 +64,7 @@ public class ConsistentHashShardingStrategy implements ShardingStrategy {
       throw new IllegalArgumentException("shardTotal 必须 >= 1, 实际: " + shardTotal);
     }
     if (onlineNodes == null || onlineNodes.isEmpty()) {
-      throw new IllegalArgumentException("onlineNodes 不能为空");
+      throw new IllegalArgumentException("job.error.online_nodes_required");
     }
     // 构建哈希环（TreeMap 保证环上有序，ceilingEntry 实现顺时针查找）
     TreeMap<Integer, String> ring = new TreeMap<>();

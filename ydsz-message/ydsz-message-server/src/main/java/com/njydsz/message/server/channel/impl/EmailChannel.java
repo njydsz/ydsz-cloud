@@ -90,50 +90,54 @@ public class EmailChannel implements MessageChannel {
     if (request.getReceiver() == null || request.getReceiver().isBlank()) {
       return MessageSendResultVO.fail(CHANNEL_TYPE, null, "收件人邮箱不能为空", "收件人邮箱不能为空", null);
     }
-    return SentryObservation.time("message.channel.email_send", "邮件通道发送", null, () -> {
-      try {
-        String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
-        String content = request.getContent();
-        boolean isHtml = content != null && content.contains("<");
+    try {
+      return SentryObservation.<MessageSendResultVO>time("message.channel.email_send", "邮件通道发送", null, () -> {
+        try {
+          String subject = request.getSubject() == null ? "YDSZ 通知" : request.getSubject();
+          String content = request.getContent();
+          boolean isHtml = content != null && content.contains("<");
 
-        // 构建 EmailMessage（适配 common-notify 的消息协议）
-        EmailMessage.EmailMessageBuilder messageBuilder = EmailMessage.builder()
-            .to(request.getReceiver())
-            .subject(subject)
-            .content(content)
-            .isHtml(isHtml);
+          // 构建 EmailMessage（适配 common-notify 的消息协议）
+          EmailMessage.EmailMessageBuilder messageBuilder = EmailMessage.builder()
+              .to(request.getReceiver())
+              .subject(subject)
+              .content(content)
+              .isHtml(isHtml);
 
-        // P2-14: 解析附件/内嵌图片
-        if (request.getChannelMeta() != null) {
-          String attachmentsStr = request.getChannelMeta().get("attachments");
-          if (StringUtils.hasText(attachmentsStr)) {
-            messageBuilder.attachments(createAttachments(attachmentsStr));
+          // P2-14: 解析附件/内嵌图片
+          if (request.getChannelMeta() != null) {
+            String attachmentsStr = request.getChannelMeta().get("attachments");
+            if (StringUtils.hasText(attachmentsStr)) {
+              messageBuilder.attachments(createAttachments(attachmentsStr));
+            }
+            String inlineStr = request.getChannelMeta().get("inlineImages");
+            if (StringUtils.hasText(inlineStr)) {
+              messageBuilder.inlineResources(createInlineResources(inlineStr));
+            }
           }
-          String inlineStr = request.getChannelMeta().get("inlineImages");
-          if (StringUtils.hasText(inlineStr)) {
-            messageBuilder.inlineResources(createInlineResources(inlineStr));
+
+          EmailMessage emailMessage = messageBuilder.build();
+          var result = emailNotifySender.sendEmail(emailMessage);
+
+          String traceId = CHANNEL_TYPE + "-" + snowflakeIdGenerator.nextId();
+          if (result.isSuccess()) {
+            log.info("[EMAIL] 发送成功: to={} subject={}", request.getReceiver(), subject);
+            return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
+          } else {
+            log.warn("[EMAIL] 发送失败: to={}, reason={}", request.getReceiver(), result.getErrorMessage());
+            return MessageSendResultVO.fail(CHANNEL_TYPE, traceId, result.getErrorMessage(),
+                result.getErrorMessage(), null);
           }
+        } catch (Exception e) {
+          log.error("[EMAIL] 发送异常: to={} reason={}", request.getReceiver(), e.getMessage(), e);
+          return MessageSendResultVO.fail(
+              CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
+              e.getClass().getSimpleName() + ": " + e.getMessage(), null);
         }
-
-        EmailMessage emailMessage = messageBuilder.build();
-        var result = emailNotifySender.sendEmail(emailMessage);
-
-        String traceId = CHANNEL_TYPE + "-" + snowflakeIdGenerator.nextId();
-        if (result.isSuccess()) {
-          log.info("[EMAIL] 发送成功: to={} subject={}", request.getReceiver(), subject);
-          return MessageSendResultVO.ok(CHANNEL_TYPE, traceId);
-        } else {
-          log.warn("[EMAIL] 发送失败: to={}, reason={}", request.getReceiver(), result.getErrorMessage());
-          return MessageSendResultVO.fail(CHANNEL_TYPE, traceId, result.getErrorMessage(),
-              result.getErrorMessage(), null);
-        }
-      } catch (Exception e) {
-        log.error("[EMAIL] 发送异常: to={} reason={}", request.getReceiver(), e.getMessage(), e);
-        return MessageSendResultVO.fail(
-            CHANNEL_TYPE, null, e.getClass().getSimpleName() + ": " + e.getMessage(),
-            e.getClass().getSimpleName() + ": " + e.getMessage(), null);
-      }
-    });
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("email_send observation error", t);
+    }
   }
 
   /**

@@ -32,7 +32,7 @@ public final class FlowNodeExt {
   private static final int DEFAULT_TIMEOUT_MINUTES = 120;
 
   private FlowNodeExt() {
-    throw new AssertionError("工具类禁止实例化");
+    throw new AssertionError("workflow.error.util_class_instantiation");
   }
 
   // ==================== 服务节点相关 ====================

@@ -178,33 +178,37 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
           .build();
     }
 
-    return SentryObservation.time("workflow.instance.merge", null, null, () -> {
-      // 生成合并组 ID
-      String mergeGroupId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+    try {
+      return SentryObservation.<String>time("workflow.instance.merge", null, null, () -> {
+        // 生成合并组 ID
+        String mergeGroupId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
 
-      // 存储合并组关系
-      String groupKey = MERGE_GROUP_KEY + mergeGroupId;
-      for (String instanceId : instanceIds) {
-        redisCollectionOps.sAdd(groupKey, instanceId);
-      }
+        // 存储合并组关系
+        String groupKey = MERGE_GROUP_KEY + mergeGroupId;
+        for (String instanceId : instanceIds) {
+          redisCollectionOps.sAdd(groupKey, instanceId);
+        }
 
-      // 存储合并组元信息
-      Map<String, String> detail = new LinkedHashMap<>(COLLECTION_CAPACITY);
-      detail.put("operatorId", operatorId != null ? operatorId : "");
-      detail.put("tenantId", tid);
-      detail.put("flowCode", flowCodes.iterator().next());
-      detail.put("instanceCount", String.valueOf(instanceIds.size()));
-      detail.put("createdAt", String.valueOf(System.currentTimeMillis()));
-      redisHashOps.hMSet(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
+        // 存储合并组元信息
+        Map<String, String> detail = new LinkedHashMap<>(COLLECTION_CAPACITY);
+        detail.put("operatorId", operatorId != null ? operatorId : "");
+        detail.put("tenantId", tid);
+        detail.put("flowCode", flowCodes.iterator().next());
+        detail.put("instanceCount", String.valueOf(instanceIds.size()));
+        detail.put("createdAt", String.valueOf(System.currentTimeMillis()));
+        redisHashOps.hMSet(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
 
-      log.info(
-          "[FlowMerge] 合并实例: groupId={} count={} flowCode={} operator={}",
-          mergeGroupId,
-          instanceIds.size(),
-          flowCodes.iterator().next(),
-          operatorId);
-      return mergeGroupId;
-    });
+        log.info(
+            "[FlowMerge] 合并实例: groupId={} count={} flowCode={} operator={}",
+            mergeGroupId,
+            instanceIds.size(),
+            flowCodes.iterator().next(),
+            operatorId);
+        return mergeGroupId;
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("merge_instances observation error", t);
+    }
   }
 
   /**

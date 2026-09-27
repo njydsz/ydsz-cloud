@@ -16,7 +16,7 @@ package com.njydsz.cronjob.domain.constants;
 public final class CronjobConstants {
 
   private CronjobConstants() {
-    throw new UnsupportedOperationException("常量类不可实例化");
+    throw new UnsupportedOperationException("job.error.class_not_instantiable");
   }
 
   // ============================== 任务状态 ==============================

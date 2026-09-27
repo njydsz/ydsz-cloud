@@ -23,7 +23,7 @@ public final class FlowSkipUtils {
 
 
   private FlowSkipUtils() {
-    throw new AssertionError("工具类禁止实例化");
+    throw new AssertionError("workflow.error.util_class_instantiation");
   }
 
   /**

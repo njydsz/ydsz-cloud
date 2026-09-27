@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -233,7 +234,7 @@ public class ThumbnailApplicationService {
       throws IOException {
     BufferedImage original = ImageIO.read(inputStream);
     if (original == null) {
-      throw new IllegalArgumentException("无法读取图片");
+      throw new IllegalArgumentException(I18n.message("nextwiki.error.image_read_failed"));
     }
 
     int originalWidth = original.getWidth();

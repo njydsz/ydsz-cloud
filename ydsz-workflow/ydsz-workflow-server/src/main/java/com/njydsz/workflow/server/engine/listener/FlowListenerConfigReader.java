@@ -37,7 +37,7 @@ import com.njydsz.common.json.YdszJson;
 public final class FlowListenerConfigReader {
 
   private FlowListenerConfigReader() {
-    throw new AssertionError("工具类禁止实例化");
+    throw new AssertionError("workflow.error.util_class_instantiation");
   }
 
   /**

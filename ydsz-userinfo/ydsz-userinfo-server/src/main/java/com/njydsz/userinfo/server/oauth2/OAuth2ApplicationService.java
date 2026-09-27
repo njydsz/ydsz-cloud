@@ -65,41 +65,45 @@ public class OAuth2ApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public OAuth2Application registerApplication(OAuth2ApplicationCommand command) {
-    return SentryObservation.time("userinfo.oauth.register", null, null, () -> {
-      // 参数校验
-      if (command.clientName() == null || command.clientName().isBlank()) {
-        throw new BusinessException(UserInfoExceptionCode.PARAM_INVALID);
-      }
-      if (command.redirectUris() == null || command.redirectUris().isEmpty()) {
-        throw new BusinessException(UserInfoExceptionCode.PARAM_INVALID);
-      }
+    try {
+      return SentryObservation.<OAuth2Application>time("userinfo.oauth.register", null, null, () -> {
+        // 参数校验
+        if (command.clientName() == null || command.clientName().isBlank()) {
+          throw new BusinessException(UserInfoExceptionCode.PARAM_INVALID);
+        }
+        if (command.redirectUris() == null || command.redirectUris().isEmpty()) {
+          throw new BusinessException(UserInfoExceptionCode.PARAM_INVALID);
+        }
 
-      String clientId = generateClientId();
-      String plainClientSecret = generateClientSecret();
-      String encodedClientSecret = PwdUtils.hashPasswordBCrypt(plainClientSecret);
+        String clientId = generateClientId();
+        String plainClientSecret = generateClientSecret();
+        String encodedClientSecret = PwdUtils.hashPasswordBCrypt(plainClientSecret);
 
-      OAuth2Application application = new OAuth2Application(
-          String.valueOf(snowflakeIdGenerator.nextId()),
-          clientId,
-          command.clientName(),
-          encodedClientSecret,
-          command.clientType(),
-          command.redirectUris(),
-          command.allowedScopes(),
-          command.allowedAudiences(),
-          OAuth2Application.ApplicationStatus.ENABLED,
-          command.description(),
-          command.iconUrl(),
-          LocalDateTime.now(),
-          LocalDateTime.now(),
-          getCurrentUserId());
+        OAuth2Application application = new OAuth2Application(
+            String.valueOf(snowflakeIdGenerator.nextId()),
+            clientId,
+            command.clientName(),
+            encodedClientSecret,
+            command.clientType(),
+            command.redirectUris(),
+            command.allowedScopes(),
+            command.allowedAudiences(),
+            OAuth2Application.ApplicationStatus.ENABLED,
+            command.description(),
+            command.iconUrl(),
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            getCurrentUserId());
 
-      OAuth2Application saved = applicationRepository.save(application);
+        OAuth2Application saved = applicationRepository.save(application);
 
-      // 返回包含明文密钥的应用对象（仅创建时返回）
-      log.info("OAuth2 application registered: clientId={}, clientName={}", clientId, command.clientName());
-      return saved.withPlainSecret(plainClientSecret);
-    });
+        // 返回包含明文密钥的应用对象（仅创建时返回）
+        log.info("OAuth2 application registered: clientId={}, clientName={}", clientId, command.clientName());
+        return saved.withPlainSecret(plainClientSecret);
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("oauth_register observation error", t);
+    }
   }
 
   /**

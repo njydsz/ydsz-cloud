@@ -536,7 +536,7 @@ private String getActionName(String action) {
         case "COUNTERSIGN_AFTER" -> MessageUtils.getMessage("workflow.countersign.after", "后加签");
         case "COUNTERSIGN_PARALLEL" -> MessageUtils.getMessage("workflow.countersign.parallel", "并加签");
         case "COUNTERSIGN_REMOVE" -> MessageUtils.getMessage("workflow.countersign.remove", "减签");
-        default -> MessageUtils.getMessage("workflow.countersign.unknownAction", "未知加签操作");
+        default -> MessageUtils.getMessage("workflow.countersign.unknown.action", "未知加签操作");
     };
 }
 

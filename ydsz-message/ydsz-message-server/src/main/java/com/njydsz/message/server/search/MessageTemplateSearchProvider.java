@@ -47,7 +47,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
   }
 
   public String getTypeLabel() {
-    return MessageUtils.getMessage("message.search.typeLabel", "消息模板");
+    return MessageUtils.getMessage("message.search.type.label", "消息模板");
   }
 
   @Override

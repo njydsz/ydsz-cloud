@@ -182,41 +182,42 @@ public class FileApplicationService {
    */
   public FileNodeVO upload(
       MultipartFile file, String parentId, String rename, String versionRemark, String userId) {
-    return SentryObservation.time("nextwiki.file.upload", null, null, () -> {
-      // ===== 阶段1：准备阶段（无事务边界） =====
-      // 1. 安全校验
-      validateUpload(file);
+    try {
+      return SentryObservation.<FileNodeVO>time("nextwiki.file.upload", null, null, () -> {
+        // ===== 阶段1：准备阶段（无事务边界） =====
+        // 1. 安全校验
+        validateUpload(file);
 
-      // 2. 配额校验
-      quotaDomainService.checkQuota(loadQuota("user", userId), file.getSize());
+        // 2. 配额校验
+        quotaDomainService.checkQuota(loadQuota("user", userId), file.getSize());
 
-      // 3. 解析父目录
-      String originalFilename = file.getOriginalFilename();
-      String rawName = (rename != null && !rename.isEmpty()) ? rename : originalFilename;
-      String fileName = sanitizeFileName(rawName);
-      String suffix = extractSuffix(fileName);
+        // 3. 解析父目录
+        String originalFilename = file.getOriginalFilename();
+        String rawName = (rename != null && !rename.isEmpty()) ? rename : originalFilename;
+        String fileName = sanitizeFileName(rawName);
+        String suffix = extractSuffix(fileName);
 
-      FileNodeVO parent = resolveParentNode(parentId, userId);
-      String resolvedParentId = parent.getId();
-      String parentPath = parent.getPath() != null ? parent.getPath() : "/";
+        FileNodeVO parent = resolveParentNode(parentId, userId);
+        String resolvedParentId = parent.getId();
+        String parentPath = parent.getPath() != null ? parent.getPath() : "/";
 
-      // 同名冲突检测（只读查询，不含写操作）
-      List<FileNodeVO> existingNodes =
-          fileNodeRepository.findByNameAndParent(fileName, resolvedParentId, userId);
-      String conflictStrategy = properties.getUpload().getConflictStrategy();
-      String strategy = conflictStrategy != null ? conflictStrategy.toUpperCase() : "KEEP_BOTH";
+        // 同名冲突检测（只读查询，不含写操作）
+        List<FileNodeVO> existingNodes =
+            fileNodeRepository.findByNameAndParent(fileName, resolvedParentId, userId);
+        String conflictStrategy = properties.getUpload().getConflictStrategy();
+        String strategy = conflictStrategy != null ? conflictStrategy.toUpperCase() : "KEEP_BOTH";
 
-      if (existingNodes != null && !existingNodes.isEmpty() && "SKIP".equals(strategy)) {
-        log.info("[FileApplicationService] 同名文件已存在，跳过上传: name={}", fileName);
-        return existingNodes.get(0);
-      }
-      if (existingNodes != null && !existingNodes.isEmpty() && "KEEP_BOTH".equals(strategy)) {
-        fileName = resolveUniqueName(fileName, resolvedParentId, userId);
-      }
+        if (existingNodes != null && !existingNodes.isEmpty() && "SKIP".equals(strategy)) {
+          log.info("[FileApplicationService] 同名文件已存在，跳过上传: name={}", fileName);
+          return existingNodes.get(0);
+        }
+        if (existingNodes != null && !existingNodes.isEmpty() && "KEEP_BOTH".equals(strategy)) {
+          fileName = resolveUniqueName(fileName, resolvedParentId, userId);
+        }
 
-      String path =
-          parentPath.endsWith("/") ? parentPath + fileName + "/" : parentPath + "/" + fileName + "/";
-      int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
+        String path =
+            parentPath.endsWith("/") ? parentPath + fileName + "/" : parentPath + "/" + fileName + "/";
+        int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
       // 4. 计算文件哈希（IO 操作，在事务外执行）
       String fileHash = null;
@@ -283,7 +284,10 @@ public class FileApplicationService {
         return persistDedupedNode(ctx);
       }
       return persistNewNode(ctx);
-    });
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("file_upload observation error", t);
+    }
   }
 
   /**

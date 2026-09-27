@@ -171,7 +171,7 @@ public class LlmClientRouter implements LlmClient {
   public List<Float> embed(String text) {
     LlmClient client = defaultClient.get();
     if (client == null) {
-      throw new LlmException("无可用 LLM Provider 执行 embedding", LlmException.ErrorType.MODEL_NOT_FOUND);
+      throw new LlmException("agent.error.llm.no_provider_for_embedding", LlmException.ErrorType.MODEL_NOT_FOUND);
     }
     try {
       return client.embed(text);

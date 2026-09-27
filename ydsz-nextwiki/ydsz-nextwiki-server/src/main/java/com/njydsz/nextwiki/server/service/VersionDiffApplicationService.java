@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.nextwiki.domain.vo.DiffResultVO;
 import com.njydsz.nextwiki.domain.vo.FileVersionVO;
@@ -51,12 +52,12 @@ public class VersionDiffApplicationService {
     // 检查是否支持 diff
     if (!versionDiffService.isDiffSupported(newVer.getMimeType(), newVer.getSize())) {
       throw new UnsupportedOperationException(
-          "该文件类型不支持版本对比（仅支持文本文件，文件大小不超过 1MB）");
+          I18n.message("nextwiki.error.diff_not_supported"));
     }
 
     IFileStorage storage = fileStorageProvider.getStorage();
     if (storage == null) {
-      throw new IllegalStateException("存储服务未初始化");
+      throw new IllegalStateException(I18n.message("nextwiki.error.storage_not_initialized"));
     }
 
     // 使用存储默认 bucket（传 null 使用配置默认值）

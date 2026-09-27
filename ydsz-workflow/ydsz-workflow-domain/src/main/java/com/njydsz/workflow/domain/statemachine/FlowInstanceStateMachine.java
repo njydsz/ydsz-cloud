@@ -254,7 +254,7 @@ public class FlowInstanceStateMachine {
     }
     if (current == target) {
       return MessageUtils.getMessage(
-          "workflow.instance.transition.noChange",
+          "workflow.instance.transition.no.change",
           new Object[] {current.name()},
           current.name() + ": 状态未变化");
     }

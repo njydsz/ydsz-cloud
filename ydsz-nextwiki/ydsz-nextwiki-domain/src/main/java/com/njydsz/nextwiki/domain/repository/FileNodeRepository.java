@@ -271,6 +271,18 @@ public interface FileNodeRepository {
   List<FileNodeVO> findAllDescendants(String folderId);
 
   /**
+   * 按文件夹 ID 一次性加载全部后代节点并在内存中构建树形结构（消除 N+1 查询）。
+   *
+   * <p>内部通过路径前缀一次性查询所有后代节点（含自身），再通过
+   * {@link com.njydsz.common.domain.tree.TreeBuilder#buildSimple}
+   * 在 O(n) 时间内完成树的组装。适用于前端加载完整目录树场景。
+   *
+   * @param folderId 文件夹节点 ID
+   * @return 树形结构的根节点列表（含完整子树）；节点不存在时返回空列表
+   */
+  List<FileNodeVO> buildFolderTree(String folderId);
+
+  /**
    * 查询冷数据候选（长期未访问的文件）
    *
    * @param threshold 时间阈值

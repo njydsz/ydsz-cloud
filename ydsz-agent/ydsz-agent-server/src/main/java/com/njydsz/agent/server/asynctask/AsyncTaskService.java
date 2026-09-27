@@ -98,26 +98,30 @@ public class AsyncTaskService {
           .build();
     }
 
-    return SentryObservation.time("agent.async_task.create", null, null, () -> {
-      // 构建任务实体
-      AsyncTask task = new AsyncTask(taskType, tenantCode, userId, inputPayload);
+    try {
+      return SentryObservation.<Long>time("agent.async_task.create", null, null, () -> {
+        // 构建任务实体
+        AsyncTask task = new AsyncTask(taskType, tenantCode, userId, inputPayload);
 
-      // 超时与过期时间
-      long timeoutSecs = type.getDefaultTimeoutSeconds();
-      task.setTimeoutSeconds(timeoutSecs);
-      task.setExpireAt(LocalDateTime.now().plusSeconds(timeoutSecs));
+        // 超时与过期时间
+        long timeoutSecs = type.getDefaultTimeoutSeconds();
+        task.setTimeoutSeconds(timeoutSecs);
+        task.setExpireAt(LocalDateTime.now().plusSeconds(timeoutSecs));
 
-      // 设置默认重试策略
-      task.setMaxRetry(DEFAULT_MAX_RETRY);
-      task.setRetryCount(0);
+        // 设置默认重试策略
+        task.setMaxRetry(DEFAULT_MAX_RETRY);
+        task.setRetryCount(0);
 
-      // 持久化
-      taskStore.submit(task);
-      log.info("[AsyncTask] 任务提交成功: id={}, type={}, tenant={}, timeout={}s",
-          task.getId(), taskType, tenantCode, timeoutSecs);
+        // 持久化
+        taskStore.submit(task);
+        log.info("[AsyncTask] 任务提交成功: id={}, type={}, tenant={}, timeout={}s",
+            task.getId(), taskType, tenantCode, timeoutSecs);
 
-      return task.getId();
-    });
+        return task.getId();
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("create_task observation error", t);
+    }
   }
 
   /**

@@ -82,7 +82,7 @@ public class UrgeChannelConfigVO implements Serializable {
     public static final String FEISHU = "FEISHU";
 
     private Channel() {
-      throw new UnsupportedOperationException("常量类不可实例化");
+      throw new UnsupportedOperationException("workflow.error.class_not_instantiable");
     }
   }
 

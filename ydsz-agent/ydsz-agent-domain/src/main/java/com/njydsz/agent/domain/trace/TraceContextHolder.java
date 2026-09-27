@@ -26,7 +26,7 @@ public final class TraceContextHolder {
 
   /** 工具类禁止实例化 */
   private TraceContextHolder() {
-    throw new UnsupportedOperationException("工具类禁止实例化");
+    throw new UnsupportedOperationException("agent.error.util_class_instantiation");
   }
 
   /** ThreadLocal 存储链路上下文（clear() 方法提供 remove() 语义，确保线程池环境安全） */

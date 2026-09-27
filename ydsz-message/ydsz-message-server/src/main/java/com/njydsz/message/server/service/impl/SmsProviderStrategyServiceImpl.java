@@ -71,7 +71,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
   @Override
   public SmsProvider selectProvider(List<SmsProvider> availableProviders) {
     if (availableProviders == null || availableProviders.isEmpty()) {
-      throw new IllegalStateException("无可用 SMS provider");
+      throw new IllegalStateException("message.error.no_sms_provider");
     }
     if (availableProviders.size() == 1) {
       return availableProviders.get(0);

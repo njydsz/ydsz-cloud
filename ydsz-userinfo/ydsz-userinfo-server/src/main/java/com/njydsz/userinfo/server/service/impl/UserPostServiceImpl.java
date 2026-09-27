@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.dto.UserPostDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserPostRepository;
@@ -52,7 +53,7 @@ public class UserPostServiceImpl implements UserPostService {
   @Override
   public List<UserPostVO> list() {
     throw new UnsupportedOperationException(
-        "UserPostRepository 不支持无过滤条件的全量列表查询，请使用 findByUserId");
+        I18n.message("userinfo.error.post.list.unsupported"));
   }
 
   /**
@@ -79,7 +80,7 @@ public class UserPostServiceImpl implements UserPostService {
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(UserPostVO vo) {
     throw new UnsupportedOperationException(
-        "UserPostRepository 不支持 update 操作，请使用 delete + create 实现关联变更");
+        I18n.message("userinfo.error.post.update.unsupported"));
   }
 
   /**

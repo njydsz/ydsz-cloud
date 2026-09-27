@@ -159,30 +159,34 @@ public class ChatService {
     String provider = llmClient.getProvider();
     String executionId = String.valueOf(snowflakeIdGenerator.nextId());
     String tenantId = resolveTenantId(convId);
-    return SentryObservation.time("agent.chat", null, null, () -> {
-      memory.save(convId, ChatMessage.user(sanitizedInput, convId));
-      runtimeMetrics.recordMessage("user");
+    try {
+      return SentryObservation.<ChatResponse>time("agent.chat", null, null, () -> {
+        memory.save(convId, ChatMessage.user(sanitizedInput, convId));
+        runtimeMetrics.recordMessage("user");
 
-      CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
-      log.info("{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
-          logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
-      performQuotaPreCheck(tenantId, estimatedCost);
+        CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+        log.info("{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}", logPrefix, convId,
+            estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+        performQuotaPreCheck(tenantId, estimatedCost);
 
-      eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT", model);
-      long startTime = System.currentTimeMillis();
-      ChatResponse response;
-      try {
-        response = llmClient.chat(request);
-      } catch (Exception e) {
+        eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT", model);
+        long startTime = System.currentTimeMillis();
+        ChatResponse response;
+        try {
+          response = llmClient.chat(request);
+        } catch (Exception e) {
+          long duration = System.currentTimeMillis() - startTime;
+          handleLlmException(e, convId, traceId, "simple", model, provider, executionId, tenantId, request, duration, false);
+          throw e;
+        }
         long duration = System.currentTimeMillis() - startTime;
-        handleLlmException(e, convId, traceId, "simple", model, provider, executionId, tenantId, request, duration, false);
-        throw e;
-      }
-      long duration = System.currentTimeMillis() - startTime;
-      return finalizeSuccess(
-          logPrefix, response, convId, traceId, "simple", model, provider, executionId, tenantId,
-          request, duration, false, "CHAT");
-    });
+        return finalizeSuccess(
+            logPrefix, response, convId, traceId, "simple", model, provider, executionId, tenantId,
+            request, duration, false, "CHAT");
+      });
+    } catch (Throwable t) {
+      throw new RuntimeException("chat observation error", t);
+    }
   }
 
   /**
