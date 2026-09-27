@@ -21,7 +21,7 @@ public class SecondaryAuthRequest {
    *
    * <p>用于验证用户身份，验证通过后写入场景化安全标记。
    */
-  @NotBlank(message = "密码不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String password;
 
   /**
@@ -30,7 +30,7 @@ public class SecondaryAuthRequest {
    * <p>用于区分不同业务场景的二级认证，每个场景独立验证、独立过期。
    * 常用值：{@code password_change}、{@code role_assign}、{@code data_export}、{@code tenant_config}
    */
-  @NotBlank(message = "场景标识不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String scene;
 
   /**

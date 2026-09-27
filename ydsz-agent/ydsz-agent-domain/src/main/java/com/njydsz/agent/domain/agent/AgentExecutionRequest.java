@@ -82,7 +82,7 @@ public final class AgentExecutionRequest {
       List<ChatMessage> contextMessages) {
     this.agentCode = agentCode;
     this.conversationId = conversationId;
-    this.userInput = Objects.requireNonNull(userInput, "userInput 不能为 null");
+    this.userInput = Objects.requireNonNull(userInput, "agent.error.user_input_required");
     this.systemPrompt = systemPrompt;
     this.variables = variables != null ? Map.copyOf(variables) : Collections.emptyMap();
     // 未指定迭代上限时默认 10 轮，作为 ReAct 循环的兜底上限，避免工具调用死循环

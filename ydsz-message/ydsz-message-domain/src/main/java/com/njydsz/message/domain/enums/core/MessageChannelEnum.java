@@ -55,12 +55,12 @@ public enum MessageChannelEnum {
    */
   public static MessageChannelEnum parse(String value) {
     if (value == null || value.isBlank()) {
-      throw new IllegalArgumentException("消息通道不能为空");
+      throw new IllegalArgumentException("message.error.channel_required");
     }
     try {
       return MessageChannelEnum.valueOf(value.trim().toUpperCase());
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("不支持的消息通道: " + value);
+      throw new IllegalArgumentException("message.error.unsupported_channel: " + value);
     }
   }
 }

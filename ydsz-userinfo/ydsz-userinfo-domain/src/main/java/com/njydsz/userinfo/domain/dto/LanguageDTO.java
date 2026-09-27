@@ -31,19 +31,19 @@ public class LanguageDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 语言 ID（更新时必填） */
-  @Xss(message = "id包含非法内容")
+  @Xss(message = "{userinfo.param.xss}")
   private String id;
 
   /** 语言编码（ISO 639-1 + ISO 3166-1，如 {@code zh-CN} / {@code en-US}） */
-  @NotBlank(message = "语言编码不能为空")
-  @Size(max = 20, message = "语言编码长度不能超过 20 个字符")
-  @Xss(message = "languageCode包含非法内容")
+  @NotBlank(message = "{userinfo.param.required}")
+  @Size(max = 20, message = "{userinfo.error.max_length}")
+  @Xss(message = "{userinfo.param.xss}")
   private String languageCode;
 
   /** 语言名称（前端展示，如「简体中文」/「English」） */
-  @NotBlank(message = "语言名称不能为空")
-  @Size(max = 64, message = "语言名称长度不能超过 64 个字符")
-  @Xss(message = "languageName包含非法内容")
+  @NotBlank(message = "{userinfo.param.required}")
+  @Size(max = 64, message = "{userinfo.error.max_length}")
+  @Xss(message = "{userinfo.param.xss}")
   private String languageName;
 
   /** 是否默认语言（{@code 1=是}，全局仅允许一个默认语言） */
@@ -53,6 +53,6 @@ public class LanguageDTO implements Serializable {
   private Integer sort;
 
   /** 启用状态（{@code "ENABLED"} / {@code "DISABLED"}） */
-  @Xss(message = "status包含非法内容")
+  @Xss(message = "{userinfo.param.xss}")
   private String status;
 }

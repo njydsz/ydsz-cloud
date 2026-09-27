@@ -31,7 +31,7 @@ public enum SocialPlatformLinkingStrategy {
    * <p>此策略在社交用户首次登录时，若本地无绑定记录且社交用户信息包含邮箱，
    * 则自动创建本地用户并创建绑定。适用于企业内部工具场景。
    */
-  AUTO_BIND("auto_bind", "自动绑定"),
+  AUTO_BIND("auto_bind", "userinfo.social.strategy.auto_bind"),
 
   /**
    * 手动绑定（仅返回社交信息，由前端引导用户登录后绑定）。
@@ -39,7 +39,7 @@ public enum SocialPlatformLinkingStrategy {
    * <p>此策略在社交用户回调时，若本地无绑定记录，则仅返回社交用户信息（昵称/头像/邮箱），
    * 前端引导用户通过本地账号登录后再完成绑定。适用于安全要求较高的场景。
    */
-  MANUAL_BIND("manual_bind", "手动绑定"),
+  MANUAL_BIND("manual_bind", "userinfo.social.strategy.manual_bind"),
 
   /**
    * 冲突拒绝（社交账号已绑定到其他用户时拒绝登录）。
@@ -47,7 +47,7 @@ public enum SocialPlatformLinkingStrategy {
    * <p>此策略在社交用户已绑定时严格校验绑定归属，若发现 openId 已被其他用户绑定
    * 且当前登录用户与绑定用户不一致，则拒绝登录并返回冲突提示。
    */
-  CONFLICT_REJECT("conflict_reject", "冲突拒绝");
+  CONFLICT_REJECT("conflict_reject", "userinfo.social.strategy.conflict_reject");
 
   /** 策略标识 */
   private final String code;

@@ -20,6 +20,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -177,31 +178,33 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
           .build();
     }
 
-    // 生成合并组 ID
-    String mergeGroupId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+    return SentryObservation.time("workflow.instance.merge", null, null, () -> {
+      // 生成合并组 ID
+      String mergeGroupId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
 
-    // 存储合并组关系
-    String groupKey = MERGE_GROUP_KEY + mergeGroupId;
-    for (String instanceId : instanceIds) {
-      redisCollectionOps.sAdd(groupKey, instanceId);
-    }
+      // 存储合并组关系
+      String groupKey = MERGE_GROUP_KEY + mergeGroupId;
+      for (String instanceId : instanceIds) {
+        redisCollectionOps.sAdd(groupKey, instanceId);
+      }
 
-    // 存储合并组元信息
-    Map<String, String> detail = new LinkedHashMap<>(COLLECTION_CAPACITY);
-    detail.put("operatorId", operatorId != null ? operatorId : "");
-    detail.put("tenantId", tid);
-    detail.put("flowCode", flowCodes.iterator().next());
-    detail.put("instanceCount", String.valueOf(instanceIds.size()));
-    detail.put("createdAt", String.valueOf(System.currentTimeMillis()));
-    redisHashOps.hMSet(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
+      // 存储合并组元信息
+      Map<String, String> detail = new LinkedHashMap<>(COLLECTION_CAPACITY);
+      detail.put("operatorId", operatorId != null ? operatorId : "");
+      detail.put("tenantId", tid);
+      detail.put("flowCode", flowCodes.iterator().next());
+      detail.put("instanceCount", String.valueOf(instanceIds.size()));
+      detail.put("createdAt", String.valueOf(System.currentTimeMillis()));
+      redisHashOps.hMSet(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
 
-    log.info(
-        "[FlowMerge] 合并实例: groupId={} count={} flowCode={} operator={}",
-        mergeGroupId,
-        instanceIds.size(),
-        flowCodes.iterator().next(),
-        operatorId);
-    return mergeGroupId;
+      log.info(
+          "[FlowMerge] 合并实例: groupId={} count={} flowCode={} operator={}",
+          mergeGroupId,
+          instanceIds.size(),
+          flowCodes.iterator().next(),
+          operatorId);
+      return mergeGroupId;
+    });
   }
 
   /**

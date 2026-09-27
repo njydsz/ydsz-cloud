@@ -11,6 +11,7 @@ import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
 import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.sentry.SentryObservation;
 
 /**
  * 异步任务管理服务
@@ -97,24 +98,26 @@ public class AsyncTaskService {
           .build();
     }
 
-    // 构建任务实体
-    AsyncTask task = new AsyncTask(taskType, tenantCode, userId, inputPayload);
+    return SentryObservation.time("agent.async_task.create", null, null, () -> {
+      // 构建任务实体
+      AsyncTask task = new AsyncTask(taskType, tenantCode, userId, inputPayload);
 
-    // 超时与过期时间
-    long timeoutSecs = type.getDefaultTimeoutSeconds();
-    task.setTimeoutSeconds(timeoutSecs);
-    task.setExpireAt(LocalDateTime.now().plusSeconds(timeoutSecs));
+      // 超时与过期时间
+      long timeoutSecs = type.getDefaultTimeoutSeconds();
+      task.setTimeoutSeconds(timeoutSecs);
+      task.setExpireAt(LocalDateTime.now().plusSeconds(timeoutSecs));
 
-    // 设置默认重试策略
-    task.setMaxRetry(DEFAULT_MAX_RETRY);
-    task.setRetryCount(0);
+      // 设置默认重试策略
+      task.setMaxRetry(DEFAULT_MAX_RETRY);
+      task.setRetryCount(0);
 
-    // 持久化
-    taskStore.submit(task);
-    log.info("[AsyncTask] 任务提交成功: id={}, type={}, tenant={}, timeout={}s",
-        task.getId(), taskType, tenantCode, timeoutSecs);
+      // 持久化
+      taskStore.submit(task);
+      log.info("[AsyncTask] 任务提交成功: id={}, type={}, tenant={}, timeout={}s",
+          task.getId(), taskType, tenantCode, timeoutSecs);
 
-    return task.getId();
+      return task.getId();
+    });
   }
 
   /**

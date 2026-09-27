@@ -164,7 +164,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
    */
   public void setStatusEnum(RuleStatusEnum statusEnum) {
     if (statusEnum == null) {
-      throw new IllegalArgumentException("规则状态不可为 null");
+      throw new IllegalArgumentException("rule.error.status_null");
     }
     this.status = statusEnum.name();
   }
@@ -183,7 +183,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
       current = RuleStatusEnum.DRAFT;
     }
     if (!current.canTransitTo(RuleStatusEnum.PUBLISHED)) {
-      throw new IllegalStateException(String.format("规则[%s]当前状态[%s]不允许发布", ruleCode, current));
+      throw new IllegalStateException("rule.error.publish_invalid_state");
     }
     this.status = RuleStatusEnum.PUBLISHED.name();
     this.reviewedBy = reviewer;
@@ -200,10 +200,10 @@ public class RuleDefinition extends MpBaseEntity<String> {
   public void disable() {
     RuleStatusEnum current = getStatusEnum();
     if (current == null) {
-      throw new IllegalStateException(String.format("规则[%s]状态为空，无法停用", ruleCode));
+      throw new IllegalStateException("rule.error.disable_status_null");
     }
     if (!current.canTransitTo(RuleStatusEnum.DISABLED)) {
-      throw new IllegalStateException(String.format("规则[%s]当前状态[%s]不允许停用", ruleCode, current));
+      throw new IllegalStateException("rule.error.disable_invalid_state");
     }
     this.status = RuleStatusEnum.DISABLED.name();
   }
@@ -218,10 +218,10 @@ public class RuleDefinition extends MpBaseEntity<String> {
   public void revertToDraft() {
     RuleStatusEnum current = getStatusEnum();
     if (current == null) {
-      throw new IllegalStateException(String.format("规则[%s]状态为空，无法回退", ruleCode));
+      throw new IllegalStateException("rule.error.revert_status_null");
     }
     if (!current.canTransitTo(RuleStatusEnum.DRAFT)) {
-      throw new IllegalStateException(String.format("规则[%s]当前状态[%s]不允许回退到草稿", ruleCode, current));
+      throw new IllegalStateException("rule.error.revert_invalid_state");
     }
     this.status = RuleStatusEnum.DRAFT.name();
     this.reviewedBy = null;

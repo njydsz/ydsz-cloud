@@ -20,6 +20,6 @@ public class MfaOperationDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** TOTP 动态码（6 位数字，由 Authenticator 应用生成） */
-  @NotBlank(message = "动态码不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String code;
 }

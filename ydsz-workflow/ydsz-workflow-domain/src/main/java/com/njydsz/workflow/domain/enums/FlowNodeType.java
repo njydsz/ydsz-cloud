@@ -12,21 +12,21 @@ import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 public enum FlowNodeType {
 
   /** 开始节点 */
-  START(0, "开始"),
+  START(0, "workflow.node.type.START"),
   /** 审批节点（单人审批） */
-  APPROVAL(1, "审批"),
+  APPROVAL(1, "workflow.node.type.APPROVAL"),
   /** 抄送节点 */
-  CC(2, "抄送"),
+  CC(2, "workflow.node.type.CC"),
   /** 条件路由节点（互斥网关） */
-  CONDITION(3, "条件"),
+  CONDITION(3, "workflow.node.type.CONDITION"),
   /** 并行网关（同时推进多条分支） */
-  PARALLEL(4, "并行网关"),
+  PARALLEL(4, "workflow.node.type.PARALLEL"),
   /** 包容网关（满足条件的分支都推进） */
-  INCLUSIVE(5, "包容网关"),
+  INCLUSIVE(5, "workflow.node.type.INCLUSIVE"),
   /** 结束节点 */
-  END(6, "结束"),
+  END(6, "workflow.node.type.END"),
   /** 子流程节点 */
-  SUBPROCESS(7, "子流程"),
+  SUBPROCESS(7, "workflow.node.type.SUBPROCESS"),
   /**
    * P1-4: 服务节点 — 自动执行（HTTP/SCRIPT/AUTO_PASS），不创建人工任务。
    *
@@ -41,7 +41,7 @@ public enum FlowNodeType {
    *
    * <p>P1-5: ext JSON 还支持 autoDedup: true 配置，表示该节点启用跨节点办理人去重 （同实例下已审批过的办理人将被排除，候选为空时自动跳过）。
    */
-  SERVICE(8, "服务节点"),
+  SERVICE(8, "workflow.node.type.SERVICE"),
   /**
    * GAP-P2-10: 循环节点（FOREACH）— 对集合变量中每个元素创建独立子任务，全部完成才推进
    *
@@ -63,7 +63,7 @@ public enum FlowNodeType {
    *   <li>{@code emptyStrategy}：集合为空兜底策略（FALLBACK/AUTO_PASS/TRANSFER_ADMIN/ASSIGN_SPECIFIED）
    * </ul>
    */
-  FOREACH(9, "循环节点"),
+  FOREACH(9, "workflow.node.type.FOREACH"),
   /**
    * P0-4: 逐级审批节点 — 从发起人直属上级开始，逐级向上审批，直到达到 maxLevel 或遇到终止条件
    *
@@ -87,7 +87,7 @@ public enum FlowNodeType {
    * <p>实现：创建任务时通过 {@link FlowAssigneeResolver#expandMultiLeader} 展开多级上级列表，
    * 使用 PARALLEL 会签模式，全部通过后推进。
    */
-  LEVEL_APPROVAL(10, "逐级审批"),
+  LEVEL_APPROVAL(10, "workflow.node.type.LEVEL_APPROVAL"),
   /**
    * P0-5: AI 审批节点 — 由 AI Agent 根据流程变量智能决策是否通过，无需人工干预。
    *
@@ -107,7 +107,7 @@ public enum FlowNodeType {
    *
    * <p>实现了 Flowlong 的「AI 审批」概念，与 ydsz-agent 模块联动，支持自然语言审批决策。
    */
-  AI_AGENT(11, "AI审批");
+  AI_AGENT(11, "workflow.node.type.AI_AGENT");
 
   private final int code;
   private final String desc;

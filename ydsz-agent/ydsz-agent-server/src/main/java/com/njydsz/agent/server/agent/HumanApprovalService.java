@@ -23,6 +23,7 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
@@ -264,7 +265,7 @@ public class HumanApprovalService {
    */
   public boolean approve(
       String approvalId, String approver, String comment, Consumer<SseEvent> eventConsumer) {
-    return resolve(approvalId, ApprovalStatus.APPROVED, approver, comment, eventConsumer);
+    return SentryObservation.time("agent.approval.approve", null, null, () -> resolve(approvalId, ApprovalStatus.APPROVED, approver, comment, eventConsumer));
   }
 
   /**
@@ -292,7 +293,7 @@ public class HumanApprovalService {
    */
   public boolean reject(
       String approvalId, String approver, String comment, Consumer<SseEvent> eventConsumer) {
-    return resolve(approvalId, ApprovalStatus.REJECTED, approver, comment, eventConsumer);
+    return SentryObservation.time("agent.approval.reject", null, null, () -> resolve(approvalId, ApprovalStatus.REJECTED, approver, comment, eventConsumer));
   }
 
   /**

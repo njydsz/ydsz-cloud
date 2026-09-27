@@ -22,14 +22,14 @@ public class ChangePasswordDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 用户 ID（指定修改密码的目标用户） */
-  @NotBlank(message = "用户ID不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String userId;
 
   /** 旧密码（明文传入，服务端 BCrypt 比对验证） */
-  @NotBlank(message = "旧密码不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String oldPassword;
 
   /** 新密码（明文传入，服务端 BCrypt 加密存储，须符合密码策略） */
-  @NotBlank(message = "新密码不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String newPassword;
 }

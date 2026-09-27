@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient.AgentExecutionResult;
@@ -127,22 +128,22 @@ public class FlowAiAgentNodeExecutor {
     log.info("[Flow-AI-Agent] 实例 {} 节点 {} 开始执行 AI 审批, agentId={}, timeout={}ms", instanceId,
         nodeCode, config.getAgentId(), config.getTimeoutMs());
 
-    // 构建上下文
     Map<String, Object> context = buildContext(instanceId, nodeCode, variables);
+    return SentryObservation.time("workflow.node.execute", null, null, () -> {
+      // 执行（带重试）
+      AgentExecutionResult result = executeWithRetry(config, resolvedPrompt, context, instanceId,
+          nodeCode);
 
-    // 执行（带重试）
-    AgentExecutionResult result = executeWithRetry(config, resolvedPrompt, context, instanceId,
-        nodeCode);
+      if (result == null) {
+        log.warn("[Flow-AI-Agent] 实例 {} 节点 {} Agent 返回 null，触发兜底策略", instanceId, nodeCode);
+        return applyFallback(config, instanceId, nodeCode, "Agent 返回 null");
+      }
 
-    if (result == null) {
-      log.warn("[Flow-AI-Agent] 实例 {} 节点 {} Agent 返回 null，触发兜底策略", instanceId, nodeCode);
-      return applyFallback(config, instanceId, nodeCode, "Agent 返回 null");
-    }
+      log.info("[Flow-AI-Agent] 实例 {} 节点 {} AI 审批完成, approve={}, confidence={}, reason={}",
+          instanceId, nodeCode, result.approve(), result.confidence(), result.reason());
 
-    log.info("[Flow-AI-Agent] 实例 {} 节点 {} AI 审批完成, approve={}, confidence={}, reason={}",
-        instanceId, nodeCode, result.approve(), result.confidence(), result.reason());
-
-    return result.approve();
+      return result.approve();
+    });
   }
 
   /**

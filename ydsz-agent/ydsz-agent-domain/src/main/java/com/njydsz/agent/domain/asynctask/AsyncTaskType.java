@@ -11,16 +11,16 @@ package com.njydsz.agent.domain.asynctask;
 public enum AsyncTaskType {
 
   /** 洞察报告生成 */
-  REPORT_GENERATE("REPORT_GENERATE", "洞察报告生成", 300L),
+  REPORT_GENERATE("REPORT_GENERATE", "agent.type.report_generate", 300L),
 
   /** RAG 文档摄入 */
-  DOC_INGEST("DOC_INGEST", "文档摄入索引", 600L),
+  DOC_INGEST("DOC_INGEST", "agent.type.doc_ingest", 600L),
 
   /** 批量对话 */
-  BATCH_CHAT("BATCH_CHAT", "批量对话处理", 120L),
+  BATCH_CHAT("BATCH_CHAT", "agent.type.batch_chat", 120L),
 
   /** 代码执行 */
-  CODE_EXECUTION("CODE_EXECUTION", "代码沙箱执行", 60L);
+  CODE_EXECUTION("CODE_EXECUTION", "agent.type.code_execution", 60L);
 
   private final String code;
 

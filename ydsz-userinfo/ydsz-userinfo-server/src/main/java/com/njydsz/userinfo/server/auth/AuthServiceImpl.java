@@ -20,6 +20,7 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
@@ -105,44 +106,46 @@ public class AuthServiceImpl implements AuthService {
    */
   @Override
   public LoginVO login(LoginDTO loginDTO, HttpServletResponse response) {
-    Timer.Sample sample = userInfoMetrics.startTimer();
-    String loginIp = loginDTO.getLoginIp();
-    String userAgent = loginDTO.getUserAgent();
+    return SentryObservation.time("userinfo.auth.login", null, null, () -> {
+      Timer.Sample sample = userInfoMetrics.startTimer();
+      String loginIp = loginDTO.getLoginIp();
+      String userAgent = loginDTO.getUserAgent();
 
-    // IP 封禁检查
-    checkIpNotBlocked(loginIp, loginDTO.getUsername(), userAgent);
+      // IP 封禁检查
+      checkIpNotBlocked(loginIp, loginDTO.getUsername(), userAgent);
 
-    // 查询用户 + 状态/锁定校验
-    UserAccountCredentialVO user = accountStatusGuard.findValidUser(loginDTO.getUsername(), loginIp, userAgent);
+      // 查询用户 + 状态/锁定校验
+      UserAccountCredentialVO user = accountStatusGuard.findValidUser(loginDTO.getUsername(), loginIp, userAgent);
 
-    // 登录风险评估（基于 IP、时间、设备、频率等多维度）
-    RiskScoringService.RiskScore risk = evaluateLoginRisk(user, loginIp, userAgent);
+      // 登录风险评估（基于 IP、时间、设备、频率等多维度）
+      RiskScoringService.RiskScore risk = evaluateLoginRisk(user, loginIp, userAgent);
 
-    // 动态认证策略 —— MEDIUM+ 强制图形验证码，HIGH 追加 MFA 动态码
-    validateCaptchaIfEnabled(loginDTO, risk);
-    validateMfaIfRequired(user, loginDTO, risk);
+      // 动态认证策略 —— MEDIUM+ 强制图形验证码，HIGH 追加 MFA 动态码
+      validateCaptchaIfEnabled(loginDTO, risk);
+      validateMfaIfRequired(user, loginDTO, risk);
 
-    // 密码校验（本地 BCrypt + LDAP 回退，失败原子锁定）
-    credentialVerifier.verify(user, loginDTO.getPassword(), loginIp, userAgent);
+      // 密码校验（本地 BCrypt + LDAP 回退，失败原子锁定）
+      credentialVerifier.verify(user, loginDTO.getPassword(), loginIp, userAgent);
 
-    // 加载角色 + 签发 Token + 存储会话
-    List<RoleVO> roles = roleCacheService.loadUserRoles(user.getId());
-    TokenResult tokenResult = issueTokensAndCreateSession(user, roles, loginDTO, response);
+      // 加载角色 + 签发 Token + 存储会话
+      List<RoleVO> roles = roleCacheService.loadUserRoles(user.getId());
+      TokenResult tokenResult = issueTokensAndCreateSession(user, roles, loginDTO, response);
 
-    // 更新登录状态 + 审计
-    updateLoginSuccess(user, loginIp, userAgent);
-    loginHistoryService.recordLoginAttempt(
-        new LoginAttemptContext(user.getId(), user.getUsername(), loginIp),
-        "SUCCESS",
-        null,
-        userAgent);
-    userInfoMetrics.recordLoginSuccess();
-    userInfoMetrics.stopTimer(sample);
-    String deviceType = DeviceType.resolve(loginDTO.getUserAgent(), loginDTO.getPlatform()).getCode();
-    userDomainEventPublisher.publishLoginSuccess(
-        user.getId(), user.getUsername(), loginIp, userAgent, deviceType);
+      // 更新登录状态 + 审计
+      updateLoginSuccess(user, loginIp, userAgent);
+      loginHistoryService.recordLoginAttempt(
+          new LoginAttemptContext(user.getId(), user.getUsername(), loginIp),
+          "SUCCESS",
+          null,
+          userAgent);
+      userInfoMetrics.recordLoginSuccess();
+      userInfoMetrics.stopTimer(sample);
+      String deviceType = DeviceType.resolve(loginDTO.getUserAgent(), loginDTO.getPlatform()).getCode();
+      userDomainEventPublisher.publishLoginSuccess(
+          user.getId(), user.getUsername(), loginIp, userAgent, deviceType);
 
-    return buildLoginResult(user, roles, tokenResult);
+      return buildLoginResult(user, roles, tokenResult);
+    });
   }
 
   /**

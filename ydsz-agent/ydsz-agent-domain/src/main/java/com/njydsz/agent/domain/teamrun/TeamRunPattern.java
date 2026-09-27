@@ -16,7 +16,7 @@ public enum TeamRunPattern {
      * <p>Agent 按顺序依次执行，前一个 Agent 的输出作为后一个 Agent 的输入。
      * 适用于流水线式任务处理。</p>
      */
-    SEQUENTIAL("SEQUENTIAL", "顺序执行"),
+    SEQUENTIAL("SEQUENTIAL", "agent.teamrun.pattern.sequential"),
 
     /**
      * 并行执行模式。
@@ -24,7 +24,7 @@ public enum TeamRunPattern {
      * <p>所有 Agent 同时执行，各自独立处理任务。
      * 适用于可并行化的独立子任务。</p>
      */
-    PARALLEL("PARALLEL", "并行执行"),
+    PARALLEL("PARALLEL", "agent.teamrun.pattern.parallel"),
 
     /**
      * 层级模式（Leader-Worker）。
@@ -32,7 +32,7 @@ public enum TeamRunPattern {
      * <p>Leader Agent 分配任务给多个 Worker Agent，Worker 完成后由 Leader 汇总。
      * 适用于需要任务分发和结果汇总的场景。</p>
      */
-    HIERARCHICAL("HIERARCHICAL", "层级模式"),
+    HIERARCHICAL("HIERARCHICAL", "agent.teamrun.pattern.hierarchical"),
 
     /**
      * 协商模式。
@@ -40,7 +40,7 @@ public enum TeamRunPattern {
      * <p>Agent 之间可以相互通信、协商，最终达成共识。
      * 适用于需要多视角分析、投票决策的场景。</p>
      */
-    NEGOTIATION("NEGOTIATION", "协商模式");
+    NEGOTIATION("NEGOTIATION", "agent.teamrun.pattern.negotiation");
 
     private final String code;
     private final String description;

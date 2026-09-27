@@ -68,9 +68,9 @@ public final class AgentDefinition implements Serializable {
       int maxTokens,
       int maxIterations,
       String modelId) {
-    this.agentId = Objects.requireNonNull(agentId, "agentId 不能为 null");
-    this.code = Objects.requireNonNull(code, "code 不能为 null");
-    this.name = Objects.requireNonNull(name, "name 不能为 null");
+    this.agentId = Objects.requireNonNull(agentId, "agent.error.agent_id_required");
+    this.code = Objects.requireNonNull(code, "agent.error.code_required");
+    this.name = Objects.requireNonNull(name, "agent.error.name_required");
     // 类型缺失时降级为最基础的单轮 CHAT，避免空指针且保证一定可执行
     this.type = type != null ? type : Type.CHAT;
     this.systemPrompt = systemPrompt;

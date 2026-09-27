@@ -22,11 +22,11 @@ public class ResetPasswordDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 用户 ID（指定重置密码的目标用户） */
-  @NotBlank(message = "用户ID不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String userId;
 
   /** 新密码（明文传入，服务端 BCrypt 加密存储，须符合密码策略） */
-  @NotBlank(message = "新密码不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String newPassword;
 
   /** 通知渠道（重置后通知用户，如 {@code SMS} / {@code EMAIL}，不传则不通知） */

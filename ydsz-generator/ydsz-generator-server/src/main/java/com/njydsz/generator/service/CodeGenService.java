@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.sentry.SentryObservation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -149,46 +150,48 @@ public class CodeGenService {
    */
   @Transactional(rollbackFor = Exception.class)
   public GenResultVO generate(GenCodeGenerateQuery query) {
-    String triggeredBy = query.getTriggeredBy() == null
-        ? "system" : query.getTriggeredBy();
-    ConflictStrategyEnum strategy = resolveStrategy(query.getConflictStrategy());
-    GenHistory history = createHistory(
-        query.getDatasourceId(), query.getTemplateGroupId(),
-        query.getTableName(), triggeredBy);
+    return SentryObservation.time("generator.code.generate", null, null, () -> {
+      String triggeredBy = query.getTriggeredBy() == null
+          ? "system" : query.getTriggeredBy();
+      ConflictStrategyEnum strategy = resolveStrategy(query.getConflictStrategy());
+      GenHistory history = createHistory(
+          query.getDatasourceId(), query.getTemplateGroupId(),
+          query.getTableName(), triggeredBy);
 
-    int successCount = 0;
-    int skipCount = 0;
-    int failCount = 0;
-    List<GenHistoryFile> historyFiles =
-        new ArrayList<>(HISTORY_FILE_LIST_CAPACITY);
+      int successCount = 0;
+      int skipCount = 0;
+      int failCount = 0;
+      List<GenHistoryFile> historyFiles =
+          new ArrayList<>(HISTORY_FILE_LIST_CAPACITY);
 
-    try {
-      WriteStats stats = renderAndWrite(history, query, strategy, historyFiles);
-      successCount = stats.successCount();
-      skipCount = stats.skipCount();
-      history.setFileCount(successCount + skipCount);
-      history.setStatus((failCount > 0
-          ? (successCount > 0 ? GenStatusEnum.PARTIAL : GenStatusEnum.FAILED)
-          : GenStatusEnum.SUCCESS).getCode());
-      history.setFinishedAt(LocalDateTime.now());
-    } catch (Exception e) {
-      log.error("代码生成失败 table={} err={}", query.getTableName(), e.getMessage(), e);
-      history.setStatus(GenStatusEnum.FAILED.getCode());
-      history.setErrorMessage(e.getMessage());
-      history.setFinishedAt(LocalDateTime.now());
-      failCount++;
-    }
+      try {
+        WriteStats stats = renderAndWrite(history, query, strategy, historyFiles);
+        successCount = stats.successCount();
+        skipCount = stats.skipCount();
+        history.setFileCount(successCount + skipCount);
+        history.setStatus((failCount > 0
+            ? (successCount > 0 ? GenStatusEnum.PARTIAL : GenStatusEnum.FAILED)
+            : GenStatusEnum.SUCCESS).getCode());
+        history.setFinishedAt(LocalDateTime.now());
+      } catch (Exception e) {
+        log.error("代码生成失败 table={} err={}", query.getTableName(), e.getMessage(), e);
+        history.setStatus(GenStatusEnum.FAILED.getCode());
+        history.setErrorMessage(e.getMessage());
+        history.setFinishedAt(LocalDateTime.now());
+        failCount++;
+      }
 
-    historyRepository.save(history);
-    historyFileRepository.batchSave(historyFiles);
+      historyRepository.save(history);
+      historyFileRepository.batchSave(historyFiles);
 
-    return GenResultVO.builder()
-        .historyId(history.getId())
-        .fileCount(successCount + skipCount + failCount)
-        .successCount(successCount)
-        .skipCount(skipCount)
-        .failCount(failCount)
-        .build();
+      return GenResultVO.builder()
+          .historyId(history.getId())
+          .fileCount(successCount + skipCount + failCount)
+          .successCount(successCount)
+          .skipCount(skipCount)
+          .failCount(failCount)
+          .build();
+    });
   }
 
   /**

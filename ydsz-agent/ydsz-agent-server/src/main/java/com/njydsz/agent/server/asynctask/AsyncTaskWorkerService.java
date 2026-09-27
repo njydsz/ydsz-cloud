@@ -9,9 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
 import com.njydsz.agent.domain.entity.AsyncTask;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -52,17 +54,21 @@ public class AsyncTaskWorkerService {
 
   private final AsyncTaskStore taskStore;
   private final AsyncTaskExecutorRegistry executorRegistry;
+  private final NotifyHelper notifyHelper;
 
   /**
-   * 构造器注入异步任务存储网关和任务执行器注册表。
+   * 构造器注入异步任务存储网关、任务执行器注册表和通知辅助工具。
    *
    * @param taskStore        异步任务存储接口
    * @param executorRegistry 任务执行器注册表
+   * @param notifyHelper     统一通知辅助类
    */
   public AsyncTaskWorkerService(AsyncTaskStore taskStore,
-                                 AsyncTaskExecutorRegistry executorRegistry) {
+                                 AsyncTaskExecutorRegistry executorRegistry,
+                                 NotifyHelper notifyHelper) {
     this.taskStore = taskStore;
     this.executorRegistry = executorRegistry;
+    this.notifyHelper = notifyHelper;
     this.workerId = "worker-" + IdGenerator.nextIdStr();
     log.info("[AsyncTask-Worker] Worker 初始化完成: workerId={}, storeType={}",
         workerId, taskStore.getType());
@@ -143,6 +149,8 @@ public class AsyncTaskWorkerService {
       log.error("[AsyncTask-Worker] 未找到任务类型的执行器: id={}, type={}", taskId, taskType);
       task.fail("未找到任务类型 " + taskType + " 对应的执行器");
       taskStore.save(task);
+      // 系统告警：执行器缺失属于运维问题
+      sendSystemAlertOrLog(taskId, taskType, task.getUserId(), "执行器缺失");
       return;
     }
 
@@ -163,6 +171,9 @@ public class AsyncTaskWorkerService {
       // 持久化任务最终状态（执行器内部会更新 task 状态，但需要显式保存）
       taskStore.save(task);
 
+      // 任务到达终态时发送站内信通知
+      sendTaskCompletionNotification(task);
+
       log.info("[AsyncTask-Worker] 任务执行完成: id={}, type={}, status={}",
           taskId, taskType, task.getStatus());
     } catch (Exception e) {
@@ -170,7 +181,82 @@ public class AsyncTaskWorkerService {
       taskStore.findById(taskId).ifPresent(t -> {
         t.fail("执行异常: " + e.getMessage());
         taskStore.save(t);
+        // 异常导致失败时发送通知
+        sendTaskCompletionNotification(t);
       });
+    }
+  }
+
+  /**
+   * 任务到达终态时向触发用户发送站内信通知。
+   *
+   * <p>仅对 SUCCEEDED 和 FAILED（终态）发送通知，避免用户被中间状态打扰。
+   * 通知发送异常不影响主流程（NotifyHelper 内部已做异常隔离）。
+   *
+   * @param task 已执行完毕的任务实体
+   */
+  private void sendTaskCompletionNotification(AsyncTask task) {
+    if (task == null || task.getUserId() == null || task.getUserId().isBlank()) {
+      return;
+    }
+
+    String status = task.getStatus();
+    String taskType = task.getTaskType();
+    String taskIdStr = task.getId() != null ? task.getId().toString() : "unknown";
+
+    if (AsyncTaskStatus.SUCCEEDED.getCode().equals(status)) {
+      String taskDesc = resolveTaskTypeDescription(taskType);
+      notifyHelper.sendInApp(task.getUserId(),
+          "任务完成",
+          String.format("您的「%s」任务已完成，任务ID: %s", taskDesc, taskIdStr));
+    } else if (AsyncTaskStatus.FAILED.getCode().equals(status) && !task.isRetryable()) {
+      String taskDesc = resolveTaskTypeDescription(taskType);
+      notifyHelper.sendInApp(task.getUserId(),
+          "任务失败",
+          String.format("您的「%s」任务执行失败，任务ID: %s，失败原因: %s",
+              taskDesc, taskIdStr, task.getErrorMessage()));
+    }
+  }
+
+  /**
+   * 解析任务类型编码为可读描述。
+   *
+   * @param taskType 任务类型编码
+   * @return 可读描述（如 "洞察报告生成"、"文档摄入"），未知类型返回编码本身
+   */
+  private String resolveTaskTypeDescription(String taskType) {
+    AsyncTaskType type = AsyncTaskType.fromCode(taskType);
+    if (type == null) {
+      return taskType;
+    }
+    return switch (type) {
+      case REPORT_GENERATE -> "洞察报告生成";
+      case DOC_INGEST -> "文档摄入";
+      case BATCH_CHAT -> "批量对话";
+      case CODE_EXECUTION -> "代码执行";
+    };
+  }
+
+  /**
+   * 发送系统告警通知（运维异常场景）。
+   *
+   * <p>当任务缺少对应执行器等系统级问题时，发送系统告警以便运维人员及时处理。
+   *
+   * @param taskId   任务 ID
+   * @param taskType 任务类型
+   * @param userId   关联用户 ID（可能为空）
+   * @param reason   告警原因简述
+   */
+  private void sendSystemAlertOrLog(Long taskId, String taskType, String userId, String reason) {
+    if (userId != null && !userId.isBlank()) {
+      notifyHelper.sendSystemAlert(
+          "异步任务执行异常",
+          String.format("任务ID: %s，类型: %s，原因: %s", taskId, taskType, reason),
+          userId);
+    } else {
+      notifyHelper.sendSystemAlert(
+          "异步任务执行异常",
+          String.format("任务ID: %s，类型: %s，原因: %s", taskId, taskType, reason));
     }
   }
 

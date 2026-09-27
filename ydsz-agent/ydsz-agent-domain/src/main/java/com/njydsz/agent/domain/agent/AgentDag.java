@@ -51,7 +51,7 @@ public final class AgentDag implements Serializable {
    */
   public AgentDag(
       String id, String name, Map<String, Node> nodes, Map<String, List<String>> edges) {
-    this.id = Objects.requireNonNull(id, "id 不能为 null");
+    this.id = Objects.requireNonNull(id, "agent.error.id_required");
     this.name = name != null ? name : id;
     this.nodes = Collections.unmodifiableMap(new HashMap<>(nodes));
     this.edges = Collections.unmodifiableMap(new HashMap<>(edges));
@@ -162,8 +162,8 @@ public final class AgentDag implements Serializable {
      */
     public Node(
         String id, String agentType, String prompt, String inputFrom, Map<String, Object> config) {
-      this.id = Objects.requireNonNull(id, "id 不能为 null");
-      this.agentType = Objects.requireNonNull(agentType, "agentType 不能为 null");
+      this.id = Objects.requireNonNull(id, "agent.error.id_required");
+      this.agentType = Objects.requireNonNull(agentType, "agent.error.agent_type_required");
       this.prompt = prompt != null ? prompt : "";
       this.inputFrom = inputFrom;
       this.config = config != null ? Map.copyOf(config) : Map.of();

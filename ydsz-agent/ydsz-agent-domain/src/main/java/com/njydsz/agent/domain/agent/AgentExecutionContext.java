@@ -45,8 +45,8 @@ public final class AgentExecutionContext implements Serializable {
       String source,
       String clientIp) {
     this.executionId = executionId != null ? executionId : IdGenerator.nextIdStr();
-    this.tenantId = Objects.requireNonNull(tenantId, "tenantId 不能为 null");
-    this.userId = Objects.requireNonNull(userId, "userId 不能为 null");
+    this.tenantId = Objects.requireNonNull(tenantId, "agent.error.tenant_id_required");
+    this.userId = Objects.requireNonNull(userId, "agent.error.user_id_required");
     this.conversationId = conversationId;
     this.source = source != null ? source : "API";
     this.clientIp = clientIp;

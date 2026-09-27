@@ -102,7 +102,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    */
   public void publish() {
     if (!isDraft()) {
-      throw new IllegalStateException(String.format("画布[%s]当前状态[%s]不允许发布", ruleCode, status));
+      throw new IllegalStateException("rule.chain.error.publish_invalid_state");
     }
     this.status = STATUS_PUBLISHED;
     this.graphVersion = (graphVersion == null) ? 1 : graphVersion + 1;
@@ -115,7 +115,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    */
   public void archive() {
     if (!isPublished()) {
-      throw new IllegalStateException(String.format("画布[%s]当前状态[%s]不允许归档", ruleCode, status));
+      throw new IllegalStateException("rule.chain.error.archive_invalid_state");
     }
     this.status = STATUS_ARCHIVED;
   }
@@ -127,7 +127,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    */
   public void revertToDraft() {
     if (!isPublished() && !isArchived()) {
-      throw new IllegalStateException(String.format("画布[%s]当前状态[%s]不允许回退", ruleCode, status));
+      throw new IllegalStateException("rule.chain.error.revert_invalid_state");
     }
     this.status = STATUS_DRAFT;
   }

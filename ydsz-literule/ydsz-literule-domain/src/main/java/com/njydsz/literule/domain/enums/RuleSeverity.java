@@ -11,22 +11,24 @@ package com.njydsz.literule.domain.enums;
  */
 public enum RuleSeverity {
   /** 提示级别 */
-  INFO("INFO", 1, "提示"),
+  INFO("INFO", 1, "rule.severity.INFO"),
 
   /** 黄色预警 */
-  YELLOW("YELLOW", 2, "黄色预警"),
+  YELLOW("YELLOW", 2, "rule.severity.YELLOW"),
 
   /** 红色严重 */
-  RED("RED", 3, "红色严重");
+  RED("RED", 3, "rule.severity.RED");
 
   private final String code;
   private final int weight;
-  private final String desc;
 
-  RuleSeverity(String code, int weight, String desc) {
+  /** i18n key — 替代硬编码中文描述 */
+  private final String i18nKey;
+
+  RuleSeverity(String code, int weight, String i18nKey) {
     this.code = code;
     this.weight = weight;
-    this.desc = desc;
+    this.i18nKey = i18nKey;
   }
 
   public String getCode() {
@@ -37,8 +39,22 @@ public enum RuleSeverity {
     return weight;
   }
 
+  /**
+   * 获取 i18n key（替代硬编码中文 desc）。
+   *
+   * @return i18n key 字符串，如 "rule.severity.INFO"
+   */
+  public String getI18nKey() {
+    return i18nKey;
+  }
+
+  /**
+   * @deprecated 使用 {@link #getI18nKey()} 获取 i18n key
+   * @return i18n key（与 getI18nKey 相同）
+   */
+  @Deprecated
   public String getDesc() {
-    return desc;
+    return i18nKey;
   }
 
   /**

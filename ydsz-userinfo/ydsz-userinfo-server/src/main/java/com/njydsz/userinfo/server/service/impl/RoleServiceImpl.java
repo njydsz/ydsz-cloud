@@ -19,6 +19,7 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.dto.RoleDTO;
 import com.njydsz.userinfo.domain.dto.RolePermissionDTO;
@@ -233,31 +234,33 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean assignPermissions(String roleId, List<String> permissionIds) {
-    RoleVO roleVO = roleRepository.findById(roleId)
-        .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND));
+    return SentryObservation.time("userinfo.role.assign", null, null, () -> {
+      RoleVO roleVO = roleRepository.findById(roleId)
+          .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND));
 
-    // 清除旧的权限关联
-    rolePermissionRepository.deleteByRoleId(roleId);
+      // 清除旧的权限关联
+      rolePermissionRepository.deleteByRoleId(roleId);
 
-    // 批量插入新关联
-    if (permissionIds != null && !permissionIds.isEmpty()) {
-      List<RolePermissionDTO> dtoList = new ArrayList<>(permissionIds.size());
-      for (String permId : permissionIds) {
-        RolePermissionDTO rp = new RolePermissionDTO();
-        rp.setRoleId(roleId);
-        rp.setPermissionId(permId);
-        dtoList.add(rp);
+      // 批量插入新关联
+      if (permissionIds != null && !permissionIds.isEmpty()) {
+        List<RolePermissionDTO> dtoList = new ArrayList<>(permissionIds.size());
+        for (String permId : permissionIds) {
+          RolePermissionDTO rp = new RolePermissionDTO();
+          rp.setRoleId(roleId);
+          rp.setPermissionId(permId);
+          dtoList.add(rp);
+        }
+        rolePermissionRepository.batchInsert(dtoList);
       }
-      rolePermissionRepository.batchInsert(dtoList);
-    }
-    log.info("Permissions assigned to role {}: count={}", roleId,
-        permissionIds != null ? permissionIds.size() : 0);
+      log.info("Permissions assigned to role {}: count={}", roleId,
+          permissionIds != null ? permissionIds.size() : 0);
 
-    // 权限分配后失效缓存
-    evictRolePermissionCache(roleId);
-    invalidatePermissionCache(roleVO.getRoleCode());
+      // 权限分配后失效缓存
+      evictRolePermissionCache(roleId);
+      invalidatePermissionCache(roleVO.getRoleCode());
 
-    return true;
+      return true;
+    });
   }
 
   /**

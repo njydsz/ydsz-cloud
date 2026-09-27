@@ -24,19 +24,19 @@ public enum UserDomainEventType {
 
   // ==================== 用户聚合根事件 ====================
   /** 用户创建 */
-  USER_CREATED("USER_CREATED", "用户创建"),
+  USER_CREATED("USER_CREATED", "userinfo.event.user_created"),
   /** 用户信息更新 */
-  USER_UPDATED("USER_UPDATED", "用户信息更新"),
+  USER_UPDATED("USER_UPDATED", "userinfo.event.user_updated"),
   /** 用户删除 */
-  USER_DELETED("USER_DELETED", "用户删除"),
+  USER_DELETED("USER_DELETED", "userinfo.event.user_deleted"),
   /** 用户登录成功 */
-  USER_LOGIN("USER_LOGIN", "用户登录"),
+  USER_LOGIN("USER_LOGIN", "userinfo.event.user_login"),
 
   // ==================== 角色/组织聚合根事件 ====================
   /** 角色变更（分配/撤销/权限修改） */
-  ROLE_CHANGED("ROLE_CHANGED", "角色变更"),
+  ROLE_CHANGED("ROLE_CHANGED", "userinfo.event.role_changed"),
   /** 组织架构变更（部门/公司增删改） */
-  ORG_STRUCTURE_CHANGED("ORG_STRUCTURE_CHANGED", "组织架构变更");
+  ORG_STRUCTURE_CHANGED("ORG_STRUCTURE_CHANGED", "userinfo.event.org_structure_changed");
 
   /** 事件类型编码（与 common-event DomainEvent.eventType 兼容） */
   private final String code;

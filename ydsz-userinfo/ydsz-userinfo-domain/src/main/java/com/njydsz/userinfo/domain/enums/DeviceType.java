@@ -25,16 +25,16 @@ import com.njydsz.common.util.message.MessageUtils;
 public enum DeviceType {
 
   /** Web 浏览器 */
-  WEB("web", "Web浏览器"),
+  WEB("web", "userinfo.device.web"),
 
   /** 移动应用（iOS/Android） */
-  APP("app", "移动应用"),
+  APP("app", "userinfo.device.app"),
 
   /** API 调用（curl/Postman/程序调用） */
-  API("api", "API调用"),
+  API("api", "userinfo.device.api"),
 
   /** 未知设备（无法识别时兜底） */
-  UNKNOWN("unknown", "未知设备");
+  UNKNOWN("unknown", "userinfo.device.unknown");
 
   /** 设备类型编码（小写，与配置键一致） */
   private final String code;

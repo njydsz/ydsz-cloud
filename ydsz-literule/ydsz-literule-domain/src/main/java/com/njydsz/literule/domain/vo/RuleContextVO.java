@@ -102,7 +102,7 @@ public final class RuleContextVO implements Serializable {
       String traceId,
       String tenantId,
       String environment) {
-    Objects.requireNonNull(facts, "facts 不能为 null");
+    Objects.requireNonNull(facts, "rule.error.facts_null");
     String env = (environment == null) ? DEFAULT_ENVIRONMENT : environment;
     return new RuleContextVO(facts, scenario, source, traceId, tenantId, env);
   }

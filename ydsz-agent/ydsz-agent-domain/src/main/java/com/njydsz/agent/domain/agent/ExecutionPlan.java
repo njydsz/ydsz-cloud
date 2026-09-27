@@ -32,9 +32,9 @@ public final class ExecutionPlan implements Serializable {
   private volatile PlanStatus status;
 
   public ExecutionPlan(String id, String goal, List<PlanStep> steps) {
-    this.id = Objects.requireNonNull(id, "id 不能为 null");
-    this.goal = Objects.requireNonNull(goal, "goal 不能为 null");
-    this.steps = new ArrayList<>(Objects.requireNonNull(steps, "steps 不能为 null"));
+    this.id = Objects.requireNonNull(id, "agent.error.id_required");
+    this.goal = Objects.requireNonNull(goal, "agent.error.goal_required");
+    this.steps = new ArrayList<>(Objects.requireNonNull(steps, "agent.error.steps_required"));
     this.status = PlanStatus.PENDING;
   }
 
@@ -168,7 +168,7 @@ public final class ExecutionPlan implements Serializable {
 
     public PlanStep(int index, String description, String action) {
       this.index = index;
-      this.description = Objects.requireNonNull(description, "description 不能为 null");
+      this.description = Objects.requireNonNull(description, "agent.error.description_required");
       this.action = action != null ? action : description;
       this.status = StepStatus.PENDING;
     }

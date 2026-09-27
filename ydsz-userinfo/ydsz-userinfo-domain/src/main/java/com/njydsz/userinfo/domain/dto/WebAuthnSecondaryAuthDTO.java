@@ -27,37 +27,37 @@ public class WebAuthnSecondaryAuthDTO {
    *
    * <p>用于区分不同业务场景的二级认证，每个场景独立验证、独立过期。
    */
-  @NotBlank(message = "场景标识不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String scene;
 
   /**
    * WebAuthn 认证挑战码（由 challenge 端点获取）。
    */
-  @NotBlank(message = "挑战码不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String challenge;
 
   /**
    * 凭证 ID（Base64URL 编码）。
    */
-  @NotBlank(message = "凭证ID不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String credentialId;
 
   /**
    * 客户端数据 JSON（Base64URL 编码）。
    */
-  @NotBlank(message = "clientDataJSON不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String clientDataJSON;
 
   /**
    * 认证器数据（Base64URL 编码）。
    */
-  @NotBlank(message = "authenticatorData不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String authenticatorData;
 
   /**
    * 签名（Base64URL 编码）。
    */
-  @NotBlank(message = "签名不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String signature;
 
   /**

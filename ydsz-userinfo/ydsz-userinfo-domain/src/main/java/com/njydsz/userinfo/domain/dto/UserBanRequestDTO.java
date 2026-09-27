@@ -23,11 +23,11 @@ public class UserBanRequestDTO implements Serializable {
   private static final long serialVersionUID = 1L;
 
   /** 封禁类型（TEMPORARY/PERMANENT），必填 */
-  @NotNull(message = "封禁类型不能为空")
+  @NotNull(message = "{userinfo.param.required}")
   private String banType;
 
   /** 封禁原因，必填 */
-  @NotBlank(message = "封禁原因不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String banReason;
 
   /** 封禁到期时间（临时封禁必填，永久封禁不填） */

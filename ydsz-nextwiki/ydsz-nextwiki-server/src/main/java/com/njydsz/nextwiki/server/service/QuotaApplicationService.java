@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.nextwiki.domain.dto.StorageQuotaDTO;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.repository.SpaceRepository;
 import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
@@ -36,6 +38,10 @@ public class QuotaApplicationService {
   private final QuotaDomainService quotaDomainService;
   private final StorageQuotaRepository storageQuotaRepository;
   private final NextwikiCacheService cacheService;
+  /** 统一通知辅助类（配额告警通知） */
+  private final NotifyHelper notifyHelper;
+  /** 空间仓储（查询空间所有者用于配额告警） */
+  private final SpaceRepository spaceRepository;
 
   /**
    * 查询配额信息（已用/上限、文件数已用/上限等）。
@@ -111,6 +117,8 @@ public class QuotaApplicationService {
   /**
    * 原子增加已使用量（上传文件时调用）。
    *
+   * <p>增加后若使用量超过上限的 80%，自动触发配额告警通知。
+   *
    * @param scopeType 配额维度
    * @param scopeId 维度 ID
    * @param bytesDelta 字节变化量（正数）
@@ -124,6 +132,64 @@ public class QuotaApplicationService {
     cacheService.evictQuotaOnChange(scopeType, scopeId);
     log.debug("[QuotaApplicationService] 配额增加: {}:{}, bytes={}, count={}",
         scopeType, scopeId, bytesDelta, fileCountDelta);
+    // 检查配额使用率是否超过 80%，超过则发送告警通知
+    checkAndNotifyQuotaWarning(scopeType, scopeId);
+  }
+
+  /**
+   * 检查配额使用率是否超过 80% 阈值，超过则发送告警通知。
+   *
+   * <p>仅在超过阈值时触发通知（非每次上传都检查，避免告警风暴）。
+   * 通知逻辑独立于主业务，异常不影响上传流程。
+   *
+   * @param scopeType 配额维度
+   * @param scopeId 维度 ID
+   */
+  private void checkAndNotifyQuotaWarning(String scopeType, String scopeId) {
+    try {
+      StorageQuotaVO fresh = storageQuotaRepository.findByScope(scopeType, scopeId).orElse(null);
+      if (fresh == null) {
+        return;
+      }
+      StorageQuotaDTO quotaDto = StorageQuotaDTO.builder()
+          .quotaLimit(fresh.getQuotaLimit())
+          .quotaUsed(fresh.getQuotaUsed())
+          .fileCountLimit(fresh.getFileCountLimit())
+          .fileCountUsed(fresh.getFileCountUsed())
+          .build();
+      if (quotaDomainService.isOverPercentage(quotaDto, 80)) {
+        long usedMb = fresh.getQuotaUsed() != null ? fresh.getQuotaUsed() / (1024 * 1024) : 0;
+        long limitMb = fresh.getQuotaLimit() != null ? fresh.getQuotaLimit() / (1024 * 1024) : 0;
+        String alertContent = String.format(
+            "您的存储空间使用率已超过 80%%（已用 %d MB / 上限 %d MB），请及时清理或扩容。",
+            usedMb, limitMb);
+        // user 维度直接通知本人
+        if ("user".equalsIgnoreCase(scopeType)) {
+          notifyHelper.sendInApp(scopeId, "存储空间告警", alertContent);
+        } else {
+          // space/tenant 维度查找管理员发送告警
+          resolveSpaceAdminIds(scopeId).forEach(adminId ->
+              notifyHelper.sendInApp(adminId, "存储空间告警", alertContent));
+        }
+      }
+    } catch (Exception e) {
+      // 配额告警通知失败不应影响主业务流程
+      log.warn("[QuotaApplicationService] 配额告警通知失败: scopeType={}, scopeId={}, error={}",
+          scopeType, scopeId, e.getMessage());
+    }
+  }
+
+  /**
+   * 解析空间管理员用户 ID 列表（用于 space/tenant 维度的配额告警）。
+   *
+   * @param scopeId 空间 ID 或租户 ID
+   * @return 管理员用户 ID 列表，查询失败返回空列表
+   */
+  private java.util.List<String> resolveSpaceAdminIds(String scopeId) {
+    return spaceRepository.findById(scopeId)
+        .filter(space -> space.getOwnerId() != null && !space.getOwnerId().isBlank())
+        .map(space -> java.util.List.of(space.getOwnerId()))
+        .orElse(java.util.List.of());
   }
 
   /**

@@ -27,12 +27,12 @@ public class UserAccountDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 用户 ID（更新时必填，指定更新的目标用户） */
-  @NotBlank(message = "ID不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String id;
 
   /** 登录用户名（全局唯一，创建时必填，创建后不可修改） */
-  @NotBlank(message = "用户名不能为空")
-  @Size(max = 64, message = "用户名长度不能超过 64 个字符")
+  @NotBlank(message = "{userinfo.param.required}")
+  @Size(max = 64, message = "{userinfo.error.max_length}")
   private String username;
 
   /** 用户名（SCIM 兼容字段，与 username 同义） */
@@ -42,25 +42,25 @@ public class UserAccountDTO implements Serializable {
   private String externalId;
 
   /** 登录密码（明文传入，服务端 BCrypt 加密存储，创建时必填） */
-  @NotBlank(message = "密码不能为空")
-  @Size(min = 8, max = 64, message = "密码长度必须在 8-64 个字符之间")
+  @NotBlank(message = "{userinfo.param.required}")
+  @Size(min = 8, max = 64, message = "{userinfo.error.length_range}")
   private String password;
 
   /** 真实姓名（用于展示和审批人显示） */
-  @NotBlank(message = "真实姓名不能为空")
-  @Size(max = 64, message = "真实姓名长度不能超过 64 个字符")
+  @NotBlank(message = "{userinfo.param.required}")
+  @Size(max = 64, message = "{userinfo.error.max_length}")
   private String realName;
 
   /** 手机号（用于短信验证/找回密码） */
-  @Size(max = 20, message = "手机号长度不能超过 20 个字符")
+  @Size(max = 20, message = "{userinfo.error.max_length}")
   private String phone;
 
   /** 邮箱（用于邮件通知/找回密码） */
-  @Size(max = 128, message = "邮箱长度不能超过 128 个字符")
+  @Size(max = 128, message = "{userinfo.error.max_length}")
   private String email;
 
   /** 头像 URL */
-  @Size(max = 255, message = "头像URL长度不能超过 255 个字符")
+  @Size(max = 255, message = "{userinfo.error.max_length}")
   private String avatar;
 
   /** 账号状态（{@link UserLifecycleStatusEnum#ENABLED}=启用 / {@link UserLifecycleStatusEnum#DISABLED}=禁用） */

@@ -25,22 +25,22 @@ import java.util.Set;
 public enum AsyncTaskStatus {
 
   /** 待执行 */
-  PENDING("PENDING", "待执行"),
+  PENDING("PENDING", "agent.status.pending"),
 
   /** 执行中 */
-  RUNNING("RUNNING", "执行中"),
+  RUNNING("RUNNING", "agent.status.running"),
 
   /** 已完成 */
-  SUCCEEDED("SUCCEEDED", "已完成"),
+  SUCCEEDED("SUCCEEDED", "agent.status.succeeded"),
 
   /** 失败（可重试） */
-  FAILED("FAILED", "失败"),
+  FAILED("FAILED", "agent.status.failed"),
 
   /** 已取消 */
-  CANCELED("CANCELED", "已取消"),
+  CANCELED("CANCELED", "agent.status.canceled"),
 
   /** 已过期 */
-  EXPIRED("EXPIRED", "已过期");
+  EXPIRED("EXPIRED", "agent.status.expired");
 
   private final String code;
 

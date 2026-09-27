@@ -11,25 +11,25 @@ package com.njydsz.agent.domain.teamrun;
 public enum TeamRunStatus {
 
     /** 已创建，等待启动 */
-    CREATED("CREATED", "已创建"),
+    CREATED("CREATED", "agent.teamrun.status.created"),
 
     /** 正在执行中 */
-    RUNNING("RUNNING", "执行中"),
+    RUNNING("RUNNING", "agent.teamrun.status.running"),
 
     /** 等待人工审批 */
-    WAITING_APPROVAL("WAITING_APPROVAL", "等待审批"),
+    WAITING_APPROVAL("WAITING_APPROVAL", "agent.teamrun.status.waiting_approval"),
 
     /** 所有 Agent 执行完成 */
-    COMPLETED("COMPLETED", "已完成"),
+    COMPLETED("COMPLETED", "agent.teamrun.status.completed"),
 
     /** 部分或全部 Agent 执行失败 */
-    FAILED("FAILED", "执行失败"),
+    FAILED("FAILED", "agent.teamrun.status.failed"),
 
     /** 已被用户取消 */
-    CANCELLED("CANCELLED", "已取消"),
+    CANCELLED("CANCELLED", "agent.teamrun.status.cancelled"),
 
     /** 执行超时被终止 */
-    TIMEOUT("TIMEOUT", "执行超时");
+    TIMEOUT("TIMEOUT", "agent.teamrun.status.timeout");
 
     private final String code;
     private final String description;

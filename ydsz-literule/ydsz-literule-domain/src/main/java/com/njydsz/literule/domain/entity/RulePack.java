@@ -120,7 +120,7 @@ public class RulePack extends MpBaseEntity<String> {
     if (newRating == null
         || newRating.compareTo(BigDecimal.ZERO) < 0
         || newRating.compareTo(new BigDecimal("5")) > 0) {
-      throw new IllegalArgumentException("评分必须在 0-5 之间: " + newRating);
+      throw new IllegalArgumentException("rule.pack.error.rating_out_of_range: " + newRating);
     }
     this.rating = newRating;
   }

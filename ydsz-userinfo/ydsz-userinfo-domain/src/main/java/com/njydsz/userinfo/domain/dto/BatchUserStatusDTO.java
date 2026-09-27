@@ -23,7 +23,7 @@ public class BatchUserStatusDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 用户 ID 列表 */
-  @NotEmpty(message = "用户 ID 列表不能为空")
-  @NotNull(message = "用户 ID 列表不能为 null")
+  @NotEmpty(message = "{userinfo.param.required}")
+  @NotNull(message = "{userinfo.param.required}")
   private List<String> ids;
 }

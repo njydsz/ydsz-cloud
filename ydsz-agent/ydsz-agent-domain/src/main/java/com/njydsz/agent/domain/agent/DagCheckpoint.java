@@ -54,7 +54,7 @@ public final class DagCheckpoint implements Serializable {
       Set<String> completedNodes,
       Set<String> failedNodes,
       LocalDateTime snapshotTime) {
-    this.executionId = Objects.requireNonNull(executionId, "executionId 不能为 null");
+    this.executionId = Objects.requireNonNull(executionId, "agent.error.execution_id_required");
     this.dagName = dagName;
     this.dsl = dsl;
     this.userInput = userInput;

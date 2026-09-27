@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
@@ -202,47 +203,49 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /** {@inheritDoc} */
   @Override
   public FlowEfficiencyStatsVO efficiencyStats(String tenantId, String startTime, String endTime) {
-    FlowEfficiencyStatsVO result = new FlowEfficiencyStatsVO();
-    try {
-      List<FlowHisTaskVO> records = queryHisTasks(tenantId, startTime, endTime, null);
-      long totalCount = records.size();
+    return SentryObservation.time("workflow.efficiency.calculate", null, null, () -> {
+      FlowEfficiencyStatsVO result = new FlowEfficiencyStatsVO();
+      try {
+        List<FlowHisTaskVO> records = queryHisTasks(tenantId, startTime, endTime, null);
+        long totalCount = records.size();
 
-      // 平均耗时
-      double avgDurationMs =
-          records.stream()
-              .filter(r -> r.getDurationMs() != null && r.getDurationMs() > 0)
-              .mapToLong(FlowHisTaskVO::getDurationMs)
-              .average()
-              .orElse(0.0);
+        // 平均耗时
+        double avgDurationMs =
+            records.stream()
+                .filter(r -> r.getDurationMs() != null && r.getDurationMs() > 0)
+                .mapToLong(FlowHisTaskVO::getDurationMs)
+                .average()
+                .orElse(0.0);
 
-      // P0-2 修复：代批率 = 委派代理人完成 PASS/REJECT 的操作数 / 总任务数（数据来源 audit_log, businessType=DELEGATE_PROXY）
-      long proxyCount = countDelegateActions(tenantId, startTime, endTime);
-      double proxyRate = totalCount > 0 ? (double) proxyCount / totalCount : 0.0;
+        // P0-2 修复：代批率 = 委派代理人完成 PASS/REJECT 的操作数 / 总任务数（数据来源 audit_log, businessType=DELEGATE_PROXY）
+        long proxyCount = countDelegateActions(tenantId, startTime, endTime);
+        double proxyRate = totalCount > 0 ? (double) proxyCount / totalCount : 0.0;
 
-      // 超期率（taskStatus=TIMEOUT 的占比）
-      long overdueCount = records.stream().filter(r -> "TIMEOUT".equals(r.getTaskStatus())).count();
-      double overdueRate = totalCount > 0 ? (double) overdueCount / totalCount : 0.0;
+        // 超期率（taskStatus=TIMEOUT 的占比）
+        long overdueCount = records.stream().filter(r -> "TIMEOUT".equals(r.getTaskStatus())).count();
+        double overdueRate = totalCount > 0 ? (double) overdueCount / totalCount : 0.0;
 
-      result.setTotalCount(totalCount);
-      result.setAvgDurationMs(Math.round(avgDurationMs));
-      result.setProxyRate(Math.round(proxyRate * 10000) / 10000.0);
-      result.setOverdueRate(Math.round(overdueRate * 10000) / 10000.0);
+        result.setTotalCount(totalCount);
+        result.setAvgDurationMs(Math.round(avgDurationMs));
+        result.setProxyRate(Math.round(proxyRate * 10000) / 10000.0);
+        result.setOverdueRate(Math.round(overdueRate * 10000) / 10000.0);
 
-      log.info(
-          "[FlowEfficiency] 效率统计: tenantId={} total={} avgMs={} proxyRate={} overdueRate={}",
-          tenantId,
-          totalCount,
-          (long) avgDurationMs,
-          proxyRate,
-          overdueRate);
-    } catch (Exception e) {
-      log.error("[FlowEfficiency] 效率统计异常: tenantId={} err={}", tenantId, e.getMessage(), e);
-      result.setTotalCount(0);
-      result.setAvgDurationMs(0);
-      result.setProxyRate(0.0);
-      result.setOverdueRate(0.0);
-    }
-    return result;
+        log.info(
+            "[FlowEfficiency] 效率统计: tenantId={} total={} avgMs={} proxyRate={} overdueRate={}",
+            tenantId,
+            totalCount,
+            (long) avgDurationMs,
+            proxyRate,
+            overdueRate);
+      } catch (Exception e) {
+        log.error("[FlowEfficiency] 效率统计异常: tenantId={} err={}", tenantId, e.getMessage(), e);
+        result.setTotalCount(0);
+        result.setAvgDurationMs(0);
+        result.setProxyRate(0.0);
+        result.setOverdueRate(0.0);
+      }
+      return result;
+    });
   }
 
   /**

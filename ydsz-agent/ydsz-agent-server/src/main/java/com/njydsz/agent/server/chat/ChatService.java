@@ -26,6 +26,7 @@ import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.quota.TenantQuotaService;
 import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
@@ -153,34 +154,35 @@ public class ChatService {
       return rejectAndBuildResponse(convId, traceId, "simple", false);
     }
 
-    memory.save(convId, ChatMessage.user(sanitizedInput, convId));
-    runtimeMetrics.recordMessage("user");
-
     ChatRequest request = buildTextRequest(convId, sanitizedInput, systemPrompt, false);
     String model = properties.getLlm().getDefaultModel();
     String provider = llmClient.getProvider();
     String executionId = String.valueOf(snowflakeIdGenerator.nextId());
     String tenantId = resolveTenantId(convId);
+    return SentryObservation.time("agent.chat", null, null, () -> {
+      memory.save(convId, ChatMessage.user(sanitizedInput, convId));
+      runtimeMetrics.recordMessage("user");
 
-    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
-    log.info("{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
-        logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
-    performQuotaPreCheck(tenantId, estimatedCost);
+      CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+      log.info("{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+          logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+      performQuotaPreCheck(tenantId, estimatedCost);
 
-    eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT", model);
-    long startTime = System.currentTimeMillis();
-    ChatResponse response;
-    try {
-      response = llmClient.chat(request);
-    } catch (Exception e) {
+      eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT", model);
+      long startTime = System.currentTimeMillis();
+      ChatResponse response;
+      try {
+        response = llmClient.chat(request);
+      } catch (Exception e) {
+        long duration = System.currentTimeMillis() - startTime;
+        handleLlmException(e, convId, traceId, "simple", model, provider, executionId, tenantId, request, duration, false);
+        throw e;
+      }
       long duration = System.currentTimeMillis() - startTime;
-      handleLlmException(e, convId, traceId, "simple", model, provider, executionId, tenantId, request, duration, false);
-      throw e;
-    }
-    long duration = System.currentTimeMillis() - startTime;
-    return finalizeSuccess(
-        logPrefix, response, convId, traceId, "simple", model, provider, executionId, tenantId,
-        request, duration, false, "CHAT");
+      return finalizeSuccess(
+          logPrefix, response, convId, traceId, "simple", model, provider, executionId, tenantId,
+          request, duration, false, "CHAT");
+    });
   }
 
   /**
@@ -257,44 +259,46 @@ public class ChatService {
       return;
     }
 
-    memory.save(convId, ChatMessage.user(sanitizedInput, convId));
-    runtimeMetrics.recordMessage("user");
-
     ChatRequest request = buildTextRequest(convId, sanitizedInput, systemPrompt, true);
     String model = properties.getLlm().getDefaultModel();
     String provider = llmClient.getProvider();
     String executionId = String.valueOf(snowflakeIdGenerator.nextId());
     String tenantId = resolveTenantId(convId);
 
-    CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
-    log.info("{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
-        logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
-    performQuotaPreCheck(tenantId, estimatedCost);
+    SentryObservation.time("agent.chat.stream", null, null, () -> {
+      memory.save(convId, ChatMessage.user(sanitizedInput, convId));
+      runtimeMetrics.recordMessage("user");
 
-    eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT_STREAM", model);
-    long startTime = System.currentTimeMillis();
-    StringBuilder contentBuilder = new StringBuilder(COLLECTION_CAPACITY);
-    final TokenUsage[] usage = {TokenUsage.zero()};
-    final boolean[] firstTokenRecorded = {false};
-    StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
+      CostEstimate estimatedCost = tokenCostCalculator.estimateBeforeCall(request);
+      log.info("{} 成本估算: convId={}, estimatedTokens={}, estimatedCostUsd={}",
+          logPrefix, convId, estimatedCost.getEstimatedTotalTokens(), estimatedCost.getEstimatedCostUsd());
+      performQuotaPreCheck(tenantId, estimatedCost);
 
-    try {
-      llmClient.stream(
-          request,
-          chunk -> handleStreamChunk(chunk, streamingMasker, contentBuilder, usage, firstTokenRecorded,
-              startTime, provider, model, chunkConsumer));
-    } catch (Exception e) {
+      eventPublisher.publishExecutionStarted(executionId, tenantId, null, "CHAT_STREAM", model);
+      long startTime = System.currentTimeMillis();
+      StringBuilder contentBuilder = new StringBuilder(COLLECTION_CAPACITY);
+      final TokenUsage[] usage = {TokenUsage.zero()};
+      final boolean[] firstTokenRecorded = {false};
+      StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
+
+      try {
+        llmClient.stream(
+            request,
+            chunk -> handleStreamChunk(chunk, streamingMasker, contentBuilder, usage, firstTokenRecorded,
+                startTime, provider, model, chunkConsumer));
+      } catch (Exception e) {
+        long duration = System.currentTimeMillis() - startTime;
+        handleLlmException(e, convId, traceId, "simple", model, provider, executionId, tenantId, request, duration, true);
+        throw e;
+      }
       long duration = System.currentTimeMillis() - startTime;
-      handleLlmException(e, convId, traceId, "simple", model, provider, executionId, tenantId, request, duration, true);
-      throw e;
-    }
-    long duration = System.currentTimeMillis() - startTime;
-    finalizeStreamSuccess(
-        logPrefix, usage[0], convId, traceId, "simple", model, provider, executionId, tenantId,
-        request, duration, contentBuilder, "CHAT_STREAM");
-    log.info("{} 流式对话完成: convId={}, tokens={}, costUsd={}",
-        logPrefix, convId, usage[0].getTotalTokens(),
-        tokenCostCalculator.calculateActual(usage[0], model).getActualCostUsd());
+      finalizeStreamSuccess(
+          logPrefix, usage[0], convId, traceId, "simple", model, provider, executionId, tenantId,
+          request, duration, contentBuilder, "CHAT_STREAM");
+      log.info("{} 流式对话完成: convId={}, tokens={}, costUsd={}",
+          logPrefix, convId, usage[0].getTotalTokens(),
+          tokenCostCalculator.calculateActual(usage[0], model).getActualCostUsd());
+    });
   }
 
   /**

@@ -18,12 +18,12 @@ import com.njydsz.common.safe.annotation.Xss;
 public class AuthPolicyDTO {
 
   /** 租户 ID（为空表示全局默认策略） */
-  @Xss(message = "租户ID包含非法内容")
+  @Xss(message = "{userinfo.param.xss}")
   private String tenantId;
 
   /** 策略名称 */
-  @Xss(message = "策略名称包含非法内容")
-  @Size(max = 128, message = "策略名称长度不能超过 128 个字符")
+  @Xss(message = "{userinfo.param.xss}")
+  @Size(max = 128, message = "{userinfo.error.max_length}")
   private String name;
 
   /** 密码最小长度（≥ 6） */
@@ -42,7 +42,7 @@ public class AuthPolicyDTO {
   private Boolean isCaptchaEnabled;
 
   /** 允许的身份提供者类型（逗号分隔，如 "LDAP,SAML,OAUTH2"） */
-  @Xss(message = "身份提供者类型包含非法内容")
+  @Xss(message = "{userinfo.param.xss}")
   private String allowedIdentityProviders;
 
   /** 最大会话数（每个用户同时在线的最大会话数） */
@@ -52,7 +52,7 @@ public class AuthPolicyDTO {
   private Integer sessionTimeoutSeconds;
 
   /** 备注说明 */
-  @Xss(message = "备注包含非法内容")
-  @Size(max = 500, message = "备注长度不能超过 500 个字符")
+  @Xss(message = "{userinfo.param.xss}")
+  @Size(max = 500, message = "{userinfo.error.max_length}")
   private String remark;
 }

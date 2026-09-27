@@ -11,19 +11,19 @@ package com.njydsz.agent.domain.channel;
 public enum ChannelType {
 
     /** Web 页面渠道 */
-    WEB("web", "Web 页面"),
+    WEB("web", "agent.channel.web"),
 
     /** API 接口渠道 */
-    API("api", "API 接口"),
+    API("api", "agent.channel.api"),
 
     /** Webhook 渠道 */
     WEBHOOK("webhook", "Webhook"),
 
     /** 消息队列渠道 */
-    MESSAGE_QUEUE("mq", "消息队列"),
+    MESSAGE_QUEUE("mq", "agent.channel.message_queue"),
 
     /** 定时任务渠道 */
-    SCHEDULED("scheduled", "定时任务");
+    SCHEDULED("scheduled", "agent.channel.scheduled");
 
     private final String code;
     private final String description;

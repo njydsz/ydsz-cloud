@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.SpaceDTO;
 import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
@@ -52,6 +53,9 @@ public class SpaceApplicationService {
 
   /** i18n 消息工具（YDIZ-I18N-002：Service 层文案必须走 i18n key） */
   private final I18nMessages i18nMessages;
+
+  /** 统一通知辅助类（空间成员添加通知） */
+  private final NotifyHelper notifyHelper;
 
   /** 默认查询数量限制 */
   private static final int DEFAULT_LIMIT = 50;
@@ -329,9 +333,30 @@ public class SpaceApplicationService {
           .updatedBy(operatorId)
           .build();
       spaceRepository.update(updateDTO);
+
+      // 站内信通知被添加的成员
+      notifyHelper.sendInApp(targetUserId,
+          "空间邀请通知",
+          String.format("您已被邀请加入「%s」空间，角色: %s", space.getName(), resolveRoleDisplayName(role)));
     }
 
     log.info("[SpaceApplicationService] 添加空间成员: spaceId={}, userId={}, role={}", spaceId, targetUserId, role);
+  }
+
+  /**
+   * 解析角色显示名称。
+   *
+   * @param role 角色编码
+   * @return 中文显示名称
+   */
+  private String resolveRoleDisplayName(String role) {
+    return switch (role) {
+      case "owner" -> "所有者";
+      case "admin" -> "管理员";
+      case "editor" -> "编辑者";
+      case "viewer" -> "查看者";
+      default -> role;
+    };
   }
 
   /**

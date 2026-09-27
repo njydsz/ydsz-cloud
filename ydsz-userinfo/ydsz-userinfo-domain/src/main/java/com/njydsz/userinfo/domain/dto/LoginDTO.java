@@ -29,11 +29,11 @@ public class LoginDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 登录用户名（全局唯一） */
-  @NotBlank(message = "用户名不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String username;
 
   /** 登录密码（明文，传输层由 HTTPS 保护，服务端 BCrypt 比对） */
-  @NotBlank(message = "密码不能为空")
+  @NotBlank(message = "{userinfo.param.required}")
   private String password;
 
   /** 验证码 Redis Key（由 {@code GET /api/auth/captcha} 返回，开启验证码时必填） */

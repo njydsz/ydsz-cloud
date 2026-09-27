@@ -21,19 +21,19 @@ public class UserProfileUpdateDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 真实姓名 */
-  @Size(max = 64, message = "真实姓名长度不能超过 64 个字符")
+  @Size(max = 64, message = "{userinfo.error.max_length}")
   private String realName;
 
   /** 手机号 */
-  @Size(max = 20, message = "手机号长度不能超过 20 个字符")
+  @Size(max = 20, message = "{userinfo.error.max_length}")
   private String phone;
 
   /** 邮箱 */
-  @Size(max = 128, message = "邮箱长度不能超过 128 个字符")
-  @Email(message = "邮箱格式不正确")
+  @Size(max = 128, message = "{userinfo.error.max_length}")
+  @Email(message = "{userinfo.param.invalid}")
   private String email;
 
   /** 头像 URL */
-  @Size(max = 255, message = "头像URL长度不能超过 255 个字符")
+  @Size(max = 255, message = "{userinfo.error.max_length}")
   private String avatar;
 }

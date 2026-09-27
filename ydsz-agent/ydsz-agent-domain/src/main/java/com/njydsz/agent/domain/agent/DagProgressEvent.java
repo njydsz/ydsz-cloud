@@ -83,7 +83,7 @@ public final class DagProgressEvent implements Serializable {
       int totalCount,
       String error,
       LocalDateTime timestamp) {
-    this.eventType = Objects.requireNonNull(eventType, "eventType 不能为 null");
+    this.eventType = Objects.requireNonNull(eventType, "agent.error.event_type_required");
     this.nodeId = nodeId;
     this.nodeType = nodeType;
     this.completedCount = completedCount;

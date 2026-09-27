@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.password.PwdUtils;
 import com.njydsz.nextwiki.domain.dto.ShareAccessLogDTO;
@@ -76,6 +77,9 @@ public class ShareApplicationService {
 
   /** Redis 字符串操作（防暴力破解失败计数与锁） */
   private final RedisStringOps stringOps;
+
+  /** 统一通知辅助类（定向分享后站内信通知被分享用户） */
+  private final NotifyHelper notifyHelper;
 
   /**
    * 创建文件分享链接。
@@ -151,8 +155,36 @@ public class ShareApplicationService {
     ShareLinkVO saved = shareLinkRepository.save(result.shareLink());
     if (result.recipients() != null && !result.recipients().isEmpty()) {
       shareRecipientRepository.saveBatch(result.recipients());
+      // 定向分享：站内信通知被分享用户
+      notifyShareRecipients(userId, node.getName(), title, targetUserIds);
     }
     return saved;
+  }
+
+  /**
+   * 定向分享后向被分享用户发送站内信通知。
+   *
+   * <p>仅在目标用户非空时触发，异常不影响主流程。
+   *
+   * @param sharerId     分享者 ID（用于通知内容）
+   * @param fileName     被分享的文件/目录名称
+   * @param shareTitle   分享标题（可为空）
+   * @param targetUserIds 被分享用户 ID 列表
+   */
+  private void notifyShareRecipients(String sharerId, String fileName,
+      String title, List<String> targetUserIds) {
+    if (targetUserIds == null || targetUserIds.isEmpty()) {
+      return;
+    }
+    String displayTitle = (title != null && !title.isBlank()) ? title : fileName;
+    for (String targetUserId : targetUserIds) {
+      if (targetUserId == null || targetUserId.isBlank()) {
+        continue;
+      }
+      notifyHelper.sendInApp(targetUserId,
+          "文件分享通知",
+          String.format("用户向您分享了「%s」，快来查看吧！", displayTitle));
+    }
   }
 
   /**

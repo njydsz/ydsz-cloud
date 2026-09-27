@@ -12,39 +12,54 @@ import org.slf4j.LoggerFactory;
 public enum RuleStatus {
 
   /** 草稿：规则已创建但未提交审核 */
-  DRAFT("草稿"),
+  DRAFT("rule.status.DRAFT"),
 
   /** 待审核：规则已提交，等待审核（向后兼容，等价于 REVIEW_L1） */
-  REVIEW("待审核"),
+  REVIEW("rule.status.REVIEW"),
 
   /** 一级审核中（P1-3 多级审批流） */
-  REVIEW_L1("一级审核中"),
+  REVIEW_L1("rule.status.REVIEW_L1"),
 
   /** 二级审核中（P1-3 多级审批流） */
-  REVIEW_L2("二级审核中"),
+  REVIEW_L2("rule.status.REVIEW_L2"),
 
   /** 终审中（P1-3 多级审批流） */
-  REVIEW_FINAL("终审中"),
+  REVIEW_FINAL("rule.status.REVIEW_FINAL"),
 
   /** 已发布：规则已审核通过并生效 */
-  PUBLISHED("已发布"),
+  PUBLISHED("rule.status.PUBLISHED"),
 
   /** 已停用：规则被手动停用 */
-  DISABLED("已停用"),
+  DISABLED("rule.status.DISABLED"),
 
   /** 已归档：规则已废弃，仅保留历史记录 */
-  ARCHIVED("已归档");
+  ARCHIVED("rule.status.ARCHIVED");
 
   private static final Logger LOG = LoggerFactory.getLogger(RuleStatus.class);
 
-  private final String desc;
+  /** i18n key — 替代硬编码中文描述 */
+  private final String i18nKey;
 
-  RuleStatus(String desc) {
-    this.desc = desc;
+  RuleStatus(String i18nKey) {
+    this.i18nKey = i18nKey;
   }
 
+  /**
+   * 获取 i18n key（替代原 getDesc 方法）。
+   *
+   * @return i18n key 字符串，如 "rule.status.DRAFT"
+   */
+  public String getI18nKey() {
+    return i18nKey;
+  }
+
+  /**
+   * @deprecated 使用 {@link #getI18nKey()} 获取 i18n key，运行时再通过 MessageSource 解析
+   * @return i18n key（与 getI18nKey 相同）
+   */
+  @Deprecated
   public String getDesc() {
-    return desc;
+    return i18nKey;
   }
 
   /**

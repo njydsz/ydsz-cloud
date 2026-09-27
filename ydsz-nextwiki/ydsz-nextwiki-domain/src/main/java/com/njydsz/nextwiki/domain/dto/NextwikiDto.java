@@ -35,8 +35,8 @@ public final class NextwikiDto {
     private String parentId;
 
     @Schema(description = "目录名称")
-    @NotBlank(message = "目录名称不能为空")
-    @Size(max = 255, message = "目录名称不能超过255个字符")
+    @NotBlank(message = "{nextwiki.param.required}")
+    @Size(max = 255, message = "{nextwiki.error.max_length}")
     private String name;
   }
 
@@ -63,7 +63,7 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "目标父目录ID")
-    @NotBlank(message = "目标父目录ID不能为空")
+    @NotBlank(message = "{nextwiki.param.required}")
     private String targetParentId;
   }
 
@@ -74,12 +74,12 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "待移动节点ID列表")
-    @NotNull(message = "节点ID列表不能为空")
-    @Size(min = 1, message = "至少选择一个节点")
+    @NotNull(message = "{nextwiki.param.required}")
+    @Size(min = 1, message = "{nextwiki.error.min_items}")
     private List<String> nodeIds;
 
     @Schema(description = "目标父目录ID")
-    @NotBlank(message = "目标父目录ID不能为空")
+    @NotBlank(message = "{nextwiki.param.required}")
     private String targetParentId;
   }
 
@@ -90,8 +90,8 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "新名称")
-    @NotBlank(message = "新名称不能为空")
-    @Size(max = 255, message = "名称不能超过255个字符")
+    @NotBlank(message = "{nextwiki.param.required}")
+    @Size(max = 255, message = "{nextwiki.error.max_length}")
     private String newName;
   }
 
@@ -102,11 +102,11 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "文件节点ID")
-    @NotBlank(message = "文件节点ID不能为空")
+    @NotBlank(message = "{nextwiki.param.required}")
     private String fileNodeId;
 
     @Schema(description = "分享类型: view / download / edit")
-    @NotBlank(message = "分享类型不能为空")
+    @NotBlank(message = "{nextwiki.param.required}")
     private String shareType;
 
     @Schema(description = "密码（可选）")
@@ -184,7 +184,7 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "关键词")
-    @NotBlank(message = "关键词不能为空")
+    @NotBlank(message = "{nextwiki.param.required}")
     private String keyword;
 
     @Schema(description = "搜索范围: all / filename / content / tag")
@@ -248,8 +248,8 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "标签名称")
-    @NotBlank(message = "标签名称不能为空")
-    @Size(max = 100, message = "标签名称不能超过100个字符")
+    @NotBlank(message = "{nextwiki.param.required}")
+    @Size(max = 100, message = "{nextwiki.error.max_length}")
     private String name;
 
     @Schema(description = "标签颜色（如 #1890ff）")
@@ -263,7 +263,7 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "文件节点ID")
-    @NotBlank(message = "文件节点ID不能为空")
+    @NotBlank(message = "{nextwiki.param.required}")
     private String fileNodeId;
 
     @Schema(description = "摘要类型: brief(简短) / detailed(详细) / key_points(关键点)")
@@ -285,11 +285,11 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "文件节点ID")
-    @NotBlank(message = "节点ID不能为空")
+    @NotBlank(message = "{nextwiki.param.required}")
     private String nodeId;
 
     @Schema(description = "排序值（升序排列，值越小越靠前）")
-    @NotNull(message = "排序值不能为空")
+    @NotNull(message = "{nextwiki.param.required}")
     private Integer sort;
   }
 
@@ -304,8 +304,8 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "排序条目列表（按目标顺序排列）")
-    @NotNull(message = "排序列表不能为空")
-    @Size(min = 1, message = "至少包含一个节点")
+    @NotNull(message = "{nextwiki.param.required}")
+    @Size(min = 1, message = "{nextwiki.error.min_items}")
     private List<SortItem> items;
 
     @Schema(description = "父目录 ID（用于权限校验与缓存失效）")
@@ -321,7 +321,7 @@ public final class NextwikiDto {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "对象存储键（文件路径）")
-    @NotBlank(message = "对象键不能为空")
+    @NotBlank(message = "{nextwiki.param.required}")
     private String objectKey;
 
     @Schema(description = "过期时间（秒，默认 3600）")

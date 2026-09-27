@@ -21,7 +21,7 @@ public enum IdentityProviderType {
    *
    * <p>标准用户类型，密码存储在本地 ydsz_acct_user 表，使用 BCrypt 哈希。
    */
-  LOCAL("local", "本地账号"),
+  LOCAL("local", "userinfo.idp.local"),
 
   /**
    * LDAP/AD 目录服务用户。
@@ -29,28 +29,28 @@ public enum IdentityProviderType {
    * <p>用户密码存储在外部 LDAP/AD 服务器，认证通过 LDAP bind 操作完成。
    * 本地仅存储用户属性和同步状态。
    */
-  LDAP("ldap", "LDAP 账号"),
+  LDAP("ldap", "userinfo.idp.ldap"),
 
   /**
    * SAML 2.0 外部 IdP 用户。
    *
    * <p>用户通过 SAML 2.0 协议在外部 IdP 完成认证，本地通过 NameID 关联用户身份。
    */
-  SAML("saml", "SAML 账号"),
+  SAML("saml", "userinfo.idp.saml"),
 
   /**
    * 社会化登录用户。
    *
    * <p>通过钉钉/企业微信/飞书等社会化平台 OAuth2 完成认证，本地存储平台 openId 关联。
    */
-  SOCIAL("social", "社会化账号"),
+  SOCIAL("social", "userinfo.idp.social"),
 
   /**
    * 外部 OAuth2/OIDC Provider 用户。
    *
    * <p>通过外部 OAuth2/OIDC 认证（如 Keycloak、Auth0）完成身份验证。
    */
-  OAUTH2("oauth2", "OAuth2 账号");
+  OAUTH2("oauth2", "userinfo.idp.oauth2");
 
   /** 类型标识（存储在用户记录中） */
   private final String code;
