@@ -7,6 +7,8 @@ import java.util.Map;
 
 import lombok.Data;
 
+import com.njydsz.common.json.annotation.JsonProperty;
+
 /**
  * 表单字段定义（P0-3 表单引擎 MVP）
  *
@@ -118,11 +120,11 @@ public class FlowFormField implements Serializable {
     private String label;
 
     /** 是否默认选中 */
-    @com.fasterxml.jackson.annotation.JsonProperty("selected")
+    @JsonProperty("selected")
     private Boolean isSelected;
 
     /** 排他（多选时选中此项后其他不可选） */
-    @com.fasterxml.jackson.annotation.JsonProperty("exclusive")
+    @JsonProperty("exclusive")
     private Boolean isExclusive;
   }
 

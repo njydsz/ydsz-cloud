@@ -6,6 +6,8 @@ import java.util.List;
 
 import lombok.Data;
 
+import com.njydsz.common.json.annotation.JsonProperty;
+
 /**
  * 流程模拟结果
  *
@@ -29,7 +31,7 @@ public class SimulationResult implements Serializable {
   private String endNode;
 
   /** 是否到达结束节点 */
-  @com.fasterxml.jackson.annotation.JsonProperty("reachedEnd")
+  @JsonProperty("reachedEnd")
   private boolean isReachedEnd;
 
   /** 警告信息列表（如条件永远不满足） */

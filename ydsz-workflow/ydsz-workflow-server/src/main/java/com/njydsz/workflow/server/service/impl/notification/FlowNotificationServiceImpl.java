@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.MessageResult;
+import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.message.api.client.NotificationClient;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
@@ -602,7 +603,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     private String bizType;
     private String bizId;
     private LocalDateTime expiredAt;
-    @com.fasterxml.jackson.annotation.JsonProperty("emailEnabled")
+    @JsonProperty("emailEnabled")
     private Boolean isEmailEnabled;
     private String receiverEmail;
   }

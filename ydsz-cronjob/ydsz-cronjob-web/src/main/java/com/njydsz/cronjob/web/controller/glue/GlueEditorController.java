@@ -21,6 +21,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
  * GLUE 代码编辑器 Controller（P2-1）。
@@ -124,7 +125,7 @@ public class GlueEditorController {
   public static class SaveResult implements Serializable {
     @Serial private static final long serialVersionUID = 1L;
     /** 是否成功 */
-    @com.fasterxml.jackson.annotation.JsonProperty("success")
+    @JsonProperty("success")
     private boolean isSuccess;
     /** 结果消息 */
     private String message;
@@ -139,7 +140,7 @@ public class GlueEditorController {
   public static class ValidateResult implements Serializable {
     @Serial private static final long serialVersionUID = 1L;
     /** 是否合法 */
-    @com.fasterxml.jackson.annotation.JsonProperty("valid")
+    @JsonProperty("valid")
     private boolean isValid;
     /** 校验消息 */
     private String message;
