@@ -9,6 +9,8 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import io.mybatis.plugin.annotation.TableIndex;
+import io.mybatis.plugin.annotation.TableIndexes;
 
 
 
@@ -52,6 +54,9 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_sys_variable")
+@TableIndexes({
+  @TableIndex(name = "idx_sys_variable_tenant", columns = {"tenant_id", "is_deleted"}),
+})
 public class Variable extends MpBaseEntity<String> {
 
   /** 状态常量：启用 */

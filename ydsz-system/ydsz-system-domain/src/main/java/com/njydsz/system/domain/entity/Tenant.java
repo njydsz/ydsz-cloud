@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import io.mybatis.plugin.annotation.TableIndex;
+import io.mybatis.plugin.annotation.TableIndexes;
 
 
 
@@ -42,6 +44,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_sys_tenant")
+@TableIndexes({
+  @TableIndex(name = "idx_sys_tenant_tenant", columns = {"tenant_id", "is_deleted"}),
+})
 public class Tenant extends MpBaseEntity<String> {
 
   /** 租户编码（唯一业务标识，租户登录/调用使用） */

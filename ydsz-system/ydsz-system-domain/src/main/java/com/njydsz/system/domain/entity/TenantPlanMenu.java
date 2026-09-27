@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import io.mybatis.plugin.annotation.TableIndex;
+import io.mybatis.plugin.annotation.TableIndexes;
 
 
 
@@ -41,6 +43,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_sys_tenant_plan_menu")
+@TableIndexes({
+  @TableIndex(name = "idx_sys_tenant_plan_menu_tenant", columns = {"tenant_id", "is_deleted"}),
+})
 public class TenantPlanMenu extends MpBaseEntity<String> {
 
   /** 套餐 ID（{@code ydsz_sys_tenant_plan.id}） */

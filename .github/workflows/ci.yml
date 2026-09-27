@@ -74,6 +74,12 @@ jobs:
             --backend-root ./ydsz-cloud \
             --min-coverage 20 \
             --verbose || echo "[CONTINUE] SpringDoc check finished (observe mode)"
+# Step 4c: DDL 三方言同步检查（观察模式，门禁逐步推进）
+      - name: DDL 三方言同步检查
+        working-directory: ydsz-cloud
+        run: |
+          python data/scripts/check-ddl-dialect-sync.py \
+            --sqls-root ./sqls 2>&1 || echo "[CONTINUE] DDL check finished (observe mode)"
 
       # Step 5: Maven verify
       - name: Maven verify (Compile + Unit Test + Integration Test)

@@ -8,6 +8,8 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
+import io.mybatis.plugin.annotation.TableIndex;
+import io.mybatis.plugin.annotation.TableIndexes;
 
 
 
@@ -41,6 +43,9 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_sys_dict_item", autoResultMap = true)
+@TableIndexes({
+  @TableIndex(name = "idx_sys_dict_item_tenant", columns = {"tenant_id", "is_deleted"}),
+})
 public class DictItem extends MpBaseEntity<String> {
 
   /** 所属字典类型编码（逻辑外键 → {@code ydsz_sys_dict_type.type_code}） */

@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import io.mybatis.plugin.annotation.TableIndex;
+import io.mybatis.plugin.annotation.TableIndexes;
 
 
 
@@ -36,6 +38,9 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_sys_dict_type")
+@TableIndexes({
+  @TableIndex(name = "idx_sys_dict_type_tenant", columns = {"tenant_id", "is_deleted"}),
+})
 public class DictType extends MpBaseEntity<String> {
 
   /** 类型编码（唯一标识，用于业务引用） */
