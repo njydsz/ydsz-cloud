@@ -15,6 +15,7 @@ import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.vo.MsgPreferenceVO;
@@ -138,51 +139,53 @@ public class GuardServiceImpl implements GuardService {
     if (userId == null || userId.isBlank()) {
       return true;
     }
-    MsgPreferenceVO pref = preferenceService.getByUser(userId, channel, bizType);
-    if (pref == null || pref.getIsEnabled() == null) {
+    return SentryObservation.time("message.guard.check", "消息发送频率检查", null, () -> {
+      MsgPreferenceVO pref = preferenceService.getByUser(userId, channel, bizType);
+      if (pref == null || pref.getIsEnabled() == null) {
+        return true;
+      }
+      if (!Boolean.TRUE.equals(pref.getIsEnabled())) {
+        return false;
+      }
+      LocalDateTime now = LocalDateTime.now();
+      if (pref.getHourlyLimit() != null && pref.getHourlyLimit() > 0) {
+        Long cur =
+            readCounter(
+                MessageConstants.FREQUENCY_HOURLY_PREFIX,
+                userId,
+                channel,
+                bizType,
+                DateUtils.formatNow("yyyyMMddHH"));
+        if (cur != null && cur >= pref.getHourlyLimit()) {
+          log.info(
+              "[Guard] 频率超限(小时): user={} channel={} cur={} limit={}",
+              userId,
+              channel,
+              cur,
+              pref.getHourlyLimit());
+          return false;
+        }
+      }
+      if (pref.getDailyLimit() != null && pref.getDailyLimit() > 0) {
+        Long cur =
+            readCounter(
+                MessageConstants.FREQUENCY_DAILY_PREFIX,
+                userId,
+                channel,
+                bizType,
+                DateUtils.formatNow("yyyyMMdd"));
+        if (cur != null && cur >= pref.getDailyLimit()) {
+          log.info(
+              "[Guard] 频率超限(日): user={} channel={} cur={} limit={}",
+              userId,
+              channel,
+              cur,
+              pref.getDailyLimit());
+          return false;
+        }
+      }
       return true;
-    }
-    if (!Boolean.TRUE.equals(pref.getIsEnabled())) {
-      return false;
-    }
-    LocalDateTime now = LocalDateTime.now();
-    if (pref.getHourlyLimit() != null && pref.getHourlyLimit() > 0) {
-      Long cur =
-          readCounter(
-              MessageConstants.FREQUENCY_HOURLY_PREFIX,
-              userId,
-              channel,
-              bizType,
-              DateUtils.formatNow("yyyyMMddHH"));
-      if (cur != null && cur >= pref.getHourlyLimit()) {
-        log.info(
-            "[Guard] 频率超限(小时): user={} channel={} cur={} limit={}",
-            userId,
-            channel,
-            cur,
-            pref.getHourlyLimit());
-        return false;
-      }
-    }
-    if (pref.getDailyLimit() != null && pref.getDailyLimit() > 0) {
-      Long cur =
-          readCounter(
-              MessageConstants.FREQUENCY_DAILY_PREFIX,
-              userId,
-              channel,
-              bizType,
-              DateUtils.formatNow("yyyyMMdd"));
-      if (cur != null && cur >= pref.getDailyLimit()) {
-        log.info(
-            "[Guard] 频率超限(日): user={} channel={} cur={} limit={}",
-            userId,
-            channel,
-            cur,
-            pref.getDailyLimit());
-        return false;
-      }
-    }
-    return true;
+    });
   }
 
   /**

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.cronjob.domain.repository.JobWebhookRepository;
 import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
@@ -96,32 +97,34 @@ public class WebhookEventDispatcher {
    */
   @Async
   public void dispatchEvent(String eventType, String jobKey, Map<String, Object> payload) {
-    try {
-      List<JobWebhookVO> webhooks = jobWebhookRepository.findActiveByEventAndJob(eventType, jobKey);
-      if (webhooks.isEmpty()) {
-        return;
-      }
-      ObjectNode eventBody = new ObjectNode();
-      eventBody.put("eventType", eventType);
-      eventBody.put("jobKey", jobKey);
-      eventBody.put("timestamp", LocalDateTime.now().toString());
-      eventBody.put("data", payload);
-
-      for (JobWebhookVO webhook : webhooks) {
-        boolean success = sendWebhookWithRetry(webhook, eventBody);
-        if (!success) {
-          // P1-3: 在线重试耗尽后写入补偿表，由 WebhookRetryScanTask 异步重试
-          createRetryRecord(webhook, eventBody);
+    SentryObservation.time("cronjob.webhook.send", null, null, () -> {
+      try {
+        List<JobWebhookVO> webhooks = jobWebhookRepository.findActiveByEventAndJob(eventType, jobKey);
+        if (webhooks.isEmpty()) {
+          return;
         }
+        ObjectNode eventBody = new ObjectNode();
+        eventBody.put("eventType", eventType);
+        eventBody.put("jobKey", jobKey);
+        eventBody.put("timestamp", LocalDateTime.now().toString());
+        eventBody.put("data", payload);
+
+        for (JobWebhookVO webhook : webhooks) {
+          boolean success = sendWebhookWithRetry(webhook, eventBody);
+          if (!success) {
+            // P1-3: 在线重试耗尽后写入补偿表，由 WebhookRetryScanTask 异步重试
+            createRetryRecord(webhook, eventBody);
+          }
+        }
+      } catch (Exception e) {
+        log.error(
+            "[Webhook] 事件分发异常: eventType={} jobKey={} reason={}",
+            eventType,
+            jobKey,
+            e.getMessage(),
+            e);
       }
-    } catch (Exception e) {
-      log.error(
-          "[Webhook] 事件分发异常: eventType={} jobKey={} reason={}",
-          eventType,
-          jobKey,
-          e.getMessage(),
-          e);
-    }
+    });
   }
 
   /**

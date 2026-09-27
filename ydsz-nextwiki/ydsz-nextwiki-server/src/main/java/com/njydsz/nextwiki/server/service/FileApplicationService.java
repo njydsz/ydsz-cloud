@@ -39,6 +39,7 @@ import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
@@ -181,106 +182,108 @@ public class FileApplicationService {
    */
   public FileNodeVO upload(
       MultipartFile file, String parentId, String rename, String versionRemark, String userId) {
-    // ===== 阶段1：准备阶段（无事务边界） =====
-    // 1. 安全校验
-    validateUpload(file);
+    return SentryObservation.time("nextwiki.file.upload", null, null, () -> {
+      // ===== 阶段1：准备阶段（无事务边界） =====
+      // 1. 安全校验
+      validateUpload(file);
 
-    // 2. 配额校验
-    quotaDomainService.checkQuota(loadQuota("user", userId), file.getSize());
+      // 2. 配额校验
+      quotaDomainService.checkQuota(loadQuota("user", userId), file.getSize());
 
-    // 3. 解析父目录
-    String originalFilename = file.getOriginalFilename();
-    String rawName = (rename != null && !rename.isEmpty()) ? rename : originalFilename;
-    String fileName = sanitizeFileName(rawName);
-    String suffix = extractSuffix(fileName);
+      // 3. 解析父目录
+      String originalFilename = file.getOriginalFilename();
+      String rawName = (rename != null && !rename.isEmpty()) ? rename : originalFilename;
+      String fileName = sanitizeFileName(rawName);
+      String suffix = extractSuffix(fileName);
 
-    FileNodeVO parent = resolveParentNode(parentId, userId);
-    String resolvedParentId = parent.getId();
-    String parentPath = parent.getPath() != null ? parent.getPath() : "/";
+      FileNodeVO parent = resolveParentNode(parentId, userId);
+      String resolvedParentId = parent.getId();
+      String parentPath = parent.getPath() != null ? parent.getPath() : "/";
 
-    // 同名冲突检测（只读查询，不含写操作）
-    List<FileNodeVO> existingNodes =
-        fileNodeRepository.findByNameAndParent(fileName, resolvedParentId, userId);
-    String conflictStrategy = properties.getUpload().getConflictStrategy();
-    String strategy = conflictStrategy != null ? conflictStrategy.toUpperCase() : "KEEP_BOTH";
+      // 同名冲突检测（只读查询，不含写操作）
+      List<FileNodeVO> existingNodes =
+          fileNodeRepository.findByNameAndParent(fileName, resolvedParentId, userId);
+      String conflictStrategy = properties.getUpload().getConflictStrategy();
+      String strategy = conflictStrategy != null ? conflictStrategy.toUpperCase() : "KEEP_BOTH";
 
-    if (existingNodes != null && !existingNodes.isEmpty() && "SKIP".equals(strategy)) {
-      log.info("[FileApplicationService] 同名文件已存在，跳过上传: name={}", fileName);
-      return existingNodes.get(0);
-    }
-    if (existingNodes != null && !existingNodes.isEmpty() && "KEEP_BOTH".equals(strategy)) {
-      fileName = resolveUniqueName(fileName, resolvedParentId, userId);
-    }
-
-    String path =
-        parentPath.endsWith("/") ? parentPath + fileName + "/" : parentPath + "/" + fileName + "/";
-    int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
-
-    // 4. 计算文件哈希（IO 操作，在事务外执行）
-    String fileHash = null;
-    try (InputStream hashStream = file.getInputStream()) {
-      fileHash = calculateSha256(hashStream);
-    } catch (Exception e) {
-      log.warn("[FileApplicationService] SHA-256 计算失败: {}", e.getMessage());
-    }
-
-    // 5. 秒传去重检查（只读查询）
-    FileNodeVO dedupExisting = null;
-    if (fileHash != null) {
-      dedupExisting = fileNodeRepository.findByFileHash(fileHash).orElse(null);
-    }
-
-    // 6. 存储上传（IO 操作，在事务外执行）
-    FileStorage uploaded = null;
-    String storageKey = null;
-    if (dedupExisting == null) {
-      IFileStorage storage = resolveStorage();
-      if (storage == null) {
-        throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
+      if (existingNodes != null && !existingNodes.isEmpty() && "SKIP".equals(strategy)) {
+        log.info("[FileApplicationService] 同名文件已存在，跳过上传: name={}", fileName);
+        return existingNodes.get(0);
       }
-      storageKey = generateStorageKey(userId, fileName);
-      uploaded = storage.upload(null, storageKey, file);
+      if (existingNodes != null && !existingNodes.isEmpty() && "KEEP_BOTH".equals(strategy)) {
+        fileName = resolveUniqueName(fileName, resolvedParentId, userId);
+      }
 
-      // 病毒扫描（IO 操作，在事务外执行）
-      if (properties.getVirusScan().isEnabled()) {
-        try (InputStream scanStream = file.getInputStream()) {
-          var scanResult = virusScanApplicationService.scan(scanStream, file.getSize());
-          if (scanResult.isInfected()) {
-            storage.delete(null, storageKey);
-            throw BusinessException.of(NextwikiExceptionCode.FILE_VIRUS_DETECTED)
-                .data("message", scanResult.getMessage());
+      String path =
+          parentPath.endsWith("/") ? parentPath + fileName + "/" : parentPath + "/" + fileName + "/";
+      int level = parent.getLevel() != null ? parent.getLevel() + 1 : 1;
+
+      // 4. 计算文件哈希（IO 操作，在事务外执行）
+      String fileHash = null;
+      try (InputStream hashStream = file.getInputStream()) {
+        fileHash = calculateSha256(hashStream);
+      } catch (Exception e) {
+        log.warn("[FileApplicationService] SHA-256 计算失败: {}", e.getMessage());
+      }
+
+      // 5. 秒传去重检查（只读查询）
+      FileNodeVO dedupExisting = null;
+      if (fileHash != null) {
+        dedupExisting = fileNodeRepository.findByFileHash(fileHash).orElse(null);
+      }
+
+      // 6. 存储上传（IO 操作，在事务外执行）
+      FileStorage uploaded = null;
+      String storageKey = null;
+      if (dedupExisting == null) {
+        IFileStorage storage = resolveStorage();
+        if (storage == null) {
+          throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
+        }
+        storageKey = generateStorageKey(userId, fileName);
+        uploaded = storage.upload(null, storageKey, file);
+
+        // 病毒扫描（IO 操作，在事务外执行）
+        if (properties.getVirusScan().isEnabled()) {
+          try (InputStream scanStream = file.getInputStream()) {
+            var scanResult = virusScanApplicationService.scan(scanStream, file.getSize());
+            if (scanResult.isInfected()) {
+              storage.delete(null, storageKey);
+              throw BusinessException.of(NextwikiExceptionCode.FILE_VIRUS_DETECTED)
+                  .data("message", scanResult.getMessage());
+            }
+            if (scanResult.isError()) {
+              log.warn("[FileApplicationService] 病毒扫描出错，跳过: {}", scanResult.getMessage());
+            }
+          } catch (IOException e) {
+            log.warn("[FileApplicationService] 病毒扫描失败，跳过: {}", e.getMessage());
           }
-          if (scanResult.isError()) {
-            log.warn("[FileApplicationService] 病毒扫描出错，跳过: {}", scanResult.getMessage());
-          }
-        } catch (IOException e) {
-          log.warn("[FileApplicationService] 病毒扫描失败，跳过: {}", e.getMessage());
         }
       }
-    }
 
-    // ===== 阶段2：事务阶段（短事务，仅数据库操作） =====
-    UploadPrepareContext ctx =
-        UploadPrepareContext.builder()
-            .resolvedParentId(resolvedParentId)
-            .fileName(fileName)
-            .suffix(suffix)
-            .dedupExisting(dedupExisting)
-            .fileHash(fileHash)
-            .path(path)
-            .level(level)
-            .uploaded(uploaded)
-            .storageKey(storageKey)
-            .versionRemark(versionRemark)
-            .userId(userId)
-            .overwriteTarget("OVERWRITE".equals(strategy) && existingNodes != null && !existingNodes.isEmpty()
-                ? existingNodes.get(0) : null)
-            .build();
+      // ===== 阶段2：事务阶段（短事务，仅数据库操作） =====
+      UploadPrepareContext ctx =
+          UploadPrepareContext.builder()
+              .resolvedParentId(resolvedParentId)
+              .fileName(fileName)
+              .suffix(suffix)
+              .dedupExisting(dedupExisting)
+              .fileHash(fileHash)
+              .path(path)
+              .level(level)
+              .uploaded(uploaded)
+              .storageKey(storageKey)
+              .versionRemark(versionRemark)
+              .userId(userId)
+              .overwriteTarget("OVERWRITE".equals(strategy) && existingNodes != null && !existingNodes.isEmpty()
+                  ? existingNodes.get(0) : null)
+              .build();
 
-    if (dedupExisting != null) {
-      return persistDedupedNode(ctx);
-    }
-    return persistNewNode(ctx);
+      if (dedupExisting != null) {
+        return persistDedupedNode(ctx);
+      }
+      return persistNewNode(ctx);
+    });
   }
 
   /**

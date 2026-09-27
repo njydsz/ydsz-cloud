@@ -18,6 +18,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.cronjob.domain.repository.WebhookRetryRepository;
 import com.njydsz.cronjob.domain.vo.JobWebhookRetryVO;
@@ -111,52 +112,54 @@ public class WebhookRetryScanTask implements ScanTask {
 
   @Override
   public void scan() {
-    WebhookRetryConfig config = cronjobProperties.getWebhookRetry();
-    int batchSize = config.getBatchSize();
+    SentryObservation.time("cronjob.webhook.retry", null, null, () -> {
+      WebhookRetryConfig config = cronjobProperties.getWebhookRetry();
+      int batchSize = config.getBatchSize();
 
-    List<JobWebhookRetryVO> pendingRetries =
-        webhookRetryRepository.findPendingRetries(LocalDateTime.now(), batchSize);
-    if (pendingRetries.isEmpty()) {
-      return;
-    }
-    log.info("[WebhookRetry] 本次扫描到 {} 条待重试记录", pendingRetries.size());
-
-    int successCount = 0;
-    int deadCount = 0;
-    for (JobWebhookRetryVO retry : pendingRetries) {
-      boolean success;
-      try {
-        success = doSend(retry);
-      } catch (Exception e) {
-        log.warn(
-            "[WebhookRetry] 重试推送异常: retryId={} webhookId={} reason={}",
-            retry.getId(),
-            retry.getWebhookId(),
-            e.getMessage());
-        success = false;
+      List<JobWebhookRetryVO> pendingRetries =
+          webhookRetryRepository.findPendingRetries(LocalDateTime.now(), batchSize);
+      if (pendingRetries.isEmpty()) {
+        return;
       }
-      if (success) {
-        webhookRetryRepository.markSuccess(retry.getId(), LocalDateTime.now());
-        successCount++;
-      } else {
-        int newCount = retry.getRetryCount() + 1;
-        if (newCount >= retry.getMaxRetries()) {
-          webhookRetryRepository.markDead(retry.getId(), LocalDateTime.now(), "重试次数耗尽");
-          deadCount++;
+      log.info("[WebhookRetry] 本次扫描到 {} 条待重试记录", pendingRetries.size());
+
+      int successCount = 0;
+      int deadCount = 0;
+      for (JobWebhookRetryVO retry : pendingRetries) {
+        boolean success;
+        try {
+          success = doSend(retry);
+        } catch (Exception e) {
+          log.warn(
+              "[WebhookRetry] 重试推送异常: retryId={} webhookId={} reason={}",
+              retry.getId(),
+              retry.getWebhookId(),
+              e.getMessage());
+          success = false;
+        }
+        if (success) {
+          webhookRetryRepository.markSuccess(retry.getId(), LocalDateTime.now());
+          successCount++;
         } else {
-          long backoffMs = calculateBackoffMs(newCount);
-          LocalDateTime nextRetry = LocalDateTime.now().plusNanos(backoffMs * NANOS_PER_MILLI);
-          webhookRetryRepository.updateForRetry(retry.getId(), newCount, nextRetry, null);
+          int newCount = retry.getRetryCount() + 1;
+          if (newCount >= retry.getMaxRetries()) {
+            webhookRetryRepository.markDead(retry.getId(), LocalDateTime.now(), "重试次数耗尽");
+            deadCount++;
+          } else {
+            long backoffMs = calculateBackoffMs(newCount);
+            LocalDateTime nextRetry = LocalDateTime.now().plusNanos(backoffMs * NANOS_PER_MILLI);
+            webhookRetryRepository.updateForRetry(retry.getId(), newCount, nextRetry, null);
+          }
         }
       }
-    }
-    if (successCount > 0 || deadCount > 0) {
-      log.info(
-          "[WebhookRetry] 本轮处理完成: successCount={} deadCount={} totalProcessed={}",
-          successCount,
-          deadCount,
-          pendingRetries.size());
-    }
+      if (successCount > 0 || deadCount > 0) {
+        log.info(
+            "[WebhookRetry] 本轮处理完成: successCount={} deadCount={} totalProcessed={}",
+            successCount,
+            deadCount,
+            pendingRetries.size());
+      }
+    });
   }
 
   @Override

@@ -39,6 +39,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.cronjob.domain.job.ExecutionContextScope;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobHandler;
@@ -289,36 +290,38 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    */
   @Override
   public String dispatch(JobVO job, String executorNode, String triggerType) {
-    // P1-2: 记录调度触发延迟指标（衡量调度精度，为 preload/扫描间隔调优提供依据）
-    recordDispatchDelay(job, triggerType);
-    // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
-    boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
-    // P1-2: CONCURRENT 策略不加锁
-    if ("CONCURRENT".equals(job.getBlockStrategy())) {
-      holdLock = false;
-    }
-    // P7-3: 对非 MANUAL 触发的任务进行配额检查（手动触发的任务不限制）
-    if (holdLock) {
-      checkExecutionQuota(job);
-    }
-    // P3: 分片任务走分片执行路径
-    if (isShardedJob(job)) {
-      return executeShardedJob(job, holdLock, triggerType);
-    }
-    // P0-1: 调度器-执行器分离 — 非分片任务也走远程派发到 Worker 节点
-    if (isSchedulerExecutorSeparationEnabled()) {
-      String logId = dispatchToWorker(job, triggerType);
-      if (logId != null) {
-        return logId;
+    return SentryObservation.time("cronjob.dispatch.execute", null, null, () -> {
+      // P1-2: 记录调度触发延迟指标（衡量调度精度，为 preload/扫描间隔调优提供依据）
+      recordDispatchDelay(job, triggerType);
+      // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
+      boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
+      // P1-2: CONCURRENT 策略不加锁
+      if ("CONCURRENT".equals(job.getBlockStrategy())) {
+        holdLock = false;
       }
-      // 无可用 Worker 时降级本地执行
-      log.debug("[Dispatcher] 无可用 Worker, 降级本地执行: key={}", job.getJobKey());
-    }
-    // P1-7: MANUAL 触发同步执行（API 调用方需要 logId），其他触发类型异步执行（隔离调度线程）
-    if (TRIGGER_MANUAL.equals(triggerType)) {
-      return executeJob(job, holdLock, triggerType, 0);
-    }
-    return dispatchAsync(job, holdLock, triggerType, 0);
+      // P7-3: 对非 MANUAL 触发的任务进行配额检查（手动触发的任务不限制）
+      if (holdLock) {
+        checkExecutionQuota(job);
+      }
+      // P3: 分片任务走分片执行路径
+      if (isShardedJob(job)) {
+        return executeShardedJob(job, holdLock, triggerType);
+      }
+      // P0-1: 调度器-执行器分离 — 非分片任务也走远程派发到 Worker 节点
+      if (isSchedulerExecutorSeparationEnabled()) {
+        String logId = dispatchToWorker(job, triggerType);
+        if (logId != null) {
+          return logId;
+        }
+        // 无可用 Worker 时降级本地执行
+        log.debug("[Dispatcher] 无可用 Worker, 降级本地执行: key={}", job.getJobKey());
+      }
+      // P1-7: MANUAL 触发同步执行（API 调用方需要 logId），其他触发类型异步执行（隔离调度线程）
+      if (TRIGGER_MANUAL.equals(triggerType)) {
+        return executeJob(job, holdLock, triggerType, 0);
+      }
+      return dispatchAsync(job, holdLock, triggerType, 0);
+    });
   }
 
   /**

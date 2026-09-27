@@ -27,6 +27,7 @@ import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
+import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
@@ -134,7 +135,7 @@ public class MessageServiceImpl implements MessageService {
 
   @Override
   public MessageSendResultVO send(MessageItemRequestDTO request) {
-    return sendInternal(request, 0);
+    return SentryObservation.time("message.send", "单条消息发送", null, () -> sendInternal(request, 0));
   }
 
   /**
@@ -450,29 +451,31 @@ public class MessageServiceImpl implements MessageService {
     if (requests == null || requests.isEmpty() || !StringUtils.hasText(batchId)) {
       return new BatchSendResultDTO(batchId, 0, 0, 0, 0);
     }
-    // 限制单批最大 100 条,防止阻塞过久
-    int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
-    List<MessageItemRequestDTO> batch = requests.subList(0, limit);
-    // 统一设置 bizId = batchId 便于进度查询
-    for (MessageItemRequestDTO req : batch) {
-      if (req != null) {
-        req.setBizId(batchId);
+    return SentryObservation.time("message.send.batch", "批量消息发送", null, () -> {
+      // 限制单批最大 100 条,防止阻塞过久
+      int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
+      List<MessageItemRequestDTO> batch = requests.subList(0, limit);
+      // 统一设置 bizId = batchId 便于进度查询
+      for (MessageItemRequestDTO req : batch) {
+        if (req != null) {
+          req.setBizId(batchId);
+        }
       }
-    }
-    // 使用 BatchService.submitBatch 异步批量发送
-    BatchSendRequestDTO dto = new BatchSendRequestDTO();
-    dto.setBatchId(batchId);
-    dto.setRequests(batch);
-    dto.setIsAsync(true);
-    MsgBatchVO msgBatch = batchService.submitBatch(dto);
-    // 异步模式下返回初始进度（实际处理在后台线程池执行）
-    BatchSendResultDTO result = new BatchSendResultDTO(batchId, msgBatch.getTotal(), 0, 0, 0);
-    log.info(
-        "[Message] 批量发送已提交: batchId={} total={} status={}",
-        batchId,
-        msgBatch.getTotal(),
-        msgBatch.getStatus());
-    return result;
+      // 使用 BatchService.submitBatch 异步批量发送
+      BatchSendRequestDTO dto = new BatchSendRequestDTO();
+      dto.setBatchId(batchId);
+      dto.setRequests(batch);
+      dto.setIsAsync(true);
+      MsgBatchVO msgBatch = batchService.submitBatch(dto);
+      // 异步模式下返回初始进度（实际处理在后台线程池执行）
+      BatchSendResultDTO result = new BatchSendResultDTO(batchId, msgBatch.getTotal(), 0, 0, 0);
+      log.info(
+          "[Message] 批量发送已提交: batchId={} total={} status={}",
+          batchId,
+          msgBatch.getTotal(),
+          msgBatch.getStatus());
+      return result;
+    });
   }
 
   @Override
