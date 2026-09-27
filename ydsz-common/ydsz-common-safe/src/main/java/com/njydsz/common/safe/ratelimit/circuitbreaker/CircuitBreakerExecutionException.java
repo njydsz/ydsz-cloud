@@ -1,7 +1,10 @@
 package com.njydsz.common.safe.ratelimit.circuitbreaker;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
+
 /**
- * 熔断器执行异常
+ * 熔断器执行异常（EXP-P1-001 整改 26.09.27 — 纳入 SysException 体系）。
  *
  * <p>在熔断保护回调（{@link CircuitBreakerCallback}）执行期间，将底层受检异常包装为
  * 运行时异常以适配 {@link java.util.function.Supplier} 契约时抛出。
@@ -13,7 +16,7 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
  * @author ydsz-team
  * @since 26.09.01
  */
-public class CircuitBreakerExecutionException extends RuntimeException {
+public class CircuitBreakerExecutionException extends SysException {
 
   private static final long serialVersionUID = 1L;
 
@@ -23,6 +26,8 @@ public class CircuitBreakerExecutionException extends RuntimeException {
    * @param cause 底层执行异常（非 {@code null}）
    */
   public CircuitBreakerExecutionException(Throwable cause) {
-    super(cause);
+    super();
+    this.code = CoreExceptionCode.INTERNAL_ERROR.getCode();
+    initCause(cause);
   }
 }

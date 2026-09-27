@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -33,6 +34,7 @@ import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.query.DictItemPageQuery;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.DictItemBatchService;
+import com.njydsz.system.server.service.DictItemImportService;
 import com.njydsz.system.server.service.DictItemService;
 
 /**
@@ -77,6 +79,7 @@ public class DictItemController {
 
   private final DictItemService service;
   private final DictItemBatchService batchService;
+  private final DictItemImportService importService;
 
   /**
    * 分页查询字典项
@@ -290,6 +293,44 @@ public class DictItemController {
   public YdszResponse<Map<String, Object>> batchSave(
       @Valid @RequestBody DictItemBatchDTO batchDTO) {
     return YdszResponse.success(batchService.batchSave(batchDTO.getItems()));
+  }
+
+  /**
+   * 通过 Excel 文件批量导入字典项
+   *
+   * <p>使用 ydsz-common-excel 流式读取 .xlsx 文件，逐行校验后委托 batchSave 在同一事务内完成入库。
+   *
+   * <p><b>文件格式要求：</b>
+   *
+   * <ul>
+   *   <li>第一行为表头，列序：字典类型编码 / 字典项编码 / 字典项展示值 / 父级ID / 排序号 / 说明 / 状态</li>
+   *   <li>必填列：字典类型编码、字典项编码、字典项展示值</li>
+   *   <li>选填列：父级ID（默认 "0"）、排序号（默认 0）、说明、状态（默认 ENABLED）</li>
+   *   <li>单次导入上限 500 条</li>
+   * </ul>
+   *
+   * @param file Excel 文件（.xlsx 格式）
+   * @return 导入结果 {successCount, totalCount, failCount, message}
+   */
+  @Audit(
+      module = "字典管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'通过Excel导入字典项: ' + #file.originalFilename")
+  @Operation(summary = "Excel 批量导入字典项", description = "运营批量导入，单次最多 500 条")
+  @RateLimit(resource = "system.dictitem.import", threshold = 10)
+  @AuthApiPermission(apiCodes = "sys:dict:item:import")
+  @PostMapping("/import")
+  public YdszResponse<Map<String, Object>> importFromExcel(
+      @Parameter(description = "Excel 文件（.xlsx 格式）") @RequestParam("file") MultipartFile file) {
+    if (file == null || file.isEmpty()) {
+      return YdszResponse.error("导入文件不能为空");
+    }
+    try {
+      return YdszResponse.success(importService.importFromExcel(file.getInputStream()));
+    } catch (Exception e) {
+      return YdszResponse.error("导入失败: " + e.getMessage());
+    }
   }
 
   /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */
