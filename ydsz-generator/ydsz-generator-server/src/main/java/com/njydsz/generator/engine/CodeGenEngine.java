@@ -12,6 +12,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.generator.domain.tool.VelocityDateTool;
 import com.njydsz.generator.domain.tool.VelocityTextTool;
@@ -42,7 +43,7 @@ public class CodeGenEngine {
   private final VelocityEngine velocityEngine;
 
   /** 日期格式化器（线程安全，可复用）。 */
-  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_PATTERN);
 
   /** 渲染 Writer 初始缓冲区大小（字符）。 */
   private static final int WRITER_BUFFER_SIZE = 4096;

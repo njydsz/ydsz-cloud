@@ -19,6 +19,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 import com.njydsz.common.feign.MessageResult;
@@ -92,7 +93,7 @@ public class AlertDispatcher {
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
   private static final DateTimeFormatter TIME_FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+      DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_TIME_PATTERN);
 
   /**
    * 监听告警事件，异步派发通知。

@@ -158,7 +158,7 @@ public class FilePermissionService {
    * @return 有效 ACL 列表，可能为空
    */
   @YdszCacheable(
-      cacheNames = NextwikiCacheConstants.NEXTWIKI_FILE_ACL_CACHE,
+      value = NextwikiCacheConstants.NEXTWIKI_FILE_ACL_CACHE,
       key = "@nextwikiCacheKeyBuilder.fileAcl(#fileNodeId, #userId)",
       condition = "#userId != null")
   public List<FileAclVO> getEffectiveAcls(String fileNodeId, String userId) {

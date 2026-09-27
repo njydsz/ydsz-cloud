@@ -32,6 +32,7 @@ import com.njydsz.workflow.domain.vo.FlowInstanceVO;
 import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
+import com.njydsz.common.util.collection.CollectionUtils;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer;
 import com.njydsz.workflow.server.form.FlowFormEngineService;
@@ -522,7 +523,7 @@ public class FlowTaskCoreService {
     if (multiReject) {
       return advancer.advanceMulti(instance, task.getNodeCode(), AUDIT_TYPE_REJECT, dto.getTargetNodeCodes(), mergedVars);
     }
-    String singleTarget = dto.getTargetNodeCodes() != null && !dto.getTargetNodeCodes().isEmpty()
+    String singleTarget = CollectionUtils.isNotEmpty(dto.getTargetNodeCodes())
         ? dto.getTargetNodeCodes().get(0) : dto.getTargetNodeCode();
     return advancer.advance(instance, task.getNodeCode(), AUDIT_TYPE_REJECT, singleTarget, mergedVars);
   }
@@ -803,7 +804,7 @@ public class FlowTaskCoreService {
     }
     try {
       Map<String, Object> base = YdszJson.parseMap(instance.getVariable());
-      if (extra != null && !extra.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(extra)) {
         base.putAll(extra);
       }
       return base;

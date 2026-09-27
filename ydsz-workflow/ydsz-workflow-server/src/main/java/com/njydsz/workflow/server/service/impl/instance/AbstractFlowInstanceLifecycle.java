@@ -27,6 +27,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.core.assembler.NameAssembler;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
+import com.njydsz.common.util.collection.CollectionUtils;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
@@ -1206,7 +1207,7 @@ public abstract class AbstractFlowInstanceLifecycle {
         return null;
       }
       List<FlowRunTaskVO> tasks = taskRepository.findPendingByNode(instanceId, attachedToRef);
-      return tasks.isEmpty() ? null : tasks.get(0).getId();
+      return CollectionUtils.findFirst(tasks).map(FlowRunTaskVO::getId).orElse(null);
     } catch (Exception e) {
       log.warn(
           "[Flow] 解析 boundaryTaskId 失败: nodeCode={} err={}", node.getNodeCode(), e.getMessage());

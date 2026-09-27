@@ -25,6 +25,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.util.collection.CollectionUtils;
 import com.njydsz.workflow.domain.vo.StringVO;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
@@ -446,10 +447,7 @@ public class FlowAdvancedController {
       return 0;
     }
     List<Long> ttls = urgeLimiter.getCooldownSeconds(userId, List.of(instanceIdLong), "INSTANCE");
-    if (ttls != null && !ttls.isEmpty()) {
-      return ttls.get(0);
-    }
-    return 0;
+    return CollectionUtils.findFirst(ttls).orElse(0L);
   }
 
   // ==================== 离线代理自动转发 ====================

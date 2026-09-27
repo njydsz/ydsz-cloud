@@ -21,6 +21,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.util.collection.CollectionUtils;
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
@@ -991,7 +992,7 @@ public class FlowTaskCreateService {
       FlowNodeVO node,
       Map<String, Object> variables,
       List<String> explicitAssignees) {
-    if (explicitAssignees != null && !explicitAssignees.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(explicitAssignees)) {
       return new ArrayList<>(explicitAssignees);
     }
     Map<String, Object> extConfig = parseExtConfig(node.getExt());

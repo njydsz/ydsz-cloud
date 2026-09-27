@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
 import com.njydsz.workflow.domain.repository.FlowHisTaskRepository;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
@@ -138,10 +139,9 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   private final FlowInstanceRepository instanceRepository;
 
   /** 日期时间格式 */
-  private static final DateTimeFormatter DT_FMT =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+  private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_TIME_PATTERN);
 
-  private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+  private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_PATTERN);
   private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
   /** 查询上限（防止全表加载 OOM） */

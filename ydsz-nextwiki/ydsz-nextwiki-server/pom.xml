@@ -90,10 +90,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-thread</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-search</artifactId>
         </dependency>
         <!-- P1-2: WebSocket 实时推送（RealtimePushTemplate 批量进度推送 / @提及通知） -->
@@ -170,5 +166,33 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
-        </dependency></dependencies>
+        </dependency>
+</dependencies>
+
+    <!--
+      注解处理器覆盖：仅使用 Lombok，移除 MapStruct。
+      原因：父 POM 的 -processor 编译器参数同时列出 Lombok + MapStruct 处理器，
+      在某些编译环境下 MapStruct 处理器的初始化异常会阻塞 Lombok 运行，
+      导致 @Slf4j/@RequiredArgsConstructor 注解全部失效（模块不依赖 MapStruct）。
+    -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs combine.self="override">
+                        <arg>-Xlint:-classfile</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths combine.self="override">
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

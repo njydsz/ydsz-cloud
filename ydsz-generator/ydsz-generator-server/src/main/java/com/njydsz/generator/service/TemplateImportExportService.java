@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.util.date.DateUtils;
+
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.security.DigestUtils;
@@ -84,7 +86,7 @@ public class TemplateImportExportService {
       zos.finish();
 
       String fileName = "templates-" + group.getName() + "-"
-          + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + ".zip";
+          + DateUtils.formatNow("yyyyMMddHHmmss") + ".zip";
       return TemplateZipVO.builder()
           .data(baos.toByteArray())
           .fileName(fileName)
@@ -184,8 +186,7 @@ public class TemplateImportExportService {
     Map<String, Object> manifest = new LinkedHashMap<>(MANIFEST_MAP_INITIAL_CAPACITY);
     manifest.put("groupName", group.getName());
     manifest.put("description", group.getDescription() == null ? "" : group.getDescription());
-    manifest.put("exportTime", LocalDateTime.now()
-        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+    manifest.put("exportTime", DateUtils.now());
     manifest.put("templateCount", templates.size());
 
     List<Map<String, String>> templateInfos = new ArrayList<>(templates.size());
