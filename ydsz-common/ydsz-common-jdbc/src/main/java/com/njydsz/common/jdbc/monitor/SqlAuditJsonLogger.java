@@ -8,7 +8,7 @@ import java.util.Map;
 import com.njydsz.common.json.YdszJson;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import com.njydsz.common.util.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;

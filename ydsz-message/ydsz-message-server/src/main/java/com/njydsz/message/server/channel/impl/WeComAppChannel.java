@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
@@ -19,6 +18,7 @@ import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.ChannelProperties;
 
@@ -223,6 +223,6 @@ public class WeComAppChannel implements MessageChannel {
     if (s == null) {
       return "";
     }
-    return s.length() > max ? s.substring(0, max) + "..." : s;
+    return s.length() > max ? StringUtils.truncate(s, max) + "..." : s;
   }
 }

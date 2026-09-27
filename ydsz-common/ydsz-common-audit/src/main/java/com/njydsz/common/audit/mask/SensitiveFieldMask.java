@@ -9,6 +9,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.mask.MaskUtils;
 
 /**
  * 敏感字段脱敏工具类
@@ -200,7 +201,8 @@ public final class SensitiveFieldMask {
     if (value.length() <= KEEP_CHARS * 2) {
       return "****";
     }
-    return value.substring(0, KEEP_CHARS) + "****" + value.substring(value.length() - KEEP_CHARS);
+    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+    return MaskUtils.mask(value, KEEP_CHARS, KEEP_CHARS);
   }
 
   /**
@@ -221,30 +223,21 @@ public final class SensitiveFieldMask {
       if (value.length() <= PHONE_PREFIX + PHONE_SUFFIX) {
         return "****";
       }
-      return value.substring(0, PHONE_PREFIX)
-          + "****"
-          + value.substring(value.length() - PHONE_SUFFIX);
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      return MaskUtils.mask(value, PHONE_PREFIX, PHONE_SUFFIX);
     }
     // 邮箱脱敏：本地部分仅保留首字符
     if (lowerKey.contains("email")) {
-      int atIndex = value.indexOf('@');
-      if (atIndex > 0) {
-        String localPart = value.substring(0, atIndex);
-        String domain = value.substring(atIndex);
-        if (localPart.length() <= EMAIL_LOCAL_KEEP) {
-          return "*" + domain;
-        }
-        return localPart.charAt(0) + "***" + domain;
-      }
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      return MaskUtils.maskEmail(value);
     }
     // 身份证号脱敏：保留前 6 后 4
     if (lowerKey.contains("idcard") || lowerKey.contains("idnumber")) {
       if (value.length() <= IDCARD_PREFIX + IDCARD_SUFFIX) {
         return "****";
       }
-      return value.substring(0, IDCARD_PREFIX)
-          + "********"
-          + value.substring(value.length() - IDCARD_SUFFIX);
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      return MaskUtils.mask(value, IDCARD_PREFIX, IDCARD_SUFFIX);
     }
     // 银行卡号脱敏：保留前 4 后 4
     if (lowerKey.contains("bankcard")
@@ -253,9 +246,8 @@ public final class SensitiveFieldMask {
       if (value.length() <= BANKCARD_PREFIX + BANKCARD_SUFFIX) {
         return "****";
       }
-      return value.substring(0, BANKCARD_PREFIX)
-          + "****"
-          + value.substring(value.length() - BANKCARD_SUFFIX);
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      return MaskUtils.mask(value, BANKCARD_PREFIX, BANKCARD_SUFFIX);
     }
     // 默认：保留前后 2 位
     return maskString(value);

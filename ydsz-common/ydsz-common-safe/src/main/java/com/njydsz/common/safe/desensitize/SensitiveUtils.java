@@ -2,6 +2,8 @@ package com.njydsz.common.safe.desensitize;
 
 import java.util.regex.Pattern;
 
+import com.njydsz.common.util.mask.MaskUtils;
+
 /**
  * 敏感数据脱敏工具类（字段级）。
  *
@@ -75,7 +77,8 @@ public final class SensitiveUtils {
     if (mobile == null || mobile.length() != 11) {
       return mobile;
     }
-    return mobile.substring(0, 3) + "****" + mobile.substring(7);
+    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+    return MaskUtils.mask(mobile, 3, 4);
   }
 
   /**
@@ -88,7 +91,8 @@ public final class SensitiveUtils {
     if (idCard == null || idCard.length() < 18) {
       return idCard;
     }
-    return idCard.substring(0, 6) + "*".repeat(8) + idCard.substring(14);
+    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+    return MaskUtils.mask(idCard, 6, 4);
   }
 
   /**
@@ -101,11 +105,8 @@ public final class SensitiveUtils {
     if (email == null || !EMAIL_PATTERN.matcher(email).matches()) {
       return email;
     }
-    int atIndex = email.indexOf("@");
-    if (atIndex <= 2) {
-      return email;
-    }
-    return email.substring(0, 2) + "*".repeat(atIndex - 2) + email.substring(atIndex);
+    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+    return MaskUtils.maskEmail(email);
   }
 
   /**
@@ -154,7 +155,8 @@ public final class SensitiveUtils {
     if (address.length() <= 6) {
       return address;
     }
-    return address.substring(0, 6) + "****";
+    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+    return MaskUtils.mask(address, 6, 0);
   }
 
   /** 全掩码：仅保留首字符。 */

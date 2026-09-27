@@ -70,7 +70,7 @@ public class GeneratorSecurityConfig {
   @Bean
   @ConditionalOnMissingBean(SecurityFilterChain.class)
   public SecurityFilterChain generatorSecurityFilterChain(HttpSecurity http) throws Exception {
-    log.info("[GeneratorSecurityConfig] 注册代码生成器模块安全过滤器链（@Secured 方法级鉴权已启用）");
+    log.info("[GeneratorSecurityConfig] 注册代码生成器模块安全过滤器链（@AuthApiPermission 方法级鉴权已启用）");
     http.csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

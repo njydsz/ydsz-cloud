@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.system.domain.repository.TenantRepository;
 
 
@@ -43,6 +44,7 @@ public class TenantExpireScheduler {
    *
    * <p>默认每 30 分钟执行一次（启动 60s 后首次执行），扫描成本为单条索引 UPDATE。
    */
+  @DistributedScheduled(lockKey = "system:tenant-expire", leaseTime = 300)
   @Scheduled(
       fixedDelayString = "${ydsz.system.tenant.expire-check-interval-ms:1800000}",
       initialDelayString = "${ydsz.system.tenant.expire-check-initial-delay-ms:60000}")

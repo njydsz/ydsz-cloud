@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
+
 import com.njydsz.agent.domain.config.AgentProperties;
 
 /**
@@ -39,6 +41,7 @@ public class MemoryConsolidationJob {
      * <p>默认每天凌晨 2:30 执行，扫描过去 24 小时内未整合的对话。
      * 单次最多处理 50 个对话，避免长时间占用资源。</p>
      */
+    @DistributedScheduled(lockKey = "agent:memory-dreaming", leaseTime = 300)
     @Scheduled(cron = "${ydsz.agent.memory.dreaming-cron:0 30 2 * * ?}")
     public void executeDreaming() {
         if (!agentProperties.getMemoryConsolidation().isEnabled()

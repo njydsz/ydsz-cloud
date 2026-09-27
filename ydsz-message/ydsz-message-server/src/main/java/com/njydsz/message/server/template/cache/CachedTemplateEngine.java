@@ -21,6 +21,7 @@ import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
+import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.util.TemplateFilterUtil;
 
@@ -397,7 +398,7 @@ public class CachedTemplateEngine extends SentryMetricsAdapter implements Templa
       log.debug(
           "[TemplateAst] 缓存已失效: {}",
           template.length() > TEMPLATE_LOG_MAX_LENGTH
-              ? template.substring(0, TEMPLATE_LOG_MAX_LENGTH) + "..."
+              ? StringUtils.truncate(template, TEMPLATE_LOG_MAX_LENGTH) + "..."
               : template);
     }
   }

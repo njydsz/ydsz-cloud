@@ -13,6 +13,7 @@ import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.PiiType;
 import com.njydsz.common.docs.security.pii.PiiContextExtractor;
 import com.njydsz.common.docs.security.pii.PiiDetector;
+import com.njydsz.common.util.mask.MaskUtils;
 
 /**
  * API 密钥/Token 检测器
@@ -141,6 +142,7 @@ public class ApiKeyDetector implements PiiDetector {
     if (matchedText == null || matchedText.length() <= 8) {
       return "****";
     }
-    return matchedText.substring(0, 4) + "****" + matchedText.substring(matchedText.length() - 4);
+    // 使用 common-util MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+    return MaskUtils.mask(matchedText, 4, 4);
   }
 }

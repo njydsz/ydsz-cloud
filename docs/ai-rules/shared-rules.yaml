@@ -16,8 +16,8 @@ meta:
   version: "26.09.27"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-27（P7 公共模块利用率深度修复：新增 YDIZ-COMMON-019 P1 脱敏规则 / YDIZ-COMMON-020 P1 日期规则 / YDIZ-COMMON-021 P1 缓存规则；修复 DndService ConcurrentMap / ReceiverMaskRegistrar maskSensitive / 7处 DateUtils / common-diff 自身脱敏）"
-  total_rules: 104
+  last_updated: "2026-09-27（P8 公共模块利用率深度修复：新增 YDIZ-COMMON-022 P1 摘要规则 / YDIZ-COMMON-023 P1 异常工具规则；修复 5 处 common 子模块脱敏收敛 / 3 处 MessageDigest→DigestUtils / SqlAuditJsonLogger ExceptionUtils / BeanUpdateUtil 替换）"
+  total_rules: 106
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -2550,7 +2550,7 @@ rules:
       3. 调用 snowflakeIdGenerator.nextId() 或 IdGenerator.nextIdStr()
     source: "编码规范附录新增（YDIZ-COMMON-017，P2，26.09.25 公共模块利用率修复）"
 
-  # ==================== 公共模块复用（common，3 条，YDIZ-COMMON-019~021） ====================
+  # ==================== 公共模块复用（common，5 条，YDIZ-COMMON-019~023） ====================
   # P7: 新增 3 条 YDIZ-COMMON 规则，收敛脱敏/缓存/日期格式化中的自实现重复代码
   - id: "YDIZ-COMMON-019"
     category: "common-reuse"
@@ -2654,6 +2654,79 @@ rules:
               .build();
     tags: [cache, 公共模块利用率]
     source: "编码规范附录新增（YDIZ-COMMON-021，P1，26.09.27 公共模块利用率深度修复）"
+
+  - id: "YDIZ-COMMON-022"
+    category: "common-reuse"
+    severity: "P1"
+    title: "摘要/散列运算必须使用 DigestUtils，禁止业务代码直接创建 MessageDigest"
+    description: |
+      所有摘要/散列运算（MD5、SHA-256、SHA-512 等）必须通过 ydsz-common-util 提供的 {@code
+      com.njydsz.common.util.security.DigestUtils} 进行。DigestUtils 封装了 JDK MessageDigest
+      的算法查找、线程安全 SecureRandom、流处理缓冲区复用等能力，业务模块无需关心 Provider 差异
+      与缓冲区分配细节。
+
+      **禁止写法**：
+      - {@code MessageDigest.getInstance("MD5")} / {@code MessageDigest.getInstance("SHA-256")}
+      - {@code java.security.SecureRandom} 直接 new（应使用 {@code DigestUtils.genSalt()}）
+
+      **例外场景**：
+      - 单流双算法并行计算（如 Adler32 + SHA-256 同一次读取同时计算），因 DigestUtils
+        当前单次仅支持单一算法，可在方法内添加注释说明理由后直接使用 MessageDigest
+
+      **推荐模式**：
+      - 字节数组摘要：{@code DigestUtils.md5Hex(data)} / {@code DigestUtils.sha256Hex(data)}
+      - 流式摘要：{@code DigestUtils.digest(inputStream, "MD5")}
+    pattern: "MessageDigest\.getInstance|java\.security\.SecureRandom"
+    fix: |
+      1. 引入 DigestUtils：import com.njydsz.common.util.security.DigestUtils
+      2. 使用 DigestUtils.md5Hex(byte[]) / sha256Hex(byte[]) / digest(InputStream, String)
+      3. 双算法并行流场景保留 MessageDigest，但添加注释说明 YDIZ-COMMON-022 例外原因
+    example_bad: |
+      ❌ 业务代码直接创建 MessageDigest
+      try {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] digest = md.digest(data);
+        return HexUtils.encode(digest);
+      } catch (Exception e) { ... }
+    example_good: |
+      ✅ 使用 DigestUtils
+      return DigestUtils.md5Hex(data);
+    tags: [security, 公共模块利用率]
+    source: "编码规范附录新增（YDIZ-COMMON-022，P1，26.09.27 公共模块利用率深度修复）"
+
+  - id: "YDIZ-COMMON-023"
+    category: "common-reuse"
+    severity: "P1"
+    title: "异常堆栈字符串获取必须使用 common-util ExceptionUtils，禁止直连 commons-lang3"
+    description: |
+      获取异常完整堆栈字符串或根因消息时，必须使用 ydsz-common-util 提供的 {@code
+      com.njydsz.common.util.exception.ExceptionUtils.getStackTrace(Throwable)} 和 {@code
+      getRootCauseMessage(Throwable)}，禁止直接引入 {@code
+      org.apache.commons.lang3.exception.ExceptionUtils}。
+
+      部分模块为单一工具方法引入整个 commons-lang3 依赖，增加依赖体积且与 common-util 的
+      封装能力重复（ExceptionUtils 自 26.09.14 起已在 common-util 落地）。
+
+      **推荐模式**：
+      - 完整堆栈：{@code ExceptionUtils.getStackTrace(t)}（替代 commons-lang3）
+      - 根因消息：{@code ExceptionUtils.getRootCauseMessage(t)}
+    pattern: "org\.apache\.commons\.lang3\.exception\.ExceptionUtils"
+    fix: |
+      1. 移除 commons-lang3 的 ExceptionUtils 依赖（若非其他用途）
+      2. 替换为 import com.njydsz.common.util.exception.ExceptionUtils
+      3. 调用方式不变：getStackTrace(t) / getRootCauseMessage(t)
+    example_bad: |
+      ❌ 直连 commons-lang3
+      import org.apache.commons.lang3.exception.ExceptionUtils;
+      ...
+      log.error("failed", ExceptionUtils.getStackTrace(t));
+    example_good: |
+      ✅ 使用 common-util ExceptionUtils
+      import com.njydsz.common.util.exception.ExceptionUtils;
+      ...
+      log.error("failed", ExceptionUtils.getStackTrace(t));
+    tags: [exception, 公共模块利用率]
+    source: "编码规范附录新增（YDIZ-COMMON-023，P1，26.09.27 公共模块利用率深度修复）"
 
   # ============================================
   # 异常处理规范（1 条新增，P0）

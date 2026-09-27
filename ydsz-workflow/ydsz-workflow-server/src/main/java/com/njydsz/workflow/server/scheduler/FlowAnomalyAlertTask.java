@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.context.TenantContext;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
 import com.njydsz.workflow.server.config.FlowAlertProperties;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
@@ -39,6 +40,7 @@ public class FlowAnomalyAlertTask {
    *
    * <p>检测 RED 级别告警并记录，供后续接入 ydzs-message 引擎做通知投递。
    */
+  @DistributedScheduled(lockKey = "flow:anomaly-alert", leaseTime = 300)
   @Scheduled(cron = "${ydsz.flow.alert.cron-expression:0 0 * * * ?}")
   public void detectAndAlert() {
     try {

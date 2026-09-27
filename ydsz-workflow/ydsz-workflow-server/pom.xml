@@ -149,6 +149,23 @@
         </dependency>
         <!-- P0 整改（云顶规范 34.6 Step 6）：server 不依赖 infra，
              通过 Spring 注入 domain 层 Repository 接口，运行时由 infra 实现提供 -->
+
+        <!-- TODO(P2 显式依赖标注 26.09.27)：
+             本模块源码直接使用 ydsz-common-tenant 的多租户上下文能力（TenantContextHolder.getTenantId），
+             当前仅通过 ydsz-common-core / ydsz-common-auth 传递获得。
+             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
+        <!-- TODO(P2 显式依赖标注 26.09.27)：
+             本模块源码直接使用 ydsz-common-locales 的国际化能力（I18nMessage / MessageSource 动态文案），
+             当前仅通过 ydsz-common-web / ydsz-common-core 传递获得。
+             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
+        <!-- TODO(P2 显式依赖标注 26.09.27)：
+             本模块源码直接使用 ydsz-common-config 的配置热重载能力（ConfigChangeBridge / @ConfigField），
+             当前仅通过 ydsz-common-core / ydsz-common-web 传递获得。
+             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
+        <!-- TODO(P2 显式依赖标注 26.09.27)：
+             本模块源码直接使用 ydsz-common-notify 的统一通知能力（NotifyHelper / 流程节点通知），
+             当前仅通过 ydsz-common-queue / ydsz-common-event 传递获得。
+             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
     </dependencies>
     <build>
         <plugins>

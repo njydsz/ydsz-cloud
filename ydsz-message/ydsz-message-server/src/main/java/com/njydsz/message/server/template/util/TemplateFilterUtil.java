@@ -15,6 +15,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.util.string.StringUtils;
+
 /**
  * 模板管道过滤器公共工具类。
  *
@@ -165,7 +167,7 @@ public class TemplateFilterUtil {
       if (str.length() <= maxLen) {
         return str;
       }
-      return str.substring(0, maxLen) + "...";
+      return StringUtils.truncate(str, maxLen) + "...";
     } catch (NumberFormatException e) {
       return str;
     }

@@ -15,6 +15,7 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
+import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
@@ -125,7 +126,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         } else {
           logVO.setChannel("UNKNOWN");
           logVO.setReceiver("UNKNOWN");
-          logVO.setContent(body.length() > BODY_LOG_MAX_LENGTH ? body.substring(0, BODY_LOG_MAX_LENGTH) + "..." : body);
+          logVO.setContent(body.length() > BODY_LOG_MAX_LENGTH ? StringUtils.truncate(body, BODY_LOG_MAX_LENGTH) + "..." : body);
         }
         logVO.setStatus(MessageStatusEnum.DEAD.name());
         logVO.setErrorMessage(errorMessage);

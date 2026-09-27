@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.njydsz.common.util.mask.MaskUtils;
+
 /**
  * 审计敏感字段脱敏器（SEC-003）。
  *
@@ -181,8 +183,10 @@ public class SensitiveFieldRedactor {
       return "****";
     }
     if (len <= 32) {
-      return value.substring(0, 2) + "****" + value.substring(len - 2);
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      return MaskUtils.mask(value, 2, 2);
     }
-    return value.substring(0, 4) + "****" + value.substring(len - 4);
+    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+    return MaskUtils.mask(value, 4, 4);
   }
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.agent.server.trigger.TriggerExecutionService;
 
 /**
@@ -83,6 +84,7 @@ public class CronTriggerScheduler {
      *
      * <p>按配置的 fixedDelay 轮询（默认 60000ms = 60s），匹配 cron 表达式并执行到期触发器。
      */
+    @DistributedScheduled(lockKey = "agent:cron-scan", leaseTime = 60)
     @Scheduled(fixedDelayString = "${ydsz.agent.trigger.cron-scan-interval-ms:60000}")
     public void scanAndExecuteCronTriggers() {
         try {

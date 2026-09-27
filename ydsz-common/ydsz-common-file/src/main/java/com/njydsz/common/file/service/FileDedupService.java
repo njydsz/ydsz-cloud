@@ -81,6 +81,9 @@ public class FileDedupService {
   public FileContentHash calculateHash(InputStream inputStream) throws IOException {
     try {
       Adler32 adler = new Adler32();
+      // YDIZ-COMMON-022 例外：adler32 + SHA-256 双算法在同一次流读取中并行计算，
+      // 避免同一输入流被遍历两次带来的 2x IO 开销（DigestUtils 单次仅支持单一算法）。
+      // 此处的 MessageDigest 受 DigestUtils 同等 JDK 算法约束，不做外部扩散。
       MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
       byte[] buffer = new byte[64 * 1024];
       int len;

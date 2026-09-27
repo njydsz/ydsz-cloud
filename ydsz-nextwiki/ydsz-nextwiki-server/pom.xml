@@ -167,6 +167,11 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- TODO(P2 显式依赖标注 26.09.27)：
+             本模块源码直接使用 ydsz-common-tenant 的多租户上下文能力（TenantContextHolder.getTenantId / 租户隔离缓存），
+             当前仅通过 ydsz-common-core / ydsz-common-web / ydsz-common-auth 传递获得。
+             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
 </dependencies>
 
     <!--

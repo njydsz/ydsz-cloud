@@ -1,7 +1,8 @@
 package com.njydsz.common.file.domain;
 
-import java.security.MessageDigest;
 import java.time.LocalDateTime;
+
+import com.njydsz.common.util.security.DigestUtils;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -132,9 +133,8 @@ public class UploadCheckpoint {
       return false;
     }
     try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] digest = md.digest(data);
-      String actualMd5 = HexUtils.encode(digest);
+      // 使用 DigestUtils 收敛安全工具入口（YDIZ-COMMON-022）
+      String actualMd5 = DigestUtils.md5Hex(data);
       return actualMd5.equalsIgnoreCase(expectedMd5);
     } catch (Exception e) {
       return false;
@@ -152,9 +152,8 @@ public class UploadCheckpoint {
       return null;
     }
     try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] digest = md.digest(data);
-      return HexUtils.encode(digest);
+      // 使用 DigestUtils 收敛安全工具入口（YDIZ-COMMON-022）
+      return DigestUtils.md5Hex(data);
     } catch (Exception e) {
       return null;
     }

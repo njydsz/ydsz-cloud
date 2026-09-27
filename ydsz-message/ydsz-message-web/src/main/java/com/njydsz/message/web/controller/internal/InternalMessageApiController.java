@@ -1,8 +1,9 @@
 package com.njydsz.message.web.controller.internal;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.util.bean.BeanUpdateUtil;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,7 +71,8 @@ public class InternalMessageApiController {
   @PostMapping("/message/send")
   public YdszResponse<String> sendMessage(@RequestBody MessageSendDTO dto) {
     MessageItemRequestDTO request = new MessageItemRequestDTO();
-    BeanUtils.copyProperties(dto, request);
+    // 使用 BeanUpdateUtil 替代 Spring BeanUtils.copyProperties（编码规范 §34.6 禁止反射式拷贝）
+    BeanUpdateUtil.copyNonNull(dto, request);
     MessageSendResultVO result = messageService.send(request);
     if (result.isSuccess()) {
       return YdszResponse.success(result.getTraceId());

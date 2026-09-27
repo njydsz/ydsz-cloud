@@ -11,6 +11,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.core.NotifyTraceContext;
 import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.util.mask.MaskUtils;
 
 /**
  * 通知审计日志服务（P1-4）
@@ -120,15 +121,16 @@ public class NotifyAuditService {
       if (atIndex <= MASK_KEEP_LENGTH) {
         return "***" + receiver.substring(atIndex);
       }
-      return receiver.substring(0, MASK_KEEP_LENGTH) + "***" + receiver.substring(atIndex);
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      return MaskUtils.mask(receiver, MASK_KEEP_LENGTH, receiver.length() - atIndex);
     }
     if (receiver.length() >= 7) {
-      return receiver.substring(0, MASK_KEEP_LENGTH)
-          + "****"
-          + receiver.substring(receiver.length() - 4);
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      return MaskUtils.mask(receiver, MASK_KEEP_LENGTH, 4);
     }
     if (receiver.length() > MASK_MIN_LENGTH) {
-      return receiver.substring(0, 2) + "***";
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      return MaskUtils.mask(receiver, 2, 0);
     }
     return "***";
   }

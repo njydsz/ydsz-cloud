@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
@@ -40,6 +41,7 @@ public class ShareExpiryReminderTask {
    *
    * <p>每小时执行一次，查找 24 小时内即将过期且未发送过提醒的分享链接。
    */
+  @DistributedScheduled(lockKey = "nextwiki:share-expiry-reminder", leaseTime = 300)
   @Scheduled(cron = "0 0 * * * *")
   public void scanExpiringShares() {
     try {

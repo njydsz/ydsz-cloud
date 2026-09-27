@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
+
+import com.njydsz.common.util.security.DigestUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -133,6 +135,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
   /**
    * 流式 MD5 摘要器（uploadId → MessageDigest），每上传一片就更新摘要。 仅缓存 MessageDigest 状态（约 128 字节），而非原始分片数据，避免大文件
    * OOM。
+   *
+   * <p><b>YDIZ-COMMON-022 例外：</b>分片上传跨请求累积 MD5 状态（update + 最终 digest），
+   * 需在多次 HTTP 请求间保持 MessageDigest 实例（有状态），DigestUtils 无状态接口无法支撑此场景
    */
   private final ConcurrentHashMap<String, MessageDigest> chunkedMd5DigestMap =
       new ConcurrentHashMap<>();
@@ -1607,6 +1612,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
   /**
    * 创建 MD5 摘要实例
    *
+   * <p>YDIZ-COMMON-022 例外：分片上传需在多次请求间累积 update 状态，
+   * 必须持有 MessageDigest 有状态实例；此私有方法由 {@link #chunkedMd5DigestMap} 独占使用
+   *
    * @return MessageDigest 实例
    */
   private static MessageDigest createMessageDigest() {
@@ -1633,15 +1641,10 @@ public abstract class AbstractFileStorage implements IFileStorage {
    */
   protected String computeMd5(InputStream inputStream) {
     try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] buffer = new byte[8192];
-      int read;
-      while ((read = inputStream.read(buffer)) != -1) {
-        md.update(buffer, 0, read);
-      }
-      byte[] digest = md.digest();
+      // 使用 DigestUtils 收敛安全工具入口（YDIZ-COMMON-022）
+      byte[] digest = DigestUtils.digest(inputStream, "MD5");
       return HexUtils.encode(digest);
-    } catch (Exception e) {
+    } catch (IOException e) {
       log.warn("[Storage] computeMd5 failed, message={}", e.getMessage());
       return null;
     }

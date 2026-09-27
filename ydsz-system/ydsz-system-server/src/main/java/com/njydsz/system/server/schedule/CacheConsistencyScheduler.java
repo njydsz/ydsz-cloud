@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.system.server.cache.CacheWarmer;
 import com.njydsz.system.server.config.SystemProperties;
 
@@ -51,6 +52,7 @@ public class CacheConsistencyScheduler {
    *
    * <p>默认每 5 分钟执行一次（启动 120s 后首次执行，给首次预热留足时间），从 DB 全量加载配置与字典项数据覆盖本地缓存。
    */
+  @DistributedScheduled(lockKey = "system:cache-consistency", leaseTime = 300)
   @Scheduled(
       fixedDelayString = "${ydsz.system.cache.consistency-refresh-interval-ms:300000}",
       initialDelayString = "${ydsz.system.cache.consistency-refresh-initial-delay-ms:120000}")

@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
+
 /**
  * 运行时会话定期清理任务。
  *
@@ -30,6 +32,7 @@ public class RuntimeSessionCleanupJob {
      *
      * <p>每 10 分钟执行一次，清理超过 2 小时的非活跃会话。</p>
      */
+    @DistributedScheduled(lockKey = "agent:runtime-cleanup", leaseTime = 300)
     @Scheduled(fixedRateString = "${ydsz.agent.runtime.cleanup-interval-ms:600000}")
     public void cleanupStaleSessions() {
         try {
