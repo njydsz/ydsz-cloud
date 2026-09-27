@@ -208,7 +208,7 @@ public class UserSessionAdminService {
     if (key == null || key.length() <= TOKEN_LOG_PREFIX_LENGTH) {
       return "***";
     }
-    return key.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "***";
+    return MaskUtils.mask(key, TOKEN_LOG_PREFIX_LENGTH, 0);
   }
 
   /**

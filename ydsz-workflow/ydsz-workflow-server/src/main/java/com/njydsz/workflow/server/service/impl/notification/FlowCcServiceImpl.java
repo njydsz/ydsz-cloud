@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.util.mask.MaskUtils;
+
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
@@ -449,7 +451,7 @@ public class FlowCcServiceImpl implements FlowCcService {
     if (token == null || token.length() <= MOBILE_MASK_KEEP_LENGTH) {
       return "***";
     }
-    return token.substring(0, MOBILE_MASK_KEEP_LENGTH) + "***";
+    return MaskUtils.mask(token, MOBILE_MASK_KEEP_LENGTH, 0);
   }
 
   /**

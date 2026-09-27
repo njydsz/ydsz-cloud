@@ -18,6 +18,7 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
@@ -307,7 +308,7 @@ public class SessionManager {
       Map<String, String> details = getSessionDeviceDetails(token);
       if (!details.isEmpty()) {
         // 用掩码替代完整 token（安全考虑）
-        details.put("sessionId", token.substring(0, Math.min(TOKEN_LOG_PREFIX_LENGTH, token.length())) + "****");
+        details.put("sessionId", MaskUtils.mask(token, TOKEN_LOG_PREFIX_LENGTH, 0));
         result.add(details);
       }
     }
