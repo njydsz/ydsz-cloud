@@ -1,6 +1,6 @@
 package com.njydsz.userinfo.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
 
 /**

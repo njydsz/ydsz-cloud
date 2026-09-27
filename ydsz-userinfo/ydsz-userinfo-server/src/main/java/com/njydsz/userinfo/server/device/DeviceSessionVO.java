@@ -2,7 +2,7 @@ package com.njydsz.userinfo.server.device;
 
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
 
 /**

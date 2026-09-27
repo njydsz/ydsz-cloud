@@ -2,7 +2,7 @@ package com.njydsz.userinfo.domain.vo;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonProperty;
 import lombok.Data;
 
 /**

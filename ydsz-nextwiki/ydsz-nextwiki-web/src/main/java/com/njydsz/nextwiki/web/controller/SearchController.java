@@ -16,12 +16,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
@@ -80,6 +82,7 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
 @ApiVersion("26.09.01")
 @Slf4j
 @RestController
+@Validated
 @RequestMapping("/nextwiki/search")
 @RequiredArgsConstructor
 @Tag(name = "全文搜索", description = "文件名/内容/标签综合搜索，支持 ES 全文检索与 DB LIKE 降级")
@@ -130,7 +133,7 @@ public class SearchController {
   @GetMapping("/suggest")
   @Operation(summary = "搜索自动补全")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public YdszResponse<List<String>> suggest(@RequestParam String prefix) {
+  public YdszResponse<List<String>> suggest(@RequestParam @Xss String prefix) {
     List<String> suggestions = searchApplicationService.autocomplete(prefix);
     return YdszResponse.success(suggestions);
   }
@@ -146,7 +149,7 @@ public class SearchController {
   @GetMapping("/did-you-mean")
   @Operation(summary = "搜索纠错建议")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
-  public YdszResponse<List<String>> didYouMean(@RequestParam String keyword) {
+  public YdszResponse<List<String>> didYouMean(@RequestParam @Xss String keyword) {
     List<String> corrections = searchApplicationService.didYouMean(keyword);
     return YdszResponse.success(corrections);
   }
@@ -245,7 +248,7 @@ public class SearchController {
   @Operation(summary = "高级语法搜索", description = "支持字段限定、布尔运算、短语精确匹配")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
   public YdszResponse<SearchResultVO> advancedSearch(
-      @RequestParam String rawInput,
+      @RequestParam @Xss String rawInput,
       @RequestParam(required = false, defaultValue = "all") String scope,
       @RequestParam(required = false, defaultValue = "1") int page,
       @RequestParam(required = false, defaultValue = "20") int pageSize,
