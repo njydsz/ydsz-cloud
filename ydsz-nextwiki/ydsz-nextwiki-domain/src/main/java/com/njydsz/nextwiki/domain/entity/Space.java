@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 知识库空间持久化实体
@@ -30,7 +30,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_wiki_space")
-public class Space extends MpBaseAuditEntity<String> {
+public class Space extends MpBaseEntity<String> {
 
   /** 状态：活跃 */
   public static final String STATUS_ACTIVE = "active";

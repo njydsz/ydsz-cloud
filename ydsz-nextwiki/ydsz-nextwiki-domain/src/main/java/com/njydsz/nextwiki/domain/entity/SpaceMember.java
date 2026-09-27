@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 知识库空间成员持久化实体
@@ -30,7 +30,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_wiki_space_member")
-public class SpaceMember extends MpBaseAuditEntity<String> {
+public class SpaceMember extends MpBaseEntity<String> {
 
   /** 角色：所有者（创建者，不可移除） */
   public static final String ROLE_OWNER = "owner";

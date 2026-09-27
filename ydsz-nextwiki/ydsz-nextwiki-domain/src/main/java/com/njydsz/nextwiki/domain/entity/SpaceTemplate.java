@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 空间模板持久化实体
@@ -28,7 +28,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_wiki_space_template")
-public class SpaceTemplate extends MpBaseAuditEntity<String> {
+public class SpaceTemplate extends MpBaseEntity<String> {
 
   /** 分类：通用 */
   public static final String CATEGORY_GENERAL = "general";

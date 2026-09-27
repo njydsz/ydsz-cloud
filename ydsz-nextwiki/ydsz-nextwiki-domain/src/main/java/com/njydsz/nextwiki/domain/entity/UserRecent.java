@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 用户最近访问持久化实体。
@@ -32,7 +32,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_wiki_user_recent")
-public class UserRecent extends MpBaseAuditEntity<String> {
+public class UserRecent extends MpBaseEntity<String> {
 
   /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.INPUT)
