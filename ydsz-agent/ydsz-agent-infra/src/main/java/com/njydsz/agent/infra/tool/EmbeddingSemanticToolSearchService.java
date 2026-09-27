@@ -4,12 +4,8 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import com.njydsz.common.cache.api.Cache;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,6 +13,7 @@ import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.tool.SemanticToolSearchService;
 import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.common.cache.YdszCache;
 
 /**
  * 基于 Embedding 向量相似度的语义 Tool 搜索服务实现
@@ -68,12 +65,14 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
 
-  /** embedding 缓存（key=工具名, value=embedding 向量），LRU 淘汰 */
-  private final LinkedHashMap<String, List<Float>> embeddingCache =
-      new LinkedHashMap<>(COLLECTION_CAPACITY, 0.75f, true);
-
-  /** 缓存读写锁 */
-  private final ReadWriteLock cacheLock = new ReentrantReadWriteLock();
+  /**
+   * embedding 缓存（key=工具名, value=embedding 向量）。
+   *
+   * <p>使用 YdszCache 替代手写 LinkedHashMap + ReadWriteLock，
+   * 获得 TinyLFU 自动驱逐（比 LRU 更优的命中率）、线程安全分片、命中率统计等能力。
+   */
+  private final Cache<String, List<Float>> embeddingCache =
+      YdszCache.<String, List<Float>>newBuilder().maximumSize(MAX_CACHE_SIZE).build();
 
   public EmbeddingSemanticToolSearchService(LlmClient llmClient, ToolRegistry toolRegistry) {
     this.llmClient = llmClient;
@@ -91,7 +90,7 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
     for (ToolDefinition tool : tools) {
       cacheToolEmbedding(tool);
     }
-    log.info("[SemToolSearch] 预热完成，缓存 {} 个工具 embedding", embeddingCache.size());
+    log.info("[SemToolSearch] 预热完成，缓存 {} 个工具 embedding", embeddingCache.estimatedSize());
   }
 
   @Override
@@ -104,10 +103,7 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
       topK = DEFAULT_TOP_K;
     }
 
-    // 1. 确保缓存已预热（懒初始化）
-    ensureCacheWarmed();
-
-    // 2. 尝试获取查询向量
+    // 1. 尝试获取查询向量
     List<Float> queryVector;
     try {
       queryVector = llmClient.embed(query);
@@ -120,10 +116,10 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
       return fallbackStringMatch(query, topK);
     }
 
-    // 3. 遍历缓存计算余弦相似度，按阈值过滤 + 降序排序
+    // 2. 遍历缓存计算余弦相似度，按阈值过滤 + 降序排序
     List<ToolScore> scored = computeSimilarity(queryVector);
 
-    // 4. 组装结果，取前 topK 个
+    // 3. 组装结果，取前 topK 个
     List<ToolDefinition> results = new ArrayList<>(Math.min(topK, scored.size()));
     for (int i = 0; i < Math.min(topK, scored.size()); i++) {
       results.add(scored.get(i).tool());
@@ -139,27 +135,15 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
    * @return 按相似度降序排列的分数列表
    */
   private List<ToolScore> computeSimilarity(List<Float> queryVector) {
-    cacheLock.readLock().lock();
-    Map<String, List<Float>> snapshot;
-    try {
-      snapshot = new LinkedHashMap<>(embeddingCache);
-    } finally {
-      cacheLock.readLock().unlock();
-    }
-
-    List<ToolScore> scored = new ArrayList<>(snapshot.size());
     List<ToolDefinition> allTools = toolRegistry.getToolDefinitions();
-    Map<String, ToolDefinition> toolMap = new ConcurrentHashMap<>(allTools.size());
-    for (ToolDefinition t : allTools) {
-      toolMap.put(t.getName(), t);
-    }
+    List<ToolScore> scored = new ArrayList<>(allTools.size());
 
-    for (Map.Entry<String, List<Float>> entry : snapshot.entrySet()) {
-      ToolDefinition tool = toolMap.get(entry.getKey());
-      if (tool == null) {
+    for (ToolDefinition tool : allTools) {
+      List<Float> toolVector = embeddingCache.getIfPresent(tool.getName());
+      if (toolVector == null) {
         continue;
       }
-      BigDecimal similarity = cosineSimilarity(queryVector, entry.getValue());
+      BigDecimal similarity = cosineSimilarity(queryVector, toolVector);
       if (similarity.compareTo(SIMILARITY_THRESHOLD) >= 0) {
         scored.add(new ToolScore(tool, similarity));
       }
@@ -206,26 +190,6 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
   }
 
   /**
-   * 确保缓存已预热，首次搜索时执行。
-   */
-  private void ensureCacheWarmed() {
-    cacheLock.readLock().lock();
-    boolean needsWarmup;
-    try {
-      needsWarmup = embeddingCache.isEmpty() && toolRegistry.size() > 0;
-    } finally {
-      cacheLock.readLock().unlock();
-    }
-    if (needsWarmup) {
-      synchronized (this) {
-        if (embeddingCache.isEmpty()) {
-          warmup();
-        }
-      }
-    }
-  }
-
-  /**
    * 为单个工具构建 embedding 并加入缓存。
    *
    * @param tool 工具定义
@@ -238,18 +202,7 @@ public class EmbeddingSemanticToolSearchService implements SemanticToolSearchSer
     try {
       List<Float> vector = llmClient.embed(description);
       if (vector != null && !vector.isEmpty()) {
-        cacheLock.writeLock().lock();
-        try {
-          // LRU 淘汰：超过上限时移除最老的条目
-          if (embeddingCache.size() >= MAX_CACHE_SIZE && !embeddingCache.containsKey(tool.getName())) {
-            String oldest = embeddingCache.keySet().iterator().next();
-            embeddingCache.remove(oldest);
-            log.debug("[SemToolSearch] LRU 淘汰: {}", oldest);
-          }
-          embeddingCache.put(tool.getName(), List.copyOf(vector));
-        } finally {
-          cacheLock.writeLock().unlock();
-        }
+        embeddingCache.put(tool.getName(), List.copyOf(vector));
       }
     } catch (Exception e) {
       log.warn("[SemToolSearch] 工具 '{}' embedding 失败: {}", tool.getName(), e.getMessage());

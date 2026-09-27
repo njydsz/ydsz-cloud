@@ -4,6 +4,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 
 /**
@@ -29,6 +31,7 @@ public class MsgUserChannelVO implements Serializable {
   private String channelType;
 
   /** 通道侧用户 ID（手机号/邮箱/openid） */
+  @SensitiveData(SensitiveType.PHONE)
   private String channelUserId;
 
   /** 是否已验证（1=已验证，0=未验证） */

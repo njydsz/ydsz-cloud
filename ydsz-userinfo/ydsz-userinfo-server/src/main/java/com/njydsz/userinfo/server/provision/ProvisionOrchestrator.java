@@ -6,10 +6,10 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.util.password.PwdUtils;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
@@ -182,13 +182,14 @@ public class ProvisionOrchestrator {
   /**
    * 生成随机初始密码（仅供占位，用户无法通过此密码登录）。
    *
+   * <p>使用 UUID 前 16 位作为随机占位密码，PwdUtils BCrypt（强度 12）编码后存储。
+   *
    * @return BCrypt 加密后的随机密码
    */
   private String generateRandomPassword() {
-    // 使用 UUID 前 16 位作为随机占位密码，BCrypt 编码后存储
     String randomPart = UUID.randomUUID().toString().replace("-", "")
         .substring(0, PASSWORD_RANDOM_LENGTH);
-    return new BCryptPasswordEncoder().encode("Init@" + randomPart);
+    return PwdUtils.hashPasswordBCrypt("Init@" + randomPart);
   }
 
   /**

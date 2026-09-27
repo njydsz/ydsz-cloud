@@ -10,12 +10,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.cache.api.Cache;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.config.properties.McpProperties;
 import com.njydsz.agent.domain.gateway.LlmException;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -64,8 +67,8 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
   /** MCP 请求默认超时（毫秒） */
   private static final int DEFAULT_TIMEOUT_MILLIS = 30000;
 
-  /** 会话缓存 TTL（毫秒） */
-  private static final long SESSION_TTL_MILLIS = 30 * 60 * 1000L;
+  /** 会话缓存 TTL（分钟） */
+  private static final long SESSION_TTL_MINUTES = 30L;
 
   /** 会话失效 HTTP 状态码（401） */
   private static final int HTTP_UNAUTHORIZED = 401;
@@ -79,42 +82,27 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
   /** OAuth token 默认过期时间（秒） */
   private static final long DEFAULT_OAUTH_EXPIRES_IN_SECONDS = 3600L;
 
-  /** OAuth token 提前过期缓冲（秒），避免边界失效 */
-  private static final long OAUTH_EXPIRY_BUFFER_SECONDS = 60L;
-
   /** HTTP Client（线程安全，可复用） */
   private final HttpClient httpClient =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
-  /** MCP 会话缓存（key=serverName, value=会话条目） */
-  private final Map<String, StreamableSessionEntry> sessionCache = new ConcurrentHashMap<>();
-
-  /** OAuth Token 缓存（key=serverName, value=token条目） */
-  private final Map<String, OAuthTokenEntry> oauthTokenCache = new ConcurrentHashMap<>();
+  /**
+   * MCP 会话缓存（key=serverName, value=sessionId）。
+   *
+   * <p>使用 YdszCache 管理 TTL 过期，替代手写 ConcurrentHashMap + System.currentTimeMillis() 判断。
+   */
+  private final Cache<String, String> sessionCache =
+      YdszCache.<String, String>newBuilder().expireAfterWrite(SESSION_TTL_MINUTES, TimeUnit.MINUTES).build();
 
   /**
-   * MCP 会话条目（Streamable HTTP）。
+   * OAuth Token 缓存（key=serverName, value=accessToken）。
    *
-   * @param sessionId MCP 会话 ID
-   * @param createdAt 会话创建时间戳（毫秒）
+   * <p>使用 YdszCache 管理 TTL 过期，token 实际有效期通过 expireAfterWrite 控制。
    */
-  private record StreamableSessionEntry(String sessionId, long createdAt) {
-    boolean isExpired() {
-      return System.currentTimeMillis() - createdAt > SESSION_TTL_MILLIS;
-    }
-  }
-
-  /**
-   * OAuth Token 缓存条目。
-   *
-   * @param accessToken 访问令牌
-   * @param expiresAt 过期时间（毫秒时间戳）
-   */
-  private record OAuthTokenEntry(String accessToken, long expiresAt) {
-    boolean isExpired() {
-      return System.currentTimeMillis() >= expiresAt;
-    }
-  }
+  private final Cache<String, String> oauthTokenCache =
+      YdszCache.<String, String>newBuilder()
+          .expireAfterWrite(DEFAULT_OAUTH_EXPIRES_IN_SECONDS, TimeUnit.SECONDS)
+          .build();
 
   @Override
   public List<McpToolAdapter.McpToolDescriptor> listTools(McpProperties.ServerInfo server) {
@@ -149,19 +137,27 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
   /**
    * 初始化 MCP 会话（带缓存与 TTL 过期）。
    *
+   * <p>使用 YdszCache 管理会话 TTL，首次调用或缓存过期后自动重新初始化。
+   *
    * @param server MCP Server 配置
    * @return 会话 ID
    */
   private String initSession(McpProperties.ServerInfo server) {
-    StreamableSessionEntry cached = sessionCache.get(server.getName());
-    if (cached != null && !cached.isExpired()) {
-      return cached.sessionId();
-    }
+    return sessionCache.get(server.getName(), k -> createSession(server));
+  }
+
+  /**
+   * 创建新的 MCP 会话。
+   *
+   * @param server MCP Server 配置
+   * @return 会话 ID
+   */
+  private String createSession(McpProperties.ServerInfo server) {
+    Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
+    params.put("protocolVersion", "2024-11-05");
+    params.put("capabilities", Map.of());
+    params.put("clientInfo", Map.of("name", "ydsz-agent", "version", "26.09.17"));
     try {
-      Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
-      params.put("protocolVersion", "2024-11-05");
-      params.put("capabilities", Map.of());
-      params.put("clientInfo", Map.of("name", "ydsz-agent", "version", "26.09.17"));
       String response = sendRequest(server, null, "initialize", params);
       String sessionId = extractSessionId(response);
       if (sessionId == null || sessionId.isBlank()) {
@@ -169,7 +165,6 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
             "MCP Streamable 初始化失败: 无法获取 sessionId, server=" + server.getName(),
             LlmException.ErrorType.INVALID_RESPONSE);
       }
-      sessionCache.put(server.getName(), new StreamableSessionEntry(sessionId, System.currentTimeMillis()));
       log.info("[MCP-Streamable] 会话初始化成功: server={}, sessionId={}", server.getName(), sessionId);
       return sessionId;
     } catch (LlmException e) {
@@ -216,8 +211,8 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
       HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
       // 401 意味着会话过期，清理缓存以便下次重试
       if (response.statusCode() == HTTP_UNAUTHORIZED) {
-        sessionCache.remove(server.getName());
-        oauthTokenCache.remove(server.getName());
+        sessionCache.invalidate(server.getName());
+        oauthTokenCache.invalidate(server.getName());
         throw new LlmException(
             "MCP 会话过期（401）: server=" + server.getName(),
             LlmException.ErrorType.AUTH_FAILED);
@@ -278,27 +273,33 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
    * @return access_token；获取失败返回 null
    */
   private String obtainOAuthToken(McpProperties.ServerInfo server) {
-    OAuthTokenEntry cached = oauthTokenCache.get(server.getName());
-    if (cached != null && !cached.isExpired()) {
-      return cached.accessToken();
+    return oauthTokenCache.get(server.getName(), k -> fetchOAuthToken(server));
+  }
+
+  /**
+   * 从 OAuth 服务器获取 access_token。
+   *
+   * @param server MCP Server 配置
+   * @return access_token；获取失败返回 null
+   */
+  private String fetchOAuthToken(McpProperties.ServerInfo server) {
+    if (server.getAuthTokenUrl() == null || server.getAuthTokenUrl().isBlank()) {
+      log.warn("[MCP-Streamable] OAuth token_url 未配置: server={}", server.getName());
+      return null;
     }
+    // 构造 OAuth Client Credentials 请求
+    String formData =
+        "grant_type=client_credentials"
+            + "&client_id=" + urlEncode(server.getAuthClientId())
+            + "&client_secret=" + urlEncode(server.getAuthClientSecret());
+    HttpRequest tokenRequest =
+        HttpRequest.newBuilder()
+            .uri(URI.create(server.getAuthTokenUrl()))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .timeout(Duration.ofSeconds(10))
+            .POST(HttpRequest.BodyPublishers.ofString(formData))
+            .build();
     try {
-      if (server.getAuthTokenUrl() == null || server.getAuthTokenUrl().isBlank()) {
-        log.warn("[MCP-Streamable] OAuth token_url 未配置: server={}", server.getName());
-        return null;
-      }
-      // 构造 OAuth Client Credentials 请求
-      String formData =
-          "grant_type=client_credentials"
-              + "&client_id=" + urlEncode(server.getAuthClientId())
-              + "&client_secret=" + urlEncode(server.getAuthClientSecret());
-      HttpRequest tokenRequest =
-          HttpRequest.newBuilder()
-              .uri(URI.create(server.getAuthTokenUrl()))
-              .header("Content-Type", "application/x-www-form-urlencoded")
-              .timeout(Duration.ofSeconds(10))
-              .POST(HttpRequest.BodyPublishers.ofString(formData))
-              .build();
       HttpResponse<String> tokenResponse =
           httpClient.send(tokenRequest, HttpResponse.BodyHandlers.ofString());
       if (tokenResponse.statusCode() >= HTTP_CLIENT_ERROR_MIN) {
@@ -310,15 +311,10 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
         return null;
       }
       Object accessTokenObj = tokenMap.get("access_token");
-      Object expiresInObj = tokenMap.get("expires_in");
       if (accessTokenObj == null) {
         return null;
       }
       String accessToken = accessTokenObj.toString();
-      long expiresInSeconds = expiresInObj instanceof Number ? ((Number) expiresInObj).longValue() : DEFAULT_OAUTH_EXPIRES_IN_SECONDS;
-      // 提前过期缓冲，避免边界失效
-      long expiresAt = System.currentTimeMillis() + (expiresInSeconds - OAUTH_EXPIRY_BUFFER_SECONDS) * 1000L;
-      oauthTokenCache.put(server.getName(), new OAuthTokenEntry(accessToken, expiresAt));
       log.info("[MCP-Streamable] OAuth token 获取成功: server={}", server.getName());
       return accessToken;
     } catch (Exception e) {

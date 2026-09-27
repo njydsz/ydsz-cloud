@@ -61,6 +61,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
+        <!-- ydsz-common-locales: 显式声明（TenantServiceImpl 使用 I18nMessages，原先仅经 common-util 传递获得） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-locales</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.njydsz</groupId>

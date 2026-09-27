@@ -127,6 +127,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
+        <!-- ydsz-common-locales: 显式声明（CronjobConfigValidator/GlueJobHandler/ScriptJobHandler/GlueCodeServiceImpl 使用 I18n，原先仅经 common-util 传递获得） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-locales</artifactId>
+        </dependency>
         <!-- P1-A: 审计日志生命周期管理（LogCleaner 联动清理 ydsz_job_audit_log） -->
         <dependency>
             <groupId>com.njydsz</groupId>

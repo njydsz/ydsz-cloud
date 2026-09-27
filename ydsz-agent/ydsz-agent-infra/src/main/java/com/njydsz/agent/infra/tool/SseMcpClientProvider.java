@@ -10,12 +10,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.cache.api.Cache;
 
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.config.properties.McpProperties;
 import com.njydsz.agent.domain.gateway.LlmException;
+import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -42,9 +45,8 @@ public class SseMcpClientProvider implements McpClientProvider {
   /** MCP 请求默认超时（毫秒） */
   private static final int DEFAULT_TIMEOUT_MILLIS = 30000;
 
-
-  /** 会话缓存 TTL（毫秒），超过后需重新建立 MCP 会话 */
-  private static final long SESSION_TTL_MILLIS = 30 * 60 * 1000L;
+  /** 会话缓存 TTL（分钟） */
+  private static final long SESSION_TTL_MINUTES = 30L;
 
   /** 会话失效时的 HTTP 状态码（401 Unauthorized） */
   private static final int HTTP_UNAUTHORIZED = 401;
@@ -59,25 +61,13 @@ public class SseMcpClientProvider implements McpClientProvider {
   private final HttpClient httpClient =
       HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
-  /** MCP Server 会话缓存（key=serverName, value=会话条目） */
-  private final Map<String, SessionEntry> sessionCache = new ConcurrentHashMap<>();
-
   /**
-   * MCP 会话条目（缓存值）。
+   * MCP 会话缓存（key=serverName, value=sessionId）。
    *
-   * @param sessionId MCP 会话 ID
-   * @param createdAt 会话创建时间戳（毫秒）
+   * <p>使用 YdszCache 管理 TTL 过期，替代手写 ConcurrentHashMap + System.currentTimeMillis() 判断。
    */
-  private record SessionEntry(String sessionId, long createdAt) {
-    /**
-     * 检查会话是否已过期。
-     *
-     * @return {@code true} 表示已过期
-     */
-    boolean isExpired() {
-      return System.currentTimeMillis() - createdAt > SESSION_TTL_MILLIS;
-    }
-  }
+  private final Cache<String, String> sessionCache =
+      YdszCache.<String, String>newBuilder().expireAfterWrite(SESSION_TTL_MINUTES, TimeUnit.MINUTES).build();
 
   /**
    * 列出 MCP Server 提供的所有工具。
@@ -130,21 +120,27 @@ public class SseMcpClientProvider implements McpClientProvider {
   /**
    * 初始化 MCP 会话（带缓存与 TTL 过期）。
    *
-   * <p>若缓存中存在未过期的会话则直接返回，否则向 MCP Server 发送 initialize 请求获取新会话。
+   * <p>使用 YdszCache 管理会话 TTL，首次调用或缓存过期后自动重新初始化。
    *
    * @param server MCP Server 配置
    * @return 会话 ID
    */
   private String initSession(McpProperties.ServerInfo server) {
-    SessionEntry cached = sessionCache.get(server.getName());
-    if (cached != null && !cached.isExpired()) {
-      return cached.sessionId();
-    }
+    return sessionCache.get(server.getName(), k -> createSession(server));
+  }
+
+  /**
+   * 创建新的 MCP 会话（向 MCP Server 发送 initialize 请求）。
+   *
+   * @param server MCP Server 配置
+   * @return 会话 ID
+   */
+  private String createSession(McpProperties.ServerInfo server) {
+    Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
+    params.put("protocolVersion", "2024-11-05");
+    params.put("capabilities", Map.of());
+    params.put("clientInfo", Map.of("name", "ydsz-agent", "version", "26.09.01"));
     try {
-      Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
-      params.put("protocolVersion", "2024-11-05");
-      params.put("capabilities", Map.of());
-      params.put("clientInfo", Map.of("name", "ydsz-agent", "version", "26.09.01"));
       String response = sendRequest(server, null, "initialize", params);
       String sessionId = extractSessionId(response);
       if (sessionId == null || sessionId.isBlank()) {
@@ -152,7 +148,6 @@ public class SseMcpClientProvider implements McpClientProvider {
             "MCP 初始化失败: 无法获取 sessionId, server=" + server.getName(),
             LlmException.ErrorType.INVALID_RESPONSE);
       }
-      sessionCache.put(server.getName(), new SessionEntry(sessionId, System.currentTimeMillis()));
       log.info("[MCP-SSE] 会话初始化成功: server={}, sessionId={}", server.getName(), sessionId);
       return sessionId;
     } catch (LlmException e) {
@@ -199,7 +194,7 @@ public class SseMcpClientProvider implements McpClientProvider {
       HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
       // 401 意味着会话过期，清理缓存以便下次重试
       if (response.statusCode() == HTTP_UNAUTHORIZED) {
-        sessionCache.remove(server.getName());
+        sessionCache.invalidate(server.getName());
         throw new LlmException(
             "MCP 会话过期（401）: server=" + server.getName(),
             LlmException.ErrorType.AUTH_FAILED);

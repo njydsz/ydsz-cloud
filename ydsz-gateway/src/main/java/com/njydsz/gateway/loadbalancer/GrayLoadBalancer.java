@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +20,8 @@ import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
 import org.springframework.http.HttpHeaders;
 import reactor.core.publisher.Mono;
 
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.util.id.RandomUtils;
 
 /**
@@ -101,12 +101,13 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   private final AtomicInteger position;
 
   /**
-   * P2-7: 按服务 ID 缓存预计算的 Alias Method 表。
+   * P2-7: 按服务 ID 缓存预计算的 Alias Method 表（最多 10 条，自动淘汰）。
    *
-   * <p>当候选实例列表不变时（同一 filtered 大小 + 同一实例集合）， 复用预计算的 Alias 表，将加权随机选择从 O(n) 降至 O(1)。 实例列表变化时（Nacos
-   * 推送刷新）自动失效，下一次请求重新构建。
+   * <p>使用 YdszCache 替代手写 ConcurrentHashMap + iterator.remove() 容量淘汰，
+   * 获得 TinyLFU 自动驱逐（更适合网关高并发读场景）。
    */
-  private final ConcurrentHashMap<String, AliasTable> aliasTableCache = new ConcurrentHashMap<>();
+  private final Cache<String, AliasTable> aliasTableCache =
+      YdszCache.<String, AliasTable>newBuilder().maximumSize(10).build();
 
   /**
    * 构造灰度负载均衡器
@@ -324,17 +325,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   /** P2-7: 获取或创建 Alias 表（基于实例列表大小和 ID 哈希作为缓存键） */
   private AliasTable getOrCreateAliasTable(List<ServiceInstance> instances) {
     String cacheKey = buildCacheKey(instances);
-    AliasTable table = aliasTableCache.get(cacheKey);
-    if (table != null) {
-      return table;
-    }
-    table = buildAliasTable(instances);
-    aliasTableCache.put(cacheKey, table);
-    // 仅保留最近 10 个服务的缓存表（防止实例 ID/Nacos key 变化导致泄漏）
-    if (aliasTableCache.size() > 10) {
-      aliasTableCache.keySet().iterator().remove();
-    }
-    return table;
+    return aliasTableCache.get(cacheKey, k -> buildAliasTable(instances));
   }
 
   /** P2-7: 基于实例 ID 和列表大小构建缓存键 */

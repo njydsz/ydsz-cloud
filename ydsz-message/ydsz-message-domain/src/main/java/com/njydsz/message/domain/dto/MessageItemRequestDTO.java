@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 
 /**
@@ -26,6 +28,7 @@ public class MessageItemRequestDTO implements Serializable {
   private String channel;
 
   /** 接收者标识（用户ID / 邮箱 / Webhook URL 等） */
+  @SensitiveData(SensitiveType.PHONE)
   private String receiver;
 
   /** 消息主题 */

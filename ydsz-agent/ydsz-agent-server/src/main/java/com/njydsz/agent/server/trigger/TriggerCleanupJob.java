@@ -28,13 +28,12 @@ public class TriggerCleanupJob {
     /**
      * 清理触发器运行时数据。
      *
-     * <p>每 10 分钟执行一次。</p>
+     * <p>每 10 分钟执行一次。YdszCache 管理去重集合和限速计数器的 TTL（5 分钟/1 小时），
+     * 无需手动清理；仅 cronTriggerScheduler 的执行记录需要定时清理。
      */
     public void cleanup() {
         log.debug("[TriggerCleanup] 开始清理触发器运行时数据");
         try {
-            evaluationService.cleanupDeduplicationSet();
-            evaluationService.cleanupCounters();
             cronTriggerScheduler.cleanupExecutionRecords();
             log.debug("[TriggerCleanup] 清理完成");
         } catch (Exception e) {

@@ -7,6 +7,9 @@ import java.util.Map;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
+
 /**
  * 模板试发请求 DTO。
  *
@@ -26,6 +29,7 @@ public class TemplateTestSendDTO implements Serializable {
 
   /** 测试接收人（用户 ID 或手机号/邮箱等） */
   @NotBlank(message = "测试接收人不能为空")
+  @SensitiveData(SensitiveType.PHONE)
   private String testReceiver;
 
   /** 模板变量参数 */

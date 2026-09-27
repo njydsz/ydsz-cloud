@@ -7,7 +7,6 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +14,7 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.util.password.PwdUtils;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.oauth2.OAuth2Application;
 import com.njydsz.userinfo.domain.oauth2.OAuth2ApplicationRepository;
@@ -50,7 +50,6 @@ public class OAuth2ApplicationService {
   private static final int CLIENT_SECRET_RANDOM_BYTES = 32;
 
   private final OAuth2ApplicationRepository applicationRepository;
-  private final BCryptPasswordEncoder passwordEncoder;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final SecureRandom secureRandom = new SecureRandom();
 
@@ -75,7 +74,7 @@ public class OAuth2ApplicationService {
 
     String clientId = generateClientId();
     String plainClientSecret = generateClientSecret();
-    String encodedClientSecret = passwordEncoder.encode(plainClientSecret);
+    String encodedClientSecret = PwdUtils.hashPasswordBCrypt(plainClientSecret);
 
     OAuth2Application application = new OAuth2Application(
         String.valueOf(snowflakeIdGenerator.nextId()),
@@ -114,7 +113,7 @@ public class OAuth2ApplicationService {
         .orElseThrow(() -> new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID));
 
     String newPlainSecret = generateClientSecret();
-    String encodedSecret = passwordEncoder.encode(newPlainSecret);
+    String encodedSecret = PwdUtils.hashPasswordBCrypt(newPlainSecret);
 
     OAuth2Application updated = new OAuth2Application(
         existing.id(),
@@ -240,7 +239,7 @@ public class OAuth2ApplicationService {
     if (application == null) {
       return false;
     }
-    return passwordEncoder.matches(clientSecret, application.clientSecret());
+    return PwdUtils.verifyPasswordBCrypt(clientSecret, application.clientSecret());
   }
 
   /**

@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 
 /**
@@ -41,6 +43,7 @@ public class MsgLogDTO implements Serializable {
   private String bizId;
 
   /** 接收人标识（手机号/邮箱/openid） */
+  @SensitiveData(SensitiveType.PHONE)
   private String receiver;
 
   /** 模板编码 */

@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.25"
+  version: "26.09.27"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-25（公共模块利用率修复：新增 YDIZ-COMMON-014~017 共 4 条 P1/P2 规则，消除 7 处业务模块自实现重复代码，Excel 导出接入 cronjob / message 模块）"
-  total_rules: 96
+  last_updated: "2026-09-27（全维度分析规则扩充：新增 YDIZ-TEST-005 P0 / YDIZ-FE-001 P1 / YDIZ-FE-002 P1 / YDIZ-DB-005 P2 共 4 条规则，覆盖 Flyway DDL 版本化 / 前端生成器同步 / schema.d.ts 维护 / Agent Entity 基类约束）"
+  total_rules: 101
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -2590,6 +2590,103 @@ rules:
     rule: "包含 pageNum/pageSize 的查询类必须 extends PageQuery"
     source: "P2-3 ExceptionLevel 分类体系落地（YDIZ-COMMON-018，P1，26.09.25）"
 
+  # ============================================
+  # 数据库规范（1 条新增，P2）
+  # ============================================
+  - id: "YDIZ-DB-005"
+    level: "P2"
+    category: "database"
+    title: "Agent 模块所有 Entity 必须继承 MpBaseEntity，禁止自建基类"
+    description: |
+      Agent 模块历史上出现 Entity 继承 MpBaseAuditEntity 或直接继承 ENTITY 导致 DDL 漂移
+      （缺少 is_deleted、revision、tenant_id 等标准字段）。
+
+      **强制要求**：
+      - 所有新增/已有 Entity 必须 extends MpBaseEntity（或 MpBaseEntity<Long>）
+      - 禁止使用 MpBaseAuditEntity 作为替代基类（审计字段由数据库触发器维护）
+      - 禁止自建 AbstractEntity / BaseEntity 绕过 ydsz-common-domain 的标准字段体系
+
+      **为什么**：
+      - MpBaseEntity 提供 id、tenant_id、is_deleted、revision、created_by/updated_by、created_at/updated_at 标准字段
+      - 部分模块曾出现 Entity 声明了 tenant_id 但 DDL 中无 tenant_id 列的情况（Entity↔DDL 漂移）
+      - 知识图谱、异步任务等新增子域必须遵守此规则，防止漂移再次引入
+
+      **违反判据**：
+      - Java 类声明 extends MpBaseAuditEntity、extends AbstractEntity、extends BaseEntity（非 ydsz 提供）
+      - 或 Entity 未继承任何 ydsz-common-domain 基类
+    rule: "Entity 类必须 extends MpBaseEntity 或 MpBaseEntity<Long>"
+    fix: "将 class XxxEntity extends Yyy 改为 extends MpBaseEntity，补全缺失的标准字段映射"
+    source: "全维度深度分析（YDIZ-DB-005，P2，26.09.27）"
+
+  # ============================================
+  # 工程规范（2 条新增，P1）
+  # ============================================
+  - id: "YDIZ-TEST-005"
+    level: "P0"
+    category: "testing"
+    title: "执行 DDL 变更时必须同步提供 Flyway 脚本，禁止手工直接修改数据库"
+    description: |
+      数据库结构变更（ALTER TABLE / ADD COLUMN / RENAME 等）必须通过 Flyway 版本化脚本管理，
+      禁止开发者在本地或生产环境手工执行 DDL。
+
+      **为什么**：
+      - 当前项目散落多个独立 DDL 脚本文件（sqls/ 目录下 V26.09.26~V26.09.29），缺乏版本顺序执行机制
+      - 手工执行 DDL 无法保证环境一致性（开发 / 测试 / 生产差异）
+      - 没有回滚机制，一旦出错难以恢复
+
+      **强制要求**：
+      - 所有 DDL 变更必须遵循 V{version}__{description}.sql 命名规范，置于 src/main/resources/db/migration/
+      - 每条 DDL 脚本必须是幂等的（使用 IF NOT EXISTS / CREATE OR REPLACE），确保重复执行不报错
+      - 跨模块的 DDL 变更需要同时在对应模块的 Flyway 历史表（flyway_schema_history）中注册
+
+      **违反判据**：
+      - 数据库表结构变更后，对应模块的 src/main/resources/db/migration/ 无对应版本脚本
+      - 提交记录中包含 Java Entity 字段变更但无对应 SQL 迁移文件
+    rule: "Entity 结构变更必须同步提交 Flyway 版本脚本"
+    fix: "在对应模块的 db/migration/ 目录下新建 V{YYMMDD}__{description}.sql，确保幂等并包含回滚说明"
+    source: "全维度深度分析（YDIZ-TEST-005，P0，26.09.27）"
+
+  - id: "YDIZ-FE-001"
+    level: "P1"
+    category: "engineering"
+    title: "gen-contract.py 更新后必须重新生成全部子应用 API 文件并提交"
+    description: |
+      前端 API 层封装由 gen-contract.py 自动生成。当生成器逻辑发生变更（如新增 FormData 文件上传支持、
+      路径前缀修正、返回类型推导优化等）后，必须对所有子应用重新生成并提交，确保实际文件与生成器逻辑一致。
+
+      **为什么**：
+      - 曾出现 gen-contract.py 已支持 MultipartFile → FormData 转换，但 nextwiki-web/src/api/file.ts
+        的 upload 函数仍发送 JSON 而非 FormData（实际文件为旧版生成）
+      - 生成器修复与实际文件脱节会导致 P0 阻断级 Bug 遗留在线上
+
+      **违反判据**：
+      - git log 显示 bash/gen-contract.py 有变更但 apps/*/src/api/ 下文件未同步更新
+      - 前端 API 请求参数与后端 Controller 实际 @RequestParam / @RequestBody 声明不一致
+    rule: "gen-contract.py 变更后必须重新运行 python bash/gen-contract.py <module> 并提交全部受影响文件"
+    fix: "执行统一生成脚本，提交所有 apps/*/src/api/ 目录下变更的自动生成文件"
+    source: "全维度深度分析（YDIZ-FE-001，P1，26.09.27）"
+
+  - id: "YDIZ-FE-002"
+    level: "P1"
+    category: "engineering"
+    title: "禁止在前端 sdk/schema.d.ts 中手动修改字段命名"
+    description: |
+      schema.d.ts 由后端 OpenAPI 规范自动生成（springdoc-openapi → openapi-typescript），
+      是后端 DTO 结构的前端镜像。手动修改此文件会引入前后端类型不一致，且在下一次重新生成时丢失。
+
+      **正确做法**：
+      - 如需统一排序字段命名（如 sortOrder → sort），应修改后端 DTO/Entity + 数据库 DDL，
+        再触发 schema.d.ts 重新生成，使类型定义自动对齐
+      - 如果后端暂时无法变更，可以通过前端 models.ts 定义兼容层（type alias 或 mapper），
+        而非直接修改生成的 schema.d.ts
+
+      **违反判据**：
+      - schema.d.ts 中出现与后端 DTO 字段不一致的手动修改（如 sort → sortOrder 反向改名）
+      - schema.d.ts 中存在 git 提交记录显示人工编辑（而非自动生成后的全量覆盖）
+    rule: "schema.d.ts 禁止手动编辑，必须由 openapi-typescript 工具自动生成"
+    fix: "修改后端 DTO 字段命名 → 重新运行 openapi-typescript 生成 → 提交新的 schema.d.ts"
+    source: "全维度深度分析（YDIZ-FE-002，P1，26.09.27）"
+
 # ============================================
 # 附录：按 category 统计（26.09.25 更新，total 96，公共模块利用率修复后 COMMON 分类含 001~018）
 # ============================================
@@ -2598,7 +2695,7 @@ stats:
   import: 5
   naming: 4
   oop: 5
-  database: 1
+  database: 2
   logging: 3
   datetime: 2
   collection: 2
@@ -2608,14 +2705,14 @@ stats:
   common-reuse: 13
   security: 2
   architecture: 6
-  engineering: 3
+  engineering: 5
   warnings: 1
   api: 2
   exception: 2
   audit: 1
   event: 3
   tx: 5
-  testing: 4
+  testing: 5
   resilience: 1
   config: 3
   errcode: 2
@@ -2626,4 +2723,4 @@ stats:
   search: 1
   util: 1
   common: 5
-  total: 97
+  total: 101

@@ -1,12 +1,10 @@
 package com.njydsz.agent.server.trigger;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -16,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
 import com.njydsz.agent.domain.trigger.TriggerType;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 
 /**
  * 触发器评估服务。
@@ -40,23 +40,35 @@ public class TriggerEvaluationService {
     private final TriggerRepository triggerRepository;
     private final TriggerExecutionService executionService;
 
-    /** 触发器每小时执行计数：triggerId -> 计数窗口 */
-    private final ConcurrentHashMap<String, HourlyCounter> triggerCounters = new ConcurrentHashMap<>();
+    /**
+     * 触发器每小时执行计数：triggerId -> AtomicInteger 计数器。
+     *
+     * <p>使用 YdszCache 管理 1 小时 TTL 窗口，替代手写 HourlyCounter 内部类。
+     */
+    private final Cache<String, AtomicInteger> triggerCounters =
+        YdszCache.<String, AtomicInteger>newBuilder().expireAfterAccess(1, TimeUnit.HOURS).build();
 
-    /** 去重集合：记录已处理的事件指纹 */
-    private final Set<String> deduplicationSet = ConcurrentHashMap.newKeySet();
+    /**
+     * 去重集合：记录已处理的事件指纹。
+     *
+     * <p>使用 YdszCache 管理 5 分钟 TTL，替代手写 Set + 手动清理。
+     */
+    private final Cache<String, Boolean> deduplicationCache =
+        YdszCache.<String, Boolean>newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
 
     /** 递归深度跟踪：executionId -> 深度 */
     private final ConcurrentHashMap<String, AtomicInteger> recursionDepthMap = new ConcurrentHashMap<>();
 
-    /** 正则表达式编译缓存（pattern 字符串 → 编译后的 Pattern），避免每次匹配重复编译 */
-    private final ConcurrentHashMap<String, Pattern> patternCache = new ConcurrentHashMap<>(16);
+    /**
+     * 正则表达式编译缓存（pattern 字符串 → 编译后的 Pattern）。
+     *
+     * <p>使用 YdszCache 管理容量（最大 256 条），替代手写 ConcurrentHashMap。
+     */
+    private final Cache<String, Pattern> patternCache =
+        YdszCache.<String, Pattern>newBuilder().maximumSize(256).build();
 
     /** 最大递归深度 */
     private static final int MAX_RECURSION_DEPTH = 3;
-
-    /** 去重窗口（分钟） */
-    private static final int DEDUPLICATION_WINDOW_MINUTES = 5;
 
     public TriggerEvaluationService(TriggerRepository triggerRepository,
                                     TriggerExecutionService executionService) {
@@ -236,7 +248,7 @@ public class TriggerEvaluationService {
      */
     private boolean isDuplicate(String triggerId, String input) {
         String fingerprint = triggerId + ":" + input.hashCode();
-        return !deduplicationSet.add(fingerprint);
+        return deduplicationCache.putIfAbsent(fingerprint, Boolean.TRUE) != null;
     }
 
     /**
@@ -246,9 +258,9 @@ public class TriggerEvaluationService {
      * @return 是否被限速
      */
     private boolean isRateLimited(AgentTrigger trigger) {
-        HourlyCounter counter = triggerCounters.computeIfAbsent(
-                trigger.getTriggerId(), k -> new HourlyCounter());
-        return counter.getCount() >= trigger.getMaxExecutionsPerHour();
+        AtomicInteger counter = triggerCounters.get(trigger.getTriggerId(),
+                k -> new AtomicInteger(0));
+        return counter.get() >= trigger.getMaxExecutionsPerHour();
     }
 
     /**
@@ -257,9 +269,8 @@ public class TriggerEvaluationService {
      * @param triggerId 触发器 ID
      */
     private void recordExecution(String triggerId) {
-        HourlyCounter counter = triggerCounters.computeIfAbsent(
-                triggerId, k -> new HourlyCounter());
-        counter.increment();
+        AtomicInteger counter = triggerCounters.get(triggerId, k -> new AtomicInteger(0));
+        counter.incrementAndGet();
     }
 
     /**
@@ -295,25 +306,6 @@ public class TriggerEvaluationService {
     }
 
     /**
-     * 清理过期的去重记录（由定时任务调用）。
-     */
-    public void cleanupDeduplicationSet() {
-        // 简化实现：直接清空，实际可基于时间窗口清理
-        if (deduplicationSet.size() > 10000) {
-            log.info("[Trigger] 清理去重集合，当前大小: {}", deduplicationSet.size());
-            deduplicationSet.clear();
-        }
-    }
-
-    /**
-     * 清理过期的限速计数器（由定时任务调用）。
-     */
-    public void cleanupCounters() {
-        // 简化实现：每小时清理一次
-        triggerCounters.clear();
-    }
-
-    /**
      * 截断字符串用于日志输出。
      *
      * @param str    原始字符串
@@ -327,24 +319,6 @@ public class TriggerEvaluationService {
         return str.length() > maxLength ? str.substring(0, maxLength) + "..." : str;
     }
 
-    /**
-     * 每小时计数器。
-     */
-    private static class HourlyCounter {
-        private final AtomicInteger count = new AtomicInteger(0);
-        private LocalDateTime windowStart = LocalDateTime.now();
-
-        public int getCount() {
-            // 检查是否需要重置窗口
-            if (ChronoUnit.HOURS.between(windowStart, LocalDateTime.now()) >= 1) {
-                count.set(0);
-                windowStart = LocalDateTime.now();
-            }
-            return count.get();
-        }
-
-        public void increment() {
-            count.incrementAndGet();
-        }
-    }
+    /** 工具 + 相似度分数内部记录 */
+    private record ToolScore(ToolDefinition tool, BigDecimal score) {}
 }

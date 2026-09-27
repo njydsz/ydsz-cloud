@@ -41,6 +41,10 @@
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-util</artifactId>
     </dependency>
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-locales</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-nextwiki-domain</artifactId>
