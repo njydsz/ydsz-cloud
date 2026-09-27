@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.cache.spring.YdszCacheable;
 import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
@@ -254,7 +254,7 @@ public class DictServiceImpl implements DictService {
    * @return 全部字典类型列表（按 createdAt 倒序）
    */
   @Override
-  @Cacheable(
+  @YdszCacheable(
       value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "T(com.njydsz.common.cache.support.CacheKeyBuilder).build('system', 'dict:type', 'all')")
   public List<DictTypeVO> listAll() {

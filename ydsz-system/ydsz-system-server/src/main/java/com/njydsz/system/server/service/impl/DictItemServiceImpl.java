@@ -12,11 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.cache.spring.YdszCacheable;
 import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.tree.TreeBuilder;
@@ -175,7 +175,7 @@ public class DictItemServiceImpl implements DictItemService {
    * @return 字典项 VO，不存在时返回 null（SpringYdszCache 自动缓存 null 值防穿透）
    */
   @Override
-  @Cacheable(
+  @YdszCacheable(
       value = SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE,
       key = "@cacheKeyBuilder.dictItem(#p0, #p1)")
   public DictItemVO getByTypeAndCode(String typeCode, String itemCode) {
@@ -199,7 +199,7 @@ public class DictItemServiceImpl implements DictItemService {
    * @return 启用状态的字典项列表（按 sort 升序），无数据时返回空列表
    */
   @Override
-  @Cacheable(
+  @YdszCacheable(
       value = SystemCacheConstants.SYSTEM_DICT_ITEM_CACHE,
       key = "@cacheKeyBuilder.dictList(#p0)",
       sync = true)

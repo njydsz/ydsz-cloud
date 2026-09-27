@@ -1,5 +1,6 @@
 package com.njydsz.agent.server.trigger;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -9,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.njydsz.agent.domain.model.ToolDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.trigger.AgentTrigger;

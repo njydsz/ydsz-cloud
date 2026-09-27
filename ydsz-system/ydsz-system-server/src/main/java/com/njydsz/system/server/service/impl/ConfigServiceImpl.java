@@ -8,12 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.cache.spring.YdszCacheable;
 import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
@@ -298,20 +298,20 @@ public class ConfigServiceImpl implements ConfigService {
   // ============================== 业务查询 ==============================
 
   @Override
-  @Cacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configValue(#p0)")
+  @YdszCacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configValue(#p0)")
   public String getConfigValue(String configKey) {
     ConfigVO config = configRepository.findEnabledByKey(configKey).orElse(null);
     return config != null ? config.getConfigValue() : null;
   }
 
   @Override
-  @Cacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configGroup(#p0)")
+  @YdszCacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configGroup(#p0)")
   public List<ConfigVO> getConfigsByGroup(String configGroup) {
     return configRepository.findEnabledByGroup(configGroup);
   }
 
   @Override
-  @Cacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configPublic()")
+  @YdszCacheable(value = SystemCacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configPublic()")
   public List<ConfigVO> listPublicConfigs() {
     return configRepository.findPublicEnabled();
   }

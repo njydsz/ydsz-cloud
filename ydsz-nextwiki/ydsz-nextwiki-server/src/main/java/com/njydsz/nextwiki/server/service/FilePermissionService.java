@@ -5,10 +5,10 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.cache.spring.YdszCacheable;
 import com.njydsz.nextwiki.server.constant.NextwikiCacheConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.dto.FileAclDTO;
@@ -157,7 +157,7 @@ public class FilePermissionService {
    * @param userId 用户 ID
    * @return 有效 ACL 列表，可能为空
    */
-  @Cacheable(
+  @YdszCacheable(
       cacheNames = NextwikiCacheConstants.NEXTWIKI_FILE_ACL_CACHE,
       key = "@nextwikiCacheKeyBuilder.fileAcl(#fileNodeId, #userId)",
       condition = "#userId != null")

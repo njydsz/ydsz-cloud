@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.cache.spring.YdszCacheable;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.workflow.server.constant.WorkflowCacheConstants;
 import com.njydsz.common.core.code.YdszResultCode;
@@ -88,7 +88,7 @@ public class FlowDefinitionQueryService {
    * @return 流程定义；不存在返回 {@code null}
    */
   @Transactional(readOnly = true)
-  @Cacheable(
+  @YdszCacheable(
       value = WorkflowCacheConstants.FLOW_DEF_PUBLISHED_CACHE,
       key = "#flowCode + ':' + #version + ':' + #tenantId",
       unless = "#result == null")
@@ -121,7 +121,7 @@ public class FlowDefinitionQueryService {
    * @return 最新版本定义；不存在返回 {@code null}
    */
   @Transactional(readOnly = true)
-  @Cacheable(
+  @YdszCacheable(
       value = WorkflowCacheConstants.FLOW_DEF_LATEST_CACHE,
       key = "#flowCode + ':' + #tenantId",
       unless = "#result == null")

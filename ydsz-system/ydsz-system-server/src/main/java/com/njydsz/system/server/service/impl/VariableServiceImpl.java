@@ -10,11 +10,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.cache.spring.YdszCacheable;
 import com.njydsz.system.server.constant.SystemCacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
@@ -180,7 +180,7 @@ public class VariableServiceImpl implements VariableService {
    * @return 变量值字符串，不存在时返回 null（SpringYdszCache 自动缓存 null 值防穿透）
    */
   @Override
-  @Cacheable(value = SystemCacheConstants.SYSTEM_VARIABLE_CACHE, key = "@cacheKeyBuilder.variable(#p0)")
+  @YdszCacheable(value = SystemCacheConstants.SYSTEM_VARIABLE_CACHE, key = "@cacheKeyBuilder.variable(#p0)")
   public String getVariableValue(String variableKey) {
     VariableVO vo = variableRepository.findEnabledByKey(variableKey).orElse(null);
     return vo != null ? vo.getVariableValue() : null;
