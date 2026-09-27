@@ -262,8 +262,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
           FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY,
           List.of("PASS", "REJECT"),
           tenantId,
-          StringUtils.hasText(startTime) ? LocalDateTime.parse(startTime, DateUtils.DEFAULT_DATE_TIME_PATTERN) : null,
-          StringUtils.hasText(endTime) ? LocalDateTime.parse(endTime, DateUtils.DEFAULT_DATE_TIME_PATTERN) : null);
+          StringUtils.hasText(startTime) ? DateUtils.parseLocalDateTime(startTime) : null,
+          StringUtils.hasText(endTime) ? DateUtils.parseLocalDateTime(endTime) : null);
     } catch (Exception e) {
       log.warn("[FlowEfficiency] 代批操作统计异常: {}", e.getMessage());
       return 0;
@@ -474,11 +474,11 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       return null;
     }
     try {
-      return LocalDateTime.parse(str, DateUtils.DEFAULT_DATE_TIME_PATTERN);
+      return DateUtils.parseLocalDateTime(str);
     } catch (Exception e) {
       // 尝试只解析日期部分
       try {
-        return LocalDate.parse(str, DateUtils.DEFAULT_DATE_PATTERN).atStartOfDay();
+        return DateUtils.parseLocalDate(str, DateUtils.DEFAULT_DATE_PATTERN).atStartOfDay();
       } catch (Exception ex) {
         log.warn("[FlowEfficiency] 无法解析时间: {}", str);
         return null;

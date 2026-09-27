@@ -2,7 +2,6 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +27,7 @@ import com.njydsz.common.core.assembler.NameAssembler;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.common.util.collection.CollectionUtils;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
@@ -1146,7 +1146,7 @@ public abstract class AbstractFlowInstanceLifecycle {
     if (date != null) {
       try {
         LocalDateTime target =
-            LocalDateTime.parse(date.toString(), DateTimeFormatter.ISO_DATE_TIME);
+            DateUtils.parseLocalDateTime(date.toString());
         Duration d = Duration.between(LocalDateTime.now(), target);
         return d.isNegative() ? null : d;
       } catch (Exception e) {

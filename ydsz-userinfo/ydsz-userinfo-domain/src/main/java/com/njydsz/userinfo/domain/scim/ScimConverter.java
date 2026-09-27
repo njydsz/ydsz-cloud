@@ -1,9 +1,9 @@
 package com.njydsz.userinfo.domain.scim;
 
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -31,9 +31,6 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  */
 public final class ScimConverter {
 
-  /** ISO 8601 日期时间格式。 */
-  private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
   /** SCIM Core User Schema 标识。 */
   private static final List<String> USER_SCHEMA =
       Collections.singletonList("urn:ietf:params:scim:schemas:core:2.0:User");
@@ -59,8 +56,8 @@ public final class ScimConverter {
         .userName(vo.getUsername())
         .meta(ScimMeta.builder()
             .resourceType("User")
-            .created(vo.getCreatedAt() != null ? vo.getCreatedAt().format(ISO_FORMATTER) : null)
-            .lastModified(vo.getUpdatedAt() != null ? vo.getUpdatedAt().format(ISO_FORMATTER) : null)
+            .created(vo.getCreatedAt() != null ? DateUtils.formatLocalDateTime(vo.getCreatedAt()) : null)
+            .lastModified(vo.getUpdatedAt() != null ? DateUtils.formatLocalDateTime(vo.getUpdatedAt()) : null)
             .build());
 
     applyRealName(builder, vo.getRealName());

@@ -3,7 +3,6 @@ package com.njydsz.workflow.server.service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 审批人可用性服务 — 基于待办计数和活跃时间的智能负载感知
@@ -203,7 +203,7 @@ public class FlowAssigneeAvailabilityService {
   private void updateLastActive(String userId) {
     try {
       String key = LAST_ACTIVE_PREFIX + userId;
-      String now = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+      String now = DateUtils.now();
       redisStringOps.set(key, now, Duration.ofDays(assigneeCacheTtlDays));
     } catch (Exception e) {
       log.debug("[Availability] 更新活跃时间失败 userId={} err={}", userId, e.getMessage());

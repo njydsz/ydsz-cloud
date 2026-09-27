@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.docs.watermark.PdfWatermarkApplier;
 import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.common.util.mask.MaskUtils;
 
 /**
  * 文件水印服务
@@ -104,10 +105,6 @@ public class WatermarkService {
 
   /** 用户 ID 掩码最小长度 */
   private static final int MASK_ID_MIN_LENGTH = 4;
-
-  /** 用户 ID 掩码占位符 */
-  private static final String MASK_ID_PLACEHOLDER = "****";
-
 
   /**
    * 判断文件格式是否支持水印叠加。
@@ -258,8 +255,6 @@ public class WatermarkService {
     if (userId == null || userId.length() <= MASK_ID_MIN_LENGTH) {
       return "****";
     }
-    return userId.substring(0, MASK_ID_KEEP_CHARS)
-        + MASK_ID_PLACEHOLDER
-        + userId.substring(userId.length() - MASK_ID_KEEP_CHARS);
+    return MaskUtils.mask(userId, MASK_ID_KEEP_CHARS, MASK_ID_KEEP_CHARS);
   }
 }

@@ -7,7 +7,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Objects;
 
@@ -17,6 +16,7 @@ import com.njydsz.agent.domain.document.DocumentFormat;
 import com.njydsz.agent.domain.document.DocumentRenderService;
 import com.njydsz.agent.domain.document.DocumentTemplate;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 文档渲染服务实现。
@@ -200,7 +200,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
             writer.println();
             writer.println("标题: " + (template != null ? template.getTitle() : "未命名"));
             writer.println("作者: " + (template != null ? template.getAuthor() : "YDSZ Agent"));
-            writer.println("日期: " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            writer.println("日期: " + DateUtils.today());
             writer.println();
             writer.println("--- 内容 ---");
             writer.println(markdown);
@@ -226,7 +226,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
             writer.println();
             writer.println("标题: " + (template != null ? template.getTitle() : "未命名"));
             writer.println("作者: " + (template != null ? template.getAuthor() : "YDSZ Agent"));
-            writer.println("日期: " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            writer.println("日期: " + DateUtils.today());
             writer.println();
             writer.println("--- 内容 ---");
             writer.println(markdown);
@@ -293,7 +293,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
 
         if (template.getSystem() != null) {
             sb.append("> 作者: ").append(template.getAuthor()).append("\n");
-            sb.append("> 日期: ").append(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            sb.append("> 日期: ").append(DateUtils.today());
             sb.append("\n\n");
         }
 

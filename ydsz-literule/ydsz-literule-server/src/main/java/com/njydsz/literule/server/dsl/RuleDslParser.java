@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -20,6 +19,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * LiteRule 声明式 DSL 解析器
@@ -532,7 +532,7 @@ public final class RuleDslParser {
       return null;
     }
     try {
-      return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+      return DateUtils.parseLocalDateTime(value);
     } catch (Exception e) {
       log.debug("[DslParser] 日期解析失败: {}", value);
       return null;

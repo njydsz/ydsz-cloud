@@ -1,7 +1,6 @@
 package com.njydsz.workflow.server.service;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeParseException;
 
@@ -9,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 
@@ -39,9 +39,6 @@ public final class DateRangeValidator {
 
   /** 最大查询天数（防 COUNT 超时） */
   public static final int MAX_RANGE_DAYS = 365;
-
-  /** ISO-8601 日期格式 */
-  private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
 
   /**
    * 校验并规范化时间范围。
@@ -113,7 +110,7 @@ public final class DateRangeValidator {
    */
   private static LocalDate parseDate(String dateStr, String paramName) {
     try {
-      return LocalDate.parse(dateStr.trim(), DATE_FORMAT);
+      return DateUtils.parseLocalDate(dateStr.trim(), DateUtils.DEFAULT_DATE_PATTERN);
     } catch (DateTimeParseException e) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_PARSING_ERROR,
           paramName + " 格式不合法（期望 yyyy-MM-dd）: " + dateStr);

@@ -16,8 +16,8 @@ meta:
   version: "26.09.27"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-27（P8 公共模块利用率深度修复：新增 YDIZ-COMMON-022 P1 摘要规则 / YDIZ-COMMON-023 P1 异常工具规则；修复 5 处 common 子模块脱敏收敛 / 3 处 MessageDigest→DigestUtils / SqlAuditJsonLogger ExceptionUtils / BeanUpdateUtil 替换）"
-  total_rules: 106
+  last_updated: "2026-09-27（P8 全局引用深度分析：新增 YDIZ-COMMON-024 P1 i18n 活性 / YDIZ-COMMON-025 P1 TreeBuilder / YDIZ-COMMON-026 P2 Sentry 覆盖率；修复 25 处 DateUtils 收敛 + 8 模块 i18n 骨架填充）"
+  total_rules: 110
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -2550,7 +2550,7 @@ rules:
       3. 调用 snowflakeIdGenerator.nextId() 或 IdGenerator.nextIdStr()
     source: "编码规范附录新增（YDIZ-COMMON-017，P2，26.09.25 公共模块利用率修复）"
 
-  # ==================== 公共模块复用（common，5 条，YDIZ-COMMON-019~023） ====================
+  # ==================== 公共模块复用（common，10 条，YDIZ-COMMON-019~027） ====================
   # P7: 新增 3 条 YDIZ-COMMON 规则，收敛脱敏/缓存/日期格式化中的自实现重复代码
   - id: "YDIZ-COMMON-019"
     category: "common-reuse"
@@ -2727,6 +2727,183 @@ rules:
       log.error("failed", ExceptionUtils.getStackTrace(t));
     tags: [exception, 公共模块利用率]
     source: "编码规范附录新增（YDIZ-COMMON-023，P1，26.09.27 公共模块利用率深度修复）"
+
+  - id: "YDIZ-COMMON-024"
+    category: "common-reuse"
+    severity: "P1"
+    title: "i18n 资源文件必须包含有效 key，禁止空壳 properties"
+    description: |
+      业务模块的 i18n 资源文件（`{module}-messages*.properties`）创建后必须在 7 天内填充
+      ≥ 5 个有效 `key=value` 格式条目，禁止提交空壳（0 key）资源文件部署。
+
+      **为什么禁止空壳**：
+      - YDIZ-I18N-003 要求每个业务模块必须创建 i18n 骨架，但只检查文件存在性
+      - 空壳文件造成"假性合规"——AI 编码工具在生成 i18n key 时找不到已有 key 命名惯例，
+        导致 key 命名风格不统一
+      - 空壳文件在 CI/CD 中不报错，但实际运行时 fallback 到中文硬编码
+
+      **达标标准**：
+      - 兜底文件 `{module}-messages.properties`：≥ 5 key
+      - 中文简体 `{module}-messages_zh_CN.properties`：≥ 5 key
+      - 英文 `{module}-messages_en_US.properties`：≥ 5 key
+      - key 使用点分命名法（如 `agent.status.pending`）
+      - 中文值使用 UTF-8 无 BOM
+
+      **当前达标状态**（2026-09-27 已修复）：
+      - agent: 104 keys ✅
+      - cronjob: 45 keys ✅
+      - literule: 62 keys ✅
+      - message: 83 keys ✅
+      - nextwiki: 97 keys ✅
+      - system: 95 keys ✅
+      - userinfo: 166 keys ✅
+      - workflow: 81 keys ✅
+    pattern: "i18n/.+\\.properties$（内容为空或无 key=value 行）"
+    fix: |
+      1. 扫描模块内硬编码中文（枚举描述、Objects.requireNonNull 描述、异常消息）
+      2. 为每个中文文案创建 i18n key（命名：`{模块}.{子域}.{描述}`）
+      3. 写入 `{module}-messages.properties`（兜底 + zh_CN）和 `{module}-messages_en_US.properties`
+      4. 后续硬编码中文新增时同步更新 i18n key
+    example_bad: |
+      ❌ 空壳文件
+      # cronjob-messages.properties
+      # （无任何 key=value 条目）
+    example_good: |
+      ✅ 包含有效 key
+      # cronjob-messages.properties
+      job.status.running=运行中
+      job.status.success=执行成功
+      job.status.failed=执行失败
+      job.op.start=启动任务
+      job.op.stop=停止任务
+    tags: [i18n, 公共模块利用率]
+    source: "全局引用深度分析报告新增（YDIZ-COMMON-024，P1，26.09.27 i18n 骨架活性检测）"
+
+  - id: "YDIZ-COMMON-025"
+    category: "common-reuse"
+    severity: "P1"
+    title: "树形结构必须使用 TreeBuilder，禁止手写递归嵌套循环"
+    description: |
+      所有返回树形结构（含 `children` 字段或递归层级关系）的 API，必须通过
+      `ydsz-common-domain` 提供的 `TreeBuilder.build()` 构建，禁止手写递归嵌套循环
+      （for + removeIf 模式）、禁止自建 `TreeNode` 接口。
+
+      **能力定位**：
+      - `TreeBuilder`：O(n) 迭代算法从扁平列表一次性构建树形结构，避免 N+1 查询
+      - `TreeNode`：统一树节点基类，提供 `getId()` / `getParentId()` / `getChildren()` 契约
+      - 支持单根树和多根森林（`buildForests()`）
+
+      **当前违规模块**（2026-09-27 零引用沉睡）：
+      - ydsz-nextwiki：`FileNodeRepositoryImpl.stream` 循环匹配 parentId
+      - ydsz-system：`MenuServiceImpl` 递归查询数据库
+      - ydsz-userinfo：`OrgDepartmentServiceImpl` BFS 遍历组织架构
+      - ydsz-agent：`AgentDag` 自行维护节点父子关系
+    pattern: "for.*\\{[\\s\\S]*?removeIf\\([\\s\\S]*?\\.contains\\(|buildTree|children\\.add"
+    fix: |
+      1. 递归节点的 Entity 类 implements `TreeNode`
+      2. 一次性查询全量扁平列表（`SELECT * WHERE tenant_id=?`）
+      3. 调用 `TreeBuilder.build(list)` 或 `TreeBuilder.buildForests(list)` 构建
+      4. 删除原有手写递归逻辑
+    example_bad: |
+      ❌ 手写递归
+      List<TreeNode> roots = list.stream()
+          .filter(n -> n.getParentId() == null)
+          .collect(Collectors.toList());
+      for (TreeNode root : roots) {
+          root.setChildren(buildChildren(root, list));  // N+1
+      }
+    example_good: |
+      ✅ 使用 TreeBuilder
+      List<FileNode> allNodes = repository.findAllByTenantId(tenantId);
+      List<TreeNode> tree = TreeBuilder.build(allNodes);
+    tags: [树形结构, DDD, 公共模块利用率]
+    source: "全局引用深度分析报告新增（YDIZ-COMMON-025，P1，26.09.27 TreeBuilder 激活）"
+
+  - id: "YDIZ-COMMON-026"
+    category: "common-reuse"
+    severity: "P2"
+    title: "SentryObservation 核心路径覆盖率应 ≥ 80%"
+    description: |
+      每个业务模块的 server 层核心 DomainService 方法（增删改查 + 关键业务操作）≥ 80%
+      必须有 `SentryObservation.time()` 包裹，确保核心链路可观测。
+
+      可观测性三件套：
+      - `time(metricName, supplier)`：计时埋点（TP99/TP999/平均耗时）
+      - `count(metricName, n, tags)`：计数埋点（请求量/成功失败数）
+      - `gauge(metricName, desc, tags, value)`：瞬时值埋点（队列积压/连接池）
+
+      **当前覆盖状态**（2026-09-27）：
+      - ✅ 已覆盖：gateway、system、literule
+      - ❌ 未覆盖：agent、cronjob、message、nextwiki、userinfo、workflow
+
+      **各引擎建议埋点维度**：
+      | 引擎 | 关键指标 | 维度 |
+      |------|---------|------|
+      | agent | Agent 执行耗时/Token 消耗量 | provider/agent_type |
+      | cronjob | Job 执行延迟/成功率 | job_type/status |
+      message | 渠道发送延迟/DLQ 堆积量 | channel_name |
+      | nextwiki | 文件上传下载速率/秒传命中率 | operation |
+      | system | 配置读取频率/搜索 QPS | resource |
+      | userinfo | 登录成功率/Token 校验耗时 | method |
+      | workflow | 流程流转耗时/节点执行耗时 | flow_type |
+    pattern: "核心 DomainService 方法（public 修饰，执行数据库/外部调用）未被 SentryObservation.time() 包裹"
+    fix: |
+      1. 定义模块级 `MetricsConstants` 类集中管理埋点 metric 名
+      2. 对每个核心 Service 方法添加 SentryObservation.time() 包裹
+      3. 通过 ArchUnit 测试强制校验覆盖率（建议：≥ 80% 核心方法有埋点）
+    example_bad: |
+      ❌ 无埋点
+      public AgentTask createTask(CreateTaskCmd cmd) {
+          return repository.save(entity);
+      }
+    example_good: |
+      ✅ 有埋点
+      public AgentTask createTask(CreateTaskCmd cmd) {
+          return SentryObservation.time("agent.task.create", () -> {
+              AgentTask entity = converter.toEntity(cmd);
+              return repository.save(entity);
+          });
+      }
+    tags: [可观测性, 公共模块利用率]
+    source: "全局引用深度分析报告新增（YDIZ-COMMON-026，P2，26.09.27 SentryObservation 覆盖率门槛）"
+
+  - id: "YDIZ-COMMON-027"
+    category: "common-reuse"
+    severity: "P1"
+    title: "禁止业务代码直接使用 DateTimeFormatter，必须使用 DateUtils"
+    description: |
+      所有业务模块的日期时间格式化与解析必须通过 ydsz-common-util 提供的 {@code
+      com.njydsz.common.util.date.DateUtils} 静态方法完成，包括 {@code now()}、{@code today()}、
+      {@code formatNow(pattern)}、{@code formatLocalDateTime(date, pattern)}、{@code parseLocalDateTime(text, pattern)}
+      等。
+
+      **禁止写法**：
+      - {@code DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")}
+      - {@code new SimpleDateFormat("yyyy-MM-dd")}
+      - {@code DateTimeFormatter.ISO_LOCAL_DATE} / {@code ISO_LOCAL_DATE_TIME} / {@code ISO_DATE_TIME}
+        等 ISO 常量直接调用（应使用 {@code DateUtils.parseLocalDateTime(text)} 等价方法）
+
+      **推荐模式**：
+      - 当前时间字符串：{@code DateUtils.now()} / {@code DateUtils.today()}
+      - 按模式格式化：{@code DateUtils.formatNow("yyyyMMdd_HHmmss")}
+      - 解析字符串：{@code DateUtils.parseLocalDateTime(text, DateUtils.DEFAULT_DATE_TIME_PATTERN)}
+      - 日期边界：{@code DateUtils.getStartOfDay(date)} / {@code DateUtils.getEndOfDay(date)}
+    pattern: "DateTimeFormatter\\.ofPattern|DateTimeFormatter\\.ISO_LOCAL|new SimpleDateFormat"
+    fix: |
+      1. 引入 DateUtils：import com.njydsz.common.util.date.DateUtils
+      2. 替换 DateTimeFormatter 静态常量 import 为 DateUtils 方法调用
+      3. 替换 new SimpleDateFormat 为 DateUtils.formatNow / formatLocalDateTime
+    example_bad: |
+      ❌ 业务代码直接使用 DateTimeFormatter
+      private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+      String text = FMT.format(LocalDateTime.now());
+    example_good: |
+      ✅ 使用 DateUtils
+      String text = DateUtils.now();
+      // 或自定义模式
+      String text = DateUtils.formatNow("yyyyMMdd_HHmmss");
+    tags: [日期时间, 公共模块利用率]
+    source: "公共模块利用率 P0/P1 修复（YDIZ-COMMON-027，P1，26.09.27 DateTimeFormatter 收敛）"
 
   # ============================================
   # 异常处理规范（1 条新增，P0）
