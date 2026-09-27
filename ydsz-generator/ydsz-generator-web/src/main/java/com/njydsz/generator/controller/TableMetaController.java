@@ -19,6 +19,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenColumnMeta;
 import com.njydsz.generator.entity.GenDatasource;
 import com.njydsz.generator.entity.GenTableMeta;
+import com.njydsz.generator.security.PermissionCodes;
 import com.njydsz.generator.service.DatasourceService;
 import com.njydsz.generator.service.TableMetadataService;
 

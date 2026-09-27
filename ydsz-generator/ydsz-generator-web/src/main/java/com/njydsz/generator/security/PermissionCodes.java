@@ -16,6 +16,14 @@ public final class PermissionCodes {
     // 工具类禁止实例化
   }
 
+  // ══════════════ 角色级入口权限（类级别注解使用） ══════════════
+
+  /** 代码生成器通用用户权限（查询/预览/生成/历史/模板读取等）。 */
+  public static final String GENERATOR_USER = "generator:user";
+
+  /** 代码生成器管理员权限（数据源写操作/分组写操作等管理接口）。 */
+  public static final String GENERATOR_ADMIN = "generator:admin";
+
   // ══════════════ 模板分组管理 ══════════════
 
   /** 查询分组列表。 */

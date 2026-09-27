@@ -18,6 +18,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenDatasource;
+import com.njydsz.generator.security.PermissionCodes;
 import com.njydsz.generator.service.DatasourceService;
 import com.njydsz.generator.vo.GenDatasourceRespVO;
 

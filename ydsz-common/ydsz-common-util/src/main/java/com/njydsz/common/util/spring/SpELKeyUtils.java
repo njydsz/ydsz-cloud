@@ -1,8 +1,8 @@
 package com.njydsz.common.util.spring;
 
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,11 +40,56 @@ public final class SpELKeyUtils {
   private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER =
       new DefaultParameterNameDiscoverer();
 
-  /** 表达式缓存（避免重复解析） */
-  private static final Map<String, Expression> EXPRESSION_CACHE = new ConcurrentHashMap<>();
+  /** 表达式缓存（避免重复解析），LRU 容量上限 512 */
+  private static final LruExpressionCache EXPRESSION_CACHE = new LruExpressionCache(512);
 
   private SpELKeyUtils() {
     throw new UnsupportedOperationException("Utility class");
+  }
+
+  /**
+   * 基于 {@link LinkedHashMap} 的轻量级 LRU 表达式缓存（保持 L1 纯净度，零外部依赖）。
+   *
+   * <p>并发访问通过 {@code synchronized} 保证安全，覆盖「读-淘汰-写」完整临界区。
+   */
+  private static final class LruExpressionCache extends LinkedHashMap<String, Expression> {
+
+    private final int maxSize;
+
+    LruExpressionCache(int maxSize) {
+      super(maxSize, 0.75f, true);
+      this.maxSize = maxSize;
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<String, Expression> eldest) {
+      return size() > maxSize;
+    }
+
+    @Override
+    public synchronized Expression get(Object key) {
+      return super.get(key);
+    }
+
+    @Override
+    public synchronized Expression put(String key, Expression value) {
+      return super.put(key, value);
+    }
+
+    /**
+     * 获取缓存值；若不存在则计算并原子性写入，保证同一表达式只解析一次。
+     */
+    synchronized Expression getOrCompute(String key, java.util.function.Function<String, Expression> loader) {
+      Expression existing = super.get(key);
+      if (existing != null) {
+        return existing;
+      }
+      Expression computed = loader.apply(key);
+      if (computed != null) {
+        super.put(key, computed);
+      }
+      return computed;
+    }
   }
 
   /**
@@ -109,7 +154,7 @@ public final class SpELKeyUtils {
    * @return 求值结果字符串，失败返回 null
    */
   private static String resolveSpEL(String expression, Method method, Object[] args) {
-    Expression expr = EXPRESSION_CACHE.computeIfAbsent(expression, PARSER::parseExpression);
+    Expression expr = EXPRESSION_CACHE.getOrCompute(expression, PARSER::parseExpression);
 
     // 创建不读取外部上下文的简单安全上下文
     SimpleEvaluationContext context = SimpleEvaluationContext.forReadOnlyDataBinding().build();
