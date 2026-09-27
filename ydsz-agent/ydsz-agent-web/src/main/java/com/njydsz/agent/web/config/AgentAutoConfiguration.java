@@ -523,11 +523,12 @@ public class AgentAutoConfiguration {
    */
   @Bean
   @ConditionalOnProperty(prefix = "ydsz.agent.mcp", name = "enabled", havingValue = "true")
-  public McpToolAdapter mcpToolAdapter(AgentProperties properties, ToolRegistry toolRegistry) {
+  public McpToolAdapter mcpToolAdapter(AgentProperties properties, ToolRegistry toolRegistry,
+      I18nMessages i18nMessages) {
     SseMcpClientProvider sseProvider = new SseMcpClientProvider();
     StreamableHttpMcpClientProvider streamableHttpProvider = new StreamableHttpMcpClientProvider();
     McpClientProviderRouter router = new McpClientProviderRouter(sseProvider, streamableHttpProvider);
-    McpToolAdapter adapter = new McpToolAdapter(router, properties.getMcp());
+    McpToolAdapter adapter = new McpToolAdapter(router, properties.getMcp(), i18nMessages);
     adapter
         .discoverAllTools()
         .forEach(

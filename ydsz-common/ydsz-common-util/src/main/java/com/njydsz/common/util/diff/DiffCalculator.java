@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.util.api.Experimental;
+import com.njydsz.common.util.mask.MaskUtils;
 
 /**
  * 字段差异计算器
@@ -168,12 +169,9 @@ public class DiffCalculator {
         });
   }
 
-  /** 敏感字段脱敏（保留前 2 后 2 位） */
+  /** 敏感字段脱敏（保留前 2 后 2 位）。YDIZ-COMMON-018 合规。 */
   private String maskSensitive(String value) {
-    if (value == null || value.length() <= 4) {
-      return "****";
-    }
-    return value.substring(0, 2) + "****" + value.substring(value.length() - 2);
+    return MaskUtils.mask(value, 2, 2);
   }
 
   /** 字段元数据 */

@@ -557,9 +557,7 @@ public class JobController {
   public void exportJobLogs(@RequestParam(required = false) String jobKey,
       @RequestParam(required = false) String status,
       jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-    String fileName =
-        "job_logs_" + java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-            .format(LocalDateTime.now()) + ".xlsx";
+    String fileName = "job_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader("Content-Disposition", "attachment; filename="
         + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)

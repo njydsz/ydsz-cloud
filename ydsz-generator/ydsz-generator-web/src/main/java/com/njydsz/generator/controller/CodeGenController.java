@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.enums.ConflictStrategyEnum;
@@ -39,7 +40,7 @@ import com.njydsz.generator.vo.GenResultVO;
  */
 @ApiVersion("26.09.01")
 @Slf4j
-@Secured("ROLE_GENERATOR_USER")
+@AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
 @RequestMapping("/generator/code")
 @RequiredArgsConstructor

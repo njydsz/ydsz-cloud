@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenColumnMeta;
@@ -29,7 +30,7 @@ import com.njydsz.generator.service.TableMetadataService;
  */
 @Slf4j
 @ApiVersion("26.09.01")
-@Secured("ROLE_GENERATOR_USER")
+@AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
 @RequestMapping("/generator/tables")
 @RequiredArgsConstructor

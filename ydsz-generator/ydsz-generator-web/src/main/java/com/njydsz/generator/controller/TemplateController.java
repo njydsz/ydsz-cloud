@@ -4,7 +4,6 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.entity.GenTemplate;
@@ -33,7 +33,7 @@ import com.njydsz.generator.vo.TemplateValidateVO;
  */
 @Slf4j
 @ApiVersion("26.09.01")
-@Secured("ROLE_GENERATOR_USER")
+@AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
 @RequestMapping("/generator")
 @RequiredArgsConstructor

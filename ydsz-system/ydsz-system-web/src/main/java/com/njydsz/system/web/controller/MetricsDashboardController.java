@@ -7,21 +7,19 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.core.env.Environment;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.system.server.metrics.RedisMetricsService;
 
 /**
  * 运维指标仪表盘 REST 控制器。
@@ -58,8 +56,8 @@ public class MetricsDashboardController {
   /** Spring 运行环境（读取应用名 / 端口等） */
   private final Environment environment;
 
-  /** Redis 操作模板（可选：未装配时跳过 Redis 指标采集） */
-  private final ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider;
+  /** Redis 指标采集服务（CACHE-P1-001 整改：Controller 层不再直接持有 RedisTemplate） */
+  private final RedisMetricsService redisMetricsService;
 
   /** 日期时间格式化器 */
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
@@ -101,8 +99,8 @@ public class MetricsDashboardController {
     List<Map<String, Object>> serviceList = collectServices();
     result.put("services", serviceList);
 
-    // 2. Redis 关键指标（Redis 未装配时降级返回 null）
-    result.put("redis", collectRedisMetrics());
+    // 2. Redis 关键指标（Redis 未装配时降级返回空 Map）
+    result.put("redis", redisMetricsService.collectRedisMetrics());
 
     // 3. 运行时信息
     result.put("runtime", collectRuntimeInfo());
@@ -166,56 +164,6 @@ public class MetricsDashboardController {
   }
 
   /**
-   * 采集 Redis 统计指标。
-   *
-   * <p>读取 INFO Stats 部分的以下字段：
-   * <ul>
-   *   <li>{@code total_commands_processed} — 启动以来处理命令总数
-   *   <li>{@code keyspace_hits} — 键命中次数
-   *   <li>{@code keyspace_misses} — 键未命中次数
-   * </ul>
-   * 并计算命中率 = hits / (hits + misses)。
-   *
-   * @return Redis 指标 Map；Redis 未装配时返回 null
-   */
-  private Map<String, Object> collectRedisMetrics() {
-    StringRedisTemplate redisTemplate = stringRedisTemplateProvider.getIfAvailable();
-    if (redisTemplate == null) {
-      return Collections.emptyMap();
-    }
-
-    try {
-      Properties info = redisTemplate.getConnectionFactory().getConnection().info("stats");
-      if (info == null) {
-        return Collections.emptyMap();
-      }
-
-      long totalCommands = parseLongOrDefault(info.getProperty("total_commands_processed"), 0L);
-      long keyspaceHits = parseLongOrDefault(info.getProperty("keyspace_hits"), 0L);
-      long keyspaceMisses = parseLongOrDefault(info.getProperty("keyspace_misses"), 0L);
-      long totalLookups = keyspaceHits + keyspaceMisses;
-      double hitRate = totalLookups > 0
-          ? Math.round((double) keyspaceHits / totalLookups * 10000.0) / 100.0
-          : 0.0;
-
-      Map<String, Object> redisMetrics = new LinkedHashMap<>(DEFAULT_MAP_CAPACITY);
-      redisMetrics.put("totalCommands", totalCommands);
-      redisMetrics.put("keyspaceHits", keyspaceHits);
-      redisMetrics.put("keyspaceMisses", keyspaceMisses);
-      redisMetrics.put("hitRate", hitRate);
-      redisMetrics.put("available", true);
-      return redisMetrics;
-    } catch (Exception ex) {
-      // Redis 指标采集异常不阻塞整体返回
-      log.debug("[MetricsDashboard] Redis 指标采集异常: {}", ex.getMessage());
-      Map<String, Object> fallback = new LinkedHashMap<>(SMALL_MAP_CAPACITY);
-      fallback.put("available", false);
-      fallback.put("reason", ex.getMessage());
-      return fallback;
-    }
-  }
-
-  /**
    * 采集运行时信息（从 Spring Environment 和 java.lang.management 读取）。
    *
    * @return 运行时信息 Map
@@ -248,23 +196,5 @@ public class MetricsDashboardController {
     runtime.put("memory", memory);
 
     return runtime;
-  }
-
-  /**
-   * 解析长整型字符串，解析失败返回默认值。
-   *
-   * @param value        字符串值
-   * @param defaultValue 默认值
-   * @return 解析结果或默认值
-   */
-  private static long parseLongOrDefault(String value, long defaultValue) {
-    if (value == null || value.isEmpty()) {
-      return defaultValue;
-    }
-    try {
-      return Long.parseLong(value.trim());
-    } catch (NumberFormatException e) {
-      return defaultValue;
-    }
   }
 }

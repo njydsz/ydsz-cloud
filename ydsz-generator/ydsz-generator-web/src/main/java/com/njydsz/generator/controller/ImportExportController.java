@@ -6,7 +6,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.generator.service.TemplateImportExportService;
@@ -30,7 +30,7 @@ import com.njydsz.generator.vo.TemplateZipVO;
  */
 @Slf4j
 @ApiVersion("26.09.01")
-@Secured("ROLE_GENERATOR_USER")
+@AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController
 @RequestMapping("/generator/import-export")
 @RequiredArgsConstructor

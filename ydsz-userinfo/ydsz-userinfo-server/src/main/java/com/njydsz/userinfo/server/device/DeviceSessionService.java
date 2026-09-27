@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.SessionManager;
@@ -157,6 +158,6 @@ public class DeviceSessionService {
     if (userAgent.length() <= USER_AGENT_MAX_LENGTH) {
       return userAgent;
     }
-    return userAgent.substring(0, USER_AGENT_MAX_LENGTH) + "...";
+    return StringUtils.truncate(userAgent, USER_AGENT_MAX_LENGTH) + "...";
   }
 }

@@ -16,8 +16,8 @@ meta:
   version: "26.09.27"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-19"
-  last_updated: "2026-09-27（全维度分析规则扩充：新增 YDIZ-TEST-005 P0 / YDIZ-FE-001 P1 / YDIZ-FE-002 P1 / YDIZ-DB-005 P2 共 4 条规则，覆盖 Flyway DDL 版本化 / 前端生成器同步 / schema.d.ts 维护 / Agent Entity 基类约束）"
-  total_rules: 101
+  last_updated: "2026-09-27（P7 公共模块利用率深度修复：新增 YDIZ-COMMON-019 P1 脱敏规则 / YDIZ-COMMON-020 P1 日期规则 / YDIZ-COMMON-021 P1 缓存规则；修复 DndService ConcurrentMap / ReceiverMaskRegistrar maskSensitive / 7处 DateUtils / common-diff 自身脱敏）"
+  total_rules: 104
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -2549,6 +2549,111 @@ rules:
       2. 通过依赖注入获取 SnowflakeIdGenerator bean
       3. 调用 snowflakeIdGenerator.nextId() 或 IdGenerator.nextIdStr()
     source: "编码规范附录新增（YDIZ-COMMON-017，P2，26.09.25 公共模块利用率修复）"
+
+  # ==================== 公共模块复用（common，3 条，YDIZ-COMMON-019~021） ====================
+  # P7: 新增 3 条 YDIZ-COMMON 规则，收敛脱敏/缓存/日期格式化中的自实现重复代码
+  - id: "YDIZ-COMMON-019"
+    category: "common-reuse"
+    severity: "P1"
+    title: "脱敏操作必须使用 MaskUtils，禁止 substring + 硬编码星号"
+    description: |
+      所有敏感数据（手机号、身份证号、银行卡号、邮箱、姓名、apiKey、token 等）的脱敏操作必须使用
+      ydsz-common-util 提供的 {@code MaskUtils.mask(value, prefix, suffix)}、{@code MaskUtils.maskPhone}、
+      {@code MaskUtils.maskEmail}、{@code MaskUtils.maskIdCard}、{@code MaskUtils.maskBankCard} 等方法。
+
+      **禁止写法**：
+      - {@code value.substring(0, 2) + "***" + value.substring(value.length() - 2)}
+      - {@code value.substring(0, 2) + "****" + value.substring(value.length() - 2)}
+      - {@code value.length() <= 4 ? "****" : ...} 类似的 if-else 手写脱敏
+
+      **适用场景**：日志打印脱敏、前端展示脱敏、审计报告导出脱敏、告警消息脱敏等
+    pattern: "substring.*\+.*\".*\\*.*\".*\\+.*substring|maskSensitive.*substring"
+    fix: |
+      1. 引入 MaskUtils：import com.njydsz.common.util.mask.MaskUtils
+      2. 确定保留位数（前缀保留几位、后缀保留几位）
+      3. 调用 MaskUtils.mask(value, prefixLen, suffixLen)；特定类型用专用方法 maskPhone/maskEmail/maskIdCard/maskBankCard
+    example_bad: |
+      ❌ 手写 substring 脱敏
+      return value.substring(0, 2) + "***" + value.substring(value.length() - 2);
+    example_good: |
+      ✅ 使用 MaskUtils
+      return MaskUtils.mask(value, 2, 2);
+      // 手机号专用：MaskUtils.maskPhone("13812345678") → "138****5678"
+      // 邮箱专用：MaskUtils.maskEmail("abc@qq.com") → "a****@qq.com"
+    tags: [excel, util, 公共模块利用率]
+    source: "编码规范附录新增（YDIZ-COMMON-019，P1，26.09.27 公共模块利用率深度修复）"
+
+  - id: "YDIZ-COMMON-020"
+    category: "common-reuse"
+    severity: "P1"
+    title: "日期格式化/解析必须使用 DateUtils，禁止业务代码 new DateTimeFormatter"
+    description: |
+      所有业务模块的日期时间格式化与解析必须使用 ydsz-common-util 提供的 {@code DateUtils} 方法，
+      包括：{@code DateUtils.now()}、{@code DateUtils.today()}、{@code DateUtils.formatNow(pattern)}、
+      {@code DateUtils.formatLocalDate(date, pattern)}、{@code DateUtils.parseLocalDateTime(text, pattern)}、
+      {@code DateUtils.parseLocalDate(text, pattern)}、{@code DateUtils.formatLocalDateTime(date, pattern)}、
+      {@code DateUtils.getStartOfDay(date)}、{@code DateUtils.getEndOfDay(date)}、{@code DateUtils.isToday(date)} 等。
+
+      **禁止写法**：
+      - {@code DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")}（业务代码中）
+      - {@code new SimpleDateFormat(...)}（线程不安全，绝对禁止）
+      - {@code java.time.format.DateTimeFormatter.ofPattern(...)} 的 FQN 写法
+
+      **例外场景**：ydsz-common 框架内部（如 ydsz-common-jdbc 的 SqlAuditJsonLogger、ydsz-common-audit 的 TableNameResolver）
+      允许自行管理 DateTimeFormatter 以优化热点路径性能。
+    pattern: "DateTimeFormatter\\.ofPattern|new SimpleDateFormat"
+    fix: |
+      1. 引入 DateUtils：import com.njydsz.common.util.date.DateUtils
+      2. 将 DateTimeFormatter.ofPattern(...) 替换为相应的 DateUtils 方法
+      3. 文件名后缀场景用 DateUtils.formatNow(pattern)；展示用 DateUtils.now()；Date key 用 DateUtils.today()
+    example_bad: |
+      ❌ 业务代码手写 DateTimeFormatter
+      private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      return LocalDate.now().format(FMT);
+    example_good: |
+      ✅ 使用 DateUtils
+      return DateUtils.today(); // yyyy-MM-dd
+      return DateUtils.now(); // yyyy-MM-dd HH:mm:ss
+      return DateUtils.formatNow("yyyyMMddHHmmss"); // 自定义
+    tags: [util, 公共模块利用率, date]
+    source: "编码规范附录新增（YDIZ-COMMON-020，P1，26.09.27 公共模块利用率深度修复）"
+
+  - id: "YDIZ-COMMON-021"
+    category: "common-reuse"
+    severity: "P1"
+    title: "本地缓存必须使用 YdszCache，禁止直接使用 Caffeine 或手写 ConcurrentHashMap TTL"
+    description: |
+      所有业务模块的本地缓存（L1）必须通过 ydsz-common-cache 提供的 {@code YdszCache.newBuilder()} 构建，
+      包括过期策略（expireAfterWrite / expireAfterAccess）、最大容量（maximumSize）、统计（recordStats）
+      等常用能力统一由 YdszCache 管理。
+
+      **禁止写法**：
+      - {@code new ConcurrentHashMap<K, V>()} + 手写时间戳比对管理 TTL
+      - {@code com.github.benmanes.caffeine.cache.Caffeine} 直接引用
+      - 手写 {@code LoadingCache} 实现逐出/过期/统计
+
+      **推荐模式**：
+      - 简单 L1：{@code YdszCache.<K, V>newBuilder().maximumSize(n).expireAfterWrite(ttl, unit).build()}
+      - L1+L2：封装为 {@code MultiLevelCacheTemplate<K, V>}（Redis 部分通过 L2Storage SPI 注入）
+    pattern: "ConcurrentMap.*Cached|ConcurrentHashMap.*TTL|com\\.github\\.benmanes\\.caffeine|Caffeine\\.newBuilder"
+    fix: |
+      1. 引入 YdszCache 和 Cache：import com.njydsz.common.cache.YdszCache 和 com.njydsz.common.cache.api.Cache
+      2. 使用 YdszCache.<K, V>newBuilder() 配置 maximumSize / expireAfterWrite / expireAfterAccess / recordStats
+      3. 复用框架能力替代手写 ConcurrentHashMap + cachedAt 时间戳比对方案
+    example_bad: |
+      ❌ 手写 ConcurrentMap TTL（有 OOM 风险）
+      private final ConcurrentMap<String, CachedConfig> cache = new ConcurrentHashMap<>();
+      if (cached != null && (System.currentTimeMillis() - cached.cachedAt) < TTL) { ... }
+    example_good: |
+      ✅ 使用 YdszCache
+      private final Cache<String, Config> cache =
+          YdszCache.<String, Config>newBuilder()
+              .maximumSize(10_000)
+              .expireAfterWrite(5, TimeUnit.MINUTES)
+              .recordStats()
+              .build();
+    tags: [cache, 公共模块利用率]
+    source: "编码规范附录新增（YDIZ-COMMON-021，P1，26.09.27 公共模块利用率深度修复）"
 
   # ============================================
   # 异常处理规范（1 条新增，P0）

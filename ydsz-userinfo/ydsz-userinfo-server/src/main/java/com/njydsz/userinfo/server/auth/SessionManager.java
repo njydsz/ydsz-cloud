@@ -452,7 +452,8 @@ public class SessionManager {
       return;
     }
     redisHashOps.hSet(accessToken, SESSION_REMEMBER_ME_FIELD, "true");
-    log.debug("Session marked as rememberMe: {}", accessToken.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "...");
+    log.debug("Session marked as rememberMe: {}",
+        MaskUtils.mask(accessToken, TOKEN_LOG_PREFIX_LENGTH, 0));
   }
 
   /**
@@ -486,7 +487,7 @@ public class SessionManager {
       }
     }
     log.debug("Session TTL extended: {} seconds for token={}", ttlSeconds,
-        accessToken.substring(0, TOKEN_LOG_PREFIX_LENGTH) + "...");
+        MaskUtils.mask(accessToken, TOKEN_LOG_PREFIX_LENGTH, 0));
   }
 
   /**

@@ -12,6 +12,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.njydsz.common.auth.aspect.AuthPermissionAspect;
+import com.njydsz.common.auth.service.RbacPermissionEvaluator;
+
 /**
  * 代码生成器模块安全配置（P0-1 鉴权缺口整改）。
  *
@@ -19,8 +22,10 @@ import org.springframework.security.web.SecurityFilterChain;
  * 对 {@code /generator/**} 路由要求 Spring Security 已认证，配合 {@link RequestContextAuthenticationFilter}
  * 将 {@code WebAuthFilter} 写入 {@code RequestContext} 的认证态桥接到 {@code SecurityContextHolder}。
  *
- * <p><b>注解方法级鉴权：</b>同时启用 {@code @EnableMethodSecurity}，使 Controller 层的
- * {@code @Secured("ROLE_GENERATOR_*")} 注解生效。
+ * <p><b>注解方法级鉴权（AUTH-P0-001 整改 26.09.27）：</b>
+ * Platform 统一使用 {@code @AuthApiPermission} 替代 Spring Security 原生 {@code @Secured}。
+ * 通过注册 {@link AuthPermissionAspect} Bean 使其拦截器生效（复用 common-auth 的 RBAC 评估器），
+ * 同时保持此模块独立的 {@code SecurityFilterChain} 不变。
  *
  * @author ydsz-team
  * @since 26.09.16
@@ -28,8 +33,24 @@ import org.springframework.security.web.SecurityFilterChain;
 @Slf4j
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
-@EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 public class GeneratorSecurityConfig {
+
+  /**
+   * 注册统一权限校验切面（AUTH-P0-001 整改）。
+   *
+   * <p>复用 ydsz-common-auth 的 {@link RbacPermissionEvaluator} 作为权限评估器，
+   * 使 {@code @AuthApiPermission} 注解在 Controller 层生效。
+   * 此方式无需 {@code @EnableYdszAuth}，保持模块独立的 SecurityFilterChain。
+   *
+   * @param evaluator RBAC 权限评估器（来自 ydsz-common-auth）
+   * @return 权限校验切面
+   */
+  @Bean
+  public AuthPermissionAspect authPermissionAspect(RbacPermissionEvaluator evaluator) {
+    log.info("[GeneratorSecurityConfig] 注册 AuthPermissionAspect（@AuthApiPermission 方法级鉴权已启用）");
+    return new AuthPermissionAspect(evaluator);
+  }
 
   /**
    * 构建代码生成器模块安全过滤器链。
