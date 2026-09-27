@@ -419,6 +419,32 @@ public final class DateUtils {
     return localDateTime.atZone(zoneId);
   }
 
+  // ==================== 特殊格式（渠道对接） ====================
+
+  /**
+   * UTC ISO 8601 格式：yyyy-MM-dd'T'HH:mm:ss'Z'。
+   *
+   * <p>常用于与外部系统对接（如阿里云 SMS、微信支付），要求 UTC 时间戳格式。
+   *
+   * <p>注意：返回的字符串中的 'Z' 是字面量后缀（非真实时区转换），
+   * 调用方需确保传入的 {@link LocalDateTime} 已经是 UTC 时间。
+   *
+   * <p>如需真实 UTC 转换，请先用 {@link #atZone(LocalDateTime, ZoneId)} 转为 {@link ZonedDateTime}。
+   *
+   * @param dateTime 日期时间，不能为 null
+   * @return UTC ISO 8601 格式字符串
+   * @throws NullPointerException 如果 dateTime 为 null
+   * @since 26.09.27
+   */
+  public static String formatUtcDateTime(LocalDateTime dateTime) {
+    Objects.requireNonNull(dateTime, "dateTime must not be null");
+    return dateTime.format(UTC_DATE_TIME_FORMATTER);
+  }
+
+  /** UTC ISO 8601 格式化器（yyyy-MM-dd'T'HH:mm:ss'Z'），线程安全可共享 */
+  private static final DateTimeFormatter UTC_DATE_TIME_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
   // ==================== 季度边界 ====================
 
   /**

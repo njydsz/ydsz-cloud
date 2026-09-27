@@ -1,8 +1,6 @@
 package com.njydsz.message.server.channel.sms;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +18,7 @@ import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
@@ -61,9 +60,6 @@ public class AliyunSmsProvider implements SmsProvider {
   /** Map 初始容量 */
   private static final int MAP_CAPACITY_16 = 16;
 
-
-  private static final DateTimeFormatter ISO_FMT =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
   private final MessageProperties.AliyunSmsConfig config;
   private final RestTemplate restTemplate;
@@ -171,7 +167,7 @@ public class AliyunSmsProvider implements SmsProvider {
     p.put("SignatureMethod", "HMAC-SHA1");
     p.put("SignatureNonce", UUID.randomUUID().toString());
     p.put("SignatureVersion", "1.0");
-    p.put("Timestamp", LocalDateTime.now(ZoneOffset.UTC).format(ISO_FMT));
+    p.put("Timestamp", DateUtils.formatUtcDateTime(LocalDateTime.now()));
     p.put("Version", "2017-05-25");
     return p;
   }
@@ -300,7 +296,7 @@ public class AliyunSmsProvider implements SmsProvider {
       params.put("Action", "QuerySendDetails");
       params.put("PhoneNumber", phone);
       params.put("BizId", bizId);
-      params.put("SendDate", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+      params.put("SendDate", DateUtils.formatNow("yyyyMMdd"));
       params.put("PageSize", "1");
       params.put("CurrentPage", "1");
       String signature = AliyunSmsSigner.sign(params, config.getAccessKeySecret());

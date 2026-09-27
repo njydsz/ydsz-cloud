@@ -1,7 +1,7 @@
 package com.njydsz.system.server.util;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.njydsz.common.util.date.DateUtils;
 
 
 /**
@@ -18,9 +18,6 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class SystemVersionUtils {
 
-  /** 版本号时间格式（精确到毫秒） */
-  private static final DateTimeFormatter FORMATTER =
-      DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS");
 
   /** 同毫秒去重序号（进程内原子递增，取模保证固定宽度） */
   private static final AtomicLong SEQUENCE = new AtomicLong(0);
@@ -39,6 +36,6 @@ public final class SystemVersionUtils {
    */
   public static String nextVersion() {
     long seq = SEQUENCE.incrementAndGet() % SEQUENCE_MODULO;
-    return String.format("v%s-%06d", LocalDateTime.now().format(FORMATTER), seq);
+    return String.format("v%s-%06d", DateUtils.formatNow("yyyyMMdd-HHmmss-SSS"), seq);
   }
 }

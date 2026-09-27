@@ -4,12 +4,13 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
@@ -49,8 +50,13 @@ public class RuleCanaryRouter {
 
   private final ExpressionEngine evaluator;
 
-  /** 灰度桶计数器：ruleCode -> {PRIMARY: count, CANARY: count} */
-  private final ConcurrentMap<String, AtomicLongArray> bucketCounts = new ConcurrentHashMap<>();
+  /** 灰度桶计数器：ruleCode -> {PRIMARY: count, CANARY: count}（基于 ydsz-common-cache YDIZ-COMMON-021） */
+  private final Cache<String, AtomicLongArray> bucketCounts =
+      YdszCache.<String, AtomicLongArray>newBuilder()
+          .maximumSize(10_000)
+          .expireAfterWrite(24, TimeUnit.HOURS)
+          .recordStats()
+          .build();
 
   public RuleCanaryRouter(ExpressionEngine evaluator) {
     this.evaluator = evaluator;
@@ -203,7 +209,7 @@ public class RuleCanaryRouter {
    * @return ruleCode -> [primaryCount, canaryCount]
    */
   public Map<String, long[]> getCanaryBucketStats() {
-    Map<String, long[]> snapshot = new HashMap<>(bucketCounts.size());
+    Map<String, long[]> snapshot = new HashMap<>((int) bucketCounts.estimatedSize());
     bucketCounts.forEach(
         (code, counts) -> snapshot.put(code, new long[] {counts.get(0), counts.get(1)}));
     return snapshot;

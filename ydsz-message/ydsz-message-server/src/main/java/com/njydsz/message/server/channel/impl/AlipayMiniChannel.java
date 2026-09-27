@@ -3,7 +3,6 @@ package com.njydsz.message.server.channel.impl;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +20,7 @@ import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
@@ -108,7 +108,7 @@ public class AlipayMiniChannel implements MessageChannel {
       params.put("sign_type", "RSA2");
       params.put(
           "timestamp",
-          LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+          DateUtils.now());
       params.put("version", "1.0");
       params.put("biz_content", YdszJson.toJson(bizContent));
 

@@ -1,7 +1,6 @@
 package com.njydsz.literule.server.dsl;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 
 /**
@@ -40,11 +40,8 @@ public final class RuleDslExporter {
 
   private RuleDslExporter() {}
 
-  private static final DateTimeFormatter DATE_TIME_FORMAT =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
   private static String formatDateTime(LocalDateTime dateTime) {
-    return dateTime != null ? dateTime.format(DATE_TIME_FORMAT) : null;
+    return dateTime != null ? DateUtils.formatLocalDateTime(dateTime, DateUtils.DEFAULT_DATE_TIME_PATTERN) : null;
   }
 
   /**

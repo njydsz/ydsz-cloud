@@ -30,6 +30,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.message.domain.dto.BatchSendResultDTO;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
@@ -188,51 +189,49 @@ public class MessageController {
   /**
    * 导出消息投递日志（Excel）
    *
-   * <p>根据当前过滤条件（channelCode/bizId/status/时间范围等）导出投递日志，自动处理多页分页与流式写入（每次 200 条）。
+   * <p>根据当前过滤条件（channelCode/bizId/status/时间范围等）导出投递日志，自动处理多页分页查询并聚合全部数据后一次性写入。
+   * SuperFastExcelWriter 每次 {@code doWrite} 输出完整 xlsx，禁止多次调用，因此先聚合再写入。
    * 文件名为 {@code msg_logs_yyyyMMddHHmmss.xlsx}。接收人字段使用 {@link MaskUtils#mask(String, int, int)} 脱敏。
    *
    * @param query 日志查询参数（同 {@link #pageLog}）
    */
   @Operation(summary = "导出投递日志（Excel）",
-      description = "根据筛选条件导出投递日志为 Excel 文件，支持多页分页流式写入。")
+      description = "根据筛选条件导出投递日志为 Excel 文件，支持多页分页查询后聚合写入。")
   @ApiResponse(responseCode = "200", description = "导出成功（返回 xlsx 文件流）")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/log/export")
   public void exportLogs(MessageLogQueryDTO query,
       jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-    String fileName =
-        "msg_logs_" + java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-            .format(java.time.LocalDateTime.now()) + ".xlsx";
+    String fileName = "msg_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader("Content-Disposition", "attachment; filename="
         + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
             .replace("+", "%20"));
 
-    // 设置大页大小用于流式导出
+    // 设置大页大小减少分页查询次数
     query.setPageSize(200);
     query.setIsUseSearchAfter(false);
 
     final int pageSize = 200;
+    List<MsgLogExportVO> rows = new java.util.ArrayList<>();
+    int pageNum = 1;
+    while (true) {
+      query.setPageNum(pageNum);
+      PageResponse<List<MsgLogVO>> page = messageService.pageLog(query);
+      if (page == null || page.getData() == null || page.getData().isEmpty()) {
+        break;
+      }
+      for (MsgLogVO vo : page.getData()) {
+        rows.add(toMsgLogExportVO(vo));
+      }
+      if (page.getData().size() < pageSize || pageNum * pageSize >= page.getTotal()) {
+        break;
+      }
+      pageNum++;
+    }
     try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
         ExcelWriter writer = ExcelFacade.write(out, MsgLogExportVO.class);) {
-      int pageNum = 1;
-      while (true) {
-        query.setPageNum(pageNum);
-        PageResponse<List<MsgLogVO>> page = messageService.pageLog(query);
-        if (page == null || page.getData() == null || page.getData().isEmpty()) {
-          break;
-        }
-        List<MsgLogExportVO> rows = new java.util.ArrayList<>(page.getData().size());
-        for (MsgLogVO vo : page.getData()) {
-          rows.add(toMsgLogExportVO(vo));
-        }
-        writer.doWrite(rows);
-        if (page.getData().size() < pageSize || pageNum * pageSize >= page.getTotal()) {
-          break;
-        }
-        pageNum++;
-      }
-      writer.finish();
+      writer.doWrite(rows);
       response.getOutputStream().write(out.toByteArray());
     }
   }

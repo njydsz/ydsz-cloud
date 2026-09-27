@@ -1,7 +1,5 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -107,7 +105,6 @@ public class FlowExportServiceImpl implements FlowExportService {
   private final FlowInstanceRepository instanceRepository;
   private final FlowHisTaskRepository hisTaskRepository;
 
-  private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_TIME_PATTERN);
 
   /** {@inheritDoc} */
   @Override
@@ -198,7 +195,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append("<div class=\"meta\">流程编码：").append(instance.getFlowCode());
     html.append(" ｜ 实例ID：").append(instance.getId());
     html.append(" ｜ 发起时间：")
-        .append(instance.getCreatedAt() != null ? instance.getCreatedAt().format(FMT) : "-");
+        .append(instance.getCreatedAt() != null ? DateUtils.formatLocalDateTime(instance.getCreatedAt(), DateUtils.DEFAULT_DATE_TIME_PATTERN) : "-");
     html.append("</div></div>");
   }
 
@@ -256,7 +253,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     html.append("<div class=\"timeline-meta\">");
     html.append("办理人：").append(task.getAssigneeName() != null ? escapeHtml(task.getAssigneeName()) : "-");
     if (task.getFinishAt() != null) {
-      html.append(" ｜ 时间：").append(task.getFinishAt().format(FMT));
+      html.append(" ｜ 时间：").append(DateUtils.formatLocalDateTime(task.getFinishAt(), DateUtils.DEFAULT_DATE_TIME_PATTERN));
       if (task.getDurationMs() != null && task.getDurationMs() > 0) {
         html.append(" ｜ 耗时：").append(formatDuration(task.getDurationMs()));
       }
@@ -280,7 +277,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("html", printHtml);
     result.put("instanceId", instanceId);
-    result.put("exportAt", LocalDateTime.now().format(FMT));
+    result.put("exportAt", DateUtils.now());
     return result;
   }
 

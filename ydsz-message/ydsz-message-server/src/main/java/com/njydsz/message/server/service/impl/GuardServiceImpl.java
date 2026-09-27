@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.constant.SystemConstants;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -49,12 +49,6 @@ public class GuardServiceImpl implements GuardService {
   @Value("${ydsz.message.guard.lock-extend-minutes:5}")
   private int lockExtendMinutes;
 
-
-  /** 小时频率计数器 key 时间格式 */
-  private static final DateTimeFormatter HOUR_FMT = DateTimeFormatter.ofPattern("yyyyMMddHH");
-
-  /** 日频率计数器 key 时间格式 */
-  private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
   /** Redis 令牌桶限流器的可选提供者（不可用时降级放行） */
   private final ObjectProvider<RedisRateLimiter> rateLimiterProvider;
@@ -159,7 +153,7 @@ public class GuardServiceImpl implements GuardService {
               userId,
               channel,
               bizType,
-              now.format(HOUR_FMT));
+              DateUtils.formatNow("yyyyMMddHH"));
       if (cur != null && cur >= pref.getHourlyLimit()) {
         log.info(
             "[Guard] 频率超限(小时): user={} channel={} cur={} limit={}",
@@ -177,7 +171,7 @@ public class GuardServiceImpl implements GuardService {
               userId,
               channel,
               bizType,
-              now.format(DAY_FMT));
+              DateUtils.formatNow("yyyyMMdd"));
       if (cur != null && cur >= pref.getDailyLimit()) {
         log.info(
             "[Guard] 频率超限(日): user={} channel={} cur={} limit={}",
@@ -211,14 +205,14 @@ public class GuardServiceImpl implements GuardService {
         userId,
         channel,
         bizType,
-        now.format(HOUR_FMT),
+        DateUtils.formatNow("yyyyMMddHH"),
         Duration.ofHours(1).plusMinutes(lockExtendMinutes).getSeconds());
     incrCounter(
         MessageConstants.FREQUENCY_DAILY_PREFIX,
         userId,
         channel,
         bizType,
-        now.format(DAY_FMT),
+        DateUtils.formatNow("yyyyMMdd"),
         Duration.ofDays(1).plusHours(1).getSeconds());
   }
 

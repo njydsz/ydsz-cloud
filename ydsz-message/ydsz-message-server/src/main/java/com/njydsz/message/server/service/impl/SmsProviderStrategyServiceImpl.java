@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.message.server.channel.sms.SmsProvider;
 import com.njydsz.message.server.config.MessageProperties;
@@ -102,7 +102,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
   @Override
   public void recordSend(String providerType, boolean success) {
     try {
-      String daySuffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+      String daySuffix = DateUtils.formatNow("yyyyMMdd");
       String totalKey = "ydsz:sms:stats:" + providerType + ":" + daySuffix + ":total";
       redisStringOps.incr(totalKey, 1);
       if (!success) {
@@ -128,7 +128,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
   public Map<String, long[]> getProviderStats() {
     Map<String, long[]> stats = new HashMap<>(COLLECTION_CAPACITY);
     try {
-      String daySuffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+      String daySuffix = DateUtils.formatNow("yyyyMMdd");
       for (String provider : new String[] {"aliyun", "tencent", "mock"}) {
         String totalKey = "ydsz:sms:stats:" + provider + ":" + daySuffix + ":total";
         String failKey = "ydsz:sms:stats:" + provider + ":" + daySuffix + ":failed";

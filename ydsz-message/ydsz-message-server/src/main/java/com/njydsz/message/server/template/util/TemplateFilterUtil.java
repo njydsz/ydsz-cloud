@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -15,6 +14,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -89,26 +89,27 @@ public class TemplateFilterUtil {
     }
     String fmt = pattern.isEmpty() ? "yyyy-MM-dd HH:mm:ss" : pattern;
     try {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern(fmt);
       if (value instanceof LocalDateTime ldt) {
-        return ldt.format(formatter);
+        return DateUtils.formatLocalDateTime(ldt, fmt);
       }
       if (value instanceof LocalDate ld) {
-        return ld.format(formatter);
+        return DateUtils.formatLocalDate(ld, fmt);
       }
       // 兼容调用方传入的 java.util.Date 类型，YDIZ-DATE-002 豁免
       if (value instanceof Date date) {
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter);
+        return DateUtils.formatLocalDateTime(
+            date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(), fmt);
       }
       if (value instanceof String str) {
         // 尝试解析 ISO 格式
-        return LocalDateTime.parse(str).format(formatter);
+        return DateUtils.formatLocalDateTime(LocalDateTime.parse(str), fmt);
       }
       if (value instanceof Long ts) {
-        return Instant.ofEpochMilli(ts)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime()
-            .format(formatter);
+        return DateUtils.formatLocalDateTime(
+            Instant.ofEpochMilli(ts)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime(),
+            fmt);
       }
     } catch (Exception e) {
       log.debug("[TemplateFilter] 日期格式化降级为原始值, value={}, err={}", value, e.getMessage());

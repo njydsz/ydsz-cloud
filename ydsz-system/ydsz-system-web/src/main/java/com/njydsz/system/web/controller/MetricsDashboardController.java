@@ -1,7 +1,5 @@
 package com.njydsz.system.web.controller;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -19,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.system.server.metrics.RedisMetricsService;
 
 /**
@@ -59,9 +58,6 @@ public class MetricsDashboardController {
   /** Redis 指标采集服务（CACHE-P1-001 整改：Controller 层不再直接持有 RedisTemplate） */
   private final RedisMetricsService redisMetricsService;
 
-  /** 日期时间格式化器 */
-  private static final DateTimeFormatter DATE_TIME_FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   /** 默认 Map 初始容量（单层 Map 字段数） */
   private static final int DEFAULT_MAP_CAPACITY = 8;
@@ -117,7 +113,7 @@ public class MetricsDashboardController {
     result.put("summary", summary);
 
     // 5. 采集时间戳
-    result.put("collectedAt", LocalDateTime.now().format(DATE_TIME_FORMATTER));
+    result.put("collectedAt", DateUtils.now());
 
     return YdszResponse.success(result);
   }

@@ -3,7 +3,6 @@ package com.njydsz.workflow.server.service.impl;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -138,12 +137,6 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
   /** 流程实例仓储（domain 层契约），提供基础 CRUD 与查询方法 */
   private final FlowInstanceRepository instanceRepository;
 
-  /** 日期时间格式 */
-  private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_TIME_PATTERN);
-
-  private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_PATTERN);
-  private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
-
   /** 查询上限（防止全表加载 OOM） */
   private static final int MAX_QUERY_LIMIT = 10000;
 
@@ -269,8 +262,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
           FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY,
           List.of("PASS", "REJECT"),
           tenantId,
-          StringUtils.hasText(startTime) ? LocalDateTime.parse(startTime, DT_FMT) : null,
-          StringUtils.hasText(endTime) ? LocalDateTime.parse(endTime, DT_FMT) : null);
+          StringUtils.hasText(startTime) ? LocalDateTime.parse(startTime, DateUtils.DEFAULT_DATE_TIME_PATTERN) : null,
+          StringUtils.hasText(endTime) ? LocalDateTime.parse(endTime, DateUtils.DEFAULT_DATE_TIME_PATTERN) : null);
     } catch (Exception e) {
       log.warn("[FlowEfficiency] 代批操作统计异常: {}", e.getMessage());
       return 0;
@@ -459,14 +452,14 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
    */
   private String formatTimeLabel(LocalDateTime dt, String gran) {
     return switch (gran) {
-      case "MONTH" -> dt.format(MONTH_FMT);
+      case "MONTH" -> DateUtils.formatLocalDate(dt.toLocalDate(), "yyyy-MM");
       case "WEEK" -> {
         WeekFields weekFields = WeekFields.ISO;
         int weekNum = dt.get(weekFields.weekOfWeekBasedYear());
         int year = dt.get(weekFields.weekBasedYear());
         yield year + "-W" + String.format("%02d", weekNum);
       }
-      default -> dt.format(DAY_FMT);
+      default -> DateUtils.formatLocalDate(dt.toLocalDate(), DateUtils.DEFAULT_DATE_PATTERN);
     };
   }
 
@@ -481,11 +474,11 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
       return null;
     }
     try {
-      return LocalDateTime.parse(str, DT_FMT);
+      return LocalDateTime.parse(str, DateUtils.DEFAULT_DATE_TIME_PATTERN);
     } catch (Exception e) {
       // 尝试只解析日期部分
       try {
-        return LocalDate.parse(str, DAY_FMT).atStartOfDay();
+        return LocalDate.parse(str, DateUtils.DEFAULT_DATE_PATTERN).atStartOfDay();
       } catch (Exception ex) {
         log.warn("[FlowEfficiency] 无法解析时间: {}", str);
         return null;

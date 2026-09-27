@@ -1,9 +1,12 @@
 package com.njydsz.literule.server.core;
 
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -48,8 +51,13 @@ public class RuleCircuitBreaker {
   /** 共享的 Resilience4j 注册表（所有规则共用配置模板） */
   private final CircuitBreakerRegistry sharedRegistry;
 
-  /** 每个规则一个独立熔断器（Resilience4j 实例） */
-  private final ConcurrentMap<String, CircuitBreaker> breakers = new ConcurrentHashMap<>();
+  /** 每个规则一个独立熔断器（Resilience4j 实例，基于 ydsz-common-cache YDIZ-COMMON-021） */
+  private final Cache<String, CircuitBreaker> breakers =
+      YdszCache.<String, CircuitBreaker>newBuilder()
+          .maximumSize(5_000)
+          .expireAfterAccess(1, TimeUnit.HOURS)
+          .recordStats()
+          .build();
 
   /**
    * 构造熔断器
@@ -97,7 +105,7 @@ public class RuleCircuitBreaker {
    * @return true=允许评估；false=已被熔断
    */
   public boolean allowEvaluate(String ruleCode) {
-    CircuitBreaker breaker = breakers.get(ruleCode);
+    CircuitBreaker breaker = breakers.getIfPresent(ruleCode);
     if (breaker == null) {
       return true;
     }
@@ -141,7 +149,7 @@ public class RuleCircuitBreaker {
    * @return 状态；规则未被评估过返回 CLOSED
    */
   public State getState(String ruleCode) {
-    CircuitBreaker breaker = breakers.get(ruleCode);
+    CircuitBreaker breaker = breakers.getIfPresent(ruleCode);
     return breaker == null ? State.CLOSED : toLocalState(breaker.getState());
   }
 
@@ -181,7 +189,9 @@ public class RuleCircuitBreaker {
 
   /** 重置全部熔断器 */
   public void resetAll() {
-    breakers.keySet().forEach(this::reset);
-    breakers.clear();
+    // 复制 keySet 避免遍历时修改缓存触发 ConcurrentModificationException
+    List<String> keys = new ArrayList<>(breakers.keySet());
+    keys.forEach(this::reset);
+    breakers.invalidateAll();
   }
 }

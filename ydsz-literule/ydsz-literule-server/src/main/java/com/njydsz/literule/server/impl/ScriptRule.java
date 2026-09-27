@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +24,8 @@ import javax.script.ScriptEngineManager;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.Rule;
 import com.njydsz.literule.domain.dto.ScriptDefinitionDTO;
@@ -118,8 +119,9 @@ public class ScriptRule implements Rule {
       ExecutorUtils.newVirtualThreadExecutor("literule-script-exec");
   // CHECKSTYLE.ON: RegexpSinglelineJava
 
-  /** ScriptEngine 缓存（按语言名，全局共享，线程安全） */
-  private static final Map<String, ScriptEngine> ENGINE_CACHE = new ConcurrentHashMap<>();
+  /** ScriptEngine 缓存（按语言名，全局共享，基于 ydsz-common-cache） */
+  private static final Cache<String, ScriptEngine> ENGINE_CACHE =
+      YdszCache.<String, ScriptEngine>newBuilder().maximumSize(16).build();
 
   private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 

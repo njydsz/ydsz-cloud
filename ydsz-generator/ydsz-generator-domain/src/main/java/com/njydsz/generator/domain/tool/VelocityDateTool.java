@@ -2,7 +2,6 @@ package com.njydsz.generator.domain.tool;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import com.njydsz.common.util.date.DateUtils;
 
@@ -58,7 +57,7 @@ public class VelocityDateTool {
       return "";
     }
     String p = pattern != null ? pattern : DateUtils.DEFAULT_DATE_TIME_PATTERN;
-    return dateTime.format(DateTimeFormatter.ofPattern(p));
+    return DateUtils.formatLocalDateTime(dateTime, p);
   }
 
   /**
@@ -94,7 +93,7 @@ public class VelocityDateTool {
    * @return 简写日期字符串
    */
   public String compactDate() {
-    return LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    return DateUtils.formatNow("yyyyMMdd");
   }
 
   /**

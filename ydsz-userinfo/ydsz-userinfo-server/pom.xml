@@ -87,10 +87,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-auth</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-excel</artifactId>
-        </dependency>
         <!-- P0-1: 密码强度校验统一委托 common-safe 的 PasswordStrengthValidator -->
         <dependency>
             <groupId>com.njydsz</groupId>

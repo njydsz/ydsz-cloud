@@ -11,8 +11,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import javax.imageio.ImageIO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +18,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.docs.watermark.PdfWatermarkApplier;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 文件水印服务
@@ -109,8 +108,6 @@ public class WatermarkService {
   /** 用户 ID 掩码占位符 */
   private static final String MASK_ID_PLACEHOLDER = "****";
 
-  /** 水印时间格式 */
-  private static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   /**
    * 判断文件格式是否支持水印叠加。
@@ -137,7 +134,7 @@ public class WatermarkService {
    * @return 水印文本
    */
   public String getWatermarkText(String userName, String userId) {
-    String timeStr = LocalDateTime.now().format(DATETIME_FORMAT);
+    String timeStr = DateUtils.now();
     if (userName != null && !userName.isEmpty()) {
       return userName + " " + timeStr;
     }

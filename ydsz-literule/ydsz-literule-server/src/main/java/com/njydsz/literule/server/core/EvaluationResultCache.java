@@ -92,7 +92,12 @@ public class EvaluationResultCache {
    *
    * <p>规则变更时按 ruleCode 精准 evict 相关缓存条目， 避免全量 {@link #clear()} 导致未变更规则的缓存全部失效。
    */
-  private final Map<String, Set<String>> ruleToCacheKeys = new ConcurrentHashMap<>();
+  private final Cache<String, Set<String>> ruleToCacheKeys =
+      YdszCache.<String, Set<String>>newBuilder()
+          .maximumSize(10_000)
+          .expireAfterAccess(1, TimeUnit.HOURS)
+          .recordStats()
+          .build();
 
   /** 使用默认配置创建缓存 */
   public EvaluationResultCache() {

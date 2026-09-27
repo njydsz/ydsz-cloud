@@ -141,10 +141,12 @@ public class HealthDashboardController {
     health.put("uptime", getUptime());
 
     // 2. 系统资源
-    health.put("system", getSystemHealth());
+    Map<String, Object> system = getSystemHealth();
+    health.put("system", system);
 
     // 3. 任务概览
-    health.put("tasks", getTaskHealth());
+    Map<String, Object> tasks = getTaskHealth();
+    health.put("tasks", tasks);
 
     // 4. DAG 工作流
     health.put("dag", getDagHealth());
@@ -156,9 +158,7 @@ public class HealthDashboardController {
     Map<String, Object> recentIssues = getRecentIssues();
     health.put("recentIssues", recentIssues);
 
-    // 7. 综合健康评分（从 health Map 获取已解析的 system/tasks Map）
-    Map<String, Object> system = (Map<String, Object>) health.get("system");
-    Map<String, Object> tasks = (Map<String, Object>) health.get("tasks");
+    // 7. 综合健康评分（直接复用局部变量，避免从 Map 取值后的 unchecked 强转）
     int overallScore = calculateOverallScore(system, tasks, recentIssues);
     health.put("overallScore", overallScore);
 

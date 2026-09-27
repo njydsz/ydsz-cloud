@@ -1,12 +1,12 @@
 package com.njydsz.message.server.service.retry;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.util.date.DateUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -35,8 +35,6 @@ public class RetryPreviewService {
   /** 每毫秒纳秒数 */
   private static final long NANOS_PER_MILLI = 1_000_000L;
 
-
-  private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
   /**
    * 生成指定预设的重试时间线预览。
@@ -88,7 +86,7 @@ public class RetryPreviewService {
       entry.put("backoffSeconds", String.format("%.1f", backoffMs / 1000.0));
       entry.put("cumulativeMs", cumulativeMs);
       entry.put("cumulativeSeconds", String.format("%.1f", cumulativeMs / 1000.0));
-      entry.put("triggerAt", triggerAt.format(TIME_FMT));
+      entry.put("triggerAt", DateUtils.formatNow("HH:mm:ss.SSS"));
       timeline.add(entry);
     }
 
@@ -96,7 +94,7 @@ public class RetryPreviewService {
     preview.put("totalRetries", preset.getMaxRetryCount());
     preview.put("totalDurationMs", cumulativeMs);
     preview.put("totalDurationSeconds", String.format("%.1f", cumulativeMs / 1000.0));
-    preview.put("generatedAt", baseTime.format(TIME_FMT));
+    preview.put("generatedAt", DateUtils.formatNow("HH:mm:ss.SSS"));
     return preview;
   }
 

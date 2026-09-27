@@ -75,13 +75,7 @@
             <artifactId>mapstruct</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- P1-5: common-excel（UserImportResultDTO 继承 ExcelImportResult 基类） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-excel</artifactId>
-            <scope>provided</scope>
-        </dependency>
-            <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
+        <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

@@ -499,7 +499,8 @@ public class JobController {
   /**
    * 导出任务列表（Excel）
    *
-   * <p>根据当前过滤（keyword/status/group）条件导出任务列表，自动处理多页分页与流式写入（每次 100 条）。数据量较大时也能保持低内存占用。
+   * <p>根据当前过滤（keyword/status/group）条件导出任务列表，自动处理多页分页查询并聚合全部数据后一次性写入。
+   * SuperFastExcelWriter 每次 {@code doWrite} 输出完整 xlsx，禁止多次调用，因此先聚合再写入。
    * 文件名为 {@code jobs_yyyyMMddHHmmss.xlsx}。
    *
    * <p>Excel 文件名、表头、列宽通过 {@link JobExportVO} 上的 {@code @ExcelProperty} 注解定义。
@@ -520,25 +521,24 @@ public class JobController {
             .replace("+", "%20"));
 
     final int pageSize = 200;
+    List<JobExportVO> rows = new ArrayList<>();
+    int pageNum = 1;
+    while (true) {
+      PageResponse<List<JobVO>> page = jobService.page(pageNum, pageSize, keyword, status, group);
+      if (page == null || page.getData() == null || page.getData().isEmpty()) {
+        break;
+      }
+      for (JobVO vo : page.getData()) {
+        rows.add(toJobExportVO(vo));
+      }
+      if (pageNum * pageSize >= page.getTotal()) {
+        break;
+      }
+      pageNum++;
+    }
     try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
         ExcelWriter writer = ExcelFacade.write(out, JobExportVO.class);) {
-      int pageNum = 1;
-      while (true) {
-        PageResponse<List<JobVO>> page = jobService.page(pageNum, pageSize, keyword, status, group);
-        if (page == null || page.getData() == null || page.getData().isEmpty()) {
-          break;
-        }
-        List<JobExportVO> rows = new ArrayList<>(page.getData().size());
-        for (JobVO vo : page.getData()) {
-          rows.add(toJobExportVO(vo));
-        }
-        writer.doWrite(rows);
-        if (pageNum * pageSize >= page.getTotal()) {
-          break;
-        }
-        pageNum++;
-      }
-      writer.finish();
+      writer.doWrite(rows);
       response.getOutputStream().write(out.toByteArray());
     }
   }
@@ -546,7 +546,8 @@ public class JobController {
   /**
    * 导出任务执行日志（Excel）
    *
-   * <p>根据当前过滤（jobKey/status）条件导出执行日志，自动处理多页分页与流式写入（每次 200 条）。
+   * <p>根据当前过滤（jobKey/status）条件导出执行日志，自动处理多页分页查询并聚合全部数据后一次性写入。
+   * SuperFastExcelWriter 每次 {@code doWrite} 输出完整 xlsx，禁止多次调用，因此先聚合再写入。
    * 文件名为 {@code job_logs_yyyyMMddHHmmss.xlsx}。
    *
    * @param jobKey 任务 JOB_KEY 过滤（同 {@link #pageLog}）
@@ -564,25 +565,24 @@ public class JobController {
             .replace("+", "%20"));
 
     final int pageSize = 200;
+    List<JobLogExportVO> rows = new ArrayList<>();
+    int pageNum = 1;
+    while (true) {
+      PageResponse<List<JobLogVO>> page = jobService.pageLog(pageNum, pageSize, jobKey, status);
+      if (page == null || page.getData() == null || page.getData().isEmpty()) {
+        break;
+      }
+      for (JobLogVO vo : page.getData()) {
+        rows.add(toJobLogExportVO(vo));
+      }
+      if (pageNum * pageSize >= page.getTotal()) {
+        break;
+      }
+      pageNum++;
+    }
     try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
         ExcelWriter writer = ExcelFacade.write(out, JobLogExportVO.class);) {
-      int pageNum = 1;
-      while (true) {
-        PageResponse<List<JobLogVO>> page = jobService.pageLog(pageNum, pageSize, jobKey, status);
-        if (page == null || page.getData() == null || page.getData().isEmpty()) {
-          break;
-        }
-        List<JobLogExportVO> rows = new ArrayList<>(page.getData().size());
-        for (JobLogVO vo : page.getData()) {
-          rows.add(toJobLogExportVO(vo));
-        }
-        writer.doWrite(rows);
-        if (pageNum * pageSize >= page.getTotal()) {
-          break;
-        }
-        pageNum++;
-      }
-      writer.finish();
+      writer.doWrite(rows);
       response.getOutputStream().write(out.toByteArray());
     }
   }

@@ -2,7 +2,6 @@ package com.njydsz.generator.engine;
 
 import java.io.StringWriter;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +41,6 @@ public class CodeGenEngine {
   /** Velocity 模板引擎。 */
   private final VelocityEngine velocityEngine;
 
-  /** 日期格式化器（线程安全，可复用）。 */
-  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_PATTERN);
 
   /** 渲染 Writer 初始缓冲区大小（字符）。 */
   private static final int WRITER_BUFFER_SIZE = 4096;
@@ -122,7 +119,7 @@ public class CodeGenEngine {
     ctx.put("module", moduleName);
     ctx.put("package", basePackage);
     ctx.put("author", author);
-    ctx.put("date", LocalDateTime.now().format(DATE_FORMATTER));
+    ctx.put("date", DateUtils.formatNow(DateUtils.DEFAULT_DATE_PATTERN));
     ctx.put("table", table);
     // 包路径段
     ctx.put("domainPackage", basePackage + ".domain");

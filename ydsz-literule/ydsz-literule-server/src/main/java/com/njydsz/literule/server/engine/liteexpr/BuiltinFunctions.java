@@ -5,13 +5,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -587,12 +587,11 @@ public final class BuiltinFunctions {
         args -> {
           Object date = args[0];
           String pattern = str(args[1]);
-          DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
           if (date instanceof LocalDateTime ldt) {
-            return ldt.format(formatter);
+            return DateUtils.formatLocalDateTime(ldt, pattern);
           }
           if (date instanceof LocalDate ld) {
-            return ld.format(formatter);
+            return DateUtils.formatLocalDateTime(ld.atStartOfDay(), pattern);
           }
           return str(date);
         },
@@ -604,7 +603,7 @@ public final class BuiltinFunctions {
         args -> {
           String text = str(args[0]);
           String pattern = str(args[1]);
-          return LocalDateTime.parse(text, DateTimeFormatter.ofPattern(pattern));
+          return DateUtils.parseLocalDateTime(text, pattern);
         },
         "dateParse(str, pattern)",
         "日期解析",

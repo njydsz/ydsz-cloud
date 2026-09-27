@@ -3,7 +3,6 @@ package com.njydsz.literule.server.core;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -13,6 +12,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.literule.domain.RuleEngine;
 import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
 import com.njydsz.literule.domain.enums.RuleStatus;
@@ -76,10 +76,6 @@ public class RuleLifecycleService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
-
-  /** 日期时间格式 */
-  private static final DateTimeFormatter DATE_TIME_FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   /** 默认休眠规则最小评估次数 */
   private static final long DEFAULT_DORMANT_MIN_EVALUATIONS = 1000;
@@ -522,7 +518,7 @@ public class RuleLifecycleService {
       return null;
     }
     try {
-      return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+      return DateUtils.parseLocalDateTime(value);
     } catch (Exception e) {
       log.debug("[Lifecycle] 日期解析失败: {}", value);
       return null;

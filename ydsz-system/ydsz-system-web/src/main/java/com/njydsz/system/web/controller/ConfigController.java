@@ -1,8 +1,6 @@
 package com.njydsz.system.web.controller;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +29,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -339,7 +338,7 @@ public class ConfigController {
    */
   private String buildExportFilename(String configGroup) {
     String group = configGroup != null ? configGroup : "all";
-    String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+    String timestamp = DateUtils.formatNow("yyyyMMdd_HHmmss");
     return "config_" + group + "_" + timestamp + ".xlsx";
   }
 
