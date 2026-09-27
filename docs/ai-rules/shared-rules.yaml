@@ -1881,6 +1881,29 @@ rules:
       3. scope 保持 test，禁止扩散到 compile/runtime
     source: "编码规范 §14.6 测试基础设施依赖管理（YDIZ-TEST-003，P1）"
 
+
+  - id: "YDIZ-TEST-004"
+    category: "testing"
+    severity: "P1"
+    title: "【推荐】相似多场景测试必须使用 @ParameterizedTest 参数化模式"
+    description: |
+      当同一业务逻辑需要验证多组输入（边界值、枚举值、null/空值），必须使用 `@ParameterizedTest` +
+      `@ValueSource` / `@EnumSource` / `@CsvSource`，禁止通过复制粘贴多个 `@Test` 方法实现。
+
+      **适用场景**：参数校验分支、枚举状态转换、边界值处理、开关组合覆盖。
+
+      **参数化测试规范**：
+      - `@ValueSource(strings = {"", " ", "valid"})`：字符串边界
+      - `@EnumSource(value = Status.class, names = {"ACTIVE", "PENDING"})`：枚举子集
+      - `@CsvSource({"param1, expected1", "param2, expected2"})`：多参数组合
+      - `@NullAndSource @ValueSource(strings = {"a"})`：null + 具体值组合
+      - 测试命名：`@DisplayName("场景: 输入{0} 应返回预期")` 中 `{0}` 引用参数
+      - `@ParameterizedTest(name = "[{index}] {arguments}")`：自定义参数显示名
+
+      **反例**：❌ 复制粘贴 5 个 `shouldReturnXxxWithInput{1..5}` 测试方法
+      **正例**：✅ 单方法 `@ParameterizedTest + @CsvSource` 传 5 组参数
+    fix: "将多个相似测试方法重构为单个 @ParameterizedTest + @MethodSource/@CsvSource"
+    source: "编码规范 §14.8 参数化测试规范（YDIZ-TEST-004，P1）"
   # ==================== 弹性与容错（resilience） ====================
   - id: "YDIZ-RESILIENCE-001"
     category: "resilience"
@@ -2592,7 +2615,7 @@ stats:
   audit: 1
   event: 3
   tx: 5
-  testing: 3
+  testing: 4
   resilience: 1
   config: 3
   errcode: 2
@@ -2603,4 +2626,4 @@ stats:
   search: 1
   util: 1
   common: 5
-  total: 96
+  total: 97

@@ -10,8 +10,6 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
-import io.mybatis.plugin.annotation.TableIndex;
-import io.mybatis.plugin.annotation.TableIndexes;
 
 
 
@@ -45,9 +43,6 @@ import io.mybatis.plugin.annotation.TableIndexes;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_sys_entity_version", autoResultMap = true)
-@TableIndexes({
-  @TableIndex(name = "idx_sys_entity_version_tenant", columns = {"tenant_id", "is_deleted"}),
-})
 public class EntityVersion extends MpBaseEntity<String> {
 
   /** 资源类型：CONFIG/DICT/VARIABLE */

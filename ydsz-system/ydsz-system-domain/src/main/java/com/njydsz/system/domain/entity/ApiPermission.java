@@ -10,8 +10,6 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.system.domain.enums.ApiPermissionStatus;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
-import io.mybatis.plugin.annotation.TableIndex;
-import io.mybatis.plugin.annotation.TableIndexes;
 
 
 /**
@@ -39,9 +37,6 @@ import io.mybatis.plugin.annotation.TableIndexes;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_sys_api_permission")
-@TableIndexes({
-  @TableIndex(name = "idx_sys_api_permission_tenant", columns = {"tenant_id", "is_deleted"}),
-})
 // YDIZ-WARN-001 允许保留：@SuperBuilder 在泛型继承链（MpBaseEntity<T>）中生成代码触发 unchecked 警告，无法在源码层面修复
 @SuppressWarnings("unchecked")
 public class ApiPermission extends MpBaseEntity<String> {

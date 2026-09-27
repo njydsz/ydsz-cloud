@@ -8,8 +8,6 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
-import io.mybatis.plugin.annotation.TableIndex;
-import io.mybatis.plugin.annotation.TableIndexes;
 
 
 
@@ -49,9 +47,6 @@ import io.mybatis.plugin.annotation.TableIndexes;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_sys_tenant_plan", autoResultMap = true)
-@TableIndexes({
-  @TableIndex(name = "idx_sys_tenant_plan_tenant", columns = {"tenant_id", "is_deleted"}),
-})
 public class TenantPlan extends MpBaseEntity<String> {
 
   /** 套餐编码（唯一标识，如 {@code TRIAL} / {@code STANDARD} / {@code ENTERPRISE}） */
