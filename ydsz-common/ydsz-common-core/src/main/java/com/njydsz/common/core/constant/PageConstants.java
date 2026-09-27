@@ -60,6 +60,9 @@ public final class PageConstants {
    */
   private static final AtomicReference<CoreProperties> PROPERTIES = new AtomicReference<>();
 
+  /** 导出场景默认最大每页记录数（未注入运行时配置时的回退值）。 */
+  private static final int EXPORT_MAX_PAGE_SIZE_FALLBACK = 500;
+
   /**
    * 注入运行时配置。由 {@code CoreAutoConfiguration} 在启动时调用。
    *
@@ -118,6 +121,19 @@ public final class PageConstants {
   public static int getMaxPageSize() {
     CoreProperties p = PROPERTIES.get();
     return p != null ? p.getMaxPageSize() : MAX_PAGE_SIZE;
+  }
+
+  /**
+   * 获取运行时导出场景最大每页记录数。
+   *
+   * <p>供批量导出等需要放宽单页记录数的场景使用，独立于普通查询上限（ 允许导出单页大于普通列表单页）。
+   *
+   * @return 运行时配置的导出最大每页记录数；未初始化时回退到默认值 500
+   * @since 26.09.27
+   */
+  public static int getExportMaxPageSize() {
+    CoreProperties p = PROPERTIES.get();
+    return p != null ? p.getExportMaxPageSize() : EXPORT_MAX_PAGE_SIZE_FALLBACK;
   }
 
   // ======================== 归一化工具方法 ========================
@@ -181,6 +197,23 @@ public final class PageConstants {
       return getDefaultPageSize();
     }
     return Math.min(pageSize, getMaxPageSize());
+  }
+
+  /**
+   * 标准化导出场景页大小。
+   *
+   * <p>与 {@link #normalizePageSize(Integer)} 语义一致，但上限改用 运行时导出配置 {@link #getExportMaxPageSize()}，
+   * 供批量导出等需要放宽单页记录数的场景使用。 各业务模块导出分页禁止自建上限常量，统一调用本方法。
+   *
+   * @param pageSize 原始页大小（可为 null）
+   * @return 标准化后的导出页大小
+   * @since 26.09.27
+   */
+  public static int normalizeExportPageSize(Integer pageSize) {
+    if (pageSize == null || pageSize < 1) {
+      return getDefaultPageSize();
+    }
+    return Math.min(pageSize, getExportMaxPageSize());
   }
 
   /**

@@ -16,16 +16,16 @@ import lombok.Getter;
 public enum ConflictStrategyEnum {
 
   /** 跳过已有文件（保留现有代码）。 */
-  SKIP("SKIP", "跳过"),
+  SKIP("SKIP", "generator.conflict.skip"),
   /** 覆盖已有文件（备份原文件到 history）。 */
-  OVERRIDE("OVERRIDE", "覆盖并备份"),
+  OVERRIDE("OVERRIDE", "generator.conflict.override"),
   /**
    * 追加模式（在已有文件末尾追加生成内容）。
    *
    * <p>生成的代码会拼接在原文件末尾并标记 {@code // AUTO-GEN}，
    * 适用于需要在已有文件基础上增量扩展的场景。</p>
    */
-  APPEND("APPEND", "追加");
+  APPEND("APPEND", "generator.conflict.append");
 
   /** 策略码。 */
   private final String code;

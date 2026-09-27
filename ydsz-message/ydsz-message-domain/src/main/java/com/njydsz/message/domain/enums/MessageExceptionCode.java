@@ -45,7 +45,7 @@ public enum MessageExceptionCode implements ExceptionCode {
   /** Notification not found */
   NOTIFICATION_NOT_FOUND("B91101", "message.notification.not.found", 404),
   /** Message log not found */
-  MESSAGE_LOG_NOT_FOUND("B91102", "message.LOG.not.found", 404),
+  MESSAGE_LOG_NOT_FOUND("B91102", "message.log.not.found", 404),
   /** Message send failed */
   MESSAGE_SEND_FAILED("B91103", "message.send.failed", 500),
   /** Message recall failed */

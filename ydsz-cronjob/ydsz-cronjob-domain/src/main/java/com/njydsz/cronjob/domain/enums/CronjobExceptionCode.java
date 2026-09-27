@@ -55,7 +55,7 @@ public enum CronjobExceptionCode implements ExceptionCode {
   /** Job version not found */
   JOB_VERSION_NOT_FOUND("B92202", "cronjob.job.version.not.found", 404),
   /** Job log not found */
-  JOB_LOG_NOT_FOUND("B92203", "cronjob.job.LOG.not.found", 404),
+  JOB_LOG_NOT_FOUND("B92203", "cronjob.job.log.not.found", 404),
 
   // ==================== B92301-B92399 告警规则/Webhook ====================
   /** Alert rule not found */

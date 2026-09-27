@@ -16,9 +16,9 @@ import lombok.Getter;
 public enum TemplateFileTypeEnum {
 
   /** 后端 Java 源代码模板（controller/service/...）。 */
-  BACKEND("BACKEND", "后端"),
+  BACKEND("BACKEND", "generator.filetype.backend"),
   /** 前端 Vue 模板（api.ts, index.vue）。 */
-  FRONTEND("FRONTEND", "前端");
+  FRONTEND("FRONTEND", "generator.filetype.frontend");
 
   /** 类型码。 */
   private final String code;

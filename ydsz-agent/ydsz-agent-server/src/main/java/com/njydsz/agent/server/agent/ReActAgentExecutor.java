@@ -294,7 +294,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       TokenUsage totalUsage,
       int iteration) {
     if (pauseService == null) {
-      throw new IllegalStateException("会话暂停服务未装配，无法保存检查点");
+      throw new IllegalStateException("agent.error.session.pause_service_not_configured");
     }
     ExecutionCheckpoint checkpoint =
         new ExecutionCheckpoint(
@@ -343,7 +343,7 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
   @Override
   public ChatResponse resume(ExecutionCheckpoint checkpoint, boolean approved) {
     if (pauseService == null) {
-      throw new IllegalStateException("会话暂停服务未装配，无法恢复执行");
+      throw new IllegalStateException("agent.error.session.pause_service_not_configured_resume");
     }
     String approvalId = checkpoint.getApprovalId();
     String convId = checkpoint.getConversationId();

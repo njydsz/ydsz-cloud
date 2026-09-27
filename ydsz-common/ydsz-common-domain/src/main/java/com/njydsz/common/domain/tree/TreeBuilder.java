@@ -203,6 +203,9 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
   /**
    * 静态便捷方法，支持不继承 TreeNode 的 VO 类构建树。
    *
+   * <p>算法：O(n) 一次遍历。先用 Map 累积每个节点的子节点列表，
+   * 最后统一通过 {@code childrenSetter} 设置到节点上。
+   *
    * @param flatList 扁平列表
    * @param idExtractor ID 提取器
    * @param parentIdExtractor 父 ID 提取器
@@ -210,7 +213,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
    * @param sortExtractor 排序字段提取器
    * @param <T> VO 类型
    * @param <ID> ID 类型
-   * @return 构建完成的根节点列表
+   * @return 构建完成的根节点列表（parentId 为 null 的节点视为根）
    */
   public static <T, ID> List<T> buildSimple(
       List<T> flatList,
@@ -221,29 +224,32 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     if (flatList == null || flatList.isEmpty()) {
       return new ArrayList<>(0);
     }
+    // 第一阶段：id → 节点索引
     Map<ID, T> nodeMap = new HashMap<>(flatList.size());
     for (T node : flatList) {
       nodeMap.put(idExtractor.apply(node), node);
     }
+    // 第二阶段：父 id → 子节点列表 累积
+    Map<ID, List<T>> childrenMap = new HashMap<>();
     List<T> roots = new ArrayList<>(flatList.size());
-    Comparator<T> comparator = Comparator.comparing(
-        sortExtractor, Comparator.nullsLast(Integer::compareTo));
     for (T node : flatList) {
       ID parentId = parentIdExtractor.apply(node);
       if (parentId == null) {
         roots.add(node);
       } else {
-        T parent = nodeMap.get(parentId);
-        if (parent != null) {
-          TreeNode<?, ?> treeNode = (TreeNode<?, ?>) parent;
-          List<Object> children = treeNode.getChildren() != null
-              ? new ArrayList<>(treeNode.getChildren())
-              : new ArrayList<>(16);
-          children.add(node);
-          childrenSetter.accept(parent, (List<T>) (List<?>) children);
-        }
+        childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>(4)).add(node);
       }
     }
+    // 第三阶段：统一设置 children
+    for (Map.Entry<ID, List<T>> entry : childrenMap.entrySet()) {
+      T parent = nodeMap.get(entry.getKey());
+      if (parent != null) {
+        childrenSetter.accept(parent, entry.getValue());
+      }
+    }
+    // 根节点排序
+    Comparator<T> comparator = Comparator.comparing(
+        sortExtractor, Comparator.nullsLast(Integer::compareTo));
     roots.sort(comparator);
     return roots;
   }

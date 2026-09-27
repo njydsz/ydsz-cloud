@@ -59,7 +59,7 @@ public final class SubAgentExecutorPool {
           .build();
 
   private SubAgentExecutorPool() {
-    throw new UnsupportedOperationException("工具类不可实例化");
+    throw new UnsupportedOperationException("agent.error.util_class_instantiation");
   }
 
   /**

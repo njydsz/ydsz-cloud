@@ -110,7 +110,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
             writer.write(markdown);
             writer.flush();
         } catch (IOException e) {
-            throw new DocumentRenderException("写入 Markdown 失败", e);
+            throw new DocumentRenderException("agent.error.document.write_markdown_failed", e);
         }
     }
 
@@ -157,7 +157,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
             writer.flush();
 
         } catch (Exception e) {
-            throw new DocumentRenderException("渲染 HTML 失败", e);
+            throw new DocumentRenderException("agent.error.document.render_html_failed", e);
         }
     }
 
@@ -179,7 +179,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
             writer.write(plainText);
             writer.flush();
         } catch (IOException e) {
-            throw new DocumentRenderException("渲染纯文本失败", e);
+            throw new DocumentRenderException("agent.error.document.render_plaintext_failed", e);
         }
     }
 
@@ -206,7 +206,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
             writer.println(markdown);
             writer.flush();
         } catch (Exception e) {
-            throw new DocumentRenderException("渲染 DOCX 失败", e);
+            throw new DocumentRenderException("agent.error.document.render_docx_failed", e);
         }
     }
 
@@ -232,7 +232,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
             writer.println(markdown);
             writer.flush();
         } catch (Exception e) {
-            throw new DocumentRenderException("渲染 PDF 失败", e);
+            throw new DocumentRenderException("agent.error.document.render_pdf_failed", e);
         }
     }
 

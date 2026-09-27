@@ -71,6 +71,18 @@ public class CoreProperties {
   private int defaultPageSize = 20;
 
   /**
+   * 运行时导出场景最大每页记录数上限。
+   *
+   * <p>由 {@link com.njydsz.common.core.constant.PageConstants#getExportMaxPageSize()} 读取， 供批量导出等需要放宽单页记录数的场景使用，独立于
+   * {@code max-page-size}（允许导出单页大于普通列表单页）。 默认 500。
+   *
+   * @since 26.09.27
+   */
+  @Min(1)
+  @Max(5000)
+  private int exportMaxPageSize = 500;
+
+  /**
    * 默认语言环境。
    *
    * <p>用于 i18n 消息解析、{@link com.njydsz.common.core.context.RequestContext#setLanguage(String)} 兜底等。

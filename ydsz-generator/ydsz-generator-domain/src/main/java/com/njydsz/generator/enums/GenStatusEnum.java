@@ -14,13 +14,13 @@ import lombok.Getter;
 public enum GenStatusEnum {
 
   /** 执行中。 */
-  RUNNING("RUNNING", "执行中"),
+  RUNNING("RUNNING", "generator.genstatus.running"),
   /** 全部生成成功。 */
-  SUCCESS("SUCCESS", "生成成功"),
+  SUCCESS("SUCCESS", "generator.genstatus.success"),
   /** 部分成功（有跳过/失败文件）。 */
-  PARTIAL("PARTIAL", "部分成功"),
+  PARTIAL("PARTIAL", "generator.genstatus.partial"),
   /** 生成失败。 */
-  FAILED("FAILED", "生成失败");
+  FAILED("FAILED", "generator.genstatus.failed");
 
   /** 状态码。 */
   private final String code;

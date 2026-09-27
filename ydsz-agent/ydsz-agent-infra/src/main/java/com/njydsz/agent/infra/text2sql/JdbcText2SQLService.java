@@ -247,12 +247,12 @@ public class JdbcText2SQLService implements Text2SQLService {
     }
     if (!allowed) {
       String snippet = sql.substring(0, Math.min(SQL_SNIPPET_LENGTH, sql.length()));
-      throw new Text2SQLException("仅允许 SELECT 查询，拒绝语句: " + snippet, "TEXT2SQL_NOT_SELECT");
+      throw new Text2SQLException("agent.error.text2sql.only_select_allowed", "TEXT2SQL_NOT_SELECT");
     }
     // 注入检测
     for (Pattern pattern : INJECTION_PATTERNS) {
       if (pattern.matcher(sql).find()) {
-        throw new Text2SQLException("检测到潜在 SQL 注入模式", "TEXT2SQL_INJECTION_DETECTED");
+        throw new Text2SQLException("agent.error.text2sql.injection_detected", "TEXT2SQL_INJECTION_DETECTED");
       }
     }
   }
