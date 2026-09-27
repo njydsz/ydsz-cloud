@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.core.alert;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -91,9 +90,6 @@ public class AlertDispatcher {
 
   /** 统一领域事件发布门面 */
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
-
-  private static final DateTimeFormatter TIME_FORMATTER =
-      DateTimeFormatter.ofPattern(DateUtils.DEFAULT_DATE_TIME_PATTERN);
 
   /**
    * 监听告警事件，异步派发通知。
@@ -477,7 +473,7 @@ public class AlertDispatcher {
     if (context.traceId() != null) {
       sb.append("| Trace ID | ").append(context.traceId()).append(" |\n");
     }
-    sb.append("| Time | ").append(LocalDateTime.now().format(TIME_FORMATTER)).append(" |\n");
+    sb.append("| Time | ").append(DateUtils.now()).append(" |\n");
     return sb.toString();
   }
 

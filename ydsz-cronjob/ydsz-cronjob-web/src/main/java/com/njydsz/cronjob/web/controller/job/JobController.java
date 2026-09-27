@@ -32,6 +32,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
@@ -512,8 +513,7 @@ public class JobController {
   public void exportJobs(@RequestParam(required = false) String keyword,
       @RequestParam(required = false) String status, @RequestParam(required = false) String group,
       jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-    String fileName = "jobs_" + java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-        .format(LocalDateTime.now()) + ".xlsx";
+    String fileName = "jobs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader("Content-Disposition", "attachment; filename="
         + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)

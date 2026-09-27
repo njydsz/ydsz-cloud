@@ -268,6 +268,22 @@ public final class DateUtils {
   // ==================== 格式化与解析 ====================
 
   /**
+   * 按指定模式解析字符串为 {@link LocalDateTime}。
+   *
+   * @param text 待解析文本，不能为 null
+   * @param pattern 日期时间格式模式（如 yyyy-MM-dd HH:mm:ss），不能为 null
+   * @return 解析后的 LocalDateTime
+   * @throws NullPointerException 如果任一参数为 null
+   * @throws java.time.format.DateTimeParseException 如果文本无法按指定模式解析
+   */
+  public static LocalDateTime parseLocalDateTime(String text, String pattern) {
+    Objects.requireNonNull(text, "text must not be null");
+    Objects.requireNonNull(pattern, "pattern must not be null");
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+    return LocalDateTime.parse(text, formatter);
+  }
+
+  /**
    * 按指定模式解析字符串为 {@link LocalDate}。
    *
    * @param text 待解析文本，不能为 null
@@ -321,6 +337,23 @@ public final class DateUtils {
   public static String formatLocalDateTime(LocalDateTime dateTime) {
     Objects.requireNonNull(dateTime, "dateTime must not be null");
     return dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+  }
+
+  /**
+   * 按指定模式格式化 {@link LocalDateTime} 为字符串。
+   *
+   * <p>常用于文件名后缀、Redis key 等场景（如 {@code "yyyyMMddHHmmss"}）。
+   *
+   * @param dateTime 日期时间，不能为 null
+   * @param pattern 日期时间格式模式（如 yyyy-MM-dd HH:mm:ss），不能为 null
+   * @return 格式化后的字符串
+   * @throws NullPointerException 如果任一参数为 null
+   */
+  public static String formatLocalDateTime(LocalDateTime dateTime, String pattern) {
+    Objects.requireNonNull(dateTime, "dateTime must not be null");
+    Objects.requireNonNull(pattern, "pattern must not be null");
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+    return dateTime.format(formatter);
   }
 
   // ==================== 工作日计算 ====================

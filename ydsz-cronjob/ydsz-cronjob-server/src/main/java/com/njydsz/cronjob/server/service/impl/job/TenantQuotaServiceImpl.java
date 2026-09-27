@@ -3,8 +3,9 @@ package com.njydsz.cronjob.server.service.impl.job;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+
+import com.njydsz.common.util.date.DateUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,9 +63,6 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   /** 日执行计数器 TTL（小时），跨天自动过期，留余量应对时区差异 */
   @Value("${ydsz.cronjob.quota.daily-ttl-hours:25}")
   private long dailyTtlHours;
-
-  /** 日期格式化器（用于日执行计数器 key 后缀） */
-  private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
   @Override
   public TenantQuotaVO getQuota(String tenantId) {
@@ -311,8 +309,8 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     }
   }
 
-  /** 获取今日日期后缀（yyyyMMdd，Asia/Shanghai 时区）。 */
+  /** 获取今日日期后缀（yyyyMMdd，Asia/Shanghai 时区）。YDIZ-COMMON-019 合规。 */
   private String todaySuffix() {
-    return LocalDate.now(ZoneId.of("Asia/Shanghai")).format(DATE_FMT);
+    return DateUtils.formatLocalDate(LocalDate.now(ZoneId.of("Asia/Shanghai")), "yyyyMMdd");
   }
 }

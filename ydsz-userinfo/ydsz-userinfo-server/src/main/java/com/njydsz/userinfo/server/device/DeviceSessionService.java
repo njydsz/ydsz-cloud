@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.server.device;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,10 +43,6 @@ public class DeviceSessionService {
 
   /** 信任设备 Redis Key 前缀 */
   private static final String TRUSTED_DEVICE_KEY_PREFIX = "userinfo:device:trusted:";
-
-  /** 日期格式化 */
-  private static final DateTimeFormatter DATE_FORMATTER =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   private final SessionManager sessionManager;
 

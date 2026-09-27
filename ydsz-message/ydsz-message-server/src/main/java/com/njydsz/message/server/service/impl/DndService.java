@@ -5,13 +5,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -21,12 +22,14 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <ul>
  *   <li>Redis 持久化的用户级 DND 时段配置（如 22:00-08:00 Asia/Shanghai）
- *   <li>本地缓存加速（5 分钟 TTL）
+ *   <li>YdszCache 本地缓存加速（5 分钟 TTL）
  *   <li>跨天窗口判断工具方法 {@link #isInWindow} 与 {@link #resolveWindowEnd}
  *   <li>统一决策入口 {@link #evaluate(String, String, String)}
  * </ul>
  *
  * <p>Redis Key 格式：{@code dnd:{userId}} → "22:00-08:00 Asia/Shanghai"
+ *
+ * <p><b>YDIZ-COMMON-020 合规：</b>本地缓存通过 {@link YdszCache} 构建， 替代手写 {@code ConcurrentHashMap} TTL 方案，消除内存泄漏风险。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -44,11 +47,19 @@ public class DndService {
   /** 默认时区 */
   private static final String DEFAULT_TIMEZONE = "Asia/Shanghai";
 
-  /** 本地缓存（减少 Redis 访问） */
-  private final ConcurrentMap<String, CachedDndConfig> configCache = new ConcurrentHashMap<>();
+  /** 本地缓存最大条目数（防止无限增长） */
+  private static final int CACHE_MAXIMUM_SIZE = 10_000;
 
-  /** D-3: 缓存过期时间（毫秒），默认 5 分钟 */
-  private static final long CACHE_TTL_MS = 5 * 60 * 1000L;
+  /** 本地缓存写入后过期时间（分钟） */
+  private static final long CACHE_EXPIRE_MINUTES = 5;
+
+  /** YdszCache 本地缓存（window-TinyLFU，线程安全，替代手写 ConcurrentHashMap） */
+  private final Cache<String, DndConfig> configCache =
+      YdszCache.<String, DndConfig>newBuilder()
+          .maximumSize(CACHE_MAXIMUM_SIZE)
+          .expireAfterWrite(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES)
+          .recordStats()
+          .build();
 
   /**
    * DND 决策结果枚举。
@@ -67,7 +78,7 @@ public class DndService {
   /**
    * DND 决策结果（行动建议 + 延迟目标时间）。
    *
-     * @param decision DND 决策类型（ALLOW / DEFER / DROP）
+   * @param decision DND 决策类型（ALLOW / DEFER / DROP）
    * @param deferUntil 延迟目标时间（仅 DEFER 时非 null）
    */
   public record DndResult(DndDecision decision, LocalDateTime deferUntil) {
@@ -137,12 +148,12 @@ public class DndService {
     LocalDateTime windowEnd = resolveWindowEnd(nowZoned, config.startTime, config.endTime);
     long deferSeconds = Duration.between(nowZoned, windowEnd).getSeconds();
     if (deferSeconds > maxDeferSeconds) {
-      log.info(
-          "[DND] 延迟超过阈值,丢弃: userId={} channel={} defer={}s max={}s",
-          userId,
-          channel,
-          deferSeconds,
-          maxDeferSeconds);
+        log.info(
+            "[DND] 延迟超过阈值,丢弃: userId={} channel={} defer={}s max={}s",
+            userId,
+            channel,
+            deferSeconds,
+            maxDeferSeconds);
       return DndResult.drop();
     }
     log.info(
@@ -182,7 +193,10 @@ public class DndService {
         startTime + "-" + endTime + " " + (timezone != null ? timezone : DEFAULT_TIMEZONE);
     redisStringOps.set(DND_KEY_PREFIX + userId, value);
     // 更新本地缓存
-    configCache.put(userId, new CachedDndConfig(parseConfig(value), System.currentTimeMillis()));
+    DndConfig config = parseConfig(value);
+    if (config != null) {
+      configCache.put(userId, config);
+    }
     log.info(
         "[DND] 用户免打扰配置已设置: userId={} window={}~{} tz={}", userId, startTime, endTime, timezone);
   }
@@ -194,31 +208,31 @@ public class DndService {
    */
   public void removeDnd(String userId) {
     redisStringOps.del(DND_KEY_PREFIX + userId);
-    configCache.remove(userId);
+    configCache.invalidate(userId);
     log.info("[DND] 用户免打扰配置已移除: userId={}", userId);
   }
 
   /**
    * 获取用户 DND 配置（带本地缓存）。
    *
+   * <p>读取顺序：L1（YdszCache）→ Redis，命中后填充 L1。
+   *
    * @param userId 用户 ID
    * @return DND 配置，null 表示未设置
    */
   private DndConfig getDndConfig(String userId) {
-    CachedDndConfig cached = configCache.get(userId);
-    // D-3: 检查缓存是否过期
-    if (cached != null && (System.currentTimeMillis() - cached.cachedAt) < CACHE_TTL_MS) {
-      return cached.config;
+    DndConfig cached = configCache.getIfPresent(userId);
+    if (cached != null) {
+      return cached;
     }
-    // 缓存过期或不存在，从 Redis 加载
+    // 缓存未命中，从 Redis 加载
     String value = redisStringOps.get(DND_KEY_PREFIX + userId, String.class);
     if (value == null || value.isBlank()) {
-      configCache.remove(userId);
       return null;
     }
     DndConfig config = parseConfig(value);
     if (config != null) {
-      configCache.put(userId, new CachedDndConfig(config, System.currentTimeMillis()));
+      configCache.put(userId, config);
     }
     return config;
   }
@@ -285,7 +299,4 @@ public class DndService {
 
   /** DND 配置内部类 */
   private record DndConfig(LocalTime startTime, LocalTime endTime, String timezone) {}
-
-  /** D-3: 带时间戳的缓存包装类 */
-  private record CachedDndConfig(DndConfig config, long cachedAt) {}
 }

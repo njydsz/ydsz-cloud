@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,6 +17,7 @@ import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.quota.QuotaCounter;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 租户 LLM 配额管理服务
@@ -52,12 +52,6 @@ public class TenantQuotaService {
 
   /** 月度 Key 保留 35 天 */
   private static final Duration MONTHLY_TTL = Duration.ofDays(35);
-
-  /** 日期格式化（yyyy-MM-dd） */
-  private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-  /** 月份格式化（yyyy-MM） */
-  private static final DateTimeFormatter MONTH_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
   /** 每日 Token 计数器（带 TTL 自动过期 + 本地降级） */
   private final QuotaCounter dailyTokenCounter;
@@ -182,10 +176,12 @@ public class TenantQuotaService {
   }
 
   private static String buildDateSuffix(String tenantId) {
-    return tenantId + ":" + LocalDate.now(ZoneId.of("Asia/Shanghai")).format(DATE_FMT);
+    return tenantId + ":" + DateUtils.formatLocalDate(
+        LocalDate.now(ZoneId.of("Asia/Shanghai")), DateUtils.DEFAULT_DATE_PATTERN);
   }
 
   private static String buildMonthSuffix(String tenantId) {
-    return tenantId + ":" + YearMonth.now(ZoneId.of("Asia/Shanghai")).format(MONTH_FMT);
+    return tenantId + ":" + DateUtils.formatLocalDate(
+        YearMonth.now(ZoneId.of("Asia/Shanghai")).atDay(1), "yyyy-MM");
   }
 }

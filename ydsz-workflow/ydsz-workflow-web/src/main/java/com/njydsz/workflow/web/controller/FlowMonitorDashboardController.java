@@ -2,7 +2,6 @@ package com.njydsz.workflow.web.controller;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
@@ -674,7 +674,7 @@ public class FlowMonitorDashboardController {
       return null;
     }
     try {
-      return LocalDateTime.parse(str, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+      return DateUtils.parseLocalDateTime(str, DateUtils.DEFAULT_DATE_TIME_PATTERN);
     } catch (Exception e) {
       try {
         return LocalDate.parse(str).atStartOfDay();
