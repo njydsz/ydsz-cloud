@@ -206,9 +206,9 @@ public class FlowCcServiceImpl implements FlowCcService {
       }
       int page = (int) Math.max(query.getPageNum(), 1);
       int size = (int) Math.min(Math.max(query.getPageSize(), 1), PageConstants.MAX_PAGE_SIZE);
-      int offset = (page - 1) * size;
+      long offset = PageConstants.calcOffset(page, size);
       return ccRepository.findCcByUserPage(
-          userId, tenantId, query.getReadStatus(), query.getFlowCode(), offset, size);
+          userId, tenantId, query.getReadStatus(), query.getFlowCode(), (int) offset, size);
     } catch (Exception e) {
       log.error("[FlowCc] pageMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
       return List.of();
@@ -266,10 +266,10 @@ public class FlowCcServiceImpl implements FlowCcService {
       }
       int page = Math.max(pageNo, 1);
       int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
-      int offset = (page - 1) * size;
+      long offset = PageConstants.calcOffset(page, size);
 
       List<FlowCcVO> list =
-          ccRepository.findCcByUserPage(userId, tenantId, readStatus, flowCode, offset, size);
+          ccRepository.findCcByUserPage(userId, tenantId, readStatus, flowCode, (int) offset, size);
       long total = ccRepository.countCcByUser(userId, tenantId, readStatus, flowCode);
       return PageResponse.success(total, (long) page, (long) size, list);
     } catch (Exception e) {

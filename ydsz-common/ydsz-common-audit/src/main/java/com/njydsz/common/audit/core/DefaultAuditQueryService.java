@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.storage.TableNameResolver;
+import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18n;
@@ -601,13 +602,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
    * @return 计算后的偏移量
    */
   private int validatePagination(int page, int size) {
-    if (page < 1) {
-      page = 1;
-    }
-    if (size < 1) {
-      size = 20;
-    }
-    return (page - 1) * size;
+    return (int) PageConstants.calcOffset(page, size);
   }
 
   /**

@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.core.constant.PageConstants;
+
 import com.njydsz.cronjob.domain.repository.JobLogContentRepository;
 import com.njydsz.cronjob.domain.vo.JobLogContentVO;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
@@ -39,7 +41,7 @@ public class JobLogContentServiceImpl implements JobLogContentService {
 
   @Override
   public List<JobLogContentVO> pageByLogId(String logId, int page, int size) {
-    int offset = Math.max(0, (page - 1) * size);
+    int offset = (int) PageConstants.calcOffset(page, size);
     return jobLogContentRepository.findByLogId(logId, offset, size);
   }
 
@@ -58,7 +60,7 @@ public class JobLogContentServiceImpl implements JobLogContentService {
     if (logId == null || logId.isBlank() || keyword == null || keyword.isBlank()) {
       return Collections.emptyList();
     }
-    int offset = Math.max(0, (page - 1) * size);
+    int offset = (int) PageConstants.calcOffset(page, size);
     return jobLogContentRepository.findByLogIdAndKeyword(logId, keyword, offset, size);
   }
 }

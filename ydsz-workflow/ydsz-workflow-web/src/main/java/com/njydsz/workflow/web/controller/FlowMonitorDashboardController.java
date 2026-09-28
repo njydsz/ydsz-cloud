@@ -24,6 +24,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
@@ -178,7 +179,7 @@ public class FlowMonitorDashboardController {
     }
 
     int total = all.size();
-    int from = Math.min((pageNum - 1) * pageSize, total);
+    int from = (int) Math.min(PageConstants.calcOffset(pageNum, pageSize), (long) total);
     int to = Math.min(from + pageSize, total);
     List<Map<String, Object>> page = from < to ? all.subList(from, to) : new ArrayList<>(0);
 
