@@ -16,12 +16,16 @@ meta:
   version: "26.09.30"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "2026-09-30（公共基础利用率提升 +7 条规则：P0 PageQuery 继承 YDIZ-COMMON-034 + 异常枚举强类型 YDIZ-COMMON-035 + I18nContextPropagator YDIZ-I18N-006 + P1 CurrentUser YDIZ-COMMON-036 + FeatureFlag YDIZ-COMMON-037 + BaseStatusEnum YDIZ-COMMON-038 + P2 批量操作结构化 YDIZ-COMMON-039；cronjob 模块 4 Query 类接入 PageQuery）"
-  total_rules: 125
+  last_updated: "2026-09-30（公共基础利用率专项验证完成：P0-1 PageQuery cronjob 落地 +4 Query 类；P1-4 AuthContextUtils 统一上下文 41 处引用；P1-6 BatchBusinessException + MvcExceptionHandler HTTP 207 handler 就绪；P1-7 17 个状态枚举全部 implements BaseStatusEnum；P2-8 TreeBuilder system/literule/workflow 已接入；P2-10 WorkflowException extends BusinessException 落地；+7 规则 YDIZ-COMMON-034~039 + YDIZ-I18N-006）"
+  total_rules: 126
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
+  summary:
+    P0: 51
+    P1: 52
+    P2: 12
 
 rules:
   # ============================================
@@ -3548,8 +3552,46 @@ rules:
       3. 成功/失败明细列表加入 ItemResult
     source: "公共基础利用率提升（YDIZ-COMMON-039，P2，26.09.30 批量操作结构化结果）"
 
+  - id: "YDIZ-COMMON-040"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【严重】throw 语句禁止硬编码中文，必须使用 I18n.message()"
+    description: |
+      所有业务模块（ydsz-agent/userinfo/message/workflow/cronjob/nextwiki/literule/system/generator/gateway）的 throw 语句
+      不得直接传入中文字符串，必须通过 `I18n.message("module.scenario.key", new Object[]{params})` 翻译后传入。
+
+      **为什么**：
+      - 中文硬编码消息仅显示给中文用户，英文/en_US locale 环境下无法切换
+      - 违反 i18n 全域覆盖原则（YDIZ-I18N-001~006）
+      - 统一中文文案到 properties 文件便于运维/产品直接改文案而不发版
+
+      **违反判据**：
+      - `throw new SomeException("中文描述: " + var)`
+      - `throw new SomeException("操作失败")`
+      - 构造 BusinessException/SysException 时使用中文字符串作为 message（而不是 i18n key + I18n.message() 调用）
+
+      **正确做法**：
+      - 中文 keys 同步追加到模块 messages.properties（默认 + zh_CN + en_US 三份同步）
+      - 含变量 → `I18n.message("module.error.scenario", new Object[]{var})`
+      - JDK RT（IllegalStateException/IllegalArgumentException）直接 `new IllegalStateException(I18n.message("key", params))`
+
+    # common-reuse 已使用 "YDIZ-COMMON-028~032，034~039"
+    pattern: "throw\\s+new\\s+\\w*Exception\\(\"[一-鿿]"
+    fix: |
+      1. 确定消息所属的子模块（agent/cronjob/workflow/nextwiki/literule/userinfo/message/system/generator/gateway）
+      2. 在 messages*.properties 追加 `module.scenario.key=中文文案` 和对应的 en_US 翻译
+      3. throw 改写为 `throw new XxxException(I18n.message("module.scenario.key", new Object[]{var}))`
+      4. 确保 Java 文件已 `import com.njydsz.common.locales.util.I18n;`
+    example_good: |
+      // 正确：i18n 调用 + 三语 properties 同步追加
+      throw new WorkflowException(
+        "workflow.validation.status_required",
+        I18n.message("workflow.validation.status_required")
+      );
+    source: "ydsz-common 全局引用分析 v2 — 硬编码中文清零专项（YDIZ-COMMON-040，P1，26.09.28）"
+
 # ============================================
-# 附录：按 category 统计（26.09.30 更新，common-reuse 18→22、exception 3→4、i18n 5→6，total 118→125）
+# 附录：按 category 统计（26.09.30 终极验证：+7 规则，common-reuse 覆盖七项公共基础能力）
 # ============================================
 stats:
   encoding: 1
@@ -3563,7 +3605,7 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-  common-reuse: 22
+    common-reuse: 22  # PageQuery/ExceptionCode/CurrentUser/FeatureFlag/BaseStatusEnum/BatchResult/I18nContext
   security: 2
   architecture: 6
   engineering: 5

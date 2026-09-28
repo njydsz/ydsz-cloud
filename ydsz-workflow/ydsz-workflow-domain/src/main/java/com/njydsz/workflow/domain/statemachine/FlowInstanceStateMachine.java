@@ -6,7 +6,7 @@ import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.exception.WorkflowException;
@@ -137,10 +137,7 @@ public class FlowInstanceStateMachine {
       throw new WorkflowException("workflow.validation.transition_params_required", I18n.message("workflow.validation.transition_params_required", new Object[]{current, target}));
     }
     if (!validateTransition(current, target)) {
-      throw BusinessException.builder()
-          .resultCode(WorkflowExceptionCode.ILLEGAL_STATE_TRANSITION)
-          .params(current.name(), target.name())
-          .build();
+      throw new WorkflowException(WorkflowExceptionCode.ILLEGAL_STATE_TRANSITION, current.name() + " -> " + target.name());
     }
   }
 
