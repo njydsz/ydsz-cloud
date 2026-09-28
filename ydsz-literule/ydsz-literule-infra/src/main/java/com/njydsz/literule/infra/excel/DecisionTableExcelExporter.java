@@ -225,7 +225,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
               .doReadAll();
 
       if (rawRows.isEmpty()) {
-      throw new SysException("Excel 文件不包含任何数据行");
+      throw new SysException(I18n.message("literule.excel.no_data_rows"));
       }
 
       // 将每行转为 List<String>，同时提取 header 行（row 0）的值
@@ -270,7 +270,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
 
       // 解析列定义
       if (row2.isEmpty()) {
-      throw new SysException("Excel 缺少列头行（第 3 行）");
+      throw new SysException(I18n.message("literule.excel.missing_header_row"));
       }
 
       int totalCols = row2.size();

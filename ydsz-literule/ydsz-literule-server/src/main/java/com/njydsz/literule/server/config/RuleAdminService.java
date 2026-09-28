@@ -430,7 +430,7 @@ public class RuleAdminService {
   @Transactional(rollbackFor = Exception.class)
   public void updateOwner(String ruleCode, String owner, String operator) {
     if (ruleCode == null || ruleCode.isBlank()) {
-      throw new SysException("ruleCode 不能为空");
+      throw new SysException(I18n.message("literule.admin.rule_code_blank"));
     }
     RuleDefinitionDTO existing = configProvider.findByCode(ruleCode);
     if (existing == null) {
@@ -462,7 +462,7 @@ public class RuleAdminService {
   @Transactional(rollbackFor = Exception.class)
   public void updateCategoryPath(String ruleCode, String path, String operator) {
     if (ruleCode == null || ruleCode.isBlank()) {
-      throw new SysException("ruleCode 不能为空");
+      throw new SysException(I18n.message("literule.admin.rule_code_blank"));
     }
     validateCategoryPath(path);
     RuleDefinitionDTO existing = configProvider.findByCode(ruleCode);
@@ -614,7 +614,7 @@ public class RuleAdminService {
   public List<RuleResultVO> dryRun(
       String ruleCode, Map<String, Object> facts, Integer limit, RuleSeverity minSeverity) {
     if (!dryRunEnabled) {
-      throw new SysException("Dry-run 功能已被禁用（ydsz.literule.dryRunEnabled=false）");
+      throw new SysException(I18n.message("literule.admin.dryrun_disabled"));
     }
     RuleContextVO context = RuleContextVO.of(facts, "DRY_RUN", "MANUAL");
 

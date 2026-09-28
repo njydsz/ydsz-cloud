@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.29"
+  version: "26.09.30"
   source: "docs/云顶编码规范.md v1.0.12"
-  last_synced: "2026-09-29"
-  last_updated: "2026-09-29（公共基础深化 P0-P2：P0-2 literule/message/agent 异常统一 + P0-3 MessageUtils→I18n 迁移 + P1-1 workflow 死代码 + P1-2 硬编码文案收敛 + P1-3 异常脱敏 12 处 e.getMessage 清理 + P1-4 TraceContextHolder→RequestContext + P2-3 Specification/TypedId 死代码删除 + 3 条新规则 YDIZ-I18N-005/YDIZ-COMMON-033/YDIZ-EX-001）"
-  total_rules: 118
+  last_synced: "2026-09-30"
+  last_updated: "2026-09-30（公共基础利用率提升 P0-1 PageQuery 强制继承 + P0-2 异常枚举强类型 + P0-3 I18nContextPropagator 激活，+3 条规则 YDIZ-COMMON-034/YDIZ-COMMON-035/YDIZ-I18N-006，cronjob 模块 4 个 Query 类接入 PageQuery）"
+  total_rules: 121
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -3439,13 +3439,13 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-  common-reuse: 18
+  common-reuse: 19
   security: 2
   architecture: 6
   engineering: 5
   warnings: 1
   api: 2
-  exception: 2
+  exception: 4
   audit: 1
   event: 3
   tx: 5
@@ -3453,12 +3453,11 @@ stats:
   resilience: 1
   config: 3
   errcode: 2
-  i18n: 5
+  i18n: 6
   tenant: 1
   safe: 1
   queue: 1
   search: 1
   util: 1
   common: 5
-  exception: 3
-  total: 118
+  total: 121

@@ -110,7 +110,7 @@ public class CEPEngine implements Serializable {
    */
   public void registerPattern(CEPPattern pattern) {
     if (pattern == null || pattern.getId() == null) {
-      throw new SysException("pattern 和 pattern.id 不能为空");
+      throw new SysException(I18n.message("literule.cep.pattern_id_required"));
     }
     patterns.put(pattern.getId(), pattern);
     eventQueues.computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>());
