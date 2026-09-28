@@ -31,6 +31,7 @@ import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.sentry.SentryObservation;
@@ -380,7 +381,8 @@ public class ChunkUploadApplicationService {
       return result;
       });
     } catch (Throwable t) {
-      throw new RuntimeException("chunk_upload_merge observation error", t);
+      throw new RuntimeException(
+          I18n.message("nextwiki.error.chunk_upload_merge_observation_error"), t);
     }
   }
 

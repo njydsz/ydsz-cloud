@@ -18,6 +18,7 @@ import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.jdbc.support.PageResponses;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.FileNodeDTO;
@@ -199,7 +200,9 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     int affected = fileNodeMapper.updateWithRevision(entity);
     if (affected == 0) {
       throw new OptimisticLockingFailureException(
-          "FileNode 乐观锁更新失败，id=" + entity.getId() + ", revision=" + entity.getRevision());
+          I18n.message(
+              "nextwiki.error.optimistic_lock_update_failed",
+              new Object[] {entity.getId(), entity.getRevision()}));
     }
     entity.setRevision(entity.getRevision() + 1);
   }

@@ -93,6 +93,44 @@ public final class RequestContext {
   public static final String KEY_API_VERSION = "apiVersion";
 
   /**
+   * 上下文键名：Agent 业务关联维度 — 关联的 Agent 定义 ID（botId）。
+   *
+   * <p>在 Agent 请求入口由 Agent 模块写入，由 {@code ExportingTraceRecorder} / 指标采集器读取， 作为 OTel Span
+   * 的 {@code ydsz.bot_id} 属性上报禁止私建 ThreadLocal 传递此值，避免与 TTL 线程池传播断裂。
+   *
+   * @since 26.09.27
+   */
+  public static final String KEY_BOT_ID = "botId";
+
+  /**
+   * 上下文键名：Agent 业务关联维度 — 对话轮次 ID（turnId）。
+   *
+   * <p>一轮对话内的多步执行共享同一个 turnId，便于在日志与 OTel Trace 上按轮次聚合。
+   *
+   * @since 26.09.27
+   */
+  public static final String KEY_TURN_ID = "turnId";
+
+  /**
+   * 上下文键名：Agent 业务关联维度 — 会话 ID（conversationId）。
+   *
+   * <p>会话级上下文贯穿多个轮次，写入后 {@code ExportingTraceRecorder.startTrace} 会自动读取并设置为
+   * OTel Span 的 {@code ydsz.conversation_id} 属性。
+   *
+   * @since 26.09.27
+   */
+  public static final String KEY_CONVERSATION_ID = "conversationId";
+
+  /**
+   * 上下文键名：Agent 业务关联维度 — 账号 / 用户 ID（accountId）。
+   *
+   * <p>脱敏后的用户标识，用于审计与指标聚合，不可存放明文敏感信息。
+   *
+   * @since 26.09.27
+   */
+  public static final String KEY_ACCOUNT_ID = "accountId";
+
+  /**
    * 上下文键名：认证信息（与 {@link BizContextKeys#KEY_AUTH_INFO} 值一致）。
    *
    * <p>业务 Filter（认证模块）写入当前认证信息，业务代码通过此常量引用 key， 并强制转型为业务模块定义的 AuthInfo 类型。
@@ -222,6 +260,106 @@ public final class RequestContext {
    */
   public static String getLanguage() {
     return (String) get(KEY_LANGUAGE);
+  }
+
+  /**
+   * 设置 Agent 业务关联维度：关联的 Agent 定义 ID（botId）。
+   *
+   * <p>在 Agent 请求入口写入，由 {@code ExportingTraceRecorder} / 指标采集器读取。
+   *
+   * @param botId Agent 定义 ID
+   * @since 26.09.27
+   */
+  public static void setBotId(String botId) {
+    put(KEY_BOT_ID, botId);
+  }
+
+  /**
+   * 获取 Agent 业务关联维度：关联的 Agent 定义 ID（botId）。
+   *
+   * @return Agent 定义 ID，未设置时返回 null
+   * @since 26.09.27
+   */
+  public static String getBotId() {
+    return (String) get(KEY_BOT_ID);
+  }
+
+  /**
+   * 设置 Agent 业务关联维度：对话轮次 ID（turnId）。
+   *
+   * <p>一轮对话内多步共享同一 turnId，便于日志与 OTel Trace 按轮次聚合。
+   *
+   * @param turnId 对话轮次 ID
+   * @since 26.09.27
+   */
+  public static void setTurnId(String turnId) {
+    put(KEY_TURN_ID, turnId);
+  }
+
+  /**
+   * 获取 Agent 业务关联维度：对话轮次 ID（turnId）。
+   *
+   * @return 对话轮次 ID，未设置时返回 null
+   * @since 26.09.27
+   */
+  public static String getTurnId() {
+    return (String) get(KEY_TURN_ID);
+  }
+
+  /**
+   * 设置 Agent 业务关联维度：会话 ID（conversationId）。
+   *
+   * @param conversationId 会话 ID
+   * @since 26.09.27
+   */
+  public static void setConversationId(String conversationId) {
+    put(KEY_CONVERSATION_ID, conversationId);
+  }
+
+  /**
+   * 获取 Agent 业务关联维度：会话 ID（conversationId）。
+   *
+   * @return 会话 ID，未设置时返回 null
+   * @since 26.09.27
+   */
+  public static String getConversationId() {
+    return (String) get(KEY_CONVERSATION_ID);
+  }
+
+  /**
+   * 设置 Agent 业务关联维度：账号 / 用户 ID（accountId）。
+   *
+   * <p>脱敏后的用户标识，用于审计与指标聚合。
+   *
+   * @param accountId 账号 ID
+   * @since 26.09.27
+   */
+  public static void setAccountId(String accountId) {
+    put(KEY_ACCOUNT_ID, accountId);
+  }
+
+  /**
+   * 获取 Agent 业务关联维度：账号 / 用户 ID（accountId）。
+   *
+   * @return 账号 ID，未设置时返回 null
+   * @since 26.09.27
+   */
+  public static String getAccountId() {
+    return (String) get(KEY_ACCOUNT_ID);
+  }
+
+  /**
+   * 清除 Agent 业务关联维度（botId / turnId / conversationId / accountId）。
+   *
+   * <p>通常在请求退出清理阶段由 Agent 拦截器调用，配合 {@link #clear()} 兜底使用。
+   *
+   * @since 26.09.27
+   */
+  public static void clearAgentDimensions() {
+    remove(KEY_BOT_ID);
+    remove(KEY_TURN_ID);
+    remove(KEY_CONVERSATION_ID);
+    remove(KEY_ACCOUNT_ID);
   }
 
   /**

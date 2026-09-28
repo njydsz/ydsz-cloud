@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -53,7 +54,8 @@ public class DocumentConversionApplicationService {
       case "html->pdf" -> convertHtmlToPdf(inputStream, outputStream);
       case "txt->html" -> convertTextToHtml(inputStream, outputStream);
       case "csv->html" -> convertCsvToHtml(inputStream, outputStream);
-      default -> throw new UnsupportedOperationException("不支持的格式转换: " + key);
+      default -> throw new UnsupportedOperationException(
+          I18n.message("nextwiki.error.unsupported_format_conversion", new Object[] {key}));
     }
   }
 

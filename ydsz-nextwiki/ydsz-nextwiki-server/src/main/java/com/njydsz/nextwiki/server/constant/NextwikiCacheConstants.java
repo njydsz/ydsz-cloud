@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.server.constant;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 文件引擎（ydsz-nextwiki）专属缓存常量 — 缓存名称与 Key 模板定义。
  *
@@ -12,7 +14,7 @@ package com.njydsz.nextwiki.server.constant;
 public final class NextwikiCacheConstants {
 
   private NextwikiCacheConstants() {
-    throw new UnsupportedOperationException("Utility class");
+    throw new UnsupportedOperationException(I18n.message("nextwiki.error.utility_class"));
   }
 
   // ============================== NextWiki 模块缓存名 ==============================

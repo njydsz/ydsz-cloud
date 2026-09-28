@@ -1,12 +1,23 @@
 package com.njydsz.agent.domain.trace;
 
+import com.njydsz.common.core.context.RequestContext;
+
 /**
- * 链路上下文持有者
+ * 链路上下文持有者。
  *
- * <p>基于 ThreadLocal 传递当前请求的业务关联维度（botId/turnId/conversationId/accountId）。
- * 在请求入口设置，在 Trace/Metrics 记录时消费。
+ * <p>已收敛为公共 {@link RequestContext} 的委托器，不再自行持有 ThreadLocal，所有读写都经
+ * {@link RequestContext#setBotId(String)} / {@link RequestContext#getBotId()} 等强类型存取器完成。
  *
- * <p>典型用法：
+ * <p>收敛动机：
+ *
+ * <ul>
+ *   <li>与请求级 {@link RequestContext} 生命周期一致，{@code RequestContext.clear()} 自动兜底清理，
+ *       消除原 ThreadLocal 在异步/线程池场景下未清理导致的上下文泄漏
+ *   <li>复用 TransmittableThreadLocal 的线程池传播能力，避免自实现未 capture/restore 的链路断裂
+ * </ul>
+ *
+ * <p>典型用法（保持不变）：
+ *
  * <pre>{@code
  * try {
  *     TraceContextHolder.set(new TraceContextHolder.TraceContext(botId, turnId, conversationId, accountId));
@@ -16,21 +27,21 @@ package com.njydsz.agent.domain.trace;
  * }
  * }</pre>
  *
- * <p><b>注意</b>：必须在请求处理完成后调用 {@link #clear()}，通常在 finally 块中，
- * 以避免线程池复用导致的上下文泄漏。
+ * <p>新代码应优先直接调用 {@link RequestContext#setBotId(String)} / {@link RequestContext#setTurnId(String)} /
+ * {@link RequestContext#setConversationId(String)} / {@link RequestContext#setAccountId(String)}，
+ * 本持有器仅作为存量调用方的兼容适配。
  *
  * @author ydsz-team
  * @since 26.09.17
+ * @deprecated 26.09.27 仅保留为适配层，新代码直接读写 {@link RequestContext}
  */
+@Deprecated
 public final class TraceContextHolder {
 
   /** 工具类禁止实例化 */
   private TraceContextHolder() {
     throw new UnsupportedOperationException("agent.error.util_class_instantiation");
   }
-
-  /** ThreadLocal 存储链路上下文（clear() 方法提供 remove() 语义，确保线程池环境安全） */
-  private static final ThreadLocal<TraceContext> CONTEXT = new ThreadLocal<>();
 
   /**
    * 当前请求的业务关联维度上下文。
@@ -45,27 +56,43 @@ public final class TraceContextHolder {
   /**
    * 设置当前线程的链路上下文。
    *
+   * <p>写入 {@link RequestContext} 的四个 Agent 业务维度，支持 {@code null}（等同于清除对应维度）。
+   *
    * @param ctx 链路上下文，可为 null（等同于清除）
    */
   public static void set(TraceContext ctx) {
-    CONTEXT.set(ctx);
+    if (ctx == null) {
+      RequestContext.clearAgentDimensions();
+      return;
+    }
+    RequestContext.setBotId(ctx.botId());
+    RequestContext.setTurnId(ctx.turnId());
+    RequestContext.setConversationId(ctx.conversationId());
+    RequestContext.setAccountId(ctx.accountId());
   }
 
   /**
-   * 获取当前线程的链路上下文（可能为 null）。
+   * 获取当前线程的链路上下文。
    *
-   * @return 当前线程的链路上下文，未设置时返回 null
+   * <p>从 {@link RequestContext} 读取四个 Agent 业务维度并组装为 record，任一维度为 null 时对应字段为 null。
+   *
+   * @return 当前线程的链路上下文，未设置时四个字段均可能为 null
    */
   public static TraceContext get() {
-    return CONTEXT.get();
+    return new TraceContext(
+        RequestContext.getBotId(),
+        RequestContext.getTurnId(),
+        RequestContext.getConversationId(),
+        RequestContext.getAccountId());
   }
 
   /**
-   * 清除当前线程的链路上下文（必须在 finally 中调用）。
+   * 清除当前线程的链路上下文。
    *
-   * <p>在线程池环境中，不清除会导致后续请求污染到前一请求的业务维度。
+   * <p>推荐使用 {@link RequestContext#clear()} 兜底清理（已在 Web 拦截器统一调用），
+   * 本方法作为显式清理的快捷入口，语义等价于仅清除四个 Agent 维度。
    */
   public static void clear() {
-    CONTEXT.remove();
+    RequestContext.clearAgentDimensions();
   }
 }

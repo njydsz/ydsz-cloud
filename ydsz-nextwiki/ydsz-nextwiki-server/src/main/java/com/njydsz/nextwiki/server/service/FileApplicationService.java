@@ -37,6 +37,7 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.sentry.SentryObservation;
@@ -286,7 +287,7 @@ public class FileApplicationService {
       return persistNewNode(ctx);
       });
     } catch (Throwable t) {
-      throw new RuntimeException("file_upload observation error", t);
+      throw new RuntimeException(I18n.message("nextwiki.error.file_upload_observation_error"), t);
     }
   }
 
