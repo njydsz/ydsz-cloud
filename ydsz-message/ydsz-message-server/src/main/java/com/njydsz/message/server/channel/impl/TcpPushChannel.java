@@ -23,9 +23,8 @@ import com.njydsz.common.netty.codec.LengthFieldCodec;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.server.AbstractNettyServer;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.locales.util.I18n
-import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.message.server.channel.MessageChannel;
 
 /**
  * TCP 推送通道（基于 common-netty）。

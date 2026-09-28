@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import jakarta.annotation.PreDestroy;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -81,11 +80,10 @@ public class CronjobThreadPoolRegistry {
   public void register(String name, ThreadPoolExecutor pool) {
     if (name == null || name.isBlank()) {
       throw BusinessException.of(CronjobExceptionCode.THREAD_POOL_NAME_REQUIRED)
-          .msg(I18n.message("cronjob.thread.pool.name.required", new Object[]{"name"}));
+          .params(new Object[]{"name"});
     }
     if (pool == null) {
-      throw BusinessException.of(CronjobExceptionCode.THREAD_POOL_INSTANCE_REQUIRED)
-          .msg(I18n.message("cronjob.thread.pool.instance.required", new Object[]{"pool"}));
+      throw BusinessException.of(CronjobExceptionCode.THREAD_POOL_INSTANCE_REQUIRED);
     }
     // P2-E1: 包装拒绝处理器为计数版本，使 rejectedExecutionCount 可观测
     wrapRejectionCounter(name, pool);

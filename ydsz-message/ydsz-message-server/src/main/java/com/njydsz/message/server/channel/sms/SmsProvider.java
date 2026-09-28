@@ -4,9 +4,8 @@ import java.util.List;
 
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
-import com.njydsz.common.locales.util.I18n
-import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.message.domain.vo.MsgTemplateVO;
 
 /**
  * 短信服务商 SPI 接口。

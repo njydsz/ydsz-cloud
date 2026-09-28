@@ -24,7 +24,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.locales.util.I18n
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
@@ -35,10 +35,6 @@ import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.EntityVersionService;
-import com.njydsz.common.locales.util.I18n;
-
-
-
 
 /**
  * 系统配置批量操作 Service 实现
@@ -378,7 +374,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private static String validateNumberValue(String configValue) {
     double v = Double.parseDouble(configValue.trim());
     if (v < MIN_NUMBER || v > MAX_NUMBER) {
-      return I18n.message("system.excel.numberOutOfRange", new Object[] {MIN_NUMBER);
+      return I18n.message("system.excel.numberOutOfRange", new Object[] {MIN_NUMBER});
     }
     return null;
   }

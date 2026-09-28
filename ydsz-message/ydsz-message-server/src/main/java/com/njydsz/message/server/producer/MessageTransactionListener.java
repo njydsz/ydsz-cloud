@@ -15,11 +15,10 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.locales.util.I18n
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.service.TemplateService;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * RocketMQ 事务消息本地事务监听器（P2-3）。

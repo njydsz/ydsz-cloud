@@ -24,7 +24,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.locales.util.I18n
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
@@ -41,7 +41,6 @@ import com.njydsz.system.server.service.VariableService;
 import com.njydsz.system.server.service.rollback.VariableRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 import com.njydsz.system.server.vo.VariableExcelVO;
-import com.njydsz.common.locales.util.I18n;
 
 
 

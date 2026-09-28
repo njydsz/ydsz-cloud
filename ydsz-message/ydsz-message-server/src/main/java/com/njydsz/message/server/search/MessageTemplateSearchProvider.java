@@ -12,10 +12,9 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.common.locales.util.I18n
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 消息模板搜索提供者 — 将消息模板数据注册到统一搜索体系。

@@ -8,7 +8,6 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -622,10 +622,10 @@ public class ScriptRule implements Rule {
           .invoke(config, customizer);
     } catch (ClassNotFoundException e) {
       // P0-4 修复：fail-closed，拒绝执行而非降级
-      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(e.getMessage);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(e.getMessage());
     } catch (Exception e) {
       // P0-4 修复：fail-closed，拒绝执行而非降级
-      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(e.getMessage);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(e.getMessage());
     }
   }
 
@@ -676,22 +676,22 @@ public class ScriptRule implements Rule {
   private static void checkScriptSafety(String script) {
     Matcher matcher = DANGEROUS_PATTERN.matcher(script);
     if (matcher.find()) {
-      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(matcher.group);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(matcher.group(0));
     }
     // 检测字符串拼接绕过尝试
     Matcher concatMatcher = CONCAT_BYPASS_PATTERN.matcher(script);
     if (concatMatcher.find()) {
-      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(concatMatcher.group);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(concatMatcher.group(0));
     }
     // 检测 GString 插值绕过尝试
     Matcher gstringMatcher = GSTRING_BYPASS_PATTERN.matcher(script);
     if (gstringMatcher.find()) {
-      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(gstringMatcher.group);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(gstringMatcher.group(0));
     }
     // P0-4 增强：检测 Unicode 转义绕过尝试
     Matcher unicodeMatcher = UNICODE_ESCAPE_PATTERN.matcher(script);
     if (unicodeMatcher.find()) {
-      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(unicodeMatcher.group);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(unicodeMatcher.group(0));
     }
     // P0-4 增强：检测八进制转义绕过尝试
     Matcher octalMatcher = OCTAL_ESCAPE_PATTERN.matcher(script);
@@ -701,7 +701,7 @@ public class ScriptRule implements Rule {
     // P0-4 增强：检测字节构造绕过尝试
     Matcher byteMatcher = BYTE_CONSTRUCT_PATTERN.matcher(script);
     if (byteMatcher.find()) {
-      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(byteMatcher.group);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(byteMatcher.group(0));
     }
   }
 

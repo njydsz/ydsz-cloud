@@ -358,7 +358,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
     } catch (IllegalArgumentException e) {
       throw e;
     } catch (Exception e) {
-      throw BusinessException.of(LiteruleExceptionCode.DECISION_TABLE_EXCEL_INVALID).params(e.getMessage);
+      throw BusinessException.of(LiteruleExceptionCode.DECISION_TABLE_EXCEL_INVALID).params(e.getMessage());
     }
   }
 

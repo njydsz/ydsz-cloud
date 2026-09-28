@@ -272,7 +272,7 @@ public class RuleApprovalService {
 
       RuleStatus firstLevelStatus = levelToStatus(1, flow.maxLevel());
       if (!current.canTransitionTo(firstLevelStatus)) {
-      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STATE_TRANSITION_DENIED).params(current.getDesc);
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STATE_TRANSITION_DENIED).params(current.getDesc());
       }
 
       // 创建审批记录
@@ -342,7 +342,7 @@ public class RuleApprovalService {
       ApprovalFlow flow = resolveFlow(record.getFlowCode());
       ApprovalStep step = flow.getStep(record.getCurrentLevel());
       if (step == null) {
-        throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel);
+        throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel());
       }
 
       // 校验权限（考虑委托场景）
@@ -466,7 +466,7 @@ public class RuleApprovalService {
       ApprovalFlow flow = resolveFlow(record.getFlowCode());
       ApprovalStep step = flow.getStep(record.getCurrentLevel());
       if (step == null) {
-      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel);
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel());
       }
 
       validateApprovePermission(operator, step, record);
@@ -548,7 +548,7 @@ public class RuleApprovalService {
       ApprovalFlow flow = resolveFlow(record.getFlowCode());
       ApprovalStep step = flow.getStep(record.getCurrentLevel());
       if (step == null) {
-      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel);
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel());
       }
       if (!step.isAllowDelegate()) {
       throw BusinessException.of(LiteruleExceptionCode.SECURITY_PRIVILEGE_ESCALATION);
@@ -605,7 +605,7 @@ public class RuleApprovalService {
       }
       if (!ApprovalRecord.STATUS_PENDING.equals(record.getCurrentStatus())
           && !ApprovalRecord.STATUS_DELEGATED.equals(record.getCurrentStatus())) {
-      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STATE_TRANSITION_DENIED).params(record.getCurrentStatus);
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STATE_TRANSITION_DENIED).params(record.getCurrentStatus());
       }
 
       record.appendLog(
@@ -916,7 +916,7 @@ public class RuleApprovalService {
       RuleDefinitionDTO def, RuleStatus target, String operator, String changeDesc) {
     RuleStatus current = RuleStatus.fromCode(def.getStatus());
     if (current != null && !current.canTransitionTo(target)) {
-      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(target.getDesc);
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(target.getDesc());
     }
     def.setStatus(target.name());
     if (target == RuleStatus.PUBLISHED) {

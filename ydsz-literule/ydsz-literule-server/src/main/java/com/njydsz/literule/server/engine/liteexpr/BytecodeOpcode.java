@@ -1,5 +1,8 @@
 package com.njydsz.literule.server.engine.liteexpr;
 
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+
 /**
  * LiteExpr 字节码指令集
  *
@@ -154,6 +157,7 @@ public enum BytecodeOpcode {
         return op;
       }
     }
-      throw BusinessException.of(LiteruleExceptionCode.ENGINE_BYTECODE_INVALID).params(Integer.toHexString);
+    throw BusinessException.of(LiteruleExceptionCode.ENGINE_BYTECODE_INVALID)
+        .params(Integer.toHexString(code));
   }
 }

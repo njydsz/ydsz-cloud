@@ -353,12 +353,12 @@ public class RuleAdminService {
   public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator, String changeDesc) {
     // 校验表达式语法
     if (!evaluator.validate(definition.getConditionExpression())) {
-      throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(definition.getConditionExpression);
+      throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(definition.getConditionExpression());
     }
     if (definition.getSeverityExpression() != null
         && !definition.getSeverityExpression().isBlank()) {
       if (!evaluator.validate(definition.getSeverityExpression())) {
-      throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(definition.getSeverityExpression);
+      throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(definition.getSeverityExpression());
       }
     }
 
@@ -773,7 +773,7 @@ public class RuleAdminService {
     // 更新：校验状态转换合法性（状态未变化时直接放行）
     RuleStatus current = parseStatusSafely(existing.getStatus());
     if (target != current && !current.canTransitionTo(target)) {
-      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(current.getDesc);
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(current.getDesc());
     }
   }
 

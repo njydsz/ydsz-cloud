@@ -7,11 +7,10 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 任务状态机（Domain 层）。
@@ -261,7 +260,7 @@ public class FlowTaskStateMachine {
    */
   public String getTransitionDescription(FlowTaskStatus current, FlowTaskStatus target) {
     if (current == null || target == null) {
-      return I18n.message("未知状态流转");
+      return I18n.message("workflow.transition.unknown");
     }
     if (current == target) {
       return I18n.message("workflow.transition.no.change", new Object[] {current.name()});

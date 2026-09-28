@@ -24,7 +24,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.locales.util.I18n
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -40,7 +40,6 @@ import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.rollback.DictItemRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 import com.njydsz.system.server.vo.DictItemExcelVO;
-import com.njydsz.common.locales.util.I18n;
 
 
 
@@ -582,7 +581,7 @@ public class DictItemServiceImpl implements DictItemService {
     // DB 唯一性校验
     if (dictRepository.existsItemByTypeAndCode(excelRow.getTypeCode(), excelRow.getItemCode())) {
       return ValidationError.of("itemCode", "DUPLICATE",
-          I18n.message("system.excel.dictItem.duplicate", new Object[] {excelRow.getTypeCode()));
+          I18n.message("system.excel.dictItem.duplicate", new Object[] {excelRow.getTypeCode()}));
     }
     return null;
   }
@@ -698,7 +697,7 @@ public class DictItemServiceImpl implements DictItemService {
       } catch (Exception e) {
         log.warn("单条插入字典项失败: typeCode={}, itemCode={}, error={}",
             dto.getTypeCode(), dto.getItemCode(), e.getMessage());
-        String errorMsg = I18n.message("system.excel.dictItem.singleSaveFailed", new Object[] {dto.getTypeCode());
+        String errorMsg = I18n.message("system.excel.dictItem.singleSaveFailed", new Object[] {dto.getTypeCode()});
         errors.add(errorMsg);
         ImportResultVO.ImportErrorItem errorItem = new ImportResultVO.ImportErrorItem();
         errorItem.setRow(0);

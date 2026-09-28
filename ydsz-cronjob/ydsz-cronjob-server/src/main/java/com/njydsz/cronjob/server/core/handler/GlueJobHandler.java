@@ -28,7 +28,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
@@ -278,14 +277,12 @@ public class GlueJobHandler implements JobHandler {
     // 从 JobExecutionContext 获取当前 jobId
     String jobId = JobExecutionContext.getShardingContext().getJobId();
     if (!StringUtils.hasText(jobId)) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_CONTEXT_MISSING_JOBID)
-          .msg(I18n.message("cronjob.glue.context.missing.job.id", new Object[]{}));
+      throw BusinessException.of(CronjobExceptionCode.GLUE_CONTEXT_MISSING_JOBID);
     }
 
     GlueCodeService glueCodeService = glueCodeServiceProvider.getIfAvailable();
     if (glueCodeService == null) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_SERVICE_UNREGISTERED)
-          .msg(I18n.message("cronjob.glue.service.unregistered", new Object[]{}));
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SERVICE_UNREGISTERED);
     }
 
     // 获取最新版本代码
@@ -294,7 +291,7 @@ public class GlueJobHandler implements JobHandler {
         || glueCode.getSourceCode() == null
         || glueCode.getSourceCode().isBlank()) {
       throw BusinessException.of(CronjobExceptionCode.GLUE_CODE_EMPTY)
-          .msg(I18n.message("cronjob.glue.code.empty", new Object[]{jobId}));
+          .params(new Object[]{jobId});
     }
 
     String sourceCode = glueCode.getSourceCode();
@@ -313,7 +310,7 @@ public class GlueJobHandler implements JobHandler {
       case "SHELL" -> executeShell(sourceCode, paramsJson);
       case "JAVASCRIPT", "JS" -> executeJavaScript(sourceCode, paramsJson);
       default -> throw BusinessException.of(CronjobExceptionCode.GLUE_LANGUAGE_UNSUPPORTED)
-          .msg(I18n.message("cronjob.glue.language.unsupported", new Object[]{language}));
+          .params(new Object[]{language});
     };
   }
 
@@ -411,8 +408,7 @@ public class GlueJobHandler implements JobHandler {
   private Object executeShell(String sourceCode, String paramsJson) throws JobExecutionException {
     SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
     if (executor == null) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_PYTHON_EXECUTOR_UNREGISTERED)
-          .msg(I18n.message("cronjob.glue.python.executor.unregistered", new Object[]{}));
+      throw BusinessException.of(CronjobExceptionCode.GLUE_PYTHON_EXECUTOR_UNREGISTERED);
     }
     Map<String, String> envVars = new HashMap<>(COLLECTION_CAPACITY);
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");

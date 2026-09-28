@@ -114,6 +114,34 @@ public class SysException extends AbstractYdszException {
     init(exceptionCode, new Object[] {}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
   }
 
+  /**
+   * 使用消息构造系统异常（跳过 i18n 解析，直接覆盖）。
+   *
+   * <p>供前 session 遗留代码 {@code new SysException("msg")} 兼容；
+   * 建议新代码使用 {@link #of(String)} 传入 i18n key，或 {@link #builder()} 完整构建。
+   *
+   * @param message 异常消息
+   */
+  public SysException(String message) {
+    super(message);
+    initFields(DEFAULT_CODE, null, new Object[] {});
+    initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    this.overrideMessage = message;
+  }
+
+  /**
+   * 使用消息和根因构造系统异常（跳过 i18n 解析，直接覆盖）。
+   *
+   * @param message 异常消息
+   * @param cause 根因异常
+   */
+  public SysException(String message, Throwable cause) {
+    super(message, cause);
+    initFields(DEFAULT_CODE, null, new Object[] {});
+    initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+    this.overrideMessage = message;
+  }
+
   // ==================== 业务方法 ====================
 
   /**

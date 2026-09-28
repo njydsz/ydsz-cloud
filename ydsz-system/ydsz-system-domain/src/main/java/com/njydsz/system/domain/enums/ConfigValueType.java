@@ -2,7 +2,6 @@ package com.njydsz.system.domain.enums;
 
 import java.util.regex.Pattern;
 
-import com.njydsz.common.locales.util.I18n
 import com.njydsz.common.locales.util.I18n;
 
 /**
@@ -139,7 +138,7 @@ public enum ConfigValueType {
       return I18n.message("数值格式非法");
     }
     if (v < MIN_NUMBER || v > MAX_NUMBER) {
-      return I18n.message("system.excel.numberOutOfRange", new Object[] {MIN_NUMBER);
+      return I18n.message("system.excel.numberOutOfRange", new Object[] {MIN_NUMBER});
     }
     return null;
   }

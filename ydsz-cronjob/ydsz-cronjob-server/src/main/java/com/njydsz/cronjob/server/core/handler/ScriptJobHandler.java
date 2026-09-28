@@ -24,7 +24,6 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
 import com.njydsz.cronjob.domain.job.JobExecutionContext;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
@@ -122,21 +121,21 @@ public class ScriptJobHandler implements JobHandler {
   public Object execute(String paramsJson) throws JobExecutionException {
     if (!StringUtils.hasText(paramsJson)) {
       throw BusinessException.of(CronjobExceptionCode.PARAM_ERROR)
-          .msg(I18n.message("cronjob.param.required", new Object[]{"paramsJson"}));
+          .params(new Object[]{"paramsJson"});
     }
 
     ObjectNode params = YdszJson.parseObject(paramsJson);
     String language = params.getString("language");
     if (!StringUtils.hasText(language)) {
       throw BusinessException.of(CronjobExceptionCode.PARAM_ERROR)
-          .msg(I18n.message("cronjob.param.required", new Object[]{"language"}));
+          .params(new Object[]{"language"});
     }
     language = language.toLowerCase();
 
     String script = params.getString("script");
     if (!StringUtils.hasText(script)) {
       throw BusinessException.of(CronjobExceptionCode.PARAM_ERROR)
-          .msg(I18n.message("cronjob.param.required", new Object[]{"script"}));
+          .params(new Object[]{"script"});
     }
 
     List<String> args = parseArgs(params.getArrayNode("args"));
@@ -387,7 +386,7 @@ public class ScriptJobHandler implements JobHandler {
         command.add(scriptFile.toString());
       }
       default -> throw BusinessException.of(CronjobExceptionCode.PARAM_ERROR)
-          .msg(I18n.message("cronjob.param.required", new Object[]{"language: " + language}));
+          .params(new Object[]{"language: " + language});
     }
     if (args != null) {
       command.addAll(args);

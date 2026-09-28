@@ -20,10 +20,9 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.http.RestTemplateUtils;
-import com.njydsz.common.locales.util.I18n
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.config.MessageProperties;
-import com.njydsz.common.locales.util.I18n;
 
 /**
  * 阿里云短信服务商实现。

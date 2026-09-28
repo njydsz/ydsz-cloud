@@ -210,6 +210,32 @@ public class BusinessException extends AbstractYdszException {
   }
 
   /**
+   * 设置 i18n 消息参数（链式调用）。
+   *
+   * <p>与 Builder 的 {@link BusinessExceptionBuilder#params(Object...)} 功能等价，
+   * 但直接作用于 {@link #of(ExceptionCode)} 返回的实例，避免显式 Builder 声明。
+   * 参数最终由 {@link #getMessage()} 通过 enum 注册的 i18n key 按请求线程 Locale 解析。
+   *
+   * <pre>{@code
+   * // 替代 builder 模式，直接链式传入占位符参数
+   * throw BusinessException.of(CronjobExceptionCode.GLUE_LANGUAGE_UNSUPPORTED)
+   *     .params(language);
+   * }</pre>
+   *
+   * <p>当未注册 i18n 资源束时，回退到 enum 原始 key 字面量。
+   *
+   * @param params i18n 消息占位符参数（如 {@code {0}}、{@code {1}}）
+   * @return 当前异常对象
+   * @since 26.09.29
+   */
+  public BusinessException params(Object... params) {
+    this.params = normalizeParams(params);
+    this.messageParams = this.params;
+    invalidateMessageCache();
+    return this;
+  }
+
+  /**
    * 转换为可序列化的异常响应体，供全局异常处理器写回 HTTP 响应。
    *
    * <p>会触发国际化消息的懒加载解析，应在请求线程内调用以保证取到正确的 Locale。 注意：通过 {@link #data(String, Object)}

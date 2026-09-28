@@ -2,7 +2,6 @@ package com.njydsz.userinfo.domain.enums;
 
 import java.util.Locale;
 
-import com.njydsz.common.locales.util.I18n
 import com.njydsz.common.locales.util.I18n;
 
 /**

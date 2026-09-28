@@ -135,7 +135,7 @@ public enum LiteruleExceptionCode implements ExceptionCode {
   SECURITY_SANDBOX_VIOLATION("B93602", "literule.security.sandbox.violation", 403),
 
   /** 熔断器配置非法 */
-  CIRCUIT_BREAKER_INVALID_CONFIG("B93603", "literule.circuit.breaker.invalid.config", 500),
+  CIRCUIT_BREAKER_INVALID_CONFIG("B93603", "literule.circuit.breaker.invalid.config", 500);
 
   /** 默认 HTTP 状态码（业务参数错误） */
   private static final int DEFAULT_HTTP_STATUS = 400;
