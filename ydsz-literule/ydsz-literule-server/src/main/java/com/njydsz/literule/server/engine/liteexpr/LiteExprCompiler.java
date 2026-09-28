@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * LiteExpr 编译器
@@ -65,7 +66,7 @@ public class LiteExprCompiler {
    */
   public ExprNode compile(String expression) {
     if (expression == null || expression.isBlank()) {
-      throw new LiteExprException("表达式为空", 1, 1);
+      throw new LiteExprException(I18n.message("literule.compiler.empty_expression"), 1, 1);
     }
     return cache.get(expression, this::compile0);
   }

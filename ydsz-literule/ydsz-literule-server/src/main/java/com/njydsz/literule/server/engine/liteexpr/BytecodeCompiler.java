@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * LiteExpr 字节码编译器 — 将 AST 编译为栈式虚拟机字节码
@@ -126,7 +127,7 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
       case "<=" -> BytecodeOpcode.CMP_LE;
       case "==" -> BytecodeOpcode.CMP_EQ;
       case "!=" -> BytecodeOpcode.CMP_NE;
-      default -> throw new SysException("未知运算符: " + node.operator());
+      default -> throw new SysException(I18n.message("literule.engine.unknown_operator", new Object[]{node.operator()}));
     };
     emitOpcode(opcode);
     return null;
@@ -138,7 +139,7 @@ public class BytecodeCompiler implements ExprNodeVisitor<Void> {
     switch (node.operator()) {
       case "!" -> emitOpcode(BytecodeOpcode.LOGIC_NOT);
       case "-" -> emitOpcode(BytecodeOpcode.NEG);
-      default -> throw new SysException("未知一元运算符: " + node.operator());
+      default -> throw new SysException(I18n.message("literule.engine.unknown_unary_operator", new Object[]{node.operator()}));
     }
     return null;
   }

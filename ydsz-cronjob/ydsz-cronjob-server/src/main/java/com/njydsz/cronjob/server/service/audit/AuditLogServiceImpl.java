@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.server.service.audit;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -8,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.cronjob.domain.query.AuditLogQuery;
 import com.njydsz.cronjob.domain.repository.AuditLogRepository;
 import com.njydsz.cronjob.domain.vo.AuditLogVO;
 
@@ -27,24 +27,24 @@ public class AuditLogServiceImpl implements AuditLogService {
   private final AuditLogRepository auditLogRepository;
 
   @Override
-  public PageResponse<List<AuditLogVO>> page(
-      int pageNum,
-      int size,
-      Integer action,
-      String operatorName,
-      LocalDateTime startTime,
-      LocalDateTime endTime) {
-    // 计算偏移量
-    int offset = (Math.max(pageNum, 1) - 1) * size;
-    // 查询总数
-    long total = auditLogRepository.countCronjobAudit(action, operatorName, startTime, endTime);
+  public PageResponse<List<AuditLogVO>> page(AuditLogQuery query) {
+    int offset = query.getOffset();
+    int limit = query.getLimit();
+    long total =
+        auditLogRepository.countCronjobAudit(
+            query.getAction(), query.getOperatorName(), query.getStartTime(), query.getEndTime());
     if (total == 0) {
-      return PageResponse.empty((long) pageNum, (long) size);
+      return PageResponse.empty((long) query.getPageNum(), (long) query.getPageSize());
     }
-    // 查询分页数据
     List<AuditLogVO> records =
         auditLogRepository.selectCronjobAuditPage(
-            action, operatorName, startTime, endTime, size, offset);
-    return PageResponse.success((long) total, (long) pageNum, (long) size, records);
+            query.getAction(),
+            query.getOperatorName(),
+            query.getStartTime(),
+            query.getEndTime(),
+            limit,
+            offset);
+    return PageResponse.success(
+        (long) total, (long) query.getPageNum(), (long) query.getPageSize(), records);
   }
 }

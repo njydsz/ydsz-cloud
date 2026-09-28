@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * LiteExpr 递归下降解析器（Pratt Parser 风格）
  *
@@ -48,7 +50,7 @@ public class ExprParser {
    */
   public ExprNode parse() {
     if (tokens.isEmpty() || (tokens.size() == 1 && tokens.get(0).type() == TokenType.EOF)) {
-      throw new LiteExprException("表达式为空", 1, 1);
+      throw new LiteExprException(I18n.message("literule.parser.empty_expression"), 1, 1);
     }
     ExprNode node = parseExpression();
     if (!isAtEnd()) {
@@ -179,7 +181,7 @@ public class ExprParser {
           String methodName = buildMemberChain(man);
           node = new FunctionCallNode(methodName, args, man.line(), man.column());
         } else {
-          throw new LiteExprException("不能对非函数表达式进行调用", node.line(), node.column());
+          throw new LiteExprException(I18n.message("literule.parser.non_function_call"), node.line(), node.column());
         }
       } else {
         break;

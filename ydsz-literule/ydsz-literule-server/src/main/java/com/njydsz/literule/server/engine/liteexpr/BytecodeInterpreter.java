@@ -8,6 +8,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * LiteExpr 字节码解释器 — 栈式虚拟机执行引擎
@@ -423,7 +424,7 @@ public class BytecodeInterpreter {
     if (v instanceof String s) {
       return Long.parseLong(s);
     }
-      throw new SysException("无法转为 long: " + v);
+      throw new SysException(I18n.message("literule.engine.cannot_convert_long", new Object[]{v}));
   }
 
   // ===== 比较运算 =====
@@ -561,7 +562,7 @@ public class BytecodeInterpreter {
   private Object callFunction(String funcName, Object[] args) {
     LiteExprFunction function = functionRegistry.lookup(funcName);
     if (function == null) {
-      throw new LiteExprException("未注册的函数: " + funcName, 0, 0);
+      throw new LiteExprException(I18n.message("literule.engine.unregistered_function", new Object[]{funcName}), 0, 0);
     }
     try {
       return function.call(args);

@@ -12,6 +12,7 @@ import java.util.Map;
 
 import com.njydsz.literule.server.debug.RuleDebugger;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * LiteExpr AST 树形遍历解释器
@@ -334,7 +335,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
                 ? -BuiltinFunctions.toLong(operandVal)
                 : BuiltinFunctions.toDecimal(operandVal).negate();
       } else {
-        throw new LiteExprException("未知一元运算符: " + op, node.line(), node.column());
+        throw new LiteExprException(I18n.message("literule.treeinterp.unknown_unary_operator", new Object[]{op}), node.line(), node.column());
       }
       if (evalSession.traceBuilder != null) {
         evalSession.traceBuilder.recordUnary(op, operandVal, result, node);
@@ -373,7 +374,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       String funcName = node.functionName();
       LiteExprFunction function = functionRegistry.lookup(funcName);
       if (function == null) {
-        throw new LiteExprException("未定义的函数: " + funcName, node.line(), node.column());
+        throw new LiteExprException(I18n.message("literule.treeinterp.undefined_function", new Object[]{funcName}), node.line(), node.column());
       }
 
       // 求值参数
@@ -572,7 +573,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
       case "<" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) < 0;
       case "<=" ->
           BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) <= 0;
-      default -> throw new LiteExprException("未知运算符: " + op, 0, 0);
+      default -> throw new LiteExprException(I18n.message("literule.treeinterp.unknown_operator", new Object[]{op}), 0, 0);
     };
   }
 
