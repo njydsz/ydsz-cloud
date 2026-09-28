@@ -14,10 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
 import com.njydsz.agent.domain.dto.PromptVersionDTO;
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.repository.PromptTemplateRepository;
 import com.njydsz.agent.domain.repository.PromptVersionRepository;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
 import com.njydsz.agent.domain.vo.PromptVersionVO;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * Prompt 管理服务（含版本管理 + 发布/灰度/回滚能力）
@@ -92,7 +94,7 @@ public class PromptManagementService {
       String code, String name, String content, String description, String category) {
     PromptTemplateVO existing = selectByCode(code);
     if (existing != null) {
-      throw new IllegalArgumentException("Prompt 模板已存在: " + code);
+    throw BusinessException.of(AgentExceptionCode.PROMPT_TEMPLATE_DUPLICATE).params(code);
     }
     LocalDateTime now = LocalDateTime.now();
     // 插入模板主表（初始版本号为 1）
@@ -128,7 +130,7 @@ public class PromptManagementService {
   public PromptTemplate update(String code, String content) {
     PromptTemplateVO existing = selectByCode(code);
     if (existing == null) {
-      throw new IllegalArgumentException("Prompt 模板不存在: " + code);
+      throw BusinessException.of(AgentExceptionCode.PROMPT_TEMPLATE_NOT_FOUND).params(code);
     }
     int newVersion = existing.getCurrentVersion() + 1;
     LocalDateTime now = LocalDateTime.now();
@@ -186,7 +188,7 @@ public class PromptManagementService {
   public String getContentWithAbTest(String code, String contextId) {
     PromptTemplateVO config = selectByCode(code);
     if (config == null) {
-      throw new IllegalArgumentException("Prompt 模板不存在: " + code);
+    throw BusinessException.of(AgentExceptionCode.PROMPT_TEMPLATE_NOT_FOUND).params(code);
     }
     if (!Boolean.TRUE.equals(config.getIsAbTestEnabled())
         || config.getAbTrafficPercent() == null
@@ -225,7 +227,7 @@ public class PromptManagementService {
   public PromptTemplate releaseVersion(String code, int targetVersion, String changeNote) {
     PromptVersion pv = getVersion(code, targetVersion);
     if (pv == null) {
-      throw new IllegalArgumentException("版本不存在: " + targetVersion);
+      throw BusinessException.of(AgentExceptionCode.PROMPT_VERSION_NOT_FOUND).params(targetVersion);
     }
     PromptTemplateVO existing = selectByCode(code);
     LocalDateTime now = LocalDateTime.now();
@@ -271,11 +273,11 @@ public class PromptManagementService {
   public void enableAbTest(String code, int canaryVersion, int trafficPercent) {
     PromptTemplateVO existing = selectByCode(code);
     if (existing == null) {
-      throw new IllegalArgumentException("Prompt 模板不存在: " + code);
+      throw BusinessException.of(AgentExceptionCode.PROMPT_TEMPLATE_NOT_FOUND).params(code);
     }
     PromptVersion pv = getVersion(code, canaryVersion);
     if (pv == null) {
-      throw new IllegalArgumentException("灰度版本不存在: " + canaryVersion);
+      throw BusinessException.of(AgentExceptionCode.PROMPT_CANARY_VERSION_NOT_FOUND).params(canaryVersion);
     }
     PromptTemplateDTO templateDTO = new PromptTemplateDTO();
     templateDTO.setId(existing.getId());
@@ -391,7 +393,7 @@ public class PromptManagementService {
   public PromptTemplate rollback(String code, int targetVersion) {
     PromptVersion pv = getVersion(code, targetVersion);
     if (pv == null) {
-      throw new IllegalArgumentException("版本不存在: " + targetVersion);
+      throw BusinessException.of(AgentExceptionCode.PROMPT_VERSION_NOT_FOUND).params(targetVersion);
     }
     PromptTemplateVO existing = selectByCode(code);
     int newVersion = existing.getCurrentVersion() + 1;
@@ -433,7 +435,7 @@ public class PromptManagementService {
   public String render(String code, Map<String, Object> variables) {
     PromptTemplate template = get(code);
     if (template == null) {
-      throw new IllegalArgumentException("Prompt 模板不存在: " + code);
+      throw BusinessException.of(AgentExceptionCode.PROMPT_TEMPLATE_NOT_FOUND).params(code);
     }
     String content = template.content();
     if (variables != null) {

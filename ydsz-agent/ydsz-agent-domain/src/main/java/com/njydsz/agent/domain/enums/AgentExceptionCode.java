@@ -75,6 +75,10 @@ public enum AgentExceptionCode implements ExceptionCode {
   PROMPT_TEMPLATE_DUPLICATE("B94305", "agent.prompt.template.duplicate"),
   /** 护栏校验拒绝 */
   GUARDRAIL_REJECTED("B94306", "agent.guardrail.rejected", 403),
+  /** Prompt 版本不存在 */
+  PROMPT_VERSION_NOT_FOUND("B94307", "agent.prompt.version.not.found", 404),
+  /** 灰度版本不存在 */
+  PROMPT_CANARY_VERSION_NOT_FOUND("B94308", "agent.prompt.canary.version.not.found", 404),
 
   // ==================== B94401-B94499 调试/追踪 ====================
   /** 追踪记录不存在 */

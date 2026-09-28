@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.compress.MessageCompressor;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
@@ -58,7 +60,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
   @Override
   public String syncSend(MessageItemRequestDTO req) {
     if (req == null) {
-      throw new IllegalArgumentException("MessageRequest must not be null");
+      throw new BusinessException("消息请求不能为空", 400);
     }
     ensureMessageId(req);
     String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
@@ -72,11 +74,11 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
           req.getMessageId(),
           req.getChannel(),
           e.getMessage());
-      throw new IllegalStateException("RocketMQ syncSend failed: " + e.getMessage(), e);
+      throw new SysException("RocketMQ 同步发送失败", e);
     }
     if (result == null || result.getSendStatus() != SendStatus.SEND_OK) {
       String status = result == null ? "null" : result.getSendStatus().name();
-      throw new IllegalStateException("RocketMQ syncSend 状态异常: " + status);
+      throw new SysException("RocketMQ 同步发送状态异常: " + status);
     }
     log.info(
         "[Producer] syncSend OK: msgId={} messageId={} channel={}",
@@ -94,7 +96,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
   @Override
   public void asyncSend(MessageItemRequestDTO req) {
     if (req == null) {
-      throw new IllegalArgumentException("MessageRequest must not be null");
+      throw new BusinessException("消息请求不能为空", 400);
     }
     ensureMessageId(req);
     String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
@@ -123,7 +125,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
     } catch (Exception e) {
       log.error(
           "[Producer] asyncSend 提交失败: messageId={} err={}", req.getMessageId(), e.getMessage());
-      throw new IllegalStateException("RocketMQ asyncSend 提交失败: " + e.getMessage(), e);
+      throw new SysException("RocketMQ 异步发送失败", e);
     }
   }
 
@@ -184,7 +186,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
   @Override
   public String sendTransactionMessage(MessageItemRequestDTO req) {
     if (req == null) {
-      throw new IllegalArgumentException("MessageRequest must not be null");
+      throw new BusinessException("消息请求不能为空", 400);
     }
     ensureMessageId(req);
     String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
@@ -203,7 +205,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
           "[Producer] sendTransactionMessage 失败: messageId={} err={}",
           req.getMessageId(),
           e.getMessage());
-      throw new IllegalStateException("RocketMQ sendTransactionMessage failed: " + e.getMessage(), e);
+      throw new SysException("RocketMQ 事务消息发送失败", e);
     }
   }
 }
