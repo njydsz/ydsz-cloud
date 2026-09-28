@@ -15,7 +15,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -25,6 +25,7 @@ import com.njydsz.system.server.vo.ImportResultVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.service.ConfigExcelService;
 import com.njydsz.system.server.vo.ConfigExcelVO;
+import com.njydsz.common.locales.util.I18n;
 
 
 
@@ -162,10 +163,8 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
       return typeError;
     }
     if (configRepository.existsByGroupAndKey(excelRow.getConfigGroup(), excelRow.getConfigKey())) {
-      String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
-      return rowPrefix + MessageUtils.getMessage("system.excel.configKey.exists",
-          new Object[] {excelRow.getConfigGroup() + "/" + excelRow.getConfigKey()},
-          "配置已存在(" + excelRow.getConfigGroup() + "/" + excelRow.getConfigKey() + ")");
+      String rowPrefix = I18n.message("system.excel.rowPrefix", new Object[] {rowNum});
+      return rowPrefix + I18n.message("system.excel.configKey.exists", new Object[] {excelRow.getConfigGroup() + "/" + excelRow.getConfigKey()});
     }
     return null;
   }
@@ -178,15 +177,15 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
    * @return 错误描述；通过返回 null
    */
   private String validateRequiredFields(ConfigExcelVO excelRow, int rowNum) {
-    String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
+    String rowPrefix = I18n.message("system.excel.rowPrefix", new Object[] {rowNum});
     if (excelRow.getConfigGroup() == null || excelRow.getConfigGroup().isBlank()) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.configGroup.required", "配置分组不能为空");
+      return rowPrefix + I18n.message("配置分组不能为空");
     }
     if (excelRow.getConfigKey() == null || excelRow.getConfigKey().isBlank()) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.configKey.required", "配置键不能为空");
+      return rowPrefix + I18n.message("配置键不能为空");
     }
     if (excelRow.getConfigValue() == null || excelRow.getConfigValue().isBlank()) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.configValue.required", "配置值不能为空");
+      return rowPrefix + I18n.message("配置值不能为空");
     }
     return null;
   }
@@ -206,9 +205,8 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
       ConfigValueType.validate(excelRow.getValueType());
       return null;
     } catch (IllegalArgumentException e) {
-      String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
-      return rowPrefix + MessageUtils.getMessage("system.excel.valueType.invalid",
-          new Object[] {excelRow.getValueType()}, "值类型不合法: " + excelRow.getValueType());
+      String rowPrefix = I18n.message("system.excel.rowPrefix", new Object[] {rowNum});
+      return rowPrefix + I18n.message("system.excel.valueType.invalid", new Object[] {excelRow.getValueType()});
     }
   }
 

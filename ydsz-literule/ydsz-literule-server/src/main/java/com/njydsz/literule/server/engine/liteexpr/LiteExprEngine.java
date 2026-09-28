@@ -12,6 +12,8 @@ import com.njydsz.literule.domain.expression.ExpressionFunctionDef;
 import com.njydsz.literule.domain.expression.ExpressionTraceNode;
 import com.njydsz.literule.domain.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * LiteExpr 自研表达式求值器
@@ -465,7 +467,7 @@ public class LiteExprEngine implements ExpressionEngine {
     if (sandboxEnabled) {
       LiteExprSandbox.SandboxResult result = sandbox.check(ast);
       if (!result.passed()) {
-        throw new SecurityException("表达式被沙箱拦截: " + result.violationSummary());
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION);
       }
     }
     return ast;

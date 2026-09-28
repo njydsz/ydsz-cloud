@@ -10,11 +10,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.SessionManager;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 设备会话管理服务（P3-2）。
@@ -153,7 +153,7 @@ public class DeviceSessionService {
    */
   private String maskUserAgent(String userAgent) {
     if (userAgent == null || userAgent.isBlank()) {
-      return MessageUtils.getMessage("userinfo.device.unknown", "未知设备");
+      return I18n.message("userinfo.device.unknown");
     }
     if (userAgent.length() <= USER_AGENT_MAX_LENGTH) {
       return userAgent;

@@ -11,6 +11,7 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 规则集实体（P2-14）。
@@ -120,7 +121,7 @@ public class RulePack extends MpBaseEntity<String> {
     if (newRating == null
         || newRating.compareTo(BigDecimal.ZERO) < 0
         || newRating.compareTo(new BigDecimal("5")) > 0) {
-      throw new IllegalArgumentException("rule.pack.error.rating_out_of_range: " + newRating);
+      throw new SysException("rule.pack.error.rating_out_of_range: " + newRating);
     }
     this.rating = newRating;
   }

@@ -16,6 +16,7 @@ import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * A/B 测试自动回滚默认实现（server 层）
@@ -192,7 +193,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
     // 回滚到上一个稳定版本（当前版本 - 1）
     RuleDefinitionDTO current = ruleAdminService.getByCode(ruleCode);
     if (current == null) {
-      throw new IllegalStateException("人工回滚失败：规则不存在，ruleCode=" + ruleCode);
+      throw new SysException("人工回滚失败：规则不存在，ruleCode=" + ruleCode);
     }
     int currentVersion = current.getVersion() > 1 ? current.getVersion() : 2;
     int targetVersion = Math.max(1, currentVersion - 1);
@@ -201,8 +202,7 @@ public class DefaultABTestAutoRollbackProvider implements ABTestAutoRollbackProv
     if (rolledBack.isEmpty()) {
       log.warn("[LiteRule-ABTest] 人工回滚失败: ruleCode={}, targetVersion={}, operator={}",
           ruleCode, targetVersion, operator);
-      throw new IllegalStateException(
-          "人工回滚失败：目标版本不存在，ruleCode=" + ruleCode + ", targetVersion=" + targetVersion);
+      throw new SysException("人工回滚失败：目标版本不存在，ruleCode=");
     }
 
     RuleABRollbackVO record = new RuleABRollbackVO();

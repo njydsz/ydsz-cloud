@@ -3,6 +3,7 @@ package com.njydsz.userinfo.infra.social;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -72,7 +73,7 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
   public String authorize(String state, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("钉钉配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.dingtalk.config.not.found"));
     }
 
     String clientId = config.getAppId();
@@ -96,7 +97,7 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
   public SocialAccessToken exchangeToken(String code, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("钉钉配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.dingtalk.config.not.found"));
     }
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
@@ -111,7 +112,7 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
 
     String accessToken = getStr(tokenResponse, "accessToken");
     if (accessToken == null || accessToken.isBlank()) {
-      throw new SocialAuthException("钉钉获取 access_token 失败");
+      throw new SocialAuthException(I18n.message("userinfo.social.dingtalk.access_token.failed"));
     }
 
     Long expireIn = getLong(tokenResponse, "expireIn", DEFAULT_EXPIRE_IN);
@@ -124,7 +125,7 @@ public class DingTalkAuthProvider extends AbstractSocialAuthProvider {
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("钉钉配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.dingtalk.config.not.found"));
     }
 
     String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);

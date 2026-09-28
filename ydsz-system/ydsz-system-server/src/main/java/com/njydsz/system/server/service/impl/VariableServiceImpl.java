@@ -24,7 +24,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
@@ -41,6 +41,7 @@ import com.njydsz.system.server.service.VariableService;
 import com.njydsz.system.server.service.rollback.VariableRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 import com.njydsz.system.server.vo.VariableExcelVO;
+import com.njydsz.common.locales.util.I18n;
 
 
 
@@ -485,27 +486,25 @@ public class VariableServiceImpl implements VariableService {
    * @return 错误描述；校验通过返回 null
    */
   private String validateExcelRow(VariableExcelVO excelRow, int rowNum) {
-    String rowPrefix = MessageUtils.getMessage("system.excel.rowPrefix", new Object[] {rowNum}, "第 " + rowNum + " 行: ");
+    String rowPrefix = I18n.message("system.excel.rowPrefix", new Object[] {rowNum});
     if (excelRow.getVariableKey() == null || excelRow.getVariableKey().isBlank()) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.variableKey.required", "变量键不能为空");
+      return rowPrefix + I18n.message("变量键不能为空");
     }
     if (excelRow.getVariableValue() == null || excelRow.getVariableValue().isBlank()) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.variableValue.required", "变量值不能为空");
+      return rowPrefix + I18n.message("变量值不能为空");
     }
     // 值类型校验
     if (excelRow.getValueType() != null && !excelRow.getValueType().isBlank()) {
       try {
         ConfigValueType.validate(excelRow.getValueType());
       } catch (IllegalArgumentException e) {
-        return rowPrefix + MessageUtils.getMessage("system.excel.valueType.invalid",
-            new Object[] {excelRow.getValueType()}, "值类型不合法: " + excelRow.getValueType());
+        return rowPrefix + I18n.message("system.excel.valueType.invalid", new Object[] {excelRow.getValueType()});
       }
     }
     // DB 唯一性校验
     VariableVO existing = variableRepository.findByKeyIgnoreStatus(excelRow.getVariableKey()).orElse(null);
     if (existing != null) {
-      return rowPrefix + MessageUtils.getMessage("system.excel.variableKey.duplicate",
-          new Object[] {excelRow.getVariableKey()}, "变量已存在(" + excelRow.getVariableKey() + ")");
+      return rowPrefix + I18n.message("system.excel.variableKey.duplicate", new Object[] {excelRow.getVariableKey()});
     }
     return null;
   }

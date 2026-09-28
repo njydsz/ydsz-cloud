@@ -23,6 +23,9 @@ import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.impl.ScorecardRule;
 import com.njydsz.literule.server.impl.ScriptRule;
 import com.njydsz.literule.server.orchestrator.RuleChain;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * DSL 模型到引擎可执行对象的转换器
@@ -144,10 +147,10 @@ public final class RuleDslConverter {
           new CrossDecisionTableRule(toCrossDecisionTableDefinition(entry), evaluator);
       case "script" -> toScriptRule(entry);
       case "static_rule" ->
-          throw new IllegalArgumentException("static_rule 类型需通过编程式注册，DSL 不支持直接声明");
+      throw new SysException("static_rule 类型需通过编程式注册，DSL 不支持直接声明");
       case "decision_tree" ->
-          throw new IllegalArgumentException("decision_tree 类型暂未支持 DSL 声明，请使用编程式 API");
-      default -> throw new IllegalArgumentException("未知规则类型: " + type);
+      throw new SysException("decision_tree 类型暂未支持 DSL 声明，请使用编程式 API");
+      default -> throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(type);
     };
   }
 
@@ -170,7 +173,7 @@ public final class RuleDslConverter {
               entry.getCondition(), resolveRule(entry.getStep(), ruleMap, entry.getName()));
       case "ELIF" -> buildElifChain(entry, ruleMap);
       case "SWITCH" -> buildSwitchChain(entry, ruleMap);
-      default -> throw new IllegalArgumentException("未知链类型: " + type);
+      default -> throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(type);
     };
   }
 
@@ -472,7 +475,7 @@ public final class RuleDslConverter {
   private static Rule[] resolveRules(
       List<String> steps, Map<String, Rule> ruleMap, String chainName) {
     if (steps == null || steps.isEmpty()) {
-      throw new IllegalArgumentException("链 " + chainName + " 的 steps 为空");
+      throw new SysException("链 " + chainName + " 的 steps 为空");
     }
     Rule[] rules = new Rule[steps.size()];
     for (int i = 0; i < steps.size(); i++) {
@@ -484,11 +487,11 @@ public final class RuleDslConverter {
   /** 解析单个规则引用 */
   private static Rule resolveRule(String code, Map<String, Rule> ruleMap, String chainName) {
     if (code == null || code.isBlank()) {
-      throw new IllegalArgumentException("链 " + chainName + " 引用了空的规则编码");
+      throw new SysException("链 " + chainName + " 引用了空的规则编码");
     }
     Rule r = ruleMap.get(code);
     if (r == null) {
-      throw new IllegalArgumentException("链 " + chainName + " 引用了不存在的规则: " + code);
+      throw new SysException("链 " + chainName + " 引用了不存在的规则: " + code);
     }
     return r;
   }

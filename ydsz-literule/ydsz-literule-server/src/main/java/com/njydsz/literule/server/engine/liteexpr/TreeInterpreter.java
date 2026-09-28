@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.njydsz.literule.server.debug.RuleDebugger;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * LiteExpr AST 树形遍历解释器
@@ -134,7 +135,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   private EvalSession requireSession() {
     EvalSession evalSession = session.get();
     if (evalSession == null) {
-      throw new IllegalStateException("LiteExpr 求值会话未初始化，请在 eval/evalWithTrace 调用链内使用");
+      throw new SysException("LiteExpr 求值会话未初始化，请在 eval/evalWithTrace 调用链内使用");
     }
     return evalSession;
   }

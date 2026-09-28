@@ -154,6 +154,6 @@ public enum BytecodeOpcode {
         return op;
       }
     }
-    throw new IllegalArgumentException("未知字节码操作码: 0x" + Integer.toHexString(code));
+      throw BusinessException.of(LiteruleExceptionCode.ENGINE_BYTECODE_INVALID).params(Integer.toHexString);
   }
 }

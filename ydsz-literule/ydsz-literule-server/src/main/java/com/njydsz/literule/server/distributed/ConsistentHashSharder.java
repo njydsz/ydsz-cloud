@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.util.security.DigestUtils;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 一致性 Hash 分片器（P2-16 分布式执行）
@@ -165,7 +166,7 @@ public class ConsistentHashSharder {
     try {
       digest = DigestUtils.digest(new ByteArrayInputStream(keyBytes), "MD5");
     } catch (IOException e) {
-      throw new IllegalStateException("MD5 摘要计算失败: " + key, e);
+      throw new SysException("MD5 摘要计算失败: " + key, e);
     }
     long h = 0;
     for (int i = 0; i < MD5_PREFIX_BYTES; i++) {

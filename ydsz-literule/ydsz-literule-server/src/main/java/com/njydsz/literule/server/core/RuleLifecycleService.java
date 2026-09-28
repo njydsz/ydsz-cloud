@@ -25,6 +25,9 @@ import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 规则生命周期管理服务（P3-1）
@@ -636,7 +639,7 @@ public class RuleLifecycleService {
   public RuleDefinitionVO rollback(String ruleCode, int version, String operator) {
     RollbackPreviewVO preview = previewRollback(ruleCode, version);
     if (!preview.isRollbackAllowed()) {
-      throw new IllegalStateException("回滚被拒绝: " + preview.getRollbackBlockedReason());
+      throw new SysException("回滚被拒绝: " + preview.getRollbackBlockedReason());
     }
     log.info(
         "[Lifecycle] 执行一键回滚: rule={}, targetVersion={}, diffCount={}, operator={}",
@@ -664,17 +667,17 @@ public class RuleLifecycleService {
   public RuleDefinitionDTO retireRule(String ruleCode, String operator, String reason) {
     RuleDefinitionDTO rule = configProvider.findByCode(ruleCode);
     if (rule == null) {
-      throw new IllegalArgumentException("规则不存在: " + ruleCode);
+      throw BusinessException.of(LiteruleExceptionCode.RULE_NOT_FOUND).params(ruleCode);
     }
 
     RuleStatus currentStatus = RuleStatus.fromCode(rule.getStatus());
     if (currentStatus == RuleStatus.ARCHIVED) {
-      throw new IllegalStateException("规则已归档，无需重复退役: " + ruleCode);
+      throw new SysException("规则已归档，无需重复退役: " + ruleCode);
     }
 
     // 校验状态转换合法性
     if (currentStatus != null && !currentStatus.canTransitionTo(RuleStatus.ARCHIVED)) {
-      throw new IllegalStateException("不允许的状态转换: " + currentStatus.getDesc() + " → 已归档（请先停用或发布规则）");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(currentStatus.getDesc);
     }
 
     // 设置归档状态并禁用

@@ -4,8 +4,9 @@ import java.util.List;
 
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 短信服务商 SPI 接口。
@@ -63,7 +64,7 @@ public interface SmsProvider {
    * @return 回执结果：状态（DELIVERED/FAILED/UNKNOWN）+ 错误码 + 错误描述
    */
   default MessageSendResultVO queryReceipt(String providerTraceId, String phone) {
-    String msg = MessageUtils.getMessage("message.sms.provider.receipt.not.supplemented", "当前 provider 未实现回执查询");
+    String msg = I18n.message("当前 provider 未实现回执查询");
     return MessageSendResultVO.fail("SMS", null, msg, msg, null);
   }
 }

@@ -24,7 +24,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.ConfigValueType;
@@ -35,6 +35,7 @@ import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.common.locales.util.I18n;
 
 
 
@@ -358,10 +359,9 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
         case JSON -> validateJsonValue(configValue);
       };
     } catch (NumberFormatException e) {
-      return MessageUtils.getMessage("system.excel.numberFormat.invalid", "数值格式非法");
+      return I18n.message("数值格式非法");
     } catch (IllegalArgumentException e) {
-      return MessageUtils.getMessage("system.excel.unknownValueType",
-          new Object[] {valueType}, "未知的值类型: " + valueType);
+      return I18n.message("system.excel.unknownValueType", new Object[] {valueType});
     } catch (Exception e) {
       return e.getMessage() != null ? e.getMessage() : "校验异常";
     }
@@ -370,8 +370,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   /** 校验 STRING 类型长度（私有）。 */
   private static String validateStringValue(String configValue) {
     return configValue.length() > MAX_STRING_LENGTH
-        ? MessageUtils.getMessage("system.excel.stringTooLong",
-            new Object[] {MAX_STRING_LENGTH}, "字符串长度超过限制 " + MAX_STRING_LENGTH)
+        ? I18n.message("system.excel.stringTooLong", new Object[] {MAX_STRING_LENGTH})
         : null;
   }
 
@@ -379,8 +378,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private static String validateNumberValue(String configValue) {
     double v = Double.parseDouble(configValue.trim());
     if (v < MIN_NUMBER || v > MAX_NUMBER) {
-      return MessageUtils.getMessage("system.excel.numberOutOfRange",
-          new Object[] {MIN_NUMBER, MAX_NUMBER}, "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]");
+      return I18n.message("system.excel.numberOutOfRange", new Object[] {MIN_NUMBER);
     }
     return null;
   }
@@ -389,7 +387,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private static String validateBooleanValue(String configValue) {
     return BOOLEAN_PATTERN.matcher(configValue.trim()).matches()
         ? null
-        : MessageUtils.getMessage("system.excel.booleanInvalid", "布尔值必须是 true/false");
+        : I18n.message("布尔值必须是 true/false");
   }
 
   /** 校验 JSON 类型合法性与长度（私有）。 */

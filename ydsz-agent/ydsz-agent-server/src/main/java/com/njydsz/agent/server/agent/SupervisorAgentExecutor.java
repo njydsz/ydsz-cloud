@@ -36,7 +36,7 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Supervisor 多 Agent 协作执行器
@@ -805,16 +805,15 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   /** 汇总子任务结果生成最终回答 */
   private String synthesizeResults(String originalTask, List<String> results, String convId) {
     if (results.isEmpty()) {
-      return MessageUtils.getMessage("agent.supervisor.noResult", "抱歉，无法完成您的任务。");
+      return I18n.message("抱歉，无法完成您的任务。");
     }
     if (results.size() == 1) {
       return results.get(0);
     }
     // 多任务结果拼接 + 最终总结
-    String header = MessageUtils.getMessage("agent.supervisor.multiTaskHeader", "以下是各子任务的执行结果：\n\n");
-    String taskPrefix = MessageUtils.getMessage("agent.supervisor.taskPrefix", "## 任务 ");
-    String footer = MessageUtils.getMessage("agent.supervisor.footer", new Object[] {originalTask},
-        "---\n这就是针对您的请求\"" + originalTask + "\"的处理结果。");
+    String header = I18n.message("以下是各子任务的执行结果：\n\n");
+    String taskPrefix = I18n.message("## 任务 ");
+    String footer = I18n.message("agent.supervisor.footer", new Object[] {originalTask});
     StringBuilder sb = new StringBuilder();
     sb.append(header);
     for (int i = 0; i < results.size(); i++) {

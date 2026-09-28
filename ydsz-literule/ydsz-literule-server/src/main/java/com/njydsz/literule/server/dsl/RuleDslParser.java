@@ -20,6 +20,9 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * LiteRule 声明式 DSL 解析器
@@ -135,7 +138,7 @@ public final class RuleDslParser {
    */
   public static RuleDsl loadFromFile(Path path) throws IOException {
     if (path == null) {
-      throw new IllegalArgumentException("文件路径不能为 null");
+      throw new SysException("文件路径不能为 null");
     }
     String fileName = path.getFileName() == null ? "" : path.getFileName().toString();
     String lower = fileName.toLowerCase();
@@ -146,7 +149,7 @@ public final class RuleDslParser {
     if (lower.endsWith(".json")) {
       return parseJson(content);
     }
-    throw new IllegalArgumentException("不支持的规则文件后缀: " + fileName + "（仅支持 .yml / .yaml / .json）");
+      throw new SysException("不支持的规则文件后缀: " + fileName + "（仅支持 .yml / .yaml / .json）");
   }
 
   /**
@@ -165,13 +168,13 @@ public final class RuleDslParser {
     }
     String content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
     if (format == null || format.isBlank()) {
-      throw new IllegalArgumentException("format 不能为空（yaml / json）");
+      throw new SysException("format 不能为空（yaml / json）");
     }
     String f = format.trim().toLowerCase();
     return switch (f) {
       case "yaml", "yml" -> parseYaml(content);
       case "json" -> parseJson(content);
-      default -> throw new IllegalArgumentException("不支持的规则文件格式: " + format);
+      default -> throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(format);
     };
   }
 
@@ -259,10 +262,10 @@ public final class RuleDslParser {
    */
   public static void validate(RuleDsl dsl) {
     if (dsl == null) {
-      throw new IllegalArgumentException("DSL 模型不能为 null");
+      throw new SysException("DSL 模型不能为 null");
     }
     if (dsl.getRules() == null && dsl.getChains() == null) {
-      throw new IllegalArgumentException("DSL 至少需包含 rules 或 chains 段");
+      throw new SysException("DSL 至少需包含 rules 或 chains 段");
     }
     // 校验规则
     if (dsl.getRules() != null) {
@@ -443,79 +446,76 @@ public final class RuleDslParser {
 
   private static void validateRuleEntry(RuleDslEntry entry) {
     if (entry.getCode() == null || entry.getCode().isBlank()) {
-      throw new IllegalArgumentException("规则 code 不能为空");
+      throw new SysException("规则 code 不能为空");
     }
     if (entry.getName() == null || entry.getName().isBlank()) {
-      throw new IllegalArgumentException("规则 name 不能为空（code=" + entry.getCode() + "）");
+      throw new SysException("规则 name 不能为空（code=" + entry.getCode() + "）");
     }
     String type = entry.getType() == null ? "expression" : entry.getType().toLowerCase();
     switch (type) {
       case "expression" -> {
         if (entry.getCondition() == null || entry.getCondition().isBlank()) {
-          throw new IllegalArgumentException(
-              "expression 规则 " + entry.getCode() + " 缺少 condition 字段");
+          throw new SysException("expression 规则 ");
         }
       }
       case "scorecard" -> {
         if ((entry.getFactors() == null || entry.getFactors().isEmpty())
             && entry.getBaseScore() == null) {
-          throw new IllegalArgumentException(
-              "scorecard 规则 " + entry.getCode() + " 至少需配置 factors 或 base_score");
+          throw new SysException("scorecard 规则 ");
         }
       }
       case "decision_table" -> {
         if (entry.getRows() == null || entry.getRows().isEmpty()) {
-          throw new IllegalArgumentException(
-              "decision_table 规则 " + entry.getCode() + " 缺少 rows 配置");
+          throw new SysException("decision_table 规则 ");
         }
       }
       case "script" -> {
         if (entry.getScriptBody() == null || entry.getScriptBody().isBlank()) {
-          throw new IllegalArgumentException("script 规则 " + entry.getCode() + " 缺少 script_body 配置");
+      throw new SysException("script 规则 " + entry.getCode() + " 缺少 script_body 配置");
         }
       }
       case "decision_tree", "static_rule" -> {
         // 校验略，类型合法即可
       }
       default ->
-          throw new IllegalArgumentException("未知规则类型: " + type + "（code=" + entry.getCode() + "）");
+      throw new SysException("未知规则类型: " + type + "（code=" + entry.getCode() + "）");
     }
   }
 
   private static void validateChainEntry(ChainDslEntry entry) {
     if (entry.getName() == null || entry.getName().isBlank()) {
-      throw new IllegalArgumentException("链 name 不能为空");
+      throw new SysException("链 name 不能为空");
     }
     String type = entry.getType() == null ? "THEN" : entry.getType().toUpperCase();
     switch (type) {
       case "THEN", "WHEN" -> {
         if (entry.getSteps() == null || entry.getSteps().isEmpty()) {
-          throw new IllegalArgumentException(type + " 链 " + entry.getName() + " 缺少 steps 配置");
+      throw new SysException(type + " 链 " + entry.getName() + " 缺少 steps 配置");
         }
       }
       case "IF" -> {
         if (entry.getCondition() == null || entry.getCondition().isBlank()) {
-          throw new IllegalArgumentException("IF 链 " + entry.getName() + " 缺少 condition");
+      throw new SysException("IF 链 " + entry.getName() + " 缺少 condition");
         }
         if (entry.getStep() == null || entry.getStep().isBlank()) {
-          throw new IllegalArgumentException("IF 链 " + entry.getName() + " 缺少 step");
+      throw new SysException("IF 链 " + entry.getName() + " 缺少 step");
         }
       }
       case "ELIF" -> {
         if (entry.getBranches() == null || entry.getBranches().isEmpty()) {
-          throw new IllegalArgumentException("ELIF 链 " + entry.getName() + " 缺少 branches");
+      throw new SysException("ELIF 链 " + entry.getName() + " 缺少 branches");
         }
       }
       case "SWITCH" -> {
         if (entry.getBranchKey() == null || entry.getBranchKey().isBlank()) {
-          throw new IllegalArgumentException("SWITCH 链 " + entry.getName() + " 缺少 branch_key");
+      throw new SysException("SWITCH 链 " + entry.getName() + " 缺少 branch_key");
         }
         if (entry.getBranches() == null || entry.getBranches().isEmpty()) {
-          throw new IllegalArgumentException("SWITCH 链 " + entry.getName() + " 缺少 branches");
+      throw new SysException("SWITCH 链 " + entry.getName() + " 缺少 branches");
         }
       }
       default ->
-          throw new IllegalArgumentException("未知链类型: " + type + "（name=" + entry.getName() + "）");
+      throw new SysException("未知链类型: " + type + "（name=" + entry.getName() + "）");
     }
   }
 

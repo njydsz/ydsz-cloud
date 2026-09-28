@@ -33,6 +33,9 @@ import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.core.RuleEvaluationException;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 脚本规则：基于 JSR-223 Groovy 脚本动态评估
@@ -147,11 +150,7 @@ public class ScriptRule implements Rule {
             engine = ENGINE_MANAGER.getEngineByName("jython");
           }
           if (engine == null) {
-            throw new IllegalStateException(
-                "脚本引擎未找到: "
-                    + lang
-                    + "，请确保对应 JSR-223 实现在 classpath 中"
-                    + "（groovy 需 groovy-jsr223，javascript 需 nashorn-core，python 需 jython）");
+            throw new SysException("脚本引擎未找到: ");
           }
           return engine;
         });
@@ -488,7 +487,7 @@ public class ScriptRule implements Rule {
       Compilable compilable = (Compilable) engine;
       return compilable.compile(script);
     } catch (Exception e) {
-      throw new IllegalArgumentException(capitalize(language) + " 脚本编译失败: " + e.getMessage(), e);
+      throw BusinessException.of(LiteruleExceptionCode.SCRIPT_COMPILATION_FAILED);
     }
   }
 
@@ -623,12 +622,10 @@ public class ScriptRule implements Rule {
           .invoke(config, customizer);
     } catch (ClassNotFoundException e) {
       // P0-4 修复：fail-closed，拒绝执行而非降级
-      throw new SecurityException(
-          "Groovy SecureASTCustomizer 不可用，拒绝执行脚本（fail-closed）: " + e.getMessage(), e);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(e.getMessage);
     } catch (Exception e) {
       // P0-4 修复：fail-closed，拒绝执行而非降级
-      throw new SecurityException(
-          "应用 Groovy SecureASTCustomizer 失败，拒绝执行脚本（fail-closed）: " + e.getMessage(), e);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(e.getMessage);
     }
   }
 
@@ -679,39 +676,32 @@ public class ScriptRule implements Rule {
   private static void checkScriptSafety(String script) {
     Matcher matcher = DANGEROUS_PATTERN.matcher(script);
     if (matcher.find()) {
-      throw new SecurityException(
-          "脚本包含被禁止的 API 调用: "
-              + matcher.group()
-              + "（沙箱模式禁止 System.exit/Runtime.exec/反射/文件I/O/网络访问等）");
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(matcher.group);
     }
     // 检测字符串拼接绕过尝试
     Matcher concatMatcher = CONCAT_BYPASS_PATTERN.matcher(script);
     if (concatMatcher.find()) {
-      throw new SecurityException(
-          "脚本检测到字符串拼接绕过尝试: " + concatMatcher.group() + "（沙箱模式禁止拼接危险 API 类名）");
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(concatMatcher.group);
     }
     // 检测 GString 插值绕过尝试
     Matcher gstringMatcher = GSTRING_BYPASS_PATTERN.matcher(script);
     if (gstringMatcher.find()) {
-      throw new SecurityException(
-          "脚本检测到 GString 插值绕过尝试: " + gstringMatcher.group() + "（沙箱模式禁止动态拼接危险 API 类名）");
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(gstringMatcher.group);
     }
     // P0-4 增强：检测 Unicode 转义绕过尝试
     Matcher unicodeMatcher = UNICODE_ESCAPE_PATTERN.matcher(script);
     if (unicodeMatcher.find()) {
-      throw new SecurityException(
-          "脚本检测到 Unicode 转义: " + unicodeMatcher.group() + "（沙箱模式禁止使用 Unicode 转义绕过类名检测）");
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(unicodeMatcher.group);
     }
     // P0-4 增强：检测八进制转义绕过尝试
     Matcher octalMatcher = OCTAL_ESCAPE_PATTERN.matcher(script);
     if (octalMatcher.find()) {
-      throw new SecurityException("脚本检测到八进制转义: " + octalMatcher.group() + "（沙箱模式禁止使用八进制转义绕过类名检测）");
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION);
     }
     // P0-4 增强：检测字节构造绕过尝试
     Matcher byteMatcher = BYTE_CONSTRUCT_PATTERN.matcher(script);
     if (byteMatcher.find()) {
-      throw new SecurityException(
-          "脚本检测到字节构造: " + byteMatcher.group() + "（沙箱模式禁止使用 new String(new byte[]{...}) 绕过类名检测）");
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_SANDBOX_VIOLATION).params(byteMatcher.group);
     }
   }
 

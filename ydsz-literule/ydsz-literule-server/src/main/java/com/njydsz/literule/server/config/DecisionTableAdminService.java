@@ -20,6 +20,9 @@ import com.njydsz.literule.server.impl.DecisionTableRule;
 import com.njydsz.literule.server.service.DecisionTableExcelService;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 决策表管理服务
@@ -158,7 +161,7 @@ public class DecisionTableAdminService {
   public byte[] exportExcel(String tableCode) {
     DecisionTableDefinitionDTO def = configProvider.findByCode(tableCode);
     if (def == null) {
-      throw new IllegalArgumentException("决策表不存在: " + tableCode);
+      throw BusinessException.of(LiteruleExceptionCode.DECISION_TABLE_NOT_FOUND).params(tableCode);
     }
     byte[] bytes = getExcelService().exportToExcel(def);
     log.info("[LiteRule-DecisionTable] 决策表已导出 Excel: code={}, bytes={}", tableCode, bytes.length);
@@ -201,16 +204,16 @@ public class DecisionTableAdminService {
 
   private void validate(DecisionTableDefinitionDTO def) {
     if (def.getTableCode() == null || def.getTableCode().isBlank()) {
-      throw new IllegalArgumentException("rule.error.decision_table_code_required");
+      throw BusinessException.of(LiteruleExceptionCode.DECISION_TABLE_CODE_REQUIRED);
     }
     if (def.getTableName() == null || def.getTableName().isBlank()) {
-      throw new IllegalArgumentException("rule.error.decision_table_name_required");
+      throw new SysException("rule.error.decision_table_name_required");
     }
     if (def.getConditionColumns() == null || def.getConditionColumns().isEmpty()) {
-      throw new IllegalArgumentException("rule.error.decision_table_condition_required");
+      throw new SysException("rule.error.decision_table_condition_required");
     }
     if (def.getActionColumns() == null || def.getActionColumns().isEmpty()) {
-      throw new IllegalArgumentException("rule.error.decision_table_action_required");
+      throw new SysException("rule.error.decision_table_action_required");
     }
     if (def.getRows() == null) {
       def.setRows(Collections.emptyList());

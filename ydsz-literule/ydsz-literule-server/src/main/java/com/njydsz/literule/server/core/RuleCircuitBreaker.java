@@ -12,6 +12,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 规则熔断器（基于 Resilience4j）。
@@ -68,10 +69,10 @@ public class RuleCircuitBreaker {
    */
   public RuleCircuitBreaker(double errorRateThreshold, int minEvaluations, long openStateMs) {
     if (errorRateThreshold <= 0 || errorRateThreshold > 1) {
-      throw new IllegalArgumentException("errorRateThreshold 必须在 (0, 1] 区间");
+      throw new SysException("errorRateThreshold 必须在 (0, 1] 区间");
     }
     if (openStateMs <= 0) {
-      throw new IllegalArgumentException("openStateMs 必须大于 0");
+      throw new SysException("openStateMs 必须大于 0");
     }
     this.errorRateThreshold = errorRateThreshold;
     this.minEvaluations = Math.max(1, minEvaluations);

@@ -3,6 +3,7 @@ package com.njydsz.userinfo.infra.social;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -72,7 +73,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
   public String authorize(String state, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("飞书配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.feishu.config.not.found"));
     }
 
     String appId = config.getAppId();
@@ -94,7 +95,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
   public SocialAccessToken exchangeToken(String code, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("飞书配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.feishu.config.not.found"));
     }
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
@@ -113,7 +114,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
     if (!(data instanceof Map<?, ?> rawMap)) {
       Integer codeObj = getInt(tokenResponse, "code", null);
       String msg = getStr(tokenResponse, "msg");
-      throw new SocialAuthException("飞书获取 access_token 失败: " + codeObj + " - " + msg);
+      throw new SocialAuthException(I18n.message("userinfo.social.feishu.access_token.failed") + ": " + codeObj + " - " + msg);
     }
 
     Map<String, Object> dataMap = new HashMap<>(rawMap.size());
@@ -122,7 +123,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
     }
     String accessToken = getStr(dataMap, "access_token");
     if (accessToken == null || accessToken.isBlank()) {
-      throw new SocialAuthException("飞书获取 access_token 失败：响应中未包含 access_token");
+      throw new SocialAuthException(I18n.message("userinfo.social.feishu.access_token.empty"));
     }
 
     Long expire = getLong(dataMap, "expire_in", DEFAULT_EXPIRE_IN);
@@ -135,7 +136,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("飞书配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.feishu.config.not.found"));
     }
 
     String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
@@ -144,7 +145,7 @@ public class FeishuAuthProvider extends AbstractSocialAuthProvider {
 
     Object data = userResponse.get("data");
     if (!(data instanceof Map<?, ?> rawMap)) {
-      throw new SocialAuthException("飞书获取用户信息失败");
+      throw new SocialAuthException(I18n.message("userinfo.social.feishu.userinfo.failed"));
     }
 
     Map<String, Object> dataMap = new HashMap<>(rawMap.size());

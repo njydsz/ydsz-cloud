@@ -25,6 +25,9 @@ import com.njydsz.literule.domain.enums.RuleStatus;
 import com.njydsz.literule.domain.repository.ApprovalRecordRepository;
 import com.njydsz.literule.domain.vo.ApprovalRecordVO;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 规则审批流服务（P1-3 多级审批流）
@@ -171,10 +174,10 @@ public class RuleApprovalService {
    */
   public void registerFlow(ApprovalFlow flow) {
     if (flow == null || flow.getFlowCode() == null || flow.getFlowCode().isBlank()) {
-      throw new IllegalArgumentException("rule.error.approval_flow_code_required");
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_FLOW_CODE_REQUIRED);
     }
     if (flow.getSteps() == null || flow.getSteps().isEmpty()) {
-      throw new IllegalArgumentException("审批流配置非法：steps 不能为空: " + flow.getFlowCode());
+      throw new SysException("审批流配置非法：steps 不能为空: " + flow.getFlowCode());
     }
     flowRegistry.put(flow.getFlowCode(), flow);
     log.info(
@@ -224,12 +227,12 @@ public class RuleApprovalService {
     try {
       lockValue = distributedLocker.tryLock(lockKey, LOCK_WAIT_TIME, LOCK_LEASE_TIME, TimeUnit.SECONDS);
       if (lockValue == null) {
-        throw new IllegalStateException("获取分布式锁失败（超时 " + LOCK_WAIT_TIME + "s）: " + lockKey);
+      throw new SysException("获取分布式锁失败（超时 " + LOCK_WAIT_TIME + "s）: " + lockKey);
       }
       return action.get();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new IllegalStateException("获取分布式锁被中断: " + lockKey, e);
+      throw new SysException("获取分布式锁被中断: " + lockKey, e);
     } finally {
       if (lockValue != null) {
         try {
@@ -269,7 +272,7 @@ public class RuleApprovalService {
 
       RuleStatus firstLevelStatus = levelToStatus(1, flow.maxLevel());
       if (!current.canTransitionTo(firstLevelStatus)) {
-        throw new IllegalStateException("当前状态 " + current.getDesc() + " 不允许提交审核，仅 DRAFT 可提交");
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STATE_TRANSITION_DENIED).params(current.getDesc);
       }
 
       // 创建审批记录
@@ -339,8 +342,7 @@ public class RuleApprovalService {
       ApprovalFlow flow = resolveFlow(record.getFlowCode());
       ApprovalStep step = flow.getStep(record.getCurrentLevel());
       if (step == null) {
-        throw new IllegalStateException(
-            "审批步骤不存在: level=" + record.getCurrentLevel() + ", flow=" + flow.getFlowCode());
+        throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel);
       }
 
       // 校验权限（考虑委托场景）
@@ -349,7 +351,7 @@ public class RuleApprovalService {
       // COUNTERSIGN：不允许同一人重复通过
       if (step.getType() == ApprovalType.COUNTERSIGN
           && record.getCurrentLevelApprovedApprovers().contains(operator)) {
-        throw new IllegalStateException("会签场景下审批人已通过当前级别: " + operator);
+      throw new SysException("会签场景下审批人已通过当前级别: " + operator);
       }
 
       // SEQUENCE：必须是下一个该审批的人
@@ -394,7 +396,7 @@ public class RuleApprovalService {
         // 全部级别通过，发布规则
         RuleStatus currentStatus = parseStatus(def.getStatus());
         if (!currentStatus.canTransitionTo(RuleStatus.PUBLISHED)) {
-          throw new IllegalStateException("当前状态 " + currentStatus.getDesc() + " 不允许变更为 PUBLISHED");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
         }
         updateRuleStatus(
             def, RuleStatus.PUBLISHED, operator, "审批通过: 全部 " + flow.maxLevel() + " 级已完成");
@@ -413,8 +415,7 @@ public class RuleApprovalService {
         RuleStatus nextStatus = levelToStatus(nextLevel, flow.maxLevel());
         RuleStatus currentStatus = parseStatus(def.getStatus());
         if (!currentStatus.canTransitionTo(nextStatus)) {
-          throw new IllegalStateException(
-              "当前状态 " + currentStatus.getDesc() + " 不允许变更为 " + nextStatus.getDesc());
+          throw new SysException("当前状态 ");
         }
         updateRuleStatus(
             def,
@@ -465,7 +466,7 @@ public class RuleApprovalService {
       ApprovalFlow flow = resolveFlow(record.getFlowCode());
       ApprovalStep step = flow.getStep(record.getCurrentLevel());
       if (step == null) {
-        throw new IllegalStateException("审批步骤不存在: level=" + record.getCurrentLevel());
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel);
       }
 
       validateApprovePermission(operator, step, record);
@@ -486,7 +487,7 @@ public class RuleApprovalService {
         // 一级驳回：回退到 DRAFT
         RuleStatus currentStatus = parseStatus(def.getStatus());
         if (!currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
-          throw new IllegalStateException("当前状态 " + currentStatus.getDesc() + " 不允许驳回回 DRAFT");
+      throw new SysException("当前状态 " + currentStatus.getDesc() + " 不允许驳回回 DRAFT");
         }
         updateRuleStatus(def, RuleStatus.DRAFT, operator, "一级驳回: " + reason);
         record.setCurrentStatus(ApprovalRecord.STATUS_CANCELLED);
@@ -498,8 +499,7 @@ public class RuleApprovalService {
         RuleStatus previousStatus = levelToStatus(previousLevel, flow.maxLevel());
         RuleStatus currentStatus = parseStatus(def.getStatus());
         if (!currentStatus.canTransitionTo(previousStatus)) {
-          throw new IllegalStateException(
-              "当前状态 " + currentStatus.getDesc() + " 不允许驳回回 " + previousStatus.getDesc());
+          throw new SysException("当前状态 ");
         }
         updateRuleStatus(
             def,
@@ -548,16 +548,16 @@ public class RuleApprovalService {
       ApprovalFlow flow = resolveFlow(record.getFlowCode());
       ApprovalStep step = flow.getStep(record.getCurrentLevel());
       if (step == null) {
-        throw new IllegalStateException("审批步骤不存在: level=" + record.getCurrentLevel());
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STEP_NOT_FOUND).params(record.getCurrentLevel);
       }
       if (!step.isAllowDelegate()) {
-        throw new IllegalStateException("当前步骤不允许委托: level=" + record.getCurrentLevel());
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_PRIVILEGE_ESCALATION);
       }
 
       validateApprovePermission(operator, step, record);
 
       if (operator.equals(delegatedTo)) {
-        throw new IllegalArgumentException("不允许委托给自己: " + operator);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_PRIVILEGE_ESCALATION);
       }
 
       record.appendLog(
@@ -601,11 +601,11 @@ public class RuleApprovalService {
 
       ApprovalRecord record = loadRecord(ruleCode);
       if (record == null) {
-        throw new IllegalArgumentException("审批记录不存在: " + ruleCode);
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_RECORD_NOT_FOUND).params(ruleCode);
       }
       if (!ApprovalRecord.STATUS_PENDING.equals(record.getCurrentStatus())
           && !ApprovalRecord.STATUS_DELEGATED.equals(record.getCurrentStatus())) {
-        throw new IllegalStateException("当前审批状态不允许撤回: " + record.getCurrentStatus());
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STATE_TRANSITION_DENIED).params(record.getCurrentStatus);
       }
 
       record.appendLog(
@@ -721,7 +721,7 @@ public class RuleApprovalService {
   private RuleDefinitionDTO loadRule(String ruleCode) {
     RuleDefinitionDTO def = configProvider.findByCode(ruleCode);
     if (def == null) {
-      throw new IllegalArgumentException("规则不存在: " + ruleCode);
+      throw BusinessException.of(LiteruleExceptionCode.RULE_NOT_FOUND).params(ruleCode);
     }
     return def;
   }
@@ -731,10 +731,10 @@ public class RuleApprovalService {
     String code = (flowCode == null || flowCode.isBlank()) ? DEFAULT_FLOW_CODE : flowCode;
     ApprovalFlow flow = flowRegistry.get(code);
     if (flow == null) {
-      throw new IllegalArgumentException("审批流不存在: " + code);
+      throw new SysException("审批流不存在: " + code);
     }
     if (!flow.isEnabled()) {
-      throw new IllegalStateException("审批流已禁用: " + code);
+      throw new SysException("审批流已禁用: " + code);
     }
     return flow;
   }
@@ -743,11 +743,11 @@ public class RuleApprovalService {
   private ApprovalRecord loadRecordForAction(String ruleCode) {
     ApprovalRecord record = loadRecord(ruleCode);
     if (record == null) {
-      throw new IllegalArgumentException("审批记录不存在: " + ruleCode);
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_RECORD_NOT_FOUND).params(ruleCode);
     }
     if (!ApprovalRecord.STATUS_PENDING.equals(record.getCurrentStatus())
         && !ApprovalRecord.STATUS_DELEGATED.equals(record.getCurrentStatus())) {
-      throw new IllegalStateException("审批记录状态非 PENDING/DELEGATED: " + record.getCurrentStatus());
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_PRIVILEGE_ESCALATION);
     }
     return record;
   }
@@ -830,7 +830,7 @@ public class RuleApprovalService {
     if (ApprovalRecord.STATUS_DELEGATED.equals(record.getCurrentStatus())) {
       String delegateTo = findLatestDelegateTo(record);
       if (delegateTo == null || !delegateTo.equals(operator)) {
-        throw new SecurityException("当前审批已委托给 " + delegateTo + "，无权操作: " + operator);
+      throw BusinessException.of(LiteruleExceptionCode.SECURITY_PRIVILEGE_ESCALATION);
       }
       return;
     }
@@ -838,7 +838,7 @@ public class RuleApprovalService {
     // 指定了审批人列表：必须在列表中
     if (step.getApprovers() != null && !step.getApprovers().isEmpty()) {
       if (!step.getApprovers().contains(operator)) {
-        throw new SecurityException("审批人不在指定审批人列表中: " + operator);
+      throw new SysException("审批人不在指定审批人列表中: " + operator);
       }
       return;
     }
@@ -846,7 +846,7 @@ public class RuleApprovalService {
     // 使用权限检查器
     if (permissionChecker != null) {
       if (!permissionChecker.hasApprovePermission(operator, step)) {
-        throw new SecurityException("无审批权限: " + operator);
+      throw new SysException("无审批权限: " + operator);
       }
     }
     // 无 approvers 也无权限检查器，放行（便于单元测试与开发环境调试）
@@ -856,7 +856,7 @@ public class RuleApprovalService {
   private void validateSequenceApprover(String operator, ApprovalStep step, ApprovalRecord record) {
     String next = nextSequenceApprover(step, record);
     if (next == null || !next.equals(operator)) {
-      throw new IllegalStateException("顺序审批场景下当前应审批人: " + next + "，实际操作人: " + operator);
+      throw new SysException("顺序审批场景下当前应审批人: " + next + "，实际操作人: " + operator);
     }
   }
 
@@ -916,11 +916,7 @@ public class RuleApprovalService {
       RuleDefinitionDTO def, RuleStatus target, String operator, String changeDesc) {
     RuleStatus current = RuleStatus.fromCode(def.getStatus());
     if (current != null && !current.canTransitionTo(target)) {
-      throw new IllegalStateException(
-          "不允许的状态转换: "
-              + (current != null ? current.getDesc() : "UNKNOWN")
-              + " → "
-              + target.getDesc());
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(target.getDesc);
     }
     def.setStatus(target.name());
     if (target == RuleStatus.PUBLISHED) {
@@ -944,7 +940,7 @@ public class RuleApprovalService {
       case 1 -> RuleStatus.REVIEW_L1;
       case 2 -> RuleStatus.REVIEW_L2;
       case LEVEL_3_REVIEW -> RuleStatus.REVIEW_FINAL;
-      default -> throw new IllegalArgumentException("不支持的审批级别: " + level + "（当前最多支持 3 级）");
+      default -> throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_INVALID).params(level);
     };
   }
 
@@ -965,7 +961,7 @@ public class RuleApprovalService {
   /** 校验字符串非空 */
   private void requireNonBlank(String value, String name) {
     if (value == null || value.isBlank()) {
-      throw new IllegalArgumentException(name + " 不能为空");
+      throw new SysException(name + " 不能为空");
     }
   }
 

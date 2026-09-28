@@ -9,6 +9,8 @@ import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * 规则链画布（P0-1）
@@ -102,7 +104,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    */
   public void publish() {
     if (!isDraft()) {
-      throw new IllegalStateException("rule.chain.error.publish_invalid_state");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
     this.status = STATUS_PUBLISHED;
     this.graphVersion = (graphVersion == null) ? 1 : graphVersion + 1;
@@ -115,7 +117,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    */
   public void archive() {
     if (!isPublished()) {
-      throw new IllegalStateException("rule.chain.error.archive_invalid_state");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
     this.status = STATUS_ARCHIVED;
   }
@@ -127,7 +129,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    */
   public void revertToDraft() {
     if (!isPublished() && !isArchived()) {
-      throw new IllegalStateException("rule.chain.error.revert_invalid_state");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
     this.status = STATUS_DRAFT;
   }

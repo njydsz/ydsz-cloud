@@ -7,10 +7,11 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 任务状态机（Domain 层）。
@@ -260,35 +261,23 @@ public class FlowTaskStateMachine {
    */
   public String getTransitionDescription(FlowTaskStatus current, FlowTaskStatus target) {
     if (current == null || target == null) {
-      return MessageUtils.getMessage("workflow.transition.unknown", "未知状态流转");
+      return I18n.message("未知状态流转");
     }
     if (current == target) {
-      return MessageUtils.getMessage("workflow.transition.no.change", new Object[] {current.name()},
-          current.name() + ": 状态未变化");
+      return I18n.message("workflow.transition.no.change", new Object[] {current.name()});
     }
     return switch (target) {
-      case PENDING -> MessageUtils.getMessage("workflow.transition.PENDING", new Object[] {current},
-          current + " → PENDING: 任务激活/恢复");
-      case CLAIMED -> MessageUtils.getMessage("workflow.transition.CLAIMED", new Object[] {current},
-          current + " → CLAIMED: 任务签收");
-      case COMPLETED -> MessageUtils.getMessage("workflow.transition.COMPLETED", new Object[] {current},
-          current + " → COMPLETED: 任务通过");
-      case REJECTED -> MessageUtils.getMessage("workflow.transition.REJECTED", new Object[] {current},
-          current + " → REJECTED: 任务驳回");
-      case SKIPPED -> MessageUtils.getMessage("workflow.transition.SKIPPED", new Object[] {current},
-          current + " → SKIPPED: 任务跳过");
-      case CANCELLED -> MessageUtils.getMessage("workflow.transition.CANCELLED", new Object[] {current},
-          current + " → CANCELLED: 任务取消");
-      case TIMEOUT -> MessageUtils.getMessage("workflow.transition.TIMEOUT", new Object[] {current},
-          current + " → TIMEOUT: 任务超时");
-      case DELEGATED -> MessageUtils.getMessage("workflow.transition.DELEGATED", new Object[] {current},
-          current + " → DELEGATED: 任务委派");
-      case FROZEN -> MessageUtils.getMessage("workflow.transition.FROZEN", new Object[] {current},
-          current + " → FROZEN: 任务冻结");
-      case SUSPENDED -> MessageUtils.getMessage("workflow.transition.SUSPENDED", new Object[] {current},
-          current + " → SUSPENDED: 任务挂起");
-      case DRAFT -> MessageUtils.getMessage("workflow.transition.DRAFT", new Object[] {current},
-          current + " → DRAFT: 任务暂存");
+      case PENDING -> I18n.message("workflow.transition.PENDING", new Object[] {current});
+      case CLAIMED -> I18n.message("workflow.transition.CLAIMED", new Object[] {current});
+      case COMPLETED -> I18n.message("workflow.transition.COMPLETED", new Object[] {current});
+      case REJECTED -> I18n.message("workflow.transition.REJECTED", new Object[] {current});
+      case SKIPPED -> I18n.message("workflow.transition.SKIPPED", new Object[] {current});
+      case CANCELLED -> I18n.message("workflow.transition.CANCELLED", new Object[] {current});
+      case TIMEOUT -> I18n.message("workflow.transition.TIMEOUT", new Object[] {current});
+      case DELEGATED -> I18n.message("workflow.transition.DELEGATED", new Object[] {current});
+      case FROZEN -> I18n.message("workflow.transition.FROZEN", new Object[] {current});
+      case SUSPENDED -> I18n.message("workflow.transition.SUSPENDED", new Object[] {current});
+      case DRAFT -> I18n.message("workflow.transition.DRAFT", new Object[] {current});
     };
   }
 

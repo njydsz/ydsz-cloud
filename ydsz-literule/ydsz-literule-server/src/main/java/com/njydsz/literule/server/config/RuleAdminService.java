@@ -37,6 +37,8 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.version.RuleVersionDiff;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 规则管理服务
@@ -351,12 +353,12 @@ public class RuleAdminService {
   public RuleDefinitionDTO save(RuleDefinitionDTO definition, String operator, String changeDesc) {
     // 校验表达式语法
     if (!evaluator.validate(definition.getConditionExpression())) {
-      throw new IllegalArgumentException("条件表达式语法错误: " + definition.getConditionExpression());
+      throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(definition.getConditionExpression);
     }
     if (definition.getSeverityExpression() != null
         && !definition.getSeverityExpression().isBlank()) {
       if (!evaluator.validate(definition.getSeverityExpression())) {
-        throw new IllegalArgumentException("严重度表达式语法错误: " + definition.getSeverityExpression());
+      throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(definition.getSeverityExpression);
       }
     }
 
@@ -427,11 +429,11 @@ public class RuleAdminService {
   @Transactional(rollbackFor = Exception.class)
   public void updateOwner(String ruleCode, String owner, String operator) {
     if (ruleCode == null || ruleCode.isBlank()) {
-      throw new IllegalArgumentException("ruleCode 不能为空");
+      throw new SysException("ruleCode 不能为空");
     }
     RuleDefinitionDTO existing = configProvider.findByCode(ruleCode);
     if (existing == null) {
-      throw new IllegalArgumentException("规则不存在: " + ruleCode);
+      throw BusinessException.of(LiteruleExceptionCode.RULE_NOT_FOUND).params(ruleCode);
     }
     existing.setOwner(owner);
     configProvider.save(existing, operator);
@@ -459,12 +461,12 @@ public class RuleAdminService {
   @Transactional(rollbackFor = Exception.class)
   public void updateCategoryPath(String ruleCode, String path, String operator) {
     if (ruleCode == null || ruleCode.isBlank()) {
-      throw new IllegalArgumentException("ruleCode 不能为空");
+      throw new SysException("ruleCode 不能为空");
     }
     validateCategoryPath(path);
     RuleDefinitionDTO existing = configProvider.findByCode(ruleCode);
     if (existing == null) {
-      throw new IllegalArgumentException("规则不存在: " + ruleCode);
+      throw BusinessException.of(LiteruleExceptionCode.RULE_NOT_FOUND).params(ruleCode);
     }
     existing.setCategoryPath(path);
     // 一级分类同步到 category
@@ -479,24 +481,24 @@ public class RuleAdminService {
   /** 校验分类路径合法性 */
   private void validateCategoryPath(String path) {
     if (path == null || path.isBlank()) {
-      throw new IllegalArgumentException("rule.error.category_path_required");
+      throw new SysException("rule.error.category_path_required");
     }
     if (path.length() > MAX_PATH_LENGTH) {
-      throw new IllegalArgumentException("rule.error.category_path_length_exceed");
+      throw new SysException("rule.error.category_path_length_exceed");
     }
     if (path.startsWith("/") || path.endsWith("/")) {
-      throw new IllegalArgumentException("分类路径不能以 / 开头或结尾: " + path);
+      throw new SysException("分类路径不能以 / 开头或结尾: " + path);
     }
     if (path.contains("//")) {
-      throw new IllegalArgumentException("分类路径不能包含连续 / : " + path);
+      throw new SysException("分类路径不能包含连续 / : " + path);
     }
     String[] segs = path.split("/");
     if (segs.length > MAX_PATH_SEGMENTS) {
-      throw new IllegalArgumentException("分类路径深度不能超过 5 级: " + path);
+      throw new SysException("分类路径深度不能超过 5 级: " + path);
     }
     for (String s : segs) {
       if (!s.matches("[\\w\\u4e00-\\u9fa5-]+")) {
-        throw new IllegalArgumentException("分类路径段包含非法字符: " + s);
+      throw new SysException("分类路径段包含非法字符: " + s);
       }
     }
   }
@@ -529,7 +531,7 @@ public class RuleAdminService {
    */
   public RuleVersionDiff getVersionDiff(String ruleCode, int oldVersion, int newVersion) {
     if (versionRepository == null) {
-      throw new IllegalStateException("rule.error.version_repo_not_configured_diff");
+      throw new SysException("rule.error.version_repo_not_configured_diff");
     }
     RuleDefinitionDTO oldDef =
         versionRepository
@@ -578,7 +580,7 @@ public class RuleAdminService {
   @Transactional(rollbackFor = Exception.class)
   public Optional<RuleDefinitionVO> rollback(String ruleCode, int version, String operator) {
     if (versionRepository == null) {
-      throw new IllegalStateException("rule.error.version_repo_not_configured_rollback");
+      throw new SysException("rule.error.version_repo_not_configured_rollback");
     }
     Optional<RuleDefinitionVO> restored = versionRepository.rollback(ruleCode, version, operator);
     publishRefreshEvent(
@@ -611,7 +613,7 @@ public class RuleAdminService {
   public List<RuleResultVO> dryRun(
       String ruleCode, Map<String, Object> facts, Integer limit, RuleSeverity minSeverity) {
     if (!dryRunEnabled) {
-      throw new IllegalStateException("Dry-run 功能已被禁用（ydsz.literule.dryRunEnabled=false）");
+      throw new SysException("Dry-run 功能已被禁用（ydsz.literule.dryRunEnabled=false）");
     }
     RuleContextVO context = RuleContextVO.of(facts, "DRY_RUN", "MANUAL");
 
@@ -756,17 +758,14 @@ public class RuleAdminService {
     }
     RuleStatus target = RuleStatus.fromCode(statusStr);
     if (target == null) {
-      throw new IllegalArgumentException(
-          "非法的规则状态: "
-              + statusStr
-              + "，合法值: DRAFT/REVIEW/REVIEW_L1/REVIEW_L2/REVIEW_FINAL/PUBLISHED/DISABLED/ARCHIVED");
+      throw new SysException("非法的规则状态: ");
     }
 
     RuleDefinitionDTO existing = configProvider.findByCode(definition.getCode());
     if (existing == null) {
       // 新建：限制初始状态白名单（禁止 REVIEW/DISABLED/ARCHIVED 作为初始状态）
       if (target != RuleStatus.DRAFT && target != RuleStatus.PUBLISHED) {
-        throw new IllegalStateException("新建规则的初始状态只能为 DRAFT 或 PUBLISHED，禁止: " + target.getDesc());
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
       }
       return;
     }
@@ -774,12 +773,7 @@ public class RuleAdminService {
     // 更新：校验状态转换合法性（状态未变化时直接放行）
     RuleStatus current = parseStatusSafely(existing.getStatus());
     if (target != current && !current.canTransitionTo(target)) {
-      throw new IllegalStateException(
-          "不允许的状态转换: "
-              + current.getDesc()
-              + " -> "
-              + target.getDesc()
-              + "（合法转换路径见 RuleStatus#canTransitionTo）");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(current.getDesc);
     }
   }
 
@@ -843,13 +837,7 @@ public class RuleAdminService {
               .filter(c -> c.getLevel() == RuleConflict.Level.ERROR)
               .findFirst()
               .orElse(null);
-      throw new IllegalStateException(
-          "规则冲突检测未通过（"
-              + conflicts.size()
-              + " 项冲突，其中 "
-              + conflicts.stream().filter(c -> c.getLevel() == RuleConflict.Level.ERROR).count()
-              + " 项 ERROR）: "
-              + (firstError != null ? firstError.getDescription() : ""));
+      throw new SysException("规则冲突检测未通过（");
     }
   }
 

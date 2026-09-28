@@ -24,7 +24,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.dto.EntityVersionDTO;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -40,6 +40,7 @@ import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.rollback.DictItemRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 import com.njydsz.system.server.vo.DictItemExcelVO;
+import com.njydsz.common.locales.util.I18n;
 
 
 
@@ -568,22 +569,20 @@ public class DictItemServiceImpl implements DictItemService {
   private ValidationError validateExcelRowStructured(DictItemExcelVO excelRow, int rowNum) {
     if (excelRow.getTypeCode() == null || excelRow.getTypeCode().isBlank()) {
       return ValidationError.of("typeCode", "REQUIRED",
-          MessageUtils.getMessage("system.excel.dictTypeCode.required", "字典类型编码不能为空"));
+          I18n.message("字典类型编码不能为空"));
     }
     if (excelRow.getItemCode() == null || excelRow.getItemCode().isBlank()) {
       return ValidationError.of("itemCode", "REQUIRED",
-          MessageUtils.getMessage("system.excel.dictItemCode.required", "字典项编码不能为空"));
+          I18n.message("字典项编码不能为空"));
     }
     if (excelRow.getItemValue() == null || excelRow.getItemValue().isBlank()) {
       return ValidationError.of("itemValue", "REQUIRED",
-          MessageUtils.getMessage("system.excel.dictItemValue.required", "字典项展示值不能为空"));
+          I18n.message("字典项展示值不能为空"));
     }
     // DB 唯一性校验
     if (dictRepository.existsItemByTypeAndCode(excelRow.getTypeCode(), excelRow.getItemCode())) {
       return ValidationError.of("itemCode", "DUPLICATE",
-          MessageUtils.getMessage("system.excel.dictItem.duplicate",
-              new Object[] {excelRow.getTypeCode(), excelRow.getItemCode()},
-              "字典项已存在(" + excelRow.getTypeCode() + "/" + excelRow.getItemCode() + ")"));
+          I18n.message("system.excel.dictItem.duplicate", new Object[] {excelRow.getTypeCode()));
     }
     return null;
   }
@@ -668,14 +667,11 @@ public class DictItemServiceImpl implements DictItemService {
         return dtos.size();
       }
       log.warn("批量插入字典项返回 false，降级逐条插入");
-      errors.add(MessageUtils.getMessage("system.excel.dictItem.batchSaveFallback",
-          "批量保存未成功，已回退到逐条插入"));
+      errors.add(I18n.message("批量保存未成功，已回退到逐条插入"));
       return saveValidItemsOneByOne(dtos, errors, errorItems);
     } catch (Exception e) {
       log.warn("批量插入字典项异常，降级逐条: {}", e.getMessage());
-      errors.add(MessageUtils.getMessage("system.excel.dictItem.batchSaveFailed",
-          new Object[] {e.getMessage()},
-          "批量导入失败: " + e.getMessage()));
+      errors.add(I18n.message("system.excel.dictItem.batchSaveFailed", new Object[] {e.getMessage()}));
       return saveValidItemsOneByOne(dtos, errors, errorItems);
     }
   }
@@ -702,9 +698,7 @@ public class DictItemServiceImpl implements DictItemService {
       } catch (Exception e) {
         log.warn("单条插入字典项失败: typeCode={}, itemCode={}, error={}",
             dto.getTypeCode(), dto.getItemCode(), e.getMessage());
-        String errorMsg = MessageUtils.getMessage("system.excel.dictItem.singleSaveFailed",
-            new Object[] {dto.getTypeCode(), dto.getItemCode(), e.getMessage()},
-            dto.getTypeCode() + "/" + dto.getItemCode() + " 保存失败: " + e.getMessage());
+        String errorMsg = I18n.message("system.excel.dictItem.singleSaveFailed", new Object[] {dto.getTypeCode());
         errors.add(errorMsg);
         ImportResultVO.ImportErrorItem errorItem = new ImportResultVO.ImportErrorItem();
         errorItem.setRow(0);

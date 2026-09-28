@@ -3,6 +3,7 @@ package com.njydsz.userinfo.infra.social;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -76,7 +77,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
   public String authorize(String state, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("企业微信配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.wecom.config.not.found"));
     }
 
     String appId = config.getAppId();
@@ -98,7 +99,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
   public SocialAccessToken exchangeToken(String code, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("企业微信配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.wecom.config.not.found"));
     }
 
     // 企业微信需要先获取 access_token（企业级别的）
@@ -114,7 +115,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
     if (accessToken == null || accessToken.isBlank()) {
       int errcode = getInt(tokenResponse, "errcode", -1);
       String errmsg = getStr(tokenResponse, "errmsg");
-      throw new SocialAuthException("企业微信获取 access_token 失败: " + errcode + " - " + errmsg);
+      throw new SocialAuthException(I18n.message("userinfo.social.wecom.access_token.failed") + ": " + errcode + " - " + errmsg);
     }
 
     // 用 access_token 和 code 获取用户信息
@@ -127,7 +128,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
 
     String userId = getStr(userResponse, "UserId");
     if (userId == null || userId.isBlank()) {
-      throw new SocialAuthException("企业微信获取用户信息失败: 未返回 UserId");
+      throw new SocialAuthException(I18n.message("userinfo.social.wecom.userinfo.failed"));
     }
 
     return new SocialAccessToken(accessToken, null, DEFAULT_EXPIRE_IN, userId, null);
@@ -137,7 +138,7 @@ public class EnterpriseWechatAuthProvider extends AbstractSocialAuthProvider {
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException("企业微信配置未找到");
+      throw new SocialAuthException(I18n.message("userinfo.social.wecom.config.not.found"));
     }
 
     // 获取用户详情

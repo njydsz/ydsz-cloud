@@ -2,7 +2,8 @@ package com.njydsz.userinfo.domain.enums;
 
 import java.util.Locale;
 
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 设备类型枚举。
@@ -52,7 +53,7 @@ public enum DeviceType {
   }
 
   public String getDescription() {
-    return MessageUtils.getMessage("userinfo.device." + code, description);
+    return I18n.message(description);
   }
 
   /**

@@ -98,6 +98,7 @@ import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
 import com.njydsz.literule.server.spi.TraceRecorder;
 import com.njydsz.literule.server.spi.ZookeeperRuleSource;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * LiteRule 规则引擎自动配置。
@@ -823,11 +824,7 @@ public class LiteRuleAutoConfiguration {
       TenantProperties.TenantMode mode = props.getMode();
       if (mode != TenantProperties.TenantMode.SCHEMA
           && mode != TenantProperties.TenantMode.ISOLATE_DB) {
-        throw new IllegalStateException(
-            "[LiteRule-Tenant] ydsz.literule.tenant.physical-isolation-required=true 要求多租户物理隔离，"
-                + "但当前 ydsz.tenant.mode="
-                + mode
-                + "（逻辑隔离），请配置为 SCHEMA 或 ISOLATE_DB（fail-fast）");
+        throw new SysException("[LiteRule-Tenant] ydsz.literule.tenant.physical-isolation-required=true 要求多租户物理隔离，");
       }
       log.info("[LiteRule-Tenant] 多租户物理隔离校验通过（mode={}）", mode);
     } else {
@@ -1233,7 +1230,7 @@ public class LiteRuleAutoConfiguration {
           source.loadAllRules().size());
     } catch (Exception e) {
       log.error("[LiteRule-FileSource] 文件规则源初始化失败: {}", e.getMessage(), e);
-      throw new IllegalStateException("FileRuleSource 初始化失败: " + e.getMessage(), e);
+      throw new SysException("FileRuleSource 初始化失败: " + e.getMessage(), e);
     }
     return source;
   }

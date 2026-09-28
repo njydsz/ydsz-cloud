@@ -15,10 +15,11 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.service.TemplateService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * RocketMQ 事务消息本地事务监听器（P2-3）。
@@ -164,29 +165,26 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
    */
   private String validateRequest(MessageItemRequestDTO req) {
     if (!StringUtils.hasText(req.getChannel())) {
-      return MessageUtils.getMessage("message.send.channel.empty", "通道为空");
+      return I18n.message("通道为空");
     }
     if (!StringUtils.hasText(req.getTemplateCode())) {
-      return MessageUtils.getMessage("message.send.template.code.empty", "模板编码为空");
+      return I18n.message("模板编码为空");
     }
     if (!StringUtils.hasText(req.getReceiver())) {
-      return MessageUtils.getMessage("message.send.receiver.empty", "接收人为空");
+      return I18n.message("接收人为空");
     }
     if (!channelRouter.isChannelEnabled(req.getChannel())) {
-      return MessageUtils.getMessage("message.send.channel.disabled",
-          new Object[] {req.getChannel()}, "通道未启用: " + req.getChannel());
+      return I18n.message("message.send.channel.disabled", new Object[] {req.getChannel()});
     }
     MsgTemplateVO tpl =
         templateService.loadByCodeAndChannel(
             req.getTemplateCode(), req.getChannel(), null,
             AuthContextUtils.getTenantIdOrDefault("1"));
     if (tpl == null) {
-      return MessageUtils.getMessage("message.send.template.not.exist",
-          new Object[] {req.getTemplateCode()}, "模板不存在: " + req.getTemplateCode());
+      return I18n.message("message.send.template.not.exist", new Object[] {req.getTemplateCode()});
     }
     if (!"ENABLED".equals(tpl.getStatus())) {
-      return MessageUtils.getMessage("message.send.template.disabled",
-          new Object[] {tpl.getStatus()}, "模板未启用: " + tpl.getStatus());
+      return I18n.message("message.send.template.disabled", new Object[] {tpl.getStatus()});
     }
     return null;
   }

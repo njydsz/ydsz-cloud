@@ -16,10 +16,10 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
-import com.njydsz.common.util.message.MessageUtils;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 用户搜索提供者
@@ -68,7 +68,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
   }
 
   public String getTypeLabel() {
-    return MessageUtils.getMessage("userinfo.search.typeLabel", "用户");
+    return I18n.message("userinfo.search.type.user");
   }
 
   @Override
@@ -115,7 +115,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
     return List.of(
         SearchField.builder()
             .name("title")
-            .label(MessageUtils.getMessage("userinfo.search.field.realName", "真实姓名"))
+            .label(I18n.message("userinfo.search.field.realname"))
             .type(FieldType.TEXT)
             .weight(WEIGHT_TITLE)
             .isSearchable(true)
@@ -124,7 +124,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
             .build(),
         SearchField.builder()
             .name("subtitle")
-            .label(MessageUtils.getMessage("userinfo.search.field.username", "用户名"))
+            .label(I18n.message("userinfo.search.field.username"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_SUBTITLE)
             .isSearchable(true)
@@ -133,7 +133,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
             .build(),
         SearchField.builder()
             .name("content")
-            .label(MessageUtils.getMessage("userinfo.search.field.contact", "联系方式"))
+            .label(I18n.message("userinfo.search.field.contact"))
             .type(FieldType.TEXT)
             .weight(WEIGHT_CONTENT)
             .isSearchable(true)
@@ -141,7 +141,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
             .build(),
         SearchField.builder()
             .name("status")
-            .label(MessageUtils.getMessage("userinfo.search.field.accountStatus", "账号状态"))
+            .label(I18n.message("userinfo.search.field.status"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_LOW)
             .isSearchable(false)
@@ -150,7 +150,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccountVO> {
             .build(),
         SearchField.builder()
             .name("user_type")
-            .label(MessageUtils.getMessage("userinfo.search.field.userType", "用户类型"))
+            .label(I18n.message("userinfo.search.field.userType"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_LOW)
             .isSearchable(false)

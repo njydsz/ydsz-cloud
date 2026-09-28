@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * CEP 引擎（精简版）
@@ -99,7 +100,7 @@ public class CEPEngine implements Serializable {
           Class.forName("com.njydsz.literule.server.engine.liteexpr.LiteExprEngine");
       return (ExpressionEngine) clazz.getConstructor(boolean.class).newInstance(true);
     } catch (Exception e) {
-      throw new IllegalStateException("无法创建默认 LiteExprEngine", e);
+      throw new SysException("无法创建默认 LiteExprEngine", e);
     }
   }
 
@@ -108,7 +109,7 @@ public class CEPEngine implements Serializable {
    */
   public void registerPattern(CEPPattern pattern) {
     if (pattern == null || pattern.getId() == null) {
-      throw new IllegalArgumentException("pattern 和 pattern.id 不能为空");
+      throw new SysException("pattern 和 pattern.id 不能为空");
     }
     patterns.put(pattern.getId(), pattern);
     eventQueues.computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>());

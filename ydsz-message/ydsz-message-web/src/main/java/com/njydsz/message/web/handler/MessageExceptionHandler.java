@@ -19,8 +19,9 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.message.domain.enums.MessageExceptionCode;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 消息中心模块全局异常处理器。
@@ -91,7 +92,7 @@ public class MessageExceptionHandler extends BaseExceptionHandler {
     Optional<MessageExceptionCode> matched = matchMessageExceptionCode(e);
     if (matched.isEmpty()) {
       // 非消息业务异常：构造通用降级响应而非返回 null，避免响应体为空
-      String userMsg = MessageUtils.getMessage("message.error.general", "消息服务处理异常，请稍后重试");
+      String userMsg = I18n.message("消息服务处理异常，请稍后重试");
       return YdszResponse.error(
           YdszResultCode.INTERNAL_ERROR.getCode(),
           userMsg);

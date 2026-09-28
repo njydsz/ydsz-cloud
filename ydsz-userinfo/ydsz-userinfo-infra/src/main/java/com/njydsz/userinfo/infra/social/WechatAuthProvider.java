@@ -3,6 +3,7 @@ package com.njydsz.userinfo.infra.social;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -75,7 +76,7 @@ public class WechatAuthProvider extends AbstractSocialAuthProvider {
   public String authorize(String state, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "微信配置未找到");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.wechat.config.not.found"));
     }
 
     String appId = config.getAppId();
@@ -98,7 +99,7 @@ public class WechatAuthProvider extends AbstractSocialAuthProvider {
   public SocialAccessToken exchangeToken(String code, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "微信配置未找到");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.wechat.config.not.found"));
     }
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
@@ -114,12 +115,12 @@ public class WechatAuthProvider extends AbstractSocialAuthProvider {
     String errcode = getStr(tokenResponse, "errcode");
     if (errcode != null && !errcode.isBlank() && !"0".equals(errcode)) {
       String errmsg = getStr(tokenResponse, "errmsg");
-      throw new SocialAuthException(PLATFORM, "微信获取 access_token 失败: " + errmsg);
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.wechat.access_token.failed") + ": " + errmsg);
     }
 
     String accessToken = getStr(tokenResponse, "access_token");
     if (accessToken == null || accessToken.isBlank()) {
-      throw new SocialAuthException(PLATFORM, "微信获取 access_token 失败: 未返回 access_token");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.wechat.access_token.missing"));
     }
 
     Long expireIn = getLong(tokenResponse, "expires_in", DEFAULT_EXPIRE_IN);
@@ -127,7 +128,7 @@ public class WechatAuthProvider extends AbstractSocialAuthProvider {
     String unionId = getStr(tokenResponse, "unionid");
 
     if (openId == null || openId.isBlank()) {
-      throw new SocialAuthException(PLATFORM, "微信获取 access_token 失败: 未返回 openid");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.wechat.access_token.no_openid"));
     }
 
     return new SocialAccessToken(accessToken, null, expireIn, openId, unionId);
@@ -137,7 +138,7 @@ public class WechatAuthProvider extends AbstractSocialAuthProvider {
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "微信配置未找到");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.wechat.config.not.found"));
     }
 
     String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
@@ -152,7 +153,7 @@ public class WechatAuthProvider extends AbstractSocialAuthProvider {
     String errcode = getStr(userResponse, "errcode");
     if (errcode != null && !errcode.isBlank() && !"0".equals(errcode)) {
       String errmsg = getStr(userResponse, "errmsg");
-      throw new SocialAuthException(PLATFORM, "微信获取用户信息失败: " + errmsg);
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.wechat.userinfo.failed") + ": " + errmsg);
     }
 
     String nickname = getStr(userResponse, "nickname");

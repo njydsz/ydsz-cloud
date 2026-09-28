@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * LiteExpr 字节码解释器 — 栈式虚拟机执行引擎
@@ -422,7 +423,7 @@ public class BytecodeInterpreter {
     if (v instanceof String s) {
       return Long.parseLong(s);
     }
-    throw new IllegalArgumentException("无法转为 long: " + v);
+      throw new SysException("无法转为 long: " + v);
   }
 
   // ===== 比较运算 =====

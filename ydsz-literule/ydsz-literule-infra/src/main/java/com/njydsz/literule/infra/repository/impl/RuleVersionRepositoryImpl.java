@@ -24,6 +24,7 @@ import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.infra.mapper.RuleVersionHistoryMapper;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 规则版本仓储实现（Infra 层）。
@@ -139,7 +140,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
     } catch (Exception e) {
       log.error("[LiteRule] 反序列化目标版本失败: ruleCode={}, version={}, error={}",
           ruleCode, version, e.getMessage(), e);
-      throw new IllegalStateException("回滚失败：目标版本 JSON 解析异常", e);
+      throw new SysException("回滚失败：目标版本 JSON 解析异常", e);
     }
 
     RuleDefinition updateEntity = doFromApi(targetDefinition);
@@ -155,7 +156,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
 
     int updated = ruleDefinitionMapper.updateById(updateEntity);
     if (updated <= 0) {
-      throw new IllegalStateException("回滚失败：规则定义更新失败，可能存在并发冲突");
+      throw new SysException("回滚失败：规则定义更新失败，可能存在并发冲突");
     }
 
     // 5. 保存回滚操作版本记录

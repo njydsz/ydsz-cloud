@@ -16,6 +16,9 @@ import com.njydsz.common.excel.exception.ExcelWriteException;
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.enums.HitPolicy;
 import com.njydsz.literule.domain.service.DecisionTableExcelService;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 决策表 Excel 导入导出器（P0-3）
@@ -100,7 +103,7 @@ public class DecisionTableExcelExporter implements DecisionTableExcelService {
   @Override
 public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
     if (definition == null) {
-      throw new IllegalArgumentException("决策表定义不能为 null");
+      throw new SysException("决策表定义不能为 null");
     }
     try {
       List<DecisionTableDefinitionDTO.Column> conditionColumns =
@@ -211,7 +214,7 @@ public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
   @Override
 public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
     if (excelBytes == null || excelBytes.length == 0) {
-      throw new IllegalArgumentException("Excel 数据不能为空");
+      throw BusinessException.of(LiteruleExceptionCode.DECISION_TABLE_EXCEL_INVALID);
     }
     try {
       List<?> rawRows =
@@ -221,7 +224,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
               .doReadAll();
 
       if (rawRows.isEmpty()) {
-        throw new IllegalArgumentException("Excel 文件不包含任何数据行");
+      throw new SysException("Excel 文件不包含任何数据行");
       }
 
       // 将每行转为 List<String>，同时提取 header 行（row 0）的值
@@ -266,12 +269,12 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
 
       // 解析列定义
       if (row2.isEmpty()) {
-        throw new IllegalArgumentException("Excel 缺少列头行（第 3 行）");
+      throw new SysException("Excel 缺少列头行（第 3 行）");
       }
 
       int totalCols = row2.size();
       if (totalCols == 0) {
-        throw new IllegalArgumentException("Excel 未定义任何列");
+      throw new SysException("Excel 未定义任何列");
       }
 
       List<DecisionTableDefinitionDTO.Column> conditionColumns = new ArrayList<>(COLLECTION_CAPACITY);
@@ -281,7 +284,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
         String label = getOrEmpty(row3, i);
         String type = getOrEmpty(row4, i);
         if (header.isBlank()) {
-          throw new IllegalArgumentException("第 " + (i + 1) + " 列头为空");
+      throw new SysException("第 " + (i + 1) + " 列头为空");
         }
         DecisionTableDefinitionDTO.Column column =
             DecisionTableDefinitionDTO.Column.builder()
@@ -294,16 +297,15 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
         } else if (header.startsWith(ACTION_PREFIX)) {
           actionColumns.add(column);
         } else {
-          throw new IllegalArgumentException(
-              "第 " + (i + 1) + " 列头 '" + header + "' 缺少 C:/A: 前缀，无法识别列类型");
+          throw new SysException("第 ");
         }
       }
 
       if (conditionColumns.isEmpty()) {
-        throw new IllegalArgumentException("决策表至少需要一个条件列");
+      throw new SysException("决策表至少需要一个条件列");
       }
       if (actionColumns.isEmpty()) {
-        throw new IllegalArgumentException("决策表至少需要一个动作列");
+      throw new SysException("决策表至少需要一个动作列");
       }
 
       // 解析决策行 + 默认动作
@@ -356,7 +358,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
     } catch (IllegalArgumentException e) {
       throw e;
     } catch (Exception e) {
-      throw new IllegalArgumentException("导入决策表 Excel 失败: " + e.getMessage(), e);
+      throw BusinessException.of(LiteruleExceptionCode.DECISION_TABLE_EXCEL_INVALID).params(e.getMessage);
     }
   }
 

@@ -13,6 +13,9 @@ import lombok.ToString;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 import com.njydsz.literule.domain.enums.RuleStatusEnum;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * LiteRule 规则定义
@@ -164,7 +167,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
    */
   public void setStatusEnum(RuleStatusEnum statusEnum) {
     if (statusEnum == null) {
-      throw new IllegalArgumentException("rule.error.status_null");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_INVALID);
     }
     this.status = statusEnum.name();
   }
@@ -183,7 +186,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
       current = RuleStatusEnum.DRAFT;
     }
     if (!current.canTransitTo(RuleStatusEnum.PUBLISHED)) {
-      throw new IllegalStateException("rule.error.publish_invalid_state");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
     this.status = RuleStatusEnum.PUBLISHED.name();
     this.reviewedBy = reviewer;
@@ -200,10 +203,10 @@ public class RuleDefinition extends MpBaseEntity<String> {
   public void disable() {
     RuleStatusEnum current = getStatusEnum();
     if (current == null) {
-      throw new IllegalStateException("rule.error.disable_status_null");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_INVALID);
     }
     if (!current.canTransitTo(RuleStatusEnum.DISABLED)) {
-      throw new IllegalStateException("rule.error.disable_invalid_state");
+      throw new SysException("rule.error.disable_invalid_state");
     }
     this.status = RuleStatusEnum.DISABLED.name();
   }
@@ -218,10 +221,10 @@ public class RuleDefinition extends MpBaseEntity<String> {
   public void revertToDraft() {
     RuleStatusEnum current = getStatusEnum();
     if (current == null) {
-      throw new IllegalStateException("rule.error.revert_status_null");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_INVALID);
     }
     if (!current.canTransitTo(RuleStatusEnum.DRAFT)) {
-      throw new IllegalStateException("rule.error.revert_invalid_state");
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
     this.status = RuleStatusEnum.DRAFT.name();
     this.reviewedBy = null;

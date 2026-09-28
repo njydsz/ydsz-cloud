@@ -12,9 +12,10 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.literule.domain.repository.RuleDefinitionRepository;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 规则定义搜索提供者 — 将规则定义数据注册到统一搜索体系。
@@ -47,7 +48,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
   }
 
   public String getTypeLabel() {
-    return MessageUtils.getMessage("literule.search.typeLabel", "规则");
+    return I18n.message("规则");
   }
 
   @Override
@@ -82,7 +83,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
     return List.of(
         SearchField.builder()
             .name("title")
-            .label(MessageUtils.getMessage("literule.search.field.name", "规则名称"))
+            .label(I18n.message("规则名称"))
             .type(FieldType.TEXT)
             .weight(WEIGHT_NAME_MATCH)
             .isSearchable(true)
@@ -91,7 +92,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .build(),
         SearchField.builder()
             .name("subtitle")
-            .label(MessageUtils.getMessage("literule.search.field.category", "分类"))
+            .label(I18n.message("分类"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_SUBTITLE_MATCH)
             .isSearchable(true)
@@ -99,7 +100,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .build(),
         SearchField.builder()
             .name("content")
-            .label(MessageUtils.getMessage("literule.search.field.code", "规则编码"))
+            .label(I18n.message("规则编码"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_CODE_MATCH)
             .isSearchable(true)
@@ -107,7 +108,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .build(),
         SearchField.builder()
             .name("status")
-            .label(MessageUtils.getMessage("literule.search.field.status", "状态"))
+            .label(I18n.message("状态"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_DESC_MATCH)
             .isSearchable(false)

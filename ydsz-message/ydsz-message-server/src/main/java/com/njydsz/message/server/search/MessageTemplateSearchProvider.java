@@ -12,9 +12,10 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 消息模板搜索提供者 — 将消息模板数据注册到统一搜索体系。
@@ -47,7 +48,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
   }
 
   public String getTypeLabel() {
-    return MessageUtils.getMessage("message.search.type.label", "消息模板");
+    return I18n.message("消息模板");
   }
 
   @Override
@@ -82,7 +83,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
     return List.of(
         SearchField.builder()
             .name("title")
-            .label(MessageUtils.getMessage("message.search.field.subject", "模板主题"))
+            .label(I18n.message("模板主题"))
             .type(FieldType.TEXT)
             .weight(NAME_WEIGHT)
             .isSearchable(true)
@@ -91,7 +92,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .build(),
         SearchField.builder()
             .name("subtitle")
-            .label(MessageUtils.getMessage("message.search.field.code", "模板编码"))
+            .label(I18n.message("模板编码"))
             .type(FieldType.KEYWORD)
             .weight(SUBTITLE_WEIGHT)
             .isSearchable(true)
@@ -99,14 +100,14 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .build(),
         SearchField.builder()
             .name("content")
-            .label(MessageUtils.getMessage("message.search.field.content", "模板内容"))
+            .label(I18n.message("模板内容"))
             .type(FieldType.TEXT)
             .weight(BODY_WEIGHT)
             .isSearchable(true)
             .build(),
         SearchField.builder()
             .name("status")
-            .label(MessageUtils.getMessage("message.search.field.status", "状态"))
+            .label(I18n.message("状态"))
             .type(FieldType.KEYWORD)
             .weight(STATUS_WEIGHT)
             .isSearchable(false)

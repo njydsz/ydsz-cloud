@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.njydsz.common.locales.util.I18n;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -86,7 +87,7 @@ public class QqAuthProvider extends AbstractSocialAuthProvider {
   public String authorize(String state, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "QQ配置未找到");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.qq.config.not.found"));
     }
 
     String appId = config.getAppId();
@@ -108,7 +109,7 @@ public class QqAuthProvider extends AbstractSocialAuthProvider {
   public SocialAccessToken exchangeToken(String code, String redirectUri) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "QQ配置未找到");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.qq.config.not.found"));
     }
 
     String tokenUrl = config.getOrDefaultAccessTokenUrl(DEFAULT_ACCESS_TOKEN_URL);
@@ -126,7 +127,7 @@ public class QqAuthProvider extends AbstractSocialAuthProvider {
 
     String accessToken = getStr(tokenResponse, "access_token");
     if (accessToken == null || accessToken.isBlank()) {
-      throw new SocialAuthException(PLATFORM, "QQ 获取 access_token 失败");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.qq.access_token.failed"));
     }
 
     Long expireIn = getLong(tokenResponse, EXPIRES_IN_KEY, DEFAULT_EXPIRE_IN);
@@ -134,7 +135,7 @@ public class QqAuthProvider extends AbstractSocialAuthProvider {
     // 获取 openid
     String openId = fetchOpenId(accessToken);
     if (openId == null || openId.isBlank()) {
-      throw new SocialAuthException(PLATFORM, "QQ 获取 openid 失败");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.qq.openid.failed"));
     }
 
     return new SocialAccessToken(accessToken, null, expireIn, openId, null);
@@ -144,7 +145,7 @@ public class QqAuthProvider extends AbstractSocialAuthProvider {
   public SocialUserInfo getUserInfo(SocialAccessToken token) {
     SocialAuthProperties.ProviderConfig config = getProviderConfig();
     if (config == null) {
-      throw new SocialAuthException(PLATFORM, "QQ配置未找到");
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.qq.config.not.found"));
     }
 
     String userInfoUrl = config.getOrDefaultUserInfoUrl(DEFAULT_USER_INFO_URL);
@@ -159,7 +160,7 @@ public class QqAuthProvider extends AbstractSocialAuthProvider {
     String ret = getStr(userResponse, "ret");
     if (ret != null && !"0".equals(ret)) {
       String msg = getStr(userResponse, "msg");
-      throw new SocialAuthException(PLATFORM, "QQ 获取用户信息失败: " + msg);
+      throw new SocialAuthException(PLATFORM, I18n.message("userinfo.social.qq.userinfo.failed") + ": " + msg);
     }
 
     String nickname = getStr(userResponse, "nickname");

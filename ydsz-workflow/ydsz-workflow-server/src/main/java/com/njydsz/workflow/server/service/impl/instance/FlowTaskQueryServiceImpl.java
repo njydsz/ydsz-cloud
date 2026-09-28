@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
@@ -28,6 +28,7 @@ import com.njydsz.workflow.domain.repository.FlowUserRepository;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowHisTaskVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 待办任务 — 查询类 Service 实现
@@ -529,14 +530,14 @@ private static final int MAX_PAGE_SIZE = 100;
    */
 private String getActionName(String action) {
     if (action == null) {
-        return MessageUtils.getMessage("workflow.countersign.unknown", "未知");
+        return I18n.message("未知");
     }
     return switch (action) {
-        case "COUNTERSIGN_BEFORE" -> MessageUtils.getMessage("workflow.countersign.before", "前加签");
-        case "COUNTERSIGN_AFTER" -> MessageUtils.getMessage("workflow.countersign.after", "后加签");
-        case "COUNTERSIGN_PARALLEL" -> MessageUtils.getMessage("workflow.countersign.parallel", "并加签");
-        case "COUNTERSIGN_REMOVE" -> MessageUtils.getMessage("workflow.countersign.remove", "减签");
-        default -> MessageUtils.getMessage("workflow.countersign.unknown.action", "未知加签操作");
+        case "COUNTERSIGN_BEFORE" -> I18n.message("前加签");
+        case "COUNTERSIGN_AFTER" -> I18n.message("后加签");
+        case "COUNTERSIGN_PARALLEL" -> I18n.message("并加签");
+        case "COUNTERSIGN_REMOVE" -> I18n.message("减签");
+        default -> I18n.message("未知加签操作");
     };
 }
 

@@ -7,10 +7,11 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.message.MessageUtils;
+import com.njydsz.common.locales.util.I18n
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 流程实例状态机（Domain 层）。
@@ -250,47 +251,20 @@ public class FlowInstanceStateMachine {
    */
   public String getTransitionDescription(FlowInstanceStatus current, FlowInstanceStatus target) {
     if (current == null || target == null) {
-      return MessageUtils.getMessage("workflow.instance.transition.unknown", "未知状态流转");
+      return I18n.message("未知状态流转");
     }
     if (current == target) {
-      return MessageUtils.getMessage(
-          "workflow.instance.transition.no.change",
-          new Object[] {current.name()},
-          current.name() + ": 状态未变化");
+      return I18n.message("workflow.instance.transition.no.change", new Object[] {current.name()});
     }
     return switch (target) {
-      case RUNNING -> MessageUtils.getMessage(
-          "workflow.instance.transition.RUNNING",
-          new Object[] {current},
-          current + " → RUNNING: 流程激活/恢复");
-      case SUSPENDED -> MessageUtils.getMessage(
-          "workflow.instance.transition.SUSPENDED",
-          new Object[] {current},
-          current + " → SUSPENDED: 流程挂起");
-      case COMPLETED -> MessageUtils.getMessage(
-          "workflow.instance.transition.COMPLETED",
-          new Object[] {current},
-          current + " → COMPLETED: 流程完成");
-      case TERMINATED -> MessageUtils.getMessage(
-          "workflow.instance.transition.TERMINATED",
-          new Object[] {current},
-          current + " → TERMINATED: 流程终止");
-      case REJECTED -> MessageUtils.getMessage(
-          "workflow.instance.transition.REJECTED",
-          new Object[] {current},
-          current + " → REJECTED: 流程驳回");
-      case ERROR -> MessageUtils.getMessage(
-          "workflow.instance.transition.ERROR",
-          new Object[] {current},
-          current + " → ERROR: 流程异常");
-      case ROLLED_BACK -> MessageUtils.getMessage(
-          "workflow.instance.transition.ROLLED_BACK",
-          new Object[] {current},
-          current + " → ROLLED_BACK: 流程回滚");
-      case DRAFT -> MessageUtils.getMessage(
-          "workflow.instance.transition.DRAFT",
-          new Object[] {current},
-          current + " → DRAFT: 转为草稿（P0-5 暂存待审）");
+      case RUNNING -> I18n.message("workflow.instance.transition.RUNNING", new Object[] {current});
+      case SUSPENDED -> I18n.message("workflow.instance.transition.SUSPENDED", new Object[] {current});
+      case COMPLETED -> I18n.message("workflow.instance.transition.COMPLETED", new Object[] {current});
+      case TERMINATED -> I18n.message("workflow.instance.transition.TERMINATED", new Object[] {current});
+      case REJECTED -> I18n.message("workflow.instance.transition.REJECTED", new Object[] {current});
+      case ERROR -> I18n.message("workflow.instance.transition.ERROR", new Object[] {current});
+      case ROLLED_BACK -> I18n.message("workflow.instance.transition.ROLLED_BACK", new Object[] {current});
+      case DRAFT -> I18n.message("workflow.instance.transition.DRAFT", new Object[] {current});
     };
   }
 
