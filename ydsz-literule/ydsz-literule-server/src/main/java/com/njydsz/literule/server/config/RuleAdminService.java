@@ -38,6 +38,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.version.RuleVersionDiff;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.exception.custom.SysException;
 
 /**
@@ -481,24 +482,24 @@ public class RuleAdminService {
   /** 校验分类路径合法性 */
   private void validateCategoryPath(String path) {
     if (path == null || path.isBlank()) {
-      throw new SysException("rule.error.category_path_required");
+      throw new SysException(I18n.message("literule.admin.category_path_required"));
     }
     if (path.length() > MAX_PATH_LENGTH) {
-      throw new SysException("rule.error.category_path_length_exceed");
+      throw new SysException(I18n.message("literule.admin.category_path_length_exceed"));
     }
     if (path.startsWith("/") || path.endsWith("/")) {
-      throw new SysException("分类路径不能以 / 开头或结尾: " + path);
+      throw new SysException(I18n.message("literule.admin.category_path_slash_boundary", new Object[]{path}));
     }
     if (path.contains("//")) {
-      throw new SysException("分类路径不能包含连续 / : " + path);
+      throw new SysException(I18n.message("literule.admin.category_path_consecutive_slash", new Object[]{path}));
     }
     String[] segs = path.split("/");
     if (segs.length > MAX_PATH_SEGMENTS) {
-      throw new SysException("分类路径深度不能超过 5 级: " + path);
+      throw new SysException(I18n.message("literule.admin.category_path_depth_exceed", new Object[]{path}));
     }
     for (String s : segs) {
       if (!s.matches("[\\w\\u4e00-\\u9fa5-]+")) {
-      throw new SysException("分类路径段包含非法字符: " + s);
+      throw new SysException(I18n.message("literule.admin.category_path_invalid_char", new Object[]{s}));
       }
     }
   }
@@ -758,7 +759,7 @@ public class RuleAdminService {
     }
     RuleStatus target = RuleStatus.fromCode(statusStr);
     if (target == null) {
-      throw new SysException("非法的规则状态: ");
+      throw new SysException(I18n.message("literule.admin.invalid_rule_status"));
     }
 
     RuleDefinitionDTO existing = configProvider.findByCode(definition.getCode());
@@ -837,7 +838,7 @@ public class RuleAdminService {
               .filter(c -> c.getLevel() == RuleConflict.Level.ERROR)
               .findFirst()
               .orElse(null);
-      throw new SysException("规则冲突检测未通过（");
+      throw new SysException(I18n.message("literule.admin.conflict_check_failed"));
     }
   }
 

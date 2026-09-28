@@ -1,17 +1,15 @@
 package com.njydsz.cronjob.web.controller.audit;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
@@ -19,6 +17,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.cronjob.domain.query.AuditLogQuery;
 import com.njydsz.cronjob.domain.vo.AuditLogVO;
 import com.njydsz.cronjob.server.service.audit.AuditLogService;
 
@@ -68,18 +67,8 @@ public class AuditLogController {
   @Operation(summary = "分页查询操作审计日志")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_AUDIT_VIEW)
   @GetMapping("/page")
-  public YdszResponse<PageResponse<List<AuditLogVO>>> page(
-      @RequestParam(defaultValue = "1") int pageNum,
-      @RequestParam(defaultValue = "20") int size,
-      @RequestParam(required = false) Integer action,
-      @RequestParam(required = false) String operatorName,
-      @RequestParam(required = false)
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-          LocalDateTime startTime,
-      @RequestParam(required = false)
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-          LocalDateTime endTime) {
+  public YdszResponse<PageResponse<List<AuditLogVO>>> page(@Validated AuditLogQuery query) {
     return YdszResponse.success(
-        auditLogService.page(pageNum, size, action, operatorName, startTime, endTime));
+        auditLogService.page(query));
   }
 }

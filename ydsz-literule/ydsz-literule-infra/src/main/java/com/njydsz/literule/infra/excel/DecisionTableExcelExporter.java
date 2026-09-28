@@ -19,6 +19,7 @@ import com.njydsz.literule.domain.service.DecisionTableExcelService;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 决策表 Excel 导入导出器（P0-3）
@@ -103,7 +104,7 @@ public class DecisionTableExcelExporter implements DecisionTableExcelService {
   @Override
 public byte[] exportToExcel(DecisionTableDefinitionDTO definition) {
     if (definition == null) {
-      throw new SysException("决策表定义不能为 null");
+      throw new SysException(I18n.message("literule.excel.decision_table_def_null"));
     }
     try {
       List<DecisionTableDefinitionDTO.Column> conditionColumns =
@@ -274,7 +275,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
 
       int totalCols = row2.size();
       if (totalCols == 0) {
-      throw new SysException("Excel 未定义任何列");
+      throw new SysException(I18n.message("literule.excel.no_columns"));
       }
 
       List<DecisionTableDefinitionDTO.Column> conditionColumns = new ArrayList<>(COLLECTION_CAPACITY);
@@ -284,7 +285,7 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
         String label = getOrEmpty(row3, i);
         String type = getOrEmpty(row4, i);
         if (header.isBlank()) {
-      throw new SysException("第 " + (i + 1) + " 列头为空");
+      throw new SysException(I18n.message("literule.excel.column_header_empty", new Object[]{i + 1}));
         }
         DecisionTableDefinitionDTO.Column column =
             DecisionTableDefinitionDTO.Column.builder()
@@ -297,15 +298,15 @@ public DecisionTableDefinitionDTO importFromExcel(byte[] excelBytes) {
         } else if (header.startsWith(ACTION_PREFIX)) {
           actionColumns.add(column);
         } else {
-          throw new SysException("第 ");
+          throw new SysException(I18n.message("literule.excel.column_header_must_have_prefix"));
         }
       }
 
       if (conditionColumns.isEmpty()) {
-      throw new SysException("决策表至少需要一个条件列");
+      throw new SysException(I18n.message("literule.excel.at_least_one_condition_column"));
       }
       if (actionColumns.isEmpty()) {
-      throw new SysException("决策表至少需要一个动作列");
+      throw new SysException(I18n.message("literule.excel.at_least_one_action_column"));
       }
 
       // 解析决策行 + 默认动作

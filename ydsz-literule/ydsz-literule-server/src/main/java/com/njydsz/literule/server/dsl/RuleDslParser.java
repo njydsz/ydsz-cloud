@@ -23,6 +23,7 @@ import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * LiteRule 声明式 DSL 解析器
@@ -138,7 +139,7 @@ public final class RuleDslParser {
    */
   public static RuleDsl loadFromFile(Path path) throws IOException {
     if (path == null) {
-      throw new SysException("文件路径不能为 null");
+      throw new SysException(I18n.message("literule.dsl.parser.file_path_null"));
     }
     String fileName = path.getFileName() == null ? "" : path.getFileName().toString();
     String lower = fileName.toLowerCase();
@@ -149,7 +150,7 @@ public final class RuleDslParser {
     if (lower.endsWith(".json")) {
       return parseJson(content);
     }
-      throw new SysException("不支持的规则文件后缀: " + fileName + "（仅支持 .yml / .yaml / .json）");
+      throw new SysException(I18n.message("literule.dsl.parser.unsupported_file_suffix", new Object[]{fileName}));
   }
 
   /**
@@ -446,76 +447,76 @@ public final class RuleDslParser {
 
   private static void validateRuleEntry(RuleDslEntry entry) {
     if (entry.getCode() == null || entry.getCode().isBlank()) {
-      throw new SysException("规则 code 不能为空");
+      throw new SysException(I18n.message("literule.dsl.parser.rule_code_required"));
     }
     if (entry.getName() == null || entry.getName().isBlank()) {
-      throw new SysException("规则 name 不能为空（code=" + entry.getCode() + "）");
+      throw new SysException(I18n.message("literule.dsl.parser.rule_name_required", new Object[]{entry.getCode()}));
     }
     String type = entry.getType() == null ? "expression" : entry.getType().toLowerCase();
     switch (type) {
       case "expression" -> {
         if (entry.getCondition() == null || entry.getCondition().isBlank()) {
-          throw new SysException("expression 规则 ");
+          throw new SysException(I18n.message("literule.dsl.parser.expression_condition_required"));
         }
       }
       case "scorecard" -> {
         if ((entry.getFactors() == null || entry.getFactors().isEmpty())
             && entry.getBaseScore() == null) {
-          throw new SysException("scorecard 规则 ");
+          throw new SysException(I18n.message("literule.dsl.parser.scorecard_factors_required"));
         }
       }
       case "decision_table" -> {
         if (entry.getRows() == null || entry.getRows().isEmpty()) {
-          throw new SysException("decision_table 规则 ");
+          throw new SysException(I18n.message("literule.dsl.parser.decision_table_rows_required"));
         }
       }
       case "script" -> {
         if (entry.getScriptBody() == null || entry.getScriptBody().isBlank()) {
-      throw new SysException("script 规则 " + entry.getCode() + " 缺少 script_body 配置");
+      throw new SysException(I18n.message("literule.dsl.parser.script_body_required", new Object[]{entry.getCode()}));
         }
       }
       case "decision_tree", "static_rule" -> {
         // 校验略，类型合法即可
       }
       default ->
-      throw new SysException("未知规则类型: " + type + "（code=" + entry.getCode() + "）");
+      throw new SysException(I18n.message("literule.dsl.parser.unknown_rule_type", new Object[]{type, entry.getCode()}));
     }
   }
 
   private static void validateChainEntry(ChainDslEntry entry) {
     if (entry.getName() == null || entry.getName().isBlank()) {
-      throw new SysException("链 name 不能为空");
+      throw new SysException(I18n.message("literule.dsl.parser.chain_name_required"));
     }
     String type = entry.getType() == null ? "THEN" : entry.getType().toUpperCase();
     switch (type) {
       case "THEN", "WHEN" -> {
         if (entry.getSteps() == null || entry.getSteps().isEmpty()) {
-      throw new SysException(type + " 链 " + entry.getName() + " 缺少 steps 配置");
+      throw new SysException(I18n.message("literule.dsl.parser.chain_steps_config_required", new Object[]{type, entry.getName()}));
         }
       }
       case "IF" -> {
         if (entry.getCondition() == null || entry.getCondition().isBlank()) {
-      throw new SysException("IF 链 " + entry.getName() + " 缺少 condition");
+      throw new SysException(I18n.message("literule.dsl.parser.if_chain_condition_required", new Object[]{entry.getName()}));
         }
         if (entry.getStep() == null || entry.getStep().isBlank()) {
-      throw new SysException("IF 链 " + entry.getName() + " 缺少 step");
+      throw new SysException(I18n.message("literule.dsl.parser.if_chain_step_required", new Object[]{entry.getName()}));
         }
       }
       case "ELIF" -> {
         if (entry.getBranches() == null || entry.getBranches().isEmpty()) {
-      throw new SysException("ELIF 链 " + entry.getName() + " 缺少 branches");
+      throw new SysException(I18n.message("literule.dsl.parser.elif_chain_branches_required", new Object[]{entry.getName()}));
         }
       }
       case "SWITCH" -> {
         if (entry.getBranchKey() == null || entry.getBranchKey().isBlank()) {
-      throw new SysException("SWITCH 链 " + entry.getName() + " 缺少 branch_key");
+      throw new SysException(I18n.message("literule.dsl.parser.switch_chain_branch_key_required", new Object[]{entry.getName()}));
         }
         if (entry.getBranches() == null || entry.getBranches().isEmpty()) {
-      throw new SysException("SWITCH 链 " + entry.getName() + " 缺少 branches");
+      throw new SysException(I18n.message("literule.dsl.parser.switch_chain_branches_required", new Object[]{entry.getName()}));
         }
       }
       default ->
-      throw new SysException("未知链类型: " + type + "（name=" + entry.getName() + "）");
+      throw new SysException(I18n.message("literule.dsl.parser.unknown_chain_type", new Object[]{type, entry.getName()}));
     }
   }
 

@@ -28,6 +28,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 规则生命周期管理服务（P3-1）
@@ -639,7 +640,7 @@ public class RuleLifecycleService {
   public RuleDefinitionVO rollback(String ruleCode, int version, String operator) {
     RollbackPreviewVO preview = previewRollback(ruleCode, version);
     if (!preview.isRollbackAllowed()) {
-      throw new SysException("回滚被拒绝: " + preview.getRollbackBlockedReason());
+      throw new SysException(I18n.message("literule.lifecycle.rollback_rejected", new Object[]{preview.getRollbackBlockedReason()}));
     }
     log.info(
         "[Lifecycle] 执行一键回滚: rule={}, targetVersion={}, diffCount={}, operator={}",
@@ -672,7 +673,7 @@ public class RuleLifecycleService {
 
     RuleStatus currentStatus = RuleStatus.fromCode(rule.getStatus());
     if (currentStatus == RuleStatus.ARCHIVED) {
-      throw new SysException("规则已归档，无需重复退役: " + ruleCode);
+      throw new SysException(I18n.message("literule.lifecycle.already_archived", new Object[]{ruleCode}));
     }
 
     // 校验状态转换合法性

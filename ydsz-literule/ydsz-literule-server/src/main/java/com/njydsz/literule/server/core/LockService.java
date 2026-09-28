@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 分布式锁服务封装（P1-3：synchronized 升级为分布式锁）
@@ -84,12 +85,12 @@ public class LockService {
         try {
             lockValue = distributedLocker.tryLock(lockKey, waitTime, leaseTime, TimeUnit.SECONDS);
             if (lockValue == null) {
-      throw new SysException("获取分布式锁失败（超时 " + waitTime + "s）: " + lockKey);
+      throw new SysException(I18n.message("literule.lock.acquire_failed", new Object[]{waitTime, lockKey}));
             }
             return action.get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-      throw new SysException("获取分布式锁被中断: " + lockKey, e);
+      throw new SysException(I18n.message("literule.lock.interrupted", new Object[]{lockKey}), e);
         } finally {
             if (lockValue != null) {
                 try {

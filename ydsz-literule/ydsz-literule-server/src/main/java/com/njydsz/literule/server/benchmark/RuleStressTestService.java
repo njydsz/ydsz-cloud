@@ -18,6 +18,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 规则压测服务
@@ -78,7 +79,7 @@ public class RuleStressTestService {
       int iterations,
       int warmupIterations) {
     if (factsList == null || factsList.isEmpty()) {
-      throw new SysException("factsList 不能为空");
+      throw new SysException(I18n.message("literule.benchmark.facts_list_empty"));
     }
     int safeThreads = Math.max(1, threads);
     int safeIterations = Math.max(1, iterations);
@@ -152,7 +153,7 @@ public class RuleStressTestService {
           ruleCode, latencies, successCount.sum(), errorCount.sum(), durationMs, threads);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new SysException("压测被中断", e);
+      throw new SysException(I18n.message("literule.benchmark.interrupted"), e);
     } finally {
       executor.shutdown();
     }

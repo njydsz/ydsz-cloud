@@ -1,9 +1,9 @@
 package com.njydsz.cronjob.server.service.audit;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.cronjob.domain.query.AuditLogQuery;
 import com.njydsz.cronjob.domain.vo.AuditLogVO;
 
 /**
@@ -19,19 +19,8 @@ public interface AuditLogService {
   /**
    * 分页查询 cronjob 模块的操作审计日志。
    *
-   * @param pageNum 页码（从 1 开始）
-   * @param size 每页条数
-   * @param action 操作行为编码（可选）
-   * @param operatorName 操作人姓名（可选）
-   * @param startTime 开始时间（可选）
-   * @param endTime 结束时间（可选）
+   * @param query 分页查询参数（含 pageNum/pageSize/过滤条件）
    * @return 分页结果
    */
-  PageResponse<List<AuditLogVO>> page(
-      int pageNum,
-      int size,
-      Integer action,
-      String operatorName,
-      LocalDateTime startTime,
-      LocalDateTime endTime);
+  PageResponse<List<AuditLogVO>> page(AuditLogQuery query);
 }

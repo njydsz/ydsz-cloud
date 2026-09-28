@@ -24,6 +24,7 @@ import com.njydsz.literule.server.impl.ScorecardRule;
 import com.njydsz.literule.server.impl.ScriptRule;
 import com.njydsz.literule.server.orchestrator.RuleChain;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 
@@ -475,7 +476,7 @@ public final class RuleDslConverter {
   private static Rule[] resolveRules(
       List<String> steps, Map<String, Rule> ruleMap, String chainName) {
     if (steps == null || steps.isEmpty()) {
-      throw new SysException("链 " + chainName + " 的 steps 为空");
+      throw new SysException(I18n.message("literule.dsl.converter.chain_steps_empty", new Object[]{chainName}));
     }
     Rule[] rules = new Rule[steps.size()];
     for (int i = 0; i < steps.size(); i++) {
@@ -487,11 +488,11 @@ public final class RuleDslConverter {
   /** 解析单个规则引用 */
   private static Rule resolveRule(String code, Map<String, Rule> ruleMap, String chainName) {
     if (code == null || code.isBlank()) {
-      throw new SysException("链 " + chainName + " 引用了空的规则编码");
+      throw new SysException(I18n.message("literule.dsl.converter.chain_ref_empty_code", new Object[]{chainName}));
     }
     Rule r = ruleMap.get(code);
     if (r == null) {
-      throw new SysException("链 " + chainName + " 引用了不存在的规则: " + code);
+      throw new SysException(I18n.message("literule.dsl.converter.chain_ref_not_found", new Object[]{chainName, code}));
     }
     return r;
   }

@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * CEP 引擎（精简版）
@@ -100,7 +101,7 @@ public class CEPEngine implements Serializable {
           Class.forName("com.njydsz.literule.server.engine.liteexpr.LiteExprEngine");
       return (ExpressionEngine) clazz.getConstructor(boolean.class).newInstance(true);
     } catch (Exception e) {
-      throw new SysException("无法创建默认 LiteExprEngine", e);
+      throw new SysException(I18n.message("literule.cep.default_engine_create_failed"), e);
     }
   }
 
