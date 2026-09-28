@@ -44,6 +44,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -138,6 +139,7 @@ public class AgentController {
       @Valid @RequestBody AgentExecutionRequestDTO request) {
     log.info(
         "[Agent-API] 执行请求: agentCode={}, stream={}", request.getAgentCode(), request.isStream());
+    applyTraceContext(request);
     requestGuard.check(request.getRequestId(), null);
     AgentExecutionRequest execReq = toExecutionRequest(request);
     ChatResponse response = agentFacade.execute(execReq);
@@ -179,6 +181,7 @@ public class AgentController {
   @Operation(summary = "流式执行 Agent（SSE）", description = "逐 chunk 推送 LLM 响应，支持心跳保活和断连检测")
   public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
     log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
+    applyTraceContext(request);
     requestGuard.check(request.getRequestId(), null);
     SseEmitter emitter = new SseEmitter();
     SseExecutor executor = new SseExecutor(emitter);
@@ -283,6 +286,7 @@ public class AgentController {
   @PostMapping("/chat")
   @Operation(summary = "同步对话", description = "等待 LLM 返回完整响应后返回")
   public YdszResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
+    applyTraceContext(request);
     requestGuard.check(request.getRequestId(), null);
     ChatResponse response;
     // 多模态输入优先：multimodalContent 非空时使用 Vision 模型对话
@@ -325,6 +329,7 @@ public class AgentController {
   @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   @Operation(summary = "流式对话（SSE）", description = "逐 token 推送 LLM 响应")
   public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
+    applyTraceContext(request);
     requestGuard.check(request.getRequestId(), null);
     SseEmitter emitter = new SseEmitter();
     SseExecutor executor = new SseExecutor(emitter);
@@ -421,6 +426,7 @@ public class AgentController {
   public YdszResponse<BatchChatResponseDTO> batchChat(
       @Valid @RequestBody BatchChatRequestDTO request) {
     log.info("[Batch-API] 批量对话请求: itemsCount={}", request.getItems().size());
+    applyTraceContext(request);
     requestGuard.check(request.getRequestId(), null);
     // DTO → 应用层 BatchChatItem 转换
     List<BatchChatItem> facadeItems = new ArrayList<>(request.getItems().size());
@@ -578,5 +584,62 @@ public class AgentController {
       }
     }
     return new MessageContent(parts);
+  }
+
+  /**
+   * 将 Agent 执行请求的业务关联维度注入 {@link RequestContext}，供 {@code ExportingTraceRecorder} 自动上报为 OTel Span
+   * 的 {@code ydsz.bot_id / turn_id / conversation_id / account_id} 属性。
+   *
+   * <p>botId 在 agentCode 语义下即为关联的 Agent 定义 ID；纯对话入口（chat / chatStream / batchChat）无 agentCode，botId 保持
+   * null，由 {@code ExportingTraceRecorder} 通过其他维度聚合。
+   *
+   * <p>accountId 统一回读 auth 链路已注入的 userId，避免 Trace 记录中用户维度丢失。必须在 requestGuard.check 之前调用， 保证链路入口即可见维度。
+   *
+   * @param req Agent 执行请求
+   */
+  private void applyTraceContext(AgentExecutionRequestDTO req) {
+    RequestContext.setBotId(req.getAgentCode());
+    injectCommonDimensions(req.getConversationId(), req.getRequestId());
+  }
+
+  /**
+   * 将对话请求的业务关联维度注入 {@link RequestContext}（无 botId 版本）。
+   *
+   * @param req 同步/流式对话请求
+   */
+  private void applyTraceContext(ChatRequestDTO req) {
+    RequestContext.setBotId(null);
+    injectCommonDimensions(req.getConversationId(), req.getRequestId());
+  }
+
+  /**
+   * 将批量对话请求的业务关联维度注入 {@link RequestContext}。
+   *
+   * <p>批量请求共享一个 requestId 作为 turnId，conversationId 取首条对话的 conversationId。
+   *
+   * @param req 批量对话请求
+   */
+  private void applyTraceContext(BatchChatRequestDTO req) {
+    RequestContext.setBotId(null);
+    String conversationId = null;
+    if (req.getItems() != null && !req.getItems().isEmpty()) {
+      conversationId = req.getItems().get(0).getConversationId();
+    }
+    injectCommonDimensions(conversationId, req.getRequestId());
+  }
+
+  /** 注入公共维度（conversationId / turnId / accountId） */
+  private void injectCommonDimensions(String conversationId, String requestId) {
+    RequestContext.setConversationId(conversationId);
+    RequestContext.setTurnId(requestId);
+    syncAccountIdFromAuth();
+  }
+
+  /** 回读 auth 链路已注入的 userId，补全 accountId 维度（幂等，null-safe） */
+  private void syncAccountIdFromAuth() {
+    String userId = RequestContext.getUserId();
+    if (userId != null) {
+      RequestContext.setAccountId(userId);
+    }
   }
 }

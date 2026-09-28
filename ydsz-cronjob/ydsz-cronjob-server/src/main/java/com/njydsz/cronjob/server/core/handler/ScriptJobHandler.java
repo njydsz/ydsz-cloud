@@ -238,8 +238,8 @@ public class ScriptJobHandler implements JobHandler {
     SandboxScriptExecutor.SandboxResult result =
         sandboxExecutor.execute(scriptContent, language, timeoutSeconds, envVars);
     if (!result.success()) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
-          .msg("沙箱脚本执行失败: " + result.errorMessage());
+      log.warn("[Script] 沙箱执行失败: lang={} err={}", language, result.errorMessage());
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED);
     }
     return new ScriptResult(
         result.exitCode(),
@@ -291,8 +291,8 @@ public class ScriptJobHandler implements JobHandler {
           process.destroyForcibly();
           stdoutThread.interrupt();
           stderrThread.interrupt();
-          throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
-              .msg("脚本执行超时: timeoutMs=" + timeoutMs + " language=" + language);
+          log.warn("[Script] 执行超时: timeoutMs={} lang={}", timeoutMs, language);
+          throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED);
         }
       } else {
         finished = process.waitFor() == 0;
@@ -311,8 +311,8 @@ public class ScriptJobHandler implements JobHandler {
           stderrStr.length());
 
       if (exitCode != 0) {
-        throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
-            .msg("脚本执行失败: exitCode=" + exitCode + " stderr=" + truncate(stderrStr));
+        log.warn("[Script] 执行失败: exitCode={} stderr={}", exitCode, truncate(stderrStr));
+        throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED);
       }
 
       return new ScriptResult(exitCode, stdoutStr, stderrStr);

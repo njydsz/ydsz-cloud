@@ -179,6 +179,52 @@ public final class MaskUtils {
     return prefixStr + repeatMask(maskLength) + suffixStr;
   }
 
+  /**
+   * 根据字段名自动选择脱敏策略。
+   *
+   * <p>YDIZ-COMMON-029: 统一脱敏策略 —— 手机号前3后4、身份证前3后4。
+   *
+   * <p>支持的字段名（不区分大小写子串匹配）：
+   *
+   * <ul>
+   *   <li>手机号：字段名包含 "mobile" 或 "phone" → {@link #maskPhone(String)}
+   *   <li>身份证：字段名包含 "idcard" 或 "idnumber" → {@link #maskIdCard(String)}
+   *   <li>银行卡：字段名包含 "bankcard" / "cardno" / "cardnumber" → {@link #maskBankCard(String)}
+   *   <li>邮箱：字段名包含 "email" → {@link #maskEmail(String)}
+   *   <li>姓名：字段名包含 "name" 或 "username" → {@link #maskName(String)}
+   * </ul>
+   *
+   * <p>未匹配到任何策略时原样返回。
+   *
+   * @param fieldName 字段名（如 idCard、mobile、phone、bankCard、email、name）
+   * @param value 字段值
+   * @return 脱敏后的值（未匹配则原样返回）
+   * @since 26.09.28
+   */
+  public static String maskByFieldName(String fieldName, String value) {
+    if (fieldName == null || fieldName.isEmpty() || value == null || value.isEmpty()) {
+      return value;
+    }
+    String lower = fieldName.toLowerCase();
+    if (lower.contains("idcard") || lower.contains("idnumber")) {
+      return maskIdCard(value);
+    }
+    if (lower.contains("mobile") || lower.contains("phone")) {
+      return maskPhone(value);
+    }
+    if (lower.contains("bankcard") || lower.contains("cardno") || lower.contains("cardnumber")) {
+      return maskBankCard(value);
+    }
+    if (lower.contains("email")) {
+      return maskEmail(value);
+    }
+    if (lower.contains("name") || lower.contains("username")) {
+      return maskName(value);
+    }
+    // 未匹配 → 原样返回
+    return value;
+  }
+
   // ==================== 内部方法 ====================
 
   /**

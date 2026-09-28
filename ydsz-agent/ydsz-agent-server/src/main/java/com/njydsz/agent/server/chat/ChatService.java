@@ -27,6 +27,7 @@ import com.njydsz.agent.server.quota.TenantQuotaService;
 import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.metrics.MetricsConstants;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
@@ -160,7 +161,7 @@ public class ChatService {
     String executionId = String.valueOf(snowflakeIdGenerator.nextId());
     String tenantId = resolveTenantId(convId);
     try {
-      return SentryObservation.<ChatResponse>time("agent.chat", null, null, () -> {
+      return SentryObservation.<ChatResponse>time(MetricsConstants.AGENT_CHAT_DURATION_MILLIS, null, null, () -> {
         memory.save(convId, ChatMessage.user(sanitizedInput, convId));
         runtimeMetrics.recordMessage("user");
 
@@ -269,7 +270,7 @@ public class ChatService {
     String executionId = String.valueOf(snowflakeIdGenerator.nextId());
     String tenantId = resolveTenantId(convId);
 
-    SentryObservation.time("agent.chat.stream", null, null, () -> {
+    SentryObservation.time(MetricsConstants.AGENT_CHAT_STREAM_TOTAL, null, null, () -> {
       memory.save(convId, ChatMessage.user(sanitizedInput, convId));
       runtimeMetrics.recordMessage("user");
 

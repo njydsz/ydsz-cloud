@@ -7,6 +7,7 @@ import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
+import com.njydsz.common.sentry.metrics.MetricsConstants;
 
 /**
  * Agent 模块 Micrometer 指标
@@ -21,7 +22,7 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  *   <li>{@code agent_llm_call_duration_seconds{provider,model}} — LLM 调用耗时
  *   <li>{@code agent_llm_tokens_total{provider,model,type}} — Token 消耗（prompt/completion）
  *   <li>{@code agent_guardrail_rejections_total{guard,direction}} — 安全护栏拒绝次数
- *   <li>{@code agent_cache_hits_total{provider}} / {@code agent_cache_misses_total{provider}} — LLM 缓存命中/未命中
+ *   <li>{@code agent_cache.hit.total{provider}} / {@code agent_cache.miss.total{provider}} — LLM 缓存命中/未命中
  * </ul>
  *
  * <p>业务关联维度（botId / conversationId）支持按 Agent 定义和会话聚合指标数据，
@@ -47,11 +48,22 @@ public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRe
   /** 安全护栏拒绝次数指标名 */
   private static final String METRIC_GUARDRAIL_REJECTIONS = "guardrail_rejections_total";
 
-  /** LLM 缓存命中次数指标名 */
-  private static final String METRIC_CACHE_HITS = "cache_hits_total";
+  /**
+   * LLM 缓存命中次数指标名。
+   *
+   * <p>使用 {@link MetricsConstants#CACHE_HIT_TOTAL} 的统一命名（不含 "agent." 前缀），
+   * {@link SentryMetricsAdapter} 会自动添加 {@code "agent_"} 前缀，
+   * 最终 Prometheus 名为 {@code agent_cache.hit.total}。
+   */
+  private static final String METRIC_CACHE_HITS = MetricsConstants.CACHE_HIT_TOTAL;
 
-  /** LLM 缓存未命中次数指标名 */
-  private static final String METRIC_CACHE_MISSES = "cache_misses_total";
+  /**
+   * LLM 缓存未命中次数指标名。
+   *
+   * <p>使用 {@link MetricsConstants#CACHE_MISS_TOTAL} 的统一命名，
+   * 最终 Prometheus 名为 {@code agent_cache.miss.total}。
+   */
+  private static final String METRIC_CACHE_MISSES = MetricsConstants.CACHE_MISS_TOTAL;
 
   public AgentMetrics() {
     super("agent_");

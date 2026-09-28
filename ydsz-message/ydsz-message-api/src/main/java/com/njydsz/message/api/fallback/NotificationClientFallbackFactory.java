@@ -11,9 +11,8 @@ import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
-import com.njydsz.common.locales.util.I18n
-import com.njydsz.message.api.client.NotificationClient;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.message.api.client.NotificationClient;
 
 /**
  * {@link NotificationClient} 的降级工厂。
@@ -42,7 +41,7 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
 
   /** 降级消息（走 i18n，不可用时回退到中文） */
   private static final String MESSAGE_UNAVAILABLE =
-      I18n.message("消息中心服务不可用");
+      I18n.message("message.service.unavailable");
 
   @Override
   public NotificationClient create(Throwable cause) {

@@ -340,8 +340,7 @@ public class GlueJobHandler implements JobHandler {
     try {
       instance = clazz.getDeclaredConstructor().newInstance();
     } catch (Exception e) {
-      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e)
-          .msg("GLUE 代码实例化失败: " + e.getMessage());
+      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e);
     }
     return invokeExecute(instance, paramsJson);
   }
@@ -370,16 +369,15 @@ public class GlueJobHandler implements JobHandler {
       throws JobExecutionException {
     GroovyDockerSandboxExecutor dockerExecutor = groovyDockerExecutorProvider.getIfAvailable();
     if (dockerExecutor == null) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_UNREGISTERED)
-          .msg(I18n.message("cronjob.glue.sandbox.unregistered", new Object[]{}));
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_UNREGISTERED);
     }
 
     GroovyDockerSandboxExecutor.GroovySandboxResult result =
         dockerExecutor.execute(sourceCode, paramsJson, SCRIPT_TIMEOUT_SECONDS);
 
     if (!result.success()) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
-          .msg("Groovy Docker 沙箱执行失败: " + result.message());
+      log.warn("[Groovy] 沙箱执行失败: {}", result.message());
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED);
     }
     return result.output();
   }
@@ -392,16 +390,15 @@ public class GlueJobHandler implements JobHandler {
   private Object executePython(String sourceCode, String paramsJson) throws JobExecutionException {
     SandboxScriptExecutor executor = sandboxExecutorProvider.getIfAvailable();
     if (executor == null) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_PYTHON_EXECUTOR_UNREGISTERED)
-          .msg(I18n.message("cronjob.glue.python.executor.unregistered", new Object[]{}));
+      throw BusinessException.of(CronjobExceptionCode.GLUE_PYTHON_EXECUTOR_UNREGISTERED);
     }
     Map<String, String> envVars = new HashMap<>(COLLECTION_CAPACITY);
     envVars.put("JOB_PARAMS", paramsJson != null ? paramsJson : "{}");
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "PYTHON", SCRIPT_TIMEOUT_SECONDS, envVars);
     if (!result.success()) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
-          .msg("Python 脚本执行失败: " + result.errorMessage());
+      log.warn("[Python] 沙箱执行失败: {}", result.errorMessage());
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED);
     }
     return result.output();
   }
@@ -422,8 +419,8 @@ public class GlueJobHandler implements JobHandler {
     SandboxScriptExecutor.SandboxResult result =
         executor.execute(sourceCode, "SHELL", SCRIPT_TIMEOUT_SECONDS, envVars);
     if (!result.success()) {
-      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED)
-          .msg("Shell 脚本执行失败: " + result.errorMessage());
+      log.warn("[Shell] 沙箱执行失败: {}", result.errorMessage());
+      throw BusinessException.of(CronjobExceptionCode.GLUE_SANDBOX_FAILED);
     }
     return result.output();
   }
@@ -437,7 +434,7 @@ public class GlueJobHandler implements JobHandler {
   private Object executeJavaScript(String sourceCode, String paramsJson) throws JobExecutionException {
     if (jsEngine == null) {
       throw BusinessException.of(CronjobExceptionCode.GLUE_LANGUAGE_UNSUPPORTED)
-          .msg("JavaScript 引擎不可用，请添加 Nashorn 或 GraalJS 依赖");
+          .params(new Object[]{"JAVASCRIPT"});
     }
     try {
       jsEngine.put("paramsJson", paramsJson != null ? paramsJson : "{}");
@@ -445,8 +442,7 @@ public class GlueJobHandler implements JobHandler {
       logToJobLogger("JavaScript 脚本执行完成: result={}", result);
       return result != null ? result.toString() : "null";
     } catch (Exception e) {
-      throw new BusinessException(CronjobExceptionCode.GLUE_SANDBOX_FAILED, e)
-          .msg("JavaScript 脚本执行失败: " + e.getMessage());
+      throw new BusinessException(CronjobExceptionCode.GLUE_SANDBOX_FAILED, e);
     }
   }
 
@@ -486,8 +482,7 @@ public class GlueJobHandler implements JobHandler {
                 clazz.getName());
             return clazz;
           } catch (Exception e) {
-            throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e)
-                .msg("GLUE 代码编译失败（沙箱安全检查未通过）: " + e.getMessage());
+            throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e);
           }
         });
   }
@@ -519,12 +514,10 @@ public class GlueJobHandler implements JobHandler {
       logToJobLogger("GLUE 脚本执行完成: result={}", result);
       return result;
     } catch (NoSuchMethodException e) {
-      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e)
-          .msg("GLUE 代码未实现 JobHandler 接口，也未定义 execute(String) 方法: " + instance.getClass().getName());
+      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, e);
     } catch (Exception e) {
       Throwable cause = e.getCause() != null ? e.getCause() : e;
-      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, cause)
-          .msg("GLUE 代码执行失败: " + cause.getMessage());
+      throw new BusinessException(CronjobExceptionCode.GLUE_INSTANTIATION_FAILED, cause);
     }
   }
 

@@ -129,6 +129,9 @@ public class SensitiveFieldRedactor {
   /**
    * 根据字段名与值类型进行脱敏（String / Map / 其他）。
    *
+   * <p>YDIZ-COMMON-029: 身份证/手机号/银行卡 走针对性策略（MaskUtils.maskXxx），
+   * 其他字段保持按长度分档保底脱敏。
+   *
    * @param key 字段名 / 路径
    * @param value 字段值
    * @return 脱敏后的值（String 脱敏为掩码形式；递归脱敏 Map；其他类型原样返回）
@@ -151,8 +154,8 @@ public class SensitiveFieldRedactor {
       return value;
     }
     // 命中敏感字段：根据类型脱敏
-    if (value instanceof String) {
-      return maskString((String) value);
+    if (value instanceof String strVal) {
+      return maskStringByKey(key, strVal);
     }
     if (value instanceof Map) {
       // 整个 Map 替换（若整体判定为敏感，如 "headers" -> "Authorization" 已经命中）
@@ -166,10 +169,13 @@ public class SensitiveFieldRedactor {
   }
 
   /**
-   * 对字符串值进行掩码（长度分档）。
+   * 对字符串值进行掩码（YDIZ-COMMON-029 统一脱敏策略）。
+   *
+   * <p>命名字段优先走针对性策略，未知字段按长度分档保底脱敏。
    *
    * @param value 原始字符串
    * @return 脱敏后字符串
+   * @since 26.09.28
    */
   public static String maskString(String value) {
     if (value == null) {
@@ -183,10 +189,42 @@ public class SensitiveFieldRedactor {
       return "****";
     }
     if (len <= 32) {
-      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-029）
       return MaskUtils.mask(value, 2, 2);
     }
-    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
+    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-029）
     return MaskUtils.mask(value, 4, 4);
+  }
+
+  /**
+   * 根据字段名选择针对性脱敏策略，未命中则按长度分档保底。
+   *
+   * <p>YDIZ-COMMON-029: 身份证/手机号/银行卡走 {@code MaskUtils.maskXxx}，
+   * 其他敏感字段（password/token/secret 等）保留原有长度分档逻辑。
+   *
+   * @param key 字段名（用于子串匹配策略选择）
+   * @param value 原始字符串值
+   * @return 脱敏后字符串
+   * @since 26.09.28
+   */
+  private static String maskStringByKey(String key, String value) {
+    if (key == null || key.isEmpty()) {
+      return maskString(value);
+    }
+    String lower = key.toLowerCase();
+    // 身份证：前 3 后 4（YDIZ-COMMON-029 统一策略）
+    if (lower.contains("idcard") || lower.contains("idnumber")) {
+      return MaskUtils.maskIdCard(value);
+    }
+    // 手机号：前 3 后 4（YDIZ-COMMON-029 统一策略）
+    if (lower.contains("mobile") || lower.contains("phone")) {
+      return MaskUtils.maskPhone(value);
+    }
+    // 银行卡：前 4 后 4（YDIZ-COMMON-029 统一策略）
+    if (lower.contains("bankcard") || lower.contains("cardno") || lower.contains("cardnumber")) {
+      return MaskUtils.maskBankCard(value);
+    }
+    // 其他敏感字段（password/token/secret 等）：保持按长度分档
+    return maskString(value);
   }
 }

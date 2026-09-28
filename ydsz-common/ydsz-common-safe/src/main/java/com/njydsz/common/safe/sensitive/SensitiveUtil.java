@@ -10,6 +10,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.njydsz.common.util.mask.MaskUtils;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -58,8 +60,12 @@ public final class SensitiveUtil {
         SensitiveType.ID_CARD);
     // 手机号：11 位数字，1 开头，第二位 3-9
     map.put(Pattern.compile("(?<![0-9])(1[3-9]\\d{9})(?![0-9])"), SensitiveType.PHONE);
-    // 银行卡号：16-19 位连续数字，62 开头
-    map.put(Pattern.compile("(?<![0-9])(6[2-9]\\d{14,17})(?![0-9])"), SensitiveType.BANK_CARD);
+    // 银行卡号：13-19 位数字，覆盖银联(62开头)、Visa(4开头)、MasterCard(51-57)、运通(34/37)
+    // YDIZ-COMMON-029: 统一脱敏策略 —— 银行卡前4后4
+    map.put(
+        Pattern.compile(
+            "(?<![0-9])((?:6[2-9]|4|5[1-7]|3[47])\\d{12,16})(?![0-9])"),
+        SensitiveType.BANK_CARD);
     // 邮箱地址
     map.put(
         Pattern.compile("([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})"), SensitiveType.EMAIL);
@@ -290,22 +296,21 @@ public final class SensitiveUtil {
   /**
    * 银行卡号脱敏
    *
-   * <p>脱敏规则：后4位保留，其余脱敏
+   * <p>脱敏规则：保留前 4 后 4 位（YDIZ-COMMON-029 统一策略）。
+   *
+   * <p>委托 {@link MaskUtils#maskBankCard(String)} 执行，确保与其他脱敏路径结果一致。
    *
    * @param value 原银行卡号
-   * @param replaceChar 替换字符
+   * @param replaceChar 替换字符（YDIZ-COMMON-029 委托 MaskUtils，固定用 *）
    * @return 脱敏后的银行卡号
    */
+  @SuppressWarnings("unused")
   public static String bankCard(String value, char replaceChar) {
     if (value == null || value.isEmpty()) {
       return value;
     }
-    int length = value.length();
-    if (length <= 4) {
-      return repeat(replaceChar, length);
-    }
-    String suffix = value.substring(length - 4);
-    return repeat(replaceChar, length - 4) + suffix;
+    // YDIZ-COMMON-029: 统一脱敏策略 —— 银行卡前4后4
+    return MaskUtils.maskBankCard(value);
   }
 
   /**

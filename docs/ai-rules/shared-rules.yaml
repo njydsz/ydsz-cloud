@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.27"
+  version: "26.09.29"
   source: "docs/云顶编码规范.md v1.0.12"
-  last_synced: "2026-09-19"
-  last_updated: "2026-09-27（P8 全局引用深度分析：新增 YDIZ-COMMON-024 P1 i18n 活性 / YDIZ-COMMON-025 P1 TreeBuilder / YDIZ-COMMON-026 P2 Sentry 覆盖率；修复 25 处 DateUtils 收敛 + 8 模块 i18n 骨架填充）"
-  total_rules: 110
+  last_synced: "2026-09-29"
+  last_updated: "2026-09-29（公共基础深化 P0-P2：P0-2 literule/message/agent 异常统一 + P0-3 MessageUtils→I18n 迁移 + P1-1 workflow 死代码 + P1-2 硬编码文案收敛 + P1-3 异常脱敏 12 处 e.getMessage 清理 + P1-4 TraceContextHolder→RequestContext + P2-3 Specification/TypedId 死代码删除 + 3 条新规则 YDIZ-I18N-005/YDIZ-COMMON-033/YDIZ-EX-001）"
+  total_rules: 118
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -3042,8 +3042,261 @@ rules:
     fix: "修改后端 DTO 字段命名 → 重新运行 openapi-typescript 生成 → 提交新的 schema.d.ts"
     source: "全维度深度分析（YDIZ-FE-002，P1，26.09.27）"
 
+  # ============================================
+  # 公共模块利用率规则（新增 5 条，26.09.28）
+  # ============================================
+  - id: "YDIZ-COMMON-028"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【强制】Excel 操作必须通过 ExcelFacade"
+    description: |
+      所有 Excel 导入/导出操作必须通过 com.njydsz.common.excel.core.ExcelFacade 统一入口。
+      禁止直接创建 XSSFWorkbook、SXSSFWorkbook、SXSSFWorkbook 等 POI 对象。
+      ExcelFacade 内部使用 SuperFastExcelWriter/SuperFastExcelReader 引擎，性能优于 POI 用户模式 5~10 倍，
+      且已解决多 Sheet 分页、动态表头、类型映射等常见需求。
+
+      **为什么统一入口**：
+      - 避免各模块重复实现分页导出（曾出现多次 doWrite 到同一 ByteArrayOutputStream 导致 ZIP 损坏的 P0 缺陷）
+      - 统一 Excel 样式、表头格式、异常处理
+      - 未来可通过 ExcelFacade 统一添加水印、安全审计、下载限流等横切需求
+
+      **违反判据**：
+      - 业务代码中出现 new XSSFWorkbook()、new SXSSFWorkbook()
+      - 未通过 ExcelFacade 而直接使用 POI API 生成 Excel
+      - 自建 ExcelWriter/ExportHelper 实现而非使用现成的 ExcelExportHelper
+    pattern: "new XSSFWorkbook\\(|new SXSSFWorkbook\\(|import org.apache.poi.xssf.usermodel.XSSFWorkbook"
+    fix: |
+      1. 使用 ExcelFacade.write(out, Clazz.class) 替代直接 POI 操作
+      2. 使用 ExcelExportHelper.export(sheetName, Class, dataList) 简化常见场景
+      3. 使用 ExcelFacade.read(in, Clazz.class) + doRead(listener) 进行流式导入
+    example_bad: |
+      // 违规：直接创建 POI 对象
+      XSSFWorkbook workbook = new XSSFWorkbook();
+      Sheet sheet = workbook.createSheet("数据");
+      ...
+    example_good: |
+      // 正确：使用统一入口
+      ExcelWriter writer = ExcelFacade.write(out, ExportVO.class);
+      writer.doWrite(dataList);
+    source: "全局引用分析 v2（YDIZ-COMMON-028，P1，26.09.28 Excel 统一入口激活）"
+    exception: "ydsz-common-excel 框架内部除外"
+
+  - id: "YDIZ-COMMON-029"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【强制】Redis 操作优先使用 RedisOps 封装层"
+    description: |
+      业务模块操作 Redis 时，禁止直接注入 RedisTemplate 或 StringRedisTemplate，
+      应通过 com.njydsz.common.redis.service.Redemps 封装层统一访问。
+      RedisOps 系列（RedisStringOps、RedisHashOps、RedisCollectionOps、RedisSortedSetOps）
+      提供键名空间约束、统一序列化/反序列化、自动过期策略等防护。
+
+      **为什么封装**：
+      - 避免 Redis Key 命名散乱（当前存在 "user:"、"USER_"、"u-" 等 6+ 种命名风格）
+      - 统一序列化避免 JSON 序列化器混用导致的反序列化失败
+      - 防止 RedisTemplate 误操作（如 KEYS *、FLUSHDB）
+      - 未来可统一接入 Redis 多租户 Key 前缀、数据加密等
+
+      **违反判据**：
+      - 业务代码注入 RedisTemplate 或 StringRedisTemplate
+      - 使用 redisTemplate.opsForValue().set(key, value)、.opsForHash() 等原生操作
+    pattern: "RedisTemplate |StringRedisTemplate |redisTemplate\\.opsForValue|opsForHash|opsForSet"
+    fix: |
+      1. 注入 RedisStringOps / RedisHashOps 替代 RedisTemplate
+      2. 使用提供的 RedisKeyBuilder 规范键名
+      3. 复杂场景使用 RedisTemplate 时需在 code review 中说明理由
+    example_bad: |
+      // 违规：直接使用 RedisTemplate
+      @Autowired
+      private StringRedisTemplate redisTemplate;
+      redisTemplate.opsForValue().set("user:" + userId, userData, 30, TimeUnit.MINUTES);
+    example_good: |
+      // 正确：使用封装层
+      @Autowired
+      private RedisStringOps redisStringOps;
+      redisStringOps.set(RedisKeyBuilder.userSession(userId), userData, Duration.ofMinutes(30));
+    source: "全局引用分析 v2（YDIZ-COMMON-029，P1，26.09.28 RedisOps 封装层激活）"
+    exception: "ydsz-common-redis 框架内部、临时数据迁移脚本除外"
+
+  - id: "YDIZ-COMMON-030"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【强制】业务通知必须通过 NotifyHelper"
+    description: |
+      所有业务通知（邮件/短信/钉钉/飞书/企微/站内信）必须通过
+      com.njydsz.common.notify.helper.NotifyHelper 统一发送。
+      禁止业务模块内部自建通知发送逻辑（渠道路由、模板渲染、限流降级）。
+
+      **为什么统一入口**：
+      - NotifyHelper 已集成 6 种渠道 API，通过 NotifyChannelStrategy SPI 可扩展
+      - 统一的重试/熔断/限流/删除策略
+      - 支持事务安全发布（Outbox）+ 死信队列
+      - 统一的消息发送审计
+
+      **已知桥接方式**（允许）：
+      - cronjob AlertDispatcher：通过 NotifyHelper（Feign 降级）
+      - message CrossModuleEventListener：直接注入 NotifyHelper
+      - nextwiki FileOperatedEventListener：直接注入 NotifyHelper
+      - userinfo SmtpAlertNotificationChannel：通过 NotifyHelper 转发邮件
+
+      **违反判据**：
+      - 业务模块自建渠道路由逻辑（if channel == "email" sendEmail...）
+      - 直接调用 message 模块的 NotificationClient Feign 接口（除非作为 NotifyHelper 不可用时的显式降级且注释说明）
+    pattern: "NotificationClient |notificationClient\\.send|MessageChannel（独立使用）"
+    fix: |
+      1. 注入 NotifyHelper：@Autowired private NotifyHelper notifyHelper
+      2. notifyHelper.sendInApp(userId, title, content) — 站内信
+      3. notifyHelper.sendEmail(email, title, content) — 邮件
+      4. notifyHelper.sendSystemAlert(title, content) — 系统告警（自动路由到管理员）
+      5. notifyHelper.sendTemplate(userId, templateCode, params) — 模板消息
+    example_bad: |
+      // 违规：自建通知路由
+      if ("email".equals(channel)) {
+          emailService.send(receiver, subject, body);
+      } else if ("sms".equals(channel)) {
+          smsService.send(receiver, content);
+      }
+    example_good: |
+      // 正确：统一入口
+      notifyHelper.sendSystemAlert("任务执行失败", "任务 " + taskName + " 执行失败，请检查");
+    source: "全局引用分析 v2（YDIZ-COMMON-030，P1，26.09.28 Notify 孤岛治理）"
+
+  - id: "YDIZ-COMMON-031"
+    severity: "P2"
+    category: "common-reuse"
+    title: "【建议】配置热更新必须通过 ConfigChangeBridge"
+    description: |
+      业务模块在监听配置变更时（如 database-config、Apollo 配置、Spring Cloud Config 推送），
+      若有自定义配置变更响应逻辑，必须通过实现
+      com.njydsz.common.config.hotreload.ConfigChangeListener SPI 接入统一桥接层，
+      禁止通过 @PostConstruct 轮询或 Webhook 回调自建。
+
+      **为什么统一**：
+      - 统一配置变更的事件格式、反序列化、幂等处理
+      - 便于全局审计（谁修改了什么配置、何时生效、哪些模块感知）
+      - 未来可统一接入配置灰度发布、A/B 测试
+
+      **适用模块**：
+      - system：字典/参数配置运行时变更
+      - literule：规则配置热加载
+      - workflow：流程定义动态更新
+      - gateway：路由规则/限流规则动态变更
+      - agent：Agent/Tool 配置在线调整
+
+      **违反判据**：
+      - 使用 @PostConstruct 轮询配置
+      - 自定义 Webhook 回调解析配置变更
+    pattern: "@PostConstruct.*配置轮询|Webhook.*config|@Scheduled.*配置"
+    fix: |
+      1. 实现 ConfigChangeListener 接口
+      2. 使用 @YdszConfigListener 注解声明关注的配置前缀
+      3. 在 onConfigChange(ConfigChangeEvent event) 中处理配置变更
+    source: "全局引用分析 v2（YDIZ-COMMON-031，P2，26.09.28 ConfigChangeBridge 激活）"
+
+  - id: "YDIZ-COMMON-032"
+    severity: "P2"
+    category: "common-reuse"
+    title: "【建议】i18n 使用率门禁"
+    description: |
+      业务模块 pom 引入 ydsz-common-locales 后，必须在代码中实际使用 I18nMessages 
+      或 I18n.message() API，不得仅声明依赖而不使用。
+
+      **为什么要求**：
+      - 当前 5 个模块（workflow、literule、message、nextwiki、generator）引入了 locales 依赖但全平台 0 处 import
+      - 空壳依赖导致依赖矩阵膨胀，增加构建时间
+      - 国际化是系统级能力，应从一开始就内嵌到业务开发流程中
+
+      **活跃度标准**（满足任一即合规）：
+      - 至少有 1 个 Service/ApplicationService 注入 I18nMessages
+      - 至少有 1 个 Exception 抛出来自 I18n.message() 的文本
+      - 至少有 1 个枚举 description 使用 I18n.message() 动态解析
+      - properties 文件中至少有 5 个 key 被 Java 代码引用（通过 IDE 引用扫描验证）
+
+      **违反判据**：
+      - pom 引入 ydsz-common-locales 但 Java 代码中无 I18nMessages / I18n.message 引用
+    pattern: "import.*I18nMessages|import.*com\\.njydsz\\.common\\.locales\\.util\\.I18n;"
+    fix: |
+      1. 确认 pom 已声明 ydsz-common-locales 依赖
+      2. 在异常消息场景使用 I18n.message("module.key")
+      3. 在 Service 注入 I18nMessages 用于动态消息解析
+      4. 在多语言枚举中使用 I18n.message() 获取 description
+    example_good: |
+      // Service 注入
+      private final I18nMessages i18n;
+      public String getStatusDescription() {
+          return i18n.resolve("userinfo.status");
+      }
+      // 异常消息
+      throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND)
+          .msg(I18n.message("userinfo.user.not.found"));
+    source: "全局引用分析 v2（YDIZ-COMMON-032，P2，26.09.28 i18n 使用率门禁）"
+
+  # ============================================
+  # 新增 3 条（26.09.29 公共基础深化）
+  # ============================================
+  - id: "YDIZ-I18N-005"
+    severity: "P1"
+    category: "i18n"
+    title: "【严重】响应体内的用户可见文案必须走 i18n，禁止中文硬编码字符串"
+    description: |
+      所有 HTTP 响应体内的用户可见文案（.data("reason") / .message() / .msg() 的字符串字面量）
+      必须使用 i18n key 解析，禁止直接使用中文字符串。
+
+      **为什么**：
+      - 中文硬编码在多语言场景下无法根据请求头 Accept-Language 动态切换
+      - 错误消息直接拼接内部信息（如 SQL 异常堆栈、内部状态码）会泄露后端实现细节
+      - YDIZ-I18N-004 聚焦异常消息；本条扩展至 HTTP 响应体中所有用户可见字段
+
+      **正确做法**：
+      1. 异常消息使用 ExceptionCode枚举 key（自动按 Locale 解析）
+      2. YdszResponse.error() 的 msg 参数传入 i18n key 解析后的文案
+      3. 数据回执/渠道回执等外部通知文案通过 I18n.message(key, params) 实现参数化
+    rule: "YdszResponse.error(code, \"中文\") 中的字符串字面量必须替换为 i18n key 或解析后的文案"
+    source: "公共基础深化（YDIZ-I18N-005，P1，26.09.29 P1-2 用户可见文案收敛）"
+
+  - id: "YDIZ-COMMON-033"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【严重】Agent 业务关联维度必须通过 RequestContext 传递，禁止私建 ThreadLocal"
+    description: |
+      Agent 模块的 botId / turnId / conversationId / accountId 等链路维度信息必须使用公共
+      RequestContext（ydsz-common-core）传递，禁止业务模块自建 ThreadLocal 持有链路上下文。
+
+      **为什么**：
+      - RequestContext 基于 TransmittableThreadLocal 实现，天然支持线程池传播
+      - 私建 ThreadLocal 在异步/线程池/CompletableFuture 场景下会导致上下文丢失（链路断裂）
+      - 私建 ThreadLocal 无法被全局 RequestContextCleanupFilter 统一清理，导致内存泄漏
+
+      **正确做法**：
+      - 入口处注入：RequestContext.setBotId(agentCode) / setRequestId(requestId) / setConversationId(...)
+      - 消费处读取：RequestContext.getBotId() / getConversationId() / getAccountId()
+      - 存量 TraceTraceHolder 已收敛为 RequestContext 的适配委托器，新代码直接用 RequestContext
+    rule: "禁止 `new ThreadLocal<...>()` 持有链路维度；禁止 AgentFacade/Controller 之外自建业务上下文持有者"
+    source: "公共基础深化（YDIZ-COMMON-033，P1，26.09.29 P1-4 Agent 链路上下文收敛）"
+
+  - id: "YDIZ-EX-001"
+    severity: "P0"
+    category: "exception"
+    title: "【强制】异常消息禁止透传 e.getMessage() 原始内容到前端"
+    description: |
+      HTTP 响应体中禁止直接暴露内部异常原始消息（e.getMessage()），所有用户可见的异常文案
+      必须经过 i18n 解析或脱敏处理后再返回前端。
+
+      **为什么**：
+      - e.getMessage() 经常包含敏感内部信息：SQL 错误详情、数据库连接串、表名、内部状态码
+      - ExceptionResponseBuilder 全局处理器已接入 ExceptionDesensitizer 脱敏，直接绕过该机制（通过
+        YdszResponse.error(e.getMessage()) 构造响应）会导致内部信息泄露
+      - 异常码体系（ExceptionCode 枚举 + YdszExceptionCode 注册表）已提供文案枚举 + i18n 解析能力
+
+      **正确做法**：
+      1. Controller catch 块内抛异常让全局处理器统一处理（不要 return YdszResponse.error(e.getMessage())）
+      2. 需要自定义文案时走 BusinessException.of(CODE).params(...) 或 .msg(I18n.message(key, params))
+      3. 无法走全局处理器时（如流式 SSE 回调）返回 i18n 安全文案（不含内部堆栈/路径）
+    rule: "return YdszResponse.error(e.getMessage()) / .message(e.getMessage()) 一律禁止； Controller catch 块中必须改造"
+    source: "公共基础深化（YDIZ-EX-001，P0，26.09.29 P1-3 异常脱敏 + e.getMessage 透传清理）"
+
 # ============================================
-# 附录：按 category 统计（26.09.25 更新，total 96，公共模块利用率修复后 COMMON 分类含 001~018）
+# 附录：按 category 统计（26.09.29 更新，i18n 4→5、common-reuse 8→9、exception 2→3，total 101→104）
 # ============================================
 stats:
   encoding: 1
@@ -3057,7 +3310,7 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-  common-reuse: 13
+  common-reuse: 18
   security: 2
   architecture: 6
   engineering: 5
@@ -3071,11 +3324,12 @@ stats:
   resilience: 1
   config: 3
   errcode: 2
-  i18n: 4
+  i18n: 5
   tenant: 1
   safe: 1
   queue: 1
   search: 1
   util: 1
   common: 5
-  total: 101
+  exception: 3
+  total: 118

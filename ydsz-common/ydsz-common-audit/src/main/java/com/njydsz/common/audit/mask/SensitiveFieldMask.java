@@ -44,8 +44,8 @@ public final class SensitiveFieldMask {
 
   private static final int PHONE_SUFFIX = 4;
 
-  /** 身份证号脱敏：保留前 6 位和后 4 位 */
-  private static final int IDCARD_PREFIX = 6;
+  /** 身份证号脱敏：保留前 3 位和后 4 位（YDIZ-COMMON-029 统一策略） */
+  private static final int IDCARD_PREFIX = 3;
 
   private static final int IDCARD_SUFFIX = 4;
 
@@ -231,13 +231,10 @@ public final class SensitiveFieldMask {
       // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
       return MaskUtils.maskEmail(value);
     }
-    // 身份证号脱敏：保留前 6 后 4
+    // 身份证号脱敏：保留前 3 后 4（YDIZ-COMMON-029 统一策略）
     if (lowerKey.contains("idcard") || lowerKey.contains("idnumber")) {
-      if (value.length() <= IDCARD_PREFIX + IDCARD_SUFFIX) {
-        return "****";
-      }
-      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
-      return MaskUtils.mask(value, IDCARD_PREFIX, IDCARD_SUFFIX);
+      // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-029）
+      return MaskUtils.maskIdCard(value);
     }
     // 银行卡号脱敏：保留前 4 后 4
     if (lowerKey.contains("bankcard")

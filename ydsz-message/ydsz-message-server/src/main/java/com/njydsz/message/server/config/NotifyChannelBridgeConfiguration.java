@@ -64,6 +64,7 @@ public class NotifyChannelBridgeConfiguration implements InitializingBean {
           "EMAIL", NotifyChannel.EMAIL,
           "SMS", NotifyChannel.SMS,
           "DINGTALK", NotifyChannel.DINGTALK,
+          "DINGTALK_WORK", NotifyChannel.DINGTALK,
           "WECOM", NotifyChannel.WECOM,
           "WECOM_APP", NotifyChannel.WECOM,
           "FEISHU", NotifyChannel.FEISHU,

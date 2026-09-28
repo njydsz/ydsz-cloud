@@ -93,7 +93,7 @@ public class CronjobConfigValidator {
       String errorMessage = sb.toString();
       log.error("[ConfigValidator] {}", errorMessage);
       throw BusinessException.of(CronjobExceptionCode.CONFIG_INVALID)
-          .msg(errorMessage);
+          .params(new Object[]{errorMessage});
     }
   }
 
@@ -105,16 +105,16 @@ public class CronjobConfigValidator {
     if (cronjobProperties.getJobLockTtlMin() != null
         && cronjobProperties.getJobLockTtlMax() != null
         && cronjobProperties.getJobLockTtlMin().compareTo(cronjobProperties.getJobLockTtlMax()) > 0) {
-      String msg = "配置校验失败: ydsz.cronjob.job-lock-ttl-min 不能大于 job-lock-ttl-max";
-      log.error("[ConfigValidator] {}", msg);
+      String msg = "job-lock-ttl-min > job-lock-ttl-max";
+      log.error("[ConfigValidator] 配置校验失败: ydsz.cronjob.job-lock-ttl-min 不能大于 job-lock-ttl-max");
       throw BusinessException.of(CronjobExceptionCode.CONFIG_INVALID)
-          .msg(msg);
+          .params(new Object[]{msg});
     }
     if (cronjobProperties.getSchedulerPoolSize() <= 0) {
-      String msg = "配置校验失败: ydsz.cronjob.scheduler-pool-size 必须大于 0";
-      log.error("[ConfigValidator] {}", msg);
+      String msg = "scheduler-pool-size <= 0";
+      log.error("[ConfigValidator] 配置校验失败: ydsz.cronjob.scheduler-pool-size 必须大于 0");
       throw BusinessException.of(CronjobExceptionCode.CONFIG_INVALID)
-          .msg(msg);
+          .params(new Object[]{msg});
     }
   }
 }

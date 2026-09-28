@@ -9,8 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.notify.core.NotifyService;
-import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.event.AuditEvent;
@@ -57,7 +56,7 @@ public class FileOperatedEventListener {
   private final TagRepository tagRepository;
   private final ContentExtractionApplicationService contentExtractionService;
   private final ShareLinkRepository shareLinkRepository;
-  private final NotifyService notifyService;
+  private final NotifyHelper notifyHelper;
 
   /**
    * 异步处理文件操作事件。
@@ -199,7 +198,7 @@ public class FileOperatedEventListener {
       String content = String.format("用户 %s 与你分享了文件「%s」，点击查看详情", event.getOperatorId(), fileName);
 
       // 发送站内信通知给文件所有者（分享创建者自身也会收到通知作为确认）
-      notifyService.send(NotifyChannel.INSITE, event.getOperatorId(), title, content);
+      notifyHelper.sendInApp(event.getOperatorId(), title, content);
 
       log.info(
           "[FileOperatedEventListener] 分享通知已发送: fileNodeId={}, shareCode={}, operator={}",

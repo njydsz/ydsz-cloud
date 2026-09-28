@@ -24,6 +24,7 @@ import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.cronjob.domain.repository.JobAlertLogRepository;
@@ -352,16 +353,92 @@ public class AlertDispatcher {
   }
 
   /**
-   * Dispatch alert via message module using Feign.
+   * 发送告警通知（主路径：NotifyHelper，降级：Feign 直连 message 模块）。
    *
-   * <p>Builds MessageRequest and calls NotificationClient.sendMessage(), message module routes to
-   * specific channel implementation.
+   * <p>优先通过 {@link NotifyHelper} 发送，走 common-notify 统一路由； 若失败则降级为 {@link
+   * NotificationClient} Feign 直连 message 模块（兼容性兜底）。
    */
-  @SuppressWarnings("removal")
   private void sendViaMessageCenter(
       AlertChannel channel, AlertContext context, JobAlertRuleVO rule, List<String> receivers) {
     String title = buildTitle(context, rule);
     String content = buildContent(context, rule);
+
+    // 主路径：通过 NotifyHelper 发送
+    NotifyHelper helper = notifyHelperProvider.getIfAvailable();
+    if (helper != null) {
+      try {
+        NotifyChannel notifyChannel = mapToNotifyChannel(channel);
+        if (notifyChannel != null && !receivers.isEmpty()) {
+          // 按渠道逐个发送（单条失败不影响其他接收者）
+          for (String receiver : receivers) {
+            notifyServiceSend(helper, notifyChannel, receiver, title, content);
+          }
+          return;
+        }
+      } catch (Exception e) {
+        log.warn(
+            "[AlertDispatcher] NotifyHelper 发送失败,降级到 Feign: channel={} reason={}",
+            channel,
+            e.getMessage());
+        // fall through to Feign fallback
+      }
+    }
+
+    // 降级路径：Feign 直连 message 模块（兼容性保留）
+    sendViaFeign(channel, context, rule, receivers, title, content);
+  }
+
+  /**
+   * 通过 NotifyHelper 发送单条通知。
+   *
+   * @param helper NotifyHelper 实例
+   * @param channel 通知渠道枚举
+   * @param receiver 接收者
+   * @param title 标题
+   * @param content 内容
+   */
+  private void notifyServiceSend(
+      NotifyHelper helper, NotifyChannel channel, String receiver, String title, String content) {
+    switch (channel) {
+      case EMAIL -> helper.sendEmail(receiver, title, content);
+      case SMS -> helper.sendSms(receiver, title, content);
+      case DINGTALK -> helper.sendDingTalk(receiver, title, content);
+      case WECOM -> helper.sendWeCom(receiver, title, content);
+      case FEISHU -> helper.sendFeishu(receiver, title, content);
+      default -> helper.sendInApp(receiver, title, content);
+    }
+  }
+
+  /**
+   * AlertChannel 映射到 NotifyChannel 枚举。
+   *
+   * @param channel 告警通道枚举
+   * @return 对应的 NotifyChannel；WEBHOOK 无对应枚举返回 null（走降级路径）
+   */
+  private NotifyChannel mapToNotifyChannel(AlertChannel channel) {
+    return switch (channel) {
+      case EMAIL -> NotifyChannel.EMAIL;
+      case SMS -> NotifyChannel.SMS;
+      case DINGTALK -> NotifyChannel.DINGTALK;
+      case WECOM -> NotifyChannel.WECOM;
+      case FEISHU -> NotifyChannel.FEISHU;
+      default -> null;
+    };
+  }
+
+  /**
+   * 降级发送：通过 Feign 直连 message 模块（兼容性兜底路径）。
+   *
+   * <p>当 NotifyHelper 不可用或发送失败时，回退到原始 Feign 调用。
+   */
+  @SuppressWarnings("removal")
+  private void sendViaFeign(
+      AlertChannel channel,
+      AlertContext context,
+      JobAlertRuleVO rule,
+      List<String> receivers,
+      String title,
+      String content) {
     MessageSendDTO request = new MessageSendDTO();
     request.setStrategy(SendStrategyEnum.SYNC);
     request.setChannel(channel.name());
@@ -399,14 +476,10 @@ public class AlertDispatcher {
             msgResult.getUserMessage() != null ? msgResult.getUserMessage() : "send failed");
       }
     } catch (AlertSendException e) {
-      // P2-10: 主渠道失败时，尝试通过 common-notify IM 渠道直推
-      tryNotifyViaHelper(context, receivers);
       throw e;
     } catch (Exception e) {
       throw new AlertSendException("Feign call error: " + e.getMessage(), e);
     }
-    // P2-10: 主渠道成功后，补充发送 IM 通知（非阻塞，失败不影响主流程）
-    tryNotifyViaHelper(context, receivers);
   }
 
   /** P2-10: 通过 NotifyHelper 发送 IM 通知（非阻塞，失败静默跳过）。 */

@@ -6,10 +6,9 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.message.domain.dto.MessageSendDTO;
-import com.njydsz.common.locales.util.I18n
-import com.njydsz.message.api.client.MessageSendClient;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.message.domain.dto.MessageSendDTO;
+import com.njydsz.message.api.client.MessageSendClient;
 
 /**
  * {@link MessageSendClient} 的 FallbackFactory。
@@ -32,7 +31,7 @@ public class MessageSendClientFallback implements FallbackFactory<MessageSendCli
     return new MessageSendClient() {
       @Override
       public YdszResponse<String> sendMessage(MessageSendDTO request) {
-        String errorMsg = I18n.message("消息中心服务不可用");
+        String errorMsg = I18n.message("message.service.unavailable");
         log.warn(
             "[MessageSendClient] sendMessage 降级: receiver={}, subject={}, reason={}",
             request == null ? null : request.getReceiver(),

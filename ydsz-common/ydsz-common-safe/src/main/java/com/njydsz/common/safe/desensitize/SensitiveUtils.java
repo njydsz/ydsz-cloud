@@ -82,7 +82,9 @@ public final class SensitiveUtils {
   }
 
   /**
-   * 身份证号脱敏（保留前 6 位和后 4 位）。
+   * 身份证号脱敏（保留前 3 位和后 4 位）。
+   *
+   * <p>YDIZ-COMMON-029: 统一脱敏策略 —— 身份证前3后4。
    *
    * @param idCard 身份证号
    * @return 脱敏后的身份证号；不足 18 位或 null 原样返回
@@ -91,8 +93,8 @@ public final class SensitiveUtils {
     if (idCard == null || idCard.length() < 18) {
       return idCard;
     }
-    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-019）
-    return MaskUtils.mask(idCard, 6, 4);
+    // 使用 MaskUtils 收敛脱敏逻辑（YDIZ-COMMON-029 统一策略前3后4）
+    return MaskUtils.maskIdCard(idCard);
   }
 
   /**
