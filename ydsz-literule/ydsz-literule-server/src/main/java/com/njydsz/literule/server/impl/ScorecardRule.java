@@ -16,6 +16,7 @@ import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 评分卡规则：基于多维度评分因子加权计算总分，按阈值区间或自定义评级映射决定严重度
@@ -250,7 +251,7 @@ public class ScorecardRule implements Rule {
       if (result instanceof Number n) {
         return n.doubleValue();
       }
-      throw new SysException("scoreExpression 未返回 Number: " + factor.getScoreExpression());
+      throw new SysException(I18n.message("literule.scorecard.non_number_expression", new Object[]{factor.getScoreExpression()}));
     }
     return factor.getScore();
   }

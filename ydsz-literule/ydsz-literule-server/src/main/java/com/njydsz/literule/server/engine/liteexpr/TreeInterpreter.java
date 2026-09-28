@@ -136,7 +136,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
   private EvalSession requireSession() {
     EvalSession evalSession = session.get();
     if (evalSession == null) {
-      throw new SysException("LiteExpr 求值会话未初始化，请在 eval/evalWithTrace 调用链内使用");
+      throw new SysException(I18n.message("literule.treeinterp.session_not_initialized"));
     }
     return evalSession;
   }

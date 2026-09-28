@@ -148,9 +148,9 @@ public final class RuleDslConverter {
           new CrossDecisionTableRule(toCrossDecisionTableDefinition(entry), evaluator);
       case "script" -> toScriptRule(entry);
       case "static_rule" ->
-      throw new SysException("static_rule 类型需通过编程式注册，DSL 不支持直接声明");
+      throw new SysException(I18n.message("literule.dsl.converter.static_rule_not_supported"));
       case "decision_tree" ->
-      throw new SysException("decision_tree 类型暂未支持 DSL 声明，请使用编程式 API");
+      throw new SysException(I18n.message("literule.dsl.converter.decision_tree_not_supported"));
       default -> throw BusinessException.of(LiteruleExceptionCode.RULE_EXPRESSION_INVALID).params(type);
     };
   }

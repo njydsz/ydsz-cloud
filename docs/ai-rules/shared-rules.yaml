@@ -16,8 +16,8 @@ meta:
   version: "26.09.30"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "2026-09-30（公共基础利用率提升 P0-1 PageQuery 强制继承 + P0-2 异常枚举强类型 + P0-3 I18nContextPropagator 激活，+3 条规则 YDIZ-COMMON-034/YDIZ-COMMON-035/YDIZ-I18N-006，cronjob 模块 4 个 Query 类接入 PageQuery）"
-  total_rules: 121
+  last_updated: "2026-09-30（公共基础利用率提升 +7 条规则：P0 PageQuery 继承 YDIZ-COMMON-034 + 异常枚举强类型 YDIZ-COMMON-035 + I18nContextPropagator YDIZ-I18N-006 + P1 CurrentUser YDIZ-COMMON-036 + FeatureFlag YDIZ-COMMON-037 + BaseStatusEnum YDIZ-COMMON-038 + P2 批量操作结构化 YDIZ-COMMON-039；cronjob 模块 4 Query 类接入 PageQuery）"
+  total_rules: 125
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -3424,8 +3424,132 @@ rules:
       }
     source: "公共基础利用率提升（YDIZ-I18N-006，P1，26.09.30 I18nContextPropagator 激活）"
 
+  # ============================================
+  # 新增 4 条（26.09.30 公共基础利用率提升 P1-P2）
+  # ============================================
+  - id: "YDIZ-COMMON-036"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【严重】获取当前登录用户信息必须使用 CurrentUser 统一模型"
+    description: |
+      Controller / Service 层获取当前登录用户信息时，必须使用 com.njydsz.common.core.model.CurrentUser
+      统一模型，禁止从 RequestContext / SecurityContext / AuthContextUtils 多处分散取数。
+
+      **为什么**：
+      - CurrentUser 封装 userId / tenantId / roles / permissions / locale 完整维度
+      - 分散取数导致同一用户信息在不同模块结构不同（有的用 loginName，有的用 username）
+      - CurrentUser 与 RequestContext 集成，支持 TransmittableThreadLocal 跨线程传播
+
+      **违反判据**：
+      - 直接调用 `SecurityContextHolder.getContext().getAuthentication()` 获取用户
+      - 从 HttpServletRequest Header 手动解析 Authorization 获取用户 ID
+      - 注入 `AuthContextUtils` 后手动转换为用户对象
+    pattern: "SecurityContextHolder\\.getContext|AuthContextUtils\\.getUserId[^D]|request\\.getHeader.*Authorization"
+    fix: |
+      1. Controller 方法注入 CurrentUser 参数（Spring 自动解析）或通过 RequestContext.getCurrentUser()
+      2. CurrentUser 已有 userId / tenantId / roles / permissions / locale 标准字段
+    example_good: |
+      // Controller 层注入
+      public YdszResponse<Void> create(@RequestBody XxxDto dto, CurrentUser currentUser) {
+          String operatorId = currentUser.getUserId();
+          String tenantId = currentUser.getTenantId();
+      }
+    source: "公共基础利用率提升（YDIZ-COMMON-036，P1，26.09.30 CurrentUser 统一上下文）"
+
+  - id: "YDIZ-COMMON-037"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【严重】灰度 / 降级 / 实验开关必须使用 FeatureFlagService"
+    description: |
+      业务代码中实现灰度发布、功能降级、A/B 实验时，必须使用
+      com.njydsz.common.core.feature.FeatureFlagService 或 ConfigDrivenFeatureFlagService，
+      禁止使用硬编码布尔常量或自建简单的 Map 开关。
+
+      **为什么**：
+      - FeatureFlagService 支持热更新（Nacos/Apollo 配置中心动态推送）
+      - ConfigDrivenFeatureFlagService 基于租户/用户/hash 多维度灰度
+      - 硬编码开关需要重新部署才能变更，无法做到分钟级灰度切换
+
+      **已接入模块**：agent（功能开关实验）
+      **待接入模块**：cronjob（新调度算法灰度）、workflow（新节点类型灰度）、nextwiki（新存储引擎灰度）、message（新渠道灰度）
+
+      **违反判据**：
+      - `if (USE_NEW_ALGORITHM) { ... }` — 硬编码常量
+      - `Map<String, Boolean> featureFlags = new HashMap<>()` — 自建开关
+      - `@Value("${feature.xxx:false}") boolean isXxxEnabled` — 配置值但无法动态灰度
+    pattern: "if\\s*\\(\\s*[A-Z_]*[Ff][Ee][Aa][Tt][Uu][Rr]|[A-Z_]*[Ff][Ll][Aa]\\s*\\)"
+    fix: |
+      1. 注入 FeatureFlagService
+      2. featureFlagService.isEnabled("feature.xxx", context)
+      3. 配置中心灰度规则（按 tenant / userId percentage）
+    example_good: |
+      // 正确：使用 FeatureFlagService
+      if (featureFlagService.isEnabled("cronjob.new.scheduler", tenantContext)) {
+          return newScheduler.execute(job);
+      }
+      return legacyScheduler.execute(job);
+    source: "公共基础利用率提升（YDIZ-COMMON-037，P1，26.09.30 FeatureFlagService 灰度能力）"
+
+  - id: "YDIZ-COMMON-038"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【严重】状态枚举必须继承 BaseStatusEnum"
+    description: |
+      业务模块的状态枚举（Status / State 枚举）必须继承 com.njydsz.common.domain.enums.BaseStatusEnum，
+      禁止各自定义 ACTIVE/INACTIVE/ENABLED/DISABLED 魔法值。
+
+      **为什么**：
+      - BaseStatusEnum 提供统一的 code/description 接口
+      - 统一状态码映射（前端可根据 code 判断状态流转）
+      - 持久化层可通过 code 反序列化为枚举实例
+
+      **现状**：当前各模块状态枚举大多自行定义，需逐步迁移至 extends BaseStatusEnum。
+
+      **违反判据**：
+      - `enum JobStatus { NORMAL, PAUSED, STOPPED }` — 未继承 BaseStatusEnum
+      - 状态枚举中存在 static codeOf(String) 手动映射
+    pattern: "enum\\s+\\w*(Status|State)\\s*\\{[^}]*(ACTIVE|INACTIVE|ENABLED|DISABLED)"
+    fix: |
+      1. 枚举改为 extends BaseStatusEnum
+      2. 实现 getCode() / getDescription()
+      3. 持久化改为枚举 code（而非 name）
+    example_good: |
+      // 正确：继承 BaseStatusEnum
+      public enum MessageStatusEnum implements BaseStatusEnum {
+          SUCCESS("SUCCESS", "已送达"),
+          FAILED("FAILED", "发送失败");
+          private final String code;
+          private final String description;
+      }
+    source: "公共基础利用率提升（YDIZ-COMMON-038，P1，26.09.30 BaseStatusEnum 全覆盖）"
+
+  - id: "YDIZ-COMMON-039"
+    severity: "P2"
+    category: "common-reuse"
+    title: "【建议】批量操作结果返回必须使用 BatchBusinessException 或结构化 Result"
+    description: |
+      批量操作接口（批量删除 / 批量启停 / 批量导入）返回结果必须结构化，包含每条记录的成功/失败状态，
+      禁止使用"一刀切"的全成功或全失败模式。
+
+      **为什么**：
+      - BatchBusinessException 支持 HTTP 207 Multi-Status
+      - 前端可展示"成功 3 条，失败 2 条（原因：任务不存在）"
+      - 用户可针对性重试失败条目
+
+      **更适合的返回类型**：cronjob 现有 BatchResultDTO&lt;T&gt; 已满足需求，可继续使用结构化 DTO。
+
+      **违反判据**：
+      - `void batchDelete(List<String> ids)` — 无返回值，失败时全部回滚
+      - 批量操作返回简单 `int successCount` 不含明细
+    pattern: "void\\s+batch\w+\\(|int\\s+batch\w+\\("
+    fix: |
+      1. 返回类型改为 BatchResultDTO&lt;T&gt;
+      2. 逐条处理，捕获单条异常后继续处理剩余条目
+      3. 成功/失败明细列表加入 ItemResult
+    source: "公共基础利用率提升（YDIZ-COMMON-039，P2，26.09.30 批量操作结构化结果）"
+
 # ============================================
-# 附录：按 category 统计（26.09.30 更新，common-reuse 18→19、exception 3→4、i18n 5→6，total 118→121）
+# 附录：按 category 统计（26.09.30 更新，common-reuse 18→22、exception 3→4、i18n 5→6，total 118→125）
 # ============================================
 stats:
   encoding: 1
@@ -3439,7 +3563,7 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-  common-reuse: 19
+  common-reuse: 22
   security: 2
   architecture: 6
   engineering: 5
@@ -3460,4 +3584,4 @@ stats:
   search: 1
   util: 1
   common: 5
-  total: 121
+  total: 125

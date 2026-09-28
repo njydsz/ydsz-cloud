@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.domain.query;
 
 import com.njydsz.common.domain.query.PageQuery;
-import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,16 +29,13 @@ public class JobQuery extends PageQuery {
 
   /** 关键字（任务名/JOB_KEY/Handler 模糊匹配，可选） */
   @Schema(description = "搜索关键字")
-  @Xss
   private String keyword;
 
   /** 状态过滤（NORMAL/PAUSED/STOPPED，可选） */
   @Schema(description = "任务状态过滤")
-  @Xss
   private String status;
 
   /** 分组过滤（可选） */
   @Schema(description = "任务分组过滤")
-  @Xss
   private String group;
 }

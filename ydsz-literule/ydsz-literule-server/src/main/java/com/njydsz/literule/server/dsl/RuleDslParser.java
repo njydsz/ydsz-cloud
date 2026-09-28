@@ -169,7 +169,7 @@ public final class RuleDslParser {
     }
     String content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
     if (format == null || format.isBlank()) {
-      throw new SysException("format 不能为空（yaml / json）");
+      throw new SysException(I18n.message("literule.dsl.parser.format_required"));
     }
     String f = format.trim().toLowerCase();
     return switch (f) {
@@ -263,10 +263,10 @@ public final class RuleDslParser {
    */
   public static void validate(RuleDsl dsl) {
     if (dsl == null) {
-      throw new SysException("DSL 模型不能为 null");
+      throw new SysException(I18n.message("literule.dsl.parser.dsl_model_null"));
     }
     if (dsl.getRules() == null && dsl.getChains() == null) {
-      throw new SysException("DSL 至少需包含 rules 或 chains 段");
+      throw new SysException(I18n.message("literule.dsl.parser.dsl_require_rules_or_chains"));
     }
     // 校验规则
     if (dsl.getRules() != null) {
