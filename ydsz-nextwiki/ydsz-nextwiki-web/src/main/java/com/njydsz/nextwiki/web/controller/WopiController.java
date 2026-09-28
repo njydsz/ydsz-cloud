@@ -245,7 +245,7 @@ public class WopiController {
       return WopiPutFileResponse.ok();
     } catch (Exception e) {
       log.error("[WopiController] PutFile 失败: fileId={}", fileId, e);
-      return WopiPutFileResponse.error(e.getMessage());
+      return WopiPutFileResponse.error("文件保存失败");
     }
   }
 

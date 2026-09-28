@@ -214,9 +214,9 @@ public class GlueCodeServiceImpl implements GlueCodeService {
       result.put("durationMs", System.currentTimeMillis() - startTime);
     } catch (Exception e) {
       result.put("success", false);
-      result.put("error", e.getMessage());
+      result.put("error", "脚本执行失败");
       result.put("durationMs", System.currentTimeMillis() - startTime);
-      log.warn("[Glue] 测试执行失败: lang={} reason={}", lang, e.getMessage());
+      log.warn("[Glue] 测试执行失败: lang={}", lang, e);
     }
     return result;
   }

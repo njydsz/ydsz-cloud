@@ -188,12 +188,8 @@ public class CEPController {
     if (engine == null) {
       return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");
     }
-    try {
-      engine.registerPattern(pattern);
-      return YdszResponse.success();
-    } catch (IllegalArgumentException e) {
-      return YdszResponse.error(e.getMessage());
-    }
+    engine.registerPattern(pattern);
+    return YdszResponse.success();
   }
 
   /**

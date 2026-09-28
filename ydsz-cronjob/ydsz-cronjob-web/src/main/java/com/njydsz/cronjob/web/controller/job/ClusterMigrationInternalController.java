@@ -84,8 +84,8 @@ public class ClusterMigrationInternalController {
       boolean result = jobService.register(dto);
       return YdszResponse.success(result);
     } catch (Exception e) {
-      log.warn("[ClusterMigration] 接收注册失败: jobKey={} reason={}", jobVO.getJobKey(), e.getMessage());
-      return YdszResponse.error(e.getMessage());
+      log.warn("[ClusterMigration] 接收注册失败: jobKey={}", jobVO.getJobKey(), e);
+      throw new RuntimeException("集群注册失败", e);
     }
   }
 
@@ -109,11 +109,8 @@ public class ClusterMigrationInternalController {
       boolean result = jobService.unregister(request.getJobKey());
       return YdszResponse.success(result);
     } catch (Exception e) {
-      log.warn(
-          "[ClusterMigration] 接收注销失败: jobKey={} reason={}",
-          request.getJobKey(),
-          e.getMessage());
-      return YdszResponse.error(e.getMessage());
+      log.warn("[ClusterMigration] 接收注销失败: jobKey={}", request.getJobKey(), e);
+      throw new RuntimeException("集群注销失败", e);
     }
   }
 

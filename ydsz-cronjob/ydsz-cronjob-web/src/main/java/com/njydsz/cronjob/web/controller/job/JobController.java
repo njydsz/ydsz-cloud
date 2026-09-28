@@ -180,7 +180,8 @@ public class JobController {
       result.put("nextFireTimes", nextFireTimes);
     } catch (IllegalArgumentException e) {
       result.put("valid", false);
-      result.put("error", e.getMessage());
+      result.put("error", "Cron 表达式非法");
+      log.warn("[Cron] 表达式校验失败: expr={}, err={}", expr, e.getMessage());
     }
     return YdszResponse.success(result);
   }

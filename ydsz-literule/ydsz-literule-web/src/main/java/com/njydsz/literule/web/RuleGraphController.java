@@ -219,14 +219,9 @@ public class RuleGraphController {
   @PostMapping("/{ruleCode}/graph/dry-run")
   public YdszResponse<List<RuleResultVO>> dryRunGraph(
       @PathVariable String ruleCode, @RequestBody Map<String, Object> facts) {
-    try {
-      List<RuleResultVO> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
-      return YdszResponse.success(
-          results.stream().map(literuleWebConverter::entityToVO).toList());
-    } catch (IllegalArgumentException e) {
-      log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
-      return YdszResponse.error(e.getMessage());
-    }
+    List<RuleResultVO> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
+    return YdszResponse.success(
+        results.stream().map(literuleWebConverter::entityToVO).toList());
   }
 
   /**

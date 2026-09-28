@@ -173,12 +173,7 @@ public class RuleDecisionTableController {
   @PostMapping("/decision-tables/{tableCode}/evaluate")
   public YdszResponse<List<Map<String, Object>>> evaluateDecisionTable(
       @PathVariable String tableCode, @RequestBody Map<String, Object> facts) {
-    try {
-      return YdszResponse.success(decisionTableEvalProvider.evaluate(tableCode, facts));
-    } catch (Exception e) {
-      log.warn("[DecisionTable] 评估失败: tableCode={}, err={}", tableCode, e.getMessage());
-      return YdszResponse.error(e.getMessage());
-    }
+    return YdszResponse.success(decisionTableEvalProvider.evaluate(tableCode, facts));
   }
 
   /**
@@ -239,11 +234,11 @@ public class RuleDecisionTableController {
       DecisionTableDefinitionDTO saved = svc.importExcel(bytes, operator);
       return YdszResponse.success(literuleWebConverter.entityToVO(saved));
     } catch (IllegalArgumentException e) {
-      log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
-      return YdszResponse.error(e.getMessage());
+      log.warn("[DecisionTable] Excel 导入数据不合法", e);
+      throw e;
     } catch (IOException e) {
-      log.warn("[DecisionTable] Excel 文件读取失败: {}", e.getMessage());
-      return YdszResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR, "文件读取失败: " + e.getMessage());
+      log.warn("[DecisionTable] Excel 文件读取失败", e);
+      throw new RuntimeException("文件读取失败", e);
     }
   }
 

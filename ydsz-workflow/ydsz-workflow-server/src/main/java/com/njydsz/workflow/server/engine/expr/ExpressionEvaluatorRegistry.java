@@ -6,6 +6,7 @@ import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import lombok.RequiredArgsConstructor;
@@ -110,7 +111,8 @@ public class ExpressionEvaluatorRegistry {
   public void setActiveStrategy(ExpressionEvalStrategy strategy) {
     ExpressionEvaluator evaluator = registry.get(strategy);
     if (evaluator == null) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_PARSING_ERROR, "表达式引擎策略未注册: " + strategy);
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_PARSING_ERROR,
+          I18n.message("workflow.expr.strategy_not_registered", new Object[] {strategy}));
     }
     this.activeStrategy = strategy;
     this.activeEvaluator = evaluator;

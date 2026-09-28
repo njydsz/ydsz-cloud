@@ -151,13 +151,12 @@ public class RuleDslController {
 
     } catch (IllegalArgumentException e) {
       result.put("valid", false);
-      result.put("errors", List.of(e.getMessage()));
+      result.put("errors", List.of("格式不合法"));
       result.put("ruleCount", 0);
       return YdszResponse.success(result);
     } catch (Exception e) {
-      log.warn("[DSL] 校验失败: {}", e.getMessage());
-      return YdszResponse.error(
-          LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 解析失败: " + e.getMessage());
+      log.warn("[DSL] 校验失败", e);
+      return YdszResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR);
     }
   }
 
@@ -190,9 +189,8 @@ public class RuleDslController {
               : RuleDslParser.parseYaml(content);
       return YdszResponse.success(toDslVO(dsl));
     } catch (Exception e) {
-      log.warn("[DSL] 解析失败: {}", e.getMessage());
-      return YdszResponse.error(
-          LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 解析失败: " + e.getMessage());
+      log.warn("[DSL] 解析失败", e);
+      return YdszResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR);
     }
   }
 
@@ -256,17 +254,17 @@ public class RuleDslController {
           Map<String, Object> r = new LinkedHashMap<>(COLLECTION_CAPACITY);
           r.put("ruleCode", rule.getCode());
           r.put("triggered", false);
-          r.put("error", e.getMessage());
+          r.put("error", "规则评估失败");
           results.add(r);
+          log.warn("[DSL] 预览规则执行异常: ruleCode={}", rule.getCode(), e);
         }
       }
 
       return YdszResponse.success(results);
 
     } catch (Exception e) {
-      log.warn("[DSL] 预览失败: {}", e.getMessage());
-      return YdszResponse.error(
-          LiteruleExceptionCode.DSL_PARSE_ERROR, "DSL 预览失败: " + e.getMessage());
+      log.warn("[DSL] 预览失败", e);
+      return YdszResponse.error(LiteruleExceptionCode.DSL_PARSE_ERROR);
     }
   }
 
