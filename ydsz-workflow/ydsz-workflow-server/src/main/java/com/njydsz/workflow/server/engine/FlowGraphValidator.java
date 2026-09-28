@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
@@ -87,10 +88,12 @@ public class FlowGraphValidator {
     for (FlowNodeVO node : nodes) {
       String code = node.getNodeCode();
       if (!StringUtils.hasText(code)) {
-        throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_NOT_FOUND, "存在 nodeCode 为空的节点");
+        throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_NOT_FOUND,
+            I18n.message("workflow.validate.node_code.empty"));
       }
       if (nodeMap.containsKey(code)) {
-        throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_NOT_FOUND, "节点编码重复: " + code);
+        throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_NOT_FOUND,
+            I18n.message("workflow.validate.node_code.duplicate", new Object[] {code}));
       }
       nodeMap.put(code, node);
     }
@@ -107,14 +110,17 @@ public class FlowGraphValidator {
     List<FlowNodeVO> startNodes = nodes.stream()
         .filter(n -> FlowNodeType.START.getCode() == n.getNodeType()).toList();
     if (startNodes.isEmpty()) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY, "流程定义缺少开始节点（nodeType=0）");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY,
+          I18n.message("workflow.validate.start_node.missing"));
     }
     if (startNodes.size() > 1) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY, "流程定义存在多个开始节点（仅允许一个）");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY,
+          I18n.message("workflow.validate.start_node.duplicate"));
     }
     boolean hasEnd = nodes.stream().anyMatch(n -> FlowNodeType.END.getCode() == n.getNodeType());
     if (!hasEnd) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY, "流程定义缺少结束节点（nodeType=2）");
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY,
+          I18n.message("workflow.validate.end_node.missing"));
     }
     return startNodes.get(0).getNodeCode();
   }
@@ -157,10 +163,12 @@ public class FlowGraphValidator {
           continue;
         }
         if (!nodeMap.containsKey(source)) {
-          throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "跳转 sourceRef 指向不存在的节点: " + source);
+          throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
+              I18n.message("workflow.validate.edge.source_not_found", new Object[] {source}));
         }
         if (!nodeMap.containsKey(target)) {
-          throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "跳转 nextNodeCode 指向不存在的节点: " + target);
+          throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
+              I18n.message("workflow.validate.edge.target_not_found", new Object[] {target}));
         }
         outEdges.get(source).add(target);
         inEdges.get(target).add(source);
@@ -184,7 +192,8 @@ public class FlowGraphValidator {
         .filter(code -> !reachable.contains(code))
         .toList();
     if (!unreachable.isEmpty()) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "以下节点从开始节点不可达: " + unreachable);
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
+          I18n.message("workflow.validate.node.unreachable", new Object[] {unreachable}));
     }
   }
 
@@ -209,7 +218,8 @@ public class FlowGraphValidator {
         .filter(code -> !canReachEnd.contains(code))
         .toList();
     if (!cannotReachEnd.isEmpty()) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "以下节点无法到达结束节点（死胡同）: " + cannotReachEnd);
+      throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
+          I18n.message("workflow.validate.node.cannot_reach_end", new Object[] {cannotReachEnd}));
     }
   }
 
@@ -224,10 +234,12 @@ public class FlowGraphValidator {
       String code = node.getNodeCode();
       int type = node.getNodeType();
       if (type != FlowNodeType.START.getCode() && edges.inEdges.get(code).isEmpty()) {
-        throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "节点 " + code + " 没有入边（非开始节点必须有入边）");
+        throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
+            I18n.message("workflow.validate.node.no_in_edge", new Object[] {code}));
       }
       if (type != FlowNodeType.END.getCode() && edges.outEdges.get(code).isEmpty()) {
-        throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID, "节点 " + code + " 没有出边（非结束节点必须有出边）");
+        throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
+            I18n.message("workflow.validate.node.no_out_edge", new Object[] {code}));
       }
     }
   }
