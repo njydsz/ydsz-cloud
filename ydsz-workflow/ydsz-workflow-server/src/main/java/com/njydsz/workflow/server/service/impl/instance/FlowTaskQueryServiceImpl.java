@@ -529,14 +529,14 @@ private static final int MAX_PAGE_SIZE = 100;
    */
 private String getActionName(String action) {
     if (action == null) {
-        return I18n.message("未知");
+        return I18n.message("workflow.task.op_unknown");
     }
     return switch (action) {
-        case "COUNTERSIGN_BEFORE" -> I18n.message("前加签");
-        case "COUNTERSIGN_AFTER" -> I18n.message("后加签");
-        case "COUNTERSIGN_PARALLEL" -> I18n.message("并加签");
-        case "COUNTERSIGN_REMOVE" -> I18n.message("减签");
-        default -> I18n.message("未知加签操作");
+        case "COUNTERSIGN_BEFORE" -> I18n.message("workflow.task.op_counter_sign_before");
+        case "COUNTERSIGN_AFTER" -> I18n.message("workflow.task.op_counter_sign_after");
+        case "COUNTERSIGN_PARALLEL" -> I18n.message("workflow.task.op_counter_sign_parallel");
+        case "COUNTERSIGN_REMOVE" -> I18n.message("workflow.task.op_counter_sign_remove");
+        default -> I18n.message("workflow.task.op_counter_sign_unknown");
     };
 }
 

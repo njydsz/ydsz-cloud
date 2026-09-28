@@ -487,10 +487,10 @@ public class VariableServiceImpl implements VariableService {
   private String validateExcelRow(VariableExcelVO excelRow, int rowNum) {
     String rowPrefix = I18n.message("system.excel.rowPrefix", new Object[] {rowNum});
     if (excelRow.getVariableKey() == null || excelRow.getVariableKey().isBlank()) {
-      return rowPrefix + I18n.message("变量键不能为空");
+      return rowPrefix + I18n.message("system.variable.key_required");
     }
     if (excelRow.getVariableValue() == null || excelRow.getVariableValue().isBlank()) {
-      return rowPrefix + I18n.message("变量值不能为空");
+      return rowPrefix + I18n.message("system.variable.value_required");
     }
     // 值类型校验
     if (excelRow.getValueType() != null && !excelRow.getValueType().isBlank()) {

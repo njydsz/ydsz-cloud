@@ -47,7 +47,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
   }
 
   public String getTypeLabel() {
-    return I18n.message("消息模板");
+    return I18n.message("message.template.label");
   }
 
   @Override
@@ -82,7 +82,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
     return List.of(
         SearchField.builder()
             .name("title")
-            .label(I18n.message("模板主题"))
+            .label(I18n.message("message.template.subject"))
             .type(FieldType.TEXT)
             .weight(NAME_WEIGHT)
             .isSearchable(true)
@@ -91,7 +91,7 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .build(),
         SearchField.builder()
             .name("subtitle")
-            .label(I18n.message("模板编码"))
+            .label(I18n.message("message.template.code"))
             .type(FieldType.KEYWORD)
             .weight(SUBTITLE_WEIGHT)
             .isSearchable(true)
@@ -99,14 +99,14 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
             .build(),
         SearchField.builder()
             .name("content")
-            .label(I18n.message("模板内容"))
+            .label(I18n.message("message.template.content"))
             .type(FieldType.TEXT)
             .weight(BODY_WEIGHT)
             .isSearchable(true)
             .build(),
         SearchField.builder()
             .name("status")
-            .label(I18n.message("状态"))
+            .label(I18n.message("message.template.status"))
             .type(FieldType.KEYWORD)
             .weight(STATUS_WEIGHT)
             .isSearchable(false)

@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 触发器执行服务。
@@ -24,9 +24,11 @@ import com.njydsz.common.locales.util.I18n;
 public class TriggerExecutionService {
 
     private final AgentExecutionDelegate executionDelegate;
+    private final I18nMessages i18nMessages;
 
-    public TriggerExecutionService(AgentExecutionDelegate executionDelegate) {
+    public TriggerExecutionService(AgentExecutionDelegate executionDelegate, I18nMessages i18nMessages) {
         this.executionDelegate = Objects.requireNonNull(executionDelegate, "executionDelegate 不能为 null");
+        this.i18nMessages = i18nMessages;
     }
 
     /**
@@ -55,7 +57,7 @@ public class TriggerExecutionService {
         } catch (Exception e) {
             log.error("[TriggerExecution] 触发器执行失败: triggerId={}, error={}",
                     triggerId, e.getMessage(), e);
-            throw new TriggerExecutionException(I18n.message("agent.error.trigger.execution_failed", new Object[]{triggerId}), e);
+            throw new TriggerExecutionException(i18nMessages.resolve("agent.error.trigger.execution_failed", new Object[]{triggerId}), e);
         }
     }
 

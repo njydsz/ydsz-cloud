@@ -9,11 +9,12 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
@@ -41,9 +42,13 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class FlowGraphValidator {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
+
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
 
 
   /**
@@ -89,11 +94,11 @@ public class FlowGraphValidator {
       String code = node.getNodeCode();
       if (!StringUtils.hasText(code)) {
         throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_NOT_FOUND,
-            I18n.message("workflow.validate.node_code.empty"));
+            i18nMessages.resolve("workflow.validate.node_code.empty"));
       }
       if (nodeMap.containsKey(code)) {
         throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_NOT_FOUND,
-            I18n.message("workflow.validate.node_code.duplicate", new Object[] {code}));
+            i18nMessages.resolve("workflow.validate.node_code.duplicate", new Object[] {code}));
       }
       nodeMap.put(code, node);
     }
@@ -111,16 +116,16 @@ public class FlowGraphValidator {
         .filter(n -> FlowNodeType.START.getCode() == n.getNodeType()).toList();
     if (startNodes.isEmpty()) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY,
-          I18n.message("workflow.validate.start_node.missing"));
+          i18nMessages.resolve("workflow.validate.start_node.missing"));
     }
     if (startNodes.size() > 1) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY,
-          I18n.message("workflow.validate.start_node.duplicate"));
+          i18nMessages.resolve("workflow.validate.start_node.duplicate"));
     }
     boolean hasEnd = nodes.stream().anyMatch(n -> FlowNodeType.END.getCode() == n.getNodeType());
     if (!hasEnd) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY,
-          I18n.message("workflow.validate.end_node.missing"));
+          i18nMessages.resolve("workflow.validate.end_node.missing"));
     }
     return startNodes.get(0).getNodeCode();
   }
@@ -164,11 +169,11 @@ public class FlowGraphValidator {
         }
         if (!nodeMap.containsKey(source)) {
           throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
-              I18n.message("workflow.validate.edge.source_not_found", new Object[] {source}));
+              i18nMessages.resolve("workflow.validate.edge.source_not_found", new Object[] {source}));
         }
         if (!nodeMap.containsKey(target)) {
           throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
-              I18n.message("workflow.validate.edge.target_not_found", new Object[] {target}));
+              i18nMessages.resolve("workflow.validate.edge.target_not_found", new Object[] {target}));
         }
         outEdges.get(source).add(target);
         inEdges.get(target).add(source);
@@ -193,7 +198,7 @@ public class FlowGraphValidator {
         .toList();
     if (!unreachable.isEmpty()) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
-          I18n.message("workflow.validate.node.unreachable", new Object[] {unreachable}));
+          i18nMessages.resolve("workflow.validate.node.unreachable", new Object[] {unreachable}));
     }
   }
 
@@ -219,7 +224,7 @@ public class FlowGraphValidator {
         .toList();
     if (!cannotReachEnd.isEmpty()) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
-          I18n.message("workflow.validate.node.cannot_reach_end", new Object[] {cannotReachEnd}));
+          i18nMessages.resolve("workflow.validate.node.cannot_reach_end", new Object[] {cannotReachEnd}));
     }
   }
 
@@ -235,11 +240,11 @@ public class FlowGraphValidator {
       int type = node.getNodeType();
       if (type != FlowNodeType.START.getCode() && edges.inEdges.get(code).isEmpty()) {
         throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
-            I18n.message("workflow.validate.node.no_in_edge", new Object[] {code}));
+            i18nMessages.resolve("workflow.validate.node.no_in_edge", new Object[] {code}));
       }
       if (type != FlowNodeType.END.getCode() && edges.outEdges.get(code).isEmpty()) {
         throw new WorkflowException(WorkflowExceptionCode.FLOW_EDGE_INVALID,
-            I18n.message("workflow.validate.node.no_out_edge", new Object[] {code}));
+            i18nMessages.resolve("workflow.validate.node.no_out_edge", new Object[] {code}));
       }
     }
   }

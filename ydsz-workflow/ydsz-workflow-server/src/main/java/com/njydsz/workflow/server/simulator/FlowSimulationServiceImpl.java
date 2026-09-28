@@ -2,7 +2,7 @@ package com.njydsz.workflow.server.simulator;
 
 import java.util.Map;
 
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 public class FlowSimulationServiceImpl implements FlowSimulationService {
 
   private final FlowSimulator flowSimulator;
+  private final I18nMessages i18nMessages;
 
   /** {@inheritDoc} */
   @Override
@@ -33,7 +34,7 @@ public class FlowSimulationServiceImpl implements FlowSimulationService {
 
     if (definitionId == null || definitionId.isBlank()) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_NODE_LIST_EMPTY,
-          I18n.message("workflow.simulate.definition_id.empty"));
+          i18nMessages.resolve("workflow.simulate.definition_id.empty"));
     }
 
     // 创建轻量级模拟上下文（不持久化）

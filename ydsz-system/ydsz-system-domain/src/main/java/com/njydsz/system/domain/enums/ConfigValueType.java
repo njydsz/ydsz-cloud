@@ -124,7 +124,7 @@ public enum ConfigValueType {
       case NUMBER -> validateNumber(value);
       case BOOLEAN -> BOOLEAN_PATTERN.matcher(value.trim()).matches()
           ? null
-          : I18n.message("布尔值必须是 true/false");
+          : I18n.message("system.config.value_type.bool_invalid");
       case JSON -> validateJson(value);
     };
   }
@@ -135,7 +135,7 @@ public enum ConfigValueType {
     try {
       v = Double.parseDouble(value.trim());
     } catch (NumberFormatException e) {
-      return I18n.message("数值格式非法");
+      return I18n.message("system.config.value_type.number_invalid");
     }
     if (v < MIN_NUMBER || v > MAX_NUMBER) {
       return I18n.message("system.excel.numberOutOfRange", new Object[] {MIN_NUMBER});

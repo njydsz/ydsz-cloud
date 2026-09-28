@@ -568,15 +568,15 @@ public class DictItemServiceImpl implements DictItemService {
   private ValidationError validateExcelRowStructured(DictItemExcelVO excelRow, int rowNum) {
     if (excelRow.getTypeCode() == null || excelRow.getTypeCode().isBlank()) {
       return ValidationError.of("typeCode", "REQUIRED",
-          I18n.message("字典类型编码不能为空"));
+          I18n.message("system.dict.type_code_required"));
     }
     if (excelRow.getItemCode() == null || excelRow.getItemCode().isBlank()) {
       return ValidationError.of("itemCode", "REQUIRED",
-          I18n.message("字典项编码不能为空"));
+          I18n.message("system.dict.item_code_required"));
     }
     if (excelRow.getItemValue() == null || excelRow.getItemValue().isBlank()) {
       return ValidationError.of("itemValue", "REQUIRED",
-          I18n.message("字典项展示值不能为空"));
+          I18n.message("system.dict.item_label_required"));
     }
     // DB 唯一性校验
     if (dictRepository.existsItemByTypeAndCode(excelRow.getTypeCode(), excelRow.getItemCode())) {
@@ -666,7 +666,7 @@ public class DictItemServiceImpl implements DictItemService {
         return dtos.size();
       }
       log.warn("批量插入字典项返回 false，降级逐条插入");
-      errors.add(I18n.message("批量保存未成功，已回退到逐条插入"));
+      errors.add(I18n.message("system.dict.batch_fallback"));
       return saveValidItemsOneByOne(dtos, errors, errorItems);
     } catch (Exception e) {
       log.warn("批量插入字典项异常，降级逐条: {}", e.getMessage());

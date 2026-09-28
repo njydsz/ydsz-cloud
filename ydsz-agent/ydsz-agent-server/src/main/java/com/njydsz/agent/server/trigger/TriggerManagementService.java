@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,7 @@ import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.agent.domain.trigger.TriggerRepository;
 import com.njydsz.agent.domain.trigger.TriggerType;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 触发器管理服务。
@@ -25,20 +26,17 @@ import com.njydsz.common.locales.util.I18n;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TriggerManagementService {
 
     private final TriggerRepository triggerRepository;
+    private final I18nMessages i18nMessages;
 
     /** 单租户最大触发器数量 */
     private static final int MAX_TRIGGERS_PER_TENANT = 50;
 
     /** 默认每小时最大执行次数 */
     private static final int DEFAULT_MAX_EXECUTIONS_PER_HOUR = 60;
-
-    public TriggerManagementService(TriggerRepository triggerRepository) {
-        this.triggerRepository = Objects.requireNonNull(triggerRepository, "triggerRepository 不能为 null");
-    }
-
     /**
      * 创建触发器。
      *
@@ -73,12 +71,12 @@ public class TriggerManagementService {
         long currentCount = triggerRepository.countByTenant(tenantId);
         if (currentCount >= MAX_TRIGGERS_PER_TENANT) {
             throw new TriggerManagementException(
-                    I18n.message("agent.error.trigger.quota_exceeded", new Object[]{MAX_TRIGGERS_PER_TENANT}));
+                    i18nMessages.resolve("agent.error.trigger.quota_exceeded", new Object[]{MAX_TRIGGERS_PER_TENANT}));
         }
 
         // 校验 CRON 类型必须提供 cron 表达式
         if (triggerType == TriggerType.CRON && (cronExpression == null || cronExpression.isBlank())) {
-            throw new TriggerManagementException(I18n.message("agent.error.trigger.cron_required"));
+            throw new TriggerManagementException(i18nMessages.resolve("agent.error.trigger.cron_required"));
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -128,11 +126,11 @@ public class TriggerManagementService {
                                        Map<String, Object> config,
                                        Integer maxExecutionsPerHour) {
         AgentTrigger existing = triggerRepository.findById(triggerId)
-                .orElseThrow(() -> new TriggerManagementException(I18n.message("agent.error.trigger.not_found", new Object[]{triggerId})));
+                .orElseThrow(() -> new TriggerManagementException(i18nMessages.resolve("agent.error.trigger.not_found", new Object[]{triggerId})));
 
         // 权限校验
         if (!existing.getTenantId().equals(tenantId)) {
-            throw new TriggerManagementException(I18n.message("agent.error.trigger.no_permission"));
+            throw new TriggerManagementException(i18nMessages.resolve("agent.error.trigger.no_permission"));
         }
 
         AgentTrigger updated = AgentTrigger.builder()
@@ -187,10 +185,10 @@ public class TriggerManagementService {
      */
     public void deleteTrigger(String triggerId, String tenantId) {
         AgentTrigger existing = triggerRepository.findById(triggerId)
-                .orElseThrow(() -> new TriggerManagementException(I18n.message("agent.error.trigger.not_found", new Object[]{triggerId})));
+                .orElseThrow(() -> new TriggerManagementException(i18nMessages.resolve("agent.error.trigger.not_found", new Object[]{triggerId})));
 
         if (!existing.getTenantId().equals(tenantId)) {
-            throw new TriggerManagementException(I18n.message("agent.error.trigger.no_permission"));
+            throw new TriggerManagementException(i18nMessages.resolve("agent.error.trigger.no_permission"));
         }
 
         triggerRepository.delete(triggerId);
@@ -209,7 +207,7 @@ public class TriggerManagementService {
                 .orElseThrow(() -> new TriggerManagementException("触发器不存在: " + triggerId));
 
         if (!trigger.getTenantId().equals(tenantId)) {
-            throw new TriggerManagementException(I18n.message("agent.error.trigger.no_access_permission"));
+            throw new TriggerManagementException(i18nMessages.resolve("agent.error.trigger.no_access_permission"));
         }
 
         return trigger;
@@ -233,7 +231,7 @@ public class TriggerManagementService {
                 .orElseThrow(() -> new TriggerManagementException("触发器不存在: " + triggerId));
 
         if (!existing.getTenantId().equals(tenantId)) {
-            throw new TriggerManagementException(I18n.message("agent.error.trigger.no_permission"));
+            throw new TriggerManagementException(i18nMessages.resolve("agent.error.trigger.no_permission"));
         }
 
         AgentTrigger updated = AgentTrigger.builder()

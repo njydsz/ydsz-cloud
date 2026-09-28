@@ -47,7 +47,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
   }
 
   public String getTypeLabel() {
-    return I18n.message("规则");
+    return I18n.message("literule.search.rule_label");
   }
 
   @Override
@@ -82,7 +82,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
     return List.of(
         SearchField.builder()
             .name("title")
-            .label(I18n.message("规则名称"))
+            .label(I18n.message("literule.search.rule_name"))
             .type(FieldType.TEXT)
             .weight(WEIGHT_NAME_MATCH)
             .isSearchable(true)
@@ -91,7 +91,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .build(),
         SearchField.builder()
             .name("subtitle")
-            .label(I18n.message("分类"))
+            .label(I18n.message("literule.search.category"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_SUBTITLE_MATCH)
             .isSearchable(true)
@@ -99,7 +99,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .build(),
         SearchField.builder()
             .name("content")
-            .label(I18n.message("规则编码"))
+            .label(I18n.message("literule.search.rule_code"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_CODE_MATCH)
             .isSearchable(true)
@@ -107,7 +107,7 @@ public class RuleSearchProvider implements SearchProvider<RuleDefinitionVO> {
             .build(),
         SearchField.builder()
             .name("status")
-            .label(I18n.message("状态"))
+            .label(I18n.message("literule.search.status"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_DESC_MATCH)
             .isSearchable(false)

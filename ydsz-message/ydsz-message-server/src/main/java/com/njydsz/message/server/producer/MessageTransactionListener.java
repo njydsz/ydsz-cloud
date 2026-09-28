@@ -164,13 +164,13 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
    */
   private String validateRequest(MessageItemRequestDTO req) {
     if (!StringUtils.hasText(req.getChannel())) {
-      return I18n.message("通道为空");
+      return I18n.message("message.channel.empty");
     }
     if (!StringUtils.hasText(req.getTemplateCode())) {
-      return I18n.message("模板编码为空");
+      return I18n.message("message.template_code.empty");
     }
     if (!StringUtils.hasText(req.getReceiver())) {
-      return I18n.message("接收人为空");
+      return I18n.message("message.recipient.empty");
     }
     if (!channelRouter.isChannelEnabled(req.getChannel())) {
       return I18n.message("message.send.channel.disabled", new Object[] {req.getChannel()});

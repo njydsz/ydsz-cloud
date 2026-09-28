@@ -178,13 +178,13 @@ public class ConfigExcelServiceImpl implements ConfigExcelService {
   private String validateRequiredFields(ConfigExcelVO excelRow, int rowNum) {
     String rowPrefix = I18n.message("system.excel.rowPrefix", new Object[] {rowNum});
     if (excelRow.getConfigGroup() == null || excelRow.getConfigGroup().isBlank()) {
-      return rowPrefix + I18n.message("配置分组不能为空");
+      return rowPrefix + I18n.message("system.config.group_required");
     }
     if (excelRow.getConfigKey() == null || excelRow.getConfigKey().isBlank()) {
-      return rowPrefix + I18n.message("配置键不能为空");
+      return rowPrefix + I18n.message("system.config.key_required");
     }
     if (excelRow.getConfigValue() == null || excelRow.getConfigValue().isBlank()) {
-      return rowPrefix + I18n.message("配置值不能为空");
+      return rowPrefix + I18n.message("system.config.value_required");
     }
     return null;
   }

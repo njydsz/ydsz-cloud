@@ -97,16 +97,16 @@ public class AliyunSmsProvider implements SmsProvider {
     String phone = request.getReceiver();
     if (!StringUtils.hasText(phone)) {
       return MessageSendResultVO.fail(
-          "SMS", null, I18n.message("手机号不能为空"),
-          I18n.message("手机号不能为空"), null);
+          "SMS", null, I18n.message("message.sms.phone_required"),
+          I18n.message("message.sms.phone_required"), null);
     }
     if (!StringUtils.hasText(config.getAccessKeyId())
         || !StringUtils.hasText(config.getAccessKeySecret())) {
       log.warn("[AliyunSms] 凭证未配置,发送失败: phone={}", phone);
       return MessageSendResultVO.fail(
           "SMS", null,
-          I18n.message("阿里云 SMS 凭证未配置"),
-          I18n.message("阿里云 SMS 凭证未配置"), null);
+          I18n.message("message.sms.aliyun_credential_missing"),
+          I18n.message("message.sms.aliyun_credential_missing"), null);
     }
     String signName =
         template != null && StringUtils.hasText(template.getSignName())
@@ -116,8 +116,8 @@ public class AliyunSmsProvider implements SmsProvider {
     if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
       return MessageSendResultVO.fail(
           "SMS", null,
-          I18n.message("短信签名或模板 Code 缺失"),
-          I18n.message("短信签名或模板 Code 缺失"),
+          I18n.message("message.sms.sign_or_code_missing"),
+          I18n.message("message.sms.sign_or_code_missing"),
           null);
     }
     try {
@@ -203,7 +203,7 @@ public class AliyunSmsProvider implements SmsProvider {
     List<MessageSendResultVO> results = new ArrayList<>(requests.size());
     if (!StringUtils.hasText(config.getAccessKeyId())
         || !StringUtils.hasText(config.getAccessKeySecret())) {
-      String credErr = I18n.message("阿里云 SMS 凭证未配置");
+      String credErr = I18n.message("message.sms.aliyun_credential_missing");
       for (int i = 0; i < requests.size(); i++) {
         results.add(MessageSendResultVO.fail("SMS", null, credErr, credErr, null));
       }
@@ -215,7 +215,7 @@ public class AliyunSmsProvider implements SmsProvider {
             : config.getSignName();
     String templateCode = template != null ? template.getProviderKey() : null;
     if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
-      String sigErr = I18n.message("短信签名或模板 Code 缺失");
+      String sigErr = I18n.message("message.sms.sign_or_code_missing");
       for (int i = 0; i < requests.size(); i++) {
         results.add(MessageSendResultVO.fail("SMS", null, sigErr, sigErr, null));
       }
@@ -278,8 +278,8 @@ public class AliyunSmsProvider implements SmsProvider {
         || !StringUtils.hasText(config.getAccessKeySecret())) {
       return MessageSendResultVO.fail(
           "SMS", null,
-          I18n.message("阿里云 SMS 凭证未配置"),
-          I18n.message("阿里云 SMS 凭证未配置"),
+          I18n.message("message.sms.aliyun_credential_missing"),
+          I18n.message("message.sms.aliyun_credential_missing"),
           null);
     }
     // 从 ALIYUN-{bizId}-{idx} 中提取 bizId

@@ -22,7 +22,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
@@ -103,6 +103,9 @@ public class ScriptJobHandler implements JobHandler {
   /** P3-11: 沙箱配置 */
   private final CronjobProperties cronjobProperties;
 
+  /** 国际化消息工具 */
+  private final I18nMessages i18nMessages;
+
   /**
    * P3-11: 通过构造器注入沙箱执行器和配置。
    *
@@ -110,12 +113,15 @@ public class ScriptJobHandler implements JobHandler {
    *
    * @param sandboxExecutorProvider 沙箱执行器提供者（延迟加载）
    * @param cronjobProperties 定时任务配置
+   * @param i18nMessages 国际化消息工具
    */
   public ScriptJobHandler(
       ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider,
-      CronjobProperties cronjobProperties) {
+      CronjobProperties cronjobProperties,
+      I18nMessages i18nMessages) {
     this.sandboxExecutorProvider = sandboxExecutorProvider;
     this.cronjobProperties = cronjobProperties;
+    this.i18nMessages = i18nMessages;
   }
 
   @Override
@@ -151,7 +157,7 @@ public class ScriptJobHandler implements JobHandler {
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
       }
-      throw new JobExecutionException(I18n.message("cronjob.script.execution_failed", new Object[]{e.getMessage()}), e);
+      throw new JobExecutionException(i18nMessages.resolve("cronjob.script.execution_failed", new Object[]{e.getMessage()}), e);
     }
   }
 

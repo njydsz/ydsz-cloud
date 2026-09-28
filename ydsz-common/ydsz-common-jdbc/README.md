@@ -43,6 +43,8 @@
 | `@DS` | 数据源切换注解，支持固定名称与 SpEL 表达式 |
 | `DynamicDataSourceAutoConfiguration` | 动态数据源自动配置（`ydsz.jdbc.dynamic-datasource.enabled=true`，默认启用） |
 
+> **零引用储备型子能力标注**：`DynamicRoutingDataSource`、`DynamicDataSourceContextHolder`、`DsAnnotationInterceptor`、`@DS` 注解及整套动态数据源路由机制，经全项目递归搜索确认：**仅在 `ydsz-common-tenant` 框架模块中被引用**（服务于 `ISOLATE_DB` 多租户独立数据源模式），**所有业务模块（agent/workflow/message/system/nextwiki/userinfo/literule/generator）均无直接或间接 Java 代码引用**。此能力为"纯储备型"——仅当未来切换到多租户独立数据库架构（`ydsz.tenant.mode=ISOLATE_DB`）时才会被激活。当前项目使用 `SINGLE` 模式，单数据源场景下该子能力不参与运行时路径。如果确认未来不会使用 ISOLATE_DB 模式，可考虑移除这部分代码，但需同步更新 `ydsz-common-tenant` 模块。
+
 `@DS` 用法：
 
 ```java

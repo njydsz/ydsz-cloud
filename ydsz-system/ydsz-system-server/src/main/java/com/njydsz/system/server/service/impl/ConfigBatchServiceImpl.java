@@ -355,7 +355,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
         case JSON -> validateJsonValue(configValue);
       };
     } catch (NumberFormatException e) {
-      return I18n.message("数值格式非法");
+      return I18n.message("system.config.value_type.number_invalid");
     } catch (IllegalArgumentException e) {
       return I18n.message("system.excel.unknownValueType", new Object[] {valueType});
     } catch (Exception e) {
@@ -383,7 +383,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
   private static String validateBooleanValue(String configValue) {
     return BOOLEAN_PATTERN.matcher(configValue.trim()).matches()
         ? null
-        : I18n.message("布尔值必须是 true/false");
+        : I18n.message("system.config.value_type.bool_invalid");
   }
 
   /** 校验 JSON 类型合法性与长度（私有）。 */

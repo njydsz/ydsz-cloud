@@ -74,7 +74,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
    * @return 类型标签
    */
   public String getTypeLabel() {
-    return I18n.message("知识库");
+    return I18n.message("nextwiki.search.wiki_label");
   }
 
   @Override
@@ -132,7 +132,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
     return List.of(
         SearchField.builder()
             .name("title")
-            .label(I18n.message("文件名"))
+            .label(I18n.message("nextwiki.search.filename"))
             .type(FieldType.TEXT)
             .weight(WEIGHT_TITLE)
             .isSearchable(true)
@@ -149,7 +149,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .build(),
         SearchField.builder()
             .name("content")
-            .label(I18n.message("全文"))
+            .label(I18n.message("nextwiki.search.fulltext"))
             .type(FieldType.TEXT)
             .weight(WEIGHT_AUTHOR)
             .isSearchable(true)
@@ -157,7 +157,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .build(),
         SearchField.builder()
             .name("tags")
-            .label(I18n.message("标签"))
+            .label(I18n.message("nextwiki.search.tag"))
             .type(FieldType.TAG)
             .weight(WEIGHT_TAGS)
             .isSearchable(true)
@@ -165,7 +165,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .build(),
         SearchField.builder()
             .name("status")
-            .label(I18n.message("共享状态"))
+            .label(I18n.message("nextwiki.search.share_status"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_LOW)
             .isSearchable(false)
@@ -173,7 +173,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .build(),
         SearchField.builder()
             .name("suffix")
-            .label(I18n.message("文件类型"))
+            .label(I18n.message("nextwiki.search.file_type"))
             .type(FieldType.KEYWORD)
             .weight(WEIGHT_LOW)
             .isSearchable(false)
