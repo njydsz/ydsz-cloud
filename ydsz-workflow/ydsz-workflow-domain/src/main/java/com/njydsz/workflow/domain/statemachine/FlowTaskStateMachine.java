@@ -107,8 +107,7 @@ public class FlowTaskStateMachine {
    */
   public boolean validateTransition(FlowTaskStatus current, FlowTaskStatus target) {
     if (current == null || target == null) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID,
-          "状态流转校验参数不能为空: current=" + current + ", target=" + target);
+      throw new WorkflowException("workflow.validation.transition_params_required", I18n.message("workflow.validation.transition_params_required", new Object[]{current, target}));
     }
     if (current == target) {
       log.debug("[FlowTaskStateMachine] 状态未变化: {}", current);
@@ -134,8 +133,7 @@ public class FlowTaskStateMachine {
    */
   public void requireTransition(FlowTaskStatus current, FlowTaskStatus target) {
     if (current == null || target == null) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID,
-          "状态流转校验参数不能为空: current=" + current + ", target=" + target);
+      throw new WorkflowException("workflow.validation.transition_params_required", I18n.message("workflow.validation.transition_params_required", new Object[]{current, target}));
     }
     if (!validateTransition(current, target)) {
       throw BusinessException.builder()
@@ -156,7 +154,7 @@ public class FlowTaskStateMachine {
    */
   public Set<FlowTaskStatus> getAvailableTransitions(FlowTaskStatus current) {
     if (current == null) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "当前状态不能为空");
+      throw new WorkflowException("workflow.validation.current_status_required", I18n.message("workflow.validation.current_status_required"));
     }
     if (current.isTerminal()) {
       return Set.of();
@@ -178,7 +176,7 @@ public class FlowTaskStateMachine {
    */
   public boolean isTerminal(FlowTaskStatus status) {
     if (status == null) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态不能为空");
+      throw new WorkflowException("workflow.validation.status_required", I18n.message("workflow.validation.status_required"));
     }
     return status.isTerminal();
   }
@@ -192,7 +190,7 @@ public class FlowTaskStateMachine {
    */
   public boolean isActive(FlowTaskStatus status) {
     if (status == null) {
-      throw new WorkflowException(WorkflowExceptionCode.FLOW_STATE_INVALID, "状态不能为空");
+      throw new WorkflowException("workflow.validation.status_required", I18n.message("workflow.validation.status_required"));
     }
     return status == FlowTaskStatus.PENDING
         || status == FlowTaskStatus.CLAIMED

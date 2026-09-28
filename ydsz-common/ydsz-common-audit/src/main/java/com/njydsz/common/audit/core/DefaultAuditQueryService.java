@@ -17,6 +17,7 @@ import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.storage.TableNameResolver;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 基于 JDBC 的默认审计查询服务实现
@@ -137,10 +138,10 @@ public class DefaultAuditQueryService implements AuditQueryService {
    */
   private void validateTableName(String tableName) {
     if (tableName == null || tableName.isEmpty()) {
-      throw new IllegalArgumentException("表名不能为空");
+      throw new IllegalArgumentException(I18n.message("common.audit.query.table_required"));
     }
     if (!TABLE_NAME_PATTERN.matcher(tableName).matches()) {
-      throw new IllegalArgumentException("非法的表名: " + tableName + "，仅允许字母、数字和下划线");
+      throw new IllegalArgumentException(I18n.message("common.audit.query.table_invalid", new Object[]{tableName}));
     }
   }
 

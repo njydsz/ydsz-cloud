@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.code;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 代码执行异常。
@@ -59,7 +60,7 @@ public class CodeExecutionException extends BusinessException {
    */
   public static CodeExecutionException timeout(int timeoutSeconds, long durationMs) {
     return new CodeExecutionException(
-        "代码执行超时（超过 " + timeoutSeconds + " 秒）",
+        I18n.message("agent.error.code.execution.timeout", new Object[]{timeoutSeconds}),
         CodeExecutionResult.timeout(timeoutSeconds, durationMs));
   }
 
@@ -71,7 +72,7 @@ public class CodeExecutionException extends BusinessException {
    */
   public static CodeExecutionException moduleNotAllowed(String module) {
     return new CodeExecutionException(
-        "模块 '" + module + "' 不在允许的白名单中，禁止 import",
+        I18n.message("agent.error.code.module_not_allowed", new Object[]{module}),
         null);
   }
 
@@ -82,7 +83,8 @@ public class CodeExecutionException extends BusinessException {
    * @return 编译异常实例
    */
   public static CodeExecutionException compilationError(String msg) {
-    return new CodeExecutionException("代码编译错误: " + msg, null);
+    return new CodeExecutionException(
+        I18n.message("agent.error.code.compilation_error", new Object[]{msg}), null);
   }
 
   /**
@@ -92,6 +94,7 @@ public class CodeExecutionException extends BusinessException {
    * @return 运行时异常实例
    */
   public static CodeExecutionException runtimeError(String msg) {
-    return new CodeExecutionException("代码运行时错误: " + msg, null);
+    return new CodeExecutionException(
+        I18n.message("agent.error.code.runtime_error", new Object[]{msg}), null);
   }
 }

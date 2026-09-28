@@ -3,6 +3,8 @@ package com.njydsz.common.core.constant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 数据权限范围类型常量。
  *
@@ -92,11 +94,11 @@ public final class DataScopeConstants {
    */
   public static String codeOf(String code) {
     if (code == null || code.trim().isEmpty()) {
-      throw new IllegalArgumentException("数据权限编码不能为空");
+      throw new IllegalArgumentException(I18n.message("common.auth.data_scope.code_required"));
     }
     String trimmed = code.trim();
     if (!CODE_MAP.containsKey(trimmed)) {
-      throw new IllegalArgumentException("未知的数据权限编码: " + code);
+      throw new IllegalArgumentException(I18n.message("common.auth.data_scope.unknown_code", new Object[]{code}));
     }
     return trimmed;
   }

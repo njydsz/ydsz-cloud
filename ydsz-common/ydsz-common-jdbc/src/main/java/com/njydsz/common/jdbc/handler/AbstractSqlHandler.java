@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.njydsz.common.jdbc.config.InterceptConfig;
 import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -86,7 +87,7 @@ public abstract class AbstractSqlHandler {
     } else if (InterceptTableStrategy.INCLUDE.equals(interceptTableStrategy)) {
       return !normalizedTables.contains(normalizedTableName);
     } else {
-      throw new IllegalStateException("未指定表拦截策略");
+      throw new IllegalStateException(I18n.message("common.jdbc.handler.strategy_unspecified"));
     }
   }
 

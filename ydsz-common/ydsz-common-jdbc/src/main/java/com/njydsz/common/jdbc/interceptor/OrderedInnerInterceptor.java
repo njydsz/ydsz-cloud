@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import com.njydsz.common.locales.util.I18n;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -57,7 +58,7 @@ public class OrderedInnerInterceptor implements InnerInterceptor, Ordered {
    */
   public OrderedInnerInterceptor(InnerInterceptor delegate, int order) {
     if (delegate == null) {
-      throw new IllegalArgumentException("被包装的 InnerInterceptor 不能为空");
+      throw new IllegalArgumentException(I18n.message("common.jdbc.interceptor.inner_required"));
     }
     this.delegate = delegate;
     this.order = order;

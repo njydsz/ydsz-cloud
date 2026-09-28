@@ -70,6 +70,19 @@ public class WorkflowException extends BusinessException {
   }
 
   /**
+   * 使用 i18n 消息键和已解析消息构造异常。
+   *
+   * <p>第一参数为 i18n key（用于错误码透传），第二参数为 {@link com.njydsz.common.locales.util.I18n#message} 解析后的本地化消息。
+   *
+   * @param code i18n 消息键
+   * @param message 已解析的本地化消息
+   */
+  public WorkflowException(String code, String message) {
+    super(code, message);
+    setMessage(message);
+  }
+
+  /**
    * 使用通用异常码和自定义消息构造异常
    *
    * <p>保留用于需要携带通用异常码（如安全模块异常码）并补充自定义消息的场景。

@@ -18,6 +18,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import com.njydsz.common.audit.core.AuditWriteException;
 import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.domain.AuditLog;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * JDBC 审计日志存储实现
@@ -159,7 +160,7 @@ public class JdbcAuditStorage implements AuditWriter {
       Map<String, Object> params = buildParamMap(auditLog);
       namedParameterJdbcTemplate.update(sql, params);
     } catch (Exception e) {
-      throw new AuditWriteException("审计日志单条写入失败 id=" + auditLog.getId(), e);
+      throw new AuditWriteException(I18n.message("common.audit.storage.write_failed", new Object[]{auditLog.getId()}), e);
     }
   }
 
@@ -183,7 +184,7 @@ public class JdbcAuditStorage implements AuditWriter {
     } catch (AuditWriteException e) {
       throw e;
     } catch (Exception e) {
-      throw new AuditWriteException("审计日志批量写入失败 count=" + auditLogs.size(), e);
+      throw new AuditWriteException(I18n.message("common.audit.storage.batch_failed", new Object[]{auditLogs.size()}), e);
     }
   }
 
@@ -261,10 +262,10 @@ public class JdbcAuditStorage implements AuditWriter {
    */
   private String validateTableName(String tableName) {
     if (tableName == null || tableName.isEmpty()) {
-      throw new IllegalArgumentException("表名不能为空");
+      throw new IllegalArgumentException(I18n.message("common.audit.storage.table_required"));
     }
     if (!TABLE_NAME_PATTERN.matcher(tableName).matches()) {
-      throw new IllegalArgumentException("表名包含非法字符: " + tableName);
+      throw new IllegalArgumentException(I18n.message("common.audit.storage.table_invalid", new Object[]{tableName}));
     }
     return tableName;
   }

@@ -23,6 +23,7 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.security.DigestUtils;
 
@@ -125,7 +126,7 @@ public class JwtTokenService implements TokenService {
     // 校验密钥非空，避免 NPE 或签名失败
     String secretKeyRaw = tokenProperties.getSecretKey();
     if (secretKeyRaw == null || secretKeyRaw.isBlank()) {
-      throw new IllegalStateException("ydsz.auth.token.secret-key 不能为空，请在配置文件中设置 JWT 签名密钥");
+      throw new IllegalStateException(I18n.message("common.auth.jwt.secret_required"));
     }
     this.secretKey = TokenKeyUtils.hmacShaKeyFor(secretKeyRaw);
     this.claimsCache =

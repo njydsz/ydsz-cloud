@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.njydsz.common.locales.util.I18n;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -162,7 +163,7 @@ public final class SqlAstCache {
    */
   public Statement parse(String sql) throws JSQLParserException {
     if (sql == null || sql.isEmpty()) {
-      throw new IllegalArgumentException("SQL 不能为空");
+      throw new IllegalArgumentException(I18n.message("common.jdbc.ast.sql_required"));
     }
 
     String fingerprint = SqlFingerprint.fingerprint(sql);

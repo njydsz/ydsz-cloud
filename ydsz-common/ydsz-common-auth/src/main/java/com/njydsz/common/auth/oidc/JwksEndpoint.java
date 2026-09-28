@@ -5,6 +5,8 @@ import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Objects;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * JWKS 公钥集数据（RFC 7517 / RFC 7518 JSON Web Key Set）
  *
@@ -56,7 +58,7 @@ public class JwksEndpoint {
   public JwksEndpoint(String publicKeyPem) {
     Objects.requireNonNull(publicKeyPem, "RSA 公钥 PEM 不可为 null");
     if (publicKeyPem.isBlank()) {
-      throw new IllegalArgumentException("RSA 公钥 PEM 不可为空");
+      throw new IllegalArgumentException(I18n.message("common.auth.jwt.rsa_pem_required"));
     }
     this.jwksJson = buildRsaOnlyJwksJson(publicKeyPem);
     this.jwksBytes = jwksJson.getBytes(StandardCharsets.UTF_8);
@@ -116,7 +118,7 @@ public class JwksEndpoint {
       byte[] digest = md.digest(content);
       return Base64.getUrlEncoder().withoutPadding().encodeToString(digest).substring(0, 16);
     } catch (Exception e) {
-      throw new IllegalStateException("SHA-256 MessageDigest 初始化失败", e);
+      throw new IllegalStateException(I18n.message("common.auth.jwt.sha256_init_failed"), e);
     }
   }
 

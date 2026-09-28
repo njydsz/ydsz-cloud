@@ -18,6 +18,7 @@ import org.springframework.beans.factory.DisposableBean;
 
 import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.domain.AuditLog;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
@@ -369,13 +370,13 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
    */
   public void setRejectPolicy(String strategy) {
     if (strategy == null || strategy.isEmpty()) {
-      throw new IllegalArgumentException("策略不能为空");
+      throw new IllegalArgumentException(I18n.message("common.audit.recorder.strategy_required"));
     }
     String upper = strategy.toUpperCase();
     if (!"DISCARD_OLDEST".equals(upper)
         && !"DISCARD_NEWEST".equals(upper)
         && !"CALLER_RUNS".equals(upper)) {
-      throw new IllegalArgumentException("策略必须为 DISCARD_OLDEST、DISCARD_NEWEST 或 CALLER_RUNS");
+      throw new IllegalArgumentException(I18n.message("common.audit.recorder.strategy_invalid"));
     }
     asyncProps.setRejectPolicy(upper);
     LOG.info("【异步审计记录器】队列满策略已设置为: {}", upper);

@@ -18,6 +18,7 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import com.njydsz.common.jdbc.datasource.hint.HintManager;
 import com.njydsz.common.jdbc.datasource.hint.HintType;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 动态路由数据源
@@ -155,7 +156,7 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
    */
   public void removeDataSource(Object key) {
     if (key.equals(defaultDataSourceKey)) {
-      throw new IllegalArgumentException("不能移除默认数据源: " + key);
+      throw new IllegalArgumentException(I18n.message("common.jdbc.ds.cannot_remove_default", new Object[]{key}));
     }
     rwLock.writeLock().lock();
     try {

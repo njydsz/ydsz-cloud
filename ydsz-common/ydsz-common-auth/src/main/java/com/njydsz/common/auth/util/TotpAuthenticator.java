@@ -9,6 +9,8 @@ import java.util.concurrent.TimeUnit;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * TOTP（RFC 6238）双因素认证工具。
  *
@@ -165,7 +167,7 @@ public final class TotpAuthenticator {
       return mac.doFinal(data);
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       // HmacSHA1 是 JDK 强制支持的算法，密钥由 Base32 解码而来必然合法
-      throw new IllegalStateException("TOTP HMAC-SHA1 计算失败", e);
+      throw new IllegalStateException(I18n.message("common.auth.totp.hmac_failed"), e);
     }
   }
 
@@ -246,7 +248,7 @@ public final class TotpAuthenticator {
     for (int i = 0; i < normalized.length(); i++) {
       char c = normalized.charAt(i);
       if (c >= BASE32_LOOKUP.length || BASE32_LOOKUP[c] < 0) {
-        throw new IllegalArgumentException("非法 Base32 字符: " + c);
+        throw new IllegalArgumentException(I18n.message("common.auth.totp.invalid_base32", new Object[]{c}));
       }
       buffer = (buffer << 5) | BASE32_LOOKUP[c];
       bitsLeft += 5;

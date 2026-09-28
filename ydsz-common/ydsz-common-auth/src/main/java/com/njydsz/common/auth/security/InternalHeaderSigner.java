@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.security.HexUtils;
 
 /**
@@ -118,7 +119,7 @@ public final class InternalHeaderSigner {
       byte[] hmacBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
       return HexUtils.encode(hmacBytes);
     } catch (Exception e) {
-      throw new IllegalStateException("生成内部头签名失败", e);
+      throw new IllegalStateException(I18n.message("common.auth.internal_header.sign_failed"), e);
     }
   }
 }

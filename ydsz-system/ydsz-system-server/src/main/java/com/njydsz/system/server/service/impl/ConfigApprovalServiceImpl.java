@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.system.domain.approval.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalQuery;
@@ -56,7 +57,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
 
     boolean success = approvalRepository.save(record);
     if (!success) {
-      throw new ConfigApprovalException("提交审批单失败");
+      throw new ConfigApprovalException(I18n.message("system.approval.submit_failed"));
     }
     log.info("用户 {} 提交配置变更审批，resourceKey={}", userName, dto.getResourceKey());
     return record.getId();
@@ -71,7 +72,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
     record.setUpdatedAt(LocalDateTime.now());
     boolean success = approvalRepository.updateStatus(record);
     if (!success) {
-      throw new ConfigApprovalException("审批通过操作失败");
+      throw new ConfigApprovalException(I18n.message("system.approval.approve_failed"));
     }
     log.info("审批单 {} 已通过，审批人={}", id, approverId);
   }
@@ -80,7 +81,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
   @Transactional(rollbackFor = Exception.class)
   public void reject(String id, String approverId, String reason) {
     if (reason == null || reason.isBlank()) {
-      throw new ConfigApprovalException("拒绝原因不能为空");
+      throw new ConfigApprovalException(I18n.message("system.approval.reject_reason_required"));
     }
     ConfigApproval record = getAndCheckPending(id);
     record.setStatus("REJECTED");
@@ -89,7 +90,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
     record.setUpdatedAt(LocalDateTime.now());
     boolean success = approvalRepository.updateStatus(record);
     if (!success) {
-      throw new ConfigApprovalException("审批拒绝操作失败");
+      throw new ConfigApprovalException(I18n.message("system.approval.reject_failed"));
     }
     log.info("审批单 {} 已拒绝，审批人={}，原因={}", id, approverId, reason);
   }
@@ -99,14 +100,14 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
   public void withdraw(String id, String submitterId) {
     ConfigApproval record = getAndCheckPending(id);
     if (!submitterId.equals(record.getSubmitterId())) {
-      throw new ConfigApprovalException("仅发起人可撤回审批单");
+      throw new ConfigApprovalException(I18n.message("system.approval.only_initiator_can_revoke"));
     }
     record.setStatus("WITHDRAWN");
     record.setClosedAt(LocalDateTime.now());
     record.setUpdatedAt(LocalDateTime.now());
     boolean success = approvalRepository.updateStatus(record);
     if (!success) {
-      throw new ConfigApprovalException("审批撤回操作失败");
+      throw new ConfigApprovalException(I18n.message("system.approval.revoke_op_failed"));
     }
     log.info("审批单 {} 已撤回，发起人={}", id, submitterId);
   }
@@ -115,7 +116,7 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
   public ConfigApproval findById(String id) {
     ConfigApproval record = approvalRepository.findById(id);
     if (record == null) {
-      throw new ConfigApprovalException("审批单不存在: " + id);
+      throw new ConfigApprovalException(I18n.message("system.approval.not_found", new Object[]{id}));
     }
     return record;
   }
@@ -147,10 +148,10 @@ public class ConfigApprovalServiceImpl implements ConfigApprovalService {
   private ConfigApproval getAndCheckPending(String id) {
     ConfigApproval record = approvalRepository.findById(id);
     if (record == null) {
-      throw new ConfigApprovalException("审批单不存在: " + id);
+      throw new ConfigApprovalException(I18n.message("system.approval.not_found", new Object[]{id}));
     }
     if (!"PENDING".equals(record.getStatus())) {
-      throw new ConfigApprovalException("审批单状态不允许此操作，当前状态: " + record.getStatus());
+      throw new ConfigApprovalException(I18n.message("system.approval.status_invalid", new Object[]{record.getStatus()}));
     }
     return record;
   }

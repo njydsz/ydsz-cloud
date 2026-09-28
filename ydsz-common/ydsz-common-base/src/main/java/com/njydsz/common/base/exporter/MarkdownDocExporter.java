@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Conditional;
 
 import com.njydsz.common.base.config.DocProperties;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 多格式文档导出器实现（Markdown 增强版）
@@ -46,7 +47,7 @@ public class MarkdownDocExporter extends AbstractDocExporter {
     return switch (format) {
       case "html" -> generateHtml(apiDocs);
       case "markdown", "md" -> generateMarkdown(apiDocs);
-      default -> throw new IllegalArgumentException("不支持的导出格式: " + format);
+      default -> throw new IllegalArgumentException(I18n.message("common.base.exporter.format_unsupported", new Object[]{format}));
     };
   }
 

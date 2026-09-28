@@ -19,6 +19,7 @@ import org.springframework.util.StreamUtils;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * YdszJson HTTP 消息转换器。
@@ -126,7 +127,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
       if (e instanceof IOException) {
         throw (IOException) e;
       }
-      throw new HttpMessageNotReadableException("JSON 解析失败：" + e.getMessage(), e, inputMessage);
+      throw new HttpMessageNotReadableException(I18n.message("common.json.deserialize_failed", new Object[]{e.getMessage()}), e, inputMessage);
     } finally {
       // 请求结束后清理 ThreadLocal 资源，防止 Tomcat 线程池泄漏
       SerializationProvider.clearThreadLocals();
@@ -180,7 +181,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
       StreamUtils.copy(bytes, out);
       // 不手动 flush，由 Spring 框架统一管理输出流生命周期
     } catch (Exception e) {
-      throw new HttpMessageNotWritableException("JSON 序列化失败：" + e.getMessage(), e);
+      throw new HttpMessageNotWritableException(I18n.message("common.json.serialize_failed", new Object[]{e.getMessage()}), e);
     } finally {
       // 请求结束后清理 ThreadLocal 资源（StringBuilder/JSONWriter/循环引用检测集），防止 Tomcat 线程池泄漏
       SerializationProvider.clearThreadLocals();

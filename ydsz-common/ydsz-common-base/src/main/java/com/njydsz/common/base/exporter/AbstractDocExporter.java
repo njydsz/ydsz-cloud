@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.base.config.DocProperties;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 文档导出器抽象基类
@@ -77,7 +78,7 @@ public abstract class AbstractDocExporter implements DocExporter {
   @Override
   public File export(String apiDocs, String outputDir, String format) throws IOException {
     if (format == null || format.isEmpty()) {
-      throw new IllegalArgumentException("导出格式不能为空");
+      throw new IllegalArgumentException(I18n.message("common.base.exporter.format_required"));
     }
     ensureOutputDirectory(outputDir);
 

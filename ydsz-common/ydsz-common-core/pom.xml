@@ -57,6 +57,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydsz-common-locales（国际化基座，DataScopeConstants 使用 I18n.message） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-locales</artifactId>
+        </dependency>
 
     </dependencies>
 

@@ -2,6 +2,7 @@ package com.njydsz.common.jdbc.datasource.hint;
 
 import java.util.Optional;
 
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.core.NamedThreadLocal;
 
 /**
@@ -73,7 +74,7 @@ public final class HintManager {
    */
   public static void datasource(String dsName) {
     if (dsName == null || dsName.isBlank()) {
-      throw new IllegalArgumentException("数据源名称不可为空");
+      throw new IllegalArgumentException(I18n.message("common.jdbc.ds.datasource_name_required"));
     }
     CURRENT_HINT.set(new Hint(HintType.CUSTOM, dsName));
   }

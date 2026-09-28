@@ -9,6 +9,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.mask.MaskUtils;
 
 /**
@@ -93,7 +94,7 @@ public final class SensitiveFieldMask {
           "accountnumber");
 
   private SensitiveFieldMask() {
-    throw new UnsupportedOperationException("SensitiveFieldMask 是工具类，禁止实例化");
+    throw new UnsupportedOperationException(I18n.message("common.audit.mask.utility_class"));
   }
 
   /**

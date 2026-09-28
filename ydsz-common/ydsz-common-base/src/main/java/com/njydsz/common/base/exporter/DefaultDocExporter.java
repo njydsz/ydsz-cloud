@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Conditional;
 
 import com.njydsz.common.base.config.DocProperties;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 默认文档导出器实现
@@ -42,7 +43,7 @@ public class DefaultDocExporter extends AbstractDocExporter {
     return switch (format) {
       case "html" -> generateHtml(apiDocs);
       case "markdown", "md" -> generateMarkdown(apiDocs);
-      default -> throw new IllegalArgumentException("不支持的导出格式: " + format);
+      default -> throw new IllegalArgumentException(I18n.message("common.base.exporter.format_unsupported", new Object[]{format}));
     };
   }
 
