@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.cronjob.domain.event.JobEvent;
+import com.njydsz.cronjob.domain.query.EventStoreQuery;
 import com.njydsz.cronjob.domain.repository.event.EventStoreRepository;
 
 /**
@@ -70,14 +71,16 @@ public class EventStoreServiceImpl implements EventStoreService {
   }
 
   @Override
-  public PageResponse<List<JobEvent>> pageByType(String eventType, int pageNum, int size) {
-    int offset = (Math.max(pageNum, 1) - 1) * size;
-    long total = eventStoreRepository.countByType(eventType);
+  public PageResponse<List<JobEvent>> pageByType(EventStoreQuery query) {
+    int offset = query.getOffset();
+    int limit = query.getLimit();
+    long total = eventStoreRepository.countByType(query.getEventType());
     if (total == 0) {
-      return PageResponse.empty((long) pageNum, (long) size);
+      return PageResponse.empty((long) query.getPageNum(), (long) query.getPageSize());
     }
-    List<JobEvent> records = eventStoreRepository.findByType(eventType, size, offset);
-    return PageResponse.success(total, (long) pageNum, (long) size, records);
+    List<JobEvent> records = eventStoreRepository.findByType(query.getEventType(), limit, offset);
+    return PageResponse.success(
+        total, (long) query.getPageNum(), (long) query.getPageSize(), records);
   }
 
   /**

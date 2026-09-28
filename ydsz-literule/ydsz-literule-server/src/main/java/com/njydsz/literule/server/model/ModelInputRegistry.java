@@ -14,6 +14,7 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInvocationException;
@@ -301,14 +302,14 @@ public class ModelInputRegistry {
       Throwable cause = e.getCause() != null ? e.getCause() : e;
       LOGGER.warn("[LiteRule-Model] Provider {} 调用异常: {}", provider.getModelId(), cause.getMessage());
       if (!fallbackOnError) {
-        throw new ModelInvocationException("模型调用异常: " + provider.getModelId(), cause);
+        throw new ModelInvocationException(I18n.message("literule.model.invocation_error", new Object[]{provider.getModelId()}), cause);
       }
       return Collections.emptyMap();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOGGER.warn("[LiteRule-Model] Provider {} 调用被中断", provider.getModelId());
       if (!fallbackOnError) {
-        throw new ModelInvocationException("模型调用中断: " + provider.getModelId(), e);
+        throw new ModelInvocationException(I18n.message("literule.model.invocation_interrupted", new Object[]{provider.getModelId()}), e);
       }
       return Collections.emptyMap();
     }

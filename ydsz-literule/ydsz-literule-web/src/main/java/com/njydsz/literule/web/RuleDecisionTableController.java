@@ -37,6 +37,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.literule.domain.dto.DecisionTableDTO;
 import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.literule.domain.spi.DecisionTableEvalProvider;
 import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
@@ -238,7 +239,7 @@ public class RuleDecisionTableController {
       throw e;
     } catch (IOException e) {
       log.warn("[DecisionTable] Excel 文件读取失败", e);
-      throw new RuntimeException("文件读取失败", e);
+      throw new RuntimeException(I18n.message("literule.web.file_read_failed"), e);
     }
   }
 

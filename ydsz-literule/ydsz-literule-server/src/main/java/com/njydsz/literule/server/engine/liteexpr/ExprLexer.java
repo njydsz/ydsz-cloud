@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * LiteExpr 词法分析器
  *
@@ -238,14 +240,14 @@ public class ExprLexer {
           advance();
         }
       } else if (c == '\n') {
-        throw new LiteExprException("字符串不能跨行（请使用反引号模板字符串）", startLine, startCol);
+        throw new LiteExprException(I18n.message("literule.lexer.string_multiline"), startLine, startCol);
       } else {
         sb.append(c);
         advance();
       }
     }
     if (pos >= length) {
-      throw new LiteExprException("字符串未闭合，缺少 '" + quote + "'", startLine, startCol);
+      throw new LiteExprException(I18n.message("literule.lexer.string_unclosed", new Object[]{quote}), startLine, startCol);
     }
     advance(); // 跳过结尾引号
     return new Token(TokenType.STRING, sb.toString(), sb.toString(), startLine, startCol, startPos);

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.cronjob.domain.event.JobEvent;
+import com.njydsz.cronjob.domain.query.EventStoreQuery;
 
 /**
  * 事件存储服务接口（P3-1 Event Sourcing）。
@@ -82,10 +83,8 @@ public interface EventStoreService {
   /**
    * 按事件类型分页查询。
    *
-   * @param eventType 事件类型（null 表示全部）
-   * @param pageNum 页码
-   * @param size 每页条数
+   * @param query 分页查询参数（含 eventType）
    * @return 分页结果
    */
-  PageResponse<List<JobEvent>> pageByType(String eventType, int pageNum, int size);
+  PageResponse<List<JobEvent>> pageByType(EventStoreQuery query);
 }

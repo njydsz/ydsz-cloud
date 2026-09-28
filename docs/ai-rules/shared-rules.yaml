@@ -3295,8 +3295,137 @@ rules:
     rule: "return YdszResponse.error(e.getMessage()) / .message(e.getMessage()) 一律禁止； Controller catch 块中必须改造"
     source: "公共基础深化（YDIZ-EX-001，P0，26.09.29 P1-3 异常脱敏 + e.getMessage 透传清理）"
 
+  # ============================================
+  # 新增 3 条（26.09.30 公共基础利用率提升 P0）
+  # ============================================
+  - id: "YDIZ-COMMON-034"
+    severity: "P0"
+    category: "common-reuse"
+    title: "【强制】分页查询参数对象必须继承 PageQuery"
+    description: |
+      所有分页查询的参数对象（XxxQuery / XxxPageQuery）必须继承 com.njydsz.common.domain.query.PageQuery，
+      禁止在 Controller 中使用原始 `int pageNum, int size` 参数或自行定义局部 Pagination DTO。
+
+      **为什么**：
+      - PageQuery 内置 @Min/@Max 校验注解 + 深度分页风险评估（PageQueryRiskAssessor）
+      - PageQuery 提供 OrderItem 结构化排序（防 SQL 注入），替代字符串拼接的 orderBy
+      - PageQuery 继承 BaseQuery（searchKey / status / startDateTime / endDateTime / tenantId），统一查询参数基类
+      - 各引擎 query 对象已大量接入：system(7)、userinfo(6)、message(12)、workflow(3)、nextwiki(3)、literule(1)
+
+      **现状**：
+      - cronjob 模块有 4 处 Controller 使用原始 int pageNum/size 参数（已整改为 AuditLogQuery/EventStoreQuery/JobQuery/JobLogQuery）
+      - 剩余合规扫描在持续进行中
+
+      **违反判据**：
+      - Controller 方法签名中出现 `@RequestParam int pageNum` + `@RequestParam int size`
+      - 自行定义 XxxPaginationDTO / XxxPageRequest 未 extends PageQuery
+      - Repository / Service 接口中出现 `method(int page, int size, ...)` 而非 `method(PageQuery query)`
+    pattern: "@RequestParam.*int pageNum|@RequestParam.*int size|int page, int size"
+    fix: |
+      1. 创建 XxxQuery extends PageQuery，继承 pageNum/pageSize/排序字段
+      2. 添加业务过滤字段（keyword/status/jobKey 等）
+      3. Controller 使用 `@Valid XxxQuery query` 替代分散参数
+    example_bad: |
+      // 违规：原始参数
+      @GetMapping("/page")
+      public YdszResponse<PageResponse<List<JobVO>>> page(
+          @RequestParam(defaultValue = "1") int pageNum,
+          @RequestParam(defaultValue = "20") int size,
+          @RequestParam(required = false) String keyword) { ... }
+    example_good: |
+      // 正确：Query 对象继承 PageQuery
+      @GetMapping("/page")
+      public YdszResponse<PageResponse<List<JobVO>>> page(@Valid JobQuery query) {
+          return YdszResponse.success(jobService.page(query));
+      }
+      // JobQuery extends PageQuery { String keyword; String status; String group; }
+    source: "公共基础利用率提升（YDIZ-COMMON-034，P0，26.09.30 PageQuery 强制继承规则）"
+
+  - id: "YDIZ-COMMON-035"
+    severity: "P0"
+    category: "exception"
+    title: "【强制】业务异常必须引用 *ExceptionCode 枚举常量，禁止使用裸字符串 i18n key"
+    description: |
+      抛出业务异常（BusinessException / SysException）时，第一个参数（错误码）必须引用对应模块的
+      *ExceptionCode 枚举常量，禁止使用裸字符串 i18n key。
+
+      **为什么**：
+      - ExceptionCode 枚举实现 IExceptionResultCode 接口，包含 code / key / httpStatus 完整三元组
+      - 使用枚举常量后，ExceptionCodeScanner 启动时自动校验 key 在 properties 中存在翻译，编译期防错
+      - 裸字符串 key 可能在 properties 中缺少翻译，运行时回退到 key 本身（用户体验差）
+      - 枚举常量提供类型安全，重构时 IDE 可自动追踪引用
+
+      **8 大引擎 + common 子模块已全部定义 *ExceptionCode 枚举（共 19 个）**：
+      system(UserInfo) / userinfo / message / workflow / cronjob / nextwiki / literule / agent / generator +
+      common: core / auth / excel / jdbc / file / lock / docs / notify
+
+      **违反判据**：
+      - `throw new BusinessException("some.key")` — 第一个参数应为枚举常量
+      - `throw new BusinessException("中文错误消息")` — 应走 i18n key 且使用 ExceptionCode 枚举
+      - `throw new BusinessException("message.template.not.found")` — 应改为 MessageExceptionCode.TEMPLATE_NOT_FOUND
+
+      **例外场景**（需注释说明理由）：
+      - 动态拼接的 key（如来自外部系统），应使用 BusinessException.builder().errorCode(...) 并注明来源
+    pattern: "new BusinessException\\("[a-z][a-z0-9_]*[\\.][a-z]|new SysException\\("[a-z][a-z0-9_]*[\\.]"
+    fix: |
+      1. 定位对应模块的 *ExceptionCode 枚举类
+      2. 找到语义匹配的枚举常量（如 MESSAGE_TEMPLATE_NOT_FOUND）
+      3. 替换裸字符串为枚举引用：`new BusinessException("msg.key")` → `new BusinessException(MessageExceptionCode.XXX)`
+    example_bad: |
+      // 违规：裸字符串 key
+      throw new BusinessException("message.template.not.found");
+      throw new BusinessException("任务不存在");
+    example_good: |
+      // 正确：枚举常量
+      throw new BusinessException(MessageExceptionCode.TEMPLATE_NOT_FOUND);
+      throw new BusinessException(CronjobExceptionCode.JOB_NOT_FOUND);
+    source: "公共基础利用率提升（YDIZ-COMMON-035，P0，26.09.30 异常枚举强类型规则）"
+
+  - id: "YDIZ-I18N-006"
+    severity: "P1"
+    category: "i18n"
+    title: "【严重】异步场景（@Async / MQ消费 / 线程池）必须传递 i18n Locale 上下文"
+    description: |
+      在 @Async 方法、MQ 消费者（RocketMQ/RabbitMQ Listener）、线程池任务中若有日志记录、异常消息生成
+      或其他 Locale 敏感操作，必须通过 I18nContextPropagator 传递 Locale 上下文。
+
+      **为什么**：
+      - I18n ThreadLocal 在传递给线程池 / @Async / MQ 消费线程时会丢失（新线程无法继承父线程 ThreadLocal）
+      - Locale 丢失后：I18n.message() 返回默认语言的文案（可能返回英文给中文用户）
+      - 异常日志 Locale 缺失导致运维排障困难（日志全是 SwitchLocale 兜底文案）
+
+      **I18nContextPropagator API**：
+      - `I18nContextPropagator.propagate(locale, () -> { ... })` — Runnable 包装
+      - `I18nContextPropagator.wrap(callable)` — Callable 包装（用于线程池 submit）
+      - 从请求头 Accept-Language 获取：`Locales.fromRequest(request)` 或 `LocaleContextHolder.getLocale()`
+
+      **扫描结果**：
+      - I18nContextPropagator 在全平台 0 处引用（8 个引擎均未使用）
+      - 这意味着所有异步场景（cronjob 调度、message DLQ 消费、agent 异步推理、workflow 异步通知）
+        都存在 Locale 丢失风险
+
+      **违反判据**：
+      - @Async 方法内部调用 I18n.message() 但入口处未 propagate Locale
+      - MQ 消费者内部抛出含 i18n 文案的异常但未 wrap I18nContextPropagator
+      - CompletableFuture.supplyAsync() 内部有 Locale 敏感操作
+    pattern: "@Async|RocketMQMessageListener|@RabbitListener|CompletableFuture\\.supplyAsync"
+    fix: |
+      1. 入口处获取当前 Locale：Locale locale = LocaleContextHolder.getLocale()
+      2. 异步任务包装：I18nContextPropagator.propagate(locale, () -> { /* async work */ })
+      3. 线程池提交：executor.submit(I18nContextPropagator.wrap(() -> { /* work */ }))
+    example_good: |
+      // MQ 消费者注入 Locale
+      @RocketMQMessageListener(...)
+      public void onMessage(Message msg) {
+          Locale locale = Locales.fromRequest(request);
+          I18nContextPropagator.propagate(locale, () -> {
+              processMessage(msg); // 内部 I18n.message() 将使用正确的 Locale
+          });
+      }
+    source: "公共基础利用率提升（YDIZ-I18N-006，P1，26.09.30 I18nContextPropagator 激活）"
+
 # ============================================
-# 附录：按 category 统计（26.09.29 更新，i18n 4→5、common-reuse 8→9、exception 2→3，total 101→104）
+# 附录：按 category 统计（26.09.30 更新，common-reuse 18→19、exception 3→4、i18n 5→6，total 118→121）
 # ============================================
 stats:
   encoding: 1

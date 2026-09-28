@@ -7,6 +7,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
+import com.njydsz.cronjob.domain.query.JobLogQuery;
+import com.njydsz.cronjob.domain.query.JobQuery;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 
@@ -221,27 +223,20 @@ public interface JobService {
    *
    * <p>支持关键字（任务名/KEY/处理器）、状态、分组多条件过滤。
    *
-   * @param page 页码
-   * @param size 每页条数
-   * @param keyword 关键字（任务名/KEY/处理器，可选）
-   * @param status 状态过滤（可选）
-   * @param group 分组过滤（可选）
+   * @param query 分页查询参数（含 pageNum/pageSize/过滤条件）
    * @return 任务分页数据
    */
-  PageResponse<List<JobVO>> page(int page, int size, String keyword, String status, String group);
+  PageResponse<List<JobVO>> page(JobQuery query);
 
   /**
    * 分页查询执行日志
    *
    * <p>支持按 {@code jobKey / status} 过滤，按触发时间倒序排列。
    *
-   * @param page 页码
-   * @param size 每页条数
-   * @param jobKey 任务 KEY 过滤（可选）
-   * @param status 状态过滤（可选）
+   * @param query 分页查询参数（含 pageNum/pageSize/过滤条件）
    * @return 执行日志分页数据
    */
-  PageResponse<List<JobLogVO>> pageLog(int page, int size, String jobKey, String status);
+  PageResponse<List<JobLogVO>> pageLog(JobLogQuery query);
 
   /**
    * 应用启动时加载所有 NORMAL 任务

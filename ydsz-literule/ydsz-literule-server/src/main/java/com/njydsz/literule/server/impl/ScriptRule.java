@@ -17,6 +17,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.script.Bindings;
+import com.njydsz.common.locales.util.I18n;
 import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
@@ -150,7 +151,7 @@ public class ScriptRule implements Rule {
             engine = ENGINE_MANAGER.getEngineByName("jython");
           }
           if (engine == null) {
-            throw new SysException("脚本引擎未找到: ");
+            throw new SysException(I18n.message("literule.script.engine_not_found"));
           }
           return engine;
         });

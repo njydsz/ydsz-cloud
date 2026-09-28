@@ -3,6 +3,8 @@ package com.njydsz.literule.server.expression;
 import java.util.Collection;
 import java.util.List;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * 变量空间元数据注册表
  *
@@ -72,7 +74,7 @@ public interface VariableRegistry {
    * @param definition 变量定义
    */
   default void register(VariableDefinition definition) {
-    throw new UnsupportedOperationException("当前 VariableRegistry 实现不支持动态注册");
+    throw new UnsupportedOperationException(I18n.message("literule.variable.unsupported_register"));
   }
 
   /**
@@ -95,7 +97,7 @@ public interface VariableRegistry {
    * @param name 变量名
    */
   default void unregister(String name) {
-    throw new UnsupportedOperationException("当前 VariableRegistry 实现不支持动态注销");
+    throw new UnsupportedOperationException(I18n.message("literule.variable.unsupported_unregister"));
   }
 
   /**

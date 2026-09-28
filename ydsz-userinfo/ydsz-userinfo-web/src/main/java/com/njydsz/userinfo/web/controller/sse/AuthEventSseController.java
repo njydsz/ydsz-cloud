@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
 
 /**
@@ -78,7 +79,7 @@ public class AuthEventSseController {
   public SseEmitter streamEvents(HttpServletRequest request) {
     String userId = RequestContext.getUserId();
     if (userId == null || userId.isBlank()) {
-      throw new IllegalStateException("未登录用户无法建立 SSE 连接");
+      throw new IllegalStateException(I18n.message("userinfo.auth.sse_login_required"));
     }
 
     // 创建 SSE Emitter，超时 30 分钟

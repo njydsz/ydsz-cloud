@@ -39,6 +39,8 @@ import com.njydsz.cronjob.domain.dto.BatchResultDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.job.JobHandler;
+import com.njydsz.cronjob.domain.query.JobLogQuery;
+import com.njydsz.cronjob.domain.query.JobQuery;
 import com.njydsz.cronjob.domain.repository.JobLogRepository;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
@@ -1030,8 +1032,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(readOnly = true)
-  public PageResponse<List<JobVO>> page(int page, int size, String keyword, String status, String group) {
-    return jobRepository.page(keyword, status, group, page, size);
+  public PageResponse<List<JobVO>> page(JobQuery query) {
+    return jobRepository.page(
+        query.getKeyword(), query.getStatus(), query.getGroup(),
+        query.getPageNum(), query.getPageSize());
   }
 
   /**
@@ -1045,8 +1049,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   @Transactional(readOnly = true)
-  public PageResponse<List<JobLogVO>> pageLog(int page, int size, String jobKey, String status) {
-    return jobLogRepository.pageByJobKeyAndStatus(jobKey, status, page, size);
+  public PageResponse<List<JobLogVO>> pageLog(JobLogQuery query) {
+    return jobLogRepository.pageByJobKeyAndStatus(
+        query.getJobKey(), query.getStatus(), query.getPageNum(), query.getPageSize());
   }
 
   // ==================== 内部执行逻辑 ====================

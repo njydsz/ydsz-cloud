@@ -56,18 +56,13 @@ public class EventStoreController {
   /**
    * 按事件类型分页查询。
    *
-   * @param eventType 事件类型（可选，如 JOB_CREATED、JOB_TRIGGERED）
-   * @param pageNum 页码（默认 1）
-   * @param size 每页条数（默认 20）
+   * @param query 分页查询参数（含 eventType/pageNum/pageSize）
    * @return 分页事件列表
    */
   @Operation(summary = "按类型分页查询事件")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/page")
-  public YdszResponse<PageResponse<List<JobEvent>>> pageByType(
-      @RequestParam(required = false) String eventType,
-      @RequestParam(defaultValue = "1") int pageNum,
-      @RequestParam(defaultValue = "20") int size) {
-    return YdszResponse.success(eventStoreService.pageByType(eventType, pageNum, size));
+  public YdszResponse<PageResponse<List<JobEvent>>> pageByType(EventStoreQuery query) {
+    return YdszResponse.success(eventStoreService.pageByType(query));
   }
 }

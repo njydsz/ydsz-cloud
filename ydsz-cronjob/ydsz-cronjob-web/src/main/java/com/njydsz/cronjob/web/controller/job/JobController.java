@@ -46,6 +46,8 @@ import com.njydsz.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.cronjob.domain.dto.job.JobBatchUpdateDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
+import com.njydsz.cronjob.domain.query.JobLogQuery;
+import com.njydsz.cronjob.domain.query.JobQuery;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
@@ -448,27 +450,13 @@ public class JobController {
    *
    * <p>支持按关键字（任务名/JOB_KEY/Handler 模糊匹配）和状态/分组过滤。 数据按 ID 倒序，最新创建的任务排在前面。返回的 VO 经过姓名装配。
    *
-   * @param pageNum 页码（默认 1，最小 1）
-   * @param size 每页条数（默认 20，最大 100）
-   * @param keyword 关键字（任务名/JOB_KEY/Handler，可选）
-   * @param status 状态过滤（<code>NORMAL</code>/<code>PAUSED</code>/<code>STOPPED</code>，可选）
-   * @param group 分组过滤（可选）
+   * @param query 分页查询参数（含 pageNum/pageSize/过滤条件）
    * @return 任务分页数据
    */
   @Operation(summary = "分页查询任务")
   @GetMapping("/page")
-  public YdszResponse<PageResponse<List<JobVO>>> page(
-      @RequestParam(defaultValue = "1")
-          @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}")
-          int pageNum,
-      @RequestParam(defaultValue = "20")
-          @Min(value = 1, message = "{validation.cronjob.msg_15154512}")
-          @Max(100)
-          int size,
-      @RequestParam(required = false) String keyword,
-      @RequestParam(required = false) String status,
-      @RequestParam(required = false) String group) {
-    return YdszResponse.success(jobService.page(pageNum, size, keyword, status, group));
+  public YdszResponse<PageResponse<List<JobVO>>> page(@Valid JobQuery query) {
+    return YdszResponse.success(jobService.page(query));
   }
 
   /**
@@ -476,25 +464,13 @@ public class JobController {
    *
    * <p>展示所有执行记录（成功/失败/超时/阻塞），按 trigger_time 倒序。 单条日志的详细堆栈/输出见 {@code /log/{id}} 接口。
    *
-   * @param pageNum 页码（默认 1，最小 1）
-   * @param size 每页条数（默认 20，最大 100）
-   * @param jobKey 任务 JOB_KEY 过滤（可选）
-   * @param status 状态过滤（SUCCESS/FAILED/TIMEOUT，可选）
+   * @param query 分页查询参数（含 pageNum/pageSize/过滤条件）
    * @return 执行日志分页数据
    */
   @Operation(summary = "分页查询任务执行日志")
   @GetMapping("/log/page")
-  public YdszResponse<PageResponse<List<JobLogVO>>> pageLog(
-      @RequestParam(defaultValue = "1")
-          @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}")
-          int pageNum,
-      @RequestParam(defaultValue = "20")
-          @Min(value = 1, message = "{validation.cronjob.msg_15154512}")
-          @Max(100)
-          int size,
-      @RequestParam(required = false) String jobKey,
-      @RequestParam(required = false) String status) {
-    return YdszResponse.success(jobService.pageLog(pageNum, size, jobKey, status));
+  public YdszResponse<PageResponse<List<JobLogVO>>> pageLog(@Valid JobLogQuery query) {
+    return YdszResponse.success(jobService.pageLog(query));
   }
 
   /**
@@ -525,7 +501,14 @@ public class JobController {
     List<JobExportVO> rows = new ArrayList<>();
     int pageNum = 1;
     while (true) {
-      PageResponse<List<JobVO>> page = jobService.page(pageNum, pageSize, keyword, status, group);
+      JobQuery query = JobQuery.builder()
+          .pageNum(pageNum)
+          .pageSize(pageSize)
+          .keyword(keyword)
+          .status(status)
+          .group(group)
+          .build();
+      PageResponse<List<JobVO>> page = jobService.page(query);
       if (page == null || page.getData() == null || page.getData().isEmpty()) {
         break;
       }
@@ -569,7 +552,13 @@ public class JobController {
     List<JobLogExportVO> rows = new ArrayList<>();
     int pageNum = 1;
     while (true) {
-      PageResponse<List<JobLogVO>> page = jobService.pageLog(pageNum, pageSize, jobKey, status);
+      JobLogQuery query = JobLogQuery.builder()
+          .pageNum(pageNum)
+          .pageSize(pageSize)
+          .jobKey(jobKey)
+          .status(status)
+          .build();
+      PageResponse<List<JobLogVO>> page = jobService.pageLog(query);
       if (page == null || page.getData() == null || page.getData().isEmpty()) {
         break;
       }

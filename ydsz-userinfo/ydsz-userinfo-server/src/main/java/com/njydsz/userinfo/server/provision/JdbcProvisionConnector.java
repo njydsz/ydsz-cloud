@@ -78,7 +78,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
       List<ProvisionRecord> records = executeQuery(query, null);
       return new ProvisionRecordPage(records);
     } catch (Exception e) {
-      throw new ProvisionException(CONNECTOR_TYPE, "全量拉取失败: " + e.getMessage(), e);
+      throw new ProvisionException(CONNECTOR_TYPE, I18n.message("userinfo.provision.full_pull_failed", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -95,7 +95,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
         String newToken = lastSyncToken; // 使用查询完成后的 max(updated_at) 作为新 token
         return new ProvisionRecordPage(records, newToken, records.size());
       } catch (Exception e) {
-        throw new ProvisionException(CONNECTOR_TYPE, "增量拉取失败: " + e.getMessage(), e);
+        throw new ProvisionException(CONNECTOR_TYPE, I18n.message("userinfo.provision.incremental_pull_failed", new Object[]{e.getMessage()}), e);
       }
     }
     // 未配置增量 SQL - 退化为全量拉取

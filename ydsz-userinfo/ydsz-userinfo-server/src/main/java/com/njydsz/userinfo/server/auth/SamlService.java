@@ -24,6 +24,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.config.SamlProperties;
@@ -348,7 +349,7 @@ public class SamlService {
         throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
       }
     } catch (GeneralSecurityException e) {
-      throw new SamlException("SIGNATURE_VERIFY", "签名验证加密操作失败: " + e.getMessage(), e);
+      throw new SamlException("SIGNATURE_VERIFY", I18n.message("userinfo.saml.signature_crypto_error", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -420,7 +421,7 @@ public class SamlService {
         throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
       }
     } catch (GeneralSecurityException e) {
-      throw new SamlException("SIGNATURE_VERIFY", "签名验证加密操作失败: " + e.getMessage(), e);
+      throw new SamlException("SIGNATURE_VERIFY", I18n.message("userinfo.saml.signature_crypto_error", new Object[]{e.getMessage()}), e);
     }
   }
 

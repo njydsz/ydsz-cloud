@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 
@@ -309,14 +310,14 @@ public class FactProviderRegistry {
       log.warn(
           "[LiteRule-Fact] Provider {} 调用异常: {}", provider.getProviderId(), cause.getMessage());
       if (!fallbackOnError) {
-        throw new FactCollectionException("事实采集异常: " + provider.getProviderId(), cause);
+        throw new FactCollectionException(I18n.message("literule.fact.collection_error", new Object[]{provider.getProviderId()}), cause);
       }
       return Collections.emptyMap();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       log.warn("[LiteRule-Fact] Provider {} 调用被中断", provider.getProviderId());
       if (!fallbackOnError) {
-        throw new FactCollectionException("事实采集中断: " + provider.getProviderId(), e);
+        throw new FactCollectionException(I18n.message("literule.fact.collection_interrupted", new Object[]{provider.getProviderId()}), e);
       }
       return Collections.emptyMap();
     }
