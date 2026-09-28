@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.tool;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 工具执行异常
@@ -47,7 +48,7 @@ public class ToolExecutionException extends BusinessException {
    * @param cause 原始异常
    */
   public ToolExecutionException(String toolName, String message, Throwable cause) {
-    super(String.format("工具执行失败 | tool=%s | error=%s", toolName, message), cause);
+    super(I18n.message("agent.error.tool.execution.failed", new Object[]{toolName, message}), cause);
     this.toolName = toolName;
   }
 

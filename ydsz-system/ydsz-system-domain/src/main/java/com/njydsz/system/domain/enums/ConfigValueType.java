@@ -72,12 +72,12 @@ public enum ConfigValueType {
    */
   public static void validate(String code) {
     if (code == null || code.isBlank()) {
-      throw new IllegalArgumentException("值类型不能为空");
+      throw new IllegalArgumentException(I18n.message("system.config.value_type.required"));
     }
     try {
       ConfigValueType.valueOf(code.toUpperCase());
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("无效的值类型: " + code + "，支持: STRING/NUMBER/BOOLEAN/JSON");
+      throw new IllegalArgumentException(I18n.message("system.config.value_type.invalid", new Object[]{code}));
     }
   }
 

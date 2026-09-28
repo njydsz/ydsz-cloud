@@ -14,6 +14,7 @@ import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 消息发送日志领域实体，全通道发送全量记录的事实表。
@@ -198,7 +199,7 @@ public class MsgLog implements Serializable {
   private void validateTransition(MessageStatusEnum targetStatus) {
     if (this.status != null && !this.status.canTransitTo(targetStatus)) {
       throw new IllegalStateException(
-          String.format("状态流转非法: %s → %s", this.status, targetStatus));
+          I18n.message("message.msglog.invalid_transition", new Object[]{this.status, targetStatus}));
     }
   }
 }

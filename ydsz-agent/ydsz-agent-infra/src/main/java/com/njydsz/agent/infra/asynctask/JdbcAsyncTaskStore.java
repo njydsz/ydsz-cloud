@@ -15,6 +15,7 @@ import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.entity.AsyncTask;
 import com.njydsz.agent.infra.mapper.AsyncTaskMapper;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 基于 PostgreSQL 的异步任务持久化实现 — 生产环境首选。
@@ -74,7 +75,7 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
     Objects.requireNonNull(newStatus, "newStatus 不能为 null");
     AsyncTask existing = asyncTaskMapper.selectById(taskId);
     if (existing == null) {
-      throw new IllegalStateException("任务不存在: id=" + taskId);
+      throw new IllegalStateException(I18n.message("agent.error.task.not_found", new Object[]{taskId}));
     }
     existing.setStatus(newStatus.getCode());
     if (AsyncTaskStatus.isTerminal(newStatus.getCode())) {
@@ -127,7 +128,7 @@ public class JdbcAsyncTaskStore implements AsyncTaskStore {
   public AsyncTask cancel(Long taskId) {
     AsyncTask existing = asyncTaskMapper.selectById(taskId);
     if (existing == null) {
-      throw new IllegalStateException("任务不存在: id=" + taskId);
+      throw new IllegalStateException(I18n.message("agent.error.task.not_found", new Object[]{taskId}));
     }
     existing.setStatus(AsyncTaskStatus.CANCELED.getCode());
     existing.setCompletedAt(LocalDateTime.now());

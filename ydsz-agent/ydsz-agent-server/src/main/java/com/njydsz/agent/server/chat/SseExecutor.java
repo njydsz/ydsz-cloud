@@ -12,6 +12,8 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * SSE 流式执行器（统一封装心跳保活、虚拟线程、断连检测、cleanup 逻辑）
  *
@@ -139,14 +141,14 @@ public class SseExecutor {
   /** 推送增量 chunk */
   private void sendChunk(SseChunk chunk) {
     if (!active.get()) {
-      throw new IllegalStateException("SSE 连接已断开，终止 LLM 调用");
+      throw new IllegalStateException(I18n.message("agent.error.chat.sse_disconnected"));
     }
     try {
       emitter.send(SseEmitter.event().data(chunk.toMap()).name("chunk"));
     } catch (IOException e) {
       active.set(false);
       log.warn("[SseExecutor] SSE chunk 发送失败，标记连接断开", e);
-      throw new IllegalStateException("SSE 连接已断开", e);
+      throw new IllegalStateException(I18n.message("agent.error.chat.sse_disconnected"), e);
     }
   }
 

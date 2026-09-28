@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 实体类反向生成服务。
@@ -92,7 +93,7 @@ public class EntityReverseService {
   public List<String> reverseBatch(String sourceDirPath, Long templateGroupId, String outputDir) {
     File dir = new File(sourceDirPath);
     if (!dir.exists() || !dir.isDirectory()) {
-      throw new IllegalArgumentException("无效目录: " + sourceDirPath);
+      throw new IllegalArgumentException(I18n.message("generator.reverse.invalid_dir", new Object[]{sourceDirPath}));
     }
     File[] javaFiles = dir.listFiles((d, name) -> name.endsWith(JAVA_FILE_EXTENSION));
     if (javaFiles == null) {

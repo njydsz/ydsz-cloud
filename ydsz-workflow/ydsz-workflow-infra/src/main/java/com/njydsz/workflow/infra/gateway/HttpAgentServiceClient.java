@@ -10,6 +10,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
@@ -108,7 +109,7 @@ public class HttpAgentServiceClient implements AgentServiceClient {
     } catch (Exception e) {
       log.error("[Workflow-Agent] Agent 调用异常: agentCode={}, error={}", agentCode, e.getMessage(), e);
       throw new WorkflowException(WorkflowExceptionCode.AI_AGENT_EXECUTION_ERROR,
-          "Agent 服务调用失败: " + e.getMessage());
+          I18n.message("workflow.agent.invocation_failed", new Object[]{e.getMessage()}));
     }
   }
 

@@ -23,6 +23,7 @@ import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.server.knowledge.KnowledgeGraphService;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -292,7 +293,7 @@ public class DocumentIngestionService {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     boolean written = ImageIO.write(image, formatName, baos);
     if (!written) {
-      throw new IOException("ImageIO.write 返回 false：不支持的格式 " + formatName);
+      throw new IOException(I18n.message("agent.error.rag.image_write_failed", new Object[]{formatName}));
     }
     return baos.toByteArray();
   }

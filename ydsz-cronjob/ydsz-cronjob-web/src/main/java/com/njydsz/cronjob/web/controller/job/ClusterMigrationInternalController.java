@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -85,7 +86,7 @@ public class ClusterMigrationInternalController {
       return YdszResponse.success(result);
     } catch (Exception e) {
       log.warn("[ClusterMigration] 接收注册失败: jobKey={}", jobVO.getJobKey(), e);
-      throw new RuntimeException("集群注册失败", e);
+      throw new RuntimeException(I18n.message("cronjob.cluster.registration_failed", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -110,7 +111,7 @@ public class ClusterMigrationInternalController {
       return YdszResponse.success(result);
     } catch (Exception e) {
       log.warn("[ClusterMigration] 接收注销失败: jobKey={}", request.getJobKey(), e);
-      throw new RuntimeException("集群注销失败", e);
+      throw new RuntimeException(I18n.message("cronjob.cluster.deregistration_failed", new Object[]{e.getMessage()}), e);
     }
   }
 

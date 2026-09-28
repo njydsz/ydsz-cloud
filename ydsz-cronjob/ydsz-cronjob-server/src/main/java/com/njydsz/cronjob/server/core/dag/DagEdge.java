@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonProperty;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * DAG 边定义（P2 DAG 增强）。
@@ -29,7 +30,7 @@ public record DagEdge(
     Objects.requireNonNull(from, "from 不能为空");
     Objects.requireNonNull(to, "to 不能为空");
     if (from.equals(to)) {
-      throw new IllegalArgumentException("DAG 边不允许自环: " + from);
+      throw new IllegalArgumentException(I18n.message("cronjob.dag.edge_no_self_loop", new Object[]{from}));
     }
   }
 

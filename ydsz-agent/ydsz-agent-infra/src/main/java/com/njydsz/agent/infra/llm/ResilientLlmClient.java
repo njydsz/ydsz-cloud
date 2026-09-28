@@ -18,6 +18,7 @@ import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 带熔断保护的 LLM 客户端装饰器（Resilience4j）
@@ -100,7 +101,7 @@ public class ResilientLlmClient implements LlmClient {
    */
   public ResilientLlmClient(LlmClient delegate, String providerName, CircuitBreakerRegistry registry) {
     if (delegate == null) {
-      throw new IllegalArgumentException("delegate 不能为 null");
+      throw new IllegalArgumentException(I18n.message("agent.error.delegate_null"));
     }
     this.delegate = delegate;
     this.circuitBreaker = registry.circuitBreaker(

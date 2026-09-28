@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.generator.entity.GenTemplateGroup;
 import com.njydsz.generator.repository.GenTemplateGroupRepository;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 模板分组领域服务。
@@ -105,7 +106,7 @@ public class TemplateGroupService {
     GenTemplateGroup group = groupRepository.findById(id)
         .orElseThrow(() -> new IllegalArgumentException("分组不存在: " + id));
     if (Boolean.TRUE.equals(group.getIsSystem())) {
-      throw new IllegalStateException("系统内置分组不可删除: " + group.getName());
+      throw new IllegalStateException(I18n.message("generator.template.system_group_undeletable", new Object[]{group.getName()}));
     }
     groupRepository.deleteById(id);
     log.info("删除模板分组 id={} name={}", id, group.getName());

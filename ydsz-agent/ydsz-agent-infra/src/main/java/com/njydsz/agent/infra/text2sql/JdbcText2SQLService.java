@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.Text2SQLService;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
@@ -116,7 +117,7 @@ public class JdbcText2SQLService implements Text2SQLService {
   @Override
   public Text2SQLResult query(String naturalLanguageQuery, String tenantId) throws Text2SQLException {
     if (!text2sqlEnabled) {
-      throw new Text2SQLException("Text2SQL 功能未启用", "TEXT2SQL_DISABLED");
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.not_enabled"), "TEXT2SQL_DISABLED");
     }
     // 1. 生成 SQL
     String sql = generateSql(naturalLanguageQuery, tenantId);
@@ -149,7 +150,7 @@ public class JdbcText2SQLService implements Text2SQLService {
       ChatResponse response = llmClient.chat(request);
       String content = response.getContent();
       if (content == null || content.isBlank()) {
-        throw new Text2SQLException("LLM 未返回 SQL", "TEXT2SQL_EMPTY_RESPONSE");
+        throw new Text2SQLException(I18n.message("agent.error.text2sql.no_sql_returned"), "TEXT2SQL_EMPTY_RESPONSE");
       }
       // 提取 SQL（LLM 可能包裹在 ```sql ``` 中）
       String sql = extractSql(content);
@@ -158,7 +159,7 @@ public class JdbcText2SQLService implements Text2SQLService {
     } catch (Text2SQLException e) {
       throw e;
     } catch (Exception e) {
-      throw new Text2SQLException("LLM 调用失败: " + e.getMessage(), "TEXT2SQL_LLM_ERROR", e);
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.llm_failed", new Object[]{e.getMessage()}), "TEXT2SQL_LLM_ERROR", e);
     }
   }
 
@@ -170,7 +171,7 @@ public class JdbcText2SQLService implements Text2SQLService {
    */
   private static void validateTenantId(String tenantId) throws Text2SQLException {
     if (tenantId == null || !TENANT_ID_PATTERN.matcher(tenantId).matches()) {
-      throw new Text2SQLException("tenantId 格式非法", "TEXT2SQL_INVALID_TENANT_ID");
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.tenantId_invalid"), "TEXT2SQL_INVALID_TENANT_ID");
     }
   }
 
@@ -247,12 +248,12 @@ public class JdbcText2SQLService implements Text2SQLService {
     }
     if (!allowed) {
       String snippet = sql.substring(0, Math.min(SQL_SNIPPET_LENGTH, sql.length()));
-      throw new Text2SQLException("agent.error.text2sql.only_select_allowed", "TEXT2SQL_NOT_SELECT");
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.only_select_allowed"), "TEXT2SQL_NOT_SELECT");
     }
     // 注入检测
     for (Pattern pattern : INJECTION_PATTERNS) {
       if (pattern.matcher(sql).find()) {
-        throw new Text2SQLException("agent.error.text2sql.injection_detected", "TEXT2SQL_INJECTION_DETECTED");
+        throw new Text2SQLException(I18n.message("agent.error.text2sql.injection_detected"), "TEXT2SQL_INJECTION_DETECTED");
       }
     }
   }
@@ -307,7 +308,7 @@ public class JdbcText2SQLService implements Text2SQLService {
     } catch (Exception e) {
       // 审计日志：记录异常
       log.error("[Text2SQL] 执行异常: reason={}, sql={}", e.getMessage(), sql);
-      throw new Text2SQLException("SQL 执行失败: " + e.getMessage(), "TEXT2SQL_EXEC_ERROR", e);
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.sql_execution_failed", new Object[]{e.getMessage()}), "TEXT2SQL_EXEC_ERROR", e);
     }
   }
 }

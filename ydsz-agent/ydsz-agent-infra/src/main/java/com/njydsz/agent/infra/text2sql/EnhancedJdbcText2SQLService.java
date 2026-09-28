@@ -29,6 +29,7 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.text2sql.SchemaRecallService;
 import com.njydsz.agent.domain.text2sql.SemanticConsistencyChecker;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.agent.domain.text2sql.TableSchema;
 import com.njydsz.agent.domain.text2sql.Text2SQLEnhancedResult;
 import com.njydsz.agent.domain.text2sql.Text2SqlStateContext;
@@ -212,7 +213,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
     } catch (Text2SQLException e) {
       throw e;
     } catch (Exception e) {
-      throw new Text2SQLException("增强链路执行异常: " + e.getMessage(), "TEXT2SQL_ENHANCED_ERROR", e);
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.enhanced_failed", new Object[]{e.getMessage()}), "TEXT2SQL_ENHANCED_ERROR", e);
     }
   }
 
@@ -302,7 +303,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
 
       if (score < FEASIBILITY_PASS_THRESHOLD) {
         throw new Text2SQLException(
-            "问题在当前 Schema 下不可回答: " + reasoning,
+            I18n.message("agent.error.text2sql.not_feasible", new Object[]{reasoning}),
             "TEXT2SQL_NOT_FEASIBLE");
       }
       return Text2SqlStateContext.builder(context.getQuery(), context.getTenantId())
@@ -357,7 +358,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
       ChatResponse response = llmClient.chat(request);
       String content = response.getContent();
       if (content == null || content.isBlank()) {
-        throw new Text2SQLException("LLM 未返回 SQL", "TEXT2SQL_EMPTY_RESPONSE");
+        throw new Text2SQLException(I18n.message("agent.error.text2sql.no_sql_returned"), "TEXT2SQL_EMPTY_RESPONSE");
       }
       String sql = extractSql(content);
       // 添加租户隔离条件
@@ -371,7 +372,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
     } catch (Text2SQLException e) {
       throw e;
     } catch (Exception e) {
-      throw new Text2SQLException("LLM 调用失败: " + e.getMessage(), "TEXT2SQL_LLM_ERROR", e);
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.llm_failed", new Object[]{e.getMessage()}), "TEXT2SQL_LLM_ERROR", e);
     }
   }
 
@@ -404,8 +405,8 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
           result.reasoning());
       if (!result.isAboveThreshold(consistencyThreshold)) {
         throw new Text2SQLException(
-            "语义一致性校验未通过（分数 %.2f < 阈值 %.2f）: %s"
-                .formatted(result.score(), consistencyThreshold, result.reasoning()),
+            I18n.message("agent.error.text2sql.consistency_failed",
+                new Object[]{result.score(), consistencyThreshold, result.reasoning()}),
             "TEXT2SQL_CONSISTENCY_FAILED");
       }
       return Text2SqlStateContext.builder(context.getQuery(), context.getTenantId())
@@ -437,7 +438,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
         context
             .getGeneratedSql()
             .orElseThrow(
-                () -> new Text2SQLException("无法执行：未生成 SQL", "TEXT2SQL_NO_SQL"));
+                () -> new Text2SQLException(I18n.message("agent.error.text2sql.no_sql_to_execute"), "TEXT2SQL_NO_SQL"));
     validateSql(sql);
     Text2SQLResult baseResult = executeSql(sql, context.getTenantId());
     List<String> recalledTableNames = buildRecalledTableNames(context);
@@ -469,11 +470,11 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
     }
     if (!allowed) {
       String snippet = sql.substring(0, Math.min(SQL_SNIPPET_LENGTH, sql.length()));
-      throw new Text2SQLException("agent.error.text2sql.only_select_allowed", "TEXT2SQL_NOT_SELECT");
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.only_select_allowed"), "TEXT2SQL_NOT_SELECT");
     }
     for (Pattern pattern : INJECTION_PATTERNS) {
       if (pattern.matcher(sql).find()) {
-        throw new Text2SQLException("agent.error.text2sql.injection_detected", "TEXT2SQL_INJECTION_DETECTED");
+        throw new Text2SQLException(I18n.message("agent.error.text2sql.injection_detected"), "TEXT2SQL_INJECTION_DETECTED");
       }
     }
   }
@@ -520,7 +521,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
       throw e;
     } catch (Exception e) {
       log.error("[Text2SQL:Execution] 执行异常: reason={}, sql={}", e.getMessage(), sql);
-      throw new Text2SQLException("SQL 执行失败: " + e.getMessage(), "TEXT2SQL_EXEC_ERROR", e);
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.sql_execution_failed", new Object[]{e.getMessage()}), "TEXT2SQL_EXEC_ERROR", e);
     }
   }
 
@@ -532,7 +533,7 @@ public class EnhancedJdbcText2SQLService implements Text2SQLService {
    */
   private static void validateTenantId(String tenantId) throws Text2SQLException {
     if (tenantId == null || !TENANT_ID_PATTERN.matcher(tenantId).matches()) {
-      throw new Text2SQLException("tenantId 格式非法", "TEXT2SQL_INVALID_TENANT_ID");
+      throw new Text2SQLException(I18n.message("agent.error.text2sql.tenantId_invalid"), "TEXT2SQL_INVALID_TENANT_ID");
     }
   }
 

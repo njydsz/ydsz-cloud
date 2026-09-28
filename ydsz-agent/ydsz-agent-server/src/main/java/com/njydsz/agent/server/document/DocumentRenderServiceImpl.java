@@ -16,6 +16,7 @@ import com.njydsz.agent.domain.document.DocumentFormat;
 import com.njydsz.agent.domain.document.DocumentRenderService;
 import com.njydsz.agent.domain.document.DocumentTemplate;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.date.DateUtils;
 
 /**
@@ -58,7 +59,7 @@ public class DocumentRenderServiceImpl implements DocumentRenderService {
                 renderToPdf(markdown, output, null);
                 break;
             default:
-                throw new DocumentRenderException("不支持的文档格式: " + format);
+                throw new DocumentRenderException(I18n.message("agent.error.document.unsupported_format", new Object[]{format}));
         }
     }
 

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.entity.AsyncTask;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 基于内存的异步任务存储实现 — 开发环境默认 fallback。
@@ -88,7 +89,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
     Objects.requireNonNull(newStatus, "newStatus 不能为 null");
     AsyncTask task = taskStore.get(taskId);
     if (task == null) {
-      throw new IllegalStateException("任务不存在: id=" + taskId);
+      throw new IllegalStateException(I18n.message("agent.error.task.not_found", new Object[]{taskId}));
     }
     synchronized (task) {
       task.setStatus(newStatus.getCode());
@@ -178,7 +179,7 @@ public class InMemoryAsyncTaskStore implements AsyncTaskStore {
   public AsyncTask cancel(Long taskId) {
     AsyncTask task = taskStore.get(taskId);
     if (task == null) {
-      throw new IllegalStateException("任务不存在: id=" + taskId);
+      throw new IllegalStateException(I18n.message("agent.error.task.not_found", new Object[]{taskId}));
     }
     synchronized (task) {
       task.setStatus(AsyncTaskStatus.CANCELED.getCode());

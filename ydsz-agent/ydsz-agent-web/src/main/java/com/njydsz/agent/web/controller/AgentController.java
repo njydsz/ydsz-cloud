@@ -46,6 +46,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
@@ -580,7 +581,7 @@ public class AgentController {
       } else if ("image_url".equals(dto.getType())) {
         parts.add(MessageContent.ContentPart.image(dto.getImageUrl()));
       } else {
-        throw new IllegalArgumentException("不支持的内容类型: " + dto.getType());
+        throw new IllegalArgumentException(I18n.message("agent.error.unsupported_content_type", new Object[]{dto.getType()}));
       }
     }
     return new MessageContent(parts);

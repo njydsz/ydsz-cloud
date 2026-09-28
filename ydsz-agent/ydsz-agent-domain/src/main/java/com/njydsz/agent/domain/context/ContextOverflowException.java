@@ -1,6 +1,7 @@
 package com.njydsz.agent.domain.context;
 
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 上下文溢出异常 — LLM 请求超出模型上下文窗口时抛出。
@@ -24,18 +25,16 @@ public class ContextOverflowException extends BusinessException {
   private final int maxContextTokens;
 
   public ContextOverflowException(int currentTokens, int maxContextTokens) {
-    super(String.format(
-        "上下文超限: 当前 %d tokens, 上限 %d tokens",
-        currentTokens, maxContextTokens));
+    super(I18n.message(
+        "agent.error.context_overflow", new Object[]{currentTokens, maxContextTokens}));
     this.currentTokens = currentTokens;
     this.maxContextTokens = maxContextTokens;
   }
 
   public ContextOverflowException(
       int currentTokens, int maxContextTokens, Throwable cause) {
-    super(String.format(
-        "上下文超限: 当前 %d tokens, 上限 %d tokens",
-        currentTokens, maxContextTokens), cause);
+    super(I18n.message(
+        "agent.error.context_overflow", new Object[]{currentTokens, maxContextTokens}), cause);
     this.currentTokens = currentTokens;
     this.maxContextTokens = maxContextTokens;
   }

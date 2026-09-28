@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
@@ -40,7 +41,7 @@ public final class AliyunSmsSigner {
     try {
       return DigestUtils.hmacSha1Base64(stringToSign, accessKeySecret + "&");
     } catch (Exception e) {
-      throw new IllegalStateException("阿里云签名计算失败: " + e.getMessage(), e);
+      throw new IllegalStateException(I18n.message("message.aliyun.sms_sign_failed", new Object[]{e.getMessage()}), e);
     }
   }
 

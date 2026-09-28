@@ -17,6 +17,7 @@ import com.njydsz.agent.domain.skill.SkillExecutionTarget;
 import com.njydsz.agent.domain.skill.SkillRegistry;
 import com.njydsz.agent.domain.skill.SkillRepository;
 import com.njydsz.agent.domain.skill.SkillRuntime;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Skill 注册中心的默认实现。
@@ -137,7 +138,7 @@ public class DefaultSkillRegistry implements SkillRegistry {
         return runtime;
       }
     }
-    throw new IllegalStateException("无可用的 Skill 运行时: " + target);
+    throw new IllegalStateException(I18n.message("agent.error.skill.no_runtime", new Object[]{target}));
   }
 
   /**

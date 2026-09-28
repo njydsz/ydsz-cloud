@@ -18,6 +18,7 @@ import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.domain.teamrun.TeamRunRepository;
 import com.njydsz.agent.domain.teamrun.TeamRunStatus;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
@@ -87,7 +88,7 @@ public class TeamRunOrchestrationService {
         // 校验租户 Team Run 数量限制
         long currentCount = teamRunRepository.countByTenant(tenantId);
         if (currentCount >= MAX_TEAM_RUNS_PER_TENANT) {
-            throw new TeamRunException("租户 Team Run 数量已达上限: " + MAX_TEAM_RUNS_PER_TENANT);
+            throw new TeamRunException(I18n.message("agent.error.teamrun.quota_exceeded", new Object[]{MAX_TEAM_RUNS_PER_TENANT}));
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -133,11 +134,11 @@ public class TeamRunOrchestrationService {
         TeamRun teamRun = getTeamRunOrThrow(teamRunId, tenantId);
 
         if (teamRun.getMembers().size() >= MAX_MEMBERS_PER_TEAM_RUN) {
-            throw new TeamRunException("Team Run 成员数量已达上限: " + MAX_MEMBERS_PER_TEAM_RUN);
+            throw new TeamRunException(I18n.message("agent.error.teamrun.members_limit", new Object[]{MAX_MEMBERS_PER_TEAM_RUN}));
         }
 
         if (teamRun.getStatus() != TeamRunStatus.CREATED) {
-            throw new TeamRunException("Team Run 已启动，无法添加成员");
+            throw new TeamRunException(I18n.message("agent.error.teamrun.already_started"));
         }
 
         TeamRunMember member = TeamRunMember.builder()
@@ -169,11 +170,11 @@ public class TeamRunOrchestrationService {
         TeamRun teamRun = getTeamRunOrThrow(teamRunId, tenantId);
 
         if (teamRun.getStatus() != TeamRunStatus.CREATED) {
-            throw new TeamRunException("Team Run 状态不正确，无法启动: " + teamRun.getStatus());
+            throw new TeamRunException(I18n.message("agent.error.teamrun.invalid_status", new Object[]{teamRun.getStatus()}));
         }
 
         if (teamRun.getMembers().isEmpty()) {
-            throw new TeamRunException("Team Run 没有成员，无法启动");
+            throw new TeamRunException(I18n.message("agent.error.teamrun.no_members"));
         }
 
         TeamRun running = teamRun.withStatus(TeamRunStatus.RUNNING);
@@ -196,7 +197,7 @@ public class TeamRunOrchestrationService {
                 executeNegotiation(running);
                 break;
             default:
-                throw new TeamRunException("不支持的协作模式: " + teamRun.getPattern());
+                throw new TeamRunException(I18n.message("agent.error.teamrun.unsupported_pattern", new Object[]{teamRun.getPattern()}));
         }
 
         return running;
@@ -354,7 +355,7 @@ public class TeamRunOrchestrationService {
             current = current.withUpdatedMember(member.getMemberId(), failedMember);
             teamRunRepository.save(current);
 
-            throw new TeamRunException("成员执行失败: " + member.getMemberId(), e);
+            throw new TeamRunException(I18n.message("agent.error.teamrun.member_failed", new Object[]{member.getMemberId()}), e);
         }
     }
 
@@ -421,7 +422,7 @@ public class TeamRunOrchestrationService {
         TeamRun teamRun = getTeamRunOrThrow(teamRunId, tenantId);
 
         if (teamRun.getStatus().isTerminal()) {
-            throw new TeamRunException("Team Run 已处于终态，无法取消");
+            throw new TeamRunException(I18n.message("agent.error.teamrun.already_terminal"));
         }
 
         TeamRun cancelled = teamRun.withStatus(TeamRunStatus.CANCELLED);
@@ -457,10 +458,10 @@ public class TeamRunOrchestrationService {
      */
     private TeamRun getTeamRunOrThrow(String teamRunId, String tenantId) {
         TeamRun teamRun = teamRunRepository.findById(teamRunId)
-                .orElseThrow(() -> new TeamRunException("Team Run 不存在: " + teamRunId));
+                .orElseThrow(() -> new TeamRunException(I18n.message("agent.error.teamrun.not_found", new Object[]{teamRunId})));
 
         if (!teamRun.getTenantId().equals(tenantId)) {
-            throw new TeamRunException("无权访问此 Team Run");
+            throw new TeamRunException(I18n.message("agent.error.teamrun.no_access_permission"));
         }
 
         return teamRun;

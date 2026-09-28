@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.njydsz.common.locales.util.I18n;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
@@ -61,7 +62,7 @@ public class ConsistentHashShardingStrategy implements ShardingStrategy {
   @Override
   public List<ShardAssignment> assign(int shardTotal, List<String> onlineNodes) {
     if (shardTotal < 1) {
-      throw new IllegalArgumentException("shardTotal 必须 >= 1, 实际: " + shardTotal);
+      throw new IllegalArgumentException(I18n.message("cronjob.sharding.shard_total_invalid", new Object[]{shardTotal}));
     }
     if (onlineNodes == null || onlineNodes.isEmpty()) {
       throw new IllegalArgumentException("job.error.online_nodes_required");

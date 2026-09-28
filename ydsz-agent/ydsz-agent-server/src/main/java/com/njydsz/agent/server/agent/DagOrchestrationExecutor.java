@@ -38,6 +38,7 @@ import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -690,7 +691,7 @@ public class DagOrchestrationExecutor extends AbstractAgentExecutor {
       return;
     }
     if (visiting.contains(nodeId)) {
-      throw new IllegalArgumentException("DAG 存在环: " + nodeId);
+      throw new IllegalArgumentException(I18n.message("agent.error.dag.cycle_detected", new Object[]{nodeId}));
     }
     visiting.add(nodeId);
     List<String> deps = dag.getEdges().getOrDefault(nodeId, List.of());

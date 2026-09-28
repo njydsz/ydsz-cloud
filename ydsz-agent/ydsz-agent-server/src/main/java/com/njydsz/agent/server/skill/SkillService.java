@@ -15,6 +15,7 @@ import com.njydsz.agent.domain.skill.SkillExecutionResult;
 import com.njydsz.agent.domain.skill.SkillExecutionTarget;
 import com.njydsz.agent.domain.skill.SkillRegistry;
 import com.njydsz.agent.domain.skill.SkillRuntime;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Skill 管理服务。
@@ -75,7 +76,7 @@ public class SkillService {
     // 查找 Skill 定义
     SkillDescriptor descriptor = skillRegistry.findByCode(skillCode);
     if (descriptor == null) {
-      throw new SkillExecutionException(skillCode, "Skill 未注册: " + skillCode);
+      throw new SkillExecutionException(skillCode, I18n.message("agent.error.skill.not_registered", new Object[]{skillCode}));
     }
 
     // 构建执行上下文
@@ -119,7 +120,7 @@ public class SkillService {
     Objects.requireNonNull(skillCode, "skillCode 不能为 null");
     SkillDescriptor descriptor = skillRegistry.findByCode(skillCode);
     if (descriptor == null) {
-      throw new SkillExecutionException(skillCode, "Skill 未注册: " + skillCode);
+      throw new SkillExecutionException(skillCode, I18n.message("agent.error.skill.not_registered", new Object[]{skillCode}));
     }
     log.debug("[SkillService] 查询 Skill 详情: skillCode={}", skillCode);
     return descriptor;

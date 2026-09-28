@@ -17,8 +17,9 @@ import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.repository.DagWorkflowRepository;
 import com.njydsz.common.base.api.ApiVersion;
-import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * DAG 工作流持久化管理 Controller。
@@ -78,7 +79,7 @@ public class DagWorkflowController {
     entity.setCategory(dto.getCategory());
     boolean ok = isCreate ? repository.insert(entity) : repository.updateById(entity);
     if (!ok) {
-      throw new RuntimeException("保存失败");
+      throw new RuntimeException(I18n.message("agent.error.dag.save_failed"));
     }
     return YdszResponse.success(entity.getId());
   }

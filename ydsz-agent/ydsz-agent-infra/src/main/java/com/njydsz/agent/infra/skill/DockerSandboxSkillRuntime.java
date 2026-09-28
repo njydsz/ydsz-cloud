@@ -22,6 +22,7 @@ import com.njydsz.agent.domain.skill.SkillDescriptor;
 import com.njydsz.agent.domain.skill.SkillExecutionContext;
 import com.njydsz.agent.domain.skill.SkillExecutionException;
 import com.njydsz.agent.domain.skill.SkillExecutionResult;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.agent.domain.skill.SkillExecutionTarget;
 import com.njydsz.agent.domain.skill.SkillRuntime;
 
@@ -190,7 +191,7 @@ public class DockerSandboxSkillRuntime implements SkillRuntime {
         metrics.put("exitCode", -1);
         metrics.put("timeout", timeout);
         return SkillExecutionResult.failure(skillCode,
-            "Skill 沙箱执行超时（" + timeout + "s）", "");
+            I18n.message("agent.error.skill.sandbox_timeout", new Object[]{timeout}), "");
       }
 
       String stdout = readStreamLimited(dockerProcess.getInputStream());
@@ -207,7 +208,7 @@ public class DockerSandboxSkillRuntime implements SkillRuntime {
 
       if (exitCode != 0) {
         return SkillExecutionResult.failure(skillCode,
-            "沙箱非零退出: exitCode=" + exitCode, stderr);
+            I18n.message("agent.error.skill.nonzero_exit", new Object[]{exitCode}), stderr);
       }
       return SkillExecutionResult.success(skillCode, stdout, List.of(), metrics);
 
@@ -218,15 +219,15 @@ public class DockerSandboxSkillRuntime implements SkillRuntime {
         dockerProcess.destroyForcibly();
       }
       log.error("[DockerSandboxSkillRuntime] Skill 被中断: {}", skillCode);
-      throw new SkillExecutionException(skillCode, "沙箱执行被中断", e);
+      throw new SkillExecutionException(skillCode, I18n.message("agent.error.skill.interrupted"), e);
     } catch (IOException e) {
       log.error("[DockerSandboxSkillRuntime] Docker IO 异常: {} - {}", skillCode, e.getMessage());
       throw new SkillExecutionException(skillCode,
-          "Docker 沙箱 IO 异常: " + e.getMessage(), e);
+          I18n.message("agent.error.skill.docker_io", new Object[]{e.getMessage()}), e);
     } catch (Exception e) {
       log.error("[DockerSandboxSkillRuntime] 沙箱执行异常: {} - {}", skillCode, e.getMessage(), e);
       throw new SkillExecutionException(skillCode,
-          "沙箱执行异常: " + e.getMessage(), e);
+          I18n.message("agent.error.skill.sandbox_exception", new Object[]{e.getMessage()}), e);
     }
   }
 

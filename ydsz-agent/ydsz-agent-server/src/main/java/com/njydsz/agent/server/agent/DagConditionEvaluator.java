@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.locales.util.I18n;
+
 /**
  * DAG 条件表达式求值器
  *
@@ -259,7 +261,7 @@ public final class DagConditionEvaluator {
     try {
       return Double.parseDouble(value.trim());
     } catch (NumberFormatException e) {
-      throw new IllegalArgumentException("数值比较的操作数无法解析为数字: " + value, e);
+      throw new IllegalArgumentException(I18n.message("agent.error.dag.not_number", new Object[]{value}), e);
     }
   }
 

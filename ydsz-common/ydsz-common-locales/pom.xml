@@ -25,12 +25,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <!-- 同层依赖：ydsz-common-core（L2，提供 BizContextKeys/TenantContextHolder 等核心上下文） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-core</artifactId>
-        </dependency>
-
         <!-- spring-boot（提供 spring-core、spring-context、spring-beans 等核心 API）
              I18nProperties @ConfigurationProperties 绑定、LocalesAutoConfiguration XML/注解配置 均直接使用 -->
         <dependency>

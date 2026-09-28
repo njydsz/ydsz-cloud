@@ -34,6 +34,7 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.IpAccessControlProperties;
 import com.njydsz.gateway.exception.GatewayErrorWriter;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * IP 访问控制全局过滤器。
@@ -128,7 +129,7 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
     String failMode = properties.getBlacklistFailMode();
     if (!"fail-open".equalsIgnoreCase(failMode) && !"fail-closed".equalsIgnoreCase(failMode)) {
       throw new IllegalStateException(
-          "IP 访问控制配置非法： blacklistFailMode 必须为 fail-open 或 fail-closed，当前值=" + failMode);
+          I18n.message("gateway.ip_control.invalid_failmode", new Object[]{failMode}));
     }
 
     long ttlSeconds = properties.getBlacklistTtlSeconds();

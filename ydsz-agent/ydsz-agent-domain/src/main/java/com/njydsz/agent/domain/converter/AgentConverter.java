@@ -181,6 +181,7 @@ public interface AgentConverter {
    * @param dto Agent 执行链路步骤 DTO
    * @return 数据库实体
    */
+  @Mapping(target = "tenantId", ignore = true)
   AgentTraceStep dtoToEntity(AgentTraceStepDTO dto);
 
   // ===== AgentApproval =====
@@ -207,6 +208,11 @@ public interface AgentConverter {
    * @param dto 审批请求 DTO
    * @return 数据库实体
    */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -219,7 +225,12 @@ public interface AgentConverter {
    * @param dto 审批请求 DTO（含 id）
    * @return 数据库实体
    */
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   AgentApproval dtoToEntityWithId(AgentApprovalDTO dto);

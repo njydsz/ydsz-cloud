@@ -13,6 +13,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import com.njydsz.agent.domain.agent.AgentDag;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
@@ -61,14 +62,14 @@ public class DagDslParser {
   public AgentDag parse(String yamlContent) {
     Map<String, Object> root = yaml.load(yamlContent);
     if (root == null) {
-      throw new IllegalArgumentException("DSL 内容为空");
+      throw new IllegalArgumentException(I18n.message("agent.error.dag.dsl_empty"));
     }
 
     String name = (String) root.getOrDefault("name", "unnamed-dag");
     Object nodesRaw = root.get("nodes");
     Object edgesRaw = root.get("edges");
     if (!(nodesRaw instanceof Map<?, ?> nodesYaml) || nodesYaml.isEmpty()) {
-      throw new IllegalArgumentException("DSL 缺少 nodes 定义");
+      throw new IllegalArgumentException(I18n.message("agent.error.dag.nodes_missing"));
     }
 
     Map<String, AgentDag.Node> nodes = new HashMap<>(COLLECTION_CAPACITY);
@@ -76,7 +77,7 @@ public class DagDslParser {
       String nodeId = String.valueOf(entry.getKey());
       Object nodeDefRaw = entry.getValue();
       if (!(nodeDefRaw instanceof Map<?, ?> nodeDef)) {
-        throw new IllegalArgumentException("节点定义格式错误: " + nodeId);
+        throw new IllegalArgumentException(I18n.message("agent.error.dag.node_format_error", new Object[]{nodeId}));
       }
       String agentType = readString(nodeDef.get("agent-type"), "CHAT");
       String prompt = readString(nodeDef.get("prompt"), "");

@@ -10,6 +10,7 @@ import com.njydsz.agent.domain.skill.LessonType;
 import com.njydsz.agent.domain.skill.SkillLesson;
 import com.njydsz.agent.domain.skill.SkillLessonRepository;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -109,7 +110,7 @@ public class SkillLessonRecorder {
         // 校验经验数量限制
         long currentCount = lessonRepository.countBySkill(tenantId, skillCode);
         if (currentCount >= MAX_LESSONS_PER_SKILL) {
-            throw new SkillLessonException("Skill 经验数量已达上限: " + MAX_LESSONS_PER_SKILL);
+            throw new SkillLessonException(I18n.message("agent.error.skill_lesson.quota_exceeded", new Object[]{MAX_LESSONS_PER_SKILL}));
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -208,7 +209,7 @@ public class SkillLessonRecorder {
      */
     public SkillLesson markLessonUsed(String lessonId) {
         SkillLesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new SkillLessonException("经验不存在: " + lessonId));
+                .orElseThrow(() -> new SkillLessonException(I18n.message("agent.error.skill_lesson.not_found", new Object[]{lessonId})));
 
         SkillLesson updated = lesson.withUsed();
         lessonRepository.save(updated);
@@ -227,7 +228,7 @@ public class SkillLessonRecorder {
      */
     public SkillLesson updateConfidence(String lessonId, int newConfidence) {
         SkillLesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new SkillLessonException("经验不存在: " + lessonId));
+                .orElseThrow(() -> new SkillLessonException(I18n.message("agent.error.skill_lesson.not_found", new Object[]{lessonId})));
 
         SkillLesson updated = lesson.withConfidence(newConfidence);
         lessonRepository.save(updated);
@@ -245,10 +246,10 @@ public class SkillLessonRecorder {
      */
     public void deleteLesson(String lessonId, String tenantId) {
         SkillLesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new SkillLessonException("经验不存在: " + lessonId));
+                .orElseThrow(() -> new SkillLessonException(I18n.message("agent.error.skill_lesson.not_found", new Object[]{lessonId})));
 
         if (!lesson.getTenantId().equals(tenantId)) {
-            throw new SkillLessonException("无权删除此经验");
+            throw new SkillLessonException(I18n.message("agent.error.skill_lesson.no_permission"));
         }
 
         lessonRepository.delete(lessonId);

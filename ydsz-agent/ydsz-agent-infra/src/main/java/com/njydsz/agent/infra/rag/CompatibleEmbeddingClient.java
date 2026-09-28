@@ -13,6 +13,7 @@ import com.njydsz.agent.domain.rag.EmbeddingClient;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * Embedding 客户端实现
@@ -132,7 +133,7 @@ public class CompatibleEmbeddingClient implements EmbeddingClient {
     ObjectNode obj = YdszJson.parseObject(json);
     ArrayNode data = obj.getArrayNode("data");
     if (data == null || data.isEmpty()) {
-      throw new LlmException("Embedding 响应无 data", LlmException.ErrorType.INVALID_RESPONSE);
+      throw new LlmException(I18n.message("agent.error.embedding.no_data"), LlmException.ErrorType.INVALID_RESPONSE);
     }
     List<List<Float>> result = new ArrayList<>(data.size());
     for (int i = 0; i < data.size(); i++) {

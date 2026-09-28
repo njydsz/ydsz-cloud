@@ -31,6 +31,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
@@ -219,7 +220,7 @@ public class CompatibleLlmClient implements LlmClient {
       }
       try {
         if (!concurrencyLimiter.tryAcquire(timeoutSeconds, TimeUnit.SECONDS)) {
-          throw new LlmException("LLM 并发限流等待超时", LlmException.ErrorType.RATE_LIMITED, null);
+          throw new LlmException(I18n.message("agent.error.llm.rate_limited"), LlmException.ErrorType.RATE_LIMITED, null);
         }
         try {
           String responseJson =
@@ -249,7 +250,7 @@ public class CompatibleLlmClient implements LlmClient {
       } catch (HttpClientErrorException e) {
         LlmException.ErrorType errorType = mapHttpError(e.getStatusCode().value());
         lastException =
-            new LlmException("LLM 调用失败 (HTTP " + e.getStatusCode().value() + ")", errorType, e);
+            new LlmException(I18n.message("agent.error.llm.rate_limited_sync", new Object[]{e.getStatusCode().value()}), errorType, e);
         if (errorType != LlmException.ErrorType.RATE_LIMITED || attempt >= maxRetries) {
           log.error("[LLM-{}] 同步调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
           throw (LlmException) lastException;
@@ -258,7 +259,7 @@ public class CompatibleLlmClient implements LlmClient {
       } catch (ResourceAccessException e) {
         lastException =
             new LlmException(
-                "LLM 网络超时或连接拒绝: " + e.getMessage(), LlmException.ErrorType.NETWORK_TIMEOUT, e);
+                I18n.message("agent.error.llm.network_error", new Object[]{e.getMessage()}), LlmException.ErrorType.NETWORK_TIMEOUT, e);
         if (attempt >= maxRetries) {
           log.error("[LLM-{}] 同步调用网络异常: {}", provider, e.getMessage());
           throw (LlmException) lastException;
@@ -269,12 +270,12 @@ public class CompatibleLlmClient implements LlmClient {
         if (attempt >= maxRetries) {
           log.error("[LLM-{}] 同步调用失败: {}", provider, e.getMessage(), e);
           throw new LlmException(
-              "LLM 调用失败: " + e.getMessage(), LlmException.ErrorType.PROVIDER_ERROR, e);
+              I18n.message("agent.error.llm.call_failed_generic", new Object[]{e.getMessage()}), LlmException.ErrorType.PROVIDER_ERROR, e);
         }
         log.warn("[LLM-{}] 未知错误重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
       }
     }
-    throw new LlmException("LLM 调用重试耗尽", LlmException.ErrorType.PROVIDER_ERROR, lastException);
+    throw new LlmException(I18n.message("agent.error.llm.retry_exhausted"), LlmException.ErrorType.PROVIDER_ERROR, lastException);
   }
 
   private boolean isRetryable(LlmException e) {
@@ -298,7 +299,7 @@ public class CompatibleLlmClient implements LlmClient {
                 // P1 优化：检测到承载线程中断（客户端断开/请求取消）时主动终止流，
                 // Reactor 会取消上游 HTTP 请求，避免连接长期占用
                 if (Thread.currentThread().isInterrupted()) {
-                  throw new LlmException("LLM 流式调用被取消（连接中断）", LlmException.ErrorType.CANCELED);
+                  throw new LlmException(I18n.message("agent.error.llm.stream_canceled"), LlmException.ErrorType.CANCELED);
                 }
                 if (line.startsWith("data: ")) {
                   String sseDataFragment = line.substring(SSE_DATA_PREFIX_LENGTH).trim();
@@ -319,15 +320,15 @@ public class CompatibleLlmClient implements LlmClient {
     } catch (WebClientResponseException e) {
       LlmException.ErrorType errorType = mapHttpError(e.getStatusCode().value());
       log.error("[LLM-{}] 流式调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
-      throw new LlmException("LLM 流式调用失败 (HTTP " + e.getStatusCode().value() + ")", errorType, e);
+      throw new LlmException(I18n.message("agent.error.llm.stream_http_error", new Object[]{e.getStatusCode().value()}), errorType, e);
     } catch (Exception e) {
       if (isTimeoutException(e)) {
         log.error("[LLM-{}] 流式调用超时: {}", provider, e.getMessage());
-        throw new LlmException("LLM 流式调用超时", LlmException.ErrorType.NETWORK_TIMEOUT, e);
+        throw new LlmException(I18n.message("agent.error.llm.stream_timeout"), LlmException.ErrorType.NETWORK_TIMEOUT, e);
       }
       log.error("[LLM-{}] 流式调用异常: {}", provider, e.getMessage(), e);
       throw new LlmException(
-          "LLM 流式调用失败: " + e.getMessage(), LlmException.ErrorType.PROVIDER_ERROR, e);
+          I18n.message("agent.error.llm.stream_generic_error", new Object[]{e.getMessage()}), LlmException.ErrorType.PROVIDER_ERROR, e);
     }
   }
 
@@ -375,7 +376,7 @@ public class CompatibleLlmClient implements LlmClient {
     String model = obj.get("model").asText();
     ArrayNode choices = (ArrayNode) obj.get("choices");
     if (choices == null || choices.size() == 0) {
-      throw new LlmException("LLM 响应无 choices", LlmException.ErrorType.INVALID_RESPONSE);
+      throw new LlmException(I18n.message("agent.error.llm.no_choices"), LlmException.ErrorType.INVALID_RESPONSE);
     }
     ObjectNode choice = (ObjectNode) choices.get(0);
     ObjectNode message = choice.has("message") ? (ObjectNode) choice.get("message") : null;
@@ -535,7 +536,7 @@ public class CompatibleLlmClient implements LlmClient {
         "input", text);
     try {
       if (!concurrencyLimiter.tryAcquire(timeoutSeconds, TimeUnit.SECONDS)) {
-        throw new LlmException("LLM 并发限流等待超时（embedding）", LlmException.ErrorType.RATE_LIMITED, null);
+        throw new LlmException(I18n.message("agent.error.llm.embedding_rate_limited"), LlmException.ErrorType.RATE_LIMITED, null);
       }
       try {
         String responseJson =
@@ -555,7 +556,7 @@ public class CompatibleLlmClient implements LlmClient {
     } catch (Exception e) {
       log.error("[LLM-{}] embedding 调用失败: {}", provider, e.getMessage(), e);
       throw new LlmException(
-          "embedding 调用失败: " + e.getMessage(), LlmException.ErrorType.PROVIDER_ERROR, e);
+          I18n.message("agent.error.llm.embedding_failed", new Object[]{e.getMessage()}), LlmException.ErrorType.PROVIDER_ERROR, e);
     }
   }
 

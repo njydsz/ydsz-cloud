@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 触发器执行服务。
@@ -54,7 +55,7 @@ public class TriggerExecutionService {
         } catch (Exception e) {
             log.error("[TriggerExecution] 触发器执行失败: triggerId={}, error={}",
                     triggerId, e.getMessage(), e);
-            throw new TriggerExecutionException("触发器执行失败: " + triggerId, e);
+            throw new TriggerExecutionException(I18n.message("agent.error.trigger.execution_failed", new Object[]{triggerId}), e);
         }
     }
 

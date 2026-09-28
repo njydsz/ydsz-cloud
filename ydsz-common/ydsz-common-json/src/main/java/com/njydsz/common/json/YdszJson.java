@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonException;
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.provider.SerializationProvider;
@@ -325,7 +324,7 @@ public class YdszJson {
       return null;
     }
     if (Map.class.isAssignableFrom(collectionClass)) {
-      throw new IllegalArgumentException(I18n.message("common.json.map_type_must_use_specialized"));
+      throw new IllegalArgumentException("Map type must use specialized method");
     }
     Type type =
         TypeFactory.getInstance()

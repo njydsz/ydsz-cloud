@@ -22,6 +22,7 @@ import com.njydsz.generator.entity.GenTableMeta;
 import com.njydsz.generator.security.PermissionCodes;
 import com.njydsz.generator.service.DatasourceService;
 import com.njydsz.generator.service.TableMetadataService;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 表元数据管理 REST 控制器。
@@ -70,7 +71,7 @@ public class TableMetaController {
   public YdszResponse<List<GenTableMeta>> refreshTables(@RequestParam Long datasourceId) {
     GenDatasource ds = datasourceService.getById(datasourceId);
     if (ds == null) {
-      throw new IllegalArgumentException("数据源不存在: " + datasourceId);
+      throw new IllegalArgumentException(I18n.message("generator.table_meta.datasource_not_found", new Object[]{datasourceId}));
     }
     return YdszResponse.success(tableMetadataService.refreshTables(ds));
   }

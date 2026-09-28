@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.cronjob.domain.job.JobExecutionException;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -96,14 +97,14 @@ public class HttpJobHandler implements JobHandler {
   @Override
   public Object execute(String paramsJson) throws JobExecutionException {
     if (paramsJson == null || paramsJson.isBlank()) {
-      throw new IllegalArgumentException("HTTP 任务参数(paramsJson)为空");
+      throw new IllegalArgumentException(I18n.message("cronjob.http.params_empty"));
     }
 
     ObjectNode params = YdszJson.parseObject(paramsJson);
 
     String url = params.getString("url");
     if (url == null || url.isBlank()) {
-      throw new IllegalArgumentException("HTTP 任务参数缺少 url");
+      throw new IllegalArgumentException(I18n.message("cronjob.http.url_required"));
     }
 
     String method = params.getString("method");
@@ -151,7 +152,7 @@ public class HttpJobHandler implements JobHandler {
       case "PATCH" -> requestBuilder.method("PATCH", bodyPublisher);
       case "DELETE" -> requestBuilder.DELETE();
       case "HEAD" -> requestBuilder.method("HEAD", HttpRequest.BodyPublishers.noBody());
-      default -> throw new IllegalArgumentException("不支持的 HTTP 方法: " + method);
+      default -> throw new IllegalArgumentException(I18n.message("cronjob.http.method_unsupported", new Object[]{method}));
     }
 
     // 执行请求（IO/中断异常统一转为 JobExecutionException，保持执行失败语义）
@@ -161,10 +162,10 @@ public class HttpJobHandler implements JobHandler {
     try {
       response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
     } catch (IOException e) {
-      throw new JobExecutionException("HTTP 请求失败: " + url + " reason=" + e.getMessage(), e);
+      throw new JobExecutionException(I18n.message("cronjob.http.request_failed", new Object[]{url, e.getMessage()}), e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new JobExecutionException("HTTP 请求被中断: " + url + " reason=" + e.getMessage(), e);
+      throw new JobExecutionException(I18n.message("cronjob.http.request_interrupted", new Object[]{url, e.getMessage()}), e);
     }
 
     int status = response.statusCode();

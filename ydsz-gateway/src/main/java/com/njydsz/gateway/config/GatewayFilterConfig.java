@@ -12,6 +12,7 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import com.njydsz.gateway.exception.GatewayExceptionHandler;
+import com.njydsz.common.locales.util.I18n;
 
 /**
  * 网关 Web 层过滤器配置（CORS + 全局异常处理 + 安全响应头）。
@@ -95,13 +96,11 @@ public class GatewayFilterConfig {
     String origin = corsProperties.getAllowedOrigin();
     if (WILDCARD_ORIGIN.equals(origin)) {
       throw new IllegalStateException(
-          "CORS 安全违规：allowCredentials=true 时禁止使用通配符 Origin (* ),"
-              + "必须在 ydsz.gateway.cors.allowed-origin 中配置单一可信来源（如 https://ydsz.example.com）");
+          I18n.message("gateway.cors.wildcard_origin_blocked"));
     }
     if (origin == null || origin.isBlank()) {
       throw new IllegalStateException(
-          "CORS 安全违规：allowCredentials=true 时 allowed-origin 不能为空，"
-              + "必须配置单一可信来源（如 https://ydsz.example.com）");
+          I18n.message("gateway.cors.origin_required"));
     }
   }
 

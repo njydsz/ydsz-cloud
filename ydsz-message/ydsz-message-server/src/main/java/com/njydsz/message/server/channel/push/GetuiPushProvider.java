@@ -19,6 +19,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.config.MessageProperties;
 
@@ -189,7 +190,7 @@ public class GetuiPushProvider implements PushProvider {
         tokenExpireAt = System.currentTimeMillis() + TOKEN_VALID_HOURS * MILLIS_PER_HOUR;
         return cachedToken;
       }
-      throw new IllegalStateException("个推鉴权失败: " + MapUtils.getString(json, "msg"));
+      throw new IllegalStateException(I18n.message("message.getui.auth_failed", new Object[]{MapUtils.getString(json, "msg")}));
     }
   }
 }
