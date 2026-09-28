@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.enums.CronjobExceptionCode;
@@ -150,7 +151,7 @@ public class ScriptJobHandler implements JobHandler {
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
       }
-      throw new JobExecutionException("脚本执行失败: reason=" + e.getMessage(), e);
+      throw new JobExecutionException(I18n.message("cronjob.script.execution_failed", new Object[]{e.getMessage()}), e);
     }
   }
 
