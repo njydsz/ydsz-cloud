@@ -1,5 +1,7 @@
 package com.njydsz.literule.server.service;
 
+import com.njydsz.literule.domain.service.DecisionTableExcelService;
+
 /**
  * 决策表 Excel 导入导出服务接口（应用服务层）
  *
@@ -10,5 +12,5 @@ package com.njydsz.literule.server.service;
  * @since 26.09.01
  */
 public interface DecisionTableExcelService
-    extends com.njydsz.literule.domain.service.DecisionTableExcelService {
+    extends DecisionTableExcelService {
 }

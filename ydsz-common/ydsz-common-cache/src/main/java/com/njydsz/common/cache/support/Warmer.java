@@ -1,5 +1,7 @@
 package com.njydsz.common.cache.support;
 
+import com.njydsz.common.cache.api.Cache;
+
 /**
  * 缓存预热器 SPI — 在应用启动时主动加载热点数据到缓存。
  *
@@ -37,5 +39,5 @@ public interface Warmer {
    *
    * @param cache 目标缓存实例（由调用方传入，非空）
    */
-  void warm(com.njydsz.common.cache.api.Cache<String, Object> cache);
+  void warm(Cache<String, Object> cache);
 }
