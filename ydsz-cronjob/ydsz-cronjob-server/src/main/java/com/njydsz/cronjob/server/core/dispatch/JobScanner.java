@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,6 +26,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.vo.JobVO;
@@ -332,10 +335,15 @@ public class JobScanner {
     AtomicInteger skipCount = new AtomicInteger(0);
     AtomicInteger failCount = new AtomicInteger(0);
     List<CompletableFuture<Void>> futures = new ArrayList<>(dueJobs.size());
+    final Locale currentLocale = Locales.current();
+
     for (JobVO job : dueJobs) {
       CompletableFuture<Void> f =
           CompletableFuture.runAsync(
-              () -> dispatchSingleJob(job, now, metrics, successCount, skipCount, failCount, scanEpoch),
+              I18nContextPropagator.wrap(
+                  () -> dispatchSingleJob(
+                      job, now, metrics, successCount, skipCount, failCount, scanEpoch),
+                  currentLocale),
               dispatchPool);
       futures.add(f);
     }

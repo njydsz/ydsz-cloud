@@ -123,6 +123,23 @@ public class CacheKeyBuilder extends AbstractModuleCacheKeyBuilder {
     return buildKeyPattern("node", "blacklist", segment);
   }
 
+  // ============================== L1 本地缓存内部 key ==============================
+
+  /**
+   * 生成「L1 本地 YdszCache」内部 key（仅用于本地缓存 Map 的 key，非 Redis Key）。
+   *
+   * <p>格式：{@code ydsz:{tenantId}:cronjob:cache:job-l1:{jobKey}}
+   *
+   * <p><b>注意：</b>此 key 仅用于 {@code YdszCache#getIfPresent()} 等本地缓存操作，
+   * 不会写入 Redis。通过 CacheKeyBuilder 保证重启/多实例间的 key 格式一致性。
+   *
+   * @param jobKey 任务标识
+   * @return 租户隔离的本地缓存键
+   */
+  public String jobL1Key(String jobKey) {
+    return buildKeyPattern("cache", "job-l1", jobKey);
+  }
+
   // ============================== 任务通用操作 key ==============================
 
   /**

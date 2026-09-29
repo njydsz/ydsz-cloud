@@ -26,6 +26,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-literule-domain</artifactId>
         </dependency>
+        <!-- ydsz-common-excel：决策表 Excel 导入导出（P2-3 迁移 DecisionTableExcelExporter 至 app 层） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
