@@ -14,21 +14,23 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.repository.TenantQuotaRepository;
 import com.njydsz.cronjob.domain.vo.TenantQuotaVO;
+import com.njydsz.cronjob.server.cache.CacheKeyBuilder;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.redis.CronjobRedisOps;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 
 /**
  * 租户配额服务实现。
  *
- * <p>管理租户的任务配额 ({@code ydsz_job_tenant_quota})：并发任务数上限、日调度次数上限、
+ * <p>管理租户的任务配额 ({@code ydzs_job_tenant_quota})：并发任务数上限、日调度次数上限、
+ * 单租户 Worker 数量、跨租户任务隔离。配额耗尽时拒绝任务提交并返回 429 Too Many Requests。
  *
- * <p>单租户 Worker 数量、跨租户任务隔离。
- *
- * <p>配额耗尽时拒绝任务提交并返回 429 Too Many Requests。
+ * <p><b>P2-1 整改（26.09.30）</b>：使用 {@link CacheKeyBuilder} 构造租户隔离的 Redis key，
+ * 通过 {@link CronjobRedisOps} 执行操作，替代此前直接注入 {@code RedisStringOps} 并手写硬编码前缀
+ * （{@code "ydsz:quota:concurrent:"} / {@code "ydsz:quota:daily:"}）的违规方式。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -47,14 +49,11 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   /** 定时任务模块配置属性 */
   private final CronjobProperties cronjobProperties;
 
-  /** P7-3: Redis String 操作（并发 + 日执行量） */
-  private final RedisStringOps redisStringOps;
+  /** P2-1 整改：模块级 Redis 操作收敛入口（封装 RedisStringOps + 统一异常降级） */
+  private final CronjobRedisOps cronjobRedisOps;
 
-  /** Redis key 前缀：并发计数器 */
-  private static final String CONCURRENT_KEY_PREFIX = "ydsz:quota:concurrent:";
-
-  /** Redis key 前缀：日执行计数器 */
-  private static final String DAILY_KEY_PREFIX = "ydsz:quota:daily:";
+  /** P2-1 整改：缓存键构造器（替代手写硬编码前缀） */
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /** 并发计数器 TTL（小时），兜底防止节点宕机导致计数泄漏 */
   @Value("${ydsz.cronjob.quota.concurrent-ttl-hours:24}")
@@ -81,7 +80,6 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     }
     Integer maxJobs = resolveMaxJobs(tenantId);
     if (maxJobs == null) {
-      // null = unlimited
       return;
     }
     long currentCount = countJobsByTenant(tenantId);
@@ -104,7 +102,6 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     }
     Integer maxConcurrent = resolveMaxConcurrent(tenantId);
     if (maxConcurrent == null) {
-      // null = unlimited
       return;
     }
     long currentConcurrent = getConcurrentCount(tenantId);
@@ -131,7 +128,6 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     }
     Integer maxDaily = resolveMaxDailyExecutions(tenantId);
     if (maxDaily == null) {
-      // null = unlimited
       return;
     }
     long currentDaily = getDailyCount(tenantId);
@@ -145,29 +141,28 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     log.debug("[Quota] 日执行量配额检查通过: tenant={} current={} max={}", tenantId, currentDaily, maxDaily);
   }
 
-  // ==================== P7-3: 执行计数器 ====================
+  // ==================== P2-1 整改：执行计数器（使用 CronjobRedisOps + CacheKeyBuilder） ====================
 
   @Override
   public void recordExecutionStart(String tenantId) {
     if (!isQuotaEnabled() || tenantId == null || tenantId.isBlank()) {
       return;
     }
-    String concurrentKey = CONCURRENT_KEY_PREFIX + tenantId;
-    String dailyKey = DAILY_KEY_PREFIX + tenantId + ":" + todaySuffix();
+    // P2-1: 通过 CacheKeyBuilder 构造租户隔离 key
+    String concurrentKey = cacheKeyBuilder.quotaConcurrent(tenantId);
+    String dailyKey = cacheKeyBuilder.quotaDaily(tenantId, todaySuffix());
     try {
-      // INCR 并发计数器，首次设置 TTL
-      Long concurrentVal = redisStringOps.incr(concurrentKey, 1);
+      Long concurrentVal = cronjobRedisOps.incrRaw(concurrentKey, 1);
       if (concurrentVal != null && concurrentVal == 1L) {
-        redisStringOps.expire(concurrentKey, Duration.ofHours(concurrentTtlHours));
+        cronjobRedisOps.expireRaw(concurrentKey, concurrentTtlHours * Duration.ofHours(1).getSeconds());
       }
     } catch (Exception e) {
       log.warn("[Quota] INCR 并发计数器失败, 降级放行: tenant={} reason={}", tenantId, e.getMessage());
     }
     try {
-      // INCR 日执行计数器，首次设置 TTL
-      Long dailyVal = redisStringOps.incr(dailyKey, 1);
+      Long dailyVal = cronjobRedisOps.incrRaw(dailyKey, 1);
       if (dailyVal != null && dailyVal == 1L) {
-        redisStringOps.expire(dailyKey, Duration.ofHours(dailyTtlHours));
+        cronjobRedisOps.expireRaw(dailyKey, dailyTtlHours * Duration.ofHours(1).getSeconds());
       }
     } catch (Exception e) {
       log.warn("[Quota] INCR 日执行计数器失败, 降级放行: tenant={} reason={}", tenantId, e.getMessage());
@@ -179,14 +174,12 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     if (!isQuotaEnabled() || tenantId == null || tenantId.isBlank()) {
       return;
     }
-    String concurrentKey = CONCURRENT_KEY_PREFIX + tenantId;
+    String concurrentKey = cacheKeyBuilder.quotaConcurrent(tenantId);
     try {
-      // DECR 并发计数器，保证不会为负
-      long val = redisStringOps.decr(concurrentKey, 1);
+      long val = cronjobRedisOps.decrRaw(concurrentKey, 1);
       if (val < 0L) {
-        // 防御性处理：如果 DECR 后为负数，重置为 0（可能因宕机导致计数器错乱）
         log.warn("[Quota] 并发计数器为负数, 重置为 0: tenant={} value={}", tenantId, val);
-        redisStringOps.set(concurrentKey, "0");
+        cronjobRedisOps.setLongRaw(concurrentKey, 0L);
       }
     } catch (Exception e) {
       log.warn("[Quota] DECR 并发计数器失败(不影响主流程): tenant={} reason={}", tenantId, e.getMessage());
@@ -203,13 +196,11 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   private Integer resolveMaxJobs(String tenantId) {
     Optional<TenantQuotaVO> quota = getQuotaOpt(tenantId);
     if (quota.isPresent() && Boolean.FALSE.equals(isEnabled(quota.get()))) {
-      // 租户级禁用配额检查
       return null;
     }
     if (quota.isPresent() && quota.get().getMaxJobs() != null) {
       return quota.get().getMaxJobs();
     }
-    // 降级到全局默认
     return cronjobProperties.getQuota() != null
         ? cronjobProperties.getQuota().getDefaultMaxJobs()
         : null;
@@ -272,7 +263,6 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
    */
   private long countJobsByTenant(String tenantId) {
     try {
-      // 走 Repository 业务方法（拦截器自动注入 tenant_id 和 deleted 条件），避免直接使用 MyBatis Plus Wrapper 穿透 DDD 分层
       return jobRepository.countAll();
     } catch (Exception e) {
       log.warn("[Quota] 统计任务数失败, 降级放行: tenant={} reason={}", tenantId, e.getMessage());
@@ -283,7 +273,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   /** 获取租户当前并发执行数（容错：Redis 失败时返回 0，降级放行）。 */
   private long getConcurrentCount(String tenantId) {
     try {
-      String quotaValue = redisStringOps.get(CONCURRENT_KEY_PREFIX + tenantId, String.class);
+      String quotaValue = cronjobRedisOps.get(cacheKeyBuilder.quotaConcurrent(tenantId), String.class);
       if (quotaValue == null || quotaValue.isEmpty()) {
         return 0L;
       }
@@ -297,8 +287,8 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   /** 获取租户当日执行数（容错：Redis 失败时返回 0，降级放行）。 */
   private long getDailyCount(String tenantId) {
     try {
-      String key = DAILY_KEY_PREFIX + tenantId + ":" + todaySuffix();
-      String quotaValue = redisStringOps.get(key, String.class);
+      String key = cacheKeyBuilder.quotaDaily(tenantId, todaySuffix());
+      String quotaValue = cronjobRedisOps.get(key, String.class);
       if (quotaValue == null || quotaValue.isEmpty()) {
         return 0L;
       }

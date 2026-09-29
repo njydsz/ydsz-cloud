@@ -52,7 +52,7 @@ public class FlowClusterLockHelper {
    */
   public <T> T tryRun(String lockKey, long leaseTimeSec, Supplier<T> task) {
     String fullKey = LOCK_PREFIX + lockKey;
-    return lockTemplate.executeOrDefault(fullKey, 0L, leaseTimeSec, TimeUnit.SECONDS, task, null);
+    return lockTemplate.executeOrDefault(fullKey, leaseTimeSec, TimeUnit.SECONDS, task, null);
   }
 
   /**

@@ -87,6 +87,17 @@ ydsz:
     default-header: X-Tenant-Id
     super-tenant-id: "0"
     system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /favicon.ico
+      - /error
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
   # P1-1: LLM 语义缓存配置（YDIZ-ENG-002 — TTL/容量已外部化，禁止硬编码）
   agent:
     enabled: true

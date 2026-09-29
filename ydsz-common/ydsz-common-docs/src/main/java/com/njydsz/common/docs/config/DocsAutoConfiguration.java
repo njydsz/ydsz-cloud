@@ -10,7 +10,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.util.ExecutorUtils.BlockingQueueType;
 
 import com.njydsz.common.docs.health.DocsHealthIndicator;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
@@ -93,22 +95,24 @@ public class DocsAutoConfiguration {
    */
   @Bean(name = "docsAsyncExecutor", destroyMethod = "shutdown")
   @ConditionalOnMissingBean(name = "docsAsyncExecutor")
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — L5 业务模块提供默认线程池 Bean，
-  // 应用方可通过同名 Bean 覆盖。使用 ThreadPoolTaskExecutor 以便 Spring 容器托管生命周期
-  public ThreadPoolTaskExecutor docsAsyncExecutor(DocsProperties properties) {
-    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-    executor.setCorePoolSize(properties.getAsyncPoolSize());
-    executor.setMaxPoolSize(properties.getAsyncPoolSize());
-    executor.setQueueCapacity(properties.getAsyncQueueCapacity());
-    executor.setThreadNamePrefix("docs-async-");
-    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-    executor.setWaitForTasksToCompleteOnShutdown(true);
-    executor.setAwaitTerminationSeconds(10);
-    executor.initialize();
+  public ThreadPoolExecutor docsAsyncExecutor(DocsProperties properties) {
+    // P1-2: 使用 ExecutorUtils.Builder 统一创建（caller-runs 拒绝策略 + daemon），
+    // 自动注册到 ThreadPoolRegistry 统一监控；原 ThreadPoolTaskExecutor 配置语义保持一致
+    int poolSize = properties.getAsyncPoolSize();
+    int queueCapacity = properties.getAsyncQueueCapacity();
+    ThreadPoolExecutor executor = ExecutorUtils.builder()
+        .corePoolSize(poolSize)
+        .maxPoolSize(poolSize)
+        .queueType(BlockingQueueType.LINKED)
+        .queueCapacity(queueCapacity)
+        .threadNamePrefix("docs-async-")
+        .daemon(true)
+        .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
+        .buildAndRegister();
     log.info(
         "[DocsAutoConfiguration] 已创建默认 docsAsyncExecutor (poolSize={}, queueCapacity={})",
-        properties.getAsyncPoolSize(),
-        properties.getAsyncQueueCapacity());
+        poolSize,
+        queueCapacity);
     return executor;
   }
 }

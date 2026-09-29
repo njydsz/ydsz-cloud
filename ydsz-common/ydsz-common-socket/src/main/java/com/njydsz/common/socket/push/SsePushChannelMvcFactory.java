@@ -1,11 +1,12 @@
 package com.njydsz.common.socket.push;
 
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.DisposableBean;
+
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * SSE 通道工厂的 Spring MVC 实现（创建 {@link SsePushChannelMvcAdapter} 实例）。
@@ -21,13 +22,9 @@ import org.springframework.beans.factory.DisposableBean;
  */
 public class SsePushChannelMvcFactory implements SsePushChannelFactory, DisposableBean {
 
-  /** 心跳共享调度器 */
+  /** 心跳共享调度器（P1-1: 使用 InternalExecutorFactory 统一管理，纳入 ThreadPoolRegistry 监控） */
   private final ScheduledExecutorService heartbeatScheduler =
-      Executors.newScheduledThreadPool(2, r -> {
-        Thread t = new Thread(r, "sse-heartbeat-" + UUID.randomUUID().toString().substring(0, 8));
-        t.setDaemon(true);
-        return t;
-      });
+      InternalExecutorFactory.newScheduledThreadPool("sse-heartbeat", 2);
 
   @Override
   public SsePushChannel create() {

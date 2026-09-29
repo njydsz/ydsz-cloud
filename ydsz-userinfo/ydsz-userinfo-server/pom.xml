@@ -195,11 +195,12 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- TODO(P2 显式依赖标注 26.09.27)：
-             本模块源码直接使用 ydsz-common-tenant 的多租户上下文能力（TenantContextHolder.getTenantId），
-             当前仅通过 ydsz-common-core / ydsz-common-web 传递获得。
-             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
-        <!-- TODO(P2 显式依赖标注 26.09.27)：
+        <!-- P0-FIX: 显式声明 tenant（UserinfoSearchController/SessionActivityService 直接使用 TenantContextHolder） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
+        <!-- TODO(P2 显式依赖标注 26.09.27）：
              本模块已有完整 i18n 骨架但尚未显式声明 ydsz-common-locales 依赖，
              当前仅通过 ydsz-common-web / ydsz-common-core 传递获得 i18n 能力。
              待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->

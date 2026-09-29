@@ -212,12 +212,13 @@ public class CronjobRedisOps {
     }
   }
 
-  // ======================== 原始 key 操作（LockKeyUtil 等已包含前缀的场景） ========================
+  // ======================== 原始 key 操作（LockKeyUtil / CacheKeyBuilder 等已包含前缀的场景） ========================
 
   /**
    * 获取指定原始 key 的值（String 类型）。
    *
-   * <p>适用于 key 已包含模块前缀的场景（如 {@code LockKeyUtil} 构造的 {@code ydzs:job:lock:{jobKey}}）。
+   * <p>适用于 key 已包含模块前缀的场景（如 {@code LockKeyUtil} 构造的 {@code ydzs:job:lock:{jobKey}}，
+   * 或 {@code CacheKeyBuilder} 生成的完整租户隔离 key）。
    *
    * @param rawKey 完整 Redis key（已含前缀）
    * @return 值；不存在或异常返回 null
@@ -228,6 +229,70 @@ public class CronjobRedisOps {
     } catch (Exception e) {
       log.debug("[CronjobRedis] GET_RAW 异常: key={} reason={}", rawKey, e.getMessage());
       return null;
+    }
+  }
+
+  /**
+   * 对指定原始 key 原子递增（不添加模块前缀）。
+   *
+   * <p>适用于传入完整 Redis key 的场景（如 {@code CacheKeyBuilder} 生成的租户隔离 key）。
+   *
+   * @param rawKey 完整 Redis key（已含前缀）
+   * @param delta  增量
+   * @return 递增后的值；异常返回 null
+   */
+  public Long incrRaw(String rawKey, long delta) {
+    try {
+      return redisStringOps.incr(rawKey, delta);
+    } catch (Exception e) {
+      log.warn("[CronjobRedis] INCR_RAW 异常: key={} reason={}", rawKey, e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * 对指定原始 key 原子递减（不添加模块前缀）。
+   *
+   * <p>适用于传入完整 Redis key 的场景（如 {@code CacheKeyBuilder} 生成的租户隔离 key）。
+   *
+   * @param rawKey 完整 Redis key（已含前缀）
+   * @param delta  减量
+   * @return 递减后的值；异常返回 0
+   */
+  public long decrRaw(String rawKey, long delta) {
+    try {
+      return redisStringOps.decr(rawKey, delta);
+    } catch (Exception e) {
+      log.warn("[CronjobRedis] DECR_RAW 异常: key={} reason={}", rawKey, e.getMessage());
+      return 0;
+    }
+  }
+
+  /**
+   * 设置指定原始 key 的过期时间（不添加模块前缀）。
+   *
+   * @param rawKey 完整 Redis key（已含前缀）
+   * @param ttlSeconds TTL（秒）
+   */
+  public void expireRaw(String rawKey, long ttlSeconds) {
+    try {
+      redisStringOps.expire(rawKey, ttlSeconds);
+    } catch (Exception e) {
+      log.debug("[CronjobRedis] EXPIRE_RAW 异常: key={} reason={}", rawKey, e.getMessage());
+    }
+  }
+
+  /**
+   * 设置指定原始 key 的 long 值（不添加模块前缀）。
+   *
+   * @param rawKey 完整 Redis key（已含前缀）
+   * @param value   计数值
+   */
+  public void setLongRaw(String rawKey, long value) {
+    try {
+      redisStringOps.set(rawKey, String.valueOf(value));
+    } catch (Exception e) {
+      log.warn("[CronjobRedis] SET_LONG_RAW 异常: key={} reason={}", rawKey, e.getMessage());
     }
   }
 }

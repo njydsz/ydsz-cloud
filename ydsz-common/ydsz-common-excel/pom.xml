@@ -110,6 +110,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- ydzz-common-thread：AsyncReadBridge 统一使用 ExecutorUtils.newVirtualThreadExecutor 替代反射 hack（P0-3） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
+
         <!-- JUnit 5 (test scope) -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
