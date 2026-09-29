@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +17,8 @@ import com.njydsz.agent.domain.dto.AgentApprovalDTO;
 import com.njydsz.agent.domain.model.SseEvent;
 import com.njydsz.agent.domain.repository.AgentApprovalRepository;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.exception.code.CoreExceptionCode;
@@ -66,8 +67,11 @@ public class HumanApprovalService {
   /** 审批结果事件类型（审批通过/拒绝统一发布，metadata.status 区分） */
   private static final String EVENT_APPROVAL_RESOLVED = "AGENT_APPROVAL_RESOLVED";
 
-  /** 审批请求内存缓存（id → 请求，DB 为准，缓存仅加速热查询） */
-  private final ConcurrentMap<String, ApprovalRequest> pendingApprovals = new ConcurrentHashMap<>();
+  /** 审批请求内存缓存（YdszCache 替代 ConcurrentHashMap，DB 为准，缓存仅加速热查询） */
+  private final Cache<String, ApprovalRequest> pendingApprovals = YdszCache.<String, ApprovalRequest>newBuilder()
+      .maximumSize(500)
+      .expireAfterAccess(24, TimeUnit.HOURS)
+      .build();
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final AgentApprovalRepository agentApprovalRepository;
@@ -124,7 +128,7 @@ public class HumanApprovalService {
       String stepDescription,
       Map<String, Object> context,
       Consumer<SseEvent> eventConsumer) {
-    if (pendingApprovals.size() >= MAX_PENDING) {
+    if (pendingApprovals.estimatedSize() >= MAX_PENDING) {
       evictExpired();
     }
     String approvalId = String.valueOf(snowflakeIdGenerator.nextId());
@@ -221,7 +225,7 @@ public class HumanApprovalService {
    * @return 审批请求，不存在时返回 null
    */
   public ApprovalRequest getApproval(String approvalId) {
-    ApprovalRequest cached = pendingApprovals.get(approvalId);
+    ApprovalRequest cached = pendingApprovals.getIfPresent(approvalId);
     if (cached != null) {
       return cached;
     }
@@ -329,9 +333,7 @@ public class HumanApprovalService {
     } catch (Exception e) {
       log.warn("[HITL] 过期审批清理失败: {}", e.getMessage());
     }
-    pendingApprovals
-        .entrySet()
-        .removeIf(
+    pendingApprovals.asMap().entrySet().removeIf(
             entry ->
                 entry.getValue().getStatus() == ApprovalStatus.PENDING
                     && entry.getValue().getCreatedAt().isBefore(cutoff));
@@ -344,7 +346,7 @@ public class HumanApprovalService {
       String approver,
       String comment,
       Consumer<SseEvent> eventConsumer) {
-    ApprovalRequest request = pendingApprovals.get(approvalId);
+    ApprovalRequest request = pendingApprovals.getIfPresent(approvalId);
     if (request == null) {
       Optional<AgentApprovalVO> vo = agentApprovalRepository.findById(approvalId);
       if (vo.isEmpty() || !ApprovalStatus.PENDING.name().equals(vo.get().getStatus())) {

@@ -2,7 +2,6 @@ package com.njydsz.message.server.reactive;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Sinks;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.vo.MsgNotificationVO;
 
 /**
@@ -38,6 +38,9 @@ public class ReactiveEventPublisher {
     /** 响应式事件注册表 */
     private final ReactiveSseRegistry reactiveSseRegistry;
 
+    /** 统一雪花 ID 生成器（替代 UUID，提供时间有序的业务事件 ID） */
+    private final SnowflakeIdGenerator snowflakeIdGenerator;
+
     /**
      * 将站内通知 VO 推送到响应式流。
      *
@@ -49,7 +52,7 @@ public class ReactiveEventPublisher {
      */
     public YdszResponse<String> publishNotification(MsgNotificationVO notification) {
         ReactiveEvent event = ReactiveEvent.builder()
-                .eventId(UUID.randomUUID().toString())
+                .eventId(String.valueOf(snowflakeIdGenerator.nextId()))
                 .eventType("notification")
                 .targetUserId(notification.getReceiverId())
                 .title(notification.getTitle())
@@ -87,7 +90,7 @@ public class ReactiveEventPublisher {
             Map<String, Object> data) {
 
         ReactiveEvent event = ReactiveEvent.builder()
-                .eventId(UUID.randomUUID().toString())
+                .eventId(String.valueOf(snowflakeIdGenerator.nextId()))
                 .eventType(eventType)
                 .targetUserId(targetUserId)
                 .title(title)
@@ -112,7 +115,7 @@ public class ReactiveEventPublisher {
      */
     public YdszResponse<String> broadcastSystemEvent(String title, String content, String level) {
         ReactiveEvent event = ReactiveEvent.builder()
-                .eventId(UUID.randomUUID().toString())
+                .eventId(String.valueOf(snowflakeIdGenerator.nextId()))
                 .eventType("system")
                 .targetUserId(null)
                 .title(title)

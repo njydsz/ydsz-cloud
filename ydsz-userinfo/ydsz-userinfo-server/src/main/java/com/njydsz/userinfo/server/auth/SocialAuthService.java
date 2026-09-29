@@ -1,9 +1,10 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,9 @@ public class SocialAuthService {
   private final SocialAccountRepository socialAccountRepository;
   private final Map<String, SocialAuthProvider> socialAuthProviderMap;
   private final RedisStringOps redisStringOps;
+
+  /** CSPRNG 安全随机数生成器（用于 OAuth2 state 参数，防 CSRF 熵优于 UUID v4） */
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   /**
    * 生成指定平台的授权 URL。
@@ -266,7 +270,9 @@ public class SocialAuthService {
    * @return 随机状态码
    */
   private String generateState() {
-    String state = UUID.randomUUID().toString().replace("-", "");
+    byte[] randomBytes = new byte[24];
+    SECURE_RANDOM.nextBytes(randomBytes);
+    String state = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     try {
       redisStringOps.set(
           STATE_KEY_PREFIX + state,

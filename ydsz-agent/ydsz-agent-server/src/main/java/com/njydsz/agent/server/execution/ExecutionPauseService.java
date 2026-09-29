@@ -2,8 +2,7 @@ package com.njydsz.agent.server.execution;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -14,6 +13,8 @@ import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.execution.ExecutionCheckpoint;
 import com.njydsz.agent.domain.state.AgentStateKey;
 import com.njydsz.agent.domain.state.AgentStateStore;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 
 /**
  * 执行暂停服务 — 内存管理 {@link ExecutionCheckpoint}。
@@ -32,8 +33,11 @@ public class ExecutionPauseService {
   /** 检查点默认 TTL：1 小时 */
   private static final Duration DEFAULT_TTL = Duration.ofHours(1);
 
-  /** 检查点内存缓存（单实例或 Redis 不可用时兜底） */
-  private final ConcurrentMap<String, ExecutionCheckpoint> checkpoints = new ConcurrentHashMap<>();
+  /** 检查点内存缓存（YdszCache 替代 ConcurrentHashMap，自动 TTL 清理） */
+  private final Cache<String, ExecutionCheckpoint> checkpoints = YdszCache.<String, ExecutionCheckpoint>newBuilder()
+      .maximumSize(500)
+      .expireAfterWrite(1, TimeUnit.HOURS)
+      .build();
 
   /** 可选的分布式状态存储（多副本部署时共享检查点） */
   private final AgentStateStore stateStore;
@@ -102,7 +106,7 @@ public class ExecutionPauseService {
    * @return 检查点；不存在时返回 empty
    */
   public Optional<ExecutionCheckpoint> find(String approvalId) {
-    ExecutionCheckpoint cached = checkpoints.get(approvalId);
+    ExecutionCheckpoint cached = checkpoints.getIfPresent(approvalId);
     if (cached != null) {
       return Optional.of(cached);
     }
@@ -143,7 +147,7 @@ public class ExecutionPauseService {
    * @return 数量
    */
   public int size() {
-    return checkpoints.size();
+    return (int) checkpoints.estimatedSize();
   }
 
   /**

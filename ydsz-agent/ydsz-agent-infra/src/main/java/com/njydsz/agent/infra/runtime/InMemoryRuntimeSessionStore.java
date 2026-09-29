@@ -3,7 +3,7 @@ package com.njydsz.agent.infra.runtime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.runtime.RuntimeSession;
 import com.njydsz.agent.domain.runtime.RuntimeSessionStore;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 
 /**
  * 基于内存的 Agent 运行时会话存储实现。
@@ -46,7 +48,10 @@ public class InMemoryRuntimeSessionStore implements RuntimeSessionStore {
                 return b.getStartTime().compareTo(a.getStartTime());
             };
 
-    private final ConcurrentHashMap<String, RuntimeSession> sessions = new ConcurrentHashMap<>();
+    private final Cache<String, RuntimeSession> sessions = YdszCache.<String, RuntimeSession>newBuilder()
+        .maximumSize(2000)
+        .expireAfterAccess(15, TimeUnit.MINUTES)
+        .build();
 
     @Override
     public void save(RuntimeSession session) {
@@ -58,7 +63,7 @@ public class InMemoryRuntimeSessionStore implements RuntimeSessionStore {
 
     @Override
     public Optional<RuntimeSession> findByExecutionId(String executionId) {
-        return Optional.ofNullable(sessions.get(executionId));
+        return Optional.ofNullable(sessions.getIfPresent(executionId));
     }
 
     @Override

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,6 +14,8 @@ import com.njydsz.agent.domain.trace.AgentSpan;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
 import com.njydsz.agent.domain.trace.TraceContextHolder;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 
 /**
@@ -58,8 +60,15 @@ public class ExportingTraceRecorder implements TraceRecorder {
   /** Span 导出器（OTel / Noop） */
   private final AgentSpanExporter exporter;
 
-  /** 链路级 Span 元数据（traceId → 根 Span 信息） */
-  private final Map<String, AgentRootSpanMeta> rootSpanMetas = new ConcurrentHashMap<>();
+  /**
+   * 链路级 Span 元数据（traceId → 根 Span 信息）。
+   *
+   * <p>使用 YdszCache 替代手写 ConcurrentHashMap，提供 TTL 自动清理能力。
+   */
+  private final Cache<String, AgentRootSpanMeta> rootSpanMetas = YdszCache.<String, AgentRootSpanMeta>newBuilder()
+      .maximumSize(1000)
+      .expireAfterWrite(5, TimeUnit.MINUTES)
+      .build();
 
   /**
    * 构造 Span 导出装饰器。
@@ -158,7 +167,7 @@ public class ExportingTraceRecorder implements TraceRecorder {
   private void exportStepSpan(
       String traceId, String stepType, String content, long durationMs, BigDecimal cost) {
     try {
-      AgentRootSpanMeta rootMeta = rootSpanMetas.get(traceId);
+      AgentRootSpanMeta rootMeta = rootSpanMetas.getIfPresent(traceId);
       String parentSpanId = rootMeta != null ? rootMeta.rootSpanId() : null;
       String spanId = TraceIdGenerator.generateSortableTraceId();
       Instant endTime = Instant.now();

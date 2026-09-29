@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -19,6 +19,8 @@ import com.njydsz.agent.domain.repository.PromptTemplateRepository;
 import com.njydsz.agent.domain.repository.PromptVersionRepository;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
 import com.njydsz.agent.domain.vo.PromptVersionVO;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.exception.custom.BusinessException;
 
 /**
@@ -55,8 +57,16 @@ import com.njydsz.common.exception.custom.BusinessException;
 @Service
 public class PromptManagementService {
 
-  /** 模板编码 → PromptTemplate，用于 O(1) 热点读取 */
-  private final Map<String, PromptTemplate> templateCache = new ConcurrentHashMap<>();
+  /**
+   * 模板编码 → PromptTemplate，用于 O(1) 热点读取。
+   *
+   * <p>使用 YdszCache 替代手写 ConcurrentHashMap，提供 maximumSize + expireAfterWrite 能力
+   * 防止缓存无限增长。
+   */
+  private final Cache<String, PromptTemplate> templateCache = YdszCache.<String, PromptTemplate>newBuilder()
+      .maximumSize(500)
+      .expireAfterWrite(10, TimeUnit.MINUTES)
+      .build();
 
   /** Prompt 模板 Repository */
   private final PromptTemplateRepository templateRepository;
@@ -167,7 +177,7 @@ public class PromptManagementService {
    * @return 模板快照，不存在时返回 null
    */
   public PromptTemplate get(String code) {
-    PromptTemplate cached = templateCache.get(code);
+    PromptTemplate cached = templateCache.getIfPresent(code);
     if (cached != null) {
       return cached;
     }
