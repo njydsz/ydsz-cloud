@@ -582,7 +582,7 @@ public class ExcelFacade {
     try {
       return parseAllSheets(inputStream);
     } catch (IOException e) {
-      throw new ExcelReadException("无类型全 Sheet 读取失败: " + e.getMessage(), e);
+      throw new ExcelReadException("Untyped full Sheet read failed: " + e.getMessage(), e);
     }
   }
 

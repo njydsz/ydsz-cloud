@@ -15,6 +15,8 @@ import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
@@ -188,7 +190,7 @@ public class GuardServiceImpl implements GuardService {
         return true;
       });
     } catch (Throwable t) {
-      throw new RuntimeException("check_frequency observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

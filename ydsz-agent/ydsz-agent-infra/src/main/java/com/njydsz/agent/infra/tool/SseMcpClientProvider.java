@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -361,7 +362,7 @@ public class SseMcpClientProvider implements McpClientProvider {
     if ("bearer".equalsIgnoreCase(authType)) {
       String token = server.getAuthToken();
       if (token != null && !token.isBlank()) {
-        requestBuilder.header("Authorization", "Bearer " + token);
+        requestBuilder.header(HeaderConstants.AUTHORIZATION, "Bearer " + token);
       }
     }
   }

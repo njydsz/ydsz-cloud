@@ -21,6 +21,7 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
@@ -138,7 +139,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       return SentryObservation.<MessageSendResultVO>time("message.send", "单条消息发送", null, () -> sendInternal(request, 0));
     } catch (Throwable t) {
-      throw new RuntimeException("send observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 
@@ -482,7 +483,7 @@ public class MessageServiceImpl implements MessageService {
         return result;
       });
     } catch (Throwable t) {
-      throw new RuntimeException("batch_send observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

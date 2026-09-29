@@ -204,9 +204,9 @@ public class ExcelReadResult<T> {
         return future.get();
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        throw new RuntimeException("获取Excel读取结果时被中断", e);
+        throw new RuntimeException("Interrupted while getting Excel read result", e);
       } catch (ExecutionException e) {
-        throw new RuntimeException("Excel读取执行异常", e.getCause());
+        throw new RuntimeException("Excel read execution error", e.getCause());
       }
     }
     return data;
@@ -226,9 +226,9 @@ public class ExcelReadResult<T> {
         return future.get(timeout, unit);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        throw new RuntimeException("获取Excel读取结果时被中断", e);
+        throw new RuntimeException("Interrupted while getting Excel read result", e);
       } catch (ExecutionException e) {
-        throw new RuntimeException("Excel读取执行异常", e.getCause());
+        throw new RuntimeException("Excel read execution error", e.getCause());
       }
     }
     return data;

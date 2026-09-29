@@ -22,6 +22,7 @@ import com.njydsz.agent.domain.gateway.A2aException;
 import com.njydsz.agent.domain.model.a2a.A2aAgentCard;
 import com.njydsz.agent.domain.model.a2a.A2aTask;
 import com.njydsz.agent.domain.model.a2a.A2aTask.A2aTaskStatus;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 
@@ -223,7 +224,7 @@ public class HttpA2aClient implements A2aClient {
           .timeout(a2aProperties.getTimeout())
           .header("Content-Type", CONTENT_TYPE_JSON)
           .header("Accept", CONTENT_TYPE_JSON)
-          .header("Authorization", "Bearer " + a2aProperties.getDefaultAuthToken())
+          .header(HeaderConstants.AUTHORIZATION, "Bearer " + a2aProperties.getDefaultAuthToken())
           .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
           .build();
       HttpResponse<String> response = httpClient.send(request,

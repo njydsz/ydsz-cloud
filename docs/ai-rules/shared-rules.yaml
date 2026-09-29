@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30"
+  version: "26.09.28-v2"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "2026-09-30（公共基础利用率专项验证完成：P0-1 PageQuery cronjob 落地 +4 Query 类；P1-4 AuthContextUtils 统一上下文 41 处引用；P1-6 BatchBusinessException + MvcExceptionHandler HTTP 207 handler 就绪；P1-7 17 个状态枚举全部 implements BaseStatusEnum；P2-8 TreeBuilder system/literule/workflow 已接入；P2-10 WorkflowException extends BusinessException 落地；+7 规则 YDIZ-COMMON-034~039 + YDIZ-I18N-006）"
-  total_rules: 126
+  last_updated: "2026-09-28-v2（全局引用深度分析 v2 落地：P0 UUID 确认已合规无业务主键违规 + Cronjob GLUE 引擎评估完成职责边界清晰不合并 + P1 I18nMessages 6文件注入 + TreeBuilder/ThreadPoolFactory 确认已合规 + NotifyHelper nextwiki TODO 修复 + ExcelFacade agent 4导出端点激活 + IFileStorage 确认无存储需求 + 沉睡能力 JsonPatch/BeanMapper 清理删除 + 零引用 jdbc 确认为核心基础设施保留 + web/app 去留决策完成；+4 规则 YDIZ-COMMON-041~044）"
+  total_rules: 129
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -3590,8 +3590,178 @@ rules:
       );
     source: "ydsz-common 全局引用分析 v2 — 硬编码中文清零专项（YDIZ-COMMON-040，P1，26.09.28）"
 
+  # ==================== 公共模块利用率 v2 专项（4 条：业务主键统一 + 脚本引擎收敛 + 利用率门禁 + 沉睡能力退出机制） ====================
+  - id: "YDIZ-COMMON-041"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【严重】业务主键禁止使用 UUID，必须使用 SnowflakeIdGenerator"
+    description: |
+      禁止在业务实体 ID 生成场景中使用 `UUID.randomUUID()`（验证码 key / OAuth state / SAML requestId 等安全场景除外），
+      所有业务主键 ID 必须通过 `SnowflakeIdGenerator.nextId()` 生成。
+
+      **为什么**：
+      - UUID 随机写入导致 B+树索引热点，写入性能随数据量增长急剧下降
+      - SnowflakeId 单调递增，ID 直接反映创建时间，支持按 ID 范围分页
+      - 64bit Long vs 128bit UUID，存储节省 50%，索引更紧凑
+
+      **违反判据**：
+      - `String id = UUID.randomUUID().toString()` 后作为 DB 实体主键写入
+      - `entity.setId(UUID.randomUUID().toString())` 这类代码
+      - orderId / taskId / recordId 等业务语义明确的 ID 使用 UUID
+
+      **豁免场景（允许使用 UUID）**：
+      - 验证码 key（需不可预测性防枚举）
+      - OAuth2 state / nonce（安全要求）
+      - SAML requestId（协议要求）
+      - SSE 订阅 ID（临时标识，不入库）
+
+      **正确做法**：
+      - 实体 ID → `entity.setId(SnowflakeIdGenerator.nextId())`
+      - 字符串 ID → `String id = String.valueOf(SnowflakeIdGenerator.nextId())`
+      - 已存在 UUID 历史数据 → 新增字段 `snowflake_id` 双写迁移
+
+    pattern: "UUID\\.randomUUID\\(\\)\\.toString\\(\\)"
+    fix: |
+      1. 确认是否为业务主键场景（参考豁免清单排除安全场景）
+      2. 注入 `SnowflakeIdGenerator`（通过构造器注入或静态工具获取）
+      3. 替换 `UUID.randomUUID().toString()` 为 `String.valueOf(SnowflakeIdGenerator.nextId())`
+      4. 如 DB 已有 UUID 历史数据，新增 snowflake_id 字段并双写
+    example_good: |
+      // 正确：业务主键使用 SnowflakeIdGenerator
+      trigger.setId(SnowflakeIdGenerator.nextId());
+      // 或字符串形式
+      String taskId = String.valueOf(SnowflakeIdGenerator.nextId());
+    example_bad: |
+      // 错误 1：业务主键使用 UUID
+      entity.setId(UUID.randomUUID().toString());
+      // 错误 2：任务 ID 使用 UUID
+      String jobId = UUID.randomUUID().toString();
+    source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-041，P1，26.09.28 业务主键统一）"
+
+  - id: "YDIZ-COMMON-042"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【严重】脚本引擎禁止直连 GroovyClassLoader/ScriptEngine，必须通过 literule"
+    description: |
+      禁止业务代码直接使用 `GroovyClassLoader` / `javax.script.ScriptEngine` / `ScriptEngineManager` 执行脚本，
+      复杂逻辑应通过 ydzs-literule 的 LiteExprEngine 执行。cronjob GlueJobHandler 是唯一的任务脚本执行器例外。
+
+      **为什么**：
+      - literule 提供统一的沙箱隔离（SecureASTCustomizer + 白名单 + 黑名单）
+      - literule 内置监控（SentryObservation 埋点）、热加载、多引擎（Aviator/Groovy/EXPR）支持
+      - 直连 GroovyClassLoader/ScriptEngine 存在沙箱逃逸、资源耗尽等安全风险
+      - 两套引擎维护成本翻倍
+
+      **违反判据**：
+      - `new GroovyClassLoader(...)` 或 `new GroovyClassLoader(ClassLoader, CompilerConfiguration)`
+      - `new ScriptEngineManager().getEngineByName(...)`
+      - `new SecureASTCustomizer()` 自建安全沙箱（literule 已提供标准化沙箱配置）
+
+      **唯一例外**：
+      - `ydsz-cronjob/GlueJobHandler.java`：任务脚本执行器（职责为任务引擎的脚本模式，与 literule 规则决策定位不同）
+
+      **正确做法**：
+      - 复杂脚本执行 → 通过 `CronjobServiceClient` Feign 调用 literule 引擎
+      - 简单脚本执行 → 通过 `LiteExprEngine` API 执行
+      - cronjob 脚本任务 → 保持使用 GlueJobHandler（已明确职责边界）
+
+    pattern: "GroovyClassLoader|ScriptEngineManager|SecureASTCustomizer"
+    fix: |
+      1. 评估脚本逻辑复杂度：简单表达式走 literule Feign，任务脚本走 cronjob GlueJobHandler
+      2. 删除自建 GroovyClassLoader/ScriptEngine 代码
+      3. 引入 `CronjobServiceClient` 或 `LiteExprEngine` API
+      4. 确保 literule 侧已配置对应的规则/表达式
+    example_good: |
+      // 复杂表达式：通过 Feign 调用 literule
+      LiteExprResult result = literuleClient.evaluate(expression, params);
+    example_bad: |
+      // 错误 1：自建 GroovyClassLoader
+      GroovyClassLoader loader = new GroovyClassLoader(...);
+      // 错误 2：自建 ScriptEngine
+      ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+    source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-042，P1，26.09.28 脚本引擎收敛）"
+
+  - id: "YDIZ-COMMON-043"
+    severity: "P2"
+    category: "common-reuse"
+    title: "【重要】公共能力上线后利用率须达标"
+    description: |
+      下沉到 ydzs-common 的能力类在发布后 30 天内须被 ≥3 个业务模块引用（通过 ArchUnit 引用扫描验证），
+      否则触发利用率告警。
+
+      **为什么**：
+      - 公共能力的核心目的是"被复用"，沉睡能力增加维护成本
+      - 30 天窗口期给业务方接入留足时间
+      - ≥3 模块引用代表能力具有通用性，而非单模块特殊需求
+
+      **验证方式**：
+      - ArchUnit 测试：`classes().that().resideInAPackage("..common..").should().beAccessedByClassesThatResideInAPackage("..biz..")`
+      - CI 集成编译前检查：`mvn compile -pl ydzs-common-check -am`
+      - 30 天窗口期内豁免告警，窗口期后未达标类自动触发告警
+
+      **豁免场景**：
+      - 框架级能力（如 DataSourceAutoConfiguration）：仅 Spring 容器引用，不需业务模块直连
+      - 储备型能力（如 DynamicRoutingDataSource + MybatisPlusConfiguration）：仅服务于未来多数据源等场景
+      - 工具内部能力（如 DiffCalculator 内部 Bean）：仅 common 内部模块互引用
+
+    pattern: "ArchUnit|Maven CI reference check"
+    fix: |
+      1. 新建 `ydsz-common-check` 模块，包含 ArchUnit 引用扫描器
+      2. 为每个公共能力类添加 `@CommonCapability(modules = {"min_refs": 3, "grace_days": 30})` 注解
+      3. CI 集成：`mvn verify -P common-check -pl ydzs-common-check`
+      4. 未达标类自动进入评估流程（保留/降级/删除）
+    example_good: |
+      // 正确：YdszJson 被 10/10 业务模块引用，达标
+      public class YdszJson { ... }
+    example_bad: |
+      // 沉睡能力在窗口期内无足够引用：
+      // JsonPatch（已被删除）—— 上线 60+ 天后仅 ConfigMergeUtils 内部引用，触发告警后确认删除
+    source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-043，P2，26.09.28 利用率门禁机制）"
+
+  - id: "YDIZ-COMMON-044"
+    severity: "P2"
+    category: "common-reuse"
+    title: "【重要】沉睡能力定期评估退出机制"
+    description: |
+      上线 90 天内零引用的能力类须进入评估流程（保留/降级/删除），避免公共模块持续积累无消费者能力。
+
+      **为什么**：
+      - 公共能力的目标是"被消费"，沉睡能力意味着代码腐烂的开始
+      - 沉睡能力增加编译时间、依赖传递、维护负担
+      - 定期清理可保持公共模块精简、聚焦
+
+      **退出流程**：
+      1. T+90d 零引用类自动进入候选池（通过 COMMON-043 ArchUnit 扫描识别）
+      2. Owner 评估：保留（说明延期激活场景） / 降级（内联到调用方） / 删除
+      3. 审批通过 → 执行清理 → 版本更新日志记录
+      4. 下一轮 QBR 复盘：统计清理率、误删率、保留率
+
+      **保留条件**（满足任一）：
+      - Owner 说明明确的延期激活场景和时间线（≤6 个月）
+      - 为框架级储备（如 JDBC 未来多数据源）且有明确路线图
+      - 有其他模块的接入 PR 已提交但未合入
+
+      **删除条件**：
+      - 满足零引用条件（通过 ArchUnit 验证）
+      - 无明确激活场景
+      - 已有替代方案（如 BeanMapper → MapStruct）
+
+    pattern: "(?s)# 沉睡能力清理日志.*"
+    fix: |
+      1. 建立 T+30d/T+60d/T+90d 三阶段利用率扫描（CI 集成）
+      2. T+30d WARN → T+60d escalate → T+90d 进入删除候选
+      3. Owner 在 7 个工作日内完成评估决策
+      4. 评估结果写入版本更新日志（CHANGELOG.md）
+    example_good: |
+      // CHANGELOG.md
+      ## [26.09.28-v2]沉睡能力清理
+      - 删除 JsonPatch.java（外部零引用，RFC 6902 无业务场景）
+      - 删除 BeanMapper.java（MapStruct 已替代，MapUtils 已内联）
+      - 保留 DynamicRoutingDataSource（储备型：多数据源未来场景）
+    source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-044，P2，26.09.28 沉睡能力退出机制）"
+
 # ============================================
-# 附录：按 category 统计（26.09.30 终极验证：+7 规则，common-reuse 覆盖七项公共基础能力）
+# 附录：按 category 统计（26.09.28-v2 深度利用率专项：+4 规则，COMMON-041~044 聚焦业务主键/脚本引擎/利用率门禁/退出机制）
 # ============================================
 stats:
   encoding: 1
@@ -3605,7 +3775,7 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-    common-reuse: 22  # PageQuery/ExceptionCode/CurrentUser/FeatureFlag/BaseStatusEnum/BatchResult/I18nContext
+    common-reuse: 26  # +4: UUID统一/脚本引擎收敛/利用率门禁/退出机制
   security: 2
   architecture: 6
   engineering: 5
@@ -3626,4 +3796,4 @@ stats:
   search: 1
   util: 1
   common: 5
-  total: 125
+  total: 129

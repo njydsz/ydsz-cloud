@@ -19,7 +19,9 @@ import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.enums.DeviceType;
@@ -148,7 +150,7 @@ public class AuthServiceImpl implements AuthService {
         return buildLoginResult(user, roles, tokenResult);
       });
     } catch (Throwable t) {
-      throw new RuntimeException("login observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

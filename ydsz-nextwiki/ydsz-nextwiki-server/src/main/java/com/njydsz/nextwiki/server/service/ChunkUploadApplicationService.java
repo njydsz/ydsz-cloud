@@ -381,8 +381,10 @@ public class ChunkUploadApplicationService {
       return result;
       });
     } catch (Throwable t) {
-      throw new RuntimeException(
-          I18n.message("nextwiki.error.chunk_upload_merge_observation_error"), t);
+      throw BusinessException.builder()
+          .key("nextwiki.error.chunk_upload_merge_observation_error")
+          .cause(t)
+          .build();
     }
   }
 

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18nMessages;
@@ -86,7 +87,7 @@ public class TenantServiceImpl implements TenantService {
    */
   @Override
   public List<TenantVO> listAccessibleTenants() {
-    String currentTenantId = AuthContextUtils.getTenantId();
+    String currentTenantId = TenantContextHolder.getTenantId();
     boolean isSuperAdmin = tenantProperties.getSuperTenantId().equals(currentTenantId);
     log.debug("查询可访问租户: currentTenantId={}, isSuperAdmin={}", currentTenantId, isSuperAdmin);
     return tenantRepository.findByAccessible(isSuperAdmin, currentTenantId);

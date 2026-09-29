@@ -287,7 +287,10 @@ public class FileApplicationService {
       return persistNewNode(ctx);
       });
     } catch (Throwable t) {
-      throw new RuntimeException(I18n.message("nextwiki.error.file_upload_observation_error"), t);
+      throw BusinessException.builder()
+          .key("nextwiki.error.file_upload_observation_error")
+          .cause(t)
+          .build();
     }
   }
 

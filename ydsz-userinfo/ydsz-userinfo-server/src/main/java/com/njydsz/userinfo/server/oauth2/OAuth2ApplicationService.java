@@ -12,7 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.password.PwdUtils;
@@ -102,7 +104,7 @@ public class OAuth2ApplicationService {
         return saved.withPlainSecret(plainClientSecret);
       });
     } catch (Throwable t) {
-      throw new RuntimeException("oauth_register observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

@@ -152,8 +152,8 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
     try {
       generateXlsx();
     } catch (Exception e) {
-      LOG.error("响应式写入器生成 xlsx 失败", e);
-      throw new RuntimeException("生成 Excel 失败: " + e.getMessage(), e);
+      LOG.error("Reactive writer xlsx generation failed", e);
+      throw new RuntimeException("Excel generation failed: " + e.getMessage(), e);
     }
   }
 
@@ -170,7 +170,7 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
    */
   private void generateXlsx() throws Exception {
     if (sheets.isEmpty()) {
-      throw new IllegalStateException("至少需要添加一个 Sheet");
+      throw new IllegalStateException("At least one Sheet must be added");
     }
 
     SharedStringsTable sst = new SharedStringsTable();

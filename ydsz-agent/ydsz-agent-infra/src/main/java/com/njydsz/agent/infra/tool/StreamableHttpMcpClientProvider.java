@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -254,14 +255,14 @@ public class StreamableHttpMcpClientProvider implements McpClientProvider {
     if ("bearer".equalsIgnoreCase(authType)) {
       String token = server.getAuthToken();
       if (token != null && !token.isBlank()) {
-        requestBuilder.header("Authorization", "Bearer " + token);
+        requestBuilder.header(HeaderConstants.AUTHORIZATION, "Bearer " + token);
       }
       return;
     }
     if ("oauth".equalsIgnoreCase(authType)) {
       String accessToken = obtainOAuthToken(server);
       if (accessToken != null) {
-        requestBuilder.header("Authorization", "Bearer " + accessToken);
+        requestBuilder.header(HeaderConstants.AUTHORIZATION, "Bearer " + accessToken);
       }
     }
   }

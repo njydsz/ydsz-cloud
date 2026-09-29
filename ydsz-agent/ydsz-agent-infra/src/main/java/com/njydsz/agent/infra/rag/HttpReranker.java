@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.agent.domain.config.properties.RerankerProperties;
 import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunk;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.json.YdszJson;
 
 /**
@@ -210,7 +211,7 @@ public class HttpReranker implements Reranker {
               .timeout(Duration.ofMillis(timeoutMillis))
               .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
       if (apiKey != null && !apiKey.isBlank()) {
-        requestBuilder.header("Authorization", "Bearer " + apiKey);
+        requestBuilder.header(HeaderConstants.AUTHORIZATION, "Bearer " + apiKey);
       }
       HttpResponse<String> response =
           httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());

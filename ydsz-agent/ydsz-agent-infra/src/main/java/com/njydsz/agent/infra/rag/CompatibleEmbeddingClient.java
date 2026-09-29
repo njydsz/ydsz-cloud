@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClient;
 
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.rag.EmbeddingClient;
+import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
@@ -63,7 +64,7 @@ public class CompatibleEmbeddingClient implements EmbeddingClient {
     this.restClient =
         RestClient.builder()
             .baseUrl(this.baseUrl)
-            .defaultHeader("Authorization", "Bearer " + apiKey)
+            .defaultHeader(HeaderConstants.AUTHORIZATION, "Bearer " + apiKey)
             .defaultHeader("Content-Type", "application/json")
             .build();
   }

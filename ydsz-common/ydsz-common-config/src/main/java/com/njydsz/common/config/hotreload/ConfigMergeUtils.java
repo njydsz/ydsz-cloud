@@ -26,7 +26,7 @@ import com.njydsz.common.json.tree.JsonNode;
  *   <li>嵌套对象递归合并（非整体替换）
  * </ul>
  *
- * <p>核心算法委托给 {@link JsonMergePatch#apply}，本类提供 String 入参出参的便捷封装。
+ * <p>核心算法委托给 {@link YdszJson#applyMergePatch(JsonNode, JsonNode)}，本类提供 String 入参出参的便捷封装。
  *
  * <p><b>使用示例：</b>
  *
@@ -39,7 +39,6 @@ import com.njydsz.common.json.tree.JsonNode;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see JsonMergePatch
  */
 public final class ConfigMergeUtils {
 

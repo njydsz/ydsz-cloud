@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -194,7 +196,7 @@ public class CodeGenService {
             .build();
       });
     } catch (Throwable t) {
-      throw new RuntimeException("generate observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

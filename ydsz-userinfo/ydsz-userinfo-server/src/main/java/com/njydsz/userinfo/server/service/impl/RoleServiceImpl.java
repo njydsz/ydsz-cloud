@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.sentry.SentryObservation;
@@ -263,7 +265,7 @@ public class RoleServiceImpl implements RoleService {
         return true;
       });
     } catch (Throwable t) {
-      throw new RuntimeException("assign_permissions observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

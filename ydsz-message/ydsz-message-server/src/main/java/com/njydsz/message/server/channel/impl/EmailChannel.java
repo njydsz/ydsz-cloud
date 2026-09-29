@@ -14,6 +14,8 @@ import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.channel.EmailMessage;
 import com.njydsz.common.notify.channel.EmailNotifySender;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.server.channel.MessageChannel;
@@ -136,7 +138,7 @@ public class EmailChannel implements MessageChannel {
         }
       });
     } catch (Throwable t) {
-      throw new RuntimeException("email_send observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

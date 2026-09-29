@@ -168,7 +168,7 @@ public class SuperFastExcelTemplateWriter {
     try {
       loadTemplateFromStream(templateStream);
     } catch (IOException e) {
-      throw new IllegalArgumentException("模板流读取失败: " + e.getMessage(), e);
+      throw new IllegalArgumentException("Template stream read failed: " + e.getMessage(), e);
     }
   }
 
@@ -194,7 +194,7 @@ public class SuperFastExcelTemplateWriter {
     try (FileInputStream fis = new FileInputStream(templatePath)) {
       loadTemplateFromStream(fis);
     } catch (IOException e) {
-      throw new IllegalArgumentException("模板文件读取失败: " + templatePath, e);
+      throw new IllegalArgumentException("Template file read failed: " + templatePath, e);
     }
   }
 
@@ -219,7 +219,7 @@ public class SuperFastExcelTemplateWriter {
         zis.closeEntry();
       }
     } catch (IOException e) {
-      throw new IllegalArgumentException("模板文件不是有效的 ZIP/OOXML 格式", e);
+      throw new IllegalArgumentException("Template file is not a valid ZIP/OOXML format", e);
     }
     parseTemplate();
   }
@@ -359,7 +359,7 @@ public class SuperFastExcelTemplateWriter {
   private void parseTargetSheet() {
     byte[] sheetBytes = templateEntries.get(targetSheetEntryPath);
     if (sheetBytes == null) {
-      throw new IllegalArgumentException("模板缺少目标 Sheet XML: " + targetSheetEntryPath);
+      throw new IllegalArgumentException("Template is missing target Sheet XML: " + targetSheetEntryPath);
     }
     String xml = new String(sheetBytes, StandardCharsets.UTF_8);
 

@@ -27,8 +27,6 @@ import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
-import com.njydsz.common.json.tree.JsonPatch;
-import com.njydsz.common.json.tree.JsonPatch.PatchOp;
 import com.njydsz.common.json.tree.NullNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.json.tree.TreeConverter;
@@ -174,35 +172,6 @@ public class YdszJson {
   }
 
   // ==================== JSON Patch (RFC 6902 / RFC 7396) ====================
-
-  /**
-   * 应用 JSON Patch（RFC 6902）到目标 JSON 字符串。
-   *
-   * <p>JSON Patch 是一个操作序列，支持 add/remove/replace/move/copy/test 六种操作， 用于对 JSON 文档做局部更新。
-   *
-   * <p><b>示例：</b>
-   *
-   * <pre>{@code
-   * String result = YdszJson.patch(
-   *     "{\"name\":\"old\",\"age\":25}",
-   *     "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"new\"}]"
-   * );
-   * // result: {"name":"new","age":25}
-   * }</pre>
-   *
-   * @param targetJson 目标 JSON 字符串
-   * @param patchJson Patch JSON 数组字符串
-   * @return 应用 Patch 后的 JSON 字符串
-   * @throws com.njydsz.common.json.exception.JsonException 当 Patch 操作失败时（如路径不存在、TEST 失败等）
-   * @since 26.09.01
-   */
-  public static String patch(String targetJson, String patchJson) {
-    // P-2 优化：统一走 JsonNode 树路径（readTree → applyToTree → toJson），
-    // 去掉原先 parseMap → Map 中转的两次结构转换（Map → tree → Map）。
-    // P1 修复：使用 applyToTree 返回值——整文档路径操作（path=""）会替换根节点。
-    ObjectNode tree = (ObjectNode) readTree(targetJson);
-    return toJson(JsonPatch.applyToTree(patchJson, tree));
-  }
 
   /**
    * 应用 JSON Merge Patch（RFC 7396）到目标 JSON 字符串。
@@ -938,60 +907,6 @@ public class YdszJson {
     SerializationProvider.clearThreadLocals();
     // P1-E1：清理身份快速路径标记，防止池化线程残留旧 Mapper 引用
     com.njydsz.common.json.JsonMapper.clearCurrentMapper();
-  }
-
-  // ==================== JSON Patch (RFC 6902) ====================
-
-  /**
-   * 解析 JSON Patch 操作列表。
-   *
-   * <p>JSON Patch 格式示例：
-   *
-   * <pre>
-   * [
-   *   {"op": "replace", "path": "/name", "value": "newName"},
-   *   {"op": "remove", "path": "/age"},
-   *   {"op": "add", "path": "/email", "value": "test@example.com"}
-   * ]
-   * </pre>
-   *
-   * @param patchJson Patch JSON 数组字符串
-   * @return Patch 操作列表
-   * @since 26.09.01
-   * @see com.njydsz.common.json.tree.JsonPatch#parse(String)
-   */
-  public static List<PatchOp> parsePatch(String patchJson) {
-    return JsonPatch.parse(patchJson);
-  }
-
-  /**
-   * 应用 JSON Patch (RFC 6902) 到目标对象，返回新对象。
-   *
-   * @param patchJson Patch JSON 数组字符串
-   * @param target 目标对象（不会被修改）
-   * @param clazz 目标类型
-   * @param <T> 目标类型参数
-   * @return Patch 后的新对象
-   * @since 26.09.01
-   */
-  public static <T> T applyPatch(String patchJson, T target, Class<T> clazz) {
-    return JsonPatch.apply(patchJson, target, clazz);
-  }
-
-  /**
-   * 应用 JSON Merge Patch (RFC 7396) 到目标对象，返回新对象。
-   *
-   * <p>Merge Patch 更简单的语义：null 值表示删除字段，其他值替换或添加。
-   *
-   * @param mergeJson Merge Patch JSON 字符串，如 {"name":"new","age":null}
-   * @param target 目标对象（不会被修改）
-   * @param clazz 目标类型
-   * @param <T> 目标类型参数
-   * @return Patch 后的新对象
-   * @since 26.09.01
-   */
-  public static <T> T applyMergePatch(String mergeJson, T target, Class<T> clazz) {
-    return JsonPatch.applyMerge(mergeJson, target, clazz);
   }
 
   // ==================== 流式 JSON Lines（JSONL）解析 ====================

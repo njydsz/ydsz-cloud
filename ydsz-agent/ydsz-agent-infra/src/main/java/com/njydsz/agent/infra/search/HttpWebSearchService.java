@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClientException;
 import com.njydsz.agent.domain.config.AgentProperties;
 import com.njydsz.agent.domain.config.properties.WebSearchProperties;
 import com.njydsz.agent.domain.search.WebSearchService;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * HTTP Web 搜索服务实现
@@ -127,7 +128,7 @@ public class HttpWebSearchService implements WebSearchService {
             .queryParam("q", query)
             .queryParam("num", topK)
             .build())
-        .header("Authorization", "Bearer " + config.getApiKey())
+        .header(HeaderConstants.AUTHORIZATION, "Bearer " + config.getApiKey())
         .retrieve()
         .body(String.class);
 
