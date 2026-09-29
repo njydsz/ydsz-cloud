@@ -273,7 +273,7 @@ public class RuleApprovalService {
 
       RuleStatus firstLevelStatus = levelToStatus(1, flow.maxLevel());
       if (!current.canTransitionTo(firstLevelStatus)) {
-      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STATE_TRANSITION_DENIED).params(current.getDesc());
+      throw BusinessException.of(LiteruleExceptionCode.APPROVAL_STATE_TRANSITION_DENIED).params(current.getI18nKey());
       }
 
       // 创建审批记录
@@ -488,7 +488,7 @@ public class RuleApprovalService {
         // 一级驳回：回退到 DRAFT
         RuleStatus currentStatus = parseStatus(def.getStatus());
         if (!currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
-      throw new SysException(I18n.message("literule.approval.reject_draft_not_allowed", new Object[]{currentStatus.getDesc()}));
+      throw new SysException(I18n.message("literule.approval.reject_draft_not_allowed", new Object[]{currentStatus.getI18nKey()}));
         }
         updateRuleStatus(def, RuleStatus.DRAFT, operator, "一级驳回: " + reason);
         record.setCurrentStatus(ApprovalRecord.STATUS_CANCELLED);
@@ -917,7 +917,7 @@ public class RuleApprovalService {
       RuleDefinitionDTO def, RuleStatus target, String operator, String changeDesc) {
     RuleStatus current = RuleStatus.fromCode(def.getStatus());
     if (current != null && !current.canTransitionTo(target)) {
-      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(target.getDesc());
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(target.getI18nKey());
     }
     def.setStatus(target.name());
     if (target == RuleStatus.PUBLISHED) {

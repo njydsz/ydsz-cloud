@@ -145,6 +145,11 @@ ydsz:
         keep-alive-seconds: 60
         slow-task-threshold-ms: 3000
 
+  # i18n 国际化配置
+  # user-priority: 参数 > Cookie > 用户偏好 > Header > 默认（五级优先级）
+  i18n:
+    locale-resolver-type: user-priority
+
 # JSON 引擎配置（ydsz-common-json）
   json:
     enabled: true

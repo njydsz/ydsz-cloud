@@ -108,7 +108,7 @@ public class RuleBatchController {
     if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
       return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
-          "当前状态 " + current.getDesc() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
+          "当前状态 " + current.getI18nKey() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
     }
     def.setStatus(RuleStatus.ARCHIVED.name());
     def.setEnabled(false);

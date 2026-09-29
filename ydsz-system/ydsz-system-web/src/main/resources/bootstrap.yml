@@ -144,6 +144,11 @@ ydsz:
       - ydsz_post
       - ydsz_language
 
+  # i18n 国际化配置
+  # user-priority: 参数 > Cookie > 用户偏好 > Header > 默认（五级优先级）
+  i18n:
+    locale-resolver-type: user-priority
+
   # P1: 统一线程池配置（ydsz-common-thread）
   # 通过 ydzs-common-audit 传递依赖获得；为后续 @Async/@Scheduled 异步任务预留托管线程池
   thread:

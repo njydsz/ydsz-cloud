@@ -93,6 +93,8 @@ ydsz:
         queue-capacity: 1024
         thread-name-prefix: nacos-route-listener-
         reject-policy: CALLER_RUNS
+  i18n:
+    locale-resolver-type: user-priority
   gateway:
     filter:
       sql-injection: true

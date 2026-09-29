@@ -774,7 +774,7 @@ public class RuleAdminService {
     // 更新：校验状态转换合法性（状态未变化时直接放行）
     RuleStatus current = parseStatusSafely(existing.getStatus());
     if (target != current && !current.canTransitionTo(target)) {
-      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(current.getDesc());
+      throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL).params(current.getI18nKey());
     }
   }
 

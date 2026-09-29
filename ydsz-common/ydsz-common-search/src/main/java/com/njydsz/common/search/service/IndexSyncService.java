@@ -1,5 +1,6 @@
 package com.njydsz.common.search.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +24,8 @@ import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
 import com.njydsz.common.search.sync.PersistentDeadLetterQueue;
 import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.util.concurrent.RetryException;
+import com.njydsz.common.util.concurrent.RetryUtils;
 
 /**
  * 索引同步服务接口。
@@ -405,33 +408,38 @@ public class IndexSyncService {
   private void executeWithRetry(Runnable action, IndexOperation operation) {
     int maxRetries = properties.getIndex().getMaxRetries();
     long retryInterval = properties.getIndex().getRetryIntervalMs();
-    for (int attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        action.run();
-        metrics.recordIndexOp(true);
-        return;
-      } catch (Exception e) {
-        metrics.recordIndexOp(false);
-        if (attempt < maxRetries) {
-          log.warn("[IndexSync] 索引操作失败，重试: {}/{}", attempt + 1, maxRetries);
-          try {
-            Thread.sleep(retryInterval * (attempt + 1));
-          } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-            break;
-          }
-        } else {
-          log.error("[IndexSync] 重试耗尽，加入死信队列", e);
-          // P6-14: 持久化到 DB（主路径），失败降级到内存
-          boolean persisted = false;
-          if (persistentDlq != null) {
-            persisted = persistentDlq.enqueue(operation, e.getMessage());
-          }
-          if (!persisted && deadLetterQueue.size() < MAX_DLQ_SIZE) {
-            deadLetterQueue.add(operation);
-          }
-        }
-      }
+    try {
+      // YDIZ-COMMON-056: 使用 RetryUtils 替代手写 for + Thread.sleep 重试循环
+      RetryUtils.executeWithRetry(
+          () -> {
+            action.run();
+            return null;
+          },
+          maxRetries,
+          Duration.ofMillis(retryInterval));
+      metrics.recordIndexOp(true);
+    } catch (RetryException e) {
+      Throwable cause = e.getCause();
+      log.error("[IndexSync] 重试耗尽，加入死信队列", cause);
+      metrics.recordIndexOp(false);
+      // P6-14: 持久化到 DB（主路径），失败降级到内存
+      enqueueToDlq(operation, cause);
+    }
+  }
+
+  /**
+   * 入队死信队列（持久化优先，内存降级）。
+   *
+   * @param operation 失败的索引操作
+   * @param cause 失败原因
+   */
+  private void enqueueToDlq(IndexOperation operation, Throwable cause) {
+    boolean persisted = false;
+    if (persistentDlq != null) {
+      persisted = persistentDlq.enqueue(operation, cause != null ? cause.getMessage() : null);
+    }
+    if (!persisted && deadLetterQueue.size() < MAX_DLQ_SIZE) {
+      deadLetterQueue.add(operation);
     }
   }
 

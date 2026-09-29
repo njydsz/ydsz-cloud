@@ -34,6 +34,7 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.domain.query.DeepPaginationException;
 
 /**
  * Spring MVC 全局异常处理器（非 Validation 部分）
@@ -440,6 +441,46 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         HttpStatus.BAD_REQUEST.value(),
         request.getRequestURI(),
         CoreExceptionCode.ILLEGAL_ARGUMENT.getLevel());
+  }
+
+  /**
+   * 处理深度分页被拒绝异常（YDIZ-DOMAIN-003 P2 落地）。
+   *
+   * <p>当 offset 分页的偏移量超过阈值（{@code ydsz.domain.page.cursor-reject-threshold}，默认 50000）时，
+   * {@code SafeQueryInnerInterceptor} 抛出此异常。返回 HTTP 400，提示客户端改用游标分页。
+   *
+   * <p>i18n 消息键 {@code domain.deep.pagination.rejected} 由各模块 messages.properties 提供，
+   * 默认兜底文案为英文描述。
+   *
+   * @param e 深度分页拒绝异常
+   * @param request HTTP 请求
+   * @return 处理结果（含 i18n 提示 + offset/threshold 参数）
+   */
+  @ExceptionHandler(DeepPaginationException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Object handleDeepPaginationException(
+      DeepPaginationException e, HttpServletRequest request) {
+    recordMetrics(e);
+    log.warn(
+        "{}深度分页被拒绝 | 路径: {} | offset={} threshold={} pageNum={} pageSize={}",
+        getLogPrefix(),
+        request.getRequestURI(),
+        e.getOffset(),
+        e.getThreshold(),
+        e.getPageNum(),
+        e.getPageSize(),
+        e);
+
+    // 按请求 Locale 解析 i18n 文案，参数：[offset, threshold, pageNum, pageSize]
+    String message =
+        resolveMessage(DeepPaginationException.MESSAGE_KEY, e.getMessageParams(), e.getMessage());
+    return buildStandardErrorResponse(
+        CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
+        DeepPaginationException.MESSAGE_KEY,
+        message,
+        HttpStatus.BAD_REQUEST.value(),
+        request.getRequestURI(),
+        "WARN");
   }
 
   /**

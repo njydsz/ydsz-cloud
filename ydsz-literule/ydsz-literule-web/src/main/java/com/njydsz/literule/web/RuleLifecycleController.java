@@ -128,7 +128,7 @@ public class RuleLifecycleController {
           LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL,
           String.format(
               "不允许从 %s(%s) 变更到 %s(%s)",
-              current.name(), current.getDesc(), target.name(), target.getDesc()));
+              current.name(), current.getI18nKey(), target.name(), target.getI18nKey()));
     }
     def.setStatus(targetStatus);
     if (target == RuleStatus.PUBLISHED) {
@@ -139,7 +139,7 @@ public class RuleLifecycleController {
     return YdszResponse.success(
         literuleWebConverter.entityToVO(
             ruleAdminService.save(
-                def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc())));
+                def, operator, "状态变更: " + current.getI18nKey() + " -> " + target.getI18nKey())));
   }
 
   /**
@@ -179,7 +179,7 @@ public class RuleLifecycleController {
     if (!current.canTransitionTo(RuleStatus.PUBLISHED)) {
       return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
-          "当前状态 " + current.getDesc() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
+          "当前状态 " + current.getI18nKey() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
     }
 
     String comment = dto.getComment() == null ? "" : dto.getComment();
@@ -195,7 +195,7 @@ public class RuleLifecycleController {
     String changeDesc =
         String.format(
             "[审批通过] %s -> PUBLISHED, 审批人=%s, 意见=%s",
-            current.getDesc(), operator, comment.isEmpty() ? "无" : comment);
+            current.getI18nKey(), operator, comment.isEmpty() ? "无" : comment);
     return YdszResponse.success(
         literuleWebConverter.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
   }
@@ -236,7 +236,7 @@ public class RuleLifecycleController {
     if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
       return YdszResponse.error(
           LiteruleExceptionCode.RULE_STATUS_INVALID,
-          "当前状态 " + current.getDesc() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
+          "当前状态 " + current.getI18nKey() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
     }
 
     String reason = dto.getReason();
@@ -250,7 +250,7 @@ public class RuleLifecycleController {
     def.setEnabled(false);
 
     String changeDesc =
-        String.format("[审批驳回] %s -> ARCHIVED, 审批人=%s, 理由=%s", current.getDesc(), operator, reason);
+        String.format("[审批驳回] %s -> ARCHIVED, 审批人=%s, 理由=%s", current.getI18nKey(), operator, reason);
     return YdszResponse.success(
         literuleWebConverter.entityToVO(ruleAdminService.save(def, operator, changeDesc)));
   }

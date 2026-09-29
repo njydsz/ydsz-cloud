@@ -10,3 +10,7 @@ spring:
         shared-configs:
           - data-id: ydsz-common.yml
             refresh: true
+
+ydsz:
+  i18n:
+    locale-resolver-type: user-priority

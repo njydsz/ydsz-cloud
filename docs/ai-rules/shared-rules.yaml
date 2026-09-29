@@ -13,19 +13,19 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v4"
+  version: "26.09.30-v6"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v5（common-domain 利用率专项：OrderItem 收敛 YDIZ-DOMAIN-001 P1 + TreeNode 统一入口 YDIZ-DOMAIN-002 P1 + 深度分页主动感知 YDIZ-DOMAIN-003 P1；+3 规则，累计 150 条）"
-  total_rules: 150
+  last_updated: "26.09.30-v6（exception 体系利用率专项：InfraException 子类创建 + P0/P1 三项落地；+3 规则，累计 153 条）"
+  total_rules: 153
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 53
-    P1: 70  # +3: YDIZ-DOMAIN-001/002/003 common-domain 利用率专项
-    P2: 18  # +3: YDIZ-COMMON-034 禁 ByteArrayOutputStream 中转（P2）
+    P1: 74  # +2: YDIZ-COMMON-050 InfraException 统一入口 + YDIZ-COMMON-051 RuntimeException 禁止穿透
+    P2: 20  # +1: YDIZ-COMMON-052 infra.error 默认 i18n key
 
 rules:
   # ============================================
@@ -4620,3 +4620,124 @@ stats:
           log.warn("接近深度分页阈值，建议改用游标分页");
       }
     source: "ydsz-common-domain 全局引用分析（YDIZ-DOMAIN-003，P1，26.09.30 深度分页主动感知专项）"
+
+  # ============================================
+  # ydsz-common-cache 全局引用分析整改（2 条，P1+P2，26.09.29）
+  # ============================================
+  - id: "YDIZ-COMMON-048"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【严重】缓存键必须使用 CacheKeyBuilder 构造，禁止手工拼接 \"ydsz:\" 前缀"
+    description: |
+      所有业务模块（ydsz-system、ydsz-userinfo、ydsz-message、ydsz-workflow、ydsz-cronjob、
+      ydzs-nextwiki、ydsz-literule、ydsz-agent、ydsz-generator、ydsz-gateway）的缓存键
+      （本地 YdszCache key、Redis key、Pub/Sub channel 名等）必须通过 ydzz-common-cache 提供的
+      `AbstractModuleCacheKeyBuilder` 子类或 `CacheKeyBuilder.build(module, entity, id)` 构造。
+
+      **统一键格式**：`ydsz:{tenantId}:{module}:{entity}:{id}`
+
+      **为什么必须使用 CacheKeyBuilder**：
+      - 自动注入租户隔离（multiTenant 模块自动追加 tenantId 段）
+      - 禁用 `static final String KEY_PREFIX = "xxx:"` 自建常量（各模块碎片化定义导致同义键格式不统一）
+      - 通过 `TenantIdResolver` SPI 解耦租户上下文获取逻辑，异步场景（MQ Consumer / @Async）空指针安全
+      - 模块新增 `CacheKeyBuilder` 类后需被 ≥1 个 Spring Bean 注入并实际调用，禁止建而不用
+
+      **已知合理例外**：
+      - L1 本地缓存内部 key（`YdszCache` 实例 name 属性，仅本地 Map 标识不跨进程，可不用标准格式，但推荐统一）
+      - Redis key 格式已有兼容存量数据（如 `cronjob:cache:job:`），应维持既有格式避免缓存雪崩，但需文档说明
+      - 框架内部（ydzsz-common-* L1 子模块）因层级依赖约束可自建内部格式
+
+      **修复方式**：
+      1. 为未建 CacheKeyBuilder 的业务模块新建 `CacheKeyBuilder extends AbstractModuleCacheKeyBuilder` @Component 类
+      2. 替换所有 `static final String XXX_KEY_PREFIX = "xxx:"` 常量为 CacheKeyBuilder 方法调用
+      3. 注入 `CacheKeyBuilder` 替代直接字符串拼接
+      4. grep 确认零残留硬编码前缀（`"_KEY_PREFIX\\s*=\\s*\"(ydsz:|userinfo:|message:)"`）
+    pattern: '(private|public)\s+static\s+final\s+String\s+\w*KEY\w*PREFIX\s*=\s*"(ydsz:|userinfo:|message:|cronjob:|agent:|gateway:|oauth2:)'
+    fix: |
+      1. 为模块新建或补充 `CacheKeyBuilder extends AbstractModuleCacheKeyBuilder` @Component 类
+      2. 添加对应实体/操作的缓存键构造方法（如 `public String entityName(String id) { return buildKey("entity", id); }`）
+      3. 在业务类中添加 `private final CacheKeyBuilder cacheKeyBuilder;` 字段
+      4. 替换所有 `XXX_KEY_PREFIX + param` 为 `cacheKeyBuilder.entityName(param)`
+    example_bad: |
+      ❌ 自建硬编码 key 前缀常量
+      private static final String DND_KEY_PREFIX = "dnd:";
+      private static final String USER_ROLES_KEY_PREFIX = "userinfo:roles:";
+      // ... 调用处
+      redisStringOps.set(DND_KEY_PREFIX + userId, value);
+    example_good: |
+      ✅ 通过 CacheKeyBuilder 统一构造
+      // CacheKeyBuilder.java
+      @Component("messageCacheKeyBuilder")
+      public class CacheKeyBuilder extends AbstractModuleCacheKeyBuilder {
+        public CacheKeyBuilder() { super("message"); }
+        public String dnd(String userId) { return buildKey("dnd", userId); }
+        public String userRoles(String userId) { return buildKey("roles", userId); }
+      }
+      // 业务类中注入并调用
+      private final CacheKeyBuilder cacheKeyBuilder;
+      redisStringOps.set(cacheKeyBuilder.dnd(userId), value);
+    source: "ydsz-common-cache 全局引用分析整改（YDIZ-COMMON-048，P1，26.09.29 CacheKeyBuilder 全覆盖）"
+    exception: "ydz-common L1 子模块内部、存量 Redis key 格式兼容场景（需文档说明）"
+
+  - id: "YDIZ-COMMON-049"
+    severity: "P2"
+    category: "common-reuse"
+    title: "【建议】@YdszCacheable 注解启用时必须配 YdszCacheManager，禁止自建 CacheManager"
+    description: |
+      业务模块使用 `@YdszCacheable` / `@YdszCacheEvict` / `@YdszCachePut` 注解驱动缓存时，
+      必须同时装配 `YdszCacheAutoConfiguration`（包含 YdszCacheManager），
+      确保底层缓存管理器由 ydsz-common-cache 统一管理，禁止自行实现 `CacheManager` 接口。
+
+      **为什么建议统一管理**：
+      - YdszCacheManager 注册 Micrometer 指标（命中率、未命中率、加载耗时），自建 CacheManager 监控盲区
+      - YdszCacheManager 自动执行 CacheWarmer 预热逻辑，自建则无预热能力
+      - CacheHealthIndicator / CacheActuator Endpoint 通过 YdszCacheManager 遍历所有 Cache 实例，自建实例不可见
+      - 一致性 hash 失效、全局清空等运维操作依赖 YdszCacheManager 枚举所有缓存
+
+      **实际数据**：当前仅 system 模块启用 @YdszCacheable 体系（6 处），workflow/nextwiki/cronjob 等模块
+      皆直接操作 YdszCache API 绕过注解驱动。不建议强制迁移，但新接入缓存场景优先使用注解驱动。
+
+      **推荐模式**：系统配置 / 字典 / 变量等 key-value 型缓存优先使用 `@YdszCacheable` + YdszCacheManager。
+      对象集合缓存（如流程节点列表、LLM 响应缓存）因 value 结构复杂，可直接使用 YdszCache API。
+
+      **修复方式**：
+      1. 确认模块 pom.xml 已声明 ydzs-common-cache 依赖
+      2. 在配置类添加 `@Import(YdszCacheAutoConfiguration.class)` 或确保自动装配生效
+      3. 定义 CacheConstants 常量类管理缓存名（与 @Cacheable value 对齐）
+      4. 在 Service 方法上添加 `@Cacheable(value = CacheConstants.XXX_CACHE, key = "@cacheKeyBuilder.method(#param)")`
+    pattern: 'implements\s+CacheManager|extends\s+AbstractCacheManager'
+    fix: |
+      1. 删除自建 CacheManager 实现类
+      2. 引入 YdszCacheAutoConfiguration 自动装配
+      3. 替换手动 YdszCache.newBuilder() 调用为 @Cacheable 注解
+      4. 复杂 value 场景保留 YdszCache API 直接操作
+    example_bad: |
+      ❌ 自建 CacheManager
+      @Configuration
+      public class CustomCacheConfig implements CacheManager {
+          @Override
+          public Cache getCache(String name) { ... }
+      }
+    example_good: |
+      ✅ 统一 YdszCacheManager
+      // 无需显式声明，YdszCacheAutoConfiguration 自动装配
+      @Service
+      @RequiredArgsConstructor
+      public class ConfigServiceImpl {
+        private final CacheKeyBuilder cacheKeyBuilder;
+
+        @Cacheable(
+            value = SystemCacheConstants.SYSTEM_CONFIG_CACHE,
+            key = "@cacheKeyBuilder.configValue(#p0)")
+        public String getConfigValue(String configKey) { ... }
+      }
+    source: "ydsz-common-cache 全局引用分析整改（YDIZ-COMMON-049，P2，26.09.29 YdszCacheManager 统一治理）"
+    exception: "复杂 value 结构缓存（VO 集合、多级索引）可使用 YdszCache API 直接操作"
+
+  # ============================================
+  # 版本标记：shared-rules.yaml v26.09.30-v3
+  # 变更摘要：
+  #   - YDIZ-COMMON-048（P1）：缓存键必须使用 CacheKeyBuilder，禁止硬编码前缀常量
+  #   - YDIZ-COMMON-049（P2）：@YdszCacheable 必须配 YdszCacheManager，禁止自建 CacheManager
+  # 更新 total：P0=53 P1=70+2=72 P2=18+1=19 → total=143
+  # ============================================

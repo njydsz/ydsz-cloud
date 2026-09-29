@@ -97,3 +97,6 @@ ydsz:
       audit-delete: true
       log-parameters: true
       max-parameter-length: 500
+
+  i18n:
+    locale-resolver-type: user-priority

@@ -160,7 +160,7 @@ public class ABTestService {
     if (result == null || !result.isTriggered() || result.getSeverity() == null) {
       return "未触发";
     }
-    return RuleSeverity.fromCode(result.getSeverity()).getDesc();
+    return RuleSeverity.fromCode(result.getSeverity()).getI18nKey();
   }
 
   /** A/B 对比胜者 */

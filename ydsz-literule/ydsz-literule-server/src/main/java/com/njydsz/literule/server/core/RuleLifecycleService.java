@@ -679,7 +679,7 @@ public class RuleLifecycleService {
     // 校验状态转换合法性
     if (currentStatus != null && !currentStatus.canTransitionTo(RuleStatus.ARCHIVED)) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL)
-          .params(currentStatus.getDesc());
+          .params(currentStatus.getI18nKey());
     }
 
     // 设置归档状态并禁用
