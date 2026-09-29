@@ -37,6 +37,24 @@ ydsz:
     # 启用元数据 REST API（/api/internal/i18n/languages）前端可动态获取可用语言列表
     metadata-api-enabled: true
 
+# =====================================================================
+#  Actuator 运维端点配置
+# --------------------------------------------------------------------
+#  暴露 cache-metrics 端点（ydsz-common-cache 提供 /actuator/cache-metrics 指标查询）
+#  要求 classpath 存在 ydzs-common-cache + ydzs-common-domain 自动配置激活
+# =====================================================================
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,beans,env,cache-metrics
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+
 # SkyWalking 链路追踪（通过 Java Agent 方式启用，无需修改业务代码）
 # 启动示例：java -javaagent:/path/to/skywalking-agent.jar \
 #   -Dskywalking.agent.service_name=ydsz-gateway \
