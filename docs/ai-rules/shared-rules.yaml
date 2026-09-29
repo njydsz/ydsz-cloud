@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.28-v3"
+  version: "26.09.28-v4"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.28-v3（RuntimeException 清零专项 YDIZ-COMMON-045 P0 + 伪 i18n 清零专项 YDIZ-COMMON-046 P1 + HeaderConstants 推广专项 YDIZ-COMMON-047 P1；+3 规则，累计 133 条）"
-  total_rules: 133
+  last_updated: "26.09.28-v4（RuntimeException 清零专项 YDIZ-COMMON-045 P0 + 伪 i18n 清零专项 YDIZ-COMMON-046 P1 + HeaderConstants 推广专项 YDIZ-COMMON-047 P1 + gateway 异常体系合规 YDIZ-COMMON-048 P2；+4 规则，累计 134 条）"
+  total_rules: 134
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -25,7 +25,7 @@ meta:
   summary:
     P0: 52
     P1: 55
-    P2: 12
+    P2: 13
 
 rules:
   # ============================================
@@ -3886,8 +3886,33 @@ rules:
       ```
     source: "公共基础深化落地（YDIZ-COMMON-047，P1，26.09.xx HeaderConstants 推广专项）"
 
+  - id: "YDIZ-COMMON-048"
+    category: "common-reuse"
+    severity: "P2"
+    title: "【建议】网关模块必须继承 BaseExceptionHandler 或注册异常码到 ErrorCodeTable"
+    description: |
+      ydzs-gateway 作为请求入口层，其异常处理应接入全局统一异常体系。
+      - 网关层错误码枚举必须标注 `@YdszExceptionCode(module="gateway")` 注册到 ErrorCodeTable
+      - 网关异常处理器建议继承 WebFluxExceptionHandler（Spring Cloud Gateway 场景）或保留 WebExceptionHandler 实现
+      - 网关发出的错误响应必须遵守 YdszResponse 结构（code/msg/data/traceId）
+
+      **当前状态**：GatewayErrorCode 已注册 @YdszExceptionCode，GatewayExceptionHandler 采用原生 WebExceptionHandler（Spring Cloud Gateway 正确模式）。
+    pattern: "GatewayErrorCode"
+    fix: |
+      1. 确认 GatewayErrorCode 已加 @YdszExceptionCode(module="gateway")
+      2. 确认网关异常响应使用 YdszResponse / WebFluxErrorUtils 统一构造
+      3. 网关错误码进入 ErrorCodeTable 后可被 Actuator 端点查询
+    example_good: |
+      ```java
+      @YdszExceptionCode(module = "gateway", since = "26.09.01")
+      public enum GatewayErrorCode {
+          AUTH_FAILED("40100", "gateway.error.auth_failed");
+      }
+      ```
+    source: "公共基础深化落地（YDIZ-COMMON-048，P2，26.09.xx gateway 异常体系合规）"
+
 # ============================================
-# 附录：按 category 统计（26.09.28-v3 深度利用率专项：+3 规则，COMMON-045~047 聚焦 RuntimeException 清零/伪 i18n 清零/HeaderConstants 推广）
+# 附录：按 category 统计（26.09.28-v4 四模块利用率专项：+4 规则，COMMON-045~048 聚焦 RuntimeException 清零/伪 i18n 清零/HeaderConstants 推广/gateway 合规）
 # ============================================
 stats:
   encoding: 1
@@ -3901,7 +3926,7 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-    common-reuse: 28  # +6: UUID统一/脚本引擎收敛/利用率门禁/退出机制/RuntimeException清零/HeaderConstants推广
+    common-reuse: 29  # +7: UUID统一/脚本引擎收敛/利用率门禁/退出机制/RuntimeException清零/HeaderConstants推广/gateway合规
   security: 2
   architecture: 6
   engineering: 5
@@ -3915,11 +3940,11 @@ stats:
   resilience: 1
   config: 3
   errcode: 2
-  i18n: 6
+  i18n: 7
   tenant: 1
   safe: 1
   queue: 1
   search: 1
   util: 1
   common: 5
-  total: 133
+  total: 134
