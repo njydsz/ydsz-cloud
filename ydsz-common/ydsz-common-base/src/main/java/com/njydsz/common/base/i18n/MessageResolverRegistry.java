@@ -20,7 +20,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 自 26.09.29 起废弃，请使用 {@link com.njydsz.common.locales.util.MessageSourceHolder}
+ *     和 {@link com.njydsz.common.locales.util.I18nMessages}。对齐 A-1/P0 统一 i18n 底座改造。
  */
+@Deprecated
 public class MessageResolverRegistry {
 
   private static final Logger LOG = LoggerFactory.getLogger(MessageResolverRegistry.class);

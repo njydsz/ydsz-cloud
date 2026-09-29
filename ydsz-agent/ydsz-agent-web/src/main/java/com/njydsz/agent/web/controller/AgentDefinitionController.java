@@ -32,8 +32,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.excel.core.ExcelFacade;
-import com.njydsz.common.excel.core.ExcelWriter;
+import com.njydsz.agent.web.util.ExcelExportUtil;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.util.date.DateUtils;
@@ -226,23 +225,12 @@ public class AgentDefinitionController {
   @GetMapping("/export")
   public void exportAgentDefinitions(jakarta.servlet.http.HttpServletResponse response)
       throws java.io.IOException {
-    String fileName = "agent_definitions_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
-    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    response.setHeader(
-        HttpHeaders.CONTENT_DISPOSITION,
-        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
-            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
-
     List<AgentDefinitionVO> all = agentDefinitionService.listActive();
     List<AgentDefinitionExportVO> rows = new ArrayList<>(all.size());
     for (AgentDefinitionVO vo : all) {
       rows.add(toExportVO(vo));
     }
-
-    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), AgentDefinitionExportVO.class)
-        .sheet("AgentDefinitions")) {
-      writer.doWrite(rows);
-    }
+    ExcelExportUtil.write(response, rows, AgentDefinitionExportVO.class, "agent_definitions", "AgentDefinitions");
   }
 
   // ==================== 私有转换方法 ====================

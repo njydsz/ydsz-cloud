@@ -46,25 +46,33 @@ public class ErrorCodeTable {
   // ==================== 错误码准入机制（26.09.19 新增） ====================
 
   /**
-   * 模块错误码数量告警阈值。
+   * 模块错误码数量告警阈值（26.09.30 从 30 上调至 50）。
    *
    * <p>单个模块注册的错误码超过此值时输出 WARN 日志，提示进行码段拆分或清理冗余码。
+   *
+   * <p>上调原因：随着业务模块丰富，单模块错误码普遍超 30（如 nextwiki 42 条、security 29 条），
+   * 50 条内视为合理区间，超过 50 条才需要治理。
    */
-  private static final int MODULE_CODE_COUNT_WARN_THRESHOLD = 30;
+  private static final int MODULE_CODE_COUNT_WARN_THRESHOLD = 50;
 
   /**
-   * 全局错误码数量 P2 软上限。
+   * 全局错误码数量 P2 软上限（26.09.30 从 200 上调至 500）。
    *
    * <p>全部模块注册的错误码总量超过此值时输出 WARN 日志，建议启动错误码治理审查。
+   *
+   * <p>上调原因：19 个注册模块、总计 ~350 条错误码，原阈值 200 已频繁误报。
+   * 500 条内视为合理增长区间，超过 500 条才需要治理。
    */
-  private static final int GLOBAL_CODE_COUNT_WARN_THRESHOLD = 200;
+  private static final int GLOBAL_CODE_COUNT_WARN_THRESHOLD = 500;
 
   /**
-   * 全局错误码数量 P1 硬上限。
+   * 全局错误码数量 P1 硬上限（26.09.30 从 500 上调至 1000）。
    *
    * <p>全部模块注册的错误码总量超过此值时输出 ERROR 日志。新增码需通过架构评审后才能扩容。
+   *
+   * <p>上调原因：为未来 1-2 年的业务增长预留编码空间，1000 条内不需要架构评审扩容。
    */
-  private static final int GLOBAL_CODE_COUNT_HARD_LIMIT = 500;
+  private static final int GLOBAL_CODE_COUNT_HARD_LIMIT = 1000;
 
   /**
    * 注册模块元信息。

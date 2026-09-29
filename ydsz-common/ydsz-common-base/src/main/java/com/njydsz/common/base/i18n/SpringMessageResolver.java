@@ -17,7 +17,10 @@ import org.springframework.context.i18n.LocaleContextHolder;
  * @since 26.09.01
  * @see MessageResolverHolder
  * @see MessageResolverHolder.MessageResolver
+ * @deprecated 自 26.09.29 起废弃，请使用 {@link com.njydsz.common.locales.util.MessageSourceHolder}
+ *     直接解析消息。对齐 A-1/P0 统一 i18n 底座改造。
  */
+@Deprecated
 public class SpringMessageResolver implements MessageResolverHolder.MessageResolver {
 
   private static final Logger LOG = LoggerFactory.getLogger(SpringMessageResolver.class);

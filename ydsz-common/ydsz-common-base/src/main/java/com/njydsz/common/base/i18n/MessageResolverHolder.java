@@ -15,7 +15,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 自 26.09.29 起废弃，请使用 {@link com.njydsz.common.locales.util.MessageSourceHolder}
+ *     统一解析路径（负缓存 + 缺失节流 + 运行时覆盖）。对齐 A-1/P0 统一 i18n 底座改造。
  */
+@Deprecated
 public final class MessageResolverHolder {
 
   /** 消息解析函数式接口。 */
