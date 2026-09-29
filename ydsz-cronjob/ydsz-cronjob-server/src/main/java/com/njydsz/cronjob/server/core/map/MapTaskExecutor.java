@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -482,7 +483,7 @@ public class MapTaskExecutor {
                 } catch (RuntimeException e) {
                   throw e;
                 } catch (Exception e) {
-                  throw new java.util.concurrent.CompletionException(e);
+                  throw new CompletionException(e);
                 }
               },
               subTaskExecutor);

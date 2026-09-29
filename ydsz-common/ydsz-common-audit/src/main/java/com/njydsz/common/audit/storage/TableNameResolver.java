@@ -1,9 +1,10 @@
 package com.njydsz.common.audit.storage;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 审计日志分表名解析器
@@ -23,15 +24,6 @@ import java.util.Set;
  * @since 26.09.01
  */
 public class TableNameResolver {
-
-  /** 按月格式化器 */
-  private static final DateTimeFormatter MONTHLY_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
-
-  /** 按天格式化器 */
-  private static final DateTimeFormatter DAILY_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
-
-  /** 按年格式化器 */
-  private static final DateTimeFormatter YEARLY_FORMATTER = DateTimeFormatter.ofPattern("yyyy");
 
   /** 分表类型 */
   private final ShardType shardType;
@@ -71,9 +63,9 @@ public class TableNameResolver {
     }
     LocalDateTime actualTime = time != null ? time : LocalDateTime.now();
     return switch (shardType) {
-      case MONTHLY -> baseTableName + "_" + actualTime.format(MONTHLY_FORMATTER);
-      case DAILY -> baseTableName + "_" + actualTime.format(DAILY_FORMATTER);
-      case YEARLY -> baseTableName + "_" + actualTime.format(YEARLY_FORMATTER);
+      case MONTHLY -> baseTableName + "_" + DateUtils.formatLocalDateTime(actualTime, "yyyyMM");
+      case DAILY -> baseTableName + "_" + DateUtils.formatLocalDateTime(actualTime, "yyyyMMdd");
+      case YEARLY -> baseTableName + "_" + DateUtils.formatLocalDateTime(actualTime, "yyyy");
     };
   }
 
