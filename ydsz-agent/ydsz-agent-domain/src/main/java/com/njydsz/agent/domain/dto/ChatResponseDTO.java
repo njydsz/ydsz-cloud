@@ -4,6 +4,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.json.annotation.JsonView;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,22 +26,27 @@ public class ChatResponseDTO implements Serializable {
   @Serial private static final long serialVersionUID = 1L;
 
   /** 对话 ID */
+  @JsonView(ChatResponseViews.Summary.class)
   @Schema(description = "对话 ID")
   private String conversationId;
 
   /** 助手回复内容 */
+  @JsonView(ChatResponseViews.Summary.class)
   @Schema(description = "助手回复内容")
   private String content;
 
   /** 实际使用的模型名称 */
+  @JsonView(ChatResponseViews.Detail.class)
   @Schema(description = "模型名称")
   private String model;
 
   /** Token 用量统计 */
+  @JsonView(ChatResponseViews.Detail.class)
   @Schema(description = "Token 用量")
   private TokenUsageDTO usage;
 
   /** 响应时间 */
+  @JsonView(ChatResponseViews.Summary.class)
   @Schema(description = "响应时间")
   private LocalDateTime respondedAt;
 

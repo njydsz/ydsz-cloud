@@ -33,11 +33,14 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.util.date.DateUtils;
-import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyExportVO;
-import com.njydsz.workflow.domain.vo.FlowEfficiencyExportVO;
+import com.njydsz.workflow.server.excel.vo.FlowApproverEfficiencyExportVO;
+import com.njydsz.workflow.server.excel.vo.FlowEfficiencyExportVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 import com.njydsz.workflow.server.service.FlowI18nService;
+import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
+import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
+import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
 
 /**
  * 审批数据分析 Controller（P2-2）

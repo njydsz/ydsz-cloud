@@ -136,3 +136,4 @@ ydsz:
 
   i18n:
     locale-resolver-type: user-priority
+    runtime-strictness: STRICT

@@ -149,6 +149,7 @@ ydsz:
   # user-priority: 参数 > Cookie > 用户偏好 > Header > 默认（五级优先级）
   i18n:
     locale-resolver-type: user-priority
+    runtime-strictness: STRICT
 
 # JSON 引擎配置（ydsz-common-json）
   json:

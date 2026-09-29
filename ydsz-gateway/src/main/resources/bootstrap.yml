@@ -95,6 +95,7 @@ ydsz:
         reject-policy: CALLER_RUNS
   i18n:
     locale-resolver-type: user-priority
+    runtime-strictness: STRICT
   gateway:
     filter:
       sql-injection: true
