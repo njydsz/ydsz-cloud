@@ -265,8 +265,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
    */
   private List<Map<String, Object>> diffFields(JobVO job1, JobVO job2) {
     List<Map<String, Object>> diffs = new ArrayList<>(COLLECTION_CAPACITY);
-    Map<String, Object> snapshot1 = YdszJson.parseMap(YdszJson.toJson(job1));
-    Map<String, Object> snapshot2 = YdszJson.parseMap(YdszJson.toJson(job2));
+    Map<String, Object> snapshot1 = YdszJson.convertValue(job1, Map.class);
+    Map<String, Object> snapshot2 = YdszJson.convertValue(job2, Map.class);
     for (String field : COMPARE_FIELDS) {
       Object oldValue = snapshot1.get(field);
       Object newValue = snapshot2.get(field);

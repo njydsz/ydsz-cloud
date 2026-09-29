@@ -30,7 +30,6 @@ import com.njydsz.common.exception.batch.BatchBusinessException;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.domain.query.DeepPaginationException;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;

@@ -47,6 +47,11 @@
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-util</artifactId>
     </dependency>
+    <!-- ydsz-common-excel：审批分析仪表盘 Excel 导出（P3-1 实现 Javadoc 声明未提供的 exportToExcel 能力） -->
+    <dependency>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common-excel</artifactId>
+    </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-workflow-server</artifactId>

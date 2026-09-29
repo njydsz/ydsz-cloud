@@ -25,6 +25,12 @@
             <artifactId>ydsz-common-locales</artifactId>
         </dependency>
 
+        <!-- ydsz-common-domain（MvcExceptionHandler 需要 DeepPaginationException） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+
         <!--
             注：原依赖 ydsz-common-util 用于 SpringContextHolder，
             经代码审计确认 exception 模块未引用任何 util 类，故移除。
