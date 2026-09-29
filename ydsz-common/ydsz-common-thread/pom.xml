@@ -59,6 +59,11 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- json（YdszJson.cleanupThread() 用于线程池任务结束后回收 ThreadLocal 缓冲） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
         <!-- Jackson annotations（optional，消除 actuator/health 编译期警告） -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

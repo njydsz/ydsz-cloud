@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.njydsz.common.json.YdszJson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.lang.NonNull;
@@ -194,6 +195,9 @@ public class TimedTaskDecorator implements TaskDecorator {
         long finishedAt = System.nanoTime();
         long executionMs = (finishedAt - startedAt) / 1_000_000L;
         recordMetric(executionMs, queueWaitMs, taskClassName);
+        // P1-A：线程归还池前回收 YdszJson ThreadLocal 缓冲（char[]、StringBuilder、JSONReader 等），
+        // 防止 MQ 消费者、定时任务等池化线程常驻 ~数十 KB/线程
+        YdszJson.cleanupThread();
       }
     }
   }

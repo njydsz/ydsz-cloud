@@ -4735,9 +4735,133 @@ stats:
     exception: "复杂 value 结构缓存（VO 集合、多级索引）可使用 YdszCache API 直接操作"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.09.30-v3
+  # 九、异常体系统一（26.09.30 新增 YDIZ-COMMON-050~052，+3 规则）
+  # ============================================
+  - id: "YDIZ-COMMON-050"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【强制】L1/L2 框架模块异常必须使用 InfraException，禁止直接 extends RuntimeException"
+    description: |
+      ydzs-common 的 L1/L2 工具模块（ydsz-common-util、ydsz-common-json、ydsz-common-excel、
+      ydzs-common-safe、ydsz-common-redis、ydsz-common-file 等）定义的自定义异常，
+      必须继承 `com.njydsz.common.exception.custom.InfraException`，**禁止直接 extends
+      RuntimeException / Exception**。
+
+      **为什么强制统一入口**：
+      - InfraException 继承 AbstractYdszException，内置 i18n DCL 缓存、异常码、HTTP 状态码、级别、分类等完整元数据
+      - 统一入口后，全局异常处理器（MvcExceptionHandler / WebFluxExceptionHandler）可通过 instanceof 精确识别
+      - InfraException 默认 HTTP 500 / ERROR / SYSTEM 分类，符合框架层基础设施故障语义
+      - 保留完整的异常链（initCause），不丢失原始堆栈
+
+      **InfraException vs SysException vs BusinessException 选型**：
+
+      | 类 | 适用场景 | HTTP 状态 | 默认分类 |
+      |---|---|---|---|
+      | InfraException | L1/L2 框架/工具层基础故障（缓存、JSON、加密、Redis、文件） | 500 | SYSTEM |
+      | SysException | server 层系统异常（数据库、MQ、外部服务、调度） | 500 | SYSTEM |
+      | BusinessException | 业务规则校验、参数校验、权限、限流 | 400/403/409/429 | BUSINESS/PERMISSION/RESOURCE |
+    pattern: 'class\s+\w+Exception\s+extends\s+(?:RuntimeException|Exception)(?!\s*extends\s*InfraException)'
+    fix: |
+      1. 将 `extends RuntimeException` 改为 `extends InfraException`
+      2. 添加 `import com.njydsz.common.exception.custom.InfraException;`
+      3. 保留所有现有构造器签名（InfraException 提供 super(message) 和 super(message, cause) 兼容）
+      4. L1 模块（util/json/cache/excel）因分层约束不引入 ydzs-common-exception 依赖，保持 RuntimeException 不变
+    example_bad: |
+      ❌ 直接 extends RuntimeException
+      public class RedisOperationException extends RuntimeException {
+        public RedisOperationException(String message) { super(message); }
+      }
+    example_good: |
+      ✅ 统一继承 InfraException
+      public class RedisOperationException extends InfraException {
+        private static final long serialVersionUID = 1L;
+        public RedisOperationException(String message, Throwable cause) {
+          super(message, cause);
+        }
+      }
+    source: "ydsz-common-exception 全局引用分析整改（YDIZ-COMMON-050，P1，26.09.30 InfraException 统一体系）"
+    exception: "L1 模块（util/json/cache/excel）因分层约束可保持 RuntimeException，不需引入 ydzs-common-exception 依赖"
+
+  - id: "YDIZ-COMMON-051"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【强制】catch 底层异常后应转换为 BusinessException/SysException/InfraException，禁止原样 rethrow RuntimeException"
+    description: |
+      Service 层调用外部依赖（数据库、RPC、Redis、文件系统、第三方 SDK）时，catch 的底层异常
+      （SQLException、IOException、TimeoutException、RuntimeException 等）**必须转换为统一的
+      AbstractYdszException 子类**后向上抛出，**禁止直接 rethrow 底层 RuntimeException**。
+
+      **为什么禁止穿透**：
+      - 底层 RuntimeException（如 NullPointerException、ClassCastException）暴露给调用方会泄露实现细节
+      - 全局异常处理器对未知 RuntimeException 返回 HTTP 500 + 兜底文案，丢失业务语义
+      - 转换后可携带统一的错误码（前端/调用方可按码处理）和 i18n 文案（用户可读）
+      - 便于异常指标统计按业务维度聚合
+
+      **转换规则**：
+      - 数据库异常（SQLException / DataAccessException）→ `SysException.of(CoreExceptionCode.DATABASE_ERROR, cause)`
+      - RPC/Feign 异常（ClientException / FeignException）→ `SysException.of(CoreExceptionCode.EXTERNAL_SERVICE_ERROR, cause)`
+      - Redis 异常（RedisConnectionFailureException 等）→ `InfraException.builder().code("REDIS_ERROR").cause(cause).build()`
+      - 文件 IO 异常（IOException）→ `InfraException.builder().key("storage.error").cause(cause).build()`
+      - 参数校验异常（IllegalArgumentException）→ `BusinessException(ExceptionCodeEnum.PARAM_ERROR, cause)`
+      - 业务规则冲突（数据已存在 / 状态非法）→ `BusinessException(ExceptionCodeEnum.DATA_CONFLICT, cause)`
+    pattern: 'catch\s*\(\s*(?:Runtime|IO|SQL|DataAccess|IllegalArgument|IllegalState)Exception\s+\w+\s*\)\s*\{[^}]*throw\s+\w+\s*;'
+    fix: |
+      1. 定位 catch 块中直接 `throw e;` 的位置
+      2. 判断异常来源（数据库/RPC/缓存/文件/参数）
+      3. 选择合适的包装类型（SysException/InfraException/BusinessException）
+      4. 传入 cause 保留堆栈链
+      5. 使用 log.error 记录错误（带 `{}` 占位符）
+    example_bad: |
+      ❌ 直接 rethrow 底层异常
+      try {
+        redisTemplate.opsForValue().set(key, value);
+      } catch (RedisException e) {
+        throw e;
+      }
+    example_good: |
+      ✅ 转换为统一的 InfraException
+      try {
+        redisTemplate.opsForValue().set(key, value);
+      } catch (RedisException e) {
+        throw InfraException.builder()
+            .code("REDIS_SET_ERROR")
+            .key("redis.operation.error")
+            .cause(e)
+            .build();
+      }
+    source: "exception 体系利用率专项（YDIZ-COMMON-051，P1，26.09.30 RuntimeException 穿透防护）"
+    exception: "业务模块 server 层 SysException/InfraException 可直接向上抛出（全局异常处理器能正确处理）"
+
+  - id: "YDIZ-COMMON-052"
+    severity: "P2"
+    category: "common-reuse"
+    title: "【建议】InfraException 默认 i18n key 为 infra.error，各模块可按需覆盖"
+    description: |
+      使用 `InfraException` 抛出基础设施异常时，**建议**为每个异常类指定默认的 i18n 消息 key，
+      确保内嵌文案在英文/中文/繁体环境下可读。
+
+      **默认 i18n key 规范**：
+      - 通用基础设施错误（未知类型）：`infra.error` = "Infrastructure error, please try again later"
+      - JSON 解析失败：`json.parse.error` / `json.serialize.error`
+      - 缓存操作失败：`cache.load.error` / `cache.write.error`
+      - Excel 读写失败：`excel.read.error` / `excel.write.error`
+      - 加解密失败：`crypto.error`
+      - Redis 操作失败：`redis.operation.error`
+      - 幂等服务不可用：`idempotent.unavailable`
+
+      **为什么建议 i18n 覆盖**：
+      - InfraException 默认构造函数使用 key=`infra.error` 作为兜底，能保证不返回空消息
+      - 具体业务场景提供精确的 i18n key，前端可据此展示针对性文案
+      - 符合 EXCEPT-002 规范（异常消息必须走 i18n key）
+    pattern: 'new\s+InfraException\(\s*[^k]*\)'
+    source: "exception 体系利用率专项（YDIZ-COMMON-052，P2，26.09.30 默认 key infra.error 治理）"
+    exception: "仅供框架内部用户无法定位精确 key 的场景；业务模块应优先使用精确 key"
+
+  # ============================================
+  # 版本标记：shared-rules.yaml v26.09.30-v6
   # 变更摘要：
-  #   - YDIZ-COMMON-048（P1）：缓存键必须使用 CacheKeyBuilder，禁止硬编码前缀常量
-  #   - YDIZ-COMMON-049（P2）：@YdszCacheable 必须配 YdszCacheManager，禁止自建 CacheManager
-  # 更新 total：P0=53 P1=70+2=72 P2=18+1=19 → total=143
+  #   - YDIZ-COMMON-050（P1）：L1/L2 框架模块异常必须使用 InfraException
+  #   - YDIZ-COMMON-051（P1）：catch 底层异常后禁止原样 rethrow RuntimeException
+  #   - YDIZ-COMMON-052（P2）：InfraException 默认 i18n key 为 infra.error
+  # 更新 total：P0=53 P1=72+2=74 P2=19+1=20 → total=153
   # ============================================

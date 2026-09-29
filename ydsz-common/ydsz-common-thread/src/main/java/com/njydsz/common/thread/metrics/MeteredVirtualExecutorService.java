@@ -11,6 +11,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
+import com.njydsz.common.json.YdszJson;
 import org.springframework.lang.NonNull;
 
 /**
@@ -148,24 +149,26 @@ public class MeteredVirtualExecutorService implements ExecutorService {
 
   // ====================== private helpers ======================
 
-  /** 包装 Runnable，在任务执行完成后计数。 */
+  /** 包装 Runnable，在任务执行完成后计数并回收 YdszJson ThreadLocal 缓冲。 */
   private Runnable wrapTask(Runnable task) {
     return () -> {
       try {
         task.run();
       } finally {
         metrics.incrementCompleted();
+        YdszJson.cleanupThread();
       }
     };
   }
 
-  /** 包装 Callable，在任务执行完成后计数。 */
+  /** 包装 Callable，在任务执行完成后计数并回收 YdszJson ThreadLocal 缓冲。 */
   private <T> Callable<T> wrapCallable(Callable<T> callable) {
     return () -> {
       try {
         return callable.call();
       } finally {
         metrics.incrementCompleted();
+        YdszJson.cleanupThread();
       }
     };
   }

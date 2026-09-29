@@ -33,6 +33,9 @@ ydsz:
     deprecation:
       enabled: true
       apis: []
+  i18n:
+    # 启用元数据 REST API（/api/internal/i18n/languages）前端可动态获取可用语言列表
+    metadata-api-enabled: true
 
 # SkyWalking 链路追踪（通过 Java Agent 方式启用，无需修改业务代码）
 # 启动示例：java -javaagent:/path/to/skywalking-agent.jar \
