@@ -19,7 +19,6 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.model.OutboxMessage;
@@ -306,7 +305,6 @@ public class MessageServiceImpl implements MessageService {
     if (ctx.getMatchedRule() != null) {
       logDO.setRouteRuleId(ctx.getMatchedRule().getId());
     }
-    logDO.setTenantId(TenantContextHolder.getTenantId());
     return logDO;
   }
 
@@ -671,7 +669,6 @@ public class MessageServiceImpl implements MessageService {
     logDO.setRecallStatus(RecallStatusEnum.NONE.name());
     logDO.setTraceId(TracerUtils.getOrCreateTraceId());
     logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
-    logDO.setTenantId(TenantContextHolder.getTenantId());
     logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
     try {
       msgLogRepository.save(logDO);

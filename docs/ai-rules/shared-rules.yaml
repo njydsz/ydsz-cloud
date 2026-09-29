@@ -13,18 +13,18 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v9"
+  version: "26.09.30-v10"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v9（JDIZ-JDBC-001 PageResponses 统一分页 + JDIZ-JDBC-002 数据权限激活；总规则 158 条）"
-  total_rules: 158
+  last_updated: "26.09.30-v10（ydsz-common-redis 全局引用分析：+2 规则 YDIZ-COMMON-059/060；总规则 160 条）"
+  total_rules: 160
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 56  # +2: YDIZ-COMMON-057 LockTemplate 强制 + YDIZ-COMMON-058 幂等反射禁止
-    P1: 76  # +2: JDIZ-JDBC-001 PageResponses 统一分页 + JDIZ-JDBC-002 数据权限激活
+    P0: 56
+    P1: 78  # +2: YDIZ-COMMON-059 RedisTemplate 注入禁止 + YDIZ-COMMON-060 CacheKeyBuilder key 构造强制
     P2: 20
 
 rules:
@@ -4432,6 +4432,116 @@ rules:
       }
     source: "ydsz-common-lock 全局引用分析（YDIZ-COMMON-058，P0，26.09.30 OutboxIdempotentAspect 反射 Redis 整改）"
     exception: "自定义 Redis 脚本（Lua）通过 RedisScriptExecutor 执行不在本规则限制范围"
+
+  # ============================================
+  # ydsz-common-redis 全局引用分析（2 条，P1，26.09.30）
+  # ============================================
+  # YDIZ-COMMON-059: 禁止业务代码直接注入 RedisTemplate
+  - id: "YDIZ-COMMON-059"
+    category: "redis-reuse"
+    severity: "P1"
+    title: "【严重】禁止业务代码直接注入 RedisTemplate / StringRedisTemplate"
+    description: |
+      业务模块（ydsz-{module}）的 Service、Controller、RepositoryImpl **禁止直接注入**
+      `RedisTemplate` 或 `StringRedisTemplate`，必须通过 ydzs-common-redis 封装的
+      `RedisStringOps` / `RedisHashOps` / `RedisCollectionOps` / `RedisRateLimiter` 等
+      操作组件执行 Redis 操作。
+
+      **为什么禁止直连**：
+      - RedisStringOps 等封装提供租户 Key 前缀自动添加（多租户隔离）
+      - 统一的异常降级、重试、指标采集
+      - 避免各业务模块直接操作底层连接（`getConnection().info()`），导致连接管理失控
+      - 通过封装层可统一升级序列化策略、Key 命名约定
+
+      **违反判据**：
+      - 业务代码 import 并注入 `org.springframework.data.redis.core.StringRedisTemplate`
+      - 业务代码 import 并注入 `org.springframework.data.redis.core.RedisTemplate`
+      - `ObjectProvider<StringRedisTemplate>` 用于非健康检查/非网关响应式场景
+
+      **例外（需在代码注释中说明 YDIZ-COMMON-059 例外原因）**：
+      - 响应式网关（WebFlux）场景使用 `ReactiveStringRedisOps` 或 `ReactiveStringRedisTemplate`
+      - HealthIndicator 健康检查（ping 探测）
+      - 框架层 ydzs-common-* 封装自身的 Bean 定义与内部实现
+      - 需要执行自定义 INFO/SLOWLOG/CLUSTER 等运维命令的场景
+
+    pattern: "import org\.springframework\.data\.redis\.core\.StringRedisTemplate|import org\.springframework\.data\.redis\.core\.RedisTemplate"
+    fix: |
+      1. 替换 `StringRedisTemplate` 注入为 `RedisStringOps` 注入
+      2. 替换 `RedisTemplate<String, String>` 注入为对应 Ops 组件（StringOps/HashOps/CollectionOps）
+      3. INFO 命令改为通过 `RedisAdvancedOps.getInfo(section)` 调用
+      4. 确认模块 pom.xml 已声明 ydzs-common-redis 依赖
+    example_bad: |
+      ❌ 违规：业务 Service 直接注入 StringRedisTemplate
+      @Service
+      public class FooService {
+          private final StringRedisTemplate redisTemplate;
+          public void doWork() {
+              redisTemplate.opsForValue().set("key", "value");
+          }
+      }
+    example_good: |
+      ✅ 正确：通过 RedisStringOps 封装操作
+      @Service
+      public class FooService {
+          private final RedisStringOps redisOps;
+          public void doWork() {
+              redisOps.set("key", "value", 3600);
+          }
+      }
+    source: "ydsz-common-redis 全局引用分析（YDIZ-COMMON-059，P1，26.09.30 业务模块直连 RedisTemplate 清零）"
+    exception: "响应式网关 WebFlux / HealthIndicator 健康检查 / 框架层 ydzs-common-* 内部实现 / INFO 运维命令"
+
+  # YDIZ-COMMON-060: 业务 Redis Key 必须通过 CacheKeyBuilder 构造
+  - id: "YDIZ-COMMON-060"
+    category: "redis-reuse"
+    severity: "P1"
+    title: "【严重】业务 Redis Key 必须通过 CacheKeyBuilder 语义化方法构造"
+    description: |
+      业务模块使用 Redis 时，**禁止**在 Service/RepositoryImpl 等代码中出现硬编码的
+      Redis Key 前缀字符串常量（如 `"ydsz:quota:concurrent:"`、`"flow:assignee:todo_count:"`），
+      必须通过本模块的 `CacheKeyBuilder` Spring Bean 提供的语义化方法构造 Key。
+
+      **为什么必须走 CacheKeyBuilder**：
+      - 集中管理 Key 前缀常量，消除各 Service 散落的魔法字符串
+      - 统一 tenant 隔离格式（`ydsz:{tenantId}:module:entity:{id}` 或模块历史格式）
+      - 提供语义化方法名（如 `cacheKeyBuilder.quotaConcurrent(tenantId)`），提升代码可读性
+      - 后续 Key 格式变更时只需修改 CacheKeyBuilder 一处
+
+      **违反判据**：
+      - `private static final String XXX_KEY_PREFIX = "ydsz:..."` 后直接拼接 key
+      - Service 方法体内 `String key = "prefix:" + id` 形式的手写拼接
+      - `RedisStringOps.get/set` 参数为字面量字符串直接拼接变量（非 CacheKeyBuilder 方法）
+
+      **各模块 CacheKeyBuilder 落地情况**（26.09.30）：
+      - gateway/agent/message/nextwiki/userinfo/workflow/system/cronjob/literule 均已有 CacheKeyBuilder
+      - 新增 Redis 操作的模块必须同步在 `{module}-server/cache/` 或 `{module}-infra/cache/` 下新建 CacheKeyBuilder
+
+      **例外（需在代码注释中说明 YDIZ-COMMON-060 例外原因）**：
+      - 框架层 ydzs-common-* 内部（如 RepeatSubmitTokenService）可接受直连
+      - 全局共享的 Redis Key 常量（无租户维度、框架级约定）可通过专门的 RedisKeysEnum 管理
+
+    pattern: "static final String [A-Z_]+_PREFIX\s*=\s*\"(ydsz|flow|msg|agent):"
+    fix: |
+      1. 在本模块 cache 包下新建或定位现有 CacheKeyBuilder
+      2. 为当前业务场景添加语义化 key 方法（如 `quotaConcurrent(String tenantId)`）
+      3. 注入 CacheKeyBuilder 替换手写前缀常量
+      4. 删除不再需要的 `private static final String XXX_KEY_PREFIX` 常量
+    example_bad: |
+      ❌ 违规：手写硬编码前缀
+      private static final String CONCURRENT_KEY_PREFIX = "ydsz:quota:concurrent:";
+      public void checkQuota(String tenantId) {
+          String key = CONCURRENT_KEY_PREFIX + tenantId;
+          redisOps.incr(key, 1);
+      }
+    example_good: |
+      ✅ 正确：通过 CacheKeyBuilder 语义化构造
+      private final CacheKeyBuilder cacheKeyBuilder;
+      public void checkQuota(String tenantId) {
+          String key = cacheKeyBuilder.quotaConcurrent(tenantId);
+          redisOps.incr(key, 1);
+      }
+    source: "ydsz-common-redis 全局引用分析（YDIZ-COMMON-060，P1，26.09.30 手写硬编码 key 清零）"
+    exception: "框架层 ydzs-common-* 直连代码 / 全局框架级 RedisKeysEnum 常量"
 
   # ============================================
   # 十二、core/domain/exception/locales 四模块利用率专项（3 条，26.09.30）

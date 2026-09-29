@@ -131,7 +131,6 @@ public class BatchServiceImpl implements BatchService {
     batch.setStatus("PENDING");
     batch.setSenderId(dto.getSenderId());
     batch.setPriority(dto.getPriority());
-    batch.setTenantId(TenantContextHolder.getTenantId());
     // P1-A3: 序列化请求列表存入 payload，支持后续断点续传
     batch.setPayload(YdszJson.toJson(requests));
     msgBatchRepository.save(batch);

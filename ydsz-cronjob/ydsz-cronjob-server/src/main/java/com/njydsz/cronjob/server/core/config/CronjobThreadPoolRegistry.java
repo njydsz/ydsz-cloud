@@ -36,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
  *       集合限定范围），避免误关 common-thread 管理的全局线程池</li>
  * </ul>
  *
+ * <p><b>P2-1 清理：</b>{@code get()} 和 {@code contains()} 两个 PassThrough 方法已移除。
+ * 调用方直接导入 {@code com.njydsz.common.thread.registry.ThreadPoolRegistry} 获取/判断线程池。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -96,7 +99,7 @@ public class CronjobThreadPoolRegistry {
   /**
    * P2-E1: 将线程池的拒绝处理器包装为计数版本。
    *
-   * <p>仅在首次注册时包装（幂等判断：已是计数版本则跳过）。 包装不改变原拒绝策略行为（委托链），仅增加计数。
+   * <p>仅在首次注册时包装（幂等判断：已是计数版本则跳过）。包装不改变原拒绝策略行为（委托链），仅增加计数。
    */
   private void wrapRejectionCounter(String name, ThreadPoolExecutor pool) {
     AtomicLong counter = rejectedCounts.computeIfAbsent(name, k -> new AtomicLong());
@@ -104,26 +107,6 @@ public class CronjobThreadPoolRegistry {
       pool.setRejectedExecutionHandler(
           new CountingRejectedExecutionHandler(pool.getRejectedExecutionHandler(), counter));
     }
-  }
-
-  /**
-   * 根据名称查找线程池。
-   *
-   * @param name 线程池名称
-   * @return 找到的线程池；不存在时返回 null
-   */
-  public ThreadPoolExecutor get(String name) {
-    return ThreadPoolRegistry.get(name);
-  }
-
-  /**
-   * 判断指定名称的线程池是否已注册。
-   *
-   * @param name 线程池名称
-   * @return true 表示已注册且可用
-   */
-  public boolean contains(String name) {
-    return ThreadPoolRegistry.contains(name);
   }
 
   /**
@@ -148,7 +131,7 @@ public class CronjobThreadPoolRegistry {
    *
    * <p>仅包含通过本注册表 {@link #register} 注册的线程池，不含 common-thread 管理的全局线程池。
    *
-   * @return 不可变的名称 -> 线程池 映射
+   * @return 不可变的名称 -&gt; 线程池 映射
    */
   public Map<String, ThreadPoolExecutor> getAll() {
     if (cronjobPoolNames.isEmpty()) {
