@@ -16,14 +16,14 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
-import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyExportVO;
 import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
 import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
 import com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO;
-import com.njydsz.workflow.domain.vo.FlowEfficiencyExportVO;
 import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
 import com.njydsz.workflow.domain.vo.FlowNodeDurationVO;
 import com.njydsz.workflow.domain.vo.FlowTrendVO;
+import com.njydsz.workflow.server.excel.vo.FlowApproverEfficiencyExportVO;
+import com.njydsz.workflow.server.excel.vo.FlowEfficiencyExportVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 
 /**

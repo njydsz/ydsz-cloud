@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -15,8 +16,10 @@ import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.util.StreamUtils;
+import org.springframework.web.method.HandlerMethod;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.provider.DeserializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider;
 /**
@@ -42,6 +45,15 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
 
   /** 默认最大请求体大小（10MB），超过此值的请求将被拒绝 */
   private static final long MAX_REQUEST_BODY_SIZE = 10L * 1024 * 1024;
+
+  /**
+   * Spring MVC 存储匹配处理器方法的请求属性键。
+   *
+   * <p>使用字符串常量而非 {@code HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE} 避免引入 spring-webmvc 依赖
+   * （本模块仅依赖 spring-web optional，保持 L1/L2 分层纯净）。
+   */
+  private static final String BEST_MATCHING_HANDLER_ATTRIBUTE =
+      "org.springframework.web.servlet.HandlerMapping.bestMatchingHandler";
 
   /** 读取缓冲区大小（8KB，平衡内存占用与系统调用次数） */
   private static final int READ_BUFFER_SIZE = 8192;
@@ -172,8 +184,8 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     try {
       OutputStream out = outputMessage.getBody();
 
-      // 缓冲模式：序列化为 byte[] 后设置 Content-Length 一次性写出
-      byte[] bytes = YdszJson.toJsonBytes(o);
+      // P1-B：检测控制器方法上的 @JsonView 注解，如果存在则按视图过滤字段
+      byte[] bytes = serializeWithView(o);
       // 设置 Content-Length，避免 HTTP chunked 编码开销
       outputMessage.getHeaders().setContentLength(bytes.length);
       StreamUtils.copy(bytes, out);
@@ -190,5 +202,52 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
   protected void writeInternal(Object o, Type type, HttpOutputMessage outputMessage)
       throws IOException, HttpMessageNotWritableException {
     writeInternal(o, outputMessage);
+  }
+
+  /**
+   * 序列化对象，如果控制器方法标注了 {@link JsonView} 则按视图过滤字段。
+   *
+   * <p>Spring MVC 通过 {@link HandlerMapping#BEST_MATCHING_HANDLER_ATTRIBUTE} 将匹配的处理器 放入请求属性，从中提取
+   * {@link HandlerMethod} 并读取其 {@code @JsonView} 注解。
+   *
+   * <p>视图类支持继承关系：如果 {@code Detail extends Summary}，序列化 {@code Detail} 视图时会同时包含
+   * {@code Summary} 和 {@code Detail} 标注的字段（Jackson 语义兼容）。
+   *
+   * @param o 待序列化对象
+   * @return JSON 字节数组
+   */
+  private byte[] serializeWithView(Object o) {
+    Class<?> viewClass = resolveViewClass();
+    if (viewClass != null) {
+      String json = YdszJson.toJson(o, viewClass);
+      return json.getBytes(StandardCharsets.UTF_8);
+    }
+    return YdszJson.toJsonBytes(o);
+  }
+
+  /**
+   * 从当前请求的 HandlerMethod 中解析 {@link JsonView} 注解的视图类。
+   *
+   * <p>仅取第一个 {@code @JsonView} 注解的 value()[0]，如需多视图支持可扩展。
+   *
+   * @return 视图类；控制器方法未标注 {@code @JsonView} 时返回 null
+   */
+  private Class<?> resolveViewClass() {
+    try {
+      Object handler = org.springframework.web.context.request.RequestContextHolder
+          .currentRequestAttributes()
+          .getAttribute(BEST_MATCHING_HANDLER_ATTRIBUTE,
+              org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+      if (handler instanceof HandlerMethod handlerMethod) {
+        Method method = handlerMethod.getMethod();
+        JsonView jsonView = method.getAnnotation(JsonView.class);
+        if (jsonView != null && jsonView.value().length > 0) {
+          return jsonView.value()[0];
+        }
+      }
+    } catch (Exception e) {
+      // 无请求上下文或获取失败时回退到全量序列化，不影响业务
+    }
+    return null;
   }
 }

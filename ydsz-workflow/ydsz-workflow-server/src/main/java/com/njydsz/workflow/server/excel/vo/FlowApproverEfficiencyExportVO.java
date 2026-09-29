@@ -1,4 +1,4 @@
-package com.njydsz.workflow.domain.vo;
+package com.njydsz.workflow.server.excel.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -11,7 +11,7 @@ import lombok.Data;
  * 办理人效率 Excel 导出 VO
  *
  * <p>P3-1: 实现 FlowAnalyticsServiceImpl Javadoc 声明的「导出为 Excel」能力。
- * 将 {@link FlowApproverEfficiencyVO} 字段映射到 Excel 列。
+ * 置于 server/excel/vo 避免反向依赖 + domain 层纯净。
  *
  * @author ydsz-team
  * @since 26.09.30

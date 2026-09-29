@@ -135,6 +135,27 @@ public class YdszJson {
   }
 
   /**
+   * 按视图类序列化对象为 JSON 字符串（对标 Jackson JsonView）。
+   *
+   * <p>仅序列化标注了与 {@code viewClass} 匹配的 {@link com.njydsz.common.json.annotation.JsonView} 注解的字段。
+   * 视图类支持继承关系：如果 {@code Detail extends Summary}，{@code Detail} 视图也会包含 {@code Summary} 标注的字段。
+   *
+   * <p>控制器方法标注 {@code @JsonView(ViewClass.class)} 后，{@link
+   * com.njydsz.common.json.spring.JsonHttpMessageConverter} 会自动调用本方法进行字段过滤。
+   *
+   * @param obj 要序列化的对象
+   * @param viewClass 视图类（如 {@code FlowViewsVO.Summary.class}）
+   * @return JSON 字符串
+   * @since 26.09.01
+   */
+  public static String toJson(Object obj, Class<?> viewClass) {
+    if (obj == null) {
+      return "null";
+    }
+    return defaultMapper.toJson(obj, viewClass);
+  }
+
+  /**
    * 格式化 JSON（带缩进）
    *
    * @param obj 要序列化的对象
