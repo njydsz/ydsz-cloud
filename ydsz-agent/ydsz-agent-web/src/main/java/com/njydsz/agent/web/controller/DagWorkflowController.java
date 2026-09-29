@@ -1,11 +1,7 @@
 package com.njydsz.agent.web.controller;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.http.HttpHeaders;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,15 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.repository.DagWorkflowRepository;
+import com.njydsz.agent.web.util.ExcelExportUtil;
 import com.njydsz.agent.web.vo.DagWorkflowExportVO;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.excel.core.ExcelFacade;
-import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.locales.util.I18n;
-import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -164,13 +158,6 @@ public class DagWorkflowController {
   public void exportDagWorkflows(
       @RequestParam(required = false) String category,
       jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-    String fileName = "dag_workflows_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
-    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    response.setHeader(
-        HttpHeaders.CONTENT_DISPOSITION,
-        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
-            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
-
     List<DagWorkflow> all = (category == null || category.isBlank())
         ? repository.findAll()
         : repository.findByCategory(category);
@@ -178,11 +165,7 @@ public class DagWorkflowController {
     for (DagWorkflow entity : all) {
       rows.add(toExportVO(entity));
     }
-
-    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), DagWorkflowExportVO.class)
-        .sheet("DagWorkflows")) {
-      writer.doWrite(rows);
-    }
+    ExcelExportUtil.write(response, rows, DagWorkflowExportVO.class, "dag_workflows", "DagWorkflows");
   }
 
   // ==================== 私有转换方法 ====================

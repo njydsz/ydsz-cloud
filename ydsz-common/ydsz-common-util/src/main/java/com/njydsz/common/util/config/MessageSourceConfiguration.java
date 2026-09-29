@@ -19,7 +19,12 @@ import com.njydsz.common.util.message.MessageUtils;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 自 26.09.29 起废弃。国际化解析请统一使用 {@link
+ *     com.njydsz.common.locales.util.I18n}（静态场景）或 {@link
+ *     com.njydsz.common.locales.util.I18nMessages}（注入场景），享有负缓存 + 缺失节流 + 运行时覆盖
+ *     全体系能力。对齐 A-1/P0 统一 i18n 底座改造。
  */
+@Deprecated
 @AutoConfiguration(after = UtilAutoConfiguration.class)
 @ConditionalOnClass(MessageSource.class)
 @ConditionalOnBean(MessageSource.class)

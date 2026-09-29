@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.MessageRole;
+import com.njydsz.agent.infra.cache.CacheKeyBuilder;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.json.YdszJson;
@@ -57,8 +58,8 @@ import com.njydsz.common.util.security.DigestUtils;
 @Slf4j
 public class SemanticLlmCache {
 
-  /** LRU 索引 key（ZSET：member=缓存 key，score=最近访问时间戳毫秒） */
-  private static final String LRU_INDEX_KEY = SemanticCacheConfig.CACHE_KEY_PREFIX + "lru-index";
+  /** 缓存实例名（本地 YdszCache 名称，同时也是 Redis key 的前缀框架） */
+  private static final String CACHE_NAME = "agent:semantic-llm";
 
   /** 超容量后一次性多淘汰的条目数（避免每次写入都触发淘汰） */
   private static final int EVICT_MARGIN = 10;
@@ -72,8 +73,8 @@ public class SemanticLlmCache {
   /** 日志中缓存 key 的截断长度 */
   private static final int LOG_KEY_TRUNCATE_LENGTH = 16;
 
-  /** 缓存名称（用于健康检查和监控） */
-  private static final String CACHE_NAME = "agent:semantic-llm";
+  /** 租户感知缓存键构造器（替代 CacheKeyBuilder 静态拼接） */
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   private final RedisStringOps redisStringOps;
   private final RedisCollectionOps redisCollectionOps;
@@ -89,13 +90,15 @@ public class SemanticLlmCache {
       Duration ttl,
       int maxCacheSize,
       int l1MaxSize,
-      int l1ExpireMinutes) {
+      int l1ExpireMinutes,
+      CacheKeyBuilder cacheKeyBuilder) {
     this.redisStringOps = redisStringOps;
     this.redisCollectionOps = redisCollectionOps;
     this.ttl = ttl;
     this.maxCacheSize = maxCacheSize;
     this.l1MaxSize = l1MaxSize;
     this.l1ExpireMinutes = l1ExpireMinutes;
+    this.cacheKeyBuilder = cacheKeyBuilder;
     this.l1Cache =
         YdszCache.<String, CachedLlmResponse>newBuilder()
             .name(CACHE_NAME)
@@ -128,7 +131,7 @@ public class SemanticLlmCache {
       String json = redisStringOps.get(key, String.class);
       if (json != null) {
         // 命中刷新 LRU 访问时间
-        redisCollectionOps.zAdd(LRU_INDEX_KEY, key, BigDecimal.valueOf(Instant.now().toEpochMilli()));
+        redisCollectionOps.zAdd(cacheKeyBuilder.semanticLruIndex(), key, BigDecimal.valueOf(Instant.now().toEpochMilli()));
         CachedLlmResponse result = YdszJson.fromJson(json, CachedLlmResponse.class);
         // L2 命中后回填 L1，加速后续同进程请求
         if (result != null) {
@@ -166,7 +169,7 @@ public class SemanticLlmCache {
       String json = YdszJson.toJson(cached);
       redisStringOps.set(key, json, ttl);
       // 维护 LRU 索引并执行容量淘汰
-      redisCollectionOps.zAdd(LRU_INDEX_KEY, key, BigDecimal.valueOf(Instant.now().toEpochMilli()));
+      redisCollectionOps.zAdd(cacheKeyBuilder.semanticLruIndex(), key, BigDecimal.valueOf(Instant.now().toEpochMilli()));
       evictIfOverCapacity();
       log.debug(
           "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, LOG_KEY_TRUNCATE_LENGTH) + "...", ttl.toMinutes());
@@ -208,7 +211,8 @@ public class SemanticLlmCache {
             + (systemPrompt != null ? systemPrompt : "")
             + SemanticCacheConfig.KEY_SEPARATOR
             + (userMessage != null ? userMessage : "");
-      return SemanticCacheConfig.CACHE_KEY_PREFIX + DigestUtils.sha256Hex(raw);
+    // P1-1 整改：通过 CacheKeyBuilder 生成租户隔离的缓存键，替代硬编码 "agent:llm:cache:" 前缀
+    return cacheKeyBuilder.semanticLlm(DigestUtils.sha256Hex(raw));
   }
 
   /**
@@ -249,13 +253,13 @@ public class SemanticLlmCache {
       return;
     }
     try {
-      long size = redisCollectionOps.zSize(LRU_INDEX_KEY);
+      long size = redisCollectionOps.zSize(cacheKeyBuilder.semanticLruIndex());
       if (size <= maxCacheSize) {
         return;
       }
       long toRemove = size - maxCacheSize + EVICT_MARGIN;
       Set<ZSetOperations.TypedTuple<Object>> oldest =
-          redisCollectionOps.popMin(LRU_INDEX_KEY, toRemove);
+          redisCollectionOps.popMin(cacheKeyBuilder.semanticLruIndex(), toRemove);
       if (oldest != null && !oldest.isEmpty()) {
         for (ZSetOperations.TypedTuple<Object> tuple : oldest) {
           Object member = tuple.getValue();

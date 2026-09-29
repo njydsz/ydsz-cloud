@@ -64,4 +64,17 @@ public class ConfigDrivenFeatureFlagService implements FeatureFlagService {
     Boolean value = flags.get(name);
     return value != null ? value : defaultValue;
   }
+
+  /**
+   * 返回当前配置驱动的全部开关映射。
+   *
+   * <p>将内部 {@code Map<String, Boolean>} 转为 {@code Map<String, Object>} 返回，
+   * 与接口契约保持一致。
+   *
+   * @return 全部开关名 → 开关值（Boolean）的映射
+   */
+  @Override
+  public Map<String, Object> getFeatureFlags() {
+    return new ConcurrentHashMap<>(flags);
+  }
 }

@@ -11,7 +11,7 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.base.i18n.MessageResolverHolder;
+import com.njydsz.common.locales.util.MessageSourceHolder;
 import com.njydsz.common.core.constant.PageConstants;
 
 /**
@@ -69,7 +69,7 @@ public class CoreHealthIndicator implements HealthIndicator {
 
     // ========== Core 运行时状态 ==========
     details.put("moduleVersion", moduleVersion);
-    details.put("i18nResolverRegistered", MessageResolverHolder.isResolverRegistered());
+    details.put("i18nResolverRegistered", MessageSourceHolder.isAvailable());
     // ydsz-common-core 精简后分页配置不再支持运行时注入，直接报告编译期常量
     details.put("pageConstantsInitialized", true);
 

@@ -1,5 +1,8 @@
 package com.njydsz.common.core.feature;
 
+import java.util.Collections;
+import java.util.Map;
+
 /**
  * 特性开关（Feature Flag）服务接口。
  *
@@ -37,4 +40,16 @@ public interface FeatureFlagService {
    * @return 开启返回 true；未配置时返回 {@code defaultValue}
    */
   boolean isEnabled(String name, boolean defaultValue);
+
+  /**
+   * 获取当前用户/租户可见的全部特性开关映射。
+   *
+   * <p>用于前端启动时一次性加载所有开关状态。默认实现返回空映射，子类按需重写。
+   *
+   * @return 开关名 → 开关值（布尔/数值/字符串）的映射；无开关时返回空 Map
+   * @since 26.09.30
+   */
+  default Map<String, Object> getFeatureFlags() {
+    return Collections.emptyMap();
+  }
 }

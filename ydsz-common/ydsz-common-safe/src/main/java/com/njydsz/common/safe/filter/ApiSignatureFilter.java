@@ -27,6 +27,7 @@ import com.njydsz.common.safe.config.ApiSignatureProperties.SigningProtocol;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.util.http.UrlPathUtils;
 import com.njydsz.common.util.net.ClientIpResolver;
+import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.util.security.HexUtils;
 
 /**
@@ -102,7 +103,6 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
   private static final Logger LOG = LoggerFactory.getLogger(ApiSignatureFilter.class);
 
   private static final String HMAC_SHA256 = "HmacSHA256";
-  private static final String SHA_256 = "SHA-256";
   private static final String QUERY_SEPARATOR = "&";
   private static final String QUERY_KV_SEPARATOR = "=";
 
@@ -110,7 +110,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
    * 默认签名校验成功属性名。
    *
    * <p>当 {@link ApiSignatureProperties#getSuccessAttribute()} 为空时，使用此默认值注入 request attribute。
-   * 兼容 ydzuserinfo 的 {@code RequireInternalAspect}，避免修改下游代码。
+   * 兼容 ydzs-common-web 的 {@code RequireInternalAspect}，避免修改下游代码。
    */
   public static final String DEFAULT_SUCCESS_ATTRIBUTE =
       ApiSignatureFilter.class.getName() + ".SIGNATURE_VERIFIED";
@@ -191,8 +191,9 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       return;
     }
 
-    String expectedSignature = hmacSha256Base64(computedContent, properties.getAppSecret());
-    // 使用 MessageDigest.isEqual() 进行恒定时间比较，替代自实现逻辑
+    // YDIZ-COMMON-054: 委托 DigestUtils.hmacSha256Base64 计算签名
+    String expectedSignature = DigestUtils.hmacSha256Base64(computedContent, properties.getAppSecret());
+    // 使用 MessageDigest.isEqual() 进行恒定时间比较（也可用 DigestUtils.constantTimeEquals）
     if (!MessageDigest.isEqual(
         expectedSignature.getBytes(StandardCharsets.UTF_8),
         signature.getBytes(StandardCharsets.UTF_8))) {
@@ -253,7 +254,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       case STANDARD -> {
         // 标准：method\npath\nnormalizedQuery\ntimestamp\nnonce\nbodySha256
         String normalizedQuery = normalizeQuery(query);
-        String bodySha256 = sha256Hex(bodyBytes);
+        String bodySha256 = DigestUtils.sha256Hex(bodyBytes);
         return method + "\n" + path + "\n" + normalizedQuery + "\n" + timestamp + "\n" + nonce
             + "\n" + bodySha256;
       }
@@ -379,30 +380,5 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
       return false;
     }
     return UrlPathUtils.matchAny(excludes, request.getServletPath());
-  }
-
-  /** 计算 SHA-256 哈希（十六进制输出） */
-  private static String sha256Hex(byte[] data) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance(SHA_256);
-      byte[] hash = digest.digest(data);
-      return HexUtils.encode(hash);
-    } catch (Exception e) {
-      return "";
-    }
-  }
-
-  /** 计算 HMAC-SHA256 签名（Base64 输出） */
-  private static String hmacSha256Base64(String data, String secret) {
-    try {
-      Mac mac = Mac.getInstance(HMAC_SHA256);
-      SecretKeySpec keySpec =
-          new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256);
-      mac.init(keySpec);
-      byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-      return Base64.getEncoder().encodeToString(hmacBytes);
-    } catch (Exception e) {
-      throw new IllegalStateException("HMAC-SHA256 computation failed", e);
-    }
   }
 }
