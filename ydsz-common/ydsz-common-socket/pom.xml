@@ -118,6 +118,12 @@
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
 
+        <!-- ydzz-common-thread（P0-2: wsBatchExecutor / SsePushChannelMvcFactory 纳入统一线程池治理） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
+
         <!-- Resilience4j CircuitBreaker（P1-5: 自研熔断器替换为 Resilience4j） -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>

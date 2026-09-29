@@ -7,14 +7,23 @@ import java.util.Properties;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
+
 /**
- * Redis 指标采集服务（CACHE-P1-001 整改 26.09.27）。
+ * Redis 指标采集服务（P1-1 整改 26.09.30）。
  *
- * <p>将 {@code MetricsDashboardController} 中直接持有的 {@link StringRedisTemplate} 下沉至 server 层，
- * 使 Controller 不再直接操作 Redis（遵循分层隔离原则 / YDIZ-ARCH-003）。
+ * <p>通过 {@link RedisAdvancedOps#getInfo(String)} 获取 Redis INFO 统计信息， 替代此前直接注入 {@code StringRedisTemplate}
+ * 并调用底层 {@code getConnection().info()} 的违规方式，符合 common-redis 封装规范。
+ *
+ * <p>采集 INFO Stats 部分的以下字段：
+ * <ul>
+ *   <li>{@code total_commands_processed} — 启动以来处理命令总数
+ *   <li>{@code keyspace_hits} — 键命中次数
+ *   <li>{@code keyspace_misses} — 键未命中次数
+ * </ul>
+ * 并计算命中率 = hits / (hits + misses)。
  */
 @Slf4j
 @Service
@@ -26,39 +35,31 @@ public class RedisMetricsService {
   /** 小型 Map 初始容量 */
   private static final int SMALL_MAP_CAPACITY = 4;
 
-  /** Redis 操作模板（可选：未装配时跳过 Redis 指标采集） */
-  private final ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider;
+  /** Redis 高级操作封装（可选：未装配时跳过 Redis 指标采集） */
+  private final ObjectProvider<RedisAdvancedOps> redisAdvancedOpsProvider;
 
   /**
    * 构造 Redis 指标采集服务。
    *
-   * @param stringRedisTemplateProvider Redis 模板提供者（可选）
+   * @param redisAdvancedOpsProvider Redis 高级操作提供者（可选）
    */
-  public RedisMetricsService(ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider) {
-    this.stringRedisTemplateProvider = stringRedisTemplateProvider;
+  public RedisMetricsService(ObjectProvider<RedisAdvancedOps> redisAdvancedOpsProvider) {
+    this.redisAdvancedOpsProvider = redisAdvancedOpsProvider;
   }
 
   /**
    * 采集 Redis 统计指标。
    *
-   * <p>读取 INFO Stats 部分的以下字段：
-   * <ul>
-   *   <li>{@code total_commands_processed} — 启动以来处理命令总数
-   *   <li>{@code keyspace_hits} — 键命中次数
-   *   <li>{@code keyspace_misses} — 键未命中次数
-   * </ul>
-   * 并计算命中率 = hits / (hits + misses)。
-   *
    * @return Redis 指标 Map；Redis 未装配时返回空 Map
    */
   public Map<String, Object> collectRedisMetrics() {
-    StringRedisTemplate redisTemplate = stringRedisTemplateProvider.getIfAvailable();
-    if (redisTemplate == null) {
+    RedisAdvancedOps ops = redisAdvancedOpsProvider.getIfAvailable();
+    if (ops == null) {
       return Collections.emptyMap();
     }
 
     try {
-      Properties info = redisTemplate.getConnectionFactory().getConnection().info("stats");
+      Properties info = ops.getInfo("stats");
       if (info == null) {
         return Collections.emptyMap();
       }

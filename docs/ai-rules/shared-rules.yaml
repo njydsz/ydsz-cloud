@@ -17,13 +17,13 @@ meta:
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
   last_updated: "26.09.30-v8（弃用代码清理：删除 TreeNode/TreeNodeProvider/BaseI18nConfiguration，YDIZ-DOMAIN-002 升 P0；总规则 154 条）"
-  total_rules: 154
+  total_rules: 156
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 54  # +1: YDIZ-DOMAIN-002 从 P1 升 P0（TreeNode 已删除）
+    P0: 56  # +2: YDIZ-COMMON-057 LockTemplate 强制 + YDIZ-COMMON-058 幂等反射禁止
     P1: 74
     P2: 20
 
@@ -4329,6 +4329,111 @@ rules:
     source: "common-util 全局引用分析（YDIZ-COMMON-056，P2，26.09.30 RetryUtils 零引用问题激活）"
 
   # ============================================
+  # ydzs-common-lock 全局引用分析（2 条，P0，26.09.30）
+  # ============================================
+  # YDIZ-COMMON-057: 编程式锁必须使用 LockTemplate
+  - id: "YDIZ-COMMON-057"
+    category: "lock-reuse"
+    severity: "P0"
+    title: "【强制】编程式分布式锁必须使用 LockTemplate，禁止自实现 try-finally 锁管理"
+    description: |
+      业务代码通过 LockStrategy 获取 DistributedLocker 后手动管理 tryLock + try-finally + unlock
+      样板代码时，**必须**改为注入 LockTemplate 并调用 execute/executeOrDefault/executeWithProtection
+      系列方法，禁止在业务 Service 中手写锁获取与释放的 try-finally 逻辑。
+
+      **为什么必须使用 LockTemplate**：
+      - LockTemplate 自动处理获取失败、执行异常、锁释放的三段式逻辑，消除样板代码
+      - 统一收集 LockMetrics 指标（获取次数/成功率/等待时间）
+      - 提供 executeOrDefault（获取失败返回默认值）和 executeWithProtection（防缓存穿透）等高级语义
+      - 看门狗续期、释放通知、降级策略等行为在 LockTemplate 内统一实现，自实现无法保证一致性
+
+      **违反判据**：
+      - 业务代码中出现 `distributedLocker.tryLock(key, ...)` + `finally { distributedLocker.unlock(key, ...) }` 模式
+      - 自行 new 一个类似 LockTemplate 的工具类包装 DistributedLocker
+      - 在多个 Service 中重复实现相同的 tryLock + 业务 + unlock 三段逻辑
+
+      **例外（需在代码注释中说明 YDIZ-COMMON-057 例外原因）**：
+      - 需要非阻塞式获取锁并获取锁值（如通过锁值传递调度信息）的场景保留 DistributedLocker 直用
+      - 需要异步获取锁（返回 CompletableFuture）的场景
+
+    pattern: "discreteLocker\.tryLock.*finally.*discreteLocker\.unlock|DistributedLocker.*tryLock.*finally"
+    fix: |
+      1. 注入 LockTemplate（Spring 自动装配提供 Bean）
+      2. 替换 try-finally 样板代码：`lockTemplate.execute(key, leaseTime, SECONDS, () -> { ... })`
+      3. 需要返回值：`lockTemplate.execute(key, leaseTime, SECONDS, () -> businessMethod())`
+      4. 需要默认值降级：`lockTemplate.executeOrDefault(key, leaseTime, SECONDS, () -> businessMethod(), defaultValue)`
+      5. 需要防止缓存穿透：`lockTemplate.executeWithProtection(key, leaseTime, SECONDS, supplier)`
+      6. 删除自实现的 try-finally 锁管理代码
+    example_bad: |
+      ❌ 违规：手写 try-finally 锁管理
+      String lockValue = distributedLocker.tryLock(key, 30, TimeUnit.SECONDS);
+      if (lockValue == null) {
+          throw new BusinessException("获取锁失败");
+      }
+      try {
+          return doBusiness(orderId);
+      } finally {
+          distributedLocker.unlock(key, lockValue);
+      }
+    example_good: |
+      ✅ 正确：使用 LockTemplate 自动管理
+      import com.njydsz.common.lock.core.LockTemplate;
+      return lockTemplate.execute("order:" + orderId, 30, TimeUnit.SECONDS,
+          () -> doBusiness(orderId));
+    source: "ydsz-common-lock 全局引用分析（YDIZ-COMMON-057，P0，26.09.30 LockTemplate 零引用激活）"
+    exception: "需要获取锁值传递给调度信息 / 异步获取锁（CompletableFuture）场景可保留 DistributedLocker 直用"
+
+  # YDIZ-COMMON-058: 幂等实现必须走 common-lock 或 safe，禁止反射 Redis
+  - id: "YDIZ-COMMON-058"
+    category: "lock-reuse"
+    severity: "P0"
+    title: "【强制】幂等去重必须使用 DistributedLocker / RedisIdempotentStrategy，禁止反射操作 StringRedisTemplate"
+    description: |
+      所有幂等去重场景（Outbox 消费去重、消息去重、接口幂等、任务去重等）必须使用以下两种方式之一：
+      1. `DistributedLocker.tryLock(key, leaseTime, SECONDS)` + `unlock(key, lockValue)` — 需续期场景
+      2. `RedisIdempotentStrategy.acquire(key, ttl)` / `release(key)` — safe 模块简单幂等
+      3. `StringOps.setIfAbsent(key, value, ttl)` — 一次性幂等标记（无续期需求）
+
+      **禁止做法**：
+      - 通过反射（getMethod/invoke）操作 StringRedisTemplate.opsForValue().setIfAbsent()
+      - 使用 ConcurrentHashMap 存储幂等标记（集群部署下多节点无法保证幂等）
+      - 通过反射调用 RedisOperations 的底层方法绕过 RedisOps 封装
+
+      **为什么禁止反射操作 Redis**：
+      - 编译期无法检查 StringRedisTemplate 方法签名变更，运行时才暴露 NoSuchMethodException
+      - 绕过 StringOps（ydsz-common-redis 封装）进行 Redis 操作违反架构分层
+      - ConcurrentHashMap 缓存幂等标记在集群部署下多节点无法保证幂等语义
+      - 反射操作性能低于直接调用 + JIT 优化
+
+      **违反判据**：
+      - 代码中出现 `redisTemplate.getClass().getMethod("opsForValue").invoke(redisTemplate)`
+      - 代码中出现反射调用 setIfAbsent / getAndSet 等 Redis 方法
+      - Outbox 幂等中使用 ConcurrentHashMap 作为集群安全的幂等存储
+
+    pattern: "getClass\(\)\.getMethod.*opsForValue|newInstance.*setIfAbsent|ConcurrentHashMap.*idempotent"
+    fix: |
+      1. 移除反射逻辑，直接注入 StringOps（或 RedisStringOps）
+      2. 幂等获取：`stringOps.setIfAbsent(key, "1", Duration.ofSeconds(ttl))`
+      3. 幂等释放：`stringOps.del(key)` 或直接依赖 TTL 过期
+      4. 需要可重入 + 看门狗续期：改用 `lockTemplate.execute(key, ttl, SECONDS, () -> { ... })`
+      5. 降级为 ConcurrentHashMap 的方案需移除（集群部署无意义）或添加集群级锁保护
+    example_bad: |
+      ❌ 违规：反射操作 StringRedisTemplate
+      Object ops = redisTemplate.getClass().getMethod("opsForValue").invoke(redisTemplate);
+      Object result = ops.getClass().getMethod("setIfAbsent", Object.class, Object.class,
+          long.class, TimeUnit.class).invoke(ops, key, "1", 3600L, TimeUnit.SECONDS);
+    example_good: |
+      ✅ 正确：使用 StringOps 类型安全 API
+      import com.njydsz.common.redis.StringOps;
+      Boolean acquired = stringOps.setIfAbsent(key, "1", Duration.ofSeconds(ttl));
+      if (Boolean.TRUE.equals(acquired)) {
+          try { processMessage(event); }
+          finally { stringOps.del(key); }
+      }
+    source: "ydsz-common-lock 全局引用分析（YDIZ-COMMON-058，P0，26.09.30 OutboxIdempotentAspect 反射 Redis 整改）"
+    exception: "自定义 Redis 脚本（Lua）通过 RedisScriptExecutor 执行不在本规则限制范围"
+
+  # ============================================
   # 十二、core/domain/exception/locales 四模块利用率专项（3 条，26.09.30）
   # ============================================
   - id: "YDIZ-CORE-001"
@@ -4882,10 +4987,9 @@ stats:
     exception: "仅供框架内部用户无法定位精确 key 的场景；业务模块应优先使用精确 key"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.09.30-v6
+  # 版本标记：shared-rules.yaml v26.09.30-v8
   # 变更摘要：
-  #   - YDIZ-COMMON-050（P1）：L1/L2 框架模块异常必须使用 InfraException
-  #   - YDIZ-COMMON-051（P1）：catch 底层异常后禁止原样 rethrow RuntimeException
-  #   - YDIZ-COMMON-052（P2）：InfraException 默认 i18n key 为 infra.error
-  # 更新 total：P0=53 P1=72+2=74 P2=19+1=20 → total=153
+  #   - YDIZ-COMMON-057（P0）：编程式锁必须使用 LockTemplate，禁止 try-finally 自实现
+  #   - YDIZ-COMMON-058（P0）：幂等去重禁止反射 StringRedisTemplate，必须走 common-lock / safe
+  # 更新 total：P0=56 P1=74 P2=20 → total=156
   # ============================================

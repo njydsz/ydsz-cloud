@@ -95,6 +95,11 @@
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
+    <!-- ydsz-common-thread（P0-1: CacheThreadPoolManager 委托替代自建线程池注册表，纳入 ThreadPoolRegistry 统一监控） -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-thread</artifactId>
+    </dependency>
 
     <!-- 测试依赖 -->
     <dependency>

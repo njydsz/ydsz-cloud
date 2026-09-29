@@ -152,9 +152,6 @@ public class MsgNotificationRepositoryImpl implements MsgNotificationRepository 
     if (query.getIds() != null && !query.getIds().isEmpty()) {
       wrapper.in("id", query.getIds());
     }
-    if (query.getTenantId() != null && !query.getTenantId().isBlank()) {
-      wrapper.eq("tenant_id", query.getTenantId());
-    }
     if (query.getMessageGroup() != null && !query.getMessageGroup().isBlank()) {
       wrapper.eq("message_group", query.getMessageGroup());
     }

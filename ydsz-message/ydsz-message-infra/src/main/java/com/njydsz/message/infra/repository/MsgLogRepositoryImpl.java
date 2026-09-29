@@ -181,9 +181,6 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     if (query.getReceiptStatus() != null && !query.getReceiptStatus().isBlank()) {
       wrapper.eq("receipt_status", query.getReceiptStatus());
     }
-    if (query.getTenantId() != null && !query.getTenantId().isBlank()) {
-      wrapper.eq("tenant_id", query.getTenantId());
-    }
     if (query.getStartTime() != null && !query.getStartTime().isBlank()) {
       try {
         wrapper.ge("created_at", LocalDateTime.parse(query.getStartTime()));

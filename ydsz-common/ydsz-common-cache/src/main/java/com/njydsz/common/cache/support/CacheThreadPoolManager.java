@@ -3,17 +3,16 @@ package com.njydsz.common.cache.support;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
  * 缓存线程池统一管理器 — 集中管理缓存相关的所有线程池
@@ -28,8 +27,10 @@ import org.springframework.beans.factory.DisposableBean;
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
  *
- * <p>线程池基于 JDK {@link ThreadPoolExecutor} / {@link ScheduledThreadPoolExecutor} 纯 API 创建，
- * 符合《云顶编码规范》L1 工具纯度原则（禁止依赖高层模块）与 YDIZ-CONC-001 统一管理要求。
+ * <p><b>变更记录：</b>自建 {@code new ThreadPoolExecutor} 逻辑已委托
+ * {@link InternalExecutorFactory}（符合云顶编码规范 YDIZ-CONC-001/002），
+ * 所有创建的线程池自动注册到 {@code com.njydsz.common.thread.registry.ThreadPoolRegistry}
+ * 纳入统一监控、指标采集与 Actuator 端点查询。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -72,9 +73,10 @@ public class CacheThreadPoolManager implements DisposableBean {
     instance = manager;
   }
 
+  /** 普通线程池本地引用缓存（避免重复创建，同名首次调用时新建，后续复用同一实例） */
   private final ConcurrentHashMap<String, ExecutorService> pools = new ConcurrentHashMap<>(16);
 
-  /** 定时调度线程池映射 */
+  /** 定时调度线程池本地引用缓存 */
   private final ConcurrentHashMap<String, ScheduledExecutorService> scheduledPools =
       new ConcurrentHashMap<>(16);
 
@@ -106,7 +108,16 @@ public class CacheThreadPoolManager implements DisposableBean {
    *     此时 {@code coreSize} 与 {@code maxSize} 不生效
    */
   public ExecutorService getOrCreatePool(String name, int coreSize, int maxSize) {
-    return pools.computeIfAbsent(name, n -> createPool(n, coreSize, maxSize));
+    return pools.computeIfAbsent(
+        name,
+        n ->
+            InternalExecutorFactory.newCustomThreadPool(
+                "cache-" + n,
+                coreSize,
+                maxSize,
+                60L,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY)));
   }
 
   /**
@@ -117,82 +128,8 @@ public class CacheThreadPoolManager implements DisposableBean {
    * @return 定时调度线程池
    */
   public ScheduledExecutorService getOrCreateScheduledPool(String name, int coreSize) {
-    return scheduledPools.computeIfAbsent(name, n -> createScheduledPool(n, coreSize));
-  }
-
-  /**
-   * 创建定时调度线程池。
-   *
-   * <p>基于 JDK {@link ScheduledThreadPoolExecutor} 创建，
-   * 线程名前缀为 {@code cache-sched-}，拒绝策略为 CallerRunsPolicy（调用方线程兜底）。
-   *
-   * @param name 线程池名称（用于线程标识）
-   * @param coreSize 核心线程数
-   * @return 调度线程池实例
-   */
-  private ScheduledExecutorService createScheduledPool(String name, int coreSize) {
-    ScheduledThreadPoolExecutor executor =
-        new ScheduledThreadPoolExecutor(coreSize, createThreadFactory("cache-sched-" + name));
-    executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-    // 取消后自动移除，避免内存泄漏
-    executor.setRemoveOnCancelPolicy(true);
-    LOG.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
-    return executor;
-  }
-
-  /**
-   * 创建缓存专用线程池。
-   *
-   * <p>基于 JDK {@link ThreadPoolExecutor} 创建，线程名前缀为 {@code cache-}，
-   * 队列容量 1024，拒绝策略为 warn 日志（不抛异常，不阻塞调用方）。
-   *
-   * @param name 线程池名称（用于线程标识）
-   * @param coreSize 核心线程数
-   * @param maxSize 最大线程数
-   * @return 线程池实例
-   */
-  private ExecutorService createPool(String name, int coreSize, int maxSize) {
-    ThreadPoolExecutor executor =
-        new ThreadPoolExecutor(
-            coreSize,
-            maxSize,
-            60L,
-            TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(DEFAULT_QUEUE_CAPACITY),
-            createThreadFactory("cache-" + name),
-            createWarnRejectedHandler(name));
-
-    LOG.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
-    return executor;
-  }
-
-  /**
-   * 创建线程工厂，为线程分配可识别的名称前缀。
-   *
-   * @param prefix 线程名前缀
-   * @return 线程工厂实例
-   */
-  private static ThreadFactory createThreadFactory(String prefix) {
-    return new ThreadFactory() {
-      private final AtomicInteger counter = new AtomicInteger(1);
-
-      @Override
-      public Thread newThread(Runnable r) {
-        Thread t = new Thread(r, prefix + "-" + counter.getAndIncrement());
-        t.setDaemon(true);
-        return t;
-      }
-    };
-  }
-
-  /**
-   * 创建告警式拒绝处理器—记录 warn 日志而非抛异常，避免阻塞调用方。
-   *
-   * @param poolName 线程池名称
-   * @return 拒绝处理器实例
-   */
-  private static RejectedExecutionHandler createWarnRejectedHandler(String poolName) {
-    return (r, executor) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", poolName);
+    return scheduledPools.computeIfAbsent(
+        name, n -> InternalExecutorFactory.newScheduledThreadPool("cache-" + n, coreSize));
   }
 
   /**
@@ -274,5 +211,4 @@ public class CacheThreadPoolManager implements DisposableBean {
     }
     LOG.info("缓存线程池已关闭: {}", name);
   }
-
 }
