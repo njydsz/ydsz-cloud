@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -22,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * 审计日志磁盘兜底写入器
@@ -57,9 +57,6 @@ public class AuditFallbackWriter implements AutoCloseable {
 
   /** 锁获取超时时间（毫秒） */
   private static final long LOCK_TIMEOUT_MS = 100;
-
-  /** 日期格式化器（线程安全） */
-  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
   /** 兜底文件目录 */
   private volatile String fallbackDir = DEFAULT_FALLBACK_DIR;
@@ -273,7 +270,7 @@ public class AuditFallbackWriter implements AutoCloseable {
       Files.createDirectories(dir);
     }
 
-    String dateStr = LocalDate.now().format(DATE_FORMATTER);
+    String dateStr = DateUtils.formatLocalDate(LocalDate.now(), "yyyy-MM-dd");
     currentFilePath = dir.resolve("audit_fallback_" + dateStr + ".json");
     currentWriter =
         new BufferedWriter(

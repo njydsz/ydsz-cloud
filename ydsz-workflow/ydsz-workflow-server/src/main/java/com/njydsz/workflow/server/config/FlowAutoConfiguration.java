@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -16,6 +17,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.core.assembler.NameAssembler;
+import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.domain.gateway.NameServiceClient;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
@@ -116,6 +118,24 @@ public class FlowAutoConfiguration {
   public NameServiceClient nameServiceClient(ObjectProvider<NameAssembler> nameAssemblerProvider) {
     // 平台兜底 NoOpNameAssembler 缺省必在；显式禁用 ydsz.feign.name-assembler 时降级为空适配器，保证可启动
     return new NameServiceClientAdapter(nameAssemblerProvider.getIfAvailable());
+  }
+
+  /**
+   * i18n 任务装饰器：自动传播 Locale 上下文到所有 @Async 异步线程。
+   *
+   * <p>Spring 的 {@code AsyncAnnotationBeanPostProcessor} 会自动检测并应用 {@link TaskDecorator} Bean
+   * 到默认的异步执行器，使 {@code @Async} 方法内的 {@code I18n.message()} / {@code Locales.current()}
+   * 能够继承发起请求的 Locale 上下文，避免 i18n 翻译回退为默认语言。
+   *
+   * <p>委托 common-locales 的 {@link I18nContextPropagator}，
+   * 进入子线程前自动 {@code setLocale}、执行后自动恢复原 Locale。
+   *
+   * @return i18n Locale 传播装饰器
+   */
+  @Bean
+  @ConditionalOnClass(I18nContextPropagator.class)
+  public TaskDecorator i18nTaskDecorator() {
+    return I18nContextPropagator::wrapWithCurrentLocale;
   }
 
   // P0-1: flowQueueExecutor 线程池已迁移到 ydsz-common-thread 统一管理

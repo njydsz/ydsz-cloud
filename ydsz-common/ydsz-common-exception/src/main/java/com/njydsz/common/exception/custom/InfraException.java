@@ -86,13 +86,17 @@ public class InfraException extends AbstractYdszException {
   /** 默认错误码 */
   private static final String DEFAULT_CODE = CoreExceptionCode.INTERNAL_ERROR.getCode();
 
+  /** 默认 i18n 消息 key */
+  private static final String DEFAULT_KEY = "infra.error";
+
   // ==================== 核心构造函数 ====================
 
-  /** 默认构造函数，初始化为 500 / ERROR / SYSTEM */
+  /** 默认构造函数，初始化为 500 / ERROR / SYSTEM / infra.error */
   public InfraException() {
     super();
     initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     this.code = DEFAULT_CODE;
+    this.key = DEFAULT_KEY;
   }
 
   /**

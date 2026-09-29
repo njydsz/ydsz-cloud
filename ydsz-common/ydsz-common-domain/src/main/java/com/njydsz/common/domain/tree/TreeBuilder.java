@@ -280,6 +280,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
    * @see TreeNodeProvider
    * @see #build()
    */
+  @Deprecated
   public List<T> buildLazy(TreeNodeProvider<T, ID> provider, int maxDepth) {
     Objects.requireNonNull(provider, "TreeNodeProvider不能为null");
     Comparator<T> comparator = sortComparator != null ? sortComparator : defaultSortComparator();

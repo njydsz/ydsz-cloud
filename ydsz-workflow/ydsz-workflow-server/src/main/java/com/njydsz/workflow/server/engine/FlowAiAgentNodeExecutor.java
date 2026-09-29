@@ -1,8 +1,11 @@
 package com.njydsz.workflow.server.engine;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
@@ -199,8 +204,21 @@ public class FlowAiAgentNodeExecutor {
   private AgentExecutionResult executeSingleAttempt(AiAgentNodeConfigVO config, String prompt,
       Map<String, Object> context) {
     // 使用 CompletableFuture + 线程池实现超时控制
+    // P1-4：捕获当前请求 Locale，确保异步线程中 i18n 解析正确
+    Locale currentLocale = Locales.current();
+    Callable<AgentExecutionResult> localeAware =
+        I18nContextPropagator.wrap(
+            () -> agentServiceClient.execute(config.getAgentId(), prompt, context,
+                config.getTimeoutMs()),
+            currentLocale);
     CompletableFuture<AgentExecutionResult> future = CompletableFuture.supplyAsync(
-        () -> agentServiceClient.execute(config.getAgentId(), prompt, context, config.getTimeoutMs()),
+        () -> {
+          try {
+            return localeAware.call();
+          } catch (Exception e) {
+            throw new CompletionException(e);
+          }
+        },
         aiAgentExecutor);
 
     try {
