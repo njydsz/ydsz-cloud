@@ -68,10 +68,10 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
 
   public RabbitMQSubscriber(RabbitMQProperties properties, String queueName) {
     if (properties == null) {
-      throw new IllegalArgumentException("RabbitMQ 配置不能为空");
+      throw new IllegalArgumentException("RabbitMQ config must not be empty");
     }
     if (queueName == null || queueName.isEmpty()) {
-      throw new IllegalArgumentException("队列名称不能为空");
+      throw new IllegalArgumentException("Queue name must not be empty");
     }
     this.queueName = queueName;
     this.maxRetryCount = DEFAULT_MAX_RETRY_COUNT;
@@ -94,7 +94,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
       log.info("[RabbitMQ] 订阅者初始化完成，queue={}", queueName);
     } catch (IOException | TimeoutException e) {
       log.error("[RabbitMQ] 初始化订阅者失败，queue={}", queueName, e);
-      throw SysException.builder().message("RabbitMQ 订阅者初始化失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("RabbitMQ subscriber initialization failed: " + e.getMessage()).cause(e).build();
     }
   }
 
@@ -143,7 +143,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
       running.set(false);
       lastError.set(e);
       log.error("[RabbitMQ] 启动消费者失败，queue={}", queueName, e);
-      throw SysException.builder().message("RabbitMQ 消费者启动失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("RabbitMQ consumer startup failed: " + e.getMessage()).cause(e).build();
     }
     return queueName;
   }

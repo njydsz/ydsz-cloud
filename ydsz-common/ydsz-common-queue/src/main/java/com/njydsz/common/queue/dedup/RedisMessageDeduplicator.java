@@ -28,10 +28,10 @@ public class RedisMessageDeduplicator {
    */
   public RedisMessageDeduplicator(RedisStringOps redisStringOps, long ttlMillis) {
     if (redisStringOps == null) {
-      throw new IllegalArgumentException("redisStringOps 不能为 null");
+      throw new IllegalArgumentException("redisStringOps must not be null");
     }
     if (ttlMillis <= 0) {
-      throw new IllegalArgumentException("去重窗口必须大于 0");
+      throw new IllegalArgumentException("Dedup window must be greater than 0");
     }
     this.redisStringOps = redisStringOps;
     this.ttlSeconds = Math.max(1, ttlMillis / 1000);

@@ -36,7 +36,7 @@ public class RocketMQ extends AbstractMessageQueue {
   public RocketMQ(RocketMQProperties properties) {
     super("RocketMQ");
     if (properties == null) {
-      throw BusinessException.builder().key("RocketMQ 配置不能为空").build();
+      throw BusinessException.builder().key("RocketMQ config must not be empty").build();
     }
     this.properties = properties;
     // 连接校验延迟到首次 publish/subscribe（lazy init），避免 NameServer 启动顺序导致应用启动失败。
@@ -48,7 +48,7 @@ public class RocketMQ extends AbstractMessageQueue {
   public IMessagePublisher createPublisher(String channel) {
     checkNotClosed();
     if (channel == null || channel.isEmpty()) {
-      throw BusinessException.builder().key("主题名称不能为空").build();
+      throw BusinessException.builder().key("Topic name must not be empty").build();
     }
     RocketMQPublisher publisher = new RocketMQPublisher(properties, channel);
     publishers.add(publisher);
@@ -59,7 +59,7 @@ public class RocketMQ extends AbstractMessageQueue {
   public IMessageSubscriber createSubscriber(String channel) {
     checkNotClosed();
     if (channel == null || channel.isEmpty()) {
-      throw BusinessException.builder().key("主题名称不能为空").build();
+      throw BusinessException.builder().key("Topic name must not be empty").build();
     }
     RocketMQSubscriber subscriber = new RocketMQSubscriber(properties, channel);
     subscribers.add(subscriber);

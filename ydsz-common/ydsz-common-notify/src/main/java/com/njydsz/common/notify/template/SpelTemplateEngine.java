@@ -70,7 +70,7 @@ public class SpelTemplateEngine implements TemplateEngine {
   public String render(String templateId, Map<String, Object> variables) {
     NotifyTemplate template = templates.get(templateId);
     if (template == null) {
-      throw new IllegalArgumentException("模板不存在: " + templateId);
+      throw new IllegalArgumentException("Template does not exist: " + templateId);
     }
     // P0-9: 模板变量校验
     if (variableValidator != null) {
@@ -155,7 +155,7 @@ public class SpelTemplateEngine implements TemplateEngine {
   @Override
   public void register(NotifyTemplate template) {
     if (template == null || template.getTemplateId() == null) {
-      throw new IllegalArgumentException("模板及 templateId 不能为空");
+      throw new IllegalArgumentException("Template and templateId must not be empty");
     }
     templates.put(template.getTemplateId(), template);
   }

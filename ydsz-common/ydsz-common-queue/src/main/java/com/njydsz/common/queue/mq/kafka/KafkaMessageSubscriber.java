@@ -77,10 +77,10 @@ public class KafkaMessageSubscriber implements IMessageSubscriber {
   public KafkaMessageSubscriber(
       KafkaQueueProperties properties, String topic, ExecutorService consumerExecutor) {
     if (properties == null) {
-      throw new IllegalArgumentException("Kafka 配置不能为空");
+      throw new IllegalArgumentException("Kafka config must not be empty");
     }
     if (topic == null || topic.isEmpty()) {
-      throw new IllegalArgumentException("主题名称不能为空");
+      throw new IllegalArgumentException("Topic name must not be empty");
     }
     this.topic = topic;
     this.groupId = properties.resolvedGroupId();

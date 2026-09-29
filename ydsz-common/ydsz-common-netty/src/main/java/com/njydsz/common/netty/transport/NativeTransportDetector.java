@@ -78,7 +78,7 @@ public final class NativeTransportDetector {
     }
 
     if ("enabled".equalsIgnoreCase(mode)) {
-      throw new NettyException("原生传输已强制启用，但当前环境不支持 Epoll 或 KQueue");
+      throw new NettyException("Native transport is forcibly enabled, but Epoll or KQueue is not available in the current environment");
     }
 
     log.info("[Netty-Transport] 原生传输不可用，使用 NIO");

@@ -119,14 +119,14 @@ public class TemplateVariableValidator {
       if (value == null) {
         // 检查模板内容中是否引用了此变量
         if (isVariableReferenced(template.getContent(), varName)) {
-          throw new NotifyException("模板变量[" + varName + "]未提供值，模板: " + template.getTemplateId());
+          throw new NotifyException("Template variable[" + varName + "] has no value provided, template: " + template.getTemplateId());
         }
         continue;
       }
 
       String strValue = String.valueOf(value);
       if (strValue.isEmpty() && isVariableReferenced(template.getContent(), varName)) {
-        throw new NotifyException("模板变量[" + varName + "]值为空，模板: " + template.getTemplateId());
+        throw new NotifyException("Template variable[" + varName + "] value is empty, template: " + template.getTemplateId());
       }
     }
   }
@@ -177,34 +177,34 @@ public class TemplateVariableValidator {
         try {
           Integer.parseInt(strValue);
         } catch (NumberFormatException e) {
-          throw new NotifyException("变量[" + varName + "]期望整数类型，实际值: " + strValue);
+          throw new NotifyException("Variable[" + varName + "] expected integer type, actual value: " + strValue);
         }
         break;
       case DECIMAL:
         try {
           Double.parseDouble(strValue);
         } catch (NumberFormatException e) {
-          throw new NotifyException("变量[" + varName + "]期望数值类型，实际值: " + strValue);
+          throw new NotifyException("Variable[" + varName + "] expected numeric type, actual value: " + strValue);
         }
         break;
       case BOOLEAN:
         if (!"true".equalsIgnoreCase(strValue) && !"false".equalsIgnoreCase(strValue)) {
-          throw new NotifyException("变量[" + varName + "]期望布尔类型，实际值: " + strValue);
+          throw new NotifyException("Variable[" + varName + "] expected boolean type, actual value: " + strValue);
         }
         break;
       case EMAIL:
         if (!Pattern.matches("^[\\w.+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$", strValue)) {
-          throw new NotifyException("变量[" + varName + "]期望邮箱格式，实际值: " + strValue);
+          throw new NotifyException("Variable[" + varName + "] expected email format, actual value: " + strValue);
         }
         break;
       case PHONE:
         if (!Pattern.matches("^1[3-9]\\d{9}$", strValue)) {
-          throw new NotifyException("变量[" + varName + "]期望手机号格式，实际值: " + strValue);
+          throw new NotifyException("Variable[" + varName + "] expected phone number format, actual value: " + strValue);
         }
         break;
       case URL:
         if (!strValue.startsWith("http://") && !strValue.startsWith("https://")) {
-          throw new NotifyException("变量[" + varName + "]期望 URL 格式，实际值: " + strValue);
+          throw new NotifyException("Variable[" + varName + "] expected URL format, actual value: " + strValue);
         }
         break;
       default:

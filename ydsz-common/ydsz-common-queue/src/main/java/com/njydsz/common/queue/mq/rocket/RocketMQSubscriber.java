@@ -56,10 +56,10 @@ public class RocketMQSubscriber implements IMessageSubscriber {
 
   public RocketMQSubscriber(RocketMQProperties properties, String topic) {
     if (properties == null) {
-      throw new IllegalArgumentException("RocketMQ 配置不能为空");
+      throw new IllegalArgumentException("RocketMQ config must not be empty");
     }
     if (topic == null || topic.isEmpty()) {
-      throw new IllegalArgumentException("主题名称不能为空");
+      throw new IllegalArgumentException("Topic name must not be empty");
     }
     this.topic = topic;
     this.groupId = properties.resolvedGroupId();
@@ -99,7 +99,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
       running.set(false);
       lastError.set(e);
       log.error("[RocketMQ] 启动消费者失败，topic={}, groupId={}", topic, groupId, e);
-      throw SysException.builder().message("RocketMQ 消费者启动失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("RocketMQ consumer startup failed: " + e.getMessage()).cause(e).build();
     }
     return groupId;
   }
@@ -169,7 +169,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
     } catch (Exception e) {
       lastError.set(e);
       log.error("[RocketMQ] 消息处理异常，topic={}, msgId={}", msgExt.getTopic(), msgExt.getMsgId(), e);
-      throw SysException.builder().message("消息处理失败").cause(e).build();
+      throw SysException.builder().message("Message processing failed").cause(e).build();
     }
   }
 
@@ -189,7 +189,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
           topic,
           properties.resolvedNamesrvAddr(),
           e);
-      throw SysException.builder().message("RocketMQ 消费者创建失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("RocketMQ consumer creation failed: " + e.getMessage()).cause(e).build();
     }
   }
 }

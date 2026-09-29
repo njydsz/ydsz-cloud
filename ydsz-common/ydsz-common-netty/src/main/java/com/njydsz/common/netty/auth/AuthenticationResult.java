@@ -54,7 +54,7 @@ public class AuthenticationResult {
    */
   public static AuthenticationResult success(String bizId) {
     if (bizId == null || bizId.isEmpty()) {
-      throw new IllegalArgumentException("bizId 不能为空");
+      throw new IllegalArgumentException("bizId must not be empty");
     }
     return new AuthenticationResult(true, bizId, null, null);
   }

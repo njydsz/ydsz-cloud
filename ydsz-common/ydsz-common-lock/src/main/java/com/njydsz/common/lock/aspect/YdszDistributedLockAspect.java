@@ -135,7 +135,7 @@ public class YdszDistributedLockAspect {
     } catch (RuntimeException | Error e) {
       throw e;
     } catch (Throwable t) {
-      throw new DistributedLockException("业务方法执行异常 | lockKey=" + lockKey, t);
+      throw new DistributedLockException("Business method execution exception | lockKey=" + lockKey, t);
     } finally {
       long holdTimeMillis = System.currentTimeMillis() - holdStartTime;
       boolean released = lock.unlock(lockKey, lockValue);
@@ -193,7 +193,7 @@ public class YdszDistributedLockAspect {
           lockValue = lock.tryLock(lockKey, waitTime, leaseTime, timeUnit);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
-          throw new DistributedLockException("[ydsz-lock]获取锁时被中断 | lockKey=" + lockKey, e);
+          throw new DistributedLockException("[ydsz-lock]Lock acquisition interrupted | lockKey=" + lockKey, e);
         }
       }
 
@@ -210,7 +210,7 @@ public class YdszDistributedLockAspect {
           TimeUnit.MILLISECONDS.sleep(backoffDelay);
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
-          throw new DistributedLockException("[ydsz-lock]重试等待时被中断 | lockKey=" + lockKey, e);
+          throw new DistributedLockException("[ydsz-lock]Retry wait interrupted | lockKey=" + lockKey, e);
         }
       }
     }

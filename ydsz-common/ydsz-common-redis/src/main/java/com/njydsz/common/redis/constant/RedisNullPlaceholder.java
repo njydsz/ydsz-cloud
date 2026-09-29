@@ -18,7 +18,7 @@ public final class RedisNullPlaceholder {
   public static final String MARKER = "$YDSZ_NULL$";
 
   private RedisNullPlaceholder() {
-    throw new UnsupportedOperationException("常量类禁止实例化");
+    throw new UnsupportedOperationException("Constant class cannot be instantiated");
   }
 
   /**

@@ -25,7 +25,7 @@ import com.njydsz.common.json.YdszJson;
 public final class JsonCodecUtil {
 
   private JsonCodecUtil() {
-    throw new UnsupportedOperationException("工具类不可实例化");
+    throw new UnsupportedOperationException("Utility class cannot be instantiated");
   }
 
   /**

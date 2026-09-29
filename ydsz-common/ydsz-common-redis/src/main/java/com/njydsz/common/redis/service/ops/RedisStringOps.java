@@ -823,7 +823,7 @@ public class RedisStringOps {
    */
   public long incr(String key, long delta) {
     if (key == null || delta <= 0) {
-      throw new IllegalArgumentException("增量必须大于 0");
+      throw new IllegalArgumentException("Delta must be greater than 0");
     }
     String formattedKey = formatKey(key);
     try {
@@ -852,7 +852,7 @@ public class RedisStringOps {
    */
   public long decr(String key, long delta) {
     if (key == null || delta <= 0) {
-      throw new IllegalArgumentException("减量必须大于 0");
+      throw new IllegalArgumentException("Delta must be greater than 0");
     }
     String formattedKey = formatKey(key);
     try {
@@ -881,7 +881,7 @@ public class RedisStringOps {
    */
   public double incrByFloat(String key, double delta) {
     if (key == null) {
-      throw new IllegalArgumentException("键不能为空");
+      throw new IllegalArgumentException("Key must not be empty");
     }
     String formattedKey = formatKey(key);
     try {

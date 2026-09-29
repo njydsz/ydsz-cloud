@@ -45,6 +45,6 @@ public enum NotifyChannel {
         return channel;
       }
     }
-    throw new IllegalArgumentException("未知通知渠道: " + code);
+    throw new IllegalArgumentException("Unknown notification channel: " + code);
   }
 }

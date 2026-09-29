@@ -72,7 +72,7 @@ public final class RedisKeyNamingConvention {
 
   /** 私有构造，禁止实例化 */
   private RedisKeyNamingConvention() {
-    throw new AssertionError("工具类禁止实例化");
+    throw new AssertionError("Utility class cannot be instantiated");
   }
 
   /**

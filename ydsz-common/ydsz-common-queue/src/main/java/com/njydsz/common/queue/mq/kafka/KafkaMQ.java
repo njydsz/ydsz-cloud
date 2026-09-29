@@ -38,7 +38,7 @@ public class KafkaMQ extends AbstractMessageQueue {
   public KafkaMQ(KafkaQueueProperties properties, ExecutorService consumerExecutor) {
     super("Kafka");
     if (properties == null) {
-      throw BusinessException.builder().key("Kafka 配置不能为空").build();
+      throw BusinessException.builder().key("Kafka config must not be empty").build();
     }
     this.properties = properties;
     this.consumerExecutor = consumerExecutor;
@@ -51,7 +51,7 @@ public class KafkaMQ extends AbstractMessageQueue {
   public IMessagePublisher createPublisher(String channel) {
     checkNotClosed();
     if (channel == null || channel.isEmpty()) {
-      throw BusinessException.builder().key("主题名称不能为空").build();
+      throw BusinessException.builder().key("Topic name must not be empty").build();
     }
     KafkaMessagePublisher publisher = new KafkaMessagePublisher(properties, channel);
     publishers.add(publisher);
@@ -62,7 +62,7 @@ public class KafkaMQ extends AbstractMessageQueue {
   public IMessageSubscriber createSubscriber(String channel) {
     checkNotClosed();
     if (channel == null || channel.isEmpty()) {
-      throw BusinessException.builder().key("主题名称不能为空").build();
+      throw BusinessException.builder().key("Topic name must not be empty").build();
     }
     KafkaMessageSubscriber subscriber =
         new KafkaMessageSubscriber(properties, channel, consumerExecutor);

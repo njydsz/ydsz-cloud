@@ -105,7 +105,7 @@ public abstract class PooledMessage<T extends PooledMessage<T>> {
     return new Recycler<R>(DEFAULT_MAX_CAPACITY) {
       @Override
       protected R newObject(Handle<R> handle) {
-        throw new UnsupportedOperationException("子类必须覆写此方法");
+        throw new UnsupportedOperationException("Subclass must override this method");
       }
     };
   }
@@ -121,7 +121,7 @@ public abstract class PooledMessage<T extends PooledMessage<T>> {
     return new Recycler<R>(maxCapacityPerThread) {
       @Override
       protected R newObject(Handle<R> handle) {
-        throw new UnsupportedOperationException("子类必须覆写此方法");
+        throw new UnsupportedOperationException("Subclass must override this method");
       }
     };
   }

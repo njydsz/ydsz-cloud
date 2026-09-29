@@ -261,7 +261,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
       byte[] rawHmac = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
       return Base64.getEncoder().encodeToString(rawHmac);
     } catch (GeneralSecurityException e) {
-      throw new NotifyException("短信签名计算失败", e);
+      throw new NotifyException("SMS signature calculation failed", e);
     }
   }
 }

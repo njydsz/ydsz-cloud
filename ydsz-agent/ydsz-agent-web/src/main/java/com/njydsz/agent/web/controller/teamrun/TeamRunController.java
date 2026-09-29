@@ -1,7 +1,13 @@
 package com.njydsz.agent.web.controller.teamrun;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,6 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.teamrun.TeamRun;
 import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.server.teamrun.TeamRunOrchestrationService;
+import com.njydsz.agent.web.vo.TeamRunExportVO;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -240,6 +250,62 @@ public class TeamRunController {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<TeamRun> teamRuns = orchestrationService.listActiveTeamRuns(tenantId);
     return YdszResponse.success(teamRuns);
+  }
+
+  /**
+   * 导出 Team Run 列表（Excel）
+   *
+   * <p>导出当前租户下活跃 Team Run 列表，自动聚合后一次性写入。
+   * SuperFastExcelWriter 每次 {@code doWrite} 输出完整 xlsx，禁止多次调用，因此先聚合再写入。
+   * 文件名为 {@code teamruns_yyyyMMddHHmmss.xlsx}。
+   *
+   * <p>Excel 表头和列宽通过 {@link TeamRunExportVO} 上的 {@code @ExcelProperty} 注解定义。
+   */
+  @Operation(summary = "导出 Team Run 列表（Excel）")
+  @GetMapping("/export")
+  public void exportTeamRuns(jakarta.servlet.http.HttpServletResponse response) throws IOException {
+    String fileName = "teamruns_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader(
+        "Content-Disposition",
+        "attachment; filename="
+            + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
+
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
+    List<TeamRun> all = orchestrationService.listActiveTeamRuns(tenantId);
+    List<TeamRunExportVO> rows = new ArrayList<>(all.size());
+    for (TeamRun teamRun : all) {
+      rows.add(toExportVO(teamRun));
+    }
+
+    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        ExcelWriter writer = ExcelFacade.write(out, TeamRunExportVO.class)) {
+      writer.doWrite(rows);
+      response.getOutputStream().write(out.toByteArray());
+    }
+  }
+
+  // ==================== 私有转换方法 ====================
+
+  /**
+   * 将 {@link TeamRun} 转换为 Excel 导出行。
+   *
+   * @param teamRun Team Run 聚合根
+   * @return Excel 导出行
+   */
+  private TeamRunExportVO toExportVO(TeamRun teamRun) {
+    TeamRunExportVO export = new TeamRunExportVO();
+    export.setTeamRunId(teamRun.getTeamRunId());
+    export.setTitle(teamRun.getTitle());
+    export.setDescription(teamRun.getDescription());
+    export.setPattern(teamRun.getPattern() != null ? teamRun.getPattern().getDescription() : null);
+    export.setStatus(teamRun.getStatus() != null ? teamRun.getStatus().getDescription() : null);
+    export.setInitiatedBy(teamRun.getInitiatedBy());
+    export.setMemberCount(String.valueOf(teamRun.getMembers() != null ? teamRun.getMembers().size() : 0));
+    export.setCreatedAt(teamRun.getCreatedAt() != null ? teamRun.getCreatedAt().toString() : null);
+    export.setStartedAt(teamRun.getStartedAt() != null ? teamRun.getStartedAt().toString() : null);
+    export.setCompletedAt(teamRun.getCompletedAt() != null ? teamRun.getCompletedAt().toString() : null);
+    return export;
   }
 
   /**

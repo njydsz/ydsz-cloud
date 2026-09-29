@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
@@ -88,7 +90,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     try {
       return SentryObservation.<String>time("workflow.instance.create", null, null, () -> lifecycleManager.start(dto));
     } catch (Throwable t) {
-      throw new RuntimeException("instance_create observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

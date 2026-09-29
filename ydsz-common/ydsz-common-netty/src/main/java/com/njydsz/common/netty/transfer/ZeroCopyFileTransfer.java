@@ -43,7 +43,7 @@ public final class ZeroCopyFileTransfer {
   private static final int DEFAULT_CHUNK_SIZE = 64 * 1024;
 
   private ZeroCopyFileTransfer() {
-    throw new UnsupportedOperationException("工具类不可实例化");
+    throw new UnsupportedOperationException("Utility class cannot be instantiated");
   }
 
   /**
@@ -73,7 +73,7 @@ public final class ZeroCopyFileTransfer {
   public static ChannelFuture sendFile(Channel channel, File file, long offset, long length)
       throws IOException {
     if (!file.exists() || !file.isFile()) {
-      throw new IOException("文件不存在或非普通文件: " + file.getAbsolutePath());
+      throw new IOException("File does not exist or is not a regular file: " + file.getAbsolutePath());
     }
     if (offset < 0 || length < 0 || offset + length > file.length()) {
       throw new IllegalArgumentException(
@@ -103,7 +103,7 @@ public final class ZeroCopyFileTransfer {
       return future;
     } catch (Exception e) {
       raf.close();
-      throw new IOException("零拷贝文件传输异常: " + file.getAbsolutePath(), e);
+      throw new IOException("Zero-copy file transfer error: " + file.getAbsolutePath(), e);
     }
   }
 
@@ -136,10 +136,10 @@ public final class ZeroCopyFileTransfer {
   public static ChannelFuture sendChunked(
       Channel channel, File file, long offset, long length, int chunkSize) throws IOException {
     if (!file.exists() || !file.isFile()) {
-      throw new IOException("文件不存在或非普通文件: " + file.getAbsolutePath());
+      throw new IOException("File does not exist or is not a regular file: " + file.getAbsolutePath());
     }
     if (chunkSize <= 0) {
-      throw new IllegalArgumentException("分块大小必须 > 0: " + chunkSize);
+      throw new IllegalArgumentException("Chunk size must be greater than 0: " + chunkSize);
     }
 
     RandomAccessFile raf = new RandomAccessFile(file, "r");
@@ -162,7 +162,7 @@ public final class ZeroCopyFileTransfer {
       return future;
     } catch (Exception e) {
       raf.close();
-      throw new IOException("分块文件传输异常: " + file.getAbsolutePath(), e);
+      throw new IOException("Chunked file transfer error: " + file.getAbsolutePath(), e);
     }
   }
 

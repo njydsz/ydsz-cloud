@@ -13,7 +13,7 @@ package com.njydsz.common.lock.constant;
 public final class LockConstants {
 
   private LockConstants() {
-    throw new AssertionError("常量类禁止实例化");
+    throw new AssertionError("Constants class cannot be instantiated");
   }
 
   // ==================== 锁键分段 ====================

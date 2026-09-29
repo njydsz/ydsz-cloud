@@ -41,10 +41,10 @@ public class DelaySpec {
    */
   public static DelaySpec fixed(long delay, TimeUnit timeUnit) {
     if (delay < 0) {
-      throw new IllegalArgumentException("延迟时间不能为负数: " + delay);
+      throw new IllegalArgumentException("Delay time must not be negative: " + delay);
     }
     if (timeUnit == null) {
-      throw new IllegalArgumentException("时间单位不能为空");
+      throw new IllegalArgumentException("Time unit must not be empty");
     }
     return new DelaySpec(delay, timeUnit, 0);
   }
@@ -57,7 +57,7 @@ public class DelaySpec {
    */
   public static DelaySpec at(long deliverAtMillis) {
     if (deliverAtMillis <= 0) {
-      throw new IllegalArgumentException("投递时间必须为正数: " + deliverAtMillis);
+      throw new IllegalArgumentException("Deliver time must be positive: " + deliverAtMillis);
     }
     return new DelaySpec(0, TimeUnit.MILLISECONDS, deliverAtMillis);
   }

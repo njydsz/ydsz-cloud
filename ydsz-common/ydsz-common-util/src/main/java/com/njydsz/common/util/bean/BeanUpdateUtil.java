@@ -38,7 +38,7 @@ import java.util.Set;
 public final class BeanUpdateUtil {
 
   private BeanUpdateUtil() {
-    throw new UnsupportedOperationException("工具类不可实例化");
+    throw new UnsupportedOperationException("Utility class cannot be instantiated");
   }
 
   /**

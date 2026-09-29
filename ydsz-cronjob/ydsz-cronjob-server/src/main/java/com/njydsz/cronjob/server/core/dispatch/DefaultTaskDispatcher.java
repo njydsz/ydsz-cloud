@@ -35,6 +35,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -324,7 +325,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         return dispatchAsync(job, holdLock, triggerType, 0);
       });
     } catch (Throwable t) {
-      throw new RuntimeException("dispatch observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

@@ -4,6 +4,8 @@ import java.util.List;
 
 import lombok.Getter;
 
+import com.njydsz.common.exception.registry.YdszExceptionCode;
+
 /**
  * P0-3: 网关层统一错误码规范。
  *
@@ -47,6 +49,7 @@ import lombok.Getter;
  * @author ydsz-team
  * @see <a href="https://docs.njydsz.com/errors">错误码文档</a>
  */
+@YdszExceptionCode(module = "gateway", since = "26.09.01")
 @Getter
 public enum GatewayErrorCode {
 

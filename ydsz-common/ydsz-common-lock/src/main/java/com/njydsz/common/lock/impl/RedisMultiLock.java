@@ -75,7 +75,7 @@ public class RedisMultiLock implements DistributedLocker {
       List<DistributedLocker> locks,
       LockWatchDog lockWatchDog) {
     if (locks == null || locks.size() < 2) {
-      throw new IllegalArgumentException("RedisMultiLock 至少需要 2 个底层锁");
+      throw new IllegalArgumentException("RedisMultiLock requires at least 2 underlying locks");
     }
     this.stringRedisTemplate = stringRedisTemplate;
     this.locks = Collections.unmodifiableList(new ArrayList<>(locks));

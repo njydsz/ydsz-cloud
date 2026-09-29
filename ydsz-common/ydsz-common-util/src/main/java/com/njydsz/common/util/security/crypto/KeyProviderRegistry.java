@@ -89,13 +89,13 @@ public final class KeyProviderRegistry {
     try {
       byte[] key = provider.getKey(keyId);
       if (key == null) {
-        throw new CryptoException("KeyProvider 返回 null 密钥, keyId: " + keyId);
+        throw new CryptoException("KeyProvider returned null key, keyId: " + keyId);
       }
       return key;
     } catch (CryptoException e) {
       throw e;
     } catch (Exception e) {
-      throw new CryptoException("解析密钥失败, keyId: " + keyId, e);
+      throw new CryptoException("Failed to resolve key, keyId: " + keyId, e);
     }
   }
 }

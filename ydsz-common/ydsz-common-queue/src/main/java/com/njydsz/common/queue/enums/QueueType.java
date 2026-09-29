@@ -90,6 +90,6 @@ public enum QueueType {
         return type;
       }
     }
-    throw new IllegalArgumentException("未知的队列类型: " + value);
+    throw new IllegalArgumentException("Unknown queue type: " + value);
   }
 }

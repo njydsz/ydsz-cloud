@@ -160,7 +160,7 @@ public class DistributedScheduledAspect {
       if (e instanceof Error err) {
         throw err;
       }
-      throw new DistributedLockException("定时任务执行异常", e);
+      throw new DistributedLockException("Scheduled task execution exception", e);
     }
     // LOG_ONLY: 仅记录日志
     log.error(

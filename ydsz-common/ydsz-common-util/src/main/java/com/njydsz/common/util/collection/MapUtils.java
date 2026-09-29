@@ -1,11 +1,41 @@
 package com.njydsz.common.util.collection;
 
+import java.lang.invoke.CallSite;
+import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 
-import com.njydsz.common.util.bean.BeanMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * Map 工具类
@@ -45,6 +75,19 @@ public final class MapUtils {
     throw new UnsupportedOperationException(
         "MapUtils is a utility class and cannot be instantiated");
   }
+
+  // ==================== Bean 映射缓存与常量（原 BeanMapper 内联） ====================
+
+  private static final Logger LOG = LoggerFactory.getLogger(MapUtils.class);
+
+  private static final ConcurrentHashMap<Class<?>, Map<String, Method>> SETTER_CACHE =
+      new ConcurrentHashMap<>();
+
+  private static final ConcurrentHashMap<Method, BiConsumer<Object, Object>> SETTER_INVOKER_CACHE =
+      new ConcurrentHashMap<>();
+
+  private static final DateTimeFormatter DEFAULT_DATE_FORMATTER =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
   // ==================== 判空方法 ====================
 
@@ -260,12 +303,12 @@ public final class MapUtils {
     return safeCastMap(item);
   }
 
-  // ==================== Bean 映射（委托 BeanMapper）====================
+  // ==================== Bean 映射（原 BeanMapper 内联）====================
 
   /**
    * 将 {@code Map<String, Object>} 转换为指定类型的 Java Bean。
    *
-   * <p>普通 Bean 基于 setter 反射绑定字段；Record 基于规范构造器绑定组件值。 具体实现委托 {@link BeanMapper}。
+   * <p>普通 Bean 基于 setter 反射绑定字段；Record 基于规范构造器绑定组件值。
    *
    * @param source 源 Map（String 键）
    * @param targetClass 目标类型
@@ -274,7 +317,11 @@ public final class MapUtils {
    * @since 26.09.01
    */
   public static <T> T toBean(Map<String, Object> source, Class<T> targetClass) {
-    return BeanMapper.toBean(source, targetClass);
+    Objects.requireNonNull(targetClass, "targetClass must not be null");
+    if (source == null) {
+      return null;
+    }
+    return toBeanOrRecord(source, targetClass);
   }
 
   /**
@@ -283,8 +330,8 @@ public final class MapUtils {
    * <p>使用示例：
    *
    * <pre>{@code
-   * List<User> users = MapUtils.toBean(rawList, new BeanMapper.TypeReference<List<User>>() {});
-   * Map<String, Order> orders = MapUtils.toBean(rawMap, new BeanMapper.TypeReference<Map<String, Order>>() {});
+   * List<User> users = MapUtils.toBean(rawList, new MapUtils.TypeReference<List<User>>() {});
+   * Map<String, Order> orders = MapUtils.toBean(rawMap, new MapUtils.TypeReference<Map<String, Order>>() {});
    * }</pre>
    *
    * @param source 源数据（List 或 Map）
@@ -293,8 +340,40 @@ public final class MapUtils {
    * @return 转换后的对象
    * @since 26.09.01
    */
-  public static <T> T toBean(Object source, BeanMapper.TypeReference<T> typeRef) {
-    return BeanMapper.toBean(source, typeRef);
+  public static <T> T toBean(Object source, MapUtils.TypeReference<T> typeRef) {
+    Objects.requireNonNull(typeRef, "typeRef must not be null");
+    Type type = typeRef.getType();
+
+    if (type instanceof ParameterizedType pt && pt.getRawType() == List.class) {
+      if (!(source instanceof List<?> rawList)) {
+        throw new IllegalArgumentException(
+            "Expected List, got " + (source == null ? "null" : source.getClass()));
+      }
+      Type elementType = pt.getActualTypeArguments()[0];
+      return (T) convertListWithType(rawList, elementType);
+    }
+
+    if (type instanceof ParameterizedType pt && pt.getRawType() == Map.class) {
+      if (!(source instanceof Map<?, ?> rawMap)) {
+        throw new IllegalArgumentException(
+            "Expected Map, got " + (source == null ? "null" : source.getClass()));
+      }
+      Type valueType = pt.getActualTypeArguments()[1];
+      return (T) convertMapWithType(rawMap, valueType);
+    }
+
+    if (type instanceof Class<?> clazz) {
+      if (source instanceof Map<?, ?> rawMap) {
+        Class<T> target = (Class<T>) clazz;
+        return toBeanOrRecord(toStringObjectMap(rawMap), target);
+      }
+      if (clazz.isInstance(source)) {
+        return (T) source;
+      }
+      throw new IllegalArgumentException("Cannot convert " + source.getClass() + " to " + clazz);
+    }
+
+    throw new IllegalArgumentException("Unsupported type: " + type);
   }
 
   /**
@@ -309,7 +388,455 @@ public final class MapUtils {
    * @since 26.09.01
    */
   public static <T> T toBeanOrRecord(Map<String, Object> map, Class<T> clazz) {
-    return BeanMapper.toBeanOrRecord(map, clazz);
+    Objects.requireNonNull(map, "map must not be null");
+    Objects.requireNonNull(clazz, "clazz must not be null");
+
+    if (clazz.isRecord()) {
+      return instantiateRecord(map, clazz);
+    }
+    return toBeanInternal(map, clazz);
+  }
+
+  // ==================== Bean 映射内部方法 ====================
+
+  private static <T> T toBeanInternal(Map<String, Object> map, Class<T> targetClass) {
+    if (map == null) {
+      throw new IllegalArgumentException("map cannot be null");
+    }
+    if (targetClass == null) {
+      throw new IllegalArgumentException("targetClass cannot be null");
+    }
+
+    T bean = createInstance(targetClass);
+    if (map.isEmpty()) {
+      return bean;
+    }
+
+    Map<String, Method> setters = getCachedSetters(targetClass);
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      String fieldName = entry.getKey();
+      Object value = entry.getValue();
+      if (value == null) {
+        continue;
+      }
+      Method setter = setters.get(fieldName);
+      if (setter == null) {
+        setter = setters.get(StringUtils.toCamelCase(fieldName));
+      }
+      if (setter == null) {
+        continue;
+      }
+      Class<?> paramType = setter.getParameterTypes()[0];
+      Object converted = convertValue(value, paramType, setter);
+      if (converted != null) {
+        try {
+          BiConsumer<Object, Object> invoker =
+              SETTER_INVOKER_CACHE.computeIfAbsent(setter, MapUtils::createSetterInvoker);
+          invoker.accept(bean, converted);
+        } catch (Exception e) {
+          // 设置失败（业务 setter 抛异常等），跳过该字段
+        }
+      }
+    }
+    return bean;
+  }
+
+  private static BiConsumer<Object, Object> createSetterInvoker(Method setter) {
+    try {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle handle = lookup.unreflect(setter);
+      CallSite site =
+          LambdaMetafactory.metafactory(
+              lookup,
+              "accept",
+              MethodType.methodType(BiConsumer.class),
+              MethodType.methodType(void.class, Object.class, Object.class),
+              handle,
+              handle.type());
+      return (BiConsumer<Object, Object>) site.getTarget().invokeExact();
+    } catch (Throwable t) {
+      return (bean, value) -> {
+        try {
+          setter.invoke(bean, value);
+        } catch (ReflectiveOperationException e) {
+          throw new IllegalStateException("Failed to invoke setter " + setter.getName(), e);
+        }
+      };
+    }
+  }
+
+  public static Map<String, Method> getCachedSetters(Class<?> clazz) {
+    return SETTER_CACHE.computeIfAbsent(clazz, k -> scanSetters(clazz));
+  }
+
+  public static Map<String, Method> scanSetters(Class<?> clazz) {
+    Map<String, Method> setterMap = new LinkedHashMap<>();
+    Method[] methods = clazz.getMethods();
+    for (Method method : methods) {
+      if (!isSetter(method)) {
+        continue;
+      }
+      String methodName = method.getName();
+      String fieldName = Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+      setterMap.put(fieldName, method);
+    }
+    return setterMap;
+  }
+
+  public static boolean isSetter(Method method) {
+    if (method == null) {
+      return false;
+    }
+    if (method.isBridge()) {
+      return false;
+    }
+    int modifiers = method.getModifiers();
+    if (!Modifier.isPublic(modifiers) || Modifier.isStatic(modifiers)) {
+      return false;
+    }
+    if (!void.class.equals(method.getReturnType())) {
+      return false;
+    }
+    if (method.getName().length() <= 3 || !method.getName().startsWith("set")) {
+      return false;
+    }
+    return method.getParameterCount() == 1;
+  }
+
+  public static DateTimeFormatter getDefaultDateFormatter() {
+    return DEFAULT_DATE_FORMATTER;
+  }
+
+  public static Object convertValue(Object value, Class<?> paramType, Method setter) {
+    return convertValue(value, paramType, DEFAULT_DATE_FORMATTER, setter);
+  }
+
+  public static Object convertValue(
+      Object value, Class<?> paramType, DateTimeFormatter dateFormatter, Method setter) {
+    if (paramType.isInstance(value)) {
+      return value;
+    }
+
+    if (paramType == Optional.class && setter != null) {
+      return convertOptional(value, setter.getGenericParameterTypes()[0]);
+    }
+
+    String str = value.toString();
+    if (str.isEmpty()) {
+      return null;
+    }
+
+    try {
+      if (paramType == int.class || paramType == Integer.class) {
+        return Integer.valueOf(str);
+      }
+      if (paramType == long.class || paramType == Long.class) {
+        return Long.valueOf(str);
+      }
+      if (paramType == short.class || paramType == Short.class) {
+        return Short.valueOf(str);
+      }
+      if (paramType == byte.class || paramType == Byte.class) {
+        return Byte.valueOf(str);
+      }
+      if (paramType == double.class || paramType == Double.class) {
+        return Double.valueOf(str);
+      }
+      if (paramType == float.class || paramType == Float.class) {
+        return Float.valueOf(str);
+      }
+      if (paramType == boolean.class || paramType == Boolean.class) {
+        Boolean b = toBoolean(value);
+        return b != null ? b : null;
+      }
+      if (paramType == BigDecimal.class) {
+        return new BigDecimal(str);
+      }
+      if (paramType == BigInteger.class) {
+        return new BigInteger(str);
+      }
+      if (paramType == UUID.class) {
+        return UUID.fromString(str);
+      }
+      if (paramType == YearMonth.class) {
+        return YearMonth.parse(str);
+      }
+      if (paramType == Duration.class) {
+        return Duration.parse(str);
+      }
+      if (paramType == LocalDateTime.class) {
+        return LocalDateTime.parse(str, dateFormatter);
+      }
+      if (paramType == LocalDate.class) {
+        return LocalDate.parse(str);
+      }
+      if (paramType == LocalTime.class) {
+        return LocalTime.parse(str);
+      }
+      if (paramType == Instant.class) {
+        return Instant.parse(str);
+      }
+      if (paramType == Date.class) {
+        LocalDateTime ldt = LocalDateTime.parse(str, dateFormatter);
+        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+      }
+      if (paramType == String.class) {
+        return str;
+      }
+    } catch (Exception e) {
+      return null;
+    }
+
+    if (value instanceof Map<?, ?> nestedMap
+        && !paramType.isInterface()
+        && !Modifier.isAbstract(paramType.getModifiers())) {
+      Map<String, Object> nestedStringMap = toStringObjectMap(nestedMap);
+      try {
+        return toBeanOrRecord(nestedStringMap, paramType);
+      } catch (Exception e) {
+        return null;
+      }
+    }
+
+    if (value instanceof List<?> rawList
+        && List.class.isAssignableFrom(paramType)
+        && setter != null) {
+      return convertToList(rawList, setter, dateFormatter);
+    }
+
+    if (value instanceof Map<?, ?> rawMap
+        && Map.class.isAssignableFrom(paramType)
+        && setter != null) {
+      return convertToMap(rawMap, setter);
+    }
+
+    return null;
+  }
+
+  public static Object convertOptional(Object value, Type optionalGenericType) {
+    if (value == null) {
+      return Optional.empty();
+    }
+    if (value instanceof Optional<?>) {
+      return value;
+    }
+    if (optionalGenericType instanceof ParameterizedType pt) {
+      Type innerType = pt.getActualTypeArguments()[0];
+      if (innerType instanceof Class<?> clazz) {
+        Object converted =
+            (value instanceof Map<?, ?> m)
+                ? toBeanOrRecord(toStringObjectMap(m), clazz)
+                : convertValue(value, clazz, DEFAULT_DATE_FORMATTER, null);
+        return Optional.ofNullable(converted);
+      }
+    }
+    return Optional.ofNullable(value);
+  }
+
+  public static Object convertToList(List<?> rawList, Method setter, DateTimeFormatter formatter) {
+    try {
+      Type genericParam = setter.getGenericParameterTypes()[0];
+      if (!(genericParam instanceof ParameterizedType pt)) {
+        return rawList;
+      }
+      Type[] typeArgs = pt.getActualTypeArguments();
+      if (typeArgs.length != 1 || !(typeArgs[0] instanceof Class<?> elementType)) {
+        return rawList;
+      }
+      if (elementType == Object.class || elementType == String.class) {
+        return new ArrayList<>(rawList);
+      }
+
+      List<Object> result = new ArrayList<>(rawList.size());
+      for (Object item : rawList) {
+        if (item instanceof Map<?, ?> itemMap) {
+          if (!elementType.isInterface() && !Modifier.isAbstract(elementType.getModifiers())) {
+            result.add(toBeanOrRecord(toStringObjectMap(itemMap), elementType));
+          } else {
+            result.add(item);
+          }
+        } else {
+          result.add(item);
+        }
+      }
+      return result;
+    } catch (Exception e) {
+      return rawList;
+    }
+  }
+
+  private static Object convertToMap(Map<?, ?> rawMap, Method setter) {
+    try {
+      Type genericParam = setter.getGenericParameterTypes()[0];
+      if (!(genericParam instanceof ParameterizedType pt)) {
+        return new LinkedHashMap<>(rawMap);
+      }
+      Type[] typeArgs = pt.getActualTypeArguments();
+      if (typeArgs.length != 2) {
+        return new LinkedHashMap<>(rawMap);
+      }
+      Type valueType = typeArgs[1];
+      if (valueType == Object.class || valueType == String.class) {
+        return new LinkedHashMap<>(rawMap);
+      }
+      return convertMapWithType(rawMap, valueType);
+    } catch (Exception e) {
+      return new LinkedHashMap<>(rawMap);
+    }
+  }
+
+  public static <T> T createInstance(Class<T> clazz) {
+    try {
+      Constructor<T> constructor = clazz.getDeclaredConstructor();
+      return constructor.newInstance();
+    } catch (NoSuchMethodException e) {
+      throw new IllegalArgumentException(
+          "Class " + clazz.getName() + " 缺少无参构造器，无法通过 MapUtils.toBean 转换", e);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalArgumentException(
+          "实例化失败: " + clazz.getName() + ", 原因: " + e.getMessage(), e);
+    }
+  }
+
+  public static List<Object> convertListWithType(List<?> rawList, Type elementType) {
+    List<Object> result = new ArrayList<>(rawList.size());
+    for (Object item : rawList) {
+      result.add(convertSingleItem(item, elementType));
+    }
+    return result;
+  }
+
+  public static Map<String, Object> convertMapWithType(Map<?, ?> rawMap, Type valueType) {
+    Map<String, Object> result = new LinkedHashMap<>(rawMap.size());
+    for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+      result.put(String.valueOf(entry.getKey()), convertSingleItem(entry.getValue(), valueType));
+    }
+    return result;
+  }
+
+  public static Object convertSingleItem(Object item, Type targetType) {
+    if (item == null) {
+      return null;
+    }
+    if (targetType instanceof Class<?> clazz) {
+      if (clazz.isInstance(item)) {
+        return item;
+      }
+      if (item instanceof Map<?, ?> itemMap) {
+        return toBeanOrRecord(toStringObjectMap(itemMap), clazz);
+      }
+      return item;
+    }
+    if (targetType instanceof ParameterizedType pt) {
+      if (pt.getRawType() == List.class && item instanceof List<?> nestedList) {
+        return convertListWithType(nestedList, pt.getActualTypeArguments()[0]);
+      }
+      if (pt.getRawType() == Map.class && item instanceof Map<?, ?> nestedMap) {
+        return convertMapWithType(nestedMap, pt.getActualTypeArguments()[1]);
+      }
+    }
+    return item;
+  }
+
+  public static <T> T instantiateRecord(Map<String, Object> map, Class<T> clazz) {
+    RecordComponent[] components = clazz.getRecordComponents();
+    Class<?>[] paramTypes = new Class[components.length];
+    Object[] args = new Object[components.length];
+
+    for (int i = 0; i < components.length; i++) {
+      paramTypes[i] = components[i].getType();
+      String name = components[i].getName();
+      Object rawValue = map.get(name);
+      if (rawValue == null) {
+        rawValue = map.get(StringUtils.toUnderScoreCase(name));
+      }
+      if (rawValue == null) {
+        rawValue = map.get(StringUtils.toCamelCase(name));
+      }
+      Type genericType = components[i].getGenericType();
+      args[i] =
+          (rawValue != null) ? convertComponentValue(rawValue, paramTypes[i], genericType) : null;
+    }
+
+    try {
+      Constructor<T> constructor = clazz.getDeclaredConstructor(paramTypes);
+      return constructor.newInstance(args);
+    } catch (NoSuchMethodException e) {
+      throw new IllegalArgumentException(
+          "Record " + clazz.getName() + " missing canonical constructor", e);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalArgumentException(
+          "Failed to create record " + clazz.getName() + ": " + e.getMessage(), e);
+    }
+  }
+
+  public static Object convertComponentValue(Object value, Class<?> paramType, Type genericType) {
+    if (paramType.isInstance(value)) {
+      return value;
+    }
+
+    if (paramType == Optional.class) {
+      if (genericType instanceof ParameterizedType pt) {
+        Type innerType = pt.getActualTypeArguments()[0];
+        if (value instanceof Map<?, ?> m) {
+          if (innerType instanceof Class<?> clazz) {
+            return Optional.of(toBeanOrRecord(toStringObjectMap(m), clazz));
+          }
+        }
+      }
+      return Optional.ofNullable(value);
+    }
+
+    if (value instanceof Map<?, ?> m && paramType.isRecord()) {
+      return instantiateRecord(toStringObjectMap(m), paramType);
+    }
+
+    if (value instanceof Map<?, ?> m && !paramType.isInterface()) {
+      return toBeanOrRecord(toStringObjectMap(m), paramType);
+    }
+
+    return convertValue(value, paramType, DEFAULT_DATE_FORMATTER, null);
+  }
+
+  /**
+   * 泛型类型引用——用于捕获参数化类型信息，解决 Java 泛型擦除导致的运行时类型丢失。
+   *
+   * <p>用法：
+   *
+   * <pre>{@code
+   * List<User> users = MapUtils.toBean(map.getList("users"), new MapUtils.TypeReference<List<User>>() {});
+   * Map<String, Order> orders = MapUtils.toBean(map.getMap("orders"),
+   *     new MapUtils.TypeReference<Map<String, Order>>() {});
+   * }</pre>
+   *
+   * @param <T> 目标泛型类型
+   * @since 26.09.01
+   */
+  public abstract static class TypeReference<T> {
+    private final Type type;
+
+    protected TypeReference() {
+      Type superClass = getClass().getGenericSuperclass();
+      if (!(superClass instanceof ParameterizedType)) {
+        throw new IllegalStateException(
+            "TypeReference must be created as anonymous subclass with type parameter");
+      }
+      this.type = ((ParameterizedType) superClass).getActualTypeArguments()[0];
+    }
+
+    public Type getType() {
+      return type;
+    }
+
+    public Class<T> getRawType() {
+      if (type instanceof Class<?> c) {
+        return (Class<T>) c;
+      }
+      if (type instanceof ParameterizedType pt) {
+        return (Class<T>) pt.getRawType();
+      }
+      return (Class<T>) Object.class;
+    }
   }
 
   // ==================== 命名转换方法 ====================

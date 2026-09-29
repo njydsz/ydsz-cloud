@@ -66,10 +66,10 @@ public class RocketMQPublisher implements IMessagePublisher {
 
   public RocketMQPublisher(RocketMQProperties properties, String topic, String tag) {
     if (properties == null) {
-      throw new IllegalArgumentException("RocketMQ 配置不能为空");
+      throw new IllegalArgumentException("RocketMQ config must not be empty");
     }
     if (topic == null || topic.isEmpty()) {
-      throw new IllegalArgumentException("主题名称不能为空");
+      throw new IllegalArgumentException("Topic name must not be empty");
     }
     this.topic = topic;
     this.tag = tag != null ? tag : "*";
@@ -88,7 +88,7 @@ public class RocketMQPublisher implements IMessagePublisher {
   @Override
   public void publish(String message) {
     if (message == null) {
-      throw BusinessException.builder().key("消息内容不能为空").build();
+      throw BusinessException.builder().key("Message content must not be empty").build();
     }
     checkNotClosed();
     try {
@@ -101,14 +101,14 @@ public class RocketMQPublisher implements IMessagePublisher {
       throw e;
     } catch (Exception e) {
       log.error("[RocketMQ] 消息发布失败，topic={}", topic, e);
-      throw BusinessException.builder().key("RocketMQ 消息发布失败：" + e.getMessage()).cause(e).build();
+      throw BusinessException.builder().key("RocketMQ message publish failed: " + e.getMessage()).cause(e).build();
     }
   }
 
   @Override
   public void publish(QueueMessage message) {
     if (message == null) {
-      throw BusinessException.builder().key("消息不能为空").build();
+      throw BusinessException.builder().key("Message must not be empty").build();
     }
     checkNotClosed();
 
@@ -168,7 +168,7 @@ public class RocketMQPublisher implements IMessagePublisher {
    */
   public CompletableFuture<SendResult> publishAsync(QueueMessage message) {
     if (message == null) {
-      throw BusinessException.builder().key("消息不能为空").build();
+      throw BusinessException.builder().key("Message must not be empty").build();
     }
     checkNotClosed();
 
@@ -244,10 +244,10 @@ public class RocketMQPublisher implements IMessagePublisher {
    */
   public void publishDelayed(QueueMessage message, long delayMillis) {
     if (message == null) {
-      throw BusinessException.builder().key("消息不能为空").build();
+      throw BusinessException.builder().key("Message must not be empty").build();
     }
     if (delayMillis <= 0) {
-      throw BusinessException.builder().key("延迟时间必须大于 0").build();
+      throw BusinessException.builder().key("Delay time must be greater than 0").build();
     }
     checkNotClosed();
 
@@ -372,7 +372,7 @@ public class RocketMQPublisher implements IMessagePublisher {
    */
   public void publishSequential(QueueMessage message) {
     if (message == null || !message.isSequential()) {
-      throw BusinessException.builder().key("顺序消息必须设置 messageGroupKey").build();
+      throw BusinessException.builder().key("Sequential message must set messageGroupKey").build();
     }
     checkNotClosed();
     Exception lastException = null;
@@ -477,7 +477,7 @@ public class RocketMQPublisher implements IMessagePublisher {
       return producer;
     } catch (Exception e) {
       log.error("[RocketMQ] 创建生产者失败，namesrvAddr={}", properties.resolvedNamesrvAddr(), e);
-      throw BusinessException.builder().key("RocketMQ 生产者创建失败：" + e.getMessage()).cause(e).build();
+      throw BusinessException.builder().key("RocketMQ producer creation failed: " + e.getMessage()).cause(e).build();
     }
   }
 
@@ -566,7 +566,7 @@ public class RocketMQPublisher implements IMessagePublisher {
 
   private void checkNotClosed() {
     if (closed) {
-      throw BusinessException.builder().key("发布者已关闭，无法继续操作").build();
+      throw BusinessException.builder().key("Publisher is closed, cannot continue operation").build();
     }
   }
 }

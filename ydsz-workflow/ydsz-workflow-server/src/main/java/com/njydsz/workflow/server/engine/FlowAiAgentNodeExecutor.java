@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
@@ -146,7 +147,7 @@ public class FlowAiAgentNodeExecutor {
         return result.approve();
       });
     } catch (Throwable t) {
-      throw new RuntimeException("node_execute observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

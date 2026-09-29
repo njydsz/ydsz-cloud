@@ -108,13 +108,13 @@ public class TokenProperties {
   public void validate() {
     if (secretKey == null || secretKey.isBlank()) {
       throw new IllegalStateException(
-          "JWT secretKey 未配置，请在配置文件中设置 ydsz.auth.token.secret-key（建议 32 字节以上的随机字符串）");
+          "JWT secretKey is not configured, please set ydsz.auth.token.secret-key in configuration file (recommend a random string of 32+ bytes)");
     }
     if (secretKey.getBytes(StandardCharsets.UTF_8).length < 32) {
       throw new IllegalStateException(
-          "JWT secretKey 长度不足 32 字节，当前长度: "
+          "JWT secretKey length is less than 32 bytes, current length: "
               + secretKey.getBytes(StandardCharsets.UTF_8).length
-              + "，请使用更安全的密钥");
+              + ", please use a more secure key");
     }
     // 弱密钥检测：启动时提醒更换
     String lowerKey = secretKey.toLowerCase();

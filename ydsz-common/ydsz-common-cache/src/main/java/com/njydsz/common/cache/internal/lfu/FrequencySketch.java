@@ -75,7 +75,7 @@ public final class FrequencySketch {
       countersPerLong = 8;
       countersPerLongShift = 3;
     } else {
-      throw new IllegalArgumentException("不支持位宽: " + bitSize + "，仅支持 4 或 8");
+      throw new IllegalArgumentException("Unsupported bit width: " + bitSize + ", only 4 or 8 is supported");
     }
     // 同步更新计数器索引掩码，避免位宽切换后探测索引越界
     if (table != null) {

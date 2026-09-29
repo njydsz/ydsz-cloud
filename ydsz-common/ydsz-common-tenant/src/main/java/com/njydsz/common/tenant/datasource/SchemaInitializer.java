@@ -90,7 +90,7 @@ public class SchemaInitializer {
       log.info("租户 schema [{}] 初始化完成（模板 schema: {}）", schemaName, templateSchema);
     } catch (SQLException e) {
       log.error("租户 schema [{}] 初始化失败: {}", schemaName, e.getMessage(), e);
-      throw new SchemaProvisionException("schema 初始化失败: " + schemaName, e);
+      throw new SchemaProvisionException("Schema initialization failed: " + schemaName, e);
     }
   }
 
@@ -112,7 +112,7 @@ public class SchemaInitializer {
       createSchema(conn, schemaName);
       grantSchemaPermissions(conn, schemaName);
     } catch (SQLException e) {
-      throw new SchemaProvisionException("schema 创建失败: " + schemaName, e);
+      throw new SchemaProvisionException("Schema creation failed: " + schemaName, e);
     }
   }
 
@@ -224,11 +224,11 @@ public class SchemaInitializer {
 
   private void validateSchemaName(@Nonnull String schemaName) {
     if (schemaName == null || schemaName.isEmpty()) {
-      throw new IllegalArgumentException("schemaName 不可为空");
+      throw new IllegalArgumentException("schemaName must not be blank");
     }
     // 安全性：schema 名必须符合命名规范，防止 SQL 注入
     if (!schemaName.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
-      throw new IllegalArgumentException("非法的 schema 名称: " + schemaName);
+      throw new IllegalArgumentException("Invalid schema name: " + schemaName);
     }
   }
 

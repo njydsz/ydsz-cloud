@@ -68,7 +68,7 @@ public class ProtobufMessageSerializer implements MessageSerializer {
   @Override
   public String serialize(QueueMessage message) throws SerializationException {
     if (!isProtobufAvailable()) {
-      throw new UnsupportedOperationException("protobuf-java 不可用，请在 pom.xml 中引入 protobuf-java 依赖");
+      throw new UnsupportedOperationException("protobuf-java is not available, please add protobuf-java dependency in pom.xml");
     }
     if (message == null) {
       return null;
@@ -84,7 +84,7 @@ public class ProtobufMessageSerializer implements MessageSerializer {
   @Override
   public QueueMessage deserialize(String payload) throws SerializationException {
     if (!isProtobufAvailable()) {
-      throw new UnsupportedOperationException("protobuf-java 不可用，请在 pom.xml 中引入 protobuf-java 依赖");
+      throw new UnsupportedOperationException("protobuf-java is not available, please add protobuf-java dependency in pom.xml");
     }
     if (payload == null || payload.isEmpty()) {
       return null;
@@ -118,7 +118,7 @@ public class ProtobufMessageSerializer implements MessageSerializer {
       Method method = target.getClass().getMethod(methodName, paramTypes);
       return method.invoke(target, args);
     } catch (Exception e) {
-      throw new SerializationException("反射调用 protobuf 方法失败: " + methodName, e);
+      throw new SerializationException("Failed to invoke protobuf method via reflection: " + methodName, e);
     }
   }
 }

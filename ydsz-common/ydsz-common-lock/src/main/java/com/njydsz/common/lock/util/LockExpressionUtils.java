@@ -44,7 +44,7 @@ public final class LockExpressionUtils {
   private static final Map<String, Expression> EXPRESSION_CACHE = new ConcurrentHashMap<>(64);
 
   private LockExpressionUtils() {
-    throw new AssertionError("工具类禁止实例化");
+    throw new AssertionError("Utility class cannot be instantiated");
   }
 
   /**

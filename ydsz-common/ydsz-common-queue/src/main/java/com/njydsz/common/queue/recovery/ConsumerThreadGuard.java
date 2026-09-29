@@ -52,10 +52,10 @@ public class ConsumerThreadGuard {
    */
   public ConsumerThreadGuard(String name, int maxRestarts, ExecutorService executor) {
     if (name == null || name.isEmpty()) {
-      throw new IllegalArgumentException("守卫名称不能为空");
+      throw new IllegalArgumentException("Guard name must not be empty");
     }
     if (maxRestarts <= 0) {
-      throw new IllegalArgumentException("最大重启次数必须大于0");
+      throw new IllegalArgumentException("Max restart count must be greater than 0");
     }
     if (executor == null) {
       throw new IllegalArgumentException(

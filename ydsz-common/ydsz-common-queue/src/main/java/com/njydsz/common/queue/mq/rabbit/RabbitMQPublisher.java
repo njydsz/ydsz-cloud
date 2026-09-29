@@ -58,10 +58,10 @@ public class RabbitMQPublisher implements IMessagePublisher {
 
   public RabbitMQPublisher(RabbitMQProperties properties, String queueName, String routingKey) {
     if (properties == null) {
-      throw new IllegalArgumentException("RabbitMQ 配置不能为空");
+      throw new IllegalArgumentException("RabbitMQ config must not be empty");
     }
     if (queueName == null || queueName.isEmpty()) {
-      throw new IllegalArgumentException("队列名称不能为空");
+      throw new IllegalArgumentException("Queue name must not be empty");
     }
     this.routingKey = routingKey != null ? routingKey : queueName;
     this.exchangeName = properties.getExchangeName();
@@ -84,7 +84,7 @@ public class RabbitMQPublisher implements IMessagePublisher {
           this.routingKey);
     } catch (IOException | TimeoutException e) {
       log.error("[RabbitMQ] 初始化发布者失败，queue={}", queueName, e);
-      throw SysException.builder().message("RabbitMQ 发布者初始化失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("RabbitMQ publisher initialization failed: " + e.getMessage()).cause(e).build();
     }
   }
 
@@ -101,7 +101,7 @@ public class RabbitMQPublisher implements IMessagePublisher {
       publish(queueMessage);
     } catch (Exception e) {
       log.error("[RabbitMQ] 消息发布失败，routingKey={}", routingKey, e);
-      throw SysException.builder().message("RabbitMQ 消息发布失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("RabbitMQ message publish failed: " + e.getMessage()).cause(e).build();
     }
   }
 
@@ -125,7 +125,7 @@ public class RabbitMQPublisher implements IMessagePublisher {
       }
     } catch (Exception e) {
       log.error("[RabbitMQ] 消息发布失败，routingKey={}, traceId={}", routingKey, message.getTraceId(), e);
-      throw SysException.builder().message("RabbitMQ 消息发布失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("RabbitMQ message publish failed: " + e.getMessage()).cause(e).build();
     }
   }
 

@@ -25,10 +25,10 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
 
   public DedupAwareSubscriber(IMessageSubscriber delegate, MessageDeduplicator deduplicator) {
     if (delegate == null) {
-      throw new IllegalArgumentException("delegate subscriber 不能为空");
+      throw new IllegalArgumentException("Delegate subscriber must not be empty");
     }
     if (deduplicator == null) {
-      throw new IllegalArgumentException("deduplicator 不能为空");
+      throw new IllegalArgumentException("Deduplicator must not be empty");
     }
     this.delegate = delegate;
     this.deduplicator = deduplicator;
@@ -72,7 +72,7 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
       } catch (RuntimeException e) {
         throw e;
       } catch (Throwable t) {
-        throw new RuntimeException("消息处理失败: " + t.getMessage(), t);
+        throw new RuntimeException("Message processing failed: " + t.getMessage(), t);
       }
     };
   }

@@ -1,7 +1,12 @@
 package com.njydsz.agent.web.controller;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +23,7 @@ import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.agent.AgentDefinitionService;
+import com.njydsz.agent.web.vo.AgentDefinitionExportVO;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -25,8 +31,11 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.util.date.DateUtils;
 
 /**
  * Agent 定义管理 REST API Controller。
@@ -68,6 +77,9 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RequestMapping("/agent/definitions")
 @RequiredArgsConstructor
 public class AgentDefinitionController {
+
+  /** 集合初始容量 */
+  private static final int COLLECTION_CAPACITY = 16;
 
   /** Agent 定义服务（封装 DB CRUD + 业务校验） */
   private final AgentDefinitionService agentDefinitionService;
@@ -198,5 +210,63 @@ public class AgentDefinitionController {
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> delete(@PathVariable String id) {
     return YdszResponse.success(agentDefinitionService.removeById(id));
+  }
+
+  /**
+   * 导出 Agent 定义列表（Excel）
+   *
+   * <p>全量导出当前活跃（{@code isActive=true}）的 Agent 定义列表，自动聚合后一次性写入。
+   * SuperFastExcelWriter 每次 {@code doWrite} 输出完整 xlsx，禁止多次调用，因此先聚合再写入。
+   * 文件名为 {@code agent_definitions_yyyyMMddHHmmss.xlsx}。
+   *
+   * <p>Excel 表头和列宽通过 {@link AgentDefinitionExportVO} 上的 {@code @ExcelProperty} 注解定义。
+   */
+  @Operation(summary = "导出 Agent 定义列表（Excel）")
+  @GetMapping("/export")
+  public void exportAgentDefinitions(jakarta.servlet.http.HttpServletResponse response)
+      throws java.io.IOException {
+    String fileName = "agent_definitions_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader(
+        "Content-Disposition",
+        "attachment; filename="
+            + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
+
+    List<AgentDefinitionVO> all = agentDefinitionService.listActive();
+    List<AgentDefinitionExportVO> rows = new ArrayList<>(all.size());
+    for (AgentDefinitionVO vo : all) {
+      rows.add(toExportVO(vo));
+    }
+
+    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        ExcelWriter writer = ExcelFacade.write(out, AgentDefinitionExportVO.class)) {
+      writer.doWrite(rows);
+      response.getOutputStream().write(out.toByteArray());
+    }
+  }
+
+  // ==================== 私有转换方法 ====================
+
+  /**
+   * 将 {@link AgentDefinitionVO} 转换为 Excel 导出行。
+   *
+   * @param vo Agent 定义 VO
+   * @return Excel 导出行
+   */
+  private AgentDefinitionExportVO toExportVO(AgentDefinitionVO vo) {
+    AgentDefinitionExportVO export = new AgentDefinitionExportVO();
+    export.setAgentCode(vo.getAgentCode());
+    export.setAgentName(vo.getAgentName());
+    export.setAgentType(vo.getAgentType());
+    export.setDescription(vo.getDescription());
+    export.setModelConfig(vo.getModelConfig());
+    export.setToolNames(vo.getToolNames());
+    export.setTemperature(vo.getTemperature() != null ? vo.getTemperature().toString() : null);
+    export.setMaxTokens(vo.getMaxTokens() != null ? vo.getMaxTokens().toString() : null);
+    export.setCreatedBy(vo.getCreatedBy());
+    export.setCreatedAt(vo.getCreatedAt() != null ? vo.getCreatedAt().toString() : null);
+    export.setUpdatedBy(vo.getUpdatedBy());
+    export.setUpdatedAt(vo.getUpdatedAt() != null ? vo.getUpdatedAt().toString() : null);
+    return export;
   }
 }

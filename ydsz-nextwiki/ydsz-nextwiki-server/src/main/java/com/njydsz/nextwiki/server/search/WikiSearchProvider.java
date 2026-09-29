@@ -141,7 +141,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
             .build(),
         SearchField.builder()
             .name("subtitle")
-            .label(I18n.message("路径"))
+            .label(I18n.message("nextwiki.search.path"))
             .type(FieldType.TEXT)
             .weight(WEIGHT_CONTENT)
             .isSearchable(true)

@@ -184,7 +184,7 @@ public class AliyunSmsProvider implements SmsProvider {
       byte[] signData = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
       return Base64.getEncoder().encodeToString(signData);
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      throw new IllegalStateException("阿里云短信 RPC 签名失败", e);
+      throw new IllegalStateException("Aliyun SMS RPC signature failed", e);
     }
   }
 
@@ -236,7 +236,7 @@ public class AliyunSmsProvider implements SmsProvider {
               .replace("%7E", "~");
       return encoded;
     } catch (Exception e) {
-      throw new IllegalStateException("URL 编码失败", e);
+      throw new IllegalStateException("URL encoding failed", e);
     }
   }
 

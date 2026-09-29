@@ -82,7 +82,7 @@ public class NotifyPasswordResolver {
       return enc.decrypt(cipherText);
     } catch (Exception e) {
       LOG.error("[NotifyPasswordResolver] 密码解密失败: {}", e.getMessage());
-      throw new IllegalStateException("SMTP 密码解密失败，请检查 jasyptKey 配置", e);
+      throw new IllegalStateException("SMTP password decryption failed, please check jasyptKey configuration", e);
     }
   }
 

@@ -41,11 +41,11 @@ public class InMemorySessionRepository implements SessionRepository {
   @Override
   public void add(ConnectionSession session) {
     if (session == null) {
-      throw new IllegalArgumentException("session 不能为 null");
+      throw new IllegalArgumentException("session must not be null");
     }
     ConnectionSession existing = sessionMap.putIfAbsent(session.getSessionId(), session);
     if (existing != null) {
-      throw new IllegalArgumentException("sessionId 已存在: " + session.getSessionId());
+      throw new IllegalArgumentException("sessionId already exists: " + session.getSessionId());
     }
     String bizId = session.getBizId();
     if (bizId != null) {

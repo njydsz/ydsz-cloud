@@ -52,7 +52,7 @@ public class AuthHandlerFactory {
    */
   public AuthHandler getAuthHandler(String serviceTypeCode) {
     if (authHandlerMap.isEmpty()) {
-      throw new IllegalStateException("未找到 AuthHandler 实现类");
+      throw new IllegalStateException("No AuthHandler implementation found");
     }
 
     String beanName = resolveBeanName(serviceTypeCode);
@@ -65,7 +65,7 @@ public class AuthHandlerFactory {
       handler = authHandlerMap.values().iterator().next();
     }
     if (handler == null) {
-      throw new IllegalStateException("无法为服务类型 [" + serviceTypeCode + "] 获取可用的 AuthHandler");
+      throw new IllegalStateException("Cannot get available AuthHandler for service type [" + serviceTypeCode + "]");
     }
     return handler;
   }

@@ -363,7 +363,7 @@ public class RedisHashOps {
    */
   public long hIncr(String key, String item, long delta) {
     if (key == null || item == null) {
-      throw new IllegalArgumentException("键和字段名不能为空");
+      throw new IllegalArgumentException("Key and field name must not be empty");
     }
     String formattedKey = formatKey(key);
     try {
@@ -394,7 +394,7 @@ public class RedisHashOps {
    */
   public BigDecimal hIncrByFloat(String key, String item, BigDecimal delta) {
     if (key == null || item == null || delta == null) {
-      throw new IllegalArgumentException("键和字段名不能为空");
+      throw new IllegalArgumentException("Key and field name must not be empty");
     }
     String formattedKey = formatKey(key);
     double deltaVal = delta.doubleValue();

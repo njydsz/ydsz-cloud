@@ -61,7 +61,7 @@ public class TimerBasedDelayedMessageSender implements DelayedMessageSender, Dis
   public TimerBasedDelayedMessageSender(
       IMessagePublisher publisher, ScheduledExecutorService scheduler) {
     if (publisher == null) {
-      throw new IllegalArgumentException("消息发布者不能为空");
+      throw new IllegalArgumentException("Message publisher must not be empty");
     }
     this.publisher = publisher;
     this.scheduler = scheduler != null ? scheduler : createDefaultScheduler();

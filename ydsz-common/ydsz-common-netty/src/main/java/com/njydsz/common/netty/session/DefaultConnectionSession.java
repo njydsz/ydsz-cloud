@@ -70,14 +70,14 @@ public class DefaultConnectionSession implements ConnectionSession {
   @Override
   public void setBizId(String bizId) {
     if (bizId == null || bizId.isEmpty()) {
-      throw new IllegalArgumentException("bizId 不能为空");
+      throw new IllegalArgumentException("bizId must not be empty");
     }
     String current = this.bizId.get();
     if (current != null) {
       if (current.equals(bizId)) {
         return; // 幂等：相同值静默忽略
       }
-      throw new IllegalStateException("bizId 已设置，不可重复设置: current=" + current + ", new=" + bizId);
+      throw new IllegalStateException("bizId is already set and cannot be set repeatedly: current=" + current + ", new=" + bizId);
     }
     this.bizId.compareAndSet(null, bizId);
   }
@@ -97,7 +97,7 @@ public class DefaultConnectionSession implements ConnectionSession {
         if (newState == ChannelState.CLOSED) {
           return false;
         }
-        throw new IllegalStateException("状态已为 CLOSED，无法流转到 " + newState);
+        throw new IllegalStateException("State is already CLOSED, cannot transition to " + newState);
       }
       // 相同状态 -> 无变化
       if (current == newState) {
@@ -152,7 +152,7 @@ public class DefaultConnectionSession implements ConnectionSession {
   @Override
   public ChannelFuture send(Object message) {
     if (!isActive()) {
-      throw new IllegalStateException("连接未活跃，无法发送消息: sessionId=" + sessionId + ", state=" + state.get());
+      throw new IllegalStateException("Connection is not active, cannot send message: sessionId=" + sessionId + ", state=" + state.get());
     }
     touch();
     return channel.writeAndFlush(message);
@@ -161,7 +161,7 @@ public class DefaultConnectionSession implements ConnectionSession {
   @Override
   public CompletableFuture<Void> sendAsync(Object message) {
     if (!isActive()) {
-      throw new IllegalStateException("连接未活跃，无法发送消息: sessionId=" + sessionId + ", state=" + state.get());
+      throw new IllegalStateException("Connection is not active, cannot send message: sessionId=" + sessionId + ", state=" + state.get());
     }
     touch();
     CompletableFuture<Void> future = new CompletableFuture<>();

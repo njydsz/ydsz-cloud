@@ -22,7 +22,7 @@ package com.njydsz.common.notify.exception;
  * <p><b>使用方式：</b>
  *
  * <pre>{@code
- * throw new NotifyException(NotifyExceptionCode.CHANNEL_UNAVAILABLE, "SMTP 服务不健康");
+ * throw new NotifyException(NotifyExceptionCode.CHANNEL_UNAVAILABLE, "SMTP service is unhealthy");
  * }</pre>
  *
  * @author ydsz-team

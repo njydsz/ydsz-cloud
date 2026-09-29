@@ -26,6 +26,8 @@ import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.quota.TenantQuotaService;
 import com.njydsz.agent.domain.model.TenantQuota;
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.metrics.MetricsConstants;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -186,7 +188,7 @@ public class ChatService {
             request, duration, false, "CHAT");
       });
     } catch (Throwable t) {
-      throw new RuntimeException("chat observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

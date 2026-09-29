@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.workflow.domain.repository.FlowAuditLogRepository;
@@ -248,7 +250,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         return result;
       });
     } catch (Throwable t) {
-      throw new RuntimeException("efficiency_stats observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

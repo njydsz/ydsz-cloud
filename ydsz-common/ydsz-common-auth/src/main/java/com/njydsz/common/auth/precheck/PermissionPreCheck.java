@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * &#64;PermissionPreCheck(resultParamName = "checkResult")
  * public void batchDeleteUsers(List<Long> ids, PermissionCheckResult checkResult) {
  *     if (!checkResult.isCheckPassed()) {
- *         throw new BusinessException("您没有批量删除的权限");
+ *         throw new BusinessException("You do not have batch delete permission");
  *     }
  *     userService.deleteUsers(ids);
  * }

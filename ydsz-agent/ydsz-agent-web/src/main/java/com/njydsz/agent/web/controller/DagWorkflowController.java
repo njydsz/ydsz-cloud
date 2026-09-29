@@ -1,7 +1,13 @@
 package com.njydsz.agent.web.controller;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,9 +22,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.repository.DagWorkflowRepository;
+import com.njydsz.agent.web.vo.DagWorkflowExportVO;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -79,7 +91,7 @@ public class DagWorkflowController {
     entity.setCategory(dto.getCategory());
     boolean ok = isCreate ? repository.insert(entity) : repository.updateById(entity);
     if (!ok) {
-      throw new RuntimeException(I18n.message("agent.error.dag.save_failed"));
+      throw BusinessException.of(CoreExceptionCode.FAIL).msg(I18n.message("agent.error.dag.save_failed"));
     }
     return YdszResponse.success(entity.getId());
   }
@@ -133,6 +145,64 @@ public class DagWorkflowController {
     DagWorkflow entity = repository.findByCode(code)
         .orElseThrow(() -> new IllegalArgumentException("工作流不存在: " + code));
     return YdszResponse.success(repository.deleteById(entity.getId()));
+  }
+
+  /**
+   * 导出 DAG 工作流列表（Excel）
+   *
+   * <p>按当前分类过滤条件导出工作流列表，未传分类时全量导出。
+   * SuperFastExcelWriter 每次 {@code doWrite} 输出完整 xlsx，禁止多次调用，因此先聚合再写入。
+   * 文件名为 {@code dag_workflows_yyyyMMddHHmmss.xlsx}。
+   *
+   * <p>Excel 表头和列宽通过 {@link DagWorkflowExportVO} 上的 {@code @ExcelProperty} 注解定义。
+   *
+   * @param category 分类筛选（同 {@link #list(java.lang.String)}）
+   */
+  @Operation(summary = "导出 DAG 工作流列表（Excel）")
+  @GetMapping("/export")
+  public void exportDagWorkflows(
+      @RequestParam(required = false) String category,
+      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+    String fileName = "dag_workflows_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader(
+        "Content-Disposition",
+        "attachment; filename="
+            + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
+
+    List<DagWorkflow> all = (category == null || category.isBlank())
+        ? repository.findAll()
+        : repository.findByCategory(category);
+    List<DagWorkflowExportVO> rows = new ArrayList<>(all.size());
+    for (DagWorkflow entity : all) {
+      rows.add(toExportVO(entity));
+    }
+
+    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        ExcelWriter writer = ExcelFacade.write(out, DagWorkflowExportVO.class)) {
+      writer.doWrite(rows);
+      response.getOutputStream().write(out.toByteArray());
+    }
+  }
+
+  // ==================== 私有转换方法 ====================
+
+  /**
+   * 将 {@link DagWorkflow} 转换为 Excel 导出行。
+   *
+   * @param entity DAG 工作流实体
+   * @return Excel 导出行
+   */
+  private DagWorkflowExportVO toExportVO(DagWorkflow entity) {
+    DagWorkflowExportVO export = new DagWorkflowExportVO();
+    export.setWorkflowCode(entity.getWorkflowCode());
+    export.setName(entity.getName());
+    export.setDescription(entity.getDescription());
+    export.setCategory(entity.getCategory());
+    export.setId(entity.getId());
+    export.setCreatedBy(entity.getCreatedBy());
+    export.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null);
+    return export;
   }
 
   /** 生成工作流编码：dag-{UUID 前 12 位} */

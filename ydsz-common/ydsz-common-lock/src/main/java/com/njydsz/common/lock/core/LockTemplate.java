@@ -203,12 +203,12 @@ public class LockTemplate {
               ? lock.tryLock(lockKey, waitTime, leaseTime, timeUnit)
               : lock.tryLock(lockKey, leaseTime, timeUnit);
       if (lockValue == null) {
-        throw new DistributedLockException("获取分布式锁失败: " + lockKey);
+        throw new DistributedLockException("Failed to acquire distributed lock: " + lockKey);
       }
       return lockValue;
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new DistributedLockException("获取分布式锁被中断: " + lockKey, e);
+      throw new DistributedLockException("Distributed lock acquisition interrupted: " + lockKey, e);
     }
   }
 

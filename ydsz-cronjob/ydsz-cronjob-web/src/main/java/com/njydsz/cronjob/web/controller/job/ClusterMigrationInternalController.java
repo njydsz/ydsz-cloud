@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
@@ -86,7 +88,7 @@ public class ClusterMigrationInternalController {
       return YdszResponse.success(result);
     } catch (Exception e) {
       log.warn("[ClusterMigration] 接收注册失败: jobKey={}", jobVO.getJobKey(), e);
-      throw new RuntimeException(I18n.message("cronjob.cluster.registration_failed", new Object[]{e.getMessage()}), e);
+      throw SysException.builder().resultCode(CoreExceptionCode.SYSTEM_ERROR).message(I18n.message("cronjob.cluster.registration_failed", new Object[]{e.getMessage()})).cause(e).build();
     }
   }
 
@@ -111,7 +113,7 @@ public class ClusterMigrationInternalController {
       return YdszResponse.success(result);
     } catch (Exception e) {
       log.warn("[ClusterMigration] 接收注销失败: jobKey={}", request.getJobKey(), e);
-      throw new RuntimeException(I18n.message("cronjob.cluster.deregistration_failed", new Object[]{e.getMessage()}), e);
+      throw SysException.builder().resultCode(CoreExceptionCode.SYSTEM_ERROR).message(I18n.message("cronjob.cluster.deregistration_failed", new Object[]{e.getMessage()})).cause(e).build();
     }
   }
 

@@ -90,7 +90,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
     try {
       return YdszJson.toJsonBytes(t);
     } catch (Exception e) {
-      throw new SerializationException("Redis对象序列化失败", e);
+      throw new SerializationException("Redis object serialization failed", e);
     }
   }
 
@@ -115,7 +115,7 @@ public class YdszJsonRedisSerializer implements RedisSerializer<Object> {
       }
       return YdszJson.fromJsonBytes(bytes, clazz);
     } catch (Exception e) {
-      throw new SerializationException("Redis对象反序列化失败", e);
+      throw new SerializationException("Redis object deserialization failed", e);
     }
   }
 

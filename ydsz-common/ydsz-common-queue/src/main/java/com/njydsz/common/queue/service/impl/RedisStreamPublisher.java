@@ -71,10 +71,10 @@ public class RedisStreamPublisher implements IMessagePublisher {
    */
   public RedisStreamPublisher(RedisTemplate<String, Object> redisTemplate, String channel) {
     if (redisTemplate == null) {
-      throw new IllegalArgumentException("RedisTemplate 不能为空");
+      throw new IllegalArgumentException("RedisTemplate must not be empty");
     }
     if (channel == null || channel.isEmpty()) {
-      throw new IllegalArgumentException("通道名称不能为空");
+      throw new IllegalArgumentException("Channel name must not be empty");
     }
     this.redisTemplate = redisTemplate;
     this.channel = channel;

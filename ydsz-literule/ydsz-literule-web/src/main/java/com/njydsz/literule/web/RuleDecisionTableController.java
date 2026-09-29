@@ -31,6 +31,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -239,7 +240,7 @@ public class RuleDecisionTableController {
       throw e;
     } catch (IOException e) {
       log.warn("[DecisionTable] Excel 文件读取失败", e);
-      throw new RuntimeException(I18n.message("literule.web.file_read_failed"), e);
+      throw new BusinessException(LiteruleExceptionCode.EXCEL_IMPORT_FAILED, e);
     }
   }
 

@@ -1,7 +1,13 @@
 package com.njydsz.agent.web.controller.trigger;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +27,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerType;
 import com.njydsz.agent.server.trigger.TriggerManagementService;
+import com.njydsz.agent.web.vo.TriggerExportVO;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
+import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -267,6 +277,64 @@ public class TriggerController {
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<AgentTrigger> triggers = triggerManagementService.listEnabledTriggers(tenantId);
     return YdszResponse.success(triggers);
+  }
+
+  /**
+   * 导出触发器列表（Excel）
+   *
+   * <p>导出当前租户下启用触发器列表，自动聚合后一次性写入。
+   * SuperFastExcelWriter 每次 {@code doWrite} 输出完整 xlsx，禁止多次调用，因此先聚合再写入。
+   * 文件名为 {@code triggers_yyyyMMddHHmmss.xlsx}。
+   *
+   * <p>Excel 表头和列宽通过 {@link TriggerExportVO} 上的 {@code @ExcelProperty} 注解定义。
+   */
+  @Operation(summary = "导出触发器列表（Excel）")
+  @GetMapping("/export")
+  public void exportTriggers(jakarta.servlet.http.HttpServletResponse response) throws IOException {
+    String fileName = "triggers_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader(
+        "Content-Disposition",
+        "attachment; filename="
+            + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
+
+    String tenantId = AuthContextUtils.getTenantIdOrDefault();
+    List<AgentTrigger> all = triggerManagementService.listEnabledTriggers(tenantId);
+    List<TriggerExportVO> rows = new ArrayList<>(all.size());
+    for (AgentTrigger trigger : all) {
+      rows.add(toExportVO(trigger));
+    }
+
+    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        ExcelWriter writer = ExcelFacade.write(out, TriggerExportVO.class)) {
+      writer.doWrite(rows);
+      response.getOutputStream().write(out.toByteArray());
+    }
+  }
+
+  // ==================== 私有转换方法 ====================
+
+  /**
+   * 将 {@link AgentTrigger} 转换为 Excel 导出行。
+   *
+   * @param trigger 触发器聚合根
+   * @return Excel 导出行
+   */
+  private TriggerExportVO toExportVO(AgentTrigger trigger) {
+    TriggerExportVO export = new TriggerExportVO();
+    export.setTriggerId(trigger.getTriggerId());
+    export.setName(trigger.getName());
+    export.setTriggerType(trigger.getTriggerType() != null ? trigger.getTriggerType().getDesc() : null);
+    export.setTargetAgentCode(trigger.getTargetAgentCode());
+    export.setTargetAgentType(trigger.getTargetAgentType());
+    export.setCronExpression(trigger.getCronExpression());
+    export.setMatchPattern(trigger.getMatchPattern());
+    export.setIsEnabled(trigger.isEnabled() ? "启用" : "禁用");
+    export.setMaxExecutionsPerHour(String.valueOf(trigger.getMaxExecutionsPerHour()));
+    export.setLastTriggeredAt(trigger.getLastTriggeredAt() != null ? trigger.getLastTriggeredAt().toString() : null);
+    export.setTotalTriggerCount(String.valueOf(trigger.getTotalTriggerCount()));
+    export.setCreatedAt(trigger.getCreatedAt() != null ? trigger.getCreatedAt().toString() : null);
+    return export;
   }
 
   /**

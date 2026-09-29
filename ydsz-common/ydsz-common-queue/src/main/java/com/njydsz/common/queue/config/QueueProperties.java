@@ -151,25 +151,25 @@ public class QueueProperties {
   @PostConstruct
   public void validate() {
     if (type == null && (typeStr == null || typeStr.trim().isEmpty())) {
-      throw new IllegalStateException("ydsz.queue.type 必须配置有效的队列引擎类型");
+      throw new IllegalStateException("ydsz.queue.type must be configured with a valid queue engine type");
     }
     if (port <= 0 || port > 65535) {
-      throw new IllegalArgumentException("ydsz.queue.port 无效: " + port);
+      throw new IllegalArgumentException("ydsz.queue.port is invalid: " + port);
     }
     if (timeout <= 0) {
-      throw new IllegalArgumentException("ydsz.queue.timeout 必须大于 0");
+      throw new IllegalArgumentException("ydsz.queue.timeout must be greater than 0");
     }
     if (deadLetterMaxRetries <= 0) {
-      throw new IllegalArgumentException("ydsz.queue.deadLetterMaxRetries 必须大于 0");
+      throw new IllegalArgumentException("ydsz.queue.deadLetterMaxRetries must be greater than 0");
     }
     if (deadLetterRetryInterval <= 0) {
-      throw new IllegalArgumentException("ydsz.queue.deadLetterRetryInterval 必须大于 0");
+      throw new IllegalArgumentException("ydsz.queue.deadLetterRetryInterval must be greater than 0");
     }
     if (deadLetterRetryJitterPercent < 0 || deadLetterRetryJitterPercent > 100) {
-      throw new IllegalArgumentException("ydsz.queue.deadLetterRetryJitterPercent 必须在 0-100 之间");
+      throw new IllegalArgumentException("ydsz.queue.deadLetterRetryJitterPercent must be between 0 and 100");
     }
     if (dedupWindowMillis <= 0) {
-      throw new IllegalArgumentException("ydsz.queue.dedupWindowMillis 必须大于 0");
+      throw new IllegalArgumentException("ydsz.queue.dedupWindowMillis must be greater than 0");
     }
   }
 
@@ -188,7 +188,7 @@ public class QueueProperties {
     if (typeStr != null && !typeStr.trim().isEmpty()) {
       return QueueType.fromValue(typeStr);
     }
-    throw new IllegalStateException("队列类型不能为空，请配置 ydsz.queue.type");
+    throw new IllegalStateException("Queue type must not be empty, please configure ydsz.queue.type");
   }
 
   /**

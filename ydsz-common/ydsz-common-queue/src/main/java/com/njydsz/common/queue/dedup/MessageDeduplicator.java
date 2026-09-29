@@ -71,10 +71,10 @@ public class MessageDeduplicator {
 
   public MessageDeduplicator(long expireWindowMs, int maxCapacity) {
     if (expireWindowMs <= 0) {
-      throw new IllegalArgumentException("去重窗口必须大于 0");
+      throw new IllegalArgumentException("Dedup window must be greater than 0");
     }
     if (maxCapacity <= 0) {
-      throw new IllegalArgumentException("最大容量必须大于 0");
+      throw new IllegalArgumentException("Max capacity must be greater than 0");
     }
     this.expireWindowMs = expireWindowMs;
     this.maxCapacity = maxCapacity;
@@ -90,7 +90,7 @@ public class MessageDeduplicator {
    */
   public void setCapacity(int capacity) {
     if (capacity <= 0) {
-      throw new IllegalArgumentException("容量必须大于 0");
+      throw new IllegalArgumentException("Capacity must be greater than 0");
     }
     cleanupLock.lock();
     try {

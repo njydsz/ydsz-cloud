@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.dto.ShareLinkDTO;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
@@ -17,9 +18,7 @@ import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
 /**
  * 分享链接到期提醒定时任务。
  *
- * <p>每小时扫描即将到期的分享链接（24 小时内到期），发布提醒事件。
- *
- * <p>实际通知（站内信/邮件/推送）由事件监听器处理，本任务仅负责识别与触发。
+ * <p>每小时扫描即将到期的分享链接（24 小时内到期），通过 NotifyHelper 向分享创建者发送站内信提醒。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -35,6 +34,8 @@ public class ShareExpiryReminderTask {
   private final ShareLinkDomainService shareLinkDomainService;
   private final ShareLinkRepository shareLinkRepository;
   private final NextwikiStructMapper mapper;
+  /** 统一通知辅助类（到期提醒站内信） */
+  private final NotifyHelper notifyHelper;
 
   /**
    * 扫描即将到期的分享链接并触发提醒。
@@ -66,15 +67,38 @@ public class ShareExpiryReminderTask {
         // 标记提醒已发送（通过领域服务修改状态，然后持久化）
         shareLinkDomainService.markReminderSent(share);
         shareLinkRepository.update(share);
+
+        // 向分享创建者发送到期提醒站内信（YDIZ-NOTIFY 规范：推送统一走 NotifyHelper）
+        notifyExpiryReminder(share);
+
         log.info(
             "[ShareExpiryReminder] 分享即将到期: shareId={}, shareCode={}, expireTime={}",
             share.getId(),
             share.getShareCode(),
             share.getExpireTime());
-        // TODO: 2026-09-01 发布领域事件，由通知服务订阅后投递站内信/邮件。（@ydsz-team）
       }
     } catch (Exception e) {
       log.error("[ShareExpiryReminder] 扫描到期分享失败", e);
     }
+  }
+
+  /**
+   * 向分享创建者发送到期提醒站内信。
+   *
+   * <p>通知发送异常不影响主流程（NotifyHelper 内部已做异常隔离）。
+   *
+   * @param share 即将到期的分享链接 DTO
+   */
+  private void notifyExpiryReminder(ShareLinkDTO share) {
+    if (share.getCreatedBy() == null || share.getCreatedBy().isBlank()) {
+      return;
+    }
+    String title = share.getTitle() != null && !share.getTitle().isBlank()
+        ? share.getTitle() : "分享链接";
+    String expireTimeStr = share.getExpireTime() != null
+        ? share.getExpireTime().toString() : "即将";
+    notifyHelper.sendInApp(share.getCreatedBy(),
+        "分享链接即将到期",
+        String.format("您创建的分享「%s」将在 %s 到期，请及时续期或处理。", title, expireTimeStr));
   }
 }

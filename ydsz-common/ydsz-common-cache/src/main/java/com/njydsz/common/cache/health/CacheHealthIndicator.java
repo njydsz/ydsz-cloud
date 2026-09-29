@@ -122,7 +122,7 @@ public class CacheHealthIndicator {
    */
   public void setMinSampleSize(long minSampleSize) {
     if (minSampleSize < 0) {
-      throw new IllegalArgumentException("minSampleSize 必须 ≥ 0: " + minSampleSize);
+      throw new IllegalArgumentException("minSampleSize must be >= 0: " + minSampleSize);
     }
     this.minSampleSize = minSampleSize;
   }

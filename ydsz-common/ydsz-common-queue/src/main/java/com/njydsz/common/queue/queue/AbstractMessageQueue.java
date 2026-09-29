@@ -97,7 +97,7 @@ public abstract class AbstractMessageQueue implements IMessageQueue {
   @Override
   public void checkNotClosed() {
     if (closed) {
-      throw new IllegalStateException("队列已关闭,无法继续操作");
+      throw new IllegalStateException("Queue is closed, cannot continue operation");
     }
   }
 

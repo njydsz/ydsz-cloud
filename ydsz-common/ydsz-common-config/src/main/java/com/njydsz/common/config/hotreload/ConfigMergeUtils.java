@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.tree.JsonMergePatch;
 import com.njydsz.common.json.tree.JsonNode;
 
 /**
@@ -67,7 +66,7 @@ public final class ConfigMergeUtils {
     try {
       JsonNode base = YdszJson.readTree(baseConfig);
       JsonNode patch = YdszJson.readTree(overrideConfig);
-      JsonNode merged = JsonMergePatch.apply(base, patch);
+      JsonNode merged = YdszJson.applyMergePatch(base, patch);
       String result = merged.toString();
       LOG.debug("[ConfigMerge] 配置合并完成: base keys={} → merged", baseConfig.length());
       return result;

@@ -42,7 +42,7 @@ public class RedisStreamMQ extends AbstractMessageQueue {
       ExecutorService consumerExecutor) {
     super("Redis-Stream");
     if (config == null) {
-      throw BusinessException.builder().key("队列配置不能为空").build();
+      throw BusinessException.builder().key("Queue config must not be empty").build();
     }
     this.queueProperties = config;
     this.redisTemplate = redisTemplate;
@@ -54,7 +54,7 @@ public class RedisStreamMQ extends AbstractMessageQueue {
   public IMessagePublisher createPublisher(String channel) {
     checkNotClosed();
     if (channel == null || channel.isEmpty()) {
-      throw BusinessException.builder().key("通道名称不能为空").build();
+      throw BusinessException.builder().key("Channel name must not be empty").build();
     }
     return new RedisStreamPublisher(redisTemplate, channel);
   }
@@ -63,7 +63,7 @@ public class RedisStreamMQ extends AbstractMessageQueue {
   public IMessageSubscriber createSubscriber(String channel) {
     checkNotClosed();
     if (channel == null || channel.isEmpty()) {
-      throw BusinessException.builder().key("通道名称不能为空").build();
+      throw BusinessException.builder().key("Channel name must not be empty").build();
     }
     return new RedisStreamSubscriber(redisTemplate, channel, queueProperties, consumerExecutor);
   }

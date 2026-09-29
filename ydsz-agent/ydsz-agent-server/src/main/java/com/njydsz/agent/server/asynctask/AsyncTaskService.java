@@ -10,7 +10,9 @@ import com.njydsz.agent.domain.asynctask.AsyncTaskStatus;
 import com.njydsz.agent.domain.asynctask.AsyncTaskStore;
 import com.njydsz.agent.domain.asynctask.AsyncTaskType;
 import com.njydsz.agent.domain.entity.AsyncTask;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.SentryObservation;
 
 /**
@@ -120,7 +122,7 @@ public class AsyncTaskService {
         return task.getId();
       });
     } catch (Throwable t) {
-      throw new RuntimeException("create_task observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

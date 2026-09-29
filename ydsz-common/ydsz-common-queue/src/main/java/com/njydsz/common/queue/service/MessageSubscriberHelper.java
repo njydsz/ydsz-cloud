@@ -80,7 +80,7 @@ public final class MessageSubscriberHelper {
       throw e;
     } catch (Throwable t) {
       // 检查异常：解包后以运行时异常向上传播，避免改变订阅方的异常处理流程
-      throw new RuntimeException("消息处理失败: " + t.getMessage(), t);
+      throw new RuntimeException("Message processing failed: " + t.getMessage(), t);
     }
   }
 

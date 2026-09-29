@@ -80,13 +80,13 @@ public interface RetryPolicy {
 
     ExponentialBackoffRetryPolicy(int maxAttempts, long initialDelayMs, long maxDelayMs) {
       if (maxAttempts < 0) {
-        throw new IllegalArgumentException("最大重试次数必须 >= 0");
+        throw new IllegalArgumentException("Max retry attempts must be >= 0");
       }
       if (initialDelayMs <= 0) {
-        throw new IllegalArgumentException("初始延迟必须 > 0");
+        throw new IllegalArgumentException("Initial delay must be greater than 0");
       }
       if (maxDelayMs < initialDelayMs) {
-        throw new IllegalArgumentException("最大延迟必须 >= 初始延迟");
+        throw new IllegalArgumentException("Max delay must be >= initial delay");
       }
       this.maxAttempts = maxAttempts;
       this.initialDelayMs = initialDelayMs;
@@ -117,10 +117,10 @@ public interface RetryPolicy {
 
     FixedIntervalRetryPolicy(int maxAttempts, long intervalMs) {
       if (maxAttempts < 0) {
-        throw new IllegalArgumentException("最大重试次数必须 >= 0");
+        throw new IllegalArgumentException("Max retry attempts must be >= 0");
       }
       if (intervalMs <= 0) {
-        throw new IllegalArgumentException("间隔时间必须 > 0");
+        throw new IllegalArgumentException("Interval time must be greater than 0");
       }
       this.maxAttempts = maxAttempts;
       this.intervalMs = intervalMs;

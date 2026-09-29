@@ -120,7 +120,7 @@ public class JwtTokenService implements TokenService {
     this.tokenBlacklistService = tokenBlacklistService;
     if (snowflakeIdGenerator == null) {
       throw new IllegalStateException(
-          "SnowflakeIdGenerator Bean 缺失：JWT jti 依赖分布式 ID 生成器，请启用 ydsz.util.snowflake 或提供替代实现");
+          "SnowflakeIdGenerator Bean is missing: JWT jti depends on a distributed ID generator, please enable ydsz.util.snowflake or provide an alternative implementation");
     }
     this.snowflakeIdGenerator = snowflakeIdGenerator;
     // 校验密钥非空，避免 NPE 或签名失败

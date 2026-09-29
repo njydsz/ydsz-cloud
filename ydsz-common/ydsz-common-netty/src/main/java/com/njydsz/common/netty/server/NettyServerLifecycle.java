@@ -52,12 +52,12 @@ public class NettyServerLifecycle implements SmartLifecycle {
         Thread.currentThread().interrupt();
         log.error("[Netty-Lifecycle] {} 启动被中断", server.getClass().getSimpleName(), e);
         if (isFailFast) {
-          throw new NettyException("Netty Server 启动被中断: " + server.getClass().getSimpleName(), e);
+          throw new NettyException("Netty Server startup interrupted: " + server.getClass().getSimpleName(), e);
         }
       } catch (Exception e) {
         log.error("[Netty-Lifecycle] {} 启动失败", server.getClass().getSimpleName(), e);
         if (isFailFast) {
-          throw new NettyException("Netty Server 启动失败: " + server.getClass().getSimpleName(), e);
+          throw new NettyException("Netty Server startup failed: " + server.getClass().getSimpleName(), e);
         }
       }
     }

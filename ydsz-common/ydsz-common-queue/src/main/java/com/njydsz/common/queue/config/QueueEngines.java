@@ -157,8 +157,8 @@ public class QueueEngines {
   private QueueProperties.EngineDefinition getEngineDef(String engineName) {
     QueueProperties.EngineDefinition def = engineDefs.get(engineName);
     if (def == null) {
-      throw new IllegalArgumentException("未注册的队列引擎名称：" + engineName
-          + "，已注册引擎：" + engineDefs.keySet());
+      throw new IllegalArgumentException("Unregistered queue engine name: " + engineName
+          + ", registered engines: " + engineDefs.keySet());
     }
     return def;
   }

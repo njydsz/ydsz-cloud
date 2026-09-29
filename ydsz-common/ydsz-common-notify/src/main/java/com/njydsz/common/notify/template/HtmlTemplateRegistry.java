@@ -49,7 +49,7 @@ public class HtmlTemplateRegistry {
    */
   public void register(HtmlEmailTemplate template) {
     if (template == null || !StringUtils.hasText(template.getCode())) {
-      throw new IllegalArgumentException("模板编码不能为空");
+      throw new IllegalArgumentException("Template code must not be empty");
     }
     templates.put(template.getCode(), template);
     LOG.info("[HtmlTemplateRegistry] 模板已注册: code={}", template.getCode());
@@ -86,10 +86,10 @@ public class HtmlTemplateRegistry {
   public String renderHtml(String code, Map<String, Object> params) {
     HtmlEmailTemplate template = templates.get(code);
     if (template == null) {
-      throw new IllegalArgumentException("模板不存在: " + code);
+      throw new IllegalArgumentException("Template does not exist: " + code);
     }
     if (!template.isEnabled()) {
-      throw new IllegalStateException("模板已禁用: " + code);
+      throw new IllegalStateException("Template is disabled: " + code);
     }
     return renderPlaceholders(template.getHtmlContent(), params);
   }
@@ -104,7 +104,7 @@ public class HtmlTemplateRegistry {
   public String renderText(String code, Map<String, Object> params) {
     HtmlEmailTemplate template = templates.get(code);
     if (template == null) {
-      throw new IllegalArgumentException("模板不存在: " + code);
+      throw new IllegalArgumentException("Template does not exist: " + code);
     }
     if (!StringUtils.hasText(template.getTextContent())) {
       return "";

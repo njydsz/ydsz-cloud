@@ -71,7 +71,7 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
       ObjectProvider<RocketMQProperties> rocketPropertiesProvider,
       ObjectProvider<RabbitMQProperties> rabbitPropertiesProvider) {
     if (properties == null) {
-      throw BusinessException.builder().key("队列配置不能为空").build();
+      throw BusinessException.builder().key("Queue config must not be empty").build();
     }
     this.properties = properties;
     this.redisTemplate = redisTemplate;
@@ -103,7 +103,7 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
   @Override
   public IMessageQueue createMessageQueue(QueueType type, String... args) {
     if (type == null) {
-      throw BusinessException.builder().key("队列类型不能为空").build();
+      throw BusinessException.builder().key("Queue type must not be empty").build();
     }
     // 容量上限检查，防止无限增长
     if (createdQueues.size() >= MAX_HELD_QUEUES) {
@@ -124,7 +124,7 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
         queue = createRabbitMQ();
         break;
       default:
-        throw BusinessException.builder().key("不支持的消息平台: " + type).build();
+        throw BusinessException.builder().key("Unsupported message platform: " + type).build();
     }
     createdQueues.add(queue);
     return queue;
@@ -154,7 +154,7 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
 
   private IMessageQueue createRedisStreamMQ() {
     if (redisTemplate == null) {
-      throw BusinessException.builder().key("使用 Redis 队列需引入 ydsz-common-redis 模块").build();
+      throw BusinessException.builder().key("Using Redis queue requires importing ydsz-common-redis module").build();
     }
     log.info("[Factory] 创建 Redis Stream 队列（复用 ydsz-common-redis 连接）");
     return new RedisStreamMQ(redisTemplate, properties, consumerExecutor);

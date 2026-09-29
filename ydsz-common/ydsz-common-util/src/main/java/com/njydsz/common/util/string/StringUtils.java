@@ -380,7 +380,7 @@ public final class StringUtils {
    */
   public static String truncate(String text, int maxLength) {
     if (maxLength < MIN_INDEX) {
-      throw new IllegalArgumentException("maxLength 不能为负数: " + maxLength);
+      throw new IllegalArgumentException("maxLength cannot be negative: " + maxLength);
     }
     if (Objects.isNull(text) || text.length() <= maxLength) {
       return text;
@@ -401,7 +401,7 @@ public final class StringUtils {
    */
   public static String abbreviate(String text, int maxLength) {
     if (maxLength < MIN_ABBREVIATION_LENGTH) {
-      throw new IllegalArgumentException("maxLength 不能小于 " + MIN_ABBREVIATION_LENGTH);
+      throw new IllegalArgumentException("maxLength cannot be less than " + MIN_ABBREVIATION_LENGTH);
     }
     if (Objects.isNull(text) || text.length() <= maxLength) {
       return text;

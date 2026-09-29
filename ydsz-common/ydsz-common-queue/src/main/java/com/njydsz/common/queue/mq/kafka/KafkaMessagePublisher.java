@@ -57,10 +57,10 @@ public class KafkaMessagePublisher implements IMessagePublisher {
 
   public KafkaMessagePublisher(KafkaQueueProperties properties, String topic) {
     if (properties == null) {
-      throw new IllegalArgumentException("Kafka 配置不能为空");
+      throw new IllegalArgumentException("Kafka config must not be empty");
     }
     if (topic == null || topic.isEmpty()) {
-      throw new IllegalArgumentException("主题名称不能为空");
+      throw new IllegalArgumentException("Topic name must not be empty");
     }
     this.topic = topic;
     this.producer = createProducer(properties);
@@ -83,7 +83,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
       publish(queueMessage);
     } catch (Exception e) {
       log.error("[Kafka] 消息发布失败，topic={}", topic, e);
-      throw SysException.builder().message("Kafka 消息发布失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("Kafka message publish failed: " + e.getMessage()).cause(e).build();
     }
   }
 
@@ -120,7 +120,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
           });
     } catch (Exception e) {
       log.error("[Kafka] 消息发布失败，topic={}, traceId={}", topic, message.getTraceId(), e);
-      throw SysException.builder().message("Kafka 消息发布失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("Kafka message publish failed: " + e.getMessage()).cause(e).build();
     }
   }
 
@@ -153,7 +153,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
    */
   public void publishSequential(QueueMessage message) {
     if (message == null || !message.isSequential()) {
-      throw new IllegalArgumentException("顺序消息必须设置 messageGroupKey");
+      throw new IllegalArgumentException("Sequential message must set messageGroupKey");
     }
     if (closed) {
       return;
@@ -186,7 +186,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
           });
     } catch (Exception e) {
       log.error("[Kafka] 顺序消息发布失败，topic={}, groupKey={}", topic, message.getMessageGroupKey(), e);
-      throw SysException.builder().message("Kafka 顺序消息发布失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("Kafka sequential message publish failed: " + e.getMessage()).cause(e).build();
     }
   }
 
@@ -234,7 +234,7 @@ public class KafkaMessagePublisher implements IMessagePublisher {
       producer.flush();
     } catch (Exception e) {
       log.error("[Kafka] 批量消息发布失败，topic={}", topic, e);
-      throw SysException.builder().message("Kafka 批量消息发布失败：" + e.getMessage()).cause(e).build();
+      throw SysException.builder().message("Kafka batch message publish failed: " + e.getMessage()).cause(e).build();
     }
   }
 

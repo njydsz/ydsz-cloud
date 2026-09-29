@@ -62,10 +62,10 @@ public class QueueManager {
   public void register(
       String queueName, String queueType, AutoCloseable queue, QueueMetrics metrics) {
     if (queueName == null || queueName.isEmpty()) {
-      throw new IllegalArgumentException("队列名称不能为空");
+      throw new IllegalArgumentException("Queue name must not be empty");
     }
     if (metrics == null) {
-      throw new IllegalArgumentException("监控指标不能为空");
+      throw new IllegalArgumentException("Metrics must not be empty");
     }
     QueueEntry entry = new QueueEntry(queueName, queueType, queue);
     queueRegistry.put(queueName, entry);

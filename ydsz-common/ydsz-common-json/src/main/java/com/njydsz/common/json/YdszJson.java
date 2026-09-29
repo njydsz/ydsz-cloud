@@ -9,6 +9,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,6 @@ import com.njydsz.common.json.reader.JSONReader;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.tree.ArrayNode;
-import com.njydsz.common.json.tree.JsonMergePatch;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.JsonPatch;
 import com.njydsz.common.json.tree.JsonPatch.PatchOp;
@@ -228,8 +228,44 @@ public class YdszJson {
   public static String mergePatch(String targetJson, String patchJson) {
     JsonNode target = readTree(targetJson);
     JsonNode patch = readTree(patchJson);
-    JsonNode result = JsonMergePatch.apply(target, patch);
+    JsonNode result = applyMergePatch(target, patch);
     return toJson(result);
+  }
+
+  /**
+   * RFC 7396 JSON Merge Patch 核心逻辑（原 JsonMergePatch 类内联）。
+   *
+   * @param target 目标 JSON 节点
+   * @param patch Merge Patch JSON 节点
+   * @return 修改后的目标节点
+   */
+  public static JsonNode applyMergePatch(JsonNode target, JsonNode patch) {
+    if (target == null || patch == null) {
+      return patch;
+    }
+    if (!patch.isObject() || !target.isObject()) {
+      return patch;
+    }
+    return mergePatchInto((ObjectNode) target, (ObjectNode) patch);
+  }
+
+  private static ObjectNode mergePatchInto(ObjectNode target, ObjectNode patch) {
+    Iterator<String> fieldNameIterator = patch.fieldNames();
+    while (fieldNameIterator.hasNext()) {
+      String fieldName = fieldNameIterator.next();
+      JsonNode patchValue = patch.get(fieldName);
+      if (patchValue.isNull()) {
+        target.remove(fieldName);
+      } else if (patchValue.isObject()
+          && target.containsKey(fieldName)
+          && target.get(fieldName).isObject()) {
+        ObjectNode targetChild = (ObjectNode) target.get(fieldName);
+        mergePatchInto(targetChild, (ObjectNode) patchValue);
+      } else {
+        target.put(fieldName, patchValue.deepCopy());
+      }
+    }
+    return target;
   }
 
   /**

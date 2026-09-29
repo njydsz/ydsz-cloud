@@ -65,7 +65,7 @@ public class RabbitMQ extends AbstractMessageQueue {
   public RabbitMQ(RabbitMQProperties properties) {
     super("RabbitMQ");
     if (properties == null) {
-      throw BusinessException.builder().key("RabbitMQ 配置不能为空").build();
+      throw BusinessException.builder().key("RabbitMQ config must not be empty").build();
     }
     this.properties = properties;
     // 连接校验延迟到首次 publish/subscribe（lazy init），避免 broker 启动顺序导致应用启动失败。
@@ -77,7 +77,7 @@ public class RabbitMQ extends AbstractMessageQueue {
   public IMessagePublisher createPublisher(String channel) {
     checkNotClosed();
     if (channel == null || channel.isEmpty()) {
-      throw BusinessException.builder().key("队列名称不能为空").build();
+      throw BusinessException.builder().key("Queue name must not be empty").build();
     }
     return new RabbitMQPublisher(properties, channel);
   }
@@ -86,7 +86,7 @@ public class RabbitMQ extends AbstractMessageQueue {
   public IMessageSubscriber createSubscriber(String channel) {
     checkNotClosed();
     if (channel == null || channel.isEmpty()) {
-      throw BusinessException.builder().key("队列名称不能为空").build();
+      throw BusinessException.builder().key("Queue name must not be empty").build();
     }
     return new RabbitMQSubscriber(properties, channel);
   }

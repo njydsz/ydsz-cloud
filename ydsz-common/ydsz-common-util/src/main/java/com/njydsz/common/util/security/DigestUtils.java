@@ -122,7 +122,7 @@ public final class DigestUtils {
    */
   static byte[] digestIterativeRaw(byte[] input, String algorithm, byte[] salt, int iterations) {
     if (iterations < 1) {
-      throw new IllegalArgumentException("iterations 必须 >= 1");
+      throw new IllegalArgumentException("iterations must be >= 1");
     }
     try {
       final MessageDigest digest = MessageDigest.getInstance(algorithm);

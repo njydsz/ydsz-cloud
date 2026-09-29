@@ -805,14 +805,14 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
   /** 汇总子任务结果生成最终回答 */
   private String synthesizeResults(String originalTask, List<String> results, String convId) {
     if (results.isEmpty()) {
-      return I18n.message("抱歉，无法完成您的任务。");
+      return I18n.message("agent.task.unable_to_complete");
     }
     if (results.size() == 1) {
       return results.get(0);
     }
     // 多任务结果拼接 + 最终总结
-    String header = I18n.message("以下是各子任务的执行结果：\n\n");
-    String taskPrefix = I18n.message("## 任务 ");
+    String header = I18n.message("agent.task.subtask_results_header");
+    String taskPrefix = I18n.message("agent.task.heading");
     String footer = I18n.message("agent.supervisor.footer", new Object[] {originalTask});
     StringBuilder sb = new StringBuilder();
     sb.append(header);

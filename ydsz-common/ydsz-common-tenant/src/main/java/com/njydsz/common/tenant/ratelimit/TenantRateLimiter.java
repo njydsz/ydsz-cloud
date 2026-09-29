@@ -27,17 +27,17 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
  * <pre>{@code
  * // 检查租户 API 调用配额（令牌桶）
  * if (!tenantRateLimiter.tryAcquireTokenBucket("api:invoke", 100, 10)) {
- *     throw new TenantIsolationException("租户 API 调用配额已用尽，请稍后重试");
+ *     throw new TenantIsolationException("Tenant API call quota exhausted, please retry later");
  * }
  *
  * // 检查租户存储配额（固定窗口）
  * if (!tenantRateLimiter.tryAcquireFixedWindow("storage:upload", 1000, Duration.ofHours(1))) {
- *     throw new TenantIsolationException("租户存储配额已用尽，请升级套餐");
+ *     throw new TenantIsolationException("Tenant storage quota exhausted, please upgrade your plan");
  * }
  *
  * // 检查租户登录频率（滑动窗口）
  * if (!tenantRateLimiter.tryAcquireSlidingWindow("user:login", 5, Duration.ofMinutes(1))) {
- *     throw new TenantIsolationException("登录频率过高，请稍后重试");
+ *     throw new TenantIsolationException("Login rate too high, please retry later");
  * }
  * }</pre>
  *

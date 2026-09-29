@@ -222,7 +222,7 @@ public abstract class AbstractNettyClient {
    */
   public ChannelFuture send(Object message) {
     if (channel == null || !channel.isActive()) {
-      throw new NettyException("Channel 未连接，请先调用 connect()");
+      throw new NettyException("Channel is not connected, please call connect() first");
     }
     return channel.writeAndFlush(message);
   }
@@ -251,7 +251,7 @@ public abstract class AbstractNettyClient {
    */
   public CompletableFuture<Void> sendAsync(Object message) {
     if (channel == null || !channel.isActive()) {
-      throw new NettyException("Channel 未连接，请先调用 connect()");
+      throw new NettyException("Channel is not connected, please call connect() first");
     }
     CompletableFuture<Void> future = new CompletableFuture<>();
     channel

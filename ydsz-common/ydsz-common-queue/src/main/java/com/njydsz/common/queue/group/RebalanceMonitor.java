@@ -86,13 +86,13 @@ public class RebalanceMonitor implements DisposableBean {
       String groupName,
       long scanIntervalSeconds) {
     if (redisTemplate == null) {
-      throw new IllegalArgumentException("RedisTemplate 不能为空");
+      throw new IllegalArgumentException("RedisTemplate must not be empty");
     }
     if (channel == null || channel.isEmpty()) {
-      throw new IllegalArgumentException("Stream channel 不能为空");
+      throw new IllegalArgumentException("Stream channel must not be empty");
     }
     if (groupName == null || groupName.isEmpty()) {
-      throw new IllegalArgumentException("消费组名称不能为空");
+      throw new IllegalArgumentException("Consumer group name must not be empty");
     }
     this.redisTemplate = redisTemplate;
     this.channel = channel;

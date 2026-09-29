@@ -95,7 +95,7 @@ public final class MessagePublisherHelper {
    */
   public static void publishSequential(IMessagePublisher publisher, QueueMessage message) {
     if (message == null || !message.isSequential()) {
-      throw new IllegalArgumentException("顺序消息必须设置 messageGroupKey");
+      throw new IllegalArgumentException("Sequential message must set messageGroupKey");
     }
     publishMessage(publisher, message);
   }

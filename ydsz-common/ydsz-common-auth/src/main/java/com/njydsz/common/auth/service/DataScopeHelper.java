@@ -157,7 +157,7 @@ public final class DataScopeHelper {
   private static void validateSqlIdentifier(String column, String paramName) {
     if (column == null || !SQL_IDENTIFIER_PATTERN.matcher(column).matches()) {
       throw new IllegalArgumentException(
-          "数据权限参数非法: " + paramName + " 必须是合法 SQL 标识符, 实际值: " + column);
+          "Data scope parameter illegal: " + paramName + " must be a valid SQL identifier, actual: " + column);
     }
   }
 
@@ -173,7 +173,7 @@ public final class DataScopeHelper {
     }
     if (!TABLE_ALIAS_PATTERN.matcher(tableAlias).matches()) {
       throw new IllegalArgumentException(
-          "数据权限参数非法: tableAlias 必须是合法 SQL 标识符(可带尾部点号), 实际值: " + tableAlias);
+          "Data scope parameter illegal: tableAlias must be a valid SQL identifier (may include trailing dot), actual: " + tableAlias);
     }
   }
 }

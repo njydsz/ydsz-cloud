@@ -20,8 +20,10 @@ import com.njydsz.agent.domain.repository.AgentApprovalRepository;
 import com.njydsz.agent.domain.vo.AgentApprovalVO;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -268,7 +270,7 @@ public class HumanApprovalService {
     try {
       return SentryObservation.<Boolean>time("agent.approval.approve", null, null, () -> resolve(approvalId, ApprovalStatus.APPROVED, approver, comment, eventConsumer));
     } catch (Throwable t) {
-      throw new RuntimeException("approve observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 
@@ -300,7 +302,7 @@ public class HumanApprovalService {
     try {
       return SentryObservation.<Boolean>time("agent.approval.reject", null, null, () -> resolve(approvalId, ApprovalStatus.REJECTED, approver, comment, eventConsumer));
     } catch (Throwable t) {
-      throw new RuntimeException("reject observation error", t);
+      throw new SysException(CoreExceptionCode.SYSTEM_ERROR, t);
     }
   }
 

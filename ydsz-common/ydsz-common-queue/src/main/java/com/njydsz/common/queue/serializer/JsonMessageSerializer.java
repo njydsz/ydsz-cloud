@@ -32,7 +32,7 @@ public class JsonMessageSerializer implements MessageSerializer {
     try {
       return YdszJson.toJson(message);
     } catch (Exception e) {
-      throw new SerializationException("JSON 序列化失败: " + e.getMessage(), e);
+      throw new SerializationException("JSON serialization failed: " + e.getMessage(), e);
     }
   }
 
@@ -49,7 +49,7 @@ public class JsonMessageSerializer implements MessageSerializer {
       }
       return message;
     } catch (Exception e) {
-      throw new SerializationException("JSON 反序列化失败: " + e.getMessage(), e);
+      throw new SerializationException("JSON deserialization failed: " + e.getMessage(), e);
     }
   }
 

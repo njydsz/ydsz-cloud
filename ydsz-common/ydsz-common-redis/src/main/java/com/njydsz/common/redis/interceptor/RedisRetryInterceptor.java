@@ -180,13 +180,13 @@ public class RedisRetryInterceptor implements MethodInterceptor {
   public RedisRetryInterceptor(
       int maxRetries, long initialBackoffMs, long maxBackoffMs, boolean retryOnWrite) {
     if (maxRetries < 0) {
-      throw new IllegalArgumentException("最大重试次数不能小于 0");
+      throw new IllegalArgumentException("Max retries must not be less than 0");
     }
     if (initialBackoffMs <= 0) {
-      throw new IllegalArgumentException("初始退避时间必须大于 0");
+      throw new IllegalArgumentException("Initial backoff time must be greater than 0");
     }
     if (maxBackoffMs < initialBackoffMs) {
-      throw new IllegalArgumentException("最大退避时间不能小于初始退避时间");
+      throw new IllegalArgumentException("Max backoff time must not be less than initial backoff time");
     }
     this.maxRetries = maxRetries;
     this.initialBackoffMs = initialBackoffMs;
