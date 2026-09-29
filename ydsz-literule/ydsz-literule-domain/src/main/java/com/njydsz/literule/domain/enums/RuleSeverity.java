@@ -49,15 +49,6 @@ public enum RuleSeverity {
   }
 
   /**
-   * @deprecated 使用 {@link #getI18nKey()} 获取 i18n key
-   * @return i18n key（与 getI18nKey 相同）
-   */
-  @Deprecated
-  public String getDesc() {
-    return i18nKey;
-  }
-
-  /**
    * 根据编码反查枚举（大小写不敏感）
    *
    * @param code 严重度编码

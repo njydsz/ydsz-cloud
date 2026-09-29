@@ -4,6 +4,8 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.njydsz.common.locales.config.EnableYdszI18n;
+
 /**
  * 代码生成器 Web 启动类。
  *
@@ -23,6 +25,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @since 26.09.05
  */
 @SpringBootApplication(scanBasePackages = "com.njydsz.generator")
+@EnableYdszI18n
 @MapperScan("com.njydsz.generator.mapper")
 public class GeneratorWebApplication {
 

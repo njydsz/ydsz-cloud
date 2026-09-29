@@ -54,15 +54,6 @@ public enum RuleStatus {
   }
 
   /**
-   * @deprecated 使用 {@link #getI18nKey()} 获取 i18n key，运行时再通过 MessageSource 解析
-   * @return i18n key（与 getI18nKey 相同）
-   */
-  @Deprecated
-  public String getDesc() {
-    return i18nKey;
-  }
-
-  /**
    * 从字符串安全解析状态枚举
    *
    * @param code 状态编码（大小写不敏感）
