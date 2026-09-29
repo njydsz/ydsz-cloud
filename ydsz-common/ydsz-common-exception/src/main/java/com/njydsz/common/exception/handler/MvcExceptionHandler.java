@@ -34,6 +34,7 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.pagination.DeepPaginationException;
 
 /**
  * Spring MVC 全局异常处理器（非 Validation 部分）

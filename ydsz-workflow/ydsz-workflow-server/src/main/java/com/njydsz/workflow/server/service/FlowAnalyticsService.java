@@ -138,4 +138,38 @@ public interface FlowAnalyticsService {
    */
   FlowMigrationImpactVO previewImpact(
       String definitionId, String nodeIdToCheck, String tenantId);
+
+  // ==================== Excel 导出 ====================
+
+  /**
+   * 导出办理人效率排行（Excel）
+   *
+   * <p>P3-1: 实现 Javadoc 声明的「导出为 Excel」能力。
+   * 将 {@link com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO} 转换为
+   * {@link com.njydsz.workflow.domain.vo.FlowApproverEfficiencyExportVO} 后返回。
+   *
+   * @param startTime 起始时间
+   * @param endTime 截止时间
+   * @param tenantId 租户 ID
+   * @param limit 返回条数（默认 20）
+   * @return 办理人效率 Excel 导出数据列表
+   */
+  List<com.njydsz.workflow.domain.vo.FlowApproverEfficiencyExportVO>
+      exportApproverEfficiency(LocalDateTime startTime, LocalDateTime endTime,
+          String tenantId, int limit);
+
+  /**
+   * 导出流程效率对比（Excel）
+   *
+   * <p>P3-1: 实现 Javadoc 声明的「导出为 Excel」能力。
+   * 将 {@link com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO} 转换为
+   * {@link com.njydsz.workflow.domain.vo.FlowEfficiencyExportVO} 后返回。
+   *
+   * @param startTime 起始时间
+   * @param endTime 截止时间
+   * @param tenantId 租户 ID
+   * @return 流程效率 Excel 导出数据列表
+   */
+  List<com.njydsz.workflow.domain.vo.FlowEfficiencyExportVO>
+      exportFlowEfficiency(LocalDateTime startTime, LocalDateTime endTime, String tenantId);
 }

@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
  * @see CreatorResolver
  */
 // YDIZ-WARN-001 允许保留：调用 Jackson 2.x 标记废弃但保持 JDK 8 兼容的 API
-@SuppressWarnings("deprecation")
 final class TypeConverter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TypeConverter.class);

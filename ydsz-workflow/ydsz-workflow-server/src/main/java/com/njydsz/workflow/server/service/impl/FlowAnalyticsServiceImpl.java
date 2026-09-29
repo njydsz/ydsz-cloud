@@ -16,9 +16,11 @@ import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
 import com.njydsz.workflow.domain.repository.FlowRunTaskRepository;
 import com.njydsz.workflow.domain.vo.FlowAnalyticsOverviewVO;
 import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
+import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyExportVO;
 import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyVO;
 import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
 import com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO;
+import com.njydsz.workflow.domain.vo.FlowEfficiencyExportVO;
 import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
 import com.njydsz.workflow.domain.vo.FlowNodeDurationVO;
 import com.njydsz.workflow.domain.vo.FlowTrendVO;
@@ -499,5 +501,55 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
     } catch (NumberFormatException e) {
       return 0.0;
     }
+  }
+
+  // ==================== Excel 导出（P3-1） ====================
+
+  @Override
+  public List<FlowApproverEfficiencyExportVO> exportApproverEfficiency(
+      LocalDateTime startTime, LocalDateTime endTime, String tenantId, int limit) {
+    List<FlowApproverEfficiencyVO> sourceList =
+        approverEfficiency(startTime, endTime, tenantId, limit);
+    return sourceList.stream()
+        .map(this::toApproverEfficiencyExport)
+        .collect(java.util.stream.Collectors.toCollection(() -> new java.util.ArrayList<>(sourceList.size())));
+  }
+
+  @Override
+  public List<FlowEfficiencyExportVO> exportFlowEfficiency(
+      LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
+    List<FlowEfficiencyComparisonVO> sourceList =
+        flowEfficiencyComparison(startTime, endTime, tenantId);
+    return sourceList.stream()
+        .map(this::toFlowEfficiencyExport)
+        .collect(java.util.stream.Collectors.toCollection(() -> new java.util.ArrayList<>(sourceList.size())));
+  }
+
+  /**
+   * 将 FlowApproverEfficiencyVO 转换为 Excel 导出 VO（ms → h 换算）
+   */
+  private FlowApproverEfficiencyExportVO toApproverEfficiencyExport(FlowApproverEfficiencyVO src) {
+    FlowApproverEfficiencyExportVO export = new FlowApproverEfficiencyExportVO();
+    export.setUserId(src.getUserId());
+    export.setUserName(src.getUserName());
+    export.setCompletedCount(src.getCompletedCount());
+    export.setAvgDurationHours(src.getAvgDurationMs() / 3_600_000.0);
+    export.setTotalDurationHours(src.getTotalDurationMs() / 3_600_000.0);
+    return export;
+  }
+
+  /**
+   * 将 FlowEfficiencyComparisonVO 转换为 Excel 导出 VO（ms → h、ratio → percent 换算）
+   */
+  private FlowEfficiencyExportVO toFlowEfficiencyExport(FlowEfficiencyComparisonVO src) {
+    FlowEfficiencyExportVO export = new FlowEfficiencyExportVO();
+    export.setFlowCode(src.getFlowCode());
+    export.setFlowName(src.getFlowName());
+    export.setTotalCount(src.getTotalCount());
+    export.setCompletedCount(src.getCompletedCount());
+    export.setAvgDurationHours(src.getAvgDurationMs() / 3_600_000.0);
+    export.setRejectionRatePercent(src.getRejectionRate() * 100);
+    export.setOverdueRatePercent(src.getOverdueRate() * 100);
+    return export;
   }
 }

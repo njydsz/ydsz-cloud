@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.domain.query.DeepPaginationException;
+import com.njydsz.common.exception.pagination.DeepPaginationException;
 
 /**
  * 深度分页拒绝异常处理器（YDIZ-DOMAIN-003 P2 落地，i18n 增强）。

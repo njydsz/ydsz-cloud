@@ -46,7 +46,8 @@ public class DomainProperties {
     /**
      * 强制拒绝的 offset 阈值（默认 50000）
      *
-     * <p>超过此值的深度分页将被直接拒绝，抛出 DeepPaginationException， 防止慢查询拖垮数据库。必须改用游标分页。
+     * <p>超过此值的深度分页将被直接拒绝，抛出
+     * {@link com.njydsz.common.exception.pagination.DeepPaginationException}，防止慢查询拖垮数据库。必须改用游标分页。
      *
      * <p>消费方：{@code com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor}
      */

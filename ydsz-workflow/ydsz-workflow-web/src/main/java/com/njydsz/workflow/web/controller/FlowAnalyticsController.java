@@ -1,8 +1,11 @@
 package com.njydsz.workflow.web.controller.analytics;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.http.HttpHeaders;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,10 +29,12 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
-import com.njydsz.workflow.domain.vo.FlowAnomalyVO;
-import com.njydsz.workflow.domain.vo.FlowBottleneckVO;
-import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
+import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.workflow.domain.vo.FlowApproverEfficiencyExportVO;
+import com.njydsz.workflow.domain.vo.FlowEfficiencyExportVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 import com.njydsz.workflow.server.service.FlowI18nService;
@@ -377,6 +382,70 @@ public class FlowAnalyticsController {
   @Operation(summary = "获取支持的语言列表")
   public YdszResponse<List<Map<String, String>>> supportedLocales() {
     return YdszResponse.success(i18nService.getSupportedLocales());
+  }
+
+  // ==================== Excel 导出（P3-1） ====================
+
+  /**
+   * 导出办理人效率排行（Excel）
+   *
+   * <p>流式写入 response.getOutputStream()，文件名带 yyyyMMddHHmmss 时间戳，
+   * RFC 5987 双编码保证中文文件名兼容。
+   *
+   * @param startTime 起始时间
+   * @param endTime 截止时间
+   * @param limit 返回条数（默认 20）
+   */
+  @GetMapping("/export/approverEfficiency")
+  @Operation(summary = "导出办理人效率排行（Excel）")
+  public void exportApproverEfficiency(
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
+      @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit,
+      jakarta.servlet.http.HttpServletResponse response) throws IOException {
+    String fileName = "approver_efficiency_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+                .replace("+", "%20"));
+    String tenantId = TenantContextHolder.getTenantId();
+    List<FlowApproverEfficiencyExportVO> rows =
+        analyticsService.exportApproverEfficiency(startTime, endTime, tenantId, limit);
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), FlowApproverEfficiencyExportVO.class)
+        .sheet("ApproverEfficiency")) {
+      writer.doWrite(rows);
+    }
+  }
+
+  /**
+   * 导出流程效率对比（Excel）
+   *
+   * <p>流式写入 response.getOutputStream()，文件名带 yyyyMMddHHmmss 时间戳，
+   * RFC 5987 双编码保证中文文件名兼容。
+   *
+   * @param startTime 起始时间
+   * @param endTime 截止时间
+   */
+  @GetMapping("/export/flowEfficiency")
+  @Operation(summary = "导出流程效率对比（Excel）")
+  public void exportFlowEfficiency(
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
+      jakarta.servlet.http.HttpServletResponse response) throws IOException {
+    String fileName = "flow_efficiency_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
+    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+                .replace("+", "%20"));
+    String tenantId = TenantContextHolder.getTenantId();
+    List<FlowEfficiencyExportVO> rows =
+        analyticsService.exportFlowEfficiency(startTime, endTime, tenantId);
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), FlowEfficiencyExportVO.class)
+        .sheet("FlowEfficiency")) {
+      writer.doWrite(rows);
+    }
   }
 }
 

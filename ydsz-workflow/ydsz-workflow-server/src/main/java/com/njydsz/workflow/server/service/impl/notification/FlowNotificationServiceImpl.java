@@ -116,7 +116,6 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("removal") // MessageResult 仍标记 @Deprecated(forRemoval=true)，跨版本 Feign 合约兼容暂时保留
 public class FlowNotificationServiceImpl implements FlowNotificationService {
     /** 集合初始容量 */
     private static final int COLLECTION_CAPACITY = 16;

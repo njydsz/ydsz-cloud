@@ -87,7 +87,6 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  */
 @Slf4j
 @RequiredArgsConstructor
-@SuppressWarnings("deprecation") // NameAssembler 已标记弃用但迁移至 common-core 尚未完成，临时抑制
 public abstract class AbstractFlowInstanceLifecycle {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -149,8 +148,7 @@ public abstract class AbstractFlowInstanceLifecycle {
   @Lazy
   protected final FlowTimerService timerService;
 
-  /** 跨服务名称解析门面（NameAssembler 已标记弃用但迁移至 common-core 尚未完成，临时抑制） */
-  @SuppressWarnings("deprecation")
+  /** 跨服务名称解析门面 */
   protected final NameAssembler nameAssembler;
 
   // ============================== 子类需实现的策略方法 ==============================

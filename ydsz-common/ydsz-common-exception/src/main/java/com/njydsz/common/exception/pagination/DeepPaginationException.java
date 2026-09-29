@@ -1,4 +1,4 @@
-package com.njydsz.common.domain.query;
+package com.njydsz.common.exception.pagination;
 
 import java.io.Serializable;
 

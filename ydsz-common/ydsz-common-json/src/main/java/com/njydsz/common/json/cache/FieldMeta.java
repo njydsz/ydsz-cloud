@@ -68,7 +68,6 @@ import com.njydsz.common.json.type.FieldTypeCode;
  * @since 26.09.01
  */
 // YDIZ-WARN-001 允许保留：调用 Jackson 2.x 标记废弃但保持 JDK 8 兼容的 API
-@SuppressWarnings("deprecation")
 public final class FieldMeta {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FieldMeta.class);

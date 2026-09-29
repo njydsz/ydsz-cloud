@@ -431,7 +431,6 @@ public class AlertDispatcher {
    *
    * <p>当 NotifyHelper 不可用或发送失败时，回退到原始 Feign 调用。
    */
-  @SuppressWarnings("removal")
   private void sendViaFeign(
       AlertChannel channel,
       AlertContext context,

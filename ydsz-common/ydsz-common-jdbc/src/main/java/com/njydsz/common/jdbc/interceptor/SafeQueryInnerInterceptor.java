@@ -24,9 +24,9 @@ import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.njydsz.common.domain.config.DomainProperties;
-import com.njydsz.common.domain.query.DeepPaginationException;
 import com.njydsz.common.domain.query.DeepPaginationRisk;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.exception.pagination.DeepPaginationException;
 
 /**
  * 安全查询拦截器（ORDER BY 注入防护 + 深度分页检测）。

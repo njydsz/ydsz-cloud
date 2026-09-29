@@ -13,7 +13,7 @@ package com.njydsz.common.domain.query;
  * @author ydsz-team
  * @since 26.09.01
  * @see PageQuery#assessPaginationRisk()
- * @see DeepPaginationException
+ @see com.njydsz.common.exception.pagination.DeepPaginationException
  */
 public enum DeepPaginationRisk {
 
@@ -28,7 +28,8 @@ public enum DeepPaginationRisk {
   WARN,
 
   /**
-   * 拒绝：offset 超过拒绝阈值（默认 50000），将抛出 {@link DeepPaginationException}。
+   * 拒绝：offset 超过拒绝阈值（默认 50000），将抛出
+ * {@link com.njydsz.common.exception.pagination.DeepPaginationException}。
    *
    * <p>强制调用方改用游标分页（SliceQuery / SliceResult 游标模式），防止慢查询拖垮数据库。
    */
@@ -41,7 +42,8 @@ public enum DeepPaginationRisk {
    */
   public static final long DEFAULT_WARN_THRESHOLD = 10000L;
 
-  /** 默认拒绝阈值：offset 超过此值触发 REJECT（抛出 {@link DeepPaginationException}）。 */
+  /** 默认拒绝阈值：offset 超过此值触发 REJECT（抛出
+   * {@link com.njydsz.common.exception.pagination.DeepPaginationException}）。 */
   public static final long DEFAULT_REJECT_THRESHOLD = 50000L;
 
   /**
