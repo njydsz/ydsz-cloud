@@ -1,5 +1,9 @@
 package com.njydsz.agent.domain.insight;
 
+import java.util.List;
+
+import com.njydsz.common.domain.enums.BaseStatusEnum;
+
 /**
  * 洞察报告状态枚举。
  *
@@ -8,7 +12,7 @@ package com.njydsz.agent.domain.insight;
  * @author ydsz-team
  * @since 26.09.07
  */
-public enum InsightReportStatus {
+public enum InsightReportStatus implements BaseStatusEnum<InsightReportStatus> {
 
   /** 草稿（正在生成中） */
   DRAFT("draft", "草稿"),
@@ -55,6 +59,59 @@ public enum InsightReportStatus {
    */
   public String getDescription() {
     return description;
+  }
+
+  /**
+   * 是否为终态。
+   *
+   * <p>生成失败和已导出均为终态。
+   *
+   * @return true 表示终态
+   */
+  @Override
+  public boolean isTerminal() {
+    return this == FAILED || this == EXPORTED;
+  }
+
+  /**
+   * 校验状态流转合法性。
+   *
+   * <pre>
+   * DRAFT     → COMPLETED | FAILED
+   * COMPLETED → EXPORTED
+   * FAILED    → 终态
+   * EXPORTED  → 终态
+   * </pre>
+   *
+   * @param target 目标状态
+   * @return true 表示允许从当前状态流转到目标状态
+   */
+  @Override
+  public boolean canTransitTo(InsightReportStatus target) {
+    if (target == null) {
+      return false;
+    }
+    if (this == target) {
+      return true;
+    }
+    if (this.isTerminal()) {
+      return false;
+    }
+    return switch (this) {
+      case DRAFT -> target == COMPLETED || target == FAILED;
+      case COMPLETED -> target == EXPORTED;
+      default -> false;
+    };
+  }
+
+  /**
+   * 返回所有枚举值。
+   *
+   * @return 全量状态列表
+   */
+  @Override
+  public List<InsightReportStatus> allStates() {
+    return List.of(values());
   }
 
   /**

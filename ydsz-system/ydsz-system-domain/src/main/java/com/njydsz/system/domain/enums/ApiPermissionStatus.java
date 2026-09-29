@@ -1,5 +1,9 @@
 package com.njydsz.system.domain.enums;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
+
+import java.util.List;
+
 /**
  * 接口权限状态枚举
  *
@@ -8,7 +12,7 @@ package com.njydsz.system.domain.enums;
  * @author ydsz-team
  * @since 26.09.01
  */
-public enum ApiPermissionStatus {
+public enum ApiPermissionStatus implements BaseStatusEnum<ApiPermissionStatus> {
 
   /** 启用状态（接口可被访问） */
   ENABLED("ENABLED"),
@@ -48,5 +52,28 @@ public enum ApiPermissionStatus {
       }
     }
     return null;
+  }
+
+  /**
+   * 校验状态流转合法性。
+   *
+   * <p>启用/禁用双向均可流转，无终态。
+   *
+   * @param target 目标状态
+   * @return 始终返回 true（二态可逆）
+   */
+  @Override
+  public boolean canTransitTo(ApiPermissionStatus target) {
+    return target != null;
+  }
+
+  /**
+   * 返回所有枚举值。
+   *
+   * @return 全量状态列表
+   */
+  @Override
+  public List<ApiPermissionStatus> allStates() {
+    return List.of(values());
   }
 }

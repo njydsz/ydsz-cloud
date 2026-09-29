@@ -13,18 +13,18 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.28-v2"
+  version: "26.09.28-v3"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "2026-09-28-v2（全局引用深度分析 v2 落地：P0 UUID 确认已合规无业务主键违规 + Cronjob GLUE 引擎评估完成职责边界清晰不合并 + P1 I18nMessages 6文件注入 + TreeBuilder/ThreadPoolFactory 确认已合规 + NotifyHelper nextwiki TODO 修复 + ExcelFacade agent 4导出端点激活 + IFileStorage 确认无存储需求 + 沉睡能力 JsonPatch/BeanMapper 清理删除 + 零引用 jdbc 确认为核心基础设施保留 + web/app 去留决策完成；+4 规则 YDIZ-COMMON-041~044）"
-  total_rules: 129
+  last_updated: "26.09.28-v3（RuntimeException 清零专项 YDIZ-COMMON-045 P0 + 伪 i18n 清零专项 YDIZ-COMMON-046 P1 + HeaderConstants 推广专项 YDIZ-COMMON-047 P1；+3 规则，累计 133 条）"
+  total_rules: 133
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 51
-    P1: 52
+    P0: 52
+    P1: 55
     P2: 12
 
 rules:
@@ -3760,8 +3760,134 @@ rules:
       - 保留 DynamicRoutingDataSource（储备型：多数据源未来场景）
     source: "ydsz-common 全局引用深度分析 v2（YDIZ-COMMON-044，P2，26.09.28 沉睡能力退出机制）"
 
+  - id: "YDIZ-COMMON-045"
+    severity: "P0"
+    category: "common-reuse"
+    title: "【强制】禁止业务模块 throw RuntimeException，必须使用 BusinessException / SysException"
+    description: |
+      所有业务模块（ydsz-system、ydsz-userinfo、ydsz-message、ydsz-workflow、ydsz-cronjob、ydsz-nextwiki、ydsz-literule、ydsz-agent、ydsz-generator）中禁止直接抛出 RuntimeException。
+
+      **为什么禁止**：
+      - RuntimeException 不携带结构化错误码，前端无法根据 code 区分错误类型
+      - 全局异常处理器 BaseExceptionHandler 按 BusinessException/SysException 分类处理，走不同日志级别和响应构造
+      - RuntimeException 不会被 ExceptionMetrics 正确分类，影响监控指标准确性
+      - 丢失 i18n key 关联，导致错误消息无法国际化
+
+      **替换规则**：
+      - 业务约束违反（参数错误、状态不允许、权限不足）→ `BusinessException.of(ModuleExceptionCode.XXX).data(...).build()`
+      - 系统级故障（tracing 失败、MQ 故障、RPC 超时）→ `SysException.of(ModuleExceptionCode.XXX, cause).build()`
+      - 不确定场景时用 `BusinessException.failed("error.key")` 兜底
+
+      **例外**：ydsz-common 内部基础子模块（L1 层：json、util、cache、excel）因层级依赖约束无法引用 L3 exception 模块，允许保留 RuntimeException，但消息必须使用纯英文。
+
+      **修复方式**：
+      1. 搜索 `throw new RuntimeException` 定位所有违反点
+      2. 确认异常语义（业务 vs 系统）选择 BusinessException / SysException
+      3. 保留原始异常作为 cause（传入构造器参数）
+      4. 添加结构化错误码（从对应模块的 ExceptionCode 枚举选择或新建）
+    pattern: "throw new RuntimeException"
+    fix: |
+      1. 全局 grep `throw new RuntimeException` → 在业务模块中逐一替换
+      2. 业务违反 → `BusinessException.of(ModuleExceptionCode.XXX).msg("...").cause(e).build()`
+      3. 系统故障 → `SysException.of(ModuleExceptionCode.XXX).cause(e).build()`
+      4. 修复后 grep 确认业务模块零残留
+    example_bad: |
+      ```java
+      // ❌ 业务模块中直接抛 RuntimeException
+      if (!success) {
+        throw new RuntimeException("dag save failed");
+      }
+      ```
+    example_good: |
+      ```java
+      // ✅ 使用 BusinessException
+      if (!success) {
+        throw BusinessException.of(AgentExceptionCode.DAG_SAVE_FAILED).data("workflowId", id).build();
+      }
+      ```
+    source: "公共基础深化落地（YDIZ-COMMON-045，P0，26.09.xx RuntimeException 清零专项）"
+
+  - id: "YDIZ-COMMON-046"
+    severity: "P1"
+    category: "i18n"
+    title: "【强制】i18n message key 必须使用英文命名规范，禁止中文原文作为 key"
+    description: |
+      使用 `I18n.message(key, ...)` 或 `I18nMessages.message(key, ...)` 时，key 必须为英文命名规范（如 "module.scenario.error_key"），严禁直接使用中文文本作为 key。
+
+      **为什么禁止**：
+      - 当 `useCodeAsDefaultMessage=true` 时，中文 key 会将原文直接返回给用户，永远无法被翻译
+      - properties 文件的 key 命名规范要求英文点分格式，中文 key 违反命名约定
+      - 英文 key + properties 翻译才是正确的三语支持模式
+
+      **合法示例**：
+      - `I18n.message("system.config.value_type.bool_invalid")` ✅
+      - `I18n.message("message.sms.phone_required", new Object[]{phone})` ✅
+
+      **非法示例**：
+      - `I18n.message("布尔值必须是 true/false")` ❌
+      - `I18n.message("配置分组不能为空")` ❌
+
+      **修复方式**：
+      1. 搜索 `I18n.message("中文` 和 `I18nMessages.message("中文` 定位所有伪 i18n 调用
+      2. 提取英文 key（格式 module.submodule.action_description）
+      3. 追加 key 到三份 properties 文件（default/en_US/zh_CN）
+      4. 调用点改引用英文 key
+    pattern: `I18n\.message\(\s*"[^a-zA-Z_\.].*I18nMessages\.message\(\s*"[^a-zA-Z_\.]`
+    fix: |
+      1. 全局搜索定位伪 i18n 调用
+      2. 创建英文 key 并追加到三份 properties 文件
+      3. 替换调用点的 key 引用
+      4. 验证三文件 key 一致率 ≥ 98%
+    example_bad: |
+      ```java
+      // ❌ 中文原文作为 key
+      throw new ConfigException(I18n.message("配置分组不能为空"));
+      ```
+    example_good: |
+      ```java
+      // ✅ 英文 key 引用
+      throw new ConfigException(I18n.message("system.config.group_required"));
+      ```
+    source: "公共基础深化落地（YDIZ-COMMON-046，P1，26.09.xx 伪 i18n 清零专项）"
+
+  - id: "YDIZ-COMMON-047"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【建议】HTTP 请求头常量必须引用 HeaderConstants，禁止硬编码字符串"
+    description: |
+      在 WebClient、RestTemplate、Feign 拦截器、ServerHttpRequest 构建等需要设置/获取 HTTP 请求头的场景中，必须使用 `HeaderConstants` 中定义的标准常量，禁止硬编码字符串字面量。
+
+      **为什么建议**：
+      - 避免同义头在不同模块拼写不一致（如 "X-Trace-Id" vs "X-Trace-ID"）
+      - 统一升级时可在一处修改
+      - 常量类包含完整 Javadoc 说明各头用途，提升可读性
+
+      **可用常量**：HeaderConstants.AUTHORIZATION、HeaderConstants.TRACE_ID_HEADER、HeaderConstants.IDEMPOTENCY_KEY 等。
+
+      **修复方式**：
+      1. grep `"Authorization"`、`"X-Trace-Id"`、`"Idempotency-Key"`、`"X-Forwarded-For"` 等字符串
+      2. 确认用于 request header 设置/获取场景
+      3. 替换为 `HeaderConstants.XXX`
+      4. 添加 import `com.njydsz.common.core.constant.HeaderConstants`
+    pattern: `"(Authorization|X-Trace-Id|Idempotency-Key|X-Forwarded-For)"(?:\s*[,)]|\s*\))`
+    fix: |
+      1. 全局 grep 定位硬编码请求头字符串
+      2. 替换为 `HeaderConstants.XXX`
+      3. 确认 import 正确添加
+    example_bad: |
+      ```java
+      // ❌ 硬编码字符串
+      headers.set("Authorization", "Bearer " + token);
+      ```
+    example_good: |
+      ```java
+      // ✅ 使用常量
+      headers.set(HeaderConstants.AUTHORIZATION, "Bearer " + token);
+      ```
+    source: "公共基础深化落地（YDIZ-COMMON-047，P1，26.09.xx HeaderConstants 推广专项）"
+
 # ============================================
-# 附录：按 category 统计（26.09.28-v2 深度利用率专项：+4 规则，COMMON-041~044 聚焦业务主键/脚本引擎/利用率门禁/退出机制）
+# 附录：按 category 统计（26.09.28-v3 深度利用率专项：+3 规则，COMMON-045~047 聚焦 RuntimeException 清零/伪 i18n 清零/HeaderConstants 推广）
 # ============================================
 stats:
   encoding: 1
@@ -3775,7 +3901,7 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-    common-reuse: 26  # +4: UUID统一/脚本引擎收敛/利用率门禁/退出机制
+    common-reuse: 28  # +6: UUID统一/脚本引擎收敛/利用率门禁/退出机制/RuntimeException清零/HeaderConstants推广
   security: 2
   architecture: 6
   engineering: 5
@@ -3796,4 +3922,4 @@ stats:
   search: 1
   util: 1
   common: 5
-  total: 129
+  total: 133

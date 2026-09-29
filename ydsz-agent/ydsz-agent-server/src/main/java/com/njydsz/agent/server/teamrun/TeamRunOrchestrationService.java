@@ -3,9 +3,12 @@ package com.njydsz.agent.server.teamrun;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,8 @@ import com.njydsz.agent.domain.teamrun.TeamRunRepository;
 import com.njydsz.agent.domain.teamrun.TeamRunStatus;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
@@ -209,22 +214,22 @@ public class TeamRunOrchestrationService {
     private void executeSequential(TeamRun teamRun) {
         log.info("[TeamRun] 顺序执行模式: teamRunId={}", teamRun.getTeamRunId());
 
-        CompletableFuture.runAsync(() -> {
+        // P1-4：捕获当前请求 Locale，确保异步线程中 i18n 解析正确
+        final Locale currentLocale = Locales.current();
+        CompletableFuture.runAsync(I18nContextPropagator.wrap(() -> {
             TeamRun current = teamRun;
             try {
                 TeamRunMember nextMember;
                 while ((nextMember = current.getNextPendingMember()) != null) {
-                    // 执行单个成员
                     current = executeMember(current, nextMember);
                 }
-                // 所有成员执行完成
                 finalizeTeamRun(current);
             } catch (Exception e) {
                 log.error("[TeamRun] 顺序执行异常: teamRunId={}, error={}",
                         teamRun.getTeamRunId(), e.getMessage(), e);
                 finalizeTeamRunWithError(current, e.getMessage());
             }
-        }, executorService);
+        }, currentLocale), executorService);
     }
 
     /**
@@ -233,9 +238,10 @@ public class TeamRunOrchestrationService {
     private void executeParallel(TeamRun teamRun) {
         log.info("[TeamRun] 并行执行模式: teamRunId={}", teamRun.getTeamRunId());
 
+        final Locale parallelLocale = Locales.current();
         List<CompletableFuture<TeamRunMember>> futures = teamRun.getMembers().stream()
-                .map(member -> CompletableFuture.supplyAsync(
-                        () -> executeMemberSync(teamRun, member), executorService))
+                .map(member -> supplyAsyncWrapped(
+                        () -> executeMemberSync(teamRun, member), parallelLocale, executorService))
                 .toList();
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
@@ -267,7 +273,8 @@ public class TeamRunOrchestrationService {
     private void executeHierarchical(TeamRun teamRun) {
         log.info("[TeamRun] 层级执行模式: teamRunId={}", teamRun.getTeamRunId());
 
-        CompletableFuture.runAsync(() -> {
+        final Locale hierarchicalLocale = Locales.current();
+        CompletableFuture.runAsync(I18nContextPropagator.wrap(() -> {
             try {
                 // 1. 先执行 Leader（order 最小的成员）
                 TeamRunMember leader = teamRun.getMembers().stream()
@@ -283,8 +290,10 @@ public class TeamRunOrchestrationService {
                         .toList();
 
                 List<CompletableFuture<TeamRunMember>> workerFutures = workers.stream()
-                        .map(worker -> CompletableFuture.supplyAsync(
-                                () -> executeMemberSync(afterLeader, worker), executorService))
+                        .map(worker -> supplyAsyncWrapped(
+                                () -> executeMemberSync(afterLeader, worker),
+                                hierarchicalLocale,
+                                executorService))
                         .toList();
 
                 // 3. 等待所有 Worker 完成
@@ -304,7 +313,7 @@ public class TeamRunOrchestrationService {
                         teamRun.getTeamRunId(), e.getMessage(), e);
                 finalizeTeamRunWithError(teamRun, e.getMessage());
             }
-        }, executorService);
+        }, hierarchicalLocale), executorService);
     }
 
     /**
@@ -486,6 +495,34 @@ public class TeamRunOrchestrationService {
      */
     private String generateExecutionId() {
         return "exec-" + IdGenerator.nextIdStr();
+    }
+
+    /**
+     * 使用 I18nContextPropagator 包装 Callable 后提交为异步任务。
+     *
+     * <p>由于 {@link I18nContextPropagator#wrap(Callable, Locale)} 返回 {@code Callable} 而非 {@code Supplier}，
+     * 需在调用方适配为 supplyAsync 所需的 Supplier 形态。统一封装以避免重复 try/catch 样板代码。
+     *
+     * @param task 要执行的 Callable 任务
+     * @param locale 要传播的 Locale
+     * @param executor 线程池
+     * @param <T> 返回值类型
+     * @return 包装后的 CompletableFuture
+     */
+    private static <T> CompletableFuture<T> supplyAsyncWrapped(
+        Callable<T> task, Locale locale, ExecutorService executor) {
+      Callable<T> wrapped = I18nContextPropagator.wrap(task, locale);
+      return CompletableFuture.supplyAsync(
+          () -> {
+            try {
+              return wrapped.call();
+            } catch (RuntimeException e) {
+              throw e;
+            } catch (Exception e) {
+              throw new CompletionException(e);
+            }
+          },
+          executor);
     }
 
     /**

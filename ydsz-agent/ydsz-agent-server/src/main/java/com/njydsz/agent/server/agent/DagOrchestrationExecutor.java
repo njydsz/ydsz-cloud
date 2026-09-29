@@ -7,7 +7,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,7 +41,9 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -395,9 +399,22 @@ public class DagOrchestrationExecutor extends AbstractAgentExecutor {
               .build();
 
       // 节点级超时：使用 CompletableFuture.orTimeout 为单个节点设置超时
+      // P1-4：wrap Callable 确保 Agent 执行器中的 i18nMessages.resolve() 继承请求 Locale
+      Locale currentLocale = Locales.current();
+      Callable<ChatResponse> wrappedCallable = I18nContextPropagator.wrap(
+          () -> agentFactory.getExecutor(nodeAgentDef).execute(nodeRequest), currentLocale);
       ChatResponse response =
           CompletableFuture.supplyAsync(
-                  () -> agentFactory.getExecutor(nodeAgentDef).execute(nodeRequest), executor)
+                  () -> {
+                    try {
+                      return wrappedCallable.call();
+                    } catch (RuntimeException e) {
+                      throw e;
+                    } catch (Exception e) {
+                      throw new CompletionException(e);
+                    }
+                  },
+                  executor)
               .orTimeout(nodeTimeoutSeconds, TimeUnit.SECONDS)
               .join();
 

@@ -3,6 +3,7 @@ package com.njydsz.agent.server.agent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -39,7 +40,9 @@ import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.core.feature.FeatureFlagService;
+import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -700,24 +703,27 @@ public class ReActAgentExecutor extends AbstractAgentExecutor {
       return results;
     }
     List<CompletableFuture<Void>> futures = new ArrayList<>(toolCalls.size());
+    final Locale currentLocale = Locales.current();
     for (ToolCall toolCall : toolCalls) {
       futures.add(
           CompletableFuture.runAsync(
-              () -> {
-                long toolStart = System.currentTimeMillis();
-                String result = toolRegistry.execute(toolCall);
-                long toolDuration = System.currentTimeMillis() - toolStart;
-                durations.put(toolCall.getId(), toolDuration);
-                // TraceRecorder 记录工具调用步骤（先持久化，后由中间件按需驱逐结果）
-                traceRecorder.recordStep(
-                    traceId,
-                    "TOOL_CALL",
-                    toolCall.getName(),
-                    toolCall.getArguments(),
-                    result,
-                    toolDuration);
-                results.put(toolCall.getId(), result);
-              },
+              I18nContextPropagator.wrap(
+                  () -> {
+                    long toolStart = System.currentTimeMillis();
+                    String result = toolRegistry.execute(toolCall);
+                    long toolDuration = System.currentTimeMillis() - toolStart;
+                    durations.put(toolCall.getId(), toolDuration);
+                    // TraceRecorder 记录工具调用步骤（先持久化，后由中间件按需驱逐结果）
+                    traceRecorder.recordStep(
+                        traceId,
+                        "TOOL_CALL",
+                        toolCall.getName(),
+                        toolCall.getArguments(),
+                        result,
+                        toolDuration);
+                    results.put(toolCall.getId(), result);
+                  },
+                  currentLocale),
               TOOL_EXECUTOR));
     }
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();

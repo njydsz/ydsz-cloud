@@ -1,5 +1,9 @@
 package com.njydsz.agent.domain.teamrun;
 
+import java.util.List;
+
+import com.njydsz.common.domain.enums.BaseStatusEnum;
+
 /**
  * Team Run 状态枚举。
  *
@@ -8,7 +12,7 @@ package com.njydsz.agent.domain.teamrun;
  * @author ydsz-agent
  * @since 26.09.01
  */
-public enum TeamRunStatus {
+public enum TeamRunStatus implements BaseStatusEnum<TeamRunStatus> {
 
     /** 已创建，等待启动 */
     CREATED("CREATED", "agent.teamrun.status.created"),
@@ -65,10 +69,54 @@ public enum TeamRunStatus {
     /**
      * 判断是否为终态。
      *
+     * <p>已完成 / 失败 / 已取消 / 超时的 Team Run 不可再迁移。
+     *
      * @return 是否为终态
      */
+    @Override
     public boolean isTerminal() {
         return this == COMPLETED || this == FAILED || this == CANCELLED || this == TIMEOUT;
+    }
+
+    /**
+     * 校验 TeamRun 状态流转合法性。
+     *
+     * <pre>
+     * CREATED          → RUNNING | CANCELLED | TIMEOUT
+     * RUNNING          → WAITING_APPROVAL | COMPLETED | FAILED | CANCELLED | TIMEOUT
+     * WAITING_APPROVAL → RUNNING | COMPLETED | FAILED | CANCELLED | TIMEOUT
+     * 终态（COMPLETED/FAILED/CANCELLED/TIMEOUT）→ 仅自身
+     * </pre>
+     *
+     * @param target 目标状态
+     * @return true 表示允许从当前状态流转到目标状态
+     */
+    @Override
+    public boolean canTransitTo(TeamRunStatus target) {
+        if (target == null) {
+            return false;
+        }
+        if (this == target) {
+            return true;
+        }
+        if (this.isTerminal()) {
+            return false;
+        }
+        return switch (this) {
+            case CREATED -> target == RUNNING || target == CANCELLED || target == TIMEOUT;
+            case RUNNING, WAITING_APPROVAL -> target != CREATED;
+            default -> false;
+        };
+    }
+
+    /**
+     * 返回所有枚举值。
+     *
+     * @return 全量状态列表
+     */
+    @Override
+    public List<TeamRunStatus> allStates() {
+        return List.of(values());
     }
 
     /**

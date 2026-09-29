@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -34,9 +36,11 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.chat.StreamingPiiMasker;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.locales.util.I18nMessages;
-import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.locales.util.Locales;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * Supervisor 多 Agent 协作执行器
@@ -221,9 +225,21 @@ public class SupervisorAgentExecutor extends AbstractAgentExecutor {
       for (SubTask subTask : layerTasks) {
         // 构建隔离的子对话 ID（对话记忆隔离）
         String subConversationId = buildSubAgentConversationId(convId, subTask);
+        Locale currentLocale = Locales.current();
+        Callable<TaskResult> wrappedCallable = I18nContextPropagator.wrap(
+            () -> executeSubTaskIsolated(subConversationId, request, subTask, traceId),
+            currentLocale);
         CompletableFuture<TaskResult> future =
             CompletableFuture.supplyAsync(
-                    () -> executeSubTaskIsolated(subConversationId, request, subTask, traceId),
+                    () -> {
+                      try {
+                        return wrappedCallable.call();
+                      } catch (RuntimeException e) {
+                        throw e;
+                      } catch (Exception e) {
+                        throw new java.util.concurrent.CompletionException(e);
+                      }
+                    },
                     SubAgentExecutorPool.getExecutor())
                 .orTimeout(SUB_TASK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .handle(

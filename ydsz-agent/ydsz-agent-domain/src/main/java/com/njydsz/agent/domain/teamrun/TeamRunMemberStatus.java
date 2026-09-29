@@ -1,5 +1,9 @@
 package com.njydsz.agent.domain.teamrun;
 
+import java.util.List;
+
+import com.njydsz.common.domain.enums.BaseStatusEnum;
+
 /**
  * Team Run 成员状态枚举。
  *
@@ -8,7 +12,7 @@ package com.njydsz.agent.domain.teamrun;
  * @author ydsz-agent
  * @since 26.09.01
  */
-public enum TeamRunMemberStatus {
+public enum TeamRunMemberStatus implements BaseStatusEnum<TeamRunMemberStatus> {
 
     /** 待执行 */
     PENDING("PENDING", "待执行"),
@@ -62,9 +66,52 @@ public enum TeamRunMemberStatus {
     /**
      * 判断是否为终态。
      *
+     * <p>已完成 / 失败 / 已跳过 / 已取消 均不可再迁移。
+     *
      * @return 是否为终态
      */
+    @Override
     public boolean isTerminal() {
         return this == COMPLETED || this == FAILED || this == SKIPPED || this == CANCELLED;
+    }
+
+    /**
+     * 校验 TeamRun 成员状态流转合法性。
+     *
+     * <pre>
+     * PENDING → RUNNING | SKIPPED | CANCELLED
+     * RUNNING → COMPLETED | FAILED | CANCELLED
+     * 终态（COMPLETED/FAILED/SKIPPED/CANCELLED）→ 仅自身
+     * </pre>
+     *
+     * @param target 目标状态
+     * @return true 表示允许从当前状态流转到目标状态
+     */
+    @Override
+    public boolean canTransitTo(TeamRunMemberStatus target) {
+        if (target == null) {
+            return false;
+        }
+        if (this == target) {
+            return true;
+        }
+        if (this.isTerminal()) {
+            return false;
+        }
+        return switch (this) {
+            case PENDING -> target == RUNNING || target == SKIPPED || target == CANCELLED;
+            case RUNNING -> target == COMPLETED || target == FAILED || target == CANCELLED;
+            default -> false;
+        };
+    }
+
+    /**
+     * 返回所有枚举值。
+     *
+     * @return 全量状态列表
+     */
+    @Override
+    public List<TeamRunMemberStatus> allStates() {
+        return List.of(values());
     }
 }

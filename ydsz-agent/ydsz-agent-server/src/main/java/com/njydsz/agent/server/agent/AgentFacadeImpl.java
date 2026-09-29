@@ -3,7 +3,10 @@ package com.njydsz.agent.server.agent;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -28,6 +31,8 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.server.chat.ChatService;
 import com.njydsz.agent.server.execution.ExecutionPauseService;
 import com.njydsz.agent.server.harness.AgentHarness;
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
@@ -128,7 +133,20 @@ public class AgentFacadeImpl implements AgentFacade {
       // 为每条请求提交一个异步任务
       List<CompletableFuture<BatchChatResult.BatchResultItem>> futures = new ArrayList<>(items.size());
       for (BatchChatItem item : items) {
-        futures.add(CompletableFuture.supplyAsync(() -> executeSingleItem(item), executor));
+        Locale currentLocale = Locales.current();
+        Callable<BatchChatResult.BatchResultItem> wrappedCallable =
+            I18nContextPropagator.wrap(() -> executeSingleItem(item), currentLocale);
+        futures.add(CompletableFuture.supplyAsync(
+            () -> {
+              try {
+                return wrappedCallable.call();
+              } catch (RuntimeException e) {
+                throw e;
+              } catch (Exception e) {
+                throw new CompletionException(e);
+              }
+            },
+            executor));
       }
 
       // 阻塞等待所有任务完成（带超时），避免单任务 Hang 住整个批量调用
