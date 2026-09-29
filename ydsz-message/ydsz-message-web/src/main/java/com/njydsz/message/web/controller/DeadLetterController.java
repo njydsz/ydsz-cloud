@@ -21,11 +21,13 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.domain.vo.MsgLogViews;
 import com.njydsz.message.server.service.core.MessageLogService;
 
 /**
@@ -99,6 +101,7 @@ public class DeadLetterController {
    * @param query 查询参数（status 字段被忽略，固定为 DEAD；含 pageNum / pageSize 分页信息）
    * @return 死信分页结果（data 为 MsgLogVO 列表，含消息 ID、通道、接收人、状态、回执 ID、发送时间；无匹配时 data 为空列表）
    */
+  @JsonView(MsgLogViews.Summary.class)
   @Operation(summary = "分页查询死信列表")
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
   @GetMapping("/page")

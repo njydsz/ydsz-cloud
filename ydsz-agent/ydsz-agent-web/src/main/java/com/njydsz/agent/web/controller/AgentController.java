@@ -28,6 +28,7 @@ import com.njydsz.agent.domain.dto.BatchChatRequestDTO;
 import com.njydsz.agent.domain.dto.BatchChatResponseDTO;
 import com.njydsz.agent.domain.dto.ChatRequestDTO;
 import com.njydsz.agent.domain.dto.ChatResponseDTO;
+import com.njydsz.agent.domain.dto.ChatResponseViews;
 import com.njydsz.agent.domain.model.BatchChatResult;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatResponse;
@@ -46,6 +47,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -134,6 +136,7 @@ public class AgentController {
       content = "'execute'")
   @Idempotent(key = "'agent:execute:' + #request.requestId", ttlSeconds = 5)
   @RateLimit(resource = "agent.agent.execute", threshold = 50)
+  @JsonView(ChatResponseViews.Detail.class)
   @PostMapping("/execute")
   @Operation(summary = "同步执行 Agent", description = "等待完整响应后返回，适用于非实时对话场景")
   public YdszResponse<ChatResponseDTO> execute(
@@ -284,6 +287,7 @@ public class AgentController {
       content = "'chat'")
   @Idempotent(key = "'agent:chat:' + #request.requestId", ttlSeconds = 5)
   @RateLimit(resource = "agent.chat.chat", threshold = 50)
+  @JsonView(ChatResponseViews.Detail.class)
   @PostMapping("/chat")
   @Operation(summary = "同步对话", description = "等待 LLM 返回完整响应后返回")
   public YdszResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {

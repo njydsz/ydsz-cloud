@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.domain.SecurityScanResult;
@@ -54,7 +55,7 @@ public class DocumentProcessResult {
    *
    * @return 文档内容；解析失败时返回 {@code null}
    */
-  public com.njydsz.common.docs.domain.DocumentContent getContent() {
+  public DocumentContent getContent() {
     return parseResult != null ? parseResult.getContent() : null;
   }
 }

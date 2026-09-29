@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 分布式锁服务封装（P1-3：synchronized 升级为分布式锁）
@@ -41,6 +41,9 @@ public class LockService {
 
     /** 分布式锁提供者（可为 null，此时降级为本地锁） */
     private final DistributedLocker distributedLocker;
+
+    /** 国际化消息 */
+    private final I18nMessages i18n;
 
     /** 锁默认等待时间（秒） */
     private static final long DEFAULT_WAIT_TIME = 5L;
@@ -85,12 +88,12 @@ public class LockService {
         try {
             lockValue = distributedLocker.tryLock(lockKey, waitTime, leaseTime, TimeUnit.SECONDS);
             if (lockValue == null) {
-      throw new SysException(I18n.message("literule.lock.acquire_failed", new Object[]{waitTime, lockKey}));
+      throw new SysException(i18n.resolve("literule.lock.acquire_failed", new Object[]{waitTime, lockKey}));
             }
             return action.get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-      throw new SysException(I18n.message("literule.lock.interrupted", new Object[]{lockKey}), e);
+      throw new SysException(i18n.resolve("literule.lock.interrupted", new Object[]{lockKey}), e);
         } finally {
             if (lockValue != null) {
                 try {

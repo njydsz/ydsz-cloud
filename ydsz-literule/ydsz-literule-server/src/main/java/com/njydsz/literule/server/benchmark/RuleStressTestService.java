@@ -18,7 +18,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 规则压测服务
@@ -53,13 +53,17 @@ public class RuleStressTestService {
   /** 规则管理服务（提供 dry-run 通道） */
   private final RuleAdminService ruleAdminService;
 
+  /** 国际化消息 */
+  private final I18nMessages i18n;
+
   /**
    * 构造压测服务
    *
    * @param ruleAdminService 规则管理服务
    */
-  public RuleStressTestService(RuleAdminService ruleAdminService) {
+  public RuleStressTestService(RuleAdminService ruleAdminService, I18nMessages i18n) {
     this.ruleAdminService = ruleAdminService;
+    this.i18n = i18n;
   }
 
   /**
@@ -79,7 +83,7 @@ public class RuleStressTestService {
       int iterations,
       int warmupIterations) {
     if (factsList == null || factsList.isEmpty()) {
-      throw new SysException(I18n.message("literule.benchmark.facts_list_empty"));
+      throw new SysException(i18n.resolve("literule.benchmark.facts_list_empty"));
     }
     int safeThreads = Math.max(1, threads);
     int safeIterations = Math.max(1, iterations);
@@ -153,7 +157,7 @@ public class RuleStressTestService {
           ruleCode, latencies, successCount.sum(), errorCount.sum(), durationMs, threads);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new SysException(I18n.message("literule.benchmark.interrupted"), e);
+      throw new SysException(i18n.resolve("literule.benchmark.interrupted"), e);
     } finally {
       executor.shutdown();
     }

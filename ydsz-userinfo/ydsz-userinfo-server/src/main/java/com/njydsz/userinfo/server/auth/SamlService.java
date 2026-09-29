@@ -24,7 +24,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.SamlIdpConfigVO;
 import com.njydsz.userinfo.server.config.SamlProperties;
@@ -82,6 +82,7 @@ public class SamlService {
 
   private final SamlProperties samlProperties;
   private final SamlIdpConfigService samlIdpConfigService;
+  private final I18nMessages i18n;
 
   /**
    * 生成 SP Metadata XML
@@ -349,7 +350,7 @@ public class SamlService {
         throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
       }
     } catch (GeneralSecurityException e) {
-      throw new SamlException("SIGNATURE_VERIFY", I18n.message("userinfo.saml.signature_crypto_error", new Object[]{e.getMessage()}), e);
+      throw new SamlException("SIGNATURE_VERIFY", i18n.resolve("userinfo.saml.signature_crypto_error", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -421,7 +422,7 @@ public class SamlService {
         throw new BusinessException(UserInfoExceptionCode.SAML_SIGNATURE_INVALID);
       }
     } catch (GeneralSecurityException e) {
-      throw new SamlException("SIGNATURE_VERIFY", I18n.message("userinfo.saml.signature_crypto_error", new Object[]{e.getMessage()}), e);
+      throw new SamlException("SIGNATURE_VERIFY", i18n.resolve("userinfo.saml.signature_crypto_error", new Object[]{e.getMessage()}), e);
     }
   }
 

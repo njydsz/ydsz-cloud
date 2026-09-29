@@ -1,5 +1,8 @@
 package com.njydsz.common.safe.spi;
 
+import com.njydsz.common.safe.desensitize.SensitiveType;
+import com.njydsz.common.safe.desensitize.SensitiveUtils;
+
 /**
  * 数据脱敏策略提供者 SPI。
  *
@@ -109,9 +112,9 @@ public interface DesensitizeProvider {
       return raw;
     }
     try {
-      com.njydsz.common.safe.desensitize.SensitiveType sensitiveType =
-          com.njydsz.common.safe.desensitize.SensitiveType.valueOf(type.toUpperCase());
-      return com.njydsz.common.safe.desensitize.SensitiveUtils.mask(raw, sensitiveType);
+      SensitiveType sensitiveType =
+          SensitiveType.valueOf(type.toUpperCase());
+      return SensitiveUtils.mask(raw, sensitiveType);
     } catch (IllegalArgumentException e) {
       return "******";
     }

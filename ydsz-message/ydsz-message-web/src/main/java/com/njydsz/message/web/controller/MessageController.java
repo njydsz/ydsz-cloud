@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
@@ -40,6 +41,7 @@ import com.njydsz.message.domain.dto.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.MessageSendDTO;
 import com.njydsz.message.domain.enums.core.SendStrategyEnum;
 import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.domain.vo.MsgLogViews;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.web.vo.MsgLogExportVO;
 
@@ -182,6 +184,7 @@ public class MessageController {
    */
   @Operation(summary = "发送日志分页", description = "分页查询消息发送日志。支持按 bizId、channelCode、status、时间范围等条件过滤。"
             + "返回分页结果含 MsgLogVO（消息 ID、通道、接收人、状态、回执 ID、发送时间）。")
+  @JsonView(MsgLogViews.Summary.class)
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/log/page")
   public YdszResponse<PageResponse<List<MsgLogVO>>> pageLog(MessageLogQueryDTO query) {
@@ -311,6 +314,7 @@ public class MessageController {
    */
   @Operation(summary = "查询批次发送进度", description = "按批次 ID 分页查询发送日志，用于追踪批量发送任务的执行进度。"
             + "返回分页结果含各消息当前状态（PENDING/SENT/FAILED）、通道、接收人、回执 ID。")
+  @JsonView(MsgLogViews.Summary.class)
   @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
   @GetMapping("/batch/{batchId}/progress")
   public YdszResponse<PageResponse<List<MsgLogVO>>> batchProgress(

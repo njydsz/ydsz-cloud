@@ -28,7 +28,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 规则生命周期管理服务（P3-1）
@@ -114,6 +114,9 @@ public class RuleLifecycleService {
   /** 规则版本仓库（SPI），用于查询历史版本列表以支撑回滚预览；为 null 时不支持回滚 */
   private final RuleVersionRepository versionRepository;
 
+  /** 国际化消息 */
+  private final I18nMessages i18n;
+
   /** 休眠规则最小评估次数 */
   private long dormantMinEvaluations = DEFAULT_DORMANT_MIN_EVALUATIONS;
 
@@ -141,11 +144,13 @@ public class RuleLifecycleService {
       RuleEngine ruleEngine,
       RuleConfigProvider configProvider,
       RuleAdminService ruleAdminService,
-      RuleVersionRepository versionRepository) {
+      RuleVersionRepository versionRepository,
+      I18nMessages i18n) {
     this.ruleEngine = ruleEngine;
     this.configProvider = configProvider;
     this.ruleAdminService = ruleAdminService;
     this.versionRepository = versionRepository;
+    this.i18n = i18n;
   }
 
   /**
@@ -640,7 +645,7 @@ public class RuleLifecycleService {
   public RuleDefinitionVO rollback(String ruleCode, int version, String operator) {
     RollbackPreviewVO preview = previewRollback(ruleCode, version);
     if (!preview.isRollbackAllowed()) {
-      throw new SysException(I18n.message("literule.lifecycle.rollback_rejected", new Object[]{preview.getRollbackBlockedReason()}));
+      throw new SysException(i18n.resolve("literule.lifecycle.rollback_rejected", new Object[]{preview.getRollbackBlockedReason()}));
     }
     log.info(
         "[Lifecycle] 执行一键回滚: rule={}, targetVersion={}, diffCount={}, operator={}",
@@ -673,7 +678,7 @@ public class RuleLifecycleService {
 
     RuleStatus currentStatus = RuleStatus.fromCode(rule.getStatus());
     if (currentStatus == RuleStatus.ARCHIVED) {
-      throw new SysException(I18n.message("literule.lifecycle.already_archived", new Object[]{ruleCode}));
+      throw new SysException(i18n.resolve("literule.lifecycle.already_archived", new Object[]{ruleCode}));
     }
 
     // 校验状态转换合法性

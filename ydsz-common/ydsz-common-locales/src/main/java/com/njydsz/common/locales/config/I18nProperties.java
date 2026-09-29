@@ -9,6 +9,8 @@ import java.util.Set;
 
 import lombok.Getter;
 import lombok.Setter;
+import com.njydsz.common.locales.spi.I18nBasenameProvider;
+import com.njydsz.common.locales.util.RuntimeStrictness;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
@@ -225,7 +227,7 @@ public class I18nProperties {
    * <p>设置此字段后，{@link #isNegativeCacheEnabled()} 与 {@link #isMissingTranslationLogEnabled()} 返回值以本枚举为准； 设为 null
    * 时回退到独立的 {@code negative-cache-enabled} / {@code missing-translation-log-enabled} 字段。 默认值：{@code null}（向后兼容，使用旧字段）。
    */
-  private com.njydsz.common.locales.util.RuntimeStrictness runtimeStrictness;
+  private RuntimeStrictness runtimeStrictness;
 
   /**
    * 是否启用 i18n 元数据 REST API（默认 false）。
@@ -362,12 +364,12 @@ public class I18nProperties {
    *
    * @return 严格度枚举，或 null
    */
-  public com.njydsz.common.locales.util.RuntimeStrictness getRuntimeStrictness() {
+  public RuntimeStrictness getRuntimeStrictness() {
     return runtimeStrictness;
   }
 
   public void setRuntimeStrictness(
-      com.njydsz.common.locales.util.RuntimeStrictness runtimeStrictness) {
+      RuntimeStrictness runtimeStrictness) {
     this.runtimeStrictness = runtimeStrictness;
   }
 
@@ -583,9 +585,9 @@ public class I18nProperties {
   private Set<String> discoverBasenamesViaSpi() {
     Set<String> discovered = new LinkedHashSet<>();
     try {
-      ServiceLoader<com.njydsz.common.locales.spi.I18nBasenameProvider> loader =
-          ServiceLoader.load(com.njydsz.common.locales.spi.I18nBasenameProvider.class);
-      for (com.njydsz.common.locales.spi.I18nBasenameProvider provider : loader) {
+      ServiceLoader<I18nBasenameProvider> loader =
+          ServiceLoader.load(I18nBasenameProvider.class);
+      for (I18nBasenameProvider provider : loader) {
         try {
           Set<String> contributed = provider.getAdditionalBasenames();
           if (contributed != null) {

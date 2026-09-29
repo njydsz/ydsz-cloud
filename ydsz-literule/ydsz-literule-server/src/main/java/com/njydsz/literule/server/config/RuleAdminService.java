@@ -38,7 +38,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.version.RuleVersionDiff;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.exception.custom.SysException;
 
 /**
@@ -96,6 +96,9 @@ public class RuleAdminService {
   /** 规则版本 Diff 服务（P0-X3） */
   private final RuleVersionDiffService ruleVersionDiffService;
 
+  /** 国际化消息 */
+  private final I18nMessages i18n;
+
   /** 当前节点标识（用于广播防循环） */
   private String nodeId;
 
@@ -129,7 +132,8 @@ public class RuleAdminService {
       RuleVersionRepository versionRepository,
       ApplicationEventPublisher eventPublisher,
       RuleDefinitionRepository ruleDefinitionRepository,
-      RuleVersionDiffService ruleVersionDiffService) {
+      RuleVersionDiffService ruleVersionDiffService,
+      I18nMessages i18n) {
     this.ruleEngine = ruleEngine;
     this.evaluator = evaluator;
     this.configProvider = configProvider;
@@ -137,6 +141,7 @@ public class RuleAdminService {
     this.eventPublisher = eventPublisher;
     this.ruleDefinitionRepository = ruleDefinitionRepository;
     this.ruleVersionDiffService = ruleVersionDiffService;
+    this.i18n = i18n;
     this.searchService = new RuleSearchService(ruleDefinitionRepository);
     this.nodeId = IdGenerator.nextIdStr().substring(0, NODE_ID_PREFIX_LENGTH);
   }
@@ -430,7 +435,7 @@ public class RuleAdminService {
   @Transactional(rollbackFor = Exception.class)
   public void updateOwner(String ruleCode, String owner, String operator) {
     if (ruleCode == null || ruleCode.isBlank()) {
-      throw new SysException(I18n.message("literule.admin.rule_code_blank"));
+      throw new SysException(i18n.resolve("literule.admin.rule_code_blank"));
     }
     RuleDefinitionDTO existing = configProvider.findByCode(ruleCode);
     if (existing == null) {
@@ -462,7 +467,7 @@ public class RuleAdminService {
   @Transactional(rollbackFor = Exception.class)
   public void updateCategoryPath(String ruleCode, String path, String operator) {
     if (ruleCode == null || ruleCode.isBlank()) {
-      throw new SysException(I18n.message("literule.admin.rule_code_blank"));
+      throw new SysException(i18n.resolve("literule.admin.rule_code_blank"));
     }
     validateCategoryPath(path);
     RuleDefinitionDTO existing = configProvider.findByCode(ruleCode);
@@ -482,24 +487,24 @@ public class RuleAdminService {
   /** 校验分类路径合法性 */
   private void validateCategoryPath(String path) {
     if (path == null || path.isBlank()) {
-      throw new SysException(I18n.message("literule.admin.category_path_required"));
+      throw new SysException(i18n.resolve("literule.admin.category_path_required"));
     }
     if (path.length() > MAX_PATH_LENGTH) {
-      throw new SysException(I18n.message("literule.admin.category_path_length_exceed"));
+      throw new SysException(i18n.resolve("literule.admin.category_path_length_exceed"));
     }
     if (path.startsWith("/") || path.endsWith("/")) {
-      throw new SysException(I18n.message("literule.admin.category_path_slash_boundary", new Object[]{path}));
+      throw new SysException(i18n.resolve("literule.admin.category_path_slash_boundary", new Object[]{path}));
     }
     if (path.contains("//")) {
-      throw new SysException(I18n.message("literule.admin.category_path_consecutive_slash", new Object[]{path}));
+      throw new SysException(i18n.resolve("literule.admin.category_path_consecutive_slash", new Object[]{path}));
     }
     String[] segs = path.split("/");
     if (segs.length > MAX_PATH_SEGMENTS) {
-      throw new SysException(I18n.message("literule.admin.category_path_depth_exceed", new Object[]{path}));
+      throw new SysException(i18n.resolve("literule.admin.category_path_depth_exceed", new Object[]{path}));
     }
     for (String s : segs) {
       if (!s.matches("[\\w\\u4e00-\\u9fa5-]+")) {
-      throw new SysException(I18n.message("literule.admin.category_path_invalid_char", new Object[]{s}));
+      throw new SysException(i18n.resolve("literule.admin.category_path_invalid_char", new Object[]{s}));
       }
     }
   }
@@ -614,7 +619,7 @@ public class RuleAdminService {
   public List<RuleResultVO> dryRun(
       String ruleCode, Map<String, Object> facts, Integer limit, RuleSeverity minSeverity) {
     if (!dryRunEnabled) {
-      throw new SysException(I18n.message("literule.admin.dryrun_disabled"));
+      throw new SysException(i18n.resolve("literule.admin.dryrun_disabled"));
     }
     RuleContextVO context = RuleContextVO.of(facts, "DRY_RUN", "MANUAL");
 
@@ -759,7 +764,7 @@ public class RuleAdminService {
     }
     RuleStatus target = RuleStatus.fromCode(statusStr);
     if (target == null) {
-      throw new SysException(I18n.message("literule.admin.invalid_rule_status"));
+      throw new SysException(i18n.resolve("literule.admin.invalid_rule_status"));
     }
 
     RuleDefinitionDTO existing = configProvider.findByCode(definition.getCode());
@@ -838,7 +843,7 @@ public class RuleAdminService {
               .filter(c -> c.getLevel() == RuleConflict.Level.ERROR)
               .findFirst()
               .orElse(null);
-      throw new SysException(I18n.message("literule.admin.conflict_check_failed"));
+      throw new SysException(i18n.resolve("literule.admin.conflict_check_failed"));
     }
   }
 

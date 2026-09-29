@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.locales.util.I18n;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 规则审批流服务（P1-3 多级审批流）
@@ -76,6 +77,9 @@ public class RuleApprovalService {
 
     /** 分布式锁（P1-3：替代 synchronized，支持集群部署） */
     private final DistributedLocker distributedLocker;
+
+    /** 国际化消息 */
+    private final I18nMessages i18n;
 
     /** 审批流配置注册表（flowCode -> ApprovalFlow） */
     private final Map<String, ApprovalFlow> flowRegistry = new ConcurrentHashMap<>();
@@ -178,7 +182,7 @@ public class RuleApprovalService {
       throw BusinessException.of(LiteruleExceptionCode.APPROVAL_FLOW_CODE_REQUIRED);
     }
     if (flow.getSteps() == null || flow.getSteps().isEmpty()) {
-      throw new SysException(I18n.message("literule.approval.steps_empty", new Object[]{flow.getFlowCode()}));
+      throw new SysException(i18n.resolve("literule.approval.steps_empty", new Object[]{flow.getFlowCode()}));
     }
     flowRegistry.put(flow.getFlowCode(), flow);
     log.info(
@@ -228,12 +232,12 @@ public class RuleApprovalService {
     try {
       lockValue = distributedLocker.tryLock(lockKey, LOCK_WAIT_TIME, LOCK_LEASE_TIME, TimeUnit.SECONDS);
       if (lockValue == null) {
-      throw new SysException(I18n.message("literule.approval.lock_acquire_failed", new Object[]{LOCK_WAIT_TIME, lockKey}));
+      throw new SysException(i18n.resolve("literule.approval.lock_acquire_failed", new Object[]{LOCK_WAIT_TIME, lockKey}));
       }
       return action.get();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new SysException(I18n.message("literule.approval.lock_interrupted", new Object[]{lockKey}), e);
+      throw new SysException(i18n.resolve("literule.approval.lock_interrupted", new Object[]{lockKey}), e);
     } finally {
       if (lockValue != null) {
         try {
@@ -352,7 +356,7 @@ public class RuleApprovalService {
       // COUNTERSIGN：不允许同一人重复通过
       if (step.getType() == ApprovalType.COUNTERSIGN
           && record.getCurrentLevelApprovedApprovers().contains(operator)) {
-      throw new SysException(I18n.message("literule.approval.countersign_already_approved", new Object[]{operator}));
+      throw new SysException(i18n.resolve("literule.approval.countersign_already_approved", new Object[]{operator}));
       }
 
       // SEQUENCE：必须是下一个该审批的人
@@ -416,7 +420,7 @@ public class RuleApprovalService {
         RuleStatus nextStatus = levelToStatus(nextLevel, flow.maxLevel());
         RuleStatus currentStatus = parseStatus(def.getStatus());
         if (!currentStatus.canTransitionTo(nextStatus)) {
-          throw new SysException(I18n.message("literule.approval.status_transition_denied"));
+          throw new SysException(i18n.resolve("literule.approval.status_transition_denied"));
         }
         updateRuleStatus(
             def,
@@ -488,7 +492,7 @@ public class RuleApprovalService {
         // 一级驳回：回退到 DRAFT
         RuleStatus currentStatus = parseStatus(def.getStatus());
         if (!currentStatus.canTransitionTo(RuleStatus.DRAFT)) {
-      throw new SysException(I18n.message("literule.approval.reject_draft_not_allowed", new Object[]{currentStatus.getI18nKey()}));
+      throw new SysException(i18n.resolve("literule.approval.reject_draft_not_allowed", new Object[]{currentStatus.getI18nKey()}));
         }
         updateRuleStatus(def, RuleStatus.DRAFT, operator, "一级驳回: " + reason);
         record.setCurrentStatus(ApprovalRecord.STATUS_CANCELLED);
@@ -500,7 +504,7 @@ public class RuleApprovalService {
         RuleStatus previousStatus = levelToStatus(previousLevel, flow.maxLevel());
         RuleStatus currentStatus = parseStatus(def.getStatus());
         if (!currentStatus.canTransitionTo(previousStatus)) {
-          throw new SysException(I18n.message("literule.approval.status_transition_denied_prev"));
+          throw new SysException(i18n.resolve("literule.approval.status_transition_denied_prev"));
         }
         updateRuleStatus(
             def,
@@ -732,10 +736,10 @@ public class RuleApprovalService {
     String code = (flowCode == null || flowCode.isBlank()) ? DEFAULT_FLOW_CODE : flowCode;
     ApprovalFlow flow = flowRegistry.get(code);
     if (flow == null) {
-      throw new SysException(I18n.message("literule.approval.flow_not_found", new Object[]{code}));
+      throw new SysException(i18n.resolve("literule.approval.flow_not_found", new Object[]{code}));
     }
     if (!flow.isEnabled()) {
-      throw new SysException(I18n.message("literule.approval.flow_disabled", new Object[]{code}));
+      throw new SysException(i18n.resolve("literule.approval.flow_disabled", new Object[]{code}));
     }
     return flow;
   }
@@ -839,7 +843,7 @@ public class RuleApprovalService {
     // 指定了审批人列表：必须在列表中
     if (step.getApprovers() != null && !step.getApprovers().isEmpty()) {
       if (!step.getApprovers().contains(operator)) {
-      throw new SysException(I18n.message("literule.approval.approver_not_in_list", new Object[]{operator}));
+      throw new SysException(i18n.resolve("literule.approval.approver_not_in_list", new Object[]{operator}));
       }
       return;
     }
@@ -847,7 +851,7 @@ public class RuleApprovalService {
     // 使用权限检查器
     if (permissionChecker != null) {
       if (!permissionChecker.hasApprovePermission(operator, step)) {
-      throw new SysException(I18n.message("literule.approval.no_permission", new Object[]{operator}));
+      throw new SysException(i18n.resolve("literule.approval.no_permission", new Object[]{operator}));
       }
     }
     // 无 approvers 也无权限检查器，放行（便于单元测试与开发环境调试）
@@ -857,7 +861,7 @@ public class RuleApprovalService {
   private void validateSequenceApprover(String operator, ApprovalStep step, ApprovalRecord record) {
     String next = nextSequenceApprover(step, record);
     if (next == null || !next.equals(operator)) {
-      throw new SysException(I18n.message("literule.approval.sequence_approver_mismatch", new Object[]{next, operator}));
+      throw new SysException(i18n.resolve("literule.approval.sequence_approver_mismatch", new Object[]{next, operator}));
     }
   }
 

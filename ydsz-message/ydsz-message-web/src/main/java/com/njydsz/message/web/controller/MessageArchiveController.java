@@ -19,7 +19,9 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.domain.vo.MsgLogViews;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
 /**
@@ -103,6 +105,7 @@ public class MessageArchiveController {
    * @return 分页的消息日志 VO（已脱敏，不暴露实体内部字段）
    */
   @Operation(summary = "全文搜索消息日志")
+  @JsonView(MsgLogViews.Summary.class)
   @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
   @GetMapping
   public YdszResponse<PageResponse<List<MsgLogVO>>> search(

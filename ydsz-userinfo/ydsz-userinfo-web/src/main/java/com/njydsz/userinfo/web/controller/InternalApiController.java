@@ -19,11 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.domain.vo.UserAccountViews;
 import com.njydsz.userinfo.server.service.CompanyService;
 import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.userinfo.server.service.PostService;
@@ -100,6 +102,7 @@ public class InternalApiController {
    * @param userId 用户 ID（雪花算法字符串）
    * @return 用户 VO；不存在时为 null
    */
+  @JsonView(UserAccountViews.Detail.class)
   @RateLimit(resource = "userinfo.internalapi.getUserInfo", threshold = 100)
   @Idempotent(key = "'ydsz:userinfo:internal-api:get-user-info:' + #userId", ttlSeconds = 5)
   @GetMapping("/user/info")
