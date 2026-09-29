@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -493,9 +495,10 @@ public class JobController {
       jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
     String fileName = "jobs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    response.setHeader("Content-Disposition", "attachment; filename="
-        + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
-            .replace("+", "%20"));
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+                .replace("+", "%20"));
 
     final int pageSize = 200;
     List<JobExportVO> rows = new ArrayList<>();
@@ -520,10 +523,9 @@ public class JobController {
       }
       pageNum++;
     }
-    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        ExcelWriter writer = ExcelFacade.write(out, JobExportVO.class);) {
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), JobExportVO.class)
+        .sheet("Jobs")) {
       writer.doWrite(rows);
-      response.getOutputStream().write(out.toByteArray());
     }
   }
 
@@ -544,9 +546,10 @@ public class JobController {
       jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
     String fileName = "job_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    response.setHeader("Content-Disposition", "attachment; filename="
-        + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
-            .replace("+", "%20"));
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+                .replace("+", "%20"));
 
     final int pageSize = 200;
     List<JobLogExportVO> rows = new ArrayList<>();
@@ -570,10 +573,9 @@ public class JobController {
       }
       pageNum++;
     }
-    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        ExcelWriter writer = ExcelFacade.write(out, JobLogExportVO.class);) {
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), JobLogExportVO.class)
+        .sheet("JobLogs")) {
       writer.doWrite(rows);
-      response.getOutputStream().write(out.toByteArray());
     }
   }
 

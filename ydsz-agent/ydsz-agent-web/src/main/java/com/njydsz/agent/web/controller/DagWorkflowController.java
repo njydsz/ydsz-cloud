@@ -1,10 +1,11 @@
 package com.njydsz.agent.web.controller;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.http.HttpHeaders;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
@@ -166,9 +167,9 @@ public class DagWorkflowController {
     String fileName = "dag_workflows_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(
-        "Content-Disposition",
-        "attachment; filename="
-            + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
+        HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
 
     List<DagWorkflow> all = (category == null || category.isBlank())
         ? repository.findAll()
@@ -178,10 +179,9 @@ public class DagWorkflowController {
       rows.add(toExportVO(entity));
     }
 
-    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        ExcelWriter writer = ExcelFacade.write(out, DagWorkflowExportVO.class)) {
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), DagWorkflowExportVO.class)
+        .sheet("DagWorkflows")) {
       writer.doWrite(rows);
-      response.getOutputStream().write(out.toByteArray());
     }
   }
 

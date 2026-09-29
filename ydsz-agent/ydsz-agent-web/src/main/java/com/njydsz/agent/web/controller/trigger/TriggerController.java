@@ -9,6 +9,8 @@ import java.util.Map;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.http.HttpHeaders;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -294,9 +296,9 @@ public class TriggerController {
     String fileName = "triggers_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(
-        "Content-Disposition",
-        "attachment; filename="
-            + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
+        HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
 
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<AgentTrigger> all = triggerManagementService.listEnabledTriggers(tenantId);
@@ -305,10 +307,9 @@ public class TriggerController {
       rows.add(toExportVO(trigger));
     }
 
-    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        ExcelWriter writer = ExcelFacade.write(out, TriggerExportVO.class)) {
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), TriggerExportVO.class)
+        .sheet("Triggers")) {
       writer.doWrite(rows);
-      response.getOutputStream().write(out.toByteArray());
     }
   }
 

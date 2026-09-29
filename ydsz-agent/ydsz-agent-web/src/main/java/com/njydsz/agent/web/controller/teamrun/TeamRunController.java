@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
+
 import jakarta.servlet.http.HttpServletResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -267,9 +269,9 @@ public class TeamRunController {
     String fileName = "teamruns_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(
-        "Content-Disposition",
-        "attachment; filename="
-            + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
+        HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
 
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<TeamRun> all = orchestrationService.listActiveTeamRuns(tenantId);
@@ -278,10 +280,9 @@ public class TeamRunController {
       rows.add(toExportVO(teamRun));
     }
 
-    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        ExcelWriter writer = ExcelFacade.write(out, TeamRunExportVO.class)) {
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), TeamRunExportVO.class)
+        .sheet("TeamRuns")) {
       writer.doWrite(rows);
-      response.getOutputStream().write(out.toByteArray());
     }
   }
 

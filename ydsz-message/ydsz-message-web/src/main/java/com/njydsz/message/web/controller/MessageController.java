@@ -2,6 +2,8 @@ package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 
+import org.springframework.http.HttpHeaders;
+
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -204,9 +206,10 @@ public class MessageController {
       jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
     String fileName = "msg_logs_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    response.setHeader("Content-Disposition", "attachment; filename="
-        + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
-            .replace("+", "%20"));
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, java.nio.charset.StandardCharsets.UTF_8)
+                .replace("+", "%20"));
 
     // 设置大页大小减少分页查询次数
     query.setPageSize(200);
@@ -229,10 +232,9 @@ public class MessageController {
       }
       pageNum++;
     }
-    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        ExcelWriter writer = ExcelFacade.write(out, MsgLogExportVO.class);) {
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), MsgLogExportVO.class)
+        .sheet("MsgLogs")) {
       writer.doWrite(rows);
-      response.getOutputStream().write(out.toByteArray());
     }
   }
 

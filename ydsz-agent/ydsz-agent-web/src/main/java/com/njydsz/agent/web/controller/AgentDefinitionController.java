@@ -1,10 +1,10 @@
 package com.njydsz.agent.web.controller;
 
-import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.http.HttpHeaders;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
@@ -229,9 +229,9 @@ public class AgentDefinitionController {
     String fileName = "agent_definitions_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     response.setHeader(
-        "Content-Disposition",
-        "attachment; filename="
-            + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
+        HttpHeaders.CONTENT_DISPOSITION,
+        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
+            + "filename*=UTF-8''" + java.net.URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
 
     List<AgentDefinitionVO> all = agentDefinitionService.listActive();
     List<AgentDefinitionExportVO> rows = new ArrayList<>(all.size());
@@ -239,10 +239,9 @@ public class AgentDefinitionController {
       rows.add(toExportVO(vo));
     }
 
-    try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-        ExcelWriter writer = ExcelFacade.write(out, AgentDefinitionExportVO.class)) {
+    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), AgentDefinitionExportVO.class)
+        .sheet("AgentDefinitions")) {
       writer.doWrite(rows);
-      response.getOutputStream().write(out.toByteArray());
     }
   }
 
