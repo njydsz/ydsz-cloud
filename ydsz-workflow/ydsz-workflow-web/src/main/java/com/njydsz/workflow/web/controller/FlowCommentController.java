@@ -118,8 +118,7 @@ public class FlowCommentController {
   @GetMapping("/instance/{instanceId}")
   @Operation(summary = "查询实例全部评论（树结构）")
   public YdszResponse<List<FlowCommentVO>> listByInstance(@PathVariable String instanceId) {
-    String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return YdszResponse.success(commentService.listByInstance(tenantId, instanceId));
+    return YdszResponse.success(commentService.listByInstance(instanceId));
   }
 
   /**
@@ -131,8 +130,7 @@ public class FlowCommentController {
   @GetMapping("/root/{instanceId}")
   @Operation(summary = "查询实例一级评论")
   public YdszResponse<List<FlowCommentVO>> listRootComments(@PathVariable String instanceId) {
-    String tenantId = AuthContextUtils.getTenantIdOrDefault();
-    return YdszResponse.success(commentService.listRootComments(tenantId, instanceId));
+    return YdszResponse.success(commentService.listRootComments(instanceId));
   }
 
   /**

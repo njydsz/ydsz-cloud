@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v7"
+  version: "26.09.30-v9"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v8（弃用代码清理：删除 TreeNode/TreeNodeProvider/BaseI18nConfiguration，YDIZ-DOMAIN-002 升 P0；总规则 154 条）"
-  total_rules: 156
+  last_updated: "26.09.30-v9（JDIZ-JDBC-001 PageResponses 统一分页 + JDIZ-JDBC-002 数据权限激活；总规则 158 条）"
+  total_rules: 158
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"

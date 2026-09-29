@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
 
@@ -218,7 +219,9 @@ public class ThreadPoolHotUpdateListener {
    */
   private void resizeGlobalThreadPool(int newMaxConcurrent) {
     try {
-      ThreadPoolExecutor pool = threadPoolRegistry.get(CronjobThreadPoolRegistry.GLOBAL_EXECUTOR);
+      // P2-1: 直接导入 ThreadPoolRegistry 获取线程池（消除 PassThrough 包装）；
+      // 仅用于 get/set 简单委托，注册/指标仍委托 CronjobThreadPoolRegistry
+      ThreadPoolExecutor pool = ThreadPoolRegistry.get(CronjobThreadPoolRegistry.GLOBAL_EXECUTOR);
       if (pool == null) {
         log.warn(
             "[ThreadPoolHotUpdate] 全局线程池未注册, 跳过: poolName={}",
