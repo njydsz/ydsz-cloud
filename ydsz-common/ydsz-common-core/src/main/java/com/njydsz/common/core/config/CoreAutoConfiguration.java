@@ -1,8 +1,6 @@
 package com.njydsz.common.core.config;
 
 import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
-import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.i18n.LocaleContextHolder;
 
@@ -22,6 +19,7 @@ import com.njydsz.common.core.feature.ConfigDrivenFeatureFlagService;
 import com.njydsz.common.core.feature.FeatureFlagContext;
 import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.locales.util.MessageSourceHolder;
 
 /**
  * Core 模块自动配置类。
@@ -50,49 +48,25 @@ public class CoreAutoConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(CoreAutoConfiguration.class);
 
   /**
-   * 注册基于 Spring MessageSource 的国际化解析器并注入到 YdszResponse。
+   * 注册基于 {@link MessageSourceHolder} 的国际化解析器并注入到 YdszResponse。
    *
-   * <p>通过静态持有方式使统一的国际化解析能力在任意位置可用 （包括非 Spring Bean 中的静态工厂方法）。 仅当容器中存在 MessageSource Bean 时生效（如
-   * starter 模块配置了 MessageSource）。
+   * <p>通过 {@link MessageSourceHolder#resolve(String, Object[], Locale)} 走统一解析路径，享有负缓存 + 缺失节流 + 运行时覆盖
+   * 全体系能力。仅当 {@link MessageSourceHolder} 已就绪（即 {@code ydsz-common-locales} 的 {@link
+   * com.njydsz.common.locales.config.LocalesAutoConfiguration} 完成 MessageSource 桥接）时生效。
    *
-   * @param messageSource Spring 消息源
-   * @return YdszResponse.MessageResolver 实例（基于 Spring MessageSource 的国际化解析器）
+   * @return YdszResponse.MessageResolver 实例（对齐 locales 统一路径）
    */
   @Bean
   @ConditionalOnBean(MessageSource.class)
-  public YdszResponse.MessageResolver springMessageResolver(MessageSource messageSource) {
+  public YdszResponse.MessageResolver springMessageResolver() {
     YdszResponse.MessageResolver resolver = (key, defaultValue) -> {
       if (key == null || key.isEmpty()) {
         return defaultValue;
       }
-      Locale locale = LocaleContextHolder.getLocale();
-      try {
-        return messageSource.getMessage(key, null, defaultValue, locale);
-      } catch (NoSuchMessageException e) {
-        return defaultValue;
-      }
+      // 走 MessageSourceHolder 统一路径：负缓存 + 缺失节流 + 运行时覆盖
+      return MessageSourceHolder.resolve(key, null, LocaleContextHolder.getLocale());
     };
     YdszResponse.setResolverIfAbsent(resolver);
-    return resolver;
-  }
-
-  /**
-   * 注册 JDK ResourceBundle 回退解析器到 YdszResponse。
-   *
-   * <p>当 Spring MessageSource 不可用时（纯 core 使用场景、CLI 环境等）， 通过 JDK 原生 {@link ResourceBundle} 加载 {@code
-   * i18n/core/messages*} 资源束， 提供最低限度的国际化能力。此 Bean 仅在基于 MessageSource 的解析器未注册时生效。
-   *
-   * @return ResourceBundleMessageResolver 实例
-   * @since 26.09.01
-   */
-  @Bean
-  @ConditionalOnMissingBean(YdszResponse.MessageResolver.class)
-  public YdszResponse.MessageResolver resourceBundleMessageResolver() {
-    ResourceBundleMessageResolver resolver = new ResourceBundleMessageResolver();
-    YdszResponse.setResolverIfAbsent(resolver);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("JDK ResourceBundle message resolver registered as fallback for i18n.");
-    }
     return resolver;
   }
 
@@ -151,33 +125,6 @@ public class CoreAutoConfiguration {
     @Override
     public void afterSingletonsInstantiated() {
       PageConstants.init(properties);
-    }
-  }
-
-  /**
-   * 基于 JDK ResourceBundle 的国际化解析器（Fallback）。
-   *
-   * <p>加载 classpath 下的 {@code i18n/core/messages} 资源束， 按当前线程的 {@link Locale} 选择对应语言版本。
-   * 资源不存在时回退到默认值。
-   */
-  static class ResourceBundleMessageResolver implements YdszResponse.MessageResolver {
-
-    /** i18n 资源束的 base name（相对于 classpath 根）。 */
-    private static final String BASENAME = "i18n/core/messages";
-
-    @Override
-    public String resolve(String key, String defaultValue) {
-      if (key == null || key.isEmpty()) {
-        return defaultValue;
-      }
-      try {
-        Locale locale = Locale.getDefault();
-        ResourceBundle bundle = ResourceBundle.getBundle(BASENAME, locale);
-        String value = bundle.getString(key);
-        return value != null ? value : defaultValue;
-      } catch (MissingResourceException e) {
-        return defaultValue;
-      }
     }
   }
 }

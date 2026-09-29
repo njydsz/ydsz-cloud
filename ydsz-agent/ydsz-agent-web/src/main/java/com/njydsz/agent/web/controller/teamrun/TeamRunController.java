@@ -1,13 +1,9 @@
 package com.njydsz.agent.web.controller.teamrun;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.http.HttpHeaders;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -27,10 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.teamrun.TeamRun;
 import com.njydsz.agent.domain.teamrun.TeamRunPattern;
 import com.njydsz.agent.server.teamrun.TeamRunOrchestrationService;
+import com.njydsz.agent.web.util.ExcelExportUtil;
 import com.njydsz.agent.web.vo.TeamRunExportVO;
-import com.njydsz.common.excel.core.ExcelFacade;
-import com.njydsz.common.excel.core.ExcelWriter;
-import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -266,24 +260,13 @@ public class TeamRunController {
   @Operation(summary = "导出 Team Run 列表（Excel）")
   @GetMapping("/export")
   public void exportTeamRuns(jakarta.servlet.http.HttpServletResponse response) throws IOException {
-    String fileName = "teamruns_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
-    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    response.setHeader(
-        HttpHeaders.CONTENT_DISPOSITION,
-        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
-            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
-
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<TeamRun> all = orchestrationService.listActiveTeamRuns(tenantId);
     List<TeamRunExportVO> rows = new ArrayList<>(all.size());
     for (TeamRun teamRun : all) {
       rows.add(toExportVO(teamRun));
     }
-
-    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), TeamRunExportVO.class)
-        .sheet("TeamRuns")) {
-      writer.doWrite(rows);
-    }
+    ExcelExportUtil.write(response, rows, TeamRunExportVO.class, "teamruns", "TeamRuns");
   }
 
   // ==================== 私有转换方法 ====================

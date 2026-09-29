@@ -7,9 +7,21 @@ ydsz-cloud（云顶数字开发平台）是云顶数字内部企业级微服务�
 
 ## 架构规则（严格）
 
-### DDD 分层
-- 业务模块使用 `api/domain/infra/server/app/web` 六层架构
-- 依赖方向严格单向：web → server → domain ← infra
+### DDD 分层依赖（基于 pom 实际结构）
+```
+web (Composition Root) → server → domain ← infra
+        │                            ▲
+        └────────────────────────────┘
+               web 同时依赖 infra + domain
+
+api → domain（provided，Feign 契约）  app → domain（按需启用）
+```
+
+**核心约束**：
+- `domain` 是分层中心，**零项目内部模块依赖**（仅依赖 common），定义 Repository 接口
+- `infra` 唯一逆向依赖 `domain`（实现 Repository 接口，依赖倒置原则）
+- `server` **不依赖** `infra`，注入 domain 的 Repository 接口编程
+- `web` 充当**组合根**：pom 同时依赖 server+infra+domain，Spring 自动装配注入 Repository 实现到 server 层
 - Entity 仅定义在 `domain/entity/` 下，禁止 infra 自建 DO/PO/Entity 副本
 - Repository 接口在 domain 层，实现在 infra 层，返回 VO 不返回 Entity
 

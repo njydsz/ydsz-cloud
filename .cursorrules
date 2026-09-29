@@ -7,11 +7,24 @@
 - 编码规范：140条红线规则（P0=53 阻断级, P1=60 严重级, P2=13 建议级）
 - 完整规则源：docs/ai-rules/shared-rules.yaml | 项目 CLAUDE.md | AGENTS.md
 
-## DDD 分层架构
+## DDD 分层架构（基于 pom 实际结构）
 所有业务模块采用六层 DDD 架构：api / domain / infra / server / app / web
-- web → server → domain ← infra
-- domain 层通过 Repository 接口倒置依赖，infra 实现接口并返回 VO
-- Entity 仅定义在 domain/entity/ 包下，禁止 infra 自建 DO/PO 替身类
+
+```
+web (Composition Root) → server → domain ← infra
+        │                            ▲
+        └────────────────────────────┘
+               web 同时依赖 infra + domain
+
+api → domain（provided，Feign 契约）  app → domain（按需启用）
+```
+
+**核心约束**：
+- `domain` **零内部模块依赖**（仅依赖 common），定义 Repository 接口
+- `server` **不依赖** infra → 注入 domain 的 Repository 接口编程
+- `infra` 唯一逆向依赖 domain（实现 Repository，基于依赖倒置原则）
+- `web` 充当**组合根**：pom 同时依赖 server+infra+domain，Spring 自动装配注入 Repository 实现
+- Entity 仅定义在 domain/entity/，禁止 infra 自建 DO/PO/替身类
 - gateway 为单模块 reactive 栈，不拆分 DDD 层
 
 ## 八大引擎矩阵
@@ -110,7 +123,9 @@ I18n.message("module.scenario.key", new Object[]{params});
 
 ## 禁止清单
 - 禁止在 common 外 import POI / Jackson / Netty
-- 禁止在 domain 层引入 Mapper 或调用 Infra 服务
+- 禁止在 server 层 import infra 的 Mapper / RepositoryImpl（违反 DDD 依赖方向）
+- 禁止在 domain 层 import 任何其他项目内部模块
+- 禁止 web 层绕过 server 直接调用 infra Repository（应经 server 编排）
 - 禁止 new SimpleDateFormat
 - 禁止直接使用 RedisTemplate（通过 StringOps/HashOps 封装）
 - 禁止 new ThreadPoolExecutor（通过 ydsz-common-thread）

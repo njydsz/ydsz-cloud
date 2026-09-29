@@ -66,6 +66,11 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * @since 26.09.01
  * @since 26.09.01 精简：移除 traverseDFS/traverseBFS/copy/cloneSubTree/moveTo/getAncestorIds/
  *     getRoot/getDescendantCount 等鲜有使用的 API，降低心智负担
+ * @since 26.09.30 标记为 {@code @deprecated}（Javadoc）：全项目仅 literule CategoryTreeNode 1 处继承，
+ *     新增代码请使用 {@link TreeBuilder#buildSimple} 替代继承模式（参见 YDIZ-DOMAIN-002 规则）。
+ *     保留现有子类不会触发编译错误，但禁止新增继承此类的子类。
+ * @deprecated 自 26.09.30 起不推荐：业务 VO 继承 TreeNode 将领域模型与框架基类耦合，违反 DDD 分层纯净性。
+ *     请使用 {@link TreeBuilder#buildSimple(List, java.util.function.Function, java.util.function.Function, java.util.function.BiConsumer, java.util.function.Function)} 构建树形结构。
  * @see TreeBuilder
  */
 @Getter

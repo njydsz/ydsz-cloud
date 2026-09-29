@@ -7,9 +7,12 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
 import com.njydsz.common.redis.health.RedisHealthIndicator;
+import com.njydsz.system.server.feature.DatabaseConfigFeatureFlagService;
 import com.njydsz.system.server.health.SystemHealthIndicator;
+import com.njydsz.system.server.service.ConfigService;
 
 
 
@@ -52,5 +55,20 @@ public class SystemConfiguration {
       ObjectProvider<RedisHealthIndicator> redisHealthIndicatorProvider,
       ObjectProvider<DataSourceHealthIndicator> dataSourceHealthIndicatorProvider) {
     return new SystemHealthIndicator(redisHealthIndicatorProvider, dataSourceHealthIndicatorProvider);
+  }
+
+  /**
+   * 注册基于数据库配置的特性开关服务。
+   *
+   * <p>包装 {@link ConfigService#getFeatureFlags()} 适配 core 的 {@link FeatureFlagService} 接口，
+   * 使系统模块的特性开关查询归一化到统一抽象（YDIZ-CORE-003）。
+   *
+   * @param configService 配置服务，不可为 {@code null}
+   * @return 特性开关服务实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(FeatureFlagService.class)
+  public FeatureFlagService featureFlagService(ConfigService configService) {
+    return new DatabaseConfigFeatureFlagService(configService);
   }
 }

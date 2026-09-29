@@ -33,6 +33,7 @@ import com.njydsz.gateway.config.GatewayErrorCode;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.IpAccessControlProperties;
+import com.njydsz.gateway.cache.CacheKeyBuilder;
 import com.njydsz.gateway.exception.GatewayErrorWriter;
 import com.njydsz.common.locales.util.I18n;
 
@@ -63,6 +64,9 @@ import com.njydsz.common.locales.util.I18n;
  *
  * <p>{@code HIGHEST_PRECEDENCE + 3}，在认证(+10)之前执行，尽早拦截恶意请求。
  *
+ * <p><b>规范合规（P1-1 整改）</b>：IP 黑名单缓存键通过 {@link CacheKeyBuilder#ipBlacklist(String)} 构造，
+ * 替代原来自建的 {@code "ydsz:ip:blacklist:"} 硬编码常量。
+ *
  * @author ydsz
  * @since 26.09.24
  */
@@ -76,8 +80,8 @@ import com.njydsz.common.locales.util.I18n;
     matchIfMissing = true)
 public class IpAccessControlFilter implements GlobalFilter, Ordered {
 
-  /** Redis IP 黑名单键前缀（{@code ydsz:ip:blacklist:{ip}}），由运维或安全系统动态写入。 */
-  private static final String IP_BLACKLIST_PREFIX = "ydsz:ip:blacklist:";
+  /** 租户感知缓存键构造器（P1-1 整改：替代 IP_BLACKLIST_PREFIX 硬编码常量） */
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /** 白名单配置分隔符正则：逗号或换行符（兼容 YAML list 和多行字符串写法）。 */
   private static final String WHITELIST_SEPARATOR = "[,\\n]";
@@ -217,7 +221,7 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
 
     // L2: 查 Redis
     return reactiveRedis
-        .hasKey(IP_BLACKLIST_PREFIX + clientIp)
+        .hasKey(cacheKeyBuilder.ipBlacklist(clientIp))
         .defaultIfEmpty(false)
         .flatMap(
             blacklisted -> {

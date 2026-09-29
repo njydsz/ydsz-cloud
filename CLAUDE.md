@@ -46,7 +46,18 @@ ydsz-cloud/
 └── ydzs-generator/       # 代码生成器（端口 9090）
 ```
 
-> **DDD 分层（业务模块）**：`api` → `domain` → `infra` → `server` → `app` → `web`（gateway 为单模块 reactive 栈，不拆分 DDD 层）
+> **DDD 分层（业务模块）**：`api` / `domain` / `infra` / `server` / `app` / `web`
+> （gateway 为单模块 reactive 栈，不拆分 DDD 层）
+>
+> **模块内部依赖关系（基于 pom 实际结构）**：
+> - `domain` 位于中心，零内部模块依赖，仅引用 common
+> - `infra` 唯一逆向依赖 `domain`（实现 Repository 接口）
+> - `server` 仅依赖 `domain`（不依赖 infra，遵循依赖倒置）
+> - `web` 同时依赖 `server` + `infra` + `domain`（组合根/接线板）
+> - `app` 依赖 `domain`（移动端入口，按需启用）
+> - `api` 以 provided 反向依赖 `domain`（Feign 契约）
+>
+> 详细分层规范见下方「DDD 分层编码规范」章节。
 
 ### ydsz-common 子模块分层
 
@@ -159,31 +170,44 @@ ydsz-cloud/
 
 ## DDD 分层编码规范
 
-### 依赖方向（强制）
+### 依赖方向（强制，基于项目实际 pom 结构）
+
 ```
-web ──→ server ──→ domain ←── infra
-              ↑                    │
-              └────────────────────┘
+web (Composition Root)
+ ├──→ server ──→ domain
+ ├──→ infra ──→ domain
+ └──→ domain
+
+api ──→ domain（provided scope，对外暴露 Feign 契约）
+app ──→ domain（移动端入口基座，大部分业务模块未启用）
 ```
-- domain **不依赖** infra（通过 Repository 接口倒置）
-- infra 实现 domain 的 Repository 接口，通过 Converter 返回 VO
-- server 层编排 domain 服务，web 层仅做 HTTP 适配
+
+**核心规则**：
+- `domain` 是分层中心，**零项目内部模块依赖**（只依赖 common），定义 Entity / Repository 接口 / VO / Query
+- `infra` 唯一逆向依赖 `domain`（实现 Repository 接口，基于依赖倒置原则）
+- `server` **不依赖** `infra`（注释：P1-2 已整改），通过注入 domain 的 Repository 接口编程
+- `web` 是**组合根（Composition Root）**：同时依赖 `server` + `infra` + `domain`，由 Spring 自动装配将 infra 的 Repository 实现注入到 server 层的 Service 中
+- `app` 依赖 `domain`，封装移动端入口（健康检查、OpenAPI 配置），大多数业务模块不启用
+- `api` 以 `provided` 作用域反向依赖 `domain`（仅引用 DTO/枚举定义 Feign 契约）
+
+> **为什么 web 同时依赖 infra**：Spring 需要 infra 的 `@Repository` Bean 在同一个 ApplicationContext 中才能注入到 server 层。web 入口负责扫描 infra 包，相当于"接线板"。server 层仅面向 domain 接口编程，不感知 infra 存在。
 
 ### 各层职责
 
-| 层 | 包名 | 职责 |
-|----|------|------|
-| `web` | `com.njydsz.module.web` | Controller + ExceptionFilter + 请求响应适配 |
-| `server` | `com.njydsz.module.server` | 业务编排 Service + 缓存 + 事务 |
-| `domain` | `com.njydsz.module.domain` | Entity + VO + Repository 接口 + Query |
-| `infra` | `com.njydsz.module.infra` | RepositoryImpl + Mapper + Converter |
-| `api` | `com.njydsz.module.api` | Feign Client 接口 + Fallback |
-| `app` | `com.njydsz.module.app` | 健康检查 + OpenAPI 配置（移动端入口时使用）|
+| 层 | 包名 | 内部依赖 | 职责 |
+|----|------|----------|------|
+| `web` | `com.njydsz.module.web` | server + infra + domain + common | Controller + ExceptionFilter + 请求响应适配 + **Bean 装配** |
+| `server` | `com.njydsz.module.server` | domain + common | 业务编排 Service + 缓存 + 事务 |
+| `domain` | `com.njydsz.module.domain` | 仅 common 模块 | Entity + VO + Repository **接口** + Query + DTO + Enums |
+| `infra` | `com.njydsz.module.infra` | domain + common-jdbc | RepositoryImpl + Mapper + Converter |
+| `api` | `com.njydsz.module.api` | domain(**provided**) + common-feign | Feign Client 接口 + Fallback |
+| `app` | `com.njydsz.module.app` | domain + common-app | 移动端健康检查 + OpenAPI 配置（按需启用）|
 
 ### Entity / PO 规范
 - Entity 定义在 `domain/entity/` 包下，直接携带 `@TableName` `@TableField` 等 ORM 注解
-- infra 层**不另立 DO/PO 类**，直接引用 domain 的 Entity
+- infra 层**不另立 DO/PO/Entity 类**，直接引用 domain 的 Entity
 - RepositoryImpl 返回类型必须是 `domain/vo/` 下的 VO，通过 Converter 从 Entity 转换
+- Repository 接口定义在 `domain/repository/`，实现在 `infra/repository/`，Spring 在 web 层完成装配
 
 ---
 

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.message.server.cache.CacheKeyBuilder;
 
 /**
  * P2-14: 用户时区感知 DND（Do Not Disturb）服务。
@@ -29,6 +30,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * <p>Redis Key 格式：{@code dnd:{userId}} → "22:00-08:00 Asia/Shanghai"
  *
+ * <p><b>规范合规（P1-1 整改）</b>：缓存键通过 {@link CacheKeyBuilder#dnd(String)} 构造，
+ * 替代原来自建的 {@code "dnd:"} 硬编码常量。
+ *
  * <p><b>YDIZ-COMMON-020 合规：</b>本地缓存通过 {@link YdszCache} 构建， 替代手写 {@code ConcurrentHashMap} TTL 方案，消除内存泄漏风险。
  *
  * @author ydsz-team
@@ -40,9 +44,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 public class DndService {
 
   private final RedisStringOps redisStringOps;
-
-  /** DND Key 前缀 */
-  private static final String DND_KEY_PREFIX = "dnd:";
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /** 默认时区 */
   private static final String DEFAULT_TIMEZONE = "Asia/Shanghai";
@@ -191,7 +193,7 @@ public class DndService {
   public void setDnd(String userId, String startTime, String endTime, String timezone) {
     String value =
         startTime + "-" + endTime + " " + (timezone != null ? timezone : DEFAULT_TIMEZONE);
-    redisStringOps.set(DND_KEY_PREFIX + userId, value);
+    redisStringOps.set(cacheKeyBuilder.dnd(userId), value);
     // 更新本地缓存
     DndConfig config = parseConfig(value);
     if (config != null) {
@@ -207,7 +209,7 @@ public class DndService {
    * @param userId 用户 ID
    */
   public void removeDnd(String userId) {
-    redisStringOps.del(DND_KEY_PREFIX + userId);
+    redisStringOps.del(cacheKeyBuilder.dnd(userId));
     configCache.invalidate(userId);
     log.info("[DND] 用户免打扰配置已移除: userId={}", userId);
   }
@@ -226,7 +228,7 @@ public class DndService {
       return cached;
     }
     // 缓存未命中，从 Redis 加载
-    String value = redisStringOps.get(DND_KEY_PREFIX + userId, String.class);
+    String value = redisStringOps.get(cacheKeyBuilder.dnd(userId), String.class);
     if (value == null || value.isBlank()) {
       return null;
     }

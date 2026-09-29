@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.server.config.MessageProperties;
+import com.njydsz.message.server.cache.CacheKeyBuilder;
 
 /**
  * P2-13: 跨渠道抑制引擎。
@@ -22,6 +23,9 @@ import com.njydsz.message.server.config.MessageProperties;
  *
  * <p>Redis Key 格式：{@code suppress:{bizType}:{bizId}:{receiver}} → channel
  *
+ * <p><b>规范合规（P1-1 整改）</b>：缓存键通过 {@link CacheKeyBuilder#suppress(String, String, String)} 构造，
+ * 替代原来自建的 {@code "suppress:"} 硬编码常量。
+ *
  * <p>TTL：抑制窗口时间
  *
  * @author ydsz-team
@@ -33,12 +37,8 @@ import com.njydsz.message.server.config.MessageProperties;
 public class ChannelSuppressionEngine {
 
   private final RedisStringOps redisStringOps;
-
-  /** OD-7 / P3-3.2: 抑制窗口配置统一从 MessageProperties 读取 */
   private final MessageProperties messageProperties;
-
-  /** OD-7: 抑制 Key 前缀 */
-  private static final String SUPPRESS_KEY_PREFIX = "suppress:";
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /**
    * 检查是否应该抑制此消息。
@@ -93,6 +93,6 @@ public class ChannelSuppressionEngine {
   }
 
   private String buildKey(String bizType, String bizId, String receiver) {
-    return SUPPRESS_KEY_PREFIX + bizType + ":" + bizId + ":" + receiver;
+    return cacheKeyBuilder.suppress(bizType, bizId, receiver);
   }
 }

@@ -1,15 +1,11 @@
 package com.njydsz.agent.web.controller.trigger;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletResponse;
-
-import org.springframework.http.HttpHeaders;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,10 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.agent.domain.trigger.AgentTrigger;
 import com.njydsz.agent.domain.trigger.TriggerType;
 import com.njydsz.agent.server.trigger.TriggerManagementService;
+import com.njydsz.agent.web.util.ExcelExportUtil;
 import com.njydsz.agent.web.vo.TriggerExportVO;
-import com.njydsz.common.excel.core.ExcelFacade;
-import com.njydsz.common.excel.core.ExcelWriter;
-import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -293,24 +287,13 @@ public class TriggerController {
   @Operation(summary = "导出触发器列表（Excel）")
   @GetMapping("/export")
   public void exportTriggers(jakarta.servlet.http.HttpServletResponse response) throws IOException {
-    String fileName = "triggers_" + DateUtils.formatNow("yyyyMMddHHmmss") + ".xlsx";
-    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    response.setHeader(
-        HttpHeaders.CONTENT_DISPOSITION,
-        "attachment; filename=\"" + fileName.replaceAll("[^\\x20-\\x7E]", "_") + "\"; "
-            + "filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
-
     String tenantId = AuthContextUtils.getTenantIdOrDefault();
     List<AgentTrigger> all = triggerManagementService.listEnabledTriggers(tenantId);
     List<TriggerExportVO> rows = new ArrayList<>(all.size());
     for (AgentTrigger trigger : all) {
       rows.add(toExportVO(trigger));
     }
-
-    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), TriggerExportVO.class)
-        .sheet("Triggers")) {
-      writer.doWrite(rows);
-    }
+    ExcelExportUtil.write(response, rows, TriggerExportVO.class, "triggers", "Triggers");
   }
 
   // ==================== 私有转换方法 ====================

@@ -36,7 +36,11 @@ import java.util.List;
  * @author ydsz-team
  * @since 26.09.19
  * @see TreeBuilder
+ * @deprecated 自 26.09.30 起废弃：全项目懒加载树场景均直接查询后调用 {@link TreeBuilder#buildSimple} 一次性构建，
+ *             SPI 注册实现数为 0。如需懒加载请直接在业务层实现「查询根节点 → 按需查询子节点 → 手动递归构建」，
+ *             避免 SPI 扩展点带来的复杂度。
  */
+@Deprecated
 @FunctionalInterface
 public interface TreeNodeProvider<T extends TreeNode<T, ID>, ID extends Serializable> {
 

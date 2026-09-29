@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.server.service.ConfigService;
 
 import java.util.Map;
 
@@ -24,14 +24,14 @@ import java.util.Map;
  *
  * <p><b>接口路径：</b>{@code /api/feature-flags}
  *
- * <p>特性开关的过滤与值解析逻辑已下沉到 {@link ConfigService#getFeatureFlags()}，
+ * <p>特性开关的过滤与值解析逻辑已下沉到 {@link FeatureFlagService#getFeatureFlags()}，
  * 本 Controller 仅作为 HTTP 适配层委托调用。
  *
  * <p><b>限流：</b>20 QPS（仅应用引导阶段调用，ConfigService 内部有 Caffeine 一级缓存）。
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see ConfigService#getFeatureFlags 特性开关过滤与值解析
+ * @see FeatureFlagService#getFeatureFlags 特性开关过滤与值解析
  */
 @Slf4j
 @ApiVersion("26.09.01")
@@ -41,12 +41,12 @@ import java.util.Map;
 @Tag(name = "远程特性开关", description = "前端 FeatureFlagsManager 远程开关数据源")
 public class FeatureFlagController {
 
-  private final ConfigService configService;
+  private final FeatureFlagService featureFlagService;
 
   /**
    * 查询当前用户可见的远程特性开关映射。
    *
-   * <p>委托 {@link ConfigService#getFeatureFlags()} 按约定过滤公开配置并解析开关值，
+   * <p>委托 {@link FeatureFlagService#getFeatureFlags()} 按约定过滤公开配置并解析开关值，
    * 返回开关名 → 开关值（布尔/数值/字符串）的映射。
    *
    * @return 开关名 → 开关值的映射（无开关配置时返回空 Map，前端回退默认值）
@@ -55,6 +55,6 @@ public class FeatureFlagController {
   @GetMapping("/me")
   @Operation(summary = "查询当前用户可见的远程特性开关", description = "按约定过滤公开配置，返回开关名到解析值（布尔/数值/字符串）的映射")
   public YdszResponse<Map<String, Object>> me() {
-    return YdszResponse.success(configService.getFeatureFlags());
+    return YdszResponse.success(featureFlagService.getFeatureFlags());
   }
 }

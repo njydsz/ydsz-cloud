@@ -36,9 +36,6 @@ public class TenantMdcFilter implements Filter {
   /** MDC 键名：用户 ID */
   public static final String MDC_USER_ID = "userId";
 
-  /** MDC 键名：链路追踪 ID */
-  public static final String MDC_TRACE_ID = "traceId";
-
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws IOException, ServletException {
@@ -54,17 +51,12 @@ public class TenantMdcFilter implements Filter {
         MDC.put(MDC_USER_ID, userId);
       }
 
-      String traceId = RequestContext.getTraceId();
-      if (traceId != null) {
-        MDC.put(MDC_TRACE_ID, traceId);
-      }
-
       chain.doFilter(request, response);
     } finally {
-      // 请求结束后清理 MDC，防止线程复用导致数据串扰
+      // 请求结束后清理 MDC，防止线程复用导致数据串扰。
+      // traceId 由 TraceFilter 写入、RequestContextCleanupFilter（MDC.clear）统一清理，此处不再重复处理。
       MDC.remove(MDC_TENANT_ID);
       MDC.remove(MDC_USER_ID);
-      MDC.remove(MDC_TRACE_ID);
     }
   }
 }
