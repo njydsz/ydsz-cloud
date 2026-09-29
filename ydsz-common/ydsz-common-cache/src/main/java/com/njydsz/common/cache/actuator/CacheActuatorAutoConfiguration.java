@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Bean;
 import com.njydsz.common.cache.api.Cache;
 
 /**
- * 缓存 Actuator 端点自动配置
+ * 缓存 Actuator 端点自动配置（P3-1 增强：激活条件与常见失败排查）
  *
  * <p>当满足以下条件时自动注册 {@link CacheMetricsEndpoint}：
  *

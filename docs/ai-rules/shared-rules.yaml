@@ -13,19 +13,19 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v6"
+  version: "26.09.30-v7"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v6（exception 体系利用率专项：InfraException 子类创建 + P0/P1 三项落地；+3 规则，累计 153 条）"
-  total_rules: 153
+  last_updated: "26.09.30-v7（common-core 利用率整改：YDIZ-CORE-003 特性开关统一入口 P1；+1 规则，累计 154 条）"
+  total_rules: 154
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 53
-    P1: 74  # +2: YDIZ-COMMON-050 InfraException 统一入口 + YDIZ-COMMON-051 RuntimeException 禁止穿透
-    P2: 20  # +1: YDIZ-COMMON-052 infra.error 默认 i18n key
+    P1: 75  # +1: YDIZ-CORE-003 特性开关必须通过 FeatureFlagService
+    P2: 20
 
 rules:
   # ============================================
@@ -4397,6 +4397,42 @@ rules:
           .msg(I18n.message("user.not.found", new Object[]{userId}));
     source: "四模块利用率提升专项（YDIZ-CORE-002，P1，26.09.30 ExceptionCode 自动推导优先）"
 
+  - id: "YDIZ-CORE-003"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【严重】特性开关必须通过 FeatureFlagService 统一读取，禁止直接查询 ConfigService"
+    description: |
+      业务模块需要读取特性开关（Feature Flag）状态时，必须通过注入或使用
+      com.njydsz.common.core.feature.FeatureFlagService 接口的 isEnabled(name) /
+      getFeatureFlags() 方法，禁止在 Controller / Service 中直接调用 ConfigService
+      获取开关映射后自行解析。
+
+      **为什么必须走 FeatureFlagService**：
+      - FeatureFlagService 是 core 层定义的统一抽象，屏蔽底层数据来源（配置中心 / DB / 本地缓存）
+      - 直接读 ConfigService 会绕过开关的 boolean 解析、null 默认值、租户隔离等统一处理逻辑
+      - 后续切换开关中心（如迁移到 Apollo/Nacos/自研开关平台）时，只需修改 FeatureFlagService
+        实现，业务调用方无需改动
+      - FeatureFlagContext 静态门面为无注入场景（工具类/切面/枚举）提供统一入口
+
+      **现状**：ydsz-system 的 FeatureFlagController 已改为注入 FeatureFlagService（26.09.30）。
+      8 业务引擎其他模块如新增特性开关读取需求，一律通过 FeatureFlagService 访问。
+    pattern: "ConfigService.*[Ff]eatureFlag|configService\.getFeatureFlags"
+    fix: |
+      1. 注入 FeatureFlagService 或通过 FeatureFlagContext.isEnabled(name) 静态调用
+      2. 移除对 ConfigService.getFeatureFlags() 的直接引用
+      3. 如需按名判定开关：featureFlagService.isEnabled(name)
+      4. 如需全量映射（前端启动加载）：featureFlagService.getFeatureFlags()
+    example_bad: |
+      ❌ 直接读 ConfigService
+      Map<String, Object> flags = configService.getFeatureFlags();
+      boolean enabled = parseFlag(flags.get("some.feature"));
+    example_good: |
+      ✅ 通过 FeatureFlagService
+      boolean enabled = featureFlagService.isEnabled("some.feature");
+      // 或静态门面
+      boolean enabled = FeatureFlagContext.isEnabled("some.feature");
+    source: "ydsz-common-core 全局引用分析整改（YDIZ-CORE-003，P1，26.09.30 特性开关统一入口）"
+
   - id: "YDIZ-LOCALE-003"
     category: "i18n"
     severity: "P1"
@@ -4445,7 +4481,7 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-  common-reuse: 34  # +12: ... +ValidationUtils/BeanUpdateUtil/DigestUtils/ExceptionUtils/RetryUtils
+  common-reuse: 35  # +1: YDIZ-CORE-003 特性开关必须通过 FeatureFlagService
   security: 2
   architecture: 6
   engineering: 5
@@ -4467,7 +4503,7 @@ stats:
   util: 1
   common: 7  # +2: Excel Web 流式导出(YDIZ-COMMON-033 P1) + 禁 ByteArrayOutputStream 中转(YDIZ-COMMON-034 P2)
   domain: 3  # +3: OrderItem 收敛(YDIZ-DOMAIN-001 P1) + TreeNode 统一入口(YDIZ-DOMAIN-002 P1) + 深度分页主动感知(YDIZ-DOMAIN-003 P1)
-  total: 144
+  total: 154
 
   # ============================================
   # 九、Domain 能力域利用率（3 条，P1×3，26.09.30 ydzs-common-domain 全局引用分析专项）
