@@ -12,10 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.agent.domain.trace.AgentSpan;
 import com.njydsz.agent.domain.trace.AgentSpanExporter;
-import com.njydsz.agent.domain.trace.TraceContextHolder;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 
 /**
@@ -35,7 +35,7 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
  *
  * <p><b>容错</b>：导出失败不影响原有链路记录（try-catch 包外层）。
  *
- * <p><b>业务关联维度</b>：在导出 Span 时，自动从 {@link TraceContextHolder} 获取当前线程的
+ * <p><b>业务关联维度</b>：在导出 Span 时，自动从 {@link com.njydsz.common.core.context.RequestContext} 获取当前线程的
  * botId / turnId / conversationId / accountId，并设置为 OTel Span 的 Attribute，
  * 便于在可观测性后台中按业务维度聚合分析。
  *
@@ -85,19 +85,21 @@ public class ExportingTraceRecorder implements TraceRecorder {
    * {@inheritDoc}
    *
    * <p>在底层记录器启动链路后，记录根 Span 元数据（用于步骤级 Span 的 parentSpanId 关联），
-   * 并自动从 {@link TraceContextHolder} 获取业务关联维度。
+   * 并自动从 {@link com.njydsz.common.core.context.RequestContext} 获取业务关联维度。
    */
   @Override
   public String startTrace(String conversationId, String agentId) {
     String traceId = delegate.startTrace(conversationId, agentId);
     String rootSpanId = TraceIdGenerator.generateSortableTraceId();
 
-    // 从 ThreadLocal 上下文获取业务关联维度
-    TraceContextHolder.TraceContext ctx = TraceContextHolder.get();
-    String botId = ctx != null ? ctx.botId() : null;
-    String turnId = ctx != null ? ctx.turnId() : null;
-    String ctxConversationId = ctx != null ? ctx.conversationId() : conversationId;
-    String accountId = ctx != null ? ctx.accountId() : null;
+    // 从 RequestContext 获取业务关联维度
+    String botId = RequestContext.getBotId();
+    String turnId = RequestContext.getTurnId();
+    String ctxConversationId = RequestContext.getConversationId();
+    String accountId = RequestContext.getAccountId();
+    if (ctxConversationId == null) {
+      ctxConversationId = conversationId;
+    }
 
     rootSpanMetas.put(traceId,
         new AgentRootSpanMeta(traceId, rootSpanId, ctxConversationId, agentId, botId, turnId, accountId, Instant.now()));

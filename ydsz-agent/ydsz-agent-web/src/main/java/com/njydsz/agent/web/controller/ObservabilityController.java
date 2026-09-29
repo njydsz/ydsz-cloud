@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.agent.domain.trace.TraceContextHolder;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.DashboardOverviewDTO;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.ModelUsageDTO;
 import com.njydsz.common.base.api.ApiVersion;
@@ -106,7 +106,7 @@ public class ObservabilityController {
   /**
    * 查询当前线程的链路上下文（调试用）。
    *
-   * <p>返回当前请求线程通过 {@link TraceContextHolder} 设置的业务关联维度信息，
+   * <p>返回当前请求线程通过 {@link RequestContext} 设置的业务关联维度信息，
    * 用于排查链路追踪中业务属性未生效的问题。
    *
    * @return 统一响应结果，data 为链路上下文字典（含 botId、turnId、conversationId、accountId）
@@ -115,18 +115,11 @@ public class ObservabilityController {
   public YdszResponse<Map<String, String>> getTraceContext() {
     log.info("[Observability-API] 查询当前链路上下文");
     Map<String, String> context = new HashMap<>(TRACE_CONTEXT_MAP_CAPACITY);
-    TraceContextHolder.TraceContext ctx = TraceContextHolder.get();
-    if (ctx != null) {
-      context.put("botId", ctx.botId() != null ? ctx.botId() : "");
-      context.put("turnId", ctx.turnId() != null ? ctx.turnId() : "");
-      context.put("conversationId", ctx.conversationId() != null ? ctx.conversationId() : "");
-      context.put("accountId", ctx.accountId() != null ? ctx.accountId() : "");
-    } else {
-      context.put("botId", "");
-      context.put("turnId", "");
-      context.put("conversationId", "");
-      context.put("accountId", "");
-    }
+    context.put("botId", RequestContext.getBotId() != null ? RequestContext.getBotId() : "");
+    context.put("turnId", RequestContext.getTurnId() != null ? RequestContext.getTurnId() : "");
+    context.put("conversationId",
+        RequestContext.getConversationId() != null ? RequestContext.getConversationId() : "");
+    context.put("accountId", RequestContext.getAccountId() != null ? RequestContext.getAccountId() : "");
     return YdszResponse.success(context);
   }
 

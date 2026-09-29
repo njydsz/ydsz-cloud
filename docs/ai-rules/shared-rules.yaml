@@ -13,19 +13,19 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v2"
+  version: "26.09.30-v4"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v2（四模块利用率提升专项：@EnableYdszI18n 全覆盖 YDIZ-CORE-001 P0 + ExceptionCode 自动推导优先 YDIZ-CORE-002 P1 + KnownLocaleTags 不可替代 YDIZ-LOCALE-003 P1；+3 规则，累计 140 条）"
-  total_rules: 140
+  last_updated: "26.09.30-v5（common-domain 利用率专项：OrderItem 收敛 YDIZ-DOMAIN-001 P1 + TreeNode 统一入口 YDIZ-DOMAIN-002 P1 + 深度分页主动感知 YDIZ-DOMAIN-003 P1；+3 规则，累计 150 条）"
+  total_rules: 150
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 53
-    P1: 60
-    P2: 13
+    P1: 70  # +3: YDIZ-DOMAIN-001/002/003 common-domain 利用率专项
+    P2: 18  # +3: YDIZ-COMMON-034 禁 ByteArrayOutputStream 中转（P2）
 
 rules:
   # ============================================
@@ -3085,6 +3085,81 @@ rules:
     source: "全局引用分析 v2（YDIZ-COMMON-028，P1，26.09.28 Excel 统一入口激活）"
     exception: "ydsz-common-excel 框架内部除外"
 
+  # ---- YDIZ-COMMON-033 ----
+  # 2026-09-30 P1: Excel Web 导出必须通过 ExcelWebSupport 流式写入 response OutputStream
+  # 激活原因: 7 个 export 端点使用 ByteArrayOutputStream 中间缓冲 + 手动 setHeader，
+  # 导致流式引擎退化为全量缓冲、文件名编码不统一。
+  - id: "YDIZ-COMMON-033"
+    severity: "P1"
+    category: "common-reuse"
+    title: "【强制】Excel Web 导出必须通过 ExcelWebSupport 流式写入 response OutputStream"
+    description: |
+      所有 Controller 层 Excel 导出端点必须通过 com.njydsz.common.excel.spring.ExcelWebSupport
+      将数据流式写入 HttpServletResponse.getOutputStream()。
+
+      禁止以下模式：
+      1. 使用 ByteArrayOutputStream 作为 Excel 写入中介，再 write 到 response
+      2. 手动 setContentType + setHeader("Content-Disposition", ...)
+      3. 多次调用 doWrite 到同一输出流（SuperFastExcelWriter 每次 doWrite 输出完整 xlsx ZIP）
+
+      正确做法A（首选，推荐90%场景）：
+         excelWebSupport.write(response, ExportVO.class, dataList, "SheetName");
+
+      正确做法B（需自定义文件名时）：
+         try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), ExportVO.class)) {
+           writer.doWrite(rows);
+         }
+         response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+             "attachment; filename=\"" + asciiName + "\"; filename*=UTF-8''" + percentEncoded);
+
+      **为什么强制**：
+      - ByteArrayOutputStream 全量缓冲使流式引擎内存占用翻倍（10W 行 → 200MB+ vs 恒定 <100MB）
+      - ExcelWebSupport.encodeFilename() 提供 RFC 5987 双编码，保证中文文件名在 IE/Edge/Chrome/Firefox 全兼容
+      - 统一 Content-Type 字符串避免拼写错误导致浏览器无法识别
+
+      **违反判据**：
+      - Controller 方法体中出现 `new ByteArrayOutputStream()` 且后续有 `ExcelFacade.write(out`
+      - 手动 setHeader("Content-Disposition") 而非通过 ExcelWebSupport
+    pattern: "ByteArrayOutputStream.*ExcelFacade\\.write\\(out"
+    fix: |
+      1. 注入 ExcelWebSupport（通过 @Resource 或构造器，由 ExcelAutoConfiguration 自动装配）
+      2. 调用 excelWebSupport.write(response, ExportVO.class, rows, "sheetName")
+      3. 如需自定义文件名，使用 ExcelFacade.write(response.getOutputStream(), clazz) 直接流式
+    example_bad: |
+      // 违规：手动设头 + ByteArrayOutputStream 缓冲
+      response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(name));
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      ExcelWriter writer = ExcelFacade.write(out, ExportVO.class);
+      writer.doWrite(rows);
+      response.getOutputStream().write(out.toByteArray());
+    example_good: |
+      // 正确：一行搞定流式写入 + 文件名自动编码
+      excelWebSupport.write(response, ExportVO.class, rows, "SheetName");
+    source: "ydsz-common-excel 全局引用分析 2026-09-30（7 处违规端点整改）"
+    exception: "非 Web 场景（如上传对象存储/邮件附件）可使用 ExcelExportHelper.export() 生成 byte[]"
+
+  # ---- YDIZ-COMMON-034 ----
+  # 2026-09-30 P2: 禁止 ByteArrayOutputStream 作为 Excel 流式中转
+  - id: "YDIZ-COMMON-034"
+    severity: "P2"
+    category: "common-reuse"
+    title: "【建议】禁止 ByteArrayOutputStream 作为 Excel 流式写入的中介缓冲区"
+    description: |
+      当目标输出流为 ServletOutputStream（response.getOutputStream()）时，
+      禁止先写入 ByteArrayOutputStream 再 flush 到 response。这会抵消流式引擎的低内存优势。
+
+      仅当以下场景允许 ByteArrayOutputStream：
+      - 需要将 Excel 字节作为 attachment 上传到对象存储（OSS/S3/COS）
+      - 需要将 Excel 作为邮件附件发送
+      - 需要将 Excel 缓存到 Redis/本地文件供后续下载
+      - 单元测试场景
+    pattern: "ByteArrayOutputStream.*toByteArray\\(\\)"
+    fix: |
+      1. Web 导出场景：ExcelFacade.write(response.getOutputStream(), clazz) 直写
+      2. 非 Web 场景：保留 ByteArrayOutputStream + ExcelExportHelper.export()
+    source: "ydsz-common-excel 全局引用分析 2026-09-30"
+
   - id: "YDIZ-COMMON-029"
     severity: "P1"
     category: "common-reuse"
@@ -4049,7 +4124,212 @@ rules:
     source: "五大 common 模块利用率提升专项（YDIZ-COMMON-051，P1，26.09.30 JdbcTemplate 清零 → Mapper）"
 
   # ============================================
-  # 十、core/domain/exception/locales 四模块利用率专项（3 条，26.09.30）
+  # 十一、common-util 利用率专项（5 条，26.09.30）
+  # ============================================
+  # YDIZ-COMMON-052: 必须使用 ValidationUtils 进行格式校验
+  - id: "YDIZ-COMMON-052"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【严重】业务校验必须使用 ValidationUtils，禁止自行编写手机号/身份证/银行卡正则"
+    description: |
+      所有业务校验场景（注册/登录/创建/更新等）中涉及的手机号、邮箱、身份证号、统一社会信用代码、
+      车牌号、银行卡号、IPv4、十六进制颜色值格式校验，必须使用 ydsz-common-util 的
+      com.njydsz.common.util.validate.ValidationUtils 工具类，禁止在业务模块中编写新的正则或校验方法。
+
+      **为什么**：
+      - ValidationUtils 内置 GB 11643-1999（身份证）、GB 32100-2015（统一社会信用代码）、
+        Luhn 算法（银行卡）等国家标准校验规则
+      - 手机号正则已预编译为 Pattern 静态字段，避免重复编译
+      - 国家标准更新（如手机号新号段）需同步修改多处，统一入口确保不漏改
+      - 自实现校验容易遗漏校验码（如身份证末位 X / 银行卡 Luhn 位）
+
+      **违反判据**：
+      - 业务代码中出现 `Pattern.compile("^1[3-9]\\d{9}$")` 等手机号正则
+      - 业务代码中出现 `idCard.length() == 18` 等仅做长度判断而遗漏校验码
+      - 业务代码中出现银行卡号纯长度判断（未做 Luhn 校验）
+
+    pattern: "Pattern\\.compile.*1\\[3-9\\]|Pattern\\.compile.*@.*\\\\.|idCard\\.length\\(\\)|idCard\\.length\\(\\).*18|bankCard.*length\\(\\)"
+    fix: |
+      1. 替换手机号校验：`StringUtils.isPhone(str)` → `ValidationUtils.isMobilePhone(str)`
+      2. 替换邮箱校验：`Pattern.compile(...email...)` → `ValidationUtils.isEmail(str)`
+      3. 替换身份证校验：`idCard.length() == 18` → `ValidationUtils.isIdCard18(str)`
+      4. 替换银行卡校验：长度判断 → `ValidationUtils.isBankCard(str)`（含 Luhn 校验）
+    example_bad: |
+      ❌ 违规：自实现手机号正则
+      private static final Pattern MOBILE = Pattern.compile("^1[3-9]\\d{9}$");
+      public boolean isMobile(String s) { return MOBILE.matcher(s).matches(); }
+    example_good: |
+      ✅ 正确：使用 ValidationUtils
+      import com.njydsz.common.util.validate.ValidationUtils;
+      if (!ValidationUtils.isMobilePhone(phone)) {
+          throw new BusinessException(ExceptionCode.INVALID_PHONE);
+      }
+    source: "common-util 全局引用分析（YDIZ-COMMON-052，P1，26.09.30 ValidationUtils 零引用问题激活）"
+
+  # YDIZ-COMMON-053: 必须使用 BeanUpdateUtil 进行 Bean 更新
+  - id: "YDIZ-COMMON-053"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【严重】DTO → Entity 更新必须使用 BeanUpdateUtil.copyNonNull，禁止 BeanUtils.copyProperties 全量复制"
+    description: |
+      在 DTO 转入 Entity 进行数据库更新的场景（PATCH 语义的部分更新）中，必须使用
+      com.njydsz.common.util.bean.BeanUpdateUtil.copyNonNull(source, target, ignoreProperties)
+      替代 Spring BeanUtils.copyProperties 或 Apache BeanUtils.copyProperties。
+
+      **为什么**：
+      - BeanUtils.copyProperties 会复制源对象的所有属性（包括 null），导致目标对象已有字段被 null 覆盖
+      - BeanUpdateUtil.copyNonNull 仅复制非 null 属性，保留目标对象原值
+      - 配合 ignoreProperties 参数（如 "id", "tenantId", "createdAt"）可精确控制忽略字段
+
+      **注意**：Entity → VO / DTO → Entity（创建场景，非更新）的转换推荐使用 MapStruct（编译期生成，性能最优）
+
+      **违反判据**：
+      - 在更新方法中使用 BeanUtils.copyProperties(dto, entity)
+      - 在更新方法中使用 BeanCopier.create()
+
+    pattern: "BeanUtils\\.copyProperties|\\.copyProperties\\(.*\\)|BeanCopier"
+    fix: |
+      1. 引入 `import com.njydsz.common.util.bean.BeanUpdateUtil;`
+      2. 替换 `BeanUtils.copyProperties(dto, entity)` → `BeanUpdateUtil.copyNonNull(dto, entity, "id", "tenantId", "createdAt")`
+      3. 列明不允许被覆盖的字段名作为 ignoreProperties 参数
+      4. 删除 BeanUtils 的 import
+    example_bad: |
+      ❌ 违规：全量复制，null 字段覆盖目标
+      public void updateEntity(UpdateDTO dto, Entity entity) {
+          BeanUtils.copyProperties(dto, entity);  // dto 中的 null 字段会覆盖 entity
+      }
+    example_good: |
+      ✅ 正确：仅复制非 null 字段，并忽略不可变字段
+      public void updateEntity(UpdateDTO dto, Entity entity) {
+          BeanUpdateUtil.copyNonNull(dto, entity, "id", "tenantId", "createdAt");
+      }
+    source: "common-util 全局引用分析（YDIZ-COMMON-053，P1，26.09.30 BeanUpdateUtil 零引用问题激活）"
+
+  # YDIZ-COMMON-054: 必须使用 DigestUtils
+  - id: "YDIZ-COMMON-054"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【严重】签名/摘要计算必须使用 DigestUtils，禁止业务代码直接调用 MessageDigest.getInstance"
+    description: |
+      所有 SHA-1/SHA-256/SHA-512 散列计算和 HMAC-SHA1/HMAC-SHA256 签名计算必须使用
+      com.njydsz.common.util.security.DigestUtils 工具类（已有 md5Hex、sha256Hex、sha1Hex、
+      hmacSha256Hex、hmacSha256Base64、verifySignature、constantTimeEquals 等方法），
+      禁止在业务代码中直接调用 MessageDigest.getInstance() 或 Mac.getInstance()。
+
+      **为什么**：
+      - DigestUtils 内部复用共享的 MessageDigest 实例（ThreadLocal 缓冲），避免频繁分配
+      - HexFormat.of().formatHex() / HexUtils.encode() 在跨模块间实现散列不兼容
+      - DigestUtils.verifySignature 提供常量时间比较（防时序攻击），自实现容易遗漏
+      - 密钥盐/散列 升级时统一修改 DigestUtils 即可影响全平台
+
+      **违反判据**：
+      - 业务代码中出现 `MessageDigest.getInstance("SHA-256")` 或 `Mac.getInstance("HmacSHA256")`
+      - 业务代码中出现 `HexFormat.of().formatHex(hash)` 手动转 hex
+
+      **例外（需在代码注释中说明 YDIZ-COMMON-054 例外原因）**：
+      - 对象存储平台签名（AWS V4 / Aliyun OSS / 七牛 KODO）等第三方协议强制要求特定格式的签名链
+
+    pattern: "MessageDigest\\.getInstance|Mac\\.getInstance|HexFormat\\.of\\(\\)\\.formatHex"
+    fix: |
+      1. 替换 SHA-256：`MessageDigest.getInstance("SHA-256")` → `DigestUtils.sha256Hex(data)`
+      2. 替换 HMAC-SHA256：`Mac.getInstance("HmacSHA256")` + `Base64.getEncoder().encodeToString(...)` → `DigestUtils.hmacSha256Base64(data, secret)`
+      3. 替换 SHA-1（如需保留兼容性）：`MessageDigest.getInstance("SHA-1")` → `DigestUtils.sha1Hex(data)`
+      4. 签名验证：自定义常量时间比较 → `DigestUtils.verifySignature(data, secret, signature, encoding)`
+      5. 替换 Hex 手动编码：`HexFormat.of().formatHex(hash)` → 使用 DigestUtils 返回 hex 的方法
+    example_bad: |
+      ❌ 违规：手动计算 HMAC-SHA256
+      Mac mac = Mac.getInstance("HmacSHA256");
+      SecretKeySpec spec = new SecretKeySpec(secret.getBytes(UTF_8), "HmacSHA256");
+      mac.init(spec);
+      byte[] hmac = mac.doFinal(data.getBytes(UTF_8));
+      return Base64.getEncoder().encodeToString(hmac);
+    example_good: |
+      ✅ 正确：委托 DigestUtils
+      import com.njydsz.common.util.security.DigestUtils;
+      return DigestUtils.hmacSha256Base64(data, secret);
+    source: "common-util 全局引用分析（YDIZ-COMMON-054，P1，26.09.30 DigestUtils 9 处直连收敛）"
+
+  # YDIZ-COMMON-055: 必须使用 ExceptionUtils
+  - id: "YDIZ-COMMON-055"
+    category: "common-reuse"
+    severity: "P2"
+    title: "【建议】获取异常堆栈/根因必须使用 ExceptionUtils，禁止手写 StringWriter + printStackTrace"
+    description: |
+      所有获取异常完整堆栈字符串或根因的场景，必须使用
+      com.njydsz.common.util.exception.ExceptionUtils 提供的 getStackTrace /
+      getRootCause / getRootCauseMessage 方法，禁止在业务代码中手写
+      `new StringWriter()` + `throwable.printStackTrace(new PrintWriter(sw))` 模式。
+
+      **为什么**：
+      - ExceptionUtils 提供一致的堆栈格式化（异常链完整渲染、防自引用死循环）
+      - 避免业务代码中到处复制 `StringWriter sw = new StringWriter(); ...` 样板代码
+      - getRootCause 实现了异常链自引用环检测，手写容易遗漏
+
+      **违反判据**：
+      - 业务代码中出现 `StringWriter sw = new StringWriter()` + `e.printStackTrace(new PrintWriter(sw))`
+      - 业务代码中出现手写 `getCause()` 循环且未做自引用环检测
+
+    pattern: "StringWriter.*printStackTrace|new PrintWriter.*sw\\)|printStackTrace.*PrintWriter"
+    fix: |
+      1. 引入 `import com.njydsz.common.util.exception.ExceptionUtils;`
+      2. 替换 `new StringWriter() + printStackTrace(new PrintWriter(sw))` → `ExceptionUtils.getStackTrace(e)`
+      3. 替换手写 `getCause()` 循环 → `ExceptionUtils.getRootCause(e)` 或 `ExceptionUtils.getRootCauseMessage(e)`
+    example_bad: |
+      ❌ 违规：手写堆栈获取
+      StringWriter sw = new StringWriter();
+      try (PrintWriter pw = new PrintWriter(sw)) {
+          e.printStackTrace(pw);
+      }
+      log.error("failed: {}", sw.toString());
+    example_good: |
+      ✅ 正确：使用 ExceptionUtils
+      import com.njydsz.common.util.exception.ExceptionUtils;
+      log.error("failed: {}", ExceptionUtils.getStackTrace(e));
+    source: "common-util 全局引用分析（YDIZ-COMMON-055，P2，26.09.30 ExceptionUtils 复用率提升）"
+
+  # YDIZ-COMMON-056: 无 Resilience4j 时使用 RetryUtils
+  - id: "YDIZ-COMMON-056"
+    category: "common-reuse"
+    severity: "P2"
+    title: "【建议】无 Resilience4j 依赖时使用 RetryUtils，禁止手写 while+Thread.sleep 重试"
+    description: |
+      在需要容错重试的场景（网络调用、消息发送、外部 API 调用等）中，如果模块未引入 Resilience4j 依赖，
+      必须使用 com.njydsz.common.util.concurrent.RetryUtils 提供的 executeWithRetry /
+      executeWithBackoff 方法，禁止手写 `while (retry-- > 0) { try { ... } catch { Thread.sleep(...) } }` 模式。
+
+      **为什么**：
+      - RetryUtils 提供固定间隔 + 指数退避 + 随机抖动（对齐 Resilience4j 语义）
+      - 手写重试缺少抖动，多节点同时重试时会产生"惊群效应"
+      - RetryUtils 提供 maxDuration 总时长上限，防止重试无限循环
+      - 统一的 RetryException 包装，异常语义清晰
+
+      **注意**：有 Resilience4j 依赖的模块直接使用 Retry.resilience4j-retry，无需降级到 RetryUtils。
+
+      **违反判据**：
+      - 业务代码中出现 `while (retry-- > 0) { ... Thread.sleep(...) ... }` 手写重试循环
+      - 业务代码中出现 `for (int i = 0; i < maxRetry; i++) { if (tryOnce()) break; Thread.sleep(...); }`
+
+    pattern: "while.*retry.*--.*>.*0.*Thread\\.sleep|for.*int.*i.*maxRetry.*Thread\\.sleep"
+    fix: |
+      1. 引入 `import com.njydsz.common.util.concurrent.RetryUtils;`
+      2. 简单重试场景：`RetryUtils.executeWithRetry(action, 3, Duration.ofSeconds(2))`
+      3. 需指数退避：`RetryUtils.executeWithBackoff(action, RetryConfig.builder().maxRetries(5).initialDelay(Duration.ofMillis(100)).build())`
+      4. 删除手写的 while/for + Thread.sleep 重试循环
+    example_bad: |
+      ❌ 违规：手写重试循环
+      int retry = 3;
+      while (retry-- > 0) {
+          try { return httpClient.call(); }
+          catch (Exception e) { Thread.sleep(1000); }
+      }
+    example_good: |
+      ✅ 正确：使用 RetryUtils
+      import com.njydsz.common.util.concurrent.RetryUtils;
+      return RetryUtils.executeWithRetry(() -> httpClient.call(), 3, Duration.ofSeconds(2));
+    source: "common-util 全局引用分析（YDIZ-COMMON-056，P2，26.09.30 RetryUtils 零引用问题激活）"
+
+  # ============================================
+  # 十二、core/domain/exception/locales 四模块利用率专项（3 条，26.09.30）
   # ============================================
   - id: "YDIZ-CORE-001"
     category: "i18n"
@@ -4151,8 +4431,8 @@ rules:
     source: "四模块利用率提升专项（YDIZ-LOCALE-003，P1，26.09.30 KnownLocaleTags 不可替代）"
 
 # ============================================
-# 附录：按 category 统计（26.09.30-v2 四模块利用率提升专项：+3 规则，YDIZ-CORE-001~002 + YDIZ-LOCALE-003）
-# ============================================
+  # 附录：按 category 统计（26.09.30-v3 common-util 利用率专项：+5 规则，YDIZ-COMMON-052~056）
+  # ============================================
 stats:
   encoding: 1
   import: 5
@@ -4165,7 +4445,7 @@ stats:
   ddd: 7
   concurrency: 3
   performance: 2
-    common-reuse: 29  # +7: UUID统一/脚本引擎收敛/利用率门禁/退出机制/RuntimeException清零/HeaderConstants推广/gateway合规
+  common-reuse: 34  # +12: ... +ValidationUtils/BeanUpdateUtil/DigestUtils/ExceptionUtils/RetryUtils
   security: 2
   architecture: 6
   engineering: 5
@@ -4185,5 +4465,158 @@ stats:
   queue: 1
   search: 1
   util: 1
-  common: 5
-  total: 134
+  common: 7  # +2: Excel Web 流式导出(YDIZ-COMMON-033 P1) + 禁 ByteArrayOutputStream 中转(YDIZ-COMMON-034 P2)
+  domain: 3  # +3: OrderItem 收敛(YDIZ-DOMAIN-001 P1) + TreeNode 统一入口(YDIZ-DOMAIN-002 P1) + 深度分页主动感知(YDIZ-DOMAIN-003 P1)
+  total: 144
+
+  # ============================================
+  # 九、Domain 能力域利用率（3 条，P1×3，26.09.30 ydzs-common-domain 全局引用分析专项）
+  # ============================================
+  - id: "YDIZ-DOMAIN-001"
+    category: "domain"
+    severity: "P1"
+    title: "【严重】禁止直接使用 QueryWrapper.orderByXxx(String) 字符串排序，必须使用 PageQuery.addOrder + OrderItem"
+    description: |
+      在 Mapper/Repository 实现层，禁止使用以下硬编码字符串排序方式：
+      - QueryWrapper.orderByAsc("column")
+      - QueryWrapper.orderByDesc("column")
+      - QueryWrapper.orderBy(true/false, "column")
+      - 直接拼接 ORDER BY 片段（wrapper.last("ORDER BY ..."))
+
+      **为什么必须使用 OrderItem**：
+      - OrderItem 是不可变值对象（column + direction + 预计算 SQL），消除字符串拼接的 SQL 注入隐患
+      - PageQuery.addAscOrder/addDescOrder 已内置 SQL 注入校验（字母数字下划线+点号白名单）
+      - 配合 OrderItemsInjector 统一将排序条件注入 QueryWrapper，保持 infra 层代码整洁
+      - 排序逻辑外置到 Query 参数对象后，Repository 只做基础条件组装，职责更清晰
+
+      **正确做法**：
+      1. Controller/Service 层通过 PageQuery.addAscOrder("created_at") 传递排序
+      2. Repository 层通过 OrderItemsInjector.apply(query, wrapper) 统一注入
+      3. 禁止在 Repository 中直接调用任何 orderBy 方法
+
+      **约束范围**：所有 ydzs-{module}-infra 层的 Repository/Mapper 实现。
+      domain 层的 OrderItem 定义/SafeQueryInnerInterceptor 不受此约束。
+    pattern: 'orderBy(Asc|Desc|)\(|wrapper\.last\("ORDER BY'
+    fix: |
+      1. 移除 infra 层所有 orderByAsc/orderByDesc 调用
+      2. 在 Repository 通用基类或 AOP 切面中增加 OrderItemsInjector.apply(pageQuery, wrapper)
+      3. 排序条件统一通过 PageQuery.addAscOrder/addDescOrder 从 Service 层传入
+    example_bad: |
+      ❌ Repository 硬编码字符串排序
+      QueryWrapper<User> wrapper = new QueryWrapper<>();
+      wrapper.orderByDesc("created_at");
+      wrapper.orderByAsc("user_name");
+      return mapper.selectPage(page, wrapper);
+    example_good: |
+      ✅ Service 传入排序参数 + Repository 注入器
+      // Service 层
+      query.addDescOrder("created_at");
+      query.addAscOrder("user_name");
+      return repository.findPage(query);
+
+      // Repository 层
+      QueryWrapper<User> wrapper = buildCondition(query);
+      OrderItemsInjector.apply(query, wrapper);
+      return mapper.selectPage(page, wrapper);
+    source: "ydsz-common-domain 全局引用分析（YDIZ-DOMAIN-001，P1，26.09.30 OrderItem 排序收敛专项）"
+
+  - id: "YDIZ-DOMAIN-002"
+    category: "domain"
+    severity: "P1"
+    title: "【严重】树构建必须使用 TreeBuilder.buildSimple() 统一入口，禁止直接继承 TreeNode"
+    description: |
+      ydzs-common-domain 提供两种树构建方式：
+      1. TreeBuilder<T extends TreeNode>.build() — 需继承 TreeNode 基类
+      2. TreeBuilder.buildSimple(flatList, idExtractor, parentIdExtractor, childrenSetter, sortExtractor) — 纯 POJO 友好
+
+      实测数据：全项目仅 1 处使用 build()（literule CategoryTreeNode），5 个模块约 23 处使用 buildSimple()。
+      继承 TreeNode 的方式将业务 VO/Entity 与框架基类耦合，违反 DDD 分层纯净性原则。
+
+      **为什么统一 buildSimple**：
+      - 业务 VO 无需继承任何框架基类，保持领域模型纯净
+      - buildSimple 通过 Lambda 方法引用传递 id/parentId/children setter，零侵入
+      - buildSimple 内部已封装 level/path 自动填充
+      - build() 的 TreeNode 继承模式导致 Java 递归泛型（T extends TreeNode<T, ID>）的心智负担
+
+      **约束范围**：所有新建树形结构代码。existing TreeNode 子类（literule CategoryTreeNode）可保留但禁止新增。
+    pattern: 'extends TreeNode<'
+    fix: |
+      1. 将继承 TreeNode 的 VO 类改为纯 POJO（仅保留 id/parentId/children/sort/level/path 字段）
+      2. 使用 TreeBuilder.buildSimple(list, VO::getId, VO::getParentId, VO::setChildren, VO::getSort) 构建树
+      3. 新增树形接口统一使用 buildSimple
+    example_bad: |
+      ❌ 业务 VO 继承 TreeNode
+      @Data
+      public class MenuVO extends TreeNode<MenuVO, String> {
+          private String menuName;
+          private String menuIcon;
+      }
+      // 构建
+      List<MenuVO> tree = new TreeBuilder<>(0L, list).build();
+    example_good: |
+      ✅ 纯 POJO + buildSimple
+      @Data
+      public class MenuVO {
+          private String id;
+          private String parentId;
+          private List<MenuVO> children;
+          private Integer sort;
+          private Integer level;
+          private String path;
+          private String menuName;
+          private String menuIcon;
+      }
+      // 构建
+      List<MenuVO> tree = TreeBuilder.buildSimple(list,
+          MenuVO::getId, MenuVO::getParentId, MenuVO::setChildren, MenuVO::getSort);
+    source: "ydsz-common-domain 全局引用分析（YDIZ-DOMAIN-002，P1，26.09.30 TreeNode 统一入口专项）"
+
+  - id: "YDIZ-DOMAIN-003"
+    category: "domain"
+    severity: "P1"
+    title: "【严重】禁止绕过 PageQuery 直接构造 offset/limit 分页参数，深度分页治理必须主动感知"
+    description: |
+      ydzs-common-domain 提供完整的深度分页防护能力：
+      - PageQueryRiskAssessor.assess(query) — 主动风险评估入口
+      - DeepPaginationRisk.assess(offset) — 静态风险评估（SAFE/WARN/REJECT）
+      - DeepPaginationException — 拒绝异常（含 i18n key + 参数）
+      - SafeQueryInnerInterceptor — 拦截器被动保护
+
+      当前全业务模块 0 处主动调用 PageQueryRiskAssessor，
+      深度分页保护完全依赖 jdbc 拦截器被动触发，存在以下盲区：
+      - 缓存层（Caffeine/YdszCache）无法感知深度分页风险
+      - 业务层无法在 offset 接近阈值时主动降级（改用游标分页）
+      - Sentry 监控缺少 deep_pagination 维度 tag，无法精准告警
+
+      **为什么必须主动感知**：
+      - 拦截器在 SQL 执行前触发，缓存层无法受益
+      - 主动调用可在 Service 层 WARN 时打 Sentry 埋点，积累性能指标
+      - 业务层可在 WARN 时向用户返回「建议改用游标分页」提示
+
+      **约束范围**：所有 PageQuery 子类的分页查询方法。原生 SQL 分页同理。
+    pattern: 'setOffset\(|setLimit\(|\.offset\(|\.limit\('
+    fix: |
+      1. 在 PageQuery.getOffset() 内置 PageQueryRiskAssessor.assess(this) 调用
+      2. WARN 级别自动通过 Sentry 打 tag "deep_pagination:warn"
+      3. Service 层可覆写 onDeepPaginationWarn() 实现自定义降级逻辑
+      4. 禁止在业务代码中手动计算 (pageNum-1)*pageSize 作为 offset
+    example_bad: |
+      ❌ 手动构造分页参数
+      int offset = (query.getPageNum() - 1) * query.getPageSize();
+      List list = mapper.findByOffset(offset, query.getPageSize());
+
+      ❌ 绕过 PageQuery
+      Page<Object> page = new Page<>(1, 20);
+      wrapper.last("LIMIT 20 OFFSET 10000");
+    example_good: |
+      ✅ 使用 PageQuery 标准分页
+      IPage<Entity> result = mapper.selectPage(
+          new Page<>(query.getPageNum(), query.getPageSize()), wrapper);
+      // getOffset() 自动触发 WARN 级 Sentry 埋点
+
+      ✅ 主动评估（Service 层）
+      DeepPaginationRisk risk = PageQueryRiskAssessor.assess(query);
+      if (risk == DeepPaginationRisk.WARN) {
+          log.warn("接近深度分页阈值，建议改用游标分页");
+      }
+    source: "ydsz-common-domain 全局引用分析（YDIZ-DOMAIN-003，P1，26.09.30 深度分页主动感知专项）"
