@@ -126,7 +126,11 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
    *
    * @return 构建完成的根节点列表（无节点时返回空列表）
    * @since 26.09.01
+   * @deprecated 自 26.09.30 起不推荐：要求泛型参数 {@code T extends TreeNode} 强制业务 VO 继承框架基类，
+   *             违反 DDD 分层纯净性。请使用 {@link #buildSimple(List, java.util.function.Function, java.util.function.Function, java.util.function.BiConsumer, java.util.function.Function)}
+   *             作为统一树构建入口（参见 YDIZ-DOMAIN-002 规则）。现有调用可保留但禁止新增。
    */
+  @Deprecated
   public List<T> build() {
     if (nodeList.isEmpty()) {
       return new ArrayList<>(0);
@@ -271,6 +275,8 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
    * @param maxDepth 最大加载深度（含根节点）；小于 1 时视为无限深度
    * @return 构建完成的根节点列表
    * @since 26.09.19
+   * @deprecated 自 26.09.30 起不推荐：依赖的 {@link TreeNodeProvider} 已废弃（全项目 0 实现）。
+   *             大数据量树场景请改为「查询根节点 → 按需查询子节点 → {@link #buildSimple} 组合构建」。
    * @see TreeNodeProvider
    * @see #build()
    */
