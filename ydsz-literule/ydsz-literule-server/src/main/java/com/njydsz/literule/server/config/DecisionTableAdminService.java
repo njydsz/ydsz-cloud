@@ -17,7 +17,7 @@ import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.server.impl.DecisionTableRule;
-import com.njydsz.literule.server.service.DecisionTableExcelService;
+import com.njydsz.literule.domain.service.DecisionTableExcelService;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.domain.enums.LiteruleExceptionCode;

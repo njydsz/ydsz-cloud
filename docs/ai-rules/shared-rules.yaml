@@ -13,18 +13,18 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v10"
+  version: "26.09.30-v12"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v10（ydsz-common-redis 全局引用分析：+2 规则 YDIZ-COMMON-059/060；总规则 160 条）"
-  total_rules: 160
+  last_updated: "26.09.30-v12（ydsz-common-jdbc 全局引用分析：+2 规则 JDIZ-JDBC-001/002；总规则 164 条）"
+  total_rules: 164
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 56
-    P1: 78  # +2: YDIZ-COMMON-059 RedisTemplate 注入禁止 + YDIZ-COMMON-060 CacheKeyBuilder key 构造强制
+    P1: 80  # +2: JDIZ-JDBC-001 PageResponses 统一分页 + JDIZ-JDBC-002 数据权限激活
     P2: 20
 
 rules:
@@ -625,6 +625,11 @@ rules:
       禁止依赖 java.util.concurrent.Executors 工厂类，
       必须通过 ThreadPoolExecutorFactory.getBean(name) 或 ExecutorUtils 获取命名线程池。
     pattern: "new ThreadPoolExecutor、new ThreadPoolTaskExecutor 或 Executors.new*（非 common-thread 模块）"
+    exemption: |
+      ydsz-common-thread 模块自身（框架内部实现）豁免。
+      L1 零依赖模块（ydsz-common-util）手写一次性守护线程池豁免：需带 CHECKSTYLE.OFF: RegexpSinglelineJava 注释说明。
+      @Configuration @Bean 方法内创建 ThreadPoolTaskScheduler/@ManagedExecutorService 并注册到 ThreadPoolRegistry
+      且通过 yml 配置（ydsz.thread.pools.*）控制参数时豁免（如 cronjob-scheduler），需带 @SuppressWarnings("YDIZ-CONC-002") 声明。
     fix: |
       通过 ydsz-common-thread 声明式获取线程池：
       `ThreadPoolExecutor executor = ThreadPoolExecutorFactory.getBean("poolName");`
@@ -661,6 +666,41 @@ rules:
     pattern: "方法体内 Pattern.compile 非静态字段"
     fix: "提取为 private static final Pattern"
     source: "编码规范 21.1 节"
+
+  # ---------- ydsz-common-thread 专项（26.09.30 新增）----------
+
+  - id: "YDIZ-CONC-004"
+    category: "concurrency"
+    severity: "P1"
+    title: "禁止通过反射获取 Executors.newVirtualThreadPerTaskExecutor()"
+    description: >
+      禁止通过反射字符串方法名获取 JDK 21 的 newVirtualThreadPerTaskExecutor()，
+      应使用 com.njydsz.common.thread.util.ExecutorUtils.newVirtualThreadExecutor(prefix) 替代。
+      反射调用脆弱（JDK 重命名则运行期NoSuchMethodException），且 IDE 无法静态检查。
+    pattern: >
+      Executors.class.getMethod\(\"newVirtualThreadPerTaskExecutor\"\)\.invoke
+    fix: >
+      替换为 com.njydsz.common.thread.util.ExecutorUtils.newVirtualThreadExecutor("xxx-");
+      （如所在模块为 L1 可选依赖 ydzs-common-thread <optional>true</optional>）
+    source: "ydsz-common-thread 全局引用分析 2026-09-30"
+
+  - id: "YDIZ-CONC-005"
+    category: "concurrency"
+    severity: "P2"
+    title: "禁止 PassThrough Wrapper 模式的线程池注册器"
+    description: >
+      禁止创建全部委托 com.njydsz.common.thread.registry.ThreadPoolRegistry 的包装类
+      （如只重写 register/get/contains/unregister 的中间层）。
+      调用方应直接 import com.njydsz.common.thread.registry.ThreadPoolRegistry，避免中间层导致链路复杂化。
+
+      例外：包装类如额外包含本模块特有逻辑（如拒绝计数包装、作用域限定 shutdown），
+      可保留但需在 Javadoc 中明确说明特有逻辑以避免误用。
+    pattern: >
+      自定义类中的 register/get/contains 方法 100% 委托 ThreadPoolRegistry
+    fix: >
+      删除 PassThrough 包装方法；直接 import ThreadPoolRegistry。
+      如特有逻辑（拒绝计数、租户隔离 Bean 装配）需保留，在类 Javadoc 中明确说明。
+    source: "ydsz-common-thread 全局引用分析 2026-09-30"
 
   # ============================================
   # 十一、性能规范（2 条，P0+P1）
@@ -5151,9 +5191,10 @@ stats:
     exception: "纯单租户模块（tenant.enabled=false）或公共只读端点无需启用"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.09.30-v9
-  # 变更摘要：
-  #   - JDIZ-JDBC-001（P1）：分页查询必须使用 PageResponses 统一包装
-  #   - JDIZ-JDBC-002（P1）：多租户场景必须激活数据权限拦截器
-  # 更新 total：P0=56 P1=74 P2=20 → total=156 → P1=76 → total=158
+  # 版本标记：shared-rules.yaml v26.09.30-v12
+  # 变更摘要（自 v9 起累积）：
+  #   - v10: YDIZ-COMMON-059/060 RedisTemplate 注入禁止 + CacheKeyBuilder key 构造强制
+  #   - v11: YDIZ-CONC-004/005 禁止虚拟线程反射 + PassThrough Wrapper
+  #   - v12: JDIZ-JDBC-001/002 PageResponses 统一分页 + 数据权限激活
+  # 更新 total：P0=56 P1=80 P2=20 → total=164
   # ============================================

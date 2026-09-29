@@ -132,6 +132,25 @@ public class LockTemplate {
   }
 
   /**
+   * 尝试在锁保护下执行业务逻辑（带等待时间和租约时间），锁获取失败时返回默认值
+   *
+   * @param lockKey 锁键
+   * @param waitTime 最大等待时间
+   * @param leaseTime 租约时间
+   * @param timeUnit 时间单位
+   * @param action 要执行的业务逻辑
+   * @param defaultValue 锁获取失败时的默认返回值
+   * @param <T> 返回值类型
+   * @return 业务逻辑的返回值或默认值
+   */
+  public <T> T executeOrDefault(
+      String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit,
+      Supplier<T> action, T defaultValue) {
+    return tryExecuteOrDefault(
+        lockKey, LockRequest.of(waitTime, leaseTime, timeUnit), action, defaultValue);
+  }
+
+  /**
    * 尝试在锁保护下执行业务逻辑（带等待时间），锁获取失败时返回 null
    *
    * @param lockKey 锁键

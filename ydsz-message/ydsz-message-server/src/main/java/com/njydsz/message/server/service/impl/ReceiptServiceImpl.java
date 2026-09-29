@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
-import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.dto.ReceiptCallbackDTO;
