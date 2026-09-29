@@ -11,6 +11,5 @@ import com.njydsz.literule.domain.service.DecisionTableExcelService;
  * @author ydsz-team
  * @since 26.09.01
  */
-public interface DecisionTableExcelService
-    extends DecisionTableExcelService {
+public interface DecisionTableExcelService extends DecisionTableExcelService {
 }

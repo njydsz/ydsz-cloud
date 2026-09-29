@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 
 /**
  * 审批人可用性服务 — 基于待办计数和活跃时间的智能负载感知
@@ -38,6 +39,8 @@ import com.njydsz.common.util.date.DateUtils;
  *   <li>{@code flow:assignee:last_active:{userId}} — 最后活跃时间（ISO LocalDateTime 格式）
  * </ul>
  *
+ * <p><b>P2-2 整改（26.09.30）</b>：使用 {@link CacheKeyBuilder} 集中管理 key 构造，消除硬编码字符串常量。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -45,14 +48,14 @@ import com.njydsz.common.util.date.DateUtils;
 @Service
 @RequiredArgsConstructor
 public class FlowAssigneeAvailabilityService {
+
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+  /** P2-2 整改：缓存键构造器（集中管理 flow:assignee:* 前缀） */
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   private final RedisStringOps redisStringOps;
-
-  private static final String TODO_COUNT_PREFIX = "flow:assignee:todo_count:";
-  private static final String LAST_ACTIVE_PREFIX = "flow:assignee:last_active:";
 
   /** 审批人状态缓存 TTL（天），默认 7 天 */
   @Value("${ydsz.workflow.assignee.cache-ttl-days:7}")
@@ -73,7 +76,7 @@ public class FlowAssigneeAvailabilityService {
       return;
     }
     try {
-      String key = TODO_COUNT_PREFIX + userId;
+      String key = cacheKeyBuilder.assigneeTodoCount(userId);
       Long count = redisStringOps.incr(key, 1);
       if (count != null && count == 1) {
         redisStringOps.expire(key, Duration.ofDays(assigneeCacheTtlDays));
@@ -94,7 +97,7 @@ public class FlowAssigneeAvailabilityService {
       return;
     }
     try {
-      String key = TODO_COUNT_PREFIX + userId;
+      String key = cacheKeyBuilder.assigneeTodoCount(userId);
       long count = redisStringOps.decr(key, 1);
       if (count <= 0) {
         redisStringOps.del(key);
@@ -180,7 +183,7 @@ public class FlowAssigneeAvailabilityService {
 
   private int getTodoCount(String userId) {
     try {
-      String val = redisStringOps.get(TODO_COUNT_PREFIX + userId, String.class);
+      String val = redisStringOps.get(cacheKeyBuilder.assigneeTodoCount(userId), String.class);
       if (val == null) {
         return 0;
       }
@@ -193,7 +196,7 @@ public class FlowAssigneeAvailabilityService {
 
   private String getLastActive(String userId) {
     try {
-      return redisStringOps.get(LAST_ACTIVE_PREFIX + userId, String.class);
+      return redisStringOps.get(cacheKeyBuilder.assigneeLastActive(userId), String.class);
     } catch (Exception e) {
       log.warn("[Availability] 查询活跃时间失败 userId={}, err={}", userId, e.getMessage());
       return null;
@@ -202,7 +205,7 @@ public class FlowAssigneeAvailabilityService {
 
   private void updateLastActive(String userId) {
     try {
-      String key = LAST_ACTIVE_PREFIX + userId;
+      String key = cacheKeyBuilder.assigneeLastActive(userId);
       String now = DateUtils.now();
       redisStringOps.set(key, now, Duration.ofDays(assigneeCacheTtlDays));
     } catch (Exception e) {

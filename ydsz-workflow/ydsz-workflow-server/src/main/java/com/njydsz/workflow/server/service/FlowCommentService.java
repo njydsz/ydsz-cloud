@@ -66,21 +66,22 @@ public interface FlowCommentService {
    * 查询实例下全部评论（一级 + 回复，按创建时间正序）。
    *
    * <p>前端一次性拉取后本地组装树结构，避免 N+1 查询。
+   * 租户隔离由 TenantIsolationInterceptor 自动处理。
    *
-   * @param tenantId 租户 ID
    * @param instanceId 实例 ID
    * @return 全部评论列表
    */
-  List<FlowCommentVO> listByInstance(String tenantId, String instanceId);
+  List<FlowCommentVO> listByInstance(String instanceId);
 
   /**
    * 查询实例下全部一级评论（按创建时间正序，不含回复）。
    *
-   * @param tenantId 租户 ID
+   * <p>租户隔离由 TenantIsolationInterceptor 自动处理。
+   *
    * @param instanceId 实例 ID
    * @return 一级评论列表
    */
-  List<FlowCommentVO> listRootComments(String tenantId, String instanceId);
+  List<FlowCommentVO> listRootComments(String instanceId);
 
   /**
    * 查询指定父评论下的全部回复（按创建时间正序）。

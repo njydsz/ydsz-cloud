@@ -221,14 +221,14 @@ public class FlowCommentServiceImpl implements FlowCommentService {
 
   /** {@inheritDoc} */
   @Override
-  public List<FlowCommentVO> listByInstance(String tenantId, String instanceId) {
-    return commentRepository.findByInstanceAndTenant(tenantId, instanceId);
+  public List<FlowCommentVO> listByInstance(String instanceId) {
+    return commentRepository.findByInstanceAndTenant(instanceId);
   }
 
   /** {@inheritDoc} */
   @Override
-  public List<FlowCommentVO> listRootComments(String tenantId, String instanceId) {
-    return commentRepository.findRootCommentsByTenant(tenantId, instanceId);
+  public List<FlowCommentVO> listRootComments(String instanceId) {
+    return commentRepository.findRootCommentsByTenant(instanceId);
   }
 
   /** {@inheritDoc} */

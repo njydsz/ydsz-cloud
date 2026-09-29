@@ -113,11 +113,10 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
 
   /** {@inheritDoc} */
   @Override
-  public List<FlowCommentVO> findByInstanceAndTenant(String tenantId, String instanceId) {
+  public List<FlowCommentVO> findByInstanceAndTenant(String instanceId) {
     return converter.flowCommentListToVO(
         commentMapper.selectList(
             new LambdaQueryWrapper<FlowComment>()
-                .eq(FlowComment::getTenantId, tenantId)
                 .eq(FlowComment::getInstanceId, instanceId)
                 .eq(FlowComment::getIsDeleted, 0)
                 .orderByAsc(FlowComment::getCreatedAt)));
@@ -125,11 +124,10 @@ public class FlowCommentRepositoryImpl implements FlowCommentRepository {
 
   /** {@inheritDoc} */
   @Override
-  public List<FlowCommentVO> findRootCommentsByTenant(String tenantId, String instanceId) {
+  public List<FlowCommentVO> findRootCommentsByTenant(String instanceId) {
     return converter.flowCommentListToVO(
         commentMapper.selectList(
             new LambdaQueryWrapper<FlowComment>()
-                .eq(FlowComment::getTenantId, tenantId)
                 .eq(FlowComment::getInstanceId, instanceId)
                 .isNull(FlowComment::getParentCommentId)
                 .eq(FlowComment::getIsDeleted, 0)

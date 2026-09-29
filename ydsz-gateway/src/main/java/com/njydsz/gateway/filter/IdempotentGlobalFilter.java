@@ -90,7 +90,7 @@ public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
   /**
    * 带 userId 维度的幂等 Redis key 构造。
    *
-   * <p>Key 格式：{@code idempotent:{userId}:{sha256(idempotencyKey)}}
+   * <p>Key 格式：{@code ydzsz:idem:gateway:{userId}:{sha256(idempotencyKey)}}
    * 取 SHA-256 避免客户端传入过长 Key 以及 userId 注入风险。
    *
    * @param userId 用户 ID（可为空）
@@ -100,7 +100,7 @@ public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
   private String buildRedisKey(String userId, String rawKey) {
     String hash = DigestUtils.sha256Hex(rawKey);
     String userPart = (userId != null && !userId.isBlank()) ? userId : "anonymous";
-    return "idempotent:" + userPart + ":" + hash;
+    return "ydsz:idem:gateway:" + userPart + ":" + hash;
   }
 
   /**

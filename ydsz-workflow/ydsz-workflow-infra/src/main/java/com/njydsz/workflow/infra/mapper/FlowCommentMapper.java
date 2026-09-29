@@ -45,11 +45,10 @@ public interface FlowCommentMapper extends BaseMapper<FlowComment> {
    */
   @Select(
       "SELECT * FROM ydsz_flow_comment "
-          + "WHERE tenant_id = #{tenantId} AND instance_id = #{instanceId} "
+          + "WHERE instance_id = #{instanceId} "
           + "AND parent_comment_id IS NULL AND deleted = 0 "
           + "ORDER BY created_at ASC")
-  List<FlowComment> listRootComments(
-      @Param("tenantId") String tenantId, @Param("instanceId") String instanceId);
+  List<FlowComment> listRootComments(@Param("instanceId") String instanceId);
 
   /**
    * 查询指定父评论下的全部回复（按创建时间正序，含多级）。
@@ -76,8 +75,7 @@ public interface FlowCommentMapper extends BaseMapper<FlowComment> {
    */
   @Select(
       "SELECT * FROM ydsz_flow_comment "
-          + "WHERE tenant_id = #{tenantId} AND instance_id = #{instanceId} "
+          + "WHERE instance_id = #{instanceId} "
           + "AND deleted = 0 ORDER BY created_at ASC")
-  List<FlowComment> listByInstance(
-      @Param("tenantId") String tenantId, @Param("instanceId") String instanceId);
+  List<FlowComment> listByInstance(@Param("instanceId") String instanceId);
 }

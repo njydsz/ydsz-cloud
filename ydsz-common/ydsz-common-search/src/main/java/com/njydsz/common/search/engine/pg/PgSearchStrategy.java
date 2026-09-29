@@ -11,6 +11,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
@@ -19,7 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+
+import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchAggregation;
@@ -108,7 +110,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
    */
   private final String indexTable;
   private volatile boolean available;
-  private final ThreadPoolTaskScheduler probeScheduler;
+  /** 探测调度器（P1-3: ScheduledExecutorService 替代 ThreadPoolTaskScheduler，由 InternalExecutorFactory 统一管理）。 */
+  private final ScheduledExecutorService probeScheduler;
 
   public PgSearchStrategy(DataSource dataSource, SearchProperties.PgConfig pgConfig) {
     this(new JdbcTemplate(dataSource), pgConfig);
@@ -121,7 +124,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
   /**
    * 创建 PostgreSQL 全文检索策略（支持外部注入调度器）。
    *
-   * <p>允许 Spring 容器注入 {@link ThreadPoolTaskScheduler} 实例，实现线程池的统一生命周期管理。
+   * <p>P1-3: 允许 Spring 容器注入 ScheduledExecutorService 实例，
+   * 由 ydz-common-thread InternalExecutorFactory 统一创建，纳管 ThreadPoolRegistry。
    *
    * @param jdbcTemplate JDBC 模板
    * @param pgConfig PG 引擎配置
@@ -131,7 +135,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
   public PgSearchStrategy(
       JdbcTemplate jdbcTemplate,
       SearchProperties.PgConfig pgConfig,
-      ThreadPoolTaskScheduler probeScheduler) {
+      ScheduledExecutorService probeScheduler) {
     this.jdbcTemplate = jdbcTemplate;
     this.pgConfig = pgConfig;
     this.indexTable = pgConfig.getIndexTable();
@@ -141,15 +145,14 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     startRecoveryProbe();
   }
 
-  /** 创建默认探测调度器（无 Spring 容器时使用）。 */
-  private static ThreadPoolTaskScheduler createDefaultProbeScheduler() {
-    ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-    scheduler.setPoolSize(1);
-    scheduler.setThreadNamePrefix("pg-search-probe-");
-    scheduler.setDaemon(true);
-    scheduler.setWaitForTasksToCompleteOnShutdown(false);
-    scheduler.initialize();
-    return scheduler;
+  /**
+   * 创建默认探测调度器（无 Spring 容器时使用）。
+   *
+   * <p>P1-3: 委托 InternalExecutorFactory.newScheduledThreadPool（daemon 线程，core=1），
+   * 纳入 ThreadPoolRegistry 统一监控，线程名前缀 ydzs-internal-pg-search-probe-。
+   */
+  private static ScheduledExecutorService createDefaultProbeScheduler() {
+    return InternalExecutorFactory.newScheduledThreadPool("pg-search-probe", 1);
   }
 
   @Override
@@ -553,11 +556,11 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
   public void shutdown() {
     probeScheduler.shutdown();
     try {
-      if (!probeScheduler.getScheduledThreadPoolExecutor().awaitTermination(3, TimeUnit.SECONDS)) {
-        probeScheduler.getScheduledThreadPoolExecutor().shutdownNow();
+      if (!probeScheduler.awaitTermination(3, TimeUnit.SECONDS)) {
+        probeScheduler.shutdownNow();
       }
     } catch (InterruptedException e) {
-      probeScheduler.getScheduledThreadPoolExecutor().shutdownNow();
+      probeScheduler.shutdownNow();
       Thread.currentThread().interrupt();
     }
     log.info("[PgSearchStrategy] 探测线程池已关闭");
@@ -682,6 +685,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
   // ==================== 引擎可用性与配置 ====================
 
   private void startRecoveryProbe() {
+    // P1-3: ScheduledExecutorService.scheduleWithFixedDelay 接收 long/TimeUnit，非 Duration
     probeScheduler.scheduleWithFixedDelay(
         () -> {
           if (!available) {
@@ -695,7 +699,9 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             }
           }
         },
-        RECOVERY_PROBE_INTERVAL);
+        RECOVERY_PROBE_INTERVAL.getSeconds(),
+        RECOVERY_PROBE_INTERVAL.getSeconds(),
+        TimeUnit.SECONDS);
   }
 
   private String detectSearchConfig() {

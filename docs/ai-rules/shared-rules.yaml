@@ -24,7 +24,7 @@ meta:
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 56  # +2: YDIZ-COMMON-057 LockTemplate 强制 + YDIZ-COMMON-058 幂等反射禁止
-    P1: 74
+    P1: 76  # +2: JDIZ-JDBC-001 PageResponses 统一分页 + JDIZ-JDBC-002 数据权限激活
     P2: 20
 
 rules:
@@ -4987,9 +4987,63 @@ stats:
     exception: "仅供框架内部用户无法定位精确 key 的场景；业务模块应优先使用精确 key"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.09.30-v8
+  # 十三、ydsz-common-jdbc 全局引用分析专项（2 条，26.09.30）
+  # ============================================
+  - id: "JDIZ-JDBC-001"
+    category: "jdbc"
+    severity: "P1"
+    title: "【严重】分页查询必须使用 PageResponses 统一包装"
+    description: |
+      所有业务模块的 Service 层分页查询方法必须使用
+      com.njydsz.common.jdbc.support.PageResponses 进行响应包装，
+      返回分页数据时禁止直接返回 IPAGE<T>、PAGE<T> 等 MP 原始类型。
+
+      **强制用法**：
+      PageResponse<T> result = PageResponses.success(page);
+      return result;
+
+      **统一响应结构**：
+      PageResponses 包装后的响应包含 pageNo、pageSize、totalPages、totalCount、records
+      字段，前端可据此统一处理分页逻辑。
+
+      **为什么必须统一包装**：
+      - 各模块分页响应体结构不一致（有的叫 list、有的叫 records、有的叫 items），前端拦截器难以统一处理
+      - 未包装的 IPAGE 对象可能暴露内部实现细节
+      - 符合 DDD 分层原则：Server 层返回业务语义明确的 VO/Response，不暴露 ORM 框架类型
+
+      **适用范围**：所有 9 个业务模块 + generator 的 Service/Repository 层分页方法
+    pattern: 'return\s+(new\s+)?(IPage|Page)<[^>]+>\s*\('
+    source: "ydsz-common-jdbc 全局引用分析（JDIZ-JDBC-001，P1，26.09.30 PageResponses 仅 nextwiki 3 文件 8 调用，其余 8 模块未使用）"
+    exception: "Repository 内部实现层可直接返回 IPAGE<T>，但 Service 返回前必须包装为 PageResponse<T>"
+
+  - id: "JDIZ-JDBC-002"
+    category: "jdbc"
+    severity: "P1"
+    title: "【严重】多租户场景必须激活数据权限拦截器"
+    description: |
+      所有启用多租户（ydsz.tenant.enabled=true）的业务模块的 bootstrap.yml
+      必须配置 ydsz.jdbc.data-permission.enabled=true，激活 RowPermissionInnerInterceptor
+      和 ColPermissionInnerInterceptor，实现行级与列级数据权限控制。
+
+      **强制配置**：
+      ydsz:
+        jdbc:
+          data-permission:
+            enabled: true
+
+      **为什么必须激活**：
+      - 当前 9 个业务模块全部未启用数据权限，存在越权访问风险
+      - 行级权限可防止用户查看不属于自己部门/公司的数据
+      - 列级权限可防止敏感字段（如身份证号、手机号）在列表查询中泄露
+
+      **适用范围**：所有 tenant.enabled=true 的业务模块（system/userinfo/workflow/message/nextwiki/literule/cronjob/agent）
+    source: "ydsz-common-jdbc 全局引用分析（JDIZ-JDBC-002，P1，26.09.30 数据权限拦截器全模块零注册）"
+    exception: "纯单租户模块（tenant.enabled=false）或公共只读端点无需启用"
+
+  # ============================================
+  # 版本标记：shared-rules.yaml v26.09.30-v9
   # 变更摘要：
-  #   - YDIZ-COMMON-057（P0）：编程式锁必须使用 LockTemplate，禁止 try-finally 自实现
-  #   - YDIZ-COMMON-058（P0）：幂等去重禁止反射 StringRedisTemplate，必须走 common-lock / safe
-  # 更新 total：P0=56 P1=74 P2=20 → total=156
+  #   - JDIZ-JDBC-001（P1）：分页查询必须使用 PageResponses 统一包装
+  #   - JDIZ-JDBC-002（P1）：多租户场景必须激活数据权限拦截器
+  # 更新 total：P0=56 P1=74 P2=20 → total=156 → P1=76 → total=158
   # ============================================

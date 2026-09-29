@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 
@@ -30,7 +31,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import com.njydsz.common.search.analytics.ClickFeedbackService;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
@@ -110,13 +110,10 @@ public class SearchAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = "pgSearchProbeScheduler")
-    public ThreadPoolTaskScheduler pgSearchProbeScheduler() {
-      ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-      scheduler.setPoolSize(1);
-      scheduler.setThreadNamePrefix("pg-search-probe-");
-      scheduler.setDaemon(true);
-      scheduler.setWaitForTasksToCompleteOnShutdown(false);
-      return scheduler;
+    // P1-3: 使用 InternalExecutorFactory 统一管理（daemon 线程前缀 pg-search-probe），
+    // 纳入 ThreadPoolRegistry 统一监控，与模块 90% 的 InternalExecutorFactory 风格保持一致
+    public ScheduledExecutorService pgSearchProbeScheduler() {
+      return InternalExecutorFactory.newScheduledThreadPool("pg-search-probe", 1);
     }
 
     /**

@@ -101,7 +101,7 @@ public class OutboxIdempotentAspect {
       return joinPoint.proceed();
     }
 
-    String cacheKey = "ydsz:outbox:idem:" + idempotencyKey;
+    String cacheKey = "ydsz:idem:outbox:" + idempotencyKey;
 
     // 尝试获取幂等锁
     boolean acquired = tryAcquire(cacheKey, annotation.expireSeconds());

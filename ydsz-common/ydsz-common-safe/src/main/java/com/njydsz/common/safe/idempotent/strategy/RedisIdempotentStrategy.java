@@ -11,9 +11,22 @@ import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException;
 
 /**
- * 基于 Redis SET NX EX 的幂等策略默认实现
+ * 基于 Redis SET NX EX 的幂等策略默认实现（P1-C：简单幂等场景专用）
  *
- * <p>使用 Lua 脚本保证 acquire/release 的原子性：
+ * <p><b>适用范围：</b>仅提供 SET NX + TTL + Lua 释放的基础幂等能力，不支持看门狗续期、可重入、监控指标等生产级特性。
+ *
+ * <p><b>适用场景：</b>
+ * <ul>
+ *   <li>接口防重复点击（fail-open 降级）</li>
+ *   <li>一次性消费去重（Outbox 消息、MQ 消息去重）</li>
+ * </ul>
+ *
+ * <p><b>需要以下能力时，请改用 {@code com.njydsz.common.lock.core.DistributedLocker}（ydsz-common-lock）：</b>
+ * <ul>
+ *   <li>看门狗自动续期（leaseTime 不够时续约） — 使用 {@code LockTemplate.execute()}</li>
+ *   <li>可重入锁（同一线程多次获取） — 使用 {@code LockType.REENTRANT}</li>
+ *   <li>Micrometer 监控指标（获取次数/成功率/等待时间） — 使用 {@code LockMetrics}</li>
+ * </ul>
  *
  * <ul>
  *   <li>acquire：生成 UUID token，SET key token NX EX ttl，成功返回 token
