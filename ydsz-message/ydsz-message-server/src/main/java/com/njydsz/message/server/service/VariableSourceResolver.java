@@ -54,7 +54,6 @@ public class VariableSourceResolver {
     }
     MsgVariableSourceQuery query = new MsgVariableSourceQuery();
     query.setTemplateCode(templateCode);
-    query.setTenantId(TenantContextHolder.getTenantId());
     return variableSourceRepository.findList(query);
   }
 

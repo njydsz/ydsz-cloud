@@ -69,7 +69,6 @@ public class ReceiptServiceImpl implements ReceiptService {
       entity.setProviderCode(dto.getProviderCode());
       entity.setProviderMsg(dto.getProviderMsg());
       entity.setRawResponse(dto.getRawResponse());
-      entity.setTenantId(TenantContextHolder.getTenantId());
       msgReceiptRepository.save(entity);
       // 联动更新日志回执状态
       try {

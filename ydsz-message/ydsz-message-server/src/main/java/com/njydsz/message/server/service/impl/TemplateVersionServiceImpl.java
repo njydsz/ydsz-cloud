@@ -108,7 +108,6 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     version.setAuditStatus(auditStatus);
     version.setAuditor(auditor);
     version.setAuditRemark(auditRemark);
-    version.setTenantId(TenantContextHolder.getTenantId());
     versionRepository.save(version);
     log.info(
         "[TemplateVersion] 版本记录: code={} version={} status={}",

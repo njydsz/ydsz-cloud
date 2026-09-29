@@ -75,7 +75,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       entity.setStatus(status);
       entity.setRoleScope(dto.getRoleScope());
       entity.setExtra(dto.getExtra());
-      entity.setTenantId(TenantContextHolder.getTenantId());
       msgSubscriptionRepository.save(entity);
       log.info(
           "[Subscription] 新建订阅: user={} topic={} channel={}",
@@ -217,7 +216,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       entity.setChannel(channel);
       entity.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
       entity.setUnsubscribedAt(LocalDateTime.now());
-      entity.setTenantId(TenantContextHolder.getTenantId());
       msgSubscriptionRepository.save(entity);
       log.info("[Subscription] 退订(新建记录): user={} topic={} channel={}", userId, topicCode, channel);
       return entity;
