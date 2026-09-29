@@ -17,7 +17,10 @@ import com.njydsz.literule.domain.enums.RuleSeverity;
 import com.njydsz.literule.domain.expression.ExpressionEngine;
 import com.njydsz.literule.domain.vo.RuleContextVO;
 import com.njydsz.literule.domain.vo.RuleResultVO;
+import com.njydsz.literule.server.core.DefaultRuleEngine;
 import com.njydsz.literule.server.debug.RuleDebugger;
+import com.njydsz.literule.server.engine.liteexpr.ExprCache;
+import com.njydsz.literule.server.engine.liteexpr.LiteExprEngine;
 
 /**
  * 表达式规则：基于 LiteExpr 表达式动态评估
@@ -382,9 +385,9 @@ public class ExpressionRule implements Rule {
     }
     // P0-A1 AlphaNode Phase 1：使用带跨规则缓存的求值
     Boolean result;
-    if (evaluator instanceof com.njydsz.literule.server.engine.liteexpr.LiteExprEngine liteEng) {
-      com.njydsz.literule.server.engine.liteexpr.ExprCache alphaCache =
-          com.njydsz.literule.server.core.DefaultRuleEngine.getStaticAlphaCache();
+    if (evaluator instanceof LiteExprEngine liteEng) {
+      ExprCache alphaCache =
+          DefaultRuleEngine.getStaticAlphaCache();
       result = liteEng.evalBoolean(expr, context, alphaCache);
     } else {
       result = evaluator.evalBoolean(expr, context);

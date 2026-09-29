@@ -16,15 +16,15 @@ meta:
   version: "26.09.30-v7"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v7（common-core 利用率整改：YDIZ-CORE-003 特性开关统一入口 P1；+1 规则，累计 154 条）"
+  last_updated: "26.09.30-v8（弃用代码清理：删除 TreeNode/TreeNodeProvider/BaseI18nConfiguration，YDIZ-DOMAIN-002 升 P0；总规则 154 条）"
   total_rules: 154
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 53
-    P1: 75  # +1: YDIZ-CORE-003 特性开关必须通过 FeatureFlagService
+    P0: 54  # +1: YDIZ-DOMAIN-002 从 P1 升 P0（TreeNode 已删除）
+    P1: 74
     P2: 20
 
 rules:
@@ -4502,7 +4502,7 @@ stats:
   search: 1
   util: 1
   common: 7  # +2: Excel Web 流式导出(YDIZ-COMMON-033 P1) + 禁 ByteArrayOutputStream 中转(YDIZ-COMMON-034 P2)
-  domain: 3  # +3: OrderItem 收敛(YDIZ-DOMAIN-001 P1) + TreeNode 统一入口(YDIZ-DOMAIN-002 P1) + 深度分页主动感知(YDIZ-DOMAIN-003 P1)
+  domain: 3  # +3: OrderItem 收敛(YDIZ-DOMAIN-001 P1) + TreeNode 已删除-升 P0(YDIZ-DOMAIN-002 P0) + 深度分页主动感知(YDIZ-DOMAIN-003 P1)
   total: 154
 
   # ============================================

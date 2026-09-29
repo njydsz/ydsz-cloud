@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
@@ -312,7 +313,7 @@ public class ResponseUnwrapDecoder implements Decoder {
      * @param httpCode 原始 HTTP 状态码（如 200、403 等）
      */
     public FeignBusinessException(String code, String msg, String url, int httpCode) {
-      super(com.njydsz.common.exception.code.CoreExceptionCode.NETWORK_ERROR);
+      super(CoreExceptionCode.NETWORK_ERROR);
       this.code = code;
       this.msg = msg;
       this.url = url;

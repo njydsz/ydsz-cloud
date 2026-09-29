@@ -10,6 +10,7 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import com.njydsz.common.locales.spi.I18nBasenameProvider;
+import com.njydsz.common.locales.util.KnownLocaleTags;
 import com.njydsz.common.locales.util.RuntimeStrictness;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -495,7 +496,7 @@ public class I18nProperties {
       }
 
       // 去掉区域后缀（使用已知 locale tags 统一维护的正则，单一数据源 F4+O2）
-      path = com.njydsz.common.locales.util.KnownLocaleTags.stripLocaleSuffix(path);
+      path = KnownLocaleTags.stripLocaleSuffix(path);
 
       return "classpath:" + path;
     } catch (Exception e) {

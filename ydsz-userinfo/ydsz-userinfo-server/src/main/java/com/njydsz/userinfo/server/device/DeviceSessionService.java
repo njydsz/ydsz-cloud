@@ -14,7 +14,7 @@ import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.userinfo.domain.enums.DeviceType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.auth.SessionManager;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 
 /**
  * 设备会话管理服务（P3-2）。
@@ -42,6 +42,8 @@ public class DeviceSessionService {
   private static final int USER_AGENT_MAX_LENGTH = 30;
 
   private final SessionManager sessionManager;
+
+  private final I18nMessages i18n;
 
   /**
    * 查询当前用户的所有活跃设备会话。
@@ -149,7 +151,7 @@ public class DeviceSessionService {
    */
   private String maskUserAgent(String userAgent) {
     if (userAgent == null || userAgent.isBlank()) {
-      return I18n.message("userinfo.device.unknown");
+      return i18n.resolve("userinfo.device.unknown");
     }
     if (userAgent.length() <= USER_AGENT_MAX_LENGTH) {
       return userAgent;

@@ -20,6 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import com.njydsz.common.event.model.OutboxMessage;
+import com.njydsz.common.event.model.OutboxStatus;
 
 /**
  * Outbox 归档仓储 JDBC 实现（F-4）
@@ -240,7 +241,7 @@ public class OutboxArchiveRepositoryJdbc implements OutboxArchiveRepository {
           .aggregateType(rs.getString("aggregate_type"))
           .eventType(rs.getString("event_type"))
           .payload(rs.getString("payload"))
-          .status(com.njydsz.common.event.model.OutboxStatus.valueOf(rs.getString("status")))
+          .status(OutboxStatus.valueOf(rs.getString("status")))
           .retryCount(rs.getLong("retry_count"))
           .maxRetries(rs.getLong("max_retries"))
           .nextRetryAt(null)
