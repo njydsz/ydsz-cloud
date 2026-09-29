@@ -25,6 +25,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.common.json.spring.boot.JsonAutoConfiguration;
+import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.advice.XssRequestBodyAdvice;
 import com.njydsz.common.safe.alert.SafeAlertProperties;
@@ -601,7 +602,7 @@ public class SafeConfiguration {
   @ConditionalOnBean(RepeatSubmitTokenService.class)
   public RepeatSubmitAspect repeatSubmitAspect(
       RepeatSubmitTokenService repeatSubmitTokenService,
-      ObjectProvider<com.njydsz.common.lock.spi.CurrentUserIdResolver> userIdResolver) {
+      ObjectProvider<CurrentUserIdResolver> userIdResolver) {
     LOG.info("注册表单重复提交 AOP 切面");
     return new RepeatSubmitAspect(repeatSubmitTokenService, userIdResolver.getIfAvailable());
   }

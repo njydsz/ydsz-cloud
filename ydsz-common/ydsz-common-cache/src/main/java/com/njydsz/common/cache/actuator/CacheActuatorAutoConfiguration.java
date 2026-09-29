@@ -25,6 +25,10 @@ import com.njydsz.common.cache.api.Cache;
  *   <li>配置项 {@code management.endpoint.cache-metrics.enabled=true}（默认 true）
  * </ul>
  *
+ * <p><b>⚠ 激活路径（P3-1 评估 26.09.29）：</b>仅 system 模块通过 YdszCacheManager + SpringYdszCache Bean 自动激活；
+ * 其他业务模块（gw/agent/msg/cronjob/userinfo）直接 YdszCache.newBuilder() private field 非 Spring Bean，当前不触发。
+ * 如需接入：将 YdszCache 改为 @Bean 或切换到 @YdszCacheable + YdszCacheManager 模式（参考 system CacheConfig）。
+ *
  * <p>端点 ID：{@code cache-metrics}，访问路径：{@code /actuator/cache-metrics}
  *
  * <p>使用示例：
