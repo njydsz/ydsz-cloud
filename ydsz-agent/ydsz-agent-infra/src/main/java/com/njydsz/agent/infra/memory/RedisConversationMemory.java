@@ -13,10 +13,10 @@ import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.domain.model.MessageRole;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
+import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.tenant.redis.TenantAwareRedisKey;
 
 /**
  * Redis 对话记忆实现
@@ -181,7 +181,13 @@ public class RedisConversationMemory implements ConversationMemory {
    * @return 完整 Redis key
    */
   private String buildKey(String conversationId) {
-    return TenantAwareRedisKey.resolve(KEY_PREFIX + conversationId);
+    if (TenantContextHolder.isPresent()
+        && !TenantContextHolder.isSkipIsolation()
+        && !TenantContextHolder.isSuperAdmin()
+        && TenantContextHolder.getTenantId() != null) {
+      return KEY_PREFIX + TenantContextHolder.getTenantId() + ":" + conversationId;
+    }
+    return KEY_PREFIX + conversationId;
   }
 
   /**

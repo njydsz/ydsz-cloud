@@ -15,6 +15,7 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelReader;
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.listener.ReadListener;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 异步读取桥接 — 利用 Java 21 虚拟线程实现不阻塞调用线程的 Excel 读取。
