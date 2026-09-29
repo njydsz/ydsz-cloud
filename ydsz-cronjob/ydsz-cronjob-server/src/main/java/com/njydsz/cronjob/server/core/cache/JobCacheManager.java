@@ -11,6 +11,7 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.vo.JobVO;
+import com.njydsz.cronjob.server.cache.CacheKeyBuilder;
 
 /**
  * Job 多级缓存管理器（P3-2 多级缓存架构）。
@@ -52,10 +53,7 @@ public class JobCacheManager {
   /** L1 本地缓存最大条目数 */
   private static final int L1_MAXIMUM_SIZE = 2000;
 
-  /** L1 本地缓存 key 前缀 */
-  private static final String L1_KEY_PREFIX = "job:";
-
-  /** L2 Redis 缓存 key 前缀 */
+  /** L2 Redis 缓存 key 前缀（保持既有格式兼容存量数据，避免存量缓存雪崩） */
   private static final String L2_KEY_PREFIX = "cronjob:cache:job:";
 
   /** L2 Redis 缓存 TTL（分钟） */
@@ -68,6 +66,7 @@ public class JobCacheManager {
   private static final JobVO NULL_PLACEHOLDER = new JobVO();
 
   private final RedisStringOps redisStringOps;
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /** L1 本地缓存（window-TinyLFU，线程安全） */
   private final Cache<String, JobVO> l1Cache =
@@ -88,7 +87,7 @@ public class JobCacheManager {
    */
   public JobVO get(String jobKey, JobCacheLoader loader) {
     // L1 命中
-    JobVO l1Value = l1Cache.getIfPresent(L1_KEY_PREFIX + jobKey);
+    JobVO l1Value = l1Cache.getIfPresent(cacheKeyBuilder.jobL1Key(jobKey));
     if (l1Value != null) {
       log.debug("[JobCache] L1 命中: jobKey={}", jobKey);
       return isNullPlaceholder(l1Value) ? null : l1Value;
@@ -103,7 +102,7 @@ public class JobCacheManager {
           if (l2Value != null) {
           log.debug("[JobCache] L2 命中: jobKey={}", jobKey);
           // 回填 L1
-          l1Cache.put(L1_KEY_PREFIX + jobKey, isNullPlaceholder(l2Value) ? NULL_PLACEHOLDER : l2Value);
+          l1Cache.put(cacheKeyBuilder.jobL1Key(jobKey), isNullPlaceholder(l2Value) ? NULL_PLACEHOLDER : l2Value);
           return isNullPlaceholder(l2Value) ? null : l2Value;
         }
       }
@@ -142,7 +141,7 @@ public class JobCacheManager {
       log.warn("[JobCache] L2 写入异常: jobKey={} reason={}", jobKey, e.getMessage());
     }
     // 失效 L1（下次从 L2 读取最新值）
-    l1Cache.invalidate(L1_KEY_PREFIX + jobKey);
+    l1Cache.invalidate(cacheKeyBuilder.jobL1Key(jobKey));
   }
 
   /**
@@ -151,7 +150,7 @@ public class JobCacheManager {
    * @param jobKey 任务 KEY
    */
   public void invalidate(String jobKey) {
-    l1Cache.invalidate(L1_KEY_PREFIX + jobKey);
+    l1Cache.invalidate(cacheKeyBuilder.jobL1Key(jobKey));
     try {
       redisStringOps.del(L2_KEY_PREFIX + jobKey);
     } catch (Exception e) {

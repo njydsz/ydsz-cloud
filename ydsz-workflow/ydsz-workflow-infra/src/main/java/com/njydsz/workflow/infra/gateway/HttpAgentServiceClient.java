@@ -10,6 +10,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.workflow.domain.exception.WorkflowException;
@@ -141,7 +142,11 @@ public class HttpAgentServiceClient implements AgentServiceClient {
   }
 
   /**
-   * 从上下文中提取租户 ID。
+   * 解析 Agent 请求的租户 ID。
+   *
+   * <p>优先从流程上下文获取租户 ID（工作流多租户覆盖场景）；
+   * 未携带时委托 {@link AuthContextUtils#getTenantIdOrDefault(String)} 从请求上下文获取，
+   * 遵循 YDIZ-TENANT-001 规范禁止静默兜底为 "system"。
    *
    * @param context 流程上下文
    * @return 租户 ID
@@ -153,7 +158,7 @@ public class HttpAgentServiceClient implements AgentServiceClient {
         return tenantId.toString();
       }
     }
-    return "system";
+    return AuthContextUtils.getTenantIdOrDefault("system");
   }
 
   /**
