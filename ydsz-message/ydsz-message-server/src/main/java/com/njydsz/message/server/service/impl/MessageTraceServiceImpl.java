@@ -57,7 +57,6 @@ public class MessageTraceServiceImpl implements MessageTraceService {
       trace.setChannel(channel);
       trace.setMessage(message);
       trace.setEventAt(LocalDateTime.now());
-      trace.setTenantId(TenantContextHolder.getTenantId());
       if (extra != null && !extra.isEmpty()) {
         trace.setExtra(YdszJson.toJson(extra));
       }

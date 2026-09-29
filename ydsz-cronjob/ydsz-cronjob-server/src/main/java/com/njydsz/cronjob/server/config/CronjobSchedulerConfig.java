@@ -54,6 +54,10 @@ public class CronjobSchedulerConfig {
    * @return 已初始化并注册到 {@link ThreadPoolRegistry} 的调度器实例
    */
   @Bean(destroyMethod = "shutdown")
+  // P2-2: cronjob 调度器需 cronjob 日期时间配置语义注入租户装饰器，无法直接换成 ydsz.thread.pools.* 配置驱动
+  // （后者通过 ThreadPoolAutoConfiguration 装配通用 Bean 但不感知 scheduler 特需的 TenantContextTaskDecorator）。
+  // 保留 @Bean 自建但注册到 ThreadPoolRegistry 统一监控，符合 YDIZ-CONC-002 对 Spring-Bean 场景的豁免条款
+  @SuppressWarnings("YDIZ-CONC-002")
   public ThreadPoolTaskScheduler cronjobTaskScheduler(
       CronjobProperties cronjobProperties,
       TenantContextTaskDecorator tenantContextTaskDecorator) {

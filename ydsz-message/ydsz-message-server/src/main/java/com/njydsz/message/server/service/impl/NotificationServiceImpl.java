@@ -253,7 +253,6 @@ public class NotificationServiceImpl implements NotificationService {
     NotificationQueryDTO query = new NotificationQueryDTO();
     query.setReceiverId(userId);
     query.setMessageGroup(messageGroup);
-    query.setTenantId(TenantContextHolder.getTenantId());
     return msgNotificationRepository.findList(query);
   }
 
@@ -333,8 +332,6 @@ public class NotificationServiceImpl implements NotificationService {
     n.setReadStatus(ReadStatusEnum.UNREAD);
     n.setRecallStatus(RecallStatusEnum.NONE.name());
     n.setExpiredAt(dto.getExpiredAt());
-    // P2-7: 补齐租户隔离,与其他消息实体一致(原依赖 DB DEFAULT '1',多租户场景会越权)
-    n.setTenantId(TenantContextHolder.getTenantId());
     return n;
   }
 }
