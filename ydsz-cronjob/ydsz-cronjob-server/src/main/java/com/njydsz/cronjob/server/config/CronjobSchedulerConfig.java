@@ -5,8 +5,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+import com.njydsz.common.locales.util.I18nContextPropagator;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 
@@ -25,6 +27,21 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
 @Slf4j
 @Configuration
 public class CronjobSchedulerConfig {
+
+  /**
+   * i18n Locale 上下文传播装饰器（全局 @Async 支持）。
+   *
+   * <p>通过 {@link TaskDecorator} 包装所有 {@code @Async} 注解方法的执行线程， 自动继承调度线程的 Locale 上下文，
+   * 确保异步方法内的 i18n 翻译使用正确的语言环境。
+   *
+   * <p>与 {@code TenantContextTaskDecorator}（租户上下文传播）互补，各自解决不同维度的上下文传播需求。
+   *
+   * @return 自动传播当前 Locale 的 TaskDecorator 实例
+   */
+  @Bean
+  public TaskDecorator i18nTaskDecorator() {
+    return I18nContextPropagator::wrapWithCurrentLocale;
+  }
 
   /**
    * 创建并配置 cronjob 调度器线程池。

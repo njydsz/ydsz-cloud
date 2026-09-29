@@ -2,9 +2,14 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -103,26 +108,35 @@ public class ScheduledMessageScanner {
       return;
     }
     log.info("[ScheduledScanner] 到期定时消息 {} 条", due.size());
-    // F2: 并发分发，单条失败不影响其他消息
+    // F2: 并发分发，单条失败不影响其他消息（包装 I18n 上下文传播）
+    final Locale currentLocale = Locales.current();
     List<CompletableFuture<Boolean>> futures =
         due.stream()
             .map(
-                logDO ->
-                    CompletableFuture.supplyAsync(
-                        () -> {
-                          try {
-                            sendScheduledMessage(logDO);
-                            return true;
-                          } catch (Exception e) {
-                            log.error(
-                                "[ScheduledScanner] 定时消息发送异常: logId={} err={}",
-                                logDO.getId(),
-                                e.getMessage(),
-                                e);
-                            return false;
-                          }
-                        },
-                        dispatcher))
+                logDO -> {
+                  Callable<Boolean> callable = () -> {
+                    try {
+                      sendScheduledMessage(logDO);
+                      return true;
+                    } catch (Exception e) {
+                      log.error(
+                          "[ScheduledScanner] 定时消息发送异常: logId={} err={}",
+                          logDO.getId(),
+                          e.getMessage(),
+                          e);
+                      return false;
+                    }
+                  };
+                  return CompletableFuture.supplyAsync(
+                      () -> {
+                        try {
+                          return I18nContextPropagator.wrap(callable, currentLocale).call();
+                        } catch (Exception e) {
+                          throw new java.util.concurrent.CompletionException(e);
+                        }
+                      },
+                      dispatcher);
+                })
             .toList();
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
     long success =

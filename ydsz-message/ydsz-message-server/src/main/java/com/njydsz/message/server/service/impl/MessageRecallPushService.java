@@ -2,9 +2,13 @@ package com.njydsz.message.server.service.impl;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,11 +79,14 @@ public class MessageRecallPushService {
       return;
     }
     // D-2: 并行推送，所有 CompletableFuture 完成后统一等待
+    final Locale currentLocale = Locales.current();
     List<CompletableFuture<Void>> futures =
         userIds.stream()
             .map(
                 userId ->
-                    CompletableFuture.runAsync(() -> pushRecall(userId, messageId, recallReason)))
+                    CompletableFuture.runAsync(
+                        I18nContextPropagator.wrap(
+                            () -> pushRecall(userId, messageId, recallReason), currentLocale)))
             .toList();
     // 等待所有推送完成，最多 10s 超时
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))

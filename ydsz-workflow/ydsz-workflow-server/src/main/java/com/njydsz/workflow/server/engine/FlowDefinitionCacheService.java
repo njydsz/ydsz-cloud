@@ -38,6 +38,11 @@ import com.njydsz.workflow.server.config.FlowProperties;
  * <p><b>架构合规说明（26.09.01 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
  * 禁止 server 层直接注入 infra Mapper（符合 §34.2.3）。Repository 返回领域 VO，无需 DO → VO 转换。
  *
+ * <p><b>P2-1 合规说明：</b>本服务实现了 L1（本地 YdszCache, TinyLFU）+ L2（Redis Pub/Sub 集群广播）
+ * 二级缓存语义，与 {@link com.njydsz.common.cache.support.MultiLevelCacheTemplate} 设计目标一致。
+ * 鉴于已具备集群广播器（FlowDefinitionCacheBroadcaster）和 eviction 链路，保持现有实现不强制套用模板，
+ * 避免引入额外的抽象层破坏已稳定的集群同步链路。
+ *
  * @since 26.09.01
  * @author ydsz-team
  */

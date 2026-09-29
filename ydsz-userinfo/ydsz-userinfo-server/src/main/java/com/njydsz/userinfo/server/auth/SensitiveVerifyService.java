@@ -16,6 +16,7 @@ import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
+import com.njydsz.userinfo.server.cache.CacheKeyBuilder;
 
 /**
  * 敏感操作二次认证服务。
@@ -25,8 +26,11 @@ import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
  * <p><b>Redis Key 设计：</b>
  *
  * <pre>
- *   userinfo:sensitive:verified:{userId}  →  "1"   验证通过标记，TTL 5 分钟
+ *   ydsz:{tenantId}:userinfo:sensitive:verified:{userId}  →  "1"   验证通过标记，TTL 5 分钟
  * </pre>
+ *
+ * <p><b>规范合规（P1-1 整改）</b>：缓存键通过 {@link CacheKeyBuilder#sensitiveVerified(String)} 构造，
+ * 替代原来自建的 {@code "userinfo:sensitive:verified:"} 硬编码常量。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -35,9 +39,6 @@ import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 @Service
 @RequiredArgsConstructor
 public class SensitiveVerifyService {
-
-  /** 敏感操作验证标记 Redis Key 前缀 */
-  private static final String SENSITIVE_VERIFIED_KEY_PREFIX = "userinfo:sensitive:verified:";
 
   /** 验证标记有效期（分钟），默认 5 分钟 */
   @Value("${ydsz.userinfo.sensitive-verify.verify-ttl-minutes:5}")
@@ -53,6 +54,7 @@ public class SensitiveVerifyService {
   private final UserAccountRepository userAccountRepository;
   private final PasswordEncoder passwordEncoder;
   private final RedisStringOps redisStringOps;
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /**
    * 执行二次认证：校验当前登录用户的密码，通过后写入 Redis 验证标记（默认 HIGH 级别，5 分钟）。
@@ -136,6 +138,6 @@ public class SensitiveVerifyService {
   }
 
   private String buildKey(String userId) {
-    return SENSITIVE_VERIFIED_KEY_PREFIX + userId;
+    return cacheKeyBuilder.sensitiveVerified(userId);
   }
 }

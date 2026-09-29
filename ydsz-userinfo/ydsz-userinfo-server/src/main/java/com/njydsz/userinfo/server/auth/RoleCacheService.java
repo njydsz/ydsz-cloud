@@ -14,6 +14,7 @@ import com.njydsz.userinfo.domain.repository.UserRoleRepository;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
+import com.njydsz.userinfo.server.cache.CacheKeyBuilder;
 
 /**
  * 用户角色缓存服务。
@@ -21,7 +22,10 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
  * <p>负责用户 → 角色列表的加载与缓存（Redis，TTL 10 分钟），角色分配变更时主动失效。 从 {@link AuthServiceImpl}
  * 拆分（P0-5），聚焦「角色加载与缓存一致性」单一职责。
  *
- * <p><b>Redis Key 设计：</b>{@code userinfo:roles:{userId}} → String（List&lt;RoleVO&gt; 的 JSON 序列化）
+ * <p><b>Redis Key 设计：</b>{@code ydsz:{tenantId}:userinfo:roles:{userId}} → String（List&lt;RoleVO&gt; 的 JSON 序列化）
+ *
+ * <p><b>规范合规（P1-1 整改）</b>：缓存键通过 {@link CacheKeyBuilder#userRoles(String)} 构造，
+ * 替代原来自建的 {@code "userinfo:roles:"} 硬编码常量。
  *
  * <p><b>缓存穿透防护（A-5）：</b>空结果（无角色用户）写入 60 秒短期占位缓存，防止恶意
  * 请求不存在的 userId 冲击数据库。
@@ -35,9 +39,6 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 @Component
 @RequiredArgsConstructor
 public class RoleCacheService {
-
-  /** 用户角色缓存 Redis Key 前缀：userinfo:roles:{userId} */
-  private static final String USER_ROLES_KEY_PREFIX = "userinfo:roles:";
 
   /** 用户角色缓存 TTL（秒）：10 分钟 */
   private static final long USER_ROLES_CACHE_TTL = 600L;
@@ -53,6 +54,7 @@ public class RoleCacheService {
   private final RedisStringOps redisStringOps;
   private final UserInfoMetrics userInfoMetrics;
   private final UserInfoProperties properties;
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /**
    * 按 user_role 关联表查询用户角色（带 Redis 缓存）。
@@ -64,7 +66,7 @@ public class RoleCacheService {
    */
   public List<RoleVO> loadUserRoles(String userId) {
     // 1. 尝试从 Redis 缓存读取（JSON 字符串反序列化为 List<RoleVO>）
-    String cacheKey = USER_ROLES_KEY_PREFIX + userId;
+    String cacheKey = cacheKeyBuilder.userRoles(userId);
     try {
       String cachedJson = redisStringOps.get(cacheKey, String.class);
       if (cachedJson != null && !cachedJson.isEmpty()) {
@@ -115,7 +117,7 @@ public class RoleCacheService {
       return;
     }
     try {
-      redisStringOps.del(USER_ROLES_KEY_PREFIX + userId);
+      redisStringOps.del(cacheKeyBuilder.userRoles(userId));
       log.info("User roles cache evicted: userId={}", userId);
     } catch (Exception e) {
       log.warn("Failed to evict user roles cache: userId={}, error={}", userId, e.getMessage(), e);

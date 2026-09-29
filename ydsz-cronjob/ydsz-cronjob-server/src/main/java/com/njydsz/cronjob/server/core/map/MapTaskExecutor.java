@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
@@ -407,6 +408,8 @@ public class MapTaskExecutor {
     int maxParallel = cronjobProperties.getMapReduce().getMaxParallelSubTasks();
     Semaphore semaphore = new Semaphore(maxParallel);
     String traceId = TracerUtils.getTraceId();
+    // 捕获当前 Locale，用于子任务异步线程传播
+    final Locale subTaskLocale = Locales.current();
 
     // 为每个子任务创建 TaskDO 并提交并行执行
     List<CompletableFuture<ProcessResult>> futures = new ArrayList<>(subTasks.size());
@@ -429,42 +432,57 @@ public class MapTaskExecutor {
       JobNodeVO targetNode = onlineNodes.get(nodeIndex.getAndIncrement() % onlineNodes.size());
       boolean isLocal = targetNode.getNodeId().equals(localNodeId);
 
+      // 包装子任务逻辑为 Callable，并通过 I18nContextPropagator 传播 Locale
+      Callable<ProcessResult> taskCallable =
+          () -> {
+            try {
+              semaphore.acquire();
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+              ProcessResult failResult = ProcessResult.failed("线程中断等待信号量");
+              updateTaskStatus(subTaskVO, failResult);
+              return failResult;
+            }
+            try {
+              ProcessResult result;
+              if (isLocal) {
+                // 本地执行
+                result =
+                    executeTaskRemotely(processor, subTask, subTaskVO, jobId, logId, jobKey);
+              } else {
+                // 远程派发
+                result = dispatchSubTaskToNode(targetNode, job, subTask, subTaskVO, traceId);
+                // 远程失败时降级本地执行
+                if (!result.isSuccess()
+                    && cronjobProperties.getMapReduce().isFallbackToLocal()) {
+                  log.warn(
+                      "[MapTaskExecutor] 远程执行失败, 降级本地: key={} taskName={} nodeId={} error={}",
+                      jobKey,
+                      subTask.getTaskName(),
+                      targetNode.getNodeId(),
+                      result.getErrorMessage());
+                  result =
+                      executeTaskRemotely(processor, subTask, subTaskVO, jobId, logId, jobKey);
+                }
+              }
+              return result;
+            } finally {
+              semaphore.release();
+            }
+          };
+
+      Callable<ProcessResult> wrappedCallable =
+          I18nContextPropagator.wrap(taskCallable, subTaskLocale);
+
       CompletableFuture<ProcessResult> future =
           CompletableFuture.supplyAsync(
               () -> {
                 try {
-                  semaphore.acquire();
-                } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-                  ProcessResult failResult = ProcessResult.failed("线程中断等待信号量");
-                  updateTaskStatus(subTaskVO, failResult);
-                  return failResult;
-                }
-                try {
-                  ProcessResult result;
-                  if (isLocal) {
-                    // 本地执行
-                    result =
-                        executeTaskRemotely(processor, subTask, subTaskVO, jobId, logId, jobKey);
-                  } else {
-                    // 远程派发
-                    result = dispatchSubTaskToNode(targetNode, job, subTask, subTaskVO, traceId);
-                    // 远程失败时降级本地执行
-                    if (!result.isSuccess()
-                        && cronjobProperties.getMapReduce().isFallbackToLocal()) {
-                      log.warn(
-                          "[MapTaskExecutor] 远程执行失败, 降级本地: key={} taskName={} nodeId={} error={}",
-                          jobKey,
-                          subTask.getTaskName(),
-                          targetNode.getNodeId(),
-                          result.getErrorMessage());
-                      result =
-                          executeTaskRemotely(processor, subTask, subTaskVO, jobId, logId, jobKey);
-                    }
-                  }
-                  return result;
-                } finally {
-                  semaphore.release();
+                  return wrappedCallable.call();
+                } catch (RuntimeException e) {
+                  throw e;
+                } catch (Exception e) {
+                  throw new java.util.concurrent.CompletionException(e);
                 }
               },
               subTaskExecutor);

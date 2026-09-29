@@ -41,10 +41,6 @@ public class DeviceSessionService {
   /** User-Agent 截断长度 */
   private static final int USER_AGENT_MAX_LENGTH = 30;
 
-
-  /** 信任设备 Redis Key 前缀 */
-  private static final String TRUSTED_DEVICE_KEY_PREFIX = "userinfo:device:trusted:";
-
   private final SessionManager sessionManager;
 
   /**

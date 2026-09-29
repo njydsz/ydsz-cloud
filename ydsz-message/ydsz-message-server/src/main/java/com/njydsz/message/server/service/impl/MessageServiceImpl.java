@@ -2,6 +2,8 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.PageResponse;
@@ -404,22 +408,34 @@ public class MessageServiceImpl implements MessageService {
           MessageConstants.MAX_CASCADE_DEPTH);
       return;
     }
-    // P2-C5: 使用 CompletableFuture 并行发送级联消息
+    // P2-C5: 使用 CompletableFuture 并行发送级联消息（包装 I18n 上下文传播）
+    final Locale currentLocale = Locales.current();
     List<CompletableFuture<Boolean>> futures = cascadeTo.stream()
         .filter(child -> child != null)
-        .map(child -> CompletableFuture.supplyAsync(() -> {
-          try {
-            child.setParentMsgId(parentLog.getMsgId());
-            sendInternal(child, depth + 1);
-            return true;
-          } catch (Exception e) {
-            log.warn("[Message] 级联消息发送失败,不影响其他级联: parentMsgId={} childMsgId={} err={}",
-                parentLog.getMsgId(),
-                child.getMessageId(),
-                e.getMessage());
-            return false;
-          }
-        }, cascadeExecutor))
+        .map(child -> {
+          Callable<Boolean> callable = () -> {
+            try {
+              child.setParentMsgId(parentLog.getMsgId());
+              sendInternal(child, depth + 1);
+              return true;
+            } catch (Exception e) {
+              log.warn("[Message] 级联消息发送失败,不影响其他级联: parentMsgId={} childMsgId={} err={}",
+                  parentLog.getMsgId(),
+                  child.getMessageId(),
+                  e.getMessage());
+              return false;
+            }
+          };
+          return CompletableFuture.supplyAsync(
+              () -> {
+                try {
+                  return I18nContextPropagator.wrap(callable, currentLocale).call();
+                } catch (Exception e) {
+                  throw new java.util.concurrent.CompletionException(e);
+                }
+              },
+              cascadeExecutor);
+        })
         .toList();
 
     // 等待所有级联消息发送完成（带超时）

@@ -3,8 +3,11 @@ package com.njydsz.message.server.config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+
+import com.njydsz.common.locales.util.I18nContextPropagator;
 
 /**
  * 消息服务自动配置。
@@ -30,5 +33,18 @@ public class MessageServiceAutoConfiguration {
   @ConditionalOnMissingBean
   public ExpressionParser expressionParser() {
     return new SpelExpressionParser();
+  }
+
+  /**
+   * i18n Locale 上下文传播 TaskDecorator。
+   *
+   * <p>注入到 Spring 管理的线程池（{@code ThreadPoolTaskExecutor} / {@code @Async}），
+   * 确保异步任务继承当前请求的 Locale，避免 i18n 翻译回退到系统默认语言。
+   *
+   * @return TaskDecorator 实例
+   */
+  @Bean
+  public TaskDecorator i18nTaskDecorator() {
+    return I18nContextPropagator::wrapWithCurrentLocale;
   }
 }

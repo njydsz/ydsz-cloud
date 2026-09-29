@@ -197,20 +197,6 @@ public class ExcelWriter implements AutoCloseable {
   }
 
   /**
-   * 使用 1904 日期窗口（Mac Excel 兼容）。
-   *
-   * <p>注意：需在构建 ExcelConfig 时设置，本方法仅保留接口兼容性。
-   *
-   * @return 当前写入器实例
-   * @deprecated 自 v26.10.01 起无效。日期窗口配置通过 {@link ExcelConfig.Builder#use1904Windowing(boolean)} 设置
-   */
-  @Deprecated(forRemoval = true)
-  public ExcelWriter use1904Windowing() {
-    LOG.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
-    return this;
-  }
-
-  /**
    * 设置日期格式。
    *
    * <p>用于格式化 Date 类型字段的输出。
@@ -231,22 +217,6 @@ public class ExcelWriter implements AutoCloseable {
    */
   public ExcelWriter numberFormat(String numberFormat) {
     metadata.setNumberFormat(numberFormat);
-    return this;
-  }
-
-  /**
-   * 设置 Sheet 保护密码。
-   *
-   * <p>注意：当前版本不支持密码保护，调用仅保留接口兼容性。
-   *
-   * @param password 保护密码
-   * @return 当前写入器实例
-   * @deprecated 自 v26.10.01 起无效，当前版本不支持密码保护
-   */
-  @Deprecated(forRemoval = true)
-  public ExcelWriter password(String password) {
-    LOG.warn("当前版本不支持 Sheet 密码保护");
-    metadata.setPassword(password);
     return this;
   }
 
@@ -303,21 +273,6 @@ public class ExcelWriter implements AutoCloseable {
   public ExcelWriter config(ExcelConfig config) {
     metadata.setExcelConfig(config);
     return this;
-  }
-
-  /**
-   * 追加写入模式（已废弃）。
-   *
-   * <p>当前版本不支持追加模式，调用将抛出 {@link UnsupportedOperationException}。
-   *
-   * @return 当前写入器实例
-   * @throws UnsupportedOperationException 始终抛出
-   * @deprecated 自 v26.10.01 起不支持。替代方案：{@link ExcelFacade#writeMultiSheet(java.io.OutputStream)}
-   */
-  @Deprecated(forRemoval = true)
-  public ExcelWriter append() {
-    throw new UnsupportedOperationException(
-        "追加模式已不支持。如需增量写入，请使用 MultiSheetFastWriter 或重新构建完整数据后写入。");
   }
 
   // ==================== 列过滤配置 ====================
@@ -667,22 +622,6 @@ public class ExcelWriter implements AutoCloseable {
   }
 
   /**
-   * 完成写入并释放资源。
-   *
-   * <p>当前版本 SuperFastExcelWriter 在 doWrite 中已自行完成输出和清理，
-   * 本方法保留仅为兼容原有调用方惯用写法（幂等无操作）。
-   *
-   * @throws IOException 不会抛出
-   * @deprecated 自 v26.10.01 起无需调用，SuperFastExcelWriter 在 doWrite 中自动完成输出
-   */
-  @Deprecated(forRemoval = true)
-  public void finish() throws IOException {
-    // SuperFastExcelWriter 在 doWrite 中已完成全部输出操作
-    // 无需额外 finish 步骤，保留此方法仅为兼容调用方惯用写法
-    isWriteCompleted = true;
-  }
-
-  /**
    * 关闭写入器（AutoCloseable 实现）。
    *
    * <p>当前版本 SuperFastExcelWriter 在 doWrite 中已自行完成输出和清理，
@@ -695,42 +634,4 @@ public class ExcelWriter implements AutoCloseable {
     isWriteCompleted = true;
   }
 
-  /**
-   * 超高速批量写入（已废弃）。
-   *
-   * <p>自 v26.10.01 起，直接调用 {@link #doWrite(Object)} 即可获得最优性能，
-   * 本方法保留仅为兼容原有调用方。
-   *
-   * @param dataList 数据列表
-   * @deprecated 自 v26.10.01 起直接调用 {@link #doWrite(Object)} 即可
-   */
-  @Deprecated(forRemoval = true)
-  public void writeBatch(List<?> dataList) {
-    doWrite(dataList);
-  }
-
-  /**
-   * 临时兼容方法 — 设置多 Sheet 写入模式（已废弃）。
-   *
-   * @param multiSheet 是否多Sheet写入（被忽略）
-   * @return 当前写入器实例
-   * @deprecated 自 v26.10.01 起无效，使用 {@link ExcelFacade#writeMultiSheet(java.io.OutputStream)}
-   */
-  @Deprecated(forRemoval = true)
-  public ExcelWriter setMultiSheetWriting(boolean multiSheet) {
-    if (multiSheet) {
-      LOG.warn("多 Sheet 共享 Workbook 模式已废弃，请使用 ExcelFacade.writeMultiSheet(OutputStream)");
-    }
-    return this;
-  }
-
-  /**
-   * 清空日期格式化缓存。
-   *
-   * @deprecated 自 v26.10.01 起无需调用，已无内部缓存
-   */
-  @Deprecated(forRemoval = true)
-  public static void clearDateFormatCache() {
-    // 已无缓存需要清空，保留此方法仅为兼容调用
-  }
 }

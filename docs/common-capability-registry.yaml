@@ -10,8 +10,8 @@
 # ============================================================================
 
 _registry:
-  version: "1.0.0"
-  last_updated: "2026-09-25"
+  version: "1.1.0"
+  last_updated: "2026-09-30"
   total_modules: 30
   maintainer: "ydsz-platform-team"
 
@@ -108,14 +108,14 @@ modules:
   ydsz-common-excel:
     layer: L1
     package: com.njydsz.common.excel
-    description: "高性能 Excel 读写引擎：双引擎 + 模板导出 + 公式注入防护"
+    description: "高性能 Excel 读写引擎：双引擎 + 模板导出 + 公式注入防护 + XLS 兼容 + 多 Sheet + 流式导出"
     since: "26.01.01"
     stability: stable
     capabilities:
       - name: ExcelFacade
         type: facade
         entry: com.njydsz.common.excel.core.ExcelFacade
-        usage: "Excel 门面入口（SuperFast/POI 自动路由）"
+        usage: "Excel 门面入口（SuperFast/POI 自动路由；含 writeMultiSheet/readAuto/readAllSheets）"
       - name: ExcelReader
         type: api
         entry: com.njydsz.common.excel.core.ExcelReader
@@ -132,6 +132,30 @@ modules:
         type: static-utility
         entry: com.njydsz.common.excel.core.FormulaInjectionGuard
         usage: "公式注入防护（=+@-开头值自动加单引号）"
+      - name: HssfCompatibleReader
+        type: api
+        entry: com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader
+        usage: "Excel 97-2003（.xls）零 POI 兼容读取（OLE2 + BIFF8 解析）"
+      - name: MultiSheetFastWriter
+        type: api
+        entry: com.njydsz.common.excel.core.writer.MultiSheetFastWriter
+        usage: "零 POI 多 Sheet 写入（共享 SST/样式表/主题，单 xlsx 输出）"
+      - name: ReactiveExcelWriter
+        type: api
+        entry: com.njydsz.common.excel.core.reactive.ReactiveExcelWriter
+        usage: "响应式 Excel 写入（适配 WebFlux / Reactor 场景）"
+      - name: ExcelWebSupport
+        type: spring-integration
+        entry: com.njydsz.common.excel.spring.ExcelWebSupport
+        usage: "Controller 层流式导出（自动 RFC 5987 文件名编码）"
+      - name: ExcelExportHelper
+        type: spring-integration
+        entry: com.njydsz.common.excel.helper.ExcelExportHelper
+        usage: "Service 层导出辅助（注解 VO + 动态表头，返回 byte[]）"
+      - name: RawSheetData
+        type: api-object
+        entry: com.njydsz.common.excel.core.RawSheetData
+        usage: "无类型全 Sheet 读取（流式 ZIP 解析，适合文档解析器）"
 
   # ---- ydsz-common-core -------------------------------------------
   ydsz-common-core:
@@ -910,7 +934,7 @@ lookup_guide:
     note: "本地缓存用 cache 模块；分布式缓存用 redis 模块"
 
   excel:
-    description: "Excel 读写"
+    description: "Excel 读写（含 XLS 兼容 / 多 Sheet / 响应式 / Web 流式导出 / 文档解析）"
     primary: ydsz-common-excel
     alternatives: []
 

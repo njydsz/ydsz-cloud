@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +37,8 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.locales.util.I18nContextPropagator;
+import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.thread.util.ExecutorUtils;
@@ -391,7 +394,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
               });
       // P0-FIX: TTL 线程池传播，确保 JobExecutionContext 从调度线程传递到工作线程
       Runnable ttlTask = TtlRunnable.get(priorityTask);
-      executor.execute(ttlTask);
+      // P0-FIX: Locale 上下文传播，确保 i18n 异步线程继承调度线程的 Locale
+      final Locale dispatchLocale = Locales.current();
+      executor.execute(I18nContextPropagator.wrap(ttlTask, dispatchLocale));
       if (finalExecutor instanceof ThreadPoolExecutor tpe) {
         log.debug(
             "[Dispatcher] 任务异步派发: key={} triggerType={} pool={} active={} queue={}",
