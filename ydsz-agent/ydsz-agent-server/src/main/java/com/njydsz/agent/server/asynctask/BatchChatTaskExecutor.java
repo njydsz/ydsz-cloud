@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.entity.AsyncTask;
+import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.server.chat.TokenCostCalculator;
 import com.njydsz.common.json.YdszJson;
@@ -123,11 +124,11 @@ public class BatchChatTaskExecutor implements AsyncTaskExecutor {
   }
 
   private ChatRequest buildChatRequest(String userMessage, String systemPrompt, String model) {
-    List<com.njydsz.agent.domain.model.ChatMessage> messages = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>();
     if (systemPrompt != null && !systemPrompt.isBlank()) {
-      messages.add(com.njydsz.agent.domain.model.ChatMessage.system(systemPrompt));
+      messages.add(ChatMessage.system(systemPrompt));
     }
-    messages.add(com.njydsz.agent.domain.model.ChatMessage.user(userMessage, null));
+    messages.add(ChatMessage.user(userMessage, null));
 
     return ChatRequest.builder()
         .model(model)

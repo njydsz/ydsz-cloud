@@ -11,6 +11,7 @@ import com.njydsz.workflow.domain.vo.FlowEfficiencyComparisonVO;
 import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
 import com.njydsz.workflow.domain.vo.FlowNodeDurationVO;
 import com.njydsz.workflow.domain.vo.FlowTrendVO;
+import com.njydsz.workflow.server.excel.vo.FlowApproverEfficiencyExportVO;
 import com.njydsz.workflow.server.excel.vo.FlowEfficiencyExportVO;
 
 /**
@@ -153,7 +154,7 @@ public interface FlowAnalyticsService {
    * @param limit 返回条数（默认 20）
    * @return 办理人效率 Excel 导出数据列表
    */
-  List<com.njydsz.workflow.server.excel.vo.FlowApproverEfficiencyExportVO>
+  List<FlowApproverEfficiencyExportVO>
       exportApproverEfficiency(LocalDateTime startTime, LocalDateTime endTime,
           String tenantId, int limit);
 
