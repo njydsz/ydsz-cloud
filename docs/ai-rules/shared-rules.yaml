@@ -13,18 +13,18 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v1"
+  version: "26.09.30-v2"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v1（五大 common 模块利用率提升专项：@Async 必须指定线程池 YDIZ-COMMON-049 P1 + SETNX 清零 → LockTemplate YDIZ-COMMON-050 P1 + JdbcTemplate 清零 → Mapper YDIZ-COMMON-051 P1；+3 规则，累计 137 条）"
-  total_rules: 137
+  last_updated: "26.09.30-v2（四模块利用率提升专项：@EnableYdszI18n 全覆盖 YDIZ-CORE-001 P0 + ExceptionCode 自动推导优先 YDIZ-CORE-002 P1 + KnownLocaleTags 不可替代 YDIZ-LOCALE-003 P1；+3 规则，累计 140 条）"
+  total_rules: 140
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 52
-    P1: 58
+    P0: 53
+    P1: 60
     P2: 13
 
 rules:
@@ -4048,8 +4048,110 @@ rules:
           .last("LIMIT " + Math.min(topK, 500)));  // 分页安全上限
     source: "五大 common 模块利用率提升专项（YDIZ-COMMON-051，P1，26.09.30 JdbcTemplate 清零 → Mapper）"
 
+  # ============================================
+  # 十、core/domain/exception/locales 四模块利用率专项（3 条，26.09.30）
+  # ============================================
+  - id: "YDIZ-CORE-001"
+    category: "i18n"
+    severity: "P0"
+    title: "【强制】所有 @SpringBootApplication 主类必须标注 @EnableYdszI18n"
+    description: |
+      所有 9 个业务模块（system / userinfo / message / workflow / cronjob / nextwiki /
+      literule / agent / gateway）的 @SpringBootApplication 启动类必须显式标注
+      @EnableYdszI18n，以激活 com.njydsz.common.locales 基础设施模块的
+      i18n 能力（MessageSource、LocaleResolver、负缓存、MissingTranslationLogger）。
+
+      **为什么必须显式标注**：
+      - ydsz-common-locales 提供核心 i18n 功能（I18n.message()、I18nMessages Bean）
+      - 显式标注表明该模块已接入国际化基础设施，便于代码审查时快速验证
+      - 防止遗漏导致部分模块消息源与全局 MessageSource 不一致
+      - 注解是纯标记类，不引入运行时副作用（LocalesAutoConfiguration 无条件初始化）
+
+      **现状**：9 个业务模块主类已全部标注 @EnableYdszI18n（26.09.30）。
+    pattern: "@SpringBootApplication.*\npublic class .*Application"
+    fix: |
+      1. import com.njydsz.common.locales.config.EnableYdszI18n;
+      2. 在 @SpringBootApplication 同级添加 @EnableYdszI18n
+      3. 已有该注解的模块无需重复添加
+    example_bad: |
+      ❌ 缺失 @EnableYdszI18n
+      @SpringBootApplication
+      @EnableYdszFeign
+      public class FooApplication { ... }
+    example_good: |
+      ✅ 已标注
+      @SpringBootApplication
+      @EnableYdszFeign
+      @EnableYdszI18n
+      public class SystemApplication { ... }
+    source: "四模块利用率提升专项（YDIZ-CORE-001，P0，26.09.30 @EnableYdszI18n 全覆盖）"
+
+  - id: "YDIZ-CORE-002"
+    category: "exception"
+    severity: "P1"
+    title: "【严重】禁止业务层调用 YdszExceptionBuilder 以外的方式构造带分类/级别的异常"
+    description: |
+      所有业务异常的抛掷必须通过 异常枚举 + 异常链式 API 完成（如 BusinessException.of(ErrorCode.X).msg(...)），
+      禁止手动 new 一个完整异常并传入分类/级别标签（跳过 ExceptionCode 前缀自动推导 ExceptionCategory 与 ExceptionLevel 的自动映射路径）。
+
+      **为什么必须走 ExceptionCode 路径**：
+      - ExceptionCode 前缀自动推导 ExceptionCategory（BIZ→业务/SYS→系统/SEC→安全/RATE→限流）
+      - AbstractYdszException 根据 HTTP 状态码范围自动推导 ExceptionLevel（INFO/WARN/ERROR/CRITICAL）
+      - 直接手动注入 category/level 会绕过自动推导，导致异常分类元数据与实际不符
+      - ErrorCodeTable 扫描器依赖此约定注册所有异常码
+
+      **现状**：business 层 457/464 处 new BusinessException 调用已使用 ExceptionCode 枚举（26.09.30 扫描结果）。
+    pattern: "手动构造 ExceptionCategory|手动 new 并注入 ExceptionLevel"
+    fix: |
+      1. 使用 ExceptionCode 枚举构造（自动推导 category/level）
+      2. 极特殊场景需自定义分类/级别时，通过 ExceptionCodeScanner.registerEnum() 注册枚举
+      3. 禁止在代码中直接调用 ExceptionCategory/ExceptionLevel 枚举值的 set 方法
+    example_bad: |
+      ❌ 手动注入 category/level
+      throw new BusinessException(ErrorCode.USER_NOT_FOUND)
+          .setCategory(ExceptionCategory.BUSINESS)
+          .setLevel(ExceptionLevel.INFO);  // 绕过自动推导
+    example_good: |
+      ✅ 使用枚举：category/level 自动推导
+      throw BusinessException.of(ErrorCode.USER_NOT_FOUND)
+          .msg(I18n.message("user.not.found", new Object[]{userId}));
+    source: "四模块利用率提升专项（YDIZ-CORE-002，P1，26.09.30 ExceptionCode 自动推导优先）"
+
+  - id: "YDIZ-LOCALE-003"
+    category: "i18n"
+    severity: "P1"
+    title: "【严重】禁止业务代码直接使用 Locale 构造/Hardcoded locale 字符串，必须使用 KnownLocaleTags"
+    description: |
+      业务代码中禁止使用以下方式处理语言/区域：
+      - 直接 new Locale("zh", "CN") 或 Locale.CHINA 等 JDK 常量
+      - 硬编码字符串 "zh_CN"、"en_US"、"zh_TW" 做 locale 比较
+      - 字符串拼接生成 locale 标签（如 locale.getLanguage() + "_" + locale.getCountry()）
+
+      **为什么必须使用 KnownLocaleTags**：
+      - KnownLocaleTags 集中维护 YDSZ 体系所有受支持的 locale 标签（DEFAULT_SUPPORTED_TAGS）
+      - 保证 i18n 体系内 locale 字符串一致性，避免 "zh_CN" vs "zh-CN" vs "zh_CN_#Hans" 碎片化
+      - 支持标签标准化（stripLocaleSuffix / normalize），输入容错
+
+      **约束范围**：ydsz-common 框架 i18n 基础设施内部代码（如 FlowI18nService、I18nProperties）使用 JDK Locale 属于框架实现细节，不受此规则约束。
+      业务层代码（Service/Controller/Domain）涉及 locale 判断/比较时必须使用 KnownLocaleTags。
+    pattern: 'new Locale\(|Locale\.(CHINA|US|UK|JAPAN|KOREAN)|getLanguage\(\)\s*\+\s*"_"'
+    fix: |
+      1. import com.njydsz.common.locales.util.KnownLocaleTags;
+      2. 替换 Locale.CHINA → KnownLocaleTags.LOCALE_ZH_CN（如已提供）
+      3. 替换 "zh_CN" 字符串 → KnownLocaleTags.TAG_ZH_CN（如已提供）
+      4. 替换 locale 字符串拼接 → KnownLocaleTags.normalize(locale.toString())
+    example_bad: |
+      ❌ 业务代码硬编码 locale
+      if ("zh_CN".equals(user.getLocaleTag())) { ... }
+      Locale locale = new Locale("zh", "CN");
+    example_good: |
+      ✅ 使用 KnownLocaleTags
+      if (KnownLocaleTags.isChinese(user.getLocaleTag())) { ... }
+      Locale locale = KnownLocaleTags.defaultLocale();
+    source: "四模块利用率提升专项（YDIZ-LOCALE-003，P1，26.09.30 KnownLocaleTags 不可替代）"
+
 # ============================================
-# 附录：按 category 统计（26.09.30-v1 五大 common 模块利用率提升专项：+3 规则，YDIZ-COMMON-049~051）
+# 附录：按 category 统计（26.09.30-v2 四模块利用率提升专项：+3 规则，YDIZ-CORE-001~002 + YDIZ-LOCALE-003）
 # ============================================
 stats:
   encoding: 1
@@ -4069,7 +4171,7 @@ stats:
   engineering: 5
   warnings: 1
   api: 2
-  exception: 4
+  exception: 5  # +1: ExceptionCode 自动推导优先(YDIZ-CORE-002 P1)
   audit: 1
   event: 3
   tx: 5
@@ -4077,7 +4179,7 @@ stats:
   resilience: 1
   config: 3
   errcode: 2
-  i18n: 7
+  i18n: 9  # +2: @EnableYdszI18n 全覆盖(YDIZ-CORE-001 P0) + KnownLocaleTags 不可替代(YDIZ-LOCALE-003 P1)
   tenant: 1
   safe: 1
   queue: 1

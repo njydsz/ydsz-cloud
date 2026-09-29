@@ -386,10 +386,9 @@ public class GuardServiceImpl implements GuardService {
             + ":"
             + suffix;
     try {
-      Long count = redisStringOps.incr(key, 1);
-      if (count != null && count == 1L) {
-        redisStringOps.expire(key, Duration.ofSeconds(ttlSeconds));
-      }
+      redisStringOps.incr(key, 1);
+      // P0-FIX：每次 INCR 后刷新 TTL，避免 INCR 成功但 EXPIRE 失败导致 key 永不过期的原子性缺陷
+      redisStringOps.expire(key, Duration.ofSeconds(ttlSeconds));
     } catch (Exception e) {
       log.warn("[Guard] 计数失败(降级忽略): key={} err={}", key, e.getMessage(), e);
     }

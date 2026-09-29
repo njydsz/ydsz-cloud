@@ -110,6 +110,7 @@ import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -478,19 +479,24 @@ public class AgentAutoConfiguration {
    *
    * @param stringOps Redis String 操作组件
    * @param distributedLocker 分布式锁实例（幂等去重）
+   * @param redisRateLimiter 分布式限流器（Lua 原子 INCR+EXPIRE）
    * @param properties Agent 配置（限流阈值）
    * @return 请求卫士
    */
   @Bean
   @ConditionalOnMissingBean(AgentRequestGuard.class)
   public AgentRequestGuard agentRequestGuard(
-      RedisStringOps stringOps, DistributedLocker distributedLocker, AgentProperties properties) {
+      RedisStringOps stringOps,
+      DistributedLocker distributedLocker,
+      RedisRateLimiter redisRateLimiter,
+      AgentProperties properties) {
     return new AgentRequestGuard(
         stringOps,
         distributedLocker,
-        properties.getGuardrail().getMaxRequestsPerMinute(),
+        redisRateLimiter,
         properties.getGuardrail().getIdempotentTtl(),
-        properties.getGuardrail().getRateWindow());
+        properties.getGuardrail().getRateWindow(),
+        properties.getGuardrail().getMaxRequestsPerMinute());
   }
 
   /**
