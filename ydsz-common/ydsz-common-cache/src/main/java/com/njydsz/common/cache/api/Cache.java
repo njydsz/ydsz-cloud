@@ -16,6 +16,7 @@ import java.util.function.Function;
 import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.cache.support.AsyncFunction;
+import com.njydsz.common.cache.support.Warmer;
 
 /**
  * 缓存基础接口，定义基本缓存操作
@@ -454,11 +455,11 @@ public interface Cache<K, V> {
    * @param warmer 预热器 SPI（非空）
    * @param target 执行预热的缓存实例（非空）
    */
-  default void warmUp(com.njydsz.common.cache.support.Warmer warmer, Cache<K, V> target) {
+  default void warmUp(Warmer warmer, Cache<K, V> target) {
     if (warmer == null) {
       return;
     }
-    warmer.warm((com.njydsz.common.cache.api.Cache<String, Object>) target);
+    warmer.warm((Cache<String, Object>) target);
   }
 
   // ============================================================================

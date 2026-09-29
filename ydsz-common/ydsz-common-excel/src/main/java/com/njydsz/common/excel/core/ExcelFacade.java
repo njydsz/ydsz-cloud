@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.reader.ExcelStream;
+import com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader;
 import com.njydsz.common.excel.core.template.TemplateRegion;
 import com.njydsz.common.excel.core.writer.MultiSheetFastWriter;
 import com.njydsz.common.excel.core.writer.SuperFastExcelTemplateWriter;
@@ -169,9 +170,9 @@ public class ExcelFacade {
    * @return HSSF 兼容读取器
    * @throws IOException 读取或解析异常
    */
-  public static com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader readXls(
+  public static HssfCompatibleReader readXls(
       InputStream inputStream) throws IOException {
-    return com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader.of(inputStream);
+    return HssfCompatibleReader.of(inputStream);
   }
 
   /**
@@ -197,7 +198,7 @@ public class ExcelFacade {
     // OLE2 magic: D0 CF 11 E0 A1 B1 1A E1
     if (header[0] == (byte) 0xD0 && header[1] == (byte) 0xCF
         && header[2] == (byte) 0x11 && header[3] == (byte) 0xE0) {
-      return com.njydsz.common.excel.core.reader.hssf.HssfCompatibleReader.of(inputStream);
+      return HssfCompatibleReader.of(inputStream);
     }
     ReadMetadata metadata = new ReadMetadata();
     metadata.setInputStream(inputStream);

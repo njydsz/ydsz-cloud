@@ -57,6 +57,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
 import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
+import com.njydsz.workflow.domain.vo.SlaConfigVO;
 import com.njydsz.workflow.domain.vo.FlowTemplateVO;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
@@ -306,7 +307,7 @@ FlowCategory dtoToEntity(FlowCategoryDTO dto);
    * @param slaConfig SLA 配置值对象
    * @return JSON 字符串，null 时返回 null
    */
-  default String mapSlaConfig(com.njydsz.workflow.domain.vo.SlaConfigVO slaConfig) {
+  default String mapSlaConfig(SlaConfigVO slaConfig) {
     if (slaConfig == null) {
       return null;
     }

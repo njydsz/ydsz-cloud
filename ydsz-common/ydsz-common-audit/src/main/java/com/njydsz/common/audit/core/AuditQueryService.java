@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.njydsz.common.audit.domain.AuditLog;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 
 /**
@@ -173,6 +174,6 @@ public interface AuditQueryService {
     if (query != null) {
       query.normalize();
     }
-    return com.njydsz.common.core.response.PageResponse.empty(1L, 20L);
+    return PageResponse.empty(1L, 20L);
   }
 }

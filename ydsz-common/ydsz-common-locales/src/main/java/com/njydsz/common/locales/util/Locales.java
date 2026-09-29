@@ -124,6 +124,6 @@ public final class Locales {
    * @return 对应的 Locale；传入 null/空串时返回 null
    */
   public static Locale parseLocaleTag(String localeTag) {
-    return com.njydsz.common.locales.util.KnownLocaleTags.toLocale(localeTag);
+    return KnownLocaleTags.toLocale(localeTag);
   }
 }
