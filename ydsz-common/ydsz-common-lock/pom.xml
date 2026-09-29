@@ -102,6 +102,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydzz-common-thread（P0-4: DistributedLocker.getAsyncExecutor 改委托 ExecutorUtils.newVirtualThreadExecutor 纳入统一治理） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
 
     </dependencies>
 

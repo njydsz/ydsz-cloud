@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminController;
@@ -358,7 +359,7 @@ public class EventAutoConfiguration {
   @ConditionalOnClass(name = "org.aspectj.lang.annotation.Aspect")
   // CHECKSTYLE.ON: RegexpSinglelineJava
   public OutboxIdempotentAspect outboxIdempotentAspect(
-      ObjectProvider<Object> stringRedisTemplateProvider) {
+      ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider) {
     LOG.info("OutboxIdempotentAspect registered (spring-aop on classpath)");
     return new OutboxIdempotentAspect(stringRedisTemplateProvider);
   }

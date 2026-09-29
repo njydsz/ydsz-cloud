@@ -53,6 +53,18 @@ public class CacheKeyBuilder extends AbstractModuleCacheKeyBuilder {
     return buildKey("memory", conversationId);
   }
 
+  /**
+   * 生成「会话摘要」缓存键。
+   *
+   * <p>格式：{@code ydsz:{tenantId}:agent:summary:{conversationId}}
+   *
+   * @param conversationId 会话 ID
+   * @return 租户隔离的摘要缓存键
+   */
+  public String summaryConversation(String conversationId) {
+    return buildKey("summary", conversationId);
+  }
+
   // ============================== LLM 语义缓存 key ==============================
 
   /**

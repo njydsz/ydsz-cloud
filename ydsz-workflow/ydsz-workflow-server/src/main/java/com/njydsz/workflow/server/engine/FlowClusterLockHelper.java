@@ -4,24 +4,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.lock.annotation.LockType;
-import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.lock.strategy.LockStrategy;
+import com.njydsz.common.lock.core.LockTemplate;
 
 /**
- * P0-2: 工作流集群调度分布式锁辅助工具
+ * P0-2: 工作流集群调度分布式锁辅助工具（P0-C2：委托 LockTemplate 消除 try-finally 样板代码）
  *
  * <p>用于包装 {@code @Scheduled} 定时任务，确保多节点部署时同一任务同一时刻只有一个节点执行。
  *
- * <p>实现：委托给 ydsz-common-lock 公共模块的 {@link DistributedLocker} 接口（默认实现为 {@link
- * com.njydsz.common.lock.impl.RedisReentrantLock}），通过 Lua 脚本原子性获取可重入锁， 获取失败时直接跳过本次执行（不阻塞等待）。锁 key 以
- * {@code ydsz:flow:schedule:} 为前缀， TTL 略大于扫描间隔，防止任务未执行完锁就释放；WatchDog 自动续期由公共模块统一维护。
- *
- * <p>降级策略：{@link LockStrategy} Bean 不存在（单节点/测试环境未装配 ydsz-common-lock）时， {@link #tryRun(String,
- * long, Supplier)} 直接执行任务不做加锁，保证功能可用。
+ * <p>实现：委托给 ydsz-common-lock 的 {@link LockTemplate}（内部使用 {@link
+ * com.njydsz.common.lock.impl.RedisReentrantLock} + 看门狗自动续期），获取失败时返回 null（不阻塞等待）。
+ * 锁 key 以 {@code ydsz:flow:schedule:} 为前缀，TTL 略大于任务预计执行时间。
  *
  * @since 26.09.01
  * @author ydsz-team
@@ -30,26 +24,19 @@ import com.njydsz.common.lock.strategy.LockStrategy;
 @Component
 public class FlowClusterLockHelper {
 
-
   /** 锁 key 前缀 */
   private static final String LOCK_PREFIX = "ydsz:flow:schedule:";
 
-  private final DistributedLocker distributedLocker;
+  private final LockTemplate lockTemplate;
 
-  
   /**
-   * 构造集群锁助手。
+   * 构造集群锁助手
    *
-   * @param lockStrategyProvider 锁策略提供器
+   * @param lockTemplate 锁模板
    */
-  public FlowClusterLockHelper(ObjectProvider<LockStrategy> lockStrategyProvider) {
-    LockStrategy lockStrategy = lockStrategyProvider.getIfAvailable();
-    if (lockStrategy == null) {
-      this.distributedLocker = null;
-      log.info("[FlowClusterLock] LockStrategy 不可用，定时任务将以单节点模式运行（不加锁）");
-    } else {
-      this.distributedLocker = lockStrategy.getLock(LockType.REENTRANT);
-    }
+  public FlowClusterLockHelper(LockTemplate lockTemplate) {
+    this.lockTemplate = lockTemplate;
+    log.info("[FlowClusterLock] LockTemplate 已注入，定时任务将以集群锁模式运行");
   }
 
   /**
@@ -64,25 +51,8 @@ public class FlowClusterLockHelper {
    * @return 任务执行结果；未获取锁时返回 null
    */
   public <T> T tryRun(String lockKey, long leaseTimeSec, Supplier<T> task) {
-    if (distributedLocker == null) {
-      return task.get();
-    }
     String fullKey = LOCK_PREFIX + lockKey;
-    // 非阻塞 tryLock：waitTime=0 语义，获取不到立即返回 null（不抛 InterruptedException）
-    String lockValue = distributedLocker.tryLock(fullKey, leaseTimeSec, TimeUnit.SECONDS);
-    if (lockValue == null) {
-      log.debug("[FlowClusterLock] 未获取锁，跳过本次执行: key={}", fullKey);
-      return null;
-    }
-    try {
-      return task.get();
-    } finally {
-      try {
-        distributedLocker.unlock(fullKey, lockValue);
-      } catch (Exception e) {
-        log.debug("[FlowClusterLock] 解锁异常（可能已超时自动释放）: key={} err={}", fullKey, e.getMessage());
-      }
-    }
+    return lockTemplate.executeOrDefault(fullKey, 0L, leaseTimeSec, TimeUnit.SECONDS, task, null);
   }
 
   /**
@@ -93,12 +63,9 @@ public class FlowClusterLockHelper {
    * @param task 要执行的任务
    */
   public void tryRun(String lockKey, long leaseTimeSec, Runnable task) {
-    tryRun(
-        lockKey,
-        leaseTimeSec,
-        () -> {
-          task.run();
-          return null;
-        });
+    tryRun(lockKey, leaseTimeSec, () -> {
+      task.run();
+      return null;
+    });
   }
 }

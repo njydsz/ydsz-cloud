@@ -153,7 +153,7 @@ logging:
     com.njydsz.generator: DEBUG
     com.njydsz.generator.mapper: INFO
 
-# 审计日志配置（ydsz-common-audit 自动装配读取 ydsz.audit 前缀）
+# Spring Boot Actuator + Prometheus 端点暴露 审计日志配置（ydsz-common-audit 自动装配读取 ydsz.audit 前缀）
 ydsz:
   audit:
     enabled: true

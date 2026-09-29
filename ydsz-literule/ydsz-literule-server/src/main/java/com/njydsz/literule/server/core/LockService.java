@@ -6,15 +6,16 @@ import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.core.LockTemplate;
+import com.njydsz.common.lock.exception.DistributedLockException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.locales.util.I18nMessages;
 
 /**
- * 分布式锁服务封装（P1-3：synchronized 升级为分布式锁）
+ * 分布式锁服务封装（P1-3：synchronized 升级为分布式锁；P0-C1：委托 LockTemplate 消除 try-finally 样板代码）
  *
- * <p>封装 ydzs-common-lock 的分布式锁操作，提供统一的锁获取/释放接口。
- * 集群部署时使用分布式锁保障多节点间的互斥，嵌入式/单节点部署时自动降级为本地锁。
+ * <p>封装 ydsz-common-lock 的 {@link LockTemplate} 编程式锁操作，提供统一的锁获取/释放接口。
+ * 集群部署时使用分布式锁保障多节点间的互斥，单节点部署时自动降级（LockTemplate 内置 FallbackDistributedLock）。
  *
  * <h3>使用示例</h3>
  *
@@ -39,8 +40,8 @@ import com.njydsz.common.locales.util.I18nMessages;
 @RequiredArgsConstructor
 public class LockService {
 
-    /** 分布式锁提供者（可为 null，此时降级为本地锁） */
-    private final DistributedLocker distributedLocker;
+    /** 锁模板（由 Spring 自动装配 Bean 提供，内置 FallbackDistributedLock 降级） */
+    private final LockTemplate lockTemplate;
 
     /** 国际化消息 */
     private final I18nMessages i18n;
@@ -54,13 +55,13 @@ public class LockService {
     /**
      * 执行带分布式锁的操作
      *
-     * <p>获取锁失败时抛出 {@link IllegalStateException}，不阻塞等待。
+     * <p>获取锁失败时抛出 {@link SysException}（i18n 文案），不阻塞等待。
      *
      * @param lockKey 锁 key（需带业务前缀，如 "literule:approval:xxx"）
      * @param action 要执行的操作
      * @param <T> 返回类型
      * @return 操作结果
-     * @throws IllegalStateException 获取锁失败
+     * @throws SysException 获取锁失败（i18n key: literule.lock.acquire_failed）
      */
     public <T> T executeWithLock(String lockKey, Supplier<T> action) {
         return executeWithLock(lockKey, DEFAULT_WAIT_TIME, DEFAULT_LEASE_TIME, action);
@@ -75,33 +76,15 @@ public class LockService {
      * @param action 要执行的操作
      * @param <T> 返回类型
      * @return 操作结果
-     * @throws IllegalStateException 获取锁失败
+     * @throws SysException 获取锁失败
      */
     public <T> T executeWithLock(String lockKey, long waitTime, long leaseTime, Supplier<T> action) {
-        if (distributedLocker == null) {
-            // 无分布式锁依赖时，直接执行（嵌入式/单节点场景）
-            log.debug("[LockService] DistributedLocker 未注入，降级为无锁执行: {}", lockKey);
-            return action.get();
-        }
-
-        String lockValue = null;
         try {
-            lockValue = distributedLocker.tryLock(lockKey, waitTime, leaseTime, TimeUnit.SECONDS);
-            if (lockValue == null) {
-      throw new SysException(i18n.resolve("literule.lock.acquire_failed", new Object[]{waitTime, lockKey}));
-            }
-            return action.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-      throw new SysException(i18n.resolve("literule.lock.interrupted", new Object[]{lockKey}), e);
-        } finally {
-            if (lockValue != null) {
-                try {
-                    distributedLocker.unlock(lockKey, lockValue);
-                } catch (Exception e) {
-                    log.warn("[LockService] 释放锁异常: {}, 原因: {}", lockKey, e.getMessage());
-                }
-            }
+            return lockTemplate.execute(lockKey, waitTime, leaseTime, TimeUnit.SECONDS, action);
+        } catch (DistributedLockException e) {
+            throw new SysException(
+                i18n.resolve("literule.lock.acquire_failed", new Object[]{waitTime, lockKey}),
+                e);
         }
     }
 
@@ -110,7 +93,7 @@ public class LockService {
      *
      * @param lockKey 锁 key
      * @param action 要执行的操作
-     * @throws IllegalStateException 获取锁失败
+     * @throws SysException 获取锁失败
      */
     public void executeWithLock(String lockKey, Runnable action) {
         executeWithLock(lockKey, () -> {
@@ -130,11 +113,7 @@ public class LockService {
      * @since 1.4.0
      */
     public <T> T executeWithLockOrDefault(String lockKey, Supplier<T> action, T defaultValue) {
-        try {
-            return executeWithLock(lockKey, action);
-        } catch (IllegalStateException e) {
-            log.warn("[LockService] 获取锁失败，返回默认值: {}, 原因: {}", lockKey, e.getMessage());
-            return defaultValue;
-        }
+        return lockTemplate.executeOrDefault(lockKey, DEFAULT_WAIT_TIME, DEFAULT_LEASE_TIME,
+            TimeUnit.SECONDS, action, defaultValue);
     }
 }
