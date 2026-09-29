@@ -120,6 +120,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- spring-data-redis（optional，OutboxIdempotentAspect 类型安全 API，禁止反射 Redis） -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- JSON 模块 -->
         <dependency>
             <groupId>com.njydsz</groupId>

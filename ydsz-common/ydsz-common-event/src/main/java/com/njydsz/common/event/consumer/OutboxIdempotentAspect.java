@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -23,7 +24,7 @@ import com.njydsz.common.event.model.OutboxMessage;
 /**
  * Outbox 幂等消费 AOP 切面（F-3）
  *
- * <p>拦截带有 {@link OutboxIdempotentConsumer} 注解的方法，通过 Redis / DB / JVM 内存实现消费去重：
+ * <p>拦截带有 {@link OutboxIdempotentConsumer} 注解的方法，通过 Redis / JVM 内存实现消费去重：
  *
  * <ul>
  *   <li>解析注解中的 SpEL 表达式获取幂等键（如 {@code #message.eventId}）
@@ -32,9 +33,9 @@ import com.njydsz.common.event.model.OutboxMessage;
  *   -   失败 → 跳过方法体（重复消费），记录 DEBUG 日志
  * </ul>
  *
- * <p><b>条件装配：</b>需要 spring-boot-starter-aop 在 classpath 并由业务模块配置切面 Bean。 *
+ * <p><b>条件装配：</b>需要 spring-boot-starter-aop 在 classpath 并由业务模块配置切面 Bean。
  *
- * <p><b>编码规范遵循：</b>YDIZ-WARN-001（不使用 @SuppressWarnings，所有告警通过空安全检查和 fallback 解决）
+ * <p><b>编码规范遵循：</b>YDIZ-COMMON-058（禁止反射操作 StringRedisTemplate，必须使用类型安全 API）。
  *
  * @author ydsz-team
  * @since 26.09.19
@@ -52,25 +53,25 @@ public class OutboxIdempotentAspect {
   /** 参数名发现器 */
   private final ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
-  /** Redis SETNX 客户端提供者（可选，优先使用 Redis） */
-  private final ObjectProvider<Object> redisProvider;
+  /** Redis StringRedisTemplate 提供者（可选，优先使用 Redis 实现幂等） */
+  private final ObjectProvider<StringRedisTemplate> redisTemplateProvider;
 
-  /** JVM 本地去重缓存（Redis 不可用时的降级方案） */
+  /** JVM 本地去重缓存（Redis 不可用时的降级方案，仅单节点部署有效） */
   private final ConcurrentHashMap<String, Long> localCache = new ConcurrentHashMap<>(256);
 
-  /** 是否启用日志 */
+  /** 是否启用 Redis 幂等 */
   private final boolean isRedisAvailable;
 
   /**
    * 构造幂等消费切面
    *
-   * @param redisProvider Redis StringRedisTemplate 提供者（可选）
+   * @param redisTemplateProvider Redis StringRedisTemplate 提供者（可选）
    */
-  public OutboxIdempotentAspect(ObjectProvider<Object> redisProvider) {
-    this.redisProvider = redisProvider;
-    this.isRedisAvailable = redisProvider.getIfAvailable() != null;
+  public OutboxIdempotentAspect(ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+    this.redisTemplateProvider = redisTemplateProvider;
+    this.isRedisAvailable = redisTemplateProvider.getIfAvailable() != null;
     if (!isRedisAvailable) {
-      LOG.info("Redis not available for OutboxIdempotentAspect. Using JVM local cache fallback.");
+      LOG.info("[OutboxIdempotent] Redis StringRedisTemplate 不可用，降级为 JVM 本地缓存（仅单节点部署有效）");
     }
   }
 
@@ -95,19 +96,20 @@ public class OutboxIdempotentAspect {
     String idempotencyKey = resolveIdempotencyKey(joinPoint, annotation.idempotencyKey());
     if (idempotencyKey == null || idempotencyKey.isBlank()) {
       // 无法解析幂等键 → 直接执行方法
-      LOG.debug("Cannot resolve idempotency key for {}, proceed directly", method.getName());
+      LOG.debug("[OutboxIdempotent] Cannot resolve idempotency key for {}, proceed directly",
+          method.getName());
       return joinPoint.proceed();
     }
 
-    String cacheKey = "ydsz:outbox:idempotent:" + idempotencyKey;
+    String cacheKey = "ydsz:outbox:idem:" + idempotencyKey;
 
     // 尝试获取幂等锁
     boolean acquired = tryAcquire(cacheKey, annotation.expireSeconds());
 
     if (!acquired) {
       // 重复消费，跳过方法体
-      LOG.debug("Duplicate message detected, skip method execution: key={}, method={}", cacheKey,
-          method.getName());
+      LOG.debug("[OutboxIdempotent] Duplicate message detected, skip: key={}, method={}",
+          cacheKey, method.getName());
       return null;
     }
 
@@ -151,7 +153,8 @@ public class OutboxIdempotentAspect {
       Object value = expression.getValue(context);
       return value != null ? value.toString() : null;
     } catch (Exception e) {
-      LOG.debug("Failed to resolve SpEL '{}': {}", spelExpression, e.getMessage());
+      LOG.debug("[OutboxIdempotent] Failed to resolve SpEL '{}': {}", spelExpression,
+          e.getMessage());
       return null;
     }
   }
@@ -171,7 +174,7 @@ public class OutboxIdempotentAspect {
   }
 
   /**
-   * 通过 Redisson / Redis 尝试 SETNX
+   * 通过 Redis 尝试 SETNX（类型安全 API，YDIZ-COMMON-058 合规）
    *
    * @param key 缓存键
    * @param expireSeconds 过期秒数
@@ -179,25 +182,16 @@ public class OutboxIdempotentAspect {
    */
   private boolean tryAcquireWithRedis(String key, int expireSeconds) {
     try {
-      Object redisTemplate = redisProvider.getIfAvailable();
+      StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
       if (redisTemplate == null) {
         return tryAcquireLocal(key, expireSeconds);
       }
-
-      // 通过反射调用 StringRedisTemplate.opsForValue().setIfAbsent()
-      Object ops = redisTemplate.getClass().getMethod("opsForValue").invoke(redisTemplate);
-      if (ops == null) {
-        return tryAcquireLocal(key, expireSeconds);
-      }
-      Object result = ops.getClass().getMethod("setIfAbsent", Object.class, Object.class,
-          long.class, TimeUnit.class).invoke(ops, key, "1", (long) expireSeconds, TimeUnit.SECONDS);
-
+      Boolean result = redisTemplate.opsForValue()
+          .setIfAbsent(key, "1", (long) expireSeconds, TimeUnit.SECONDS);
       return Boolean.TRUE.equals(result);
     } catch (RuntimeException e) {
-      LOG.debug("Redis SETNX failed, fallback to local cache: {}", e.getMessage());
-      return tryAcquireLocal(key, expireSeconds);
-    } catch (Exception e) {
-      LOG.debug("Redis operation exception, fallback to local cache: {}", e.getMessage());
+      LOG.debug("[OutboxIdempotent] Redis SETNX failed, fallback to local cache: {}",
+          e.getMessage());
       return tryAcquireLocal(key, expireSeconds);
     }
   }
@@ -233,12 +227,12 @@ public class OutboxIdempotentAspect {
   private void release(String key) {
     if (isRedisAvailable) {
       try {
-        Object redisTemplate = redisProvider.getIfAvailable();
+        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
         if (redisTemplate != null) {
-          redisTemplate.getClass().getMethod("delete", Object.class).invoke(redisTemplate, key);
+          redisTemplate.delete(key);
         }
-      } catch (Throwable e) {
-        LOG.debug("Redis delete failed: {}", e.getMessage());
+      } catch (RuntimeException e) {
+        LOG.debug("[OutboxIdempotent] Redis delete failed: {}", e.getMessage());
         localCache.remove(key);
       }
     }

@@ -84,7 +84,7 @@ generator:
     # 排队容量
     queue-capacity: 64
 
-# 统一线程池配置（ydsz-common-thread）
+# 统一线程池 / 多租户 / JDBC / 审计 配置（ydsz-common-*）
 ydsz:
   thread:
     pools:
@@ -95,9 +95,26 @@ ydsz:
         thread-name-prefix: code-gen-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30
-  # P0-2: 启用多租户隔离（SINGLE 模式 + tenant_id 列注入）
+  # P0-2: 多租户隔离（SINGLE 模式 + tenant_id 列注入）
   tenant:
     enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /favicon.ico
+      - /error
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
   # JDBC 安全加固（ydsz-common-jdbc）
   jdbc:
     sql-firewall:
@@ -114,8 +131,23 @@ ydsz:
       enabled: true
       threshold-millis: 500
       alert-threshold-millis: 2000
-
-# 日志
+  # 审计日志（ydsz-common-audit 自动装配读取 ydsz.audit）
+  audit:
+    enabled: true
+    app-key: ydsz-generator
+    storage-type: LOCAL
+    record-request: true
+    record-response: false
+    sensitive-params:
+      - password
+      - url
+      - connectionString
+    retention-days: 90
+    async:
+      batch-size: 50
+      thread-core-size: 1
+      thread-max-size: 2
+      queue-capacity: 5000
 logging:
   level:
     com.njydsz.generator: DEBUG

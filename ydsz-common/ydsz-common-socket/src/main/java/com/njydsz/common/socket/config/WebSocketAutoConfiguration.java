@@ -1,11 +1,11 @@
 package com.njydsz.common.socket.config;
 
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
+import com.njydsz.common.thread.util.ExecutorUtils.BlockingQueueType;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -708,18 +708,18 @@ public class WebSocketAutoConfiguration {
     int queueCapacity = properties.getBatch() != null
         ? properties.getBatch().getQueueCapacity()
         : 10000;
-    ThreadPoolExecutor executor = new ThreadPoolExecutor(
-        maxConcurrency,
-        maxConcurrency,
-        60L,
-        TimeUnit.SECONDS,
-        new LinkedBlockingQueue<>(queueCapacity),
-        r -> {
-          Thread t = new Thread(r, "ws-batch-" + System.nanoTime());
-          t.setDaemon(true);
-          return t;
-        },
-        new ThreadPoolExecutor.CallerRunsPolicy());
+    // P0-2: 使用 ExecutorUtils.Builder 统一创建（caller-runs 拒绝策略 + daemon），
+    // 自动注册到 ThreadPoolRegistry 统一监控；原 System.nanoTime() 命名改为序号递增命名（可排查）
+    ThreadPoolExecutor executor = ExecutorUtils.builder()
+        .corePoolSize(maxConcurrency)
+        .maxPoolSize(maxConcurrency)
+        .keepAliveTime(60, java.util.concurrent.TimeUnit.SECONDS)
+        .queueType(BlockingQueueType.LINKED)
+        .queueCapacity(queueCapacity)
+        .threadNamePrefix("ws-batch-")
+        .daemon(true)
+        .rejectedHandler(new ThreadPoolExecutor.CallerRunsPolicy())
+        .buildAndRegister();
     log.info(
         "[WebSocket] 注册批量推送线程池: corePoolSize={}, queueCapacity={}",
         maxConcurrency, queueCapacity);
