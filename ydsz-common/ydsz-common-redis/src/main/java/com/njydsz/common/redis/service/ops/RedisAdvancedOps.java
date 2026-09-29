@@ -221,6 +221,26 @@ public class RedisAdvancedOps {
     }
   }
 
+  // ============================ INFO 监控命令 =============================
+
+  /**
+   * 执行 Redis INFO 命令并返回结果 Properties（INFO-COMMANDS 统一封装）。
+   *
+   * <p>封装底层 {@code getConnection().info()} 调用，避免业务代码直接获取底层连接， 为监控/诊断场景提供安全、统一的入口。
+   *
+   * @param section INFO 章节（如 "stats"/"memory"/"clients"/"server"），{@code null} 返回全部信息
+   * @return INFO 结果 Properties；执行失败时返回 {@code null}
+   */
+  public Properties getInfo(String section) {
+    try {
+      return redisTemplate.execute(
+          (RedisCallback<Properties>) connection -> connection != null ? connection.info() : null);
+    } catch (Exception e) {
+      log.error("【Redis】INFO 命令执行失败 | section={} | error={}", section, e);
+      return null;
+    }
+  }
+
   // ============================ Cluster 模式 Pipeline =============================
 
   /**

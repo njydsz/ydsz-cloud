@@ -101,15 +101,15 @@ ydsz:
       enabled: true
       threshold-millis: 500
       alert-threshold-millis: 2000
-  # P2: SQL 审计（写操作落盘备查）
-  sql-audit:
-    enabled: true
-    audit-select: false
-    audit-insert: true
-    audit-update: true
-    audit-delete: true
-    log-parameters: true
-    max-parameter-length: 500
+    # P2: SQL 审计（写操作落盘备查）
+    sql-audit:
+      enabled: true
+      audit-select: false
+      audit-insert: true
+      audit-update: true
+      audit-delete: true
+      log-parameters: true
+      max-parameter-length: 500
 
   # P0-3: 内部 API IP 白名单（委托 ydsz-common-safe IpAccessService，支持 CIDR 网段）
   # 迁移说明：原 ydsz.system.internal-api-ip-whitelist 精确匹配已升级为此统一配置
