@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
@@ -28,7 +29,8 @@ import java.util.function.Function;
  * <p><b>并发说明：</b>真实数据存于 {@link ConcurrentHashMap}（线程安全）， {@code LinkedHashMap}
  * 仅维护淘汰顺序（全部操作持锁），两个容器在写路径内保持同步。
  *
- * <p>适用场景：类元数据、序列化器实例、格式化器等小对象缓存（建议容量 128~1024）。
+ * <p><b>规范合规：</b>作为 L1（零依赖）模块内部工具，保持零外部依赖设计。
+ * 通过 {@link #stats()} 暴露命中率统计，便于上层 Spring 容器注册 Micrometer 指标。
  *
  * @param <K> 键类型
  * @param <V> 值类型
@@ -47,6 +49,15 @@ public final class BoundedLruCache<K, V> {
 
   /** 写路径轻量锁（保护 lruOrder 与 map 的同步淘汰） */
   private final ReentrantLock lock = new ReentrantLock();
+
+  /** 缓存命中计数（get 路径探测到值） */
+  private final LongAdder hitCount = new LongAdder();
+
+  /** 缓存未命中计数（get 路径返回 null） */
+  private final LongAdder missCount = new LongAdder();
+
+  /** 缓存条目淘汰计数 */
+  private final LongAdder evictionCount = new LongAdder();
 
   /**
    * 创建有界 LRU 缓存。
@@ -73,7 +84,13 @@ public final class BoundedLruCache<K, V> {
    * @return 缓存值，不存在返回 null
    */
   public V get(K key) {
-    return map.get(key);
+    V value = map.get(key);
+    if (value != null) {
+      hitCount.increment();
+    } else {
+      missCount.increment();
+    }
+    return value;
   }
 
   /**
@@ -134,7 +151,7 @@ public final class BoundedLruCache<K, V> {
     }
   }
 
-  /** 在持锁状态下淘汰超限条目（从两个容器同步移除最旧条目）。 */
+  /** 在持锁状态下淘汰超限条目（从两个容器同步移除最旧条目，更新淘汰计数）。 */
   private void evictIfNeeded() {
     while (map.size() > maxSize && !lruOrder.isEmpty()) {
       Iterator<Map.Entry<K, K>> it = lruOrder.entrySet().iterator();
@@ -142,9 +159,33 @@ public final class BoundedLruCache<K, V> {
         K eldest = it.next().getKey();
         it.remove();
         map.remove(eldest);
+        evictionCount.increment();
       } else {
         break;
       }
+    }
+  }
+
+  /**
+   * 返回缓存统计快照（命中率 / 条目数）。
+   *
+   * <p>零依赖实现，不依赖 Micrometer，可在健康检查或监控端点中调用。
+   *
+   * @return 当前统计快照（瞬时值）
+   */
+  public Stats stats() {
+    long hits = hitCount.sum();
+    long misses = missCount.sum();
+    long total = hits + misses;
+    double hitRate = total > 0 ? (double) hits / total : 0.0;
+    return new Stats(map.size(), maxSize, hits, misses, evictionCount.sum(), hitRate);
+  }
+
+  /** 统计快照（不可变值对象）。 */
+  public record Stats(int size, int maxSize, long hits, long misses, long evictions, double hitRate) {
+    /** 总请求数（命中 + 未命中） */
+    public long requests() {
+      return hits + misses;
     }
   }
 
