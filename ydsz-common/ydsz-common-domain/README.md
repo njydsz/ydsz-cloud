@@ -2,7 +2,7 @@
 
 > 领域基础组件（L3 基础服务层）— 分页查询 / 树形结构 / 类型化 ID / 规约模式
 
-提供分页查询对象（`PageQuery` / `BaseQuery`）、树形结构构建器（`TreeBuilder` / `TreeNode`）、强类型 ID（`TypedId`）、数据权限上下文、规约模式（`Specification`）等 DDD 领域基础组件，是所有业务模块领域层的统一基座。
+提供分页查询对象（`PageQuery` / `BaseQuery`）、树形结构构建器（`TreeBuilder`）、强类型 ID（`TypedId`）、数据权限上下文、规约模式（`Specification`）等 DDD 领域基础组件，是所有业务模块领域层的统一基座。
 
 ## 模块定位
 
@@ -54,30 +54,25 @@ try {
 
 | 类 | 说明 |
 |---|---|
-| `TreeNode` | 树节点基类（level / path 字段由 TreeBuilder.build() 自动填充；isLeaf() 动态计算） |
-| `TreeBuilder` | 树构建器（build 全量构建 / buildLazy 懒加载构建） |
-| `TreeNodeProvider` | 懒加载 SPI（大数据量场景按需加载子节点） |
+| `TreeBuilder` | 树构建器（静态工具类，提供 `buildSimple()` 统一入口，O(n) HashMap 索引） |
 
 **使用示例**：
 
 ```java
-// 定义菜单树节点
+// 定义菜单树节点（纯 POJO，无需继承框架基类）
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class Menu extends TreeNode<Menu, Long> {
+public class MenuVO {
+    private Long id;
+    private Long parentId;
+    private List<MenuVO> children;
+    private Integer sort;
     private String menuName;
 }
 
-// 构建树（自动填充 level 和 path）
-List<Menu> allMenus = menuMapper.selectList();
-List<Menu> tree = new TreeBuilder<>(0L, allMenus).build();
-
-// 懒加载构建（大数据量场景）
-List<Menu> tree = new TreeBuilder<Long>(0L, Collections.emptyList())
-    .buildLazy(menuMapper::selectByParentId, 3);
-
-// 空安全构建
-List<Menu> safeTree = new TreeBuilder<>(nodeList).build(); // 自动处理
+// 构建树（根节点判定：parentId == null）
+List<MenuVO> allMenus = menuMapper.selectList();
+List<MenuVO> tree = TreeBuilder.buildSimple(
+    allMenus, MenuVO::getId, MenuVO::getParentId, MenuVO::setChildren, MenuVO::getSort);
 ```
 
 ### 3. 强类型 ID
@@ -183,7 +178,6 @@ ydsz:
 | SPI 接口 | 用途 | 注册方式 |
 |---|---|---|
 | `Specification<T>` | 业务规约（可组合业务规则） | `@Component` |
-| `TreeNodeProvider<T, ID>` | 子节点懒加载（大数据量树时使用） | 匿名 Lambda |
 | `Repository` | DDD 聚合根仓储接口 | `@Component` |
 
 ## 自动配置类
@@ -195,7 +189,7 @@ ydsz:
 ## 注意事项
 
 1. **深度分页保护**：offset 超过 `cursor-reject-threshold`（默认 50000）时抛出 `DeepPaginationException`；消费方可通过 `getMessageKey()` 获取 i18n 消息键。
-2. **树构建性能**：`TreeBuilder.build()` 使用 Map 索引 O(n)，自动填充 level 和 path；超大数据集请使用 `buildLazy(provider, maxDepth)` 按需加载。
+2. **树构建性能**：`TreeBuilder.buildSimple()` 使用 Map 索引 O(n) 构建树；level/path 由调用方在构建后自行填充（如有需要）。
 3. **TypedId 序列化**：Jackson 序列化时输出为 long 数值。
 4. **DataScopeContextHolder**：每次请求后由 WebFilter 清理，避免跨请求污染。
 5. **DataPermissionContext.EMPTY**：共享不可变常量，禁止通过 setter 修改。
@@ -203,18 +197,8 @@ ydsz:
 
 ## 变更记录
 
-- **1.3.0**（2026-09-19）：
-  - 修复 TreeNode `isLeaf` 字段歧义：移除独立 `isLeaf` 字段，统一由 `isLeaf()` 动态计算；新增 `@JsonProperty("isLeaf")` 保证 JSON 序列化输出
-  - 新增 `TreeNodeProvider` SPI 接口与 `TreeBuilder.buildLazy()` 懒加载能力
-  - 新增 `TreeBuilder.build()` 自动填充节点的 `level` 和 `path` 字段
-  - 重命名 BaseQuery `statusEnum` → `fillStatusByEnum`，新增 `withStatus/withSearchKey/withTimeRange/withTenantId` Fluent API
-  - 新增 Specification `allOf/anyOf/noneOf/fromPredicate` 批量组合 API
-  - 新增 OrderItem `toSql()` 构造时预计算优化
-  - 新增 DataPermissionContext `EMPTY` 不可变常量与 `emptyMutable()` 工厂
-  - DomainProperties `isEnabled` → `enabled`，对齐 `@ConditionalOnProperty(name="enabled")`
-  - DeepPaginationException 新增 `getMessageKey()` / `getMessageParams()` 支持 i18n
-  - DataPermissionContext 新增 `readObject` 反序列化 null 安全防御
-  - 清理 `additional-spring-configuration-metadata.json` 未实现的 deprecated 属性
-- **1.2.0**（2026-09-07）：PageQuery 深度分页风险评估器集成；TreeNode 新增 `buildSafely` 空安全方法；DataPermissionContext 拆分为 Header 常量。
+- **1.4.0**（2026-09-30）：移除废弃的 `TreeNode` 基类、`TreeNodeProvider` SPI 和 `TreeBuilder.build()`/`buildLazy()` 方法；`TreeBuilder` 收敛为仅含 `buildSimple()` 静态入口的工具类。统一树构建入口为 `buildSimple()`（参见 YDIZ-DOMAIN-002 规则）。
+- **1.3.0**（2026-09-19）：重命名 BaseQuery `statusEnum` → `fillStatusByEnum`，新增 `withStatus/withSearchKey/withTimeRange/withTenantId` Fluent API；新增 Specification `allOf/anyOf/noneOf/fromPredicate` 批量组合 API；新增 OrderItem `toSql()` 构造时预计算优化；新增 DataPermissionContext `EMPTY` 不可变常量与 `emptyMutable()` 工厂；DomainProperties `isEnabled` → `enabled`；DeepPaginationException 新增 `getMessageKey()` / `getMessageParams()` 支持 i18n；DataPermissionContext 新增 `readObject` 反序列化 null 安全防御。
+- **1.2.0**（2026-09-07）：PageQuery 深度分页风险评估器集成；DataPermissionContext 拆分为 Header 常量。
 - **1.1.0**（2026-08-20）：新增 TypedId 类型化 ID 体系；新增 DataPermissionContext / DataScopeContextHolder 数据权限上下文。
-- **1.0.0**（2026-08-02）：初始版本（PageQuery / BaseQuery / TreeBuilder / TreeNode / Specification）。
+- **1.0.0**（2026-08-02）：初始版本（PageQuery / BaseQuery / TreeBuilder / Specification）。

@@ -8,7 +8,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.workflow.domain.event.DomainEventPublisher;
 import com.njydsz.workflow.domain.event.FlowDomainEvent;
 import com.njydsz.workflow.domain.exception.WorkflowException;
@@ -47,7 +46,7 @@ public class OutboxFlowDomainEventPublisher implements DomainEventPublisher {
   private static final String AGGREGATE_TYPE_WORKFLOW = "Workflow";
 
   /** common-event 统一门面（可选依赖，未装配时安全降级） */
-  private final ObjectProvider<DomainEventPublisher>
+  private final ObjectProvider<com.njydsz.common.event.publish.DomainEventPublisher>
       publisherProvider;
 
   /**
@@ -56,7 +55,7 @@ public class OutboxFlowDomainEventPublisher implements DomainEventPublisher {
    * @param publisherProvider common-event 统一门面提供者
    */
   public OutboxFlowDomainEventPublisher(
-      ObjectProvider<DomainEventPublisher> publisherProvider) {
+      ObjectProvider<com.njydsz.common.event.publish.DomainEventPublisher> publisherProvider) {
     this.publisherProvider = publisherProvider;
   }
 
@@ -75,7 +74,7 @@ public class OutboxFlowDomainEventPublisher implements DomainEventPublisher {
     if (event == null) {
       throw new WorkflowException(WorkflowExceptionCode.FLOW_PARSING_ERROR, "event must not be null");
     }
-    DomainEventPublisher delegate =
+    com.njydsz.common.event.publish.DomainEventPublisher delegate =
         publisherProvider.getIfAvailable();
     if (delegate == null) {
       log.debug(

@@ -249,9 +249,9 @@ ydsz:
 
 ## 与 ydsz-common-base 的关系
 
-`ydsz-common-base`（L6）已内嵌集成 `ydsz-common-locales`，无需额外配置。Base 的 `BaseI18nConfiguration` 抽象基类在 locales 的 `LocalesAutoConfiguration` 上层封装了更友好的资源 basename 配置能力。
+`ydsz-common-base`（L6）已内嵌集成 `ydsz-common-locales`，无需额外配置。国际化基础设施由 `LocalesAutoConfiguration` 完成自动装配。
 
-**使用 ydsz-common-base 的业务模块**：只需引入 `ydsz-common-base`，国际化能力即自动生效；如需要自定义 basename 覆盖默认列表，继承 `BaseI18nConfiguration` 即可。
+**使用 ydsz-common-base 的业务模块**：只需引入 `ydsz-common-base`，国际化能力即自动生效。
 
 ## 与 ydsz-common-exception 的关系
 

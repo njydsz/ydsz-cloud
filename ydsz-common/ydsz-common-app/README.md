@@ -21,7 +21,6 @@
 | 类 | 说明 |
 |---|---|
 | `AppMvcConfiguration` | App 端 MVC 核心配置（继承 `BaseMvcConfiguration`），`@AutoConfiguration` + `@AutoConfigureBefore({YdszAutoConfiguration.class, SafeConfiguration.class})`；集中注册过滤器链、拦截器、`AppAuthHandler`、`AppMetrics`、`AppHealthIndicator` |
-| `AppI18nConfiguration` | 国际化配置（继承 `BaseI18nConfiguration`），basename=`i18n/app-messages` |
 | `AppOpenApiConfiguration` | OpenAPI 配置（继承 `BaseOpenApiConfiguration`），标题=`YDSZ App API 文档` |
 | `AppCorsProperties` | CORS 配置（继承 `BaseCorsProperties`），前缀 `ydsz.app.cors` |
 | `AppTraceProperties` | Trace 配置（继承 `BaseTraceProperties`），前缀 `ydsz.app.trace` |
@@ -163,7 +162,6 @@ public class AppUserController {
 | 抽象基类 | App 模块实现 | 差异化点 |
 |---|---|---|
 | `BaseMvcConfiguration` | `AppMvcConfiguration` | 注册 App 特有过滤器链、拦截器、Bean |
-| `BaseI18nConfiguration` | `AppI18nConfiguration` | basename=`i18n/app-messages` |
 | `BaseOpenApiConfiguration` | `AppOpenApiConfiguration` | 标题=`YDSZ App API 文档` |
 | `BaseCorsProperties` | `AppCorsProperties` | 前缀=`ydsz.app.cors` |
 | `BaseTraceProperties` | `AppTraceProperties` | 前缀=`ydsz.app.trace` |
@@ -217,7 +215,6 @@ public class AppUserController {
 
 ```
 com.njydsz.common.app.config.AppMvcConfiguration
-com.njydsz.common.app.config.AppI18nConfiguration
 com.njydsz.common.app.config.AppOpenApiConfiguration
 com.njydsz.common.app.config.RequestIdGeneratorAutoConfiguration
 ```

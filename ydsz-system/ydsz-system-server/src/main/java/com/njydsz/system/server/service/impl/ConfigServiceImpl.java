@@ -240,10 +240,11 @@ public class ConfigServiceImpl implements ConfigService {
   public boolean patchConfig(String id, Map<String, Object> patch) {
     ConfigVO existing = getById(id);
     if (existing == null) {
-      throw new BusinessException(SystemExceptionCode.CONFIG_NOT_FOUND, id);
+      throw new BusinessException(SystemExceptionCode.CONFIG_NOT_FOUND);
     }
     String existingJson = YdszJson.toJson(existing);
-    String mergedJson = YdszJson.mergePatch(existingJson, patch);
+    String patchJson = YdszJson.toJson(patch);
+    String mergedJson = YdszJson.mergePatch(existingJson, patchJson);
     ConfigDTO mergedDto = YdszJson.fromJson(mergedJson, ConfigDTO.class);
     mergedDto.setId(id);
     return updateById(mergedDto);

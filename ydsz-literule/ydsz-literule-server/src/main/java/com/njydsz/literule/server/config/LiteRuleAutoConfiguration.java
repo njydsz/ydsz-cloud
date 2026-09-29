@@ -30,6 +30,7 @@ import com.njydsz.common.event.repository.OutboxRepository;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.config.TenantProperties;
@@ -686,7 +687,8 @@ public class LiteRuleAutoConfiguration {
       ObjectProvider<OutboxService> outboxServiceProvider,
       ApplicationEventPublisher eventPublisher,
       LiteRuleProperties properties,
-      RuleDefinitionRepository ruleDefinitionRepository) {
+      RuleDefinitionRepository ruleDefinitionRepository,
+      I18nMessages i18nMessages) {
     RuleAdminService service =
         new RuleAdminService(
             ruleEngine,
@@ -695,7 +697,8 @@ public class LiteRuleAutoConfiguration {
             versionRepoProvider.getIfAvailable(),
             eventPublisher,
             ruleDefinitionRepository,
-            ruleVersionDiffService);
+            ruleVersionDiffService,
+            i18nMessages);
     service.setDryRunEnabled(properties.isDryRunEnabled());
     RuleConfigBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
     if (broadcaster != null) {
@@ -884,8 +887,9 @@ public class LiteRuleAutoConfiguration {
       DistributedLocker distributedLocker,
       ObjectProvider<ApprovalRecordRepository> recordRepoProvider,
       ObjectProvider<ApprovalPermissionChecker> permissionCheckerProvider,
-      ObjectProvider<RuleApprovalWorkflowBridge> workflowBridgeProvider) {
-    RuleApprovalService service = new RuleApprovalService(configProvider, distributedLocker);
+      ObjectProvider<RuleApprovalWorkflowBridge> workflowBridgeProvider,
+      I18nMessages i18nMessages) {
+    RuleApprovalService service = new RuleApprovalService(configProvider, distributedLocker, i18nMessages);
     ApprovalRecordRepository recordRepo = recordRepoProvider.getIfAvailable();
     if (recordRepo != null) {
       service.setRecordRepository(recordRepo);
@@ -1524,10 +1528,11 @@ public class LiteRuleAutoConfiguration {
       RuleConfigProvider configProvider,
       RuleAdminService ruleAdminService,
       ObjectProvider<RuleVersionRepository> versionRepoProvider,
-      LiteRuleProperties properties) {
+      LiteRuleProperties properties,
+      I18nMessages i18nMessages) {
     RuleLifecycleService service =
         new RuleLifecycleService(
-            ruleEngine, configProvider, ruleAdminService, versionRepoProvider.getIfAvailable());
+            ruleEngine, configProvider, ruleAdminService, versionRepoProvider.getIfAvailable(), i18nMessages);
     service.configure(properties.getLifecycle());
     log.info(
         "[LiteRule-Lifecycle] 规则生命周期管理服务已初始化（dormantMin={}, errorRateThreshold={}, staleDays={}, lowImpactRate={}）",
@@ -1705,8 +1710,8 @@ public class LiteRuleAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   @ConditionalOnBean(RuleAdminService.class)
-  public RuleStressTestService ruleStressTestService(RuleAdminService ruleAdminService) {
+  public RuleStressTestService ruleStressTestService(RuleAdminService ruleAdminService, I18nMessages i18nMessages) {
     log.info("[LiteRule-Benchmark] 规则压测服务已初始化");
-    return new RuleStressTestService(ruleAdminService);
+    return new RuleStressTestService(ruleAdminService, i18nMessages);
   }
 }

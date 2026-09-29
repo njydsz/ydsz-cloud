@@ -20,6 +20,7 @@ import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.ParseOptions;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.domain.SecurityScanResult;
+import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.enums.PiiType;
 import com.njydsz.common.docs.enums.SecurityLevel;
 import com.njydsz.common.docs.exception.DocumentException;
@@ -233,7 +234,7 @@ public class DocumentProcessorPipeline {
 
       // 2. 解析
       try {
-        var format = com.njydsz.common.docs.enums.DocumentFormat.fromFileName(fileName);
+        var format = DocumentFormat.fromFileName(fileName);
         if (!parserRegistry.isSupported(format)) {
           result.setParseResult(
               DocumentParseResult.builder()
@@ -277,7 +278,7 @@ public class DocumentProcessorPipeline {
     }
 
     private SecurityScanResult doScanSecurity(InputStream inputStream, String fileName) {
-      var format = com.njydsz.common.docs.enums.DocumentFormat.fromFileName(fileName);
+      var format = DocumentFormat.fromFileName(fileName);
       Path tempFile;
       try {
         tempFile = tempFileManager.createAndWrite("ydsz-docs-pipeline-", ".tmp", inputStream);

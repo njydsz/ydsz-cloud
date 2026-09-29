@@ -4558,37 +4558,28 @@ stats:
 
   - id: "YDIZ-DOMAIN-002"
     category: "domain"
-    severity: "P1"
-    title: "【严重】树构建必须使用 TreeBuilder.buildSimple() 统一入口，禁止直接继承 TreeNode"
+    severity: "P0"
+    title: "【强制】树构建必须使用 TreeBuilder.buildSimple() 统一入口，禁止使用已废弃的 TreeNode 基类"
     description: |
-      ydzs-common-domain 提供两种树构建方式：
-      1. TreeBuilder<T extends TreeNode>.build() — 需继承 TreeNode 基类
-      2. TreeBuilder.buildSimple(flatList, idExtractor, parentIdExtractor, childrenSetter, sortExtractor) — 纯 POJO 友好
+      `TreeNode` 基类、`TreeNodeProvider` SPI、`TreeBuilder.build()` 和 `buildLazy()` 已于 26.09.30 移除。
+      树构建唯一入口为 `TreeBuilder.buildSimple(flatList, idExtractor, parentIdExtractor, childrenSetter, sortExtractor)`。
 
-      实测数据：全项目仅 1 处使用 build()（literule CategoryTreeNode），5 个模块约 23 处使用 buildSimple()。
-      继承 TreeNode 的方式将业务 VO/Entity 与框架基类耦合，违反 DDD 分层纯净性原则。
-
-      **为什么统一 buildSimple**：
-      - 业务 VO 无需继承任何框架基类，保持领域模型纯净
-      - buildSimple 通过 Lambda 方法引用传递 id/parentId/children setter，零侵入
-      - buildSimple 内部已封装 level/path 自动填充
-      - build() 的 TreeNode 继承模式导致 Java 递归泛型（T extends TreeNode<T, ID>）的心智负担
-
-      **约束范围**：所有新建树形结构代码。existing TreeNode 子类（literule CategoryTreeNode）可保留但禁止新增。
+      **约束**：
+      - 禁止 `extends TreeNode<...>`（TreeNode 类已不存在）
+      - 禁止 `new TreeBuilder<>()` 实例化（TreeBuilder 为 final 静态工具类）
+      - 禁止调用 `TreeBuilder.build()` 或 `buildLazy()`（已移除）
+      - 禁止实现 `TreeNodeProvider` 接口（已移除）
+      - 所有树形结构统一使用 `TreeBuilder.buildSimple()` 静态方法 + 纯 POJO
     pattern: 'extends TreeNode<'
     fix: |
-      1. 将继承 TreeNode 的 VO 类改为纯 POJO（仅保留 id/parentId/children/sort/level/path 字段）
-      2. 使用 TreeBuilder.buildSimple(list, VO::getId, VO::getParentId, VO::setChildren, VO::getSort) 构建树
-      3. 新增树形接口统一使用 buildSimple
+      使用 TreeBuilder.buildSimple(list, VO::getId, VO::getParentId, VO::setChildren, VO::getSort) 构建树。
+      level/path 可在构建后由调用方自行填充（如有需要）。
     example_bad: |
-      ❌ 业务 VO 继承 TreeNode
+      ❌ 继承已废弃的 TreeNode（编译错误）
       @Data
       public class MenuVO extends TreeNode<MenuVO, String> {
           private String menuName;
-          private String menuIcon;
       }
-      // 构建
-      List<MenuVO> tree = new TreeBuilder<>(0L, list).build();
     example_good: |
       ✅ 纯 POJO + buildSimple
       @Data
@@ -4597,15 +4588,12 @@ stats:
           private String parentId;
           private List<MenuVO> children;
           private Integer sort;
-          private Integer level;
-          private String path;
           private String menuName;
-          private String menuIcon;
       }
       // 构建
       List<MenuVO> tree = TreeBuilder.buildSimple(list,
-          MenuVO::getId, MenuVO::getParentId, MenuVO::setChildren, MenuVO::getSort);
-    source: "ydsz-common-domain 全局引用分析（YDIZ-DOMAIN-002，P1，26.09.30 TreeNode 统一入口专项）"
+          MenuVO::getId, MenuVO::getParentId, MenuVO::setChildren, VO::getSort);
+    source: "ydsz-common-domain 弃用代码清理（YDIZ-DOMAIN-002，P0，26.09.30 TreeNode 已删除）"
 
   - id: "YDIZ-DOMAIN-003"
     category: "domain"
