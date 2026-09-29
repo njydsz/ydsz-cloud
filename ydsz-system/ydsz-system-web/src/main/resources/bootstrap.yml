@@ -143,3 +143,18 @@ ydsz:
       - ydsz_department
       - ydsz_post
       - ydsz_language
+
+  # P1: 统一线程池配置（ydsz-common-thread）
+  # 通过 ydzs-common-audit 传递依赖获得；为后续 @Async/@Scheduled 异步任务预留托管线程池
+  thread:
+    enabled: true
+    pools:
+      sysIo:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 100
+        thread-name-prefix: sys-async-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+        slow-task-threshold-ms: 3000

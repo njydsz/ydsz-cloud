@@ -13,18 +13,18 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.28-v4"
+  version: "26.09.30-v1"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.28-v4（RuntimeException 清零专项 YDIZ-COMMON-045 P0 + 伪 i18n 清零专项 YDIZ-COMMON-046 P1 + HeaderConstants 推广专项 YDIZ-COMMON-047 P1 + gateway 异常体系合规 YDIZ-COMMON-048 P2；+4 规则，累计 134 条）"
-  total_rules: 134
+  last_updated: "26.09.30-v1（五大 common 模块利用率提升专项：@Async 必须指定线程池 YDIZ-COMMON-049 P1 + SETNX 清零 → LockTemplate YDIZ-COMMON-050 P1 + JdbcTemplate 清零 → Mapper YDIZ-COMMON-051 P1；+3 规则，累计 137 条）"
+  total_rules: 137
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 52
-    P1: 55
+    P1: 58
     P2: 13
 
 rules:
@@ -3911,8 +3911,145 @@ rules:
       ```
     source: "公共基础深化落地（YDIZ-COMMON-048，P2，26.09.xx gateway 异常体系合规）"
 
+  # ============================================
+  # 新增 3 条（26.09.30 五大 common 模块利用率提升专项：JDBC 清零 + SETNX 清零 + @Async 规范）
+  # ============================================
+  - id: "YDIZ-COMMON-049"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【严重】@Async 必须显式指定线程池，禁止使用 Spring 默认 SimpleAsyncTaskExecutor"
+    description: |
+      所有 Spring @Async 注解必须通过 `value` 属性显式指定 ydzz-common-thread 托管线程池 Bean 名，
+      禁止省略 value（省略时退化为 SimpleAsyncTaskExecutor，每次 new Thread，无复用/无队列/无监控）。
+
+      **为什么**：
+      - SimpleAsyncTaskExecutor 每次调用创建新线程，高并发下导致线程堆积 OOM
+      - ydzz-common-thread 提供声明式线程池（ydsz.thread.pools.*），含 Micrometer 指标 + 优雅关闭 + 慢任务检测
+      - ThreadRegistry 自动采集所有 ThreadPoolTaskExecutor 指标，暴露 /actuator/threadpools 端点
+
+      **配置方式**（bootstrap.yml）：
+      ```yaml
+      ydsz:
+        thread:
+          enabled: true
+          pools:
+            <poolName>:
+              core-size: 4
+              max-size: 16
+              queue-capacity: 100
+              reject-policy: CALLER_RUNS
+      ```
+      Bean 名称为 `{poolName}Executor`（如 poolName=userIo → Bean 名 userIoExecutor）。
+
+      **违反判据**：
+      - `@Async` 省略 value 属性
+      - `@Async("someBean")` 引用的 Bean 不是 ThreadPoolTaskExecutor 类型
+      - 在 self-maintained ThreadPool 上 @Async（绕过 ydzz-common-thread）
+
+    pattern: "@Async\\s*$|@Async\\(\\s*\\)"
+    fix: |
+      1. 在 bootstrap.yml 追加 ydzz.thread.pools.\<poolName\> 配置
+      2. @Async 改为 @Async("\<poolName\>Executor")
+      3. 多异步方法按业务重要性配置不同池（io/cpu/batch 隔离）
+    example_bad: |
+      ❌ 违规：使用默认线程池
+      @Async
+      public void sendNotification() { ... }
+    example_good: |
+      ✅ 正确：显式指定托管线程池
+      @Async("userIoExecutor")
+      public void sendNotification() { ... }
+      \# bootstrap.yml: ydzz.thread.pools.userIo.core-size=4, max-size=16
+    source: "五大 common 模块利用率提升专项（YDIZ-COMMON-049，P1，26.09.30 @Async 必须指定线程池）"
+
+  - id: "YDIZ-COMMON-050"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【严重】禁止业务代码自行实现 SETNX 分布式锁，必须使用 LockTemplate / RedisStringOps.getOrCompute"
+    description: |
+      防缓存穿透、防并发加载等需要分布式锁的场景，必须使用 ydzs-common-lock 的 LockTemplate 编程式 API
+      或 RedisStringOps.getOrCompute() 声明式 API，禁止在业务代码中直接使用 SETNX + EXPIRE Lua
+      脚本自实现分布式锁。
+
+      **为什么**：
+      - LockTemplate 提供看门狗自动续期 + Micrometer 指标采集 + fail-open/closed 降级策略
+      - 自实现锁无法被 LockMetrics 监控获取次数/成功率/等待时间/续期失败等指标
+      - 自实现锁缺少重入保护、释放通知器（减少空轮询）等生产级能力
+      - DistributedLockAutoConfiguration 已全局注册 LockTemplate Bean，无需额外配置
+
+      **正确做法**：
+      - **防缓存穿透**：`redisStringOps.getOrCompute(key, ttl, supplier, clazz)` — 原子获取或加载
+      - **显式互斥区**：`lockTemplate.execute("resource:" + id, 30, SECONDS, () -> { ... })`
+      - **声明式锁**：`@YdszDistributedLock(key = "order:#{#orderId}", waitTime = 3, leaseTime = 30)`
+
+      **违反判据**：
+      - Lua 脚本中直接使用 SET key value NX EX
+      - 手动 `redisTemplate.execute(luaScript, ...)` 实现锁获取
+      - `if (redisTemplate.opsForValue().setIfAbsent(key, value)) { ... redisTemplate.expire(key, ttl) ... }` 两步非原子
+
+    pattern: "setIfAbsent.*expire|SET.*NX.*EX|lua.*redis.call.*set.*nx|setIfPresent.* Lucius|SETNX"
+    fix: |
+      1. 确认业务场景属于"防缓存穿透"还是"互斥区"
+      2. 防缓存穿透：换成 RedisStringOps.getOrCompute()
+      3. 互斥区：换成 LockTemplate.execute() 或 @YdszDistributedLock
+      4. 删除自实现的 SETNX Lua 脚本
+    example_bad: |
+      ❌ 违规：SETNX + 过期时间自实现
+      String lockKey = "lock:" + id;
+      boolean acquired = redisTemplate.opsForValue().setIfAbsent(lockKey, "1", 30, TimeUnit.SECONDS);
+      if (acquired) {
+          try { reloadFromDb(); } finally { redisTemplate.delete(lockKey); }
+      }
+    example_good: |
+      ✅ 正确：LockTemplate 编程式锁
+      lockTemplate.execute("lock:" + id, 30, TimeUnit.SECONDS, this::reloadFromDb);
+    source: "五大 common 模块利用率提升专项（YDIZ-COMMON-050，P1，26.09.30 SETNX 清零 → LockTemplate）"
+
+  - id: "YDIZ-COMMON-051"
+    category: "common-reuse"
+    severity: "P1"
+    title: "【严重】禁止业务代码直接使用 JdbcTemplate，所有数据库访问必须走 Mapper / MybatisPlus 拦截器链"
+    description: |
+      业务模块（尤其 agent 向量检索、全文检索等 SQL 密集型场景）的所有数据库访问必须通过 MyBatis Mapper
+      或继承 MpBaseEntity 的 Service 层实现，禁止直接注入 JdbcTemplate 执行原生 SQL。
+
+      **为什么**：
+      - MyBatisPlusInterceptor 链自动提供 SQL 防火墙 / 数据权限拦截 / 分页安全上限 / 慢 SQL 检测
+      - MpBaseEntity 基类提供审计字段（createdAt/createdBy/updatedAt/updatedBy）自动填充
+      - JdbcTemplate 绕过上述所有保护层，SQL 注入、全表扫描、权限越界风险全部暴露
+      - 租户隔离拦截器（TenantIsolationInterceptor）仅在 MyBatis 拦截链中生效，JdbcTemplate 完全绕过
+
+      **特殊场景（需显式注解 + 注释说明）**：
+      - 向量库操作（PgVector)：使用 JdbcTemplate 时必须通过 `/* tenant_isolation */` SQL 注释标记，
+        并在 SQL 中显式追加 `WHERE tenant_id = ?` 条件，确保租户隔离
+      - 性能敏感的全表扫描（如 Analyze 表统计信息）：需申请豁免并加 `@SuppressWarnings("YDIZ-COMMON-051")`
+
+      **违反判据**：
+      - 直接注入 JdbcTemplate 或 NamedParameterJdbcTemplate
+      - 手动拼接 SQL 字符串执行查询/更新
+      - 使用 SimpleJdbcCall 调用存储过程（除非 dbo 级别的数据迁移）
+
+    pattern: "JdbcTemplate|NamedParameterJdbcTemplate|SimpleJdbcCall"
+    fix: |
+      1. 创建对应实体类继承 MpBaseEntity（获得审计字段 + 乐观锁）
+      2. 创建 Mapper 接口继承 BaseMapper<Entity>
+      3. 替换 JdbcTemplate.query/execute 为 mapper.selectList/updateById
+      4. 无法替代的向量库操作：保留 JdbcTemplate 并加 @SuppressWarnings + P0-FIX 注释说明租户隔离策略
+    example_bad: |
+      ❌ 违规：直接使用 JdbcTemplate
+      jdbcTemplate.query("SELECT * FROM vector_store WHERE embedding <-> ? LIMIT ?",
+          new Object[]{embedding, topK}, new VectorRowMapper());
+    example_good: |
+      ✅ 正确：走 Mapper
+      VectorStore entity = new VectorStore();
+      entity.setEmbedding(embedding);
+      return mapper.selectList(new LambdaQueryWrapper<VectorStore>()
+          .orderByAsc(VectorStore::getDistance)
+          .last("LIMIT " + Math.min(topK, 500)));  // 分页安全上限
+    source: "五大 common 模块利用率提升专项（YDIZ-COMMON-051，P1，26.09.30 JdbcTemplate 清零 → Mapper）"
+
 # ============================================
-# 附录：按 category 统计（26.09.28-v4 四模块利用率专项：+4 规则，COMMON-045~048 聚焦 RuntimeException 清零/伪 i18n 清零/HeaderConstants 推广/gateway 合规）
+# 附录：按 category 统计（26.09.30-v1 五大 common 模块利用率提升专项：+3 规则，YDIZ-COMMON-049~051）
 # ============================================
 stats:
   encoding: 1

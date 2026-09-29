@@ -20,24 +20,16 @@ import com.njydsz.common.core.context.TenantContextHolder;
  * 混合检索器（Hybrid Retrieval）
  *
  * <p>结合向量相似度检索和全文检索（BM25/ILIKE），通过 RRF（Reciprocal Rank Fusion） 融合两路检索结果，提升召回率和精确度。
- *
- * <p>实现 domain 层 {@link Retriever} 接口，符合 DDD 分层规范。
- *
- * <h3>RRF 算法</h3>
- *
- * <pre>
- * score(d) = Σ 1 / (k + rank_i(d))
- * </pre>
- *
- * <p>其中 k 为平滑常数（默认 60），rank_i(d) 为文档 d 在第 i 路检索中的排名（从 1 开始）。
- *
- * <p><b>多租户隔离（P0 修复）</b>：全文检索走 {@link JdbcTemplate} 原生 SQL，不经过 MyBatis 租户拦截器，SQL 中需显式追加 {@code
- * tenant_id} 过滤，防止跨租户文档被召回。
+ * ...
+ * <p><b>豁免说明（YDIZ-COMMON-051）</b>：全文检索使用 PostgreSQL 专有全文搜索语法（{@code to_tsvector}/{@code ts_rank}/{@code
+ * plainto_tsquery}），MyBatis-Plus 无法原生支持，故保留 {@link JdbcTemplate} 并通过 {@link SuppressWarnings} 豁免。
+ * 多租户隔离通过 {@link #resolveTenantId()} 在 SQL 层显式追加租户过滤。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
+@SuppressWarnings("YDIZ-COMMON-051")
 public class HybridRetriever implements Retriever, RagDebugEnquirer {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;

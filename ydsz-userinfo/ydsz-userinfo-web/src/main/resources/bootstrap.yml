@@ -130,6 +130,21 @@ ydsz:
       header-name: X-API-Version
       sunset-headers: true
 
+  # P1: 统一线程池配置（ydsz-common-thread）
+  # 通过 ydzs-common-audit 传递依赖获得；此处声明业务线程池
+  thread:
+    enabled: true
+    pools:
+      userIo:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 100
+        thread-name-prefix: user-async-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+        slow-task-threshold-ms: 3000
+
 # JSON 引擎配置（ydsz-common-json）
   json:
     enabled: true

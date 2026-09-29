@@ -109,6 +109,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
+        <!-- P1: ydsz-common-thread — @Async("userIoExecutor") 使用此托管线程池（YDIZ-COMMON-037） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
         <!-- common-lock: @Idempotent 注解（InternalApiController 幂等保护） -->
         <dependency>
             <groupId>com.njydsz</groupId>

@@ -568,7 +568,8 @@ public class NextwikiCacheService {
    * 非阻塞尝试获取分布式互斥锁（防缓存穿透）。
    *
    * <p>委托 {@link LockStrategy} + {@link DistributedLocker#tryLock(String, long, TimeUnit)} 实现，
-   * 利用 Redis SETNX + 过期时间保证仅一个线程能成功获锁执行 DB 回查，与原有语义一致。
+   * 走 ydsz-common-lock ReentrantLock 路径（Hash 结构 + Lua 脚本原子获取），
+   * 支持看门狗续期与 Micrometer 指标采集，与原有 SETNX + 过期时间语义一致但可观测性更强。
    *
    * @param lockKey 锁键
    * @return 获锁成功返回 lockValue（用于释放时校验），失败返回 {@code null}

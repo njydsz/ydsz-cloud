@@ -51,7 +51,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
   private final LoginAttemptCounterService loginAttemptCounterService;
 
   @Override
-  @Async
+  @Async("userIoExecutor")
   public void recordLoginAttempt(
       LoginAttemptContext context, String result, String failReason, String userAgent) {
     // Redis 维度：记录 IP 失败计数（供 IP 封禁与风险评分统一读取）

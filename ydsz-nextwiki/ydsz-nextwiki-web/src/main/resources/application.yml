@@ -70,14 +70,11 @@ ydsz:
   thread:
     enabled: true
     pools:
+      # P2-003: JDK 21 虚拟线程试点（nextwiki-task 改为 VIRTUAL — IO 密集型异步任务友好）
       nextwikiTask:
-        core-size: 4
-        max-size: 16
-        queue-capacity: 100
+        type: VIRTUAL
         thread-name-prefix: nextwiki-async-
-        reject-policy: CALLER_RUNS
         await-termination-seconds: 60
-        keep-alive-seconds: 60
       nextwikiSchedule:
         core-size: 2
         max-size: 4

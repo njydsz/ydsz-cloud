@@ -413,6 +413,7 @@ public class AgentAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(VectorStore.class)
+  @SuppressWarnings("YDIZ-COMMON-051")
   public VectorStore vectorStore(
       AgentProperties properties, EmbeddingClient embeddingClient, JdbcTemplate jdbcTemplate) {
     RagProperties ragConfig = properties.getRag();
@@ -695,6 +696,7 @@ public class AgentAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(HybridRetriever.class)
+  @SuppressWarnings("YDIZ-COMMON-051")
   public HybridRetriever hybridRetriever(
       AgentProperties properties,
       VectorStore vectorStore,

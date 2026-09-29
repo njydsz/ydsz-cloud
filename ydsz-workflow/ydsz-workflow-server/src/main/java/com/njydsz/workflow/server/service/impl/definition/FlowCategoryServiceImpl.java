@@ -2,6 +2,9 @@ package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +16,8 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.lock.strategy.LockStrategy;
+import com.njydsz.common.lock.RedisReadWriteLock;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.repository.FlowCategoryRepository;
@@ -93,6 +98,25 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   /** 流程分类仓储（domain 层契约），管理 ydsz_flow_category 表 CRUD */
   private final FlowCategoryRepository categoryRepository;
 
+  /** 分布式读写锁（来自 ydsz-common-lock），保护分类树本地缓存并发加载 */
+  private final LockStrategy lockStrategy;
+
+  /** 分类树本地缓存（tenantId → tree），读写锁保护下读写 */
+  private final Map<String, List<FlowCategoryTreeVO>> treeCache = new ConcurrentHashMap<>();
+
+  /** 流程分类树分布式锁 key 前缀（UIDIZ-COMMON-037：必须使用 ydsz-common-lock） */
+  private static final String CATEGORY_TREE_LOCK_KEY = "flow:category:tree";
+
+  /** 获取分类树分布式读锁（允许多节点并发读取缓存） */
+  private Lock categoryReadLock() {
+    return lockStrategy.getReadWriteLock(CATEGORY_TREE_LOCK_KEY).readLock();
+  }
+
+  /** 获取分类树分布式写锁（仅缓存加载/失效时独占，防止缓存击穿） */
+  private Lock categoryWriteLock() {
+    return lockStrategy.getReadWriteLock(CATEGORY_TREE_LOCK_KEY).writeLock();
+  }
+
   /**
    * 查询当前租户全部分类
    *
@@ -124,6 +148,46 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
   @Override
   public List<FlowCategoryTreeVO> tree(String tenantId) {
     String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+
+    // ① 读锁检查本地缓存（允许并发读）
+    Lock readLock = categoryReadLock();
+    readLock.lock();
+    try {
+      List<FlowCategoryTreeVO> cached = treeCache.get(tid);
+      if (cached != null) {
+        return cached;
+      }
+    } finally {
+      readLock.unlock();
+    }
+
+    // ② 写锁加载缓存（防止多节点并发击穿 DB）— 双重检查
+    Lock writeLock = categoryWriteLock();
+    writeLock.lock();
+    try {
+      List<FlowCategoryTreeVO> cached = treeCache.get(tid);
+      if (cached != null) {
+        return cached;
+      }
+      List<FlowCategoryTreeVO> result = buildCategoryTree(tid);
+      if (!result.isEmpty()) {
+        treeCache.put(tid, result);
+      }
+      return result;
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  /**
+   * 构建分类树（DB 查询 + 树构建 + level/path 计算）。
+   *
+   * <p><b>前置条件：</b>调用方已持有写锁（{@link #categoryWriteLock()}），确保单节点单线程执行。
+   *
+   * @param tid 租户 ID
+   * @return 构建好的分类树（可能为空列表）
+   */
+  private List<FlowCategoryTreeVO> buildCategoryTree(String tid) {
     List<FlowCategoryVO> all = categoryRepository.findAll(tid);
     all.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
     if (all.isEmpty()) {
@@ -145,6 +209,19 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
       fillChildrenLevelPath(root, 0);
     }
     return tree;
+  }
+
+  /**
+   * 失效指定租户的分类树缓存（CRUD 写操作后调用）。
+   *
+   * <p>非同步写——下次 {@link #tree} 调用在写锁保护下从 DB 重新加载。
+   *
+   * @param tid 租户 ID
+   */
+  private void evictCategoryTreeCache(String tid) {
+    if (tid != null) {
+      treeCache.remove(tid);
+    }
   }
 
   /** 递归填充子节点 level/path */
@@ -209,6 +286,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     categoryDto.setIcon(dto.getIcon());
     categoryDto.setRemark(dto.getRemark());
     categoryRepository.save(categoryDto);
+    evictCategoryTreeCache(tid);
     log.info(
         "[FlowCategory] 新增分类: code={} name={} id={}",
         category.getCategoryCode(),
@@ -267,6 +345,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     updateDto.setTenantId(existing.getTenantId());
     updateDto.setIsDeleted(existing.getIsDeleted());
     categoryRepository.update(updateDto);
+    evictCategoryTreeCache(existing.getTenantId());
   }
 
   /**
@@ -315,6 +394,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     deleteDto.setId(existing.getId());
     deleteDto.setIsDeleted(true);
     categoryRepository.update(deleteDto);
+    evictCategoryTreeCache(existing.getTenantId());
   }
 
   /**

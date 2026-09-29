@@ -19,34 +19,17 @@ import com.njydsz.common.json.YdszJson;
  *
  * <p>使用 PostgreSQL pgvector 扩展存储和检索向量数据。 依赖表 {@code ydsz_agt_document_chunk}（含 vector 类型列）。
  *
- * <p><b>DDL（多租户：需含 tenant_id 列）：</b>
+ * <p><b>DDL（多租户：需含 tenant_id 列）：</b> ...
  *
- * <pre>
- * CREATE TABLE ydsz_agt_document_chunk (
- *   id           VARCHAR(64) PRIMARY KEY,
- *   document_id  VARCHAR(64) NOT NULL,
- *   content      TEXT NOT NULL,
- *   embedding    vector(1536),
- *   chunk_index  INTEGER,
- *   token_count  INTEGER,
- *   document_title VARCHAR(256),
- *   source       VARCHAR(128),
- *   metadata     JSONB,
- *   tenant_id    VARCHAR(64),
- *   created_at   TIMESTAMPTZ DEFAULT NOW()
- * );
- * CREATE INDEX idx_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
- * CREATE INDEX idx_chunk_doc ON ydsz_agt_document_chunk(document_id);
- * CREATE INDEX idx_chunk_tenant ON ydsz_agt_document_chunk(tenant_id);
- * </pre>
- *
- * <p><b>多租户隔离（P0 修复）</b>：本实现走 {@link JdbcTemplate} 原生 SQL，不经过 MyBatis 租户拦截器，因此必须在 SQL 层显式追加 {@code
- * tenant_id} 条件，否则跨租户检索会泄露数据。 租户 ID 从 {@link TenantContextHolder} 解析；超级管理员/系统租户/跳过隔离场景不做过滤。
+ * <p><b>豁免说明（YDIZ-COMMON-051）</b>：本实现使用 pgvector 专有 SQL（{@code ::vector} 类型转换、{@code <=>} 余弦距离算子），
+ * MyBatis-Plus 无法原生支持，故保留 {@link JdbcTemplate} 并通过 {@link SuppressWarnings} 豁免。 多租户隔离通过 {@link
+ * #resolveTenantId()} 在 SQL 层显式追加 {@code tenant_id} 条件实现（P0 修复已审查）。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 @Slf4j
+@SuppressWarnings("YDIZ-COMMON-051")
 public class PgVectorStore implements VectorStore {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
