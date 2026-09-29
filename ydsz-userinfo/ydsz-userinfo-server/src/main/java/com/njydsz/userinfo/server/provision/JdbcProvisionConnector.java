@@ -15,7 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.jdbc.datasource.DynamicDataSourceContextHolder;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.locales.util.I18nMessages;
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.userinfo.domain.provision.ProvisionException;
 import com.njydsz.userinfo.domain.provision.ProvisionRecord;
@@ -58,6 +58,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
 
   private final JdbcTemplate jdbcTemplate;
   private final JdbcProvisionProperties properties;
+  private final I18nMessages i18n;
 
   @Override
   public String getConnectorType() {
@@ -78,7 +79,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
       List<ProvisionRecord> records = executeQuery(query, null);
       return new ProvisionRecordPage(records);
     } catch (Exception e) {
-      throw new ProvisionException(CONNECTOR_TYPE, I18n.message("userinfo.provision.full_pull_failed", new Object[]{e.getMessage()}), e);
+      throw new ProvisionException(CONNECTOR_TYPE, i18n.resolve("userinfo.provision.full_pull_failed", new Object[]{e.getMessage()}), e);
     }
   }
 
@@ -95,7 +96,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
         String newToken = lastSyncToken; // 使用查询完成后的 max(updated_at) 作为新 token
         return new ProvisionRecordPage(records, newToken, records.size());
       } catch (Exception e) {
-        throw new ProvisionException(CONNECTOR_TYPE, I18n.message("userinfo.provision.incremental_pull_failed", new Object[]{e.getMessage()}), e);
+        throw new ProvisionException(CONNECTOR_TYPE, i18n.resolve("userinfo.provision.incremental_pull_failed", new Object[]{e.getMessage()}), e);
       }
     }
     // 未配置增量 SQL - 退化为全量拉取
@@ -126,7 +127,7 @@ public class JdbcProvisionConnector implements IdentityProvisionConnector {
   private String resolveQuery() {
     String query = properties.getUserQuery();
     if (query == null || query.isBlank()) {
-      throw new ProvisionException(CONNECTOR_TYPE, I18n.message("userinfo.error.jdbc.query.not.configured"));
+      throw new ProvisionException(CONNECTOR_TYPE, i18n.resolve("userinfo.error.jdbc.query.not.configured"));
     }
     // 自动添加 LIMIT 子句防止一次拉取过多数据
     if (!query.toLowerCase().contains("limit")) {
