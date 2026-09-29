@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
@@ -294,7 +295,7 @@ public class ResponseUnwrapDecoder implements Decoder {
    * <p>自 26.09.19 起由 {@link feign.codec.DecodeException} 改为继承 {@link com.njydsz.common.exception.custom.SysException}，
    * 避免父类构造函数需要非 null Request 的限制。
    */
-  public static class FeignBusinessException extends com.njydsz.common.exception.custom.SysException {
+  public static class FeignBusinessException extends SysException {
 
     private static final long serialVersionUID = 1L;
 

@@ -1,6 +1,7 @@
 package com.njydsz.system.server.service.impl;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import lombok.RequiredArgsConstructor;
@@ -225,6 +226,27 @@ public class ConfigServiceImpl implements ConfigService {
       publishConfigChangedEvent(dto.getConfigKey(), dto.getConfigGroup());
     }
     return updated;
+  }
+
+  /**
+   * P2-D：RFC 7396 Merge Patch 增量更新配置。
+   *
+   * <p>实现路径：序列化现有配置 → 应用 patch → 反序列化为 DTO → 委托 {@link #updateById} 持久化。
+   *
+   * <p>版本快照、缓存失效、变更事件等副作用与 {@link #updateById} 保持一致，调用方无感知差异。
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public boolean patchConfig(String id, Map<String, Object> patch) {
+    ConfigVO existing = getById(id);
+    if (existing == null) {
+      throw new BusinessException(SystemExceptionCode.CONFIG_NOT_FOUND, id);
+    }
+    String existingJson = YdszJson.toJson(existing);
+    String mergedJson = YdszJson.mergePatch(existingJson, patch);
+    ConfigDTO mergedDto = YdszJson.fromJson(mergedJson, ConfigDTO.class);
+    mergedDto.setId(id);
+    return updateById(mergedDto);
   }
 
   @Override

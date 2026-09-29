@@ -32,6 +32,7 @@ import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
+import com.njydsz.common.excel.core.template.TemplateRegion;
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 import com.njydsz.common.excel.support.mh.MHFieldAccessor;
@@ -514,7 +515,7 @@ public class SuperFastExcelTemplateWriter {
    * @param data 数据列表
    * @param region 循环区域描述符
    */
-  public void doWrite(List<?> data, com.njydsz.common.excel.core.template.TemplateRegion region) {
+  public void doWrite(List<?> data, TemplateRegion region) {
     if (data == null || data.isEmpty()) {
       writeOutput(true);
       return;

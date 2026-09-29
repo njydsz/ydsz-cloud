@@ -10,8 +10,8 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * <p>由消费方（如 project 模块）提供实现，提供基于 category_path 的多级目录树构建、 按路径过滤规则、按 Owner 筛选等能力。将原有 {@code
  * RuleCategoryTreeService} 的能力抽象为 SPI， 避免 literule 模块直接依赖 project 模块。
  *
- * <p>目录树节点使用 {@link CategoryTreeNode}（基于 common-domain {@link
- * com.njydsz.common.domain.tree.TreeNode}），构建时使用 {@link com.njydsz.common.domain.tree.TreeBuilder}。
+ * <p>目录树节点使用 {@link CategoryTreeNode}（独立 POJO），构建时推荐使用 {@link
+ * com.njydsz.common.domain.tree.TreeBuilder#buildSimple}。
  *
  * @since 26.09.01
  * @author ydsz-team
@@ -21,11 +21,15 @@ public interface RuleCategoryProvider {
   /**
    * 构建规则目录树
    *
-   * <p>推荐使用 {@link com.njydsz.common.domain.tree.TreeBuilder} 构建：
+   * <p>推荐使用 {@link com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 构建：
    *
    * <pre>{@code
-   * List<CategoryTreeNode> flatNodes = ...;
-   * List<CategoryTreeNode> tree = new TreeBuilder<>("0", flatNodes).build();
+   * List<CategoryTreeNode> tree = TreeBuilder.buildSimple(
+   *     flatNodes,
+   *     CategoryTreeNode::getId,
+   *     CategoryTreeNode::getParentId,
+   *     CategoryTreeNode::setChildren,
+   *     CategoryTreeNode::getSort);
    * }</pre>
    *
    * @return 树根（虚拟根，name="ROOT"），children 为一级分类

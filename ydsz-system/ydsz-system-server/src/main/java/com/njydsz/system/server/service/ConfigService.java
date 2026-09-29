@@ -103,6 +103,23 @@ public interface ConfigService {
   boolean updateById(ConfigDTO dto);
 
   /**
+   * 增量更新配置（RFC 7396 Merge Patch 语义，P2-D）。
+   *
+   * <p>对比 {@link #updateById(ConfigDTO)} 的全量替换模式，本方法通过 JSON Merge Patch 语义实现部分更新：
+   * 客户端仅需发送需要变更的字段，未包含的字段保持不变；显式置 {@code null} 的字段被清除（写入默认值）。
+   *
+   * <p>典型场景：前端「配置编辑页」中仅修改 {@code configValue} 和 {@code description} 两个字段，
+   * 无需回传完整的配置对象。
+   *
+   * <p>实现路径：{@code existingVo → toJson → mergePatch(patch) → fromJson(ConfigDTO) → updateById}。
+   *
+   * @param id 主键 ID
+   * @param patch 变更字段的键值对映射（{@code Map<String, Object>}），仅包含需要修改的字段
+   * @return 是否成功
+   */
+  boolean patchConfig(String id, Map<String, Object> patch);
+
+  /**
    * 删除配置
    *
    * <p>删除后失效 Redis 缓存。
