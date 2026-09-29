@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.locales.config.EnableYdszI18n;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
@@ -26,6 +27,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszFeign
+@EnableYdszI18n
 @MapperScan("com.njydsz.userinfo.infra.mapper")
 @EnableScheduling
 public class UserInfoApplication {

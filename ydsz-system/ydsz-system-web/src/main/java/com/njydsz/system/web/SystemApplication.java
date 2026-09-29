@@ -11,6 +11,7 @@ import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.locales.config.EnableYdszI18n;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
@@ -28,6 +29,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAudit
 @EnableYdszSafe
 @EnableYdszFeign
+@EnableYdszI18n
 @ConditionalOnPlatform(PlatformMode.WEB)
 @MapperScan("com.njydsz.system.infra.mapper")
 @EnableScheduling

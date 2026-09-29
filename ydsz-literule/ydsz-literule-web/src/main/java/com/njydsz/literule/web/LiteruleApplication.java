@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.locales.config.EnableYdszI18n;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
@@ -42,6 +43,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszSafe
 @EnableYdszAudit
 @EnableYdszFeign
+@EnableYdszI18n
 @EnableScheduling
 public class LiteruleApplication {
 

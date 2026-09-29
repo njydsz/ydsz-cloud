@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.locales.config.EnableYdszI18n;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
@@ -35,6 +36,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszFeign
+@EnableYdszI18n
 // P1-1: 移除 literule Mapper 扫描，跨模块数据访问应通过 Feign 交互而非直接访问 Mapper
 @MapperScan({"com.njydsz.workflow.infra.mapper"})
 @EnableScheduling

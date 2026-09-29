@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
+import com.njydsz.common.locales.config.EnableYdszI18n;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.gateway.config.CorsProperties;
 import com.njydsz.gateway.config.GatewayHealthIndicator;
@@ -56,6 +57,7 @@ import com.njydsz.gateway.filter.AuthGlobalFilter;
  */
 @SpringBootApplication
 @EnableDiscoveryClient
+@EnableYdszI18n
 @EnableConfigurationProperties({
   GatewayRateLimitProperties.class,
   SecurityHeaderProperties.class,

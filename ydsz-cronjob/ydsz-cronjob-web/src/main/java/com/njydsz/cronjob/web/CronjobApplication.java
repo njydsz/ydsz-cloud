@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.locales.config.EnableYdszI18n;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
@@ -31,6 +32,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAudit
 // P0-FIX: @EnableYdszFeign 为无属性注解（默认扫描 com.njydsz 下 FeignClient），移除不存在的 basePackages 属性
 @EnableYdszFeign
+@EnableYdszI18n
 @EnableScheduling
 @MapperScan("com.njydsz.cronjob.infra.mapper")
 public class CronjobApplication {
