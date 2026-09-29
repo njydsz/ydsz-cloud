@@ -1,11 +1,7 @@
 package com.njydsz.common.auth.security;
 
-import java.nio.charset.StandardCharsets;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
 import com.njydsz.common.locales.util.I18n;
-import com.njydsz.common.util.security.HexUtils;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 内部请求头签名工具（P0-3 由 ydsz-gateway 下沉至 ydsz-common-auth）。
@@ -19,12 +15,12 @@ import com.njydsz.common.util.security.HexUtils;
  *
  * <p>签名 payload 拼接顺序：traceId|userId|username|roles|permissions
  *
+ * <p>底层委托 {@link DigestUtils#hmacSha256Hex}（YDIZ-COMMON-054）。
+ *
  * @since 26.09.01
  * @author ydsz-team
  */
 public final class InternalHeaderSigner {
-
-  private static final String HMAC_SHA256 = "HmacSHA256";
 
   private InternalHeaderSigner() {
     throw new UnsupportedOperationException("Utility class");
@@ -53,7 +49,8 @@ public final class InternalHeaderSigner {
       String permissions,
       String receivedSig) {
     String expectedSig = sign(secret, traceId, userId, username, roles, permissions);
-    return slowEquals(expectedSig, receivedSig);
+    // YDIZ-COMMON-054: 委托 DigestUtils.constantTimeEquals 进行恒定时间比较
+    return DigestUtils.constantTimeEquals(expectedSig, receivedSig);
   }
 
   /**
@@ -83,43 +80,7 @@ public final class InternalHeaderSigner {
             username != null ? username : "",
             roles != null ? roles : "",
             permissions != null ? permissions : "");
-    return hmacSha256(secret, payload);
-  }
-
-  /**
-   * 恒定时间比较（防计时攻击）。
-   *
-   * @param left  待比较字符串
-   * @param right 待比较字符串
-   * @return true=完全相等；false=不相等
-   */
-  private static boolean slowEquals(String left, String right) {
-    if (left == null || right == null || left.length() != right.length()) {
-      return false;
-    }
-    int diff = 0;
-    for (int i = 0; i < left.length(); i++) {
-      diff |= left.charAt(i) ^ right.charAt(i);
-    }
-    return diff == 0;
-  }
-
-  /**
-   * 计算 HMAC-SHA256。
-   *
-   * @param secret 签名密钥
-   * @param payload 待签名内容
-   * @return 十六进制签名串
-   */
-  private static String hmacSha256(String secret, String payload) {
-    try {
-      Mac mac = Mac.getInstance(HMAC_SHA256);
-      SecretKeySpec keySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256);
-      mac.init(keySpec);
-      byte[] hmacBytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-      return HexUtils.encode(hmacBytes);
-    } catch (Exception e) {
-      throw new IllegalStateException(I18n.message("common.auth.internal_header.sign_failed"), e);
-    }
+    // YDIZ-COMMON-054: 委托 DigestUtils.hmacSha256Hex 计算 HMAC-SHA256
+    return DigestUtils.hmacSha256Hex(payload, secret);
   }
 }

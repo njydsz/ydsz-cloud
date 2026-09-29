@@ -223,6 +223,53 @@ public final class DigestUtils {
     return md5Hex(input.getBytes(StandardCharsets.UTF_8));
   }
 
+  // ==================== SHA-1 散列（仅限非安全场景使用） ====================
+
+  /**
+   * 计算 SHA-1 散列
+   *
+   * <p>⚠️ <b>安全提示：SHA-1 已不再推荐用于安全敏感场景</b>（密码存储、数字签名等），
+   * 仅适用于内容指纹、文件校验、第三方协议对接（如企微回调签名）等非安全场景。
+   *
+   * @param input 输入
+   * @return SHA-1 摘要字节数组
+   * @since 26.09.30
+   */
+  public static byte[] sha1(byte[] input) {
+    return digestIterativeRaw(input, "SHA-1", null, 1);
+  }
+
+  /**
+   * 计算 SHA-1 散列（Hex 格式）
+   *
+   * <p>⚠️ <b>安全提示：SHA-1 不推荐用于安全敏感场景</b>。典型用途：企微回调签名。
+   *
+   * @param input 输入
+   * @return 十六进制 SHA-1 字符串
+   * @since 26.09.30
+   */
+  public static String sha1Hex(byte[] input) {
+    return HexFormat.of().formatHex(sha1(input));
+  }
+
+  /**
+   * 计算字符串的 SHA-1 散列（Hex 格式，UTF-8 编码）
+   *
+   * <p>⚠️ <b>安全提示：SHA-1 不推荐用于安全敏感场景</b>。
+   *
+   * @param input 输入字符串（UTF-8 编码）
+   * @return 十六进制 SHA-1 字符串；输入为 null 时返回 null
+   * @since 26.09.30
+   */
+  public static String sha1Hex(String input) {
+    if (input == null) {
+      return null;
+    }
+    return sha1Hex(input.getBytes(StandardCharsets.UTF_8));
+  }
+
+  // ==================== SHA-256 散列 ====================
+
   /**
    * 计算 SHA-256 散列
    *

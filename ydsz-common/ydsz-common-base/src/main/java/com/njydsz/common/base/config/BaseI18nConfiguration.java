@@ -1,14 +1,9 @@
 package com.njydsz.common.base.config;
 
-import java.util.List;
-import java.util.Locale;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.web.servlet.LocaleResolver;
-import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
 import com.njydsz.common.base.i18n.MessageResolverHolder;
 import com.njydsz.common.base.i18n.MessageResolverRegistry;
@@ -20,13 +15,16 @@ import com.njydsz.common.base.i18n.SpringMessageResolver;
  * <p>提供基于 {@link ResourceBundleMessageSource} 的国际化支持。 子类覆盖 {@link #getBasenames()} 即可接入不同的 i18n
  * 资源文件。
  *
+ * <p><b>注意：</b>自 26.09.29 起，{@link #messageSource()} 和 {@link #localeResolver()} Bean 已移除——国际化
+ * 基础设施统一由 {@code ydsz-common-locales} 的 {@link
+ * com.njydsz.common.locales.config.LocalesAutoConfiguration} 提供（支持负缓存、缺失节流、运行时覆盖、user-priority
+ * Locale 解析等增强能力）。本类仅保留 {@link #messageResolverRegistry()} 用于向后兼容。
+ *
  * <p><b>特性：</b>
  *
  * <ul>
- *   <li>支持基于 {@code Accept-Language} 请求头的语言解析
- *   <li>默认支持简体中文（zh_CN）和美式英语（en_US）
- *   <li>默认编码 UTF-8，缺失 key 时回退到 code 而非抛出异常
  *   <li>通过 {@link MessageResolverRegistry} 桥接 Spring MessageSource 到框架 SPI
+ *   <li>默认编码 UTF-8，缺失 key 时回退到 code 而非抛出异常
  * </ul>
  *
  * <p><b>资源文件命名规范：</b>
@@ -53,49 +51,18 @@ public abstract class BaseI18nConfiguration {
   protected abstract String[] getBasenames();
 
   /**
-   * 注册 LocaleResolver
+   * 注册消息解析器注册表（向后兼容路径）。
    *
-   * <p>基于 {@link AcceptHeaderLocaleResolver} 从 HTTP 请求头 {@code Accept-Language} 解析语言。 默认语言为简体中文，支持
-   * zh_CN 和 en_US。
-   *
-   * @return LocaleResolver 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  public LocaleResolver localeResolver() {
-    AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
-    resolver.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
-    resolver.setSupportedLocales(List.of(Locale.SIMPLIFIED_CHINESE, Locale.US));
-    return resolver;
-  }
-
-  /**
-   * 注册 MessageSource
-   *
-   * <p>使用 {@link ResourceBundleMessageSource} 加载多语言资源文件， 设置默认编码 UTF-8，开启 {@code
-   * useCodeAsDefaultMessage} 以便在缺失 key 时 返回 code 而非抛出 NoSuchMessageException。
-   *
-   * @return MessageSource 实例
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  public MessageSource messageSource() {
-    ResourceBundleMessageSource source = new ResourceBundleMessageSource();
-    source.setBasenames(getBasenames());
-    source.setDefaultEncoding("UTF-8");
-    source.setUseCodeAsDefaultMessage(true);
-    source.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
-    return source;
-  }
-
-  /**
-   * 注册消息解析器注册表。
-   *
-   * <p>桥接 Spring MessageSource 到框架统一的 MessageResolverHolder SPI， 同时支持 Spring 注入和程序化注册两种模式。
+   * <p>桥接 Spring MessageSource 到框架统一的 MessageResolverHolder SPI。 新代码请直接使用 {@link
+   * com.njydsz.common.locales.util.MessageSourceHolder} 和 {@link
+   * com.njydsz.common.locales.util.I18nMessages}。
    *
    * @param messageSource Spring 消息源
    * @return MessageResolverRegistry 实例
+   * @deprecated 自 26.09.29 起废弃，{@link com.njydsz.common.locales.util.MessageSourceHolder} 已提供
+   *     完整的负缓存 + 缺失节流 + 运行时覆盖能力。对齐 A-1/P0 统一 i18n 底座改造。
    */
+  @Deprecated
   @Bean
   @ConditionalOnMissingBean
   public MessageResolverRegistry messageResolverRegistry(MessageSource messageSource) {

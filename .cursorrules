@@ -1,0 +1,118 @@
+# .cursorrules — Cursor AI 编码规则（ydsz-cloud 项目）
+> 本文件在 Cursor 编辑器中作为项目级规则自动加载。
+
+## 项目基本信息
+- 项目：ydsz-cloud（云顶云平台）— 9大微服务 + 30个公共子模块
+- 技术栈：Java 21 + Spring Boot 4.1.0 + Spring Cloud 2025.1.2 + MyBatis-Plus + PostgreSQL
+- 编码规范：140条红线规则（P0=53 阻断级, P1=60 严重级, P2=13 建议级）
+- 完整规则源：docs/ai-rules/shared-rules.yaml | 项目 CLAUDE.md | AGENTS.md
+
+## DDD 分层架构
+所有业务模块采用六层 DDD 架构：api / domain / infra / server / app / web
+- web → server → domain ← infra
+- domain 层通过 Repository 接口倒置依赖，infra 实现接口并返回 VO
+- Entity 仅定义在 domain/entity/ 包下，禁止 infra 自建 DO/PO 替身类
+- gateway 为单模块 reactive 栈，不拆分 DDD 层
+
+## 八大引擎矩阵
+- 系统引擎(ydsz-system,9001) 身份引擎(ydsz-userinfo,9002) 消息引擎(ydsz-message,9004)
+- 流程引擎(ydsz-workflow,9005) 任务引擎(ydsz-cronjob,9006) 规则引擎(ydsz-literule,9007)
+- 文件引擎(ydsz-nextwiki,9003) 智能引擎(ydsz-agent,9008) + 网关(ydsz-gateway,9000)
+
+## P0 阻断级红线（绝对禁止）
+
+### 文件编码
+- 所有源文件 UTF-8 无 BOM，AI 生成文件后必须确认编码
+
+### Import 规则
+- 禁止行内 FQN（必须顶部 import + 使用简单名）
+- 禁止 import * 通配符
+- 禁止未使用的 import
+- 禁止直接 import Jackson/Fastjson/Gson（用 JsonUtils）
+- 禁止直接 import Netty（用 common-netty 封装）
+
+### 命名规则
+- entity 包禁止 DO 后缀
+- 数据库表名必须 ydsz_ 前缀
+- 排序字段统一 sort（禁用 sort_order）
+
+### OOP 规则
+- equals/hashCode 必须同时覆盖
+- 包装类比较必须用 equals
+- 金额必须用 BigDecimal（禁用 double/float）
+- 布尔字段必须 is 前缀（Java isXxx ↔ DB is_xxx）
+
+### 异常与日志
+- 禁止空 catch 块
+- 日志必须用 {} 占位符（禁止字符串拼接）
+- 禁止 System.out/err 和 printStackTrace
+
+### 日期与集合
+- 禁止 SimpleDateFormat 作为共享变量
+- 使用 java.time.* API（禁止 Date/Calendar）
+
+### 国际化
+- 资源文件必须带模块前缀（禁止裸 messages.properties）
+- 禁止硬编码中文文案（必须走 i18n key 或 I18n.message()）
+
+## 公共能力复用（禁止重复造轮子）
+
+必须使用 common | 禁止自行实现
+---|---
+JsonUtils（ydsz-common-json） | Jackson/Fastjson 直连
+ExcelFacade（ydsz-common-excel） | Apache POI 直连
+DateUtils（ydsz-common-util） | 直接使用 DateTimeFormatter
+MaskUtils（ydsz-common-util） | substring + * 手写脱敏
+YdszCache（ydsz-common-cache） | ConcurrentHashMap 手写 TTL
+CryptoUtils/DigestUtils | 自行实现加解密
+PwdUtils | BCryptPasswordEncoder 直连
+NotifyHelper（ydsz-common-notify） | Feign 直连通知服务
+LockUtils（ydsz-common-lock） | 直连 Redisson API
+I18n.message() 或 I18nMessages | MessageSource.getMessage 直连
+
+## 代码编写规范
+
+### Controller 层
+- 返回类型必须为 YdszResponse<T> 或 PageResponse<T>
+- 禁止在 Controller 内写业务逻辑
+- 异常通过 ExceptionHandler 统一处理
+
+### Service 层
+- 编排业务逻辑，调用 domain 服务
+- 事务控制在 server 层
+- 通过 i18n 抛出业务异常
+
+### Entity/PO 规范
+- Entity 直接携带 ORM 注解（@TableName/@TableField）
+- Repository 返回 VO（通过 Converter 转换）
+- 审计字段：created_at / updated_at / created_by / updated_by
+- 逻辑删除：is_deleted (默认 false)
+
+### 日志示例
+log.info("用户{}操作失败，原因：{}", userId, reason);
+
+### 异常示例
+throw new BusinessException(ExceptionCodeEnum.TENANT_NOT_FOUND, tenantId);
+
+### i18n 使用
+// Spring 托管 Bean 场景
+private final I18nMessages i18n; // 构造注入
+throw new BusinessException(i18n.tenantNotFound(tenantId));
+
+// 无注入场景
+I18n.message("module.scenario.key", new Object[]{params});
+
+## 修改代码后的必做操作
+1. 修改模块 mvn compile 验证零错误
+2. 新文件确认 UTF-8 无 BOM
+3. 删除代码前 grep 确认无其他引用
+4. 禁止在未知情的情况下去除 @SuppressWarnings
+
+## 禁止清单
+- 禁止在 common 外 import POI / Jackson / Netty
+- 禁止在 domain 层引入 Mapper 或调用 Infra 服务
+- 禁止 new SimpleDateFormat
+- 禁止直接使用 RedisTemplate（通过 StringOps/HashOps 封装）
+- 禁止 new ThreadPoolExecutor（通过 ydsz-common-thread）
+- 禁止使用 Flyway/Liquibase（通过 sqls/ 管理变更）
+- 禁止在 Controller 中 try-catch（走 ExceptionHandler）
