@@ -27,6 +27,7 @@ import com.njydsz.agent.domain.config.properties.MemoryProperties;
 import com.njydsz.agent.domain.config.properties.ProviderProperties;
 import com.njydsz.agent.domain.config.properties.RagProperties;
 import com.njydsz.agent.domain.config.properties.RerankerProperties;
+import com.njydsz.agent.infra.cache.CacheKeyBuilder;
 import com.njydsz.agent.domain.context.ContextCompressor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.DagCheckpointStore;
@@ -162,8 +163,9 @@ public class AgentAutoConfiguration {
   public LlmClient llmClient(
       AgentProperties properties,
       AgentMetrics agentMetrics,
-            ObjectProvider<RedisStringOps> redisStringOpsProvider,
-      ObjectProvider<RedisCollectionOps> redisCollectionOpsProvider) {
+      ObjectProvider<RedisStringOps> redisStringOpsProvider,
+      ObjectProvider<RedisCollectionOps> redisCollectionOpsProvider,
+      CacheKeyBuilder cacheKeyBuilder) {
     LlmClientRouter router = new LlmClientRouter();
     LlmProperties llmConfig = properties.getLlm();
 
@@ -204,7 +206,8 @@ public class AgentAutoConfiguration {
                 Duration.ofMinutes(properties.getCache().getTtlMinutes()),
                 properties.getCache().getMaxSize(),
                 properties.getCache().getL1MaxSize(),
-                properties.getCache().getL1ExpireMinutes());
+                properties.getCache().getL1ExpireMinutes(),
+                cacheKeyBuilder);
         log.info(
             "[Agent] LLM 语义缓存已启用, L2 ttl={}min, L2 maxSize={}, L1 maxSize={}, L1 expire={}min",
             properties.getCache().getTtlMinutes(),

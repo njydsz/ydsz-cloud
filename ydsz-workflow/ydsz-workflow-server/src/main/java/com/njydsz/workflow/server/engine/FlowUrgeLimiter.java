@@ -49,6 +49,7 @@ public class FlowUrgeLimiter {
   /**
    * 构造催办限流器。
    *
+   * @param cacheKeyBuilder 缓存键构造器（提供 urgeLimit 限流 key）
    * @param rateLimiterProvider Redis 限流器提供器
    */
   public FlowUrgeLimiter(

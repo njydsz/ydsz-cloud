@@ -1,6 +1,5 @@
 package com.njydsz.workflow.server.engine;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
