@@ -1,11 +1,11 @@
 package com.njydsz.workflow.server.engine;
 
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.cache.support.CacheKeyBuilder;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 
 /**
  * 任务计数 Redis 缓存服务。
@@ -44,8 +44,8 @@ public class FlowTaskCountCacheService {
   /** 模块标识 */
   private static final String MODULE = "workflow";
 
-  /** 全局待办计数 key（全局共享，不区分租户） */
-  private static final String KEY_TOTAL_PENDING = "ydsz:workflow:task:count:total";
+  /** P2-2 整改：缓存键构造器（提供 workflowTaskCountTotal 全局计数 key） */
+  private final CacheKeyBuilder localKeyBuilder;
 
   /** Redis String 模板（键已通过 CacheKeyBuilder 携带租户前缀，直接使用即可） */
   private final RedisStringOps redisStringOps;
@@ -57,7 +57,7 @@ public class FlowTaskCountCacheService {
    * @return 租户隔离的 key，如 {@code ydsz:acme:workflow:task:count:U10086}
    */
   private String buildUserKey(String userId) {
-    return CacheKeyBuilder.build(MODULE, "task:count", userId);
+    return com.njydsz.common.cache.support.CacheKeyBuilder.build(MODULE, "task:count", userId);
   }
 
   /**
@@ -75,7 +75,7 @@ public class FlowTaskCountCacheService {
     try {
       String userKey = buildUserKey(userId);
       long count = redisStringOps.incr(userKey, 1);
-      redisStringOps.incr(KEY_TOTAL_PENDING, 1);
+      redisStringOps.incr(localKeyBuilder.workflowTaskCountTotal(), 1);
       return count;
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] INCR 失败 userId={}: {}", userId, e.getMessage());
@@ -99,7 +99,7 @@ public class FlowTaskCountCacheService {
     try {
       String userKey = buildUserKey(userId);
       long count = redisStringOps.decr(userKey, 1);
-      redisStringOps.decr(KEY_TOTAL_PENDING, 1);
+      redisStringOps.decr(localKeyBuilder.workflowTaskCountTotal(), 1);
       // 归零后删除 key，避免长期占用内存
       if (count <= 0) {
         redisStringOps.del(userKey);
@@ -137,7 +137,7 @@ public class FlowTaskCountCacheService {
    */
   public long getTotalPendingCount() {
     try {
-      String value = redisStringOps.get(KEY_TOTAL_PENDING, String.class);
+      String value = redisStringOps.get(localKeyBuilder.workflowTaskCountTotal(), String.class);
       return value != null ? Long.parseLong(value) : 0;
     } catch (Exception e) {
       log.warn("[FlowTaskCountCache] GET total 失败: {}", e.getMessage());

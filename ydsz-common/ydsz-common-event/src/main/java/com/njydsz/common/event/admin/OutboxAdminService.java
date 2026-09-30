@@ -6,12 +6,12 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
 import com.njydsz.common.event.repository.OutboxRepository;
@@ -64,12 +64,18 @@ public class OutboxAdminService {
    * @param page 页码（从 0 开始）
    * @param size 每页大小（最大 200）
    * @param eventTypeFilter 事件类型过滤（可为 null，表示不加过滤）
-   * @return 死信消息分页结果
+   * @return 死信消息分页结果（统一 PageResponse 包装）
    */
-  public Page<OutboxMessage> listDeadLetters(int page, int size, String eventTypeFilter) {
+  public PageResponse<List<OutboxMessage>> listDeadLetters(int page, int size, String eventTypeFilter) {
     int validatedSize = Math.min(Math.max(size, 1), 200);
     Pageable pageable = PageRequest.of(Math.max(page, 0), validatedSize);
-    return outboxRepository.findByStatus(OutboxStatus.DEAD_LETTER, pageable, eventTypeFilter);
+    org.springframework.data.domain.Page<OutboxMessage> springPage =
+        outboxRepository.findByStatus(OutboxStatus.DEAD_LETTER, pageable, eventTypeFilter);
+    return PageResponse.success(
+        springPage.getTotalElements(),
+        (long) springPage.getNumber() + 1,
+        (long) springPage.getSize(),
+        springPage.getContent());
   }
 
   /**

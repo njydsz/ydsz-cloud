@@ -325,7 +325,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
   public Map<String, Object> getMergeGroup(String mergeGroupId) {
     Set<String> instanceIds = getGroupInstanceIds(mergeGroupId);
     Map<String, String> detail =
-        redisHashOps.hGetAll(MERGE_GROUP_DETAIL_KEY + mergeGroupId, String.class);
+        redisHashOps.hGetAll(cacheKeyBuilder.mergeGroupDetail(mergeGroupId), String.class);
 
     Map<String, Object> result = new LinkedHashMap<>(COLLECTION_CAPACITY);
     result.put("mergeGroupId", mergeGroupId);
@@ -408,7 +408,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     if (mergeGroupId == null) {
       return Collections.emptySet();
     }
-    Set<String> ids = redisCollectionOps.sMembers(MERGE_GROUP_KEY + mergeGroupId, String.class);
+    Set<String> ids = redisCollectionOps.sMembers(cacheKeyBuilder.mergeGroup(mergeGroupId), String.class);
     return ids != null ? ids : Collections.emptySet();
   }
 }
