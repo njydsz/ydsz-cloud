@@ -9,6 +9,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 
 /**
  * 催办限流器
@@ -39,6 +40,9 @@ public class FlowUrgeLimiter {
   /** 默认冷却窗口 30 分钟 */
   public static final long DEFAULT_COOLDOWN_SECONDS = 30 * 60L;
 
+  /** P2-2 整改：缓存键构造器（提供 urgeLimit 限流 key） */
+  private final CacheKeyBuilder cacheKeyBuilder;
+
   private final RedisRateLimiter rateLimiter;
 
   
@@ -47,7 +51,10 @@ public class FlowUrgeLimiter {
    *
    * @param rateLimiterProvider Redis 限流器提供器
    */
-  public FlowUrgeLimiter(ObjectProvider<RedisRateLimiter> rateLimiterProvider) {
+  public FlowUrgeLimiter(
+      CacheKeyBuilder cacheKeyBuilder,
+      ObjectProvider<RedisRateLimiter> rateLimiterProvider) {
+    this.cacheKeyBuilder = cacheKeyBuilder;
     this.rateLimiter = rateLimiterProvider.getIfAvailable();
     if (this.rateLimiter == null) {
       log.warn("[FlowUrgeLimiter] RedisRateLimiter 不可用，催办限流将降级放行");
@@ -82,7 +89,7 @@ public class FlowUrgeLimiter {
     if (rateLimiter == null) {
       return true; // RedisRateLimiter 不可用时降级放行
     }
-    String key = buildKey(userId, targetId, targetType);
+    String key = cacheKeyBuilder.urgeLimit(targetType, targetId.toString(), userId);
     try {
       boolean acquired =
           rateLimiter.tryAcquireFixedWindow(key, 1, Duration.ofSeconds(cooldownSeconds));
@@ -114,7 +121,7 @@ public class FlowUrgeLimiter {
       return;
     }
     try {
-      rateLimiter.reset(buildKey(userId, targetId, targetType));
+      rateLimiter.reset(cacheKeyBuilder.urgeLimit(targetType, targetId.toString(), userId));
     } catch (Exception e) {
       log.warn("[FlowUrgeLimiter] 释放冷却失败: {}", e.getMessage());
     }
@@ -136,7 +143,7 @@ public class FlowUrgeLimiter {
         .map(
             targetId -> {
               try {
-                long ttl = rateLimiter.getRemainingSeconds(buildKey(userId, targetId, type));
+                long ttl = rateLimiter.getRemainingSeconds(cacheKeyBuilder.urgeLimit(type, targetId.toString(), userId));
                 return Math.max(0, ttl);
               } catch (Exception e) {
                 log.warn(
@@ -145,9 +152,5 @@ public class FlowUrgeLimiter {
               }
             })
         .toList();
-  }
-
-  private static String buildKey(String userId, Long targetId, String targetType) {
-    return "flow:urge:" + targetType + ":" + targetId + ":by:" + userId;
   }
 }

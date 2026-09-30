@@ -1,11 +1,12 @@
 package com.njydsz.common.event.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.model.OutboxMessage;
 
 /**
@@ -36,7 +37,7 @@ import com.njydsz.common.event.model.OutboxMessage;
  *     private final OutboxAdminController adminController;
  *
  *     &#64;GetMapping("/dead-letters")
- *     public YdszResponse&lt;Page&lt;OutboxMessage&gt;&gt; listDeadLetters(
+ *     public YdszResponse&lt;PageResponse&lt;List&lt;OutboxMessage&gt;&gt;&gt; listDeadLetters(
  *             &#64;RequestParam(defaultValue = "0") int page,
  *             &#64;RequestParam(defaultValue = "20") int size,
  *             &#64;RequestParam(required = false) String eventType) {
@@ -85,9 +86,9 @@ public class OutboxAdminController {
    * @param page 页码（从 0 开始）
    * @param size 每页大小（默认 20，最大 200）
    * @param eventType 事件类型过滤（可选）
-   * @return 死信消息分页列表
+   * @return 死信消息分页列表（统一 PageResponse 包装）
    */
-  public Page<OutboxMessage> listDeadLetters(int page, int size, String eventType) {
+  public PageResponse<List<OutboxMessage>> listDeadLetters(int page, int size, String eventType) {
     return outboxAdminService.listDeadLetters(page, size, eventType);
   }
 
