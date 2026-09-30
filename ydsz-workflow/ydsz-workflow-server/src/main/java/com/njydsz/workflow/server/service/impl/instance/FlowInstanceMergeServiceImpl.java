@@ -23,6 +23,7 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
@@ -117,14 +118,11 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
   /** Redis 集合操作组件（Set 存储合并组实例 ID 集合） */
   private final RedisCollectionOps redisCollectionOps;
 
+  /** P2-2 整改：缓存键构造器（集中管理 ydzs:flow:merge:* key 前缀） */
+  private final CacheKeyBuilder cacheKeyBuilder;
+
   /** Redis Hash 操作组件（Hash 存储合并组元信息） */
   private final RedisHashOps redisHashOps;
-
-  /** Redis Key 前缀：合并组实例 ID 集合 */
-  private static final String MERGE_GROUP_KEY = "ydsz:flow:merge:group:";
-
-  /** Redis Key 前缀：合并组元信息 */
-  private static final String MERGE_GROUP_DETAIL_KEY = "ydsz:flow:merge:detail:";
 
   /**
    * {@inheritDoc}
@@ -185,7 +183,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         String mergeGroupId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
 
         // 存储合并组关系
-        String groupKey = MERGE_GROUP_KEY + mergeGroupId;
+        String groupKey = cacheKeyBuilder.mergeGroup(mergeGroupId);
         for (String instanceId : instanceIds) {
           redisCollectionOps.sAdd(groupKey, instanceId);
         }
@@ -197,7 +195,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         detail.put("flowCode", flowCodes.iterator().next());
         detail.put("instanceCount", String.valueOf(instanceIds.size()));
         detail.put("createdAt", String.valueOf(System.currentTimeMillis()));
-        redisHashOps.hMSet(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
+        redisHashOps.hMSet(cacheKeyBuilder.mergeGroupDetail(mergeGroupId), detail);
 
         log.info(
             "[FlowMerge] 合并实例: groupId={} count={} flowCode={} operator={}",

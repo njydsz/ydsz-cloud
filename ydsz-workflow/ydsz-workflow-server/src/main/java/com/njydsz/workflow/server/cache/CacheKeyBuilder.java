@@ -46,6 +46,15 @@ public class CacheKeyBuilder {
   private static final String JOIN_TOTAL_SUFFIX = ":total";
   private static final String JOIN_REQUIRED_SUFFIX = ":required";
 
+  // ============================== 全局计数 ==============================
+
+  /** 工作流待办计数全局 key（无租户维度，全局统计） */
+  private static final String WORKFLOW_TASK_COUNT_TOTAL = "ydsz:workflow:task:count:total";
+
+  // ============================== 审批催促限流 key ==============================
+
+  private static final String URGE_LIMIT_PREFIX = "flow:urge:";
+
   // ============================== 消息 Pub/Sub channel ==============================
 
   private static final String MESSAGE_CHANNEL_PREFIX = "flow:message:";
@@ -105,6 +114,19 @@ public class CacheKeyBuilder {
   // ============================== 会签令牌 key ==============================
 
   /**
+   * 生成会签基础 key（到达计数 key 或 total/required 前缀）。
+   *
+   * <p>格式：{@code flow:join:{instanceId}:{joinNodeCode}}
+   *
+   * @param instanceId 流程实例 ID
+   * @param joinNodeCode join 节点编码
+   * @return Redis 会签基础 key
+   */
+  public String joinToken(String instanceId, String joinNodeCode) {
+    return JOIN_TOKEN_PREFIX + nullSafe(instanceId) + ":" + nullSafe(joinNodeCode);
+  }
+
+  /**
    * 生成会签 total 令牌 key。
    *
    * <p>格式：{@code flow:join:{joinKey}:total}
@@ -140,6 +162,35 @@ public class CacheKeyBuilder {
    */
   public String messageChannel(String channelSuffix) {
     return MESSAGE_CHANNEL_PREFIX + nullSafe(channelSuffix);
+  }
+
+  // ============================== 流程全局计数 ==============================
+
+  /**
+   * 获取工作流待办计数全局 key（无租户维度）。
+   *
+   * <p>格式：{@code ydzs:workflow:task:count:total}
+   *
+   * @return 全局 key 常量
+   */
+  public String workflowTaskCountTotal() {
+    return WORKFLOW_TASK_COUNT_TOTAL;
+  }
+
+  // ============================== 审批催促限流 key ==============================
+
+  /**
+   * 生成催促限流 key。
+   *
+   * <p>格式：{@code flow:urge:{targetType}:{targetId}:by:{userId}}
+   *
+   * @param targetType 目标类型
+   * @param targetId 目标 ID
+   * @param userId 催促发起人
+   * @return 限流 key
+   */
+  public String urgeLimit(String targetType, String targetId, String userId) {
+    return URGE_LIMIT_PREFIX + nullSafe(targetType) + ":" + nullSafe(targetId) + ":by:" + nullSafe(userId);
   }
 
   // ============================== 内部工具 ==============================

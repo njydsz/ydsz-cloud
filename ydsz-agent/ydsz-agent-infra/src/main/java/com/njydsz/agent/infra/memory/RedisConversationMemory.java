@@ -13,10 +13,10 @@ import com.njydsz.agent.domain.model.MessageContent;
 import com.njydsz.agent.domain.model.MessageRole;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
-import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.tenant.redis.TenantAwareRedisKey;
 
 /**
  * Redis 对话记忆实现
@@ -175,19 +175,14 @@ public class RedisConversationMemory implements ConversationMemory {
   /**
    * 构建带租户前缀的 Redis key。
    *
-   * <p>存在租户上下文且非超级管理员/跳过隔离时，追加租户段； 否则保持原 key 格式（单租户部署向后兼容）。
+   * <p>存在租户上下文且非超级管理员/跳过隔离时，追加租户段；否则保持原 key 格式（单租户部署向后兼容）。
+   * 逻辑委托给 {@link TenantAwareRedisKey#resolve(String)} 以保持项目内的 Redis key 构造策略统一。
    *
    * @param conversationId 对话 ID
    * @return 完整 Redis key
    */
   private String buildKey(String conversationId) {
-    if (TenantContextHolder.isPresent()
-        && !TenantContextHolder.isSkipIsolation()
-        && !TenantContextHolder.isSuperAdmin()
-        && TenantContextHolder.getTenantId() != null) {
-      return KEY_PREFIX + TenantContextHolder.getTenantId() + ":" + conversationId;
-    }
-    return KEY_PREFIX + conversationId;
+    return TenantAwareRedisKey.resolve(KEY_PREFIX + conversationId);
   }
 
   /**

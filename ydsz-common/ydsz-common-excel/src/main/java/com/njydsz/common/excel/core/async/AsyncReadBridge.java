@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -236,20 +235,13 @@ public final class AsyncReadBridge {
     void accept(T t, U u);
   }
 
-  /** 创建虚拟线程执行器（或传统线程池回退） */
+  /**
+   * 创建虚拟线程执行器。
+   *
+   * <p>P0-3: 委托 ExecutorUtils.newVirtualThreadExecutor（Java 21 virtual thread per-task），
+   * 纳入 ydsz-common-thread 统一治理框架；原反射 hack（脆弱的字符串方法名依赖）已移除。
+   */
   private static Executor virtualThreadExecutor() {
-    try {
-      // Java 21+：Thread.ofVirtual().factory()
-      return (Executor) Executors.class
-          .getMethod("newVirtualThreadPerTaskExecutor")
-          .invoke(null);
-    } catch (Exception e) {
-      // fallback: 传统守护线程池
-      return Executors.newCachedThreadPool(r -> {
-        Thread t = new Thread(r, "excel-async-" + System.nanoTime());
-        t.setDaemon(true);
-        return t;
-      });
-    }
+    return ExecutorUtils.newVirtualThreadExecutor("excel-async-");
   }
 }

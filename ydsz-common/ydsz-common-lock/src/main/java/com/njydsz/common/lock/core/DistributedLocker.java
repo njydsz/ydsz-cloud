@@ -2,8 +2,9 @@ package com.njydsz.common.lock.core;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 分布式锁核心接口
@@ -127,7 +128,8 @@ public interface DistributedLocker {
    * @return 异步锁操作使用的执行器
    */
   default ExecutorService getAsyncExecutor() {
-    return Executors.newThreadPerTaskExecutor(
-        Thread.ofVirtual().name("ydsz-lock-async-", 0).factory());
+    // P0-4: 委托 ExecutorUtils.newVirtualThreadExecutor 创建（线程名前缀 lock-async-），
+    // 纳入 ydsz-common-thread 统一治理框架；原 Thread.ofVirtual().factory() 直建已移除
+    return ExecutorUtils.newVirtualThreadExecutor("lock-async-");
   }
 }

@@ -130,5 +130,9 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
     </dependencies>
 </project>

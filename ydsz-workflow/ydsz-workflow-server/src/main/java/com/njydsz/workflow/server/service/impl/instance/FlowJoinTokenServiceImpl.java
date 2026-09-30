@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.workflow.server.cache.CacheKeyBuilder;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
 
 /**
@@ -28,17 +29,11 @@ import com.njydsz.workflow.server.service.FlowJoinTokenService;
 @RequiredArgsConstructor
 public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
 
-  /** 到达计数 key 前缀：flow:join:{instanceId}:{joinNodeCode} */
-  private static final String KEY_PREFIX = "flow:join:";
-
-  /** 分支总数 key 后缀 */
-  private static final String TOTAL_SUFFIX = ":total";
-
-  /** P0-3: N/M join 所需到达数 key 后缀 */
-  private static final String REQUIRED_SUFFIX = ":required";
-
   /** 默认 TTL：7 天 */
   private static final long TTL_SECONDS = 7 * 24 * 60 * 60;
+
+  /** P2-2 整改：缓存键构造器（集中管理 flow:join:* key 前缀） */
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /** Redis String 操作组件（SET + EXPIRE、INCR、GET 等高级 API，支持租户前缀） */
   private final RedisStringOps redisStringOps;
@@ -407,7 +402,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
    * @return Redis 到达计数 key
    */
   private String buildArrivedKey(String instanceId, String joinNodeCode) {
-    return KEY_PREFIX + instanceId + ":" + joinNodeCode;
+    return cacheKeyBuilder.joinToken(instanceId, joinNodeCode);
   }
 
   /**
@@ -418,7 +413,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
    * @return Redis 分支总数 key
    */
   private String buildTotalKey(String instanceId, String joinNodeCode) {
-    return buildArrivedKey(instanceId, joinNodeCode) + TOTAL_SUFFIX;
+    return cacheKeyBuilder.joinTokenTotal(instanceId + ":" + joinNodeCode);
   }
 
   /**
@@ -429,6 +424,6 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
    * @return Redis N/M join required key
    */
   private String buildRequiredKey(String instanceId, String joinNodeCode) {
-    return buildArrivedKey(instanceId, joinNodeCode) + REQUIRED_SUFFIX;
+    return cacheKeyBuilder.joinTokenRequired(instanceId + ":" + joinNodeCode);
   }
 }
