@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     system_prompt            TEXT                     DEFAULT NULL,
     model_config             JSONB                    DEFAULT NULL,
     tool_names               JSONB                    DEFAULT NULL,
-    temperature              DOUBLE PRECISION         DEFAULT NULL,
+    temperature              NUMERIC(4,2)             DEFAULT NULL,
     max_tokens               INTEGER                  DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
@@ -136,7 +136,7 @@ COMMENT ON COLUMN ydsz_agt_definition.description IS 'Agent 描述';
 COMMENT ON COLUMN ydsz_agt_definition.system_prompt IS '系统提示词';
 COMMENT ON COLUMN ydsz_agt_definition.model_config IS '模型配置 JSON（temperature/maxTokens/modelId 等）';
 COMMENT ON COLUMN ydsz_agt_definition.tool_names IS '工具名称列表 JSON（["tool1","tool2"]）';
-COMMENT ON COLUMN ydsz_agt_definition.temperature IS '温度参数';
+COMMENT ON COLUMN ydsz_agt_definition.temperature IS '温度参数（NUMERIC(4,2)，精确小数）';
 COMMENT ON COLUMN ydsz_agt_definition.max_tokens IS '最大生成 Token 数';
 COMMENT ON COLUMN ydsz_agt_definition.status IS '状态标识';
 COMMENT ON COLUMN ydsz_agt_definition.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
@@ -155,6 +155,12 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     agent_id                 VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL,
     total_duration_ms        BIGINT                   DEFAULT NULL,
+    -- MpBaseEntity 继承字段
+    tenant_id                VARCHAR(64)              NOT NULL DEFAULT '0',
+    is_deleted               BOOLEAN                  NOT NULL DEFAULT FALSE,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_agt_trace PRIMARY KEY (trace_id)
 );
 
@@ -164,10 +170,16 @@ COMMENT ON COLUMN ydsz_agt_trace.conversation_id IS '所属对话 ID';
 COMMENT ON COLUMN ydsz_agt_trace.agent_id IS 'Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR）';
 COMMENT ON COLUMN ydsz_agt_trace.status IS '执行状态（RUNNING/SUCCESS/FAILED/MAX_ITERATIONS/GUARDRAIL_REJECTED）';
 COMMENT ON COLUMN ydsz_agt_trace.total_duration_ms IS '总耗时（毫秒）';
+COMMENT ON COLUMN ydsz_agt_trace.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_trace.is_deleted IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN ydsz_agt_trace.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_agt_trace.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_agt_trace.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_trace_conversation ON ydsz_agt_trace (conversation_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_trace_agent ON ydsz_agt_trace (agent_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_trace_status ON ydsz_agt_trace (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_tenant_is_deleted ON ydsz_agt_trace (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     trace_id                 VARCHAR(64)              NOT NULL,
@@ -178,6 +190,15 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     output_json              JSONB                    DEFAULT NULL,
     duration_ms              BIGINT                   DEFAULT NULL,
     cost                     NUMERIC(12,6)            NOT NULL DEFAULT 0.0,
+    -- MpBaseEntity 继承字段
+    tenant_id                VARCHAR(64)              NOT NULL DEFAULT '0',
+    is_deleted               BOOLEAN                  NOT NULL DEFAULT FALSE,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_agt_trace_step PRIMARY KEY (trace_id, step_index)
 );
 
@@ -190,8 +211,17 @@ COMMENT ON COLUMN ydsz_agt_trace_step.input_json IS '步骤输入（JSON 字符�
 COMMENT ON COLUMN ydsz_agt_trace_step.output_json IS '步骤输出（JSON 字符串）';
 COMMENT ON COLUMN ydsz_agt_trace_step.duration_ms IS '耗时（毫秒）';
 COMMENT ON COLUMN ydsz_agt_trace_step.cost IS 'Token 成本（USD，精确到 6 位小数；非 LLM 调用步骤为 0）';
+COMMENT ON COLUMN ydsz_agt_trace_step.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_trace_step.is_deleted IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN ydsz_agt_trace_step.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_agt_trace_step.status IS '状态标识';
+COMMENT ON COLUMN ydsz_agt_trace_step.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_agt_trace_step.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_agt_trace_step.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_agt_trace_step.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_step_trace_step_cost ON ydsz_agt_trace_step (cost);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_trace_step_tenant ON ydsz_agt_trace_step (tenant_id);
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     id                       VARCHAR(64)             ,
@@ -208,6 +238,9 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     updated_by               VARCHAR(64)              DEFAULT NULL,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at              TIMESTAMP                DEFAULT NULL,
+    -- MpBaseEntity 继承字段补充
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
     CONSTRAINT pk_ydsz_agt_approval PRIMARY KEY (id)
 );
 
@@ -223,6 +256,10 @@ COMMENT ON COLUMN ydsz_agt_approval.comment IS '审批意见';
 COMMENT ON COLUMN ydsz_agt_approval.tenant_id IS '租户 ID';
 COMMENT ON COLUMN ydsz_agt_approval.created_at IS '请求创建时间';
 COMMENT ON COLUMN ydsz_agt_approval.resolved_at IS '审批完成时间';
+COMMENT ON COLUMN ydsz_agt_approval.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_agt_approval.revision IS '乐观锁版本号';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_approval_tenant_deleted ON ydsz_agt_approval (tenant_id, is_deleted);
 
 -- ============================================================================
 -- 2026-09-13: AgentApproval 补充审计列（created_by/updated_by/updated_at）。
@@ -327,13 +364,13 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_document_id ON ydsz_agt_d
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_tenant ON ydsz_agt_document_chunk (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
 
-INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
 VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, FALSE);
 
 INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
 VALUES ('100000000000000002', '0', 'DEFAULT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '初始版本');
 
-INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, deleted)
+INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
 VALUES ('100000000000000003', '0', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', 1, FALSE);
 
 INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
@@ -405,6 +442,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_user_profile (
     common_intents          TEXT           DEFAULT NULL,
     total_interactions      INTEGER        NOT NULL DEFAULT 0,
     last_interaction_at     TIMESTAMP      DEFAULT NULL,
+    -- MpBaseEntity 继承字段
+    tenant_id               VARCHAR(64)    NOT NULL DEFAULT '0',
+    is_deleted              BOOLEAN        NOT NULL DEFAULT FALSE,
+    revision                INTEGER        NOT NULL DEFAULT 0,
+    status                  VARCHAR(32)    DEFAULT NULL,
     created_by              VARCHAR(64)    DEFAULT NULL,
     created_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by              VARCHAR(64)    DEFAULT NULL,
@@ -421,6 +463,10 @@ COMMENT ON COLUMN ydsz_agt_user_profile.query_style IS '查询风格（如 简�
 COMMENT ON COLUMN ydsz_agt_user_profile.common_intents IS '高频意图标签（JSON 字符串存储）';
 COMMENT ON COLUMN ydsz_agt_user_profile.total_interactions IS '总交互次数';
 COMMENT ON COLUMN ydsz_agt_user_profile.last_interaction_at IS '最近交互时间（findActiveProfiles ORDER BY last_interaction_at DESC）';
+COMMENT ON COLUMN ydsz_agt_user_profile.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_user_profile.is_deleted IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN ydsz_agt_user_profile.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_agt_user_profile.status IS '状态标识';
 COMMENT ON COLUMN ydsz_agt_user_profile.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
 COMMENT ON COLUMN ydsz_agt_user_profile.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_agt_user_profile.updated_by IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
@@ -452,6 +498,10 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_insight_report (
     report_path             VARCHAR(512)   DEFAULT NULL,
     error_message           VARCHAR(512)   DEFAULT NULL,
     duration_ms             INTEGER        DEFAULT NULL,
+    -- MpBaseEntity 继承字段补充
+    tenant_id               VARCHAR(64)    NOT NULL DEFAULT '0',
+    is_deleted              BOOLEAN        NOT NULL DEFAULT FALSE,
+    revision                INTEGER        NOT NULL DEFAULT 0,
     created_by              VARCHAR(64)    DEFAULT NULL,
     created_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by              VARCHAR(64)    DEFAULT NULL,
@@ -474,6 +524,9 @@ COMMENT ON COLUMN ydzs_agt_insight_report.report_format IS '报告格式（html 
 COMMENT ON COLUMN ydzs_agt_insight_report.report_path IS '存储路径（可选）';
 COMMENT ON COLUMN ydzs_agt_insight_report.error_message IS '生成失败时的错误信息';
 COMMENT ON COLUMN ydzs_agt_insight_report.duration_ms IS '生成耗时（毫秒）';
+COMMENT ON COLUMN ydzs_agt_insight_report.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydzs_agt_insight_report.is_deleted IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN ydzs_agt_insight_report.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydzs_agt_insight_report.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
 COMMENT ON COLUMN ydzs_agt_insight_report.created_at IS '创建时间';
 COMMENT ON COLUMN ydzs_agt_insight_report.updated_by IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
@@ -481,6 +534,7 @@ COMMENT ON COLUMN ydzs_agt_insight_report.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_insight_report_user_id ON ydsz_agt_insight_report (user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_insight_report_status ON ydsz_agt_insight_report (status);
+CREATE INDEX IF NOT EXISTS idx_ydsz_agt_insight_report_tenant_deleted ON ydsz_agt_insight_report (tenant_id, is_deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器（PostgreSQL）
@@ -530,7 +584,11 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_dag_workflow (
     layout_json     TEXT,
     category        VARCHAR(64),
     is_published    BOOLEAN NOT NULL DEFAULT FALSE,
+    -- MpBaseEntity 继承字段补充
+    tenant_id       VARCHAR(64) NOT NULL DEFAULT '0',
     is_deleted      BOOLEAN NOT NULL DEFAULT FALSE,
+    revision        INTEGER     NOT NULL DEFAULT 0,
+    status          VARCHAR(32) DEFAULT NULL,
     created_by      VARCHAR(64),
     updated_by      VARCHAR(64),
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -571,6 +629,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_async_task (
     id                       VARCHAR(32)              NOT NULL,
     task_type                VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
+    tenant_id                VARCHAR(64)              NOT NULL DEFAULT '0',
     tenant_code              VARCHAR(64)              DEFAULT NULL,
     user_id                  VARCHAR(64)              DEFAULT NULL,
     input_payload            TEXT                     DEFAULT NULL,
@@ -599,7 +658,8 @@ COMMENT ON TABLE ydsz_agt_async_task IS '异步任务持久化表';
 COMMENT ON COLUMN ydsz_agt_async_task.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_agt_async_task.task_type IS '任务类型编码（REPORT_GENERATE/DOC_INGEST/BATCH_CHAT/CODE_EXECUTION 等）';
 COMMENT ON COLUMN ydsz_agt_async_task.status IS '任务状态（PENDING/RUNNING/SUCCEEDED/FAILED/CANCELED/EXPIRED）';
-COMMENT ON COLUMN ydsz_agt_async_task.tenant_code IS '租户编码（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_async_task.tenant_code IS '租户编码（多租户隔离，业务侧兼容字段）';
+COMMENT ON COLUMN ydsz_agt_async_task.tenant_id IS '租户 ID（多租户隔离，MpBaseEntity 标准字段）';
 COMMENT ON COLUMN ydsz_agt_async_task.user_id IS '触发用户 ID';
 COMMENT ON COLUMN ydsz_agt_async_task.input_payload IS '任务输入参数（JSON 字符串）';
 COMMENT ON COLUMN ydsz_agt_async_task.output_payload IS '任务执行结果（JSON 字符串，完成后非空）';
