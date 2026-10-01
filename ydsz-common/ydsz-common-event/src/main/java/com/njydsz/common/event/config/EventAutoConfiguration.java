@@ -179,29 +179,40 @@ public class EventAutoConfiguration {
     return new NoopEventPublishGateway();
   }
 
-  /**
-   * 创建 Outbox 后台处理器
-   *
-   * @param outboxRepository Outbox 仓储
-   * @param publishGateway 投递网关
-   * @param properties 事件配置属性
-   * @param meterRegistryProvider Micrometer 指标注册器提供者（可选）
-   * @return Outbox 后台处理器实例
-   */
-  @Bean(initMethod = "start")
-  public OutboxProcessor outboxProcessor(
-      OutboxRepository outboxRepository,
-      EventPublishGateway publishGateway,
-      EventProperties properties,
-      ObjectProvider<MeterRegistry> meterRegistryProvider) {
-    this.activeGateway = publishGateway;
-    this.activeProperties = properties;
-    OutboxProcessor processor =
-        new OutboxProcessor(
-            outboxRepository, publishGateway, properties, meterRegistryProvider.getIfAvailable());
-    this.outboxProcessor = processor;
-    return processor;
+/**
+ * 创建 Outbox 后台处理器
+ *
+ * @param outboxRepository Outbox 仓储
+ * @param publishGateway 投递网关
+ * @param properties 事件配置属性
+ * @param meterRegistryProvider Micrometer 指标注册器提供者（可选）
+ * @param archiveRepositoryProvider Outbox 归档仓储提供者（可选，启用归档时注入）
+ * @return Outbox 后台处理器实例
+ */
+@Bean(initMethod = "start")
+public OutboxProcessor outboxProcessor(
+    OutboxRepository outboxRepository,
+    EventPublishGateway publishGateway,
+    EventProperties properties,
+    ObjectProvider<MeterRegistry> meterRegistryProvider,
+    ObjectProvider<OutboxArchiveRepository> archiveRepositoryProvider) {
+  this.activeGateway = publishGateway;
+  this.activeProperties = properties;
+  OutboxProcessor processor =
+      new OutboxProcessor(
+          outboxRepository,
+          publishGateway,
+          properties,
+          meterRegistryProvider.getIfAvailable());
+  OutboxArchiveRepository archiveRepo = archiveRepositoryProvider.getIfAvailable();
+  if (archiveRepo != null) {
+    processor.setArchiveRepository(archiveRepo);
+    LOG.info("[EventAutoConfiguration] Outbox 归档功能已启用，归档表: {}",
+        properties.getArchive().getTableName());
   }
+  this.outboxProcessor = processor;
+  return processor;
+}
 
   /**
    * 创建 Outbox 健康检查指标

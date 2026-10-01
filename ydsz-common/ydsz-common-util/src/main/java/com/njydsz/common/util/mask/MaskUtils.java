@@ -1,5 +1,12 @@
 package com.njydsz.common.util.mask;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.api.Experimental;
 
 /**
@@ -223,6 +230,137 @@ public final class MaskUtils {
     }
     // 未匹配 → 原样返回
     return value;
+  }
+
+  // ==================== JSON 级脱敏 ====================
+
+  /** 默认敏感字段名称匹配模式（不区分大小写、子串匹配） */
+  private static final Set<String> DEFAULT_SENSITIVE_PATTERNS =
+      Set.of(
+          // 认证凭据类
+          "password", "secret", "token", "credential", "apikey", "apisecret",
+          "privatekey", "publickey", "salt", "auth", "sessionid", "refreshtoken",
+          // 个人信息类
+          "creditcard", "cardno", "cardnumber", "bankcard", "cvv", "pin",
+          "idcard", "idnumber", "mobile", "phone", "email", "address",
+          // 其他敏感信息
+          "passport", "license", "accountno", "accountnumber");
+
+  /**
+   * 对 JSON 字符串中的敏感字段进行脱敏处理。
+   *
+   * <p>解析 JSON 为 Map 结构后递归遍历，命中敏感词列表的字段值将根据字段名类型自动选择脱敏策略
+   * （手机号前3后4、身份证前3后4、银行卡前4后4、邮箱保留首字符、其他保留前后2位）。
+   * 解析失败时降级返回原 JSON。
+   *
+   * <p>性能优化：先通过字符串子串预检快速判断 JSON 是否包含任何敏感词，
+   * 若不含则直接跳过解析-修改-重序列化流程。
+   *
+   * @param json JSON 字符串
+   * @param extraPatterns 额外敏感字段名称集合（与默认模式合并生效）；传入 null 则仅使用默认模式
+   * @return 脱敏后的 JSON 字符串；解析失败或无需脱敏时返回原 JSON
+   * @since 26.10.01
+   */
+  public static String maskJson(String json, Set<String> extraPatterns) {
+    if (json == null || json.isEmpty()) {
+      return json;
+    }
+    Set<String> combined = new HashSet<>(DEFAULT_SENSITIVE_PATTERNS);
+    if (extraPatterns != null) {
+      combined.addAll(extraPatterns);
+    }
+    // 快速路径：不包含任何敏感词则直接跳过
+    if (!jsonContainsSensitiveKey(json, combined)) {
+      return json;
+    }
+    try {
+      Object parsed = YdszJson.fromJson(json, Object.class);
+      Object masked = maskJsonValue(parsed, combined);
+      return YdszJson.toJson(masked);
+    } catch (Exception e) {
+      return json;
+    }
+  }
+
+  /**
+   * 对 JSON 字符串中的敏感字段进行脱敏处理（仅使用默认敏感词）。
+   *
+   * @param json JSON 字符串
+   * @return 脱敏后的 JSON 字符串
+   * @since 26.10.01
+   */
+  public static String maskJson(String json) {
+    return maskJson(json, null);
+  }
+
+  /**
+   * 快速检查 JSON 字符串是否可能包含敏感字段（不解析 JSON）。
+   *
+   * @param json 待检查的 JSON 字符串
+   * @param patterns 敏感词集合
+   * @return 包含敏感词返回 true
+   */
+  private static boolean jsonContainsSensitiveKey(String json, Set<String> patterns) {
+    String lowerJson = json.toLowerCase();
+    for (String pattern : patterns) {
+      if (lowerJson.contains(pattern.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 递归脱敏处理：根据字段名或 Map key 匹配敏感词。
+   *
+   * @param value 待处理值
+   * @param patterns 敏感词集合
+   * @return 脱敏后的值
+   */
+  private static Object maskJsonValue(Object value, Set<String> patterns) {
+    if (value == null) {
+      return null;
+    }
+    if (value instanceof String str) {
+      return mask(str, 2, 2);
+    }
+    if (value instanceof Map<?, ?> mapObj) {
+      Map<String, Object> result = new HashMap<>(mapObj.size());
+      for (Map.Entry<?, ?> entry : mapObj.entrySet()) {
+        String key = String.valueOf(entry.getKey());
+        Object val = entry.getValue();
+        if (isJsonSensitiveKey(key, patterns)) {
+          result.put(key, maskByFieldName(key, String.valueOf(val)));
+        } else {
+          result.put(key, maskJsonValue(val, patterns));
+        }
+      }
+      return result;
+    }
+    if (value instanceof List<?> list) {
+      return list.stream().map(item -> maskJsonValue(item, patterns)).toList();
+    }
+    return value;
+  }
+
+  /**
+   * 判断字段名称是否为敏感字段（大小写不敏感、子串匹配）。
+   *
+   * @param key 字段名称
+   * @param patterns 敏感词集合
+   * @return 命中返回 true
+   */
+  private static boolean isJsonSensitiveKey(String key, Set<String> patterns) {
+    if (key == null) {
+      return false;
+    }
+    String lower = key.toLowerCase();
+    for (String pattern : patterns) {
+      if (lower.contains(pattern.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // ==================== 内部方法 ====================

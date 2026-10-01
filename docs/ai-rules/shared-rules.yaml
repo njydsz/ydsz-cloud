@@ -13,19 +13,19 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v14"
+  version: "26.10.01-v16"
   source: "docs/云顶编码规范.md v1.0.12"
-  last_synced: "2026-09-30"
-  last_updated: "26.09.30-v14（ydsz-common-audit 全局引用分析：+2 规则 YDIZ-AUDIT-002 审计查询 SPI 强制 + YDIZ-AUDIT-003 数据导出事件审计；总规则 167 条）"
-  total_rules: 167
+  last_synced: "2026-10-01"
+  last_updated: "26.10.01-v16（ydsz-common-event 模块利用率专项整改：+3 规则 YDIZ-EVENT-003 DomainEventPublisher 统一门面 + YDIZ-EVENT-004 topic 强制 + YDIZ-EVENT-005 OutboxSubscriber 幂等强制；总规则 174 条）"
+  total_rules: 174
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 56
-    P1: 82  # +1: YDIZ-AUDIT-002 审计查询 SPI 强制（audit 全局引用分析）
-    P2: 21  # +1: YDIZ-AUDIT-003 数据导出事件审计（audit 全局引用分析）
+    P0: 57
+    P1: 87
+    P2: 22
 
 rules:
   # ============================================
@@ -2495,6 +2495,124 @@ rules:
       }
     source: "编码规范 §28.6 Outbox 消费端 SPI 规范（YDIZ-EVENT-002，P1）"
 
+  - id: "YDIZ-EVENT-003"
+    category: "event"
+    severity: "P0"
+    title: "【强制】跨模块事件发布必须使用 DomainEventPublisher 统一门面，禁止直接注入 OutboxService"
+    description: |
+      所有业务模块发布跨模块事件时，必须通过 `DomainEventPublisher.publish(DomainEvent)` 写入 Outbox，
+      禁止直接注入 `OutboxService` 构建 `OutboxMessage`。
+
+      **为什么禁止**：
+      - DomainEventPublisher 是 Outbox 写入的唯一官方入口，可统一管理事件元数据（tenant_id、trace_id、schema_version）
+      - 直接注入 OutboxService 会导致 OutboxMessage 字段不完整，后续归档、审计、重试可能失败
+      - 违反统一门面规范将导致事件链路不可追溯
+
+      **合规步骤**：
+      1. 注入 `DomainEventPublisher`（通过 `ObjectProvider<DomainEventPublisher>` 可选注入）
+      2. 构建 DomainEvent 时设置完整字段（aggregateType/aggregateId/eventType/topic/payload/idempotencyKey）
+      3. 调用 `publisher.publish(domainEvent)` 写入 Outbox
+      4. OutboxProcessor 自动调度投递到 EventPublishGateway
+    example_bad: |
+      // ❌ 直接注入 OutboxService 构建 OutboxMessage（YDIZ-EVENT-003 违规）
+      @Service
+      public class MessageService {
+          private final OutboxService outboxService; // 禁止直连
+
+          public void sendMessage(...) {
+              outboxService.appendToOutbox(
+                  OutboxMessage.builder()
+                      .aggregateId(msgId)
+                      .eventType("MessageSent")
+                      .payload(payload)
+                      .build());
+          }
+      }
+    example_good: |
+      // ✅ 使用 DomainEventPublisher 统一门面（YDIZ-EVENT-003 合规）
+      @Service
+      public class MessageService {
+          private final DomainEventPublisher eventPublisher;
+
+          public void sendMessage(...) {
+              DomainEvent event = DomainEvent.builder()
+                  .aggregateType("Message")
+                  .aggregateId(msgId)
+                  .eventType(MessageSentEvent.class.getName())
+                  .topic("message")
+                  .payload(YdszJson.toJson(event))
+                  .idempotencyKey(msgId)
+                  .build();
+              eventPublisher.publish(event);
+          }
+      }
+    source: "编码规范 §28.5.1 DomainEventPublisher 统一门面（YDIZ-EVENT-003，P0）"
+
+  - id: "YDIZ-EVENT-004"
+    category: "event"
+    severity: "P1"
+    title: "【强制】DomainEvent 发布时必须设置 topic 字段，禁止留空导致分发失败"
+    description: |
+      构建 `DomainEvent` 时，必须显式设置 `topic` 字段（值域：有限枚举），禁止留空。
+
+      **为什么必须设置**：
+      - topic 是 OutboxSubscriberDispatcher 路由的依据，null topic 仅能路由到通配（topic="*"）订阅者
+      - 不同模块使用统一 topic 值域（如 "message"/"audit"/"notification"/"default"）有利于监控治理
+      - 未设置 topic 的消息在生产环境可能因仅有精确匹配订阅者而被丢弃
+
+      **推荐 topic 值域**：模块级 topic 遵循 `{module}` 命名（如 message 模块用 "message"，
+      workflow 模块用 "workflow"）；跨模块通知类用 "notification"；审计类用 "audit"。
+    example_bad: |
+      // ❌ 未设置 topic（YDIZ-EVENT-004 违规）
+      DomainEvent.builder()
+          .aggregateId(msgId)
+          .eventType("MessageSent")
+          .payload(payload)
+          .build();
+    example_good: |
+      // ✅ 显式设置 topic（YDIZ-EVENT-004 合规）
+      DomainEvent.builder()
+          .aggregateId(msgId)
+          .eventType("MessageSent")
+          .topic("message")
+          .payload(payload)
+          .build();
+    source: "编码规范 §28.5.2 Outbox 事件 topic 规范（YDIZ-EVENT-004，P1）"
+
+  - id: "YDIZ-EVENT-005"
+    category: "event"
+    severity: "P1"
+    title: "【强制】OutboxSubscriber 消费方法必须添加 @OutboxIdempotentConsumer 注解保障幂等"
+    description: |
+      所有实现 `OutboxSubscriber` 的 `onMessage(OutboxMessage message)` 方法，
+      必须添加 `@OutboxIdempotentConsumer` 注解提供幂等保障。
+
+      **为什么必须添加**：
+      - OutboxProcessor 使用 CAS claim 避免并发消费，但不保障 JVM 崩溃后的业务幂等
+      - CAS 成功后 markAsSent 前 JVM 崩溃可能导致重复消费
+      - 消费方处理成功但 markAsSent 失败（DB 异常）可能重复投递
+      - `@OutboxIdempotentConsumer` 提供 Redis SETNX + TTL 滑动窗口去重，恰好填补这一空白
+
+      **配置要点**：
+      1. `idempotencyKey` 使用 `"#message.id"`（SpEL 引用方法参数）
+      2. `expireSeconds` 通常设为 3600（1 小时）即可
+      3. Redis 不可用时自动降级为 JVM 本地 ConcurrentHashMap（由 OutboxIdempotentAspect 内置保障）
+    example_bad: |
+      // ❌ 缺少幂等注解（YDIZ-EVENT-005 违规）
+      @Override
+      public void onMessage(OutboxMessage message) {
+          // 无幂等保障，重复消费时可能多次发送通知
+          notifyHelper.send(...);
+      }
+    example_good: |
+      // ✅ 添加幂等注解（YDIZ-EVENT-005 合规）
+      @Override
+      @OutboxIdempotentConsumer(idempotencyKey = "#message.id", expireSeconds = 3600)
+      public void onMessage(OutboxMessage message) {
+          notifyHelper.send(...);
+      }
+    source: "编码规范 §28.6.1 Outbox 消费幂等规范（YDIZ-EVENT-005，P1）"
+
   - id: "YDIZ-SAFE-001"
     category: "safe"
     severity: "P1"
@@ -2578,6 +2696,222 @@ rules:
       - "ydsz-system: InternalApiIpFilter.java（已于 26.09.24 重构删除，使用 common-safe IpAccessFilter + includes）"
     source: "编码规范 §18.2 IP 访问控制白名单（YDIZ-SAFE-001，P1）"
     tags: ["safe", "security", "ip-filtering", "YDIZ-SAFE-001"]
+
+  - id: "YDIZ-SAFE-002"
+    category: "safe"
+    severity: "P1"
+    title: "【强制】CSRF 防护必须使用 CsrfDoubleSubmitUtility，禁止自建恒定时间比较与 Token 生成"
+    description: |
+      CSRF 双重提交 Cookie 模式的 Token 生成与比较必须委托 ydsz-common-safe 提供的 `CsrfDoubleSubmitUtility`，
+      禁止业务模块或 common-auth 等公共模块自建恒定时间比较（constantTimeEquals）和 Token 生成逻辑。
+
+      **为什么禁止自建**：
+      - `CsrfDoubleSubmitUtility.generateToken()` 使用 SecureRandom 32 字节 + Base64URL 提供 256 bit 熵，
+        优于 UUID（仅 122 bit），不可预测性更强
+      - `CsrfDoubleSubmitUtility.validateDoubleSubmit()` 恒定时间比较委托 `DigestUtils.constantTimeEquals`，
+        防止时序攻击（timing attack）
+      - Cookie 安全属性统一：HttpOnly=false + SameSite=Strict + 动态 Secure（HTTPS 请求自动开启）
+
+      **架构定位**：CsrfDoubleSubmitUtility 与 CsrfFilter 互补：
+      - `CsrfFilter` — 独立过滤器，完整生命周期（Token 生成 + 校验 + 刷新 + Origin 校验）
+      - `CsrfDoubleSubmitUtility` — 轻量工具类，供程序化校验使用（如 BaseAuthFilter 等已有过滤器基类）
+    pattern: |
+      以下任一情形构成违规：
+      1. 业务模块自建 `constantTimeEquals` 方法（位运算逐字节比较）
+      2. 业务模块使用 `UUID.randomUUID()` 生成 CSRF Token（熵不足）
+      3. 业务模块通过 `String.equals()` 比较 CSRF Token（时序攻击风险）
+      4. 业务模块自建 CSRF Cookie 构建逻辑（直接拼接 `Set-Cookie` 头）
+    fix: |
+      1. 注入或静态调用 `CsrfDoubleSubmitUtility`
+      2. 生成 Token：`CsrfDoubleSubmitUtility.generateToken()`
+      3. 校验：`CsrfDoubleSubmitUtility.validateDoubleSubmit(request, "X-CSRF-Token", "ydsz-csrf-token")`
+      4. 写入 Cookie：`CsrfDoubleSubmitUtility.addCsrfCookie(response, "ydsz-csrf-token", token, request)`
+      5. 删除自建 Token 生成与比较方法
+    example_bad: |
+      ```java
+      // ❌ 自建恒定时间比较 + UUID Token（YDIZ-SAFE-002 违规）
+      public class CsrfValidator {
+          private static boolean constantTimeEquals(String a, String b) {
+              if (a.length() != b.length()) return false;
+              int result = 0;
+              for (int i = 0; i < a.length(); i++) {
+                  result |= a.charAt(i) ^ b.charAt(i);
+              }
+              return result == 0;
+          }
+          public String generateCsrfToken() {
+              return UUID.randomUUID().toString();
+          }
+      }
+      ```
+    example_good: |
+      ```java
+      // ✅ 委托 common-safe CsrfDoubleSubmitUtility（YDIZ-SAFE-002 合规）
+      import com.njydsz.common.safe.csrf.CsrfDoubleSubmitUtility;
+
+      @Component
+      public class CsrfTokenValidator {
+          private static final String HEADER = "X-CSRF-Token";
+          private static final String COOKIE = "ydsz-csrf-token";
+
+          public String generateToken() {
+              return CsrfDoubleSubmitUtility.generateToken();
+          }
+          public boolean validate(HttpServletRequest request) {
+              return CsrfDoubleSubmitUtility.validateDoubleSubmit(request, HEADER, COOKIE);
+          }
+          public void setCsrfCookie(HttpServletResponse response, String token, HttpServletRequest request) {
+              CsrfDoubleSubmitUtility.addCsrfCookie(response, COOKIE, token, request);
+          }
+      }
+      ```
+    source: "ydsz-common-safe 全局引用分析整改（YDIZ-SAFE-002，P1）"
+    tags: ["safe", "csrf", "security", "YDIZ-SAFE-002"]
+
+  - id: "YDIZ-SAFE-003"
+    category: "safe"
+    severity: "P1"
+    title: "【强制】Feign / Resilience4j 熔断器必须使用共享 CircuitBreakerRegistry，禁止模块独立创建"
+    description: |
+      Feign、Sentry、Socket 等模块的 Resilience4j 熔断器必须使用 safe 模块提供的共享 `CircuitBreakerRegistry` Bean
+      （Bean 名称：`safeCircuitBreakerRegistry`），禁止各模块独立调用 `CircuitBreakerRegistry.ofDefaults()` 或
+      `CircuitBreakerRegistry.of(config)` 创建私有 Registry。
+
+      **为什么禁止独立创建**：
+      - 共享 Registry 统一管理所有熔断器实例、状态一致性、事件订阅
+      - 统一配置前缀（`ydsz.safe.circuit-breaker.*`），运维一致性
+      - 支持 Resilience4j 与 Micrometer 指标的无缝集成
+
+      **架构定位**：
+      - Safe 模块 `SafeConfiguration.circuitBreakerRegistry()` 提供共享 Registry（@ConditionalOnMissingBean）
+      - common-feign `SafeCircuitBreakerAdapter` 优先注入共享 Registry，未配置时降级 `ofDefaults()`
+      - common-sentry / common-socket 熔断器类参照 feign 模式改造
+    pattern: |
+      以下任一情形构成违规：
+      1. 业务模块或 common-feign 构造器内调用 `CircuitBreakerRegistry.ofDefaults()`
+      2. 构造函数内 `CircuitBreakerRegistry.of(customConfig)` — 绕开共享配置
+      3. 熔断器配置仅存在于本地模块 yml，未在 safe 模块集中管理
+    fix: |
+      1. 注入 `CircuitBreakerRegistry`（通过 `ObjectProvider<CircuitBreakerRegistry>` 获取共享 Bean）
+      2. 调用 `registry.circuitBreaker(name)` 获取实例
+      3. 移除私有 `@Bean` 或构造器内的 `ofDefaults()` 调用
+      4. 迁移配置至 `ydsz.safe.circuit-breaker.*`
+    example_good: |
+      ```java
+      // ✅ 使用共享 Registry（YDIZ-SAFE-003 合规）
+      @RequiredArgsConstructor
+      public class SafeCircuitBreakerAdapter {
+          private final CircuitBreakerRegistry registry;
+          private final CircuitBreakerMetricsExporter metricsExporter;
+
+          public CircuitBreaker getOrCreate(String serviceName) {
+              return registry.circuitBreaker(serviceName);
+          }
+      }
+      ```
+      ```java
+      // SafeConfiguration 提供共享 Bean
+      @Bean(name = "safeCircuitBreakerRegistry")
+      @ConditionalOnMissingBean(name = "safeCircuitBreakerRegistry")
+      public CircuitBreakerRegistry circuitBreakerRegistry() {
+          return CircuitBreakerRegistry.ofDefaults();
+      }
+      ```
+    source: "ydsz-common-safe 全局引用分析整改（YDIZ-SAFE-003，P1）"
+    tags: ["safe", "circuit-breaker", "resilience4j", "YDIZ-SAFE-003"]
+
+  - id: "YDIZ-SAFE-004"
+    category: "safe"
+    severity: "P2"
+    title: "DTO 自由文本输入字段应使用 @Xss 注解标记清洗"
+    description: |
+      业务模块 DTO / VO 中接受用户自由文本输入的 String 字段（name、title、description、remark、content、comment 等）
+      应使用 ydsz-common-safe 提供的 `@Xss` 注解进行输入清洗，防止存储型 XSS 攻击。
+
+      **为什么需要**：
+      - @EnableYdszSafe 全局 Filter 仅做请求级清洗，无法覆盖反序列化后的字段级场景
+      - @Xss 注解通过 XssRequestBodyAdvice 在字段级别提供精准清洗
+      - 三模式可选（Filter / Advice / Converter），注解级更精准
+
+      **适用范围**：name、title、remark、description、comment、content、reason、rejectReason 等自由文本字段
+      **不适用**：ID、code（枚举类）、JSON blob、系统生成字段、外键引用、@TableField 实体字段（走全局 Filter 即可）
+    pattern: |
+      检查条件（同时构成）：
+      1. DTO / VO / Query 对象中的 String 字段
+      2. 字段语义为自由文本输入（非 ID/code/枚举）
+      3. 缺少 @Xss 注解
+    fix: |
+      1. 引入 `import com.njydsz.common.safe.annotation.Xss;`
+      2. 在字段上方标注 `@Xss`
+      3. 确认模块 pom 已引入 ydzs-common-safe 依赖
+    example_good: |
+      ```java
+      // ✅ 自由文本字段标注 @Xss（YDIZ-SAFE-004 合规）
+      @Data
+      public class FlowTaskOperateDTO {
+          @Xss
+          private String rejectReason;
+
+          @Xss
+          private String comment;
+
+          // ID/code 字段无需 @Xss
+          private String taskId;
+          private String status;
+      }
+      ```
+    source: "ydsz-common-safe 全局引用分析整改（YDIZ-SAFE-004，P2）"
+    tags: ["safe", "xss", "dto", "YDIZ-SAFE-004"]
+
+  - id: "YDIZ-SAFE-005"
+    category: "safe"
+    severity: "P1"
+    title: "【强制】响应式/WebFlux 幂等必须使用 ReactiveIdempotentStrategy SPI，禁止内联 Redis SETNX"
+    description: |
+      响应式编程（WebFlux/Reactor）场景的幂等保护必须使用 ydsz-common-safe 提供的 `ReactiveIdempotentStrategy` SPI，
+      禁止在 GlobalFilter 中内联 `ReactiveStringRedisOps.setIfAbsent()` 实现幂等逻辑。
+
+      **为什么禁止内联**：
+      - `RedisReactiveIdempotentStrategy` 提供统一的 fail-open 降级语义（组件异常时放行不影响业务）
+      - 统一幂等 Key 前缀（`ydsz:idem:gateway:`）和管理规范
+      - 与同步 `IdempotentStrategy` 共用语义，代码可维护性更高
+
+      **架构定位**：
+      - `ReactiveIdempotentStrategy` — 响应式 SPI（Mono 返回值）
+      - `RedisReactiveIdempotentStrategy` — 基于 `ReactiveStringRedisOps` 的实现（WebFlux 环境）
+      - 同步栈使用 `IdempotentStrategy` / `RedisIdempotentStrategy`（Servlet 环境）
+      - 两者互补，不可混用
+    pattern: |
+      以下任一情形构成违规：
+      1. GlobalFilter 中直接调用 `ReactiveStringRedisOps.setIfAbsent(key, "1", ...)`
+      2. WebFlux 环境注入 `StringRedisTemplate` 做幂等（阻塞 API 在响应式链中使用）
+      3. 网关幂等逻辑未实现 fail-open 降级（Redis 异常时阻塞请求）
+    fix: |
+      1. 注入 `ReactiveIdempotentStrategy`（@ConditionalOnBean 保护）
+      2. 调用 `idempotentStrategy.tryAcquire(key, ttlSeconds)` 获取 Mono<Boolean>
+      3. flatMap 判断：true=放行 chain.filter，false=返回 409
+      4. 不在 filter 中直接访问 Redis
+    example_good: |
+      ```java
+      // ✅ 网关幂等委托 ReactiveIdempotentStrategy（YDIZ-SAFE-005 合规）
+      @Component
+      @RequiredArgsConstructor
+      @ConditionalOnBean(ReactiveIdempotentStrategy.class)
+      public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
+          private final ReactiveIdempotentStrategy idempotentStrategy;
+
+          @Override
+          public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+              String redisKey = buildRedisKey(userId, rawKey);
+              return idempotentStrategy.tryAcquire(redisKey, 30)
+                  .flatMap(isFirst -> Boolean.TRUE.equals(isFirst)
+                      ? chain.filter(exchange)
+                      : rejectDuplicateRequest(exchange));
+          }
+      }
+      ```
+    source: "ydsz-common-safe 全局引用分析整改（YDIZ-SAFE-005，P1）"
+    tags: ["safe", "idempotent", "webflux", "gateway", "YDIZ-SAFE-005"]
 
   - id: "YDIZ-ARCH-004"
     category: "architecture"
@@ -5338,20 +5672,22 @@ stats:
   - id: "YDIZ-FEIGN-002"
     category: "feign"
     severity: "P0"
-    title: "【强制】禁止业务模块自建 RestTemplate/HttpClient 调用内部服务"
+    title: "【强制】禁止业务模块自建 RestTemplate/HttpClient 调用同 Nacos 注册域内的内部服务"
     description: |
       微服务之间的内部调用必须走 @FeignClient + ydsz-common-feign 体系。
-      禁止使用 RestTemplate、OkHttp、JDK HttpClient 直接调用内部服务地址，防止绕过熔断/重试/追踪/头透传等能力。
+      禁止使用 RestTemplate、OkHttp、JDK HttpClient 直接调用 Nacos 注册的中心内部服务，防止绕过熔断/重试/追踪/头透传等能力。
 
       **允许场景**：
       - 调用外部第三方服务（如阿里云、微信开放平台等）
-      - ydsz-common-notify 模块中的第三方网关调用
+      - ydzz-common-notify 模块中的第三方网关调用
       - Gateway 模块的 Reactor Netty HttpClient（WebFlux 专属）
+      - ydzs-cronjob-server 的 ClusterMigrationClient（跨集群直连 URL 调用，不通过 Nacos 发现）
 
-      **违规判据**：业务模块（ydsz-{module}-infra/server）直接 new RestTemplate/HttpClient 调用 ydzs-*
+      **违规判据**：业务模块（ydsz-{module}-infra/server）直接 new RestTemplate/HttpClient 调用 ydzs-* 服务
+        （Feign 可通过 Nacos 服务发现找到的）。
     pattern: 'new\s+RestTemplate\(|HttpClient\.newBuilder|OkHttpClient\s*\('
-    source: "ydsz-common-feign 全局引用分析（YDIZ-FEIGN-002，P0，26.10.01 发现 2 处架构偏移：workflow HttpAgentServiceClient、cronjob ClusterMigrationClient）"
-    exception: "ydsz-common-notify 第三方网关调用、xdz-gateway WebFlux Reactor HTTP 客户端"
+    source: "ydsz-common-feign 全局引用分析（YDIZ-FEIGN-002，P0，26.10.01 workflow HttpAgentServiceClient 已迁移至 Feign（P1-3 整改），cronjob ClusterMigrationClient 属跨集群直连例外）"
+    exception: "ydsz-common-notify 第三方网关调用、xdz-gateway WebFlux Reactor HTTP 客户端、ydsz-cronjob-server 跨集群漂移 ClusterMigrationClient（直连远程集群 URL，不通过 Nacos 发现）"
 
   - id: "YDIZ-FEIGN-003"
     category: "feign"
@@ -5409,8 +5745,9 @@ stats:
     exception: "极低调用频率的内部工具 Bean（每分钟 < 1 次）"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.10.01-v14
-  # 变更摘要（自 v13 起新增）：
-  #   - v14: YDIZ-FEIGN-001~005 Feign 专项红线规则（fallbackFactory 强制/禁止自建 HTTP/健康桥接/i18n/连接池）
+  # 版本标记：shared-rules.yaml v26.10.01-v15
+  # 变更摘要：
+  #   - v14: YDIZ-FEIGN-001~005 Feign 专项红线规则
+  #   - v15: YDIZ-FEIGN-002 明确范围 + cronjob 跨集群直连例外
   # 更新 total：P0=58 P1=84 P2=21 → total=170
   # ============================================

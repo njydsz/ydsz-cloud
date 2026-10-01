@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 
 import com.njydsz.common.event.api.OutboxNewMessageEvent;
+import com.njydsz.common.event.archive.OutboxArchiveRepository;
 import com.njydsz.common.event.config.EventProperties;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.model.OutboxMessage;
@@ -69,6 +70,9 @@ public class OutboxProcessor {
 
   /** 事件配置属性 */
   private final EventProperties properties;
+
+  /** 归档仓储（可选，启用归档时由调用方设置） */
+  private OutboxArchiveRepository archiveRepository;
 
   /** 调度线程池（单线程，仅负责轮询和 claim） */
   private final ScheduledExecutorService scheduler;
@@ -124,7 +128,8 @@ public class OutboxProcessor {
         properties,
         meterRegistry,
         createDefaultScheduler(),
-        createDefaultPublishExecutor(properties));
+        createDefaultPublishExecutor(properties),
+        null);
   }
 
   /**
@@ -138,6 +143,7 @@ public class OutboxProcessor {
    * @param meterRegistry Micrometer 指标注册器（可为 null）
    * @param scheduler 外部注入的调度线程池
    * @param publishExecutor 外部注入的投递线程池
+   * @param archiveRepository 归档仓储（可为 null，启用归档时由调用方注入）
    */
   public OutboxProcessor(
       OutboxRepository outboxRepository,
@@ -145,14 +151,27 @@ public class OutboxProcessor {
       EventProperties properties,
       MeterRegistry meterRegistry,
       ScheduledExecutorService scheduler,
-      ExecutorService publishExecutor) {
+      ExecutorService publishExecutor,
+      OutboxArchiveRepository archiveRepository) {
     this.outboxRepository = outboxRepository;
     this.publishGateway = publishGateway;
     this.properties = properties;
+    this.archiveRepository = archiveRepository;
     this.scheduler = scheduler;
     this.publishExecutor = publishExecutor;
 
     registerMetrics(meterRegistry);
+  }
+
+  /**
+   * 设置归档仓储（可选）。
+   *
+   * <p>启用 Outbox 归档功能后由调用方注入，启用后 {@link #cleanupSentMessages(int)} 会在删除前先将消息归档。
+   *
+   * @param archiveRepository 归档仓储实例
+   */
+  public void setArchiveRepository(OutboxArchiveRepository archiveRepository) {
+    this.archiveRepository = archiveRepository;
   }
 
   /**
@@ -525,15 +544,70 @@ public class OutboxProcessor {
   }
 
   /**
-   * 清理已投递的历史消息
+   * 清理已投递的历史消息。
    *
-   * @param retentionDays 保留天数，早于此天数的 SENT 消息将被删除
+   * <p>如果配置了归档仓储，则先将消息归档到归档表再删除；否则直接删除。
+   *
+   * @param retentionDays 保留天数，早于此天数的 SENT 消息将被归档并删除
    */
   public void cleanupSentMessages(int retentionDays) {
+    if (retentionDays <= 0) {
+      return;
+    }
     Instant cutoff = Instant.now().minusSeconds(retentionDays * 86400L);
+
+    // 归档阶段：如果归档仓储可用，先将消息归档到归档表
+    if (archiveRepository != null && Boolean.TRUE.equals(properties.getArchive().isEnabled())) {
+      archiveSentMessagesBefore(cutoff);
+    }
+
+    // 清理阶段：删除主表中的已投递消息
     int deleted = outboxRepository.deleteSentBefore(cutoff);
     if (deleted > 0) {
       LOG.info("Cleaned up {} sent outbox messages older than {} days", deleted, retentionDays);
+    }
+  }
+
+  /**
+   * 归档早于截止时间的已投递消息（内部方法，用于归档-清理集成）。
+   *
+   * @param cutoff 截止时间
+   */
+  private void archiveSentMessagesBefore(Instant cutoff) {
+    int batchSize = properties.getBatchSize();
+    try {
+      // 分批查询并归档，防止一次性加载过多数据到内存
+      List<OutboxMessage> batch = outboxRepository.findSentBefore(cutoff, batchSize);
+      int totalArchived = 0;
+      while (batch != null && !batch.isEmpty()) {
+        List<String> processedIds = new ArrayList<>(batch.size());
+        for (OutboxMessage msg : batch) {
+          try {
+            archiveRepository.archive(msg);
+            processedIds.add(msg.getId());
+          } catch (Exception e) {
+            LOG.warn("归档消息失败，跳过: id={} err={}", msg.getId(), e.getMessage());
+          }
+        }
+
+        // 归档成功的消息从主表删除（避免重复归档）
+        if (!processedIds.isEmpty()) {
+          int deleted = outboxRepository.deleteSentByIds(processedIds);
+          totalArchived += deleted;
+        }
+
+        // 如果最后一批未满，说明已经处理完毕
+        if (batch.size() < batchSize) {
+          break;
+        }
+        batch = outboxRepository.findSentBefore(cutoff, batchSize);
+      }
+      if (totalArchived > 0) {
+        LOG.info("已归档 Outbox 消息 {} 条 (cutoff={})", totalArchived, cutoff);
+      }
+    } catch (Exception e) {
+      LOG.error("归档 Outbox 消息异常: cutoff={} err={}", cutoff, e.getMessage());
+      // 归档失败不影响后续删除流程
     }
   }
 

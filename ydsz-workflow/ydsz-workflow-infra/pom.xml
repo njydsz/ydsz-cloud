@@ -52,5 +52,17 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-auth</artifactId>
         </dependency>
+        <!-- ydzs-agent-api: AgentExecuteClient Feign 契约 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-agent-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- ydzs-agent-domain: AgentExecutionRequestDTO / ChatResponseDTO（provided via agent-api 传递） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-agent-domain</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

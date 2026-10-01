@@ -39,6 +39,9 @@ public final class FeignClientConstants {
   /** 知识库服务 */
   public static final String NEXTWIKI = "ydsz-nextwiki";
 
+  /** Agent 智能引擎服务 */
+  public static final String SERVICE_AGENT = "ydsz-agent";
+
   // ======================== 系统服务路径常量 ========================
 
   /**

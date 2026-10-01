@@ -66,6 +66,15 @@ public class DomainEvent extends ApplicationEvent {
   /** 聚合根类型 */
   private final String aggregateType;
 
+  /** 事件路由主题（可选，如 "webhook"/"metrics"/"audit"/"message"），由 EventChannelRegistry 按 topic 分发到不同订阅者 */
+  private final String topic;
+
+  /** 预序列化的 JSON 负载（可选）。设置后 {@link com.njydsz.common.event.publish.DomainEventPublisher} 将此值直接写入 OutboxMessage.payload，不再重新序列化 */
+  private final String payload;
+
+  /** 幂等去重键（可选），写入 OutboxMessage.idempotencyKey 以支持下游消费去重 */
+  private final String idempotencyKey;
+
   /** 扩展元数据 */
   private final Map<String, Object> metadata;
 
@@ -80,6 +89,9 @@ public class DomainEvent extends ApplicationEvent {
    * @param eventType 事件类型
    * @param aggregateId 聚合根ID
    * @param aggregateType 聚合根类型
+   * @param topic 事件路由主题（可选，null 表示默认通道）
+   * @param payload 预序列化的 JSON 负载（可选，null 时由 DomainEventPublisher 自动序列化）
+   * @param idempotencyKey 幂等去重键（可选）
    * @param metadata 扩展元数据
    * @param schemaVersion 事件 schema 版本号（≥1）
    */
@@ -89,6 +101,9 @@ public class DomainEvent extends ApplicationEvent {
       String eventType,
       String aggregateId,
       String aggregateType,
+      String topic,
+      String payload,
+      String idempotencyKey,
       Map<String, Object> metadata,
       int schemaVersion) {
     super(eventType);
@@ -97,6 +112,9 @@ public class DomainEvent extends ApplicationEvent {
     this.eventType = eventType;
     this.aggregateId = aggregateId;
     this.aggregateType = aggregateType;
+    this.topic = topic;
+    this.payload = payload;
+    this.idempotencyKey = idempotencyKey;
     this.schemaVersion = schemaVersion > 0 ? schemaVersion : 1;
     this.metadata =
         metadata != null
@@ -159,6 +177,33 @@ public class DomainEvent extends ApplicationEvent {
   }
 
   /**
+   * 获取事件路由主题。
+   *
+   * @return 路由主题；未设置时返回 null
+   */
+  public String getTopic() {
+    return topic;
+  }
+
+  /**
+   * 获取预序列化的 JSON 负载。
+   *
+   * @return 预序列化 payload；未设置时返回 null，此时 DomainEventPublisher 会自动序列化事件
+   */
+  public String getPayload() {
+    return payload;
+  }
+
+  /**
+   * 获取幂等去重键。
+   *
+   * @return 幂等键；未设置时返回 null
+   */
+  public String getIdempotencyKey() {
+    return idempotencyKey;
+  }
+
+  /**
    * 获取扩展元数据（不可变）。
    *
    * @return 元数据 Map（不可变）
@@ -209,8 +254,9 @@ public class DomainEvent extends ApplicationEvent {
   public String toString() {
     return String.format(
         "DomainEvent{eventId='%s', occurredAt=%s, eventType='%s', aggregateId='%s', "
-            + "aggregateType='%s', schemaVersion=%d, metadata=%s}",
-        eventId, occurredAt, eventType, aggregateId, aggregateType, schemaVersion, metadata);
+            + "aggregateType='%s', topic='%s', schemaVersion=%d, metadata=%s}",
+        eventId, occurredAt, eventType, aggregateId, aggregateType, topic, schemaVersion,
+        metadata);
   }
 
   /**
@@ -224,6 +270,9 @@ public class DomainEvent extends ApplicationEvent {
     private String eventType;
     private String aggregateId;
     private String aggregateType;
+    private String topic;
+    private String payload;
+    private String idempotencyKey;
     private int schemaVersion = 1;
     private final Map<String, Object> metadata = new HashMap<>(16);
 
@@ -289,6 +338,51 @@ public class DomainEvent extends ApplicationEvent {
     }
 
     /**
+     * 设置事件路由主题（可选）。
+     *
+     * <p>topic 用于 {@link com.njydsz.common.event.gateway.EventChannelRegistry} 按 topic 分发到不同订阅者
+     *（如 "webhook"/"metrics"/"audit"/"message"）。未设置或 null 时使用默认通道。
+     *
+     * @param topic 事件路由主题；null 表示默认通道
+     * @return 当前 Builder，便于链式调用
+     * @since 26.09.30
+     */
+    public Builder topic(String topic) {
+      this.topic = topic;
+      return this;
+    }
+
+    /**
+     * 设置预序列化的 JSON 负载。
+     *
+     * <p>适用于调用方已将领域对象序列化为 JSON 的场景（避免二次序列化）。
+     * 设置后 DomainEventPublisher 直接将此值写入 OutboxMessage.payload。
+     *
+     * @param payload JSON 字符串；null 表示由 DomainEventPublisher 自动序列化
+     * @return 当前 Builder，便于链式调用
+     * @since 26.09.30
+     */
+    public Builder payload(String payload) {
+      this.payload = payload;
+      return this;
+    }
+
+    /**
+     * 设置幂等去重键。
+     *
+     * <p>写入 Outbox 后会传递到 OutboxMessage.idempotencyKey，用于下游消费端去重。
+     * 建议传入具有业务唯一性的值（如消息 ID 或事件 ID）。
+     *
+     * @param idempotencyKey 幂等去重键；null 表示不显式设置
+     * @return 当前 Builder，便于链式调用
+     * @since 26.09.30
+     */
+    public Builder idempotencyKey(String idempotencyKey) {
+      this.idempotencyKey = idempotencyKey;
+      return this;
+    }
+
+    /**
      * 设置事件 schema 版本号。
      *
      * <p>默认值 1（初始版本）。仅在需要声明新版本以向前兼容时显式指定。
@@ -343,8 +437,8 @@ public class DomainEvent extends ApplicationEvent {
       }
       String eid = eventId != null ? eventId : IdGenerator.nextIdStr();
       LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now();
-      return new DomainEvent(eid, occurred, eventType, aggregateId, aggregateType, metadata,
-          schemaVersion);
+      return new DomainEvent(eid, occurred, eventType, aggregateId, aggregateType, topic,
+          payload, idempotencyKey, metadata, schemaVersion);
     }
   }
 }

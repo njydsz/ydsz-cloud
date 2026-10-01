@@ -91,6 +91,9 @@ public class AuditAspect {
   /** 敏感参数名集合（构造时从配置初始化） */
   private final Set<String> sensitiveParams = new HashSet<>(16);
 
+  /** Access-Token 请求头名称（与 AuthHeaderConstants.X_ACCESS_TOKEN 值一致，audit 模块不硬依赖 auth） */
+  private static final String ACCESS_TOKEN_HEADER = "X-Access-Token";
+
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
@@ -184,7 +187,7 @@ public class AuditAspect {
       context.setUri(request.getRequestURI());
       context.setHttpMethod(request.getMethod());
       context.setIpAddress(ClientIpResolver.getClientIp(request));
-      context.setToken(request.getHeader("X-Access-Token"));
+      context.setToken(request.getHeader(ACCESS_TOKEN_HEADER));
       context.setBusinessNo(request.getHeader("X-Business-No"));
 
       // 记录 TraceId（如果存在）

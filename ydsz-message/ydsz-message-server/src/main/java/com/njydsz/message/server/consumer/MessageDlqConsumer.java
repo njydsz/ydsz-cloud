@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.queue.service.DeadLetterQueueService;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
@@ -63,6 +64,8 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
   private final MsgLogRepository msgLogRepository;
   private final MessageMetrics messageMetrics;
   private final IdempotentStrategy idempotentStrategy;
+  /** P1-4: common-queue 死信队列服务（NoOp 实现兜底，无 Redis 时安全降级）*/
+  private final DeadLetterQueueService deadLetterQueueService;
 
   @Override
   public void onMessage(MessageExt messageExt) {
@@ -109,6 +112,8 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
             msgLogRepository.update(existingVO);
             log.info("[MessageDlqConsumer] 已更新现有记录为 DEAD: msgId={}", bizMsgId);
             messageMetrics.recordDead(request != null ? request.getChannel() : "UNKNOWN");
+            // P1-4: 注册死信到 common-queue DLQ 跟踪存储（Redis Hash），统一可观测
+            registerDeadLetterToQueue(originTopic, msgId, body, errorMessage);
             return;
           }
         }
@@ -135,6 +140,8 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         logVO.setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
         msgLogRepository.save(logVO);
         messageMetrics.recordDead(logVO.getChannel());
+        // P1-4: 注册死信到 common-queue DLQ 跟踪存储（Redis Hash），统一可观测
+        registerDeadLetterToQueue(originTopic, msgId, body, errorMessage);
       } catch (Exception e) {
         log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);
       }
@@ -147,6 +154,28 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
           request == null ? null : request.getBizType(),
           request == null ? null : request.getBizId(),
           request == null ? null : request.getReceiver());
+    }
+  }
+
+  /** P1-4: 注册死信到 common-queue DLQ 跟踪存储。
+   *
+   * <p>调用 {@link DeadLetterQueueService#sendToDeadLetter} 将死信元数据写入 Redis Hash 结构。
+   * 若 common-queue 未启用或 Redis 不可用时自动降级为 NoOp 实现（无操作），不阻塞主流程。
+   *
+   * @param topic 原始 Topic 名称
+   * @param messageId RocketMQ 消息 ID
+   * @param messageBody 消息体
+   * @param failureReason 失败原因描述
+   */
+  private void registerDeadLetterToQueue(
+      String topic, String messageId, String messageBody, String failureReason) {
+    try {
+      deadLetterQueueService.sendToDeadLetter(topic, messageId, messageBody, failureReason);
+      log.info("[MessageDlqConsumer] 死信已注册到 common-queue DLQ: topic={} msgId={}", topic, messageId);
+    } catch (Exception e) {
+      // DLQ 注册为辅助观测链路，禁止影响主流程
+      log.warn("[MessageDlqConsumer] 注册死信到 common-queue 失败,不影响主流程: msgId={} err={}",
+          messageId, e.getMessage());
     }
   }
 

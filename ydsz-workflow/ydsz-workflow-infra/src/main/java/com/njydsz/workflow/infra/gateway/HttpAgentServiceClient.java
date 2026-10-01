@@ -1,42 +1,49 @@
 package com.njydsz.workflow.infra.gateway;
 
-import java.time.Duration;
 import java.util.Map;
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.core.env.Environment;
-import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
+import com.njydsz.agent.api.client.AgentExecuteClient;
+import com.njydsz.agent.domain.dto.AgentExecutionRequestDTO;
+import com.njydsz.agent.domain.dto.ChatResponseDTO;
 import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.locales.util.I18n;
-import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.workflow.domain.exception.WorkflowException;
 import com.njydsz.workflow.domain.exception.WorkflowExceptionCode;
 import com.njydsz.workflow.domain.gateway.AgentServiceClient;
 
 /**
- * AgentServiceClient 的 HTTP 调用实现。
+ * AgentServiceClient 的 Feign 调用实现（P1-3 由 RestTemplate 迁移）。
  *
- * <p>通过 {@link RestTemplate} 调用 ydsz-agent 的 REST API，封装同步执行 Agent 的流程。
- * 作为默认实现注册，可通过 {@code @ConditionalOnMissingBean} 机制由 Feign 实现替换。
+ * <p>通过 {@link AgentExecuteClient} Feign 契约调用 {@code POST /api/agent/execute}，
+ * 统一获得 ydsz-common-feign 体系提供的熔断/重试/追踪/13 头透传能力，
+ * 替代原始基于 JDK {@code RestTemplate} 的直接 HTTP 调用。
  *
- * <p>RestTemplate 经 common-util {@link RestTemplateUtils#create} 统一构建（P2-3 整改：
- * 不再注入裸 RestTemplate Bean，与同模块 {@code FlowServiceNodeExecutor} 收敛姿势对齐，
- * 获得统一超时配置）。
- *
- * <h3>架构说明</h3>
+ * <h3>架构层次</h3>
  *
  * <ul>
- *   <li>domain/gateway/AgentServiceClient — 领域层抽象接口（防腐层）</li>
- *   <li>infra/gateway/HttpAgentServiceClient — 基础设施层适配器（对标 ydsz-agent REST API）</li>
+ *   <li>{@code domain/gateway/AgentServiceClient} — 领域层抽象接口（防腐层）</li>
+ *   <li>{@code infra/gateway/HttpAgentServiceClient} — 基础设施层适配器（委托 Feign 客户端）</li>
+ *   <li>{@code ydzs-agent-api/.../AgentExecuteClient} — Feign 契约接口</li>
+ *   <li>{@code ydzs-agent-api/.../AgentExecuteClientFallback} — Feign 熔断降级</li>
+ * </ul>
+ *
+ * <h3>与旧实现差异</h3>
+ *
+ * <ul>
+ *   <li>移除 RestTemplate 直接 HTTP 调用 → 委托 Feign AgentExecuteClient</li>
+ *   <li>移除手动租户头透传（{@code X-Tenant-Id}）→ FeignRequestInterceptor 自动透传 13 个头</li>
+ *   <li>Feign 自带熔断/重试 → 无需在校层手工实现</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 26.09.01
- * @since 26.09.14 RestTemplate 改经 RestTemplateUtils 统一构建（P2-3 整改）
+ * @since 26.10.01 由 RestTemplate 迁移至 Feign（P1-3 YDIZ-FEIGN-002 违规整改）
  */
 @Slf4j
 @Component
@@ -49,61 +56,40 @@ public class HttpAgentServiceClient implements AgentServiceClient {
   /** 依据关键词判定通过/拒绝后的置信度 */
   private static final double KEYWORD_CONFIDENCE = 0.85;
 
-  /** 连接超时 */
-  private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+  private final AgentExecuteClient agentExecuteClient;
 
-  /** 读取超时 */
-  private static final Duration READ_TIMEOUT = Duration.ofSeconds(30);
-
-  /** HTTP 客户端（RestTemplateUtils 统一构建，含超时配置） */
-  private final RestTemplate restTemplate;
-
-  /** Agent 服务基础 URL（从配置注入） */
-  private final String agentBaseUrl;
-
-  /**
-   * 构造器。
-   *
-   * @param env Spring 环境配置
-   */
-  public HttpAgentServiceClient(Environment env) {
-    this.restTemplate = RestTemplateUtils.create(CONNECT_TIMEOUT, READ_TIMEOUT);
-    this.agentBaseUrl = env.getProperty("ydsz.agent.base-url", "http://ydsz-agent:8080");
+  public HttpAgentServiceClient(AgentExecuteClient agentExecuteClient) {
+    this.agentExecuteClient = agentExecuteClient;
   }
 
   /**
    * {@inheritDoc}
    *
-   * <p>通过 HTTP POST 调用 ydsz-agent 的 {@code /api/agent/execute} 接口执行 Agent，
-   * 解析响应后返回审批决策结果。
+   * <p>通过 Feign {@link AgentExecuteClient#execute} 调用 ydsz-agent。 Feign 自动透传租户、
+   * 用户、追踪等 13 个业务头（{@code FeignRequestInterceptor}），无需在校层手工处理。
    *
    * @param agentCode Agent 代码
    * @param prompt 提示词
    * @param context 流程上下文变量
-   * @param timeoutMs 超时时间（毫秒）
+   * @param timeoutMs 超时时间（毫秒，预留属性，Feign 体系走 ydsz.feign.timeout 配置）
    * @return Agent 执行结果
    */
   @Override
   public AgentExecutionResult execute(String agentCode, String prompt,
       Map<String, Object> context, int timeoutMs) {
-    log.info("[Workflow-Agent] 调用 Agent 服务: agentCode={}, timeout={}ms", agentCode, timeoutMs);
+    log.info("[Workflow-Agent] 调用 Agent 服务（Feign）: agentCode={}, timeout={}ms", agentCode, timeoutMs);
 
-    AgentExecuteRequest requestBody = new AgentExecuteRequest(agentCode, prompt, context);
+    AgentExecutionRequestDTO requestBody = buildRequest(agentCode, prompt, context);
 
     try {
-      RequestEntity<AgentExecuteRequest> request = RequestEntity
-          .post(agentBaseUrl + "/api/agent/execute")
-          .header("X-Tenant-Id", resolveTenantId(context))
-          .body(requestBody);
+      YdszResponse<ChatResponseDTO> response = agentExecuteClient.execute(requestBody);
 
-      var response = restTemplate.exchange(request, AgentExecuteResponse.class);
-
-      if (response.getBody() == null || response.getBody().data() == null) {
+      if (response == null || response.getData() == null) {
         log.warn("[Workflow-Agent] Agent 返回空响应: agentCode={}", agentCode);
-        return AgentExecutionResult.error("Agent 返回空响应");
+        return AgentExecutionResult.error(I18n.message("workflow.agent.empty_response"));
       }
 
-      AgentExecuteResponseDTO result = response.getBody().data();
+      ChatResponseDTO result = response.getData();
       return parseAgentResult(result);
     } catch (WorkflowException e) {
       throw e;
@@ -114,14 +100,27 @@ public class HttpAgentServiceClient implements AgentServiceClient {
     }
   }
 
-  /**
-   * 解析 Agent 返回结果。
-   *
-   * @param dto Agent 响应 DTO
-   * @return 审批决策结果
-   */
-  private AgentExecutionResult parseAgentResult(AgentExecuteResponseDTO dto) {
-    String content = dto.content();
+  private AgentExecutionRequestDTO buildRequest(String agentCode, String prompt,
+      Map<String, Object> context) {
+    AgentExecutionRequestDTO request = new AgentExecutionRequestDTO();
+    request.setAgentCode(agentCode);
+    request.setUserInput(prompt);
+    request.setRequestId(UUID.randomUUID().toString());
+    if (context != null && context.containsKey("systemPrompt")) {
+      Object systemPrompt = context.get("systemPrompt");
+      if (systemPrompt != null) {
+        request.setSystemPrompt(systemPrompt.toString());
+      }
+    }
+    String tenantId = resolveTenantId(context);
+    if (tenantId != null && !tenantId.isEmpty() && !tenantId.equals("system")) {
+      request.setConversationId("wf-" + tenantId + "-" + agentCode);
+    }
+    return request;
+  }
+
+  private AgentExecutionResult parseAgentResult(ChatResponseDTO dto) {
+    String content = dto.getContent();
 
     boolean approve = false;
     String reason = content != null ? content : "";
@@ -159,35 +158,5 @@ public class HttpAgentServiceClient implements AgentServiceClient {
       }
     }
     return AuthContextUtils.getTenantIdOrDefault("system");
-  }
-
-  /**
-   * Agent 执行请求体。
-   *
-   * @param agentCode Agent 代码
-   * @param prompt 提示词
-   * @param context 上下文
-   */
-  private record AgentExecuteRequest(String agentCode, String prompt, Map<String, Object> context) {
-  }
-
-  /**
-   * Agent 执行响应体。
-   *
-   * @param code 响应码
-   * @param message 响应消息
-   * @param data 响应数据
-   */
-  private record AgentExecuteResponse(int code, String message, AgentExecuteResponseDTO data) {
-  }
-
-  /**
-   * Agent 执行响应 DTO。
-   *
-   * @param agentCode Agent 代码
-   * @param content 执行输出
-   * @param model 使用的模型
-   */
-  private record AgentExecuteResponseDTO(String agentCode, String content, String model) {
   }
 }

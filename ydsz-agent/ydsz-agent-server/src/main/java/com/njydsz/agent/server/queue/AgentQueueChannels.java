@@ -13,10 +13,14 @@ import com.njydsz.common.queue.constant.QueueChannels;
  *
  * <p><b>通道说明：</b>
  *
+ * <p><b>注意：以上通道当前仅作为常量注册中心使用，实际 Publisher/Subscriber 尚未实现。</b>
+ *
+ * <p><b>落地计划 TODO：</b>
+ *
  * <ul>
- *   <li>{@link #AGENT_TASK_RESULT} - Agent 任务执行结果通道（生产方：agent 模块）
- *   <li>{@link #AGENT_APPROVAL_REQUEST} - Human-in-the-Loop 审批请求通道（生产方：agent 模块）
- *   <li>{@link #AGENT_KNOWLEDGE_UPDATE} - 知识库更新事件通道（生产方：agent 模块）
+ *   <li>{@link #AGENT_TASK_RESULT} — 异步任务结果回传，待 TaskModule 落地后接入 IMessagePublisher 发布结果事件。
+ *   <li>{@link #AGENT_APPROVAL_REQUEST} — 人工审批请求，待 ApprovalWorkflow 流程引擎接入后由审批服务消费。
+ *   <li>{@link #AGENT_KNOWLEDGE_UPDATE} — 知识库更新事件，待 KnowledgeSyncJob 定时任务落地后触发增量索引同步。
  * </ul>
  *
  * @author ydsz-team

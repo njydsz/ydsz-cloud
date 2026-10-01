@@ -1,32 +1,40 @@
 /**
- * Agent 模块 API 层（契约与 Feign 客户端）.
+ * Agent 模块 API 层（契约与 Feign 客户端）。
  *
- * <h3>当前设计决策</h3>
- * <p>Agent 子系统当前以独立微服务形态对外暴露 REST 端点，前端通过网关直接消费，
- * 暂无其他后端模块依赖 Agent 的 RPC 场景。因此本模块暂不定义 FeignClient 接口，
- * 仅作为契约层预留，便于未来跨服务调用场景引入 Feign 客户端时保持架构一致。</p>
+ * <h3>跨模块 Feign 调用</h3>
  *
- * <h3>跨模块调用路径</h3>
+ * <p>本子模块定义 {@code client} 子包（{@link com.njydsz.agent.api.client}）下的 Feign 客户端契约接口，
+ * 以及其他后端模块调用 Agent 引擎的统一入口。当前已启用：
+ *
  * <ul>
- *   <li>前端 BFF --{@literal >} Gateway --{@literal >} agent-web：HTTP REST 直调</li>
- *   <li>其他后端模块 --{@literal >} 暂未引入 Feign 依赖，按需启用</li>
+ *   <li>{@link com.njydsz.agent.api.client.AgentExecuteClient} — 同步执行 Agent（{@code POST /api/agent/execute}），
+ *       供 workflow / 其他审批流调用</li>
  * </ul>
  *
- * <h3>未来演进</h3>
- * <p>当其他模块需要通过 Feign 调用 Agent 能力时：</p>
+ * <h3>跨模块调用路径</h3>
+ *
+ * <ul>
+ *   <li>前端 BFF → Gateway → agent-web：HTTP REST 直调</li>
+ *   <li>workflow 模块 → {@link com.njydsz.agent.api.client.AgentExecuteClient} Feign → agent-web</li>
+ * </ul>
+ *
+ * <h3>新增 Feign 客户端步骤</h3>
+ *
  * <ol>
- *   <li>在本模块新建 {@code client} 子包，定义 {@code @FeignClient} 接口</li>
- *   <li>创建 {@code fallback} 子包，提供降级实现</li>
- *   <li>引入 {@code ydsz-agent-domain} 依赖，复用 {@code dto/vo} 定义</li>
+ *   <li>在 {@code client} 子包新建 {@code @FeignClient} 接口（name = {@code FeignClientConstants.SERVICE_AGENT}）</li>
+ *   <li>在 {@code fallback} 子包新建对应 {@code FallbackFactory} 实现（委托 {@code I18n.message}）</li>
+ *   <li>返回类型必须使用 {@code YdszResponse<T>} 以利用 {@code ResponseUnwrapDecoder}</li>
  * </ol>
  *
  * <h3>模块依赖约束</h3>
+ *
  * <ul>
- *   <li>本模块仅依赖 {@code ydsz-agent-domain} + {@code ydsz-common-feign}（按需）</li>
+ *   <li>本模块依赖 {@code ydzs-agent-domain} (provided) + {@code ydsz-common-feign} + {@code ydsz-common-core}</li>
  *   <li>禁止引入 infra / server / web 层依赖</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @since 26.10.01 新增 AgentExecuteClient Feign 契约（P1-3 整改）
  */
 package com.njydsz.agent.api;

@@ -401,6 +401,36 @@ public class OutboxRepository {
   }
 
   /**
+   * 查询早于指定时间的已投递消息（用于归档）。
+   *
+   * @param cutoff 截止时间（sent_at 早于此时间的消息）
+   * @param limit 最大条数限制
+   * @return 符合条件的已投递消息列表（按 sent_at 升序）
+   */
+  public List<OutboxMessage> findSentBefore(Instant cutoff, int limit) {
+    String sql = "SELECT * FROM " + tableName
+        + " WHERE status = ? AND sent_at < ? ORDER BY sent_at ASC LIMIT ?";
+    return jdbcTemplate.query(
+        sql, OutboxRowMapper.INSTANCE, OutboxStatus.SENT.name(), Timestamp.from(cutoff), limit);
+  }
+
+  /**
+   * ID 列表批量删除已投递消息（归档回调用）。
+   *
+   * @param ids 待删除的消息 ID 列表
+   * @return 实际删除条数
+   */
+  public int deleteSentByIds(List<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+    String sql = "DELETE FROM " + tableName
+        + " WHERE status = 'SENT' AND id IN (" + placeholders + ")";
+    return jdbcTemplate.update(sql, ids.toArray());
+  }
+
+  /**
    * 根据 idempotencyKey 查询是否已存在
    *
    * <p>仅检查 PENDING 和 PROCESSING 状态的消息（SENT/DEAD_LETTER 已投递完成或放弃）。

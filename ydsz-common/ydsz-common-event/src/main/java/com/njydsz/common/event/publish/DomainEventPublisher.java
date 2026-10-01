@@ -91,7 +91,9 @@ public class DomainEventPublisher {
               .aggregateType(event.getAggregateType())
               .aggregateId(event.getAggregateId())
               .eventType(event.getEventType())
-              .payload(toJsonPayload(event)));
+              .topic(event.getTopic())
+              .payload(event.getPayload() != null ? event.getPayload() : toJsonPayload(event))
+              .idempotencyKey(event.getIdempotencyKey()));
     } catch (Exception e) {
       log.warn(
           "[DomainEventPublisher] Failed to publish event: type={}, id={}, err={}",
@@ -102,7 +104,7 @@ public class DomainEventPublisher {
   }
 
   /**
-   * 将领域事件序列化为 JSON payload。
+   * 将领域事件序列化为 JSON payload（仅当 event.getPayload() 为 null 时调用）。
    *
    * <p>序列化包含 eventId、occurredAt、eventType、aggregateId、aggregateType、metadata 全量字段，
    * 确保消费方能够访问完整的事件元数据。
