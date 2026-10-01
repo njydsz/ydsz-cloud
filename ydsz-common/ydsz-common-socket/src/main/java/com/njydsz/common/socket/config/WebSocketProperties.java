@@ -120,6 +120,9 @@ public class WebSocketProperties {
   /** 在线状态广播配置（UX-003 Presence 功能，默认关闭） */
   private Presence presence = new Presence();
 
+  /** SSE 连接限流配置（YDIZ-SOCKET-001：统一 SSE 通道抽象）。 */
+  private Sse sse = new Sse();
+
   /**
    * 心跳保活配置。
    *
@@ -345,5 +348,20 @@ public class WebSocketProperties {
 
     /** 是否携带 lastSeenAt 字段（OFFLINE 事件末次在线时间，默认 true） */
     private boolean isLastSeenEnabled = true;
+  }
+
+  /**
+   * SSE 连接限流配置（YDIZ-SOCKET-001）。
+   *
+   * <p>提供通用 SSE 连接数限流参数，{@link SsePushChannelMvcFactory} 在创建通道时依据此配置
+   * 做连接数校验，超限快速失败返回错误消息。
+   */
+  @Data
+  public static class Sse {
+    /** 每用户最大并发 SSE 连接数（默认 5） */
+    private int maxConnectionsPerUser = 5;
+
+    /** 全局最大并发 SSE 连接数（默认 500） */
+    private int maxTotalConnections = 500;
   }
 }

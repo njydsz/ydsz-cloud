@@ -71,12 +71,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-netty</artifactId>
         </dependency>
-        <!-- ydzs-common-web：提供 WebhookDispatcher/WebhookSubscription（OutboundWebhookService 使用） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
-        </dependency>
-        <!-- ydzs-common-auth：提供 AuthContextUtils（MQ 消费者中多租户/安全上下文获取） -->
+        <!-- P0-A: ydsz-common-web 已移除（WebhookDispatcher 迁移至 common-core） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-auth</artifactId>
@@ -211,9 +206,5 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
-        <!-- TODO(P2 显式依赖标注 26.09.27）：
-             本模块源码直接使用 ydsz-common-config 的配置热重载能力（ConfigChangeBridge / @ConfigField），
-             当前仅通过 ydsz-common-core / ydsz-common-web 传递获得。
-             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
 </dependencies>
 </project>

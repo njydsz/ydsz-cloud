@@ -121,10 +121,28 @@ public final class FileOps {
    * @return 存储键字符串（不含前导 "/"）
    */
   public static String generateStorageKey(String namespace, String originalFilename) {
+    return generateStorageKey("file", namespace, originalFilename);
+  }
+
+  /**
+   * 生成对象存储键（路径式：{prefix}/{namespace}/{yyyy/MM/dd}/{uuid}.{suffix}）。
+   *
+   * <p>允许业务模块自定义存储前缀，多模块共享同一存储桶时使用此重载。 例如 NextWiki 使用 "wiki" 前缀： {@code
+   * FileOps.generateStorageKey("wiki", userId, "doc.pdf")} 生成 "wiki/{userId}/2026/09/30/{uuid}.pdf"。
+   *
+   * @param prefix 存储前缀（如 "file" / "wiki" / "workflow-attachment"）
+   * @param namespace 命名空间（如用户 ID、租户 ID 或业务模块标识）
+   * @param originalFilename 原始文件名（仅用于提取后缀）
+   * @return 存储键字符串（不含前导 "/"）
+   * @since 2026.10.01
+   */
+  public static String generateStorageKey(
+      String prefix, String namespace, String originalFilename) {
     String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
     String uuid = IdGenerator.nextIdStr();
     String suffix = extractSuffix(originalFilename);
-    return "file/"
+    return prefix
+        + "/"
         + namespace
         + "/"
         + datePath

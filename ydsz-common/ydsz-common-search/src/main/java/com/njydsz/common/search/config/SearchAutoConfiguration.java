@@ -506,6 +506,7 @@ public class SearchAutoConfiguration {
    * @param searchTextProcessor 查询文本预处理器
    * @param businessRanker 业务重排器
    * @param searchCacheService 共享搜索缓存服务
+   * @param zeroResultHandler 零结果引导处理器
    * @return 统一搜索服务实例，永不为 {@code null}
    */
   @Bean
@@ -520,7 +521,8 @@ public class SearchAutoConfiguration {
       SearchTextProcessor searchTextProcessor,
       BusinessRanker businessRanker,
       SearchCacheService searchCacheService,
-      ThreadPoolTaskExecutor searchExecutor) {
+      ThreadPoolTaskExecutor searchExecutor,
+      ZeroResultHandler zeroResultHandler) {
     unifiedSearchServiceInstance =
         new UnifiedSearchService(
             engineRegistry,
@@ -532,7 +534,8 @@ public class SearchAutoConfiguration {
             searchTextProcessor,
             businessRanker,
             searchCacheService,
-            searchExecutor);
+            searchExecutor,
+            zeroResultHandler);
     return unifiedSearchServiceInstance;
   }
 

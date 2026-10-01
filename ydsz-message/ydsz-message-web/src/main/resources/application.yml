@@ -30,6 +30,11 @@ ydsz:
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30
 
+  # P2-2: 搜索引擎 PG 索引表名（各模块独立表，避免共用默认 ydzs_wiki_search_index）
+  search:
+    pg:
+      index-table: ydsz_message_search_index
+
 skywalking:
   agent:
     service_name: ${spring.application.name}

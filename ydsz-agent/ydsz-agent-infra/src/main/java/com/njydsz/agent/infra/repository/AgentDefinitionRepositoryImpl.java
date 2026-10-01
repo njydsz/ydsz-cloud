@@ -59,6 +59,15 @@ public class AgentDefinitionRepositoryImpl implements AgentDefinitionRepository 
   }
 
   @Override
+  public List<AgentDefinitionVO> findAll(String tenantId) {
+    List<AgentDefinition> entityList = agentDefinitionMapper.selectList(
+        new LambdaQueryWrapper<AgentDefinition>()
+            .eq(tenantId != null && !tenantId.isBlank(), AgentDefinition::getTenantId, tenantId)
+            .orderByDesc(AgentDefinition::getCreatedAt));
+    return converter.agentDefinitionListToVO(entityList);
+  }
+
+  @Override
   public boolean insert(AgentDefinitionDTO dto) {
     AgentDefinition entity = converter.dtoToEntity(dto);
     return agentDefinitionMapper.insert(entity) > 0;

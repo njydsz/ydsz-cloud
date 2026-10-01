@@ -36,6 +36,11 @@ import com.njydsz.common.sentry.metrics.MetricsConstants;
  */
 public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRecorder {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.AGENT;
+  }
+
   /** LLM 调用次数指标名 */
   private static final String METRIC_LLM_CALLS = "llm_calls_total";
 

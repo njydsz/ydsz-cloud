@@ -41,6 +41,11 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 @Component
 public class SystemMetrics extends SentryMetricsAdapter {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.SYSTEM;
+  }
+
   public SystemMetrics() {
     super("ydsz_system_");
   }

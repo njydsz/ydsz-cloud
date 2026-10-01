@@ -51,6 +51,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
+        <!-- P2-CONFIG: 配置热重载桥接（AgentConfigChangeListener 使用 ConfigChangeListener） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-config</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -74,11 +79,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-docs</artifactId>
         </dependency>
+        <!-- P0-A: ydsz-common-web 已移除（server 层零 import，违规依赖清理 2026-10-01） -->
+        <!-- ydsz-common-base：提供 AbstractModuleHealthIndicator（AgentHealthIndicator 使用） -->
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
+            <artifactId>ydsz-common-base</artifactId>
         </dependency>
-        <!-- NotifyHelper: 异步任务完成主动通知推送 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-notify</artifactId>

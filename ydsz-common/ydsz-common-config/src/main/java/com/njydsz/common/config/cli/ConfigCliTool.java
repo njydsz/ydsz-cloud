@@ -45,8 +45,13 @@ import com.njydsz.common.json.YdszJson;
  * <p>默认使用 {@code PBEWithHMACSHA512AndAES_256}（需 JCE unlimited strength， JDK 8u161+ 已内置），与项目 Nacos
  * 共享配置 {@code jasypt.encryptor.algorithm} 对齐。
  *
+ * <p><b>统一入口规范：</b>运行时需对 {@code ENC()} 密文做手动解密的场景（如 API 签名密钥、第三方回调验签），
+ * 必须使用本类的 {@link #decrypt(String, String)} 或 {@link #decrypt(String)} 方法，禁止直接创建 {@code PooledPBEStringEncryptor}
+ * 或使用不一致的算法参数。Spring 配置属性中的 {@code ENC(...)} 占位符由 jasypt-spring-boot-starter 自动解密，无需手动处理。
+ *
  * @author ydsz-team
  * @since 26.09.01
+ * @see com.njydsz.common.config.ConfigAutoConfiguration
  */
 public class ConfigCliTool {
 

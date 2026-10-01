@@ -8,9 +8,12 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.file.virus.ClamAvVirusScanner;
+import com.njydsz.common.file.virus.VirusScanner;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
 
@@ -43,5 +46,23 @@ public class AsyncConfig {
       indicator.setFileStorageProvider(provider);
     }
     return indicator;
+  }
+
+  /**
+   * P1-4: ClamAV 病毒扫描器注册为 VirusScanner SPI 实现。
+   *
+   * <p>通过 {@code @Primary} 标记，common-file 的 {@code FileConfiguration} 检测到已有
+   * {@link VirusScanner} Bean 后自动跳过 {@code NoOpVirusScanner} 装配。 扫描器配置从
+   * {@link NextwikiProperties.VirusScanConfig} 读取（host/port/enabled）。
+   */
+  @Bean
+  @Primary
+  public VirusScanner clamAvVirusScanner(NextwikiProperties properties) {
+    NextwikiProperties.VirusScanConfig virusScan = properties.getVirusScan();
+    return new ClamAvVirusScanner(
+        virusScan.getHost(),
+        virusScan.getPort(),
+        100L * 1024 * 1024, // 100MB 文件大小上限
+        virusScan.isEnabled());
   }
 }

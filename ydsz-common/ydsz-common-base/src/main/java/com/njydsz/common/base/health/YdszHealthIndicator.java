@@ -14,7 +14,6 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.base.config.DocProperties;
-import com.njydsz.common.base.config.YdszSecurityHeadersProperties;
 
 /**
  * Base 模块健康指标
@@ -23,12 +22,11 @@ import com.njydsz.common.base.config.YdszSecurityHeadersProperties;
  *
  * <ul>
  *   <li>时区配置是否生效
- *   <li>安全响应头是否启用
- *   <li>链路追踪是否启用（通过配置间接判断）
  *   <li>文档功能状态
- *   <li>CORS 配置安全性（通过基类属性判断）
  *   <li>JVM 堆内存使用概况
  * </ul>
+ *
+ * <p>注：安全响应头检查已下沉至 common-safe 模块（SecurityHeaderHealthIndicator），base 模块不再重复检查。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -50,21 +48,17 @@ public class YdszHealthIndicator implements HealthIndicator {
   /** 期望的时区 ID，从配置 {@code ydsz.base.timezone} 读取，默认 {@code Asia/Shanghai} */
   private final String expectedTimezone;
 
-  private final YdszSecurityHeadersProperties securityHeadersProperties;
   private final DocProperties docProperties;
 
   /**
    * 构造 Base 模块健康指标
    *
-   * @param securityHeadersProperties 安全响应头配置
    * @param docProperties 文档配置
    * @param expectedTimezone 期望的时区 ID（从 {@code ydsz.base.timezone} 配置读取）
    */
   public YdszHealthIndicator(
-      YdszSecurityHeadersProperties securityHeadersProperties,
       DocProperties docProperties,
       @Value("${ydsz.base.timezone:Asia/Shanghai}") String expectedTimezone) {
-    this.securityHeadersProperties = securityHeadersProperties;
     this.docProperties = docProperties;
     this.expectedTimezone = expectedTimezone;
   }
@@ -82,13 +76,6 @@ public class YdszHealthIndicator implements HealthIndicator {
           "timezone.warning", "期望时区 " + expectedTimezone + " 与实际时区 " + currentTimezone + " 不一致");
     }
 
-    // 安全响应头状态
-    details.put("securityHeaders.enabled", securityHeadersProperties.isEnabled());
-    details.put("securityHeaders.frameOptions", securityHeadersProperties.getFrameOptions());
-    details.put(
-        "securityHeaders.csp",
-        securityHeadersProperties.getCsp() != null ? "configured" : "not-set");
-
     // 文档功能状态
     details.put("doc.enabled", docProperties.isEnabled());
     if (docProperties.isEnabled()) {
@@ -102,10 +89,7 @@ public class YdszHealthIndicator implements HealthIndicator {
     BigDecimal heapUsagePercent = collectHeapMemoryDetails(details);
 
     // 健康状态判定
-    boolean healthy =
-        checkSecurityHeaders(details)
-            && checkDocSecurity(details)
-            && checkHeapMemory(details, heapUsagePercent);
+    boolean healthy = checkDocSecurity(details) && checkHeapMemory(details, heapUsagePercent);
 
     if (healthy) {
       return Health.up().withDetails(details).build();
@@ -141,22 +125,6 @@ public class YdszHealthIndicator implements HealthIndicator {
     memoryDetails.put("usagePercent", usagePercent);
     details.put("heapMemory", memoryDetails);
     return usagePercent;
-  }
-
-  /**
-   * 检查安全响应头配置是否合法
-   *
-   * @param details 健康详情映射
-   * @return 配置合法返回 true
-   */
-  private boolean checkSecurityHeaders(Map<String, Object> details) {
-    if (securityHeadersProperties.isEnabled()
-        && (securityHeadersProperties.getFrameOptions() == null
-            || securityHeadersProperties.getFrameOptions().isBlank())) {
-      details.put("warning", "安全响应头已启用但 frameOptions 为空");
-      return false;
-    }
-    return true;
   }
 
   /**

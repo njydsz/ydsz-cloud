@@ -106,6 +106,8 @@
 | `FileLifecycleManager` | 基于 `@Scheduled` + Cron 的过期文件清理，按路径前缀匹配规则；支持 dryRun 模拟执行与手动触发 |
 | `FileLifecycleProperties` | 生命周期配置（cron / bucket / rules / dryRun），每条规则含 prefix / maxAgeDays / action |
 
+> **P2-2 FileLifecycleManager 定位**：本管理器提供「按路径前缀匹配 + TTL」的通用文件过期清理能力，适用场景包括：临时导入文件定期清除、版本快照过期删除、操作日志归档清理。`FileLifecycleManager` 通过 `@ConditionalOnMissingBean` 自动装配；业务模块注入自定义实现可覆盖默认清理策略。当前 NextWiki 等模块如有独立清理逻辑（如版本快照自动清理），可考虑统一委托给本管理器以消除重复调度任务。
+
 ### 10. 重试与可观测性
 
 | 类 | 说明 |
@@ -135,6 +137,8 @@
     <artifactId>ydsz-common-file</artifactId>
 </dependency>
 ```
+
+> **P3-2 依赖透传说明**：`ydsz-common-file` 在 `pom.xml` 中将 7 个云存储 SDK 声明为 **optional** 依赖（MinIO / Aliyun OSS / AWS S3 / Qcloud COS / Huawei OBS / Qiniu / Rust）。引入本模块后，这些 SDK 会进入编译期 classpath，但**不会传递到下游模块**（optional=true）。业务模块如需传递，须在自己的 pom 中显式声明对应 SDK 依赖。
 
 ### 2. 配置启用
 
@@ -309,6 +313,8 @@ public void stream(@PathVariable String objectName,
     fileStorage.download(null, objectName, response, 0L, 1024L * 1024L);
 }
 ```
+
+> **P2-5 Range 断点续传最佳实践**：大文件下载场景建议启用 HTTP Range 请求支持。前端通过 `Range: bytes=0-1048575` 请求头指定下载范围，后端调用 `storage.download(bucket, objectName, response, offset, length)` 仅返回对应片段，配合 `Content-Range` / `206 Partial Content` 状态码实现断点续传与多线程分片下载。详情参考 `IFileStorage.download` Javadoc。
 
 ### 4. 文件生命周期清理配置
 

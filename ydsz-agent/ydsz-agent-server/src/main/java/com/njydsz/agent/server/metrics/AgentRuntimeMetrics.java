@@ -43,6 +43,11 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  */
 public class AgentRuntimeMetrics extends SentryMetricsAdapter {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.AGENT;
+  }
+
   // -----------------------------------------------------------------------
   // 指标名常量
   // -----------------------------------------------------------------------

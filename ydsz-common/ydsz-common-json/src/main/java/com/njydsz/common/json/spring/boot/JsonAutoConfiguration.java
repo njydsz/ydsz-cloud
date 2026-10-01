@@ -18,7 +18,7 @@ import org.springframework.core.convert.converter.Converter;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.internal.JsonConfig;
-import com.njydsz.common.json.internal.JsonConfig.ConfigChangeListener;
+import com.njydsz.common.json.internal.JsonConfig.JsonConfigChangeListener;
 import com.njydsz.common.json.module.JsonModule;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.provider.PolymorphicTypeResolver;
@@ -154,7 +154,7 @@ public class JsonAutoConfiguration {
      * <p>P1 修复：持有引用以便 {@code @PreDestroy} 注销——原先匿名注册后从不移除，
      * 容器热重启场景下监听器在静态列表中累积泄漏。
      */
-    private ConfigChangeListener cacheInvalidationListener;
+    private JsonConfigChangeListener cacheInvalidationListener;
 
     public JsonConfigBean(JsonProperties properties, List<JsonModule> springModules) {
       this.properties = properties;

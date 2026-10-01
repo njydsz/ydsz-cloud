@@ -5,9 +5,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 
-import com.njydsz.common.base.exporter.DefaultDocExporter;
-import com.njydsz.common.base.exporter.MarkdownDocExporter;
-
 /**
  * 文档模块自动配置类
  *
@@ -17,8 +14,9 @@ import com.njydsz.common.base.exporter.MarkdownDocExporter;
  *   <li>启用 {@link DocProperties} 配置属性绑定
  *   <li>按条件激活 {@link OpenApiAutoConfiguration}（OpenAPI 3.0 多分组）
  *   <li>按条件激活 {@link Knife4jAutoConfiguration}（Knife4j 增强 UI）
- *   <li>注册文档导出器 Bean（{@link DefaultDocExporter}、{@link MarkdownDocExporter}）
  * </ul>
+ *
+ * <p>注：文档导出器（DocExporter 系列）已随 P2-A 清理移除，导出功能如需使用请在 common-docs 模块中实现。
  *
  * <p><b>环境控制：</b> 文档功能默认关闭（{@code ydsz.doc.enabled=false}），需显式配置开启。 生产环境通过 {@link
  * DocSecurityConfiguration} 的 {@code ydsz.doc.production-enabled} 和 {@code ydsz.doc.basic-auth}
@@ -38,8 +36,6 @@ import com.njydsz.common.base.exporter.MarkdownDocExporter;
 @EnableConfigurationProperties(DocProperties.class)
 @Import({
   OpenApiAutoConfiguration.class,
-  Knife4jAutoConfiguration.class,
-  DefaultDocExporter.class,
-  MarkdownDocExporter.class
+  Knife4jAutoConfiguration.class
 })
 public class DocAutoConfiguration {}

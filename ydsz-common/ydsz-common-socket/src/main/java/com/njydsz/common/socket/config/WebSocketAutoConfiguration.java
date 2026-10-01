@@ -566,14 +566,19 @@ public class WebSocketAutoConfiguration {
    * <p>当 classpath 中存在 {@code SseEmitter} 时自动注册。业务模块通过 {@link SsePushChannelFactory}
    * 创建 SSE 连接通道，无需自行管理心跳/断连/cleanup 逻辑。
    *
+   * <p>工厂内置全局限流逻辑（参见 {@link WebSocketProperties.Sse#getMaxTotalConnections()}），
+   * 超限返回 {@link SseLimitExceededChannel}（首次 sendEvent 抛 IOException）。
+   *
+   * @param properties WebSocket 配置属性（含 SSE 限流参数）
    * @return SSE 通道工厂实例
    */
   @Bean
   @ConditionalOnClass(name = "org.springframework.web.servlet.mvc.method.annotation.SseEmitter")
   @ConditionalOnMissingBean(SsePushChannelFactory.class)
-  public SsePushChannelFactory ssePushChannelFactory() {
-    log.info("[WebSocket] 注册 SsePushChannelFactory（SSE 通道抽象）");
-    return new SsePushChannelMvcFactory();
+  public SsePushChannelFactory ssePushChannelFactory(WebSocketProperties properties) {
+    log.info("[WebSocket] 注册 SsePushChannelFactory（SSE 通道抽象 + 连接限流 maxTotal={})",
+        properties.getSse() != null ? properties.getSse().getMaxTotalConnections() : 500);
+    return new SsePushChannelMvcFactory(properties);
   }
 
   // ==================== ARCH-003: 优雅停机 ====================
@@ -624,12 +629,19 @@ public class WebSocketAutoConfiguration {
    *
    * <p>实现 {@link SmartInitializingSingleton} 确保所有单例 Bean 都初始化完成后再扫描注册。
    *
+   * <p>默认关闭（opt-in），仅在业务模块存在 C→S 消息路由需求并通过 {@code ydsz.websocket.c2s.enabled=true}
+   * 显式开启时注册，避免无业务模块使用时浪费启动扫描资源。
+   *
    * @param applicationContext Spring 应用上下文
    * @param messageSerializer 消息序列化器，用于反序列化 payload
    * @return 消息分发器实例
    */
   @Bean
   @ConditionalOnMissingBean(WebSocketMessageDispatcher.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.websocket.c2s",
+      name = "enabled",
+      havingValue = "true")
   public WebSocketMessageDispatcher webSocketMessageDispatcher(
       ApplicationContext applicationContext, MessageSerializer messageSerializer) {
     log.info("[WebSocket] 注册 WebSocketMessageDispatcher（C→S 消息路由）");
@@ -841,10 +853,10 @@ public class WebSocketAutoConfiguration {
    * <p>实现 {@link com.njydsz.common.socket.lifecycle.WebSocketConnectionListener} 接口，通过 Spring
    * 自动收集所有 ConnectionListener Bean 的机制注册到 {@code WebSocketSessionEventListener}。
    *
-   * <p>仅在 {@code ydsz.websocket.presence.enabled=true} 时开启实际广播逻辑；未启用时仍然实例化（维持 Bean
-   * 拓扑稳定），但 {@link WebSocketPresenceService#isEnabled()} 返回 false 会让事件回调短路。
-   * 业务侧可直接通过 {@code @Autowired WebSocketPresenceService} 调用 {@link
-   * WebSocketPresenceService#broadcastPresence} 主动刷新用户在线状态。
+   * <p>通过 {@code ydsz.websocket.presence.enabled=true} 显式开启时才注册 Bean。未开启时 Bean
+   * 不存在，可避免 {@code WebSocketSessionEventListener} 中因 ConnectionListener 短路的 Redis 查询
+   * 开销（每秒万级连接事件推送）。业务侧可通过注入 {@code Optional<WebSocketPresenceService>}
+   * 在运行时安全调用 {@link WebSocketPresenceService#broadcastPresence}。
    *
    * @param messagingTemplate STOMP 消息模板
    * @param onlineUserService 在线用户服务
@@ -854,6 +866,10 @@ public class WebSocketAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(WebSocketPresenceService.class)
+  @ConditionalOnProperty(
+      prefix = "ydsz.websocket.presence",
+      name = "enabled",
+      havingValue = "true")
   public WebSocketPresenceService webSocketPresenceService(
       SimpMessagingTemplate messagingTemplate,
       OnlineUserService onlineUserService,

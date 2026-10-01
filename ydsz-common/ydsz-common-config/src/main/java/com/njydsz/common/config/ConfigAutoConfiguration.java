@@ -50,6 +50,9 @@ import com.njydsz.common.config.hotreload.LogbackAuditPublisher;
  * <p><b>生命周期状态（§33.7 储备义务，26.09.14 标注）：</b>reserve · 稳定。配置变更桥接与加密健康检查已可用；
  * 低引用属能力储备特征，后续接入方启用前需保持热更新桥接的关键路径单测。
  *
+ * <p><b>相关能力：</b>多层 JSON 配置合并需求（tenant-override / feature-flag）请使用
+ * {@link com.njydsz.common.config.hotreload.ConfigMergeUtils}。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

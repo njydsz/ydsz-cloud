@@ -1,5 +1,9 @@
 package com.njydsz.common.file.spi;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
@@ -29,6 +33,27 @@ import javax.imageio.stream.ImageInputStream;
 public class DefaultImageProcessor implements ImageProcessor {
 
   private static final String DEFAULT_FORMAT = "JPEG";
+
+  /** 平铺模式最小字号（像素） */
+  private static final int TILED_MIN_FONT_SIZE = 16;
+
+  /** 字号按图片短边缩放的分母 */
+  private static final int TILED_FONT_SIZE_DIVISOR = 25;
+
+  /** 平铺水印灰度 RGB 分量值 */
+  private static final int TILED_GRAY_RGB = 128;
+
+  /** 平铺水印透明度（AlphaComposite 原始值 0-255） */
+  private static final int TILED_OPACITY_RAW = 50;
+
+  /** 平铺水平步长附加间距（像素） */
+  private static final int TILED_SPACING_X = 100;
+
+  /** 平铺垂直步长附加间距（像素） */
+  private static final int TILED_SPACING_Y = 80;
+
+  /** 平铺旋转角度（度） */
+  private static final double TILED_ROTATE_DEGREES = 30;
 
   @Override
   public void scale(
@@ -91,10 +116,67 @@ public class DefaultImageProcessor implements ImageProcessor {
     if (src == null) {
       throw new IOException("无法识别图片格式或输入流为空");
     }
+    if (position == WatermarkPosition.TILED) {
+      applyTiledWatermark(src, watermarkText, opacity);
+    } else {
+      applySingleWatermark(src, watermarkText, opacity, position);
+    }
+    ImageIO.write(src, DEFAULT_FORMAT, output);
+  }
+
+  /**
+   * 对角线平铺水印（防截屏/拍照溯源模式）。
+   *
+   * <p>字号根据图片短边等比缩放（最小 {@value TILED_MIN_FONT_SIZE}px），按步长矩阵覆盖全图，
+   * 每个水印单元旋转 {@value TILED_ROTATE_DEGREES}°。
+   *
+   * @param src 源图片（原地绘制）
+   * @param watermarkText 水印文本
+   * @param opacity 不透明度（0.0 ~ 1.0）
+   */
+  private void applyTiledWatermark(BufferedImage src, String watermarkText, float opacity) {
     Graphics2D g = src.createGraphics();
-    g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, opacity));
-    g.setColor(java.awt.Color.GRAY);
-    g.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 24));
+    try {
+      g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+      int fontSize =
+          Math.max(
+              TILED_MIN_FONT_SIZE,
+              Math.min(src.getWidth(), src.getHeight()) / TILED_FONT_SIZE_DIVISOR);
+      Font font = new Font("SansSerif", Font.BOLD, fontSize);
+      g.setFont(font);
+      FontMetrics fontMetrics = g.getFontMetrics();
+      int textWidth = fontMetrics.stringWidth(watermarkText);
+      int textHeight = fontMetrics.getHeight();
+      g.setColor(new Color(TILED_GRAY_RGB, TILED_GRAY_RGB, TILED_GRAY_RGB, TILED_OPACITY_RAW));
+      g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+      int stepX = textWidth + TILED_SPACING_X;
+      int stepY = textHeight + TILED_SPACING_Y;
+      for (int y = 0; y < src.getHeight() + stepY; y += stepY) {
+        for (int x = -stepX / 2; x < src.getWidth() + stepX; x += stepX) {
+          g.rotate(Math.toRadians(TILED_ROTATE_DEGREES), x, y);
+          g.drawString(watermarkText, x, y);
+          g.rotate(Math.toRadians(-TILED_ROTATE_DEGREES), x, y);
+        }
+      }
+    } finally {
+      g.dispose();
+    }
+  }
+
+  /**
+   * 单位置水印模式。
+   *
+   * @param src 源图片（原地绘制）
+   * @param watermarkText 水印文本
+   * @param opacity 不透明度（0.0 ~ 1.0）
+   * @param position 水印位置
+   */
+  private void applySingleWatermark(
+      BufferedImage src, String watermarkText, float opacity, WatermarkPosition position) {
+    Graphics2D g = src.createGraphics();
+    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+    g.setColor(Color.GRAY);
+    g.setFont(new Font("SansSerif", Font.BOLD, 24));
     int textWidth = g.getFontMetrics().stringWidth(watermarkText);
     int textHeight = g.getFontMetrics().getHeight();
     int x = 10;
@@ -116,7 +198,6 @@ public class DefaultImageProcessor implements ImageProcessor {
     }
     g.drawString(watermarkText, x, y);
     g.dispose();
-    ImageIO.write(src, DEFAULT_FORMAT, output);
   }
 
   @Override

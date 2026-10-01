@@ -1,17 +1,11 @@
 package com.njydsz.agent.server.rag;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.imageio.ImageIO;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +17,7 @@ import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.server.knowledge.KnowledgeGraphService;
-import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.docs.ocr.OcrProvider;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -55,13 +49,11 @@ public class DocumentIngestionService {
   /** OCR 图片渲染默认 DPI */
   private static final int DEFAULT_OCR_DPI = 200;
 
-  /** OCR 图片输出格式 */
-  private static final String OCR_IMAGE_FORMAT = "png";
-
   private final TextChunker textChunker;
   private final EmbeddingClient embeddingClient;
   private final VectorStore vectorStore;
   private final ObjectProvider<OcrService> ocrServiceProvider;
+  private final ObjectProvider<OcrProvider> ocrProviderProvider;
   private final AgentProperties properties;
   private final ObjectProvider<KnowledgeGraphService> knowledgeGraphServiceProvider;
 
@@ -72,6 +64,7 @@ public class DocumentIngestionService {
    * @param embeddingClient          向量化客户端
    * @param vectorStore              向量存储
    * @param ocrServiceProvider        OCR 服务（可选）
+   * @param ocrProviderProvider       PDF 页面渲染能力（common-docs OcrProvider，可选）
    * @param properties               Agent 配置属性
    * @param knowledgeGraphServiceProvider 知识图谱服务（可选，未配置则跳过 KG 摄入）
    */
@@ -80,12 +73,14 @@ public class DocumentIngestionService {
       EmbeddingClient embeddingClient,
       VectorStore vectorStore,
       ObjectProvider<OcrService> ocrServiceProvider,
+      ObjectProvider<OcrProvider> ocrProviderProvider,
       AgentProperties properties,
       ObjectProvider<KnowledgeGraphService> knowledgeGraphServiceProvider) {
     this.textChunker = textChunker;
     this.embeddingClient = embeddingClient;
     this.vectorStore = vectorStore;
     this.ocrServiceProvider = ocrServiceProvider;
+    this.ocrProviderProvider = ocrProviderProvider;
     this.properties = properties;
     this.knowledgeGraphServiceProvider = knowledgeGraphServiceProvider;
   }
@@ -180,7 +175,7 @@ public class DocumentIngestionService {
    * <p>处理流程：
    *
    * <ol>
-   *   <li>将 PDF 逐页转为图片（使用 PDFBox）</li>
+   *   <li>委托 common-docs {@link OcrProvider} 将 PDF 逐页渲染为图片（封装 PDFBox，消除业务层对 PDFBox 的直接依赖）</li>
    *   <li>调用 {@link OcrService#recognize} 逐页提取文字</li>
    *   <li>合并所有页文本</li>
    *   <li>进入正常 ingestion 流程（分块 + embedding + 存入向量库）</li>
@@ -202,24 +197,28 @@ public class DocumentIngestionService {
       return 0;
     }
 
+    // P1-1: 委托 common-docs OcrProvider 渲染 PDF 页面，消除对 PDFBox 的直接依赖
+    OcrProvider ocrProvider = ocrProviderProvider.getIfAvailable();
+    if (ocrProvider == null) {
+      log.warn("[RAG-OCR] OcrProvider 不可用（common-docs 未装配），跳过扫描版 PDF 摄入: fileName={}", fileName);
+      return 0;
+    }
+
     log.info("[RAG-OCR] 开始扫描版 PDF 摄入: fileName={}, datasetId={}, size={} bytes",
         fileName, datasetId, pdfBytes.length);
 
-    try (PDDocument document = Loader.loadPDF(pdfBytes)) {
-      int pageCount = Math.min(document.getNumberOfPages(), MAX_OCR_PAGES);
-      int dpi = properties.getOcr().getPdfDpi() > 0 ? properties.getOcr().getPdfDpi() : DEFAULT_OCR_DPI;
-      PDFRenderer renderer = new PDFRenderer(document);
+    try (ByteArrayInputStream pdfStream = new ByteArrayInputStream(pdfBytes)) {
+      int ocrDpi = properties.getOcr().getPdfDpi() > 0 ? properties.getOcr().getPdfDpi() : DEFAULT_OCR_DPI;
+      List<byte[]> pageImages = ocrProvider.renderPages(pdfStream, fileName, ocrDpi, MAX_OCR_PAGES);
       StringBuilder allText = new StringBuilder();
 
-      for (int i = 0; i < pageCount; i++) {
-        BufferedImage image = renderer.renderImageWithDPI(i, dpi);
-        byte[] imageBytes = bufferedImageToBytes(image, OCR_IMAGE_FORMAT);
-        String pageText = ocrService.recognize(imageBytes, ImageFormat.PNG);
+      for (int i = 0; i < pageImages.size(); i++) {
+        String pageText = ocrService.recognize(pageImages.get(i), ImageFormat.PNG);
         if (pageText != null && !pageText.isBlank()) {
           allText.append("\n--- 第 ").append(i + 1).append(" 页 ---\n");
           allText.append(pageText).append("\n");
         }
-        log.debug("[RAG-OCR] 第 {}/{} 页 OCR 完成, 提取 {} 字符", i + 1, pageCount,
+        log.debug("[RAG-OCR] 第 {}/{} 页 OCR 完成, 提取 {} 字符", i + 1, pageImages.size(),
             pageText != null ? pageText.length() : 0);
       }
 
@@ -232,10 +231,10 @@ public class DocumentIngestionService {
       String documentId = "ocr-" + IdGenerator.nextIdStr() + "-" + fileName;
       int count = ingest(documentId, fullText, fileName, "ocr-scanned-pdf");
       log.info("[RAG-OCR] 扫描版 PDF 摄入完成: fileName={}, pages={}, chunks={}",
-          fileName, pageCount, count);
+          fileName, pageImages.size(), count);
       return count;
-    } catch (IOException e) {
-      log.error("[RAG-OCR] PDF 解析失败: fileName={}, error={}", fileName, e.getMessage(), e);
+    } catch (Exception e) {
+      log.error("[RAG-OCR] 扫描版 PDF 摄入失败: fileName={}, error={}", fileName, e.getMessage(), e);
       return 0;
     }
   }
@@ -279,23 +278,6 @@ public class DocumentIngestionService {
     int count = ingest(documentId, text, "image-" + datasetId, "ocr-image");
     log.info("[RAG-OCR] 图片 OCR 摄入完成: datasetId={}, chunks={}", datasetId, count);
     return count;
-  }
-
-  /**
-   * 将 BufferedImage 转换为指定格式的图片字节数组
-   *
-   * @param image 图片对象
-   * @param formatName 图片格式名称（png/jpeg）
-   * @return 图片字节数组
-   * @throws IOException 转换失败时抛出
-   */
-  private byte[] bufferedImageToBytes(BufferedImage image, String formatName) throws IOException {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    boolean written = ImageIO.write(image, formatName, baos);
-    if (!written) {
-      throw new IOException(I18n.message("agent.error.rag.image_write_failed", new Object[]{formatName}));
-    }
-    return baos.toByteArray();
   }
 
   /**

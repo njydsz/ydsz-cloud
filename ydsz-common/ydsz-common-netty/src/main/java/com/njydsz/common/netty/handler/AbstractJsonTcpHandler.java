@@ -108,6 +108,21 @@ public abstract class AbstractJsonTcpHandler extends ChannelInboundHandlerAdapte
    *
    * <p>子类实现此方法将 userId 与 Channel 绑定（如加入分组管理器等）。
    *
+   * <p><b>最佳实践：</b>认证成功后，除了将 Channel 加入分组管理器外，还应更新 Session 的 bizId，
+   * 以激活 {@link com.njydsz.common.netty.session.SessionRepository} 的会话管理能力。
+   * 示例：
+   *
+   * <pre>{@code
+   * &#64;Override
+   * protected void onAuthenticated(ChannelHandlerContext ctx, String userId) {
+   *     this.userId = userId;
+   *     server.registerUser(userId, ctx.channel());
+   *     // 激活 Session 管理：更新 bizId 使 sessionRepository 可查询到此会话
+   *     server.getSessionRepository().find(s -> s.getChannel().equals(ctx.channel()))
+   *         .forEach(s -> server.getSessionRepository().updateBizId(s.getSessionId(), userId));
+   * }
+   * }</pre>
+   *
    * @param ctx    Channel 上下文
    * @param userId 已认证的用户 ID
    */

@@ -266,7 +266,15 @@ public class NotificationController {
   /**
    * 单推（实时推送至指定用户）。
    *
-   * <p>通过 WebSocket 向指定用户实时推送消息，不经过消息中心持久化。推送失败不重试，返回结果仅表示推送动作已执行。
+   * <p><b>推送路径：实时 WebSocket 链路</b>（{@code RealtimePushService} → STOMP + Redis Pub/Sub 集群广播）。
+   * 不经过消息中心持久化，前端 WebSocket 在线时可即时感知。
+   *
+   * <p><b>选型指南：</b>
+   *
+   * <ul>
+   *   <li>需要实时感知 + 前端 WebSocket 在线 + 不需要持久化 → 使用本方法</li>
+   *   <li>需要消息持久化 + 离线补偿 + 多通道投递（邮件/短信/企微） → 使用 消息发送接口（走 NotifyHelper）</li>
+   * </ul>
    *
    * @param userId 目标用户 ID（Query 参数，不可为空）
    * @param type 推送类型（Query 参数，如 notif / task / alert）

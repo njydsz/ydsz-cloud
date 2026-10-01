@@ -70,7 +70,7 @@ public final class JsonConfig implements Serializable {
    *
    * <p>监听器在 {@link #install(JsonConfig)} 完成后回调，可用于清理缓存、记录审计日志等。
    */
-  private static final List<ConfigChangeListener> CHANGE_LISTENERS = new CopyOnWriteArrayList<>();
+  private static final List<JsonConfigChangeListener> CHANGE_LISTENERS = new CopyOnWriteArrayList<>();
 
   /** 默认 JSON 最大字节数上限：10 MB */
   private static final long DEFAULT_MAX_JSON_SIZE = 10L * 1024 * 1024;
@@ -177,7 +177,8 @@ public final class JsonConfig implements Serializable {
    *
    * <p>此方法等价于 {@code instance = newConfig; newConfig.apply()}， 保证配置立即生效（传播到 JSONReader /
    * SerializationProvider 等全局组件）， 并同步刷新 {@link com.njydsz.common.json.YdszJson} 内部的默认 Mapper 实例。
-   * 安装后会自增全局配置版本号 {@link #CONFIG_VERSION} 并通知所有注册的 {@link ConfigChangeListener}。
+   * 安装后会自增全局配置版本号 {@link #CONFIG_VERSION} 并通知所有注册的
+   * {@link JsonConfigChangeListener}。
    *
    * @param newConfig 新的全局配置实例（由 Builder 构建）
    * @since 26.09.01
@@ -209,7 +210,7 @@ public final class JsonConfig implements Serializable {
    * @param listener 监听器实例，null 忽略
    * @since 26.09.01
    */
-  public static void addChangeListener(ConfigChangeListener listener) {
+  public static void addChangeListener(JsonConfigChangeListener listener) {
     if (listener != null) {
       CHANGE_LISTENERS.add(listener);
     }
@@ -221,7 +222,7 @@ public final class JsonConfig implements Serializable {
    * @param listener 待移除的监听器
    * @since 26.09.01
    */
-  public static void removeChangeListener(ConfigChangeListener listener) {
+  public static void removeChangeListener(JsonConfigChangeListener listener) {
     CHANGE_LISTENERS.remove(listener);
   }
 
@@ -249,7 +250,7 @@ public final class JsonConfig implements Serializable {
     if (CHANGE_LISTENERS.isEmpty()) {
       return;
     }
-    for (ConfigChangeListener listener : CHANGE_LISTENERS) {
+    for (JsonConfigChangeListener listener : CHANGE_LISTENERS) {
       try {
         listener.onConfigChanged(oldConfig, newConfig, newVersion);
       } catch (Exception e) {
@@ -756,16 +757,19 @@ public final class JsonConfig implements Serializable {
   }
 
   /**
-   * 配置变更监听器接口。
+   * JSON 引擎配置变更监听器接口（内部 API）。
    *
    * <p>在 {@link JsonConfig#install(JsonConfig)} 完成后回调，接收旧配置、新配置和新版本号。 实现类可使用此接口清理缓存、记录审计日志、刷新状态等。
+   *
+   * <p><b>命名说明：</b>添加 {@code Json} 前缀以区别于 {@code com.njydsz.common.config.hotreload.ConfigChangeListener}
+   * （Spring Cloud 中心配置变更监听器），避免同名接口在同时 import 时产生歧义。
    *
    * <p><b>线程安全：</b>监听器可能被并发回调，实现需保证线程安全。 <b>执行约束：</b>监听器不应执行耗时操作，避免阻塞配置安装流程。
    *
    * @since 26.09.01
    */
   @FunctionalInterface
-  public interface ConfigChangeListener {
+  public interface JsonConfigChangeListener {
 
     /**
      * 配置已变更回调。

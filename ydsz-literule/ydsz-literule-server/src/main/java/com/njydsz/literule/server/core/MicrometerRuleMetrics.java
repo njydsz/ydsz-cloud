@@ -34,6 +34,11 @@ import com.njydsz.literule.domain.enums.RuleSeverity;
  */
 public class MicrometerRuleMetrics extends SentryMetricsAdapter implements RuleMetrics {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.LITERULE;
+  }
+
   private final AtomicInteger lastTraceQueueSize = new AtomicInteger(0);
   private final AtomicInteger lastRegisteredRules = new AtomicInteger(0);
   private final AtomicInteger lastEvaluatedRules = new AtomicInteger(0);

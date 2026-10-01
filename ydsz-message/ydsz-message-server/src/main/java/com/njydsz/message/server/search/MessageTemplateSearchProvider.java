@@ -2,16 +2,19 @@ package com.njydsz.message.server.search;
 
 import java.math.BigDecimal;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
+import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
@@ -44,6 +47,32 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
   @Override
   public String getType() {
     return "message_template";
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public List<SearchFilter> getFilters(SearchProviderContext context) {
+    if (context == null || context.isAdmin()) {
+      return List.of();
+    }
+    List<SearchFilter> filters = new ArrayList<>(3);
+    // 租户隔离
+    if (context.getTenantId() != null && !context.getTenantId().isBlank()) {
+      filters.add(
+          SearchFilter.builder()
+              .field("tenant_id")
+              .values(List.of(context.getTenantId()))
+              .operator(SearchFilter.Operator.EQ)
+              .build());
+    }
+    // 仅搜索已启用状态的模板
+    filters.add(
+        SearchFilter.builder()
+            .field("status")
+            .values(List.of("ENABLED"))
+            .operator(SearchFilter.Operator.EQ)
+            .build());
+    return filters;
   }
 
   public String getTypeLabel() {

@@ -12,6 +12,19 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
  * <p>P1.3.0 重构：底层推送逻辑（STOMP + Redis Pub/Sub 集群广播 + 降级 + 离线补偿 + 指标监控） 已上迁到 {@code
  * ydsz-common-socket} 模块的 {@link RealtimePushTemplate}， 本类保留为业务门面，确保现有调用方无需修改注入路径。
  *
+ * <h3>推送路径选型指南</h3>
+ *
+ * <p>本服务提供的是 <b>实时 WebSocket 链路</b>（STOMP + Redis Pub/Sub 集群广播），适用于前端通过 WebSocket 长连接
+ * 即时感知业务事件的场景（如任务状态变更、消息到达提醒等）。
+ *
+ * <p><b>选型对照：</b>
+ *
+ * <ul>
+ *   <li>需要实时感知 + 前端 WebSocket 在线 + 不需要持久化 → 使用本类（{@code pushToUser} / {@code broadcast}）</li>
+ *   <li>需要消息持久化 + 离线补偿 + 多通道投递（邮件/短信/企微） → 使用 {@code NotifyHelper}</li>
+ *   <li>需要实时 + 离线补偿（WebSocket + Redis 暂存） → 使用 {@code pushToUserWithOffline}</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 26.09.01
  */

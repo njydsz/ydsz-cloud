@@ -41,6 +41,11 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 @Component
 public class NextwikiMetrics extends SentryMetricsAdapter {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.NEXTWIKI;
+  }
+
   private final StorageQuotaRepository quotaRepository;
 
   /** 配额用量缓存（用于 Gauge） */

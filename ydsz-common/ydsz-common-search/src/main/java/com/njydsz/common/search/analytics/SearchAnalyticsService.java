@@ -1,10 +1,12 @@
 package com.njydsz.common.search.analytics;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,15 @@ public class SearchAnalyticsService {
   private static final String ZERO_RESULT_KEY = "search:analytics:zero";
   private static final String DAILY_SEARCHES_KEY = "search:analytics:daily";
   private static final int MAX_HOT_KEYWORDS = 1000;
+
+  /** 用户搜索历史 Redis List 前缀 */
+  private static final String USER_HISTORY_KEY_PREFIX = "search:analytics:history:";
+
+  /** 每用户搜索历史最大保留条数 */
+  private static final int MAX_USER_HISTORY_SIZE = 20;
+
+  /** 用户搜索历史 TTL：30 天（秒） */
+  private static final long USER_HISTORY_TTL_SECONDS = 30L * 24 * 60 * 60;
 
   private final ObjectProvider<StringRedisTemplate> redisProvider;
 
@@ -248,6 +259,111 @@ public class SearchAnalyticsService {
     hotKeywords.clear();
     zeroResultKeywords.clear();
     dailySearches.clear();
+  }
+
+  // ==================== 用户搜索历史（收敛自业务模块 SearchHistoryService） ====================
+
+  /**
+   * 记录用户搜索历史并更新热门搜索排行。
+   *
+   * <p>同时写入用户历史 List 与热门搜索 Sorted Set：
+   *
+   * <ul>
+   *   <li>用户历史：Redis List，每个用户独立，保留最近 {@value #MAX_USER_HISTORY_SIZE} 条，TTL 30 天</li>
+   *   <li>热门搜索：全局 Sorted Set {@code search:analytics:hot}（与 {@link #recordSearch} 共用同一 key）</li>
+   * </ul>
+   *
+   * <p>先做去重（移除历史中相同关键词）再左侧插入，保证最新记录在顶部且不重复。 空白用户 ID 或空白关键词静默跳过。 Redis 失败时降级到内存 Map，不影响业务主链路。
+   *
+   * @param userId 用户 ID（不可为 null 或空白）
+   * @param keyword 原始搜索关键词（自动 trim，超长截断至 100 字符）
+   */
+  public void recordUserSearchHistory(String userId, String keyword) {
+    if (userId == null || userId.isBlank() || keyword == null || keyword.isBlank()) {
+      return;
+    }
+    String normalizedKeyword = keyword.trim();
+    if (normalizedKeyword.length() > 100) {
+      normalizedKeyword = normalizedKeyword.substring(0, 100);
+    }
+
+    String historyKey = USER_HISTORY_KEY_PREFIX + userId;
+    StringRedisTemplate redis = getRedis();
+    if (redis != null) {
+      recordUserHistoryToRedis(redis, historyKey, normalizedKeyword);
+    } else {
+      recordUserHistoryToMemory(normalizedKeyword);
+    }
+
+    // 一并更新热门搜索排行
+    recordSearch(normalizedKeyword, -1);
+  }
+
+  private void recordUserHistoryToRedis(
+      StringRedisTemplate redis, String historyKey, String keyword) {
+    try {
+      redis.opsForList().remove(historyKey, 0, keyword);
+      redis.opsForList().leftPush(historyKey, keyword);
+      redis.opsForList().trim(historyKey, 0, MAX_USER_HISTORY_SIZE - 1);
+      redis.expire(historyKey, USER_HISTORY_TTL_SECONDS, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      log.debug("[SearchAnalytics] Redis 记录搜索历史失败，降级到内存: userId={}, keyword={}",
+          historyKey, keyword, e);
+      recordUserHistoryToMemory(keyword);
+    }
+  }
+
+  private void recordUserHistoryToMemory(String keyword) {
+    // 内存模式：Redis 不可用时仅记录热门词（用户历史无法跨 JVM 持久化）
+    hotKeywords.computeIfAbsent(keyword, k -> new AtomicLong(0)).incrementAndGet();
+  }
+
+  /**
+   * 获取用户搜索历史列表（最新在前）。
+   *
+   * <p>从 Redis List 读取完整历史记录；Redis 不可用时返回空列表。
+   *
+   * @param userId 用户 ID（null 或空白时返回空列表）
+   * @return 搜索历史字符串列表（最新在前）；无数据或故障时返回空列表
+   */
+  public List<String> getUserSearchHistory(String userId) {
+    if (userId == null || userId.isBlank()) {
+      return new ArrayList<>(0);
+    }
+    String historyKey = USER_HISTORY_KEY_PREFIX + userId;
+    StringRedisTemplate redis = getRedis();
+    if (redis == null) {
+      return new ArrayList<>(0);
+    }
+    try {
+      List<String> history = redis.opsForList().range(historyKey, 0, -1);
+      return history != null ? history : new ArrayList<>(0);
+    } catch (Exception e) {
+      log.debug("[SearchAnalytics] Redis 读取搜索历史失败: userId={}", userId, e);
+      return new ArrayList<>(0);
+    }
+  }
+
+  /**
+   * 清除用户搜索历史记录（热门搜索不受影响）。
+   *
+   * <p>属于不可逆操作，删除后无法恢复。Redis 失败时静默处理，不打扰调用方。
+   *
+   * @param userId 用户 ID（null 或空白时静默跳过）
+   */
+  public void clearUserSearchHistory(String userId) {
+    if (userId == null || userId.isBlank()) {
+      return;
+    }
+    StringRedisTemplate redis = getRedis();
+    if (redis == null) {
+      return;
+    }
+    try {
+      redis.delete(USER_HISTORY_KEY_PREFIX + userId);
+    } catch (Exception e) {
+      log.debug("[SearchAnalytics] Redis 清除搜索历史失败: userId={}", userId, e);
+    }
   }
 
   private StringRedisTemplate getRedis() {

@@ -31,9 +31,9 @@ import org.springframework.validation.annotation.Validated;
  *       field-weights: { title: 1.0, subtitle: 0.7, content: 0.4, tags: 0.2 }
  *       time-decay-days: 0
  *     text-processor:                # 文本处理配置
- *       synonym-enabled: false
+ *       synonym-enabled: true
  *       synonym-file: classpath:synonyms.txt
- *       pinyin-enabled: false
+ *       pinyin-enabled: true
  *       pinyin-file: classpath:pinyin.txt
  * </pre>
  *
@@ -207,9 +207,9 @@ public class SearchProperties {
   /** 文本处理配置（同义词扩展与拼音搜索）。 */
   @Data
   public static class TextProcessorConfig {
-    private boolean synonymEnabled = false;
+    private boolean synonymEnabled = true;
     private String synonymFile = "classpath:synonyms.txt";
-    private boolean pinyinEnabled = false;
+    private boolean pinyinEnabled = true;
     private String pinyinFile = "classpath:pinyin.txt";
   }
 

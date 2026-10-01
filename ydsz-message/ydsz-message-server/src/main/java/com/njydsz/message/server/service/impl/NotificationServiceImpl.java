@@ -60,9 +60,6 @@ public class NotificationServiceImpl implements NotificationService {
   /** 实时推送服务（WebSocket / 离线缓存） */
   private final RealtimePushService realtimePushService;
 
-  /** P2-18: 站内通知全文搜索索引 */
-  private final NotificationSearchService notificationSearchService;
-
   /** 消息撤回服务 */
   private final RecallService recallService;
 
@@ -102,8 +99,7 @@ public class NotificationServiceImpl implements NotificationService {
     for (int i = 0; i < entities.size(); i++) {
       MsgNotificationVO entity = entities.get(i);
       String rid = receiverIds.get(i);
-      // P2-18: 构建全文搜索索引
-      notificationSearchService.index(rid, entity.getId(), dto.getTitle(), entity.getContent());
+      // P2-18: 全文搜索索引已收敛至 ydsz-common-search（NotificationSearchProvider），由搜索服务从 DB 全量加载
       // 实时推送（P0-4: 离线时自动缓存到 Redis，上线时补偿）
       realtimePushService.pushToUserWithOffline(rid, "NOTIFICATION", entity);
     }
@@ -194,8 +190,7 @@ public class NotificationServiceImpl implements NotificationService {
     query.setReceiverId(userId);
     List<MsgNotificationVO> notifications = msgNotificationRepository.findList(query);
     for (MsgNotificationVO n : notifications) {
-      // P2-18: 移除全文搜索索引
-      notificationSearchService.removeIndex(userId, n.getId(), n.getTitle(), n.getContent());
+      // P2-18: 全文搜索索引已收敛至 ydsz-common-search，删除后由搜索服务通过 loadAll 自动同步
       msgNotificationRepository.deleteById(n.getId());
     }
   }

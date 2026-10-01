@@ -182,6 +182,30 @@ server 不依赖 infra（P1-2 整改后）
 3. 任务幂等设计（防重复执行）
 4. 通过 notify 发送任务结果通知
 
+### 3.6 SOP-6：新增文件上传端点
+
+**步骤**:
+1. 在 web 层 Controller 添加 POST 端点（`@PostMapping("/upload")`），参数使用 `@RequestParam("file") MultipartFile`
+2. 注入 `IFileStorageProvider` 获取存储实例：`fileStorageProvider.getStorage()`
+3. 文件名净化：`String safeName = FileOps.sanitizeFileName(file.getOriginalFilename())`
+4. 提取后缀：`String suffix = FileOps.extractSuffix(safeName)`
+5. 真实类型校验（P1 强制，YDIZ-COMMON-061）：
+   - 注入 `FileTypeValidator` 或 `FileTypeDetector`，调用 `fileTypeValidator.validate(file.getInputStream(), safeName)`
+   - 或 `FileTypeDetector.detect(file.getInputStream())` 验证 MIME 与后缀匹配
+   - 拒绝 `FileTypeDetector.isDangerousType()` 返回 true 的上传
+6. 生成存储 Key：`String key = FileOps.generateStorageKey("模块前缀", namespace, safeName)`
+   - 多模块共享同一存储桶时使用自定义前缀（如 "wiki"/"workflow-attachment"）
+7. 秒传优化（可选）：注入 `FileDedupService`，通过 SHA-256 判断重复文件
+8. 调用 `storage.upload(bucket, key, file)` 获取 `FileStorage` 返回元信息
+9. 文件元信息存入业务表（`FileNode`/`Attachment` 等业务实体），记录 `storageKey`、`bucketName`、`mimeType`、`size`
+
+**禁止事项**:
+- 禁止提取后缀用 `filename.lastIndexOf('.')` 自实现 → 使用 `FileOps.extractSuffix()`
+- 禁止生成存储 Key 用 `"file/" + uuid` 自实现 → 使用 `FileOps.generateStorageKey()`
+- 禁止净化文件名用 `filename.replace("/", "_")` 自实现 → 使用 `FileOps.sanitizeFileName()`
+- 禁止直接 `new MinioClient()` / `new OSSClient()` → 通过 `IFileStorageProvider` 获取
+- 禁止在后缀白名单通过后不再校验 Magic Number（YDIZ-COMMON-061 P1 强制）
+
 ---
 
 ## 4. 项目已废弃/禁止的技术

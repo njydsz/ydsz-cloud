@@ -10,7 +10,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.socket.push.RealtimePushTemplate;
@@ -43,7 +42,8 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
  *   }
  * </pre>
  *
- * <p><b>降级策略：</b>WebSocket 模块未引入时静默降级，不影响评论正常提交。
+ * <p><b>注入方式：</b>直接注入 {@link RealtimePushTemplate}（nextwiki-server pom 已强依赖 ydsz-common-socket），
+ * 无需 {@code ObjectProvider} 降级样板代码。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -55,8 +55,8 @@ public class MentionService {
   /** @提及 正则：@后面跟非空白字符（用户名/用户ID） */
   private static final Pattern MENTION_PATTERN = Pattern.compile("@([^\\s@]+)");
 
-  /** WebSocket 推送模板（可选依赖） */
-  private final ObjectProvider<RealtimePushTemplate> pushTemplateProvider;
+  /** WebSocket 推送模板（统一实时推送能力） */
+  private final RealtimePushTemplate pushTemplate;
 
   /** 消息类型常量 */
   public static final String TYPE_COMMENT_MENTION = "COMMENT_MENTION";
@@ -64,10 +64,10 @@ public class MentionService {
   /**
    * 构造方法注入。
    *
-   * @param pushTemplateProvider WebSocket 推送模板提供者
+   * @param pushTemplate WebSocket 推送模板
    */
-  public MentionService(ObjectProvider<RealtimePushTemplate> pushTemplateProvider) {
-    this.pushTemplateProvider = pushTemplateProvider;
+  public MentionService(RealtimePushTemplate pushTemplate) {
+    this.pushTemplate = pushTemplate;
   }
 
   /**
@@ -117,12 +117,6 @@ public class MentionService {
       List<String> mentionedUserIds) {
 
     if (mentionedUserIds == null || mentionedUserIds.isEmpty()) {
-      return;
-    }
-
-    RealtimePushTemplate pushTemplate = pushTemplateProvider.getIfAvailable();
-    if (pushTemplate == null) {
-      log.debug("[MentionService] WebSocket 模块未引入，跳过 @提及通知");
       return;
     }
 

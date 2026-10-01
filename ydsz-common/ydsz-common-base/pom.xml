@@ -44,12 +44,6 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
 
-        <!-- 公共认证模块（BaseAuthInfo 继承自 auth.model.YdszAuthInfo） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-auth</artifactId>
-        </dependency>
-
         <!-- 公共国际化基座（ydsz-common-locales 提供 I18nProperties 与 I18n 配置能力） -->
         <dependency>
             <groupId>com.njydsz</groupId>

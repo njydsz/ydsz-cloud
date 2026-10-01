@@ -1,5 +1,6 @@
 package com.njydsz.nextwiki.server.channel;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,10 +8,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,6 +17,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.netty.codec.LengthFieldCodec;
 import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.handler.AbstractJsonTcpHandler;
 import com.njydsz.common.netty.server.AbstractNettyServer;
 /**
  * NextWiki TCP 推送通道（基于 common-netty，P1-2 Netty 推送能力扩展）。
@@ -144,7 +143,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       eventData.put("payload", payload);
       eventData.put("timestamp", System.currentTimeMillis());
       String json = YdszJson.toJson(eventData);
-      ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
+      ByteBuf buf = Unpooled.copiedBuffer(json, StandardCharsets.UTF_8);
       channelGroupManager.broadcastToGroup(groupKey, buf);
       int count = channelGroupManager.groupSize(groupKey);
       log.info(
@@ -182,7 +181,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       eventData.put("payload", payload);
       eventData.put("timestamp", System.currentTimeMillis());
       String json = YdszJson.toJson(eventData);
-      ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
+      ByteBuf buf = Unpooled.copiedBuffer(json, StandardCharsets.UTF_8);
       channelGroupManager.broadcastToGroup(groupKey, buf);
       return true;
     } catch (Exception e) {
@@ -243,12 +242,11 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
   }
 
   /**
-   * NextWiki TCP 推送服务端 Handler。
+   * NextWiki TCP 推送服务端 Handler（基于 {@link AbstractJsonTcpHandler} 基类）。
    *
-   * <p>处理客户端连接/断开、空闲检测、认证消息（AUTH）、空间订阅消息（SUB_SPACE / UNSUB_SPACE）。
+   * <p>封装 ByteBuf → UTF-8 → JSON 解析、空闲超时关闭、异常关闭等通用逻辑。 子类实现认证注册、空间订阅/取消订阅等业务消息路由。
    */
-  @Slf4j
-  static class NextwikiPushServerHandler extends ChannelInboundHandlerAdapter {
+  static class NextwikiPushServerHandler extends AbstractJsonTcpHandler {
 
     private final NextwikiTcpPushChannel server;
     private String userId;
@@ -258,63 +256,31 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-      server.channelGroupManager.add(ctx.channel());
-      log.debug("[NextWiki-PUSH] 新连接: remote={}", ctx.channel().remoteAddress());
+    protected String getLogPrefix() {
+      return "[NextWiki-PUSH]";
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
-      server.channelGroupManager.remove(ctx.channel());
-      log.debug("[NextWiki-PUSH] 连接断开: remote={}, userId={}", ctx.channel().remoteAddress(), userId);
-    }
-
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-      if (!(msg instanceof ByteBuf buf)) {
-        return;
-      }
-      String json = buf.toString(CharsetUtil.UTF_8);
-      try {
-        Map<String, Object> data = YdszJson.parseMap(json);
-        String type = (String) data.get("type");
-        if ("AUTH".equals(type)) {
-          handleAuth(ctx, data);
-        } else if ("SUB_SPACE".equals(type)) {
-          handleSubSpace(ctx, data);
-        } else if ("UNSUB_SPACE".equals(type)) {
-          handleUnsubSpace(ctx, data);
-        } else {
-          log.debug("[NextWiki-PUSH] 未知消息类型: type={}", type);
-        }
-      } catch (Exception e) {
-        log.warn("[NextWiki-PUSH] 消息解析失败: {}", e.getMessage(), e);
-      }
-    }
-
-    /**
-     * 处理 AUTH 认证消息。
-     *
-     * @param ctx Channel 上下文
-     * @param data 消息数据
-     */
-    private void handleAuth(ChannelHandlerContext ctx, Map<String, Object> data) {
-      this.userId = (String) data.get("userId");
-      // token 验证：实际项目中应调用 TokenService 校验，此处做结构预留
-      if (userId != null && !userId.isBlank()) {
-        server.registerUser(userId, ctx.channel());
-        Map<String, Object> ack = new HashMap<>(MAP_CAPACITY_4);
-        ack.put("type", "AUTH_ACK");
-        ack.put("success", true);
-        ack.put("message", "ok");
-        ctx.writeAndFlush(Unpooled.copiedBuffer(YdszJson.toJson(ack), CharsetUtil.UTF_8));
+    protected void onJsonMessage(ChannelHandlerContext ctx, Map<String, Object> message) {
+      String type = (String) message.get("type");
+      if (AbstractJsonTcpHandler.TYPE_AUTH.equals(type)) {
+        handleAuth(ctx, message);
+      } else if ("SUB_SPACE".equals(type)) {
+        handleSubSpace(ctx, message);
+      } else if ("UNSUB_SPACE".equals(type)) {
+        handleUnsubSpace(ctx, message);
       } else {
-        Map<String, Object> ack = new HashMap<>(MAP_CAPACITY_4);
-        ack.put("type", "AUTH_ACK");
-        ack.put("success", false);
-        ack.put("message", "userId is required");
-        ctx.writeAndFlush(Unpooled.copiedBuffer(YdszJson.toJson(ack), CharsetUtil.UTF_8));
+        log.debug("[NextWiki-PUSH] 未知消息类型: type={}", type);
       }
+    }
+
+    @Override
+    protected void onAuthenticated(ChannelHandlerContext ctx, String userId) {
+      this.userId = userId;
+      server.registerUser(userId, ctx.channel());
+      // 激活 Session 管理：更新 bizId 使 sessionRepository 可查询到此会话
+      server.getSessionRepository().find(s -> s.getChannel().equals(ctx.channel()))
+          .forEach(s -> server.getSessionRepository().updateBizId(s.getSessionId(), userId));
     }
 
     /**
@@ -322,7 +288,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
      *
      * <p>仅当用户已认证（userId 非空）后才允许订阅。
      *
-     * @param ctx Channel 上下文
+     * @param ctx  Channel 上下文
      * @param data 消息数据
      */
     private void handleSubSpace(ChannelHandlerContext ctx, Map<String, Object> data) {
@@ -339,7 +305,7 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
     /**
      * 处理 UNSUB_SPACE 空间取消订阅消息。
      *
-     * @param ctx Channel 上下文
+     * @param ctx  Channel 上下文
      * @param data 消息数据
      */
     private void handleUnsubSpace(ChannelHandlerContext ctx, Map<String, Object> data) {
@@ -347,41 +313,6 @@ public class NextwikiTcpPushChannel extends AbstractNettyServer {
       if (spaceId != null && !spaceId.isBlank()) {
         server.unsubscribeSpace(spaceId, ctx.channel());
       }
-    }
-
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-      if (evt instanceof IdleStateEvent event) {
-        switch (event.state()) {
-          case READER_IDLE -> {
-            log.info("[NextWiki-PUSH] 读空闲超时,关闭连接: remote={}", ctx.channel().remoteAddress());
-            ctx.close();
-          }
-          case WRITER_IDLE -> log.debug("[NextWiki-PUSH] 写空闲: remote={}", ctx.channel().remoteAddress());
-          case ALL_IDLE -> {
-            log.info("[NextWiki-PUSH] 读写空闲超时,关闭连接: remote={}", ctx.channel().remoteAddress());
-            ctx.close();
-          }
-          default -> {
-            // ignore
-          }
-        }
-      }
-    }
-
-    /**
-     * 处理 Netty 通道异常（关闭异常连接）。
-     *
-     * @param context 通道处理器上下文
-     * @param cause 异常原因
-     */
-    @Override
-    public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
-      log.error(
-          "[NextWiki-PUSH] 连接异常: remote={} err={}",
-          context.channel().remoteAddress(),
-          cause.getMessage());
-      context.close();
     }
   }
 }

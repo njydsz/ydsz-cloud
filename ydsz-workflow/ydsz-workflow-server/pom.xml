@@ -164,10 +164,6 @@
              本模块源码直接使用 ydsz-common-locales 的国际化能力（I18nMessage / MessageSource 动态文案），
              当前仅通过 ydsz-common-web / ydsz-common-core 传递获得。
              待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
-        <!-- TODO(P2 显式依赖标注 26.09.27)：
-             本模块源码直接使用 ydsz-common-config 的配置热重载能力（ConfigChangeBridge / @ConfigField），
-             当前仅通过 ydsz-common-core / ydsz-common-web 传递获得。
-             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
         <!-- P0-1: 显式声明 common-notify（FlowNotificationServiceImpl 使用 NotifyHelper 统一发通知，ADR-001 收敛） -->
         <dependency>
             <groupId>com.njydsz</groupId>

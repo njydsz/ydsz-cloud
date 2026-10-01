@@ -34,6 +34,8 @@ import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
+import com.njydsz.common.search.service.ZeroResultHandler;
+import com.njydsz.common.search.service.ZeroResultHandler.ZeroResultGuide;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
 
 /**
@@ -57,6 +59,7 @@ public class UnifiedSearchService {
   private final SearchTextProcessor textProcessor;
   private final ThreadPoolTaskExecutor searchExecutor;
   private final BusinessRanker ranker;
+  private final ZeroResultHandler zeroResultHandler;
 
   /** Resilience4j 熔断器，提供标准化状态机与 HALF_OPEN 自动探测 */
   private final CircuitBreaker circuitBreaker;
@@ -86,6 +89,7 @@ public class UnifiedSearchService {
    * @param ranker 业务重排器
    * @param searchCacheService 共享搜索缓存服务
    * @param searchExecutor 外部注入的线程池（不可为 {@code null}）
+   * @param zeroResultHandler 零结果引导处理器，可为 {@code null}
    */
   public UnifiedSearchService(
       SearchEngineRegistry engineRegistry,
@@ -97,7 +101,8 @@ public class UnifiedSearchService {
       SearchTextProcessor textProcessor,
       BusinessRanker ranker,
       SearchCacheService searchCacheService,
-      ThreadPoolTaskExecutor searchExecutor) {
+      ThreadPoolTaskExecutor searchExecutor,
+      ZeroResultHandler zeroResultHandler) {
     this.engineRegistry = engineRegistry;
     this.providerRegistry = providerRegistry;
     this.properties = properties;
@@ -108,6 +113,7 @@ public class UnifiedSearchService {
     this.ranker = ranker;
     this.cacheService = searchCacheService;
     this.searchExecutor = searchExecutor;
+    this.zeroResultHandler = zeroResultHandler;
     this.searchConcurrencyLimit = new Semaphore(properties.getMaxPageSize(), true);
     this.circuitBreaker = createCircuitBreaker(properties);
   }
@@ -158,7 +164,8 @@ public class UnifiedSearchService {
         textProcessor,
         ranker,
         new SearchCacheService(properties),
-        createDefaultSearchExecutor(properties));
+        createDefaultSearchExecutor(properties),
+        null);
   }
 
   /**
@@ -318,6 +325,22 @@ public class UnifiedSearchService {
         if (qualityTracker != null) {
           qualityTracker.recordSearchEvent(response.getTotal(), took);
         }
+
+        // 零结果引导：当搜索返回 0 条结果时，通过 zeroResultHandler 生成引导建议
+        if (zeroResultHandler != null && response.getTotal() == 0) {
+          try {
+            ZeroResultGuide guide = zeroResultHandler.handle(request);
+            SearchSuggestion suggestion = SearchSuggestion.builder()
+                .type(SearchSuggestion.SuggestionType.DID_YOU_MEAN)
+                .suggestions(guide.didYouMean())
+                .originalInput(request.getKeyword())
+                .build();
+            response.setSuggestion(suggestion);
+          } catch (Exception e) {
+            log.debug("[UnifiedSearch] 零结果引导生成失败: {}", e.getMessage());
+          }
+        }
+
         cacheService.put(request, response);
 
         // P5-13: 回填阶段耗时到响应（供前端/调试使用）

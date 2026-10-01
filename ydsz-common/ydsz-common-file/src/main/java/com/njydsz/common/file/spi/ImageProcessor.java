@@ -119,13 +119,20 @@ public interface ImageProcessor {
    */
   ImageMetadata getMetadata(InputStream input) throws IOException;
 
-  /** 水印位置枚举。 */
+  /**
+   * 水印位置枚举。
+   *
+   * <p>{@link #TILED} 表示对角线平铺模式——将水印文字按倾斜角度 + 步长矩阵平铺覆盖全图，
+   * 适用于防截屏/拍照溯源场景（无法通过裁剪去除水印片段）。
+   * TILED 模式下 {@code opacity} 参数仍生效，{@code position} 参数被忽略。
+   */
   enum WatermarkPosition {
     CENTER,
     TOP_LEFT,
     TOP_RIGHT,
     BOTTOM_LEFT,
-    BOTTOM_RIGHT
+    BOTTOM_RIGHT,
+    TILED
   }
 
   /**

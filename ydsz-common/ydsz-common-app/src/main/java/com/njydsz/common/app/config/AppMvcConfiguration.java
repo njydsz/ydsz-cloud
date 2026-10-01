@@ -12,13 +12,10 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
-import com.njydsz.common.app.advice.AppGlobalResponseAdvice;
 import com.njydsz.common.app.auth.AppAuthHandler;
 import com.njydsz.common.app.constant.AppFilterOrder;
-import com.njydsz.common.app.exception.AppExceptionHandler;
 import com.njydsz.common.app.filter.AppAuthFilter;
 import com.njydsz.common.app.filter.AppContentCachingFilter;
 import com.njydsz.common.app.filter.AppRequestIdResponseFilter;
@@ -50,6 +47,9 @@ import com.njydsz.common.safe.config.SafeConfiguration;
  * <p><b>注意：</b>API 签名验证和安全响应头由 {@code ydsz-common-safe} 模块统一提供， 通过 {@code
  * ydsz.safe.api-signature.enabled} 和 {@code ydsz.safe.security-headers.enabled} 控制启用，本模块不再重复注册。
  *
+ * <p>注：App 端统一响应包装（AppGlobalResponseAdvice）和统一异常处理（AppExceptionHandler）已随 @AppApi
+ * 机制一起移除（P1-A 清理，业务模块自建 ExceptionHandler 覆盖）。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -61,7 +61,6 @@ import com.njydsz.common.safe.config.SafeConfiguration;
   AppTraceProperties.class,
   AppContentCacheProperties.class
 })
-@Import({AppGlobalResponseAdvice.class, AppExceptionHandler.class})
 public class AppMvcConfiguration extends BaseMvcConfiguration {
 
   private final AppRequestLogInterceptor appRequestLogInterceptor;

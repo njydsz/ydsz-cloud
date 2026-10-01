@@ -1,5 +1,6 @@
 package com.njydsz.message.server.channel.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,10 +8,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,6 +19,7 @@ import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.netty.codec.LengthFieldCodec;
 import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.handler.AbstractJsonTcpHandler;
 import com.njydsz.common.netty.server.AbstractNettyServer;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.locales.util.I18n;
@@ -127,7 +126,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
       pushData.put("traceId", traceId);
       pushData.put("timestamp", System.currentTimeMillis());
       String json = YdszJson.toJson(pushData);
-      ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
+      ByteBuf buf = Unpooled.copiedBuffer(json, StandardCharsets.UTF_8);
       channelGroupManager.broadcastToGroup(groupKey, buf);
       log.info(
           "[TCP-PUSH] 推送成功: userId={} traceId={} subject={}",
@@ -179,12 +178,11 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
   }
 
   /**
-   * TCP 推送服务端 Handler。
+   * TCP 推送服务端 Handler（基于 {@link AbstractJsonTcpHandler} 基类）。
    *
-   * <p>处理客户端连接/断开、空闲检测、认证消息。 空闲检测由 IdleStateHandler 自动触发，通过 {@link #userEventTriggered} 处理。
+   * <p>封装 ByteBuf → UTF-8 → JSON 解析、空闲超时关闭、异常关闭等通用逻辑。 子类仅需实现认证注册和业务消息路由。
    */
-  @Slf4j
-  static class TcpPushServerHandler extends ChannelInboundHandlerAdapter {
+  static class TcpPushServerHandler extends AbstractJsonTcpHandler {
 
     private final TcpPushChannel server;
     private String userId;
@@ -194,74 +192,27 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-      server.channelGroupManager.add(ctx.channel());
-      log.debug("[TCP-PUSH] 新连接: remote={}", ctx.channel().remoteAddress());
+    protected String getLogPrefix() {
+      return "[TCP-PUSH]";
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
-      // ChannelGroupManager.remove 会自动从全局组和业务分组移除，并清理空分组
-      server.channelGroupManager.remove(ctx.channel());
-      log.debug("[TCP-PUSH] 连接断开: remote={}", ctx.channel().remoteAddress());
-    }
-
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-      if (!(msg instanceof ByteBuf buf)) {
-        return;
-      }
-      String json = buf.toString(CharsetUtil.UTF_8);
-      try {
-        Map<String, Object> data = YdszJson.parseMap(json);
-        String type = (String) data.get("type");
-        if ("AUTH".equals(type)) {
-          // 认证消息：注册 userId
-          this.userId = (String) data.get("userId");
-          if (userId != null) {
-            server.registerUser(userId, ctx.channel());
-            // 回复认证成功
-            Map<String, Object> ack = new HashMap<>(2);
-            ack.put("type", "AUTH_ACK");
-            ack.put("success", true);
-            ctx.writeAndFlush(Unpooled.copiedBuffer(YdszJson.toJson(ack), CharsetUtil.UTF_8));
-          }
-        } else {
-          log.debug("[TCP-PUSH] 收到业务消息: type={}", type);
-        }
-      } catch (Exception e) {
-        log.warn("[TCP-PUSH] 消息解析失败: {}", e.getMessage(), e);
+    protected void onJsonMessage(ChannelHandlerContext ctx, Map<String, Object> message) {
+      String type = (String) message.get("type");
+      if (AbstractJsonTcpHandler.TYPE_AUTH.equals(type)) {
+        handleAuth(ctx, message);
+      } else {
+        log.debug("[TCP-PUSH] 收到业务消息: type={}", type);
       }
     }
 
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-      if (evt instanceof IdleStateEvent event) {
-        switch (event.state()) {
-          case READER_IDLE -> {
-            log.info("[TCP-PUSH] 读空闲超时,关闭连接: remote={}", ctx.channel().remoteAddress());
-            ctx.close();
-          }
-          case WRITER_IDLE -> {
-            // 写空闲可选择发送心跳保活，此处仅记录
-            log.debug("[TCP-PUSH] 写空闲: remote={}", ctx.channel().remoteAddress());
-          }
-          case ALL_IDLE -> {
-            log.info("[TCP-PUSH] 读写空闲超时,关闭连接: remote={}", ctx.channel().remoteAddress());
-            ctx.close();
-          }
-          default -> {
-            // ignore
-          }
-        }
-      }
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-      log.error(
-          "[TCP-PUSH] 连接异常: remote={} err={}", ctx.channel().remoteAddress(), cause.getMessage());
-      ctx.close();
+    protected void onAuthenticated(ChannelHandlerContext ctx, String userId) {
+      this.userId = userId;
+      server.registerUser(userId, ctx.channel());
+      // 激活 Session 管理：更新 bizId 使 sessionRepository 可查询到此会话
+      server.getSessionRepository().find(s -> s.getChannel().equals(ctx.channel()))
+          .forEach(s -> server.getSessionRepository().updateBizId(s.getSessionId(), userId));
     }
   }
 }

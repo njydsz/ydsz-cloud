@@ -1,23 +1,18 @@
 package com.njydsz.nextwiki.server.service;
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.imageio.ImageIO;
+import java.io.OutputStream;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.docs.watermark.PdfWatermarkApplier;
+import com.njydsz.common.file.spi.ImageProcessor;
+import com.njydsz.common.file.spi.ImageProcessor.WatermarkPosition;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.mask.MaskUtils;
 
@@ -28,9 +23,8 @@ import com.njydsz.common.util.mask.MaskUtils;
  *
  * <p>在文件下载/预览时动态叠加水印（用户名 + 时间），防止截屏/拍照泄露。
  *
- * <p><b>算法说明：</b>水印透明度（alpha 0.0~1.0）和旋转角度（~360°）涉及图形渲染计算，
- * 使用 primitive float/double 是图形学领域标准实践（AWT / OpenCV / ImageMagick 均使用此类类型）。
- * 不涉及金额/比例等精确业务值，故保留 float/double 类型。
+ * <p><b>说明：</b>图片水印委托 common-file {@link ImageProcessor}，业务层不直接操作图形库。
+ * 不透明度使用 primitive float 是图形学领域标准实践（与 AWT / OpenCV 一致），不涉及金额/比例精确业务值。
  *
  * <p><b>支持的文件类型：</b>
  *
@@ -58,13 +52,20 @@ public class WatermarkService {
   /** PDF 水印能力提供者（common-docs 封装 PDFBox），运行时无 PDFBox 依赖时为 null */
   private final ObjectProvider<PdfWatermarkApplier> pdfWatermarkApplierProvider;
 
+  /** 图片水印能力（common-file 统一图片处理器） */
+  private final ImageProcessor imageProcessor;
+
   /**
    * 构造水印服务。
    *
    * @param pdfWatermarkApplierProvider PDF 水印能力提供者（可选，无实现时跳过 PDF 水印）
+   * @param imageProcessor 图片处理能力（common-file 封装）
    */
-  public WatermarkService(ObjectProvider<PdfWatermarkApplier> pdfWatermarkApplierProvider) {
+  public WatermarkService(
+      ObjectProvider<PdfWatermarkApplier> pdfWatermarkApplierProvider,
+      ImageProcessor imageProcessor) {
     this.pdfWatermarkApplierProvider = pdfWatermarkApplierProvider;
+    this.imageProcessor = imageProcessor;
   }
 
   /** 图片格式：PNG */
@@ -76,29 +77,8 @@ public class WatermarkService {
   /** PDF 格式 */
   private static final String MIME_PDF = "application/pdf";
 
-  /** 水印透明度（0-255，越小越透明） */
-  private static final int WATERMARK_OPACITY = 50;
-
-  /** 水印字体最小字号（像素） */
-  private static final int MIN_FONT_SIZE = 16;
-
-  /** 字号按图片短边缩放的分母 */
-  private static final int FONT_SIZE_DIVISOR = 25;
-
-  /** 水印灰度 RGB 分量值 */
-  private static final int WATERMARK_GRAY_RGB = 128;
-
-  /** 水印透明度（AlphaComposite） */
+  /** 图片水印不透明度（委托 common-file ImageProcessor 的平铺模式） */
   private static final float WATERMARK_ALPHA = 0.2f;
-
-  /** 水印平铺水平步长附加间距（像素） */
-  private static final int TILE_SPACING_X = 100;
-
-  /** 水印平铺垂直步长附加间距（像素） */
-  private static final int TILE_SPACING_Y = 80;
-
-  /** 水印旋转角度（度） */
-  private static final double WATERMARK_ROTATE_DEGREES = 30;
 
   /** 用户 ID 掩码：保留前 3 位 */
   private static final int MASK_ID_KEEP_CHARS = 3;
@@ -141,7 +121,8 @@ public class WatermarkService {
   /**
    * 为图片文件叠加水印。
    *
-   * <p>使用 Java 2D API 在图片上绘制半透明文字水印（对角线平铺）。
+   * <p>委托 common-file {@link ImageProcessor#watermark} 的平铺模式（{@link WatermarkPosition#TILED}），
+   * 将水印文字以对角线矩阵倾斜覆盖全图，实现防截屏/拍照溯源保护。
    *
    * @param fileBytes 原始文件字节
    * @param mimeType MIME 类型（仅支持 PNG/JPEG）
@@ -156,64 +137,10 @@ public class WatermarkService {
       return fileBytes;
     }
 
-    try (InputStream is = new ByteArrayInputStream(fileBytes)) {
-      BufferedImage originalImage = ImageIO.read(is);
-      if (originalImage == null) {
-        log.warn("[WatermarkService] 读取图片失败，返回原始文件");
-        return fileBytes;
-      }
-
-      int width = originalImage.getWidth();
-      int height = originalImage.getHeight();
-
-      // 创建绘图上下文
-      Graphics2D g2d = originalImage.createGraphics();
-      try {
-        // 设置抗锯齿
-        g2d.setRenderingHint(
-            RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // 设置字体（根据图片大小调整）
-        int fontSize = Math.max(MIN_FONT_SIZE, Math.min(width, height) / FONT_SIZE_DIVISOR);
-        Font font = new Font("SansSerif", Font.BOLD, fontSize);
-        g2d.setFont(font);
-
-        // 计算文字尺寸
-        FontMetrics fontMetrics = g2d.getFontMetrics();
-        int textWidth = fontMetrics.stringWidth(watermarkText);
-        int textHeight = fontMetrics.getHeight();
-
-        // 设置颜色和透明度
-        g2d.setColor(
-            new Color(
-                WATERMARK_GRAY_RGB,
-                WATERMARK_GRAY_RGB,
-                WATERMARK_GRAY_RGB,
-                WATERMARK_OPACITY));
-        g2d.setComposite(
-            AlphaComposite.getInstance(AlphaComposite.SRC_OVER, WATERMARK_ALPHA));
-
-        // 对角线平铺水印
-        int stepX = textWidth + TILE_SPACING_X;
-        int stepY = textHeight + TILE_SPACING_Y;
-        for (int y = 0; y < height + stepY; y += stepY) {
-          for (int x = -stepX / 2; x < width + stepX; x += stepX) {
-            // 绘制旋转 30 度的文字
-            g2d.rotate(Math.toRadians(WATERMARK_ROTATE_DEGREES), x, y);
-            g2d.drawString(watermarkText, x, y);
-            g2d.rotate(-Math.toRadians(WATERMARK_ROTATE_DEGREES), x, y);
-          }
-        }
-      } finally {
-        g2d.dispose();
-      }
-
-      // 输出为字节数组
-      try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-        String formatName = MIME_IMAGE_PNG.equals(mimeType) ? "png" : "jpg";
-        ImageIO.write(originalImage, formatName, bos);
-        return bos.toByteArray();
-      }
+    try (InputStream is = new ByteArrayInputStream(fileBytes);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+      imageProcessor.watermark(is, bos, watermarkText, WATERMARK_ALPHA, WatermarkPosition.TILED);
+      return bos.toByteArray();
     } catch (Exception e) {
       log.error("[WatermarkService] 叠加水印失败，返回原始文件: err={}", e.getMessage(), e);
       return fileBytes;

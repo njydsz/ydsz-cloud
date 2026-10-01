@@ -55,15 +55,17 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
         </dependency>
-        <!-- P1-4: 搜索 Provider SPI（用户/部门/角色搜索） -->
+        <!-- P0-A: common-web 已移除，server 层零 import（违规依赖清理 2026-10-01） -->
+        <!-- ydsz-common-base：提供 AbstractModuleHealthIndicator（UserinfoHealthIndicator 使用） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-base</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-search</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-web</artifactId>
-        </dependency>
+        <!-- P0-A: ydsz-common-web 已移除（server 层零 import） -->
         <!-- P0-1: 统一配置热重载（ConfigChangeBridge + ConfigChangeListener） -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -201,8 +203,7 @@
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
         <!-- TODO(P2 显式依赖标注 26.09.27）：
-             本模块已有完整 i18n 骨架但尚未显式声明 ydsz-common-locales 依赖，
-             当前仅通过 ydsz-common-web / ydsz-common-core 传递获得 i18n 能力。
+             本模块已有完整 i18n 骨架但显式声明了 ydsz-common-locales 依赖，
              待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
 </dependencies>
 </project>

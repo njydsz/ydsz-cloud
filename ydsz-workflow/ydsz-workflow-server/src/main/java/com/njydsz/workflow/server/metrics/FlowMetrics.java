@@ -52,6 +52,11 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
 public class FlowMetrics extends SentryMetricsAdapter {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.WORKFLOW;
+  }
+
 
   /** Gauge 查询 30s TTL 缓存（避免 Prometheus 每次抓取都打 DB） */
   private static final long GAUGE_CACHE_TTL_NS = 30_000_000_000L;

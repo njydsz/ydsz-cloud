@@ -22,7 +22,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  *
  * <p><b>版本感知自动失效（P0-2，2026-08-05）：</b>
  *
- * <p>注册为 {@link JsonConfig.ConfigChangeListener}，当全局配置版本变更时（如命名策略切换），
+ * <p>注册为 {@link JsonConfig.JsonConfigChangeListener}，当全局配置版本变更时（如命名策略切换），
  * 自动清理全部缓存条目，消除"命名策略对已缓存类无效"的隐患。
  *
  * @author ydsz-team

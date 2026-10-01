@@ -20,7 +20,7 @@ import com.njydsz.common.json.writer.BeanSerializer;
  *
  * <p><b>版本感知自动失效（P2-O1，1.2.1）：</b>
  *
- * <p>注册为 {@link JsonConfig.ConfigChangeListener}，当全局配置版本变更时（如命名策略切换）， 自动清理全部缓存条目。此前
+ * <p>注册为 {@link JsonConfig.JsonConfigChangeListener}，当全局配置版本变更时（如命名策略切换）， 自动清理全部缓存条目。此前
  * BeanSerializerCache 未注册监听器，仅 SerializerCache 注册了， 导致命名策略变更后 BeanSerializerCache 持有旧的
  * BeanSerializer（烘焙了旧命名字段名）， 新请求仍输出旧字段名。现已对齐 {@link SerializerCache} 的缓存一致性保障。
  *

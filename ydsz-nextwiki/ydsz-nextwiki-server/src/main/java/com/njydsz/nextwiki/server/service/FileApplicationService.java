@@ -35,6 +35,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.locales.util.I18n;
@@ -94,9 +95,6 @@ public class FileApplicationService {
 
   /** 每兆字节数（字节） */
   private static final long BYTES_PER_MB = 1024 * 1024;
-
-  /** 文件名最大长度（字符，含扩展名） */
-  private static final int MAX_FILENAME_LENGTH = 255;
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -195,8 +193,8 @@ public class FileApplicationService {
         // 3. 解析父目录
         String originalFilename = file.getOriginalFilename();
         String rawName = (rename != null && !rename.isEmpty()) ? rename : originalFilename;
-        String fileName = sanitizeFileName(rawName);
-        String suffix = extractSuffix(fileName);
+    String fileName = FileOps.sanitizeFileName(rawName);
+    String suffix = FileOps.extractSuffix(fileName);
 
         FileNodeVO parent = resolveParentNode(parentId, userId);
         String resolvedParentId = parent.getId();
@@ -242,7 +240,7 @@ public class FileApplicationService {
         if (storage == null) {
           throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
         }
-        storageKey = generateStorageKey(userId, fileName);
+        storageKey = FileOps.generateStorageKey("wiki", userId, fileName);
         uploaded = storage.upload(null, storageKey, file);
 
         // 病毒扫描（IO 操作，在事务外执行）
@@ -428,7 +426,7 @@ public class FileApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public FileNodeVO createFolder(String parentId, String name, String userId) {
-    String sanitizedName = sanitizeFileName(name);
+      String sanitizedName = FileOps.sanitizeFileName(name);
     FileNodeVO parent = resolveParentNode(parentId, userId);
     List<FileNodeVO> siblings = fileNodeRepository.findChildren(parent.getId());
     FileNodeVO folder = folderDomainService.createFolder(parent, siblings, sanitizedName, userId);
@@ -545,7 +543,7 @@ public class FileApplicationService {
       FileNodeVO node = fileNodeRepository.findById(nodeId)
           .orElseThrow(() -> BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId));
       FileNodeVO parent = resolveParentNode(node.getParentId(), userId);
-      FileNodeVO renamedNode = folderDomainService.rename(node, parent, sanitizeFileName(newName), userId);
+      FileNodeVO renamedNode = folderDomainService.rename(node, parent, FileOps.sanitizeFileName(newName), userId);
       fileNodeRepository.update(mapper.fileNodeVOToDTO(renamedNode));
 
       // 失效缓存：文件详情 + 父目录子节点列表
@@ -1102,11 +1100,11 @@ public class FileApplicationService {
       throw BusinessException.of(NextwikiExceptionCode.FILE_TOO_LARGE)
           .data("maxSize", maxFileSize / BYTES_PER_MB + "MB");
     }
-    String filename = sanitizeFileName(file.getOriginalFilename());
+    String filename = FileOps.sanitizeFileName(file.getOriginalFilename());
     if (filename == null || filename.isEmpty()) {
       throw new BusinessException(NextwikiExceptionCode.FILE_NAME_EMPTY);
     }
-    String suffix = extractSuffix(filename);
+    String suffix = FileOps.extractSuffix(filename);
     if (BLOCKED_EXTENSIONS.contains(suffix)) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_TYPE_NOT_ALLOWED)
           .data("suffix", suffix);
@@ -1278,7 +1276,7 @@ public class FileApplicationService {
   /** 生成唯一文件名（用于 KEEP_BOTH 策略） */
   private String resolveUniqueName(String fileName, String parentId, String userId) {
     String baseName = fileName;
-    String suffix = extractSuffix(fileName);
+    String suffix = FileOps.extractSuffix(fileName);
     if (!suffix.isEmpty()) {
       baseName = fileName.substring(0, fileName.length() - suffix.length() - 1);
     }
@@ -1297,47 +1295,6 @@ public class FileApplicationService {
     }
   }
 
-  private String generateStorageKey(String userId, String originalFilename) {
-    String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
-    String uuid = String.valueOf(snowflakeIdGenerator.nextId());
-    String suffix = extractSuffix(originalFilename);
-    return "wiki/" + userId + "/" + datePath + "/" + uuid + (suffix.isEmpty() ? "" : "." + suffix);
-  }
-
-  /** 净化文件名：去除路径穿越字符、特殊字符、超长名称 */
-  private String sanitizeFileName(String filename) {
-    if (filename == null || filename.isEmpty()) {
-      return filename;
-    }
-    // 仅取文件名部分（去除路径分隔符）
-    String name = filename;
-    // 统一替换正反斜杠为下划线，防止路径穿越
-    name = name.replace("/", "_").replace("\\", "_");
-    // 去除 ../ 和 ..\
-    name = name.replace("..", "_");
-    // 去除特殊字符（保留中文、字母、数字、点、下划线、短横线、空格、括号）
-    name = name.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9._\\- ()（）]", "_");
-    // 限制文件名长度（含扩展名，最大 255 字符）
-    if (name.length() > MAX_FILENAME_LENGTH) {
-      String suffix = extractSuffix(name);
-      String baseName =
-          suffix.isEmpty() ? name : name.substring(0, name.length() - suffix.length() - 1);
-      name =
-          baseName.substring(0, MAX_FILENAME_LENGTH - suffix.length() - 1) + "." + suffix;
-    }
-    return name;
-  }
-
-  private String extractSuffix(String filename) {
-    if (filename == null || filename.isEmpty()) {
-      return "";
-    }
-    int dot = filename.lastIndexOf('.');
-    if (dot < 0 || dot == filename.length() - 1) {
-      return "";
-    }
-    return filename.substring(dot + 1).toLowerCase();
-  }
 
   private String calculateSha256(InputStream inputStream) throws IOException {
     return DigestUtils.sha256Hex(inputStream);

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.socket.push.RealtimePushTemplate;
@@ -33,7 +32,8 @@ import com.njydsz.common.socket.push.RealtimePushTemplate;
  *   }
  * </pre>
  *
- * <p><b>降级策略：</b>当 WebSocket 模块未引入时（{@link RealtimePushTemplate} 不可用），静默降级为 no-op，不影响批量任务正常执行。
+ * <p><b>注入方式：</b>直接注入 {@link RealtimePushTemplate}（nextwiki-server pom 已强依赖 ydsz-common-socket），
+ * 无需 {@code ObjectProvider} 降级样板代码。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -45,8 +45,8 @@ public class BatchProgressNotifier {
   private static final int COLLECTION_CAPACITY = 16;
 
 
-  /** WebSocket 推送模板（可选依赖，未引入时降级为 no-op） */
-  private final ObjectProvider<RealtimePushTemplate> pushTemplateProvider;
+  /** WebSocket 推送模板（统一实时推送能力） */
+  private final RealtimePushTemplate pushTemplate;
 
   /** 消息类型常量 */
   public static final String TYPE_BATCH_PROGRESS = "BATCH_PROGRESS";
@@ -54,10 +54,10 @@ public class BatchProgressNotifier {
   /**
    * 构造方法注入。
    *
-   * @param pushTemplateProvider WebSocket 推送模板提供者
+   * @param pushTemplate WebSocket 推送模板
    */
-  public BatchProgressNotifier(ObjectProvider<RealtimePushTemplate> pushTemplateProvider) {
-    this.pushTemplateProvider = pushTemplateProvider;
+  public BatchProgressNotifier(RealtimePushTemplate pushTemplate) {
+    this.pushTemplate = pushTemplate;
   }
 
   /**
@@ -183,13 +183,6 @@ public class BatchProgressNotifier {
    * @param payload 消息内容
    */
   private void pushToUser(String userId, Map<String, Object> payload) {
-    RealtimePushTemplate pushTemplate = pushTemplateProvider.getIfAvailable();
-    if (pushTemplate == null) {
-      // WebSocket 模块未引入，降级为 no-op（仅记录调试日志）
-      log.debug("[BatchProgressNotifier] WebSocket 模块未引入，跳过进度推送: userId={}", userId);
-      return;
-    }
-
     try {
       // 使用 taskId 作为消息 ID 实现幂等去重
       String messageId = payload.get("taskId") + "_" + payload.get("processedCount");

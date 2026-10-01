@@ -1,4 +1,4 @@
-# 云顶编码规范 - AI 红线规则集（Shared Rules）
+﻿# 云顶编码规范 - AI 红线规则集（Shared Rules）
 # Ydsz Cloud Coding Standards - AI Red Line Rules
 #
 # 本文件为单一权威源（Single Source of Truth），适用于所有 AI 编码工具。
@@ -13,19 +13,19 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.10.01-v16"
+  version: "26.10.01-v21"  # v21: +YDIZ-DOCS-001 文档处理必须通过 ydzsz-common-docs 统一模块
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-10-01"
-  last_updated: "26.10.01-v16（ydsz-common-event 模块利用率专项整改：+3 规则 YDIZ-EVENT-003 DomainEventPublisher 统一门面 + YDIZ-EVENT-004 topic 强制 + YDIZ-EVENT-005 OutboxSubscriber 幂等强制；总规则 174 条）"
-  total_rules: 174
+  last_updated: "26.10.01-v21（ydsz-common-docs 全局引用分析整改：+1 P0 规则 YDIZ-DOCS-001 文档处理统一入口；总规则 180 条）"
+  total_rules: 180
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 57
-    P1: 87
-    P2: 22
+    P0: 58
+    P1: 88
+    P2: 24
 
 rules:
   # ============================================
@@ -133,8 +133,17 @@ rules:
     category: "import"
     severity: "P0"
     title: "禁止业务模块直接 import Netty"
-    description: "禁止直接 import io.netty.*，必须通过 ydsz-common-netty 或 ydsz-common-socket 封装。"
-    pattern: "import io.netty.* 且模块非 common-netty/common-socket"
+    description: |
+      禁止直接 import io.netty.*，必须通过 ydsz-common-netty 或 ydsz-common-socket 封装。
+
+      **豁免场景**：
+      - reactor-netty / spring-webflux 的 API 签名级引用 `io.netty.channel.ChannelOption` 
+        （如 `HttpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)` — reactor-netty API 
+        底层依赖 Netty 原生类型，其 `option()` 方法接收 `ChannelOption<T>` 参数，
+        ydsz-common-netty 的 `NettyChannelOptions` 封装类已废弃删除，无替代封装存在，
+        属于"不可绕过的底层依赖"豁免情形）
+    pattern: "import io\\.netty\\.(buffer|channel|handler|util)\\.(?!ChannelOption，reactor-netty-API-豁免).*"
+    exception: "reactor-netty 等响应式框架 API 直接要求 io.netty.channel.ChannelOption 类型参数时豁免"
     fix: "使用 ydsz-common-netty 的 AbstractNettyServer/AbstractNettyClient"
     source: "编码规范 22.3 节、23.6 节"
 
@@ -5051,6 +5060,32 @@ rules:
     source: "ydsz-common-redis 全局引用分析（YDIZ-COMMON-060，P1，26.09.30 手写硬编码 key 清零）"
     exception: "框架层 ydzs-common-* 直连代码 / 全局框架级 RedisKeysEnum 常量"
 
+  # YDIZ-COMMON-061: 文件上传必须校验真实文件类型（Magic Number）
+  - id: "YDIZ-COMMON-061"
+    category: "file"
+    severity: "P1"
+    title: "【强制】文件上传必须使用 FileTypeValidator 或 FileTypeDetector 校验真实文件类型"
+    description: |
+      业务模块处理用户上传文件时，仅依赖文件后缀名判断类型存在「改后缀绕过」安全风险
+      （如将 .jsp/.exe 伪装成 .jpg 上传）。必须使用 ydsz-common-file 提供的
+      FileTypeValidator（Spring Bean，结合后缀白名单 + Magic Number 校验）
+      或 FileTypeDetector（纯检测工具，返回实际 MIME 类型）进行真实类型校验。
+    pattern: "endsWith\(\"\.jpg\"\)|endsWith\(\"\.png\"\)|endsWith\(\"\.pdf\"\)|endsWith\(\"\.mp4\"\)"
+    fix: |
+      1. 注入 FileTypeValidator 或 FileTypeDetector（Spring 自动配置已注册为 Bean）
+      2. 上传时在 sanitizeFileName/suffix 校验之后，调用 fileTypeValidator.validate()
+         或 FileTypeDetector.detect(file.getInputStream()) 获取真实 MIME
+      3. 拒绝 suffix 与 MIME 不匹配或 isDangerousType() 返回 true 的上传
+    example_good: |
+      try {
+        fileTypeValidator.validate(file.getInputStream(), file.getOriginalFilename());
+      } catch (IOException e) {
+        throw new BusinessException(ExceptionCodeEnum.FILE_TYPE_INVALID);
+      }
+    source: "ydsz-common-file 全局引用分析（YDIZ-COMMON-061，P1，26.10.01 FileTypeDetector 零使用修复）"
+    exception: "ydsz-common-file 框架层内部代码"
+
+
   # ============================================
   # 十二、core/domain/exception/locales 四模块利用率专项（3 条，26.09.30）
   # ============================================
@@ -5188,6 +5223,76 @@ rules:
       if (KnownLocaleTags.isChinese(user.getLocaleTag())) { ... }
       Locale locale = KnownLocaleTags.defaultLocale();
     source: "四模块利用率提升专项（YDIZ-LOCALE-003，P1，26.09.30 KnownLocaleTags 不可替代）"
+
+  # ============================================
+  # 十三、ydsz-common-config 利用率专项（1 条，26.10.01）
+  # ============================================
+  - id: "YDIZ-CONFIG-001"
+    category: "common-reuse"
+    severity: "P2"
+    title: "【规范】多层 JSON 配置合并必须使用 ConfigMergeUtils，禁止自行实现"
+    description: |
+      涉及多层 JSON 配置深度合并的场景（如 tenant-override、feature-flag、config-profile），
+      必须使用 com.njydsz.common.config.hotreload.ConfigMergeUtils 的 merge() / mergeLayers()
+      方法，禁止自行通过 JSONObject.putAll() / Map.putAll() / 递归遍历实现 JSON 深度合并。
+
+      **为什么必须使用 ConfigMergeUtils**：
+      - 基于 RFC 7396 JSON Merge Patch 标准语义，覆盖/删除/保留行为明确
+      - 委托 YdszJson.applyMergePatch() 实现，避免重复造轮子
+      - 内置异常降级逻辑（合并失败时返回 override），避免配置合并异常导致启动失败
+
+      **适用场景**：
+      - 基础配置 + 租户覆盖 → 最终生效配置
+      - 默认配置 + 环境覆盖（dev/test/prod）→ 运行时配置
+      - Nacos 远程配置 + 本地 override → 合并配置
+
+      **当前状态**：工具类已储备就绪，待首个多层 JSON 配置合并场景落地。
+    pattern: "JSONObject.*putAll|JsonUtils\.toJson.*putAll"
+    fix: |
+      1. import com.njydsz.common.config.hotreload.ConfigMergeUtils;
+      2. 双配置合并：ConfigMergeUtils.merge(baseConfig, overrideConfig)
+      3. 多层配置合并：Config.mergeLayers(defaults, envConfig, tenantConfig)
+    example_bad: |
+      ❌ 自行实现 JSON 深度合并
+      JSONObject merged = new JSONObject(base);
+      merged.putAll(override);  // 浅合并，嵌套对象整体替换
+    example_good: |
+      ✅ 使用 ConfigMergeUtils
+      String merged = ConfigMergeUtils.mergeLayers(defaults, envConfig, tenantConfig);
+    source: "ydsz-common-config 全局引用分析整改（YDIZ-CONFIG-001，P2，26.10.01 ConfigMergeUtils 储备能力）"
+    exception: "Spring Environment 属性源优先级体系已覆盖扁平 key-value 场景；仅多层 JSON 对象深度合并适用"
+
+  - id: "YDIZ-CONFIG-002"
+    category: "common-reuse"
+    severity: "P2"
+    title: "【规范】手动 Jasypt 解密必须使用 ConfigCliTool，禁止直接创建 PooledPBEStringEncryptor"
+    description: |
+      运行时需要对 {@code ENC()} 密文做手动解密的场景（如 API 签名密钥解密、第三方回调验签密钥获取），
+      必须使用 com.njydsz.common.config.cli.ConfigCliTool 的 decrypt() 方法，禁止直接创建 {@code
+      PooledPBEStringEncryptor} 或使用不一致的算法参数。
+
+      **为什么必须统一入口**：
+      - ConfigCliTool 默认使用 PBEWithHMACSHA512AndAES_256 + 1000 次迭代，与项目全局 jasypt 配置对齐
+      - 自行创建.encryptor 可能使用不同算法，导致密文不兼容
+      - ConfigCliTool 委托 ydsz-common-config 的 ConfigProperties.Cli 子配置，确保参数一致性
+
+      **ENC() 自动解密**：Spring 配置属性中声明为 {@code property.name=ENC(xxx)} 的值由
+      jasypt-spring-boot-starter 在 PropertySource 加载时自动解密，注入到 @ConfigurationProperties
+      中的值已是明文，无需手动处理。
+    pattern: "new PooledPBEStringEncryptOR|StandardPBEStringEncryptor|setAlgorithm\("
+    fix: |
+      1. import com.njydsz.common.config.cli.ConfigCliTool;
+      2. 使用 ConfigCliTool.decrypt(encryptedValue, masterPassword) 解密
+      3. 不要自行创建 encryptor 实例
+    example_bad: |
+      ❌ 自行创建 encryptor
+      PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
+      encryptor.setAlgorithm("PBEWithMD5AndDES");  // 不安全，且与全局配置不一致
+    example_good: |
+      ✅ 使用 ConfigCliTool
+      String plain = ConfigCliTool.decrypt(encryptedValue, masterPassword);
+    source: "ydsz-common-config 全局引用分析整改（YDIZ-CONFIG-002，P2，26.10.01 Jasypt 统一解密入口）"
+    exception: "ydsz-common-config 模块内部的 ConfigCliTool.createEncryptor 方法（属于框架自身实现）"
 
 # ============================================
   # 附录：按 category 统计（26.09.30-v3 common-util 利用率专项：+5 规则，YDIZ-COMMON-052~056）
@@ -5745,9 +5850,209 @@ stats:
     exception: "极低调用频率的内部工具 Bean（每分钟 < 1 次）"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.10.01-v15
+  # 十七、Sentry 监控规范（1 条，P0）
+  # ============================================
+  - id: "YDIZ-SENTRY-001"
+    category: "sentry"
+    severity: "P0"
+    title: "【强制】禁止业务代码直接 import Micrometer API，必须通过 MetricsCollector SPI"
+    description: |
+      所有业务模块和 common 子模块的指标采集必须通过 `com.njydsz.common.sentry.spi.MetricsCollector` SPI 
+      或 `com.njydsz.common.sentry.adapter.SentryMetricsAdapter` 适配器上报，
+      **严禁直接 import `io.micrometer.core.instrument.*`**。
+
+      **为什么禁止直连 Micrometer**：
+      - Micrometer 是底层监控抽象，直接耦合会导致指标治理碎片化（指标名不一致、前缀混乱、无统一采样/降级策略）
+      - sentry 模块的 `MetricsCollector` SPI 支持可插拔底层实现（Micrometer / 内存计数 / 其他）
+      - `SentryMetricsAdapter` 提供自动前缀拼接、Counter/Timer/Gauge 缓存、SentryService 集成等增强能力
+
+      **正例**（新代码）：
+      ```java
+      // 方式1：直接注入 MetricsCollector（推荐新代码）
+      @Component
+      public class OrderMetricsCollector {
+          private final MetricsCollector collector;
+          public OrderMetricsCollector(MetricsCollector collector) { this.collector = collector; }
+          
+          public void incOrderCreated(String channel) {
+              collector.incrementCounter("ydsz_order_created_total", 
+                  "订单创建总数", Map.of("channel", channel), 1.0);
+          }
+      }
+
+      // 方式2：继承 SentryMetricsAdapter（兼容旧 AbstractModuleMetrics 风格）
+      @Component("orderMetrics")
+      public class OrderMetrics extends SentryMetricsAdapter {
+          public OrderMetrics() { super("ydsz_order_"); }
+          public void incOrderCreated(String channel) {
+              incrementCounter("created_total", "channel", safe(channel));
+          }
+      }
+      ```
+
+      **反例**（违规）：
+      ```java
+      // 违规：直接 import Micrometer API
+      import io.micrometer.core.instrument.Counter;
+      import io.micrometer.core.instrument.MeterRegistry;
+      
+      @Component
+      public class OrderMetrics {
+          private final MeterRegistry registry;
+          public void incOrderCreated() {
+              Counter.builder("order.created").register(registry).increment();  // ❌ 直连 Micrometer
+          }
+      }
+      ```
+
+      **适用范围**：
+      - 业务模块（ydsz-system/userinfo/message/workflow/cronjob/nextwiki/literule/agent/gateway/generator）：**强制**
+      - common 子模块（ydsz-common-auth/cache/redis/safe/web/app/excel/thread/feign/jdbc/lock 等）：**强制**
+      - ydzs-common-sentry 自身内部实现（如 MicrometerMetricsCollector）：**例外**，属于 SPI 底层实现
+
+      **迁移路径**：现有直连代码分两批迁移：
+      1. 优先迁移 auth/cache/redis/safe 四个安全关键模块（本次整改）
+      2. 其余模块随功能迭代逐步迁移，新增代码**强制遵守**
+    pattern: "import io\\.micrometer\\.core\\.instrument\\.(Counter|Timer|Gauge|MeterRegistry|DistributionSummary|LongTaskTimer|FunctionCounter|FunctionTimer|TimeGauge)"
+    fix: |
+      1. 删除 `import io.micrometer.core.instrument.*` 语句
+      2. 注入 `MetricsCollector` 或修改类继承 `SentryMetricsAdapter`
+      3. 将 `Counter.builder(...).register(registry)` 替换为 `collector.incrementCounter(name, desc, tags, amount)` 或 `incrementCounter(name, tags...)`
+      4. 将 `Timer.builder(...).register(registry)` 替换为 `collector.recordTimer(name, desc, tags, duration)` 或 `recordTimer(...)`
+      5. 将 `Gauge.builder(...).register(registry)` 替换为 `collector.setGauge(name, desc, tags, value)` 或 `gauge(...)`
+    example_bad: |
+      @Component
+      public class AuthMetricsCollector {
+          private final MeterRegistry meterRegistry;
+          public AuthMetricsCollector(MeterRegistry meterRegistry) { this.meterRegistry = meterRegistry; }
+          public void recordAuthSuccess(String userType, long durationNanos) {
+              Counter.builder("auth.login.success").tag("user_type", userType).register(meterRegistry).increment();
+          }
+      }
+    example_good: |
+      @Component
+      public class AuthMetricsCollector implements AuthMetrics {
+          private final MetricsCollector collector;
+          public AuthMetricsCollector(MetricsCollector collector) { this.collector = collector; }
+          public void recordAuthSuccess(String userType, long durationNanos) {
+              collector.incrementCounter("ydsz_auth_login_success_total",
+                  "认证成功总数", Map.of("user_type", userType));
+              collector.recordTimer("ydsz_auth_login_duration_ms",
+                  "认证耗时", Map.of("user_type", userType), Duration.ofNanos(durationNanos) );
+          }
+      }
+    source: "ydsz-common-sentry 全局引用分析（YDIZ-SENTRY-001，P0，26.10.01 18+ common 子模块直连 MeterRegistry）"
+    exception: "ydsz-common-sentry 模块内部的 MicrometerMetricsCollector 实现（属于 SPI 底层实现）"
+
+  # ============================================
+  # 十八、Netty 通信规范（1 条，P1）
+  # ============================================
+  - id: "YDIZ-NETTY-001"
+    category: "netty"
+    severity: "P1"
+    title: "TCP 推送 Handler 必须使用 AbstractJsonTcpHandler 基类"
+    description: |
+      禁止 TCP 推送 Handler 直接 extends {@code ChannelInboundHandlerAdapter} 并手动实现 
+      ByteBuf → UTF-8 → JSON 解析、空闲超时关闭、异常关闭、AUTH 认证等通用逻辑。
+      必须使用 {@code com.njydsz.common.netty.handler.AbstractJsonTcpHandler} 作为基类。
+    fix: "参见 YDIZ-NETTY-001 原文（已在上方 P1 规则中完整定义）"
+    source: "ydsz-common-netty 全局引用分析（P0 Handler 迁移整改，26.10.01）"
+
+  # ============================================
+  # 十八（续）、Netty 会话管理规范（1 条，P2）
+  # ============================================
+  - id: "YDIZ-NETTY-002"
+    category: "netty"
+    severity: "P2"
+    title: "认证后必须更新 Session bizId 激活 Session 管理"
+    description: |
+      TCP 连接认证成功后（AUTH_ACK 已发送），业务层应额外调用
+      {@code sessionRepository.updateBizId(sessionId, userId)} 设置会话的业务标识，
+      以激活 {@link com.njydsz.common.netty.session.SessionRepository} 的会话管理能力。
+
+      **为什么要求**：
+      - 未设置 bizId 的会话无法通过 {@code sessionRepository.getByBizId(userId)} 查找
+      - 设置 bizId 后可以实现：多端登录管理、按用户推送、会话级属性追踪
+      - 统一的会话管理有利于后期实现跨节点 Session 迁移（如从本地内存迁移到 Redis）
+
+      **正例**（在 onAuthenticated 中添加 Session 更新逻辑）：
+      ```java
+      &#64;Override
+      protected void onAuthenticated(ChannelHandlerContext ctx, String userId) {
+          this.userId = userId;
+          server.registerUser(userId, ctx.channel());
+          // 激活 Session 管理
+          server.getSessionRepository().find(s -> s.getChannel().equals(ctx.channel()))
+              .forEach(s -> server.getSessionRepository().updateBizId(s.getSessionId(), userId));
+      }
+      ```
+
+      **适用场景**：
+      - 所有使用 AbstractJsonTcpHandler 且通过 AUTH 认证的业务模块
+      - message-server / nextwiki-server：**强制**
+
+    fix: |
+      1. 在 onAuthenticated() 方法中，除了分组注册外，增加 sessionRepository.updateBizId 调用
+      2. 使用 server.getSessionRepository().find(s -> s.getChannel().equals(channel)) 查找对应 session
+      3. 调用 updateBizId(session.getSessionId(), userId) 注册 bizId
+    source: "ydsz-common-netty 全局引用分析（P2 Session 能力激活整改，26.10.01）"
+
+  # ============================================
+  # 十九、文档处理规范（1 条，P0）
+  # ============================================
+  # YDIZ-DOCS-001: 文档上传/解析/水印场景必须通过 ydzsz-common-docs 模块，禁止直连底层三方库
+  - id: "YDIZ-DOCS-001"
+    category: "docs"
+    severity: "P0"
+    title: "文档处理必须通过 ydzsz-common-docs 统一模块"
+    description: |
+      业务模块涉及文档解析、格式转换、安全扫描、PII 检测、OCR 等场景时，
+      必须通过 ydzsz-common-modules 的 ydzsz-common-docs 模块提供的公共能力实现，
+      禁止直接 import 底层三方库（PDFBox / POI / Jsoup / Apache Tika），
+      禁止在业务模块中自行实现文档解析逻辑。
+
+      **为什么要求**：
+      - common-docs 已提供 8 格式统一解析、安全扫描（Office 宏 / PDF JS / OLE2）、
+        PII 检测（7 类敏感信息）、OCR 扩展接口、格式转换等完整能力
+      - 直接依赖底层库会造成三方库版本碎片化、安全合规能力缺失
+      - 统一模块便于集中修复安全漏洞和升级解析能力
+
+      **必须使用 common-docs 的场景**：
+      - 文档上传后的内容解析、格式检测、安全扫描
+      - 文档 PII 合规检测（手机号 / 身份证 / 银行卡 / 邮箱 等敏感信息扫描）
+      - 文档安全扫描（恶意宏 / PDF JS / OLE2 嵌入对象 检测）
+      - 文档水印（PDF 文字水印 使用 PdfWatermarkApplier）
+
+      **正例**（业务层委托 common-docs 解析文档）：
+      ```java
+      DocumentParseResult result = documentService.parseWithSecurityCheck(inputStream, fileName, null);
+      if (!result.isSuccess()) {
+          // 安全扫描未通过或解析失败
+          return;
+      }
+      List<PiiFinding> piiFindings = documentService.detectPii(result.getContent());
+      ```
+
+      **适用场景**：
+      - 所有涉及文件上传、文档解析的业务模块（system/userinfo/message/workflow/nextwiki 等）
+      - 文档安全合规扫描场景：强制
+      - 图片水印场景：应委托 ydsz-common-fle 的 ImageProcessor
+
+    fix: |
+      1. 注入 DocumentService（com.njydsz.common.docs.service.DocumentService）
+      2. 用 documentService.parseWithSecurityCheck() 替代直接调用 POI / PDFBox 的解析逻辑
+      3. 用 documentService.detectPii() 替代手写正则的 PII 检测
+      4. 如有 PDF 水印需要，注入 PdfWatermarkApplier 接口（com.njydsz.common.docs.watermark）
+    source: "ydsz-common-docs 全局引用分析（P0 文档处理规范，26.10.01）"
+
+  # ============================================
+  # 版本标记：shared-rules.yaml v26.10.01-v21
   # 变更摘要：
-  #   - v14: YDIZ-FEIGN-001~005 Feign 专项红线规则
-  #   - v15: YDIZ-FEIGN-002 明确范围 + cronjob 跨集群直连例外
-  # 更新 total：P0=58 P1=84 P2=21 → total=170
+  #   - v21: YDIZ-DOCS-001 文档处理必须通过 ydzsz-common-docs（P0，文档统一处理入口）
+  #   - v20: YDIZ-NETTY-002 认证后必须更新 Session bizId 激活 Session 管理
+  #   - v19: YDIZ-CONFIG-002 手动 Jasypt 解密必须使用 ConfigCliTool
+  #   - v18: YDIZ-NETTY-001 TCP 推送 Handler 必须使用 AbstractJsonTcpHandler 基类
+  #          IMPORT-005 规则新增 reactor-netty 豁免条款
+  #   - v17: YDIZ-CONFIG-001 多层 JSON 配置合并必须使用 ConfigMergeUtils + 两 ConfigChangeListener 命名消歧
+  # 更新 total：P0=58 P1=88 P2=24 → total=180
   # ============================================

@@ -54,6 +54,17 @@ public interface AgentDefinitionRepository {
   List<AgentDefinitionVO> findActive();
 
   /**
+   * 查询所有 Agent 定义列表（用于全量索引重建）。
+   *
+   * <p>按租户过滤：tenantId 不为空时仅返回该租户数据；为空时返回全量（跨租户）。
+   * 已删除记录由 MyBatis-Plus @TableLogic 自动过滤。
+   *
+   * @param tenantId 租户 ID（可为 null 或空，表示跨租户全量）
+   * @return Agent 定义 VO 列表；无数据时返回空列表
+   */
+  List<AgentDefinitionVO> findAll(String tenantId);
+
+  /**
    * 插入 Agent 定义
    *
    * @param dto Agent 定义 DTO（id 字段不传）

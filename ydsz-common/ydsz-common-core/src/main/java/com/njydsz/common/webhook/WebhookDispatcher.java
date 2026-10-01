@@ -5,14 +5,15 @@ import java.util.Map;
 /**
  * Webhook 统一投递器接口。
  *
- * <p>提供 Webhook 订阅管理（注册 / 注销）与事件投递（HTTP POST + HMAC 签名 + 重试）能力。 各业务模块（message / workflow / project
- * 等）通过此接口统一投递 Webhook 事件， 避免在每个模块中重复实现 HTTP 投递、签名、重试逻辑。
+ * <p>提供 Webhook 订阅管理（注册 / 注销）与事件投递（HTTP POST + HMAC 签名 + 重试）能力。
+ * 各业务模块（message / workflow / project 等）通过此接口统一投递 Webhook 事件，
+ * 避免在每个模块中重复实现 HTTP 投递、签名、重试逻辑。
  *
  * <p>实现方需保证：
  *
  * <ul>
- *   <li><b>HMAC-SHA256 签名</b>：投递时在 HTTP Header 中附带 {@code X-Webhook-Signature}， 值为 {@code
- *       HMAC-SHA256(payload, secret)} 的 Base64 编码
+ *   <li><b>HMAC-SHA256 签名</b>：投递时在 HTTP Header 中附带 {@code X-Webhook-Signature}，
+ *       值为 {@code HMAC-SHA256(payload, secret)} 的 Base64 编码
  *   <li><b>重试策略</b>：投递失败时按指数退避重试（默认 3 次）
  *   <li><b>事件过滤</b>：仅向订阅了对应 {@code eventType} 的 URL 投递
  * </ul>

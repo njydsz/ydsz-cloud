@@ -14,7 +14,6 @@ import org.springframework.core.env.Environment;
 import com.njydsz.common.base.constant.FilterOrder;
 import com.njydsz.common.base.filter.RequestBodySizeLimitFilter;
 import com.njydsz.common.base.filter.RequestContextCleanupFilter;
-import com.njydsz.common.base.filter.SecurityHeadersFilter;
 import com.njydsz.common.base.filter.TraceFilter;
 import com.njydsz.common.base.health.CoreHealthIndicator;
 import com.njydsz.common.base.health.YdszHealthIndicator;
@@ -27,10 +26,10 @@ import com.njydsz.common.base.health.YdszHealthIndicator;
  * <ul>
  *   <li>RequestContext 清理过滤器
  *   <li>链路追踪过滤器（TraceFilter）
- *   <li>安全响应头过滤器（SecurityHeadersFilter）
- *   <li>安全响应头配置属性绑定
  *   <li>健康指标（YdszHealthIndicator，需 actuator 依赖）
  * </ul>
+ *
+ * <p>注：安全响应头过滤器已下沉至 common-safe 模块统一管理，base 模块不再注册兜底实现。
  *
  * <p>注意：BaseCorsProperties 和 BaseTraceProperties 为抽象基类， 实际配置由 Web/App 子模块通过
  * {@code @ConfigurationProperties} 注解提供具体前缀。 若业务方直接使用 base 模块，请继承这些基类并指定自己的前缀。
@@ -49,7 +48,7 @@ import com.njydsz.common.base.health.YdszHealthIndicator;
     name = "enabled",
     havingValue = "true",
     matchIfMissing = true)
-@EnableConfigurationProperties({YdszSecurityHeadersProperties.class, YdszRequestProperties.class})
+@EnableConfigurationProperties(YdszRequestProperties.class)
 public class YdszAutoConfiguration {
 
   /**
@@ -101,34 +100,6 @@ public class YdszAutoConfiguration {
   }
 
   /**
-   * 安全响应头过滤器（base 模块兜底实现）
-   *
-   * <p>添加安全相关的 HTTP 响应头，防止常见安全漏洞。 执行顺序：{@link FilterOrder#SECURITY_HEADER_FILTER}。
-   *
-   * <p><b>与 web/app/safe 模块的关系：</b> Bean 名统一为 {@code securityHeaderFilter}，通过
-   * {@code @ConditionalOnMissingBean} 保证： 当项目中已存在 web/app/safe 模块注册的同名安全头过滤器时，本兜底实现自动退出，避免重复注册。
-   *
-   * @param properties 安全响应头配置属性
-   * @return FilterRegistrationBean
-   */
-  @Bean
-  @ConditionalOnMissingBean(name = "securityHeaderFilter")
-  @ConditionalOnProperty(
-      prefix = "ydsz.base.security-headers",
-      name = "enabled",
-      havingValue = "true",
-      matchIfMissing = true)
-  public FilterRegistrationBean<SecurityHeadersFilter> securityHeaderFilter(
-      YdszSecurityHeadersProperties properties) {
-    FilterRegistrationBean<SecurityHeadersFilter> registration = new FilterRegistrationBean<>();
-    registration.setFilter(new SecurityHeadersFilter(properties));
-    registration.setOrder(FilterOrder.SECURITY_HEADER_FILTER);
-    registration.addUrlPatterns("/*");
-    registration.setName("securityHeaderFilter");
-    return registration;
-  }
-
-  /**
    * RequestContext 清理过滤器
    *
    * <p>确保每个 HTTP 请求结束后自动清理 RequestContext，防止 ThreadLocal 内存泄漏。 该过滤器以 {@link
@@ -151,9 +122,8 @@ public class YdszAutoConfiguration {
   /**
    * Base 模块健康指标
    *
-   * <p>报告时区、安全响应头、文档功能等基础配置的运行状态。 仅在 classpath 中存在 {@code HealthIndicator} 类时激活。
+   * <p>报告时区、文档功能等基础配置的运行状态。 仅在 classpath 中存在 {@code HealthIndicator} 类时激活。
    *
-   * @param securityHeadersProperties 安全响应头配置
    * @param docProperties 文档配置
    * @return YdszHealthIndicator 实例
    */
@@ -163,24 +133,24 @@ public class YdszAutoConfiguration {
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
   // CHECKSTYLE.ON: RegexpSinglelineJava
   public YdszHealthIndicator baseHealthIndicator(
-      YdszSecurityHeadersProperties securityHeadersProperties,
       DocProperties docProperties,
       Environment environment) {
     String timezone = environment.getProperty("ydsz.base.timezone", "Asia/Shanghai");
-    return new YdszHealthIndicator(securityHeadersProperties, docProperties, timezone);
+    return new YdszHealthIndicator(docProperties, timezone);
   }
 
   /**
    * Core 模块健康指标（从 CoreAutoConfiguration 迁出，L6 层）。
    *
-   * <p>TraceId 生成探针 + i18n 解析器状态检查。
+   * <p>Ydsz-Core 提供的健康指标（如内存、CPU 等），仅在 base 模块引入时激活。
+   *
+   * @return CoreHealthIndicator 实例
    */
   @Bean
   @ConditionalOnMissingBean(name = "coreHealthIndicator")
-  // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
   @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-  // CHECKSTYLE.ON: RegexpSinglelineJava
   public CoreHealthIndicator coreHealthIndicator() {
     return new CoreHealthIndicator();
   }
+
 }

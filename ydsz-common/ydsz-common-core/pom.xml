@@ -62,6 +62,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-locales</artifactId>
         </dependency>
+        <!-- spring-web（提供 RestTemplate / HttpHeaders / HttpEntity 等 HTTP 客户端能力，WebhookDispatcher 使用） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <optional>true</optional>
+        </dependency>
 
     </dependencies>
 

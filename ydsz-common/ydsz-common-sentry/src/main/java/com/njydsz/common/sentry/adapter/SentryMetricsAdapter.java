@@ -29,6 +29,9 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  * <p><b>26.09.01 变更</b>：移除 {@link MeterRegistry} 构造参数，改为内部通过 {@link SentryService} 获取 {@link
  * MetricsCollector}，业务模块不再直接依赖 Micrometer API。 符合《云顶编码规范》第 27.2.1 节「禁止直接操作 MeterRegistry」的强制要求。
  *
+ * <p><b>26.10.01 变更</b>：新增 {@link #modulePrefix()} 抽象方法和 {@link MetricRegion} 枚举， 统一指标命名规范为 {@code
+ * ydzs_{module}_{metric}_total} 格式，消除现有 MetricsConstants（30 个常量仅 4 处使用）的碎片化问题。 符合 P0 规则 YDIZ-SENTRY-001。
+ *
  * <h3>迁移路径</h3>
  *
  * <ol>
@@ -36,20 +39,21 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  *   <li><b>最终阶段</b>：直接调用 {@code SentryService} 的 count/time/gauge 方法
  * </ol>
  *
- * <h3>使用示例</h3>
+ * <h3>使用示例（26.10.01 新规范）</h3>
  *
  * <pre>{@code
  * @Component("flowMetrics")
  * public class FlowMetrics extends SentryMetricsAdapter {
- *     public FlowMetrics() {
- *         super("ydsz_flow_");
- *     }
+ *     &#64;Override
+ *     protected MetricRegion moduleRegion() { return MetricRegion.WORKFLOW; }
  *
  *     public void incInstanceCreated(String flowCode) {
  *         incrementCounter("instance_created_total", "flow_code", safe(flowCode));
  *     }
  * }
  * }</pre>
+ *
+ * <p>最终注册到 Prometheus 的指标名为：{@code ydzs_workflow_instance_created_total}
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -60,7 +64,7 @@ public abstract class SentryMetricsAdapter {
 
   private static final Logger LOG = LoggerFactory.getLogger(SentryMetricsAdapter.class);
 
-  /** 模块指标前缀（如 "ydsz_flow_" / "ydsz_msg_"） */
+  /** 模块指标前缀（如 "ydsz_flow_" / "ydsz_msg_"），通过 {@link #modulePrefix()} 动态生成 */
   protected final String prefix;
 
   /** Counter 实例缓存，避免重复构建 Builder */
@@ -74,6 +78,98 @@ public abstract class SentryMetricsAdapter {
 
   /** SentryService 提供者（由 SentryAutoConfiguration 注册） */
   private static volatile Supplier<SentryService> sentryServiceProvider;
+
+  /**
+   * 模块分区枚举。
+   *
+   * <p>定义业务模块的 Prometheus 指标命名空间，统一为 {@code ydzs_{region}_} 前缀。 消除现有 MetricsConstants（30 个常量仅 4
+   * 处使用）的碎片化问题。
+   *
+   * @since 26.10.01
+   */
+  public enum MetricRegion {
+    /** agent 智能引擎 */
+    AGENT("ydsz_agent_"),
+    /** cronjob 任务引擎 */
+    CRONJOB("ydsz_cronjob_"),
+    /** gateway 网关 */
+    GATEWAY("ydsz_gateway_"),
+    /** literule 规则引擎 */
+    LITERULE("ydsz_literule_"),
+    /** message 消息引擎 */
+    MESSAGE("ydsz_msg_"),
+    /** nextwiki 文件引擎 */
+    NEXTWIKI("ydsz_nextwiki_"),
+    /** system 系统引擎 */
+    SYSTEM("ydsz_system_"),
+    /** userinfo 身份引擎 */
+    USERINFO("ydsz_userinfo_"),
+    /** workflow 流程引擎 */
+    WORKFLOW("ydsz_flow_"),
+    /** generator 代码生成器 */
+    GENERATOR("ydsz_generator_"),
+    /** common 通用模块（兜底） */
+    COMMON("ydsz_common_"),
+    /** auth 认证模块 */
+    AUTH("ydsz_auth_"),
+    /** cache 缓存模块 */
+    CACHE("ydsz_cache_"),
+    /** redis 缓存模块 */
+    REDIS("ydsz_redis_"),
+    /** safe 安全模块 */
+    SAFE("ydsz_safe_"),
+    /** web 通用模块 */
+    WEB("ydsz_web_"),
+    /** excel 通用模块 */
+    EXCEL("ydsz_excel_"),
+    /** thread 线程池模块 */
+    THREAD("ydsz_thread_"),
+    /** feign 远程调用模块 */
+    FEIGN("ydsz_feign_"),
+    /** jdbc 数据库模块 */
+    JDBC("ydsz_jdbc_"),
+    /** lock 分布式锁模块 */
+    LOCK("ydsz_lock_"),
+    /** notify 通知模块 */
+    NOTIFY("ydsz_notify_"),
+    /** file 文件存储模块 */
+    FILE("ydsz_file_"),
+    /** tenant 多租户模块 */
+    TENANT("ydsz_tenant_"),
+    /** socket WebSocket 模块 */
+    SOCKET("ydsz_socket_"),
+    /** netty 网络模块 */
+    NETTY("ydsz_netty_"),
+    /** docs 文档模块 */
+    DOCS("ydsz_docs_"),
+    /** exception 异常模块 */
+    EXCEPTION("ydsz_exception_"),
+    /** queue 消息队列模块 */
+    QUEUE("ydsz_queue_"),
+    /** event 事件模块 */
+    EVENT("ydsz_event_"),
+    /** audit 审计模块 */
+    AUDIT("ydsz_audit_"),
+    /** search 搜索模块 */
+    SEARCH("ydsz_search_"),
+    /** config 配置模块 */
+    CONFIG("ydsz_config_"),
+    /** app 移动端模块 */
+    APP("ydsz_app_"),
+    /** sentry 监控模块自身 */
+    SENTRY("ydsz_sentry_"),
+    ;
+
+    private final String prefix;
+
+    MetricRegion(String prefix) {
+      this.prefix = prefix;
+    }
+
+    public String prefix() {
+      return prefix;
+    }
+  }
 
   /**
    * 注册 SentryService 的 Supplier。
@@ -107,10 +203,51 @@ public abstract class SentryMetricsAdapter {
   /**
    * 构造 Sentry 指标适配器。
    *
-   * @param prefix 模块指标前缀（如 "ydsz_flow_"，自动拼接到所有指标名称前）
+   * <p>通过 {@link #moduleRegion()} 获取模块前缀，自动拼接到所有指标名称前。 指标名格式为 {@code ydzs_{module}_{metric}_total}。
    */
-  protected SentryMetricsAdapter(String prefix) {
-    this.prefix = prefix == null ? "" : prefix;
+  protected SentryMetricsAdapter() {
+    this.prefix = moduleRegion().prefix;
+  }
+
+  /**
+   * 构造 Sentry 指标适配器（兼容旧版本，指定自定义前缀）。
+   *
+   * @param customPrefix 自定义模块前缀，如 "ydsz_flow_"（不含 "_" 后缀会自动补充）
+   * @deprecated 26.10.01 起推荐使用 {@link #moduleRegion()} 枚举分区，避免前缀碎片化
+   */
+  @Deprecated
+  protected SentryMetricsAdapter(String customPrefix) {
+    if (customPrefix == null || customPrefix.isEmpty()) {
+      this.prefix = "ydsz_";
+    } else if (customPrefix.endsWith("_")) {
+      this.prefix = customPrefix;
+    } else {
+      this.prefix = customPrefix + "_";
+    }
+  }
+
+  /**
+   * 获取模块分区，子类必须实现以确定指标前缀。
+   *
+   * <p>实现示例：
+   *
+   * <pre>{@code
+   * &#64;Override
+   * protected MetricRegion moduleRegion() { return MetricRegion.WORKFLOW; }
+   * }</pre>
+   *
+   * @return 模块分区，不可为 null
+   */
+  protected abstract MetricRegion moduleRegion();
+
+  /**
+   * 便捷方法：通过 moduleRegion() 生成最终前缀（用于 getInstance 场景等）。
+   *
+   * @param region 模块分区
+   * @return 前缀字符串
+   */
+  public static String getPrefixForRegion(MetricRegion region) {
+    return region.prefix;
   }
 
   /**

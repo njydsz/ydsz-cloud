@@ -23,6 +23,11 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 @ConditionalOnClass(MeterRegistry.class)
 public class MessageMetrics extends SentryMetricsAdapter {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.MESSAGE;
+  }
+
   public MessageMetrics() {
     super("ydsz_message_");
   }

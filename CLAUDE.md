@@ -3,7 +3,7 @@
 > **本文件为 Claude Code / Cursor / Windsurf / Aider 等 AI 编码工具的 `always` 规则。**
 > 任何 AI 编码助手在本项目中编程时，都必须遵守本文件中的规则。
 >
-> **规范版本**: v26.09.30-v8（154 条红线规则，P0=54 P1=74 P2=20）
+> **规范版本**: v26.10.01-v21（180 条红线规则，P0=58 P1=88 P2=24）
 > **完整规则源**: `docs/ai-rules/shared-rules.yaml`（单一权威源）
 > **编码规范参考**: `docs/云顶编码规范.md`（v1.0.12）
 
@@ -162,8 +162,11 @@ ydsz-cloud/
 | 本地缓存 | `YdszCache.newBuilder()` | Caffeine 直连 |
 | Map 转换 | MapStruct 接口 | BeanUtils.copyProperties |
 | Feign 调用 | `@FeignClient` + ydsz-common-feign | 自行配置 Feign |
-| 文件存储 | `FileStorageClient`（ydsz-common-file）| 直接 SDK 调用 MinIO/OSS |
+| 文件存储 | `IFileStorageProvider`（ydsz-common-file）| 直接 SDK 调用 MinIO/OSS |
 | WebSocket | `StompMessageSender`（ydsz-common-socket）| 直连 SimpMessagingTemplate |
+| 文档处理（解析/安全扫描/PII） | `DocumentService`（ydsz-common-docs，YDIZ-DOCS-001 P0）| 直接 import PDFBox / POI / Jsoup |
+| PDF 水印 | `PdfWatermarkApplier`（ydsz-common-docs）| 直接 import PDFBox |
+| 图片处理（缩放/裁剪/水印） | `ImageProcessor`（ydsz-common-file）| 直接 import Java AWT |
 | 审计日志 | `@Audit` AOP（ydsz-common-audit）| 手动 insert 审计表 |
 
 ---

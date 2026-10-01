@@ -39,6 +39,11 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 @ConditionalOnClass(MeterRegistry.class)
 public class UserInfoMetrics extends SentryMetricsAdapter {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.USERINFO;
+  }
+
   /** Redis 在线会话总数计数器 Key */
   private static final String SESSION_TOTAL_KEY = "userinfo:session:total";
 

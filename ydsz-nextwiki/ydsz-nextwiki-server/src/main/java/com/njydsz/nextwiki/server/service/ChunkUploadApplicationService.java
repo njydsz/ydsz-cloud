@@ -30,6 +30,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
@@ -333,7 +334,7 @@ public class ChunkUploadApplicationService {
           if (storage == null) {
             throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
           }
-          storageKey = generateStorageKey(userId, session.getFileName());
+          storageKey = FileOps.generateStorageKey("wiki", userId, session.getFileName());
         try {
           MultipartFile multipartFile = createMultipartFile(mergedFile, session.getFileName());
           stored = storage.upload(null, storageKey, multipartFile);
@@ -437,7 +438,7 @@ public class ChunkUploadApplicationService {
               .parentId(ctx.parent.getId())
               .name(ctx.session.getFileName())
               .nodeType(FileNodeVO.TYPE_FILE)
-              .suffix(extractSuffix(ctx.session.getFileName()))
+              .suffix(FileOps.extractSuffix(ctx.session.getFileName()))
               .size(ctx.stored.getSize())
               .storageKey(ctx.storageKey)
               .bucketName(ctx.stored.getUuidName())
@@ -600,7 +601,7 @@ public class ChunkUploadApplicationService {
 
   private Path getMergedPath(String uploadId, String fileName) {
     return Path.of(
-        properties.getUpload().getChunkTempDir(), uploadId, "merged-" + sanitizeFileName(fileName));
+        properties.getUpload().getChunkTempDir(), uploadId, "merged-" + FileOps.sanitizeFileName(fileName));
   }
 
   private void cleanupChunks(String uploadId, int totalChunks, String fileName) {
@@ -654,30 +655,6 @@ public class ChunkUploadApplicationService {
     }
   }
 
-  private String sanitizeFileName(String filename) {
-    if (filename == null) {
-      return "unknown";
-    }
-    return filename.replace("/", "_").replace("\\", "_").replace("..", "_");
-  }
-
-  private String extractSuffix(String filename) {
-    if (filename == null || filename.isEmpty()) {
-      return "";
-    }
-    int dot = filename.lastIndexOf('.');
-    if (dot < 0 || dot == filename.length() - 1) {
-      return "";
-    }
-    return filename.substring(dot + 1).toLowerCase();
-  }
-
-  private String generateStorageKey(String userId, String originalFilename) {
-    String datePath = LocalDateTime.now().toString().substring(0, 10).replace("-", "/");
-    String uuid = String.valueOf(snowflakeIdGenerator.nextId());
-    String suffix = extractSuffix(originalFilename);
-    return "wiki/" + userId + "/" + datePath + "/" + uuid + (suffix.isEmpty() ? "" : "." + suffix);
-  }
 
   private IFileStorage resolveStorage() {
     if (fileStorageProvider != null) {
@@ -748,7 +725,7 @@ public class ChunkUploadApplicationService {
             .parentId(parent.getId())
             .name(session.getFileName())
             .nodeType(FileNodeVO.TYPE_FILE)
-            .suffix(extractSuffix(session.getFileName()))
+            .suffix(FileOps.extractSuffix(session.getFileName()))
             .size(existing.getSize())
             .storageKey(existing.getStorageKey())
             .bucketName(existing.getBucketName())

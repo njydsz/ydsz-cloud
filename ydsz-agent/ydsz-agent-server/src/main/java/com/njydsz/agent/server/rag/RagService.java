@@ -15,6 +15,7 @@ import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
+import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.service.DocumentService;
 
@@ -258,12 +259,14 @@ public class RagService {
       return 0;
     }
 
-    // 使用 common-docs 解析文档
+    // 使用 common-docs 解析 + 安全扫描一体化（含 Office 宏 / PDF JS / OLE2 检测）
     DocumentParseResult parseResult =
-        documentService.parseAndPreprocess(inputStream, fileName, null);
+        documentService.parseWithSecurityCheck(inputStream, fileName, null);
     if (!parseResult.isSuccess()) {
       log.warn(
-          "[RagService] 文档解析失败: fileName={}, error={}", fileName, parseResult.getErrorMessage());
+          "[RagService] 文档解析失败或安全扫描未通过: fileName={}, error={}",
+          fileName,
+          parseResult.getErrorMessage());
       return 0;
     }
 
@@ -271,6 +274,15 @@ public class RagService {
     if (docContent == null || docContent.getText() == null || docContent.getText().isEmpty()) {
       log.warn("[RagService] 文档内容为空: fileName={}", fileName);
       return 0;
+    }
+
+    // PII 检测审计：记录敏感信息类型，不阻断 RAG 索引流程
+    List<PiiFinding> piiFindings = documentService.detectPii(docContent);
+    if (!piiFindings.isEmpty()) {
+      log.info(
+          "[RagService] 文件含敏感信息: fileName={}, piiCount={}",
+          fileName,
+          piiFindings.size());
     }
 
     String text = docContent.getText();

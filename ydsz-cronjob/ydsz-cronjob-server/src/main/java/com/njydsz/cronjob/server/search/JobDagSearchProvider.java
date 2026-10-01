@@ -1,13 +1,17 @@
 package com.njydsz.cronjob.server.search;
 
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
+import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.cronjob.domain.vo.JobDagVO;
 
 /**
@@ -27,6 +31,25 @@ public class JobDagSearchProvider implements SearchProvider<JobDagVO> {
   @Override
   public String getType() {
     return "job_dag";
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public List<SearchFilter> getFilters(SearchProviderContext context) {
+    if (context == null || context.isAdmin()) {
+      return List.of();
+    }
+    List<SearchFilter> filters = new ArrayList<>(2);
+    // 租户隔离
+    if (context.getTenantId() != null && !context.getTenantId().isBlank()) {
+      filters.add(
+          SearchFilter.builder()
+              .field("tenant_id")
+              .values(List.of(context.getTenantId()))
+              .operator(SearchFilter.Operator.EQ)
+              .build());
+    }
+    return filters;
   }
 
   @Override

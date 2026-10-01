@@ -58,6 +58,11 @@ import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 @Slf4j
 @Component("cronjobMetrics")
 public class CronjobMetrics extends SentryMetricsAdapter {
+
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.CRONJOB;
+  }
   /** CPU 高负载权重 */
   private static final BigDecimal CPU_WEIGHT_HIGH = new BigDecimal("0.5");
 

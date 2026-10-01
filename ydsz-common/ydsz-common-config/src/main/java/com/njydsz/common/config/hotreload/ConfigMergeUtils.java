@@ -7,14 +7,14 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
 
 /**
- * 配置合并工具（基于 RFC 7396 JSON Merge Patch 语义）
+ * 多层配置合并工具（基于 RFC 7396 JSON Merge Patch 语义）。
  *
- * <p>提供 JSON 配置的深度合并能力，用于：
+ * <p>提供 JSON 配置的深度合并能力，用于以下标准化场景：
  *
  * <ul>
- *   <li>基础配置 + 租户覆盖配置 → 最终生效配置
- *   <li>默认配置 + 环境覆盖配置 → 运行时配置
- *   <li>Nacos 远程配置 + 本地 override → 合并配置
+ *   <li>基础配置 + 租户覆盖配置 → 最终生效配置（{@code TenantConfigProvider} 未来增强路径）
+ *   <li>默认配置 + 环境覆盖配置 → 运行时配置（多环境配置层叠）
+ *   <li>Nacos 远程配置 + 本地 override → 合并配置（远程 + 本地优先级仲裁）
  * </ul>
  *
  * <p><b>合并规则（RFC 7396）：</b>
@@ -28,6 +28,11 @@ import com.njydsz.common.json.tree.JsonNode;
  *
  * <p>核心算法委托给 {@link YdszJson#applyMergePatch(JsonNode, JsonNode)}，本类提供 String 入参出参的便捷封装。
  *
+ * <p><b>储备说明：</b>当前项目暂未落地多层 JSON 配置合并场景（Spring Boot {@code Environment}
+ * 属性源优先级体系已覆盖扁平 key-value 场景）。本工具为未来 tenant-override / feature-flag /
+ * config-profile 等深层 JSON 合并场景预置，后续相关需求<b>必须</b>使用本类，禁止自行实现 JSON 深
+ * 度合并逻辑。
+ *
  * <p><b>使用示例：</b>
  *
  * <pre>{@code
@@ -39,6 +44,8 @@ import com.njydsz.common.json.tree.JsonNode;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @see com.njydsz.common.config.ConfigAutoConfiguration
+ * @see com.njydsz.common.config.hotreload.ConfigChangeBridge
  */
 public final class ConfigMergeUtils {
 

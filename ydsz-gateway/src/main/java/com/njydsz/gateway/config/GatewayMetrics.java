@@ -45,6 +45,11 @@ import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 @ConditionalOnClass(MeterRegistry.class)
 public class GatewayMetrics extends SentryMetricsAdapter {
 
+  @Override
+  protected MetricRegion moduleRegion() {
+    return MetricRegion.GATEWAY;
+  }
+
   /** 所有 Prometheus 指标的统一前缀。 */
   private static final String PREFIX = "ydsz_gateway_";
 

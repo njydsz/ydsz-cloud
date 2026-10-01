@@ -32,7 +32,11 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  *
  * @author ydsz-team
  * @since 26.09.01
+ * @deprecated 26.10.01 已收敛至统一搜索体系，使用 {@link
+ *             com.njydsz.message.server.search.NotificationSearchProvider} 替代。 该服务仅作
+ *             迁移期兼容保留，新搜索需求请走 ydsz-common-search。
  */
+@Deprecated
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
+import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.service.DocumentService;
 import com.njydsz.common.file.storage.IFileStorage;
@@ -35,8 +36,10 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
  *
  * <ul>
  *   <li>后缀白名单：由 {@link DocumentFormat} 枚举统一管理，覆盖 16 种格式
- *   <li>PDF/Office 解析：由 {@link DocumentService#parse} 委托 Apache Tika / POI
- *   <li>HTML 标签清理：由 {@link DocumentService#preprocess} 流水线统一处理
+ *   <li>PDF/Office 解析：由 {@link DocumentService#parseWithSecurityCheck} 执行解析 + 安全扫描一体化
+ *   <li>安全扫描：覆盖 Office 宏 / PDF JS / OLE2 嵌入对象三类检测，高风险文档拒绝解析
+ *   <li>PII 检测：解析后自动扫描手机号/身份证/银行卡/邮箱等敏感信息并记录审计日志
+ *   <li>HTML 标签清理：由内置预处理流水线统一处理
  * </ul>
  *
  * @author ydsz-team
@@ -165,11 +168,13 @@ public class ContentExtractionApplicationService {
   /**
    * 通过 common-docs 解析文档内容。
    *
-   * <p>委托 {@link DocumentService#parseAndPreprocess} 执行解析 + 预处理一体化流程， 内部自动选择对应格式的解析器（PDFBox / POI /
-   * Jsoup 等），并执行文本归一化、 清洗等预处理步骤。
+   * <p>委托 {@link DocumentService#parseWithSecurityCheck} 执行解析 + 安全扫描一体化流程， 自动选择对应格式解析器（PDFBox / POI /
+   * Jsoup 等），执行文本归一化、清洗等预处理步骤； 并在解析前执行 Office 宏、PDF JS、OLE2 嵌入对象安全扫描。 安全扫描不通过的文档将被拒绝解析，阻止含恶意代码的文件入库。
+   *
+   * <p>解析通过后执行 PII 检测（{@link DocumentService#detectPii}）， 审计日志记录发现的敏感信息类型（手机号 / 身份证 / 银行卡 / 邮箱等）， 不阻断索引流程。
    *
    * @param node 文件节点（含存储定位信息）
-   * @return 解析后的纯文本内容；解析失败返回 {@code null}
+   * @return 解析后的纯文本内容；解析失败或安全扫描未通过返回 {@code null}
    */
   private String parseDocumentContent(FileNodeVO node) {
     IFileStorage storage = resolveStorage();
@@ -179,11 +184,12 @@ public class ContentExtractionApplicationService {
 
     try (InputStream is =
         storage.downloadAsStream(node.getBucketName(), node.getStorageKey())) {
-      DocumentParseResult result = documentService.parseAndPreprocess(is, node.getName(), null);
+      // 解析 + 安全扫描一体化（P0-2）：高风险文档直接返回失败
+      DocumentParseResult result = documentService.parseWithSecurityCheck(is, node.getName(), null);
 
       if (!result.isSuccess()) {
         log.warn(
-            "[ContentExtractionApplicationService] 文档解析失败: fileNodeId={}, error={}",
+            "[ContentExtractionApplicationService] 文档解析失败或安全扫描未通过: fileNodeId={}, error={}",
             node.getId(),
             result.getErrorMessage());
         return null;
@@ -192,6 +198,15 @@ public class ContentExtractionApplicationService {
       DocumentContent content = result.getContent();
       if (content == null || content.getText() == null || content.getText().isEmpty()) {
         return null;
+      }
+
+      // PII 检测审计（P0-3）：记录敏感信息类型，不阻断索引
+      List<PiiFinding> piiFindings = documentService.detectPii(content);
+      if (!piiFindings.isEmpty()) {
+        log.info(
+            "[ContentExtractionApplicationService] 文件含敏感信息: fileNodeId={}, piiCount={}",
+            node.getId(),
+            piiFindings.size());
       }
 
       return content.getText();
