@@ -1,4 +1,4 @@
-﻿# 云顶编码规范 - AI 红线规则集（Shared Rules）
+# 云顶编码规范 - AI 红线规则集（Shared Rules）
 # Ydsz Cloud Coding Standards - AI Red Line Rules
 #
 # 本文件为单一权威源（Single Source of Truth），适用于所有 AI 编码工具。
@@ -13,11 +13,11 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.10.01-v21"  # v21: +YDIZ-DOCS-001 文档处理必须通过 ydzsz-common-docs 统一模块
+  version: "26.10.01-v22"  # v21: +YDIZ-DOCS-001 文档处理必须通过 ydzsz-common-docs 统一模块
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-10-01"
-  last_updated: "26.10.01-v21（ydsz-common-docs 全局引用分析整改：+1 P0 规则 YDIZ-DOCS-001 文档处理统一入口；总规则 180 条）"
-  total_rules: 180
+  last_updated: "26.10.01-v22（ydsz-common-socket 全局引用分析整改：+1 P0 规则 YDIZ-DOCS-001 文档处理统一入口；总规则 180 条）"
+  total_rules: 183
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
@@ -6046,13 +6046,120 @@ stats:
     source: "ydsz-common-docs 全局引用分析（P0 文档处理规范，26.10.01）"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.10.01-v21
+  # SSE / WebSocket 统一规范（ydsz-common-socket 全局引用分析整改 26.10.01）
+  # ============================================
+
+  - id: "YDIZ-SOCKET-001"
+    category: "socket"
+    severity: "P0"
+    title: "【强制】禁止业务代码直接 new SseEmitter()，必须使用 SsePushChannelFactory 创建 SSE 通道"
+    description: |
+      业务模块的 SSE 连接创建必须通过 com.njydsz.common.socket.push.SsePushChannelFactory 进行，
+      禁止直接 new SseEmitter()。Factory 提供：(1) 共享心跳调度（避免每连接独立线程池）；
+      (2) 全局限流（maxTotalConnections 可配）；(3) 统一 cleanup 回调注册。
+
+      重构步骤：
+      1. Controller / Service 层注入 SsePushChannelFactory（web 层自动配置已注册为 Bean）
+      2. 调用 factory.create(timeout) 获取 SsePushChannel
+      3. 通过 channel.getEmitter() 获取底层 SseEmitter 用于 Connection 回调注册
+      4. 通过 channel.sendEvent(name, data) / channel.complete() / channel.completeWithError() 操作通道
+
+      该方法返回 SseEmitter 给 Spring MVC 处理（框架要求 SSE 端点返回 SseEmitter 类型）。
+
+      MCP over SSE 等协议场景同样适用——factory.create(0L) 创建无超时通道用于长连接保持。
+    pattern: |
+      以下情形构成违规：
+      1. 业务代码（web 层除外）直接 import + new SseEmitter()
+      2. 手写 ScheduledExecutorService 独立调度心跳
+      3. 自建心跳调度器（与 SsePushChannelMvcFactory 内置调度重复）
+    fix: |
+      // 反例：手写心跳 + 直接 new SseEmitter
+      SseEmitter emitter = new SseEmitter(timeout);
+      ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+      scheduler.scheduleAtFixedRate(() -> emitter.send(SseEmitter.event().comment("keep-alive")), 15, 15, TimeUnit.SECONDS);
+
+      // 正例：使用 SsePushChannelFactory
+      SsePushChannel channel = ssePushChannelFactory.create(timeout);
+      SseEmitter emitter = channel.getEmitter();
+      // 心跳由 SsePushChannelMvcAdapter 内置调度自动处理——无需业务代码手写
+    example_bad: |
+      // ❌ 直接 new SseEmitter + 手写心跳调度
+      SseEmitter emitter = new SseEmitter(120_000L);
+      ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+      scheduler.scheduleAtFixedRate(() -> {
+          try { emitter.send(SseEmitter.event().comment("keep-alive")); }
+          catch (IOException e) { active.set(false); }
+      }, 15, 15, TimeUnit.SECONDS);
+    example_good: |
+      // ✅ 使用 Factory 抽象
+      SsePushChannel channel = ssePushChannelFactory.create(120_000L);
+      SseEmitter emitter = channel.getEmitter();
+      // 业务逻辑：channel.sendEvent("data", payload)
+      // 完成时：channel.complete() 或 channel.completeWithError(e)
+      return emitter;
+    source: "ydsz-common-socket 全局引用分析（P0 SSE 通道抽象，26.10.01）"
+
+  - id: "YDIZ-SOCKET-002"
+    category: "socket"
+    severity: "P1"
+    title: "【建议】WebSocket 推送结果不应静默丢弃，必须检查推送返回状态"
+    description: |
+      RealtimePushTemplate 提供的 pushWithDeliveryResult / pushToUserWithOffline 等方法返回推送结果对象，
+      业务代码应对推送失败的场景做显式处理（告警 / 降级 / 记录日志），不应静默丢弃。
+
+      检查方法：
+      1. pushToUser 后检查返回的 WebSocketDeliveryResult / WebSocketDeliveryStatus
+      2. 对 DELIVERED / CACHED 视为成功；对 FAILED / OFFLINE_UNREACHABLE 触发降级逻辑
+      3. 推送失败时记录 INFO 日志（含 userId + 消息类型），便于后续排查
+    pattern: |
+      以下情形构成违规：
+      1. 调用 pushToUser 系列方法后完全不使用返回值
+      2. 推送失败时无任何日志或告警
+      3. 业务逻辑依赖推送成功但不做失败兜底
+    fix: |
+      // 反例：静默丢弃推送结果
+      realtimePushTemplate.pushToUser(userId, "task_complete", payload);
+
+      // 正例：检查推送结果 + 降级
+      WebSocketDeliveryResult result = realtimePushTemplate.pushToUserWithOffline(userId, "task_complete", payload);
+      if (!result.isDelivered()) {
+          log.warn("[TaskService] WebSocket 推送失败，降级为离线缓存: userId={}, reason={}", userId, result.getStatus());
+      }
+    source: "ydsz-common-socket 全局引用分析（P1 推送可观测性，26.10.01）"
+
+  - id: "YDIZ-SOCKET-003"
+    category: "socket"
+    severity: "P1"
+    title: "【建议】禁止业务模块自建在线状态广播服务，必须使用 WebSocketPresenceService"
+    description: |
+      在线状态（Presence）广播（用户上线/下线事件推送）必须通过 ydsz-common-socket 提供的
+      WebSocketPresenceService.broadcastPresence() 实现。禁止业务模块自行实现 WebSocket 主题订阅广播
+      逻辑（如直接使用 SimpMessagingTemplate.convertAndSend 广播到 /topic/presence/xxx）。
+
+      激活方式：在业务模块配置中设置 ydsz.websocket.presence.enabled=true 即可启用标准化 Presence 广播。
+    pattern: |
+      以下情形构成违规：
+      1. 业务代码直接使用 SimpMessagingTemplate.convertAndSend("/topic/presence/" + userId, event)
+      2. 自行维护在线状态 Map + 广播逻辑
+      3. 通过自定义 STOMP 主题实现实时在线状态推送
+    fix: |
+      // 反例：手写 Presence 广播
+      simpMessagingTemplate.convertAndSend("/topic/presence/" + userId, presenceEvent);
+
+      // 正例：使用标准 Presence 服务
+      webSocketPresenceService.broadcastPresence(userId, WebSocketPresenceEvent.Type.ONLINE);
+    source: "ydsz-common-socket 全局引用分析（P1 Presence 服务规范，26.10.01）"
+
+  # ============================================
+  # 版本标记：shared-rules.yaml v26.10.01-v22
   # 变更摘要：
+  #   - v22: +3 SSE/websocket 规范（YDIZ-SOCKET-001 P0 / YDIZ-SOCKET-002 P1 / YDIZ-SOCKET-003 P1）
+  #         来自 ydsz-common-socket 全局引用分析整改
   #   - v21: YDIZ-DOCS-001 文档处理必须通过 ydzsz-common-docs（P0，文档统一处理入口）
   #   - v20: YDIZ-NETTY-002 认证后必须更新 Session bizId 激活 Session 管理
   #   - v19: YDIZ-CONFIG-002 手动 Jasypt 解密必须使用 ConfigCliTool
   #   - v18: YDIZ-NETTY-001 TCP 推送 Handler 必须使用 AbstractJsonTcpHandler 基类
   #          IMPORT-005 规则新增 reactor-netty 豁免条款
   #   - v17: YDIZ-CONFIG-001 多层 JSON 配置合并必须使用 ConfigMergeUtils + 两 ConfigChangeListener 命名消歧
-  # 更新 total：P0=58 P1=88 P2=24 → total=180
+  # 更新 total：P0=59 P1=90 P2=24 → total=183
   # ============================================

@@ -95,7 +95,6 @@ public class GatewayMetrics extends SentryMetricsAdapter {
    * 业务模块不再需要显式注入 {@code SentryService} 或 {@code MeterRegistry}。
    */
   public GatewayMetrics() {
-    super(PREFIX);
     log.info("[GatewayMetrics] 自定义 Prometheus 指标初始化完成（通过 SentryMetricsAdapter 桥接）");
   }
 

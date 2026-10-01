@@ -40,6 +40,8 @@ import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.SseExecutor;
 import com.njydsz.agent.server.chat.SseExecutor.SseChunk;
 import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.socket.push.SsePushChannel;
+import com.njydsz.common.socket.push.SsePushChannelFactory;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
@@ -111,6 +113,9 @@ public class AgentController {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
+
+  /** SSE 通道工厂（统一 SSE 生命周期：心跳保活 + cleanup，来自 ydsz-common-socket） */
+  private final SsePushChannelFactory ssePushChannelFactory;
 
   /** Agent 应用门面（解耦 Controller 与内部服务） */
   private final AgentFacade agentFacade;
@@ -187,8 +192,9 @@ public class AgentController {
     log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
     applyTraceContext(request);
     requestGuard.check(request.getRequestId(), null);
-    SseEmitter emitter = new SseEmitter();
-    SseExecutor executor = new SseExecutor(emitter);
+    // P0-SOCKET: 使用 SsePushChannelFactory 创建 SSE 通道（统一心跳保活 + cleanup）
+    SsePushChannel channel = ssePushChannelFactory.create();
+    SseExecutor executor = new SseExecutor(channel);
     AgentExecutionRequest execReq = toExecutionRequest(request);
 
     executor.execute(
@@ -223,27 +229,24 @@ public class AgentController {
                   int completed = progressEvent.getCompletedCount();
                   int total = progressEvent.getTotalCount();
                   try {
-                    emitter.send(
-                        SseEmitter.event()
-                            .data(
-                                String.format(
-                                    "{\"eventType\":\"%s\",\"nodeId\":\"%s\",\"nodeType\":\"%s\","
-                                        + "\"completedCount\":%d,\"totalCount\":%d,\"error\":\"%s\"}",
-                                    status,
-                                    nodeId != null ? nodeId : "",
-                                    progressEvent.getNodeType() != null ? progressEvent.getNodeType() : "",
-                                    completed,
-                                    total,
-                                    progressEvent.getError() != null ? progressEvent.getError() : ""))
-                            .name("progress"));
-                  } catch (IOException e) {
+                    String progressData = String.format("{\"eventType\":\"%s\",\"nodeId\":\"%s\","
+                            + "\"nodeType\":\"%s\",\"completedCount\":%d,\"totalCount\":%d,"
+                            + "\"error\":\"%s\"}",
+                        status,
+                        nodeId != null ? nodeId : "",
+                        progressEvent.getNodeType() != null ? progressEvent.getNodeType() : "",
+                        completed,
+                        total,
+                        progressEvent.getError() != null ? progressEvent.getError() : "");
+                    channel.sendEvent("progress", progressData);
+                  } catch (Exception e) {
                     log.debug("[Agent-API] SSE progress 发送失败（客户端已断开）: {}", e.getMessage());
                   }
                 },
                 // P0-2/P0-3: 类型化事件帧 — 工具调用开始/完成、思考链、HITL 审批请求等
-                event -> sendSseEvent(emitter, event)));
+                event -> sendSseEvent(channel, event)));
 
-    return emitter;
+    return channel.getEmitter();
   }
 
   /**
@@ -253,16 +256,16 @@ public class AgentController {
    * 事件载荷（含 {@code source} 归属标识）作为 {@code data:}。客户端已断开时静默忽略——
    * 断连由 {@link SseExecutor} 的 active 标志统一处理，此处不重复中止执行。
    *
-   * @param emitter SSE 发送句柄
+   * @param channel SSE 通道
    * @param event 类型化事件（null 时忽略）
    */
-  private void sendSseEvent(SseEmitter emitter, SseEvent event) {
+  private void sendSseEvent(SsePushChannel channel, SseEvent event) {
     if (event == null) {
       return;
     }
     try {
-      emitter.send(SseEmitter.event().data(event.toPayload()).name(event.getEvent()));
-    } catch (IOException e) {
+      channel.sendEvent(event.getEvent(), event.toPayload());
+    } catch (Exception e) {
       log.debug("[Agent-API] SSE 事件发送失败（客户端已断开）: type={}", event.getEvent());
     }
   }
@@ -336,8 +339,9 @@ public class AgentController {
   public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
     applyTraceContext(request);
     requestGuard.check(request.getRequestId(), null);
-    SseEmitter emitter = new SseEmitter();
-    SseExecutor executor = new SseExecutor(emitter);
+    // P0-SOCKET: 使用 SsePushChannelFactory 创建 SSE 通道
+    SsePushChannel channel = ssePushChannelFactory.create();
+    SseExecutor executor = new SseExecutor(channel);
 
     // 多模态输入优先：multimodalContent 非空时使用 Vision 模型流式对话
     if (request.getMultimodalContent() != null && !request.getMultimodalContent().isEmpty()) {
@@ -362,7 +366,6 @@ public class AgentController {
                     } else if (chunk.isFinished()) {
                       chunkConsumer.accept(SseChunk.finish(chunk.getFinishReason()));
                     } else {
-                      // 工具调用等非文本 chunk 原样转发
                       chunkConsumer.accept(
                           SseChunk.content(
                               chunk.getDeltaContent(),
@@ -370,7 +373,7 @@ public class AgentController {
                               chunk.getDeltaToolCalls()));
                     }
                   }));
-      return emitter;
+      return channel.getEmitter();
     }
 
     log.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
@@ -390,7 +393,6 @@ public class AgentController {
                   } else if (chunk.isFinished()) {
                     chunkConsumer.accept(SseChunk.finish(chunk.getFinishReason()));
                   } else {
-                    // 工具调用等非文本 chunk 原样转发
                     chunkConsumer.accept(
                         SseChunk.content(
                             chunk.getDeltaContent(),
@@ -399,7 +401,7 @@ public class AgentController {
                   }
                 }));
 
-    return emitter;
+    return channel.getEmitter();
   }
 
   /**

@@ -16,8 +16,10 @@ import com.njydsz.common.core.context.RequestContext;
  *
  * <p>在请求处理前将 tenantId 写入 MDC（Mapped Diagnostic Context）， 使得日志输出中自动包含租户标识，便于按租户维度排查问题。
  *
- * <p><b>使用方式：</b> 在 WebSecurityConfiguration 或 WebMvcConfiguration 中注册此过滤器， 优先级应高于业务过滤器（如
- * WebAuthFilter）。
+ * <p><b>装配方式：</b>由 {@code WebCoreAutoConfiguration} 通过 {@code @Bean} + {@code @ConditionalOnMissingBean}
+ * 注册，无需手动装配。
+ *
+ * <p>可通过 {@code ydsz.core.tenant-mdc-filter.enabled=false} 关闭。
  *
  * <p><b>日志配置示例（logback-spring.xml）：</b>
  *
@@ -40,21 +42,16 @@ public class TenantMdcFilter implements Filter {
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws IOException, ServletException {
     try {
-      // 从 RequestContext 读取租户信息并写入 MDC
       String tenantId = RequestContext.getTenantId();
-      if (tenantId != null) {
+      String userId = RequestContext.getUserId();
+      if (tenantId != null && !tenantId.isEmpty()) {
         MDC.put(MDC_TENANT_ID, tenantId);
       }
-
-      String userId = RequestContext.getUserId();
-      if (userId != null) {
+      if (userId != null && !userId.isEmpty()) {
         MDC.put(MDC_USER_ID, userId);
       }
-
       chain.doFilter(request, response);
     } finally {
-      // 请求结束后清理 MDC，防止线程复用导致数据串扰。
-      // traceId 由 TraceFilter 写入、RequestContextCleanupFilter（MDC.clear）统一清理，此处不再重复处理。
       MDC.remove(MDC_TENANT_ID);
       MDC.remove(MDC_USER_ID);
     }

@@ -50,7 +50,7 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
   private final RedisStringOps redisStringOps;
 
   public UserInfoMetrics(RedisStringOps redisStringOps) {
-    super("ydsz_userinfo_");
+    super();
     this.redisStringOps = redisStringOps;
     log.info("[UserInfoMetrics] Micrometer 指标初始化完成");
   }

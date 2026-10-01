@@ -1,0 +1,4 @@
+# DocumentPreprocessor SPI —— 文档预处理链（按 order 值升序执行）
+com.njydsz.common.docs.preprocess.impl.TextNormalizer
+com.njydsz.common.docs.preprocess.impl.TextCleaner
+com.njydsz.common.docs.preprocess.impl.TextChunker

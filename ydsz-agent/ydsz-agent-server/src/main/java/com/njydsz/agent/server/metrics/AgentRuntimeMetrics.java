@@ -86,7 +86,6 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
    * 方法写入。
    */
   public AgentRuntimeMetrics() {
-    super("agent_");
     // 注册活跃对话 Gauge（使用 AtomicReference 模式）
     gaugeRef(METRIC_ACTIVE_CONVERSATIONS, activeConversationsRef, AtomicReference::get);
   }

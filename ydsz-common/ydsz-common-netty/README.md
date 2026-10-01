@@ -202,8 +202,11 @@ ydsz:
 import com.njydsz.common.netty.server.AbstractNettyServer;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.codec.LengthFieldCodec;
+import com.njydsz.common.netty.handler.AbstractJsonTcpHandler;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import org.springframework.stereotype.Component;
+import java.util.Map;
 
 @Component
 public class MyTcpServer extends AbstractNettyServer {
@@ -215,7 +218,47 @@ public class MyTcpServer extends AbstractNettyServer {
     @Override
     protected void initChannelPipeline(SocketChannel ch) {
         LengthFieldCodec.addToPipeline(ch.pipeline());
-        ch.pipeline().addLast(new MyBusinessHandler());
+        ch.pipeline().addLast(new MyPushHandler(this));  // YDIZ-NETTY-001: 继承 AbstractJsonTcpHandler
+    }
+
+    /**
+     * TCP 推送 Handler — 处理客户端连接、认证、业务消息。
+     *
+     * <p>继承 {@link AbstractJsonTcpHandler} 基类，无需手动实现 ByteBuf 解析、空闲关闭、异常关闭。
+     */
+    static class MyPushHandler extends AbstractJsonTcpHandler {
+        private final MyTcpServer server;
+        private String userId;
+
+        MyPushHandler(MyTcpServer server) { this.server = server; }
+
+        @Override
+        protected String getLogPrefix() { return "[My-PUSH]"; }
+
+        @Override
+        protected void onJsonMessage(ChannelHandlerContext ctx, Map<String, Object> message) {
+            String type = (String) message.get("type");
+            if (AbstractJsonTcpHandler.TYPE_AUTH.equals(type)) {
+                handleAuth(ctx, message);
+            } else {
+                log.debug("[My-PUSH] 未知消息类型: type={}", type);
+            }
+        }
+
+        @Override
+        protected void onAuthenticated(ChannelHandlerContext ctx, String userId) {
+            this.userId = userId;
+            server.registerUser(userId, ctx.channel());
+            // YDIZ-NETTY-002 (P2)：同时更新 Session bizId 激活 Session 管理
+            server.getSessionRepository().find(s -> s.getChannel().equals(ctx.channel()))
+                .forEach(s -> server.getSessionRepository().updateBizId(s.getSessionId(), userId));
+        }
+    }
+
+    /** 注册用户到业务分组 */
+    void registerUser(String userId, io.netty.channel.Channel channel) {
+        getChannelGroupManager().addToGroup("user:" + userId, channel);
+
     }
 }
 ```
@@ -226,8 +269,8 @@ public class MyTcpServer extends AbstractNettyServer {
 import com.njydsz.common.netty.client.AbstractNettyClient;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.codec.LengthFieldCodec;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import org.springframework.stereotype.Component;
 
@@ -247,8 +290,8 @@ public class MyTcpClient extends AbstractNettyClient {
     /**
      * 业务 Handler 示例 — 处理服务端下发的消息。
      *
-     * <p>推荐使用 SimpleChannelInboundHandler 或 ChannelInboundHandlerAdapter，
-     * 在 channelRead 中按消息 type 字段做 switch 分发。
+     * <p>对于非 JSON 自定义协议，使用 ChannelInboundHandlerAdapter 手动处理；
+     * JSON 协议推荐继承 AbstractJsonTcpHandler（参见"接入方式 #3"）。
      */
     static class MyBusinessHandler extends ChannelInboundHandlerAdapter {
         @Override
@@ -306,33 +349,61 @@ public class MyTcpClient extends AbstractNettyClient {
 
 ## 使用示例
 
-### 1. 消息处理推荐模式
+### 1. 消息处理推荐模式（JSON 协议）
 
-**推荐：使用 `SimpleChannelInboundHandler<T>` + 策略模式（默认）**
+**推荐：使用 `AbstractJsonTcpHandler` 基类（YDIZ-NETTY-001 P1 强制）**
+
+对于 JSON 格式消息、`Length(4B) + Payload(JSON)` 帧协议的 TCP 推送服务端，
+必须使用 `AbstractJsonTcpHandler` 作为 Handler 基类（消除重复实现、统一空闲关闭与异常处理）：
 
 ```java
+import com.njydsz.common.netty.handler.AbstractJsonTcpHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import java.util.Map;
 
-public class MyBusinessHandler extends SimpleChannelInboundHandler<MyMessage> {
+static class MyPushHandler extends AbstractJsonTcpHandler {
+    private final MyTcpServer server;
+    private String userId;
+
+    MyPushHandler(MyTcpServer server) { this.server = server; }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, MyMessage msg) {
-        switch (msg.getType()) {
-            case "AUTH" -> handleAuth(ctx, msg);
-            case "PING" -> handlePing(ctx, msg);
-            case "ORDER" -> handleOrder(ctx, msg);
-            default -> log.warn("未知消息类型: {}", msg.getType());
+    protected String getLogPrefix() { return "[My-PUSH]"; }
+
+    @Override
+    protected void onJsonMessage(ChannelHandlerContext ctx, Map<String, Object> message) {
+        String type = (String) message.get("type");
+        if (AbstractJsonTcpHandler.TYPE_AUTH.equals(type)) {
+            handleAuth(ctx, message);          // 复用基类 AUTH 处理 + AUTH_ACK 响应
+        } else if ("SUB_SPACE".equals(type)) {
+            handleSubSpace(ctx, message);        // 业务消息
+        } else {
+            log.debug("[My-PUSH] 未知消息类型: type={}", type);
         }
     }
 
-    private void handleAuth(ChannelHandlerContext ctx, MyMessage msg) { ... }
-    private void handlePing(ChannelHandlerContext ctx, MyMessage msg) { ... }
-    private void handleOrder(ChannelHandlerContext ctx, MyMessage msg) { ... }
+    @Override
+    protected void onAuthenticated(ChannelHandlerContext ctx, String userId) {
+        this.userId = userId;
+        server.registerUser(userId, ctx.channel());  // 注册 Channel 到业务分组
+        // YDIZ-NETTY-002 (P2)：同时更新 Session bizId 激活 Session 管理
+        server.getSessionRepository().find(s -> s.getChannel().equals(ctx.channel()))
+            .forEach(s -> server.getSessionRepository().updateBizId(s.getSessionId(), userId));
+    }
 }
+
+// Pipeline 注册
+ch.pipeline().addLast(new MyPushHandler(this));
 ```
 
-### 2. Channel 事件监听
+> **适用范围：** message-server / nextwiki-server TCP 推送模块已强制迁移 (26.10.01)。
+
+### 2. 消息处理备选模式（非 JSON 协议）
+
+当使用自定义二进制 / Protobuf 等非 JSON 协议时，
+使用 `SimpleChannelInboundHandler<T>` + 策略模式：
+
+### 3. Channel 事件监听
 
 ```java
 import com.njydsz.common.netty.event.ChannelEventListener;
@@ -359,7 +430,7 @@ public class MyChannelEventListener implements ChannelEventListener {
 }
 ```
 
-### 3. Channel 分组广播
+### 4. Channel 分组广播
 
 ```java
 // 向指定业务组广播消息
@@ -372,7 +443,7 @@ server.getChannelGroupManager().broadcastGlobal(message);
 Set<String> groups = server.getChannelGroupManager().getGroupKeys();
 ```
 
-### 4. SSL/TLS 配置（双向认证）
+### 5. SSL/TLS 配置（双向认证）
 
 ```yaml
 ydsz:
@@ -384,7 +455,7 @@ ydsz:
       need-client-auth: true       # 双向认证
 ```
 
-### 5. 流量整形配置
+### 6. 流量整形配置
 
 ```yaml
 ydsz:
@@ -396,7 +467,7 @@ ydsz:
       global: true                 # 限制整个 Server 总带宽
 ```
 
-### 6. JSON 编解码（Encoder + Decoder 分离）
+### 7. JSON 编解码（Encoder + Decoder 分离）
 
 ```java
 import com.njydsz.common.netty.codec.JsonMessageEncoder;
@@ -406,7 +477,7 @@ ch.pipeline().addLast(new JsonMessageEncoder<>(MyMessage.class));
 ch.pipeline().addLast(new JsonMessageDecoder<>(MyMessage.class));
 ```
 
-### 7. 可靠消息 ACK
+### 8. 可靠消息 ACK
 
 ```java
 import com.njydsz.common.netty.reliable.ReliableMessage;
@@ -422,7 +493,7 @@ msg.setRequiresAck(true);
 channel.writeAndFlush(msg);
 ```
 
-### 8. Session 管理
+### 9. Session 管理
 
 ```java
 import com.njydsz.common.netty.session.SessionRepository;
@@ -432,13 +503,16 @@ import com.njydsz.common.netty.session.ConnectionSession;
 SessionRepository repo = server.getSessionRepository();
 
 // 按业务 ID 查找会话（如按 userId 推送）
-Set<ConnectionSession> sessions = repo.findByBizId("user-123");
+List<ConnectionSession> sessions = repo.getByBizId("user-123");
 
-// 向目标用户推送消息
+// 向目标用户推送消息（向该用户的所有在线 Session 广播）
 sessions.forEach(session -> session.send(message));
+
+// 统计用户在线 Session 数
+int count = repo.countByBizId("user-123");
 ```
 
-### 9. Graceful Drain（引流关闭）
+### 10. Graceful Drain（引流关闭）
 
 ```java
 // 等待现有连接处理完毕再关闭（最长等 30s 或连接数降至 100）
@@ -448,7 +522,7 @@ future.thenRun(() -> {
 });
 ```
 
-### 10. 零拷贝文件传输
+### 11. 零拷贝文件传输
 
 ```java
 import com.njydsz.common.netty.transfer.ZeroCopyFileTransfer;
@@ -528,17 +602,18 @@ ZeroCopyFileTransfer.sendChunked(channel, file);
 11. **连接限制**：`connection-control.max-connections` 超过上限时 `ConnectionLimitHandler` 直接拒绝新连接，防止服务过载。
 12. **直接内存监控**：`ydsz.netty.direct.memory.used` / `direct.memory.max` 指标实时监控堆外内存，使用率 ≥80% 时 `NettyStartupReporter` 输出告警。
 
-## 废弃类
+## 废弃/已移除类
 
 | 类 | 替代方案 | 说明 |
 |---|---|---|
-| `NettyChannelOptions` | 直接使用 `io.netty.channel.ChannelOption` | 仅为常量引用封装，无额外价值 |
-| `NettyBufferUtils` | 直接使用 `Unpooled.copiedBuffer` / `ByteBuf.toString(Charset)` | 方法过于简单 |
-| `IdleStateHandlerFactory` | 直接 `new IdleStateHandler(readerIdle, writerIdle, allIdle, TimeUnit.SECONDS)` | 工厂类无必要间接 |
-| `JsonMessageCodec` | `JsonMessageEncoder` + `JsonMessageDecoder` | 拆分为独立编解码器，职责更清晰 |
+| `NettyChannelOptions` | 直接使用 `io.netty.channel.ChannelOption` | 仅为常量引用封装，**已于 26.10.01 移除**（agent-infra 等模块的 reactor-netty ChannelOption 引用按 IMPORT-005 豁免条款处理） |
+| `NettyBufferUtils` | 直接使用 `Unpooled.copiedBuffer` / `ByteBuf.toString(Charset)` | 方法过于简单，**已移除** |
+| `IdleStateHandlerFactory` | 直接 `new IdleStateHandler(readerIdle, writerIdle, allIdle, TimeUnit.SECONDS)` | 工厂类无必要间接，**已移除** |
+| `JsonMessageCodec` | `JsonMessageEncoder` + `JsonMessageDecoder` | 拆分为独立编解码器，职责更清晰，**已移除** |
 
 ## 变更记录
 
+- **26.10.01**（2026-10-01）：YDIZ-NETTY-001 P1 规则 — TCP Handler 强制继承 AbstractJsonTcpHandler；message/nextwiki 两个模块 TcpPushServerHandler 完成迁移（消除 ~200 行重复代码）；YDIZ-NETTY-002 P2 规则 — 认证后必须更新 Session bizId 激活 Session 管理；agent-infra 移除无效 netty 依赖；IMPORT-005 P0 增加 reactor-netty API 签名豁免条款；README 同步更新（添加 AbstractJsonTcpHandler 接入示例、废弃类表更新、SessionRepository 方法名修正）
 - **26.09.01**（2026-09-20）：Session 管理（ConnectionSession + SessionRepository + ChannelState）；RPC 请求-响应（NettyRpcClient + RpcMessage）；连接认证 SPI（ConnectionAuthenticator）；可靠消息 ACK（ReliableMessage + AckMessage + ReliableMessageHandler）；Graceful Drain 引流关闭；PooledMessage 对象池；ZeroCopyFileTransfer 零拷贝传输；JsonMessageCodec 拆分为 Encoder + Decoder + Util；直接内存监控指标（3 项新 Gauge）；缓存区水位线可配置；泄漏检测可配置；ReconnectHandler 并发修复；IdleStateHandlerFactory 内联清理；标记 NettyChannelOptions / NettyBufferUtils / JsonMessageCodec / IdleStateHandlerFactory 为 @Deprecated
 - **26.09.01**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 26.09.01 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式；新增 `allocator`（ByteBuf 分配器）、`connection-control`（连接数限制）配置段；新增 `ConnectionLimitHandler`、`ConnectionMetrics`、`NettyPipelineDiagnostics`、`NettyActuatorEndpoint`；provided 依赖 `micrometer-core` 改为通过 `@ConditionalOnClass` 可选装配
 - **26.09.01**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 26.09.01 移除）

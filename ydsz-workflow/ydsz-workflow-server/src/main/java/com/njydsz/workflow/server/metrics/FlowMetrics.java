@@ -85,7 +85,6 @@ public class FlowMetrics extends SentryMetricsAdapter {
   public FlowMetrics(
       FlowInstanceRepository instanceRepository,
       FlowRunTaskRepository taskRepository) {
-    super("ydsz_flow_");
     this.instanceRepository = instanceRepository;
     this.taskRepository = taskRepository;
     registerGauges();

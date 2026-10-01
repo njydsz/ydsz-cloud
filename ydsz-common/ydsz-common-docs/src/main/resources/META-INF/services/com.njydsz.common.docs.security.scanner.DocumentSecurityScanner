@@ -1,0 +1,4 @@
+# DocumentSecurityScanner SPI —— 文档恶意代码扫描器
+com.njydsz.common.docs.security.scanner.MacroDetector
+com.njydsz.common.docs.security.scanner.PdfJsDetector
+com.njydsz.common.docs.security.scanner.Ole2EmbeddedObjectScanner

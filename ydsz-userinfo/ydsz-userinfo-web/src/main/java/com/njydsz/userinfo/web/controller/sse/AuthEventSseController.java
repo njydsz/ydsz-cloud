@@ -17,6 +17,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.socket.push.SsePushChannel;
+import com.njydsz.common.socket.push.SsePushChannelFactory;
 import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
 
 /**
@@ -36,7 +38,8 @@ import com.njydsz.userinfo.server.sse.SseEmitterRegistry;
  * <p><b>连接管理：</b>
  *
  * <ul>
- *   <li>Emitter 超时时间通过 {@code ydsz.userinfo.sse.timeout} 配置（默认 30 分钟）</li>
+ *   <li>Emitter 超时时间通过 {@code ydzs.userinfo.sse.timeout} 配置（默认 30 分钟）</li>
+ *   <li>使用 {@link SsePushChannelFactory} 创建 SSE 通道（统一心跳保活 + 连接限流）</li>
  *   <li>支持单用户多设备（多 Tab/浏览器）同时订阅</li>
  *   <li>连接断开后自动清理资源</li>
  * </ul>
@@ -62,6 +65,9 @@ public class AuthEventSseController {
   /** SSE 连接超时（毫秒）：30 分钟 */
   private static final long SSE_TIMEOUT_MILLIS = 30 * 60 * 1000L;
 
+  /** SSE 通道工厂（统一 SSE 生命周期管理，来自 ydsz-common-socket） */
+  private final SsePushChannelFactory ssePushChannelFactory;
+
   private final SseEmitterRegistry emitterRegistry;
 
   /**
@@ -82,20 +88,18 @@ public class AuthEventSseController {
       throw new IllegalStateException(I18n.message("userinfo.auth.sse_login_required"));
     }
 
-    // 创建 SSE Emitter，超时 30 分钟
-    SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MILLIS);
+    // P0-SOCKET: 使用 SsePushChannelFactory 创建 SSE 通道（统一心跳保活 + cleanup）
+    SsePushChannel channel = ssePushChannelFactory.create(SSE_TIMEOUT_MILLIS);
+    SseEmitter emitter = channel.getEmitter();
 
     // 注册连接
     emitterRegistry.register(userId, emitter);
 
-    // 发送连接确认事件
+    // 发送连接确认事件（使用通道统一 sendEvent）
     try {
-      emitter.send(SseEmitter.event()
-          .name("connected")
-          .data(Map.of(
+      channel.sendEvent("connected", Map.of(
               "message", "SSE 连接已建立",
-              "timestamp", LocalDateTime.now().toString()),
-              MediaType.APPLICATION_JSON));
+              "timestamp", LocalDateTime.now().toString()));
     } catch (Exception e) {
       log.debug("SSE 连接确认发送失败: userId={}", userId);
       emitterRegistry.remove(userId, emitter);

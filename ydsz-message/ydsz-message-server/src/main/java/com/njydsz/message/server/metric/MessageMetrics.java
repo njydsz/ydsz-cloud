@@ -29,7 +29,6 @@ public class MessageMetrics extends SentryMetricsAdapter {
   }
 
   public MessageMetrics() {
-    super("ydsz_message_");
   }
 
   /**

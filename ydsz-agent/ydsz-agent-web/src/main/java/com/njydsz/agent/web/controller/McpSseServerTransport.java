@@ -32,6 +32,8 @@ import com.njydsz.agent.server.agent.AgentFacade;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.locales.util.I18nMessages;
+import com.njydsz.common.socket.push.SsePushChannel;
+import com.njydsz.common.socket.push.SsePushChannelFactory;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -95,6 +97,9 @@ public class McpSseServerTransport {
   /** 已建立的 SSE 会话（sessionId → SseEmitter） */
   private final Map<String, SseEmitter> sessions = new ConcurrentHashMap<>();
 
+  /** SSE 通道工厂（统一 SSE 生命周期管理，来自 ydsz-common-socket） */
+  private final SsePushChannelFactory ssePushChannelFactory;
+
   /** MCP Server 能力提供者 */
   private final McpServerCapabilityProvider capabilityProvider;
 
@@ -129,7 +134,9 @@ public class McpSseServerTransport {
   @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter connect() {
     String sessionId = IdGenerator.nextIdStr();
-    SseEmitter emitter = new SseEmitter(0L); // 0 = 无超时（长连接保持）
+    // P0-SOCKET: 使用 SsePushChannelFactory 创建长连接 SSE 通道（0 = 无超时）
+    SsePushChannel channel = ssePushChannelFactory.create(0L);
+    SseEmitter emitter = channel.getEmitter();
     sessions.put(sessionId, emitter);
 
     // 清理：连接断开或超时时移除会话

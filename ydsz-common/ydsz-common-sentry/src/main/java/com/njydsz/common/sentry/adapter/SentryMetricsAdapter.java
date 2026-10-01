@@ -158,6 +158,8 @@ public abstract class SentryMetricsAdapter {
     APP("ydsz_app_"),
     /** sentry 监控模块自身 */
     SENTRY("ydsz_sentry_"),
+    /** message-template 消息模板渲染 */
+    MESSAGE_TEMPLATE("ydsz_message_template_"),
     ;
 
     private final String prefix;
@@ -207,23 +209,6 @@ public abstract class SentryMetricsAdapter {
    */
   protected SentryMetricsAdapter() {
     this.prefix = moduleRegion().prefix;
-  }
-
-  /**
-   * 构造 Sentry 指标适配器（兼容旧版本，指定自定义前缀）。
-   *
-   * @param customPrefix 自定义模块前缀，如 "ydsz_flow_"（不含 "_" 后缀会自动补充）
-   * @deprecated 26.10.01 起推荐使用 {@link #moduleRegion()} 枚举分区，避免前缀碎片化
-   */
-  @Deprecated
-  protected SentryMetricsAdapter(String customPrefix) {
-    if (customPrefix == null || customPrefix.isEmpty()) {
-      this.prefix = "ydsz_";
-    } else if (customPrefix.endsWith("_")) {
-      this.prefix = customPrefix;
-    } else {
-      this.prefix = customPrefix + "_";
-    }
   }
 
   /**

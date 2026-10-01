@@ -205,5 +205,10 @@
         <!-- TODO(P2 显式依赖标注 26.09.27）：
              本模块已有完整 i18n 骨架但显式声明了 ydsz-common-locales 依赖，
              待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
-</dependencies>
+        <!-- P0-SOCKET: 统一 SSE 通道工厂（SseEmitterRegistry 使用 SsePushChannelFactory 替代手写心跳调度） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-socket</artifactId>
+        </dependency>
+    </dependencies>
 </project>

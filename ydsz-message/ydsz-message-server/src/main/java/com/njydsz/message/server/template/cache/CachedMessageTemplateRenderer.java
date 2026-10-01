@@ -56,8 +56,7 @@ public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implemen
 
   @Override
   protected MetricRegion moduleRegion() {
-    // 实际前缀由构造器 super("ydsz_message_template_") 指定，此处仅满足编译约束
-    return MetricRegion.MESSAGE;
+    return MetricRegion.MESSAGE_TEMPLATE;
   }
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
@@ -117,7 +116,6 @@ public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implemen
   public CachedMessageTemplateRenderer(
       int maxCacheSize,
       long expireAfterWriteMinutes) {
-    super("ydsz_message_template_");
     this.astCache =
         YdszCache.<String, TemplateAst>newBuilder()
             .name(CACHE_NAME)

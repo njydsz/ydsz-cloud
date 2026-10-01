@@ -1,0 +1,10 @@
+# DocumentParser SPI —— 文档格式解析器
+# 业务模块可声明自己的实现类（需 @Component + @ConditionalOnClass），追加到本文件末尾即可启用
+com.njydsz.common.docs.parser.impl.CsvDocumentParser
+com.njydsz.common.docs.parser.impl.ExcelDocumentParser
+com.njydsz.common.docs.parser.impl.HtmlDocumentParser
+com.njydsz.common.docs.parser.impl.MarkdownDocumentParser
+com.njydsz.common.docs.parser.impl.PdfDocumentParser
+com.njydsz.common.docs.parser.impl.PptDocumentParser
+com.njydsz.common.docs.parser.impl.TxtDocumentParser
+com.njydsz.common.docs.parser.impl.WordDocumentParser

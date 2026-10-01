@@ -1,0 +1,2 @@
+# PdfWatermarkApplier SPI —— PDF 水印叠加（依赖 PDFBox 运行时依赖）
+com.njydsz.common.docs.watermark.PdfBoxWatermarkApplier

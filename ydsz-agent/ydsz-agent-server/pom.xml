@@ -141,5 +141,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+        <!-- P0-SOCKET: 统一 SSE 通道工厂（SseExecutor/AgentController 使用 SsePushChannelFactory 替代手写心跳） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-socket</artifactId>
+        </dependency>
     </dependencies>
 </project>

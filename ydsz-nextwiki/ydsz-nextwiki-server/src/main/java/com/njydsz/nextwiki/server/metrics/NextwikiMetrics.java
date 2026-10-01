@@ -52,7 +52,6 @@ public class NextwikiMetrics extends SentryMetricsAdapter {
   private final AtomicLong quotaUsageCached = new AtomicLong(0);
 
   public NextwikiMetrics(StorageQuotaRepository quotaRepository) {
-    super("ydsz_nextwiki_");
     this.quotaRepository = quotaRepository;
     // 注册配额用量 Gauge（动态引用模式）
     gaugeRef("quota_usage_bytes", quotaUsageCached, AtomicLong::get,

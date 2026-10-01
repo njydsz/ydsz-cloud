@@ -3,6 +3,7 @@ package com.njydsz.common.socket.push;
 import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * SSE 连接数超限时返回的错误通道（快速失败）。
@@ -49,5 +50,10 @@ public class SseLimitExceededChannel implements SsePushChannel {
   @Override
   public String getSessionId() {
     return "limit-exceeded";
+  }
+
+  @Override
+  public SseEmitter getEmitter() {
+    throw new UnsupportedOperationException("限流错误通道无底层 SseEmitter");
   }
 }

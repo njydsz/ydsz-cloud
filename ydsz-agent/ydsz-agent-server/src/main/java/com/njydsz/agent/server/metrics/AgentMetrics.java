@@ -71,7 +71,6 @@ public class AgentMetrics extends SentryMetricsAdapter implements CacheMetricsRe
   private static final String METRIC_CACHE_MISSES = MetricsConstants.CACHE_MISS_TOTAL;
 
   public AgentMetrics() {
-    super("agent_");
   }
 
   /**

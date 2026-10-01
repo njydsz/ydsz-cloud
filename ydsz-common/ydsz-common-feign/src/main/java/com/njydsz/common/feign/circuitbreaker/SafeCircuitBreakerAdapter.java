@@ -53,23 +53,6 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
     this.registry = registry;
   }
 
-  /**
-   * 构造熔断适配器。
-   *
-   * @param properties Feign 配置属性
-   * @param statePersistence 状态持久化（可为 null）
-   * @param metricsExporter 指标导出器（可为 null）
-   * @deprecated 使用 {@link #SafeCircuitBreakerAdapter(FeignProperties, CircuitBreakerStatePersistence,
-   *     FeignCircuitBreakerMetricsExporter, CircuitBreakerRegistry)} 以接入共享注册表。
-   */
-  @Deprecated
-  public SafeCircuitBreakerAdapter(
-      FeignProperties properties,
-      CircuitBreakerStatePersistence statePersistence,
-      FeignCircuitBreakerMetricsExporter metricsExporter) {
-    this(properties, statePersistence, metricsExporter, CircuitBreakerRegistry.ofDefaults());
-  }
-
   @Override
   public boolean allowRequest(String serviceName) {
     return getOrCreate(serviceName).tryAcquirePermission();

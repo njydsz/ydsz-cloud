@@ -47,7 +47,6 @@ public class SystemMetrics extends SentryMetricsAdapter {
   }
 
   public SystemMetrics() {
-    super("ydsz_system_");
   }
 
   /**

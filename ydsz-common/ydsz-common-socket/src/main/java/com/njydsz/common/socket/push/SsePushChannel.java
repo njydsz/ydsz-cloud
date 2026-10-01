@@ -2,6 +2,8 @@ package com.njydsz.common.socket.push;
 
 import java.io.IOException;
 
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 /**
  * SSE 推送通道接口（WebFlux / Spring MVC SSE 抽象层）。
  *
@@ -84,4 +86,18 @@ public interface SsePushChannel {
    * @return 会话 ID（非 null，通常来自请求指纹）
    */
   String getSessionId();
+
+  /**
+   * 获取底层 SseEmitter（适配 Spring MVC 场景）。
+   *
+   * <p>当通道底层基于 SseEmitter 实现时（如 {@code SsePushChannelMvcAdapter}），返回底层句柄供
+   * Controller 直接操作（如注册 onCompletion/onTimeout/onError 回调）。
+   *
+   * <p>对于非 MVC 实现（如限流错误占位通道 {@link SseLimitExceededChannel}）或 WebFlux 场景，
+   * 抛出 {@link UnsupportedOperationException}。
+   *
+   * @return 底层 SseEmitter 句柄
+   * @throws UnsupportedOperationException 当通道无底层 SseEmitter 时抛出
+   */
+  SseEmitter getEmitter();
 }

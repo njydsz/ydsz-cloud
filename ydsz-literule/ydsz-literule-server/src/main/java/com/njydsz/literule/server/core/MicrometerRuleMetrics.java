@@ -50,7 +50,6 @@ public class MicrometerRuleMetrics extends SentryMetricsAdapter implements RuleM
   private final AtomicLong totalErrors = new AtomicLong(0);
 
   public MicrometerRuleMetrics() {
-    super("ydsz_literule_");
     gaugeRef("trace_queue_size", lastTraceQueueSize, AtomicInteger::doubleValue);
     gaugeRef("registered_rules", lastRegisteredRules, AtomicInteger::doubleValue);
     gaugeRef("evaluated_rules", lastEvaluatedRules, AtomicInteger::doubleValue);

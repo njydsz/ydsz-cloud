@@ -124,7 +124,7 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   public CronjobMetrics(
       ObjectProvider<RunningTaskCounter> runningTaskCounterProvider,
       CronjobProperties cronjobProperties) {
-    super("ydsz_cronjob_");
+    super();
     this.runningTaskCounterProvider = runningTaskCounterProvider;
     this.cronjobProperties = cronjobProperties;
     registerGauges();

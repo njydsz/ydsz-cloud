@@ -1,0 +1,8 @@
+# PiiDetector SPI —— 个人敏感信息检测器
+com.njydsz.common.docs.security.pii.impl.PhoneDetector
+com.njydsz.common.docs.security.pii.impl.IdCardDetector
+com.njydsz.common.docs.security.pii.impl.BankCardDetector
+com.njydsz.common.docs.security.pii.impl.EmailDetector
+com.njydsz.common.docs.security.pii.impl.ApiKeyDetector
+com.njydsz.common.docs.security.pii.impl.IpAddressDetector
+com.njydsz.common.docs.security.pii.impl.PassportDetector

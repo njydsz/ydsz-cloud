@@ -30,13 +30,13 @@ import com.njydsz.common.audit.diff.DiffSnapshotHelper;
 import com.njydsz.common.audit.diff.DiffSnapshotHelper.DiffResult;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.enums.AuditStatus;
-import com.njydsz.common.audit.mask.SensitiveFieldMask;
 import com.njydsz.common.audit.template.AuditTemplateProcessor;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.http.RequestContextUtils;
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.net.ClientIpResolver;
 import com.njydsz.common.util.string.StringUtils;
@@ -490,7 +490,7 @@ public class AuditAspect {
       return json;
     }
     if (properties.isMaskEnabled()) {
-      return SensitiveFieldMask.maskJson(json, sensitiveFields);
+      return MaskUtils.maskJson(json, sensitiveFields);
     }
     return json;
   }

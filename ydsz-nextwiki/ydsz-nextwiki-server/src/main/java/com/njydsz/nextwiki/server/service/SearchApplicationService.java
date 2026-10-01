@@ -19,6 +19,7 @@ import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
@@ -67,6 +68,8 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
 public class SearchApplicationService {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
+  /** 热门搜索返回条数 */
+  private static final int HOT_SEARCHES_LIMIT = 10;
 
 
   private final SearchDomainService searchDomainService;
@@ -76,7 +79,7 @@ public class SearchApplicationService {
   private final ObjectProvider<UnifiedSearchService> unifiedSearchServiceProvider;
   private final ObjectProvider<SearchEngineRegistry> engineRegistryProvider;
   private final ObjectProvider<SuggestionService> suggestionServiceProvider;
-  private final SearchHistoryService searchHistoryService;
+  private final SearchAnalyticsService searchAnalyticsService;
   /** 高级搜索语法解析器（S3-P2-02） */
   private final SearchQueryParser searchQueryParser;
 
@@ -111,7 +114,7 @@ public class SearchApplicationService {
     }
 
     // 记录搜索历史（异步不影响主流程）
-    searchHistoryService.recordSearch(userId, keyword);
+    searchAnalyticsService.recordUserSearchHistory(userId, keyword);
     return result;
   }
 
@@ -156,7 +159,7 @@ public class SearchApplicationService {
 
     // 记录搜索历史
     if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
-      searchHistoryService.recordSearch(userId, request.getKeyword());
+      searchAnalyticsService.recordUserSearchHistory(userId, request.getKeyword());
     }
     return result;
   }
@@ -255,7 +258,7 @@ public class SearchApplicationService {
    * @return 搜索历史列表（最新在前）
    */
   public List<String> getUserSearchHistory(String userId) {
-    return searchHistoryService.getUserHistory(userId);
+    return searchAnalyticsService.getUserSearchHistory(userId);
   }
 
   /**
@@ -264,7 +267,7 @@ public class SearchApplicationService {
    * @param userId 用户 ID
    */
   public void clearUserSearchHistory(String userId) {
-    searchHistoryService.clearUserHistory(userId);
+    searchAnalyticsService.clearUserSearchHistory(userId);
   }
 
   /**
@@ -273,7 +276,9 @@ public class SearchApplicationService {
    * @return 热门搜索词及热度分值列表（按热度降序）
    */
   public List<Map.Entry<String, Double>> getHotSearches() {
-    return searchHistoryService.getHotSearches();
+    return searchAnalyticsService.getHotKeywords(HOT_SEARCHES_LIMIT).stream()
+        .map(hk -> Map.entry(hk.keyword(), (double) hk.count()))
+        .collect(Collectors.toList());
   }
 
   // ==================== 高级语法搜索（S3-P2-02） ====================
@@ -319,7 +324,7 @@ public class SearchApplicationService {
 
     // 3. 记录搜索历史
     if (rawInput != null && !rawInput.isBlank()) {
-      searchHistoryService.recordSearch(userId, rawInput);
+      searchAnalyticsService.recordUserSearchHistory(userId, rawInput);
     }
     return result;
   }
