@@ -832,6 +832,12 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_credential (
     display_name             VARCHAR(128)             DEFAULT NULL,
     registered_at            TIMESTAMP                DEFAULT NULL,
     last_used_at             TIMESTAMP                DEFAULT NULL,
+    -- MpBaseEntity 继承字段补充
+    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    status                   VARCHAR(32)              DEFAULT NULL,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
@@ -850,11 +856,17 @@ COMMENT ON COLUMN ydsz_auth_credential.aaguid IS 'AAGUID（认证器唯一标识
 COMMENT ON COLUMN ydsz_auth_credential.display_name IS '凭证友好名称';
 COMMENT ON COLUMN ydsz_auth_credential.registered_at IS '注册时间';
 COMMENT ON COLUMN ydsz_auth_credential.last_used_at IS '最后使用时间';
+COMMENT ON COLUMN ydsz_auth_credential.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_auth_credential.status IS '状态标识';
+COMMENT ON COLUMN ydsz_auth_credential.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_auth_credential.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_auth_credential.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_auth_credential.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_auth_credential.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_auth_credential.is_deleted IS '删除标记（软删除，0=未删除，1=已删除）';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_auth_credential_user_id ON ydsz_auth_credential (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_auth_credential_tenant_is_deleted ON ydsz_auth_credential (tenant_id, is_deleted);
 
 
 -- ============================================================================
