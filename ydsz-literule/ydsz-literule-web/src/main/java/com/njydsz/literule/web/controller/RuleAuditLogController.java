@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.YdszResponse;
@@ -23,7 +24,6 @@ import com.njydsz.common.util.diff.DiffReport;
 import com.njydsz.common.util.diff.FieldDiff;
 import com.njydsz.literule.domain.vo.AuditLogEntryVO;
 import com.njydsz.literule.server.audit.RuleAuditLogService;
-import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
 
 /**
  * 规则审计日志查询接口（P3-5）
@@ -124,8 +124,8 @@ public class RuleAuditLogController {
   /**
    * 按操作类型查询审计日志
    *
-   * @param action 操作类型（CREATE / UPDATE / TOGGLE / ROLLBACK / APPROVE / REJECT / IMPORT / EXPORT /
-   *     DELETE）
+   * @param action 操作类型（CREATE / UPDATE / DELETE / IMPORT / EXPORT / ENABLE / DISABLE / APPROVE /
+   *     REJECT / RESTORE / OTHER 等）
    * @param limit 返回条数（默认 50，最大 200）
    * @return 审计日志列表
    */
@@ -148,8 +148,8 @@ public class RuleAuditLogController {
           YdszResultCode.VALIDATION_FAILED,
           "非法的操作类型: "
               + action
-              + "，合法值: CREATE / UPDATE / TOGGLE / STATUS_CHANGE / ROLLBACK / APPROVE / REJECT / "
-              + "IMPORT / EXPORT / DELETE / DRY_RUN / STRESS_TEST / REPLAY");
+              + "，合法值: CREATE / UPDATE / DELETE / IMPORT / EXPORT / ENABLE / DISABLE / APPROVE / "
+              + "REJECT / RESET / LOCK / UNLOCK / BACKUP / RESTORE / SYNC / CLEAN / OTHER");
     }
   }
 

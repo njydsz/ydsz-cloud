@@ -134,18 +134,6 @@ public class AuthProperties {
   private Integer roleColumnCacheSeconds = 30;
 
   /**
-   * 列脱敏缓存最大条目数，默认 1000。
-   *
-   * <p>按角色编码缓存脱敏规则上下文，超出后按 LRU 淘汰。
-   */
-  @Min(1)
-  private Integer desensitizeCacheMaxSize = 1000;
-
-  /** 列脱敏缓存过期时间（秒），默认 1800（30 分钟）。 */
-  @Min(1)
-  private Integer desensitizeCacheTtlSeconds = 1800;
-
-  /**
    * 本地权限降级缓存过期时间（分钟），默认 5。
    *
    * <p>当 Redis 不可用时，本地缓存作为降级兜底，此值控制其过期时间。

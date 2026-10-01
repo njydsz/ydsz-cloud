@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.locales.config.EnableYdszI18n;
 
 /**
@@ -25,6 +26,7 @@ import com.njydsz.common.locales.config.EnableYdszI18n;
  * @since 26.09.05
  */
 @SpringBootApplication(scanBasePackages = "com.njydsz.generator")
+@EnableYdszAudit
 @EnableYdszI18n
 @MapperScan("com.njydsz.generator.mapper")
 public class GeneratorWebApplication {

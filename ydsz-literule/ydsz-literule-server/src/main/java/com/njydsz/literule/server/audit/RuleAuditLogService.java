@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.domain.AuditLog;
+import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditStatus;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.json.YdszJson;
@@ -37,8 +38,8 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * <ul>
  *   <li><b>操作人</b>（who）：谁执行了操作（工号/SSO 用户名）
  *   <li><b>操作时间</b>（when）：操作发生的时间
- *   <li><b>操作类型</b>（what）：CREATE / UPDATE / TOGGLE / ROLLBACK / APPROVE / REJECT / IMPORT / EXPORT
- *       / DELETE
+ *   <li><b>操作类型</b>（what）：CREATE / UPDATE / DELETE / IMPORT / EXPORT / ENABLE / DISABLE /
+ *       APPROVE / REJECT / RESTORE 等（引用 common-audit {@code AuditAction}）
  *   <li><b>变更内容</b>（before/after）：操作前后的规则定义快照（字段级 diff）
  *   <li><b>操作来源</b>（source）：MANUAL（手动）/ API（接口）/ SCHEDULED（定时）/ SDK（嵌入式）
  *   <li><b>操作结果</b>（result）：SUCCESS / FAILURE
@@ -671,133 +672,7 @@ public class RuleAuditLogService {
   }
 
 
-  // ==================== 内部枚举与模型 ====================
-
-  /**
-   * 规则引擎本地审计操作类型。
-   *
-   * <p>编码值与通用 {@code com.njydsz.common.audit.enums.AuditAction} 保持 1-23 一一对应，
-   * 规则专属操作从 100 起。
-   */
-  public enum AuditAction {
-    /** 创建规则（编码 1） */
-    CREATE(1, "新增"),
-    /** 更新规则（编码 2） */
-    UPDATE(2, "修改"),
-    /** 删除规则（编码 3） */
-    DELETE(3, "删除"),
-    /** 查询（编码 4） */
-    QUERY(4, "查询"),
-    /** 导入规则（编码 5） */
-    IMPORT(5, "导入"),
-    /** 导出规则（编码 6） */
-    EXPORT(6, "导出"),
-    /** 上传（编码 7） */
-    UPLOAD(7, "上传"),
-    /** 下载（编码 8） */
-    DOWNLOAD(8, "下载"),
-    /** 登录（编码 9） */
-    LOGIN(9, "登录"),
-    /** 登出（编码 10） */
-    LOGOUT(10, "登出"),
-    /** 授权（编码 11） */
-    GRANT(11, "授权"),
-    /** 取消授权（编码 12） */
-    REVOKE(12, "取消授权"),
-    /** 启用规则（编码 13） */
-    ENABLE(13, "启用"),
-    /** 停用规则（编码 14） */
-    DISABLE(14, "禁用"),
-    /** 审核（编码 15） */
-    APPROVE(15, "审核"),
-    /** 驳回（编码 16） */
-    REJECT(16, "驳回"),
-    /** 重置（编码 17） */
-    RESET(17, "重置"),
-    /** 锁定（编码 18） */
-    LOCK(18, "锁定"),
-    /** 解锁（编码 19） */
-    UNLOCK(19, "解锁"),
-    /** 备份（编码 20） */
-    BACKUP(20, "备份"),
-    /** 恢复（编码 21） */
-    RESTORE(21, "恢复"),
-    /** 同步（编码 22） */
-    SYNC(22, "同步"),
-    /** 清理（编码 23） */
-    CLEAN(23, "清理"),
-    /** 其他操作（编码 99，兜底） */
-    OTHER(99, "其他"),
-    /** 规则启停切换（编码 101，规则专属） */
-    TOGGLE(101, "启停切换"),
-    /** 规则状态变更（编码 102，规则专属） */
-    STATUS_CHANGE(102, "状态变更"),
-    /** 规则版本回滚（编码 103，规则专属） */
-    ROLLBACK(103, "版本回滚"),
-    /** 规则试跑（编码 104，规则专属） */
-    DRY_RUN(104, "试跑"),
-    /** 规则压测（编码 105，规则专属） */
-    STRESS_TEST(105, "压测"),
-    /** 规则回放（编码 106，规则专属） */
-    REPLAY(106, "回放");
-
-    /** 操作编码（与通用 AuditAction 保持 1-23 一致，规则专属从 100 起） */
-    private final int code;
-
-    /** 操作描述（界面展示文案） */
-    private final String description;
-
-    AuditAction(int code, String description) {
-      this.code = code;
-      this.description = description;
-    }
-
-    /**
-     * 获取操作编码
-     *
-     * @return 编码
-     */
-    public int getCode() {
-      return code;
-    }
-
-    /**
-     * 获取操作描述
-     *
-     * @return 描述
-     */
-    public String getDescription() {
-      return description;
-    }
-
-    /**
-     * 根据编码获取审计操作枚举
-     *
-     * @param code 编码
-     * @return 审计操作；未匹配时返回 {@link #OTHER} 兜底
-     */
-    public static AuditAction fromCode(int code) {
-      for (AuditAction action : values()) {
-        if (action.code == code) {
-          return action;
-        }
-      }
-      return OTHER;
-    }
-
-    /**
-     * 根据编码获取审计操作枚举（Integer 版本，null 安全）
-     *
-     * @param code 编码（可为 null）
-     * @return 审计操作；null 或未匹配时返回 {@link #OTHER} 兜底
-     */
-    public static AuditAction fromCode(Integer code) {
-      if (code == null) {
-        return OTHER;
-      }
-      return fromCode(code.intValue());
-    }
-  }
+  // ==================== 内部模型 ====================
 
   /** 审计结果 */
   public enum AuditResult {

@@ -1,23 +1,14 @@
 package com.njydsz.workflow.server.service.impl.notification;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.annotation.JsonProperty;
-import com.njydsz.message.api.client.NotificationClient;
-import com.njydsz.message.domain.dto.MessageSendDTO;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 
@@ -41,10 +32,8 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  *
  * <ul>
  *   <li>本模块是工作流域的<b>通知适配器</b>，负责将工作流事件转为通知请求
- *   <li>通道字符串与 {@code NotifyChannel} 枚举的映射关系： INAPP → {@code NotifyChannel.INSITE}（站内信）、 EMAIL →
- *       {@code NotifyChannel.EMAIL}、 WEBHOOK → {@code NotifyChannel.DINGTALK} / {@code
- *       NotifyChannel.FEISHU} / {@code NotifyChannel.WECOM}
- *   <li>未来 ADR-001 完全落地后，可直接委托 {@code NotifyHelper} 发送， 届时本类可进一步精简
+ *   <li>通过 {@link NotifyHelper} 统一发送，复用 common-notify 的去重/熔断/限流等企业能力
+ *   <li>通道映射： INAPP → {@code sendInApp}、 EMAIL → {@code sendEmail}、 WEBHOOK → {@code sendDingTalk/Feishu/WeCom}
  * </ul>
  *
  * <p><b>核心职责：</b>
@@ -117,11 +106,8 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
 @Service
 @RequiredArgsConstructor
 public class FlowNotificationServiceImpl implements FlowNotificationService {
-    /** 集合初始容量 */
-    private static final int COLLECTION_CAPACITY = 16;
 
-
-    /** Map 初始容量：小集合（4） */
+  /** Map 初始容量：小集合（4） */
   private static final int MAP_INIT_CAPACITY_4 = 4;
 
   /** Map 初始容量：中等集合（8） */
@@ -129,14 +115,13 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
 
   /** 通知通道常量 */
   private static final String CHANNEL_INAPP = "INAPP";
-
   private static final String CHANNEL_EMAIL = "EMAIL";
   private static final String CHANNEL_WEBHOOK = "WEBHOOK";
 
-  /** 统一通知客户端（P1-5: INAPP / EMAIL / WEBHOOK 通道统一入口） */
-  private final NotificationClient notificationClient;
+  /** 统一通知辅助类（ADR-001 统一入口） */
+  private final NotifyHelper notifyHelper;
 
-  /** P1-5: 敏感字段脱敏器（原 FlowNotificationHelper 功能合并） */
+  /** 敏感字段脱敏器 */
   private final FlowSensitiveMasker sensitiveMasker;
 
   /** {@inheritDoc} */
@@ -296,14 +281,8 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       }
       String title = "审批任务已超时";
       String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 超时，触发动作：" + action;
-      Map<String, Object> extra = new HashMap<>(MAP_INIT_CAPACITY_8);
-      extra.put("bizType", "WORKFLOW_SLA_TIMEOUT");
-      extra.put("instanceId", instanceId);
-      extra.put("taskId", taskId);
-      extra.put("action", action);
-      // SLA 超时同时走站内信 + 邮件
-      send(CHANNEL_INAPP, assigneeId, title, content, extra);
-      send(CHANNEL_EMAIL, assigneeId, title, content, extra);
+      // SLA 超时使用系统告警（站内信 + 邮件双通道，自动识别接收者类型）
+      notifyHelper.sendSystemAlert(title, content, assigneeId);
       log.debug(
           "[FlowNotify] SLA 超时通知: instanceId={} taskId={} assigneeId={} action={}",
           instanceId,
@@ -327,12 +306,21 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       if (channel == null || userId == null) {
         return;
       }
+      String maskedTitle = sensitiveMasker.mask(title);
+      String maskedContent = sensitiveMasker.mask(content);
       switch (channel) {
-        case CHANNEL_INAPP -> sendInApp(userId, title, content, extra);
-        case CHANNEL_EMAIL -> sendEmail(userId, title, content, extra);
-        case CHANNEL_WEBHOOK -> sendWebhook(userId, title, content, extra);
+        case CHANNEL_INAPP -> notifyHelper.sendInApp(userId, maskedTitle, maskedContent);
+        case CHANNEL_EMAIL -> {
+          // 优先使用 extra 中的 receiverEmail，否则将 userId 作为接收者
+          String email = extra == null ? null : (String) extra.get("receiverEmail");
+          if (email == null || email.isBlank()) {
+            email = userId;
+          }
+          notifyHelper.sendEmail(email, maskedTitle, maskedContent);
+        }
+        case CHANNEL_WEBHOOK -> sendWebhook(extra, maskedTitle, maskedContent);
         default ->
-            log.warn("[FlowNotify] 未知通知通道: channel={} userId={} title={}", channel, userId, title);
+            log.warn("[FlowNotify] 未知通知通道: channel={} userId={}", channel, userId);
       }
     } catch (Exception e) {
       log.warn("[FlowNotify] 通知发送异常: channel={} userId={} err={}", channel, userId, e.getMessage());
@@ -340,124 +328,28 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
   }
 
   /**
-   * INAPP 通道：通过 NotificationClient Feign 调用 notification 服务写入站内信。
-   *
-   * @param userId 接收人 ID
-   * @param title 通知标题
-   * @param content 通知内容
-   * @param extra 扩展参数（含 bizType/bizId 等）
-   */
-  private void sendInApp(String userId, String title, String content, Map<String, Object> extra) {
-    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
-    if (extra != null) {
-      payload.putAll(extra);
-    }
-    payload.put("userId", userId);
-    payload.put("title", title);
-    payload.put("content", content);
-    payload.put("channel", "PUSH");
-    try {
-      MessageSendDTO req = new MessageSendDTO();
-      req.setChannel(asString(payload.get("channel")));
-      req.setReceiver(asString(payload.get("userId")));
-      req.setSubject(asString(payload.get("title")));
-      req.setContent(asString(payload.get("content")));
-      req.setBizType(asString(payload.get("bizType")));
-      notificationClient.sendMessage(req);
-    } catch (Exception e) {
-      log.warn(
-          "[FlowNotify][INAPP] Feign 调用降级为日志: userId={} title={} err={}",
-          userId,
-          title,
-          e.getMessage());
-    }
-    log.debug("[FlowNotify][INAPP] userId={} title={}", userId, title);
-  }
-
-  /**
-   * EMAIL 通道：同样通过 NotificationClient 投递（channel=EMAIL）， 由 notification 服务负责实际邮件发送。
-   *
-   * @param userId 接收人 ID
-   * @param title 通知标题
-   * @param content 通知内容
-   * @param extra 扩展参数（含 receiver 等）
-   */
-  private void sendEmail(String userId, String title, String content, Map<String, Object> extra) {
-    Map<String, Object> payload = new HashMap<>(COLLECTION_CAPACITY);
-    if (extra != null) {
-      payload.putAll(extra);
-    }
-    payload.put("userId", userId);
-    payload.put("title", title);
-    payload.put("content", content);
-    payload.put("channel", "EMAIL");
-    Object receiver = extra == null ? null : extra.get("receiver");
-    if (receiver != null) {
-      payload.put("receiver", receiver);
-    }
-    try {
-      MessageSendDTO req = new MessageSendDTO();
-      req.setChannel("EMAIL");
-      req.setReceiver(asString(payload.get("receiver") != null ? payload.get("receiver") : payload.get("userId")));
-      req.setSubject(asString(payload.get("title")));
-      req.setContent(asString(payload.get("content")));
-      req.setBizType(asString(payload.get("bizType")));
-      notificationClient.sendMessage(req);
-    } catch (Exception e) {
-      log.warn(
-          "[FlowNotify][EMAIL] Feign 调用降级为日志: userId={} title={} err={}",
-          userId,
-          title,
-          e.getMessage());
-    }
-    log.debug("[FlowNotify][EMAIL] userId={} title={}", userId, title);
-  }
-
-  /**
-   * WEBHOOK 通道：通过 {@link NotificationClient#sendMessage} 委托消息中心发送到 extra.webhookUrl 指定的机器人地址。
+   * WEBHOOK 通道：通过 {@link NotifyHelper} 发送 IM 机器人通知。
    * webhookUrl 未配置时直接跳过（不算异常）。
    *
-   * @param userId 接收人 ID
-   * @param title 通知标题
-   * @param content 通知内容
-   * @param extra 扩展参数（含 webhookUrl）
+   * @param extra 扩展参数（含 webhookUrl 及可选 channelType）
+   * @param title 通知标题（已脱敏）
+   * @param content 通知内容（已脱敏）
    */
-  private void sendWebhook(String userId, String title, String content, Map<String, Object> extra) {
+  private void sendWebhook(Map<String, Object> extra, String title, String content) {
     String webhookUrl = extra == null ? null : (String) extra.get("webhookUrl");
     if (webhookUrl == null || webhookUrl.isBlank()) {
-      log.debug("[FlowNotify][WEBHOOK] 未配置 webhookUrl，跳过: userId={} title={}", userId, title);
+      log.debug("[FlowNotify][WEBHOOK] 未配置 webhookUrl，跳过");
       return;
     }
-    MessageSendDTO request = new MessageSendDTO();
-    request.setChannel("WEBHOOK");
-    request.setReceiver(userId);
-    request.setSubject(title);
-    request.setContent(content);
-    request.setBizType(extra == null ? null : asString(extra.get("bizType")));
-    request.setBizId(extra == null ? null : asString(extra.get("bizId")));
-    Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
-    if (extra != null) {
-      params.putAll(extra);
+    // 根据 channelType 选择机器人类型，默认钉钉
+    String channelType = extra == null ? null : (String) extra.get("channelType");
+    if ("FEISHU".equalsIgnoreCase(channelType)) {
+      notifyHelper.sendFeishu(webhookUrl, title, content);
+    } else if ("WECOM".equalsIgnoreCase(channelType)) {
+      notifyHelper.sendWeCom(webhookUrl, title, content);
+    } else {
+      notifyHelper.sendDingTalk(webhookUrl, title, content);
     }
-    params.put("webhookUrl", webhookUrl);
-    request.setParams(params);
-    try {
-      YdszResponse<MessageResult> result = notificationClient.sendMessage(request);
-      if (result != null && result.getData() != null && !result.getData().isSuccess()) {
-        log.warn(
-            "[FlowNotify][WEBHOOK] 发送失败: userId={} url={} err={}",
-            userId,
-            webhookUrl,
-            result.getData().getUserMessage());
-      }
-    } catch (Exception e) {
-      log.warn(
-          "[FlowNotify][WEBHOOK] 发送异常: userId={} url={} err={}",
-          userId,
-          webhookUrl,
-          e.getMessage());
-    }
-    log.debug("[FlowNotify][WEBHOOK] userId={} title={} url={}", userId, title, webhookUrl);
   }
 
   // ============================== P1-5: 带脱敏的便捷通知（原 FlowNotificationHelper 合并）
@@ -517,93 +409,3 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
   }
 
-  /**
-   * 将 Map 形式的 payload 转换为强类型 NotificationFeignDTO
-   *
-   * @param payload Map 形式的原始通知载荷（含 title/content/level/category/senderId 等键）
-   * @return 强类型的通知服务 DTO，payload 为 null 时返回空对象
-   */
-  private NotificationFeignDTO toFeignDTO(Map<String, Object> payload) {
-    NotificationFeignDTO dto = new NotificationFeignDTO();
-    if (payload == null) {
-      return dto;
-    }
-    dto.setTitle(asString(payload.get("title")));
-    dto.setContent(asString(payload.get("content")));
-    dto.setLevel(asString(payload.get("level")));
-    dto.setCategory(asString(payload.get("category")));
-    dto.setSenderId(asString(payload.get("senderId")));
-    dto.setReceiverId(asString(payload.get("receiverId")));
-    if (dto.getReceiverId() == null) {
-      dto.setReceiverId(asString(payload.get("userId")));
-    }
-    Object receiverIds = payload.get("receiverIds");
-    if (receiverIds instanceof List<?> list) {
-      List<Long> ids = new ArrayList<>(list.size());
-      for (Object o : list) {
-        Long id = asLong(o);
-        if (id != null) {
-          ids.add(id);
-        }
-      }
-      dto.setReceiverIds(ids);
-    }
-    dto.setBizType(asString(payload.get("bizType")));
-    dto.setBizId(asString(payload.get("bizId")));
-    Object expiredAt = payload.get("expiredAt");
-    if (expiredAt instanceof LocalDateTime ldt) {
-      dto.setExpiredAt(ldt);
-    }
-    Object emailEnabled = payload.get("emailEnabled");
-    if (emailEnabled instanceof Boolean b) {
-      dto.setIsEmailEnabled(b);
-    }
-    dto.setReceiverEmail(asString(payload.get("receiverEmail")));
-    if (dto.getReceiverEmail() == null) {
-      dto.setReceiverEmail(asString(payload.get("receiver")));
-    }
-    return dto;
-  }
-
-  private String asString(Object o) {
-    return o == null ? null : o.toString();
-  }
-
-  private Long asLong(Object o) {
-    if (o == null) {
-      return null;
-    }
-    if (o instanceof Number n) {
-      return n.longValue();
-    }
-    try {
-      return Long.parseLong(o.toString().trim());
-    } catch (NumberFormatException e) {
-      log.warn("[FlowNotificationServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
-      return null;
-    }
-  }
-
-  /**
-   * 通知 Feign DTO — 内部使用，用于封装通知请求参数。
-   *
-   * <p>替代原来依赖 {@code com.njydsz.common.feign.dto.NotificationFeignDTO} 的外部类。
-   */
-  @Data
-  public static class NotificationFeignDTO implements Serializable {
-    @Serial private static final long serialVersionUID = 1L;
-    private String title;
-    private String content;
-    private String level;
-    private String category;
-    private String senderId;
-    private String receiverId;
-    private List<Long> receiverIds;
-    private String bizType;
-    private String bizId;
-    private LocalDateTime expiredAt;
-    @JsonProperty("emailEnabled")
-    private Boolean isEmailEnabled;
-    private String receiverEmail;
-  }
-}
