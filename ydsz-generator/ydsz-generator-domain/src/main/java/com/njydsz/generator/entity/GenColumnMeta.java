@@ -44,7 +44,8 @@ public class GenColumnMeta extends MpBaseIdEntity<Long> {
   private String columnName;
   /** 数据类型（数据库原生类型名，如 VARCHAR、BIGINT）。 */
   private String dataType;
-  /** Java 类型（由 dataType 经 type-mapping 自动推断，可被 overrideJavaType 覆盖）。 */
+  /** Java 类型（由 dataType 经 type-mapping 自动推断，可被 overrideJavaType 覆盖；非持久化字段）。 */
+  @TableField(exist = false)
   private String javaType;
   /** 字段长度。 */
   private Integer columnSize;
@@ -67,16 +68,19 @@ public class GenColumnMeta extends MpBaseIdEntity<Long> {
   /** Query 跳过标记。 */
   @TableField("is_query_skipped")
   private Boolean isQuerySkipped;
-  /** 是否为审计字段（审计字段由基类 MpBaseAuditEntity 提供，子类无需重复生成）。 */
+  /** 是否为审计字段（非持久化字段，审计字段由基类 MpBaseAuditEntity 提供）。 */
+  @TableField(exist = false)
   private Boolean isAuditField;
-  /** 枚举值列表（从注释中自动解析，格式: 字段名(值1=标签1,值2=标签2)）。 */
+  /** 枚举值列表（非持久化字段，从 extra_config JSON 中解析）。 */
+  @TableField(exist = false)
   private String enumValues;
   /** 扩展配置 JSON。 */
   private String extraConfig;
 
   // -- 非持久化字段与辅助方法（模板渲染辅助） --
 
-  /** TypeScript 类型（由 dataType 经 GeneratorTypeMapper 推断）。 */
+  /** TypeScript 类型（非持久化字段，由 dataType 经 GeneratorTypeMapper 推断）。 */
+  @TableField(exist = false)
   private String tsType;
   /**
    * 判断当前列是否需要额外的 TS import（如 Date、BigDecimal 等）。

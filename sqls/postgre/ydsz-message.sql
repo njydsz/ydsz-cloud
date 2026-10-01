@@ -515,6 +515,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     started_at               TIMESTAMP                DEFAULT NULL,
     completed_at             TIMESTAMP                DEFAULT NULL,
     sender_id                VARCHAR(32)              DEFAULT NULL,
+    priority                 VARCHAR(32)              NOT NULL DEFAULT 'NORMAL',
     payload                  JSONB                    DEFAULT NULL,
     is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
@@ -544,6 +545,7 @@ COMMENT ON COLUMN ydsz_msg_batch.error_message IS '错误信息';
 COMMENT ON COLUMN ydsz_msg_batch.started_at IS '开始处理时间';
 COMMENT ON COLUMN ydsz_msg_batch.completed_at IS '完成时间';
 COMMENT ON COLUMN ydsz_msg_batch.sender_id IS '触发发送的用户 ID';
+COMMENT ON COLUMN ydsz_msg_batch.priority IS '批次优先级: LOW / NORMAL / HIGH / URGENT';
 COMMENT ON COLUMN ydsz_msg_batch.payload IS '消息请求列表 JSON（断点续传恢复用）';
 COMMENT ON COLUMN ydsz_msg_batch.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_msg_batch.revision IS '乐观锁版本号';
