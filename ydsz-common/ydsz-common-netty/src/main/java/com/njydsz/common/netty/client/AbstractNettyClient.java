@@ -38,7 +38,7 @@ import com.njydsz.common.netty.transport.NativeTransportDetector;
  * <p>内置指数退避断线重连机制，通过 {@link NettyProperties.Reconnect} 配置控制。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public abstract class AbstractNettyClient {

@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01 (P1-10)
+ * @since 26.10.01 (P1-10)
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 与泛型继承产生 unchecked 警告
 @SuppressWarnings("unchecked")

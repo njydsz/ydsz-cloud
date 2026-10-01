@@ -50,7 +50,7 @@ import com.njydsz.common.json.YdszJson;
  * 或使用不一致的算法参数。Spring 配置属性中的 {@code ENC(...)} 占位符由 jasypt-spring-boot-starter 自动解密，无需手动处理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.config.ConfigAutoConfiguration
  */
 public class ConfigCliTool {

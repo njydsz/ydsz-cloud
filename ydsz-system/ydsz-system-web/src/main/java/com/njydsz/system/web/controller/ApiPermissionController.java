@@ -32,10 +32,10 @@ import com.njydsz.system.server.service.ApiPermissionService;
  * <p><b>接口路径：</b>{@code /api/permission/api}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.system.server.service.ApiPermissionService 接口权限业务逻辑
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "接口权限管理", description = "接口权限自动注册查看/同步管理")
 @Slf4j
 @RestController

@@ -11,11 +11,11 @@ import lombok.Getter;
  * <p>预分配编码区间 B96xxx，具体异常常量待实际场景明确后补充。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @AllArgsConstructor
-@YdszExceptionCode(module = "generator", description = "代码生成器模块异常码", since = "26.09.01")
+@YdszExceptionCode(module = "generator", description = "代码生成器模块异常码", since = "26.10.01")
 public enum GeneratorExceptionCode implements ExceptionCode {
 
   // TODO: 预分配编码，等实际异常场景明确后补充

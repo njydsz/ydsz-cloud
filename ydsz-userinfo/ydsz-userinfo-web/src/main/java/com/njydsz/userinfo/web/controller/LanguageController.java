@@ -62,12 +62,12 @@ import com.njydsz.userinfo.server.service.LanguageService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see LanguageService 语言业务逻辑
  * @see com.njydsz.userinfo.domain.vo.LanguageVO 语言VO
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/language")
 @Tag(name = "语言管理", description = "语言 CRUD")

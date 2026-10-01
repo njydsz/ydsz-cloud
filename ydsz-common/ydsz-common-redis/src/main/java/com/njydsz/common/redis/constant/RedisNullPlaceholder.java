@@ -10,7 +10,7 @@ package com.njydsz.common.redis.constant;
  * <p>使用 {@link #MARKER} 作为占位符写入缓存，使用 {@link #isMarker(Object)} 判断缓存值是否为空标记。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class RedisNullPlaceholder {
 

@@ -33,7 +33,7 @@ import com.njydsz.common.queue.mq.rocket.RocketMQProperties;
  * {@link #MAX_HELD_QUEUES}，超过时记录 WARN 日志并触发部分关闭。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class MessageQueueFactory implements IMessageQueueProvider, DisposableBean {

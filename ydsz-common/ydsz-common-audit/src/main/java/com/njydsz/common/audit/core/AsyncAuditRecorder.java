@@ -47,7 +47,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
 

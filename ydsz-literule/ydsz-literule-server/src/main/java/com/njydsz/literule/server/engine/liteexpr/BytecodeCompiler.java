@@ -22,7 +22,7 @@ import com.njydsz.common.locales.util.I18n;
  *   <li>属性访问：发出 GET_MEMBER（空值安全由 VM 运行时保证）
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public class BytecodeCompiler implements ExprNodeVisitor<Void> {

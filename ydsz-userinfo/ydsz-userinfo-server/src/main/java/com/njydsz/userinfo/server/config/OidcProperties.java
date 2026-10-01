@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>封装 ydsz.userinfo.oidc 前缀下的配置项，用于控制 OIDC Provider 的行为。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.oidc")

@@ -9,7 +9,7 @@ package com.njydsz.message.domain.identity;
  * <p>默认实现类 {@code MpIdGenerator} 通过 Snowflake 算法生成 64 位 Long 并以字符串形式返回。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface IdGenerator {
 

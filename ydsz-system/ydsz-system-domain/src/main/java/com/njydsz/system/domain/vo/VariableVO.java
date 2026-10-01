@@ -36,7 +36,7 @@ import com.njydsz.system.domain.entity.Variable;
  * com.njydsz.system.domain.dto.VariableDTO} 负责。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see Variable 系统变量实体
  * @see ConfigVO 系统配置 VO（按分组的同类结构）
  */

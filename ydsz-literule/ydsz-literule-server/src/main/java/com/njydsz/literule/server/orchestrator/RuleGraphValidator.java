@@ -34,7 +34,7 @@ import lombok.Data;
  *   }
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public final class RuleGraphValidator {
@@ -211,7 +211,7 @@ public final class RuleGraphValidator {
   /**
    * 图验证问题描述
    *
-   * @since 26.09.01
+   * @since 26.10.01
    * @author ydsz-team
    */
   @Data

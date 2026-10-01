@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供操作审计留痕、合规追溯、数据导出审计等能力 |
 | **依赖** | common-core、common-util、common-exception、common-thread、common-json；spring-boot-starter、spring-boot-starter-aspectj；可选依赖 spring-jdbc、spring-webmvc、jakarta.servlet-api、spring-boot-health、micrometer-core |
-| **版本** | 26.09.01-SNAPSHOT |
+| **版本** | 26.10.01-SNAPSHOT |
 
 ## 核心能力
 
@@ -382,6 +382,6 @@ public class SyncAuditRecorder implements AuditRecorder {
 
 ## 变更记录
 
-- **26.09.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
-- **26.09.01**（2026-08-15）：新增 Diff 快照（`recordDiff` / `resourceIdSpEL`）、数据导出审计事件（`DataExportAuditEvent`）、磁盘兜底写入器（`AuditFallbackWriter`）；重构异步线程池与优雅停机逻辑；移除同步模式主路径，默认异步。
-- **26.09.01**（2026-08-02）：初始版本，提供 `@Audit` 注解 + `AuditAspect` + JDBC 存储 + 控制台降级。
+- **26.10.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
+- **26.10.01**（2026-08-15）：新增 Diff 快照（`recordDiff` / `resourceIdSpEL`）、数据导出审计事件（`DataExportAuditEvent`）、磁盘兜底写入器（`AuditFallbackWriter`）；重构异步线程池与优雅停机逻辑；移除同步模式主路径，默认异步。
+- **26.10.01**（2026-08-02）：初始版本，提供 `@Audit` 注解 + `AuditAspect` + JDBC 存储 + 控制台降级。

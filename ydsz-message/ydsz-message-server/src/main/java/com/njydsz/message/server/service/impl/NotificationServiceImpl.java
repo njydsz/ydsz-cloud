@@ -39,7 +39,7 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * <p>本服务是 {@code ydsz-message} 对外的「门面」，内部委托给具体业务服务（Template/Batch/Receipt 等）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

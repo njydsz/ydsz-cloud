@@ -6,7 +6,7 @@ package com.njydsz.common.jdbc.constant;
  * <p>用于 {@code @DS} 注解指定动态数据源名称。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class DataSourceConstants {
 

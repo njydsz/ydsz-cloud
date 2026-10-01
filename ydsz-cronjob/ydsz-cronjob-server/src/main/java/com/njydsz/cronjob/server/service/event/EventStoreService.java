@@ -12,7 +12,7 @@ import com.njydsz.cronjob.domain.query.EventStoreQuery;
  * <p>提供事件追加和查询能力，供业务层记录领域事件、供查询层读取事件流。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface EventStoreService {
 

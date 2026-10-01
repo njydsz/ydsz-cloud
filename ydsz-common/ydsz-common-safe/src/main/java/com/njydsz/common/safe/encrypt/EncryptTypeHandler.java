@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author ydsz-team
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @MappedTypes(String.class)
 @MappedJdbcTypes(JdbcType.VARCHAR)

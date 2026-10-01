@@ -25,7 +25,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobWebhookMapper;
  * <p>通过 {@link CronjobConverter} 将 Entity 转换为 VO 后返回。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Repository
 @RequiredArgsConstructor

@@ -67,13 +67,13 @@ import com.njydsz.message.server.service.batch.AggregateService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.batch.AggregateService 聚合批次服务
  * @see com.njydsz.message.domain.entity.batch.MsgAggregate 聚合批次实体
  */
 @Tag(name = "聚合批次", description = "消息聚合批次查询与刷新")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/aggregate")
 @RequiredArgsConstructor

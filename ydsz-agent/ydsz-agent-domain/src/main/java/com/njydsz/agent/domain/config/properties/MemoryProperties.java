@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>YAML 前缀：{@code ydsz.agent.memory}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @NoArgsConstructor

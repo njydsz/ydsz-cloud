@@ -42,7 +42,7 @@ import com.njydsz.userinfo.server.service.UserPreferenceService;
  * @see com.njydsz.userinfo.domain.vo.UserPreferenceVO 偏好 VO
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/user/preferences")
 @RequiredArgsConstructor

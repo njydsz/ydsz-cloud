@@ -11,7 +11,7 @@ import com.njydsz.common.safe.annotation.SensitiveLevel;
  * <p>前端调用 {@code Post /api/auth/secondary-auth} 接口时传入，包含当前用户密码和目标场景标识。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class SecondaryAuthRequest {

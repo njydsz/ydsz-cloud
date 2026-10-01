@@ -45,7 +45,7 @@ import java.lang.annotation.Target;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @apiNote 行/列数据权限统一由 ydsz-common-jdbc 处理；本注解（AuthApiPermission）不会被移除。
  */
 @Inherited

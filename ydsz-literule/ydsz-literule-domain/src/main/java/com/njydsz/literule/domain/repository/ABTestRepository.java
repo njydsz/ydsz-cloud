@@ -12,7 +12,7 @@ import com.njydsz.literule.domain.vo.RuleABRollbackVO;
  * DefaultABTestRepository}）， 消费方可提供自定义实现（如基于 MyBatis 的数据库存储）以替代默认存储。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface ABTestRepository {
 

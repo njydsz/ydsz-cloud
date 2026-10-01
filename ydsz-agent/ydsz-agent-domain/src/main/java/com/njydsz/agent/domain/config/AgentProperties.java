@@ -37,7 +37,7 @@ import com.njydsz.agent.domain.config.properties.WebSearchProperties;
  * 具体字段定义参见各独立配置类（{@code domain.config.properties.*}）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @ConfigurationProperties("ydsz.agent")

@@ -21,7 +21,7 @@ import org.springframework.context.ApplicationEvent;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class PermissionChangedEvent extends ApplicationEvent implements Serializable {
 

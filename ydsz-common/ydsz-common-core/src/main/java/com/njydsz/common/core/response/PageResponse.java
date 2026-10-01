@@ -18,12 +18,12 @@ import com.njydsz.common.core.code.YdszResultCode;
  *
  * <p>本类是 API 响应信封，用于 Controller 层返回分页数据。 新代码请直接返回 {@code PageResponse<T>}。
  *
- * <p><b>迁移提示：</b>{@link YdszResponse} 上的分页字段与 {@code successPage()/emptyPage()} 方法已于 26.09.01
+ * <p><b>迁移提示：</b>{@link YdszResponse} 上的分页字段与 {@code successPage()/emptyPage()} 方法已于 26.10.01
  * 移除。新代码请直接返回 {@code PageResponse<T>}。
  *
  * @param <T> 数据元素的类型
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @EqualsAndHashCode(callSuper = true)
 public class PageResponse<T> extends YdszResponse<T> {
@@ -131,7 +131,7 @@ public class PageResponse<T> extends YdszResponse<T> {
    * @param nextCursor 下一页游标（null 表示已无更多数据）
    * @param <T> 列表元素的数据类型
    * @return 分页成功响应（{@code PageResponse<List<T>>}）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static <T> PageResponse<List<T>> ofList(List<T> records, String nextCursor) {
     PageResponse<List<T>> response = new PageResponse<>();

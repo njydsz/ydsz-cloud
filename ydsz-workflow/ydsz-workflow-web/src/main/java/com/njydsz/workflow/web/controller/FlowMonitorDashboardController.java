@@ -51,13 +51,13 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * FlowInstanceService} / {@link FlowTaskService}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowEfficiencyService 效率分析服务
  * @see FlowInstanceService 流程实例服务
  * @see FlowTaskService 任务服务
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @Tag(name = "workflow-monitor", description = "工作流监控看板与效率分析统一接口")
 @RequestMapping("/workflow/engine")

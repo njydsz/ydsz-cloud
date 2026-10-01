@@ -9,7 +9,7 @@ package com.njydsz.common.feign.assembler;
  * 后删除，届时本枚举一并移除。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum NameType {
 

@@ -17,7 +17,7 @@ import com.njydsz.system.domain.dto.AppValidateRequest;
  * <p><b>安全约定：</b>密钥通过 <b>POST body</b> 传输，严禁出现在 URL 中。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @FeignClient(
     name = FeignClientConstants.SYSTEM,

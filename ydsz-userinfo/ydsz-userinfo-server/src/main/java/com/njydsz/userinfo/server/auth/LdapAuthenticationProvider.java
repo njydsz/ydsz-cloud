@@ -18,7 +18,7 @@ import com.njydsz.userinfo.server.config.LdapProperties;
  * <p>提供 LDAP/Active Directory 域认证能力，供 {@code AuthServiceImpl} 直接调用。 配置通过 {@link LdapProperties} 注入。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回灰度实验的完整信息。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class MsgCanaryVO implements Serializable {

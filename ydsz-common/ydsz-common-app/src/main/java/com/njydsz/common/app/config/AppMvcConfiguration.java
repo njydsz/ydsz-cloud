@@ -51,7 +51,7 @@ import com.njydsz.common.safe.config.SafeConfiguration;
  * 机制一起移除（P1-A 清理，业务模块自建 ExceptionHandler 覆盖）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)

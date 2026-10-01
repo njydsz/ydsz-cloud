@@ -90,7 +90,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * <p><b>扩展能力：</b>如需新增通知类型，在 {@code common-notify} 侧新增通道，本类无需修改即可支持。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowNotificationService 接口定义
  * @see NotifyHelper 统一通知辅助类
  * @see FlowSensitiveMasker 敏感数据脱敏器

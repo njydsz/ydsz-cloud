@@ -43,10 +43,10 @@ import com.njydsz.system.server.service.TenantPlanService;
  * <p><b>接口路径：</b>{@code /api/tenant-plan}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see TenantPlanService 套餐业务逻辑
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "租户套餐管理", description = "套餐 CRUD / 菜单配置")
 @Slf4j
 @RestController

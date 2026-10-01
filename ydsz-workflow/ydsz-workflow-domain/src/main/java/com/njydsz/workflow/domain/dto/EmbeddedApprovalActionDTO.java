@@ -19,7 +19,7 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
  * <p>action: PASS/REJECT/TRANSFER/DELEGATE/URGE/WITHDRAW
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class EmbeddedApprovalActionDTO implements Serializable {

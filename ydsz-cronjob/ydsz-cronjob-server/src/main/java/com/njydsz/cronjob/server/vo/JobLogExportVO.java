@@ -16,7 +16,7 @@ import lombok.Data;
  * 避免一次性加载全量数据到内存。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class JobLogExportVO implements Serializable {

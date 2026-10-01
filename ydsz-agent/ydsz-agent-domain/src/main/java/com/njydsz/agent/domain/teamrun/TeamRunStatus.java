@@ -10,7 +10,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * <p>定义多 Agent 协作执行的生命周期状态。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum TeamRunStatus implements BaseStatusEnum<TeamRunStatus> {
 

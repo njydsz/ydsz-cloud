@@ -22,7 +22,7 @@ import com.njydsz.common.core.response.YdszResponse;
  * @author ydsz-team
  * @see AbstractGlobalResponseAdvice
  * @see YdszResponse
- * @since 26.09.01
+ * @since 26.10.01
  */
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)

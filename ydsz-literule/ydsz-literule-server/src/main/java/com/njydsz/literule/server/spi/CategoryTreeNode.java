@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
  *
  * <p>扩展业务字段（name/ruleCount/owners），由 {@link RuleCategoryProvider#buildTree()} 返回，供前端展示规则分类目录树。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  * @see com.njydsz.common.domain.tree.TreeBuilder
  */

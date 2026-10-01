@@ -6,7 +6,7 @@ package com.njydsz.common.redis.enums;
  * <p>定义当限流器（如Redis）发生故障时的处理策略
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum FailOpenPolicy {
 

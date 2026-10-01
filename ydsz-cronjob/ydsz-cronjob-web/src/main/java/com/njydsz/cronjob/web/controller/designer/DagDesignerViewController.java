@@ -11,9 +11,9 @@ import com.njydsz.common.base.api.ApiVersion;
  * <p>返回 DAG 可视化设计器静态页面。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Controller
 public class DagDesignerViewController {
 

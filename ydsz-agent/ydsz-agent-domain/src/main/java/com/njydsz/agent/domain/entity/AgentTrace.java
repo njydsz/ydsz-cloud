@@ -22,7 +22,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 主键 {@code id} 映射到数据库 {@code trace_id} 列（业务生成，非自增）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

@@ -9,7 +9,7 @@ import com.njydsz.literule.domain.vo.RuleResultVO;
  *
  * <p>封装单条规则的评估逻辑，供 {@link ParallelRuleEvaluator} 并行调度使用。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @FunctionalInterface

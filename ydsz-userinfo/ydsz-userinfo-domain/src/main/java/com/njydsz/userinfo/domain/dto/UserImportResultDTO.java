@@ -15,7 +15,7 @@ import com.njydsz.common.excel.api.result.ExcelImportResult;
  * <p>封装批量导入的执行结果，继承通用 {@link ExcelImportResult} 基类。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

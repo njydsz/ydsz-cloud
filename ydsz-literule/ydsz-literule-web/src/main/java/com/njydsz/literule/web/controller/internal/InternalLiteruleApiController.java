@@ -46,10 +46,10 @@ import com.njydsz.literule.server.converter.LiteruleWebConverter;
  * 提供接口级限流防护；租户与链路 ID 从网关注入的请求头解析。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.literule.api.client.LiteRuleClient Feign Client 接口
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/internal")

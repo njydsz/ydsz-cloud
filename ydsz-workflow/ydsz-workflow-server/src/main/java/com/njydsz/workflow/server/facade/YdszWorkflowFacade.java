@@ -45,12 +45,12 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  *
  * <p>所有操作落 ydsz_flow_* 表，对外暴露的 WorkflowFacade 统一接口实现。
  *
- * <p>26.09.01 新增能力：加签 / 撤回 / 催办 / 审计轨迹查询。
+ * <p>26.10.01 新增能力：加签 / 撤回 / 催办 / 审计轨迹查询。
  *
- * <p><b>架构合规说明（26.09.01 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
+ * <p><b>架构合规说明（26.10.01 DDD 分层规范修复）：</b>通过 domain 层 Repository 接口访问数据，
  * 禁止 server 层直接注入 infra Mapper 或直接引用 infra.entity（符合 §34.2.3 / §34.2.1）。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

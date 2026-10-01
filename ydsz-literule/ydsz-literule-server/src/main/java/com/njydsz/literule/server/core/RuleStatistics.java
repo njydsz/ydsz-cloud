@@ -22,7 +22,7 @@ import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
  *
  * <p>所有计数器使用 {@link AtomicLong}，按规则明细使用 {@link ConcurrentHashMap}。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

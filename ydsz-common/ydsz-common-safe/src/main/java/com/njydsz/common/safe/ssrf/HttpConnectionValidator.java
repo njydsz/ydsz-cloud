@@ -39,7 +39,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public final class HttpConnectionValidator {
@@ -303,7 +303,7 @@ public final class HttpConnectionValidator {
    * 403）， 由全局异常处理器统一转换为标准错误响应。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static class SsrfBlockedException extends BusinessException {
     private static final long serialVersionUID = 1L;

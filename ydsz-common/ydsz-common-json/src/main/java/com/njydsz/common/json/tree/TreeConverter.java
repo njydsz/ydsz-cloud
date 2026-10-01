@@ -35,7 +35,7 @@ import java.util.Map;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class TreeConverter {
 
@@ -134,7 +134,7 @@ public final class TreeConverter {
    *
    * @param node 源 JsonNode 树
    * @return true 表示所有后代节点均为标量
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static boolean isFlatScalarTree(JsonNode node) {
     if (node == null || node.isMissing()) {
@@ -174,7 +174,7 @@ public final class TreeConverter {
    * @param clazz 目标 Bean 类型
    * @param <T> 目标类型
    * @return 转换后的 Bean 实例，失败时返回 null
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static <T> T directConvertFlatObject(ObjectNode node, Class<T> clazz) {
     if (node == null || clazz == null) {

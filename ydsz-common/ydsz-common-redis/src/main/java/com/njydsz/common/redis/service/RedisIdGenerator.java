@@ -44,7 +44,7 @@ import com.njydsz.common.redis.constant.RedisScriptConstants;
  * {@code com.njydsz.common.util.id.SnowflakeIdGenerator}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RequiredArgsConstructor

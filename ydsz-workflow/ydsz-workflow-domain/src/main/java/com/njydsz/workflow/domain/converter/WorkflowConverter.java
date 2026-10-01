@@ -82,7 +82,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
  * infra 层实现依赖倒置提供 Converter。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface WorkflowConverter {

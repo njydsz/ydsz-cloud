@@ -20,7 +20,7 @@ import lombok.Data;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.system.domain.entity.Tenant 租户实体
  * @see com.njydsz.system.domain.dto.TenantDTO 租户 DTO
  */

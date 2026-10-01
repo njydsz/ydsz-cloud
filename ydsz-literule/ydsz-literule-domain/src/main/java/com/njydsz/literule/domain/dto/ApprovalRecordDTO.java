@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>创建时 {@code recordId} 字段不传，更新时传入 {@code recordId}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class ApprovalRecordDTO implements Serializable {

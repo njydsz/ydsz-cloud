@@ -62,12 +62,12 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.server.service.CompanyService 公司业务逻辑
  * @see com.njydsz.userinfo.domain.vo.CompanyVO 公司VO
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/company")
 @RequiredArgsConstructor
@@ -98,7 +98,7 @@ public class CompanyController {
    * 并填充 {@code level}/{@code path} 元数据。典型场景：集团-子公司组织架构选择器。
    *
    * @return 公司树形结构根节点列表
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @GetMapping("/tree")
   @Operation(summary = "查询公司树形结构")

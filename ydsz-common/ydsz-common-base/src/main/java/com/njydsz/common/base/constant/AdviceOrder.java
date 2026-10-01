@@ -8,7 +8,7 @@ package com.njydsz.common.base.constant;
  * <p>ControllerAdvice 使用自然数体系（0, 10, 20...）， 数值越小优先级越高（最先执行）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class AdviceOrder {
 

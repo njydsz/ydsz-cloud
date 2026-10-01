@@ -32,7 +32,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>索引设计：</b>唯一索引 {@code uk_plan_menu}（{@code plan_id}, {@code menu_id}）保证关联唯一性。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see TenantPlan 租户套餐
  * @see Tenant 租户
  */

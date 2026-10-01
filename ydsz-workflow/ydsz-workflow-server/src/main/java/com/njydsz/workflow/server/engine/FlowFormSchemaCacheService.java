@@ -30,7 +30,7 @@ import com.njydsz.workflow.server.form.FlowFormValidator;
  * <p><b>版本校验：</b>节点 ext JSON 不变时 hashCode 不变，缓存自然命中；
  * ext JSON 变更后 hashCode 变化，旧缓存自然失效（LRU 淘汰）。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -45,7 +45,7 @@ public class FlowFormSchemaCacheService {
   /** 表单 Schema 缓存：nodeExtHashCode → FlowFormSchema */
   private final Cache<String, FlowFormSchema> schemaCache;
 
-  
+
   /**
    * 构造表单 Schema 缓存服务。
    *

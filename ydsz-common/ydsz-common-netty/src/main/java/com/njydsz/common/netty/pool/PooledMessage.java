@@ -42,7 +42,7 @@ import io.netty.util.Recycler.Handle;
  *
  * @param <T> 子类型自身（自引用泛型）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public abstract class PooledMessage<T extends PooledMessage<T>> {
 

@@ -15,7 +15,7 @@ import java.util.List;
  * 目标不同，<b>不合并</b>；但实现类的切段算法若与 common-docs 逐行重复，必须改为委托调用（§33.4）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface TextChunker {
 

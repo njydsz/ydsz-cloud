@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
  * 单个 Provider 配置（名称、模型、API 密钥、Base URL 等）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @NoArgsConstructor

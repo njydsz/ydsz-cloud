@@ -33,7 +33,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
  * com.njydsz.common.exception.custom.AbstractYdszException} 共同消费。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class MessageSourceHolder {
 

@@ -27,7 +27,7 @@ import com.njydsz.common.queue.config.QueueProperties;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

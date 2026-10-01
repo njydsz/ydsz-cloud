@@ -10,7 +10,7 @@ import com.njydsz.message.domain.dto.MessageItemRequestDTO;
  * <p>对标 Spring Security Filter Chain / Netty Pipeline 模式， 支持运行时动态编排（通过配置调整 Handler 顺序或开关）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SendHandler {
 

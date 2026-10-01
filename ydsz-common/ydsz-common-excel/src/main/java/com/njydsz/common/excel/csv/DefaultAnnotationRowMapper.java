@@ -49,7 +49,7 @@ import com.njydsz.common.excel.tabular.TabularRowMapper;
  *
  * @param <T> 目标类型
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
 

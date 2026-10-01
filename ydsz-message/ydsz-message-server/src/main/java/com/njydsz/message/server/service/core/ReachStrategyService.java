@@ -29,7 +29,7 @@ import com.njydsz.message.domain.dto.UserReachProfileDTO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see UserReachProfileDTO 用户触达画像 DTO
  * @see ReachStrategyService 智能触达主服务
  */

@@ -60,7 +60,7 @@ import com.njydsz.workflow.server.service.FlowCcService;
  * 继续推进。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowCcService 接口定义
  * @see FlowCcVO 抄送值对象
  * @see FlowAssigneeResolver 审批人解析器（{@code role:/dept:} 展开）

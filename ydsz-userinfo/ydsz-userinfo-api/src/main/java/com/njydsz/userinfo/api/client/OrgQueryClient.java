@@ -37,7 +37,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * <p>所有 ID 均为 String 类型（雪花算法字符串），与项目 ID 约定一致。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @FeignClient(
     name = FeignClientConstants.USERINFO,

@@ -16,7 +16,7 @@ import com.njydsz.workflow.server.service.FlowI18nService;
  * <p>对 {@link FlowI18nService} 接口的完整实现。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowI18nService 接口定义
  */
 @Slf4j

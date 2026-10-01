@@ -30,7 +30,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * 当重试队列积压或节点异常时报告降级状态（UP 但带 warning 详情）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)

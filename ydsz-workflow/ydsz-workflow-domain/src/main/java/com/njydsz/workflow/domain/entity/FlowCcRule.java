@@ -44,7 +44,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowCc 流程抄送（具体实例）
  * @see FlowCcRuleResolver 抄送规则解析器
  */

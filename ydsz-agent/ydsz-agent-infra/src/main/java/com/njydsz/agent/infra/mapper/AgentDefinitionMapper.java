@@ -24,6 +24,6 @@ import com.njydsz.agent.domain.entity.AgentDefinition;
  * <p><b>逻辑删除：</b>is_deleted 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface AgentDefinitionMapper extends BaseMapper<AgentDefinition> {}

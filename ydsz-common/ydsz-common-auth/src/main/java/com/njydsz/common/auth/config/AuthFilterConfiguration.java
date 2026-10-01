@@ -21,7 +21,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  * <p><b>性能优化：</b>合并后的忽略路径白名单通过 {@link #cachedIgnoreUrls} 惰性缓存， 仅在首次调用或配置变更时重新构建，避免每请求重复创建 {@link HashSet} 并执行三次 addAll。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @EnableConfigurationProperties(AuthFilterProperties.class)

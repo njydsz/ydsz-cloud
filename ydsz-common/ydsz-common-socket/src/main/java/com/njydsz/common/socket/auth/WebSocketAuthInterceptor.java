@@ -40,7 +40,7 @@ import com.njydsz.common.util.net.ClientIpResolver;
  * 接口而非具体的 {@code JwtTokenProvider}， 可适配任何 TokenService 实现，解耦更彻底。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {

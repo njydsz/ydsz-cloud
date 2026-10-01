@@ -23,7 +23,7 @@ import com.njydsz.common.auth.handler.AuthHandler;
  *
  * @author ydsz-team
  * @see AuthHandler
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 public class AuthHandlerFactory {

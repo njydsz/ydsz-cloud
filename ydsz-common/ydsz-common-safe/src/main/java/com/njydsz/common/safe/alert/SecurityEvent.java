@@ -16,7 +16,7 @@ import java.time.Instant;
  * <p>本类为不可变对象，线程安全。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SecurityEvent implements Serializable {
 

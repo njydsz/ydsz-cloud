@@ -11,7 +11,7 @@ package com.njydsz.cronjob.domain.constants;
  * 不在本类重复定义。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class CronjobConstants {
 

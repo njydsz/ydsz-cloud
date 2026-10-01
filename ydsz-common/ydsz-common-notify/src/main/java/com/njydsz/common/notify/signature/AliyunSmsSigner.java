@@ -24,7 +24,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * {@code %7E} → {@code ~}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class AliyunSmsSigner {
 

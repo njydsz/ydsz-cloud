@@ -33,8 +33,8 @@ import com.njydsz.common.event.model.OutboxStatus;
  * PROCESSING，确保同一消息只被一个实例处理。
  *
  * @author ydsz-team
- * @since 26.09.01
- * @since 26.09.01 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段的读写
+ * @since 26.10.01
+ * @since 26.10.01 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段的读写
  * @since 26.09.19 E-2 字段对齐：Java 字段 idempotencyKey ↔ DDL 列名 idempotency_key
  * @since 26.09.19 E-1 error_message 智能截断：保留首部 800 字符 + 尾部 1200 字符，确保根因不丢
  * @since 26.09.19 O-4 增加 schema_version 列读写，默认值 1

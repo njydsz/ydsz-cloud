@@ -26,7 +26,7 @@ import com.njydsz.common.json.YdszJson;
  * #resolveTenantId()} 在 SQL 层显式追加 {@code tenant_id} 条件实现（P0 修复已审查）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @SuppressWarnings("YDIZ-COMMON-051")

@@ -9,7 +9,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * #canTransitTo(MessageStatusEnum)} 校验。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum MessageStatusEnum implements BaseStatusEnum<MessageStatusEnum> {
 

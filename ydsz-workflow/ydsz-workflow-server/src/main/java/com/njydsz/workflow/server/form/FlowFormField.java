@@ -25,7 +25,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
  *   <li>选项数据源：静态选项 / 动态 API 选项
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Data

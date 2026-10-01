@@ -28,7 +28,7 @@ import com.njydsz.workflow.domain.entity.FlowSkip;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.workflow.domain.entity.FlowSkip 节点跳转实体
  * @see com.njydsz.workflow.server.engine.FlowEngine 流程引擎
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

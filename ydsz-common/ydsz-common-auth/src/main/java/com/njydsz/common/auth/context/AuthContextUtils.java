@@ -14,7 +14,7 @@ import com.njydsz.common.exception.custom.SysException;
 /**
  * 认证上下文便捷访问工具类。
  *
- * <p>自 26.09.01 起，认证与权限上下文统一收口至 {@link RequestContext}。 本类提供静态便捷 API，内部全部委托 {@link RequestContext}
+ * <p>自 26.10.01 起，认证与权限上下文统一收口至 {@link RequestContext}。 本类提供静态便捷 API，内部全部委托 {@link RequestContext}
  * 实现：
  *
  * <ul>
@@ -32,7 +32,7 @@ import com.njydsz.common.exception.custom.SysException;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RequestContext
  */
 public final class AuthContextUtils {

@@ -22,7 +22,7 @@ import reactor.core.publisher.Sinks;
  * <p><b>注意：</b>该类为有状态单例 Bean，生命周期随 Spring 容器管理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ReactiveEvent
  * @see com.njydsz.message.web.controller.ReactiveNotificationController
  * @see ReactiveEventPublisher

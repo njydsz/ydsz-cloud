@@ -64,14 +64,14 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.template.MessageTemplateRenderer 模板渲染引擎
  * @see com.njydsz.message.server.template.TemplateVariableValidator 变量校验器
  * @see com.njydsz.message.server.service.template.TemplateService 模板服务
  */
 @Tag(name = "模板预览", description = "模板渲染预览")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/template/preview")
 @RequiredArgsConstructor

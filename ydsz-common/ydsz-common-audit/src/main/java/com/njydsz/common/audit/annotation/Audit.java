@@ -42,7 +42,7 @@ import com.njydsz.common.audit.enums.AuditType;
  * 配置不会生效。{@code recordDiff} 已支持 Level 1 实现（通过方法参数与返回值计算快照 diff）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.audit.aspect.AuditAspect
  * @see AuditType
  * @see AuditAction

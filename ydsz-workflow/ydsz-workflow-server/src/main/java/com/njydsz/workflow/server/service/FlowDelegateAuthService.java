@@ -12,7 +12,7 @@ import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;
  * <p>A 委托 B 代为审批。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface FlowDelegateAuthService {
 
@@ -24,7 +24,7 @@ public interface FlowDelegateAuthService {
    *
    * @param dto 授权 Post DTO
    * @return 授权 VO
-   * @since 26.09.01
+   * @since 26.10.01
    */
   FlowDelegateAuthVO postDtoToVO(FlowDelegateAuthPostDTO dto);
 

@@ -32,7 +32,7 @@ import com.njydsz.common.json.provider.SerializationProvider;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 // YDIZ-WARN-001 允许保留：调用 Jackson 2.x 标记废弃但保持 JDK 8 兼容的 API
 public final class BeanSerializer {
@@ -66,7 +66,7 @@ public final class BeanSerializer {
    * SerializationProvider#serialize(Object)}，因此上层调用方可以安全地跳过 {@code serializingObjects} 的 add/remove
    * 操作，避免 IdentityHashMap 的查询开销。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public final boolean primitiveOnly;
 

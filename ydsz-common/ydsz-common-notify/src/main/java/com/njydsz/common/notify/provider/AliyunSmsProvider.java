@@ -43,7 +43,7 @@ import com.njydsz.common.notify.signature.AliyunSmsSigner;
  * <p><b>说明：</b>阿里云短信服务未提供公开的余额查询接口，{@link #queryBalance()} 返回明确的「不支持」结果。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class AliyunSmsProvider implements SmsProvider {
 

@@ -462,7 +462,7 @@ L6c  ydsz-common-base-app     App 端基座 (已有雏形)
 
 ### 6.5 版本与发布
 
-- [ ] 基座模块版本号遵循 `26.09.01-SNAPSHOT` 规范
+- [ ] 基座模块版本号遵循 `26.10.01-SNAPSHOT` 规范
 - [ ] 若变更基座 API，已评估是否需要 shared module 版本号升级（见 `docs/云顶版本规范.md`）
 - [ ] SNAPSHOT 版本推送至内部 Nexus 后下游模块能正常解析
 

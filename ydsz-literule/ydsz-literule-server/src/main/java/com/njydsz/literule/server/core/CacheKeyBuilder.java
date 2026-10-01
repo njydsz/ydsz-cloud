@@ -13,7 +13,7 @@ import com.njydsz.common.cache.support.AbstractModuleCacheKeyBuilder;
  * <p><b>规则评估结果缓存键：</b>{@code ydsz:{tenantId}:literule:eval:{sha256Hex}}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 public class CacheKeyBuilder extends AbstractModuleCacheKeyBuilder {

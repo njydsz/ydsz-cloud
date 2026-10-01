@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>对应 ydsz_rule_canary_bucket 表，按日聚合每条规则在 PRIMARY/CANARY 桶中的执行次数。 用于 AB Test 自动回滚判断（比较两桶错误率/触发率）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 // YDIZ-WARN-001 允许保留：Lombok @Data 与 JPA 继承共用，父类字段泛型擦除
 @SuppressWarnings("unchecked")

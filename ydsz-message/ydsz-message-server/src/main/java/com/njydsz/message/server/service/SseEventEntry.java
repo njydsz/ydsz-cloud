@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * SSE 事件日志条目（供 Last-Event-ID 断线重连回放）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SseEventEntry {
 

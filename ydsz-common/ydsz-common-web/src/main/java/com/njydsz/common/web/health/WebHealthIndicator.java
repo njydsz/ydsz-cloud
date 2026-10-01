@@ -37,7 +37,7 @@ import com.njydsz.common.web.config.WebTraceProperties;
  *
  * @author ydsz-team
  * @see HealthIndicator
- * @since 26.09.01
+ * @since 26.10.01
  */
   // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
 @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")

@@ -23,7 +23,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  * 构造函数兼容性问题。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component
@@ -106,7 +106,7 @@ public class DagDefinitionCodec {
               n.getString("paramsJson"),
               // 节点类型（缺失时默认 TASK，已废弃类型自动降级为 TASK）
               n.getString("nodeType"),
-              // 以下三个字段已废弃（26.09.01 移除控制节点），保留读取以兼容旧数据
+              // 以下三个字段已废弃（26.10.01 移除控制节点），保留读取以兼容旧数据
               n.getString("conditionExpression"),
               n.getInteger("loopCount"),
               n.getInteger("parallelBranches"),

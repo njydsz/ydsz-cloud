@@ -39,10 +39,10 @@ import com.njydsz.userinfo.server.service.UserAccountService;
  * <p><b>接口路径：</b>{@code /api/profile}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/profile")
 @RequiredArgsConstructor

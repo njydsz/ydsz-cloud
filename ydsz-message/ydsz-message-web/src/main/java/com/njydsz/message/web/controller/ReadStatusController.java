@@ -68,12 +68,12 @@ import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.receipt.ReadStatusSyncService 已读状态同步服务
  */
 @Tag(name = "已读状态", description = "消息已读/未读状态同步")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/read-status")
 @RequiredArgsConstructor

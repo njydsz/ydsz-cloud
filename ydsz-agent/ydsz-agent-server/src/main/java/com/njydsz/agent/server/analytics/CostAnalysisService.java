@@ -35,7 +35,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * <p>所有金额使用 {@link BigDecimal} 类型，精度 6 位小数（微美元级），符合货币计算规范。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class CostAnalysisService {

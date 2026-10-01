@@ -34,7 +34,7 @@ import com.njydsz.common.util.ip.CidrUtils;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class ClientIpResolver {
 
@@ -101,7 +101,7 @@ public final class ClientIpResolver {
    * @param xForwardedFor X-Forwarded-For 头值（可为 null）
    * @param xRealIp X-Real-IP 头值（可为 null）
    * @return 客户端真实 IP
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static String resolveFromHeaders(String directIp, String xForwardedFor, String xRealIp) {
     if (directIp != null && isTrustedProxy(directIp)) {

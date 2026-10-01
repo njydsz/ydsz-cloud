@@ -31,7 +31,7 @@ import com.njydsz.common.json.module.JsonModuleRegistry;
  * MBeanServer，无需业务代码介入。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class JsonConfigViewer implements JsonConfigViewerMBean {
 

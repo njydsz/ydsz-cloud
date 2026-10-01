@@ -46,7 +46,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Service
 @ConditionalOnClass(name = "io.jsonwebtoken.Jwts")

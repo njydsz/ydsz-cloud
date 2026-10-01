@@ -13,7 +13,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * <p>目录树节点使用 {@link CategoryTreeNode}（独立 POJO），构建时推荐使用 {@link
  * com.njydsz.common.domain.tree.TreeBuilder#buildSimple}。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public interface RuleCategoryProvider {

@@ -61,12 +61,12 @@ import com.njydsz.userinfo.domain.dto.UserSearchQuery;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.system.web.controller.GlobalSearchController 全局搜索（跨实体）
  * @see UnifiedSearchService 统一搜索服务
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/userinfo/search")
 @RequiredArgsConstructor

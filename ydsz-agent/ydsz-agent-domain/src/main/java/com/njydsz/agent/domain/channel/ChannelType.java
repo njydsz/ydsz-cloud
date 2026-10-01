@@ -6,7 +6,7 @@ package com.njydsz.agent.domain.channel;
  * <p>定义 Agent 支持的消息渠道类型。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum ChannelType {
 

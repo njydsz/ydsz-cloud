@@ -39,7 +39,7 @@ import com.njydsz.system.domain.entity.Config;
  * com.njydsz.system.domain.dto.ConfigDTO} 负责。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see Config 系统配置实体
  * @see com.njydsz.system.domain.dto.ConfigDTO 配置输入 DTO
  */

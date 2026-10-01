@@ -14,7 +14,7 @@ import com.njydsz.agent.domain.entity.AgentApproval;
  * <b>多租户：</b>由 MyBatis 拦截器自动注入 tenant_id 过滤条件，本接口不感知。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface AgentApprovalMapper extends BaseMapper<AgentApproval> {}

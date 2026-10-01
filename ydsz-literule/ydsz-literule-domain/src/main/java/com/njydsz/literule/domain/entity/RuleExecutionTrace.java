@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
  * <p><b>约束：</b>追踪数据只做追加写入，不随规则定义的变更而改写，因此不可用于推断规则当前状态。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告

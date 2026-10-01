@@ -65,11 +65,11 @@ import com.njydsz.system.server.service.DictItemService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see DictController 字典类型 Controller（字典两级体系上层）
  * @see DictVersionController 字典版本 Controller（变更历史与回滚）
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "字典项", description = "字典项 CRUD + 批量操作 + 按类型查询 + 树形查询")
 @Slf4j
 @RestController

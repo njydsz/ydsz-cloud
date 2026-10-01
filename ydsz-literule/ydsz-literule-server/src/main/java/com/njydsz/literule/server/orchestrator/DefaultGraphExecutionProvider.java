@@ -39,7 +39,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
  *
  * <p>消费方仍可覆盖本实现（装配为 {@code @ConditionalOnMissingBean(GraphExecutionProvider.class)}）。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

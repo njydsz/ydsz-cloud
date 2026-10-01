@@ -17,13 +17,13 @@ import lombok.experimental.SuperBuilder;
  *
  * <p>仅含主键 ID 的实体基类，主键使用雪花算法自动生成（{@link IdType#ASSIGN_ID}）。
  *
- * <p><b>26.09.01</b>：不再继承 common-domain 的 BaseIdEntity，字段内联自洽， 业务模块实体仅依赖 ydsz-common-jdbc 一个模块。
+ * <p><b>26.10.01</b>：不再继承 common-domain 的 BaseIdEntity，字段内联自洽， 业务模块实体仅依赖 ydsz-common-jdbc 一个模块。
  *
  * <p><b>26.09.12</b>：新增 {@code createdAt} 字段，统一记录实体创建时间， 解决子类引用 {@code getCreatedAt()} 方法不存在的编译错误。
  *
  * @param <T> 主键ID类型
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

@@ -37,7 +37,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CrossDomainSsoProperties 跨域 SSO 配置
  * @see CrossDomainSsoFilter 跨域 SSO 过滤器
  */

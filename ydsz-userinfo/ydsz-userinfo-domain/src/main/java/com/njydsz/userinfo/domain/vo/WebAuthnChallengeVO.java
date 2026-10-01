@@ -11,7 +11,7 @@ import lombok.Data;
  * 挑战码存储在 Redis 中，带 TTL 过期。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class WebAuthnChallengeVO implements Serializable {

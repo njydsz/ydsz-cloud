@@ -21,7 +21,7 @@ import com.njydsz.common.exception.custom.SysException;
  * <p>版本管理：每次发布生成新的 {@code packVersion}，同时通过 {@link #ruleSnapshots} 固化规则定义快照，保证历史版本内容可复现、可回滚。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
@@ -35,7 +35,7 @@ public class RulePack extends MpBaseEntity<String> {
   /** 规则集编码（全局唯一，用于版本间关联） */
   private String packCode;
 
-  /** 规则集版本号（如 26.09.01、26.09.01） */
+  /** 规则集版本号（如 26.10.01、26.10.01） */
   private String packVersion;
 
   /** 规则集名称 */

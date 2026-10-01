@@ -19,7 +19,7 @@ import com.njydsz.common.docs.service.internal.AsyncDocumentParser;
  * 文档处理模块健康指标
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RequiredArgsConstructor

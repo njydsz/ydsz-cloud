@@ -31,7 +31,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * <p><b>稳定性：</b>错误码是业务契约，修改/废弃必须保留向前兼容的 alias， 避免错误码硬编码在客户端代码中后无法平滑升级。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @YdszExceptionCode(module = "docs", description = "文档管理")
 public enum DocumentExceptionCode implements ExceptionCode {

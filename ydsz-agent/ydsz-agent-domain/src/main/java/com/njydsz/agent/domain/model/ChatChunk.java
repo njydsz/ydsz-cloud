@@ -17,7 +17,7 @@ import java.util.Objects;
  * <p><b>线程安全</b>：全字段 final 且集合不可变，不可变值对象，可安全在流式回调与业务线程间共享。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class ChatChunk implements Serializable {
 

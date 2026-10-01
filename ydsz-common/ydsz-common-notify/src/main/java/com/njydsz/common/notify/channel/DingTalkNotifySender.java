@@ -26,7 +26,7 @@ import com.njydsz.common.notify.template.TemplateEngine;
  * URL 中。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 @ConditionalOnProperty(prefix = "ydsz.notify.dingtalk", name = "webhook")

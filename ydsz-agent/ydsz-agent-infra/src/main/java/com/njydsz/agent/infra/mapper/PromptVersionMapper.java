@@ -22,6 +22,6 @@ import com.njydsz.agent.domain.entity.PromptVersion;
  * <p><b>逻辑删除：</b>版本表不做逻辑删除，保留完整历史记录。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface PromptVersionMapper extends BaseMapper<PromptVersion> {}

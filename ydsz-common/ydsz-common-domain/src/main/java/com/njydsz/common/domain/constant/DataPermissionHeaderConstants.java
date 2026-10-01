@@ -9,7 +9,7 @@ package com.njydsz.common.domain.constant;
  * 避免 auth 反向依赖 jdbc 模块。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class DataPermissionHeaderConstants {
 

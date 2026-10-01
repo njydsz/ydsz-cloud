@@ -12,7 +12,7 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  * <p>用于在模块中注册自定义序列化器，提供类型安全的注册接口。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class ModuleSerializerRegistry {
 

@@ -42,7 +42,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * {@link #getReadWriteLock} / {@link #getSemaphore}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class DefaultLockStrategy implements LockStrategy {
 

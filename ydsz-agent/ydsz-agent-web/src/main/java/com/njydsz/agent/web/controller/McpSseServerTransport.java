@@ -72,7 +72,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * @since 26.09.07
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/mcp")
 @ConditionalOnProperty(prefix = "ydsz.agent.mcp", name = "serverEnabled", havingValue = "true")

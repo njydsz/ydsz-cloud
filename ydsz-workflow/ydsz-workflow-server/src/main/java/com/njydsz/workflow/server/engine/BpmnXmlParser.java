@@ -69,7 +69,7 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
  *
  * <p>不依赖任何第三方 BPMN 库，零外部兼容。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

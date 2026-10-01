@@ -40,11 +40,11 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.nextwiki.api.client.NextwikiSpaceClient
  * @see com.njydsz.nextwiki.api.client.NextwikiQuotaClient
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/internal")

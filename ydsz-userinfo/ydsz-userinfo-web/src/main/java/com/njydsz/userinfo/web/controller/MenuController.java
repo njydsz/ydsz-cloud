@@ -70,13 +70,13 @@ import com.njydsz.userinfo.server.service.MenuService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.server.service.MenuService 菜单业务逻辑
  * @see com.njydsz.userinfo.domain.vo.MenuVO 菜单VO
  * @see com.njydsz.userinfo.web.controller.RoleController 角色 Controller（关联分配）
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/menu")
 @RequiredArgsConstructor

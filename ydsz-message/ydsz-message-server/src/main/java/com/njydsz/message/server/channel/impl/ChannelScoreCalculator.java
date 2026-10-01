@@ -35,7 +35,7 @@ import com.njydsz.message.server.metric.MessageMetrics;
  * 待用户行为数据与通道指标接入后启用完整三因子加权模型。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

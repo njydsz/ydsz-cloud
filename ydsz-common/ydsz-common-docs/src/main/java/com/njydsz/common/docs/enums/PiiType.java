@@ -6,7 +6,7 @@ package com.njydsz.common.docs.enums;
  * <p>定义系统中可识别的敏感信息类型。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum PiiType {
 

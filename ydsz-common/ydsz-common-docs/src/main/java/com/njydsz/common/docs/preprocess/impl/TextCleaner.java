@@ -22,7 +22,7 @@ import com.njydsz.common.docs.preprocess.DocumentPreprocessor;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 public class TextCleaner implements DocumentPreprocessor {

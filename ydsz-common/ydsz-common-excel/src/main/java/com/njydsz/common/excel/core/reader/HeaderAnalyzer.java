@@ -28,7 +28,7 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  * 接收由 SuperFast 引擎流式收集的表头列名（已含 SST 解析），无 POI API 依赖。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @version 26.10.01
  * @see ExcelReader
  */

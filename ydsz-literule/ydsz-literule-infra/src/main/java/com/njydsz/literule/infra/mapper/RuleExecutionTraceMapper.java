@@ -31,7 +31,7 @@ import com.njydsz.literule.domain.entity.RuleExecutionTrace;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RuleExecutionTrace 执行轨迹实体
  * @see com.njydsz.literule.server.service.RuleExecutionTraceService 轨迹 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

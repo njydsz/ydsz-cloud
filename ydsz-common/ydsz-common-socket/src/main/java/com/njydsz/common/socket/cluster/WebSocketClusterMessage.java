@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
  * （当前仅判定 major 版本号，兼容同大版本下的字段新增）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @NoArgsConstructor

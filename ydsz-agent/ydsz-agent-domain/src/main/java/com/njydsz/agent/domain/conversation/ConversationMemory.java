@@ -21,7 +21,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
  * 返回的消息列表不应被调用方原地修改（建议返回防御性拷贝）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface ConversationMemory {
 

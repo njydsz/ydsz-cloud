@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于创建用户-角色关联关系。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class UserRoleDTO implements Serializable {

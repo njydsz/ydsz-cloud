@@ -44,7 +44,7 @@ import com.njydsz.userinfo.api.client.OrgQueryClient;
  * OrgQueryClient} 且未注册其它 {@link NameAssembler}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class UserInfoNameAssembler implements NameAssembler {

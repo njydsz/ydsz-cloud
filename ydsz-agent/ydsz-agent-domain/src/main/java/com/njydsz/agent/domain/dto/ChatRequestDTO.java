@@ -24,7 +24,7 @@ import lombok.Data;
  * <p>当 {@code multimodalContent} 非空时，优先使用多模态格式，{@code message} 忽略。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Schema(description = "对话请求")

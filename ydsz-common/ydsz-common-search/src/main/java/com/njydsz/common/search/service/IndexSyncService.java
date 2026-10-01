@@ -33,7 +33,7 @@ import com.njydsz.common.util.concurrent.RetryUtils;
  * <p>业务数据变更同步到 ES。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class IndexSyncService {

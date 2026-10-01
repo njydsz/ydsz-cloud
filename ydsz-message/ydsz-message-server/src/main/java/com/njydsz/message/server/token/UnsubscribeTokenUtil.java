@@ -35,7 +35,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 @RequiredArgsConstructor

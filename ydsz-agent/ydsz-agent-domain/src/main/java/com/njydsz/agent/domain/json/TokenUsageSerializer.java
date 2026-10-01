@@ -12,7 +12,7 @@ import com.njydsz.common.json.writer.JSONWriter;
  * Token 计量的 JSON 形状与 LLM API 契约一致。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class TokenUsageSerializer implements JsonSerializer<TokenUsage> {
 

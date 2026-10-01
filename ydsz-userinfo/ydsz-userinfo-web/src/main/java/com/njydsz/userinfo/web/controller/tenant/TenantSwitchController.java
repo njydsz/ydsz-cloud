@@ -43,7 +43,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
  * @since 26.09.08
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/auth/tenant")
 @RequiredArgsConstructor

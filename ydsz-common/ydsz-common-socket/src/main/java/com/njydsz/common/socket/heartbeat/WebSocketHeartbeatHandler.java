@@ -28,7 +28,7 @@ import com.njydsz.common.socket.session.OnlineUserService;
  * WebSocketProperties.Heartbeat#getStaleSessionTimeout()} 未活跃的 Session 标记为僵尸连接并触发下线清理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class WebSocketHeartbeatHandler {

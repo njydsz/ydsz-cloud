@@ -137,8 +137,8 @@ rules:
       禁止直接 import io.netty.*，必须通过 ydsz-common-netty 或 ydsz-common-socket 封装。
 
       **豁免场景**：
-      - reactor-netty / spring-webflux 的 API 签名级引用 `io.netty.channel.ChannelOption` 
-        （如 `HttpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)` — reactor-netty API 
+      - reactor-netty / spring-webflux 的 API 签名级引用 `io.netty.channel.ChannelOption`
+        （如 `HttpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)` — reactor-netty API
         底层依赖 Netty 原生类型，其 `option()` 方法接收 `ChannelOption<T>` 参数，
         ydsz-common-netty 的 `NettyChannelOptions` 封装类已废弃删除，无替代封装存在，
         属于"不可绕过的底层依赖"豁免情形）
@@ -1321,7 +1321,7 @@ rules:
       // ❌ @ApiVersion 在 @RequestMapping 下方
       @RestController
       @RequestMapping("/api/app")
-      @ApiVersion("26.09.01")  // 位置错误，应在上方
+      @ApiVersion("26.10.01")  // 位置错误，应在上方
       public class AppInfoController { }
     example_good: |
       // ✅ @ApiVersion 在 @RequestMapping 上方
@@ -1329,7 +1329,7 @@ rules:
        * OAuth2 应用注册
        * @author Marvin Lee
        */
-      @ApiVersion("26.09.01")
+      @ApiVersion("26.10.01")
       @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
       @Slf4j
       @RestController
@@ -3794,7 +3794,7 @@ rules:
     category: "common-reuse"
     title: "【建议】i18n 使用率门禁"
     description: |
-      业务模块 pom 引入 ydsz-common-locales 后，必须在代码中实际使用 I18nMessages 
+      业务模块 pom 引入 ydsz-common-locales 后，必须在代码中实际使用 I18nMessages
       或 I18n.message() API，不得仅声明依赖而不使用。
 
       **为什么要求**：
@@ -4496,7 +4496,7 @@ rules:
       3. 网关错误码进入 ErrorCodeTable 后可被 Actuator 端点查询
     example_good: |
       ```java
-      @YdszExceptionCode(module = "gateway", since = "26.09.01")
+      @YdszExceptionCode(module = "gateway", since = "26.10.01")
       public enum GatewayErrorCode {
           AUTH_FAILED("40100", "gateway.error.auth_failed");
       }
@@ -5857,7 +5857,7 @@ stats:
     severity: "P0"
     title: "【强制】禁止业务代码直接 import Micrometer API，必须通过 MetricsCollector SPI"
     description: |
-      所有业务模块和 common 子模块的指标采集必须通过 `com.njydsz.common.sentry.spi.MetricsCollector` SPI 
+      所有业务模块和 common 子模块的指标采集必须通过 `com.njydsz.common.sentry.spi.MetricsCollector` SPI
       或 `com.njydsz.common.sentry.adapter.SentryMetricsAdapter` 适配器上报，
       **严禁直接 import `io.micrometer.core.instrument.*`**。
 
@@ -5873,9 +5873,9 @@ stats:
       public class OrderMetricsCollector {
           private final MetricsCollector collector;
           public OrderMetricsCollector(MetricsCollector collector) { this.collector = collector; }
-          
+
           public void incOrderCreated(String channel) {
-              collector.incrementCounter("ydsz_order_created_total", 
+              collector.incrementCounter("ydsz_order_created_total",
                   "订单创建总数", Map.of("channel", channel), 1.0);
           }
       }
@@ -5895,7 +5895,7 @@ stats:
       // 违规：直接 import Micrometer API
       import io.micrometer.core.instrument.Counter;
       import io.micrometer.core.instrument.MeterRegistry;
-      
+
       @Component
       public class OrderMetrics {
           private final MeterRegistry registry;
@@ -5952,7 +5952,7 @@ stats:
     severity: "P1"
     title: "TCP 推送 Handler 必须使用 AbstractJsonTcpHandler 基类"
     description: |
-      禁止 TCP 推送 Handler 直接 extends {@code ChannelInboundHandlerAdapter} 并手动实现 
+      禁止 TCP 推送 Handler 直接 extends {@code ChannelInboundHandlerAdapter} 并手动实现
       ByteBuf → UTF-8 → JSON 解析、空闲超时关闭、异常关闭、AUTH 认证等通用逻辑。
       必须使用 {@code com.njydsz.common.netty.handler.AbstractJsonTcpHandler} 作为基类。
     fix: "参见 YDIZ-NETTY-001 原文（已在上方 P1 规则中完整定义）"

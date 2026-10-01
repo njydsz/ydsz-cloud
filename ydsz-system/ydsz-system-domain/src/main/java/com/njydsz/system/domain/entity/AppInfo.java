@@ -36,7 +36,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * {@code app_key}），分别加速编码去重与认证查询。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

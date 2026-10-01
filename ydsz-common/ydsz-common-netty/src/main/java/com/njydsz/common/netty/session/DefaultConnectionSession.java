@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>此实现由框架内部创建，业务层不应直接实例化。 通过 {@link SessionRepository#getById(String)} 获取。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class DefaultConnectionSession implements ConnectionSession {

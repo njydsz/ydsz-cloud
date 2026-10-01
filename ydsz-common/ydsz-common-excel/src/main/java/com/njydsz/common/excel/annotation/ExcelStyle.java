@@ -27,9 +27,9 @@ import java.lang.annotation.Target;
  *
  * @author ydsz-team
 
- * @version 26.09.01
+ * @version 26.10.01
  * @see com.njydsz.common.excel.core.ExcelWriter
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

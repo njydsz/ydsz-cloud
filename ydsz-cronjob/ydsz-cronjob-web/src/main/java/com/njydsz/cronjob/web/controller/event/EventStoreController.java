@@ -26,11 +26,11 @@ import com.njydsz.cronjob.server.service.event.EventStoreService;
  * <p>提供领域事件流的查询接口，用于审计追溯和状态重建。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Tag(name = "事件存储", description = "Event Sourcing 事件流查询")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/events")
 @RequiredArgsConstructor

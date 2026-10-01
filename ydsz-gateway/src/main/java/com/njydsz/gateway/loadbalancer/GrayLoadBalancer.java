@@ -50,7 +50,7 @@ import com.njydsz.common.util.id.RandomUtils;
  *   <li>exchange attribute {@code X-Gray-Tag}(Filter 写入的备份)
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {

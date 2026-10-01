@@ -27,7 +27,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * 「按分组列出」走该索引范围扫描，性能可控。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.domain.query.PageQuery 父类（分页参数）
  */
 @Data

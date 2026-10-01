@@ -19,7 +19,7 @@ import com.njydsz.nextwiki.infra.mapper.SpaceMemberMapper;
  * 空间成员仓储实现
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Repository

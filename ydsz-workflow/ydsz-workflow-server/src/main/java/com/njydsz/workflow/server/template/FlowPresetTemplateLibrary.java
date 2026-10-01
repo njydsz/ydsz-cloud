@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  *   <li>项目立项（PROJECT）— 发起人 → 部门负责人 → 项目总监 → 总经理审批
  * </ol>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -62,7 +62,7 @@ public class FlowPresetTemplateLibrary {
 
   private final List<FlowTemplateDefinition> templates = new ArrayList<>(10);
 
-  
+
   /** 默认构造，初始化内置模板库。 */
   public FlowPresetTemplateLibrary() {
     templates.add(buildLeaveTemplate());

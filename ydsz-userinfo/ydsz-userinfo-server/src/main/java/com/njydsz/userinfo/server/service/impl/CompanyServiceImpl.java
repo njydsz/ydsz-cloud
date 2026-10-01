@@ -39,7 +39,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * <p><b>事务：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CompanyService Service 接口
  */
 @Slf4j
@@ -66,7 +66,7 @@ public class CompanyServiceImpl implements CompanyService {
    *
    * <p>一次性查询全表后在内存中构建树，使用 {@link TreeBuilder#buildSimple} O(n) 算法。 公司数据量小（百级别），全量加载可接受。
    *
-   * <p>注：26.09.01 精简版 {@code buildSimple} 不再自动填充 {@code level}/{@code path} 元数据， 当前无下游消费者，保持为 null。
+   * <p>注：26.10.01 精简版 {@code buildSimple} 不再自动填充 {@code level}/{@code path} 元数据， 当前无下游消费者，保持为 null。
    *
    * @return 公司树形结构根节点列表，无数据返回空列表
    */

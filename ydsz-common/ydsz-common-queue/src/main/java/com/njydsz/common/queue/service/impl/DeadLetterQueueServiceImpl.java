@@ -34,7 +34,7 @@ import com.njydsz.common.queue.service.IMessagePublisher;
  * <p>供后台调度消费做告警、人工干预、归档等处理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {

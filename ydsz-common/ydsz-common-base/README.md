@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供 Web/App 共享的 HTTP 基座：CORS、时区、I18n、安全头、请求体大小限制、TraceId、请求日志、上下文清理、全局响应包装、OpenAPI/Knife4j 文档、文档导出、健康检查、模块指标基类、限流与幂等 |
 | **依赖** | common-core、common-util、common-exception、common-json、common-auth、common-safe；可选：spring-boot-actuator、spring-boot-health、springdoc-openapi、knife4j、micrometer-core |
-| **版本** | 26.09.01-SNAPSHOT |
+| **版本** | 26.10.01-SNAPSHOT |
 
 ## 核心能力
 
@@ -208,7 +208,7 @@ public class CustomTraceProperties extends BaseTraceProperties {
 | `ydsz.doc.production-enabled` | `false` | 生产环境是否允许访问文档 |
 | `ydsz.doc.api-docs-path` | `/v3/api-docs` | OpenAPI 文档 JSON 路径 |
 | `ydsz.doc.knife4j-path` | `/doc.html` | Knife4j 文档访问路径 |
-| `ydsz.doc.doc-version` | `26.09.01` | 文档版本号 |
+| `ydsz.doc.doc-version` | `26.10.01` | 文档版本号 |
 | `ydsz.doc.info.title` | `API Documentation` | 文档标题 |
 | `ydsz.doc.info.description` | `` | 文档描述 |
 | `ydsz.doc.groups` | `[]` | 分组配置列表 |
@@ -291,6 +291,6 @@ com.njydsz.common.base.i18n.I18nAutoConfiguration
 
 ## 变更记录
 
-- **26.09.01**（2026-08-17）：补全 `YdszSecurityHeadersProperties` / `YdszRequestProperties` / `RequestBodySizeLimitFilter` 文档；补全 api 包（`ApiVersion` / `ApiVersionOpenApiCustomizer` / `ApiVersionResolver`）文档
-- **26.09.01**（2026-08-17）：补全 i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
-- **26.09.01**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点、健康检查端点、注意事项；统一版本号
+- **26.10.01**（2026-08-17）：补全 `YdszSecurityHeadersProperties` / `YdszRequestProperties` / `RequestBodySizeLimitFilter` 文档；补全 api 包（`ApiVersion` / `ApiVersionOpenApiCustomizer` / `ApiVersionResolver`）文档
+- **26.10.01**（2026-08-17）：补全 i18n（`SpringMessageResolver` / `MessageResolverRegistry` / `MessageResolverHolder`）、`CoreHealthIndicator` 文档
+- **26.10.01**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全横切点执行顺序表、SPI 扩展点、健康检查端点、注意事项；统一版本号

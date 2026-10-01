@@ -26,7 +26,7 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  * 供审计日志和下游订阅方消费。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

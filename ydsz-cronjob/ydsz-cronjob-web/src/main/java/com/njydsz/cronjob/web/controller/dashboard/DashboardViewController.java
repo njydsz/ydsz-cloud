@@ -11,9 +11,9 @@ import com.njydsz.common.base.api.ApiVersion;
  * <p>返回运维 Dashboard 静态页面，使用 ECharts 按需引入方式渲染图表。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Controller
 public class DashboardViewController {
 

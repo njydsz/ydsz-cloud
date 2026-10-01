@@ -49,7 +49,7 @@ import com.njydsz.common.netty.session.SessionRepository;
  * 连接管理与粘拆包处理的关键路径单测。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @AutoConfiguration

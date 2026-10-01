@@ -15,6 +15,6 @@
  * <p><b>设计原则：</b>领域事件不可变，使用 record 或 final 字段。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 package com.njydsz.workflow.domain.event;

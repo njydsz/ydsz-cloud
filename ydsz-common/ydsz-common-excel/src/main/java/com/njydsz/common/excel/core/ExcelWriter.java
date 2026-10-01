@@ -76,7 +76,7 @@ import com.njydsz.common.excel.support.mh.MHFieldAccessor;
  * @see SuperFastExcelWriter
  * @see WriteMetadata
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ExcelWriter implements AutoCloseable {
 

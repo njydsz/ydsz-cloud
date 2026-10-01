@@ -11,7 +11,7 @@ import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
  * {@code implements HealthIndicator} 样板改为模板方法复用）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.14 改继承 AbstractModuleHealthIndicator，消除样板（P1-5 整改）
  */
 public class MessageAppHealthIndicator extends AbstractModuleHealthIndicator {

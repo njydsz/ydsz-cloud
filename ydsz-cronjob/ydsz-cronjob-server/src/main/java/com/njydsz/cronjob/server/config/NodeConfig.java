@@ -16,7 +16,7 @@ import lombok.Data;
  * <p>通过 JSR-380 注解声明约束，启动时自动校验。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class NodeConfig {

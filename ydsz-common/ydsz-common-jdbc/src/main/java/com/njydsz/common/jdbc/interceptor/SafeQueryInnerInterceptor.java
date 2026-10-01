@@ -54,7 +54,7 @@ import com.njydsz.common.exception.pagination.DeepPaginationException;
  *
  * @author ydsz-team
  * @see com.njydsz.common.domain.query.PageQuery 原职责来源
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SafeQueryInnerInterceptor implements InnerInterceptor {
 

@@ -14,7 +14,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * 属性元素，遵循 RFC 7643 Section 4.1.1。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

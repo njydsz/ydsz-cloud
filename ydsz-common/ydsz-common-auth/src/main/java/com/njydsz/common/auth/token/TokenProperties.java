@@ -38,7 +38,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>生成推荐密钥可使用 {@link #generateSecureSecret()} 静态工具方法。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.auth.token")

@@ -30,7 +30,7 @@ import com.njydsz.common.base.constant.DocConstants;
  *     knife4j-path: /doc.html
  *     info:
  *       title: 我的应用 API 文档
- *       version: 26.09.01
+ *       version: 26.10.01
  *     groups:
  *       - name: default
  *         base-package: com.example.controller
@@ -43,7 +43,7 @@ import com.njydsz.common.base.constant.DocConstants;
  * <p><b>线程安全性：</b>本类由 Spring Boot 配置属性绑定机制管理， 绑定完成后通常视为只读；若业务方在运行时修改属性需自行保证线程安全。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.doc")

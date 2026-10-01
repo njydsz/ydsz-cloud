@@ -16,7 +16,7 @@ import lombok.Data;
  * <p><b>YDIZ-OOP-006 合规：</b>DTO {@code isEnabled}（primitive {@code boolean}）与实体/VO 一致。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class AlertRulePutDTO implements Serializable {

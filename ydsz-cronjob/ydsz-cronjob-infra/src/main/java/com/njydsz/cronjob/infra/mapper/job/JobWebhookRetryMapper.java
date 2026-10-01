@@ -18,7 +18,7 @@ import com.njydsz.cronjob.domain.entity.job.JobWebhookRetry;
  * <p>注解式 SQL，与模块内其他 Mapper 风格一致。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface JobWebhookRetryMapper extends BaseMapper<JobWebhookRetry> {

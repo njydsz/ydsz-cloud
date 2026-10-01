@@ -27,7 +27,7 @@ import com.njydsz.common.base.config.BaseTraceProperties;
  * @author ydsz-team
  * @see BaseTraceProperties
  * @see com.njydsz.common.web.filter.TraceIdResponseFilter
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Validated

@@ -13,7 +13,7 @@ import com.njydsz.common.locales.util.I18n;
  * <p>替代原枚举 {@code DataScopeType}，改用常量 + String 方案消除跨模块枚举耦合。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class DataScopeConstants {
 

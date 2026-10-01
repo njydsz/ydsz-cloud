@@ -8,7 +8,7 @@
 <!-- ====================================================================== -->
 <!--                                                                        -->
 <!-- Effective POM for project                                              -->
-<!-- 'com.njydsz:ydsz-common-excel:jar:26.09.01-SNAPSHOT'                   -->
+<!-- 'com.njydsz:ydsz-common-excel:jar:26.10.01-SNAPSHOT'                   -->
 <!--                                                                        -->
 <!-- ====================================================================== -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -16,11 +16,11 @@
   <parent>
     <groupId>com.njydsz</groupId>
     <artifactId>ydsz-common</artifactId>
-    <version>26.09.01-SNAPSHOT</version>
+    <version>26.10.01-SNAPSHOT</version>
   </parent>
   <groupId>com.njydsz</groupId>
   <artifactId>ydsz-common-excel</artifactId>
-  <version>26.09.01-SNAPSHOT</version>
+  <version>26.10.01-SNAPSHOT</version>
   <name>ydsz-common-excel</name>
   <description>高性能 Excel 处理模块 — 纯手工 OOXML 字节流引擎（零 POI 依赖）、MethodHandle 字段访问优化、公式注入防护</description>
   <url>https://spring.io/projects/spring-boot/ydsz-cloud/ydsz-common/ydsz-common-excel</url>
@@ -263,7 +263,7 @@
     <redisson.version>4.6.1</redisson.version>
     <resilience4j.version>2.4.0</resilience4j.version>
     <resource.delimiter>@</resource.delimiter>
-    <revision>26.09.01-SNAPSHOT</revision>
+    <revision>26.10.01-SNAPSHOT</revision>
     <rocketmq-client.version>5.3.3</rocketmq-client.version>
     <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
     <rsocket.version>1.1.5</rsocket.version>
@@ -320,7 +320,7 @@
     <xmlunit2.version>2.11.0</xmlunit2.version>
     <yasson.version>3.0.4</yasson.version>
     <yauaa.version>7.32.0</yauaa.version>
-    <ydsz.version>26.09.01-SNAPSHOT</ydsz.version>
+    <ydsz.version>26.10.01-SNAPSHOT</ydsz.version>
     <zipkin-reporter.version>3.5.3</zipkin-reporter.version>
   </properties>
   <dependencyManagement>
@@ -328,132 +328,132 @@
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-core</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-locales</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-util</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-exception</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-jdbc</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-redis</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-lock</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-thread</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-tenant</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-cache</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-auth</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-safe</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-feign</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-audit</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-file</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-notify</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-queue</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-event</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-config</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-socket</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-netty</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-docs</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-json</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-base</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.ow2.asm</groupId>
@@ -468,17 +468,17 @@
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-excel</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-search</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-sentry</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.mybatis</groupId>
@@ -716,268 +716,268 @@
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-common-app</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-userinfo</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-cronjob</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-system</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-literule</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-message</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-workflow</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-nextwiki</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-agent</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-system-api</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-userinfo-api</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-cronjob-api</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-message-api</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-literule-api</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-workflow-api</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-agent-api</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-system-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-userinfo-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-cronjob-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-message-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-literule-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-workflow-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-nextwiki-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-agent-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-system-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-userinfo-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-cronjob-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-message-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-literule-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-workflow-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-nextwiki-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-agent-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-system-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-userinfo-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-cronjob-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-message-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-literule-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-workflow-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-nextwiki-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-agent-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-system-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-userinfo-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-cronjob-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-message-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-literule-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-workflow-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-nextwiki-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-agent-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-generator-domain</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-generator-infra</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-generator-server</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-generator-web</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>com.baomidou</groupId>
@@ -13046,7 +13046,7 @@
     <dependency>
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-util</artifactId>
-      <version>26.09.01-SNAPSHOT</version>
+      <version>26.10.01-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -13220,7 +13220,7 @@
       </testResource>
     </testResources>
     <directory>D:\Code\open\ydsz-cloud\ydsz-common\ydsz-common-excel\target</directory>
-    <finalName>ydsz-common-excel-26.09.01-SNAPSHOT</finalName>
+    <finalName>ydsz-common-excel-26.10.01-SNAPSHOT</finalName>
     <pluginManagement>
       <plugins>
         <plugin>

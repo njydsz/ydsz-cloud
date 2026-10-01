@@ -58,7 +58,7 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.search.service.UnifiedSearchService 统一搜索服务
  * @see SearchDomainService DB 降级搜索
  */

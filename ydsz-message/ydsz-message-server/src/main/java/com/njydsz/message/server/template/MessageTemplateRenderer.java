@@ -24,7 +24,7 @@ import java.util.Set;
  * 二者能力分层不同，不合并；非消息域的模板渲染需求一律优先 common-notify。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface MessageTemplateRenderer {
 

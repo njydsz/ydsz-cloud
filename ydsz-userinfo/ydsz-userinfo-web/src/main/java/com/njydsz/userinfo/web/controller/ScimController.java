@@ -51,10 +51,10 @@ import com.njydsz.userinfo.server.service.UserAccountService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 /**
  * SCIM 协议控制器（System for Cross-domain Identity Management）。
  * <p>

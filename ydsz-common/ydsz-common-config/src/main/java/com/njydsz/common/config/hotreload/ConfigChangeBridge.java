@@ -62,7 +62,7 @@ import com.njydsz.common.config.hotreload.ConfigChangeEvent.ChangeType;
  * 在 AutoConfiguration 层控制。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent> {
 

@@ -41,7 +41,7 @@ import com.njydsz.workflow.server.cache.CacheKeyBuilder;
  * <p><b>P2-2 整改（26.09.30）</b>：使用 {@link CacheKeyBuilder} 集中管理 key 构造，消除硬编码字符串常量。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

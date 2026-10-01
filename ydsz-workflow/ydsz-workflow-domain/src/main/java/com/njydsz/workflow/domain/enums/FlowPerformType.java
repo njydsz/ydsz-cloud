@@ -27,7 +27,7 @@ package com.njydsz.workflow.domain.enums;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see impl.CountersignStrategy 会签策略接口
  * @see impl.strategy.WeightedCountersignStrategy 票签策略实现
  */

@@ -32,7 +32,7 @@ import com.njydsz.common.util.net.ClientIpResolver;
  * <p><b>降级策略：</b>Redis 异常时不阻断服务（fail-open），仅记录日志。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see IpAccessService
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)

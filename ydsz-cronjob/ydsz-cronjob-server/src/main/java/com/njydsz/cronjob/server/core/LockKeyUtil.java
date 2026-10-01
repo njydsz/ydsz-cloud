@@ -17,7 +17,7 @@ package com.njydsz.cronjob.server.core;
  * <p>锁的获取与释放统一委托 ydsz-common-lock 的 DistributedLocker（通过 JobLockManager）， 不再使用 Lua 脚本自实现。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class LockKeyUtil {
 

@@ -39,7 +39,7 @@ import com.njydsz.generator.vo.GenResultVO;
  * @author ydsz-team
  * @since 26.09.05
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @AuthApiPermission(apiCodes = PermissionCodes.GENERATOR_USER)
 @RestController

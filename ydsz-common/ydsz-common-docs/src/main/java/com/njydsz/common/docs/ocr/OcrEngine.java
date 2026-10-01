@@ -6,7 +6,7 @@ package com.njydsz.common.docs.ocr;
  * <p>业务方实现此接口对接外部 OCR 服务（如阿里云 OCR / 百度 OCR / Tesseract）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface OcrEngine {
 

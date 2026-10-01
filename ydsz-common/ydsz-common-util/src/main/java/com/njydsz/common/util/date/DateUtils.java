@@ -25,9 +25,9 @@ import com.njydsz.common.util.api.Experimental;
  * java.text.SimpleDateFormat} 不同）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@Experimental(value = "能力储备：JDK 时间 API 常用封装；节假日日历与国际化场景待验证", since = "26.09.01")
+@Experimental(value = "能力储备：JDK 时间 API 常用封装；节假日日历与国际化场景待验证", since = "26.10.01")
 public final class DateUtils {
 
   /** 默认日期时间格式：yyyy-MM-dd HH:mm:ss */

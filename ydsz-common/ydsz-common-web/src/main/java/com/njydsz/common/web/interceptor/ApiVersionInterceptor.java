@@ -29,7 +29,7 @@ import com.njydsz.common.base.api.ApiVersionResolver;
  * <p>可通过 {@code ydsz.web.api-version.enabled=false} 关闭，或通过自定义 {@link ApiVersionInterceptor} Bean 覆盖。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ApiVersion
  * @see ApiVersionResolver
  */

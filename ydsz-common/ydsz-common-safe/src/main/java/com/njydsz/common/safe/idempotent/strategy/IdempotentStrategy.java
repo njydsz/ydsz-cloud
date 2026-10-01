@@ -6,7 +6,7 @@ package com.njydsz.common.safe.idempotent.strategy;
  * <p>定义幂等锁的获取、释放和检查语义。获取成功返回 token（用于安全释放）， 释放时校验 token 匹配后删除，避免误删他人持有的锁。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface IdempotentStrategy {
 

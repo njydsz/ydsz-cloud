@@ -13,7 +13,7 @@ import com.njydsz.userinfo.domain.vo.LanguageVO;
  * <p>封装语言的完整业务逻辑：CRUD、默认语言唯一性管理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface LanguageService {
 

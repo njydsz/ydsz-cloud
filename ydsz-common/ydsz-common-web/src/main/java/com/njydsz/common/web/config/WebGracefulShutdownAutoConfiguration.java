@@ -50,7 +50,7 @@ import com.njydsz.common.safe.config.SecurityHeaderProperties;
  * 会在停机开始时输出日志，便于运维观测。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)

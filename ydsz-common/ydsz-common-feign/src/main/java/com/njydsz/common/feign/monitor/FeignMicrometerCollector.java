@@ -28,7 +28,7 @@ import io.micrometer.core.instrument.Timer;
  * 的对象分配开销，使用 {@link ConcurrentHashMap} 缓存已创建的 Counter 和 DistributionSummary 实例，避免每次调用重新构建 Builder。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class FeignMicrometerCollector {
 

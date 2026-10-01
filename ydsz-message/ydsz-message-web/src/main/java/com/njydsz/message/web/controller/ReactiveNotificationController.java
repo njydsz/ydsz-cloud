@@ -38,12 +38,12 @@ import com.njydsz.message.server.reactive.ReactiveSseRegistry;
  * 试点阶段主要用作对比参考，验证响应式编程模型的集成可行性。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ReactiveSseRegistry
  * @see ReactiveEvent
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/reactive")
 @RequiredArgsConstructor

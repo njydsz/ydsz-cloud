@@ -13,7 +13,7 @@ import lombok.Data;
  * com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class JobDagNodeInstanceVO implements Serializable {

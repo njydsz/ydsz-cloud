@@ -33,7 +33,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @ConditionalOnClass(name = "jakarta.servlet.http.HttpServletResponse")
 public class ExcelWebSupport {

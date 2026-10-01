@@ -77,13 +77,13 @@ import com.njydsz.message.server.service.template.TemplateVersionService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.template.TemplateVersionService 模板版本服务
  * @see com.njydsz.message.domain.entity.template.MsgTemplateVersion 模板版本实体
  */
 @Slf4j
 @Tag(name = "模板版本管理", description = "版本历史、回滚、预览、试发")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/template/version")
 @RequiredArgsConstructor

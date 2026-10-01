@@ -21,7 +21,7 @@ import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
  * <p>所有字段均为 {@code final}，天然线程安全，无需同步。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ExcelConfig {
 

@@ -54,7 +54,7 @@ import lombok.NoArgsConstructor;
  *     step: HIGH_AMOUNT_RULE
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Data

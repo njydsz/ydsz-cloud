@@ -33,7 +33,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  * 纳入统一监控、指标采集与 Actuator 端点查询。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class CacheThreadPoolManager implements DisposableBean {
 

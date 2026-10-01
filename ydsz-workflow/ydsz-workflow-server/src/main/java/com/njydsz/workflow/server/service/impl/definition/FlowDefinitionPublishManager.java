@@ -50,7 +50,7 @@ import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
  * <p><b>缓存治理：</b>发布/停用/切换/回滚时通过 {@link CacheEvict} 双层失效本地与 Redis 集群缓存。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component
@@ -112,7 +112,7 @@ public class FlowDefinitionPublishManager {
    *
    * @param definitionId 流程定义 ID
    */
-  
+
   public void publish(String definitionId) {
     publish(definitionId, false);
   }
@@ -136,7 +136,7 @@ public class FlowDefinitionPublishManager {
    * @param definitionId 流程定义 ID
    * @param force 是否强制发布（跳过状态校验）
    */
-  
+
   public void publish(String definitionId, boolean force) {
     FlowDefinitionVO def = definitionRepository.findById(definitionId).orElse(null);
     if (def == null) {
@@ -172,7 +172,7 @@ public class FlowDefinitionPublishManager {
    *
    * @param definitionId 流程定义 ID
    */
-  
+
   public void deprecate(String definitionId) {
     definitionRepository.publish(definitionId, DEPRECATE_PUBLISH_VERSION);
     flowDefinitionCacheService.evict(definitionId);
@@ -200,7 +200,7 @@ public class FlowDefinitionPublishManager {
    * @param definitionId 目标激活的流程定义 ID
    * @param tenantId 租户 ID
    */
-  
+
   public void switchActiveVersion(String flowCode, String definitionId, String tenantId) {
     if (!StringUtils.hasText(flowCode)) {
       throw SysException.builder()
@@ -274,7 +274,7 @@ public class FlowDefinitionPublishManager {
    * @param tenantId 租户 ID
    * @return 回滚结果（含回滚前后的 definitionId）
    */
-  
+
   public Map<String, Object> rollbackDefinition(String flowCode, String tenantId) {
     if (!StringUtils.hasText(flowCode)) {
       throw SysException.builder()

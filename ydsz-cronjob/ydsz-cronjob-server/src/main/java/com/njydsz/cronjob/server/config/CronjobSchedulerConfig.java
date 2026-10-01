@@ -22,7 +22,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * <p>配合 {@code JobServiceImpl} 构造器注入使用，替代原有的 {@code @PostConstruct initScheduler()} 自建逻辑。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Configuration

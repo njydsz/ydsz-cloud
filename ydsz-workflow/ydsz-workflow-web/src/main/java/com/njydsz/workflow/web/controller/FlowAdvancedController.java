@@ -63,7 +63,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicSe
  * <p><b>设计原则：</b>Controller 仅做参数透传、权限校验、VO 转换； 报表生成、实例合并、会签阈值计算、催办限流逻辑下沉到对应 Service。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowReportService 周报 / 月报服务
  * @see FlowInstanceMergeService 多实例合并服务
  * @see FlowCountersignDynamicService 动态会签服务
@@ -71,7 +71,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicSe
  * @see FlowUrgeLimiter 催办限流器
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @Tag(name = "workflow-advanced", description = "工作流高级功能接口")
 @RequestMapping("/workflow/advanced")

@@ -32,7 +32,7 @@ import lombok.Data;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder
@@ -87,7 +87,7 @@ public class EmailMessage implements Serializable {
    * 邮件附件
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   @Builder
@@ -109,7 +109,7 @@ public class EmailMessage implements Serializable {
    * 内联资源（用于 HTML 邮件中通过 cid: 引用）
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   @Builder

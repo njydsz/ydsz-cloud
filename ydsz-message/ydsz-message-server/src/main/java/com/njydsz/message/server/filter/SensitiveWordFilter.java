@@ -26,7 +26,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * <p>过滤策略：命中敏感词替换为 {@code ***}，多次命中分别替换。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

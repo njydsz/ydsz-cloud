@@ -60,7 +60,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * <p>26.09.19 变更（P2-7）：新增 {@code /actuator/threadpools/{poolName}/dump} 端点输出线程栈帧。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 // CHECKSTYLE.OFF: RegexpSinglelineJava — 端点命名与 Spring Boot Actuator 规范一致
 @Endpoint(id = "threadpools")

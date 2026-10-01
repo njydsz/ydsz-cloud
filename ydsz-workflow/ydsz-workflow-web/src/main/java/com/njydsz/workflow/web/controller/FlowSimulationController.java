@@ -24,9 +24,9 @@ import com.njydsz.workflow.server.simulator.SimulationResult;
  * <p>提供流程定义模拟执行能力，在不创建实际实例的情况下预测执行路径。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/workflow/simulation")
 @Tag(name = "流程模拟", description = "流程定义模拟执行接口")

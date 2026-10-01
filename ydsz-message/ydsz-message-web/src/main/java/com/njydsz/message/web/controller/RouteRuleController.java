@@ -68,13 +68,13 @@ import com.njydsz.message.server.service.config.RouteRuleService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.config.RouteRuleService 路由规则服务
  * @see com.njydsz.message.domain.entity.config.MsgRouteRule 路由规则实体
  */
 @Tag(name = "路由规则", description = "消息路由规则管理")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/route-rule")
 @RequiredArgsConstructor

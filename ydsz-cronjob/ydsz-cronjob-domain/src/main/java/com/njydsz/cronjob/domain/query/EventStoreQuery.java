@@ -16,7 +16,7 @@ import static lombok.AccessLevel.PROTECTED;
  * 统一继承 {@link PageQuery}，获得分页校验、结构化排序、深度分页风险评估等能力。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

@@ -31,7 +31,7 @@ import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
  * 由调用方基于 {@code WebSocketContext} 传入限定 key。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class RedisOfflineMessageStore implements OfflineMessageStore {

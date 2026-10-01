@@ -15,7 +15,7 @@ import java.util.Objects;
  * @param columns 列定义列表（不可变）
  * @param description 表描述（可为 null）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record TableSchema(
     String tableName,

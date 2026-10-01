@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>封装消息发送所需的全部信息，支持多通道路由。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @apiNote 消息 DTO 原有职责在 Feign 层定义，目前已扩展为项目全局使用的消息发送请求 DTO；
  *     后续计划将其迁移至 ydsz-common-core 或 ydsz-message，在此之前继续在此处定义以兼容全量调用方。
  */

@@ -20,7 +20,7 @@ import java.math.BigDecimal;
  * <p>针对热路径编程时，可仅注入 {@link FeignCircuitBreakerGuard} 避免依赖运维查询方法。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FeignCircuitBreakerGuard
  * @see CircuitBreakerFeignConfiguration
  */

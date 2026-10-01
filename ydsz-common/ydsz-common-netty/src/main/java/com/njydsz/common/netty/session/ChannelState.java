@@ -24,7 +24,7 @@ package com.njydsz.common.netty.session;
  * <p>状态流转是单向的（CLOSED 除外，任何状态都可能直接流转到 CLOSED）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum ChannelState {
 

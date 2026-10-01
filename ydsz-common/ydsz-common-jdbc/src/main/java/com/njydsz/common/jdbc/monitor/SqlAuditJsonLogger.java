@@ -48,7 +48,7 @@ import org.slf4j.MDC;
  * <p>日志 logger name: {@code sql.audit.json} — 可独立配置 appender 输出到专用文件。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SqlAuditJsonLogger {

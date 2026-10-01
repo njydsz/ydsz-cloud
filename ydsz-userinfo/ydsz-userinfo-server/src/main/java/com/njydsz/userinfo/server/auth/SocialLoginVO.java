@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.enums.SocialPlatformLinkingStrategy;
  * 专用于社交登录场景，额外携带来源平台信息和绑定状态。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class SocialLoginVO {

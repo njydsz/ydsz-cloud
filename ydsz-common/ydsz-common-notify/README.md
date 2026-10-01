@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供统一的多渠道消息通知发送能力，集成限流、熔断、降级、去重、聚合、模板渲染、重试等全链路保障 |
 | **依赖** | common-core、common-util、common-exception、common-redis（可选）、common-thread；spring-boot-starter、spring-boot-starter-mail（可选）；可选依赖 rocketmq-spring-boot-starter、spring-boot-health、micrometer-core、spring-data-redis、jasypt、apache-httpclient5 |
-| **版本** | 26.09.01-SNAPSHOT |
+| **版本** | 26.10.01-SNAPSHOT |
 
 ## 核心能力
 
@@ -375,7 +375,7 @@ public class TencentCloudSmsProvider implements SmsProvider {
 
 ## 变更记录
 
-- **26.09.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
-- **26.09.01**（2026-08-20）：新增事务安全发布（`TransactionalNotifyPublisher`）、时间窗聚合（`TimeWindowAggregator`）、消息去重（`NotifyDedupService`）、通知审计（`NotifyAuditService`）、国际化（`NotifyI18nService`/`NotifyI18nResolver`）；扩展渠道覆盖度至 7 大渠道（新增 Webhook/Insite）。
-- **26.09.01**（2026-08-05）：拆分为 `core` / `channel` / `template` / `security` / `config` / `aggregate` / `dedup` / `preference` / `i18n` / `metrics` / `fallback` / `tracking` / `audit` / `helper` / `provider` 子模块，架构优化，取消单一扁平包结构。
-- **26.09.01**（2026-08-02）：初始版本，提供 `NotifyServiceImpl` + `EmailNotifySender` + `SmsNotifySender` + `SendChain` + `DeadLetterHandler`。
+- **26.10.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
+- **26.10.01**（2026-08-20）：新增事务安全发布（`TransactionalNotifyPublisher`）、时间窗聚合（`TimeWindowAggregator`）、消息去重（`NotifyDedupService`）、通知审计（`NotifyAuditService`）、国际化（`NotifyI18nService`/`NotifyI18nResolver`）；扩展渠道覆盖度至 7 大渠道（新增 Webhook/Insite）。
+- **26.10.01**（2026-08-05）：拆分为 `core` / `channel` / `template` / `security` / `config` / `aggregate` / `dedup` / `preference` / `i18n` / `metrics` / `fallback` / `tracking` / `audit` / `helper` / `provider` 子模块，架构优化，取消单一扁平包结构。
+- **26.10.01**（2026-08-02）：初始版本，提供 `NotifyServiceImpl` + `EmailNotifySender` + `SmsNotifySender` + `SendChain` + `DeadLetterHandler`。

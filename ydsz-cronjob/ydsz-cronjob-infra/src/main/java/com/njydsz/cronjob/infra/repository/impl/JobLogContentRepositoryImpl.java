@@ -16,7 +16,7 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogContentMapper;
  * 任务日志内容 Repository 实现（Infra 层）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Repository
 @RequiredArgsConstructor

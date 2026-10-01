@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * 调用方直接导入 {@code com.njydsz.common.thread.registry.ThreadPoolRegistry} 获取/判断线程池。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RequiredArgsConstructor

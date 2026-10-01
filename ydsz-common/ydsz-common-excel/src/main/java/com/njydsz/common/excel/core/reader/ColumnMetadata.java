@@ -19,7 +19,7 @@ import com.njydsz.common.excel.support.mh.MHFieldAccessor.FieldSetter;
  * 重复查找和反射调用。类型转换策略接收零 POI 依赖的 {@link ICell} 接口。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class ColumnMetadata {
 

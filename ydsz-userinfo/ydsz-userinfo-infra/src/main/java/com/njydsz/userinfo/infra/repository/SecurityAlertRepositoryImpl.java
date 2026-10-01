@@ -23,7 +23,7 @@ import com.njydsz.userinfo.infra.mapper.SecurityAlertMapper;
  * <p>基于 MyBatis-Plus 实现 domain 层 {@link SecurityAlertRepository} 接口。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Repository
 @RequiredArgsConstructor

@@ -14,7 +14,7 @@ package com.njydsz.literule.server.engine.liteexpr;
  * });
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @FunctionalInterface

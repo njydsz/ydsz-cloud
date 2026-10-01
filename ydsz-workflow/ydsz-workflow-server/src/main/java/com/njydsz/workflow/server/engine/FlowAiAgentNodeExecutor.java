@@ -61,7 +61,7 @@ import com.njydsz.workflow.server.engine.impl.FlowVariableReplacer;
  * <p><b>P0-1 线程池统一：</b>使用 {@link InternalExecutorFactory} 创建命名化、可观测的线程池，
  * 纳入 {@code ThreadPoolRegistry} 统一监控。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

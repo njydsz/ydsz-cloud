@@ -37,7 +37,7 @@ import com.njydsz.common.locales.util.I18n;
  * boolean mine = sharder.isMine("rule-code-001", selfNodeId);
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public class ConsistentHashSharder {

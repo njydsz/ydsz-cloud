@@ -20,9 +20,9 @@ import com.njydsz.common.excel.core.metadata.ReadMetadata;
  *
  * @author ydsz-team
 
- * @version 26.09.01
+ * @version 26.10.01
  * @see ExcelReader
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class InputSourceDetector {
 

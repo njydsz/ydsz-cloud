@@ -33,7 +33,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  * <p><b>依赖说明</b>：使用 {@link RedisPubSubOps} 收敛所有 Redis Pub/Sub 操作，
  * 禁止直接注入 {@code RedissonClient}。豁免原因已随迁移消除（此前 RTopic 操作现由 {@link RedisPubSubOps} 替代）。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {

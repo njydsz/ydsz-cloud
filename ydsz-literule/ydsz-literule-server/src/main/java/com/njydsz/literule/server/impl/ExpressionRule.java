@@ -27,7 +27,7 @@ import com.njydsz.literule.server.engine.liteexpr.LiteExprEngine;
  *
  * <p>从 {@link RuleDefinitionDTO} 构建，条件表达式返回 boolean 决定是否触发， 严重度表达式可动态决定严重等级。支持 ${var} 模板渲染标题和描述。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -118,7 +118,7 @@ public class ExpressionRule implements Rule {
    * 暴露规则定义（用于灰度路由 / Trace 记录 / 监控指标）
    *
    * @return 原始规则定义
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Override
   public RuleDefinitionDTO getRuleDefinition() {
@@ -132,7 +132,7 @@ public class ExpressionRule implements Rule {
    * {@link RuleContextVO#getTenantId()}，仅当两者匹配时才评估该规则。
    *
    * @return 规则定义中的租户 ID；默认 "1"
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Override
   public String getTenantId() {
@@ -147,7 +147,7 @@ public class ExpressionRule implements Rule {
    * "default"} 时匹配任何上下文环境； 非 "default" 时必须完全匹配。
    *
    * @return 规则定义中的环境标识；默认 "default"
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Override
   public String getEnvironment() {
@@ -370,7 +370,7 @@ public class ExpressionRule implements Rule {
    * @param expr 条件表达式
    * @param context 评估上下文
    * @return 布尔结果；expr 为 null/空返回 null
-   * @since 26.09.01（26.09.23 增加 AlphaNode 缓存）
+   * @since 26.10.01（26.09.23 增加 AlphaNode 缓存）
    */
   private Boolean evalBooleanCached(String expr, RuleContextVO context) {
     if (expr == null || expr.isBlank()) {

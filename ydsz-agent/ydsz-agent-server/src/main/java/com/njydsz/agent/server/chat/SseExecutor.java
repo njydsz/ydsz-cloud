@@ -34,7 +34,7 @@ import com.njydsz.common.socket.push.SsePushChannel;
  * <p><b>线程安全</b>：本类为单次请求实例，不跨请求共享。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class SseExecutor {

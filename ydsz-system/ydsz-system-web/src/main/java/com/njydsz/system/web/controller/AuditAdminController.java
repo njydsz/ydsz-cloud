@@ -48,9 +48,9 @@ import com.njydsz.system.web.vo.AuditLogVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "审计日志管理", description = "审计日志查询（运营/管理后台）")
 @Slf4j
 @RestController

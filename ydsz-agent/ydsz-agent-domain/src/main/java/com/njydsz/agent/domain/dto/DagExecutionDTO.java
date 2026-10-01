@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>封装基于 YAML DSL 的多 Agent DAG 编排执行请求， 支持定义节点间的依赖关系和数据流转。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Schema(description = "DAG 编排请求")

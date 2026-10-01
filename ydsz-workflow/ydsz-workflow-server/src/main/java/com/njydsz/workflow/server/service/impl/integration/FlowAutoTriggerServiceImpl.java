@@ -68,7 +68,7 @@ import com.njydsz.workflow.server.service.impl.instance.DefaultFlowRoutingServic
  * 「<b>永远成立</b>」（即不评估条件），所有 enabled 规则都会触发。 生产环境应保证 {@code ydsz-literule} 已正确引入。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowAutoTriggerService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowAutoTriggerVO 自动触发规则值对象
  * @see WorkflowFacade 工作流门面

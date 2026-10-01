@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>使用场景：需按用户维度控制请求频率，防止单用户过度调用。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  * @see KeyResolver
  * @see IpKeyResolver

@@ -14,7 +14,7 @@ import com.njydsz.userinfo.domain.vo.MenuVO;
  * <p>封装菜单的完整业务逻辑：CRUD、菜单树查询、按角色构建前端动态路由树。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface MenuService {
 

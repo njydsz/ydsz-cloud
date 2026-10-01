@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class NumberNode extends JsonNode {
 
@@ -97,7 +97,7 @@ public final class NumberNode extends JsonNode {
    * <p>对标 Jackson {@code shortValue()}，补全基本数值类型覆盖。
    *
    * @return short 值
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public short asShort() {
     return value.shortValue();
@@ -109,7 +109,7 @@ public final class NumberNode extends JsonNode {
    * <p>对标 Jackson {@code floatValue()}，补全基本数值类型覆盖。
    *
    * @return float 值
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public float asFloat() {
     return value.floatValue();
@@ -121,7 +121,7 @@ public final class NumberNode extends JsonNode {
    * <p>对标 Jackson {@code byteValue()}，补全基本数值类型覆盖。
    *
    * @return byte 值
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public byte asByte() {
     return value.byteValue();

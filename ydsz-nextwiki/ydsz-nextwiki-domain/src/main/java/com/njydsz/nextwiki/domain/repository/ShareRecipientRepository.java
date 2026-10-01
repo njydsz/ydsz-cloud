@@ -17,7 +17,7 @@ import com.njydsz.nextwiki.domain.vo.ShareRecipientVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface ShareRecipientRepository {
 

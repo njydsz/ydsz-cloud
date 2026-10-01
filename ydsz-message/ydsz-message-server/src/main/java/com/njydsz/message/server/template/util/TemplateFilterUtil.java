@@ -37,7 +37,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>所有方法均为无状态纯函数，线程安全。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class TemplateFilterUtil {
 

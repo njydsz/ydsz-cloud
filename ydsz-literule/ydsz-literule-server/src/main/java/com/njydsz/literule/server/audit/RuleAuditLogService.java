@@ -65,7 +65,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  * 此前使用 JDK 随机 UUID 写入主键，与平台 ID 边界冲突）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.15 审计主键改用 common-util IdGenerator 雪花 ID（ADR-008 整改）
  */
 @Slf4j

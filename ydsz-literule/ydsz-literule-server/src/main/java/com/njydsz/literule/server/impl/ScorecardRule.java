@@ -51,7 +51,7 @@ import com.njydsz.common.locales.util.I18n;
  *     .build();
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -124,7 +124,7 @@ public class ScorecardRule implements Rule {
    * @param def 评分卡定义
    * @param evaluator 表达式求值器
    * @return ScorecardRule 实例
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static ScorecardRule from(ScorecardDefinitionDTO def, ExpressionEngine evaluator) {
     ScorecardRuleBuilder b =

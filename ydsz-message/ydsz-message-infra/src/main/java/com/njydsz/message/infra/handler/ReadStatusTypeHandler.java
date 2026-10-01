@@ -16,7 +16,7 @@ import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
  * <p>数据库列 {@code read_status} 存储 0（未读）/ 1（已读），实体字段使用类型安全的枚举。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ReadStatusTypeHandler extends BaseTypeHandler<ReadStatusEnum> {
 

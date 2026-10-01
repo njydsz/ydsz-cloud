@@ -93,7 +93,7 @@ import com.njydsz.common.socket.session.WebSocketSessionEventListener;
  * 装配），接入方启用前需补齐会话管理与集群广播的关键路径单测。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @AutoConfiguration

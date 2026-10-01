@@ -48,7 +48,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * （能力超集：batchSend + queryReceipt），HMAC-SHA1 签名逻辑已下沉至 common-notify 的 signer 中。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

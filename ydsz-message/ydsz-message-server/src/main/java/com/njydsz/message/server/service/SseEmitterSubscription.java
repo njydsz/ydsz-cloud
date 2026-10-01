@@ -6,7 +6,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * SSE 订阅信息（封装 SseEmitter 与订阅上下文）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SseEmitterSubscription {
 

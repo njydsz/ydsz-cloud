@@ -30,7 +30,7 @@ import com.njydsz.common.safe.config.IpAccessProperties;
  * 否则使用 {@link SafeCacheFactoryHelper} 创建，可退化为 ConcurrentTtlSafeCache 兜底。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see IpAccessFilter
  */
 public class IpAccessService {

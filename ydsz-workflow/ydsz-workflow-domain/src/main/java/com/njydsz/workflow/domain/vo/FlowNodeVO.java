@@ -22,7 +22,7 @@ import com.njydsz.common.json.YdszJson;
  * 提供等价的互斥语义同时避免内置锁的局限性。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Slf4j

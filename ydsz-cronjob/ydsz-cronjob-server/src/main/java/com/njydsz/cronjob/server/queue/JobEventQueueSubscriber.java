@@ -40,7 +40,7 @@ import com.njydsz.cronjob.server.core.EventDrivenScheduler;
  * 的订阅者，自动消费消息并调用该方法，补全了事件驱动调度的消费端闭环。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

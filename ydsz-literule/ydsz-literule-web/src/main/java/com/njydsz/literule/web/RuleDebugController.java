@@ -42,9 +42,9 @@ import com.njydsz.literule.server.debug.RuleDebugger;
  * <p>与回放（{@link RuleTraceController}）互补：回放是"事后追溯"，断点是"实时暂停"。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/literule/debug")

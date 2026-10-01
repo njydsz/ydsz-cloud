@@ -43,7 +43,7 @@ import com.njydsz.message.server.template.MessageTemplateRenderer;
  * <p>避免对用户造成骚扰。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

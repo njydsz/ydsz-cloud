@@ -21,7 +21,7 @@ import com.njydsz.nextwiki.domain.vo.ShareLinkVO;
  * <p>每小时扫描即将到期的分享链接（24 小时内到期），通过 NotifyHelper 向分享创建者发送站内信提醒。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

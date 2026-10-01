@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>栈上限 50 条/会话，FIFO 淘汰旧条目；最近空闲超 30 分钟的会话会自动过期清理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

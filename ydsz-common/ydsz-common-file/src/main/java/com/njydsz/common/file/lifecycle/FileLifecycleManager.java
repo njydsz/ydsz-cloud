@@ -27,7 +27,7 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
  * ydsz:
  *   file:
  *     lifecycle:
- *       enabled: true          # 默认启用（26.09.01+）
+ *       enabled: true          # 默认启用（26.10.01+）
  *       cron: "0 0 2 * * ?"    # 每天凌晨 2 点执行
  *       dry-run: false         # 首次启用建议 true 试运行
  *       rules:
@@ -42,7 +42,7 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RequiredArgsConstructor

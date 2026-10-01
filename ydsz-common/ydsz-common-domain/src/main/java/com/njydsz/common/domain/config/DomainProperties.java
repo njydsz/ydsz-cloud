@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 与 {@link DomainAutoConfiguration} 的 {@code @ConditionalOnProperty(name = "enabled")} 保持一致。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.domain")

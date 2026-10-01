@@ -20,7 +20,7 @@ import com.njydsz.common.json.YdszJson;
  * <p>生成符合 RFC 7517 标准的 JWKS 格式公钥集合。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class JwksEndpointVO {

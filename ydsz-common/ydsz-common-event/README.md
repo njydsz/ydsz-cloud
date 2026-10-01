@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供基于 Outbox 模式的领域事件可靠投递能力，保障数据库事务与消息投递的最终一致性 |
 | **依赖** | common-core、common-exception、common-util、common-json、common-thread、common-domain；spring-jdbc、spring-tx；可选依赖 rocketmq-spring-boot-starter、spring-boot-health、micrometer-core、spring-data-commons（Page/Pageable） |
-| **版本** | 26.09.01-SNAPSHOT |
+| **版本** | 26.10.01-SNAPSHOT |
 
 ## 核心能力
 
@@ -289,6 +289,6 @@ rocketmq:
 
 ## 变更记录
 
-- **26.09.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
-- **26.09.01**（2026-08-20）：移除 JSON Schema 校验框架和同步投递模式的自动配置，精简职责；移除已废弃的 `EventStore` 接口支持，统一使用 `DomainEventPublisher`；将 `RocketMqGatewayConfiguration` 由独立顶层配置类改为嵌套配置类，修复 `@Import` 导致条件注解失效问题。
-- **26.09.01**（2026-08-02）：初始版本，提供 OutboxService + OutboxProcessor + RocketMqEventPublishGateway + NoopEventPublishGateway。
+- **26.10.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
+- **26.10.01**（2026-08-20）：移除 JSON Schema 校验框架和同步投递模式的自动配置，精简职责；移除已废弃的 `EventStore` 接口支持，统一使用 `DomainEventPublisher`；将 `RocketMqGatewayConfiguration` 由独立顶层配置类改为嵌套配置类，修复 `@Import` 导致条件注解失效问题。
+- **26.10.01**（2026-08-02）：初始版本，提供 OutboxService + OutboxProcessor + RocketMqEventPublishGateway + NoopEventPublishGateway。

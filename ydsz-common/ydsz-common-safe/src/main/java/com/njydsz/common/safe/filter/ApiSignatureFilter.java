@@ -94,7 +94,7 @@ import com.njydsz.common.util.security.HexUtils;
  * 注入到 request attribute，供下游过滤器或切面读取。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ApiSignatureProperties
  * @see NonceCache
  */

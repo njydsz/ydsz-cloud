@@ -14,7 +14,7 @@ import java.time.LocalDate;
  * @param failCount 登录失败次数
  * @param successRate 成功率（0.0-1.0）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record LoginSuccessRateVO(
     LocalDate date,

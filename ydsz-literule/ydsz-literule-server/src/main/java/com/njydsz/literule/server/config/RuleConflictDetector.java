@@ -42,7 +42,7 @@ import com.njydsz.literule.server.spi.RuleConfigProvider;
  *
  * <p>租户隔离：仅在同一 tenantId 内检测冲突（单租户部署下 tenantId 恒为 1）。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

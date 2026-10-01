@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>线程安全：注册中心内部使用 {@link ConcurrentHashMap}，天然支持并发读写。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public final class ThreadPoolRegistry {
@@ -174,7 +174,7 @@ public final class ThreadPoolRegistry {
    *
    * <p>不可变数据类，用于端点序列化和监控数据采集。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static final class ThreadPoolMetricsSnapshot {
     /** 线程池名称 */

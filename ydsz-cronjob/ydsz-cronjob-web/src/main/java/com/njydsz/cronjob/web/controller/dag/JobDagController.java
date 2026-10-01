@@ -70,11 +70,11 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Tag(name = "DAG工作流定义", description = "DAG CRUD、启停、触发、校验、版本历史、回滚")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/dag")
 @RequiredArgsConstructor

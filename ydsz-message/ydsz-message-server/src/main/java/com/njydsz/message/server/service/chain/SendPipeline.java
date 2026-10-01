@@ -19,7 +19,7 @@ import com.njydsz.message.domain.vo.MessageSendResultVO;
  * <p>扩展方式：实现 {@link SendHandler} 接口并注册为 Spring Bean， Spring 容器启动时自动注入。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供 PC Web 服务的 MVC / 认证 / 会话 / API 版本 / Multipart / Webhook / 优雅停机等基座能力 |
 | **依赖** | common-base（传递 common-core、common-util、common-exception、common-json、common-auth、common-safe）、common-domain、common-redis、common-excel；可选：spring-security、mybatis-plus、jasypt、redisson、knife4j、springdoc |
-| **版本** | 26.09.01-SNAPSHOT |
+| **版本** | 26.10.01-SNAPSHOT |
 
 ## 核心能力
 
@@ -328,5 +328,5 @@ com.njydsz.common.web.config.InternalSignatureAutoConfiguration
 
 ## 变更记录
 
-- **26.09.01**（2026-08-17）：补全 `FilterIgnoreProperties` / `WebhookProperties` / `InternalSignatureAutoConfiguration` / `AbstractModuleHealthIndicator` / `WebCoreAutoConfiguration` 文档；修正 Webhook 默认超时时间
-- **26.09.01**（2026-08-02）：补全 API 版本控制、Multipart 文件上传、Webhook 调度、优雅停机章节；新增接入方式、使用示例、注意事项章节；扩充配置项与自动配置表
+- **26.10.01**（2026-08-17）：补全 `FilterIgnoreProperties` / `WebhookProperties` / `InternalSignatureAutoConfiguration` / `AbstractModuleHealthIndicator` / `WebCoreAutoConfiguration` 文档；修正 Webhook 默认超时时间
+- **26.10.01**（2026-08-02）：补全 API 版本控制、Multipart 文件上传、Webhook 调度、优雅停机章节；新增接入方式、使用示例、注意事项章节；扩充配置项与自动配置表

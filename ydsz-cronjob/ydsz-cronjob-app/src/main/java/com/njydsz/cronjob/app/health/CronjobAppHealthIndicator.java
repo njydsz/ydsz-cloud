@@ -14,7 +14,7 @@ import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
  * （包 {@code org.springframework.boot.health.contributor}），依赖由 ydsz-cronjob-app/pom.xml 的 spring-boot-health 提供。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.14 改继承 AbstractModuleHealthIndicator，消除样板（P1-5 整改）
  */
 public class CronjobAppHealthIndicator extends AbstractModuleHealthIndicator {

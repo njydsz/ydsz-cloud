@@ -24,7 +24,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
  * <p>所有金额使用 {@link BigDecimal} 类型，精度 6 位小数（微美元级），符合货币计算规范。 单价来源于 {@link AgentProperties.Llm#getModelPrices()} 配置，兜底单价通过 {@code agent.llm.fallback-price} 配置项注入。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 public class TokenCostCalculator {

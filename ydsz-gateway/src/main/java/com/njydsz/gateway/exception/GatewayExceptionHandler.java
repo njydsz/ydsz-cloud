@@ -34,7 +34,7 @@ import com.njydsz.gateway.config.GatewayErrorCode;
  *
  * <p>通过 {@code @Order(-2)} 确保优先于 Spring Boot 默认的 ErrorWebExceptionHandler。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

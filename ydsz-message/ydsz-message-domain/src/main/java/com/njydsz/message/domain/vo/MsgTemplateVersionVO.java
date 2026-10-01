@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于返回模板版本历史的完整信息，包含版本号、内容快照及审核信息。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class MsgTemplateVersionVO implements Serializable {

@@ -35,7 +35,7 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
  * 因 {@link SentryMetricsAdapter} 暂不支持 DistributionSummary。待适配器扩展后恢复。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

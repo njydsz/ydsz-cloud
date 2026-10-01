@@ -34,7 +34,7 @@ import com.njydsz.cronjob.domain.vo.JobNodeVO;
  * <p>默认启用（{@code matchIfMissing = true}），通过 {@code ydsz.cronjob.node-discovery.type=nacos} 显式指定。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

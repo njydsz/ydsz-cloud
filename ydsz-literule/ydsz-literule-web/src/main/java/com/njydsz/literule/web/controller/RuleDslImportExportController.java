@@ -60,12 +60,12 @@ import com.njydsz.literule.server.dsl.RuleDslParser;
  * 导出接口。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RuleDslController DSL 校验 / 解析 / 预览接口
  * @see RuleAdminService 规则管理服务
  * @see RuleDslExporter DSL 导出器
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/literule/dsl")

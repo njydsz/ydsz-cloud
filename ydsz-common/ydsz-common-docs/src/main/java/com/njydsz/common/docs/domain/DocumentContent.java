@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>文档解析后的完整结果，包含文本内容、结构化分节、表格、图片等。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

@@ -32,7 +32,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  * com.njydsz.literule.server.config.LiteRuleAutoConfiguration#expressionValidationService}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class ExpressionValidationService {
@@ -280,7 +280,7 @@ public class ExpressionValidationService {
    * @param expression 表达式
    * @param facts 样例事实数据
    * @return 求值结果（含 value / type / error）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public ExpressionPreviewResult previewEvaluate(String expression, Map<String, Object> facts) {
     long start = System.nanoTime();

@@ -15,7 +15,7 @@ import com.njydsz.agent.domain.conversation.Conversation;
  * </ul>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface MemoryConsolidationService {
 

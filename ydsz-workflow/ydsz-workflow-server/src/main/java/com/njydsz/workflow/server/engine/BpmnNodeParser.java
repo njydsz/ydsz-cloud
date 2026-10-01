@@ -22,7 +22,7 @@ import com.njydsz.workflow.domain.vo.FlowNodeVO;
  * 解析为 {@link FlowNodeVO} 数据对象。处理包括属性映射、扩展属性读取、
  * 事件定义解析、多实例配置解析等所有与节点相关的逻辑。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

@@ -18,7 +18,7 @@ package com.njydsz.common.socket.push;
  * @param timestamp 推送发起时间戳（毫秒）
  * @param topic 主题路径（仅 TOPIC 类型时非 null）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record PushContext(
     String userId,

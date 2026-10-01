@@ -36,7 +36,7 @@ import com.njydsz.message.server.cache.CacheKeyBuilder;
  * <p><b>YDIZ-COMMON-020 合规：</b>本地缓存通过 {@link YdszCache} 构建， 替代手写 {@code ConcurrentHashMap} TTL 方案，消除内存泄漏风险。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

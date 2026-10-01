@@ -20,7 +20,7 @@ import com.njydsz.common.excel.api.result.ExcelImportResult;
  * <p>结构化错误（{@link #errorItems}）与旧错误（{@link #errors}）并存： {@link #errorItems} 供前端精准定位错误行/字段； {@link #errors} 供旧版前端展示纯文本错误。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

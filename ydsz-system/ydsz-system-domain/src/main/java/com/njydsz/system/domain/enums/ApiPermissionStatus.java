@@ -10,7 +10,7 @@ import java.util.List;
  * <p>用于接口权限注册表（{@code ydsz_sys_api_permission}）的状态管理。 与 DDL 默认值对齐：{@code status VARCHAR(32) DEFAULT 'ENABLED'}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum ApiPermissionStatus implements BaseStatusEnum<ApiPermissionStatus> {
 

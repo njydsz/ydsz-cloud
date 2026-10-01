@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * 和边界处理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class RandomUtils {
 

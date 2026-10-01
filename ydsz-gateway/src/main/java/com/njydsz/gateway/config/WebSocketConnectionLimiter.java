@@ -48,7 +48,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>每次 WebSocket 连接被拒绝时递增 {@code ydsz_gateway_ws_rejected_total} Prometheus 指标。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

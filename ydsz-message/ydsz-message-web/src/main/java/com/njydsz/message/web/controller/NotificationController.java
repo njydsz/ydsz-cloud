@@ -82,14 +82,14 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.core.NotificationService 站内通知服务
  * @see com.njydsz.message.server.realtime.RealtimePushService 实时推送服务
  * @see com.njydsz.message.server.service.receipt.RecallService 撤回服务
  */
 @Tag(name = "站内通知", description = "站内通知发送/收件箱/已读/撤回/推送")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/notifications")
 @RequiredArgsConstructor

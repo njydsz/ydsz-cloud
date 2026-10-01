@@ -32,10 +32,10 @@ import com.njydsz.userinfo.server.config.OidcProperties;
  * <p>参考规范：<a href="https://openid.net/specs/openid-connect-discovery-1_0.html">OpenID Connect Discovery 1.0</a>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/.well-known")
 @RequiredArgsConstructor

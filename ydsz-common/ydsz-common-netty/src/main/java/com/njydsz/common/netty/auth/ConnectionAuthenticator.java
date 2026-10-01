@@ -44,7 +44,7 @@ import com.njydsz.common.netty.session.ConnectionSession;
  * <p><b>线程安全：</b>此接口的实现必须线程安全，同一时刻可能有多个 Channel 并发认证。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see AuthenticationResult
  * @see com.njydsz.common.netty.session.ChannelState
  */

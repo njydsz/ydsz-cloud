@@ -21,7 +21,7 @@ import com.njydsz.common.notify.preference.NotifyPreferenceManager;
  * </ol>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class NotifyI18nResolver {
 

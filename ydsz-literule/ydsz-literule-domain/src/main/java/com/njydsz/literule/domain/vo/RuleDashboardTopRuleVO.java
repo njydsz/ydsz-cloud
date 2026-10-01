@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于表格展示最活跃 / 最慢 / 错误率最高的规则。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

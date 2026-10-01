@@ -33,7 +33,7 @@ import com.njydsz.userinfo.server.cache.CacheKeyBuilder;
  * 替代原来自建的 {@code "userinfo:sensitive:verified:"} 硬编码常量。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

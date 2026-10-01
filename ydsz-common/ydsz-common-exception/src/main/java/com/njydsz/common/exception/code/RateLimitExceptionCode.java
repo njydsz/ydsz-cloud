@@ -15,7 +15,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * ExceptionCategory#RATE_LIMIT}，消除基于 key 前缀推断的脆弱性。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CoreExceptionCode
  * @see SecurityExceptionCode
  */

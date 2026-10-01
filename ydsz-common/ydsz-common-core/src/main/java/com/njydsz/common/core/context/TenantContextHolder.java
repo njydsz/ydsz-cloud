@@ -15,7 +15,7 @@ package com.njydsz.common.core.context;
  * <p><b>生命周期：</b>请求结束时必须调用 {@link #clear()}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class TenantContextHolder {
 

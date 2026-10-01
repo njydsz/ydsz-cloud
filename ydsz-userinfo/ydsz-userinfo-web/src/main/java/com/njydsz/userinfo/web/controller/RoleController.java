@@ -65,13 +65,13 @@ import com.njydsz.userinfo.server.service.RoleService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.server.service.RoleService 角色业务逻辑
  * @see com.njydsz.userinfo.web.controller.MenuController 菜单 Controller（权限分配的目标对象）
  * @see com.njydsz.userinfo.web.controller.UserAccountController 用户 Controller（角色授予目标）
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/role")
 @RequiredArgsConstructor

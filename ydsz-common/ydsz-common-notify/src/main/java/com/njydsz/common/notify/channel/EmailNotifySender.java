@@ -63,7 +63,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 @ConditionalOnClass(JavaMailSender.class)

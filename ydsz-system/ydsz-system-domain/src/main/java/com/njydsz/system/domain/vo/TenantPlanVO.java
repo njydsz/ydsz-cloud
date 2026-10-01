@@ -22,7 +22,7 @@ import com.njydsz.system.domain.entity.TenantPlan;
  * com.njydsz.system.domain.dto.TenantPlanDTO} 负责。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see TenantPlan 套餐实体
  */
 @Data

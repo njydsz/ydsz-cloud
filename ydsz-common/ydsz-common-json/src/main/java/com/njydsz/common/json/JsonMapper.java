@@ -70,7 +70,7 @@ import com.njydsz.common.json.type.TypeFactory;
  * 避免线程间配置污染。Mapper 实例创建后为只读配置，线程安全，可作为 Spring Bean 单例注入。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class JsonMapper {
 
@@ -85,7 +85,7 @@ public class JsonMapper {
    *
    * <p>当同一 Mapper 在同一线程连续调用时，身份相等检查（{@code ==}）可替代 9 字段逐项比对， 消除最常见的热路径计算开销。仅当身份不匹配时才降级到完整字段比较。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   // CHECKSTYLE.OFF: RegexpSinglelineJava — ThreadLocal 字段，已在 cleanupThread() 中调用 remove()（云顶规范 15.1）
   private static final ThreadLocal<JsonMapper> CURRENT_MAPPER = new ThreadLocal<>();
@@ -135,7 +135,7 @@ public class JsonMapper {
    * ThreadLocal 配置字段。
    *
    * @return 运行时配置（只读）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public JsonRuntimeConfig getRuntimeConfig() {
     return runtimeConfig;
@@ -187,7 +187,7 @@ public class JsonMapper {
    * JsonParserUtil 独立管理，仅在显式配置差异时变化， 一致性判定纳入其值比较）。
    *
    * @return true 表示当前线程已持有本 Mapper 的全部配置
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private boolean isRuntimeConfigActive() {
     // P1-E1：身份快速路径——同一 Mapper 在同一线程连续调用时，== 检查替代 9 字段逐项比对
@@ -219,7 +219,7 @@ public class JsonMapper {
    * </ul>
    *
    * @return true 表示当前线程深度状态已与目标一致
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private boolean depthOverridesMatch() {
     if (isCustomDepth()) {
@@ -240,7 +240,7 @@ public class JsonMapper {
    * 静态值——后者可被运行期临时调整， 临时调整不应使继承型 Mapper 被误判为自定义型。
    *
    * @return true 表示本 Mapper 深度配置与全局已安装配置不同
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private boolean isCustomDepth() {
     JsonConfig installed = JsonConfig.copyOf(null);
@@ -253,7 +253,7 @@ public class JsonMapper {
    *
    * <p>目标是最终消除 ThreadLocal 依赖（P0-5/P0-6），当前作为过渡方案， 利用已预计算的 runtimeConfig 避免重复从 JsonConfig 读取。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private void applyRuntimeConfig() {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
@@ -291,7 +291,7 @@ public class JsonMapper {
    * 避免逐个字段赋值。调用方需负责清理（使用现有清理机制）。
    *
    * @param runtimeConfig 预计算运行时配置
-   * @since 26.09.01
+   * @since 26.10.01
    */
   static void installSerializationContext(JsonRuntimeConfig runtimeConfig) {
     SerializationContext ctx = SerializationContext.from(runtimeConfig);
@@ -301,7 +301,7 @@ public class JsonMapper {
   /**
    * 清理当前线程的身份快速路径标记（供 {@link YdszJson#cleanupThread()} 调用）。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   static void clearCurrentMapper() {
     CURRENT_MAPPER.remove();
@@ -373,7 +373,7 @@ public class JsonMapper {
    * @param obj 要序列化的对象
    * @param viewClass 视图类
    * @return JSON 字符串
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public String toJson(Object obj, Class<?> viewClass) {
     if (obj == null) {
@@ -517,7 +517,7 @@ public class JsonMapper {
    * @param clazz 目标类型
    * @param <T> 类型参数
    * @return 反序列化后的对象
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public <T> T toObject(byte[] bytes, Class<T> clazz) {
     if (bytes == null || bytes.length == 0) {
@@ -541,7 +541,7 @@ public class JsonMapper {
    * @param type 目标类型
    * @param <T> 类型参数
    * @return 反序列化后的对象
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public <T> T toObject(byte[] bytes, Type type) {
     if (bytes == null || bytes.length == 0) {
@@ -589,7 +589,7 @@ public class JsonMapper {
    * @param typeRef 类型引用
    * @param <T> 类型参数
    * @return 反序列化后的对象
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public <T> T readValue(InputStream in, JsonType<T> typeRef) {
     if (in == null) {
@@ -688,7 +688,7 @@ public class JsonMapper {
    *
    * @param json JSON 字符串
    * @return JsonNode 树
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public JsonNode readTree(String json) {
     Object parsed = JsonParserUtil.parse(json);
@@ -700,7 +700,7 @@ public class JsonMapper {
    *
    * @param obj 要序列化的对象
    * @return JsonNode 树
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public JsonNode valueToTree(Object obj) {
     if (obj == null) {
@@ -732,7 +732,7 @@ public class JsonMapper {
    * @param json JSON 字符串
    * @param pointer JSON Pointer 路径
    * @return 指针指向的值
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public Object getByPointer(String json, String pointer) {
     if (json == null || pointer == null || pointer.isBlank()) {
@@ -761,7 +761,7 @@ public class JsonMapper {
    * @param toValueType 目标类型
    * @param <T> 目标类型参数
    * @return 转换后的对象
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public <T> T convertValue(Object fromValue, Class<T> toValueType) {
     if (fromValue == null) {
@@ -786,7 +786,7 @@ public class JsonMapper {
    * @param toValueTypeRef 目标类型引用
    * @param <T> 目标类型参数
    * @return 转换后的对象
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public <T> T convertValue(Object fromValue, JsonType<T> toValueTypeRef) {
     if (fromValue == null) {
@@ -807,7 +807,7 @@ public class JsonMapper {
    * @param clazz 目标类型
    * @param <T> 目标类型参数
    * @return 转换后的对象
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public <T> T treeToValue(JsonNode node, Class<T> clazz) {
     if (node == null) {
@@ -844,7 +844,7 @@ public class JsonMapper {
    * @param typeRef 目标类型引用（可为泛型）
    * @param <T> 目标类型参数
    * @return 转换后的对象
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public <T> T treeToValue(JsonNode node, JsonType<T> typeRef) {
     if (node == null) {
@@ -918,7 +918,7 @@ public class JsonMapper {
    *
    * @param obj 要序列化的对象
    * @return 格式化的 JSON 字符串
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public String format(Object obj) {
     return toJson(obj, true);
@@ -980,7 +980,7 @@ public class JsonMapper {
    * <p>用于需要脱离 ThreadLocal 显式传递配置的场景（如跨线程批量序列化、响应式管道中）， 避免隐式 ThreadLocal 读取导致的线程污染风险。
    *
    * @return 当前 Mapper 的配置载体（与 runtimeConfig 同源的独立副本，不可变）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public JsonConfigCarrier getConfigCarrier() {
     return JsonConfigCarrier.from(runtimeConfig);
@@ -1004,7 +1004,7 @@ public class JsonMapper {
    * 创建 Builder 实例。
    *
    * @return Builder 实例
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static Builder builder() {
     return new Builder();
@@ -1024,7 +1024,7 @@ public class JsonMapper {
    *     .build();
    * </pre>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static final class Builder {
 
@@ -1049,7 +1049,7 @@ public class JsonMapper {
      *
      * @param mapper 源 JsonMapper 实例（不可为 null）
      * @return 预填充源 Mapper 配置的 Builder 实例
-     * @since 26.09.01
+     * @since 26.10.01
      */
     public Builder from(JsonMapper mapper) {
       if (mapper == null) {

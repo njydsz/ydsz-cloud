@@ -47,7 +47,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * @since 26.09.08
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/oauth2")
 @RequiredArgsConstructor

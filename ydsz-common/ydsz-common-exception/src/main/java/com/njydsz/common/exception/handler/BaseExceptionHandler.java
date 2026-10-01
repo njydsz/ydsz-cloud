@@ -48,7 +48,7 @@ import com.njydsz.common.exception.util.ExceptionDesensitizer;
  * 导致单元测试需 mock 整个基类。拆分后 {@link ExceptionResponseBuilder} 可独立测试响应结构。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.exception.custom.BusinessException
  * @see YdszResponse
  * @see ProblemDetail

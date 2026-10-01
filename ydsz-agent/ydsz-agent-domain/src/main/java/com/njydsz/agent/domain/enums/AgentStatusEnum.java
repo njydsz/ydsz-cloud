@@ -11,7 +11,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * <p><b>状态流转：</b>{@code ENABLED ⇄ DISABLED}（双向可切换）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum AgentStatusEnum implements BaseStatusEnum<AgentStatusEnum> {
 

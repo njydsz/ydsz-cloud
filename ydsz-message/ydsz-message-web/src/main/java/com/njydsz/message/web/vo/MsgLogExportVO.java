@@ -17,7 +17,7 @@ import lombok.Data;
  * 每次 200 条，避免一次性加载全量数据到内存（投递日志表 ydsz_msg_log 可能达数十万行）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class MsgLogExportVO implements Serializable {

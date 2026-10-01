@@ -42,7 +42,7 @@ import com.njydsz.literule.domain.vo.RuleContextVO;
  * ...}}}， 以兼容 LiteExpr 表达式 {@code model.score} 的属性访问语法。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ModelInputRegistry {
   /** 集合初始容量 */

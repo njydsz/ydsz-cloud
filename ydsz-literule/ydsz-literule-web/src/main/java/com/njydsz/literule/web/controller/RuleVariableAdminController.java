@@ -36,9 +36,9 @@ import com.njydsz.literule.server.expression.VariableRegistry;
  * <p>提供规则变量空间元数据的 CRUD 与缓存刷新 REST API，供前端表达式编辑器 自动补全、变量校验配置使用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/literule/variables")

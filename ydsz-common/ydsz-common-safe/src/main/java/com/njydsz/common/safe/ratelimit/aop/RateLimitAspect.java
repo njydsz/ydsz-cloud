@@ -35,7 +35,7 @@ import com.njydsz.common.util.net.ClientIpResolver;
  * <p>拦截 {@link RateLimit} 注解，执行限流决策。 限流被拒绝时抛出 {@link BusinessException}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Aspect

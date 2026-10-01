@@ -14,7 +14,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * <p>包含模拟执行路径和分析结果。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class SimulationResult implements Serializable {

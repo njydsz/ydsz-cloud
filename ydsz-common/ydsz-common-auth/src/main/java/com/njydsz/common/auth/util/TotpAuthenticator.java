@@ -30,7 +30,7 @@ import com.njydsz.common.locales.util.I18n;
  * {@link com.njydsz.common.util.security.crypto.CryptoUtils} 加密存储。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class TotpAuthenticator {
 

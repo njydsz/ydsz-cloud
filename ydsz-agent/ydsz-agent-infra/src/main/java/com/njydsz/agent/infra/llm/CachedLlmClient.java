@@ -45,7 +45,7 @@ import com.njydsz.common.cache.api.Cache;
  * <p><b>线程安全</b>：无状态装饰器 + YdszCache 去重缓存（Cache#getWithProtection），可安全并发调用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class CachedLlmClient implements LlmClient {

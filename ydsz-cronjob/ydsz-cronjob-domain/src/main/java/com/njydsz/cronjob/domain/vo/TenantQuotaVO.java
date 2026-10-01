@@ -15,7 +15,7 @@ import lombok.Data;
  * Lombok 生成 {@code isEnabled()} getter。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class TenantQuotaVO implements Serializable {

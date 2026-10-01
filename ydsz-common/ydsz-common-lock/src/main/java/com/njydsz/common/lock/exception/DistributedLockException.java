@@ -21,7 +21,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * <p><b>P2-E2 改进：</b>使用 {@link Builder} 构建异常，消除 5 个重载构造器的组合爆炸。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class DistributedLockException extends BusinessException {
 

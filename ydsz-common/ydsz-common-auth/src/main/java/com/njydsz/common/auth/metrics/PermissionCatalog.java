@@ -11,6 +11,6 @@ import java.util.List;
  * @param entries 不可变权限条目列表
  * @param snapshotMillis 快照时间戳（毫秒）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record PermissionCatalog(List<PermissionCatalogRegistry.PermissionEntry> entries, long snapshotMillis) {}

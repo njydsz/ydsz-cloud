@@ -33,7 +33,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>借鉴 MateClaw 的记忆生命周期设计：对话后提取、定时整合、Dreaming 工作流。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

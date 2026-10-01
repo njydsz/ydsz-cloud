@@ -16,7 +16,7 @@ import lombok.Data;
  * <p><b>此对象设计为可池化的</b>，在 NettyRpcClient 内部复用，减少 GC 压力。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RpcResponseHandler
  * @see NettyRpcClient
  */

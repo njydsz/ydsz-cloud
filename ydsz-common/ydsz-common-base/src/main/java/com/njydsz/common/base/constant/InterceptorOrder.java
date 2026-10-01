@@ -10,7 +10,7 @@ package com.njydsz.common.base.constant;
  * <p><b>注意：</b>base 模块定义全局共享的顺序常量，各业务模块的专属 Interceptor 顺序常量 应定义在各自模块中。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class InterceptorOrder {
 

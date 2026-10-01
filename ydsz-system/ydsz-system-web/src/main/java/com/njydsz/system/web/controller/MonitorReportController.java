@@ -43,7 +43,7 @@ import com.njydsz.system.server.service.MonitorReportService;
  * @author ydsz-team
  * @since 26.09.14
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequiredArgsConstructor

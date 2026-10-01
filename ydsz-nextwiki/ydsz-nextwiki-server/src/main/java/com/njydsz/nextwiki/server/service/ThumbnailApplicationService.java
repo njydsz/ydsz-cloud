@@ -34,7 +34,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * 不涉及金额/比例等精确业务值，故保留 double 类型。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

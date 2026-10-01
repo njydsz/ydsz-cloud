@@ -40,8 +40,8 @@ import com.njydsz.system.domain.entity.DictItem;
  * com.njydsz.system.domain.dto.DictItemDTO} 负责。
  *
  * @author ydsz-team
- * @since 26.09.01
- * @since 26.09.01 由继承 {@code ydsz-common-domain} 的 {@code TreeNode} 基类改为纯 POJO，使用 {@code TreeBuilder.buildSimple()}
+ * @since 26.10.01
+ * @since 26.10.01 由继承 {@code ydsz-common-domain} 的 {@code TreeNode} 基类改为纯 POJO，使用 {@code TreeBuilder.buildSimple()}
  *               构建树形结构，消除业务 VO 与框架基类的耦合
  * @see DictItem 字典项实体
  * @see DictTypeVO 字典类型 VO

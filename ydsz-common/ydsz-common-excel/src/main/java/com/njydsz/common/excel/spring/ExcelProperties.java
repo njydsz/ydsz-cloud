@@ -15,7 +15,7 @@ import com.njydsz.common.excel.core.config.ExcelConfig;
  * 中存在但 ExcelProperties 未声明，配置了不生效。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @ConfigurationProperties(prefix = "ydsz.excel")
 public class ExcelProperties {

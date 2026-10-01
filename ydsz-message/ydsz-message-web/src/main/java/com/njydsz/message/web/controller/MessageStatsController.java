@@ -74,7 +74,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.core.MessageStatsService 消息统计服务
  * @see MessageStatsDTO 总览 VO
  * @see FunnelStatsDTO 漏斗 VO
@@ -82,7 +82,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
  */
 @Slf4j
 @Tag(name = "消息统计看板", description = "发送/重试/死信/回执聚合指标")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/stats")
 @RequiredArgsConstructor

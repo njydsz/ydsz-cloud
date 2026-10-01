@@ -6,7 +6,7 @@ package com.njydsz.common.file.storage;
  * <p>支持多实例部署时断点续传检查点共享。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface CheckpointStore {
 

@@ -50,7 +50,7 @@ import java.lang.reflect.Type;
  * </ol>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see Type
  * @see ParameterizedType
  */
@@ -58,7 +58,7 @@ import java.lang.reflect.Type;
  * JsonType。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  *
  * @param <T> 泛型类型
  */

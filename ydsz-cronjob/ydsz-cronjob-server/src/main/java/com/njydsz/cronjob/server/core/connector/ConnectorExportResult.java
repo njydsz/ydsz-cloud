@@ -9,7 +9,7 @@ import lombok.Data;
  * 连接器导出结果（P2-3）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class ConnectorExportResult {

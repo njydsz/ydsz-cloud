@@ -11,7 +11,7 @@ import org.springframework.core.task.TaskDecorator;
  * 自动从父线程传播租户快照到异步线程。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class TenantDecoratedExecutorService extends AbstractDelegatedExecutorService {
 

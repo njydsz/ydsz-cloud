@@ -30,7 +30,7 @@ import com.njydsz.cronjob.domain.entity.job.JobArtifact;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.cronjob.domain.entity.job.JobArtifact 产物实体
  * @see com.njydsz.cronjob.server.service.JobArtifactService 产物 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

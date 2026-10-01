@@ -29,7 +29,7 @@ import com.njydsz.workflow.server.cache.CacheKeyBuilder;
  *   <li>RedisRateLimiter 不可用时降级放行（ObjectProvider 可选注入）
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -45,7 +45,7 @@ public class FlowUrgeLimiter {
 
   private final RedisRateLimiter rateLimiter;
 
-  
+
   /**
    * 构造催办限流器。
    *

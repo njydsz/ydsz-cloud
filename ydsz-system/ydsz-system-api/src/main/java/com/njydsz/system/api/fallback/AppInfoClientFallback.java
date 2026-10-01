@@ -17,7 +17,7 @@ import com.njydsz.system.domain.dto.AppValidateRequest;
  * 日志，保证调用方走"服务不可用"分支而非异常中断。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

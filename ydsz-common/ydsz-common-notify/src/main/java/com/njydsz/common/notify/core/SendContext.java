@@ -22,7 +22,7 @@ import com.njydsz.common.notify.enums.NotifyType;
  * @param startTime 开始时间戳纳秒（由链路填充）
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record SendContext(
     NotifyChannel channel,

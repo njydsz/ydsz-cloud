@@ -230,5 +230,5 @@ DiffReport diff = DiffCalculator.compare(oldObj, newObj);
 
 ## 变更记录
 
-- **26.09.01**（2026-09-01）：架构精简重构，移除 LUR/Weighted/弱引用等未落地能力；统一工具类分层（id/security/crypto/bean/collection/http/string/io）；新增 Diff 工具链；解密密 SPI 扩展（`KeyProvider` / `CryptoProvider`）；雪花 ID 健康检查。
-- **26.09.01**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。
+- **26.10.01**（2026-09-01）：架构精简重构，移除 LUR/Weighted/弱引用等未落地能力；统一工具类分层（id/security/crypto/bean/collection/http/string/io）；新增 Diff 工具链；解密密 SPI 扩展（`KeyProvider` / `CryptoProvider`）；雪花 ID 健康检查。
+- **26.10.01**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。

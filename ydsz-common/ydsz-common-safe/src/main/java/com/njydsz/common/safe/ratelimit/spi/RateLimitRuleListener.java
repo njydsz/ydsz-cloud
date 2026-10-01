@@ -6,7 +6,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  * 限流规则变更监听器
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @FunctionalInterface
 public interface RateLimitRuleListener {

@@ -6,7 +6,7 @@ package com.njydsz.agent.domain.skill;
  * <p>定义 Skill 执行过程中记录的经验类型。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum LessonType {
 

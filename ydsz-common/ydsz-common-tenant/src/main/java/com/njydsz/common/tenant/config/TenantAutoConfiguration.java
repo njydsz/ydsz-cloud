@@ -66,7 +66,7 @@ import com.njydsz.common.tenant.web.TenantContextWebFilter;
  * 多个业务模块经自动装配隐式依赖本模块，属能力储备而非可删项。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @AutoConfiguration

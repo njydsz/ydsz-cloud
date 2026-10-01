@@ -69,13 +69,13 @@ import com.njydsz.message.server.service.TemplateService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.template.TemplateService 模板服务
  * @see MsgTemplate 模板实体
  */
 @Tag(name = "消息模板", description = "消息模板增删改查与审核")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/template")
 @RequiredArgsConstructor

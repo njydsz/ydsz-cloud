@@ -6,7 +6,7 @@ package com.njydsz.common.safe.alert;
  * <p>通过 {@link java.util.ServiceLoader} 加载所有实现，接收安全事件回调。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SecurityAlertListener {
 

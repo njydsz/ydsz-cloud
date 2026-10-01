@@ -10,7 +10,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * <p>定义单个 Agent 在 Team Run 中的执行状态。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum TeamRunMemberStatus implements BaseStatusEnum<TeamRunMemberStatus> {
 

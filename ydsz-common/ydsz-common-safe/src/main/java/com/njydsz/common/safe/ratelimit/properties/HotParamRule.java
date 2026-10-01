@@ -10,7 +10,7 @@ import lombok.Data;
  * <p>用于对特定参数值进行更细粒度的限流（如同一商品 ID 的秒杀请求限流）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class HotParamRule {

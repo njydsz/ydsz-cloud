@@ -31,7 +31,7 @@ import com.njydsz.userinfo.server.cache.CacheKeyBuilder;
  * 请求不存在的 userId 冲击数据库。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.domain.entity.UserRole 用户-角色关联实体
  * @see com.njydsz.userinfo.domain.entity.Role 角色实体
  */

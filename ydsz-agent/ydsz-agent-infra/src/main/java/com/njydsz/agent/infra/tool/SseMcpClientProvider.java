@@ -33,7 +33,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p><b>线程安全</b>：{@link HttpClient} 与 {@link ConcurrentHashMap} 均线程安全，可并发调用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class SseMcpClientProvider implements McpClientProvider {
@@ -140,7 +140,7 @@ public class SseMcpClientProvider implements McpClientProvider {
     Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY_4);
     params.put("protocolVersion", "2024-11-05");
     params.put("capabilities", Map.of());
-    params.put("clientInfo", Map.of("name", "ydsz-agent", "version", "26.09.01"));
+    params.put("clientInfo", Map.of("name", "ydsz-agent", "version", "26.10.01"));
     try {
       String response = sendRequest(server, null, "initialize", params);
       String sessionId = extractSessionId(response);

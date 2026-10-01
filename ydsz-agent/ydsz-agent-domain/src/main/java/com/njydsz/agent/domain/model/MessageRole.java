@@ -4,7 +4,7 @@ package com.njydsz.agent.domain.model;
  * 消息角色枚举
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum MessageRole {
 

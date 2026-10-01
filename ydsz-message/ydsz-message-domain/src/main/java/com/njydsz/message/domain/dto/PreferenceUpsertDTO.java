@@ -8,7 +8,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * 用户消息偏好新增/更新 DTO
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class PreferenceUpsertDTO {

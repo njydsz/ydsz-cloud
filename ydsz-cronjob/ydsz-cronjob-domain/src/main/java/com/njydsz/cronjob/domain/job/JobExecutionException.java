@@ -14,7 +14,7 @@ import com.njydsz.common.exception.custom.SysException;
  * SPI 契约文档保留；调用方 catch 逻辑不受影响。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class JobExecutionException extends SysException {
 

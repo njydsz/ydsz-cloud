@@ -44,7 +44,7 @@ import com.njydsz.common.util.io.TempFileManager;
  * Spring 容器与 {@link TempFileManager} 接管，降低本类的职责范围。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

@@ -14,7 +14,7 @@ import java.util.Set;
  * 给超级管理员角色返回所有权限，其他角色返回空集合。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RbacPermissionEvaluator
  */
 public interface PermissionFallbackProvider {

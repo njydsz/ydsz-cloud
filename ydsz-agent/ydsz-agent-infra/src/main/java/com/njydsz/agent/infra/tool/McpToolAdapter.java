@@ -35,7 +35,7 @@ import com.njydsz.common.locales.util.I18nMessages;
  * <p>所有传输实现均支持四级认证（none / api-key / bearer / oauth），配置方式见 {@link McpProperties.ServerInfo}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class McpToolAdapter {

@@ -42,7 +42,7 @@ import io.micrometer.core.instrument.Timer;
  * <p>注意：因共享机制使用静态字段，{@link #bindTo} 仅需调用一次（传入 Spring 容器中的 MeterRegistry 即可）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @deprecated 自 v26.10.01 起废弃。直连 {@code MeterRegistry} 违反 YDIZ-SENTRY-001 红线规则。
  *     迁移方案：
  *     <ul>

@@ -220,4 +220,4 @@ public class MoneySerializer extends JsonSerializer<Money> {
 ## 变更记录
 
 - **3.0.0**（2026-09-01）：重构为零依赖引擎 + Jackson 注解兼容层；内置 JsonPatch / JsonMergePatch；新增序列化缓存（BeanSerializerCache）+ 启动预热（JsonWarmupRunner）；HttpMessageConverter 自动替换 Jackson。
-- **26.09.01**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。
+- **26.10.01**（2026-08-02）：初始版本，对标 common-jdbc 标准格式重构 README。

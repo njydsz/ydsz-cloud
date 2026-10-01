@@ -22,7 +22,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>cascade_on_disable=true 表示被依赖规则被禁用时，本规则也要级联禁用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 与泛型继承产生 unchecked 警告
 @SuppressWarnings("unchecked")

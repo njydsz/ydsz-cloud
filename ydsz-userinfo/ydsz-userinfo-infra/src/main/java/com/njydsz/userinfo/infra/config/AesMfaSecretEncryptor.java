@@ -22,7 +22,7 @@ import com.njydsz.userinfo.domain.config.MfaSecretEncryptor;
  * <p><b>启用条件：</b>{@code ydsz.userinfo.mfa.encryption-key} 已配置。</p>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

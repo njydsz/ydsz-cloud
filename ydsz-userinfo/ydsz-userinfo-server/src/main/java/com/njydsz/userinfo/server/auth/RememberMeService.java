@@ -42,7 +42,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RememberMeProperties Remember-Me 配置
  * @see com.njydsz.userinfo.web.filter.RememberMeFilter Remember-Me 过滤器
  */

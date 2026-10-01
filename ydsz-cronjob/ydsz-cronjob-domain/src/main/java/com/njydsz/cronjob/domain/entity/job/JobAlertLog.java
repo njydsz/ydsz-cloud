@@ -21,7 +21,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * <p>记录每次告警派发的实际情况，用于审计、去重判断和告警效果统计。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @Setter

@@ -44,7 +44,7 @@ import com.njydsz.common.locales.util.I18n;
  * engine.feed(event);
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -88,7 +88,7 @@ public class CEPEngine implements Serializable {
    * <p>推荐使用此构造器，使 CEP 的表达式求值器与引擎主求值器配置一致（沙箱开关、自定义函数注册等），避免独立 new 实例导致的配置不一致。
    *
    * @param expressionEvaluator 表达式求值器
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public CEPEngine(ExpressionEngine expressionEvaluator) {
     this.expressionEvaluator =
@@ -387,7 +387,7 @@ public class CEPEngine implements Serializable {
    *
    * <p>遍历所有模式的事件队列，移除窗口外的过期事件，防止长时间运行时队列无限增长。建议由 @Scheduled 定时调用（如每 60 秒）。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public void cleanupExpiredEvents() {
     Instant now = Instant.now();
@@ -415,7 +415,7 @@ public class CEPEngine implements Serializable {
   /**
    * 优雅关闭：清理所有队列和状态
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @PreDestroy
   public void destroy() {
@@ -429,7 +429,7 @@ public class CEPEngine implements Serializable {
    * <p>当队列大小超过 MAX_EVENTS_PER_PARTITION 时，丢弃最旧的事件并记录告警。防止高吞吐场景下队列无限增长导致 OOM。
    *
    * @param queue 事件队列
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private void enforceQueueLimit(ConcurrentLinkedDeque<CEPEvent> queue) {
     while (queue.size() > MAX_EVENTS_PER_PARTITION) {

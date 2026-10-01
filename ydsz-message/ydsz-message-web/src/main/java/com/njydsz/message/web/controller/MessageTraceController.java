@@ -73,13 +73,13 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.core.MessageTraceService 消息追踪服务
  * @see com.njydsz.message.infra.entity.MsgTrace 追踪实体
  */
 @Tag(name = "消息追踪", description = "消息端到端全链路追踪")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/trace")
 @RequiredArgsConstructor

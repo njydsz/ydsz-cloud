@@ -36,7 +36,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.message", "com.njydsz.common"})
 @EnableDiscoveryClient

@@ -8,7 +8,7 @@
 LABEL org.opencontainers.image.authors="ydsz-dev@njydsz.com" \
       org.opencontainers.image.title="ydsz-cloud-service" \
       org.opencontainers.image.description="Ydsz Cloud business service container" \
-      org.opencontainers.image.version="26.09.01-SNAPSHOT" \
+      org.opencontainers.image.version="26.10.01-SNAPSHOT" \
       org.opencontainers.image.vendor="njydsz" \
       org.opencontainers.image.licenses="Proprietary"
 
@@ -51,7 +51,7 @@ ARG MODULE_DIR=.
 
 # 元数据 LABEL（与上方阶段呼应，最终镜像保留）
 LABEL maintainer="ydsz-dev@njydsz.com" \
-      version="26.09.01-SNAPSHOT" \
+      version="26.10.01-SNAPSHOT" \
       description="ydsz-cloud business module runtime"
 
 # 拷贝 fat-jar：去掉 Spring Boot 分层后缀即可被 java -jar 执行

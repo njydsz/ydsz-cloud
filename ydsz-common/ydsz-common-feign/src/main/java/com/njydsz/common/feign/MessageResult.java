@@ -17,7 +17,7 @@ import lombok.Data;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @apiNote 消息 DTO 原有职责在 Feign 层定义，目前已扩展为项目全局使用的消息发送结果 VO；
  *     后续计划将其迁移至 ydsz-common-core 或 ydsz-message，在此之前继续在此处定义以兼容全量调用方。
  */
@@ -49,7 +49,7 @@ public class MessageResult implements Serializable {
    * 用户友好消息（走 i18n 解析，前端直接展示）。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private String userMessage;
 
@@ -57,7 +57,7 @@ public class MessageResult implements Serializable {
    * 开发者调试信息（含异常类名 + 详情，前端可折叠展示或日志采集）。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private String developerMessage;
 
@@ -65,7 +65,7 @@ public class MessageResult implements Serializable {
    * 建议重试等待秒数（单位秒，取自 {@link com.njydsz.common.exception.enums.ExceptionCode#retryAfterSeconds()}）。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private Integer retryAfter;
 

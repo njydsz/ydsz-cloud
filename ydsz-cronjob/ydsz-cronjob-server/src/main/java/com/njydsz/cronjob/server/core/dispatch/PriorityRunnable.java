@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </ol>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class PriorityRunnable implements Runnable, Comparable<PriorityRunnable> {
   /** 默认优先级 */

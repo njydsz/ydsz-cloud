@@ -26,7 +26,7 @@ import java.util.function.Function;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.30 移除 build() / buildLazy() / TreeNode 继承模式，仅保留 buildSimple() 静态入口（参见 YDIZ-DOMAIN-002）
  */
 public final class TreeBuilder {

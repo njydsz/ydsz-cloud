@@ -27,7 +27,7 @@ import lombok.Data;
  * 不会为 {@code null}，防止下游 {@link #isEmptyRowScope()} 调用出现 NPE。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class DataPermissionContext {

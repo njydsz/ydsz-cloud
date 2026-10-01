@@ -30,10 +30,10 @@ import com.njydsz.userinfo.server.auth.LdapOrgSyncService.SyncResult;
  * <p><b>启用条件：</b>{@code ydsz.userinfo.ldap.sync.enabled=true}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/admin/ldap/sync")
 @ConditionalOnProperty(prefix = "ydsz.userinfo.ldap.sync", name = "enabled", havingValue = "true")

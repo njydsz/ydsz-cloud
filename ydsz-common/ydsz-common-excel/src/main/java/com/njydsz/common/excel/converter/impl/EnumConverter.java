@@ -18,7 +18,7 @@ import com.njydsz.common.excel.converter.ConvertContext;
  * 在大量枚举转换场景（如枚举列批量导入）下性能提升显著。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class EnumConverter implements CellValueConverter {
 

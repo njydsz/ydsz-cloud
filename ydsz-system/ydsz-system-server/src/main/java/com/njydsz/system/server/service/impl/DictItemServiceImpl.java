@@ -110,7 +110,7 @@ import com.njydsz.system.server.vo.DictItemExcelVO;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see DictItemService 字典项 Service 接口
  * @see DictServiceImpl 字典类型 Service 实现
  * @see EntityVersionService 统一实体版本 Service（写操作触发版本快照）
@@ -243,7 +243,7 @@ public class DictItemServiceImpl implements DictItemService {
     // 查询指定类型的所有字典项
     List<DictItemVO> flatList = dictRepository.findItemsByTypeCode(typeCode);
 
-    // 使用 TreeBuilder.buildSimple() 构建树形结构（O(n) 迭代；26.09.01 精简版不自动填充 level/path）
+    // 使用 TreeBuilder.buildSimple() 构建树形结构（O(n) 迭代；26.10.01 精简版不自动填充 level/path）
     return TreeBuilder.buildSimple(
         flatList,
         DictItemVO::getId,

@@ -19,7 +19,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * <p>全量/增量重建 ES 索引。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class IndexRebuildService {

@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>返回给前端的收藏节点信息（含节点元数据 + 收藏排序号）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

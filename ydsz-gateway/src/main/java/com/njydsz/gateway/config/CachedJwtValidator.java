@@ -52,7 +52,7 @@ import com.njydsz.gateway.cache.CacheKeyBuilder;
  * <p>本实现采用 TTL 过期策略保证多实例间最终一致性。黑名单生效延迟最长为 TTL 时间（默认 10s）。
  * 对于需要即时失效的场景，建议缩短 JWT Token 过期时间（如 15min）配合 refresh token 机制。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

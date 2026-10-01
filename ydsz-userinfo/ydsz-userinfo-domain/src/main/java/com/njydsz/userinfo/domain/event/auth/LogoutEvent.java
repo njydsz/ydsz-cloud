@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @param sourceIp 注销来源 IP
  * @param sessionDuration 会话持续时长（毫秒）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record LogoutEvent(
     String userId,

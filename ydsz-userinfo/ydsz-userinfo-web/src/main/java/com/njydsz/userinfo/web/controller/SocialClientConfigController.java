@@ -37,9 +37,9 @@ import com.njydsz.userinfo.server.service.SocialClientConfigService;
  * <p><b>配置优先级：</b>数据库 ＞ application.yml
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @Tag(name = "社交平台配置", description = "社交平台 OAuth2 客户端配置管理（热更新）")
 @RestController

@@ -38,7 +38,7 @@ import com.njydsz.workflow.domain.vo.FlowRollbackResultVO;
  * FLOW_ADMIN} 角色，由 Service 层 {@code FlowAdminGuard} 显式校验。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.workflow.server.service.impl.FlowDefinitionServiceImpl 实现类
  * @see com.njydsz.workflow.server.guard.FlowAdminGuard 流程管理员权限校验
  */

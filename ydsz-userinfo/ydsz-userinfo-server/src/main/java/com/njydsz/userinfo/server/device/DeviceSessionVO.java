@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>展示用户当前活跃的设备会话信息，用于设备管理页面。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class DeviceSessionVO {

@@ -32,7 +32,7 @@ import java.util.Map;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ColumnDesensitizationRule
  * @see ColumnDesensitizationExecutor
  */

@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.domain.entity.SpaceMember;
  * <p>对应数据表 {@code nw_space_member}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface SpaceMemberMapper extends BaseMapper<SpaceMember> {

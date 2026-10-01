@@ -40,7 +40,7 @@ import com.njydsz.common.auth.model.LoginUser;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class DataScopeHelper {
 

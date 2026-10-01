@@ -44,7 +44,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowDefinition 流程定义
  * @see FlowTemplateService 模板服务
  */
@@ -89,7 +89,7 @@ public class FlowTemplate extends MpBaseEntity<String> {
   /** 模板版本号（从 {@code 1} 开始单调递增，同一 {@code templateCode} 下唯一） */
   private Integer version;
 
-  /** 版本标签（如 {@code 26.09.01} / {@code 26.09.01-rc1}，可选可读标识） */
+  /** 版本标签（如 {@code 26.10.01} / {@code 26.10.01-rc1}，可选可读标识） */
   private String versionLabel;
 
   /** 继承类型：{@code STANDALONE}=独立 / {@code CLONE}=克隆 / {@code INHERIT}=继承 */

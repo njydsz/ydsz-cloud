@@ -14,7 +14,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p>底层委托 {@link DigestUtils#verifySignature}（常量时间比较，防时序攻击）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Experimental("IM 回调签名验证，当前暂无业务模块直接引用，保留待 workflow 三方审批回调接入；签名原语优先使用 common-util DigestUtils")
 public final class HmacSignatureUtil {

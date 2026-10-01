@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Import;
  * <p><b>扩展点：</b>任意 Bean 可通过 {@code @Bean} + {@code @Primary} 或 {@code @ConditionalOnMissingBean} 覆盖。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnProperty(

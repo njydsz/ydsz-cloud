@@ -33,7 +33,7 @@ import com.njydsz.common.util.string.StringUtils;
  * 保证多拦截器协作时后者优先。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class FeignRequestInterceptor implements RequestInterceptor {
 

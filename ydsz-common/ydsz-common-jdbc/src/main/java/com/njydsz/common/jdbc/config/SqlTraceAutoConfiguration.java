@@ -41,7 +41,7 @@ import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
  * 和 {@code ydsz.jdbc.sql-audit.*} 配置完全兼容。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see SqlTraceInnerInterceptor
  * @see MybatisPlusConfiguration
  */

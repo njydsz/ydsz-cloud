@@ -46,7 +46,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnClass({StringRedisTemplate.class})
@@ -87,7 +87,7 @@ public class DistributedLockAutoConfiguration {
   /**
    * 创建统一的锁续期服务 Bean。
    *
-   * <p>26.09.01 引入，将散落在各锁实现中的续期 Lua 脚本统一收口，消除双锁冗余。 业务方可覆盖此 Bean 以注入自定义 {@link
+   * <p>26.10.01 引入，将散落在各锁实现中的续期 Lua 脚本统一收口，消除双锁冗余。 业务方可覆盖此 Bean 以注入自定义 {@link
    * LockRenewalService.LockRenewalStrategy}。
    *
    * @return LockRenewalService 实例
@@ -101,7 +101,7 @@ public class DistributedLockAutoConfiguration {
   /**
    * 创建看门狗 Bean。
    *
-   * <p>26.09.01 变更：通过 {@link LockRenewalService} 统一执行续期， 不再在本地维护续期 Lua 脚本。
+   * <p>26.10.01 变更：通过 {@link LockRenewalService} 统一执行续期， 不再在本地维护续期 Lua 脚本。
    *
    * @param lockWatchDogScheduler 看门狗调度线程池
    * @param stringRedisTemplate Redis 模板

@@ -43,13 +43,13 @@ import com.njydsz.common.util.api.Experimental;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Experimental(
     value = "能力储备：Unchecked 风格轻量重试。平台级标准为 Resilience4j，"
         + "本类保留给轻量场景（无 Resilience4j 依赖），启用前请确认测试覆盖",
-    since = "26.09.01")
+    since = "26.10.01")
 public final class RetryUtils {
 
   /** 默认指数退避乘数（每次延迟翻倍）。 */

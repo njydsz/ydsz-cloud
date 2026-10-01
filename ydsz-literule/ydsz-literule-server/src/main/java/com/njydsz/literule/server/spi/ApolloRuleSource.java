@@ -25,7 +25,7 @@ import com.njydsz.literule.domain.dto.RuleDefinitionDTO;
  *
  * <p>依赖：需在 classpath 中引入 {@code com.ctrip.framework.apollo:apollo-client}。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

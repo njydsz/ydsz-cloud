@@ -15,7 +15,7 @@ import com.njydsz.common.tenant.metrics.TenantMetrics;
  * <p>order=400 确保租户隔离在字段填充（300）之后、数据权限（500）之前执行。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see InnerInterceptorProvider
  * @see TenantIsolationInterceptor
  */

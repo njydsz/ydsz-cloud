@@ -45,7 +45,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * </ol>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see TokenBlacklistService Token 黑名单服务（吊销）
  */
 @Slf4j

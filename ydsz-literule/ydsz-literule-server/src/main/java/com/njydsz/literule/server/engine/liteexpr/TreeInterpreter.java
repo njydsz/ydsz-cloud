@@ -29,7 +29,7 @@ import com.njydsz.common.locales.util.I18n;
  *       {@link ThreadLocal} 会话中（P0-2 并发修复），并发求值互不干扰
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public class TreeInterpreter implements ExprNodeVisitor<Object> {

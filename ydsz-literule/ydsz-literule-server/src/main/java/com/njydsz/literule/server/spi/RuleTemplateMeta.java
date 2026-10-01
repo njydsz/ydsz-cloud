@@ -22,7 +22,7 @@ import lombok.Data;
  *   <li>新增 {@code usageCount} 反映模板被引用次数，用于市场排序
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Data

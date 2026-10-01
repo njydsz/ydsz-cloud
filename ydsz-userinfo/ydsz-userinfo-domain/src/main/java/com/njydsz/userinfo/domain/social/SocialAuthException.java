@@ -11,7 +11,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * <p>该异常为 domain 层异常，不依赖 Spring 或任何框架。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SocialAuthException extends BusinessException {
 

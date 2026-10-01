@@ -15,7 +15,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     当前保留以兼容 ydsz-workflow 调用方。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @Setter

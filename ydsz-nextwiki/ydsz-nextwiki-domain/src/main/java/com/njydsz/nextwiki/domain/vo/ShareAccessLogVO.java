@@ -11,7 +11,7 @@ import lombok.Data;
  * 分享访问日志 VO
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

@@ -42,7 +42,7 @@ import com.njydsz.workflow.domain.gateway.AgentServiceClient;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.10.01 由 RestTemplate 迁移至 Feign（P1-3 YDIZ-FEIGN-002 违规整改）
  */
 @Slf4j

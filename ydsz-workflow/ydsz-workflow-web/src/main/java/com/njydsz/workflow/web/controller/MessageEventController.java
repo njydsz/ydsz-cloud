@@ -23,9 +23,9 @@ import com.njydsz.workflow.server.message.MessageEventService;
  * <p>提供消息事件发布能力，外部系统通过此接口发布消息触发等待中的流程节点。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/workflow/message-event")
 @Tag(name = "消息事件", description = "消息事件发布与订阅接口")

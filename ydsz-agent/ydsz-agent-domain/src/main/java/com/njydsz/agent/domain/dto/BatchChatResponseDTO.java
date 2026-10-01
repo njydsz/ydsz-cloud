@@ -16,7 +16,7 @@ import lombok.Data;
  * 调用方可通过 {@link BatchResultItem#success} 字段快速判断每条结果状态。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Schema(description = "批量对话响应")

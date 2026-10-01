@@ -20,7 +20,7 @@ import com.njydsz.common.locales.util.I18n;
  * @param score         相似度得分
  * @param sourcePath    来源路径
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record Citation(
         String documentId,

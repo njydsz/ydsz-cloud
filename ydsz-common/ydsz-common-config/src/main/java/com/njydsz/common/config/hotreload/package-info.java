@@ -54,6 +54,6 @@
  * 独立注册、互不干扰。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 package com.njydsz.common.config.hotreload;

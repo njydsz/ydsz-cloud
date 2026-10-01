@@ -13,7 +13,7 @@ import java.util.List;
  * 隔离存储），TraceStep 为不可变记录载体。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface TraceRecorder {
 

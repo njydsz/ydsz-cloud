@@ -30,7 +30,7 @@ import com.njydsz.common.redis.service.ops.RedisHashOps;
  * <p><b>依赖说明</b>：使用 {@link RedisHashOps} 收敛所有 Redis 操作，禁止直接注入 {@code RedissonClient}。
  * 豁免原因已随迁移消除（此前 RMap 操作现由 {@link RedisHashOps} 的 hSet/hGet/hDel/hGetAll 替代）。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public class RedisNodeRegistry implements NodeRegistry {

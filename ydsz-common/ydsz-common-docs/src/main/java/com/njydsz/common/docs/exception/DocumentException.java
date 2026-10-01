@@ -17,7 +17,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class DocumentException extends BusinessException {
 

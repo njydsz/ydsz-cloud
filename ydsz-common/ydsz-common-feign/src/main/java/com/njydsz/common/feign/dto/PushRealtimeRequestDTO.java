@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
  * <p><b>P0-3-fix</b>：新增 DTO 以支持 {@link com.njydsz.message.api.client.NotificationClient#pushRealtime} 方法。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @apiNote 推送请求 DTO 原有职责在 Feign 层定义，目前已扩展为项目全局使用的实时单播推送请求 VO；
  *     后续计划将其迁移至 ydsz-common-core 或 ydsz-message，在此之前继续在此处定义以兼容全量调用方。
  */

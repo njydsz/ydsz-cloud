@@ -19,7 +19,7 @@ import com.njydsz.cronjob.domain.entity.job.JobTask;
  * 管理子任务生命周期。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface JobTaskMapper extends BaseMapper<JobTask> {

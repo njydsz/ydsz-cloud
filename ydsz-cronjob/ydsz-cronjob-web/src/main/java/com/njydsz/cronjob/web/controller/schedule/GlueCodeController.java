@@ -46,11 +46,11 @@ import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Tag(name = "GLUE 在线编码")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/glue")
 @RequiredArgsConstructor

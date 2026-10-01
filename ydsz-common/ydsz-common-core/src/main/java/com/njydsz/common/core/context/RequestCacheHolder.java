@@ -27,7 +27,7 @@ import com.alibaba.ttl.TransmittableThreadLocal;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RequestContext
  */
 public final class RequestCacheHolder {
@@ -65,7 +65,7 @@ public final class RequestCacheHolder {
    * <p>由 RbacPermissionEvaluator 在首次加载后调用一次， 供同一请求内多次权限校验复用，避免反复 Redis 调用。
    *
    * @return 可变的缓存 Map（初始容量 8，适配典型用户信息字段数）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static Map<String, Object> createCachedUserInfoMap() {
     Map<String, Object> map = new LinkedHashMap<>(8);
@@ -79,7 +79,7 @@ public final class RequestCacheHolder {
    * <p>直接替换当前线程的缓存引用（不跨线程传播）。
    *
    * @param cache 缓存 Map（可为 null，等同于 {@link #clear()}）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static void setCachedUserInfoMap(Map<String, Object> cache) {
     if (cache == null) {
@@ -95,7 +95,7 @@ public final class RequestCacheHolder {
    * <p>该缓存存储于独立的 {@code CACHE_HOLDER}，不随 TTL 跨线程传播。 子线程如需缓存，请各自调用 {@link #createCachedUserInfoMap()} 懒初始化。
    *
    * @return 缓存 Map（可变），未创建返回 null
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static Map<String, Object> getCachedUserInfoMap() {
     return CACHE_HOLDER.get();
@@ -106,7 +106,7 @@ public final class RequestCacheHolder {
    *
    * <p>由 {@link RequestContext#clear()} 统一调用，一般不直接使用。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static void clear() {
     CACHE_HOLDER.remove();

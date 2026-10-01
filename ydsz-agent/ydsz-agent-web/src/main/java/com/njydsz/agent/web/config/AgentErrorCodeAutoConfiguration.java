@@ -27,7 +27,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * <p>已通过扫描器注册的场景下，本配置为无操作（idempotent），零运行时开销。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @AutoConfiguration

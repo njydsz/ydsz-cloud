@@ -22,7 +22,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  * 注解（项目规范：HealthIndicator 统一在 AutoConfiguration 中注册）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SnowflakeHealthIndicator implements HealthIndicator {
 

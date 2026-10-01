@@ -13,7 +13,7 @@ import java.util.List;
  * "重新发布到 topic 末尾"语义。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface DeadLetterQueueService {
 

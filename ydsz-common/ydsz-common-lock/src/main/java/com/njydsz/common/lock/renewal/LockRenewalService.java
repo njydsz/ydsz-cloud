@@ -30,7 +30,7 @@ import com.njydsz.common.lock.annotation.LockType;
  * <p><b>线程安全：</b>脚本实例为无状态不可变对象，多线程安全。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class LockRenewalService {

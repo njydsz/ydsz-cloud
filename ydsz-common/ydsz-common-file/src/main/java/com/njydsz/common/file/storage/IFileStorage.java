@@ -40,7 +40,7 @@ import com.njydsz.common.file.domain.UploadCheckpoint;
  * <p><b>并发一致性：</b>分片上传需保证 partNumber 唯一性；complete 时需校验所有分片 ETag 与云端一致，避免出现 "孤儿分片"。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see IFileStorageProvider
  * @see com.njydsz.common.file.storage.platform.LocalStorage
  * @see com.njydsz.common.file.storage.platform.MinioStorage

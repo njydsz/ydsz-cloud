@@ -40,7 +40,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowInstanceLifecycleMan
  * <p><b>架构合规说明（YDIZ-ARCH-001）：</b>实现 domain 层 {@link FlowAdvancer} 接口，
  * server 层可依赖 domain 接口，domain 层禁止反向依赖 server 层。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  * @see FlowAdvancer 流程推进器策略接口（domain 层）
  */

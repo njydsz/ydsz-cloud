@@ -50,7 +50,7 @@ import com.njydsz.system.server.service.ApiPermissionService;
  * <p><b>多租户：</b>扫描注册使用平台租户（{@code 0}）作为默认租户 ID。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ApiPermissionService 接口权限 Service 接口
  */
 @Slf4j

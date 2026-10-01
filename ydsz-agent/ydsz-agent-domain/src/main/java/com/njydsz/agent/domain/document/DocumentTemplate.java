@@ -8,7 +8,7 @@ import java.util.Map;
  * <p>定义文档生成的模板参数。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class DocumentTemplate {
 

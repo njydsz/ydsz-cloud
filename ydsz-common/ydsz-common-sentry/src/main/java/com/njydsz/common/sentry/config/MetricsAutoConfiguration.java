@@ -36,7 +36,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  *   <li>{@link SentryCircuitBreaker}：ELK/Loki 通道独立熔断器（基于 Resilience4j）
  * </ul>
  *
- * <h3>26.09.01 变更（2026-09-01）</h3>
+ * <h3>26.10.01 变更（2026-09-01）</h3>
  *
  * <ul>
  *   <li>熔断底层改为 Resilience4j（{@code resilience4j-circuitbreaker}），移除自研引擎依赖
@@ -44,7 +44,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)

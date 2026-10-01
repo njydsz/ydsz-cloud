@@ -39,7 +39,7 @@ import com.njydsz.userinfo.domain.enums.SocialPlatformLinkingStrategy;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.userinfo.social")
@@ -60,7 +60,7 @@ public class SocialAuthProperties {
    * <p>每个平台独立的 OAuth2 端点与凭据配置。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class ProviderConfig {

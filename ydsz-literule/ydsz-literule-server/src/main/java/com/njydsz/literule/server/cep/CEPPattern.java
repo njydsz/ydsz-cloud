@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
  * - threshold: 5
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Data

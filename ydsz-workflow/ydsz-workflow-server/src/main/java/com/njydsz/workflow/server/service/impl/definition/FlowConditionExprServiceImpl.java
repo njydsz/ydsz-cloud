@@ -86,7 +86,7 @@ import com.njydsz.workflow.server.service.FlowConditionExprService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowConditionExprService 接口定义
  * @see AviatorEvaluator Aviator 表达式引擎
  * @see FlowNodeVO 流程节点（关联条件表达式的实体）

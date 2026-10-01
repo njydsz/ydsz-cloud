@@ -88,9 +88,9 @@ import com.njydsz.nextwiki.server.mention.MentionService;
  * <p>TODO: 待接入 {@code ydsz_wiki_file_comment} 表 + FileCommentMapper 后启用完整评论能力
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/nextwiki/comments")

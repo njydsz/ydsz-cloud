@@ -11,7 +11,7 @@ import com.njydsz.common.safe.annotation.SensitiveLevel;
  * 确保写入 Redis 的 TTL 计算逻辑统一。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class SecondaryAuthAspect {
 

@@ -32,7 +32,7 @@ import java.util.Map;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public abstract class JsonNode {
 
@@ -304,7 +304,7 @@ public abstract class JsonNode {
    * 可直接安全共享引用；容器节点（ObjectNode / ArrayNode）可变，需要深拷贝。
    *
    * @return true 如果节点为叶子节点
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public boolean isLeaf() {
     return !isObject() && !isArray();
@@ -317,7 +317,7 @@ public abstract class JsonNode {
    * ArrayNode）必须重写此方法返回全新的嵌套副本。
    *
    * @return 当前节点的深拷贝（叶子节点返回 this）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public JsonNode deepCopy() {
     return this;
@@ -488,7 +488,7 @@ public abstract class JsonNode {
    * <p>基类默认实现委托 {@link #toString()}，子类可覆盖为直接写入 sb 的高效形式。 调用方始终可使用此方法避免每层嵌套树都创建独立的中间 String。
    *
    * @param sb 输出目标 StringBuilder
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public void appendTo(StringBuilder sb) {
     sb.append(toString());

@@ -9,7 +9,7 @@ import java.util.List;
  * 避免将全量 Schema 注入 Prompt，降低 Token 消耗并提升 SQL 生成质量。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SchemaRecallService {
 

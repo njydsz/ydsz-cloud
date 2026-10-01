@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * <p>使用方无需在编译期引入 cache 模块，运行时自动识别 classpath 并选择实现。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class SafeCacheFactoryHelper {
 

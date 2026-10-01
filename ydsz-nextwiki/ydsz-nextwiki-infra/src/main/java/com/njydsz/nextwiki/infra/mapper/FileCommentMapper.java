@@ -23,7 +23,7 @@ import com.njydsz.nextwiki.domain.entity.FileComment;
  * 手写 SQL 需显式携带租户条件。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.nextwiki.infra.entity.FileComment 文件评论实体
  */
 @Mapper

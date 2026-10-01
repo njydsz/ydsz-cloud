@@ -33,7 +33,7 @@ import com.njydsz.common.tenant.redis.TenantAwareRedisKey;
  * {@code maxMessages * 2}， 保留一定余量供滑动窗口检索。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class RedisConversationMemory implements ConversationMemory {

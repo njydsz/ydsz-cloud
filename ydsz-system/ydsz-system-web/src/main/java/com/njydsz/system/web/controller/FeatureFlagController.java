@@ -30,11 +30,11 @@ import java.util.Map;
  * <p><b>限流：</b>20 QPS（仅应用引导阶段调用，ConfigService 内部有 Caffeine 一级缓存）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FeatureFlagService#getFeatureFlags 特性开关过滤与值解析
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/feature-flags")
 @RequiredArgsConstructor

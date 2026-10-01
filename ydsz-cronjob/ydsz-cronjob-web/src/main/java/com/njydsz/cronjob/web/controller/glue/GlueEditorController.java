@@ -46,11 +46,11 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * </ol>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Tag(name = "GLUE 编辑器", description = "GLUE 任务 Handler 在线代码编辑")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/glue")
 @RequiredArgsConstructor

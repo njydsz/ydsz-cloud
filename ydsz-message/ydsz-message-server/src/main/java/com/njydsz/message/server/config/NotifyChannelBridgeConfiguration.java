@@ -48,7 +48,7 @@ import com.njydsz.message.server.channel.NotifyChannelStrategyAdapter;
  * common-notify 的 {@code List<NotifyChannelStrategy>} 注入无法收集到 List 内的元素）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Configuration

@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于批量驳回时的参数传递，包含任务 ID、驳回原因和可选的驳回目标节点。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class TaskRejectionDTO implements Serializable {

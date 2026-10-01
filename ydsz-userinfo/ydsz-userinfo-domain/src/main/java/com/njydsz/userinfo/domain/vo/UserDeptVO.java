@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>不包含 deleted、createdBy 等内部维护字段。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class UserDeptVO {

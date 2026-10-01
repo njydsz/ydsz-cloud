@@ -25,7 +25,7 @@ import com.njydsz.agent.domain.model.ChatMessage;
  * <p><b>线程安全</b>：全部字段 final 且集合经不可变封装，实例不可变、可安全跨线程传递。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class AgentExecutionRequest {
 

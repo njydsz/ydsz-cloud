@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供多引擎消息队列统一抽象，屏蔽底层差异，集成死信/延迟/去重/限速/压缩等能力 |
 | **依赖** | common-core、common-util、common-redis（可选）、common-thread、common-json；可选依赖 jedis、kafka-clients、rocketmq-spring-boot-starter、spring-rabbit、spring-boot-health、micrometer-core、spring-boot-actuator |
-| **版本** | 26.09.01-SNAPSHOT |
+| **版本** | 26.10.01-SNAPSHOT |
 
 ## 核心能力
 
@@ -392,7 +392,7 @@ management:
 
 ## 变更记录
 
-- **26.09.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
-- **26.09.01**（2026-08-25）：新增 `ConsumerRateLimiter`（消费者限速）、`ConsumerThreadGuard`（消费线程守卫）、`RebalanceMonitor`（再均衡监控）；新增 DelayedMessageSender / TimerBasedDelayedMessageSender 延迟消息组件；新增 ActiveMQ 引擎适配（ActiveMQPublisher / ActiveMQSubscriber）。
-- **26.09.01**（2026-08-15）：架构重构为子模块分包（config / domain / enums / service / queue / mq / health / metrics / actuator / trace / dedup / delayed / compress / serializer / recovery / rate / group / retry / scheduler / constant / annotation / manager），拆分为 20+ 子包。
-- **26.09.01**（2026-08-02）：初始版本，提供 StreamMQ / ListMQ / PubSubMQ 三种 Redis 引擎 + 死信队列 + 基础生产和消费 API。
+- **26.10.01**（2026-09-01）：对标 common-jdbc 标准格式重构 README，补全全部章节。
+- **26.10.01**（2026-08-25）：新增 `ConsumerRateLimiter`（消费者限速）、`ConsumerThreadGuard`（消费线程守卫）、`RebalanceMonitor`（再均衡监控）；新增 DelayedMessageSender / TimerBasedDelayedMessageSender 延迟消息组件；新增 ActiveMQ 引擎适配（ActiveMQPublisher / ActiveMQSubscriber）。
+- **26.10.01**（2026-08-15）：架构重构为子模块分包（config / domain / enums / service / queue / mq / health / metrics / actuator / trace / dedup / delayed / compress / serializer / recovery / rate / group / retry / scheduler / constant / annotation / manager），拆分为 20+ 子包。
+- **26.10.01**（2026-08-02）：初始版本，提供 StreamMQ / ListMQ / PubSubMQ 三种 Redis 引擎 + 死信队列 + 基础生产和消费 API。

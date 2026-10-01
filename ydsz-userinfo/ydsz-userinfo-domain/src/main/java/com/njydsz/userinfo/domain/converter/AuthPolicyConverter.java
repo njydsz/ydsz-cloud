@@ -13,7 +13,7 @@ import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
  * 使用 Spring 注入模式，替代静态单例 INSTANT，提升可测试性。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 @Mapper(componentModel = "spring")

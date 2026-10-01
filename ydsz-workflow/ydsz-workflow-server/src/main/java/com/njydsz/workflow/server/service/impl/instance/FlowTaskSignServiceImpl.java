@@ -62,7 +62,7 @@ import com.njydsz.workflow.domain.vo.FlowUserVO;
  * <p><b>跨子服务共享：</b>任务校验 / 审计 / 事件能力委托给 {@link FlowTaskSupport}，避免代码重复。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowTaskSupport 跨子服务共享辅助
  * @see FlowTaskOperateDTO 任务操作参数 DTO
  * @see FlowSignType 加签类型枚举

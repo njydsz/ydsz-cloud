@@ -55,7 +55,7 @@ import com.njydsz.cronjob.server.core.maintenance.ScanTask;
  * 单节点执行扫描任务。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Configuration

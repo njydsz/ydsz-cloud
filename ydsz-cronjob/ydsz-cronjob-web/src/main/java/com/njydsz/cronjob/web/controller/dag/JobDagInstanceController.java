@@ -54,11 +54,11 @@ import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
  * {@link #getVisualization} 返回的 VO 包含节点/边的实时状态、运行时长、错误堆栈等， 供前端 DAG 查看器渲染节点颜色（绿/黄/红/灰）和边动画。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Tag(name = "DAG工作流实例", description = "DAG 实例查询、暂停/恢复/取消、可视化、上下文管理")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/dag/instance")
 @RequiredArgsConstructor

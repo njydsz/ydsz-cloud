@@ -13,7 +13,7 @@ import java.lang.invoke.VarHandle;
  * <p>线程安全：所有读写操作使用 {@link VarHandle} CAS 保证原子性。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class FrequencySketch {
 

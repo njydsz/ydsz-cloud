@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * <p>定义 AI 生成的摘要结果数据结构，供 server 层和 api 层共享使用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @NoArgsConstructor

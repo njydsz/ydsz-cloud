@@ -8,7 +8,7 @@ import java.util.List;
  * <p>实现 OpenID Connect Discovery 1.0 规范中的 Provider Configuration Response。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @param issuer                                  签发者标识
  * @param authorizationEndpoint                   授权端点 URL
  * @param tokenEndpoint                           令牌端点 URL

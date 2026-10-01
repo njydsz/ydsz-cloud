@@ -40,7 +40,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * com.njydsz.common.thread.util.ExecutorUtils} 新注册线程池的指标注册问题（P1-13）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class ThreadPoolRegistryMetrics implements MeterBinder {

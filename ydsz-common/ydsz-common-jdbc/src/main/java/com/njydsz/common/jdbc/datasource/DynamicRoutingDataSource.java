@@ -35,7 +35,7 @@ import com.njydsz.common.locales.util.I18n;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
 
@@ -65,7 +65,7 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
    *   <li>默认数据源
    * </ol>
    *
-   * <p><b>读写分离说明：</b>自 26.09.01 起，读写分离能力委托 dynamic-datasource 内置实现， 不再使用自研拦截器。{@link
+   * <p><b>读写分离说明：</b>自 26.10.01 起，读写分离能力委托 dynamic-datasource 内置实现， 不再使用自研拦截器。{@link
    * DynamicDataSourceContextHolder} 中的从库选择由 dynamic-datasource 自动处理。
    *
    * @return 数据源路由 key；determineCurrentLookupKey 契约中 null 表示使用默认数据源

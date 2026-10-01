@@ -25,7 +25,7 @@ import com.njydsz.cronjob.server.core.dispatch.WebhookEventDispatcher;
  * <p>幂等保证：基于 eventKey 去重（WebHook 接收方也应做幂等处理）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.24 实现 OutboxSubscriber SPI（YDIZ-EVENT-002），移除 @EventListener 手动过滤
  */
 @Slf4j

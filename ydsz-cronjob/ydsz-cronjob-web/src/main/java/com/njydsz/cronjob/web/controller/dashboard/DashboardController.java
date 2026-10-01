@@ -32,11 +32,11 @@ import com.njydsz.cronjob.domain.repository.JobRepository;
  * <p>数据通过 ECharts 按需引入方式在前端渲染，减少首屏加载体积。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Tag(name = "运维 Dashboard", description = "Dashboard 聚合统计数据：任务分布/分组排行/调度类型")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/dashboard")
 @RequiredArgsConstructor

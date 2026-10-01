@@ -8,7 +8,7 @@ import java.util.List;
  * <p>需要显式索引维护的引擎（PG/ES/Solr/OpenSearch）实现此接口。 RediSearch 等直接索引数据源的引擎可不实现此接口。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see SearchStrategy
  */
 public interface IndexStrategy {

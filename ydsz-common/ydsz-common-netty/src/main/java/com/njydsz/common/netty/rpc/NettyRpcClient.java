@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p><b>线程安全：</b>invoke() 方法可被多线程同时调用，内部 pending 表使用 {@link ConcurrentHashMap} 保证线程安全。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RpcMessage
  */
 @Slf4j

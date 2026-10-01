@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于展示指定办理人的审批效率数据，包括完成数量、平均耗时及累计耗时。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowApproverEfficiencyVO implements Serializable {

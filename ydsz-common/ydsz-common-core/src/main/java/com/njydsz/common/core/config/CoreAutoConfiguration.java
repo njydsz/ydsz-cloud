@@ -33,7 +33,7 @@ import com.njydsz.common.locales.util.MessageSourceHolder;
  * <p><b>启用条件：</b>当 {@code ydsz.core.enabled=true} 时生效（默认启用）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnProperty(
@@ -112,7 +112,7 @@ public class CoreAutoConfiguration {
    * <p>本类为包级可见的启动期一次性组件，无状态、不对外暴露。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   static class PageConstantsInitializer implements SmartInitializingSingleton {
 

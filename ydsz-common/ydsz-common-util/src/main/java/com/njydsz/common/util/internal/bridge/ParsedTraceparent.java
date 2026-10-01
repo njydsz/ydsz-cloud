@@ -11,7 +11,7 @@ package com.njydsz.common.util.internal.bridge;
  * @param traceId 32 位十六进制 Trace ID
  * @param spanId 16 位十六进制 Span ID
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record ParsedTraceparent(String traceId, String spanId) {
 

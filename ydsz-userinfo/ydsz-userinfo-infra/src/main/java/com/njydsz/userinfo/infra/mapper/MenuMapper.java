@@ -26,7 +26,7 @@ import com.njydsz.userinfo.domain.entity.Menu;
  * <p><b>多租户：</b>由 MyBatis 拦截器自动注入 {@code tenant_id} 过滤条件。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.domain.entity.Menu 菜单实体（含 permCode 字段）
  * @see com.njydsz.userinfo.infra.mapper.RolePermissionMapper 角色-权限关联 Mapper
  */

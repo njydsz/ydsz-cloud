@@ -28,7 +28,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * 降级为日志记录（保留事件全貌，不丢失关键审计信息）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.24 实现 OutboxSubscriber SPI（YDIZ-EVENT-002），移除 @EventListener 手动过滤
  */
 @Slf4j

@@ -18,7 +18,7 @@ import com.njydsz.common.notify.template.TemplateEngine;
  * <p>每种通知渠道实现该接口，通过策略模式实现渠道自动分发。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface NotifyChannelStrategy {
 

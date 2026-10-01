@@ -31,7 +31,7 @@ import org.springframework.validation.annotation.Validated;
  * 通过 @EnableConfigurationProperties 注册。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Validated

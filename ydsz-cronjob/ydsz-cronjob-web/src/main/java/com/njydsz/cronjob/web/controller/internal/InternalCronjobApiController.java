@@ -36,11 +36,11 @@ import com.njydsz.cronjob.server.service.job.JobService;
  * {@code CronjobServiceClient} 的 Feign 声明严格对齐。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.cronjob.api.client.CronjobServiceClient Feign Client 接口
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/internal")
 @RequiredArgsConstructor

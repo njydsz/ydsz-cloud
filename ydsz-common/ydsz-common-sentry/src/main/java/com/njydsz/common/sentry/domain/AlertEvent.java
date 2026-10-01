@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>统一的告警事件模型，支持告警收敛、去重和静默。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

@@ -17,7 +17,7 @@ import com.njydsz.common.json.YdszJson;
  *
  * <p>所有方法均为无状态纯函数（入参为 JSON 字符串），线程安全。解析失败时返回合理的默认值而非 null。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

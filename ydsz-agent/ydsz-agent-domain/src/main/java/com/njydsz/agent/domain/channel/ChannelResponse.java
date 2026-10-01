@@ -8,7 +8,7 @@ import java.util.Map;
  * <p>封装返回给不同渠道的响应数据。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class ChannelResponse {
 

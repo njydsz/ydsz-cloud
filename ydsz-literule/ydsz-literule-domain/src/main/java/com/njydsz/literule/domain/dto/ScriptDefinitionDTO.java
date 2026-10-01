@@ -28,7 +28,7 @@ import com.njydsz.literule.domain.Rule;
  * 通过 {@code ScriptRule#from(ScriptDefinitionDTO)} 转换为可执行规则。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

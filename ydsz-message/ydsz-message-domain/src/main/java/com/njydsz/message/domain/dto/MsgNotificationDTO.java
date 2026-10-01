@@ -21,7 +21,7 @@ import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
  * <p>遵循云顶编码规范第 34 节：domain 层 DTO 不区分 Create/Update。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class MsgNotificationDTO implements Serializable {

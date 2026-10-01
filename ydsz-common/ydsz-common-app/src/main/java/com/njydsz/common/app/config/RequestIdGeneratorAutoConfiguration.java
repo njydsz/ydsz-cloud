@@ -16,7 +16,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * <p><b>生命周期状态（§33.7 储备义务，26.09.14 标注）：</b>reserve · 稳定。App 端通用基座能力，低引用属储备特征。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 public class RequestIdGeneratorAutoConfiguration {

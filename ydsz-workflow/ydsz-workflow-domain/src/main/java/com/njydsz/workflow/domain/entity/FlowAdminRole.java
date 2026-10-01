@@ -41,7 +41,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowAdminGuard 流程管理员权限校验
  * @see com.njydsz.workflow.domain.enums.FlowRoleCode 流程角色编码枚举
  */

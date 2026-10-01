@@ -25,7 +25,7 @@ import com.njydsz.common.safe.csrf.CsrfDoubleSubmitUtility;
  * 确保 Token 生成（密码学安全随机数）、比较（恒定时间）、Cookie 构建（安全属性）统一遵循安全模块规范。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.10.01 重构为 CsrfDoubleSubmitUtility 委托适配器
  * @see CsrfDoubleSubmitUtility
  */

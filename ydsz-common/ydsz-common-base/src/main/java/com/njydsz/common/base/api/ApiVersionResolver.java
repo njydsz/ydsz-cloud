@@ -13,7 +13,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
  * <p>供拦截器、OpenAPI 自定义处理器、日志埋点等场景复用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class ApiVersionResolver {
 

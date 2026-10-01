@@ -40,11 +40,11 @@ import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
  * {@code WorkflowServiceClient} 的 Feign 声明严格对齐，避免跨服务反序列化失败。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.workflow.api.client.WorkflowServiceClient Feign Client 接口
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/internal")
 @RequiredArgsConstructor

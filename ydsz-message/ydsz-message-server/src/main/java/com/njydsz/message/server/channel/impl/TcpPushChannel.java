@@ -45,7 +45,7 @@ import com.njydsz.message.server.channel.MessageChannel;
  * 配置（默认 9123）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

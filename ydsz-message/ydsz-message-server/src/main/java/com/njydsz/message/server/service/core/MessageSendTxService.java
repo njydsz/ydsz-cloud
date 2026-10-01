@@ -25,7 +25,7 @@ import com.njydsz.message.server.event.OutboxDomainEventPublisher;
  * 避免 msgLog 已落库但 Outbox 写入失败的不一致场景。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.30 改用 OutboxDomainEventPublisher 委托 DomainEventPublisher 统一门面，移除 OutboxService 直连
  */
 @Slf4j

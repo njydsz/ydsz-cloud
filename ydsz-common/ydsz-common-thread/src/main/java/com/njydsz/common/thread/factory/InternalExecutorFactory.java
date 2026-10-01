@@ -47,7 +47,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * RegexpSinglelineJava} 线程池构造检测。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public final class InternalExecutorFactory {

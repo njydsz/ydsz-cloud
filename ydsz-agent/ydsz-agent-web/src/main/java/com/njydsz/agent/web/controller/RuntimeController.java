@@ -32,10 +32,10 @@ import com.njydsz.common.core.response.YdszResponse;
  * 提供集中化的 Agent 执行状态监控与干预能力。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/agent/runtime")
 public class RuntimeController {

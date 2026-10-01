@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author ydsz-team
  * @see com.njydsz.common.web.filter.ContentCachingFilter
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.web.content-cache")

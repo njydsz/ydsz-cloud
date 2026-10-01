@@ -45,7 +45,7 @@ import com.njydsz.common.web.metrics.WebMetrics;
  * <p>ContentCachingFilter、WebAuthFilter、SecurityHeaderFilter、TraceIdResponseFilter、RequestLogInterceptor。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)

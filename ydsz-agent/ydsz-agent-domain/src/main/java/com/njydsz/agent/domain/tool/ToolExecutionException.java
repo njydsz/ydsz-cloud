@@ -10,7 +10,7 @@ import com.njydsz.common.locales.util.I18n;
  * 工具内部错误等场景。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ToolExecutionException extends BusinessException {
 

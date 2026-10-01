@@ -28,7 +28,7 @@ import com.njydsz.message.domain.entity.MsgNotification;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see MsgNotification 通知实体
  * @see com.njydsz.message.server.service.MsgNotificationService 通知 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

@@ -10,7 +10,7 @@ import lombok.Data;
  * FlowEventSubscription 视图对象。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowEventSubscriptionVO implements Serializable {

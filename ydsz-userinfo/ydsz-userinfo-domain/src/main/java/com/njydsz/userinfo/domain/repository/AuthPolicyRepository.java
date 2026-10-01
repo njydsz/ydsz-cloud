@@ -21,7 +21,7 @@ import com.njydsz.userinfo.domain.vo.AuthPolicyVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface AuthPolicyRepository {
 

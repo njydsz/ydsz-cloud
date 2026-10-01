@@ -19,7 +19,7 @@ import com.njydsz.userinfo.app.config.ConditionalOnPlatform;
  * common-app 保持一致；未开启时本配置不注册任何 Bean（此前为无条件下暴露 Swagger，属越权暴露面）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.15 改为继承 common-base {@link BaseOpenApiConfiguration}，移除自建 OpenAPI Bean
  */
 @Configuration

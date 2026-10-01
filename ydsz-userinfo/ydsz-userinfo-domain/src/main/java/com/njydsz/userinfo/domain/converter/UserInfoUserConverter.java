@@ -40,7 +40,7 @@ import com.njydsz.userinfo.domain.vo.UserRoleVO;
  * <p>使用 Spring 注入模式（componentModel = "spring"），替代旧的静态单例 INSTANT 访问方式。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper(componentModel = "spring")
 @Component

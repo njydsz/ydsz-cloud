@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowListenerPluginExecutor 执行器，读取此配置并分发给对应插件
  */
 @Data

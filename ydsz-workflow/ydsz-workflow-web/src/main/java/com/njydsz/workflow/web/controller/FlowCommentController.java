@@ -70,13 +70,13 @@ import com.njydsz.workflow.server.service.FlowCommentService;
  * 通知被回复人；提及人（{@code @xxx}）索引便于 @ 检索。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowCommentService 评论服务（含常用语能力）
  * @see FlowComment 评论实体
  * @see FlowCommentCreateDTO 评论创建 DTO
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @Tag(name = "workflow-comment", description = "工作流审批评论与常用语统一接口")
 @RequestMapping("/workflow/comment")

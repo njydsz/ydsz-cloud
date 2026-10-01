@@ -16,7 +16,7 @@ import com.njydsz.agent.domain.vo.AgentTraceVO;
  * {@link TraceRecorder}，由 infra 层实现类负责实例化具体记录器。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface AgentTraceRepository {
 

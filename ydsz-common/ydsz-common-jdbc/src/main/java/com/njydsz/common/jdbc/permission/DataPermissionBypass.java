@@ -43,7 +43,7 @@ import org.springframework.core.NamedThreadLocal;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.jdbc.interceptor.RowPermissionInnerInterceptor
  * @see DataPermissionIgnore
  */

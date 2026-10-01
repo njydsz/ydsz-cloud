@@ -76,14 +76,14 @@ import com.njydsz.message.server.service.core.MessageLogService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.core.MessageLogService 消息日志服务
  * @see MsgLog 发送日志实体
  * @see com.njydsz.message.domain.enums.core.MessageStatusEnum 消息状态枚举
  */
 @Slf4j
 @Tag(name = "死信管理", description = "死信查询与手动重发")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/dead-letter")
 @RequiredArgsConstructor

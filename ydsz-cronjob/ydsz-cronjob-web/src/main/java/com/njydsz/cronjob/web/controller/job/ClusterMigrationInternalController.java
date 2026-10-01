@@ -37,11 +37,11 @@ import com.njydsz.cronjob.server.service.job.JobService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Tag(name = "集群漂移（内部接收端）", description = "接收远程集群的漂移注册/注销请求")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/internal/migrate")
 @RequiredArgsConstructor

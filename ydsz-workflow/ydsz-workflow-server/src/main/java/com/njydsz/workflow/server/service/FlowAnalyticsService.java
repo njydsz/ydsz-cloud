@@ -20,7 +20,7 @@ import com.njydsz.workflow.server.excel.vo.FlowEfficiencyExportVO;
  * <p>多维度统计流程实例、任务、SLA 数据。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface FlowAnalyticsService {
 

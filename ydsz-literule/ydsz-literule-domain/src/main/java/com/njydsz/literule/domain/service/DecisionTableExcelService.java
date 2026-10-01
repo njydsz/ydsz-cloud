@@ -11,7 +11,7 @@ import com.njydsz.literule.domain.dto.DecisionTableDefinitionDTO;
  * server 层通过本接口调用 Excel 导入导出功能，避免直接依赖实现类。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface DecisionTableExcelService {
 

@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Bean;
  * <p>所有依赖以 optional=true 引入，业务方未引入 OTel 相关 jar 时不生效。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @AutoConfiguration

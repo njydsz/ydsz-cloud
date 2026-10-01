@@ -67,7 +67,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowDefinition 流程定义
  * @see com.njydsz.workflow.domain.enums.FlowNodeType 节点类型枚举
  * @see AssignmentResolver 办理人解析器

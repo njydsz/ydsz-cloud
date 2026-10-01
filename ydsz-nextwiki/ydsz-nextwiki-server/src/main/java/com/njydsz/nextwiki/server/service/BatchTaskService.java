@@ -36,7 +36,7 @@ import com.njydsz.nextwiki.server.websocket.BatchProgressNotifier;
  * 避免直接创建原生线程池（符合云顶编码规范 15.4 节）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service
@@ -319,7 +319,7 @@ public class BatchTaskService {
    * 自研引擎可正常序列化/反序列化（record 无无参构造，自研引擎不保证支持）。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @lombok.Data
   @lombok.Builder

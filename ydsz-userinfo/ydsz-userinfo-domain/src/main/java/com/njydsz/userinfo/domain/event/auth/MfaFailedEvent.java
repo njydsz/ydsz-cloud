@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @param mfaType MFA 类型（TOTP/SMS/EMAIL）
  * @param reason 失败原因
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record MfaFailedEvent(
     String userId, String username, LocalDateTime timestamp, String mfaType, String reason) {}

@@ -63,7 +63,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>通过 {@link Auth#privateDownloadUrl(String, long)} 生成临时下载链接， 支持自定义过期时间。公开空间可直接通过 CDN 域名访问。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see AbstractFileStorage
  * @see Auth
  * @see UploadManager

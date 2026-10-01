@@ -76,13 +76,13 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.config.UserChannelBindingService 用户通道绑定服务
  * @see com.njydsz.message.domain.entity.config.MsgUserChannel 绑定实体
  */
 @Tag(name = "用户通道绑定", description = "用户通道联系方式绑定/查询/删除")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/user-channels")
 @RequiredArgsConstructor

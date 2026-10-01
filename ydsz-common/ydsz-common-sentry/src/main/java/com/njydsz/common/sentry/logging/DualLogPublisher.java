@@ -21,7 +21,7 @@ import com.njydsz.common.sentry.spi.LogPublisher;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class DualLogPublisher implements LogPublisher {

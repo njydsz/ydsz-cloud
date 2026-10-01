@@ -32,7 +32,7 @@ import lombok.Data;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Schema(description = "批量对话请求")

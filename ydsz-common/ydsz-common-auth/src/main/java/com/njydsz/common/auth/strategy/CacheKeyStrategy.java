@@ -22,7 +22,7 @@ import java.util.Set;
  * <p><b>默认实现：</b>{@link DefaultCacheKeyStrategy} 使用 {@code tenantId:roleCodes} 格式。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @FunctionalInterface
 public interface CacheKeyStrategy {

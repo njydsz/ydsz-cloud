@@ -72,12 +72,12 @@ import com.njydsz.userinfo.web.annotation.RequireInternal;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.api.client.OrgQueryClient Feign Client 接口
  */
 @Slf4j
 @Validated
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequireInternal
 @RequestMapping("/internal")

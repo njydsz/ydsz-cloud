@@ -19,7 +19,7 @@ import lombok.Data;
  * <p>遵循云顶编码规范第 34 节：domain 层 DTO 不区分 Create/Update。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class MsgTemplateDTO implements Serializable {

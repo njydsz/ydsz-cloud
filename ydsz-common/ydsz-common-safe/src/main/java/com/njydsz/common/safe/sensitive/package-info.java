@@ -13,6 +13,6 @@
  * 避免各模块自行维护正则导致升级遗漏。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 package com.njydsz.common.safe.sensitive;

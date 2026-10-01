@@ -23,6 +23,6 @@ import com.njydsz.agent.domain.entity.TokenUsageRecord;
  * <p><b>逻辑删除：</b>用量记录不做逻辑删除，永久保留以供审计。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface TokenUsageRecordMapper extends BaseMapper<TokenUsageRecord> {}

@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于返回流程版本回滚操作的结果，包含回滚前后的版本信息。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowRollbackResultVO implements Serializable {

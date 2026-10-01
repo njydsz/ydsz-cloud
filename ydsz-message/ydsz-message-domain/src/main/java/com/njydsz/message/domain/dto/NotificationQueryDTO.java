@@ -13,7 +13,7 @@ import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
  * 站内通知分页查询 DTO
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

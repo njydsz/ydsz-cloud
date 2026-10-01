@@ -33,7 +33,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  * <p>子类需实现 {@code doAuthFilter} 方法完成具体的 Token 解析和认证逻辑。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see OncePerRequestFilter
  * @see AuthFilterConfiguration
  * @see RateLimiter

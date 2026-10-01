@@ -11,7 +11,7 @@ import lombok.Data;
  * Boot 会自动合并字段，无冲突）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class AlertScanConfig {

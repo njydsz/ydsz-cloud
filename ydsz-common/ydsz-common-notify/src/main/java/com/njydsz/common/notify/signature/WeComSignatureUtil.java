@@ -16,7 +16,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p>底层委托 {@link DigestUtils#sha1Hex}（YDIZ-COMMON-054）+ {@link DigestUtils#constantTimeEquals}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class WeComSignatureUtil {
 

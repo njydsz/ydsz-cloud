@@ -6,7 +6,7 @@ package com.njydsz.workflow.server.service;
  * <p>审批人离线时自动转办。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface FlowOfflineAutoForwardService {
 

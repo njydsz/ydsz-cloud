@@ -29,7 +29,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * <p>P1-12: 核心逻辑已下沉到 common-safe {@code CaptchaGenerator}， 本服务保留为薄封装，负责业务异常转换。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

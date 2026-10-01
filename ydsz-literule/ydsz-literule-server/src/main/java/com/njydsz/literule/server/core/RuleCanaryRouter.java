@@ -39,7 +39,7 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  *   <li>分桶统计通过 {@link #getCanaryBucketStats} 暴露给运营监控
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -174,7 +174,7 @@ public class RuleCanaryRouter {
    *
    * @param original 原始规则定义
    * @return 候选版本 Rule
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public Rule buildCanaryRule(RuleDefinitionDTO original) {
     return new ExpressionRule(buildCanaryDefinition(original), evaluator);

@@ -33,7 +33,7 @@ import com.njydsz.common.json.serializer.JsonSerializer;
  * <p>注意：实现类必须覆盖 {@link #getModuleName()} 和标注 {@code @Component}（或其衍生注解）以被 Spring 容器扫描。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public abstract class AbstractJsonModule implements JsonModule {
 

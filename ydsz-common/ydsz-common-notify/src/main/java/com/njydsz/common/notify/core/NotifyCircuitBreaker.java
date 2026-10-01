@@ -24,9 +24,9 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  *
  * <p><b>线程安全：</b>继承 {@link AbstractCircuitBreaker}，状态转换由基类 CAS 保证原子性。
  *
- * <h3>26.09.01 变更</h3>
+ * <h3>26.10.01 变更</h3>
  *
- * <p>自 26.09.01 起，继承 {@link AbstractCircuitBreaker}（ydsz-common-safe）， 复用标准三态状态机，移除自研 AtomicReference
+ * <p>自 26.10.01 起，继承 {@link AbstractCircuitBreaker}（ydsz-common-safe）， 复用标准三态状态机，移除自研 AtomicReference
  * + CAS 状态管理代码。
  *
  * <h3>熔断器选型指引（P1-5 收敛评审结论，勿重复建设）</h3>
@@ -42,7 +42,7 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class NotifyCircuitBreaker extends AbstractCircuitBreaker {
 

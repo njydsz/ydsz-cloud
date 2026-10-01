@@ -51,7 +51,7 @@ import com.njydsz.userinfo.server.config.ScimProperties;
  * 无需在过滤器内自行实现 HMAC 计算或常量时间比较逻辑。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.29 业务特异过滤器（YDIZ-ARCH-004 例外）：SCIM 2.0 Bearer Token 认证（RFC 7644），SCIM 错误格式无法由通用过滤器承载，不可下沉至 common-safe。Order=LOWEST_PRECEDENCE-200。
  */
 @Slf4j

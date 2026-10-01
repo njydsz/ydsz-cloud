@@ -11,7 +11,7 @@ import com.njydsz.cronjob.domain.vo.JobDagContextVO;
  * <p>提供节点级结果的存储与查询能力，避免 CAS 更新整行 context_json。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface DagContextRepository {
 

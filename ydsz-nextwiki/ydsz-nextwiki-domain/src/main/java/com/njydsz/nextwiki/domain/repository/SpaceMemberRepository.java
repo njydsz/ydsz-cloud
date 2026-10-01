@@ -9,7 +9,7 @@ import com.njydsz.nextwiki.domain.dto.SpaceMemberDTO;
  * 空间成员仓储接口
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SpaceMemberRepository {
 

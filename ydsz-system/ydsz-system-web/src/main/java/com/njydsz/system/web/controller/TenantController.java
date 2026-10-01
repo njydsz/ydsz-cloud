@@ -49,10 +49,10 @@ import com.njydsz.system.server.service.TenantService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see TenantService 租户业务逻辑
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "租户管理", description = "多租户 CRUD")
 @Slf4j
 @RestController

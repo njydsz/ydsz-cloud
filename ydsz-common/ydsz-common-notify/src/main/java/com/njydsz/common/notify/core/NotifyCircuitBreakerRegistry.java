@@ -16,7 +16,7 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  * 配置。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class NotifyCircuitBreakerRegistry {
 

@@ -27,7 +27,7 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
  * 不再直接依赖 RedissonClient。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Configuration
 @ConditionalOnProperty(prefix = "ydsz.literule.distributed", name = "enabled", havingValue = "true")

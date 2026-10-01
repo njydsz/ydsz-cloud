@@ -33,7 +33,7 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

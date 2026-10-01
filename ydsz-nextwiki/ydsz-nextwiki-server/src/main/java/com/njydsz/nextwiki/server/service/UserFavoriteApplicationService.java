@@ -25,7 +25,7 @@ import com.njydsz.nextwiki.domain.vo.UserFavoriteVO;
  * <p>提供用户收藏夹的增删查改功能：收藏/取消收藏、查看收藏列表、排序。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

@@ -74,13 +74,13 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.archive.MessageArchiveService 消息归档服务
  * @see MsgLog 发送日志实体
  */
 @Tag(name = "消息归档搜索", description = "消息发送日志全文搜索")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/archive/search")
 @RequiredArgsConstructor

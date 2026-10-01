@@ -41,7 +41,7 @@ import com.njydsz.userinfo.domain.event.auth.SessionEvictedEvent;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Order(50)

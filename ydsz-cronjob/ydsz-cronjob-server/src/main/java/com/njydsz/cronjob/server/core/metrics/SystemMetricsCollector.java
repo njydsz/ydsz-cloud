@@ -32,7 +32,7 @@ import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
  * 后续迭代应复用 common-sentry 的采集结果，删除自有 JMX 读数实现（ADR-3 决议 2）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

@@ -26,7 +26,7 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  * <p>为已从 {@code AbstractModuleMetrics} 迁移但仍依赖前缀拼接语义的模块提供过渡方案。 本类将传统 Counter/Timer/Gauge 调用桥接到
  * {@link MetricsCollector} 统一入口， 底层由 {@code MicrometerMetricsCollector} 执行实际的 Micrometer 注册。
  *
- * <p><b>26.09.01 变更</b>：移除 {@link MeterRegistry} 构造参数，改为内部通过 {@link SentryService} 获取 {@link
+ * <p><b>26.10.01 变更</b>：移除 {@link MeterRegistry} 构造参数，改为内部通过 {@link SentryService} 获取 {@link
  * MetricsCollector}，业务模块不再直接依赖 Micrometer API。 符合《云顶编码规范》第 27.2.1 节「禁止直接操作 MeterRegistry」的强制要求。
  *
  * <p><b>26.10.01 变更</b>：新增 {@link #modulePrefix()} 抽象方法和 {@link MetricRegion} 枚举， 统一指标命名规范为 {@code
@@ -56,7 +56,7 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  * <p>最终注册到 Prometheus 的指标名为：{@code ydzs_workflow_instance_created_total}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.sentry.SentryService
  * @see MetricsCollector
  */

@@ -4,7 +4,7 @@ package com.njydsz.common.safe.ratelimit.enums;
  * 限流结果枚举
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum RateLimitResult {
 

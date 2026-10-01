@@ -15,7 +15,7 @@ import org.springframework.validation.annotation.Validated;
 /**
  * LiteRule 配置属性
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Data
@@ -122,7 +122,7 @@ public class LiteRuleProperties {
    *         - myCustomFunc
    * </pre>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private SandboxPolicyConfig sandboxPolicy = new SandboxPolicyConfig();
 
@@ -142,7 +142,7 @@ public class LiteRuleProperties {
    *       async-queue-capacity: 10000
    * </pre>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private CepConfig cep = new CepConfig();
 
@@ -228,7 +228,7 @@ public class LiteRuleProperties {
    *       watch: true
    * </pre>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private FileSourceConfig fileSource = new FileSourceConfig();
 
@@ -247,7 +247,7 @@ public class LiteRuleProperties {
    *   <li>写操作通过 Redis 版本号失效全部节点 L1
    * </ul>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private CacheConfig cache = new CacheConfig();
 
@@ -258,7 +258,7 @@ public class LiteRuleProperties {
    * 启动时被自动注册到引擎。 未配置时仅扫描 {@code @LiteRule} 标注的已注册 Spring Bean（无需指定包）， 而 {@code @RuleDefinitionMeta}
    * 类扫描需显式配置本项以提高扫描性能。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private String annotationScanBasePackages = "";
 
@@ -269,7 +269,7 @@ public class LiteRuleProperties {
    *
    * <p>默认值 {@code "1"}（向后兼容）。多租户场景下通过 {@code ydsz.literule.default-tenant-id} 配置覆盖。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private String defaultTenantId = "1";
 
@@ -280,7 +280,7 @@ public class LiteRuleProperties {
    * {@code physical-isolation-required=true} 强制要求物理隔离（SCHEMA/ISOLATE_DB）， 校验不通过时启动失败（fail-fast），
    * 避免高合规场景下误用逻辑隔离导致租户数据串扰。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private TenantConfig tenant = new TenantConfig();
 
@@ -299,7 +299,7 @@ public class LiteRuleProperties {
    * <p>配置后，引擎评估时仅放行 environment 为 {@code "default"} 或与本配置匹配的规则。 用于 dev/staging/prod
    * 环境的规则隔离，避免开发环境的测试规则在生产环境触发。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private String environment = "default";
 
@@ -329,7 +329,7 @@ public class LiteRuleProperties {
    *       mock-enabled: false
    * </pre>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private ModelConfig model = new ModelConfig();
 
@@ -352,7 +352,7 @@ public class LiteRuleProperties {
    *       fallback-on-error: true
    * </pre>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private FactConfig fact = new FactConfig();
 
@@ -362,7 +362,7 @@ public class LiteRuleProperties {
    * <p>控制事实采集和模型注入并行执行的线程池大小。
    * 默认值根据 CPU 核数动态计算，确保在不同规格机器上都能获得合理的并发度。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private InjectionConfig injection = new InjectionConfig();
 
@@ -371,7 +371,7 @@ public class LiteRuleProperties {
    *
    * <p>控制评估结果缓存与规则分组并行评估。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private PerformanceConfig performance = new PerformanceConfig();
 
@@ -380,7 +380,7 @@ public class LiteRuleProperties {
    *
    * <p>控制退役检测的阈值参数，用于自动识别应退役的规则。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private LifecycleConfig lifecycle = new LifecycleConfig();
 
@@ -389,7 +389,7 @@ public class LiteRuleProperties {
    *
    * <p>启用后规则引擎按一致性 hash 将规则分片到集群节点， 每个节点只执行属于自己的规则，避免重复计算。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class Distributed {
@@ -433,7 +433,7 @@ public class LiteRuleProperties {
    *         path: /literule/definitions
    * </pre>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class RuleSourceConfig {
@@ -489,7 +489,7 @@ public class LiteRuleProperties {
    *
    * <p>控制 Caffeine（L1）+ Redis（L2）两级缓存行为。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class CacheConfig {
@@ -522,7 +522,7 @@ public class LiteRuleProperties {
    *
    * <p>控制 {@link com.njydsz.literule.server.spi.FileRuleSource} 的加载行为。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class FileSourceConfig {
@@ -565,7 +565,7 @@ public class LiteRuleProperties {
    * com.njydsz.literule.server.model.MockModelInputProvider} 的行为。 默认关闭（{@code
    * enabled=false}），需显式启用以保证向后兼容。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class ModelConfig {
@@ -619,7 +619,7 @@ public class LiteRuleProperties {
    * <p>控制 {@link com.njydsz.literule.server.spi.FactProviderRegistry} 的行为。 默认关闭（{@code
    * enabled=false}），需显式启用以保证向后兼容。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class FactConfig {
@@ -654,7 +654,7 @@ public class LiteRuleProperties {
    *
    * <p>控制评估结果缓存与规则分组并行评估，提升大规则量场景下的评估吞吐。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class PerformanceConfig {
@@ -704,7 +704,7 @@ public class LiteRuleProperties {
      *
      * 0（默认）表示关闭慢规则检测。 推荐生产环境设置为 100~500ms，对标在线风控引擎性能要求。
      *
-     * @since 26.09.01
+     * @since 26.10.01
      */
     private long slowRuleThresholdMs = 0L;
 
@@ -713,7 +713,7 @@ public class LiteRuleProperties {
      *
      * <p>控制 RuleIndexer 的索引启用/绕过阈值。
      *
-     * @since 26.09.01
+     * @since 26.10.01
      */
     private IndexConfig index = new IndexConfig();
   }
@@ -723,7 +723,7 @@ public class LiteRuleProperties {
    *
    * <p>控制 RuleIndexer 的索引启用/绕过阈值。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class IndexConfig {
@@ -760,7 +760,7 @@ public class LiteRuleProperties {
    *   <li>低影响：触发率 &lt; {@link #lowImpactTriggerRate} 且评估次数 ≥ {@link #minSampleSize}
    * </ul>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class LifecycleConfig {
@@ -827,7 +827,7 @@ public class LiteRuleProperties {
    *       physical-isolation-required: true   # 强制要求物理隔离
    * </pre>
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class TenantConfig {
@@ -846,7 +846,7 @@ public class LiteRuleProperties {
    *
    * <p>全部可选，未配置时仅使用内置黑名单。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class SandboxPolicyConfig {
@@ -866,7 +866,7 @@ public class LiteRuleProperties {
    *
    * <p>控制 CEP 引擎的异步投递与队列参数。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class CepConfig {
@@ -889,7 +889,7 @@ public class LiteRuleProperties {
    *
    * <p>控制引擎对外置依赖的注入行为。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class InjectionConfig {

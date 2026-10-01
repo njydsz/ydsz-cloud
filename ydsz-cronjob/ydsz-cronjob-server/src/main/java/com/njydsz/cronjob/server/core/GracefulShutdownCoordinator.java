@@ -44,7 +44,7 @@ import com.njydsz.cronjob.server.core.logger.DisruptorLogPublisher;
  * 捕获 SIGTERM 信号（如 Kubernetes Pod 终止、systemctl stop）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

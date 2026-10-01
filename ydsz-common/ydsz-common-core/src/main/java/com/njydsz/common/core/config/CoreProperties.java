@@ -33,7 +33,7 @@ import org.springframework.validation.annotation.Validated;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CoreAutoConfiguration
  * @see com.njydsz.common.core.constant.PageConstants
  */
@@ -88,7 +88,7 @@ public class CoreProperties {
    * <p>用于 i18n 消息解析、{@link com.njydsz.common.core.context.RequestContext#setLanguage(String)} 兜底等。
    * 支持任意 JDK {@link java.util.Locale} 格式（如 {@code zh-CN}、{@code en-US}）。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private String defaultLocale = "zh-CN";
 
@@ -104,7 +104,7 @@ public class CoreProperties {
    *
    * <p>供 web 模块消费以建立版本号→路由映射与默认版本策略。 业务模块需要版本灰度分流时可按此配置实现 {@code HandlerMapping} 路由。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private ApiVersionConfig apiVersion = new ApiVersionConfig();
 
@@ -115,7 +115,7 @@ public class CoreProperties {
    *
    * <p>示例：{@code ydsz.core.feature-flags: { user.register.sms: true }}
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private Map<String, Boolean> featureFlags = Collections.emptyMap();
 
@@ -136,7 +136,7 @@ public class CoreProperties {
    *
    * <p>绑定到 {@code ydsz.core.api-version.*}。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class ApiVersionConfig {

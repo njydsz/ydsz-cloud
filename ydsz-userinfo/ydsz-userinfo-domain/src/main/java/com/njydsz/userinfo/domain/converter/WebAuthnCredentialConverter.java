@@ -14,7 +14,7 @@ import com.njydsz.userinfo.domain.vo.WebAuthnCredentialVO;
  * 使用 Spring 注入模式 + MapStruct，替代手动 toVO/toDO 方法，提升可测试性并与项目 Converter 体系一致。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 @Mapper(componentModel = "spring")

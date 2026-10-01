@@ -28,7 +28,7 @@ import com.njydsz.common.excel.annotation.ExcelProperty;
  * @see ClassMetadata
  * @see FieldInfo
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ClassMetadataCache {
 
@@ -193,7 +193,7 @@ public class ClassMetadataCache {
    *
    * @author ydsz-team
 
-   * @version 26.09.01
+   * @version 26.10.01
    */
   public static class ClassMetadata {
     private Class<?> clazz;

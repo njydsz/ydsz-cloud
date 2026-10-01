@@ -22,7 +22,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * <p>26.09.20 变更：新增 {@code alert.converger.*} 和 {@code sla.*} 健康详情字段。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RequiredArgsConstructor

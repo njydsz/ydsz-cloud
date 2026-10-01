@@ -31,7 +31,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>最基础的 Agent 模式：System Prompt + 历史消息 + 用户消息 → LLM → 响应。 适用于不需要工具调用的纯对话场景。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class SimpleAgentExecutor extends AbstractAgentExecutor {

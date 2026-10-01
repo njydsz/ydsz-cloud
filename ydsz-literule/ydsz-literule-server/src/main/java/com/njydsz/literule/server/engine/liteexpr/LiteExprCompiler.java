@@ -28,7 +28,7 @@ import com.njydsz.common.locales.util.I18n;
  *   <li><b>AST 级错误定位</b>：编译错误携带精确行列号
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public class LiteExprCompiler {

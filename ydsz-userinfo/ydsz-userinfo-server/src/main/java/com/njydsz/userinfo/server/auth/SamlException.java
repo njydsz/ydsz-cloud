@@ -9,7 +9,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * 证书配置错误等场景。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SamlException extends BusinessException {
 

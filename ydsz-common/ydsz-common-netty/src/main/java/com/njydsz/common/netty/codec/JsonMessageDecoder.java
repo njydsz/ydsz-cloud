@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @param <T> 业务消息类型
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see JsonMessageEncoder
  * @see JsonCodecUtil
  */

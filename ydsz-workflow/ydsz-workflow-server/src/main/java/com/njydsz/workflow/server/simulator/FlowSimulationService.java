@@ -8,7 +8,7 @@ import java.util.Map;
  * <p>在不创建实际实例的情况下，模拟执行流程定义，预测执行路径。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface FlowSimulationService {
 

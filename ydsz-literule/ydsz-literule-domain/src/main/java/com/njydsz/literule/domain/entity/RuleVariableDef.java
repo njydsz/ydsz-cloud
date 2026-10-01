@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * ExpressionValidationService} 做 UNDEFINED_VARIABLE 校验。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 与泛型继承产生 unchecked 警告
 @SuppressWarnings("unchecked")

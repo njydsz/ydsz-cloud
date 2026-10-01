@@ -21,7 +21,7 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  * <p>从图片中提取文字。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

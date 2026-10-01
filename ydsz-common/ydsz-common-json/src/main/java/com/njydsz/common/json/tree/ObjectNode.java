@@ -42,7 +42,7 @@ import com.njydsz.common.json.YdszJson;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class ObjectNode extends JsonNode {
 
@@ -269,7 +269,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param fieldName 字段名
    * @return 该字段对应的 ArrayNode（永不为 null；类型不符时抛出 IllegalStateException）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public ArrayNode withArray(String fieldName) {
     JsonNode existing = fields.get(fieldName);
@@ -292,7 +292,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param fieldName 字段名
    * @return 该字段对应的 ObjectNode（永不为 null；类型不符时抛出 IllegalStateException）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public ObjectNode withObject(String fieldName) {
     JsonNode existing = fields.get(fieldName);
@@ -315,7 +315,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param other 源 ObjectNode（为 null 时忽略）
    * @return 当前对象节点（支持链式调用）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public ObjectNode setAll(ObjectNode other) {
     if (other == null) {
@@ -332,7 +332,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param map 字段名到原始值的映射（为 null 时忽略）
    * @return 当前对象节点（支持链式调用）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public ObjectNode setAll(Map<String, ?> map) {
     if (map == null) {
@@ -383,7 +383,7 @@ public final class ObjectNode extends JsonNode {
    * <p>当存在嵌套容器节点时，子节点的 appendTo 将为递归的直接写入，避免每层嵌套树都创建独立中间 String。
    *
    * @param sb 输出目标 StringBuilder
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Override
   public void appendTo(StringBuilder sb) {
@@ -631,7 +631,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param name 字段名
    * @return ObjectNode 实例
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public ObjectNode getObjectNode(String name) {
     JsonNode node = fields.get(name);
@@ -646,7 +646,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param name 字段名
    * @return ArrayNode 实例
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public ArrayNode getArrayNode(String name) {
     JsonNode node = fields.get(name);
@@ -830,7 +830,7 @@ public final class ObjectNode extends JsonNode {
    *
    * @param map 源 Map，null 返回空 ObjectNode
    * @return ObjectNode 实例
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static ObjectNode fromMap(Map<?, ?> map) {
     ObjectNode node = new ObjectNode();

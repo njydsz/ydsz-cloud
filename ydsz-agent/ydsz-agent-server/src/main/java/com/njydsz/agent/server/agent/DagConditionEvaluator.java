@@ -34,7 +34,7 @@ import com.njydsz.common.locales.util.I18n;
  * <p><b>线程安全</b>：无状态工具类，可安全并发调用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public final class DagConditionEvaluator {

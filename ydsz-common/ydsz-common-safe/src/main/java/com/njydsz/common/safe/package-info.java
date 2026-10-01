@@ -34,6 +34,6 @@
  * <p><b>业务模块使用规范：</b>业务模块必须优先使用本模块提供的安全能力，禁止重复造轮子。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 package com.njydsz.common.safe;

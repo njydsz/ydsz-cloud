@@ -22,7 +22,7 @@ import com.njydsz.common.json.parser.TolerantJsonUtils;
  * <p>降级策略：LLM 调用失败时返回 1.0（默认通过），避免因校验环节阻塞查询链路。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

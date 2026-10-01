@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Bean;
  * <p>配置路径：{@code ydsz.feign.circuit-breaker.*}（自 26.09.19 起统一入口）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FeignProperties.CircuitBreaker
  */
 @Slf4j

@@ -16,7 +16,7 @@ import com.njydsz.workflow.domain.entity.FlowAttachment;
  * FlowAttachment} 对齐， 仅保留业务可见字段，不暴露内部版本号/审计字段。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowAttachmentDTO implements Serializable {

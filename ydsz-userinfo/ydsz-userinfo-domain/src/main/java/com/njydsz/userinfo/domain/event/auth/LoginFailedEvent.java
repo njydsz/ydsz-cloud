@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * @param reason 失败原因
  * @param failCount 累计失败次数
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record LoginFailedEvent(
     String userId,

@@ -77,11 +77,11 @@ import com.njydsz.workflow.domain.vo.FlowMigrationImpactVO;
  * <p><b>设计原则：</b>Controller 仅做参数透传与时间范围解析； 指标计算、聚合 SQL 编排、缓存管理下沉到 {@link FlowAnalyticsService}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowAnalyticsService 审批数据分析服务
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/workflow/analytics")
 @RequiredArgsConstructor

@@ -20,7 +20,7 @@ import com.njydsz.common.json.YdszJson;
  * <p>Pipeline 内编码请用 {@link JsonMessageEncoder}，解码请用 {@link JsonMessageDecoder}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class JsonCodecUtil {
 

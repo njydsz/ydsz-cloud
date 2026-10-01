@@ -8,7 +8,7 @@ import com.njydsz.common.app.config.AppOpenApiConfiguration;
  * 定时任务模块 App 端 OpenAPI 配置。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 public class CronjobAppOpenApiConfiguration extends AppOpenApiConfiguration {

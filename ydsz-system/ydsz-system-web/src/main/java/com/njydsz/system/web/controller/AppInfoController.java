@@ -59,10 +59,10 @@ import com.njydsz.system.server.service.AppInfoService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see AppInfoService 应用注册业务逻辑
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "应用注册", description = "OAuth2 应用注册 CRUD")
 @Slf4j
 @RestController

@@ -46,11 +46,11 @@ import com.njydsz.system.server.service.VariableService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.system.server.service.EntityVersionService 统一实体版本业务逻辑
  * @see com.njydsz.system.infra.entity.EntityVersion 实体版本
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "变量版本", description = "变量变更历史查询 + 一键回滚")
 @Slf4j
 @RestController

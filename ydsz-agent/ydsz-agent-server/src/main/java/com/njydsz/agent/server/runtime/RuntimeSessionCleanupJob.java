@@ -13,7 +13,7 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
  * 默认每 10 分钟执行一次，清理超过 2 小时的过期会话。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

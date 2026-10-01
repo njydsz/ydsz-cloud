@@ -6,7 +6,7 @@ package com.njydsz.message.server.service.receipt;
  * <p>撤回已发送的消息。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface RecallService {
 

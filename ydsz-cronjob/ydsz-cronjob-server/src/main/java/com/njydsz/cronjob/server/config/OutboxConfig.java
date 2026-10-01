@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>对应配置前缀 {@code ydsz.cronjob.outbox.*}（过渡期兼容，新代码不再使用）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.29 迁移至 ydsz-common-event OutboxProcessor，标记过渡期兼容
  */
 @Data

@@ -15,7 +15,7 @@ import lombok.Data;
  * Job 修改请求 DTO。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class JobPutDTO implements Serializable {

@@ -12,7 +12,7 @@ import com.njydsz.common.exception.custom.InfraException;
  * 异常指标统计、异常事件发布等能力。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class IdempotentUnavailableException extends InfraException {
 

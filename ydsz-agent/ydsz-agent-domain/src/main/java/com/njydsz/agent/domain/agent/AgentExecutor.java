@@ -23,7 +23,7 @@ import com.njydsz.agent.domain.model.SseEvent;
  * <p><b>线程安全</b>：执行器通常被多个请求并发调用，实现必须是无状态的（依赖通过参数传入）， 不得在实例字段中保存请求级状态，否则会引发并发错乱。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface AgentExecutor {
 

@@ -8,7 +8,7 @@ import lombok.Data;
  * 配置查询请求 DTO。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Schema(description = "配置查询请求")

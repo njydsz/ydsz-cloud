@@ -45,7 +45,7 @@ import com.njydsz.workflow.server.service.impl.CountersignStrategyFactory;
  * <p>下一节点路由、自动跳过规则、并行网关合流。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

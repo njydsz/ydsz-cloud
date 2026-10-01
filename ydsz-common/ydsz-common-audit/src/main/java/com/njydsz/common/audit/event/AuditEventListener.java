@@ -51,7 +51,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * </table>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @RequiredArgsConstructor
 public class AuditEventListener {

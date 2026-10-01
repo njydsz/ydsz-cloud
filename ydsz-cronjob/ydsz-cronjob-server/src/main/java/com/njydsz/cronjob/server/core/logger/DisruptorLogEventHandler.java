@@ -35,7 +35,7 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class DisruptorLogEventHandler implements EventHandler<DisruptorLogEvent> {

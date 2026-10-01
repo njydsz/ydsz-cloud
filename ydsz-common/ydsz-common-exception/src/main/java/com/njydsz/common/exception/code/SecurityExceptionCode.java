@@ -16,7 +16,7 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  * {@code auth.} 前缀误判）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CoreExceptionCode
  * @see RateLimitExceptionCode
  */

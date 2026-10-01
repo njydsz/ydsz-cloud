@@ -21,7 +21,7 @@ import com.njydsz.system.server.vo.ImportResultVO;
  * 由全局异常处理器统一返回错误响应。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ConfigService 配置主服务
  */
 public interface ConfigExcelService {

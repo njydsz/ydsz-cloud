@@ -36,7 +36,7 @@ import com.njydsz.message.server.service.config.CanaryExperimentService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CanaryExperimentService
  */
 @Slf4j

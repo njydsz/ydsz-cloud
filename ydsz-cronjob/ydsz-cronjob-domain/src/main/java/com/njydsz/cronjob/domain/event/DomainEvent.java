@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
  * {@code AlertDispatcher} / {@code DefaultTaskDispatcher} 的用法），聚合内状态变更溯源使用本接口。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface DomainEvent {
 

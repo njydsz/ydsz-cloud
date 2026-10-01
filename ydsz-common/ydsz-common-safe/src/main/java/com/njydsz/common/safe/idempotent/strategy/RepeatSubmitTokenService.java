@@ -24,7 +24,7 @@ import org.springframework.util.StringUtils;
  * <p><b>Redis Key 格式：</b> {@code ydsz:repeat:token:{userId}:{token}}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class RepeatSubmitTokenService {

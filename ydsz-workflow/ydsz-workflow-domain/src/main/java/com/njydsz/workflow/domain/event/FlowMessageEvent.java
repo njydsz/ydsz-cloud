@@ -13,7 +13,7 @@ import lombok.ToString;
  * 使用 Redis Pub/Sub + ydsz_flow_event_subscription 表实现消息订阅与分发。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @ToString

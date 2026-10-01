@@ -44,7 +44,7 @@ import com.njydsz.common.safe.aspect.XssValidator;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see XssValidator
  */
 @Retention(RetentionPolicy.RUNTIME)

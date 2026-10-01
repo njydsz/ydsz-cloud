@@ -28,11 +28,11 @@ import com.njydsz.message.server.service.retry.RetryPreviewService;
  * <p><b>接口路径：</b>{@code /api/message/retry/**}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Tag(name = "重试策略预览", description = "重试预设档位可视化预览")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/retry")
 @RequiredArgsConstructor

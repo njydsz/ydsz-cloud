@@ -32,7 +32,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * <p><b>存储格式：</b>DB 列使用整数（0=禁用, 1=启用，历史遗留），新状态使用枚举名字符串存储。 通过 {@link IntegerStringTypeHandler} 自动转换。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see BaseStatusEnum
  */
 public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatusEnum> {

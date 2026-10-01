@@ -32,7 +32,7 @@ import com.njydsz.common.locales.util.MessageSourceHolder;
  * org.springframework.context.i18n.LocaleContextHolder} 基于线程绑定天然保证多语言不串文案。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ExceptionCode
  * @see ExceptionCategory
  * @see ExceptionLevel
@@ -266,7 +266,7 @@ public abstract class AbstractYdszException extends RuntimeException
    * 兜底逻辑。
    *
    * @return 桥接后的 ResultCode 视图；未初始化时返回 null
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Override
   public ResultCode resultCode() {

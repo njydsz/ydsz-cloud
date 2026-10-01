@@ -10,7 +10,7 @@ import com.njydsz.common.sentry.domain.AlertEvent;
  * <p>统一告警发布抽象，支持告警收敛、去重和静默。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface AlertPublisher {
 

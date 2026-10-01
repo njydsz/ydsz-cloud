@@ -54,7 +54,7 @@ import com.njydsz.common.exception.pagination.DeepPaginationException;
  * <p><b>HTTP 状态码：</b>使用 {@link HttpServletResponse#setStatus(int)} 动态设置 与异常对象中声明的 HTTP 状态码一致的响应状态码。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see BaseExceptionHandler
  * @see ValidationExceptionHandler
  * @see YdszExceptionHandlerAutoConfiguration

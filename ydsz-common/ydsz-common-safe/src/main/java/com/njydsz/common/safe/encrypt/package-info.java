@@ -7,6 +7,6 @@
  * 需要查询的字段（如手机号、邮箱）不建议加密，或采用应用层哈希索引方案。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 package com.njydsz.common.safe.encrypt;

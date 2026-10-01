@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
  * <p><b>90 天试用期规则：</b>自 {@link #since()} 标注的版本日起，若 90 天内无消费方稳定调用， 该 API 将被移入 sandbox 模块或移除。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

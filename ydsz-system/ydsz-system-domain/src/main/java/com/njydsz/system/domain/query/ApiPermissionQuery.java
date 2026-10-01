@@ -25,7 +25,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * <p><b>多租户：</b>租户过滤由 MyBatis 拦截器自动注入。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.domain.query.PageQuery 父类（分页参数）
  */
 @Data

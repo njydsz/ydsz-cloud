@@ -73,13 +73,13 @@ import com.njydsz.message.server.service.config.PreferenceService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.config.PreferenceService 用户偏好服务
  * @see com.njydsz.message.domain.entity.config.MsgPreference 偏好实体
  */
 @Tag(name = "消息偏好", description = "用户消息偏好管理")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/preference")
 @RequiredArgsConstructor

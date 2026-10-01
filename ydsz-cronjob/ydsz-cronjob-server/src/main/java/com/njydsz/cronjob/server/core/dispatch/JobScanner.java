@@ -68,7 +68,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * <= NOW()} 的任务并派发。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Configuration

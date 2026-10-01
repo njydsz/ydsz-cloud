@@ -23,7 +23,7 @@ import com.njydsz.common.locales.util.I18n;
  *   <li>安全限制：节点访问预算 + 递归深度，防止病态表达式耗尽 CPU/栈
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -93,7 +93,7 @@ public class BytecodeInterpreter {
    * @param program 编译后的字节码程序
    * @param variables 变量上下文（facts）
    * @return 执行结果
-   * @since 26.09.01（26.09.23 增加超时检查）
+   * @since 26.10.01（26.09.23 增加超时检查）
    */
   public Object execute(CompiledProgram program, Map<String, Object> variables) {
     byte[] code = program.getBytecode();

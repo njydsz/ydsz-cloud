@@ -9,7 +9,7 @@ import com.njydsz.message.domain.dto.MessageItemRequestDTO;
  * 当前统一使用 {@link CommonQueueMessageOperations}（基于 common-queue 的 {@code IMessagePublisher}）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface MessageQueueOperations {
 

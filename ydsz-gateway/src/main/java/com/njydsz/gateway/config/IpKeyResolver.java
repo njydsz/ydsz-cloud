@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * key-resolver: "#{@ipKeyResolver}"} 对应。
  *
  * <p>使用场景：防御单 IP 暴力请求或爬虫。   *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  * @see KeyResolver
  * @see UserKeyResolver

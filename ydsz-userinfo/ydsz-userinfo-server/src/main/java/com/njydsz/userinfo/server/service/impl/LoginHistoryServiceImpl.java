@@ -33,7 +33,7 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
  * 不阻塞登录主流程；异步线程仅消费方法参数，无上下文传播依赖。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

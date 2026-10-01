@@ -32,7 +32,7 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
  * （{@code "ydsz:quota:concurrent:"} / {@code "ydsz:quota:daily:"}）的违规方式。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

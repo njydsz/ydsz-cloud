@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * {@code System.nanoTime()} 差值加法，对热路径性能影响可忽略不计。读取路径（JMX 轮询）无写争用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class JsonMetrics {
 

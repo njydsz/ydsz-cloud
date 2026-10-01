@@ -32,7 +32,7 @@ import com.njydsz.userinfo.api.client.OrgQueryClient;
  * <p>本配置注册 {@link UserInfoNameAssembler} Bean 以 {@code @ConditionalOnMissingBean(NameAssembler.class)} 优先级生效
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(OrgQueryClient.class)

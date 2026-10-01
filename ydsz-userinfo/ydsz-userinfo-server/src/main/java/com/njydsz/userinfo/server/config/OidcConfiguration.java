@@ -25,7 +25,7 @@ import com.njydsz.common.auth.token.TokenProperties;
  * jjwt {@code Keys} 工具类，密钥构建语义收敛至 common-auth）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.14 密钥构建收敛至 common-auth TokenKeyUtils（P2-5 整改）
  */
 @Configuration

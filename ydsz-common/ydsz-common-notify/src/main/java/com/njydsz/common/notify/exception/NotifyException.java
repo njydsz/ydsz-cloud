@@ -14,7 +14,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * <p>默认错误码使用 {@link CoreExceptionCode#NOTIFY_ERROR}（B02056）， i18n 消息键 {@code notify.error}，HTTP 500。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class NotifyException extends BusinessException {
 

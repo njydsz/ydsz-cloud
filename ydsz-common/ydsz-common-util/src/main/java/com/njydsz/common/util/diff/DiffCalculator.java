@@ -37,11 +37,11 @@ import com.njydsz.common.util.mask.MaskUtils;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see DiffField
  * @see DiffReport
  */
-@Experimental(value = "能力储备：字段级差异对比（审计日志场景），启用前请确认测试覆盖", since = "26.09.01")
+@Experimental(value = "能力储备：字段级差异对比（审计日志场景），启用前请确认测试覆盖", since = "26.10.01")
 public class DiffCalculator {
 
   private static final Logger LOG = LoggerFactory.getLogger(DiffCalculator.class);

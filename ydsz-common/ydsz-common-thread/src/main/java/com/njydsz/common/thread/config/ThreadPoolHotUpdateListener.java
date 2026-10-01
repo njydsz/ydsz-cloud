@@ -34,7 +34,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  *
  * <p>快照数据通过 {@link ThreadPoolRegistry.ThreadPoolMetricsSnapshot} 暴露，去除了重复的 {@code ThreadPoolSnapshot} 内部类。
  *
- * <p>26.09.01 变更：
+ * <p>26.10.01 变更：
  *
  * <ul>
  *   <li>从依赖 {@link ThreadPoolAutoConfiguration} 改为直接注入 {@link ApplicationContext}， 降低耦合并纳入自动配置体系
@@ -48,7 +48,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
 
@@ -57,7 +57,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   /**
    * Bean 名称常量，供其他模块引用。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static final String BEAN_NAME = "threadPoolHotUpdateListener";
 

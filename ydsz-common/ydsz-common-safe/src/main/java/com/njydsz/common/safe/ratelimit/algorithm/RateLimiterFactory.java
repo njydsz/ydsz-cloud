@@ -8,7 +8,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  * <p>根据 {@link com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm} 创建对应的 {@link RateLimiter} 实现。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class RateLimiterFactory {
 

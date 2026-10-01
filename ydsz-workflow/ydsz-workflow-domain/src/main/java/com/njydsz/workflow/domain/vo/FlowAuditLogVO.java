@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>与横切通用操作审计（{@code ydsz-common-audit}）为两套独立体系。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowAuditLogVO implements Serializable {

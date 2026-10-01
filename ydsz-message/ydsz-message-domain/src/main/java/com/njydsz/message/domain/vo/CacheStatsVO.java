@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
  * 供运维诊断接口（{@code GET /api/message/ops/template-cache/stats}）返回。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

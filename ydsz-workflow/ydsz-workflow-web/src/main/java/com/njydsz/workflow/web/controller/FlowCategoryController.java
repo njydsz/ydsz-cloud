@@ -52,13 +52,13 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * /categories} 扁平结果自行组装。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowCategoryService 分类服务
  * @see FlowCategoryDTO 分类 DTO
  */
 @Slf4j
 @Validated
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/workflow/categories")
 @RequiredArgsConstructor
@@ -92,7 +92,7 @@ public class FlowCategoryController {
    * 并填充 {@code level}/{@code path} 元数据。典型场景：设计器左侧分类树加载、发起审批页分类筛选。
    *
    * @return 分类树形结构根节点列表
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @GetMapping("/tree")
   @Operation(summary = "查询全部分类（树形结构）")

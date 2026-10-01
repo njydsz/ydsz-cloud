@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.domain.vo.SpaceVO;
  * CUD 入参必须是 DTO。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SpaceRepository {
 

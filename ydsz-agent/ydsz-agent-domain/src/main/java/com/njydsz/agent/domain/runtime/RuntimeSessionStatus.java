@@ -10,7 +10,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * <p>定义 Agent 执行会话在其生命周期中可能处于的所有状态。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum RuntimeSessionStatus implements BaseStatusEnum<RuntimeSessionStatus> {
 

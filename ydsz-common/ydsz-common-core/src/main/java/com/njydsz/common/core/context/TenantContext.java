@@ -36,7 +36,7 @@ import java.util.Map;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class TenantContext {
 
@@ -46,7 +46,7 @@ public class TenantContext {
    * <p>当来源 Map 中未包含对应键时，字段为 {@link #UNKNOWN}； 安全相关的 getter（如 {@link TenantContext#isSkipIsolation()}）将 UNKNOWN 降级为 {@code false}，
    * 遵循"安全默认"原则（未明确授权视为未授权）。
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   enum TriState {
     /** 字段在来源数据中显式为 true。 */
@@ -308,7 +308,7 @@ public class TenantContext {
    * 租户上下文构建器。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static final class Builder {
     private final String tenantId;

@@ -37,7 +37,7 @@ import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
  *   <li>{@code ydsz_gateway_request_latency_seconds} — 请求延迟直方图（支持 Prometheus 的 {@code histogram_quantile()} 查询 P99/P95）
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public abstract class AbstractCircuitBreaker {

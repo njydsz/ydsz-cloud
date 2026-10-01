@@ -9,7 +9,7 @@ import com.njydsz.common.exception.custom.SysException;
  * <p>当消息序列化或反序列化失败时抛出此异常。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SerializationException extends SysException {
 

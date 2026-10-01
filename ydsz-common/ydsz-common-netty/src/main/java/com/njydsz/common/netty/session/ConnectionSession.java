@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
  * <p><b>线程安全：</b>此接口的实现类必须确保所有方法在 Netty EventLoop 线程和其他 调用线程中都能安全使用。attr 操作使用 {@link java.util.concurrent.ConcurrentHashMap} 实现。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see SessionRepository
  * @see ChannelState
  */

@@ -36,10 +36,10 @@ import com.njydsz.userinfo.server.auth.SocialAuthService;
  * <p><b>接口路径：</b>{@code /api/profile/social}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/profile/social")
 @RequiredArgsConstructor
@@ -146,7 +146,7 @@ case "FEISHU" -> "IM";
    * @param boundAt 绑定时间
    * @param nickname 社交平台昵称
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public record PlatformBindingStatusVO(
       String platform,

@@ -17,7 +17,7 @@ import lombok.Getter;
  * 在脱离 Spring 上下文的场景（如单元测试），{@link #getMessage()} 提供英文兜底文案。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 public class DeepPaginationException extends RuntimeException implements Serializable {

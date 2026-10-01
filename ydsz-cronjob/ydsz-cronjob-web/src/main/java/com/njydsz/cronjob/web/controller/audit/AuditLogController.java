@@ -40,11 +40,11 @@ import com.njydsz.cronjob.domain.vo.AuditLogVO;
  * <p>需要 {@code CRONJOB_AUDIT_VIEW} 权限，通常仅管理员可查看。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Tag(name = "操作审计", description = "cronjob 操作审计日志分页查询")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/audit")
 @RequiredArgsConstructor

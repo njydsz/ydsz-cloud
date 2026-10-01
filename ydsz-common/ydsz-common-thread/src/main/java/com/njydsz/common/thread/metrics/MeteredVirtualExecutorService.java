@@ -22,15 +22,15 @@ import org.springframework.lang.NonNull;
  *
  * <p>使用装饰器模式透明包装原始 {@link ExecutorService}，对调用方无侵入。
  *
- * <p>26.09.01 变更：移除 rejected 相关逻辑（JDK 21 的虚拟线程执行器从不拒绝任务， 拒绝计数器和对应指标为不可达代码）。
+ * <p>26.10.01 变更：移除 rejected 相关逻辑（JDK 21 的虚拟线程执行器从不拒绝任务， 拒绝计数器和对应指标为不可达代码）。
  *
- * <p>26.09.01 新增：修复虚拟线程池指标计数器空转问题。
+ * <p>26.10.01 新增：修复虚拟线程池指标计数器空转问题。
  *
  * <p>26.09.19 变更（P2-14）：移除内部重复计数器，仅保留 {@link VirtualThreadMetrics} 作为唯一数据来源，
  * {@link #getSubmittedCount()} / {@link #getCompletedCount()} 改为从 metrics 读取。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see VirtualThreadMetrics
  */
 public class MeteredVirtualExecutorService implements ExecutorService {

@@ -23,7 +23,7 @@ import java.util.Map;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class RequestSnapshot {
 
@@ -123,7 +123,7 @@ public final class RequestSnapshot {
    * @param traceId 链路追踪 ID，可为 null
    * @param headers 需要携带的请求头副本（会被拷贝为不可变 Map），可为 null
    * @return 不可变快照
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static RequestSnapshot of(
       String method,

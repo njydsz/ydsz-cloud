@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * @param lastLoginTime 最近登录时间
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record ActiveUserVO(
     String userId,

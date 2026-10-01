@@ -14,7 +14,7 @@ import com.njydsz.common.exception.custom.SysException;
  * 统一转换为 {@code RateLimitDecision.BLOCKED}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class CircuitBreakerExecutionException extends SysException {
 

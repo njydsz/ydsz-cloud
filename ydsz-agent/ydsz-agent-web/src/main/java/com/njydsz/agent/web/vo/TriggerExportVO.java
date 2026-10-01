@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>导出租户下的启用触发器列表，用于合规审计与问题排查。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class TriggerExportVO implements Serializable {

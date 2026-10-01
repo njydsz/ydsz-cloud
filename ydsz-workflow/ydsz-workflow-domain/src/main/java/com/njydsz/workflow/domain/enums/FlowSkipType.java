@@ -4,7 +4,7 @@ package com.njydsz.workflow.domain.enums;
  * 流程跳转类型
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum FlowSkipType {
 

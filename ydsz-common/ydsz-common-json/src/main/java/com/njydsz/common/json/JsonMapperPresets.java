@@ -30,7 +30,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * 需避免在多线程间共享 single instance，建议以 {@code ThreadLocal} 持有或每次 {@code build()} 新实例。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class JsonMapperPresets {
 

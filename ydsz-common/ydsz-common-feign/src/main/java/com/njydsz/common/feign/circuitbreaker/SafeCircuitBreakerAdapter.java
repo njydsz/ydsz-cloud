@@ -21,7 +21,7 @@ import com.njydsz.common.feign.config.FeignProperties;
  * 提供的共享注册表（Bean 名 {@code safeCircuitBreakerRegistry}），保证全平台指标统一采集。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {

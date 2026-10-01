@@ -20,7 +20,7 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * 无需自行过滤 topic（已在 {@link #getTopic()} 声明）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.24 实现 OutboxSubscriber SPI（YDIZ-EVENT-002），移除 @EventListener 手动过滤
  */
 @Slf4j

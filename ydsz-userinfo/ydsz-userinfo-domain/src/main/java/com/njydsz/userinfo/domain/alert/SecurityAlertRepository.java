@@ -13,7 +13,7 @@ import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
  * <p>定义安全告警的数据访问能力，实现类位于 {@code ydsz-userinfo-infra} 模块。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SecurityAlertRepository {
 

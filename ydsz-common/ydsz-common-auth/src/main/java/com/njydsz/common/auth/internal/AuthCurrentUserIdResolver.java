@@ -15,7 +15,7 @@ import com.njydsz.common.lock.spi.CurrentUserIdResolver;
  * <p>此实现遵循依赖倒置原则：lock 模块定义接口，auth 模块提供实现。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CurrentUserIdResolver
  */
 @Component

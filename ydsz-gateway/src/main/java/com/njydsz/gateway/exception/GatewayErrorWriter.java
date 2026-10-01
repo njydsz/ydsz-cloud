@@ -32,7 +32,7 @@ import com.njydsz.gateway.config.GatewayErrorCode;
  * {@link #write(ServerWebExchange, HttpStatus, GatewayErrorCode, String, String)}，
  * 禁止再各自拼接 JSON。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

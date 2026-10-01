@@ -7,7 +7,7 @@ package com.njydsz.agent.domain.text2sql;
  * 返回一致性分数（0.0-1.0）及推理原因。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SemanticConsistencyChecker {
 
@@ -26,7 +26,7 @@ public interface SemanticConsistencyChecker {
    * @param score 一致性分数（0.0-1.0，越高越一致）
    * @param reasoning 推理原因说明
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   record ConsistencyCheckResult(double score, String reasoning) {
 

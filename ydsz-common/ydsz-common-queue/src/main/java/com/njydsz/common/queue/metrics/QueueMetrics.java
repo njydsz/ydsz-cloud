@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.LongAdder;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.queue.manager.QueueManager
  */
 public class QueueMetrics {

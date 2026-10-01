@@ -19,7 +19,7 @@ import com.njydsz.common.core.context.RequestContext;
  * <p><b>线程安全性：</b>无状态过滤器，线程安全。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class AppRequestIdResponseFilter extends BaseRequestIdResponseFilter {
 

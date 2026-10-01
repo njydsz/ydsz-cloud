@@ -33,7 +33,7 @@ import com.njydsz.common.json.annotation.JsonProperty;
  * @param approvalUsers 审批人列表（APPROVAL 节点，逗号分隔，P1-6）
  * @param approvalTimeoutMinutes 审批超时时间（分钟，超时自动拒绝，P1-6）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @JsonClass(description = "DAG 节点定义，标记可安全反序列化")
 public record DagNode(

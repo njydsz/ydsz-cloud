@@ -46,7 +46,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * @since 26.09.07
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/agent/insight")
 @RequiredArgsConstructor

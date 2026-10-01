@@ -12,7 +12,7 @@ import com.njydsz.common.cache.support.AbstractModuleCacheKeyBuilder;
  * <p>统一格式：{@code ydsz:{tenantId}:nextwiki:{entity}:{id}}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component("nextwikiCacheKeyBuilder")
 public class CacheKeyBuilder extends AbstractModuleCacheKeyBuilder {

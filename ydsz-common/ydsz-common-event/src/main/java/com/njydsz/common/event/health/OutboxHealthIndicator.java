@@ -37,7 +37,7 @@ import com.njydsz.common.event.repository.OutboxRepository;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.19 E-3 阈值可配：移除硬编码常量，改为从 EventProperties.Health 读取
  * @since 26.09.19 移除对 EventProperties 的依赖（由构造注入改为配置注入）
  */

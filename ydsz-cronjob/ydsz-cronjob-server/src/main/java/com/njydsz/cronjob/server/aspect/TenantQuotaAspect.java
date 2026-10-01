@@ -33,7 +33,7 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
  * QUOTA_EXCEEDED}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Aspect

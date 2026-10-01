@@ -12,7 +12,7 @@ import lombok.Data;
  * 树形结构请使用 {@link DepartmentTreeVO}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class DepartmentVO {

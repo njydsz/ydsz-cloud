@@ -8,7 +8,7 @@ import java.io.Serial;
  * <p>在批次处理完成后发布，携带最终统计信息。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class BatchCompletedEvent extends MessageDomainEvent {
 

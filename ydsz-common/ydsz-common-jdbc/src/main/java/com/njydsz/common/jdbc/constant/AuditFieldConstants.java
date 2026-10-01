@@ -18,7 +18,7 @@ package com.njydsz.common.jdbc.constant;
  * MessageSource，保持轻量。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class AuditFieldConstants {
 

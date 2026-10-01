@@ -43,13 +43,13 @@ import com.njydsz.message.server.template.cache.CachedMessageTemplateRenderer;
  * <p><b>安全要求：</b>所有接口均需高权限认证（{@code MESSAGE_LOG_VIEW} 或 {@code MESSAGE_TEMPLATE_EDIT}），防止越权操作。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CachedMessageTemplateRenderer 模板引擎缓存
  * @see BloomFilterDeduplicator 消息去重过滤器
  */
 @Slf4j
 @Tag(name = "运维诊断", description = "消息模块运维操作接口（高权限）")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/ops")
 @RequiredArgsConstructor

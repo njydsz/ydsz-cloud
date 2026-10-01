@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>线程安全：</b>注册与解析均为无锁原子操作，密钥解析发生在请求路径上时不引入竞争。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see KeyProvider
  */
 @Slf4j

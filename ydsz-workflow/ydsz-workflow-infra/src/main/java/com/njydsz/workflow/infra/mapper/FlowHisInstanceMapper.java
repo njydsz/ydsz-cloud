@@ -29,7 +29,7 @@ import com.njydsz.workflow.domain.entity.FlowHisInstance;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.workflow.domain.entity.FlowHisInstance 流程实例归档实体
  * @see com.njydsz.workflow.server.service.FlowArchiveService 归档 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper

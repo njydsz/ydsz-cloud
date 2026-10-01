@@ -21,7 +21,7 @@ import lombok.Setter;
  * 如需控制 JSON 序列化名称，在字段上方添加 {@code @JsonProperty("isAscending")} 等注解。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @Setter

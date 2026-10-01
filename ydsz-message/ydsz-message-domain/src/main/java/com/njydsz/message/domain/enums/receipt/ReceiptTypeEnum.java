@@ -4,7 +4,7 @@ package com.njydsz.message.domain.enums.receipt;
  * 消息回执类型枚举。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum ReceiptTypeEnum {
 

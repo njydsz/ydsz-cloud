@@ -87,7 +87,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowEventSubscriptionService 接口定义
  * @see com.njydsz.workflow.domain.vo.FlowEventSubscriptionVO 事件订阅值对象
  * @see com.njydsz.workflow.server.engine.impl.DefaultFlowAdvancer 流程推进引擎

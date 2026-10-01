@@ -54,7 +54,7 @@ import com.njydsz.common.config.hotreload.LogbackAuditPublisher;
  * {@link com.njydsz.common.config.hotreload.ConfigMergeUtils}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ConfigProperties.class)

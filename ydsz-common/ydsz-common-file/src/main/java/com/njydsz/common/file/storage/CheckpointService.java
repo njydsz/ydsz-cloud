@@ -13,7 +13,7 @@ import com.njydsz.common.file.domain.UploadCheckpoint;
  * AbstractFileStorage} 职责更清晰。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface CheckpointService {
 

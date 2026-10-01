@@ -17,7 +17,7 @@ import com.njydsz.system.domain.dto.ConfigGetRequest;
  * 日志，保证调用方主流程不受影响。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

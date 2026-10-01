@@ -33,10 +33,10 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @AuthApiPermission(roleCodes = "admin")
 @RestController
 @RequestMapping("/sso/metrics")
@@ -106,7 +106,7 @@ public class SsoMetricsController {
    * SSO 指标值对象。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @lombok.Data
   public static class SsoMetricsVO {

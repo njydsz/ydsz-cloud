@@ -75,7 +75,7 @@ import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Validated
@@ -193,7 +193,7 @@ public class TenantProperties {
    * SQL 改写缓存配置。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   public static class SqlCache {
@@ -223,7 +223,7 @@ public class TenantProperties {
    * 租户隔离模式枚举。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public enum TenantMode {
     /** 单字段模式：只取第一个租户字段注入 SQL。 */
@@ -240,7 +240,7 @@ public class TenantProperties {
    * 单个租户字段配置。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static class TenantField {
     /** 数据库列名（必填）。 */

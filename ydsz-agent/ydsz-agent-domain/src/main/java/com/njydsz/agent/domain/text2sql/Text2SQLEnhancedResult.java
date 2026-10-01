@@ -23,7 +23,7 @@ import com.njydsz.agent.domain.gateway.Text2SQLService;
  * @param feasibilityReason 可行性评估原因说明（null 表示未启用或不可评估）
  * @param consistencyScore 语义一致性分数（null 表示未启用一致性校验）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record Text2SQLEnhancedResult(
     List<String> columns,

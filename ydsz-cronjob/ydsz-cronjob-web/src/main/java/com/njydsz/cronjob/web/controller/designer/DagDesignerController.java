@@ -38,11 +38,11 @@ import com.njydsz.common.core.response.YdszResponse;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Tag(name = "DAG 设计器", description = "DAG 工作流可视化编排")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/dag")
 @RequiredArgsConstructor

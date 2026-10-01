@@ -38,7 +38,7 @@ import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see PermissionChangedEvent
  * @see PermissionChangeNotifier
  */

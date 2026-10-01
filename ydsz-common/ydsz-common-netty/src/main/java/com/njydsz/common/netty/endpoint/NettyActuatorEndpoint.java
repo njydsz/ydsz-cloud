@@ -33,7 +33,7 @@ import java.util.Map;
  * <p>通过 {@code /actuator/netty/channels} 和 {@code /actuator/netty/channels/{channelId}} 查看单个 Channel 级别的诊断信息（远端地址、Pipeline 结构等）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Endpoint(id = "netty")
 @RequiredArgsConstructor

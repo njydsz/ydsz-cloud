@@ -29,7 +29,7 @@ import com.njydsz.common.base.config.DocProperties;
  * <p>注：安全响应头检查已下沉至 common-safe 模块（SecurityHeaderHealthIndicator），base 模块不再重复检查。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class YdszHealthIndicator implements HealthIndicator {
 

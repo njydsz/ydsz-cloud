@@ -54,7 +54,7 @@ import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @AutoConfigureAfter(MultiDataSourcePoolCustomizer.class)

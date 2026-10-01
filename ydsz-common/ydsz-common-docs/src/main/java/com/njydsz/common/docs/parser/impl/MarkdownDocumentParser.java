@@ -28,7 +28,7 @@ import com.njydsz.common.docs.parser.DocumentParser;
  * <p>输出 {@link DocumentSection} 类型包括 {@code heading / paragraph / list / code / link}， 类型字符串与 {@link
  * com.njydsz.common.docs.domain.DocumentSection#getType()} 约定一致。
  *
- * <p><b>识别范围（自 26.09.01 升级）：</b>
+ * <p><b>识别范围（自 26.10.01 升级）：</b>
  *
  * <ul>
  *   <li>ATX 标题：行首 1–6 个 {@code #} + 空格
@@ -48,7 +48,7 @@ import com.njydsz.common.docs.parser.DocumentParser;
  * <p><b>流式：</b>状态机逐行扫描，仅跟踪最近一行段落用于 Setext 判定，内存占用与文件大小无关。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

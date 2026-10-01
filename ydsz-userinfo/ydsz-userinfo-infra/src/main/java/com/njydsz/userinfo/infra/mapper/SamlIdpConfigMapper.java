@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.entity.SamlIdpConfig;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface SamlIdpConfigMapper extends BaseMapper<SamlIdpConfig> {

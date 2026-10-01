@@ -15,7 +15,7 @@ import lombok.Data;
  * （默认 500），超出时需分批调用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class BatchUserStatusDTO implements Serializable {

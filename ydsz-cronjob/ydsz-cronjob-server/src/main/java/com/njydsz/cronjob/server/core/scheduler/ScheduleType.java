@@ -13,7 +13,7 @@ package com.njydsz.cronjob.server.core.scheduler;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum ScheduleType {
   /** Cron 表达式调度（默认，向后兼容） */

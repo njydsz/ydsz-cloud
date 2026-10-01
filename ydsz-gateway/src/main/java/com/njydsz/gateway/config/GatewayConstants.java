@@ -19,7 +19,7 @@ import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
  *   <li>下游服务信任网关的前提是 {@link com.njydsz.common.auth.security.InternalHeaderSigner} 签名校验通过
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public final class GatewayConstants {

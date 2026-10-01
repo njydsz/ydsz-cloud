@@ -37,7 +37,7 @@ import com.njydsz.common.lock.spi.CurrentUserIdResolver;
  * @see RepeatSubmitTokenService
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/repeat-submit")
 @Tag(name = "防重复提交", description = "表单重复提交防护 Token 管理")

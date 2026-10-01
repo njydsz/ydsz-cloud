@@ -9,7 +9,7 @@ import java.util.Map;
  * <p>向用户推荐相关模板。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface FlowTemplateRecommendService {
 

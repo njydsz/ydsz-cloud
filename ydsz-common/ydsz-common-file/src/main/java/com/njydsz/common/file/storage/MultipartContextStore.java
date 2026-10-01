@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>支持多实例部署时分片上下文共享。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface MultipartContextStore {
 

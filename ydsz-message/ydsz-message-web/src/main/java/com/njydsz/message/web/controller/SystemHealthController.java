@@ -40,12 +40,12 @@ import com.njydsz.message.server.service.core.MessageHealthService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see MessageHealthService 消息健康检查服务
  */
 @Tag(name = "系统健康检查", description = "消息模块运行时健康状态监控")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/health")
 @RequiredArgsConstructor

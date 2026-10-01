@@ -73,7 +73,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
  *           type: ID_CARD
  * }</pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @see SensitiveData
  * @see SensitiveDataProcessor
  * @see SensitiveDataProperties

@@ -16,7 +16,7 @@ import org.springframework.web.socket.WebSocketSession;
  * <p>该注册表由 {@code WebSocketHandlerDecorator} 在连接建立/关闭时自动维护， 业务层仅需读取，不应直接操作。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class LocalSessionRegistry {
 

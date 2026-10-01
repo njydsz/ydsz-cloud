@@ -19,7 +19,7 @@ import com.njydsz.common.locales.util.I18n;
  * @param failStrategy 失败传播策略（FAIL_FAST / CONTINUE_ON_FAIL / null=使用 DAG 默认策略）
  * @param condition 条件表达式（null 表示无条件触发；非 null 时按表达式求值决定是否触发）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @JsonClass(description = "DAG 边定义，标记可安全反序列化")
 public record DagEdge(

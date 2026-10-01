@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * <p>所有操作均为 O(1) 时间复杂度（find 除外，为 O(n)）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class InMemorySessionRepository implements SessionRepository {

@@ -324,7 +324,7 @@ mvn compile
 
 ## 版本规范
 
-- **版本格式**：`YY.MM.DD`（不含 V 前缀），如 `26.09.01-SNAPSHOT`
+- **版本格式**：`YY.MM.DD`（不含 V 前缀），如 `26.10.01-SNAPSHOT`
 - **Flyway/Liquibase**：**禁止**（项目不使用 schema-migration 框架）
 - **数据库变更**：通过 `sqls/` 目录下的手动 SQL 脚本管理
 

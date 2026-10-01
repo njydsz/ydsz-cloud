@@ -256,5 +256,5 @@ ydsz:
 
 - **2.2.0**（26.09.19）：合并熔断配置源（CircuitBreaker 为唯一配置入口，resilience4j 路径标记废弃）；ResponseUnwrapDecoder 增加 JsonNode 中间路径优化；BigDecimal 阈值改为 float；README 文档与代码同步修正。
 - **2.1.0**（26.09.04）：新增 `MethodAwareRetryer` 方法级感知重试（HTTP 方法白名单过滤）；新增 Bulkhead 信号量隔离。
-- **2.0.0**（26.09.01）：13 个核心业务头统一透传；YdszResponse 自动解包（ResponseUnwrapDecoder）；Resilience4j 熔断器适配。
+- **2.0.0**（26.10.01）：13 个核心业务头统一透传；YdszResponse 自动解包（ResponseUnwrapDecoder）；Resilience4j 熔断器适配。
 - **1.0.0**（26.08.02）：初始版本（Feign 增强基座）。

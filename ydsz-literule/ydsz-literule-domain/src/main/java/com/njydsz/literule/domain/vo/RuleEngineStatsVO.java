@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>用于前端展示规则引擎的运行时指标，包含累计评估/命中/错误次数、耗时、 已注册规则数及单规则明细，支撑引擎健康度与性能监控。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

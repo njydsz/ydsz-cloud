@@ -24,7 +24,7 @@ import com.njydsz.nextwiki.server.service.SearchQueryParser;
  * 所有 Spring 相关的 Bean 定义集中在本类中，确保 domain 层的纯净性。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Configuration
 public class NextwikiBeanConfig {

@@ -23,7 +23,7 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
  * <p>由独立 Scheduler 周期调度（{@code @Scheduled}，默认 1 分钟）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

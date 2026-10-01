@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>安全加固：</b>对日志中的敏感字段值进行脱敏，防止密码、令牌等敏感信息泄露到日志中。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j(topic = "com.njydsz.feign")
 public class YdszFeignLogger extends Logger {

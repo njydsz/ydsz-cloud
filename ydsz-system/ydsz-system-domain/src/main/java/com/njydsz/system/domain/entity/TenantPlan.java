@@ -38,7 +38,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
  * <p><b>索引设计：</b>唯一索引 {@code uk_plan_code}（{@code plan_code}）保证套餐编码全局唯一。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see Tenant 租户实体
  * @see TenantPlanMenu 套餐-菜单关联
  */

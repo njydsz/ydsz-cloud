@@ -51,7 +51,7 @@ import org.springframework.core.Ordered;
  * 4），便于多过滤器场景协调先后。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.safe.api-signature")

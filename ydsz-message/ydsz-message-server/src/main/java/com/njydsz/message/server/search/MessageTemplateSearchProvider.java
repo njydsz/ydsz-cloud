@@ -23,7 +23,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
  * 消息模板搜索提供者 — 将消息模板数据注册到统一搜索体系。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

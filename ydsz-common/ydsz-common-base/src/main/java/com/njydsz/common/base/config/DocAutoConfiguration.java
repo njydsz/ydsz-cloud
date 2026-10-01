@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Import;
  * <p><b>线程安全性：</b>本类仅包含 Spring 注解与导入语句，无可变状态，线程安全。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnProperty(

@@ -34,7 +34,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>索引设计：</b>唯一索引 {@code uk_language_code}（{@code language_code}）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.web.controller.LanguageController 语言 Controller
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告

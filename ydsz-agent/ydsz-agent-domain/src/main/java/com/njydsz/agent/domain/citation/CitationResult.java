@@ -10,7 +10,7 @@ import java.util.List;
  * 前端可基于 citation 列表构建引用抽屉，让用户追溯到原始知识。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class CitationResult {
 

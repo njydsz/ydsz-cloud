@@ -69,13 +69,13 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.core.MessageFeedbackService 消息反馈服务
  * @see com.njydsz.message.domain.entity.config.MsgFeedback 反馈实体
  */
 @Tag(name = "消息反馈", description = "消息质量评分与用户反馈")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/feedback")
 @RequiredArgsConstructor

@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>从文档中提取的表格结构化数据。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
  * 空间成员 DTO
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

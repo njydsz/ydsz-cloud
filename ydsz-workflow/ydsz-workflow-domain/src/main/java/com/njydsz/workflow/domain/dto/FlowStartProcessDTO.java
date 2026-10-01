@@ -18,7 +18,7 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
  * <p>复用现有 StartProcessDTO 的核心字段，新增 ydsz_flow_* 引擎所需字段。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowStartProcessDTO implements Serializable {

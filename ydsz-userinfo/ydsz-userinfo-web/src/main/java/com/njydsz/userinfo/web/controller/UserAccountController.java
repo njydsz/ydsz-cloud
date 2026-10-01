@@ -78,11 +78,11 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.server.service.UserAccountService 用户业务逻辑
  * @see com.njydsz.userinfo.domain.vo.UserAccountVO 用户VO
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @Tag(name = "用户管理", description = "用户账号 CRUD、密码管理、角色分配")
 @RestController

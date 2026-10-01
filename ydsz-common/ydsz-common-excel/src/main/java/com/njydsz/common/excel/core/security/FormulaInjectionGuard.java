@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * 支持 {@code \t}、{@code \r} 转义。默认值为完整 OWASP 前缀集。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.excel.core.config.ExcelConfig#isFormulaInjectionProtection()
  */
 public final class FormulaInjectionGuard {

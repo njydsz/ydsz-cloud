@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
  * <p>最大模拟步数 1000 步，防止死循环。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

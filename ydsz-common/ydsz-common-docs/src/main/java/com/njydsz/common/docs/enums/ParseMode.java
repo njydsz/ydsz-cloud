@@ -6,7 +6,7 @@ package com.njydsz.common.docs.enums;
  * <p>控制解析器的行为粒度，平衡解析精度与性能开销。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum ParseMode {
 

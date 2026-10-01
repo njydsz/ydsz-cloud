@@ -22,7 +22,7 @@ import com.njydsz.cronjob.domain.vo.JobVO;
  * <p>通过 {@code ydsz.cronjob.node-selector.type=round_robin} 配置启用（默认使用 LeastLoadNodeSelector）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Configuration
 @ConditionalOnProperty(name = "ydsz.cronjob.node-selector.type", havingValue = "round_robin")

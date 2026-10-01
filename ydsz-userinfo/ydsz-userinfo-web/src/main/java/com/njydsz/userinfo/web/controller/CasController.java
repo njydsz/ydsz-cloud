@@ -46,10 +46,10 @@ import com.njydsz.userinfo.server.config.CasProperties;
  * <p><b>单点登出：</b>用户访问 {@code /cas/logout} 时，清除 TGT Cookie 并删除 Redis 中的 TGT。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cas")
 @RequiredArgsConstructor
@@ -455,7 +455,7 @@ public class CasController {
    * CAS 校验响应。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @lombok.Data
   public static class CasValidateResponse {

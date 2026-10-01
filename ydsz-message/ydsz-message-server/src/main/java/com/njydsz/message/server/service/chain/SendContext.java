@@ -15,7 +15,7 @@ import com.njydsz.message.domain.vo.MsgRouteRuleVO;
  * #errorResult}， 管线短路退出。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class SendContext {

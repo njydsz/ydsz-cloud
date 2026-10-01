@@ -43,7 +43,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *         retry-after: 5
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.14 由 RateLimitProperties 重命名（ADR-011 消歧）
  * @author ydsz-team
  */

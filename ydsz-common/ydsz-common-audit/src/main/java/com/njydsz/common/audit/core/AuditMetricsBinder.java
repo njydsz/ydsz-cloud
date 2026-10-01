@@ -29,7 +29,7 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  * 本模块自身作为基础设施实现，必须直接使用 {@link MeterBinder} 契约注册指标。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class AuditMetricsBinder implements MeterBinder {
 

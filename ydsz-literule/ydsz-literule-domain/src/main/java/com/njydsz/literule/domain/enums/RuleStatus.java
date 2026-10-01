@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
  * 规则生命周期状态枚举
  *
  * @author ydsz
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum RuleStatus {
 
@@ -58,7 +58,7 @@ public enum RuleStatus {
    *
    * @param code 状态编码（大小写不敏感）
    * @return 对应的 RuleStatus；未匹配返回 null
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static RuleStatus fromCode(String code) {
     if (code == null || code.isBlank()) {

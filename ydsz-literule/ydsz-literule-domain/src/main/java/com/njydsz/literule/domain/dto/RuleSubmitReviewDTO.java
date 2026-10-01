@@ -10,7 +10,7 @@ import lombok.Data;
  * 级审批流。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Schema(description = "规则提交审核请求体")

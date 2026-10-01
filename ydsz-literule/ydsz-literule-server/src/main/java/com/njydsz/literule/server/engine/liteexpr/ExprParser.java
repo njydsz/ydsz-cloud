@@ -27,7 +27,7 @@ import com.njydsz.common.locales.util.I18n;
  *
  * <p>解析错误抛出 {@link LiteExprException}，携带行列位置。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public class ExprParser {

@@ -70,7 +70,7 @@ import com.njydsz.common.json.YdszJson;
  *
  * @param <T> Java 对象类型
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see <a href="https://mybatis.org/mybatis-3/zh/configuration.html#typeHandlers">MyBatis
  *     TypeHandler</a>
  */

@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.njydsz</groupId>
         <artifactId>ydsz-userinfo</artifactId>
-        <version>26.09.01-SNAPSHOT</version>
+        <version>26.10.01-SNAPSHOT</version>
     </parent>
     <artifactId>ydsz-userinfo-web</artifactId>
     <name>ydsz-userinfo-web</name>
@@ -124,7 +124,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
-        
+
             <!-- 单元测试基础设施：JUnit 5 + AssertJ + Mockito（云顶编码规范 §14.1） -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -19,7 +19,7 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  * {@code VARCHAR(16)} 类型，列名 {@code read_status}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum ReadStatusEnum implements BaseStatusEnum<ReadStatusEnum> {
 

@@ -26,7 +26,7 @@ import com.njydsz.common.core.context.TenantContextHolder;
  * 多租户隔离通过 {@link #resolveTenantId()} 在 SQL 层显式追加租户过滤。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @SuppressWarnings("YDIZ-COMMON-051")

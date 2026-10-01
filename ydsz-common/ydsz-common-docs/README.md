@@ -351,16 +351,16 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 2. **旧格式拒绝**：`.doc` / `.ppt` / `.xls` 旧格式直接抛 `UNSUPPORTED_FORMAT`，建议业务层提示用户转换为新格式。
 3. **宏文档警告**：`.docm` / `.xlsm` / `.pptm` 含宏文档会被 `MacroDetector` 标记为 `HIGH` 风险，配合 `block-on-high-risk=true` 可阻止解析。
 4. **大文件控制**：`max-file-size-mb=50` 默认上限，超出应在上游网关拦截；解析器内部不重复校验。
-5. **异步线程池**：26.09.01 起线程池由 Spring 托管，使用方需声明 `docsAsyncExecutor` Bean。
+5. **异步线程池**：26.10.01 起线程池由 Spring 托管，使用方需声明 `docsAsyncExecutor` Bean。
 6. **临时文件清理**：所有临时文件由 `ydsz-common-util` 的 `TempFileManager` 统一跟踪管理，JVM 退出时有 ShutdownHook 兜底清理。
 7. **PII 检测精度**：基于正则表达式，存在误报与漏报可能；身份证号、银行卡号有校验位验证，准确率较高。
 8. **输出轮廓选择**：通过 `ParseOptions.profile` 控制输出结构化程度，`TEXT_ONLY` 模式性能最优，`FULL` 模式最耗资源。
 
 ## 变更记录
 
-- **26.09.01**（2026-08-17）：
+- **26.10.01**（2026-08-17）：
   - 更新依赖说明：标注 `ydsz-common-excel` / `ydsz-common-safe` 为直接依赖，添加 `pdfbox-io`（optional）、`jakarta.validation-api`（optional）
   - 补全 `DocumentException` / `DocumentExceptionCode` 异常处理文档
   - 修正 `ExcelDocumentParser` 依赖为 `ydsz-common-excel`（统一 Excel 引擎），`PdfDocumentParser` 标注 `pdfbox-io` 可选
-- **26.09.01**（2026-08-16）：基于过度设计评估全面重构
-- **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节
+- **26.10.01**（2026-08-16）：基于过度设计评估全面重构
+- **26.10.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

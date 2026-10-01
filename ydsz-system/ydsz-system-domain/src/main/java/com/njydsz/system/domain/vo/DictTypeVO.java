@@ -32,7 +32,7 @@ import com.njydsz.system.domain.entity.DictType;
  * com.njydsz.system.domain.dto.DictTypeDTO} 负责。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see DictType 字典类型实体
  * @see DictItemVO 字典项 VO
  */

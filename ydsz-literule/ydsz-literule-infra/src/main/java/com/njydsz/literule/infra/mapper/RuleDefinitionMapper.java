@@ -27,7 +27,7 @@ import com.njydsz.literule.domain.entity.RuleDefinition;
  * <p><b>逻辑删除：</b>{@code deleted} 字段标识，所有查询自动过滤已删除记录。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RuleDefinition 规则定义实体
  * @see com.njydsz.literule.server.service.RuleLifecycleService 规则生命周期 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
@@ -52,7 +52,7 @@ public interface RuleDefinitionMapper extends BaseMapper<RuleDefinition> {
    * @param enabled 启停过滤（null=不过滤）
    * @param page 分页参数
    * @return 分页结果
-   * @since 26.09.01
+   * @since 26.10.01
    */
   IPage<RuleDefinition> searchRules(
       @Param("query") String query,
@@ -69,7 +69,7 @@ public interface RuleDefinitionMapper extends BaseMapper<RuleDefinition> {
    * @param category 分类过滤
    * @param enabled 启停过滤
    * @return 匹配的规则总数
-   * @since 26.09.01
+   * @since 26.10.01
    */
   int searchRulesCount(
       @Param("query") String query,

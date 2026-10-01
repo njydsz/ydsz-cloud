@@ -44,7 +44,7 @@ import com.njydsz.common.queue.manager.QueueManager;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class QueueMetricsBinder implements MeterBinder {
 

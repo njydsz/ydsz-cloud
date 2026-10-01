@@ -17,7 +17,7 @@ import com.njydsz.common.lock.core.LockTemplate;
  * com.njydsz.common.lock.impl.RedisReentrantLock} + 看门狗自动续期），获取失败时返回 null（不阻塞等待）。
  * 锁 key 以 {@code ydsz:flow:schedule:} 为前缀，TTL 略大于任务预计执行时间。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

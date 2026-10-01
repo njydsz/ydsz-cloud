@@ -29,7 +29,7 @@ import com.njydsz.workflow.server.config.FlowProperties;
  *
  * <p>参考实现：auth 模块 PermissionChangeNotifier / PermissionChangeCacheInvalidator
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

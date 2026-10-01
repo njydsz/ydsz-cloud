@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * infra 层通过依赖 domain 模块引用本类，禁止自建 PO/DO 副本。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @NoArgsConstructor

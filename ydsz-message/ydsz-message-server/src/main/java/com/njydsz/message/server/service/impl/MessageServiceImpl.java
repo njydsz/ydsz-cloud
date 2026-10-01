@@ -71,7 +71,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
  * <p>支持单发、批量、聚合、定时、灰度、A/B 等多种发送模式。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

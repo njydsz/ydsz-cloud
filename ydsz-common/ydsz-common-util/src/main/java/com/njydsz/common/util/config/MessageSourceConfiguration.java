@@ -22,7 +22,7 @@ import com.njydsz.common.util.message.MessageUtils;
  * 仍被 8 个 common 子模块文件依赖，暂保留以确保 i18n 能力不退化。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.locales.util.I18n 新 i18n 静态入口
  * @see com.njydsz.common.locales.util.I18nMessages 新 i18n 注入入口
  */

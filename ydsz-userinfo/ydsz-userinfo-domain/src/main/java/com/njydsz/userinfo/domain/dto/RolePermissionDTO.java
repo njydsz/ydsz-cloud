@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>用于批量分配权限给角色。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class RolePermissionDTO implements Serializable {

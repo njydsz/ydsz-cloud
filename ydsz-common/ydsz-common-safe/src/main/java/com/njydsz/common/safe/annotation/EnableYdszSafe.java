@@ -42,7 +42,7 @@ import com.njydsz.common.safe.config.SafeConfiguration;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see SafeConfiguration
  */
 @Target(ElementType.TYPE)

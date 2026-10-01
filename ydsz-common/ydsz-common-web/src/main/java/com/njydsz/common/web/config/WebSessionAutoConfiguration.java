@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Import;
  * <p>通过 {@code ydsz.web.session.enabled=false} 可降级为本地 Session。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)

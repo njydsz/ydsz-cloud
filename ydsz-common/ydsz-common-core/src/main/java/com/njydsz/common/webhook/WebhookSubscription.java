@@ -10,7 +10,7 @@ import lombok.Data;
  * 签名密钥等。由 {@link WebhookDispatcher} 统一管理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

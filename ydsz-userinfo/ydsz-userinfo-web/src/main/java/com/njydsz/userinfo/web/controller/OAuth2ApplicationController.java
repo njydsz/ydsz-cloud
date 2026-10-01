@@ -45,10 +45,10 @@ import com.njydsz.userinfo.server.oauth2.OAuth2ApplicationService;
  * <p><b>权限要求：</b>所有接口需 {@code admin:oauth2:application} 权限。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/admin/oauth2/applications")
 @RequiredArgsConstructor

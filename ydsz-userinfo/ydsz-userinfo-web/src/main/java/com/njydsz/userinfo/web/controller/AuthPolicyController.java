@@ -35,9 +35,9 @@ import com.njydsz.userinfo.server.service.AuthPolicyService;
  * <p><b>接口路径：</b>{@code /api/auth-policy}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/auth-policy")

@@ -12,7 +12,7 @@ import lombok.Data;
  * <p>用于 Controller 层返回任务调度数据，对应实体 {@link com.njydsz.cronjob.domain.entity.job.Job}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class JobVO implements Serializable {

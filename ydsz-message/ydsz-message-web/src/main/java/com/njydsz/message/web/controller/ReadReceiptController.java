@@ -41,11 +41,11 @@ import com.njydsz.message.server.service.receipt.ReadReceiptService;
  * 返回 HTTP 404 提示用户，而非重定向到错误页，避免引入外部跳转风险。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Tag(name = "已读回执", description = "短信短链回调")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/read-receipt")
 @RequiredArgsConstructor

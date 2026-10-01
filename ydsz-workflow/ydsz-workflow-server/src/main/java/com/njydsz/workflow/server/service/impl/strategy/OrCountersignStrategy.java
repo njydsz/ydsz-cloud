@@ -19,7 +19,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
  * <p>任一拒绝则整体拒绝。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 @RequiredArgsConstructor

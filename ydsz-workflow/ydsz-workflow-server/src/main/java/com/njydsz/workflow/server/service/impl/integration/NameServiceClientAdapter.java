@@ -34,7 +34,7 @@ import com.njydsz.workflow.domain.gateway.NameServiceClient;
  * 待 userinfo 暴露多形态名称端点后按类型分派（见 TODO）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class NameServiceClientAdapter implements NameServiceClient {

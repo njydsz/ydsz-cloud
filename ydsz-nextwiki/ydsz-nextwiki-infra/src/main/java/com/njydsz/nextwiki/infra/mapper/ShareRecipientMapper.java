@@ -13,7 +13,7 @@ import com.njydsz.nextwiki.domain.entity.ShareRecipient;
  * 分享目标用户 Mapper。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface ShareRecipientMapper extends BaseMapper<ShareRecipient> {

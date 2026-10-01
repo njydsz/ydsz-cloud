@@ -48,7 +48,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  * 异步投递到单线程消费者执行， 事件监听线程仅负责入队，不直接调用 {@link IpAccessService}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see SecurityEvent
  * @see IpAccessService
  */

@@ -23,7 +23,7 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
  * <p><b>DDD 分层：</b> domain 层 AgentDefinition 直接承载 MP 注解用于持久化。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Repository
 @RequiredArgsConstructor

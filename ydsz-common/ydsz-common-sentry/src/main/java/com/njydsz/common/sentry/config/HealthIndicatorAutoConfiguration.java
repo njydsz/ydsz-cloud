@@ -31,7 +31,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * {@link SlaCollector} 可选依赖，用于暴露内部健康详情。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureAfter({

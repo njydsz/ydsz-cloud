@@ -19,7 +19,7 @@ import lombok.experimental.SuperBuilder;
  * <p><b>表特征</b>：该表使用 (trace_id, step_index) 复合业务键，无独立 id 列，不使用 BaseMapper。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

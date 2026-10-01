@@ -30,7 +30,7 @@ import com.njydsz.workflow.server.engine.impl.DefaultFlowVariableStrategy;
  * 本次拆分将最独立的办理人解析逻辑先行抽出，后续将继续抽出委派改写、空办理人兜底等逻辑。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService 任务创建服务（调用方）
  * @see DefaultFlowVariableStrategy 变量表达式策略
  */
@@ -41,7 +41,7 @@ public class AssigneeResolutionService {
   /** 变量策略，解析节点 permissionFlag 中的表达式 */
   private final DefaultFlowVariableStrategy variableStrategy;
 
-  
+
   /**
    * 构造办理人解析服务。
    *

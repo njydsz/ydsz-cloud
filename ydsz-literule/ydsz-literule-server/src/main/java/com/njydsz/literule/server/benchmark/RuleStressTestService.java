@@ -27,7 +27,7 @@ import com.njydsz.common.locales.util.I18nMessages;
  * 压测走 dry-run 通道：不发布事件、不记录统计、不影响线上指标。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class RuleStressTestService {

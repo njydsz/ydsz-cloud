@@ -32,7 +32,7 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
  * 确保熔断器能够正确探测服务是否恢复，避免因限流导致半开探测失败、熔断器重新打开。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class NotifyRateLimiterManager {

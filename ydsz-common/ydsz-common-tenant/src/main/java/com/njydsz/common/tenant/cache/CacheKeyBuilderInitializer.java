@@ -16,7 +16,7 @@ import com.njydsz.common.core.context.TenantContextHolder;
  * 缓存 key 自动具备租户隔离维度。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class CacheKeyBuilderInitializer {
 

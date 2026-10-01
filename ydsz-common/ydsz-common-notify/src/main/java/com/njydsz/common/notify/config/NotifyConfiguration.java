@@ -76,7 +76,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  * 熔断器、死信队列、事务安全发布。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @EnableConfigurationProperties(NotifyProperties.class)

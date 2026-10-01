@@ -84,7 +84,7 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowCategoryService 接口定义
  * @see FlowCategoryVO 分类实体
  * @see FlowCategoryDTO 分类 DTO

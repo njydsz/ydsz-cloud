@@ -24,7 +24,7 @@ import org.springframework.context.ApplicationEvent;
  * 业务方只需实现 {@code AuditDiffProvider} 接口提供「旧值查询」能力，无论注解还是事件场景均可复用同一 diff 计算机制。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 public class OperationLogEvent extends ApplicationEvent {

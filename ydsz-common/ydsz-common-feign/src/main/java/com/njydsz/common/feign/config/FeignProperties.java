@@ -20,7 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 原先 {@code ydsz.feign.resilience4j.*} 配置路径已废弃，保留一版本兼容后移除。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @ConfigurationProperties(prefix = "ydsz.feign")
 public class FeignProperties {

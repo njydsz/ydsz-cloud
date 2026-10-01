@@ -16,7 +16,7 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
  * <p><b>安全注意：</b>本 VO 包含密码哈希，仅在认证服务内部使用，禁止返回给前端或跨服务传输。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class UserAccountCredentialVO {

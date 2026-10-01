@@ -25,7 +25,7 @@ import com.njydsz.agent.server.trigger.TriggerExecutionService;
  * <p>注意：此为轻量级实现，生产环境建议迁移至 Quartz 或 Spring Scheduling 的动态 cron 注册。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

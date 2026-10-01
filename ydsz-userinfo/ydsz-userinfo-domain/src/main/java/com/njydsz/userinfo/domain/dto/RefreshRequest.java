@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>由 {@link com.njydsz.userinfo.web.controller.AuthController#refresh(RefreshRequest)} 使用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class RefreshRequest {

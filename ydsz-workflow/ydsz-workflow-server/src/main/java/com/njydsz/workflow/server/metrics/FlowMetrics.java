@@ -46,7 +46,7 @@ import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
  * <b>严禁</b>把 instanceId、userId、异常 message 等无界值传入标签位，否则会造成 Prometheus 时间序列爆炸。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")

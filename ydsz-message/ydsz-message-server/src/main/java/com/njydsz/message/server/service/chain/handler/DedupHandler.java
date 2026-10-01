@@ -31,7 +31,7 @@ import com.njydsz.message.server.service.core.GuardService;
  * 含 channel 时追加 channel 维度（P2-D3 去重精化）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

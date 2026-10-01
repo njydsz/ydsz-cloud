@@ -33,7 +33,7 @@ import com.njydsz.userinfo.web.annotation.RequireInternal;
  * 签名未通过或未配置时，回退到原有的 IP 标记头校验逻辑。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RequireInternal 内部接口标记注解
  * @see InternalCallProperties 内部调用配置
  * @see com.njydsz.common.safe.config.ApiSignatureProperties 签名配置（common-safe）

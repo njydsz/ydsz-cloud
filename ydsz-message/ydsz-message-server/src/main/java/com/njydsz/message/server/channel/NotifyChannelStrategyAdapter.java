@@ -24,7 +24,7 @@ import com.njydsz.common.notify.template.TemplateEngine;
  * <p>仅支持在 {@link NotifyChannel} 枚举中有对应值的通道类型， PUSH / WEBHOOK 等无对应枚举值的通道不会被适配。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {

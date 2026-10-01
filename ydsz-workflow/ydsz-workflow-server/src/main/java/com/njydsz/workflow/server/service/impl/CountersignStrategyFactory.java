@@ -19,7 +19,7 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
  * <p>对外暴露 {@code getStrategy(String type)} 接口，根据节点配置返回对应策略实例。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

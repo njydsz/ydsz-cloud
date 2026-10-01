@@ -31,7 +31,7 @@ import com.njydsz.common.json.naming.PropertyNamingStrategy;
  * @param isFailOnError 序列化失败时是否抛出异常
  * @param namingStrategy 字段命名策略
  * @param isUseBigDecimal 是否使用 BigDecimal 解析浮点数
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public record JsonConfigCarrier(

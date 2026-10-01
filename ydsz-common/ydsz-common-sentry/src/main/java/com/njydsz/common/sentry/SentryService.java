@@ -26,10 +26,10 @@ import com.njydsz.common.sentry.spi.TraceContext;
  *   <li>继续使用 {@link SentryObservation} 静态方法：向后兼容，内部委托本 Bean
  * </ul>
  *
- * <p>26.09.01 新增：替代原静态门面模式，解决 ServiceLocator 反模式问题。
+ * <p>26.10.01 新增：替代原静态门面模式，解决 ServiceLocator 反模式问题。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see SentryObservation
  */
 @Slf4j
@@ -170,7 +170,7 @@ public class SentryService {
    * <p>供 SentryMetricsAdapter 等内部组件使用，使业务模块无需直接注入 MeterRegistry。
    *
    * @return MetricsCollector 实例，可能为 null
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public MetricsCollector getMetricsCollector() {
     return metricsCollector;

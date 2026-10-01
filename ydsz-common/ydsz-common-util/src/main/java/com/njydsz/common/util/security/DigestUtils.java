@@ -20,7 +20,7 @@ import javax.crypto.spec.SecretKeySpec;
  * <p>提供 MD5、SHA-1、SHA-256、SHA-512 散列、HMAC-SHA256 签名、PBKDF2 密钥派生、 常量时间比较等安全能力。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class DigestUtils {
 
@@ -411,7 +411,7 @@ public final class DigestUtils {
    * @param input 输入
    * @param key 键
    * @return 处理后的字节数组
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static byte[] hmacSha1(byte[] input, byte[] key) {
     try {
@@ -430,7 +430,7 @@ public final class DigestUtils {
    * @param data 待签名数据
    * @param secret 密钥
    * @return Base64 标准编码的签名；入参为 null 时返回 null
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static String hmacSha1Base64(String data, String secret) {
     if (data == null || secret == null) {

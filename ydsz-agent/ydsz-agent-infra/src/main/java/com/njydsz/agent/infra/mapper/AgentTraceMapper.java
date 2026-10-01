@@ -11,7 +11,7 @@ import com.njydsz.agent.domain.entity.AgentTrace;
  * <p>映射 {@code ydsz_agt_trace} 表，存储 Agent 执行的元数据。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface AgentTraceMapper extends BaseMapper<AgentTrace> {}

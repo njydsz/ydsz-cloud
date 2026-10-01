@@ -37,7 +37,7 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
  * <p><b>Bean 清单：</b>密码编码器等公共 Bean 见 ydsz-common-auth 自动配置（P1-7 收敛后本类仅保留健康检查 Bean）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see UserInfoProperties 用户中心配置属性
  * @see LdapProperties LDAP 配置属性
  * @see com.njydsz.userinfo.UserInfoApplication ydsz-userinfo 启动类

@@ -17,7 +17,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * 避免污染 {@link com.njydsz.common.exception.custom.AbstractYdszException} 主类。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.common.exception.custom.AbstractYdszException
  */
 public class ExceptionContext implements Serializable {

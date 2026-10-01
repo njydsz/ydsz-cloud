@@ -33,7 +33,7 @@ import com.njydsz.agent.domain.text2sql.TableSchema;
  * <p>降级策略：当 LLM 调用失败时，回退到纯启发式匹配结果。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

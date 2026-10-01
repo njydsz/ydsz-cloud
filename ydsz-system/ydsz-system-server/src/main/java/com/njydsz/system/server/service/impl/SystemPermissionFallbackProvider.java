@@ -23,7 +23,7 @@ import com.njydsz.system.domain.vo.ApiPermissionVO;
  * {@code @Autowired(required = false)} 自动注入（要求 classpath 中有此实现）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see PermissionFallbackProvider
  */
 @Slf4j

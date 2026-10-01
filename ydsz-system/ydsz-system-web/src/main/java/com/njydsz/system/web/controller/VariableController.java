@@ -58,11 +58,11 @@ import com.njydsz.system.server.service.VariableService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ConfigController 系统配置 Controller（面向后端）
  * @see com.njydsz.system.server.service.VariableService 变量业务逻辑
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "系统变量", description = "系统变量 CRUD + 按 key 查询（高频调用走 Redis 缓存）")
 @Slf4j
 @RestController

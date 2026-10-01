@@ -30,7 +30,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
  * <p><b>唯一约束：</b>{@code (tenant_id, api_code)} — 同一租户下权限码唯一。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

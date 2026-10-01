@@ -29,7 +29,7 @@ import com.njydsz.common.search.api.SearchRequest;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class QueryParser {

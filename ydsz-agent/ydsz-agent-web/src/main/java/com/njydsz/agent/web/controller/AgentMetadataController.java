@@ -45,14 +45,14 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p>本 Controller 仅做参数透传与 VO 转换，所有元数据来源由 {@link LlmClient} 与 {@link ToolRegistry} 提供，不包含业务编排逻辑。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see AgentController Agent 执行接口（同步 / SSE 流式）
  * @see LlmClient LLM 客户端抽象
  * @see LlmClientRouter 多 Provider 路由器
  * @see ToolRegistry 工具注册中心
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/agent")
 @RequiredArgsConstructor

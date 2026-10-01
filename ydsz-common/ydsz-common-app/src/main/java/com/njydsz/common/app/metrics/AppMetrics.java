@@ -36,7 +36,7 @@ import com.njydsz.common.auth.metrics.AuthMetrics;
  * 本模块自身作为基础设施实现，必须直接使用 {@link MeterRegistry} 注册指标。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see AuthMetrics
  */
 public class AppMetrics implements AuthMetrics {

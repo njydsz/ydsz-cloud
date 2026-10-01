@@ -36,7 +36,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  * <p>通过 {@link SecurityHeaderProperties} 配置开关、排除路径和各安全头值。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see SecurityHeaderProperties
  * @see OncePerRequestFilter
  */

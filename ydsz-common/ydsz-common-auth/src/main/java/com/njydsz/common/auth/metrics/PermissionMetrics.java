@@ -9,7 +9,7 @@ package com.njydsz.common.auth.metrics;
  * <p>认证（Authentication）相关指标见 {@link AuthMetrics}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see AuthMetrics
  * @see AuthMetricsCollector
  */

@@ -50,7 +50,7 @@ import com.njydsz.common.cache.builder.CacheType;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @ConfigurationProperties(prefix = "ydsz.cache")
 @Validated

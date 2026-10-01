@@ -18,7 +18,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * AUTO 回滚或 NOTIFY 通知。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 // YDIZ-WARN-001 允许保留：Lombok @Data 与 JPA 继承共用，父类字段泛型擦除
 @SuppressWarnings("unchecked")

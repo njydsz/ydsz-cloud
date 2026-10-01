@@ -45,7 +45,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * 一致时才刷新 TTL，避免续期到被抢占后的其他客户端锁上。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class RedisReadWriteLock implements ReadWriteLock {

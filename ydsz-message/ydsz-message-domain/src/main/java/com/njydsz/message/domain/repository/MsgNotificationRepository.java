@@ -24,7 +24,7 @@ import com.njydsz.message.domain.vo.MsgNotificationVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface MsgNotificationRepository {
 

@@ -53,12 +53,12 @@ import com.njydsz.userinfo.server.auth.CaptchaService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CaptchaService 验证码业务逻辑
  * @see com.njydsz.userinfo.web.controller.AuthController 认证 Controller（消费 captcha）
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/captcha")
 @RequiredArgsConstructor

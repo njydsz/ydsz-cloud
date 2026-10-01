@@ -19,7 +19,7 @@ import com.njydsz.common.locales.util.I18nContextPropagator;
  * <p>通过 {@code ydsz.message.*} 控制各功能模块的开关。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Configuration
 public class MessageServiceAutoConfiguration {

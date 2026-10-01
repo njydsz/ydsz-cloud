@@ -52,11 +52,11 @@ import com.njydsz.system.server.service.DictService;
  * ydsz.dict.cache-ttl}）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see DictItemController 字典项 Controller（字典两级体系下层）
  * @see DictVersionService 字典版本管理（变更通知下游）
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "字典类型", description = "字典类型 CRUD + 全量列表")
 @Slf4j
 @RestController

@@ -9,7 +9,7 @@ import java.util.Map;
  * 使用 Redis Pub/Sub + ydzsz_flow_event_subscription 表实现消息订阅分发。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface MessageEventService {
 

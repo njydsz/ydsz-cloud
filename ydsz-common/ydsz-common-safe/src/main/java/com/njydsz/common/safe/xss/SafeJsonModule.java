@@ -16,7 +16,7 @@ import com.njydsz.common.json.module.ModuleDeserializerRegistry;
  * {@code JsonAutoConfiguration} 中的 {@code JsonModuleRegistrar} 会自动发现并注册。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class SafeJsonModule implements JsonModule, JsonModule.SpringFactory {
 

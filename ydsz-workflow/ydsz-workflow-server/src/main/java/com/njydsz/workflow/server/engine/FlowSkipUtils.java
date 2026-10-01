@@ -16,7 +16,7 @@ import com.njydsz.workflow.domain.vo.FlowSkipVO;
  * FlowDefinitionServiceImpl 部署逻辑）。本工具提供唯一规范的读取入口。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public final class FlowSkipUtils {

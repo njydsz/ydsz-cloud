@@ -20,7 +20,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
  * <p>@EnableAsync 已移至 {@code AsyncConfig} 统一管理异步线程池。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.nextwiki", "com.njydsz.common"})
 @EnableDiscoveryClient

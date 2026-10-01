@@ -23,7 +23,7 @@ import com.njydsz.common.feign.config.FeignConfiguration;
  * 仅在需要精确控制配置加载顺序时使用此注解。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FeignConfiguration
  */
 @Target(ElementType.TYPE)

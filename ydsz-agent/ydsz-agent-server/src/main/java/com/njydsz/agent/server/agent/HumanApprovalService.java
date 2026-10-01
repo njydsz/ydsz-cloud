@@ -51,7 +51,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
  * 轮询端点保留作为流断开或页面刷新后的补偿路径。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Service
 @Slf4j
@@ -454,7 +454,7 @@ public class HumanApprovalService {
    * <p>定义 Human-in-the-Loop 审批请求的生命周期状态：待审批、已通过、已拒绝、已过期。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public enum ApprovalStatus {
     /** 待审批：Agent 已暂停等待人工决策 */

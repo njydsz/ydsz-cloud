@@ -23,9 +23,9 @@ import com.njydsz.common.util.api.Experimental;
  * <p>所有正则表达式已预编译为 {@link Pattern} 静态字段，避免重复编译。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@Experimental(value = "能力储备：常用格式校验工具；覆盖面待扩充（护照、港澳台证件等）", since = "26.09.01")
+@Experimental(value = "能力储备：常用格式校验工具；覆盖面待扩充（护照、港澳台证件等）", since = "26.10.01")
 public final class ValidationUtils {
 
   /** 中国大陆手机号正则：1开头，第二位3-9，共11位 */

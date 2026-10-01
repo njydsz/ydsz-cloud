@@ -32,7 +32,7 @@ import com.njydsz.userinfo.domain.entity.Company;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.domain.entity.Company 公司实体
  * @see com.njydsz.userinfo.infra.mapper.CompanyDeptMapper 公司-部门关联 Mapper
  */

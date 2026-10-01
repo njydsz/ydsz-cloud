@@ -102,7 +102,7 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowHistoryArchiveService 接口定义
  * @see com.njydsz.workflow.server.config.FlowProperties.History 历史数据配置
  * @see com.njydsz.workflow.domain.vo.FlowHisInstanceVO 历史实例值对象

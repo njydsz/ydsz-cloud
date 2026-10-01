@@ -70,12 +70,12 @@ import com.njydsz.literule.server.cep.CEPPattern;
  * 形成 "CEP 命中 → 规则评估 → 预警" 的完整闭环。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CEPTestController CEP 模式测试接口
  * @see CEPEngine CEP 引擎
  * @see CEPPattern CEP 模式定义
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/literule/cep")

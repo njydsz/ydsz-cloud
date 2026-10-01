@@ -44,7 +44,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  * <p>跨多业务实体（项目/合同/任务/文档）联合检索。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class UnifiedSearchService {

@@ -60,7 +60,7 @@
 | `ChannelEventListener` | Channel 事件监听器 SPI 接口，业务侧实现订阅 Channel 生命周期事件 |
 | `NettyPipelineDiagnostics` | Pipeline 诊断工具，运行时打印 Handler 链结构与事件传播路径，辅助排查 Handler 顺序问题 |
 
-> 说明：`@MessageHandler` 注解 / `MessageDispatcher` 分发器已在 26.09.01 **移除**。消息处理统一使用 `SimpleChannelInboundHandler` + switch 策略模式。
+> 说明：`@MessageHandler` 注解 / `MessageDispatcher` 分发器已在 26.10.01 **移除**。消息处理统一使用 `SimpleChannelInboundHandler` + switch 策略模式。
 
 ### 5. SSL/TLS
 
@@ -614,7 +614,7 @@ ZeroCopyFileTransfer.sendChunked(channel, file);
 ## 变更记录
 
 - **26.10.01**（2026-10-01）：YDIZ-NETTY-001 P1 规则 — TCP Handler 强制继承 AbstractJsonTcpHandler；message/nextwiki 两个模块 TcpPushServerHandler 完成迁移（消除 ~200 行重复代码）；YDIZ-NETTY-002 P2 规则 — 认证后必须更新 Session bizId 激活 Session 管理；agent-infra 移除无效 netty 依赖；IMPORT-005 P0 增加 reactor-netty API 签名豁免条款；README 同步更新（添加 AbstractJsonTcpHandler 接入示例、废弃类表更新、SessionRepository 方法名修正）
-- **26.09.01**（2026-09-20）：Session 管理（ConnectionSession + SessionRepository + ChannelState）；RPC 请求-响应（NettyRpcClient + RpcMessage）；连接认证 SPI（ConnectionAuthenticator）；可靠消息 ACK（ReliableMessage + AckMessage + ReliableMessageHandler）；Graceful Drain 引流关闭；PooledMessage 对象池；ZeroCopyFileTransfer 零拷贝传输；JsonMessageCodec 拆分为 Encoder + Decoder + Util；直接内存监控指标（3 项新 Gauge）；缓存区水位线可配置；泄漏检测可配置；ReconnectHandler 并发修复；IdleStateHandlerFactory 内联清理；标记 NettyChannelOptions / NettyBufferUtils / JsonMessageCodec / IdleStateHandlerFactory 为 @Deprecated
-- **26.09.01**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 26.09.01 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式；新增 `allocator`（ByteBuf 分配器）、`connection-control`（连接数限制）配置段；新增 `ConnectionLimitHandler`、`ConnectionMetrics`、`NettyPipelineDiagnostics`、`NettyActuatorEndpoint`；provided 依赖 `micrometer-core` 改为通过 `@ConditionalOnClass` 可选装配
-- **26.09.01**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 26.09.01 移除）
-- **26.09.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README
+- **26.10.01**（2026-09-20）：Session 管理（ConnectionSession + SessionRepository + ChannelState）；RPC 请求-响应（NettyRpcClient + RpcMessage）；连接认证 SPI（ConnectionAuthenticator）；可靠消息 ACK（ReliableMessage + AckMessage + ReliableMessageHandler）；Graceful Drain 引流关闭；PooledMessage 对象池；ZeroCopyFileTransfer 零拷贝传输；JsonMessageCodec 拆分为 Encoder + Decoder + Util；直接内存监控指标（3 项新 Gauge）；缓存区水位线可配置；泄漏检测可配置；ReconnectHandler 并发修复；IdleStateHandlerFactory 内联清理；标记 NettyChannelOptions / NettyBufferUtils / JsonMessageCodec / IdleStateHandlerFactory 为 @Deprecated
+- **26.10.01**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 26.10.01 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式；新增 `allocator`（ByteBuf 分配器）、`connection-control`（连接数限制）配置段；新增 `ConnectionLimitHandler`、`ConnectionMetrics`、`NettyPipelineDiagnostics`、`NettyActuatorEndpoint`；provided 依赖 `micrometer-core` 改为通过 `@ConditionalOnClass` 可选装配
+- **26.10.01**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 26.10.01 移除）
+- **26.10.01**（2026-08-02）：对标 common-jdbc 标准格式重构 README

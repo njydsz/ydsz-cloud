@@ -31,7 +31,7 @@ import com.njydsz.common.exception.custom.SysException;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @Setter
@@ -100,7 +100,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
   /**
    * 互斥组名称（同组内首个命中后跳过其余规则；null 表示无互斥组）
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private String mutexGroup;
 

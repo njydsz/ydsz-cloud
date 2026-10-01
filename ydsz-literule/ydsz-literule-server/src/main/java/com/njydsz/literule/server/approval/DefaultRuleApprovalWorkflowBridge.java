@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * <p>作为兜底实现，所有方法体仅记录 debug 日志，不执行任何实际工作流操作。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see RuleApprovalWorkflowBridge
  * @see RuleApprovalService
  */

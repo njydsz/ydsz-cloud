@@ -39,7 +39,7 @@ import com.njydsz.common.json.provider.SerializationProvider;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverter<Object> {
 
@@ -77,7 +77,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
    * 设置最大请求体大小。
    *
    * @param maxRequestBodySize 最大请求体大小（字节）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public void setMaxRequestBodySize(long maxRequestBodySize) {
     this.maxRequestBodySize = maxRequestBodySize;
@@ -95,7 +95,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
    * @return 反序列化后的对象
    * @throws IOException 读取失败
    * @throws HttpMessageNotReadableException JSON 解析失败
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Override
   protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
@@ -155,7 +155,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
    * @param estimatedSize 预估容量（用于 ByteArrayOutputStream 初始分配，避免频繁扩容）
    * @return 读取的字节数组（长度不超过 maxBytes）
    * @throws IOException 读取失败或超过大小限制
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private static byte[] readBoundedBytes(InputStream input, long maxBytes, int estimatedSize)
       throws IOException {

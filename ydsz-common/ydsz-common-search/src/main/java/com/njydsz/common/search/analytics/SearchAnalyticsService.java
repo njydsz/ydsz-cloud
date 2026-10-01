@@ -22,7 +22,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  * <p>Redis 持久化：热门词用 Sorted Set，零结果词用 Sorted Set，每日量用 Hash。 Redis 不可用时自动降级到内存存储。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class SearchAnalyticsService {

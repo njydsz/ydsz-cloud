@@ -36,7 +36,7 @@ import com.njydsz.system.server.service.TenantPlanService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see TenantPlanService 套餐 Service 接口
  * @see com.njydsz.system.infra.entity.TenantPlan 套餐实体
  */

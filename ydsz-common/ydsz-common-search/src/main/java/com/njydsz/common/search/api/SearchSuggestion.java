@@ -28,7 +28,7 @@ import lombok.Setter;
  * <p>典型用途：搜索框下拉联想词（分组展示引擎建议 + 热门搜索）、搜索无结果时的智能纠错提示。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @Setter

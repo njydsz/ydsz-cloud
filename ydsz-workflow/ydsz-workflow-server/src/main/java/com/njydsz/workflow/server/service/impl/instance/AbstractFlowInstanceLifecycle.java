@@ -83,7 +83,7 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -1129,7 +1129,7 @@ public abstract class AbstractFlowInstanceLifecycle {
    * @param timer 定时器配置 Map
    * @return 解析后的延迟时间
    */
-  
+
 
   protected Duration parseTimerDelay(Map<?, ?> timer) {
     Object duration = timer.get("duration");
@@ -1170,7 +1170,7 @@ public abstract class AbstractFlowInstanceLifecycle {
    * @param node 流程节点 VO
    * @return ext 字段解析后的 Map
    */
-  
+
 
   protected Map<String, Object> parseExtMap(FlowNodeVO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1189,7 +1189,7 @@ public abstract class AbstractFlowInstanceLifecycle {
    * @param instanceId 流程实例 ID
    * @return 对应任务 ID
    */
-  
+
 
   protected String resolveBoundaryTaskId(FlowNodeVO node, String instanceId) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1217,7 +1217,7 @@ public abstract class AbstractFlowInstanceLifecycle {
    * @param node 流程节点 VO
    * @return 是否子流程节点
    */
-  
+
 
   protected boolean isCallActivity(FlowNodeVO node) {
     if (node == null || !StringUtils.hasText(node.getExt())) {
@@ -1238,7 +1238,7 @@ public abstract class AbstractFlowInstanceLifecycle {
    *
    * @param action 事件消费者
    */
-  
+
 
   protected void fireEvent(Consumer<FlowEventListener> action) {
     flowTaskSupport.fireEvent(action, null);
@@ -1249,7 +1249,7 @@ public abstract class AbstractFlowInstanceLifecycle {
    * @param instanceId 流程实例 ID
    * @param taskId 任务 ID
    */
-  
+
 
   protected void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
     flowTaskSupport.publishWorkflowEvent(eventType, instanceId, taskId);
@@ -1289,7 +1289,7 @@ public abstract class AbstractFlowInstanceLifecycle {
    * @param vo 流程实例 VO
    * @return 流程实例 DTO
    */
-  
+
 
   protected static FlowInstanceDTO toDto(FlowInstanceVO vo) {
     FlowInstanceDTO dto = new FlowInstanceDTO();

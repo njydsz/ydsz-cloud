@@ -31,7 +31,7 @@ import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
  * <p>所有操作均使用全租户前缀 + 应用前缀的组合，保证多租户隔离。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RequiredArgsConstructor

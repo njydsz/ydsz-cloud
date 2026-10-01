@@ -19,7 +19,7 @@ import com.njydsz.system.server.service.ApiPermissionService;
  * <p><b>异常处理：</b>扫描注册失败不会阻止应用启动，仅记录错误日志。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ApiPermissionService#scanAndRegister() 扫描注册 Service 方法
  */
 @Slf4j

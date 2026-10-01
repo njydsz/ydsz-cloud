@@ -26,7 +26,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * <p><b>注意：</b>此实现适用于单机部署。分布式环境下建议使用 Redis 实现。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see CsrfTokenRepository
  */
 public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {

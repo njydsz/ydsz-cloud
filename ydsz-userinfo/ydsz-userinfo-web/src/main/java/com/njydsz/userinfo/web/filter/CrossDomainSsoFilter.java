@@ -38,7 +38,7 @@ import com.njydsz.userinfo.server.config.CrossDomainSsoProperties;
  * <p><b>兼容性：</b>同域请求（无 Origin 头或 Origin 与当前域一致）不受影响，直接放行。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * 业务特异过滤器（YDIZ-ARCH-004 例外）：跨域 SSO 传递逻辑依赖 ydsz 专有 Cookie 提取 + postMessage 回调协议，不可下沉至 common-safe。Order=HIGHEST_PRECEDENCE+50 与认证过滤器隔离。
  * @see CrossDomainTokenService 跨域 Token 服务
  * @see CrossDomainSsoProperties 跨域 SSO 配置

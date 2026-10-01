@@ -13,7 +13,7 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
  * 办理人 DTO
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowAssigneeDTO implements Serializable {

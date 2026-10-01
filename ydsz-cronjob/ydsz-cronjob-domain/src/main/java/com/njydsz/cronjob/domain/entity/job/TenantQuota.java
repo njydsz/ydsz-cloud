@@ -22,7 +22,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * DB 列映射 {@code is_enabled} 通过 {@link TableField} 显式声明。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @Setter

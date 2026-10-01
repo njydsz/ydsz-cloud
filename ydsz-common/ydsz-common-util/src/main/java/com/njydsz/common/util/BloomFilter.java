@@ -30,7 +30,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * 返回 {@code true} 时元素<b>可能存在</b>（存在误判）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class BloomFilter {
 

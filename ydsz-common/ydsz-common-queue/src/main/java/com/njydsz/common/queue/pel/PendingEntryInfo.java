@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>记录消费组中 Pending 消息的元数据，用于 PEL 清理决策。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

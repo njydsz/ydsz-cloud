@@ -32,7 +32,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  * UserInfoExceptionCode#PASSWORD_TOO_WEAK}，对调用方透明。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see PasswordStrengthValidator
  */
 @Slf4j

@@ -10,7 +10,7 @@ package com.njydsz.common.socket.push;
  * @param errorCode 错误码（失败时）
  * @param errorMessage 错误描述（失败时）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record PushResult(boolean success, String messageId, String errorCode, String errorMessage) {
 

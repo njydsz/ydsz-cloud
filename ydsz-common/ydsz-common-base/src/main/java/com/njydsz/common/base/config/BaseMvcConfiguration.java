@@ -18,7 +18,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * <p>JSON 序列化统一使用 YdszJson 引擎（通过 ydsz-common-json 的 JsonHttpMessageConverter 自动注册）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public abstract class BaseMvcConfiguration implements WebMvcConfigurer {

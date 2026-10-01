@@ -32,7 +32,7 @@ import com.njydsz.common.util.security.HexUtils;
  * <p>空结果使用更短的 TTL（整体 TTL / {@link #EMPTY_TTL_RATIO}）防缓存穿透。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class SearchCacheService {

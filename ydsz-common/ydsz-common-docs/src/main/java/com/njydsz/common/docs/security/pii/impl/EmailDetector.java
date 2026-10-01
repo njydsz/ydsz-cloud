@@ -22,7 +22,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * <p>脱敏策略为"首字母 + *** + 完整域名"，与 {@link SensitiveUtil#email} 策略接近但保留了完整域名供安全审计与泄露溯源。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 public class EmailDetector implements PiiDetector {

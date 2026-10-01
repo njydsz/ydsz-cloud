@@ -84,7 +84,7 @@ import com.njydsz.nextwiki.server.service.TagApplicationService;
  * @author ydsz
  * @since 26.09.24
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @RestController
 @RequestMapping("/nextwiki/tags")

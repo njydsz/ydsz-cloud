@@ -70,14 +70,14 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.receipt.ReceiptService 消息回执服务
  * @see com.njydsz.message.domain.entity.receipt.MsgReceipt 回执实体
  * @see ReceiptCallbackDTO 回执回调 DTO
  */
 @Tag(name = "消息回执", description = "服务商回执回调与查询")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/receipt")
 @RequiredArgsConstructor

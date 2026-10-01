@@ -30,7 +30,7 @@ import org.springframework.lang.NonNull;
  * {@link ThreadPoolMetricsEndpoint} 端点或告警系统消费。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ThreadPoolTimerMetrics
  */
 @Slf4j

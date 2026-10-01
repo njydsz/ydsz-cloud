@@ -25,7 +25,7 @@ import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
  * 不支持无解析器时的降级转换（避免与 ExcelFacade 产生重复实现）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

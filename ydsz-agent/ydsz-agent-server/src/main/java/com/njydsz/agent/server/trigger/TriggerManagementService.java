@@ -22,7 +22,7 @@ import com.njydsz.common.locales.util.I18nMessages;
  * 作为触发器聚合的应用服务层，协调领域对象与仓储。</p>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

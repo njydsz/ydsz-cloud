@@ -26,7 +26,7 @@ import com.njydsz.message.domain.event.MessageDomainEvent;
  * </ol>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.30 重构为委托 common-event DomainEventPublisher 门类，删除自建 OutboxMessage 构建逻辑
  */
 @Slf4j

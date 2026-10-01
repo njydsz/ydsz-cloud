@@ -35,7 +35,7 @@ import com.njydsz.system.server.service.ConfigApprovalService;
  * @author ydsz-team
  * @since 26.09.08
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "配置变更审批", description = "配置/字典/变量变更审批流")
 @Slf4j
 @RestController

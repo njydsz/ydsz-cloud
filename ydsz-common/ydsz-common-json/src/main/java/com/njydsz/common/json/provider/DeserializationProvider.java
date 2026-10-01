@@ -55,7 +55,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * </ol>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class DeserializationProvider {
 
@@ -76,7 +76,7 @@ public final class DeserializationProvider {
    * @param clazz 目标类型
    * @param <T> 类型参数
    * @return 反序列化后的对象，bytes 为空时返回 null
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static <T> T deserialize(byte[] bytes, Class<T> clazz) {
     if (bytes == null || bytes.length == 0) {
@@ -92,7 +92,7 @@ public final class DeserializationProvider {
    * @param bytes UTF-8 编码的 JSON 字节数组
    * @param type 目标类型
    * @return 反序列化后的对象
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static Object deserializeToObject(byte[] bytes, Type type) {
     if (bytes == null || bytes.length == 0) {
@@ -702,7 +702,7 @@ public final class DeserializationProvider {
    * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法， 防止 {@link #DESERIALIZE_DEPTH} 等 ThreadLocal 值在线程池中残留。
   // CHECKSTYLE.ON: RegexpSinglelineJava
    *
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static void clearThreadLocals() {
     DESERIALIZE_DEPTH.remove();

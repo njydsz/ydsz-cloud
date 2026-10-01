@@ -82,7 +82,7 @@ import com.njydsz.system.domain.vo.VariableVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.system.infra.entity AppInfo / Config / DictItem / DictType / EntityVersion /
  *     Variable
  * @see com.njydsz.system.domain.vo AppInfoVO / ConfigVO / DictItemVO / DictTypeVO / EntityVersionVO /

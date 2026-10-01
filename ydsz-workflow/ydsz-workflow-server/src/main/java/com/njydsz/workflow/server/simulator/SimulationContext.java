@@ -16,7 +16,7 @@ import lombok.Data;
  * 模拟执行过程中跟踪当前节点、已访问节点、步骤序列等状态。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class SimulationContext implements Serializable {
@@ -53,7 +53,7 @@ public class SimulationContext implements Serializable {
   /** 结束节点编码 */
   private String endNode;
 
-  
+
   /**
    * 构造模拟执行上下文。
    *

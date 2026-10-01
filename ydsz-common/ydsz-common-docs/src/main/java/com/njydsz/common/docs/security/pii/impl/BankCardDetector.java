@@ -23,7 +23,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  * 这是文档场景的特殊需求——保留前 4 位可识别发卡行以供交易分析。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 public class BankCardDetector implements PiiDetector {

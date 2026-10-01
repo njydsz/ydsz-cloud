@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>用于大盘首屏指标卡片展示，包含规则数量、触发率、耗时分布、错误率等核心指标。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

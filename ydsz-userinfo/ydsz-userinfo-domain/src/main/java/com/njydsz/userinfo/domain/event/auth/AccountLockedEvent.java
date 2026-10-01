@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @param lockDuration 锁定持续时长（分钟），-1 表示永久锁定
  * @param reason 锁定原因
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record AccountLockedEvent(
     String userId, String username, LocalDateTime timestamp, long lockDuration, String reason) {}

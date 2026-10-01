@@ -15,7 +15,7 @@ import lombok.Data;
  * <p>封装通过指定 Agent 执行任务的请求参数， 支持 ReAct、Plan-Execute、Router 等多种 Agent 模式。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Schema(description = "Agent 执行请求")

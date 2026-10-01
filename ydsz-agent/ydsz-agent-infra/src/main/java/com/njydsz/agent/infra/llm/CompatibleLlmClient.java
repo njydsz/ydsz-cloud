@@ -59,7 +59,7 @@ import io.netty.channel.ChannelOption;
  * <p>使用 {@link WebClient} 接收 SSE 流，逐行解析 {@code data:} 前缀的 JSON 片段。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class CompatibleLlmClient implements LlmClient {

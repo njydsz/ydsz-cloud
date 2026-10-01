@@ -28,9 +28,9 @@ import com.njydsz.workflow.server.service.FlowAttachmentService;
  * <p>提供任务/实例附件查询、逻辑删除与在线预览能力。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/workflow/engine")
 @RequiredArgsConstructor

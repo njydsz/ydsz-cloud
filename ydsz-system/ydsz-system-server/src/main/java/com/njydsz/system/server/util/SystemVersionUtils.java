@@ -14,7 +14,7 @@ import com.njydsz.common.util.date.DateUtils;
  * （概率极低），如需全局强唯一，可接入分布式 ID（雪花算法）作为版本号来源。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class SystemVersionUtils {
 

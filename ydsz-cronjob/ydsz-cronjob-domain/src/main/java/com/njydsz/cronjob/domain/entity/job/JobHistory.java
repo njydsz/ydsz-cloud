@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * 与 MyBatis-Plus 逻辑删除约定一致。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Getter
 @Setter

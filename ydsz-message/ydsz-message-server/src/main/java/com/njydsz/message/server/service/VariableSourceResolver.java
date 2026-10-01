@@ -26,7 +26,7 @@ import com.njydsz.message.domain.vo.MsgVariableSourceVO;
  * <p>模板渲染前自动从 BEAN/SQL/HTTP 数据源拉取变量值。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

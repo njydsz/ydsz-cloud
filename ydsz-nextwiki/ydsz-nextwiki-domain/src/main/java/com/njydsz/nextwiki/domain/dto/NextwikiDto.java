@@ -19,7 +19,7 @@ import com.njydsz.common.domain.query.PageQuery;
  * 网盘知识库 API DTO 集合
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class NextwikiDto {
 

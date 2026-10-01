@@ -19,7 +19,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
  * <p>P0-4 增强：支持批量发送（{@link #batchSend}）和回执查询（{@link #queryReceipt}）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SmsProvider {
 

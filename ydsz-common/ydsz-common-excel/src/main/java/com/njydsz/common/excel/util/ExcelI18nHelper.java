@@ -8,7 +8,7 @@ import com.njydsz.common.util.message.MessageUtils;
  * <p>直接委托 ydsz-common-util 的 {@link MessageUtils} 获取国际化消息。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class ExcelI18nHelper {
 

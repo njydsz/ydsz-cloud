@@ -24,7 +24,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @param <DO> 数据库实体类型
  * @param <MAPPER> MyBatis Mapper 类型
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public abstract class SimpleRepositoryImpl<VO, DO, MAPPER extends BaseMapper<DO>> {
 

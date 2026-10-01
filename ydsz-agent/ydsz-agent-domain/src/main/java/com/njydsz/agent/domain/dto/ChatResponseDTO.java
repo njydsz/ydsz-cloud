@@ -16,7 +16,7 @@ import lombok.Data;
  * <p>封装 Agent 对话的响应结果，包括回复内容、 实际使用的模型、Token 用量统计和响应时间。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @AllArgsConstructor
@@ -58,7 +58,7 @@ public class ChatResponseDTO implements Serializable {
    * <p>记录单次 LLM 调用的 Token 消耗明细，用于成本分析和用量监控。
    *
    * @author ydsz-team
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Data
   @AllArgsConstructor

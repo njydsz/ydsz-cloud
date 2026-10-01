@@ -90,11 +90,11 @@ import com.njydsz.workflow.server.service.FlowTaskService;
  * 胖 Service」规范。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see FlowDefinitionService 流程定义服务
  * @see FlowDeployProcessDTO 部署参数 DTO
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "workflow-definition", description = "工作流流程定义统一接口")
 @Slf4j
 @RestController

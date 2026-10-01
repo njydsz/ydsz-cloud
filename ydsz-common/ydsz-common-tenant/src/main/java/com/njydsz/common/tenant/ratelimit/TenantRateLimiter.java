@@ -44,7 +44,7 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
  * <p><b>注意：</b>本门面是租户级限流的唯一推荐入口，各模块应避免自行实现限流逻辑， 以确保限流配额按租户维度统一管理与监控。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class TenantRateLimiter {
 

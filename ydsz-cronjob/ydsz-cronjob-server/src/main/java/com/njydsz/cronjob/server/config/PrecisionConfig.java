@@ -14,7 +14,7 @@ import lombok.Data;
  * CAS 推进 next_fire_time 互斥，不会重复派发（实现见 JobScanner/TaskPreloadScheduler）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class PrecisionConfig {

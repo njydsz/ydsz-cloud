@@ -81,13 +81,13 @@ import com.njydsz.message.server.service.batch.BatchService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.batch.BatchService 批量发送服务
  * @see com.njydsz.message.domain.entity.batch.MsgBatch 批次实体
  */
 @Slf4j
 @Tag(name = "批量发送", description = "异步批量发送与进度查询")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/batch")
 @RequiredArgsConstructor

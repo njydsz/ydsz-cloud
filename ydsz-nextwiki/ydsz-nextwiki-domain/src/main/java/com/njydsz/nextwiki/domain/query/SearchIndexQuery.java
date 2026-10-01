@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
  * <p>用于搜索索引的分页搜索查询，作为 Repository 接口查询方法的入参。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder

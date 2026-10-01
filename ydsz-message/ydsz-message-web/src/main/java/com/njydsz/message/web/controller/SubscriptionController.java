@@ -64,13 +64,13 @@ import com.njydsz.message.server.service.config.SubscriptionService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.config.SubscriptionService 订阅服务
  * @see com.njydsz.message.domain.entity.config.MsgSubscription 订阅实体
  */
 @Tag(name = "消息订阅", description = "用户主题订阅关系管理")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/subscription")
 @RequiredArgsConstructor

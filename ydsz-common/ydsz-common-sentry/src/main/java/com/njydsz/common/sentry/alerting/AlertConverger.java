@@ -29,7 +29,7 @@ import com.njydsz.common.sentry.spi.AlertPublisher;
  * <p>静默记录使用有界 Map，超出上限时移除最早过期的条目，防止高基数告警导致内存泄漏。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class AlertConverger implements AlertPublisher {

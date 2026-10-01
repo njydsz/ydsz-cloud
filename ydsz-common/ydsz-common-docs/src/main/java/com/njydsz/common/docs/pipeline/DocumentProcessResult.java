@@ -17,7 +17,7 @@ import com.njydsz.common.docs.security.pii.PiiDetectionSummary;
  * 文档管道处理结果 —— 聚合解析、安全扫描与 PII 检测三阶段输出。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

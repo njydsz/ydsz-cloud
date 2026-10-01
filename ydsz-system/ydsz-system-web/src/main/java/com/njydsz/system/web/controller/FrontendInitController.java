@@ -35,9 +35,9 @@ import com.njydsz.system.server.service.FrontendInitService;
  * <p><b>接口路径：</b>{@code /api/system/init}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "前端初始化", description = "前端启动聚合数据接口")
 @Slf4j
 @RestController

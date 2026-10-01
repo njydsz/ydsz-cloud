@@ -33,7 +33,7 @@ import com.njydsz.userinfo.domain.vo.UserSessionVO;
  * 字段包含 userId、username、roleCode、roleName、tenantId、refreshToken、deviceType、schemaVersion。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

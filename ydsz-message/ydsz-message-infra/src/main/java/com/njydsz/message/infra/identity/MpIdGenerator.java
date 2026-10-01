@@ -18,7 +18,7 @@ import com.njydsz.message.domain.identity.IdGenerator;
  * <p>domain 层 {@link IdGenerator} 接口保留（DDD 依赖倒置合理），仅替换实现体。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.14 实现体改委托 common-util SnowflakeIdGenerator（ADR-008 整改）
  */
 @Component

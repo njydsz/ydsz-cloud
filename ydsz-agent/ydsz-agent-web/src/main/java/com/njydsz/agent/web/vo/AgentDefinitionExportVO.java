@@ -14,7 +14,7 @@ import lombok.Data;
  * 由 {@link com.njydsz.common.excel.core.ExcelFacade} 流式写出到 HTTP 响应。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class AgentDefinitionExportVO implements Serializable {

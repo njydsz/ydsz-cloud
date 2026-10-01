@@ -28,7 +28,7 @@ import com.njydsz.common.auth.model.YdszAuthInfo;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see YdszAuthInfo
  */
 public abstract class BaseAuthInfo extends YdszAuthInfo {

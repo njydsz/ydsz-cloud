@@ -51,11 +51,11 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
  * <p>适用于运维人员快速定位系统异常、评估集群健康度。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Tag(name = "健康仪表盘", description = "聚合系统资源、任务、DAG、调度器多维度运行状态")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/dashboard/health")
 @RequiredArgsConstructor

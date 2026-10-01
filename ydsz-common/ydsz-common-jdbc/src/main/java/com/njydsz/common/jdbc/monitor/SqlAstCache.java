@@ -79,7 +79,7 @@ import org.springframework.stereotype.Component;
  * {@link #parse(String)} 都会构造新的 AST，请勿在同一拦截器实例中持有返回值跨请求复用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 public final class SqlAstCache {

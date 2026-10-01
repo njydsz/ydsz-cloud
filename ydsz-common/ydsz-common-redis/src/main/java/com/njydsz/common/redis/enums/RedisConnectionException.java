@@ -14,7 +14,7 @@ package com.njydsz.common.redis.enums;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class RedisConnectionException extends RedisOperationException {
 

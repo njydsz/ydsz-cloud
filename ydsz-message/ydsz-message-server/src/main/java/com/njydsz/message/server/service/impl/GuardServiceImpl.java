@@ -38,7 +38,7 @@ import com.njydsz.message.server.service.core.GuardService;
  * <p>降级策略：Redis 异常时 fail-open（返回 true），仅记 WARN 日志，不阻断业务。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

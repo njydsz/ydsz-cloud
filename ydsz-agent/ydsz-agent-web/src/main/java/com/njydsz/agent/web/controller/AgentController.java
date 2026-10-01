@@ -98,12 +98,12 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see AgentMetadataController 元数据查询接口（可用模型 / 已注册工具）
  * @see AgentFacade Agent 应用门面
  * @see AgentRequestGuard 请求守卫（幂等 + 限流 + 业务校验）
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "Agent 统一入口", description = "Agent 执行 / 对话 / 历史")
 @Slf4j
 @RestController

@@ -83,7 +83,7 @@ import com.njydsz.common.exception.custom.SysException;
  *   <li><b>Python</b>：Jython 仅支持 Python 2.7 且无依赖，不再支持
  * </ul>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -304,7 +304,7 @@ public class ScriptRule implements Rule {
    *
    * @param def 脚本规则定义
    * @return ScriptRule 实例
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static ScriptRule from(ScriptDefinitionDTO def) {
     RuleSeverity severity =
@@ -751,7 +751,7 @@ public class ScriptRule implements Rule {
    * 获取脚本语言
    *
    * @return 语言名（groovy/javascript/python）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public String getLanguage() {
     return language;

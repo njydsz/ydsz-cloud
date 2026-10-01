@@ -7,7 +7,7 @@ package com.njydsz.common.file.storage;
  * 下次 {@link #getStorage()} 将重新创建实例，可使用更新的配置。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface IFileStorageProvider {
   /**

@@ -38,7 +38,7 @@ import com.njydsz.system.server.service.DashboardService;
  * @see com.njydsz.system.server.service.DashboardService 聚合业务逻辑
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/dashboard")
 @RequiredArgsConstructor

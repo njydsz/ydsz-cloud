@@ -47,7 +47,7 @@ import com.njydsz.common.redis.health.RedisHealthIndicator;
  * <p><b>访问端点：</b>{@code GET /actuator/health/system}（由 Actuator 自动暴露）
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see org.springframework.boot.health.contributor.HealthIndicator Spring Boot 健康检查接口
  * @see com.njydsz.common.base.health.AbstractModuleHealthIndicator 通用健康检查基类
  * @see com.njydsz.common.jdbc.health.DataSourceHealthIndicator 数据源健康检查

@@ -19,7 +19,7 @@ import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
  * <p><b>不可更新字段：</b>{@code username}（登录名创建后不可修改）、{@code password}（请使用专用修改密码接口）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class UserAccountDTO implements Serializable {

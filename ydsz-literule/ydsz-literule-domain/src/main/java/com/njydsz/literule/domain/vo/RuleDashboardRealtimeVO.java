@@ -13,7 +13,7 @@ import lombok.Data;
  * <p>用于展示当前 QPS、活跃规则数等秒级实时指标。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

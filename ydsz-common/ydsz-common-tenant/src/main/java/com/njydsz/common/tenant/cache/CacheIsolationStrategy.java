@@ -16,7 +16,7 @@ import com.njydsz.common.core.context.TenantContextHolder;
  * <p>通过配置 {@code ydsz.tenant.cache-isolation-strategy} 选择策略。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public enum CacheIsolationStrategy {
 

@@ -35,7 +35,7 @@ import com.njydsz.message.server.template.cache.CachedMessageTemplateRenderer;
  * <p>ChannelRouter 为 {@code @Component}，由组件扫描自动注册，无需在此 @Bean。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Configuration

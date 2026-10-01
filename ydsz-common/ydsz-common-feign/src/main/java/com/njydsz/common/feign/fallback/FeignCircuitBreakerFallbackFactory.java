@@ -33,7 +33,7 @@ import com.njydsz.common.feign.exception.OpenFeignException;
  *
  * @param <T> Feign 客户端接口类型
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class FeignCircuitBreakerFallbackFactory<T> implements FallbackFactory<T> {
 

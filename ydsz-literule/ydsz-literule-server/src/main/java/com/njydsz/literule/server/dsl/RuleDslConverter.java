@@ -48,7 +48,7 @@ import com.njydsz.common.exception.custom.SysException;
  * List&lt;RuleChain&gt; chains = RuleDslConverter.toChains(dsl, ruleMap, evaluator);
  * </pre>
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j
@@ -185,7 +185,7 @@ public final class RuleDslConverter {
    *
    * @param entry DSL 规则条目
    * @return RuleDefinitionDTO
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static RuleDefinitionDTO toRuleDefinition(RuleDslEntry entry) {
     RuleSeverity defaultSeverity = parseSeverity(entry.getSeverity(), RuleSeverity.INFO);

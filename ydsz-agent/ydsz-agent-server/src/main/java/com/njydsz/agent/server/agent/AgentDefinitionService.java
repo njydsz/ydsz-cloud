@@ -13,7 +13,7 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
  * 使用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface AgentDefinitionService {
 

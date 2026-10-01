@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 继承 `common-base` 提供 App 端特有能力：App 认证、请求体缓存、请求追踪、健康检查、Micrometer 指标采集、`@AppApi` 作用域隔离 |
 | **依赖** | common-domain、common-base（传递 common-core、common-util、common-exception、common-json、common-auth、common-safe）、common-redis；可选：spring-boot-actuator、spring-boot-health、micrometer-core、jakarta.validation-api |
-| **版本** | 26.09.01-SNAPSHOT |
+| **版本** | 26.10.01-SNAPSHOT |
 
 ## 核心能力
 
@@ -232,5 +232,5 @@ com.njydsz.common.app.config.RequestIdGeneratorAutoConfiguration
 
 ## 变更记录
 
-- **26.09.01**（2026-08-17）：更新依赖说明，添加 `common-domain` 为直接依赖；补全 `AppFilterOrder` / `RequestIdGeneratorAutoConfiguration` 文档
-- **26.09.01**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全 Filter 链顺序表、SPI 扩展点、Micrometer 指标列表、注意事项；统一版本号
+- **26.10.01**（2026-08-17）：更新依赖说明，添加 `common-domain` 为直接依赖；补全 `AppFilterOrder` / `RequestIdGeneratorAutoConfiguration` 文档
+- **26.10.01**（2026-08-02）：按 ydsz-common-jdbc 9 章节标准重构 README；补全 Filter 链顺序表、SPI 扩展点、Micrometer 指标列表、注意事项；统一版本号

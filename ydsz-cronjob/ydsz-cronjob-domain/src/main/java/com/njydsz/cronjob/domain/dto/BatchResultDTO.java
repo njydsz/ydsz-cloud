@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
  *
  * @param <T> 批量操作项的类型（通常为 String，表示 jobId）
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @NoArgsConstructor

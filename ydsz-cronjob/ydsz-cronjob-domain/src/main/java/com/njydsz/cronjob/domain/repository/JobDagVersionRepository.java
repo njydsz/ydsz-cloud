@@ -9,7 +9,7 @@ import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
  * DAG 版本历史 Repository（domain 层契约）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface JobDagVersionRepository {
 

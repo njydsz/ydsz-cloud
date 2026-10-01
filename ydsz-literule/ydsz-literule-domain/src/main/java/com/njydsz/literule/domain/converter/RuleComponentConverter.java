@@ -22,7 +22,7 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
  * <p>承载决策表、AB 测试策略、回滚记录、规则链画布、规则模板等组件实体的 Entity ↔ VO 转换。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface RuleComponentConverter {

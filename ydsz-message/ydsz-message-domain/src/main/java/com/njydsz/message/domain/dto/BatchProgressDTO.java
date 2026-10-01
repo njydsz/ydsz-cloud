@@ -8,7 +8,7 @@ import lombok.Data;
  * 批次发送进度 VO。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class BatchProgressDTO {

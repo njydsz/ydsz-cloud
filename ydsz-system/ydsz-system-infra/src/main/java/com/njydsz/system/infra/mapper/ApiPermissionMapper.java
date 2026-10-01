@@ -27,7 +27,7 @@ import com.njydsz.system.domain.entity.ApiPermission;
  * <p><b>逻辑删除：</b>{@code deleted} 字段由 MP @TableLogic 自动处理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ApiPermission 接口权限实体
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

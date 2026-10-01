@@ -163,4 +163,4 @@ if (FeatureFlagService.isEnabled("new_checkout_flow")) {
 ## 变更记录
 
 - **2.0.0**（2026-09-01）：统一响应模型重构（YdszResponse / PageResponse / IResponse）；RequestContext 基于 TTL 传播；新增特性开关服务（FeatureFlagService + ConfigDrivenFeatureFlagService）；常量拆分（HeaderConstants / SystemConstants / PageConstants / DataScopeConstants）。
-- **26.09.01**（2026-08-02）：初始版本。
+- **26.10.01**（2026-08-02）：初始版本。

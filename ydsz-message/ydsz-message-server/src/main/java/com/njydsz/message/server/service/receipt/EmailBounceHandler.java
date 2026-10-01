@@ -26,7 +26,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  * <p>硬退信（HARD）表示邮箱永久不可达，建议后续联动用户通道绑定状态更新。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

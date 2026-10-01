@@ -65,7 +65,7 @@ import com.njydsz.message.domain.vo.MsgVariableSourceVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MessageConverter {

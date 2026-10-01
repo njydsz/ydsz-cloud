@@ -26,7 +26,7 @@ import com.njydsz.common.core.context.RequestContext;
  * 端认证质量。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see AuthHandler
  * @see AuthInfo
  * @see AuthMetrics

@@ -14,7 +14,7 @@ import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
  * 待 App 端控制器接入后补充模块特有探针（如 LLM Provider 连通性、RAG 向量存储等）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.14 改继承 AbstractModuleHealthIndicator，消除样板（P1-5 整改）
  */
 public class AgentAppHealthIndicator extends AbstractModuleHealthIndicator {

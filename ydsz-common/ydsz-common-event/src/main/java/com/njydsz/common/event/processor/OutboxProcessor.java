@@ -50,7 +50,7 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  * Counter/Timer/Gauge。现有指标命名（ydsz.outbox.*）保持兼容。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @since 26.09.19 P-2 逐条 CAS 替代批量 claim，消除高并发冲突；去除冗余重试路径
  * @since 26.09.19 P-1 推模式：订阅 OutboxNewMessageEvent 触发即时轮询
  */

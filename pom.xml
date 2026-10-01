@@ -13,7 +13,7 @@
 
     <groupId>com.njydsz</groupId>
     <artifactId>ydsz-cloud</artifactId>
-    <version>26.09.01-SNAPSHOT</version>
+    <version>26.10.01-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>ydsz-cloud</name>
     <description>Ydsz Cloud — 企业级微服务开发平台，基于 Spring Boot 4 &amp; Spring Cloud , DDD 分层架构，覆盖认证、工作流、消息、调度、规则引擎、AI 智能体等业务场景</description>
@@ -34,8 +34,8 @@
 
     <properties>
         <!--ydsz-->
-        <revision>26.09.01-SNAPSHOT</revision>
-        <ydsz.version>26.09.01-SNAPSHOT</ydsz.version>
+        <revision>26.10.01-SNAPSHOT</revision>
+        <ydsz.version>26.10.01-SNAPSHOT</ydsz.version>
         <!--utf8-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -1189,7 +1189,7 @@
     </dependencyManagement>
 
     <!-- 项目规范禁止 Flyway / Liquibase（见 deploy/sql/README.md §1） -->
-    <!-- 所有 schema 变更直接编辑 deploy/sql/V26.09.01.sql 单文件，禁止增量脚本 -->
+    <!-- 所有 schema 变更直接编辑 deploy/sql/V26.10.01.sql 单文件，禁止增量脚本 -->
 
     <dependencies>
         <!-- Lombok（所有子模块） -->

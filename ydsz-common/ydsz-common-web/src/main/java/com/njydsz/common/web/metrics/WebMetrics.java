@@ -29,7 +29,7 @@ import io.micrometer.core.instrument.Timer;
  * @see MeterRegistry
  * @see Counter
  * @see Timer
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class WebMetrics {
 

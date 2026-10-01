@@ -19,7 +19,7 @@ import com.njydsz.agent.domain.channel.ChannelType;
  * 实现渠道间的错误隔离，单个渠道异常不影响其他渠道。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class ChannelAdapterRegistry {

@@ -23,13 +23,13 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>HALF_OPEN → 探测失败 → OPEN
  * </ul>
  *
- * <h3>26.09.01 变更</h3>
+ * <h3>26.10.01 变更</h3>
  *
- * <p>自 26.09.01 起，委托 Resilience4j CircuitBreaker，移除自研 AbstractCircuitBreaker 继承体系，
+ * <p>自 26.10.01 起，委托 Resilience4j CircuitBreaker，移除自研 AbstractCircuitBreaker 继承体系，
  * 复用经过生产验证的 Resilience4j 滑动窗口、状态机、指标等核心能力。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class WebSocketCircuitBreaker {

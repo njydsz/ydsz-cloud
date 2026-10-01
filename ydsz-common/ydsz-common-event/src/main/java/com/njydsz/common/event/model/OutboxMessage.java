@@ -35,8 +35,8 @@ import lombok.ToString;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
- * @since 26.09.01 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段， 移除非约定的 mutable state
+ * @since 26.10.01
+ * @since 26.10.01 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段， 移除非约定的 mutable state
  *     方法（markAsProcessing/Sent/Failed）和 fromDraft 工厂方法， 实体回归纯 POJO + Builder 模式
  * @since 26.09.19 E-2 字段对齐：deduplicationId → idempotencyKey，对齐 DDL 列名 idempotency_key
  * @since 26.09.19 O-4 增加 schemaVersion 字段（默认 1），用于事件 schema 向前兼容

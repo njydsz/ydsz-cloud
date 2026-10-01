@@ -1,10 +1,10 @@
 [INFO] Scanning for projects...
-[INFO] 
+[INFO]
 [INFO] --------------------< com.njydsz:ydsz-common-excel >--------------------
-[INFO] Building ydsz-common-excel 26.09.01-SNAPSHOT
+[INFO] Building ydsz-common-excel 26.10.01-SNAPSHOT
 [INFO]   from pom.xml
 [INFO] --------------------------------[ jar ]---------------------------------
-[INFO] 
+[INFO]
 [INFO] --- exec:3.5.0:java (default-cli) @ ydsz-common-excel ---
 ==============================================================
   REAL COMPETITIVE BENCHMARK — ydsz-common-excel

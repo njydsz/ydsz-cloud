@@ -45,7 +45,7 @@ import com.njydsz.common.json.spring.JsonProperties;
  * spring.autoconfigure.exclude}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @EnableConfigurationProperties(JsonProperties.class)
@@ -97,7 +97,7 @@ public class JsonAutoConfiguration {
    * PropertyNamingStrategy} 接口常量。
    *
    * @return Converter 实例
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Bean
   @ConditionalOnMissingBean(name = "namingStrategyConverter")
@@ -126,7 +126,7 @@ public class JsonAutoConfiguration {
    *
    * @param applicationContext Spring 应用上下文
    * @return 预热 Runner
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Bean
   @ConditionalOnProperty(prefix = "ydsz.json", name = "warmup-enabled", havingValue = "true")
@@ -241,7 +241,7 @@ public class JsonAutoConfiguration {
      *
      * <p>防止 Spring 容器重启（如热部署、测试多次启动）时， 全局静态缓存中的旧元数据与 ThreadLocal 残留影响新容器实例。
      *
-     * @since 26.09.01
+     * @since 26.10.01
      */
     @PreDestroy
     public void destroy() {

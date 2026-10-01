@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Bean;
  * <p><b>启用条件：</b>当 {@code ydsz.skywalking.enabled=true} 时生效（默认启用）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnProperty(

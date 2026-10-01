@@ -18,7 +18,7 @@ import com.njydsz.common.json.YdszJson;
  * 每个事件以两个换行符（{@code \n\n}）结尾。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class SseEventSerializer {
 

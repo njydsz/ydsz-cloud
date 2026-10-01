@@ -17,7 +17,7 @@ import com.njydsz.common.audit.domain.AuditLog;
  * <p><b>线程安全：</b>本类无状态，{@link AuditWriter} 实现需自身保证线程安全。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class DefaultAuditRecorder implements AuditRecorder {
 

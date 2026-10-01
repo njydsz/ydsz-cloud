@@ -20,7 +20,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
  * <p>对应数据库表 ydsz_auth_credential，存储用户注册的公钥凭证。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")

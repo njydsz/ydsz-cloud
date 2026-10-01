@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * <p>26.09.19 重构：从 {@link ThreadPoolAutoConfiguration} 内部类提取为独立顶级类（P2-1）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ThreadPoolMetricsPostProcessor implements BeanPostProcessor, BeanFactoryAware {
 

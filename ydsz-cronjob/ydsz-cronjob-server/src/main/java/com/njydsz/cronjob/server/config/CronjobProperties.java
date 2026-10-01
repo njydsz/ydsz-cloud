@@ -31,7 +31,7 @@ import org.springframework.validation.annotation.Validated;
  * 实现启动即报错。子配置类（{@link LeaderConfig}、{@link NodeConfig}）通过字段级 JSR-380 注解约束。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Configuration

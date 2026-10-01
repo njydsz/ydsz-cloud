@@ -26,7 +26,7 @@ import static lombok.AccessLevel.PROTECTED;
  * @author ydsz-team
  * @see PageQueryRiskAssessor
  * @see DeepPaginationRisk
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @SuperBuilder
@@ -105,7 +105,7 @@ public class PageQuery extends BaseQuery {
    * @param column 排序列名（必须通过 SQL 安全白名单校验）
    * @return 当前查询对象（支持链式调用）
    * @throws IllegalArgumentException 当列名包含非法字符时
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public PageQuery addAscOrder(String column) {
     validateOrderColumn(column);
@@ -125,7 +125,7 @@ public class PageQuery extends BaseQuery {
    * @param column 排序列名（必须通过 SQL 安全白名单校验）
    * @return 当前查询对象（支持链式调用）
    * @throws IllegalArgumentException 当列名包含非法字符时
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public PageQuery addDescOrder(String column) {
     validateOrderColumn(column);
@@ -181,7 +181,7 @@ public class PageQuery extends BaseQuery {
    * 钩子通知子类）。REJECT 级别由 {@code SafeQueryInnerInterceptor} 在 SQL 执行前被动拦截。
    *
    * @return 偏移量（从 0 开始）
-   * @since 26.09.01
+   * @since 26.10.01
    * @since 26.09.30 增加深度分页风险评估自动触发
    */
   public int getOffset() {
@@ -196,7 +196,7 @@ public class PageQuery extends BaseQuery {
    *
    * @return 偏移量
    * @see #getOffset()
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public long getOffsetLong() {
     assessDeepPagination();

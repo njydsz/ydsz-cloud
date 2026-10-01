@@ -40,7 +40,7 @@ import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
  * 空办理人兜底等多重职责，本次拆分将空办理人兜底逻辑抽出为独立服务，使各职责边界更清晰。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.workflow.server.service.impl.instance.FlowTaskCreateService 任务创建服务（调用方）
  * @see AssigneeResolutionService 办理人解析服务
  */
@@ -248,7 +248,7 @@ public class EmptyAssigneeStrategyService {
     private final FlowNodeVO node;
     private final Map<String, Object> variables;
 
-    
+
     /**
      * 构造空办理人策略推进上下文。
      *

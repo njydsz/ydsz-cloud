@@ -67,7 +67,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  * {@code @ConditionalOnMissingBean} 机制）。 禁用本实现：{@code ydsz.notify.insite.enabled=false}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Component
 @ConditionalOnProperty(prefix = "ydsz.notify.insite", name = "enabled", havingValue = "true")

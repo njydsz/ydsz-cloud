@@ -27,7 +27,7 @@ import com.njydsz.userinfo.domain.entity.Language;
  * <p><b>删除约束：</b>默认语言（{@code isDefault=true}）<b>禁止删除</b>，避免后端文案回退链断裂。 由 Service 层在删除前校验。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.domain.entity.Language 语言实体
  */
 @Mapper

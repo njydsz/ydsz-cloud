@@ -38,7 +38,7 @@ import com.njydsz.common.search.core.IndexDocument;
  *
  * @param <T> 实体类型
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface SearchProvider<T> {
 

@@ -41,7 +41,7 @@ import lombok.Data;
  * VO 面向数据输出场景，承载领域层的输出契约。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowInstanceDTO implements Serializable {

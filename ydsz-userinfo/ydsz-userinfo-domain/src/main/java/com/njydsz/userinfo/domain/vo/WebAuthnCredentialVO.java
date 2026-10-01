@@ -11,7 +11,7 @@ import lombok.Data;
  * <p>存储用户注册的无密码认证凭证（公钥凭证），用于后续认证时验证签名。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class WebAuthnCredentialVO implements Serializable {

@@ -14,7 +14,7 @@ import com.njydsz.workflow.domain.entity.FlowDefinition;
  * <p>用于 Controller 层返回流程定义数据，对应实体 {@link FlowDefinition}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowDefinitionVO implements Serializable {

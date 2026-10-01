@@ -42,11 +42,11 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
  * <p>注意：子任务分片策略由 {@code MapTaskExecutor} 决定，本 Controller 仅负责查询。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Tag(name = "MapReduce 子任务查询", description = "子任务列表/分页/进度汇总")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/cronjob/task")
 @RequiredArgsConstructor

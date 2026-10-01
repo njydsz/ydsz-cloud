@@ -22,7 +22,7 @@ import lombok.Data;
  * <p>缓存策略：每 24 小时刷新一次；API 不可用时仍使用任务级手动配置的 holidays。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class HolidayConfig {

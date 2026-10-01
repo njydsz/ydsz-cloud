@@ -61,10 +61,10 @@ import com.njydsz.common.safe.idempotent.annotation.Idempotent;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/agent/approvals")
 @RequiredArgsConstructor

@@ -29,7 +29,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p><b>使用方式：</b> 通常由 {@link XssFilter} 创建并传递给 FilterChain。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see XssFilter
  * @see EscapeUtils
  */

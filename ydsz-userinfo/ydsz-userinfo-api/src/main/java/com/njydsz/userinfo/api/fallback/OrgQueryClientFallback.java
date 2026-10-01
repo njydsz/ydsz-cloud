@@ -26,7 +26,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * <p>注意：必须返回 error 而非 success(null/emptyList/emptyMap)，否则调用方通过 {@code isSuccess()} 检查会误判为查询成功（结果为空）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

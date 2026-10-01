@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * 由 {@code YdszExceptionHandlerAutoConfiguration} 自动装配 MessageSource/Metrics/Properties。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RestControllerAdvice

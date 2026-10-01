@@ -20,7 +20,7 @@ import com.njydsz.common.netty.exception.NettyException;
  * failFast=false} 时仅记录错误日志。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class NettyServerLifecycle implements SmartLifecycle {

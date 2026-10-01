@@ -13,7 +13,7 @@ import com.njydsz.system.app.openapi.SystemAppOpenApiConfiguration;
  * 系统管理模块 App 端自动配置。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @AutoConfiguration
 @ConditionalOnPlatform(PlatformMode.APP)

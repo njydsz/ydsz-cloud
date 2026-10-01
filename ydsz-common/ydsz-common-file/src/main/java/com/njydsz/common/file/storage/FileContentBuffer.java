@@ -26,7 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
  * <p><b>资源释放：</b>本接口继承 {@link AutoCloseable}，必须在 {@code try-with-resources} 中使用，确保临时文件被清理。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface FileContentBuffer extends AutoCloseable {
 

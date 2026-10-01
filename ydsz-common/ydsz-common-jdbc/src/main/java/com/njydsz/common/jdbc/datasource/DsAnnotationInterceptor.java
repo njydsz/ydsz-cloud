@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.annotation.DS;
  * <p>支持 SpEL 表达式动态解析数据源名称。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class DsAnnotationInterceptor implements MethodInterceptor {
 

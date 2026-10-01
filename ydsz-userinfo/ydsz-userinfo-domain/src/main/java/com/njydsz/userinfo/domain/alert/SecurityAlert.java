@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
  * @param handledAt 处理时间
  * @param handlerNote 处理备注
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public record SecurityAlert(
     String id,

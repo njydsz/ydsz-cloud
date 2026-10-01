@@ -13,7 +13,7 @@ import com.njydsz.userinfo.domain.entity.SecurityAlertEntity;
  * <p>提供 SecurityAlertEntity ↔ SecurityAlert 的转换方法。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper(componentModel = "spring")
 @Component

@@ -36,7 +36,7 @@ import com.njydsz.common.docs.enums.SecurityLevel;
  * <p>当 {@link MeterRegistry} 不在 Classpath 时，指标采集静默降级为空操作。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

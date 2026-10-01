@@ -69,13 +69,13 @@ import com.njydsz.message.server.service.receipt.RecallService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.receipt.RecallService 消息撤回服务
  * @see RecallRequestDTO 撤回请求 DTO
  */
 @Tag(name = "消息撤回", description = "通知/消息撤回")
 @Slf4j
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message/recall")
 @RequiredArgsConstructor

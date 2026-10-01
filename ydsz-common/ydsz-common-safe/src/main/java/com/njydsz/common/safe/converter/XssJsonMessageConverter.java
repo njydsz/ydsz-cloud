@@ -34,7 +34,7 @@ import com.njydsz.common.safe.xss.EscapeUtils;
  * Filter 模式和 Advice 模式互斥。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see JsonHttpMessageConverter
  * @see EscapeUtils
  */

@@ -27,7 +27,7 @@ import com.njydsz.message.server.service.config.SubscriptionService;
  * <p>发布时根据订阅关系生成接收人列表。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

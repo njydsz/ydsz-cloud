@@ -31,7 +31,7 @@ import com.njydsz.message.domain.vo.MsgTenantConfigVO;
  * 不引入 Jackson 依赖。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>此报告器为纯工具类，不依赖 Spring 上下文，可在任何 Netty Server 启动场景使用。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see NettyPipelineDiagnostics
  */
 @Slf4j

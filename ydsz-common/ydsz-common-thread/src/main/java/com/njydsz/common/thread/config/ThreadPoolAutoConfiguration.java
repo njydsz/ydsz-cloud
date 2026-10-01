@@ -59,7 +59,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * private ThreadPoolTaskExecutor ioExecutor;
  * }</pre>
  *
- * <p><b>26.09.01 变更：</b>
+ * <p><b>26.10.01 变更：</b>
  *
  * <ul>
  *   <li>新增 {@link ThreadPoolMetrics} / {@link com.njydsz.common.thread.metrics.VirtualThreadMetrics} 自动注册
@@ -74,7 +74,7 @@ import com.njydsz.common.thread.registry.ThreadPoolRegistry;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see ThreadPoolProperties
  * @see com.njydsz.common.thread.health.ThreadHealthIndicator
  */
@@ -151,11 +151,11 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>该 Bean 负责在 Spring 容器初始化阶段动态注册线程池和指标绑定器 BeanDefinition。 通过 {@link
    * BeanDefinitionRegistryPostProcessor} 在所有常规 BeanDefinition 加载完成后、 Bean 实例化之前执行注册逻辑。
    *
-   * <p>26.09.01 修复：显式声明为 {@code @Bean}， 修复 {@link ThreadPoolRegistrar} 因缺少组件原型注解导致装配链路断裂的问题。
+   * <p>26.10.01 修复：显式声明为 {@code @Bean}， 修复 {@link ThreadPoolRegistrar} 因缺少组件原型注解导致装配链路断裂的问题。
    *
    * @param properties 线程池配置属性
    * @return 线程池注册器
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -170,7 +170,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>供下游模块（如消息通道 Bulkhead 隔离）按名称查找线程池并组装为业务 Map。 虚拟线程池（{@link ExecutorService}）不在此返回范围内。
    *
    * @return Bean 名称 → ThreadPoolTaskExecutor 的映射；无线程池时返回空 Map
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public Map<String, ThreadPoolTaskExecutor> getExecutors() {
     if (applicationContext == null) {
@@ -191,7 +191,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    *
    * @param meterRegistryProvider Micrometer MeterRegistry 提供者（可选）
    * @return ThreadPoolRegistryMetrics 指标绑定器
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -217,7 +217,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>仅在 Spring Boot Actuator 和端点基础设施存在时注册。
    *
    * @return ThreadPoolMetricsEndpoint 实例
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
@@ -235,10 +235,10 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
    * <p>通过 BeanPostProcessor 而非构造器注入避免循环依赖： ThreadPoolTaskExecutor → 拒绝策略 → MeteredRejectedHandler →
    * ThreadPoolMetrics → ThreadPoolTaskExecutor。
    *
-   * <p>26.09.01 重构：{@link ThreadPoolRegistrar} 已提取为独立组件类。
+   * <p>26.10.01 重构：{@link ThreadPoolRegistrar} 已提取为独立组件类。
    *
    * @return 装配后处理器
-   * @since 26.09.01
+   * @since 26.10.01
    */
   @Bean
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)

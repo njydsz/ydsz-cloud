@@ -50,7 +50,7 @@ import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
  *       otel:
  *         enabled: true
  *         service-name: ydsz-order
- *         service-version: 26.09.01
+ *         service-version: 26.10.01
  *         sampler: parent-based
  *         sampler-ratio: 0.1
  *         tail-sampling:
@@ -65,7 +65,7 @@ import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
@@ -178,7 +178,7 @@ public class OtelAutoConfiguration {
                   .serviceVersion(
                       otelConfig.getServiceVersion() != null
                           ? otelConfig.getServiceVersion()
-                          : "26.09.01")
+                          : "26.10.01")
                   .serviceNamespace(otelConfig.getServiceNamespace())
                   .environment(sentryProperties.getProfile())
                   .customAttributes(otelConfig.getResourceAttributes())

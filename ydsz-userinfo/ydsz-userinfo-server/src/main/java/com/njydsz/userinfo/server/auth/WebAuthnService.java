@@ -74,7 +74,7 @@ import com.njydsz.userinfo.server.config.WebAuthnProperties;
  * </ol>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

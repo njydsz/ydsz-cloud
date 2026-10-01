@@ -17,7 +17,7 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
  * <p>封装单次限流决策的完整结果，包括是否通过、剩余配额、等待时间等。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Builder

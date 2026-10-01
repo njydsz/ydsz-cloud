@@ -15,7 +15,7 @@ import com.njydsz.workflow.domain.entity.FlowRunTask;
  * <p>用于 Controller 层返回待办/已办任务数据，对应实体 {@link FlowRunTask}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 public class FlowRunTaskVO implements Serializable {

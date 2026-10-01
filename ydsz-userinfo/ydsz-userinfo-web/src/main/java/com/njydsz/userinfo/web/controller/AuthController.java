@@ -80,11 +80,11 @@ import com.njydsz.userinfo.server.auth.WebAuthnService;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.userinfo.server.auth.AuthService 认证业务逻辑
  * @see com.njydsz.userinfo.web.controller.OAuth2Controller OAuth2.0 授权端点
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @Tag(name = "认证管理", description = "登录/登出/Token 刷新")
 @RestController

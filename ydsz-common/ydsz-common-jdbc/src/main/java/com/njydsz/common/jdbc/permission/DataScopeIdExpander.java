@@ -17,7 +17,7 @@ import java.util.Set;
  * <p>未提供实现时由 {@link NoopDataScopeIdExpander} 兜底（原样返回，不扩展下级）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see NoopDataScopeIdExpander
  */
 public interface DataScopeIdExpander {

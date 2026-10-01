@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * 等主流链路追踪系统。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class TraceIdGenerator {
 
@@ -86,7 +86,7 @@ public final class TraceIdGenerator {
    * <p>默认使用可排序版本（{@link #generateSortableTraceId()}），按时间有序，适合日志关联和链路追踪场景。
    *
    * @return 32 位小写十六进制字符串
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static String generateTraceId() {
     return generateSortableTraceId();
@@ -108,7 +108,7 @@ public final class TraceIdGenerator {
    * <p>本方法使用全局原子计数器 + 轻量级同步块维护时间戳+序号状态，无锁时间占绝大部分，适合高并发场景下生成有序 traceId。
    *
    * @return 32 位小写十六进制字符串（时间有序）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static String generateSortableTraceId() {
     byte[] bytes = new byte[TRACE_ID_BYTES];
@@ -142,7 +142,7 @@ public final class TraceIdGenerator {
    *
    * @param nowMillis 当前毫秒时间戳
    * @return 当前使用的序号（0 ~ MAX_SEQ_PER_MS）
-   * @since 26.09.01
+   * @since 26.10.01
    */
   private static long nextGlobalSeq(long nowMillis) {
     synchronized (SEQ_LOCK) {
@@ -172,7 +172,7 @@ public final class TraceIdGenerator {
    * <p>SpanId 用于标识一次分布式调用中的单个操作，符合 W3C Trace Context 规范。
    *
    * @return 16 位十六进制字符串
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static String generateSpanId() {
     byte[] bytes = new byte[SPAN_ID_BYTES];
@@ -195,7 +195,7 @@ public final class TraceIdGenerator {
    * <p>直接赋值给 HTTP header {@code traceparent} 即可对接 SkyWalking/Jaeger/Zipkin。
    *
    * @return W3C traceparent header 值
-   * @since 26.09.01
+   * @since 26.10.01
    * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
    */
   public static String traceparentHeader() {
@@ -210,7 +210,7 @@ public final class TraceIdGenerator {
    * @param traceId 上游传入的 traceId（32 位十六进制）
    * @param spanId 当前服务生成的 spanId（16 位十六进制）
    * @return W3C traceparent header 值
-   * @since 26.09.01
+   * @since 26.10.01
    */
   public static String traceparentHeader(String traceId, String spanId) {
     return "00-" + traceId + "-" + spanId + "-01";
@@ -224,7 +224,7 @@ public final class TraceIdGenerator {
    *
    * @param traceparent W3C traceparent 字符串，非空
    * @return 解析结果；格式非法时返回 null
-   * @since 26.09.01
+   * @since 26.10.01
    * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
    */
   public static ParsedTraceparent parseTraceparent(String traceparent) {
@@ -251,7 +251,7 @@ public final class TraceIdGenerator {
    * @param traceId 32 位十六进制 traceId
    * @param spanId 16 位十六进制 spanId（注入后可作为 parentSpanId）
    * @param traceFlags 2 位十六进制 traceFlags（{@code 01} = sampled）
-   * @since 26.09.01
+   * @since 26.10.01
    * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
    */
   public record ParsedTraceparent(int version, String traceId, String spanId, int traceFlags) {}
@@ -270,7 +270,7 @@ public final class TraceIdGenerator {
    * </ul>
    *
    * @return 32 位小写十六进制字符串
-   * @since 26.09.01
+   * @since 26.10.01
    * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
    */
   public static String generateW3CTraceId() {
@@ -286,7 +286,7 @@ public final class TraceIdGenerator {
    * 配套使用，用于 W3C Trace Context 标准场景。
    *
    * @return 16 位小写十六进制字符串
-   * @since 26.09.01
+   * @since 26.10.01
    * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
    */
   public static String generateW3CSpanId() {

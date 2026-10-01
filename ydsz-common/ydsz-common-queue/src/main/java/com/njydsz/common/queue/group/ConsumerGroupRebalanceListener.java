@@ -24,7 +24,7 @@ package com.njydsz.common.queue.group;
  * }</pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @FunctionalInterface
 public interface ConsumerGroupRebalanceListener {

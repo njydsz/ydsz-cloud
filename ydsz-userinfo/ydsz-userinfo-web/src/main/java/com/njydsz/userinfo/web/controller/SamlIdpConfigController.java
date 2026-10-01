@@ -35,9 +35,9 @@ import com.njydsz.userinfo.server.service.SamlIdpConfigService;
  * <p><b>接口路径：</b>{@code /api/saml-idp-config}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Slf4j
 @Tag(name = "SAML IdP 配置", description = "SAML 身份提供者配置管理（多租户）")
 @RestController

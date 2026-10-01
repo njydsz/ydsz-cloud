@@ -22,7 +22,7 @@ import com.njydsz.workflow.server.service.FlowJoinTokenService;
  * 替代手写 Lua 脚本，保证原子性同时提升可维护性。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

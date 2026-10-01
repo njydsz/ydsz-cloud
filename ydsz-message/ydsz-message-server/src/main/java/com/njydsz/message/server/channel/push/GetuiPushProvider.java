@@ -35,7 +35,7 @@ import com.njydsz.message.server.config.MessageProperties;
  * <p>目标设备标识来源：优先 {@code channelMeta.deviceToken}，回退 {@code receiver}。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

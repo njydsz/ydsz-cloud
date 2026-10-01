@@ -8,7 +8,7 @@ import java.io.OutputStream;
  * <p>定义将 Markdown 内容渲染为各种文档格式的操作。</p>
  *
  * @author ydsz-agent
- * @since 26.09.01
+ * @since 26.10.01
  */
 public interface DocumentRenderService {
 

@@ -95,9 +95,9 @@ import com.njydsz.cronjob.server.vo.JobLogExportVO;
  * </pre>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @Tag(name = "任务调度", description = "任务 CRUD、暂停/恢复、立即触发、Cron 校验、批量操作")
 @Slf4j
 @RestController

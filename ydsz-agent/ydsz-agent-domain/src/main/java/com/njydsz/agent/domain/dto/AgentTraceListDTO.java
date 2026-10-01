@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * @param startedAt 开始时间
  * @param durationMs 执行耗时（毫秒）
  * @param stepCount 执行步骤数
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 public record AgentTraceListDTO(

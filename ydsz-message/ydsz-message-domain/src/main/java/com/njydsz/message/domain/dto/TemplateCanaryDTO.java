@@ -11,7 +11,7 @@ import lombok.Data;
  * 模板灰度发布请求 DTO（P2-F4）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Data
 @Schema(description = "模板灰度发布请求")

@@ -35,7 +35,7 @@ import java.util.Map;
  * <p><b>线程安全</b>：不可变值对象，使用 {@code List.copyOf} / {@code Map.copyOf} 封装集合字段。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public final class SseEvent {
   /** 集合初始容量 */

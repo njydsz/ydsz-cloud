@@ -91,14 +91,14 @@ import com.njydsz.message.web.vo.MsgLogExportVO;
  * </ul>
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  * @see com.njydsz.message.server.service.core.MessageService 消息发送服务
  * @see com.njydsz.message.domain.dto.MessageItemRequestDTO 共享消息请求 DTO
  * @see com.njydsz.message.domain.enums.core.SendStrategyEnum 发送策略枚举
  */
 @Slf4j
 @Tag(name = "消息发送", description = "消息发送与发送日志查询")
-@ApiVersion("26.09.01")
+@ApiVersion("26.10.01")
 @RestController
 @RequestMapping("/message")
 @RequiredArgsConstructor

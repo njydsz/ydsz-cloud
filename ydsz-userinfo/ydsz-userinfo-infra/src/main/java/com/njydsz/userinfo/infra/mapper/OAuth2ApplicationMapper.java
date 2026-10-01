@@ -11,7 +11,7 @@ import com.njydsz.userinfo.domain.entity.OAuth2ApplicationEntity;
  * <p>对应数据表 {@code ydsz_idp_oauth2_application}，提供 OAuth2 应用记录的 CRUD 操作。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Mapper
 public interface OAuth2ApplicationMapper extends BaseMapper<OAuth2ApplicationEntity> {}

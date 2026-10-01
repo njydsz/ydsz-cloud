@@ -31,7 +31,7 @@ import com.njydsz.nextwiki.domain.vo.FileNodeVO;
  * 密码哈希由 server 层完成后传入；Redis 防暴力破解由 server 层负责。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @RequiredArgsConstructor

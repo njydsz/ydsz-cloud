@@ -27,7 +27,7 @@ import com.njydsz.common.util.mask.MaskUtils;
  * SensitiveSerializer} 支持 handlerName 参数。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Component

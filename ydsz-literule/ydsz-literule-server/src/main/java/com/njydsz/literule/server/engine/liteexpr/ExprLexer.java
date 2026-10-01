@@ -25,7 +25,7 @@ import com.njydsz.common.locales.util.I18n;
  *
  * <p>每个 Token 携带精确的行列位置，用于前端错误高亮。
  *
- * @since 26.09.01
+ * @since 26.10.01
  */
 
 /**
@@ -34,7 +34,7 @@ import com.njydsz.common.locales.util.I18n;
  * <p>所属包：{@code com.njydsz.literule.server.engine.liteexpr}
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 public class ExprLexer {
 

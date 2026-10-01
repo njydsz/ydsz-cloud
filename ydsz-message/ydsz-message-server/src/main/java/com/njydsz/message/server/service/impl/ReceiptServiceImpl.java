@@ -28,7 +28,7 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
  * <p>回执更新触发 {@code OperationLog} 异步落库与前端实时通知。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 @Service

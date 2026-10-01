@@ -9,10 +9,10 @@ import com.njydsz.common.base.health.AbstractModuleHealthIndicator;
 /**
  * 工作流 App 端健康检查指示器。
  *
- * <p><b>架构合规说明（26.09.01 DDD 分层规范）：</b>App 端独立健康检查入口（符合 §34.2.5）。
+ * <p><b>架构合规说明（26.10.01 DDD 分层规范）：</b>App 端独立健康检查入口（符合 §34.2.5）。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @ConditionalOnClass(HealthIndicator.class)
 public class WorkflowAppHealthIndicator extends AbstractModuleHealthIndicator {

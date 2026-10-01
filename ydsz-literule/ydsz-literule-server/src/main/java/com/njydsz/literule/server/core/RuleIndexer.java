@@ -33,7 +33,7 @@ import com.njydsz.literule.domain.enums.RuleEnvironment;
  *
  * <p>1.6.0 起新增环境维度索引（P1-5）：与 tenantId 维度正交，支持 dev/staging/prod 环境隔离。
  *
- * @since 26.09.01
+ * @since 26.10.01
  * @author ydsz-team
  */
 @Slf4j

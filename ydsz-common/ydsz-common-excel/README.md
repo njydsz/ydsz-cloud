@@ -237,4 +237,4 @@ RawSheetData rawSheet = ExcelFacade.readRaw(inputStream, 0);
 ## 变更记录
 
 - **2.1.0**（2026-09-01）：FormulaInjectionGuard 公式注入防护默认开启；新增 ExcelWebSupport 自动处理下载响应头；优化 SuperFast 字符串驻留策略；新增 Micrometer 指标。
-- **26.09.01**（2026-08-02）：初始版本，双引擎架构（SuperFast + POI）。
+- **26.10.01**（2026-08-02）：初始版本，双引擎架构（SuperFast + POI）。

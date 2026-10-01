@@ -49,7 +49,7 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  * 不直接操作 {@link MeterRegistry}。监控指标通过 {@code MetricsCollector} SPI 统一上报。
  *
  * @author ydsz-team
- * @since 26.09.01
+ * @since 26.10.01
  */
 @Slf4j
 public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implements MessageTemplateRenderer {
