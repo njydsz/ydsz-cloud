@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
@@ -28,9 +29,11 @@ public class DagWorkflow extends MpBaseEntity<String> {
   private String workflowCode;
 
   /** 工作流名称 */
+  @TableField("workflow_name")
   private String name;
 
   /** DAG 定义（YAML DSL） */
+  @TableField("dsl_content")
   private String dsl;
 
   /** 工作流描述 */

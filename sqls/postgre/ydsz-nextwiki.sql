@@ -572,6 +572,10 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
+    -- P2-3: 文件模板扩展字段
+    template_type            VARCHAR(32)              DEFAULT 'space',
+    source_node_id           VARCHAR(32)              DEFAULT NULL,
+    visibility               VARCHAR(32)              DEFAULT 'system',
     CONSTRAINT pk_ydsz_wiki_space_template PRIMARY KEY (id)
 );
 
@@ -592,6 +596,9 @@ COMMENT ON COLUMN ydsz_wiki_space_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_wiki_space_template.updated_at IS '最后更新时间';
 COMMENT ON COLUMN ydsz_wiki_space_template.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_wiki_space_template.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_wiki_space_template.template_type IS '模板类型：space=空间模板，file=文件模板（P2-3: 文件模板扩展）';
+COMMENT ON COLUMN ydsz_wiki_space_template.source_node_id IS '源文件节点 ID（templateType=file 时必填）';
+COMMENT ON COLUMN ydsz_wiki_space_template.visibility IS '可见性级别：system=系统内置，org=组织内可见，private=仅创建者可见';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_tenant_category ON ydsz_wiki_space_template (tenant_id, category);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_is_system_is_public_access ON ydsz_wiki_space_template (is_system, is_public_access);
