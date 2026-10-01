@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.event.consumer.OutboxIdempotentConsumer;
 import com.njydsz.common.event.consumer.OutboxSubscriber;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.json.YdszJson;
@@ -47,6 +48,7 @@ public class WebhookOutboxSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   @Override
+  @OutboxIdempotentConsumer(idempotencyKey = "#message.id", expireSeconds = 3600)
   public void onMessage(OutboxMessage message) {
     try {
       Map<String, Object> payload = parsePayload(message.getPayload());

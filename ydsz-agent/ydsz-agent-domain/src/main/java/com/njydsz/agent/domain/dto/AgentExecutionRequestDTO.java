@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -37,10 +38,12 @@ public class AgentExecutionRequestDTO implements Serializable {
   /** 用户输入内容（必填） */
   @NotBlank(message = "用户输入不能为空")
   @Schema(description = "用户输入", requiredMode = Schema.RequiredMode.REQUIRED)
+  @Xss(message = "用户输入包含非法字符")
   private String userInput;
 
   /** 系统提示词（可选，覆盖 Agent 默认配置） */
   @Schema(description = "系统提示词（可选，覆盖默认）")
+  @Xss(message = "系统提示词包含非法字符")
   private String systemPrompt;
 
   /** 最大迭代次数（ReAct 模式下生效，默认 10） */

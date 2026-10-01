@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,6 +26,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
+import com.njydsz.common.safe.alert.SecurityEvent;
+import com.njydsz.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.common.safe.ratelimit.algorithm.RateLimiterFactory;
 import com.njydsz.common.safe.ratelimit.cluster.RedisClusterRateLimiter;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
@@ -88,6 +92,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   private final StringRedisTemplate redisTemplate;
   private final GatewayMetrics gatewayMetrics;
   private final LocalRateLimiter localRateLimiter;
+  private final ObjectProvider<SecurityEventPublisher> securityEventPublisherProvider;
 
   /** Redis 连续失败计数器（超过阈值时限流降级放行）。 */
   private static final int CIRCUIT_THRESHOLD = 5;
@@ -418,6 +423,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     }
 
     gatewayMetrics.incrementRatelimitTriggered(dimension, exchange.getRequest().getURI().getPath());
+    publishRateLimitEvent(dimension, identity, exchange.getRequest().getURI().getPath());
 
     GatewayErrorCode errorCode = resolveRateLimitErrorCode(dimension);
     log.info("[RateLimit] 限流触发: dimension={} identity={} path={}",
@@ -473,6 +479,34 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     }
     // keepPrefix=2, keepSuffix=2：长度 5 以上可见头尾各 2 字符，中间动态掩码
     return MaskUtils.mask(identity, 2, 2);
+  }
+
+  /**
+   * 发布 RATE_LIMIT_TRIGGERED 安全事件（fire-and-forget）。
+   *
+   * <p>安全事件 Publisher 不可用时静默降级，不影响限流主流程。
+   *
+   * @param dimension 限流维度（IP / USER）
+   * @param identity 限流标识
+   * @param path 请求路径
+   */
+  private void publishRateLimitEvent(String dimension, String identity, String path) {
+    SecurityEventPublisher publisher = securityEventPublisherProvider.getIfAvailable();
+    if (publisher == null) {
+      return;
+    }
+    try {
+      publisher.publish(
+          new SecurityEvent(
+              SecurityEventType.RATE_LIMIT_TRIGGERED,
+              path,
+              identity,
+              null,
+              "Rate limit triggered: dimension=" + dimension,
+              SecurityEvent.Severity.MEDIUM));
+    } catch (Exception e) {
+      log.debug("[RateLimit] 安全事件发布降级: reason={}", e.getMessage());
+    }
   }
 
   @Override

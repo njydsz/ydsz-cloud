@@ -12,6 +12,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
@@ -62,8 +63,8 @@ public class TokenAutoRenewalFilter extends OncePerRequestFilter {
   /** Bearer Token 前缀长度（"Bearer " 共 7 个字符） */
   private static final int BEARER_PREFIX_LENGTH = 7;
 
-  /** 新 Token 响应头名称 */
-  public static final String NEW_TOKEN_HEADER = "X-Access-Token";
+  /** 新 Token 响应头名称（YDIZ-AUTH-001: 与 AuthHeaderConstants.X_ACCESS_TOKEN 保持一致） */
+  public static final String NEW_TOKEN_HEADER = AuthHeaderConstants.X_ACCESS_TOKEN;
 
   /** 是否启用自动续签的响应头（便于前端判断服务端是否支持） */
   public static final String RENEWAL_ENABLED_HEADER = "X-Token-Renewal";

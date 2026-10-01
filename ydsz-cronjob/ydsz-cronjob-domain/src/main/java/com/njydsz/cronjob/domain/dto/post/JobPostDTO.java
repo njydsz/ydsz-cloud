@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.dto.post;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -24,6 +25,7 @@ public class JobPostDTO implements Serializable {
   @Schema(description = "主键 ID（创建时为空，由服务端 Snowflake 生成）")
   private String id;
 
+  @Xss(message = "任务名称包含非法字符")
   @NotBlank(message = "{validation.cronjob.msg_f96f7bb7}")
   @Schema(description = "任务名称", requiredMode = Schema.RequiredMode.REQUIRED)
   private String jobName;
@@ -62,6 +64,7 @@ public class JobPostDTO implements Serializable {
   private String status;
 
   @Schema(description = "备注")
+  @Xss(message = "备注包含非法字符")
   private String remark;
 
   @Min(value = 1, message = "任务级锁 TTL 必须为正数")

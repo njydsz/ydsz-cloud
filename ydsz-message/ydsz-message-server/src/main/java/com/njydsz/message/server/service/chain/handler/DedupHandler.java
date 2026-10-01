@@ -2,11 +2,13 @@ package com.njydsz.message.server.service.chain.handler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.context.TenantContextHolder;
+import com.njydsz.common.notify.dedup.NotifyDedupService;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
@@ -43,6 +45,12 @@ public class DedupHandler implements SendHandler {
   private final GuardService guardService;
   private final MessageMetrics messageMetrics;
   private final DomainEventPublisher domainEventPublisher;
+  /**
+   * notify 管道去重服务（ObjectProvider 可选注入）。
+   *
+   * <p>common-notify 未装配或未启用时，仅走消息级去重，保持向后兼容。
+   */
+  private final ObjectProvider<NotifyDedupService> notifyDedupServiceProvider;
 
   @Override
   public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
@@ -74,6 +82,63 @@ public class DedupHandler implements SendHandler {
           "消息重复,已忽略",
           null));
       return false;
+    }
+    // 双保险：消息级去重通过后，再委托 notify 管道做通知级去重
+    if (!checkNotifyDedup(request, ctx)) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * 通知级去重检查（双保险第二层）。
+   *
+   * <p>消息级去重通过后，再使用 notify 的 {@link NotifyDedupService} 做一次内容指纹级去重。
+   * 若 notify 管道未装配或未启用，跳过；notify 调用异常时降级到纯 message 管道。
+   *
+   * @param request 消息请求
+   * @param ctx     管线上下文
+   * @return true 表示非重复允许继续，false 表示被 notify 去重拦截
+   */
+  private boolean checkNotifyDedup(MessageItemRequestDTO request, SendContext ctx) {
+    NotifyDedupService notifyDedupService = notifyDedupServiceProvider.getIfAvailable();
+    if (notifyDedupService == null) {
+      return true;
+    }
+    if (!notifyDedupService.isDedupEnabled()) {
+      return true;
+    }
+    try {
+      String receiver = ctx.getReceiver();
+      String subject = request.getSubject();
+      String content = request.getContent();
+      if (notifyDedupService.isDuplicate(receiver, subject, content)) {
+        log.info(
+            "[DedupHandler] notify 管道去重命中,跳过发送: receiver={}, templateCode={}, channel={}",
+            SensitiveUtil.scanAndMask(receiver),
+            request.getTemplateCode(),
+            request.getChannel());
+        messageMetrics.recordSend(ctx.getChannel(), "NOTIFY_DEDUPED", 0);
+        domainEventPublisher.publish(
+            new MessageSkippedEvent(
+                TenantContextHolder.getTenantId(),
+                request.getMessageId(),
+                "NOTIFY_DEDUP",
+                ctx.getChannel(),
+                ctx.getBizType()));
+        ctx.setErrorResult(MessageSendResultVO.fail(
+            ctx.getChannel(),
+            MessageExceptionCode.MESSAGE_DUPLICATED.getCode(),
+            "消息重复,已忽略",
+            "消息重复,已忽略",
+            null));
+        return false;
+      }
+    } catch (Exception e) {
+      log.warn(
+          "[DedupHandler] notify 管道去重异常,降级到纯 message 管道: receiver={}, err={}",
+          SensitiveUtil.scanAndMask(ctx.getReceiver()),
+          e.getMessage());
     }
     return true;
   }

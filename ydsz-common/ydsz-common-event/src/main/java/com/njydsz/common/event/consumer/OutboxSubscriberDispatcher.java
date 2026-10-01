@@ -19,14 +19,15 @@ import com.njydsz.common.event.model.OutboxMessage;
  * <p>分发规则：
  *
  * <ul>
- *   <li>topic 精确匹配优先（订阅者 {@code getTopic()} 等于消息 {@code getTopic()}）
- *   <li>通配订阅者兜底（订阅者 {@code getTopic()} 为 {@code "*"}，在精确匹配无结果时触发）
- *   <li>无匹配订阅者时记录 DEBUG 日志（非异常，允许 topic 无消费方）
- *   <li>多个精确匹配订阅者全部触发（广播语义，顺序按 {@code @Order} 排序）
+ *   <li>topic 非空时：精确匹配优先 → 通配订阅者兜底</li>
+ *   <li>topic 为 null 时（兼容跨模块事件发布时未设置 topic 的场景）：仅通配订阅者可接收</li>
+ *   <li>无匹配订阅者时记录 DEBUG 日志（非异常，允许 topic 无消费方）</li>
+ *   <li>多个精确匹配订阅者全部触发（广播语义，顺序按 {@code @Order} 排序）</li>
  * </ul>
  *
  * <p><b>YDIZ-EVENT-002 告知：</b>业务模块实现 {@link OutboxSubscriber} 即可订阅 Outbox 事件，
- * 无需自行编写 {@code @EventListener} 方法。
+ * 无需自行编写 {@code @EventListener} 方法。跨模块事件消费可使用通配符主题（topic="*"），
+ * 在 {@link OutboxSubscriber#onMessage(OutboxMessage)} 内部按 eventType 字段进一步过滤。
  *
  * @author ydsz-team
  * @since 26.09.24
@@ -63,28 +64,42 @@ public class OutboxSubscriberDispatcher {
   /**
    * 监听 OutboxMessage 事件并分发。
    *
-   * <p>由 Spring事件机制触发（{@link EventListener} 语义）。
+   * <p>由 Spring 事件机制触发（{@link EventListener} 语义）。
    *
    * @param message Outbox 消息事件
    */
   @EventListener
   public void onOutboxMessage(OutboxMessage message) {
-    if (message == null || message.getTopic() == null) {
-      LOG.warn("[OutboxDispatcher] 收到无效消息: topic={}", message != null ? message.getTopic() : "null");
+    if (message == null) {
+      LOG.warn("[OutboxDispatcher] 收到无效消息: null");
       return;
     }
 
     String topic = message.getTopic();
-    List<OutboxSubscriber> targets = exactSubscribers.get(topic);
 
-    if (targets != null && !targets.isEmpty()) {
-      for (OutboxSubscriber subscriber : targets) {
-        invokeSubscriber(subscriber, message);
+    // topic 非空时，先进行精确匹配
+    if (topic != null) {
+      List<OutboxSubscriber> targets = exactSubscribers.get(topic);
+      if (targets != null && !targets.isEmpty()) {
+        for (OutboxSubscriber subscriber : targets) {
+          invokeSubscriber(subscriber, message);
+        }
+        return;
       }
+
+      // 无精确匹配，尝试通配订阅者
+      if (!wildcardSubscribers.isEmpty()) {
+        for (OutboxSubscriber subscriber : wildcardSubscribers) {
+          invokeSubscriber(subscriber, message);
+        }
+        return;
+      }
+
+      LOG.debug("[OutboxDispatcher] topic={} 无匹配订阅者", topic);
       return;
     }
 
-    // 无精确匹配，尝试通配订阅者
+    // topic 为 null 时，仅通配订阅者可接收（兼容跨模块事件发布时未设置 topic 的场景）
     if (!wildcardSubscribers.isEmpty()) {
       for (OutboxSubscriber subscriber : wildcardSubscribers) {
         invokeSubscriber(subscriber, message);
@@ -92,7 +107,7 @@ public class OutboxSubscriberDispatcher {
       return;
     }
 
-    LOG.debug("[OutboxDispatcher] topic={} 无匹配订阅者", topic);
+    LOG.debug("[OutboxDispatcher] topic=null 且无通配订阅者，消息丢弃: eventKey={}", message.getId());
   }
 
   /**

@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -47,9 +48,11 @@ public class MsgTemplateDTO implements Serializable {
   private String sceneCode;
 
   /** 主题（邮件标题/短信签名+正文） */
+  @Xss
   private String subject;
 
   /** 模板内容 */
+  @Xss
   private String content;
 
   /** 供应商（ALIYUN/TENCENT/HUAWEI） */
@@ -74,9 +77,11 @@ public class MsgTemplateDTO implements Serializable {
   private LocalDateTime auditAt;
 
   /** 审核备注 */
+  @Xss
   private String auditRemark;
 
   /** 模板描述 */
+  @Xss
   private String description;
 
   /** 变量定义 JSON */

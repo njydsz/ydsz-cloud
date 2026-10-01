@@ -24,7 +24,7 @@ import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
 import com.njydsz.message.domain.repository.MsgTemplateRepository;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.TemplateService;
-import com.njydsz.message.server.template.TemplateEngine;
+import com.njydsz.message.server.template.MessageTemplateRenderer;
 
 /**
  * 消息模板服务实现。
@@ -49,7 +49,7 @@ public class TemplateServiceImpl implements TemplateService {
   private final MsgTemplateRepository msgTemplateRepository;
 
   /** 模板引擎（变量渲染） */
-  private final TemplateEngine templateEngine;
+  private final MessageTemplateRenderer templateEngine;
 
   /** 搜索索引事件桥接器（可选注入）。 用于在模板创建/更新/删除时异步同步到 ydsz-common-search 统一搜索索引。 */
   private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
@@ -358,7 +358,7 @@ public class TemplateServiceImpl implements TemplateService {
   /**
    * 渲染模板预览。
    *
-   * <p>先加载启用模板，再交由 {@link TemplateEngine} 按入参渲染变量；模板不存在抛 NOT_FOUND。
+   * <p>先加载启用模板，再交由 {@link MessageTemplateRenderer} 按入参渲染变量；模板不存在抛 NOT_FOUND。
    *
    * @param templateCode 模板编码
    * @param channel 通道

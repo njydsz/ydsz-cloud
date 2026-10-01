@@ -38,8 +38,8 @@ import com.njydsz.common.audit.enums.AuditType;
  *   <li>响应结果默认不记录，开启时需评估日志存储与合规风险
  * </ul>
  *
- * <p><b>已知限制：</b>{@code recordDiff} 和 {@code resourceIdSpEL} 当前版本
- * 暂不支持，标记为「规划中」（Planned），配置不会生效。
+ * <p><b>已知限制：</b>{@code resourceIdSpEL} 当前版本暂不支持（Level 2 预留），
+ * 配置不会生效。{@code recordDiff} 已支持 Level 1 实现（通过方法参数与返回值计算快照 diff）。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -131,15 +131,25 @@ public @interface Audit {
   /**
    * 是否记录变更 diff 快照（合规追溯增强）。
    *
-   * <p><b>⏳ 规划中（Planned）：</b>当前版本暂不支持此功能，配置不会生效。
+   * <p><b>Level 1（当前实现）：</b>开启后，审计切面会在方法执行后：
+   * <ol>
+   *   <li>将方法请求参数序列化为 JSON 存入 {@code diffBeforeSnapshot}</li>
+   *   <li>将方法返回结果序列化为 JSON 存入 {@code diffAfterSnapshot}</li>
+   *   <li>调用 {@link com.njydsz.common.audit.diff.DiffSnapshotHelper} 计算字段级 diff</li>
+   * </ol>
    *
-   * <p>开启后（规划中），审计切面会在方法执行前（解析 {@link #resourceIdSpEL()} 后）查询旧值作为
-   * 「变更前快照」（{@code diffBeforeSnapshot}），方法执行成功后记录返回值作为
-   * 「变更后快照」（{@code diffAfterSnapshot}）。
+   * <p>适用场景：
+   * <ul>
+   *   <li>CREATE 操作：返回值包含生成的主键等完整状态，diff 显示新建字段</li>
+   *   <li>UPDATE 操作：传入对象为「输入态」，返回值为「完成态」，diff 显示修正差异</li>
+   *   <li>DELETE 操作：传入对象为删除条件，返回值为删除结果</li>
+   * </ul>
    *
-   * <p>仅对 {@code action = UPDATE / DELETE} 场景意义最大；CREATE 只记录「后」。
+   * <p><b>Level 2（后续）：</b>通过 {@link #resourceIdSpEL()} 解析资源 ID，
+   * 切面查询旧值作为「真实变更前快照」，实现精准的 before/after diff。当前版本 {@link #resourceIdSpEL()} 配置不生效。
    *
-   * <p>注意：开启后（规划中）会引入一次额外的「查询旧值」数据库操作，需评估性能。
+   * <p><b>注意：</b>开启后会增加参数/返回值的序列化开销，建议在关键审计场景选择性开启。
+   * diff 计算包裹在 try-catch 中，失败不影响业务主链路。
    *
    * @return 开启 diff 记录返回 true（默认 false）
    */

@@ -3,6 +3,7 @@ package com.njydsz.agent.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -27,8 +28,10 @@ public class PromptVersionDTO implements Serializable {
   private Integer version;
 
   /** 该版本的模板内容快照 */
+  @Xss(message = "模板内容包含非法字符")
   private String content;
 
   /** 版本备注（描述本次变更内容） */
+  @Xss(message = "版本备注包含非法字符")
   private String changeNote;
 }

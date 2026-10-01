@@ -18,7 +18,7 @@ import com.njydsz.message.server.service.VariableSourceResolver;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.template.RichMediaRenderer;
 import com.njydsz.message.server.template.TemplateVariableValidator;
-import com.njydsz.message.server.template.cache.CachedTemplateEngine;
+import com.njydsz.message.server.template.cache.CachedMessageTemplateRenderer;
 
 /**
  * 消息内容渲染服务。
@@ -47,7 +47,7 @@ public class MessageRenderService {
 
 
   /** 带 AST 缓存的模板引擎（YdszCache 实现，变量占位符渲染） */
-  private final CachedTemplateEngine cachedTemplateEngine;
+  private final CachedMessageTemplateRenderer cachedTemplateEngine;
 
   /** 模板管理服务（加载/校验模板） */
   private final TemplateService templateService;

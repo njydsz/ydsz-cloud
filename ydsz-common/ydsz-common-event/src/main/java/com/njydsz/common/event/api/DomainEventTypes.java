@@ -66,11 +66,6 @@ public final class DomainEventTypes {
   /** 组织/部门变更（消费方: ydsz-workflow → 审批人解析缓存刷新） */
   public static final String ORG_STRUCTURE_CHANGED = "ORG_STRUCTURE_CHANGED";
 
-  // ==================== 告警事件（发布方: 各模块） ====================
-
-  /** 统一告警事件（消费方: ydsz-message → 多通道告警派发） */
-  public static final String UNIFIED_ALERT = "UNIFIED_ALERT";
-
   // ==================== 定时任务事件（发布方: ydsz-cronjob） ====================
 
   /** 定时任务执行失败（消费方: ydsz-message） */

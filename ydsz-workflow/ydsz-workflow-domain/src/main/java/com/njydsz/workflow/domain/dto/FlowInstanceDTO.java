@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -72,6 +73,7 @@ public class FlowInstanceDTO implements Serializable {
   private String businessNo;
 
   /** 流程标题（展示用） */
+  @Xss(message = "流程标题包含非法字符")
   private String title;
 
   /** 发起人 ID */
@@ -117,6 +119,7 @@ public class FlowInstanceDTO implements Serializable {
   private LocalDateTime dueAt;
 
   /** 驳回原因 */
+  @Xss(message = "驳回原因包含非法字符")
   private String rejectReason;
 
   /** 租户 ID（多租户隔离） */

@@ -28,6 +28,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.RepeatSubmit;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.DictItemBatchDTO;
 import com.njydsz.system.domain.dto.DictItemDTO;
@@ -200,6 +201,7 @@ public class DictItemController {
       key = "'ydsz:system:dict-item:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:dict:item:add")
+  @RepeatSubmit
   @PostMapping
   public YdszResponse<String> save(@Valid @RequestBody DictItemDTO dto) {
     return YdszResponse.success(service.save(dto));
@@ -227,6 +229,7 @@ public class DictItemController {
       key = "'ydsz:system:dict-item:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:dict:item:edit")
+  @RepeatSubmit
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody DictItemDTO dto) {
     return YdszResponse.success(service.updateById(dto));
@@ -254,6 +257,7 @@ public class DictItemController {
           + "AuthContextUtils).getUserId() + ':' + #id",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:dict:item:delete")
+  @RepeatSubmit
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

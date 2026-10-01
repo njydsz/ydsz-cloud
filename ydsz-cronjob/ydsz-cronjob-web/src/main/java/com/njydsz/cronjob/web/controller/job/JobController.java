@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,12 +31,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.audit.event.DataExportAuditEvent;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
@@ -106,6 +111,9 @@ public class JobController {
 
   /** 任务调度服务 */
   private final JobService jobService;
+
+  /** 事件发布器 */
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * 新增任务
@@ -527,6 +535,7 @@ public class JobController {
         .sheet("Jobs")) {
       writer.doWrite(rows);
     }
+    publishDataExportAudit("任务管理", "job", rows.size());
   }
 
   /**
@@ -576,6 +585,39 @@ public class JobController {
     try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), JobLogExportVO.class)
         .sheet("JobLogs")) {
       writer.doWrite(rows);
+    }
+    publishDataExportAudit("任务管理", "job_log", rows.size());
+  }
+
+  // ==================== 私有辅助方法 ====================
+
+  /**
+   * 发布数据导出审计事件。
+   *
+   * <p>事件发布不阻塞业务链路，异常仅记录日志。
+   *
+   * @param exportModule 导出模块名
+   * @param bizType 业务类型
+   * @param rowCount 导出行数
+   */
+  private void publishDataExportAudit(String exportModule, String bizType, int rowCount) {
+    try {
+      DataExportAuditEvent event = DataExportAuditEvent.builder()
+          .userId(AuthContextUtils.getUserId())
+          .username(AuthContextUtils.getUsername())
+          .exportModule(exportModule)
+          .bizType(bizType)
+          .rowCount(rowCount)
+          .traceId(TracerUtils.getTraceId())
+          .clientIp(RequestContext.getClientIp())
+          .tenantId(AuthContextUtils.getTenantIdOrDefault())
+          .exportedAt(System.currentTimeMillis())
+          .build();
+      eventPublisher.publishEvent(event);
+      log.debug("[Audit] 数据导出事件已发布: module={}, bizType={}, rowCount={}",
+          exportModule, bizType, rowCount);
+    } catch (Exception e) {
+      log.warn("[Audit] 发布数据导出事件异常: exportModule={}, reason={}", exportModule, e.getMessage());
     }
   }
 

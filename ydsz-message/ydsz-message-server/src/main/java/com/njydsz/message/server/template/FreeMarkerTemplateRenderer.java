@@ -19,7 +19,7 @@ import com.njydsz.common.exception.custom.SysException;
  *
  * <p>作为默认模板引擎，提供高性能的模板渲染能力。 支持 FreeMarker 标准语法：变量替换 {@code ${var}}、条件 {@code <#if>}、循环 {@code <#list>} 等。
  *
- * <p>对于仍使用旧语法（{@code {{#if}}} / {@code {{#each}}}）的模板， 回退到 {@link DefaultTemplateEngine} 渲染。
+ * <p>对于仍使用旧语法（{@code {{#if}}} / {@code {{#each}}}）的模板， 回退到 {@link DefaultMessageTemplateRenderer} 渲染。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -27,12 +27,12 @@ import com.njydsz.common.exception.custom.SysException;
 @Slf4j
 @Primary
 @Component
-public class FreeMarkerTemplateEngine implements TemplateEngine {
+public class FreeMarkerTemplateRenderer implements MessageTemplateRenderer {
 
   private final Configuration freemarkerConfiguration;
-  private final DefaultTemplateEngine fallbackEngine;
+  private final DefaultMessageTemplateRenderer fallbackEngine;
 
-  public FreeMarkerTemplateEngine(Configuration freemarkerConfiguration, DefaultTemplateEngine fallbackEngine) {
+  public FreeMarkerTemplateRenderer(Configuration freemarkerConfiguration, DefaultMessageTemplateRenderer fallbackEngine) {
     this.freemarkerConfiguration = freemarkerConfiguration;
     this.fallbackEngine = fallbackEngine;
   }

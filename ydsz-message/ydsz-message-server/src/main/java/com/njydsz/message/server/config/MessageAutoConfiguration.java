@@ -18,8 +18,8 @@ import com.njydsz.message.server.config.ChannelProperties.FeishuConfig;
 import com.njydsz.message.server.config.ChannelProperties.WebhookConfig;
 import com.njydsz.message.server.health.MessageHealthIndicator;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.template.TemplateEngine;
-import com.njydsz.message.server.template.cache.CachedTemplateEngine;
+import com.njydsz.message.server.template.MessageTemplateRenderer;
+import com.njydsz.message.server.template.cache.CachedMessageTemplateRenderer;
 
 /**
  * 消息模块自动装配。
@@ -65,13 +65,13 @@ public class MessageAutoConfiguration {
    * <p>监控指标通过 {@link com.njydsz.common.sentry.adapter.SentryMetricsAdapter} 桥接注册，
    * 不再直接注入 {@link MeterRegistry}，符合《云顶编码规范》第 27.2.1 节要求。
    *
-   * @return CachedTemplateEngine 实例
+   * @return CachedMessageTemplateRenderer 实例
    */
   @Bean
-  @ConditionalOnMissingBean(TemplateEngine.class)
+  @ConditionalOnMissingBean(MessageTemplateRenderer.class)
   @ConditionalOnClass(MeterRegistry.class)
-  public CachedTemplateEngine cachedTemplateEngine() {
-    return new CachedTemplateEngine(DEFAULT_TEMPLATE_CACHE_MAX_SIZE, DEFAULT_TEMPLATE_CACHE_EXPIRE_MINUTES);
+  public CachedMessageTemplateRenderer cachedTemplateEngine() {
+    return new CachedMessageTemplateRenderer(DEFAULT_TEMPLATE_CACHE_MAX_SIZE, DEFAULT_TEMPLATE_CACHE_EXPIRE_MINUTES);
   }
 
   /** 默认模板 AST 缓存最大容量 */

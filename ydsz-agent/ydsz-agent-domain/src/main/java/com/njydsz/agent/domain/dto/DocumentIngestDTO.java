@@ -3,6 +3,7 @@ package com.njydsz.agent.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -29,10 +30,12 @@ public class DocumentIngestDTO implements Serializable {
   /** 文档文本内容（必填，将被分块、向量化和索引） */
   @NotBlank(message = "文档内容不能为空")
   @Schema(description = "文档文本内容", requiredMode = Schema.RequiredMode.REQUIRED)
+  @Xss(message = "文档内容包含非法字符")
   private String content;
 
   /** 文档标题（可选，用于展示和检索） */
   @Schema(description = "文档标题")
+  @Xss(message = "文档标题包含非法字符")
   private String documentTitle;
 
   /** 文档来源（nextwiki/project/contract，用于来源过滤） */

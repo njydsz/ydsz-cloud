@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.enums.QueueType;
+import com.njydsz.common.queue.manager.QueueManager;
+import com.njydsz.common.queue.metrics.QueueMetrics;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessagePublisher;
@@ -56,8 +58,10 @@ public class JobResultQueuePublisher {
 
 
   private final IMessageQueueProvider messageQueueProvider;
+  private final QueueManager queueManager;
   private IMessageQueue resultQueue;
   private IMessagePublisher resultPublisher;
+  private QueueMetrics resultMetrics;
 
   /**
    * 启动任务结果队列发布者（应用启动即建立发布通道）。
@@ -72,6 +76,10 @@ public class JobResultQueuePublisher {
       resultQueue = messageQueueProvider.createMessageQueue(QueueType.STREAM);
       resultPublisher = resultQueue.createPublisher(JobQueueChannels.JOB_RESULT);
       log.info("[JobQueue] 任务结果队列发布者已启动, channel={}", JobQueueChannels.JOB_RESULT);
+      if (queueManager != null && resultQueue != null) {
+        resultMetrics = new QueueMetrics(JobQueueChannels.JOB_RESULT, "STREAM");
+        queueManager.register(JobQueueChannels.JOB_RESULT, "STREAM", resultQueue, resultMetrics);
+      }
     } catch (Exception e) {
       log.warn("[JobQueue] 任务结果队列发布者启动失败: {}", e.getMessage());
     }
@@ -114,6 +122,9 @@ public class JobResultQueuePublisher {
    */
   @PreDestroy
   public void destroy() {
+    if (queueManager != null) {
+      queueManager.unregister(JobQueueChannels.JOB_RESULT);
+    }
     if (resultPublisher != null) {
       resultPublisher.close();
     }

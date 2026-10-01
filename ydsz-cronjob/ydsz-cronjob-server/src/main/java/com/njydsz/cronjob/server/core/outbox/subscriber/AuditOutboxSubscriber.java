@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.event.consumer.OutboxIdempotentConsumer;
 import com.njydsz.common.event.consumer.OutboxSubscriber;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -84,6 +85,7 @@ public class AuditOutboxSubscriber implements OutboxSubscriber {
    * @param message Outbox 消息
    */
   @Override
+  @OutboxIdempotentConsumer(idempotencyKey = "#message.id", expireSeconds = 3600)
   public void onMessage(OutboxMessage message) {
     try {
       writeAudit(message);

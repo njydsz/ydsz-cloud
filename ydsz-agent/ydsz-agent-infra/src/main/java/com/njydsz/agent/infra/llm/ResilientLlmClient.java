@@ -19,6 +19,9 @@ import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.safe.alert.SecurityEvent;
+import com.njydsz.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.common.safe.alert.SecurityEventType;
 
 /**
  * 带熔断保护的 LLM 客户端装饰器（Resilience4j）
@@ -82,6 +85,9 @@ public class ResilientLlmClient implements LlmClient {
   /** Resilience4j 熔断器实例（基于 per-Provider 隔离） */
   private final CircuitBreaker circuitBreaker;
 
+  /** 安全事件发布器（可选，不可用时静默降级） */
+  private final SecurityEventPublisher securityEventPublisher;
+
   /**
    * 创建带熔断保护的 LLM 客户端。
    *
@@ -100,15 +106,34 @@ public class ResilientLlmClient implements LlmClient {
    * @param registry 熔断器注册表（可接入 Micrometer 指标）
    */
   public ResilientLlmClient(LlmClient delegate, String providerName, CircuitBreakerRegistry registry) {
+    this(delegate, providerName, registry, null);
+  }
+
+  /**
+   * 创建带熔断保护的 LLM 客户端（支持安全事件发布）。
+   *
+   * @param delegate 被装饰的原 LLM 客户端
+   * @param providerName Provider 名称
+   * @param registry 熔断器注册表
+   * @param securityEventPublisher 安全事件发布器（可为 null）
+   */
+  public ResilientLlmClient(
+      LlmClient delegate, String providerName, CircuitBreakerRegistry registry,
+      SecurityEventPublisher securityEventPublisher) {
     if (delegate == null) {
       throw new IllegalArgumentException(I18n.message("agent.error.delegate_null"));
     }
     this.delegate = delegate;
+    this.securityEventPublisher = securityEventPublisher;
     this.circuitBreaker = registry.circuitBreaker(
         "llm-" + providerName, createCircuitBreakerConfig());
     this.circuitBreaker.getEventPublisher()
         .onStateTransition(
-            event -> log.warn("[LLM-{}] 熔断器状态转换: {}", providerName, event.getStateTransition()))
+            event -> {
+              log.warn("[LLM-{}] 熔断器状态转换: {}", providerName, event.getStateTransition());
+              publishCircuitBreakerEvent(providerName, event.getStateTransition().getFromState(),
+                  event.getStateTransition().getToState());
+            })
         .onError(
             event -> log.debug("[LLM-{}] 熔断器记录错误: {}", providerName, event.getThrowable().getMessage()))
         .onSuccess(
@@ -178,6 +203,38 @@ public class ResilientLlmClient implements LlmClient {
    *
    * @return CircuitBreakerConfig 实例
    */
+  /**
+   * 发布熔断器状态转换安全事件（fire-and-forget）。
+   *
+   * <p>仅当状态转换为 OPEN 时上报 ILLEGAL_ACCESS 安全事件，其他状态转换静默。
+   * 安全事件 Publisher 不可用时静默降级。
+   *
+   * @param providerName Provider 名称
+   * @param fromState 原状态
+   * @param toState 新状态
+   */
+  private void publishCircuitBreakerEvent(
+      String providerName, CircuitBreaker.State fromState, CircuitBreaker.State toState) {
+    if (toState != CircuitBreaker.State.OPEN) {
+      return;
+    }
+    if (securityEventPublisher == null) {
+      return;
+    }
+    try {
+      securityEventPublisher.publish(
+          new SecurityEvent(
+              SecurityEventType.ILLEGAL_ACCESS,
+              "/agent/llm/" + providerName,
+              null,
+              null,
+              "Circuit breaker OPEN for LLM provider: " + providerName + " (from " + fromState + ")",
+              SecurityEvent.Severity.HIGH));
+    } catch (Exception e) {
+      log.debug("[LLM-{}] 安全事件发布降级: reason={}", providerName, e.getMessage());
+    }
+  }
+
   private static CircuitBreakerConfig createCircuitBreakerConfig() {
     return CircuitBreakerConfig.custom()
         // 基于计数滑动窗口（每次调用计数一次）

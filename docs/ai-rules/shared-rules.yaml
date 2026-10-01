@@ -13,19 +13,19 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.09.30-v12"
+  version: "26.09.30-v14"
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-09-30"
-  last_updated: "26.09.30-v12（ydsz-common-jdbc 全局引用分析：+2 规则 JDIZ-JDBC-001/002；总规则 164 条）"
-  total_rules: 164
+  last_updated: "26.09.30-v14（ydsz-common-audit 全局引用分析：+2 规则 YDIZ-AUDIT-002 审计查询 SPI 强制 + YDIZ-AUDIT-003 数据导出事件审计；总规则 167 条）"
+  total_rules: 167
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
     P0: 56
-    P1: 80  # +2: JDIZ-JDBC-001 PageResponses 统一分页 + JDIZ-JDBC-002 数据权限激活
-    P2: 20
+    P1: 82  # +1: YDIZ-AUDIT-002 审计查询 SPI 强制（audit 全局引用分析）
+    P2: 21  # +1: YDIZ-AUDIT-003 数据导出事件审计（audit 全局引用分析）
 
 rules:
   # ============================================
@@ -885,7 +885,7 @@ rules:
     source: "P2-quota：QuotaCounter 抽象下沉至 common-safe"
 
   # ============================================
-  # 十三、安全规范（2 条，P0+P1）
+  # 十三、安全规范（3 条，P0+P1+P1）
   # ============================================
   - id: "YDIZ-SEC-001"
     category: "security"
@@ -904,6 +904,27 @@ rules:
     pattern: "log 中出现 password/token/secret/apiKey 等敏感值"
     fix: "脱敏处理后打印或直接省略"
     source: "编码规范 13 章"
+
+  - id: "YDIZ-SEC-003"
+    category: "security"
+    severity: "P1"
+    title: "禁止新建签名工具类，必须使用 auth InternalHeaderSigner / DigestUtils"
+    description: |
+      签名/哈希操作必须使用统一的工具类，禁止在业务模块中自行实现 HMAC-SHA256 / SHA-256 签名逻辑。
+
+      **必须使用**：
+      - 内部请求头签名：`com.njydsz.common.auth.security.InternalHeaderSigner`（sign + verify，HMAC-SHA256）
+      - 通用哈希/HMAC：`com.njydsz.common.util.security.DigestUtils`（sha256Hex/sha1Hex/hmacSha256Base64/constantTimeEquals 等）
+
+      **为什么禁止自建**：
+      - 项目存在至少 5 处签名实现碎片化（auth InternalHeaderSigner / web InternalSignatureFilter / safe ApiSignatureFilter / feign SignatureUtils / notify DingTalkSignUtil），密钥管理和算法选择各自为政
+      - 自建签名容易出现密钥硬编码、算法不一致、缺少恒定时间比较等安全隐患
+
+      **适用范围**：所有新增签名/验签/HMAC 场景。
+      例外：第三方平台要求特定签名算法（如钉钉/企微官方 SDK）无法复用通用工具时，需在注释中说明 YDIZ-SEC-003 例外原因。
+    pattern: "自行 new HmacUtils / 手写 HMAC-SHA256 拼接 / MessageDigest.getInstance(\"SHA-256\") 直接调用"
+    fix: "改用 DigestUtils.hmacSha256Base64/hex 或 InternalHeaderSigner"
+    source: "ydsz-common-auth 全局引用分析报告（YDIZ-SEC-003，P1，26.09.30 签名体系碎片化治理）"
 
   # ============================================
   # 十四、编译器警告处理规范（1 条，P0）
@@ -1397,6 +1418,119 @@ rules:
       // ✅ 通过统一审计通道写入
       AuditContext.record("workflow", "create_flow", flowId);
     source: "编码规范 §29（审计日志规范）"
+
+  - id: "YDIZ-AUDIT-002"
+    category: "audit"
+    severity: "P1"
+    title: "审计查询必须使用 AuditQueryService SPI，禁止自建 Mapper 直查 sys_audit_log"
+    description: |
+      业务模块审计日志查询必须通过注入 `com.njydsz.common.audit.core.AuditQueryService`
+      实现，禁止自建 Mapper/Repository 直接查询 `sys_audit_log` 表。
+
+      **为什么**：
+      - AuditQueryService 提供分表路由（按时间自动 UNION ALL 覆盖所需分表）
+      - 内置表名白名单校验防 SQL 注入
+      - 参数化查询，安全合规
+      - 统一的 AuditSearchQuery 检索语义（关键词、多维度过滤）
+
+      **SPI 扩展**：确有自定义查询需求的，应通过实现 `AuditQueryService` 接口并注册同名 `@Bean` 覆盖默认实现，而非自建 Mapper。
+
+      **违反判据**：
+      - 业务模块定义 `XxxAuditLogMapper` 且 SELECT 语句包含 `FROM sys_audit_log`
+      - 业务模块 Repository 实现中直接引用 `sys_audit_log` 表名
+      - 与 `AuditQueryService` 功能重复的自建查询链路
+
+    pattern: |
+      SELECT.*FROM.*sys_audit_log|XxxAuditLogMapper接口定义
+    fix: |
+      1. 删除自建 XxxAuditLogMapper / XxxAuditRepository
+      2. 在 Controller 注入 `com.njydsz.common.audit.core.AuditQueryService`
+      3. 调用 `auditQueryService.queryByTimeRange(start, end, page, size)` 或对应查询维度方法
+      4. 如有分表自定义需求，实现 AuditQueryService SPI 接口并注册为 Spring Bean
+    example_bad: |
+      // ❌ 自建 Mapper 直查 sys_audit_log
+      public interface CronjobAuditLogMapper {
+          @Select("SELECT * FROM sys_audit_log WHERE module = 'cronjob' AND ...")
+          List<SysAuditLog> selectPage(...);
+      }
+    example_good: |
+      // ✅ 使用 AuditQueryService
+      @Autowired
+      private AuditQueryService auditQueryService;
+
+      public PageResponse<List<AuditLogVO>> page(AuditLogQuery query) {
+          List<AuditLog> logs = auditQueryService.queryByTimeRange(
+              query.getStartTime(), query.getEndTime(), query.getPageNum(), query.getPageSize());
+          // 转换为 VO 返回...
+      }
+    source: "audit 全局引用分析（YDIZ-AUDIT-002，P1，26.09.30 cronjob 自建审计查询层收敛）"
+
+  - id: "YDIZ-AUDIT-003"
+    category: "audit"
+    severity: "P2"
+    title: "数据导出场景必须通过 DataExportAuditEvent 发布审计事件"
+    description: |
+      业务模块的 Excel/CSV/数据导出端点（@GetMapping + 输出流写入场景）应在导出逻辑完成后，
+      通过 ApplicationEventPublisher 发布 `DataExportAuditEvent`，统一由 AuditEventListener
+      落库到 sys_audit_log。
+
+      **为什么**：
+      - 导出操作属于「数据交付」高风险动作，审计留痕是合规刚需
+      - 统一事件模型保证审计数据格式一致，无需各模块各自实现
+      - 自动关联 userId、traceId、IP、tenantId 等上下文字段
+
+      **发布时机**：Excel/CSV 流输出成功完成后、返回响应前。导出失败（异常）时不发布 DataExportAuditEvent，
+      但若方法本身标注 @Audit，异常会由切面自动采集。
+
+      **违反判据**：
+      - 导出端点无任何审计数据产出（无 @Audit 也无 DataExportAuditEvent 发布）
+      - 在导出端点中自行 INSERT 审计表而非通过事件通道
+
+    pattern: |
+      导出端点方法缺少 @Audit 注解且无 eventPublisher.publishEvent(new DataExportAuditEvent(...)) 调用
+    fix: |
+      1. 注入 `ApplicationEventPublisher eventPublisher`
+      2. 在导出成功后调用：
+
+         DataExportAuditEvent event = new DataExportAuditEvent();
+         event.setUserId(AuthContextUtils.getUserId());
+         event.setUsername(AuthContextUtils.getUsername());
+         event.setExportModule("模块名");
+         event.setBizType("业务类型");
+         event.setRowCount(exportData.size());
+         event.setTraceId(TracerUtils.getTraceId());
+         event.setClientIp(RequestContext.getClientIp());
+         event.setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
+         eventPublisher.publishEvent(event);
+
+      3. 发布逻辑用 try-catch 包裹，失败仅记 warn 日志
+    example_bad: |
+      // ❌ 导出端点无审计
+      @GetMapping("/export")
+      public void export(HttpServletResponse response) {
+          List<Data> list = service.list();
+          excelFacade.export(response, list, ExportVO.class);
+          // 无任何审计记录
+      }
+    example_good: |
+      // ✅ 导出成功后发布 DataExportAuditEvent
+      @GetMapping("/export")
+      public void export(HttpServletResponse response) {
+          List<Data> list = service.list();
+          excelFacade.export(response, list, ExportVO.class);
+          try {
+              DataExportAuditEvent event = new DataExportAuditEvent();
+              event.setRowCount(list.size());
+              event.setExportModule("module");
+              event.setBizType("type");
+              event.setUserId(AuthContextUtils.getUserId());
+              event.setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
+              eventPublisher.publishEvent(event);
+          } catch (Exception ex) {
+              log.warn("发布导出审计事件失败，不影响业务", ex);
+          }
+      }
+    source: "audit 全局引用分析（YDIZ-AUDIT-003，P2，26.09.30 事件通道零引用破冰）"
 
   - id: "YDIZ-OUTBOX-001"
     category: "event"
@@ -5174,27 +5308,109 @@ stats:
       所有启用多租户（ydsz.tenant.enabled=true）的业务模块的 bootstrap.yml
       必须配置 ydsz.jdbc.data-permission.enabled=true，激活 RowPermissionInnerInterceptor
       和 ColPermissionInnerInterceptor，实现行级与列级数据权限控制。
-
-      **强制配置**：
-      ydsz:
-        jdbc:
-          data-permission:
-            enabled: true
-
-      **为什么必须激活**：
-      - 当前 9 个业务模块全部未启用数据权限，存在越权访问风险
-      - 行级权限可防止用户查看不属于自己部门/公司的数据
-      - 列级权限可防止敏感字段（如身份证号、手机号）在列表查询中泄露
-
-      **适用范围**：所有 tenant.enabled=true 的业务模块（system/userinfo/workflow/message/nextwiki/literule/cronjob/agent）
-    source: "ydsz-common-jdbc 全局引用分析（JDIZ-JDBC-002，P1，26.09.30 数据权限拦截器全模块零注册）"
+    source: "ydsz-common-jdbc 全局引用分析（JDIZ-JDBC-002，P1）"
     exception: "纯单租户模块（tenant.enabled=false）或公共只读端点无需启用"
 
   # ============================================
-  # 版本标记：shared-rules.yaml v26.09.30-v12
-  # 变更摘要（自 v9 起累积）：
-  #   - v10: YDIZ-COMMON-059/060 RedisTemplate 注入禁止 + CacheKeyBuilder key 构造强制
-  #   - v11: YDIZ-CONC-004/005 禁止虚拟线程反射 + PassThrough Wrapper
-  #   - v12: JDIZ-JDBC-001/002 PageResponses 统一分页 + 数据权限激活
-  # 更新 total：P0=56 P1=80 P2=20 → total=164
+  # Feign 专项红线规则（YDIZ-FEIGN-001~005）
+  # 来源：ydsz-common-feign 全局引用分析（26.10.01）
+  # ============================================
+
+  - id: "YDIZ-FEIGN-001"
+    category: "feign"
+    severity: "P0"
+    title: "【强制】FeignClient 必须声明 fallbackFactory，禁止裸 Fallback"
+    description: |
+      所有 @FeignClient 接口必须配置 fallbackFactory 属性（非 fallback）。
+      FallbackFactory 可获取触发降级的 cause，便于问题排查与差异返回。
+
+      **正例**：
+      @FeignClient(name = "ydsz-xxx", fallbackFactory = XxxFallbackFactory.class)
+
+      **反例**：
+      @FeignClient(name = "ydsz-xxx", fallback = XxxFallback.class)
+
+      **为什么强制**：无法获取 cause 意味着降级时无法区分超时/熔断/网络异常，日志缺乏根因。
+    pattern: '@FeignClient\s*\([^)]*fallback\s*=(?!.*fallbackFactory)'
+    source: "ydsz-common-feign 全局引用分析（YDIZ-FEIGN-001，P0，26.10.01 fallbackFactory 使用率100%→强制保持）"
+    exception: "无"
+
+  - id: "YDIZ-FEIGN-002"
+    category: "feign"
+    severity: "P0"
+    title: "【强制】禁止业务模块自建 RestTemplate/HttpClient 调用内部服务"
+    description: |
+      微服务之间的内部调用必须走 @FeignClient + ydsz-common-feign 体系。
+      禁止使用 RestTemplate、OkHttp、JDK HttpClient 直接调用内部服务地址，防止绕过熔断/重试/追踪/头透传等能力。
+
+      **允许场景**：
+      - 调用外部第三方服务（如阿里云、微信开放平台等）
+      - ydsz-common-notify 模块中的第三方网关调用
+      - Gateway 模块的 Reactor Netty HttpClient（WebFlux 专属）
+
+      **违规判据**：业务模块（ydsz-{module}-infra/server）直接 new RestTemplate/HttpClient 调用 ydzs-*
+    pattern: 'new\s+RestTemplate\(|HttpClient\.newBuilder|OkHttpClient\s*\('
+    source: "ydsz-common-feign 全局引用分析（YDIZ-FEIGN-002，P0，26.10.01 发现 2 处架构偏移：workflow HttpAgentServiceClient、cronjob ClusterMigrationClient）"
+    exception: "ydsz-common-notify 第三方网关调用、xdz-gateway WebFlux Reactor HTTP 客户端"
+
+  - id: "YDIZ-FEIGN-003"
+    category: "feign"
+    severity: "P1"
+    title: "Feign HealthSnapshot 必须在 web 模块桥接到 Actuator"
+    description: |
+      每个业务模块的 web 层必须提供 FeignHealthIndicator，将 FeignHealthSnapshot.from(feignProperties)
+      适配为 Spring Boot Actuator 的 HealthIndicator，对外暴露 Feign 模块完整健康度。
+
+      **实现方式**：实现 HealthIndicator 接口，委托 FeignHealthSnapshot.from(feignProperties)，
+      返回 Health.up/down().withDetails(snapshot.getDetails())。
+
+      **为什么必须**：feign 模块的高级能力（熔断/隔离/限流/压缩）若无健康暴露，运维无法观测配置生效状态。
+    pattern: "无一"
+    source: "ydsz-common-feign 全局引用分析（YDIZ-FEIGN-003，P1，26.10.01 FeignHealthSnapshot 零消费）"
+    exception: "纯后台服务（如 ydsz-generator-web 等）若无前端健康观测需求可延后"
+
+  - id: "YDIZ-FEIGN-004"
+    category: "feign"
+    severity: "P1"
+    title: "Feign 调用 FallbackFactory 错误消息必须走 I18n.message"
+    description: |
+      FallbackFactory 中返回给调用方的错误消息必须使用 I18n.message("module.xxx.unavailable") 国际化 key，
+      禁止在 FallbackFactory 实现中硬编码中文/英文错误文案。
+
+      **正例**：
+      String msg = I18n.message("workflow.service.unavailable");
+      return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, msg);
+
+      **反例**：
+      return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
+
+      **为什么**：FallbackFactory 可能被不同 Locale 的客户端调用，硬编码中文不满足 i18n 规则。
+    pattern: 'FEIGN_SERVICE_UNAVAILABLE,\s*"[^"]*[\x{4e00}-\x{9fff}]'
+    source: "ydsz-common-feign 全局引用分析（YDIZ-FEIGN-004，P1，26.10.01 8/14 FallbackFactory 中文硬编码）"
+    exception: "无"
+
+  - id: "YDIZ-FEIGN-005"
+    category: "feign"
+    severity: "P2"
+    title: "ydsz-common-notify RestTemplate 必须使用 HttpComponentsClientHttpRequestFactory"
+    description: |
+      ydzz-common-notify 的 notifyRestTemplate Bean 必须使用 HttpComponentsClientHttpRequestFactory
+      （Apache HttpClient 5），禁止使用 SimpleClientHttpRequestFactory（JDK HttpURLConnection 无连接池）。
+
+      **为什么**：notifyRestTemplate 承载短信/第三方网关的高并发调用，SimpleClientHttpRequestFactory
+      每次请求新建 TCP 连接，高并发下 TIME_WAIT 堆积。HikariCP 项目规范统一连接池管理。
+
+      **配置示例**：
+      HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+      factory.setConnectTimeout(...);
+      factory.setReadTimeout(...);
+    pattern: 'SimpleClientHttpRequestFactory'
+    source: "ydsz-common-feign 全局引用分析（YDIZ-FEIGN-005，P2，26.10.01 notifyRestTemplate 使用 JDK 无连接池工厂）"
+    exception: "极低调用频率的内部工具 Bean（每分钟 < 1 次）"
+
+  # ============================================
+  # 版本标记：shared-rules.yaml v26.10.01-v14
+  # 变更摘要（自 v13 起新增）：
+  #   - v14: YDIZ-FEIGN-001~005 Feign 专项红线规则（fallbackFactory 强制/禁止自建 HTTP/健康桥接/i18n/连接池）
+  # 更新 total：P0=58 P1=84 P2=21 → total=170
   # ============================================

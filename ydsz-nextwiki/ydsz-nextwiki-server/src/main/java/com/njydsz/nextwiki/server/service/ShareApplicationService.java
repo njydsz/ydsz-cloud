@@ -162,7 +162,7 @@ public class ShareApplicationService {
   }
 
   /**
-   * 定向分享后向被分享用户发送站内信通知。
+   * 定向分享后向被分享用户批量发送站内信通知。
    *
    * <p>仅在目标用户非空时触发，异常不影响主流程。
    *
@@ -177,14 +177,8 @@ public class ShareApplicationService {
       return;
     }
     String displayTitle = (title != null && !title.isBlank()) ? title : fileName;
-    for (String targetUserId : targetUserIds) {
-      if (targetUserId == null || targetUserId.isBlank()) {
-        continue;
-      }
-      notifyHelper.sendInApp(targetUserId,
-          "文件分享通知",
-          String.format("用户向您分享了「%s」，快来查看吧！", displayTitle));
-    }
+    String content = String.format("用户向您分享了「%s」，快来查看吧！", displayTitle);
+    notifyHelper.batchSendInApp(targetUserIds, "文件分享通知", content);
   }
 
   /**

@@ -21,9 +21,8 @@ import com.njydsz.common.locales.util.Locales;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.publish.DomainEventPublisher;
-import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.message.server.event.OutboxDomainEventPublisher;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
@@ -122,8 +121,8 @@ public class MessageServiceImpl implements MessageService {
 
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
-  /** Outbox 写入服务（委托 common-event 标准体系） */
-  private final OutboxService outboxService;
+  /** Outbox 写入适配器（委托 DomainEventPublisher 统一门面） */
+  private final OutboxDomainEventPublisher outboxPublisher;
 
   /** P1-A3: 消息内容渲染服务（从本类拆分，降低 God Class 复杂度） */
   private final MessageRenderService messageRenderService;
@@ -157,7 +156,7 @@ public class MessageServiceImpl implements MessageService {
    * + updateById)用 {@code @Transactional} 保证原子性。
    *
    * <p>P1-A4: 支持异步发送模式。当 {@code ydsz.message.defaultAsync=true} 且请求未显式要求同步时, 落库 PENDING + 写入
-   * OutboxEvent 后立即返回, 由 OutboxEventScheduler 异步投递 MQ。
+   * OutboxEvent 后立即返回, 由 OutboxProcessor 异步投递 MQ。
    *
    *
    * @param request 消息发送请求
@@ -239,7 +238,7 @@ public class MessageServiceImpl implements MessageService {
    * @return 发送结果（含 msgId 供追踪）
    */
   private MessageSendResultVO dispatchAsync(MsgLogVO logDO, SendContext ctx) {
-    // P2-A6: 委托 OutboxService 写入标准 Outbox 表，与 msgLog 落库在同一事务中
+    // P2-A6: 委托 OutboxDomainEventPublisher（DomainEventPublisher 统一门面）写入标准 Outbox 表
     MessageItemRequestDTO request = buildMessageRequestFromLog(logDO, ctx);
     messageSendTxService.insertLogAndOutbox(logDO, request);
     log.info(
@@ -566,9 +565,8 @@ public class MessageServiceImpl implements MessageService {
    *
    * <p>/** P2-3: 事务消息发送。
    *
-   * <p>通过 RocketMQ 半消息机制,确保通知请求仅在本地事务校验（通道/模板有效性）通过后才投递。 半消息发送后由 {@link
-   * com.njydsz.message.server.producer.MessageTransactionListener} 执行校验,COMMIT 后消费端异步调用 {@link
-   * #send} 完成实际发送。
+   * <p>通过 {@link com.njydsz.message.server.producer.CommonQueueMessageOperations}
+   * 执行发送前校验（通道/模板有效性），校验通过后同步投递。
    *
    * <p>降级策略：未配置 RocketMQ 时直接走同步 {@link #send}。
    *
@@ -612,12 +610,12 @@ public class MessageServiceImpl implements MessageService {
    *   <li>幂等校验：同 messageId 的 PENDING/SENDING/SUCCESS 记录已存在时直接返回
    *   <li>生成 messageId（雪花 ID）
    *   <li>落库 PENDING 记录 + 写入 OutboxEvent（同事务，DB 是 Source of Truth）
-   *   <li>OutboxEventScheduler 异步扫描 Outbox 表并投递到 MQ
-   *   <li>MQ 投递失败 → Outbox 扫描器重试，不降级为同步发送（避免重复落库）
+   *   <li>OutboxProcessor 异步扫描 Outbox 表并投递到 MQ
+   *   <li>MQ 投递失败 → Outbox 表重试，不降级为同步发送（避免重复落库）
    * </ol>
    *
    * <p><b>事务一致性保证：</b>MQ 投递失败时不会降级调用 {@link #send}，避免产生重复 PENDING 记录。 PENDING 记录由
-   * OutboxEventScheduler 扫描补偿，保证最终一致性。
+   * OutboxProcessor 扫描补偿，保证最终一致性。
    *
    * @param request 消息发送请求
    * @return 发送结果
@@ -678,15 +676,12 @@ public class MessageServiceImpl implements MessageService {
       log.error("[Message] 异步消息落库失败: msgId={} err={}", request.getMessageId(), e.getMessage(), e);
       return MessageSendResultVO.fail(request.getChannel(), null, "消息落库失败: " + e.getMessage(), "消息落库失败: " + e.getMessage(), null);
     }
-    // ② 写入 Outbox 表（委托 OutboxService，由 OutboxProcessor 异步投递 MQ）
+    // ② 写入 Outbox 表（委托 OutboxDomainEventPublisher，由 OutboxProcessor 异步投递 MQ）
     try {
-      outboxService.appendToOutbox(
-          OutboxMessage.builder()
-              .aggregateType("Message")
-              .aggregateId(logDO.getMsgId())
-              .eventType("MessageAsyncDispatch")
-              .payload(YdszJson.toJson(request))
-              .idempotencyKey(logDO.getMsgId()));
+      outboxPublisher.publishAggregateDispatch(
+          logDO.getMsgId(),
+          YdszJson.toJson(request),
+          logDO.getMsgId());
       log.info(
           "[Message] 异步消息已写入 Outbox: msgId={}",
           request.getMessageId());

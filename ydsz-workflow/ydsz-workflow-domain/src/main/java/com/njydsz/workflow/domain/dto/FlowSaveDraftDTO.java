@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 
+import com.njydsz.common.safe.annotation.Xss;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -48,6 +49,7 @@ public class FlowSaveDraftDTO implements Serializable {
   private String businessNo;
 
   /** 流程标题 */
+  @Xss(message = "流程标题包含非法字符")
   private String title;
 
   /** 发起人 ID */

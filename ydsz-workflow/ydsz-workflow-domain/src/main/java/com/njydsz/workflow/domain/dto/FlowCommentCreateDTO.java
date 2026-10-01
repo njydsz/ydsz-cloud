@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
 
@@ -37,6 +38,7 @@ public class FlowCommentCreateDTO implements Serializable {
   /** 评论内容（必填，最长 2000 字符） */
   @NotBlank(message = "评论内容不能为空")
   @Size(max = 2000, message = "评论内容最长 2000 字符")
+  @Xss(message = "评论内容包含非法字符")
   private String content;
 
   /** 父评论 ID（可选，一级评论为 null；回复时必填） */

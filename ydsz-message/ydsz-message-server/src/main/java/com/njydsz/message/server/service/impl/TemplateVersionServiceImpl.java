@@ -23,7 +23,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.domain.vo.MsgTemplateVersionVO;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.template.TemplateVersionService;
-import com.njydsz.message.server.template.TemplateEngine;
+import com.njydsz.message.server.template.MessageTemplateRenderer;
 
 /**
  * 消息模板版本服务实现。
@@ -47,7 +47,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   private final MsgTemplateRepository templateRepository;
 
   /** 模板引擎（预览渲染） */
-  private final TemplateEngine templateEngine;
+  private final MessageTemplateRenderer templateEngine;
 
   /** 消息发送服务（试发） */
   private final MessageService messageService;

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import lombok.Data;
 
+import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
 
 /**
@@ -31,9 +32,11 @@ public class MsgNotificationDTO implements Serializable {
   private String id;
 
   /** 通知标题 */
+  @Xss
   private String title;
 
   /** 通知内容 */
+  @Xss
   private String content;
 
   /** 级别（INFO/WARN/ERROR/CRITICAL） */
@@ -67,6 +70,7 @@ public class MsgNotificationDTO implements Serializable {
   private String actionUrl;
 
   /** 操作按钮文案 */
+  @Xss
   private String actionText;
 
   /** 图标 */

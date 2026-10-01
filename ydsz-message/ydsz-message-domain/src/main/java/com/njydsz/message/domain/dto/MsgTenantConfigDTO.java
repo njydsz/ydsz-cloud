@@ -3,6 +3,7 @@ package com.njydsz.message.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -29,6 +30,7 @@ public class MsgTenantConfigDTO implements Serializable {
   private String tenantId;
 
   /** 租户名称 */
+  @Xss
   private String tenantName;
 
   /** 租户级每日发送上限（null 表示使用全局默认值） */

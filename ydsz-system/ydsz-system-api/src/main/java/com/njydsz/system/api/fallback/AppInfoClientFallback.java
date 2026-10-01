@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.api.client.AppInfoClient;
 import com.njydsz.system.domain.dto.AppValidateRequest;
 
@@ -24,14 +25,16 @@ public class AppInfoClientFallback implements FallbackFactory<AppInfoClient> {
 
   @Override
   public AppInfoClient create(Throwable cause) {
-    log.warn("[AppInfoClient] 降级触发: {}", cause.getMessage());
+    log.warn("[AppInfoClient] 降级触发: {}", cause == null ? "?" : cause.getMessage());
+    String unavailableMsg = I18n.message("system.admin.service.unavailable");
     return new AppInfoClient() {
       @Override
       public YdszResponse<Boolean> validateClient(AppValidateRequest request) {
         log.warn(
-            "[AppInfoClient] validateClient 降级: appKey={}, reason=系统管理服务不可用",
-            request == null ? null : request.getAppKey());
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
+            "[AppInfoClient] validateClient 降级: appKey={}, reason={}",
+            request == null ? null : request.getAppKey(),
+            unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
     };
   }

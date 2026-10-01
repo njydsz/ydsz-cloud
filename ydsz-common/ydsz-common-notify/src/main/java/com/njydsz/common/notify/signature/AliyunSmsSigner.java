@@ -1,32 +1,36 @@
-package com.njydsz.message.server.channel.sms;
+package com.njydsz.common.notify.signature;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.njydsz.common.locales.util.I18n;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
- * 阿里云 SMS Common RPC 26.09.01 签名工具。
+ * 阿里云 SMS Common RPC 协议签名工具。
  *
  * <p>实现阿里云 {@code HMAC-SHA1} 签名算法，纯静态方法，可独立单元测试。 签名步骤：
  *
  * <ol>
  *   <li>所有请求参数按 key 字典序排序，URL encode 后拼接成 canonical query
- *   <li>构造签名字符串 {@code GET&%2F&<percentEncode(canonicalQuery)>}
- *   <li>HMAC-SHA1(signString, accessKeySecret + "&") → Base64 → Signature
+ *   <li>构造签名字符串 {@code GET&#38;%2F&#38;<percentEncode(canonicalQuery)>}
+ *   <li>HMAC-SHA1(signString, accessKeySecret + "&amp;") → Base64 → Signature
  * </ol>
  *
- * <p>零外部 SDK 依赖，仅用 JDK 标准库，符合自研轻量化风格。
+ * <p>零外部 SDK 依赖，仅用 JDK 标准库 + {@link DigestUtils}（YDIZ-COMMON-054），符合自研轻量化风格。
+ *
+ * <p>通用 {@code percentEncode}：URL encode 后替换 {@code +} → {@code %20}、{@code *} → {@code %2A}、
+ * {@code %7E} → {@code ~}。
  *
  * @author ydsz-team
  * @since 26.09.01
  */
 public final class AliyunSmsSigner {
 
-  private AliyunSmsSigner() {}
+  private AliyunSmsSigner() {
+    throw new UnsupportedOperationException("Utility class");
+  }
 
   /**
    * 计算阿里云 RPC 签名。
@@ -41,7 +45,8 @@ public final class AliyunSmsSigner {
     try {
       return DigestUtils.hmacSha1Base64(stringToSign, accessKeySecret + "&");
     } catch (Exception e) {
-      throw new IllegalStateException(I18n.message("message.aliyun.sms_sign_failed", new Object[]{e.getMessage()}), e);
+      throw new IllegalStateException(
+          "Aliyun SMS signature computation failed: " + e.getMessage(), e);
     }
   }
 
@@ -56,10 +61,9 @@ public final class AliyunSmsSigner {
     StringBuilder sb = new StringBuilder();
     for (Map.Entry<String, String> e : sorted.entrySet()) {
       if (sb.length() > 0) {
-        sb.append("&");
+        sb.append('&');
       }
-      sb.append(percentEncode(e.getKey()))
-          .append("=")
+      sb.append(percentEncode(e.getKey())).append('=')
           .append(percentEncode(e.getValue() == null ? "" : e.getValue()));
     }
     return sb.toString();
@@ -75,10 +79,9 @@ public final class AliyunSmsSigner {
     StringBuilder sb = new StringBuilder();
     for (Map.Entry<String, String> e : params.entrySet()) {
       if (sb.length() > 0) {
-        sb.append("&");
+        sb.append('&');
       }
-      sb.append(percentEncode(e.getKey()))
-          .append("=")
+      sb.append(percentEncode(e.getKey())).append('=')
           .append(percentEncode(e.getValue() == null ? "" : e.getValue()));
     }
     return sb.toString();

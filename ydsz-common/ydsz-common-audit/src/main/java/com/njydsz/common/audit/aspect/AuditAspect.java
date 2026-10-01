@@ -26,6 +26,8 @@ import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.context.AuditContext;
 import com.njydsz.common.audit.context.AuditContext.AuditContextData;
 import com.njydsz.common.audit.core.AuditRecorder;
+import com.njydsz.common.audit.diff.DiffSnapshotHelper;
+import com.njydsz.common.audit.diff.DiffSnapshotHelper.DiffResult;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.enums.AuditStatus;
 import com.njydsz.common.audit.mask.SensitiveFieldMask;
@@ -262,6 +264,11 @@ public class AuditAspect {
       }
     }
 
+    // 计算 diff 快照（recordDiff=true 时执行）
+    if (audit.recordDiff()) {
+      buildDiffSnapshot(joinPoint, audit, result, auditLog);
+    }
+
     if (exception != null) {
       auditLog.setErrorMessage(buildErrorMessage(exception));
     }
@@ -270,6 +277,160 @@ public class AuditAspect {
     auditLog.setCreatedAt(LocalDateTime.now());
 
     return auditLog;
+  }
+
+  /**
+   * 构建变更 diff 快照。
+   *
+   * <p>将请求参数序列化为 {@code diffBeforeSnapshot}，返回结果序列化为 {@code diffAfterSnapshot}，
+   * 并调用 {@link DiffSnapshotHelper#diff} 计算字段级变更摘要。
+   *
+   * <p><b>设计说明（Level 1 实现）：</b>
+   * <ul>
+   *   <li>beforeSnapshot：方法输入态（所有过滤后的参数 JSON 拼接）</li>
+   *   <li>afterSnapshot：方法输出态（返回值 JSON 序列化）</li>
+   *   <li>diff 计算失败时降级处理，不影响审计主流程和业务流程</li>
+   * </ul>
+   *
+   * @param joinPoint 切点
+   * @param audit 审计注解
+   * @param result 方法执行结果
+   * @param auditLog 审计日志实体（用于设置快照字段）
+   */
+  private void buildDiffSnapshot(
+      ProceedingJoinPoint joinPoint, Audit audit, Object result, AuditLog auditLog) {
+    try {
+      // 1. 变更前快照：序列化请求参数（保留原始值以保障 diff 计算准确性）
+      String beforeJson = serializeArgsRaw(joinPoint);
+
+      // 2. 变更后快照：序列化返回结果
+      String afterJson = null;
+      if (result != null) {
+        afterJson = serializeSafely(result);
+      }
+
+      // 3. 存储快照（脱敏后存储到审计日志）
+      if (beforeJson != null && !beforeJson.isEmpty()) {
+        String maskedBefore = maskSensitiveJson(beforeJson, sensitiveParams);
+        maskedBefore = truncateWithWarning(maskedBefore, DEFAULT_MAX_SERIALIZE_LENGTH, "变更前快照");
+        auditLog.setDiffBeforeSnapshot(maskedBefore);
+      }
+      if (afterJson != null && !afterJson.isEmpty()) {
+        String maskedAfter = maskSensitiveJson(afterJson, sensitiveParams);
+        maskedAfter = truncateWithWarning(maskedAfter, DEFAULT_MAX_SERIALIZE_LENGTH, "变更后快照");
+        auditLog.setDiffAfterSnapshot(maskedAfter);
+      }
+
+      // 4. 计算 diff 摘要用于日志记录（不阻断审计流程）
+      DiffResult diffResult = DiffSnapshotHelper.diff(
+          filterIgnoredFields(beforeJson, audit.excludeParams()),
+          afterJson,
+          mergeExcludedParams(audit.excludeParams()));
+      if (diffResult != null && hasDiffChanges(diffResult)) {
+        LOG.debug(
+            "【审计切面】diff计算完成, id={}, module={}, changedFields={}, addedFields={}, removedFields={}",
+            auditLog.getId(),
+            auditLog.getModule(),
+            diffResult.getChangedFields().size(),
+            diffResult.getAddedFields().size(),
+            diffResult.getRemovedFields().size());
+      }
+    } catch (Exception e) {
+      LOG.warn("【审计切面】计算diff快照失败，已降级处理: {}", e.getMessage());
+    }
+  }
+
+  /**
+   * 序列化方法参数为原始 JSON 字符串（不脱敏），用于 diff 计算和快照存储。
+   *
+   * <p>与 {@link #buildRequestParams} 的区别：本方法不做脱敏处理，
+   * 确保 diff 计算的准确性；存储时由调用方再脱敏。
+   *
+   * @param joinPoint 切点
+   * @return 参数 JSON 字符串（多参数以空格分隔），无参数时返回 null
+   */
+  private String serializeArgsRaw(ProceedingJoinPoint joinPoint) {
+    try {
+      Object[] args = joinPoint.getArgs();
+      if (args == null || args.length == 0) {
+        return null;
+      }
+      StringBuilder sb = new StringBuilder();
+      for (Object arg : args) {
+        if (arg != null && !isFilterObject(arg)) {
+          try {
+            String json = serializeSafely(arg);
+            if (StringUtils.isNotBlank(json)) {
+              sb.append(json).append(" ");
+            }
+          } catch (Exception e) {
+            LOG.trace("【审计切面】序列化参数失败: {}", e.getMessage());
+          }
+        }
+      }
+      String result = sb.toString().trim();
+      return result.isEmpty() ? null : result;
+    } catch (Exception e) {
+      LOG.debug("【审计切面】构建diff快照参数失败: {}", e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * 将排除的参数名合并为 Set，用于 DiffSnapshotHelper.ignoredFields。
+   *
+   * @param excludeParams 需要排除的参数名数组
+   * @return 合并后的 Set，永不为 null
+   */
+  private Set<String> mergeExcludedParams(String[] excludeParams) {
+    Set<String> merged = new HashSet<>(sensitiveParams);
+    if (excludeParams != null) {
+      merged.addAll(Arrays.asList(excludeParams));
+    }
+    return merged;
+  }
+
+  /**
+   * 过滤 JSON 中的被排除字段（简单的 key 移除），用于 diff 计算前预处理。
+   *
+   * <p>采用轻量级字符串匹配而非完整 JSON 解析，避免性能损耗。
+   * 如果 beforeJson 为 null 或为空，直接返回原值。
+   *
+   * @param json 原始 JSON 字符串
+   * @param excludedFields 需要排除的字段名
+   * @return 过滤后的 JSON，解析失败时返回原值
+   */
+  private String filterIgnoredFields(String json, String[] excludedFields) {
+    if (json == null || json.isEmpty() || excludedFields == null || excludedFields.length == 0) {
+      return json;
+    }
+    try {
+      String result = json;
+      for (String field : excludedFields) {
+        if (field != null && !field.isEmpty()) {
+          // 移除简单字段："fieldName": value,
+          result = result.replaceAll("\"" + field + "\"\\s*:\\s*[^,{},]+", "");
+        }
+      }
+      return result;
+    } catch (Exception e) {
+      return json;
+    }
+  }
+
+  /**
+   * 判断 DiffResult 是否存在有效的字段变更。
+   *
+   * @param result diff 结果
+   * @return 存在变更返回 true
+   */
+  private boolean hasDiffChanges(DiffResult result) {
+    if (result == null) {
+      return false;
+    }
+    return (result.getChangedFields() != null && !result.getChangedFields().isEmpty())
+        || (result.getAddedFields() != null && !result.getAddedFields().isEmpty())
+        || (result.getRemovedFields() != null && !result.getRemovedFields().isEmpty());
   }
 
   /**

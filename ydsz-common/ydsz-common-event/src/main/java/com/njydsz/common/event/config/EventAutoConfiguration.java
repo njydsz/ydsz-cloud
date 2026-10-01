@@ -18,6 +18,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -36,7 +38,12 @@ import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.KafkaEventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.common.event.gateway.OutboxObservationGateway;
+import com.njydsz.common.event.gateway.QueueEventPublishGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
+import com.njydsz.common.queue.queue.IMessageQueueProvider;
+
+import org.springframework.beans.factory.annotation.Value;
+
 import com.njydsz.common.event.health.OutboxHealthIndicator;
 import com.njydsz.common.event.processor.OutboxProcessor;
 import com.njydsz.common.event.repository.OutboxRepository;
@@ -392,6 +399,53 @@ public class EventAutoConfiguration {
       outboxProcessor.stop();
     }
   }
+
+  // ==================== 嵌套配置：Queue 抽象网关 ====================
+
+    /**
+     * 基于 common-queue 的统一投递网关配置（嵌套配置类）
+     *
+     * <p>通过嵌套 {@code @Configuration} 类实现条件装配——当 classpath 存在 {@link IMessageQueueProvider}
+     * 且容器中不存在其他 {@link EventPublishGateway} Bean 时自动注册 {@link QueueEventPublishGateway}。
+     *
+     * <p>使用 {@link Order} 最高优先级确保在 RocketMqGatewayConfiguration 和 KafkaGatewayConfiguration
+     * 之前注册，实现以 common-queue 抽象统一接管 MQ 投递。当底层引入 RocketMQ / Kafka 客户端，业务模块又希望
+     * 使用 common-queue 抽象层（而非直连 RocketMQTemplate / KafkaTemplate）时，本配置优先生效。
+     *
+     * <p>当容器中已存在业务模块自定义的 {@link EventPublishGateway} Bean 时，本配置自动跳过。
+     *
+     * @author ydsz-team
+     * @since 26.09.30
+     */
+    @Configuration
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — 字符串常量（注解/反射类名），非代码引用
+    @ConditionalOnClass(name = "com.njydsz.common.queue.queue.IMessageQueueProvider")
+    // CHECKSTYLE.ON: RegexpSinglelineJava
+    public static class QueueGatewayConfiguration {
+
+      /** 日志实例 */
+      private static final Logger LOG = LoggerFactory.getLogger(QueueGatewayConfiguration.class);
+
+      /**
+       * 注册基于 common-queue 的统一事件投递网关
+       *
+       * <p>当容器中已有业务模块自定义的 EventPublishGateway Bean 或已注册 RocketMQ/Kafka 网关时，
+       * 本 Bean 不会生效（{@code @ConditionalOnMissingBean} 条件控制）。
+       *
+       * @param provider IMessageQueueProvider 提供者
+       * @param queueType 队列类型配置（STREAM / ROCKET / KAFKA），默认 STREAM
+       * @return QueueEventPublishGateway 实例
+       */
+      @Bean
+      @ConditionalOnMissingBean(EventPublishGateway.class)
+      public EventPublishGateway queueEventPublishGateway(
+          ObjectProvider<IMessageQueueProvider> provider,
+          @Value("${ydsz.event.outbox.queue.type:STREAM}") String queueType) {
+        LOG.info("QueueEventPublishGateway registered: queueType={}, topic=ydsz-outbox-events", queueType);
+        return new QueueEventPublishGateway(provider, queueType);
+      }
+    }
 
   // ==================== 嵌套配置：RocketMQ 网关 ====================
 

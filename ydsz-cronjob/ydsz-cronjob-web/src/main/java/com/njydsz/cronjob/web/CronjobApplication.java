@@ -10,6 +10,7 @@ import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
 import com.njydsz.common.locales.config.EnableYdszI18n;
+import com.njydsz.common.queue.annotation.EnableQueue;
 import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
@@ -35,6 +36,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszI18n
 @EnableScheduling
 @MapperScan("com.njydsz.cronjob.infra.mapper")
+@EnableQueue
 public class CronjobApplication {
 
   /**

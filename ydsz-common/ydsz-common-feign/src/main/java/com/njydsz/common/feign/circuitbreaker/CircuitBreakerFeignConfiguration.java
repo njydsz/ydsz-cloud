@@ -1,6 +1,7 @@
 package com.njydsz.common.feign.circuitbreaker;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -60,12 +61,14 @@ public class CircuitBreakerFeignConfiguration {
   /**
    * 注册 Resilience4j 熔断器策略 Bean。
    *
-   * <p>自动注入 {@link CircuitBreakerStatePersistence}（用于状态持久化） 和 {@link
-   * FeignCircuitBreakerMetricsExporter}（用于指标自动注册）。
+   * <p>自动注入 {@link CircuitBreakerStatePersistence}（用于状态持久化）、 {@link
+   * FeignCircuitBreakerMetricsExporter}（用于指标自动注册）以及共享的 {@link CircuitBreakerRegistry}
+   *（由 ydzs-common-safe 提供，Bean 名 {@code safeCircuitBreakerRegistry}）。
    *
    * @param properties Feign 配置属性
    * @param statePersistenceProvider 熔断状态持久化提供者（可选）
    * @param metricsExporterProvider 熔断指标导出器提供者（可选）
+   * @param circuitBreakerRegistryProvider 共享熔断器注册表提供者（可选）
    * @return SafeCircuitBreakerAdapter 实例
    */
   @Bean
@@ -73,15 +76,17 @@ public class CircuitBreakerFeignConfiguration {
   public FeignCircuitBreakerStrategy safeCircuitBreakerStrategy(
       FeignProperties properties,
       ObjectProvider<CircuitBreakerStatePersistence> statePersistenceProvider,
-      ObjectProvider<FeignCircuitBreakerMetricsExporter> metricsExporterProvider) {
+      ObjectProvider<FeignCircuitBreakerMetricsExporter> metricsExporterProvider,
+      ObjectProvider<CircuitBreakerRegistry> circuitBreakerRegistryProvider) {
     FeignCircuitBreakerMetricsExporter exporter = metricsExporterProvider.getIfAvailable();
+    CircuitBreakerRegistry registry = circuitBreakerRegistryProvider.getIfAvailable();
     SafeCircuitBreakerAdapter adapter =
         new SafeCircuitBreakerAdapter(
-            properties, statePersistenceProvider.getIfAvailable(), exporter);
+            properties, statePersistenceProvider.getIfAvailable(), exporter, registry);
     if (exporter != null) {
       exporter.setCircuitBreakerStrategy(adapter);
     }
-    log.info("[Feign] 使用 Resilience4j 熔断器策略");
+    log.info("[Feign] 使用 Resilience4j 熔断器策略（共享注册表: {}", registry != null);
     return adapter;
   }
 }

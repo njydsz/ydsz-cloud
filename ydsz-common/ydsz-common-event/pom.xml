@@ -144,6 +144,17 @@
             <artifactId>aspectjrt</artifactId>
         </dependency>
 
+        <!--
+            common-queue（optional，编译期可见，运行期不强制）
+            提供 IMessageQueueProvider / QueueMessage 抽象队列能力。
+            仅当使用方引入 ydzs-common-queue 时才自动装配 QueueEventPublishGateway。
+        -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-queue</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- test scope -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

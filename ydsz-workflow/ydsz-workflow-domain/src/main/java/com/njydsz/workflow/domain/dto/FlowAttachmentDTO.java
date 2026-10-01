@@ -6,6 +6,7 @@ import java.io.Serializable;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.workflow.domain.entity.FlowAttachment;
 
 /**
@@ -24,6 +25,7 @@ public class FlowAttachmentDTO implements Serializable {
 
   /** 原始文件名 */
   @NotBlank(message = "{validation.workflow.attachment.fileName.required}")
+  @Xss(message = "文件名包含非法字符")
   private String fileName;
 
   /** 文件扩展名（jpg/pdf/docx...，可空时由 fileName 推断） */

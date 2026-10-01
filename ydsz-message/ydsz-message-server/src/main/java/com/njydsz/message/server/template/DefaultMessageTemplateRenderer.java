@@ -34,7 +34,7 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  * @since 26.09.01
  */
 @Component
-public class DefaultTemplateEngine implements TemplateEngine {
+public class DefaultMessageTemplateRenderer implements MessageTemplateRenderer {
   /** if/else 正则 false 分支组 */
   private static final int IF_ELSE_GROUP_FALSE = 3;
 

@@ -22,7 +22,7 @@ import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.common.util.string.StringUtils;
-import com.njydsz.message.server.template.TemplateEngine;
+import com.njydsz.message.server.template.MessageTemplateRenderer;
 import com.njydsz.message.server.template.util.TemplateFilterUtil;
 
 /**
@@ -52,7 +52,7 @@ import com.njydsz.message.server.template.util.TemplateFilterUtil;
  * @since 26.09.01
  */
 @Slf4j
-public class CachedTemplateEngine extends SentryMetricsAdapter implements TemplateEngine {
+public class CachedMessageTemplateRenderer extends SentryMetricsAdapter implements MessageTemplateRenderer {
   /** 集合初始容量 */
   private static final int COLLECTION_CAPACITY = 16;
 
@@ -108,7 +108,7 @@ public class CachedTemplateEngine extends SentryMetricsAdapter implements Templa
    * @param maxCacheSize 最大缓存容量
    * @param expireAfterWriteMinutes 写入后过期时间（分钟）
    */
-  public CachedTemplateEngine(
+  public CachedMessageTemplateRenderer(
       int maxCacheSize,
       long expireAfterWriteMinutes) {
     super("ydsz_message_template_");
@@ -312,10 +312,10 @@ public class CachedTemplateEngine extends SentryMetricsAdapter implements Templa
             }
           }
         }
-                default -> {
+        default -> {
             // 未知指令忽略
           }
-        }
+      }
     }
     return result.toString();
   }
@@ -446,7 +446,7 @@ public class CachedTemplateEngine extends SentryMetricsAdapter implements Templa
             .peek(astCache::invalidate)
             .count();
     log.info(
-        "[CachedTemplateEngine] evictByTemplateCode: templateCode={}, evicted={}",
+        "[CachedMessageTemplateRenderer] evictByTemplateCode: templateCode={}, evicted={}",
         templateCode,
         evicted);
   }

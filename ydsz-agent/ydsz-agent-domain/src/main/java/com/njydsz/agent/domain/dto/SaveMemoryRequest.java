@@ -3,6 +3,7 @@ package com.njydsz.agent.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -28,6 +29,7 @@ public class SaveMemoryRequest implements Serializable {
 
   /** 消息内容 */
   @Schema(description = "消息内容")
+  @Xss(message = "消息内容包含非法字符")
   private String content;
 
   /** 工具调用 ID（Tool 角色必填） */

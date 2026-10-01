@@ -6,12 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.repository.MsgLogRepository;
 import com.njydsz.message.domain.vo.MsgLogVO;
+import com.njydsz.message.server.event.OutboxDomainEventPublisher;
 
 /**
  * 消息发送事务包装服务。
@@ -27,7 +26,7 @@ import com.njydsz.message.domain.vo.MsgLogVO;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @since 26.09.29 迁移至 common-event OutboxService，删除自建 OutboxEventRepository
+ * @since 26.09.30 改用 OutboxDomainEventPublisher 委托 DomainEventPublisher 统一门面，移除 OutboxService 直连
  */
 @Slf4j
 @Service
@@ -35,33 +34,29 @@ import com.njydsz.message.domain.vo.MsgLogVO;
 public class MessageSendTxService {
 
   private final MsgLogRepository msgLogRepository;
-  private final OutboxService outboxService;
+  private final OutboxDomainEventPublisher outboxDomainEventPublisher;
   private final MessageTraceService messageTraceService;
 
   /**
    * 同步发送的事务包装：落库 PENDING + 写 Outbox 在同一事务中。
    *
-   * <p>确保 {@link com.njydsz.message.server.event.OutboxDomainEventPublisher} 因存在事务上下文而使用
-   * {@link org.springframework.transaction.support.TransactionSynchronization#afterCommit()} 注册 Outbox 写入,
+   * <p>确保 {@link OutboxDomainEventPublisher} 因存在事务上下文而使用 Outbox 模式写入,
    * 而非回退到同步发布。
    *
    * <p>同时记录轨迹节点 {@code "PERSISTED"}, 与 {@code MessageServiceImpl} 中其他 trace 节点保持一致。
    *
    * @param logVO 消息日志 VO（已构造，未落库）
-   * @param MessageItemRequestDTO 消息发送请求（可为 null，为 null 时仅落库 msgLog）
+   * @param request 消息发送请求（可为 null，为 null 时仅落库 msgLog）
    */
   @Transactional(propagation = Propagation.REQUIRED)
-  public void insertLogAndOutbox(MsgLogVO logVO, MessageItemRequestDTO MessageItemRequestDTO) {
+  public void insertLogAndOutbox(MsgLogVO logVO, MessageItemRequestDTO request) {
     msgLogRepository.save(logVO);
-    if (MessageItemRequestDTO != null) {
-      // 委托 OutboxService 写入标准 Outbox 表
-      outboxService.appendToOutbox(
-          OutboxMessage.builder()
-              .aggregateType("Message")
-              .aggregateId(logVO.getMsgId())
-              .eventType("MessageAsyncDispatch")
-              .payload(YdszJson.toJson(MessageItemRequestDTO))
-              .idempotencyKey(logVO.getMsgId()));
+    if (request != null) {
+      // 委托 OutboxDomainEventPublisher 写入 Outbox（共同体 DomainEventPublisher 统一门面）
+      outboxDomainEventPublisher.publishAggregateDispatch(
+          logVO.getMsgId(),
+          YdszJson.toJson(request),
+          logVO.getMsgId());
     }
     messageTraceService.recordTrace(
         logVO.getMsgId(),

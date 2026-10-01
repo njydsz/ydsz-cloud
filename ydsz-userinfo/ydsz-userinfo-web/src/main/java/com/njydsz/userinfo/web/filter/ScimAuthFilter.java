@@ -42,10 +42,13 @@ import com.njydsz.userinfo.server.config.ScimProperties;
  * <p><b>安全设计：</b>
  *
  * <ul>
- *   <li>Token 比较使用 {@link DigestUtils#constantTimeEquals(String, String)} 防时序攻击
- *   <li>认证失败不暴露具体原因（Token 无效 vs 缺失统一返回 "authentication failed"）
- *   <li>SCIM 使用独立认证体系，不依赖 ydsz 主系统的 Session/Token
+ *   <li>Token 比较使用 {@link DigestUtils#constantTimeEquals(String, String)} 防时序攻击</li>
+ *   <li>认证失败不暴露具体原因（Token 无效 vs 缺失统一返回 "authentication failed"）</li>
+ *   <li>SCIM 使用独立认证体系，不依赖 ydz 主系统的 Session/Token</li>
  * </ul>
+ *
+ * <p><b>安全模块委托：</b>本过滤器的时序安全完全委托给 ydsz-common-util 的 {@link DigestUtils}，
+ * 无需在过滤器内自行实现 HMAC 计算或常量时间比较逻辑。
  *
  * @author ydsz-team
  * @since 26.09.01

@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -31,6 +32,7 @@ public class AgentApprovalDTO implements Serializable {
   private String traceId;
 
   /** 待审批步骤的业务描述 */
+  @Xss(message = "审批步骤描述包含非法字符")
   private String stepDescription;
 
   /** 审批上下文（JSON 字符串，含用户输入、已有结果等） */
@@ -43,6 +45,7 @@ public class AgentApprovalDTO implements Serializable {
   private String approver;
 
   /** 审批意见 */
+  @Xss(message = "审批意见包含非法字符")
   private String comment;
 
   /** 请求创建时间 */

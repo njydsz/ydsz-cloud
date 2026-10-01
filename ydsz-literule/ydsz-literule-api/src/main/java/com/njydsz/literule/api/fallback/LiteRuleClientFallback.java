@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.literule.api.client.LiteRuleClient;
 import com.njydsz.literule.domain.vo.RuleResultVO;
 
@@ -29,22 +30,21 @@ public class LiteRuleClientFallback implements FallbackFactory<LiteRuleClient> {
 
   @Override
   public LiteRuleClient create(Throwable cause) {
-    log.warn("[LiteRuleClient] 降级触发: {}", cause.getMessage());
+    log.warn("[LiteRuleClient] 降级触发: {}", cause == null ? "?" : cause.getMessage());
+    String unavailableMsg = I18n.message("literule.service.unavailable");
     return new LiteRuleClient() {
       @Override
       public YdszResponse<List<RuleResultVO>> dryRun(String ruleCode, Map<String, Object> facts) {
-        log.warn("[LiteRuleClient] dryRun 降级: ruleCode={}, reason=规则引擎服务不可用", ruleCode);
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "规则引擎服务不可用");
+        log.warn("[LiteRuleClient] dryRun 降级: ruleCode={}, reason={}", ruleCode, unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
 
       @Override
       public YdszResponse<List<RuleResultVO>> evaluate(
           String ruleCode, String scenario, Map<String, Object> facts) {
-        log.warn(
-            "[LiteRuleClient] evaluate 降级: ruleCode={}, scenario={}, reason=规则引擎服务不可用",
-            ruleCode,
-            scenario);
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "规则引擎服务不可用");
+        log.warn("[LiteRuleClient] evaluate 降级: ruleCode={}, scenario={}, reason={}",
+            ruleCode, scenario, unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
     };
   }

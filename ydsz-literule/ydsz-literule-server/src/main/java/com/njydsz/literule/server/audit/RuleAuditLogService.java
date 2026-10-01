@@ -562,7 +562,7 @@ public class RuleAuditLogService {
    * 写入审计日志到通用审计框架
    *
    * @param entry 自建审计日志条目（用于日志输出）
-   * @param action 审计操作（本地枚举，编码与通用 AuditAction 兼容）
+   * @param action 审计操作（common-audit {@code AuditAction}）
    * @param beforeSnapshot 变更前快照
    * @param afterSnapshot 变更后快照
    * @param status 审计状态（为 null 时默认 SUCCESS）

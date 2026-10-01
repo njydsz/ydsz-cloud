@@ -1,4 +1,4 @@
-package com.njydsz.common.auth.util;
+package com.njydsz.common.util;
 
 import java.util.BitSet;
 import java.util.concurrent.atomic.AtomicLong;
@@ -7,16 +7,27 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * 布隆过滤器（零第三方依赖实现）。
  *
- * <p>用于 Token 黑名单前置过滤：判断元素「一定不在」集合中（假阴性为 0）， 从而短路 Redis 查询，降低高 QPS 下的 Redis 开销。
+ * <p>用于元素「一定不在」集合中的前置判断，从而短路后端查询，降低高 QPS 下的存储层开销。
  *
  * <p>特性：
  *
  * <ul>
- *   <li>基于 {@link BitSet} 实现，默认 14 个哈希函数（约 0.01% 误判率）
+ *   <li>基于 {@link BitSet} 实现，零第三方依赖（纯 JDK）
  *   <li>可配置预计元素数与误判率，自动计算位数组大小与哈希函数个数
  *   <li>线程安全：写入持写锁，读取无锁（仅 volatile 读）
  *   <li>支持容量统计 {@link #estimatedSize()}
  * </ul>
+ *
+ * <p><b>典型使用场景：</b>
+ *
+ * <ul>
+ *   <li>Token 黑名单前置过滤（auth 模块）
+ *   <li>消息去重（message 模块）
+ *   <li>缓存穿透防护
+ * </ul>
+ *
+ * <p><b>语义：</b>返回 {@code false} 时元素<b>一定不在</b>集合中（零假阴性）；
+ * 返回 {@code true} 时元素<b>可能存在</b>（存在误判）。
  *
  * @author ydsz-team
  * @since 26.09.01

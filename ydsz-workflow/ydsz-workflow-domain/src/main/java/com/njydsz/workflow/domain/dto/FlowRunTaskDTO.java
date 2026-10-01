@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -52,6 +53,7 @@ public class FlowRunTaskDTO {
   private Integer nodeType;
 
   /** 任务标题 */
+  @Xss(message = "任务标题包含非法字符")
   private String title;
 
   /** 委托人 ID（委派操作产生） */
@@ -88,6 +90,7 @@ public class FlowRunTaskDTO {
   private String taskStatus;
 
   /** 任务意见/备注 */
+  @Xss(message = "任务意见包含非法字符")
   private String comment;
 
   /** 签收时间 */

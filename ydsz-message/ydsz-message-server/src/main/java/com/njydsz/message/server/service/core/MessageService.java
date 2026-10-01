@@ -90,8 +90,8 @@ public interface MessageService {
   /**
    * P2-3: 事务消息发送（RocketMQ 半消息）。
    *
-   * <p>发送半消息后，由 {@link com.njydsz.message.server.producer.MessageTransactionListener}
-   * 执行本地事务校验（通道/模板有效性），COMMIT 后消费端异步处理。 适用于业务侧需要确保通知请求仅在本地校验通过后才投递的场景。
+   * <p>发送前由 {@link com.njydsz.message.server.producer.CommonQueueMessageOperations}
+   * 执行本地校验（通道/模板有效性），校验通过后同步投递。 适用于业务侧需要确保通知请求仅在本地校验通过后才投递的场景。
    *
    * @param request 消息发送请求
    * @return 发送结果（success=true 表示半消息已提交，实际发送由消费端异步完成）

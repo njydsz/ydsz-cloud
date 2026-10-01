@@ -9,14 +9,12 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.SearchIndexDTO;
 import com.njydsz.nextwiki.domain.event.AuditEvent;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
-import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
@@ -55,9 +53,6 @@ public class FileOperatedEventListener {
   private final FileNodeRepository fileNodeRepository;
   private final TagRepository tagRepository;
   private final ContentExtractionApplicationService contentExtractionService;
-  private final ShareLinkRepository shareLinkRepository;
-  private final NotifyHelper notifyHelper;
-
   /**
    * 异步处理文件操作事件。
    *
@@ -185,32 +180,11 @@ public class FileOperatedEventListener {
       return;
     }
 
-    try {
-      // 查询分享链接详情，获取被分享者信息
-      var shareLink = shareLinkRepository.findByShareCode(shareCode);
-      if (shareLink == null) {
-        log.warn("[FileOperatedEventListener] 分享链接不存在: shareCode={}", shareCode);
-        return;
-      }
-
-      String fileName = event.getFileName() != null ? event.getFileName() : "未知文件";
-      String title = "文件分享通知";
-      String content = String.format("用户 %s 与你分享了文件「%s」，点击查看详情", event.getOperatorId(), fileName);
-
-      // 发送站内信通知给文件所有者（分享创建者自身也会收到通知作为确认）
-      notifyHelper.sendInApp(event.getOperatorId(), title, content);
-
-      log.info(
-          "[FileOperatedEventListener] 分享通知已发送: fileNodeId={}, shareCode={}, operator={}",
-          event.getFileNodeId(),
-          shareCode,
-          event.getOperatorId());
-    } catch (Exception e) {
-      log.warn(
-          "[FileOperatedEventListener] 分享通知发送失败: fileNodeId={}, error={}",
-          event.getFileNodeId(),
-          e.getMessage());
-    }
+    log.info(
+        "[FileOperatedEventListener] 分享事件处理: fileNodeId={}, shareCode={}, operator={}",
+        event.getFileNodeId(),
+        shareCode,
+        event.getOperatorId());
   }
 
   /**

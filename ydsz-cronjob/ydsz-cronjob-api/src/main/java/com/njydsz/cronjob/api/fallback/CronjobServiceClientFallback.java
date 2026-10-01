@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.cronjob.api.client.CronjobServiceClient;
 
 /**
@@ -35,7 +36,8 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
    */
   @Override
   public CronjobServiceClient create(Throwable cause) {
-    log.warn("[CronjobServiceClient] 降级触发: {}", cause.getMessage());
+    log.warn("[CronjobServiceClient] 降级触发: {}", cause == null ? "?" : cause.getMessage());
+    String unavailableMsg = I18n.message("cronjob.service.unavailable");
     return new CronjobServiceClient() {
       /**
        * 降级实现：不真正触发任务，仅记录 WARN 日志。
@@ -45,8 +47,8 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        */
       @Override
       public YdszResponse<String> trigger(String jobId) {
-        log.warn("[CronjobServiceClient] trigger 降级: jobId={}, reason=cronjob服务不可用", jobId);
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+        log.warn("[CronjobServiceClient] trigger 降级: jobId={}, reason={}", jobId, unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
 
       /**
@@ -59,10 +61,11 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
       @Override
       public YdszResponse<String> trigger(String jobId, boolean holdLock) {
         log.warn(
-            "[CronjobServiceClient] trigger 降级: jobId={}, holdLock={}, reason=cronjob服务不可用",
+            "[CronjobServiceClient] trigger 降级: jobId={}, holdLock={}, reason={}",
             jobId,
-            holdLock);
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+            holdLock,
+            unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
 
       /**
@@ -73,9 +76,9 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        */
       @Override
       public YdszResponse<Map<String, Object>> getJobInfo(String jobId) {
-        log.warn("[CronjobServiceClient] getJobInfo 降级: jobId={}, reason=cronjob服务不可用", jobId);
+        log.warn("[CronjobServiceClient] getJobInfo 降级: jobId={}, reason={}", jobId, unavailableMsg);
         return YdszResponse.error(
-            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
 
       /**
@@ -86,9 +89,9 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        */
       @Override
       public YdszResponse<Void> pauseJob(String jobId) {
-        log.warn("[CronjobServiceClient] pauseJob 降级: jobId={}, reason=cronjob服务不可用", jobId);
+        log.warn("[CronjobServiceClient] pauseJob 降级: jobId={}, reason={}", jobId, unavailableMsg);
         return YdszResponse.error(
-            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
 
       /**
@@ -99,9 +102,9 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
        */
       @Override
       public YdszResponse<Void> resumeJob(String jobId) {
-        log.warn("[CronjobServiceClient] resumeJob 降级: jobId={}, reason=cronjob服务不可用", jobId);
+        log.warn("[CronjobServiceClient] resumeJob 降级: jobId={}, reason={}", jobId, unavailableMsg);
         return YdszResponse.error(
-            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "定时任务服务不可用");
+            FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
     };
   }

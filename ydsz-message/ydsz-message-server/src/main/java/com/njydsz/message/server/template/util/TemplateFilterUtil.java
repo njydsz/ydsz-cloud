@@ -20,7 +20,7 @@ import com.njydsz.common.util.string.StringUtils;
 /**
  * 模板管道过滤器公共工具类。
  *
- * <p>提供模板变量渲染中的常用过滤器实现，供 {@code DefaultTemplateEngine} 和 {@code CachedTemplateEngine} 共享，
+ * <p>提供模板变量渲染中的常用过滤器实现，供 {@code DefaultMessageTemplateRenderer} 和 {@code CachedMessageTemplateRenderer} 共享，
  * 避免重复代码。
  *
  * <p>支持的过滤器：

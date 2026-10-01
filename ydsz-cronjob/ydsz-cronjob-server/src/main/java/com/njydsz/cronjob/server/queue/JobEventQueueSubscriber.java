@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.enums.QueueType;
+import com.njydsz.common.queue.manager.QueueManager;
+import com.njydsz.common.queue.metrics.QueueMetrics;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessageSubscriber;
@@ -47,9 +49,11 @@ public class JobEventQueueSubscriber {
 
   private final IMessageQueueProvider messageQueueProvider;
   private final EventDrivenScheduler eventDrivenScheduler;
+  private final QueueManager queueManager;
 
   private IMessageQueue eventTriggerQueue;
   private IMessageSubscriber eventTriggerSubscriber;
+  private QueueMetrics eventTriggerMetrics;
 
   /**
    * 启动事件触发消息订阅（应用启动即开始监听）。
@@ -66,6 +70,11 @@ public class JobEventQueueSubscriber {
           eventTriggerQueue.createSubscriber(JobQueueChannels.JOB_EVENT_TRIGGER);
       eventTriggerSubscriber.subscribeAsync(this::handleEventTrigger);
       log.info("[JobQueue] 事件驱动调度订阅者已启动, channel={}", JobQueueChannels.JOB_EVENT_TRIGGER);
+      if (queueManager != null && eventTriggerQueue != null) {
+        eventTriggerMetrics = new QueueMetrics(JobQueueChannels.JOB_EVENT_TRIGGER, "STREAM");
+        queueManager.register(JobQueueChannels.JOB_EVENT_TRIGGER, "STREAM", eventTriggerQueue,
+            eventTriggerMetrics);
+      }
     } catch (Exception e) {
       log.warn("[JobQueue] 事件驱动调度订阅者启动失败, 事件触发功能不可用: {}", e.getMessage());
     }

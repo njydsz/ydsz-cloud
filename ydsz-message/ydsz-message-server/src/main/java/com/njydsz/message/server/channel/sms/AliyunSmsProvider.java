@@ -21,17 +21,18 @@ import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.util.http.RestTemplateUtils;
 import com.njydsz.common.locales.util.I18n;
+import com.njydsz.common.notify.signature.AliyunSmsSigner;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.config.MessageProperties;
 
 /**
  * 阿里云短信服务商实现。
  *
- * <p>通过阿里云 SMS Common RPC API（{@code SendSms}）发送短信，签名使用 {@link AliyunSmsSigner} 自实现 HmacSHA1，零外部
- * SDK 依赖。
+ * <p>通过阿里云 SMS Common RPC API（{@code SendSms}）发送短信，签名委托 {@link AliyunSmsSigner}（位于
+ * {@code ydzs-common-notify/signature/}），零外部 SDK 依赖。
  *
- * <p>仅当 {@code ydsz.message.sms.provider=aliyun} 时装配；凭证缺失时返回 fail （由 {@link
- * com.njydsz.message.server.channel.impl.SmsChannel} 自动降级到 Mock）。
+ * <p>仅当 {@code ydsz.message.sms.provider=aliyun} 时装配；凭证缺失时返回 fail（由
+ * {@link com.njydsz.message.server.channel.impl.SmsChannel} 自动降级到 Mock）。
  *
  * <p>参数来源：
  *
@@ -42,10 +43,9 @@ import com.njydsz.message.server.config.MessageProperties;
  *   <li>TemplateParam = {@code request.getParams()} 的 JSON
  * </ul>
  *
- * <p><b>与 ydsz-common-notify 同名类的关系（ADR-1，见 docs/architecture/adr/ADR-009-public-capability-convergence.md）：</b>
- * common-notify 亦提供 {@code AliyunSmsProvider}（同一阿里云 RPC 协议的独立实现，含内联 HMAC-SHA1 签名）。
- * 按 ADR-1 决议：本类与 {@link AliyunSmsSigner} 为<b>权威实现</b>（能力超集：batchSend + queryReceipt），
- * 阿里云签名逻辑后续将下沉至 common-notify，届时本类改为组合调用 common，删除自有协议细节。
+ * <p><b>与 ydzs-common-notify 同名类的关系（ADR-1，见 docs/architecture/adr/ADR-009-public-capability-convergence.md）：</b>
+ * common-notify 亦提供 {@code AliyunSmsProvider}（独立接口 + 共享 signer）。本类为其<b>权威实现</b>
+ * （能力超集：batchSend + queryReceipt），HMAC-SHA1 签名逻辑已下沉至 common-notify 的 signer 中。
  *
  * @author ydsz-team
  * @since 26.09.01

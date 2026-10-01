@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.dto.put;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -26,6 +27,7 @@ public class AlertRulePutDTO implements Serializable {
   @Schema(description = "规则 ID（更新时必填）")
   private String id;
 
+  @Xss(message = "规则名称包含非法字符")
   @NotBlank(message = "规则名称不能为空")
   @Schema(description = "规则名称", requiredMode = Schema.RequiredMode.REQUIRED)
   private String ruleName;

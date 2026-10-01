@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.enums.QueueType;
+import com.njydsz.common.queue.manager.QueueManager;
+import com.njydsz.common.queue.metrics.QueueMetrics;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessagePublisher;
@@ -59,8 +61,10 @@ public class FlowQueuePublisher {
   private static final int MAP_INIT_CAPACITY_8 = 8;
 
   private final IMessageQueueProvider messageQueueProvider;
+  private final QueueManager queueManager;
   private IMessageQueue flowEventQueue;
   private IMessagePublisher flowEventPublisher;
+  private QueueMetrics flowEventMetrics;
 
   /**
    * 应用启动后创建工作流事件通道的发布者。
@@ -76,6 +80,9 @@ public class FlowQueuePublisher {
     try {
       flowEventQueue = messageQueueProvider.createMessageQueue(QueueType.STREAM);
       flowEventPublisher = flowEventQueue.createPublisher(FlowQueueChannels.FLOW_EVENT);
+      flowEventMetrics = new QueueMetrics(FlowQueueChannels.FLOW_EVENT, "STREAM");
+      queueManager.register(FlowQueueChannels.FLOW_EVENT, "STREAM", flowEventQueue,
+          flowEventMetrics);
       log.info("[FlowQueue] 工作流事件队列发布者已启动, channel={}", FlowQueueChannels.FLOW_EVENT);
     } catch (Exception e) {
       log.warn("[FlowQueue] 工作流事件队列发布者启动失败, 将降级为仅本地事件: {}", e.getMessage());
@@ -209,6 +216,9 @@ public class FlowQueuePublisher {
    */
   @PreDestroy
   public void destroy() {
+    if (queueManager != null) {
+      queueManager.unregister(FlowQueueChannels.FLOW_EVENT);
+    }
     if (flowEventPublisher != null) {
       flowEventPublisher.close();
     }

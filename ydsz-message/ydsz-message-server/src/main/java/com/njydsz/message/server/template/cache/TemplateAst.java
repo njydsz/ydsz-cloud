@@ -16,7 +16,7 @@ import lombok.Getter;
  *   <li><b>EACH</b>：循环块 {@code {{#each list}}...{{/each}}</li>
  * </ul>
  *
- * <p>使用 {@code CachedTemplateEngine} 将高频模板编译为 AST 并缓存，
+ * <p>使用 {@code CachedMessageTemplateRenderer} 将高频模板编译为 AST 并缓存，
  * 渲染时直接遍历指令列表，时间复杂度从 O(正则匹配次数) 降为 O(指令数)。
  *
  * @author ydsz-team

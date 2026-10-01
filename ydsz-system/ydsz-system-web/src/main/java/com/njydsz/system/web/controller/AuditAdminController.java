@@ -1,7 +1,9 @@
 package com.njydsz.system.web.controller;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,7 +22,9 @@ import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.system.web.vo.AuditLogVO;
 
 /**
  * 审计日志管理 Controller
@@ -28,6 +32,8 @@ import com.njydsz.common.core.response.YdszResponse;
  * <p>提供 sys_audit_log 表的查询接口，供运营后台/管理控制台查看操作轨迹。 支持按时间范围、操作人、操作行为、操作模块、追踪 ID 等多维度检索。
  *
  * <p>数据来源：调用 {@link AuditQueryService} (ydsz-common-audit 提供的查询能力)， 充分利用已有查询服务，避免重复编写 SQL 查询逻辑。
+ *
+ * <p>响应中统一使用 {@link AuditLogVO} 替代 {@link AuditLog} 实体直接返回， 分页接口使用 {@link PageResponse} 包装以透出 total / pageNum / pageSize。
  *
  * <p><b>接口路径：</b>{@code /api/admin/audit}
  *
@@ -68,11 +74,11 @@ public class AuditAdminController {
    * @param endTime 结束时间（格式：yyyy-MM-dd HH:mm:ss）
    * @param page 页码（从 1 开始，默认 1）
    * @param size 每页大小（默认 20，最大 100）
-   * @return 分页查询结果
+   * @return 分页查询结果（含总记录数、当前页码、每页大小、数据列表）
    */
   @GetMapping("/logs")
   @Operation(summary = "按时间范围分页查询审计日志", description = "查询指定时间范围内的审计日志，按操作时间倒序排列")
-  public YdszResponse<List<AuditLog>> queryByTimeRange(
+  public YdszResponse<PageResponse<List<AuditLogVO>>> queryByTimeRange(
       @Parameter(description = "开始时间（yyyy-MM-dd HH:mm:ss）")
           @RequestParam
           @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -84,7 +90,9 @@ public class AuditAdminController {
       @Parameter(description = "页码（默认 1）") @RequestParam(defaultValue = "1") int page,
       @Parameter(description = "每页大小（默认 20，最大 100）") @RequestParam(defaultValue = "20") int size) {
     int normalizedSize = normalizePageSize(size);
-    return auditQueryService.queryByTimeRange(startTime, endTime, page, normalizedSize);
+    YdszResponse<List<AuditLog>> response =
+        auditQueryService.queryByTimeRange(startTime, endTime, page, normalizedSize);
+    return YdszResponse.success(toPageOfVo(response));
   }
 
   /**
@@ -97,12 +105,14 @@ public class AuditAdminController {
    */
   @GetMapping("/operator/{operatorId}")
   @Operation(summary = "按操作人分页查询审计日志", description = "查询指定操作人的审计轨迹")
-  public YdszResponse<List<AuditLog>> queryByOperator(
+  public YdszResponse<PageResponse<List<AuditLogVO>>> queryByOperator(
       @Parameter(description = "操作人 ID") @PathVariable String operatorId,
       @Parameter(description = "页码（默认 1）") @RequestParam(defaultValue = "1") int page,
       @Parameter(description = "每页大小（默认 20）") @RequestParam(defaultValue = "20") int size) {
     int normalizedSize = normalizePageSize(size);
-    return auditQueryService.queryByOperator(operatorId, page, normalizedSize);
+    YdszResponse<List<AuditLog>> response =
+        auditQueryService.queryByOperator(operatorId, page, normalizedSize);
+    return YdszResponse.success(toPageOfVo(response));
   }
 
   /**
@@ -115,12 +125,14 @@ public class AuditAdminController {
    */
   @GetMapping("/action/{action}")
   @Operation(summary = "按操作行为分页查询审计日志", description = "按操作行为类型查询审计日志（1=新增, 2=修改, 3=删除, 4=查询, 5=导出）")
-  public YdszResponse<List<AuditLog>> queryByAction(
+  public YdszResponse<PageResponse<List<AuditLogVO>>> queryByAction(
       @Parameter(description = "操作行为编码") @PathVariable Integer action,
       @Parameter(description = "页码（默认 1）") @RequestParam(defaultValue = "1") int page,
       @Parameter(description = "每页大小（默认 20）") @RequestParam(defaultValue = "20") int size) {
     int normalizedSize = normalizePageSize(size);
-    return auditQueryService.queryByAction(action, page, normalizedSize);
+    YdszResponse<List<AuditLog>> response =
+        auditQueryService.queryByAction(action, page, normalizedSize);
+    return YdszResponse.success(toPageOfVo(response));
   }
 
   /**
@@ -133,10 +145,10 @@ public class AuditAdminController {
    */
   @GetMapping("/trace/{traceId}")
   @Operation(summary = "按链路追踪ID查询审计日志", description = "通过 traceId 追踪完整请求链路中的所有操作记录")
-  public YdszResponse<List<AuditLog>> queryByTraceId(
+  public YdszResponse<List<AuditLogVO>> queryByTraceId(
       @Parameter(description = "链路追踪 ID") @PathVariable String traceId) {
     List<AuditLog> logs = auditQueryService.queryByTraceId(traceId);
-    return YdszResponse.success(logs);
+    return YdszResponse.success(toVOList(logs));
   }
 
   /**
@@ -147,13 +159,88 @@ public class AuditAdminController {
    */
   @GetMapping("/{id}")
   @Operation(summary = "查询单条审计日志详情", description = "根据审计记录 ID 查询完整的审计日志信息")
-  public YdszResponse<AuditLog> getById(
+  public YdszResponse<AuditLogVO> getById(
       @Parameter(description = "审计记录 ID") @PathVariable String id) {
     AuditLog log = auditQueryService.getById(id);
     if (log == null) {
       return YdszResponse.error(YdszResultCode.NOT_FOUND.getCode(), "审计日志不存在");
     }
-    return YdszResponse.success(log);
+    return YdszResponse.success(toVO(log));
+  }
+
+  // ======================== 私有辅助方法 ========================
+
+  /**
+   * 将服务的 YdszResponse（含 PageResponse 分页信息）转换为 PageResponse&lt;List&lt;AuditLogVO&gt;&gt;。
+   *
+   * <p>当响应体中无分页数据时，返回空分页结果。
+   *
+   * @param response 服务层响应（可能为 PageResponse）
+   * @return 携带 AuditLogVO 列表的分页响应
+   */
+  @SuppressWarnings("unchecked")
+  private PageResponse<List<AuditLogVO>> toPageOfVo(YdszResponse<List<AuditLog>> response) {
+    if (response == null) {
+      return PageResponse.empty(1L, (long) DEFAULT_PAGE_SIZE);
+    }
+    // AuditQueryService 实际返回 PageResponse（强制转型以提取分页元信息）
+    if (response instanceof PageResponse<List<AuditLog>> pageResponse) {
+      List<AuditLog> records = pageResponse.getData();
+      List<AuditLogVO> voList = toVOList(records);
+      Long total = pageResponse.getTotal() != null ? pageResponse.getTotal() : 0L;
+      Long pageNum = pageResponse.getPageNum() != null ? pageResponse.getPageNum() : 1L;
+      Long pageSize = pageResponse.getPageSize() != null ? pageResponse.getPageSize() : (long) DEFAULT_PAGE_SIZE;
+      return PageResponse.success(total, pageNum, pageSize, voList);
+    }
+    // 兜底：无法提取分页信息时，直接用 data 列表构造空分页
+    List<AuditLog> records = response.getData();
+    return PageResponse.success(
+        records != null ? (long) records.size() : 0L,
+        1L,
+        (long) DEFAULT_PAGE_SIZE,
+        toVOList(records));
+  }
+
+  /**
+   * 将 AuditLog 实体列表转换为 AuditLogVO 列表。
+   *
+   * @param logs 原始审计日志实体列表（可为 null）
+   * @return 转换后的 VO 列表；输入为 null 时返回空列表
+   */
+  private List<AuditLogVO> toVOList(List<AuditLog> logs) {
+    if (logs == null || logs.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return logs.stream().filter(Objects::nonNull).map(this::toVO).toList();
+  }
+
+  /**
+   * 将单个 AuditLog 实体转换为 AuditLogVO。
+   *
+   * @param log 审计日志实体（可为 null）
+   * @return 对应的 VO；输入为 null 时返回 null
+   */
+  private AuditLogVO toVO(AuditLog log) {
+    if (log == null) {
+      return null;
+    }
+    AuditLogVO vo = new AuditLogVO();
+    vo.setId(log.getId());
+    vo.setAuditType(log.getAuditType());
+    vo.setAction(log.getAction());
+    vo.setStatus(log.getStatus());
+    vo.setModule(log.getModule());
+    vo.setContent(log.getContent());
+    vo.setBusinessNo(log.getBusinessNo());
+    vo.setOperatorId(log.getOperatorId());
+    vo.setOperatorName(log.getOperatorName());
+    vo.setOperationTime(log.getOperationTime());
+    vo.setIpAddress(log.getIpAddress());
+    vo.setCostTime(log.getCostTime());
+    vo.setTraceId(log.getTraceId());
+    vo.setAppKey(log.getAppKey());
+    vo.setTenantId(log.getTenantId());
+    return vo;
   }
 
   /**

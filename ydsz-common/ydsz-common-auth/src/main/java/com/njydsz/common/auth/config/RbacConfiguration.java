@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import com.njydsz.common.auth.aspect.AuthPermissionAspect;
 import com.njydsz.common.auth.event.PermissionCacheInvalidationListener;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
-import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.common.auth.service.RbacUserInfoService;
@@ -89,11 +88,9 @@ public class RbacConfiguration {
       RedisStringOps redisStringOps,
       AuthProperties properties,
       PermissionChangeNotifier notifier,
-      RolePermissionCacheService permissionCacheService,
-      ObjectProvider<PermissionHierarchyService> hierarchyServiceProvider) {
-    PermissionHierarchyService hierarchyService = hierarchyServiceProvider.getIfAvailable();
+      RolePermissionCacheService permissionCacheService) {
     return new RedisRolePermissionLoader(
-        redisStringOps, properties, notifier, permissionCacheService, hierarchyService);
+        redisStringOps, properties, notifier, permissionCacheService);
   }
 
   /**
@@ -132,7 +129,6 @@ public class RbacConfiguration {
    * @param rolePermissionCacheService 角色权限缓存服务
    * @param cacheKeyStrategy 缓存 Key 生成策略
    * @param metricsCollectorProvider 指标采集器提供者（可选）
-   * @param hierarchyServiceProvider 权限层级服务提供者（可选）
    * @return 权限评估器实例
    */
   @Bean
@@ -143,8 +139,7 @@ public class RbacConfiguration {
       RolePermissionLoader rolePermissionLoader,
       RolePermissionCacheService rolePermissionCacheService,
       CacheKeyStrategy cacheKeyStrategy,
-      ObjectProvider<AuthMetricsCollector> metricsCollectorProvider,
-      ObjectProvider<PermissionHierarchyService> hierarchyServiceProvider) {
+      ObjectProvider<AuthMetricsCollector> metricsCollectorProvider) {
     RbacPermissionEvaluator evaluator =
         new RbacPermissionEvaluator(
             properties, userInfoService, rolePermissionLoader, rolePermissionCacheService);
@@ -152,10 +147,6 @@ public class RbacConfiguration {
     AuthMetricsCollector metricsCollector = metricsCollectorProvider.getIfAvailable();
     if (metricsCollector != null) {
       evaluator.setMetricsCollector(metricsCollector);
-    }
-    PermissionHierarchyService hierarchyService = hierarchyServiceProvider.getIfAvailable();
-    if (hierarchyService != null) {
-      evaluator.setHierarchyService(hierarchyService);
     }
     return evaluator;
   }

@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
-import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.service.RolePermissionCacheService;
 import com.njydsz.common.auth.service.RolePermissionLoader;
@@ -67,14 +66,13 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
   private final Cache<String, RolePermissions> cache;
   private final PermissionChangeNotifier notifier;
   private final RolePermissionCacheService permissionCacheService;
-  private final PermissionHierarchyService hierarchyService;
 
   /** 标记 Redis 是否可用，初始值为 true。 */
   private volatile boolean redisAvailable = true;
 
   public RedisRolePermissionLoader(
       RedisStringOps redisStringOps, AuthProperties properties, PermissionChangeNotifier notifier) {
-    this(redisStringOps, properties, notifier, null, null);
+    this(redisStringOps, properties, notifier, null);
   }
 
   public RedisRolePermissionLoader(
@@ -82,21 +80,11 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
       AuthProperties properties,
       PermissionChangeNotifier notifier,
       RolePermissionCacheService permissionCacheService) {
-    this(redisStringOps, properties, notifier, permissionCacheService, null);
-  }
-
-  public RedisRolePermissionLoader(
-      RedisStringOps redisStringOps,
-      AuthProperties properties,
-      PermissionChangeNotifier notifier,
-      RolePermissionCacheService permissionCacheService,
-      PermissionHierarchyService hierarchyService) {
     this.redisStringOps = redisStringOps;
     this.properties = properties;
     this.cache = buildCache();
     this.notifier = notifier;
     this.permissionCacheService = permissionCacheService;
-    this.hierarchyService = hierarchyService;
   }
 
   /**
@@ -192,11 +180,6 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
               Collections.unmodifiableSet(buttonPerms),
               Collections.unmodifiableSet(apiPerms));
       cache.put(role, loaded);
-
-      // 自动注册权限层级继承关系
-      registerPermissionHierarchy(menuPerms);
-      registerPermissionHierarchy(buttonPerms);
-      registerPermissionHierarchy(apiPerms);
 
       // 同时写入 RolePermissionCacheService，为后续 Redis 降级时提供兜底数据
       if (permissionCacheService != null) {
@@ -401,46 +384,6 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
           .code(String.valueOf(HttpStatus.FORBIDDEN.value()))
           .message("权限加载失败")
           .build();
-    }
-  }
-
-  /**
-   * 自动注册权限层级继承关系。
-   *
-   * <p>权限码格式为 {@code 领域:资源:操作}，通过冒号分割解析层级关系。 例如：{@code sys:user} 是 {@code sys:user:list} 的父权限。
-   * 更短前缀的权限码自动成为更长权限码的父级。
-   *
-   * @param permissions 权限码集合
-   */
-  private void registerPermissionHierarchy(Set<String> permissions) {
-    if (permissions == null || permissions.isEmpty()) {
-      return;
-    }
-    for (String perm : permissions) {
-      if (perm == null || perm.isBlank()) {
-        continue;
-      }
-      String trimmed = perm.trim();
-      int lastColon = trimmed.lastIndexOf(':');
-      if (lastColon > 0) {
-        String parent = trimmed.substring(0, lastColon);
-        registerHierarchy(parent, trimmed);
-      }
-    }
-  }
-
-  /**
-   * 注册权限层级到 {@link PermissionHierarchyService}。
-   *
-   * <p>如果层级服务未配置（为 null），则跳过注册。
-   *
-   * @param parent 父权限码
-   * @param child 子权限码
-   */
-  private void registerHierarchy(String parent, String child) {
-    if (hierarchyService != null) {
-      hierarchyService.registerPermission(
-          PermissionHierarchyService.DEFAULT_TENANT_ID, parent, child);
     }
   }
 

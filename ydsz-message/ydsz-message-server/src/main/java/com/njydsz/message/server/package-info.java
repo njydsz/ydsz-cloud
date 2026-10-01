@@ -12,7 +12,7 @@
  *       依次执行去重、频控、用户偏好校验、渠道路由、节流等处理</li>
  *   <li>渠道路由：{@code ChannelRouter} 基于 {@code ChannelScoreCalculator} 评分选择最优通道，
  *       支持邮件、短信、App 推送、钉钉、飞书、企微、支付宝小程序、微信小程序等多通道</li>
- *   <li>模板渲染：{@code MessageRenderService} 通过 {@code TemplateEngine} 接口（FreeMarker 实现）
+ *   <li>模板渲染：{@code MessageRenderService} 通过 {@code MessageTemplateRenderer} 接口（FreeMarker 实现）
  *       渲染变量模板，支持富媒体卡片与多语言</li>
  *   <li>批量处理：{@code BatchServiceImpl} 承接批量发送任务，通过 {@code BatchProgressPusher} 推送进度</li>
  *   <li>重试调度：{@code RetryScanner} 扫描超时未确认消息触发重试；{@code ScheduledMessageScanner} 处理延时消息</li>

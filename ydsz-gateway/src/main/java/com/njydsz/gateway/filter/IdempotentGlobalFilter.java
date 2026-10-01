@@ -1,11 +1,12 @@
 package com.njydsz.gateway.filter;
 
-import java.time.Duration;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -17,7 +18,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import com.njydsz.common.redis.service.ops.ReactiveStringRedisOps;
+import com.njydsz.common.safe.alert.SecurityEvent;
+import com.njydsz.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.common.safe.alert.SecurityEventType;
+import com.njydsz.common.safe.idempotent.strategy.ReactiveIdempotentStrategy;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayErrorCode;
@@ -33,7 +37,8 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *
  * <ol>
  *   <li>客户端生成唯一的 {@code X-Idempotency-Key}（如 UUID），在重试时保持同一 Key 不变</li>
- *   <li>网关通过 {@code SETNX}（SET if Not eXists）在 Redis 写入幂等标记</li>
+ *   <li>网关通过 {@code SETNX}（SET if Not eXists）在 Redis 写入幂等标记（委托 common-safe 的
+ *       {@link ReactiveIdempotentStrategy} SPI 统一执行）</li>
  *   <li>写入成功 → 放行请求；写入失败（Key 已存在） → 返回 409 Conflict 拒绝重复请求</li>
  *   <li>标记默认 TTL 30 秒后自动过期，表示幂等窗口——仅在此窗口内的重试会被拦截</li>
  * </ol>
@@ -43,6 +48,12 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  * <p>仅对 POST / PUT / PATCH / DELETE 等变更类请求启用幂等保护，GET / HEAD / OPTIONS 默认跳过。
  *
  * <p>幂等 Key 未携带时，请求不做幂等拦截（向后兼容），确保旧版客户端和浏览器直接请求不受影响。
+ *
+ * <h3>架构说明</h3>
+ *
+ * <p>委托 ydsz-common-safe 的 {@link ReactiveIdempotentStrategy} 执行 Redis SETNX + TTL 语义，
+ * 统一安全能力入口，消除网关自行维护 Redis 幂等逻辑的重复实现。
+ * Redis 异常时安全模块自动 fail-open 降级（放行），避免幂等组件导致全链路不可用。
  *
  * <h3>配置项</h3>
  *
@@ -54,11 +65,12 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  *
  * <h3>执行顺序</h3>
  *
- * <p>位于 {@link AuthGlobalFilter}(+10) 之后、{@code GatewayApiKeyAuthFilter}(+15) 之前，确保已注入的身份信息可融入幂等 Key
+ * <p>位于 {@code AuthGlobalFilter}(+10) 之后、GatewayApiKeyAuthFilter(+15) 之前，确保已注入的身份信息可融入幂等 Key
  * （同一用户对不同业务操作的幂等 Key 独立、不同用户间的同名 Key 相互隔离）。
  *
  * @author ydsz
  * @since 26.09.24
+ * @see ReactiveIdempotentStrategy
  */
 @Slf4j
 @Component
@@ -68,6 +80,7 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
     name = "idempotent",
     havingValue = "true",
     matchIfMissing = false)
+@ConditionalOnBean(ReactiveIdempotentStrategy.class)
 public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
 
   /** GET / HEAD / OPTIONS 等安全方法不启用幂等保护（只读请求无需幂等拦截）。 */
@@ -77,7 +90,11 @@ public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
   /** 响应头：标明本次请求是否为重复请求（对调用方可观测）。 */
   private static final String HEADER_IDEMPOTENT_REPLAYED = "X-Idempotent-Replayed";
 
-  private final ReactiveStringRedisOps redisOps;
+  /** 响应式幂等策略（委托 common-safe 执行 SETNX + fail-open 降级） */
+  private final ReactiveIdempotentStrategy idempotentStrategy;
+
+  /** 安全事件发布器（可选，不可用时静默降级） */
+  private final ObjectProvider<SecurityEventPublisher> securityEventPublisherProvider;
 
   /** 幂等窗口期（秒），默认 30s。 */
   @Value("${ydsz.gateway.idempotent.ttl-seconds:30}")
@@ -116,6 +133,9 @@ public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
   /**
    * 幂等过滤逻辑入口：检查幂等 Key → SETNX 写入 → 冲突返回 409 或放行。
    *
+   * <p>委托 {@link ReactiveIdempotentStrategy#tryAcquire} 执行原子 SETNX + TTL，
+   * Redis 异常时安全模块自动降级返回 true（放行），此处无需额外异常处理。
+   *
    * @param exchange 服务器 Web 交换上下文
    * @param chain 网关过滤器链
    * @return 放行（Mono 放行链）或 409 冲突拒绝（完成信号 Mono）
@@ -139,31 +159,28 @@ public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
     String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
     String redisKey = buildRedisKey(userId, rawKey);
 
-    // SETNX + TTL：首次请求写入成功（true），重复请求写入失败（false → 409）
-    return redisOps.setIfAbsent(redisKey, "1", Duration.ofSeconds(idempotentTtlSeconds))
+    // 委托 common-safe 的 ReactiveIdempotentStrategy 执行 SETNX + TTL
+    // 首次请求写入成功（true），重复请求写入失败（false → 409）
+    // Redis 异常时安全模块自动 fail-open 降级（返回 true 放行）
+    return idempotentStrategy
+        .tryAcquire(redisKey, idempotentTtlSeconds)
         .flatMap(
             isFirstRequest -> {
               if (Boolean.TRUE.equals(isFirstRequest)) {
                 log.debug("[Idempotent] 幂等校验通过 (firstRequest) key={}", redisKey);
                 return chain.filter(exchange);
               }
-              // 重复请求：200 + 特殊响应头 OR 409（当前采用 409，明确区分首次请求成功）
+              // 重复请求：返回 409 Conflict
               log.warn("[Idempotent] 重复请求被拦截 key={} path={}",
                   redisKey, request.getURI().getPath());
               return rejectDuplicateRequest(exchange);
-            })
-        .onErrorResume(
-            e -> {
-              // Redis 异常时降级放行（避免限流/幂等组件导致全链路不可用）
-              log.warn("[Idempotent] Redis 幂等检查异常，降级放行: {}", e.getMessage());
-              return chain.filter(exchange);
             });
   }
 
   /**
    * 返回 409 Conflict 拒绝重复请求。
    *
-   * <p>复用 {@link GatewayErrorCode#IDEMPOTENT_DUPLICATE}（新增的幂等冲突码）+ {@link GatewayErrorWriter} 统一响应。
+   * <p>复用 {@code GatewayErrorCode#IDEMPOTENT_DUPLICATE} + {@code GatewayErrorWriter} 统一响应。
    *
    * @param exchange 服务器 Web 交换上下文
    * @return 完成信号 Mono（已写出 409 响应）
@@ -171,12 +188,39 @@ public class IdempotentGlobalFilter implements GlobalFilter, Ordered {
   private Mono<Void> rejectDuplicateRequest(ServerWebExchange exchange) {
     // 注入可观测性响应头
     exchange.getResponse().getHeaders().add(HEADER_IDEMPOTENT_REPLAYED, "true");
+    publishIdempotentReplayEvent(exchange);
     return GatewayErrorWriter.write(
         exchange,
         HttpStatus.CONFLICT,
         GatewayErrorCode.IDEMPOTENT_DUPLICATE,
         GatewayErrorCode.IDEMPOTENT_DUPLICATE.getMessageKey(),
         exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID));
+  }
+
+  /**
+   * 发布 ILLEGAL_ACCESS 安全事件（fire-and-forget）：幂等重放检测。
+   *
+   * <p>安全事件 Publisher 不可用时静默降级，不影响幂等主流程。
+   *
+   * @param exchange Web 交换上下文
+   */
+  private void publishIdempotentReplayEvent(ServerWebExchange exchange) {
+    SecurityEventPublisher publisher = securityEventPublisherProvider.getIfAvailable();
+    if (publisher == null) {
+      return;
+    }
+    try {
+      publisher.publish(
+          new SecurityEvent(
+              SecurityEventType.ILLEGAL_ACCESS,
+              exchange.getRequest().getURI().getPath(),
+              null,
+              null,
+              "Idempotent replay detected",
+              SecurityEvent.Severity.LOW));
+    } catch (Exception e) {
+      log.debug("[Idempotent] 安全事件发布降级: reason={}", e.getMessage());
+    }
   }
 
   /**

@@ -14,14 +14,13 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.safe.alert.SecurityEvent;
+import com.njydsz.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.common.util.date.DateUtils;
-import com.njydsz.message.domain.dto.MessageSendDTO;
-import com.njydsz.message.domain.enums.core.SendStrategyEnum;
-import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.notify.enums.NotifyChannel;
@@ -33,7 +32,6 @@ import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.server.core.AlertSendException;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
-import com.njydsz.message.api.client.NotificationClient;
 
 /**
  * 告警派发器（P5 告警 + 监控）。
@@ -43,16 +41,16 @@ import com.njydsz.message.api.client.NotificationClient;
  * <ol>
  *   <li><b>冷却去重</b>：通过 CAS 更新 {@code ydsz_job_alert_rule.last_alert_at}，
  *       仅当上次告警时间早于冷却窗口起点时才更新成功（分布式环境下保证同一规则不重复告警）
- *   <li><b>通道路由</b>：解析规则配置的 channels JSON，逐通道构建 MessageRequest
- *   <li><b>统一派发</b>：通过 NotificationClient Feign 委托到 message 模块， 由 message
- *       模块路由到具体通道实现，单个通道失败不影响其他通道（status=PARTIAL）
+ *   <li><b>通道路由</b>：解析规则配置的 channels JSON，逐通道构建通知请求
+ *   <li><b>统一派发</b>：通过 {@link NotifyHelper} 经 common-notify 统一路由， 由 common-notify
+ *       路由到具体通道实现，单个通道失败不影响其他通道（status=PARTIAL）
  *   <li><b>日志持久化</b>：将告警派发结果记录到 {@code ydsz_job_alert_dispatch}（P3-1-merge 后统一落此表），便于审计与效果统计
- *   <li><b>实时广播</b>：通过 NotificationClient Feign 广播告警到前端 WebSocket
+ *   <li><b>实时广播</b>：通过 {@link RealtimePushTemplate} 广播告警到前端 WebSocket
  * </ol>
  *
- * <p><b>P0-1-fix</b>：原实现既直接调用 {@code NotificationClient.sendMessage()} 发送告警消息， 又通过 Spring
- * 事件机制间接发送，导致同一告警被发送两次。 现在改为直接调用 {@code NotificationClient.broadcast()} 实现实时广播， IM 补充通知委托 {@link
- * NotifyHelper} 发送站内信， 消息发送仅由本类执行一次。
+ * <p><b>P0-1-fix</b>：原实现既直接调用 Feign 客户端发送告警消息， 又通过 Spring
+ * 事件机制间接发送，导致同一告警被发送两次。 现在改为统一通过 {@link NotifyHelper}
+ * 经 common-notify 路由发送站内信，实时广播由 {@link RealtimePushTemplate} 推送。
  *
  * <p>使用 {@code @Async} 异步执行，避免阻塞任务执行主流程。
  *
@@ -80,14 +78,14 @@ public class AlertDispatcher {
   /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
   private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
-  /** 统一通知客户端（用于发送具体通道：EMAIL/SMS/IM 等，仍需经 message 模块路由） */
-  private final NotificationClient notificationClient;
-
-  /** P2-7: 统一推送模板（直接广播到 WebSocket，替代 Feign 中转 message 模块） */
+  /** 统一推送模板（直接广播到 WebSocket） */
   private final RealtimePushTemplate pushTemplate;
 
   /** P2-10: common-notify 通知助手（可选注入，IM 渠道直推） */
   private final ObjectProvider<NotifyHelper> notifyHelperProvider;
+
+  /** 安全事件发布器（可选，不可用时静默降级） */
+  private final ObjectProvider<SecurityEventPublisher> securityEventPublisherProvider;
 
   /** 统一领域事件发布门面 */
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
@@ -206,6 +204,8 @@ public class AlertDispatcher {
     persistAlertLog(context, rule, status, errorMessage);
     // P6-2: 记录告警指标
     recordAlertMetrics(rule.getAlertType(), status);
+    // 发布任务失败安全事件（非恢复通知）
+    publishJobFailureEvent(context, rule, recovery);
 
     log.info(
         "[AlertDispatcher] 告警派发完成: ruleId={} ruleName={} channels={} failed={} status={} recovery={}",
@@ -353,39 +353,32 @@ public class AlertDispatcher {
   }
 
   /**
-   * 发送告警通知（主路径：NotifyHelper，降级：Feign 直连 message 模块）。
+   * 发送告警通知（NotifyHelper 单路径，走 common-notify 统一路由）。
    *
-   * <p>优先通过 {@link NotifyHelper} 发送，走 common-notify 统一路由； 若失败则降级为 {@link
-   * NotificationClient} Feign 直连 message 模块（兼容性兜底）。
+   * <p>通过 {@link NotifyHelper} 按渠道构建并发送通知，不可用时抛 {@link AlertSendException}
+   * 由外层 dispatch 循环记录为失败通道。
    */
   private void sendViaMessageCenter(
       AlertChannel channel, AlertContext context, JobAlertRuleVO rule, List<String> receivers) {
     String title = buildTitle(context, rule);
     String content = buildContent(context, rule);
 
-    // 主路径：通过 NotifyHelper 发送
     NotifyHelper helper = notifyHelperProvider.getIfAvailable();
-    if (helper != null) {
-      try {
-        NotifyChannel notifyChannel = mapToNotifyChannel(channel);
-        if (notifyChannel != null && !receivers.isEmpty()) {
-          // 按渠道逐个发送（单条失败不影响其他接收者）
-          for (String receiver : receivers) {
-            notifyServiceSend(helper, notifyChannel, receiver, title, content);
-          }
-          return;
-        }
-      } catch (Exception e) {
-        log.warn(
-            "[AlertDispatcher] NotifyHelper 发送失败,降级到 Feign: channel={} reason={}",
-            channel,
-            e.getMessage());
-        // fall through to Feign fallback
-      }
+    if (helper == null) {
+      throw new AlertSendException("NotifyHelper not available for channel: " + channel);
     }
 
-    // 降级路径：Feign 直连 message 模块（兼容性保留）
-    sendViaFeign(channel, context, rule, receivers, title, content);
+    NotifyChannel notifyChannel = mapToNotifyChannel(channel);
+    if (notifyChannel == null) {
+      throw new AlertSendException("No NotifyChannel mapping for channel: " + channel);
+    }
+    if (receivers.isEmpty()) {
+      throw new AlertSendException("No receivers for alert rule: " + rule.getRuleName());
+    }
+
+    for (String receiver : receivers) {
+      notifyServiceSend(helper, notifyChannel, receiver, title, content);
+    }
   }
 
   /**
@@ -413,7 +406,7 @@ public class AlertDispatcher {
    * AlertChannel 映射到 NotifyChannel 枚举。
    *
    * @param channel 告警通道枚举
-   * @return 对应的 NotifyChannel；WEBHOOK 无对应枚举返回 null（走降级路径）
+   * @return 对应的 NotifyChannel；WEBHOOK 无对应枚举返回 null
    */
   private NotifyChannel mapToNotifyChannel(AlertChannel channel) {
     return switch (channel) {
@@ -424,61 +417,6 @@ public class AlertDispatcher {
       case FEISHU -> NotifyChannel.FEISHU;
       default -> null;
     };
-  }
-
-  /**
-   * 降级发送：通过 Feign 直连 message 模块（兼容性兜底路径）。
-   *
-   * <p>当 NotifyHelper 不可用或发送失败时，回退到原始 Feign 调用。
-   */
-  private void sendViaFeign(
-      AlertChannel channel,
-      AlertContext context,
-      JobAlertRuleVO rule,
-      List<String> receivers,
-      String title,
-      String content) {
-    MessageSendDTO request = new MessageSendDTO();
-    request.setStrategy(SendStrategyEnum.SYNC);
-    request.setChannel(channel.name());
-    request.setSubject(title);
-    request.setContent(content);
-    request.setBizType("CRONJOB_ALERT");
-    request.setBizId(String.valueOf(rule.getId()));
-    request.setReceiver(receivers.isEmpty() ? null : String.join(",", receivers));
-    Map<String, Object> params = new HashMap<>(COLLECTION_CAPACITY);
-    params.put("ruleId", rule.getId());
-    params.put("ruleName", rule.getRuleName());
-    params.put("alertType", rule.getAlertType());
-    params.put("alertLevel", rule.getAlertLevel());
-    params.put("jobId", context.jobId());
-    params.put("jobKey", context.jobKey());
-    params.put("jobName", context.jobName());
-    params.put("triggerValue", context.triggerValue());
-    params.put("threshold", rule.getThreshold());
-    params.put("errorMessage", context.errorMessage());
-    params.put("traceId", context.traceId());
-    params.put("triggerLogId", context.triggerLogId());
-    params.put("tenantId", context.tenantId());
-    params.put("recovery", context.recovery());
-    params.put("receivers", receivers);
-    request.setParams(params);
-    try {
-      YdszResponse<MessageResult> result = notificationClient.sendMessage(request);
-      if (result == null || !result.isSuccess()) {
-        String reason = result != null && result.getMsg() != null ? result.getMsg() : "unknown";
-        throw new AlertSendException("message module returned failure: " + reason);
-      }
-      MessageResult msgResult = result.getData();
-      if (msgResult != null && !msgResult.isSuccess()) {
-        throw new AlertSendException(
-            msgResult.getUserMessage() != null ? msgResult.getUserMessage() : "send failed");
-      }
-    } catch (AlertSendException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new AlertSendException("Feign call error: " + e.getMessage(), e);
-    }
   }
 
   /** P2-10: 通过 NotifyHelper 发送 IM 通知（非阻塞，失败静默跳过）。 */
@@ -651,6 +589,38 @@ public class AlertDispatcher {
       return sb.length() > 0 ? sb.toString() : "INAPP";
     } catch (Exception e) {
       return "INAPP";
+    }
+  }
+
+  /**
+   * 发布任务失败安全事件（fire-and-forget）。
+   *
+   * <p>仅非恢复通知时上报 ILLEGAL_ACCESS 安全事件，表示任务执行失败。
+   * 安全事件 Publisher 不可用时静默降级，不影响告警主流程。
+   *
+   * @param context 告警上下文
+   * @param rule 告警规则
+   * @param recovery 是否为恢复通知
+   */
+  private void publishJobFailureEvent(AlertContext context, JobAlertRuleVO rule, boolean recovery) {
+    if (recovery) {
+      return;
+    }
+    SecurityEventPublisher publisher = securityEventPublisherProvider.getIfAvailable();
+    if (publisher == null) {
+      return;
+    }
+    try {
+      publisher.publish(
+          new SecurityEvent(
+              SecurityEventType.ILLEGAL_ACCESS,
+              "/cronjob/" + context.jobKey(),
+              null,
+              null,
+              "Job execution failed: " + context.jobKey() + " - " + context.errorMessage(),
+              SecurityEvent.Severity.HIGH));
+    } catch (Exception e) {
+      log.debug("[AlertDispatcher] 安全事件发布降级: ruleId={} reason={}", rule.getId(), e.getMessage());
     }
   }
 

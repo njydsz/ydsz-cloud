@@ -3,6 +3,7 @@ package com.njydsz.agent.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -26,10 +27,12 @@ public class DagWorkflowDTO implements Serializable {
   /** 工作流名称（必填） */
   @NotBlank(message = "工作流名称不能为空")
   @Schema(description = "工作流名称", requiredMode = Schema.RequiredMode.REQUIRED)
+  @Xss(message = "工作流名称包含非法字符")
   private String workflowName;
 
   /** 工作流描述 */
   @Schema(description = "工作流描述")
+  @Xss(message = "工作流描述包含非法字符")
   private String description;
 
   /** YAML DSL 内容（必填） */

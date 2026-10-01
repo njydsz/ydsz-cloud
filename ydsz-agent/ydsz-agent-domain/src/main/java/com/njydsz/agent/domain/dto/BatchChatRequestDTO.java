@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -63,6 +64,7 @@ public class BatchChatRequestDTO implements Serializable {
 
   /** 系统提示词（可选，所有条目共享） */
   @Schema(description = "系统提示词（可选，所有条目共享）")
+  @Xss(message = "系统提示词包含非法字符")
   private String systemPrompt;
 
   /**
@@ -84,6 +86,7 @@ public class BatchChatRequestDTO implements Serializable {
 
     /** 用户消息（纯文本，与 multimodalContent 二选一） */
     @Schema(description = "用户消息（纯文本，与 multimodalContent 二选一）")
+    @Xss(message = "消息内容包含非法字符")
     private String message;
 
     /** 多模态内容段落（Vision 模型，与 message 二选一） */

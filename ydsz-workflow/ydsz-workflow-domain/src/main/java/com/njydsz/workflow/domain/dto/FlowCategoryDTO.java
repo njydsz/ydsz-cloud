@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.dto;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -26,6 +27,7 @@ public class FlowCategoryDTO {
   @Schema(description = "分类名称", requiredMode = Schema.RequiredMode.REQUIRED)
   @NotBlank(message = "分类名称不能为空")
   @Size(max = 128, message = "分类名称不能超过128字")
+  @Xss(message = "分类名称包含非法字符")
   private String categoryName;
 
   @Schema(description = "父分类 ID（顶级分类不传）")
@@ -38,6 +40,7 @@ public class FlowCategoryDTO {
   private String icon;
 
   @Schema(description = "备注")
+  @Xss(message = "备注包含非法字符")
   private String remark;
 
   @Schema(description = "租户 ID（多租户隔离）")

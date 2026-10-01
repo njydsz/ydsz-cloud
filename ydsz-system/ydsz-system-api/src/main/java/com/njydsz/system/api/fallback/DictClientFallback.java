@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.api.client.DictClient;
 import com.njydsz.system.domain.dto.DictItemGetRequest;
 import com.njydsz.system.domain.dto.DictListRequest;
@@ -26,23 +27,26 @@ public class DictClientFallback implements FallbackFactory<DictClient> {
 
   @Override
   public DictClient create(Throwable cause) {
-    log.warn("[DictClient] 降级触发: {}", cause.getMessage());
+    log.warn("[DictClient] 降级触发: {}", cause == null ? "?" : cause.getMessage());
+    String unavailableMsg = I18n.message("system.admin.service.unavailable");
     return new DictClient() {
       @Override
       public YdszResponse<String> getDictItem(DictItemGetRequest request) {
         log.warn(
-            "[DictClient] getDictItem 降级: typeCode={}, itemCode={}, reason=系统管理服务不可用",
+            "[DictClient] getDictItem 降级: typeCode={}, itemCode={}, reason={}",
             request == null ? null : request.getTypeCode(),
-            request == null ? null : request.getItemCode());
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
+            request == null ? null : request.getItemCode(),
+            unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
 
       @Override
       public YdszResponse<List<String>> listDictItems(DictListRequest request) {
         log.warn(
-            "[DictClient] listDictItems 降级: typeCode={}, reason=系统管理服务不可用",
-            request == null ? null : request.getTypeCode());
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
+            "[DictClient] listDictItems 降级: typeCode={}, reason={}",
+            request == null ? null : request.getTypeCode(),
+            unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
     };
   }

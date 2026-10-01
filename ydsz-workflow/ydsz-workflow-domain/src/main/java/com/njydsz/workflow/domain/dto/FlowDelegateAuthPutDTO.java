@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
 
@@ -58,5 +59,6 @@ public class FlowDelegateAuthPutDTO implements Serializable {
   private LocalDateTime endTime;
 
   @Schema(description = "委派原因")
+  @Xss(message = "委派原因包含非法字符")
   private String reason;
 }

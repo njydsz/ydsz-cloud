@@ -2,11 +2,14 @@ package com.njydsz.message.server.service.chain.handler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.constant.SystemConstants;
+import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.ratelimit.NotifyRateLimiterManager;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
@@ -43,6 +46,12 @@ public class ThrottlingHandler implements SendHandler {
   private final GuardService guardService;
   private final SenderQuotaService senderQuotaService;
   private final MessageMetrics messageMetrics;
+  /**
+   * notify 管道限流管理器（ObjectProvider 可选注入）。
+   *
+   * <p>common-notify 未装配时，仅走消息级限流，保持向后兼容。
+   */
+  private final ObjectProvider<NotifyRateLimiterManager> notifyRateLimiterProvider;
 
   @Override
   public boolean handle(MessageItemRequestDTO request, SendContext ctx) {
@@ -100,7 +109,87 @@ public class ThrottlingHandler implements SendHandler {
           null));
       return false;
     }
+    // 双保险：消息级限流全部通过后，再委托 notify 管道做通道级限流
+    if (!checkNotifyRateLimit(channel, ctx)) {
+      return false;
+    }
     return true;
+  }
+
+  /**
+   * 通知级通道限流检查（双保险第二层）。
+   *
+   * <p>消息级限流全部通过后，再使用 notify 的 {@link NotifyRateLimiterManager} 做一次通道级限流。
+   * 若 notify 管道未装配或通道无对应枚举值，跳过；notify 调用异常时降级到纯 message 管道。
+   *
+   * @param channel 通道标识（如 EMAIL/SMS/DINGTALK）
+   * @param ctx     管线上下文
+   * @return true 表示允许继续，false 表示被 notify 限流拦截
+   */
+  private boolean checkNotifyRateLimit(String channel, SendContext ctx) {
+    NotifyRateLimiterManager rateLimiterManager = notifyRateLimiterProvider.getIfAvailable();
+    if (rateLimiterManager == null) {
+      return true;
+    }
+    NotifyChannel notifyChannel = resolveNotifyChannel(channel);
+    if (notifyChannel == null) {
+      return true;
+    }
+    try {
+      if (!rateLimiterManager.tryAcquire(notifyChannel, ctx.getTenantId())) {
+        log.warn(
+            "[ThrottlingHandler] notify 管道通道限流触发: channel={}, tenantId={}",
+            channel,
+            ctx.getTenantId());
+        messageMetrics.recordSend(channel, "NOTIFY_RATE_LIMITED", 0);
+        ctx.setErrorResult(MessageSendResultVO.fail(
+            channel,
+            MessageExceptionCode.SEND_RATE_LIMITED.getCode(),
+            "发送限流，请稍后重试",
+            "发送限流，请稍后重试",
+            null));
+        return false;
+      }
+    } catch (Exception e) {
+      log.warn(
+          "[ThrottlingHandler] notify 管道限流异常,降级到纯 message 管道: channel={}, err={}",
+          channel,
+          e.getMessage());
+    }
+    return true;
+  }
+
+  /**
+   * 将消息通道字符串解析为 {@link NotifyChannel} 枚举。
+   *
+   * <p>仅处理 notify 有对应枚举值的通道（EMAIL/SMS/DINGTALK/WECOM/FEISHU/INAPP），
+   * 其他通道（PUSH/WEBHOOK 等）返回 null，由调用方跳过 notify 级限流。
+   *
+   * @param channel 消息通道字符串
+   * @return 对应的 NotifyChannel 枚举，无对应值时返回 null
+   */
+  private NotifyChannel resolveNotifyChannel(String channel) {
+    if (!StringUtils.hasText(channel)) {
+      return null;
+    }
+    switch (channel.trim().toUpperCase()) {
+      case "EMAIL":
+        return NotifyChannel.EMAIL;
+      case "SMS":
+        return NotifyChannel.SMS;
+      case "DINGTALK":
+      case "DINGTALK_WORK":
+        return NotifyChannel.DINGTALK;
+      case "WECOM":
+      case "WECOM_APP":
+        return NotifyChannel.WECOM;
+      case "FEISHU":
+        return NotifyChannel.FEISHU;
+      case "INAPP":
+        return NotifyChannel.INSITE;
+      default:
+        return null;
+    }
   }
 
   @Override

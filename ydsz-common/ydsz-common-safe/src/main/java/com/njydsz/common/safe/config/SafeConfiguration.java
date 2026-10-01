@@ -2,6 +2,7 @@ package com.njydsz.common.safe.config;
 
 import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -60,7 +61,9 @@ import com.njydsz.common.safe.idempotent.aspect.IdempotentAspect;
 import com.njydsz.common.safe.idempotent.aspect.RepeatSubmitAspect;
 import com.njydsz.common.safe.idempotent.exception.IdempotentUnavailableException;
 import com.njydsz.common.safe.idempotent.strategy.IdempotentStrategy;
+import com.njydsz.common.safe.idempotent.strategy.ReactiveIdempotentStrategy;
 import com.njydsz.common.safe.idempotent.strategy.RedisIdempotentStrategy;
+import com.njydsz.common.safe.idempotent.strategy.RedisReactiveIdempotentStrategy;
 import com.njydsz.common.safe.idempotent.strategy.RepeatSubmitTokenService;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
 import com.njydsz.common.safe.sensitive.SensitiveDataProperties;
@@ -540,6 +543,31 @@ public class SafeConfiguration {
   }
 
   /**
+   * 注册响应式幂等策略 Bean（WebFlux / Reactor 场景专用）。
+   *
+   * <p>基于 {@link com.njydsz.common.redis.service.ops.ReactiveStringRedisOps} 实现 SETNX + TTL 语义，
+   * 供 ydzz-gateway 等响应式框架使用。Redis 异常时自动 fail-open 降级（返回 true 放行），
+   * 避免幂等组件故障导致全链路不可用。
+   *
+   * @param reactiveStringRedisOpsProvider 响应式 Redis String 操作（可选）
+   * @return ReactiveIdempotentStrategy 实例， reactive ops 不可用时返回 null
+   */
+  @Bean(name = "safeReactiveIdempotentStrategy")
+  @ConditionalOnMissingBean(name = "safeReactiveIdempotentStrategy")
+  public ReactiveIdempotentStrategy reactiveIdempotentStrategy(
+      ObjectProvider<com.njydsz.common.redis.service.ops.ReactiveStringRedisOps>
+          reactiveStringRedisOpsProvider) {
+    com.njydsz.common.redis.service.ops.ReactiveStringRedisOps reactiveOps =
+        reactiveStringRedisOpsProvider.getIfAvailable();
+    if (reactiveOps == null) {
+      LOG.info("ReactiveStringRedisOps 不可用，跳过响应式幂等策略注册");
+      return null;
+    }
+    LOG.info("注册响应式幂等策略（WebFlux Redis 实现）");
+    return new RedisReactiveIdempotentStrategy(reactiveOps);
+  }
+
+  /**
    * 注册接口幂等性 AOP 切面
    *
    * <p>拦截 {@code com.njydsz.common.safe.idempotent.annotation.Idempotent} 注解方法， 基于 Redis SET NX EX Lua
@@ -799,5 +827,21 @@ public class SafeConfiguration {
   public HttpConnectionValidator httpConnectionValidator() {
     LOG.info("注册 SSRF 防护校验器");
     return HttpConnectionValidator.getDefault();
+  }
+
+  /**
+   * 注册共享的 Resilience4j 熔断器注册表。
+   *
+   * <p>作为全局唯一的 {@link CircuitBreakerRegistry} Bean，供 ydzs-common-feign 的
+   * {@code SafeCircuitBreakerAdapter} 及其他模块共享使用，避免各自创建独立注册表导致
+   * 指标分散、配置不一致。
+   *
+   * @return 共享的 CircuitBreakerRegistry 实例
+   */
+  @Bean(name = "safeCircuitBreakerRegistry")
+  @ConditionalOnMissingBean(name = "safeCircuitBreakerRegistry")
+  public CircuitBreakerRegistry circuitBreakerRegistry() {
+    LOG.info("注册共享 CircuitBreakerRegistry");
+    return CircuitBreakerRegistry.ofDefaults();
   }
 }

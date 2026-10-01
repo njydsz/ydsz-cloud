@@ -23,9 +23,8 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * <ul>
  *   <li>早期版本：通知基础设施（{@code outbox / template / channel / preference}）耦合在 {@code ydsz-workflow}
  *       模块内部，<b>已移除</b>
- *   <li>当前架构：通知能力由独立的<b>消息通知引擎</b> {@code ydsz-message} 承载， 本类仅作为 Feign 适配器，将工作流关键事件转发到 {@link
- *       NotificationClient}
- *   <li>这种解耦符合大厂 B 端架构原则：<b>单一职责 + 服务化</b>，避免模块职责膨胀
+ * <li>当前架构：通知能力由 {@code ydsz-common-notify} 承载， 通过 {@link NotifyHelper} 统一发送
+ *   <li>符合 ADR-001 统一入口策略，复用去重/熔断/限流等企业能力
  * </ul>
  *
  * <p><b>收敛对齐（ADR-001）：</b>
@@ -51,11 +50,11 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * <table>
  *   <caption>通知通道映射</caption>
  *   <tr><th>本服务入参</th><th>通知引擎处理</th><th>实际投递</th></tr>
- *   <tr><td>{@code INAPP}</td><td>{@link NotificationClient} 写入站内信（{@code channel=PUSH}）</td>
- *       <td>前端 WebSocket 推送 / 待办中心</td></tr>
- *   <tr><td>{@code EMAIL}</td><td>{@link NotificationClient} 投递（{@code channel=EMAIL}）</td>
+ *   <tr><td>{@code INAPP}</td><td>{@link NotifyHelper#sendInApp} 站内信</td>
+ *       <td>待办中心</td></tr>
+ *   <tr><td>{@code EMAIL}</td><td>{@link NotifyHelper#sendEmail} 投递</td>
  *       <td>SMTP / 企业邮箱</td></tr>
- *   <tr><td>{@code WEBHOOK}</td><td>{@link NotificationClient#sendMessage} 委托消息中心</td>
+ *   <tr><td>{@code WEBHOOK}</td><td>{@link NotifyHelper#sendDingTalk}/{@link NotifyHelper#sendFeishu}/{@link NotifyHelper#sendWeCom}</td>
  *       <td>发送到 {@code extra.webhookUrl} 指定的机器人</td></tr>
  * </table>
  *
@@ -63,20 +62,17 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  *
  * <ul>
  *   <li>本类<b>不开启事务</b>（{@code @Transactional} 缺失），通知发送是<b>非事务性</b>操作
- *   <li>Feign 调用失败时仅记录日志，<b>不抛异常</b>，避免主流程事务回滚
- *   <li>消息可靠性由 {@code ydsz-message} 模块的消息队列保证
+ *   <li>通知失败时仅记录日志，<b>不抛异常</b>，避免主流程事务回滚
+ *   <li>消息可靠性由 {@code ydsz-common-notify} 模块保证
  * </ul>
  *
  * <p><b>设计要点：</b>
  *
  * <ul>
- *   <li><b>轻量适配器</b>：本类只做「事件 → 通知请求」转换 + Feign 调用， <b>不负责</b>通知模板渲染 / 通道选择 / 用户偏好（均由 {@code
- *       ydsz-message} 处理）
- *   <li><b>敏感数据脱敏</b>：通过 {@link FlowSensitiveMasker} 对 {@code content} 字段脱敏， 避免手机号 / 身份证 /
- *       银行卡等敏感信息通过 IM 泄露
- *   <li><b>幂等性</b>：通过 {@code providerTraceId} 实现通知幂等， 同一事件多次通知只会发送一次（由 {@code ydsz-message} 侧保证）
- *   <li><b>异常降级</b>：所有 Feign 异常 / 网络异常 {@code try-catch} 吞掉， <b>不抛异常</b>，避免主流程事务回滚
- *   <li><b>异步非阻塞</b>：通过 Feign 的非阻塞调用实现，不阻塞主流程
+ *   <li><b>轻量适配器</b>：本类只做「事件 → NotifyHelper 适配」转换，利用 {@link NotifyHelper} 统一发送
+ *   <li><b>敏感数据脱敏</b>：通过 {@link FlowSensitiveMasker} 对通知内容脱敏
+ *   <li><b>幂等性</b>：由 {@code common-notify} 的去重模块保证
+ *   <li><b>异常降级</b>：通知异常 {@code try-catch} 吞掉，<b>不抛异常</b>，避免主流程事务回滚
  * </ul>
  *
  * <p><b>典型使用：</b>
@@ -91,16 +87,13 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  *     "您的审批任务已超时 4 小时", "WORKFLOW_TIMEOUT", "WARN");
  * }</pre>
  *
- * <p><b>扩展能力：</b>如需新增通知类型（如「流程完成通知」「抄送通知」）， 在 {@code ydsz-message} 侧新增模板，本类无需修改即可支持。
+ * <p><b>扩展能力：</b>如需新增通知类型，在 {@code common-notify} 侧新增通道，本类无需修改即可支持。
  *
  * @author ydsz-team
  * @since 26.09.01
  * @see FlowNotificationService 接口定义
- * @see NotificationClient 通知中心 Feign 客户端
- * @see MessageRequest 消息请求 DTO
- * @see FlowNotificationServiceImpl.NotificationFeignDTO 通知 Feign DTO
+ * @see NotifyHelper 统一通知辅助类
  * @see FlowSensitiveMasker 敏感数据脱敏器
- * @see MessageResult 消息发送结果
  */
 @Slf4j
 @Service
@@ -408,4 +401,4 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
       }
     }
   }
-
+}

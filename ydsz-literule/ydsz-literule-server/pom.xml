@@ -174,15 +174,15 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>
         </dependency>
+        <!-- P1-1: 规则触发告警通知（RuleTriggeredEventListener 通过 NotifyHelper 发送站内信/系统告警） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-notify</artifactId>
+        </dependency>
         <!-- P2: JdbcHealthIndicator 自动注册（需要 actuator 在 classpath 上） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
-        <!-- TODO(P2 显式依赖标注 26.09.27)：
-             本模块源码直接使用 ydsz-common-locales 的国际化能力（I18nMessage / MessageSource 动态文案），
-             当前仅通过 ydsz-common-web / ydsz-common-core 传递获得。
-             待后续评审后显式声明。版本由根 pom dependencyManagement 统一管理。 -->
-</dependencies>
+    </dependencies>
 </project>

@@ -5,16 +5,8 @@ import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 /**
  * 消息队列操作抽象接口。
  *
- * <p>将消息服务的 MQ 发送能力抽象化，底层可切换 RocketMQ / Kafka / RabbitMQ 等实现。 默认实现为 {@link
- * RocketMQMessageProducer}（基于 Spring RocketMQTemplate）， 也可通过 {@code CommonQueueMessageOperations}
- * 适配 common-queue 的 {@code IMessagePublisher}。
- *
- * <p>配置项 {@code ydsz.message.mq-type} 控制使用哪种实现：
- *
- * <ul>
- *   <li>{@code rocketmq}（默认）：直接使用 RocketMQTemplate
- *   <li>{@code common-queue}：通过 common-queue 的 IMessageQueue 抽象发送
- * </ul>
+ * <p>将消息服务的 MQ 发送能力抽象化，底层可切换 RocketMQ / Kafka / RabbitMQ 等实现。
+ * 当前统一使用 {@link CommonQueueMessageOperations}（基于 common-queue 的 {@code IMessagePublisher}）。
  *
  * @author ydsz-team
  * @since 26.09.01
@@ -30,16 +22,16 @@ public interface MessageQueueOperations {
   String syncSend(MessageItemRequestDTO req);
 
   /**
-   * 异步发送消息（不阻塞，结果通过回调通知）。
+   * 异步发送消息（不阻塞，底层引擎支持时自然异步）。
    *
    * @param req 消息请求
    */
   void asyncSend(MessageItemRequestDTO req);
 
   /**
-   * 发送事务消息（半消息）。
+   * 发送事务消息（发送前校验通道/模板，校验通过后同步投递）。
    *
-   * <p>发送半消息后，由事务监听器执行本地事务校验，COMMIT 后消费端异步处理。 不支持事务消息的 MQ 实现可降级为同步发送。
+   * <p>校验失败时抛出 BusinessException，不降级发送。
    *
    * @param req 消息请求
    * @return MQ 消息 ID

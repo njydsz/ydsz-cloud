@@ -31,6 +31,7 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.spring.ExcelWebSupport;
 import com.njydsz.common.util.date.DateUtils;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.RepeatSubmit;
 import com.njydsz.common.safe.annotation.SensitiveLevel;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.ConfigBatchDTO;
@@ -150,6 +151,7 @@ public class ConfigController {
       key = "'ydsz:system:config:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:config:add")
+  @RepeatSubmit
   @PostMapping
   public YdszResponse<String> save(@Valid @RequestBody ConfigDTO dto) {
     return YdszResponse.success(configService.save(dto));
@@ -178,6 +180,7 @@ public class ConfigController {
       key = "'ydsz:system:config:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:config:edit")
+  @RepeatSubmit
   @PutMapping
   public YdszResponse<Boolean> update(@Valid @RequestBody ConfigDTO dto) {
     return YdszResponse.success(configService.updateById(dto));
@@ -207,6 +210,7 @@ public class ConfigController {
       key = "'ydsz:system:config:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:config:delete")
+  @RepeatSubmit
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(configService.removeById(id));

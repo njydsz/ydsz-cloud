@@ -20,7 +20,7 @@ import com.njydsz.message.domain.vo.PipelineTopologyVO;
 import com.njydsz.message.server.consumer.BloomFilterDeduplicator;
 import com.njydsz.message.server.service.chain.SendPipelineFacade;
 import com.njydsz.message.server.service.impl.ScheduledMessageScanner;
-import com.njydsz.message.server.template.cache.CachedTemplateEngine;
+import com.njydsz.message.server.template.cache.CachedMessageTemplateRenderer;
 
 /**
  * 运维诊断 Controller。
@@ -44,7 +44,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see CachedTemplateEngine 模板引擎缓存
+ * @see CachedMessageTemplateRenderer 模板引擎缓存
  * @see BloomFilterDeduplicator 消息去重过滤器
  */
 @Slf4j
@@ -56,7 +56,7 @@ import com.njydsz.message.server.template.cache.CachedTemplateEngine;
 public class OpsController {
 
   /** 带 AST 缓存的模板引擎 */
-  private final CachedTemplateEngine cachedTemplateEngine;
+  private final CachedMessageTemplateRenderer cachedTemplateEngine;
 
   /** 基于 BloomFilter 的消息去重过滤器 */
   private final BloomFilterDeduplicator bloomFilterDeduplicator;

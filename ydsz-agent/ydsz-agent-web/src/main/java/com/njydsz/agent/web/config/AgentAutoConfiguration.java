@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -114,6 +115,7 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.safe.alert.SecurityEventPublisher;
 
 /**
  * Agent 模块自动配置（DDD 分层：由 web 层负责依赖注入编排）。
@@ -165,7 +167,8 @@ public class AgentAutoConfiguration {
       AgentMetrics agentMetrics,
       ObjectProvider<RedisStringOps> redisStringOpsProvider,
       ObjectProvider<RedisCollectionOps> redisCollectionOpsProvider,
-      CacheKeyBuilder cacheKeyBuilder) {
+      CacheKeyBuilder cacheKeyBuilder,
+      ObjectProvider<SecurityEventPublisher> securityEventPublisherProvider) {
     LlmClientRouter router = new LlmClientRouter();
     LlmProperties llmConfig = properties.getLlm();
 
@@ -176,8 +179,10 @@ public class AgentAutoConfiguration {
             llmConfig.getBaseUrl(),
             llmConfig.getApiKey(),
             llmConfig.getTimeoutSeconds());
+    SecurityEventPublisher securityEventPublisher = securityEventPublisherProvider.getIfAvailable();
     String defaultProviderName = llmConfig.getDefaultProvider();
-    router.register(new ResilientLlmClient(defaultClient, defaultProviderName));
+    router.register(new ResilientLlmClient(defaultClient, defaultProviderName,
+        CircuitBreakerRegistry.ofDefaults(), securityEventPublisher));
 
     // 注册额外 Provider（多模型 + Fallback 链，每个独立熔断）
     if (llmConfig.getProviders() != null) {
@@ -190,7 +195,8 @@ public class AgentAutoConfiguration {
         CompatibleLlmClient client =
             new CompatibleLlmClient(
                 providerName, pc.getBaseUrl(), pc.getApiKey(), llmConfig.getTimeoutSeconds());
-        router.register(new ResilientLlmClient(client, providerName));
+        router.register(new ResilientLlmClient(client, providerName,
+            CircuitBreakerRegistry.ofDefaults(), securityEventPublisher));
       }
     }
 

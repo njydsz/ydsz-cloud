@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 
 import com.njydsz.message.domain.vo.MessageSendResultVO;
@@ -22,9 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.audit.event.DataExportAuditEvent;
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.response.PageResponse;
@@ -33,7 +36,9 @@ import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.message.domain.dto.BatchSendResultDTO;
 import com.njydsz.message.domain.dto.MessageItemRequestDTO;
@@ -101,6 +106,9 @@ public class MessageController {
 
   /** 消息发送服务 */
   private final MessageService messageService;
+
+  /** 事件发布器 */
+  private final ApplicationEventPublisher eventPublisher;
 
   /**
    * 统一消息发送入口。
@@ -238,6 +246,39 @@ public class MessageController {
     try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), MsgLogExportVO.class)
         .sheet("MsgLogs")) {
       writer.doWrite(rows);
+    }
+    publishDataExportAudit("消息投递", "msg_log", rows.size());
+  }
+
+  // ==================== 私有辅助方法 ====================
+
+  /**
+   * 发布数据导出审计事件。
+   *
+   * <p>事件发布不阻塞业务链路，异常仅记录日志。
+   *
+   * @param exportModule 导出模块名
+   * @param bizType 业务类型
+   * @param rowCount 导出行数
+   */
+  private void publishDataExportAudit(String exportModule, String bizType, int rowCount) {
+    try {
+      DataExportAuditEvent event = DataExportAuditEvent.builder()
+          .userId(AuthContextUtils.getUserId())
+          .username(AuthContextUtils.getUsername())
+          .exportModule(exportModule)
+          .bizType(bizType)
+          .rowCount(rowCount)
+          .traceId(TracerUtils.getTraceId())
+          .clientIp(RequestContext.getClientIp())
+          .tenantId(AuthContextUtils.getTenantIdOrDefault())
+          .exportedAt(System.currentTimeMillis())
+          .build();
+      eventPublisher.publishEvent(event);
+      log.debug("[Audit] 数据导出事件已发布: module={}, bizType={}, rowCount={}",
+          exportModule, bizType, rowCount);
+    } catch (Exception e) {
+      log.warn("[Audit] 发布数据导出事件异常: exportModule={}, reason={}", exportModule, e.getMessage());
     }
   }
 

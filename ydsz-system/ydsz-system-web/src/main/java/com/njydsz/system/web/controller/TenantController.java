@@ -26,6 +26,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.idempotent.annotation.RepeatSubmit;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.dto.TenantDTO;
 import com.njydsz.system.domain.query.TenantPageQuery;
@@ -125,6 +126,7 @@ public class TenantController {
       key = "'ydsz:system:tenant:save:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:tenant:add")
+  @RepeatSubmit
   @PostMapping
   public YdszResponse<String> save(
       @Valid @RequestBody TenantDTO dto,
@@ -150,6 +152,7 @@ public class TenantController {
       key = "'ydsz:system:tenant:update:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId()",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:tenant:edit")
+  @RepeatSubmit
   @PutMapping
   public YdszResponse<Boolean> update(
       @Valid @RequestBody TenantDTO dto,
@@ -174,6 +177,7 @@ public class TenantController {
       key = "'ydsz:system:tenant:remove:' + T(com.njydsz.common.auth.context.AuthContextUtils).getUserId() + ':' + #id",
       ttlSeconds = 5)
   @AuthApiPermission(apiCodes = "sys:tenant:delete")
+  @RepeatSubmit
   @DeleteMapping("/{id}")
   public YdszResponse<Boolean> remove(@PathVariable String id) {
     return YdszResponse.success(service.removeById(id));

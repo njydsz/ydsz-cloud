@@ -53,7 +53,7 @@ import com.njydsz.message.server.service.TemplateService;
  * <p><b>模板状态机：</b>{@code DRAFT}（待审核）→ {@code PUBLISHED}（已发布，可用于发送）→ {@code OFFLINE}（已下线，停止使用）/
  * {@code REJECTED}（审核未通过）。
  *
- * <p><b>变量替换：</b>模板内容支持 {@code ${var}} 嵌套变量语法，发送时由 {@code TemplateEngine} 替换为实际值。 例如：{@code "您的验证码为
+ * <p><b>变量替换：</b>模板内容支持 {@code ${var}} 嵌套变量语法，发送时由 {@code MessageTemplateRenderer} 替换为实际值。 例如：{@code "您的验证码为
  * ${code}，5 分钟内有效"} → {@code "您的验证码为 123456，5 分钟内有效"}。
  *
  * <p><b>多渠道支持：</b>同一模板可绑定到多个渠道（短信 / 邮件 / 站内信 / IM / 企业微信）， 每个渠道有独立的 {@code TemplateCode}
@@ -88,7 +88,7 @@ public class TemplateController {
    * 创建消息模板。
    *
    * <p>新建一条消息模板记录，初始状态为 {@code DRAFT}（需审核通过后才能发布使用）。
-   * 模板内容支持 {@code ${var}} 占位符语法，由 {@code TemplateEngine} 在发送时替换实际值。
+   * 模板内容支持 {@code ${var}} 占位符语法，由 {@code MessageTemplateRenderer} 在发送时替换实际值。
    * 启用 5s 幂等防重、50 QPS 限流，并记录审计日志。
    *
    * @param dto 模板创建请求体（经 {@code @Valid} 校验；含 templateCode / name / content / subject / channel 等）

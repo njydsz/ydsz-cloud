@@ -1,25 +1,22 @@
 package com.njydsz.message.server.consumer;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnels;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.thread.factory.InternalExecutorFactory;
+import com.njydsz.common.util.BloomFilter;
 
 /**
  * 基于 BloomFilter + Redis 的消息去重前置过滤器，降低重复消息处理的 Redis 查询压力。
@@ -34,7 +31,6 @@ import com.njydsz.common.thread.factory.InternalExecutorFactory;
  */
 @Slf4j
 @Component
-@ConditionalOnClass(BloomFilter.class)
 @ConditionalOnProperty(
     prefix = "ydsz.message.consumer",
     name = "bloom-filter-enabled",
@@ -55,10 +51,10 @@ public class BloomFilterDeduplicator {
   private final int redisDedupTtlSeconds;
 
   /** 当前活跃的 BloomFilter（写入新条目） */
-  private final AtomicReference<BloomFilter<String>> activeFilter = new AtomicReference<>();
+  private final AtomicReference<BloomFilter> activeFilter = new AtomicReference<>();
 
   /** 上一周期的 BloomFilter（保留用于防止边界误判） */
-  private final AtomicReference<BloomFilter<String>> previousFilter =
+  private final AtomicReference<BloomFilter> previousFilter =
       new AtomicReference<>();
 
   /** 窗口翻转调度器（单线程，守护线程，由 InternalExecutorFactory 统一管理） */
@@ -131,8 +127,8 @@ public class BloomFilterDeduplicator {
       return false;
     }
 
-    BloomFilter<String> active = activeFilter.get();
-    BloomFilter<String> previous = previousFilter.get();
+    BloomFilter active = activeFilter.get();
+    BloomFilter previous = previousFilter.get();
 
     // 先查当前窗口，再查上一窗口（防止边界误判）
     boolean localMightContain = active != null && active.mightContain(msgId);
@@ -181,7 +177,7 @@ public class BloomFilterDeduplicator {
       return;
     }
 
-    BloomFilter<String> active = activeFilter.get();
+    BloomFilter active = activeFilter.get();
     if (active != null) {
       active.put(msgId);
       currentWindowCount++;
@@ -206,7 +202,7 @@ public class BloomFilterDeduplicator {
    * @return 统计信息字符串
    */
   public String stats() {
-    BloomFilter<String> active = activeFilter.get();
+    BloomFilter active = activeFilter.get();
     return String.format(
         "windowCount=%d totalHits=%d activeSize=%s",
         currentWindowCount, totalHits, active != null ? "active" : "null");
@@ -215,8 +211,8 @@ public class BloomFilterDeduplicator {
   /** 翻转 BloomFilter 窗口：当前变历史，创建新的当前。 */
   private void rotateFilter() {
     try {
-      BloomFilter<String> newFilter = createFilter();
-      BloomFilter<String> oldActive = activeFilter.getAndSet(newFilter);
+      BloomFilter newFilter = createFilter();
+      BloomFilter oldActive = activeFilter.getAndSet(newFilter);
       previousFilter.set(oldActive);
       currentWindowCount = 0;
       windowCreatedAt.set(System.currentTimeMillis());
@@ -229,13 +225,12 @@ public class BloomFilterDeduplicator {
   /**
    * 创建新的 BloomFilter 实例。
    *
+   * <p>YDIZ-COMMON-048: 使用 ydsz-common-util 零依赖 BloomFilter 替代 Guava。
+   *
    * @return 配置好预期插入数和误判率的新 BloomFilter 实例
    */
-  private BloomFilter<String> createFilter() {
-    return BloomFilter.create(
-        Funnels.stringFunnel(StandardCharsets.UTF_8),
-        expectedInsertions,
-        falsePositiveProbability);
+  private BloomFilter createFilter() {
+    return new BloomFilter(expectedInsertions, falsePositiveProbability);
   }
 
   /**

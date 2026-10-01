@@ -91,7 +91,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
-        <!-- P1-FIX: 显式声明 common-json（OutboxDomainEventPublisher/MessageTransactionListener 使用 JsonMapper） -->
+        <!-- P1-FIX: 显式声明 common-json（OutboxDomainEventPublisher/CommonQueueMessageOperations 使用 JsonMapper） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>

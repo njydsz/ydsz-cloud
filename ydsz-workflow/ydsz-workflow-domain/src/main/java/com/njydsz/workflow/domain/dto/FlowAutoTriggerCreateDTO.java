@@ -1,5 +1,6 @@
 package com.njydsz.workflow.domain.dto;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -38,5 +39,6 @@ public class FlowAutoTriggerCreateDTO {
 
   /** 触发规则描述（可选） */
   @Schema(description = "触发规则描述")
+  @Xss(message = "触发规则描述包含非法字符")
   private String description;
 }

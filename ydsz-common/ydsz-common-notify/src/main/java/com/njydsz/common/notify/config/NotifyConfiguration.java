@@ -1,6 +1,5 @@
 package com.njydsz.common.notify.config;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -19,8 +18,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -525,7 +527,10 @@ public class NotifyConfiguration {
    * <p>供短信/第三方网关等 HTTP 调用复用，连接/读取超时从 {@code ydsz.notify.http} 配置读取。
    * 使用 {@code @ConditionalOnMissingBean} 允许业务侧提供带拦截器/连接池的定制实例。
    *
-   * <p><b>P0-3 超时外部化</b>：超时参数由 {@link NotifyProperties.HttpConfig} 提供， 默认 5s 连接、10s
+   * <p>使用 Apache HttpClient 5 连接池（{@link HttpComponentsClientHttpRequestFactory}），
+   * 替代 JDK {@code HttpURLConnection}（{@code SimpleClientHttpRequestFactory}）避免高并发 TIME_WAIT 堆积。
+   *
+   * <p><b>P2-1 连接池化</b>：连接/读取超时参数由 {@link NotifyProperties.HttpConfig} 提供， 默认 5s 连接、10s
    * 读取，可通过 {@code ydsz.notify.http.connect-timeout-millis} 与 {@code
    * ydsz.notify.http.read-timeout-millis} 调整。
    *
@@ -536,11 +541,15 @@ public class NotifyConfiguration {
   @ConditionalOnMissingBean
   public RestTemplate notifyRestTemplate(NotifyProperties properties) {
     NotifyProperties.HttpConfig httpConfig = properties.getHttp();
-    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-    factory.setConnectTimeout(Duration.ofMillis(httpConfig.getConnectTimeoutMillis()));
-    factory.setReadTimeout(Duration.ofMillis(httpConfig.getReadTimeoutMillis()));
+    // P2-1: 使用 HttpClient5 连接池（YDIZ-FEIGN-005），替代 SimpleClientHttpRequestFactory
+    RequestConfig requestConfig = RequestConfig.custom()
+        .setConnectTimeout(Timeout.ofMilliseconds(httpConfig.getConnectTimeoutMillis()))
+        .setResponseTimeout(Timeout.ofMilliseconds(httpConfig.getReadTimeoutMillis()))
+        .build();
+    HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(
+        HttpClients.custom().setDefaultRequestConfig(requestConfig).build());
     LOG.info(
-        "[NotifyConfiguration] notifyRestTemplate 已创建，connectTimeout={}ms, readTimeout={}ms",
+        "[NotifyConfiguration] notifyRestTemplate 已创建（HttpClient5 连接池），connectTimeout={}ms, readTimeout={}ms",
         httpConfig.getConnectTimeoutMillis(),
         httpConfig.getReadTimeoutMillis());
     return new RestTemplate(factory);

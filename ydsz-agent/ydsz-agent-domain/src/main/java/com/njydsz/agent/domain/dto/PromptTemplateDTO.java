@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -28,12 +29,15 @@ public class PromptTemplateDTO implements Serializable {
   private String templateCode;
 
   /** 模板名称（展示用） */
+  @Xss(message = "模板名称包含非法字符")
   private String templateName;
 
   /** 模板内容，支持 #{var} 占位符 */
+  @Xss(message = "模板内容包含非法字符")
   private String content;
 
   /** 模板描述 */
+  @Xss(message = "模板描述包含非法字符")
   private String description;
 
   /** 分类（用于分组检索） */

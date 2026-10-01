@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.api.client.UserCredentialClient;
 import com.njydsz.system.domain.dto.VerifyPasswordRequest;
 
@@ -31,14 +32,16 @@ public class UserCredentialClientFallback implements FallbackFactory<UserCredent
 
   @Override
   public UserCredentialClient create(Throwable cause) {
-    log.warn("[UserCredentialClient] 降级触发，拒绝二次认证: {}", cause.getMessage());
+    log.warn("[UserCredentialClient] 降级触发，拒绝二次认证: {}", cause == null ? "?" : cause.getMessage());
+    String unavailableMsg = I18n.message("system.user_credential.unavailable");
     return new UserCredentialClient() {
       @Override
       public YdszResponse<Boolean> verifyPassword(VerifyPasswordRequest request) {
         log.warn(
-            "[UserCredentialClient] verifyPassword 降级: userId={}, reason=用户中心服务不可用",
-            request == null ? null : request.getUserId());
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "用户中心服务不可用，无法完成二次认证");
+            "[UserCredentialClient] verifyPassword 降级: userId={}, reason={}",
+            request == null ? null : request.getUserId(),
+            unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
     };
   }

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,13 +27,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.audit.event.DataExportAuditEvent;
+import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.base.api.ApiVersion;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.util.date.DateUtils;
+import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.workflow.server.excel.vo.FlowApproverEfficiencyExportVO;
 import com.njydsz.workflow.server.excel.vo.FlowEfficiencyExportVO;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
@@ -85,6 +90,9 @@ public class FlowAnalyticsController {
 
   /** 审批数据分析服务，提供效率排行、趋势分析等统计能力 */
   private final FlowAnalyticsService analyticsService;
+
+  /** 事件发布器 */
+  private final ApplicationEventPublisher eventPublisher;
 
   /** 流程历史归档服务，负责数据归档、冷数据清理与配置查询 */
   private final FlowHistoryArchiveService archiveService;
@@ -415,11 +423,12 @@ public class FlowAnalyticsController {
     String tenantId = TenantContextHolder.getTenantId();
     List<FlowApproverEfficiencyExportVO> rows =
         analyticsService.exportApproverEfficiency(startTime, endTime, tenantId, limit);
-    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), FlowApproverEfficiencyExportVO.class)
-        .sheet("ApproverEfficiency")) {
-      writer.doWrite(rows);
-    }
-  }
+try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), FlowApproverEfficiencyExportVO.class)
+.sheet("ApproverEfficiency")) {
+writer.doWrite(rows);
+}
+publishDataExportAudit("流程分析", "approver_efficiency", rows.size());
+}
 
   /**
    * 导出流程效率对比（Excel）
@@ -445,10 +454,43 @@ public class FlowAnalyticsController {
     String tenantId = TenantContextHolder.getTenantId();
     List<FlowEfficiencyExportVO> rows =
         analyticsService.exportFlowEfficiency(startTime, endTime, tenantId);
-    try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), FlowEfficiencyExportVO.class)
-        .sheet("FlowEfficiency")) {
-      writer.doWrite(rows);
-    }
+try (ExcelWriter writer = ExcelFacade.write(response.getOutputStream(), FlowEfficiencyExportVO.class)
+.sheet("FlowEfficiency")) {
+writer.doWrite(rows);
+}
+publishDataExportAudit("流程分析", "flow_efficiency", rows.size());
+}
+
+// ==================== 私有辅助方法 ====================
+
+/**
+ * 发布数据导出审计事件。
+ *
+ * <p>事件发布不阻塞业务链路，异常仅记录日志。
+ *
+ * @param exportModule 导出模块名
+ * @param bizType 业务类型
+ * @param rowCount 导出行数
+ */
+private void publishDataExportAudit(String exportModule, String bizType, int rowCount) {
+  try {
+    DataExportAuditEvent event = DataExportAuditEvent.builder()
+        .userId(AuthContextUtils.getUserId())
+        .username(AuthContextUtils.getUsername())
+        .exportModule(exportModule)
+        .bizType(bizType)
+        .rowCount(rowCount)
+        .traceId(TracerUtils.getTraceId())
+        .clientIp(RequestContext.getClientIp())
+        .tenantId(AuthContextUtils.getTenantIdOrDefault())
+        .exportedAt(System.currentTimeMillis())
+        .build();
+    eventPublisher.publishEvent(event);
+    log.debug("[Audit] 数据导出事件已发布: module={}, bizType={}, rowCount={}",
+        exportModule, bizType, rowCount);
+  } catch (Exception e) {
+    log.warn("[Audit] 发布数据导出事件异常: exportModule={}, reason={}", exportModule, e.getMessage());
   }
+}
 }
 

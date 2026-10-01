@@ -93,7 +93,6 @@ public final class PermissionUtils {
         return true;
       }
     }
-    // 注意：权限继承层级检查已由调用方通过 PermissionHierarchyService 处理
     return false;
   }
 

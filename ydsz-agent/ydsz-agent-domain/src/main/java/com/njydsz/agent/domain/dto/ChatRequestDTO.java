@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -42,6 +43,7 @@ public class ChatRequestDTO implements Serializable {
   /** 用户消息内容（必填，纯文本场景） */
   @NotBlank(message = "消息内容不能为空")
   @Schema(description = "用户消息（纯文本，与 multimodalContent 二选一）")
+  @Xss(message = "消息内容包含非法字符")
   private String message;
 
   /**

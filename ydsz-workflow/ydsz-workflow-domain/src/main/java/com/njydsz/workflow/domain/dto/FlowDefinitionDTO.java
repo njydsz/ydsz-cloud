@@ -3,6 +3,7 @@ package com.njydsz.workflow.domain.dto;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -29,6 +30,7 @@ public class FlowDefinitionDTO {
   private String flowCode;
 
   /** 流程名称 */
+  @Xss(message = "流程名称包含非法字符")
   private String flowName;
 
   /** 流程版本号 */

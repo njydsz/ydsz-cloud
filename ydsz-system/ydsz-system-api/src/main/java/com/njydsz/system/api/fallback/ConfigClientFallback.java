@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.system.api.client.ConfigClient;
 import com.njydsz.system.domain.dto.ConfigGetRequest;
 
@@ -24,14 +25,16 @@ public class ConfigClientFallback implements FallbackFactory<ConfigClient> {
 
   @Override
   public ConfigClient create(Throwable cause) {
-    log.warn("[ConfigClient] 降级触发: {}", cause.getMessage());
+    log.warn("[ConfigClient] 降级触发: {}", cause == null ? "?" : cause.getMessage());
+    String unavailableMsg = I18n.message("system.admin.service.unavailable");
     return new ConfigClient() {
       @Override
       public YdszResponse<String> getConfig(ConfigGetRequest request) {
         log.warn(
-            "[ConfigClient] getConfig 降级: key={}, reason=系统管理服务不可用",
-            request == null ? null : request.getKey());
-        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
+            "[ConfigClient] getConfig 降级: key={}, reason={}",
+            request == null ? null : request.getKey(),
+            unavailableMsg);
+        return YdszResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, unavailableMsg);
       }
     };
   }

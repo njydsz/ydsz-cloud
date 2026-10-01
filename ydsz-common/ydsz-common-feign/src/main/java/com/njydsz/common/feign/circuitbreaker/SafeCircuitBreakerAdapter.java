@@ -17,6 +17,9 @@ import com.njydsz.common.feign.config.FeignProperties;
  * <p>封装 Resilience4j {@link CircuitBreaker} 实现，实现 {@link FeignCircuitBreakerStrategy} 接口。
  * 每个服务名称对应一个独立的熔断器实例，参数从 {@code ydsz.feign.circuit-breaker.*} 配置读取。
  *
+ * <p>推荐使用接受 {@link CircuitBreakerRegistry} 参数的构造方法，以复用 ydzs-common-safe
+ * 提供的共享注册表（Bean 名 {@code safeCircuitBreakerRegistry}），保证全平台指标统一采集。
+ *
  * @author ydsz-team
  * @since 26.09.01
  */
@@ -29,20 +32,42 @@ public class SafeCircuitBreakerAdapter implements FeignCircuitBreakerStrategy {
   private final CircuitBreakerRegistry registry;
 
   /**
+   * 构造熔断适配器（使用共享注册表）。
+   *
+   * <p>使用 ydzs-common-safe 提供的共享 {@link CircuitBreakerRegistry}，
+   * 保证熔断器指标统一采集到全局 Micrometer。
+   *
+   * @param properties Feign 配置属性
+   * @param statePersistence 状态持久化（可为 null）
+   * @param metricsExporter 指标导出器（可为 null）
+   * @param registry 共享的熔断器注册表
+   */
+  public SafeCircuitBreakerAdapter(
+      FeignProperties properties,
+      CircuitBreakerStatePersistence statePersistence,
+      FeignCircuitBreakerMetricsExporter metricsExporter,
+      CircuitBreakerRegistry registry) {
+    this.properties = properties;
+    this.statePersistence = statePersistence;
+    this.metricsExporter = metricsExporter;
+    this.registry = registry;
+  }
+
+  /**
    * 构造熔断适配器。
    *
    * @param properties Feign 配置属性
    * @param statePersistence 状态持久化（可为 null）
    * @param metricsExporter 指标导出器（可为 null）
+   * @deprecated 使用 {@link #SafeCircuitBreakerAdapter(FeignProperties, CircuitBreakerStatePersistence,
+   *     FeignCircuitBreakerMetricsExporter, CircuitBreakerRegistry)} 以接入共享注册表。
    */
+  @Deprecated
   public SafeCircuitBreakerAdapter(
       FeignProperties properties,
       CircuitBreakerStatePersistence statePersistence,
       FeignCircuitBreakerMetricsExporter metricsExporter) {
-    this.properties = properties;
-    this.statePersistence = statePersistence;
-    this.metricsExporter = metricsExporter;
-    this.registry = CircuitBreakerRegistry.ofDefaults();
+    this(properties, statePersistence, metricsExporter, CircuitBreakerRegistry.ofDefaults());
   }
 
   @Override

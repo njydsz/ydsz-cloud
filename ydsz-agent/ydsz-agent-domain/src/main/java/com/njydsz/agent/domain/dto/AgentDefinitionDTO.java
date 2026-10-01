@@ -3,6 +3,7 @@ package com.njydsz.agent.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
 
 /**
@@ -33,15 +34,18 @@ public class AgentDefinitionDTO implements Serializable {
   private String agentCode;
 
   /** Agent 名称 */
+  @Xss(message = "Agent名称包含非法字符")
   private String agentName;
 
   /** Agent 类型 */
   private String agentType;
 
   /** 描述 */
+  @Xss(message = "描述包含非法字符")
   private String description;
 
   /** 系统提示词 */
+  @Xss(message = "系统提示词包含非法字符")
   private String systemPrompt;
 
   /** 模型配置 JSON */

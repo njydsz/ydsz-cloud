@@ -20,7 +20,6 @@ import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.constant.AuthErrorCode;
 import com.njydsz.common.auth.exception.PermissionDeniedException;
 import com.njydsz.common.auth.exception.PermissionDeniedException.PermissionType;
-import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.strategy.CacheKeyStrategy;
@@ -69,9 +68,6 @@ public class RbacPermissionEvaluator {
   private final RbacUserInfoService userInfoService;
   private final RolePermissionLoader rolePermissionLoader;
   private final RolePermissionCacheService rolePermissionCacheService;
-
-  /** 权限层级服务，支持按租户隔离。 可选注入，为 null 时回退到 {@link PermissionUtils} 静态调用（向后兼容）。 */
-  private PermissionHierarchyService hierarchyService;
 
   /** 可选的指标采集器，由 AuthConfiguration 注入。为 null 时不采集指标（向后兼容）。 */
   private AuthMetricsCollector metricsCollector;
@@ -191,15 +187,6 @@ public class RbacPermissionEvaluator {
    *
    * @param cacheKeyStrategy 缓存 Key 生成策略
    */
-  /**
-   * 设置权限层级服务。
-   *
-   * @param hierarchyService 权限层级服务实例
-   */
-  public void setHierarchyService(PermissionHierarchyService hierarchyService) {
-    this.hierarchyService = hierarchyService;
-  }
-
   /**
    * 设置指标采集器（由 AuthConfiguration 注入）。
    *
@@ -521,11 +508,6 @@ public class RbacPermissionEvaluator {
   }
 
   private boolean hasPermission(Set<String> granted, String required) {
-    if (hierarchyService != null) {
-      return hierarchyService.hasPermission(
-          resolveTenantIdOrDefault(), granted, required, properties.isWildcardEnabled());
-    }
-    // 向后兼容：回退到 PermissionUtils 静态调用
     return PermissionUtils.hasPermission(granted, required, properties.isWildcardEnabled());
   }
 
@@ -536,7 +518,7 @@ public class RbacPermissionEvaluator {
    */
   private String resolveTenantIdOrDefault() {
     String tenantId = resolveTenantId();
-    return tenantId != null ? tenantId : PermissionHierarchyService.DEFAULT_TENANT_ID;
+    return tenantId != null ? tenantId : "__DEFAULT__";
   }
 
   private Set<String> parseUserRoles(Map<String, Object> userInfo) {

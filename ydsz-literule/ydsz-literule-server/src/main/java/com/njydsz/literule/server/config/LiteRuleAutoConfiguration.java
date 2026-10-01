@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -116,6 +117,7 @@ import com.njydsz.common.locales.util.I18n;
 @Configuration
 @EnableConfigurationProperties(LiteRuleProperties.class)
 @EnableScheduling
+@EnableAsync
 @ConditionalOnProperty(
     prefix = "ydsz.literule",
     name = "enabled",

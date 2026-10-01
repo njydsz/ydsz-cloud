@@ -3,6 +3,7 @@ package com.njydsz.agent.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -25,6 +26,7 @@ public class ToolSearchRequestDTO implements Serializable {
 
   /** 自然语言查询文本 */
   @Schema(description = "自然语言查询文本", example = "查询天气的工具")
+  @Xss(message = "查询内容包含非法字符")
   private String query;
 
   /** 返回数量上限（默认 5，最大 20） */

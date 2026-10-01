@@ -31,7 +31,7 @@ import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.TemplateService;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.server.service.core.MessageService;
-import com.njydsz.message.server.template.TemplateEngine;
+import com.njydsz.message.server.template.MessageTemplateRenderer;
 
 /**
  * 消息聚合服务实现。
@@ -75,7 +75,7 @@ public class AggregateServiceImpl implements AggregateService {
   private final MessageService messageService;
 
   /** 模板引擎（摘要渲染） */
-  private final TemplateEngine templateEngine;
+  private final MessageTemplateRenderer templateEngine;
 
   /** 模板管理服务（加载摘要模板） */
   private final TemplateService templateService;

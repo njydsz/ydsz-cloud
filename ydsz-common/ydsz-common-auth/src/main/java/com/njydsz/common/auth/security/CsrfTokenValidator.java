@@ -70,12 +70,24 @@ public class CsrfTokenValidator {
    * @param token CSRF Token
    */
   public void setCsrfCookie(HttpServletResponse response, String token) {
+    setCsrfCookie(response, token, null);
+  }
+
+  /**
+   * 设置 CSRF Cookie 到响应中（带请求上下文）。
+   *
+   * <p>当调用方持有 {@link HttpServletRequest} 时，建议使用此重载以获得更精确的 Secure 标志判定。
+   *
+   * @param response HTTP 响应
+   * @param token    CSRF Token
+   * @param request  HTTP 请求（用于判断 Secure 标志）
+   */
+  public void setCsrfCookie(HttpServletResponse response, String token, HttpServletRequest request) {
     if (!enabled || token == null) {
       return;
     }
-    // 使用 Servlet Cookie API 构建标准 Cookie（委托 safe 模块工具类设置安全属性）
-    CsrfDoubleSubmitUtility.addCsrfCookie(response, CSRF_COOKIE_NAME, token,
-        getCurrentRequest());
+    // 委托 safe 模块工具类设置标准化 CSRF Cookie（HttpOnly=false + SameSite=Strict + 动态 Secure）
+    CsrfDoubleSubmitUtility.addCsrfCookie(response, CSRF_COOKIE_NAME, token, request);
   }
 
   /**
@@ -97,10 +109,9 @@ public class CsrfTokenValidator {
     if (!valid) {
       String headerToken = request.getHeader(CSRF_HEADER_NAME);
       String cookieToken = CsrfDoubleSubmitUtility.getCookieValue(request, CSRF_COOKIE_NAME);
-      LOG.debug(
-          "CSRF Token 缺失: header={}, cookie={}",
-          headerToken != null ? "present" : "missing",
-          cookieToken != null ? "present" : "missing");
+      LOG.debug("CSRF Token 校验失败 | header={} | cookie={}",
+          headerToken != null ? "present" : "absent",
+          cookieToken != null ? "present" : "absent");
     }
 
     return valid;
@@ -113,16 +124,5 @@ public class CsrfTokenValidator {
    */
   public boolean isEnabled() {
     return enabled;
-  }
-
-  /**
-   * 获取当前 HTTP 请求（用于 Cookie Secure 标志动态判断）。
-   *
-   * <p>子类可重写此方法以提供实际的请求对象；默认实现返回 null（使用兼容模式）。
-   *
-   * @return 当前请求，或 null
-   */
-  protected HttpServletRequest getCurrentRequest() {
-    return null;
   }
 }

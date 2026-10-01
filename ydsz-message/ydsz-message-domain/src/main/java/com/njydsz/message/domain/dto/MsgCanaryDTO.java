@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.common.safe.annotation.Xss;
 import lombok.Builder;
 import lombok.Data;
 
@@ -32,6 +33,7 @@ public class MsgCanaryDTO implements Serializable {
   private String canaryKey;
 
   /** A/B 实验名称 */
+  @Xss
   private String experimentName;
 
   /** 关联模板编码 */

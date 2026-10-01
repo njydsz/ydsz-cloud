@@ -22,7 +22,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.domain.vo.MsgTemplateVO;
 import com.njydsz.message.server.service.TemplateService;
-import com.njydsz.message.server.template.TemplateEngine;
+import com.njydsz.message.server.template.MessageTemplateRenderer;
 import com.njydsz.message.server.template.TemplateVariableValidator;
 
 /**
@@ -48,7 +48,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
  *       "defaultValue": "000000"}}）解析变量定义
  *   <li>调用 {@link com.njydsz.message.server.template.TemplateVariableValidator#validateAndFill}
  *       校验必填项 + 填充默认值
- *   <li>用 {@link com.njydsz.message.server.template.TemplateEngine#render} 替换 {@code ${var}} 占位符
+ *   <li>用 {@link com.njydsz.message.server.template.MessageTemplateRenderer#render} 替换 {@code ${var}} 占位符
  *   <li>返回渲染后的 content / subject
  * </ol>
  *
@@ -60,12 +60,12 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
  * <ul>
  *   <li>{@code /raw} 接口（自定义内容）启用 {@link Idempotent} 5s 防重，防止被刷渲染资源
  *   <li>{@code /raw} 接口启用 {@link RateLimit} 50 QPS 限流
- *   <li>变量替换在沙箱内执行，避免模板注入风险（{@code TemplateEngine} 使用纯字符串替换，不求值 Groovy / OGNL 等表达式）
+   * <li>变量替换在沙箱内执行，避免模板注入风险（{@code MessageTemplateRenderer} 使用纯字符串替换，不求值 Groovy / OGNL 等表达式）
  * </ul>
  *
  * @author ydsz-team
  * @since 26.09.01
- * @see com.njydsz.message.server.template.TemplateEngine 模板渲染引擎
+ * @see com.njydsz.message.server.template.MessageTemplateRenderer 模板渲染引擎
  * @see com.njydsz.message.server.template.TemplateVariableValidator 变量校验器
  * @see com.njydsz.message.server.service.template.TemplateService 模板服务
  */
@@ -81,14 +81,14 @@ public class TemplatePreviewController {
 
 
   private final TemplateService templateService;
-  private final TemplateEngine templateEngine;
+  private final MessageTemplateRenderer templateEngine;
   private final TemplateVariableValidator variableValidator;
 
   /**
    * 按模板编码预览已发布模板的渲染结果。
    *
    * <p>从 DB 加载指定 {@code templateCode/channel/locale}（默认值 INAPP / zh-CN）的模板， 按 {@code variableDefs}
-   * 校验必填变量并填充默认值，再用 {@link TemplateEngine} 渲染 subject / content。模板不存在或编码为空时返回 error，不抛异常。
+   * 校验必填变量并填充默认值，再用 {@link MessageTemplateRenderer} 渲染 subject / content。模板不存在或编码为空时返回 error，不抛异常。
    *
    * @param req 预览请求（含 templateCode 与渲染参数 params）
    * @return 渲染后的 content / subject 映射；失败返回错误响应
@@ -132,7 +132,7 @@ public class TemplatePreviewController {
   /**
    * 预览自定义模板字符串的渲染结果（不依赖数据库模板）。
    *
-   * <p>直接对调用方传入的任意模板字符串与参数做 {@link TemplateEngine} 纯字符串替换， 不校验变量定义、不查库。模板内容为空时返回 error。 因接受外部内容，启用
+   * <p>直接对调用方传入的任意模板字符串与参数做 {@link MessageTemplateRenderer} 纯字符串替换， 不校验变量定义、不查库。模板内容为空时返回 error。 因接受外部内容，启用
    * 5s 幂等防重与 50 QPS 限流，且渲染在沙箱内进行（不求值 Groovy/OGNL 等表达式），避免模板注入风险。
    *
    * @param req 原始预览请求（含 template 字符串与渲染参数 params）

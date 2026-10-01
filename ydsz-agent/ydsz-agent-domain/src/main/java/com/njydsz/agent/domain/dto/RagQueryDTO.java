@@ -3,6 +3,7 @@ package com.njydsz.agent.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 
+import com.njydsz.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class RagQueryDTO implements Serializable {
   /** 查询文本（必填，将向量化后进行相似度检索） */
   @NotBlank(message = "查询内容不能为空")
   @Schema(description = "查询文本", requiredMode = Schema.RequiredMode.REQUIRED)
+  @Xss(message = "查询内容包含非法字符")
   private String query;
 
   /** 返回前 K 条结果（默认 5） */

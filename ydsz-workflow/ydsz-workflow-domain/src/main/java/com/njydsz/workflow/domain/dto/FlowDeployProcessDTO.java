@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
+import com.njydsz.common.safe.annotation.Xss;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -30,6 +31,7 @@ public class FlowDeployProcessDTO implements Serializable {
   private String flowCode;
 
   /** 流程名称 */
+  @Xss(message = "流程名称包含非法字符")
   @NotBlank(message = "{validation.workflow.deploy.flowName.required}")
   private String flowName;
 
@@ -40,6 +42,7 @@ public class FlowDeployProcessDTO implements Serializable {
   private String category;
 
   /** 流程描述 */
+  @Xss(message = "流程描述包含非法字符")
   private String description;
 
   /** 审批表单路径 */

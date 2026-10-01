@@ -8,6 +8,7 @@ import java.util.Map;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
 
@@ -43,6 +44,7 @@ public class FlowStartProcessDTO implements Serializable {
   private String businessNo;
 
   /** 流程标题 */
+  @Xss(message = "流程标题包含非法字符")
   private String title;
 
   /** 发起人 ID */
