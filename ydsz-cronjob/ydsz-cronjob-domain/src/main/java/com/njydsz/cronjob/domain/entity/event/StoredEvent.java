@@ -11,12 +11,12 @@ import lombok.Data;
 /**
  * 存储事件实体（P3-1 Event Sourcing）。
  *
- * <p>对应 <code>ydsz_event_store</code> 表，存储所有领域事件的仅追加日志。
+ * <p>对应 <code>ydsz_job_event_store</code> 表，存储所有领域事件的仅追加日志。
  *
  * <h3>表结构</h3>
  *
  * <pre>{@code
- * CREATE TABLE ydsz_event_store (
+ * CREATE TABLE ydsz_job_event_store (
  *   id              VARCHAR(32)  PRIMARY KEY COMMENT '事件 ID（雪花算法）',
  *   aggregate_type  VARCHAR(64)  NOT NULL COMMENT '聚合根类型（如 job）',
  *   aggregate_id    VARCHAR(32)  NOT NULL COMMENT '聚合根 ID',
@@ -34,7 +34,7 @@ import lombok.Data;
  * @since 26.10.01
  */
 @Data
-@TableName("ydsz_event_store")
+@TableName("ydsz_job_event_store")
 public class StoredEvent {
 
   @Serial private static final long serialVersionUID = 1L;

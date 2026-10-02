@@ -958,7 +958,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_dag_context_instance ON ydsz_job_dag_con
 -- 21. 事件溯源表
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS ydsz_event_store (
+CREATE TABLE IF NOT EXISTS ydsz_job_event_store (
     id                       VARCHAR(32)              NOT NULL,
     aggregate_type           VARCHAR(64)              NOT NULL,
     aggregate_id             VARCHAR(32)              NOT NULL,
@@ -967,21 +967,21 @@ CREATE TABLE IF NOT EXISTS ydsz_event_store (
     operator                 VARCHAR(64)              DEFAULT NULL,
     occurred_at              TIMESTAMP                NOT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_event_store PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_job_event_store PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_event_store IS '事件溯源表（Event Store）';
-COMMENT ON COLUMN ydsz_event_store.id IS '事件 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_event_store.aggregate_type IS '聚合根类型（如 job、dag_definition）';
-COMMENT ON COLUMN ydsz_event_store.aggregate_id IS '聚合根 ID';
-COMMENT ON COLUMN ydsz_event_store.event_type IS '事件类型（如 JOB_CREATED）';
-COMMENT ON COLUMN ydsz_event_store.payload IS '事件负载 JSON';
-COMMENT ON COLUMN ydsz_event_store.operator IS '操作人';
-COMMENT ON COLUMN ydsz_event_store.occurred_at IS '事件发生时间';
-COMMENT ON COLUMN ydsz_event_store.created_at IS '记录写入时间';
+COMMENT ON TABLE ydsz_job_event_store IS '事件溯源表（Event Store）';
+COMMENT ON COLUMN ydsz_job_event_store.id IS '事件 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_job_event_store.aggregate_type IS '聚合根类型（如 job、dag_definition）';
+COMMENT ON COLUMN ydsz_job_event_store.aggregate_id IS '聚合根 ID';
+COMMENT ON COLUMN ydsz_job_event_store.event_type IS '事件类型（如 JOB_CREATED）';
+COMMENT ON COLUMN ydsz_job_event_store.payload IS '事件负载 JSON';
+COMMENT ON COLUMN ydsz_job_event_store.operator IS '操作人';
+COMMENT ON COLUMN ydsz_job_event_store.occurred_at IS '事件发生时间';
+COMMENT ON COLUMN ydsz_job_event_store.created_at IS '记录写入时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_event_store_aggregate ON ydsz_event_store (aggregate_type, aggregate_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_event_store_occurred ON ydsz_event_store (occurred_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_event_store_aggregate ON ydsz_job_event_store (aggregate_type, aggregate_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_event_store_occurred ON ydsz_job_event_store (occurred_at);
 
 -- ============================================================================
 -- 22. WebHook 重试队列表

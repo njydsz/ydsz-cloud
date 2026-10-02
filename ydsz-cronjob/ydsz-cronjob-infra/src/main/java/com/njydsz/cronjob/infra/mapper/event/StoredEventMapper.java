@@ -13,7 +13,7 @@ import com.njydsz.cronjob.domain.entity.event.StoredEvent;
 /**
  * 存储事件 Mapper（P3-1 Event Sourcing）。
  *
- * <p>对应 <code>ydsz_event_store</code> 表。仅提供查询能力，写入由 Repository 通过
+ * <p>对应 <code>ydsz_job_event_store</code> 表。仅提供查询能力，写入由 Repository 通过
  * MyBatis-Plus 基类方法完成。
  *
  * @author ydsz-team
@@ -30,7 +30,7 @@ public interface StoredEventMapper extends BaseMapper<StoredEvent> {
    */
   @Select(
       "SELECT id, aggregate_type, aggregate_id, event_type, payload, operator, occurred_at, created_at "
-          + "FROM ydsz_event_store "
+          + "FROM ydsz_job_event_store "
           + "WHERE aggregate_type = 'job' AND aggregate_id = #{aggregateId} "
           + "ORDER BY occurred_at ASC")
   List<StoredEvent> selectByAggregateId(@Param("aggregateId") String aggregateId);
@@ -46,7 +46,7 @@ public interface StoredEventMapper extends BaseMapper<StoredEvent> {
   @Select(
       "<script>"
           + "SELECT id, aggregate_type, aggregate_id, event_type, payload, operator, occurred_at, created_at "
-          + "FROM ydsz_event_store "
+          + "FROM ydsz_job_event_store "
           + "WHERE aggregate_type = 'job' AND aggregate_id = #{aggregateId} "
           + "<if test=\"startTime != null\"> AND occurred_at &gt;= #{startTime} </if> "
           + "<if test=\"endTime != null\"> AND occurred_at &lt;= #{endTime} </if> "
@@ -68,7 +68,7 @@ public interface StoredEventMapper extends BaseMapper<StoredEvent> {
   @Select(
       "<script>"
           + "SELECT id, aggregate_type, aggregate_id, event_type, payload, operator, occurred_at, created_at "
-          + "FROM ydsz_event_store "
+          + "FROM ydsz_job_event_store "
           + "WHERE aggregate_type = 'job' "
           + "<if test=\"eventType != null and eventType != ''\"> AND event_type = #{eventType} </if> "
           + "ORDER BY occurred_at DESC "
@@ -87,7 +87,7 @@ public interface StoredEventMapper extends BaseMapper<StoredEvent> {
    */
   @Select(
       "<script>"
-          + "SELECT COUNT(*) FROM ydsz_event_store "
+          + "SELECT COUNT(*) FROM ydsz_job_event_store "
           + "WHERE aggregate_type = 'job' "
           + "<if test=\"eventType != null and eventType != ''\"> AND event_type = #{eventType} </if> "
           + "</script>")

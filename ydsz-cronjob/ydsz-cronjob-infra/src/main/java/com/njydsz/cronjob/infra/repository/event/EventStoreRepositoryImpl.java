@@ -16,7 +16,7 @@ import com.njydsz.cronjob.infra.mapper.event.StoredEventMapper;
 /**
  * 事件存储 Repository 实现（P3-1 Event Sourcing）。
  *
- * <p>实现 {@link EventStoreRepository} 接口，封装 ydsz_event_store 表的数据访问。
+ * <p>实现 {@link EventStoreRepository} 接口，封装 ydsz_job_event_store 表的数据访问。
  *
  * @author ydsz-team
  * @since 26.10.01

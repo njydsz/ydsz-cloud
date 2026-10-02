@@ -330,6 +330,8 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_tenant_is_deleted ON ydsz_ag
 --   CREATE EXTENSION IF NOT EXISTS vector;
 -- 该表依赖 pgvector 扩展，仅 PostgreSQL 方言提供（MySQL/Oracle 无对应类型）。
 -- ============================================================================
+CREATE EXTENSION IF NOT EXISTS vector;
+
 CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
     id                       VARCHAR(64)              NOT NULL,
     document_id              VARCHAR(64)              NOT NULL,
