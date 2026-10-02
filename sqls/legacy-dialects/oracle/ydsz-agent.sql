@@ -25,7 +25,6 @@
 
 CREATE TABLE ydsz_agt_prompt_template (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     template_name            VARCHAR2(128 CHAR)       NOT NULL,
     content                  CLOB                     NOT NULL,
@@ -33,14 +32,16 @@ CREATE TABLE ydsz_agt_prompt_template (
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     current_version          NUMBER(10)               NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_agt_prompt_template PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_agt_prompt_template_template_code UNIQUE (template_code, tenant_id)
+    CONSTRAINT uk_ydsz_agt_prompt_template_template_code UNIQUE (template_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_agt_prompt_template IS 'Prompt 模板主表';
@@ -65,20 +66,21 @@ CREATE INDEX idx_ydsz_agt_prompt_template_tenant_is_deleted ON ydsz_agt_prompt_t
 
 CREATE TABLE ydsz_agt_prompt_version (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
     content                  CLOB                     NOT NULL,
     change_note              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_agt_prompt_version PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_agt_prompt_version_template_version UNIQUE (template_code, version, tenant_id)
+    CONSTRAINT uk_ydsz_agt_prompt_version_template_version UNIQUE (template_code, version, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_agt_prompt_version IS 'Prompt 模板版本历史表';
@@ -100,7 +102,6 @@ CREATE INDEX idx_ydsz_agt_prompt_version_template_code ON ydsz_agt_prompt_versio
 
 CREATE TABLE ydsz_agt_definition (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     agent_code               VARCHAR2(64 CHAR)        NOT NULL,
     agent_name               VARCHAR2(128 CHAR)       NOT NULL,
     agent_type               VARCHAR2(32 CHAR)        NOT NULL,
@@ -111,14 +112,16 @@ CREATE TABLE ydsz_agt_definition (
     temperature              BINARY_DOUBLE            DEFAULT NULL,
     max_tokens               NUMBER(10)               DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_agt_definition PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_agt_definition_agent_code UNIQUE (agent_code, tenant_id)
+    CONSTRAINT uk_ydsz_agt_definition_agent_code UNIQUE (agent_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_agt_definition IS 'Agent 定义（Agent 的完整配置信息）';
@@ -150,7 +153,15 @@ CREATE TABLE ydsz_agt_trace (
     agent_id                 VARCHAR2(64 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL,
     total_duration_ms        NUMBER(19)               DEFAULT NULL,
-    CONSTRAINT pk_ydsz_agt_trace PRIMARY KEY (trace_id)
+    CONSTRAINT pk_ydsz_agt_trace PRIMARY KEY (trace_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_agt_trace IS 'Agent 执行链路（记录一次 Agent 执行的完整元数据）';
@@ -173,7 +184,16 @@ CREATE TABLE ydsz_agt_trace_step (
     output_json              CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_agt_trace_step_output_json CHECK (output_json IS JSON),
     duration_ms              NUMBER(19)               DEFAULT NULL,
     cost                     NUMBER(12,6)             NOT NULL DEFAULT 0.0,
-    CONSTRAINT pk_ydsz_agt_trace_step PRIMARY KEY (trace_id, step_index)
+    CONSTRAINT pk_ydsz_agt_trace_step PRIMARY KEY (trace_id, step_index),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_agt_trace_step IS 'Agent 执行链路步骤（记录单个执行步骤，支持回放与调试）';
@@ -197,13 +217,16 @@ CREATE TABLE ydsz_agt_approval (
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PENDING',
     approver                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     comment                  VARCHAR2(512 CHAR)       DEFAULT NULL,
-    tenant_id                VARCHAR2(64 CHAR)        NOT NULL DEFAULT '0',
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at              TIMESTAMP                DEFAULT NULL,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_agt_approval PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_agt_approval PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_agt_approval IS 'Agent 人工审批请求（Human-in-the-Loop 审批持久化）';
@@ -230,20 +253,21 @@ CREATE INDEX idx_ydsz_agt_approval_approval_tenant ON ydsz_agt_approval (tenant_
 
 CREATE TABLE ydsz_agt_token_usage (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     conversation_id          VARCHAR2(64 CHAR)        NOT NULL,
     model_name               VARCHAR2(64 CHAR)        NOT NULL,
     prompt_tokens            NUMBER(19)               NOT NULL DEFAULT 0,
     completion_tokens        NUMBER(19)               NOT NULL DEFAULT 0,
     total_tokens             NUMBER(19)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_agt_token_usage PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_agt_token_usage PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_agt_token_usage IS 'Token 用量记录（LLM 调用 Token 消耗明细）';

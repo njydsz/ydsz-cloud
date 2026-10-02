@@ -27,7 +27,6 @@
 
 CREATE TABLE ydsz_sys_tenant (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     tenant_code              VARCHAR2(64 CHAR)        NOT NULL,
     tenant_name              VARCHAR2(128 CHAR)       NOT NULL,
     contact_name             VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -38,14 +37,16 @@ CREATE TABLE ydsz_sys_tenant (
     datasource_key           VARCHAR2(64 CHAR)        DEFAULT NULL,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_sys_tenant PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_sys_tenant_tenant_code UNIQUE (tenant_code)
+    CONSTRAINT uk_ydsz_sys_tenant_tenant_code UNIQUE (tenant_code),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_tenant IS '租户主表';
@@ -73,22 +74,22 @@ CREATE INDEX idx_ydsz_sys_tenant_tenant_is_deleted ON ydsz_sys_tenant (tenant_id
 
 CREATE TABLE ydsz_sys_tenant_plan (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     plan_code                VARCHAR2(64 CHAR)        NOT NULL,
     plan_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              CLOB                     DEFAULT NULL,
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     quota_json               CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_tenant_plan_quota_json CHECK (quota_json IS JSON),
     feature_json             CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_tenant_plan_feature_json CHECK (feature_json IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_sys_tenant_plan PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_sys_tenant_plan_plan_code UNIQUE (plan_code)
+    CONSTRAINT uk_ydsz_sys_tenant_plan_plan_code UNIQUE (plan_code),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_tenant_plan IS '租户套餐表';
@@ -112,18 +113,19 @@ CREATE INDEX idx_ydsz_sys_tenant_plan_tenant_is_deleted ON ydsz_sys_tenant_plan 
 
 CREATE TABLE ydsz_sys_tenant_plan_menu (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     plan_id                  VARCHAR2(32 CHAR)        NOT NULL,
     menu_id                  VARCHAR2(64 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_sys_tenant_plan_menu PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_sys_tenant_plan_menu_plan_menu UNIQUE (plan_id, menu_id)
+    CONSTRAINT uk_ydsz_sys_tenant_plan_menu_plan_menu UNIQUE (plan_id, menu_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_tenant_plan_menu IS '租户套餐菜单关联表';
@@ -143,19 +145,20 @@ CREATE INDEX idx_ydsz_sys_tenant_plan_menu_tenant_is_deleted ON ydsz_sys_tenant_
 
 CREATE TABLE ydsz_sys_dict_type (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     type_code                VARCHAR2(64 CHAR)        NOT NULL,
     type_name                VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_sys_dict_type PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_sys_dict_type_type_code UNIQUE (type_code)
+    CONSTRAINT uk_ydsz_sys_dict_type_type_code UNIQUE (type_code),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_dict_type IS '字典类型表';
@@ -176,23 +179,23 @@ CREATE INDEX idx_ydsz_sys_dict_type_tenant_is_deleted ON ydsz_sys_dict_type (ten
 
 CREATE TABLE ydsz_sys_dict_item (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     type_code                VARCHAR2(64 CHAR)        NOT NULL,
     item_code                VARCHAR2(64 CHAR)        NOT NULL,
     item_value               VARCHAR2(128 CHAR)       NOT NULL,
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     parent_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     ext_json                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_dict_item_ext_json CHECK (ext_json IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_sys_dict_item PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_sys_dict_item_type_item_code UNIQUE (type_code, item_code)
+    CONSTRAINT uk_ydsz_sys_dict_item_type_item_code UNIQUE (type_code, item_code),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_dict_item IS '字典项表';
@@ -218,7 +221,6 @@ CREATE INDEX idx_ydsz_sys_dict_item_tenant_is_deleted ON ydsz_sys_dict_item (ten
 
 CREATE TABLE ydsz_sys_config (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     config_group             VARCHAR2(64 CHAR)        NOT NULL,
     config_key               VARCHAR2(128 CHAR)       NOT NULL,
     config_value             CLOB                     DEFAULT NULL,
@@ -226,16 +228,17 @@ CREATE TABLE ydsz_sys_config (
     default_value            CLOB                     DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     is_public                   NUMBER(1)                NOT NULL DEFAULT 0,
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_sys_config PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_sys_config_config_group_key UNIQUE (config_group, config_key)
+    CONSTRAINT uk_ydsz_sys_config_config_group_key UNIQUE (config_group, config_key),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_config IS '系统配置表';
@@ -261,20 +264,21 @@ CREATE INDEX idx_ydsz_sys_config_tenant_is_deleted ON ydsz_sys_config (tenant_id
 
 CREATE TABLE ydsz_sys_variable (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     variable_key             VARCHAR2(128 CHAR)       NOT NULL,
     variable_value           CLOB                     DEFAULT NULL,
     value_type               VARCHAR2(32 CHAR)        NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_sys_variable PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_sys_variable_variable_key UNIQUE (variable_key)
+    CONSTRAINT uk_ydsz_sys_variable_variable_key UNIQUE (variable_key),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_variable IS '系统变量表';
@@ -296,7 +300,6 @@ CREATE INDEX idx_ydsz_sys_variable_tenant_is_deleted ON ydsz_sys_variable (tenan
 
 CREATE TABLE ydsz_sys_app_info (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     app_code                 VARCHAR2(64 CHAR)        NOT NULL,
     app_name                 VARCHAR2(128 CHAR)       NOT NULL,
     app_key                  VARCHAR2(64 CHAR)        NOT NULL,
@@ -306,15 +309,17 @@ CREATE TABLE ydsz_sys_app_info (
     bound_ips                VARCHAR2(512 CHAR)       DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_sys_app_info PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_sys_app_info_app_code UNIQUE (app_code),
-    CONSTRAINT uk_ydsz_sys_app_info_tenant_app_key UNIQUE (tenant_id, app_key)
+    CONSTRAINT uk_ydsz_sys_app_info_tenant_app_key UNIQUE (tenant_id, app_key),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_app_info IS '应用信息表';
@@ -340,7 +345,6 @@ CREATE INDEX idx_ydsz_sys_app_info_tenant_is_deleted ON ydsz_sys_app_info (tenan
 
 CREATE TABLE ydsz_sys_entity_version (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     resource_type            VARCHAR2(32 CHAR)        NOT NULL,
     resource_key             VARCHAR2(128 CHAR)       NOT NULL,
     resource_group           VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -349,13 +353,15 @@ CREATE TABLE ydsz_sys_entity_version (
     snapshot_json            CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_sys_entity_version_snapshot_json CHECK (snapshot_json IS JSON),
     effective_date           TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_sys_entity_version PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_sys_entity_version PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_sys_entity_version IS '统一实体版本表';

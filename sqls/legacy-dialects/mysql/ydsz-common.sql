@@ -40,13 +40,10 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     compressed          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT 'payload 是否 GZIP 压缩存储',
 
     -- ========== 上下文 ==========
-    tenant_id           VARCHAR(64)              COMMENT '租户 ID（多租户隔离）',
     trace_id            VARCHAR(64)              COMMENT '链路追踪 ID',
     idempotency_key     VARCHAR(64)              COMMENT '幂等去重 ID',
 
     -- ========== 时间戳 ==========
-    created_at          DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-    updated_at          DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
                                         ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '最后更新时间',
     sent_at             DATETIME(3)              COMMENT '投递成功时间',
 
@@ -65,7 +62,15 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     -- 幂等去重索引
     INDEX idx_ydsz_comm_outbox_idempotency (idempotency_key, status),
     -- 聚合根查询索引
-    INDEX idx_ydsz_comm_outbox_aggregate (aggregate_type, aggregate_id, created_at DESC)
+    INDEX idx_ydsz_comm_outbox_aggregate (aggregate_type, aggregate_id, created_at DESC),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64)              COMMENT '租户 ID（多租户隔离）',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci
@@ -86,20 +91,25 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     status          VARCHAR(16)     NOT NULL,
     retry_count     INT             NOT NULL DEFAULT 0,
     max_retries     INT             NOT NULL DEFAULT 5,
-    tenant_id       VARCHAR(64)     DEFAULT NULL,
     idempotency_key VARCHAR(128)    DEFAULT NULL,
     trace_id        VARCHAR(64)     DEFAULT NULL,
     schema_version  INT             NOT NULL DEFAULT 1,
     compressed      TINYINT(1)      NOT NULL DEFAULT 0,
-    created_at      DATETIME        NOT NULL,
-    updated_at      DATETIME        NOT NULL,
     sent_at         DATETIME        DEFAULT NULL,
     archived_at     DATETIME        NOT NULL,
     error_message   VARCHAR(4000)   DEFAULT NULL,
     INDEX idx_archive_aggregate (aggregate_id, created_at),
     INDEX idx_archive_event_type (event_type, created_at),
     INDEX idx_archive_created_at (created_at),
-    INDEX idx_archive_archived_at (archived_at)
+    INDEX idx_archive_archived_at (archived_at),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64)     DEFAULT NULL,
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL,
+    updated_by VARCHAR(64),
+    updated_at DATETIME        NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Outbox 事件归档表（已投递或已丢弃的消息）';
 
 -- ============================================================================
@@ -119,13 +129,20 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
     error_msg     TEXT         DEFAULT NULL COMMENT '最后一次失败原因（截断 2000 字符）',
     retry_count   INT          NOT NULL DEFAULT 0 COMMENT '已重试次数，达到 5 次升级为 DISCARDED',
     status        VARCHAR(20)  NOT NULL DEFAULT 'PENDING' COMMENT 'is_resolved-已解决 / DISCARDED-已放弃(需人工介入)',
-    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '入队时间',
     resolved_at   DATETIME     DEFAULT NULL COMMENT '解决时间',
     PRIMARY KEY (id),
     -- 按状态 + 创建时间索引，支持高效扫描待处理记录
     INDEX idx_dlq_status_created (status, created_at),
     -- 按实体类型索引，支持按类型查询失败记录（原 PG 部分索引转译）
-    INDEX idx_dlq_doc_type (doc_type, status)
+    INDEX idx_dlq_doc_type (doc_type, status),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '入队时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
 
 -- ============================================================================
@@ -139,12 +156,10 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
 CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     id                       VARCHAR(64)     NOT NULL  COMMENT '审计记录唯一标识（雪花算法生成）',
     app_key                  VARCHAR(64)     NOT NULL DEFAULT ''  COMMENT '应用标识（区分不同微服务的审计记录）',
-    tenant_id                VARCHAR(64)     DEFAULT NULL  COMMENT '租户 ID（多租户隔离）',
     operator_id              VARCHAR(64)     DEFAULT NULL  COMMENT '操作人 ID（来自 RequestContext 透传）',
     operator_name            VARCHAR(64)     DEFAULT NULL  COMMENT '操作人姓名（便于直接展示）',
     audit_type               SMALLINT        NOT NULL DEFAULT 1  COMMENT '审计类型编码（1=操作/2=登录/3=数据/4=权限/5=配置/6=文件/7=接口/8=系统）',
     action                   SMALLINT        NOT NULL DEFAULT 99  COMMENT '操作行为编码（1=新增/2=修改/3=删除/4=查询/5=导入/6=导出/7=上传/8=下载/99=其他）',
-    status                   SMALLINT        NOT NULL DEFAULT 1  COMMENT '执行状态（1=成功/0=失败）',
     module                   VARCHAR(128)    DEFAULT NULL  COMMENT '模块名称（如：用户管理、代码生成等）',
     content                  VARCHAR(1024)   DEFAULT NULL  COMMENT '操作内容描述（SpEL 解析后的最终文本）',
     business_no              VARCHAR(128)    DEFAULT NULL  COMMENT '业务流水号（关联业务单据）',
@@ -157,7 +172,6 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     cost_time                BIGINT          DEFAULT 0  COMMENT '执行耗时（毫秒）',
     trace_id                 VARCHAR(64)     DEFAULT NULL  COMMENT '链路追踪 ID（独立列，支持索引查询）',
     operation_time           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '操作时间（业务方法执行时刻）',
-    created_at               DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '审计日志落库时刻',
     PRIMARY KEY (id),
     -- 核心查询：按操作时间降序分页
     INDEX idx_ydsz_comm_audit_log_operation_time (operation_time DESC),
@@ -168,7 +182,16 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     -- 按租户 ID + 时间范围查询（多租户隔离）
     INDEX idx_ydsz_comm_audit_log_tenant_time (tenant_id, operation_time DESC),
     -- 按状态查询（成功/失败分离）
-    INDEX idx_ydsz_comm_audit_log_status (status, operation_time DESC)
+    INDEX idx_ydsz_comm_audit_log_status (status, operation_time DESC),
+    sort INT NOT NULL DEFAULT 0,
+    status SMALLINT        NOT NULL DEFAULT 1  COMMENT '执行状态（1=成功/0=失败）',
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64)     DEFAULT NULL  COMMENT '租户 ID（多租户隔离）',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '审计日志落库时刻',
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci

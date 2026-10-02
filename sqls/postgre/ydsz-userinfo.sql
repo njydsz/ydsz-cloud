@@ -26,14 +26,6 @@
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_user (
     id                       VARCHAR(32)             ,
-    sort INTEGER DEFAULT 0,
-    revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
-    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
-    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     username                 VARCHAR(64)              NOT NULL,
     password                 VARCHAR(255)             NOT NULL,
     real_name                VARCHAR(512)             DEFAULT NULL,
@@ -56,7 +48,15 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user (
     banned_by                VARCHAR(64)              DEFAULT NULL,
     banned_at                TIMESTAMP                DEFAULT NULL,
     CONSTRAINT pk_ydsz_idm_account_user PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_account_user_username UNIQUE (username)
+    CONSTRAINT uk_ydsz_idm_account_user_username UNIQUE (username),
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_account_user IS '用户账号主表';
@@ -97,14 +97,6 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_account_user_tenant_is_deleted ON ydsz_i
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_org_company (
     id                       VARCHAR(32)             ,
-    sort INTEGER DEFAULT 0,
-    revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
-    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
-    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     company_name             VARCHAR(128)             NOT NULL,
     company_code             VARCHAR(64)              NOT NULL,
     parent_id                VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -113,7 +105,15 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_company (
     address                  VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
     CONSTRAINT pk_ydsz_idm_org_company PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_org_company_company_code UNIQUE (company_code)
+    CONSTRAINT uk_ydsz_idm_org_company_company_code UNIQUE (company_code),
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_org_company IS '公司表';
@@ -138,14 +138,6 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_org_company_tenant_is_deleted ON ydsz_id
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_org_department (
     id                       VARCHAR(32)             ,
-    sort INTEGER                  NOT NULL DEFAULT 0,
-    revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
-    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
-    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     parent_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     dept_name                VARCHAR(128)             NOT NULL,
     dept_code                VARCHAR(64)              NOT NULL,
@@ -153,7 +145,15 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_department (
     leader_id                VARCHAR(32)              DEFAULT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
     CONSTRAINT pk_ydsz_idm_org_department PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_org_department_dept_code UNIQUE (dept_code)
+    CONSTRAINT uk_ydsz_idm_org_department_dept_code UNIQUE (dept_code),
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_org_department IS '部门表';
@@ -179,14 +179,6 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_org_department_tenant_is_deleted ON ydsz
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_role (
     id                       VARCHAR(32)             ,
-    sort INTEGER                  NOT NULL DEFAULT 0,
-    revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
-    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
-    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     role_code                VARCHAR(64)              NOT NULL,
     role_name                VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
@@ -194,7 +186,15 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_role (
     data_scope               VARCHAR(32)              DEFAULT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
     CONSTRAINT pk_ydsz_idm_role PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_role_role_code UNIQUE (role_code, tenant_id)
+    CONSTRAINT uk_ydsz_idm_role_role_code UNIQUE (role_code, tenant_id),
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_role IS '角色表';
@@ -218,14 +218,6 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_role_tenant_is_deleted ON ydsz_idm_role 
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_menu (
     id                       VARCHAR(32)             ,
-    sort INTEGER                  NOT NULL DEFAULT 0,
-    revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
-    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
-    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     parent_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     menu_name                VARCHAR(128)             NOT NULL,
     menu_code                VARCHAR(64)              NOT NULL,
@@ -237,7 +229,15 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_menu (
     visible                  SMALLINT                 NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
     CONSTRAINT pk_ydsz_idm_menu PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_menu_menu_code UNIQUE (menu_code)
+    CONSTRAINT uk_ydsz_idm_menu_menu_code UNIQUE (menu_code),
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_menu IS '菜单/权限表';
@@ -267,6 +267,12 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_menu_tenant_is_deleted ON ydsz_idm_menu 
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_post (
     id                       VARCHAR(32)             ,
+    post_name                VARCHAR(128)             NOT NULL,
+    post_code                VARCHAR(64)              NOT NULL,
+    description              VARCHAR(512)             DEFAULT NULL,
+    status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
+    CONSTRAINT pk_ydsz_idm_post PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idm_post_post_code UNIQUE (post_code),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -274,13 +280,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_post (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    post_name                VARCHAR(128)             NOT NULL,
-    post_code                VARCHAR(64)              NOT NULL,
-    description              VARCHAR(512)             DEFAULT NULL,
-    status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
-    CONSTRAINT pk_ydsz_idm_post PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_post_post_code UNIQUE (post_code)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_post IS '岗位表';
@@ -302,6 +302,12 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_post_tenant_is_deleted ON ydsz_idm_post 
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_language (
     id                       VARCHAR(32)             ,
+    language_code            VARCHAR(32)              NOT NULL,
+    language_name            VARCHAR(128)             NOT NULL,
+    is_default               SMALLINT                 NOT NULL DEFAULT 0,
+    status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
+    CONSTRAINT pk_ydsz_idm_account_user_language PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idm_account_user_language_language_code UNIQUE (language_code),
     sort INTEGER                  NOT NULL DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -309,13 +315,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_language (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    language_code            VARCHAR(32)              NOT NULL,
-    language_name            VARCHAR(128)             NOT NULL,
-    is_default               SMALLINT                 NOT NULL DEFAULT 0,
-    status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
-    CONSTRAINT pk_ydsz_idm_account_user_language PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_account_user_language_language_code UNIQUE (language_code)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_account_user_language IS '语言配置表';
@@ -337,6 +337,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_account_user_language_tenant_is_deleted 
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_role (
     id                       VARCHAR(32)             ,
+    user_id                  VARCHAR(32)              NOT NULL,
+    role_id                  VARCHAR(32)              NOT NULL,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_account_user_role PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -344,11 +348,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_role (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    user_id                  VARCHAR(32)              NOT NULL,
-    role_id                  VARCHAR(32)              NOT NULL,
-    status                   VARCHAR(32)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_account_user_role PRIMARY KEY (id)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_account_user_role IS '用户-角色关联表';
@@ -370,6 +370,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_account_user_role_tenant_is_deleted ON y
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_post (
     id                       VARCHAR(32)             ,
+    user_id                  VARCHAR(32)              NOT NULL,
+    post_id                  VARCHAR(32)              NOT NULL,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_account_user_post PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -377,11 +381,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_post (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    user_id                  VARCHAR(32)              NOT NULL,
-    post_id                  VARCHAR(32)              NOT NULL,
-    status                   VARCHAR(32)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_account_user_post PRIMARY KEY (id)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_account_user_post IS '用户-岗位关联表';
@@ -403,6 +403,11 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_account_user_post_tenant_is_deleted ON y
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_dept (
     id                       VARCHAR(32)             ,
+    user_id                  VARCHAR(32)              NOT NULL,
+    dept_id                  VARCHAR(32)              NOT NULL,
+    is_primary               SMALLINT                 NOT NULL DEFAULT 0,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_account_user_dept PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -410,12 +415,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_account_user_dept (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    user_id                  VARCHAR(32)              NOT NULL,
-    dept_id                  VARCHAR(32)              NOT NULL,
-    is_primary               SMALLINT                 NOT NULL DEFAULT 0,
-    status                   VARCHAR(32)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_account_user_dept PRIMARY KEY (id)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_account_user_dept IS '用户-部门关联表';
@@ -438,6 +438,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_account_user_dept_tenant_is_deleted ON y
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_org_company_dept (
     id                       VARCHAR(32)             ,
+    company_id               VARCHAR(32)              NOT NULL,
+    dept_id                  VARCHAR(32)              NOT NULL,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_org_company_dept PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -445,11 +449,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_org_company_dept (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    company_id               VARCHAR(32)              NOT NULL,
-    dept_id                  VARCHAR(32)              NOT NULL,
-    status                   VARCHAR(32)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_org_company_dept PRIMARY KEY (id)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_org_company_dept IS '公司-部门关联表';
@@ -471,6 +471,11 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_org_company_dept_tenant_is_deleted ON yd
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_role_permission (
     id                       VARCHAR(32)             ,
+    role_id                  VARCHAR(32)              NOT NULL,
+    permission_id            VARCHAR(32)              NOT NULL,
+    menu_id                  VARCHAR(32)              DEFAULT NULL,
+    status                   VARCHAR(32)              DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_role_permission PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -478,12 +483,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_role_permission (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    role_id                  VARCHAR(32)              NOT NULL,
-    permission_id            VARCHAR(32)              NOT NULL,
-    menu_id                  VARCHAR(32)              DEFAULT NULL,
-    status                   VARCHAR(32)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_role_permission PRIMARY KEY (id)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_role_permission IS '角色-权限关联表';
@@ -567,14 +567,6 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_account_password_history_user_id ON ydsz
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_auth_policy (
     id                       VARCHAR(64)             ,
-    sort INTEGER DEFAULT 0,
-    revision INTEGER                  DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
-    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
-    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     name                     VARCHAR(64)              NOT NULL,
     password_min_length      INTEGER                  DEFAULT 8,
     is_password_require_uppercase BOOLEAN                  DEFAULT TRUE,
@@ -587,7 +579,15 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_policy (
     remark                   VARCHAR(256)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_idm_auth_policy PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_auth_policy_tenant_id UNIQUE (tenant_id)
+    CONSTRAINT uk_ydsz_idm_auth_policy_tenant_id UNIQUE (tenant_id),
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  DEFAULT 0,
+    tenant_id VARCHAR(64)              DEFAULT NULL,
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_auth_policy IS '认证策略配置表';
@@ -625,6 +625,9 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_client (
     scope                    VARCHAR(256)             DEFAULT NULL,
     redirect_uri             VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(16)              NOT NULL DEFAULT 'ENABLED',
+    remark                   VARCHAR(256)             DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_auth_social_client PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idm_auth_social_client_platform UNIQUE (platform),
     sort INTEGER                  DEFAULT 100,
     revision INTEGER                  DEFAULT 0,
     tenant_id VARCHAR(64)              DEFAULT NULL,
@@ -632,10 +635,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_client (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
-    remark                   VARCHAR(256)             DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_auth_social_client PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_auth_social_client_platform UNIQUE (platform)
+    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_auth_social_client IS '社交平台客户端配置表';
@@ -669,6 +669,9 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_saml_config (
     email_attribute          VARCHAR(64)              DEFAULT 'email',
     display_name_attribute   VARCHAR(64)              DEFAULT 'displayName',
     status                   VARCHAR(16)              NOT NULL DEFAULT 'ENABLED',
+    remark                   VARCHAR(256)             DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_identity_saml_config PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idm_identity_saml_config_entity_id UNIQUE (entity_id),
     sort INTEGER                  DEFAULT 100,
     revision INTEGER                  DEFAULT 0,
     tenant_id VARCHAR(64)              DEFAULT NULL,
@@ -676,10 +679,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_saml_config (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
-    remark                   VARCHAR(256)             DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_identity_saml_config PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_identity_saml_config_entity_id UNIQUE (entity_id)
+    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_identity_saml_config IS 'SAML 2.0 身份提供者配置表';
@@ -716,6 +716,8 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_oauth2_application (
     status                   VARCHAR(16)              NOT NULL DEFAULT 'ENABLED',
     description              VARCHAR(512)             DEFAULT NULL,
     icon_url                 VARCHAR(512)             DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_identity_oauth2_application PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idm_identity_oauth2_application_client_id UNIQUE (client_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  DEFAULT 0,
     tenant_id VARCHAR(64)              DEFAULT NULL,
@@ -723,9 +725,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_oauth2_application (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_idm_identity_oauth2_application PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_identity_oauth2_application_client_id UNIQUE (client_id)
+    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_identity_oauth2_application IS 'OAuth2 应用注册表';
@@ -753,14 +753,6 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_idm_identity_oauth2_application_tenant_is_de
 
 CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_account (
     id                       VARCHAR(32)             ,
-    sort INTEGER DEFAULT 0,
-    revision INTEGER                  NOT NULL DEFAULT 0,
-    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
-    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
-    created_by VARCHAR(64)              DEFAULT NULL,
-    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(32)              NOT NULL,
     platform                 VARCHAR(32)              NOT NULL,
     open_id                  VARCHAR(128)             NOT NULL,
@@ -772,7 +764,15 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_social_account (
     expires_at               TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_idm_auth_social_account PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_auth_social_account_platform_open_id UNIQUE (platform, open_id)
+    CONSTRAINT uk_ydsz_idm_auth_social_account_platform_open_id UNIQUE (platform, open_id),
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_auth_social_account IS '社交账号绑定表';
@@ -808,6 +808,9 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_security_alert (
     title                    VARCHAR(256)             NOT NULL,
     content                  TEXT                    ,
     status                   VARCHAR(16)              NOT NULL DEFAULT 'PENDING',
+    handled_at               TIMESTAMP                DEFAULT NULL,
+    handler_note             VARCHAR(512)             DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_identity_security_alert PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  DEFAULT 0,
     tenant_id VARCHAR(64)              DEFAULT NULL,
@@ -815,10 +818,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_identity_security_alert (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
-    handled_at               TIMESTAMP                DEFAULT NULL,
-    handler_note             VARCHAR(512)             DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_identity_security_alert PRIMARY KEY (id)
+    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_identity_security_alert IS '安全告警表';
@@ -859,6 +859,9 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_credential (
     registered_at            TIMESTAMP                DEFAULT NULL,
     last_used_at             TIMESTAMP                DEFAULT NULL,
     -- MpBaseEntity 继承字段补充
+    status                   VARCHAR(32)              DEFAULT NULL,
+    CONSTRAINT pk_ydsz_idm_auth_credential PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idm_auth_credential_credential_id UNIQUE (credential_id),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -866,10 +869,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_credential (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status                   VARCHAR(32)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_idm_auth_credential PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_auth_credential_credential_id UNIQUE (credential_id)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_auth_credential IS 'WebAuthn 凭证表';
@@ -911,6 +911,9 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_apikey (
     last_used_at             TIMESTAMP                DEFAULT NULL,
     rate_limit               INTEGER                  NOT NULL DEFAULT 0,
     is_enabled               BOOLEAN                  NOT NULL DEFAULT TRUE,
+    status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
+    CONSTRAINT pk_ydsz_idm_auth_apikey PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_idm_auth_apikey_hash UNIQUE (api_key_hash),
     sort INTEGER DEFAULT 0,
     revision INTEGER                  NOT NULL DEFAULT 0,
     tenant_id VARCHAR(64)              DEFAULT NULL,
@@ -918,10 +921,7 @@ CREATE TABLE IF NOT EXISTS ydsz_idm_auth_apikey (
     created_by VARCHAR(64)              DEFAULT NULL,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR(64)              DEFAULT NULL,
-    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status                   VARCHAR(32)              NOT NULL DEFAULT 'ENABLED',
-    CONSTRAINT pk_ydsz_idm_auth_apikey PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_idm_auth_apikey_hash UNIQUE (api_key_hash)
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_idm_auth_apikey IS 'API Key 表（服务间调用或第三方应用授权）';

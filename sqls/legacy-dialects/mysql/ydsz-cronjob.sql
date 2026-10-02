@@ -21,7 +21,6 @@
 
 CREATE TABLE IF NOT EXISTS ydsz_job (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     job_name              VARCHAR(128)    NOT NULL COMMENT '任务名称',
     job_group             VARCHAR(128)    DEFAULT NULL COMMENT '任务分组',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（唯一）',
@@ -59,15 +58,17 @@ CREATE TABLE IF NOT EXISTS ydsz_job (
     canary_handler        VARCHAR(128)    DEFAULT NULL COMMENT '金丝雀处理器 Bean 名称',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_job_key UNIQUE (job_key, tenant_id),
     INDEX idx_job_group (job_group),
     INDEX idx_job_dispatch (status, next_fire_time, tenant_id, is_deleted),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='定时任务定义主表';
 
 -- ----------------------------------------------------------------------------
@@ -76,7 +77,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
     source_code           TEXT            NOT NULL COMMENT '源代码（Groovy/Python/Shell/JavaScript 脚本内容）',
     language              VARCHAR(32)     NOT NULL DEFAULT 'GROOVY' COMMENT '语言: GROOVY(默认)/PYTHON/SHELL/JAVASCRIPT/JAVA',
@@ -84,13 +84,15 @@ CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     remark                VARCHAR(512)    DEFAULT NULL COMMENT '版本备注',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_glue_job_version UNIQUE (job_id, version),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='GLUE 在线编码版本表';
 
 -- ----------------------------------------------------------------------------
@@ -99,7 +101,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_glue (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_task (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID（关联 ydsz_job.id）',
     log_id                VARCHAR(32)     NOT NULL COMMENT '执行日志 ID（关联 ydsz_job_log.id）',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余，便于查询）',
@@ -113,15 +114,17 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
     retry_count           INT             NOT NULL DEFAULT 0 COMMENT '重试次数（默认 0，每次重试递增）',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_jt_job_id (job_id),
     INDEX idx_jt_log_id (log_id),
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
-    INDEX idx_job_task_job_status (job_id, status)
+    INDEX idx_job_task_job_status (job_id, status),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='MapReduce 子任务记录表';
 
 -- ----------------------------------------------------------------------------
@@ -130,7 +133,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_task (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_node (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     node_id               VARCHAR(64)     NOT NULL COMMENT '节点 ID（hostname:port 或 hostname:pid）',
     app_name              VARCHAR(128)    DEFAULT NULL COMMENT '应用名称',
     host                  VARCHAR(128)    NOT NULL COMMENT '主机名',
@@ -145,15 +147,17 @@ CREATE TABLE IF NOT EXISTS ydsz_job_node (
     consecutive_failures  INT             DEFAULT 0 COMMENT '连续失败次数（心跳/健康检查连续失败，超阈值触发自动隔离）',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_node_id UNIQUE (node_id),
     INDEX idx_last_heartbeat (last_heartbeat),
     INDEX idx_jn_status_response (node_status, response_time_ms),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调度节点心跳表';
 
 -- ----------------------------------------------------------------------------
@@ -180,7 +184,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_history (
     is_history_deleted       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标记: 0 未删除 / 1 已删除',
     CONSTRAINT uk_jh_job_version UNIQUE (job_id, version),
     INDEX idx_jh_job_id (job_id),
-    INDEX idx_jh_changed_at (changed_at)
+    INDEX idx_jh_changed_at (changed_at),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务配置历史版本表';
 
 -- ----------------------------------------------------------------------------
@@ -189,7 +202,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_history (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
     log_id                VARCHAR(32)     NOT NULL COMMENT '执行日志 ID',
     job_key               VARCHAR(64)     NOT NULL COMMENT '任务 KEY（冗余）',
@@ -202,15 +214,17 @@ CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
     expire_at             DATETIME        DEFAULT NULL COMMENT '过期时间（null=不过期）',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_ja_job_id (job_id),
     INDEX idx_ja_log_id (log_id),
     INDEX idx_ja_expire_at (expire_at),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='执行产物记录表';
 
 -- ----------------------------------------------------------------------------
@@ -219,7 +233,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_artifact (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     name                  VARCHAR(128)    NOT NULL COMMENT 'WebHook 名称',
     event_type            VARCHAR(64)     NOT NULL COMMENT '订阅的事件类型: TASK_STARTED / TASK_SUCCESS / TASK_FAILED / TASK_TIMEOUT / DAG_COMPLETED',
     job_key               VARCHAR(64)     DEFAULT NULL COMMENT '订阅的任务 KEY（null=所有任务）',
@@ -231,14 +244,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
     webhook_status        VARCHAR(32)     DEFAULT NULL COMMENT 'is_active / INACTIVE',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_event_type (event_type),
     INDEX idx_jw_job_key (job_key),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='WebHook 事件订阅表';
 
 -- ----------------------------------------------------------------------------
@@ -247,7 +262,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_name             VARCHAR(128)    NOT NULL COMMENT '规则名称',
     job_id                VARCHAR(32)     DEFAULT NULL COMMENT '关联任务 ID（NULL 表示全局规则）',
     job_key               VARCHAR(64)     DEFAULT NULL COMMENT '任务 KEY 冗余（NULL 表示全局规则）',
@@ -263,14 +277,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
     last_alert_at         DATETIME        DEFAULT NULL COMMENT '最后告警时间（用于冷却判断）',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_ar_job_id (job_id),
     INDEX idx_ar_alert_type (alert_type),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务告警规则表';
 
 -- ----------------------------------------------------------------------------
@@ -279,19 +295,20 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_rule (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     max_jobs              INT             DEFAULT NULL COMMENT '任务数上限（NULL=unlimited；超过此值拒绝创建新任务）',
     max_concurrent        INT             DEFAULT NULL COMMENT '并发执行上限（NULL=unlimited；超过此值拒绝派发）',
     max_daily_executions  INT             DEFAULT NULL COMMENT '日执行量上限（NULL=unlimited；超过此值拒绝派发）',
     is_enabled               TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用配额检查: 0 禁用 / 1 启用',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
-    CONSTRAINT uk_tq_tenant UNIQUE (tenant_id)
+    CONSTRAINT uk_tq_tenant UNIQUE (tenant_id),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='租户级配额表';
 
 -- ----------------------------------------------------------------------------
@@ -300,7 +317,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_tenant_quota (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     dag_key               VARCHAR(64)     NOT NULL COMMENT 'DAG 唯一 KEY（调度与触发使用）',
     dag_name              VARCHAR(128)    NOT NULL COMMENT 'DAG 名称（展示用）',
     dag_definition        JSON            NOT NULL COMMENT 'DAG 定义 JSON（nodes + edges + 可视化坐标）',
@@ -319,14 +335,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag (
     version               INT             NOT NULL DEFAULT 1 COMMENT '版本号(乐观锁)',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_dag_key UNIQUE (dag_key, tenant_id),
     INDEX idx_dag_next_fire (next_fire_time),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 工作流定义表';
 
 -- ----------------------------------------------------------------------------
@@ -335,7 +353,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG ID（关联 ydsz_job_dag.id）',
     dag_key               VARCHAR(64)     NOT NULL COMMENT 'DAG KEY（冗余字段，便于查询）',
     version               INT             NOT NULL COMMENT '版本号（从 1 递增）',
@@ -348,14 +365,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
     changed_by            VARCHAR(64)     DEFAULT NULL COMMENT '变更操作人',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_dv_dag_version UNIQUE (dag_id, version),
     INDEX idx_dv_dag_key (dag_key),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 工作流版本历史表';
 
 -- ----------------------------------------------------------------------------
@@ -364,7 +383,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_version (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG 定义 ID',
     dag_key               VARCHAR(64)     NOT NULL COMMENT 'DAG KEY（冗余，便于查询）',
     instance_status       VARCHAR(32)     NOT NULL COMMENT '实例状态: PENDING/RUNNING/SUCCESS/FAILED/PARTIAL_SUCCESS/PAUSED/CANCELED',
@@ -383,16 +401,18 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
     next_fire_time        DATETIME        DEFAULT NULL COMMENT '下次触发时间（用于 DAG 的 CRON 调度）',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_di_dag_id (dag_id),
     INDEX idx_di_status (instance_status),
     INDEX idx_di_started_at (started_at),
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
-    INDEX idx_dag_instance_dag_status (dag_id, instance_status)
+    INDEX idx_dag_instance_dag_status (dag_id, instance_status),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 工作流实例表';
 
 -- ----------------------------------------------------------------------------
@@ -401,7 +421,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_instance (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     dag_instance_id       VARCHAR(32)     NOT NULL COMMENT 'DAG 实例 ID',
     dag_id                VARCHAR(32)     NOT NULL COMMENT 'DAG 定义 ID',
     job_id                VARCHAR(32)     NOT NULL COMMENT '任务 ID',
@@ -417,16 +436,18 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_node_instance (
     error_message         TEXT            DEFAULT NULL COMMENT '节点错误信息',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_dni_dag_instance_id (dag_instance_id),
     INDEX idx_dni_job_id (job_id),
     INDEX idx_dni_log_id (log_id),
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
-    INDEX idx_dag_node_instance_status (dag_instance_id, node_status)
+    INDEX idx_dag_node_instance_status (dag_instance_id, node_status),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 节点实例表';
 
 -- ----------------------------------------------------------------------------
@@ -459,8 +480,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     handler_end_time      DATETIME        DEFAULT NULL COMMENT 'Handler 执行结束时间（JobHandler.execute() 返回的时刻）',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '执行状态: RUNNING/SUCCESS/FAILED/TIMEOUT',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识：0=未删除，1=已删除',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_jl_job_id (job_id),
     INDEX idx_jl_job_key (job_key),
     INDEX idx_jl_status (status),
@@ -471,7 +490,14 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log (
     INDEX idx_jl_node_status (exec_node_id, status),
     INDEX idx_job_log_jobid_starttime (job_id, start_time DESC),
     INDEX idx_job_log_tenant_status (tenant_id, is_deleted, status),
-    INDEX idx_job_log_trigger_time (trigger_type, created_at)
+    INDEX idx_job_log_trigger_time (trigger_type, created_at),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务执行日志表';
 
 -- ----------------------------------------------------------------------------
@@ -486,7 +512,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
     log_level             VARCHAR(32)     DEFAULT NULL COMMENT '日志级别：DEBUG / INFO / WARN / ERROR',
     content               VARCHAR(4000)   NOT NULL COMMENT '日志内容（单行文本，最长 4000 字符）',
     CONSTRAINT uk_jlc_log_line UNIQUE (log_id, line_no),
-    INDEX idx_jlc_job_key (job_key)
+    INDEX idx_jlc_job_key (job_key),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务执行日志内容表（行级明细）';
 
 -- ----------------------------------------------------------------------------
@@ -507,7 +542,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_daily_stats (
     min_duration_ms       BIGINT          DEFAULT NULL COMMENT '最小耗时（毫秒）',
     p95_duration_ms       BIGINT          DEFAULT NULL COMMENT 'P95 耗时（毫秒）',
     CONSTRAINT uk_jds_job_date UNIQUE (job_id, stats_date),
-    INDEX idx_jds_stats_date (stats_date)
+    INDEX idx_jds_stats_date (stats_date),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务执行每日统计表';
 
 -- ----------------------------------------------------------------------------
@@ -536,7 +580,16 @@ CREATE TABLE IF NOT EXISTS ydsz_job_alert_dispatch (
     CONSTRAINT uk_ad_alert_code UNIQUE (alert_code),
     INDEX idx_ad_rule_id (rule_id),
     INDEX idx_ad_job_id (job_id),
-    INDEX idx_ad_source_status (source_type, alert_status)
+    INDEX idx_ad_source_status (source_type, alert_status),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='告警派发日志表（cronjob 告警记录，source_type=CRONJOB）';
 
 -- ----------------------------------------------------------------------------
@@ -554,12 +607,18 @@ CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
     status                VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '事件状态: PENDING 待发布 / PUBLISHED 已发布 / DEAD 死亡信（重试耗尽）',
     retry_count           INT             NOT NULL DEFAULT 0 COMMENT '已重试次数',
     next_retry_time       DATETIME(3)     DEFAULT NULL COMMENT '下次重试时间',
-    create_time           DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-    update_time           DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     PRIMARY KEY (id),
     CONSTRAINT uk_jo_event_key UNIQUE (event_key),
     INDEX idx_jo_status_retry (status, next_retry_time),
-    INDEX idx_jo_status_created (status, create_time)
+    INDEX idx_jo_status_created (status, created_at),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3)     NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Outbox 事务性事件表：存储待发布的领域事件，保障业务写操作与事件投递的事务一致性';
 
 -- ----------------------------------------------------------------------------
@@ -568,15 +627,21 @@ CREATE TABLE IF NOT EXISTS ydsz_job_outbox (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
     dag_instance_id       VARCHAR(32)     NOT NULL COMMENT 'DAG 实例 ID（关联 ydsz_job_dag_instance.id）',
     node_key              VARCHAR(128)    NOT NULL COMMENT '节点 KEY',
     result_json           JSON            DEFAULT NULL COMMENT '节点执行结果 JSON（单次写入，避免行锁竞争）',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     CONSTRAINT uk_dci_instance_node UNIQUE (dag_instance_id, node_key),
     INDEX idx_dci_instance_id (dag_instance_id),
-    INDEX idx_tenant_is_deleted (tenant_id)
+    INDEX idx_tenant_is_deleted (tenant_id),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='DAG 实例节点上下文表：节点级结果存储，避免 CAS 更新整行 context_json';
 
 -- ----------------------------------------------------------------------------
@@ -587,7 +652,6 @@ CREATE TABLE IF NOT EXISTS ydsz_job_dag_context (
 
 CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
     id                    VARCHAR(64)     PRIMARY KEY COMMENT '主键（雪花 ID）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
     webhook_id            VARCHAR(64)     NOT NULL COMMENT 'Webhook 订阅 ID（关联 ydsz_job_webhook.id）',
     event_type            VARCHAR(32)     NOT NULL COMMENT '事件类型: TASK_STARTED/TASK_SUCCESS/TASK_FAILED/TASK_TIMEOUT/DAG_COMPLETED',
     job_key               VARCHAR(128)    DEFAULT NULL COMMENT '任务 KEY',
@@ -603,11 +667,18 @@ CREATE TABLE IF NOT EXISTS ydsz_job_webhook_retry (
     retry_status          VARCHAR(16)     NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING/SUCCESS/DEAD',
     last_error            VARCHAR(1024)   DEFAULT NULL COMMENT '最后错误信息',
     last_retry_time       DATETIME        DEFAULT NULL COMMENT '最后重试时间',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     INDEX idx_wrr_status_next (retry_status, next_retry_time),
     INDEX idx_wrr_webhook (webhook_id),
-    INDEX idx_tenant_is_deleted (tenant_id)
+    INDEX idx_tenant_is_deleted (tenant_id),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Webhook 重试补偿表（P1-3 Webhook 投递保障）';
 
 -- ----------------------------------------------------------------------------
@@ -732,19 +803,25 @@ DELIMITER ;
 
 CREATE TABLE IF NOT EXISTS ydsz_job_event_store (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
     aggregate_type        VARCHAR(64)     NOT NULL COMMENT '聚合根类型',
     aggregate_id          VARCHAR(32)     NOT NULL COMMENT '聚合根 ID',
     event_type            VARCHAR(64)     NOT NULL COMMENT '事件类型',
     event_data            MEDIUMTEXT      NOT NULL COMMENT '事件数据 JSON',
     event_version         INT             NOT NULL DEFAULT 1 COMMENT '事件版本号',
     occurred_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发生时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     INDEX idx_jes_aggregate (aggregate_type, aggregate_id),
     INDEX idx_jes_event_type (event_type),
     INDEX idx_jes_occurred_at (occurred_at),
-    INDEX idx_tenant_is_deleted (tenant_id)
+    INDEX idx_tenant_is_deleted (tenant_id),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件存储表（Event Sourcing）';
 
 -- ----------------------------------------------------------------------------

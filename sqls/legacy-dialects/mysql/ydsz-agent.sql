@@ -11,7 +11,6 @@
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     template_code   VARCHAR(64)     NOT NULL COMMENT '模板唯一编码（业务标识，创建后不可变）',
     template_name   VARCHAR(128)    NOT NULL COMMENT '模板名称（展示用）',
     content         TEXT            NOT NULL COMMENT '模板内容，支持 #{var} 占位符',
@@ -20,16 +19,18 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
     current_version INT             NOT NULL DEFAULT 1 COMMENT '当前版本号，自 1 起每次更新递增',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
 
     -- 索引
     CONSTRAINT uk_template_code UNIQUE (template_code, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Prompt 模板主表';
 
 -- ----------------------------------------------------------------------------
@@ -37,22 +38,23 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_template (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     template_code   VARCHAR(64)     NOT NULL COMMENT '所属模板编码（关联 ydsz_agt_prompt_template.template_code）',
     version         INT             NOT NULL COMMENT '版本号（与 template 的 current_version 对应）',
     content         TEXT            NOT NULL COMMENT '该版本的模板内容快照',
     change_note     VARCHAR(512)    DEFAULT NULL COMMENT '版本备注（描述本次变更内容）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '版本创建时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '操作人',
-    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '版本更新时间',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
 
     -- 索引
     CONSTRAINT uk_template_version UNIQUE (template_code, version, tenant_id),
-    INDEX idx_template_code (template_code)
+    INDEX idx_template_code (template_code),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '操作人',
+    created_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '版本创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '版本更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Prompt 模板版本历史表';
 
 -- ----------------------------------------------------------------------------
@@ -60,7 +62,6 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_prompt_version (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     agent_code      VARCHAR(64)     NOT NULL COMMENT 'Agent 编码（业务唯一键）',
     agent_name      VARCHAR(128)    NOT NULL COMMENT 'Agent 名称（展示用）',
     agent_type      VARCHAR(32)     NOT NULL COMMENT 'Agent 类型（CHAT/REACT/RAG/PLAN_EXECUTE/ROUTER）',
@@ -72,16 +73,18 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
     max_tokens      INT             DEFAULT NULL COMMENT '最大生成 Token 数',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
 
     -- 索引
     CONSTRAINT uk_agent_code UNIQUE (agent_code, tenant_id),
     INDEX idx_agent_type (agent_type),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 定义（Agent 的完整配置信息）';
 
 -- ----------------------------------------------------------------------------
@@ -89,7 +92,6 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_definition (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     trace_id            VARCHAR(64)     PRIMARY KEY COMMENT '链路唯一 ID（主键，业务生成非自增）',
-    tenant_id           VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     conversation_id     VARCHAR(64)     NOT NULL COMMENT '所属对话 ID',
     agent_id            VARCHAR(64)     NOT NULL COMMENT 'Agent 类型标识（CHAT/REACT/RAG/PLAN_EXECUTE/SUPERVISOR）',
     status              VARCHAR(32)     NOT NULL COMMENT '执行状态（RUNNING/SUCCESS/FAILED/MAX_ITERATIONS/GUARDRAIL_REJECTED）',
@@ -101,7 +103,15 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     INDEX idx_trace_agent (agent_id),
     INDEX idx_trace_status (status),
     INDEX idx_trace_tenant_conversation (tenant_id, conversation_id),
-    INDEX idx_trace_tenant_status (tenant_id, status)
+    INDEX idx_trace_tenant_status (tenant_id, status),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 执行链路（记录一次 Agent 执行的完整元数据）';
 
 -- ----------------------------------------------------------------------------
@@ -110,7 +120,6 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
 CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     trace_id        VARCHAR(64)     NOT NULL COMMENT '链路 ID（关联 ydsz_agt_trace.trace_id）',
     step_index      INT             NOT NULL COMMENT '步骤序号（从 0 开始递增）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
     step_type       VARCHAR(32)     NOT NULL COMMENT '步骤类型（LLM_CALL/TOOL_CALL/THOUGHT/OBSERVATION/ROUTE/LLM_CALL_ERROR）',
     content         TEXT            DEFAULT NULL COMMENT '步骤内容描述',
     input_json      JSON            DEFAULT NULL COMMENT '步骤输入（JSON 字符串）',
@@ -122,7 +131,16 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     PRIMARY KEY (trace_id, step_index),
     INDEX idx_step_tenant (tenant_id),
     INDEX idx_trace_step_cost (cost),
-    INDEX idx_step_tenant_trace (tenant_id, trace_id)
+    INDEX idx_step_tenant_trace (tenant_id, trace_id),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '1' COMMENT '租户 ID（多租户隔离）',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 执行链路步骤（记录单个执行步骤，支持回放与调试）';
 
 -- ----------------------------------------------------------------------------
@@ -137,19 +155,22 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
     status              VARCHAR(32)     NOT NULL DEFAULT 'PENDING' COMMENT '审批状态（PENDING/APPROVED/REJECTED/EXPIRED）',
     approver            VARCHAR(64)     DEFAULT NULL COMMENT '审批人标识',
     `comment`           VARCHAR(512)    DEFAULT NULL COMMENT '审批意见',
-    tenant_id           VARCHAR(64)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
-    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '请求创建时间',
     resolved_at         DATETIME        DEFAULT NULL COMMENT '审批完成时间',
-    created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人 ID（CombinedFieldFillInterceptor 自动填充）',
-    updated_by          VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）',
-    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
 
     -- 索引
     INDEX idx_approval_tenant_created (tenant_id, created_at),
     INDEX idx_approval_conversation (conversation_id),
     INDEX idx_approval_trace (trace_id),
     INDEX idx_approval_status (status),
-    INDEX idx_approval_tenant (tenant_id)
+    INDEX idx_approval_tenant (tenant_id),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64)     NOT NULL DEFAULT '0' COMMENT '租户 ID',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人 ID（CombinedFieldFillInterceptor 自动填充）',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '请求创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Agent 人工审批请求（Human-in-the-Loop 审批持久化）';
 
 -- ----------------------------------------------------------------------------
@@ -157,7 +178,6 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_approval (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     id                  VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id           VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     conversation_id     VARCHAR(64)     NOT NULL COMMENT '所属对话 ID（关联 ydsz_agent_conversation）',
     model_name          VARCHAR(64)     NOT NULL COMMENT '使用的模型标识',
     prompt_tokens       BIGINT          NOT NULL DEFAULT 0 COMMENT '提示词 Token 数',
@@ -165,15 +185,17 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_token_usage (
     total_tokens        BIGINT          NOT NULL DEFAULT 0 COMMENT '总 Token 数（prompt + completion）',
     status              VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted             TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision            INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by          VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by          VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
 
     -- 索引
     INDEX idx_conversation_created (conversation_id, created_at),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Token 用量记录（LLM 调用 Token 消耗明细）';
 
 -- ============================================================================

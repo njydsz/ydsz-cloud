@@ -26,7 +26,6 @@
 
 CREATE TABLE ydsz_rule_def (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -54,14 +53,16 @@ CREATE TABLE ydsz_rule_def (
     canary_conditions        CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_def_canary_conditions CHECK (canary_conditions IS JSON),
     canary_condition_expression CLOB                    ,
     canary_severity_expression CLOB                    ,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_def PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_def_rule_code UNIQUE (rule_code, tenant_id)
+    CONSTRAINT uk_ydsz_rule_def_rule_code UNIQUE (rule_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_def IS 'LiteRule 规则定义主表';
@@ -107,7 +108,6 @@ CREATE INDEX idx_ydsz_rule_def_tenant_is_deleted ON ydsz_rule_def (tenant_id, is
 
 CREATE TABLE ydsz_rule_variable_def (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     var_name                 VARCHAR2(128 CHAR)       NOT NULL,
     var_type                 VARCHAR2(32 CHAR)        DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -116,14 +116,16 @@ CREATE TABLE ydsz_rule_variable_def (
     is_required              NUMBER(1)                NOT NULL DEFAULT 0,
     is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_variable_def PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_variable_def_var_name UNIQUE (var_name, tenant_id)
+    CONSTRAINT uk_ydsz_rule_variable_def_var_name UNIQUE (var_name, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_variable_def IS '规则变量定义表';
@@ -149,7 +151,6 @@ CREATE INDEX idx_ydsz_rule_variable_def_tenant_is_deleted ON ydsz_rule_variable_
 
 CREATE TABLE ydsz_rule_template (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     template_name            VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -164,14 +165,16 @@ CREATE TABLE ydsz_rule_template (
     industry                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     tags                     VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_template PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_template_template_code UNIQUE (template_code, tenant_id)
+    CONSTRAINT uk_ydsz_rule_template_template_code UNIQUE (template_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_template IS 'LiteRule 规则模板表';
@@ -203,7 +206,6 @@ CREATE INDEX idx_ydsz_rule_template_tenant_is_deleted ON ydsz_rule_template (ten
 
 CREATE TABLE ydsz_rule_script (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -217,13 +219,15 @@ CREATE TABLE ydsz_rule_script (
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_rule_script PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rule_script PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_script IS '规则脚本表';
@@ -254,7 +258,6 @@ CREATE INDEX idx_ydsz_rule_script_tenant_is_deleted ON ydsz_rule_script (tenant_
 
 CREATE TABLE ydsz_rule_decision_table (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     table_code               VARCHAR2(64 CHAR)        NOT NULL,
     table_name               VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -268,14 +271,16 @@ CREATE TABLE ydsz_rule_decision_table (
     priority                 NUMBER(10)               DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_decision_table PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_decision_table_table_code UNIQUE (table_code, tenant_id)
+    CONSTRAINT uk_ydsz_rule_decision_table_table_code UNIQUE (table_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_decision_table IS '决策表实体表';
@@ -306,7 +311,6 @@ CREATE INDEX idx_ydsz_rule_decision_table_tenant_is_deleted ON ydsz_rule_decisio
 
 CREATE TABLE ydsz_rule_decision_tree (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -318,13 +322,15 @@ CREATE TABLE ydsz_rule_decision_tree (
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_rule_decision_tree PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rule_decision_tree PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_decision_tree IS '规则决策树表';
@@ -353,7 +359,6 @@ CREATE INDEX idx_ydsz_rule_decision_tree_tenant_is_deleted ON ydsz_rule_decision
 
 CREATE TABLE ydsz_rule_scorecard (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -368,13 +373,15 @@ CREATE TABLE ydsz_rule_scorecard (
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_rule_scorecard PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rule_scorecard PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_scorecard IS '规则评分卡表';
@@ -407,7 +414,6 @@ CREATE INDEX idx_ydsz_rule_scorecard_tenant_is_deleted ON ydsz_rule_scorecard (t
 
 CREATE TABLE ydsz_rule_chain_graph (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     name                     VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
@@ -415,14 +421,16 @@ CREATE TABLE ydsz_rule_chain_graph (
     graph_version            NUMBER(10)               NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     content_json             CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_chain_graph_content_json CHECK (content_json IS JSON),
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_chain_graph PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_chain_graph_rule_code UNIQUE (rule_code, tenant_id)
+    CONSTRAINT uk_ydsz_rule_chain_graph_rule_code UNIQUE (rule_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_chain_graph IS '规则链画布表';
@@ -446,21 +454,22 @@ CREATE INDEX idx_ydsz_rule_chain_graph_tenant_is_deleted ON ydsz_rule_chain_grap
 
 CREATE TABLE ydsz_rule_dependency (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     depends_on_rule_code     VARCHAR2(64 CHAR)        NOT NULL,
     dependency_type          VARCHAR2(32 CHAR)        NOT NULL,
     is_cascade_on_disable       NUMBER(1)                NOT NULL DEFAULT 0,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_dependency PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_dependency_rule_dep UNIQUE (rule_code, depends_on_rule_code)
+    CONSTRAINT uk_ydsz_rule_dependency_rule_dep UNIQUE (rule_code, depends_on_rule_code),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_dependency IS '规则依赖关系表';
@@ -484,7 +493,6 @@ CREATE INDEX idx_ydsz_rule_dependency_tenant_is_deleted ON ydsz_rule_dependency 
 
 CREATE TABLE ydsz_rule_pack (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     pack_code                VARCHAR2(64 CHAR)        NOT NULL,
     pack_version             VARCHAR2(32 CHAR)        NOT NULL,
     pack_name                VARCHAR2(128 CHAR)       NOT NULL,
@@ -500,14 +508,16 @@ CREATE TABLE ydsz_rule_pack (
     is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
     is_official                 NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_pack PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_pack_pack_code UNIQUE (pack_code, pack_version)
+    CONSTRAINT uk_ydsz_rule_pack_pack_code UNIQUE (pack_code, pack_version),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_pack IS '规则集（知识包）表';
@@ -541,18 +551,19 @@ CREATE INDEX idx_ydsz_rule_pack_tenant_is_deleted ON ydsz_rule_pack (tenant_id, 
 
 CREATE TABLE ydsz_rule_pack_install (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     installed_by             VARCHAR2(64 CHAR)        DEFAULT NULL,
     installed_at             TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     error_message            CLOB                    ,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_rule_pack_install PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rule_pack_install PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_pack_install IS '规则包安装记录表';
@@ -575,7 +586,6 @@ CREATE INDEX idx_ydsz_rule_pack_install_tenant_is_deleted ON ydsz_rule_pack_inst
 
 CREATE TABLE ydsz_rule_ab_policy (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     is_auto_rollback_is_enabled    NUMBER(1)                NOT NULL DEFAULT 0,
     rollback_action          VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -587,14 +597,16 @@ CREATE TABLE ydsz_rule_ab_policy (
     last_evaluated_at        TIMESTAMP                DEFAULT NULL,
     last_rollback_at         TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_ab_policy PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_ab_policy_rule_code UNIQUE (rule_code, tenant_id)
+    CONSTRAINT uk_ydsz_rule_ab_policy_rule_code UNIQUE (rule_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_ab_policy IS 'AB Test 自动回滚策略表';
@@ -622,20 +634,21 @@ CREATE INDEX idx_ydsz_rule_ab_policy_tenant_is_deleted ON ydsz_rule_ab_policy (t
 
 CREATE TABLE ydsz_rule_canary_bucket (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     bucket_type              VARCHAR2(32 CHAR)        NOT NULL,
     bucket_count             NUMBER(19)               NOT NULL DEFAULT 0,
     stat_date                DATE                     NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_canary_bucket PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_rule_canary_bucket_rule_bucket_date UNIQUE (rule_code, bucket_type, stat_date)
+    CONSTRAINT uk_ydsz_rule_canary_bucket_rule_bucket_date UNIQUE (rule_code, bucket_type, stat_date),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_canary_bucket IS '规则灰度分桶统计表';
@@ -658,7 +671,6 @@ CREATE INDEX idx_ydsz_rule_canary_bucket_tenant_is_deleted ON ydsz_rule_canary_b
 
 CREATE TABLE ydsz_rule_ab_rollback (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     trigger_reason           VARCHAR2(32 CHAR)        NOT NULL,
     error_rate               NUMBER(20,6)             DEFAULT NULL,
@@ -667,13 +679,15 @@ CREATE TABLE ydsz_rule_ab_rollback (
     operator                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     notify_status            VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_rule_ab_rollback PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rule_ab_rollback PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_rule_ab_rollback IS 'AB Test 回滚历史表';
@@ -705,7 +719,16 @@ CREATE TABLE ydsz_rule_version_history (
     definition_json          CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_version_history_definition_json CHECK (definition_json IS JSON),
     change_desc              VARCHAR2(512 CHAR)       DEFAULT NULL,
     operator                 VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_rule_version_history PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rule_version_history PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_rule_version_history IS 'LiteRule 规则版本历史表';
@@ -731,7 +754,16 @@ CREATE TABLE ydsz_rule_execution_trace (
     facts_snapshot           CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_execution_trace_facts_snapshot CHECK (facts_snapshot IS JSON),
     result_snapshot          CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_rule_execution_trace_result_snapshot CHECK (result_snapshot IS JSON),
     error_message            CLOB                    ,
-    CONSTRAINT pk_ydsz_rule_execution_trace PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_rule_execution_trace PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_rule_execution_trace IS '规则执行链路追踪表';

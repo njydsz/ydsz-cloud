@@ -12,7 +12,6 @@
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     parent_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '父节点ID（根目录为 "0"）',
     name            VARCHAR(255)    NOT NULL COMMENT '节点名称（文件名或目录名）',
     node_type       VARCHAR(32)     NOT NULL COMMENT 'is_folder / file',
@@ -23,7 +22,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     mime_type       VARCHAR(128)    DEFAULT NULL COMMENT 'MIME 类型',
     path            VARCHAR(1024)   NOT NULL COMMENT '目录路径（如 /root/docs/contract/），用于快速判断层级关系',
     level           INT             NOT NULL DEFAULT 0 COMMENT '层级深度（根为 0）',
-    sort            INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     current_version INT             NOT NULL DEFAULT 1 COMMENT '当前版本号（从 1 开始，每次更新 +1）',
     file_hash       VARCHAR(64)     DEFAULT NULL COMMENT '文件 SHA-256 哈希（用于秒传去重）',
     thumbnail_key   VARCHAR(1024)   DEFAULT NULL COMMENT '缩略图存储键',
@@ -35,11 +33,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     storage_class   VARCHAR(32)     NOT NULL DEFAULT 'STANDARD' COMMENT '存储类型：STANDARD / GLACIER / DEEP_ARCHIVE（冷数据归档）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_parent_id (parent_id),
     INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
@@ -49,7 +42,14 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     INDEX idx_ydsz_file_file_node_created_deleted_type (created_by, is_deleted, node_type),
     INDEX idx_ydsz_file_file_node_file_hash (file_hash),
     INDEX idx_ydsz_file_file_node_not_is_deleted (id, parent_id, tenant_id),
-    INDEX idx_ydsz_file_file_node_storage_class (node_type, is_deleted, storage_class, updated_at)
+    INDEX idx_ydsz_file_file_node_storage_class (node_type, is_deleted, storage_class, updated_at),
+    sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='网盘文件节点（统一表示文件和目录，构成目录树的核心节点）';
 
 -- ----------------------------------------------------------------------------
@@ -57,7 +57,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '关联的文件节点ID',
     version_number  INT             NOT NULL COMMENT '版本号（从 1 开始递增）',
     storage_key     VARCHAR(1024)   DEFAULT NULL COMMENT '该版本的存储对象键',
@@ -66,17 +65,19 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
     mime_type       VARCHAR(128)    DEFAULT NULL COMMENT '该版本的 MIME 类型',
     remark          VARCHAR(512)    DEFAULT NULL COMMENT '版本说明（用户自定义的版本备注）',
     change_type     VARCHAR(32)     NOT NULL DEFAULT 'update' COMMENT '变更类型：create / update / rollback',
-    is_active          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为当前活跃版本',
+    active_flag          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为当前活跃版本',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_file_node_version (file_node_id, version_number),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件版本历史（每次文件更新生成一条版本记录，支持版本回溯）';
 
 -- ----------------------------------------------------------------------------
@@ -84,21 +85,22 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_tag (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     name            VARCHAR(255)    NOT NULL COMMENT '标签名称',
     color           VARCHAR(32)     DEFAULT NULL COMMENT '标签颜色（十六进制颜色码，如 #1890ff）',
     type            VARCHAR(32)     NOT NULL DEFAULT 'manual' COMMENT 'is_system（系统预设）',
     usage_count     INT             NOT NULL DEFAULT 0 COMMENT '使用次数（文件关联数）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_tenant_tag_name (tenant_id, name),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标签（对文件/文件夹打标签，用于知识库分类和检索）';
 
 -- ----------------------------------------------------------------------------
@@ -106,20 +108,21 @@ CREATE TABLE IF NOT EXISTS ydsz_file_tag (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点ID',
     tag_id          VARCHAR(32)     NOT NULL COMMENT '标签ID',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_file_node_tag (file_node_id, tag_id),
     INDEX idx_tag_id (tag_id),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件-标签关联（多对多）';
 
 -- ----------------------------------------------------------------------------
@@ -127,7 +130,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
     id                VARCHAR(32)   NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id         VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id      VARCHAR(32)   NOT NULL COMMENT '关联的文件节点ID',
     content           TEXT          NOT NULL COMMENT '评论内容',
     parent_comment_id VARCHAR(32)   DEFAULT NULL COMMENT '父评论ID（用于回复，null 表示顶级评论）',
@@ -136,15 +138,17 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
     is_edited            TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '是否被编辑过',
     status            VARCHAR(32)   DEFAULT NULL COMMENT '状态标识',
     is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by        VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
-    updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_file_node_id (file_node_id),
     INDEX idx_parent_comment_id (parent_comment_id),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件评论（支持文件级别的评论和回复，用于知识库协作讨论）';
 
 -- ----------------------------------------------------------------------------
@@ -152,7 +156,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点ID',
     grantee_type    VARCHAR(32)     NOT NULL COMMENT '授权对象类型：user / role / group / tenant',
     grantee_id      VARCHAR(64)     NOT NULL COMMENT '授权对象ID（用户ID / 角色ID / 组ID / 租户ID）',
@@ -161,15 +164,17 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
     is_owner           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为所有者（所有者拥有全部权限）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_file_grantee (file_node_id, grantee_type, grantee_id),
     INDEX idx_grantee (grantee_type, grantee_id),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件级 ACL 权限（文件/文件夹级别的细粒度权限控制）';
 
 -- ----------------------------------------------------------------------------
@@ -177,7 +182,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
     id                VARCHAR(32)   NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id         VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id      VARCHAR(32)   NOT NULL COMMENT '关联的文件节点ID',
     share_code        VARCHAR(64)   NOT NULL COMMENT '分享码（URL 中的唯一标识，UUID 生成）',
     extract_code      VARCHAR(8)    DEFAULT NULL COMMENT '提取码（4 位数字，访问时需要输入）',
@@ -191,16 +195,18 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
     is_reminder_sent     TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '到期提醒是否已发送',
     title             VARCHAR(255)  DEFAULT NULL COMMENT '分享标题（可选）',
     is_deleted           TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision          INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by        VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
-    updated_by        VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_share_code (share_code),
     INDEX idx_file_node_id (file_node_id),
     INDEX idx_ydsz_file_share_link_expire_reminder (status, expire_time, is_reminder_sent),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件分享链接（带密码和过期时间的文件级临时授权机制）';
 
 -- ----------------------------------------------------------------------------
@@ -208,7 +214,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
     recipient_type  VARCHAR(32)     NOT NULL DEFAULT 'USER' COMMENT '接收者类型：USER/DEPT/ROLE',
     recipient_id    VARCHAR(64)     NOT NULL COMMENT '接收者 ID',
@@ -216,16 +221,18 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
     status          VARCHAR(32)     NOT NULL DEFAULT 'ACTIVE' COMMENT 'is_active/VIEWED/REVOKED',
     viewed_at       DATETIME        DEFAULT NULL COMMENT '首次查看时间',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_share_recipient (share_id, recipient_type, recipient_id),
     INDEX idx_ydsz_file_share_recipient_share (share_id, is_deleted),
     INDEX idx_ydsz_file_share_recipient_user (recipient_id, status, is_deleted),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享目标用户（定向分享，记录分享链接的目标接收者）';
 
 -- ----------------------------------------------------------------------------
@@ -233,7 +240,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
     share_code      VARCHAR(64)     NOT NULL COMMENT '分享码',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点 ID',
@@ -247,17 +253,19 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
     access_time     DATETIME        NOT NULL COMMENT '访问时间',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_access_time (access_time),
     INDEX idx_ydsz_file_share_access_log_share_id (share_id, created_at),
     INDEX idx_ydsz_file_share_access_log_created (created_at),
     INDEX idx_ydsz_file_share_access_log_visitor (visitor_id, created_at),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享链接访问日志（记录每次分享链接被访问的详细信息，用于安全审计和访问统计）';
 
 -- ----------------------------------------------------------------------------
@@ -265,7 +273,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     share_id        VARCHAR(32)     NOT NULL COMMENT '分享链接 ID',
     share_code      VARCHAR(64)     NOT NULL COMMENT '分享码',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '文件节点 ID',
@@ -278,12 +285,19 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
     fail_reason     VARCHAR(255)    DEFAULT NULL COMMENT '失败原因',
     access_time     DATETIME        NOT NULL COMMENT '访问时间',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (id),
     INDEX idx_archive_share_created (share_id, created_at),
     INDEX idx_archive_created (created_at),
     INDEX idx_archive_access_time (access_time),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分享访问日志归档表（归档 90 天前访问日志，防止主表无限膨胀）';
 
 -- ----------------------------------------------------------------------------
@@ -291,7 +305,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_space (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     name            VARCHAR(128)    NOT NULL COMMENT '空间名称',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '空间描述',
     icon_url        VARCHAR(1024)   DEFAULT NULL COMMENT '空间图标 URL',
@@ -299,22 +312,24 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space (
     owner_id        VARCHAR(64)     NOT NULL COMMENT '空间所有者（创建者）',
     status          VARCHAR(32)     NOT NULL DEFAULT 'active' COMMENT 'is_deleted',
     visibility      VARCHAR(32)     NOT NULL DEFAULT 'private' COMMENT 'is_public',
-    sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     member_count    INT             NOT NULL DEFAULT 1 COMMENT '成员数量',
     node_count      INT             NOT NULL DEFAULT 0 COMMENT '节点数量（文件/目录总数）',
     quota_limit     BIGINT          DEFAULT NULL COMMENT '空间独立配额（字节，NULL 表示使用租户配额）',
     quota_used      BIGINT          NOT NULL DEFAULT 0 COMMENT '已使用配额（字节）',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     deleted_time    DATETIME        DEFAULT NULL COMMENT '删除时间',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_file_space_tenant_name (tenant_id, name),
     INDEX idx_ydsz_file_space_tenant_sort (tenant_id, sort),
     INDEX idx_ydsz_file_space_is_owner (owner_id),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库空间（空间管理聚合根，文件节点的顶级容器）';
 
 -- ----------------------------------------------------------------------------
@@ -322,21 +337,24 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     space_id        VARCHAR(32)     NOT NULL COMMENT '空间ID',
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
     role            VARCHAR(32)     NOT NULL COMMENT 'is_owner / admin / editor / viewer',
     joined_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_file_space_member_space_user (space_id, user_id),
     INDEX idx_ydsz_file_space_member_space_role (space_id, role),
     INDEX idx_ydsz_file_space_member_user (user_id),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间成员（记录用户与空间的归属关系及角色）';
 
 -- ----------------------------------------------------------------------------
@@ -344,7 +362,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     DEFAULT NULL COMMENT '租户 ID（系统模板为 NULL）',
     name            VARCHAR(128)    NOT NULL COMMENT '模板名称',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '模板描述',
     category        VARCHAR(32)     NOT NULL DEFAULT 'general' COMMENT '模板分类：general / project / meeting / knowledge',
@@ -352,17 +369,20 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
     is_system          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统内置模板（不可删除）',
     is_public_access   TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否公开（所有租户可见）',
     structure_json  JSON            NOT NULL COMMENT '模板结构 JSON（定义目录树、初始页面、权限配置等）',
-    sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
     usage_count     INT             NOT NULL DEFAULT 0 COMMENT '使用次数',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_ydsz_file_space_template_tenant_category (tenant_id, category),
     INDEX idx_ydsz_file_space_template_system_is_public (is_system, is_public_access),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号',
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     DEFAULT NULL COMMENT '租户 ID（系统模板为 NULL）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间模板（预定义可复用的空间结构模板）';
 
 -- ----------------------------------------------------------------------------
@@ -370,7 +390,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
     id                  VARCHAR(32)   NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id           VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id        VARCHAR(32)   NOT NULL COMMENT '原文件节点ID',
     original_name       VARCHAR(255)  NOT NULL COMMENT '原文件名',
     original_path       VARCHAR(1024) DEFAULT NULL COMMENT '原始路径',
@@ -381,16 +400,18 @@ CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
     purge_time          DATETIME      NOT NULL COMMENT '预计永久删除时间',
     status              VARCHAR(32)   NOT NULL DEFAULT 'in_trash' COMMENT '状态：in_trash / restored / purged',
     is_deleted             TINYINT(1)    NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision            INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by          VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
-    updated_by          VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     INDEX idx_file_node_id (file_node_id),
     INDEX idx_deleted_time (deleted_time),
     INDEX idx_purge_time (purge_time),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT           NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)   NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)   DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)   DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='回收站条目（记录被逻辑删除的文件/文件夹，支持恢复和自动清理）';
 
 -- ----------------------------------------------------------------------------
@@ -398,7 +419,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     file_node_id    VARCHAR(32)     NOT NULL COMMENT '关联的文件节点ID',
     name            VARCHAR(255)    NOT NULL COMMENT '文件名（用于搜索）',
     path            VARCHAR(1024)   DEFAULT NULL COMMENT '目录路径',
@@ -409,15 +429,17 @@ CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
     tags            VARCHAR(512)    DEFAULT NULL COMMENT '标签（逗号分隔）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_file_node_id (file_node_id),
     FULLTEXT INDEX ft_search_name_content (name, content),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件搜索索引（数据库 fallback 搜索，ES 不可用时提供文件名/路径/内容搜索）';
 
 -- ----------------------------------------------------------------------------
@@ -425,20 +447,22 @@ CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
     node_id         VARCHAR(64)     NOT NULL COMMENT '收藏的文件/目录节点ID',
-    sort      INT             NOT NULL DEFAULT 0 COMMENT '排序序号（值越小越靠前）',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
     deleted_time    DATETIME        DEFAULT NULL COMMENT '删除时间',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_file_user_favorite_user_node (user_id, node_id),
     INDEX idx_ydsz_file_user_favorite_user_sort (user_id, sort),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号（值越小越靠前）',
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
 
 -- ----------------------------------------------------------------------------
@@ -446,19 +470,24 @@ CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     user_id         VARCHAR(64)     NOT NULL COMMENT '用户ID',
     node_id         VARCHAR(64)     NOT NULL COMMENT '访问的文件/目录节点ID',
     access_type     VARCHAR(32)     NOT NULL DEFAULT 'view' COMMENT '访问类型：view / edit / download',
     accessed_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '最近访问时间（排序字段）',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_file_user_recent_user_node (user_id, node_id),
     INDEX idx_ydsz_file_user_recent_user_accessed (user_id, accessed_at),
     INDEX idx_ydsz_file_user_recent_access_type (user_id, access_type),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户最近访问记录（同一节点只保留一条，支持按访问时间倒序查询）';
 
 -- ----------------------------------------------------------------------------
@@ -466,7 +495,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
     id              VARCHAR(32)     NOT NULL COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     scope_type      VARCHAR(32)     NOT NULL COMMENT '配额维度：user / tenant / project',
     scope_id        VARCHAR(64)     NOT NULL COMMENT '维度ID（用户ID / 租户ID / 项目ID）',
     quota_limit     BIGINT          NOT NULL DEFAULT 0 COMMENT '配额上限（字节）',
@@ -475,12 +503,14 @@ CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
     file_count_used INT             NOT NULL DEFAULT 0 COMMENT '已使用文件数量',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     PRIMARY KEY (id),
     UNIQUE KEY uk_scope (scope_type, scope_id),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='存储配额（按用户/租户/项目维度设置存储上限，上传时校验配额）';

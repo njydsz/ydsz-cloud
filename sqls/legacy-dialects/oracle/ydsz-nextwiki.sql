@@ -26,7 +26,6 @@
 
 CREATE TABLE ydsz_file_file_node (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     parent_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     name                     VARCHAR2(255 CHAR)       NOT NULL,
     node_type                VARCHAR2(32 CHAR)        NOT NULL,
@@ -37,7 +36,6 @@ CREATE TABLE ydsz_file_file_node (
     mime_type                VARCHAR2(128 CHAR)       DEFAULT NULL,
     path                     VARCHAR2(1024 CHAR)      NOT NULL,
     level                    NUMBER(10)               NOT NULL DEFAULT 0,
-    sort                     NUMBER(10)               NOT NULL DEFAULT 0,
     current_version          NUMBER(10)               NOT NULL DEFAULT 1,
     file_hash                VARCHAR2(64 CHAR)        DEFAULT NULL,
     thumbnail_key            VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -48,13 +46,15 @@ CREATE TABLE ydsz_file_file_node (
     original_path            VARCHAR2(1024 CHAR)      DEFAULT NULL,
     storage_class            VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'STANDARD',
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_file_node PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_file_node PRIMARY KEY (id),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_file_node IS '网盘文件节点（统一表示文件和目录，构成目录树的核心节点）';
@@ -100,7 +100,6 @@ CREATE INDEX idx_ydsz_file_file_node_storage_class ON ydsz_file_file_node (node_
 
 CREATE TABLE ydsz_file_file_version (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     version_number           NUMBER(10)               NOT NULL,
     storage_key              VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -109,16 +108,18 @@ CREATE TABLE ydsz_file_file_version (
     mime_type                VARCHAR2(128 CHAR)       DEFAULT NULL,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     change_type              VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'update',
-    is_active                   NUMBER(1)                NOT NULL DEFAULT 0,
+    active_flag                   NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_version PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_file_version_file_node_version UNIQUE (file_node_id, version_number)
+    CONSTRAINT uk_ydsz_file_file_version_file_node_version UNIQUE (file_node_id, version_number),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_file_version IS '文件版本历史（每次文件更新生成一条版本记录，支持版本回溯）';
@@ -132,7 +133,7 @@ COMMENT ON COLUMN ydsz_file_file_version.file_hash IS '该版本的文件 SHA-25
 COMMENT ON COLUMN ydsz_file_file_version.mime_type IS '该版本的 MIME 类型';
 COMMENT ON COLUMN ydsz_file_file_version.remark IS '版本说明（用户自定义的版本备注）';
 COMMENT ON COLUMN ydsz_file_file_version.change_type IS '变更类型：create / update / rollback';
-COMMENT ON COLUMN ydsz_file_file_version.is_active IS '是否为当前活跃版本';
+COMMENT ON COLUMN ydsz_file_file_version.active_flag IS '是否为当前活跃版本';
 COMMENT ON COLUMN ydsz_file_file_version.status IS '状态标识';
 COMMENT ON COLUMN ydsz_file_file_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_file_file_version.revision IS '乐观锁版本号';
@@ -145,20 +146,21 @@ CREATE INDEX idx_ydsz_file_file_version_tenant_is_deleted ON ydsz_file_file_vers
 
 CREATE TABLE ydsz_file_tag (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     name                     VARCHAR2(255 CHAR)       NOT NULL,
     color                    VARCHAR2(32 CHAR)        DEFAULT NULL,
     type                     VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'manual',
     usage_count              NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_tag PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_tag_tenant_tag_name UNIQUE (tenant_id, name)
+    CONSTRAINT uk_ydsz_file_tag_tenant_tag_name UNIQUE (tenant_id, name),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_tag IS '标签（对文件/文件夹打标签，用于知识库分类和检索）';
@@ -180,18 +182,19 @@ CREATE INDEX idx_ydsz_file_tag_tenant_is_deleted ON ydsz_file_tag (tenant_id, is
 
 CREATE TABLE ydsz_file_file_tag (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     tag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_tag PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_file_tag_file_node_tag UNIQUE (file_node_id, tag_id)
+    CONSTRAINT uk_ydsz_file_file_tag_file_node_tag UNIQUE (file_node_id, tag_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_file_tag IS '文件-标签关联（多对多）';
@@ -212,7 +215,6 @@ CREATE INDEX idx_ydsz_file_file_tag_tenant_is_deleted ON ydsz_file_file_tag (ten
 
 CREATE TABLE ydsz_file_file_comment (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     content                  CLOB                     NOT NULL,
     parent_comment_id        VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -220,13 +222,15 @@ CREATE TABLE ydsz_file_file_comment (
     position                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_file_file_comment_position CHECK (position IS JSON),
     is_edited                   NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_file_comment PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_file_comment PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_file_comment IS '文件评论（支持文件级别的评论和回复，用于知识库协作讨论）';
@@ -252,7 +256,6 @@ CREATE INDEX idx_ydsz_file_file_comment_tenant_is_deleted ON ydsz_file_file_comm
 
 CREATE TABLE ydsz_file_file_acl (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     grantee_type             VARCHAR2(32 CHAR)        NOT NULL,
     grantee_id               VARCHAR2(64 CHAR)        NOT NULL,
@@ -260,14 +263,16 @@ CREATE TABLE ydsz_file_file_acl (
     is_inherited                NUMBER(1)                NOT NULL DEFAULT 1,
     is_owner                    NUMBER(1)                NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_acl PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_file_acl_file_grantee UNIQUE (file_node_id, grantee_type, grantee_id)
+    CONSTRAINT uk_ydsz_file_file_acl_file_grantee UNIQUE (file_node_id, grantee_type, grantee_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_file_acl IS '文件级 ACL 权限（文件/文件夹级别的细粒度权限控制）';
@@ -292,7 +297,6 @@ CREATE INDEX idx_ydsz_file_file_acl_tenant_is_deleted ON ydsz_file_file_acl (ten
 
 CREATE TABLE ydsz_file_share_link (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
     extract_code             VARCHAR2(8 CHAR)         DEFAULT NULL,
@@ -305,14 +309,16 @@ CREATE TABLE ydsz_file_share_link (
     share_target_type        VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PUBLIC',
     is_reminder_sent            NUMBER(1)                NOT NULL DEFAULT 0,
     title                    VARCHAR2(255 CHAR)       DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_share_link PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_share_link_share_code UNIQUE (share_code)
+    CONSTRAINT uk_ydsz_file_share_link_share_code UNIQUE (share_code),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_share_link IS '文件分享链接（带密码和过期时间的文件级临时授权机制）';
@@ -343,21 +349,22 @@ CREATE INDEX idx_ydsz_file_share_link_tenant_is_deleted ON ydsz_file_share_link 
 
 CREATE TABLE ydsz_file_share_recipient (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     share_id                 VARCHAR2(32 CHAR)        NOT NULL,
     recipient_type           VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'USER',
     recipient_id             VARCHAR2(64 CHAR)        NOT NULL,
     recipient_name           VARCHAR2(128 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ACTIVE',
     viewed_at                TIMESTAMP                DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_share_recipient PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_share_recipient_share_recipient UNIQUE (share_id, recipient_type, recipient_id)
+    CONSTRAINT uk_ydsz_file_share_recipient_share_recipient UNIQUE (share_id, recipient_type, recipient_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_share_recipient IS '分享目标用户（定向分享，记录分享链接的目标接收者）';
@@ -382,7 +389,6 @@ CREATE INDEX idx_ydsz_file_share_recipient_tenant_is_deleted ON ydsz_file_share_
 
 CREATE TABLE ydsz_file_share_access_log (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     share_id                 VARCHAR2(32 CHAR)        NOT NULL,
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
@@ -395,13 +401,15 @@ CREATE TABLE ydsz_file_share_access_log (
     fail_reason              VARCHAR2(255 CHAR)       DEFAULT NULL,
     access_time              TIMESTAMP                NOT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_share_access_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_share_access_log PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_share_access_log IS '分享链接访问日志（记录每次分享链接被访问的详细信息，用于安全审计和访问统计）';
@@ -434,7 +442,6 @@ CREATE INDEX idx_ydsz_file_share_access_log_tenant_is_deleted ON ydsz_file_share
 
 CREATE TABLE ydsz_file_share_access_log_archive (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     share_id                 VARCHAR2(32 CHAR)        NOT NULL,
     share_code               VARCHAR2(64 CHAR)        NOT NULL,
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
@@ -446,9 +453,16 @@ CREATE TABLE ydsz_file_share_access_log_archive (
     access_status            VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'SUCCESS',
     fail_reason              VARCHAR2(255 CHAR)       DEFAULT NULL,
     access_time              TIMESTAMP                NOT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_file_share_access_log_archive PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_share_access_log_archive PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_file_share_access_log_archive IS '分享访问日志归档表（归档 90 天前访问日志，防止主表无限膨胀）';
@@ -475,7 +489,6 @@ CREATE INDEX idx_ydsz_file_share_access_log_archive_tenant_is_deleted ON ydsz_fi
 
 CREATE TABLE ydsz_file_space (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     name                     VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     icon_url                 VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -483,19 +496,21 @@ CREATE TABLE ydsz_file_space (
     owner_id                 VARCHAR2(64 CHAR)        NOT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'active',
     visibility               VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'private',
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     member_count             NUMBER(10)               NOT NULL DEFAULT 1,
     node_count               NUMBER(10)               NOT NULL DEFAULT 0,
     quota_limit              NUMBER(19)               DEFAULT NULL,
     quota_used               NUMBER(19)               NOT NULL DEFAULT 0,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     deleted_time             TIMESTAMP                DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_space PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_space_tenant_name UNIQUE (tenant_id, name)
+    CONSTRAINT uk_ydsz_file_space_tenant_name UNIQUE (tenant_id, name),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_space IS '知识库空间（空间管理聚合根，文件节点的顶级容器）';
@@ -526,18 +541,21 @@ CREATE INDEX idx_ydsz_file_space_tenant_is_deleted ON ydsz_file_space (tenant_id
 
 CREATE TABLE ydsz_file_space_member (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     space_id                 VARCHAR2(32 CHAR)        NOT NULL,
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     role                     VARCHAR2(32 CHAR)        NOT NULL,
     joined_at                TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_space_member PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_space_member_space_user UNIQUE (space_id, user_id)
+    CONSTRAINT uk_ydsz_file_space_member_space_user UNIQUE (space_id, user_id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_space_member IS '空间成员（记录用户与空间的归属关系及角色）';
@@ -559,7 +577,6 @@ CREATE INDEX idx_ydsz_file_space_member_tenant_is_deleted ON ydsz_file_space_mem
 
 CREATE TABLE ydsz_file_space_template (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
     name                     VARCHAR2(128 CHAR)       NOT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     category                 VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'general',
@@ -567,14 +584,17 @@ CREATE TABLE ydsz_file_space_template (
     is_system                   NUMBER(1)                NOT NULL DEFAULT 0,
     is_public_access           NUMBER(1)                NOT NULL DEFAULT 1,
     structure_json           CLOB                     NOT NULL CONSTRAINT ck_ydsz_file_space_template_structure_json CHECK (structure_json IS JSON),
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     usage_count              NUMBER(10)               NOT NULL DEFAULT 0,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_space_template PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_space_template PRIMARY KEY (id),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        DEFAULT NULL,
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_space_template IS '空间模板（预定义可复用的空间结构模板）';
@@ -601,7 +621,6 @@ CREATE INDEX idx_ydsz_file_space_template_tenant_is_deleted ON ydsz_file_space_t
 
 CREATE TABLE ydsz_file_trash_item (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     original_name            VARCHAR2(255 CHAR)       NOT NULL,
     original_path            VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -611,13 +630,15 @@ CREATE TABLE ydsz_file_trash_item (
     deleted_time             TIMESTAMP                NOT NULL,
     purge_time               TIMESTAMP                NOT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'in_trash',
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_file_trash_item PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_trash_item PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_trash_item IS '回收站条目（记录被逻辑删除的文件/文件夹，支持恢复和自动清理）';
@@ -646,7 +667,6 @@ CREATE INDEX idx_ydsz_file_trash_item_tenant_is_deleted ON ydsz_file_trash_item 
 
 CREATE TABLE ydsz_file_search_index (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     file_node_id             VARCHAR2(32 CHAR)        NOT NULL,
     name                     VARCHAR2(255 CHAR)       NOT NULL,
     path                     VARCHAR2(1024 CHAR)      DEFAULT NULL,
@@ -656,14 +676,16 @@ CREATE TABLE ydsz_file_search_index (
     size                     NUMBER(19)               NOT NULL DEFAULT 0,
     tags                     VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_search_index PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_search_index_file_node_id UNIQUE (file_node_id)
+    CONSTRAINT uk_ydsz_file_search_index_file_node_id UNIQUE (file_node_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_search_index IS '文件搜索索引（数据库 fallback 搜索，ES 不可用时提供文件名/路径/内容搜索）';
@@ -691,18 +713,20 @@ CREATE INDEX idx_ydsz_file_search_index_tenant_is_deleted ON ydsz_file_search_in
 
 CREATE TABLE ydsz_file_user_favorite (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
     deleted_time             TIMESTAMP                DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_user_favorite PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_user_favorite_user_node UNIQUE (user_id, node_id)
+    CONSTRAINT uk_ydsz_file_user_favorite_user_node UNIQUE (user_id, node_id),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_user_favorite IS '用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
@@ -723,16 +747,21 @@ CREATE INDEX idx_ydsz_file_user_favorite_tenant_is_deleted ON ydsz_file_user_fav
 
 CREATE TABLE ydsz_file_user_recent (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(64 CHAR)        NOT NULL,
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
     access_type              VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'view',
     accessed_at              TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_file_user_recent PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_user_recent_user_node UNIQUE (user_id, node_id)
+    CONSTRAINT uk_ydsz_file_user_recent_user_node UNIQUE (user_id, node_id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_user_recent IS '用户最近访问记录（同一节点只保留一条，支持按访问时间倒序查询）';
@@ -752,7 +781,6 @@ CREATE INDEX idx_ydsz_file_user_recent_tenant_is_deleted ON ydsz_file_user_recen
 
 CREATE TABLE ydsz_file_storage_quota (
     id                       VARCHAR2(32 CHAR)        NOT NULL,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     scope_type               VARCHAR2(32 CHAR)        NOT NULL,
     scope_id                 VARCHAR2(64 CHAR)        NOT NULL,
     quota_limit              NUMBER(19)               NOT NULL DEFAULT 0,
@@ -760,14 +788,16 @@ CREATE TABLE ydsz_file_storage_quota (
     file_count_limit         NUMBER(10)               DEFAULT NULL,
     file_count_used          NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_storage_quota PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_file_storage_quota_scope UNIQUE (scope_type, scope_id)
+    CONSTRAINT uk_ydsz_file_storage_quota_scope UNIQUE (scope_type, scope_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_file_storage_quota IS '存储配额（按用户/租户/项目维度设置存储上限，上传时校验配额）';

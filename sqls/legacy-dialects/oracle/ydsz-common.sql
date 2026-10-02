@@ -40,13 +40,18 @@ CREATE TABLE ydsz_comm_outbox (
     max_retries              NUMBER(10)               NOT NULL DEFAULT 5,
     next_retry_at            TIMESTAMP(3)            ,
     error_message            CLOB                    ,
-    tenant_id                VARCHAR2(64 CHAR)       ,
     trace_id                 VARCHAR2(64 CHAR)       ,
     deduplication_id         VARCHAR2(64 CHAR)       ,
-    created_at               TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sent_at                  TIMESTAMP(3)            ,
-    CONSTRAINT pk_ydsz_comm_outbox PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_comm_outbox PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64 CHAR),
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_comm_outbox IS '事务性 Outbox 表：存储领域事件，保障业务写操作与事件投递的事务一致性';
@@ -84,9 +89,16 @@ CREATE TABLE ydsz_comm_search_dead_letter (
     error_msg                CLOB                     DEFAULT NULL,
     retry_count              NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(20 CHAR)        NOT NULL DEFAULT 'PENDING',
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at              TIMESTAMP                DEFAULT NULL,
-    CONSTRAINT pk_ydsz_comm_search_dead_letter PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_comm_search_dead_letter PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_comm_search_dead_letter IS '搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
@@ -115,12 +127,10 @@ CREATE INDEX idx_ydsz_comm_search_dead_letter_dlq_doc_type ON ydsz_comm_search_d
 CREATE TABLE ydsz_comm_audit_log (
     id                       VARCHAR2(64 CHAR)        NOT NULL,
     app_key                  VARCHAR2(64 CHAR)        NOT NULL DEFAULT '',
-    tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
     operator_id              VARCHAR2(64 CHAR)        DEFAULT NULL,
     operator_name            VARCHAR2(64 CHAR)        DEFAULT NULL,
     audit_type               NUMBER(5)                NOT NULL DEFAULT 1,
     action                   NUMBER(5)                NOT NULL DEFAULT 99,
-    status                   NUMBER(5)                NOT NULL DEFAULT 1,
     module                   VARCHAR2(128 CHAR)       DEFAULT NULL,
     content                  VARCHAR2(1024 CHAR)      DEFAULT NULL,
     business_no              VARCHAR2(128 CHAR)       DEFAULT NULL,
@@ -133,8 +143,16 @@ CREATE TABLE ydsz_comm_audit_log (
     cost_time                NUMBER(19)               DEFAULT 0,
     trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     operation_time           TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_comm_audit_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_comm_audit_log PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER(5)                NOT NULL DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64 CHAR)        DEFAULT NULL,
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_comm_audit_log IS '全平台操作审计日志表（ydsz-common-audit 自动落库）';

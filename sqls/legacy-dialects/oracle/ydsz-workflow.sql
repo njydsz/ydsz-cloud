@@ -37,7 +37,6 @@
 
 CREATE TABLE ydsz_flow_category (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     category_code            VARCHAR2(64 CHAR)        NOT NULL,
     category_name            VARCHAR2(128 CHAR)       NOT NULL,
     parent_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -45,14 +44,16 @@ CREATE TABLE ydsz_flow_category (
     icon                     VARCHAR2(128 CHAR)       DEFAULT NULL,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_category PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_category_category_code UNIQUE (category_code, tenant_id)
+    CONSTRAINT uk_ydsz_flow_category_category_code UNIQUE (category_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_category IS '流程分类表（树形结构，流程定义分组归类）';
@@ -77,7 +78,6 @@ CREATE INDEX idx_ydsz_flow_category_tenant_is_deleted ON ydsz_flow_category (ten
 
 CREATE TABLE ydsz_flow_definition (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -99,14 +99,16 @@ CREATE TABLE ydsz_flow_definition (
     locked_by                VARCHAR2(32 CHAR)        DEFAULT NULL,
     locked_at                TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_definition PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_definition_flow_code_version UNIQUE (flow_code, flow_version, tenant_id)
+    CONSTRAINT uk_ydsz_flow_definition_flow_code_version UNIQUE (flow_code, flow_version, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_definition IS '流程定义表（流程模板元数据）';
@@ -145,7 +147,6 @@ CREATE INDEX idx_ydsz_flow_definition_tenant_is_deleted ON ydsz_flow_definition 
 
 CREATE TABLE ydsz_flow_template (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     template_name            VARCHAR2(128 CHAR)       NOT NULL,
     category                 VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -154,21 +155,22 @@ CREATE TABLE ydsz_flow_template (
     bpmn_xml                 CLOB                    ,
     form_path                VARCHAR2(1024 CHAR)      DEFAULT NULL,
     use_count                NUMBER(10)               NOT NULL DEFAULT 0,
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     parent_template_id       VARCHAR2(32 CHAR)        DEFAULT NULL,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     version_label            VARCHAR2(32 CHAR)        DEFAULT NULL,
     inherit_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
     is_latest                NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_template PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_template_template_code_version UNIQUE (template_code, version, tenant_id)
+    CONSTRAINT uk_ydsz_flow_template_template_code_version UNIQUE (template_code, version, tenant_id),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_template IS '流程模板表（模板市场预置模板，BPMN 2.0 XML）';
@@ -202,7 +204,6 @@ CREATE INDEX idx_ydsz_flow_template_tenant_is_deleted ON ydsz_flow_template (ten
 
 CREATE TABLE ydsz_flow_node (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     node_type                NUMBER(10)               NOT NULL,
@@ -217,14 +218,16 @@ CREATE TABLE ydsz_flow_node (
     sla_config               CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_node_sla_config CHECK (sla_config IS JSON),
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_node PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_node_definition_node_code UNIQUE (definition_id, node_code)
+    CONSTRAINT uk_ydsz_flow_node_definition_node_code UNIQUE (definition_id, node_code),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_node IS '流程节点表（流程定义结构最小单元）';
@@ -256,7 +259,6 @@ CREATE INDEX idx_ydsz_flow_node_tenant_is_deleted ON ydsz_flow_node (tenant_id, 
 
 CREATE TABLE ydsz_flow_skip (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     skip_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
@@ -271,13 +273,15 @@ CREATE TABLE ydsz_flow_skip (
     ext                      CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_flow_skip_ext CHECK (ext IS JSON),
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_skip PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_skip PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_skip IS '节点跳转关联表（流程图有向边）';
@@ -311,21 +315,21 @@ CREATE INDEX idx_ydsz_flow_skip_tenant_is_deleted ON ydsz_flow_skip (tenant_id, 
 
 CREATE TABLE ydsz_flow_auto_trigger (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     source_flow_code         VARCHAR2(64 CHAR)        NOT NULL,
     target_flow_code         VARCHAR2(64 CHAR)        NOT NULL,
     condition_expression     VARCHAR2(512 CHAR)       DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     is_enabled                  NUMBER(10)               NOT NULL DEFAULT 1,
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_auto_trigger PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_auto_trigger PRIMARY KEY (id),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_auto_trigger IS '流程自动触发规则表（流程触发流程的自动化配置）';
@@ -352,7 +356,6 @@ CREATE INDEX idx_ydsz_flow_auto_trigger_tenant_is_deleted ON ydsz_flow_auto_trig
 
 CREATE TABLE ydsz_flow_instance (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       NOT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
@@ -377,14 +380,16 @@ CREATE TABLE ydsz_flow_instance (
     due_at                   TIMESTAMP                DEFAULT NULL,
     reject_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_instance PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_instance_business_type_id UNIQUE (business_type, business_id)
+    CONSTRAINT uk_ydsz_flow_instance_business_type_id UNIQUE (business_type, business_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_instance IS '流程实例表（一次完整流程审批的运行时上下文）';
@@ -427,7 +432,6 @@ CREATE INDEX idx_ydsz_flow_instance_tenant_is_deleted ON ydsz_flow_instance (ten
 
 CREATE TABLE ydsz_flow_run_task (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
@@ -469,14 +473,16 @@ CREATE TABLE ydsz_flow_run_task (
     iter_var                 VARCHAR2(128 CHAR)       DEFAULT '' NOT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_run_task PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_run_task_instance_node_assignee UNIQUE (instance_id, node_code, assignee_id, iter_var)
+    CONSTRAINT uk_ydsz_flow_run_task_instance_node_assignee UNIQUE (instance_id, node_code, assignee_id, iter_var),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_run_task IS '待办任务运行表（我的待办核心查询表）';
@@ -534,7 +540,6 @@ CREATE INDEX idx_ydsz_flow_run_task_tenant_is_deleted ON ydsz_flow_run_task (ten
 
 CREATE TABLE ydsz_flow_user (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     task_id                  VARCHAR2(32 CHAR)        NOT NULL,
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     node_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -548,14 +553,16 @@ CREATE TABLE ydsz_flow_user (
     sign_type                VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ORIGINAL',
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_user PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_user_task_user UNIQUE (task_id, user_id, sign_type)
+    CONSTRAINT uk_ydsz_flow_user_task_user UNIQUE (task_id, user_id, sign_type),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_user IS '流程任务-办理人关系表（会签/加签多对多关系）';
@@ -586,7 +593,6 @@ CREATE INDEX idx_ydsz_flow_user_tenant_is_deleted ON ydsz_flow_user (tenant_id, 
 
 CREATE TABLE ydsz_flow_timer (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -601,13 +607,15 @@ CREATE TABLE ydsz_flow_timer (
     cancel_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_timer PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_timer PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_timer IS '工作流定时器表（中间/边界定时器调度）';
@@ -641,7 +649,6 @@ CREATE INDEX idx_ydsz_flow_timer_tenant_is_deleted ON ydsz_flow_timer (tenant_id
 
 CREATE TABLE ydsz_flow_event_subscription (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -658,13 +665,15 @@ CREATE TABLE ydsz_flow_event_subscription (
     cancel_reason            VARCHAR2(512 CHAR)       DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_event_subscription PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_event_subscription PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_event_subscription IS '工作流事件订阅表（消息/错误/信号事件运行时等待）';
@@ -701,7 +710,6 @@ CREATE INDEX idx_ydsz_flow_event_subscription_tenant_is_deleted ON ydsz_flow_eve
 
 CREATE TABLE ydsz_flow_his_task (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        NOT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -730,13 +738,15 @@ CREATE TABLE ydsz_flow_his_task (
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     iter_var                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_his_task PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_his_task PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_his_task IS '历史任务表（已完成任务归档，按月分区）';
@@ -785,7 +795,6 @@ CREATE INDEX idx_ydsz_flow_his_task_tenant_is_deleted ON ydsz_flow_his_task (ten
 
 CREATE TABLE ydsz_flow_his_instance (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
     flow_name                VARCHAR2(128 CHAR)       DEFAULT NULL,
     definition_id            VARCHAR2(32 CHAR)        NOT NULL,
@@ -807,14 +816,16 @@ CREATE TABLE ydsz_flow_his_instance (
     archived_at              TIMESTAMP                DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_his_instance PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_his_instance_business_type_id UNIQUE (business_type, business_id)
+    CONSTRAINT uk_ydsz_flow_his_instance_business_type_id UNIQUE (business_type, business_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_his_instance IS '历史流程实例表（终态实例冷数据归档，按月分区）';
@@ -853,7 +864,6 @@ CREATE INDEX idx_ydsz_flow_his_instance_end_at ON ydsz_flow_his_instance (end_at
 
 CREATE TABLE ydsz_flow_comment (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -866,13 +876,15 @@ CREATE TABLE ydsz_flow_comment (
     reply_to_user_name       VARCHAR2(64 CHAR)        DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_comment PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_comment PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_comment IS '流程评论表（审批人沟通讨论，支持多级回复）';
@@ -903,7 +915,6 @@ CREATE INDEX idx_ydsz_flow_comment_tenant_is_deleted ON ydsz_flow_comment (tenan
 
 CREATE TABLE ydsz_flow_quick_comment (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     content                  VARCHAR2(500 CHAR)       NOT NULL,
     comment_type             VARCHAR2(32 CHAR)        DEFAULT NULL,
@@ -911,13 +922,15 @@ CREATE TABLE ydsz_flow_quick_comment (
     use_count                NUMBER(10)               NOT NULL DEFAULT 0,
     is_system                NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_quick_comment PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_quick_comment PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_quick_comment IS '审批常用语表（用户预设常用审批意见）';
@@ -944,7 +957,6 @@ CREATE INDEX idx_ydsz_flow_quick_comment_tenant_is_deleted ON ydsz_flow_quick_co
 
 CREATE TABLE ydsz_flow_cc (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -963,13 +975,15 @@ CREATE TABLE ydsz_flow_cc (
     read_at                  TIMESTAMP                DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_cc PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_cc PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_cc IS '流程抄送表（抄送中心通知记录）';
@@ -1007,7 +1021,6 @@ CREATE INDEX idx_ydsz_flow_cc_tenant_is_deleted ON ydsz_flow_cc (tenant_id, is_d
 
 CREATE TABLE ydsz_flow_cc_rule (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     flow_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
     rule_type                VARCHAR2(32 CHAR)        NOT NULL,
@@ -1015,13 +1028,15 @@ CREATE TABLE ydsz_flow_cc_rule (
     is_enabled                  NUMBER(10)               NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_cc_rule PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_cc_rule PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_cc_rule IS '流程抄送规则表（自动抄送规则配置）';
@@ -1047,7 +1062,6 @@ CREATE INDEX idx_ydsz_flow_cc_rule_tenant_is_deleted ON ydsz_flow_cc_rule (tenan
 
 CREATE TABLE ydsz_flow_attachment (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     node_code                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -1064,13 +1078,15 @@ CREATE TABLE ydsz_flow_attachment (
     md5                      VARCHAR2(64 CHAR)        DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_attachment PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_attachment PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_attachment IS '审批附件表（附件元数据，支持 MD5 秒传）';
@@ -1106,7 +1122,6 @@ CREATE INDEX idx_ydsz_flow_attachment_tenant_is_deleted ON ydsz_flow_attachment 
 
 CREATE TABLE ydsz_flow_delegate_auth (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     owner_user_id            VARCHAR2(32 CHAR)        NOT NULL,
     owner_user_name          VARCHAR2(64 CHAR)        DEFAULT NULL,
     delegate_user_id         VARCHAR2(32 CHAR)        NOT NULL,
@@ -1121,13 +1136,15 @@ CREATE TABLE ydsz_flow_delegate_auth (
     reason                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_delegate_auth PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_delegate_auth PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_delegate_auth IS '流程委派代理表（长期授权规则）';
@@ -1161,7 +1178,6 @@ CREATE INDEX idx_ydsz_flow_delegate_auth_tenant_is_deleted ON ydsz_flow_delegate
 
 CREATE TABLE ydsz_flow_admin_role (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     role_code                VARCHAR2(64 CHAR)        NOT NULL,
     is_enabled               NUMBER(1)                NOT NULL DEFAULT 1,
@@ -1169,14 +1185,16 @@ CREATE TABLE ydsz_flow_admin_role (
     granted_at               TIMESTAMP                DEFAULT NULL,
     expire_at                TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_admin_role PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_flow_admin_role_user_role UNIQUE (user_id, role_code)
+    CONSTRAINT uk_ydsz_flow_admin_role_user_role UNIQUE (user_id, role_code),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_admin_role IS '流程管理员角色映射表（用户-角色多对多）';
@@ -1201,7 +1219,6 @@ CREATE INDEX idx_ydsz_flow_admin_role_tenant_is_deleted ON ydsz_flow_admin_role 
 
 CREATE TABLE ydsz_flow_audit_log (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     instance_id              VARCHAR2(32 CHAR)        NOT NULL,
     task_id                  VARCHAR2(32 CHAR)        DEFAULT NULL,
     flow_code                VARCHAR2(64 CHAR)        NOT NULL,
@@ -1219,13 +1236,15 @@ CREATE TABLE ydsz_flow_audit_log (
     operated_at              TIMESTAMP                NOT NULL,
     provider_trace_id        VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_flow_audit_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_flow_audit_log PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_audit_log IS '流程审计日志表（全生命周期操作轨迹，只追加）';

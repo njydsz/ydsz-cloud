@@ -39,7 +39,6 @@
 
 CREATE TABLE ydsz_msg_template (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
     locale                   VARCHAR2(16 CHAR)        DEFAULT 'zh-CN',
@@ -58,13 +57,16 @@ CREATE TABLE ydsz_msg_template (
     audit_remark             VARCHAR2(512 CHAR)       DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     variable_defs            CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_template_variable_defs CHECK (variable_defs IS JSON),
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_template PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_template_template_code UNIQUE (template_code, tenant_id)
+    CONSTRAINT uk_ydsz_msg_template_template_code UNIQUE (template_code, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_template IS '消息模板主表';
@@ -100,7 +102,6 @@ CREATE INDEX idx_ydsz_msg_template_tenant_is_deleted ON ydsz_msg_template (tenan
 
 CREATE TABLE ydsz_msg_template_version (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
     content                  CLOB                     NOT NULL,
@@ -109,14 +110,16 @@ CREATE TABLE ydsz_msg_template_version (
     auditor                  VARCHAR2(64 CHAR)        DEFAULT NULL,
     audit_remark             VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_template_version PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_template_version_tpl_version UNIQUE (template_code, version)
+    CONSTRAINT uk_ydsz_msg_template_version_tpl_version UNIQUE (template_code, version),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_template_version IS '消息模板版本历史表';
@@ -141,7 +144,6 @@ CREATE INDEX idx_ydsz_msg_template_version_tenant_is_deleted ON ydsz_msg_templat
 
 CREATE TABLE ydsz_msg_notification (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     title                    VARCHAR2(255 CHAR)       NOT NULL,
     content                  CLOB                    ,
     level                    VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'INFO',
@@ -164,12 +166,16 @@ CREATE TABLE ydsz_msg_notification (
     recall_at                TIMESTAMP                DEFAULT NULL,
     expired_at               TIMESTAMP                DEFAULT NULL,
     mention_user_ids         CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_notification_mention_user_ids CHECK (mention_user_ids IS JSON),
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_msg_notification PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_msg_notification PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_notification IS '站内通知表';
@@ -211,7 +217,6 @@ CREATE INDEX idx_ydsz_msg_notification_tenant_is_deleted ON ydsz_msg_notificatio
 
 CREATE TABLE ydsz_msg_user_channel (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     channel_type             VARCHAR2(32 CHAR)        NOT NULL,
     channel_user_id          VARCHAR2(128 CHAR)       NOT NULL,
@@ -219,14 +224,16 @@ CREATE TABLE ydsz_msg_user_channel (
     is_primary               NUMBER(1)                NOT NULL DEFAULT 0,
     extra                    CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_user_channel_extra CHECK (extra IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_user_channel PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_user_channel_user_channel UNIQUE (user_id, channel_type, channel_user_id)
+    CONSTRAINT uk_ydsz_msg_user_channel_user_channel UNIQUE (user_id, channel_type, channel_user_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_user_channel IS '用户通道绑定表';
@@ -251,7 +258,6 @@ CREATE INDEX idx_ydsz_msg_user_channel_tenant_is_deleted ON ydsz_msg_user_channe
 
 CREATE TABLE ydsz_msg_subscription (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     topic_code               VARCHAR2(64 CHAR)        NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -259,14 +265,16 @@ CREATE TABLE ydsz_msg_subscription (
     role_scope               VARCHAR2(128 CHAR)       DEFAULT NULL,
     extra                    CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_subscription_extra CHECK (extra IS JSON),
     unsubscribed_at          TIMESTAMP                DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_subscription PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_subscription_subscription UNIQUE (user_id, topic_code, channel)
+    CONSTRAINT uk_ydsz_msg_subscription_subscription UNIQUE (user_id, topic_code, channel),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_subscription IS '订阅关系表';
@@ -291,7 +299,6 @@ CREATE INDEX idx_ydsz_msg_subscription_tenant_is_deleted ON ydsz_msg_subscriptio
 
 CREATE TABLE ydsz_msg_preference (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
     biz_type                 VARCHAR2(64 CHAR)        NOT NULL DEFAULT '__DEFAULT__',
@@ -306,14 +313,16 @@ CREATE TABLE ydsz_msg_preference (
     locale                   VARCHAR2(16 CHAR)        DEFAULT NULL,
     extra                    CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_preference_extra CHECK (extra IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_preference PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_preference_preference UNIQUE (user_id, channel, biz_type)
+    CONSTRAINT uk_ydsz_msg_preference_preference UNIQUE (user_id, channel, biz_type),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_preference IS '用户消息偏好表';
@@ -344,7 +353,6 @@ CREATE INDEX idx_ydsz_msg_preference_tenant_is_deleted ON ydsz_msg_preference (t
 
 CREATE TABLE ydsz_msg_route_rule (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_code                VARCHAR2(64 CHAR)        NOT NULL,
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     biz_type                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -354,16 +362,17 @@ CREATE TABLE ydsz_msg_route_rule (
     target_channel           VARCHAR2(32 CHAR)        NOT NULL,
     fallback_channel         VARCHAR2(32 CHAR)        DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
-    sort               NUMBER(10)               DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_route_rule PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_route_rule_rule_code UNIQUE (rule_code, tenant_id)
+    CONSTRAINT uk_ydsz_msg_route_rule_rule_code UNIQUE (rule_code, tenant_id),
+    sort NUMBER(10)               DEFAULT NULL,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_route_rule IS '消息路由规则表';
@@ -392,7 +401,6 @@ CREATE INDEX idx_ydsz_msg_route_rule_tenant_is_deleted ON ydsz_msg_route_rule (t
 
 CREATE TABLE ydsz_msg_variable_source (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
     variable_name            VARCHAR2(64 CHAR)        NOT NULL,
     source_type              VARCHAR2(32 CHAR)        NOT NULL,
@@ -400,14 +408,16 @@ CREATE TABLE ydsz_msg_variable_source (
     cache_ttl                NUMBER(10)               DEFAULT NULL,
     description              VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_variable_source PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_variable_source_variable UNIQUE (template_code, variable_name)
+    CONSTRAINT uk_ydsz_msg_variable_source_variable UNIQUE (template_code, variable_name),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_variable_source IS '消息变量数据源绑定表';
@@ -431,7 +441,6 @@ CREATE INDEX idx_ydsz_msg_variable_source_tenant_is_deleted ON ydsz_msg_variable
 
 CREATE TABLE ydsz_msg_canary (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     canary_key               VARCHAR2(128 CHAR)       NOT NULL,
     experiment_name          VARCHAR2(128 CHAR)       NOT NULL,
     template_code            VARCHAR2(64 CHAR)        NOT NULL,
@@ -442,14 +451,16 @@ CREATE TABLE ydsz_msg_canary (
     experiment_group         VARCHAR2(32 CHAR)        DEFAULT NULL,
     metrics_goal             VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ACTIVE',
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_canary PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_canary_canary_key UNIQUE (canary_key)
+    CONSTRAINT uk_ydsz_msg_canary_canary_key UNIQUE (canary_key),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_canary IS '灰度实验表';
@@ -477,7 +488,6 @@ CREATE INDEX idx_ydsz_msg_canary_tenant_is_deleted ON ydsz_msg_canary (tenant_id
 
 CREATE TABLE ydsz_msg_tenant_config (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL,
     tenant_name              VARCHAR2(128 CHAR)       DEFAULT NULL,
     daily_limit              NUMBER(19)               DEFAULT NULL,
     hourly_limit             NUMBER(19)               DEFAULT NULL,
@@ -485,7 +495,15 @@ CREATE TABLE ydsz_msg_tenant_config (
     provider_overrides       CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_tenant_config_provider_overrides CHECK (provider_overrides IS JSON),
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ENABLED',
     CONSTRAINT pk_ydsz_msg_tenant_config PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_tenant_config_tenant_id UNIQUE (tenant_id)
+    CONSTRAINT uk_ydsz_msg_tenant_config_tenant_id UNIQUE (tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL,
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_msg_tenant_config IS '多租户消息配置表';
@@ -501,7 +519,6 @@ COMMENT ON COLUMN ydsz_msg_tenant_config.status IS '配置状态: ENABLED / DISA
 
 CREATE TABLE ydsz_msg_batch (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     batch_id                 VARCHAR2(64 CHAR)        NOT NULL,
     batch_name               VARCHAR2(128 CHAR)       DEFAULT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -518,14 +535,16 @@ CREATE TABLE ydsz_msg_batch (
     completed_at             TIMESTAMP                DEFAULT NULL,
     sender_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
     payload                  CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_batch_payload CHECK (payload IS JSON),
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_batch PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_msg_batch_batch_id UNIQUE (batch_id)
+    CONSTRAINT uk_ydsz_msg_batch_batch_id UNIQUE (batch_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_batch IS '消息发送批次表';
@@ -560,7 +579,6 @@ CREATE INDEX idx_ydsz_msg_batch_tenant_is_deleted ON ydsz_msg_batch (tenant_id, 
 
 CREATE TABLE ydsz_msg_aggregate (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     aggregate_group          VARCHAR2(64 CHAR)        NOT NULL,
     receiver                 VARCHAR2(128 CHAR)       NOT NULL,
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -572,13 +590,15 @@ CREATE TABLE ydsz_msg_aggregate (
     sent_at                  TIMESTAMP                DEFAULT NULL,
     digest_content           CLOB                    ,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_msg_aggregate PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_msg_aggregate PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_aggregate IS '聚合批次表';
@@ -609,7 +629,6 @@ CREATE INDEX idx_ydsz_msg_aggregate_tenant_is_deleted ON ydsz_msg_aggregate (ten
 
 CREATE TABLE ydsz_msg_offline (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
     msg_type                 VARCHAR2(32 CHAR)        DEFAULT NULL,
     payload                  CLOB                     NOT NULL CONSTRAINT ck_ydsz_msg_offline_payload CHECK (payload IS JSON),
@@ -617,13 +636,15 @@ CREATE TABLE ydsz_msg_offline (
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PENDING',
     pushed_at                TIMESTAMP                DEFAULT NULL,
     expired_at               TIMESTAMP                DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_msg_offline PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_msg_offline PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_offline IS '离线消息持久化表';
@@ -649,7 +670,6 @@ CREATE INDEX idx_ydsz_msg_offline_tenant_is_deleted ON ydsz_msg_offline (tenant_
 
 CREATE TABLE ydsz_msg_log (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     channel                  VARCHAR2(32 CHAR)        NOT NULL,
     biz_type                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     biz_id                   VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -682,12 +702,15 @@ CREATE TABLE ydsz_msg_log (
     reconsume_times          NUMBER(10)               DEFAULT NULL,
     parent_msg_id            VARCHAR2(64 CHAR)        DEFAULT NULL,
     scheduled_at             TIMESTAMP                DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_msg_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_msg_log PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_log IS '消息发送日志表';
@@ -745,7 +768,6 @@ CREATE INDEX idx_ydsz_msg_log_tenant_is_deleted ON ydsz_msg_log (tenant_id, is_d
 
 CREATE TABLE ydsz_msg_receipt (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     log_id                   VARCHAR2(32 CHAR)        NOT NULL,
     provider_trace_id        VARCHAR2(128 CHAR)       DEFAULT NULL,
     receipt_type             VARCHAR2(32 CHAR)        NOT NULL,
@@ -754,13 +776,15 @@ CREATE TABLE ydsz_msg_receipt (
     provider_msg             VARCHAR2(512 CHAR)       DEFAULT NULL,
     raw_response             CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_receipt_raw_response CHECK (raw_response IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_msg_receipt PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_msg_receipt PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_receipt IS '消息回执表';
@@ -801,7 +825,15 @@ CREATE TABLE ydsz_msg_trace (
     message                  VARCHAR2(512 CHAR)       DEFAULT NULL,
     extra                    CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_msg_trace_extra CHECK (extra IS JSON),
     event_at                 TIMESTAMP                NOT NULL,
-    CONSTRAINT pk_ydsz_msg_trace PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_msg_trace PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_msg_trace IS '消息轨迹表';
@@ -827,7 +859,6 @@ CREATE INDEX idx_ydsz_msg_trace_event_at ON ydsz_msg_trace (event_at);
 
 CREATE TABLE ydsz_msg_feedback (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     msg_id                   VARCHAR2(64 CHAR)        NOT NULL,
     notification_id          VARCHAR2(32 CHAR)        DEFAULT NULL,
     user_id                  VARCHAR2(32 CHAR)        NOT NULL,
@@ -837,13 +868,15 @@ CREATE TABLE ydsz_msg_feedback (
     feedback_type            VARCHAR2(32 CHAR)        DEFAULT NULL,
     content                  VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_msg_feedback PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_msg_feedback PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_msg_feedback IS '消息用户反馈表';
@@ -875,12 +908,18 @@ CREATE TABLE ydsz_msg_outbox (
     aggregate_id             VARCHAR2(128 CHAR)       NOT NULL,
     event_type               VARCHAR2(128 CHAR)       NOT NULL,
     payload                  CLOB                     NOT NULL CONSTRAINT ck_ydsz_msg_outbox_payload CHECK (payload IS JSON),
-    tenant_id                VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PENDING',
     publish_attempts         NUMBER(10)               NOT NULL DEFAULT 0,
     published_at             TIMESTAMP                DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_msg_outbox PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_msg_outbox PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        DEFAULT NULL,
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_msg_outbox IS 'Outbox 事件表（事务性 Outbox 模式）';

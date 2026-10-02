@@ -28,10 +28,17 @@ CREATE TABLE ydsz_gen_datasource (
     dialect                  VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'ORACLE',
     is_default               NUMBER(1)                NOT NULL DEFAULT 0,
     description              VARCHAR2(255 CHAR)       DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_gen_datasource PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_gen_datasource_name UNIQUE (name)
+    CONSTRAINT uk_ydsz_gen_datasource_name UNIQUE (name),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_gen_datasource IS '代码生成器数据源配置';
@@ -56,12 +63,18 @@ CREATE TABLE ydsz_gen_template_group (
     name                     VARCHAR2(64 CHAR)        NOT NULL,
     description              VARCHAR2(255 CHAR)       DEFAULT NULL,
     is_system               NUMBER(1)                NOT NULL DEFAULT 0,
-    sort               NUMBER(10)               NOT NULL DEFAULT 0,
-    is_active                NUMBER(1)                NOT NULL DEFAULT 1,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    active_flag                NUMBER(1)                NOT NULL DEFAULT 1,
     CONSTRAINT pk_ydsz_gen_template_group PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_gen_template_group_name UNIQUE (name)
+    CONSTRAINT uk_ydsz_gen_template_group_name UNIQUE (name),
+    sort NUMBER(10)               NOT NULL DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_gen_template_group IS '代码生成器模板分组';
@@ -70,7 +83,7 @@ COMMENT ON COLUMN ydsz_gen_template_group.name IS '分组名（唯一标识，�
 COMMENT ON COLUMN ydsz_gen_template_group.description IS '分组描述';
 COMMENT ON COLUMN ydsz_gen_template_group.is_system IS '是否为系统分组（0=否 1=是，系统分组不可删除）';
 COMMENT ON COLUMN ydsz_gen_template_group.sort IS '排序序号（升序）';
-COMMENT ON COLUMN ydsz_gen_template_group.is_active IS '是否激活为当前使用分组（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_template_group.active_flag IS '是否激活为当前使用分组（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_template_group.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_gen_template_group.updated_at IS '更新时间';
 
@@ -89,13 +102,20 @@ CREATE TABLE ydsz_gen_template (
     parent_path              VARCHAR2(512 CHAR)       NOT NULL DEFAULT '',
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     hash                     CHAR(32)                 DEFAULT NULL,
-    is_active                NUMBER(1)                NOT NULL DEFAULT 1,
+    active_flag                NUMBER(1)                NOT NULL DEFAULT 1,
     file_type                VARCHAR2(16 CHAR)        NOT NULL DEFAULT 'BACKEND',
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_gen_template PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_gen_template_group_file UNIQUE (group_id, file_name),
-    CONSTRAINT fk_ydsz_gen_template_group FOREIGN KEY (group_id) REFERENCES ydsz_gen_template_group (id)
+    CONSTRAINT fk_ydsz_gen_template_group FOREIGN KEY (group_id) REFERENCES ydsz_gen_template_group (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_gen_template IS '代码生成器模板';
@@ -108,7 +128,7 @@ COMMENT ON COLUMN ydsz_gen_template.is_folder IS '是否为虚拟文件夹标记
 COMMENT ON COLUMN ydsz_gen_template.parent_path IS '父路径（如 vue/ 表示前端子目录）';
 COMMENT ON COLUMN ydsz_gen_template.version IS '当前版本号';
 COMMENT ON COLUMN ydsz_gen_template.hash IS '内容 MD5 哈希（版本对比用）';
-COMMENT ON COLUMN ydsz_gen_template.is_active IS '是否启用（0=否 1=是）';
+COMMENT ON COLUMN ydsz_gen_template.active_flag IS '是否启用（0=否 1=是）';
 COMMENT ON COLUMN ydsz_gen_template.file_type IS '模板类型（BACKEND/FRONTEND）';
 COMMENT ON COLUMN ydsz_gen_template.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_gen_template.updated_at IS '更新时间';
@@ -135,7 +155,15 @@ CREATE TABLE ydsz_gen_history (
     gen_params               CLOB                     DEFAULT NULL,
     CONSTRAINT pk_ydsz_gen_history PRIMARY KEY (id),
     CONSTRAINT fk_ydsz_gen_history_datasource FOREIGN KEY (datasource_id) REFERENCES ydsz_gen_datasource (id),
-    CONSTRAINT fk_ydsz_gen_history_template_group FOREIGN KEY (template_group_id) REFERENCES ydsz_gen_template_group (id)
+    CONSTRAINT fk_ydsz_gen_history_template_group FOREIGN KEY (template_group_id) REFERENCES ydsz_gen_template_group (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_gen_history IS '代码生成任务历史';
@@ -168,7 +196,16 @@ CREATE TABLE ydsz_gen_history_file (
     file_hash                CHAR(32)                 DEFAULT NULL,
     action                   VARCHAR2(16 CHAR)        NOT NULL DEFAULT 'CREATED',
     CONSTRAINT pk_ydsz_gen_history_file PRIMARY KEY (id),
-    CONSTRAINT fk_ydsz_gen_history_file_history FOREIGN KEY (history_id) REFERENCES ydsz_gen_history (id)
+    CONSTRAINT fk_ydsz_gen_history_file_history FOREIGN KEY (history_id) REFERENCES ydsz_gen_history (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydzs_gen_history_file IS '生成历史文件明细';
@@ -196,7 +233,16 @@ CREATE TABLE ydsz_gen_table_meta (
     cached_at                TIMESTAMP                NOT NULL,
     CONSTRAINT pk_ydsz_gen_table_meta PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_gen_table_meta_ds_table UNIQUE (datasource_id, table_name),
-    CONSTRAINT fk_ydsz_gen_table_meta_datasource FOREIGN KEY (datasource_id) REFERENCES ydsz_gen_datasource (id)
+    CONSTRAINT fk_ydsz_gen_table_meta_datasource FOREIGN KEY (datasource_id) REFERENCES ydsz_gen_datasource (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_gen_table_meta IS '表元数据缓存';
@@ -232,7 +278,16 @@ CREATE TABLE ydzs_gen_column_meta (
     extra_config             CLOB                     DEFAULT NULL,
     CONSTRAINT pk_ydsz_gen_column_meta PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_gen_column_meta_table_column UNIQUE (table_meta_id, column_name),
-    CONSTRAINT fk_ydsz_gen_column_meta_table FOREIGN KEY (table_meta_id) REFERENCES ydsz_gen_table_meta (id)
+    CONSTRAINT fk_ydsz_gen_column_meta_table FOREIGN KEY (table_meta_id) REFERENCES ydsz_gen_table_meta (id),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydzs_gen_column_meta IS '列元数据缓存（含人工覆盖配置）';
@@ -263,7 +318,7 @@ USING (SELECT 'default' AS name FROM dual) s
 ON (t.name = s.name)
 WHEN MATCHED THEN UPDATE SET is_system = 1
 WHEN NOT MATCHED THEN
-    INSERT (name, description, is_system, sort, is_active)
+    INSERT (name, description, is_system, sort, active_flag)
     VALUES ('default', '标准 DDD 分层模板（entity/service/controller/repository...）', 1, 1, 1);
 
 MERGE INTO ydsz_gen_template_group t
@@ -271,7 +326,7 @@ USING (SELECT 'mybatis-plus' AS name FROM dual) s
 ON (t.name = s.name)
 WHEN MATCHED THEN UPDATE SET is_system = 1
 WHEN NOT MATCHED THEN
-    INSERT (name, description, is_system, sort, is_active)
+    INSERT (name, description, is_system, sort, active_flag)
     VALUES ('mybatis-plus', 'Mybatis-Plus 增强版模板（含 Wrapper/通用 Service）', 1, 2, 0);
 
 COMMIT;

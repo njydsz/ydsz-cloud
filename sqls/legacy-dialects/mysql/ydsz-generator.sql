@@ -22,10 +22,17 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_datasource (
     dialect             VARCHAR(32)     NOT NULL DEFAULT 'MYSQL' COMMENT '数据库方言（MYSQL/POSTGRESQL/ORACLE）',
     is_default         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为默认数据源（0=否 1=是）',
     description         VARCHAR(255)    DEFAULT NULL COMMENT '数据源描述',
-    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
-    UNIQUE KEY uk_ydsz_gen_datasource_name (name)
+    UNIQUE KEY uk_ydsz_gen_datasource_name (name),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成器数据源配置';
 
 
@@ -38,12 +45,18 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template_group (
     name                VARCHAR(64)     NOT NULL COMMENT '分组名（唯一标识，如 default、mybatis-plus）',
     description         VARCHAR(255)    DEFAULT NULL COMMENT '分组描述',
     is_system          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否为系统分组（0=否 1=是，系统分组不可删除）',
-    sort          INT             NOT NULL DEFAULT 0 COMMENT '排序序号（升序）',
-    is_active          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否激活为当前使用分组（0=否 1=是）',
-    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    active_flag          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否激活为当前使用分组（0=否 1=是）',
     PRIMARY KEY (id),
-    UNIQUE KEY uk_ydsz_gen_template_group_name (name)
+    UNIQUE KEY uk_ydsz_gen_template_group_name (name),
+    sort INT             NOT NULL DEFAULT 0 COMMENT '排序序号（升序）',
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成器模板分组';
 
 
@@ -61,14 +74,21 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template (
     parent_path         VARCHAR(512)    NOT NULL DEFAULT '' COMMENT '父路径（如 vue/ 表示前端子目录）',
     version             INT             NOT NULL DEFAULT 1 COMMENT '当前版本号',
     hash                CHAR(32)        DEFAULT NULL COMMENT '内容 MD5 哈希（版本对比用）',
-    is_active          TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（0=否 1=是）',
+    active_flag          TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（0=否 1=是）',
     file_type           VARCHAR(16)     NOT NULL DEFAULT 'BACKEND' COMMENT '模板类型（BACKEND/FRONTEND）',
-    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_gen_template_group_file (group_id, file_name),
     KEY idx_ydsz_gen_template_group (group_id),
-    CONSTRAINT fk_ydsz_gen_template_group FOREIGN KEY (group_id) REFERENCES ydsz_gen_template_group (id)
+    CONSTRAINT fk_ydsz_gen_template_group FOREIGN KEY (group_id) REFERENCES ydsz_gen_template_group (id),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64),
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成器模板';
 
 
@@ -93,7 +113,15 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history (
     KEY idx_ydsz_gen_history_status (status),
     KEY idx_ydsz_gen_history_started (started_at),
     CONSTRAINT fk_ydsz_gen_history_datasource FOREIGN KEY (datasource_id) REFERENCES ydsz_gen_datasource (id),
-    CONSTRAINT fk_ydsz_gen_history_template_group FOREIGN KEY (template_group_id) REFERENCES ydsz_gen_template_group (id)
+    CONSTRAINT fk_ydsz_gen_history_template_group FOREIGN KEY (template_group_id) REFERENCES ydsz_gen_template_group (id),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='代码生成任务历史';
 
 
@@ -110,7 +138,16 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history_file (
     action              VARCHAR(16)     NOT NULL DEFAULT 'CREATED' COMMENT '文件操作类型（CREATED/UPDATED/UNCHANGED）',
     PRIMARY KEY (id),
     KEY idx_ydsz_gen_history_file_history (history_id),
-    CONSTRAINT fk_ydsz_gen_history_file_history FOREIGN KEY (history_id) REFERENCES ydsz_gen_history (id)
+    CONSTRAINT fk_ydsz_gen_history_file_history FOREIGN KEY (history_id) REFERENCES ydsz_gen_history (id),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生成历史文件明细';
 
 
@@ -129,7 +166,16 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_table_meta (
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_gen_table_meta_ds_table (datasource_id, table_name),
     KEY idx_ydsz_gen_table_meta_datasource (datasource_id),
-    CONSTRAINT fk_ydsz_gen_table_meta_datasource FOREIGN KEY (datasource_id) REFERENCES ydsz_gen_datasource (id)
+    CONSTRAINT fk_ydsz_gen_table_meta_datasource FOREIGN KEY (datasource_id) REFERENCES ydsz_gen_datasource (id),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表元数据缓存';
 
 
@@ -155,7 +201,16 @@ CREATE TABLE IF NOT EXISTS ydzs_gen_column_meta (
     PRIMARY KEY (id),
     UNIQUE KEY uk_ydsz_gen_column_meta_table_column (table_meta_id, column_name),
     KEY idx_ydsz_gen_column_meta_table (table_meta_id),
-    CONSTRAINT fk_ydsz_gen_column_meta_table FOREIGN KEY (table_meta_id) REFERENCES ydsz_gen_table_meta (id)
+    CONSTRAINT fk_ydsz_gen_column_meta_table FOREIGN KEY (table_meta_id) REFERENCES ydsz_gen_table_meta (id),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='列元数据缓存（含人工覆盖配置）';
 
 
@@ -164,11 +219,11 @@ CREATE TABLE IF NOT EXISTS ydzs_gen_column_meta (
 -- ============================================================================
 
 -- 默认 DDD 模板分组
-INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, is_active)
+INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, active_flag)
 VALUES ('default', '标准 DDD 分层模板（entity/service/controller/repository...）', 1, 1, 1)
 ON DUPLICATE KEY UPDATE is_system = is_system;
 
 -- Mybatis-Plus 模板分组（预留）
-INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, is_active)
+INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, active_flag)
 VALUES ('mybatis-plus', 'Mybatis-Plus 增强版模板（含 Wrapper/通用 Service）', 1, 2, 0)
 ON DUPLICATE KEY UPDATE is_system = is_system;

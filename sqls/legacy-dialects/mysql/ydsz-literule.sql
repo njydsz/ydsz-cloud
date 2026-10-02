@@ -12,7 +12,6 @@
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     id                          VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id                   VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code                   VARCHAR(64)     NOT NULL COMMENT '规则编码，业务唯一',
     rule_name                   VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category                    VARCHAR(64)     DEFAULT NULL COMMENT '规则分类编码（一级分类标识）',
@@ -41,15 +40,17 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     canary_condition_expression TEXT            COMMENT '灰度候选版本条件表达式',
     canary_severity_expression  TEXT            COMMENT '灰度候选版本严重度表达式',
     is_deleted                     TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision                    INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at                  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by                  VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by                  VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_code UNIQUE (rule_code, tenant_id),
     INDEX idx_category (category),
     INDEX idx_status (status),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='LiteRule 规则定义主表';
 
 -- ============================================================================
@@ -58,7 +59,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     id              VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id       VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     var_name        VARCHAR(128)    NOT NULL COMMENT '变量名（如 cpi / budgetAmount / evmRedCount）',
     var_type        VARCHAR(32)     DEFAULT NULL COMMENT '变量类型（Number / String 等）',
     description     VARCHAR(512)    DEFAULT NULL COMMENT '变量描述（中文，供前端编辑器提示）',
@@ -68,19 +68,20 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     is_enabled      TINYINT(1)      NOT NULL DEFAULT 1 COMMENT '是否启用（1=启用，0=停用）',
     status          VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision        INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by      VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by      VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_var_name UNIQUE (var_name, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则变量定义表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     id                    VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id             VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     template_code         VARCHAR(64)     NOT NULL COMMENT '模板编码，业务唯一',
     template_name         VARCHAR(128)    NOT NULL COMMENT '模板名称',
     category              VARCHAR(64)     DEFAULT NULL COMMENT '分类编码',
@@ -96,14 +97,16 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     tags                  VARCHAR(512)    DEFAULT NULL COMMENT '标签，逗号分隔',
     status                VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted               TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision              INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at            DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by            VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by            VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_template_code UNIQUE (template_code, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='LiteRule 规则模板表';
 
 -- ============================================================================
@@ -112,7 +115,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_template (
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     id               VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id        VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code        VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name        VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category         VARCHAR(64)     DEFAULT NULL COMMENT '规则分类',
@@ -127,18 +129,19 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     provider_trace_id VARCHAR(64)    DEFAULT NULL COMMENT '供应商侧追踪 ID',
     status           VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision         INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by       VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by       VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_rule_code (rule_code),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则脚本表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     id                VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id         VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     table_code        VARCHAR(64)     NOT NULL COMMENT '决策表编码',
     table_name        VARCHAR(128)    NOT NULL COMMENT '决策表名称',
     description       VARCHAR(512)    DEFAULT NULL COMMENT '描述',
@@ -153,19 +156,20 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     version           INT             NOT NULL DEFAULT 1 COMMENT '版本',
     status            VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision          INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by        VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by        VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_table_code UNIQUE (table_code, tenant_id),
     INDEX idx_category (category),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='决策表实体表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     id                VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id         VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code         VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name         VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category          VARCHAR(64)     DEFAULT NULL COMMENT '规则分类',
@@ -178,18 +182,19 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     provider_trace_id VARCHAR(64)     DEFAULT NULL COMMENT '供应商侧追踪 ID',
     status            VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision          INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by        VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by        VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_rule_code (rule_code),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则决策树表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     id                VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id         VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code         VARCHAR(64)     NOT NULL COMMENT '规则编码',
     rule_name         VARCHAR(128)    NOT NULL COMMENT '规则名称',
     category          VARCHAR(64)     DEFAULT NULL COMMENT '规则分类（RISK / QUALITY / PROFIT 等）',
@@ -205,14 +210,16 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     provider_trace_id VARCHAR(64)     DEFAULT NULL COMMENT '供应商侧追踪 ID',
     status            VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted           TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision          INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by        VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by        VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_rule_code (rule_code),
     INDEX idx_category (category),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则评分卡表';
 
 -- ============================================================================
@@ -221,7 +228,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
     id            VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id     VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code     VARCHAR(64)     NOT NULL COMMENT '关联规则编码（一对一）',
     name          VARCHAR(128)    NOT NULL COMMENT '画布名称',
     description   VARCHAR(512)    DEFAULT NULL COMMENT '画布描述',
@@ -230,18 +236,19 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
     status        VARCHAR(32)     DEFAULT NULL COMMENT '画布状态（DRAFT/PUBLISHED/ARCHIVED）',
     content_json  JSON            DEFAULT NULL COMMENT '画布内容 JSON（包含 nodes/edges/viewport/metadata）',
     is_deleted       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision      INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by    VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by    VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_code UNIQUE (rule_code, tenant_id),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则链画布表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
     id                   VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id            VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code            VARCHAR(64)     NOT NULL COMMENT '主规则编码（依赖方）',
     depends_on_rule_code VARCHAR(64)     NOT NULL COMMENT '被依赖的规则编码',
     dependency_type      VARCHAR(32)     NOT NULL COMMENT '依赖类型（EXECUTE/READ_RESULT/SOFT）',
@@ -249,14 +256,16 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
     description          VARCHAR(512)    DEFAULT NULL COMMENT '依赖说明',
     status               VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted              TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision             INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by           VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by           VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_dep UNIQUE (rule_code, depends_on_rule_code),
     INDEX idx_depends_on_rule_code (depends_on_rule_code),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则依赖关系表';
 
 -- ============================================================================
@@ -265,7 +274,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     id               VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id        VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     pack_code        VARCHAR(64)     NOT NULL COMMENT '规则集编码（全局唯一，用于版本间关联）',
     pack_version     VARCHAR(32)     NOT NULL COMMENT '规则集版本号（如 26.10.01）',
     pack_name        VARCHAR(128)    NOT NULL COMMENT '规则集名称',
@@ -282,33 +290,36 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     is_official         TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '是否官方认证规则集（1=官方发布，0=社区贡献）',
     status           VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted          TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision         INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by       VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by       VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_pack_code UNIQUE (pack_code, pack_version),
     INDEX idx_pack_code (pack_code),
     INDEX idx_industry (industry),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则集（知识包）表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
     id            VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id     VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     installed_by  VARCHAR(64)     DEFAULT NULL COMMENT '安装操作人 ID',
     installed_at  DATETIME        DEFAULT NULL COMMENT '安装时间',
     status        VARCHAR(32)     DEFAULT NULL COMMENT '安装状态（INSTALLING/INSTALLED/FAILED/UNINSTALLING/UNINSTALLED）',
     error_message TEXT            COMMENT '失败原因（status=FAILED 时记录异常信息）',
     is_deleted       TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision      INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at    DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by    VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by    VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_status (status),
     INDEX idx_installed_at (installed_at),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则包安装记录表';
 
 -- ============================================================================
@@ -317,7 +328,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     id                   VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id            VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code            VARCHAR(64)     NOT NULL COMMENT '关联规则编码（一对一）',
     is_auto_rollback_is_enabled TINYINT(1)     NOT NULL DEFAULT 0 COMMENT '是否启用自动回滚（1=启用，0=停用）',
     rollback_action      VARCHAR(32)     DEFAULT NULL COMMENT 'is_owner）',
@@ -330,37 +340,39 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     last_rollback_at     DATETIME        DEFAULT NULL COMMENT '最近一次回滚时间',
     status               VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted              TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision             INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by           VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by           VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_code UNIQUE (rule_code, tenant_id),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AB Test 自动回滚策略表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
     id           VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id    VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code    VARCHAR(64)     NOT NULL COMMENT '规则编码',
     bucket_type  VARCHAR(32)     NOT NULL COMMENT '桶类型（PRIMARY/CANARY）',
     bucket_count BIGINT          NOT NULL DEFAULT 0 COMMENT '桶命中次数',
     stat_date    DATE            NOT NULL COMMENT '统计日期',
     status       VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted      TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision     INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by   VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by   VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     CONSTRAINT uk_rule_bucket_date UNIQUE (rule_code, bucket_type, stat_date),
     INDEX idx_stat_date (stat_date),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则灰度分桶统计表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     id             VARCHAR(32)     PRIMARY KEY COMMENT '主键 ID（Snowflake）',
-    tenant_id      VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
     rule_code      VARCHAR(64)     NOT NULL COMMENT '规则编码（关联 ydsz_rule_def.rule_code）',
     trigger_reason VARCHAR(32)     NOT NULL COMMENT '触发原因（ERROR_RATE/MANUAL/OWNER_REQUEST）',
     error_rate     DECIMAL(20,6)   DEFAULT NULL COMMENT '回滚时的错误率（triggerReason=ERROR_RATE 时记录）',
@@ -370,14 +382,16 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     notify_status  VARCHAR(32)     DEFAULT NULL COMMENT '通知状态（PENDING/SENT/FAILED，回滚后通知规则责任人）',
     status         VARCHAR(32)     DEFAULT NULL COMMENT '状态标识',
     is_deleted        TINYINT(1)      NOT NULL DEFAULT 0 COMMENT '逻辑删除标识（0=未删除，1=已删除）',
-    revision       INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    created_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '回滚时间',
-    updated_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-    created_by     VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
-    updated_by     VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
     INDEX idx_rule_code (rule_code),
     INDEX idx_created_at (created_at),
-    INDEX idx_tenant_is_deleted (tenant_id, is_deleted)
+    INDEX idx_tenant_is_deleted (tenant_id, is_deleted),
+    sort INT NOT NULL DEFAULT 0,
+    revision INT             NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    tenant_id VARCHAR(32)     NOT NULL DEFAULT '0' COMMENT '租户 ID（多租户隔离）',
+    created_by VARCHAR(64)     DEFAULT NULL COMMENT '创建人',
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '回滚时间',
+    updated_by VARCHAR(64)     DEFAULT NULL COMMENT '最后更新人',
+    updated_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AB Test 回滚历史表';
 
 -- ============================================================================
@@ -391,7 +405,16 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
     definition_json JSON            DEFAULT NULL COMMENT '该版本的规则定义 JSON 快照',
     change_desc     VARCHAR(512)    DEFAULT NULL COMMENT '变更说明',
     operator        VARCHAR(64)     DEFAULT NULL COMMENT '操作人',
-    INDEX idx_rule_version (rule_code, version)
+    INDEX idx_rule_version (rule_code, version),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='LiteRule 规则版本历史表';
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
@@ -407,9 +430,17 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     facts_snapshot   JSON            DEFAULT NULL COMMENT '事实数据快照（JSON 对象）',
     result_snapshot  JSON            DEFAULT NULL COMMENT '结果快照（JSON 对象）',
     error_message    TEXT            COMMENT '错误信息',
-    created_at       DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（P2-2：轨迹写入时间）',
     INDEX idx_trace_id (trace_id),
     INDEX idx_rule_code (rule_code),
     INDEX idx_scenario (scenario),
-    INDEX idx_rule_code_created_at (rule_code, created_at)
+    INDEX idx_rule_code_created_at (rule_code, created_at),
+    sort INT NOT NULL DEFAULT 0,
+    status INT NOT NULL DEFAULT 1,
+    revision INT NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(64) NOT NULL DEFAULT '1',
+    is_deleted TINYINT(1) NOT NULL DEFAULT 0,
+    created_by VARCHAR(64),
+    created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（P2-2：轨迹写入时间）',
+    updated_by VARCHAR(64),
+    updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则执行链路追踪表';

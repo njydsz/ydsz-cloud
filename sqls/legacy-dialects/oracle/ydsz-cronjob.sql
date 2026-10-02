@@ -35,7 +35,6 @@
 
 CREATE TABLE ydsz_job_main (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     job_name                 VARCHAR2(128 CHAR)       NOT NULL,
     job_group                VARCHAR2(128 CHAR)       DEFAULT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
@@ -72,14 +71,16 @@ CREATE TABLE ydsz_job_main (
     canary_ratio             NUMBER(10)               DEFAULT NULL,
     canary_handler           VARCHAR2(128 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_main PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_main_job_key UNIQUE (job_key, tenant_id)
+    CONSTRAINT uk_ydsz_job_main_job_key UNIQUE (job_key, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_main IS '定时任务定义主表';
@@ -134,21 +135,22 @@ CREATE INDEX idx_ydsz_job_main_tenant_is_deleted ON ydsz_job_main (tenant_id, is
 
 CREATE TABLE ydsz_job_glue (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     source_code              CLOB                     NOT NULL,
     language                 VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'GROOVY',
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_glue PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_glue_glue_job_version UNIQUE (job_id, version)
+    CONSTRAINT uk_ydsz_job_glue_glue_job_version UNIQUE (job_id, version),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_glue IS 'GLUE 在线编码版本表';
@@ -171,7 +173,6 @@ CREATE INDEX idx_ydsz_job_glue_tenant_is_deleted ON ydsz_job_glue (tenant_id, is
 
 CREATE TABLE ydsz_job_task (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     log_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
@@ -184,13 +185,15 @@ CREATE TABLE ydsz_job_task (
     exec_node_id             VARCHAR2(64 CHAR)        DEFAULT NULL,
     retry_count              NUMBER(10)               NOT NULL DEFAULT 0,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_job_task PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_job_task PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_task IS 'MapReduce 子任务记录表';
@@ -221,7 +224,6 @@ CREATE INDEX idx_ydsz_job_task_tenant_is_deleted ON ydsz_job_task (tenant_id, is
 
 CREATE TABLE ydsz_job_node (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     node_id                  VARCHAR2(64 CHAR)        NOT NULL,
     app_name                 VARCHAR2(128 CHAR)       DEFAULT NULL,
     host                     VARCHAR2(128 CHAR)       NOT NULL,
@@ -233,14 +235,16 @@ CREATE TABLE ydsz_job_node (
     running_count            NUMBER(10)               NOT NULL DEFAULT 0,
     tags                     CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_node_tags CHECK (tags IS JSON),
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_node PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_node_node_id UNIQUE (node_id)
+    CONSTRAINT uk_ydsz_job_node_node_id UNIQUE (node_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_node IS '调度节点心跳表';
@@ -285,7 +289,16 @@ CREATE TABLE ydsz_job_history (
     changed_at               TIMESTAMP                DEFAULT NULL,
     is_history_deleted          NUMBER(1)                NOT NULL DEFAULT 0,
     CONSTRAINT pk_ydsz_job_history PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_history_jh_job_version UNIQUE (job_id, version)
+    CONSTRAINT uk_ydsz_job_history_jh_job_version UNIQUE (job_id, version),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_job_history IS '任务配置历史版本表';
@@ -311,7 +324,6 @@ CREATE INDEX idx_ydsz_job_history_jh_changed_at ON ydsz_job_history (changed_at)
 
 CREATE TABLE ydsz_job_artifact (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
     log_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        NOT NULL,
@@ -323,13 +335,15 @@ CREATE TABLE ydsz_job_artifact (
     metadata                 CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_artifact_metadata CHECK (metadata IS JSON),
     expire_at                TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_job_artifact PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_job_artifact PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_artifact IS '执行产物记录表';
@@ -360,7 +374,6 @@ CREATE INDEX idx_ydsz_job_artifact_tenant_is_deleted ON ydsz_job_artifact (tenan
 
 CREATE TABLE ydsz_job_webhook (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     name                     VARCHAR2(128 CHAR)       NOT NULL,
     event_type               VARCHAR2(64 CHAR)        NOT NULL,
     job_key                  VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -371,13 +384,15 @@ CREATE TABLE ydsz_job_webhook (
     secret                   VARCHAR2(256 CHAR)       DEFAULT NULL,
     webhook_status           VARCHAR2(32 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_job_webhook PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_job_webhook PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_webhook IS 'WebHook 事件订阅表';
@@ -406,7 +421,6 @@ CREATE INDEX idx_ydsz_job_webhook_tenant_is_deleted ON ydsz_job_webhook (tenant_
 
 CREATE TABLE ydsz_job_alert_rule (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     rule_name                VARCHAR2(128 CHAR)       NOT NULL,
     job_id                   VARCHAR2(32 CHAR)        DEFAULT NULL,
     job_key                  VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -421,13 +435,15 @@ CREATE TABLE ydsz_job_alert_rule (
     source_type              VARCHAR2(32 CHAR)        DEFAULT NULL,
     last_alert_at            TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_job_alert_rule PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_job_alert_rule PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_alert_rule IS '任务告警规则表';
@@ -460,20 +476,21 @@ CREATE INDEX idx_ydsz_job_alert_rule_tenant_is_deleted ON ydsz_job_alert_rule (t
 
 CREATE TABLE ydsz_job_tenant_quota (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     max_jobs                 NUMBER(10)               DEFAULT NULL,
     max_concurrent           NUMBER(10)               DEFAULT NULL,
     max_daily_executions     NUMBER(10)               DEFAULT NULL,
     is_enabled                  NUMBER(1)                NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_tenant_quota PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_tenant_quota_tq_tenant UNIQUE (tenant_id)
+    CONSTRAINT uk_ydsz_job_tenant_quota_tq_tenant UNIQUE (tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_tenant_quota IS '租户级配额表';
@@ -494,7 +511,6 @@ COMMENT ON COLUMN ydsz_job_tenant_quota.updated_by IS '最后更新人';
 
 CREATE TABLE ydsz_job_dag (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     dag_key                  VARCHAR2(64 CHAR)        NOT NULL,
     dag_name                 VARCHAR2(128 CHAR)       NOT NULL,
     dag_definition           CLOB                     NOT NULL CONSTRAINT ck_ydsz_job_dag_dag_definition CHECK (dag_definition IS JSON),
@@ -512,14 +528,16 @@ CREATE TABLE ydsz_job_dag (
     fail_count               NUMBER(19)               NOT NULL DEFAULT 0,
     version                  NUMBER(10)               NOT NULL DEFAULT 1,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_dag PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_dag_dag_key UNIQUE (dag_key, tenant_id)
+    CONSTRAINT uk_ydsz_job_dag_dag_key UNIQUE (dag_key, tenant_id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_dag IS 'DAG 工作流定义表';
@@ -554,7 +572,6 @@ CREATE INDEX idx_ydsz_job_dag_tenant_is_deleted ON ydsz_job_dag (tenant_id, is_d
 
 CREATE TABLE ydsz_job_dag_version (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     dag_key                  VARCHAR2(64 CHAR)        NOT NULL,
     version                  NUMBER(10)               NOT NULL,
@@ -566,14 +583,16 @@ CREATE TABLE ydsz_job_dag_version (
     remark                   VARCHAR2(512 CHAR)       DEFAULT NULL,
     changed_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_dag_version PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_dag_version_dv_dag_version UNIQUE (dag_id, version)
+    CONSTRAINT uk_ydsz_job_dag_version_dv_dag_version UNIQUE (dag_id, version),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_dag_version IS 'DAG 工作流版本历史表';
@@ -602,7 +621,6 @@ CREATE INDEX idx_ydsz_job_dag_version_tenant_is_deleted ON ydsz_job_dag_version 
 
 CREATE TABLE ydsz_job_dag_instance (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     dag_key                  VARCHAR2(64 CHAR)        NOT NULL,
     instance_status          VARCHAR2(32 CHAR)        NOT NULL,
@@ -620,13 +638,15 @@ CREATE TABLE ydsz_job_dag_instance (
     skipped_nodes            NUMBER(10)               DEFAULT NULL,
     next_fire_time           TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_job_dag_instance PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_job_dag_instance PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_dag_instance IS 'DAG 工作流实例表';
@@ -663,7 +683,6 @@ CREATE INDEX idx_ydsz_job_dag_instance_tenant_is_deleted ON ydsz_job_dag_instanc
 
 CREATE TABLE ydsz_job_dag_node_instance (
     id                       VARCHAR2(32 CHAR)       ,
-    tenant_id                VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
     dag_instance_id          VARCHAR2(32 CHAR)        NOT NULL,
     dag_id                   VARCHAR2(32 CHAR)        NOT NULL,
     job_id                   VARCHAR2(32 CHAR)        NOT NULL,
@@ -678,13 +697,15 @@ CREATE TABLE ydsz_job_dag_node_instance (
     result_json              CLOB                     DEFAULT NULL CONSTRAINT ck_ydsz_job_dag_node_instance_result_json CHECK (result_json IS JSON),
     error_message            CLOB                     DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    revision                 NUMBER(10)               NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    updated_by               VARCHAR2(64 CHAR)        DEFAULT NULL,
-    CONSTRAINT pk_ydsz_job_dag_node_instance PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_job_dag_node_instance PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER(10)               NOT NULL DEFAULT 0,
+    tenant_id VARCHAR2(32 CHAR)        NOT NULL DEFAULT '0',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64 CHAR)        DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_dag_node_instance IS 'DAG 节点实例表';
@@ -740,10 +761,15 @@ CREATE TABLE ydsz_job_log (
     handler_init_time        TIMESTAMP                DEFAULT NULL,
     handler_end_time         TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR2(32 CHAR)        DEFAULT NULL,
-    is_deleted                  NUMBER(1)                NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_job_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_job_log PRIMARY KEY (id),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1)                NOT NULL DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_log IS '任务执行日志表';
@@ -788,7 +814,16 @@ CREATE TABLE ydsz_job_log_content (
     log_level                VARCHAR2(32 CHAR)        DEFAULT NULL,
     content                  VARCHAR2(4000 CHAR)      NOT NULL,
     CONSTRAINT pk_ydsz_job_log_content PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_log_content_jlc_log_line UNIQUE (log_id, line_no)
+    CONSTRAINT uk_ydsz_job_log_content_jlc_log_line UNIQUE (log_id, line_no),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_job_log_content IS '任务执行日志内容表（行级明细）';
@@ -815,7 +850,16 @@ CREATE TABLE ydsz_job_daily_stats (
     min_duration_ms          NUMBER(19)               DEFAULT NULL,
     p95_duration_ms          NUMBER(19)               DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_daily_stats PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_daily_stats_jds_job_date UNIQUE (job_id, stats_date)
+    CONSTRAINT uk_ydsz_job_daily_stats_jds_job_date UNIQUE (job_id, stats_date),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_job_daily_stats IS '任务执行每日统计表';
@@ -852,7 +896,16 @@ CREATE TABLE ydsz_job_alert_dispatch (
     trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     trigger_log_id           VARCHAR2(32 CHAR)        DEFAULT NULL,
     CONSTRAINT pk_ydsz_job_alert_dispatch PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_alert_dispatch_ad_alert_code UNIQUE (alert_code)
+    CONSTRAINT uk_ydsz_job_alert_dispatch_ad_alert_code UNIQUE (alert_code),
+    sort NUMBER DEFAULT 0,
+    status NUMBER DEFAULT 1,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at DATE DEFAULT SYSDATE,
+    updated_by VARCHAR2(64),
+    updated_at DATE DEFAULT SYSDATE
 );
 
 COMMENT ON TABLE ydsz_job_alert_dispatch IS '告警派发日志表（cronjob 告警记录，source_type=CRONJOB）';
@@ -886,10 +939,16 @@ CREATE TABLE ydsz_job_outbox (
     status                   VARCHAR2(32 CHAR)        NOT NULL DEFAULT 'PENDING',
     retry_count              NUMBER(10)               NOT NULL DEFAULT 0,
     next_retry_time          TIMESTAMP(3)             DEFAULT NULL,
-    create_time              TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_time              TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_outbox PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_job_outbox_jo_event_key UNIQUE (event_key)
+    CONSTRAINT uk_ydsz_job_outbox_jo_event_key UNIQUE (event_key),
+    sort NUMBER DEFAULT 0,
+    revision NUMBER DEFAULT 0,
+    tenant_id VARCHAR2(64) DEFAULT '1',
+    is_deleted NUMBER(1) DEFAULT 0,
+    created_by VARCHAR2(64),
+    created_at TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR2(64),
+    updated_at TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_job_outbox IS 'Outbox 事务性事件表：存储待发布的领域事件，保障业务写操作与事件投递的事务一致性';
@@ -901,11 +960,11 @@ COMMENT ON COLUMN ydsz_job_outbox.payload IS '事件 payload（JSON 字符串）
 COMMENT ON COLUMN ydsz_job_outbox.status IS '事件状态: PENDING 待发布 / PUBLISHED 已发布 / DEAD 死亡信（重试耗尽）';
 COMMENT ON COLUMN ydsz_job_outbox.retry_count IS '已重试次数';
 COMMENT ON COLUMN ydsz_job_outbox.next_retry_time IS '下次重试时间';
-COMMENT ON COLUMN ydsz_job_outbox.create_time IS '创建时间';
-COMMENT ON COLUMN ydsz_job_outbox.update_time IS '更新时间';
+COMMENT ON COLUMN ydsz_job_outbox.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_job_outbox.updated_at IS '更新时间';
 
 CREATE INDEX idx_ydsz_job_outbox_jo_status_retry ON ydsz_job_outbox (status, next_retry_time);
-CREATE INDEX idx_ydsz_job_outbox_jo_status_created ON ydsz_job_outbox (status, create_time);
+CREATE INDEX idx_ydsz_job_outbox_jo_status_created ON ydsz_job_outbox (status, created_at);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (Oracle)
@@ -1029,10 +1088,10 @@ END;
 /
 
 -- 自动更新 update_time（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_job_outbox_update_time
+CREATE OR REPLACE TRIGGER trg_ydsz_job_outbox_updated_at
 BEFORE UPDATE ON ydsz_job_outbox
 FOR EACH ROW
 BEGIN
-    :NEW.update_time := CURRENT_TIMESTAMP;
+    :NEW.updated_at := CURRENT_TIMESTAMP;
 END;
 /

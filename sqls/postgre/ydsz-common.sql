@@ -40,6 +40,10 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     error_message            TEXT                    ,
     schema_version           INTEGER                 NOT NULL DEFAULT 1,
     compressed               BOOLEAN                 NOT NULL DEFAULT FALSE,
+    trace_id                 VARCHAR(64)             ,
+    idempotency_key          VARCHAR(64)             ,
+    sent_at                  TIMESTAMP(3)            ,
+    CONSTRAINT pk_ydsz_comm_outbox PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER DEFAULT 0,
     tenant_id VARCHAR(64),
@@ -47,11 +51,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     created_by VARCHAR,
     created_at TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     updated_by VARCHAR,
-    updated_at TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    trace_id                 VARCHAR(64)             ,
-    idempotency_key          VARCHAR(64)             ,
-    sent_at                  TIMESTAMP(3)            ,
-    CONSTRAINT pk_ydsz_comm_outbox PRIMARY KEY (id)
+    updated_at TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 );
 
 COMMENT ON TABLE ydsz_comm_outbox IS '事务性 Outbox 表：存储领域事件，保障业务写操作与事件投递的事务一致性';
@@ -97,6 +97,13 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     status          VARCHAR(16)     NOT NULL,
     retry_count     INT             NOT NULL DEFAULT 0,
     max_retries     INT             NOT NULL DEFAULT 5,
+    idempotency_key VARCHAR(128)    DEFAULT NULL,
+    trace_id        VARCHAR(64)     DEFAULT NULL,
+    schema_version  INT             NOT NULL DEFAULT 1,
+    compressed      BOOLEAN         NOT NULL DEFAULT FALSE,
+    sent_at         TIMESTAMP       DEFAULT NULL,
+    archived_at     TIMESTAMP       NOT NULL,
+    error_message   TEXT            DEFAULT NULL,
     sort INTEGER DEFAULT 0,
     revision INTEGER DEFAULT 0,
     tenant_id VARCHAR(64)     DEFAULT NULL,
@@ -104,14 +111,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     created_by VARCHAR,
     created_at TIMESTAMP       NOT NULL,
     updated_by VARCHAR,
-    updated_at TIMESTAMP       NOT NULL,
-    idempotency_key VARCHAR(128)    DEFAULT NULL,
-    trace_id        VARCHAR(64)     DEFAULT NULL,
-    schema_version  INT             NOT NULL DEFAULT 1,
-    compressed      BOOLEAN         NOT NULL DEFAULT FALSE,
-    sent_at         TIMESTAMP       DEFAULT NULL,
-    archived_at     TIMESTAMP       NOT NULL,
-    error_message   TEXT            DEFAULT NULL
+    updated_at TIMESTAMP       NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_comm_outbox_archive_aggregate ON ydsz_comm_outbox_archive (aggregate_id, created_at);
@@ -130,6 +130,8 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
     error_msg                TEXT                     DEFAULT NULL,
     retry_count              INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(20)              NOT NULL DEFAULT 'PENDING',
+    resolved_at              TIMESTAMP                DEFAULT NULL,
+    CONSTRAINT pk_ydsz_comm_search_dead_letter PRIMARY KEY (id),
     sort INTEGER DEFAULT 0,
     revision INTEGER DEFAULT 0,
     tenant_id VARCHAR DEFAULT '1',
@@ -137,9 +139,7 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
     created_by VARCHAR,
     created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by VARCHAR,
-    updated_at TIMESTAMP DEFAULT NOW(),
-    resolved_at              TIMESTAMP                DEFAULT NULL,
-    CONSTRAINT pk_ydsz_comm_search_dead_letter PRIMARY KEY (id)
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 COMMENT ON TABLE ydsz_comm_search_dead_letter IS '搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
@@ -185,15 +185,6 @@ EXECUTE FUNCTION fn_ydsz_comm_outbox_set_updated_at();
 CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     id                       VARCHAR(64)              NOT NULL,
     app_key                  VARCHAR(64)              NOT NULL DEFAULT '',
-    sort INTEGER DEFAULT 0,
-    status SMALLINT                 NOT NULL DEFAULT 1,
-    revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR(64)              DEFAULT NULL,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
-    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by VARCHAR,
-    updated_at TIMESTAMP DEFAULT NOW(),
     operator_id              VARCHAR(64)              DEFAULT NULL,
     operator_name            VARCHAR(64)              DEFAULT NULL,
     audit_type               SMALLINT                 NOT NULL DEFAULT 1,
@@ -210,7 +201,16 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     cost_time                BIGINT                   DEFAULT 0,
     trace_id                 VARCHAR(64)              DEFAULT NULL,
     operation_time           TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_comm_audit_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_comm_audit_log PRIMARY KEY (id),
+    sort INTEGER DEFAULT 0,
+    status SMALLINT                 NOT NULL DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(64)              DEFAULT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR,
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 COMMENT ON TABLE ydsz_comm_audit_log IS '全平台操作审计日志表（ydsz-common-audit 自动落库）';
@@ -278,23 +278,23 @@ CREATE TABLE IF NOT EXISTS ydsz_comm_search_index_partitioned
 (
     id              VARCHAR(128) NOT NULL,
     doc_type        VARCHAR(64)  NOT NULL,
-    sort INTEGER DEFAULT 0,
-    status INTEGER DEFAULT 1,
-    revision INTEGER DEFAULT 0,
-    tenant_id VARCHAR(64)  NOT NULL,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_by VARCHAR,
-    updated_by VARCHAR,
     title           VARCHAR(512),
     subtitle        VARCHAR(512),
     content         TEXT,
     tags            TEXT[],
     locale          VARCHAR(16)  DEFAULT 'zh-CN',
     metadata        JSONB,
-    is_active       BOOLEAN      DEFAULT TRUE,
+    active_flag       BOOLEAN      DEFAULT TRUE,
     created_at      TIMESTAMPTZ  DEFAULT NOW(),
     updated_at      TIMESTAMPTZ  DEFAULT NOW(),
-    CONSTRAINT pk_search_partitioned PRIMARY KEY (tenant_id, id, doc_type)
+    CONSTRAINT pk_search_partitioned PRIMARY KEY (tenant_id, id, doc_type),
+    sort INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(64)  NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    updated_by VARCHAR
 ) PARTITION BY HASH (tenant_id);
 
 -- 创建 8 个 HASH 分区
