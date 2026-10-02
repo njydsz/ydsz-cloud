@@ -1,0 +1,51 @@
+# =====================================================================
+#  YDSZ 规则引擎 — 移动端基座配置（Nacos 数据中心）
+#  对应模块：ydsz-literule-app（端口 7007）
+# =====================================================================
+
+ydsz:
+  tenant:
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  thread:
+    enabled: true
+    pools:
+      ruleParallel:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydzsz-rule-app-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      ruleChain:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: ydzsz-rule-app-chain-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+
+  search:
+    pg:
+      index-table: ydsz_literule_search_index
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+skywalking:
+  agent:
+    service_name: ydzsz-literule-app
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

@@ -1,0 +1,67 @@
+# =====================================================================
+#  YDSZ 系统管理引擎 — 微服务端配置（Nacos 数据中心）
+#  通过 bootstrap.yml shared-configs 引入
+#  依赖 common: jdbc, json, tenant, thread, i18n, sentry, search, audit, excel, safe, feign, lock
+# =====================================================================
+ydsz:
+  json:
+    warmup-classes:
+      - com.njydsz.system.domain.vo.ConfigVO
+      - com.njydsz.system.domain.entity.DictItem
+
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    ignore-tables:
+      - ydsz_sys_tenant
+      - ydsz_sys_tenant_plan
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  safe:
+    ip-access:
+      enabled: true
+      mode: WHITELIST
+      static-whitelist:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+      excludes:
+        - /actuator/**
+
+  thread:
+    pools:
+      sysIo:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 100
+        thread-name-prefix: sys-async-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+        slow-task-threshold-ms: 3000
+
+  sentry:
+    app-name: ydzsz-system
+    metrics:
+      primary: micrometer
+      enable-system-metrics: true
+
+  search:
+    pg:
+      index-table: ydsz_system_search_index
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+skywalking:
+  agent:
+    service_name: ydzsz-system
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

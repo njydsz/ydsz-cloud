@@ -1,0 +1,378 @@
+# =====================================================================
+#  YDSZ 云平台 — 公共 Web 配置（Nacos 数据中心）
+# =====================================================================
+#  用途：所有业务模块（除 Gateway 外）通过 bootstrap.yml shared-configs 引入
+#  命名：ydsz-common.yml
+#  分组：由 ${spring.profiles.active} 决定（dev/sit/uat/prod）
+#  刷新：refresh=true（支持 @RefreshScope 动态生效）
+#
+#  依赖此配置的 common 子模块：
+#    ydzs-common-core     - YdszResponse/PageResponse/ErrorCode/FeatureFlags
+#    ydzs-common-base     - YdszApplication / ServletUtils
+#    ydzs-common-util     - DateUtils/MaskUtils/DigestUtils/ValidationUtils
+#    ydzs-common-exception- AbstractYdszException / BusinessException
+#    ydzs-common-auth     - RBAC / AuthApiPermission / InternalHeaderSigner
+#    ydzs-common-safe     - IpAccessService / ApiSignatureFilter / FieldEncryptor
+#    ydzs-common-web      - GlobalResponseAdvice / ExceptionHandler / TenantMdcFilter
+#    ydzs-common-json     - YdszJson / JsonHttpMessageConverter
+#    ydzs-common-jdbc     - SQL Firewall / 分页安全 / 慢SQL检测 / 数据权限
+#    ydzs-common-tenant   - TenantContext / 多租户 SQL 拦截器
+#    ydzs-common-audit    - @Audit AOP / AuditLogWriter
+#    ydzs-common-i18n     - I18nMessages / LocaleResolver
+#    ydzs-common-thread   - ExecutorUtils / 统一线程池管理
+#    ydzs-common-cache    - YdszCache / CacheKeyBuilder
+#    ydzs-common-redis    - StringOps / HashOps / ListOps / Redisson
+#    ydzs-common-feign    - @FeignClient 全局契约
+#    ydzs-common-sentry   - SentryObservation / Metrics
+#    ydzs-common-search   - PG 全文搜索
+# =====================================================================
+
+# ---------------------------------------------------------------------
+#  服务端口（各模块 override，此处为默认值）
+# ---------------------------------------------------------------------
+server:
+  max-http-request-header-size: 16KB
+  servlet:
+    context-path: /
+
+# ---------------------------------------------------------------------
+#  Spring 基础配置
+# ---------------------------------------------------------------------
+spring:
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+  # -------------------------------------------------------------------
+  #  数据源配置（PostgreSQL + HikariCP）
+  #  各模块通过 ydsz.{module}-web.yml 覆盖 url/username/password
+  # -------------------------------------------------------------------
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      pool-name: ydsz-hikari-pool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
+      leak-detection-threshold: 30000
+      data-source-properties:
+        stringtype: unspecified
+        reWriteBatchedInserts: true
+        ApplicationName: ydsz-cloud
+      # 密码加密（Jasypt）启动时解密
+    url: ${NACOS_DB_URL:jdbc:postgresql://127.0.0.1:5432/ydsz_cloud?currentSchema=public&stringtype=unspecified}
+    username: ${NACOS_DB_USERNAME:postgres}
+    password: ${NACOS_DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  # -------------------------------------------------------------------
+  #  Redis 连接配置（Redisson）
+  # -------------------------------------------------------------------
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      connect-timeout: 3000
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2000ms
+      cluster:
+        nodes: ${REDIS_CLUSTER_NODES:}
+        max-redirects: 3
+
+  # -------------------------------------------------------------------
+  #  消息队列（RocketMQ — message 模块启用）
+  # -------------------------------------------------------------------
+  rocketmq:
+    name-server: ${ROCKETMQ_NAMESRV:127.0.0.1:9876}
+    producer:
+      group: ydsz-cloud-producer
+      send-message-timeout: 3000
+      retry-times-when-send-failed: 2
+      max-message-size: 4194304
+
+# ---------------------------------------------------------------------
+#  MyBatis-Plus 基础配置（ydsz-common-jdbc 托管）
+# ---------------------------------------------------------------------
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.njydsz.**.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    call-setters-on-nulls: true
+    jdbc-type-for-null: NULL
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: is_deleted
+      logic-delete-value: true
+      logic-not-delete-value: false
+      insert-strategy: NOT_NULL
+      update-strategy: NOT_NULL
+      where-strategy: NOT_NULL
+
+# ---------------------------------------------------------------------
+#  SpringDoc OpenAPI / Knife4j 配置
+# ---------------------------------------------------------------------
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+  default-flat-param-object: true
+  default-support-form-data: true
+  writer-with-order-by-keys: true
+
+# ---------------------------------------------------------------------
+#  日志配置
+# ---------------------------------------------------------------------
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  level:
+    root: INFO
+    com.njydsz: DEBUG
+    com.baomidou.mybatisplus: WARN
+    org.springframework.cloud: WARN
+    io.netty: WARN
+    com.zaxxer.hikari: WARN
+
+# ---------------------------------------------------------------------
+#  Actuator 运维端点
+# ---------------------------------------------------------------------
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics,beans,env,cache-metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    export:
+      prometheus:
+        enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# ---------------------------------------------------------------------
+#  ydsz.* 自定义配置
+# ---------------------------------------------------------------------
+ydsz:
+
+  # ============================================================
+  #  JSON 引擎（ydsz-common-json）
+  # ============================================================
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    naming-strategy: LOWER_CAMEL_CASE
+    write-nulls: false
+    monitoring-enabled: true
+    safe-mode: true
+    streaming-enabled: false
+    use-big-decimal: false
+    # ASM 预热由各模块专属配置声明 warmup-classes
+
+  # ============================================================
+  #  国际化 i18n（ydsz-common-i18n）
+  # ============================================================
+  i18n:
+    locale-resolver-type: user-priority
+    runtime-strictness: STRICT
+    default-locale: zh_CN
+    message-source:
+      cache-seconds: 1800
+      fallback-to-locale: true
+      use-code-as-default-message: false
+    metadata-api-enabled: true
+
+  # ============================================================
+  #  JDBC 安全加固（ydsz-common-jdbc）
+  # ============================================================
+  jdbc:
+    # SQL 防火墙
+    sql-firewall:
+      enabled: true
+      block-drop-table: true
+      block-truncate: true
+      block-delete-without-where: true
+      block-update-without-where: true
+      block-multi-statement: true
+      block-permission-ops: true
+      allowed-tables-regex: ""
+    # 分页安全
+    pagination:
+      max-limit: 500
+    # 慢 SQL 检测
+    slow-sql:
+      enabled: true
+      threshold-millis: 500
+      alert-threshold-millis: 2000
+    # SQL 审计
+    sql-audit:
+      enabled: true
+      audit-select: false
+      audit-insert: true
+      audit-update: true
+      audit-delete: true
+      log-parameters: true
+      max-parameter-length: 500
+
+  # ============================================================
+  #  多租户隔离（ydsz-common-tenant）— 基础框架配置
+  # ============================================================
+  tenant:
+    enabled: false
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /favicon.ico
+      - /error
+    ignore-tables: []
+    ignore-url-patterns: []
+    Feign-enabled: true
+
+  # ============================================================
+  #  统一线程池（ydsz-common-thread）— 基础开关
+  # ============================================================
+  thread:
+    enabled: true
+    virtual-by-default: false
+    pools: {}
+
+  # ============================================================
+  #  审计日志（ydsz-common-audit）— 基础框架配置
+  # ============================================================
+  audit:
+    enabled: true
+    app-key: ydsz-cloud-common
+    storage-type: LOCAL
+    record-request: true
+    record-response: false
+    sensitive-params:
+      - password
+      - token
+      - secret
+      - authorization
+    retention-days: 90
+    async:
+      batch-size: 50
+      queue-capacity: 5000
+      thread-core-size: 1
+      thread-max-size: 2
+      reject-policy: CALLER_RUNS
+      shutdown-timeout: 10
+
+  # ============================================================
+  #  安全（ydsz-common-safe）— IP 控制 / 字段加密 / API 签名
+  # ============================================================
+  safe:
+    ip-access:
+      enabled: false
+      mode: BLACKLIST
+      static-whitelist: []
+      static-blacklist: []
+      excludes: []
+      rate-limit-enabled: false
+      rate-limit-capacity: 100
+      rate-limit-rate: 50
+    auto-block:
+      enabled: false
+      threshold: 10
+      window-seconds: 60
+      block-ttl-seconds: 300
+    field-encryption:
+      enabled: false
+      default-key-version: 1
+      failure-strategy: THROW
+      masked-value: "****"
+      keys: {}
+    api-signature:
+      enabled: false
+      app-id: ""
+      app-secret: ""
+      timestamp-tolerance-seconds: 300
+      nonce-expire-seconds: 600
+      header-timestamp: X-Timestamp
+      header-nonce: X-Nonce
+      header-signature: X-Signature
+      header-app-id: X-App-Id
+      excludes: []
+
+  # ============================================================
+  #  Sentry 监控（ydsz-common-sentry）
+  # ============================================================
+  sentry:
+    app-name: ydsz-cloud-common
+    metrics:
+      primary: micrometer
+      enable-system-metrics: false
+
+  # ============================================================
+  #  Web 基座（ydsz-common-web）
+  # ============================================================
+  web:
+    api-version:
+      enabled: true
+      default-version: "1"
+      strategy: HEADER
+      header-name: X-API-Version
+      sunset-headers: true
+    cors:
+      enabled: true
+      allowed-origins: "*"
+      allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
+# =====================================================================
+#  SkyWalking 链路追踪（基础配置，各模块可覆盖 service_name）
+# =====================================================================
+skywalking:
+  agent:
+    service_name: ${spring.application.name}
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}
+  plugin:
+    toolkit:
+      activate: true

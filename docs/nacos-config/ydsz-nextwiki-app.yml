@@ -1,0 +1,58 @@
+# =====================================================================
+#  YDSZ 网盘知识库 — 移动端基座配置（Nacos 数据中心）
+#  通过 bootstrap.yml shared-configs 引入
+# =====================================================================
+#  与 nextwiki-web 的差异：
+#    - app 端文件上传限制更小（移动端网络不稳定）
+#    - 分片上传优先（弱网环境友好）
+#    - 预签名 URL 有效期更短（安全优先）
+#    - 不支持 WOPI 在线编辑（仅桌面端）
+# =====================================================================
+
+ydsz:
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+
+  thread:
+    enabled: true
+    pools:
+      nextwikiAppTask:
+        type: VIRTUAL
+        thread-name-prefix: nextwiki-app-async-
+        await-termination-seconds: 60
+
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    write-nulls: false
+
+  i18n:
+    locale-resolver-type: user-priority
+    runtime-strictness: STRICT
+
+# NextWiki App 独有配置
+nextwiki:
+  app:
+    enabled: true
+    default-page-size: 20
+    max-page-size: 100
+  upload:
+    max-file-size: 104857600
+    chunk-enabled: true
+    chunk-size: 5242880
+    chunk-temp-dir: ${java.io.tmpdir}/nextwiki-app-chunk
+  preview:
+    enabled: true
+    libreoffice-path: ${LIBREOFFICE_PATH:soffice}
+    temp-dir: ${java.io.tmpdir}/nextwiki-app-preview
+  virus-scan:
+    enabled: false
+  download:
+    rate-limit-per-minute: 10
+    signed-url-expire-seconds: 1800

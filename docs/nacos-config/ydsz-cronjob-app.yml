@@ -1,0 +1,69 @@
+# =====================================================================
+#  YDSZ 调度引擎 — 移动端基座配置（Nacos 数据中心）
+#  对应模块：ydsz-cronjob-app（端口 7006）
+# =====================================================================
+
+ydsz:
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  audit:
+    enabled: true
+    app-key: ydsz-cronjob-app
+    record-request: false
+    record-response: false
+    retention-days: 90
+    async:
+      batch-size: 50
+      queue-capacity: 5000
+      thread-core-size: 1
+      thread-max-size: 2
+      reject-policy: CALLER_RUNS
+      shutdown-timeout: 15
+
+  scan:
+    normal-load-limit: 5000
+
+  thread:
+    enabled: true
+    pools:
+      cronjobAppDispatch:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 512
+        thread-name-prefix: cronjob-app-dispatch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      cronjobAppMapReduce:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydsz-job-app-mapreduce-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+
+  search:
+    pg:
+      index-table: ydsz_cronjob_search_index
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+skywalking:
+  agent:
+    service_name: ydzsz-cronjob-app
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

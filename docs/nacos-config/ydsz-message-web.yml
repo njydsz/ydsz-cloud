@@ -1,0 +1,48 @@
+# =====================================================================
+#  YDSZ 消息通知引擎 — 微服务端配置（Nacos 数据中心）
+#  通过 bootstrap.yml shared-configs 引入
+#  依赖 common: auth,base,cache,exception,feign,socket,domain,web,core,excel,audit,lock,safe
+# =====================================================================
+ydsz:
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /favicon.ico
+      - /error
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  thread:
+    pools:
+      messageBatch:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydsz-msg-batch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+
+  search:
+    pg:
+      index-table: ydsz_message_search_index
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+skywalking:
+  agent:
+    service_name: ydzsz-message
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

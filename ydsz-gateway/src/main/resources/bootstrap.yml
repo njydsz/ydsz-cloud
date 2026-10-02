@@ -55,58 +55,13 @@ spring:
         # 引入共享配置：datasource / redis / mybatis-plus / springdoc / logging
         # 所有服务共享一份配置，修改一次全集群生效
         shared-configs:
-          - data-id: ydsz-common.yaml
+          - data-id: ydsz-common.yml
             group: ${spring.profiles.active}
             refresh: true
           # P1-3: 网关跨环境共享配置（过滤器开关 / 限流 / IP 控制 / 连接池 / 健康探针等）
-          # 环境特有配置（CORS Origin / 日志级别 / 连接池大小）仍在 ydsz-gateway-{profile}.yaml 中覆盖
-          - data-id: ydsz-gateway-common.yaml
+          - data-id: ydzs-gateway.yml
             group: ${spring.profiles.active}
             refresh: true
           # P0-A1: 网关路由不再通过 shared-configs 引入 yaml 路由文件，
           #        统一由 NacosRouteDefinitionRepository 从 gateway-routes.json（JSON 数组格式）加载，
           #        避免双路由源竞争。路由模板见 src/main/resources/routes-nacos.yaml。
-
-# P1-pilot: 特性开关（Feature Flags）默认值，Nacos 配置中心可动态覆盖
-ydsz:
-  core:
-    feature-flags:
-      gateway.circuit-breaker.enabled: true
-      gateway.rate-limit.strict-mode: false
-
-# P1-1: Nacos 路由配置变更监听器托管线程池（ydsz-common-thread 统一管理，替代原自建 ThreadPoolExecutor）
-# 对应 Bean 名称: nacosRouteListenerExecutor（默认 beanNamePrefix 为空，命名规则为 key + "Executor"）
-  # P0: 多租户隔离（ydsz-common-tenant）— A6/A7 全引擎启用 + Feign 透传
-  tenant:
-    enabled: true
-    mode: SINGLE
-    tenant-column: tenant_id
-    default-claim: tenantId
-    default-header: X-Tenant-Id
-    super-tenant-id: "0"
-    system-tenant-id: "1"
-  thread:
-    pools:
-      nacosRouteListener:
-        core-size: 1
-        max-size: 1
-        queue-capacity: 1024
-        thread-name-prefix: nacos-route-listener-
-        reject-policy: CALLER_RUNS
-  i18n:
-    locale-resolver-type: user-priority
-    runtime-strictness: STRICT
-  gateway:
-    filter:
-      sql-injection: true
-    sql-injection:
-      enabled: true
-      mode: STANDARD
-      auto-block: true
-      auto-block-threshold: 3
-      auto-block-ttl-seconds: 3600
-      whitelist-param-names:
-        - tenantId
-        - page
-        - size
-        - sort

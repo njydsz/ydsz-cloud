@@ -1,0 +1,89 @@
+# =====================================================================
+#  YDSZ 调度引擎 — 微服务端配置（Nacos 数据中心）
+#  通过 bootstrap.yml shared-configs 引入
+#  依赖 common: auth,base,exception,feign,util,domain,web,core,audit,lock,safe,excel
+# =====================================================================
+ydsz:
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /favicon.ico
+      - /error
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  audit:
+    enabled: true
+    app-key: ydsz-cronjob
+    record-request: false
+    record-response: true
+    retention-days: 180
+    sharding-enabled: false
+    sharding-base-table-name: ydsz_job_audit_log
+    async:
+      batch-size: 50
+      queue-capacity: 5000
+      thread-core-size: 1
+      thread-max-size: 2
+      reject-policy: CALLER_RUNS
+      shutdown-timeout: 15
+
+  json:
+    warmup-classes:
+      - com.njydsz.cronjob.domain.entity.job.Job
+      - com.njydsz.cronjob.domain.entity.job.JobTask
+      - com.njydsz.cronjob.domain.entity.job.JobHistory
+      - com.njydsz.cronjob.domain.entity.dag.JobDag
+      - com.njydsz.cronjob.domain.entity.dag.JobDagInstance
+
+  scan:
+    normal-load-limit: 10000
+
+  thread:
+    pools:
+      cronjobDispatch:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 512
+        thread-name-prefix: cronjob-dispatch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      cronjobMapReduce:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 200
+        thread-name-prefix: ydsz-job-mapreduce-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      auditExecutor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: ydsz-job-audit-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
+
+  search:
+    pg:
+      index-table: ydsz_cronjob_search_index
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+skywalking:
+  agent:
+    service_name: ydzsz-cronjob
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

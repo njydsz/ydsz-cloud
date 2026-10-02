@@ -1,0 +1,80 @@
+# =====================================================================
+#  YDSZ 用户信息引擎 — 移动端基座配置（Nacos 数据中心）
+#  通过 bootstrap.yml shared-configs 引入
+# =====================================================================
+#  与应用层 (ydsz-userinfo-web.yml) 的差异：
+#    - app 端通常面向移动端 / 第三方 Open API
+#    - 字段加密默认开（移动端敏感信息泄露风险更高）
+#    - 限流策略更严格（移动端用户量大）
+#    - 认证链路可接入 OAuth2 PKCE 流程
+#    - 无需 tenant 隔离（移动端用户上下文由 JWT 自携带）
+# =====================================================================
+
+ydsz:
+  safe:
+    ip-access:
+      enabled: true
+      mode: BLACKLIST
+    auto-block:
+      enabled: true
+      threshold: 5
+      window-seconds: 60
+      block-ttl-seconds: 600
+    field-encryption:
+      enabled: true
+      default-key-version: 1
+      failure-strategy: THROW
+      masked-value: "****"
+      keys:
+        1: ${YDSZ_FIELD_ENC_KEY_V1:}
+
+  tenant:
+    enabled: false
+    mode: SINGLE
+    tenant-column: tenant_id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+
+  userinfo:
+    internal-call:
+      enabled: false
+      header-name: X-Internal-Call
+
+  web:
+    api-version:
+      enabled: true
+      default-version: "1"
+      strategy: HEADER
+      header-name: X-API-Version
+      sunset-headers: true
+
+  thread:
+    enabled: true
+    pools:
+      userIo:
+        core-size: 8
+        max-size: 32
+        queue-capacity: 200
+        thread-name-prefix: user-app-async-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+
+  i18n:
+    locale-resolver-type: user-priority
+    runtime-strictness: STRICT
+
+  security:
+    alert:
+      dedup-ttl-seconds: 300
+      ip-dedup-ttl-seconds: 180
+      brute-force-threshold: 5
+      password-spray-threshold: 3
+      aggregation:
+        enabled: true
+        cron: "0 */5 * * * ?"
+
+  json:
+    enabled: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    write-nulls: false

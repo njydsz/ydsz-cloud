@@ -1,0 +1,95 @@
+# =====================================================================
+#  YDSZ 用户信息引擎 — 微服务端配置（Nacos 数据中心）
+#  通过 bootstrap.yml shared-configs 引入
+#  依赖 common: jdbc, json, tenant(thread,sentry,search,audit,feign,lock,safe,auth,util,core,domain,base,exception,redis)
+# =====================================================================
+ydsz:
+  json:
+    warmup-classes:
+      - com.njydsz.userinfo.domain.vo.LoginVO
+      - com.njydsz.userinfo.domain.vo.UserAccountVO
+
+  safe:
+    ip-access:
+      enabled: true
+      mode: BLACKLIST
+    auto-block:
+      enabled: true
+      threshold: 10
+      window-seconds: 60
+    field-encryption:
+      enabled: true
+      default-key-version: 1
+      failure-strict: THROW
+      masked-value: "****"
+      keys:
+        1: ${YDSZ_FIELD_ENC_KEY_V1:}
+
+  tenant:
+    enabled: false
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /api/auth/login
+      - /api/auth/refresh
+      - /api/captcha
+      - /api/self-service
+      - /api/oauth2
+      - /api/internal
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  userinfo:
+    internal-call:
+      enabled: false
+      header-name: X-Internal-Call
+
+  web:
+    api-version:
+      enabled: true
+      default-version: "1"
+      strategy: HEADER
+      header-name: X-API-Version
+      sunset-headers: true
+
+  thread:
+    pools:
+      userIo:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 100
+        thread-name-prefix: user-async-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+        slow-task-threshold-ms: 3000
+
+  search:
+    pg:
+      index-table: ydsz_userinfo_search_index
+
+  security:
+    alert:
+      dedup-ttl-seconds: 300
+      ip-dedup-ttl-seconds: 180
+      brute-force-threshold: 10
+      password-spray-threshold: 5
+      aggregation:
+        enabled: true
+        cron: "0 */5 * * * ?"
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+skywalking:
+  agent:
+    service_name: ydzsz-userinfo
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

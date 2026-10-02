@@ -7,20 +7,6 @@
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
 # =====================================================================
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-    enabled: true
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-    tags-sorter: alpha
-    operations-sorter: alpha
-  default-flat-param-object: true
-  default-support-form-data: true
-  writer-with-order-by-keys: true
-  # 多模块场景下，可通过 urls 配置聚合（仅网关模式使用）
-
 server:
   # HTTP 监听端口（按构建顺序 2/10）
   port: 9001
@@ -63,104 +49,9 @@ spring:
         file-extension: yaml
         refresh-enabled: true
         shared-configs:
-          - data-id: ydsz-common.yaml
+          - data-id: ydsz-common.yml
             group: ${spring.profiles.active}
             refresh: true
-          - data-id: ydsz-system.yml
+          - data-id: ydsz-system-web.yml
             group: ${spring.profiles.active}
             refresh: true
-
-# JSON 引擎配置（ydsz-common-json）
-ydsz:
-  json:
-    enabled: true
-    date-format: yyyy-MM-dd HH:mm:ss
-    naming-strategy: LOWER_CAMEL_CASE
-    write-nulls: false
-    monitoring-enabled: true
-    warmup-classes:
-      - com.njydsz.system.domain.vo.ConfigVO
-      - com.njydsz.system.domain.entity.DictItem
-
-  # P0: JDBC 安全加固（ydsz-common-jdbc）
-  jdbc:
-    # SQL 防火墙：拦截 DDL（DROP/TRUNCATE）、无 WHERE 写操作、多语句注入、GRANT/REVOKE
-    sql-firewall:
-      enabled: true
-      block-drop-table: true
-      block-truncate: true
-      block-delete-without-where: true
-      block-update-without-where: true
-      block-multi-statement: true
-      block-permission-ops: true
-    # 分页安全上限：防止 pageSize=999999 导致全表扫描 OOM
-    pagination:
-      max-limit: 500
-    # P1: 慢 SQL 全局检测
-    slow-sql:
-      enabled: true
-      threshold-millis: 500
-      alert-threshold-millis: 2000
-    # P2: SQL 审计（写操作落盘备查）
-    sql-audit:
-      enabled: true
-      audit-select: false
-      audit-insert: true
-      audit-update: true
-      audit-delete: true
-      log-parameters: true
-      max-parameter-length: 500
-
-  # P0-3: 内部 API IP 白名单（委托 ydsz-common-safe IpAccessService，支持 CIDR 网段）
-  # 迁移说明：原 ydsz.system.internal-api-ip-whitelist 精确匹配已升级为此统一配置
-  # 配置格式支持单个 IP（192.168.1.100）和 CIDR 网段（10.0.0.0/8）
-  safe:
-    ip-access:
-      enabled: true
-      mode: WHITELIST
-      static-whitelist:
-        - 10.0.0.0/8        # K8s 集群 Pod 网段
-        - 172.16.0.0/12     # Docker bridge 网段
-        # - 192.168.1.100   # 运维办公网单个 IP
-      excludes:
-        - /actuator/**
-
-  # P0: 多租户隔离（ydsz-common-tenant）— A1 修复启动失败（TenantProperties Bean 不存在）+ A6 全引擎启用
-  # system 引擎作为「多租户管理中心」必须启用；超级管理员（tenantId=0）由拦截器内置豁免全量查询
-  tenant:
-    enabled: true
-    mode: SINGLE
-    tenant-column: tenant_id
-    default-claim: tenantId
-    default-header: X-Tenant-Id
-    super-tenant-id: "0"
-    system-tenant-id: "1"
-    # 租户管理 / 认证等基础表不参与隔离（超级管理员需跨租户读取）
-    ignore-tables:
-      - ydsz_sys_tenant
-      - ydsz_sys_tenant_plan
-      - ydsz_company
-      - ydsz_department
-      - ydsz_post
-      - ydsz_language
-
-  # i18n 国际化配置
-  # user-priority: 参数 > Cookie > 用户偏好 > Header > 默认（五级优先级）
-  i18n:
-    locale-resolver-type: user-priority
-    runtime-strictness: STRICT
-
-  # P1: 统一线程池配置（ydsz-common-thread）
-  # 通过 ydzs-common-audit 传递依赖获得；为后续 @Async/@Scheduled 异步任务预留托管线程池
-  thread:
-    enabled: true
-    pools:
-      sysIo:
-        core-size: 4
-        max-size: 16
-        queue-capacity: 100
-        thread-name-prefix: sys-async-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 60
-        keep-alive-seconds: 60
-        slow-task-threshold-ms: 3000

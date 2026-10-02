@@ -1,17 +1,43 @@
+# =====================================================================
+#  YDSZ 网盘知识库 App 端 bootstrap 配置
+#  --------------------------------------------------------------------
+#  端口：8081
+#  职责：移动端/应用端 API（文件浏览、分享、预览、上传）
+#  依赖：Nacos 服务发现 / 配置中心
+#
+#  启动方式：
+#    java -jar ydsz-nextwiki-app.jar
+# =====================================================================
+
+server:
+  port: 7003
+  max-http-request-header-size: 16KB
+  servlet:
+    context-path: /
+
 spring:
   application:
     name: ydsz-nextwiki-app
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
   cloud:
     nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: DEFAULT_GROUP
       config:
         server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
         namespace: ${NACOS_NAMESPACE:}
         file-extension: yml
+        refresh-enabled: true
         shared-configs:
           - data-id: ydsz-common.yml
+            group: ${spring.profiles.active}
             refresh: true
-
-ydsz:
-  i18n:
-    locale-resolver-type: user-priority
-    runtime-strictness: STRICT
+          - data-id: ydsz-nextwiki-app.yml
+            group: ${spring.profiles.active}
+            refresh: true

@@ -1,0 +1,84 @@
+# =====================================================================
+#  YDSZ 网关 — 微服务端配置（Nacos 数据中心）
+#  通过 bootstrap.yml shared-configs 引入
+#  依赖 common: tenant, cache, redis, sentry, json, i18n, thread
+# =====================================================================
+ydsz:
+  core:
+    feature-flags:
+      gateway.circuit-breaker.enabled: true
+      gateway.rate-limit.strict-mode: false
+
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+
+  thread:
+    pools:
+      nacosRouteListener:
+        core-size: 1
+        max-size: 1
+        queue-capacity: 1024
+        thread-name-prefix: nacos-route-listener-
+        reject-policy: CALLER_RUNS
+
+  i18n:
+    locale-resolver-type: user-priority
+    runtime-strictness: STRICT
+    metadata-api-enabled: true
+
+  gateway:
+    filter:
+      sql-injection: true
+    sql-injection:
+      enabled: true
+      mode: STANDARD
+      auto-block: true
+      auto-block-threshold: 3
+      auto-block-ttl-seconds: 3600
+      whitelist-param-names:
+        - tenantId
+        - page
+        - size
+        - sort
+    deprecation:
+      enabled: true
+      apis: []
+    cors:
+      allowed-origins: ${GATEWAY_CORS_ORIGINS:http://localhost:3000,http://localhost:8080}
+    response-timeout-millis: 30000
+    httpclient:
+      connect-timeout: 2000
+      response-timeout: 30000
+      pool:
+        max-connections: 500
+        acquire-timeout: 5000
+    ip-access:
+      enabled: true
+      static-whitelist:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+skywalking:
+  agent:
+    service_name: ydzsz-gateway
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

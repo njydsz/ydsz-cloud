@@ -1,22 +1,23 @@
 # =====================================================================
-#  YDSZ AI Agent 服务 bootstrap 配置
+#  YDSZ 代码生成器 bootstrap 配置
 #  --------------------------------------------------------------------
-#  端口：9008
-#  职责：LLM 对话/RAG/记忆/工具调用/PII 脱敏/护栏/Guardrail
-#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、LLM API
+#  端口：9090
+#  职责：代码生成引擎（模板驱动 / MapStruct / MyBatis-Plus / DDL 解析）
+#  依赖：Nacos 服务发现 / 配置中心、MySQL（独立库 ydsz_cloud_gen）
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
+#        注意 generator 使用 MySQL 数据源（非 PostgreSQL）
 # =====================================================================
 
 server:
-  # HTTP 监听端口（按构建顺序 9/10）
-  port: 9008
+  # HTTP 监听端口
+  port: 9009
   max-http-request-header-size: 16KB
   servlet:
-    context-path: /
+    context-path: /gen
 
 spring:
   application:
-    name: ydsz-agent
+    name: ydzs-generator
   profiles:
     # 默认 dev，可通过 -Dspring.profiles.active=dev|sit|uat|prod 或 ENV SPRING_PROFILES_ACTIVE 覆盖
     active: ${SPRING_PROFILES_ACTIVE:dev}
@@ -36,7 +37,7 @@ spring:
         password: ${NACOS_PASSWORD:nacos}
         metadata:
           version: 26.10.01
-          port: 9008
+          port: 9090
         ip-type: IPv4
       # ---------- 配置中心 ----------
       config:
@@ -52,6 +53,6 @@ spring:
           - data-id: ydsz-common.yml
             group: ${spring.profiles.active}
             refresh: true
-          - data-id: ydsz-agent-web.yml
+          - data-id: ydzs-generator-web.yml
             group: ${spring.profiles.active}
             refresh: true

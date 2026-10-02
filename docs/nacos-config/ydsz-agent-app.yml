@@ -1,0 +1,89 @@
+# =====================================================================
+#  YDSZ AI Agent 智能引擎 — 移动端基座配置（Nacos 数据中心）
+#  对应模块：ydsz-agent-app（端口 7008）
+# =====================================================================
+
+ydsz:
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  core:
+    feature-flags:
+      agent.llm.streaming.enabled: true
+      agent.tool.code-execution.enabled: true
+      agent.rag.hybrid-search.enabled: false
+
+  agent:
+    enabled: true
+    cache:
+      enabled: ${AGENT_CACHE_ENABLED:false}
+      type: caffeine
+      ttl-minutes: 60
+      max-size: 1000
+      similarity-threshold: 0.95
+      l1-max-size: ${AGENT_CACHE_L1_MAX_SIZE:200}
+      l1-expire-minutes: ${AGENT_CACHE_L1_EXPIRE_MINUTES:5}
+    llm:
+      default-provider: ${LLM_PROVIDER:default}
+      default-model: ${LLM_MODEL:default-model}
+      api-key: ${LLM_API_KEY:}
+      base-url: ${LLM_BASE_URL:}
+      temperature: ${LLM_TEMPERATURE:0.7}
+      max-tokens: ${LLM_MAX_TOKENS:2048}
+      timeout-seconds: ${LLM_TIMEOUT:60}
+    memory:
+      ttl-hours: 24
+      max-messages: 20
+    rag:
+      enabled: ${RAG_ENABLED:false}
+      vector-store: ${RAG_VECTOR_STORE:memory}
+      embedding-model: ${EMBEDDING_MODEL:default-embedding}
+      embedding-api-key: ${EMBEDDING_API_KEY:}
+      embedding-base-url: ${EMBEDDING_BASE_URL:}
+      dimension: ${EMBEDDING_DIMENSION:1536}
+      chunk-size: 500
+      chunk-overlap: 50
+      top-k: 5
+      min-score: 0.7
+
+  thread:
+    enabled: true
+    pools:
+      agentDag:
+        type: VIRTUAL
+        thread-name-prefix: agent-app-dag-
+        await-termination-seconds: 30
+      agentHeartbeat:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: agent-app-heartbeat-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 10
+
+  json:
+    warmup-classes:
+      - com.njydsz.agent.domain.model.ChatMessage
+      - com.njydsz.agent.domain.model.ChatRequest
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+skywalking:
+  agent:
+    service_name: ydzsz-agent-app
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

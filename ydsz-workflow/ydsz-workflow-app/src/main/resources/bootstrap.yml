@@ -1,23 +1,17 @@
 # =====================================================================
-#  YDSZ 用户信息中心服务 App 端 bootstrap 配置（P1-2 双入口架构）
+#  YDSZ 工作流服务 App 端 bootstrap 配置
 #  --------------------------------------------------------------------
-#  端口：7002（对应 Web 端 9002 的移动端）
-#  职责：移动端/应用端 API（用户认证、社交登录、个人资料管理）
-#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis
-#
-#  启动方式：
-#    java -jar ydsz-userinfo-app.jar --ydsz.userinfo.platform=app
+#  端口：7005
+#  职责：移动端流程查询/审批接口
+#  依赖：Nacos 配置中心
 # =====================================================================
 
 server:
-  port: 7002
-  max-http-request-header-size: 16KB
-  servlet:
-    context-path: /
+  port: 7005
 
 spring:
   application:
-    name: ydsz-userinfo-app
+    name: ydzsz-workflow-app
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   main:
@@ -25,19 +19,6 @@ spring:
     allow-bean-definition-overriding: true
   cloud:
     nacos:
-      discovery:
-        enabled: true
-        register-enabled: true
-        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:ydsz}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:nacos}
-        metadata:
-          version: 26.10.01
-          port: 7002
-          platform: app
-        ip-type: IPv4
       config:
         enabled: true
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
@@ -51,6 +32,6 @@ spring:
           - data-id: ydsz-common.yml
             group: ${spring.profiles.active}
             refresh: true
-          - data-id: ydsz-userinfo-app.yml
+          - data-id: ydzs-workflow-app.yml
             group: ${spring.profiles.active}
             refresh: true

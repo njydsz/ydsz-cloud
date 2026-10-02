@@ -1,0 +1,97 @@
+# =====================================================================
+#  YDSZ 网盘知识库引擎 — 微服务端配置（Nacos 数据中心）
+#  依赖 common: base,exception,file,lock,safe,web,core,util,auth,audit,feign
+# =====================================================================
+ydsz:
+  tenant:
+    enabled: true
+    mode: SINGLE
+    tenant-column: tenant_id
+    default-claim: tenantId
+    default-header: X-Tenant-Id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    anon-urls:
+      - /actuator/**
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /favicon.ico
+      - /error
+    ignore-tables:
+      - ydsz_company
+      - ydsz_department
+      - ydsz_post
+      - ydsz_language
+
+  json:
+    warmup-classes:
+      - com.njydsz.nextwiki.domain.vo.FileNodeVO
+      - com.njydsz.nextwiki.domain.vo.ShareLinkVO
+
+  thread:
+    pools:
+      nextwikiTask:
+        type: VIRTUAL
+        thread-name-prefix: nextwiki-async-
+        await-termination-seconds: 60
+      nextwikiSchedule:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: nextwiki-sched-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+        keep-alive-seconds: 60
+      nextwikiBatchImport:
+        core-size: 5
+        max-size: 5
+        queue-capacity: 200
+        thread-name-prefix: nextwiki-batch-import-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+        keep-alive-seconds: 60
+
+  search:
+    pg:
+      index-table: ydsz_nextwiki_search_index
+
+# NextWiki 独有配置
+nextwiki:
+  upload:
+    max-file-size: 524288500
+    allowed-types: ""
+    conflict-strategy: KEEP_BOTH
+    chunk-temp-dir: ${java.io.tmpdir}/nextwiki-chunk
+  preview:
+    libreoffice-path: ${LIBREOFFICE_PATH:soffice}
+    temp-dir: ${java.io.tmpdir}/nextwiki-preview
+  thumbnail:
+    temp-dir: ${java.io.tmpdir}/nextwiki-thumbnail
+  ai:
+    llm-enabled: false
+    llm-api-url: ${LLM_API_URL:}
+    llm-api-key: ${LLM_API_KEY:}
+  cdn:
+    enabled: false
+    provider: aliyun
+    domain: ${CDN_DOMAIN:}
+    access-key: ${CDN_ACCESS_KEY:}
+    secret-key: ${CDN_SECRET_KEY:}
+  virus-scan:
+    enabled: false
+    host: ${CLAMAV_HOST:localhost}
+    port: ${CLAMAV_PORT:3310}
+  ocr:
+    enabled: false
+    provider: tesseract
+    tesseract-path: ${TESSERACT_PATH:tesseract}
+    language: chi_sim+eng
+  download:
+    rate-limit-per-minute: 30
+    ip-rate-limit-per-minute: 100
+    signed-url-expire-seconds: 3600
+  wopi:
+    editor-url: ${WOPI_EDITOR_URL:}
+  tcp-push:
+    enabled: false
+    port: 9124

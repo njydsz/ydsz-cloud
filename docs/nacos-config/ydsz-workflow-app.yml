@@ -1,0 +1,86 @@
+# =====================================================================
+#  YDSZ 工作流引擎 — 移动端基座配置（Nacos 数据中心）
+#  对应模块：ydsz-workflow-app（端口 7005）
+#  与 workflow-web 的差异：
+#    - app 端仅暴露精简的流程查询/审批接口
+#    - 不暴露流程设计器/发布管理（仅 Web 端）
+#    - 弱网优化：返回 DTO 字段精简
+# =====================================================================
+
+ydsz:
+  tenant:
+    enabled: true
+    mode: MULTI
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+    tenant-fields:
+      - column: tenant_id
+        claim: tenantId
+        header: X-Tenant-Id
+      - column: company_id
+        claim: companyId
+        header: X-Company-Ids
+      - column: dept_id
+        claim: deptId
+        header: X-Dept-Ids
+        multi-value: true
+    ignore-tables:
+      - ydsz_tenant
+      - ydsz_tenant_plan
+      - ydsz_dict
+      - ydsz_dict_data
+
+  flow:
+    enabled: true
+    health-enabled: true
+    publish-block-on-high-risk: true
+    designer-lock-timeout-minutes: 30
+    definition-cache:
+      definition-cache-ttl-minutes: 60
+      definition-cache-max-size: 1000
+
+  seata:
+    enabled: false
+    default-type: LOCAL
+    tcc-enabled: false
+    saga-enabled: false
+    seata-at-enabled: false
+    tcc-log-store: memory
+
+  json:
+    use-big-decimal: true
+    streaming-enabled: true
+    warmup-classes:
+      - com.njydsz.workflow.infra.entity.FlowDefinition
+      - com.njydsz.workflow.infra.entity.FlowInstance
+
+  thread:
+    enabled: true
+    pools:
+      flowQueue:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 256
+        thread-name-prefix: flow-app-queue-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 10
+      auditExecutor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+        thread-name-prefix: ydsz-flow-app-audit-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
+
+  search:
+    pg:
+      index-table: ydsz_workflow_search_index
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+skywalking:
+  agent:
+    service_name: ydzsz-workflow-app
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

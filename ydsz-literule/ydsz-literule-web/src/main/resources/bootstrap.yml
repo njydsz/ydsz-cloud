@@ -56,95 +56,9 @@ spring:
         file-extension: yaml
         refresh-enabled: true
         shared-configs:
-          - data-id: ydsz-common.yaml
+          - data-id: ydsz-common.yml
             group: ${spring.profiles.active}
             refresh: true
-
-# P0-2: 统一线程池配置（ydsz-common-thread）
-# LiteRuleAutoConfiguration 通过 lookupExecutor() 查找以下命名线程池，
-# 找到则注入管理，找不到则降级为 Executors.new*（测试环境可用）
-ydsz:
-  # P0: 多租户隔离（ydsz-common-tenant）— A6 全引擎启用
-  tenant:
-    enabled: true
-    mode: SINGLE
-    tenant-column: tenant_id
-    default-claim: tenantId
-    default-header: X-Tenant-Id
-    super-tenant-id: "0"
-    system-tenant-id: "1"
-    anon-urls:
-      - /actuator/**
-      - /v3/api-docs/**
-      - /swagger-ui/**
-      - /favicon.ico
-      - /error
-    ignore-tables:
-      - ydsz_company
-      - ydsz_department
-      - ydsz_post
-      - ydsz_language
-  thread:
-    enabled: true
-    pools:
-      ruleTimeoutExecutor:
-        core-size: 2
-        max-size: 8
-        queue-capacity: 256
-        thread-name-prefix: literule-timeout-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 15
-      ruleParallelExecutor:
-        core-size: 4
-        max-size: 16
-        queue-capacity: 512
-        thread-name-prefix: literule-parallel-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 15
-      modelInputExecutor:
-        core-size: 2
-        max-size: 4
-        queue-capacity: 128
-        thread-name-prefix: literule-model-input-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 10
-      factProviderExecutor:
-        core-size: 2
-        max-size: 4
-        queue-capacity: 128
-        thread-name-prefix: literule-fact-provider-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 10
-
-  # P0: JDBC 安全加固（ydsz-common-jdbc）
-  jdbc:
-    # SQL 防火墙：拦截 DDL（DROP/TRUNCATE）、无 WHERE 写操作、多语句注入、GRANT/REVOKE
-    sql-firewall:
-      enabled: true
-      block-drop-table: true
-      block-truncate: true
-      block-delete-without-where: true
-      block-update-without-where: true
-      block-multi-statement: true
-      block-permission-ops: true
-    # 分页安全上限：防止 pageSize=999999 导致全表扫描 OOM
-    pagination:
-      max-limit: 500
-    # P1: 慢 SQL 全局检测
-    slow-sql:
-      enabled: true
-      threshold-millis: 500
-      alert-threshold-millis: 2000
-    # P2: SQL 审计（写操作落盘备查）
-    sql-audit:
-      enabled: true
-      audit-select: false
-      audit-insert: true
-      audit-update: true
-      audit-delete: true
-      log-parameters: true
-      max-parameter-length: 500
-
-  i18n:
-    locale-resolver-type: user-priority
-    runtime-strictness: STRICT
+          - data-id: ydsz-literule-web.yml
+            group: ${spring.profiles.active}
+            refresh: true
