@@ -39,6 +39,11 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-core</artifactId>
     </dependency>
+    <!-- ydsz-common-json：YdszResponse 上的 @JsonInclude 注解来源模块（common-core 未传递该依赖到下游） -->
+    <dependency>
+      <groupId>com.njydsz</groupId>
+      <artifactId>ydsz-common-json</artifactId>
+    </dependency>
     <!-- Lombok -->
     <dependency>
       <groupId>org.projectlombok</groupId>
