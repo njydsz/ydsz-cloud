@@ -3,11 +3,11 @@ package com.njydsz.workflow.domain.entity;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 工作流全链路幂等记录实体。
@@ -24,19 +24,17 @@ import lombok.Data;
  *
  * <p><b>TTL 策略：</b>凭 {@code ttl_at} 字段由定时任务自动清理过期记录，无需逻辑删除。
  *
+ * <p><b>表特征：</b>该表无 created_by/updated_by 审计人字段，仅含 id 主键，继承 {@link MpBaseIdEntity}。
+ *
  * @author ydsz-team
  * @since 26.10.02
  */
 @Data
-@TableName("ydsz_flow_idempotent")
-public class FlowIdempotent {
+@EqualsAndHashCode(callSuper = true)
+public class FlowIdempotent extends MpBaseEntity<String> {
 
   @Serial
   private static final long serialVersionUID = 1L;
-
-  /** 主键 ID（Snowflake） */
-  @TableId(value = "id", type = IdType.ASSIGN_ID)
-  private String id;
 
   /** 幂等作用域（如 workflow.advance / workflow.start / workflow.reject） */
   @TableField("scope")
@@ -54,10 +52,6 @@ public class FlowIdempotent {
   @TableField("result_data")
   private String resultData;
 
-  /** 处理状态（PROCESSING / SUCCESS / FAILED） */
-  @TableField("status")
-  private String status;
-
   /** 重试次数 */
   @TableField("retry_count")
   private Integer retryCount;
@@ -65,18 +59,6 @@ public class FlowIdempotent {
   /** 最后一次错误信息 */
   @TableField("error_message")
   private String errorMessage;
-
-  /** 租户 ID */
-  @TableField("tenant_id")
-  private String tenantId;
-
-  /** 创建时间 */
-  @TableField("created_at")
-  private LocalDateTime createdAt;
-
-  /** 更新时间 */
-  @TableField("updated_at")
-  private LocalDateTime updatedAt;
 
   /** 过期时间（自动清理依据） */
   @TableField("ttl_at")

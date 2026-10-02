@@ -1,23 +1,20 @@
 package com.njydsz.message.domain.entity;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
-
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.locales.util.I18n;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.locales.util.I18n;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 消息发送日志领域实体，全通道发送全量记录的事实表。
@@ -25,6 +22,9 @@ import com.njydsz.common.locales.util.I18n;
  * <p>对应数据库表 {@code ydsz_msg_log}。记录每条消息的完整生命周期（接收→校验→路由→渲染→投递→回执），
  * 状态/优先级/通道字段使用枚举类型。含领域行为方法（markAsSending/Success/Failed/Recalled/Skipped）
  * 驱动状态流转，通过 canTransitionTo 校验合法性。
+ *
+ * <p><b>status 字段说明：</b>DB 存储为 VARCHAR（枚举 name 字符串，如 PENDING/SENDING/SUCCESS），
+ * 领域方法通过 {@link MessageStatusEnum#valueOf(String)} 做枚举转换，保证类型安全与兼容基类 {@code MpBaseEntity}。
  *
  * @author ydsz
  * @since 26.09.24
@@ -34,20 +34,10 @@ import com.njydsz.common.locales.util.I18n;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@TableName("ydsz_msg_log")
-public class MsgLog implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class MsgLog extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
-
-  // ===== 审计字段 =====
-  @TableId(value = "id", type = IdType.ASSIGN_ID)
-  private String id;
-  private String tenantId;
-  private String createdBy;
-  private LocalDateTime createdAt;
-  private String updatedBy;
-  private LocalDateTime updatedAt;
-  private Boolean isDeleted;
 
   // ===== 业务字段 =====
   private MessageChannelEnum channel;
@@ -57,7 +47,6 @@ public class MsgLog implements Serializable {
   private String templateCode;
   private String templateParams;
   private String content;
-  private MessageStatusEnum status;
   private String errorMessage;
   private MessagePriorityEnum priority;
   private String senderId;
@@ -86,6 +75,28 @@ public class MsgLog implements Serializable {
   // ===== 领域行为 =====
 
   /**
+   * 获取状态枚举视图。
+   *
+   * @return 状态枚举，无法解析时返回 null
+   */
+  public MessageStatusEnum getStatusEnum() {
+    return getStatus() == null ? null : MessageStatusEnum.valueOf(getStatus());
+  }
+
+  /**
+   * 设置状态（通过枚举）。
+   *
+   * @param statusEnum 状态枚举，不可为 null
+   */
+  public void setStatusEnum(MessageStatusEnum statusEnum) {
+    if (statusEnum == null) {
+      setStatus(null);
+      return;
+    }
+    setStatus(statusEnum.name());
+  }
+
+  /**
    * 标记消息为发送中状态。
    *
    * <p>状态流转：待发送/重试 → 发送中
@@ -94,7 +105,7 @@ public class MsgLog implements Serializable {
    */
   public void markAsSending() {
     validateTransition(MessageStatusEnum.SENDING);
-    this.status = MessageStatusEnum.SENDING;
+    setStatus(MessageStatusEnum.SENDING.name());
   }
 
   /**
@@ -109,7 +120,7 @@ public class MsgLog implements Serializable {
    */
   public void markAsSuccess(String providerTraceId, long costMs, BigDecimal cost) {
     validateTransition(MessageStatusEnum.SUCCESS);
-    this.status = MessageStatusEnum.SUCCESS;
+    setStatus(MessageStatusEnum.SUCCESS.name());
     this.providerTraceId = providerTraceId;
     this.costMs = costMs;
     this.cost = cost;
@@ -125,7 +136,7 @@ public class MsgLog implements Serializable {
    */
   public void markAsFailed(String errorMessage) {
     validateTransition(MessageStatusEnum.FAILED);
-    this.status = MessageStatusEnum.FAILED;
+    setStatus(MessageStatusEnum.FAILED.name());
     this.errorMessage = errorMessage;
   }
 
@@ -139,7 +150,7 @@ public class MsgLog implements Serializable {
    */
   public void markAsRetry(LocalDateTime nextRetryAt) {
     validateTransition(MessageStatusEnum.RETRY);
-    this.status = MessageStatusEnum.RETRY;
+    setStatus(MessageStatusEnum.RETRY.name());
     this.nextRetryAt = nextRetryAt;
     if (this.retryCount == null) {
       this.retryCount = 1;
@@ -157,7 +168,7 @@ public class MsgLog implements Serializable {
    */
   public void markAsRecalled() {
     validateTransition(MessageStatusEnum.RECALLED);
-    this.status = MessageStatusEnum.RECALLED;
+    setStatus(MessageStatusEnum.RECALLED.name());
     this.recallStatus = RecallStatusEnum.RECALLED;
     this.recallAt = LocalDateTime.now();
   }
@@ -171,7 +182,7 @@ public class MsgLog implements Serializable {
    */
   public void markAsSkipped() {
     validateTransition(MessageStatusEnum.SKIPPED);
-    this.status = MessageStatusEnum.SKIPPED;
+    setStatus(MessageStatusEnum.SKIPPED.name());
   }
 
   /**
@@ -181,10 +192,11 @@ public class MsgLog implements Serializable {
    * @return true 表示允许流转
    */
   public boolean canTransitionTo(MessageStatusEnum targetStatus) {
-    if (this.status == null) {
+    MessageStatusEnum current = getStatusEnum();
+    if (current == null) {
       return true;
     }
-    return this.status.canTransitTo(targetStatus);
+    return current.canTransitTo(targetStatus);
   }
 
   /**
@@ -195,16 +207,18 @@ public class MsgLog implements Serializable {
    * @return true 表示已处于终态
    */
   public boolean isTerminal() {
-    if (this.status == null) {
+    MessageStatusEnum current = getStatusEnum();
+    if (current == null) {
       return false;
     }
-    return this.status.isTerminal();
+    return current.isTerminal();
   }
 
   private void validateTransition(MessageStatusEnum targetStatus) {
-    if (this.status != null && !this.status.canTransitTo(targetStatus)) {
+    MessageStatusEnum current = getStatusEnum();
+    if (current != null && !current.canTransitTo(targetStatus)) {
       throw new IllegalStateException(
-          I18n.message("message.msglog.invalid_transition", new Object[]{this.status, targetStatus}));
+          I18n.message("message.msglog.invalid_transition", new Object[]{current, targetStatus}));
     }
   }
 }

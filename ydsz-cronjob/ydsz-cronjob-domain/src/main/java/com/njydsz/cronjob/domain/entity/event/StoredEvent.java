@@ -3,10 +3,10 @@ package com.njydsz.cronjob.domain.entity.event;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 存储事件实体（P3-1 Event Sourcing）。
@@ -30,18 +30,16 @@ import lombok.Data;
  * ) COMMENT='事件存储表（Event Sourcing）';
  * }</pre>
  *
+ * <p><b>表特征：</b>事件源表无租户/审计人字段，仅含 id 主键，继承 {@link MpBaseIdEntity}。
+ *
  * @author ydsz-team
  * @since 26.10.01
  */
 @Data
-@TableName("ydsz_job_event_store")
-public class StoredEvent {
+@EqualsAndHashCode(callSuper = true)
+public class StoredEvent extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
-
-  /** 事件 ID（雪花算法） */
-  @TableId(type = IdType.ASSIGN_ID)
-  private String id;
 
   /** 聚合根类型（如 job、dag_definition） */
   private String aggregateType;
@@ -60,7 +58,4 @@ public class StoredEvent {
 
   /** 事件发生时间 */
   private LocalDateTime occurredAt;
-
-  /** 记录写入时间 */
-  private LocalDateTime createdAt;
 }

@@ -1,22 +1,18 @@
 package com.njydsz.message.domain.entity;
 
 import java.io.Serial;
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
-
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.NotificationCategoryEnum;
 import com.njydsz.message.domain.enums.core.NotificationLevelEnum;
 import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 站内通知领域实体，系统消息/待办/预警/公告统一入口。
@@ -33,20 +29,10 @@ import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 @Data
 @SuperBuilder
 @NoArgsConstructor
-@TableName("ydsz_msg_notification")
-public class MsgNotification implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class MsgNotification extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
-
-  // ===== 审计字段 =====
-  @TableId(value = "id", type = IdType.ASSIGN_ID)
-  private String id;
-  private String tenantId;
-  private String createdBy;
-  private LocalDateTime createdAt;
-  private String updatedBy;
-  private LocalDateTime updatedAt;
-  private Boolean isDeleted;
 
   // ===== 业务字段 =====
   private String title;

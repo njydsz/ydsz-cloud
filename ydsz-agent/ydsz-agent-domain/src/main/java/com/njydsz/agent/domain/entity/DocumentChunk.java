@@ -3,11 +3,11 @@ package com.njydsz.agent.domain.entity;
 import java.io.Serial;
 import java.time.OffsetDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * RAG 文档分块向量实体。
@@ -17,19 +17,17 @@ import lombok.Data;
  *
  * <p><b>向量字段：</b>{@link #embedding} 为 {@code vector(1536)} 类型，需 pgvector 扩展支持。
  *
+ * <p><b>表特征：</b>该表无 created_by/updated_by 审计人字段，仅含 id 主键，继承 {@link MpBaseIdEntity}。
+ *
  * @author ydsz-team
  * @since 26.10.02
  */
 @Data
-@TableName("ydsz_agt_document_chunk")
-public class DocumentChunk {
+@EqualsAndHashCode(callSuper = true)
+public class DocumentChunk extends MpBaseEntity<String> {
 
   @Serial
   private static final long serialVersionUID = 1L;
-
-  /** 分块主键 ID */
-  @TableId(value = "id", type = IdType.ASSIGN_ID)
-  private String id;
 
   /** 所属文档 ID */
   @TableField("document_id")
@@ -62,16 +60,4 @@ public class DocumentChunk {
   /** 分块元数据 JSONB */
   @TableField("metadata")
   private String metadata;
-
-  /** 租户 ID（多租户隔离） */
-  @TableField("tenant_id")
-  private String tenantId;
-
-  /** 逻辑删除标识 */
-  @TableField("is_deleted")
-  private Boolean isDeleted;
-
-  /** 创建时间 */
-  @TableField("created_at")
-  private OffsetDateTime createdAt;
 }

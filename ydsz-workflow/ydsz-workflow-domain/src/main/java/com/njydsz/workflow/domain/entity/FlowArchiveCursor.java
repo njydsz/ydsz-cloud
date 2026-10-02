@@ -1,12 +1,9 @@
 package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -24,21 +21,18 @@ import lombok.NoArgsConstructor;
  *   <li>archive_type = PURGE：value = 上次清理的最大 id</li>
  * </ul>
  *
+ * <p><b>表特征：</b>该表无 created_by/updated_by 审计人字段，仅含 id 主键，继承 {@link MpBaseIdEntity}。
+ *
  * @author ydsz-team
  * @since 26.09.23
  */
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-@TableName("ydsz_flow_archive_cursor")
-public class FlowArchiveCursor {
+@EqualsAndHashCode(callSuper = true)
+public class FlowArchiveCursor extends MpBaseEntity<String> {
 
   @Serial
   private static final long serialVersionUID = 1L;
-
-  /** 主键 ID（Snowflake） */
-  @TableId(type = IdType.ASSIGN_ID)
-  private String id;
 
   /** 归档类型（INSTANCE / PURGE） */
   private String archiveType;
@@ -48,13 +42,4 @@ public class FlowArchiveCursor {
 
   /** 附加数据 JSON */
   private String cursorData;
-
-  /** 租户 ID */
-  private String tenantId;
-
-  /** 创建时间 */
-  private LocalDateTime createdAt;
-
-  /** 最后更新时间 */
-  private LocalDateTime updatedAt;
 }

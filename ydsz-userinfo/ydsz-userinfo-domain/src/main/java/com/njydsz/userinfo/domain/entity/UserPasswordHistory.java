@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -39,9 +40,8 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_idm_account_password_history")
-// YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")
-public class UserPasswordHistory extends MpBaseIdEntity<String> {
+public class UserPasswordHistory extends MpBaseEntity<String> {
 
   /** 主键 ID（雪花算法，由基类提供；此处覆盖 @TableId 以兼容 String 类型） */
   @TableId(type = IdType.ASSIGN_ID)
@@ -52,8 +52,4 @@ public class UserPasswordHistory extends MpBaseIdEntity<String> {
 
   /** BCrypt 加密后的历史密码哈希 */
   private String passwordHash;
-
-  /** 逻辑删除标记（false=未删除，true=已删除；用于软删除兼容） */
-  @TableField(value = "is_deleted")
-  private Boolean isDeleted;
 }

@@ -16,14 +16,14 @@ meta:
   version: "26.10.01-v22"  # v21: +YDIZ-DOCS-001 文档处理必须通过 ydzsz-common-docs 统一模块
   source: "docs/云顶编码规范.md v1.0.12"
   last_synced: "2026-10-01"
-  last_updated: "26.10.01-v22（ydsz-common-socket 全局引用分析整改：+1 P0 规则 YDIZ-DOCS-001 文档处理统一入口；总规则 180 条）"
-  total_rules: 183
+  last_updated: "26.10.01-v23（+1 P0 强制基础字段规则 YDIZ-DB-002；总规则 184 条）"
+  total_rules: 184
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 58
+    P0: 59
     P1: 88
     P2: 24
 
@@ -272,8 +272,51 @@ rules:
     source: "编码规范 6.5 节"
 
   # ============================================
-  # 五、数据库命名规范（1 条，P0）
+  # 五、数据库命名规范（2 条，P0）
   # ============================================
+  - id: "YDIZ-DB-002"
+    category: "database"
+    severity: "P0"
+    title: "【强制】每张表必须包含 9 个基础字段，顺序固定"
+    description: |
+      **每张数据库表必须包含以下 9 个基础字段**，类型固定、顺序固定（放在主键 id 之后、CONSTRAINT 之前）：
+
+      末尾 9 个基础字段（顺序严格固定）：
+      1. `sort` — `INTEGER NOT NULL DEFAULT 0` — 排序权重
+      2. `status` — `INTEGER NOT NULL DEFAULT 1` — 状态标识
+      3. `revision` — `INTEGER NOT NULL DEFAULT 0` — 乐观锁版本号
+      4. `tenant_id` — `VARCHAR(64) NOT NULL DEFAULT '0'` — 租户 ID（多租户隔离）
+      5. `is_deleted` — `BOOLEAN NOT NULL DEFAULT FALSE` — 逻辑删除标识
+      6. `created_by` — `VARCHAR(64)` — 创建人
+      7. `created_at` — `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP` — 创建时间
+      8. `updated_by` — `VARCHAR(64)` — 最后更新人
+      9. `updated_at` — `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP` — 最后更新时间
+
+      **已有业务字段与上述名称冲突时**：业务字段改名（如业务状态改为 `xxx_status`），基础字段 `status` 不可省略。
+
+      **Java 实体侧**：必须继承 `MpBaseEntity<String>`（来自 ydzs-common-jdbc），禁止手动声明这 9 个基础字段。
+
+      **MySQL 方言适配**：is_deleted → TINYINT(1)，时间 → DATETIME(3)，整数 → INT NOT NULL
+
+      **Oracle 方言适配**：is_deleted → NUMBER(1)，时间 → DATE，VARCHAR → VARCHAR2，INTEGER → NUMBER
+    pattern: "CREATE TABLE 缺少 sort/status/revision/tenant_id/is_deleted/created_by/created_at/updated_by/updated_at 中任意一个，或顺序不正确"
+    fix: "按固定顺序补充缺失的基础字段；已有同名业务字段需改名"
+    example_bad: |
+      ❌ CREATE TABLE ydsz_xxx (id VARCHAR(64), name VARCHAR(128), is_deleted BOOLEAN);
+      ❌ 字段顺序错误：sort 放在 status 之后
+      ❌ Java 实体直接 extends MpBaseEntity 外再声明 private Integer sort;
+    example_good: |
+      ✅ CREATE TABLE ydsz_xxx (
+             id VARCHAR(64) NOT NULL, name VARCHAR(128) NOT NULL,
+             sort INTEGER NOT NULL DEFAULT 0, status INTEGER NOT NULL DEFAULT 1,
+             revision INTEGER NOT NULL DEFAULT 0, tenant_id VARCHAR(64) NOT NULL DEFAULT '0',
+             is_deleted BOOLEAN NOT NULL DEFAULT FALSE, created_by VARCHAR(64),
+             created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+             updated_by VARCHAR(64), updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+             CONSTRAINT pk_xxx PRIMARY KEY (id));
+      ✅ Java: public class Xxx extends MpBaseEntity<String> { ... }
+    source: "编码规范 6.13 节"
+
   - id: "YDIZ-DB-001"
     category: "database"
     severity: "P0"

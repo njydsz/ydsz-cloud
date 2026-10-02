@@ -3,7 +3,9 @@ package com.njydsz.agent.domain.entity;
 import java.math.BigDecimal;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
@@ -16,7 +18,8 @@ import lombok.experimental.SuperBuilder;
  * <p><b>YDIZ-DDD-007</b>：domain Entity 直接携带 MyBatis-Plus ORM 注解，
  * infra 层通过依赖 domain 模块引用本类，禁止自建 PO/DO 副本。
  *
- * <p><b>表特征</b>：该表使用 (trace_id, step_index) 复合业务键，无独立 id 列，不使用 BaseMapper。
+ * <p><b>表特征</b>：该表使用 (trace_id, step_index) 复合业务键，不使用 BaseMapper，
+ * 通过 Repository 手写 SQL 精确控制查询列，故对象中继承的 id/revision/tenantId 等字段不参与持久化。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -24,20 +27,11 @@ import lombok.experimental.SuperBuilder;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_agt_trace_step")
-public class AgentTraceStep {
+public class AgentTraceStep extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
-
-  /**
-   * 租户 ID（多租户隔离字段，由 Repository 层或拦截器透明注入）
-   *
-   * <p>该字段不参与复合业务键，仅用于数据隔离过滤。
-   */
-  private String tenantId;
-
-  /** 链路 ID（关联 ydsz_agt_trace.traceId） */
-  private String traceId;
 
   /** 步骤序号（从 0 开始递增） */
   private Integer stepIndex;
