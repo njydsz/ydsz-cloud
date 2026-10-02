@@ -2,9 +2,6 @@ package com.njydsz.nextwiki.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,25 +31,11 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @TableName("ydsz_file_user_favorite")
 public class UserFavorite extends MpBaseEntity<String> {
 
-  /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.INPUT)
-  private String id;
-
   /** 用户ID */
   private String userId;
 
   /** 收藏的文件/目录节点ID */
   private String nodeId;
-
-  /** 租户ID */
-  private String tenantId;
-
-  /** 排序序号（值越小越靠前） */
-  private Integer sort;
-
-  /** 逻辑删除标识 */
-  @TableLogic
-  private Boolean isDeleted;
 
   /** 删除时间 */
   private LocalDateTime deletedTime;

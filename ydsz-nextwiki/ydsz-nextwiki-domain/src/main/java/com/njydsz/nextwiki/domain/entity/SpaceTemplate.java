@@ -1,8 +1,5 @@
 package com.njydsz.nextwiki.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,10 +39,6 @@ public class SpaceTemplate extends MpBaseEntity<String> {
   /** 分类：知识库 */
   public static final String CATEGORY_KNOWLEDGE = "knowledge";
 
-  /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.INPUT)
-  private String id;
-
   /** 模板名称 */
   private String name;
 
@@ -58,9 +51,6 @@ public class SpaceTemplate extends MpBaseEntity<String> {
   /** 模板图标 URL */
   private String iconUrl;
 
-  /** 租户ID（系统模板为 null） */
-  private String tenantId;
-
   /** 是否为系统内置模板（不可删除） */
   private Boolean isSystem;
 
@@ -70,15 +60,8 @@ public class SpaceTemplate extends MpBaseEntity<String> {
   /** 模板结构 JSON（定义目录树、初始页面、权限配置等） */
   private String structureJson;
 
-  /** 排序序号 */
-  private Integer sort;
-
   /** 使用次数 */
   private Integer usageCount;
-
-  /** 逻辑删除标识 */
-  @TableLogic
-  private Boolean isDeleted;
 
   // ==================== P2-3: 文件模板扩展 ====================
 

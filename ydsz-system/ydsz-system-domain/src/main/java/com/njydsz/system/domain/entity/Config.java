@@ -72,8 +72,6 @@ public class Config extends MpBaseEntity<String> {
   /** 是否公开配置（true=公开，前端可查；false=私有，仅后端可查） */
   private Boolean isPublic;
 
-  /** 排序序号 */
-  private Integer sort;
 
   // ==================== 充血领域方法 ====================
 

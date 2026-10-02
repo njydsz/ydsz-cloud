@@ -72,8 +72,6 @@ public class FileNode extends MpBaseEntity<String> implements Serializable {
   /** 层级深度（根为 0） */
   private Integer level;
 
-  /** 排序序号 */
-  private Integer sort;
 
   /** 当前版本号（从 1 开始，每次更新 +1） */
   private Integer currentVersion;

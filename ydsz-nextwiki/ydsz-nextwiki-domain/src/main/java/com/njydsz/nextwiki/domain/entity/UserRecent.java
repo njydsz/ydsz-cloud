@@ -2,9 +2,6 @@ package com.njydsz.nextwiki.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,18 +31,11 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @TableName("ydsz_file_user_recent")
 public class UserRecent extends MpBaseEntity<String> {
 
-  /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.INPUT)
-  private String id;
-
   /** 用户ID */
   private String userId;
 
   /** 访问的文件/目录节点ID */
   private String nodeId;
-
-  /** 租户ID */
-  private String tenantId;
 
   /** 访问类型：view / edit / download */
   private String accessType;
@@ -53,7 +43,4 @@ public class UserRecent extends MpBaseEntity<String> {
   /** 最近访问时间（排序字段） */
   private LocalDateTime accessedAt;
 
-  /** 逻辑删除标识 */
-  @TableLogic
-  private Boolean isDeleted;
 }

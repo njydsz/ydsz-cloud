@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,15 +32,8 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
   /** 默认最大重试次数 */
   private static final int DEFAULT_MAX_RETRY = 3;
 
-  /** 主键 ID（自增，对应数据库 sequence）。 */
-  @TableId(type = IdType.AUTO)
-  private Long id;
-
   /** 任务类型编码（REPORT_GENERATE / DOC_INGEST / BATCH_CHAT 等） */
   private String taskType;
-
-  /** 租户 ID（多租户隔离，对齐 MpBaseEntity.tenantId 命名约定） */
-  private String tenantId;
 
   /** 触发用户 ID */
   private String userId;
@@ -92,7 +83,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
    * @return 租户编码
    */
   public String getTenantCode() {
-    return tenantId;
+    return getTenantId();
   }
 
   /**
@@ -112,7 +103,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
    */
   public AsyncTask(String taskType, String tenantId, String userId, String inputPayload) {
     this.taskType = Objects.requireNonNull(taskType, "taskType 不能为 null");
-    this.tenantId = tenantId;
+    setTenantId(tenantId);
     this.userId = userId;
     this.inputPayload = inputPayload;
     setStatus(AsyncTaskStatus.PENDING.getCode());

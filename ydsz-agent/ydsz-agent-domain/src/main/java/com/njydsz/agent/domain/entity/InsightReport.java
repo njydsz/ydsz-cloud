@@ -2,8 +2,6 @@ package com.njydsz.agent.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,10 +34,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 public class InsightReport extends MpBaseEntity<Long> {
 
   private static final long serialVersionUID = 1L;
-
-  /** 自增主键（与数据库 SERIAL/BIGSERIAL 自增列对齐）。 */
-  @TableId(type = IdType.AUTO)
-  private Long id;
 
   /** 唯一业务 ID */
   private String reportId;

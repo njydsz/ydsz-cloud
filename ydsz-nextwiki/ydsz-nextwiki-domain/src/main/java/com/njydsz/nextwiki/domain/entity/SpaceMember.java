@@ -2,9 +2,6 @@ package com.njydsz.nextwiki.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,10 +41,6 @@ public class SpaceMember extends MpBaseEntity<String> {
   /** 角色：查看者（只读权限） */
   public static final String ROLE_VIEWER = "viewer";
 
-  /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.INPUT)
-  private String id;
-
   /** 空间ID */
   private String spaceId;
 
@@ -57,13 +50,7 @@ public class SpaceMember extends MpBaseEntity<String> {
   /** 角色：owner / admin / editor / viewer */
   private String role;
 
-  /** 租户ID */
-  private String tenantId;
-
   /** 加入时间 */
   private LocalDateTime joinedAt;
 
-  /** 逻辑删除标识 */
-  @TableLogic
-  private Boolean isDeleted;
 }

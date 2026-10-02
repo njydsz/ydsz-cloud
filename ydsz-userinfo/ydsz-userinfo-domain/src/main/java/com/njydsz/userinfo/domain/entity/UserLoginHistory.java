@@ -1,7 +1,5 @@
 package com.njydsz.userinfo.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -43,10 +41,6 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")
 public class UserLoginHistory extends MpBaseEntity<String> {
-
-  /** 主键 ID（雪花算法，由基类提供；此处覆盖 @TableId 以兼容 String 类型） */
-  @TableId(type = IdType.ASSIGN_ID)
-  private String id;
 
   /** 用户 ID（关联 ydsz_idm_account_user.id） */
   private String userId;

@@ -2,9 +2,7 @@ package com.njydsz.userinfo.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,10 +37,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 public class ApiKey extends MpBaseEntity<Long> {
 
   private static final long serialVersionUID = 1L;
-
-  /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID） */
-  @TableId(type = IdType.AUTO)
-  private Long id;
 
   /** API Key SHA-256 哈希值（唯一索引，用于验证） */
   @TableField("api_key_hash")

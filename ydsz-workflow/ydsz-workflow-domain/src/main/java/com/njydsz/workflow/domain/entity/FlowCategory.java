@@ -53,8 +53,6 @@ public class FlowCategory extends MpBaseEntity<String> {
   /** 父分类 ID（支持多级树形结构，顶级为 {@code NULL}） */
   private String parentId;
 
-  /** 排序号（越小越靠前，YDIZ-DB-001 统一命名为 sort）。 */
-  private Integer sort;
 
   /** 图标（前端展示用，如 Element Plus icon 名称） */
   private String icon;

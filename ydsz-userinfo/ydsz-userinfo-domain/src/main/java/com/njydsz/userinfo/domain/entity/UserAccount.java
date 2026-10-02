@@ -95,6 +95,9 @@ public class UserAccount extends MpBaseEntity<String> {
    * <p><b>YDIZ-DDD-008 豁免</b>：DB 列 {@code status} 为历史遗留整型（0=禁用/1=启用），
    * 需通过自定义 {@link IntegerStringTypeHandler} 做 String↔Integer 双向转换。
    * TODO: 后续 DDL 迁移为 VARCHAR 存储枚举值（ENABLED/DISABLED/…）后可移除此字段覆盖，改用基类标准映射。
+   *
+   * <p><b>YDIZ-DB-006 豁免</b>：status 字段因使用特殊 TypeHandler（IntegerStringTypeHandler），
+   * 保留覆盖声明（架构确认 26.10.02）。
    */
   @TableField(value = "status", typeHandler = IntegerStringTypeHandler.class)
   private String status;

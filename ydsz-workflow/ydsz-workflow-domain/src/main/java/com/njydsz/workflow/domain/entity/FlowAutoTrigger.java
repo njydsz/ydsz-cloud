@@ -71,7 +71,5 @@ public class FlowAutoTrigger extends MpBaseEntity<String> {
   @TableField("is_enabled")
   private Boolean isEnabled;
 
-  /** 排序权重（升序执行） */
-  @TableField("sort")
-  private Integer sort;
+
 }

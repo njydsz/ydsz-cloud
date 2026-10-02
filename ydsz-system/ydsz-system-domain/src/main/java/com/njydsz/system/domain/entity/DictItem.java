@@ -52,8 +52,6 @@ public class DictItem extends MpBaseEntity<String> {
   /** 字典项真实值（业务代码引用的枚举值，如 "PAID"） */
   private String itemValue;
 
-  /** 展示排序序号（升序） */
-  private Integer sort;
 
   /** 父级字典项 ID，支持树形字典（如行政区划、组织架构） */
   private String parentId;

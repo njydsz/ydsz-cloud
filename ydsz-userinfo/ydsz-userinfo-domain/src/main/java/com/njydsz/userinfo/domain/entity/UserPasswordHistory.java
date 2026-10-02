@@ -1,8 +1,5 @@
 package com.njydsz.userinfo.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -42,10 +39,6 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @TableName("ydsz_idm_account_password_history")
 @SuppressWarnings("unchecked")
 public class UserPasswordHistory extends MpBaseEntity<String> {
-
-  /** 主键 ID（雪花算法，由基类提供；此处覆盖 @TableId 以兼容 String 类型） */
-  @TableId(type = IdType.ASSIGN_ID)
-  private String id;
 
   /** 用户 ID（关联 ydsz_idm_account_user.id） */
   private String userId;

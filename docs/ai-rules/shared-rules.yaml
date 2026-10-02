@@ -793,8 +793,9 @@ rules:
 
       **字段覆盖豁免（需代码注释说明）**：
       1. 数据库列因历史遗留使用非标准类型（如整型 0/1 表示状态），需通过自定义 `typeHandler` 映射时：
-         子类可重新声明 `@TableField(value = "status", typeHandler = XxxTypeHandler.class) private String status`，
-         但必须在 Javadoc 中说明"历史遗留"原因及建议迁移方案
+         **正确做法**：将业务字段改名（如 `lifecycleStatus`），通过 `@TableField(value = "status", typeHandler = XxxTypeHandler.class)` 保持数据库列映射，
+         Java 字段名不再与基类 `status` 冲突，MP 反射扫描时子类字段覆盖父类映射，无需 platform 字段覆盖。
+         必须在 Javadoc 中说明"历史遗留"原因及建议迁移为 VARCHAR 枚举列后的字段名对齐方案。
       2. 表使用复合业务键无独立 id 列（如 `(trace_id, step_index)`），不使用 BaseMapper，
          手写 SQL 精确控制查询列时：可声明不参与持久化的 id 字段或复用表结构映射，
          但仍须继承 MpBaseEntity 并在 Javadoc 说明"复合主键，继承字段不参与持久化"

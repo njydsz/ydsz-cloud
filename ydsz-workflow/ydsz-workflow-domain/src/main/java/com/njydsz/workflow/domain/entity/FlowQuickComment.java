@@ -2,7 +2,6 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -57,9 +56,6 @@ public class FlowQuickComment extends MpBaseEntity<String> {
   /** 意见分类：{@code AGREE} / {@code DISAGREE} / {@code SUGGEST} / {@code INQUIRE}（可空） */
   private String commentType;
 
-  /** 排序号（越小越靠前，默认 {@code 0}，数据库列名 sort_num）。 */
-  @TableField("sort_num")
-  private Integer sort;
 
   /** 使用次数（统计用，前端可按使用频率排序） */
   private Integer useCount;

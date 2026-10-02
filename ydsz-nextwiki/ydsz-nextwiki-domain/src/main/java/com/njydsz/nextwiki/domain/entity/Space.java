@@ -2,9 +2,6 @@ package com.njydsz.nextwiki.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -62,9 +59,6 @@ public class Space extends MpBaseEntity<String> {
   /** 空间封面 URL */
   private String coverUrl;
 
-  /** 租户ID */
-  private String tenantId;
-
   /** 空间所有者（创建者） */
   private String ownerId;
 
@@ -82,10 +76,6 @@ public class Space extends MpBaseEntity<String> {
 
   /** 已使用配额（字节） */
   private Long quotaUsed;
-
-  /** 逻辑删除标识 */
-  @TableLogic
-  private Boolean isDeleted;
 
   /** 删除时间 */
   private LocalDateTime deletedTime;

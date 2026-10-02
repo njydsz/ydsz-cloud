@@ -5,9 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
@@ -34,11 +31,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 public class AgentTrace extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
-
-  /** 链路唯一 ID（主键，业务生成非自增，映射数据库 trace_id 列）。 */
-  @TableId(type = IdType.INPUT)
-  @TableField("trace_id")
-  private String id;
 
   /** 所属对话 ID */
   private String conversationId;
