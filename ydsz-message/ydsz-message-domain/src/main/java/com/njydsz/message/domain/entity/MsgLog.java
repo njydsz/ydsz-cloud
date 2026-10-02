@@ -14,6 +14,9 @@ import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.locales.util.I18n;
 
 /**
@@ -31,11 +34,13 @@ import com.njydsz.common.locales.util.I18n;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@TableName("ydsz_msg_log")
 public class MsgLog implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
   // ===== 审计字段 =====
+  @TableId(value = "id", type = IdType.ASSIGN_ID)
   private String id;
   private String tenantId;
   private String createdBy;

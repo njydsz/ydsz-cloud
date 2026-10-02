@@ -562,14 +562,73 @@ COMMENT ON COLUMN ydsz_sys_api_permission.updated_at IS '更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_api_permission_tenant_deleted ON ydsz_sys_api_permission (tenant_id, is_deleted);
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_api_permission_api_code ON ydsz_sys_api_permission (api_code);
 
+-- ============================================================================
+-- 配置变更审批单（ydsz_system_config_approval）
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS ydsz_system_config_approval (
+    id                       VARCHAR(32),
+    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    resource_type            VARCHAR(32)              NOT NULL,
+    resource_key             VARCHAR(128)             NOT NULL,
+    resource_group           VARCHAR(128)             DEFAULT NULL,
+    change_type              VARCHAR(16)              NOT NULL,
+    before_json              TEXT                     DEFAULT NULL,
+    after_json               TEXT                     DEFAULT NULL,
+    status                   VARCHAR(16)              NOT NULL DEFAULT 'PENDING',
+    submitter_id             VARCHAR(32)              DEFAULT NULL,
+    submitted_at             TIMESTAMP                DEFAULT NULL,
+    reason                   VARCHAR(512)             DEFAULT NULL,
+    rejection_reason         VARCHAR(512)             DEFAULT NULL,
+    closed_at                TIMESTAMP                DEFAULT NULL,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
+    revision                 INTEGER                  NOT NULL DEFAULT 0,
+    created_by               VARCHAR(64)              DEFAULT NULL,
+    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by               VARCHAR(64)              DEFAULT NULL,
+    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ydsz_system_config_approval PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_system_config_approval_resource UNIQUE (tenant_id, resource_type, resource_key, status)
+);
+
+COMMENT ON TABLE ydsz_system_config_approval IS '配置变更审批单（CONFIG / DICT / VARIABLE 三类资源的审批流记录）';
+COMMENT ON COLUMN ydsz_system_config_approval.id IS '审批单唯一 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_system_config_approval.tenant_id IS '租户 ID';
+COMMENT ON COLUMN ydsz_system_config_approval.resource_type IS '资源类型（CONFIG / DICT / VARIABLE）';
+COMMENT ON COLUMN ydsz_system_config_approval.resource_key IS '资源唯一标识';
+COMMENT ON COLUMN ydsz_system_config_approval.resource_group IS '资源分组（仅 CONFIG 类型有值）';
+COMMENT ON COLUMN ydsz_system_config_approval.change_type IS '变更操作类型（CREATE / UPDATE / DELETE）';
+COMMENT ON COLUMN ydsz_system_config_approval.before_json IS '变更前的 JSON 值（CREATE 时为空）';
+COMMENT ON COLUMN ydsz_system_config_approval.after_json IS '变更后的 JSON 值（DELETE 时为空）';
+COMMENT ON COLUMN ydsz_system_config_approval.status IS '审批状态（PENDING / APPROVED / REJECTED / WITHDRAWN）';
+COMMENT ON COLUMN ydsz_system_config_approval.submitter_id IS '发起人 ID';
+COMMENT ON COLUMN ydsz_system_config_approval.submitted_at IS '发起时间';
+COMMENT ON COLUMN ydsz_system_config_approval.reason IS '变更原因';
+COMMENT ON COLUMN ydsz_system_config_approval.rejection_reason IS '拒绝原因（REJECTED 时有值）';
+COMMENT ON COLUMN ydsz_system_config_approval.closed_at IS '审批单关闭时间';
+COMMENT ON COLUMN ydsz_system_config_approval.is_deleted IS '逻辑删除: 0=未删除, 1=已删除';
+COMMENT ON COLUMN ydsz_system_config_approval.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_system_config_approval.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_system_config_approval.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_system_config_approval.updated_by IS '更新人';
+COMMENT ON COLUMN ydsz_system_config_approval.updated_at IS '更新时间';
+
+CREATE INDEX IF NOT EXISTS idx_ydsz_system_config_approval_tenant_status ON ydsz_system_config_approval (tenant_id, status, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_system_config_approval_submitter ON ydsz_system_config_approval (submitter_id, is_deleted);
+
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_sys_api_permission_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_system_config_approval_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_ydsz_system_config_approval_updated_at ON ydsz_system_config_approval;
+CREATE TRIGGER trg_ydsz_system_config_approval_updated_at
+BEFORE UPDATE ON ydsz_system_config_approval
+FOR EACH ROW EXECUTE FUNCTION fn_ydsz_system_config_approval_set_updated_at();
 
 DROP TRIGGER IF EXISTS trg_ydsz_sys_api_permission_updated_at ON ydsz_sys_api_permission;
 CREATE TRIGGER trg_ydsz_sys_api_permission_updated_at

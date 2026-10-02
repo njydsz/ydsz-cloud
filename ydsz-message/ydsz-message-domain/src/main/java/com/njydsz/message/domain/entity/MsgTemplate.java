@@ -8,6 +8,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
 import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
@@ -27,11 +32,13 @@ import com.njydsz.message.domain.enums.template.TemplateStatusEnum;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@TableName("ydsz_msg_template")
 public class MsgTemplate implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
   // ===== 审计字段 =====
+  @TableId(value = "id", type = IdType.ASSIGN_ID)
   private String id;
   private String tenantId;
   private String createdBy;

@@ -12,6 +12,10 @@ import com.njydsz.message.domain.enums.core.MessagePriorityEnum;
 import com.njydsz.message.domain.enums.core.NotificationCategoryEnum;
 import com.njydsz.message.domain.enums.core.NotificationLevelEnum;
 import com.njydsz.message.domain.enums.receipt.ReadStatusEnum;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 
 /**
@@ -29,11 +33,13 @@ import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@TableName("ydsz_msg_notification")
 public class MsgNotification implements Serializable {
 
   @Serial private static final long serialVersionUID = 1L;
 
   // ===== 审计字段 =====
+  @TableId(value = "id", type = IdType.ASSIGN_ID)
   private String id;
   private String tenantId;
   private String createdBy;

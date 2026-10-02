@@ -368,16 +368,20 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_tenant ON ydsz_agt_docume
 -- CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
 
 INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
-VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, FALSE);
+VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, 0)
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
-VALUES ('100000000000000002', '0', 'DEFAULT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '初始版本');
+VALUES ('100000000000000002', '0', 'DEFAULT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '初始版本')
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
-VALUES ('100000000000000003', '0', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', 1, FALSE);
+VALUES ('100000000000000003', '0', 'REACT_SYSTEM', 'ReAct Agent Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', 'ReAct 模式下的工具调用助手 Prompt', 'system', 1, 0)
+ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO ydsz_agt_prompt_version (id, tenant_id, template_code, version, content, change_note)
-VALUES ('100000000000000004', '0', 'REACT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', '初始版本');
+VALUES ('100000000000000004', '0', 'REACT_SYSTEM', 1, '你是 YDSZ 项目管理信息系统的智能助手。你可以使用工具来帮助用户完成任务。请根据用户需求决定是否使用工具。如果不需要工具，直接回答即可。', '初始版本')
+ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
@@ -429,7 +433,7 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_agt_token_usage_set_updated_at();
 
 -- ============================================================================
--- 用户画像表 ydzs_agt_user_profile
+-- 用户画像表 ydsz_agt_user_profile
 --
 -- 派生自 domain/profile/UserProfile.java（继承 MpBaseAuditEntity<String>，
 -- 以 user_id 为业务主键，独立 id 列不存在）。
@@ -460,7 +464,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_user_profile (
 COMMENT ON TABLE ydsz_agt_user_profile IS '用户画像表（三层长期记忆体系中的画像层）';
 COMMENT ON COLUMN ydsz_agt_user_profile.user_id IS '用户 ID（主键，业务 ID，雪花算法生成）';
 COMMENT ON COLUMN ydsz_agt_user_profile.preferred_language IS '偏好语言（zh-CN / en-US）';
-COMMENT ON COLUMN ydzs_agt_user_profile.interested_domains IS '关注领域列表（JSON 字符串存储）';
+COMMENT ON COLUMN ydsz_agt_user_profile.interested_domains IS '关注领域列表（JSON 字符串存储）';
 COMMENT ON COLUMN ydsz_agt_user_profile.domain_frequency IS '领域查询频次统计（JSON 字符串，领域 → 次数映射）';
 COMMENT ON COLUMN ydsz_agt_user_profile.query_style IS '查询风格（如 简洁 / 详细 / 分析型 / 探索型）';
 COMMENT ON COLUMN ydsz_agt_user_profile.common_intents IS '高频意图标签（JSON 字符串存储）';
@@ -478,7 +482,7 @@ COMMENT ON COLUMN ydsz_agt_user_profile.updated_at IS '最后更新时间';
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_user_profile_last_interaction_at ON ydsz_agt_user_profile (last_interaction_at DESC);
 
 -- ============================================================================
--- 洞察报告表 ydzs_agt_insight_report
+-- 洞察报告表 ydsz_agt_insight_report
 --
 -- 派生自 domain/insight/InsightReport.java（继承 MpBaseAuditEntity<Long>，
 -- 自增 BIGSERIAL 主键）。
@@ -513,27 +517,27 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_insight_report (
 );
 
 COMMENT ON TABLE ydsz_agt_insight_report IS '洞察报告表（BI 洞察报告持久化，含分析结果 JSON 与报告内容 JSON）';
-COMMENT ON COLUMN ydzs_agt_insight_report.id IS '自增主键（BIGSERIAL）';
-COMMENT ON COLUMN ydzs_agt_insight_report.report_id IS '唯一业务 ID（雪花算法生成）';
+COMMENT ON COLUMN ydsz_agt_insight_report.id IS '自增主键（BIGSERIAL）';
+COMMENT ON COLUMN ydsz_agt_insight_report.report_id IS '唯一业务 ID（雪花算法生成）';
 COMMENT ON COLUMN ydsz_agt_insight_report.user_id IS '触发用户 ID';
 COMMENT ON COLUMN ydsz_agt_insight_report.conversation_id IS '关联对话 ID（可选）';
 COMMENT ON COLUMN ydsz_agt_insight_report.title IS '报告标题';
 COMMENT ON COLUMN ydsz_agt_insight_report.query IS '原始分析查询';
-COMMENT ON COLUMN ydzs_agt_insight_report.data_source_type IS '数据源类型（sql / python / mixed）';
-COMMENT ON COLUMN ydzs_agt_insight_report.data_json IS '原始数据分析结果 JSON';
-COMMENT ON COLUMN ydzs_agt_insight_report.content_json IS '报告内容 JSON（含 sections 列表）';
-COMMENT ON COLUMN ydzs_agt_insight_report.status IS '报告状态编码（draft / completed / failed / exported）';
-COMMENT ON COLUMN ydzs_agt_insight_report.report_format IS '报告格式（html / pdf / markdown）';
-COMMENT ON COLUMN ydzs_agt_insight_report.report_path IS '存储路径（可选）';
-COMMENT ON COLUMN ydzs_agt_insight_report.error_message IS '生成失败时的错误信息';
-COMMENT ON COLUMN ydzs_agt_insight_report.duration_ms IS '生成耗时（毫秒）';
-COMMENT ON COLUMN ydzs_agt_insight_report.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydzs_agt_insight_report.is_deleted IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
-COMMENT ON COLUMN ydzs_agt_insight_report.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydzs_agt_insight_report.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
-COMMENT ON COLUMN ydzs_agt_insight_report.created_at IS '创建时间';
-COMMENT ON COLUMN ydzs_agt_insight_report.updated_by IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
-COMMENT ON COLUMN ydzs_agt_insight_report.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_agt_insight_report.data_source_type IS '数据源类型（sql / python / mixed）';
+COMMENT ON COLUMN ydsz_agt_insight_report.data_json IS '原始数据分析结果 JSON';
+COMMENT ON COLUMN ydsz_agt_insight_report.content_json IS '报告内容 JSON（含 sections 列表）';
+COMMENT ON COLUMN ydsz_agt_insight_report.status IS '报告状态编码（draft / completed / failed / exported）';
+COMMENT ON COLUMN ydsz_agt_insight_report.report_format IS '报告格式（html / pdf / markdown）';
+COMMENT ON COLUMN ydsz_agt_insight_report.report_path IS '存储路径（可选）';
+COMMENT ON COLUMN ydsz_agt_insight_report.error_message IS '生成失败时的错误信息';
+COMMENT ON COLUMN ydsz_agt_insight_report.duration_ms IS '生成耗时（毫秒）';
+COMMENT ON COLUMN ydsz_agt_insight_report.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_agt_insight_report.is_deleted IS '逻辑删除标识（FALSE=未删除，TRUE=已删除）';
+COMMENT ON COLUMN ydsz_agt_insight_report.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_agt_insight_report.created_by IS '创建人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydsz_agt_insight_report.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_agt_insight_report.updated_by IS '最后更新人 ID（CombinedFieldFillInterceptor 自动填充）';
+COMMENT ON COLUMN ydsz_agt_insight_report.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_insight_report_user_id ON ydsz_agt_insight_report (user_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_insight_report_status ON ydsz_agt_insight_report (status);
