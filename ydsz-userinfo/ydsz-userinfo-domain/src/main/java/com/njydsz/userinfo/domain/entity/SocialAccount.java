@@ -16,7 +16,7 @@ import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 /**
  * 社交账号绑定实体。
  *
- * <p>对应数据库表 {@code ydsz_auth_social_account}，存储用户与第三方社交平台的绑定关系。
+ * <p>对应数据库表 {@code ydsz_idm_auth_social_account}，存储用户与第三方社交平台的绑定关系。
  * 支持微信、钉钉、企业微信、GitHub 等 OAuth2 平台。
  *
  * <p><b>安全敏感字段：</b>
@@ -42,10 +42,10 @@ import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_auth_social_account")
+@TableName("ydsz_idm_auth_social_account")
 public class SocialAccount extends MpBaseEntity<String> {
 
-  /** 关联用户 ID（关联 {@code ydsz_acct_user.id}） */
+  /** 关联用户 ID（关联 {@code ydsz_idm_account_user.id}） */
   private String userId;
 
   /** 平台标识（WECHAT/DINGTALK/ENTERPRISE_WECHAT/GITHUB） */

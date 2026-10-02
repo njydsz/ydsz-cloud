@@ -13,7 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 /**
  * 用户登录历史实体
  *
- * <p>对应数据库表 {@code ydsz_acct_login_history}，记录每次登录尝试的详细信息， 用于安全审计、异常登录检测、登录追溯。
+ * <p>对应数据库表 {@code ydsz_idm_account_login_history}，记录每次登录尝试的详细信息， 用于安全审计、异常登录检测、登录追溯。
  *
  * <p><b>设计说明：</b>
  *
@@ -38,7 +38,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_acct_login_history")
+@TableName("ydsz_idm_account_login_history")
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")
 public class UserLoginHistory extends MpBaseIdEntity<String> {
@@ -47,7 +47,7 @@ public class UserLoginHistory extends MpBaseIdEntity<String> {
   @TableId(type = IdType.ASSIGN_ID)
   private String id;
 
-  /** 用户 ID（关联 ydsz_acct_user.id） */
+  /** 用户 ID（关联 ydsz_idm_account_user.id） */
   private String userId;
 
   /** 用户名（冗余存储，即使用户被删除也可追溯） */

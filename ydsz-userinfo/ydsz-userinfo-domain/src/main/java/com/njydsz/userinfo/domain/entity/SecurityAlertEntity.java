@@ -13,7 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 安全告警实体。
  *
- * <p>对应数据库表 {@code ydsz_idp_security_alert}，存储安全告警事件记录。
+ * <p>对应数据库表 {@code ydsz_idm_identity_security_alert}，存储安全告警事件记录。
  *
  * <p><b>索引设计：</b>
  *
@@ -33,7 +33,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_idp_security_alert")
+@TableName("ydsz_idm_identity_security_alert")
 public class SecurityAlertEntity extends MpBaseEntity<String> {
 
   /** 告警类型（ACCOUNT_LOCKED/ACCOUNT_BANNED/MFA_FAILED/BRUTE_FORCE/ANOMALOUS_LOGIN/PASSWORD_SPRAY） */

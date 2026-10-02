@@ -17,7 +17,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 /**
  * WebAuthn 凭证持久化实体
  *
- * <p>对应数据库表 ydsz_auth_credential，存储用户注册的公钥凭证。
+ * <p>对应数据库表 ydsz_idm_auth_credential，存储用户注册的公钥凭证。
  *
  * @author ydsz-team
  * @since 26.10.01
@@ -28,7 +28,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_auth_credential")
+@TableName("ydsz_idm_auth_credential")
 public class WebAuthnCredential extends MpBaseIdEntity<Long> {
 
   private static final long serialVersionUID = 1L;

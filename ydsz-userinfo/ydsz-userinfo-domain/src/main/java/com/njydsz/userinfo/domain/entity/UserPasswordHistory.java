@@ -14,7 +14,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 /**
  * 密码历史实体
  *
- * <p>对应数据库表 {@code ydsz_acct_password_history}，用于记录用户修改过的密码历史， 防止用户短期内重复使用旧密码，符合信息安全等级保护和密码安全管理要求。
+ * <p>对应数据库表 {@code ydsz_idm_account_password_history}，用于记录用户修改过的密码历史， 防止用户短期内重复使用旧密码，符合信息安全等级保护和密码安全管理要求。
  *
  * <p><b>设计说明：</b>
  *
@@ -38,7 +38,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_acct_password_history")
+@TableName("ydsz_idm_account_password_history")
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")
 public class UserPasswordHistory extends MpBaseIdEntity<String> {
@@ -47,7 +47,7 @@ public class UserPasswordHistory extends MpBaseIdEntity<String> {
   @TableId(type = IdType.ASSIGN_ID)
   private String id;
 
-  /** 用户 ID（关联 ydsz_acct_user.id） */
+  /** 用户 ID（关联 ydsz_idm_account_user.id） */
   private String userId;
 
   /** BCrypt 加密后的历史密码哈希 */

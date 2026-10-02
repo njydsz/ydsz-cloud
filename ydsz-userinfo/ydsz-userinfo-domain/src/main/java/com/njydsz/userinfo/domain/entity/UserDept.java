@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 用户-部门关联实体
  *
- * <p>对应数据库表 {@code ydsz_acct_user_dept}，是连接用户与部门的多对多中间表。 支持用户兼职多个部门（兼岗），通过 {@link #isPrimary} 字段标识主部门。
+ * <p>对应数据库表 {@code ydsz_idm_account_user_dept}，是连接用户与部门的多对多中间表。 支持用户兼职多个部门（兼岗），通过 {@link #isPrimary} 字段标识主部门。
  *
  * <p><b>设计要点：</b>
  *
@@ -24,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p><b>主部门唯一性约束：</b>应在 Service 层校验「同一用户只允许一个主部门」， 通过事务保证 + 加锁实现。SQL 层可通过部分唯一索引实现：
  *
  * <pre>{@code
- * CREATE UNIQUE INDEX uk_user_primary_dept ON ydsz_acct_user_dept (user_id) WHERE is_primary = 1;
+ * CREATE UNIQUE INDEX uk_user_primary_dept ON ydsz_idm_account_user_dept (user_id) WHERE is_primary = 1;
  * }</pre>
  *
  * <p><b>典型使用：</b>
@@ -51,7 +51,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_acct_user_dept")
+@TableName("ydsz_idm_account_user_dept")
 public class UserDept extends MpBaseEntity<String> {
 
   /** 用户 ID，关联 {@link UserAccount#getId()} */

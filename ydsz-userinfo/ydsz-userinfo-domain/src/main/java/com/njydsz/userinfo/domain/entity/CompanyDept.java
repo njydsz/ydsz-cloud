@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 公司-部门关联实体
  *
- * <p>对应数据库表 {@code ydsz_org_company_dept}，是连接公司与部门的多对多中间表。 一个部门可被多个公司共享（如「研发中心」归属于集团总部和子公司），
+ * <p>对应数据库表 {@code ydsz_idm_org_company_dept}，是连接公司与部门的多对多中间表。 一个部门可被多个公司共享（如「研发中心」归属于集团总部和子公司），
  * 一个公司可包含多个部门（含跨公司调岗场景）。
  *
  * <p><b>设计要点：</b>
@@ -53,7 +53,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_org_company_dept")
+@TableName("ydsz_idm_org_company_dept")
 public class CompanyDept extends MpBaseEntity<String> {
 
   /** 公司 ID，关联 {@link Company#getId()} */

@@ -11,7 +11,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * 认证策略实体（P3-1 多租户认证域隔离）。
  *
- * <p>对应数据库表 {@code ydsz_auth_policy}，存储租户级认证策略配置。
+ * <p>对应数据库表 {@code ydsz_idm_auth_policy}，存储租户级认证策略配置。
  *
  * <p><b>索引设计：</b>
  *
@@ -25,7 +25,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_auth_policy")
+@TableName("ydsz_idm_auth_policy")
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")
 public class AuthPolicy extends MpBaseEntity<String> {

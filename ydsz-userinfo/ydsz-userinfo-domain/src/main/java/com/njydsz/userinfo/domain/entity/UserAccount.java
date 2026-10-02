@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
 /**
  * 用户账号实体
  *
- * <p>对应数据库表 {@code ydsz_acct_user}，存储系统用户账号信息。是用户中心服务的核心实体，被各业务模块通过 Feign 远程查询。
+ * <p>对应数据库表 {@code ydsz_idm_account_user}，存储系统用户账号信息。是用户中心服务的核心实体，被各业务模块通过 Feign 远程查询。
  *
  * <p><b>安全敏感字段：</b>
  *
@@ -52,7 +52,7 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_acct_user")
+@TableName("ydsz_idm_account_user")
 // YDIZ-WARN-001 允许保留：Lombok @SuperBuilder 泛型擦除导致 unchecked 警告
 @SuppressWarnings("unchecked")
 public class UserAccount extends MpBaseEntity<String> {
@@ -98,7 +98,7 @@ public class UserAccount extends MpBaseEntity<String> {
   /** 用户类型（PLATFORM/ISV/TENANT_ADMIN/REGULAR 等） */
   private String userType;
 
-  /** 所属公司 ID（关联 {@code ydsz_org_company.id}） */
+  /** 所属公司 ID（关联 {@code ydsz_idm_org_company.id}） */
   private String companyId;
 
   /** 最近登录时间 */
@@ -113,10 +113,10 @@ public class UserAccount extends MpBaseEntity<String> {
   /** 账号锁定截止时间（解锁后自动清零 loginFailCount） */
   private LocalDateTime lockedUntil;
 
-  /** 所属部门 ID（关联 ydsz_org_department.id，支持 dept: 审批人展开） */
+  /** 所属部门 ID（关联 ydsz_idm_org_department.id，支持 dept: 审批人展开） */
   private String deptId;
 
-  /** 直属上级用户 ID（关联 ydsz_acct_user.id，支持 leader: 审批人展开） */
+  /** 直属上级用户 ID（关联 ydsz_idm_account_user.id，支持 leader: 审批人展开） */
   private String leaderId;
 
   /** 岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开） */

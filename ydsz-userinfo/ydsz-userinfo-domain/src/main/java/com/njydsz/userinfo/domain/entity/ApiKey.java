@@ -16,7 +16,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 /**
  * API Key 实体（P1-2 API Key 授权体系）。
  *
- * <p>对应数据库表 {@code ydsz_auth_apikey}，存储服务间调用或第三方应用的 API Key。
+ * <p>对应数据库表 {@code ydsz_idm_auth_apikey}，存储服务间调用或第三方应用的 API Key。
  *
  * <p><b>安全设计：</b>
  *
@@ -35,7 +35,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_auth_apikey")
+@TableName("ydsz_idm_auth_apikey")
 public class ApiKey extends MpBaseEntity<Long> {
 
   private static final long serialVersionUID = 1L;
