@@ -3,7 +3,7 @@
 > **本文件为 Claude Code / Cursor / Windsurf / Aider 等 AI 编码工具的 `always` 规则。**
 > 任何 AI 编码助手在本项目中编程时，都必须遵守本文件中的规则。
 >
-> **规范版本**: v26.10.01-v24（185 条红线规则，P0=60 P1=88 P2=24）
+> **规范版本**: v26.10.01-v25（186 条红线规则，P0=61 P1=88 P2=24）
 > **完整规则源**: `docs/ai-rules/shared-rules.yaml`（单一权威源）
 > **编码规范参考**: `docs/云顶编码规范.md`（v1.0.13）
 
@@ -123,6 +123,7 @@ ydsz-cloud/
 | DDD-001 | 依赖方向必须**单向**：web → server → domain ← infra，禁止反向依赖 |
 | DDD-004 | Entity 仅在 `{module}-domain/entity/` 下定义，禁止 infra 自建 DO/PO 替身 |
 | DDD-007 | infra 层**必须通过 Converter 转换后返回 VO**，禁止将 PO 直接返回给 server 层 |
+| DDD-008 | **【新 P0】** 所有业务层 Entity 必须继承 MpBaseEntity（或 MpBaseIdEntity/MpBaseAuditEntity），禁止覆盖平台基础字段（id/status/isDeleted/tenantId/sort/revision/审计四字段），禁止自建持久化基类，禁止 domain/infra 双层 entity 分层 |
 
 ### 异常体系
 
@@ -206,9 +207,9 @@ app ──→ domain（移动端入口基座，大部分业务模块未启用）
 | `api` | `com.njydsz.module.api` | domain(**provided**) + common-feign | Feign Client 接口 + Fallback |
 | `app` | `com.njydsz.module.app` | domain + common-app | 移动端健康检查 + OpenAPI 配置（按需启用）|
 
-### Entity / PO 规范（【强制】继承 MpBaseEntity）
+### Entity / PO 规范（【强制】继承 MpBaseEntity，YDIZ-DDD-008）
 
-> **规范版本 v26.10.01-v24 +1 P0：所有业务模块 Entity 必须继承 `MpBaseEntity`**（YDIZ-DB-006 阻断级）。
+> **规范版本 v26.10.01-v25 +1 P0：所有业务模块 Entity 必须继承 `MpBaseEntity`**（YDIZ-DDD-008 阻断级）。
 
 **平台基础字段清单**（共 10 个，由 `MpBaseEntity` 提供，业务模块禁止覆盖）：
 
