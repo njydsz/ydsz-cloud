@@ -1,7 +1,7 @@
 # =====================================================================
 #  YDSZ 代码生成器 bootstrap 配置
 #  --------------------------------------------------------------------
-#  端口：9090
+#  端口：9009
 #  职责：代码生成引擎（模板驱动 / MapStruct / MyBatis-Plus / DDL 解析）
 #  依赖：Nacos 服务发现 / 配置中心、MySQL（独立库 ydsz_cloud_gen）
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
@@ -37,7 +37,7 @@ spring:
         password: ${NACOS_PASSWORD:nacos}
         metadata:
           version: 26.10.01
-          port: 9090
+          port: 9009
         ip-type: IPv4
       # ---------- 配置中心 ----------
       config:

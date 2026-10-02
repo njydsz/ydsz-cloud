@@ -1,0 +1,96 @@
+# =====================================================================
+#  YDSZ 代码生成器 — CLI 模式配置（Nacos 数据中心）
+#  对应模块：ydsz-generator-app（CLI 模式，无 HTTP 端口）
+#  注意：generator 使用 MySQL 数据源（独立数据库 ydsz_cloud_gen）
+# =====================================================================
+
+# 数据源配置 — 覆盖 common-web 中的 PostgreSQL 配置
+spring:
+  datasource:
+    url: ${NACOS_GEN_DB_URL:jdbc:mysql://127.0.0.1:3306/ydsz_cloud_gen?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai}
+    username: ${NACOS_GEN_DB_USERNAME:}
+    password: ${NACOS_GEN_DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: ydsz-gen-hikari-pool
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.njydsz.generator.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+
+ydsz:
+  tenant:
+    enabled: false
+    mode: SINGLE
+    tenant-column: tenant_id
+    super-tenant-id: "0"
+    system-tenant-id: "1"
+
+  audit:
+    enabled: false
+
+  thread:
+    enabled: true
+    pools:
+      code-gen:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 64
+        thread-name-prefix: code-gen-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+
+generator:
+  output-dir: ./generated
+  default-author: ydsz-generator
+  default-package: com.njydsz
+  template-group: default
+  conflict-strategy: SKIP
+  table-prefix: t_,tab_
+  type-mapping:
+    VARCHAR: String
+    CHAR: String
+    TEXT: String
+    LONGTEXT: String
+    MEDIUMTEXT: String
+    TINYTEXT: String
+    INT: Integer
+    INTEGER: Integer
+    TINYINT: Integer
+    SMALLINT: Integer
+    MEDIUMINT: Integer
+    BIGINT: Long
+    FLOAT: Float
+    DOUBLE: Double
+    DECIMAL: java.math.BigDecimal
+    NUMERIC: java.math.BigDecimal
+    DATE: java.time.LocalDate
+    DATETIME: java.time.LocalDateTime
+    TIMESTAMP: java.time.LocalDateTime
+    TIME: java.time.LocalTime
+    BOOLEAN: Boolean
+    BOOL: Boolean
+    BIT: Boolean
+    BLOB: "[B"
+    LONGBLOB: "[B"
+    BYTEA: "[B"
+  batch-timeout-minutes: 5
+  thread-pool:
+    core-size: 0
+    max-size: 16
+    queue-capacity: 64
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  level:
+    com.njydsz.generator: DEBUG
+    com.njydsz.generator.mapper: INFO
+
+skywalking:
+  agent:
+    service_name: ydzsz-generator-app
+    collector_backend_service: ${SW_AGENT_COLLECTOR_BACKEND_SERVICES:127.0.0.1:11800}

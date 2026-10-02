@@ -1,0 +1,34 @@
+# =====================================================================
+#  YDSZ 系统管理引擎 App 端 bootstrap 配置
+#  --------------------------------------------------------------------
+#  端口：7001
+#  职责：移动端系统管理（字典查询/参数查看/配置读取）
+#  依赖：Nacos 配置中心
+# =====================================================================
+
+spring:
+  application:
+    name: ydzsz-system-app
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      config:
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        file-extension: yaml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: ydsz-common.yml
+            group: ${spring.profiles.active}
+            refresh: true
+          - data-id: ydzs-system-app.yml
+            group: ${spring.profiles.active}
+            refresh: true
