@@ -13,17 +13,17 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.10.01-v22"  # v21: +YDIZ-DOCS-001 文档处理必须通过 ydzsz-common-docs 统一模块
-  source: "docs/云顶编码规范.md v1.0.12"
-  last_synced: "2026-10-01"
-  last_updated: "26.10.01-v23（+1 P0 强制基础字段规则 YDIZ-DB-002；总规则 184 条）"
-  total_rules: 184
+  version: "26.10.01-v24"  # v24: +YDIZ-DB-006 所有业务 Entity 必须继承 MpBaseEntity，禁止覆盖基础字段
+  source: "docs/云顶编码规范.md v1.0.13"
+  last_synced: "2026-10-02"
+  last_updated: "26.10.01-v24（+1 P0 YDIZ-DB-006 MpBaseEntity 全覆盖+基础字段保护；总规则 185 条）"
+  total_rules: 185
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 59
+    P0: 60
     P1: 88
     P2: 24
 
@@ -272,7 +272,7 @@ rules:
     source: "编码规范 6.5 节"
 
   # ============================================
-  # 五、数据库命名规范（2 条，P0）
+  # 五、数据库命名规范（3 条，P0）
   # ============================================
   - id: "YDIZ-DB-002"
     category: "database"
@@ -294,9 +294,7 @@ rules:
 
       **已有业务字段与上述名称冲突时**：业务字段改名（如业务状态改为 `xxx_status`），基础字段 `status` 不可省略。
 
-      **【强制】禁止覆盖基础字段**：业务模块**禁止**在 Java 实体类中声明与上述 9 个基础字段同名的属性（如 `private Integer sort;`、`private Boolean isDeleted;`），即使通过 `extends MpBaseEntity` 已继承也不得重复声明。这 9 个字段只能通过继承 `MpBaseEntity` 获得，**不允许任何形式的覆盖或重定义**。
-
-      **Java 实体侧**：必须继承 `MpBaseEntity<String>`（来自 ydzs-common-jdbc），禁止手动声明这 9 个基础字段。
+      **【强制】禁止覆盖基础字段**（YDIZ-DB-006 覆盖）：业务模块**禁止**在 Java 实体中声明同名属性覆盖基础字段，9 个字段只能来自 `MpBaseEntity` 继承。
 
       **MySQL 方言适配**：is_deleted → TINYINT(1)，时间 → DATETIME(3)，整数 → INT NOT NULL
 
@@ -318,6 +316,108 @@ rules:
              CONSTRAINT pk_xxx PRIMARY KEY (id));
       ✅ Java: public class Xxx extends MpBaseEntity<String> { ... }
     source: "编码规范 6.13 节"
+
+  - id: "YDIZ-DB-006"
+    category: "database"
+    severity: "P0"
+    title: "【强制】所有业务模块 Entity 必须继承 MpBaseEntity，禁止自建基类及覆盖基础字段"
+    description: |
+      平台基础字段清单（共 10 个，由 `ydsz-common-jdbc` 的 `MpBaseEntity` 提供）：
+
+      | Java 字段 | DB 列 | 类型 | 说明 |
+      |-----------|--------|------|------|
+      | `id` | `id` | `VARCHAR`/`BIGINT` | 主键 |
+      | `sort` | `sort` | `INTEGER` | 排序权重 |
+      | `status` | `status` | `INTEGER/VARCHAR` | 状态标识 |
+      | `revision` | `revision` | `INTEGER` | 乐观锁版本号 |
+      | `tenantId` | `tenant_id` | `VARCHAR` | 租户 ID |
+      | `isDeleted` | `is_deleted` | `BOOLEAN` | 逻辑删除 |
+      | `createdBy` | `created_by` | `VARCHAR` | 创建人 |
+      | `createdAt` | `created_at` | `TIMESTAMP` | 创建时间 |
+      | `updatedBy` | `updated_by` | `VARCHAR` | 更新人 |
+      | `updatedAt` | `updated_at` | `TIMESTAMP` | 更新时间 |
+
+      **【强制规则一：必须继承 MpBaseEntity】**
+      所有业务模块（agent / cronjob / message / nextwiki / system / userinfo / workflow / literule / generator 等）的 Entity 类**必须直接继承** `com.njydsz.common.jdbc.entity.MpBaseEntity`（或 `MpBaseEntity<Long>` / `MpBaseEntity<String>`），**禁止以下行为**：
+
+      1. 不继承任何 ydsz 基类（plain POJO 作为 Entity）
+      2. 自建 `AbstractXxxEntity` / `BaseXxxEntity` 绕过 `MpBaseEntity` 标准字段体系
+      3. 继承 `MpBaseAuditEntity` 替代 `MpBaseEntity`（`MpBaseAuditEntity` 缺少 `tenant_id/is_deleted/status/revision` 字段，会导致 DDL 漂移）
+      4. 在非 domain/entity 包下重新声明 Entity 类（如 infra 层仿制 DO/PO）
+
+      **【强制规则二：禁止覆盖 / 重定义基础字段】**
+      即使已通过 `extends MpBaseEntity` 继承了上述 10 个字段，业务实体也**禁止再次声明**以下任何属性：
+
+      - `private Integer sort;` / `private String status;` / `private Integer revision;`
+      - `private String tenantId;` / `private Boolean isDeleted;`
+      - `private String createdBy;` / `private LocalDateTime createdAt;`
+      - `private String updatedBy;` / `private LocalDateTime updatedAt;`
+
+      **违反后果**：覆盖基础字段会导致 MyBatis-Plus 拦截器填充异常、乐观锁失效、SQL 拦截器租户条件错位、审计字段填充冲突。
+
+      **实体继承决策树**：
+      ```text
+      [新建业务 Entity]
+        │
+        ├─ 需要乐观锁（高并发更新）→ extends MpBaseEntity<Long/String>
+        ├─ 纯查询/低频配置表 → extends MpSimpleEntity<Long/String>
+        ├─ 仅需审计字段 → extends MpBaseAuditEntity<Long/String>
+        └─ 仅需主键 → extends MpBaseIdEntity<Long/String>
+      ```
+
+      > **AI 生成约束**：生成新的业务 Entity 时，必须包含 `extends MpBaseEntity<String>` 或 `extends MpBaseEntity<Long>`，且不得声明任何与上述 10 个基础字段同名的属性。
+    pattern: |
+      domain/entity/ 目录下：
+      1. class XxxEntity 后无 extends 或 extends 非 ydsz 基类
+      2. class XxxEntity extends (?!Mp(BaseEntity|SimpleEntity|BaseAuditEntity|BaseIdEntity))
+      3. 在 extends MpBaseEntity 后又声明了 sort/status/revision/tenantId/isDeleted/createdAt/createdBy/updatedAt/updatedBy 中任一属性
+    fix: |
+      1. 将 class XxxEntity 改为 class XxxEntity extends MpBaseEntity<String>（或 MpBaseEntity<Long>）
+      2. 删除实体中声明的 sort/status/revision/tenantId/isDeleted/createdAt/createdBy/updatedAt/updatedBy 同名属性
+      3. 自建基类改为继承 MpBaseEntity，或在 DDL 中补齐缺失的 9 个基础字段
+    example_bad: |
+      ❌ // 无继承 — 缺少所有基础字段
+      @TableName("ydsz_xxx")
+      public class Xxx { private Long id; }
+
+      ❌ // 自建基类绕过标准字段体系
+      public abstract class AbstractXxxEntity { private Long id; }
+      public class Xxx extends AbstractXxxEntity { ... }
+
+      ❌ // 继承 MpBaseAuditEntity（缺少 tenant_id/is_deleted/status/revision）
+      public class Xxx extends MpBaseAuditEntity<String> { ... }
+
+      ❌ // 继承 MpBaseEntity 后再声明 tenant_id 覆盖基础字段
+      public class Space extends MpBaseEntity<String> {
+          @TableField("tenant_id")
+          private String tenantId;  // ❌ 覆盖基础字段
+      }
+
+      ❌ // 继承 MpBaseEntity 后声明 sort
+      @TableName("ydsz_xxx")
+      public class Xxx extends MpBaseEntity<String> {
+          @TableField("sort")
+          private Integer sort;  // ❌ 重复声明，会冲突
+      }
+    example_good: |
+      ✅ // 标准继承（推荐，高性能并发）
+      @Data
+      @EqualsAndHashCode(callSuper = true)
+      @TableName("ydsz_xxx")
+      public class Xxx extends MpBaseEntity<String> {
+          @TableField("name")
+          private String name;
+      }
+
+      ✅ // 配置表无乐观锁（纯查询场景）
+      @Data
+      @EqualsAndHashCode(callSuper = true)
+      @TableName("ydsz_dict")
+      public class Dict extends MpSimpleEntity<Long> {
+          @TableField("label")
+          private String label;
+      }
+    source: "编码规范 6.13 节 + 平台基础字段保护规范"
 
   - id: "YDIZ-DB-001"
     category: "database"

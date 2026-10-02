@@ -2,6 +2,7 @@ package com.njydsz.agent.domain.entity;
 
 import java.math.BigDecimal;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
@@ -32,6 +33,10 @@ import lombok.experimental.SuperBuilder;
 public class AgentTraceStep extends MpBaseEntity<String> {
 
   private static final long serialVersionUID = 1L;
+
+  /** 所属链路 ID（复合业务键之一，关联 ydsz_agt_trace.trace_id） */
+  @TableField("trace_id")
+  private String traceId;
 
   /** 步骤序号（从 0 开始递增） */
   private Integer stepIndex;

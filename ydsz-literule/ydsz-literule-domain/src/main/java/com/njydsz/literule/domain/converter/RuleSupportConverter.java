@@ -68,11 +68,20 @@ public interface RuleSupportConverter {
 
   // ===== RuleVersionDTO → RuleVersionHistory =====
   @Mapping(target = "id", ignore = true)
+  @Mapping(target = "sort", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   RuleVersionHistory postDtoToEntity(RuleVersionDTO dto);
 
   // ===== DecisionTable PostDTO → Entity =====
   @Mapping(target = "id", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
@@ -84,10 +93,11 @@ public interface RuleSupportConverter {
   DecisionTable postDtoToEntity(DecisionTableDTO dto);
 
   // ===== RuleABPolicy PutDTO → Entity =====
+  @Mapping(target = "sort", ignore = true)
+  @Mapping(target = "status", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "status", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)

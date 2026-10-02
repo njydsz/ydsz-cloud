@@ -3,9 +3,9 @@
 > **本文件为 Claude Code / Cursor / Windsurf / Aider 等 AI 编码工具的 `always` 规则。**
 > 任何 AI 编码助手在本项目中编程时，都必须遵守本文件中的规则。
 >
-> **规范版本**: v26.10.01-v21（180 条红线规则，P0=58 P1=88 P2=24）
+> **规范版本**: v26.10.01-v24（185 条红线规则，P0=60 P1=88 P2=24）
 > **完整规则源**: `docs/ai-rules/shared-rules.yaml`（单一权威源）
-> **编码规范参考**: `docs/云顶编码规范.md`（v1.0.12）
+> **编码规范参考**: `docs/云顶编码规范.md`（v1.0.13）
 
 ---
 
@@ -206,11 +206,62 @@ app ──→ domain（移动端入口基座，大部分业务模块未启用）
 | `api` | `com.njydsz.module.api` | domain(**provided**) + common-feign | Feign Client 接口 + Fallback |
 | `app` | `com.njydsz.module.app` | domain + common-app | 移动端健康检查 + OpenAPI 配置（按需启用）|
 
-### Entity / PO 规范
+### Entity / PO 规范（【强制】继承 MpBaseEntity）
+
+> **规范版本 v26.10.01-v24 +1 P0：所有业务模块 Entity 必须继承 `MpBaseEntity`**（YDIZ-DB-006 阻断级）。
+
+**平台基础字段清单**（共 10 个，由 `MpBaseEntity` 提供，业务模块禁止覆盖）：
+
+| Java 字段 | DB 列 | 说明 |
+|-----------|--------|------|
+| `id` | `id` | 主键 |
+| `sort` | `sort` | 排序权重 |
+| `status` | `status` | 状态标识 |
+| `revision` | `revision` | 乐观锁版本号 |
+| `tenantId` | `tenant_id` | 租户 ID |
+| `isDeleted` | `is_deleted` | 逻辑删除 |
+| `createdBy` | `created_by` | 创建人 |
+| `createdAt` | `created_at` | 创建时间 |
+| `updatedBy` | `updated_by` | 更新人 |
+| `updatedAt` | `updated_at` | 更新时间 |
+
+**【强制】继承规则**：
 - Entity 定义在 `domain/entity/` 包下，直接携带 `@TableName` `@TableField` 等 ORM 注解
+- **必须继承** `com.njydsz.common.jdbc.entity.MpBaseEntity<String>`（或 `MpBaseEntity<Long>`）
+- **禁止**自建 `AbstractXxxEntity` / `BaseXxxEntity` 绕过 `MpBaseEntity`
+- **禁止**在 Entity 中声明与上述 10 个基础字段同名的属性（即使已通过继承获得）
 - infra 层**不另立 DO/PO/Entity 类**，直接引用 domain 的 Entity
 - RepositoryImpl 返回类型必须是 `domain/vo/` 下的 VO，通过 Converter 从 Entity 转换
 - Repository 接口定义在 `domain/repository/`，实现在 `infra/repository/`，Spring 在 web 层完成装配
+
+```java
+// ✅ 正例
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("ydsz_xxx")
+public class Xxx extends MpBaseEntity<String> {
+    @TableField("name")
+    private String name;
+    // 不声明 sort/status/tenantId/isDeleted 等——从 MpBaseEntity 继承
+}
+
+// ❌ 反例 — 缺少继承
+public class Xxx {
+    private Long id;
+    // 缺少基础字段
+}
+
+// ❌ 反例 — 自建基类
+public abstract class AbstractXxxEntity {
+    private Long id; private String sort;
+}
+
+// ❌ 反例 — 覆盖基础字段
+public class Space extends MpBaseEntity<String> {
+    @TableField("tenant_id")
+    private String tenantId;  // ❌ 与 MpBaseEntity 继承的 tenantId 冲突
+}
+```
 
 ---
 
