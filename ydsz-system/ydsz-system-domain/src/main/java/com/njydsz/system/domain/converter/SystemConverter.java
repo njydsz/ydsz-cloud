@@ -126,6 +126,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   ApiPermission apiPermissionDtoToEntity(ApiPermissionDTO dto);
 
   /**
@@ -141,6 +142,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   ApiPermission apiPermissionDtoToEntityWithId(ApiPermissionDTO dto);
 
   /**
@@ -160,6 +162,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Named("apiPermissionDtoToEntity")
   ApiPermission apiPermissionDtoToEntityInternal(ApiPermissionDTO dto);
 
@@ -207,6 +210,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   AppInfo dtoToEntity(AppInfoDTO dto);
 
   /**
@@ -224,6 +228,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   AppInfo dtoToEntityWithId(AppInfoDTO dto);
 
   /**
@@ -425,6 +430,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   DictType dtoToEntity(DictTypeDTO dto);
 
   /**
@@ -442,6 +448,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   DictType dtoToEntityWithId(DictTypeDTO dto);
 
   // ===== EntityVersion =====
@@ -480,6 +487,7 @@ public interface SystemConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "status", ignore = true)
   @Mapping(target = "effectiveDate", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   EntityVersion dtoToEntity(EntityVersionDTO dto);
 
   // ===== Tenant =====
@@ -516,6 +524,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   Tenant dtoToEntity(TenantDTO dto);
 
   /**
@@ -533,6 +542,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   Tenant dtoToEntityWithId(TenantDTO dto);
 
   // ===== TenantPlan =====
@@ -624,6 +634,7 @@ public interface SystemConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   TenantPlanMenu dtoToEntity(String planId, String menuId);
 
   // ===== Variable =====
@@ -661,6 +672,7 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   Variable dtoToEntity(VariableDTO dto);
 
   /**
@@ -678,5 +690,6 @@ public interface SystemConverter {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   Variable dtoToEntityWithId(VariableDTO dto);
 }
