@@ -24,7 +24,14 @@
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     parent_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     name                     VARCHAR(255)             NOT NULL,
     node_type                VARCHAR(32)              NOT NULL,
@@ -35,7 +42,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     mime_type                VARCHAR(128)             DEFAULT NULL,
     path                     VARCHAR(1024)            NOT NULL,
     level                    INTEGER                  NOT NULL DEFAULT 0,
-    sort                     INTEGER                  NOT NULL DEFAULT 0,
     current_version          INTEGER                  NOT NULL DEFAULT 1,
     file_hash                VARCHAR(64)              DEFAULT NULL,
     thumbnail_key            VARCHAR(1024)            DEFAULT NULL,
@@ -46,12 +52,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     original_path            VARCHAR(1024)            DEFAULT NULL,
     storage_class            VARCHAR(32)              NOT NULL DEFAULT 'STANDARD',
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_node PRIMARY KEY (id)
 );
 
@@ -100,7 +100,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_storage_class ON ydsz_file_fi
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     file_node_id             VARCHAR(32)              NOT NULL,
     version_number           INTEGER                  NOT NULL,
     storage_key              VARCHAR(1024)            DEFAULT NULL,
@@ -111,12 +118,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
     change_type              VARCHAR(32)              NOT NULL DEFAULT 'update',
     is_active                SMALLINT                 NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_version PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_file_version_file_node_version UNIQUE (file_node_id, version_number)
 );
@@ -145,18 +146,19 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_version_tenant_is_deleted ON ydsz_
 
 CREATE TABLE IF NOT EXISTS ydsz_file_tag (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name                     VARCHAR(255)             NOT NULL,
     color                    VARCHAR(32)              DEFAULT NULL,
     type                     VARCHAR(32)              NOT NULL DEFAULT 'manual',
     usage_count              INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_tag PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_tag_tenant_tag_name UNIQUE (tenant_id, name)
 );
@@ -180,16 +182,17 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_tag_tenant_is_deleted ON ydsz_file_tag 
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     file_node_id             VARCHAR(32)              NOT NULL,
     tag_id                   VARCHAR(32)              NOT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_tag PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_file_tag_file_node_tag UNIQUE (file_node_id, tag_id)
 );
@@ -212,7 +215,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_tag_tenant_is_deleted ON ydsz_file
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     file_node_id             VARCHAR(32)              NOT NULL,
     content                  TEXT                     NOT NULL,
     parent_comment_id        VARCHAR(32)              DEFAULT NULL,
@@ -220,12 +230,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
     position                 JSONB                    DEFAULT NULL,
     is_edited                SMALLINT                 NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_comment PRIMARY KEY (id)
 );
 
@@ -252,7 +256,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_comment_tenant_is_deleted ON ydsz_
 
 CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     file_node_id             VARCHAR(32)              NOT NULL,
     grantee_type             VARCHAR(32)              NOT NULL,
     grantee_id               VARCHAR(64)              NOT NULL,
@@ -260,12 +271,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
     is_inherited             SMALLINT                 NOT NULL DEFAULT 1,
     is_owner                 SMALLINT                 NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_file_acl PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_file_acl_file_grantee UNIQUE (file_node_id, grantee_type, grantee_id)
 );
@@ -292,7 +297,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_acl_tenant_is_deleted ON ydsz_file
 
 CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     file_node_id             VARCHAR(32)              NOT NULL,
     share_code               VARCHAR(64)              NOT NULL,
     extract_code             VARCHAR(8)               DEFAULT NULL,
@@ -305,12 +317,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
     share_target_type        VARCHAR(32)              NOT NULL DEFAULT 'PUBLIC',
     is_reminder_sent         SMALLINT                 NOT NULL DEFAULT 0,
     title                    VARCHAR(255)             DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_share_link PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_share_link_share_code UNIQUE (share_code)
 );
@@ -343,19 +349,20 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_link_tenant_is_deleted ON ydsz_fi
 
 CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     share_id                 VARCHAR(32)              NOT NULL,
     recipient_type           VARCHAR(32)              NOT NULL DEFAULT 'USER',
     recipient_id             VARCHAR(64)              NOT NULL,
     recipient_name           VARCHAR(128)             DEFAULT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'ACTIVE',
     viewed_at                TIMESTAMP                DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_share_recipient PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_share_recipient_share_recipient UNIQUE (share_id, recipient_type, recipient_id)
 );
@@ -382,7 +389,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_recipient_tenant_is_deleted ON yd
 
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     share_id                 VARCHAR(32)              NOT NULL,
     share_code               VARCHAR(64)              NOT NULL,
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -395,12 +409,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
     fail_reason              VARCHAR(255)             DEFAULT NULL,
     access_time              TIMESTAMP                NOT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_share_access_log PRIMARY KEY (id)
 );
 
@@ -434,7 +442,15 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_tenant_is_deleted ON y
 
 CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR,
+    updated_at TIMESTAMP DEFAULT NOW(),
     share_id                 VARCHAR(32)              NOT NULL,
     share_code               VARCHAR(64)              NOT NULL,
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -446,8 +462,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
     access_status            VARCHAR(32)              NOT NULL DEFAULT 'SUCCESS',
     fail_reason              VARCHAR(255)             DEFAULT NULL,
     access_time              TIMESTAMP                NOT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_file_share_access_log_archive PRIMARY KEY (id)
 );
 
@@ -475,7 +489,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_archive_tenant_is_dele
 
 CREATE TABLE IF NOT EXISTS ydsz_file_space (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name                     VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     icon_url                 VARCHAR(1024)            DEFAULT NULL,
@@ -483,17 +504,11 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space (
     owner_id                 VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'active',
     visibility               VARCHAR(32)              NOT NULL DEFAULT 'private',
-    sort               INTEGER                  NOT NULL DEFAULT 0,
     member_count             INTEGER                  NOT NULL DEFAULT 1,
     node_count               INTEGER                  NOT NULL DEFAULT 0,
     quota_limit              BIGINT                   DEFAULT NULL,
     quota_used               BIGINT                   NOT NULL DEFAULT 0,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     deleted_time             TIMESTAMP                DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_space PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_space_tenant_name UNIQUE (tenant_id, name)
 );
@@ -526,16 +541,19 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_tenant_is_deleted ON ydsz_file_sp
 
 CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     space_id                 VARCHAR(32)              NOT NULL,
     user_id                  VARCHAR(64)              NOT NULL,
     role                     VARCHAR(32)              NOT NULL,
     joined_at                TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_space_member PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_space_member_space_user UNIQUE (space_id, user_id)
 );
@@ -559,7 +577,15 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_member_tenant_is_deleted ON ydsz_
 
 CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              DEFAULT NULL,
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              DEFAULT NULL,
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     name                     VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     category                 VARCHAR(32)              NOT NULL DEFAULT 'general',
@@ -567,13 +593,7 @@ CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
     is_system                SMALLINT                 NOT NULL DEFAULT 0,
     is_public_access         SMALLINT                 NOT NULL DEFAULT 1,
     structure_json           JSONB                    NOT NULL,
-    sort               INTEGER                  NOT NULL DEFAULT 0,
     usage_count              INTEGER                  NOT NULL DEFAULT 0,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     -- P2-3: 文件模板扩展字段
     template_type            VARCHAR(32)              DEFAULT 'space',
     source_node_id           VARCHAR(32)              DEFAULT NULL,
@@ -608,7 +628,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_template_tenant_is_deleted ON yds
 
 CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     file_node_id             VARCHAR(32)              NOT NULL,
     original_name            VARCHAR(255)             NOT NULL,
     original_path            VARCHAR(1024)            DEFAULT NULL,
@@ -618,12 +645,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
     deleted_time             TIMESTAMP                NOT NULL,
     purge_time               TIMESTAMP                NOT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'in_trash',
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_trash_item PRIMARY KEY (id)
 );
 
@@ -653,7 +674,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_trash_item_tenant_is_deleted ON ydsz_fi
 
 CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     file_node_id             VARCHAR(32)              NOT NULL,
     name                     VARCHAR(255)             NOT NULL,
     path                     VARCHAR(1024)            DEFAULT NULL,
@@ -663,12 +691,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
     size                     BIGINT                   NOT NULL DEFAULT 0,
     tags                     VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_search_index PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_search_index_file_node_id UNIQUE (file_node_id)
 );
@@ -698,16 +720,18 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_search_index_tenant_is_deleted ON ydsz_
 
 CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(64)              NOT NULL,
     node_id                  VARCHAR(64)              NOT NULL,
-    sort               INTEGER                  NOT NULL DEFAULT 0,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     deleted_time             TIMESTAMP                DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_user_favorite PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_user_favorite_user_node UNIQUE (user_id, node_id)
 );
@@ -730,16 +754,19 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_favorite_tenant_is_deleted ON ydsz
 
 CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(64)              NOT NULL,
     node_id                  VARCHAR(64)              NOT NULL,
     access_type              VARCHAR(32)              NOT NULL DEFAULT 'view',
     accessed_at              TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_user_recent PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_user_recent_user_node UNIQUE (user_id, node_id)
 );
@@ -763,7 +790,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_recent_tenant_is_deleted ON ydsz_f
 
 CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
     id                       VARCHAR(32)              NOT NULL,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     scope_type               VARCHAR(32)              NOT NULL,
     scope_id                 VARCHAR(64)              NOT NULL,
     quota_limit              BIGINT                   NOT NULL DEFAULT 0,
@@ -771,12 +805,6 @@ CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
     file_count_limit         INTEGER                  DEFAULT NULL,
     file_count_used          INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_file_storage_quota PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_file_storage_quota_scope UNIQUE (scope_type, scope_id)
 );

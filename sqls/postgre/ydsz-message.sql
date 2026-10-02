@@ -37,7 +37,14 @@
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_template (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     template_code            VARCHAR(64)              NOT NULL,
     channel                  VARCHAR(32)              NOT NULL,
     locale                   VARCHAR(16)              DEFAULT 'zh-CN',
@@ -56,11 +63,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template (
     audit_remark             VARCHAR(512)             DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     variable_defs            JSONB                    DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_template PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_template_template_code UNIQUE (template_code, tenant_id)
 );
@@ -98,7 +100,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_template_tenant_is_deleted ON ydsz_msg_t
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_template_version (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     template_code            VARCHAR(64)              NOT NULL,
     version                  INTEGER                  NOT NULL,
     content                  TEXT                     NOT NULL,
@@ -107,12 +116,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_template_version (
     auditor                  VARCHAR(64)              DEFAULT NULL,
     audit_remark             VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_template_version PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_template_version_tpl_version UNIQUE (template_code, version)
 );
@@ -139,7 +142,15 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_template_version_tenant_is_deleted ON yd
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     title                    VARCHAR(255)             NOT NULL,
     content                  TEXT                    ,
     level                    VARCHAR(32)              NOT NULL DEFAULT 'INFO',
@@ -162,11 +173,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_notification (
     recall_at                TIMESTAMP                DEFAULT NULL,
     expired_at               TIMESTAMP                DEFAULT NULL,
     mention_user_ids         JSONB                    DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_notification PRIMARY KEY (id)
 );
 
@@ -209,7 +215,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_notification_tenant_is_deleted ON ydsz_m
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(32)              NOT NULL,
     channel_type             VARCHAR(32)              NOT NULL,
     channel_user_id          VARCHAR(128)             NOT NULL,
@@ -217,12 +230,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_user_channel (
     is_primary               SMALLINT                 NOT NULL DEFAULT 0,
     extra                    JSONB                    DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_user_channel PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_user_channel_user_channel UNIQUE (user_id, channel_type, channel_user_id)
 );
@@ -249,7 +256,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_user_channel_tenant_is_deleted ON ydsz_m
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(32)              NOT NULL,
     topic_code               VARCHAR(64)              NOT NULL,
     channel                  VARCHAR(32)              NOT NULL,
@@ -257,12 +271,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_subscription (
     role_scope               VARCHAR(128)             DEFAULT NULL,
     extra                    JSONB                    DEFAULT NULL,
     unsubscribed_at          TIMESTAMP                DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_subscription PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_subscription_subscription UNIQUE (user_id, topic_code, channel)
 );
@@ -289,7 +297,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_subscription_tenant_is_deleted ON ydsz_m
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(32)              NOT NULL,
     channel                  VARCHAR(32)              NOT NULL,
     biz_type                 VARCHAR(64)              NOT NULL DEFAULT '__DEFAULT__',
@@ -304,12 +319,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_preference (
     locale                   VARCHAR(16)              DEFAULT NULL,
     extra                    JSONB                    DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_preference PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_preference_preference UNIQUE (user_id, channel, biz_type)
 );
@@ -342,7 +351,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_preference_tenant_is_deleted ON ydsz_msg
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER                  DEFAULT NULL,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     biz_type                 VARCHAR(64)              DEFAULT NULL,
@@ -352,14 +368,7 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_route_rule (
     target_channel           VARCHAR(32)              NOT NULL,
     fallback_channel         VARCHAR(32)              DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
-    sort               INTEGER                  DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_route_rule PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_route_rule_rule_code UNIQUE (rule_code, tenant_id)
 );
@@ -390,7 +399,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_route_rule_tenant_is_deleted ON ydsz_msg
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_variable_source (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     template_code            VARCHAR(64)              NOT NULL,
     variable_name            VARCHAR(64)              NOT NULL,
     source_type              VARCHAR(32)              NOT NULL,
@@ -398,12 +414,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_variable_source (
     cache_ttl                INTEGER                  DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_variable_source PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_variable_source_variable UNIQUE (template_code, variable_name)
 );
@@ -429,7 +439,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_variable_source_tenant_is_deleted ON yds
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_canary (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     canary_key               VARCHAR(128)             NOT NULL,
     experiment_name          VARCHAR(128)             NOT NULL,
     template_code            VARCHAR(64)              NOT NULL,
@@ -440,12 +457,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_canary (
     experiment_group         VARCHAR(32)              DEFAULT NULL,
     metrics_goal             VARCHAR(32)              DEFAULT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'ACTIVE',
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_canary PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_canary_canary_key UNIQUE (canary_key)
 );
@@ -475,7 +486,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_canary_tenant_is_deleted ON ydsz_msg_can
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_tenant_config (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL,
+    sort INTEGER DEFAULT 0,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_by VARCHAR,
+    updated_at TIMESTAMP DEFAULT NOW(),
     tenant_name              VARCHAR(128)             DEFAULT NULL,
     daily_limit              BIGINT                   DEFAULT NULL,
     hourly_limit             BIGINT                   DEFAULT NULL,
@@ -499,7 +517,14 @@ COMMENT ON COLUMN ydsz_msg_tenant_config.status IS '配置状态: ENABLED / DISA
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     batch_id                 VARCHAR(64)              NOT NULL,
     batch_name               VARCHAR(128)             DEFAULT NULL,
     channel                  VARCHAR(32)              NOT NULL,
@@ -517,12 +542,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_batch (
     sender_id                VARCHAR(32)              DEFAULT NULL,
     priority                 VARCHAR(32)              NOT NULL DEFAULT 'NORMAL',
     payload                  JSONB                    DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_batch PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_msg_batch_batch_id UNIQUE (batch_id)
 );
@@ -560,7 +579,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_batch_tenant_is_deleted ON ydsz_msg_batc
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     aggregate_group          VARCHAR(64)              NOT NULL,
     receiver                 VARCHAR(128)             NOT NULL,
     channel                  VARCHAR(32)              NOT NULL,
@@ -572,12 +598,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_aggregate (
     sent_at                  TIMESTAMP                DEFAULT NULL,
     digest_content           TEXT                    ,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_aggregate PRIMARY KEY (id)
 );
 
@@ -609,7 +629,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_aggregate_tenant_is_deleted ON ydsz_msg_
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(32)              NOT NULL,
     msg_type                 VARCHAR(32)              DEFAULT NULL,
     payload                  JSONB                    NOT NULL,
@@ -617,12 +644,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_offline (
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
     pushed_at                TIMESTAMP                DEFAULT NULL,
     expired_at               TIMESTAMP                DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_offline PRIMARY KEY (id)
 );
 
@@ -649,7 +670,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_offline_tenant_is_deleted ON ydsz_msg_of
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     channel                  VARCHAR(32)              NOT NULL,
     biz_type                 VARCHAR(64)              DEFAULT NULL,
     biz_id                   VARCHAR(64)              DEFAULT NULL,
@@ -682,11 +710,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_log (
     reconsume_times          INTEGER                  DEFAULT NULL,
     parent_msg_id            VARCHAR(64)              DEFAULT NULL,
     scheduled_at             TIMESTAMP                DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_log PRIMARY KEY (id)
 );
 
@@ -749,7 +772,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_tenant_is_deleted ON ydsz_msg_log (t
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     log_id                   VARCHAR(32)              NOT NULL,
     provider_trace_id        VARCHAR(128)             DEFAULT NULL,
     receipt_type             VARCHAR(32)              NOT NULL,
@@ -758,12 +788,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_receipt (
     provider_msg             VARCHAR(512)             DEFAULT NULL,
     raw_response             JSONB                    DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_receipt PRIMARY KEY (id)
 );
 
@@ -805,6 +829,14 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_trace (
     message                  VARCHAR(512)             DEFAULT NULL,
     extra                    JSONB                    DEFAULT NULL,
     event_at                 TIMESTAMP                NOT NULL,
+    sort INTEGER DEFAULT 0,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR DEFAULT '1',
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_by VARCHAR,
+    updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_msg_trace PRIMARY KEY (id)
 );
 
@@ -831,7 +863,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_trace_event_at ON ydsz_msg_trace (event_
 
 CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     msg_id                   VARCHAR(64)              NOT NULL,
     notification_id          VARCHAR(32)              DEFAULT NULL,
     user_id                  VARCHAR(32)              NOT NULL,
@@ -841,12 +880,6 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_feedback (
     feedback_type            VARCHAR(32)              DEFAULT NULL,
     content                  VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted                  SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_msg_feedback PRIMARY KEY (id)
 );
 
@@ -879,11 +912,17 @@ CREATE TABLE IF NOT EXISTS ydsz_msg_outbox (
     aggregate_id             VARCHAR(128)             NOT NULL,
     event_type               VARCHAR(128)             NOT NULL,
     payload                  JSONB                    NOT NULL,
-    tenant_id                VARCHAR(32)              DEFAULT NULL,
+    sort INTEGER DEFAULT 0,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)              DEFAULT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR,
+    updated_at TIMESTAMP DEFAULT NOW(),
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
     publish_attempts         INTEGER                  NOT NULL DEFAULT 0,
     published_at             TIMESTAMP                DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_msg_outbox PRIMARY KEY (id)
 );
 

@@ -4,13 +4,8 @@ import java.io.Serializable;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import com.baomidou.mybatisplus.annotation.Version;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.json.annotation.JsonIgnore;
@@ -49,10 +44,10 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  *
  * @param <T> 主键ID类型
  * @author ydsz-team
- * @since 26.10.01
  * @see MpVersionedEntity
  * @see MpBaseEntity
  * @see MpBaseAuditEntity
+ * @since 26.10.01
  */
 @Getter
 @Setter
@@ -63,34 +58,55 @@ import com.njydsz.common.json.annotation.JsonIgnore;
 @EqualsAndHashCode(callSuper = true)
 public class MpSimpleEntity<T extends Serializable> extends MpBaseAuditEntity<T> {
 
-  private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-  /**
-   * 逻辑删除标识
-   *
-   * <p>false=未删除，true=已删除。使用 MP 原生 {@code @TableLogic} 注解，由 MyBatis-Plus 自动处理逻辑删除条件。
-   */
-  @TableLogic
-  @TableField("is_deleted")
-  @JsonIgnore
-  private Boolean isDeleted;
+    /**
+     * 排序权重
+     *
+     * <p>数值越小越靠前，默认 0。用于列表展示的排序。
+     */
+    @TableField("sort")
+    private Integer sort;
 
-  /**
-   * 状态标识
-   *
-   * <p>子类可按需覆盖为具体业务状态枚举值，默认值为空。
-   */
-  @TableField("status")
-  private String status;
+    /**
+     * 状态标识
+     *
+     * <p>子类可按需覆盖为具体业务状态枚举值，默认值为空。
+     */
+    @TableField("status")
+    private String status;
 
-  /**
-   * 租户 ID
-   *
-   * <p>多租户隔离字段，由 SQL 拦截器自动注入 WHERE 条件和 INSERT 填充。 对外 API 不暴露租户 ID。
-   *
-   * <p><b>注意：</b>此字段始终存在于 {@code MpSimpleEntity} 中。 当未启用多租户时，此字段被忽略（DDL 默认值 '1'），不会影响业务逻辑。
-   */
-  @TableField("tenant_id")
-  @JsonIgnore
-  private String tenantId;
+    /**
+     * 乐观锁版本号
+     *
+     * <p>每次更新时自动递增（+1），防止并发更新冲突。 由 MyBatis-Plus 原生 {@code OptimisticLockerInnerInterceptor} 处理， 使用
+     * {@code @Version} 注解标记，避免自研拦截器维护参数映射的脆弱性。
+     *
+     * <p>初始值为 0，首次 UPDATE 时自动递增为 1。
+     */
+    @Version
+    @TableField("revision")
+    @Builder.Default
+    private Integer revision = 0;
+
+    /**
+     * 逻辑删除标识
+     *
+     * <p>false=未删除，true=已删除。使用 MP 原生 {@code @TableLogic} 注解，由 MyBatis-Plus 自动处理逻辑删除条件。
+     */
+    @TableLogic
+    @TableField("is_deleted")
+    @JsonIgnore
+    private Boolean isDeleted;
+
+    /**
+     * 租户 ID
+     *
+     * <p>多租户隔离字段，由 SQL 拦截器自动注入 WHERE 条件和 INSERT 填充。 对外 API 不暴露租户 ID。
+     *
+     * <p><b>注意：</b>此字段始终存在于 {@code MpSimpleEntity} 中。 当未启用多租户时，此字段被忽略（DDL 默认值 '1'），不会影响业务逻辑。
+     */
+    @TableField("tenant_id")
+    @JsonIgnore
+    private String tenantId;
 }

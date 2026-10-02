@@ -24,7 +24,14 @@
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -52,12 +59,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_def (
     canary_conditions        JSONB                    DEFAULT NULL,
     canary_condition_expression TEXT                    ,
     canary_severity_expression TEXT                    ,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_def PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_def_rule_code UNIQUE (rule_code, tenant_id)
 );
@@ -105,7 +106,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_def_tenant_is_deleted ON ydsz_rule_def 
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     var_name                 VARCHAR(128)             NOT NULL,
     var_type                 VARCHAR(32)              DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
@@ -114,12 +122,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_variable_def (
     is_required              SMALLINT                 NOT NULL DEFAULT 0,
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_variable_def PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_variable_def_var_name UNIQUE (var_name, tenant_id)
 );
@@ -147,7 +149,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_variable_def_tenant_is_deleted ON ydsz_
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     template_code            VARCHAR(64)              NOT NULL,
     template_name            VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -162,12 +171,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_template (
     industry                 VARCHAR(64)              DEFAULT NULL,
     tags                     VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_template PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_template_template_code UNIQUE (template_code, tenant_id)
 );
@@ -201,7 +204,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_template_tenant_is_deleted ON ydsz_rule
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -215,12 +225,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_script (
     version                  INTEGER                  NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_script PRIMARY KEY (id)
 );
 
@@ -252,7 +256,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_script_tenant_is_deleted ON ydsz_rule_s
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     table_code               VARCHAR(64)              NOT NULL,
     table_name               VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
@@ -266,12 +277,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_table (
     priority                 INTEGER                  DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_decision_table PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_decision_table_table_code UNIQUE (table_code, tenant_id)
 );
@@ -304,7 +309,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_table_tenant_is_deleted ON yds
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -316,12 +328,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_decision_tree (
     version                  INTEGER                  NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_decision_tree PRIMARY KEY (id)
 );
 
@@ -351,7 +357,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_decision_tree_tenant_is_deleted ON ydsz
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     rule_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -366,12 +379,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_scorecard (
     version                  INTEGER                  NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_scorecard PRIMARY KEY (id)
 );
 
@@ -405,7 +412,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_scorecard_tenant_is_deleted ON ydsz_rul
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     name                     VARCHAR(128)             NOT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
@@ -413,12 +427,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_chain_graph (
     graph_version            INTEGER                  NOT NULL DEFAULT 1,
     status                   VARCHAR(32)              DEFAULT NULL,
     content_json             JSONB                    DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_chain_graph PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_chain_graph_rule_code UNIQUE (rule_code, tenant_id)
 );
@@ -444,19 +452,20 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_chain_graph_tenant_is_deleted ON ydsz_r
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_dependency (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     depends_on_rule_code     VARCHAR(64)              NOT NULL,
     dependency_type          VARCHAR(32)              NOT NULL,
     is_cascade_on_disable    SMALLINT                 NOT NULL DEFAULT 0,
     description              VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_dependency PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_dependency_rule_dep UNIQUE (rule_code, depends_on_rule_code)
 );
@@ -482,7 +491,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_dependency_tenant_is_deleted ON ydsz_ru
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     pack_code                VARCHAR(64)              NOT NULL,
     pack_version             VARCHAR(32)              NOT NULL,
     pack_name                VARCHAR(128)             NOT NULL,
@@ -498,12 +514,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_pack (
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
     is_official              SMALLINT                 NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_pack PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_pack_pack_code UNIQUE (pack_code, pack_version)
 );
@@ -539,17 +549,18 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_tenant_is_deleted ON ydsz_rule_pac
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_pack_install (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     installed_by             VARCHAR(64)              DEFAULT NULL,
     installed_at             TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
     error_message            TEXT                    ,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_pack_install PRIMARY KEY (id)
 );
 
@@ -573,7 +584,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_pack_install_tenant_is_deleted ON ydsz_
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     is_auto_rollback_enabled SMALLINT                 NOT NULL DEFAULT 0,
     rollback_action          VARCHAR(32)              DEFAULT NULL,
@@ -585,12 +603,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_policy (
     last_evaluated_at        TIMESTAMP                DEFAULT NULL,
     last_rollback_at         TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_ab_policy PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_ab_policy_rule_code UNIQUE (rule_code, tenant_id)
 );
@@ -620,18 +632,19 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_ab_policy_tenant_is_deleted ON ydsz_rul
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_canary_bucket (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     bucket_type              VARCHAR(32)              NOT NULL,
     bucket_count             BIGINT                   NOT NULL DEFAULT 0,
     stat_date                DATE                     NOT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_canary_bucket PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_rule_canary_bucket_rule_bucket_date UNIQUE (rule_code, bucket_type, stat_date)
 );
@@ -656,7 +669,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_rule_canary_bucket_tenant_is_deleted ON ydsz
 
 CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     rule_code                VARCHAR(64)              NOT NULL,
     trigger_reason           VARCHAR(32)              NOT NULL,
     error_rate               NUMERIC(20,6)            DEFAULT NULL,
@@ -665,12 +685,6 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_ab_rollback (
     operator                 VARCHAR(64)              DEFAULT NULL,
     notify_status            VARCHAR(32)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
     CONSTRAINT pk_ydsz_rule_ab_rollback PRIMARY KEY (id)
 );
 
@@ -703,7 +717,15 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_version_history (
     definition_json          JSONB                    DEFAULT NULL,
     change_desc              VARCHAR(512)             DEFAULT NULL,
     operator                 VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sort INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR DEFAULT '1',
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR,
+    updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_rule_version_history PRIMARY KEY (id)
 );
 
@@ -731,7 +753,15 @@ CREATE TABLE IF NOT EXISTS ydsz_rule_execution_trace (
     facts_snapshot           JSONB                    DEFAULT NULL,
     result_snapshot          JSONB                    DEFAULT NULL,
     error_message            TEXT                    ,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sort INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR DEFAULT '1',
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR,
+    updated_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT pk_ydsz_rule_execution_trace PRIMARY KEY (id)
 );
 

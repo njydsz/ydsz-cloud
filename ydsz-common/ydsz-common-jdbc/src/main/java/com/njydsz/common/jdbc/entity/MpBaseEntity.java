@@ -58,7 +58,6 @@ import lombok.experimental.SuperBuilder;
  * @author ydsz-team
  * @since 26.10.01
  * @see MpSimpleEntity
- * @see MpVersionedEntity
  * @see MpBaseAuditEntity
  * @see MpBaseIdEntity
  */
@@ -68,7 +67,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class MpBaseEntity<T extends Serializable> extends MpVersionedEntity<T> {
+public class MpBaseEntity<T extends Serializable> extends MpSimpleEntity<T> {
 
   private static final long serialVersionUID = 1L;
 }

@@ -35,20 +35,20 @@
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_category (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     category_code            VARCHAR(64)              NOT NULL,
     category_name            VARCHAR(128)             NOT NULL,
     parent_id                VARCHAR(32)              DEFAULT NULL,
-    sort                     INTEGER                  NOT NULL DEFAULT 0,
     icon                     VARCHAR(128)             DEFAULT NULL,
     remark                   VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_category PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_category_category_code UNIQUE (category_code, tenant_id)
 );
@@ -75,7 +75,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_category_tenant_is_deleted ON ydsz_flow
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     flow_code                VARCHAR(64)              NOT NULL,
     flow_name                VARCHAR(128)             NOT NULL,
     category                 VARCHAR(64)              DEFAULT NULL,
@@ -97,12 +104,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_definition (
     locked_by                VARCHAR(32)              DEFAULT NULL,
     locked_at                TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_definition PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_definition_flow_code_version UNIQUE (flow_code, flow_version, tenant_id)
 );
@@ -143,7 +144,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_definition_tenant_is_deleted ON ydsz_fl
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     template_code            VARCHAR(64)              NOT NULL,
     template_name            VARCHAR(128)             NOT NULL,
     category                 VARCHAR(32)              DEFAULT NULL,
@@ -152,19 +160,12 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_template (
     bpmn_xml                 TEXT                    ,
     form_path                VARCHAR(1024)            DEFAULT NULL,
     use_count                INTEGER                  NOT NULL DEFAULT 0,
-    sort               INTEGER                  NOT NULL DEFAULT 0,
     parent_template_id       VARCHAR(32)              DEFAULT NULL,
     version                  INTEGER                  NOT NULL DEFAULT 1,
     version_label            VARCHAR(32)              DEFAULT NULL,
     inherit_type             VARCHAR(32)              DEFAULT NULL,
     is_latest                INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_template PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_template_template_code_version UNIQUE (template_code, version, tenant_id)
 );
@@ -200,7 +201,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_template_tenant_is_deleted ON ydsz_flow
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_node (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     definition_id            VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
     node_type                INTEGER                  NOT NULL,
@@ -215,12 +223,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_node (
     sla_config               JSONB                    DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_node PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_node_definition_node_code UNIQUE (definition_id, node_code)
 );
@@ -254,7 +256,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_node_tenant_is_deleted ON ydsz_flow_nod
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     definition_id            VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
     skip_name                VARCHAR(128)             DEFAULT NULL,
@@ -269,12 +278,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_skip (
     ext                      JSONB                    DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_skip PRIMARY KEY (id)
 );
 
@@ -309,20 +312,20 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_skip_tenant_is_deleted ON ydsz_flow_ski
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_auto_trigger (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER                  NOT NULL DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     source_flow_code         VARCHAR(64)              NOT NULL,
     target_flow_code         VARCHAR(64)              NOT NULL,
     condition_expression     VARCHAR(512)             DEFAULT NULL,
     description              VARCHAR(512)             DEFAULT NULL,
     is_enabled               INTEGER                  NOT NULL DEFAULT 1,
-    sort               INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_auto_trigger PRIMARY KEY (id)
 );
 
@@ -350,7 +353,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_auto_trigger_tenant_is_deleted ON ydsz_
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     flow_code                VARCHAR(64)              NOT NULL,
     flow_name                VARCHAR(128)             NOT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
@@ -375,12 +385,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_instance (
     due_at                   TIMESTAMP                DEFAULT NULL,
     reject_reason            VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_instance PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_instance_business_type_id UNIQUE (business_type, business_id)
 );
@@ -429,7 +433,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_tenant_flow_code_time
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     instance_id              VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
@@ -471,12 +482,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     iter_var                 VARCHAR(128)             NOT NULL DEFAULT '',
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_run_task PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_run_task_instance_node_assignee UNIQUE (instance_id, node_code, assignee_id, iter_var)
 );
@@ -540,7 +545,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_assignee_status_is_deleted
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_user (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     task_id                  VARCHAR(32)              NOT NULL,
     instance_id              VARCHAR(32)              NOT NULL,
     node_code                VARCHAR(64)              NOT NULL,
@@ -554,12 +566,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_user (
     sign_type                VARCHAR(32)              NOT NULL DEFAULT 'ORIGINAL',
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_user PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_user_task_user UNIQUE (task_id, user_id, sign_type)
 );
@@ -592,7 +598,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_user_tenant_is_deleted ON ydsz_flow_use
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     instance_id              VARCHAR(32)              NOT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              DEFAULT NULL,
@@ -607,12 +620,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_timer (
     cancel_reason            VARCHAR(512)             DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_timer PRIMARY KEY (id)
 );
 
@@ -647,7 +654,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_timer_tenant_is_deleted ON ydsz_flow_ti
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     instance_id              VARCHAR(32)              NOT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              DEFAULT NULL,
@@ -664,12 +678,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_event_subscription (
     cancel_reason            VARCHAR(512)             DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_event_subscription PRIMARY KEY (id)
 );
 
@@ -707,7 +715,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_subscription_tenant_is_deleted ON
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              NOT NULL,
     flow_code                VARCHAR(64)              NOT NULL,
@@ -736,12 +751,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_task (
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     iter_var                 VARCHAR(128)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_his_task PRIMARY KEY (id)
 );
 
@@ -791,7 +800,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_tenant_is_deleted ON ydsz_flow
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     flow_code                VARCHAR(64)              NOT NULL,
     flow_name                VARCHAR(128)             DEFAULT NULL,
     definition_id            VARCHAR(32)              NOT NULL,
@@ -813,12 +829,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_his_instance (
     archived_at              TIMESTAMP                DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_his_instance PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_his_instance_business_type_id UNIQUE (business_type, business_id)
 );
@@ -860,7 +870,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_tenant_is_deleted ON ydsz_
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              DEFAULT NULL,
     node_code                VARCHAR(64)              DEFAULT NULL,
@@ -873,12 +890,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_comment (
     reply_to_user_name       VARCHAR(64)              DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_comment PRIMARY KEY (id)
 );
 
@@ -910,7 +921,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_comment_tenant_is_deleted ON ydsz_flow_
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(32)              NOT NULL,
     content                  VARCHAR(500)             NOT NULL,
     comment_type             VARCHAR(32)              DEFAULT NULL,
@@ -918,12 +936,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_quick_comment (
     use_count                INTEGER                  NOT NULL DEFAULT 0,
     is_system                INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_quick_comment PRIMARY KEY (id)
 );
 
@@ -951,7 +963,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_quick_comment_tenant_is_deleted ON ydsz
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              DEFAULT NULL,
     node_code                VARCHAR(64)              DEFAULT NULL,
@@ -970,12 +989,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc (
     read_at                  TIMESTAMP                DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_cc PRIMARY KEY (id)
 );
 
@@ -1014,7 +1027,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_tenant_is_deleted ON ydsz_flow_cc (t
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     flow_code                VARCHAR(64)              DEFAULT NULL,
     node_code                VARCHAR(64)              DEFAULT NULL,
     rule_type                VARCHAR(32)              NOT NULL,
@@ -1022,12 +1042,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_cc_rule (
     is_enabled               INTEGER                  NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_cc_rule PRIMARY KEY (id)
 );
 
@@ -1054,7 +1068,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_cc_rule_tenant_is_deleted ON ydsz_flow_
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     instance_id              VARCHAR(32)              NOT NULL,
     task_id                  VARCHAR(32)              DEFAULT NULL,
     node_code                VARCHAR(64)              DEFAULT NULL,
@@ -1071,12 +1092,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_attachment (
     md5                      VARCHAR(64)              DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_attachment PRIMARY KEY (id)
 );
 
@@ -1113,7 +1128,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_attachment_tenant_is_deleted ON ydsz_fl
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     owner_user_id            VARCHAR(32)              NOT NULL,
     owner_user_name          VARCHAR(64)              DEFAULT NULL,
     delegate_user_id         VARCHAR(32)              NOT NULL,
@@ -1128,12 +1150,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_delegate_auth (
     reason                   VARCHAR(512)             DEFAULT NULL,
     provider_trace_id        VARCHAR(64)              DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_delegate_auth PRIMARY KEY (id)
 );
 
@@ -1168,7 +1184,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_delegate_auth_tenant_is_deleted ON ydsz
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
     id                       VARCHAR(32)             ,
-    tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER                  NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)              NOT NULL DEFAULT '0',
+    is_deleted SMALLINT                 NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)              DEFAULT NULL,
+    created_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)              DEFAULT NULL,
+    updated_at TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id                  VARCHAR(32)              NOT NULL,
     role_code                VARCHAR(64)              NOT NULL,
     is_enabled               SMALLINT                 NOT NULL DEFAULT 1,
@@ -1176,12 +1199,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_admin_role (
     granted_at               TIMESTAMP                DEFAULT NULL,
     expire_at                TIMESTAMP                DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
-    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
-    revision                 INTEGER                  NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)              DEFAULT NULL,
-    created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)              DEFAULT NULL,
-    updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_admin_role PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_flow_admin_role_user_role UNIQUE (user_id, role_code)
 );
@@ -1210,7 +1227,14 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_admin_role_tenant_is_deleted ON ydsz_fl
 --   目的：审计日志按月分区提升查询性能，同时便于历史分区 detach 归档到冷存储
 CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     id                       VARCHAR(32)     NOT NULL,
-    tenant_id                VARCHAR(32)      NOT NULL DEFAULT '0',
+    sort INTEGER DEFAULT 0,
+    revision INTEGER          NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(32)      NOT NULL DEFAULT '0',
+    is_deleted SMALLINT         NOT NULL DEFAULT 0,
+    created_by VARCHAR(64)      DEFAULT NULL,
+    created_at TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(64)      DEFAULT NULL,
+    updated_at TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     instance_id              VARCHAR(32)      NOT NULL,
     task_id                  VARCHAR(32)      DEFAULT NULL,
     flow_code                VARCHAR(64)      NOT NULL,
@@ -1228,12 +1252,6 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_audit_log (
     operated_at              TIMESTAMP        NOT NULL,
     provider_trace_id        VARCHAR(64)      DEFAULT NULL,
     status                   VARCHAR(32)      DEFAULT NULL,
-    is_deleted               SMALLINT         NOT NULL DEFAULT 0,
-    revision                 INTEGER          NOT NULL DEFAULT 0,
-    created_by               VARCHAR(64)      DEFAULT NULL,
-    created_at               TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               VARCHAR(64)      DEFAULT NULL,
-    updated_at               TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_flow_audit_log PRIMARY KEY (id, operated_at)
 ) PARTITION BY RANGE (operated_at);
 
@@ -1304,9 +1322,14 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_idempotent (
     status          VARCHAR(16)      NOT NULL DEFAULT 'PROCESSING',
     retry_count     INTEGER          NOT NULL DEFAULT 0,
     error_message   VARCHAR(512)     DEFAULT NULL,
-    tenant_id       VARCHAR(32)      DEFAULT '0',
-    created_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    sort INTEGER DEFAULT 0,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)      DEFAULT '0',
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    created_at TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR,
+    updated_at TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ttl_at          TIMESTAMP        NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '7 days')
 );
 
@@ -1347,9 +1370,15 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_archive_cursor (
     -- 归档游标值（如最大 end_time 的 ISO-8601）
     cursor_data     JSONB            DEFAULT NULL,
     -- 附加数据（如上次归档统计、最后处理的实例数）
-    tenant_id       VARCHAR(32)      DEFAULT '0',
-    created_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP
+    sort INTEGER DEFAULT 0,
+    status INTEGER DEFAULT 1,
+    revision INTEGER DEFAULT 0,
+    tenant_id VARCHAR(32)      DEFAULT '0',
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_by VARCHAR,
+    created_at TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR,
+    updated_at TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE ydsz_flow_archive_cursor IS '流程归档断点续传游标表';

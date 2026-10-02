@@ -38,8 +38,4 @@ public class MpBaseIdEntity<T extends Serializable> implements Serializable {
   /** 主键ID，使用雪花算法自动生成 */
   @TableId(type = IdType.ASSIGN_ID)
   private T id;
-
-  /** 创建时间 */
-  @TableField(value = "created_at")
-  private LocalDateTime createdAt;
 }
