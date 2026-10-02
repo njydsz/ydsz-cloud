@@ -57,16 +57,6 @@ public class Department extends MpBaseEntity<String> {
   /** 部门描述（说明部门职责与归属） */
   private String description;
 
-  /** 同级排序序号（升序） */
-  private Integer sort;
-
-  /**
-   * 启用状态（{@code "ENABLED"} / {@code "DISABLED"}）
-   *
-   * <p>禁用后，部门下用户无法被分配新角色，但现有角色不受影响。
-   */
-  private String status;
-
   /**
    * 部门负责人用户 ID。
    *

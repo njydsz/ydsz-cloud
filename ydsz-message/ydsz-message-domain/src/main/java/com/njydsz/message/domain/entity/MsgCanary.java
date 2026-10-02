@@ -59,6 +59,4 @@ public class MsgCanary extends MpBaseEntity<String> {
   /** 目标指标：DELIVERY_RATE 送达率 / READ_RATE 阅读率 / CLICK_RATE 点击率 */
   private String metricsGoal;
 
-  /** 实验状态：ACTIVE 运行中 / PAUSED 已暂停 / COMPLETED 已结束 */
-  private String status;
 }

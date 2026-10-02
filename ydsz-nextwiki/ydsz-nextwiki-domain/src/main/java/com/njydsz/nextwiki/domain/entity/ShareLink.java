@@ -55,9 +55,6 @@ public class ShareLink extends MpBaseEntity<String> implements Serializable {
   /** 已访问次数 */
   private Integer accessCount;
 
-  /** 分享状态：active / expired / revoked */
-  private String status;
-
   /** 分享密码（BCrypt 加密；空表示无密码） */
   private String password;
 

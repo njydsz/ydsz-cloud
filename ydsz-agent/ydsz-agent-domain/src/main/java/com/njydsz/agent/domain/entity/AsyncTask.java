@@ -41,9 +41,6 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
   /** 任务类型编码（REPORT_GENERATE / DOC_INGEST / BATCH_CHAT 等） */
   private String taskType;
 
-  /** 任务状态 */
-  private String status;
-
   /** 租户 ID（多租户隔离，对齐 MpBaseEntity.tenantId 命名约定） */
   private String tenantId;
 
@@ -118,7 +115,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
     this.tenantId = tenantId;
     this.userId = userId;
     this.inputPayload = inputPayload;
-    this.status = AsyncTaskStatus.PENDING.getCode();
+    setStatus(AsyncTaskStatus.PENDING.getCode());
     this.progressPercent = 0;
     this.retryCount = 0;
     this.maxRetry = DEFAULT_MAX_RETRY;
@@ -130,7 +127,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
    * @return true=已到达终态
    */
   public boolean isTerminal() {
-    return AsyncTaskStatus.isTerminal(this.status);
+    return AsyncTaskStatus.isTerminal(getStatus());
   }
 
   /**
@@ -139,7 +136,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
    * @return true=可重试
    */
   public boolean isRetryable() {
-    return AsyncTaskStatus.isRetryable(this.status)
+    return AsyncTaskStatus.isRetryable(getStatus())
         && retryCount != null
         && maxRetry != null
         && retryCount < maxRetry;
@@ -160,7 +157,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
   public void updateProgress(int percent) {
     this.progressPercent = Math.clamp(percent, 0, 100);
     if (this.progressPercent >= 100) {
-      this.status = AsyncTaskStatus.SUCCEEDED.getCode();
+      setStatus(AsyncTaskStatus.SUCCEEDED.getCode());
       this.completedAt = LocalDateTime.now();
     }
   }
@@ -172,7 +169,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
    */
   public void fail(String message) {
     this.errorMessage = message;
-    this.status = AsyncTaskStatus.FAILED.getCode();
+    setStatus(AsyncTaskStatus.FAILED.getCode());
     this.completedAt = LocalDateTime.now();
   }
 
@@ -183,7 +180,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
    */
   public void succeed(String output) {
     this.outputPayload = output;
-    this.status = AsyncTaskStatus.SUCCEEDED.getCode();
+    setStatus(AsyncTaskStatus.SUCCEEDED.getCode());
     this.progressPercent = 100;
     this.completedAt = LocalDateTime.now();
   }
@@ -192,7 +189,7 @@ public class AsyncTask extends MpBaseEntity<Long> implements Serializable {
    * 标记任务取消。
    */
   public void cancel() {
-    this.status = AsyncTaskStatus.CANCELED.getCode();
+    setStatus(AsyncTaskStatus.CANCELED.getCode());
     this.completedAt = LocalDateTime.now();
   }
 

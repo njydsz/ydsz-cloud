@@ -10,8 +10,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
-
 /**
  * 消息轨迹记录实体，记录消息从接入到投递全链路的每个关键节点。
  *
@@ -40,9 +38,6 @@ public class MsgTrace extends MpBaseEntity<String> {
 
   /** 轨迹节点类型 */
   private String node;
-
-  /** 节点状态: SUCCESS / FAILED / SKIPPED / PENDING */
-  private String status;
 
   /** 通道: SMS/EMAIL/PUSH/...（节点关联的通道，部分节点如 RECEIVED 无通道则为 null） */
   private String channel;

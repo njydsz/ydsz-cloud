@@ -50,10 +50,6 @@ public class Space extends MpBaseEntity<String> {
   /** 可见性：公开 */
   public static final String VISIBILITY_PUBLIC = "public";
 
-  /** 主键ID（分布式ID手动赋值，覆盖基类 ASSIGN_ID）。 */
-  @TableId(type = IdType.INPUT)
-  private String id;
-
   /** 空间名称 */
   private String name;
 
@@ -72,14 +68,8 @@ public class Space extends MpBaseEntity<String> {
   /** 空间所有者（创建者） */
   private String ownerId;
 
-  /** 空间状态：active / archived / deleted */
-  private String status;
-
   /** 可见性：private / organization / public */
   private String visibility;
-
-  /** 排序序号 */
-  private Integer sort;
 
   /** 成员数量 */
   private Integer memberCount;

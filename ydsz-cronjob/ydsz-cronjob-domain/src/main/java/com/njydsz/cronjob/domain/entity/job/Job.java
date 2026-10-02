@@ -55,9 +55,6 @@ public class Job extends MpBaseEntity<String> {
   private Long fixedDelayMs;
   private String paramsJson;
 
-  /** 任务状态（NORMAL / AUTO_PAUSED / ERROR） */
-  private String status;
-
   /** 任务备注 */
   private String remark;
 

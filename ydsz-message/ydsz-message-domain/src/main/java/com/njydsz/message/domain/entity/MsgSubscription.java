@@ -40,9 +40,6 @@ public class MsgSubscription extends MpBaseEntity<String> {
   /** 通道 */
   private String channel;
 
-  /** 订阅状态: SUBSCRIBED 已订阅 / UNSUBSCRIBED 已退订 */
-  private String status;
-
   /** 角色范围(如 PM|MEMBER,限定角色内可见性) */
   private String roleScope;
 

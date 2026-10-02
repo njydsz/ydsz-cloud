@@ -41,9 +41,6 @@ public class ShareRecipient extends MpBaseEntity<String> implements Serializable
   /** 接收者名称 */
   private String recipientName;
 
-  /** 状态：ACTIVE/VIEWED/REVOKED */
-  private String status;
-
   /** 首次查看时间 */
   private LocalDateTime viewedAt;
 }

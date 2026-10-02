@@ -64,9 +64,6 @@ public class AgentApproval extends MpBaseEntity<String> {
   /** 审批上下文（JSON 字符串，含用户输入、已有结果等） */
   private String contextJson;
 
-  /** 审批状态（PENDING/APPROVED/REJECTED/EXPIRED） */
-  private String status;
-
   /** 审批人标识 */
   private String approver;
 

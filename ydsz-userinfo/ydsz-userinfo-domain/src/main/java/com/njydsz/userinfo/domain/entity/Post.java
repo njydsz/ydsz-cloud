@@ -61,14 +61,4 @@ public class Post extends MpBaseEntity<String> {
 
   /** 岗位描述（说明岗位的工作职责与任职要求） */
   private String description;
-
-  /** 同级排序序号（升序） */
-  private Integer sort;
-
-  /**
-   * 启用状态（{@code "ENABLED"} / {@code "DISABLED"}）
-   *
-   * <p>禁用后，岗位不可再被分配给新用户，但现有用户的岗位关联不受影响。
-   */
-  private String status;
 }

@@ -65,9 +65,6 @@ public class InsightReport extends MpBaseEntity<Long> {
   /** 报告内容 JSON（含 sections 列表） */
   private String contentJson;
 
-  /** 报告状态编码（draft / completed / failed / exported） */
-  private String status;
-
   /** 报告格式（html / pdf / markdown） */
   private String reportFormat;
 

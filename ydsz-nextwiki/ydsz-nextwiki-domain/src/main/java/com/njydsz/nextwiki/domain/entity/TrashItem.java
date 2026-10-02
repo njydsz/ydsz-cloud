@@ -54,9 +54,6 @@ public class TrashItem extends MpBaseEntity<String> implements Serializable {
   /** 预计永久删除时间 */
   private LocalDateTime purgeTime;
 
-  /** 状态：in_trash / restored / purged */
-  private String status;
-
   /** 默认保留天数 */
   public static final int DEFAULT_RETENTION_DAYS = 30;
 }

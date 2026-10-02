@@ -61,9 +61,6 @@ public class OAuth2ApplicationEntity extends MpBaseEntity<String> {
   @TableField(typeHandler = JacksonTypeHandler.class)
   private Set<String> allowedAudiences;
 
-  /** 应用状态（ENABLED/DISABLED） */
-  private String status;
-
   /** 应用描述 */
   private String description;
 

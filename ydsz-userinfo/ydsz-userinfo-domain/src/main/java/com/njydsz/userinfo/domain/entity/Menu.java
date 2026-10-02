@@ -73,15 +73,9 @@ public class Menu extends MpBaseEntity<String> {
   /** 菜单图标（Iconify / Element Plus 图标名） */
   private String icon;
 
-  /** 同级排序序号（升序） */
-  private Integer sort;
-
   /** 权限码（{@code "system:user:create"} 格式，被后端 {@code @AuthApiPermission} 引用） */
   private String permissionCode;
 
   /** 是否前端可见（0=隐藏但仍参与鉴权，1=可见） */
   private Integer visible;
-
-  /** 启用状态（ENABLED / DISABLED） */
-  private String status;
 }

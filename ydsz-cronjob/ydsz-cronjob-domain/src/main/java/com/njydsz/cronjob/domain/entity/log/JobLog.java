@@ -126,20 +126,4 @@ public class JobLog extends MpBaseEntity<String> {
 
   /** Handler 执行结束时间（JobHandler.execute() 返回的时刻，与 endTime 可能不同：endTime 含后续清理） */
   private LocalDateTime handlerEndTime;
-
-  /** 执行状态: RUNNING/SUCCESS/FAILED/TIMEOUT */
-  private String status;
-
-  /** 逻辑删除标识：false=未删除，true=已删除 */
-  @TableLogic
-  @TableField("is_deleted")
-  private Boolean isDeleted;
-
-  /** 创建时间 */
-  @TableField("created_at")
-  private LocalDateTime createdAt;
-
-  /** 更新时间 */
-  @TableField("updated_at")
-  private LocalDateTime updatedAt;
 }

@@ -294,6 +294,8 @@ rules:
 
       **已有业务字段与上述名称冲突时**：业务字段改名（如业务状态改为 `xxx_status`），基础字段 `status` 不可省略。
 
+      **【强制】禁止覆盖基础字段**：业务模块**禁止**在 Java 实体类中声明与上述 9 个基础字段同名的属性（如 `private Integer sort;`、`private Boolean isDeleted;`），即使通过 `extends MpBaseEntity` 已继承也不得重复声明。这 9 个字段只能通过继承 `MpBaseEntity` 获得，**不允许任何形式的覆盖或重定义**。
+
       **Java 实体侧**：必须继承 `MpBaseEntity<String>`（来自 ydzs-common-jdbc），禁止手动声明这 9 个基础字段。
 
       **MySQL 方言适配**：is_deleted → TINYINT(1)，时间 → DATETIME(3)，整数 → INT NOT NULL

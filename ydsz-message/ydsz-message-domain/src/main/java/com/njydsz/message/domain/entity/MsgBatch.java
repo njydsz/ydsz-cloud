@@ -60,9 +60,6 @@ public class MsgBatch extends MpBaseEntity<String> {
   /** 跳过数（限流/拦截） */
   private Integer skipped;
 
-  /** 批次状态: PENDING / PROCESSING / COMPLETED / FAILED */
-  private String status;
-
   /** 人群包来源（CSV 文件名 / 标签 ID） */
   private String audienceSource;
 

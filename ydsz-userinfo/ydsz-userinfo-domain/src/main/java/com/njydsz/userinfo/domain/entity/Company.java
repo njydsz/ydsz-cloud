@@ -68,11 +68,4 @@ public class Company extends MpBaseEntity<String> {
 
   /** 注册地址 */
   private String address;
-
-  /**
-   * 启用状态（{@code "ENABLED"} / {@code "DISABLED"}）
-   *
-   * <p>禁用后，公司下所有部门和用户均无法登录（由登录拦截器在租户上下文检查）。
-   */
-  private String status;
 }

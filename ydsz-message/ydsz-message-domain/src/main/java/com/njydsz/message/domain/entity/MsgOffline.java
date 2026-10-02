@@ -43,9 +43,6 @@ public class MsgOffline extends MpBaseEntity<String> {
   /** 消息时间戳（毫秒） */
   private Long msgTimestamp;
 
-  /** 推送状态: PENDING 待推送 / PUSHED 已推送 / EXPIRED 已过期 */
-  private String status;
-
   /** 推送时间 */
   private LocalDateTime pushedAt;
 

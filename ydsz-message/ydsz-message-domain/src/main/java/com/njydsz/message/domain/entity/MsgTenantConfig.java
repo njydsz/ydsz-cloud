@@ -7,8 +7,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
-
 /**
  * 多租户消息配置实体，提供租户级发送配额与通道覆盖能力。
  *
@@ -28,9 +26,6 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @TableName("ydsz_msg_tenant_config")
 public class MsgTenantConfig extends MpBaseEntity<String> {
 
-  /** 租户 ID */
-  private String tenantId;
-
   /** 租户名称 */
   private String tenantName;
 
@@ -46,6 +41,4 @@ public class MsgTenantConfig extends MpBaseEntity<String> {
   /** 租户级通道映射：JSON Map，如 {"SMS": "aliyun", "EMAIL": "sendgrid"} */
   private String providerOverrides;
 
-  /** 配置状态：ENABLED / DISABLED */
-  private String status;
 }

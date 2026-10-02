@@ -62,14 +62,4 @@ public class Language extends MpBaseEntity<String> {
    * <p>{@code 1=是}、{@code 0=否}。系统全局仅允许 1 个默认语言。
    */
   private Integer isDefault;
-
-  /** 排序序号（升序，决定语言切换器展示顺序） */
-  private Integer sort;
-
-  /**
-   * 启用状态（{@code "ENABLED"} / {@code "DISABLED"}）
-   *
-   * <p>禁用后，前端语言切换器隐藏该选项，但已登录用户的语言偏好保留。
-   */
-  private String status;
 }
