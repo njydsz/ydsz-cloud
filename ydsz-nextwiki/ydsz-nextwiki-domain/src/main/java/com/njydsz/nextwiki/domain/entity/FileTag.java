@@ -15,14 +15,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <p>建立 {@link FileNode} 与 {@link Tag} 之间的多对多关系，一条记录表示某个文件被打上了某个标签。
  * 标签作为文件的轻量级分类维度，支持前端按标签筛选、检索文件。
  *
- * <p><b>表名：</b>{@code ydsz_wiki_file_tag}
+ * <p><b>表名：</b>{@code ydsz_file_file_tag}
  *
  * @author ydsz
  * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_wiki_file_tag")
+@TableName("ydsz_file_file_tag")
 public class FileTag extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

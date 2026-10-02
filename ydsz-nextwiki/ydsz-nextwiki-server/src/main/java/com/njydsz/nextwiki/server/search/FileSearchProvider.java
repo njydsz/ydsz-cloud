@@ -41,7 +41,7 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
+public class FileSearchProvider implements SearchProvider<FileNodeVO> {
 
   /** 字段权重：标题（最高） */
   private static final BigDecimal WEIGHT_TITLE = new BigDecimal("3.0");
@@ -90,7 +90,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
         tagNames = tags.stream().map(TagVO::getName).filter(n -> n != null && !n.isBlank()).toList();
       }
     } catch (Exception e) {
-      log.debug("[WikiSearchProvider] 加载标签失败: nodeId={}", node.getId(), e);
+      log.debug("[FileSearchProvider] 加载标签失败: nodeId={}", node.getId(), e);
     }
 
     // 全文内容（P1-5 修复）：文档正文由 ContentExtractionApplicationService 解析后，
@@ -210,7 +210,7 @@ public class WikiSearchProvider implements SearchProvider<FileNodeVO> {
    * @return 全部文件节点 ID
    */
   public List<String> getAllDocumentIds(String tenantId) {
-    log.info("[WikiSearchProvider] 获取全部文件 ID: tenantId={}", tenantId);
+    log.info("[FileSearchProvider] 获取全部文件 ID: tenantId={}", tenantId);
     // SearchIndexRepository.findAllFileNodeIds 参数为 createdBy，传 null 查询全部
     return searchIndexRepository.findAllFileNodeIds(null);
   }

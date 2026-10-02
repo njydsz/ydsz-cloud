@@ -71,7 +71,7 @@ import com.njydsz.common.domain.constant.DataPermissionHeaderConstants;
  * ydsz:
  *   tenant:
  *     table-column-mapping:
- *       ydsz_wiki_file_node: org_id
+ *       ydsz_file_file_node: org_id
  * </pre>
  *
  * @author ydsz-team

@@ -16,14 +16,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 通过 {@link #parentCommentId} 构建评论回复树（顶级评论为 null）。支持批注模式（{@link #position}
  * 存储文档内定位信息），并可通过 {@link #isResolved} 标记批注的解决状态。
  *
- * <p><b>表名：</b>{@code ydsz_wiki_file_comment}
+ * <p><b>表名：</b>{@code ydsz_file_file_comment}
  *
  * @author ydsz
  * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_wiki_file_comment")
+@TableName("ydsz_file_file_comment")
 public class FileComment extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

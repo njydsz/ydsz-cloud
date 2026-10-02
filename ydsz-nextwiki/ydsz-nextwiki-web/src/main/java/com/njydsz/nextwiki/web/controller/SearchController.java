@@ -70,10 +70,10 @@ import com.njydsz.nextwiki.server.service.SearchApplicationService;
  *   前端 (PC Web) → ydsz-gateway → ydsz-nextwiki-web (本 Controller)
  *                                            ↓
  *                                   ydsz-nextwiki-server.SearchApplicationService
- *                                       ├── WikiSearchProvider (ES 适配)
+ *                                       ├── FileSearchProvider (ES 适配)
  *                                       └── SearchDomainService (DB LIKE 降级)
  *                                            ↓
- *                                   Elasticsearch / ydsz_wiki_search_index
+ *                                   Elasticsearch / ydsz_file_search_index
  * </pre>
  *
  * @author ydsz-team

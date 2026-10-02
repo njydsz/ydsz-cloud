@@ -5,7 +5,7 @@
 #  公共配置（datasource / redis / mybatis-plus）由 Nacos ydsz-common.yaml 提供
 # =====================================================================
 
-# P2-2: 搜索引擎 PG 索引表名（各模块独立表，避免共用默认 ydsz_wiki_search_index）
+# P2-2: 搜索引擎 PG 索引表名（各模块独立表，避免共用默认 ydsz_file_search_index）
 ydsz:
   search:
     pg:

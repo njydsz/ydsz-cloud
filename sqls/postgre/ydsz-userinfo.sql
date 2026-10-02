@@ -548,10 +548,10 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
     tenant_id                VARCHAR(64)              DEFAULT NULL,
     name                     VARCHAR(64)              NOT NULL,
     password_min_length      INTEGER                  DEFAULT 8,
-    password_require_uppercase BOOLEAN                  DEFAULT TRUE,
-    password_require_digit   BOOLEAN                  DEFAULT TRUE,
-    mfa_enabled              BOOLEAN                  DEFAULT FALSE,
-    captcha_enabled          BOOLEAN                  DEFAULT TRUE,
+    is_password_require_uppercase BOOLEAN                  DEFAULT TRUE,
+    is_password_require_digit   BOOLEAN                  DEFAULT TRUE,
+    is_mfa_enabled              BOOLEAN                  DEFAULT FALSE,
+    is_captcha_enabled          BOOLEAN                  DEFAULT TRUE,
     allowed_identity_providers VARCHAR(256)             DEFAULT 'LOCAL',
     max_sessions_per_user    INTEGER                  DEFAULT 3,
     session_timeout_seconds  INTEGER                  DEFAULT 7200,
@@ -589,7 +589,7 @@ COMMENT ON COLUMN ydsz_auth_policy.updated_by IS '更新者用户 ID';
 COMMENT ON COLUMN ydsz_auth_policy.revision IS '乐观锁版本号';
 
 
-INSERT INTO ydsz_auth_policy (id, tenant_id, name, password_min_length, password_require_uppercase, password_require_digit, mfa_enabled, captcha_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, is_deleted, revision)
+INSERT INTO ydsz_auth_policy (id, tenant_id, name, password_min_length, is_password_require_uppercase, is_password_require_digit, is_mfa_enabled, is_captcha_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, is_deleted, revision)
 VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, TRUE, TRUE, FALSE, TRUE, 'LOCAL', 3, 7200, '系统全局默认策略，租户未配置时继承', 0, 0)
 ON CONFLICT (id) DO NOTHING;
 
@@ -1223,3 +1223,16 @@ CREATE TRIGGER trg_ydsz_auth_apikey_updated_at
 BEFORE UPDATE ON ydsz_auth_apikey
 FOR EACH ROW
 EXECUTE FUNCTION fn_ydsz_auth_apikey_set_updated_at();
+
+-- ============================================================================
+-- V26.10.02 — ydsz_auth_policy 布尔列名补 is_ 前缀（对齐 OOP-006 规范）
+--
+-- 修复：Entity 字段 isPasswordRequireUppercase 等经 MP 自动推导列名
+--       is_password_require_uppercase，原 DDL 缺 is_ 前缀导致运行时
+--       "column does not exist" 错误。
+-- ============================================================================
+
+ALTER TABLE ydsz_auth_policy RENAME COLUMN password_require_uppercase TO is_password_require_uppercase;
+ALTER TABLE ydsz_auth_policy RENAME COLUMN password_require_digit TO is_password_require_digit;
+ALTER TABLE ydsz_auth_policy RENAME COLUMN mfa_enabled TO is_mfa_enabled;
+ALTER TABLE ydsz_auth_policy RENAME COLUMN captcha_enabled TO is_captcha_enabled;

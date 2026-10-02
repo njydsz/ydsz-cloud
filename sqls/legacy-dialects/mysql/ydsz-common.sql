@@ -4,8 +4,8 @@
 -- 模块：ydsz-common（公共组件，含 ydsz-common-event、ydsz-common-search、ydsz-common-audit）
 -- 说明：基于 ydsz-common-event、ydsz-common-search 与 ydsz-common-audit 既有 SQL 整理的完整建表脚本。
 --       outbox 表沿用 ydsz-common-event/src/main/resources/db/outbox_mysql.sql 原定义；
---       搜索死信队列表由 PostgreSQL 版本（ydsz_com_search_dead_letter.sql）转译为 MySQL；
---       审计日志表（ydsz_com_audit_log）由审计切面（AuditAspect）自动写入。
+--       搜索死信队列表由 PostgreSQL 版本（ydsz_comm_search_dead_letter.sql）转译为 MySQL；
+--       审计日志表（ydsz_comm_audit_log）由审计切面（AuditAspect）自动写入。
 -- 数据库：MySQL 8.0+，InnoDB / utf8mb4
 -- 日期：2026-09-08
 -- @author ydsz-team
@@ -15,7 +15,7 @@
 -- 1. 事务性 Outbox 表（ydsz-common-event）
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS ydsz_com_outbox (
+CREATE TABLE IF NOT EXISTS ydsz_comm_outbox (
     -- ========== 业务主键 ==========
     id                  VARCHAR(64)     NOT NULL COMMENT '消息唯一标识（Snowflake ID）',
 
@@ -53,19 +53,19 @@ CREATE TABLE IF NOT EXISTS ydsz_com_outbox (
     -- ========== 约束与主键 ==========
     PRIMARY KEY (id),
     -- 轮询待投递消息索引
-    INDEX idx_ydsz_com_outbox_pending (status, created_at ASC),
+    INDEX idx_ydsz_comm_outbox_pending (status, created_at ASC),
     -- 下次重试时间索引
-    INDEX idx_ydsz_com_outbox_retry (status, next_retry_at),
+    INDEX idx_ydsz_comm_outbox_retry (status, next_retry_at),
     -- PROCESSING 超时回收索引
-    INDEX idx_ydsz_com_outbox_processing (status, updated_at),
+    INDEX idx_ydsz_comm_outbox_processing (status, updated_at),
     -- 已投递清理索引
-    INDEX idx_ydsz_com_outbox_sent_at (status, sent_at),
+    INDEX idx_ydsz_comm_outbox_sent_at (status, sent_at),
     -- 租户隔离索引
-    INDEX idx_ydsz_com_outbox_tenant (tenant_id, status),
+    INDEX idx_ydsz_comm_outbox_tenant (tenant_id, status),
     -- 幂等去重索引
-    INDEX idx_ydsz_com_outbox_idempotency (idempotency_key, status),
+    INDEX idx_ydsz_comm_outbox_idempotency (idempotency_key, status),
     -- 聚合根查询索引
-    INDEX idx_ydsz_com_outbox_aggregate (aggregate_type, aggregate_id, created_at DESC)
+    INDEX idx_ydsz_comm_outbox_aggregate (aggregate_type, aggregate_id, created_at DESC)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS ydsz_com_outbox (
 -- 用途：存储已投递完成或已丢弃的消息，降低主 Outbox 表压力，支持事件回溯。
 -- 启用条件：ydsz.event.outbox.archive.enabled=true（默认不启用）
 
-CREATE TABLE IF NOT EXISTS ydsz_com_outbox_archive (
+CREATE TABLE IF NOT EXISTS ydsz_comm_outbox_archive (
     id              VARCHAR(64)     PRIMARY KEY,
     aggregate_id    VARCHAR(128)    NOT NULL,
     aggregate_type  VARCHAR(128)    DEFAULT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS ydsz_com_outbox_archive (
 -- 由 PostgreSQL 版转译：BIGSERIAL→BIGINT AUTO_INCREMENT、TIMESTAMPTZ→DATETIME、
 -- CHECK 约束并入注释、部分索引转译为普通复合索引。
 
-CREATE TABLE IF NOT EXISTS ydsz_com_search_dead_letter (
+CREATE TABLE IF NOT EXISTS ydsz_comm_search_dead_letter (
     id            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '自增主键',
     operation     VARCHAR(20)  NOT NULL COMMENT '索引操作类型：UPSERT / DELETE / BULK',
     doc_type      VARCHAR(64)  DEFAULT NULL COMMENT '实体类型（project/wiki/user 等）',
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS ydsz_com_search_dead_letter (
 -- 由 PostgreSQL 版转译：TIMESTAMPTZ→DATETIME、SMALLINT→SMALLINT、
 -- IF NOT EXISTS 语法调整、移除 CONSTRAINT 命名（MySQL 内联约束）。
 
-CREATE TABLE IF NOT EXISTS ydsz_com_audit_log (
+CREATE TABLE IF NOT EXISTS ydsz_comm_audit_log (
     id                       VARCHAR(64)     NOT NULL  COMMENT '审计记录唯一标识（雪花算法生成）',
     app_key                  VARCHAR(64)     NOT NULL DEFAULT ''  COMMENT '应用标识（区分不同微服务的审计记录）',
     tenant_id                VARCHAR(64)     DEFAULT NULL  COMMENT '租户 ID（多租户隔离）',
@@ -160,21 +160,21 @@ CREATE TABLE IF NOT EXISTS ydsz_com_audit_log (
     created_at               DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '审计日志落库时刻',
     PRIMARY KEY (id),
     -- 核心查询：按操作时间降序分页
-    INDEX idx_ydsz_com_audit_log_operation_time (operation_time DESC),
+    INDEX idx_ydsz_comm_audit_log_operation_time (operation_time DESC),
     -- 按操作人查询其审计轨迹
-    INDEX idx_ydsz_com_audit_log_operator_id (operator_id, operation_time DESC),
+    INDEX idx_ydsz_comm_audit_log_operator_id (operator_id, operation_time DESC),
     -- 按链路追踪 ID 查询完整业务链路
-    INDEX idx_ydsz_com_audit_log_trace_id (trace_id),
+    INDEX idx_ydsz_comm_audit_log_trace_id (trace_id),
     -- 按租户 ID + 时间范围查询（多租户隔离）
-    INDEX idx_ydsz_com_audit_log_tenant_time (tenant_id, operation_time DESC),
+    INDEX idx_ydsz_comm_audit_log_tenant_time (tenant_id, operation_time DESC),
     -- 按状态查询（成功/失败分离）
-    INDEX idx_ydsz_com_audit_log_status (status, operation_time DESC)
+    INDEX idx_ydsz_comm_audit_log_status (status, operation_time DESC)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci
   COMMENT='全平台操作审计日志表（ydsz-common-audit 自动落库）';
 
 -- 以下为单独创建的索引（避免内联索引过多影响建表语句可读性）
-CREATE INDEX idx_ydsz_com_audit_log_action ON ydsz_com_audit_log (action, operation_time DESC);
-CREATE INDEX idx_ydsz_com_audit_log_module_action ON ydsz_com_audit_log (module, action, operation_time DESC);
-CREATE INDEX idx_ydsz_com_audit_log_app_key ON ydsz_com_audit_log (app_key, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_action ON ydsz_comm_audit_log (action, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_module_action ON ydsz_comm_audit_log (module, action, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_app_key ON ydsz_comm_audit_log (app_key, operation_time DESC);

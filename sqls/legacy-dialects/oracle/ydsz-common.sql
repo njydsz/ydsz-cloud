@@ -4,8 +4,8 @@
 -- 模块：ydsz-common（公共组件，含 ydsz-common-event、ydsz-common-search、ydsz-common-audit）
 -- 说明：基于 ydsz-common-event、ydsz-common-search 与 ydsz-common-audit 既有 SQL 整理的完整建表脚本。
 --       outbox 表沿用 ydsz-common-event/src/main/resources/db/outbox_mysql.sql 原定义；
---       搜索死信队列表由 PostgreSQL 版本（ydsz_com_search_dead_letter.sql）转译为 Oracle；
---       审计日志表（ydsz_com_audit_log）由审计切面（AuditAspect）自动写入。
+--       搜索死信队列表由 PostgreSQL 版本（ydsz_comm_search_dead_letter.sql）转译为 Oracle；
+--       审计日志表（ydsz_comm_audit_log）由审计切面（AuditAspect）自动写入。
 -- 数据库：Oracle 12.2+（由 MySQL 8.0 转译）
 -- 日期：2026-09-08
 -- @author ydsz-team
@@ -29,13 +29,13 @@
 -- ============================================================================
 
 
-CREATE TABLE ydsz_com_outbox (
+CREATE TABLE ydsz_comm_outbox (
     id                       VARCHAR2(64 CHAR)        NOT NULL,
     aggregate_type           VARCHAR2(128 CHAR)       NOT NULL,
     aggregate_id             VARCHAR2(128 CHAR)       NOT NULL,
     event_type               VARCHAR2(128 CHAR)       NOT NULL,
     payload                  CLOB                     NOT NULL,
-    status                   VARCHAR2(15 CHAR)        NOT NULL DEFAULT 'PENDING' CONSTRAINT ck_ydsz_com_outbox_status CHECK (status IN ('PENDING', 'PROCESSING', 'SENT', 'DEAD_LETTER')),
+    status                   VARCHAR2(15 CHAR)        NOT NULL DEFAULT 'PENDING' CONSTRAINT ck_ydsz_comm_outbox_status CHECK (status IN ('PENDING', 'PROCESSING', 'SENT', 'DEAD_LETTER')),
     retry_count              NUMBER(10)               NOT NULL DEFAULT 0,
     max_retries              NUMBER(10)               NOT NULL DEFAULT 5,
     next_retry_at            TIMESTAMP(3)            ,
@@ -46,36 +46,36 @@ CREATE TABLE ydsz_com_outbox (
     created_at               TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP(3)             NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sent_at                  TIMESTAMP(3)            ,
-    CONSTRAINT pk_ydsz_com_outbox PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_comm_outbox PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_com_outbox IS '事务性 Outbox 表：存储领域事件，保障业务写操作与事件投递的事务一致性';
-COMMENT ON COLUMN ydsz_com_outbox.id IS '消息唯一标识（Snowflake ID）';
-COMMENT ON COLUMN ydsz_com_outbox.aggregate_type IS '聚合根类型（如 Order, User）';
-COMMENT ON COLUMN ydsz_com_outbox.aggregate_id IS '聚合根 ID';
-COMMENT ON COLUMN ydsz_com_outbox.event_type IS '事件类型（如 OrderCreated）';
-COMMENT ON COLUMN ydsz_com_outbox.payload IS '事件负载 JSON（最大 4MB）';
-COMMENT ON COLUMN ydsz_com_outbox.status IS '投递状态';
-COMMENT ON COLUMN ydsz_com_outbox.retry_count IS '当前重试次数';
-COMMENT ON COLUMN ydsz_com_outbox.max_retries IS '最大重试次数';
-COMMENT ON COLUMN ydsz_com_outbox.next_retry_at IS '下次重试时间（指数退避）';
-COMMENT ON COLUMN ydsz_com_outbox.error_message IS '最后一次失败的错误信息';
-COMMENT ON COLUMN ydsz_com_outbox.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_com_outbox.trace_id IS '链路追踪 ID';
-COMMENT ON COLUMN ydsz_com_outbox.deduplication_id IS '幂等去重 ID';
-COMMENT ON COLUMN ydsz_com_outbox.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_com_outbox.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_com_outbox.sent_at IS '投递成功时间';
+COMMENT ON TABLE ydsz_comm_outbox IS '事务性 Outbox 表：存储领域事件，保障业务写操作与事件投递的事务一致性';
+COMMENT ON COLUMN ydsz_comm_outbox.id IS '消息唯一标识（Snowflake ID）';
+COMMENT ON COLUMN ydsz_comm_outbox.aggregate_type IS '聚合根类型（如 Order, User）';
+COMMENT ON COLUMN ydsz_comm_outbox.aggregate_id IS '聚合根 ID';
+COMMENT ON COLUMN ydsz_comm_outbox.event_type IS '事件类型（如 OrderCreated）';
+COMMENT ON COLUMN ydsz_comm_outbox.payload IS '事件负载 JSON（最大 4MB）';
+COMMENT ON COLUMN ydsz_comm_outbox.status IS '投递状态';
+COMMENT ON COLUMN ydsz_comm_outbox.retry_count IS '当前重试次数';
+COMMENT ON COLUMN ydsz_comm_outbox.max_retries IS '最大重试次数';
+COMMENT ON COLUMN ydsz_comm_outbox.next_retry_at IS '下次重试时间（指数退避）';
+COMMENT ON COLUMN ydsz_comm_outbox.error_message IS '最后一次失败的错误信息';
+COMMENT ON COLUMN ydsz_comm_outbox.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_comm_outbox.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN ydsz_comm_outbox.deduplication_id IS '幂等去重 ID';
+COMMENT ON COLUMN ydsz_comm_outbox.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_comm_outbox.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_comm_outbox.sent_at IS '投递成功时间';
 
-CREATE INDEX idx_ydsz_com_outbox_pending ON ydsz_com_outbox (status, created_at ASC);
-CREATE INDEX idx_ydsz_com_outbox_retry ON ydsz_com_outbox (status, next_retry_at);
-CREATE INDEX idx_ydsz_com_outbox_processing ON ydsz_com_outbox (status, updated_at);
-CREATE INDEX idx_ydsz_com_outbox_sent_at ON ydsz_com_outbox (status, sent_at);
-CREATE INDEX idx_ydsz_com_outbox_tenant ON ydsz_com_outbox (tenant_id, status);
-CREATE INDEX idx_ydsz_com_outbox_dedup ON ydsz_com_outbox (deduplication_id, status);
-CREATE INDEX idx_ydsz_com_outbox_aggregate ON ydsz_com_outbox (aggregate_type, aggregate_id, created_at DESC);
+CREATE INDEX idx_ydsz_comm_outbox_pending ON ydsz_comm_outbox (status, created_at ASC);
+CREATE INDEX idx_ydsz_comm_outbox_retry ON ydsz_comm_outbox (status, next_retry_at);
+CREATE INDEX idx_ydsz_comm_outbox_processing ON ydsz_comm_outbox (status, updated_at);
+CREATE INDEX idx_ydsz_comm_outbox_sent_at ON ydsz_comm_outbox (status, sent_at);
+CREATE INDEX idx_ydsz_comm_outbox_tenant ON ydsz_comm_outbox (tenant_id, status);
+CREATE INDEX idx_ydsz_comm_outbox_dedup ON ydsz_comm_outbox (deduplication_id, status);
+CREATE INDEX idx_ydsz_comm_outbox_aggregate ON ydsz_comm_outbox (aggregate_type, aggregate_id, created_at DESC);
 
-CREATE TABLE ydsz_com_search_dead_letter (
+CREATE TABLE ydsz_comm_search_dead_letter (
     id                       NUMBER(19) GENERATED BY DEFAULT AS IDENTITY NOT NULL,
     operation                VARCHAR2(20 CHAR)        NOT NULL,
     doc_type                 VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -86,23 +86,23 @@ CREATE TABLE ydsz_com_search_dead_letter (
     status                   VARCHAR2(20 CHAR)        NOT NULL DEFAULT 'PENDING',
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     resolved_at              TIMESTAMP                DEFAULT NULL,
-    CONSTRAINT pk_ydsz_com_search_dead_letter PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_comm_search_dead_letter PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_com_search_dead_letter IS '搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.id IS '自增主键';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.operation IS '索引操作类型：UPSERT / DELETE / BULK';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.doc_type IS '实体类型（project/wiki/user 等）';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.document_id IS '文档主键（DELETE 操作时使用）';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.document_json IS '文档 JSON（UPSERT/BULK 操作时使用）';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.error_msg IS '最后一次失败原因（截断 2000 字符）';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.retry_count IS '已重试次数，达到 5 次升级为 DISCARDED';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.status IS '状态：PENDING-待处理 / RETRYING-处理中 / RESOLVED-已解决 / DISCARDED-已放弃(需人工介入)';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.created_at IS '入队时间';
-COMMENT ON COLUMN ydsz_com_search_dead_letter.resolved_at IS '解决时间';
+COMMENT ON TABLE ydsz_comm_search_dead_letter IS '搜索索引死信队列：存储索引写入失败的操作，支持定时重放补偿';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.id IS '自增主键';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.operation IS '索引操作类型：UPSERT / DELETE / BULK';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.doc_type IS '实体类型（project/wiki/user 等）';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.document_id IS '文档主键（DELETE 操作时使用）';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.document_json IS '文档 JSON（UPSERT/BULK 操作时使用）';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.error_msg IS '最后一次失败原因（截断 2000 字符）';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.retry_count IS '已重试次数，达到 5 次升级为 DISCARDED';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.status IS '状态：PENDING-待处理 / RETRYING-处理中 / RESOLVED-已解决 / DISCARDED-已放弃(需人工介入)';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.created_at IS '入队时间';
+COMMENT ON COLUMN ydsz_comm_search_dead_letter.resolved_at IS '解决时间';
 
-CREATE INDEX idx_ydsz_com_search_dead_letter_dlq_status_created ON ydsz_com_search_dead_letter (status, created_at);
-CREATE INDEX idx_ydsz_com_search_dead_letter_dlq_doc_type ON ydsz_com_search_dead_letter (doc_type, status);
+CREATE INDEX idx_ydsz_comm_search_dead_letter_dlq_status_created ON ydsz_comm_search_dead_letter (status, created_at);
+CREATE INDEX idx_ydsz_comm_search_dead_letter_dlq_doc_type ON ydsz_comm_search_dead_letter (doc_type, status);
 
 -- ============================================================================
 -- 3. 审计日志表（ydsz-common-audit）
@@ -112,7 +112,7 @@ CREATE INDEX idx_ydsz_com_search_dead_letter_dlq_doc_type ON ydsz_com_search_dea
 -- 由 PostgreSQL 版转译：VARCHAR→VARCHAR2(n CHAR)、SMALLINT→NUMBER(5)、
 -- BIGINT→NUMBER(19)、TEXT→CLOB、TIMESTAMP→TIMESTAMP。
 
-CREATE TABLE ydsz_com_audit_log (
+CREATE TABLE ydsz_comm_audit_log (
     id                       VARCHAR2(64 CHAR)        NOT NULL,
     app_key                  VARCHAR2(64 CHAR)        NOT NULL DEFAULT '',
     tenant_id                VARCHAR2(64 CHAR)        DEFAULT NULL,
@@ -134,63 +134,63 @@ CREATE TABLE ydsz_com_audit_log (
     trace_id                 VARCHAR2(64 CHAR)        DEFAULT NULL,
     operation_time           TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_com_audit_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_comm_audit_log PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_com_audit_log IS '全平台操作审计日志表（ydsz-common-audit 自动落库）';
-COMMENT ON COLUMN ydsz_com_audit_log.id IS '审计记录唯一标识（雪花算法生成）';
-COMMENT ON COLUMN ydsz_com_audit_log.app_key IS '应用标识（区分不同微服务的审计记录）';
-COMMENT ON COLUMN ydsz_com_audit_log.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_com_audit_log.operator_id IS '操作人 ID（来自 RequestContext 透传）';
-COMMENT ON COLUMN ydsz_com_audit_log.operator_name IS '操作人姓名（便于直接展示）';
-COMMENT ON COLUMN ydsz_com_audit_log.audit_type IS '审计类型编码（1=操作/2=登录/3=数据/4=权限/5=配置/6=文件/7=接口/8=系统）';
-COMMENT ON COLUMN ydsz_com_audit_log.action IS '操作行为编码（1=新增/2=修改/3=删除/4=查询/5=导入/6=导出/7=上传/8=下载/99=其他）';
-COMMENT ON COLUMN ydsz_com_audit_log.status IS '执行状态（1=成功/0=失败）';
-COMMENT ON COLUMN ydsz_com_audit_log.module IS '模块名称（如：用户管理、代码生成等）';
-COMMENT ON COLUMN ydsz_com_audit_log.content IS '操作内容描述（SpEL 解析后的最终文本）';
-COMMENT ON COLUMN ydsz_com_audit_log.business_no IS '业务流水号（关联业务单据）';
-COMMENT ON COLUMN ydsz_com_audit_log.ip_address IS '请求来源 IP 地址';
-COMMENT ON COLUMN ydsz_com_audit_log.request_params IS '请求参数 JSON（已脱敏/截断，最大 10KB）';
-COMMENT ON COLUMN ydsz_com_audit_log.response_result IS '响应结果 JSON（已脱敏/截断，默认不记录）';
-COMMENT ON COLUMN ydsz_com_audit_log.diff_before_snapshot IS '变更前快照 JSON（仅 @Audit(recordDiff=true) 时写入）';
-COMMENT ON COLUMN ydsz_com_audit_log.diff_after_snapshot IS '变更后快照 JSON（仅 @Audit(recordDiff=true) 时写入）';
-COMMENT ON COLUMN ydsz_com_audit_log.error_message IS '异常信息（业务方法抛异常时记录）';
-COMMENT ON COLUMN ydsz_com_audit_log.cost_time IS '执行耗时（毫秒）';
-COMMENT ON COLUMN ydsz_com_audit_log.trace_id IS '链路追踪 ID（独立列，支持索引查询）';
-COMMENT ON COLUMN ydsz_com_audit_log.operation_time IS '操作时间（业务方法执行时刻）';
-COMMENT ON COLUMN ydsz_com_audit_log.created_at IS '审计日志落库时刻';
+COMMENT ON TABLE ydsz_comm_audit_log IS '全平台操作审计日志表（ydsz-common-audit 自动落库）';
+COMMENT ON COLUMN ydsz_comm_audit_log.id IS '审计记录唯一标识（雪花算法生成）';
+COMMENT ON COLUMN ydsz_comm_audit_log.app_key IS '应用标识（区分不同微服务的审计记录）';
+COMMENT ON COLUMN ydsz_comm_audit_log.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_comm_audit_log.operator_id IS '操作人 ID（来自 RequestContext 透传）';
+COMMENT ON COLUMN ydsz_comm_audit_log.operator_name IS '操作人姓名（便于直接展示）';
+COMMENT ON COLUMN ydsz_comm_audit_log.audit_type IS '审计类型编码（1=操作/2=登录/3=数据/4=权限/5=配置/6=文件/7=接口/8=系统）';
+COMMENT ON COLUMN ydsz_comm_audit_log.action IS '操作行为编码（1=新增/2=修改/3=删除/4=查询/5=导入/6=导出/7=上传/8=下载/99=其他）';
+COMMENT ON COLUMN ydsz_comm_audit_log.status IS '执行状态（1=成功/0=失败）';
+COMMENT ON COLUMN ydsz_comm_audit_log.module IS '模块名称（如：用户管理、代码生成等）';
+COMMENT ON COLUMN ydsz_comm_audit_log.content IS '操作内容描述（SpEL 解析后的最终文本）';
+COMMENT ON COLUMN ydsz_comm_audit_log.business_no IS '业务流水号（关联业务单据）';
+COMMENT ON COLUMN ydsz_comm_audit_log.ip_address IS '请求来源 IP 地址';
+COMMENT ON COLUMN ydsz_comm_audit_log.request_params IS '请求参数 JSON（已脱敏/截断，最大 10KB）';
+COMMENT ON COLUMN ydsz_comm_audit_log.response_result IS '响应结果 JSON（已脱敏/截断，默认不记录）';
+COMMENT ON COLUMN ydsz_comm_audit_log.diff_before_snapshot IS '变更前快照 JSON（仅 @Audit(recordDiff=true) 时写入）';
+COMMENT ON COLUMN ydsz_comm_audit_log.diff_after_snapshot IS '变更后快照 JSON（仅 @Audit(recordDiff=true) 时写入）';
+COMMENT ON COLUMN ydsz_comm_audit_log.error_message IS '异常信息（业务方法抛异常时记录）';
+COMMENT ON COLUMN ydsz_comm_audit_log.cost_time IS '执行耗时（毫秒）';
+COMMENT ON COLUMN ydsz_comm_audit_log.trace_id IS '链路追踪 ID（独立列，支持索引查询）';
+COMMENT ON COLUMN ydsz_comm_audit_log.operation_time IS '操作时间（业务方法执行时刻）';
+COMMENT ON COLUMN ydsz_comm_audit_log.created_at IS '审计日志落库时刻';
 
 -- 核心查询：按操作时间降序分页
-CREATE INDEX idx_ydsz_com_audit_log_operation_time ON ydsz_com_audit_log (operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_operation_time ON ydsz_comm_audit_log (operation_time DESC);
 
 -- 按操作人查询其审计轨迹
-CREATE INDEX idx_ydsz_com_audit_log_operator_id ON ydsz_com_audit_log (operator_id, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_operator_id ON ydsz_comm_audit_log (operator_id, operation_time DESC);
 
 -- 按操作行为类型聚合查询
-CREATE INDEX idx_ydsz_com_audit_log_action ON ydsz_com_audit_log (action, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_action ON ydsz_comm_audit_log (action, operation_time DESC);
 
 -- 按模块+行为组合查询
-CREATE INDEX idx_ydsz_com_audit_log_module_action ON ydsz_com_audit_log (module, action, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_module_action ON ydsz_comm_audit_log (module, action, operation_time DESC);
 
 -- 按应用标识查询（多应用场景隔离）
-CREATE INDEX idx_ydsz_com_audit_log_app_key ON ydsz_com_audit_log (app_key, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_app_key ON ydsz_comm_audit_log (app_key, operation_time DESC);
 
 -- 按链路追踪 ID 查询完整业务链路
-CREATE INDEX idx_ydsz_com_audit_log_trace_id ON ydsz_com_audit_log (trace_id);
+CREATE INDEX idx_ydsz_comm_audit_log_trace_id ON ydsz_comm_audit_log (trace_id);
 
 -- 按租户 ID + 时间范围查询（多租户隔离）
-CREATE INDEX idx_ydsz_com_audit_log_tenant_time ON ydsz_com_audit_log (tenant_id, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_tenant_time ON ydsz_comm_audit_log (tenant_id, operation_time DESC);
 
 -- 按状态查询（成功/失败分离）
-CREATE INDEX idx_ydsz_com_audit_log_status ON ydsz_com_audit_log (status, operation_time DESC);
+CREATE INDEX idx_ydsz_comm_audit_log_status ON ydsz_comm_audit_log (status, operation_time DESC);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (Oracle)
 -- ============================================================================
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE TRIGGER trg_ydsz_com_outbox_updated_at
-BEFORE UPDATE ON ydsz_com_outbox
+CREATE OR REPLACE TRIGGER trg_ydsz_comm_outbox_updated_at
+BEFORE UPDATE ON ydsz_comm_outbox
 FOR EACH ROW
 BEGIN
     :NEW.updated_at := CURRENT_TIMESTAMP;

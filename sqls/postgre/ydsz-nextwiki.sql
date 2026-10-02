@@ -22,7 +22,7 @@
 -- ============================================================================
 
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_file_node (
+CREATE TABLE IF NOT EXISTS ydsz_file_file_node (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     parent_id                VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -52,53 +52,53 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_node (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_file_node PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_file_node PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_wiki_file_node IS '网盘文件节点（统一表示文件和目录，构成目录树的核心节点）';
-COMMENT ON COLUMN ydsz_wiki_file_node.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_file_node.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_file_node.parent_id IS '父节点ID（根目录为 "0"）';
-COMMENT ON COLUMN ydsz_wiki_file_node.name IS '节点名称（文件名或目录名）';
-COMMENT ON COLUMN ydsz_wiki_file_node.node_type IS '节点类型：folder / file';
-COMMENT ON COLUMN ydsz_wiki_file_node.suffix IS '文件扩展名（小写，不含点；文件夹为空）';
-COMMENT ON COLUMN ydsz_wiki_file_node.size IS '文件大小（字节；文件夹为 0）';
-COMMENT ON COLUMN ydsz_wiki_file_node.storage_key IS '底层存储对象键（objectName）';
-COMMENT ON COLUMN ydsz_wiki_file_node.bucket_name IS '存储桶名称';
-COMMENT ON COLUMN ydsz_wiki_file_node.mime_type IS 'MIME 类型';
-COMMENT ON COLUMN ydsz_wiki_file_node.path IS '目录路径（如 /root/docs/contract/），用于快速判断层级关系';
-COMMENT ON COLUMN ydsz_wiki_file_node.level IS '层级深度（根为 0）';
-COMMENT ON COLUMN ydsz_wiki_file_node.sort IS '排序序号';
-COMMENT ON COLUMN ydsz_wiki_file_node.current_version IS '当前版本号（从 1 开始，每次更新 +1）';
-COMMENT ON COLUMN ydsz_wiki_file_node.file_hash IS '文件 SHA-256 哈希（用于秒传去重）';
-COMMENT ON COLUMN ydsz_wiki_file_node.thumbnail_key IS '缩略图存储键';
-COMMENT ON COLUMN ydsz_wiki_file_node.is_preview_ready IS '是否已生成预览（0=否 1=是）';
-COMMENT ON COLUMN ydsz_wiki_file_node.is_starred       IS '是否星标文件（0=否 1=是）';
-COMMENT ON COLUMN ydsz_wiki_file_node.share_status IS '共享状态：private / shared / public';
-COMMENT ON COLUMN ydsz_wiki_file_node.deleted_time IS '逻辑删除时间（回收站功能：删除时记录时间，30 天后永久删除）';
-COMMENT ON COLUMN ydsz_wiki_file_node.original_path IS '原始路径（删除前的完整路径，用于恢复）';
-COMMENT ON COLUMN ydsz_wiki_file_node.storage_class IS '存储类型：STANDARD / GLACIER / DEEP_ARCHIVE（冷数据归档）';
-COMMENT ON COLUMN ydsz_wiki_file_node.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_node.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_file_node.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_file_node.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_file_node.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_file_node.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_file_node.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_file_node IS '网盘文件节点（统一表示文件和目录，构成目录树的核心节点）';
+COMMENT ON COLUMN ydsz_file_file_node.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_file_node.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_file_node.parent_id IS '父节点ID（根目录为 "0"）';
+COMMENT ON COLUMN ydsz_file_file_node.name IS '节点名称（文件名或目录名）';
+COMMENT ON COLUMN ydsz_file_file_node.node_type IS '节点类型：folder / file';
+COMMENT ON COLUMN ydsz_file_file_node.suffix IS '文件扩展名（小写，不含点；文件夹为空）';
+COMMENT ON COLUMN ydsz_file_file_node.size IS '文件大小（字节；文件夹为 0）';
+COMMENT ON COLUMN ydsz_file_file_node.storage_key IS '底层存储对象键（objectName）';
+COMMENT ON COLUMN ydsz_file_file_node.bucket_name IS '存储桶名称';
+COMMENT ON COLUMN ydsz_file_file_node.mime_type IS 'MIME 类型';
+COMMENT ON COLUMN ydsz_file_file_node.path IS '目录路径（如 /root/docs/contract/），用于快速判断层级关系';
+COMMENT ON COLUMN ydsz_file_file_node.level IS '层级深度（根为 0）';
+COMMENT ON COLUMN ydsz_file_file_node.sort IS '排序序号';
+COMMENT ON COLUMN ydsz_file_file_node.current_version IS '当前版本号（从 1 开始，每次更新 +1）';
+COMMENT ON COLUMN ydsz_file_file_node.file_hash IS '文件 SHA-256 哈希（用于秒传去重）';
+COMMENT ON COLUMN ydsz_file_file_node.thumbnail_key IS '缩略图存储键';
+COMMENT ON COLUMN ydsz_file_file_node.is_preview_ready IS '是否已生成预览（0=否 1=是）';
+COMMENT ON COLUMN ydsz_file_file_node.is_starred       IS '是否星标文件（0=否 1=是）';
+COMMENT ON COLUMN ydsz_file_file_node.share_status IS '共享状态：private / shared / public';
+COMMENT ON COLUMN ydsz_file_file_node.deleted_time IS '逻辑删除时间（回收站功能：删除时记录时间，30 天后永久删除）';
+COMMENT ON COLUMN ydsz_file_file_node.original_path IS '原始路径（删除前的完整路径，用于恢复）';
+COMMENT ON COLUMN ydsz_file_file_node.storage_class IS '存储类型：STANDARD / GLACIER / DEEP_ARCHIVE（冷数据归档）';
+COMMENT ON COLUMN ydsz_file_file_node.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_file_node.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_file_node.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_file_node.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_file_node.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_file_node.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_file_node.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_id ON ydsz_wiki_file_node (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_tenant_is_deleted ON ydsz_wiki_file_node (tenant_id, is_deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_tenant_parent_is_deleted
-    ON ydsz_wiki_file_node (tenant_id, parent_id, is_deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_is_is_deleted_updated ON ydsz_wiki_file_node (parent_id, is_deleted, updated_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_is_is_deleted_type_updated ON ydsz_wiki_file_node (parent_id, is_deleted, node_type, updated_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_path ON ydsz_wiki_file_node (left(path, 255));
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_created_is_deleted_type ON ydsz_wiki_file_node (created_by, is_deleted, node_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_file_hash ON ydsz_wiki_file_node (file_hash);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_id_parent_tenant ON ydsz_wiki_file_node (id, parent_id, tenant_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_storage_class ON ydsz_wiki_file_node (node_type, is_deleted, storage_class, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_parent_id ON ydsz_file_file_node (parent_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_tenant_is_deleted ON ydsz_file_file_node (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_tenant_parent_is_deleted
+    ON ydsz_file_file_node (tenant_id, parent_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_parent_is_is_deleted_updated ON ydsz_file_file_node (parent_id, is_deleted, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_parent_is_is_deleted_type_updated ON ydsz_file_file_node (parent_id, is_deleted, node_type, updated_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_path ON ydsz_file_file_node (left(path, 255));
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_created_is_deleted_type ON ydsz_file_file_node (created_by, is_deleted, node_type);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_file_hash ON ydsz_file_file_node (file_hash);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_id_parent_tenant ON ydsz_file_file_node (id, parent_id, tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_node_storage_class ON ydsz_file_file_node (node_type, is_deleted, storage_class, updated_at);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_file_version (
+CREATE TABLE IF NOT EXISTS ydsz_file_file_version (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -117,33 +117,33 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_version (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_file_version PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_file_version_file_node_version UNIQUE (file_node_id, version_number)
+    CONSTRAINT pk_ydsz_file_file_version PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_file_version_file_node_version UNIQUE (file_node_id, version_number)
 );
 
-COMMENT ON TABLE ydsz_wiki_file_version IS '文件版本历史（每次文件更新生成一条版本记录，支持版本回溯）';
-COMMENT ON COLUMN ydsz_wiki_file_version.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_file_version.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_file_version.file_node_id IS '关联的文件节点ID';
-COMMENT ON COLUMN ydsz_wiki_file_version.version_number IS '版本号（从 1 开始递增）';
-COMMENT ON COLUMN ydsz_wiki_file_version.storage_key IS '该版本的存储对象键';
-COMMENT ON COLUMN ydsz_wiki_file_version.size IS '该版本的文件大小（字节）';
-COMMENT ON COLUMN ydsz_wiki_file_version.file_hash IS '该版本的文件 SHA-256 哈希';
-COMMENT ON COLUMN ydsz_wiki_file_version.mime_type IS '该版本的 MIME 类型';
-COMMENT ON COLUMN ydsz_wiki_file_version.remark IS '版本说明（用户自定义的版本备注）';
-COMMENT ON COLUMN ydsz_wiki_file_version.change_type IS '变更类型：create / update / rollback';
-COMMENT ON COLUMN ydsz_wiki_file_version.is_active IS '是否为当前活跃版本';
-COMMENT ON COLUMN ydsz_wiki_file_version.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_file_version.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_file_version.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_file_version.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_file_version.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_file_version.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_file_version IS '文件版本历史（每次文件更新生成一条版本记录，支持版本回溯）';
+COMMENT ON COLUMN ydsz_file_file_version.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_file_version.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_file_version.file_node_id IS '关联的文件节点ID';
+COMMENT ON COLUMN ydsz_file_file_version.version_number IS '版本号（从 1 开始递增）';
+COMMENT ON COLUMN ydsz_file_file_version.storage_key IS '该版本的存储对象键';
+COMMENT ON COLUMN ydsz_file_file_version.size IS '该版本的文件大小（字节）';
+COMMENT ON COLUMN ydsz_file_file_version.file_hash IS '该版本的文件 SHA-256 哈希';
+COMMENT ON COLUMN ydsz_file_file_version.mime_type IS '该版本的 MIME 类型';
+COMMENT ON COLUMN ydsz_file_file_version.remark IS '版本说明（用户自定义的版本备注）';
+COMMENT ON COLUMN ydsz_file_file_version.change_type IS '变更类型：create / update / rollback';
+COMMENT ON COLUMN ydsz_file_file_version.is_active IS '是否为当前活跃版本';
+COMMENT ON COLUMN ydsz_file_file_version.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_file_version.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_file_version.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_file_version.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_file_version.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_file_version.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_file_version.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_version_tenant_is_deleted ON ydsz_wiki_file_version (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_version_tenant_is_deleted ON ydsz_file_file_version (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_tag (
+CREATE TABLE IF NOT EXISTS ydsz_file_tag (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     name                     VARCHAR(255)             NOT NULL,
@@ -157,28 +157,28 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_tag (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_tag PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_tag_tenant_tag_name UNIQUE (tenant_id, name)
+    CONSTRAINT pk_ydsz_file_tag PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_tag_tenant_tag_name UNIQUE (tenant_id, name)
 );
 
-COMMENT ON TABLE ydsz_wiki_tag IS '标签（对文件/文件夹打标签，用于知识库分类和检索）';
-COMMENT ON COLUMN ydsz_wiki_tag.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_tag.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_tag.name IS '标签名称';
-COMMENT ON COLUMN ydsz_wiki_tag.color IS '标签颜色（十六进制颜色码，如 #1890ff）';
-COMMENT ON COLUMN ydsz_wiki_tag.type IS '标签类型：manual（手动）/ auto（自动推荐）/ system（系统预设）';
-COMMENT ON COLUMN ydsz_wiki_tag.usage_count IS '使用次数（文件关联数）';
-COMMENT ON COLUMN ydsz_wiki_tag.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_tag.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_tag.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_tag.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_tag.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_tag.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_tag.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_tag IS '标签（对文件/文件夹打标签，用于知识库分类和检索）';
+COMMENT ON COLUMN ydsz_file_tag.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_tag.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_tag.name IS '标签名称';
+COMMENT ON COLUMN ydsz_file_tag.color IS '标签颜色（十六进制颜色码，如 #1890ff）';
+COMMENT ON COLUMN ydsz_file_tag.type IS '标签类型：manual（手动）/ auto（自动推荐）/ system（系统预设）';
+COMMENT ON COLUMN ydsz_file_tag.usage_count IS '使用次数（文件关联数）';
+COMMENT ON COLUMN ydsz_file_tag.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_tag.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_tag.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_tag.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_tag.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_tag.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_tag.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_tag_tenant_is_deleted ON ydsz_wiki_tag (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_tag_tenant_is_deleted ON ydsz_file_tag (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_file_tag (
+CREATE TABLE IF NOT EXISTS ydsz_file_file_tag (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -190,27 +190,27 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_tag (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_file_tag PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_file_tag_file_node_tag UNIQUE (file_node_id, tag_id)
+    CONSTRAINT pk_ydsz_file_file_tag PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_file_tag_file_node_tag UNIQUE (file_node_id, tag_id)
 );
 
-COMMENT ON TABLE ydsz_wiki_file_tag IS '文件-标签关联（多对多）';
-COMMENT ON COLUMN ydsz_wiki_file_tag.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_file_tag.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_file_tag.file_node_id IS '文件节点ID';
-COMMENT ON COLUMN ydsz_wiki_file_tag.tag_id IS '标签ID';
-COMMENT ON COLUMN ydsz_wiki_file_tag.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_tag.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_file_tag.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_file_tag.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_file_tag.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_file_tag.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_file_tag.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_file_tag IS '文件-标签关联（多对多）';
+COMMENT ON COLUMN ydsz_file_file_tag.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_file_tag.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_file_tag.file_node_id IS '文件节点ID';
+COMMENT ON COLUMN ydsz_file_file_tag.tag_id IS '标签ID';
+COMMENT ON COLUMN ydsz_file_file_tag.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_file_tag.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_file_tag.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_file_tag.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_file_tag.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_file_tag.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_file_tag.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_tag_tag_id ON ydsz_wiki_file_tag (tag_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_tag_tenant_is_deleted ON ydsz_wiki_file_tag (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_tag_tag_id ON ydsz_file_file_tag (tag_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_tag_tenant_is_deleted ON ydsz_file_file_tag (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_file_comment (
+CREATE TABLE IF NOT EXISTS ydsz_file_file_comment (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -226,31 +226,31 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_comment (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_file_comment PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_file_comment PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_wiki_file_comment IS '文件评论（支持文件级别的评论和回复，用于知识库协作讨论）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.file_node_id IS '关联的文件节点ID';
-COMMENT ON COLUMN ydsz_wiki_file_comment.content IS '评论内容';
-COMMENT ON COLUMN ydsz_wiki_file_comment.parent_comment_id IS '父评论ID（用于回复，null 表示顶级评论）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.is_resolved IS '是否已解决（用于批注功能）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.position IS '评论位置信息（JSON，用于文档内定位批注）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.is_edited IS '是否被编辑过';
-COMMENT ON COLUMN ydsz_wiki_file_comment.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_comment.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_file_comment.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_file_comment.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_file_comment.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_file_comment.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_file_comment.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_file_comment IS '文件评论（支持文件级别的评论和回复，用于知识库协作讨论）';
+COMMENT ON COLUMN ydsz_file_file_comment.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_file_comment.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_file_comment.file_node_id IS '关联的文件节点ID';
+COMMENT ON COLUMN ydsz_file_file_comment.content IS '评论内容';
+COMMENT ON COLUMN ydsz_file_file_comment.parent_comment_id IS '父评论ID（用于回复，null 表示顶级评论）';
+COMMENT ON COLUMN ydsz_file_file_comment.is_resolved IS '是否已解决（用于批注功能）';
+COMMENT ON COLUMN ydsz_file_file_comment.position IS '评论位置信息（JSON，用于文档内定位批注）';
+COMMENT ON COLUMN ydsz_file_file_comment.is_edited IS '是否被编辑过';
+COMMENT ON COLUMN ydsz_file_file_comment.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_file_comment.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_file_comment.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_file_comment.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_file_comment.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_file_comment.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_file_comment.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_file_node_id ON ydsz_wiki_file_comment (file_node_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_parent_comment_id ON ydsz_wiki_file_comment (parent_comment_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_comment_tenant_is_deleted ON ydsz_wiki_file_comment (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_comment_file_node_id ON ydsz_file_file_comment (file_node_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_comment_parent_comment_id ON ydsz_file_file_comment (parent_comment_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_comment_tenant_is_deleted ON ydsz_file_file_comment (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_file_acl (
+CREATE TABLE IF NOT EXISTS ydsz_file_file_acl (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -266,31 +266,31 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_file_acl (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_file_acl PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_file_acl_file_grantee UNIQUE (file_node_id, grantee_type, grantee_id)
+    CONSTRAINT pk_ydsz_file_file_acl PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_file_acl_file_grantee UNIQUE (file_node_id, grantee_type, grantee_id)
 );
 
-COMMENT ON TABLE ydsz_wiki_file_acl IS '文件级 ACL 权限（文件/文件夹级别的细粒度权限控制）';
-COMMENT ON COLUMN ydsz_wiki_file_acl.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_file_acl.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_file_acl.file_node_id IS '文件节点ID';
-COMMENT ON COLUMN ydsz_wiki_file_acl.grantee_type IS '授权对象类型：user / role / group / tenant';
-COMMENT ON COLUMN ydsz_wiki_file_acl.grantee_id IS '授权对象ID（用户ID / 角色ID / 组ID / 租户ID）';
-COMMENT ON COLUMN ydsz_wiki_file_acl.permission_mask IS '权限位掩码（read=1, write=2, delete=4, share=8, download=16）';
-COMMENT ON COLUMN ydsz_wiki_file_acl.is_inherited IS '是否继承自父目录';
-COMMENT ON COLUMN ydsz_wiki_file_acl.is_owner IS '是否为所有者（所有者拥有全部权限）';
-COMMENT ON COLUMN ydsz_wiki_file_acl.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_file_acl.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_file_acl.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_file_acl.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_file_acl.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_file_acl.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_file_acl.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_file_acl IS '文件级 ACL 权限（文件/文件夹级别的细粒度权限控制）';
+COMMENT ON COLUMN ydsz_file_file_acl.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_file_acl.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_file_acl.file_node_id IS '文件节点ID';
+COMMENT ON COLUMN ydsz_file_file_acl.grantee_type IS '授权对象类型：user / role / group / tenant';
+COMMENT ON COLUMN ydsz_file_file_acl.grantee_id IS '授权对象ID（用户ID / 角色ID / 组ID / 租户ID）';
+COMMENT ON COLUMN ydsz_file_file_acl.permission_mask IS '权限位掩码（read=1, write=2, delete=4, share=8, download=16）';
+COMMENT ON COLUMN ydsz_file_file_acl.is_inherited IS '是否继承自父目录';
+COMMENT ON COLUMN ydsz_file_file_acl.is_owner IS '是否为所有者（所有者拥有全部权限）';
+COMMENT ON COLUMN ydsz_file_file_acl.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_file_acl.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_file_acl.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_file_acl.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_file_acl.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_file_acl.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_file_acl.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_acl_grantee ON ydsz_wiki_file_acl (grantee_type, grantee_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_acl_tenant_is_deleted ON ydsz_wiki_file_acl (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_acl_grantee ON ydsz_file_file_acl (grantee_type, grantee_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_file_acl_tenant_is_deleted ON ydsz_file_file_acl (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_share_link (
+CREATE TABLE IF NOT EXISTS ydsz_file_share_link (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -311,37 +311,37 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_link (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_share_link PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_share_link_share_code UNIQUE (share_code)
+    CONSTRAINT pk_ydsz_file_share_link PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_share_link_share_code UNIQUE (share_code)
 );
 
-COMMENT ON TABLE ydsz_wiki_share_link IS '文件分享链接（带密码和过期时间的文件级临时授权机制）';
-COMMENT ON COLUMN ydsz_wiki_share_link.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_share_link.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_share_link.file_node_id IS '关联的文件节点ID';
-COMMENT ON COLUMN ydsz_wiki_share_link.share_code IS '分享码（URL 中的唯一标识，UUID 生成）';
-COMMENT ON COLUMN ydsz_wiki_share_link.extract_code IS '提取码（4 位数字，访问时需要输入）';
-COMMENT ON COLUMN ydsz_wiki_share_link.share_type IS '分享类型：view（仅查看）/ download（可下载）/ edit（可编辑）';
-COMMENT ON COLUMN ydsz_wiki_share_link.expire_time IS '过期时间（null 表示永久有效）';
-COMMENT ON COLUMN ydsz_wiki_share_link.max_access_count IS '最大访问次数（null 表示不限）';
-COMMENT ON COLUMN ydsz_wiki_share_link.access_count IS '已访问次数';
-COMMENT ON COLUMN ydsz_wiki_share_link.status IS '分享状态：active / expired / revoked';
-COMMENT ON COLUMN ydsz_wiki_share_link.password IS '分享密码（BCrypt 加密；空表示无密码）';
-COMMENT ON COLUMN ydsz_wiki_share_link.share_target_type IS '分享目标类型：PUBLIC(公开) / USER(指定用户) / DEPT(部门)';
-COMMENT ON COLUMN ydsz_wiki_share_link.is_reminder_sent IS '到期提醒是否已发送';
-COMMENT ON COLUMN ydsz_wiki_share_link.title IS '分享标题（可选）';
-COMMENT ON COLUMN ydsz_wiki_share_link.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_share_link.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_share_link.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_share_link.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_share_link.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_share_link.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_share_link IS '文件分享链接（带密码和过期时间的文件级临时授权机制）';
+COMMENT ON COLUMN ydsz_file_share_link.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_share_link.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_share_link.file_node_id IS '关联的文件节点ID';
+COMMENT ON COLUMN ydsz_file_share_link.share_code IS '分享码（URL 中的唯一标识，UUID 生成）';
+COMMENT ON COLUMN ydsz_file_share_link.extract_code IS '提取码（4 位数字，访问时需要输入）';
+COMMENT ON COLUMN ydsz_file_share_link.share_type IS '分享类型：view（仅查看）/ download（可下载）/ edit（可编辑）';
+COMMENT ON COLUMN ydsz_file_share_link.expire_time IS '过期时间（null 表示永久有效）';
+COMMENT ON COLUMN ydsz_file_share_link.max_access_count IS '最大访问次数（null 表示不限）';
+COMMENT ON COLUMN ydsz_file_share_link.access_count IS '已访问次数';
+COMMENT ON COLUMN ydsz_file_share_link.status IS '分享状态：active / expired / revoked';
+COMMENT ON COLUMN ydsz_file_share_link.password IS '分享密码（BCrypt 加密；空表示无密码）';
+COMMENT ON COLUMN ydsz_file_share_link.share_target_type IS '分享目标类型：PUBLIC(公开) / USER(指定用户) / DEPT(部门)';
+COMMENT ON COLUMN ydsz_file_share_link.is_reminder_sent IS '到期提醒是否已发送';
+COMMENT ON COLUMN ydsz_file_share_link.title IS '分享标题（可选）';
+COMMENT ON COLUMN ydsz_file_share_link.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_share_link.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_share_link.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_share_link.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_share_link.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_share_link.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_file_node_id ON ydsz_wiki_share_link (file_node_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_expire_reminder ON ydsz_wiki_share_link (status, expire_time, is_reminder_sent);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_link_tenant_is_deleted ON ydsz_wiki_share_link (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_link_file_node_id ON ydsz_file_share_link (file_node_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_link_expire_reminder ON ydsz_file_share_link (status, expire_time, is_reminder_sent);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_link_tenant_is_deleted ON ydsz_file_share_link (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_share_recipient (
+CREATE TABLE IF NOT EXISTS ydsz_file_share_recipient (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     share_id                 VARCHAR(32)              NOT NULL,
@@ -356,31 +356,31 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_recipient (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_share_recipient PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_share_recipient_share_recipient UNIQUE (share_id, recipient_type, recipient_id)
+    CONSTRAINT pk_ydsz_file_share_recipient PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_share_recipient_share_recipient UNIQUE (share_id, recipient_type, recipient_id)
 );
 
-COMMENT ON TABLE ydsz_wiki_share_recipient IS '分享目标用户（定向分享，记录分享链接的目标接收者）';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.share_id IS '分享链接 ID';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.recipient_type IS '接收者类型：USER/DEPT/ROLE';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.recipient_id IS '接收者 ID';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.recipient_name IS '接收者名称';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.status IS '状态：ACTIVE/VIEWED/REVOKED';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.viewed_at IS '首次查看时间';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_share_recipient.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_share_recipient IS '分享目标用户（定向分享，记录分享链接的目标接收者）';
+COMMENT ON COLUMN ydsz_file_share_recipient.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_share_recipient.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_share_recipient.share_id IS '分享链接 ID';
+COMMENT ON COLUMN ydsz_file_share_recipient.recipient_type IS '接收者类型：USER/DEPT/ROLE';
+COMMENT ON COLUMN ydsz_file_share_recipient.recipient_id IS '接收者 ID';
+COMMENT ON COLUMN ydsz_file_share_recipient.recipient_name IS '接收者名称';
+COMMENT ON COLUMN ydsz_file_share_recipient.status IS '状态：ACTIVE/VIEWED/REVOKED';
+COMMENT ON COLUMN ydsz_file_share_recipient.viewed_at IS '首次查看时间';
+COMMENT ON COLUMN ydsz_file_share_recipient.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_share_recipient.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_share_recipient.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_share_recipient.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_share_recipient.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_share_recipient.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_share_id_is_deleted ON ydsz_wiki_share_recipient (share_id, is_deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_user_is_deleted ON ydsz_wiki_share_recipient (recipient_id, status, is_deleted);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_recipient_tenant_is_deleted ON ydsz_wiki_share_recipient (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_recipient_share_id_is_deleted ON ydsz_file_share_recipient (share_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_recipient_user_is_deleted ON ydsz_file_share_recipient (recipient_id, status, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_recipient_tenant_is_deleted ON ydsz_file_share_recipient (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log (
+CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     share_id                 VARCHAR(32)              NOT NULL,
@@ -401,38 +401,38 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_share_access_log PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_share_access_log PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_wiki_share_access_log IS '分享链接访问日志（记录每次分享链接被访问的详细信息，用于安全审计和访问统计）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.share_id IS '分享链接 ID';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.share_code IS '分享码';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.file_node_id IS '文件节点 ID';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.visitor_id IS '访问者用户 ID（匿名为空）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.visitor_name IS '访问者名称';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.visitor_ip IS '访问者 IP 地址';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.user_agent IS '访问者 User-Agent';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.access_type IS '访问类型：VIEW/DOWNLOAD/EDIT';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.access_status IS '访问状态：SUCCESS/FAIL';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.fail_reason IS '失败原因';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.access_time IS '访问时间';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_share_access_log.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_share_access_log IS '分享链接访问日志（记录每次分享链接被访问的详细信息，用于安全审计和访问统计）';
+COMMENT ON COLUMN ydsz_file_share_access_log.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_share_access_log.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_share_access_log.share_id IS '分享链接 ID';
+COMMENT ON COLUMN ydsz_file_share_access_log.share_code IS '分享码';
+COMMENT ON COLUMN ydsz_file_share_access_log.file_node_id IS '文件节点 ID';
+COMMENT ON COLUMN ydsz_file_share_access_log.visitor_id IS '访问者用户 ID（匿名为空）';
+COMMENT ON COLUMN ydsz_file_share_access_log.visitor_name IS '访问者名称';
+COMMENT ON COLUMN ydsz_file_share_access_log.visitor_ip IS '访问者 IP 地址';
+COMMENT ON COLUMN ydsz_file_share_access_log.user_agent IS '访问者 User-Agent';
+COMMENT ON COLUMN ydsz_file_share_access_log.access_type IS '访问类型：VIEW/DOWNLOAD/EDIT';
+COMMENT ON COLUMN ydsz_file_share_access_log.access_status IS '访问状态：SUCCESS/FAIL';
+COMMENT ON COLUMN ydsz_file_share_access_log.fail_reason IS '失败原因';
+COMMENT ON COLUMN ydsz_file_share_access_log.access_time IS '访问时间';
+COMMENT ON COLUMN ydsz_file_share_access_log.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_share_access_log.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_share_access_log.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_share_access_log.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_share_access_log.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_share_access_log.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_share_access_log.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_access_time ON ydsz_wiki_share_access_log (access_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_share_id ON ydsz_wiki_share_access_log (share_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_created ON ydsz_wiki_share_access_log (created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_visitor ON ydsz_wiki_share_access_log (visitor_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_tenant_is_deleted ON ydsz_wiki_share_access_log (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_access_time ON ydsz_file_share_access_log (access_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_share_id ON ydsz_file_share_access_log (share_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_created ON ydsz_file_share_access_log (created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_visitor ON ydsz_file_share_access_log (visitor_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_tenant_is_deleted ON ydsz_file_share_access_log (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log_archive (
+CREATE TABLE IF NOT EXISTS ydsz_file_share_access_log_archive (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     share_id                 VARCHAR(32)              NOT NULL,
@@ -448,32 +448,32 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_share_access_log_archive (
     access_time              TIMESTAMP                NOT NULL,
     is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT pk_ydsz_wiki_share_access_log_archive PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_share_access_log_archive PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_wiki_share_access_log_archive IS '分享访问日志归档表（归档 90 天前访问日志，防止主表无限膨胀）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.share_id IS '分享链接 ID';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.share_code IS '分享码';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.file_node_id IS '文件节点 ID';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.visitor_id IS '访问者用户 ID（匿名为空）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.visitor_name IS '访问者名称';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.visitor_ip IS '访问者 IP 地址';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.user_agent IS '访问者 User-Agent';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.access_type IS '访问类型：VIEW/DOWNLOAD/EDIT';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.access_status IS '访问状态：SUCCESS/FAIL';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.fail_reason IS '失败原因';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.access_time IS '访问时间';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_share_access_log_archive.created_at IS '创建时间';
+COMMENT ON TABLE ydsz_file_share_access_log_archive IS '分享访问日志归档表（归档 90 天前访问日志，防止主表无限膨胀）';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.share_id IS '分享链接 ID';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.share_code IS '分享码';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.file_node_id IS '文件节点 ID';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.visitor_id IS '访问者用户 ID（匿名为空）';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.visitor_name IS '访问者名称';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.visitor_ip IS '访问者 IP 地址';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.user_agent IS '访问者 User-Agent';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.access_type IS '访问类型：VIEW/DOWNLOAD/EDIT';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.access_status IS '访问状态：SUCCESS/FAIL';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.fail_reason IS '失败原因';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.access_time IS '访问时间';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_share_access_log_archive.created_at IS '创建时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_share_created ON ydsz_wiki_share_access_log_archive (share_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_created ON ydsz_wiki_share_access_log_archive (created_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_archive_access_time ON ydsz_wiki_share_access_log_archive (access_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_share_access_log_archive_tenant_is_deleted ON ydsz_wiki_share_access_log_archive (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_archive_archive_share_created ON ydsz_file_share_access_log_archive (share_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_archive_archive_created ON ydsz_file_share_access_log_archive (created_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_archive_archive_access_time ON ydsz_file_share_access_log_archive (access_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_share_access_log_archive_tenant_is_deleted ON ydsz_file_share_access_log_archive (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
+CREATE TABLE IF NOT EXISTS ydsz_file_space (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     name                     VARCHAR(128)             NOT NULL,
@@ -494,37 +494,37 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_space PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_space_tenant_name UNIQUE (tenant_id, name)
+    CONSTRAINT pk_ydsz_file_space PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_space_tenant_name UNIQUE (tenant_id, name)
 );
 
-COMMENT ON TABLE ydsz_wiki_space IS '知识库空间（空间管理聚合根，文件节点的顶级容器）';
-COMMENT ON COLUMN ydsz_wiki_space.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_space.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_space.name IS '空间名称';
-COMMENT ON COLUMN ydsz_wiki_space.description IS '空间描述';
-COMMENT ON COLUMN ydsz_wiki_space.icon_url IS '空间图标 URL';
-COMMENT ON COLUMN ydsz_wiki_space.cover_url IS '空间封面 URL';
-COMMENT ON COLUMN ydsz_wiki_space.owner_id IS '空间所有者（创建者）';
-COMMENT ON COLUMN ydsz_wiki_space.status IS '空间状态：active / archived / deleted';
-COMMENT ON COLUMN ydsz_wiki_space.visibility IS '可见性：private / organization / public';
-COMMENT ON COLUMN ydsz_wiki_space.sort IS '排序序号';
-COMMENT ON COLUMN ydsz_wiki_space.member_count IS '成员数量';
-COMMENT ON COLUMN ydsz_wiki_space.node_count IS '节点数量（文件/目录总数）';
-COMMENT ON COLUMN ydsz_wiki_space.quota_limit IS '空间独立配额（字节，NULL 表示使用租户配额）';
-COMMENT ON COLUMN ydsz_wiki_space.quota_used IS '已使用配额（字节）';
-COMMENT ON COLUMN ydsz_wiki_space.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_space.deleted_time IS '删除时间';
-COMMENT ON COLUMN ydsz_wiki_space.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_space.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_space.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_space.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_space IS '知识库空间（空间管理聚合根，文件节点的顶级容器）';
+COMMENT ON COLUMN ydsz_file_space.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_space.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_space.name IS '空间名称';
+COMMENT ON COLUMN ydsz_file_space.description IS '空间描述';
+COMMENT ON COLUMN ydsz_file_space.icon_url IS '空间图标 URL';
+COMMENT ON COLUMN ydsz_file_space.cover_url IS '空间封面 URL';
+COMMENT ON COLUMN ydsz_file_space.owner_id IS '空间所有者（创建者）';
+COMMENT ON COLUMN ydsz_file_space.status IS '空间状态：active / archived / deleted';
+COMMENT ON COLUMN ydsz_file_space.visibility IS '可见性：private / organization / public';
+COMMENT ON COLUMN ydsz_file_space.sort IS '排序序号';
+COMMENT ON COLUMN ydsz_file_space.member_count IS '成员数量';
+COMMENT ON COLUMN ydsz_file_space.node_count IS '节点数量（文件/目录总数）';
+COMMENT ON COLUMN ydsz_file_space.quota_limit IS '空间独立配额（字节，NULL 表示使用租户配额）';
+COMMENT ON COLUMN ydsz_file_space.quota_used IS '已使用配额（字节）';
+COMMENT ON COLUMN ydsz_file_space.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_space.deleted_time IS '删除时间';
+COMMENT ON COLUMN ydsz_file_space.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_space.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_space.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_space.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_tenant_sort ON ydsz_wiki_space (tenant_id, sort);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_owner ON ydsz_wiki_space (owner_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_tenant_is_deleted ON ydsz_wiki_space (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_tenant_sort ON ydsz_file_space (tenant_id, sort);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_owner ON ydsz_file_space (owner_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_tenant_is_deleted ON ydsz_file_space (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_space_member (
+CREATE TABLE IF NOT EXISTS ydsz_file_space_member (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     space_id                 VARCHAR(32)              NOT NULL,
@@ -536,28 +536,28 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_member (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_space_member PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_space_member_space_user UNIQUE (space_id, user_id)
+    CONSTRAINT pk_ydsz_file_space_member PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_space_member_space_user UNIQUE (space_id, user_id)
 );
 
-COMMENT ON TABLE ydsz_wiki_space_member IS '空间成员（记录用户与空间的归属关系及角色）';
-COMMENT ON COLUMN ydsz_wiki_space_member.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_space_member.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_space_member.space_id IS '空间ID';
-COMMENT ON COLUMN ydsz_wiki_space_member.user_id IS '用户ID';
-COMMENT ON COLUMN ydsz_wiki_space_member.role IS '角色：owner / admin / editor / viewer';
-COMMENT ON COLUMN ydsz_wiki_space_member.joined_at IS '加入时间';
-COMMENT ON COLUMN ydsz_wiki_space_member.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_space_member.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_space_member.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_space_member.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_space_member.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_space_member IS '空间成员（记录用户与空间的归属关系及角色）';
+COMMENT ON COLUMN ydsz_file_space_member.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_space_member.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_space_member.space_id IS '空间ID';
+COMMENT ON COLUMN ydsz_file_space_member.user_id IS '用户ID';
+COMMENT ON COLUMN ydsz_file_space_member.role IS '角色：owner / admin / editor / viewer';
+COMMENT ON COLUMN ydsz_file_space_member.joined_at IS '加入时间';
+COMMENT ON COLUMN ydsz_file_space_member.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_space_member.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_space_member.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_space_member.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_space_member.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_space_role ON ydsz_wiki_space_member (space_id, role);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_user ON ydsz_wiki_space_member (user_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_member_tenant_is_deleted ON ydsz_wiki_space_member (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_member_space_role ON ydsz_file_space_member (space_id, role);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_member_user ON ydsz_file_space_member (user_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_member_tenant_is_deleted ON ydsz_file_space_member (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
+CREATE TABLE IF NOT EXISTS ydsz_file_space_template (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              DEFAULT NULL,
     name                     VARCHAR(128)             NOT NULL,
@@ -578,35 +578,35 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_space_template (
     template_type            VARCHAR(32)              DEFAULT 'space',
     source_node_id           VARCHAR(32)              DEFAULT NULL,
     visibility               VARCHAR(32)              DEFAULT 'system',
-    CONSTRAINT pk_ydsz_wiki_space_template PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_space_template PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_wiki_space_template IS '空间模板（预定义可复用的空间结构模板）';
-COMMENT ON COLUMN ydsz_wiki_space_template.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_space_template.tenant_id IS '租户 ID（系统模板为 NULL）';
-COMMENT ON COLUMN ydsz_wiki_space_template.name IS '模板名称';
-COMMENT ON COLUMN ydsz_wiki_space_template.description IS '模板描述';
-COMMENT ON COLUMN ydsz_wiki_space_template.category IS '模板分类：general / project / meeting / knowledge';
-COMMENT ON COLUMN ydsz_wiki_space_template.icon_url IS '模板图标 URL';
-COMMENT ON COLUMN ydsz_wiki_space_template.is_system IS '是否为系统内置模板（不可删除）';
-COMMENT ON COLUMN ydsz_wiki_space_template.is_public_access IS '是否公开（所有租户可见）';
-COMMENT ON COLUMN ydsz_wiki_space_template.structure_json IS '模板结构 JSON（定义目录树、初始页面、权限配置等）';
-COMMENT ON COLUMN ydsz_wiki_space_template.sort IS '排序序号';
-COMMENT ON COLUMN ydsz_wiki_space_template.usage_count IS '使用次数';
-COMMENT ON COLUMN ydsz_wiki_space_template.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_space_template.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_space_template.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_space_template.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_space_template.updated_by IS '最后更新人';
-COMMENT ON COLUMN ydsz_wiki_space_template.template_type IS '模板类型：space=空间模板，file=文件模板（P2-3: 文件模板扩展）';
-COMMENT ON COLUMN ydsz_wiki_space_template.source_node_id IS '源文件节点 ID（templateType=file 时必填）';
-COMMENT ON COLUMN ydsz_wiki_space_template.visibility IS '可见性级别：system=系统内置，org=组织内可见，private=仅创建者可见';
+COMMENT ON TABLE ydsz_file_space_template IS '空间模板（预定义可复用的空间结构模板）';
+COMMENT ON COLUMN ydsz_file_space_template.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_space_template.tenant_id IS '租户 ID（系统模板为 NULL）';
+COMMENT ON COLUMN ydsz_file_space_template.name IS '模板名称';
+COMMENT ON COLUMN ydsz_file_space_template.description IS '模板描述';
+COMMENT ON COLUMN ydsz_file_space_template.category IS '模板分类：general / project / meeting / knowledge';
+COMMENT ON COLUMN ydsz_file_space_template.icon_url IS '模板图标 URL';
+COMMENT ON COLUMN ydsz_file_space_template.is_system IS '是否为系统内置模板（不可删除）';
+COMMENT ON COLUMN ydsz_file_space_template.is_public_access IS '是否公开（所有租户可见）';
+COMMENT ON COLUMN ydsz_file_space_template.structure_json IS '模板结构 JSON（定义目录树、初始页面、权限配置等）';
+COMMENT ON COLUMN ydsz_file_space_template.sort IS '排序序号';
+COMMENT ON COLUMN ydsz_file_space_template.usage_count IS '使用次数';
+COMMENT ON COLUMN ydsz_file_space_template.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_space_template.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_space_template.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_space_template.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_space_template.updated_by IS '最后更新人';
+COMMENT ON COLUMN ydsz_file_space_template.template_type IS '模板类型：space=空间模板，file=文件模板（P2-3: 文件模板扩展）';
+COMMENT ON COLUMN ydsz_file_space_template.source_node_id IS '源文件节点 ID（templateType=file 时必填）';
+COMMENT ON COLUMN ydsz_file_space_template.visibility IS '可见性级别：system=系统内置，org=组织内可见，private=仅创建者可见';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_tenant_category ON ydsz_wiki_space_template (tenant_id, category);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_is_system_is_public_access ON ydsz_wiki_space_template (is_system, is_public_access);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_space_template_tenant_is_deleted ON ydsz_wiki_space_template (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_template_tenant_category ON ydsz_file_space_template (tenant_id, category);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_template_is_system_is_public_access ON ydsz_file_space_template (is_system, is_public_access);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_space_template_tenant_is_deleted ON ydsz_file_space_template (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_trash_item (
+CREATE TABLE IF NOT EXISTS ydsz_file_trash_item (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -624,34 +624,34 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_trash_item (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_trash_item PRIMARY KEY (id)
+    CONSTRAINT pk_ydsz_file_trash_item PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ydsz_wiki_trash_item IS '回收站条目（记录被逻辑删除的文件/文件夹，支持恢复和自动清理）';
-COMMENT ON COLUMN ydsz_wiki_trash_item.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_trash_item.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_trash_item.file_node_id IS '原文件节点ID';
-COMMENT ON COLUMN ydsz_wiki_trash_item.original_name IS '原文件名';
-COMMENT ON COLUMN ydsz_wiki_trash_item.original_path IS '原始路径';
-COMMENT ON COLUMN ydsz_wiki_trash_item.original_parent_id IS '原始父节点ID';
-COMMENT ON COLUMN ydsz_wiki_trash_item.node_type IS '节点类型：folder / file';
-COMMENT ON COLUMN ydsz_wiki_trash_item.size IS '文件大小（字节）';
-COMMENT ON COLUMN ydsz_wiki_trash_item.deleted_time IS '删除时间';
-COMMENT ON COLUMN ydsz_wiki_trash_item.purge_time IS '预计永久删除时间';
-COMMENT ON COLUMN ydsz_wiki_trash_item.status IS '状态：in_trash / restored / purged';
-COMMENT ON COLUMN ydsz_wiki_trash_item.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_trash_item.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_trash_item.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_trash_item.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_trash_item.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_trash_item.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_trash_item IS '回收站条目（记录被逻辑删除的文件/文件夹，支持恢复和自动清理）';
+COMMENT ON COLUMN ydsz_file_trash_item.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_trash_item.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_trash_item.file_node_id IS '原文件节点ID';
+COMMENT ON COLUMN ydsz_file_trash_item.original_name IS '原文件名';
+COMMENT ON COLUMN ydsz_file_trash_item.original_path IS '原始路径';
+COMMENT ON COLUMN ydsz_file_trash_item.original_parent_id IS '原始父节点ID';
+COMMENT ON COLUMN ydsz_file_trash_item.node_type IS '节点类型：folder / file';
+COMMENT ON COLUMN ydsz_file_trash_item.size IS '文件大小（字节）';
+COMMENT ON COLUMN ydsz_file_trash_item.deleted_time IS '删除时间';
+COMMENT ON COLUMN ydsz_file_trash_item.purge_time IS '预计永久删除时间';
+COMMENT ON COLUMN ydsz_file_trash_item.status IS '状态：in_trash / restored / purged';
+COMMENT ON COLUMN ydsz_file_trash_item.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_trash_item.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_trash_item.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_trash_item.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_trash_item.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_trash_item.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_file_node_id ON ydsz_wiki_trash_item (file_node_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_deleted_time ON ydsz_wiki_trash_item (deleted_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_purge_time ON ydsz_wiki_trash_item (purge_time);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_trash_item_tenant_is_deleted ON ydsz_wiki_trash_item (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_trash_item_file_node_id ON ydsz_file_trash_item (file_node_id);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_trash_item_deleted_time ON ydsz_file_trash_item (deleted_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_trash_item_purge_time ON ydsz_file_trash_item (purge_time);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_trash_item_tenant_is_deleted ON ydsz_file_trash_item (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_search_index (
+CREATE TABLE IF NOT EXISTS ydsz_file_search_index (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     file_node_id             VARCHAR(32)              NOT NULL,
@@ -669,34 +669,34 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_search_index (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_search_index PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_search_index_file_node_id UNIQUE (file_node_id)
+    CONSTRAINT pk_ydsz_file_search_index PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_search_index_file_node_id UNIQUE (file_node_id)
 );
 
-COMMENT ON TABLE ydsz_wiki_search_index IS '文件搜索索引（数据库 fallback 搜索，ES 不可用时提供文件名/路径/内容搜索）';
-COMMENT ON COLUMN ydsz_wiki_search_index.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_search_index.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_search_index.file_node_id IS '关联的文件节点ID';
-COMMENT ON COLUMN ydsz_wiki_search_index.name IS '文件名（用于搜索）';
-COMMENT ON COLUMN ydsz_wiki_search_index.path IS '目录路径';
-COMMENT ON COLUMN ydsz_wiki_search_index.content IS '索引内容（文件名 + 路径 + 提取的文本）';
-COMMENT ON COLUMN ydsz_wiki_search_index.suffix IS '文件后缀';
-COMMENT ON COLUMN ydsz_wiki_search_index.mime_type IS 'MIME 类型';
-COMMENT ON COLUMN ydsz_wiki_search_index.size IS '文件大小（字节）';
-COMMENT ON COLUMN ydsz_wiki_search_index.tags IS '标签（逗号分隔）';
-COMMENT ON COLUMN ydsz_wiki_search_index.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_search_index.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_search_index.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_search_index.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_search_index.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_search_index.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_search_index.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_search_index IS '文件搜索索引（数据库 fallback 搜索，ES 不可用时提供文件名/路径/内容搜索）';
+COMMENT ON COLUMN ydsz_file_search_index.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_search_index.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_search_index.file_node_id IS '关联的文件节点ID';
+COMMENT ON COLUMN ydsz_file_search_index.name IS '文件名（用于搜索）';
+COMMENT ON COLUMN ydsz_file_search_index.path IS '目录路径';
+COMMENT ON COLUMN ydsz_file_search_index.content IS '索引内容（文件名 + 路径 + 提取的文本）';
+COMMENT ON COLUMN ydsz_file_search_index.suffix IS '文件后缀';
+COMMENT ON COLUMN ydsz_file_search_index.mime_type IS 'MIME 类型';
+COMMENT ON COLUMN ydsz_file_search_index.size IS '文件大小（字节）';
+COMMENT ON COLUMN ydsz_file_search_index.tags IS '标签（逗号分隔）';
+COMMENT ON COLUMN ydsz_file_search_index.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_search_index.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_search_index.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_search_index.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_search_index.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_search_index.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_search_index.updated_by IS '最后更新人';
 
 -- 原 MySQL FULLTEXT 索引, 转 GIN 全文索引 (to_tsvector, simple 分词)
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_search_index_ft_search_name_content ON ydsz_wiki_search_index USING GIN (to_tsvector('simple', COALESCE(name, '') || ' ' || COALESCE(content, '')));
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_search_index_tenant_is_deleted ON ydsz_wiki_search_index (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_search_index_ft_search_name_content ON ydsz_file_search_index USING GIN (to_tsvector('simple', COALESCE(name, '') || ' ' || COALESCE(content, '')));
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_search_index_tenant_is_deleted ON ydsz_file_search_index (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
+CREATE TABLE IF NOT EXISTS ydsz_file_user_favorite (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     user_id                  VARCHAR(64)              NOT NULL,
@@ -708,27 +708,27 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_favorite (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_user_favorite PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_user_favorite_user_node UNIQUE (user_id, node_id)
+    CONSTRAINT pk_ydsz_file_user_favorite PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_user_favorite_user_node UNIQUE (user_id, node_id)
 );
 
-COMMENT ON TABLE ydsz_wiki_user_favorite IS '用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.user_id IS '用户ID';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.node_id IS '收藏的文件/目录节点ID';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.sort IS '排序序号（值越小越靠前）';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.deleted_time IS '删除时间';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_user_favorite.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_user_favorite IS '用户收藏夹（记录用户收藏的文件/目录节点，支持排序与软删除）';
+COMMENT ON COLUMN ydsz_file_user_favorite.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_user_favorite.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_user_favorite.user_id IS '用户ID';
+COMMENT ON COLUMN ydsz_file_user_favorite.node_id IS '收藏的文件/目录节点ID';
+COMMENT ON COLUMN ydsz_file_user_favorite.sort IS '排序序号（值越小越靠前）';
+COMMENT ON COLUMN ydsz_file_user_favorite.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_user_favorite.deleted_time IS '删除时间';
+COMMENT ON COLUMN ydsz_file_user_favorite.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_user_favorite.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_user_favorite.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_user_favorite.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_favorite_user_sort ON ydsz_wiki_user_favorite (user_id, sort);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_favorite_tenant_is_deleted ON ydsz_wiki_user_favorite (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_favorite_user_sort ON ydsz_file_user_favorite (user_id, sort);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_favorite_tenant_is_deleted ON ydsz_file_user_favorite (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_user_recent (
+CREATE TABLE IF NOT EXISTS ydsz_file_user_recent (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     user_id                  VARCHAR(64)              NOT NULL,
@@ -740,28 +740,28 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_user_recent (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_user_recent PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_user_recent_user_node UNIQUE (user_id, node_id)
+    CONSTRAINT pk_ydsz_file_user_recent PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_user_recent_user_node UNIQUE (user_id, node_id)
 );
 
-COMMENT ON TABLE ydsz_wiki_user_recent IS '用户最近访问记录（同一节点只保留一条，支持按访问时间倒序查询）';
-COMMENT ON COLUMN ydsz_wiki_user_recent.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_user_recent.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_user_recent.user_id IS '用户ID';
-COMMENT ON COLUMN ydsz_wiki_user_recent.node_id IS '访问的文件/目录节点ID';
-COMMENT ON COLUMN ydsz_wiki_user_recent.access_type IS '访问类型：view / edit / download';
-COMMENT ON COLUMN ydsz_wiki_user_recent.accessed_at IS '最近访问时间（排序字段）';
-COMMENT ON COLUMN ydsz_wiki_user_recent.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_user_recent.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_user_recent.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_user_recent.created_by IS '创建者用户 ID';
-COMMENT ON COLUMN ydsz_wiki_user_recent.updated_by IS '更新者用户 ID';
+COMMENT ON TABLE ydsz_file_user_recent IS '用户最近访问记录（同一节点只保留一条，支持按访问时间倒序查询）';
+COMMENT ON COLUMN ydsz_file_user_recent.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_user_recent.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_user_recent.user_id IS '用户ID';
+COMMENT ON COLUMN ydsz_file_user_recent.node_id IS '访问的文件/目录节点ID';
+COMMENT ON COLUMN ydsz_file_user_recent.access_type IS '访问类型：view / edit / download';
+COMMENT ON COLUMN ydsz_file_user_recent.accessed_at IS '最近访问时间（排序字段）';
+COMMENT ON COLUMN ydsz_file_user_recent.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_user_recent.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_user_recent.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_user_recent.created_by IS '创建者用户 ID';
+COMMENT ON COLUMN ydsz_file_user_recent.updated_by IS '更新者用户 ID';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_user_accessed ON ydsz_wiki_user_recent (user_id, accessed_at);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_access_type ON ydsz_wiki_user_recent (user_id, access_type);
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_user_recent_tenant_is_deleted ON ydsz_wiki_user_recent (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_recent_user_accessed ON ydsz_file_user_recent (user_id, accessed_at);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_recent_access_type ON ydsz_file_user_recent (user_id, access_type);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_user_recent_tenant_is_deleted ON ydsz_file_user_recent (tenant_id, is_deleted);
 
-CREATE TABLE IF NOT EXISTS ydsz_wiki_storage_quota (
+CREATE TABLE IF NOT EXISTS ydsz_file_storage_quota (
     id                       VARCHAR(32)              NOT NULL,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
     scope_type               VARCHAR(32)              NOT NULL,
@@ -777,35 +777,35 @@ CREATE TABLE IF NOT EXISTS ydsz_wiki_storage_quota (
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by               VARCHAR(64)              DEFAULT NULL,
     updated_by               VARCHAR(64)              DEFAULT NULL,
-    CONSTRAINT pk_ydsz_wiki_storage_quota PRIMARY KEY (id),
-    CONSTRAINT uk_ydsz_wiki_storage_quota_scope UNIQUE (scope_type, scope_id)
+    CONSTRAINT pk_ydsz_file_storage_quota PRIMARY KEY (id),
+    CONSTRAINT uk_ydsz_file_storage_quota_scope UNIQUE (scope_type, scope_id)
 );
 
-COMMENT ON TABLE ydsz_wiki_storage_quota IS '存储配额（按用户/租户/项目维度设置存储上限，上传时校验配额）';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.id IS '主键 ID（Snowflake）';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.tenant_id IS '租户 ID（多租户隔离）';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.scope_type IS '配额维度：user / tenant / project';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.scope_id IS '维度ID（用户ID / 租户ID / 项目ID）';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.quota_limit IS '配额上限（字节）';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.quota_used IS '已使用量（字节）';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.file_count_limit IS '文件数量上限';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.file_count_used IS '已使用文件数量';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.status IS '状态标识';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.revision IS '乐观锁版本号';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.created_at IS '创建时间';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.updated_at IS '最后更新时间';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.created_by IS '创建人';
-COMMENT ON COLUMN ydsz_wiki_storage_quota.updated_by IS '最后更新人';
+COMMENT ON TABLE ydsz_file_storage_quota IS '存储配额（按用户/租户/项目维度设置存储上限，上传时校验配额）';
+COMMENT ON COLUMN ydsz_file_storage_quota.id IS '主键 ID（Snowflake）';
+COMMENT ON COLUMN ydsz_file_storage_quota.tenant_id IS '租户 ID（多租户隔离）';
+COMMENT ON COLUMN ydsz_file_storage_quota.scope_type IS '配额维度：user / tenant / project';
+COMMENT ON COLUMN ydsz_file_storage_quota.scope_id IS '维度ID（用户ID / 租户ID / 项目ID）';
+COMMENT ON COLUMN ydsz_file_storage_quota.quota_limit IS '配额上限（字节）';
+COMMENT ON COLUMN ydsz_file_storage_quota.quota_used IS '已使用量（字节）';
+COMMENT ON COLUMN ydsz_file_storage_quota.file_count_limit IS '文件数量上限';
+COMMENT ON COLUMN ydsz_file_storage_quota.file_count_used IS '已使用文件数量';
+COMMENT ON COLUMN ydsz_file_storage_quota.status IS '状态标识';
+COMMENT ON COLUMN ydsz_file_storage_quota.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_file_storage_quota.revision IS '乐观锁版本号';
+COMMENT ON COLUMN ydsz_file_storage_quota.created_at IS '创建时间';
+COMMENT ON COLUMN ydsz_file_storage_quota.updated_at IS '最后更新时间';
+COMMENT ON COLUMN ydsz_file_storage_quota.created_by IS '创建人';
+COMMENT ON COLUMN ydsz_file_storage_quota.updated_by IS '最后更新人';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_storage_quota_tenant_is_deleted ON ydsz_wiki_storage_quota (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_file_storage_quota_tenant_is_deleted ON ydsz_file_storage_quota (tenant_id, is_deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
 -- ============================================================================
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_node_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_file_node_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -813,14 +813,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_node_updated_at ON ydsz_wiki_file_node;
-CREATE TRIGGER trg_ydsz_wiki_file_node_updated_at
-BEFORE UPDATE ON ydsz_wiki_file_node
+DROP TRIGGER IF EXISTS trg_ydsz_file_file_node_updated_at ON ydsz_file_file_node;
+CREATE TRIGGER trg_ydsz_file_file_node_updated_at
+BEFORE UPDATE ON ydsz_file_file_node
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_file_node_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_file_node_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_version_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_file_version_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -828,14 +828,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_version_updated_at ON ydsz_wiki_file_version;
-CREATE TRIGGER trg_ydsz_wiki_file_version_updated_at
-BEFORE UPDATE ON ydsz_wiki_file_version
+DROP TRIGGER IF EXISTS trg_ydsz_file_file_version_updated_at ON ydsz_file_file_version;
+CREATE TRIGGER trg_ydsz_file_file_version_updated_at
+BEFORE UPDATE ON ydsz_file_file_version
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_file_version_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_file_version_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_tag_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_tag_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -843,14 +843,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_tag_updated_at ON ydsz_wiki_tag;
-CREATE TRIGGER trg_ydsz_wiki_tag_updated_at
-BEFORE UPDATE ON ydsz_wiki_tag
+DROP TRIGGER IF EXISTS trg_ydsz_file_tag_updated_at ON ydsz_file_tag;
+CREATE TRIGGER trg_ydsz_file_tag_updated_at
+BEFORE UPDATE ON ydsz_file_tag
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_tag_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_tag_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_tag_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_file_tag_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -858,14 +858,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_tag_updated_at ON ydsz_wiki_file_tag;
-CREATE TRIGGER trg_ydsz_wiki_file_tag_updated_at
-BEFORE UPDATE ON ydsz_wiki_file_tag
+DROP TRIGGER IF EXISTS trg_ydsz_file_file_tag_updated_at ON ydsz_file_file_tag;
+CREATE TRIGGER trg_ydsz_file_file_tag_updated_at
+BEFORE UPDATE ON ydsz_file_file_tag
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_file_tag_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_file_tag_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_comment_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_file_comment_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -873,14 +873,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_comment_updated_at ON ydsz_wiki_file_comment;
-CREATE TRIGGER trg_ydsz_wiki_file_comment_updated_at
-BEFORE UPDATE ON ydsz_wiki_file_comment
+DROP TRIGGER IF EXISTS trg_ydsz_file_file_comment_updated_at ON ydsz_file_file_comment;
+CREATE TRIGGER trg_ydsz_file_file_comment_updated_at
+BEFORE UPDATE ON ydsz_file_file_comment
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_file_comment_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_file_comment_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_file_acl_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_file_acl_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -888,14 +888,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_file_acl_updated_at ON ydsz_wiki_file_acl;
-CREATE TRIGGER trg_ydsz_wiki_file_acl_updated_at
-BEFORE UPDATE ON ydsz_wiki_file_acl
+DROP TRIGGER IF EXISTS trg_ydsz_file_file_acl_updated_at ON ydsz_file_file_acl;
+CREATE TRIGGER trg_ydsz_file_file_acl_updated_at
+BEFORE UPDATE ON ydsz_file_file_acl
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_file_acl_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_file_acl_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_share_link_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_share_link_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -903,14 +903,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_share_link_updated_at ON ydsz_wiki_share_link;
-CREATE TRIGGER trg_ydsz_wiki_share_link_updated_at
-BEFORE UPDATE ON ydsz_wiki_share_link
+DROP TRIGGER IF EXISTS trg_ydsz_file_share_link_updated_at ON ydsz_file_share_link;
+CREATE TRIGGER trg_ydsz_file_share_link_updated_at
+BEFORE UPDATE ON ydsz_file_share_link
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_share_link_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_share_link_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_share_recipient_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_share_recipient_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -918,14 +918,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_share_recipient_updated_at ON ydsz_wiki_share_recipient;
-CREATE TRIGGER trg_ydsz_wiki_share_recipient_updated_at
-BEFORE UPDATE ON ydsz_wiki_share_recipient
+DROP TRIGGER IF EXISTS trg_ydsz_file_share_recipient_updated_at ON ydsz_file_share_recipient;
+CREATE TRIGGER trg_ydsz_file_share_recipient_updated_at
+BEFORE UPDATE ON ydsz_file_share_recipient
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_share_recipient_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_share_recipient_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_share_access_log_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_share_access_log_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -933,14 +933,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_share_access_log_updated_at ON ydsz_wiki_share_access_log;
-CREATE TRIGGER trg_ydsz_wiki_share_access_log_updated_at
-BEFORE UPDATE ON ydsz_wiki_share_access_log
+DROP TRIGGER IF EXISTS trg_ydsz_file_share_access_log_updated_at ON ydsz_file_share_access_log;
+CREATE TRIGGER trg_ydsz_file_share_access_log_updated_at
+BEFORE UPDATE ON ydsz_file_share_access_log
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_share_access_log_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_share_access_log_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_space_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_space_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -948,14 +948,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_space_updated_at ON ydsz_wiki_space;
-CREATE TRIGGER trg_ydsz_wiki_space_updated_at
-BEFORE UPDATE ON ydsz_wiki_space
+DROP TRIGGER IF EXISTS trg_ydsz_file_space_updated_at ON ydsz_file_space;
+CREATE TRIGGER trg_ydsz_file_space_updated_at
+BEFORE UPDATE ON ydsz_file_space
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_space_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_space_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_space_member_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_space_member_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -963,14 +963,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_space_member_updated_at ON ydsz_wiki_space_member;
-CREATE TRIGGER trg_ydsz_wiki_space_member_updated_at
-BEFORE UPDATE ON ydsz_wiki_space_member
+DROP TRIGGER IF EXISTS trg_ydsz_file_space_member_updated_at ON ydsz_file_space_member;
+CREATE TRIGGER trg_ydsz_file_space_member_updated_at
+BEFORE UPDATE ON ydsz_file_space_member
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_space_member_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_space_member_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_space_template_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_space_template_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -978,14 +978,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_space_template_updated_at ON ydsz_wiki_space_template;
-CREATE TRIGGER trg_ydsz_wiki_space_template_updated_at
-BEFORE UPDATE ON ydsz_wiki_space_template
+DROP TRIGGER IF EXISTS trg_ydsz_file_space_template_updated_at ON ydsz_file_space_template;
+CREATE TRIGGER trg_ydsz_file_space_template_updated_at
+BEFORE UPDATE ON ydsz_file_space_template
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_space_template_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_space_template_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_trash_item_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_trash_item_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -993,14 +993,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_trash_item_updated_at ON ydsz_wiki_trash_item;
-CREATE TRIGGER trg_ydsz_wiki_trash_item_updated_at
-BEFORE UPDATE ON ydsz_wiki_trash_item
+DROP TRIGGER IF EXISTS trg_ydsz_file_trash_item_updated_at ON ydsz_file_trash_item;
+CREATE TRIGGER trg_ydsz_file_trash_item_updated_at
+BEFORE UPDATE ON ydsz_file_trash_item
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_trash_item_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_trash_item_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_search_index_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_search_index_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1008,14 +1008,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_search_index_updated_at ON ydsz_wiki_search_index;
-CREATE TRIGGER trg_ydsz_wiki_search_index_updated_at
-BEFORE UPDATE ON ydsz_wiki_search_index
+DROP TRIGGER IF EXISTS trg_ydsz_file_search_index_updated_at ON ydsz_file_search_index;
+CREATE TRIGGER trg_ydsz_file_search_index_updated_at
+BEFORE UPDATE ON ydsz_file_search_index
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_search_index_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_search_index_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_user_favorite_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_user_favorite_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1023,14 +1023,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_user_favorite_updated_at ON ydsz_wiki_user_favorite;
-CREATE TRIGGER trg_ydsz_wiki_user_favorite_updated_at
-BEFORE UPDATE ON ydsz_wiki_user_favorite
+DROP TRIGGER IF EXISTS trg_ydsz_file_user_favorite_updated_at ON ydsz_file_user_favorite;
+CREATE TRIGGER trg_ydsz_file_user_favorite_updated_at
+BEFORE UPDATE ON ydsz_file_user_favorite
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_user_favorite_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_user_favorite_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_user_recent_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_user_recent_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1038,14 +1038,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_user_recent_updated_at ON ydsz_wiki_user_recent;
-CREATE TRIGGER trg_ydsz_wiki_user_recent_updated_at
-BEFORE UPDATE ON ydsz_wiki_user_recent
+DROP TRIGGER IF EXISTS trg_ydsz_file_user_recent_updated_at ON ydsz_file_user_recent;
+CREATE TRIGGER trg_ydsz_file_user_recent_updated_at
+BEFORE UPDATE ON ydsz_file_user_recent
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_user_recent_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_user_recent_set_updated_at();
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
-CREATE OR REPLACE FUNCTION fn_ydsz_wiki_storage_quota_set_updated_at()
+CREATE OR REPLACE FUNCTION fn_ydsz_file_storage_quota_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at := CURRENT_TIMESTAMP;
@@ -1053,11 +1053,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_ydsz_wiki_storage_quota_updated_at ON ydsz_wiki_storage_quota;
-CREATE TRIGGER trg_ydsz_wiki_storage_quota_updated_at
-BEFORE UPDATE ON ydsz_wiki_storage_quota
+DROP TRIGGER IF EXISTS trg_ydsz_file_storage_quota_updated_at ON ydsz_file_storage_quota;
+CREATE TRIGGER trg_ydsz_file_storage_quota_updated_at
+BEFORE UPDATE ON ydsz_file_storage_quota
 FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_wiki_storage_quota_set_updated_at();
+EXECUTE FUNCTION fn_ydsz_file_storage_quota_set_updated_at();
 
 -- ============================================================================
 -- 2026-09-13: FileNode 布尔字段 is 前缀合规（YDIZ-OOP-006 补）。
@@ -1069,15 +1069,15 @@ DO $$
 BEGIN
     -- preview_ready → is_preview_ready
     IF EXISTS (SELECT 1 FROM information_schema.columns
-               WHERE table_name = 'ydsz_wiki_file_node' AND column_name = 'preview_ready') THEN
-        ALTER TABLE ydsz_wiki_file_node RENAME COLUMN preview_ready TO is_preview_ready;
+               WHERE table_name = 'ydsz_file_file_node' AND column_name = 'preview_ready') THEN
+        ALTER TABLE ydsz_file_file_node RENAME COLUMN preview_ready TO is_preview_ready;
     END IF;
     -- starred → is_starred
     IF EXISTS (SELECT 1 FROM information_schema.columns
-               WHERE table_name = 'ydsz_wiki_file_node' AND column_name = 'starred') THEN
-        ALTER TABLE ydsz_wiki_file_node RENAME COLUMN starred TO is_starred;
+               WHERE table_name = 'ydsz_file_file_node' AND column_name = 'starred') THEN
+        ALTER TABLE ydsz_file_file_node RENAME COLUMN starred TO is_starred;
     END IF;
 END $$;
 
-COMMENT ON COLUMN ydsz_wiki_file_node.is_preview_ready IS '是否已生成预览（0=否 1=是）';
-COMMENT ON COLUMN ydsz_wiki_file_node.is_starred IS '是否星标文件（0=否 1=是）';
+COMMENT ON COLUMN ydsz_file_file_node.is_preview_ready IS '是否已生成预览（0=否 1=是）';
+COMMENT ON COLUMN ydsz_file_file_node.is_starred IS '是否星标文件（0=否 1=是）';

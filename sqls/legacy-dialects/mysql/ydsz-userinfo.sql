@@ -333,8 +333,8 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
     password_min_length INT DEFAULT 8 COMMENT '密码最小长度（≥ 6）',
     is_password_require_uppercase BOOLEAN DEFAULT TRUE COMMENT '密码必须包含大写字母',
     is_password_require_digit BOOLEAN DEFAULT TRUE COMMENT '密码必须包含数字',
-    mfa_is_enabled BOOLEAN DEFAULT FALSE COMMENT '是否启用双因素认证',
-    captcha_is_enabled BOOLEAN DEFAULT TRUE COMMENT '登录是否启用图形验证码',
+    is_mfa_enabled BOOLEAN DEFAULT FALSE COMMENT '是否启用双因素认证',
+    is_captcha_enabled BOOLEAN DEFAULT TRUE COMMENT '登录是否启用图形验证码',
     allowed_identity_providers VARCHAR(256) DEFAULT 'LOCAL' COMMENT '允许的身份提供者类型（逗号分隔：LOCAL/LDAP/SAML/OAUTH2）',
     max_sessions_per_user INT DEFAULT 3 COMMENT '每个用户最大会话数',
     session_timeout_seconds INT DEFAULT 7200 COMMENT '会话超时时间（秒）',
@@ -354,7 +354,7 @@ CREATE TABLE IF NOT EXISTS ydsz_auth_policy (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='认证策略配置表';
 
 -- 插入全局默认策略
-INSERT INTO ydsz_auth_policy (id, tenant_id, name, password_min_length, is_password_require_uppercase, is_password_require_digit, is_mfa_is_enabled, is_captcha_is_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, is_deleted, revision)
+INSERT INTO ydsz_auth_policy (id, tenant_id, name, password_min_length, is_password_require_uppercase, is_password_require_digit, is_mfa_enabled, is_captcha_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, is_deleted, revision)
 VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, TRUE, TRUE, FALSE, TRUE, 'LOCAL', 3, 7200, '系统全局默认策略，租户未配置时继承', FALSE, 0)
 ON DUPLICATE KEY UPDATE name = name;
 

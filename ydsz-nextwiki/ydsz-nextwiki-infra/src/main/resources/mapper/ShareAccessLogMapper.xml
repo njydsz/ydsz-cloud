@@ -25,7 +25,7 @@
 
     <select id="selectByShareId" resultMap="ShareAccessLogResult">
         SELECT id, share_id, share_code, file_node_id, visitor_id, visitor_name, visitor_ip, user_agent, access_type, access_status, fail_reason, access_time, created_by, created_at, updated_at, updated_by, revision, is_deleted
-        FROM ydsz_wiki_share_access_log
+        FROM ydsz_file_share_access_log
         WHERE share_id = #{shareId} AND is_deleted = 0
         ORDER BY created_at DESC
         LIMIT #{limit}
@@ -34,7 +34,7 @@
     <select id="countDailyAccess" resultType="java.util.Map">
         SELECT TO_CHAR(created_at, 'YYYY-MM-DD') AS access_date,
                COUNT(*) AS access_count
-        FROM ydsz_wiki_share_access_log
+        FROM ydsz_file_share_access_log
         WHERE share_id = #{shareId}
           AND is_deleted = 0
           AND created_at &gt;= NOW() - INTERVAL '#{days} days'

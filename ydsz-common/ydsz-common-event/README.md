@@ -21,7 +21,7 @@
 | 类 | 说明 |
 |---|---|
 | `OutboxService` | Outbox 业务写入服务，提供 `save(DomainEvent)` 方法，在当前事务中插入 outbox 记录，保障事件落库与业务操作的原子性 |
-| `OutboxRepository` | Outbox 数据访问层，操作 `ydsz_com_outbox` 表，支持分页查询、状态计数（带缓存 TTL）、CAS 状态更新 |
+| `OutboxRepository` | Outbox 数据访问层，操作 `ydsz_comm_outbox` 表，支持分页查询、状态计数（带缓存 TTL）、CAS 状态更新 |
 | `OutboxMessage` | Outbox 消息实体（含 id、aggregateId、eventType、payload、status、retryCount、nextRetryAt 等字段） |
 | `OutboxStatus` | 状态枚举：`PENDING`（待投递）、`PROCESSING`（投递中）、`SENT`（已投递）、`FAILED`（失败） |
 
@@ -87,7 +87,7 @@
 ### 2. 数据库建表
 
 ```sql
-CREATE TABLE ydsz_com_outbox (
+CREATE TABLE ydsz_comm_outbox (
     id              VARCHAR(64)   PRIMARY KEY,
     aggregate_id    VARCHAR(128)  NOT NULL,
     aggregate_type  VARCHAR(128),
@@ -152,7 +152,7 @@ public record OrderCreatedEvent(Order order) implements DomainEvent {
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.event.outbox.enabled` | `true` | 是否启用 Outbox 模式 |
-| `ydsz.event.outbox.table-name` | `ydsz_com_outbox` | Outbox 表名 |
+| `ydsz.event.outbox.table-name` | `ydsz_comm_outbox` | Outbox 表名 |
 | `ydsz.event.outbox.poll-interval-seconds` | `5` | 后台轮询间隔（秒） |
 | `ydsz.event.outbox.batch-size` | `100` | 每批最大条数 |
 | `ydsz.event.outbox.max-retries` | `5` | 默认最大重试次数 |

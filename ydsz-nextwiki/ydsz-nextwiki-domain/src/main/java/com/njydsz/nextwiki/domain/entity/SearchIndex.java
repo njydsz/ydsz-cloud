@@ -17,14 +17,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 索引字段包含文件名（{@link #name}）、目录路径（{@link #path}）、聚合文本内容（{@link #content}，
  * 含文件名+路径+文档提取文本）、文件后缀（{@link #suffix}）和标签（{@link #tags}，逗号分隔）。
  *
- * <p><b>表名：</b>{@code ydsz_wiki_search_index}
+ * <p><b>表名：</b>{@code ydsz_file_search_index}
  *
  * @author ydsz
  * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_wiki_search_index")
+@TableName("ydsz_file_search_index")
 public class SearchIndex extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

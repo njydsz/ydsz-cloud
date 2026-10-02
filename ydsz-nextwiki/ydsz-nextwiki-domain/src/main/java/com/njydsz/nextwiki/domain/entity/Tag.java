@@ -17,14 +17,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 每个标签拥有唯一名称（{@link #name}）和颜色（{@link #color}，十六进制如 #1890ff），
  * 通过 {@link com.njydsz.nextwiki.domain.entity.FileTag} 与文件节点建立多对多关联。
  *
- * <p><b>表名：</b>{@code ydsz_wiki_tag}
+ * <p><b>表名：</b>{@code ydsz_file_tag}
  *
  * @author ydsz
  * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_wiki_tag")
+@TableName("ydsz_file_tag")
 public class Tag extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

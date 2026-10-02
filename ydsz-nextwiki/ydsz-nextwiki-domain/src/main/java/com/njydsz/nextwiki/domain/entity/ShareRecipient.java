@@ -17,14 +17,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 通过 {@link #recipientType} 标识接收者维度（USER/DEPT/ROLE），对应 {@link #recipientId} 和
  * {@link #recipientName}。状态机为 ACTIVE → VIEWED → REVOKED，{@link #viewedAt} 记录首次查看时间。
  *
- * <p><b>表名：</b>{@code ydsz_wiki_share_recipient}
+ * <p><b>表名：</b>{@code ydsz_file_share_recipient}
  *
  * @author ydsz
  * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_wiki_share_recipient")
+@TableName("ydsz_file_share_recipient")
 public class ShareRecipient extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

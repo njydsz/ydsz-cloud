@@ -17,14 +17,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 分别记录字节级配额上限和已用量，{@link #fileCountLimit} 和 {@link #fileCountUsed} 记录文件数量维度的上限和已用量。
  * 为 null 或 0 表示不限制。
  *
- * <p><b>表名：</b>{@code ydsz_wiki_storage_quota}
+ * <p><b>表名：</b>{@code ydsz_file_storage_quota}
  *
  * @author ydsz
  * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_wiki_storage_quota")
+@TableName("ydsz_file_storage_quota")
 public class StorageQuota extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

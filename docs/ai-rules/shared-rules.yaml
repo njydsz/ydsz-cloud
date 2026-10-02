@@ -169,7 +169,7 @@ rules:
     pattern: "@TableName 注解值不以 ydsz_ 开头"
     fix: "改为 ydsz_ 前缀"
     example_bad: "@TableName(\"nw_file_node\")"
-    example_good: "@TableName(\"ydsz_wiki_file_node\")"
+    example_good: "@TableName(\"ydsz_file_node\")"
     source: "编码规范 2.5 节"
 
   - id: "YDIZ-NAME-003"
@@ -1577,7 +1577,7 @@ rules:
       1. 引入 ydzs-common-event 依赖
       2. 使用 OutboxService.appendToOutbox() 替代自建写入逻辑
       3. 删除自建 OutboxEvent 实体、Repository、Scheduler
-      4. 迁移数据从自建表至 ydsz_com_outbox（或使用 OutboxRepository 指定表名）
+      4. 迁移数据从自建表至 ydsz_comm_outbox（或使用 OutboxRepository 指定表名）
       5. 复用 OutboxAdminController 运维端点
     example_bad: |
       // ❌ 业务模块自建 Outbox 组件

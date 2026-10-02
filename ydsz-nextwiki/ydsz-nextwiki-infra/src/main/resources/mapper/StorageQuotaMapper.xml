@@ -22,13 +22,13 @@
 
     <select id="selectByScope" resultMap="StorageQuotaResult">
         SELECT id, scope_type, scope_id, quota_limit, quota_used, file_count_limit, file_count_used, status, created_by, created_at, updated_by, updated_at, revision, is_deleted, tenant_id
-        FROM ydsz_wiki_storage_quota
+        FROM ydsz_file_storage_quota
         WHERE scope_type = #{scopeType} AND scope_id = #{scopeId} AND is_deleted = 0
         LIMIT 1
     </select>
 
     <update id="updateWithRevision">
-        UPDATE ydsz_wiki_storage_quota
+        UPDATE ydsz_file_storage_quota
         SET
             scope_type = #{quota.scopeType},
             scope_id = #{quota.scopeId},

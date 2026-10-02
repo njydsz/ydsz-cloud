@@ -67,7 +67,7 @@ COMMENT ON COLUMN ydsz_sys_tenant.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_id ON ydsz_sys_tenant (plan_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_tenant_deleted ON ydsz_sys_tenant ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_tenant_deleted ON ydsz_sys_tenant (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan (
     id                       VARCHAR(32)             ,
@@ -106,7 +106,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant_plan.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_tenant_deleted ON ydsz_sys_tenant_plan ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_tenant_deleted ON ydsz_sys_tenant_plan (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_tenant_plan_menu (
     id                       VARCHAR(32)             ,
@@ -137,7 +137,7 @@ COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_tenant_plan_menu.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_menu_tenant_deleted ON ydsz_sys_tenant_plan_menu ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_tenant_plan_menu_tenant_deleted ON ydsz_sys_tenant_plan_menu (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_dict_type (
     id                       VARCHAR(32)             ,
@@ -170,7 +170,7 @@ COMMENT ON COLUMN ydsz_sys_dict_type.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_dict_type.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_dict_type.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_type_tenant_deleted ON ydsz_sys_dict_type ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_type_tenant_deleted ON ydsz_sys_dict_type (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_dict_item (
     id                       VARCHAR(32)             ,
@@ -212,7 +212,7 @@ COMMENT ON COLUMN ydsz_sys_dict_item.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_dict_item.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_item_parent_id ON ydsz_sys_dict_item (parent_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_item_tenant_deleted ON ydsz_sys_dict_item ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_dict_item_tenant_deleted ON ydsz_sys_dict_item (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_config (
     id                       VARCHAR(32)             ,
@@ -255,7 +255,7 @@ COMMENT ON COLUMN ydsz_sys_config.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_config.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_config.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_config_tenant_deleted ON ydsz_sys_config ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_config_tenant_deleted ON ydsz_sys_config (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_variable (
     id                       VARCHAR(32)             ,
@@ -290,7 +290,7 @@ COMMENT ON COLUMN ydsz_sys_variable.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_variable.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_variable.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_variable_tenant_deleted ON ydsz_sys_variable ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_variable_tenant_deleted ON ydsz_sys_variable (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_app_info (
     id                       VARCHAR(32)             ,
@@ -334,7 +334,7 @@ COMMENT ON COLUMN ydsz_sys_app_info.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_app_info.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_app_info.updated_at IS '最后更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_app_info_tenant_deleted ON ydsz_sys_app_info ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_app_info_tenant_deleted ON ydsz_sys_app_info (tenant_id, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_sys_entity_version (
     id                       VARCHAR(32)             ,
@@ -375,7 +375,7 @@ COMMENT ON COLUMN ydsz_sys_entity_version.updated_by IS '最后更新人';
 COMMENT ON COLUMN ydsz_sys_entity_version.updated_at IS '最后更新时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_entity_version_resource_type_key_version ON ydsz_sys_entity_version (resource_type, resource_key, version);
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_entity_version_tenant_deleted ON ydsz_sys_entity_version ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_entity_version_tenant_deleted ON ydsz_sys_entity_version (tenant_id, is_deleted);
 
 -- ============================================================================
 -- ON UPDATE CURRENT_TIMESTAMP 自动更新触发器 (PostgreSQL)
@@ -559,7 +559,7 @@ COMMENT ON COLUMN ydsz_sys_api_permission.created_at IS '创建时间';
 COMMENT ON COLUMN ydsz_sys_api_permission.updated_by IS '更新人';
 COMMENT ON COLUMN ydsz_sys_api_permission.updated_at IS '更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_ydsz_sys_api_permission_tenant_deleted ON ydsz_sys_api_permission ((tenant_id, is_deleted));
+CREATE INDEX IF NOT EXISTS idx_ydsz_sys_api_permission_tenant_deleted ON ydsz_sys_api_permission (tenant_id, is_deleted);
 CREATE INDEX IF NOT EXISTS idx_ydsz_sys_api_permission_api_code ON ydsz_sys_api_permission (api_code);
 
 -- 自动更新 updated_at（原 MySQL ON UPDATE CURRENT_TIMESTAMP）
@@ -599,23 +599,23 @@ ON CONFLICT DO NOTHING;
 -- ----------------------------------------------------------------------------
 -- 2. 系统配置默认值 (config_group='SYSTEM')
 -- ----------------------------------------------------------------------------
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, is_deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, is_public, sort, status, is_deleted, revision)
 VALUES ('cfg_sys_001', 'SYSTEM', 'app.name', '云顶数据中台', 'STRING', '云顶数据中台', '系统显示名称', 1, 1, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, is_deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, is_public, sort, status, is_deleted, revision)
 VALUES ('cfg_sys_002', 'SYSTEM', 'app.logoUrl', '/assets/logo.png', 'STRING', '/assets/logo.png', '系统 Logo 地址', 1, 2, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, is_deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, is_public, sort, status, is_deleted, revision)
 VALUES ('cfg_sys_003', 'SYSTEM', 'i18n.defaultLanguage', 'zh-CN', 'STRING', 'zh-CN', '默认语言编码', 1, 3, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, is_deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, is_public, sort, status, is_deleted, revision)
 VALUES ('cfg_sys_004', 'SYSTEM', 'security.passwordMinLength', '8', 'NUMBER', '8', '密码最小长度', 0, 10, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, public, sort, status, is_deleted, revision)
+INSERT INTO ydsz_sys_config (id, config_group, config_key, config_value, value_type, default_value, description, is_public, sort, status, is_deleted, revision)
 VALUES ('cfg_sys_005', 'SYSTEM', 'security.maxLoginFailCount', '5', 'NUMBER', '5', '最大连续登录失败次数', 0, 11, 'ENABLED', 0, 0)
 ON CONFLICT DO NOTHING;
 

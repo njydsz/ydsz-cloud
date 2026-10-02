@@ -25,7 +25,7 @@ import com.njydsz.common.event.model.OutboxStatus;
 /**
  * Outbox 归档仓储 JDBC 实现（F-4）
  *
- * <p>使用独立的归档表 {@code ydsz_com_outbox_archive} 存储已处理完成的消息。 通过配置 {@link
+ * <p>使用独立的归档表 {@code ydsz_comm_outbox_archive} 存储已处理完成的消息。 通过配置 {@link
  * com.njydsz.common.event.config.EventProperties.Archive} 启用归档功能。 *
  *
  * <p><b>使用场景：</b>
@@ -56,7 +56,7 @@ public class OutboxArchiveRepositoryJdbc implements OutboxArchiveRepository {
    * 构造归档仓储
    *
    * @param jdbcTemplate JDBC 模板
-   * @param archiveTableName 归档表名（默认 ydsz_com_outbox_archive）
+   * @param archiveTableName 归档表名（默认 ydsz_comm_outbox_archive）
    */
   public OutboxArchiveRepositoryJdbc(JdbcTemplate jdbcTemplate, String archiveTableName) {
     if (archiveTableName == null || !archiveTableName.matches(TABLE_NAME_PATTERN)) {

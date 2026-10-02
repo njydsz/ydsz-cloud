@@ -45,7 +45,7 @@ import com.njydsz.nextwiki.domain.vo.TagVO;
  * <pre>
  *   用户请求 → SearchController → SearchApplicationService.search()
  *       ↓
- *   主路径：UnifiedSearchService → WikiSearchProvider（权限过滤 + 全文检索）
+ *   主路径：UnifiedSearchService → FileSearchProvider（权限过滤 + 全文检索）
  *       ↓
  *   降级：SearchDomainService.search()（nw_search_index 表的 LIKE 查询）
  * </pre>
@@ -86,7 +86,7 @@ public class SearchApplicationService {
   /**
    * 全文检索（按关键词在用户可见范围内分页搜索）。
    *
-   * <p>搜索引擎可用时走统一检索链路（PG/ES + {@code WikiSearchProvider} 权限过滤）， 不可用时降级到 DB LIKE。引擎异常同样降级并打印 warn
+   * <p>搜索引擎可用时走统一检索链路（PG/ES + {@code FileSearchProvider} 权限过滤）， 不可用时降级到 DB LIKE。引擎异常同样降级并打印 warn
    * 日志，保证搜索接口始终可用。
    *
    * <p><b>搜索记录：</b>每次成功搜索后记录用户搜索历史并更新热门搜索排行。

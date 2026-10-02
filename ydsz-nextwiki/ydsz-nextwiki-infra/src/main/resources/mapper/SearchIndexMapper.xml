@@ -22,7 +22,7 @@
 
     <!-- 新增或更新索引（PostgreSQL ON CONFLICT 语义，以 file_node_id 为唯一键） -->
     <insert id="upsert">
-        INSERT INTO ydsz_wiki_search_index
+        INSERT INTO ydsz_file_search_index
             (id, file_node_id, name, path, content, suffix, mime_type, size, tags,
              created_by, created_at, updated_at, revision, is_deleted)
         VALUES
@@ -43,23 +43,23 @@
 
     <!-- 根据文件节点ID删除索引（物理删除） -->
     <delete id="deleteByFileNodeId">
-        DELETE FROM ydsz_wiki_search_index WHERE file_node_id = #{fileNodeId}
+        DELETE FROM ydsz_file_search_index WHERE file_node_id = #{fileNodeId}
     </delete>
 
     <!-- 根据文件节点ID查询索引 -->
     <select id="selectByFileNodeId" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index WHERE file_node_id = #{fileNodeId} AND is_deleted = 0 LIMIT 1
+        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_file_search_index WHERE file_node_id = #{fileNodeId} AND is_deleted = 0 LIMIT 1
     </select>
 
     <!-- 查询所有未删除的索引记录（含 content 大字段，限制单次返回上限防止 OOM） -->
     <select id="selectAll" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index WHERE is_deleted = 0 ORDER BY created_at ASC
+        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_file_search_index WHERE is_deleted = 0 ORDER BY created_at ASC
         LIMIT 1000
     </select>
 
     <!-- 数据库分页搜索索引（支持 name/path/content/tags 多维度 LIKE 搜索） -->
     <select id="searchPage" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index
+        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_file_search_index
         WHERE is_deleted = 0
         AND created_by = #{createdBy}
         <choose>
@@ -87,7 +87,7 @@
 
     <!-- 统计搜索结果总数 -->
     <select id="countSearchResults" resultType="long">
-        SELECT COUNT(*) FROM ydsz_wiki_search_index
+        SELECT COUNT(*) FROM ydsz_file_search_index
         WHERE is_deleted = 0
         AND created_by = #{createdBy}
         <choose>
@@ -116,7 +116,7 @@
         调用前由 SearchIndexRepositoryImpl.searchAdvanced 将 SearchQuery 转为各参数
     -->
     <select id="searchAdvanced" resultMap="SearchIndexResult">
-        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_wiki_search_index
+        SELECT id, file_node_id, name, path, content, suffix, mime_type, size, tags, created_by, created_at, updated_at, revision, is_deleted FROM ydsz_file_search_index
         WHERE is_deleted = 0
         AND created_by = #{query.createdBy}
         <!-- 全文词模糊匹配（name/path/content/tags，任意一词命中即匹配） -->

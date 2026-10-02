@@ -18,14 +18,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 和大小（{@link #size}）以支持完整恢复。默认保留 30 天（{@link #DEFAULT_RETENTION_DAYS}），
  * 超期（{@link #purgeTime}）自动永久删除。状态机为 in_trash → restored / purged。
  *
- * <p><b>表名：</b>{@code ydsz_wiki_trash_item}
+ * <p><b>表名：</b>{@code ydsz_file_trash_item}
  *
  * @author ydsz
  * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_wiki_trash_item")
+@TableName("ydsz_file_trash_item")
 public class TrashItem extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

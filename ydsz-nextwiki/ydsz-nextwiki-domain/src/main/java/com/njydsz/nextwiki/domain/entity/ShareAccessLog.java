@@ -18,14 +18,14 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 客户端 IP（{@link #visitorIp}）、浏览器标识（{@link #userAgent}）、访问类型（VIEW/DOWNLOAD/EDIT）、
  * 访问结果（SUCCESS/FAIL）及失败原因（{@link #failReason}）。
  *
- * <p><b>表名：</b>{@code ydsz_wiki_share_access_log}
+ * <p><b>表名：</b>{@code ydsz_file_share_access_log}
  *
  * @author ydsz
  * @since 26.09.24
  */@Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
-@TableName("ydsz_wiki_share_access_log")
+@TableName("ydsz_file_share_access_log")
 public class ShareAccessLog extends MpBaseEntity<String> implements Serializable {
 
   private static final long serialVersionUID = 1L;

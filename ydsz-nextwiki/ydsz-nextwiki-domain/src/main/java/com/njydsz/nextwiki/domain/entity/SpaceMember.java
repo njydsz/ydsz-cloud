@@ -29,7 +29,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_wiki_space_member")
+@TableName("ydsz_file_space_member")
 public class SpaceMember extends MpBaseEntity<String> {
 
   /** 角色：所有者（创建者，不可移除） */

@@ -552,8 +552,8 @@ CREATE TABLE ydsz_auth_policy (
     password_min_length      NUMBER(10)               DEFAULT 8,
     is_password_require_uppercase NUMBER(1)                DEFAULT 1,
     is_password_require_digit   NUMBER(1)                DEFAULT 1,
-    is_mfa_is_enabled              NUMBER(1)                DEFAULT 0,
-    is_captcha_is_enabled          NUMBER(1)                DEFAULT 1,
+    is_mfa_enabled              NUMBER(1)                DEFAULT 0,
+    is_captcha_enabled          NUMBER(1)                DEFAULT 1,
     allowed_identity_providers VARCHAR2(256 CHAR)       DEFAULT 'LOCAL',
     max_sessions_per_user    NUMBER(10)               DEFAULT 3,
     session_timeout_seconds  NUMBER(10)               DEFAULT 7200,
@@ -576,8 +576,8 @@ COMMENT ON COLUMN ydsz_auth_policy.name IS '策略名称';
 COMMENT ON COLUMN ydsz_auth_policy.password_min_length IS '密码最小长度（≥ 6）';
 COMMENT ON COLUMN ydsz_auth_policy.is_password_require_uppercase IS '密码必须包含大写字母';
 COMMENT ON COLUMN ydsz_auth_policy.is_password_require_digit IS '密码必须包含数字';
-COMMENT ON COLUMN ydsz_auth_policy.is_mfa_is_enabled IS '是否启用双因素认证';
-COMMENT ON COLUMN ydsz_auth_policy.is_captcha_is_enabled IS '登录是否启用图形验证码';
+COMMENT ON COLUMN ydsz_auth_policy.is_mfa_enabled IS '是否启用双因素认证';
+COMMENT ON COLUMN ydsz_auth_policy.is_captcha_enabled IS '登录是否启用图形验证码';
 COMMENT ON COLUMN ydsz_auth_policy.allowed_identity_providers IS '允许的身份提供者类型（逗号分隔：LOCAL/LDAP/SAML/OAUTH2）';
 COMMENT ON COLUMN ydsz_auth_policy.max_sessions_per_user IS '每个用户最大会话数';
 COMMENT ON COLUMN ydsz_auth_policy.session_timeout_seconds IS '会话超时时间（秒）';
@@ -596,7 +596,7 @@ MERGE INTO ydsz_auth_policy t
 USING (SELECT 'default-policy-001' AS id FROM dual) s
 ON (t.id = s.id)
 WHEN NOT MATCHED THEN
-    INSERT (id, tenant_id, name, password_min_length, is_password_require_uppercase, is_password_require_digit, is_mfa_is_enabled, is_captcha_is_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, is_deleted, revision)
+    INSERT (id, tenant_id, name, password_min_length, is_password_require_uppercase, is_password_require_digit, is_mfa_enabled, is_captcha_enabled, allowed_identity_providers, max_sessions_per_user, session_timeout_seconds, remark, is_deleted, revision)
     VALUES ('default-policy-001', NULL, '全局默认认证策略', 8, 1, 1, 0, 1, 'LOCAL', 3, 7200, '系统全局默认策略，租户未配置时继承', 0, 0)
 ;
 

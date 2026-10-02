@@ -67,7 +67,7 @@ import com.njydsz.nextwiki.server.service.QuotaApplicationService;
  *                                            ↓
  *                                   ydsz-nextwiki-infra.StorageQuotaMapper
  *                                            ↓
- *                                   ydsz_wiki_storage_quota
+ *                                   ydsz_file_storage_quota
  * </pre>
  *
  * @author ydsz-team

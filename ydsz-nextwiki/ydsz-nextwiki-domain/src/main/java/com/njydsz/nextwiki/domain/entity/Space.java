@@ -18,7 +18,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * <p><b>S3-P2-01：空间管理聚合根</b>
  *
- * <p>对应知识库空间表 {@code ydsz_wiki_space}，表示一个知识库空间（类似 Confluence 的 Space）。 空间是文件节点的顶级容器，每个文件节点必须属于一个空间。
+ * <p>对应知识库空间表 {@code ydsz_file_space}，表示一个知识库空间（类似 Confluence 的 Space）。 空间是文件节点的顶级容器，每个文件节点必须属于一个空间。
  *
  * @author ydsz
  * @since 26.09.24
@@ -29,7 +29,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_wiki_space")
+@TableName("ydsz_file_space")
 public class Space extends MpBaseEntity<String> {
 
   /** 状态：活跃 */

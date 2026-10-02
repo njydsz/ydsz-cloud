@@ -81,7 +81,7 @@ ydsz:
       - com.njydsz.workflow.infra.entity.FlowAuditLog
     streaming-enabled: true
 
-  # P2-2: 搜索引擎 PG 索引表名（各模块独立表，避免共用默认 ydsz_wiki_search_index）
+  # P2-2: 搜索引擎 PG 索引表名（各模块独立表，避免共用默认 ydsz_file_search_index）
   search:
     pg:
       index-table: ydsz_workflow_search_index

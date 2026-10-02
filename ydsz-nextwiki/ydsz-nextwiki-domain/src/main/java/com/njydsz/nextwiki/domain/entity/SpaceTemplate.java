@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @SuperBuilder
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TableName("ydsz_wiki_space_template")
+@TableName("ydsz_file_space_template")
 public class SpaceTemplate extends MpBaseEntity<String> {
 
   /** 分类：通用 */
