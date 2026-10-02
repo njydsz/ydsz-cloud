@@ -13,17 +13,17 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.10.01-v25"  # v25: +YDIZ-DDD-008 所有业务 Entity 必须继承 MpBaseEntity，禁止覆盖平台基础字段和自建基类
-  source: "docs/云顶编码规范.md v1.0.13"
-  last_synced: "2026-10-02"
-  last_updated: "26.10.01-v25（+1 P0 YDIZ-DDD-008 MpBaseEntity 全覆盖+禁止覆盖平台基础字段/自建基类；总规则 186 条）"
-  total_rules: 186
+  version: "26.10.01-v26"  # v26: +YDIZ-NAME-005 数据库 snake_case 列名必须严格驼峰映射为 Java 字段名
+  source: "docs/云顶编码规范.md v1.0.14"
+  last_synced: "2026-10-03"
+  last_updated: "26.10.01-v26（+1 P0 YDIZ-NAME-005 驼峰命名强制映射 snake_case→camelCase；总规则 187 条）"
+  total_rules: 187
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 61
+    P0: 62
     P1: 88
     P2: 24
 
@@ -148,7 +148,7 @@ rules:
     source: "编码规范 22.3 节、23.6 节"
 
   # ============================================
-  # 三、命名规范（4 条）
+  # 三、命名规范（5 条）
   # ============================================
   - id: "YDIZ-NAME-001"
     category: "naming"
@@ -193,6 +193,66 @@ rules:
     example_bad: "int d; boolean flag;"
     example_good: "int elapsedDays; boolean enabled;"
     source: "编码规范 2.1 节"
+
+  - id: "YDIZ-NAME-005"
+    category: "naming"
+    severity: "P0"
+    title: "【强制】数据库 snake_case 列名必须严格遵循驼峰规则映射为 Java 字段名"
+    description: |
+      数据库列名使用 snake_case（下划线分隔）时，Java 实体字段名**必须**严格按 camelCase 驼峰规则转换，
+      每个下划线后的单词首字母大写，**禁止**将所有字母小写拼接成单一单词。
+
+      **强制转换规则**：
+      - 数据库 `life_cycle` → Java `lifeCycle`（**禁止** `lifecycle`、`LIFECYCLE`）
+      - 数据库 `user_name` → Java `userName`（**禁止** `username`）
+      - 数据库 `api_key` → Java `apiKey`（**禁止** `apikey`）
+      - 数据库 `created_at` → Java `createdAt`（**禁止** `createdat`）
+
+      **为什么必须严格遵守**：
+      - 驼峰转换保留原始词界语义，`lifeCycle` 准确反映"生命"+"周期"两个语义单元；
+        `lifecycle` 丢失词界，与英文固有词 lifecycle（生命周期）混淆，降低可读性
+      - IDE 自动生成的 Getter/Setter (`getLifeCycle()` / `setLifeCycle()`) 与方法名駝峰规范一致；
+        若字段名为 `lifecycle`，生成的 `getLifecycle()` 与数据库列名 `life_cycle` 失去直观映射关系
+      - `lowerCamelCase` 是 Java 变量名强制约定（checkstyle LocalFinalVariableName / LocalVariableName 校验），
+        snake_case 转全小写不符合驼峰规范，变量名内隐含的词界信息被抹除
+
+      **适用范围**：所有使用 `@TableField("xxx_yyy")` 映射的 Entity 字段、
+      DTO/VO 中与数据库列对应的字段、MyBatis 结果映射中涉及 snake_case 列名的场景。
+
+      **豁免条件**：
+      - 数据库列本身为全小写单词（如 `id`、`name`、`code`）无需转换，Java 字段与列名相同
+      - `@ConfigurationProperties` 配置类字段名与 YAML 属性键一一对应的场景（已标注 OOP-006-EXEMPT）
+      - 第三方系统固定 API 返回的 JSON key 不做 ORM 映射时，可用 `@JsonProperty` 保持原始 key
+    pattern: "@TableField\(\"[a-z]+_[a-z_]+\"\) 对应的 Java 字段名为全小写无驼峰形式"
+    fix: |
+      1. 将 Java 字段名中的下划线去掉，每个下划线后的字母改为大写
+      例：`private String lifecycle;` → `private String lifeCycle;`
+      2. 同步更新 Getter/Setter 方法名：`getLifecycle()` → `getLifeCycle()` / `setLifecycle()` → `setLifeCycle()`
+      3. 若使用了 Lombok @Data / @Getter / @Setter，字段名变更后Getter/Setter 自动更新
+      4. 检查对应 VO/DTO/Query 对象中有无同名字段引用，同步更新
+    example_bad: |
+      // ❌ 数据库 life_cycle → Java 字段错误地命名为 lifecycle（丢失词界）
+      @TableField("life_cycle")
+      private String lifecycle;
+      // 生成的方法: getLifecycle() / setLifecycle()
+
+      // ❌ 数据库 api_key → Java 字段错误地命名为 apikey
+      @TableField("api_key")
+      private String apikey;
+    example_good: |
+      // ✅ 数据库 life_cycle → Java 字段正确地驼峰化为 lifeCycle
+      @TableField("life_cycle")
+      private String lifeCycle;
+      // 生成的方法: getLifeCycle() / setLifeCycle()
+
+      // ✅ 数据库 api_key → Java 字段正确地驼峰化为 apiKey
+      @TableField("api_key")
+      private String apiKey;
+
+      // ✅ 单名词列名无需转换
+      @TableField("name")
+      private String name;
+    source: "编码规范 2.1 节 + 6.5 节 驼峰命名规范"
 
   # ============================================
   # 四、OOP 规约（6 条）

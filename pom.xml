@@ -1460,22 +1460,23 @@
 
     <repositories>
         <repository>
-            <id>aliyun-public</id>
-            <name>Aliyun Public</name>
-            <url>https://maven.aliyun.com/repository/public</url>
+            <id>ydsz-releases</id>
+            <url>https://nexus.njydsz.com/repository/ydsz-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>aliyun-spring</id>
-            <name>Aliyun Spring</name>
-            <url>https://maven.aliyun.com/repository/spring</url>
-        </repository>
     </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>ydsz-releases</id>
+            <url>https://nexus.njydsz.com/repository/ydsz-public/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <!-- ============================================================
          Profile: openapi-spec
@@ -1532,4 +1533,17 @@
             </build>
         </profile>
     </profiles>
+
+    <distributionManagement>
+        <repository>
+            <id>ydsz-releases</id>
+            <name>release</name>
+            <url>https://nexus.njydsz.com/repository/ydsz-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>maven-snapshots</id>
+            <name>snapshot</name>
+            <url>https://nexus.njydsz.com/repository/ydsz-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
