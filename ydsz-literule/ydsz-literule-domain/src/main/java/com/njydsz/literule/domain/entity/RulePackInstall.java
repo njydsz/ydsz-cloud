@@ -38,9 +38,6 @@ public class RulePackInstall extends MpBaseEntity<String> {
   /** 安装时间 */
   private LocalDateTime installedAt;
 
-  /** 安装状态：INSTALLING / INSTALLED / FAILED / UNINSTALLING / UNINSTALLED */
-  private String status;
-
   /** 失败原因（status=FAILED 时记录异常信息） */
   private String errorMessage;
 }

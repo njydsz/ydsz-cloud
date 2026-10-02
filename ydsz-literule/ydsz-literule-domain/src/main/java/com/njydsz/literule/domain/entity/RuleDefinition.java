@@ -114,13 +114,6 @@ public class RuleDefinition extends MpBaseEntity<String> {
    */
   private Integer version;
 
-  /**
-   * 生命周期状态
-   *
-   * <p>数据库存储为字符串，通过 {@link #getStatusEnum()} / {@link #setStatusEnum(RuleStatusEnum)} 提供枚举视图。
-   */
-  private String status;
-
   /** 生效时间 */
   private LocalDateTime effectiveFrom;
 
@@ -157,7 +150,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @return 状态枚举，无法解析时返回 null
    */
   public RuleStatusEnum getStatusEnum() {
-    return RuleStatusEnum.parse(this.status);
+    return RuleStatusEnum.parse(getStatus());
   }
 
   /**
@@ -169,7 +162,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
     if (statusEnum == null) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_INVALID);
     }
-    this.status = statusEnum.name();
+    setStatus(statusEnum.name());
   }
 
   /**
@@ -188,7 +181,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
     if (!current.canTransitTo(RuleStatusEnum.PUBLISHED)) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
-    this.status = RuleStatusEnum.PUBLISHED.name();
+    setStatus(RuleStatusEnum.PUBLISHED.name());
     this.reviewedBy = reviewer;
     this.reviewedAt = LocalDateTime.now();
   }
@@ -208,7 +201,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
     if (!current.canTransitTo(RuleStatusEnum.DISABLED)) {
       throw new SysException("rule.error.disable_invalid_state");
     }
-    this.status = RuleStatusEnum.DISABLED.name();
+    setStatus(RuleStatusEnum.DISABLED.name());
   }
 
   /**
@@ -226,7 +219,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
     if (!current.canTransitTo(RuleStatusEnum.DRAFT)) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
-    this.status = RuleStatusEnum.DRAFT.name();
+    setStatus(RuleStatusEnum.DRAFT.name());
     this.reviewedBy = null;
     this.reviewedAt = null;
     this.reviewComment = null;
@@ -272,7 +265,7 @@ public class RuleDefinition extends MpBaseEntity<String> {
    * @return true 表示已发布且启用
    */
   public boolean isActive() {
-    return RuleStatusEnum.PUBLISHED.name().equals(status) && Boolean.TRUE.equals(isEnabled);
+    return RuleStatusEnum.PUBLISHED.name().equals(getStatus()) && Boolean.TRUE.equals(isEnabled);
   }
 
   /**

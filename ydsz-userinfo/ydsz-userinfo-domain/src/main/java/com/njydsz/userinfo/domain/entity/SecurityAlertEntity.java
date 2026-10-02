@@ -57,9 +57,6 @@ public class SecurityAlertEntity extends MpBaseEntity<String> {
   /**告警内容 */
   private String content;
 
-  /** 告警状态（PENDING/ACKNOWLEDGED/RESOLVED/IGNORED） */
-  private String status;
-
   /** 处理时间 */
   private LocalDateTime handledAt;
 

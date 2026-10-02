@@ -70,16 +70,6 @@ public class Role extends MpBaseEntity<String> {
   /** 角色描述（说明该角色的业务定位与适用场景） */
   private String description;
 
-  /** 同级排序序号（升序） */
-  private Integer sort;
-
-  /**
-   * 启用状态（{@code "ENABLED"} / {@code "DISABLED"}）
-   *
-   * <p>禁用后，拥有该角色的用户暂时无法访问系统，但用户-角色关联不删除。
-   */
-  private String status;
-
   /**
    * 是否内置角色。
    *

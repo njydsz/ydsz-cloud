@@ -61,9 +61,6 @@ public class RuleChainGraph extends MpBaseEntity<String> {
   /** 画布版本号（独立递增） */
   private Integer graphVersion;
 
-  /** 画布状态：DRAFT / PUBLISHED / ARCHIVED */
-  private String status;
-
   /** 画布内容 JSON（包含 nodes/edges/viewport/metadata） */
   @TableField(typeHandler = JsonTypeHandler.class)
   private String contentJson;
@@ -76,7 +73,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    * @return true 表示草稿
    */
   public boolean isDraft() {
-    return STATUS_DRAFT.equals(status);
+    return STATUS_DRAFT.equals(getStatus());
   }
 
   /**
@@ -85,7 +82,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    * @return true 表示已发布
    */
   public boolean isPublished() {
-    return STATUS_PUBLISHED.equals(status);
+    return STATUS_PUBLISHED.equals(getStatus());
   }
 
   /**
@@ -94,7 +91,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
    * @return true 表示已归档
    */
   public boolean isArchived() {
-    return STATUS_ARCHIVED.equals(status);
+    return STATUS_ARCHIVED.equals(getStatus());
   }
 
   /**
@@ -106,7 +103,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
     if (!isDraft()) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
-    this.status = STATUS_PUBLISHED;
+    setStatus(STATUS_PUBLISHED);
     this.graphVersion = (graphVersion == null) ? 1 : graphVersion + 1;
   }
 
@@ -119,7 +116,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
     if (!isPublished()) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
-    this.status = STATUS_ARCHIVED;
+    setStatus(STATUS_ARCHIVED);
   }
 
   /**
@@ -131,7 +128,7 @@ public class RuleChainGraph extends MpBaseEntity<String> {
     if (!isPublished() && !isArchived()) {
       throw BusinessException.of(LiteruleExceptionCode.RULE_STATUS_TRANSITION_ILLEGAL);
     }
-    this.status = STATUS_DRAFT;
+    setStatus(STATUS_DRAFT);
   }
 
   /**

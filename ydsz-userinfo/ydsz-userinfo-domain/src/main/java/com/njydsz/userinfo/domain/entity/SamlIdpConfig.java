@@ -50,12 +50,6 @@ public class SamlIdpConfig extends MpBaseEntity<String> {
   /** 用户显示名称对应的 SAML Attribute 名称（默认 "displayName"） */
   private String displayNameAttribute;
 
-  /** 状态：ENABLED / DISABLED */
-  private String status;
-
-  /** 排序权重（越小越靠前，用于前端展示排序） */
-  private Integer sort;
-
   /** 备注说明 */
   private String remark;
 }

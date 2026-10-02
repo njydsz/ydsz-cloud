@@ -61,12 +61,6 @@ public class SocialClient extends MpBaseEntity<String> {
    */
   private String redirectUri;
 
-  /** 状态：ENABLED / DISABLED */
-  private String status;
-
-  /** 排序权重（越小越靠前，用于前端展示排序） */
-  private Integer sort;
-
   /** 备注说明 */
   private String remark;
 }
