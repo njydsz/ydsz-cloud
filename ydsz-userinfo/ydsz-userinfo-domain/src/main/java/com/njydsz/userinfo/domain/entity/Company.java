@@ -45,6 +45,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_idm_org_company")
+@SuppressWarnings("unchecked")
 public class Company extends MpBaseEntity<String> {
 
   /** 公司名称（前端展示） */

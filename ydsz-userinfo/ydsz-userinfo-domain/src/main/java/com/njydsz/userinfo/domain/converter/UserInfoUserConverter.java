@@ -92,6 +92,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "banExpireAt", ignore = true)
   @Mapping(target = "bannedBy", ignore = true)
   @Mapping(target = "bannedAt", ignore = true)
+  @Mapping(target = "lifeCycle", ignore = true)
   UserAccount dtoToEntity(UserAccountDTO dto);
 
   /**
@@ -121,6 +122,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "banExpireAt", ignore = true)
   @Mapping(target = "bannedBy", ignore = true)
   @Mapping(target = "bannedAt", ignore = true)
+  @Mapping(target = "lifeCycle", ignore = true)
   UserAccount dtoToEntityWithId(UserAccountDTO dto);
 
   /**

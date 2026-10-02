@@ -1200,6 +1200,32 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <repository>
+            <id>ydsz-releases</id>
+            <name>release</name>
+            <url>https://nexus.njydsz.com/repository/ydsz-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>maven-snapshots</id>
+            <name>snapshot</name>
+            <url>https://nexus.njydsz.com/repository/ydsz-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>ydsz-releases</id>
+            <url>https://nexus.njydsz.com/repository/ydsz-public/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>ydsz-releases</id>
+            <url>https://nexus.njydsz.com/repository/ydsz-public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <build>
         <pluginManagement>
             <plugins>
@@ -1458,26 +1484,6 @@
         </plugins>
     </build>
 
-    <repositories>
-        <repository>
-            <id>ydsz-releases</id>
-            <url>https://nexus.njydsz.com/repository/ydsz-public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>ydsz-releases</id>
-            <url>https://nexus.njydsz.com/repository/ydsz-public/</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <!-- ============================================================
          Profile: openapi-spec
          用法: mvn clean compile -P openapi-spec (-DskipTests)
@@ -1534,16 +1540,4 @@
         </profile>
     </profiles>
 
-    <distributionManagement>
-        <repository>
-            <id>ydsz-releases</id>
-            <name>release</name>
-            <url>https://nexus.njydsz.com/repository/ydsz-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>maven-snapshots</id>
-            <name>snapshot</name>
-            <url>https://nexus.njydsz.com/repository/ydsz-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
