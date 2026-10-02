@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_datasource (
     CONSTRAINT uk_ydsz_gen_datasource_name UNIQUE (name)
 );
 
-COMMENT ON TABLE ydzs_gen_datasource IS '代码生成器数据源配置';
+COMMENT ON TABLE ydsz_gen_datasource IS '代码生成器数据源配置';
 COMMENT ON COLUMN ydsz_gen_datasource.id IS '主键 ID';
 COMMENT ON COLUMN ydsz_gen_datasource.name IS '数据源名称（唯一标识）';
 COMMENT ON COLUMN ydsz_gen_datasource.jdbc_url IS 'JDBC URL';
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template_group (
     CONSTRAINT uk_ydsz_gen_template_group_name UNIQUE (name)
 );
 
-COMMENT ON TABLE ydzs_gen_template_group IS '代码生成器模板分组';
+COMMENT ON TABLE ydsz_gen_template_group IS '代码生成器模板分组';
 COMMENT ON COLUMN ydsz_gen_template_group.id IS '主键 ID';
 COMMENT ON COLUMN ydsz_gen_template_group.name IS '分组名（唯一标识，如 default、mybatis-plus）';
 COMMENT ON COLUMN ydsz_gen_template_group.description IS '分组描述';
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_template (
     CONSTRAINT fk_ydsz_gen_template_group FOREIGN KEY (group_id) REFERENCES ydsz_gen_template_group (id)
 );
 
-COMMENT ON TABLE ydzs_gen_template IS '代码生成器模板';
+COMMENT ON TABLE ydsz_gen_template IS '代码生成器模板';
 COMMENT ON COLUMN ydsz_gen_template.id IS '主键 ID';
 COMMENT ON COLUMN ydsz_gen_template.group_id IS '关联模板分组 ID';
 COMMENT ON COLUMN ydsz_gen_template.file_name IS '文件名（如 entity.vm、vue/api.vm）';
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history (
     CONSTRAINT fk_ydsz_gen_history_template_group FOREIGN KEY (template_group_id) REFERENCES ydsz_gen_template_group (id)
 );
 
-COMMENT ON TABLE ydzs_gen_history IS '代码生成任务历史';
+COMMENT ON TABLE ydsz_gen_history IS '代码生成任务历史';
 COMMENT ON COLUMN ydsz_gen_history.id IS '主键 ID';
 COMMENT ON COLUMN ydsz_gen_history.module_name IS '模块名称';
 COMMENT ON COLUMN ydsz_gen_history.datasource_id IS '使用的数据源 ID';
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_history_file (
     CONSTRAINT fk_ydsz_gen_history_file_history FOREIGN KEY (history_id) REFERENCES ydsz_gen_history (id)
 );
 
-COMMENT ON TABLE ydzs_gen_history_file IS '生成历史文件明细';
+COMMENT ON TABLE ydsz_gen_history_file IS '生成历史文件明细';
 COMMENT ON COLUMN ydsz_gen_history_file.id IS '主键 ID';
 COMMENT ON COLUMN ydsz_gen_history_file.history_id IS '所属任务 ID';
 COMMENT ON COLUMN ydsz_gen_history_file.file_path IS '生成文件路径';
@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_table_meta (
     CONSTRAINT fk_ydsz_gen_table_meta_datasource FOREIGN KEY (datasource_id) REFERENCES ydsz_gen_datasource (id)
 );
 
-COMMENT ON TABLE ydzs_gen_table_meta IS '表元数据缓存';
+COMMENT ON TABLE ydsz_gen_table_meta IS '表元数据缓存';
 COMMENT ON COLUMN ydsz_gen_table_meta.id IS '主键 ID';
 COMMENT ON COLUMN ydsz_gen_table_meta.datasource_id IS '关联数据源 ID';
 COMMENT ON COLUMN ydsz_gen_table_meta.table_name IS '物理表名';
@@ -264,7 +264,7 @@ CREATE TABLE IF NOT EXISTS ydsz_gen_column_meta (
     CONSTRAINT fk_ydsz_gen_column_meta_table FOREIGN KEY (table_meta_id) REFERENCES ydsz_gen_table_meta (id)
 );
 
-COMMENT ON TABLE ydzs_gen_column_meta IS '列元数据缓存（含人工覆盖配置）';
+COMMENT ON TABLE ydsz_gen_column_meta IS '列元数据缓存（含人工覆盖配置）';
 COMMENT ON COLUMN ydsz_gen_column_meta.id IS '主键 ID';
 COMMENT ON COLUMN ydsz_gen_column_meta.table_meta_id IS '所属表元数据 ID';
 COMMENT ON COLUMN ydsz_gen_column_meta.column_name IS '物理列名';
@@ -290,11 +290,11 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_gen_column_meta_table ON ydsz_gen_column_met
 
 INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, is_active)
 VALUES ('default', '标准 DDD 分层模板（entity/service/controller/repository...）', 1, 1, 1)
-ON CONFLICT (name) DO UPDATE SET is_system = is_system;
+ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO ydsz_gen_template_group (name, description, is_system, sort, is_active)
 VALUES ('mybatis-plus', 'Mybatis-Plus 增强版模板（含 Wrapper/通用 Service）', 1, 2, 0)
-ON CONFLICT (name) DO UPDATE SET is_system = is_system;
+ON CONFLICT (name) DO NOTHING;
 
 
 -- ============================================================================

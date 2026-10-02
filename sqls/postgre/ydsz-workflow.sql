@@ -131,7 +131,7 @@ COMMENT ON COLUMN ydsz_flow_definition.canary_rollout_log IS '灰度发布历史
 COMMENT ON COLUMN ydsz_flow_definition.locked_by IS '当前持锁人 ID（设计器协同编辑锁定，NULL=未锁定）';
 COMMENT ON COLUMN ydsz_flow_definition.locked_at IS '加锁时间（超过 30 分钟可强制抢占）';
 COMMENT ON COLUMN ydsz_flow_definition.status IS '状态标识';
-.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
+COMMENT ON COLUMN ydsz_flow_definition.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_flow_definition.revision IS '乐观锁版本号';
 COMMENT ON COLUMN ydsz_flow_definition.created_by IS '创建人';
 COMMENT ON COLUMN ydsz_flow_definition.created_at IS '创建时间';
@@ -1365,7 +1365,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_ydsz_flow_archive_cursor_type_tenant
 
 -- ydsz_flow_run_task 复合覆盖索引（待办列表高频查询）
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_assignee_status_due
-    ON ydsz_flow_run_task (tenant_id, assignee, status, due_date DESC, created_at DESC);
+    ON ydsz_flow_run_task (tenant_id, assignee_id, status, due_at DESC, created_at DESC);
 
 -- ydsz_flow_instance 状态监控复合索引
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_status_def_end
