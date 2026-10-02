@@ -78,6 +78,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -106,6 +107,7 @@ public interface UserInfoUserConverter {
    */
   @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -160,6 +162,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -195,6 +198,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -230,6 +234,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -247,6 +252,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
@@ -279,6 +285,14 @@ public interface UserInfoUserConverter {
    */
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   UserPasswordHistory dtoToEntity(UserPasswordHistoryDTO dto);
 
   // ===== UserLoginHistory =====
@@ -312,6 +326,15 @@ public interface UserInfoUserConverter {
    * @return 登录历史实体
    */
   @Mapping(target = "id", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
   UserLoginHistory dtoToEntity(UserLoginHistoryDTO dto);
 
   // ===== SocialAccount =====
@@ -329,6 +352,7 @@ public interface UserInfoUserConverter {
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)

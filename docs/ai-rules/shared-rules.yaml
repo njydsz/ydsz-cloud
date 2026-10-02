@@ -16,8 +16,8 @@ meta:
   version: "26.10.01-v25"  # v25: +YDIZ-DDD-008 所有业务 Entity 必须继承 MpBaseEntity，禁止覆盖平台基础字段和自建基类
   source: "docs/云顶编码规范.md v1.0.13"
   last_synced: "2026-10-02"
-  last_updated: "26.10.01-v24（+1 P0 YDIZ-DB-006 MpBaseEntity 全覆盖+基础字段保护；总规则 185 条）"
-  total_rules: 185
+  last_updated: "26.10.01-v25（+1 P0 YDIZ-DDD-008 MpBaseEntity 全覆盖+禁止覆盖平台基础字段/自建基类；总规则 186 条）"
+  total_rules: 186
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
