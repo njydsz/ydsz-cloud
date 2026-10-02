@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace (
     total_duration_ms        BIGINT                   DEFAULT NULL,
     -- MpBaseEntity 继承字段
     tenant_id                VARCHAR(64)              NOT NULL DEFAULT '0',
-    is_deleted               BOOLEAN                  NOT NULL DEFAULT FALSE,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               VARCHAR(64)              DEFAULT NULL,
@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_trace_step (
     cost                     NUMERIC(12,6)            NOT NULL DEFAULT 0.0,
     -- MpBaseEntity 继承字段
     tenant_id                VARCHAR(64)              NOT NULL DEFAULT '0',
-    is_deleted               BOOLEAN                  NOT NULL DEFAULT FALSE,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     status                   VARCHAR(32)              DEFAULT NULL,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -341,7 +341,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
     source                   VARCHAR(128)             DEFAULT NULL,
     metadata                 JSONB                    DEFAULT NULL,
     tenant_id                VARCHAR(64)              DEFAULT NULL,
-    is_deleted               BOOLEAN                  NOT NULL DEFAULT FALSE,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMPTZ              NOT NULL DEFAULT NOW(),
     CONSTRAINT pk_ydsz_agt_document_chunk PRIMARY KEY (id)
 );
@@ -444,7 +444,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_user_profile (
     last_interaction_at     TIMESTAMP      DEFAULT NULL,
     -- MpBaseEntity 继承字段
     tenant_id               VARCHAR(64)    NOT NULL DEFAULT '0',
-    is_deleted              BOOLEAN        NOT NULL DEFAULT FALSE,
+    is_deleted              SMALLINT       NOT NULL DEFAULT 0,
     revision                INTEGER        NOT NULL DEFAULT 0,
     status                  VARCHAR(32)    DEFAULT NULL,
     created_by              VARCHAR(64)    DEFAULT NULL,
@@ -500,7 +500,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_insight_report (
     duration_ms             INTEGER        DEFAULT NULL,
     -- MpBaseEntity 继承字段补充
     tenant_id               VARCHAR(64)    NOT NULL DEFAULT '0',
-    is_deleted              BOOLEAN        NOT NULL DEFAULT FALSE,
+    is_deleted              SMALLINT       NOT NULL DEFAULT 0,
     revision                INTEGER        NOT NULL DEFAULT 0,
     created_by              VARCHAR(64)    DEFAULT NULL,
     created_at              TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -586,7 +586,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_dag_workflow (
     is_published    BOOLEAN NOT NULL DEFAULT FALSE,
     -- MpBaseEntity 继承字段补充
     tenant_id       VARCHAR(64) NOT NULL DEFAULT '0',
-    is_deleted      BOOLEAN NOT NULL DEFAULT FALSE,
+    is_deleted      SMALLINT NOT NULL DEFAULT 0,
     revision        INTEGER     NOT NULL DEFAULT 0,
     status          VARCHAR(32) DEFAULT NULL,
     created_by      VARCHAR(64),
@@ -629,8 +629,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_async_task (
     id                       VARCHAR(32)              NOT NULL,
     task_type                VARCHAR(64)              NOT NULL,
     status                   VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
-    tenant_id                VARCHAR(64)              NOT NULL DEFAULT '0',
-    tenant_code              VARCHAR(64)              DEFAULT NULL,
+    tenant_id                VARCHAR(64)              DEFAULT NULL,
     user_id                  VARCHAR(64)              DEFAULT NULL,
     input_payload            TEXT                     DEFAULT NULL,
     output_payload           TEXT                     DEFAULT NULL,
@@ -644,7 +643,7 @@ CREATE TABLE IF NOT EXISTS ydsz_agt_async_task (
     started_at               TIMESTAMP                DEFAULT NULL,
     completed_at             TIMESTAMP                DEFAULT NULL,
     expire_at                TIMESTAMP                DEFAULT NULL,
-    is_deleted               BOOLEAN                  NOT NULL DEFAULT FALSE,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     revision                 INTEGER                  NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -658,8 +657,7 @@ COMMENT ON TABLE ydsz_agt_async_task IS '异步任务持久化表';
 COMMENT ON COLUMN ydsz_agt_async_task.id IS '主键 ID（Snowflake）';
 COMMENT ON COLUMN ydsz_agt_async_task.task_type IS '任务类型编码（REPORT_GENERATE/DOC_INGEST/BATCH_CHAT/CODE_EXECUTION 等）';
 COMMENT ON COLUMN ydsz_agt_async_task.status IS '任务状态（PENDING/RUNNING/SUCCEEDED/FAILED/CANCELED/EXPIRED）';
-COMMENT ON COLUMN ydsz_agt_async_task.tenant_code IS '租户编码（多租户隔离，业务侧兼容字段）';
-COMMENT ON COLUMN ydsz_agt_async_task.tenant_id IS '租户 ID（多租户隔离，MpBaseEntity 标准字段）';
+COMMENT ON COLUMN ydsz_agt_async_task.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN ydsz_agt_async_task.user_id IS '触发用户 ID';
 COMMENT ON COLUMN ydsz_agt_async_task.input_payload IS '任务输入参数（JSON 字符串）';
 COMMENT ON COLUMN ydsz_agt_async_task.output_payload IS '任务执行结果（JSON 字符串，完成后非空）';
@@ -684,7 +682,7 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_async_task_status_type
     ON ydsz_agt_async_task (status, task_type);
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_async_task_tenant_status
-    ON ydsz_agt_async_task (tenant_code, status);
+    ON ydsz_agt_async_task (tenant_id, status);
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_async_task_expire_at
     ON ydsz_agt_async_task (expire_at);

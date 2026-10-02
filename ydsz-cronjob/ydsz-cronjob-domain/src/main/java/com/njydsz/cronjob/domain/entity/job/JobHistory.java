@@ -3,7 +3,6 @@ package com.njydsz.cronjob.domain.entity.job;
 import java.io.Serial;
 import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.EqualsAndHashCode;
@@ -80,13 +79,12 @@ public class JobHistory extends MpBaseIdEntity<String> {
   private LocalDateTime changedAt;
 
   /**
-   * 是否逻辑删除（DB 列为 {@code history_deleted}，0=未删除，1=已删除）。
+   * 是否逻辑删除（DB 列为 {@code is_deleted}，0=未删除，1=已删除）。
    *
    * <p>YDIZ-OOP-006 合规：{@code isDeleted}（primitive {@code boolean}）+
-   * {@link TableLogic} + {@code @TableField("history_deleted")} 映射 DDL 列名，
+   * {@link TableLogic} 自动映射 {@code is_deleted} 列，
    * Lombok 生成 {@code isDeleted()} getter。
    */
   @TableLogic
-  @TableField("history_deleted")
   private boolean isDeleted;
 }

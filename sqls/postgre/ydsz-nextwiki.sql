@@ -88,6 +88,8 @@ COMMENT ON COLUMN ydsz_wiki_file_node.updated_by IS '最后更新人';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_id ON ydsz_wiki_file_node (parent_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_tenant_is_deleted ON ydsz_wiki_file_node (tenant_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_tenant_parent_is_deleted
+    ON ydsz_wiki_file_node (tenant_id, parent_id, is_deleted);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_is_is_deleted_updated ON ydsz_wiki_file_node (parent_id, is_deleted, updated_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_parent_is_is_deleted_type_updated ON ydsz_wiki_file_node (parent_id, is_deleted, node_type, updated_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_wiki_file_node_path ON ydsz_wiki_file_node (left(path, 255));

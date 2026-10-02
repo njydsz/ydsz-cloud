@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS ydsz_flow_category (
     category_code            VARCHAR(64)              NOT NULL,
     category_name            VARCHAR(128)             NOT NULL,
     parent_id                VARCHAR(32)              DEFAULT NULL,
-    sort_num                 INTEGER                  NOT NULL DEFAULT 0,
+    sort                     INTEGER                  NOT NULL DEFAULT 0,
     icon                     VARCHAR(128)             DEFAULT NULL,
     remark                   VARCHAR(512)             DEFAULT NULL,
     status                   VARCHAR(32)              DEFAULT NULL,
@@ -59,7 +59,7 @@ COMMENT ON COLUMN ydsz_flow_category.tenant_id IS '租户 ID（多租户隔离�
 COMMENT ON COLUMN ydsz_flow_category.category_code IS '分类编码（唯一，业务语义，建议 snake_case）';
 COMMENT ON COLUMN ydsz_flow_category.category_name IS '分类名称（前端展示）';
 COMMENT ON COLUMN ydsz_flow_category.parent_id IS '父分类 ID（支持多级树形结构，顶级为 NULL）';
-COMMENT ON COLUMN ydsz_flow_category.sort_num IS '排序号（越小越靠前）';
+COMMENT ON COLUMN ydsz_flow_category.sort IS '排序号（越小越靠前）';
 COMMENT ON COLUMN ydsz_flow_category.icon IS '图标（前端展示用，如 Element Plus icon 名称）';
 COMMENT ON COLUMN ydsz_flow_category.remark IS '备注（说明分类的业务用途）';
 COMMENT ON COLUMN ydsz_flow_category.status IS '状态标识';
@@ -423,6 +423,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_initiator_id ON ydsz_flow_inst
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_flow_status ON ydsz_flow_instance (flow_status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_tenant_is_deleted ON ydsz_flow_instance (tenant_id, is_deleted);
 
+-- V26.09.26: P1 复合索引补齐（流程实例按租户+流程编码+创建时间查询高频场景）
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_tenant_flow_code_time
+    ON ydsz_flow_instance (tenant_id, flow_code, created_at);
+
 CREATE TABLE IF NOT EXISTS ydsz_flow_run_task (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -529,6 +533,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_assignee_id ON ydsz_flow_run_t
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_business ON ydsz_flow_run_task (business_type, business_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_due_at ON ydsz_flow_run_task (due_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_tenant_is_deleted ON ydsz_flow_run_task (tenant_id, is_deleted);
+
+-- V26.09.29: P1 复合索引补充（待办列表按办理人+状态+删除标记查询高频场景）
+CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_assignee_status_is_deleted
+    ON ydsz_flow_run_task (assignee_id, status, is_deleted);
 
 CREATE TABLE IF NOT EXISTS ydsz_flow_user (
     id                       VARCHAR(32)             ,

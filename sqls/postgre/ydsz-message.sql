@@ -736,6 +736,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_receiver ON ydsz_msg_log (receiver);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_biz ON ydsz_msg_log (biz_type, biz_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_template_code ON ydsz_msg_log (template_code);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_msg_id ON ydsz_msg_log (msg_id);
+
+-- V26.09.26: P1 复合索引补齐（消息列表按渠道+时间倒序分页高频场景）
+CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_tenant_channel_time
+    ON ydsz_msg_log (tenant_id, channel, created_at);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_trace_id ON ydsz_msg_log (trace_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_batch_id ON ydsz_msg_log (batch_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_msg_log_dedup_key ON ydsz_msg_log (dedup_key);

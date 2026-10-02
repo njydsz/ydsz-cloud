@@ -130,6 +130,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_job_group ON ydsz_job_main (job_group);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_job_next_fire ON ydsz_job_main (next_fire_time);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_tenant_is_deleted ON ydsz_job_main (tenant_id, is_deleted);
 
+-- V26.09.29: P1 复合索引补充（JobScanner 调度扫描高频场景：按状态+删除标记+下次触发时间）
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_main_status_is_deleted_next_fire
+    ON ydsz_job_main (status, is_deleted, next_fire_time);
+
 CREATE TABLE IF NOT EXISTS ydsz_job_glue (
     id                       VARCHAR(32)             ,
     tenant_id                VARCHAR(32)              NOT NULL DEFAULT '0',
@@ -285,7 +289,7 @@ CREATE TABLE IF NOT EXISTS ydsz_job_history (
     remark                   VARCHAR(512)             DEFAULT NULL,
     changed_by               VARCHAR(64)              DEFAULT NULL,
     changed_at               TIMESTAMP                DEFAULT NULL,
-    history_deleted          SMALLINT                 NOT NULL DEFAULT 0,
+    is_deleted               SMALLINT                 NOT NULL DEFAULT 0,
     created_at               TIMESTAMP                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_ydsz_job_history PRIMARY KEY (id),
     CONSTRAINT uk_ydsz_job_history_jh_job_version UNIQUE (job_id, version)
@@ -307,7 +311,7 @@ COMMENT ON COLUMN ydsz_job_history.params_json IS '参数 JSON（冗余）';
 COMMENT ON COLUMN ydsz_job_history.remark IS '备注（冗余）';
 COMMENT ON COLUMN ydsz_job_history.changed_by IS '修改人 ID';
 COMMENT ON COLUMN ydsz_job_history.changed_at IS '修改时间';
-COMMENT ON COLUMN ydsz_job_history.history_deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN ydsz_job_history.is_deleted IS '逻辑删除标识（0=未删除，1=已删除）';
 COMMENT ON COLUMN ydsz_job_history.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_history_jh_job_id ON ydsz_job_history (job_id);
@@ -783,6 +787,10 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_jl_job_key ON ydsz_job_log (job_key)
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_jl_status ON ydsz_job_log (status);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_jl_start_time ON ydsz_job_log (start_time);
 CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_jl_trace_id ON ydsz_job_log (trace_id);
+
+-- V26.09.26: P1 复合索引补齐（任务执行历史检索高频场景）
+CREATE INDEX IF NOT EXISTS idx_ydsz_job_log_job_key_status_created
+    ON ydsz_job_log (job_key, status, created_at);
 
 CREATE TABLE IF NOT EXISTS ydsz_job_log_content (
     id                       VARCHAR(32)             ,
