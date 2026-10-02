@@ -63,9 +63,9 @@ ydsz-cloud/
 ```
 [新增数据库表]
   │
-  ├─ 表名必须 ydzz_ 前缀
-  ├─ 禁止使用 Flyway/Liquibase
-  ├─ SQL 脚本放 sqls/ 目录，命名 V{version}__{description}.sql
+  ├─ 表名必须 ydsz_ 前缀
+  └─ 使用 Flyway 管理数据库版本变更
+  ├─ SQL 脚本放 data/sqls/flyway/ 目录，命名 V{version}.sql
   ├─ Entity 类放在 domain/entity/ 包下
   ├─ 排序字段用 sort（禁用 sort_order）
   ├─ 布尔字段用 is_xxx（Java isXxx）
@@ -212,7 +212,7 @@ server 不依赖 infra（P1-2 整改后）
 
 | 技术 | 替代方案 |
 |------|---------|
-| Flyway / Liquibase | 手动 SQL 脚本管理（sqls/ 目录）|
+| Flyway | 版本化 SQL 脚本管理（data/sqls/flyway/ 目录）|
 | Druid 连接池 | HikariCP（Spring Boot 默认）|
 | 直接 new ThreadPoolExecutor | ydsz-common-thread 封装 |
 | Caffeine 直连 | ydsz-common-cache (YdszCache) |

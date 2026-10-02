@@ -17,7 +17,7 @@
 | 语言 | Java 21（启用虚拟线程 + 密封类 + record 模式匹配）|
 | 框架 | Spring Boot 4.1.0 + Spring Cloud 2025.1.2 + Spring Cloud Alibaba 2025.1.0.0 |
 | ORM | MyBatis-Plus 3.5.16 + ydsz-common-jdbc 行/列权限增强 |
-| 数据库 | PostgreSQL 18（HikariCP 连接池，**禁止 Flyway/Liquibase**）|
+| 数据库 | PostgreSQL 18（HikariCP 连接池，**Flyway 版本管理**）|
 | 缓存 | Redis（Redisson 4.6.1），本地缓存通过 ydsz-common-cache（W-TinyLFU）|
 | 消息队列 | RocketMQ 2.3.1 + ydsz-common-queue 6 种 MQ 引擎封装 |
 | 网关 | ydsz-gateway（WebFlux 响应式），12 个全局过滤器 |
@@ -325,8 +325,8 @@ mvn compile
 ## 版本规范
 
 - **版本格式**：`YY.MM.DD`（不含 V 前缀），如 `26.10.01-SNAPSHOT`
-- **Flyway/Liquibase**：**禁止**（项目不使用 schema-migration 框架）
-- **数据库变更**：通过 `data/sqls` 目录下的手动 SQL 脚本管理
+- **Flyway**：已启用（版本脚本目录：`data/sqls/flyway/`，命名格式 `V{YY.MM.DD}.sql`，当前基线版本 `V26.10.01`）
+- **数据库变更**：通过 Flyway 版本脚本管理，脚本目录 `data/sqls/flyway/`，命名 `V{YY.MM.DD}.sql`
 
 ---
 
