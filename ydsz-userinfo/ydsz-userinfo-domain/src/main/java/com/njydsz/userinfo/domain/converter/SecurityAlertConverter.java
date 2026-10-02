@@ -66,5 +66,6 @@ public interface SecurityAlertConverter {
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   SecurityAlertEntity domainToEntity(SecurityAlert domain);
 }

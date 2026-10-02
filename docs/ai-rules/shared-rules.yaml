@@ -13,7 +13,7 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.10.01-v24"  # v24: +YDIZ-DB-006 所有业务 Entity 必须继承 MpBaseEntity，禁止覆盖基础字段
+  version: "26.10.01-v25"  # v25: +YDIZ-DDD-008 所有业务 Entity 必须继承 MpBaseEntity，禁止覆盖平台基础字段和自建基类
   source: "docs/云顶编码规范.md v1.0.13"
   last_synced: "2026-10-02"
   last_updated: "26.10.01-v24（+1 P0 YDIZ-DB-006 MpBaseEntity 全覆盖+基础字段保护；总规则 185 条）"
@@ -762,6 +762,115 @@ rules:
           }
       }
     source: "编码规范 §34.1、§34.5"
+
+  - id: "YDIZ-DDD-008"
+    category: "ddd"
+    severity: "P0"
+    title: "【强制】所有业务层 Entity 必须直接继承 MpBaseEntity，禁止覆盖平台基础字段和自建基类"
+    description: |
+      **所有业务模块的持久化实体（`{module}-domain/entity/*.java`）必须直接或间接继承 `com.njydsz.common.jdbc.entity.MpBaseEntity`。**
+
+      继承链选择：
+      - `MpBaseEntity<T>` — 完整版（含 id / 审计字段 / isDeleted / status / revision / sort / tenantId），适用于绝大多数含完整审计能力的业务表
+      - `MpBaseAuditEntity<T>` — 仅 id + 审计字段，不含 deleted/status/revision/tenantId，适用于无状态标记的日志/事件表
+      - `MpBaseIdEntity<T>` — 仅 id 主键，适用于极简关联表或无审计需求的表
+      - `MpSimpleEntity<T>` — 等同于 MpBaseEntity（完整字段的别名），推荐直接使用 MpBaseEntity
+
+      **平台基础字段（禁止业务模块覆盖/重名）**：
+      以下字段由 MpBaseEntity 及其祖先类统一维护，**子类禁止再次声明**：
+      1. `id` — 主键，`@TableId(type = IdType.ASSIGN_ID)`
+      2. `tenantId` — 租户标识，`@TableField("tenant_id")`
+      3. `isDeleted` — 逻辑删除标记，`@TableField("is_deleted")` + `@TableLogic`
+      4. `status` — 记录状态，`@TableField("status")`
+      5. `revision` — 数据版本号（乐观锁），`@TableField("revision")`
+      6. `sort` — 排序字段，`@TableField("sort")`
+      7. `createdBy` / `createdAt` / `updatedBy` / `updatedAt` — 审计四字段
+
+      **自建基类禁令**：
+      - 禁止业务模块自建 `DomainBaseEntity`、`AbstractEntity`、`BaseEntity` 等持久化基类（脱离 ydzs-common-jdbc 体系）
+      - 禁止通过 domain/infra 双层entity分层（参见 YDIZ-DDD-007）
+      - Entity 直接继承 MP 基类，单包模式
+
+      **字段覆盖豁免（需代码注释说明）**：
+      1. 数据库列因历史遗留使用非标准类型（如整型 0/1 表示状态），需通过自定义 `typeHandler` 映射时：
+         子类可重新声明 `@TableField(value = "status", typeHandler = XxxTypeHandler.class) private String status`，
+         但必须在 Javadoc 中说明"历史遗留"原因及建议迁移方案
+      2. 表使用复合业务键无独立 id 列（如 `(trace_id, step_index)`），不使用 BaseMapper，
+         手写 SQL 精确控制查询列时：可声明不参与持久化的 id 字段或复用表结构映射，
+         但仍须继承 MpBaseEntity 并在 Javadoc 说明"复合主键，继承字段不参与持久化"
+
+      **为什么不许自建基类或覆盖字段**：
+      - MpBaseEntity 提供统一的 id 生成策略、乐观锁、逻辑删除、租户隔离、审计自动填充
+      - 自建基类会绕过这些能力，导致部分表缺失逻辑删除、审计等基础治理功能
+      - 字段遮蔽（同名 private 字段）会导致子类与父类各自独立存储值，Lombok 生成的 getter/setter 返回的是子类字段值，
+        而 MP 框架通过基类映射读取父类字段值，造成数据不一致（读取为 null）
+    pattern: |
+      以下任一情形构成违规：
+      1. domain/entity/ 下的类未 extends MpBaseEntity / MpBaseAuditEntity / MpBaseIdEntity
+      2. domain/entity/ 下的类 extends 了自定义的 local base entity（如 extends DomainBaseEntity）
+      3. domain/entity/ 下的类声明了与 MpBaseEntity 基础字段同名的 private 字段（id/status/isDeleted/tenantId/revision/sort/createdAt/updatedAt/createdBy/updatedBy），且有自定义映射或未在 Javadoc 中标注豁免原因
+      4. 业务模块自建持久化基类（如 DomainBaseEntity、AbstractBaseEntity 等含 id/audit 字段的基类）
+      5. Entity 继承层级中断（如 extends 某个不带 MP 注解的中间基类导致丢失 MP 自动能力）
+    fix: |
+      1. 将 Entity 的父类改为 `MpBaseEntity<String>`（或根据表结构选择 MpBaseIdEntity/MpBaseAuditEntity）
+      2. 删除 Entity 中重复声明的基类字段（保留业务字段）
+      3. 将自建基类（DomainBaseEntity 等）删除，所有引用入口改为 extends MpBaseEntity
+      4. 若 DB 列含自定义 typeHandler，保留 status 字段声明并在 Javadoc 注释豁免原因
+      5. 检查是否有外部调用 `entity.setStatus(xxx)` / `entity.getStatus()` — 基类提供同样的 getter/setter，调用方无需修改
+      6. 检查是否有 `this.status = xxx` 等内部引用，改为 `setStatus(xxx)` / `getStatus()`
+    exemption: |
+      自定义 TypeHandler 需覆盖基础字段映射时豁免（需注释说明）。
+      复合主键表无独立 id 列、RF 字段不参与持久化时豁免（需注释说明）。
+      ydzs-common-jdbc 框架自身（基类 impl）不在此约束内。
+    example_bad: |
+      // ❌ 违规：Entity 未继承 MpBaseEntity
+      @Data
+      @TableName("ydsz_msg_notification")
+      public class MsgNotification implements Serializable {
+          @TableId(value = "id", type = IdType.ASSIGN_ID)
+          private String id;
+          // ... 手写审计字段
+      }
+
+      // ❌ 违规：Entity 自建基类
+      @Data
+      public class MsgLog extends DomainBaseEntity<String> { ... }
+
+      // ❌ 违规：子类重复声明 status 字段（字段遮蔽）
+      public class Company extends MpBaseEntity<String> {
+          private String name;
+          private String status;  // ❌ 与基类 status 同名且 private → 遮蔽
+      }
+    example_good: |
+      // ✅ 正确：继承 MpBaseEntity，不重名字段
+      @Data
+      @SuperBuilder
+      @NoArgsConstructor
+      @EqualsAndHashCode(callSupper = true)
+      public class Company extends MpBaseEntity<String> {
+          private String name;
+          // status 直接使用基类继承的
+      }
+
+      // ✅ 正确：复合主键表（豁免说明）
+      @Data
+      @TableName("ydsz_agt_trace_step")
+      public class AgentTraceStep extends MpBaseEntity<String> {
+          // 该表使用 (trace_id, step_index) 复合业务键，
+          // 不使用 BaseMapper，继承字段不参与持久化
+      }
+
+      // ✅ 正确：TypeHandler 豁免
+      @Data
+      public class UserAccount extends MpBaseEntity<String> {
+          /**
+           * 账号状态（DB 整型列 0/1，历史遗留，通过 IntegerStringTypeHandler 自动转换）。
+           * TODO: 后续迁移为 VARCHAR 枚举值后可移除此覆盖。
+           */
+          @TableField(value = "status", typeHandler = IntegerStringTypeHandler.class)
+          private String status;
+      }
+    source: "编码规范 §34.1、§34.6（新增）、架构委员会 26.10.02 决议"
 
   # ============================================
   # 十、并发规范（3 条）
@@ -5476,7 +5585,7 @@ stats:
   util: 1
   common: 7  # +2: Excel Web 流式导出(YDIZ-COMMON-033 P1) + 禁 ByteArrayOutputStream 中转(YDIZ-COMMON-034 P2)
   domain: 3  # +3: OrderItem 收敛(YDIZ-DOMAIN-001 P1) + TreeNode 已删除-升 P0(YDIZ-DOMAIN-002 P0) + 深度分页主动感知(YDIZ-DOMAIN-003 P1)
-  total: 154
+  total: 155
 
   # ============================================
   # 九、Domain 能力域利用率（3 条，P1×3，26.09.30 ydzs-common-domain 全局引用分析专项）

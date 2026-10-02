@@ -113,6 +113,7 @@ public interface UserInfoAuthConverter {
   @Mapping(target = "revision", ignore = true)
   @Mapping(target = "tenantId", ignore = true)
   @Mapping(target = "status", ignore = true)
+  @Mapping(target = "sort", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedBy", ignore = true)
