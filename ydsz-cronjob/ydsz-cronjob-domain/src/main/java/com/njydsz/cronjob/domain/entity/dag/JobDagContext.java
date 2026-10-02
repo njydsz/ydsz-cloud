@@ -3,6 +3,7 @@ package com.njydsz.cronjob.domain.entity.dag;
 import java.io.Serial;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_dag_context")
-public class JobDagContext extends MpBaseAuditEntity<String> {
+public class JobDagContext extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_log")
-public class JobLog extends MpBaseIdEntity<String> {
+public class JobLog extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 

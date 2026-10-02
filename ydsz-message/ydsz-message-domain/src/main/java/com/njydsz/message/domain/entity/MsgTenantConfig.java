@@ -1,6 +1,7 @@
 package com.njydsz.message.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_msg_tenant_config")
-public class MsgTenantConfig extends MpBaseIdEntity<String> {
+public class MsgTenantConfig extends MpBaseEntity<String> {
 
   /** 租户 ID */
   private String tenantId;

@@ -3,6 +3,7 @@ package com.njydsz.generator.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ import com.njydsz.common.jdbc.entity.MpBaseAuditEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_template")
-public class GenTemplate extends MpBaseAuditEntity<Long> {
+public class GenTemplate extends MpBaseEntity<Long> {
 
   /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)

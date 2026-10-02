@@ -4,6 +4,7 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,7 +36,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_webhook_retry")
-public class JobWebhookRetry extends MpBaseIdEntity<String> {
+public class JobWebhookRetry extends MpBaseEntity<String> {
 
   @Serial private static final long serialVersionUID = 1L;
 

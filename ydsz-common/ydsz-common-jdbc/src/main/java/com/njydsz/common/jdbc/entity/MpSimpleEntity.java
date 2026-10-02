@@ -36,7 +36,7 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  * <pre>{@code
  * &#64;Data
  * &#64;EqualsAndHashCode(callSuper = true)
- * public class Dict extends MpSimpleEntity<Long> {
+ * public class Dict extends MpBaseEntity<Long> {
  *     private String label;
  *     private String value;
  * }
@@ -44,7 +44,6 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  *
  * @param <T> 主键ID类型
  * @author ydsz-team
- * @see MpVersionedEntity
  * @see MpBaseEntity
  * @see MpBaseAuditEntity
  * @since 26.10.01

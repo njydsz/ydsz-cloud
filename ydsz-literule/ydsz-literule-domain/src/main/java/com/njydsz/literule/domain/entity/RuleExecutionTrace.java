@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -33,7 +34,7 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "ydsz_rule_execution_trace", autoResultMap = true)
-public class RuleExecutionTrace extends MpBaseIdEntity<String> {
+public class RuleExecutionTrace extends MpBaseEntity<String> {
 
   /** 追踪 ID（同一批次评估共享） */
   private String traceId;

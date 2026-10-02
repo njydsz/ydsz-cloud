@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_gen_table_meta")
-public class GenTableMeta extends MpBaseIdEntity<Long> {
+public class GenTableMeta extends MpBaseEntity<Long> {
 
   /** 主键 ID（AUTO 自增，覆盖基类 ASSIGN_ID）。 */
   @TableId(type = IdType.AUTO)

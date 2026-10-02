@@ -49,7 +49,7 @@ import lombok.experimental.SuperBuilder;
  * // 配置表场景：无需乐观锁
  * &#64;Data
  * &#64;EqualsAndHashCode(callSuper = true)
- * public class Dict extends MpSimpleEntity<Long> {
+ * public class Dict extends MpBaseEntity<Long> {
  *     private String label;
  * }
  * }</pre>
