@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.BanType;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
@@ -43,7 +43,7 @@ public class AccountStatusGuard {
    *
    * <p>通过 {@link UserAccountRepository#findCredentialByUsername} 获取用户认证凭据，校验账号状态（不存在/生命周期状态/锁定）。
    *
-   * <p>使用 {@link UserLifecycleStatusEnum} 进行状态校验，覆盖所有生命周期状态：
+   * <p>使用 {@link UserLifeCycleEnum} 进行状态校验，覆盖所有生命周期状态：
    *
    * <ul>
    *   <li>PENDING → 抛出 {@link UserInfoExceptionCode#USER_NOT_ACTIVATED}
@@ -93,7 +93,7 @@ public class AccountStatusGuard {
       String username,
       String loginIp,
       String userAgent) {
-    UserLifecycleStatusEnum lifecycleStatus = resolveLifecycleStatus(credential);
+    UserLifeCycleEnum lifecycleStatus = resolveLifecycleStatus(credential);
     if (lifecycleStatus == null || lifecycleStatus.canLogin()) {
       return;
     }
@@ -163,11 +163,11 @@ public class AccountStatusGuard {
    * @param credential 用户认证凭据 VO
    * @return 生命周期状态枚举，无法解析时返回 null
    */
-  private UserLifecycleStatusEnum resolveLifecycleStatus(UserAccountCredentialVO credential) {
+  private UserLifeCycleEnum resolveLifecycleStatus(UserAccountCredentialVO credential) {
     if (credential.getStatus() == null) {
       return null;
     }
-    return UserLifecycleStatusEnum.parse(String.valueOf(credential.getStatus()));
+    return UserLifeCycleEnum.parse(String.valueOf(credential.getStatus()));
   }
 
   /**

@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.password.PwdUtils;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.provision.IdentityProvisionConnector;
 import com.njydsz.userinfo.domain.provision.ProvisionException;
 import com.njydsz.userinfo.domain.provision.ProvisionRecord;
@@ -141,7 +141,7 @@ public class ProvisionOrchestrator {
       dto.setRealName(record.realName());
       dto.setEmail(record.email());
       dto.setPhone(record.phone());
-      dto.setStatus(UserLifecycleStatusEnum.ENABLED);
+      dto.setStatus(UserLifeCycleEnum.ENABLED);
       // 使用 UUID 片段 + BCrypt 作为占位密码（用户不可通过此密码登录）
       dto.setPassword(generateRandomPassword());
 

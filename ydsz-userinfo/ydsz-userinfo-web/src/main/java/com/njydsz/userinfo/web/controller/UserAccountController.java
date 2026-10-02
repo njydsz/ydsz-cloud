@@ -38,7 +38,7 @@ import com.njydsz.userinfo.domain.dto.SensitiveVerifyDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
@@ -480,7 +480,7 @@ public class UserAccountController {
   /**
    * 暂停用户账号（ENABLED → SUSPENDED）
    *
-   * <p>临时停用，可由管理员恢复为 {@link UserLifecycleStatusEnum#ENABLED}。暂停期间禁止登录。
+   * <p>临时停用，可由管理员恢复为 {@link UserLifeCycleEnum#ENABLED}。暂停期间禁止登录。
    *
    * <p>幂等保护 5 秒；限流 10 QPS；写审计日志。
    *
@@ -524,7 +524,7 @@ public class UserAccountController {
   /**
    * 禁用用户账号（ENABLED/SUSPENDED → DISABLED）
    *
-   * <p>长期禁用，从 DISABLED 可重新启用为 {@link UserLifecycleStatusEnum#ENABLED}。
+   * <p>长期禁用，从 DISABLED 可重新启用为 {@link UserLifeCycleEnum#ENABLED}。
    *
    * @param userId 用户 ID
    * @return 流转后的目标状态

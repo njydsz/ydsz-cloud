@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.scim.ScimConverter;
 import com.njydsz.userinfo.domain.scim.ScimPatchOp;
 import com.njydsz.userinfo.domain.scim.ScimUser;
@@ -323,15 +323,15 @@ public class ScimPatchHandler {
       if (value instanceof Boolean active) {
         updateDTO.setStatus(
             active
-                ? UserLifecycleStatusEnum.ENABLED
-                : UserLifecycleStatusEnum.DISABLED);
+                ? UserLifeCycleEnum.ENABLED
+                : UserLifeCycleEnum.DISABLED);
         return true;
       }
       throw new BusinessException(UserInfoExceptionCode.SCIM_PATCH_INVALID);
     }
     if ("remove".equals(op)) {
       // active 属性不可移除，设为启用
-      updateDTO.setStatus(UserLifecycleStatusEnum.ENABLED);
+      updateDTO.setStatus(UserLifeCycleEnum.ENABLED);
       return true;
     }
     throw new BusinessException(UserInfoExceptionCode.SCIM_PATCH_INVALID);

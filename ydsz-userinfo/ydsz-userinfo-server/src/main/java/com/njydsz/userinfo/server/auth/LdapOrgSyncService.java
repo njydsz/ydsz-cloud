@@ -28,7 +28,7 @@ import com.njydsz.userinfo.domain.dto.DepartmentDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.dto.UserDeptDTO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.query.DepartmentPageQuery;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
@@ -264,7 +264,7 @@ public class LdapOrgSyncService {
           createDTO.setDeptName(ldapDept.ou());
           createDTO.setDescription(ldapDept.description());
           createDTO.setParentId(parentId);
-          createDTO.setStatus(UserLifecycleStatusEnum.ENABLED.name());
+          createDTO.setStatus(UserLifeCycleEnum.ENABLED.name());
           DepartmentVO vo = departmentRepository.save(createDTO);
           dnToDeptId.put(ldapDept.dn(), vo.getId());
           created++;
@@ -457,7 +457,7 @@ public class LdapOrgSyncService {
     dto.setRealName(ldapUser.realName());
     dto.setEmail(ldapUser.email());
     dto.setUserType("REGULAR");
-    dto.setStatus(UserLifecycleStatusEnum.ENABLED);
+    dto.setStatus(UserLifeCycleEnum.ENABLED);
     // LDAP 用户密码由 LDAP 管理，此处设置随机占位密码（用户通过 LDAP 认证）
     dto.setPassword(generatePlaceholderPassword());
     return dto;

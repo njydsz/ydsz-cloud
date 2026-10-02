@@ -29,13 +29,16 @@ import com.njydsz.common.domain.enums.BaseStatusEnum;
  *
  * <p><b>登录权限：</b>仅 {@link #ENABLED} 状态允许登录。
  *
- * <p><b>存储格式：</b>DB 列使用整数（0=禁用, 1=启用，历史遗留），新状态使用枚举名字符串存储。 通过 {@link IntegerStringTypeHandler} 自动转换。
+ * <p><b>存储格式：</b>新增 DB 列 {@code life_cycle VARCHAR(32)} 直接存储枚举名字符串（ENABLED/DISABLED/PENDING/SUSPENDED/RESIGNED），
+ * 无需 TypeHandler。旧列 {@code status}（INTEGER 0/1 历史遗留）已在 V26.10.02 DDL 中通过 UPDATE 迁移数据到 life_cycle，
+ * 旧列保留在表中作为平台基类 MpBaseEntity.status 映射占位（标记 DEPRECATED），待后续版本删除。
+ * {@link #parse(String)} 仍兼容遗留 "0"/"1" 格式解析，用于过渡期存量数据读取。
  *
  * @author ydsz-team
  * @since 26.10.01
  * @see BaseStatusEnum
  */
-public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatusEnum> {
+public enum UserLifeCycleEnum implements BaseStatusEnum<UserLifeCycleEnum> {
 
   /**
    * 待激活（已注册但未验证邮箱/手机）。
@@ -94,7 +97,7 @@ public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatu
    * @return true 表示允许流转
    */
   @Override
-  public boolean canTransitTo(UserLifecycleStatusEnum target) {
+  public boolean canTransitTo(UserLifeCycleEnum target) {
     if (target == null) {
       return false;
     }
@@ -142,7 +145,7 @@ public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatu
    * @return 所有状态枚举值列表
    */
   @Override
-  public List<UserLifecycleStatusEnum> allStates() {
+  public List<UserLifeCycleEnum> allStates() {
     return Arrays.asList(values());
   }
 
@@ -160,7 +163,7 @@ public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatu
    * @param value 状态字符串
    * @return 枚举值，无法解析时返回 null
    */
-  public static UserLifecycleStatusEnum parse(String value) {
+  public static UserLifeCycleEnum parse(String value) {
     if (value == null || value.isBlank()) {
       return null;
     }
@@ -172,7 +175,7 @@ public enum UserLifecycleStatusEnum implements BaseStatusEnum<UserLifecycleStatu
       return ENABLED;
     }
     try {
-      return UserLifecycleStatusEnum.valueOf(value.toUpperCase());
+      return UserLifeCycleEnum.valueOf(value.toUpperCase());
     } catch (IllegalArgumentException e) {
       return null;
     }

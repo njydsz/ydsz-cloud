@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 
 
 /**
@@ -63,8 +63,8 @@ public class UserAccountDTO implements Serializable {
   @Size(max = 255, message = "{userinfo.error.max_length}")
   private String avatar;
 
-  /** 账号状态（{@link UserLifecycleStatusEnum#ENABLED}=启用 / {@link UserLifecycleStatusEnum#DISABLED}=禁用） */
-  private UserLifecycleStatusEnum status;
+  /** 账号状态（{@link UserLifeCycleEnum#ENABLED}=启用 / {@link UserLifeCycleEnum#DISABLED}=禁用） */
+  private UserLifeCycleEnum status;
 
   /** 用户类型（{@code PLATFORM}=平台用户 / {@code TENANT_ADMIN}=租户管理员 / {@code REGULAR}=普通用户） */
   private String userType;

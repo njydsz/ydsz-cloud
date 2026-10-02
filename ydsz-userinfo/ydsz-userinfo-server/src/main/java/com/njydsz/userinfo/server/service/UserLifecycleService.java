@@ -1,19 +1,19 @@
 package com.njydsz.userinfo.server.service;
 
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 
 /**
  * 用户生命周期状态机服务接口（P2-3）。
  *
  * <p>提供单用户状态流转能力，涵盖 PENDING → ENABLED → SUSPENDED/DISABLED → RESIGNED 完整链路。
- * 所有流转均通过 {@link UserLifecycleStatusEnum#canTransitTo} 进行前置校验，
+ * 所有流转均通过 {@link UserLifeCycleEnum#canTransitTo} 进行前置校验，
  * 杜绝非法流转（如终态 REISIGNED 反向流转）。
  *
  * <p><b>设计要点：</b>
  *
  * <ul>
  *   <li>状态变更自动发布领域事件，供审计日志和下游订阅方（如搜索索引同步、权限回收）使用</li>
- *   <li>终态 {@link UserLifecycleStatusEnum#RESIGNED} 不允许任何流出流转</li>
+ *   <li>终态 {@link UserLifeCycleEnum#RESIGNED} 不允许任何流出流转</li>
  *   <li>幂等性：流转到当前状态时不报错，直接返回（兼容前端重复提交）</li>
  * </ul>
  *
@@ -30,7 +30,7 @@ public interface UserLifecycleService {
    * @param userId 用户 ID
    * @return 流转后的目标状态
    */
-  UserLifecycleStatusEnum activate(String userId);
+  UserLifeCycleEnum activate(String userId);
 
   /**
    * 暂停账号（ENABLED → SUSPENDED）。
@@ -40,7 +40,7 @@ public interface UserLifecycleService {
    * @param userId 用户 ID
    * @return 流转后的目标状态
    */
-  UserLifecycleStatusEnum suspend(String userId);
+  UserLifeCycleEnum suspend(String userId);
 
   /**
    * 恢复账号（SUSPENDED → ENABLED）。
@@ -50,7 +50,7 @@ public interface UserLifecycleService {
    * @param userId 用户 ID
    * @return 流转后的目标状态
    */
-  UserLifecycleStatusEnum resume(String userId);
+  UserLifeCycleEnum resume(String userId);
 
   /**
    * 禁用账号（ENABLED/SUSPENDED → DISABLED）。
@@ -60,7 +60,7 @@ public interface UserLifecycleService {
    * @param userId 用户 ID
    * @return 流转后的目标状态
    */
-  UserLifecycleStatusEnum disable(String userId);
+  UserLifeCycleEnum disable(String userId);
 
   /**
    * 启用账号（DISABLED → ENABLED）。
@@ -70,7 +70,7 @@ public interface UserLifecycleService {
    * @param userId 用户 ID
    * @return 流转后的目标状态
    */
-  UserLifecycleStatusEnum enable(String userId);
+  UserLifeCycleEnum enable(String userId);
 
   /**
    * 账号离职（ENABLED/SUSPENDED → RESIGNED）。
@@ -80,7 +80,7 @@ public interface UserLifecycleService {
    * @param userId 用户 ID
    * @return 流转后的目标状态（始终为 RESIGNED）
    */
-  UserLifecycleStatusEnum resign(String userId);
+  UserLifeCycleEnum resign(String userId);
 
   /**
    * 通用状态流转（核心方法）。
@@ -93,5 +93,5 @@ public interface UserLifecycleService {
    * @return 流转后的目标状态
    * @throws com.njydsz.common.exception.custom.BusinessException 用户不存在或非法流转时抛出
    */
-  UserLifecycleStatusEnum transition(String userId, UserLifecycleStatusEnum target);
+  UserLifeCycleEnum transition(String userId, UserLifeCycleEnum target);
 }

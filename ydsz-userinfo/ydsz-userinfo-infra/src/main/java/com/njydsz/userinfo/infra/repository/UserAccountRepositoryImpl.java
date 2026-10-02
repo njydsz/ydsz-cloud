@@ -19,7 +19,7 @@ import com.njydsz.userinfo.domain.converter.UserInfoUserConverter;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
@@ -156,12 +156,12 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public int batchUpdateStatus(Collection<String> ids, UserLifecycleStatusEnum status) {
+  public int batchUpdateStatus(Collection<String> ids, UserLifeCycleEnum status) {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
     List<String> idList = new ArrayList<>(ids);
-    if (status == UserLifecycleStatusEnum.ENABLED) {
+    if (status == UserLifeCycleEnum.ENABLED) {
       return userAccountMapper.batchEnableByIds(idList);
     }
     return userAccountMapper.batchDisableByIds(idList);
@@ -176,7 +176,7 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
-  public int updateLifecycleStatus(String id, UserLifecycleStatusEnum status) {
+  public int updateLifecycleStatus(String id, UserLifeCycleEnum status) {
     if (id == null || id.isBlank() || status == null) {
       return 0;
     }
@@ -186,11 +186,11 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   /**
-   * 将 {@link UserLifecycleStatusEnum} 转换为 DB 存储字符串。
+   * 将 {@link UserLifeCycleEnum} 转换为 DB 存储字符串。
    *
    * <p>存储规则：ENABLED → "1"、DISABLED → "0"、PENDING/SUSPENDED/RESIGNED → 枚举名字符串。
    */
-  private static String convertLifecycleStatusToString(UserLifecycleStatusEnum status) {
+  private static String convertLifecycleStatusToString(UserLifeCycleEnum status) {
     return switch (status) {
       case ENABLED -> "1";
       case DISABLED -> "0";

@@ -7,7 +7,7 @@ import java.util.Optional;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserAccountDTO;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.vo.UserAccountCredentialVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
@@ -177,7 +177,7 @@ public interface UserAccountRepository {
    * @param status 目标状态（ENABLED / DISABLED）
    * @return 影响行数
    */
-  int batchUpdateStatus(Collection<String> ids, UserLifecycleStatusEnum status);
+  int batchUpdateStatus(Collection<String> ids, UserLifeCycleEnum status);
 
   /**
    * 批量逻辑删除用户账号（P0-9：单条 SQL 替代 N+1 循环）。
@@ -199,7 +199,7 @@ public interface UserAccountRepository {
    * @param status 目标生命周期状态
    * @return 影响行数（用户不存在或已删除时为 0）
    */
-  int updateLifecycleStatus(String id, UserLifecycleStatusEnum status);
+  int updateLifecycleStatus(String id, UserLifeCycleEnum status);
 
   /**
    * 更新账号封禁字段。

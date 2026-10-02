@@ -10,11 +10,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
 import com.njydsz.common.safe.encrypt.EncryptField;
 import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 import com.njydsz.userinfo.domain.enums.BanType;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.vo.BanInfoVO;
 
 /**
@@ -25,22 +24,27 @@ import com.njydsz.userinfo.domain.vo.BanInfoVO;
  * <p><b>安全敏感字段：</b>
  *
  * <ul>
- *   <li>{@code password}：BCrypt 加密（cost=10），禁止明文存储与返回
- *   <li>{@code realName}：AES-256-GCM 字段级加密（{@code @EncryptField}），密文存储，明文仅在内存中出现
- *   <li>{@code phone} / {@code email}：敏感信息，返回时脱敏
- *   <li>{@code loginFailCount} / {@code lockedUntil}：登录失败保护，达到阈值自动锁定
+ *   <li>{@code password}：BCrypt 加密（cost=10），禁止明文存储与返回</li>
+ *   <li>{@code realName}：AES-256-GCM 字段级加密（{@code @EncryptField}），密文存储，明文仅在内存中出现</li>
+ *   <li>{@code phone} / {@code email}：敏感信息，返回时脱敏</li>
+ *   <li>{@code loginFailCount} / {@code lockedUntil}：登录失败保护，达到阈值自动锁定</li>
  * </ul>
  *
- * <p><b>状态字段说明：</b>DB 列使用整数（0=禁用, 1=启用，历史遗留），通过 {@link IntegerStringTypeHandler} 自动转换为 String。
- * 业务代码通过 {@link #getStatusEnum()} / {@link #setStatusEnum(UserLifecycleStatusEnum)} 使用枚举类型，
- * {@link UserLifecycleStatusEnum#parse(String)} 兼容两种格式。
+ * <p><b>生命周期状态字段说明（YDIZ-DDD-008 合规）</b>：
+ *
+ * <ul>
+   *   <li>DB 新增列 {@code life_cycle VARCHAR(32)} 存储枚举字面量（ENABLED/DISABLED/PENDING/SUSPENDED/RESIGNED），通过 {@link #lifeCycle} 字段映射，无 TypeHandler</li>
+ *   <li>平台基类 MpBaseEntity 继承的 {@code status} 字段在 UserAccount 中不再声明，避免覆盖</li>
+ *   <li>旧列 {@code status} 保留在表中（标记 DEPRECATED），仅作为平台基类映射占位，业务代码不读写</li>
+   *   <li>业务代码统一使用 {@link #getLifeCycle()} / {@link #setLifeCycle(UserLifeCycleEnum)} 操作枚举值</li>
+ * </ul>
  *
  * <p><b>审批人展开支持：</b>
  *
  * <ul>
- *   <li>{@code deptId}：所属部门，支持 {@code dept:xxx} 审批人展开
- *   <li>{@code leaderId}：直属上级用户 ID，支持 {@code leader:xxx} 展开
- *   <li>{@code positionCode}：岗位编码（PM/DEV/QA/SA），支持 {@code position:xxx} 展开
+ *   <li>{@code deptId}：所属部门，支持 {@code dept:xxx} 审批人展开</li>
+ *   <li>{@code leaderId}：直属上级用户 ID，支持 {@code leader:xxx} 展开</li>
+ *   <li>{@code positionCode}：岗位编码（PM/DEV/QA/SA），支持 {@code position:xxx} 展开</li>
  * </ul>
  *
  * <p><b>索引设计：</b>唯一索引 {@code uk_username}（{@code username}），普通索引 {@code idx_phone}、{@code idx_dept_id}。
@@ -69,7 +73,8 @@ public class UserAccount extends MpBaseEntity<String> {
    * <p>使用 common-safe 的 {@link EncryptField} + {@link EncryptTypeHandler} 实现字段级加密，
    * 明文仅在应用内存中出现，数据库存储密文。解密由 TypeHandler 自动完成，业务代码无需感知。
    *
-   * <p><b>注意：</b>加密字段不可用于 WHERE/LIKE 条件查询（AES-GCM 随机 IV 导致明文相同密文不同）， 本字段仅用于 SELECT 展示，不参与条件检索。
+   * <p><b>注意：</b>加密字段不可用于 WHERE/LIKE 条件查询（AES-GCM 随机 IV 导致明文相同密文不同），
+   * 本字段仅用于 SELECT 展示，不参与条件检索。
    *
    * @see EncryptField
    * @see EncryptTypeHandler
@@ -87,20 +92,20 @@ public class UserAccount extends MpBaseEntity<String> {
   /** 头像 URL */
   private String avatar;
 
+  // ===== 生命周期（YDIZ-DDD-008：业务字段改名 lifeCycle，不覆盖平台基础字段）=====
+
   /**
-   * 账号状态（DB 整数列 0/1，通过 {@link IntegerStringTypeHandler} 自动转换为 String）。
+   * 用户生命周期（映射 DB 列 {@code life_cycle}）。
    *
-   * <p>业务代码建议通过 {@link #getStatusEnum()} / {@link #setStatusEnum(UserLifecycleStatusEnum)} 使用枚举类型。
+   * <p>取值：PENDING / ENABLED / SUSPENDED / DISABLED / RESIGNED。
    *
-   * <p><b>YDIZ-DDD-008 豁免</b>：DB 列 {@code status} 为历史遗留整型（0=禁用/1=启用），
-   * 需通过自定义 {@link IntegerStringTypeHandler} 做 String↔Integer 双向转换。
-   * TODO: 后续 DDL 迁移为 VARCHAR 存储枚举值（ENABLED/DISABLED/…）后可移除此字段覆盖，改用基类标准映射。
+   * <p>旧列 {@code status}（INTEGER 0/1）已在 V26.10.02 DDL 迁移中通过 UPDATE 复制数据到 {@code life_cycle}，
+   * 旧列保留在表中作为平台基类占位（标记 DEPRECATED），业务代码不再读写。
    *
-   * <p><b>YDIZ-DB-006 豁免</b>：status 字段因使用特殊 TypeHandler（IntegerStringTypeHandler），
-   * 保留覆盖声明（架构确认 26.10.02）。
+   * <p>如需与历史 0/1 值兼容，调用 {@link UserLifeCycleEnum#parse(String)} 方法。
    */
-  @TableField(value = "status", typeHandler = IntegerStringTypeHandler.class)
-  private String status;
+  @TableField("life_cycle")
+  private String lifeCycle;
 
   /** 用户类型（PLATFORM/ISV/TENANT_ADMIN/REGULAR 等） */
   private String userType;
@@ -146,33 +151,47 @@ public class UserAccount extends MpBaseEntity<String> {
   /** 封禁操作时间 */
   private LocalDateTime bannedAt;
 
+  // ==================== 状态枚举访问器 ====================
+
   /**
-   * 获取状态枚举。
+   * 获取生命周期状态枚举。
    *
-   * <p>兼容 "0"/"1"（DB 存储）和 "ENABLED"/"DISABLED"（枚举字面量）两种格式。
+   * <p>兼容遗留 "0"/"1" 格式（历史数据兼容）和枚举字面量格式。
    *
-   * @return 状态枚举，无法解析时返回 null
+   * @return 生命周期状态枚举，无法解析时返回 null
    */
-  public UserLifecycleStatusEnum getStatusEnum() {
-    return UserLifecycleStatusEnum.parse(this.status);
+  public UserLifeCycleEnum getLifeCycle() {
+    return UserLifeCycleEnum.parse(this.lifeCycle);
   }
 
   /**
-   * 从枚举设置状态。
+   * 设置生命周期。
    *
-   * @param statusEnum 状态枚举，为 null 时清除状态
+   * @param lifeCycle 生命周期枚举，为 null 时清除
    */
-  public void setStatusEnum(UserLifecycleStatusEnum statusEnum) {
-    if (statusEnum == null) {
-      this.status = null;
-    } else {
-      this.status = statusEnum == UserLifecycleStatusEnum.ENABLED ? "1" : "0";
-    }
+  public void setLifeCycle(UserLifeCycleEnum lifeCycle) {
+    this.lifeCycle = lifeCycle == null ? null : lifeCycle.name();
+  }
+
+  /**
+   * {@link #getLifeCycle()} 的别名，兼容旧版 API。
+   *
+   * @return 生命周期枚举
+   */
+  public UserLifeCycleEnum getStatusEnum() {
+    return getLifeCycle();
+  }
+
+  /**
+   * {@link #setLifeCycle(UserLifeCycleEnum)} 的别名，兼容旧版 API。
+   *
+   * @param lifeCycleEnum 生命周期枚举
+   */
+  public void setStatusEnum(UserLifeCycleEnum lifeCycleEnum) {
+    setLifeCycle(lifeCycleEnum);
   }
 
   // ==================== 领域行为（Domain Behavior）====================
-
-  // ==================== 封禁行为 ====================
 
   /**
    * 封禁账号。
@@ -260,16 +279,16 @@ public class UserAccount extends MpBaseEntity<String> {
   /**
    * 激活账号（PENDING → ENABLED）。
    *
-   * <p>将状态设为 {@link UserLifecycleStatusEnum#ENABLED}，清除锁定信息。仅当前状态为 {@link UserLifecycleStatusEnum#PENDING} 时允许。
+   * <p>将状态设为 {@link UserLifeCycleEnum#ENABLED}，清除锁定信息。
    *
    * @throws IllegalStateException 当前状态不允许激活时抛出
    */
   public void activate() {
-    UserLifecycleStatusEnum current = getLifecycleStatus();
+    UserLifeCycleEnum current = getLifeCycle();
     if (current != null) {
-      current.requireTransitTo(UserLifecycleStatusEnum.ENABLED);
+      current.requireTransitTo(UserLifeCycleEnum.ENABLED);
     }
-    setLifecycleStatus(UserLifecycleStatusEnum.ENABLED);
+    setLifeCycle(UserLifeCycleEnum.ENABLED);
     this.lockedUntil = null;
     this.loginFailCount = 0;
   }
@@ -277,31 +296,31 @@ public class UserAccount extends MpBaseEntity<String> {
   /**
    * 暂停账号（ENABLED → SUSPENDED）。
    *
-   * <p>将状态设为 {@link UserLifecycleStatusEnum#SUSPENDED}。仅当前状态为 {@link UserLifecycleStatusEnum#ENABLED} 时允许。
+   * <p>将状态设为 {@link UserLifeCycleEnum#SUSPENDED}。
    *
    * @throws IllegalStateException 当前状态不允许暂停时抛出
    */
   public void suspend() {
-    UserLifecycleStatusEnum current = getLifecycleStatus();
+    UserLifeCycleEnum current = getLifeCycle();
     if (current != null) {
-      current.requireTransitTo(UserLifecycleStatusEnum.SUSPENDED);
+      current.requireTransitTo(UserLifeCycleEnum.SUSPENDED);
     }
-    setLifecycleStatus(UserLifecycleStatusEnum.SUSPENDED);
+    setLifeCycle(UserLifeCycleEnum.SUSPENDED);
   }
 
   /**
    * 恢复账号（SUSPENDED → ENABLED）。
    *
-   * <p>将状态设为 {@link UserLifecycleStatusEnum#ENABLED}。仅当前状态为 {@link UserLifecycleStatusEnum#SUSPENDED} 时允许。
+   * <p>将状态设为 {@link UserLifeCycleEnum#ENABLED}。
    *
    * @throws IllegalStateException 当前状态不允许恢复时抛出
    */
   public void resume() {
-    UserLifecycleStatusEnum current = getLifecycleStatus();
+    UserLifeCycleEnum current = getLifeCycle();
     if (current != null) {
-      current.requireTransitTo(UserLifecycleStatusEnum.ENABLED);
+      current.requireTransitTo(UserLifeCycleEnum.ENABLED);
     }
-    setLifecycleStatus(UserLifecycleStatusEnum.ENABLED);
+    setLifeCycle(UserLifeCycleEnum.ENABLED);
     this.lockedUntil = null;
     this.loginFailCount = 0;
   }
@@ -309,38 +328,37 @@ public class UserAccount extends MpBaseEntity<String> {
   /**
    * 离职处理（→ RESIGNED）。
    *
-   * <p>将状态设为 {@link UserLifecycleStatusEnum#RESIGNED}（终态）。从 ENABLED 或 SUSPENDED 状态均可流转。
+   * <p>将状态设为 {@link UserLifeCycleEnum#RESIGNED}（终态）。
    *
    * @throws IllegalStateException 当前状态不允许离职时抛出
    */
   public void resign() {
-    UserLifecycleStatusEnum current = getLifecycleStatus();
+    UserLifeCycleEnum current = getLifeCycle();
     if (current != null) {
-      current.requireTransitTo(UserLifecycleStatusEnum.RESIGNED);
+      current.requireTransitTo(UserLifeCycleEnum.RESIGNED);
     }
-    setLifecycleStatus(UserLifecycleStatusEnum.RESIGNED);
+    setLifeCycle(UserLifeCycleEnum.RESIGNED);
   }
 
   /**
    * 禁用账号（→ DISABLED）。
    *
-   * <p>将状态设为 {@link UserLifecycleStatusEnum#DISABLED}。
-   * 支持从 ENABLED 或 SUSPENDED 状态流转。
+   * <p>将状态设为 {@link UserLifeCycleEnum#DISABLED}。
    *
    * @throws IllegalStateException 当前状态不允许禁用时抛出
    */
   public void disable() {
-    UserLifecycleStatusEnum current = getLifecycleStatus();
+    UserLifeCycleEnum current = getLifeCycle();
     if (current != null) {
-      current.requireTransitTo(UserLifecycleStatusEnum.DISABLED);
+      current.requireTransitTo(UserLifeCycleEnum.DISABLED);
     }
-    setLifecycleStatus(UserLifecycleStatusEnum.DISABLED);
+    setLifeCycle(UserLifeCycleEnum.DISABLED);
   }
 
   /**
    * 解锁账号。
    *
-   * <p>清除锁定截止时间、重置登录失败计数。仅当账号已锁定时调用（由 Service 层判断）。
+   * <p>清除锁定截止时间、重置登录失败计数。
    */
   public void unlock() {
     this.lockedUntil = null;
@@ -350,8 +368,6 @@ public class UserAccount extends MpBaseEntity<String> {
   /**
    * 判断当前是否处于锁定状态。
    *
-   * <p>当 {@link #lockedUntil} 非空且晚于当前时间时，账号处于锁定状态。锁定过期后自动解除（无需显式调用 {@link #unlock()}）。
-   *
    * @return true 表示当前被锁定
    */
   public boolean isLocked() {
@@ -359,48 +375,18 @@ public class UserAccount extends MpBaseEntity<String> {
   }
 
   /**
-   * 获取生命周期状态枚举。
-   *
-   * <p>兼容 "0"/"1"（DB 存储）和 "ENABLED"/"DISABLED"/"PENDING"/"SUSPENDED"/"RESIGNED" 格式。
-   *
-   * @return 生命周期状态枚举，无法解析时返回 null
-   */
-  public UserLifecycleStatusEnum getLifecycleStatus() {
-    return UserLifecycleStatusEnum.parse(this.status);
-  }
-
-  /**
-   * 设置生命周期状态。
-   *
-   * @param status 生命周期状态枚举，为 null 时清除状态
-   */
-  public void setLifecycleStatus(UserLifecycleStatusEnum status) {
-    if (status == null) {
-      this.status = null;
-      return;
-    }
-    switch (status) {
-      case ENABLED -> this.status = "1";
-      case DISABLED -> this.status = "0";
-      default -> this.status = status.name();
-    }
-  }
-
-  /**
    * 检查是否允许登录。
    *
-   * <p>仅 {@link UserLifecycleStatusEnum#ENABLED} 状态且未锁定时允许登录。
+   * <p>仅 {@link UserLifeCycleEnum#ENABLED} 状态且未锁定时允许登录。
    *
    * @return true 表示允许登录
    */
   public boolean canLogin() {
-    return getLifecycleStatus() == UserLifecycleStatusEnum.ENABLED && !isLocked();
+    return getLifeCycle() == UserLifeCycleEnum.ENABLED && !isLocked();
   }
 
   /**
    * 记录一次登录失败。
-   *
-   * <p>递增登录失败计数；若达到 {@code maxFailCount} 阈值，自动设置锁定时间戳（当前时间 + {@code lockDurationMinutes} 分钟）。
    *
    * @param maxLoginFailCount 触发锁定的最大失败次数（正整数）
    * @param lockDurationMinutes 锁定时长（分钟，正整数）
@@ -415,8 +401,6 @@ public class UserAccount extends MpBaseEntity<String> {
 
   /**
    * 记录一次登录成功。
-   *
-   * <p>重置登录失败计数、清除锁定截止时间、更新最近登录 IP。由 Service 层在认证通过后调用。
    *
    * @param loginIp 登录来源 IP
    */

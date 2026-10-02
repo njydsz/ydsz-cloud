@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.userinfo.domain.enums.UserLifecycleStatusEnum;
+import com.njydsz.userinfo.domain.enums.UserLifeCycleEnum;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
@@ -17,7 +17,7 @@ import com.njydsz.userinfo.server.service.UserLifecycleService;
  * 用户生命周期状态机服务实现（P2-3）。
  *
  * <p>提供 PENDING → ENABLED → SUSPENDED/DISABLED → RESIGNED 完整状态流转能力。
- * 所有流转均通过 {@link UserLifecycleStatusEnum#canTransitTo} 进行前置校验，
+ * 所有流转均通过 {@link UserLifeCycleEnum#canTransitTo} 进行前置校验，
  * 终态 RESIGNED 不允许任何流出流转。
  *
  * <p><b>幂等性：</b>流转到当前状态时不报错，直接返回（兼容前端重复提交）。
@@ -37,38 +37,38 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
   private final UserDomainEventPublisher eventPublisher;
 
   @Override
-  public UserLifecycleStatusEnum activate(String userId) {
-    return transition(userId, UserLifecycleStatusEnum.ENABLED);
+  public UserLifeCycleEnum activate(String userId) {
+    return transition(userId, UserLifeCycleEnum.ENABLED);
   }
 
   @Override
-  public UserLifecycleStatusEnum suspend(String userId) {
-    return transition(userId, UserLifecycleStatusEnum.SUSPENDED);
+  public UserLifeCycleEnum suspend(String userId) {
+    return transition(userId, UserLifeCycleEnum.SUSPENDED);
   }
 
   @Override
-  public UserLifecycleStatusEnum resume(String userId) {
-    return transition(userId, UserLifecycleStatusEnum.ENABLED);
+  public UserLifeCycleEnum resume(String userId) {
+    return transition(userId, UserLifeCycleEnum.ENABLED);
   }
 
   @Override
-  public UserLifecycleStatusEnum disable(String userId) {
-    return transition(userId, UserLifecycleStatusEnum.DISABLED);
+  public UserLifeCycleEnum disable(String userId) {
+    return transition(userId, UserLifeCycleEnum.DISABLED);
   }
 
   @Override
-  public UserLifecycleStatusEnum enable(String userId) {
-    return transition(userId, UserLifecycleStatusEnum.ENABLED);
+  public UserLifeCycleEnum enable(String userId) {
+    return transition(userId, UserLifeCycleEnum.ENABLED);
   }
 
   @Override
-  public UserLifecycleStatusEnum resign(String userId) {
-    return transition(userId, UserLifecycleStatusEnum.RESIGNED);
+  public UserLifeCycleEnum resign(String userId) {
+    return transition(userId, UserLifeCycleEnum.RESIGNED);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
-  public UserLifecycleStatusEnum transition(String userId, UserLifecycleStatusEnum target) {
+  public UserLifeCycleEnum transition(String userId, UserLifeCycleEnum target) {
     if (userId == null || userId.isBlank()) {
       throw new BusinessException(UserInfoExceptionCode.PARAM_INVALID);
     }
@@ -83,7 +83,7 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
         });
 
     // 解析当前生命周期状态
-    UserLifecycleStatusEnum current = resolveCurrentStatus(user);
+    UserLifeCycleEnum current = resolveCurrentStatus(user);
 
     // 幂等：已经在目标状态，直接返回
     if (current == target) {
@@ -116,25 +116,25 @@ public class UserLifecycleServiceImpl implements UserLifecycleService {
    * 解析用户当前生命周期状态。
    *
    * <p>{@link UserAccountVO#getStatus()} 为 Integer（兼容旧格式 0/1），
-   * 新状态使用枚举字面量字符串。通过 {@link UserLifecycleStatusEnum#parse} 兼容两种格式。
+   * 新状态使用枚举字面量字符串。通过 {@link UserLifeCycleEnum#parse} 兼容两种格式。
    *
    * @param user 用户 VO
    * @return 当前生命周期状态，无法解析时默认 DISABLED
    */
-  private UserLifecycleStatusEnum resolveCurrentStatus(UserAccountVO user) {
+  private UserLifeCycleEnum resolveCurrentStatus(UserAccountVO user) {
     // 优先尝试从枚举名格式解析（PENDING/SUSPENDED/RESIGNED）
     if (user.getStatus() == null) {
-      return UserLifecycleStatusEnum.PENDING;
+      return UserLifeCycleEnum.PENDING;
     }
     // status 字段存储为 Integer：1=ENABLED, 0=DISABLED
     if (user.getStatus() == 1) {
-      return UserLifecycleStatusEnum.ENABLED;
+      return UserLifeCycleEnum.ENABLED;
     }
     if (user.getStatus() == 0) {
-      return UserLifecycleStatusEnum.DISABLED;
+      return UserLifeCycleEnum.DISABLED;
     }
     // 其他情况尝试解析字符串格式
-    UserLifecycleStatusEnum parsed = UserLifecycleStatusEnum.parse(String.valueOf(user.getStatus()));
-    return parsed != null ? parsed : UserLifecycleStatusEnum.DISABLED;
+    UserLifeCycleEnum parsed = UserLifeCycleEnum.parse(String.valueOf(user.getStatus()));
+    return parsed != null ? parsed : UserLifeCycleEnum.DISABLED;
   }
 }

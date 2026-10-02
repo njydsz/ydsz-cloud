@@ -791,14 +791,14 @@ rules:
       - 禁止通过 domain/infra 双层entity分层（参见 YDIZ-DDD-007）
       - Entity 直接继承 MP 基类，单包模式
 
-      **字段覆盖豁免（需代码注释说明）**：
-      1. 数据库列因历史遗留使用非标准类型（如整型 0/1 表示状态），需通过自定义 `typeHandler` 映射时：
-         **正确做法**：将业务字段改名（如 `lifecycleStatus`），通过 `@TableField(value = "status", typeHandler = XxxTypeHandler.class)` 保持数据库列映射，
-         Java 字段名不再与基类 `status` 冲突，MP 反射扫描时子类字段覆盖父类映射，无需 platform 字段覆盖。
-         必须在 Javadoc 中说明"历史遗留"原因及建议迁移为 VARCHAR 枚举列后的字段名对齐方案。
-      2. 表使用复合业务键无独立 id 列（如 `(trace_id, step_index)`），不使用 BaseMapper，
-         手写 SQL 精确控制查询列时：可声明不参与持久化的 id 字段或复用表结构映射，
-         但仍须继承 MpBaseEntity 并在 Javadoc 说明"复合主键，继承字段不参与持久化"
+      **字段改名迁移方案（YDIZ-DDD-008 推荐做法）**：
+      当业务表存在历史遗留 status 列（非标准类型/值域不兼容）时，**不应在子类覆盖 status 字段**，
+      而应采用"新增列 + 业务字段改名"策略：
+      1. DDL 阶段：新增 {@code life_cycle VARCHAR(32)} 列存储枚举字面量，数据从旧 status 列迁移
+      2. Java 阶段：业务字段改名（如 {@code lifecycleStatus}），通过 {@code @TableField("life_cycle")} 映射新列
+      3. 旧列保留在表中作为平台基类 MpBaseEntity.status 映射占位（标记 DEPRECATED），后续版本删除
+      4. 业务代码不应读写平台基类继承的 status 字段
+      优点：不覆盖平台基础字段、不依赖 TypeHandler、符合规约要求
 
       **为什么不许自建基类或覆盖字段**：
       - MpBaseEntity 提供统一的 id 生成策略、乐观锁、逻辑删除、租户隔离、审计自动填充
@@ -816,13 +816,16 @@ rules:
       1. 将 Entity 的父类改为 `MpBaseEntity<String>`（或根据表结构选择 MpBaseIdEntity/MpBaseAuditEntity）
       2. 删除 Entity 中重复声明的基类字段（保留业务字段）
       3. 将自建基类（DomainBaseEntity 等）删除，所有引用入口改为 extends MpBaseEntity
-      4. 若 DB 列含自定义 typeHandler，保留 status 字段声明并在 Javadoc 注释豁免原因
+      4. 若存在历史遗留 status 列（非标准类型/值域不兼容），采用"新增列 + 业务字段改名"策略：
+         DDL 新增 life_cycle 列并从旧 status 列迁移数据，Java 字段改名（如 lifecycleStatus）映射新列，
+         旧 status 列保留在表中作为平台基类占位（标记 DEPRECATED）
       5. 检查是否有外部调用 `entity.setStatus(xxx)` / `entity.getStatus()` — 基类提供同样的 getter/setter，调用方无需修改
       6. 检查是否有 `this.status = xxx` 等内部引用，改为 `setStatus(xxx)` / `getStatus()`
+      7. 过渡期可保留 getStatusEnum()/setStatusEnum() 别名方法内部路由到新字段，避免批量修改调用方
     exemption: |
-      自定义 TypeHandler 需覆盖基础字段映射时豁免（需注释说明）。
-      复合主键表无独立 id 列、RF 字段不参与持久化时豁免（需注释说明）。
+      复合主键表无独立 id 列、继承字段不参与持久化时豁免（需注释说明）。
       ydzs-common-jdbc 框架自身（基类 impl）不在此约束内。
+      历史遗留 status 列推荐采用"新增列 + 业务字段改名"策略（见字段改名迁移方案）。
     example_bad: |
       // ❌ 违规：Entity 未继承 MpBaseEntity
       @Data
@@ -861,15 +864,19 @@ rules:
           // 不使用 BaseMapper，继承字段不参与持久化
       }
 
-      // ✅ 正确：TypeHandler 豁免
+      // ✅ 正确：新增列 + 业务字段改名，旧列 DEPRECATED 保留
       @Data
       public class UserAccount extends MpBaseEntity<String> {
           /**
-           * 账号状态（DB 整型列 0/1，历史遗留，通过 IntegerStringTypeHandler 自动转换）。
-           * TODO: 后续迁移为 VARCHAR 枚举值后可移除此覆盖。
+           * 用户生命周期（映射 DB 列 life_cycle）。
+           * 旧列 status 保留在表中作为平台基类占位（DEPRECATED），业务代码不读写。
            */
-          @TableField(value = "status", typeHandler = IntegerStringTypeHandler.class)
-          private String status;
+          @TableField("life_cycle")
+          private String lifeCycle;
+
+          public UserLifeCycleEnum getLifeCycle() {
+              return UserLifeCycleEnum.parse(this.lifeCycle);
+          }
       }
     source: "编码规范 §34.1、§34.6（新增）、架构委员会 26.10.02 决议"
 
