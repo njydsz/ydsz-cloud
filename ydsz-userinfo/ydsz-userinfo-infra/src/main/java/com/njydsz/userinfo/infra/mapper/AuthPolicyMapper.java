@@ -10,7 +10,7 @@ import com.njydsz.userinfo.domain.entity.AuthPolicy;
 /**
  * 认证策略 Mapper 接口（P3-1）。
  *
- * <p>对应数据表 {@code ydsz_auth_policy}。
+ * <p>对应数据表 {@code ydsz_idm_auth_policy}。
  *
  * <p><b>主要索引：</b>
  *
@@ -32,7 +32,7 @@ public interface AuthPolicyMapper extends BaseMapper<AuthPolicy> {
    * @param tenantId 租户 ID；null 表示查询全局默认
    * @return 认证策略 DO；不存在返回 null
    */
-  @Select("SELECT * FROM ydsz_auth_policy "
+  @Select("SELECT * FROM ydsz_idm_auth_policy "
       + "WHERE (tenant_id = #{tenantId} OR (#{tenantId} IS NULL AND tenant_id IS NULL)) "
       + "AND deleted = 0 LIMIT 1")
   AuthPolicy selectByTenantId(@Param("tenantId") String tenantId);

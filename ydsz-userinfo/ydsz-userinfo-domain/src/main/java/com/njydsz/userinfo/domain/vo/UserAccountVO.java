@@ -63,11 +63,11 @@ public class UserAccountVO {
   @JsonView(UserAccountViews.Detail.class)
   private String companyId;
 
-  /** 所属部门 ID（关联 ydsz_org_department.id，支持 dept: 审批人展开） */
+  /** 所属部门 ID（关联 ydsz_idm_org_department.id，支持 dept: 审批人展开） */
   @JsonView(UserAccountViews.Detail.class)
   private String deptId;
 
-  /** 直属上级用户 ID（关联 ydsz_acct_user.id，支持 leader: 审批人展开） */
+  /** 直属上级用户 ID（关联 ydsz_idm_account_user.id，支持 leader: 审批人展开） */
   @JsonView(UserAccountViews.Detail.class)
   private String leaderId;
 

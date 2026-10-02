@@ -8,7 +8,7 @@ import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
 /**
  * 密码历史 Mapper 接口
  *
- * <p>对应数据表 {@code ydsz_acct_password_history}，提供密码历史记录的 CRUD 操作。
+ * <p>对应数据表 {@code ydsz_idm_account_password_history}，提供密码历史记录的 CRUD 操作。
  *
  * <p><b>主要查询场景：</b>
  *

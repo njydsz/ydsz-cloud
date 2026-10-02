@@ -1232,7 +1232,8 @@ EXECUTE FUNCTION fn_ydsz_idm_auth_apikey_set_updated_at();
 --       "column does not exist" 错误。
 -- ============================================================================
 
-ALTER TABLE ydsz_idm_auth_policy RENAME COLUMN password_require_uppercase TO is_password_require_uppercase;
-ALTER TABLE ydsz_idm_auth_policy RENAME COLUMN password_require_digit TO is_password_require_digit;
-ALTER TABLE ydsz_idm_auth_policy RENAME COLUMN mfa_enabled TO is_mfa_enabled;
-ALTER TABLE ydsz_idm_auth_policy RENAME COLUMN captcha_enabled TO is_captcha_enabled;
+-- 以下 4 个 ALTER TABLE 已跳过：建表 DDL 中列名已带 is_ 前缀，无需重命名
+-- ALTER TABLE ydsz_idm_auth_policy RENAME COLUMN password_require_uppercase TO is_password_require_uppercase;
+-- ALTER TABLE ydsz_idm_auth_policy RENAME COLUMN password_require_digit TO is_password_require_digit;
+-- ALTER TABLE ydsz_idm_auth_policy RENAME COLUMN mfa_enabled TO is_mfa_enabled;
+-- ALTER TABLE ydsz_idm_auth_policy RENAME COLUMN captcha_enabled TO is_captcha_enabled;

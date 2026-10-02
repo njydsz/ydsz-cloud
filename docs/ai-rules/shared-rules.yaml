@@ -442,7 +442,7 @@ rules:
       // ❌ Entity 错误地放在 infra 层
       // 文件：ydsz-userinfo-infra/src/main/java/com/njydsz/userinfo/infra/entity/UserAccount.java
       package com.njydsz.userinfo.infra.entity;
-      @TableName("ydsz_acct_user")
+      @TableName("ydsz_idm_account_user")
       public class UserAccount { ... }
 
       // ❌ Converter 错误地放在 infra 层

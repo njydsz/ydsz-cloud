@@ -24,7 +24,7 @@ import com.njydsz.userinfo.domain.vo.UserAccountVO;
  * 身份供给编排器（P0-1 Identity Provisioning 管道）。
  *
  * <p>将 {@link IdentityProvisionConnector} 输出的 {@link ProvisionRecord} 转换为本地用户记录，
- * 写入 ydsz_acct_user 表。职责包括：
+ * 写入 ydsz_idm_account_user 表。职责包括：
  *
  * <ul>
  *   <li>新增外部用户（{@code created}）</li>

@@ -8,7 +8,7 @@ import com.njydsz.userinfo.domain.entity.OAuth2ApplicationEntity;
 /**
  * OAuth2 应用 Mapper 接口。
  *
- * <p>对应数据表 {@code ydsz_idp_oauth2_application}，提供 OAuth2 应用记录的 CRUD 操作。
+ * <p>对应数据表 {@code ydsz_idm_identity_oauth2_application}，提供 OAuth2 应用记录的 CRUD 操作。
  *
  * @author ydsz-team
  * @since 26.10.01

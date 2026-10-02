@@ -22,7 +22,7 @@ import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
  * 登录日志查询控制器。
  *
  * <p>供管理员查看用户登录历史，支持按用户名、IP、状态、时间范围筛选。
- * 数据来源于 {@code ydsz_acct_login_history} 表，浏览器/操作系统字段由 User-Agent 解析得出。
+ * 数据来源于 {@code ydsz_idm_account_login_history} 表，浏览器/操作系统字段由 User-Agent 解析得出。
  *
  * <p><b>接口路径：</b>{@code /api/userinfo/login-log}
  *

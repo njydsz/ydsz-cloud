@@ -13,7 +13,7 @@ import com.njydsz.userinfo.domain.entity.ApiKey;
 /**
  * API Key Mapper 接口。
  *
- * <p>对应数据表 {@code ydsz_auth_apikey}。
+ * <p>对应数据表 {@code ydsz_idm_auth_apikey}。
  *
  * <p><b>主要索引：</b>
  * <ul>
@@ -36,7 +36,7 @@ public interface ApiKeyMapper extends BaseMapper<ApiKey> {
    * @param lastUsedAt 使用时间
    * @return 影响行数
    */
-  @Update("UPDATE ydsz_auth_apikey SET last_used_at = #{lastUsedAt}, updated_at = NOW() "
+  @Update("UPDATE ydsz_idm_auth_apikey SET last_used_at = #{lastUsedAt}, updated_at = NOW() "
       + "WHERE id = #{id} AND deleted = false")
   int updateLastUsedAt(@Param("id") Long id, @Param("lastUsedAt") LocalDateTime lastUsedAt);
 
@@ -54,6 +54,6 @@ public interface ApiKeyMapper extends BaseMapper<ApiKey> {
    * @param now 当前时间
    * @return 影响行数
    */
-  @Update("DELETE FROM ydsz_auth_apikey WHERE expire_at IS NOT NULL AND expire_at < #{now}")
+  @Update("DELETE FROM ydsz_idm_auth_apikey WHERE expire_at IS NOT NULL AND expire_at < #{now}")
   int deleteExpired(@Param("now") LocalDateTime now);
 }
