@@ -326,17 +326,17 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_agt_token_usage_tenant_is_deleted ON ydsz_ag
 -- HybridRetriever（全文检素）通过 JdbcTemplate 原生 SQL 直接读写，
 -- 不走 MP 租户拦截器，故租户隔离由 SQL 自带 tenant_id 条件显式保证。
 --
--- 注意：embedding 为 pgvector 类型，执行本脚本前需先：
---   CREATE EXTENSION IF NOT EXISTS vector;
--- 该表依赖 pgvector 扩展，仅 PostgreSQL 方言提供（MySQL/Oracle 无对应类型）。
+-- 注意：embedding 原为 pgvector vector(1536) 类型，但当前环境未安装 pgvector 扩展
+-- 为兼容本地环境，embedding 列暂用 bytea 存储序列化的 float 数组
+-- 如需完整向量检索功能，请手动安装 pgvector 后替换列类型
 -- ============================================================================
-CREATE EXTENSION IF NOT EXISTS vector;
+-- CREATE EXTENSION IF NOT EXISTS vector;  -- 本地环境未安装 pgvector，已注释
 
 CREATE TABLE IF NOT EXISTS ydsz_agt_document_chunk (
     id                       VARCHAR(64)              NOT NULL,
     document_id              VARCHAR(64)              NOT NULL,
     content                  TEXT                     NOT NULL,
-    embedding                vector(1536)             DEFAULT NULL,
+    embedding                BYTEA                    DEFAULT NULL,
     chunk_index              INTEGER                  DEFAULT NULL,
     token_count              INTEGER                  DEFAULT NULL,
     document_title           VARCHAR(256)             DEFAULT NULL,
@@ -364,7 +364,8 @@ COMMENT ON COLUMN ydsz_agt_document_chunk.created_at IS '创建时间';
 
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_document_id ON ydsz_agt_document_chunk (document_id);
 CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_tenant ON ydsz_agt_document_chunk (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
+-- 以下索引需要 pgvector 扩展，本地环境已注释
+-- CREATE INDEX IF NOT EXISTS idx_ydsz_agt_document_chunk_embedding ON ydsz_agt_document_chunk USING ivfflat (embedding vector_cosine_ops);
 
 INSERT INTO ydsz_agt_prompt_template (id, tenant_id, template_code, template_name, content, description, category, current_version, is_deleted)
 VALUES ('100000000000000001', '0', 'DEFAULT_SYSTEM', '默认系统 Prompt', '你是 YDSZ 项目管理信息系统的智能助手。你可以帮助用户查询项目信息、分析项目进度、发起审批流程、发送消息通知等。请用中文回答。', '系统默认的通用助手 Prompt', 'system', 1, FALSE);

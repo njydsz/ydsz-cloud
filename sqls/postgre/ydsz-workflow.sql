@@ -1369,15 +1369,15 @@ CREATE INDEX IF NOT EXISTS idx_ydsz_flow_run_task_assignee_status_due
 
 -- ydsz_flow_instance 状态监控复合索引
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_instance_status_def_end
-    ON ydsz_flow_instance (tenant_id, status, definition_id, end_time);
+    ON ydsz_flow_instance (tenant_id, status, definition_id, end_at);
 
 -- ydsz_flow_his_instance 历史查询复合索引
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_instance_initiator_end
-    ON ydsz_flow_his_instance (tenant_id, initiator, end_time DESC);
+    ON ydsz_flow_his_instance (tenant_id, initiator_id, end_at DESC);
 
 -- ydsz_flow_his_task 历史审批记录查询
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_his_task_assignee_operated
-    ON ydsz_flow_his_task (tenant_id, assignee, operated_at DESC);
+    ON ydsz_flow_his_task (tenant_id, assignee_id, finish_at DESC);
 
 -- ydsz_flow_event_subscription 事件分发索引
 CREATE INDEX IF NOT EXISTS idx_ydsz_flow_event_sub_type_status
@@ -1741,9 +1741,3 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_ydsz_agt_prompt_version_updated_at ON ydsz_agt_prompt_version;
-CREATE TRIGGER trg_ydsz_agt_prompt_version_updated_at
-BEFORE UPDATE ON ydsz_agt_prompt_version
-FOR EACH ROW
-EXECUTE FUNCTION fn_ydsz_agt_prompt_version_set_updated_at();
