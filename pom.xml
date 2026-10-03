@@ -1207,7 +1207,7 @@
             <url>https://nexus.njydsz.com/repository/ydsz-releases/</url>
         </repository>
         <snapshotRepository>
-            <id>maven-snapshots</id>
+            <id>ydsz-snapshots</id>
             <name>snapshot</name>
             <url>https://nexus.njydsz.com/repository/ydsz-snapshots/</url>
         </snapshotRepository>
