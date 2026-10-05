@@ -1,3 +1,4 @@
+com.njydsz.common.web.config.sqlaudit.SqlAuditHealthAutoConfiguration
 com.njydsz.common.web.config.WebMvcConfiguration
 com.njydsz.common.web.config.UserAgentConfiguration
 com.njydsz.common.web.config.WebSecurityConfiguration

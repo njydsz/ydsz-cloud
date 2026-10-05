@@ -95,7 +95,12 @@
             <artifactId>micrometer-core</artifactId>
         </dependency>
 
-        <!-- ydzs-common-jdbc（统一 MP 封装，替代直连 mybatis-plus-core；当前源码零 MP 直接引用，预留以保持依赖一致） -->
+        <!--
+            ydzs-common-jdbc（统一 MP 封装，替代直连 mybatis-plus-core）
+            optional=true 原因：gateway / cronjob 等无消费数据源模块无需传递 JDBC 依赖。
+            使用方：SqlAuditHealthIndicator（@ConditionalOnBean 守卫，无 JDBC 时自动跳过）
+                     及 common-web 中其他直接使用 DataPermissionConfiguration 的位置。
+        -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-jdbc</artifactId>

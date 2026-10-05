@@ -40,6 +40,8 @@ import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.rollback.DictItemRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 import com.njydsz.system.server.vo.DictItemExcelVO;
+import com.njyzsz.system.server.service.event.DictChangeEventConstants;
+import com.njyzsz.system.server.service.event.DictChangeEventPublisher;
 
 
 
@@ -144,6 +146,9 @@ public class DictItemServiceImpl implements DictItemService {
 
   /** Spring 事件发布器（用于异步创建版本快照，P3-2 版本快照异步化） */
   private final ApplicationEventPublisher eventPublisher;
+
+  /** Redis 字典变更事件发布器（用于 SSE 多端广播） */
+  private final DictChangeEventPublisher dictChangeEventPublisher;
 
   /**
    * 根据主键查询字典项（不走缓存，直接走 DB）
@@ -309,6 +314,8 @@ public class DictItemServiceImpl implements DictItemService {
     // 写操作前抓取「变更前」快照，支持后续版本回滚
     createSnapshotVersion(dto.getTypeCode(), "新增字典项: " + dto.getItemCode());
     dictRepository.insertItem(dto);
+    dictChangeEventPublisher.publishDictItemEvent(
+        dto.getTypeCode(), dto.getItemCode(), DictChangeEventConstants.EVENT_TYPE_CREATED);
     return dto.getId();
   }
 
@@ -345,6 +352,10 @@ public class DictItemServiceImpl implements DictItemService {
         evictDictList(before.getTypeCode());
       }
     }
+    if (updated) {
+      dictChangeEventPublisher.publishDictItemEvent(
+          dto.getTypeCode(), dto.getItemCode(), DictChangeEventConstants.EVENT_TYPE_UPDATED);
+    }
     return updated;
   }
 
@@ -379,6 +390,8 @@ public class DictItemServiceImpl implements DictItemService {
       // 精准失效单条 item 缓存 + 类型列表缓存（替代 allEntries 全量清空）
       evictDictItem(vo.getTypeCode(), vo.getItemCode());
       evictDictList(vo.getTypeCode());
+      dictChangeEventPublisher.publishDictItemEvent(
+          vo.getTypeCode(), vo.getItemCode(), DictChangeEventConstants.EVENT_TYPE_DELETED);
     }
     return removed;
   }

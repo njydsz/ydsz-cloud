@@ -1,4 +1,8 @@
-package com.njyzsz.system.server.service.impl;
+const fs = require('fs');
+const path = process.argv[2];
+const spel = process.argv[3];
+
+const content = \package com.njyzsz.system.server.service.impl;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -24,81 +28,112 @@ import com.njyzsz.system.server.service.DictService;
 import com.njyzsz.system.server.service.event.DictChangeEventConstants;
 import com.njyzsz.system.server.service.event.DictChangeEventPublisher;
 
-
-/**
- * \u5b57\u5178\u7c7b\u578b Service \u5b9e\u73b0
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DictServiceImpl implements DictService {
 
-  /** \u5b57\u5178\u4ed3\u50a8 */
+  /** 字典仓储（聚合 DictTypeMapper / DictItemMapper） */
   private final DictRepository dictRepository;
 
-  /** \u7edf\u4e00\u9886\u57df\u4e8b\u4ef6\u53d1\u5e03\u95e8\u9762 */
+  /** 统一领域事件发布门面（ObjectProvider 可选注入，common-event 未引入时安全降级） */
   private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
-  /** Redis \u5b57\u5178\u53d8\u66f4\u4e8b\u4ef6\u53d1\u5e03\u5668\uff08\u7528\u4e8e SSE \u591a\u7aef\u5e7f\u64ad\uff09 */
+  /** Redis 字典变更事件发布器（用于 SSE 多端广播） */
   private final DictChangeEventPublisher dictChangeEventPublisher;
 
   // ============================== CRUD ==============================
 
-  /** \u5206\u9875\u67e5\u8be2 */
+  /**
+   * 分页查询字典类型（管理后台列表页）
+   *
+   * <p>支持按 typeCode 精确匹配、typeName 模糊匹配、status 精确匹配过滤，按 created_at 倒序。
+   *
+   * @param query 分页查询条件
+   * @return 分页结果
+   */
   @Override
   public PageResponse<List<DictTypeVO>> page(DictPageQuery query) {
     return dictRepository.findTypePage(query);
   }
 
-  /** \u6839\u636e\u4e3b\u952e\u67e5\u8be2 */
+  /**
+   * 根据主键查询字典类型
+   *
+   * @param id 字典类型主键
+   * @return 字典类型 VO，不存在返回 null
+   */
   @Override
   public DictTypeVO getById(String id) {
     return dictRepository.findTypeById(id).orElse(null);
   }
 
-  /** \u65b0\u589e\u5b57\u5178\u7c7b\u578b */
+  /**
+   * 新增字典类型
+   *
+   * <p>执行链路：唯一性校验 → 插入 DB → 发布领域事件 + Redis 通道事件（双通道）
+   *
+   * @return 新创建的字典类型 ID
+   */
   @Override
   @CacheEvict(
       value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
-      key = "T(com.njyzsz.common.cache.support.CacheKeyBuilder).build('system','dict:type','all')")
+      key = "\")
   @Transactional(rollbackFor = Exception.class)
   public String save(DictTypeDTO dto) {
     checkDuplicateTypeCode(dto);
     dictRepository.insertType(dto);
-    publishDictTypeChangedEvent(dto.getTypeCode(), "\u521b\u5efa\u5b57\u5178\u7c7b\u578b");
+    publishDictTypeChangedEvent(dto.getTypeCode(), "创建字典类型");
     dictChangeEventPublisher.publishDictTypeEvent(
         dto.getTypeCode(), DictChangeEventConstants.EVENT_TYPE_CREATED);
     return dto.getId();
   }
 
-  /** \u66f4\u65b0\u5b57\u5178\u7c7b\u578b */
+  /**
+   * 更新字典类型
+   *
+   * <p>执行链路：唯一性校验 → 更新 DB → 发布领域事件 + Redis 通道事件
+   *
+   * @return true=更新成功，false=记录不存在
+   */
   @Override
   @CacheEvict(
       value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
-      key = "T(com.njyzsz.common.cache.support.CacheKeyBuilder).build('system','dict:type','all')")
+      key = "\")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(DictTypeDTO dto) {
     checkDuplicateTypeCode(dto);
     boolean updated = dictRepository.updateTypeById(dto);
     if (updated) {
-      publishDictTypeChangedEvent(dto.getTypeCode(), "\u66f4\u65b0\u5b57\u5178\u7c7b\u578b");
+      publishDictTypeChangedEvent(dto.getTypeCode(), "更新字典类型");
       dictChangeEventPublisher.publishDictTypeEvent(
           dto.getTypeCode(), DictChangeEventConstants.EVENT_TYPE_UPDATED);
     }
     return updated;
   }
 
-  /** \u903b\u8f91\u5220\u9664\u5b57\u5178\u7c7b\u578b */
+  /**
+   * 逻辑删除字典类型
+   *
+   * <p>采用逻辑删除（deleted=1 + status=DISABLED）。
+   *
+   * <p><b>子项校验：</b>删除前校验其下是否存在字典项，若存在则抛出
+   * {@link SystemExceptionCode#DICT_TYPE_HAS_ITEMS} 阻止删除。
+   *
+   * @param id 字典类型主键
+   * @return true=删除成功，false=记录不存在
+   */
   @Override
   @CacheEvict(
       value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
-      key = "T(com.njyzsz.common.cache.support.CacheKeyBuilder).build('system','dict:type','all')")
+      key = "\")
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     DictTypeVO vo = dictRepository.findTypeById(id).orElse(null);
     if (vo == null) {
       return false;
     }
+    // 子项校验：若该类型下存在字典项，阻止删除
     long itemCount = dictRepository.countItemsByTypeCode(vo.getTypeCode());
     if (itemCount > 0) {
       throw BusinessException.of(SystemExceptionCode.DICT_TYPE_HAS_ITEMS)
@@ -107,16 +142,21 @@ public class DictServiceImpl implements DictService {
     }
     boolean removed = dictRepository.deleteTypeById(id);
     if (removed) {
-      publishDictTypeChangedEvent(vo.getTypeCode(), "\u5220\u9664\u5b57\u5178\u7c7b\u578b");
+      publishDictTypeChangedEvent(vo.getTypeCode(), "删除字典类型");
       dictChangeEventPublisher.publishDictTypeEvent(
           vo.getTypeCode(), DictChangeEventConstants.EVENT_TYPE_DELETED);
     }
     return removed;
   }
 
-  // ============================== \u79c1\u6709\u65b9\u6cd5 ==============================
+  // ============================== 私有方法 ==============================
 
-  /** \u5e7f\u64ad\u5b57\u5178\u7c7b\u578b\u53d8\u66f4\u4e8b\u4ef6 */
+  /**
+   * 广播字典类型变更事件（用于跨实例本地缓存失效感知）。
+   *
+   * @param typeCode 字典类型编码
+   * @param action 变更动作描述
+   */
   private void publishDictTypeChangedEvent(String typeCode, String action) {
     DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
     if (publisher == null) {
@@ -132,20 +172,32 @@ public class DictServiceImpl implements DictService {
             .build());
   }
 
-  // ============================== \u4e1a\u52a1\u67e5\u8be2 ==============================
+  // ============================== 业务查询 ==============================
 
-  /** \u67e5\u8be2\u5168\u90e8\u5b57\u5178\u7c7b\u578b */
+  /**
+   * 查询全部字典类型（不区分状态）
+   *
+   * <p>按照 createdAt 倒序返回，走本地 Caffeine 缓存（5min TTL）。
+   *
+   * @return 全部字典类型列表
+   */
   @Override
   @YdszCacheable(
       value = SystemCacheConstants.SYSTEM_DICT_TYPE_CACHE,
-      key = "T(com.njyzsz.common.cache.support.CacheKeyBuilder).build('system','dict:type','all')")
+      key = "\")
   public List<DictTypeVO> listAll() {
     return dictRepository.findAllTypes();
   }
 
-  // ============================== \u79c1\u6709\u65b9\u6cd5 ==============================
+  // ============================== 私有方法 ==============================
 
-  /** \u552f\u4e00\u6027\u6821\u9a8c */
+  /**
+   * 唯一性校验
+   *
+   * <p>校验 typeCode 是否已被其他字典类型占用。更新场景下排除自身 ID。
+   *
+   * @throws BusinessException typeCode 已存在时抛出
+   */
   private void checkDuplicateTypeCode(DictTypeDTO dto) {
     if (dictRepository.existsTypeCode(dto.getTypeCode(), dto.getId())) {
       throw BusinessException.of(SystemExceptionCode.DICT_TYPE_CODE_DUPLICATE)
@@ -153,3 +205,7 @@ public class DictServiceImpl implements DictService {
     }
   }
 }
+\;
+
+fs.writeFileSync(path, content, 'utf-8');
+console.log('Written ' + content.length + ' chars to ' + path);

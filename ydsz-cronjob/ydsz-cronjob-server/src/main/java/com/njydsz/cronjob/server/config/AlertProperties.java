@@ -63,8 +63,8 @@ public class AlertProperties {
     /** 是否启用邮件通道 */
     private boolean isEnabled = true;
 
-    /** 发件人邮箱地址（如 alert@ydszsoft.com） */
-    private String from = "alert@ydszsoft.com";
+    /** 发件人邮箱地址（如 alert@njydsz.com） */
+    private String from = "alert@njydsz.com";
 
     /** 邮件服务转发 URL（NULL 时尝试本地 SMTP） */
     private String serviceUrl;

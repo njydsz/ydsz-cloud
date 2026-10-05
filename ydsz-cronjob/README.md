@@ -303,7 +303,7 @@ ydsz-cronjob/                          # 父 POM
 | `ydsz.cronjob.alert.scan-interval-ms` | `300000` | 告警扫描间隔（毫秒，默认 5 分钟） |
 | `ydsz.cronjob.alert.rule-cache-ttl-seconds` | `60` | 告警规则本地缓存 TTL（秒） |
 | `ydsz.cronjob.alert.email.enabled` | `true` | 邮件通道开关 |
-| `ydsz.cronjob.alert.email.from` | `alert@ydszsoft.com` | 发件人邮箱地址 |
+| `ydsz.cronjob.alert.email.from` | `alert@njydsz.com` | 发件人邮箱地址 |
 | `ydsz.cronjob.alert.email.service-url` | — | 邮件服务转发 URL |
 | `ydsz.cronjob.alert.email.subject-prefix` | `[YDSZ 告警]` | 邮件主题前缀 |
 | `ydsz.cronjob.alert.dingtalk.enabled` | `true` | IM 通道开关 |
