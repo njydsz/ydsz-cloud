@@ -41,4 +41,8 @@ public class DagWorkflow extends MpBaseEntity<String> {
 
   /** 分类（用于分组检索） */
   private String category;
+
+  /** 是否已发布（smallint: 0=未发布, 1=已发布，YDIZ-DDD-008 统一布尔约定） */
+  @TableField("is_published")
+  private Boolean isPublished;
 }

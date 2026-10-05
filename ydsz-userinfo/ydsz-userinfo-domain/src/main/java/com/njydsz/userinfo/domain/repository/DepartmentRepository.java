@@ -70,6 +70,14 @@ public interface DepartmentRepository {
   List<DepartmentVO> listByIds(Collection<String> ids);
 
   /**
+   * 批量根据部门编码查询部门（单次 SQL，消除 N+1 循环查询）。
+   *
+   * @param deptCodes 部门编码集合
+   * @return 部门列表
+   */
+  List<DepartmentVO> findAllByDeptCodes(Collection<String> deptCodes);
+
+  /**
    * 保存部门（创建或更新）。
    *
    * <p>统一 DTO：创建时 {@code id} 可不传，更新时 {@code id} 必填。

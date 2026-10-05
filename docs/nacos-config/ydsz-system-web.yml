@@ -3,6 +3,12 @@
 #  通过 bootstrap.yml shared-configs 引入
 #  依赖 common: jdbc, json, tenant, thread, i18n, sentry, search, audit, excel, safe, feign, lock
 # =====================================================================
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 15
+      pool-name: ydsz-hikari-system
+
 ydsz:
   json:
     warmup-classes:

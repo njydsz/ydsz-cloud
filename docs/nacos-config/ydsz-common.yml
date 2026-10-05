@@ -49,7 +49,8 @@ spring:
 
   # -------------------------------------------------------------------
   #  数据源配置（PostgreSQL + HikariCP）
-  #  各模块通过 ydsz.{module}-web.yml 覆盖 url/username/password
+  #  各模块通过 ydsz.{module}-web.yml 覆盖 maximum-pool-size 分模块调优
+  #  快速失败：connection-timeout 收紧到 10s（30s 过高导致线程长时间阻塞）
   # -------------------------------------------------------------------
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
@@ -57,12 +58,13 @@ spring:
       pool-name: ydsz-hikari-pool
       minimum-idle: 5
       maximum-pool-size: 20
-      connection-timeout: 30000
+      connection-timeout: 10000
       idle-timeout: 600000
       max-lifetime: 1800000
       connection-test-query: SELECT 1
       validation-timeout: 5000
       leak-detection-threshold: 30000
+      initialSize: 10
       data-source-properties:
         stringtype: unspecified
         reWriteBatchedInserts: true

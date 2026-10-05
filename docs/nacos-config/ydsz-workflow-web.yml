@@ -4,6 +4,12 @@
 #  依赖 common: auth,base,feign,json,safe,util,excel,web,core,audit,lock
 #  特色：MULTI 多级租户、流程引擎独有配置、Seata 分布式事务预留
 # =====================================================================
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 40
+      pool-name: ydsz-hikari-workflow
+
 ydsz:
   flow:
     enabled: true

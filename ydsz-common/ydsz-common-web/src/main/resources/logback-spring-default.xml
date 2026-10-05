@@ -63,6 +63,16 @@
         </layout>
     </appender>
 
+    <!-- ============================== 异步 Appender（生产环境） ============================== -->
+    <!-- LMAX Disruptor 异步落地：queueSize=2048, discardingThreshold=20%（队列满 80% 时丢弃 WARN 以下） -->
+    <appender name="ASYNC_JSON_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>2048</queueSize>
+        <discardingThreshold>20</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="JSON_FILE"/>
+    </appender>
+
     <!-- ============================== dev profile ============================== -->
     <!-- 控制台输出，DEBUG 级别，非 JSON 格式（pattern 含 traceId/userId/tenantId） -->
     <springProfile name="dev">
@@ -101,11 +111,10 @@
     </springProfile>
 
     <!-- ============================== prod profile ============================== -->
-    <!-- 文件 + 滚动归档，WARN 级别，JSON 格式，单文件 100MB，保留 30 天 -->
+    <!-- 异步文件 + 滚动归档，INFO 级别，JSON 格式；AsyncAppender 消除同步 IO 阻塞业务线程 -->
     <springProfile name="prod">
-        <!-- prod 默认不输出控制台，仅写文件；如需控制台可通过覆盖追加 JSON_CONSOLE -->
-        <root level="WARN">
-            <appender-ref ref="JSON_FILE"/>
+        <root level="INFO">
+            <appender-ref ref="ASYNC_JSON_FILE"/>
         </root>
 
         <!-- 生产环境严格抑制框架噪声 -->

@@ -2,6 +2,12 @@
 #  YDSZ AI Agent 智能引擎 — 微服务端配置（Nacos 数据中心）
 #  依赖 common: auth,base,feign,json,lock,redis,safe,web,core,excel,audit
 # =====================================================================
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 30
+      pool-name: ydsz-hikari-agent
+
 ydsz:
   tenant:
     enabled: true

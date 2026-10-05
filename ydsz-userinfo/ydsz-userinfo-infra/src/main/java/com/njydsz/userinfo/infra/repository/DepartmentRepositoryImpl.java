@@ -83,6 +83,17 @@ public class DepartmentRepositoryImpl implements DepartmentRepository {
   }
 
   @Override
+  public List<DepartmentVO> findAllByDeptCodes(Collection<String> deptCodes) {
+    if (deptCodes == null || deptCodes.isEmpty()) {
+      return new ArrayList<>();
+    }
+    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
+    wrapper.in(Department::getDeptCode, deptCodes);
+    List<Department> entities = departmentMapper.selectList(wrapper);
+    return converter.departmentListToVO(entities);
+  }
+
+  @Override
   public DepartmentVO save(DepartmentDTO dto) {
     if (dto.getId() == null || dto.getId().isBlank()) {
       Department entity = converter.dtoToEntity(dto);
