@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.njydsz.agent.domain.entity.DagWorkflow;
+import com.njydsz.agent.domain.vo.DagWorkflowVO;
 
 /**
  * DAG 工作流仓储接口（Repository 契约定义在领域层）。
@@ -35,7 +36,7 @@ public interface DagWorkflowRepository {
    * @param id 工作流唯一标识，不可为空
    * @return 匹配的工作流实体，未找到时返回 {@link Optional#empty()}
    */
-  Optional<DagWorkflow> findById(String id);
+  Optional<DagWorkflowVO> findById(String id);
 
   /**
    * 根据编码查询（业务唯一）.
@@ -43,14 +44,14 @@ public interface DagWorkflowRepository {
    * @param workflowCode 工作流业务编码，不可为空
    * @return 匹配的工作流实体，未找到时返回 {@link Optional#empty()}
    */
-  Optional<DagWorkflow> findByCode(String workflowCode);
+  Optional<DagWorkflowVO> findByCode(String workflowCode);
 
   /**
    * 查询所有未删除的工作流.
    *
    * @return 工作流实体列表，无数据时返回空列表
    */
-  List<DagWorkflow> findAll();
+  List<DagWorkflowVO> findAll();
 
   /**
    * 根据分类查询.
@@ -58,7 +59,7 @@ public interface DagWorkflowRepository {
    * @param category 分类标签，可空时返回全部
    * @return 匹配分类的工作流实体列表
    */
-  List<DagWorkflow> findByCategory(String category);
+  List<DagWorkflowVO> findByCategory(String category);
 
   /**
    * 逻辑删除.

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
@@ -66,7 +68,7 @@ public class InternalWorkflowApiController {
       key = "'ydsz:workflow:internal-api:start-process:' + #dto.flowCode + ':' + #dto.businessKey",
       ttlSeconds = 5)
   @PostMapping("/engine/instance/start")
-  public YdszResponse<String> startProcess(@RequestBody FlowStartProcessDTO dto) {
+  public YdszResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
     return YdszResponse.success(workflowFacade.startProcess(dto));
   }
 

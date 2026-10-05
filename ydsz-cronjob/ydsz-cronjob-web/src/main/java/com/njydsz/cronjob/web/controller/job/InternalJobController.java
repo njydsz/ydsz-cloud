@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -116,7 +118,7 @@ public class InternalJobController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'execute'")
-  public YdszResponse<String> execute(@RequestBody RemoteTaskRequest request) {
+  public YdszResponse<String> execute(@Valid @RequestBody RemoteTaskRequest request) {
     if (request == null || request.getJob() == null) {
       log.warn("[InternalJob] 远程派发请求参数为空");
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "请求参数为空");
@@ -186,7 +188,7 @@ public class InternalJobController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'executeSubTask'")
-  public YdszResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
+  public YdszResponse<ProcessResult> executeSubTask(@Valid @RequestBody RemoteSubTaskRequest request) {
     if (request == null || request.getJobKey() == null || request.getHandler() == null) {
       log.warn("[InternalJob] 子任务请求参数为空");
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "请求参数为空");
@@ -266,7 +268,7 @@ public class InternalJobController {
       type = AuditType.OPERATION,
       action = AuditAction.OTHER,
       content = "'executeBatch'")
-  public YdszResponse<List<String>> executeBatch(@RequestBody List<RemoteTaskRequest> requests) {
+  public YdszResponse<List<String>> executeBatch(@Valid @RequestBody List<RemoteTaskRequest> requests) {
     if (requests == null || requests.isEmpty()) {
       log.warn("[InternalJob] 批量派发请求为空");
       return YdszResponse.success(Collections.emptyList());

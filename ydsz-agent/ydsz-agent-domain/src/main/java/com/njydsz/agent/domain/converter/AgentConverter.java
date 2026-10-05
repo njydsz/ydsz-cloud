@@ -10,6 +10,7 @@ import com.njydsz.agent.domain.dto.AgentApprovalDTO;
 import com.njydsz.agent.domain.dto.AgentDefinitionDTO;
 import com.njydsz.agent.domain.dto.AgentTraceDTO;
 import com.njydsz.agent.domain.dto.AgentTraceStepDTO;
+import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.dto.PromptTemplateDTO;
 import com.njydsz.agent.domain.dto.PromptVersionDTO;
 import com.njydsz.agent.domain.dto.TokenUsageRecordDTO;
@@ -17,6 +18,7 @@ import com.njydsz.agent.domain.entity.AgentApproval;
 import com.njydsz.agent.domain.entity.AgentDefinition;
 import com.njydsz.agent.domain.entity.AgentTrace;
 import com.njydsz.agent.domain.entity.AgentTraceStep;
+import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.entity.PromptTemplate;
 import com.njydsz.agent.domain.entity.PromptVersion;
 import com.njydsz.agent.domain.entity.TokenUsageRecord;
@@ -24,6 +26,7 @@ import com.njydsz.agent.domain.vo.AgentApprovalVO;
 import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.domain.vo.AgentTraceStepVO;
 import com.njydsz.agent.domain.vo.AgentTraceVO;
+import com.njydsz.agent.domain.vo.DagWorkflowVO;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
 import com.njydsz.agent.domain.vo.PromptVersionVO;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
@@ -196,6 +199,63 @@ public interface AgentConverter {
   @Mapping(target = "updatedBy", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   AgentTraceStep dtoToEntity(AgentTraceStepDTO dto);
+
+  // ===== DagWorkflow =====
+
+  /**
+   * Entity → VO 转换
+   *
+   * @param entity 数据库实体
+   * @return 视图对象
+   */
+  DagWorkflowVO entityToVO(DagWorkflow entity);
+
+  /**
+   * Entity 列表 → VO 列表转换
+   *
+   * @param entities 实体列表
+   * @return VO 列表
+   */
+  List<DagWorkflowVO> dagWorkflowListToVO(List<DagWorkflow> entities);
+
+  /**
+   * VO → Entity 转换（更新场景，忽略系统字段）。
+   *
+   * @param vo DAG 工作流视图对象
+   * @return 数据库实体
+   */
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
+  DagWorkflow voToEntityWithId(DagWorkflowVO vo);
+
+  /**
+   * DTO → Entity 转换（创建场景，系统字段自动忽略）。
+   *
+   * @param dto DAG 工作流 DTO（id 不传）
+   * @return 数据库实体
+   */
+  @Mapping(target = "name", source = "workflowName")
+  @Mapping(target = "dsl", source = "dslContent")
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "layoutJson", ignore = true)
+  @Mapping(target = "isPublished", ignore = true)
+  @Mapping(target = "isDeleted", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "sort", ignore = true)
+  DagWorkflow dtoToEntity(DagWorkflowDTO dto);
 
   // ===== AgentApproval =====
 

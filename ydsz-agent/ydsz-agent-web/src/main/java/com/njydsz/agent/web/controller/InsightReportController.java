@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.insight.InsightReportRequest;
 import com.njydsz.agent.domain.insight.InsightReportResult;
@@ -80,7 +82,7 @@ public class InsightReportController {
    */
   @PostMapping("/report")
   public YdszResponse<InsightReportResult> generateReport(
-      @RequestBody InsightReportRequest request) {
+      @Valid @RequestBody InsightReportRequest request) {
     return YdszResponse.success(insightReportService.generateReport(request));
   }
 

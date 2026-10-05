@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -66,7 +68,7 @@ public class ClusterMigrationInternalController {
       content = "'migrateRegister'")
   @RateLimit(resource = "cronjob.migrate.register", threshold = 100)
   @PostMapping("/register")
-  public YdszResponse<Boolean> register(@RequestBody JobVO jobVO) {
+  public YdszResponse<Boolean> register(@Valid @RequestBody JobVO jobVO) {
     try {
       // 将 JobVO 转换为 JobPostDTO 后注册
       JobPostDTO dto = new JobPostDTO();
@@ -107,7 +109,7 @@ public class ClusterMigrationInternalController {
       action = AuditAction.DELETE,
       content = "'migrateUnregister'")
   @PostMapping("/unregister")
-  public YdszResponse<Boolean> unregister(@RequestBody UnregisterRequest request) {
+  public YdszResponse<Boolean> unregister(@Valid @RequestBody UnregisterRequest request) {
     try {
       boolean result = jobService.unregister(request.getJobKey());
       return YdszResponse.success(result);

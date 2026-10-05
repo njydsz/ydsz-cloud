@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
@@ -49,7 +51,7 @@ public class FlowSimulationController {
   @Operation(summary = "运行流程模拟", description = "模拟执行流程定义，预测执行路径和分析结果")
   public YdszResponse<SimulationResult> runSimulation(
       @Parameter(description = "模拟请求", required = true)
-      @RequestBody SimulationRequest request) {
+      @Valid @RequestBody SimulationRequest request) {
     return YdszResponse.success(simulationService.simulate(
         request.getDefinitionId(), request.getVariables()));
   }

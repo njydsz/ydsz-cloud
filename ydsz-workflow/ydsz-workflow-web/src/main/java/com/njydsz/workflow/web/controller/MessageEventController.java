@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.workflow.server.message.MessageEventService;
@@ -47,7 +49,7 @@ public class MessageEventController {
   @Operation(summary = "发布消息事件", description = "向订阅了该消息的等待节点触发流程继续")
   public YdszResponse<String> publish(
       @Parameter(description = "发布消息请求", required = true)
-      @RequestBody PublishMessageRequest request) {
+      @Valid @RequestBody PublishMessageRequest request) {
     Map<String, Object> keys = request.getCorrelationKeys() != null
         ? new HashMap<>(request.getCorrelationKeys()) : null;
     int count = messageEventService.publishMessageEvent(

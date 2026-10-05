@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -72,7 +74,7 @@ public class GlueEditorController {
       action = AuditAction.UPDATE,
       content = "'glueSave'")
   @PostMapping("/save")
-  public YdszResponse<SaveResult> save(@RequestBody SaveCodeDTO dto) {
+  public YdszResponse<SaveResult> save(@Valid @RequestBody SaveCodeDTO dto) {
     int codeLength = dto.getCode() != null ? dto.getCode().length() : 0;
     log.info("[GlueEditor] 保存代码: file={} language={} length={}",
         dto.getFile(), dto.getLanguage(), codeLength);
@@ -95,7 +97,7 @@ public class GlueEditorController {
   @Operation(summary = "校验 GLUE 代码")
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @PostMapping("/validate")
-  public YdszResponse<ValidateResult> validate(@RequestBody SaveCodeDTO dto) {
+  public YdszResponse<ValidateResult> validate(@Valid @RequestBody SaveCodeDTO dto) {
     log.info("[GlueEditor] 校验代码: file={} language={}", dto.getFile(), dto.getLanguage());
 
     ValidateResult result = new ValidateResult();

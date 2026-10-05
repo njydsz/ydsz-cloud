@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -64,7 +66,7 @@ public class DagDesignerController {
       action = AuditAction.CREATE,
       content = "'dagSave'")
   @PostMapping("/save")
-  public YdszResponse<Boolean> save(@RequestBody DagDefinitionDTO dto) {
+  public YdszResponse<Boolean> save(@Valid @RequestBody DagDefinitionDTO dto) {
     log.info("[DagDesigner] 保存 DAG 定义: nodes={} edges={}", dto.getNodes().size(), dto.getEdges().size());
 
     // TODO: 实际实现需要调用 DagDefinitionService 持久化

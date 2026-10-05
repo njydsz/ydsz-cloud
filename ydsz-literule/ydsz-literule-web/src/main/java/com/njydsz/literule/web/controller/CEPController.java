@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -183,7 +185,7 @@ public class CEPController {
   @RateLimit(resource = "literule.c_e_p.registerPattern", threshold = 50)
   @PostMapping("/patterns")
   @Operation(summary = "注册 CEP 模式")
-  public YdszResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
+  public YdszResponse<Void> registerPattern(@Valid @RequestBody CEPPattern pattern) {
     CEPEngine engine = cepEngineProvider.getIfAvailable();
     if (engine == null) {
       return YdszResponse.error(YdszResultCode.SERVICE_UNAVAILABLE, "CEP 引擎未启用");

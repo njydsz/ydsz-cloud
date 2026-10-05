@@ -1,0 +1,33 @@
+# 开发环境 — 本地工程师开发调试专用
+# 公共配置（datasource / redis / mybatis-plus）由 Nacos ydsz-common.yaml 提供
+
+spring:
+  profiles:
+    active: dev
+
+# 日志：DEBUG 级别 + 人类可读格式（非 JSON）
+logging:
+  level:
+    root: INFO
+    com.njydsz: DEBUG
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
+
+# 数据源覆写（本地连接）
+datasource:
+  hikari:
+    maximum-pool-size: 10
+    connection-timeout: 5000
+
+# 禁用 Nacos 注册（本地单机）
+# cloud.nacos.discovery.enabled: false
+
+ydsz:
+  local-dev: true
+  agent:
+    # 开发环境降低 LLM 超时以便快速调试
+    llm:
+      timeout-seconds: 120
+    # 开发环境关闭敏感工具暂停（方便调试）
+    approval:
+      pause-on-sensitive: false

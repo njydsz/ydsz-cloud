@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -79,7 +81,7 @@ public class JobWebhookController {
       content = "'create'")
   @RateLimit(resource = "cronjob.jobwebhook.create", threshold = 50)
   @PostMapping
-  public YdszResponse<String> create(@RequestBody JobWebhookPostDTO dto) {
+  public YdszResponse<String> create(@Valid @RequestBody JobWebhookPostDTO dto) {
     // 通过 Service 新增（Service 处理 DTO→VO 转换 + Repository 写入）
     String newId = jobWebhookService.create(dto);
     return YdszResponse.success(newId);
@@ -103,7 +105,7 @@ public class JobWebhookController {
       content = "'update'")
   @RateLimit(resource = "cronjob.jobwebhook.update", threshold = 50)
   @PutMapping
-  public YdszResponse<Void> update(@RequestBody JobWebhookPutDTO dto) {
+  public YdszResponse<Void> update(@Valid @RequestBody JobWebhookPutDTO dto) {
     // 通过 Service 更新（Service → Repository）
     jobWebhookService.update(dto);
     return YdszResponse.success();

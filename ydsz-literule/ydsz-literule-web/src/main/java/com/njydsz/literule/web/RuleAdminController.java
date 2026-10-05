@@ -175,7 +175,7 @@ public class RuleAdminController {
   @PostMapping
   @AuthApiPermission(apiCodes = "execution:rule:save")
   public YdszResponse<RuleDefinitionVO> save(
-      @RequestBody RuleDefinitionDTO definition,
+      @Valid @RequestBody RuleDefinitionDTO definition,
       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
       @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
     return YdszResponse.success(

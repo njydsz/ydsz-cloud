@@ -1,0 +1,16 @@
+# 生产环境 — 仅允许覆盖，具体配置在 Nacos 配置中心统一管理
+# 公共配置（datasource / redis / mybatis-plus）由 Nacos ydsz-common.yaml 提供
+
+spring:
+  profiles:
+    active: prod
+
+# 日志：INFO 级别便于生产排查
+logging:
+  level:
+    root: INFO
+    com.njydsz: INFO
+
+ydsz:
+  local-dev: false
+  prod-env: true
