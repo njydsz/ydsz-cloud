@@ -1,13 +1,9 @@
 package com.njydsz.nextwiki.web.controller.activity;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,8 +18,8 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.context.TenantContextHolder;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
-import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
+import com.njydsz.nextwiki.server.service.ActivityQueryService;
+import com.njydsz.nextwiki.server.service.ActivityQueryService.ActivityItem;
 
 /**
  * 用户活动流 REST API Controller（P2-4：文件操作活动流）。
@@ -46,14 +42,8 @@ import com.njydsz.nextwiki.domain.repository.UserRecentRepository;
 @Tag(name = "活动流", description = "文件操作活动流、通知聚合（最近访问/分享/评论）")
 public class ActivityController {
 
-  /** 最近访问记录仓储 */
-  private final UserRecentRepository userRecentRepository;
-
-  /** 分享接收者仓储 */
-  private final ShareRecipientRepository shareRecipientRepository;
-
-  /** 默认每页返回条数 */
-  private static final int DEFAULT_LIMIT = 20;
+  /** 活动流查询服务（封装最近访问/分享聚合逻辑） */
+  private final ActivityQueryService activityQueryService;
 
   /**
    * 获取当前用户活动流（按时间倒序，分页）。
@@ -74,65 +64,11 @@ public class ActivityController {
       @RequestParam(value = "page", defaultValue = "1") int page,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
 
-    int safeLimit = Math.min(Math.max(limit, 1), 50);
-    int offset = Math.max((page - 1) * safeLimit, 0);
     String tenantId = TenantContextHolder.getTenantId();
-
-    // 1. 最近访问记录
-    var recents = userRecentRepository.findByUserIdWithPage(userId, tenantId, offset, safeLimit);
-    // 2. 分享给当前用户的记录（通过接收者仓储查询当前用户被分享的通知）
-    var shareRecipients = shareRecipientRepository.findByRecipientId(userId);
-
-    // 合并、去重、排序（按时间倒序），取前 safeLimit 条
-    List<ActivityItem> activities = Stream.concat(
-        recents.stream().map(r -> ActivityItem.builder()
-            .type(ActivityItem.TYPE_RECENT)
-            .fileNodeId(r.getNodeId())
-            .activityTime(r.getAccessedAt())
-            .build()),
-        shareRecipients.stream().map(sr -> ActivityItem.builder()
-            .type(ActivityItem.TYPE_SHARED)
-            .fileNodeId(sr.getShareId())
-            .activityTime(sr.getViewedAt() != null ? sr.getViewedAt() : sr.getCreatedAt())
-            .operatorId(sr.getCreatedBy())
-            .build()))
-        .sorted((a, b) -> {
-          if (a.getActivityTime() == null || b.getActivityTime() == null) {
-            return 0;
-          }
-          return b.getActivityTime().compareTo(a.getActivityTime());
-        })
-        .limit(safeLimit)
-        .collect(Collectors.toList());
+    List<ActivityItem> activities = activityQueryService.listActivities(userId, tenantId, page, limit);
 
     log.debug("[ActivityController] 查询活动流: userId={}, page={}, limit={}, resultSize={}",
-        userId, page, safeLimit, activities.size());
+        userId, page, limit, activities.size());
     return YdszResponse.success(activities);
-  }
-
-  /** 活动流条目 DTO */
-  @Data
-  @Builder
-  public static class ActivityItem {
-    /** 活动类型：最近访问 */
-    public static final String TYPE_RECENT = "recent";
-
-    /** 活动类型：被分享 */
-    public static final String TYPE_SHARED = "shared";
-
-    /** 活动类型：recent / shared */
-    private String type;
-
-    /** 关联文件节点 ID */
-    private String fileNodeId;
-
-    /** 关联文件名 */
-    private String fileName;
-
-    /** 活动时间 */
-    private java.time.LocalDateTime activityTime;
-
-    /** 操作人 ID（分享场景为分享者） */
-    private String operatorId;
   }
 }

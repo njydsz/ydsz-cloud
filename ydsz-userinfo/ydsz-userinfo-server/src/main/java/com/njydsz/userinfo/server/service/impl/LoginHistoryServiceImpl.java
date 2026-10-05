@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.UserLoginHistoryDTO;
+import com.njydsz.userinfo.domain.query.LoginLogPageQuery;
 import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 import com.njydsz.userinfo.server.auth.LoginAttemptCounterService;
@@ -110,5 +112,10 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
       log.warn("Failed to query recent logins: userId={}, error={}", userId, e.getMessage());
       return List.of();
     }
+  }
+
+  @Override
+  public PageResponse<List<UserLoginHistoryVO>> pageLoginHistory(LoginLogPageQuery query) {
+    return loginHistoryRepository.page(query);
   }
 }

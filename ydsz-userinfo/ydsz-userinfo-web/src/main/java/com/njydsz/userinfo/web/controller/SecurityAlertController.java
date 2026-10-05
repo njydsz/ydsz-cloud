@@ -18,8 +18,8 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
-import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
 import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
+import com.njydsz.userinfo.server.alert.SecurityAlertService;
 
 /**
  * 安全告警管理 Controller。
@@ -50,7 +50,7 @@ public class SecurityAlertController {
   /** 分页查询每页大小上限 */
   private static final int MAX_PAGE_SIZE = 100;
 
-  private final SecurityAlertRepository alertRepository;
+  private final SecurityAlertService alertService;
 
   /**
    * 分页查询安全告警列表。
@@ -67,7 +67,7 @@ public class SecurityAlertController {
     if (query.getPageSize() > MAX_PAGE_SIZE) {
       query.setPageSize(MAX_PAGE_SIZE);
     }
-    return YdszResponse.success(alertRepository.page(query));
+    return YdszResponse.success(alertService.pageAlerts(query));
   }
 
   /**
@@ -92,7 +92,7 @@ public class SecurityAlertController {
         log.debug("[SecurityAlert] 忽略无效的风险等级值: riskLevel={}", riskLevel);
       }
     }
-    return YdszResponse.success(alertRepository.findPendingAlerts(riskLevelEnum, limit));
+    return YdszResponse.success(alertService.findPendingAlerts(riskLevelEnum, limit));
   }
 
   /**
@@ -109,7 +109,7 @@ public class SecurityAlertController {
       @PathVariable String id,
       @RequestParam(required = false) String note) {
     return YdszResponse.success(
-        alertRepository.updateStatus(id, SecurityAlert.AlertStatus.ACKNOWLEDGED, note));
+        alertService.updateStatus(id, SecurityAlert.AlertStatus.ACKNOWLEDGED, note));
   }
 
   /**
@@ -126,7 +126,7 @@ public class SecurityAlertController {
       @PathVariable String id,
       @RequestParam(required = false) String note) {
     return YdszResponse.success(
-        alertRepository.updateStatus(id, SecurityAlert.AlertStatus.RESOLVED, note));
+        alertService.updateStatus(id, SecurityAlert.AlertStatus.RESOLVED, note));
   }
 
   /**
@@ -143,6 +143,6 @@ public class SecurityAlertController {
       @PathVariable String id,
       @RequestParam(required = false) String note) {
     return YdszResponse.success(
-        alertRepository.updateStatus(id, SecurityAlert.AlertStatus.IGNORED, note));
+        alertService.updateStatus(id, SecurityAlert.AlertStatus.IGNORED, note));
   }
 }

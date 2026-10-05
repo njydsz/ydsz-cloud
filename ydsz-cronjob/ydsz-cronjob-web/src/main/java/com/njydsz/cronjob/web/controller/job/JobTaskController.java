@@ -1,6 +1,5 @@
 package com.njydsz.cronjob.web.controller.job;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,9 +20,7 @@ import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.cronjob.domain.enums.JobTaskStatusEnum;
-import com.njydsz.cronjob.domain.repository.JobRepository;
-import com.njydsz.cronjob.domain.repository.JobTaskRepository;
+import com.njydsz.cronjob.domain.service.JobTaskQueryService;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 
 /**
@@ -52,12 +49,8 @@ import com.njydsz.cronjob.domain.vo.JobTaskVO;
 @RequiredArgsConstructor
 @Validated
 public class JobTaskController {
-  /** 集合初始容量 */
-  private static final int COLLECTION_CAPACITY = 16;
-
-
-  /** 子任务 Repository（DDD 分层：Controller 通过 Repository 接口查询子任务） */
-  private final JobTaskRepository jobTaskRepository;
+  /** 子任务查询 Service（DDD 分层：Controller → Service → Repository） */
+  private final JobTaskQueryService jobTaskQueryService;
 
   /**
    * 查询指定执行日志的子任务列表。
@@ -71,8 +64,8 @@ public class JobTaskController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/list")
   public YdszResponse<List<JobTaskVO>> list(@RequestParam String logId) {
-    // 通过 Repository 查询（返回 VO 列表）
-    return YdszResponse.success(jobTaskRepository.findByLogId(logId));
+    // 通过 Service 查询子任务列表（Service → Repository）
+    return YdszResponse.success(jobTaskQueryService.findByLogId(logId));
   }
 
   /**
@@ -97,8 +90,8 @@ public class JobTaskController {
           @Min(value = 1, message = "{validation.cronjob.msg_15154512}")
           @Max(100)
           int size) {
-    // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
-    PageResponse<List<JobTaskVO>> result = jobTaskRepository.pageByLogId(logId, page, size);
+    // 通过 Service 分页查询（Service → Repository）
+    PageResponse<List<JobTaskVO>> result = jobTaskQueryService.pageByLogId(logId, page, size);
     return YdszResponse.success(result);
   }
 
@@ -114,19 +107,7 @@ public class JobTaskController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/progress")
   public YdszResponse<Map<String, Object>> progress(@RequestParam String logId) {
-    // 通过 Repository 统计各状态子任务数量（避免拉取全量列表）
-    int total = jobTaskRepository.countByLogId(logId);
-    int pending = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.PENDING.name());
-    int running = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.RUNNING.name());
-    int success = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.SUCCESS.name());
-    int failed = jobTaskRepository.countByLogIdAndStatus(logId, JobTaskStatusEnum.FAILED.name());
-    Map<String, Object> result = new HashMap<>(COLLECTION_CAPACITY);
-    result.put("total", total);
-    result.put("pending", pending);
-    result.put("running", running);
-    result.put("success", success);
-    result.put("failed", failed);
-    result.put("progressPercent", total > 0 ? (int) ((success + failed) * 100.0 / total) : 0);
-    return YdszResponse.success(result);
+    // 通过 Service 获取子任务执行进度（Service → Repository）
+    return YdszResponse.success(jobTaskQueryService.getProgress(logId));
   }
 }

@@ -178,6 +178,12 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- ArchUnit：DDD 分层架构合规门禁（YDIZ-DDD-001 P0 编译期拦截） -->
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- spring-boot-starter-test: 提供spring-boot-test、spring-boot-test-autoconfigure、spring-test、jackson-databind -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,9 +1,6 @@
 package com.njydsz.nextwiki.web.controller;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,10 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.nextwiki.domain.repository.SpaceRepository;
-import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.domain.vo.SpaceVO;
 import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
+import com.njydsz.nextwiki.server.service.InternalQueryService;
 
 /**
  * 内部 API Controller（供跨服务 Feign 调用）
@@ -52,8 +48,7 @@ import com.njydsz.nextwiki.domain.vo.StorageQuotaVO;
 @Tag(name = "内部 API", description = "跨服务 Feign 调用接口")
 public class InternalApiController {
 
-  private final SpaceRepository spaceRepository;
-  private final StorageQuotaRepository storageQuotaRepository;
+  private final InternalQueryService internalQueryService;
 
   // ==================== 空间查询接口 ====================
 
@@ -66,9 +61,7 @@ public class InternalApiController {
   @GetMapping("/space/get")
   @Operation(summary = "按空间 ID 查询空间详情（内部 Feign 调用）")
   public YdszResponse<SpaceVO> getSpaceById(@RequestParam String spaceId) {
-    return spaceRepository.findById(spaceId)
-        .map(YdszResponse::success)
-        .orElse(YdszResponse.success(null));
+    return internalQueryService.getSpaceById(spaceId);
   }
 
   /**
@@ -80,15 +73,7 @@ public class InternalApiController {
   @PostMapping("/space/batch")
   @Operation(summary = "批量按空间 ID 查询空间详情（内部 Feign 调用）")
   public YdszResponse<List<SpaceVO>> batchGetSpaces(@RequestBody List<String> spaceIds) {
-    if (spaceIds == null || spaceIds.isEmpty()) {
-      return YdszResponse.success(Collections.emptyList());
-    }
-    List<SpaceVO> result = spaceIds.stream()
-        .map(spaceRepository::findById)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .collect(Collectors.toList());
-    return YdszResponse.success(result);
+    return internalQueryService.batchGetSpaces(spaceIds);
   }
 
   // ==================== 配额查询接口 ====================
@@ -102,9 +87,7 @@ public class InternalApiController {
   @GetMapping("/quota/get-by-tenant")
   @Operation(summary = "按租户 ID 查询存储配额（内部 Feign 调用）")
   public YdszResponse<StorageQuotaVO> getQuotaByTenantId(@RequestParam String tenantId) {
-    return storageQuotaRepository.findByScope("tenant", tenantId)
-        .map(YdszResponse::success)
-        .orElse(YdszResponse.success(null));
+    return internalQueryService.getQuotaByTenantId(tenantId);
   }
 
   /**
@@ -116,8 +99,6 @@ public class InternalApiController {
   @GetMapping("/quota/get-by-space")
   @Operation(summary = "按空间 ID 查询存储配额（内部 Feign 调用）")
   public YdszResponse<StorageQuotaVO> getQuotaBySpaceId(@RequestParam String spaceId) {
-    return storageQuotaRepository.findByScope("space", spaceId)
-        .map(YdszResponse::success)
-        .orElse(YdszResponse.success(null));
+    return internalQueryService.getQuotaBySpaceId(spaceId);
   }
 }

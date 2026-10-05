@@ -28,11 +28,10 @@ import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.util.security.DigestUtils;
-import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
+import com.njydsz.nextwiki.server.service.WopiFileService;
 
 /**
  * WOPI 协议接口 Controller（P1-4 + P1-R5 + P2-R4）。
@@ -82,8 +81,9 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
  *   OnlyOffice/Collabora 编辑器
  *     → ydsz-gateway
  *       → ydsz-nextwiki-web (本 Controller)
- *         → ydsz-nextwiki-domain.FileNodeRepository
+ *         → ydsz-nextwiki-server.WopiFileService
  *         → ydsz-common-file (IFileStorage 抽象)
+ *         → ydsz-nextwiki-domain.FileNodeRepository（接口）
  * → ydsz-common-file.FileOps
  * </pre>
  *
@@ -98,10 +98,8 @@ import com.njydsz.nextwiki.server.config.NextwikiProperties;
 @Tag(name = "WOPI 协议", description = "在线协同编辑 WOPI 接口（OnlyOffice / Collabora 集成）")
 public class WopiController {
 
-  /** 文件节点仓储（用于查询/更新文件） */
-  private final FileNodeRepository fileNodeRepository;
-
-  private final NextwikiStructMapper mapper;
+  /** WOPI 文件操作服务（封装查询/锁定/更新逻辑） */
+  private final WopiFileService wopiFileService;
 
   /** NextWiki 全局配置 */
   private final NextwikiProperties properties;
@@ -128,7 +126,7 @@ public class WopiController {
     // P1-R5: WOPI Token 验证
     validateWopiToken(authToken);
 
-    FileNodeVO node = fileNodeRepository.findById(fileId).orElse(null);
+    FileNodeVO node = wopiFileService.findFileOptional(fileId).orElse(null);
     if (node == null || !node.isFile()) {
       return WopiCheckFileInfoResponse.error("file not found");
     }
@@ -166,7 +164,7 @@ public class WopiController {
     // P1-R5: WOPI Token 验证
     validateWopiToken(authToken);
 
-    FileNodeVO node = fileNodeRepository.findById(fileId).orElse(null);
+    FileNodeVO node = wopiFileService.findFileOptional(fileId).orElse(null);
     if (node == null || node.getStorageKey() == null) {
       return new byte[0];
     }
@@ -199,7 +197,6 @@ public class WopiController {
   @Idempotent(key = "ydsz:nextwiki:WopiController:putFileContents:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/contents")
   @Operation(summary = "WOPI PutFile", description = "接收编辑器保存的文件内容")
-  @Transactional(rollbackFor = Exception.class)
   public WopiPutFileResponse putFileContents(
       @PathVariable String fileId,
       @RequestHeader(value = AuthHeaderConstants.X_USER_ID, required = false) String userId,
@@ -210,7 +207,7 @@ public class WopiController {
     // P1-R5: WOPI Token 验证
     validateWopiToken(authToken);
 
-    FileNodeVO node = fileNodeRepository.findById(fileId).orElse(null);
+    FileNodeVO node = wopiFileService.findFileOptional(fileId).orElse(null);
     if (node == null) {
       return WopiPutFileResponse.error("file not found");
     }
@@ -236,10 +233,8 @@ public class WopiController {
               writeTempFile(content), node.getName(), node.getMimeType());
       storage.upload(null, storageKey, multipartFile);
 
-      node.setSize((long) content.length);
-      node.setUpdatedBy(userId);
-      node.setUpdatedAt(LocalDateTime.now());
-      fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
+      // 委托 WopiFileService 更新文件元数据（含事务）
+      wopiFileService.updateFileMeta(fileId, userId, content.length);
 
       log.info("[WopiController] PutFile 成功: fileId={}, size={}", fileId, content.length);
       return WopiPutFileResponse.ok();
@@ -261,7 +256,6 @@ public class WopiController {
   @Idempotent(key = "ydsz:nextwiki:WopiController:lockFile:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/lock")
   @Operation(summary = "WOPI Lock", description = "锁定文件防止并发编辑")
-  @Transactional(rollbackFor = Exception.class)
   public WopiPutFileResponse lockFile(
       @PathVariable String fileId,
       @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
@@ -270,15 +264,8 @@ public class WopiController {
 
     validateWopiToken(authToken);
 
-    FileNodeVO node = fileNodeRepository.findById(fileId).orElse(null);
-    if (node == null) {
-      return WopiPutFileResponse.error("file not found");
-    }
-
-    node.setStatus("locked");
-    node.setUpdatedBy(userId);
-    node.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
+    // 委托 WopiFileService 执行锁定逻辑（含状态变更事务）
+    wopiFileService.lockFile(fileId, userId);
 
     return WopiPutFileResponse.ok();
   }
@@ -294,7 +281,6 @@ public class WopiController {
   @Idempotent(key = "ydsz:nextwiki:WopiController:unlockFile:lock", ttlSeconds = 5)
   @PostMapping("/files/{fileId}/unlock")
   @Operation(summary = "WOPI Unlock", description = "解锁文件")
-  @Transactional(rollbackFor = Exception.class)
   public WopiPutFileResponse unlockFile(
       @PathVariable String fileId,
       @RequestHeader(value = "X-WOPI-Lock", required = false) String lockId,
@@ -302,13 +288,8 @@ public class WopiController {
 
     validateWopiToken(authToken);
 
-    FileNodeVO node = fileNodeRepository.findById(fileId).orElse(null);
-    if (node == null) {
-      return WopiPutFileResponse.error("file not found");
-    }
-
-    node.setStatus("active");
-    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
+    // 委托 WopiFileService 执行解锁逻辑（含状态变更事务）
+    wopiFileService.unlockFile(fileId);
 
     return WopiPutFileResponse.ok();
   }

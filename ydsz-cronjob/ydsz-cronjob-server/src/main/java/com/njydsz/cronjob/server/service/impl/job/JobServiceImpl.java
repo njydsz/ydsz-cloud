@@ -1388,5 +1388,32 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       bridge.indexDelete(type, id);
     }
   }
+
+  // ===== 任务分组查询实现（供 JobGroupController 使用，消除 Controller 直注 Repository） =====
+
+  @Override
+  public PageResponse<List<JobVO>> pageByGroup(String jobGroup, int page, int size) {
+    return jobRepository.pageByGroup(jobGroup, page, size);
+  }
+
+  @Override
+  public List<JobVO> findByGroupAndStatus(String jobGroup, String status) {
+    return jobRepository.findByGroupAndStatus(jobGroup, status);
+  }
+
+  @Override
+  public List<String> listDistinctGroups() {
+    return jobRepository.listDistinctGroups();
+  }
+
+  @Override
+  public long countByGroup(String jobGroup) {
+    return jobRepository.countByGroup(jobGroup);
+  }
+
+  @Override
+  public long countAll() {
+    return jobRepository.countAll();
+  }
 }
 

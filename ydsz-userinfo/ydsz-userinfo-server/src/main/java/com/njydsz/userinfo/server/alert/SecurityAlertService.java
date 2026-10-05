@@ -7,10 +7,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.alert.SecurityAlert;
 import com.njydsz.userinfo.domain.alert.SecurityAlertRepository;
+import com.njydsz.userinfo.domain.query.SecurityAlertPageQuery;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
@@ -237,19 +239,44 @@ public class SecurityAlertService {
         content));
   }
 
-  // ==================== 内部方法 ====================
+  // ==================== 查询与状态变更（供 Controller 调用）====================
 
   /**
-   * * 创建告警并发送通知。
+   * 分页查询安全告警列表。
    *
-   * @param alertType 告警类型
-   * @param riskLevel 风险等级
-   * @param userId 用户 ID
-   * @param username 用户名
-   * @param sourceIp 来源 IP
-   * @param title 标题
-   * @param content 内容
+   * @param query 分页查询参数（status / riskLevel / start / end / pageNum / pageSize）
+   * @return 分页告警列表
    */
+  public PageResponse<List<SecurityAlert>> pageAlerts(SecurityAlertPageQuery query) {
+    return alertRepository.page(query);
+  }
+
+  /**
+   * 查询待处理的告警列表。
+   *
+   * @param riskLevel 风险等级过滤（可为 null 表示不过滤）
+   * @param limit 限制数量
+   * @return 待处理告警列表
+   */
+  public List<SecurityAlert> findPendingAlerts(SecurityAlert.RiskLevel riskLevel, int limit) {
+    return alertRepository.findPendingAlerts(riskLevel, limit);
+  }
+
+  /**
+   * 更新告警状态。
+   *
+   * @param id 告警 ID
+   * @param status 目标状态
+   * @param handlerNote 处理备注
+   * @return 更新成功返回 true
+   */
+  public boolean updateStatus(
+      String id, SecurityAlert.AlertStatus status, String handlerNote) {
+    return alertRepository.updateStatus(id, status, handlerNote);
+  }
+
+  // ==================== 内部方法 ====================
+
   /**
    * 创建并发送安全告警（高风险/严重告警不受去重限制）。
    *
@@ -298,7 +325,7 @@ public class SecurityAlertService {
   }
 
   /**
-   * * 判断是否为重复告警。
+   * 判断是否为重复告警。
    *
    * @param alertType 告警类型
    * @param userId 用户 ID
@@ -387,7 +414,7 @@ public class SecurityAlertService {
   }
 
   /**
-   * * 发送通知到所有可用渠道。
+   * 发送通知到所有可用渠道。
    *
    * @param alert 安全告警
    */

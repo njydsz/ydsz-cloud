@@ -15,8 +15,8 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.userinfo.domain.query.LoginLogPageQuery;
-import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
+import com.njydsz.userinfo.server.service.LoginHistoryService;
 
 /**
  * 登录日志查询控制器。
@@ -37,7 +37,7 @@ import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 @RequiredArgsConstructor
 public class LoginLogController {
 
-  private final UserLoginHistoryRepository loginHistoryRepository;
+  private final LoginHistoryService loginHistoryService;
 
   /**
    * 分页查询登录日志。
@@ -54,6 +54,6 @@ public class LoginLogController {
   public YdszResponse<PageResponse<List<UserLoginHistoryVO>>> page(LoginLogPageQuery query) {
     log.debug("分页查询登录日志: username={}, ip={}, status={}",
         query.getUsername(), query.getLoginIp(), query.getStatus());
-    return YdszResponse.success(loginHistoryRepository.page(query));
+    return YdszResponse.success(loginHistoryService.pageLoginHistory(query));
   }
 }

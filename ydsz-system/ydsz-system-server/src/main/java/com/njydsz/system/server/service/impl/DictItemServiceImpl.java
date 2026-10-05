@@ -40,8 +40,8 @@ import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.rollback.DictItemRollbackStrategy;
 import com.njydsz.system.server.util.SystemVersionUtils;
 import com.njydsz.system.server.vo.DictItemExcelVO;
-import com.njyzsz.system.server.service.event.DictChangeEventConstants;
-import com.njyzsz.system.server.service.event.DictChangeEventPublisher;
+import com.njydsz.system.server.service.event.DictChangeEventConstants;
+import com.njydsz.system.server.service.event.DictChangeEventPublisher;
 
 
 

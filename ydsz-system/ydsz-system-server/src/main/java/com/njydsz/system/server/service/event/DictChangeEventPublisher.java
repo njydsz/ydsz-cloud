@@ -7,7 +7,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.context.AuthContextUtils;
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.auth.model.LoginUser;
 import com.njydsz.common.json.YdszJson;
 
 @Slf4j
@@ -28,8 +29,8 @@ public class DictChangeEventPublisher {
     publishEvent(DictChangeEvent.builder()
         .dictCode(dictCode)
         .eventType(eventType)
-        .operatorId(AuthContextUtils.getUserIdOrDefault("SYSTEM"))
-        .operatorName(AuthContextUtils.getUserNameOrDefault("SYSTEM"))
+        .operatorId(resolveOperatorId())
+        .operatorName(resolveOperatorName())
         .timestamp(LocalDateTime.now())
         .build());
   }
@@ -39,10 +40,20 @@ public class DictChangeEventPublisher {
         .dictCode(dictCode)
         .dictItemCode(dictItemCode)
         .eventType(eventType)
-        .operatorId(AuthContextUtils.getUserIdOrDefault("SYSTEM"))
-        .operatorName(AuthContextUtils.getUserNameOrDefault("SYSTEM"))
+        .operatorId(resolveOperatorId())
+        .operatorName(resolveOperatorName())
         .timestamp(LocalDateTime.now())
         .build());
+  }
+
+  private static String resolveOperatorId() {
+    LoginUser user = AuthContextUtils.getCurrentOrNull();
+    return user != null ? user.getUserId() : "SYSTEM";
+  }
+
+  private static String resolveOperatorName() {
+    LoginUser user = AuthContextUtils.getCurrentOrNull();
+    return user != null ? user.getUsername() : "SYSTEM";
   }
 
   private void publishEvent(DictChangeEvent event) {

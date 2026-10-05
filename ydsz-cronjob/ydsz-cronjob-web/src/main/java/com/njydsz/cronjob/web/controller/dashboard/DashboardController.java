@@ -1,7 +1,5 @@
 package com.njydsz.cronjob.web.controller.dashboard;
 
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +14,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.service.DashboardQueryService;
 
 /**
  * Dashboard 数据 API Controller（P2-6）。
@@ -41,12 +39,8 @@ import com.njydsz.cronjob.domain.repository.JobRepository;
 @RequestMapping("/cronjob/dashboard")
 @RequiredArgsConstructor
 public class DashboardController {
-  /** 集合初始容量 */
-  private static final int COLLECTION_CAPACITY = 16;
-
-
-  /** 任务定义 Repository */
-  private final JobRepository jobRepository;
+  /** Dashboard 查询 Service（DDD 分层：Controller → Service → Repository） */
+  private final DashboardQueryService dashboardQueryService;
 
   /**
    * 查询 Dashboard 概览数据。
@@ -59,32 +53,8 @@ public class DashboardController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/overview")
   public YdszResponse<Map<String, Object>> getOverview() {
-    Map<String, Object> data = new LinkedHashMap<>(COLLECTION_CAPACITY);
-
-    // 1. 任务状态分布
-    Map<String, Long> statusDistribution = new LinkedHashMap<>(COLLECTION_CAPACITY);
-    statusDistribution.put("NORMAL", jobRepository.countByStatus("NORMAL"));
-    statusDistribution.put("PAUSED", jobRepository.countByStatus("PAUSED"));
-    statusDistribution.put("AUTO_PAUSED", jobRepository.countByStatus("AUTO_PAUSED"));
-    statusDistribution.put("ERROR", jobRepository.countByStatus("ERROR"));
-    data.put("statusDistribution", statusDistribution);
-
-    // 2. 分组任务数量统计
-    List<String> groups = jobRepository.listDistinctGroups();
-    Map<String, Long> groupStats = new LinkedHashMap<>(COLLECTION_CAPACITY);
-    for (String group : groups) {
-      groupStats.put(group, jobRepository.countByGroup(group));
-    }
-    data.put("groupStats", groupStats);
-
-    // 3. 汇总指标
-    Map<String, Object> summary = new LinkedHashMap<>(COLLECTION_CAPACITY);
-    summary.put("total", jobRepository.countAll());
-    summary.put("normalCount", jobRepository.countByStatus("NORMAL"));
-    summary.put("pausedCount", jobRepository.countByStatus("PAUSED"));
-    summary.put("errorCount", jobRepository.countByStatus("ERROR"));
-    data.put("summary", summary);
-
+    // 通过 Service 聚合 Dashboard 数据（Service → Repository，符合 DDD 分层）
+    Map<String, Object> data = dashboardQueryService.getOverview();
     return YdszResponse.success(data);
   }
 }

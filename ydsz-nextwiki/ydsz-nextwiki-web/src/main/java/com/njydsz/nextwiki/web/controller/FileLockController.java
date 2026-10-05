@@ -1,7 +1,5 @@
 package com.njydsz.nextwiki.web.controller;
 
-import java.time.LocalDateTime;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +19,8 @@ import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
-import com.njydsz.nextwiki.domain.converter.NextwikiStructMapper;
-import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.server.service.FileLockService;
 import com.njydsz.nextwiki.server.service.FilePermissionService;
 
 /**
@@ -78,8 +72,10 @@ import com.njydsz.nextwiki.server.service.FilePermissionService;
  * <pre>
  *   前端 (PC Web) → ydsz-gateway → ydsz-nextwiki-web (本 Controller)
  *                                            ↓
- *                                   ydsz-nextwiki-domain.FileNodeRepository
+ *                                   ydsz-nextwiki-server.FileLockService
  *                                   ydsz-nextwiki-server.FilePermissionService
+ *                                            ↓
+ *                                   ydsz-nextwiki-domain.FileNodeRepository（接口）
  *                                            ↓
  *                                   ydsz-nextwiki-infra Mapper
  * </pre>
@@ -95,10 +91,8 @@ import com.njydsz.nextwiki.server.service.FilePermissionService;
 @Tag(name = "文件锁定", description = "Check-out/Check-in 防并发编辑（P0-R3 修复后使用 status 字段）")
 public class FileLockController {
 
-  /** 文件节点仓储（用于查询/更新文件状态） */
-  private final FileNodeRepository fileNodeRepository;
-
-  private final NextwikiStructMapper mapper;
+  /** 文件锁定服务（封装锁定/解锁状态变更） */
+  private final FileLockService fileLockService;
 
   /** 文件权限服务（封装读写权限校验） */
   private final FilePermissionService permissionService;
@@ -118,27 +112,14 @@ public class FileLockController {
   @PostMapping("/{nodeId}/lock")
   @Operation(summary = "锁定文件（Check-out）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  @Transactional(rollbackFor = Exception.class)
   public YdszResponse<Void> lock(
       @PathVariable String nodeId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     // P2-R2: 权限检查
     permissionService.checkWrite(nodeId, userId);
 
-    FileNodeVO node = fileNodeRepository.findById(nodeId).orElse(null);
-    if (node == null || !node.isFile()) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
-
-    // P0-R3: 使用 status 字段记录锁定状态，不再覆盖 shareStatus
-    if ("locked".equals(node.getStatus()) && !userId.equals(node.getUpdatedBy())) {
-      throw new BusinessException(NextwikiExceptionCode.FILE_LOCKED);
-    }
-
-    node.setStatus("locked");
-    node.setUpdatedBy(userId);
-    node.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
+    // 委托 FileLockService 执行锁定逻辑（含状态变更事务）
+    fileLockService.lock(nodeId, userId);
 
     log.info("[FileLockController] 锁定文件: nodeId={}, userId={}", nodeId, userId);
     return YdszResponse.success();
@@ -160,23 +141,14 @@ public class FileLockController {
   @PostMapping("/{nodeId}/unlock")
   @Operation(summary = "解锁文件（Check-in）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
-  @Transactional(rollbackFor = Exception.class)
   public YdszResponse<Void> unlock(
       @PathVariable String nodeId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
     // P2-R2: 权限检查
     permissionService.checkWrite(nodeId, userId);
 
-    FileNodeVO node = fileNodeRepository.findById(nodeId).orElse(null);
-    if (node == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-    }
-
-    // P0-R3: 恢复 status 为 active，不影响 shareStatus
-    node.setStatus("active");
-    node.setUpdatedBy(userId);
-    node.setUpdatedAt(LocalDateTime.now());
-    fileNodeRepository.update(mapper.fileNodeVOToDTO(node));
+    // 委托 FileLockService 执行解锁逻辑（含状态变更事务）
+    fileLockService.unlock(nodeId, userId);
 
     log.info("[FileLockController] 解锁文件: nodeId={}, userId={}", nodeId, userId);
     return YdszResponse.success();

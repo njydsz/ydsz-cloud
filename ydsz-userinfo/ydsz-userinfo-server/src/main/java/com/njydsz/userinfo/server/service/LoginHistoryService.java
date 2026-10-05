@@ -2,6 +2,8 @@ package com.njydsz.userinfo.server.service;
 
 import java.util.List;
 
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.userinfo.domain.query.LoginLogPageQuery;
 import com.njydsz.userinfo.domain.vo.UserLoginHistoryVO;
 
 /**
@@ -52,4 +54,14 @@ public interface LoginHistoryService {
    * @return 登录历史列表
    */
   List<UserLoginHistoryVO> getRecentLogins(String userId, int limit);
+
+  /**
+   * 分页查询登录历史列表。
+   *
+   * <p>支持按用户名、IP、登录结果、时间范围筛选，默认按创建时间降序排列。
+   *
+   * @param query 分页查询条件
+   * @return 分页结果（含总记录数与当前页数据）
+   */
+  PageResponse<List<UserLoginHistoryVO>> pageLoginHistory(LoginLogPageQuery query);
 }

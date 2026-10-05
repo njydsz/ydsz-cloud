@@ -1,10 +1,7 @@
 package com.njydsz.cronjob.web.controller.dag;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,17 +16,8 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.cronjob.domain.repository.JobDagInstanceRepository;
-import com.njydsz.cronjob.domain.repository.JobDagNodeInstanceRepository;
-import com.njydsz.cronjob.domain.repository.JobDagRepository;
-import com.njydsz.cronjob.domain.repository.JobLogRepository;
-import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
-import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
-import com.njydsz.cronjob.domain.vo.JobDagVO;
+import com.njydsz.cronjob.domain.service.DagTopologyQueryService;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.server.core.dag.DagCytoscapeHelper;
-import com.njydsz.cronjob.server.core.dag.DagDefinition;
-import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 
 /**
  * 任务执行拓扑图后端 API Controller（P2-11）。
@@ -76,27 +64,8 @@ import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 @RequestMapping("/cronjob/topology")
 @RequiredArgsConstructor
 public class TaskTopologyController {
-  /** 集合初始容量 */
-  private static final int COLLECTION_CAPACITY = 16;
-
-  /** 最近日志条数 */
-  private static final int RECENT_LOG_LIMIT = 20;
-
-
-  /** DAG 实例 Repository（DDD 分层：Controller 通过 Repository 接口访问） */
-  private final JobDagInstanceRepository dagInstanceRepository;
-
-  /** DAG 节点实例 Repository */
-  private final JobDagNodeInstanceRepository dagNodeInstanceRepository;
-
-  /** DAG 定义 Repository */
-  private final JobDagRepository dagRepository;
-
-  /** DAG 定义 JSON 编解码器 */
-  private final DagDefinitionCodec dagDefinitionCodec;
-
-  /** 任务执行日志 Repository */
-  private final JobLogRepository jobLogRepository;
+  /** DAG 拓扑查询 Service（DDD 分层：Controller → Service → Repository） */
+  private final DagTopologyQueryService dagTopologyQueryService;
 
   /**
    * 查询 DAG 实例的执行拓扑图数据。
@@ -121,31 +90,8 @@ public class TaskTopologyController {
   @GetMapping("/dagInstance/{dagInstanceId}")
   public YdszResponse<Map<String, Object>> getDagInstanceTopology(
       @PathVariable String dagInstanceId) {
-    // 1. 加载 DAG 实例（通过 Repository 返回 VO）
-    Optional<JobDagInstanceVO> instanceOpt = dagInstanceRepository.findById(dagInstanceId);
-    if (instanceOpt.isEmpty()) {
-      log.debug("[TaskTopology] DAG 实例不存在: dagInstanceId={}", dagInstanceId);
-      return YdszResponse.success(null);
-    }
-    JobDagInstanceVO instance = instanceOpt.get();
-
-    // 2. 加载 DAG 定义（dag_definition JSON 字段 → DagDefinition 对象）
-    Optional<JobDagVO> dagOpt = dagRepository.findById(instance.getDagId());
-    DagDefinition definition =
-        dagOpt.isPresent() && dagOpt.get().getDagDefinition() != null
-            ? dagDefinitionCodec.fromJson(dagOpt.get().getDagDefinition())
-            : DagDefinition.empty();
-
-    // 3. 查询节点实例列表（通过 Repository 返回 VO 列表）
-    List<JobDagNodeInstanceVO> nodeInstances =
-        dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
-
-    // 4. 组装拓扑数据（使用 LinkedHashMap 保持 key 顺序）
-    Map<String, Object> topology = new LinkedHashMap<>(COLLECTION_CAPACITY);
-    topology.put("dagDefinition", definition);
-    topology.put("dagInstance", instance);
-    topology.put("nodeInstances", nodeInstances);
-
+    // 通过 Service 组装拓扑数据（Service → Repository，符合 DDD 分层）
+    Map<String, Object> topology = dagTopologyQueryService.getDagInstanceTopology(dagInstanceId);
     return YdszResponse.success(topology);
   }
 
@@ -171,39 +117,8 @@ public class TaskTopologyController {
   @GetMapping("/dagInstance/{dagInstanceId}/cytoscape")
   public YdszResponse<Map<String, Object>> getDagInstanceCytoscape(
       @PathVariable String dagInstanceId) {
-    // 1. 加载 DAG 实例（通过 Repository）
-    Optional<JobDagInstanceVO> instanceOpt = dagInstanceRepository.findById(dagInstanceId);
-    if (instanceOpt.isEmpty()) {
-      log.debug("[TaskTopology] DAG 实例不存在: dagInstanceId={}", dagInstanceId);
-      return YdszResponse.success(null);
-    }
-    JobDagInstanceVO instance = instanceOpt.get();
-
-    // 2. 加载 DAG 定义（通过 Repository）
-    Optional<JobDagVO> dagOpt = dagRepository.findById(instance.getDagId());
-    DagDefinition definition =
-        dagOpt.isPresent() && dagOpt.get().getDagDefinition() != null
-            ? dagDefinitionCodec.fromJson(dagOpt.get().getDagDefinition())
-            : DagDefinition.empty();
-
-    // 3. 查询节点实例并构建状态映射（通过 Repository 返回 VO 列表）
-    List<JobDagNodeInstanceVO> nodeInstances =
-        dagNodeInstanceRepository.findByDagInstanceId(dagInstanceId);
-    Map<String, String> statusMap = new HashMap<>(COLLECTION_CAPACITY);
-    Map<String, Long> durationMap = new HashMap<>(COLLECTION_CAPACITY);
-    for (JobDagNodeInstanceVO ni : nodeInstances) {
-      if (ni.getJobKey() != null && ni.getNodeStatus() != null) {
-        statusMap.put(ni.getJobKey(), ni.getNodeStatus());
-      }
-      if (ni.getDurationMs() != null && ni.getDurationMs() > 0) {
-        durationMap.put(ni.getJobKey(), ni.getDurationMs());
-      }
-    }
-
-    // 4. 转换为 Cytoscape.js 格式
-    Map<String, Object> cytoscapeData =
-        DagCytoscapeHelper.toCytoscapeFormat(definition, statusMap, durationMap);
-
+    // 通过 Service 组装 Cytoscape.js 可视化数据（Service → Repository）
+    Map<String, Object> cytoscapeData = dagTopologyQueryService.getDagInstanceCytoscape(dagInstanceId);
     return YdszResponse.success(cytoscapeData);
   }
 
@@ -222,7 +137,7 @@ public class TaskTopologyController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/jobHistory/{jobKey}")
   public YdszResponse<List<JobLogVO>> getJobExecutionHistory(@PathVariable String jobKey) {
-    // 通过 Repository 查询最近 20 条执行日志（LIMIT 20 在 Repository 层控制）
-    return YdszResponse.success(jobLogRepository.findByJobKey(jobKey, RECENT_LOG_LIMIT));
+    // 通过 Service 查询执行历史（Service → Repository）
+    return YdszResponse.success(dagTopologyQueryService.getJobExecutionHistory(jobKey, 20));
   }
 }

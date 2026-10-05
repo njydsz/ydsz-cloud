@@ -1,4 +1,4 @@
-package com.njyzsz.system.server.service.impl;
+package com.njydsz.system.server.service.impl;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -8,21 +8,21 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njyzsz.common.cache.spring.YdszCacheable;
-import com.njyzsz.system.server.constant.SystemCacheConstants;
-import com.njyzsz.common.core.response.PageResponse;
-import com.njyzsz.common.event.api.DomainEvent;
-import com.njyzsz.common.event.api.DomainEventTypes;
-import com.njyzsz.common.event.publish.DomainEventPublisher;
-import com.njyzsz.common.exception.custom.BusinessException;
-import com.njyzsz.system.domain.dto.DictTypeDTO;
-import com.njyzsz.system.domain.enums.SystemExceptionCode;
-import com.njyzsz.system.domain.query.DictPageQuery;
-import com.njyzsz.system.domain.repository.DictRepository;
-import com.njyzsz.system.domain.vo.DictTypeVO;
-import com.njyzsz.system.server.service.DictService;
-import com.njyzsz.system.server.service.event.DictChangeEventConstants;
-import com.njyzsz.system.server.service.event.DictChangeEventPublisher;
+import com.njydsz.common.cache.spring.YdszCacheable;
+import com.njydsz.system.server.constant.SystemCacheConstants;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.system.domain.dto.DictTypeDTO;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.DictPageQuery;
+import com.njydsz.system.domain.repository.DictRepository;
+import com.njydsz.system.domain.vo.DictTypeVO;
+import com.njydsz.system.server.service.DictService;
+import com.njydsz.system.server.service.event.DictChangeEventConstants;
+import com.njydsz.system.server.service.event.DictChangeEventPublisher;
 
 
 /**

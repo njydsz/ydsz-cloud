@@ -26,9 +26,9 @@ import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.dto.FileCommentDTO;
-import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
 import com.njydsz.nextwiki.domain.vo.FileCommentVO;
 import com.njydsz.nextwiki.server.mention.MentionService;
+import com.njydsz.nextwiki.server.service.FileCommentService;
 
 /**
  * 文件评论 REST API Controller（P1-5）。
@@ -74,7 +74,9 @@ import com.njydsz.nextwiki.server.mention.MentionService;
  * <pre>
  *   前端 (PC Web) → ydsz-gateway → ydsz-nextwiki-web (本 Controller)
  *                                            ↓
- *                                   ydsz-nextwiki-domain.FileCommentRepository
+ *                                   ydsz-nextwiki-server.FileCommentService
+ *                                            ↓
+ *                                   ydsz-nextwiki-domain.FileCommentRepository（接口）
  *                                            ↓
  *                                   ydsz-nextwiki-infra Mapper
  *                                            ↓
@@ -101,8 +103,8 @@ public class FileCommentController {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  /** 文件评论仓储（封装评论的 CRUD + 解决标记） */
-  private final FileCommentRepository commentRepository;
+  /** 文件评论服务（封装评论的 CRUD + 解决标记） */
+  private final FileCommentService fileCommentService;
 
   /** @ 提及服务（S4-P3-04） */
   private final MentionService mentionService;
@@ -119,7 +121,7 @@ public class FileCommentController {
   @Operation(summary = "查询文件的评论列表")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VIEW)
   public YdszResponse<List<FileCommentVO>> listComments(@PathVariable String fileNodeId) {
-    return YdszResponse.success(commentRepository.findByFileNodeId(fileNodeId));
+    return YdszResponse.success(fileCommentService.listComments(fileNodeId));
   }
 
   /**
@@ -170,7 +172,7 @@ public class FileCommentController {
             .mentions(mentions.isEmpty() ? null : mentions)
             .build();
 
-    FileCommentVO saved = commentRepository.save(comment);
+    FileCommentVO saved = fileCommentService.addComment(comment);
 
     // 发送 @ 提及通知（S4-P3-04）
     if (!mentions.isEmpty()) {
@@ -211,7 +213,7 @@ public class FileCommentController {
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
   public YdszResponse<Void> deleteComment(
       @PathVariable String commentId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    commentRepository.delete(commentId);
+    fileCommentService.deleteComment(commentId);
     return YdszResponse.success();
   }
 
@@ -235,7 +237,7 @@ public class FileCommentController {
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
   public YdszResponse<Void> resolveComment(
       @PathVariable String commentId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
-    commentRepository.markResolved(commentId, userId);
+    fileCommentService.resolveComment(commentId, userId);
     return YdszResponse.success();
   }
 

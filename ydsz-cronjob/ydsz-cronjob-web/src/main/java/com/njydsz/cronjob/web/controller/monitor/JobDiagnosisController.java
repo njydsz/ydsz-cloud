@@ -22,7 +22,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.cronjob.domain.repository.JobLogRepository;
+import com.njydsz.cronjob.domain.service.JobDiagnosisService;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
@@ -67,8 +67,8 @@ public class JobDiagnosisController {
   private static final int MAP_CAPACITY_4 = 4;
 
 
-  /** 日志 Repository（DDD 分层：Controller 通过 Repository 接口查询日志） */
-  private final JobLogRepository jobLogRepository;
+  /** 诊断 Service（DDD 分层：Controller → Service → Repository） */
+  private final JobDiagnosisService jobDiagnosisService;
   private final CronjobProperties cronjobProperties;
   private final CronjobRedisOps cronjobRedisOps;
 
@@ -102,7 +102,7 @@ public class JobDiagnosisController {
     diagnosis.put("nodeId", getNodeId());
 
     // 2. 最近一次执行日志（通过 Repository 查询 VO）
-    Optional<JobLogVO> lastLogOpt = jobLogRepository.findLatestByJobKey(jobKey);
+    Optional<JobLogVO> lastLogOpt = jobDiagnosisService.findLatestByJobKey(jobKey);
     if (lastLogOpt.isPresent()) {
       JobLogVO lastLog = lastLogOpt.get();
       Map<String, Object> lastLogInfo = new HashMap<>(MAP_CAPACITY_8);
@@ -120,7 +120,7 @@ public class JobDiagnosisController {
     }
 
     // 3. 最近 5 次执行记录数
-    List<JobLogVO> recentLogs = jobLogRepository.findByJobKey(jobKey, RECENT_LOG_LIMIT);
+    List<JobLogVO> recentLogs = jobDiagnosisService.findByJobKey(jobKey, RECENT_LOG_LIMIT);
     diagnosis.put("recentExecutions", recentLogs.size());
 
     // 4. 当前 Redis 锁状态（DDD 分层：Controller 通过 CronjobRedisOps 访问 Redis，禁止直接依赖 RedisTemplate）

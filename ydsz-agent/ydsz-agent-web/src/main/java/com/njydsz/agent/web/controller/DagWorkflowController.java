@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,15 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.entity.DagWorkflow;
-import com.njydsz.agent.domain.repository.DagWorkflowRepository;
+import com.njydsz.agent.domain.service.DagWorkflowService;
 import com.njydsz.agent.web.util.ExcelExportUtil;
 import com.njydsz.agent.web.vo.DagWorkflowExportVO;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.locales.util.I18n;
-import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * DAG 工作流持久化管理 Controller。
@@ -34,20 +30,20 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>提供工作流 DSL 的 CRUD 能力（保存 / 更新 / 查询 / 列表 / 删除），
  * 与执行控制器（{@code DagController}）分离，各司其职。
  *
+ * <p><b>DDD 分层：</b>Controller 注入 {@link DagWorkflowService}（domain 接口），
+ * 禁止直接注入 Repository。
+ *
  * @author ydsz-team
  * @since 26.09.17
  */
 @Slf4j
 @ApiVersion("26.09.17")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/agent/dag-workflow")
 public class DagWorkflowController {
 
-  private final DagWorkflowRepository repository;
-
-  public DagWorkflowController(DagWorkflowRepository repository) {
-    this.repository = repository;
-  }
+  private final DagWorkflowService dagWorkflowService;
 
   /**
    * 保存工作流（新建 / 更新）。
@@ -57,8 +53,7 @@ public class DagWorkflowController {
    * <ol>
    *   <li>校验工作流名称、分类等基础字段</li>
    *   <li>若为新建（workflowCode 为空），自动生成编码并将 isPublished 设为 false</li>
-   *   <li>若为更新，按 workflowCode 查询现有记录，不存在则抛异常</li>
-   *   <li>执行器校验 {@code dslContent} 格式合法性（YAML 语法 + 节点定义完整性）</li>
+   *   <li>若为更新，按 workflowCode 查询现有记录，不存在则抛业务异常</li>
    *   <li>持久化到数据库并返回记录 ID</li>
    * </ol>
    *
@@ -66,80 +61,54 @@ public class DagWorkflowController {
    *
    * @param dto 工作流数据（workflowCode 为空则新建；存在则更新；必填字段：workflowName / dslContent）
    * @return 统一响应结果，data 为保存后的工作流 ID（雪花算法字符串）
-   * @throws IllegalArgumentException 更新时工作流编码不存在，或 DSL 格式校验失败
-   * @throws RuntimeException 数据库写入失败（"保存失败"）
    */
   @PostMapping("/save")
   public YdszResponse<String> save(@Valid @RequestBody DagWorkflowDTO dto) {
-    boolean isCreate = (dto.getWorkflowCode() == null || dto.getWorkflowCode().isBlank());
-    DagWorkflow entity;
-    if (isCreate) {
-      entity = new DagWorkflow();
-      entity.setWorkflowCode(generateWorkflowCode());
-    } else {
-      entity = repository.findByCode(dto.getWorkflowCode())
-          .orElseThrow(() -> new IllegalArgumentException("工作流不存在: " + dto.getWorkflowCode()));
-    }
-    entity.setName(dto.getWorkflowName());
-    entity.setDescription(dto.getDescription());
-    entity.setDsl(dto.getDslContent());
-    entity.setCategory(dto.getCategory());
-    boolean ok = isCreate ? repository.insert(entity) : repository.updateById(entity);
-    if (!ok) {
-      throw BusinessException.of(CoreExceptionCode.FAIL).msg(I18n.message("agent.error.dag.save_failed"));
-    }
-    return YdszResponse.success(entity.getId());
+    String id = dagWorkflowService.save(dto);
+    return YdszResponse.success(id);
   }
 
   /**
    * 根据编码查询工作流。
    *
    * <p>按 {@code workflowCode}（业务唯一编码）查询单条工作流记录。
-   * 编码为 {@code dag-{UUID前12位}} 格式，持久化时自动生成。
+   * 编码为 {@code dag-{雪花ID}} 格式，持久化时自动生成。
    *
    * @param code 工作流编码（格式：dag-xxxxxxxxxxxx），不可为空或空白
-   * @return 统一响应结果，data 为 {@link DagWorkflow}（含 id / workflowCode / workflowName / dslContent / layoutJson / category / isPublished 等字段）；不存在时返回 null
+   * @return 统一响应结果，data 为 {@link DagWorkflow}（含 id / workflowCode / workflowName / dsl / category 等字段）；不存在时返回 null
    */
   @GetMapping("/{code}")
   public YdszResponse<DagWorkflow> getByCode(@PathVariable String code) {
-    return repository.findByCode(code)
-        .map(YdszResponse::success)
-        .orElse(YdszResponse.success(null));
+    return YdszResponse.success(dagWorkflowService.getByCode(code));
   }
 
   /**
    * 查询工作流列表。
    *
    * <p>按分类条件筛选工作流记录。不传分类或不传参数时返回全量列表。
-   * 结果按持久化顺序返回，前端通常需要按 createdAt 倒序展示。
+   * 结果按更新时间倒序返回。
    *
    * @param category 分类筛选（可选，传 null / 空字符串则返回全量），用于区分不同业务域的工作流（如 "order" / "report" / "analysis"）
    * @return 统一响应结果，data 为 {@link DagWorkflow} 列表；无匹配记录时返回空列表（非 null）
    */
   @GetMapping("/list")
   public YdszResponse<List<DagWorkflow>> list(@RequestParam(required = false) String category) {
-    List<DagWorkflow> workflows = (category == null || category.isBlank())
-        ? repository.findAll()
-        : repository.findByCategory(category);
-    return YdszResponse.success(workflows);
+    return YdszResponse.success(dagWorkflowService.listByCategory(category));
   }
 
   /**
    * 删除工作流（逻辑删除）。
    *
-   * <p>按编码查询目标工作流并执行逻辑删除（设置 {@code deleted=true} 或等效标记），
+   * <p>按编码查询目标工作流并执行逻辑删除（设置 isDeleted），
    * 已从列表中移除但数据库记录仍存在。注意：删除前不会校验工作流是否被其他工作流依赖，
    * 如需级联校验请在上游业务逻辑中处理。
    *
    * @param code 工作流编码（格式：dag-xxxxxxxxxxxx）
    * @return 统一响应结果，data 为 true 表示删除成功
-   * @throws IllegalArgumentException 工作流编码不存在
    */
   @DeleteMapping("/{code}")
   public YdszResponse<Boolean> delete(@PathVariable String code) {
-    DagWorkflow entity = repository.findByCode(code)
-        .orElseThrow(() -> new IllegalArgumentException("工作流不存在: " + code));
-    return YdszResponse.success(repository.deleteById(entity.getId()));
+    return YdszResponse.success(dagWorkflowService.deleteByCode(code));
   }
 
   /**
@@ -151,16 +120,15 @@ public class DagWorkflowController {
    *
    * <p>Excel 表头和列宽通过 {@link DagWorkflowExportVO} 上的 {@code @ExcelProperty} 注解定义。
    *
+   * @param response HTTP 响应
    * @param category 分类筛选（同 {@link #list(java.lang.String)}）
    */
   @Operation(summary = "导出 DAG 工作流列表（Excel）")
   @GetMapping("/export")
   public void exportDagWorkflows(
-      @RequestParam(required = false) String category,
-      jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-    List<DagWorkflow> all = (category == null || category.isBlank())
-        ? repository.findAll()
-        : repository.findByCategory(category);
+      jakarta.servlet.http.HttpServletResponse response,
+      @RequestParam(required = false) String category) throws java.io.IOException {
+    List<DagWorkflow> all = dagWorkflowService.listByCategory(category);
     List<DagWorkflowExportVO> rows = new ArrayList<>(all.size());
     for (DagWorkflow entity : all) {
       rows.add(toExportVO(entity));
@@ -186,10 +154,5 @@ public class DagWorkflowController {
     export.setCreatedBy(entity.getCreatedBy());
     export.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null);
     return export;
-  }
-
-  /** 生成工作流编码：dag-{UUID 前 12 位} */
-  private String generateWorkflowCode() {
-    return "dag-" + IdGenerator.nextIdStr();
   }
 }

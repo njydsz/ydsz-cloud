@@ -1,9 +1,6 @@
 package com.njydsz.cronjob.web.controller.job;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,13 +19,9 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.PermissionCodes;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
-import com.njydsz.cronjob.domain.constants.CronjobConstants;
-import com.njydsz.cronjob.domain.repository.JobDailyStatsRepository;
-import com.njydsz.cronjob.domain.repository.JobLogRepository;
-import com.njydsz.cronjob.domain.repository.JobRepository;
+import com.njydsz.cronjob.domain.service.JobStatsQueryService;
 import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
 import com.njydsz.cronjob.domain.vo.JobLogVO;
-import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
  * 任务执行统计 Controller（P2-3 执行历史趋势可视化 + P1-2 监控仪表盘）。
@@ -56,30 +49,8 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequestMapping("/cronjob/stats")
 @RequiredArgsConstructor
 public class JobStatsController {
-  /** 集合初始容量 */
-  private static final int COLLECTION_CAPACITY = 16;
-
-  /** 一天小时数 */
-  private static final int HOURS_PER_DAY = 24;
-
-  /** 结束分钟 */
-  private static final int MINUTE_END = 59;
-
-  /** 结束秒 */
-  private static final int SECOND_END = 59;
-
-
-  /** 每日统计 Repository（DDD 分层：Controller 通过 Repository 接口访问） */
-  private final JobDailyStatsRepository jobDailyStatsRepository;
-
-  /** 日志 Repository（仪表盘实时数据查询） */
-  private final JobLogRepository jobLogRepository;
-
-  /** 任务 Repository（任务总数统计） */
-  private final JobRepository jobRepository;
-
-  /** Prometheus 指标（可选注入） */
-  private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
+  /** 任务统计查询 Service（DDD 分层：Controller → Service → Repository） */
+  private final JobStatsQueryService jobStatsQueryService;
 
   /**
    * 查询指定任务的每日统计（趋势图数据源）。
@@ -99,9 +70,9 @@ public class JobStatsController {
       @RequestParam String jobId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-    // 通过 Repository 查询（LocalDate 重载内部转换为 LocalDateTime）
+    // 通过 Service 查询每日统计（Service → Repository）
     return YdszResponse.success(
-        jobDailyStatsRepository.findByJobIdAndDateRange(jobId, startDate, endDate));
+        jobStatsQueryService.getDailyStats(jobId, startDate, endDate));
   }
 
   /**
@@ -126,44 +97,8 @@ public class JobStatsController {
       @RequestParam String jobId,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-    // 1. 通过 Repository 查询每日统计 VO 列表
-    List<JobDailyStatsVO> list =
-        jobDailyStatsRepository.findByJobIdAndDateRange(jobId, startDate, endDate);
-    // 2. 累加统计
-    long fireCount = 0L;
-    long successCount = 0L;
-    long failCount = 0L;
-    long timeoutCount = 0L;
-    long totalDuration = 0L;
-    long durationSamples = 0L;
-    for (JobDailyStatsVO s : list) {
-      if (s.getFireCount() != null) {
-        fireCount += s.getFireCount();
-      }
-      if (s.getSuccessCount() != null) {
-        successCount += s.getSuccessCount();
-      }
-      if (s.getFailCount() != null) {
-        failCount += s.getFailCount();
-      }
-      if (s.getTimeoutCount() != null) {
-        timeoutCount += s.getTimeoutCount();
-      }
-      if (s.getAvgDurationMs() != null) {
-        totalDuration += s.getAvgDurationMs();
-        durationSamples++;
-      }
-    }
-    Map<String, Object> summary = new HashMap<>(COLLECTION_CAPACITY);
-    summary.put("jobId", jobId);
-    summary.put("startDate", startDate);
-    summary.put("endDate", endDate);
-    summary.put("fireCount", fireCount);
-    summary.put("successCount", successCount);
-    summary.put("failCount", failCount);
-    summary.put("timeoutCount", timeoutCount);
-    summary.put("avgDurationMs", durationSamples > 0 ? totalDuration / durationSamples : 0L);
-    return YdszResponse.success(summary);
+    // 通过 Service 汇总统计（Service → Repository）
+    return YdszResponse.success(jobStatsQueryService.getSummary(jobId, startDate, endDate));
   }
 
   // ==================== P1-2: 运维监控仪表盘增强 ====================
@@ -187,43 +122,8 @@ public class JobStatsController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/dashboard")
   public YdszResponse<Map<String, Object>> dashboard() {
-    Map<String, Object> dashboard = new HashMap<>(COLLECTION_CAPACITY);
-    // 1. 任务状态分布（通过 Repository 统计）
-    Map<String, Object> taskStats = new HashMap<>(COLLECTION_CAPACITY);
-    taskStats.put("total", jobRepository.countAll());
-    taskStats.put("normal", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_NORMAL));
-    taskStats.put("paused", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_PAUSED));
-    taskStats.put("error", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_ERROR));
-    taskStats.put("autoPaused", jobRepository.countByStatus(CronjobConstants.JOB_STATUS_AUTO_PAUSED));
-    dashboard.put("taskStats", taskStats);
-
-    // 2. 今日执行统计（通过 Repository 统计）
-    LocalDateTime todayStart = LocalDate.now().atStartOfDay();
-    Map<String, Object> todayExec = new HashMap<>(COLLECTION_CAPACITY);
-    long todayTotal = jobLogRepository.countByStatusAfter(null, todayStart);
-    long todaySuccess = jobLogRepository.countByStatusAfter("SUCCESS", todayStart);
-    long todayFailed = jobLogRepository.countByStatusAfter("FAILED", todayStart);
-    long todayRunning = jobLogRepository.countByStatusAfter("RUNNING", null);
-    todayExec.put("total", todayTotal);
-    todayExec.put("success", todaySuccess);
-    todayExec.put("failed", todayFailed);
-    todayExec.put("running", todayRunning);
-    todayExec.put(
-        "successRate",
-        todayTotal > 0
-            ? String.format("%.1f%%", todaySuccess * 100.0 / todayTotal)
-            : "N/A");
-    dashboard.put("todayExec", todayExec);
-
-    // 3. Prometheus 指标
-    CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
-    if (metrics != null) {
-      Map<String, Object> systemMetrics = new HashMap<>(COLLECTION_CAPACITY);
-      systemMetrics.put("running", todayRunning);
-      dashboard.put("systemMetrics", systemMetrics);
-    }
-
-    return YdszResponse.success(dashboard);
+    // 通过 Service 获取仪表盘数据（Service → Repository）
+    return YdszResponse.success(jobStatsQueryService.getDashboard());
   }
 
   /**
@@ -238,8 +138,8 @@ public class JobStatsController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
   @GetMapping("/recent-failures")
   public YdszResponse<List<JobLogVO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
-    // 通过 Repository 查询最近失败日志（Repository 内部处理 LIMIT 上限）
-    return YdszResponse.success(jobLogRepository.findRecentFailures(limit));
+    // 通过 Service 查询最近失败日志（Service → Repository）
+    return YdszResponse.success(jobStatsQueryService.getRecentFailures(limit));
   }
 
   /**
@@ -256,18 +156,7 @@ public class JobStatsController {
   public YdszResponse<List<Map<String, Object>>> heatmap(
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
           LocalDate date) {
-    LocalDate queryDate = date != null ? date : LocalDate.now();
-    List<Map<String, Object>> heatmap = new ArrayList<>(COLLECTION_CAPACITY);
-    for (int hour = 0; hour < HOURS_PER_DAY; hour++) {
-      LocalDateTime hourStart = queryDate.atTime(hour, 0);
-      LocalDateTime hourEnd = queryDate.atTime(hour, MINUTE_END, SECOND_END);
-      // 通过 Repository 统计每小时的执行数量
-      long count = jobLogRepository.countByTimeRange(hourStart, hourEnd);
-      Map<String, Object> entry = new HashMap<>(COLLECTION_CAPACITY);
-      entry.put("hour", hour);
-      entry.put("count", count);
-      heatmap.add(entry);
-    }
-    return YdszResponse.success(heatmap);
+    // 通过 Service 获取热力图数据（Service → Repository）
+    return YdszResponse.success(jobStatsQueryService.getHeatmap(date));
   }
 }

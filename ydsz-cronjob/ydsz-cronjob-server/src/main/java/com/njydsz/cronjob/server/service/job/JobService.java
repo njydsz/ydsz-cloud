@@ -245,4 +245,47 @@ public interface JobService {
    * 的任务注册到调度器。
    */
   void loadOnStartup();
+
+  // ===== 任务分组查询（供 JobGroupController 使用，消除 Controller 直注 Repository） =====
+
+  /**
+   * 按任务分组分页查询任务列表（按 created_at 倒序）。
+   *
+   * @param jobGroup 任务分组（精确匹配）
+   * @param page 页码（从 1 开始）
+   * @param size 每页条数
+   * @return 分页结果
+   */
+  PageResponse<List<JobVO>> pageByGroup(String jobGroup, int page, int size);
+
+  /**
+   * 按任务分组和状态查询任务列表。
+   *
+   * @param jobGroup 任务分组（精确匹配）
+   * @param status 任务状态
+   * @return 任务 VO 列表
+   */
+  List<JobVO> findByGroupAndStatus(String jobGroup, String status);
+
+  /**
+   * 查询所有任务分组列表（去重）。
+   *
+   * @return 分组名称列表
+   */
+  List<String> listDistinctGroups();
+
+  /**
+   * 统计指定分组的任务数量。
+   *
+   * @param jobGroup 任务分组
+   * @return 任务数量
+   */
+  long countByGroup(String jobGroup);
+
+  /**
+   * 统计所有未删除任务总数。
+   *
+   * @return 任务总数
+   */
+  long countAll();
 }

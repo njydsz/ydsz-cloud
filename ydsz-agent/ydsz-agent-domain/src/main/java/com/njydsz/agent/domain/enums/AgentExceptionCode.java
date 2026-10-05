@@ -39,6 +39,8 @@ public enum AgentExceptionCode implements ExceptionCode {
   AGENT_EXECUTION_FAILED("B94004", "agent.execution.failed", 500),
   /** DAG 编排存在环引用 */
   AGENT_DAG_CYCLE_DETECTED("B94005", "agent.dag.cycle.detected"),
+  /** DAG 工作流不存在 */
+  DAG_WORKFLOW_NOT_FOUND("B94006", "agent.dag.workflow.not.found"),
 
   // ==================== B94101-B94199 对话/记忆 ====================
   /** 会话不存在 */

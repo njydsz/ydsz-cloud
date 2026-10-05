@@ -28,7 +28,6 @@ import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.cronjob.domain.constants.CronjobConstants;
 import com.njydsz.cronjob.domain.dto.BatchResultDTO;
-import com.njydsz.cronjob.domain.repository.JobRepository;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.server.service.job.JobService;
 
@@ -91,10 +90,7 @@ public class JobGroupController {
   private static final int COLLECTION_CAPACITY = 16;
 
 
-  /** 任务 Repository（DDD 分层：Controller 通过 Repository 接口访问，禁止 Mapper 直注） */
-  private final JobRepository jobRepository;
-
-  /** 任务 Service（封装 batchPause/batchResume/batchTrigger 等批量操作） */
+  /** 任务 Service（封装分组/批量操作，DDD 分层：Controller → Service → Repository） */
   private final JobService jobService;
 
   /**
@@ -115,8 +111,8 @@ public class JobGroupController {
       @PathVariable String jobGroup,
       @RequestParam(defaultValue = "1") int page,
       @RequestParam(defaultValue = "20") int size) {
-    // 通过 Repository 分页查询（封装了 MyBatis-Plus Page 和 Entity→VO 转换）
-    PageResponse<List<JobVO>> result = jobRepository.pageByGroup(jobGroup, page, size);
+    // 通过 Service 分页查询（Service → Repository，符合 DDD 分层）
+    PageResponse<List<JobVO>> result = jobService.pageByGroup(jobGroup, page, size);
     return YdszResponse.success(result);
   }
 
@@ -143,7 +139,7 @@ public class JobGroupController {
   @PostMapping("/{jobGroup}/pause")
   public YdszResponse<BatchResultDTO<String>> pauseByGroup(@PathVariable String jobGroup) {
     // 查询 NORMAL 状态且未删除的任务
-    List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_NORMAL);
+    List<JobVO> jobs = jobService.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_NORMAL);
     // 提取 ID 列表
     List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
@@ -178,7 +174,7 @@ public class JobGroupController {
   @PostMapping("/{jobGroup}/resume")
   public YdszResponse<BatchResultDTO<String>> resumeByGroup(@PathVariable String jobGroup) {
     // 查询 PAUSED 状态且未删除的任务
-    List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_PAUSED);
+    List<JobVO> jobs = jobService.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_PAUSED);
     List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
       log.info("[JobGroup] resumeByGroup jobGroup={} 命中 0 个 PAUSED 任务，跳过", jobGroup);
@@ -214,7 +210,7 @@ public class JobGroupController {
   @PostMapping("/{jobGroup}/trigger")
   public YdszResponse<BatchResultDTO<String>> triggerByGroup(@PathVariable String jobGroup) {
     // 查询 NORMAL 状态且未删除的任务（仅 NORMAL 状态可被触发）
-    List<JobVO> jobs = jobRepository.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_NORMAL);
+    List<JobVO> jobs = jobService.findByGroupAndStatus(jobGroup, CronjobConstants.JOB_STATUS_NORMAL);
     List<String> jobIds = jobs.stream().map(JobVO::getId).toList();
     if (jobIds.isEmpty()) {
       log.info("[JobGroup] triggerByGroup jobGroup={} 命中 0 个 NORMAL 任务，跳过", jobGroup);
@@ -239,16 +235,16 @@ public class JobGroupController {
   @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
   @GetMapping("/stats")
   public YdszResponse<List<Map<String, Object>>> groupStats() {
-    // 1. 通过 Repository 获取去重分组列表
-    List<String> groups = jobRepository.listDistinctGroups();
+    // 1. 通过 Service 获取去重分组列表
+    List<String> groups = jobService.listDistinctGroups();
     // 2. 逐组统计任务数
     Map<String, Integer> counts = new LinkedHashMap<>(COLLECTION_CAPACITY);
     for (String group : groups) {
-      counts.put(group, (int) jobRepository.countByGroup(group));
+      counts.put(group, (int) jobService.countByGroup(group));
     }
     // jobGroup 为空的记录归入 default 分组
     long defaultCount =
-        jobRepository.countAll() - counts.values().stream().mapToLong(Integer::longValue).sum();
+        jobService.countAll() - counts.values().stream().mapToLong(Integer::longValue).sum();
     if (defaultCount > 0) {
       counts.put("default", (int) defaultCount);
     }

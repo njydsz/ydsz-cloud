@@ -34,7 +34,6 @@ import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
 import com.njydsz.common.util.net.ClientIpResolver;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService;
@@ -87,6 +86,7 @@ import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownl
  *                                            ↓
  *                                   ydsz-nextwiki-server.DownloadApplicationService
  *                                            ↓
+ *                                   ydsz-nextwiki-domain.FileNodeRepository（接口）
  *                                   ydsz-common-safe (ClientIpResolver / 限流)
  *                                   ydsz-common-file (IFileStorage 抽象)
  *                                            ↓
@@ -116,9 +116,6 @@ public class DownloadController {
   /** Micrometer 指标采集（记录下载次数） */
   private final NextwikiMetrics nextwikiMetrics;
 
-  /** 文件节点仓储（用于文件夹子节点递归查询） */
-  private final FileNodeRepository fileNodeRepository;
-
   /**
    * 将指定文件夹递归打包为 ZIP 流式下载。
    *
@@ -138,10 +135,7 @@ public class DownloadController {
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       HttpServletResponse response) {
 
-    FileNodeVO folder = fileNodeRepository.findById(folderId).orElse(null);
-    if (folder == null || !folder.isFolder()) {
-      throw new BusinessException(NextwikiExceptionCode.FILE_NOT_FOUND);
-    }
+    FileNodeVO folder = downloadApplicationService.findFolderForDownload(folderId);
 
     String zipName = folder.getName() + ".zip";
     setDownloadHeaders(response, zipName, "application/zip");
@@ -174,13 +168,8 @@ public class DownloadController {
       FileNodeVO folder, ZipOutputStream zos, String userId) {
 
     List<FileNodeVO> allDescendants;
-    try {
-      allDescendants = fileNodeRepository.findAllDescendants(folder.getId());
-    } catch (Exception e) {
-      log.warn("[DownloadController] 查询后代节点失败: folderId={}", folder.getId(), e);
-      return;
-    }
-    if (allDescendants == null || allDescendants.isEmpty()) {
+    allDescendants = downloadApplicationService.findFolderDescendants(folder.getId());
+    if (allDescendants.isEmpty()) {
       return;
     }
 
