@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +141,7 @@ public class FlowAssigneeAvailabilityService {
   }
 
   /**
-   * 批量查询审批人忙碌状态
+   * 批量查询审批人忙碌状态（Pipeline MGET 优化，2N 次 RTT → 2 次 RTT）
    *
    * @param userIds 用户 ID 列表
    * @return userId → availability Map
@@ -150,14 +151,49 @@ public class FlowAssigneeAvailabilityService {
     if (userIds == null || userIds.isEmpty()) {
       return result;
     }
-    for (String userId : userIds) {
-      result.put(userId, getAvailability(userId));
+
+    List<String> userIdList = new ArrayList<>(userIds);
+    int size = userIdList.size();
+    List<String> todoCountKeys = new ArrayList<>(size);
+    List<String> lastActiveKeys = new ArrayList<>(size);
+    for (String userId : userIdList) {
+      todoCountKeys.add(cacheKeyBuilder.assigneeTodoCount(userId));
+      lastActiveKeys.add(cacheKeyBuilder.assigneeLastActive(userId));
     }
+
+    try {
+      List<String> todoCountValues = redisStringOps.multiGetPipelined(todoCountKeys);
+      List<String> lastActiveValues = redisStringOps.multiGetPipelined(lastActiveKeys);
+
+      LocalDate today = LocalDate.now();
+      for (int i = 0; i < size; i++) {
+        String userId = userIdList.get(i);
+        Map<String, Object> availability = new HashMap<>(COLLECTION_CAPACITY);
+        availability.put("userId", userId);
+        availability.put("date", today.toString());
+
+        int todoCount = parseTodoCount(todoCountValues, i);
+        availability.put("todoCount", todoCount);
+        availability.put("status", calculateStatus(todoCount));
+
+        if (i < lastActiveValues.size()) {
+          availability.put("lastActive", lastActiveValues.get(i));
+        }
+
+        result.put(userId, availability);
+      }
+    } catch (Exception e) {
+      log.warn("[Availability] 批量查询失败 userIdCount={} err={}", size, e.getMessage());
+      for (String userId : userIdList) {
+        result.put(userId, getAvailability(userId));
+      }
+    }
+
     return result;
   }
 
   /**
-   * 推荐最空闲的审批人（从候选人中选择）
+   * 推荐最空闲的审批人（从候选人中选择，Pipeline 批量获取待办计数）
    *
    * @param candidateUserIds 候选人列表
    * @return 最空闲的候选人 userId，列表为空时返回 null
@@ -166,16 +202,28 @@ public class FlowAssigneeAvailabilityService {
     if (candidateUserIds == null || candidateUserIds.isEmpty()) {
       return null;
     }
-    String bestUser = null;
-    int minCount = Integer.MAX_VALUE;
+
+    List<String> keys = new ArrayList<>(candidateUserIds.size());
     for (String userId : candidateUserIds) {
-      int count = getTodoCount(userId);
-      if (count < minCount) {
-        minCount = count;
-        bestUser = userId;
-      }
+      keys.add(cacheKeyBuilder.assigneeTodoCount(userId));
     }
-    return bestUser;
+
+    try {
+      List<String> values = redisStringOps.multiGetPipelined(keys);
+      String bestUser = null;
+      int minCount = Integer.MAX_VALUE;
+      for (int i = 0; i < candidateUserIds.size(); i++) {
+        int count = parseTodoCount(values, i);
+        if (count < minCount) {
+          minCount = count;
+          bestUser = candidateUserIds.get(i);
+        }
+      }
+      return bestUser;
+    } catch (Exception e) {
+      log.warn("[Availability] 批量获取待办计数失败 candidateCount={} err={}", candidateUserIds.size(), e.getMessage());
+      return null;
+    }
   }
 
   // ============================== 私有方法 ==============================
@@ -200,6 +248,43 @@ public class FlowAssigneeAvailabilityService {
       log.warn("[Availability] 查询活跃时间失败 userId={}, err={}", userId, e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * 解析 Pipeline 批量查询结果中指定索引的待办计数
+   *
+   * @param values Pipeline 查询结果
+   * @param index 索引
+   * @return 待办计数（解析失败或 null 返回 0）
+   */
+  private int parseTodoCount(List<String> values, int index) {
+    if (values == null || index >= values.size() || values.get(index) == null) {
+      return 0;
+    }
+    try {
+      return Integer.parseInt(values.get(index));
+    } catch (NumberFormatException e) {
+      return 0;
+    }
+  }
+
+  /**
+   * 根据待办计数计算忙碌状态
+   *
+   * @param todoCount 待办计数
+   * @return 状态标识（IDLE/NORMAL/BUSY/OVERLOADED）
+   */
+  private String calculateStatus(int todoCount) {
+    if (todoCount == 0) {
+      return "IDLE";
+    }
+    if (todoCount < BUSY_THRESHOLD) {
+      return "NORMAL";
+    }
+    if (todoCount < OVERLOADED_THRESHOLD) {
+      return "BUSY";
+    }
+    return "OVERLOADED";
   }
 
   private void updateLastActive(String userId) {

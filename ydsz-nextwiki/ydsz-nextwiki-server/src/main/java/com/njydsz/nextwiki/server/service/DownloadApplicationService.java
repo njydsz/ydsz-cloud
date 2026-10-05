@@ -1,5 +1,7 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -128,6 +130,41 @@ public class DownloadApplicationService {
    */
   public IFileStorage resolveStorageForDownload() {
     return resolveStorage();
+  }
+
+  /**
+   * 校验文件夹存在性并返回文件夹节点。
+   *
+   * <p>供文件夹打包下载场景调用，避免 Controller 直接依赖 FileNodeRepository。
+   *
+   * @param folderId 文件夹节点 ID
+   * @return 文件夹节点 VO
+   * @throws BusinessException 节点不存在或非目录
+   */
+  public FileNodeVO findFolderForDownload(String folderId) {
+    FileNodeVO folder = fileNodeRepository.findById(folderId).orElse(null);
+    if (folder == null || !folder.isFolder()) {
+      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", folderId);
+    }
+    return folder;
+  }
+
+  /**
+   * 查询文件夹的全部后代节点（一次性加载，消除 N+1 查询）。
+   *
+   * <p>供文件夹打包下载场景调用，避免 Controller 直接依赖 FileNodeRepository。
+   *
+   * @param folderId 文件夹节点 ID
+   * @return 后代节点 VO 列表；查询失败或无后代返回空列表
+   */
+  public List<FileNodeVO> findFolderDescendants(String folderId) {
+    try {
+      List<FileNodeVO> descendants = fileNodeRepository.findAllDescendants(folderId);
+      return descendants != null ? descendants : List.of();
+    } catch (Exception e) {
+      log.warn("[DownloadApplicationService] 查询后代节点失败: folderId={}", folderId, e);
+      return List.of();
+    }
   }
 
   /** 下载上下文 */

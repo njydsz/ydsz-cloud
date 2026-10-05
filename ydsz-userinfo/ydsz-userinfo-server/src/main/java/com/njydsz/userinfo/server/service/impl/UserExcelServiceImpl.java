@@ -24,6 +24,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.UserAccountPageQuery;
 import com.njydsz.userinfo.domain.repository.DepartmentRepository;
 import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
@@ -320,7 +321,7 @@ public class UserExcelServiceImpl implements UserExcelService {
   }
 
   /**
-   * 批量查询已存在的用户名。
+   * 批量查询已存在的用户名（单次 SQL 预查，消除 N+1 循环查询）。
    *
    * @param usernames 待检查的用户名集合
    * @return 已存在的用户名集合
@@ -329,13 +330,13 @@ public class UserExcelServiceImpl implements UserExcelService {
     if (usernames.isEmpty()) {
       return new HashSet<>(0);
     }
-    return usernames.stream()
-        .filter(username -> userAccountRepository.findByUsername(username).isPresent())
+    return userAccountRepository.findAllByUsernames(usernames).stream()
+        .map(UserAccountVO::getUsername)
         .collect(Collectors.toSet());
   }
 
   /**
-   * 批量查询部门编码 → ID 映射。
+   * 批量查询部门编码 → ID 映射（单次 SQL 预查，消除 N+1 循环查询）。
    *
    * @param deptCodes 部门编码集合
    * @return 部门编码 → ID 映射
@@ -344,16 +345,13 @@ public class UserExcelServiceImpl implements UserExcelService {
     if (deptCodes.isEmpty()) {
       return new HashMap<>(0);
     }
-    Map<String, String> result = new HashMap<>(deptCodes.size());
-    for (String deptCode : deptCodes) {
-      departmentRepository.findByDeptCode(deptCode)
-          .ifPresent(vo -> result.put(deptCode, vo.getId()));
-    }
-    return result;
+    List<DepartmentVO> departments = departmentRepository.findAllByDeptCodes(deptCodes);
+    return departments.stream()
+        .collect(Collectors.toMap(DepartmentVO::getDeptCode, DepartmentVO::getId, (v1, v2) -> v1));
   }
 
   /**
-   * 批量查询用户名 → ID 映射。
+   * 批量查询用户名 → ID 映射（单次 SQL 预查，消除 N+1 循环查询）。
    *
    * @param usernames 用户名集合
    * @return 用户名 → ID 映射
@@ -362,12 +360,8 @@ public class UserExcelServiceImpl implements UserExcelService {
     if (usernames.isEmpty()) {
       return new HashMap<>(0);
     }
-    Map<String, String> result = new HashMap<>(usernames.size());
-    for (String username : usernames) {
-      userAccountRepository.findByUsername(username)
-          .ifPresent(vo -> result.put(username, vo.getId()));
-    }
-    return result;
+    return userAccountRepository.findAllByUsernames(usernames).stream()
+        .collect(Collectors.toMap(UserAccountVO::getUsername, UserAccountVO::getId, (v1, v2) -> v1));
   }
 
   /**

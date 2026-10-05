@@ -121,6 +121,17 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
   }
 
   @Override
+  public List<UserAccountVO> findAllByUsernames(Collection<String> usernames) {
+    if (usernames == null || usernames.isEmpty()) {
+      return new ArrayList<>();
+    }
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.in(UserAccount::getUsername, usernames);
+    List<UserAccount> entities = userAccountMapper.selectList(wrapper);
+    return converter.userAccountListToVO(entities);
+  }
+
+  @Override
   public long count(UserAccountPageQuery query) {
     LambdaQueryWrapper<UserAccount> wrapper = buildWrapper(query);
     return userAccountMapper.selectCount(wrapper);

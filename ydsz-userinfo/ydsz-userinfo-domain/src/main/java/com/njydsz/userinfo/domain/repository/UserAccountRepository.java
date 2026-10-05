@@ -111,6 +111,14 @@ public interface UserAccountRepository {
   List<UserAccountVO> listByIds(Collection<String> ids);
 
   /**
+   * 批量根据用户名查询用户账号（单次 SQL，消除 N+1 循环查询）。
+   *
+   * @param usernames 用户名集合
+   * @return 用户 VO 列表
+   */
+  List<UserAccountVO> findAllByUsernames(Collection<String> usernames);
+
+  /**
    * 统计符合条件的用户数量。
    *
    * @param query 查询参数
