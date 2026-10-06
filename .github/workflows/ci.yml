@@ -66,14 +66,14 @@ jobs:
             --frontend-root ./ydsz-micro \
             --verbose || echo "[CONTINUE] i18n check finished (observe mode)"
 
-      # Step 4b: SpringDoc @Operation 覆盖率检查（观察模式）
-      - name: SpringDoc @Operation 覆盖率检查
+      # Step 4b: SpringDoc @Operation 覆盖率硬门禁（threshold=15 阻止退化，目标 80%）
+      - name: SpringDoc @Operation 覆盖率硬门禁
         working-directory: ydsz-cloud
         run: |
           python data/scripts/check-springdoc-coverage.py \
-            --backend-root ./ydsz-cloud \
-            --min-coverage 20 \
-            --verbose || echo "[CONTINUE] SpringDoc check finished (observe mode)"
+            --backend-root . \
+            --min-coverage 15 \
+            --verbose
 # Step 4c: DDL 三方言同步检查（观察模式，门禁逐步推进）
       - name: DDL 三方言同步检查
         working-directory: ydsz-cloud

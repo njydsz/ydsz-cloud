@@ -449,7 +449,7 @@ public class FlowCcServiceImpl implements FlowCcService {
    */
   private static String maskToken(String token) {
     if (token == null || token.length() <= MOBILE_MASK_KEEP_LENGTH) {
-      return "***";
+      return MaskUtils.PLACEHOLDER;
     }
     return MaskUtils.mask(token, MOBILE_MASK_KEEP_LENGTH, 0);
   }

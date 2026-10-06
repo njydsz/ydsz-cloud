@@ -276,7 +276,7 @@ public class GatewayApiKeyAuthFilter implements GlobalFilter, Ordered {
    */
   private String maskApiKey(String apiKey) {
     if (apiKey == null || apiKey.length() <= 8) {
-      return "***";
+      return MaskUtils.PLACEHOLDER;
     }
     // keepPrefix=4, keepSuffix=4：长度 9 以上可见头尾各 4 字符，中间动态掩码
     return MaskUtils.mask(apiKey, 4, 4);

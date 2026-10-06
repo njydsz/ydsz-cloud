@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.message.server.config.MessageProperties;
 
 /**
@@ -32,8 +33,8 @@ import com.njydsz.message.server.config.MessageProperties;
 @Component
 public class SensitiveWordFilter {
 
-  /** 默认占位符 */
-  public static final String MASK = "***";
+  /** 默认占位符（统一使用 MaskUtils 标准脱敏标记） */
+  public static final String MASK = MaskUtils.PLACEHOLDER;
 
   /** 内置默认敏感词（生产环境应通过配置或外部词库覆盖） */
   private static final Set<String> DEFAULT_WORDS = Set.of("政治敏感", "色情", "赌博", "毒品", "诈骗", "违禁");

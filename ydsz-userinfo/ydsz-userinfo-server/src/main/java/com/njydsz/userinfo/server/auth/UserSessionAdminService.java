@@ -206,7 +206,7 @@ public class UserSessionAdminService {
    */
   private static String maskKey(String key) {
     if (key == null || key.length() <= TOKEN_LOG_PREFIX_LENGTH) {
-      return "***";
+      return MaskUtils.PLACEHOLDER;
     }
     return MaskUtils.mask(key, TOKEN_LOG_PREFIX_LENGTH, 0);
   }
@@ -244,7 +244,7 @@ public class UserSessionAdminService {
    */
   private String maskToken(String token) {
     if (token == null || token.length() < MIN_TOKEN_LENGTH) {
-      return "***";
+      return MaskUtils.PLACEHOLDER;
     }
     // keepPrefix=8, keepSuffix=4：保留前 8 位 + 后 4 位
     return MaskUtils.mask(token, 8, 4);

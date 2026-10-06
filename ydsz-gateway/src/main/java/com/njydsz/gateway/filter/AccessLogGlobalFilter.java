@@ -23,6 +23,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
@@ -111,7 +112,7 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
           );
 
   /** P0-8: 敏感参数值的脱敏占位符。 */
-  private static final String MASKED_VALUE = "***";
+  private static final String MASKED_VALUE = MaskUtils.PLACEHOLDER;
 
   /** exchange attribute key：请求开始时间戳（{@code System.currentTimeMillis()}）。 */
   private static final String ATTR_START_TIME = "__gateway_start_time";

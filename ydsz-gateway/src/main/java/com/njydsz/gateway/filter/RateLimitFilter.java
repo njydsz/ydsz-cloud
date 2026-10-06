@@ -541,7 +541,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
    */
   private String maskIdentity(String identity) {
     if (identity == null || identity.length() <= 4) {
-      return "***";
+      return MaskUtils.PLACEHOLDER;
     }
     // keepPrefix=2, keepSuffix=2：长度 5 以上可见头尾各 2 字符，中间动态掩码
     return MaskUtils.mask(identity, 2, 2);

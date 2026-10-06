@@ -684,7 +684,7 @@ public class SessionActivityService {
    */
   private String maskToken(String token) {
     if (token == null || token.length() < MIN_TOKEN_LENGTH) {
-      return "***";
+      return MaskUtils.PLACEHOLDER;
     }
     // keepPrefix=8, keepSuffix=4：保留前 8 位 + 后 4 位
     return MaskUtils.mask(token, 8, 4);

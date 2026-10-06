@@ -180,7 +180,7 @@ public class WatermarkService {
    */
   private String maskUserId(String userId) {
     if (userId == null || userId.length() <= MASK_ID_MIN_LENGTH) {
-      return "****";
+      return MaskUtils.PLACEHOLDER;
     }
     return MaskUtils.mask(userId, MASK_ID_KEEP_CHARS, MASK_ID_KEEP_CHARS);
   }
