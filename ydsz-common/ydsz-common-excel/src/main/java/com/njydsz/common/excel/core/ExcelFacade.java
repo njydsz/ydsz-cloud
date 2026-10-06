@@ -496,7 +496,7 @@ public class ExcelFacade {
         index++;
       }
     } catch (RuntimeException e) {
-      throw new RuntimeException("Failed to write Excel file: " + fileName, e);
+      throw new ExcelOperationException("Failed to write Excel file: " + fileName, e);
     }
   }
 

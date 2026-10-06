@@ -1,5 +1,6 @@
 package com.njydsz.common.excel.core.async;
 
+import com.njydsz.common.excel.core.ExcelOperationException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,13 +97,13 @@ public final class AsyncReadBridge {
           }
           @Override
           public void onError(AnalysisContext ctx, Exception e) {
-            throw new RuntimeException(e);
+            throw new ExcelOperationException("Async line read error", e);
           }
         });
         return results;
       } catch (Exception e) {
         LOG.error("Async read failed", e);
-        throw new RuntimeException("Async read failed: " + e.getMessage(), e);
+        throw new ExcelOperationException("Async read failed: " + e.getMessage(), e);
       }
     }, executor);
   }
@@ -147,7 +148,7 @@ public final class AsyncReadBridge {
           }
         });
       } catch (Exception e) {
-        throw new RuntimeException("Async stream failed", e);
+        throw new ExcelOperationException("Async stream failed", e);
       }
     }, vThreads);
   }

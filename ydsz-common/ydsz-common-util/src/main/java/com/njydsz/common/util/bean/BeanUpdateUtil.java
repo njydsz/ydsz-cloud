@@ -1,5 +1,6 @@
 package com.njydsz.common.util.bean;
 
+import com.njydsz.common.util.bean.BeanUpdateException;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -98,7 +99,7 @@ public final class BeanUpdateUtil {
         }
       }
     } catch (Exception e) {
-      throw new RuntimeException("Bean copy failed: " + e.getMessage(), e);
+      throw new BeanUpdateException("Bean copy failed: " + e.getMessage(), e);
     }
     return target;
   }
@@ -135,7 +136,7 @@ public final class BeanUpdateUtil {
       }
       return ignored.toArray(new String[0]);
     } catch (IntrospectionException e) {
-      throw new RuntimeException("Failed to introspect source object: " + e.getMessage(), e);
+      throw new BeanUpdateException("Failed to introspect source object: " + e.getMessage(), e);
     }
   }
 

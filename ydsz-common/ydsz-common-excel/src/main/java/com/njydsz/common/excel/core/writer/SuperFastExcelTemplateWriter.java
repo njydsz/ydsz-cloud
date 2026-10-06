@@ -1,5 +1,6 @@
 package com.njydsz.common.excel.core.writer;
 
+import com.njydsz.common.excel.core.ExcelOperationException;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1113,7 +1114,7 @@ public class SuperFastExcelTemplateWriter {
         throw new IllegalArgumentException("No output target specified");
       }
     } catch (IOException e) {
-      throw new RuntimeException("Output failed: " + e.getMessage(), e);
+      throw new ExcelOperationException("Output failed: " + e.getMessage(), e);
     }
   }
 

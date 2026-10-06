@@ -1,5 +1,6 @@
 package com.njydsz.common.netty.session;
 
+import com.njydsz.common.netty.session.NettyOperationException;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import lombok.extern.slf4j.Slf4j;
@@ -170,7 +171,7 @@ public class DefaultConnectionSession implements ConnectionSession {
         future.complete(null);
       } else {
         future.completeExceptionally(
-            new RuntimeException("消息发送失败: " + f.cause().getMessage(), f.cause()));
+            new NettyOperationException("消息发送失败: " + f.cause().getMessage(), f.cause()));
       }
     });
     return future;

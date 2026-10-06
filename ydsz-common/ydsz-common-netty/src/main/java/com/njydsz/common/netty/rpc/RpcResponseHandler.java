@@ -3,6 +3,7 @@ package com.njydsz.common.netty.rpc;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import com.njydsz.common.netty.session.NettyOperationException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -55,7 +56,7 @@ public class RpcResponseHandler extends SimpleChannelInboundHandler<RpcMessage> 
     } else if (msg.isException()) {
       // 异常响应：回调异常完成
       rpcClient.handleException(requestId,
-          new RuntimeException(msg.getErrorCode() + ": " + msg.getErrorMessage()));
+          new NettyOperationException(msg.getErrorCode() + ": " + msg.getErrorMessage()));
     } else if (msg.isRequest()) {
       // 可能是对端反向调用（双工 RPC），忽略或处理
       log.debug("[Netty-RPC] 收到对端请求（双工 RPC），暂不处理: requestId={}", requestId);
