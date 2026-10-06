@@ -10,12 +10,15 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.system.domain.approval.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalQuery;
 import com.njydsz.system.domain.approval.ConfigApprovalRepository;
+import com.njydsz.system.domain.approval.ConfigApprovalVO;
+import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.infra.mapper.ConfigApprovalMapper;
 
 /**
  * 配置变更审批单 Repository 实现。
  *
  * <p>基于 MyBatis-Plus Mapper 实现持久化操作；排序字段统一命名为 {@code sort}（详见 YDIZ-DB-001）。
+ * 读取时通过 {@link SystemConverter} 将 domain 实体转为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 26.09.08
@@ -25,6 +28,8 @@ import com.njydsz.system.infra.mapper.ConfigApprovalMapper;
 public class ConfigApprovalRepositoryImpl implements ConfigApprovalRepository {
 
   private final ConfigApprovalMapper configApprovalMapper;
+
+  private final SystemConverter converter;
 
   @Override
   public boolean save(ConfigApproval record) {
@@ -43,17 +48,19 @@ public class ConfigApprovalRepositoryImpl implements ConfigApprovalRepository {
   }
 
   @Override
-  public ConfigApproval findById(String id) {
-    return configApprovalMapper.selectById(id);
+  public ConfigApprovalVO findById(String id) {
+    ConfigApproval entity = configApprovalMapper.selectById(id);
+    return converter.entityToVO(entity);
   }
 
   @Override
-  public List<ConfigApproval> findByQuery(ConfigApprovalQuery query) {
+  public List<ConfigApprovalVO> findByQuery(ConfigApprovalQuery query) {
     LambdaQueryWrapper<ConfigApproval> wrapper = buildQueryWrapper(query);
     wrapper.orderByDesc(ConfigApproval::getSubmittedAt);
     int offset = (query.getPageNum() - 1) * query.getPageSize();
     wrapper.last("LIMIT " + offset + ", " + query.getPageSize());
-    return configApprovalMapper.selectList(wrapper);
+    List<ConfigApproval> entities = configApprovalMapper.selectList(wrapper);
+    return converter.configApprovalListToVO(entities);
   }
 
   @Override

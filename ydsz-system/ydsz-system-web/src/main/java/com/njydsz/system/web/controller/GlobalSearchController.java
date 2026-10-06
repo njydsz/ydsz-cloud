@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -197,7 +199,7 @@ public class GlobalSearchController {
       content = "'点击反馈: keyword=' + #clickRequest.keyword + ', docId=' + #clickRequest.docId")
   @Operation(summary = "点击反馈回传", description = "接收搜索结果点击事件，回写到 CTR ZSet 供排序消费")
   @PostMapping("/click")
-  public YdszResponse<Boolean> recordClick(@RequestBody ClickFeedbackRequest clickRequest) {
+  public YdszResponse<Boolean> recordClick(@Valid @RequestBody ClickFeedbackRequest clickRequest) {
     clickFeedbackService.recordClick(
         clickRequest.keyword(),
         clickRequest.docId(),

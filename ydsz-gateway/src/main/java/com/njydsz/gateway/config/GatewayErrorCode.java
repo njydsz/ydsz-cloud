@@ -136,6 +136,9 @@ public enum GatewayErrorCode {
   /** RATE_LIMITED_USER */
   RATE_LIMITED_USER(42902, "error.RATE_LIMITED_USER",
       List.of("当前用户触发限流，请降低请求频率或申请提额")),
+  /** RATE_LIMITED_TENANT */
+  RATE_LIMITED_TENANT(42903, "error.RATE_LIMITED_TENANT",
+      List.of("当前租户触发限流，请降低请求频率或联系管理员申请租户级提额")),
 
   // ===== 500xx 网关内部错误 =====
   /** INTERNAL_ERROR */

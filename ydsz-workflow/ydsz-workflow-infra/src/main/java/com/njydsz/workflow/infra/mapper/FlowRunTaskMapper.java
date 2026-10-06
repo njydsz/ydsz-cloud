@@ -101,6 +101,21 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
       @Param("limit") int limit);
 
   /**
+   * 基于主键 ID 的简单游标分页（Keyset Pagination by id）。
+   *
+   * <p>适用于深度分页场景（SLA 扫描、批量迁移）：SELECT ... WHERE id > #{lastId} AND deleted = 0 ORDER BY id ASC LIMIT N。
+   * 相比 LIMIT/OFFSET 在大 offset 场景下有显著性能优势（O(log N) index seek vs O(N) scan）。
+   *
+   * <p>当 {@code lastId} 为 {@code null} 或空串时，查询从头开始。
+   *
+   * @param lastId 上一页最后一条记录的主键 ID（首次查询传 null）
+   * @param limit 每页大小
+   * @return 下一页任务列表（按 id 升序）
+   */
+  List<FlowRunTask> selectByIdGreaterThan(
+      @Param("lastId") String lastId, @Param("limit") int limit);
+
+  /**
    * 统计用户待办总数（用于分页计算总页数）
    *
    * @param assigneeId 办理人用户 ID

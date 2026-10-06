@@ -45,4 +45,19 @@ public interface MsgLogMapper extends BaseMapper<MsgLog> {
    * @return 影响行数
    */
   int insertBatch(@Param("records") List<MsgLog> records);
+
+  /**
+   * 基于主键 ID 的简单游标分页（Keyset Pagination by id）。
+   *
+   * <p>适用于消息发送日志等大数据量场景的深度分页：查询 id &gt; #{lastId} 的下 N 条记录。
+   * 相比 LIMIT/OFFSET 在大 offset 场景下有显著性能优势（O(log N) 索引定位 vs O(N) 全表扫描 + 丢弃）。
+   *
+   * <p>当 {@code lastId} 为 {@code null} 或空串时，查询从头开始。
+   *
+   * @param lastId 上一页最后一条记录的主键 ID（首次查询传 null）
+   * @param limit 每页大小
+   * @return 下一页日志列表（按 id 升序）
+   */
+  List<MsgLog> selectByIdGreaterThan(
+      @Param("lastId") String lastId, @Param("limit") int limit);
 }

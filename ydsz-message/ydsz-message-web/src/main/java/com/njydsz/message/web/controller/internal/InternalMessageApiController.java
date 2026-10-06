@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
@@ -69,7 +71,7 @@ public class InternalMessageApiController {
           "'ydsz:message:internal-api:send-message:' + #dto.receiver + ':' + #dto.templateCode",
       ttlSeconds = 5)
   @PostMapping("/message/send")
-  public YdszResponse<String> sendMessage(@RequestBody MessageSendDTO dto) {
+  public YdszResponse<String> sendMessage(@Valid @RequestBody MessageSendDTO dto) {
     MessageItemRequestDTO request = new MessageItemRequestDTO();
     // 使用 BeanUpdateUtil 替代 Spring BeanUtils.copyProperties（编码规范 §34.6 禁止反射式拷贝）
     BeanUpdateUtil.copyNonNull(dto, request);

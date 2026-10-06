@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.code.YdszResultCode;
 import com.njydsz.common.core.context.TenantContextHolder;
@@ -95,7 +97,7 @@ public class TemplatePreviewController {
    */
   @Operation(summary = "按模板编码预览渲染结果")
   @PostMapping("/by-code")
-  public YdszResponse<Map<String, String>> previewByCode(@RequestBody PreviewRequest req) {
+  public YdszResponse<Map<String, String>> previewByCode(@Valid @RequestBody PreviewRequest req) {
     if (req == null || !StringUtils.hasText(req.getTemplateCode())) {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "模板编码不能为空");
     }
@@ -142,7 +144,7 @@ public class TemplatePreviewController {
   @RateLimit(resource = "message.templatepreview.previewRaw", threshold = 50)
   @Idempotent(key = "ydsz:message:TemplatePreviewController:previewRaw:lock", ttlSeconds = 5)
   @PostMapping("/raw")
-  public YdszResponse<String> previewRaw(@RequestBody RawPreviewRequest req) {
+  public YdszResponse<String> previewRaw(@Valid @RequestBody RawPreviewRequest req) {
     if (req == null || !StringUtils.hasText(req.getTemplate())) {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "模板内容不能为空");
     }

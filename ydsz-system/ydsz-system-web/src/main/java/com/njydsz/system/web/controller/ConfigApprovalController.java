@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -21,6 +23,7 @@ import com.njydsz.common.auth.util.SecurityUtils;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.system.domain.approval.ConfigApprovalQuery;
 import com.njydsz.system.domain.approval.ConfigApprovalSubmitDTO;
 import com.njydsz.system.domain.approval.ConfigApprovalVO;
@@ -119,9 +122,10 @@ public class ConfigApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.CREATE,
       content = "'提交配置变更审批: ' + #dto.resourceKey")
+  @RateLimit(resource = "system.approval.submit", threshold = 20)
   @PostMapping("/submit")
   @Operation(summary = "提交配置变更审批")
-  public YdszResponse<String> submit(@RequestBody ConfigApprovalSubmitDTO dto) {
+  public YdszResponse<String> submit(@Valid @RequestBody ConfigApprovalSubmitDTO dto) {
     String userId = SecurityUtils.getCurrentUserId();
     String userName = SecurityUtils.getCurrentUserName();
     String approvalId = approvalService.submit(userId, userName, dto);
@@ -140,9 +144,10 @@ public class ConfigApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'通过审批单: ' + #id")
+  @RateLimit(resource = "system.approval.approve", threshold = 30)
   @PostMapping("/{id}/approve")
   @Operation(summary = "通过审批单")
-  public YdszResponse<Boolean> approve(@PathVariable String id, @RequestBody(required = false) ApproveBody body) {
+  public YdszResponse<Boolean> approve(@PathVariable String id, @Valid @RequestBody(required = false) ApproveBody body) {
     String currentUserId = SecurityUtils.getCurrentUserId();
     String comment = body != null ? body.getComment() : null;
     approvalService.approve(id, currentUserId, comment);
@@ -161,9 +166,10 @@ public class ConfigApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'拒绝审批单: ' + #id")
+  @RateLimit(resource = "system.approval.reject", threshold = 30)
   @PostMapping("/{id}/reject")
   @Operation(summary = "拒绝审批单")
-  public YdszResponse<Boolean> reject(@PathVariable String id, @RequestBody RejectBody body) {
+  public YdszResponse<Boolean> reject(@PathVariable String id, @Valid @RequestBody RejectBody body) {
     String currentUserId = SecurityUtils.getCurrentUserId();
     approvalService.reject(id, currentUserId, body.getReason());
     return YdszResponse.success(true);
@@ -180,6 +186,7 @@ public class ConfigApprovalController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'撤回审批单: ' + #id")
+  @RateLimit(resource = "system.approval.withdraw", threshold = 30)
   @PostMapping("/{id}/withdraw")
   @Operation(summary = "撤回审批单")
   public YdszResponse<Boolean> withdraw(@PathVariable String id) {

@@ -66,6 +66,7 @@ import com.njydsz.gateway.exception.GatewayErrorWriter;
  * <ol>
  *   <li>IP 级（最先检查，防止单 IP 暴力请求）
  *   <li>用户级（按 userId 限流）
+ *   <li>租户级（按 tenantId 限流，防止单租户流量拖垮全平台）
  * </ol>
  *
  * <h3>降级策略</h3>
@@ -161,6 +162,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
     String clientIp = GatewayIpUtils.getClientIp(request);
     String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
+    String tenantId = request.getHeaders().getFirst(GatewayConstants.HEADER_TENANT_ID);
 
     // IP 白名单检查
     boolean ipWhitelisted =
@@ -179,26 +181,30 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         || userId == null
         || userId.isEmpty()
         || localRateLimiter.tryAcquireLocal("user:" + userId, false);
+    boolean localTenantAllowed = !properties.getPerTenant().isEnabled()
+        || tenantId == null
+        || tenantId.isEmpty()
+        || localRateLimiter.tryAcquireLocal("tenant:" + tenantId, false);
 
     // 本地桶命中时直接放行，仅耗尽时需要 Redis L2 精确计数
-    if (localIpAllowed && localUserAllowed) {
+    if (localIpAllowed && localUserAllowed && localTenantAllowed) {
       return chain.filter(exchange);
     }
-    if (localIpAllowed && !properties.getPerUser().isEnabled()) {
+    if (localIpAllowed && localTenantAllowed && !properties.getPerUser().isEnabled()) {
       return chain.filter(exchange);
     }
-    if (localUserAllowed && !properties.getPerIp().isEnabled()) {
+    if (localUserAllowed && localTenantAllowed && !properties.getPerIp().isEnabled()) {
       return chain.filter(exchange);
     }
 
     // L2: 本地桶耗尽，走 Redis 分布式精确计数
-    return executeRateLimit(exchange, clientIp, userId, ipWhitelisted)
+    return executeRateLimit(exchange, clientIp, userId, tenantId, ipWhitelisted)
         .flatMap(
             result -> {
-              if (result == null || (result.ipAllowed && result.userAllowed)) {
+              if (result == null || (result.ipAllowed && result.userAllowed && result.tenantAllowed)) {
                 return chain.filter(exchange);
               }
-              // 按优先级检查各维度限流：IP → USER
+              // 按优先级检查各维度限流：IP → USER → TENANT
               if (!result.ipAllowed) {
                 return rejectWithRateLimit(
                     exchange,
@@ -214,6 +220,14 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                     userId,
                     properties.getPerUser().getDefaultQps(),
                     result.userRemaining);
+              }
+              if (!result.tenantAllowed) {
+                return rejectWithRateLimit(
+                    exchange,
+                    "TENANT",
+                    tenantId,
+                    properties.getPerTenant().getDefaultQps(),
+                    result.tenantRemaining);
               }
               return chain.filter(exchange);
             });
@@ -236,6 +250,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       ServerWebExchange exchange,
       String clientIp,
       String userId,
+      String tenantId,
       boolean ipWhitelisted) {
 
     // Redis 熔断检查
@@ -251,13 +266,16 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             && !clientIp.isEmpty();
     boolean userEnabled =
         properties.getPerUser().isEnabled() && userId != null && !userId.isEmpty();
+    boolean tenantEnabled =
+        properties.getPerTenant().isEnabled() && tenantId != null && !tenantId.isEmpty();
 
-    if (!ipEnabled && !userEnabled) {
+    if (!ipEnabled && !userEnabled && !tenantEnabled) {
       return Mono.just(allAllowedResult());
     }
 
     // 将阻塞调用包装在 boundedElastic Scheduler 上执行
-    return Mono.fromCallable(() -> doAcquire(ipEnabled, userEnabled, clientIp, userId))
+    return Mono.fromCallable(
+        () -> doAcquire(ipEnabled, userEnabled, tenantEnabled, clientIp, userId, tenantId))
         .subscribeOn(blockingScheduler)
         .onErrorResume(
             e -> {
@@ -282,7 +300,8 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
    * @return 限流结果
    */
   private GatewayRateLimitResult doAcquire(
-      boolean ipEnabled, boolean userEnabled, String clientIp, String userId) {
+      boolean ipEnabled, boolean userEnabled, boolean tenantEnabled,
+      String clientIp, String userId, String tenantId) {
 
     RedisClusterRateLimiter limiter = getClusterLimiter();
 
@@ -290,6 +309,8 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     int ipRemaining = 0;
     boolean userAllowed = true;
     int userRemaining = 0;
+    boolean tenantAllowed = true;
+    int tenantRemaining = 0;
 
     // IP 维度限流
     if (ipEnabled) {
@@ -329,7 +350,27 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       }
     }
 
-    return new GatewayRateLimitResult(ipAllowed, ipRemaining, userAllowed, userRemaining);
+    // 租户维度限流
+    if (tenantAllowed && ipAllowed && userAllowed && tenantEnabled) {
+      RateLimitRule tenantRule = buildTenantRule(tenantId);
+      RateLimitContext tenantCtx = RateLimitContext.builder()
+          .resource("tenant:" + tenantId)
+          .build();
+      try {
+        RateLimitDecision decision = limiter.tryAcquire(tenantRule, tenantCtx);
+        tenantAllowed = decision.getResult() == RateLimitResult.PASS;
+        tenantRemaining = decision.getRemaining() != null
+            ? decision.getRemaining().intValue() : 0;
+        redisFailureCount.set(0);
+      } catch (Exception e) {
+        redisFailureCount.incrementAndGet();
+        tenantAllowed = true;
+        log.warn("[RateLimit] 租户维度限流异常，降级放行: tenantId={}", tenantId, e);
+      }
+    }
+
+    return new GatewayRateLimitResult(
+        ipAllowed, ipRemaining, userAllowed, userRemaining, tenantAllowed, tenantRemaining);
   }
 
   /**
@@ -373,23 +414,47 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 限流结果封装：IP + 用户两个维度的令牌桶判定结果。
+   * 构建租户维度的限流规则。
+   *
+   * @param tenantId 租户 ID
+   * @return 租户维度限流规则
+   */
+  private RateLimitRule buildTenantRule(String tenantId) {
+    int qps = properties.getPerTenant().getDefaultQps();
+    int burstCapacity = properties.getPerTenant().getBurstCapacity();
+    return RateLimitRule.builder()
+        .resource("ratelimit:tenant:" + tenantId)
+        .dimension(RateLimitDimension.TENANT)
+        .algorithm(RateLimitAlgorithm.TOKEN_BUCKET)
+        .mode(RateLimitMode.CLUSTER)
+        .threshold(BigDecimal.valueOf(qps))
+        .window(Duration.ofSeconds(1))
+        .burstCapacity(burstCapacity)
+        .build();
+  }
+
+  /**
+   * 限流结果封装：IP + 用户 + 租户三个维度的令牌桶判定结果。
    *
    * @param ipAllowed IP 维度是否放行
    * @param ipRemaining IP 维度剩余令牌数
    * @param userAllowed 用户维度是否放行
    * @param userRemaining 用户维度剩余令牌数
+   * @param tenantAllowed 租户维度是否放行
+   * @param tenantRemaining 租户维度剩余令牌数
    */
   private record GatewayRateLimitResult(
       boolean ipAllowed,
       int ipRemaining,
       boolean userAllowed,
-      int userRemaining) {}
+      int userRemaining,
+      boolean tenantAllowed,
+      int tenantRemaining) {}
 
   /** 全部维度放行的限流结果（未启用维度与异常降级时使用） */
   private GatewayRateLimitResult allAllowedResult() {
     gatewayMetrics.incrementRatelimitFallback();
-    return new GatewayRateLimitResult(true, 0, true, 0);
+    return new GatewayRateLimitResult(true, 0, true, 0, true, 0);
   }
 
   /**
@@ -450,6 +515,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     return switch (dimension.toUpperCase()) {
       case "IP" -> GatewayErrorCode.RATE_LIMITED_IP;
       case "USER" -> GatewayErrorCode.RATE_LIMITED_USER;
+      case "TENANT" -> GatewayErrorCode.RATE_LIMITED_TENANT;
       default -> GatewayErrorCode.RATE_LIMITED;
     };
   }

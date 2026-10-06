@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import com.njydsz.agent.domain.converter.AgentConverter;
 import com.njydsz.agent.domain.entity.InsightReport;
 import com.njydsz.agent.domain.insight.InsightReportRepository;
+import com.njydsz.agent.domain.vo.InsightReportVO;
 import com.njydsz.agent.infra.mapper.InsightReportMapper;
 
 /**
@@ -16,6 +18,7 @@ import com.njydsz.agent.infra.mapper.InsightReportMapper;
  *
  * <p>基于 MyBatis-Plus 实现 {@link InsightReportRepository} 接口，
  * 完成 {@link InsightReport} 实体的持久化操作（查找、插入、更新、删除）。
+ * 读取时通过 {@link AgentConverter} 将 domain 实体转为 VO，对调用方屏蔽持久化细节。
  *
  * <p><b>设计要点：</b>
  * <ul>
@@ -39,6 +42,8 @@ public class InsightReportRepositoryImpl implements InsightReportRepository {
 
   private final InsightReportMapper insightReportMapper;
 
+  private final AgentConverter converter;
+
   /**
    * {@inheritDoc}
    *
@@ -60,11 +65,13 @@ public class InsightReportRepositoryImpl implements InsightReportRepository {
    * <p>通过业务 ID 字段 reportId 查找（非主键 id），使用 LambdaQueryWrapper 精确匹配。
    */
   @Override
-  public Optional<InsightReport> findById(String reportId) {
+  public Optional<InsightReportVO> findById(String reportId) {
     LambdaQueryWrapper<InsightReport> wrapper =
         new LambdaQueryWrapper<InsightReport>()
             .eq(InsightReport::getReportId, reportId);
-    return Optional.ofNullable(insightReportMapper.selectOne(wrapper));
+    InsightReport entity = insightReportMapper.selectOne(wrapper);
+    return Optional.ofNullable(entity)
+        .map(converter::entityToVO);
   }
 
   /**
@@ -73,7 +80,7 @@ public class InsightReportRepositoryImpl implements InsightReportRepository {
    * <p>按创建时间倒序：最近生成的报告排在前面；limit 限制返回条数（不超过 MAX_LIMIT）。
    */
   @Override
-  public List<InsightReport> findByUserId(String userId, int limit) {
+  public List<InsightReportVO> findByUserId(String userId, int limit) {
     int safeLimit = Math.min(Math.max(limit, 0), MAX_LIMIT);
     if (safeLimit == 0) {
       safeLimit = DEFAULT_LIMIT;
@@ -83,7 +90,8 @@ public class InsightReportRepositoryImpl implements InsightReportRepository {
             .eq(InsightReport::getUserId, userId)
             .orderByDesc(InsightReport::getCreatedAt)
             .last("LIMIT " + safeLimit);
-    return insightReportMapper.selectList(wrapper);
+    List<InsightReport> entities = insightReportMapper.selectList(wrapper);
+    return converter.insightReportListToVO(entities);
   }
 
   /**

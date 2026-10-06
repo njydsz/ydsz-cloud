@@ -430,6 +430,21 @@ public interface FlowRunTaskRepository {
   long countPendingByTenantId(String tenantId);
 
   /**
+   * P3-1: 基于主键 ID 的简单游标分页（Keyset Pagination by id）。
+   *
+   * <p>适用于深度分页场景（流程 SLA 扫描、数据迁移）：基于上一页最后一条记录的 ID 作为游标锚点，
+   * 查询 id &gt; lastId 的下 N 条记录。相比 LIMIT/OFFSET 在大 offset 场景下有显著性能优势
+   * （O(log N) 索引定位 vs O(N) 全表扫描 + 丢弃）。
+   *
+   * <p><b>使用方式：</b>首次查询传 {@code lastId=null}；后续查询传上一页最后一条记录的 id。
+   *
+   * @param lastId 上一页最后一条记录的主键 ID（首次查询传 null）
+   * @param pageSize 每页大小
+   * @return 下一页任务 VO 列表（按 id 升序）
+   */
+  List<FlowRunTaskVO> pageByIdCursor(String lastId, int pageSize);
+
+  /**
    * 查询超期任务 Top N（按超期时长降序，监控用）。
    *
    * @param tenantId 租户 ID

@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.base.api.ApiVersion;
@@ -78,7 +80,7 @@ public class TenantSwitchController {
   @Operation(summary = "切换当前用户的活动租户", description = "持有有效 access_token，切换到目标租户上下文（目标需在 accessible_tenants 内）")
   public YdszResponse<TenantSwitchResponse> switchTenant(
       @RequestHeader(value = "Authorization", required = false) String authorization,
-      @RequestBody TenantSwitchRequest request) {
+      @Valid @RequestBody TenantSwitchRequest request) {
 
     // 1. 校验并解析当前 token
     if (authorization == null || !authorization.startsWith("Bearer ")) {

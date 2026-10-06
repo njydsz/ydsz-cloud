@@ -2,13 +2,12 @@ package com.njydsz.system.server.converter;
 
 import org.springframework.stereotype.Component;
 
-import com.njydsz.system.domain.approval.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalVO;
 
 /**
- * 配置变更审批单 Converter。
+ * 配置变更审批单 VO 增强器。
  *
- * <p>手工映射（非 MapStruct），负责 ConfigApproval Entity → VO 的转换。
+ * <p>为 MapStruct 生成的 VO 填充计算字段（title / submitterName / currentApproverName）。
  *
  * @author ydsz-team
  * @since 26.09.08
@@ -17,42 +16,31 @@ import com.njydsz.system.domain.approval.ConfigApprovalVO;
 public class ConfigApprovalConverter {
 
   /**
-   * Entity → VO 转换。
+   * 为 VO 填充计算字段。
    *
-   * @param entity 审批单实体
-   * @return 展示视图对象
+   * <p>MapStruct 仅做字段映射，title / submitterName / currentApproverName 需手工填充。
+   *
+   * @param vo 审批单 VO（已由 MapStruct 从 Entity 映射基础字段）
+   * @return 填充完成后的 VO（同一实例）
    */
-  public ConfigApprovalVO toVO(ConfigApproval entity) {
-    if (entity == null) {
+  public ConfigApprovalVO toVO(ConfigApprovalVO vo) {
+    if (vo == null) {
       return null;
     }
-    ConfigApprovalVO vo = new ConfigApprovalVO();
-    vo.setId(entity.getId());
-    vo.setResourceType(entity.getResourceType());
-    vo.setResourceKey(entity.getResourceKey());
-    vo.setResourceGroup(entity.getResourceGroup());
-    vo.setChangeType(entity.getChangeType());
-    vo.setBeforeJson(entity.getBeforeJson());
-    vo.setAfterJson(entity.getAfterJson());
-    vo.setStatus(entity.getStatus());
-    vo.setSubmitterId(entity.getSubmitterId());
-    vo.setSubmittedAt(entity.getSubmittedAt());
-    vo.setReason(entity.getReason());
-    vo.setRejectionReason(entity.getRejectionReason());
-    vo.setClosedAt(entity.getClosedAt());
-    vo.setTitle(buildTitle(entity));
+    vo.setTitle(buildTitle(vo));
+    // submitterName / currentApproverName 需由 service 层或前端额外查询用户表填充
     return vo;
   }
 
   /**
    * 构建展示标题。
    *
-   * @param entity 审批单实体
+   * @param vo 审批单 VO
    * @return 标题字符串
    */
-  private String buildTitle(ConfigApproval entity) {
+  private String buildTitle(ConfigApprovalVO vo) {
     String changeOp;
-    switch (entity.getChangeType()) {
+    switch (vo.getChangeType()) {
       case "CREATE":
         changeOp = "创建";
         break;
@@ -65,6 +53,6 @@ public class ConfigApprovalConverter {
       default:
         changeOp = "变更";
     }
-    return changeOp + entity.getResourceType() + ":" + entity.getResourceKey();
+    return changeOp + vo.getResourceType() + ":" + vo.getResourceKey();
   }
 }

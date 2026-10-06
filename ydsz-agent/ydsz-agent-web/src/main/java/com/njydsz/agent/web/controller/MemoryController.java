@@ -167,7 +167,7 @@ public class MemoryController {
   @Operation(summary = "触发记忆整合", description = "提取对话中有价值的事实并刷新用户画像")
   public YdszResponse<Void> consolidate(
       @PathVariable("conversationId") String conversationId,
-      @RequestBody ConsolidateMemoryRequest request) {
+      @Valid @RequestBody ConsolidateMemoryRequest request) {
     String tenantId = request.getTenantId();
     consolidationService.consolidateConversation(conversationId, tenantId);
     log.info("触发记忆整合: conversationId={}, tenantId={}", conversationId, tenantId);

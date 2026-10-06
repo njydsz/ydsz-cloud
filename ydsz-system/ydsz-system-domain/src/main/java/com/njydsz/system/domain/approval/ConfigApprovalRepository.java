@@ -7,6 +7,8 @@ import java.util.List;
  *
  * <p>定义审批单的持久化操作契约，实现位于 infra 层。
  *
+ * <p>查询方法返回 {@link ConfigApprovalVO}，禁止将 Entity 泄露到 server 层（DDD-007）。
+ *
  * @author ydsz-team
  * @since 26.09.08
  */
@@ -32,17 +34,17 @@ public interface ConfigApprovalRepository {
    * 根据 ID 查询审批单。
    *
    * @param id 审批单 ID
-   * @return 审批单实体，不存在时返回 null
+   * @return 审批单视图对象，不存在时返回 null
    */
-  ConfigApproval findById(String id);
+  ConfigApprovalVO findById(String id);
 
   /**
    * 分页查询审批单。
    *
    * @param query 查询参数
-   * @return 审批单列表
+   * @return 审批单 VO 列表
    */
-  List<ConfigApproval> findByQuery(ConfigApprovalQuery query);
+  List<ConfigApprovalVO> findByQuery(ConfigApprovalQuery query);
 
   /**
    * 统计满足条件的审批单数量。

@@ -438,6 +438,13 @@ public long countTodoByAssignee(String assigneeId, String tenantId) {
 
   /** {@inheritDoc} */
   @Override
+  public List<FlowRunTaskVO> pageByIdCursor(String lastId, int pageSize) {
+    List<FlowRunTask> list = taskMapper.selectByIdGreaterThan(lastId, pageSize);
+    return list == null ? Collections.emptyList() : converter.flowRunTaskListToVO(list);
+  }
+
+  /** {@inheritDoc} */
+  @Override
   public List<Map<String, Object>> selectOverdueTopN(String tenantId, int limit) {
     return taskMapper.selectOverdueTopN(tenantId, limit);
   }

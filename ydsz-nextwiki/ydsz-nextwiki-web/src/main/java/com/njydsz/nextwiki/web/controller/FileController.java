@@ -30,6 +30,7 @@ import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.response.YdszResponse;
 import com.njydsz.common.safe.idempotent.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.nextwiki.domain.dto.NextwikiDto;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
@@ -126,6 +127,7 @@ public class FileController {
    */
   @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'upload'")
   @Idempotent(key = "ydsz:nextwiki:FileController:upload:lock", ttlSeconds = 5)
+  @RateLimit(resource = "nextwiki.file.upload", threshold = 20)
   @PostMapping("/upload")
   @Operation(summary = "上传文件", description = "支持单文件上传，自动创建版本记录")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
@@ -157,6 +159,7 @@ public class FileController {
       action = AuditAction.CREATE,
       content = "'createFolder'")
   @Idempotent(key = "ydsz:nextwiki:FileController:createFolder:lock", ttlSeconds = 5)
+  @RateLimit(resource = "nextwiki.file.createFolder", threshold = 30)
   @PostMapping("/folders")
   @Operation(summary = "创建目录")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FOLDER_CREATE)
@@ -212,6 +215,7 @@ public class FileController {
    */
   @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.UPDATE, content = "'move'")
   @Idempotent(key = "ydsz:nextwiki:FileController:move:lock", ttlSeconds = 5)
+  @RateLimit(resource = "nextwiki.file.move", threshold = 30)
   @PutMapping("/{nodeId}/move")
   @Operation(summary = "移动文件/文件夹")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
@@ -236,6 +240,7 @@ public class FileController {
    */
   @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.UPDATE, content = "'rename'")
   @Idempotent(key = "ydsz:nextwiki:FileController:rename:lock", ttlSeconds = 5)
+  @RateLimit(resource = "nextwiki.file.rename", threshold = 50)
   @PutMapping("/{nodeId}/rename")
   @Operation(summary = "重命名文件/文件夹")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
@@ -260,6 +265,7 @@ public class FileController {
    */
   @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.DELETE, content = "'delete'")
   @Idempotent(key = "ydsz:nextwiki:FileController:delete:lock", ttlSeconds = 5)
+  @RateLimit(resource = "nextwiki.file.delete", threshold = 50)
   @DeleteMapping("/{nodeId}")
   @Operation(summary = "删除文件/文件夹（移入回收站）")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)

@@ -18,6 +18,7 @@ import com.njydsz.workflow.domain.dto.FlowInstanceDTO;
 import com.njydsz.workflow.domain.dto.FlowRunTaskDTO;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowAdminRole;
+import com.njydsz.workflow.domain.entity.FlowArchiveCursor;
 import com.njydsz.workflow.domain.entity.FlowAttachment;
 import com.njydsz.workflow.domain.entity.FlowAuditLog;
 import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
@@ -39,6 +40,7 @@ import com.njydsz.workflow.domain.entity.FlowTemplate;
 import com.njydsz.workflow.domain.entity.FlowTimer;
 import com.njydsz.workflow.domain.entity.FlowUser;
 import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
+import com.njydsz.workflow.domain.vo.FlowArchiveCursorVO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
@@ -94,6 +96,9 @@ public interface WorkflowConverter {
   FlowAdminRoleVO entityToVO(FlowAdminRole entity);
 
   List<FlowAdminRoleVO> flowAdminRoleListToVO(List<FlowAdminRole> entities);
+
+  // ===== FlowArchiveCursor =====
+  FlowArchiveCursorVO entityToVO(FlowArchiveCursor entity);
 
   // ===== FlowAttachment =====
   FlowAttachmentVO entityToVO(FlowAttachment entity);

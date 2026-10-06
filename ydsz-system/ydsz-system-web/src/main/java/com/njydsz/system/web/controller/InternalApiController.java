@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.base.api.ApiVersion;
 import com.njydsz.common.core.response.YdszResponse;
@@ -79,7 +81,7 @@ public class InternalApiController {
   @RateLimit(resource = "system.internalapi.getConfig", threshold = 50)
   @Idempotent(key = "'ydsz:system:internal-api:get-config:' + #request.key", ttlSeconds = 5)
   @PostMapping("/config/get")
-  public YdszResponse<String> getConfig(@RequestBody ConfigGetRequest request) {
+  public YdszResponse<String> getConfig(@Valid @RequestBody ConfigGetRequest request) {
     return YdszResponse.success(configService.getConfigValue(request.getKey()));
   }
 
@@ -98,7 +100,7 @@ public class InternalApiController {
       key = "'ydsz:system:internal-api:get-dict-item:' + #request.typeCode + ':' + #request.itemCode",
       ttlSeconds = 5)
   @PostMapping("/dict/item")
-  public YdszResponse<String> getDictItem(@RequestBody DictItemGetRequest request) {
+  public YdszResponse<String> getDictItem(@Valid @RequestBody DictItemGetRequest request) {
     DictItemVO vo =
         dictItemService.getByTypeAndCode(request.getTypeCode(), request.getItemCode());
     return YdszResponse.success(vo == null ? null : vo.getItemValue());
@@ -117,7 +119,7 @@ public class InternalApiController {
   @RateLimit(resource = "system.internalapi.listDictItems", threshold = 50)
   @Idempotent(key = "'ydsz:system:internal-api:list-dict-items:' + #request.typeCode", ttlSeconds = 5)
   @PostMapping("/dict/list")
-  public YdszResponse<List<String>> listDictItems(@RequestBody DictListRequest request) {
+  public YdszResponse<List<String>> listDictItems(@Valid @RequestBody DictListRequest request) {
     List<DictItemVO> items = dictItemService.listEnabledByTypeCode(request.getTypeCode());
     if (items == null || items.isEmpty()) {
       return YdszResponse.success(List.of());
@@ -144,7 +146,7 @@ public class InternalApiController {
           "'ydsz:system:internal-api:validate-client:' + #request.appKey + ':' + #request.appSecret.hashCode()",
       ttlSeconds = 5)
   @PostMapping("/app/validate")
-  public YdszResponse<Boolean> validateClient(@RequestBody AppValidateRequest request) {
+  public YdszResponse<Boolean> validateClient(@Valid @RequestBody AppValidateRequest request) {
     return YdszResponse.success(
         appInfoService.validateClient(request.getAppKey(), request.getAppSecret()));
   }

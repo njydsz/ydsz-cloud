@@ -8,8 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.entity.FlowArchiveCursor;
 import com.njydsz.workflow.domain.repository.FlowArchiveCursorRepository;
+import com.njydsz.workflow.domain.vo.FlowArchiveCursorVO;
 import com.njydsz.workflow.infra.mapper.FlowArchiveCursorMapper;
 
 /**
@@ -17,6 +19,7 @@ import com.njydsz.workflow.infra.mapper.FlowArchiveCursorMapper;
  *
  * <p>基于 FlowArchiveCursorMapper 提供归档断点续传游标的持久化操作。
  * 通过唯一索引 uk_ydsz_flow_archive_cursor_type_tenant 保证 upsert 语义。
+ * 读取时通过 {@link WorkflowConverter} 将 domain 实体转为 VO，对调用方屏蔽持久化细节。
  *
  * @author ydsz-team
  * @since 26.09.23
@@ -28,12 +31,15 @@ public class FlowArchiveCursorRepositoryImpl implements FlowArchiveCursorReposit
 
   private final FlowArchiveCursorMapper mapper;
 
+  private final WorkflowConverter converter;
+
   @Override
-  public FlowArchiveCursor findByTypeAndTenant(String archiveType, String tenantId) {
-    return mapper.selectOne(
+  public FlowArchiveCursorVO findByTypeAndTenant(String archiveType, String tenantId) {
+    FlowArchiveCursor entity = mapper.selectOne(
         new LambdaQueryWrapper<FlowArchiveCursor>()
             .eq(FlowArchiveCursor::getArchiveType, archiveType)
             .eq(FlowArchiveCursor::getTenantId, tenantId));
+    return converter.entityToVO(entity);
   }
 
   @Override
@@ -41,15 +47,18 @@ public class FlowArchiveCursorRepositoryImpl implements FlowArchiveCursorReposit
     if (cursor == null) {
       return;
     }
-    FlowArchiveCursor existing = findByTypeAndTenant(cursor.getArchiveType(), cursor.getTenantId());
+    FlowArchiveCursor existingEntity = mapper.selectOne(
+        new LambdaQueryWrapper<FlowArchiveCursor>()
+            .eq(FlowArchiveCursor::getArchiveType, cursor.getArchiveType())
+            .eq(FlowArchiveCursor::getTenantId, cursor.getTenantId()));
     LocalDateTime now = LocalDateTime.now();
-    if (existing == null) {
+    if (existingEntity == null) {
       cursor.setCreatedAt(now);
       cursor.setUpdatedAt(now);
       mapper.insert(cursor);
     } else {
       LambdaUpdateWrapper<FlowArchiveCursor> wrapper = new LambdaUpdateWrapper<>();
-      wrapper.eq(FlowArchiveCursor::getId, existing.getId())
+      wrapper.eq(FlowArchiveCursor::getId, existingEntity.getId())
           .set(FlowArchiveCursor::getCursorValue, cursor.getCursorValue())
           .set(FlowArchiveCursor::getCursorData, cursor.getCursorData())
           .set(FlowArchiveCursor::getUpdatedAt, now);

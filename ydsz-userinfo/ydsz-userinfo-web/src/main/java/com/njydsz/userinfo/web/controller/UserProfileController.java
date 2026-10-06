@@ -111,7 +111,7 @@ public class UserProfileController {
   @PutMapping("/password")
   @Operation(summary = "修改密码", description = "当前登录用户修改密码（需验证旧密码）")
   @RateLimit(resource = "userinfo.profile.changePassword", threshold = 3)
-  public YdszResponse<Boolean> changePassword(@jakarta.validation.Valid @RequestBody ChangePasswordDTO dto) {
+  public YdszResponse<Boolean> changePassword(@Valid @RequestBody ChangePasswordDTO dto) {
     String userId = RequestContext.getUserId();
     // 确保只能修改自己的密码
     dto.setUserId(userId);

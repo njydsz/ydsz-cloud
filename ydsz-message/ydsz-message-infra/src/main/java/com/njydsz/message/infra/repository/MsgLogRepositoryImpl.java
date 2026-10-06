@@ -139,6 +139,14 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
     return msgLogMapper.insertBatch(entities) > 0;
   }
 
+  // ===== 游标分页（深度分页场景） =====
+
+  @Override
+  public List<MsgLogVO> pageByIdCursor(String lastId, int pageSize) {
+    List<MsgLog> list = msgLogMapper.selectByIdGreaterThan(lastId, pageSize);
+    return list == null ? Collections.emptyList() : converter.logListToVO(list);
+  }
+
   // ===== 私有辅助方法 =====
 
   private QueryWrapper<MsgLog> buildWrapper(MessageLogQueryDTO query) {

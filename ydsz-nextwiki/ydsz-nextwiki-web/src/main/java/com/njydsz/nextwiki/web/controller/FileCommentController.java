@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -153,7 +155,7 @@ public class FileCommentController {
   @Operation(summary = "添加评论/回复")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
   public YdszResponse<FileCommentVO> addComment(
-      @RequestBody AddCommentRequest request,
+      @Valid @RequestBody AddCommentRequest request,
       @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId,
       @RequestHeader(value = AuthHeaderConstants.X_USER_NAME, required = false) String userName) {
 

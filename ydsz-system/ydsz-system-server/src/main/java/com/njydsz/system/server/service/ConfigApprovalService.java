@@ -2,14 +2,16 @@ package com.njydsz.system.server.service;
 
 import java.util.List;
 
-import com.njydsz.system.domain.approval.ConfigApproval;
 import com.njydsz.system.domain.approval.ConfigApprovalQuery;
 import com.njydsz.system.domain.approval.ConfigApprovalSubmitDTO;
+import com.njydsz.system.domain.approval.ConfigApprovalVO;
 
 /**
  * 配置变更审批单服务接口。
  *
  * <p>定义审批单的业务操作契约：提交、通过、拒绝、撤回、查询。
+ *
+ * <p>查询方法返回 {@link ConfigApprovalVO}，禁止将 Entity 泄露到 Web 层（DDD-007）。
  *
  * @author ydsz-team
  * @since 26.09.08
@@ -56,18 +58,18 @@ public interface ConfigApprovalService {
    * 根据 ID 查询审批单。
    *
    * @param id 审批单 ID
-   * @return 审批单实体
+   * @return 审批单视图对象
    */
-  ConfigApproval findById(String id);
+  ConfigApprovalVO findById(String id);
 
   /**
    * 分页查询待当前用户审批的审批单。
    *
    * @param approverId 当前审批人 ID
    * @param query 分页参数
-   * @return 审批单列表
+   * @return 审批单 VO 列表
    */
-  List<ConfigApproval> findPendingByApprover(
+  List<ConfigApprovalVO> findPendingByApprover(
       String approverId, ConfigApprovalQuery query);
 
   /**
@@ -75,16 +77,16 @@ public interface ConfigApprovalService {
    *
    * @param submitterId 发起人 ID
    * @param query 分页参数
-   * @return 审批单列表
+   * @return 审批单 VO 列表
    */
-  List<ConfigApproval> findBySubmitter(
+  List<ConfigApprovalVO> findBySubmitter(
       String submitterId, ConfigApprovalQuery query);
 
   /**
    * 分页查询所有审批单（管理视角）。
    *
    * @param query 分页 + 筛选参数
-   * @return 审批单列表
+   * @return 审批单 VO 列表
    */
-  List<ConfigApproval> findAll(ConfigApprovalQuery query);
+  List<ConfigApprovalVO> findAll(ConfigApprovalQuery query);
 }

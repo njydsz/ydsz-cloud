@@ -7,6 +7,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
+import com.njydsz.system.domain.approval.ConfigApproval;
+import com.njydsz.system.domain.approval.ConfigApprovalVO;
 import com.njydsz.system.domain.dto.ApiPermissionDTO;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.dto.ConfigDTO;
@@ -319,6 +321,29 @@ public interface SystemConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Named("configDtoToEntity")
   Config configDtoToEntityInternal(ConfigDTO dto);
+
+  // ===== ConfigApproval =====
+
+  /**
+   * 配置审批单实体 → VO（忽略计算字段）。
+   *
+   * <p>计算字段（title / submitterName / currentApproverName）由 service 层填充。
+   *
+   * @param entity 审批单实体
+   * @return 审批单 VO
+   */
+  @Mapping(target = "title", ignore = true)
+  @Mapping(target = "submitterName", ignore = true)
+  @Mapping(target = "currentApproverName", ignore = true)
+  ConfigApprovalVO entityToVO(ConfigApproval entity);
+
+  /**
+   * 配置审批单实体列表 → VO 列表。
+   *
+   * @param entities 审批单实体列表
+   * @return 审批单 VO 列表
+   */
+  List<ConfigApprovalVO> configApprovalListToVO(List<ConfigApproval> entities);
 
   // ===== DictItem =====
 

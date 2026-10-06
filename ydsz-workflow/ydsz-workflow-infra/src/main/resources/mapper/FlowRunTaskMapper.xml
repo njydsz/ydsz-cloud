@@ -148,6 +148,19 @@ ORDER BY priority DESC, created_at ASC
         LIMIT #{limit}
     </select>
 
+    <!-- P3-1: 基于主键 ID 的简单游标分页（Keyset by id）— SLA / 迁移扫描专用 -->
+    <select id="selectByIdGreaterThan" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_flow_run_task
+        WHERE status = 'ENABLED'
+          AND is_deleted = 0
+          <if test="lastId != null and lastId != ''">
+              AND id &gt; #{lastId}
+          </if>
+        ORDER BY id ASC
+        LIMIT #{limit}
+    </select>
+
     <select id="selectDoneByAssignee" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_run_task

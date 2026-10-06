@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.workflow.domain.entity.FlowArchiveCursor;
+import com.njydsz.workflow.domain.vo.FlowArchiveCursorVO;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.repository.FlowArchiveCursorRepository;
 import com.njydsz.workflow.domain.repository.FlowHisInstanceRepository;
@@ -165,11 +166,10 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     // 【断点续传】读取归档游标（上次归档的最大 end_time），用于可观测性与兜底续传
     String cursorValue = null;
     try {
-      FlowArchiveCursor cursor = archiveCursorRepository.findByTypeAndTenant(
+FlowArchiveCursorVO cursor = archiveCursorRepository.findByTypeAndTenant(
           CURSOR_TYPE_INSTANCE, "0");
       if (cursor != null && cursor.getCursorValue() != null) {
         cursorValue = cursor.getCursorValue();
-        log.info("[FlowHistoryArchive] 读取归档游标: lastEndAt={}", cursorValue);
       }
     } catch (Exception e) {
       log.warn("[FlowHistoryArchive] 读取归档游标失败（不影响归档执行）: {}", e.getMessage());

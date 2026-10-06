@@ -8,11 +8,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 网关限流配置属性（响应式栈）。
  *
- * <p>支持 IP 和用户两个维度的令牌桶限流：
+ * <p>支持 IP、用户和租户三个维度的令牌桶限流：
  *
  * <ul>
  *   <li>IP 级限流：防止单 IP 暴力请求
  *   <li>用户级限流：按用户 ID 限流
+ *   <li>租户级限流：按租户 ID（X-Tenant-Id 头）限流
  * </ul>
  *
  * <p><b>命名消歧（ADR-011，见 docs/architecture/adr/ADR-011-reactive-ratelimit-boundary.md）：</b>
@@ -60,6 +61,9 @@ public class GatewayRateLimitProperties {
   /** IP 级限流配置 */
   private PerIpConfig perIp = new PerIpConfig();
 
+  /** 租户级限流配置 */
+  private PerTenantConfig perTenant = new PerTenantConfig();
+
   /** 响应头配置 */
   private ResponseHeadersConfig responseHeaders = new ResponseHeadersConfig();
 
@@ -74,6 +78,19 @@ public class GatewayRateLimitProperties {
 
     /** 令牌桶突发容量（短时最大请求数，默认 100）。 */
     private int burstCapacity = 100;
+  }
+
+  /** 租户级限流配置：按租户 ID（X-Tenant-Id 头）维度限流。 */
+  @Data
+  public static class PerTenantConfig {
+    /** 是否启用租户级限流（默认 true）。 */
+    private boolean enabled = true;
+
+    /** 令牌桶填充速率（每秒请求数，默认 100）。 */
+    private int defaultQps = 100;
+
+    /** 令牌桶突发容量（短时最大请求数，默认 200）。 */
+    private int burstCapacity = 200;
   }
 
   /** IP 级限流配置：按客户端真实 IP 维度限流。 */

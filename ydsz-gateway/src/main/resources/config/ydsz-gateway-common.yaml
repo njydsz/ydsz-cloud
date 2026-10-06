@@ -72,7 +72,7 @@ ydsz:
       blacklist-fail-mode: fail-open
       whitelist-enabled: false
       whitelist: ""
-    # F1: 限流配置（IP + 用户二维度）
+    # F1: 限流配置（IP + 用户 + 租户三维度）
     ratelimit:
       enabled: true
       per-ip:
@@ -83,6 +83,10 @@ ydsz:
         enabled: true
         default-qps: 50
         burst-capacity: 100
+      per-tenant:
+        enabled: true
+        default-qps: 100
+        burst-capacity: 200
       response-headers:
         enabled: true
     # P0-A4: API 版本响应头（ApiVersionHeaderFilter 开关）

@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.entity.InsightReport;
+import com.njydsz.agent.domain.vo.InsightReportVO;
 import com.njydsz.agent.domain.insight.InsightReportGenerator;
 import com.njydsz.agent.domain.insight.InsightReportRepository;
 import com.njydsz.agent.domain.insight.InsightReportRequest;
@@ -146,7 +147,7 @@ public class InsightReportServiceImpl implements InsightReportService {
   @Override
   public InsightReportResult getReport(String reportId) {
     return reportRepository.findById(reportId)
-        .map(entity -> deserializeResult(entity))
+        .map(this::deserializeResult)
         .orElse(null);
   }
 
@@ -181,18 +182,18 @@ public class InsightReportServiceImpl implements InsightReportService {
   /**
    * 反序列化持久化实体为结果值对象。
    */
-  private InsightReportResult deserializeResult(InsightReport entity) {
-    List<InsightSection> sections = parseSectionsFromJson(entity.getContentJson());
-    InsightReportStatus status = InsightReportStatus.fromCode(entity.getStatus());
+  private InsightReportResult deserializeResult(InsightReportVO vo) {
+    List<InsightSection> sections = parseSectionsFromJson(vo.getContentJson());
+    InsightReportStatus status = InsightReportStatus.fromCode(vo.getStatus());
     return new InsightReportResult(
-        entity.getReportId(),
-        entity.getTitle(),
+        vo.getReportId(),
+        vo.getTitle(),
         "",  // 完整 HTML 内容不在列表中返回
         sections,
         status,
-        entity.getReportPath(),
-        entity.getCreatedAt(),
-        entity.getDurationMs() != null ? entity.getDurationMs().longValue() : 0);
+        vo.getReportPath(),
+        vo.getCreatedAt(),
+        vo.getDurationMs() != null ? vo.getDurationMs().longValue() : 0);
   }
 
   /**

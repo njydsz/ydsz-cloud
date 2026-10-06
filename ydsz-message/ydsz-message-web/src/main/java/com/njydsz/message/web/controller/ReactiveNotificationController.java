@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
@@ -118,7 +119,7 @@ public class ReactiveNotificationController {
      * @return 推送结果
      */
     @PostMapping("/publish")
-    public YdszResponse<String> publishEvent(@RequestBody ReactiveEvent event) {
+    public YdszResponse<String> publishEvent(@Valid @RequestBody ReactiveEvent event) {
         // 补充必要字段
         if (event.getEventId() == null || event.getEventId().isBlank()) {
             event.setEventId(IdGenerator.nextIdStr());

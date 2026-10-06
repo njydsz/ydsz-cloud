@@ -89,6 +89,7 @@ public class ShareController {
       action = AuditAction.CREATE,
       content = "'createShare'")
   @Idempotent(key = "ydsz:nextwiki:ShareController:createShare:lock", ttlSeconds = 5)
+  @RateLimit(resource = "nextwiki.share.create", threshold = 20)
   @PostMapping
   @Operation(summary = "创建分享链接")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)

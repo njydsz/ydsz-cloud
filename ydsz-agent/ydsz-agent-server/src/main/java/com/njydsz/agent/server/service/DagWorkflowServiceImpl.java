@@ -7,11 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.agent.domain.converter.AgentConverter;
 import com.njydsz.agent.domain.dto.DagWorkflowDTO;
 import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.repository.DagWorkflowRepository;
 import com.njydsz.agent.domain.service.DagWorkflowService;
+import com.njydsz.agent.domain.vo.DagWorkflowVO;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -30,6 +32,7 @@ import com.njydsz.common.util.id.IdGenerator;
 public class DagWorkflowServiceImpl implements DagWorkflowService {
 
   private final DagWorkflowRepository dagWorkflowRepository;
+  private final AgentConverter converter;
 
   /**
    * {@inheritDoc}
@@ -43,17 +46,18 @@ public class DagWorkflowServiceImpl implements DagWorkflowService {
     boolean isCreate = (dto.getWorkflowCode() == null || dto.getWorkflowCode().isBlank());
     DagWorkflow entity;
     if (isCreate) {
-      entity = new DagWorkflow();
+      entity = converter.dtoToEntity(dto);
       entity.setWorkflowCode(generateWorkflowCode());
       entity.setIsPublished(false);
     } else {
-      entity = dagWorkflowRepository.findByCode(dto.getWorkflowCode())
+      DagWorkflowVO existing = dagWorkflowRepository.findByCode(dto.getWorkflowCode())
           .orElseThrow(() -> BusinessException.of(AgentExceptionCode.DAG_WORKFLOW_NOT_FOUND)
               .params(dto.getWorkflowCode()));
+      entity = converter.voToEntityWithId(existing);
     }
     entity.setName(dto.getWorkflowName());
-    entity.setDescription(dto.getDescription());
     entity.setDsl(dto.getDslContent());
+    entity.setDescription(dto.getDescription());
     entity.setCategory(dto.getCategory());
     boolean ok = isCreate
         ? dagWorkflowRepository.insert(entity)
@@ -72,7 +76,7 @@ public class DagWorkflowServiceImpl implements DagWorkflowService {
    * {@inheritDoc}
    */
   @Override
-  public DagWorkflow getByCode(String code) {
+  public DagWorkflowVO getByCode(String code) {
     return dagWorkflowRepository.findByCode(code).orElse(null);
   }
 
@@ -80,7 +84,7 @@ public class DagWorkflowServiceImpl implements DagWorkflowService {
    * {@inheritDoc}
    */
   @Override
-  public List<DagWorkflow> listByCategory(String category) {
+  public List<DagWorkflowVO> listByCategory(String category) {
     if (category == null || category.isBlank()) {
       return dagWorkflowRepository.findAll();
     }
@@ -91,7 +95,7 @@ public class DagWorkflowServiceImpl implements DagWorkflowService {
    * {@inheritDoc}
    */
   @Override
-  public DagWorkflow getById(String id) {
+  public DagWorkflowVO getById(String id) {
     return dagWorkflowRepository.findById(id).orElse(null);
   }
 
@@ -103,9 +107,9 @@ public class DagWorkflowServiceImpl implements DagWorkflowService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean deleteByCode(String code) {
-    DagWorkflow entity = dagWorkflowRepository.findByCode(code)
+    DagWorkflowVO vo = dagWorkflowRepository.findByCode(code)
         .orElseThrow(() -> BusinessException.of(AgentExceptionCode.DAG_WORKFLOW_NOT_FOUND).params(code));
-    boolean deleted = dagWorkflowRepository.deleteById(entity.getId());
+    boolean deleted = dagWorkflowRepository.deleteById(vo.getId());
     if (deleted) {
       log.info("[DagWorkflow] deleted workflow: code={}", code);
     }

@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.agent.domain.dto.DagWorkflowDTO;
-import com.njydsz.agent.domain.entity.DagWorkflow;
 import com.njydsz.agent.domain.service.DagWorkflowService;
+import com.njydsz.agent.domain.vo.DagWorkflowVO;
 import com.njydsz.agent.web.util.ExcelExportUtil;
 import com.njydsz.agent.web.vo.DagWorkflowExportVO;
 import com.njydsz.common.base.api.ApiVersion;
@@ -78,7 +78,7 @@ public class DagWorkflowController {
    * @return 统一响应结果，data 为 {@link DagWorkflow}（含 id / workflowCode / workflowName / dsl / category 等字段）；不存在时返回 null
    */
   @GetMapping("/{code}")
-  public YdszResponse<DagWorkflow> getByCode(@PathVariable String code) {
+  public YdszResponse<DagWorkflowVO> getByCode(@PathVariable String code) {
     return YdszResponse.success(dagWorkflowService.getByCode(code));
   }
 
@@ -92,7 +92,7 @@ public class DagWorkflowController {
    * @return 统一响应结果，data 为 {@link DagWorkflow} 列表；无匹配记录时返回空列表（非 null）
    */
   @GetMapping("/list")
-  public YdszResponse<List<DagWorkflow>> list(@RequestParam(required = false) String category) {
+  public YdszResponse<List<DagWorkflowVO>> list(@RequestParam(required = false) String category) {
     return YdszResponse.success(dagWorkflowService.listByCategory(category));
   }
 
@@ -128,10 +128,10 @@ public class DagWorkflowController {
   public void exportDagWorkflows(
       jakarta.servlet.http.HttpServletResponse response,
       @RequestParam(required = false) String category) throws java.io.IOException {
-    List<DagWorkflow> all = dagWorkflowService.listByCategory(category);
+    List<DagWorkflowVO> all = dagWorkflowService.listByCategory(category);
     List<DagWorkflowExportVO> rows = new ArrayList<>(all.size());
-    for (DagWorkflow entity : all) {
-      rows.add(toExportVO(entity));
+    for (DagWorkflowVO vo : all) {
+      rows.add(toExportVO(vo));
     }
     ExcelExportUtil.write(response, rows, DagWorkflowExportVO.class, "dag_workflows", "DagWorkflows");
   }
@@ -139,20 +139,20 @@ public class DagWorkflowController {
   // ==================== 私有转换方法 ====================
 
   /**
-   * 将 {@link DagWorkflow} 转换为 Excel 导出行。
+   * 将 {@link DagWorkflowVO} 转换为 Excel 导出行。
    *
-   * @param entity DAG 工作流实体
+   * @param vo DAG 工作流视图对象
    * @return Excel 导出行
    */
-  private DagWorkflowExportVO toExportVO(DagWorkflow entity) {
+  private DagWorkflowExportVO toExportVO(DagWorkflowVO vo) {
     DagWorkflowExportVO export = new DagWorkflowExportVO();
-    export.setWorkflowCode(entity.getWorkflowCode());
-    export.setName(entity.getName());
-    export.setDescription(entity.getDescription());
-    export.setCategory(entity.getCategory());
-    export.setId(entity.getId());
-    export.setCreatedBy(entity.getCreatedBy());
-    export.setCreatedAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null);
+    export.setWorkflowCode(vo.getWorkflowCode());
+    export.setName(vo.getName());
+    export.setDescription(vo.getDescription());
+    export.setCategory(vo.getCategory());
+    export.setId(vo.getId());
+    export.setCreatedBy(vo.getCreatedBy());
+    export.setCreatedAt(vo.getCreatedAt() != null ? vo.getCreatedAt().toString() : null);
     return export;
   }
 }

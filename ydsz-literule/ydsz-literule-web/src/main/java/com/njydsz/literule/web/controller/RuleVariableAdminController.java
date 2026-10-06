@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -102,7 +104,7 @@ public class RuleVariableAdminController {
       content = "'save'")
   @RateLimit(resource = "literule.rule_variable_admin.save", threshold = 50)
   @PostMapping
-  public YdszResponse<VariableDefinitionVO> save(@RequestBody VariableDefinition definition) {
+  public YdszResponse<VariableDefinitionVO> save(@Valid @RequestBody VariableDefinition definition) {
     if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
       return YdszResponse.error(YdszResultCode.VALIDATION_FAILED, "变量定义及 name 不能为空");
     }

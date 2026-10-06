@@ -19,6 +19,7 @@ import com.njydsz.agent.domain.entity.AgentDefinition;
 import com.njydsz.agent.domain.entity.AgentTrace;
 import com.njydsz.agent.domain.entity.AgentTraceStep;
 import com.njydsz.agent.domain.entity.DagWorkflow;
+import com.njydsz.agent.domain.entity.InsightReport;
 import com.njydsz.agent.domain.entity.PromptTemplate;
 import com.njydsz.agent.domain.entity.PromptVersion;
 import com.njydsz.agent.domain.entity.TokenUsageRecord;
@@ -27,6 +28,7 @@ import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.domain.vo.AgentTraceStepVO;
 import com.njydsz.agent.domain.vo.AgentTraceVO;
 import com.njydsz.agent.domain.vo.DagWorkflowVO;
+import com.njydsz.agent.domain.vo.InsightReportVO;
 import com.njydsz.agent.domain.vo.PromptTemplateVO;
 import com.njydsz.agent.domain.vo.PromptVersionVO;
 import com.njydsz.agent.domain.vo.TokenUsageRecordVO;
@@ -244,7 +246,6 @@ public interface AgentConverter {
   @Mapping(target = "name", source = "workflowName")
   @Mapping(target = "dsl", source = "dslContent")
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "layoutJson", ignore = true)
   @Mapping(target = "isPublished", ignore = true)
   @Mapping(target = "isDeleted", ignore = true)
   @Mapping(target = "status", ignore = true)
@@ -256,6 +257,24 @@ public interface AgentConverter {
   @Mapping(target = "updatedAt", ignore = true)
   @Mapping(target = "sort", ignore = true)
   DagWorkflow dtoToEntity(DagWorkflowDTO dto);
+
+  // ===== InsightReport =====
+
+  /**
+   * Entity → VO 转换
+   *
+   * @param entity 数据库实体
+   * @return 视图对象
+   */
+  InsightReportVO entityToVO(InsightReport entity);
+
+  /**
+   * Entity 列表 → VO 列表转换
+   *
+   * @param entities 实体列表
+   * @return VO 列表
+   */
+  List<InsightReportVO> insightReportListToVO(List<InsightReport> entities);
 
   // ===== AgentApproval =====
 
