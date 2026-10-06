@@ -24,6 +24,9 @@ import com.njydsz.common.util.api.Experimental;
 @Experimental(value = "能力储备：数据脱敏工具；后续规划 @Mask 注解化与脱敏位可配置化", since = "26.10.01")
 public final class MaskUtils {
 
+  /** 标准脱敏占位符（全掩码场景：如 URL 参数值、Token 完整替换） */
+  public static final String PLACEHOLDER = "***";
+
   /** 默认掩码字符 */
   private static final char MASK_CHAR = '*';
 

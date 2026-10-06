@@ -18,6 +18,7 @@ import com.njydsz.message.domain.dto.MessageItemRequestDTO;
 import com.njydsz.message.domain.vo.MessageSendResultVO;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.util.mask.MaskUtils;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.message.server.config.ChannelProperties;
 
@@ -182,7 +183,7 @@ public class WebhookChannel implements MessageChannel {
     if (!StringUtils.hasText(url)) {
       return "";
     }
-    return url.replaceAll("(access_token|secret|key)=[^&]*", "$1=***");
+    return url.replaceAll("(access_token|secret|key)=[^&]*", "$1=" + MaskUtils.PLACEHOLDER);
   }
 
   /**
