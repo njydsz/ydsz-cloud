@@ -13,17 +13,17 @@
 #   - 同步脚本: data/scripts/sync-ai-rules.py
 
 meta:
-  version: "26.10.01-v26"  # v26: +YDIZ-NAME-005 数据库 snake_case 列名必须严格驼峰映射为 Java 字段名
+  version: "26.10.03-v27"  # v27: +YDIZ-DB-007 布尔类型统一 SMALLINT；OOP-006+SMALLINT
   source: "docs/云顶编码规范.md v1.0.14"
-  last_synced: "2026-10-03"
-  last_updated: "26.10.01-v26（+1 P0 YDIZ-NAME-005 驼峰命名强制映射 snake_case→camelCase；总规则 187 条）"
-  total_rules: 187
+  last_synced: "2026-10-06"
+  last_updated: "26.10.03-v27（+1 P0 YDIZ-DB-007 布尔类型统一 SMALLINT；更新 OOP-006 类型约束；总规则 188 条）"
+  total_rules: 188
   severity_levels:
     P0: "阻断级，AI 编码绝对违反"
     P1: "严重级，AI 编码不应违反，违反需人工确认"
     P2: "建议级，AI 编码建议遵循"
   summary:
-    P0: 62
+    P0: 63
     P1: 88
     P2: 24
 
@@ -300,18 +300,28 @@ rules:
   - id: "YDIZ-OOP-006"
     category: "oop"
     severity: "P0"
-    title: "【强制】布尔字段必须带 is 前缀"
+    title: "【强制】布尔字段必须带 is 前缀，数据库列必须使用 SMALLINT 类型"
     description: |
-      数据库布尔字段和 Java 布尔字段映射**必须统一使用 `is_xxx` / `isXxx` 前缀**。
-      此规则同时约束 Java 字段名和数据库列名。
+      数据库布尔字段和 Java 布尔字段映射**必须统一使用 `is_xxx` / `isXxx` 前缀**，
+      且数据库列类型**必须使用 `SMALLINT`**（0=否 / 1=是），**禁止使用 PostgreSQL `BOOLEAN` 类型**。
 
       **强制命名规范**：
       - 数据库列名：`is_default`、`is_active`、`is_system`、`is_public`、`is_deleted`、`is_folder`
+      - 数据库列类型：`SMALLINT NOT NULL DEFAULT 0`（统一！禁用 `BOOLEAN`）
       - Java 字段名：`isDefault`、`isActive`、`isSystem`、`isPublic`、`isDeleted`、`isFolder`
+      - Java 字段类型：`Boolean`（包装类，允许 null）或 `boolean`（基础类型）
       - Getter 方法：`getIsDefault()`、`getIsActive()` 等
 
-      **禁止的命名**：
-      不带 `is` 前缀的布尔字段（如 `default`、`active`、`deleted`）
+      **为什么用 SMALLINT 而非 BOOLEAN**：
+      - 类型一致性：项目中已有 ~150+ 张表使用 `SMALLINT`，需保持统一
+      - 跨数据库兼容：`SMALLINT` 在 PostgreSQL/MySQL/Oracle/Dm 中行为一致，`BOOLEAN` 在某些数据库（如 Oracle、旧版 DM）中不支持
+      - 位运算友好：`SMALLINT` 可直接用于位掩码查询
+      - NULL 语义：`SMALLINT` + `NOT NULL DEFAULT 0` 杜绝三态歧义
+
+      **禁止的命名与类型**：
+      - 不带 `is` 前缀的布尔字段（如 `default`、`active`、`deleted`）
+      - 数据库列使用 `BOOLEAN`、`BOOL`、`TINYINT(1)` 类型（统一为 `SMALLINT`）
+      - 布尔字段值使用 `TRUE`/`FALSE` 字面量（Java 中统一用 `true`/`false`）
 
       **`@ConfigurationProperties` 豁免**：
       标注 `@ConfigurationProperties` 的配置类中，布尔字段名直接作为 YAML 属性键对外暴露，
@@ -319,8 +329,8 @@ rules:
       此类配置类允许保留原有布尔字段名（如 `automaticTrim`、`useFastReader`、`formulaInjectionProtection`），
       但须在 Javadoc 字段注释中标注 `<!-- OOP-006-EXEMPT: @ConfigurationProperties -->`。
       非 Spring Boot 绑定场景（非 @ConfigurationProperties 的纯 POJO / VO）不予豁免。
-    pattern: "private Boolean deleted; 或 private Boolean default;"
-    fix: "Java 字段改为 isXxx；数据库列改为 is_xxx"
+    pattern: "private Boolean deleted; 或 private Boolean default; 或 is_deleted BOOLEAN;"
+    fix: "Java 字段改为 isXxx；数据库列改为 SMALLINT NOT NULL DEFAULT 0"
     example_bad: |
       ❌ private Boolean default;         // 缺少 is 前缀
       ❌ private Boolean deleted;         // 缺少 is 前缀
@@ -331,8 +341,71 @@ rules:
       ✅ private Boolean isSystem;        // 数据库列: is_system
     source: "编码规范 6.5 节"
 
+  - id: "YDIZ-DB-007"
+    category: "database"
+    severity: "P0"
+    title: "【强制】BOOLEAN 类型必须使用 SMALLINT（0/1），禁止 PostgreSQL BOOLEAN"
+    description: |
+      所有布尔状态字段在数据库中的存储类型**必须为 `SMALLINT NOT NULL DEFAULT 0`**，
+      0 表示「否 / 关闭 / 未删除」，1 表示「是 / 开启 / 已删除」。
+
+      **禁止使用以下类型**：
+      - `BOOLEAN` / `BOOL`（PostgreSQL 特有，跨库不兼容）
+      - `TINYINT(1)`（MySQL 特有，跨库不兼容）
+      - `NUMBER(1)`（Oracle 特有，跨库不兼容）
+
+      **为什么统一 SMALLINT**：
+      1. **跨数据库兼容**：PostgreSQL / MySQL / Oracle / 达梦 / openGauss 全部原生支持 `SMALLINT`
+      2. **项目一致性**：全库 ~300+ 个布尔列已使用 `SMALLINT`，新表/新字段必须保持一致
+      3. **MyBatis-Plus 兼容**：`@TableField` 对 `SMALLINT` 的枚举映射已做适配
+      4. **位运算查询友好**：`(flags & 1) = 1` 语法在所有数据库中通用
+      5. **JDBC 类型统一**：`ResultSet.getInt()` 取值，避免 `getBoolean()` 驱动差异
+
+      **DDL 迁移示例**：
+      ```sql
+      -- ✅ 正确
+      is_deleted SMALLINT NOT NULL DEFAULT 0,
+      is_active   SMALLINT NOT NULL DEFAULT 1,
+
+      -- ❌ 错误（旧表待修复）
+      is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+      is_active   BOOLEAN NOT NULL DEFAULT TRUE,
+      ```
+
+      **加 CHECK 约束（推荐）**：
+      ```sql
+      ALTER TABLE ydsz_xxx ADD CONSTRAINT chk_is_deleted CHECK (is_deleted IN (0, 1));
+      ALTER TABLE ydsz_xxx ADD CONSTRAINT chk_is_active   CHECK (is_active   IN (0, 1));
+      ```
+
+      **影响范围排查**：
+      ```bash
+      # 找出所有使用 BOOLEAN 的表和列
+      SELECT table_name, column_name, data_type
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND data_type = 'boolean'
+        AND column_name LIKE 'is_%';
+      ```
+    pattern: |
+      CREATE TABLE 或 ALTER TABLE 中包含 is_xxx BOOLEAN、is_xxx BOOL 类型的列
+    fix: |
+      1. 新增字段：使用 `is_xxx SMALLINT NOT NULL DEFAULT 0`
+      2. 存量修复：Flyway 脚本 ALTER COLUMN TYPE
+         `ALTER TABLE ydsz_xxx ALTER COLUMN is_deleted TYPE SMALLINT USING CASE WHEN is_deleted = TRUE THEN 1 ELSE 0 END;`
+      3. 添加 CHECK 约束限制取值范围
+    example_bad: |
+      ❌ is_deleted BOOLEAN NOT NULL DEFAULT FALSE
+      ❌ is_active   BOOL DEFAULT TRUE
+      ❌ is_system   TINYINT(1)
+    example_good: |
+      ✅ is_deleted SMALLINT NOT NULL DEFAULT 0
+      ✅ is_active   SMALLINT NOT NULL DEFAULT 1
+      ✅ is_system   SMALLINT NOT NULL DEFAULT 0
+    source: "全维度对标分析（2026-10-06，P0 布尔类型统一规范）"
+
   # ============================================
-  # 五、数据库命名规范（3 条，P0）
+  # 五、数据库命名规范（4 条，全部 P0）
   # ============================================
   - id: "YDIZ-DB-002"
     category: "database"
@@ -346,7 +419,7 @@ rules:
       2. `status` — `INTEGER NOT NULL DEFAULT 1` — 状态标识
       3. `revision` — `INTEGER NOT NULL DEFAULT 0` — 乐观锁版本号
       4. `tenant_id` — `VARCHAR(64) NOT NULL DEFAULT '0'` — 租户 ID（多租户隔离）
-      5. `is_deleted` — `BOOLEAN NOT NULL DEFAULT FALSE` — 逻辑删除标识
+      5. `is_deleted` — `SMALLINT NOT NULL DEFAULT 0` — 逻辑删除标识（**强制 SMALLINT，禁用 BOOLEAN**）
       6. `created_by` — `VARCHAR(64)` — 创建人
       7. `created_at` — `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP` — 创建时间
       8. `updated_by` — `VARCHAR(64)` — 最后更新人
@@ -356,13 +429,15 @@ rules:
 
       **【强制】禁止覆盖基础字段**（YDIZ-DB-006 覆盖）：业务模块**禁止**在 Java 实体中声明同名属性覆盖基础字段，9 个字段只能来自 `MpBaseEntity` 继承。
 
-      **MySQL 方言适配**：is_deleted → TINYINT(1)，时间 → DATETIME(3)，整数 → INT NOT NULL
+      **MySQL 方言适配**：is_deleted → TINYINT(1) 兼容，但**新项目统一 SMALLINT**；时间 → DATETIME(3)，整数 → INT NOT NULL
 
-      **Oracle 方言适配**：is_deleted → NUMBER(1)，时间 → DATE，VARCHAR → VARCHAR2，INTEGER → NUMBER
+      **Oracle 方言适配**：is_deleted → NUMBER(1) 兼容，但**新项目统一 SMALLINT**；时间 → DATE，VARCHAR → VARCHAR2，INTEGER → NUMBER
+
+      **PostgreSQL 方言（推荐）**：is_deleted → `SMALLINT NOT NULL DEFAULT 0`，加 CHECK 约束 `CHECK (is_deleted IN (0, 1))`
     pattern: "CREATE TABLE 缺少 sort/status/revision/tenant_id/is_deleted/created_by/created_at/updated_by/updated_at 中任意一个，或顺序不正确"
     fix: "按固定顺序补充缺失的基础字段；已有同名业务字段需改名"
     example_bad: |
-      ❌ CREATE TABLE ydsz_xxx (id VARCHAR(64), name VARCHAR(128), is_deleted BOOLEAN);
+      ❌ CREATE TABLE ydsz_xxx (id VARCHAR(64), name VARCHAR(128), is_deleted BOOLEAN);  -- BOOLEAN 必须改为 SMALLINT
       ❌ 字段顺序错误：sort 放在 status 之后
       ❌ Java 实体直接 extends MpBaseEntity 外再声明 private Integer sort;
     example_good: |
@@ -370,7 +445,7 @@ rules:
              id VARCHAR(64) NOT NULL, name VARCHAR(128) NOT NULL,
              sort INTEGER NOT NULL DEFAULT 0, status INTEGER NOT NULL DEFAULT 1,
              revision INTEGER NOT NULL DEFAULT 0, tenant_id VARCHAR(64) NOT NULL DEFAULT '0',
-             is_deleted BOOLEAN NOT NULL DEFAULT FALSE, created_by VARCHAR(64),
+             is_deleted SMALLINT NOT NULL DEFAULT 0, created_by VARCHAR(64),
              created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
              updated_by VARCHAR(64), updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
              CONSTRAINT pk_xxx PRIMARY KEY (id));
@@ -391,7 +466,7 @@ rules:
       | `status` | `status` | `INTEGER/VARCHAR` | 状态标识 |
       | `revision` | `revision` | `INTEGER` | 乐观锁版本号 |
       | `tenantId` | `tenant_id` | `VARCHAR` | 租户 ID |
-      | `isDeleted` | `is_deleted` | `BOOLEAN` | 逻辑删除 |
+      | `isDeleted` | `is_deleted` | `SMALLINT` | 逻辑删除（**强制 SMALLINT，禁用 BOOLEAN**） |
       | `createdBy` | `created_by` | `VARCHAR` | 创建人 |
       | `createdAt` | `created_at` | `TIMESTAMP` | 创建时间 |
       | `updatedBy` | `updated_by` | `VARCHAR` | 更新人 |

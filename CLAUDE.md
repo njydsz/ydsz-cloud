@@ -3,7 +3,7 @@
 > **本文件为 Claude Code / Cursor / Windsurf / Aider 等 AI 编码工具的 `always` 规则。**
 > 任何 AI 编码助手在本项目中编程时，都必须遵守本文件中的规则。
 >
-> **规范版本**: v26.10.01-v25（186 条红线规则，P0=61 P1=88 P2=24）
+> **规范版本**: v26.10.03-v27（188 条红线规则，P0=63 P1=88 P2=24）
 > **完整规则源**: `docs/ai-rules/shared-rules.yaml`（单一权威源）
 > **编码规范参考**: `docs/云顶编码规范.md`（v1.0.13）
 
@@ -91,6 +91,7 @@ ydsz-cloud/
 | NAME-001 | entity 包下**禁止 DO 后缀**，直接用业务名 |
 | NAME-002 | 数据库表名必须以 `ydsz_` 前缀（`@TableName("ydsz_xxx")`）|
 | DB-001 | 排序字段统一命名 `sort`（禁用 `sort_order`/`sortOrder`）|
+| DB-007 | 布尔字段列**必须 `SMALLINT`**，禁止 `BOOLEAN`/`BOOL`/`TINYINT(1)` |
 
 ### OOP
 
@@ -99,7 +100,7 @@ ydsz-cloud/
 | OOP-001 | 覆盖 equals **必须同时覆盖** hashCode |
 | OOP-002 | 包装类比较**必须用 equals**，禁止 `==` |
 | OOP-003 | 浮点金額**必须用 BigDecimal**，禁止 double/float |
-| OOP-006 | 布尔字段**必须 `is` 前缀**（Java `isDeleted` ↔ DB `is_deleted`）|
+| OOP-006 | 布尔字段**必须 `is` 前缀**，数据库列**必须 `SMALLINT`**（Java `isDeleted` ↔ DB `is_deleted SMALLINT`，禁用 `BOOLEAN`）|
 
 ### 异常与日志
 
@@ -115,7 +116,6 @@ ydsz-cloud/
 |------|------|
 | DATE-001 | **禁止 SimpleDateFormat 作为共享变量** |
 | DATE-002 | 使用 java.time.* API，禁止 Date/Calendar |
-
 ### DDD 分层
 
 | 规则 | 要求 |
@@ -322,15 +322,20 @@ throw new RuntimeException("租户不存在");           // 硬编码中文
 try { ... } catch (Exception e) {}                  // 空 catch 吞异常
 ```
 
-### 布尔字段命名
+### 布尔字段命名与类型
 ```java
 // 正例（Java + 数据库列）
 @TableField("is_deleted")
 private Boolean isDeleted;         // Lombok 生成 getIsDeleted()
+// DDL: is_deleted SMALLINT NOT NULL DEFAULT 0
 
 // 反例
 private Boolean deleted;           // 缺少 is 前缀
+// DDL: is_deleted BOOLEAN         // ❌ 必须用 SMALLINT
 ```
+
+> **规范要求**：布尔字段数据库列**必须使用 `SMALLINT NOT NULL DEFAULT 0`**，**禁用 PostgreSQL `BOOLEAN` 类型**。
+> 理由：跨数据库兼容、MyBatis-Plus 映射一致性、项目 ~300+ 布尔列已统一 SMALLINT。
 
 ### BigDecimal 使用
 ```java
