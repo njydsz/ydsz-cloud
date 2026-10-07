@@ -2,8 +2,8 @@ package com.njydsz.system.server.config;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +20,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.thread.util.ExecutorUtils;
 import com.njydsz.system.server.service.event.DictChangeEvent;
 import com.njydsz.system.server.service.event.DictChangeEventConstants;
 
@@ -66,11 +67,8 @@ public class DictSseRedisListenerConfig implements DisposableBean {
     log.info("[DictSseRedisListener] Subscribed to channel: {}",
         DictChangeEventConstants.REDIS_CHANNEL);
 
-    ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-      Thread t = new Thread(r, "dict-sse-keepalive");
-      t.setDaemon(true);
-      return t;
-    });
+    ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(
+        1, ExecutorUtils.createDaemonThreadFactory("dict-sse-keepalive"));
     scheduler.scheduleAtFixedRate(
         emitterRegistry::broadcastKeepalive,
         DictChangeEventConstants.SSE_KEEPALIVE_INTERVAL_SECONDS,

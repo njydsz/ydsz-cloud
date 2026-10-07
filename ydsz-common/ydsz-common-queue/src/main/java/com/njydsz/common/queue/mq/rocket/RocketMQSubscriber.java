@@ -10,6 +10,8 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
@@ -156,7 +158,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
         try {
           handler.onMessage(message);
         } catch (Throwable t) {
-          throw new RuntimeException(t);
+          throw new BusinessException(CoreExceptionCode.MQ_ERROR, t);
         }
       }
       consumedCount.incrementAndGet();

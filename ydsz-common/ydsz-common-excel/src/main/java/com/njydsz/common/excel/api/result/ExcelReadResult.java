@@ -11,6 +11,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * Excel读取结果封装类 - 结果模式实现
  *
@@ -204,9 +207,9 @@ public class ExcelReadResult<T> {
         return future.get();
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        throw new RuntimeException("Interrupted while getting Excel read result", e);
+        throw new BusinessException(CoreExceptionCode.SYSTEM_ERROR, e);
       } catch (ExecutionException e) {
-        throw new RuntimeException("Excel read execution error", e.getCause());
+        throw new BusinessException(CoreExceptionCode.INTERNAL_ERROR, e.getCause());
       }
     }
     return data;
@@ -226,9 +229,9 @@ public class ExcelReadResult<T> {
         return future.get(timeout, unit);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        throw new RuntimeException("Interrupted while getting Excel read result", e);
+        throw new BusinessException(CoreExceptionCode.SYSTEM_ERROR, e);
       } catch (ExecutionException e) {
-        throw new RuntimeException("Excel read execution error", e.getCause());
+        throw new BusinessException(CoreExceptionCode.INTERNAL_ERROR, e.getCause());
       }
     }
     return data;

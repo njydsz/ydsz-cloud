@@ -63,7 +63,9 @@ public enum GatewayFilterOrder {
   /** 限流过滤器（熔断通过后执行，确保仅对下游可用的请求做限流统计） */
   RATE_LIMIT(50),
   /** API 版本响应头过滤器 */
-  API_VERSION_HEADER(200);
+  API_VERSION_HEADER(200),
+  /** HTTP 缓存控制响应头注入过滤器 */
+  CACHE_CONTROL_HEADER(180);
 
   /** 相对 {@link Ordered#HIGHEST_PRECEDENCE} 的偏移量 */
   private final int offset;

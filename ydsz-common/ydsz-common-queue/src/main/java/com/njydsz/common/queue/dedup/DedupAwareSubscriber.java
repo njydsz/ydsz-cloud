@@ -2,6 +2,8 @@ package com.njydsz.common.queue.dedup;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessageHandler;
 import com.njydsz.common.queue.service.IMessageSubscriber;
@@ -72,7 +74,7 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
       } catch (RuntimeException e) {
         throw e;
       } catch (Throwable t) {
-        throw new RuntimeException("Message processing failed: " + t.getMessage(), t);
+        throw new BusinessException(CoreExceptionCode.MQ_ERROR, t);
       }
     };
   }

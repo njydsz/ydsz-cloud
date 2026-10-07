@@ -116,6 +116,12 @@
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
 
+        <!-- ydsz-common-exception：BusinessException + CoreExceptionCode（EXCEPT-003 红线：禁止 RuntimeException） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+
         <!-- JUnit 5 (test scope) -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

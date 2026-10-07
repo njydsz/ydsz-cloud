@@ -14,6 +14,8 @@ import java.util.zip.ZipOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
@@ -153,7 +155,10 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
       generateXlsx();
     } catch (Exception e) {
       LOG.error("Reactive writer xlsx generation failed", e);
-      throw new RuntimeException("Excel generation failed: " + e.getMessage(), e);
+      throw BusinessException.builder()
+          .resultCode(CoreExceptionCode.INTERNAL_ERROR)
+          .message("Excel generation failed: " + e.getMessage())
+          .build();
     }
   }
 
@@ -295,7 +300,7 @@ public final class ReactiveExcelWriter implements Flow.Publisher<byte[]> {
       try {
         return field.get(obj);
       } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
+        throw new BusinessException(CoreExceptionCode.INTERNAL_ERROR, e);
       }
     };
   }

@@ -33,6 +33,9 @@ ydsz:
     deprecation:
       enabled: true
       apis: []
+    cache-control:
+      enabled: true
+      default-max-age-seconds: 60
   i18n:
     # 启用元数据 REST API（/api/internal/i18n/languages）前端可动态获取可用语言列表
     metadata-api-enabled: true

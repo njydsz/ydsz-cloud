@@ -11,6 +11,8 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelReader;
 import com.njydsz.common.excel.core.context.AnalysisContext;
@@ -192,7 +194,7 @@ public final class AsyncReadBridge {
             }
             @Override
             public void onError(AnalysisContext ctx, Exception e) {
-              throw new RuntimeException(e);
+              throw new BusinessException(CoreExceptionCode.INTERNAL_ERROR, e);
             }
           });
           return list;

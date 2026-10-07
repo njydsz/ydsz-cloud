@@ -19,6 +19,8 @@ import org.springframework.data.redis.connection.stream.StreamReadOptions;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.metrics.QueueMetrics;
@@ -332,7 +334,7 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
         try {
           handler.onMessage(message);
         } catch (Throwable t) {
-          throw new RuntimeException(t);
+          throw new BusinessException(CoreExceptionCode.MQ_ERROR, t);
         }
       }
       redisTemplate.opsForStream().acknowledge(channel, group, entry.getId());

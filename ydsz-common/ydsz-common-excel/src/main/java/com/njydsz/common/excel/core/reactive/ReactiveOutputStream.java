@@ -6,6 +6,9 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+
 /**
  * 响应式输出流 — 桥接同步 Excel XML/ZIP 写入到 {@link Flow.Publisher}&lt;byte[]&gt;，适配 WebFlux {@code Flux<byte[]>}。
  *
@@ -171,10 +174,11 @@ public class ReactiveOutputStream extends OutputStream implements Flow.Publisher
       }
     }
     if (requested.get() <= 0 && !closed) {
-      throw new RuntimeException(
-          "ReactiveOutputStream timeout: downstream did not send request within "
-              + requestTimeoutMs
-              + "ms");
+      throw BusinessException.builder()
+          .resultCode(CoreExceptionCode.SYSTEM_ERROR)
+          .message("ReactiveOutputStream timeout: downstream did not send request within "
+              + requestTimeoutMs + "ms")
+          .build();
     }
   }
 

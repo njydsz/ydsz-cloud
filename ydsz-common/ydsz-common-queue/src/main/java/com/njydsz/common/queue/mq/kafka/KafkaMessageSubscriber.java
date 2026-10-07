@@ -18,6 +18,8 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
 import com.njydsz.common.queue.recovery.ConsumerThreadGuard;
@@ -221,7 +223,7 @@ public class KafkaMessageSubscriber implements IMessageSubscriber {
         try {
           handler.onMessage(message);
         } catch (Throwable t) {
-          throw new RuntimeException(t);
+          throw new BusinessException(CoreExceptionCode.MQ_ERROR, t);
         }
       }
       consumer.commitSync();

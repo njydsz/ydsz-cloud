@@ -1,5 +1,7 @@
 package com.njydsz.common.queue.service;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.domain.QueueMessage;
 
 /**
@@ -62,7 +64,7 @@ public final class MessageSubscriberHelper {
    * @param subscriber 订阅者实例，不可为 null
    * @param handler 消息处理器，不可为 null
    * @return 消息 traceId，消费失败或无消息时返回 null
-   * @throws RuntimeException 当 handler 抛出异常时，以原始类型向上传播
+   * @throws BusinessException 当 handler 抛出异常时，以业务异常类型向上传播
    */
   public static String subscribeOnce(IMessageSubscriber subscriber, IMessageHandler handler) {
     if (subscriber == null || handler == null) {
@@ -80,7 +82,7 @@ public final class MessageSubscriberHelper {
       throw e;
     } catch (Throwable t) {
       // 检查异常：解包后以运行时异常向上传播，避免改变订阅方的异常处理流程
-      throw new RuntimeException("Message processing failed: " + t.getMessage(), t);
+      throw new BusinessException(CoreExceptionCode.MQ_ERROR, t);
     }
   }
 

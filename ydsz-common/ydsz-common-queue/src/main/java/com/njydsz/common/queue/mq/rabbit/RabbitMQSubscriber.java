@@ -18,6 +18,8 @@ import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
@@ -164,7 +166,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
         try {
           handler.onMessage(message);
         } catch (Throwable t) {
-          throw new RuntimeException(t);
+          throw new BusinessException(CoreExceptionCode.MQ_ERROR, t);
         }
       }
       channel.basicAck(envelope.getDeliveryTag(), false);
